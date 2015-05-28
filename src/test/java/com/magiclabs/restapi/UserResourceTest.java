@@ -1,0 +1,88 @@
+package com.magiclabs.restapi;
+
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import com.eclipsesource.json.JsonObject;
+import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.exceptions.UnirestException;
+import com.mashape.unirest.request.GetRequest;
+import com.mashape.unirest.request.body.RequestBodyEntity;
+
+public class UserResourceTest extends AbstractTest {
+
+	@BeforeClass
+	public static void resetTestAccount() throws UnirestException,
+			InterruptedException {
+		AccountResourceTest.resetTestAccount();
+	}
+
+	@Test
+	public void shouldSignUpSuccessfullyAndMore() throws UnirestException,
+			InterruptedException {
+
+		// signup
+
+		RequestBodyEntity req1 = Unirest
+				.post("http://localhost:8080/v1/user/")
+				.basicAuth("dave", "hi_dave")
+				.header("x-magic-account-id", "test")
+				.body(Json.builder().add("username", "vince")
+						.add("password", "hi_vince")
+						.add("email", "vince@magic.com").build().toString());
+
+		post(req1, 201);
+
+		refreshIndex("test");
+
+		// get ok
+
+		GetRequest req2 = Unirest.get("http://localhost:8080/v1/user/vince")
+				.basicAuth("vince", "hi_vince")
+				.header("x-magic-account-id", "test");
+
+		JsonObject res2 = get(req2, 200);
+		assertTrue(Json.equals(
+				Json.builder().add("username", "vince")
+						.add("password", "hi_vince")
+						.add("email", "vince@magic.com").build(), res2));
+
+		// wrong username
+
+		GetRequest req5 = Unirest.get("http://localhost:8080/v1/user/vince")
+				.basicAuth("XXX", "hi_vince")
+				.header("x-magic-account-id", "test");
+
+		get(req5, 401);
+
+		// wrong password
+
+		GetRequest req3 = Unirest.get("http://localhost:8080/v1/user/vince")
+				.basicAuth("vince", "XXX").header("x-magic-account-id", "test");
+
+		get(req3, 401);
+
+		// wrong account id
+
+		GetRequest req4 = Unirest.get("http://localhost:8080/v1/user/vince")
+				.basicAuth("vince", "hi_vince")
+				.header("x-magic-account-id", "XXX");
+
+		get(req4, 401);
+
+		// login ok
+
+		GetRequest req6 = Unirest.get("http://localhost:8080/v1/login")
+				.basicAuth("vince", "hi_vince")
+				.header("x-magic-account-id", "test");
+
+		get(req6, 200);
+
+		// login nok
+
+		GetRequest req7 = Unirest.get("http://localhost:8080/v1/login")
+				.basicAuth("vince", "XXX").header("x-magic-account-id", "test");
+
+		get(req7, 401);
+	}
+}
