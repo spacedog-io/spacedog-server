@@ -10,14 +10,14 @@ import com.mashape.unirest.request.GetRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
 import com.mashape.unirest.request.body.RequestBodyEntity;
 
-public class MetaResourceTest extends AbstractTest {
+public class SchemaResourceTest extends AbstractTest {
 
 	@Test
 	public void shouldDeletePutAndGetCarSchema() throws UnirestException {
 
 		resetCarSchema();
 
-		GetRequest req = Unirest.get("http://localhost:8080/v1/meta/car")
+		GetRequest req = Unirest.get("http://localhost:8080/v1/schema/car")
 				.basicAuth("dave", "hi_dave")
 				.header("x-magic-account-id", "test");
 
@@ -27,14 +27,14 @@ public class MetaResourceTest extends AbstractTest {
 
 	public static void resetCarSchema() throws UnirestException {
 		HttpRequestWithBody req1 = Unirest
-				.delete("http://localhost:8080/v1/meta/car")
+				.delete("http://localhost:8080/v1/schema/car")
 				.basicAuth("dave", "hi_dave")
 				.header("x-magic-account-id", "test");
 
 		delete(req1, 200);
 
 		RequestBodyEntity req2 = Unirest
-				.post("http://localhost:8080/v1/meta/car")
+				.post("http://localhost:8080/v1/schema/car")
 				.basicAuth("dave", "hi_dave")
 				.header("x-magic-account-id", "test")
 				.body(buildCarSchema().toString());
@@ -64,7 +64,7 @@ public class MetaResourceTest extends AbstractTest {
 
 		shouldResetHomeSchema();
 
-		GetRequest req = Unirest.get("http://localhost:8080/v1/meta/home")
+		GetRequest req = Unirest.get("http://localhost:8080/v1/schema/home")
 				.basicAuth("dave", "hi_dave")
 				.header("x-magic-account-id", "test");
 
@@ -74,14 +74,14 @@ public class MetaResourceTest extends AbstractTest {
 
 	private static void shouldResetHomeSchema() throws UnirestException {
 		HttpRequestWithBody req1 = Unirest
-				.delete("http://localhost:8080/v1/meta/home")
+				.delete("http://localhost:8080/v1/schema/home")
 				.basicAuth("dave", "hi_dave")
 				.header("x-magic-account-id", "test");
 
 		delete(req1, 200);
 
 		RequestBodyEntity req2 = Unirest
-				.post("http://localhost:8080/v1/meta/home")
+				.post("http://localhost:8080/v1/schema/home")
 				.basicAuth("dave", "hi_dave")
 				.header("x-magic-account-id", "test")
 				.body(buildHomeSchema().toString());
@@ -108,7 +108,7 @@ public class MetaResourceTest extends AbstractTest {
 		resetCarSchema();
 		shouldResetHomeSchema();
 
-		GetRequest req = Unirest.get("http://localhost:8080/v1/meta")
+		GetRequest req = Unirest.get("http://localhost:8080/v1/schema")
 				.basicAuth("dave", "hi_dave")
 				.header("x-magic-account-id", "test");
 
@@ -130,14 +130,14 @@ public class MetaResourceTest extends AbstractTest {
 	private HttpResponse<String> shouldFailDueToInvalidSchema(String jsonSchema)
 			throws UnirestException {
 		HttpRequestWithBody req1 = Unirest
-				.delete("http://localhost:8080/v1/meta/toto")
+				.delete("http://localhost:8080/v1/schema/toto")
 				.basicAuth("dave", "hi_dave")
 				.header("x-magic-account-id", "test");
 
 		delete(req1, 200);
 
 		RequestBodyEntity request = Unirest
-				.put("http://localhost:8080/v1/meta/toto")
+				.put("http://localhost:8080/v1/schema/toto")
 				.basicAuth("dave", "hi_dave")
 				.header("x-magic-account-id", "test").body(jsonSchema);
 
@@ -159,7 +159,7 @@ public class MetaResourceTest extends AbstractTest {
 	private void shouldFailToChangeSchema(JsonObject json)
 			throws UnirestException {
 		RequestBodyEntity req2 = Unirest
-				.put("http://localhost:8080/v1/meta/car")
+				.put("http://localhost:8080/v1/schema/car")
 				.basicAuth("dave", "hi_dave")
 				.header("x-magic-account-id", "test").body(json.toString());
 

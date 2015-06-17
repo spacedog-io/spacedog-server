@@ -18,7 +18,7 @@ public class QueryTest extends AbstractTest {
 	@Test
 	public void resetAndImportDataset() throws UnirestException {
 		AccountResourceTest.resetTestAccount();
-		MetaResourceTest.resetCarSchema();
+		SchemaResourceTest.resetCarSchema();
 
 		for (int i = 0; i < 500; i++) {
 			RequestBodyEntity req2 = Unirest

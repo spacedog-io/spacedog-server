@@ -22,7 +22,7 @@ public class Start {
 
 	private static void configure(Routes routes) {
 		routes.add(DataResource.class) //
-				.add(MetaResource.class) //
+				.add(SchemaResource.class) //
 				.add(UserResource.class) //
 				.add(AccountResource.class);
 	}

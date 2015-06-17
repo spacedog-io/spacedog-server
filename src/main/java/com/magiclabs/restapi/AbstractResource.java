@@ -17,7 +17,7 @@ import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.magiclabs.restapi.Account.InvalidAccountException;
-import com.magiclabs.restapi.MetaResource.NotFoundException;
+import com.magiclabs.restapi.SchemaResource.NotFoundException;
 import com.magiclabs.restapi.SchemaValidator.InvalidSchemaException;
 
 public abstract class AbstractResource {
@@ -32,8 +32,12 @@ public abstract class AbstractResource {
 		return objectMapper;
 	}
 
-	public static String toJsonError(Throwable e) {
-		return add(new JsonObject(), e).toString();
+	public static String toJsonString(Throwable e) {
+		return toJsonObject(e).toString();
+	}
+
+	public static JsonObject toJsonObject(Throwable e) {
+		return add(new JsonObject(), e);
 	}
 
 	private static JsonObject add(JsonObject error, Throwable t) {
@@ -59,38 +63,38 @@ public abstract class AbstractResource {
 	}
 
 	public static Payload internalServerError(Throwable throwable) {
-		return new Payload(JSON_CONTENT, toJsonError(throwable),
+		return new Payload(JSON_CONTENT, toJsonString(throwable),
 				HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
 	public static Payload internalServerError(String message, Object... args) {
-		return new Payload(JSON_CONTENT, toJsonError(new RuntimeException(
+		return new Payload(JSON_CONTENT, toJsonString(new RuntimeException(
 				String.format(message, args))),
 				HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
 	public static Payload badRequest(Throwable throwable) {
-		return new Payload(JSON_CONTENT, toJsonError(throwable),
+		return new Payload(JSON_CONTENT, toJsonString(throwable),
 				HttpStatus.BAD_REQUEST);
 	}
 
 	public static Payload forbidden(Throwable throwable) {
-		return new Payload(JSON_CONTENT, toJsonError(throwable),
+		return new Payload(JSON_CONTENT, toJsonString(throwable),
 				HttpStatus.FORBIDDEN);
 	}
 
 	public static Payload unauthorized(Throwable throwable) {
-		return new Payload(JSON_CONTENT, toJsonError(throwable),
+		return new Payload(JSON_CONTENT, toJsonString(throwable),
 				HttpStatus.UNAUTHORIZED);
 	}
 
 	public static Payload notFound(String message, Object... args) {
-		return new Payload(JSON_CONTENT, toJsonError(new RuntimeException(
+		return new Payload(JSON_CONTENT, toJsonString(new RuntimeException(
 				String.format(message, args))), HttpStatus.NOT_FOUND);
 	}
 
 	public static Payload notFound(Throwable throwable) {
-		return new Payload(JSON_CONTENT, toJsonError(throwable),
+		return new Payload(JSON_CONTENT, toJsonString(throwable),
 				HttpStatus.NOT_FOUND);
 	}
 

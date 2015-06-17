@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
+import com.google.common.base.Strings;
 
 public class Json {
 
@@ -82,5 +83,73 @@ public class Json {
 			return merged == null ? new JsonObject() : merged;
 		}
 
+	}
+
+	public static String prettyString(JsonValue json) {
+		StringBuilder builder = new StringBuilder();
+		prettyString(json, builder, 1);
+		return builder.toString();
+	}
+
+	private static void prettyString(JsonValue json, StringBuilder builder,
+			int level) {
+		if (json.isArray()) {
+			builder.append("[ ");
+			for (int i = 0; i < json.asArray().size(); i++) {
+				JsonValue item = json.asArray().get(i);
+				prettyString(item, builder, level + 1);
+				if (i == json.asArray().size() - 1)
+					builder.append(" ]");
+				else if (item.isString() && item.asString().length() > 35)
+					builder.append(",\n");
+				else
+					builder.append(", ");
+			}
+		} else if (json.isObject()) {
+			builder.append("{\n");
+			json.asObject().forEach(member -> {
+				prettyTab(builder, level);
+				builder.append(member.getName()).append(" : ");
+				prettyString(member.getValue(), builder, level + 1);
+				builder.append('\n');
+			});
+			prettyTab(builder, level - 1);
+			builder.append("}");
+		} else {
+			builder.append(json.toString());
+		}
+	}
+
+	private static void prettyTab(StringBuilder builder, int level) {
+		for (int i = 0; i < level * 4; i++)
+			builder.append(' ');
+	}
+
+	public static boolean isJson(String body) {
+
+		if (Strings.isNullOrEmpty(body))
+			return false;
+
+		switch (body.charAt(0)) {
+		case 'n':
+		case 't':
+		case 'f':
+		case '"':
+		case '[':
+		case '{':
+		case '-':
+		case '0':
+		case '1':
+		case '2':
+		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
+		case '8':
+		case '9':
+			return true;
+		}
+		return false;
 	}
 }

@@ -19,8 +19,8 @@ import org.elasticsearch.indices.TypeMissingException;
 import com.eclipsesource.json.JsonObject;
 import com.magiclabs.restapi.Json.JsonMerger;
 
-@Prefix("/v1/meta")
-public class MetaResource extends AbstractResource {
+@Prefix("/v1/schema")
+public class SchemaResource extends AbstractResource {
 
 	@Get("")
 	@Get("/")
@@ -97,7 +97,7 @@ public class MetaResource extends AbstractResource {
 			upsertSchemaInternal(type, newSchemaAsString,
 					credentials.getAccountId());
 
-			return created("meta", type);
+			return created("schema", type);
 
 		} catch (Throwable throwable) {
 			return AbstractResource.toPayload(throwable);
@@ -122,7 +122,7 @@ public class MetaResource extends AbstractResource {
 
 	@Delete("/:type")
 	@Delete("/:type/")
-	public Payload deleteMeta(String type, Context context) {
+	public Payload deleteSchema(String type, Context context) {
 		try {
 			Credentials credentials = AccountResource.checkCredentials(context);
 			Start.getElasticClient().admin().indices()

@@ -49,6 +49,11 @@ public class DataResource extends AbstractResource {
 	public Payload create(String type, String jsonBody, Context context) {
 		try {
 			Credentials credentials = AccountResource.checkCredentials(context);
+
+			// check if type is well defined
+			// object should be validated before saved
+			SchemaResource.getSchema(credentials.getAccountId(), type);
+
 			IndexResponse response = Start.getElasticClient()
 					.prepareIndex(credentials.getAccountId(), type)
 					.setSource(jsonBody).get();
@@ -61,13 +66,19 @@ public class DataResource extends AbstractResource {
 	@Delete("/:type")
 	@Delete("/:type/")
 	public Payload deleteAll(String type, Context context) {
-		return new MetaResource().deleteMeta(type, context);
+		return new SchemaResource().deleteSchema(type, context);
 	}
 
 	@Get("/:type/:id")
 	public Payload get(String type, String objectId, Context context) {
 		try {
 			Credentials credentials = AccountResource.checkCredentials(context);
+
+			// check if type is well defined
+			// throws a NotFoundException if not
+			// TODO useful for security?
+			SchemaResource.getSchema(credentials.getAccountId(), type);
+
 			GetResponse response = Start.getElasticClient()
 					.prepareGet(credentials.getAccountId(), type, objectId)
 					.get();
@@ -99,6 +110,11 @@ public class DataResource extends AbstractResource {
 			Context context) {
 		try {
 			Credentials credentials = AccountResource.checkCredentials(context);
+
+			// check if type is well defined
+			// object should be validated before saved
+			SchemaResource.getSchema(credentials.getAccountId(), type);
+
 			Start.getElasticClient()
 					.prepareUpdate(credentials.getAccountId(), type, objectId)
 					.setDoc(bytes).get();
@@ -112,6 +128,12 @@ public class DataResource extends AbstractResource {
 	public Payload delete(String type, String objectId, Context context) {
 		try {
 			Credentials credentials = AccountResource.checkCredentials(context);
+
+			// check if type is well defined
+			// throws a NotFoundException if not
+			// TODO useful for security?
+			SchemaResource.getSchema(credentials.getAccountId(), type);
+
 			DeleteResponse response = Start.getElasticClient()
 					.prepareDelete(credentials.getAccountId(), type, objectId)
 					.get();
@@ -129,8 +151,12 @@ public class DataResource extends AbstractResource {
 		SearchRequestBuilder builder = Start.getElasticClient().prepareSearch(
 				index);
 
-		if (!Strings.isNullOrEmpty(type))
+		if (!Strings.isNullOrEmpty(type)) {
+			// check if type is well defined
+			// throws a NotFoundException if not
+			SchemaResource.getSchema(index, type);
 			builder.setTypes(type);
+		}
 
 		if (Strings.isNullOrEmpty(json)) {
 			int from = context.request().query().getInteger("from", 0);

@@ -3,8 +3,6 @@ package com.magiclabs.restapi;
 import org.junit.Assert;
 
 import com.eclipsesource.json.JsonObject;
-import com.eclipsesource.json.ParseException;
-import com.google.common.base.Strings;
 import com.google.common.primitives.Ints;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
@@ -35,9 +33,9 @@ public abstract class AbstractTest extends Assert {
 		return exec(req.getHttpRequest(), req.getBody(), expectedStatus);
 	}
 
-	protected static JsonObject delete(HttpRequestWithBody req,
-			int... expectedStatus) throws UnirestException {
-		return exec(req.getHttpRequest(), req.getBody(), expectedStatus);
+	protected static void delete(HttpRequestWithBody req, int... expectedStatus)
+			throws UnirestException {
+		exec(req.getHttpRequest(), req.getBody(), expectedStatus);
 	}
 
 	protected static JsonObject put(RequestBodyEntity req,
@@ -55,34 +53,17 @@ public abstract class AbstractTest extends Assert {
 		if (requestBody != null)
 			System.out.println(String.format("request body = %s", requestBody));
 
-		try {
-			JsonObject result = null;
-			if (!Strings.isNullOrEmpty(resp.getBody())) {
-				result = JsonObject.readFrom(resp.getBody());
+		String body = resp.getBody();
+		JsonObject result = null;
 
-				if (resp.getStatus() >= 400) {
-					System.out.println(String.format("Error type = %s",
-							result.get("type")));
-					System.out.println(String.format("Error message = %s",
-							result.get("message")));
-					System.out.println("Error trace = ");
-					result.get("trace")
-							.asArray()
-							.forEach(
-									jsonValue -> System.out.println(String
-											.format("    %s", jsonValue)));
-				} else {
-					System.out.println(String.format("response body = %s",
-							result));
-				}
-			}
-			assertTrue(Ints.contains(expectedStatus, resp.getStatus()));
-			return result;
-		} catch (ParseException e) {
-			System.out.println(String.format("Response parse error [%s]",
-					resp.getBody()));
-			throw e;
+		if (Json.isJson(body)) {
+			result = JsonObject.readFrom(body);
+			body = Json.prettyString(result);
 		}
+
+		System.out.println(String.format("Response body = %s", body));
+		assertTrue(Ints.contains(expectedStatus, resp.getStatus()));
+		return result;
 	}
 
 	protected static void printHttpRequest(HttpRequest req,

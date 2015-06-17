@@ -45,7 +45,7 @@ public class UserResource extends AbstractResource {
 
 	void initSchema(String accountId) throws InterruptedException,
 			ExecutionException {
-		new MetaResource().upsertSchemaInternal(USER_TYPE, USER_DEFAULT_SCHEMA,
+		new SchemaResource().upsertSchemaInternal(USER_TYPE, USER_DEFAULT_SCHEMA,
 				accountId);
 	}
 
