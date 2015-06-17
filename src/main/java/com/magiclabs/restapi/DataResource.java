@@ -19,7 +19,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.indices.IndexMissingException;
 
-@Prefix("/v1")
+@Prefix("/v1/data")
 public class DataResource extends AbstractResource {
 
 	@Get("")

@@ -50,7 +50,7 @@ public class DataResourceTest extends AbstractTest {
 
 	private void checkDeleteById(String id) throws Exception {
 		HttpRequestWithBody req = Unirest
-				.delete("http://{host}:8080/v1/car/{id}")
+				.delete("http://{host}:8080/v1/data/car/{id}")
 				.routeParam("host", MAGIC_HOST).routeParam("id", id)
 				.basicAuth("dave", "hi_dave")
 				.header("x-magic-account-id", "test");
@@ -59,7 +59,7 @@ public class DataResourceTest extends AbstractTest {
 	}
 
 	private String checkCreate(JsonObject car) throws Exception {
-		RequestBodyEntity req = Unirest.post("http://{host}:8080/v1/car")
+		RequestBodyEntity req = Unirest.post("http://{host}:8080/v1/data/car")
 				.routeParam("host", MAGIC_HOST).basicAuth("dave", "hi_dave")
 				.header("x-magic-account-id", "test").body(car.toString());
 
@@ -73,7 +73,7 @@ public class DataResourceTest extends AbstractTest {
 	}
 
 	private void checkFindById(JsonObject car, String id) throws Exception {
-		GetRequest req = Unirest.get("http://{host}:8080/v1/car/{id}")
+		GetRequest req = Unirest.get("http://{host}:8080/v1/data/car/{id}")
 				.routeParam("host", MAGIC_HOST).routeParam("id", id)
 				.basicAuth("dave", "hi_dave")
 				.header("x-magic-account-id", "test");
@@ -83,7 +83,8 @@ public class DataResourceTest extends AbstractTest {
 	}
 
 	private void checkUpdate(JsonValue car, String id) throws UnirestException {
-		RequestBodyEntity req1 = Unirest.put("http://{host}:8080/v1/car/{id}")
+		RequestBodyEntity req1 = Unirest
+				.put("http://{host}:8080/v1/data/car/{id}")
 				.routeParam("host", MAGIC_HOST).routeParam("id", id)
 				.basicAuth("dave", "hi_dave")
 				.header("x-magic-account-id", "test")
@@ -91,7 +92,7 @@ public class DataResourceTest extends AbstractTest {
 
 		put(req1, 200);
 
-		GetRequest req2 = Unirest.get("http://{host}:8080/v1/car/{id}")
+		GetRequest req2 = Unirest.get("http://{host}:8080/v1/data/car/{id}")
 				.routeParam("host", MAGIC_HOST).routeParam("id", id)
 				.basicAuth("dave", "hi_dave")
 				.header("x-magic-account-id", "test");

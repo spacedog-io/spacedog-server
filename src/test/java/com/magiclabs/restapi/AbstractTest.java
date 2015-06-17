@@ -58,10 +58,10 @@ public abstract class AbstractTest extends Assert {
 
 		if (Json.isJson(body)) {
 			result = JsonObject.readFrom(body);
-			body = Json.prettyString(result);
+			System.out.println(String.format("Response body = %s",
+					Json.prettyString(result)));
 		}
 
-		System.out.println(String.format("Response body = %s", body));
 		assertTrue(Ints.contains(expectedStatus, resp.getStatus()));
 		return result;
 	}

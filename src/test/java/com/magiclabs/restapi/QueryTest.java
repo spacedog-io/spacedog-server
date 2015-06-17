@@ -22,7 +22,7 @@ public class QueryTest extends AbstractTest {
 
 		for (int i = 0; i < 500; i++) {
 			RequestBodyEntity req2 = Unirest
-					.post("http://localhost:8080/v1/car")
+					.post("http://localhost:8080/v1/data/car")
 					.basicAuth("dave", "hi_dave")
 					.header("x-magic-account-id", "test")
 					.body(jsonCar(i).toString());
