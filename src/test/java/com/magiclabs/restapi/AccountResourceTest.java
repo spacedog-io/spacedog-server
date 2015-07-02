@@ -21,8 +21,7 @@ public class AccountResourceTest extends AbstractTest {
 		assertEquals(Json.builder().add("id", "test").build(), res1);
 
 		GetRequest req2 = Unirest.get("http://localhost:8080/v1/user/dave")
-				.basicAuth("dave", "hi_dave")
-				.header("x-magic-account-id", "test");
+				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
 		JsonObject res2 = get(req2, 200);
 		assertTrue(Json.equals(
 				Json.builder().add("username", "dave")

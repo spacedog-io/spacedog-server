@@ -39,7 +39,7 @@ public class AccountResource extends AbstractResource {
 	private static final Set<String> INTERNAL_INDICES = Sets
 			.newHashSet(ADMIN_INDEX);
 
-	private static final String ACCOUNT_ID_HEADER = "x-magic-account-id";
+	private static final String ACCOUNT_ID_HEADER = "x-magic-app-id";
 	private static final String AUTHORIZATION_HEADER = "Authorization";
 	private static final String BASIC_AUTHENTICATION_SCHEME = "Basic";
 

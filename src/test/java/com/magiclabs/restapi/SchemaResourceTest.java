@@ -18,8 +18,7 @@ public class SchemaResourceTest extends AbstractTest {
 		resetCarSchema();
 
 		GetRequest req = Unirest.get("http://localhost:8080/v1/schema/car")
-				.basicAuth("dave", "hi_dave")
-				.header("x-magic-account-id", "test");
+				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
 
 		JsonObject res = get(req, 200);
 		assertTrue(Json.equals(buildCarSchema(), res));
@@ -28,15 +27,13 @@ public class SchemaResourceTest extends AbstractTest {
 	public static void resetCarSchema() throws UnirestException {
 		HttpRequestWithBody req1 = Unirest
 				.delete("http://localhost:8080/v1/schema/car")
-				.basicAuth("dave", "hi_dave")
-				.header("x-magic-account-id", "test");
+				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
 
 		delete(req1, 200);
 
 		RequestBodyEntity req2 = Unirest
 				.post("http://localhost:8080/v1/schema/car")
-				.basicAuth("dave", "hi_dave")
-				.header("x-magic-account-id", "test")
+				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test")
 				.body(buildCarSchema().toString());
 
 		post(req2, 201);
@@ -65,8 +62,7 @@ public class SchemaResourceTest extends AbstractTest {
 		shouldResetHomeSchema();
 
 		GetRequest req = Unirest.get("http://localhost:8080/v1/schema/home")
-				.basicAuth("dave", "hi_dave")
-				.header("x-magic-account-id", "test");
+				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
 
 		JsonObject res = get(req, 200);
 		assertTrue(Json.equals(buildHomeSchema(), res));
@@ -75,15 +71,13 @@ public class SchemaResourceTest extends AbstractTest {
 	private static void shouldResetHomeSchema() throws UnirestException {
 		HttpRequestWithBody req1 = Unirest
 				.delete("http://localhost:8080/v1/schema/home")
-				.basicAuth("dave", "hi_dave")
-				.header("x-magic-account-id", "test");
+				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
 
 		delete(req1, 200);
 
 		RequestBodyEntity req2 = Unirest
 				.post("http://localhost:8080/v1/schema/home")
-				.basicAuth("dave", "hi_dave")
-				.header("x-magic-account-id", "test")
+				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test")
 				.body(buildHomeSchema().toString());
 
 		post(req2, 201);
@@ -109,8 +103,7 @@ public class SchemaResourceTest extends AbstractTest {
 		shouldResetHomeSchema();
 
 		GetRequest req = Unirest.get("http://localhost:8080/v1/schema")
-				.basicAuth("dave", "hi_dave")
-				.header("x-magic-account-id", "test");
+				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
 
 		JsonObject result = get(req, 200);
 		// user, car and home
@@ -131,15 +124,14 @@ public class SchemaResourceTest extends AbstractTest {
 			throws UnirestException {
 		HttpRequestWithBody req1 = Unirest
 				.delete("http://localhost:8080/v1/schema/toto")
-				.basicAuth("dave", "hi_dave")
-				.header("x-magic-account-id", "test");
+				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
 
 		delete(req1, 200);
 
 		RequestBodyEntity request = Unirest
 				.put("http://localhost:8080/v1/schema/toto")
-				.basicAuth("dave", "hi_dave")
-				.header("x-magic-account-id", "test").body(jsonSchema);
+				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test")
+				.body(jsonSchema);
 
 		HttpResponse<String> response = request.asString();
 		print(request, response);
@@ -160,8 +152,8 @@ public class SchemaResourceTest extends AbstractTest {
 			throws UnirestException {
 		RequestBodyEntity req2 = Unirest
 				.put("http://localhost:8080/v1/schema/car")
-				.basicAuth("dave", "hi_dave")
-				.header("x-magic-account-id", "test").body(json.toString());
+				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test")
+				.body(json.toString());
 
 		put(req2, 400);
 	}

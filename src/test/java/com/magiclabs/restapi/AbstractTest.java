@@ -90,9 +90,9 @@ public abstract class AbstractTest extends Assert {
 				request.getHttpMethod(), request.getUrl(),
 				response.getStatus(), response.getStatusText()));
 
-		if (request.getHeaders().containsKey("x-magic-account-id")) {
-			System.out.println("x-magic-account-id = "
-					+ request.getHeaders().get("x-magic-account-id"));
+		if (request.getHeaders().containsKey("x-magic-app-id")) {
+			System.out.println("x-magic-app-id = "
+					+ request.getHeaders().get("x-magic-app-id"));
 		}
 		if (request.getHeaders().containsKey("Authorization")) {
 			System.out.println("Authorization = "

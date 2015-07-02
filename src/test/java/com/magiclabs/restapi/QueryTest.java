@@ -24,7 +24,7 @@ public class QueryTest extends AbstractTest {
 			RequestBodyEntity req2 = Unirest
 					.post("http://localhost:8080/v1/data/car")
 					.basicAuth("dave", "hi_dave")
-					.header("x-magic-account-id", "test")
+					.header("x-magic-app-id", "test")
 					.body(jsonCar(i).toString());
 
 			post(req2, 201);

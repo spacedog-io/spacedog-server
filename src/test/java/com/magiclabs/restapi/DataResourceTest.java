@@ -52,8 +52,7 @@ public class DataResourceTest extends AbstractTest {
 		HttpRequestWithBody req = Unirest
 				.delete("http://{host}:8080/v1/data/car/{id}")
 				.routeParam("host", MAGIC_HOST).routeParam("id", id)
-				.basicAuth("dave", "hi_dave")
-				.header("x-magic-account-id", "test");
+				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
 
 		delete(req, 200);
 	}
@@ -61,7 +60,7 @@ public class DataResourceTest extends AbstractTest {
 	private String checkCreate(JsonObject car) throws Exception {
 		RequestBodyEntity req = Unirest.post("http://{host}:8080/v1/data/car")
 				.routeParam("host", MAGIC_HOST).basicAuth("dave", "hi_dave")
-				.header("x-magic-account-id", "test").body(car.toString());
+				.header("x-magic-app-id", "test").body(car.toString());
 
 		JsonObject result = post(req, 201);
 
@@ -75,8 +74,7 @@ public class DataResourceTest extends AbstractTest {
 	private void checkFindById(JsonObject car, String id) throws Exception {
 		GetRequest req = Unirest.get("http://{host}:8080/v1/data/car/{id}")
 				.routeParam("host", MAGIC_HOST).routeParam("id", id)
-				.basicAuth("dave", "hi_dave")
-				.header("x-magic-account-id", "test");
+				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
 
 		JsonObject res = get(req, 200);
 		assertTrue(Json.equals(car, res));
@@ -86,16 +84,14 @@ public class DataResourceTest extends AbstractTest {
 		RequestBodyEntity req1 = Unirest
 				.put("http://{host}:8080/v1/data/car/{id}")
 				.routeParam("host", MAGIC_HOST).routeParam("id", id)
-				.basicAuth("dave", "hi_dave")
-				.header("x-magic-account-id", "test")
+				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test")
 				.body(new JsonObject().add("color", "blue").toString());
 
 		put(req1, 200);
 
 		GetRequest req2 = Unirest.get("http://{host}:8080/v1/data/car/{id}")
 				.routeParam("host", MAGIC_HOST).routeParam("id", id)
-				.basicAuth("dave", "hi_dave")
-				.header("x-magic-account-id", "test");
+				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
 
 		JsonObject res2 = get(req2, 200);
 		assertEquals("1234567890", res2.get("serialNumber").asString());

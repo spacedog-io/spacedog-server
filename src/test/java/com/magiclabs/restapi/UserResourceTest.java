@@ -26,7 +26,7 @@ public class UserResourceTest extends AbstractTest {
 		RequestBodyEntity req1 = Unirest
 				.post("http://localhost:8080/v1/user/")
 				.basicAuth("dave", "hi_dave")
-				.header("x-magic-account-id", "test")
+				.header("x-magic-app-id", "test")
 				.body(Json.builder().add("username", "vince")
 						.add("password", "hi_vince")
 						.add("email", "vince@magic.com").build().toString());
@@ -39,7 +39,7 @@ public class UserResourceTest extends AbstractTest {
 
 		GetRequest req2 = Unirest.get("http://localhost:8080/v1/user/vince")
 				.basicAuth("vince", "hi_vince")
-				.header("x-magic-account-id", "test");
+				.header("x-magic-app-id", "test");
 
 		JsonObject res2 = get(req2, 200);
 		assertTrue(Json.equals(
@@ -50,23 +50,21 @@ public class UserResourceTest extends AbstractTest {
 		// wrong username
 
 		GetRequest req5 = Unirest.get("http://localhost:8080/v1/user/vince")
-				.basicAuth("XXX", "hi_vince")
-				.header("x-magic-account-id", "test");
+				.basicAuth("XXX", "hi_vince").header("x-magic-app-id", "test");
 
 		get(req5, 401);
 
 		// wrong password
 
 		GetRequest req3 = Unirest.get("http://localhost:8080/v1/user/vince")
-				.basicAuth("vince", "XXX").header("x-magic-account-id", "test");
+				.basicAuth("vince", "XXX").header("x-magic-app-id", "test");
 
 		get(req3, 401);
 
 		// wrong account id
 
 		GetRequest req4 = Unirest.get("http://localhost:8080/v1/user/vince")
-				.basicAuth("vince", "hi_vince")
-				.header("x-magic-account-id", "XXX");
+				.basicAuth("vince", "hi_vince").header("x-magic-app-id", "XXX");
 
 		get(req4, 401);
 
@@ -74,7 +72,7 @@ public class UserResourceTest extends AbstractTest {
 
 		GetRequest req6 = Unirest.get("http://localhost:8080/v1/login")
 				.basicAuth("vince", "hi_vince")
-				.header("x-magic-account-id", "test");
+				.header("x-magic-app-id", "test");
 
 		get(req6, 200);
 
