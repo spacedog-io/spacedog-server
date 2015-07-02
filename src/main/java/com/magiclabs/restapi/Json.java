@@ -152,4 +152,8 @@ public class Json {
 		}
 		return false;
 	}
+
+	public static boolean isNull(JsonValue value) {
+		return value == null || JsonValue.NULL.equals(value);
+	}
 }
