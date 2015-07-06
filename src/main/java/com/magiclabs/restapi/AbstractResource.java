@@ -66,6 +66,33 @@ public abstract class AbstractResource {
 		return error(httpStatus, null);
 	}
 
+	public static Payload error(Throwable t) {
+
+		if (t instanceof AuthenticationException) {
+			return error(HttpStatus.UNAUTHORIZED, t);
+		}
+		if (t instanceof InvalidAccountException) {
+			return error(HttpStatus.BAD_REQUEST, t);
+		}
+		if (t instanceof NotFoundException) {
+			return error(HttpStatus.NOT_FOUND, t);
+		}
+		if (t instanceof IllegalArgumentException) {
+			return error(HttpStatus.BAD_REQUEST, t);
+		}
+		if (t instanceof InvalidSchemaException) {
+			return error(HttpStatus.BAD_REQUEST, t);
+		}
+		if (t instanceof ExecutionException) {
+			if (t.getCause() instanceof MergeMappingException)
+				return error(HttpStatus.BAD_REQUEST, t.getCause());
+			else
+				return error(HttpStatus.INTERNAL_SERVER_ERROR, t);
+		}
+
+		return error(HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+
 	public static Payload error(int httpStatus, Throwable throwable) {
 		JsonBuilder builder = Json.builder().add("success", false);
 		if (throwable != null)
@@ -76,38 +103,6 @@ public abstract class AbstractResource {
 	public static Payload error(int httpStatus, String message, Object... args) {
 		return error(httpStatus,
 				new RuntimeException(String.format(message, args)));
-	}
-
-	public static Payload internalServerError(Throwable throwable) {
-		return error(HttpStatus.INTERNAL_SERVER_ERROR, throwable);
-	}
-
-	public static Payload internalServerError(String message, Object... args) {
-		return error(HttpStatus.INTERNAL_SERVER_ERROR, message, args);
-	}
-
-	public static Payload badRequest(Throwable throwable) {
-		return error(HttpStatus.BAD_REQUEST, throwable);
-	}
-
-	public static Payload forbidden(Throwable throwable) {
-		return error(HttpStatus.FORBIDDEN, throwable);
-	}
-
-	public static Payload unauthorized(Throwable throwable) {
-		return error(HttpStatus.UNAUTHORIZED, throwable);
-	}
-
-	public static Payload notFound(String message, Object... args) {
-		return error(HttpStatus.NOT_FOUND, message, args);
-	}
-
-	public static Payload notFound(Throwable throwable) {
-		return error(HttpStatus.NOT_FOUND, throwable);
-	}
-
-	protected Payload unsupportedOperation() {
-		return error(HttpStatus.NOT_IMPLEMENTED);
 	}
 
 	protected Payload created(String uri, String type, String id) {
@@ -149,32 +144,5 @@ public abstract class AbstractResource {
 		// }
 
 		return new Payload(JSON_CONTENT, payload, HttpStatus.OK);
-	}
-
-	public static Payload toPayload(Throwable t) {
-
-		if (t instanceof AuthenticationException) {
-			return unauthorized(t);
-		}
-		if (t instanceof InvalidAccountException) {
-			return badRequest(t);
-		}
-		if (t instanceof NotFoundException) {
-			return notFound(t);
-		}
-		if (t instanceof IllegalArgumentException) {
-			return badRequest(t);
-		}
-		if (t instanceof InvalidSchemaException) {
-			return badRequest(t);
-		}
-		if (t instanceof ExecutionException) {
-			if (t.getCause() instanceof MergeMappingException)
-				return badRequest(t.getCause());
-			else
-				return internalServerError(t);
-		}
-
-		return internalServerError(t);
 	}
 }

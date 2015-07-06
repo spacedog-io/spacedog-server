@@ -58,7 +58,7 @@ public class AccountResource extends AbstractResource {
 
 			return extractResults(response);
 		} catch (Throwable throwable) {
-			return AbstractResource.toPayload(throwable);
+			return error(throwable);
 		}
 	}
 
@@ -102,7 +102,7 @@ public class AccountResource extends AbstractResource {
 			return created("/v1", ACCOUNT_TYPE, account.id);
 
 		} catch (Throwable throwable) {
-			return AbstractResource.toPayload(throwable);
+			return error(throwable);
 		}
 	}
 
@@ -117,12 +117,13 @@ public class AccountResource extends AbstractResource {
 					.prepareGet(ADMIN_INDEX, ACCOUNT_TYPE, id).get();
 
 			if (!response.isExists())
-				return notFound("account for id [%s] not found", id);
+				return error(HttpStatus.NOT_FOUND,
+						"account for id [%s] not found", id);
 
 			return new Payload(JSON_CONTENT, response.getSourceAsBytes(),
 					HttpStatus.OK);
 		} catch (Throwable throwable) {
-			return AbstractResource.toPayload(throwable);
+			return error(throwable);
 		}
 	}
 
@@ -135,7 +136,7 @@ public class AccountResource extends AbstractResource {
 		try {
 			return new Payload(HttpStatus.NOT_IMPLEMENTED);
 		} catch (Throwable throwable) {
-			return AbstractResource.toPayload(throwable);
+			return error(throwable);
 		}
 	}
 
@@ -146,28 +147,25 @@ public class AccountResource extends AbstractResource {
 	@Delete("/:id/")
 	public Payload delete(String accountId, Context context) {
 		try {
-			try {
-				DeleteResponse resp1 = Start.getElasticClient()
-						.prepareDelete(ADMIN_INDEX, ACCOUNT_TYPE, accountId)
-						.get();
+			DeleteResponse resp1 = Start.getElasticClient()
+					.prepareDelete(ADMIN_INDEX, ACCOUNT_TYPE, accountId).get();
 
-				if (!resp1.isFound())
-					return notFound("account id [%s] not found", accountId);
+			if (!resp1.isFound())
+				return error(HttpStatus.NOT_FOUND, "account id [%s] not found",
+						accountId);
 
-				DeleteIndexResponse resp2 = Start.getElasticClient().admin()
-						.indices().prepareDelete(accountId).get();
+			DeleteIndexResponse resp2 = Start.getElasticClient().admin()
+					.indices().prepareDelete(accountId).get();
 
-				if (!resp2.isAcknowledged())
-					return internalServerError(
-							"account id [%s] internal index deletion not acknowledged",
-							accountId);
+			if (!resp2.isAcknowledged())
+				return error(
+						HttpStatus.INTERNAL_SERVER_ERROR,
+						"account id [%s] internal index deletion not acknowledged",
+						accountId);
 
-				return success();
-			} catch (Throwable throwable) {
-				return AbstractResource.toPayload(throwable);
-			}
+			return success();
 		} catch (Throwable throwable) {
-			return AbstractResource.toPayload(throwable);
+			return error(throwable);
 		}
 	}
 

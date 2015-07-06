@@ -54,7 +54,7 @@ public class SchemaResource extends AbstractResource {
 					HttpStatus.OK);
 
 		} catch (Throwable throwable) {
-			return AbstractResource.toPayload(throwable);
+			return error(throwable);
 		}
 	}
 
@@ -66,7 +66,7 @@ public class SchemaResource extends AbstractResource {
 			return new Payload(JSON_CONTENT, getSchema(
 					credentials.getAccountId(), type).toString(), HttpStatus.OK);
 		} catch (Throwable throwable) {
-			return AbstractResource.toPayload(throwable);
+			return error(throwable);
 		}
 	}
 
@@ -100,7 +100,7 @@ public class SchemaResource extends AbstractResource {
 			return created("/v1", "schema", type);
 
 		} catch (Throwable throwable) {
-			return toPayload(throwable);
+			return error(throwable);
 		}
 	}
 
@@ -128,12 +128,14 @@ public class SchemaResource extends AbstractResource {
 			Start.getElasticClient().admin().indices()
 					.prepareDeleteMapping(credentials.getAccountId())
 					.setType(type).get();
+
 		} catch (TypeMissingException exception) {
 			// TODO I consider that delete a non existing type is not an error
 		} catch (Throwable throwable) {
-			return AbstractResource.toPayload(throwable);
+			return error(throwable);
 		}
-		return Payload.ok();
+
+		return success();
 	}
 
 	@SuppressWarnings("serial")

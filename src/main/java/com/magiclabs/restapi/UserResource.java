@@ -56,7 +56,7 @@ public class UserResource extends AbstractResource {
 			AccountResource.checkCredentials(context);
 			return Payload.ok();
 		} catch (Throwable throwable) {
-			return AbstractResource.toPayload(throwable);
+			return error(throwable);
 		}
 	}
 
@@ -67,7 +67,7 @@ public class UserResource extends AbstractResource {
 			AccountResource.checkCredentials(context);
 			return Payload.ok();
 		} catch (Throwable throwable) {
-			return AbstractResource.toPayload(throwable);
+			return error(throwable);
 		}
 	}
 
@@ -84,7 +84,7 @@ public class UserResource extends AbstractResource {
 
 			return extractResults(response);
 		} catch (Throwable throwable) {
-			return AbstractResource.toPayload(throwable);
+			return error(throwable);
 		}
 	}
 
@@ -110,7 +110,7 @@ public class UserResource extends AbstractResource {
 			return created("/v1", USER_TYPE, resp2.getId());
 
 		} catch (Throwable throwable) {
-			return AbstractResource.toPayload(throwable);
+			return error(throwable);
 		}
 	}
 
@@ -124,12 +124,13 @@ public class UserResource extends AbstractResource {
 					.get();
 
 			if (!response.isExists())
-				return notFound("user for id [%s] not found", id);
+				return error(HttpStatus.NOT_FOUND,
+						"user for id [%s] not found", id);
 
 			return new Payload(JSON_CONTENT, response.getSourceAsBytes(),
 					HttpStatus.OK);
 		} catch (Throwable throwable) {
-			return AbstractResource.toPayload(throwable);
+			return error(throwable);
 		}
 	}
 
@@ -143,11 +144,11 @@ public class UserResource extends AbstractResource {
 					.prepareDelete(credentials.getAccountId(), USER_TYPE, id)
 					.get();
 
-			return response.isFound() ? success() : notFound(
+			return response.isFound() ? success() : error(HttpStatus.NOT_FOUND,
 					"user for id [%s] not found", id);
 
 		} catch (Throwable throwable) {
-			return AbstractResource.toPayload(throwable);
+			return error(throwable);
 		}
 	}
 

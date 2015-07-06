@@ -9,7 +9,6 @@ import net.codestory.http.annotations.Put;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
-import org.elasticsearch.ExceptionsHelper;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
@@ -17,7 +16,6 @@ import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.common.base.Strings;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.indices.IndexMissingException;
 
 @Prefix("/v1/data")
 public class DataResource extends AbstractResource {
@@ -29,7 +27,7 @@ public class DataResource extends AbstractResource {
 			Credentials credentials = AccountResource.checkCredentials(context);
 			return doSearch(credentials.getAccountId(), null, null, context);
 		} catch (Throwable throwable) {
-			return AbstractResource.toPayload(throwable);
+			return error(throwable);
 		}
 	}
 
@@ -40,7 +38,7 @@ public class DataResource extends AbstractResource {
 			Credentials credentials = AccountResource.checkCredentials(context);
 			return doSearch(credentials.getAccountId(), type, null, context);
 		} catch (Throwable throwable) {
-			return AbstractResource.toPayload(throwable);
+			return error(throwable);
 		}
 	}
 
@@ -59,7 +57,7 @@ public class DataResource extends AbstractResource {
 					.setSource(jsonBody).get();
 			return created("/v1/data", type, response.getId());
 		} catch (Throwable throwable) {
-			return AbstractResource.toPayload(throwable);
+			return error(throwable);
 		}
 	}
 
@@ -84,13 +82,14 @@ public class DataResource extends AbstractResource {
 					.get();
 
 			if (!response.isExists())
-				return notFound("object of type [%s] for id [%s] not found",
-						type, objectId);
+				return error(HttpStatus.NOT_FOUND,
+						"object of type [%s] for id [%s] not found", type,
+						objectId);
 
 			return new Payload(JSON_CONTENT, response.getSourceAsBytes(),
 					HttpStatus.OK);
 		} catch (Throwable throwable) {
-			return AbstractResource.toPayload(throwable);
+			return error(throwable);
 		}
 	}
 
@@ -101,7 +100,7 @@ public class DataResource extends AbstractResource {
 			Credentials credentials = AccountResource.checkCredentials(context);
 			return doSearch(credentials.getAccountId(), type, jsonBody, context);
 		} catch (Throwable throwable) {
-			return AbstractResource.toPayload(throwable);
+			return error(throwable);
 		}
 	}
 
@@ -120,7 +119,7 @@ public class DataResource extends AbstractResource {
 					.setDoc(bytes).get();
 			return success();
 		} catch (Throwable throwable) {
-			return AbstractResource.toPayload(throwable);
+			return error(throwable);
 		}
 	}
 
@@ -138,10 +137,11 @@ public class DataResource extends AbstractResource {
 					.prepareDelete(credentials.getAccountId(), type, objectId)
 					.get();
 			return response.isFound() ? success()
-					: notFound("object of type [%s] and id [%s] not found",
-							type, objectId);
+					: error(HttpStatus.NOT_FOUND,
+							"object of type [%s] and id [%s] not found", type,
+							objectId);
 		} catch (Throwable throwable) {
-			return AbstractResource.toPayload(throwable);
+			return error(throwable);
 		}
 	}
 
@@ -177,11 +177,6 @@ public class DataResource extends AbstractResource {
 			builder.setSource(json);
 		}
 
-		try {
-			return extractResults(builder.get());
-		} catch (IndexMissingException e) {
-			return new Payload("test/plain;charset=UTF-8",
-					ExceptionsHelper.detailedMessage(e), HttpStatus.NOT_FOUND);
-		}
+		return extractResults(builder.get());
 	}
 }
