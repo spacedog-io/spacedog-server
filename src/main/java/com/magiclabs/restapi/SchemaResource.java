@@ -100,7 +100,7 @@ public class SchemaResource extends AbstractResource {
 			return created("schema", type);
 
 		} catch (Throwable throwable) {
-			return AbstractResource.toPayload(throwable);
+			return toPayload(throwable);
 		}
 	}
 
