@@ -23,8 +23,8 @@ import com.magiclabs.restapi.SchemaValidator.InvalidSchemaException;
 public abstract class AbstractResource {
 
 	public static final String JSON_CONTENT = "application/json;charset=UTF-8";
-
 	public static final String HEADER_OBJECT_ID = "X-magiclabs-object-id";
+	public static final String BASE_URL = "https://api.magicapps.com";
 
 	private static ObjectMapper objectMapper = new ObjectMapper();
 
@@ -58,55 +58,70 @@ public abstract class AbstractResource {
 		return error;
 	}
 
-	public static Payload done() {
-		return new Payload(JSON_CONTENT, "{\"done\":true}", HttpStatus.OK);
+	public static Payload success() {
+		return new Payload(JSON_CONTENT, "{\"success\":true}", HttpStatus.OK);
+	}
+
+	public static Payload error(int httpStatus) {
+		return error(httpStatus, null);
+	}
+
+	public static Payload error(int httpStatus, Throwable throwable) {
+		JsonBuilder builder = Json.builder().add("success", false);
+		if (throwable != null)
+			builder.add("error", toJsonObject(throwable));
+		return new Payload(JSON_CONTENT, builder.build().toString(), httpStatus);
+	}
+
+	public static Payload error(int httpStatus, String message, Object... args) {
+		return error(httpStatus,
+				new RuntimeException(String.format(message, args)));
 	}
 
 	public static Payload internalServerError(Throwable throwable) {
-		return new Payload(JSON_CONTENT, toJsonString(throwable),
-				HttpStatus.INTERNAL_SERVER_ERROR);
+		return error(HttpStatus.INTERNAL_SERVER_ERROR, throwable);
 	}
 
 	public static Payload internalServerError(String message, Object... args) {
-		return new Payload(JSON_CONTENT, toJsonString(new RuntimeException(
-				String.format(message, args))),
-				HttpStatus.INTERNAL_SERVER_ERROR);
+		return error(HttpStatus.INTERNAL_SERVER_ERROR, message, args);
 	}
 
 	public static Payload badRequest(Throwable throwable) {
-		return new Payload(JSON_CONTENT, toJsonString(throwable),
-				HttpStatus.BAD_REQUEST);
+		return error(HttpStatus.BAD_REQUEST, throwable);
 	}
 
 	public static Payload forbidden(Throwable throwable) {
-		return new Payload(JSON_CONTENT, toJsonString(throwable),
-				HttpStatus.FORBIDDEN);
+		return error(HttpStatus.FORBIDDEN, throwable);
 	}
 
 	public static Payload unauthorized(Throwable throwable) {
-		return new Payload(JSON_CONTENT, toJsonString(throwable),
-				HttpStatus.UNAUTHORIZED);
+		return error(HttpStatus.UNAUTHORIZED, throwable);
 	}
 
 	public static Payload notFound(String message, Object... args) {
-		return new Payload(JSON_CONTENT, toJsonString(new RuntimeException(
-				String.format(message, args))), HttpStatus.NOT_FOUND);
+		return error(HttpStatus.NOT_FOUND, message, args);
 	}
 
 	public static Payload notFound(Throwable throwable) {
-		return new Payload(JSON_CONTENT, toJsonString(throwable),
-				HttpStatus.NOT_FOUND);
+		return error(HttpStatus.NOT_FOUND, throwable);
 	}
 
 	protected Payload unsupportedOperation() {
-		return new Payload(HttpStatus.NOT_IMPLEMENTED);
+		return error(HttpStatus.NOT_IMPLEMENTED);
 	}
 
-	protected Payload created(String type, String id) {
-		return new Payload(JSON_CONTENT, Json.builder().add("done", true)
-				.add("id", id).add("type", type).build().toString(),
-				HttpStatus.CREATED).withHeader(
+	protected Payload created(String uri, String type, String id) {
+		return new Payload(JSON_CONTENT, Json.builder() //
+				.add("success", true) //
+				.add("id", id).add("type", type) //
+				.add("location", toUrl(BASE_URL, uri, type, id)) //
+				.build().toString(), HttpStatus.CREATED).withHeader(
 				AbstractResource.HEADER_OBJECT_ID, id);
+	}
+
+	protected String toUrl(String baseUrl, String uri, String type, String id) {
+		return new StringBuilder(baseUrl).append(uri).append('/').append(type)
+				.append('/').append(id).toString();
 	}
 
 	protected Payload extractResults(SearchResponse response) {

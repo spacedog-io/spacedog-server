@@ -75,6 +75,14 @@ public class JsonBuilder {
 		return this;
 	}
 
+	public JsonBuilder add(String key, JsonObject value) {
+		if (currentJsonObject == null)
+			throw new IllegalStateException("current json node not an object");
+
+		currentJsonObject.add(key, value);
+		return this;
+	}
+
 	public JsonBuilder stObj(String key) {
 		if (currentJsonObject == null)
 			throw new IllegalStateException("current json node not an object");

@@ -99,7 +99,7 @@ public class AccountResource extends AbstractResource {
 					.prepareIndex(account.id, UserResource.USER_TYPE)
 					.setSource(userBytes).get();
 
-			return created(ACCOUNT_TYPE, account.id);
+			return created("/v1", ACCOUNT_TYPE, account.id);
 
 		} catch (Throwable throwable) {
 			return AbstractResource.toPayload(throwable);
@@ -162,7 +162,7 @@ public class AccountResource extends AbstractResource {
 							"account id [%s] internal index deletion not acknowledged",
 							accountId);
 
-				return done();
+				return success();
 			} catch (Throwable throwable) {
 				return AbstractResource.toPayload(throwable);
 			}

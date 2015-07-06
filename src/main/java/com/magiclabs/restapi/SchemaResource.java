@@ -97,7 +97,7 @@ public class SchemaResource extends AbstractResource {
 			upsertSchemaInternal(type, newSchemaAsString,
 					credentials.getAccountId());
 
-			return created("schema", type);
+			return created("/v1", "schema", type);
 
 		} catch (Throwable throwable) {
 			return toPayload(throwable);

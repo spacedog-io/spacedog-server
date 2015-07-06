@@ -45,8 +45,8 @@ public class UserResource extends AbstractResource {
 
 	void initSchema(String accountId) throws InterruptedException,
 			ExecutionException {
-		new SchemaResource().upsertSchemaInternal(USER_TYPE, USER_DEFAULT_SCHEMA,
-				accountId);
+		new SchemaResource().upsertSchemaInternal(USER_TYPE,
+				USER_DEFAULT_SCHEMA, accountId);
 	}
 
 	@Get("/login")
@@ -107,7 +107,7 @@ public class UserResource extends AbstractResource {
 					.prepareIndex(credentials.getAccountId(), USER_TYPE)
 					.setSource(userBytes).get();
 
-			return created(USER_TYPE, resp2.getId());
+			return created("/v1", USER_TYPE, resp2.getId());
 
 		} catch (Throwable throwable) {
 			return AbstractResource.toPayload(throwable);
@@ -143,7 +143,7 @@ public class UserResource extends AbstractResource {
 					.prepareDelete(credentials.getAccountId(), USER_TYPE, id)
 					.get();
 
-			return response.isFound() ? done() : notFound(
+			return response.isFound() ? success() : notFound(
 					"user for id [%s] not found", id);
 
 		} catch (Throwable throwable) {

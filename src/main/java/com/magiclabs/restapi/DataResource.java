@@ -57,7 +57,7 @@ public class DataResource extends AbstractResource {
 			IndexResponse response = Start.getElasticClient()
 					.prepareIndex(credentials.getAccountId(), type)
 					.setSource(jsonBody).get();
-			return created(type, response.getId());
+			return created("/v1/data", type, response.getId());
 		} catch (Throwable throwable) {
 			return AbstractResource.toPayload(throwable);
 		}
@@ -118,7 +118,7 @@ public class DataResource extends AbstractResource {
 			Start.getElasticClient()
 					.prepareUpdate(credentials.getAccountId(), type, objectId)
 					.setDoc(bytes).get();
-			return done();
+			return success();
 		} catch (Throwable throwable) {
 			return AbstractResource.toPayload(throwable);
 		}
@@ -137,7 +137,7 @@ public class DataResource extends AbstractResource {
 			DeleteResponse response = Start.getElasticClient()
 					.prepareDelete(credentials.getAccountId(), type, objectId)
 					.get();
-			return response.isFound() ? done()
+			return response.isFound() ? success()
 					: notFound("object of type [%s] and id [%s] not found",
 							type, objectId);
 		} catch (Throwable throwable) {

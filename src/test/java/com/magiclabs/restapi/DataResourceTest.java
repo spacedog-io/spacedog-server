@@ -64,7 +64,7 @@ public class DataResourceTest extends AbstractTest {
 
 		JsonObject result = post(req, 201);
 
-		assertEquals(true, result.get("done").asBoolean());
+		assertEquals(true, result.get("success").asBoolean());
 		assertEquals("car", result.get("type").asString());
 		assertNotNull(result.get("id"));
 
