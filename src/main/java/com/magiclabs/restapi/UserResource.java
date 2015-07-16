@@ -101,8 +101,8 @@ public class UserResource extends AbstractResource {
 	}
 
 	public static String getDefaultUserMapping() {
-		JsonObject schema = SchemaValidator.validate(USER_DEFAULT_SCHEMA,
-				USER_TYPE);
+		JsonObject schema = SchemaValidator.validate(USER_TYPE,
+				USER_DEFAULT_SCHEMA);
 		return SchemaTranslator.translate(USER_TYPE, schema).toString();
 	}
 

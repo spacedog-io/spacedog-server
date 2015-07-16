@@ -1,80 +1,55 @@
 package com.magiclabs.restapi;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.eclipsesource.json.JsonObject;
+import com.google.common.io.Resources;
 
 public class SchemaTranslatorTest extends Assert {
 
 	@Test
-	public void shouldSuccessfullyTranslateSchema() {
+	public void shouldTranslateSchema() throws IOException {
+		Charset utf8 = Charset.forName("UTF-8");
 
-		// testSchemaTranslation(
-		// Json.builder().stObj("mytype").add("_type", "stash").build(),
-		// Json.builder().add("type", "object").add("enabled", false)
-		// .build());
+		// load schema
+		URL urlSchema = Resources
+				.getResource("com/magiclabs/restapi/SchemaTranslatorTest-schema.json");
+		String jsonSchema = Resources.toString(urlSchema, utf8);
+		JsonObject schema = JsonObject.readFrom(jsonSchema);
 
-		testSchemaTranslation(
-				Json.builder().stObj("mytype").stObj("color")
-						.add("_type", "enum").add("_required", true).end()
-						.stObj("model").add("_type", "code")
-						.add("_required", true).build(),
-				Json.builder().stObj("color").add("type", "string")
-						.add("index", "not_analyzed").end().stObj("model")
-						.add("type", "string").add("index", "not_analyzed")
-						.build());
-	}
+		// validate and translate
+		SchemaValidator.validate("myschema", schema);
+		JsonObject mapping = SchemaTranslator.translate("myschema", schema);
 
-	private void testSchemaTranslation(JsonObject schema,
-			JsonObject expectedDataMapping) {
-		JsonObject mapping = SchemaTranslator.translate("mytype", schema);
-		JsonObject expected = expected("mytype", expectedDataMapping, schema);
-		if (!Json.equals(mapping, expected)) {
-			System.out.println(String.format("Schema = %s",
-					Json.prettyString(schema)));
-			System.out.println(String.format("Expected mapping = %s",
-					Json.prettyString(expected)));
-			System.out.println(String.format("Translate result = %s",
-					Json.prettyString(mapping)));
-			fail();
+		try {
+			// load expected mapping
+			URL urlExpectedMapping = Resources
+					.getResource("com/magiclabs/restapi/SchemaTranslatorTest-mapping.json");
+			String jsonExpectedMapping = Resources.toString(urlExpectedMapping,
+					utf8);
+			JsonObject expectedMapping = JsonObject
+					.readFrom(jsonExpectedMapping);
+
+			// assert
+			assertTrue(Json.equals(mapping, expectedMapping));
+
+		} catch (IllegalArgumentException exc) {
+
+			// save mapping if no expected mapping found
+			Path path = Paths.get("SchemaTranslatorTest-mapping.json");
+			BufferedWriter writer = Files.newBufferedWriter(path, utf8);
+			writer.write(mapping.toString());
+			writer.close();
 		}
-	}
 
-	JsonObject expected(String type, JsonObject expectedDataMapping,
-			JsonObject schema) {
-		JsonObject meta = Json.builder() //
-				.add("type", "object") //
-				.stObj("properties") //
-				.stObj("createdBy") //
-				.add("type", "string") //
-				.add("index", "not_analyzed") //
-				.end() //
-				.stObj("updatedBy") //
-				.add("type", "string") //
-				.add("index", "not_analyzed") //
-				.end() //
-				.stObj("createdAt") //
-				.add("type", "date") //
-				.add("format", "date_time") //
-				.end() //
-				.stObj("updatedAt") //
-				.add("type", "date") //
-				.add("format", "date_time") //
-				.end() //
-				.build();
-
-		expectedDataMapping.add("meta", meta);
-
-		return Json.builder() //
-				.stObj(type) //
-				.stObj("_timestamp") //
-				.add("enabled", false) //
-				.end() //
-				.add("dynamic", "strict") //
-				.add("date_detection", false) //
-				.addJson("properties", expectedDataMapping) //
-				.addJson("_meta", schema) //
-				.build();
 	}
 }

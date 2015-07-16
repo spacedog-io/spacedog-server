@@ -24,7 +24,7 @@ public class SchemaValidatorTest extends Assert {
 	private void testValidSchema(JsonBuilder builder) {
 		JsonObject schema = builder.build();
 		System.out.println("Valid schema: " + schema.toString());
-		SchemaValidator.validate(schema, "car");
+		SchemaValidator.validate("car", schema);
 	}
 
 	@Test
@@ -50,7 +50,7 @@ public class SchemaValidatorTest extends Assert {
 		JsonObject schema = builder.build();
 		System.out.println("Invalid schema: " + schema.toString());
 		try {
-			SchemaValidator.validate(schema, "car");
+			SchemaValidator.validate("car", schema);
 			fail("an InvalidSchemaException should be thrown");
 		} catch (InvalidSchemaException e) {
 			e.printStackTrace();

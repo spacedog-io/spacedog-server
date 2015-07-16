@@ -18,7 +18,7 @@ public class SchemaValidator {
 		OBJECT, ARRAY, TEXT, CODE, BOOLEAN, GEOPOINT, NUMBER, DATE, TIME, TIMESTAMP, ENUM, STASH
 	}
 
-	public static JsonObject validate(JsonObject schema, String type)
+	public static JsonObject validate(String type, JsonObject schema)
 			throws InvalidSchemaException {
 
 		JsonObject rootObject = checkField(schema, type, true, JsonType.OBJECT)
@@ -100,8 +100,12 @@ public class SchemaValidator {
 			checkTimestampProperty(propertyName, jsonObject);
 		else if (type.equals("integer"))
 			checkIntegerProperty(propertyName, jsonObject);
+		else if (type.equals("long"))
+			checkLongProperty(propertyName, jsonObject);
 		else if (type.equals("float"))
 			checkFloatProperty(propertyName, jsonObject);
+		else if (type.equals("double"))
+			checkDoubleProperty(propertyName, jsonObject);
 		else if (type.equals("boolean"))
 			checkBooleanProperty(propertyName, jsonObject);
 		else if (type.equals("object"))
@@ -173,9 +177,23 @@ public class SchemaValidator {
 		checkField(json, "_required", false, JsonType.BOOLEAN);
 	}
 
+	private static void checkLongProperty(String propertyName, JsonObject json)
+			throws InvalidSchemaException {
+		checkNoProperties(propertyName, "long", json);
+		checkAllSettingsAreValid(json, Lists.newArrayList("_type", "_required"));
+		checkField(json, "_required", false, JsonType.BOOLEAN);
+	}
+
 	private static void checkFloatProperty(String propertyName, JsonObject json)
 			throws InvalidSchemaException {
 		checkNoProperties(propertyName, "float", json);
+		checkAllSettingsAreValid(json, Lists.newArrayList("_type", "_required"));
+		checkField(json, "_required", false, JsonType.BOOLEAN);
+	}
+
+	private static void checkDoubleProperty(String propertyName, JsonObject json)
+			throws InvalidSchemaException {
+		checkNoProperties(propertyName, "double", json);
 		checkAllSettingsAreValid(json, Lists.newArrayList("_type", "_required"));
 		checkField(json, "_required", false, JsonType.BOOLEAN);
 	}

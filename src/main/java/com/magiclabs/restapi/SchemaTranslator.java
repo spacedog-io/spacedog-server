@@ -92,8 +92,14 @@ public class SchemaTranslator {
 		} else if ("integer".equals(type)) {
 			mapping.add("type", "integer");
 			mapping.add("coerce", "false");
+		} else if ("long".equals(type)) {
+			mapping.add("type", "long");
+			mapping.add("coerce", "false");
 		} else if ("float".equals(type)) {
 			mapping.add("type", "float");
+			mapping.add("coerce", "false");
+		} else if ("double".equals(type)) {
+			mapping.add("type", "double");
 			mapping.add("coerce", "false");
 		} else if ("date".equals(type)) {
 			mapping.add("type", "date");

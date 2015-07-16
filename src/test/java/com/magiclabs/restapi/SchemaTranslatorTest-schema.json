@@ -1,0 +1,47 @@
+{
+  "myschema": {
+    "string": {
+      "_type": "code",
+      "_required": true
+    },
+    "text": {
+      "_type": "text"
+    },
+    "boolean": {
+      "_type": "boolean"
+    },
+    "integer": {
+      "_type": "integer"
+    },
+    "long": {
+      "_type": "long"
+    },
+    "float": {
+      "_type": "float"
+    },
+    "double": {
+      "_type": "double"
+    },
+    "object": {
+      "_type": "object",
+      "date": {
+        "_type": "date"
+      },
+      "time": {
+        "_type": "time"
+      },
+      "timestamp": {
+        "_type": "timestamp"
+      }
+    },
+    "geopoint": {
+      "_type": "geopoint"
+    },
+    "enum": {
+      "_type": "enum"
+    },
+    "stash": {
+      "_type": "stash"
+    }
+  }
+}
