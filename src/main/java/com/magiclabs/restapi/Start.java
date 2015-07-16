@@ -21,17 +21,26 @@ public class Start {
 	}
 
 	private static void configure(Routes routes) {
-		routes.add(DataResource.class) //
-				.add(SchemaResource.class) //
-				.add(UserResource.class) //
-				.add(AccountResource.class);
+		routes.add(DataResource.get()) //
+				.add(SchemaResource.get()) //
+				.add(UserResource.get()) //
+				.add(AccountResource.get());
 	}
 
 	public static void main(String[] args) {
-		elasticNode = NodeBuilder.nodeBuilder().local(true).data(true)
-				.clusterName("MagicLabs-ES-Cluster").node();
+		try {
+			elasticNode = NodeBuilder.nodeBuilder().local(true).data(true)
+					.clusterName("MagicLabs-ES-Cluster").node();
 
-		elasticClient = elasticNode.client();
-		new WebServer().configure(Start::configure).start();
+			elasticClient = elasticNode.client();
+
+			AccountResource.get().initAdminIndex();
+
+			new WebServer().configure(Start::configure).start();
+
+		} catch (Throwable t) {
+			t.printStackTrace();
+			System.exit(-1);
+		}
 	}
 }

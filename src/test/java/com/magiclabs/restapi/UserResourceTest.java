@@ -42,10 +42,12 @@ public class UserResourceTest extends AbstractTest {
 				.header("x-magic-app-id", "test");
 
 		JsonObject res2 = get(req2, 200);
+
 		assertTrue(Json.equals(
 				Json.builder().add("username", "vince")
 						.add("password", "hi_vince")
-						.add("email", "vince@magic.com").build(), res2));
+						.add("email", "vince@magic.com").stArr("groups")
+						.add("test").build(), res2.remove("meta")));
 
 		// wrong username
 
@@ -79,7 +81,7 @@ public class UserResourceTest extends AbstractTest {
 		// login nok
 
 		GetRequest req7 = Unirest.get("http://localhost:8080/v1/login")
-				.basicAuth("vince", "XXX").header("x-magic-account-id", "test");
+				.basicAuth("vince", "XXX").header("x-magic-app-id", "test");
 
 		get(req7, 401);
 	}

@@ -16,9 +16,21 @@ import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.common.base.Strings;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.joda.time.DateTime;
+
+import com.eclipsesource.json.JsonObject;
 
 @Prefix("/v1/data")
 public class DataResource extends AbstractResource {
+
+	private static DataResource singleton = new DataResource();
+
+	static DataResource get() {
+		return singleton;
+	}
+
+	private DataResource() {
+	}
 
 	@Get("")
 	@Get("/")
@@ -52,19 +64,39 @@ public class DataResource extends AbstractResource {
 			// object should be validated before saved
 			SchemaResource.getSchema(credentials.getAccountId(), type);
 
-			IndexResponse response = Start.getElasticClient()
-					.prepareIndex(credentials.getAccountId(), type)
-					.setSource(jsonBody).get();
-			return created("/v1/data", type, response.getId());
+			String id = createInternal(credentials.getAccountId(), type,
+					JsonObject.readFrom(jsonBody), credentials.getId());
+
+			return created("/v1/data", type, id);
+
 		} catch (Throwable throwable) {
 			return error(throwable);
 		}
 	}
 
+	String createInternal(String index, String type, JsonObject object,
+			String createdBy) {
+
+		String now = DateTime.now().toString();
+
+		// remove then add meta to avoid developers to
+		// set any meta fields directly
+		object.remove("meta").add(
+				"meta",
+				new JsonObject().add("createdBy", createdBy)
+						.add("updatedBy", createdBy).add("createdAt", now)
+						.add("updatedAt", now));
+
+		IndexResponse response = Start.getElasticClient()
+				.prepareIndex(index, type).setSource(object.toString()).get();
+
+		return response.getId();
+	}
+
 	@Delete("/:type")
 	@Delete("/:type/")
 	public Payload deleteAll(String type, Context context) {
-		return new SchemaResource().deleteSchema(type, context);
+		return SchemaResource.get().deleteSchema(type, context);
 	}
 
 	@Get("/:type/:id")
@@ -86,8 +118,13 @@ public class DataResource extends AbstractResource {
 						"object of type [%s] for id [%s] not found", type,
 						objectId);
 
-			return new Payload(JSON_CONTENT, response.getSourceAsBytes(),
-					HttpStatus.OK);
+			JsonObject object = JsonObject.readFrom(response
+					.getSourceAsString());
+			object.get("meta").asObject().add("id", response.getId())
+					.add("type", response.getType())
+					.add("version", response.getVersion());
+
+			return new Payload(JSON_CONTENT, object.toString(), HttpStatus.OK);
 		} catch (Throwable throwable) {
 			return error(throwable);
 		}
@@ -105,7 +142,7 @@ public class DataResource extends AbstractResource {
 	}
 
 	@Put("/:type/:id")
-	public Payload update(String type, String objectId, byte[] bytes,
+	public Payload update(String type, String objectId, String jsonBody,
 			Context context) {
 		try {
 			Credentials credentials = AccountResource.checkCredentials(context);
@@ -114,9 +151,18 @@ public class DataResource extends AbstractResource {
 			// object should be validated before saved
 			SchemaResource.getSchema(credentials.getAccountId(), type);
 
+			JsonObject object = JsonObject.readFrom(jsonBody)
+					// removed to forbid developers the update of meta fields
+					.remove("meta")
+					.add("meta",
+							new JsonObject().add("updatedBy",
+									credentials.getId()).add("updatedAt",
+									DateTime.now().toString()));
+
 			Start.getElasticClient()
 					.prepareUpdate(credentials.getAccountId(), type, objectId)
-					.setDoc(bytes).get();
+					.setDoc(object.toString()).get();
+
 			return success();
 		} catch (Throwable throwable) {
 			return error(throwable);

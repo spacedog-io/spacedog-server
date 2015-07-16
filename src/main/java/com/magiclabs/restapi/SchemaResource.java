@@ -1,7 +1,6 @@
 package com.magiclabs.restapi;
 
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -21,6 +20,15 @@ import com.magiclabs.restapi.Json.JsonMerger;
 
 @Prefix("/v1/schema")
 public class SchemaResource extends AbstractResource {
+
+	private static SchemaResource singleton = new SchemaResource();
+
+	static SchemaResource get() {
+		return singleton;
+	}
+
+	private SchemaResource() {
+	}
 
 	@Get("")
 	@Get("/")
@@ -94,30 +102,24 @@ public class SchemaResource extends AbstractResource {
 		try {
 			Credentials credentials = AccountResource.checkCredentials(context);
 
-			upsertSchemaInternal(type, newSchemaAsString,
-					credentials.getAccountId());
+			JsonObject schema = SchemaValidator.validate(
+					JsonObject.readFrom(newSchemaAsString), type);
+
+			String elasticMapping = SchemaTranslator.translate(type, schema)
+					.toString();
+
+			PutMappingRequest putMappingRequest = new PutMappingRequest(
+					credentials.getAccountId()).type(type).source(
+					elasticMapping);
+
+			Start.getElasticClient().admin().indices()
+					.putMapping(putMappingRequest).get();
 
 			return created("/v1", "schema", type);
 
 		} catch (Throwable throwable) {
 			return error(throwable);
 		}
-	}
-
-	void upsertSchemaInternal(String type, String newSchemaAsString,
-			String index) throws InterruptedException, ExecutionException {
-
-		JsonObject schema = SchemaValidator.validate(
-				JsonObject.readFrom(newSchemaAsString), type);
-
-		String elasticMapping = SchemaTranslator.translate(type, schema)
-				.toString();
-
-		PutMappingRequest putMappingRequest = new PutMappingRequest(index)
-				.type(type).source(elasticMapping);
-
-		Start.getElasticClient().admin().indices()
-				.putMapping(putMappingRequest).get();
 	}
 
 	@Delete("/:type")
@@ -130,7 +132,7 @@ public class SchemaResource extends AbstractResource {
 					.setType(type).get();
 
 		} catch (TypeMissingException exception) {
-			// TODO I consider that delete a non existing type is not an error
+			// ignored
 		} catch (Throwable throwable) {
 			return error(throwable);
 		}

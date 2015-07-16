@@ -59,7 +59,7 @@ public class SchemaResourceTest extends AbstractTest {
 	@Test
 	public void shouldDeletePutAndGetHomeSchema() throws UnirestException {
 
-		shouldResetHomeSchema();
+		resetHomeSchema();
 
 		GetRequest req = Unirest.get("http://localhost:8080/v1/schema/home")
 				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
@@ -68,7 +68,7 @@ public class SchemaResourceTest extends AbstractTest {
 		assertTrue(Json.equals(buildHomeSchema(), res));
 	}
 
-	private static void shouldResetHomeSchema() throws UnirestException {
+	private static void resetHomeSchema() throws UnirestException {
 		HttpRequestWithBody req1 = Unirest
 				.delete("http://localhost:8080/v1/schema/home")
 				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
@@ -100,17 +100,21 @@ public class SchemaResourceTest extends AbstractTest {
 	@Test
 	public void shouldGetAllSchemas() throws UnirestException {
 		resetCarSchema();
-		shouldResetHomeSchema();
+		resetHomeSchema();
 
 		GetRequest req = Unirest.get("http://localhost:8080/v1/schema")
 				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
 
 		JsonObject result = get(req, 200);
+
 		// user, car and home
 		assertEquals(3, result.size());
-		JsonObject expected = Json.merger().add(buildHomeSchema())
-				.add(buildCarSchema())
-				.add(UserResource.USER_DEFAULT_SCHEMA_OBJECT).get();
+		JsonObject expected = Json.merger() //
+				.add(buildHomeSchema()) //
+				.add(buildCarSchema()) //
+				.add(UserResource.USER_DEFAULT_SCHEMA) //
+				.get();
+
 		assertTrue(Json.equals(expected, result));
 	}
 

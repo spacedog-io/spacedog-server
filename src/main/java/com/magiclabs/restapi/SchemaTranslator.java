@@ -5,40 +5,77 @@ import com.eclipsesource.json.JsonValue;
 
 public class SchemaTranslator {
 
+	private static JsonObject META_MAPPING = Json.builder()
+			.add("type", "object") //
+			.stObj("properties") //
+			.stObj("createdBy") //
+			.add("type", "string") //
+			.add("index", "not_analyzed") //
+			.end() //
+			.stObj("updatedBy") //
+			.add("type", "string") //
+			.add("index", "not_analyzed") //
+			.end() //
+			.stObj("createdAt") //
+			.add("type", "date") //
+			.add("format", "date_time") //
+			.end() //
+			.stObj("updatedAt") //
+			.add("type", "date") //
+			.add("format", "date_time") //
+			.build(); //
+
 	public static JsonObject translate(String type, JsonObject schema) {
 
-		JsonObject subMapping = toElasticType(schema.get(type).asObject());
+		JsonObject subMapping = toElasticMapping(schema.get(type).asObject());
 		subMapping.add("_meta", schema);
 
 		JsonObject mapping = new JsonObject();
 		mapping.add(type, subMapping);
 
+		System.out.println(Json.prettyString(mapping));
 		return mapping;
 	}
 
-	private static JsonObject toElasticType(JsonObject schema) {
-		JsonObject subMapping = new JsonObject() //
-				.add("_timestamp", new JsonObject().add("enabled", true)) //
-				.add("dynamic", "strict") //
-				.add("date_detection", false) //
-				.add("properties", toElasticProperties(schema));
+	private static JsonObject toElasticMapping(JsonObject schema) {
 
-		JsonValue id = schema.get("_id");
-		if (id != null)
-			subMapping.add("_id", new JsonObject().add("path", id));
+		String type = schema.getString("_type", "object");
 
-		return subMapping;
+		if ("object".equals(type)) {
+			JsonBuilder builder = Json
+					.builder()
+					// Enable _timestamp when I find out how to read/get it back
+					.stObj("_timestamp")
+					.add("enabled", false)
+					.end()
+					.add("dynamic", "strict")
+					.add("date_detection", false)
+					.addJson(
+							"properties",
+							toElasticProperties(schema).add("meta",
+									META_MAPPING));
+
+			JsonValue id = schema.get("_id");
+			if (id != null)
+				builder = builder.stObj("_id") //
+						.add("path", id.asString()).end();
+
+			return builder.build();
+		} else
+			throw new IllegalArgumentException(String.format(
+					"Invalid schema root type [%s]", type));
 	}
 
 	private static JsonObject toElasticProperties(JsonObject schema) {
-		JsonObject mapping = new JsonObject();
+
+		JsonBuilder builder = Json.builder();
 		for (String key : schema.names()) {
 			if (key.charAt(0) != '_') {
-				mapping.add(key,
+				builder.addJson(key,
 						toElasticProperty(key, schema.get(key).asObject()));
 			}
 		}
-		return mapping;
+		return builder.build();
 	}
 
 	private static JsonValue toElasticProperty(String key, JsonObject schema) {
@@ -82,7 +119,6 @@ public class SchemaTranslator {
 		} else if ("stash".equals(type)) {
 			mapping.add("type", "object");
 			mapping.add("enabled", false);
-			// mapping.add("dynamic", "true");
 		} else {
 			throw new IllegalArgumentException("Invalid type [" + type
 					+ "] for property [" + key + "]");

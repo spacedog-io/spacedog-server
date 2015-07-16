@@ -5,6 +5,7 @@ import java.nio.charset.Charset;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -15,11 +16,11 @@ import net.codestory.http.annotations.Put;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.common.base.Strings;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -33,8 +34,26 @@ import com.google.common.collect.Sets;
 @Prefix("/v1/account")
 public class AccountResource extends AbstractResource {
 
-	private static final String ACCOUNT_TYPE = "account";
+	// singleton begins
+
+	private static AccountResource singleton = new AccountResource();
+
+	static AccountResource get() {
+		return singleton;
+	}
+
+	private AccountResource() {
+	}
+
+	// singleton ends
+
 	private static final String ADMIN_INDEX = "admin";
+	private static final String ACCOUNT_TYPE = "account";
+	public static final String ACCOUNT_MAPPING = Json.builder()
+			.stObj("account").add("dynamic", "strict").stObj("_id")
+			.add("path", "id").end().stObj("properties").stObj("id")
+			.add("type", "string").add("index", "not_analyzed").build()
+			.toString();
 
 	private static final Set<String> INTERNAL_INDICES = Sets
 			.newHashSet(ADMIN_INDEX);
@@ -44,6 +63,16 @@ public class AccountResource extends AbstractResource {
 	private static final String BASIC_AUTHENTICATION_SCHEME = "Basic";
 
 	private static final Charset UTF_8 = Charset.forName("UTF-8");
+
+	void initAdminIndex() throws InterruptedException, ExecutionException {
+
+		IndicesAdminClient indices = Start.getElasticClient().admin().indices();
+
+		if (!indices.prepareExists(ADMIN_INDEX).get().isExists()) {
+			indices.prepareCreate(ADMIN_INDEX)
+					.addMapping(ACCOUNT_TYPE, ACCOUNT_MAPPING).get();
+		}
+	}
 
 	/**
 	 * Internal web service. Not accessible by clients.
@@ -86,18 +115,16 @@ public class AccountResource extends AbstractResource {
 			user.groups = Collections.singletonList("admin");
 			user.checkUserInputValidity();
 
-			CreateIndexRequest accountIndex = new CreateIndexRequest(account.id);
-
-			Start.getElasticClient().admin().indices().create(accountIndex)
-					.get();
-
-			new UserResource().initSchema(account.id);
-
-			byte[] userBytes = getObjectMapper().writeValueAsBytes(user);
-
+			// default app index is named after the account id
 			Start.getElasticClient()
-					.prepareIndex(account.id, UserResource.USER_TYPE)
-					.setSource(userBytes).get();
+					.admin()
+					.indices()
+					.prepareCreate(account.id)
+					.addMapping(UserResource.USER_TYPE,
+							UserResource.getDefaultUserMapping()).get();
+
+			DataResource.get().createInternal(account.id,
+					UserResource.USER_TYPE, user.toJsonObject(), user.username);
 
 			return created("/v1", ACCOUNT_TYPE, account.id);
 
@@ -241,11 +268,10 @@ public class AccountResource extends AbstractResource {
 				throw new AuthenticationException(
 						"invalid username or password");
 
-			User user = getObjectMapper()
-					.readValue(response.getHits().getAt(0).getSourceAsString(),
-							User.class);
+			JsonObject userJson = JsonObject.readFrom(response.getHits()
+					.getAt(0).getSourceAsString());
 
-			return new Credentials(accountId, user);
+			return new Credentials(accountId, User.fromJsonObject(userJson));
 
 		} catch (IndexMissingException e) {
 			throw new AuthenticationException(String.format(

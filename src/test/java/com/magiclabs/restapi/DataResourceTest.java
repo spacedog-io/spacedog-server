@@ -1,10 +1,10 @@
 package com.magiclabs.restapi;
 
+import org.joda.time.DateTime;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.eclipsesource.json.JsonObject;
-import com.eclipsesource.json.JsonValue;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.GetRequest;
@@ -42,59 +42,96 @@ public class DataResourceTest extends AbstractTest {
 				.add("lon", -54.6765) //
 				.build();
 
-		String id = checkCreate(car);
-		checkFindById(car, id);
-		checkUpdate(car, id);
-		checkDeleteById(id);
-	}
+		// check create
 
-	private void checkDeleteById(String id) throws Exception {
-		HttpRequestWithBody req = Unirest
-				.delete("http://{host}:8080/v1/data/car/{id}")
-				.routeParam("host", MAGIC_HOST).routeParam("id", id)
-				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
-
-		delete(req, 200);
-	}
-
-	private String checkCreate(JsonObject car) throws Exception {
 		RequestBodyEntity req = Unirest.post("http://{host}:8080/v1/data/car")
 				.routeParam("host", MAGIC_HOST).basicAuth("dave", "hi_dave")
 				.header("x-magic-app-id", "test").body(car.toString());
 
+		DateTime beforeCreate = DateTime.now();
 		JsonObject result = post(req, 201);
 
 		assertEquals(true, result.get("success").asBoolean());
 		assertEquals("car", result.get("type").asString());
 		assertNotNull(result.get("id"));
 
-		return result.get("id").asString();
-	}
+		String id = result.get("id").asString();
 
-	private void checkFindById(JsonObject car, String id) throws Exception {
-		GetRequest req = Unirest.get("http://{host}:8080/v1/data/car/{id}")
+		// check find by id
+
+		GetRequest req1 = Unirest.get("http://{host}:8080/v1/data/car/{id}")
 				.routeParam("host", MAGIC_HOST).routeParam("id", id)
 				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
 
-		JsonObject res = get(req, 200);
-		assertTrue(Json.equals(car, res));
-	}
+		JsonObject res1 = get(req1, 200);
 
-	private void checkUpdate(JsonValue car, String id) throws UnirestException {
-		RequestBodyEntity req1 = Unirest
+		JsonObject meta1 = res1.get("meta").asObject();
+		assertEquals("dave", meta1.get("createdBy").asString());
+		assertEquals("dave", meta1.get("updatedBy").asString());
+		DateTime createdAt = DateTime.parse(meta1.get("createdAt").asString());
+		assertTrue(createdAt.isAfter(beforeCreate.getMillis()));
+		assertTrue(createdAt.isBeforeNow());
+		assertEquals(meta1.get("updatedAt"), meta1.get("createdAt"));
+		assertTrue(Json.equals(car, res1.remove("meta")));
+
+		// create user vince
+
+		RequestBodyEntity req1a = Unirest
+				.post("http://localhost:8080/v1/user/")
+				.basicAuth("dave", "hi_dave")
+				.header("x-magic-app-id", "test")
+				.body(Json.builder().add("username", "vince")
+						.add("password", "hi_vince")
+						.add("email", "vince@magic.com").build().toString());
+
+		post(req1a, 201);
+
+		refreshIndex("test");
+
+		// update
+
+		RequestBodyEntity req2 = Unirest
 				.put("http://{host}:8080/v1/data/car/{id}")
 				.routeParam("host", MAGIC_HOST).routeParam("id", id)
-				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test")
+				.basicAuth("vince", "hi_vince")
+				.header("x-magic-app-id", "test")
 				.body(new JsonObject().add("color", "blue").toString());
 
-		put(req1, 200);
+		DateTime beforeUpdate = DateTime.now();
+		put(req2, 200);
 
-		GetRequest req2 = Unirest.get("http://{host}:8080/v1/data/car/{id}")
+		// check update is correct
+
+		GetRequest req3 = Unirest.get("http://{host}:8080/v1/data/car/{id}")
 				.routeParam("host", MAGIC_HOST).routeParam("id", id)
 				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
 
-		JsonObject res2 = get(req2, 200);
-		assertEquals("1234567890", res2.get("serialNumber").asString());
-		assertEquals("blue", res2.get("color").asString());
+		JsonObject res3 = get(req3, 200);
+
+		JsonObject meta3 = res3.get("meta").asObject();
+		assertEquals("dave", meta3.get("createdBy").asString());
+		assertEquals("vince", meta3.get("updatedBy").asString());
+		DateTime createdAtAfterUpdate = DateTime.parse(meta3.get("createdAt")
+				.asString());
+		assertEquals(createdAt, createdAtAfterUpdate);
+		DateTime updatedAt = DateTime.parse(meta3.get("updatedAt").asString());
+		assertTrue(updatedAt.isAfter(beforeUpdate.getMillis()));
+		assertTrue(updatedAt.isBeforeNow());
+		assertEquals("1234567890", res3.get("serialNumber").asString());
+		assertEquals("blue", res3.get("color").asString());
+
+		// delete
+
+		HttpRequestWithBody req4 = Unirest
+				.delete("http://{host}:8080/v1/data/car/{id}")
+				.routeParam("host", MAGIC_HOST).routeParam("id", id)
+				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
+
+		delete(req4, 200);
+
+		// check delete is done
+
+		JsonObject res5 = get(req1, 404);
+		assertFalse(res5.get("success").asBoolean());
 	}
 }

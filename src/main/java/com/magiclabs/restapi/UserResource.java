@@ -1,53 +1,39 @@
 package com.magiclabs.restapi;
 
-import java.util.concurrent.ExecutionException;
+import java.util.Collections;
 
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
-import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
-
-import org.elasticsearch.action.delete.DeleteResponse;
-import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.index.query.QueryBuilders;
 
 import com.eclipsesource.json.JsonObject;
 
 @Prefix("/v1")
 public class UserResource extends AbstractResource {
 
+	// singleton begin
+
+	private static UserResource singleton = new UserResource();
+
+	static UserResource get() {
+		return singleton;
+	}
+
+	private UserResource() {
+	}
+
+	// singleton end
+
 	static final String USER_TYPE = "user";
 
-	static final String USER_DEFAULT_MAPPING = Json.builder().stObj("user")
-			.add("dynamic", "strict").stObj("_id").add("path", "username")
-			.end().stObj("properties").stObj("username").add("type", "string")
-			.add("index", "not_analyzed").end().stObj("accountId")
-			.add("type", "string").add("index", "not_analyzed").end()
-			.stObj("email").add("type", "string").add("index", "not_analyzed")
-			.end().stObj("password").add("type", "string")
-			.add("index", "not_analyzed").end().stObj("groups")
-			.add("type", "string").add("index", "not_analyzed").end().build()
-			.toString();
-
-	static final JsonObject USER_DEFAULT_SCHEMA_OBJECT = SchemaBuilder
+	static final JsonObject USER_DEFAULT_SCHEMA = SchemaBuilder
 			.builder(USER_TYPE).id("username").add("username", "code", true)
 			.add("password", "code", true).add("email", "code", true)
 			.add("accountId", "code", true).add("groups", "code", false)
 			.build();
-
-	static final String USER_DEFAULT_SCHEMA = USER_DEFAULT_SCHEMA_OBJECT
-			.toString();
-
-	void initSchema(String accountId) throws InterruptedException,
-			ExecutionException {
-		new SchemaResource().upsertSchemaInternal(USER_TYPE,
-				USER_DEFAULT_SCHEMA, accountId);
-	}
 
 	@Get("/login")
 	@Get("/login/")
@@ -74,18 +60,7 @@ public class UserResource extends AbstractResource {
 	@Get("/user")
 	@Get("/user/")
 	public Payload getAll(Context context) {
-		try {
-			Credentials credentials = AccountResource.checkCredentials(context);
-
-			SearchResponse response = Start.getElasticClient()
-					.prepareSearch(credentials.getAccountId())
-					.setTypes(USER_TYPE)
-					.setQuery(QueryBuilders.matchAllQuery()).get();
-
-			return extractResults(response);
-		} catch (Throwable throwable) {
-			return error(throwable);
-		}
+		return DataResource.get().search(USER_TYPE, context);
 	}
 
 	@Post("/user")
@@ -99,15 +74,14 @@ public class UserResource extends AbstractResource {
 			user.username = input.getString("username", null);
 			user.email = input.getString("email", null);
 			user.password = input.getString("password", null);
+			user.groups = Collections.singletonList(credentials.getAccountId());
 			user.checkUserInputValidity();
 
-			byte[] userBytes = getObjectMapper().writeValueAsBytes(user);
+			String userId = DataResource.get().createInternal(
+					credentials.getAccountId(), USER_TYPE, user.toJsonObject(),
+					credentials.getId());
 
-			IndexResponse resp2 = Start.getElasticClient()
-					.prepareIndex(credentials.getAccountId(), USER_TYPE)
-					.setSource(userBytes).get();
-
-			return created("/v1", USER_TYPE, resp2.getId());
+			return created("/v1", USER_TYPE, userId);
 
 		} catch (Throwable throwable) {
 			return error(throwable);
@@ -117,39 +91,19 @@ public class UserResource extends AbstractResource {
 	@Get("/user/:id")
 	@Get("/user/:id/")
 	public Payload get(String id, Context context) {
-		try {
-			Credentials credentials = AccountResource.checkCredentials(context);
-			GetResponse response = Start.getElasticClient()
-					.prepareGet(credentials.getAccountId(), USER_TYPE, id)
-					.get();
-
-			if (!response.isExists())
-				return error(HttpStatus.NOT_FOUND,
-						"user for id [%s] not found", id);
-
-			return new Payload(JSON_CONTENT, response.getSourceAsBytes(),
-					HttpStatus.OK);
-		} catch (Throwable throwable) {
-			return error(throwable);
-		}
+		return DataResource.get().get(USER_TYPE, id, context);
 	}
 
 	@Delete("/user/:id")
 	@Delete("/user/:id/")
 	public Payload delete(String id, Context context) {
-		try {
-			Credentials credentials = AccountResource.checkCredentials(context);
+		return DataResource.get().delete(USER_TYPE, id, context);
+	}
 
-			DeleteResponse response = Start.getElasticClient()
-					.prepareDelete(credentials.getAccountId(), USER_TYPE, id)
-					.get();
-
-			return response.isFound() ? success() : error(HttpStatus.NOT_FOUND,
-					"user for id [%s] not found", id);
-
-		} catch (Throwable throwable) {
-			return error(throwable);
-		}
+	public static String getDefaultUserMapping() {
+		JsonObject schema = SchemaValidator.validate(USER_DEFAULT_SCHEMA,
+				USER_TYPE);
+		return SchemaTranslator.translate(USER_TYPE, schema).toString();
 	}
 
 }

@@ -1,9 +1,5 @@
 package com.magiclabs.restapi;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import net.codestory.http.constants.HttpStatus;
@@ -11,6 +7,7 @@ import net.codestory.http.payload.Payload;
 
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.mapper.MergeMappingException;
+import org.elasticsearch.indices.IndexMissingException;
 import org.elasticsearch.search.SearchHit;
 
 import com.eclipsesource.json.JsonArray;
@@ -77,6 +74,9 @@ public abstract class AbstractResource {
 		if (t instanceof NotFoundException) {
 			return error(HttpStatus.NOT_FOUND, t);
 		}
+		if (t instanceof IndexMissingException) {
+			return error(HttpStatus.NOT_FOUND, t);
+		}
 		if (t instanceof IllegalArgumentException) {
 			return error(HttpStatus.BAD_REQUEST, t);
 		}
@@ -90,13 +90,13 @@ public abstract class AbstractResource {
 				return error(HttpStatus.INTERNAL_SERVER_ERROR, t);
 		}
 
-		return error(HttpStatus.INTERNAL_SERVER_ERROR);
+		return error(HttpStatus.INTERNAL_SERVER_ERROR, t);
 	}
 
 	public static Payload error(int httpStatus, Throwable throwable) {
 		JsonBuilder builder = Json.builder().add("success", false);
 		if (throwable != null)
-			builder.add("error", toJsonObject(throwable));
+			builder.addJson("error", toJsonObject(throwable));
 		return new Payload(JSON_CONTENT, builder.build().toString(), httpStatus);
 	}
 
@@ -120,29 +120,19 @@ public abstract class AbstractResource {
 	}
 
 	protected Payload extractResults(SearchResponse response) {
-		List<Map<String, Object>> results = new ArrayList<Map<String, Object>>();
+		JsonBuilder builder = Json.builder()
+				.add("took", response.getTookInMillis())
+				.add("total", response.getHits().getTotalHits())
+				.stArr("results");
 
 		for (SearchHit hit : response.getHits().getHits()) {
-			Map<String, Object> map = new HashMap<String, Object>();
-			map.put("id", hit.getId());
-			map.put("type", hit.getType());
-			map.put("version", hit.getVersion());
-			// if (returnContents) {
-			map.put("object", hit.getSource());
-			// }
-			results.add(map);
+			JsonObject object = JsonObject.readFrom(hit.sourceAsString());
+			object.get("meta").asObject().add("id", hit.id())
+					.add("type", hit.type()).add("version", hit.version());
+			builder.addJson(object);
 		}
 
-		long total = response.getHits().getTotalHits();
-		Map<String, Object> payload = new HashMap<String, Object>();
-		payload.put("timeSpent", response.getTookInMillis());
-		payload.put("total", total);
-		payload.put("results", results);
-		// if (results.size() > 0) {
-		// payload.put("from", from);
-		// payload.put("to", from + results.size() - 1);
-		// }
-
-		return new Payload(JSON_CONTENT, payload, HttpStatus.OK);
+		return new Payload(JSON_CONTENT, builder.build().toString(),
+				HttpStatus.OK);
 	}
 }
