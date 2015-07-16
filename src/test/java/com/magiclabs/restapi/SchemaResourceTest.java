@@ -29,7 +29,7 @@ public class SchemaResourceTest extends AbstractTest {
 				.delete("http://localhost:8080/v1/schema/car")
 				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
 
-		delete(req1, 200);
+		delete(req1, 200, 404);
 
 		RequestBodyEntity req2 = Unirest
 				.post("http://localhost:8080/v1/schema/car")
@@ -41,7 +41,7 @@ public class SchemaResourceTest extends AbstractTest {
 
 	public static JsonObject buildCarSchema() {
 		return SchemaBuilder.builder("car") //
-				.add("serialNumber", "code", true) //
+				.add("serialNumber", "string", true) //
 				.add("buyDate", "date", true) //
 				.add("buyTime", "time", true) //
 				.add("buyTimestamp", "timestamp", true) //
@@ -89,10 +89,10 @@ public class SchemaResourceTest extends AbstractTest {
 				.startObject("address", true) //
 				.add("number", "integer", false)//
 				.add("street", "text", true) //
-				.add("city", "code", true) //
-				.add("country", "code", true) //
+				.add("city", "string", true) //
+				.add("country", "string", true) //
 				.end() //
-				.add("phone", "code", false)//
+				.add("phone", "string", false)//
 				.add("location", "geopoint", true) //
 				.build();
 	}

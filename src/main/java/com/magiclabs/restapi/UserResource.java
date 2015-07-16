@@ -30,9 +30,9 @@ public class UserResource extends AbstractResource {
 	static final String USER_TYPE = "user";
 
 	static final JsonObject USER_DEFAULT_SCHEMA = SchemaBuilder
-			.builder(USER_TYPE).id("username").add("username", "code", true)
-			.add("password", "code", true).add("email", "code", true)
-			.add("accountId", "code", true).add("groups", "code", false)
+			.builder(USER_TYPE).id("username").add("username", "string", true)
+			.add("password", "string", true).add("email", "string", true)
+			.add("accountId", "string", true).add("groups", "string", false)
 			.build();
 
 	@Get("/login")

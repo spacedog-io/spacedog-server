@@ -1,5 +1,6 @@
 package com.magiclabs.restapi;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,14 +25,16 @@ public class SchemaValidator {
 		JsonObject rootObject = checkField(schema, type, true, JsonType.OBJECT)
 				.get().asObject();
 
-		checkAllFieldsAreValid(schema, Lists.newArrayList(type));
+		checkAllFieldsAreValid(schema, Collections.singletonList(type));
 
 		String rootType = checkField(rootObject, "_type", false,
 				JsonType.STRING).orElse(JsonValue.valueOf("object")).asString();
 
-		if (rootType.equals("stash")) {
-			checkStashProperty(type, rootObject);
-		} else if (rootType.equals("object")) {
+		// if (rootType.equals("stash")) {
+		// checkStashProperty(type, rootObject);
+		// } else
+
+		if (rootType.equals("object")) {
 			checkField(rootObject, "_id", false, JsonType.STRING);
 			Optional<JsonValue> opt = checkField(rootObject, "_acl", false,
 					JsonType.OBJECT);
@@ -90,7 +93,7 @@ public class SchemaValidator {
 
 		if (type.equals("text"))
 			checkTextProperty(propertyName, jsonObject);
-		else if (type.equals("code"))
+		else if (type.equals("string"))
 			checkCodeProperty(propertyName, jsonObject);
 		else if (type.equals("date"))
 			checkDateProperty(propertyName, jsonObject);

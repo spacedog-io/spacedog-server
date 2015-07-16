@@ -89,7 +89,7 @@
     "_meta": {
       "myschema": {
         "string": {
-          "_type": "code",
+          "_type": "string",
           "_required": true
         },
         "text": {

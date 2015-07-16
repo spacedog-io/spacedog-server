@@ -84,7 +84,7 @@ public class SchemaTranslator {
 
 		if ("text".equals(type)) {
 			mapping.add("type", "string");
-		} else if ("code".equals(type)) {
+		} else if ("string".equals(type)) {
 			mapping.add("type", "string");
 			mapping.add("index", "not_analyzed");
 		} else if ("boolean".equals(type)) {

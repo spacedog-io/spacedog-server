@@ -10,13 +10,16 @@ public class SchemaValidatorTest extends Assert {
 
 	@Test
 	public void shouldSucceedToValidateSchema() {
-		testValidSchema(Json.builder().stObj("car").add("_type", "stash"));
+
+		// no yet valid
+		// testValidSchema(Json.builder().stObj("car").add("_type", "stash"));
+
 		testValidSchema(Json.builder().stObj("car").stObj("color")
 				.add("_type", "enum").add("_required", true).end()
-				.stObj("model").add("_type", "code").add("_required", true));
+				.stObj("model").add("_type", "string").add("_required", true));
 		testValidSchema(Json.builder().stObj("car").stObj("color")
 				.add("_type", "enum").add("_required", true).end()
-				.stObj("model").add("_type", "code").add("_required", true)
+				.stObj("model").add("_type", "string").add("_required", true)
 				.end().stObj("descr").stObj("short").add("_type", "text").end()
 				.stObj("detailed").add("_type", "stash"));
 	}
