@@ -9,6 +9,22 @@ import com.google.common.base.Strings;
 
 public class Json {
 
+	public static JsonValue get(JsonValue json, String path) {
+
+		JsonValue current = json;
+
+		for (String s : path.split("\\.")) {
+
+			if (current.isObject())
+				current = current.asObject().get(s);
+
+			else if (current.isArray())
+				current = current.asArray().get(Integer.parseInt(s));
+		}
+
+		return current;
+	}
+
 	public static boolean equals(JsonValue v1, JsonValue v2) {
 		if (v1 == v2)
 			return true;
