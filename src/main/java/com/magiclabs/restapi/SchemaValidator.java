@@ -155,8 +155,10 @@ public class SchemaValidator {
 	private static void checkTextProperty(String propertyName, JsonObject json)
 			throws InvalidSchemaException {
 		checkNoProperties(propertyName, "text", json);
-		checkAllSettingsAreValid(json, Lists.newArrayList("_type", "_required"));
+		checkAllSettingsAreValid(json,
+				Lists.newArrayList("_type", "_required", "_language"));
 		checkField(json, "_required", false, JsonType.BOOLEAN);
+		checkField(json, "_language", false, JsonType.STRING);
 	}
 
 	private static void checkArrayProperty(String propertyName, JsonObject json)

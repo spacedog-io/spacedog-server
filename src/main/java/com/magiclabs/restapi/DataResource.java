@@ -1,5 +1,7 @@
 package com.magiclabs.restapi;
 
+import java.util.concurrent.ExecutionException;
+
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -12,10 +14,10 @@ import net.codestory.http.payload.Payload;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.common.base.Strings;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.joda.time.DateTime;
 
 import com.eclipsesource.json.JsonObject;
@@ -192,37 +194,38 @@ public class DataResource extends AbstractResource {
 	}
 
 	private Payload doSearch(String index, String type, String json,
-			Context context) {
+			Context context) throws InterruptedException, ExecutionException {
 
-		SearchRequestBuilder builder = Start.getElasticClient().prepareSearch(
-				index);
+		SearchRequest request = new SearchRequest(index);
 
 		if (!Strings.isNullOrEmpty(type)) {
 			// check if type is well defined
 			// throws a NotFoundException if not
 			SchemaResource.getSchema(index, type);
-			builder.setTypes(type);
+			request.types(type);
 		}
 
 		if (Strings.isNullOrEmpty(json)) {
-			int from = context.request().query().getInteger("from", 0);
-			int size = context.request().query().getInteger("size", 10);
-			boolean returnContents = context.request().query()
-					.getBoolean("fetch-contents", true);
+			SearchSourceBuilder builder = SearchSourceBuilder
+					.searchSource()
+					.from(context.request().query().getInteger("from", 0))
+					.size(context.request().query().getInteger("size", 10))
+					.fetchSource(
+							context.request().query()
+									.getBoolean("fetch-contents", true))
+					.query(QueryBuilders.matchAllQuery());
 
-			builder.setFrom(from).setSize(size).setFetchSource(returnContents);
-
-			QueryBuilder query = QueryBuilders.matchAllQuery();
-			String searchString = context.get("s");
-			if (!Strings.isNullOrEmpty(searchString)) {
-				query = QueryBuilders.simpleQueryStringQuery(searchString);
+			String queryText = context.get("q");
+			if (!Strings.isNullOrEmpty(queryText)) {
+				builder.query(QueryBuilders.simpleQueryStringQuery(queryText));
 			}
-			builder.setQuery(query);
+
+			request.extraSource(builder);
 
 		} else {
-			builder.setSource(json);
+			request.source(json);
 		}
 
-		return extractResults(builder.get());
+		return extractResults(Start.getElasticClient().search(request).get());
 	}
 }

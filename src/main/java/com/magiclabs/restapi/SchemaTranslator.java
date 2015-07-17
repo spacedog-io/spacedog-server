@@ -84,6 +84,8 @@ public class SchemaTranslator {
 
 		if ("text".equals(type)) {
 			mapping.add("type", "string");
+			mapping.add("index", "analyzed");
+			mapping.add("analyzer", schema.getString("_language", "english"));
 		} else if ("string".equals(type)) {
 			mapping.add("type", "string");
 			mapping.add("index", "not_analyzed");

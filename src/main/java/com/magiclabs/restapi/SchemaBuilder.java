@@ -37,6 +37,12 @@ public class SchemaBuilder {
 		return this;
 	}
 
+	public SchemaBuilder addText(String key, String language, boolean mandatory) {
+		this.add(key, Schema.PropertyTypes.TEXT.toString(), mandatory);
+		currentJson.get(key).asObject().add("_language", language);
+		return this;
+	}
+
 	public SchemaBuilder startObject(String key, boolean mandatory) {
 		JsonObject nextJson = new JsonObject();
 		nextJson.add("_type", "object");

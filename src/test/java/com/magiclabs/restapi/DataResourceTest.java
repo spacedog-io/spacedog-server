@@ -25,15 +25,25 @@ public class DataResourceTest extends AbstractTest {
 	@Test
 	public void shouldCreateFindUpdateAndDelete() throws Exception {
 
-		JsonObject car = Json.builder() //
-				.add("serialNumber", "1234567890") //
-				.add("buyDate", "2015-01-09") //
-				.add("buyTime", "15:37:00") //
-				.add("buyTimestamp", "2015-01-09T15:37:00.123Z") //
-				.add("color", "red") //
-				.add("techChecked", false) //
-				.stObj("model") //
-				.add("description", "") //
+		JsonObject car = Json
+				.builder()
+				//
+				.add("serialNumber", "1234567890")
+				//
+				.add("buyDate", "2015-01-09")
+				//
+				.add("buyTime", "15:37:00")
+				//
+				.add("buyTimestamp", "2015-01-09T15:37:00.123Z")
+				//
+				.add("color", "red")
+				//
+				.add("techChecked", false)
+				//
+				.stObj("model")
+				//
+				.add("description",
+						"Cette voiture sent bon la France. Elle est inventive et raffinée.") //
 				.add("fiscalPower", 8) //
 				.add("size", 4.67) //
 				.end() //
@@ -42,7 +52,7 @@ public class DataResourceTest extends AbstractTest {
 				.add("lon", -54.6765) //
 				.build();
 
-		// check create
+		// create
 
 		RequestBodyEntity req = Unirest.post("http://{host}:8080/v1/data/car")
 				.routeParam("host", MAGIC_HOST).basicAuth("dave", "hi_dave")
@@ -57,7 +67,9 @@ public class DataResourceTest extends AbstractTest {
 
 		String id = result.get("id").asString();
 
-		// check find by id
+		refreshIndex("test");
+
+		// find by id
 
 		GetRequest req1 = Unirest.get("http://{host}:8080/v1/data/car/{id}")
 				.routeParam("host", MAGIC_HOST).routeParam("id", id)
@@ -73,6 +85,15 @@ public class DataResourceTest extends AbstractTest {
 		assertTrue(createdAt.isBeforeNow());
 		assertEquals(meta1.get("updatedAt"), meta1.get("createdAt"));
 		assertTrue(Json.equals(car, res1.remove("meta")));
+
+		// find by full text search
+
+		GetRequest req1b = Unirest.get("http://{host}:8080/v1/data/car?q={q}")
+				.routeParam("host", MAGIC_HOST).routeParam("q", "inVENt*")
+				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
+
+		JsonObject res1b = get(req1b, 200);
+		assertEquals(id, Json.get(res1b, "results.0.meta.id").asString());
 
 		// create user vince
 

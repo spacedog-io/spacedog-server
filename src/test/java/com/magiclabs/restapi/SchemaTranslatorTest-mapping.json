@@ -11,7 +11,9 @@
         "index": "not_analyzed"
       },
       "text": {
-        "type": "string"
+        "type": "string",
+        "index": "analyzed",
+        "analyzer": "english"
       },
       "boolean": {
         "type": "boolean"

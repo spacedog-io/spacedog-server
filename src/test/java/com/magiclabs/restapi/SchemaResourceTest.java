@@ -48,7 +48,7 @@ public class SchemaResourceTest extends AbstractTest {
 				.add("color", "enum", true) //
 				.add("techChecked", "boolean", true) //
 				.startObject("model", true) //
-				.add("description", "text", true) //
+				.addText("description", "french", true) //
 				.add("fiscalPower", "integer", true) //
 				.add("size", "float", true) //
 				.end() //

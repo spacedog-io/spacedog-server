@@ -8,6 +8,7 @@ import com.magiclabs.restapi.SchemaValidator.InvalidSchemaException;
 
 public class Schema {
 
+	@SuppressWarnings("serial")
 	public static class InvalidDataObjectException extends RuntimeException {
 
 		public InvalidDataObjectException(String message) {
@@ -20,8 +21,13 @@ public class Schema {
 
 	}
 
-	private static enum MagicType {
-		OBJECT, ARRAY, TEXT, STRING, BOOLEAN, GEOPOINT, NUMBER, DATE, TIME, TIMESTAMP, ENUM, AMOUNT, STASH, REF, FILE
+	public static enum PropertyTypes {
+		OBJECT, ARRAY, TEXT, STRING, BOOLEAN, GEOPOINT, NUMBER, //
+		DATE, TIME, TIMESTAMP, ENUM, AMOUNT, STASH, REF, FILE;
+
+		public String toString() {
+			return super.toString().toLowerCase();
+		}
 	}
 
 	private String _id;
@@ -92,7 +98,7 @@ public class Schema {
 	}
 
 	public class TextProperty extends Property {
-		private String language = "en"; // TODO find the real java type
+		private String language = "english"; // TODO find the real java type
 		private int _min = 0;
 		private int _max = 10000;
 
