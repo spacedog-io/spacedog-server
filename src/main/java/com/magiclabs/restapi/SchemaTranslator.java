@@ -123,7 +123,7 @@ public class SchemaTranslator {
 			mapping.add("geohash_prefix", "true");
 		} else if ("object".equals(type)) {
 			mapping.add("type", "object");
-			mapping.add("properties", toElasticProperties(schema.asObject()));
+			mapping.add("properties", toElasticProperties(schema));
 		} else if ("stash".equals(type)) {
 			mapping.add("type", "object");
 			mapping.add("enabled", false);

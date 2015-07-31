@@ -28,6 +28,10 @@ public class Schema {
 		public String toString() {
 			return super.toString().toLowerCase();
 		}
+
+		public static PropertyTypes valueOfIgnoreCase(String value) {
+			return valueOf(value.toUpperCase());
+		}
 	}
 
 	private String _id;

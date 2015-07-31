@@ -41,18 +41,53 @@ public class SchemaResourceTest extends AbstractTest {
 
 	public static JsonObject buildCarSchema() {
 		return SchemaBuilder.builder("car") //
-				.add("serialNumber", "string", true) //
-				.add("buyDate", "date", true) //
-				.add("buyTime", "time", true) //
-				.add("buyTimestamp", "timestamp", true) //
-				.add("color", "enum", true) //
-				.add("techChecked", "boolean", true) //
-				.startObject("model", true) //
-				.addText("description", "french", true) //
-				.add("fiscalPower", "integer", true) //
-				.add("size", "float", true) //
+				.add("serialNumber", "string").required() //
+				.add("buyDate", "date").required() //
+				.add("buyTime", "time").required() //
+				.add("buyTimestamp", "timestamp").required() //
+				.add("color", "enum").required() //
+				.add("techChecked", "boolean").required() //
+				.startObject("model").required() //
+				.add("description", "text").language("french").required() //
+				.add("fiscalPower", "integer").required() //
+				.add("size", "float").required() //
 				.end() //
-				.add("location", "geopoint", true) //
+				.add("location", "geopoint").required() //
+				.build();
+	}
+
+	public static void resetSaleSchema() throws UnirestException {
+		HttpRequestWithBody req1 = Unirest
+				.delete("http://localhost:8080/v1/schema/sale")
+				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
+
+		delete(req1, 200, 404);
+
+		RequestBodyEntity req2 = Unirest
+				.post("http://localhost:8080/v1/schema/sale")
+				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test")
+				.body(buildSaleSchema().toString());
+
+		post(req2, 201);
+	}
+
+	public static JsonObject buildSaleSchema() {
+		return SchemaBuilder.builder("sale") //
+				.add("number", "string").required() //
+				.add("when", "timestamp").required() //
+				.add("where", "geopoint") //
+				.add("online", "boolean").required() //
+				.add("deliveryDate", "date").required() //
+				.add("deliveryTime", "time").required() //
+				.startObject("items").required() //
+				.array() //
+				.add("ref", "string").required() //
+				.add("description", "text").required() //
+				.language("english") //
+				.add("quantity", "integer") //
+				// .add("price", "amount").required() //
+				.add("type", "enum").required() //
+				.end() //
 				.build();
 	}
 
@@ -85,15 +120,15 @@ public class SchemaResourceTest extends AbstractTest {
 
 	private static JsonObject buildHomeSchema() {
 		return SchemaBuilder.builder("home") //
-				.add("type", "enum", true) //
-				.startObject("address", true) //
-				.add("number", "integer", false)//
-				.add("street", "text", true) //
-				.add("city", "string", true) //
-				.add("country", "string", true) //
+				.add("type", "enum").required() //
+				.startObject("address").required() //
+				.add("number", "integer")//
+				.add("street", "text").required() //
+				.add("city", "string").required() //
+				.add("country", "string").required() // /
 				.end() //
-				.add("phone", "string", false)//
-				.add("location", "geopoint", true) //
+				.add("phone", "string")//
+				.add("location", "geopoint").required() //
 				.build();
 	}
 
@@ -101,17 +136,19 @@ public class SchemaResourceTest extends AbstractTest {
 	public void shouldGetAllSchemas() throws UnirestException {
 		resetCarSchema();
 		resetHomeSchema();
+		resetSaleSchema();
 
 		GetRequest req = Unirest.get("http://localhost:8080/v1/schema")
 				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
 
 		JsonObject result = get(req, 200);
 
-		// user, car and home
-		assertEquals(3, result.size());
+		// user, car, sale and home
+		assertEquals(4, result.size());
 		JsonObject expected = Json.merger() //
 				.add(buildHomeSchema()) //
 				.add(buildCarSchema()) //
+				.add(buildSaleSchema()) //
 				.add(UserResource.USER_DEFAULT_SCHEMA) //
 				.get();
 

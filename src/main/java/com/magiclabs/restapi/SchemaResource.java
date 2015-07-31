@@ -102,8 +102,8 @@ public class SchemaResource extends AbstractResource {
 		try {
 			Credentials credentials = AccountResource.checkCredentials(context);
 
-			JsonObject schema = SchemaValidator.validate(
-					type, JsonObject.readFrom(newSchemaAsString));
+			JsonObject schema = SchemaValidator.validate(type,
+					JsonObject.readFrom(newSchemaAsString));
 
 			String elasticMapping = SchemaTranslator.translate(type, schema)
 					.toString();

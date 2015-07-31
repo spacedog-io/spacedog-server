@@ -1,10 +1,6 @@
 package com.magiclabs.restapi;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
-
-import org.elasticsearch.common.collect.Lists;
 
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
@@ -15,17 +11,13 @@ public class SchemaValidator {
 		OBJECT, ARRAY, BOOLEAN, STRING, NUMBER
 	}
 
-	private static enum MagicTypes {
-		OBJECT, ARRAY, TEXT, CODE, BOOLEAN, GEOPOINT, NUMBER, DATE, TIME, TIMESTAMP, ENUM, STASH
-	}
-
 	public static JsonObject validate(String type, JsonObject schema)
 			throws InvalidSchemaException {
 
 		JsonObject rootObject = checkField(schema, type, true, JsonType.OBJECT)
 				.get().asObject();
 
-		checkAllFieldsAreValid(schema, Collections.singletonList(type));
+		checkIfInvalidField(schema, false, type);
 
 		String rootType = checkField(rootObject, "_type", false,
 				JsonType.STRING).orElse(JsonValue.valueOf("object")).asString();
@@ -41,8 +33,7 @@ public class SchemaValidator {
 			if (opt.isPresent()) {
 				checkAcl(type, opt.get().asObject());
 			}
-			checkAllSettingsAreValid(rootObject,
-					Lists.newArrayList("_acl", "_id"));
+			checkIfInvalidField(rootObject, true, "_acl", "_id");
 			checkObjectProperties(type, rootObject);
 		} else
 			throw InvalidSchemaException.invalidObjectType(type, rootType);
@@ -73,8 +64,8 @@ public class SchemaValidator {
 		checkField(json, "_type", false, JsonType.STRING,
 				JsonValue.valueOf("object"));
 		checkField(json, "_required", false, JsonType.BOOLEAN);
-		checkAllSettingsAreValid(json, Lists.newArrayList("_type", "_required"));
-
+		checkField(json, "_array", false, JsonType.BOOLEAN);
+		checkIfInvalidField(json, true, "_type", "_required", "_array");
 		checkObjectProperties(propertyName, json);
 	}
 
@@ -94,173 +85,82 @@ public class SchemaValidator {
 		if (type.equals("text"))
 			checkTextProperty(propertyName, jsonObject);
 		else if (type.equals("string"))
-			checkCodeProperty(propertyName, jsonObject);
+			checkSimpleProperty(jsonObject, propertyName, type);
 		else if (type.equals("date"))
-			checkDateProperty(propertyName, jsonObject);
+			checkSimpleProperty(jsonObject, propertyName, type);
 		else if (type.equals("time"))
-			checkTimeProperty(propertyName, jsonObject);
+			checkSimpleProperty(jsonObject, propertyName, type);
 		else if (type.equals("timestamp"))
-			checkTimestampProperty(propertyName, jsonObject);
+			checkSimpleProperty(jsonObject, propertyName, type);
 		else if (type.equals("integer"))
-			checkIntegerProperty(propertyName, jsonObject);
+			checkSimpleProperty(jsonObject, propertyName, type);
 		else if (type.equals("long"))
-			checkLongProperty(propertyName, jsonObject);
+			checkSimpleProperty(jsonObject, propertyName, type);
 		else if (type.equals("float"))
-			checkFloatProperty(propertyName, jsonObject);
+			checkSimpleProperty(jsonObject, propertyName, type);
 		else if (type.equals("double"))
-			checkDoubleProperty(propertyName, jsonObject);
+			checkSimpleProperty(jsonObject, propertyName, type);
 		else if (type.equals("boolean"))
-			checkBooleanProperty(propertyName, jsonObject);
+			checkSimpleProperty(jsonObject, propertyName, type);
 		else if (type.equals("object"))
 			checkObjectProperty(propertyName, jsonObject);
-		else if (type.equals("array"))
-			checkArrayProperty(propertyName, jsonObject);
 		else if (type.equals("enum"))
 			checkEnumProperty(propertyName, jsonObject);
 		else if (type.equals("geopoint"))
-			checkGeoPointProperty(propertyName, jsonObject);
+			checkSimpleProperty(jsonObject, propertyName, type);
 		else if (type.equals("stash"))
 			checkStashProperty(propertyName, jsonObject);
 		else
 			throw new InvalidSchemaException("Invalid field type: " + type);
 	}
 
-	private static void checkStashProperty(String type, JsonObject json) {
-		checkNoProperties(type, "stash", json);
-		checkAllSettingsAreValid(json, Lists.newArrayList("_type", "_required"));
+	private static void checkSimpleProperty(JsonObject json,
+			String propertyName, String propertyType)
+			throws InvalidSchemaException {
 		checkField(json, "_required", false, JsonType.BOOLEAN);
+		checkField(json, "_array", false, JsonType.BOOLEAN);
+		checkIfInvalidField(json, false, "_type", "_required", "_array");
 	}
 
-	private static void checkGeoPointProperty(String propertyName,
-			JsonObject json) throws InvalidSchemaException {
-		checkNoProperties(propertyName, "geopoint", json);
-		checkAllSettingsAreValid(json, Lists.newArrayList("_type", "_required"));
+	private static void checkStashProperty(String type, JsonObject json) {
 		checkField(json, "_required", false, JsonType.BOOLEAN);
+		checkIfInvalidField(json, false, "_type", "_required");
 	}
 
 	private static void checkEnumProperty(String propertyName, JsonObject json)
 			throws InvalidSchemaException {
-		checkNoProperties(propertyName, "enum", json);
-		checkAllSettingsAreValid(json, Lists.newArrayList("_type", "_required"));
 		checkField(json, "_required", false, JsonType.BOOLEAN);
-	}
-
-	private static void checkCodeProperty(String propertyName, JsonObject json)
-			throws InvalidSchemaException {
-		checkNoProperties(propertyName, "code", json);
-		checkAllSettingsAreValid(json, Lists.newArrayList("_type", "_required"));
-		checkField(json, "_required", false, JsonType.BOOLEAN);
+		checkField(json, "_array", false, JsonType.BOOLEAN);
+		checkIfInvalidField(json, false, "_type", "_required", "_array");
 	}
 
 	private static void checkTextProperty(String propertyName, JsonObject json)
 			throws InvalidSchemaException {
-		checkNoProperties(propertyName, "text", json);
-		checkAllSettingsAreValid(json,
-				Lists.newArrayList("_type", "_required", "_language"));
+		checkIfInvalidField(json, false, "_type", "_required", "_language",
+				"_array");
 		checkField(json, "_required", false, JsonType.BOOLEAN);
 		checkField(json, "_language", false, JsonType.STRING);
+		checkField(json, "_array", false, JsonType.BOOLEAN);
 	}
 
-	private static void checkArrayProperty(String propertyName, JsonObject json)
-			throws InvalidSchemaException {
-		checkNoProperties(propertyName, "array", json);
-		checkAllSettingsAreValid(json, Lists.newArrayList("_type", "_required"));
-		checkField(json, "_required", false, JsonType.BOOLEAN);
-	}
-
-	private static void checkBooleanProperty(String propertyName,
-			JsonObject json) throws InvalidSchemaException {
-		checkNoProperties(propertyName, "boolean", json);
-		checkAllSettingsAreValid(json, Lists.newArrayList("_type", "_required"));
-		checkField(json, "_required", false, JsonType.BOOLEAN);
-	}
-
-	private static void checkIntegerProperty(String propertyName,
-			JsonObject json) throws InvalidSchemaException {
-		checkNoProperties(propertyName, "integer", json);
-		checkAllSettingsAreValid(json, Lists.newArrayList("_type", "_required"));
-		checkField(json, "_required", false, JsonType.BOOLEAN);
-	}
-
-	private static void checkLongProperty(String propertyName, JsonObject json)
-			throws InvalidSchemaException {
-		checkNoProperties(propertyName, "long", json);
-		checkAllSettingsAreValid(json, Lists.newArrayList("_type", "_required"));
-		checkField(json, "_required", false, JsonType.BOOLEAN);
-	}
-
-	private static void checkFloatProperty(String propertyName, JsonObject json)
-			throws InvalidSchemaException {
-		checkNoProperties(propertyName, "float", json);
-		checkAllSettingsAreValid(json, Lists.newArrayList("_type", "_required"));
-		checkField(json, "_required", false, JsonType.BOOLEAN);
-	}
-
-	private static void checkDoubleProperty(String propertyName, JsonObject json)
-			throws InvalidSchemaException {
-		checkNoProperties(propertyName, "double", json);
-		checkAllSettingsAreValid(json, Lists.newArrayList("_type", "_required"));
-		checkField(json, "_required", false, JsonType.BOOLEAN);
-	}
-
-	private static void checkTimestampProperty(String propertyName,
-			JsonObject json) throws InvalidSchemaException {
-		checkNoProperties(propertyName, "timestamp", json);
-		checkAllSettingsAreValid(json, Lists.newArrayList("_type", "_required"));
-		checkField(json, "_required", false, JsonType.BOOLEAN);
-	}
-
-	private static void checkTimeProperty(String propertyName, JsonObject json)
-			throws InvalidSchemaException {
-		checkNoProperties(propertyName, "time", json);
-		checkAllSettingsAreValid(json, Lists.newArrayList("_type", "_required"));
-		checkField(json, "_required", false, JsonType.BOOLEAN);
-	}
-
-	private static void checkDateProperty(String propertyName, JsonObject json)
-			throws InvalidSchemaException {
-		checkNoProperties(propertyName, "date", json);
-		checkAllSettingsAreValid(json, Lists.newArrayList("_type", "_required"));
-		checkField(json, "_required", false, JsonType.BOOLEAN);
-	}
-
-	private static void checkAllFieldsAreValid(JsonObject json,
-			List<String> validFieldNames) {
+	private static void checkIfInvalidField(JsonObject json,
+			boolean checkSettingsOnly, String... validFieldNames) {
 		json.names()
 				.stream()
-				.filter(name -> !validFieldNames.contains(name))
+				.filter(name -> checkSettingsOnly ? name.charAt(0) == ('_')
+						: true)
+				.filter(name -> {
+					for (String validName : validFieldNames) {
+						if (name.equals(validName))
+							return false;
+					}
+					return true;
+				})
 				.findFirst()
 				.ifPresent(
 						name -> {
-							throw new InvalidSchemaException(String.format(
-									"invalid field [%s]", name));
-						});
-	}
-
-	private static void checkNoProperties(String propertyName,
-			String propertyType, JsonObject json) {
-		json.names()
-				.stream()
-				.filter(name -> name.charAt(0) != ('_'))
-				.findAny()
-				.ifPresent(
-						fieldName -> {
-							throw InvalidSchemaException.noProperties(
-									fieldName, propertyName, propertyType);
-						});
-	}
-
-	private static void checkAllSettingsAreValid(JsonObject json,
-			List<String> validSettingNames) {
-		json.names()
-				.stream()
-				.filter(name -> name.charAt(0) == ('_'))
-				.filter(name -> !validSettingNames.contains(name))
-				.findFirst()
-				.ifPresent(
-						name -> {
-							throw new InvalidSchemaException(String.format(
-									"invalid property setting [%s]", name));
+							throw InvalidSchemaException.invalidField(name,
+									validFieldNames);
 						});
 	}
 
@@ -317,12 +217,11 @@ public class SchemaValidator {
 			super(message);
 		}
 
-		public static InvalidSchemaException noProperties(String fieldName,
-				String propertyName, String propertyType) {
-			return new InvalidSchemaException(
-					String.format(
-							"invalid field [%s], property [%s] of type [%s] should not have any nested properties",
-							fieldName, propertyName, propertyType));
+		public static InvalidSchemaException invalidField(String fieldName,
+				String... expectedFiedNames) {
+			return new InvalidSchemaException(String.format(
+					"invalid field [%s]: expected fields are [%s]", fieldName,
+					expectedFiedNames));
 		}
 
 		public static InvalidSchemaException invalidObjectType(String type,

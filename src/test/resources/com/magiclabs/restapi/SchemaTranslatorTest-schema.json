@@ -42,6 +42,20 @@
     },
     "stash": {
       "_type": "stash"
+    },
+    "integerArray": {
+      "_type": "integer",
+      "_array": true
+    },
+    "objectArray": {
+      "_type": "object",
+      "_array": true,
+      "string": {
+       "_type": "string"
+      },
+      "integer": {
+        "_type": "integer"
+      }
     }
   }
 }

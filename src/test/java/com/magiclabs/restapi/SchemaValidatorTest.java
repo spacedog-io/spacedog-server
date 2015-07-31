@@ -22,6 +22,13 @@ public class SchemaValidatorTest extends Assert {
 				.stObj("model").add("_type", "string").add("_required", true)
 				.end().stObj("descr").stObj("short").add("_type", "text").end()
 				.stObj("detailed").add("_type", "stash"));
+		testValidSchema(Json.builder().stObj("car").stObj("color")
+				.add("_type", "enum").add("_required", true)
+				.add("_array", true).end().stObj("model")
+				.add("_type", "object").add("_required", true)
+				.add("_array", true).stObj("name").add("_type", "string")
+				.add("_required", true).end().stObj("description")
+				.add("_type", "text"));
 	}
 
 	private void testValidSchema(JsonBuilder builder) {

@@ -1,12 +1,8 @@
 package com.magiclabs.restapi;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -29,27 +25,17 @@ public class SchemaTranslatorTest extends Assert {
 		// validate and translate
 		SchemaValidator.validate("myschema", schema);
 		JsonObject mapping = SchemaTranslator.translate("myschema", schema);
+		System.out.println("Translated schema into mapping =");
+		System.out.println(mapping.toString());
 
-		try {
-			// load expected mapping
-			URL urlExpectedMapping = Resources
-					.getResource("com/magiclabs/restapi/SchemaTranslatorTest-mapping.json");
-			String jsonExpectedMapping = Resources.toString(urlExpectedMapping,
-					utf8);
-			JsonObject expectedMapping = JsonObject
-					.readFrom(jsonExpectedMapping);
+		// load expected mapping
+		URL urlExpectedMapping = Resources
+				.getResource("com/magiclabs/restapi/SchemaTranslatorTest-mapping.json");
+		String jsonExpectedMapping = Resources.toString(urlExpectedMapping,
+				utf8);
+		JsonObject expectedMapping = JsonObject.readFrom(jsonExpectedMapping);
 
-			// assert
-			assertTrue(Json.equals(mapping, expectedMapping));
-
-		} catch (IllegalArgumentException exc) {
-
-			// save mapping if no expected mapping found
-			Path path = Paths.get("SchemaTranslatorTest-mapping.json");
-			BufferedWriter writer = Files.newBufferedWriter(path, utf8);
-			writer.write(mapping.toString());
-			writer.close();
-		}
-
+		// assert
+		assertTrue(Json.equals(mapping, expectedMapping));
 	}
 }
