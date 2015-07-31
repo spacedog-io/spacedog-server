@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+	  <meta charset="utf-8"/>
+	  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+	  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+	  <title>SpaceZ documentation: Configuration</title>
+	  <meta name="description" content="Forget about server-side pain. Focus on creating amazing user experiences. Sign up and immediately access our backend services. Save and search for data. Edit and push new contents. Deploy and publish resources and services.
+"/>
+
+	  <meta name="author" content="David Attias"/>
+
+	  <link rel="stylesheet" href="/css/spacez.css"/>
+	  <link rel="stylesheet" href="/css/highlight.css"/>
+	  
+	  <link rel="icon" type="image/png" href="images/favicon.png"/>
+	</head>
+
+  <body>
+
+	<header>
+      <nav>
+        <a class= "logo" href="/">SpaceZ</a>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/documentation.html">Documentation</a></li>
+          <li><a class="button" href="/signin">Sign in</a></li>
+        </ul>
+      </nav>    
+    </header>
+
+    <menu>
+		<h5>User's guide</h5>
+		
+    <ul>
+      
+			
+       	<li>
+          
+          
+            <a  href="/user-guide/Signing-up.html"> Signing up </a>
+          
+      </li>
+     	
+       	<li>
+          
+          
+            <a  href="/user-guide/Storing-and-searching-data.html"> Storing and searching data </a>
+          
+      </li>
+     	
+       	<li>
+          
+          
+            <a  href="/user-guide/Data-object-schema.html"> Data object schema </a>
+          
+      </li>
+     	
+       	<li>
+          
+          
+            <a  href="/user-guide/Deploy-to-the-cloud.html"> Deploy to the cloud </a>
+          
+      </li>
+     	
+       	<li>
+          
+          
+            <a  href="/user-guide/Configurations-and-contents.html"> Configurations and contents </a>
+          
+      </li>
+     	
+    </ul>
+
+   	</br>
+    <h5>Reference's guide</h5>
+		
+    <ul>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Accounts.html"> Accounts </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Batch.html"> Batch </a>
+          
+        </li>
+      
+        <li>
+          
+            <a  class="active"  href="/reference-guide/Configuration.html"> Configuration --> </a>
+          
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Contents.html"> Contents </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Data.html"> Data </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Files.html"> Files </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Jobs.html"> Jobs </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Logging.html"> Logging </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/PDF-&-Emails.html"> PDF & Emails </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Queues.html"> Queues </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Schema.html"> Schema </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Services.html"> Services </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Stash.html"> Stash </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Users.html"> Users </a>
+          
+        </li>
+      
+    </ul>
+
+    </menu>
+
+    <div class="doc">
+
+	    <h1>Config</h1>
+
+<p>Use the config API endpoints to configure your app. A configuration is a plain JSON object containing the first properties an app needs to initialize. It can contant for example the base URL of the backend API, the name of a data store, ... New version of an application might fetch a different
+configuration set. There is no schema for configurations.</p>
+
+<h3>/v1/config</h3>
+
+<p><code>GET</code> returns all configurations.</p>
+
+<p><code>POST</code> creates one or many configurations.</p>
+
+<ul>
+<li><code>stash</code> = [true]/false –– Not published until stash is released (see Stash).</li>
+<li><code>body</code> –– A JSON object or an array of JSON objects.</li>
+<li><code>result</code> –– A created status object or an array of it.</li>
+</ul>
+
+<h3>/v1/config/{id1},{id2},...</h3>
+
+<p><code>GET</code> returns the specified configurations.</p>
+
+<ul>
+<li><code>stash</code> = [false]/true –– Returns stashed in place of the published configurations if available.</li>
+</ul>
+
+<p><code>PUT</code> updates the specified configurations.</p>
+
+<ul>
+<li><code>ttl</code> –– Optional header. TTL in milliseconds. Default is ?.</li>
+<li><code>stash</code> = [true]/false –– Not published until stash is released (see Stash).</li>
+<li><code>body</code> –– A JSON object or an array of JSON objects.</li>
+<li><code>result</code> –– A created status object or an array of it.</li>
+</ul>
+
+<h3>/v1/config/stash</h3>
+
+<p><code>GET</code> returns the stashed configurations.</p>
+
+<p><code>DELETE</code> deletes the stashed configurations.</p>
+
+<h3>Questions:</h3>
+
+<ol>
+<li>do we merge a list of configurations to a single merged configuration containing all the fields to ease the developer work?</li>
+</ol>
+
+
+    </div>
+  </body>
+</html>

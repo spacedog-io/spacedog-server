@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+	  <meta charset="utf-8"/>
+	  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+	  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+	  <title>SpaceZ documentation: Storing and searching data</title>
+	  <meta name="description" content="Forget about server-side pain. Focus on creating amazing user experiences. Sign up and immediately access our backend services. Save and search for data. Edit and push new contents. Deploy and publish resources and services.
+"/>
+
+	  <meta name="author" content="David Attias"/>
+
+	  <link rel="stylesheet" href="/css/spacez.css"/>
+	  <link rel="stylesheet" href="/css/highlight.css"/>
+	  
+	  <link rel="icon" type="image/png" href="images/favicon.png"/>
+	</head>
+
+  <body>
+
+	<header>
+      <nav>
+        <a class= "logo" href="/">SpaceZ</a>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/documentation.html">Documentation</a></li>
+          <li><a class="button" href="/signin">Sign in</a></li>
+        </ul>
+      </nav>    
+    </header>
+
+    <menu>
+		<h5>User's guide</h5>
+		
+    <ul>
+      
+			
+       	<li>
+          
+          
+            <a  href="/user-guide/Signing-up.html"> Signing up </a>
+          
+      </li>
+     	
+       	<li>
+          
+            <a  class="active"  href="/user-guide/Storing-and-searching-data.html"> Storing and searching data --> </a>
+          
+          
+      </li>
+     	
+       	<li>
+          
+          
+            <a  href="/user-guide/Data-object-schema.html"> Data object schema </a>
+          
+      </li>
+     	
+       	<li>
+          
+          
+            <a  href="/user-guide/Deploy-to-the-cloud.html"> Deploy to the cloud </a>
+          
+      </li>
+     	
+       	<li>
+          
+          
+            <a  href="/user-guide/Configurations-and-contents.html"> Configurations and contents </a>
+          
+      </li>
+     	
+    </ul>
+
+   	</br>
+    <h5>Reference's guide</h5>
+		
+    <ul>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Accounts.html"> Accounts </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Batch.html"> Batch </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Configuration.html"> Configuration </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Contents.html"> Contents </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Data.html"> Data </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Files.html"> Files </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Jobs.html"> Jobs </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Logging.html"> Logging </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/PDF-&-Emails.html"> PDF & Emails </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Queues.html"> Queues </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Schema.html"> Schema </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Services.html"> Services </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Stash.html"> Stash </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Users.html"> Users </a>
+          
+        </li>
+      
+    </ul>
+
+    </menu>
+
+    <div class="doc">
+
+	    <p>Before to store any data with the MagicApps platform, you first need to create a data object type by posting a new schema. A schema defines data objects. It is used:
+- to validate that data is well formed
+- to know how to index data objects and, evidently, how to search for it,
+- to defines who can read or write these objects,
+- to set which custom functions to trigger when objects are saved or deleted.</p>
+
+<p>Here is a very simple schema:</p>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;car&quot;</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;_type&quot;</span> <span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;brand&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;_type&quot;</span> <span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;_required&quot;</span> <span class="p">:</span> <span class="kc">true</span>
+    <span class="p">},</span>
+    <span class="nt">&quot;model&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;_type&quot;</span> <span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;_required&quot;</span> <span class="p">:</span> <span class="kc">true</span>
+    <span class="p">},</span>
+    <span class="nt">&quot;color&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;_type&quot;</span> <span class="p">:</span> <span class="s2">&quot;enum&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;_required&quot;</span> <span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+      <span class="nt">&quot;_values&quot;</span> <span class="p">:</span> <span class="p">[</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="s2">&quot;green&quot;</span><span class="p">]</span>
+    <span class="p">},</span>
+    <span class="nt">&quot;description&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;_type&quot;</span> <span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;_language&quot;</span> <span class="p">:</span> <span class="s2">&quot;en&quot;</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<ul>
+<li><code>car</code> is the schema identifier and the name of the object type this schema defines.</li>
+<li><code>_type</code> is the field or object type. Read the <a href="field%20types">field types</a> page for more details.</li>
+<li><code>_required</code> is optional and indicates if the field is mandatory.</li>
+<li><code>_language</code> is useful for <code>text</code> fields. It indicates the text language and allow a better full text indexing.</li>
+<li><code>_values</code> is useful for <code>enum</code> fields by listing authorized values. The system will reject any undefined value in this field.</li>
+</ul>
+
+<p>The <code>car</code>schema defines objects like this one:</p>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;brand&quot;</span> <span class="p">:</span> <span class="s2">&quot;Citroën&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;model&quot;</span> <span class="p">:</span> <span class="s2">&quot;2CV&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;color&quot;</span> <span class="p">:</span> <span class="s2">&quot;blue&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;description&quot;</span> <span class="p">:</span> <span class="s2">&quot;The Citroën 2CV (French: \&quot;deux chevaux\&quot; i.e. \&quot;deux chevaux-vapeur\&quot; (lit. \&quot;two steam horses\&quot;), \&quot;two tax horsepower\&quot;) is a front-engine, front wheel drive, air-cooled economy car introduced at the 1948 Paris Mondial de l&#39;Automobile and manufactured by Citroën for model years 1948–1990.&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<h5>Create a schema</h5>
+
+<p>To create a schema, <code>POST /v1/schema</code> a body set to the schema JSON. It will return a status object, either a success:</p>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;success&quot;</span> <span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+  <span class="nt">&quot;id&quot;</span> <span class="p">:</span> <span class="s2">&quot;car&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;location&quot;</span> <span class="p">:</span> <span class="s2">&quot;https://api.magicapps.com/v1/schema/car&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>or a failure:</p>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;success&quot;</span> <span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+  <span class="nt">&quot;error&quot;</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;code&quot;</span> <span class="p">:</span> <span class="mi">123</span><span class="p">,</span>
+    <span class="nt">&quot;message&quot;</span> <span class="p">:</span> <span class="s2">&quot;not authorized, missing x-magic-app-id http header&quot;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>This is generally true for <code>POST</code>, <code>PUT</code> and <code>DELETE</code> requests on the other API endpoints.</p>
+
+<h5>Create a data object</h5>
+
+<p>To store a new car, send a <code>POST /v1/data/car</code> with a body set to a car JSON. You&#39;ll get the new car id from the status object.</p>
+
+<h5>Fetch a data object</h5>
+
+<p>To check the new car is correctly stored, send a <code>GET /v1/data/car/76867kjvkgcjg8764jhgkhc</code>and check the car JSON returned.</p>
+
+<h5>Full text search data objects</h5>
+
+<p>Send a <code>GET /v1/data</code> to search into all types of objects or <code>GET /v1/data/car</code> to search only cars. Add a <code>text</code> query param set to <code>deux chevaux</code> to full text search this text and you&#39;ll get the response:</p>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;took&quot;</span> <span class="p">:</span> <span class="mi">145</span><span class="p">,</span>
+  <span class="nt">&quot;total&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+  <span class="nt">&quot;results&quot;</span> <span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+      <span class="nt">&quot;meta&quot;</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;id&quot;</span> <span class="p">:</span> <span class="s2">&quot;76867kjvkgcjg8764jhgkhc&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;type&quot;</span> <span class="p">:</span> <span class="s2">&quot;car&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;version&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="nt">&quot;createdBy&quot;</span> <span class="p">:</span> <span class="s2">&quot;ptidenis&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;updatedBy&quot;</span> <span class="p">:</span> <span class="s2">&quot;ptidenis&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;createdAt&quot;</span> <span class="p">:</span> <span class="s2">&quot;2015-06-01T15:12:56.123Z&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;updatedAt&quot;</span> <span class="p">:</span> <span class="s2">&quot;2015-06-01T15:17:06.123Z&quot;</span>
+      <span class="p">},</span>
+      <span class="nt">&quot;brand&quot;</span> <span class="p">:</span> <span class="s2">&quot;Citroën&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;model&quot;</span> <span class="p">:</span> <span class="s2">&quot;2CV&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;color&quot;</span> <span class="p">:</span> <span class="s2">&quot;blue&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;description&quot;</span> <span class="p">:</span> <span class="s2">&quot;The Citroën 2CV (French: \&quot;deux chevaux\&quot; i.e. \&quot;deux chevaux-vapeur\&quot; (lit. \&quot;two steam horses\&quot;), \&quot;two tax horsepower\&quot;) is a front-engine, front wheel drive, air-cooled economy car introduced at the 1948 Paris Mondial de l&#39;Automobile and manufactured by Citroën for model years 1948–1990.&quot;</span>
+    <span class="p">}</span>
+  <span class="p">]</span>
+  <span class="p">}</span>
+<span class="err">}</span>
+</code></pre></div>
+<p>For full text search, only <code>text</code> fields are analyzed:
+- polished: some characters are removed or replaced,
+- tokenized: broken down into small terms,
+- filtered: some terms are added (synonyms), others are removed (stopwords like <code>a</code>, <code>and</code>, <code>the</code>, ...).</p>
+
+<p>Only the analyzed field value is indexed for later full text search. The value raw data is stored for retrieval.</p>
+
+<h5>Update or delete a data object</h5>
+
+<p>To update the car object, send a <code>PUT /v1/data/car/76867kjvkgcjg8764jhgkhc/1</code> where <code>76867kjvkgcjg8764jhgkhc</code> is the car identifier and where <code>1</code> is the object version. Add a body set to the updated car JSON. You&#39;ll get a regular  status response.</p>
+
+<p>When updating a data object, the version is mandatory to alloy optimistic consistency check. More than one person or program might update the same object at the same time. This might end up with a data inconsistency. To avoid such problem, all data objects have a system managed version. Every time an object is updated, the provided version is compared to the one in store. Versions are different means that the object has been updated in the meantime by someone else. It results an error for the second to try an update.</p>
+
+<p>To delete the car object, send a <code>DELETE /v1/data/car/76867kjvkgcjg8764jhgkhc</code> and get a status response. No need to provide a version in this case since a delete will always win over an update.</p>
+
+<h5>More advanced search</h5>
+
+<p>For an advanced search, send a <code>POST /v1/data/search</code> or a <code>POST /v1/data/car/search</code> with a body set to a query JSON. Since MagicApps uses ElasticSearch for storing and searching data objects, the query JSON must be compliant with the ElasticSearch query DSL. Please read the <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html">query DSL documentation</a> on the Elastic company web site.</p>
+
+<p>For example, this query JSON will full text search for car objects containing <code>air-cooled</code> but only when it is a <code>Citroën</code>:</p>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;query&quot;</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;filtered&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;query&quot;</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;match&quot;</span> <span class="p">:</span> <span class="p">{</span> <span class="nt">&quot;message&quot;</span> <span class="p">:</span> <span class="s2">&quot;air-cooled&quot;</span> <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="nt">&quot;filter&quot;</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;term&quot;</span> <span class="p">:</span> <span class="p">{</span> <span class="nt">&quot;brand&quot;</span> <span class="p">:</span> <span class="s2">&quot;Citroën&quot;</span> <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h5>Update or delete a schema</h5>
+
+<p>To update the <code>car</code> schema, send a <code>PUT /v1/schema/car</code> with a body set with the updated schema JSON.</p>
+
+<p>The system will reject all changes that might endanger retro compatibility. It means that all changes that might end up with a failure in old released versions of your app are forbidden. For example, these changes are rejected:
+- delete a field
+- change a field&#39;s name or type
+- move a field to another sub object
+- remove a defined value from an <code>enum</code>
+- ...</p>
+
+<p>When developing a new release of your app, you usually need to make changes in your objet schemas. You are only authorized with adding fields or changing validation to less restrictive rules.</p>
+
+<p>To delete the <code>car</code> schema, send a <code>DELETE /v1/schema/car</code>. It will also delete all the <code>car</code> objects.</p>
+
+
+    </div>
+  </body>
+</html>

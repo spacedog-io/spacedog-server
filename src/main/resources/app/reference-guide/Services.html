@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+	  <meta charset="utf-8"/>
+	  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+	  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+	  <title>SpaceZ documentation: Services</title>
+	  <meta name="description" content="Forget about server-side pain. Focus on creating amazing user experiences. Sign up and immediately access our backend services. Save and search for data. Edit and push new contents. Deploy and publish resources and services.
+"/>
+
+	  <meta name="author" content="David Attias"/>
+
+	  <link rel="stylesheet" href="/css/spacez.css"/>
+	  <link rel="stylesheet" href="/css/highlight.css"/>
+	  
+	  <link rel="icon" type="image/png" href="images/favicon.png"/>
+	</head>
+
+  <body>
+
+	<header>
+      <nav>
+        <a class= "logo" href="/">SpaceZ</a>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/documentation.html">Documentation</a></li>
+          <li><a class="button" href="/signin">Sign in</a></li>
+        </ul>
+      </nav>    
+    </header>
+
+    <menu>
+		<h5>User's guide</h5>
+		
+    <ul>
+      
+			
+       	<li>
+          
+          
+            <a  href="/user-guide/Signing-up.html"> Signing up </a>
+          
+      </li>
+     	
+       	<li>
+          
+          
+            <a  href="/user-guide/Storing-and-searching-data.html"> Storing and searching data </a>
+          
+      </li>
+     	
+       	<li>
+          
+          
+            <a  href="/user-guide/Data-object-schema.html"> Data object schema </a>
+          
+      </li>
+     	
+       	<li>
+          
+          
+            <a  href="/user-guide/Deploy-to-the-cloud.html"> Deploy to the cloud </a>
+          
+      </li>
+     	
+       	<li>
+          
+          
+            <a  href="/user-guide/Configurations-and-contents.html"> Configurations and contents </a>
+          
+      </li>
+     	
+    </ul>
+
+   	</br>
+    <h5>Reference's guide</h5>
+		
+    <ul>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Accounts.html"> Accounts </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Batch.html"> Batch </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Configuration.html"> Configuration </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Contents.html"> Contents </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Data.html"> Data </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Files.html"> Files </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Jobs.html"> Jobs </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Logging.html"> Logging </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/PDF-&-Emails.html"> PDF & Emails </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Queues.html"> Queues </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Schema.html"> Schema </a>
+          
+        </li>
+      
+        <li>
+          
+            <a  class="active"  href="/reference-guide/Services.html"> Services --> </a>
+          
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Stash.html"> Stash </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Users.html"> Users </a>
+          
+        </li>
+      
+    </ul>
+
+    </menu>
+
+    <div class="doc">
+
+	    <h1>Services</h1>
+
+<p>Use this API endpoints when you need to deploy some business logic in your backend. This is usually the case when you need to interact a lot with the data store without the performance constraint of getting all in the client.</p>
+
+<p>You also need services if you want to:
+- create scheduled jobs,
+- create queues for message async processing,
+- add business logic when data objets are saved or deleted.</p>
+
+<h3>/v1/service/{id}</h3>
+
+<p><code>POST/PUT</code> creates/updates the specified service.</p>
+
+<ul>
+<li><code>id</code> –– the service unique identifier.</li>
+<li>request body –– The service script.</li>
+<li><code>content-type</code> header –– the script content type.</li>
+</ul>
+
+<p><code>GET</code>returns the script of the specified service.</p>
+
+<p><code>DELETE</code> deletes the specified script. If the service is curently in use, deletion occurs when the service terminates. In the meantime, requests of this service are denied with a <code>NOT FOUND</code> HTTP status.</p>
+
+<h3>/v1/service/{id}/run</h3>
+
+<p><code>POST</code> runs the specified service.</p>
+
+<ul>
+<li><code>id</code> –– the service identifier.</li>
+<li>request body –– a JSON object containing the params passed to the service.</li>
+</ul>
+
+
+    </div>
+  </body>
+</html>

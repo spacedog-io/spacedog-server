@@ -1,0 +1,198 @@
+
+/* Base Styles
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+html,
+body {
+/*  line-height: 1.6;*/
+  font-weight: 100;
+  font-family: consolas, sans-serif;
+  background-color: black;
+  color: darkorange;
+  min-height:100%;
+  max-width: 100%;
+  padding:0;
+  margin:0;
+}
+
+header {
+  margin: 0;
+  padding: 10px 0;
+  top: 0;
+  height: 50px;
+  width: 100%;
+  position: fixed;
+  background-color: black;
+  border-bottom-width: 1px;
+  border-color: red;
+  border-bottom-style: inset;
+}
+
+.logo {
+  float: left;
+  margin: 0;
+  padding: 10px 30px;
+  font-size: 2.2em;
+}
+
+nav ul {
+  margin: 0;
+  padding: 0 30px 0 0;
+  float: right;
+}
+
+nav li {
+  display:inline-block
+}
+
+a {
+	color: darkorange;
+  cursor:pointer;
+}
+
+.active {
+  color: red;
+}
+
+a:focus,
+a:hover {
+	color: red;
+}
+
+nav a {
+/*  font-style: bold;*/
+  text-decoration:none;
+  display:inline-block;
+  font-size:1.2em;
+/*  font-weight:700; */
+  margin-left:9px;
+  position:relative;
+  cursor:pointer;
+  line-height:1em;
+  padding: 20px 0 20px 10px;
+  border-radius:5px;
+  opacity:1;
+}
+
+menu {
+  float: left;
+  margin: 0;
+  padding: 15px 30px;
+  position: fixed;
+  color: beige;
+}
+
+menu ul {
+  list-style-type: none;
+  margin: 0 16px;
+  padding: 0;
+}
+
+menu a {
+  text-decoration:none;
+  display:inline-block;
+  position:relative;
+}
+/*
+nav ul a:hover{opacity:1;background:rgba(0,0,0,.1);box-shadow:inset 0 1px 2px rgba(0,0,0,.05)}
+*/
+
+.banner {
+  margin-top: 73px;
+  background-image: url(../images/sky.jpg);
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.uvp {
+/*  min-height: 700px;*/
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 18% 0 18% 0;
+  text-align:center;
+  background-color: transparent;
+}
+
+.doc {
+  max-width: 700px;
+  margin: 70px auto;
+  padding: 15px 30px;
+  /*background-color: #181818;*/
+  border-left-width: 1px;
+  border-color: red;
+  border-left-style: outset;
+  color: beige;
+}
+
+.doc table {
+  border-top: 1px solid #CCC;
+  border-left: 1px solid #CCC;
+  border-color: beige;
+  margin: 2em 0;
+}
+
+.doc th,
+.doc td {
+  border-right: 1px solid #CCC;
+  border-bottom: 1px solid #CCC;
+  border-color: beige;
+}
+
+/* Typography
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 1rem 0;
+  font-weight: 100;
+  color: darkorange;
+}
+
+h1 { font-size: 2.6rem; line-height: 1.2;  letter-spacing: -.2rem;}
+h2 { font-size: 2.2rem; line-height: 1.25; letter-spacing: -.2rem; }
+h3 { font-size: 1.8rem; line-height: 1.3;  letter-spacing: -.2rem; }
+h4 { font-size: 1.4rem; line-height: 1.35; letter-spacing: -.08rem; }
+h5 { font-size: 1.2rem; line-height: 1.5;  letter-spacing: -.05rem; }
+h6 { font-size: 1.1rem; line-height: 1.6;  letter-spacing: 0; }
+
+/* Buttons
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+.button,
+button,
+input[type="submit"],
+input[type="reset"],
+input[type="button"] {
+  display: inline-block;
+  height: 2em;
+  padding: 10px 25px;
+/*  color: #555; */
+  text-align: center;
+  font-size: 1.2em;
+/*  font-weight: 600;*/
+/*  font-style: bold;*/
+  line-height: 1em;
+/*  letter-spacing: .1rem; */
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  border-radius: 28px;
+  border: 2px solid #bbb;
+  border-color: red;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+.button:hover,
+button:hover,
+input[type="submit"]:hover,
+input[type="reset"]:hover,
+input[type="button"]:hover,
+.button:focus,
+button:focus,
+input[type="submit"]:focus,
+input[type="reset"]:focus,
+input[type="button"]:focus {
+  color: #FFF;
+  background-color: red;
+
+/*  background-color: #1EAEDB;
+  border-color: #1EAEDB; */
+}

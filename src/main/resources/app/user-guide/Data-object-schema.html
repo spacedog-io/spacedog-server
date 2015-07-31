@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+	  <meta charset="utf-8"/>
+	  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+	  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+	  <title>SpaceZ documentation: Data object schema</title>
+	  <meta name="description" content="Forget about server-side pain. Focus on creating amazing user experiences. Sign up and immediately access our backend services. Save and search for data. Edit and push new contents. Deploy and publish resources and services.
+"/>
+
+	  <meta name="author" content="David Attias"/>
+
+	  <link rel="stylesheet" href="/css/spacez.css"/>
+	  <link rel="stylesheet" href="/css/highlight.css"/>
+	  
+	  <link rel="icon" type="image/png" href="images/favicon.png"/>
+	</head>
+
+  <body>
+
+	<header>
+      <nav>
+        <a class= "logo" href="/">SpaceZ</a>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/documentation.html">Documentation</a></li>
+          <li><a class="button" href="/signin">Sign in</a></li>
+        </ul>
+      </nav>    
+    </header>
+
+    <menu>
+		<h5>User's guide</h5>
+		
+    <ul>
+      
+			
+       	<li>
+          
+          
+            <a  href="/user-guide/Signing-up.html"> Signing up </a>
+          
+      </li>
+     	
+       	<li>
+          
+          
+            <a  href="/user-guide/Storing-and-searching-data.html"> Storing and searching data </a>
+          
+      </li>
+     	
+       	<li>
+          
+            <a  class="active"  href="/user-guide/Data-object-schema.html"> Data object schema --> </a>
+          
+          
+      </li>
+     	
+       	<li>
+          
+          
+            <a  href="/user-guide/Deploy-to-the-cloud.html"> Deploy to the cloud </a>
+          
+      </li>
+     	
+       	<li>
+          
+          
+            <a  href="/user-guide/Configurations-and-contents.html"> Configurations and contents </a>
+          
+      </li>
+     	
+    </ul>
+
+   	</br>
+    <h5>Reference's guide</h5>
+		
+    <ul>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Accounts.html"> Accounts </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Batch.html"> Batch </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Configuration.html"> Configuration </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Contents.html"> Contents </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Data.html"> Data </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Files.html"> Files </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Jobs.html"> Jobs </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Logging.html"> Logging </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/PDF-&-Emails.html"> PDF & Emails </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Queues.html"> Queues </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Schema.html"> Schema </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Services.html"> Services </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Stash.html"> Stash </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Users.html"> Users </a>
+          
+        </li>
+      
+    </ul>
+
+    </menu>
+
+    <div class="doc">
+
+	    <h4>Field types</h4>
+
+<p>Data object fields are defined and typed in schemas. Find below all the permitted field types.</p>
+
+<h5><code>string</code></h5>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;car&quot;</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;brand&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;_type&quot;</span> <span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;_required&quot;</span> <span class="p">:</span> <span class="kc">true</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><code>string</code> fields are suitable for all string data that do not contain real text that should be analyzed for latter full text search. Names, identifiers, codes, zip codes are good examples. <code>string</code> fields are better search with equal type queries.</p>
+
+<h5><code>text</code></h5>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;car&quot;</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;description&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;_type&quot;</span> <span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;_language&quot;</span> <span class="p">:</span> <span class="s2">&quot;english&quot;</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><code>text</code> fields are suitable for all string data that do contain real text and should be analyzed for latter full text search. Descriptions, forum posts, messages, emails are good examples. <code>text</code> fields are better search with full text type queries.</p>
+
+<p><code>_language</code> contains the language setting for better text analysis. Defaults to <code>english</code>. Here is a list of available <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-lang-analyzer.html">languages</a>.</p>
+
+<h5><code>boolean</code></h5>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;car&quot;</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;convertible&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;_type&quot;</span> <span class="p">:</span> <span class="s2">&quot;boolean&quot;</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h5><code>integer</code>, <code>long</code>, <code>float</code> and <code>double</code></h5>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;car&quot;</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;taxHorsePower&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;_type&quot;</span> <span class="p">:</span> <span class="s2">&quot;integer&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;_gte&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+      <span class="nt">&quot;_lte&quot;</span> <span class="p">:</span> <span class="mi">13</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Number fields are validated before objects are saved if these rules are used:
+- <code>_gt</code> greater than.
+- <code>_gte</code> greater than or equal. 
+- <code>_lt</code> lesser than.
+- <code>_lte</code> lesser than or equal.
+- <code>_values</code> array of valid values.</p>
+
+<p>Car example:</p>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;brand&quot;</span> <span class="p">:</span> <span class="s2">&quot;Jeep&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;taxHorsePower&quot;</span> <span class="p">:</span> <span class="mi">12</span>
+<span class="p">}</span>
+</code></pre></div>
+<h5><code>object</code></h5>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;car&quot;</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;lastToll&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;_type&quot;</span> <span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;paid&quot;</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;_type&quot;</span> <span class="p">:</span> <span class="s2">&quot;float&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;_required&quot;</span> <span class="p">:</span> <span class="kc">true</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Car example:</p>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;brand&quot;</span> <span class="p">:</span> <span class="s2">&quot;Jeep&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;lastToll&quot;</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;paid&quot;</span> <span class="p">:</span> <span class="mf">3.56</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h5><code>date</code>, <code>time</code> and <code>timestamp</code></h5>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;car&quot;</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;...&quot;</span> <span class="p">:</span> <span class="s2">&quot;...&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;firstRegistration&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;_type&quot;</span> <span class="p">:</span> <span class="s2">&quot;date&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;_required&quot;</span> <span class="p">:</span> <span class="kc">true</span>
+    <span class="p">},</span>
+    <span class="nt">&quot;avgMorningDepartureTime&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;_type&quot;</span> <span class="p">:</span> <span class="s2">&quot;time&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;_required&quot;</span> <span class="p">:</span> <span class="kc">true</span>
+    <span class="p">},</span>
+    <span class="nt">&quot;lastToll&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;_type&quot;</span> <span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;paid&quot;</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;_type&quot;</span> <span class="p">:</span> <span class="s2">&quot;float&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;_required&quot;</span> <span class="p">:</span> <span class="kc">true</span>
+      <span class="p">},</span>
+      <span class="nt">&quot;when&quot;</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;_type&quot;</span> <span class="p">:</span> <span class="s2">&quot;timestamp&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;_required&quot;</span> <span class="p">:</span> <span class="kc">true</span>
+      <span class="p">},</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<ul>
+<li><code>date</code> are year, month and day formatted strings. Exact format is <code>yyyy-MM-dd</code>.</li>
+<li><code>time</code> are hours, minutes and seconds formatted strings. Exact format is <code>HH:mm:ss.SSS</code>. The milliseconds part is optional.</li>
+<li><code>timestamp</code> are ISO 8601 strings with format like <code>yyyy-MM-ddTHH:mm:ss.SSSZ</code>.</li>
+</ul>
+
+<p>Car Example:</p>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;brand&quot;</span> <span class="p">:</span> <span class="s2">&quot;Jeep&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;firstRegistration&quot;</span> <span class="p">:</span> <span class="s2">&quot;1995-09-24&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;avgMorningDepartureTime&quot;</span> <span class="p">:</span> <span class="s2">&quot;08:22:17&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;lastToll&quot;</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;paid&quot;</span> <span class="p">:</span> <span class="mf">4.76</span><span class="p">,</span>
+    <span class="nt">&quot;when&quot;</span> <span class="p">:</span> <span class="s2">&quot;2015-03-04T19:34:56.123Z&quot;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h5>geopoint</h5>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;car&quot;</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;...&quot;</span> <span class="p">:</span> <span class="s2">&quot;...&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;location&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;_type&quot;</span> <span class="p">:</span> <span class="s2">&quot;geopoint&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;_required&quot;</span> <span class="p">:</span> <span class="kc">true</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Example of car object with a location field:</p>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;brand&quot;</span> <span class="p">:</span> <span class="s2">&quot;Jeep&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;plate&quot;</span> <span class="p">:</span> <span class="s2">&quot;FG-89776-XKE&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;location&quot;</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;lat&quot;</span> <span class="p">:</span> <span class="mf">41.12</span><span class="p">,</span>
+    <span class="nt">&quot;lon&quot;</span> <span class="p">:</span> <span class="mf">-71.34</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>A <code>geopoint</code> field represent a precise (1 meter) point on planet earth. They are automatically geo hashed and indexed for geographical search.</p>
+
+<h5><code>enum</code></h5>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;car&quot;</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;color&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;_type&quot;</span> <span class="p">:</span> <span class="s2">&quot;enum&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;_required&quot;</span> <span class="p">:</span> <span class="kc">true</span><span class="p">,</span>
+      <span class="nt">&quot;_values&quot;</span> <span class="p">:</span> <span class="p">[</span><span class="s2">&quot;electric-blue&quot;</span><span class="p">,</span> <span class="s2">&quot;burgundy-red&quot;</span><span class="p">,</span> <span class="s2">&quot;silver-metal&quot;</span><span class="p">,</span> <span class="s2">&quot;tropical-green&quot;</span><span class="p">]</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Car example:</p>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;brand&quot;</span> <span class="p">:</span> <span class="s2">&quot;Jeep&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;color&quot;</span> <span class="p">:</span> <span class="s2">&quot;tropical-green&quot;</span>
+<span class="p">}</span>
+</code></pre></div>
+<h5><code>stash</code></h5>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;car&quot;</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;extra&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;_type&quot;</span> <span class="p">:</span> <span class="s2">&quot;stash&quot;</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Use a <code>stash</code> field to store a JSON that does not need any validation nor indexing. Fields and values inside a stash<code>stash</code> field do not need to be defined in the schema.</p>
+
+<p>You might need this when:
+- you need less schema migration restriction,
+- you are not interested in searching in this part of the object and you seek less index disk space.</p>
+
+<p>Car example:</p>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;brand&quot;</span> <span class="p">:</span> <span class="s2">&quot;Jeep&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;extra&quot;</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;...&quot;</span> <span class="p">:</span> <span class="s2">&quot;...&quot;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h5><code>ref</code></h5>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;car&quot;</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;owner&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;_type&quot;</span> <span class="p">:</span> <span class="s2">&quot;ref&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;_refType&quot;</span> <span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;_required&quot;</span> <span class="p">:</span> <span class="kc">true</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Use a <code>ref</code> field to store an identifier of another object of the same data store. If necessary, use <code>_refType</code> to indicate the type of the referenced object.</p>
+
+<p>Car example:</p>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;brand&quot;</span> <span class="p">:</span> <span class="s2">&quot;Jeep&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;owner&quot;</span> <span class="p">:</span> <span class="s2">&quot;ptidenis&quot;</span>
+  <span class="p">}</span>
+<span class="err">}</span>
+</code></pre></div>
+<p>To fetch a car object but also its owner referenced user object, send a <code>GET /v1/data/car/76867kjvkgcjg8764jhgkhc</code> request with the <code>fetch</code> param set to <code>owner</code>. You get the following response:</p>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;brand&quot;</span> <span class="p">:</span> <span class="s2">&quot;Jeep&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;...&quot;</span> <span class="p">:</span> <span class="s2">&quot;...&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;owner&quot;</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;username&quot;</span> <span class="p">:</span> <span class="s2">&quot;ptidenis&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;email&quot;</span> <span class="p">:</span> <span class="s2">&quot;ptidenis@ptilabs.com&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;...&quot;</span> <span class="p">:</span> <span class="s2">&quot;...&quot;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>The <code>fetch</code> param accepts a comma separated list of field names and the <code>all</code> keyword. It only fetches referenced fields from the root object of the graph.</p>
+
+<h5><code>file</code></h5>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;car&quot;</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;userManual&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;_type&quot;</span> <span class="p">:</span> <span class="s2">&quot;file&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;_contentTypes&quot;</span> <span class="p">:</span> <span class="p">[</span><span class="s2">&quot;application/pdf&quot;</span><span class="p">],</span>
+      <span class="nt">&quot;_required&quot;</span> <span class="p">:</span> <span class="kc">true</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Use a <code>file</code> field to reference an uploaded file. Reed the <a href="files">file API</a> documentation. Use <code>_contentTypes</code> if you need to restrict this field to certain types of files.</p>
+
+<p>Car example:</p>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;brand&quot;</span> <span class="p">:</span> <span class="s2">&quot;Jeep&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;userManual&quot;</span> <span class="p">:</span> <span class="s2">&quot;jhjhbjgvc9786Rjhchvghvk87954jhcJHVv&quot;</span>
+  <span class="p">}</span>
+<span class="err">}</span>
+</code></pre></div>
+<h5><code>amount</code></h5>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;car&quot;</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;lastToll&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;_type&quot;</span> <span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;paid&quot;</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;_type&quot;</span> <span class="p">:</span> <span class="s2">&quot;amount&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;_required&quot;</span> <span class="p">:</span> <span class="kc">true</span>
+      <span class="p">},</span>
+      <span class="nt">&quot;when&quot;</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;_type&quot;</span> <span class="p">:</span> <span class="s2">&quot;timestamp&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;_required&quot;</span> <span class="p">:</span> <span class="kc">true</span>
+      <span class="p">},</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Use an <code>amount</code> field to store amounts. The three first characters encodes the currency in ISO 4217 format. The following characters represent the number. The decimal separator is a dot. A <code>+</code>or <code>-</code> can preceed the number. When dealing with amounts, prefer this type than <code>float</code> or <code>double</code> fields that might lead you to precision errors.</p>
+
+<p>Car Example:</p>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;brand&quot;</span> <span class="p">:</span> <span class="s2">&quot;Jeep&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;lastToll&quot;</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;paid&quot;</span> <span class="p">:</span> <span class="s2">&quot;USD4.76&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;when&quot;</span> <span class="p">:</span> <span class="s2">&quot;2015-03-04T19:34:56.123Z&quot;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h4>Data object access control</h4>
+
+<p>Permissions can be set in a per type basis. The <code>_acl</code> schema field defines all the permissions of data objects defined by this schema. Car schema example:</p>
+<div class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span>
+  <span class="nt">&quot;_id&quot;</span> <span class="p">:</span> <span class="s2">&quot;car&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;...&quot;</span> <span class="p">:</span> <span class="s2">&quot;...&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;_acl&quot;</span> <span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;_creator&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;_read&quot;</span> <span class="p">:</span> <span class="kc">true</span><span class="p">,</span> <span class="nt">&quot;_write&quot;</span> <span class="p">:</span> <span class="kc">true</span>
+    <span class="p">},</span>
+    <span class="nt">&quot;admin&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;_read&quot;</span> <span class="p">:</span> <span class="kc">true</span><span class="p">,</span> <span class="nt">&quot;_write&quot;</span> <span class="p">:</span> <span class="kc">true</span>
+    <span class="p">},</span>
+    <span class="nt">&quot;myApiKey&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;_read&quot;</span> <span class="p">:</span> <span class="kc">true</span><span class="p">,</span> <span class="nt">&quot;_write&quot;</span> <span class="p">:</span> <span class="kc">true</span>
+    <span class="p">},</span>
+    <span class="nt">&quot;_public&quot;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;_read&quot;</span> <span class="p">:</span> <span class="kc">true</span>
+    <span class="p">}</span>   
+  <span class="p">},</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>This schema means that:
+- the object creator - defined by the username or api key stored in document system field <code>_createdBy</code> - can read/write its own car objects.
+- the members of the admin group car read/write all car objects.
+- the api key <code>myApiKey</code> can read/write all car objects.
+- the public - all the rest - can read all car objects.</p>
+
+<p>Any user, api key and group can be listed in the access control list to set specific permissions. </p>
+
+<p>When a user is fetching or updating a specific data object for wich he does not have permission, he gets back an <code>NOT AUTHORIZED</code> response. When a user sends a search query, objects he does not have read permission will be automaticaly excluded from the response.</p>
+
+
+    </div>
+  </body>
+</html>

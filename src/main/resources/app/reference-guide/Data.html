@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+	  <meta charset="utf-8"/>
+	  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+	  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+	  <title>SpaceZ documentation: Data</title>
+	  <meta name="description" content="Forget about server-side pain. Focus on creating amazing user experiences. Sign up and immediately access our backend services. Save and search for data. Edit and push new contents. Deploy and publish resources and services.
+"/>
+
+	  <meta name="author" content="David Attias"/>
+
+	  <link rel="stylesheet" href="/css/spacez.css"/>
+	  <link rel="stylesheet" href="/css/highlight.css"/>
+	  
+	  <link rel="icon" type="image/png" href="images/favicon.png"/>
+	</head>
+
+  <body>
+
+	<header>
+      <nav>
+        <a class= "logo" href="/">SpaceZ</a>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/documentation.html">Documentation</a></li>
+          <li><a class="button" href="/signin">Sign in</a></li>
+        </ul>
+      </nav>    
+    </header>
+
+    <menu>
+		<h5>User's guide</h5>
+		
+    <ul>
+      
+			
+       	<li>
+          
+          
+            <a  href="/user-guide/Signing-up.html"> Signing up </a>
+          
+      </li>
+     	
+       	<li>
+          
+          
+            <a  href="/user-guide/Storing-and-searching-data.html"> Storing and searching data </a>
+          
+      </li>
+     	
+       	<li>
+          
+          
+            <a  href="/user-guide/Data-object-schema.html"> Data object schema </a>
+          
+      </li>
+     	
+       	<li>
+          
+          
+            <a  href="/user-guide/Deploy-to-the-cloud.html"> Deploy to the cloud </a>
+          
+      </li>
+     	
+       	<li>
+          
+          
+            <a  href="/user-guide/Configurations-and-contents.html"> Configurations and contents </a>
+          
+      </li>
+     	
+    </ul>
+
+   	</br>
+    <h5>Reference's guide</h5>
+		
+    <ul>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Accounts.html"> Accounts </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Batch.html"> Batch </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Configuration.html"> Configuration </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Contents.html"> Contents </a>
+          
+        </li>
+      
+        <li>
+          
+            <a  class="active"  href="/reference-guide/Data.html"> Data --> </a>
+          
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Files.html"> Files </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Jobs.html"> Jobs </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Logging.html"> Logging </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/PDF-&-Emails.html"> PDF & Emails </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Queues.html"> Queues </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Schema.html"> Schema </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Services.html"> Services </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Stash.html"> Stash </a>
+          
+        </li>
+      
+        <li>
+          
+          
+            <a  href="/reference-guide/Users.html"> Users </a>
+          
+        </li>
+      
+    </ul>
+
+    </menu>
+
+    <div class="doc">
+
+	    <h4>/v1/data</h4>
+
+<p><code>GET</code> searches for data objects of all types in full text mode.</p>
+
+<ul>
+<li><code>text</code> The text to full text search.</li>
+<li><code>fetch</code> One or more field names of type <code>ref</code> to automatically fetch. Use the keyword <code>all</code> to automatically fetch all referenced objects. This behavior is only available at the first level of the object graph.</li>
+</ul>
+
+<h3>/v1/data/{type}</h3>
+
+<p><code>GET</code> searches for data objects of the specified type.</p>
+
+<ul>
+<li><code>text</code> The text to full text search.</li>
+<li><code>fetch</code> One or more field names of type <code>ref</code> to automatically fetch. Use the keyword <code>all</code> to automatically fetch all referenced objects. This behavior is only available at the first level of the object graph.</li>
+</ul>
+
+<p><code>POST</code> creates a new data object of this type.</p>
+
+<p><code>DELETE</code> deletes this type and all data objects of this type.</p>
+
+<h4>/v1/data/{type}/{id}</h4>
+
+<p><code>GET</code> returns the specified data object.</p>
+
+<p><code>PUT</code> updates the specified data object.</p>
+
+<ul>
+<li><code>body</code> The data JSON object of this type</li>
+</ul>
+
+<p><code>DELETE</code> deletes the specified data object.</p>
+
+<h4>/v1/data/search</h4>
+
+<h4>/v1/data/{type}/search</h4>
+
+<p><code>POST</code> searches for data objects of the specified type if provided.</p>
+
+<ul>
+<li><code>body</code> An ElasticSearch JSON query.</li>
+</ul>
+
+
+    </div>
+  </body>
+</html>
