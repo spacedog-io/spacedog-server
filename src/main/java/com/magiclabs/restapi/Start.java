@@ -1,5 +1,10 @@
 package com.magiclabs.restapi;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+
 import net.codestory.http.WebServer;
 import net.codestory.http.routes.Routes;
 
@@ -36,7 +41,24 @@ public class Start {
 
 			AccountResource.get().initAdminIndex();
 
-			new WebServer().configure(Start::configure).start();
+			Path ssl = Paths.get("/home/davattias/ssl");
+
+			if (Files.isDirectory(ssl)) {
+
+				// Force Fluent HTTP to production mode
+				System.setProperty("PROD_MOD", "true");
+
+				new WebServer()
+						.configure(Start::configure)
+						.startSSL(
+								443,
+								Arrays.asList(
+										ssl.resolve("attias.space.certificate-191630.crt"),
+										ssl.resolve("attias.space.intermediate.certificate.crt")),
+								ssl.resolve("attias.space.pkcs8.der"));
+			} else {
+				new WebServer().configure(Start::configure).start(8080);
+			}
 
 		} catch (Throwable t) {
 			t.printStackTrace();
