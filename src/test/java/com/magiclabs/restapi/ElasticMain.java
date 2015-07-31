@@ -13,7 +13,7 @@ import org.elasticsearch.indices.IndexMissingException;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 
-public class ElasticTest {
+public class ElasticMain {
 
 	public static void main(String[] args) {
 		try {
