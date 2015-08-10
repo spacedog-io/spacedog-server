@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+	  <meta charset="utf-8"/>
+	  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+	  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+	  <title>SpaceZ documentation: {{ page.title }}</title>
+	  <meta name="description" content="{% if page.excerpt %}{{ page.excerpt | strip_html | strip_newlines | truncate: 160 }}{% else %}{{ site.description }}{% endif %}"/>
+
+	  <meta name="author" content="David Attias"/>
+
+	  <link rel="stylesheet" href="/css/spacez.css"/>
+	  <link rel="stylesheet" href="/css/highlight.css"/>
+	  
+	  <link rel="icon" type="image/png" href="images/favicon.png"/>
+	</head>
+
+  <body>
+
+	<header>
+      <nav>
+        <a class= "logo" href="/">SpaceZ</a>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/documentation.html">Documentation</a></li>
+          <li><a class="button" href="/signin">Sign in</a></li>
+        </ul>
+      </nav>    
+    </header>
+
+    <menu>
+		<h5>User's guide</h5>
+		
+    <ul>
+      {% assign docs = site.user-guide | sort: 'rank' %}
+			{% for doc in docs %}
+       	<li>
+          {% if doc.url == page.url %}
+            <a  class="active"  href="{{doc.url}}"> {{doc.title}} --> </a>
+          {% endif %}
+          {% if doc.url != page.url %}
+            <a  href="{{doc.url}}"> {{doc.title}} </a>
+          {% endif %}
+      </li>
+     	{% endfor %}
+    </ul>
+
+   	</br>
+    <h5>Reference's guide</h5>
+		
+    <ul>
+      {% for doc in site.reference-guide %}
+        <li>
+          {% if doc.url == page.url %}
+            <a  class="active"  href="{{doc.url}}"> {{doc.title}} --> </a>
+          {% endif %}
+          {% if doc.url != page.url %}
+            <a  href="{{doc.url}}"> {{doc.title}} </a>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+
+    </menu>
+
+    <div class="doc">
+
+	    {{ content }}
+
+    </div>
+  </body>
+</html>

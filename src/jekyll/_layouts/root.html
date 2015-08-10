@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+	  <meta charset="utf-8"/>
+	  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+	  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+	  <title>{{ site.title }}</title>
+
+	  <meta name="description" content="{{ site.description }}"/>
+	  <meta name="author" content="David Attias"/>
+
+	  <link rel="stylesheet" href="/css/spacez.css"/>
+    <link rel="icon" type="image/png" href="images/favicon.png"/>
+	  
+	  <link rel="canonical" href="{{ page.url | replace:'index.html','' | prepend: site.baseurl | prepend: site.url }}"/>
+	</head>
+
+  <body>
+
+	  <header>
+      <nav>
+        <a class= "logo" href="">SpaceZ</a>
+        <ul>
+          <li><a href="">Home</a></li>
+          <li><a href="/documentation.html">Documentation</a></li>
+          <li><a class="button" href="/signin">Sign in</a></li>
+        </ul>
+      </nav>    
+    </header>
+
+
+    <div class="banner">
+
+      {{ content }}
+
+    </div>
+  </body>
+</html>
