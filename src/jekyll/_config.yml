@@ -1,12 +1,13 @@
 # Site settings
-title: SpaceZ | Smart backend for mobile and web applications
+name: Backspace
+title: Backspace | Smart backend for mobile and web applications
 email: attias666@gmail.com
-description: > # SpaceZ is the perfect backend in the cloud for mobile and web applications.
+description: > # Backspace is the perfect cloud backend for mobile and web applications.
  Forget about server-side pain. Focus on creating amazing user experiences. Sign up and immediately
  access our backend services. Save and search for data. Edit and push new contents. Deploy and publish
  resources and services.
 baseurl: "" # the subpath of your site, e.g. /blog/
-url: "http://davattias.github.io" # the base hostname & protocol for your site
+url: "https://attias.space" # the base hostname & protocol for your site
 github_username:  davattias
 
 # Build settings
