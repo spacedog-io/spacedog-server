@@ -1,5 +1,6 @@
 package com.magiclabs.restapi;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 import com.eclipsesource.json.JsonObject;
@@ -220,8 +221,8 @@ public class SchemaValidator {
 		public static InvalidSchemaException invalidField(String fieldName,
 				String... expectedFiedNames) {
 			return new InvalidSchemaException(String.format(
-					"invalid field [%s]: expected fields are [%s]", fieldName,
-					expectedFiedNames));
+					"invalid field [%s]: expected fields are %s", fieldName,
+					Arrays.toString(expectedFiedNames)));
 		}
 
 		public static InvalidSchemaException invalidObjectType(String type,
