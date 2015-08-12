@@ -92,7 +92,7 @@ To check the new car is correctly stored, send a `GET /v1/data/car/76867kjvkgcjg
 
 ##### Full text search data objects
 
-Send a `GET /v1/data` to search into all types of objects or `GET /v1/data/car` to search only cars. Add a `text` query param set to `deux chevaux` to full text search this text and you'll get the response:
+Send a `GET /v1/data` to search into all types of objects or `GET /v1/data/car` to search only cars. Add a `q` query param set to `deux chevaux` to full text search this text and you'll get the response:
 
 ```json
 {
@@ -146,7 +146,7 @@ For example, this query JSON will full text search for car objects containing `a
   "query" : {
     "filtered" : {
       "query" : {
-        "match" : { "message" : "air-cooled" }
+        "match" : { "description" : "air cooled" }
       },
       "filter" : {
         "term" : { "brand" : "Citroën" }
