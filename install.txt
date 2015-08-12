@@ -49,3 +49,9 @@ tar xvzf install/magiclabs-rest-api-0.1.0-SNAPSHOT-bundle.tar.gz
 cd /magic
 # sudo sinon permission denied
 sudo ./start.sh
+
+
+###
+### For java server auto start at boot time, configure a custom metadata of the instance with
+### key=startup-script value=/home/davattias/magic/start.sh
+###
