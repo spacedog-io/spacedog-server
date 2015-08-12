@@ -7,6 +7,7 @@ import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
+import net.codestory.http.annotations.Put;
 import net.codestory.http.payload.Payload;
 
 import com.eclipsesource.json.JsonObject;
@@ -92,6 +93,12 @@ public class UserResource extends AbstractResource {
 	@Get("/user/:id/")
 	public Payload get(String id, Context context) {
 		return DataResource.get().get(USER_TYPE, id, context);
+	}
+
+	@Put("/user/:id")
+	@Put("/user/:id/")
+	public Payload update(String id, String jsonBody, Context context) {
+		return DataResource.get().update(USER_TYPE, id, jsonBody, context);
 	}
 
 	@Delete("/user/:id")

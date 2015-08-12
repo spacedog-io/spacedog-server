@@ -21,7 +21,7 @@ public class UserResourceTest extends AbstractTest {
 	public void shouldSignUpSuccessfullyAndMore() throws UnirestException,
 			InterruptedException {
 
-		// signup
+		// signup ok
 
 		RequestBodyEntity req1 = Unirest
 				.post("http://localhost:8080/v1/user/")
@@ -84,5 +84,34 @@ public class UserResourceTest extends AbstractTest {
 				.basicAuth("vince", "XXX").header("x-magic-app-id", "test");
 
 		get(req7, 401);
+
+		// email update ok
+
+		RequestBodyEntity req8 = Unirest
+				.put("http://localhost:8080/v1/user/vince")
+				.basicAuth("vince", "hi_vince")
+				.header("x-magic-app-id", "test")
+				.body(Json.builder().add("email", "bignose@magic.com").build()
+						.toString());
+
+		put(req8, 200);
+
+		refreshIndex("test");
+
+		// get ok
+
+		GetRequest req9 = Unirest.get("http://localhost:8080/v1/user/vince")
+				.basicAuth("vince", "hi_vince")
+				.header("x-magic-app-id", "test");
+
+		JsonObject res9 = get(req9, 200);
+
+		assertEquals(Json.get(res9, "meta.version").asInt(), 2);
+
+		assertTrue(Json.equals(
+				Json.builder().add("username", "vince")
+						.add("password", "hi_vince")
+						.add("email", "bignose@magic.com").stArr("groups")
+						.add("test").build(), res9.remove("meta")));
 	}
 }
