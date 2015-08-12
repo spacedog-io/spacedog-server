@@ -13,24 +13,17 @@
 
 	  <link rel="stylesheet" href="/css/spacez.css"/>
     <link rel="icon" type="image/png" href="images/favicon.png"/>
-	  
-	  <link rel="canonical" href="{{ page.url | replace:'index.html','' | prepend: site.baseurl | prepend: site.url }}"/>
 	</head>
 
   <body>
 
 	  <header>
       <nav>
-        <a class= "logo" href="">{{ site.name }}</a>
-        <ul>
-          <li><a href="">Home</a></li>
-          <li><a href="/documentation.html">Documentation</a></li>
-          <li><a class="button" href="/signin.html">Sign in</a></li>
-        </ul>
+        <a class= "logo" href="/">{{ site.name }}</a>
       </nav>    
     </header>
 
-    {{ content }}
+      {{ content }}
 
   </body>
 </html>
