@@ -1,29 +1,39 @@
 ---
-layout: signin
+
 ---
 
+
+<!DOCTYPE html>
+<html>
+
+	<head>
+		{% include head.html %}
+	</head>
+
+  <body>
+
+	{% include console-header.html %}
 
     <div class="sign">
 
       	<h3>Sign-in</h3>
   	 	<br>
-		<form action="" method="post">
+		<form action="" onsubmit="return false">
 			<label>Username</label>
 			<input type="text" name="username" class="form-field">
 			<label>Password</label>
 			<input type="password" name="password" class="form-field">
 			<div class="sign-form-submit">
-	    		<input type="submit" value="Sign-in" class="button">
+	    		<button type="button" id="sign-in">Sign-in</button>
 	    	</div>
     	</form>
 	    
 	    <br>
-
 	    <br>
 	    
       	<h3>Create acompte</h3>
   	 	</br>
-		<form action="" method="post">
+		<form>
 			<label>Username</label>
 			<input type="text" name="username" class="form-field">
 			<label>Email address</label>
@@ -35,8 +45,11 @@ layout: signin
 			<label>Application id</label>
 			<input type="text" name="app-id" class="form-field">
 			<div class="sign-form-submit">
-		    	<input type="submit" value="Create" class="button">
+	    		<button type="button" id="create-acompte">Create</button>
 	    	</div>
     	</form>
 
     </div>
+
+  </body>
+</html>
