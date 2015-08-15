@@ -26,6 +26,6 @@ public class CrossOriginFilter implements Filter {
 
 		return payload.withAllowMethods(ALLOW_METHODS) //
 				.withAllowHeaders(AccountResource.ACCOUNT_ID_HEADER,
-						AccountResource.AUTHORIZATION_HEADER);
+						Headers.AUTHORIZATION, Headers.CONTENT_TYPE);
 	}
 }
