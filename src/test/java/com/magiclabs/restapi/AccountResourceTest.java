@@ -20,13 +20,13 @@ public class AccountResourceTest extends AbstractTest {
 		resetTestAccount();
 
 		GetRequest req1 = Unirest.get("http://localhost:8080/v1/account/test");
-		JsonObject res1 = get(req1, 200);
+		JsonObject res1 = get(req1, 200).json();
 		assertEquals(Json.builder().add("id", "test").build(), res1);
 
 		GetRequest req2 = Unirest.get("http://localhost:8080/v1/user/dave")
 				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
 
-		JsonObject res2 = get(req2, 200);
+		JsonObject res2 = get(req2, 200).json();
 
 		JsonObject meta2 = res2.get("meta").asObject();
 		assertEquals("user", meta2.get("type").asString());

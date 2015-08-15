@@ -30,6 +30,8 @@ public class Start {
 				.add(SchemaResource.get()) //
 				.add(UserResource.get()) //
 				.add(AccountResource.get());
+
+		routes.filter(new CrossOriginFilter());
 	}
 
 	public static void main(String[] args) {

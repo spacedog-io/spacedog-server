@@ -41,7 +41,7 @@ public class UserResourceTest extends AbstractTest {
 				.basicAuth("vince", "hi_vince")
 				.header("x-magic-app-id", "test");
 
-		JsonObject res2 = get(req2, 200);
+		JsonObject res2 = get(req2, 200).json();
 
 		assertTrue(Json.equals(
 				Json.builder().add("username", "vince")
@@ -104,7 +104,7 @@ public class UserResourceTest extends AbstractTest {
 				.basicAuth("vince", "hi_vince")
 				.header("x-magic-app-id", "test");
 
-		JsonObject res9 = get(req9, 200);
+		JsonObject res9 = get(req9, 200).json();
 
 		assertEquals(Json.get(res9, "meta.version").asInt(), 2);
 

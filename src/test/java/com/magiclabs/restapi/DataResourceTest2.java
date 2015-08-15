@@ -61,7 +61,7 @@ public class DataResourceTest2 extends AbstractTest {
 				.header("x-magic-app-id", "test").body(sale.toString());
 
 		DateTime beforeCreate = DateTime.now();
-		JsonObject result = post(req, 201);
+		JsonObject result = post(req, 201).json();
 
 		assertEquals(true, result.get("success").asBoolean());
 		assertEquals("sale", result.get("type").asString());
@@ -77,7 +77,7 @@ public class DataResourceTest2 extends AbstractTest {
 				.routeParam("host", MAGIC_HOST).routeParam("id", id)
 				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
 
-		JsonObject res1 = get(req1, 200);
+		JsonObject res1 = get(req1, 200).json();
 
 		JsonObject meta1 = res1.get("meta").asObject();
 		assertEquals("dave", meta1.get("createdBy").asString());
@@ -115,7 +115,7 @@ public class DataResourceTest2 extends AbstractTest {
 				.routeParam("host", MAGIC_HOST).routeParam("q", "museum")
 				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
 
-		JsonObject res1b = get(req1b, 200);
+		JsonObject res1b = get(req1b, 200).json();
 		assertEquals(id, Json.get(res1b, "results.0.meta.id").asString());
 
 		// create user vince
@@ -152,7 +152,7 @@ public class DataResourceTest2 extends AbstractTest {
 				.routeParam("host", MAGIC_HOST).routeParam("id", id)
 				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
 
-		JsonObject res3 = get(req3, 200);
+		JsonObject res3 = get(req3, 200).json();
 
 		JsonObject meta3 = res3.get("meta").asObject();
 		assertEquals("dave", meta3.get("createdBy").asString());
@@ -177,7 +177,7 @@ public class DataResourceTest2 extends AbstractTest {
 
 		// check delete is done
 
-		JsonObject res5 = get(req1, 404);
+		JsonObject res5 = get(req1, 404).json();
 		assertFalse(res5.get("success").asBoolean());
 	}
 }

@@ -23,51 +23,36 @@ public abstract class AbstractTest extends Assert {
 								.getStatusText()));
 	}
 
-	protected static JsonObject get(GetRequest req, int... expectedStatus)
+	protected static Result get(GetRequest req, int... expectedStatus)
 			throws UnirestException {
 		return exec(req.getHttpRequest(), null, expectedStatus);
 	}
 
-	protected static JsonObject post(RequestBodyEntity req,
-			int... expectedStatus) throws UnirestException {
-		return exec(req.getHttpRequest(), req.getBody(), expectedStatus);
-	}
-
-	protected static void delete(HttpRequestWithBody req, int... expectedStatus)
+	protected static Result post(RequestBodyEntity req, int... expectedStatus)
 			throws UnirestException {
-		exec(req.getHttpRequest(), req.getBody(), expectedStatus);
+		return exec(req.getHttpRequest(), req.getBody(), expectedStatus);
 	}
 
-	protected static JsonObject put(RequestBodyEntity req,
+	protected static Result delete(HttpRequestWithBody req,
 			int... expectedStatus) throws UnirestException {
 		return exec(req.getHttpRequest(), req.getBody(), expectedStatus);
 	}
 
-	protected static JsonObject exec(HttpRequest req, Object requestBody,
+	protected static Result put(RequestBodyEntity req, int... expectedStatus)
+			throws UnirestException {
+		return exec(req.getHttpRequest(), req.getBody(), expectedStatus);
+	}
+
+	protected static Result options(HttpRequestWithBody req,
+			int... expectedStatus) throws UnirestException {
+		return exec(req.getHttpRequest(), req.getBody(), expectedStatus);
+	}
+
+	private static Result exec(HttpRequest req, Object requestBody,
 			int... expectedStatus) throws UnirestException {
 
 		HttpResponse<String> resp = req.asString();
 
-		printHttpRequest(req, resp);
-
-		if (requestBody != null)
-			System.out.println(String.format("request body = %s", requestBody));
-
-		String body = resp.getBody();
-		JsonObject result = null;
-
-		if (Json.isJson(body)) {
-			result = JsonObject.readFrom(body);
-			System.out.println(String.format("Response body = %s",
-					Json.prettyString(result)));
-		}
-
-		assertTrue(Ints.contains(expectedStatus, resp.getStatus()));
-		return result;
-	}
-
-	protected static void printHttpRequest(HttpRequest req,
-			HttpResponse<String> resp) {
 		System.out.println();
 		System.out.println(String.format("%s %s => %s => %s",
 				req.getHttpMethod(), req.getUrl(), resp.getStatus(),
@@ -76,30 +61,48 @@ public abstract class AbstractTest extends Assert {
 		req.getHeaders().forEach(
 				(key, value) -> System.out.println(String.format("%s : %s",
 						key, value)));
+
+		if (requestBody != null)
+			System.out.println(String
+					.format("Request body = [%s]", requestBody));
+
+		Result result = new Result(resp);
+
+		resp.getHeaders().forEach(
+				(key, value) -> System.out.println(String.format("=> %s : %s",
+						key, value)));
+
+		System.out.println(String.format("=> Response body = [%s]", result
+				.isJson() ? Json.prettyString(result.json) : resp.getBody()));
+
+		assertTrue(Ints.contains(expectedStatus, resp.getStatus()));
+		return result;
 	}
 
-	static <T> void print(RequestBodyEntity request, HttpResponse<T> response) {
-		print(request.getHttpRequest(), response);
-		System.out
-				.println(String.format("request body = %s", request.getBody()));
-	}
+	public static class Result {
+		private JsonObject json;
+		private HttpResponse<String> response;
 
-	static <T> void print(HttpRequest request, HttpResponse<T> response) {
-		System.out.println();
-		System.out.println(String.format("%s %s => %s => %s",
-				request.getHttpMethod(), request.getUrl(),
-				response.getStatus(), response.getStatusText()));
+		public Result(HttpResponse<String> response) {
+			this.response = response;
 
-		if (request.getHeaders().containsKey("x-magic-app-id")) {
-			System.out.println("x-magic-app-id = "
-					+ request.getHeaders().get("x-magic-app-id"));
-		}
-		if (request.getHeaders().containsKey("Authorization")) {
-			System.out.println("Authorization = "
-					+ request.getHeaders().get("Authorization"));
+			String body = response.getBody();
+			if (Json.isJson(body)) {
+				json = JsonObject.readFrom(body);
+			}
 		}
 
-		System.out.println(String.format("response body = %s",
-				response.getBody()));
+		public boolean isJson() {
+			return json != null;
+		}
+
+		public JsonObject json() {
+			return json;
+		}
+
+		public HttpResponse<String> response() {
+			return response;
+		}
+
 	}
 }

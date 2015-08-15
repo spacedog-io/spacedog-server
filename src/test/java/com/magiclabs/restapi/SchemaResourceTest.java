@@ -3,7 +3,6 @@ package com.magiclabs.restapi;
 import org.junit.Test;
 
 import com.eclipsesource.json.JsonObject;
-import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.GetRequest;
@@ -20,7 +19,7 @@ public class SchemaResourceTest extends AbstractTest {
 		GetRequest req = Unirest.get("http://localhost:8080/v1/schema/car")
 				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
 
-		JsonObject res = get(req, 200);
+		JsonObject res = get(req, 200).json();
 		assertTrue(Json.equals(buildCarSchema(), res));
 	}
 
@@ -99,7 +98,7 @@ public class SchemaResourceTest extends AbstractTest {
 		GetRequest req = Unirest.get("http://localhost:8080/v1/schema/home")
 				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
 
-		JsonObject res = get(req, 200);
+		JsonObject res = get(req, 200).json();
 		assertTrue(Json.equals(buildHomeSchema(), res));
 	}
 
@@ -141,7 +140,7 @@ public class SchemaResourceTest extends AbstractTest {
 		GetRequest req = Unirest.get("http://localhost:8080/v1/schema")
 				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
 
-		JsonObject result = get(req, 200);
+		JsonObject result = get(req, 200).json();
 
 		// user, car, sale and home
 		assertEquals(4, result.size());
@@ -157,11 +156,10 @@ public class SchemaResourceTest extends AbstractTest {
 
 	@Test
 	public void shouldFailDueToInvalidSchema() throws UnirestException {
-		HttpResponse<String> response = shouldFailDueToInvalidSchema("{\"toto\":{\"_type\":\"XXX\"}}");
-		assertEquals(400, response.getStatus());
+		shouldFailDueToInvalidSchema("{\"toto\":{\"_type\":\"XXX\"}}");
 	}
 
-	private HttpResponse<String> shouldFailDueToInvalidSchema(String jsonSchema)
+	private void shouldFailDueToInvalidSchema(String jsonSchema)
 			throws UnirestException {
 		HttpRequestWithBody req1 = Unirest
 				.delete("http://localhost:8080/v1/schema/toto")
@@ -169,14 +167,12 @@ public class SchemaResourceTest extends AbstractTest {
 
 		delete(req1, 200);
 
-		RequestBodyEntity request = Unirest
+		RequestBodyEntity req2 = Unirest
 				.put("http://localhost:8080/v1/schema/toto")
 				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test")
 				.body(jsonSchema);
 
-		HttpResponse<String> response = request.asString();
-		print(request, response);
-		return response;
+		put(req2, 400);
 	}
 
 	@Test
