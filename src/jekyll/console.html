@@ -1,5 +1,5 @@
 ---
-toto: titi
+
 ---
 
 
@@ -12,7 +12,47 @@ toto: titi
 
   <body>
 
-    {% include console-header.html %}
-    
+	{% include console-header.html %}
+
+    <div id="main" class="sign">
+
+		<p id="error"></p>
+		<br>
+		
+		<form id="sign-form">
+			<h3>Sign-in</h3>
+			<br>
+			<label>Username</label>
+			<input type="text" name="username" class="form-field">
+			<label>Application id</label>
+			<input type="text" name="id" class="form-field">
+			<label>Password</label>
+			<input type="password" name="password" class="form-field">
+			<div class="sign-form-submit">
+	    		<button id="sign-in" type="button">Sign-in</button>
+	    	</div>
+    	</form>
+	    
+	    
+		<form id="create-form">
+			<h3>Create account</h3>
+			</br>
+			<label>Username</label>
+			<input type="text" name="username" class="form-field">
+			<label>Email address</label>
+			<input type="email" name="email" class="form-field">
+			<label>Password</label>
+			<input type="password" name="password" class="form-field">
+			<label>Confirm Password</label>
+			<input type="password" name="password-confirmation" class="form-field">
+			<label>Application id</label>
+			<input type="text" name="id" class="form-field">
+			<div class="sign-form-submit">
+	    		<button type="button" id="create-account">Create</button>
+	    	</div>
+    	</form>
+
+    </div>
+
   </body>
 </html>

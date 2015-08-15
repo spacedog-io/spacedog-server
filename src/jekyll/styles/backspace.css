@@ -118,14 +118,32 @@ menu a {
   background-color: transparent;
 }
 
-/* Signin
+/* Console
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
 .sign {
   margin: 100px auto 100px auto;
   padding: 20px;
-  max-width: 400px;
+  max-width: 800px;
   text-align: left;
+}
+
+.sign form {
+  margin: 0;
+  padding: 20px;
+  max-width: 340px;
+  text-align: left;
+  border: 25px solid darkorange;
+  border-radius: 20px;
+  border-left-style:hidden;
+}
+
+#sign-form {
+  float: left;  
+}
+
+#create-form {
+  float: right;
 }
 
 .sign input {
@@ -133,7 +151,7 @@ menu a {
 }
 
 .sign-form-submit {
-  text-align: center;
+  text-align: right;
   margin-top: 20px;
 }
 
