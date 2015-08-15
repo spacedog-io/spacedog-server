@@ -14,13 +14,18 @@ public class CrossOriginFilter implements Filter {
 	public Payload apply(String uri, Context context, PayloadSupplier nextFilter)
 			throws Exception {
 
+		Payload payload = null;
+
 		if (context.request().isPreflight()) {
-			return Payload.ok() //
+			payload = Payload.ok() //
 					.withAllowOrigin(context.request().header(Headers.ORIGIN)) //
-					.withAllowMethods(ALLOW_METHODS) //
 					.withMaxAge(31536000); // one year
+		} else {
+			payload = nextFilter.get().withAllowOrigin("*");
 		}
-		return nextFilter.get().withAllowOrigin("*")
-				.withAllowMethods(ALLOW_METHODS);
+
+		return payload.withAllowMethods(ALLOW_METHODS) //
+				.withAllowHeaders(AccountResource.ACCOUNT_ID_HEADER,
+						AccountResource.AUTHORIZATION_HEADER);
 	}
 }

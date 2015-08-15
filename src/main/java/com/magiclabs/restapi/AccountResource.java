@@ -58,9 +58,9 @@ public class AccountResource extends AbstractResource {
 	private static final Set<String> INTERNAL_INDICES = Sets
 			.newHashSet(ADMIN_INDEX);
 
-	private static final String ACCOUNT_ID_HEADER = "x-magic-app-id";
-	private static final String AUTHORIZATION_HEADER = "Authorization";
-	private static final String BASIC_AUTHENTICATION_SCHEME = "Basic";
+	public static final String ACCOUNT_ID_HEADER = "x-magic-app-id";
+	public static final String AUTHORIZATION_HEADER = "Authorization";
+	public static final String BASIC_AUTHENTICATION_SCHEME = "Basic";
 
 	private static final Charset UTF_8 = Charset.forName("UTF-8");
 
