@@ -7,7 +7,6 @@ import com.google.common.primitives.Ints;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
-import com.mashape.unirest.request.GetRequest;
 import com.mashape.unirest.request.HttpRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
 import com.mashape.unirest.request.body.RequestBodyEntity;
@@ -23,7 +22,7 @@ public abstract class AbstractTest extends Assert {
 								.getStatusText()));
 	}
 
-	protected static Result get(GetRequest req, int... expectedStatus)
+	protected static Result get(HttpRequest req, int... expectedStatus)
 			throws UnirestException {
 		return exec(req.getHttpRequest(), null, expectedStatus);
 	}
