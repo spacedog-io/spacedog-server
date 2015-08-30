@@ -18,8 +18,8 @@ function showSearchDiv() {
 	sessionStorage.signInOk = 'true';
 	resetNavSignButton();
 
-	$('#user-info').html('=> Username: [' + sessionStorage.username
-		+ '], application identifier: [' + sessionStorage.id + ']');
+	$('#user-info').html('=> Hello [' + sessionStorage.username
+		+ '], your x-magic-app-id is [' + sessionStorage.id + ']');
 	$signDiv.css('visibility', 'hidden');
 	$signDiv.css('display', 'none');
 	$searchDiv.css('visibility', 'visible');
@@ -42,11 +42,11 @@ function showSignDiv() {
 }
 
 function searchOk(data, textStatus, jqXHR) {
-	$alert.html('=> [' + data.total + '] result(s), search took [' + data.took + '] millisecond(s)');
+	$alert.html('=> [' + data.total + '] result(s), [' + data.results.length + '] displayed, search took [' + data.took + '] millisecond(s)');
 	console.log(data);
 	
 	$results.empty();
-	for (i=0; i < data.total; i++)
+	for (i=0; i < data.results.length; i++)
 		$results.append('<pre class="prettyprint"><code>'
 			 + JSON.stringify(data.results[i], null, 4)
 			 + '</code></pre><br>')
@@ -113,12 +113,16 @@ function searchObjects(event) {
 			'x-magic-app-id':  sessionStorage.id,
 			Authorization: 'Basic ' + btoa(sessionStorage.username + ':' + sessionStorage.password)
 		},
-		data: $('#search-form').serialize(),
+		data: {
+			q: $('input[name="q"]').val(),
+			from: 0,
+			size: 25
+		},
 		success: searchOk,
 		error: showError
 	});
 
-	$searchDiv.find('[name="q"]').focus();
+	$searchDiv.find('input[name="q"]').focus();
 	return false;
 }
 
