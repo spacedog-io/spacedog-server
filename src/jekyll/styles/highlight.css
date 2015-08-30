@@ -1,81 +1,36 @@
 
-.highlight .hll { /*background-color: #333333*/
- }
 .highlight  { 
-
-/*	background-color: darkgray;
-/*background: #111111; */
-
-color: #ffffff ;
-
-padding: 0.2em 0.9em;
-  margin-bottom: 1em;
-	font: normal normal normal 115%/normal 'Courier New', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', monospace !important;
-  line-height: 1.1em;
-  overflow: auto;
-	font-size: 1.0em;
-
-/*	border: 1px solid #CCC;
-	border-color: red;
-	
-	-moz-border-radius:7px;
-	-webkit-border-radius:7px;
-	border-radius:7px;
-*/
-
+	padding: 0.2em 0.9em;
+	overflow: auto;
 	border-top: 1px dotted #CCC;
 	border-right: 1px dotted #CCC;
 	border-color: beige;
-
+	text-align: left;
 }
 
-p > code, p > a > code, li > code, h3 > code
-{
-	
-border-radius: 4px;
--webkit-border-radius: 4px;
--moz-border-radius: 4px;
-color: #C5CBD0;
-/*color: white*/
-background-image: url(/images/opaque_20.png);
-font-family: Consolas, "Courier New", Courier, "Liberation Mono", monospace;
-font-size: 1.1em;
-/*height: 0px;
-image-rendering: auto;
-left: auto;
-list-style-type: disc;*/
-padding-bottom: 2px;
-padding-left: 4px;
-padding-right: 4px;
-padding-top: 2px;
-text-decoration: none;
-text-indent: 0px;
-text-shadow: none;
-text-transform: none;
-top: auto;
-
+code,
+pre {
+	font-family: consolas;
 }
 
 
-p > a > code
-{
-color: #95be7d;
+p > code,
+p > a > code,
+li > code,
+h3 > code {
+	font-size: 0.95em;
+	color: green;
+	padding: 0 5px;
+	border: 1px solid green;
+	border-radius: 8px;
 }
 
-code, pre {
-	font-family: "Consolas", "Courier New", "Courier", "FreeMono", monospace;
-	font-size:0.95em;
-	margin: 1em 0 1.5em 0;
-}
 
-.highlight span
-{
-font-family: "Consolas", "Courier New", "Courier", "FreeMono", monospace;
-font-size:1em;
+p > a > code {
+	color: #95be7d;
 }
 
 .highlight .hll { background-color: #49483e }
-.highlight  { /*background: #272822;*/ color: #f8f8f2 }
 .highlight .c { color: #75715e } /* Comment */
 .highlight .err { color: #960050; background-color: #1e0010 } /* Error */
 .highlight .k { color: #66d9ef } /* Keyword */
@@ -110,7 +65,7 @@ font-size:1em;
 .highlight .nn { color: #f8f8f2 } /* Name.Namespace */
 .highlight .nx { color: #a6e22e } /* Name.Other */
 .highlight .py { color: #f8f8f2 } /* Name.Property */
-.highlight .nt { color: #f92672 } /* Name.Tag */
+.highlight .nt { color: #f92672 ; color: green;} /* Name.Tag */
 .highlight .nv { color: #f8f8f2 } /* Name.Variable */
 .highlight .ow { color: #f92672 } /* Operator.Word */
 .highlight .w { color: #f8f8f2 } /* Text.Whitespace */

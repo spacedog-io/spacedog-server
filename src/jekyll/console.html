@@ -12,24 +12,38 @@
 
   <body>
 
-	{% include console-header.html %}
+	{% include header.html %}
 
-    <div id="main" class="sign">
+	<div id="search-div">
+		<p id="user-info"></p>
+		<br>
+		<form id="search-form">
+			<input type="text" name="q">
+    		<button type="submit" id="search">Search</button>
+    	</form>	
+    	<br>
+		<p id="search-alert">=></p>
+		<br>
+		<div id="search-results">
+		</div>
+	</div>
+	
+    <div id="sign-div">
 
-		<p id="error"></p>
+		<p id="sign-alert">=></p>
 		<br>
 		
 		<form id="sign-form">
 			<h3>Sign-in</h3>
 			<br>
 			<label>Username</label>
-			<input type="text" name="username" class="form-field">
+			<input type="text" name="username">
 			<label>Application id</label>
-			<input type="text" name="id" class="form-field">
+			<input type="text" name="id">
 			<label>Password</label>
-			<input type="password" name="password" class="form-field">
+			<input type="password" name="password">
 			<div class="sign-form-submit">
-	    		<button id="sign-in" type="button">Sign-in</button>
+	    		<button id="sign-in" type="submit">Sign-in</button>
 	    	</div>
     	</form>
 	    
@@ -38,17 +52,17 @@
 			<h3>Create account</h3>
 			</br>
 			<label>Username</label>
-			<input type="text" name="username" class="form-field">
+			<input type="text" name="username">
 			<label>Email address</label>
-			<input type="email" name="email" class="form-field">
+			<input type="email" name="email">
 			<label>Password</label>
-			<input type="password" name="password" class="form-field">
+			<input type="password" name="password">
 			<label>Confirm Password</label>
-			<input type="password" name="password-confirmation" class="form-field">
+			<input type="password" name="password-confirmation">
 			<label>Application id</label>
-			<input type="text" name="id" class="form-field">
+			<input type="text" name="id">
 			<div class="sign-form-submit">
-	    		<button type="button" id="create-account">Create</button>
+	    		<button type="submit" id="create-account">Create</button>
 	    	</div>
     	</form>
 

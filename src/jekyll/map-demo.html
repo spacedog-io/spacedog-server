@@ -1,0 +1,30 @@
+---
+
+---
+
+
+<!DOCTYPE html>
+<html>
+
+	<head>
+		{% include head.html %}
+
+	    <script async defer
+    	  src="https://maps.googleapis.com/maps/api/js?v=3&key=AIzaSyDvfs2R9nhAGMo__KDYGhsIpwZIVkz5YzM&callback=initMap">
+    	</script>
+	  	<script src="/scripts/map-demo.js"></script>
+	</head>
+
+  <body>
+
+	{% include header.html %}
+
+	<div id="map">
+		<form id="search-form">
+			<input type="text" name="q">
+    		<button type="submit" id="search">Search</button>
+    	</form>	
+	</div>
+	
+  </body>
+</html>

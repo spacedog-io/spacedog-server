@@ -8,7 +8,7 @@
   <body>
 
 
-    {% include main-header.html %}
+    {% include header.html %}
 
     <menu>
   		<h5>User's guide</h5>
@@ -18,7 +18,7 @@
   			{% for doc in docs %}
          	<li>
             {% if doc.url == page.url %}
-              <a  class="active"  href="{{doc.url}}"> {{doc.title}} --> </a>
+              <a  class="active"  href="{{doc.url}}"> {{doc.title}} </a>
             {% endif %}
             {% if doc.url != page.url %}
               <a  href="{{doc.url}}"> {{doc.title}} </a>
@@ -34,7 +34,7 @@
         {% for doc in site.reference-guide %}
           <li>
             {% if doc.url == page.url %}
-              <a  class="active"  href="{{doc.url}}"> {{doc.title}} --> </a>
+              <a  class="active"  href="{{doc.url}}"> {{doc.title}} </a>
             {% endif %}
             {% if doc.url != page.url %}
               <a  href="{{doc.url}}"> {{doc.title}} </a>
