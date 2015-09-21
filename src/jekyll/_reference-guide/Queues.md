@@ -51,9 +51,22 @@ errorPolicy | string | Optional. Valid values are: delete, manual, automatic. De
 - request body: a queue JSON objet.
 - returns an updated status object.
 
+A queue object:
+
+```json
+{
+  "name" : "sms",
+  "purge" : 12562,
+  "serviceId" : "sendSMS",
+  "retry" : 3,
+  "deletePolicy": "processRemaining"
+}
+```
+
 `DELETE` deletes the specified queue.
 
-- `processRemaining` = [true]/false : If true, the queue is deleted when all messages are processed. No new message can be added to the queue. If false, remaining messages are discarded and the queue is deleted.
+- `deletePolicy` = `processRemaining` : the queue is deleted when all messages are processed. No new message can be added to the queue.
+- `deletePolicy` = `immediately` : the queue is deleted immediately. No message can be added. Remaining messages are discarded and the queue is deleted.
 - returns a deleted status object.
 
 ### /v1/queue/{qid}/process
@@ -81,9 +94,9 @@ errorPolicy | string | Optional. Valid values are: delete, manual, automatic. De
 ```json
 {
   "id" : "1234567585757",
+  "status" : "processed",
   "processed" : "2016-04-13T23:45:07.454Z",
   "took" : 12562,
-  "success" : true,
   "message" : {
     "..." : "..."
   }

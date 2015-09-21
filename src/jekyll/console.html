@@ -14,17 +14,19 @@
 
 	{% include header.html %}
 
-	<div id="search-div">
-		<p id="user-info"></p>
-		<br>
-		<form id="search-form">
-			<input type="text" name="q">
-    		<button type="submit" id="search">Search</button>
-    	</form>	
-    	<br>
-		<p id="search-alert">=></p>
-		<br>
-		<div id="search-results">
+	<div id="console">
+		<div id="console-menu">
+			<div id="user-info"></div>
+			<br>
+			<form id="console-search-form">
+				<input type="text" name="q">
+				<button type="submit" id="search">Search</button>
+			</form>	
+			<br>
+			<p id="search-alert">=></p>
+		</div>
+	
+		<div id="console-results">
 		</div>
 	</div>
 	
@@ -34,7 +36,7 @@
 		<br>
 		
 		<form id="sign-form">
-			<h3>Sign-in</h3>
+			<h4>Already registered? Sign-in:</h4>
 			<br>
 			<label>Username</label>
 			<input type="text" name="username">
@@ -49,7 +51,7 @@
 	    
 	    
 		<form id="create-form">
-			<h3>Create account</h3>
+			<h4>First time? Create an account:</h4>
 			</br>
 			<label>Username</label>
 			<input type="text" name="username">

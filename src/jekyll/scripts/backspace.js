@@ -2,7 +2,7 @@
 */
 
 var	$signDiv;
-var	$searchDiv;
+var	$consoleDiv;
 var	$alert;
 var $results;
 var $navSignBt;
@@ -18,13 +18,13 @@ function showSearchDiv() {
 	sessionStorage.signInOk = 'true';
 	resetNavSignButton();
 
-	$('#user-info').html('=> Hello [' + sessionStorage.username
-		+ '], your x-magic-app-id is [' + sessionStorage.id + ']');
+	$('#user-info').html('<p>Hello [' + sessionStorage.username
+		+ ']</p><p>Your application id is [' + sessionStorage.id + ']</p>');
 	$signDiv.css('visibility', 'hidden');
 	$signDiv.css('display', 'none');
-	$searchDiv.css('visibility', 'visible');
-	$searchDiv.css('display', 'block');
-	$searchDiv.find('[name="q"]').focus();
+	$consoleDiv.css('visibility', 'visible');
+	$consoleDiv.css('display', 'block');
+	$consoleDiv.find('[name="q"]').focus();
 	$alert = $('#search-alert');
 }
 
@@ -33,11 +33,11 @@ function showSignDiv() {
 	
 	$signDiv.css('visibility', 'visible');
 	$signDiv.css('display', 'block');
-	$searchDiv.css('visibility', 'hidden');
-	$searchDiv.css('display', 'none');
+	$consoleDiv.css('visibility', 'hidden');
+	$consoleDiv.css('display', 'none');
 	
 	$('#sign-form').find('[name="username"]').focus();
-	$searchDiv.css('visibility', 'hidden');
+	$consoleDiv.css('visibility', 'hidden');
 	$alert = $('#sign-alert');
 }
 
@@ -122,7 +122,7 @@ function searchObjects(event) {
 		error: showError
 	});
 
-	$searchDiv.find('input[name="q"]').focus();
+	$consoleDiv.find('input[name="q"]').focus();
 	return false;
 }
 
@@ -151,13 +151,13 @@ function init() {
 	if (window.location.pathname == '/console.html') {
 
 		$signDiv = $('#sign-div');
-		$searchDiv = $('#search-div');
+		$consoleDiv = $('#console');
 		$alert = $('#sign-alert');
-		$results = $('#search-results');
+		$results = $('#console-results');
 
 		$('#sign-form').submit(signIn);
 		$('#create-form').submit(createAccount);
-		$('#search-form').submit(searchObjects);
+		$('#console-search-form').submit(searchObjects);
 
 		if (sessionStorage.signInOk) showSearchDiv();
 		else showSignDiv();

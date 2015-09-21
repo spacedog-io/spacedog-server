@@ -77,8 +77,9 @@ projection {
 }
 pre.prettyprint {
     padding: 2px;
-    border-left: 20px solid darkorange;
-    border-radius: 20px;
+    border-left: 10px solid darkorange;
+    border-radius: 10px;
+    max-width: 800px;
 }
 ol.linenums {
     margin-top: 0;
