@@ -8,19 +8,21 @@ import com.mashape.unirest.request.HttpRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
 import com.mashape.unirest.request.body.RequestBodyEntity;
 
-public class MappyPoiImport extends AbstractTest {
+public class MappyImport extends AbstractTest {
+
+	public static void main1(String[] args) {
+		int i = 0;
+		for (double lat = 48; lat <= 49.5; lat += 0.1) {
+			for (double lon = 1.8; lon <= 2.9; lon += 0.1) {
+
+				System.out.println("i=" + (i++) + " : " + lat + ',' + lon + ','
+						+ (lat + 0.1) + ',' + (lon + 0.1));
+			}
+		}
+	}
 
 	public static void main(String[] args) {
 		try {
-			HttpRequest req1 = Unirest
-					.get("http://search.mappy.net/search/1.0/find")
-					.queryString("max_results", "100")
-					.queryString("q", "restaurant")
-					.queryString("bbox",
-							"48.671228,1.854415,49.034931,2.843185");
-
-			JsonObject res1 = get(req1, 200).json();
-
 			HttpRequestWithBody req2 = Unirest
 					.delete("http://localhost:8080/v1/schema/resto")
 					.basicAuth("dave", "hi_dave")
@@ -35,7 +37,26 @@ public class MappyPoiImport extends AbstractTest {
 					.body(buildRestoSchema().toString());
 
 			post(req3, 201);
-			res1.get("pois").asArray().forEach(MappyPoiImport::copyPoi);
+
+			for (double lat = 48; lat <= 49.5; lat += 0.1) {
+				for (double lon = 1.8; lon <= 2.9; lon += 0.1) {
+
+					HttpRequest req1 = Unirest
+							.get("http://search.mappy.net/search/1.0/find")
+							.queryString("max_results", "100")
+							.queryString("q", "restaurant")
+							.queryString(
+									"bbox",
+									"" + lat + ',' + lon + ',' + (lat + 0.1)
+											+ ',' + (lon + 0.1));
+
+					// "48.671228,1.854415,49.034931,2.843185");
+
+					JsonObject res1 = get(req1, 200).json();
+
+					res1.get("pois").asArray().forEach(MappyImport::copyPoi);
+				}
+			}
 
 		} catch (Throwable t) {
 			t.printStackTrace();
@@ -48,8 +69,12 @@ public class MappyPoiImport extends AbstractTest {
 		JsonBuilder target = Json.builder()
 				.add("name", src.get("name").asString()) //
 				.add("town", src.get("town").asString()) //
-				.add("townCode", src.get("townCode").asString()) //
-				.add("way", src.get("way").asString());
+				.add("zipcode", src.get("pCode").asString()) //
+				.add("way", src.get("way").asString()) //
+				.stObj("where") //
+				.add("lat", src.get("lat").asDouble()) //
+				.add("lon", src.get("lng").asDouble()) //
+				.end();
 
 		if (src.get("rubricId") != null)
 			target = target.add("mainRubricId", src.get("rubricId").asString());
@@ -92,11 +117,11 @@ public class MappyPoiImport extends AbstractTest {
 
 	public static JsonObject buildRestoSchema() {
 		return SchemaBuilder.builder("resto") //
-				.add("name", "text").required() //
+				.add("name", "text").language("french").required() //
 				.add("where", "geopoint").required() //
-				.add("way", "text").required() //
-				.add("town", "text").required() //
-				.add("townCode", "string").required() //
+				.add("way", "text").language("french").required() //
+				.add("town", "text").language("french").required() //
+				.add("zipcode", "string").required() //
 				.add("mainRubricId", "string").required() //
 				.add("url", "string") //
 				.add("illustration", "string") //
@@ -104,7 +129,7 @@ public class MappyPoiImport extends AbstractTest {
 				.startObject("rubrics").required() //
 				.array() //
 				.add("rubricId", "string").required() //
-				.add("rubricLabel", "text").required() //
+				.add("rubricLabel", "text").language("french").required() //
 				.end() //
 				.build();
 	}
