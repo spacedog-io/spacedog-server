@@ -135,7 +135,7 @@ function searchInPois(event) {
 	
 	$.ajax({
 		method: "POST",
-		url: "http://localhost:8080/v1/data/resto/search",
+		url: window.location.origin + "/v1/data/resto/search",
 		processData: false,
 		data: JSON.stringify({
 			from: 0,
@@ -183,7 +183,7 @@ function searchOutPois() {
 	
 	$.ajax({
 		method: "POST",
-		url: "http://localhost:8080/v1/data/resto/search",
+		url: window.location.origin + "/v1/data/resto/search",
 		processData: false,
 		data: JSON.stringify({
 			from: 0,

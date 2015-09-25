@@ -1,7 +1,7 @@
 ---
 layout: doc
 title: Configurations and contents
-rank: 5
+rank: 6
 ---
 
 # Configurations

@@ -1,7 +1,7 @@
 ---
 layout: doc
 title: Deploy to the cloud
-rank: 4
+rank: 5
 ---
 
 Use the `/v1/file` endpoint to upload and publish files and file sets to the cloud.

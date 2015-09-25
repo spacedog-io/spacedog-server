@@ -69,7 +69,7 @@ function signIn(event) {
 
 	$.ajax({
 		method: "GET",
-		url: "http://localhost:8080/v1/login",
+		url: window.location.origin + "/v1/login",
 		cache: false,
 		headers : {
 			'x-magic-app-id':  sessionStorage.id,
@@ -89,7 +89,7 @@ function createAccount(event) {
 
 	$.ajax({
 		method: 'POST',
-		url: 'http://localhost:8080/v1/account',
+		url: window.location.origin + '/v1/account',
 		cache: false,
 		contentType: 'application/json; charset=UTF-8',
 		data: JSON.stringify(sessionStorage),
@@ -107,7 +107,7 @@ function searchObjects(event) {
 
 	$.ajax({
 		method: "GET",
-		url: "http://localhost:8080/v1/data",
+		url: window.location.origin + "/v1/data",
 		cache: false,
 		headers : {
 			'x-magic-app-id':  sessionStorage.id,
