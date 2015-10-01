@@ -1,9 +1,5 @@
 package io.spacedog.services;
 
-import io.spacedog.services.Json;
-import io.spacedog.services.SchemaTranslator;
-import io.spacedog.services.SchemaValidator;
-
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -22,7 +18,7 @@ public class SchemaTranslatorTest extends Assert {
 
 		// load schema
 		URL urlSchema = Resources
-				.getResource("com/magiclabs/restapi/SchemaTranslatorTest-schema.json");
+				.getResource("io/spacedog/services/SchemaTranslatorTest-schema.json");
 		String jsonSchema = Resources.toString(urlSchema, utf8);
 		JsonObject schema = JsonObject.readFrom(jsonSchema);
 
@@ -34,7 +30,7 @@ public class SchemaTranslatorTest extends Assert {
 
 		// load expected mapping
 		URL urlExpectedMapping = Resources
-				.getResource("com/magiclabs/restapi/SchemaTranslatorTest-mapping.json");
+				.getResource("io/spacedog/services/SchemaTranslatorTest-mapping.json");
 		String jsonExpectedMapping = Resources.toString(urlExpectedMapping,
 				utf8);
 		JsonObject expectedMapping = JsonObject.readFrom(jsonExpectedMapping);

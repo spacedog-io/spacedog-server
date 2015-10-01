@@ -1,7 +1,5 @@
 package io.spacedog.services;
 
-import io.spacedog.services.Json;
-
 import org.junit.Assert;
 
 import com.eclipsesource.json.JsonObject;
@@ -9,11 +7,14 @@ import com.google.common.primitives.Ints;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import com.mashape.unirest.request.GetRequest;
 import com.mashape.unirest.request.HttpRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
 import com.mashape.unirest.request.body.RequestBodyEntity;
 
 public abstract class AbstractTest extends Assert {
+
+	private static String backendDomain = "http://localhost:8080";
 
 	protected static void refreshIndex(String index) throws UnirestException {
 		System.out.println();
@@ -22,6 +23,69 @@ public abstract class AbstractTest extends Assert {
 						Unirest.post("http://localhost:9200/{index}/_refresh")
 								.routeParam("index", index).asString()
 								.getStatusText()));
+	}
+
+	protected static GetRequest prepareGet(String uri) {
+		return prepareGet(uri, null);
+	}
+
+	protected static GetRequest prepareGet(String uri, String spacedogKey) {
+		String url = new StringBuilder(backendDomain).append(uri).toString();
+		GetRequest request = Unirest.get(url);
+		if (spacedogKey != null)
+			request.header(AccountResource.SPACEDOG_KEY_HEADER, spacedogKey);
+		return request;
+	}
+
+	protected static HttpRequestWithBody preparePost(String uri) {
+		return preparePost(uri, null);
+	}
+
+	protected static HttpRequestWithBody preparePost(String uri,
+			String spacedogKey) {
+		String url = new StringBuilder(backendDomain).append(uri).toString();
+		HttpRequestWithBody request = Unirest.post(url);
+		if (spacedogKey != null)
+			request.header(AccountResource.SPACEDOG_KEY_HEADER, spacedogKey);
+		return request;
+	}
+
+	protected static HttpRequestWithBody preparePut(String uri) {
+		return preparePut(uri, null);
+	}
+
+	protected static HttpRequestWithBody preparePut(String uri,
+			String spacedogKey) {
+		String url = new StringBuilder(backendDomain).append(uri).toString();
+		HttpRequestWithBody request = Unirest.put(url);
+		if (spacedogKey != null)
+			request.header(AccountResource.SPACEDOG_KEY_HEADER, spacedogKey);
+		return request;
+	}
+
+	protected static HttpRequestWithBody prepareDelete(String uri) {
+		return prepareDelete(uri, null);
+	}
+
+	protected static HttpRequestWithBody prepareDelete(String uri,
+			String spacedogKey) {
+		String url = new StringBuilder(backendDomain).append(uri).toString();
+		HttpRequestWithBody request = Unirest.delete(url);
+		if (spacedogKey != null)
+			request.header(AccountResource.SPACEDOG_KEY_HEADER, spacedogKey);
+		return request;
+	}
+
+	protected HttpRequestWithBody prepareOptions(String uri) {
+		return prepareOptions(uri, null);
+	}
+
+	protected HttpRequestWithBody prepareOptions(String uri, String spacedogKey) {
+		String url = new StringBuilder(backendDomain).append(uri).toString();
+		HttpRequestWithBody request = Unirest.options(url);
+		if (spacedogKey != null)
+			request.header(AccountResource.SPACEDOG_KEY_HEADER, spacedogKey);
+		return request;
 	}
 
 	protected static Result get(HttpRequest req, int... expectedStatus)

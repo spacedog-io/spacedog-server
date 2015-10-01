@@ -7,6 +7,10 @@ public class AuthenticationException extends RuntimeException {
 		super(message);
 	}
 
+	public AuthenticationException(String message, Object... parameters) {
+		super(String.format(message, parameters));
+	}
+
 	public AuthenticationException(String message,
 			IllegalArgumentException cause) {
 		super(message, cause);

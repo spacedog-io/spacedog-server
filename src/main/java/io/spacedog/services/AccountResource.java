@@ -3,7 +3,6 @@ package io.spacedog.services;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -30,6 +29,7 @@ import com.eclipsesource.json.JsonObject;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.google.common.collect.Sets;
+import com.google.common.io.Resources;
 
 @Prefix("/v1/account")
 public class AccountResource extends AbstractResource {
@@ -47,30 +47,31 @@ public class AccountResource extends AbstractResource {
 
 	// singleton ends
 
-	private static final String ADMIN_INDEX = "admin";
-	private static final String ACCOUNT_TYPE = "account";
-	public static final String ACCOUNT_MAPPING = Json.builder()
-			.stObj("account").add("dynamic", "strict").stObj("_id")
-			.add("path", "id").end().stObj("properties").stObj("id")
-			.add("type", "string").add("index", "not_analyzed").build()
-			.toString();
+	public static final String SPACEDOG_INDEX = "spacedog";
+	public static final String ACCOUNT_TYPE = "account";
+	public static final String DEFAULT_API_KEY_ID = "client-app";
 
 	private static final Set<String> INTERNAL_INDICES = Sets
-			.newHashSet(ADMIN_INDEX);
+			.newHashSet(SPACEDOG_INDEX);
 
-	public static final String ACCOUNT_ID_HEADER = "x-magic-app-id";
+	public static final String SPACEDOG_KEY_HEADER = "x-spacedog-key";
 	public static final String AUTHORIZATION_HEADER = "Authorization";
 	public static final String BASIC_AUTHENTICATION_SCHEME = "Basic";
 
-	private static final Charset UTF_8 = Charset.forName("UTF-8");
+	public static final Charset UTF_8 = Charset.forName("UTF-8");
 
-	void initAdminIndex() throws InterruptedException, ExecutionException {
+	void initSpacedogIndex() throws InterruptedException, ExecutionException,
+			IOException {
+
+		String accountMapping = Resources.toString(Resources
+				.getResource("io/spacedog/services/account-mapping.json"),
+				UTF_8);
 
 		IndicesAdminClient indices = Start.getElasticClient().admin().indices();
 
-		if (!indices.prepareExists(ADMIN_INDEX).get().isExists()) {
-			indices.prepareCreate(ADMIN_INDEX)
-					.addMapping(ACCOUNT_TYPE, ACCOUNT_MAPPING).get();
+		if (!indices.prepareExists(SPACEDOG_INDEX).get().isExists()) {
+			indices.prepareCreate(SPACEDOG_INDEX)
+					.addMapping(ACCOUNT_TYPE, accountMapping).get();
 		}
 	}
 
@@ -82,7 +83,7 @@ public class AccountResource extends AbstractResource {
 	public Payload getAll(Context context) {
 		try {
 			SearchResponse response = Start.getElasticClient()
-					.prepareSearch(ADMIN_INDEX).setTypes(ACCOUNT_TYPE)
+					.prepareSearch(SPACEDOG_INDEX).setTypes(ACCOUNT_TYPE)
 					.setQuery(QueryBuilders.matchAllQuery()).get();
 
 			return extractResults(response);
@@ -101,32 +102,27 @@ public class AccountResource extends AbstractResource {
 			JsonObject input = JsonObject.readFrom(body);
 
 			Account account = new Account();
-			account.id = input.getString("id", null);
-			account.checkUserInputValidity();
+			account.backendId = input.getString("backendId", null);
+			account.username = input.getString("username", null);
+			account.email = input.getString("email", null);
+			account.password = input.getString("password", null);
+			account.apiKey = new ApiKey(DEFAULT_API_KEY_ID);
+			account.checkAccountInputValidity();
 
 			byte[] accountBytes = getObjectMapper().writeValueAsBytes(account);
-			Start.getElasticClient().prepareIndex(ADMIN_INDEX, ACCOUNT_TYPE)
+			Start.getElasticClient().prepareIndex(SPACEDOG_INDEX, ACCOUNT_TYPE)
 					.setSource(accountBytes).get();
 
-			User user = new User();
-			user.username = input.getString("username", null);
-			user.email = input.getString("email", null);
-			user.password = input.getString("password", null);
-			user.groups = Collections.singletonList("admin");
-			user.checkUserInputValidity();
-
-			// default app index is named after the account id
+			// backend index is named after the backend id
 			Start.getElasticClient()
 					.admin()
 					.indices()
-					.prepareCreate(account.id)
+					.prepareCreate(account.backendId)
 					.addMapping(UserResource.USER_TYPE,
 							UserResource.getDefaultUserMapping()).get();
 
-			DataResource.get().createInternal(account.id,
-					UserResource.USER_TYPE, user.toJsonObject(), user.username);
-
-			return created("/v1", ACCOUNT_TYPE, account.id);
+			return created("/v1", ACCOUNT_TYPE, account.backendId).withHeader(
+					AccountResource.SPACEDOG_KEY_HEADER, account.spaceDogKey());
 
 		} catch (Throwable throwable) {
 			return error(throwable);
@@ -138,14 +134,14 @@ public class AccountResource extends AbstractResource {
 	 */
 	@Get("/:id")
 	@Get("/:id/")
-	public Payload get(String id, Context context) {
+	public Payload get(String backendId, Context context) {
 		try {
 			GetResponse response = Start.getElasticClient()
-					.prepareGet(ADMIN_INDEX, ACCOUNT_TYPE, id).get();
+					.prepareGet(SPACEDOG_INDEX, ACCOUNT_TYPE, backendId).get();
 
 			if (!response.isExists())
 				return error(HttpStatus.NOT_FOUND,
-						"account for id [%s] not found", id);
+						"account with id [%s] not found", backendId);
 
 			return new Payload(JSON_CONTENT, response.getSourceAsBytes(),
 					HttpStatus.OK);
@@ -172,23 +168,24 @@ public class AccountResource extends AbstractResource {
 	 */
 	@Delete("/:id")
 	@Delete("/:id/")
-	public Payload delete(String accountId, Context context) {
+	public Payload delete(String backendId, Context context) {
 		try {
 			DeleteResponse resp1 = Start.getElasticClient()
-					.prepareDelete(ADMIN_INDEX, ACCOUNT_TYPE, accountId).get();
+					.prepareDelete(SPACEDOG_INDEX, ACCOUNT_TYPE, backendId)
+					.get();
 
 			if (!resp1.isFound())
-				return error(HttpStatus.NOT_FOUND, "account id [%s] not found",
-						accountId);
+				return error(HttpStatus.NOT_FOUND,
+						"account with id [%s] not found", backendId);
 
 			DeleteIndexResponse resp2 = Start.getElasticClient().admin()
-					.indices().prepareDelete(accountId).get();
+					.indices().prepareDelete(backendId).get();
 
 			if (!resp2.isAcknowledged())
 				return error(
 						HttpStatus.INTERNAL_SERVER_ERROR,
-						"account id [%s] internal index deletion not acknowledged",
-						accountId);
+						"internal index deletion not acknowledged for account and backend with id [%s] ",
+						backendId);
 
 			return success();
 		} catch (Throwable throwable) {
@@ -199,84 +196,147 @@ public class AccountResource extends AbstractResource {
 	public static Credentials checkCredentials(Context context)
 			throws JsonParseException, JsonMappingException, IOException {
 
-		String accountId = context.header(ACCOUNT_ID_HEADER);
+		String keyRawValue = context.header(SPACEDOG_KEY_HEADER);
 
-		if (Strings.isNullOrEmpty(accountId))
-			throw new AuthenticationException(String.format(
-					"account id header [%s] not specified", ACCOUNT_ID_HEADER));
+		if (Strings.isNullOrEmpty(keyRawValue))
+			throw new AuthenticationException("[%s] header not specified",
+					SPACEDOG_KEY_HEADER);
 
-		if (INTERNAL_INDICES.contains(accountId))
-			throw new AuthenticationException(String.format(
-					"account id [%s] is reserved for internal purposes",
-					accountId));
+		String[] key = keyRawValue.split(":", 3);
+
+		if (key.length != 3)
+			throw new AuthenticationException(
+					"invalid spacedog key [%s], no backend id, key id or key secret",
+					keyRawValue);
+
+		String backendId = key[0];
+		String keyId = key[1];
+		String keySecret = key[2];
+
+		if (Strings.isNullOrEmpty(backendId))
+			throw new AuthenticationException(
+					"invalid spacedog key [%s], no backend id specified",
+					keyRawValue);
+
+		if (INTERNAL_INDICES.contains(backendId))
+			throw new AuthenticationException(
+					"this backend id [%s] is reserved", backendId);
 
 		String authzHeaderValue = context.header(AUTHORIZATION_HEADER);
 
-		if (Strings.isNullOrEmpty(authzHeaderValue))
-			throw new AuthenticationException(String.format(
-					"no authorization header [%s] specified",
-					AUTHORIZATION_HEADER));
+		if (Strings.isNullOrEmpty(authzHeaderValue)) {
 
-		String[] schemeAndValue = authzHeaderValue.split(" ", 2);
-
-		if (schemeAndValue.length != 2)
-			throw new AuthenticationException(
-					"no authentication token specified");
-
-		if (Strings.isNullOrEmpty(schemeAndValue[0]))
-			throw new AuthenticationException(
-					"authentication scheme not specified");
-
-		if (!schemeAndValue[0].equalsIgnoreCase(BASIC_AUTHENTICATION_SCHEME))
-			throw new AuthenticationException(String.format(
-					"authentication scheme [%s] not supported",
-					schemeAndValue[0]));
-
-		byte[] encodedBytes = schemeAndValue[1].getBytes(UTF_8);
-
-		String decoded = null;
-
-		try {
-			decoded = new String(Base64.getDecoder().decode(encodedBytes));
-		} catch (IllegalArgumentException e) {
-			throw new AuthenticationException(
-					"authentication token is not base 64 encoded", e);
-		}
-
-		String[] tokens = decoded.split(":", 2);
-
-		if (tokens.length != 2)
-			throw new AuthenticationException("invalid authentication token");
-
-		if (Strings.isNullOrEmpty(tokens[1]))
-			throw new AuthenticationException("no password specified");
-
-		try {
-			SearchResponse response = Start
-					.getElasticClient()
-					.prepareSearch(accountId)
-					.setTypes(UserResource.USER_TYPE)
-					.setQuery(
-							QueryBuilders.filteredQuery(QueryBuilders
-									.matchAllQuery(), FilterBuilders.andFilter(
-									FilterBuilders.termFilter("username",
-											tokens[0]), FilterBuilders
-											.termFilter("password", tokens[1]))))
-					.get();
-
-			if (response.getHits().getTotalHits() == 0)
+			if (Strings.isNullOrEmpty(keyId))
 				throw new AuthenticationException(
-						"invalid username or password");
+						"invalid spacedog key [%s], no key id specified",
+						keyRawValue);
 
-			JsonObject userJson = JsonObject.readFrom(response.getHits()
-					.getAt(0).getSourceAsString());
+			if (Strings.isNullOrEmpty(keySecret))
+				throw new AuthenticationException(
+						"invalid spacedog key [%s], no secret specified",
+						keyRawValue);
 
-			return new Credentials(accountId, User.fromJsonObject(userJson));
+			try {
+				// check apikeys in account objects of spacedog internal index
+				SearchResponse response = Start
+						.getElasticClient()
+						.prepareSearch(SPACEDOG_INDEX)
+						.setTypes(ACCOUNT_TYPE)
+						.setQuery(
+								QueryBuilders.filteredQuery(QueryBuilders
+										.matchAllQuery(), FilterBuilders
+										.andFilter(FilterBuilders.termFilter(
+												"backendId", backendId), //
+												FilterBuilders.termFilter(
+														"apiKey.id", keyId),//
+												FilterBuilders.termFilter(
+														"apiKey.secret",
+														keySecret)))).get();
 
-		} catch (IndexMissingException e) {
-			throw new AuthenticationException(String.format(
-					"invalid account id [%s]", accountId));
+				if (response.getHits().getTotalHits() == 0)
+					throw new AuthenticationException(
+							"invalid username or password");
+
+				Account account = getObjectMapper().readValue(
+						response.getHits().getAt(0).getSourceAsString(),
+						Account.class);
+
+				// JsonObject userJson = JsonObject.readFrom(response.getHits()
+				// .getAt(0).getSourceAsString());
+
+				return new Credentials(backendId, account.apiKey);
+
+			} catch (IndexMissingException e) {
+				throw new AuthenticationException("invalid account id [%s]",
+						backendId);
+			}
+
+		} else {
+
+			String[] schemeAndValue = authzHeaderValue.split(" ", 2);
+
+			if (schemeAndValue.length != 2)
+				throw new AuthenticationException(
+						"no authentication token specified");
+
+			if (Strings.isNullOrEmpty(schemeAndValue[0]))
+				throw new AuthenticationException(
+						"authentication scheme not specified");
+
+			if (!schemeAndValue[0]
+					.equalsIgnoreCase(BASIC_AUTHENTICATION_SCHEME))
+				throw new AuthenticationException(
+						"authentication scheme [%s] not supported",
+						schemeAndValue[0]);
+
+			byte[] encodedBytes = schemeAndValue[1].getBytes(UTF_8);
+
+			String decoded = null;
+
+			try {
+				decoded = new String(Base64.getDecoder().decode(encodedBytes));
+			} catch (IllegalArgumentException e) {
+				throw new AuthenticationException(
+						"authentication token is not base 64 encoded", e);
+			}
+
+			String[] tokens = decoded.split(":", 2);
+
+			if (tokens.length != 2)
+				throw new AuthenticationException(
+						"invalid authentication token");
+
+			if (Strings.isNullOrEmpty(tokens[1]))
+				throw new AuthenticationException("no password specified");
+
+			try {
+				// check users in app index
+				SearchResponse response = Start
+						.getElasticClient()
+						.prepareSearch(backendId)
+						.setTypes(UserResource.USER_TYPE)
+						.setQuery(
+								QueryBuilders.filteredQuery(QueryBuilders
+										.matchAllQuery(), FilterBuilders
+										.andFilter(FilterBuilders.termFilter(
+												"username", tokens[0]),
+												FilterBuilders.termFilter(
+														"password", tokens[1]))))
+						.get();
+
+				if (response.getHits().getTotalHits() == 0)
+					throw new AuthenticationException(
+							"invalid username or password");
+
+				JsonObject userJson = JsonObject.readFrom(response.getHits()
+						.getAt(0).getSourceAsString());
+
+				return new Credentials(backendId, User.fromJsonObject(userJson));
+
+			} catch (IndexMissingException e) {
+				throw new AuthenticationException("invalid account id [%s]",
+						backendId);
+			}
 		}
 	}
-
 }

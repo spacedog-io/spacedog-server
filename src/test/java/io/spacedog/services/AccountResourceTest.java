@@ -1,12 +1,9 @@
 package io.spacedog.services;
 
-import io.spacedog.services.Json;
-
-import org.joda.time.DateTime;
 import org.junit.Test;
 
 import com.eclipsesource.json.JsonObject;
-import com.mashape.unirest.http.Unirest;
+import com.google.common.base.Strings;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.GetRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
@@ -18,65 +15,44 @@ public class AccountResourceTest extends AbstractTest {
 	public void shouldSignUpTestAccount() throws UnirestException,
 			InterruptedException {
 
-		DateTime beforeCreate = DateTime.now();
 		resetTestAccount();
 
-		GetRequest req1 = Unirest.get("http://localhost:8080/v1/account/test");
+		GetRequest req1 = prepareGet("/v1/account/test");
 		JsonObject res1 = get(req1, 200).json();
-		assertEquals(Json.builder().add("id", "test").build(), res1);
 
-		GetRequest req2 = Unirest.get("http://localhost:8080/v1/user/dave")
-				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
+		assertEquals("test", Json.get(res1, "backendId").asString());
+		assertEquals("dave", Json.get(res1, "username").asString());
+		assertEquals("hi dave", Json.get(res1, "password").asString());
+		assertEquals("david@spacedog.io", Json.get(res1, "email").asString());
 
+		GetRequest req2 = prepareGet("/v1/data", testKey);
 		JsonObject res2 = get(req2, 200).json();
-
-		JsonObject meta2 = res2.get("meta").asObject();
-		assertEquals("user", meta2.get("type").asString());
-		assertEquals("dave", meta2.get("id").asString());
-		assertEquals(1, meta2.get("version").asInt());
-		assertEquals("dave", meta2.get("createdBy").asString());
-		assertEquals("dave", meta2.get("updatedBy").asString());
-		DateTime createdAt = DateTime.parse(meta2.get("createdAt").asString());
-		assertTrue(createdAt.isAfter(beforeCreate));
-		assertTrue(createdAt.isBeforeNow());
-		assertEquals(meta2.get("updatedAt"), meta2.get("createdAt"));
-
-		assertTrue(Json.equals(
-				Json.builder().add("username", "dave")
-						.add("password", "hi_dave")
-						.add("email", "dave@magic.com").stArr("groups")
-						.add("admin").build(), res2.remove("meta")));
+		assertEquals(0, Json.get(res2, "total").asInt());
 
 	}
 
-	// @Test
-	// public void shouldFailToSignUpTestAccountAgain() throws UnirestException,
-	// InterruptedException {
-	//
-	// resetTestAccount();
-	// RequestBodyEntity req2 = createTestAccountRequest();
-	// post(req2, 400);
-	// }
-	//
 	public static void resetTestAccount() throws UnirestException {
-		HttpRequestWithBody req1 = Unirest
-				.delete("http://localhost:8080/v1/account/test");
 
+		HttpRequestWithBody req1 = prepareDelete("/v1/account/test");
 		delete(req1, 200, 404);
 
-		RequestBodyEntity req2 = createTestAccountRequest();
+		RequestBodyEntity req2 = preparePost("/v1/account/").body(
+				Json.builder().add("backendId", "test").add("username", "dave")
+						.add("password", "hi dave")
+						.add("email", "david@spacedog.io").build().toString());
 
-		post(req2, 201);
+		testKey = post(req2, 201).response().getHeaders()
+				.get(AccountResource.SPACEDOG_KEY_HEADER).get(0);
 
-		refreshIndex("admin");
+		assertFalse(Strings.isNullOrEmpty(testKey));
+
+		refreshIndex(AccountResource.SPACEDOG_INDEX);
 		refreshIndex("test");
 	}
 
-	private static RequestBodyEntity createTestAccountRequest() {
-		return Unirest.post("http://localhost:8080/v1/account/").body(
-				Json.builder().add("id", "test").add("username", "dave")
-						.add("password", "hi_dave")
-						.add("email", "dave@magic.com").build().toString());
+	public static String testKey() {
+		return testKey;
 	}
 
+	private static String testKey;
 }

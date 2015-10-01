@@ -1,12 +1,10 @@
 package io.spacedog.services;
 
-import io.spacedog.services.CrossOriginFilter;
 import net.codestory.http.constants.Headers;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.GetRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
@@ -24,9 +22,7 @@ public class CrossOriginFilterTest extends AbstractTest {
 
 		// CORS for simple requests
 
-		GetRequest req1 = Unirest.get("http://localhost:8080/v1/user")
-				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
-
+		GetRequest req1 = prepareGet("/v1/data", AccountResourceTest.testKey());
 		Result res1 = get(req1, 200);
 
 		assertEquals(
@@ -46,11 +42,10 @@ public class CrossOriginFilterTest extends AbstractTest {
 
 		// CORS pre-flight request
 
-		HttpRequestWithBody req2 = Unirest
-				.options("http://localhost:8080/v1/user/mynameisperson")
-				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test")
-				.header(Headers.ORIGIN, "http://www.apple.com")
-				.header(Headers.ACCESS_CONTROL_REQUEST_METHOD, "PUT");
+		HttpRequestWithBody req2 = prepareOptions("/v1/user/mynameisperson",
+				AccountResourceTest.testKey()).header(Headers.ORIGIN,
+				"http://www.apple.com").header(
+				Headers.ACCESS_CONTROL_REQUEST_METHOD, "PUT");
 
 		Result res2 = options(req2, 200);
 

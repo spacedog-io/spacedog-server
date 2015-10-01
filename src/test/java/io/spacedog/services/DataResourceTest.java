@@ -1,21 +1,16 @@
 package io.spacedog.services;
 
-import io.spacedog.services.Json;
-
 import org.joda.time.DateTime;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.eclipsesource.json.JsonObject;
-import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.GetRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
 import com.mashape.unirest.request.body.RequestBodyEntity;
 
 public class DataResourceTest extends AbstractTest {
-
-	private static final String MAGIC_HOST = "localhost";
 
 	@BeforeClass
 	public static void resetTestAccount() throws UnirestException,
@@ -56,9 +51,8 @@ public class DataResourceTest extends AbstractTest {
 
 		// create
 
-		RequestBodyEntity req = Unirest.post("http://{host}:8080/v1/data/car")
-				.routeParam("host", MAGIC_HOST).basicAuth("dave", "hi_dave")
-				.header("x-magic-app-id", "test").body(car.toString());
+		RequestBodyEntity req = preparePost("/v1/data/car",
+				AccountResourceTest.testKey()).body(car.toString());
 
 		DateTime beforeCreate = DateTime.now();
 		JsonObject result = post(req, 201).json();
@@ -73,15 +67,15 @@ public class DataResourceTest extends AbstractTest {
 
 		// find by id
 
-		GetRequest req1 = Unirest.get("http://{host}:8080/v1/data/car/{id}")
-				.routeParam("host", MAGIC_HOST).routeParam("id", id)
-				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
-
+		GetRequest req1 = prepareGet("/v1/data/car/{id}",
+				AccountResourceTest.testKey()).routeParam("id", id);
 		JsonObject res1 = get(req1, 200).json();
 
 		JsonObject meta1 = res1.get("meta").asObject();
-		assertEquals("dave", meta1.get("createdBy").asString());
-		assertEquals("dave", meta1.get("updatedBy").asString());
+		assertEquals(AccountResource.DEFAULT_API_KEY_ID, meta1.get("createdBy")
+				.asString());
+		assertEquals(AccountResource.DEFAULT_API_KEY_ID, meta1.get("updatedBy")
+				.asString());
 		DateTime createdAt = DateTime.parse(meta1.get("createdAt").asString());
 		assertTrue(createdAt.isAfter(beforeCreate.getMillis()));
 		assertTrue(createdAt.isBeforeNow());
@@ -90,34 +84,28 @@ public class DataResourceTest extends AbstractTest {
 
 		// find by full text search
 
-		GetRequest req1b = Unirest.get("http://{host}:8080/v1/data/car?q={q}")
-				.routeParam("host", MAGIC_HOST).routeParam("q", "inVENt*")
-				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
+		GetRequest req1b = prepareGet("/v1/data/car?q={q}",
+				AccountResourceTest.testKey()).routeParam("q", "inVENt*");
 
 		JsonObject res1b = get(req1b, 200).json();
 		assertEquals(id, Json.get(res1b, "results.0.meta.id").asString());
 
 		// create user vince
 
-		RequestBodyEntity req1a = Unirest
-				.post("http://localhost:8080/v1/user/")
-				.basicAuth("dave", "hi_dave")
-				.header("x-magic-app-id", "test")
-				.body(Json.builder().add("username", "vince")
-						.add("password", "hi_vince")
-						.add("email", "vince@magic.com").build().toString());
+		RequestBodyEntity req1a = preparePost("/v1/user/",
+				AccountResourceTest.testKey()).body(
+				Json.builder().add("username", "vince")
+						.add("password", "hi vince")
+						.add("email", "vince@spacedog.io").build().toString());
 
 		post(req1a, 201);
-
 		refreshIndex("test");
 
 		// update
 
-		RequestBodyEntity req2 = Unirest
-				.put("http://{host}:8080/v1/data/car/{id}")
-				.routeParam("host", MAGIC_HOST).routeParam("id", id)
-				.basicAuth("vince", "hi_vince")
-				.header("x-magic-app-id", "test")
+		RequestBodyEntity req2 = preparePut("/v1/data/car/{id}",
+				AccountResourceTest.testKey()).routeParam("id", id)
+				.basicAuth("vince", "hi vince")
 				.body(new JsonObject().add("color", "blue").toString());
 
 		DateTime beforeUpdate = DateTime.now();
@@ -125,14 +113,13 @@ public class DataResourceTest extends AbstractTest {
 
 		// check update is correct
 
-		GetRequest req3 = Unirest.get("http://{host}:8080/v1/data/car/{id}")
-				.routeParam("host", MAGIC_HOST).routeParam("id", id)
-				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
-
+		GetRequest req3 = prepareGet("/v1/data/car/{id}",
+				AccountResourceTest.testKey()).routeParam("id", id);
 		JsonObject res3 = get(req3, 200).json();
 
 		JsonObject meta3 = res3.get("meta").asObject();
-		assertEquals("dave", meta3.get("createdBy").asString());
+		assertEquals(AccountResource.DEFAULT_API_KEY_ID, meta3.get("createdBy")
+				.asString());
 		assertEquals("vince", meta3.get("updatedBy").asString());
 		DateTime createdAtAfterUpdate = DateTime.parse(meta3.get("createdAt")
 				.asString());
@@ -145,11 +132,8 @@ public class DataResourceTest extends AbstractTest {
 
 		// delete
 
-		HttpRequestWithBody req4 = Unirest
-				.delete("http://{host}:8080/v1/data/car/{id}")
-				.routeParam("host", MAGIC_HOST).routeParam("id", id)
-				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
-
+		HttpRequestWithBody req4 = prepareDelete("/v1/data/car/{id}",
+				AccountResourceTest.testKey()).routeParam("id", id);
 		delete(req4, 200);
 
 		// check delete is done

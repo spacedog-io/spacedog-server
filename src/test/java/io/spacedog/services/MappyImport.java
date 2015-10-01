@@ -1,11 +1,8 @@
 package io.spacedog.services;
 
-import io.spacedog.services.Json;
-import io.spacedog.services.JsonBuilder;
-import io.spacedog.services.SchemaBuilder;
-
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
+import com.google.common.base.Strings;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.HttpRequest;
@@ -14,30 +11,34 @@ import com.mashape.unirest.request.body.RequestBodyEntity;
 
 public class MappyImport extends AbstractTest {
 
-	public static void main1(String[] args) {
-		int i = 0;
-		for (double lat = 48; lat <= 49.5; lat += 0.1) {
-			for (double lon = 1.8; lon <= 2.9; lon += 0.1) {
+	private static String demoKey;
 
-				System.out.println("i=" + (i++) + " : " + lat + ',' + lon + ','
-						+ (lat + 0.1) + ',' + (lon + 0.1));
-			}
-		}
+	public static void resetDemoAccount() throws UnirestException {
+
+		HttpRequestWithBody req1 = prepareDelete("/v1/account/demo");
+		delete(req1, 200, 404);
+
+		RequestBodyEntity req2 = preparePost("/v1/account/").body(
+				Json.builder().add("backendId", "demo").add("username", "dave")
+						.add("password", "hi dave")
+						.add("email", "david@spacedog.io").build().toString());
+
+		demoKey = post(req2, 201).response().getHeaders()
+				.get(AccountResource.SPACEDOG_KEY_HEADER).get(0);
+
+		assertFalse(Strings.isNullOrEmpty(demoKey));
+
+		refreshIndex(AccountResource.SPACEDOG_INDEX);
+		refreshIndex("demo");
 	}
 
 	public static void main(String[] args) {
 		try {
-			HttpRequestWithBody req2 = Unirest
-					.delete("http://localhost:8080/v1/schema/resto")
-					.basicAuth("dave", "hi_dave")
-					.header("x-magic-app-id", "test");
-
+			HttpRequestWithBody req2 = prepareDelete("/v1/schema/resto",
+					demoKey);
 			delete(req2, 200, 404);
 
-			RequestBodyEntity req3 = Unirest
-					.post("http://localhost:8080/v1/schema/resto")
-					.basicAuth("dave", "hi_dave")
-					.header("x-magic-app-id", "test")
+			RequestBodyEntity req3 = preparePost("/v1/schema/resto", demoKey)
 					.body(buildRestoSchema().toString());
 
 			post(req3, 201);
@@ -107,10 +108,8 @@ public class MappyImport extends AbstractTest {
 					});
 		}
 
-		RequestBodyEntity req = Unirest
-				.post("http://localhost:8080/v1/data/resto")
-				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test")
-				.body(target.build().toString());
+		RequestBodyEntity req = preparePost("/v1/data/resto", demoKey).body(
+				target.build().toString());
 
 		try {
 			post(req, 201);
@@ -136,6 +135,17 @@ public class MappyImport extends AbstractTest {
 				.add("rubricLabel", "text").language("french").required() //
 				.end() //
 				.build();
+	}
+
+	public static void mainOld(String[] args) {
+		int i = 0;
+		for (double lat = 48; lat <= 49.5; lat += 0.1) {
+			for (double lon = 1.8; lon <= 2.9; lon += 0.1) {
+
+				System.out.println("i=" + (i++) + " : " + lat + ',' + lon + ','
+						+ (lat + 0.1) + ',' + (lon + 0.1));
+			}
+		}
 	}
 
 }

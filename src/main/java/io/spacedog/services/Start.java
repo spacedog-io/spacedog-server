@@ -73,7 +73,7 @@ public class Start {
 	}
 
 	private static void startElastic(String[] conf)
-			throws InterruptedException, ExecutionException {
+			throws InterruptedException, ExecutionException, IOException {
 
 		// Sets ElasticSearch data path
 		System.setProperty("es.path.data", Paths.get(conf[0]).resolve("data")
@@ -84,7 +84,7 @@ public class Start {
 
 		elasticClient = elasticNode.client();
 
-		AccountResource.get().initAdminIndex();
+		AccountResource.get().initSpacedogIndex();
 	}
 
 	private static void startFluent(boolean ssl, String[] conf)

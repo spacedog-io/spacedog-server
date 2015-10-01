@@ -1,7 +1,5 @@
 package io.spacedog.services;
 
-import io.spacedog.services.AccountResource;
-
 import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
@@ -14,6 +12,8 @@ import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.indices.IndexMissingException;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
+
+import com.google.common.io.Resources;
 
 public class ElasticMain {
 
@@ -49,9 +49,14 @@ public class ElasticMain {
 			if (mappings.get("test2") == null
 					|| mappings.get("test2").get("account") == null) {
 
+				String accountMapping = Resources
+						.toString(
+								Resources
+										.getResource("io/spacedog/services/account-mapping.json"),
+								AccountResource.UTF_8);
+
 				PutMappingRequest mappingRequest = new PutMappingRequest(
-						"test2").type("account").source(
-						AccountResource.ACCOUNT_MAPPING);
+						"test2").type("account").source(accountMapping);
 
 				indices.putMapping(mappingRequest).get();
 			}

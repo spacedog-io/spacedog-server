@@ -1,8 +1,5 @@
 package io.spacedog.services;
 
-import io.spacedog.services.GeoPoint;
-import io.spacedog.services.Json;
-
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -12,7 +9,6 @@ import org.junit.Test;
 
 import com.eclipsesource.json.JsonObject;
 import com.google.common.collect.Lists;
-import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.body.RequestBodyEntity;
 
@@ -24,11 +20,8 @@ public class QueryTest extends AbstractTest {
 		SchemaResourceTest.resetCarSchema();
 
 		for (int i = 0; i < 500; i++) {
-			RequestBodyEntity req2 = Unirest
-					.post("http://localhost:8080/v1/data/car")
-					.basicAuth("dave", "hi_dave")
-					.header("x-magic-app-id", "test")
-					.body(jsonCar(i).toString());
+			RequestBodyEntity req2 = preparePost("/v1/data/car",
+					AccountResourceTest.testKey()).body(jsonCar(i).toString());
 
 			post(req2, 201);
 		}

@@ -1,13 +1,9 @@
 package io.spacedog.services;
 
-import io.spacedog.services.Json;
-import io.spacedog.services.SchemaBuilder;
-import io.spacedog.services.UserResource;
-
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.eclipsesource.json.JsonObject;
-import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.GetRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
@@ -15,30 +11,32 @@ import com.mashape.unirest.request.body.RequestBodyEntity;
 
 public class SchemaResourceTest extends AbstractTest {
 
+	@BeforeClass
+	public static void resetTestAccount() throws UnirestException,
+			InterruptedException {
+		AccountResourceTest.resetTestAccount();
+	}
+
 	@Test
 	public void shouldDeletePutAndGetCarSchema() throws UnirestException {
 
 		resetCarSchema();
 
-		GetRequest req = Unirest.get("http://localhost:8080/v1/schema/car")
-				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
-
+		GetRequest req = prepareGet("/v1/schema/car",
+				AccountResourceTest.testKey());
 		JsonObject res = get(req, 200).json();
 		assertTrue(Json.equals(buildCarSchema(), res));
 	}
 
 	public static void resetCarSchema() throws UnirestException {
-		HttpRequestWithBody req1 = Unirest
-				.delete("http://localhost:8080/v1/schema/car")
-				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
 
+		HttpRequestWithBody req1 = prepareDelete("/v1/schema/car",
+				AccountResourceTest.testKey());
 		delete(req1, 200, 404);
 
-		RequestBodyEntity req2 = Unirest
-				.post("http://localhost:8080/v1/schema/car")
-				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test")
+		RequestBodyEntity req2 = preparePost("/v1/schema/car",
+				AccountResourceTest.testKey())
 				.body(buildCarSchema().toString());
-
 		post(req2, 201);
 	}
 
@@ -60,17 +58,13 @@ public class SchemaResourceTest extends AbstractTest {
 	}
 
 	public static void resetSaleSchema() throws UnirestException {
-		HttpRequestWithBody req1 = Unirest
-				.delete("http://localhost:8080/v1/schema/sale")
-				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
-
+		HttpRequestWithBody req1 = prepareDelete("/v1/schema/sale",
+				AccountResourceTest.testKey());
 		delete(req1, 200, 404);
 
-		RequestBodyEntity req2 = Unirest
-				.post("http://localhost:8080/v1/schema/sale")
-				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test")
-				.body(buildSaleSchema().toString());
-
+		RequestBodyEntity req2 = preparePost("/v1/schema/sale",
+				AccountResourceTest.testKey()).body(
+				buildSaleSchema().toString());
 		post(req2, 201);
 	}
 
@@ -99,25 +93,20 @@ public class SchemaResourceTest extends AbstractTest {
 
 		resetHomeSchema();
 
-		GetRequest req = Unirest.get("http://localhost:8080/v1/schema/home")
-				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
-
+		GetRequest req = prepareGet("/v1/schema/home",
+				AccountResourceTest.testKey());
 		JsonObject res = get(req, 200).json();
 		assertTrue(Json.equals(buildHomeSchema(), res));
 	}
 
 	private static void resetHomeSchema() throws UnirestException {
-		HttpRequestWithBody req1 = Unirest
-				.delete("http://localhost:8080/v1/schema/home")
-				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
-
+		HttpRequestWithBody req1 = prepareDelete("/v1/schema/home",
+				AccountResourceTest.testKey());
 		delete(req1, 200);
 
-		RequestBodyEntity req2 = Unirest
-				.post("http://localhost:8080/v1/schema/home")
-				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test")
-				.body(buildHomeSchema().toString());
-
+		RequestBodyEntity req2 = preparePost("/v1/schema/home",
+				AccountResourceTest.testKey()).body(
+				buildHomeSchema().toString());
 		post(req2, 201);
 	}
 
@@ -141,9 +130,7 @@ public class SchemaResourceTest extends AbstractTest {
 		resetHomeSchema();
 		resetSaleSchema();
 
-		GetRequest req = Unirest.get("http://localhost:8080/v1/schema")
-				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
-
+		GetRequest req = prepareGet("/v1/schema", AccountResourceTest.testKey());
 		JsonObject result = get(req, 200).json();
 
 		// user, car, sale and home
@@ -165,17 +152,12 @@ public class SchemaResourceTest extends AbstractTest {
 
 	private void shouldFailDueToInvalidSchema(String jsonSchema)
 			throws UnirestException {
-		HttpRequestWithBody req1 = Unirest
-				.delete("http://localhost:8080/v1/schema/toto")
-				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test");
-
+		HttpRequestWithBody req1 = prepareDelete("/v1/schema/toto",
+				AccountResourceTest.testKey());
 		delete(req1, 200);
 
-		RequestBodyEntity req2 = Unirest
-				.put("http://localhost:8080/v1/schema/toto")
-				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test")
-				.body(jsonSchema);
-
+		RequestBodyEntity req2 = preparePut("/v1/schema/toto",
+				AccountResourceTest.testKey()).body(jsonSchema);
 		put(req2, 400);
 	}
 
@@ -191,11 +173,8 @@ public class SchemaResourceTest extends AbstractTest {
 
 	private void shouldFailToChangeSchema(JsonObject json)
 			throws UnirestException {
-		RequestBodyEntity req2 = Unirest
-				.put("http://localhost:8080/v1/schema/car")
-				.basicAuth("dave", "hi_dave").header("x-magic-app-id", "test")
-				.body(json.toString());
-
+		RequestBodyEntity req2 = preparePut("/v1/schema/car",
+				AccountResourceTest.testKey()).body(json.toString());
 		put(req2, 400);
 	}
 

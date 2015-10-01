@@ -21,8 +21,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public abstract class AbstractResource {
 
 	public static final String JSON_CONTENT = "application/json;charset=UTF-8";
-	public static final String HEADER_OBJECT_ID = "X-magiclabs-object-id";
-	public static final String BASE_URL = "https://api.magicapps.com";
+	public static final String HEADER_OBJECT_ID = "x-spacedog-object-id";
+	public static final String BASE_URL = "https://spacedog.io";
 
 	private static ObjectMapper objectMapper = new ObjectMapper();
 
