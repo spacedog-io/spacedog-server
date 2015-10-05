@@ -51,6 +51,7 @@ nav li {
 }
 
 a {
+  text-decoration: none;
   color: darkorange;
   cursor:pointer;
 }
@@ -63,7 +64,6 @@ a:hover {
 }
 
 nav a {
-  text-decoration:none;
   display:inline-block;
   font-size:1.2em;
   margin-left: 10px;
@@ -184,7 +184,6 @@ menu ul {
 }
 
 menu a {
-  text-decoration:none;
   display:inline-block;
   position:relative;
 }
@@ -210,6 +209,10 @@ menu a {
   border-color: beige;
 }
 
+.next-doc {
+  margin-top: 30px;
+  text-align: right;
+}
 
 /* Map demo
 –––––––––––––––––––––––––––––––––––––––––––––––––– */

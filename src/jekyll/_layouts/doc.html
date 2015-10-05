@@ -27,7 +27,7 @@
       </ul>
 
      	</br>
-      <h5>Reference's guide</h5>
+      <h5>Reference guide</h5>
   		
       <ul>
         {% for doc in site.reference-guide %}
@@ -47,6 +47,21 @@
 
 	    {{ content }}
 
+    
+		{% if page.url contains '/docs/user-guide/' %}
+			{% for doc in docs %}
+			    {% if doc.rank > page.rank %}
+			    
+				    <div class="next-doc">
+			    	<a  href="{{doc.url}}"> >>> {{doc.title}} >>> </a>
+			    	</div>
+			    	
+			    {% break %}			    	
+			    {% endif%}
+			{% endfor %}
+		{% endif%}
+		
     </div>
+		
   </body>
 </html>
