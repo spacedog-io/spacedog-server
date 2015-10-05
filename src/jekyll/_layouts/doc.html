@@ -15,15 +15,14 @@
   		
       <ul>
         {% assign docs = site.user-guide | sort: 'rank' %}
-  			{% for doc in docs %}
+  		{% for doc in docs %}
          	<li>
-            {% if doc.url == page.url %}
-              <a  class="active"  href="{{doc.url}}"> {{doc.title}} </a>
-            {% endif %}
-            {% if doc.url != page.url %}
-              <a  href="{{doc.url}}"> {{doc.title}} </a>
-            {% endif %}
-        </li>
+				{% if doc.url == page.url %}
+				  <a  class="active"  href="{{doc.url}}"> {{doc.title}} </a>
+				{% else %}
+				  <a  href="{{doc.url}}"> {{doc.title}} </a>
+				{% endif %}
+        	</li>
        	{% endfor %}
       </ul>
 
@@ -35,8 +34,7 @@
           <li>
             {% if doc.url == page.url %}
               <a  class="active"  href="{{doc.url}}"> {{doc.title}} </a>
-            {% endif %}
-            {% if doc.url != page.url %}
+            {% else %}
               <a  href="{{doc.url}}"> {{doc.title}} </a>
             {% endif %}
           </li>

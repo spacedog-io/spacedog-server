@@ -2,10 +2,23 @@
       <nav>
         <a class= "logo" href="/">{{ site.name }}</a>
         <ul>
-          <li><a href="/">Overview</a></li>
-          <li><a href="/documentation.html">Docs</a></li>
-          <li><a href="/demo.html">Demo</a></li>
-          <li><a href="/console.html">Console</a></li>
+          
+          <li><a
+            {% if "/index.html" == page.url %} class='active' {% endif %}
+            href="/">Overview</a></li>
+            
+          <li><a
+            {% if page.url contains '/docs/' %} class='active' {% endif %}
+            href="/docs/user-guide/getting-started.html">Docs</a></li>
+
+          <li><a
+            {% if "/demo.html" == page.url %} class='active' {% endif %}
+            href="/demo.html">Demo</a></li>
+
+          <li><a
+            {% if "/console.html" == page.url %} class='active' {% endif %}
+            href="/console.html">Console</a></li>
+            
           <li><button id="nav-sign-bt">Sign in</a></li>
         </ul>
       </nav>    

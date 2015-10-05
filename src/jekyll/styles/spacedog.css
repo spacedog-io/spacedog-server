@@ -257,20 +257,20 @@ menu a {
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
 ::-webkit-input-placeholder { /* WebKit, Blink, Edge */
-    color:    darkchocolate;
-}
-:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
-   color:    #909;
-   opacity:  1;
-}
-::-moz-placeholder { /* Mozilla Firefox 19+ */
-   color:    #909;
-   opacity:  1;
-}
-:-ms-input-placeholder { /* Internet Explorer 10-11 */
-   color:    #909;
+  color: darkred;
 }
 
+:-moz-placeholder { /* Firefox 4 to 18 */
+  color: darkred;
+}
+
+::-moz-placeholder { /* Firefox 19+ */ 
+  color: darkred;
+}
+
+:-ms-input-placeholder { /* IE 10+ */
+  color: darkred;
+}
 
 /* Typography
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
@@ -322,18 +322,14 @@ button:focus {
 /* Forms
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
-input {
-  font-weight: 100;
-  font-family: consolas, sans-serif;
-  background-color: black;
-  color: darkorange;
-}
-
 .form-row {
   position: relative;
 }
 
 input {
+  background-color: black;
+  color: darkorange;
+  font-family: andale mono, consolas, sans-serif;
   height: 2em;
   padding: 10px;
   margin: 0 10px 0 0;
@@ -345,7 +341,6 @@ input {
   border: 1px solid red;  
   cursor: text;
   box-sizing: border-box;
-  background-color: black;
 }
 
 /* Removes awkward default styles on some inputs for iOS */
