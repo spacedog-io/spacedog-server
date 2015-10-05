@@ -1,5 +1,7 @@
 package io.spacedog.services;
 
+import io.spacedog.services.ElasticHelper.FilteredSearchBuilder;
+
 import java.util.concurrent.ExecutionException;
 
 import net.codestory.http.Context;
@@ -38,7 +40,7 @@ public class DataResource extends AbstractResource {
 	@Get("/")
 	public Payload search(Context context) {
 		try {
-			Credentials credentials = AccountResource.checkCredentials(context);
+			Credentials credentials = AdminResource.checkCredentials(context);
 			return doSearch(credentials.getAccountId(), null, null, context);
 		} catch (Throwable throwable) {
 			return error(throwable);
@@ -49,7 +51,7 @@ public class DataResource extends AbstractResource {
 	@Get("/:type/")
 	public Payload search(String type, Context context) {
 		try {
-			Credentials credentials = AccountResource.checkCredentials(context);
+			Credentials credentials = AdminResource.checkCredentials(context);
 			return doSearch(credentials.getAccountId(), type, null, context);
 		} catch (Throwable throwable) {
 			return error(throwable);
@@ -60,7 +62,7 @@ public class DataResource extends AbstractResource {
 	@Post("/:type/")
 	public Payload create(String type, String jsonBody, Context context) {
 		try {
-			Credentials credentials = AccountResource.checkCredentials(context);
+			Credentials credentials = AdminResource.checkCredentials(context);
 
 			// check if type is well defined
 			// object should be validated before saved
@@ -104,7 +106,7 @@ public class DataResource extends AbstractResource {
 	@Get("/:type/:id")
 	public Payload get(String type, String objectId, Context context) {
 		try {
-			Credentials credentials = AccountResource.checkCredentials(context);
+			Credentials credentials = AdminResource.checkCredentials(context);
 
 			// check if type is well defined
 			// throws a NotFoundException if not
@@ -136,8 +138,26 @@ public class DataResource extends AbstractResource {
 	@Post("/:type/search/")
 	public Payload search(String type, String jsonBody, Context context) {
 		try {
-			Credentials credentials = AccountResource.checkCredentials(context);
+			Credentials credentials = AdminResource.checkCredentials(context);
 			return doSearch(credentials.getAccountId(), type, jsonBody, context);
+		} catch (Throwable throwable) {
+			return error(throwable);
+		}
+	}
+
+	@Post("/:type/filter")
+	@Post("/:type/filter/")
+	public Payload filter(String type, String jsonBody, Context context) {
+		try {
+			Credentials credentials = AdminResource.checkCredentials(context);
+
+			FilteredSearchBuilder builder = ElasticHelper
+					.searchBuilder(credentials.getAccountId(), type)
+					.applyContext(context)
+					.applyFilters(JsonObject.readFrom(jsonBody));
+
+			return extractResults(builder.get());
+
 		} catch (Throwable throwable) {
 			return error(throwable);
 		}
@@ -147,7 +167,7 @@ public class DataResource extends AbstractResource {
 	public Payload update(String type, String objectId, String jsonBody,
 			Context context) {
 		try {
-			Credentials credentials = AccountResource.checkCredentials(context);
+			Credentials credentials = AdminResource.checkCredentials(context);
 
 			// check if type is well defined
 			// object should be validated before saved
@@ -174,7 +194,7 @@ public class DataResource extends AbstractResource {
 	@Delete("/:type/:id")
 	public Payload delete(String type, String objectId, Context context) {
 		try {
-			Credentials credentials = AccountResource.checkCredentials(context);
+			Credentials credentials = AdminResource.checkCredentials(context);
 
 			// check if type is well defined
 			// throws a NotFoundException if not

@@ -14,7 +14,7 @@ public class CrossOriginFilterTest extends AbstractTest {
 	@BeforeClass
 	public static void resetTestAccount() throws UnirestException,
 			InterruptedException {
-		AccountResourceTest.resetTestAccount();
+		AdminResourceTest.resetTestAccount();
 	}
 
 	@Test
@@ -22,7 +22,7 @@ public class CrossOriginFilterTest extends AbstractTest {
 
 		// CORS for simple requests
 
-		GetRequest req1 = prepareGet("/v1/data", AccountResourceTest.testKey());
+		GetRequest req1 = prepareGet("/v1/data", AdminResourceTest.testKey());
 		Result res1 = get(req1, 200);
 
 		assertEquals(
@@ -43,7 +43,7 @@ public class CrossOriginFilterTest extends AbstractTest {
 		// CORS pre-flight request
 
 		HttpRequestWithBody req2 = prepareOptions("/v1/user/mynameisperson",
-				AccountResourceTest.testKey()).header(Headers.ORIGIN,
+				AdminResourceTest.testKey()).header(Headers.ORIGIN,
 				"http://www.apple.com").header(
 				Headers.ACCESS_CONTROL_REQUEST_METHOD, "PUT");
 

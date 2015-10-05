@@ -43,7 +43,7 @@ public class Start {
 		routes.add(DataResource.get()) //
 				.add(SchemaResource.get()) //
 				.add(UserResource.get()) //
-				.add(AccountResource.get());
+				.add(AdminResource.get());
 
 		routes.filter(new CrossOriginFilter());
 	}
@@ -84,7 +84,7 @@ public class Start {
 
 		elasticClient = elasticNode.client();
 
-		AccountResource.get().initSpacedogIndex();
+		AdminResource.get().initSpacedogIndex();
 	}
 
 	private static void startFluent(boolean ssl, String[] conf)

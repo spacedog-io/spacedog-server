@@ -30,6 +30,17 @@ public abstract class AbstractResource {
 		return objectMapper;
 	}
 
+	protected Payload checkExistence(String index, String type, String field,
+			String value) {
+		try {
+			return ElasticHelper.search(index, type, field, value)
+					.getTotalHits() == 0 ? Payload.notFound() : Payload.ok();
+
+		} catch (Throwable throwable) {
+			return error(throwable);
+		}
+	}
+
 	public static String toJsonString(Throwable e) {
 		return toJsonObject(e).toString();
 	}
@@ -106,7 +117,26 @@ public abstract class AbstractResource {
 				new RuntimeException(String.format(message, args)));
 	}
 
-	protected Payload created(String uri, String type, String id) {
+	/**
+	 * @param parameters
+	 *            triples with parameter name, value and message
+	 * @return a bad request http payload with a json listing conflicting
+	 *         parameters
+	 */
+	protected static Payload badParameters(String... parameters) {
+		JsonBuilder builder = Json.builder().add("success", false);
+		if (parameters.length > 0 && parameters.length % 3 == 0) {
+			builder = builder.stObj("badParameters");
+			for (int i = 0; i < parameters.length; i += 3)
+				builder = builder.stObj(parameters[0])
+						.add("value", parameters[1])
+						.add("problem", parameters[2]);
+		}
+		return new Payload(JSON_CONTENT, builder.build().toString(),
+				HttpStatus.BAD_REQUEST);
+	}
+
+	protected static Payload created(String uri, String type, String id) {
 		return new Payload(JSON_CONTENT, Json.builder() //
 				.add("success", true) //
 				.add("id", id).add("type", type) //
@@ -115,7 +145,8 @@ public abstract class AbstractResource {
 				AbstractResource.HEADER_OBJECT_ID, id);
 	}
 
-	protected String toUrl(String baseUrl, String uri, String type, String id) {
+	protected static String toUrl(String baseUrl, String uri, String type,
+			String id) {
 		return new StringBuilder(baseUrl).append(uri).append('/').append(type)
 				.append('/').append(id).toString();
 	}

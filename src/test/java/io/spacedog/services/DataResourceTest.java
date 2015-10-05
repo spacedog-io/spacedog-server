@@ -15,7 +15,7 @@ public class DataResourceTest extends AbstractTest {
 	@BeforeClass
 	public static void resetTestAccount() throws UnirestException,
 			InterruptedException {
-		AccountResourceTest.resetTestAccount();
+		AdminResourceTest.resetTestAccount();
 		SchemaResourceTest.resetCarSchema();
 	}
 
@@ -52,7 +52,7 @@ public class DataResourceTest extends AbstractTest {
 		// create
 
 		RequestBodyEntity req = preparePost("/v1/data/car",
-				AccountResourceTest.testKey()).body(car.toString());
+				AdminResourceTest.testKey()).body(car.toString());
 
 		DateTime beforeCreate = DateTime.now();
 		JsonObject result = post(req, 201).json();
@@ -68,13 +68,13 @@ public class DataResourceTest extends AbstractTest {
 		// find by id
 
 		GetRequest req1 = prepareGet("/v1/data/car/{id}",
-				AccountResourceTest.testKey()).routeParam("id", id);
+				AdminResourceTest.testKey()).routeParam("id", id);
 		JsonObject res1 = get(req1, 200).json();
 
 		JsonObject meta1 = res1.get("meta").asObject();
-		assertEquals(AccountResource.DEFAULT_API_KEY_ID, meta1.get("createdBy")
+		assertEquals(AdminResource.DEFAULT_API_KEY_ID, meta1.get("createdBy")
 				.asString());
-		assertEquals(AccountResource.DEFAULT_API_KEY_ID, meta1.get("updatedBy")
+		assertEquals(AdminResource.DEFAULT_API_KEY_ID, meta1.get("updatedBy")
 				.asString());
 		DateTime createdAt = DateTime.parse(meta1.get("createdAt").asString());
 		assertTrue(createdAt.isAfter(beforeCreate.getMillis()));
@@ -85,7 +85,7 @@ public class DataResourceTest extends AbstractTest {
 		// find by full text search
 
 		GetRequest req1b = prepareGet("/v1/data/car?q={q}",
-				AccountResourceTest.testKey()).routeParam("q", "inVENt*");
+				AdminResourceTest.testKey()).routeParam("q", "inVENt*");
 
 		JsonObject res1b = get(req1b, 200).json();
 		assertEquals(id, Json.get(res1b, "results.0.meta.id").asString());
@@ -93,7 +93,7 @@ public class DataResourceTest extends AbstractTest {
 		// create user vince
 
 		RequestBodyEntity req1a = preparePost("/v1/user/",
-				AccountResourceTest.testKey()).body(
+				AdminResourceTest.testKey()).body(
 				Json.builder().add("username", "vince")
 						.add("password", "hi vince")
 						.add("email", "vince@spacedog.io").build().toString());
@@ -104,7 +104,7 @@ public class DataResourceTest extends AbstractTest {
 		// update
 
 		RequestBodyEntity req2 = preparePut("/v1/data/car/{id}",
-				AccountResourceTest.testKey()).routeParam("id", id)
+				AdminResourceTest.testKey()).routeParam("id", id)
 				.basicAuth("vince", "hi vince")
 				.body(new JsonObject().add("color", "blue").toString());
 
@@ -114,11 +114,11 @@ public class DataResourceTest extends AbstractTest {
 		// check update is correct
 
 		GetRequest req3 = prepareGet("/v1/data/car/{id}",
-				AccountResourceTest.testKey()).routeParam("id", id);
+				AdminResourceTest.testKey()).routeParam("id", id);
 		JsonObject res3 = get(req3, 200).json();
 
 		JsonObject meta3 = res3.get("meta").asObject();
-		assertEquals(AccountResource.DEFAULT_API_KEY_ID, meta3.get("createdBy")
+		assertEquals(AdminResource.DEFAULT_API_KEY_ID, meta3.get("createdBy")
 				.asString());
 		assertEquals("vince", meta3.get("updatedBy").asString());
 		DateTime createdAtAfterUpdate = DateTime.parse(meta3.get("createdAt")
@@ -133,7 +133,7 @@ public class DataResourceTest extends AbstractTest {
 		// delete
 
 		HttpRequestWithBody req4 = prepareDelete("/v1/data/car/{id}",
-				AccountResourceTest.testKey()).routeParam("id", id);
+				AdminResourceTest.testKey()).routeParam("id", id);
 		delete(req4, 200);
 
 		// check delete is done

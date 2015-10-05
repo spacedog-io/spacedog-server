@@ -6,7 +6,7 @@ html,
 body {
   height: 100%;
   font-weight: 100;
-  font-family: consolas, sans-serif;
+  font-family: andale mono, consolas, sans-serif;
   background-color: black;
   color: darkorange;
   min-height:100%;

@@ -164,8 +164,7 @@ function searchInPois(event) {
 			}
 		}),
 		headers : {
-			'x-magic-app-id':  'test',
-			Authorization: 'Basic ' + btoa('dave:hi_dave')
+			'x-spacedog-key':  'demo:client-app:a72c46fd-1882-4d77-a449-74a707e4e6e1'
 		},
 		success: searchInOk,
 		error: searchNok
@@ -193,8 +192,7 @@ function searchOutPois() {
 			}
 		}),
 		headers : {
-			'x-magic-app-id':  'test',
-			Authorization: 'Basic ' + btoa('dave:hi_dave')
+			'x-spacedog-key':  'demo:client-app:a72c46fd-1882-4d77-a449-74a707e4e6e1'
 		},
 		success: searchOutOk,
 		error: searchNok

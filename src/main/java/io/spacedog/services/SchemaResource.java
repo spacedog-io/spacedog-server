@@ -35,7 +35,7 @@ public class SchemaResource extends AbstractResource {
 	@Get("/")
 	public Payload getAll(Context context) {
 		try {
-			Credentials credentials = AccountResource.checkCredentials(context);
+			Credentials credentials = AdminResource.checkCredentials(context);
 			String elasticIndex = credentials.getAccountId();
 			GetMappingsResponse resp = Start.getElasticClient().admin()
 					.indices().prepareGetMappings(elasticIndex).get();
@@ -71,7 +71,7 @@ public class SchemaResource extends AbstractResource {
 	@Get("/:type/")
 	public Payload get(String type, Context context) {
 		try {
-			Credentials credentials = AccountResource.checkCredentials(context);
+			Credentials credentials = AdminResource.checkCredentials(context);
 			return new Payload(JSON_CONTENT, getSchema(
 					credentials.getAccountId(), type).toString(), HttpStatus.OK);
 		} catch (Throwable throwable) {
@@ -101,7 +101,7 @@ public class SchemaResource extends AbstractResource {
 	public Payload upsertSchema(String type, String newSchemaAsString,
 			Context context) {
 		try {
-			Credentials credentials = AccountResource.checkCredentials(context);
+			Credentials credentials = AdminResource.checkCredentials(context);
 
 			JsonObject schema = SchemaValidator.validate(type,
 					JsonObject.readFrom(newSchemaAsString));
@@ -127,7 +127,7 @@ public class SchemaResource extends AbstractResource {
 	@Delete("/:type/")
 	public Payload deleteSchema(String type, Context context) {
 		try {
-			Credentials credentials = AccountResource.checkCredentials(context);
+			Credentials credentials = AdminResource.checkCredentials(context);
 			Start.getElasticClient().admin().indices()
 					.prepareDeleteMapping(credentials.getAccountId())
 					.setType(type).get();

@@ -3,6 +3,7 @@ package io.spacedog.services;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Base64;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -21,9 +22,8 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.common.base.Strings;
-import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.indices.IndexMissingException;
+import org.elasticsearch.search.SearchHits;
 
 import com.eclipsesource.json.JsonObject;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -31,18 +31,18 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 
-@Prefix("/v1/account")
-public class AccountResource extends AbstractResource {
+@Prefix("/v1/admin")
+public class AdminResource extends AbstractResource {
 
 	// singleton begins
 
-	private static AccountResource singleton = new AccountResource();
+	private static AdminResource singleton = new AdminResource();
 
-	static AccountResource get() {
+	static AdminResource get() {
 		return singleton;
 	}
 
-	private AccountResource() {
+	private AdminResource() {
 	}
 
 	// singleton ends
@@ -78,8 +78,8 @@ public class AccountResource extends AbstractResource {
 	/**
 	 * Internal web service. Not accessible by clients.
 	 */
-	@Get("")
-	@Get("/")
+	@Get("/account")
+	@Get("/account/")
 	public Payload getAll(Context context) {
 		try {
 			SearchResponse response = Start.getElasticClient()
@@ -95,8 +95,28 @@ public class AccountResource extends AbstractResource {
 	/**
 	 * Internal web service. Not accessible by clients.
 	 */
-	@Post("")
-	@Post("/")
+	@Get("/user/:username")
+	@Get("/user/:username/")
+	public Payload isUserRegistered(String username) {
+		return checkExistence(SPACEDOG_INDEX, ACCOUNT_TYPE, "username",
+				username);
+	}
+
+	/**
+	 * Internal web service. Not accessible by clients.
+	 */
+	@Get("/backend/:id")
+	@Get("/backend/:id/")
+	public Payload isBackendRegistered(String backendId) {
+		return checkExistence(SPACEDOG_INDEX, ACCOUNT_TYPE, "backendId",
+				backendId);
+	}
+
+	/**
+	 * Internal web service. Not accessible by clients.
+	 */
+	@Post("/account")
+	@Post("/account/")
 	public Payload signUp(String body, Context context) {
 		try {
 			JsonObject input = JsonObject.readFrom(body);
@@ -108,6 +128,11 @@ public class AccountResource extends AbstractResource {
 			account.password = input.getString("password", null);
 			account.apiKey = new ApiKey(DEFAULT_API_KEY_ID);
 			account.checkAccountInputValidity();
+
+			if (ElasticHelper.search(SPACEDOG_INDEX, ACCOUNT_TYPE, "username",
+					account.username).getTotalHits() > 0)
+				return badParameters("username", account.username,
+						account.username + " is already used");
 
 			byte[] accountBytes = getObjectMapper().writeValueAsBytes(account);
 			Start.getElasticClient().prepareIndex(SPACEDOG_INDEX, ACCOUNT_TYPE)
@@ -121,8 +146,9 @@ public class AccountResource extends AbstractResource {
 					.addMapping(UserResource.USER_TYPE,
 							UserResource.getDefaultUserMapping()).get();
 
-			return created("/v1", ACCOUNT_TYPE, account.backendId).withHeader(
-					AccountResource.SPACEDOG_KEY_HEADER, account.spaceDogKey());
+			return created("/v1/admin", ACCOUNT_TYPE, account.backendId)
+					.withHeader(AdminResource.SPACEDOG_KEY_HEADER,
+							account.spaceDogKey());
 
 		} catch (Throwable throwable) {
 			return error(throwable);
@@ -132,8 +158,8 @@ public class AccountResource extends AbstractResource {
 	/**
 	 * Internal web service. Not accessible by clients.
 	 */
-	@Get("/:id")
-	@Get("/:id/")
+	@Get("/account/:id")
+	@Get("/account/:id/")
 	public Payload get(String backendId, Context context) {
 		try {
 			GetResponse response = Start.getElasticClient()
@@ -153,8 +179,8 @@ public class AccountResource extends AbstractResource {
 	/**
 	 * Internal web service. Not accessible by clients.
 	 */
-	@Put("/:id")
-	@Put("/:id/")
+	@Put("/account/:id")
+	@Put("/account/:id/")
 	public Payload put(String id, String body, Context context) {
 		try {
 			return new Payload(HttpStatus.NOT_IMPLEMENTED);
@@ -166,8 +192,8 @@ public class AccountResource extends AbstractResource {
 	/**
 	 * Internal web service. Not accessible by clients.
 	 */
-	@Delete("/:id")
-	@Delete("/:id/")
+	@Delete("/account/:id")
+	@Delete("/account/:id/")
 	public Payload delete(String backendId, Context context) {
 		try {
 			DeleteResponse resp1 = Start.getElasticClient()
@@ -193,20 +219,58 @@ public class AccountResource extends AbstractResource {
 		}
 	}
 
+	@Get("/login")
+	@Get("/login/")
+	public Payload login(Context context) {
+		try {
+
+			Optional<String[]> tokens = decodeAuthorizationHeader(context);
+
+			if (tokens.isPresent()) {
+
+				SearchHits hits = ElasticHelper.search(SPACEDOG_INDEX,
+						ACCOUNT_TYPE, "username", tokens.get()[0], "password",
+						tokens.get()[1]);
+
+				if (hits.getTotalHits() == 0)
+					throw new AuthenticationException(
+							"invalid username or password");
+
+				if (hits.getTotalHits() > 1)
+					throw new RuntimeException(String.format(
+							"more than one admin with username [%s]",
+							tokens.get()[0]));
+
+				Account account = getObjectMapper().readValue(
+						hits.getAt(0).getSourceAsString(), Account.class);
+
+				return Payload.ok().withHeader(
+						AdminResource.SPACEDOG_KEY_HEADER,
+						account.spaceDogKey());
+
+			} else {
+				throw new AuthenticationException(
+						"no authorization header specified");
+			}
+		} catch (Throwable throwable) {
+			return error(throwable);
+		}
+	}
+
 	public static Credentials checkCredentials(Context context)
 			throws JsonParseException, JsonMappingException, IOException {
 
 		String keyRawValue = context.header(SPACEDOG_KEY_HEADER);
 
 		if (Strings.isNullOrEmpty(keyRawValue))
-			throw new AuthenticationException("[%s] header not specified",
+			throw new AuthenticationException("%s header not specified",
 					SPACEDOG_KEY_HEADER);
 
 		String[] key = keyRawValue.split(":", 3);
 
 		if (key.length != 3)
 			throw new AuthenticationException(
-					"invalid spacedog key [%s], no backend id, key id or key secret",
+					"malformed spacedog key [%s], should be <backendId>:<apiKeyId>:<apiKeySecret>",
 					keyRawValue);
 
 		String backendId = key[0];
@@ -222,121 +286,105 @@ public class AccountResource extends AbstractResource {
 			throw new AuthenticationException(
 					"this backend id [%s] is reserved", backendId);
 
-		String authzHeaderValue = context.header(AUTHORIZATION_HEADER);
+		if (Strings.isNullOrEmpty(keyId))
+			throw new AuthenticationException(
+					"invalid spacedog key [%s], no apikey id specified",
+					keyRawValue);
 
-		if (Strings.isNullOrEmpty(authzHeaderValue)) {
+		if (Strings.isNullOrEmpty(keySecret))
+			throw new AuthenticationException(
+					"invalid spacedog key [%s], no apikey secret specified",
+					keyRawValue);
 
-			if (Strings.isNullOrEmpty(keyId))
+		// check apikeys in account objects of spacedog internal index
+
+		SearchHits accountHits = ElasticHelper.search(SPACEDOG_INDEX,
+				ACCOUNT_TYPE, "backendId", backendId, "apiKey.id", keyId,
+				"apiKey.secret", keySecret);
+
+		if (accountHits.getTotalHits() == 0)
+			throw new AuthenticationException("spacedog key [%s] not found",
+					keyRawValue);
+
+		if (accountHits.getTotalHits() > 1)
+			throw new RuntimeException(
+					String.format(
+							"more than one apikey for backend id [%s] and apikey id [%s]",
+							backendId, keyId));
+
+		Optional<String[]> tokens = decodeAuthorizationHeader(context);
+
+		if (tokens.isPresent()) {
+
+			// check users in app index
+
+			SearchHits userHits = ElasticHelper.search(backendId,
+					UserResource.USER_TYPE, "username", tokens.get()[0],
+					"password", tokens.get()[1]);
+
+			if (userHits.getTotalHits() == 0)
 				throw new AuthenticationException(
-						"invalid spacedog key [%s], no key id specified",
-						keyRawValue);
+						"invalid username or password");
 
-			if (Strings.isNullOrEmpty(keySecret))
-				throw new AuthenticationException(
-						"invalid spacedog key [%s], no secret specified",
-						keyRawValue);
+			if (userHits.getTotalHits() > 1)
+				throw new RuntimeException(String.format(
+						"more than one user with username [%s]",
+						tokens.get()[0]));
 
-			try {
-				// check apikeys in account objects of spacedog internal index
-				SearchResponse response = Start
-						.getElasticClient()
-						.prepareSearch(SPACEDOG_INDEX)
-						.setTypes(ACCOUNT_TYPE)
-						.setQuery(
-								QueryBuilders.filteredQuery(QueryBuilders
-										.matchAllQuery(), FilterBuilders
-										.andFilter(FilterBuilders.termFilter(
-												"backendId", backendId), //
-												FilterBuilders.termFilter(
-														"apiKey.id", keyId),//
-												FilterBuilders.termFilter(
-														"apiKey.secret",
-														keySecret)))).get();
+			JsonObject userJson = JsonObject.readFrom(userHits.getAt(0)
+					.getSourceAsString());
 
-				if (response.getHits().getTotalHits() == 0)
-					throw new AuthenticationException(
-							"invalid username or password");
-
-				Account account = getObjectMapper().readValue(
-						response.getHits().getAt(0).getSourceAsString(),
-						Account.class);
-
-				// JsonObject userJson = JsonObject.readFrom(response.getHits()
-				// .getAt(0).getSourceAsString());
-
-				return new Credentials(backendId, account.apiKey);
-
-			} catch (IndexMissingException e) {
-				throw new AuthenticationException("invalid account id [%s]",
-						backendId);
-			}
+			return new Credentials(backendId, User.fromJsonObject(userJson));
 
 		} else {
 
-			String[] schemeAndValue = authzHeaderValue.split(" ", 2);
+			Account account = getObjectMapper().readValue(
+					accountHits.getAt(0).getSourceAsString(), Account.class);
 
-			if (schemeAndValue.length != 2)
-				throw new AuthenticationException(
-						"no authentication token specified");
-
-			if (Strings.isNullOrEmpty(schemeAndValue[0]))
-				throw new AuthenticationException(
-						"authentication scheme not specified");
-
-			if (!schemeAndValue[0]
-					.equalsIgnoreCase(BASIC_AUTHENTICATION_SCHEME))
-				throw new AuthenticationException(
-						"authentication scheme [%s] not supported",
-						schemeAndValue[0]);
-
-			byte[] encodedBytes = schemeAndValue[1].getBytes(UTF_8);
-
-			String decoded = null;
-
-			try {
-				decoded = new String(Base64.getDecoder().decode(encodedBytes));
-			} catch (IllegalArgumentException e) {
-				throw new AuthenticationException(
-						"authentication token is not base 64 encoded", e);
-			}
-
-			String[] tokens = decoded.split(":", 2);
-
-			if (tokens.length != 2)
-				throw new AuthenticationException(
-						"invalid authentication token");
-
-			if (Strings.isNullOrEmpty(tokens[1]))
-				throw new AuthenticationException("no password specified");
-
-			try {
-				// check users in app index
-				SearchResponse response = Start
-						.getElasticClient()
-						.prepareSearch(backendId)
-						.setTypes(UserResource.USER_TYPE)
-						.setQuery(
-								QueryBuilders.filteredQuery(QueryBuilders
-										.matchAllQuery(), FilterBuilders
-										.andFilter(FilterBuilders.termFilter(
-												"username", tokens[0]),
-												FilterBuilders.termFilter(
-														"password", tokens[1]))))
-						.get();
-
-				if (response.getHits().getTotalHits() == 0)
-					throw new AuthenticationException(
-							"invalid username or password");
-
-				JsonObject userJson = JsonObject.readFrom(response.getHits()
-						.getAt(0).getSourceAsString());
-
-				return new Credentials(backendId, User.fromJsonObject(userJson));
-
-			} catch (IndexMissingException e) {
-				throw new AuthenticationException("invalid account id [%s]",
-						backendId);
-			}
+			return new Credentials(backendId, account.apiKey);
 		}
+	}
+
+	private static Optional<String[]> decodeAuthorizationHeader(Context context) {
+
+		String authzHeaderValue = context.header(AUTHORIZATION_HEADER);
+
+		if (Strings.isNullOrEmpty(authzHeaderValue))
+			return Optional.empty();
+
+		String[] schemeAndTokens = authzHeaderValue.split(" ", 2);
+
+		if (schemeAndTokens.length != 2)
+			throw new AuthenticationException("invalid authorization header");
+
+		if (Strings.isNullOrEmpty(schemeAndTokens[0]))
+			throw new AuthenticationException(
+					"no authorization scheme specified");
+
+		if (!schemeAndTokens[0].equalsIgnoreCase(BASIC_AUTHENTICATION_SCHEME))
+			throw new AuthenticationException(
+					"authorization scheme [%s] not supported",
+					schemeAndTokens[0]);
+
+		byte[] encodedBytes = schemeAndTokens[1].getBytes(UTF_8);
+
+		String decoded = null;
+
+		try {
+			decoded = new String(Base64.getDecoder().decode(encodedBytes));
+		} catch (IllegalArgumentException e) {
+			throw new AuthenticationException(
+					"authorization token is not base 64 encoded", e);
+		}
+
+		String[] tokens = decoded.split(":", 2);
+
+		if (tokens.length != 2)
+			throw new AuthenticationException("invalid authorization token");
+
+		if (Strings.isNullOrEmpty(tokens[1]))
+			throw new AuthenticationException("no password specified");
+
+		return Optional.of(tokens);
 	}
 }

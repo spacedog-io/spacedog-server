@@ -14,12 +14,16 @@ function computeContextFromForm(form) {
 	console.log(sessionStorage);
 }
 
-function showSearchDiv() {
+function showSearchDiv(_, _, jqxhr) {
 	sessionStorage.signInOk = 'true';
+	if (jqxhr)
+		sessionStorage.spacedogKey = jqxhr.getResponseHeader('x-spacedog-key');
+	console.log(jqxhr);
 	resetNavSignButton();
 
 	$('#user-info').html('<p>Hello [' + sessionStorage.username
-		+ ']</p><p>Your application id is [' + sessionStorage.id + ']</p>');
+		+ ']</p><p>Your spacedog key is</p><p>' + sessionStorage.spacedogKey + '</p>');
+
 	$signDiv.css('visibility', 'hidden');
 	$signDiv.css('display', 'none');
 	$consoleDiv.css('visibility', 'visible');
@@ -69,10 +73,9 @@ function signIn(event) {
 
 	$.ajax({
 		method: "GET",
-		url: window.location.origin + "/v1/login",
+		url: window.location.origin + "/v1/admin/login",
 		cache: false,
 		headers : {
-			'x-magic-app-id':  sessionStorage.id,
 			Authorization: 'Basic ' + btoa(sessionStorage.username + ':' + sessionStorage.password)
 		},
 		success: showSearchDiv,
@@ -89,7 +92,7 @@ function createAccount(event) {
 
 	$.ajax({
 		method: 'POST',
-		url: window.location.origin + '/v1/account',
+		url: window.location.origin + '/v1/admin/account',
 		cache: false,
 		contentType: 'application/json; charset=UTF-8',
 		data: JSON.stringify(sessionStorage),
@@ -110,8 +113,7 @@ function searchObjects(event) {
 		url: window.location.origin + "/v1/data",
 		cache: false,
 		headers : {
-			'x-magic-app-id':  sessionStorage.id,
-			Authorization: 'Basic ' + btoa(sessionStorage.username + ':' + sessionStorage.password)
+			'x-spacedog-key':  sessionStorage.spacedogKey
 		},
 		data: {
 			q: $('input[name="q"]').val(),

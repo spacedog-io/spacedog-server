@@ -16,12 +16,12 @@ public class QueryTest extends AbstractTest {
 
 	@Test
 	public void resetAndImportDataset() throws UnirestException {
-		AccountResourceTest.resetTestAccount();
+		AdminResourceTest.resetTestAccount();
 		SchemaResourceTest.resetCarSchema();
 
 		for (int i = 0; i < 500; i++) {
 			RequestBodyEntity req2 = preparePost("/v1/data/car",
-					AccountResourceTest.testKey()).body(jsonCar(i).toString());
+					AdminResourceTest.testKey()).body(jsonCar(i).toString());
 
 			post(req2, 201);
 		}

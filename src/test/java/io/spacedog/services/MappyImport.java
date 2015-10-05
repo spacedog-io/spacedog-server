@@ -15,25 +15,27 @@ public class MappyImport extends AbstractTest {
 
 	public static void resetDemoAccount() throws UnirestException {
 
-		HttpRequestWithBody req1 = prepareDelete("/v1/account/demo");
+		HttpRequestWithBody req1 = prepareDelete("/v1/admin/account/demo");
 		delete(req1, 200, 404);
 
-		RequestBodyEntity req2 = preparePost("/v1/account/").body(
-				Json.builder().add("backendId", "demo").add("username", "dave")
-						.add("password", "hi dave")
-						.add("email", "david@spacedog.io").build().toString());
+		RequestBodyEntity req2 = preparePost("/v1/admin/account/").body(
+				Json.builder().add("backendId", "demo").add("username", "demo")
+						.add("password", "hi demo")
+						.add("email", "hello@spacedog.io").build().toString());
 
 		demoKey = post(req2, 201).response().getHeaders()
-				.get(AccountResource.SPACEDOG_KEY_HEADER).get(0);
+				.get(AdminResource.SPACEDOG_KEY_HEADER).get(0);
 
 		assertFalse(Strings.isNullOrEmpty(demoKey));
 
-		refreshIndex(AccountResource.SPACEDOG_INDEX);
+		refreshIndex(AdminResource.SPACEDOG_INDEX);
 		refreshIndex("demo");
 	}
 
 	public static void main(String[] args) {
 		try {
+			resetDemoAccount();
+
 			HttpRequestWithBody req2 = prepareDelete("/v1/schema/resto",
 					demoKey);
 			delete(req2, 200, 404);
@@ -136,16 +138,4 @@ public class MappyImport extends AbstractTest {
 				.end() //
 				.build();
 	}
-
-	public static void mainOld(String[] args) {
-		int i = 0;
-		for (double lat = 48; lat <= 49.5; lat += 0.1) {
-			for (double lon = 1.8; lon <= 2.9; lon += 0.1) {
-
-				System.out.println("i=" + (i++) + " : " + lat + ',' + lon + ','
-						+ (lat + 0.1) + ',' + (lon + 0.1));
-			}
-		}
-	}
-
 }

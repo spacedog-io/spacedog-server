@@ -53,7 +53,7 @@ public class ElasticMain {
 						.toString(
 								Resources
 										.getResource("io/spacedog/services/account-mapping.json"),
-								AccountResource.UTF_8);
+								AdminResource.UTF_8);
 
 				PutMappingRequest mappingRequest = new PutMappingRequest(
 						"test2").type("account").source(accountMapping);

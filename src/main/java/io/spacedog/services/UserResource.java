@@ -40,7 +40,7 @@ public class UserResource extends AbstractResource {
 	@Get("/login/")
 	public Payload login(Context context) {
 		try {
-			AccountResource.checkCredentials(context);
+			AdminResource.checkCredentials(context);
 			return Payload.ok();
 		} catch (Throwable throwable) {
 			return error(throwable);
@@ -51,7 +51,7 @@ public class UserResource extends AbstractResource {
 	@Get("/logout/")
 	public Payload logout(Context context) {
 		try {
-			AccountResource.checkCredentials(context);
+			AdminResource.checkCredentials(context);
 			return Payload.ok();
 		} catch (Throwable throwable) {
 			return error(throwable);
@@ -69,7 +69,7 @@ public class UserResource extends AbstractResource {
 	public Payload signUp(String body, Context context) {
 		try {
 			JsonObject input = JsonObject.readFrom(body);
-			Credentials credentials = AccountResource.checkCredentials(context);
+			Credentials credentials = AdminResource.checkCredentials(context);
 
 			User user = new User();
 			user.username = input.getString("username", null);

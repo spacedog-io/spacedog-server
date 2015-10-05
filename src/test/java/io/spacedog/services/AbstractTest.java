@@ -33,7 +33,7 @@ public abstract class AbstractTest extends Assert {
 		String url = new StringBuilder(backendDomain).append(uri).toString();
 		GetRequest request = Unirest.get(url);
 		if (spacedogKey != null)
-			request.header(AccountResource.SPACEDOG_KEY_HEADER, spacedogKey);
+			request.header(AdminResource.SPACEDOG_KEY_HEADER, spacedogKey);
 		return request;
 	}
 
@@ -46,7 +46,7 @@ public abstract class AbstractTest extends Assert {
 		String url = new StringBuilder(backendDomain).append(uri).toString();
 		HttpRequestWithBody request = Unirest.post(url);
 		if (spacedogKey != null)
-			request.header(AccountResource.SPACEDOG_KEY_HEADER, spacedogKey);
+			request.header(AdminResource.SPACEDOG_KEY_HEADER, spacedogKey);
 		return request;
 	}
 
@@ -59,7 +59,7 @@ public abstract class AbstractTest extends Assert {
 		String url = new StringBuilder(backendDomain).append(uri).toString();
 		HttpRequestWithBody request = Unirest.put(url);
 		if (spacedogKey != null)
-			request.header(AccountResource.SPACEDOG_KEY_HEADER, spacedogKey);
+			request.header(AdminResource.SPACEDOG_KEY_HEADER, spacedogKey);
 		return request;
 	}
 
@@ -72,7 +72,7 @@ public abstract class AbstractTest extends Assert {
 		String url = new StringBuilder(backendDomain).append(uri).toString();
 		HttpRequestWithBody request = Unirest.delete(url);
 		if (spacedogKey != null)
-			request.header(AccountResource.SPACEDOG_KEY_HEADER, spacedogKey);
+			request.header(AdminResource.SPACEDOG_KEY_HEADER, spacedogKey);
 		return request;
 	}
 
@@ -84,7 +84,7 @@ public abstract class AbstractTest extends Assert {
 		String url = new StringBuilder(backendDomain).append(uri).toString();
 		HttpRequestWithBody request = Unirest.options(url);
 		if (spacedogKey != null)
-			request.header(AccountResource.SPACEDOG_KEY_HEADER, spacedogKey);
+			request.header(AdminResource.SPACEDOG_KEY_HEADER, spacedogKey);
 		return request;
 	}
 
