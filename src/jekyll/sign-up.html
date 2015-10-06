@@ -1,0 +1,46 @@
+---
+
+---
+
+
+<!DOCTYPE html>
+<html>
+
+	<head>
+		{% include head.html %}
+	  	<script src="/scripts/sign.js"></script>
+	</head>
+
+  <body>
+
+    <div id="sign-div">
+
+        <a class='logo' href="/">{{ site.name }}</a>
+
+		<form id="create-form">
+			<h4>Create an account</h4>
+			<br>
+			<label>Backend id</label>
+			<input type="text" name="backendId">
+			<label>Username</label>
+			<input type="text" name="username">
+			<label>Email address</label>
+			<input type="email" name="email">
+			<label>Password</label>
+			<input type="password" name="password">
+			<label>Confirm Password</label>
+			<input type="password" name="password-confirmation">
+			<div class="sign-form-submit">
+	    		<button type="submit" id="create-account">Create</button>
+	    	</div>
+   			<p id="sign-alert"></p>
+
+    	</form>
+
+		<p>If you already have an account, <a href='/sign-in.html'>sign-in.</a></p>
+		<br>
+		
+    </div>
+
+  </body>
+</html>

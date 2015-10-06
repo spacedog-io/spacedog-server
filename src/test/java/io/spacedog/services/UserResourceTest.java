@@ -23,7 +23,7 @@ public class UserResourceTest extends AbstractTest {
 		// signup ok
 
 		RequestBodyEntity req1 = preparePost("/v1/user",
-				AdminResourceTest.testKey()).body(
+				AdminResourceTest.testClientKey()).body(
 				Json.builder().add("username", "vince")
 						.add("password", "hi vince")
 						.add("email", "vince@dog.com").build().toString());
@@ -35,7 +35,7 @@ public class UserResourceTest extends AbstractTest {
 		// get ok
 
 		GetRequest req2 = prepareGet("/v1/user/vince",
-				AdminResourceTest.testKey()).basicAuth("vince", "hi vince");
+				AdminResourceTest.testClientKey()).basicAuth("vince", "hi vince");
 
 		JsonObject res2 = get(req2, 200).json();
 
@@ -48,14 +48,14 @@ public class UserResourceTest extends AbstractTest {
 		// wrong username
 
 		GetRequest req5 = prepareGet("/v1/user/vince",
-				AdminResourceTest.testKey()).basicAuth("XXX", "hi vince");
+				AdminResourceTest.testClientKey()).basicAuth("XXX", "hi vince");
 
 		get(req5, 401);
 
 		// wrong password
 
 		GetRequest req3 = prepareGet("/v1/user/vince",
-				AdminResourceTest.testKey()).basicAuth("vince", "XXX");
+				AdminResourceTest.testClientKey()).basicAuth("vince", "XXX");
 
 		get(req3, 401);
 
@@ -68,14 +68,14 @@ public class UserResourceTest extends AbstractTest {
 
 		// login ok
 
-		GetRequest req6 = prepareGet("/v1/login", AdminResourceTest.testKey())
+		GetRequest req6 = prepareGet("/v1/login", AdminResourceTest.testClientKey())
 				.basicAuth("vince", "hi vince");
 
 		get(req6, 200);
 
 		// login nok
 
-		GetRequest req7 = prepareGet("/v1/login", AdminResourceTest.testKey())
+		GetRequest req7 = prepareGet("/v1/login", AdminResourceTest.testClientKey())
 				.basicAuth("vince", "XXX");
 
 		get(req7, 401);
@@ -83,7 +83,7 @@ public class UserResourceTest extends AbstractTest {
 		// email update ok
 
 		RequestBodyEntity req8 = preparePut("/v1/user/vince",
-				AdminResourceTest.testKey()).basicAuth("vince", "hi vince")
+				AdminResourceTest.testClientKey()).basicAuth("vince", "hi vince")
 				.body(Json.builder().add("email", "bignose@magic.com").build()
 						.toString());
 
@@ -94,7 +94,7 @@ public class UserResourceTest extends AbstractTest {
 		// get ok
 
 		GetRequest req9 = prepareGet("/v1/user/vince",
-				AdminResourceTest.testKey()).basicAuth("vince", "hi vince");
+				AdminResourceTest.testClientKey()).basicAuth("vince", "hi vince");
 
 		JsonObject res9 = get(req9, 200).json();
 

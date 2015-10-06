@@ -22,7 +22,7 @@ public class CrossOriginFilterTest extends AbstractTest {
 
 		// CORS for simple requests
 
-		GetRequest req1 = prepareGet("/v1/data", AdminResourceTest.testKey());
+		GetRequest req1 = prepareGet("/v1/data", AdminResourceTest.testClientKey());
 		Result res1 = get(req1, 200);
 
 		assertEquals(
@@ -43,7 +43,7 @@ public class CrossOriginFilterTest extends AbstractTest {
 		// CORS pre-flight request
 
 		HttpRequestWithBody req2 = prepareOptions("/v1/user/mynameisperson",
-				AdminResourceTest.testKey()).header(Headers.ORIGIN,
+				AdminResourceTest.testClientKey()).header(Headers.ORIGIN,
 				"http://www.apple.com").header(
 				Headers.ACCESS_CONTROL_REQUEST_METHOD, "PUT");
 

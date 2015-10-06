@@ -8,6 +8,7 @@
 
 	<head>
 		{% include head.html %}
+	  	<script src="/scripts/console.js"></script>
 	</head>
 
   <body>
@@ -15,60 +16,25 @@
 	{% include header.html %}
 
 	<div id="console">
+
 		<div id="console-menu">
+
 			<div id="user-info"></div>
 			<br>
+
 			<form id="console-search-form">
 				<input type="text" name="q">
 				<button type="submit" id="search">Search</button>
 			</form>	
 			<br>
+
 			<p id="search-alert">=></p>
+			
 		</div>
 	
 		<div id="console-results">
 		</div>
 	</div>
 	
-    <div id="sign-div">
-
-		<p id="sign-alert">=></p>
-		<br>
-		
-		<form id="sign-form">
-			<h4>Already registered? Sign-in:</h4>
-			<br>
-			<label>Username</label>
-			<input type="text" name="username">
-			<label>Backend id</label>
-			<input type="text" name="id">
-			<label>Password</label>
-			<input type="password" name="password">
-			<div class="sign-form-submit">
-	    		<button id="sign-in" type="submit">Sign-in</button>
-	    	</div>
-    	</form>
-	    
-	    
-		<form id="create-form">
-			<h4>First time? Create an account:</h4>
-			</br>
-			<label>Username</label>
-			<input type="text" name="username">
-			<label>Email address</label>
-			<input type="email" name="email">
-			<label>Password</label>
-			<input type="password" name="password">
-			<label>Confirm Password</label>
-			<input type="password" name="password-confirmation">
-			<label>Backend id</label>
-			<input type="text" name="id">
-			<div class="sign-form-submit">
-	    		<button type="submit" id="create-account">Create</button>
-	    	</div>
-    	</form>
-
-    </div>
-
   </body>
 </html>

@@ -23,7 +23,7 @@ public class SchemaResourceTest extends AbstractTest {
 		resetCarSchema();
 
 		GetRequest req = prepareGet("/v1/schema/car",
-				AdminResourceTest.testKey());
+				AdminResourceTest.testClientKey());
 		JsonObject res = get(req, 200).json();
 		assertTrue(Json.equals(buildCarSchema(), res));
 	}
@@ -31,11 +31,11 @@ public class SchemaResourceTest extends AbstractTest {
 	public static void resetCarSchema() throws UnirestException {
 
 		HttpRequestWithBody req1 = prepareDelete("/v1/schema/car",
-				AdminResourceTest.testKey());
+				AdminResourceTest.testClientKey());
 		delete(req1, 200, 404);
 
 		RequestBodyEntity req2 = preparePost("/v1/schema/car",
-				AdminResourceTest.testKey())
+				AdminResourceTest.testClientKey())
 				.body(buildCarSchema().toString());
 		post(req2, 201);
 	}
@@ -59,11 +59,11 @@ public class SchemaResourceTest extends AbstractTest {
 
 	public static void resetSaleSchema() throws UnirestException {
 		HttpRequestWithBody req1 = prepareDelete("/v1/schema/sale",
-				AdminResourceTest.testKey());
+				AdminResourceTest.testClientKey());
 		delete(req1, 200, 404);
 
 		RequestBodyEntity req2 = preparePost("/v1/schema/sale",
-				AdminResourceTest.testKey()).body(
+				AdminResourceTest.testClientKey()).body(
 				buildSaleSchema().toString());
 		post(req2, 201);
 	}
@@ -94,18 +94,18 @@ public class SchemaResourceTest extends AbstractTest {
 		resetHomeSchema();
 
 		GetRequest req = prepareGet("/v1/schema/home",
-				AdminResourceTest.testKey());
+				AdminResourceTest.testClientKey());
 		JsonObject res = get(req, 200).json();
 		assertTrue(Json.equals(buildHomeSchema(), res));
 	}
 
 	private static void resetHomeSchema() throws UnirestException {
 		HttpRequestWithBody req1 = prepareDelete("/v1/schema/home",
-				AdminResourceTest.testKey());
+				AdminResourceTest.testClientKey());
 		delete(req1, 200);
 
 		RequestBodyEntity req2 = preparePost("/v1/schema/home",
-				AdminResourceTest.testKey()).body(
+				AdminResourceTest.testClientKey()).body(
 				buildHomeSchema().toString());
 		post(req2, 201);
 	}
@@ -130,7 +130,7 @@ public class SchemaResourceTest extends AbstractTest {
 		resetHomeSchema();
 		resetSaleSchema();
 
-		GetRequest req = prepareGet("/v1/schema", AdminResourceTest.testKey());
+		GetRequest req = prepareGet("/v1/schema", AdminResourceTest.testClientKey());
 		JsonObject result = get(req, 200).json();
 
 		// user, car, sale and home
@@ -153,11 +153,11 @@ public class SchemaResourceTest extends AbstractTest {
 	private void shouldFailDueToInvalidSchema(String jsonSchema)
 			throws UnirestException {
 		HttpRequestWithBody req1 = prepareDelete("/v1/schema/toto",
-				AdminResourceTest.testKey());
+				AdminResourceTest.testClientKey());
 		delete(req1, 200);
 
 		RequestBodyEntity req2 = preparePut("/v1/schema/toto",
-				AdminResourceTest.testKey()).body(jsonSchema);
+				AdminResourceTest.testClientKey()).body(jsonSchema);
 		put(req2, 400);
 	}
 
@@ -174,7 +174,7 @@ public class SchemaResourceTest extends AbstractTest {
 	private void shouldFailToChangeSchema(JsonObject json)
 			throws UnirestException {
 		RequestBodyEntity req2 = preparePut("/v1/schema/car",
-				AdminResourceTest.testKey()).body(json.toString());
+				AdminResourceTest.testClientKey()).body(json.toString());
 		put(req2, 400);
 	}
 

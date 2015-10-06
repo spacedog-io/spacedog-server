@@ -49,7 +49,7 @@ public class AdminResource extends AbstractResource {
 
 	public static final String SPACEDOG_INDEX = "spacedog";
 	public static final String ACCOUNT_TYPE = "account";
-	public static final String DEFAULT_API_KEY_ID = "client-app";
+	public static final String DEFAULT_CLIENT_KEY_ID = "default";
 
 	private static final Set<String> INTERNAL_INDICES = Sets
 			.newHashSet(SPACEDOG_INDEX);
@@ -126,13 +126,20 @@ public class AdminResource extends AbstractResource {
 			account.username = input.getString("username", null);
 			account.email = input.getString("email", null);
 			account.password = input.getString("password", null);
-			account.apiKey = new ApiKey(DEFAULT_API_KEY_ID);
+			account.apiKey = new ApiKey(DEFAULT_CLIENT_KEY_ID);
 			account.checkAccountInputValidity();
 
 			if (ElasticHelper.search(SPACEDOG_INDEX, ACCOUNT_TYPE, "username",
 					account.username).getTotalHits() > 0)
-				return badParameters("username", account.username,
-						account.username + " is already used");
+				return invalidParameters("username", account.username,
+						String.format("account username [%s] is not available",
+								account.username));
+
+			if (ElasticHelper.search(SPACEDOG_INDEX, ACCOUNT_TYPE, "backendId",
+					account.backendId).getTotalHits() > 0)
+				return invalidParameters("backendId", account.backendId,
+						String.format("backend id [%s] is not available",
+								account.backendId));
 
 			byte[] accountBytes = getObjectMapper().writeValueAsBytes(account);
 			Start.getElasticClient().prepareIndex(SPACEDOG_INDEX, ACCOUNT_TYPE)
@@ -148,7 +155,7 @@ public class AdminResource extends AbstractResource {
 
 			return created("/v1/admin", ACCOUNT_TYPE, account.backendId)
 					.withHeader(AdminResource.SPACEDOG_KEY_HEADER,
-							account.spaceDogKey());
+							account.defaultClientKey());
 
 		} catch (Throwable throwable) {
 			return error(throwable);
@@ -246,11 +253,11 @@ public class AdminResource extends AbstractResource {
 
 				return Payload.ok().withHeader(
 						AdminResource.SPACEDOG_KEY_HEADER,
-						account.spaceDogKey());
+						account.defaultClientKey());
 
 			} else {
 				throw new AuthenticationException(
-						"no authorization header specified");
+						"not authorized since no 'Authorization' header found");
 			}
 		} catch (Throwable throwable) {
 			return error(throwable);
@@ -262,61 +269,96 @@ public class AdminResource extends AbstractResource {
 
 		String keyRawValue = context.header(SPACEDOG_KEY_HEADER);
 
+		if (keyRawValue == null) {
+
+			Optional<String[]> tokens = decodeAuthorizationHeader(context);
+
+			if (tokens.isPresent()) {
+
+				// check admin users in spacedog index
+
+				SearchHits accountHits = ElasticHelper.search(SPACEDOG_INDEX,
+						ACCOUNT_TYPE, "username", tokens.get()[0], "password",
+						tokens.get()[1]);
+
+				if (accountHits.getTotalHits() == 0)
+					throw new AuthenticationException(
+							"invalid admin username or password");
+
+				if (accountHits.getTotalHits() > 1)
+					throw new RuntimeException(String.format(
+							"more than one admin user with username [%s]",
+							tokens.get()[0]));
+
+				Account account = getObjectMapper()
+						.readValue(accountHits.getAt(0).getSourceAsString(),
+								Account.class);
+
+				return new Credentials(account.backendId, account.adminUser());
+
+			} else
+				throw new AuthenticationException(
+						String.format(
+								"not authorized since no 'Authorization' or '%s' header found",
+								SPACEDOG_KEY_HEADER));
+		}
+
 		if (Strings.isNullOrEmpty(keyRawValue))
-			throw new AuthenticationException("%s header not specified",
-					SPACEDOG_KEY_HEADER);
+			throw new AuthenticationException("invalid %s header [%s]",
+					SPACEDOG_KEY_HEADER, keyRawValue);
 
 		String[] key = keyRawValue.split(":", 3);
 
-		if (key.length != 3)
+		if (key.length < 3)
 			throw new AuthenticationException(
-					"malformed spacedog key [%s], should be <backendId>:<apiKeyId>:<apiKeySecret>",
+					"malformed client key [%s], should be <backend id>:<client id>:<client secret>",
 					keyRawValue);
 
 		String backendId = key[0];
-		String keyId = key[1];
-		String keySecret = key[2];
+		String clientId = key[1];
+		String clientSecret = key[2];
 
 		if (Strings.isNullOrEmpty(backendId))
 			throw new AuthenticationException(
-					"invalid spacedog key [%s], no backend id specified",
+					"invalid client key [%s], no backend id specified",
 					keyRawValue);
 
 		if (INTERNAL_INDICES.contains(backendId))
 			throw new AuthenticationException(
 					"this backend id [%s] is reserved", backendId);
 
-		if (Strings.isNullOrEmpty(keyId))
+		if (Strings.isNullOrEmpty(clientId))
 			throw new AuthenticationException(
-					"invalid spacedog key [%s], no apikey id specified",
+					"invalid client key [%s], no client id specified",
 					keyRawValue);
 
-		if (Strings.isNullOrEmpty(keySecret))
+		if (Strings.isNullOrEmpty(clientSecret))
 			throw new AuthenticationException(
-					"invalid spacedog key [%s], no apikey secret specified",
+					"invalid client key [%s], no client secret specified",
 					keyRawValue);
 
-		// check apikeys in account objects of spacedog internal index
+		// check client id/secret pairs in spacedog
+		// index account objects
 
 		SearchHits accountHits = ElasticHelper.search(SPACEDOG_INDEX,
-				ACCOUNT_TYPE, "backendId", backendId, "apiKey.id", keyId,
-				"apiKey.secret", keySecret);
+				ACCOUNT_TYPE, "backendId", backendId, "apiKey.id", clientId,
+				"apiKey.secret", clientSecret);
 
 		if (accountHits.getTotalHits() == 0)
-			throw new AuthenticationException("spacedog key [%s] not found",
+			throw new AuthenticationException("invalid client key [%s]",
 					keyRawValue);
 
 		if (accountHits.getTotalHits() > 1)
 			throw new RuntimeException(
 					String.format(
-							"more than one apikey for backend id [%s] and apikey id [%s]",
-							backendId, keyId));
+							"more than one client key for backend [%s] and client [%s]",
+							backendId, clientId));
 
 		Optional<String[]> tokens = decodeAuthorizationHeader(context);
 
 		if (tokens.isPresent()) {
 
-			// check users in app index
+			// check users in user specific backend index
 
 			SearchHits userHits = ElasticHelper.search(backendId,
 					UserResource.USER_TYPE, "username", tokens.get()[0],

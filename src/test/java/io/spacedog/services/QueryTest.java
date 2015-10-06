@@ -21,7 +21,7 @@ public class QueryTest extends AbstractTest {
 
 		for (int i = 0; i < 500; i++) {
 			RequestBodyEntity req2 = preparePost("/v1/data/car",
-					AdminResourceTest.testKey()).body(jsonCar(i).toString());
+					AdminResourceTest.testClientKey()).body(jsonCar(i).toString());
 
 			post(req2, 201);
 		}

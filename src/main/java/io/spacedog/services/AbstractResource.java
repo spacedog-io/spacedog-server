@@ -120,17 +120,16 @@ public abstract class AbstractResource {
 	/**
 	 * @param parameters
 	 *            triples with parameter name, value and message
-	 * @return a bad request http payload with a json listing conflicting
-	 *         parameters
+	 * @return a bad request http payload with a json listing invalid parameters
 	 */
-	protected static Payload badParameters(String... parameters) {
+	protected static Payload invalidParameters(String... parameters) {
 		JsonBuilder builder = Json.builder().add("success", false);
 		if (parameters.length > 0 && parameters.length % 3 == 0) {
-			builder = builder.stObj("badParameters");
+			builder = builder.stObj("invalidParameters");
 			for (int i = 0; i < parameters.length; i += 3)
 				builder = builder.stObj(parameters[0])
 						.add("value", parameters[1])
-						.add("problem", parameters[2]);
+						.add("message", parameters[2]);
 		}
 		return new Payload(JSON_CONTENT, builder.build().toString(),
 				HttpStatus.BAD_REQUEST);

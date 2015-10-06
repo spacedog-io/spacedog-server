@@ -5,7 +5,6 @@
 html,
 body {
   height: 100%;
-  font-weight: 100;
   font-family: andale mono, consolas, sans-serif;
   background-color: black;
   color: darkorange;
@@ -29,10 +28,13 @@ header {
   border-bottom-style: inset;
 }
 
-.logo {
+header .logo {
   float: left;
   margin: 0;
   padding: 10px 30px;
+}
+
+.logo {
   font-size: 2.2em;
 }
 
@@ -67,7 +69,6 @@ nav a {
   display:inline-block;
   font-size:1.2em;
   margin-left: 10px;
-  /* position:relative; */
   padding: 20px 0 20px 10px;
 }
 
@@ -99,29 +100,27 @@ nav button {
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
 #sign-div {
-  margin: 60px auto 100px auto;
-  padding: 20px;
-  max-width: 800px;
-  text-align: left;
-  visibility: hidden;
-  display: none;
+  margin: 50px auto;
+  text-align: center;
+  width: 500px;
 }
 
-#sign-form {
-  float: left;
+#sign-div h4, p, label {
+  color: white;
+  opacity: 0.8;
 }
 
-#create-form {
-  float: right;
+#sign-div .logo {
+  font-size: 2.2em;
+  margin-bottom: 20px;
+  display: block;
 }
 
 #sign-div form {
   margin: 0;
   padding: 20px;
-  max-width: 250px;
-  text-align: left;
+  text-align: center;
   border: 15px solid darkorange;
-  border-left-style:hidden;
   border-radius: 20px;
 }
 
@@ -130,19 +129,21 @@ nav button {
 }
 
 .sign-form-submit {
-  text-align: right;
+  text-align: center;
   margin-top: 20px;
 }
+
+
 
 /* Console Search
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
 #console {
   background-color: black;
-  visibility: hidden;
-  display: none;
   width: 100%;
   height: 100%
+  display: none;
+  visibility: hidden;
 }
 
 #console-menu {

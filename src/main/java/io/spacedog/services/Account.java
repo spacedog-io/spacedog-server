@@ -1,5 +1,7 @@
 package io.spacedog.services;
 
+import java.util.Collections;
+
 import com.google.common.base.Strings;
 
 public class Account {
@@ -39,6 +41,12 @@ public class Account {
 					"account password is null or empty");
 	}
 
+	public static void checkPasswordValidity(String password) {
+		if (Strings.isNullOrEmpty(password))
+			throw new InvalidAccountException(
+					"account password is null or empty");
+	}
+
 	@SuppressWarnings("serial")
 	public static class InvalidAccountException extends RuntimeException {
 		public InvalidAccountException(String message) {
@@ -46,8 +54,17 @@ public class Account {
 		}
 	}
 
-	public String spaceDogKey() {
-		return new StringBuilder().append(backendId).append(':')
-				.append(apiKey.id).append(':').append(apiKey.secret).toString();
+	public String defaultClientKey() {
+		return new StringBuilder(backendId).append(':').append(apiKey.id)
+				.append(':').append(apiKey.secret).toString();
+	}
+
+	public User adminUser() {
+		User user = new User();
+		user.username = username;
+		user.email = email;
+		user.password = password;
+		user.groups = Collections.emptyList();
+		return user;
 	}
 }

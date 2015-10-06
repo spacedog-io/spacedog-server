@@ -223,4 +223,8 @@ public class JsonBuilder {
 		return parentBuilder == null ? currentJsonObject : parentBuilder
 				.build();
 	}
+
+	public String toString() {
+		return build().toString();
+	}
 }
