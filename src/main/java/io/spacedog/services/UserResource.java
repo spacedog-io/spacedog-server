@@ -32,7 +32,7 @@ public class UserResource extends AbstractResource {
 
 	static final JsonObject USER_DEFAULT_SCHEMA = SchemaBuilder
 			.builder(USER_TYPE).id("username").add("username", "string")
-			.required().add("password", "string").required()
+			.required().add("hashedPassword", "string").required()
 			.add("email", "string").required().add("accountId", "string")
 			.required().add("groups", "string").build();
 
@@ -40,7 +40,7 @@ public class UserResource extends AbstractResource {
 	@Get("/login/")
 	public Payload login(Context context) {
 		try {
-			AdminResource.checkCredentials(context);
+			AdminResource.checkUserCredentialsOnly(context);
 			return Payload.ok();
 		} catch (Throwable throwable) {
 			return error(throwable);
@@ -51,7 +51,7 @@ public class UserResource extends AbstractResource {
 	@Get("/logout/")
 	public Payload logout(Context context) {
 		try {
-			AdminResource.checkCredentials(context);
+			AdminResource.checkUserCredentialsOnly(context);
 			return Payload.ok();
 		} catch (Throwable throwable) {
 			return error(throwable);
@@ -68,19 +68,29 @@ public class UserResource extends AbstractResource {
 	@Post("/user/")
 	public Payload signUp(String body, Context context) {
 		try {
-			JsonObject input = JsonObject.readFrom(body);
+			/**
+			 * TODO adjust this. Admin should be able to sign up users. But what
+			 * backend id if many in account? Backend key should be able to sign
+			 * up users. Should common users be able to?
+			 */
 			Credentials credentials = AdminResource.checkCredentials(context);
+			JsonObject input = JsonObject.readFrom(body);
 
 			User user = new User();
 			user.username = input.getString("username", null);
 			user.email = input.getString("email", null);
-			user.password = input.getString("password", null);
+			String password = input.getString("password", null);
+			User.checkPasswordValidity(password);
+			user.hashedPassword = User.hashPassword(password);
 			user.groups = Collections.singletonList(credentials.getAccountId());
 			user.checkUserInputValidity();
 
 			String userId = DataResource.get().createInternal(
-					credentials.getAccountId(), USER_TYPE, user.toJsonObject(),
-					credentials.getId());
+					credentials.getAccountId(), USER_TYPE,
+					// TODO find something better to avoid to many object format
+					// transformations
+					JsonObject.readFrom(getObjectMapper().writeValueAsString(
+							user)), credentials.getId());
 
 			return created("/v1", USER_TYPE, userId);
 

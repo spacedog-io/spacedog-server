@@ -49,8 +49,6 @@ public class AdminResource extends AbstractResource {
 
 	public static final String SPACEDOG_INDEX = "spacedog";
 	public static final String ACCOUNT_TYPE = "account";
-	public static final String DEFAULT_CLIENT_KEY_ID = "default";
-
 	private static final Set<String> INTERNAL_INDICES = Sets
 			.newHashSet(SPACEDOG_INDEX);
 
@@ -76,12 +74,14 @@ public class AdminResource extends AbstractResource {
 	}
 
 	/**
-	 * Internal web service. Not accessible by clients.
+	 * Internal web service only accessible to administrators.
 	 */
 	@Get("/account")
 	@Get("/account/")
 	public Payload getAll(Context context) {
 		try {
+			checkAdminCredentialsOnly(context);
+
 			SearchResponse response = Start.getElasticClient()
 					.prepareSearch(SPACEDOG_INDEX).setTypes(ACCOUNT_TYPE)
 					.setQuery(QueryBuilders.matchAllQuery()).get();
@@ -92,29 +92,20 @@ public class AdminResource extends AbstractResource {
 		}
 	}
 
-	/**
-	 * Internal web service. Not accessible by clients.
-	 */
-	@Get("/user/:username")
-	@Get("/user/:username/")
-	public Payload isUserRegistered(String username) {
+	@Get("/user/:username/check")
+	@Get("/user/:username/check")
+	public Payload checkUsername(String username) {
 		return checkExistence(SPACEDOG_INDEX, ACCOUNT_TYPE, "username",
 				username);
 	}
 
-	/**
-	 * Internal web service. Not accessible by clients.
-	 */
-	@Get("/backend/:id")
-	@Get("/backend/:id/")
-	public Payload isBackendRegistered(String backendId) {
+	@Get("/backend/:id/check")
+	@Get("/backend/:id/check")
+	public Payload checkBackendId(String backendId) {
 		return checkExistence(SPACEDOG_INDEX, ACCOUNT_TYPE, "backendId",
 				backendId);
 	}
 
-	/**
-	 * Internal web service. Not accessible by clients.
-	 */
 	@Post("/account")
 	@Post("/account/")
 	public Payload signUp(String body, Context context) {
@@ -125,14 +116,17 @@ public class AdminResource extends AbstractResource {
 			account.backendId = input.getString("backendId", null);
 			account.username = input.getString("username", null);
 			account.email = input.getString("email", null);
-			account.password = input.getString("password", null);
-			account.apiKey = new ApiKey(DEFAULT_CLIENT_KEY_ID);
+			String password = input.getString("password", null);
+			Account.checkPasswordValidity(password);
+			account.hashedPassword = User.hashPassword(password);
+			account.backendKey = new BackendKey();
 			account.checkAccountInputValidity();
 
 			if (ElasticHelper.search(SPACEDOG_INDEX, ACCOUNT_TYPE, "username",
 					account.username).getTotalHits() > 0)
 				return invalidParameters("username", account.username,
-						String.format("account username [%s] is not available",
+						String.format(
+								"administrator username [%s] is not available",
 								account.username));
 
 			if (ElasticHelper.search(SPACEDOG_INDEX, ACCOUNT_TYPE, "backendId",
@@ -163,12 +157,14 @@ public class AdminResource extends AbstractResource {
 	}
 
 	/**
-	 * Internal web service. Not accessible by clients.
+	 * Internal web service only accessible to administrators.
 	 */
 	@Get("/account/:id")
 	@Get("/account/:id/")
 	public Payload get(String backendId, Context context) {
 		try {
+			checkAdminCredentialsOnly(context);
+
 			GetResponse response = Start.getElasticClient()
 					.prepareGet(SPACEDOG_INDEX, ACCOUNT_TYPE, backendId).get();
 
@@ -184,25 +180,30 @@ public class AdminResource extends AbstractResource {
 	}
 
 	/**
-	 * Internal web service. Not accessible by clients.
+	 * Internal web service only accessible to administrators.
 	 */
 	@Put("/account/:id")
 	@Put("/account/:id/")
 	public Payload put(String id, String body, Context context) {
 		try {
+			checkAdminCredentialsOnly(context);
+
 			return new Payload(HttpStatus.NOT_IMPLEMENTED);
+
 		} catch (Throwable throwable) {
 			return error(throwable);
 		}
 	}
 
 	/**
-	 * Internal web service. Not accessible by clients.
+	 * Internal web service only accessible to administrators.
 	 */
 	@Delete("/account/:id")
 	@Delete("/account/:id/")
 	public Payload delete(String backendId, Context context) {
 		try {
+			checkAdminCredentialsOnly(context);
+
 			DeleteResponse resp1 = Start.getElasticClient()
 					.prepareDelete(SPACEDOG_INDEX, ACCOUNT_TYPE, backendId)
 					.get();
@@ -226,39 +227,17 @@ public class AdminResource extends AbstractResource {
 		}
 	}
 
+	/**
+	 * Internal web service only accessible to administrators.
+	 */
 	@Get("/login")
 	@Get("/login/")
 	public Payload login(Context context) {
 		try {
+			Account account = checkAdminCredentialsOnly(context);
 
-			Optional<String[]> tokens = decodeAuthorizationHeader(context);
-
-			if (tokens.isPresent()) {
-
-				SearchHits hits = ElasticHelper.search(SPACEDOG_INDEX,
-						ACCOUNT_TYPE, "username", tokens.get()[0], "password",
-						tokens.get()[1]);
-
-				if (hits.getTotalHits() == 0)
-					throw new AuthenticationException(
-							"invalid username or password");
-
-				if (hits.getTotalHits() > 1)
-					throw new RuntimeException(String.format(
-							"more than one admin with username [%s]",
-							tokens.get()[0]));
-
-				Account account = getObjectMapper().readValue(
-						hits.getAt(0).getSourceAsString(), Account.class);
-
-				return Payload.ok().withHeader(
-						AdminResource.SPACEDOG_KEY_HEADER,
-						account.defaultClientKey());
-
-			} else {
-				throw new AuthenticationException(
-						"not authorized since no 'Authorization' header found");
-			}
+			return Payload.ok().withHeader(AdminResource.SPACEDOG_KEY_HEADER,
+					account.defaultClientKey());
 		} catch (Throwable throwable) {
 			return error(throwable);
 		}
@@ -267,94 +246,71 @@ public class AdminResource extends AbstractResource {
 	public static Credentials checkCredentials(Context context)
 			throws JsonParseException, JsonMappingException, IOException {
 
-		String keyRawValue = context.header(SPACEDOG_KEY_HEADER);
+		String rawBackendKey = context.header(SPACEDOG_KEY_HEADER);
 
-		if (keyRawValue == null) {
+		if (Strings.isNullOrEmpty(rawBackendKey)) {
+			Account account = checkAdminCredentialsOnly(context);
+			return new Credentials(account.backendId, account.adminUser());
 
-			Optional<String[]> tokens = decodeAuthorizationHeader(context);
-
-			if (tokens.isPresent()) {
-
-				// check admin users in spacedog index
-
-				SearchHits accountHits = ElasticHelper.search(SPACEDOG_INDEX,
-						ACCOUNT_TYPE, "username", tokens.get()[0], "password",
-						tokens.get()[1]);
-
-				if (accountHits.getTotalHits() == 0)
-					throw new AuthenticationException(
-							"invalid admin username or password");
-
-				if (accountHits.getTotalHits() > 1)
-					throw new RuntimeException(String.format(
-							"more than one admin user with username [%s]",
-							tokens.get()[0]));
-
-				Account account = getObjectMapper()
-						.readValue(accountHits.getAt(0).getSourceAsString(),
-								Account.class);
-
-				return new Credentials(account.backendId, account.adminUser());
-
-			} else
-				throw new AuthenticationException(
-						String.format(
-								"not authorized since no 'Authorization' or '%s' header found",
-								SPACEDOG_KEY_HEADER));
+		} else {
+			return checkUserCredentialsOnly(context);
 		}
+	}
 
-		if (Strings.isNullOrEmpty(keyRawValue))
-			throw new AuthenticationException("invalid %s header [%s]",
-					SPACEDOG_KEY_HEADER, keyRawValue);
+	protected static Credentials checkUserCredentialsOnly(Context context)
+			throws IOException, JsonParseException, JsonMappingException {
 
-		String[] key = keyRawValue.split(":", 3);
+		String rawBackendKey = context.header(SPACEDOG_KEY_HEADER);
+
+		String[] key = rawBackendKey.split(":", 3);
 
 		if (key.length < 3)
 			throw new AuthenticationException(
-					"malformed client key [%s], should be <backend id>:<client id>:<client secret>",
-					keyRawValue);
+					"malformed backend key [%s], should be <backend-id>:<key-name>:<key-secret>",
+					rawBackendKey);
 
 		String backendId = key[0];
-		String clientId = key[1];
-		String clientSecret = key[2];
+		String keyName = key[1];
+		String keySecret = key[2];
 
 		if (Strings.isNullOrEmpty(backendId))
 			throw new AuthenticationException(
-					"invalid client key [%s], no backend id specified",
-					keyRawValue);
+					"invalid backend key [%s], no backend id specified",
+					rawBackendKey);
 
 		if (INTERNAL_INDICES.contains(backendId))
 			throw new AuthenticationException(
 					"this backend id [%s] is reserved", backendId);
 
-		if (Strings.isNullOrEmpty(clientId))
+		if (Strings.isNullOrEmpty(keyName))
 			throw new AuthenticationException(
-					"invalid client key [%s], no client id specified",
-					keyRawValue);
+					"invalid backend key [%s], no key name specified",
+					rawBackendKey);
 
-		if (Strings.isNullOrEmpty(clientSecret))
+		if (Strings.isNullOrEmpty(keySecret))
 			throw new AuthenticationException(
-					"invalid client key [%s], no client secret specified",
-					keyRawValue);
+					"invalid backend key [%s], no key secret specified",
+					rawBackendKey);
 
 		// check client id/secret pairs in spacedog
 		// index account objects
 
 		SearchHits accountHits = ElasticHelper.search(SPACEDOG_INDEX,
-				ACCOUNT_TYPE, "backendId", backendId, "apiKey.id", clientId,
-				"apiKey.secret", clientSecret);
+				ACCOUNT_TYPE, "backendId", backendId, "backendKey.name",
+				keyName, "backendKey.secret", keySecret);
 
 		if (accountHits.getTotalHits() == 0)
-			throw new AuthenticationException("invalid client key [%s]",
-					keyRawValue);
+			throw new AuthenticationException("invalid backend key [%s]",
+					rawBackendKey);
 
 		if (accountHits.getTotalHits() > 1)
 			throw new RuntimeException(
 					String.format(
-							"more than one client key for backend [%s] and client [%s]",
-							backendId, clientId));
+							"more than one backend key for backend id [%s] and key name [%s]",
+							backendId, keyName));
 
-		Optional<String[]> tokens = decodeAuthorizationHeader(context);
+		Optional<String[]> tokens = decodeAuthorizationHeader(context
+				.header(AUTHORIZATION_HEADER));
 
 		if (tokens.isPresent()) {
 
@@ -362,7 +318,7 @@ public class AdminResource extends AbstractResource {
 
 			SearchHits userHits = ElasticHelper.search(backendId,
 					UserResource.USER_TYPE, "username", tokens.get()[0],
-					"password", tokens.get()[1]);
+					"hashedPassword", User.hashPassword(tokens.get()[1]));
 
 			if (userHits.getTotalHits() == 0)
 				throw new AuthenticationException(
@@ -373,23 +329,53 @@ public class AdminResource extends AbstractResource {
 						"more than one user with username [%s]",
 						tokens.get()[0]));
 
-			JsonObject userJson = JsonObject.readFrom(userHits.getAt(0)
-					.getSourceAsString());
-
-			return new Credentials(backendId, User.fromJsonObject(userJson));
+			return new Credentials(backendId, getObjectMapper().readValue(
+					userHits.getAt(0).getSourceRef().array(), User.class));
 
 		} else {
 
 			Account account = getObjectMapper().readValue(
 					accountHits.getAt(0).getSourceAsString(), Account.class);
 
-			return new Credentials(backendId, account.apiKey);
+			return new Credentials(backendId, account.backendKey);
 		}
 	}
 
-	private static Optional<String[]> decodeAuthorizationHeader(Context context) {
+	public static Account checkAdminCredentialsOnly(Context context)
+			throws JsonParseException, JsonMappingException, IOException {
 
-		String authzHeaderValue = context.header(AUTHORIZATION_HEADER);
+		Optional<String[]> tokens = decodeAuthorizationHeader(context
+				.header(AUTHORIZATION_HEADER));
+
+		if (tokens.isPresent()) {
+
+			// check admin users in spacedog index
+
+			SearchHits accountHits = ElasticHelper.search(SPACEDOG_INDEX,
+					ACCOUNT_TYPE, "username", tokens.get()[0],
+					"hashedPassword", User.hashPassword(tokens.get()[1]));
+
+			if (accountHits.getTotalHits() == 0)
+				throw new AuthenticationException(
+						"invalid administrator username or password");
+
+			if (accountHits.getTotalHits() > 1)
+				throw new RuntimeException(String.format(
+						"more than one admin user with username [%s]",
+						tokens.get()[0]));
+
+			return getObjectMapper().readValue(
+					accountHits.getAt(0).getSourceAsString(), Account.class);
+
+		} else
+			throw new AuthenticationException(
+					String.format(
+							"not authorized since no 'Authorization' or '%s' header found",
+							SPACEDOG_KEY_HEADER));
+	}
+
+	public static Optional<String[]> decodeAuthorizationHeader(
+			String authzHeaderValue) {
 
 		if (Strings.isNullOrEmpty(authzHeaderValue))
 			return Optional.empty();

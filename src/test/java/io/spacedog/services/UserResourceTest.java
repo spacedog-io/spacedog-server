@@ -20,7 +20,7 @@ public class UserResourceTest extends AbstractTest {
 	public void shouldSignUpSuccessfullyAndMore() throws UnirestException,
 			InterruptedException {
 
-		// signup ok
+		// vince sign up should succeed
 
 		RequestBodyEntity req1 = preparePost("/v1/user",
 				AdminResourceTest.testClientKey()).body(
@@ -32,69 +32,71 @@ public class UserResourceTest extends AbstractTest {
 
 		refreshIndex("test");
 
-		// get ok
+		// get vince user object should succeed
 
 		GetRequest req2 = prepareGet("/v1/user/vince",
-				AdminResourceTest.testClientKey()).basicAuth("vince", "hi vince");
+				AdminResourceTest.testClientKey()).basicAuth("vince",
+				"hi vince");
 
 		JsonObject res2 = get(req2, 200).json();
 
 		assertTrue(Json.equals(
 				Json.builder().add("username", "vince")
-						.add("password", "hi vince")
+						.add("hashedPassword", User.hashPassword("hi vince"))
 						.add("email", "vince@dog.com").stArr("groups")
 						.add("test").build(), res2.remove("meta")));
 
-		// wrong username
+		// get data with wrong username should fail
 
 		GetRequest req5 = prepareGet("/v1/user/vince",
 				AdminResourceTest.testClientKey()).basicAuth("XXX", "hi vince");
 
 		get(req5, 401);
 
-		// wrong password
+		// get data with wrong password should fail
 
 		GetRequest req3 = prepareGet("/v1/user/vince",
 				AdminResourceTest.testClientKey()).basicAuth("vince", "XXX");
 
 		get(req3, 401);
 
-		// wrong account key
+		// get data with wrong backend key should fail
 
 		GetRequest req4 = prepareGet("/v1/user/vince", "XXX").basicAuth(
 				"vince", "hi vince");
 
 		get(req4, 401);
 
-		// login ok
+		// login shoud succeed
 
-		GetRequest req6 = prepareGet("/v1/login", AdminResourceTest.testClientKey())
-				.basicAuth("vince", "hi vince");
+		GetRequest req6 = prepareGet("/v1/login",
+				AdminResourceTest.testClientKey()).basicAuth("vince",
+				"hi vince");
 
 		get(req6, 200);
 
-		// login nok
+		// login with wrong password should fail
 
-		GetRequest req7 = prepareGet("/v1/login", AdminResourceTest.testClientKey())
-				.basicAuth("vince", "XXX");
+		GetRequest req7 = prepareGet("/v1/login",
+				AdminResourceTest.testClientKey()).basicAuth("vince", "XXX");
 
 		get(req7, 401);
 
-		// email update ok
+		// email update should succeed
 
 		RequestBodyEntity req8 = preparePut("/v1/user/vince",
-				AdminResourceTest.testClientKey()).basicAuth("vince", "hi vince")
-				.body(Json.builder().add("email", "bignose@magic.com").build()
+				AdminResourceTest.testClientKey()).basicAuth("vince",
+				"hi vince").body(
+				Json.builder().add("email", "bignose@magic.com").build()
 						.toString());
 
 		put(req8, 200);
 
 		refreshIndex("test");
 
-		// get ok
-
 		GetRequest req9 = prepareGet("/v1/user/vince",
-				AdminResourceTest.testClientKey()).basicAuth("vince", "hi vince");
+				AdminResourceTest.testClientKey()).basicAuth("vince",
+				"hi vince");
 
 		JsonObject res9 = get(req9, 200).json();
 
@@ -102,7 +104,7 @@ public class UserResourceTest extends AbstractTest {
 
 		assertTrue(Json.equals(
 				Json.builder().add("username", "vince")
-						.add("password", "hi vince")
+						.add("hashedPassword", User.hashPassword("hi vince"))
 						.add("email", "bignose@magic.com").stArr("groups")
 						.add("test").build(), res9.remove("meta")));
 	}

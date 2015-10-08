@@ -8,9 +8,9 @@ public class Account {
 
 	public String backendId;
 	public String username;
-	public String password;
+	public String hashedPassword;
 	public String email;
-	public ApiKey apiKey;
+	public BackendKey backendKey;
 
 	public void checkAccountInputValidity() {
 		if (Strings.isNullOrEmpty(backendId))
@@ -36,7 +36,7 @@ public class Account {
 			throw new InvalidAccountException(
 					"account username is null or empty");
 
-		if (Strings.isNullOrEmpty(password))
+		if (Strings.isNullOrEmpty(hashedPassword))
 			throw new InvalidAccountException(
 					"account password is null or empty");
 	}
@@ -55,15 +55,15 @@ public class Account {
 	}
 
 	public String defaultClientKey() {
-		return new StringBuilder(backendId).append(':').append(apiKey.id)
-				.append(':').append(apiKey.secret).toString();
+		return new StringBuilder(backendId).append(':').append(backendKey.name)
+				.append(':').append(backendKey.secret).toString();
 	}
 
 	public User adminUser() {
 		User user = new User();
 		user.username = username;
 		user.email = email;
-		user.password = password;
+		user.hashedPassword = hashedPassword;
 		user.groups = Collections.emptyList();
 		return user;
 	}

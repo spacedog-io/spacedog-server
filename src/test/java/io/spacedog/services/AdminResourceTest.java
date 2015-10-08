@@ -19,12 +19,13 @@ public class AdminResourceTest extends AbstractTest {
 
 		// get just created test account should succeed
 
-		GetRequest req1 = prepareGet("/v1/admin/account/test");
+		GetRequest req1 = prepareGet("/v1/admin/account/test").basicAuth(
+				"test", "hi test");
 		JsonObject res1 = get(req1, 200).json();
 
 		assertEquals("test", Json.get(res1, "backendId").asString());
 		assertEquals("test", Json.get(res1, "username").asString());
-		assertEquals("hi test", Json.get(res1, "password").asString());
+		assertNotEquals("hi test", Json.get(res1, "hashedPassword").asString());
 		assertEquals("hello@spacedog.io", Json.get(res1, "email").asString());
 
 		// create new account with same username should fail
@@ -100,8 +101,8 @@ public class AdminResourceTest extends AbstractTest {
 
 		RequestBodyEntity req9a = preparePost("/v1/user", testClientKey).body(
 				Json.builder().add("username", "john")
-						.add("password", "hi john")
-						.add("email", "hello@spacedog.io").toString());
+						.add("password", "hi john").add("email", "john@dog.io")
+						.toString());
 		post(req9a, 201);
 
 		GetRequest req9b = prepareGet("/v1/data", testClientKey).basicAuth(
@@ -111,8 +112,13 @@ public class AdminResourceTest extends AbstractTest {
 
 	public static void resetTestAccount() throws UnirestException {
 
-		HttpRequestWithBody req1 = prepareDelete("/v1/admin/account/test");
-		delete(req1, 200, 404);
+		HttpRequestWithBody req1 = prepareDelete("/v1/admin/account/test")
+				.basicAuth("test", "hi test");
+
+		// 401 Unauthorized is valid since if this account does not exist
+		// delete returns 401 because admin username and password
+		// won't match any account
+		delete(req1, 200, 401);
 
 		refreshIndex(AdminResource.SPACEDOG_INDEX);
 		refreshIndex("test");

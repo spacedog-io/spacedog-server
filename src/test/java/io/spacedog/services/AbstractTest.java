@@ -1,5 +1,7 @@
 package io.spacedog.services;
 
+import java.util.List;
+
 import org.junit.Assert;
 
 import com.eclipsesource.json.JsonObject;
@@ -123,9 +125,7 @@ public abstract class AbstractTest extends Assert {
 				req.getHttpMethod(), req.getUrl(), resp.getStatus(),
 				resp.getStatusText()));
 
-		req.getHeaders().forEach(
-				(key, value) -> System.out.println(String.format("%s : %s",
-						key, value)));
+		req.getHeaders().forEach((key, value) -> printHeader(key, value));
 
 		if (requestBody != null)
 			System.out.println(String
@@ -142,6 +142,18 @@ public abstract class AbstractTest extends Assert {
 
 		assertTrue(Ints.contains(expectedStatus, resp.getStatus()));
 		return result;
+	}
+
+	private static void printHeader(String key, List<String> value) {
+		if (key.equals(AdminResource.AUTHORIZATION_HEADER)) {
+			AdminResource.decodeAuthorizationHeader(value.get(0)).ifPresent(
+					tokens -> System.out.println(String.format(
+							"%s %s => [Basic %s:%s]", key, value, tokens[0],
+							tokens[1])));
+			return;
+		}
+
+		System.out.println(String.format("%s : %s", key, value));
 	}
 
 	public static class Result {

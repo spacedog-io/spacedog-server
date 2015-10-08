@@ -6,16 +6,16 @@ public class Credentials {
 
 	private String accoundId;
 	private User user;
-	private ApiKey apiKey;
+	private BackendKey backendKey;
 
 	public Credentials(String accountId, User user) {
 		this.accoundId = accountId;
 		this.user = user;
 	}
 
-	public Credentials(String accountId, ApiKey apiKey) {
+	public Credentials(String accountId, BackendKey apiKey) {
 		this.accoundId = accountId;
-		this.apiKey = apiKey;
+		this.backendKey = apiKey;
 	}
 
 	public String getAccountId() {
@@ -26,13 +26,13 @@ public class Credentials {
 		return Optional.ofNullable(this.user);
 	}
 
-	public Optional<ApiKey> getApiKey() {
-		return Optional.ofNullable(this.apiKey);
+	public Optional<BackendKey> getApiKey() {
+		return Optional.ofNullable(this.backendKey);
 	}
 
 	public String getId() {
-		if (apiKey != null)
-			return apiKey.id;
+		if (backendKey != null)
+			return backendKey.name;
 		if (user != null)
 			return user.username;
 		throw new RuntimeException(
@@ -40,10 +40,10 @@ public class Credentials {
 	}
 
 	public String getSecret() {
-		if (apiKey != null)
-			return apiKey.secret;
+		if (backendKey != null)
+			return backendKey.secret;
 		if (user != null)
-			return user.password;
+			return user.hashedPassword;
 		throw new RuntimeException(
 				"invalid credentials: apikey and user are null");
 	}

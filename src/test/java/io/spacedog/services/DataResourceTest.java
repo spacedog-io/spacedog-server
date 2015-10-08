@@ -72,9 +72,9 @@ public class DataResourceTest extends AbstractTest {
 		JsonObject res1 = get(req1, 200).json();
 
 		JsonObject meta1 = res1.get("meta").asObject();
-		assertEquals(AdminResource.DEFAULT_CLIENT_KEY_ID, meta1.get("createdBy")
+		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, meta1.get("createdBy")
 				.asString());
-		assertEquals(AdminResource.DEFAULT_CLIENT_KEY_ID, meta1.get("updatedBy")
+		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, meta1.get("updatedBy")
 				.asString());
 		DateTime createdAt = DateTime.parse(meta1.get("createdAt").asString());
 		assertTrue(createdAt.isAfter(beforeCreate.getMillis()));
@@ -118,7 +118,7 @@ public class DataResourceTest extends AbstractTest {
 		JsonObject res3 = get(req3, 200).json();
 
 		JsonObject meta3 = res3.get("meta").asObject();
-		assertEquals(AdminResource.DEFAULT_CLIENT_KEY_ID, meta3.get("createdBy")
+		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, meta3.get("createdBy")
 				.asString());
 		assertEquals("vince", meta3.get("updatedBy").asString());
 		DateTime createdAtAfterUpdate = DateTime.parse(meta3.get("createdAt")

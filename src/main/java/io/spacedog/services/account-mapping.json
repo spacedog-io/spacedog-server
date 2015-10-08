@@ -7,12 +7,12 @@
         "properties" : {
             "backendId" : {"type" : "string", "index" : "not_analyzed"},
             "username" : {"type" : "string", "index" : "not_analyzed"},
-            "password" : {"type" : "string", "index" : "not_analyzed"},
+            "hashedPassword" : {"type" : "string", "index" : "not_analyzed"},
             "email" : {"type" : "string", "index" : "not_analyzed"},
-            "apiKey" : {
+            "backendKey" : {
                 "type" : "object",
                 "properties" : {
-                    "id" : {"type" : "string", "index" : "not_analyzed"},
+                    "name" : {"type" : "string", "index" : "not_analyzed"},
                     "secret" : {"type" : "string", "index" : "not_analyzed"},
                     "generatedAt" : {"type" : "date", "format" : "date_time"}
                 }
