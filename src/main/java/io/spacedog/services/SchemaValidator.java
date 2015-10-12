@@ -34,7 +34,7 @@ public class SchemaValidator {
 			if (opt.isPresent()) {
 				checkAcl(type, opt.get().asObject());
 			}
-			checkIfInvalidField(rootObject, true, "_acl", "_id");
+			checkIfInvalidField(rootObject, true, "_acl", "_id", "_type");
 			checkObjectProperties(type, rootObject);
 		} else
 			throw InvalidSchemaException.invalidObjectType(type, rootType);
