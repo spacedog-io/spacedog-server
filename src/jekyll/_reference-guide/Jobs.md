@@ -3,6 +3,8 @@ layout: doc
 title: Jobs
 ---
 
+#### Scheduled jobs
+
 Use the batch API to define, schedule and run backend jobs. Only admin users can use the API.
 
 A job JSON object is of type:
@@ -26,12 +28,12 @@ Schedule patterns can be:
 - ...
 
 
-####  /v1/jobs
+#####  /v1/jobs
 
 `GET` returns all jobs objects.
 
 
-#### /v1/job/{id}
+##### /v1/job/{id}
 
 `POST/PUT` create/update the specified job.
 
@@ -40,12 +42,12 @@ Schedule patterns can be:
 `DELETE` deletes the specified job.
 
 
-#### /v1/job/run
+##### /v1/job/run
 
 `GET` returns info on the last 20 job runs.
 
 
-#### /v1/job/{id}/run 
+##### /v1/job/{id}/run 
 
 `POST` run the specified job immediately.
 

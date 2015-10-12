@@ -3,7 +3,7 @@ layout: doc
 title: Queues
 ---
 
-# Queues
+#### Queues
 
 Use a queue when you want to process a task later. This is very usefull to speed up some user requests since you don’t need to wait for all the tasks to complete before returning a result to the user. Some of the tasks might be processed later in queues.
 
@@ -33,7 +33,7 @@ active | boolean | If false, the queue does not process its messages. But messag
 archive | boolean | Optional. Default is false. If true, store all processed messages.
 errorPolicy | string | Optional. Valid values are: delete, manual, automatic. Default is manual.
 
-### /v1/queue
+##### /v1/queue
 
 `GET` returns all queues.
 
@@ -42,7 +42,7 @@ errorPolicy | string | Optional. Valid values are: delete, manual, automatic. De
 - request body: a queue JSON object.
 - returns a created status object.
 
-### /v1/queue/{qid}
+##### /v1/queue/{qid}
 
 `GET` returns the specified queue.
 
@@ -69,7 +69,7 @@ A queue object:
 - `deletePolicy` = `immediately` : the queue is deleted immediately. No message can be added. Remaining messages are discarded and the queue is deleted.
 - returns a deleted status object.
 
-### /v1/queue/{qid}/process
+##### /v1/queue/{qid}/process
 
 `POST` adds an object at the end of the specified queue.
  
@@ -83,7 +83,7 @@ A queue object:
 - `size` = 1 to 1000 — The number of objets to return. Default is 10. Maximum is 1000.
 - returns an array of JSON objects.
 
-### /v1/queue/{qid}/processed
+##### /v1/queue/{qid}/processed
 
 `GET` returns the list of already processed objects from the youngest to the oldest. Processed messages are stored if the queue `archive` field is est to `true`.
  
@@ -103,8 +103,7 @@ A queue object:
 }
 ```
 
-
-### /v1/queue/{qid}/message/{mid}
+##### /v1/queue/{qid}/message/{mid}
 
 `GET` returns the specified message if it has not been processed or if it has been archived.
 

@@ -3,13 +3,13 @@ layout: doc
 title: Configuration
 ---
 
-# Config
+#### Application configuration
 
 Use the config API endpoints to configure your app. A configuration is a plain JSON object containing the first properties an app needs to initialize. It can contant for example the base URL of the backend API, the name of a data store, ... New version of an application might fetch a different
 configuration set. There is no schema for configurations.
 
 
-### /v1/config
+##### /v1/config
 
 `GET` returns all configurations.
 
@@ -20,7 +20,7 @@ configuration set. There is no schema for configurations.
 - `result` –– A created status object or an array of it.
 
 
-### /v1/config/{id1},{id2},...
+##### /v1/config/{id1},{id2},...
 
 `GET` returns the specified configurations.
 
@@ -34,12 +34,12 @@ configuration set. There is no schema for configurations.
 - `result` –– A created status object or an array of it.
 
 
-### /v1/config/stash
+##### /v1/config/stash
 
 `GET` returns the stashed configurations.
 
 `DELETE` deletes the stashed configurations.
 
 
-### Questions:
+##### Questions:
 1. do we merge a list of configurations to a single merged configuration containing all the fields to ease the developer work?

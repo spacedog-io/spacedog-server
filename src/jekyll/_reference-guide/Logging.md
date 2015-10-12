@@ -3,7 +3,7 @@ layout: doc
 title: Logging
 ---
 
-# Logging
+#### Application and backend logging
 
 Use the log API endpoints to monitor your backend. We log:
 
@@ -96,7 +96,7 @@ In case of error, the log contains:
 ```
 
 
-### /v1/log
+##### /v1/log
 
 `GET` returns the last 100 logs.
 

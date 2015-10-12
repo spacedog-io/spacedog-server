@@ -3,12 +3,12 @@ layout: doc
 title: Files
 ---
 
-# Files
+#### Files
 
 The file API allows developers and apps to upload files and tgz to the cloud.
 Uploaded files will be available to download to authorized users.
 
-### /v1/file/settings
+##### /v1/file/settings
 
 `GET` returns the default file settings.
 
@@ -40,7 +40,7 @@ Uploaded files will be available to download to authorized users.
 `PUT` updates the default file settings.
 
 
-### /v1/file
+##### /v1/file
 
 `GET` lists all uploaded files.
 
@@ -79,7 +79,7 @@ It returns this type of JSON object:
 If the file uploaded is an archive, the returned location is the base location of the archice file tree. To access a specific file of the file tree, append the file relative path to the base location.
 
 
-### /v1/file/{id}
+##### /v1/file/{id}
 
 `PUT` updates the specified file or archive.
 
@@ -92,7 +92,7 @@ If the file uploaded is an archive, the returned location is the base location o
 `DELETE` deletes the specified file or archive.
 
 
-### /v1/file/{id}/settings
+##### /v1/file/{id}/settings
 
 `GET` returns the specified file or archive specific settings.
 
@@ -113,11 +113,11 @@ A file specific settings is equivalent to the default file settings. For archive
 ```
 
 
-# URL
+#### URL
 
 You can use your own domain names to serve uploaded files and file trees. The domain names must first be attached to your app. Read this tutorial to learn how to proceed: http://… Use the following API endpoints to attach your files or file trees to a specific domain and URI.
 
-### /v1/url/{hostname}/{port}/{uri}
+##### /v1/url/{hostname}/{port}/{uri}
 
 `POST/PUT` attach the specified URL to a file or file tree.
 

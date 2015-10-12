@@ -3,19 +3,19 @@ layout: doc
 title: Contents
 ---
 
-# Contents
+#### Application contents
 
 Contents are collection of JSON documents. Each collection is defined by a type and schema.
 
-### /v1/content
+##### /v1/content
 
 `GET` returns the list of all content types and schemas.
 
-### /v1/content/{type}
+##### /v1/content/{type}
 
 `GET` returns content objects of the specified type.
 
-### /v1/content/{type}/{id},...
+##### /v1/content/{type}/{id},...
 
 `GET` returns the specified contents
 

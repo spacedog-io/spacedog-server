@@ -3,11 +3,11 @@ layout: doc
 title: Batch
 ---
 
-# Batch Requests
+#### Batch requests
 
 Use a batch request when you want to send to your backend a batch of requests. It speeds up operations since there is only one round trip to the server.
 
-### /v1/batch
+##### /v1/batch
 
 `POST` process a batch of requests.
 
@@ -71,5 +71,3 @@ It would return:
      }
 ]
 ```
-
-

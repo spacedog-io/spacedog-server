@@ -3,6 +3,8 @@ layout: doc
 title: Schema
 ---
 
+#### Data object schemas
+
 A schema object defines a type of data objects. A schema must be first defined before objects can be stored.
 
 ```json
@@ -89,7 +91,7 @@ ref | valid objet string id | A reference to another object of the same data sto
 file | file id as string | Reference an uploaded file.
 amount | string EUR-67.765 | An amount. The three first characters encodes the currency with ISO norm blablabla. The decimal separator must be a dot.
 
-#### /v1/schema
+##### /v1/schema
 
 `GET` returns all schemas as a set.
 
@@ -97,8 +99,7 @@ amount | string EUR-67.765 | An amount. The three first characters encodes the c
 
 The requets body is An array of schemas. It returns an array of status objects.
 
-
-#### /v1/schema/{type},...
+##### /v1/schema/{type},...
 
 `GET` returns the specified schemas.
 

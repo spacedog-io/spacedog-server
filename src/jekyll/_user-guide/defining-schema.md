@@ -1,14 +1,14 @@
 ---
 layout: doc
-title: Data object schema
+title: Defining schema
 rank: 3
 ---
 
-# Data object schema
+#### Schema field types
 
 Data object fields are defined and typed in schemas. Find below all the permitted field types.
 
-##### `string`
+`string`
 
 ```json
 {
@@ -23,7 +23,7 @@ Data object fields are defined and typed in schemas. Find below all the permitte
 
 `string` fields are suitable for all string data that do not contain real text that should be analyzed for latter full text search. Names, identifiers, codes, zip codes are good examples. `string` fields are better search with equal type queries.
 
-##### `text`
+`text`
 
 ```json
 {
@@ -40,7 +40,7 @@ Data object fields are defined and typed in schemas. Find below all the permitte
 
 `_language` contains the language setting for better text analysis. Defaults to `english`. Here is a list of available [languages](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-lang-analyzer.html).
 
-##### `boolean`
+`boolean`
 
 ```json
 {
@@ -52,7 +52,7 @@ Data object fields are defined and typed in schemas. Find below all the permitte
 }
 ```
 
-##### `integer`, `long`, `float` and `double`
+`integer`, `long`, `float` and `double`
 
 ```json
 {
@@ -66,7 +66,7 @@ Data object fields are defined and typed in schemas. Find below all the permitte
 }
 ```
 
-Number fields are validated before objects are saved if these rules are used:
+[Not yet implemented] Number fields are validated before objects are saved if these rules are used:
 
 - `_gt` greater than.
 - `_gte` greater than or equal. 
@@ -83,7 +83,7 @@ Car example:
 }
 ```
 
-##### `object`
+`object`
 
 ```json
 {
@@ -109,7 +109,7 @@ Car example:
 }
 ```
 
-##### `date`, `time` and `timestamp`
+`date`, `time` and `timestamp`
 
 ```json
 {
@@ -156,7 +156,7 @@ Car Example:
 }
 ```
 
-##### geopoint
+`geopoint`
 
 ```json
 {
@@ -185,7 +185,7 @@ Example of car object with a location field:
 
 A `geopoint` field represent a precise (1 meter) point on planet earth. They are automatically geo hashed and indexed for geographical search.
 
-##### `enum`
+`enum`
 
 ```json
 {
@@ -208,7 +208,7 @@ Car example:
 }
 ```
 
-##### `stash`
+`stash`
 
 ```json
 {
@@ -220,7 +220,7 @@ Car example:
 }
 ```
 
-Use a `stash` field to store a JSON that does not need any validation nor indexing. Fields and values inside a stash`stash` field do not need to be defined in the schema.
+Use a `stash` field to store a JSON that does not need any validation nor indexing. Fields and values inside a `stash` field do not need to be defined in the schema.
 
 You might need this when:
 
@@ -238,7 +238,7 @@ Car example:
 }
 ```
 
-##### `ref`
+`ref` [Not yet implemented]
 
 ```json
 {
@@ -260,7 +260,6 @@ Car example:
 {
   "brand" : "Jeep",
   "owner" : "ptidenis"
-  }
 }
 ```
 
@@ -280,7 +279,7 @@ To fetch a car object but also its owner referenced user object, send a `GET /v1
 
 The `fetch` param accepts a comma separated list of field names and the `all` keyword. It only fetches referenced fields from the root object of the graph.
 
-##### `file`
+`file` [Not yet implemented]
 
 ```json
 {
@@ -294,7 +293,7 @@ The `fetch` param accepts a comma separated list of field names and the `all` ke
 }
 ```
 
-Use a `file` field to reference an uploaded file. Reed the [file API](files) documentation. Use `_contentTypes` if you need to restrict this field to certain types of files.
+Use a `file` field to reference an uploaded file. Reed the [deploy to the cloud](deploy-to-the-cloud.html) page. Use `_contentTypes` if you need to restrict this field to certain types of files.
 
 Car example:
 
@@ -302,11 +301,10 @@ Car example:
 {
   "brand" : "Jeep",
   "userManual" : "jhjhbjgvc9786Rjhchvghvk87954jhcJHVv"
-  }
 }
 ```
 
-##### `amount`
+`amount` [Not yet implemented]
 
 ```json
 {
@@ -341,7 +339,7 @@ Car Example:
 ```
 
 
-# Object access control
+#### Object access control [Not yet implemented]
 
 Permissions can be set in a per type basis. The `_acl` schema field defines all the permissions of data objects defined by this schema. Car schema example:
 

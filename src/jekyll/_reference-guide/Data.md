@@ -3,14 +3,16 @@ layout: doc
 title: Data
 ---
 
-#### /v1/data
+#### Application data
+
+##### /v1/data
 
 `GET` searches for data objects of all types in full text mode.
 
 - `text` The text to full text search.
 - `fetch` One or more field names of type `ref` to automatically fetch. Use the keyword `all` to automatically fetch all referenced objects. This behavior is only available at the first level of the object graph.
 
-### /v1/data/{type}
+##### /v1/data/{type}
 
 `GET` searches for data objects of the specified type.
 
@@ -22,7 +24,7 @@ title: Data
 `DELETE` deletes this type and all data objects of this type.
 
 
-#### /v1/data/{type}/{id}
+##### /v1/data/{type}/{id}
 
 `GET` returns the specified data object.
 
@@ -33,8 +35,8 @@ title: Data
 `DELETE` deletes the specified data object.
 
 
-#### /v1/data/search
-#### /v1/data/{type}/search
+##### /v1/data/search
+##### /v1/data/{type}/search
 
 `POST` searches for data objects of the specified type if provided.
 
