@@ -35,17 +35,18 @@ public class SchemaResource extends AbstractResource {
 	@Get("/")
 	public Payload getAll(Context context) {
 		try {
-			Credentials credentials = AdminResource
-					.checkCredentials(context);
-			String elasticIndex = credentials.getAccountId();
+			Credentials credentials = AdminResource.checkCredentials(context);
 			GetMappingsResponse resp = Start.getElasticClient().admin()
-					.indices().prepareGetMappings(elasticIndex).get();
+					.indices().prepareGetMappings(credentials.getBackendId())
+					.get();
 
 			JsonMerger jsonMerger = Json.merger();
 
 			Optional.ofNullable(resp.getMappings())
-					.map(indexMap -> indexMap.get(elasticIndex))
-					.orElseThrow(() -> new NotFoundException(elasticIndex))
+					.map(indexMap -> indexMap.get(credentials.getBackendId()))
+					.orElseThrow(
+							() -> new NotFoundException(credentials
+									.getBackendId()))
 					.forEach(
 							typeAndMapping -> {
 								try {
@@ -72,10 +73,9 @@ public class SchemaResource extends AbstractResource {
 	@Get("/:type/")
 	public Payload get(String type, Context context) {
 		try {
-			Credentials credentials = AdminResource
-					.checkCredentials(context);
+			Credentials credentials = AdminResource.checkCredentials(context);
 			return new Payload(JSON_CONTENT, getSchema(
-					credentials.getAccountId(), type).toString(), HttpStatus.OK);
+					credentials.getBackendId(), type).toString(), HttpStatus.OK);
 		} catch (Throwable throwable) {
 			return error(throwable);
 		}
@@ -100,11 +100,10 @@ public class SchemaResource extends AbstractResource {
 	@Put("/:type/")
 	@Post("/:type")
 	@Post("/:type/")
-	public Payload upsertSchema(String type, String newSchemaAsString,
+	public Payload updateSchema(String type, String newSchemaAsString,
 			Context context) {
 		try {
-			Credentials credentials = AdminResource
-					.checkCredentials(context);
+			Account account = AdminResource.checkAdminCredentialsOnly(context);
 
 			JsonObject schema = SchemaValidator.validate(type,
 					JsonObject.readFrom(newSchemaAsString));
@@ -113,8 +112,7 @@ public class SchemaResource extends AbstractResource {
 					.toString();
 
 			PutMappingRequest putMappingRequest = new PutMappingRequest(
-					credentials.getAccountId()).type(type).source(
-					elasticMapping);
+					account.backendId).type(type).source(elasticMapping);
 
 			Start.getElasticClient().admin().indices()
 					.putMapping(putMappingRequest).get();
@@ -130,11 +128,11 @@ public class SchemaResource extends AbstractResource {
 	@Delete("/:type/")
 	public Payload deleteSchema(String type, Context context) {
 		try {
-			Credentials credentials = AdminResource
-					.checkCredentials(context);
+			Account account = AdminResource.checkAdminCredentialsOnly(context);
+
 			Start.getElasticClient().admin().indices()
-					.prepareDeleteMapping(credentials.getAccountId())
-					.setType(type).get();
+					.prepareDeleteMapping(account.backendId).setType(type)
+					.get();
 
 		} catch (TypeMissingException exception) {
 			// ignored

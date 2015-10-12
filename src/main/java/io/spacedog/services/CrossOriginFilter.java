@@ -25,7 +25,7 @@ public class CrossOriginFilter implements Filter {
 		}
 
 		return payload.withAllowMethods(ALLOW_METHODS) //
-				.withAllowHeaders(AdminResource.SPACEDOG_KEY_HEADER,
+				.withAllowHeaders(AdminResource.BACKEND_KEY_HEADER,
 						Headers.AUTHORIZATION, Headers.CONTENT_TYPE);
 	}
 }

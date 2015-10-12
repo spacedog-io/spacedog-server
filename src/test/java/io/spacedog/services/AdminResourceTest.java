@@ -59,10 +59,10 @@ public class AdminResourceTest extends AbstractTest {
 		GetRequest req3 = prepareGet("/v1/admin/login").basicAuth("test",
 				"hi test");
 		String loginKey = get(req3, 200).response().getHeaders()
-				.get(AdminResource.SPACEDOG_KEY_HEADER).get(0);
+				.get(AdminResource.BACKEND_KEY_HEADER).get(0);
 		assertEquals(testClientKey, loginKey);
 
-		// no header login should fail
+		// no header no user login should fail
 
 		GetRequest req4 = prepareGet("/v1/admin/login");
 		get(req4, 401);
@@ -79,25 +79,25 @@ public class AdminResourceTest extends AbstractTest {
 				"hi XXX");
 		get(req6, 401);
 
-		// api access with client key should succeed
+		// data access with client key should succeed
 
 		GetRequest req7 = prepareGet("/v1/data", testClientKey);
 		JsonObject res7 = get(req7, 200).json();
 		assertEquals(0, Json.get(res7, "total").asInt());
 
-		// api access with admin user should succeed
+		// data access with admin user should succeed
 
 		GetRequest req7b = prepareGet("/v1/data").basicAuth("test", "hi test");
 		JsonObject res7b = get(req7b, 200).json();
 		assertEquals(0, Json.get(res7b, "total").asInt());
 
-		// api access with admin user but client key should fail
+		// data access with admin user but client key should fail
 
 		GetRequest req8 = prepareGet("/v1/data", testClientKey).basicAuth(
 				"test", "hi test");
 		get(req8, 401).json();
 
-		// api access with regular user but no client key should fail
+		// let's create a common user in 'test' backend
 
 		RequestBodyEntity req9a = preparePost("/v1/user", testClientKey).body(
 				Json.builder().add("username", "john")
@@ -105,9 +105,19 @@ public class AdminResourceTest extends AbstractTest {
 						.toString());
 		post(req9a, 201);
 
-		GetRequest req9b = prepareGet("/v1/data", testClientKey).basicAuth(
-				"john", "hi john");
-		get(req9b, 401).json();
+		refreshIndex("test");
+
+		// data access with common user but no client key should fail
+
+		GetRequest req9b = prepareGet("/v1/data").basicAuth("john", "hi john");
+		get(req9b, 401);
+
+		// admin access with regular user and backend key should fail
+
+		GetRequest req10 = prepareGet("/v1/admin/account/test", testClientKey)
+				.basicAuth("john", "hi john");
+		get(req10, 401);
+
 	}
 
 	public static void resetTestAccount() throws UnirestException {
@@ -129,7 +139,7 @@ public class AdminResourceTest extends AbstractTest {
 						.add("email", "hello@spacedog.io").toString());
 
 		testClientKey = post(req2, 201).response().getHeaders()
-				.get(AdminResource.SPACEDOG_KEY_HEADER).get(0);
+				.get(AdminResource.BACKEND_KEY_HEADER).get(0);
 
 		assertFalse(Strings.isNullOrEmpty(testClientKey));
 

@@ -82,15 +82,15 @@ public class UserResource extends AbstractResource {
 			String password = input.getString("password", null);
 			User.checkPasswordValidity(password);
 			user.hashedPassword = User.hashPassword(password);
-			user.groups = Collections.singletonList(credentials.getAccountId());
+			user.groups = Collections.singletonList(credentials.getBackendId());
 			user.checkUserInputValidity();
 
 			String userId = DataResource.get().createInternal(
-					credentials.getAccountId(), USER_TYPE,
+					credentials.getBackendId(), USER_TYPE,
 					// TODO find something better to avoid to many object format
 					// transformations
 					JsonObject.readFrom(getObjectMapper().writeValueAsString(
-							user)), credentials.getId());
+							user)), credentials.getName());
 
 			return created("/v1", USER_TYPE, userId);
 

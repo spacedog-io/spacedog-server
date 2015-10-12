@@ -12,17 +12,14 @@ import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
-import net.codestory.http.annotations.Put;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.common.base.Strings;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHits;
 
 import com.eclipsesource.json.JsonObject;
@@ -52,7 +49,7 @@ public class AdminResource extends AbstractResource {
 	private static final Set<String> INTERNAL_INDICES = Sets
 			.newHashSet(SPACEDOG_INDEX);
 
-	public static final String SPACEDOG_KEY_HEADER = "x-spacedog-key";
+	public static final String BACKEND_KEY_HEADER = "x-spacedog-backend-key";
 	public static final String AUTHORIZATION_HEADER = "Authorization";
 	public static final String BASIC_AUTHENTICATION_SCHEME = "Basic";
 
@@ -74,19 +71,21 @@ public class AdminResource extends AbstractResource {
 	}
 
 	/**
-	 * Internal web service only accessible to administrators.
+	 * Internal service only accessible to spacedog administrators.
 	 */
 	@Get("/account")
 	@Get("/account/")
 	public Payload getAll(Context context) {
 		try {
-			checkAdminCredentialsOnly(context);
+			return Payload.unauthorized("spacedog.io");
 
-			SearchResponse response = Start.getElasticClient()
-					.prepareSearch(SPACEDOG_INDEX).setTypes(ACCOUNT_TYPE)
-					.setQuery(QueryBuilders.matchAllQuery()).get();
-
-			return extractResults(response);
+			// checkAdminCredentialsOnly(context);
+			//
+			// SearchResponse response = Start.getElasticClient()
+			// .prepareSearch(SPACEDOG_INDEX).setTypes(ACCOUNT_TYPE)
+			// .setQuery(QueryBuilders.matchAllQuery()).get();
+			//
+			// return extractResults(response);
 		} catch (Throwable throwable) {
 			return error(throwable);
 		}
@@ -148,7 +147,7 @@ public class AdminResource extends AbstractResource {
 							UserResource.getDefaultUserMapping()).get();
 
 			return created("/v1/admin", ACCOUNT_TYPE, account.backendId)
-					.withHeader(AdminResource.SPACEDOG_KEY_HEADER,
+					.withHeader(AdminResource.BACKEND_KEY_HEADER,
 							account.defaultClientKey());
 
 		} catch (Throwable throwable) {
@@ -156,9 +155,6 @@ public class AdminResource extends AbstractResource {
 		}
 	}
 
-	/**
-	 * Internal web service only accessible to administrators.
-	 */
 	@Get("/account/:id")
 	@Get("/account/:id/")
 	public Payload get(String backendId, Context context) {
@@ -179,25 +175,6 @@ public class AdminResource extends AbstractResource {
 		}
 	}
 
-	/**
-	 * Internal web service only accessible to administrators.
-	 */
-	@Put("/account/:id")
-	@Put("/account/:id/")
-	public Payload put(String id, String body, Context context) {
-		try {
-			checkAdminCredentialsOnly(context);
-
-			return new Payload(HttpStatus.NOT_IMPLEMENTED);
-
-		} catch (Throwable throwable) {
-			return error(throwable);
-		}
-	}
-
-	/**
-	 * Internal web service only accessible to administrators.
-	 */
 	@Delete("/account/:id")
 	@Delete("/account/:id/")
 	public Payload delete(String backendId, Context context) {
@@ -227,16 +204,13 @@ public class AdminResource extends AbstractResource {
 		}
 	}
 
-	/**
-	 * Internal web service only accessible to administrators.
-	 */
 	@Get("/login")
 	@Get("/login/")
 	public Payload login(Context context) {
 		try {
 			Account account = checkAdminCredentialsOnly(context);
 
-			return Payload.ok().withHeader(AdminResource.SPACEDOG_KEY_HEADER,
+			return Payload.ok().withHeader(AdminResource.BACKEND_KEY_HEADER,
 					account.defaultClientKey());
 		} catch (Throwable throwable) {
 			return error(throwable);
@@ -246,7 +220,7 @@ public class AdminResource extends AbstractResource {
 	public static Credentials checkCredentials(Context context)
 			throws JsonParseException, JsonMappingException, IOException {
 
-		String rawBackendKey = context.header(SPACEDOG_KEY_HEADER);
+		String rawBackendKey = context.header(BACKEND_KEY_HEADER);
 
 		if (Strings.isNullOrEmpty(rawBackendKey)) {
 			Account account = checkAdminCredentialsOnly(context);
@@ -260,7 +234,7 @@ public class AdminResource extends AbstractResource {
 	protected static Credentials checkUserCredentialsOnly(Context context)
 			throws IOException, JsonParseException, JsonMappingException {
 
-		String rawBackendKey = context.header(SPACEDOG_KEY_HEADER);
+		String rawBackendKey = context.header(BACKEND_KEY_HEADER);
 
 		String[] key = rawBackendKey.split(":", 3);
 
@@ -368,10 +342,8 @@ public class AdminResource extends AbstractResource {
 					accountHits.getAt(0).getSourceAsString(), Account.class);
 
 		} else
-			throw new AuthenticationException(
-					String.format(
-							"not authorized since no 'Authorization' or '%s' header found",
-							SPACEDOG_KEY_HEADER));
+			throw new AuthenticationException(String.format(
+					"no 'Authorization' header found", BACKEND_KEY_HEADER));
 	}
 
 	public static Optional<String[]> decodeAuthorizationHeader(

@@ -40,9 +40,8 @@ public class DataResource extends AbstractResource {
 	@Get("/")
 	public Payload search(Context context) {
 		try {
-			Credentials credentials = AdminResource
-					.checkCredentials(context);
-			return doSearch(credentials.getAccountId(), null, null, context);
+			Credentials credentials = AdminResource.checkCredentials(context);
+			return doSearch(credentials.getBackendId(), null, null, context);
 		} catch (Throwable throwable) {
 			return error(throwable);
 		}
@@ -52,9 +51,8 @@ public class DataResource extends AbstractResource {
 	@Get("/:type/")
 	public Payload search(String type, Context context) {
 		try {
-			Credentials credentials = AdminResource
-					.checkCredentials(context);
-			return doSearch(credentials.getAccountId(), type, null, context);
+			Credentials credentials = AdminResource.checkCredentials(context);
+			return doSearch(credentials.getBackendId(), type, null, context);
 		} catch (Throwable throwable) {
 			return error(throwable);
 		}
@@ -64,15 +62,14 @@ public class DataResource extends AbstractResource {
 	@Post("/:type/")
 	public Payload create(String type, String jsonBody, Context context) {
 		try {
-			Credentials credentials = AdminResource
-					.checkCredentials(context);
+			Credentials credentials = AdminResource.checkCredentials(context);
 
 			// check if type is well defined
 			// object should be validated before saved
-			SchemaResource.getSchema(credentials.getAccountId(), type);
+			SchemaResource.getSchema(credentials.getBackendId(), type);
 
-			String id = createInternal(credentials.getAccountId(), type,
-					JsonObject.readFrom(jsonBody), credentials.getId());
+			String id = createInternal(credentials.getBackendId(), type,
+					JsonObject.readFrom(jsonBody), credentials.getName());
 
 			return created("/v1/data", type, id);
 
@@ -109,16 +106,15 @@ public class DataResource extends AbstractResource {
 	@Get("/:type/:id")
 	public Payload get(String type, String objectId, Context context) {
 		try {
-			Credentials credentials = AdminResource
-					.checkCredentials(context);
+			Credentials credentials = AdminResource.checkCredentials(context);
 
 			// check if type is well defined
 			// throws a NotFoundException if not
 			// TODO useful for security?
-			SchemaResource.getSchema(credentials.getAccountId(), type);
+			SchemaResource.getSchema(credentials.getBackendId(), type);
 
 			GetResponse response = Start.getElasticClient()
-					.prepareGet(credentials.getAccountId(), type, objectId)
+					.prepareGet(credentials.getBackendId(), type, objectId)
 					.get();
 
 			if (!response.isExists())
@@ -138,13 +134,23 @@ public class DataResource extends AbstractResource {
 		}
 	}
 
+	@Post("/search")
+	@Post("/search/")
+	public Payload searchAllTypes(String jsonBody, Context context) {
+		try {
+			Credentials credentials = AdminResource.checkCredentials(context);
+			return doSearch(credentials.getBackendId(), null, jsonBody, context);
+		} catch (Throwable throwable) {
+			return error(throwable);
+		}
+	}
+
 	@Post("/:type/search")
 	@Post("/:type/search/")
-	public Payload search(String type, String jsonBody, Context context) {
+	public Payload searchThisType(String type, String jsonBody, Context context) {
 		try {
-			Credentials credentials = AdminResource
-					.checkCredentials(context);
-			return doSearch(credentials.getAccountId(), type, jsonBody, context);
+			Credentials credentials = AdminResource.checkCredentials(context);
+			return doSearch(credentials.getBackendId(), type, jsonBody, context);
 		} catch (Throwable throwable) {
 			return error(throwable);
 		}
@@ -154,11 +160,10 @@ public class DataResource extends AbstractResource {
 	@Post("/:type/filter/")
 	public Payload filter(String type, String jsonBody, Context context) {
 		try {
-			Credentials credentials = AdminResource
-					.checkCredentials(context);
+			Credentials credentials = AdminResource.checkCredentials(context);
 
 			FilteredSearchBuilder builder = ElasticHelper
-					.searchBuilder(credentials.getAccountId(), type)
+					.searchBuilder(credentials.getBackendId(), type)
 					.applyContext(context)
 					.applyFilters(JsonObject.readFrom(jsonBody));
 
@@ -173,23 +178,22 @@ public class DataResource extends AbstractResource {
 	public Payload update(String type, String objectId, String jsonBody,
 			Context context) {
 		try {
-			Credentials credentials = AdminResource
-					.checkCredentials(context);
+			Credentials credentials = AdminResource.checkCredentials(context);
 
 			// check if type is well defined
 			// object should be validated before saved
-			SchemaResource.getSchema(credentials.getAccountId(), type);
+			SchemaResource.getSchema(credentials.getBackendId(), type);
 
 			JsonObject object = JsonObject.readFrom(jsonBody)
 					// removed to forbid developers the update of meta fields
 					.remove("meta")
 					.add("meta",
 							new JsonObject().add("updatedBy",
-									credentials.getId()).add("updatedAt",
+									credentials.getName()).add("updatedAt",
 									DateTime.now().toString()));
 
 			Start.getElasticClient()
-					.prepareUpdate(credentials.getAccountId(), type, objectId)
+					.prepareUpdate(credentials.getBackendId(), type, objectId)
 					.setDoc(object.toString()).get();
 
 			return success();
@@ -201,16 +205,15 @@ public class DataResource extends AbstractResource {
 	@Delete("/:type/:id")
 	public Payload delete(String type, String objectId, Context context) {
 		try {
-			Credentials credentials = AdminResource
-					.checkCredentials(context);
+			Credentials credentials = AdminResource.checkCredentials(context);
 
 			// check if type is well defined
 			// throws a NotFoundException if not
 			// TODO useful for security?
-			SchemaResource.getSchema(credentials.getAccountId(), type);
+			SchemaResource.getSchema(credentials.getBackendId(), type);
 
 			DeleteResponse response = Start.getElasticClient()
-					.prepareDelete(credentials.getAccountId(), type, objectId)
+					.prepareDelete(credentials.getBackendId(), type, objectId)
 					.get();
 			return response.isFound() ? success()
 					: error(HttpStatus.NOT_FOUND,

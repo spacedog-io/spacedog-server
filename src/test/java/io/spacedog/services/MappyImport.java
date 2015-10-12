@@ -24,7 +24,7 @@ public class MappyImport extends AbstractTest {
 						.add("email", "hello@spacedog.io").build().toString());
 
 		demoKey = post(req2, 201).response().getHeaders()
-				.get(AdminResource.SPACEDOG_KEY_HEADER).get(0);
+				.get(AdminResource.BACKEND_KEY_HEADER).get(0);
 
 		assertFalse(Strings.isNullOrEmpty(demoKey));
 

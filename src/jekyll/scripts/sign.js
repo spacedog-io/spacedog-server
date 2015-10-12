@@ -16,7 +16,7 @@ function computeContextFromForm(form) {
 
 function showConsole(_, _, jqxhr) {
 	sessionStorage.signInOk = 'true';
-	sessionStorage.spacedogKey = jqxhr.getResponseHeader('x-spacedog-key');
+	sessionStorage.spacedogKey = jqxhr.getResponseHeader('x-spacedog-backend-key');
 	window.location.assign('/console.html');
 }
 
