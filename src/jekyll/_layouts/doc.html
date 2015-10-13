@@ -47,21 +47,9 @@
 
 	    {{ content }}
 
-    
-		{% if page.url contains '/docs/user-guide/' %}
-			{% for doc in docs %}
-			    {% if doc.rank > page.rank %}
-			    
-				    <div class="next-doc">
-			    	<a  href="{{doc.url}}"> >>> {{doc.title}} >>> </a>
-			    	</div>
-			    	
-			    {% break %}			    	
-			    {% endif%}
-			{% endfor %}
-		{% endif%}
-		
     </div>
-		
+
+   	{% include footer.html %}
+
   </body>
 </html>

@@ -186,4 +186,6 @@ When developing a new release of your app, you usually need to make changes in y
 
 To delete the `car` schema, send a `DELETE /v1/schema/car`. It will also delete all the `car` objects.
 
->>> Next: [Defining schema](defining-schema.md) >>>
+⋮
+
+Next: [Defining schema](defining-schema.html) ⋙

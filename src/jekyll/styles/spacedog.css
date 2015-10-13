@@ -7,11 +7,17 @@ body {
   height: 100%;
   font-family: andale mono, consolas, sans-serif;
   background-color: black;
-  color: darkorange;
+  color: orange;
   min-height:100%;
   max-width: 100%;
   padding:0;
   margin:0;
+}
+
+footer {
+  margin: 30px 0 5px 0;
+  width: 100%;
+  text-align: center;
 }
 
 header {
@@ -54,7 +60,7 @@ nav li {
 
 a {
   text-decoration: none;
-  color: darkorange;
+  color: orange;
   cursor:pointer;
 }
 
@@ -81,19 +87,33 @@ nav button {
 
 .banner {
   margin-top: 73px;
-
-/*  background-image: url(../images/sky.jpg);
-  background-size: cover;
-  background-repeat: no-repeat; */
 }
 
 .uvp {
-/*  min-height: 700px;*/
   max-width: 700px;
   margin: 0 auto;
-  padding: 18% 0 18% 0;
+  padding: 2% 0 2% 0;
   text-align:center;
   background-color: transparent;
+}
+
+#register {
+  padding: 0 16px 20px 16px;
+  position: relative;
+  display: inline-block;
+  border-radius: 15px;
+  background-color: #112365;
+}
+
+#register button,
+#register input {
+  border-color: orange;
+}
+
+#register button:focus,
+#register button:hover,
+#register input:focus {
+  border-color: red;
 }
 
 /* Console Sign In
@@ -105,7 +125,9 @@ nav button {
   width: 500px;
 }
 
-#sign-div h4, p, label {
+#sign-div h4,
+#sign-div p,
+#sign-div label {
   color: beige;
 }
 
@@ -209,11 +231,6 @@ menu a {
   border-color: beige;
 }
 
-.next-doc {
-  margin-top: 30px;
-  text-align: right;
-}
-
 /* Map demo
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
@@ -260,19 +277,20 @@ menu a {
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
 ::-webkit-input-placeholder { /* WebKit, Blink, Edge */
-  color: darkred;
+  color: darkorange;
+  opacity: 0.6;
 }
 
 :-moz-placeholder { /* Firefox 4 to 18 */
-  color: darkred;
+  color: darkorange;
 }
 
 ::-moz-placeholder { /* Firefox 19+ */ 
-  color: darkred;
+  color: darkorange;
 }
 
 :-ms-input-placeholder { /* IE 10+ */
-  color: darkred;
+  color: darkorange;
 }
 
 /* Typography
@@ -281,7 +299,7 @@ menu a {
 h1, h2, h3, h4, h5, h6 {
   margin: 1rem 0;
   font-weight: 100;
-  color: darkorange;
+  color: orange;
 }
 
 h1 { font-size: 2.6rem; line-height: 1.2;  }
@@ -299,7 +317,7 @@ button {
   height: 2em;
   padding: 10px 10px;
   background-color: black;
-  color: darkorange;
+  color: orange;
   font-weight: 100;
   font-family: consolas, sans-serif;
   vertical-align: middle;
@@ -331,7 +349,7 @@ button:focus {
 
 input {
   background-color: black;
-  color: darkorange;
+  color: orange;
   font-family: andale mono, consolas, sans-serif;
   height: 2em;
   padding: 10px;

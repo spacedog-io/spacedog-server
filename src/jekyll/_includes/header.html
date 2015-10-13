@@ -8,12 +8,12 @@
             href="/">Overview</a></li>
             
           <li><a
-            {% if page.url contains '/docs/' %} class='active' {% endif %}
-            href="/docs/user-guide/getting-started.html">Docs</a></li>
+            {% if "/examples.html" == page.url %} class='active' {% endif %}
+            href="/examples.html">Examples</a></li>
 
           <li><a
-            {% if "/demo.html" == page.url %} class='active' {% endif %}
-            href="/demo.html">Demo</a></li>
+            {% if page.url contains '/docs/' %} class='active' {% endif %}
+            href="/docs/user-guide/getting-started.html">Docs</a></li>
 
           <li><a id="nav-console-lk"
             {% if "/console.html" == page.url %} class='active' {% endif %}

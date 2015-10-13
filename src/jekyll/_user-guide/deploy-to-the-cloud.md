@@ -4,7 +4,7 @@ title: Deploy to the cloud
 rank: 5
 ---
 
-##### [Not yet implemented]
+#### The file endpoint [Not yet implemented]
 
 Use the `/v1/file` endpoint to upload and publish files and file sets to the cloud.
 
@@ -16,7 +16,7 @@ Why would you do that?
 - to store app generated reports and files,
 - ...
 
-##### Publish a tgz file [Not yet implemented]
+#### Publish a tgz file [Not yet implemented]
 
 First create tgz archive, call it `myapp.tgz`:
 
@@ -51,7 +51,7 @@ https://static.spacedog.io/{backend-id}/getmepizza/index.png
 https://static.spacedog.io/{backend-id}/getmepizza/images/logo.png
 ```
 
-##### Add a settings to your tgz file [Not yet implemented]
+#### Add a settings to your tgz file [Not yet implemented]
 
 To change the way uploaded file sets are served, add a `.settings.json` file at the root of the tgz archive. Example:
 
@@ -93,14 +93,14 @@ To change the way uploaded file sets are served, add a `.settings.json` file at 
 - `images` contains the specific file settings for the `images` file tree. Do the same for all archive file or file tree that need specific settings. Specific and default settings are merged with specific overriding default fields.
 
 
-##### Default file settings [Not yet implemented]
+#### Default file settings [Not yet implemented]
 
 The system provides a default file settings JSON. When serving files, the system merges default and specific settings (if any) an archive might provided. The specific settings have precedence.
 
 To get the default file settings, send a `GET /v1/file/settings` request. To update it, send a `PUT /v1/file/settings` request with a body set to the updated settings JSON.
 
 
-##### Publish a single file [Not yet implemented]
+#### Publish a single file [Not yet implemented]
 
 To upload and publish a single file, send a `POST /v1/file` with
 
@@ -122,7 +122,7 @@ It should return:
 
 ```
 
-##### Attach a specific URL to a file or file tree [Not yet implemented]
+#### Attach a specific URL to a file or file tree [Not yet implemented]
 
 You can use your own domain names to serve uploaded files and file trees. The domain names must first be attached to your account with help of the SpaceDog administration console.
 
@@ -136,4 +136,6 @@ Then to attach your file or file tree to a specific domain and URI, send a `PUT 
 }
 ```
 
->>> Next: [Configurations and contents](configurations-and-contents.md) >>>
+⋮
+
+Next: [Configurations and contents](configurations-and-contents.html) ⋙

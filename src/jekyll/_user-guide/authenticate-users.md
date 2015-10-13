@@ -30,4 +30,6 @@ Authorization Basic ZG9jOmhpIGRvYw==
 
 To login a user, send a `GET /v1/login` with the backend key header and the `Authorization` header. Login is not mandatory since, all requests are authenticated the same way. It is a convenient method to check whether the user credentials are valid or not before going further.
 
->>> Next: [Deploy to the cloud](deploy-to-the-cloud.md) >>>
+⋮
+
+Next: [Deploy to the cloud](deploy-to-the-cloud.html) ⋙

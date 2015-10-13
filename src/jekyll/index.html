@@ -13,27 +13,26 @@
 
 	{% include header.html %}
 
-
     <div class="banner">
 
 	    <div class="uvp">
+	    	<img src="/images/spacedog.png">
 	      	<h1>Smart backend for mobile and web applications.</h1>
-	      	<h5>Forget about server-side pain. Focus on creating amazing user experiences. Sign up and immediately access our backend services in the cloud. Save and search for data. Edit and push new contents. Deploy and publish resources and services.</h5>
+	      	<h5>Focus on creating amazing user experiences. Forget about server-side pain. Sign up and immediately access our backend services in the cloud. Save and search for data. Edit and push new contents. Deploy and publish resources and services.</h5>
 	  	 	</br>
 
 			<!-- Begin MailChimp Signup Form -->
 			
 			<div id="mc_embed_signup">
 			<form action="//space.us11.list-manage.com/subscribe/post?u=695c4d3705128a6eb146ca520&amp;id=2ec6d416a8" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
-				
-					<label for="mce-EMAIL">Get news about SpaceDog:</label>
-					
-					<div style="position: relative">
+
+					<div id="register">
+						<h5><bold>STAY INFORMED</bold></h5>
 						<input type="email" value="" name="EMAIL" class="form-field" id="mce-EMAIL" placeholder="Email address">
 				    	<button type="submit" name="subscribe" id="mc-embedded-subscribe">Register</button>
 				    </div>
 				    
-				    <br>
+				    <br><br>
 					
 					<div id="mce-responses" class="clear">
 						<div class="response" id="mce-error-response" style="display:none"></div>
@@ -56,5 +55,7 @@
 
     </div>
 
+	{% include footer.html %}
+	
   </body>
 </html>

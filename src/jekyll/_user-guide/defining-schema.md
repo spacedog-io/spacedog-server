@@ -375,4 +375,6 @@ Any user, api key and group can be listed in the access control list to set spec
 
 When a user is fetching or updating a specific data object for wich he does not have permission, he gets back an `NOT AUTHORIZED` response. When a user sends a search query, objects he does not have read permission will be automaticaly excluded from the response.
 
->>> Next: [Authenticate users](authenticate-users.md) >>>
+⋮
+
+Next: [Authenticate users](authenticate-users.html) ⋙
