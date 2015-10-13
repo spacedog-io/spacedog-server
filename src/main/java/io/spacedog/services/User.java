@@ -1,6 +1,7 @@
+/**
+ * © David Attias 2015
+ */
 package io.spacedog.services;
-
-import io.spacedog.services.Account.InvalidAccountException;
 
 import java.util.List;
 
@@ -9,6 +10,8 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.xml.bind.DatatypeConverter;
 
 import com.google.common.base.Strings;
+
+import io.spacedog.services.Account.InvalidAccountException;
 
 public class User {
 
@@ -36,12 +39,10 @@ public class User {
 	 */
 	public static String hashPassword(String password) {
 		try {
-			PBEKeySpec spec = new PBEKeySpec(password.toCharArray(),
-					"hjyuetcslhhjgl".getBytes(), 1000, 64 * 8);
+			PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), "hjyuetcslhhjgl".getBytes(), 1000, 64 * 8);
 			SecretKeyFactory skf;
 			skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-			return DatatypeConverter.printHexBinary(skf.generateSecret(spec)
-					.getEncoded());
+			return DatatypeConverter.printHexBinary(skf.generateSecret(spec).getEncoded());
 		} catch (Throwable t) {
 			throw new RuntimeException("failed to hash password", t);
 		}

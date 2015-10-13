@@ -1,3 +1,6 @@
+/**
+ * © David Attias 2015
+ */
 package io.spacedog.services;
 
 import java.io.IOException;
@@ -15,8 +18,7 @@ public class HttpPermanentRedirect implements Container {
 	private String destinationHostname;
 	private SocketConnection socketConnection;
 
-	private HttpPermanentRedirect(int portToRedirect, String destinationHostname)
-			throws IOException {
+	private HttpPermanentRedirect(int portToRedirect, String destinationHostname) throws IOException {
 
 		// TODO Create an url from the destinationHostname to make sure
 		// we got the scheme and everything we need
@@ -28,16 +30,14 @@ public class HttpPermanentRedirect implements Container {
 		socketConnection.connect(new InetSocketAddress(portToRedirect));
 	}
 
-	public static HttpPermanentRedirect start(int portToRedirect,
-			String destinationHostname) throws IOException {
+	public static HttpPermanentRedirect start(int portToRedirect, String destinationHostname) throws IOException {
 		return new HttpPermanentRedirect(portToRedirect, destinationHostname);
 	}
 
 	@Override
 	public void handle(Request request, Response response) {
 		try {
-			response.setValue("Location",
-					destinationHostname + request.getPath());
+			response.setValue("Location", destinationHostname + request.getPath());
 			response.setStatus(Status.MOVED_PERMANENTLY);
 			response.setContentLength(0);
 			response.close();

@@ -1,13 +1,9 @@
+/**
+ * © David Attias 2015
+ */
 package io.spacedog.services;
 
-import io.spacedog.services.Account.InvalidAccountException;
-import io.spacedog.services.SchemaResource.NotFoundException;
-import io.spacedog.services.SchemaValidator.InvalidSchemaException;
-
 import java.util.concurrent.ExecutionException;
-
-import net.codestory.http.constants.HttpStatus;
-import net.codestory.http.payload.Payload;
 
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.mapper.MergeMappingException;
@@ -17,6 +13,12 @@ import org.elasticsearch.search.SearchHit;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.spacedog.services.Account.InvalidAccountException;
+import io.spacedog.services.SchemaResource.NotFoundException;
+import io.spacedog.services.SchemaValidator.InvalidSchemaException;
+import net.codestory.http.constants.HttpStatus;
+import net.codestory.http.payload.Payload;
 
 public abstract class AbstractResource {
 
@@ -30,11 +32,10 @@ public abstract class AbstractResource {
 		return objectMapper;
 	}
 
-	protected Payload checkExistence(String index, String type, String field,
-			String value) {
+	protected Payload checkExistence(String index, String type, String field, String value) {
 		try {
-			return ElasticHelper.search(index, type, field, value)
-					.getTotalHits() == 0 ? Payload.notFound() : Payload.ok();
+			return ElasticHelper.search(index, type, field, value).getTotalHits() == 0 ? Payload.notFound()
+					: Payload.ok();
 
 		} catch (Throwable throwable) {
 			return error(throwable);
@@ -113,8 +114,7 @@ public abstract class AbstractResource {
 	}
 
 	public static Payload error(int httpStatus, String message, Object... args) {
-		return error(httpStatus,
-				new RuntimeException(String.format(message, args)));
+		return error(httpStatus, new RuntimeException(String.format(message, args)));
 	}
 
 	/**
@@ -127,43 +127,35 @@ public abstract class AbstractResource {
 		if (parameters.length > 0 && parameters.length % 3 == 0) {
 			builder = builder.stObj("invalidParameters");
 			for (int i = 0; i < parameters.length; i += 3)
-				builder = builder.stObj(parameters[0])
-						.add("value", parameters[1])
-						.add("message", parameters[2]);
+				builder = builder.stObj(parameters[0]).add("value", parameters[1]).add("message", parameters[2]);
 		}
-		return new Payload(JSON_CONTENT, builder.build().toString(),
-				HttpStatus.BAD_REQUEST);
+		return new Payload(JSON_CONTENT, builder.build().toString(), HttpStatus.BAD_REQUEST);
 	}
 
 	protected static Payload created(String uri, String type, String id) {
-		return new Payload(JSON_CONTENT, Json.builder() //
-				.add("success", true) //
-				.add("id", id).add("type", type) //
-				.add("location", toUrl(BASE_URL, uri, type, id)) //
-				.build().toString(), HttpStatus.CREATED).withHeader(
-				AbstractResource.HEADER_OBJECT_ID, id);
+		return new Payload(JSON_CONTENT,
+				Json.builder() //
+						.add("success", true) //
+						.add("id", id).add("type", type) //
+						.add("location", toUrl(BASE_URL, uri, type, id)) //
+						.build().toString(),
+				HttpStatus.CREATED).withHeader(AbstractResource.HEADER_OBJECT_ID, id);
 	}
 
-	protected static String toUrl(String baseUrl, String uri, String type,
-			String id) {
-		return new StringBuilder(baseUrl).append(uri).append('/').append(type)
-				.append('/').append(id).toString();
+	protected static String toUrl(String baseUrl, String uri, String type, String id) {
+		return new StringBuilder(baseUrl).append(uri).append('/').append(type).append('/').append(id).toString();
 	}
 
 	protected Payload extractResults(SearchResponse response) {
-		JsonBuilder builder = Json.builder()
-				.add("took", response.getTookInMillis())
-				.add("total", response.getHits().getTotalHits())
-				.stArr("results");
+		JsonBuilder builder = Json.builder().add("took", response.getTookInMillis())
+				.add("total", response.getHits().getTotalHits()).stArr("results");
 
 		for (SearchHit hit : response.getHits().getHits()) {
 			JsonObject object = JsonObject.readFrom(hit.sourceAsString());
-			object.get("meta").asObject().add("id", hit.id())
-					.add("type", hit.type()).add("version", hit.version());
+			object.get("meta").asObject().add("id", hit.id()).add("type", hit.type()).add("version", hit.version());
 			builder.addJson(object);
 		}
 
-		return new Payload(JSON_CONTENT, builder.build().toString(),
-				HttpStatus.OK);
+		return new Payload(JSON_CONTENT, builder.build().toString(), HttpStatus.OK);
 	}
 }

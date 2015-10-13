@@ -1,3 +1,6 @@
+/**
+ * © David Attias 2015
+ */
 package io.spacedog.services;
 
 @SuppressWarnings("serial")
@@ -11,8 +14,7 @@ public class AuthenticationException extends RuntimeException {
 		super(String.format(message, parameters));
 	}
 
-	public AuthenticationException(String message,
-			IllegalArgumentException cause) {
+	public AuthenticationException(String message, IllegalArgumentException cause) {
 		super(message, cause);
 	}
 }

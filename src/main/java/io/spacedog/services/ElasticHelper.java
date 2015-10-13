@@ -1,10 +1,11 @@
+/**
+ * © David Attias 2015
+ */
 package io.spacedog.services;
 
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.concurrent.ExecutionException;
-
-import net.codestory.http.Context;
 
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
@@ -19,27 +20,23 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 
+import net.codestory.http.Context;
+
 public class ElasticHelper {
 
 	public static SearchHits search(String index, String type, String... terms) {
 
 		if (terms.length % 2 == 1)
-			throw new RuntimeException(String.format(
-					"invalid search terms [%s]: missing term value",
-					terms.toString()));
+			throw new RuntimeException(
+					String.format("invalid search terms [%s]: missing term value", terms.toString()));
 
 		AndFilterBuilder builder = new AndFilterBuilder();
 		for (int i = 0; i < terms.length; i = i + 2) {
 			builder.add(FilterBuilders.termFilter(terms[i], terms[i + 1]));
 		}
 
-		SearchResponse response = Start
-				.getElasticClient()
-				.prepareSearch(index)
-				.setTypes(type)
-				.setQuery(
-						QueryBuilders.filteredQuery(
-								QueryBuilders.matchAllQuery(), builder)).get();
+		SearchResponse response = Start.getElasticClient().prepareSearch(index).setTypes(type)
+				.setQuery(QueryBuilders.filteredQuery(QueryBuilders.matchAllQuery(), builder)).get();
 
 		return response.getHits();
 	}
@@ -70,12 +67,9 @@ public class ElasticHelper {
 		}
 
 		public FilteredSearchBuilder applyContext(Context context) {
-			sourceBuilder
-					.from(context.request().query().getInteger("from", 0))
+			sourceBuilder.from(context.request().query().getInteger("from", 0))
 					.size(context.request().query().getInteger("size", 10))
-					.fetchSource(
-							context.request().query()
-									.getBoolean("fetch-contents", true));
+					.fetchSource(context.request().query().getBoolean("fetch-contents", true));
 
 			String queryText = context.get("q");
 			if (!Strings.isNullOrEmpty(queryText)) {
@@ -88,16 +82,13 @@ public class ElasticHelper {
 
 		public FilteredSearchBuilder applyFilters(JsonObject filters) {
 			filterBuilder = new AndFilterBuilder();
-			filters.forEach(member -> filterBuilder.add(FilterBuilders
-					.termFilter(member.getName(),
-							toSimpleValue(member.getValue()))));
+			filters.forEach(member -> filterBuilder
+					.add(FilterBuilders.termFilter(member.getName(), toSimpleValue(member.getValue()))));
 			return this;
 		}
 
-		public SearchResponse get() throws InterruptedException,
-				ExecutionException {
-			searchRequest.source(sourceBuilder.query(QueryBuilders
-					.filteredQuery(queryBuilder, filterBuilder)));
+		public SearchResponse get() throws InterruptedException, ExecutionException {
+			searchRequest.source(sourceBuilder.query(QueryBuilders.filteredQuery(queryBuilder, filterBuilder)));
 			return Start.getElasticClient().search(searchRequest).get();
 		}
 	}

@@ -1,3 +1,6 @@
+/**
+ * © David Attias 2015
+ */
 package io.spacedog.services;
 
 import org.junit.BeforeClass;
@@ -12,8 +15,7 @@ import com.mashape.unirest.request.body.RequestBodyEntity;
 public class SchemaResourceTest extends AbstractTest {
 
 	@BeforeClass
-	public static void resetTestAccount() throws UnirestException,
-			InterruptedException {
+	public static void resetTestAccount() throws UnirestException, InterruptedException {
 		AdminResourceTest.resetTestAccount();
 	}
 
@@ -22,20 +24,18 @@ public class SchemaResourceTest extends AbstractTest {
 
 		resetCarSchema();
 
-		GetRequest req = prepareGet("/v1/schema/car",
-				AdminResourceTest.testClientKey());
+		GetRequest req = prepareGet("/v1/schema/car", AdminResourceTest.testClientKey());
 		JsonObject res = get(req, 200).json();
 		assertTrue(Json.equals(buildCarSchema(), res));
 	}
 
 	public static void resetCarSchema() throws UnirestException {
 
-		HttpRequestWithBody req1 = prepareDelete("/v1/schema/car").basicAuth(
-				"test", "hi test");
+		HttpRequestWithBody req1 = prepareDelete("/v1/schema/car").basicAuth("test", "hi test");
 		delete(req1, 200, 404);
 
-		RequestBodyEntity req2 = preparePost("/v1/schema/car").basicAuth(
-				"test", "hi test").body(buildCarSchema().toString());
+		RequestBodyEntity req2 = preparePost("/v1/schema/car").basicAuth("test", "hi test")
+				.body(buildCarSchema().toString());
 		post(req2, 201);
 	}
 
@@ -57,12 +57,11 @@ public class SchemaResourceTest extends AbstractTest {
 	}
 
 	public static void resetSaleSchema() throws UnirestException {
-		HttpRequestWithBody req1 = prepareDelete("/v1/schema/sale").basicAuth(
-				"test", "hi test");
+		HttpRequestWithBody req1 = prepareDelete("/v1/schema/sale").basicAuth("test", "hi test");
 		delete(req1, 200, 404);
 
-		RequestBodyEntity req2 = preparePost("/v1/schema/sale").basicAuth(
-				"test", "hi test").body(buildSaleSchema().toString());
+		RequestBodyEntity req2 = preparePost("/v1/schema/sale").basicAuth("test", "hi test")
+				.body(buildSaleSchema().toString());
 		post(req2, 201);
 	}
 
@@ -91,19 +90,17 @@ public class SchemaResourceTest extends AbstractTest {
 
 		resetHomeSchema();
 
-		GetRequest req = prepareGet("/v1/schema/home",
-				AdminResourceTest.testClientKey());
+		GetRequest req = prepareGet("/v1/schema/home", AdminResourceTest.testClientKey());
 		JsonObject res = get(req, 200).json();
 		assertTrue(Json.equals(buildHomeSchema(), res));
 	}
 
 	private static void resetHomeSchema() throws UnirestException {
-		HttpRequestWithBody req1 = prepareDelete("/v1/schema/home").basicAuth(
-				"test", "hi test");
+		HttpRequestWithBody req1 = prepareDelete("/v1/schema/home").basicAuth("test", "hi test");
 		delete(req1, 200);
 
-		RequestBodyEntity req2 = preparePost("/v1/schema/home").basicAuth(
-				"test", "hi test").body(buildHomeSchema().toString());
+		RequestBodyEntity req2 = preparePost("/v1/schema/home").basicAuth("test", "hi test")
+				.body(buildHomeSchema().toString());
 		post(req2, 201);
 	}
 
@@ -127,8 +124,7 @@ public class SchemaResourceTest extends AbstractTest {
 		resetHomeSchema();
 		resetSaleSchema();
 
-		GetRequest req = prepareGet("/v1/schema",
-				AdminResourceTest.testClientKey());
+		GetRequest req = prepareGet("/v1/schema", AdminResourceTest.testClientKey());
 		JsonObject result = get(req, 200).json();
 
 		// user, car, sale and home
@@ -148,14 +144,11 @@ public class SchemaResourceTest extends AbstractTest {
 		shouldFailDueToInvalidSchema("{\"toto\":{\"_type\":\"XXX\"}}");
 	}
 
-	private void shouldFailDueToInvalidSchema(String jsonSchema)
-			throws UnirestException {
-		HttpRequestWithBody req1 = prepareDelete("/v1/schema/toto").basicAuth(
-				"test", "hi test");
+	private void shouldFailDueToInvalidSchema(String jsonSchema) throws UnirestException {
+		HttpRequestWithBody req1 = prepareDelete("/v1/schema/toto").basicAuth("test", "hi test");
 		delete(req1, 200);
 
-		RequestBodyEntity req2 = preparePut("/v1/schema/toto").basicAuth(
-				"test", "hi test").body(jsonSchema);
+		RequestBodyEntity req2 = preparePut("/v1/schema/toto").basicAuth("test", "hi test").body(jsonSchema);
 		put(req2, 400);
 	}
 
@@ -169,10 +162,8 @@ public class SchemaResourceTest extends AbstractTest {
 		shouldFailToChangeSchema(json);
 	}
 
-	private void shouldFailToChangeSchema(JsonObject json)
-			throws UnirestException {
-		RequestBodyEntity req2 = preparePut("/v1/schema/car").basicAuth("test",
-				"hi test").body(json.toString());
+	private void shouldFailToChangeSchema(JsonObject json) throws UnirestException {
+		RequestBodyEntity req2 = preparePut("/v1/schema/car").basicAuth("test", "hi test").body(json.toString());
 		put(req2, 400);
 	}
 

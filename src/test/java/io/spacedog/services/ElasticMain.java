@@ -1,3 +1,6 @@
+/**
+ * © David Attias 2015
+ */
 package io.spacedog.services;
 
 import java.util.concurrent.ExecutionException;
@@ -20,8 +23,7 @@ public class ElasticMain {
 	public static void main(String[] args) {
 		try {
 
-			Node node = NodeBuilder.nodeBuilder().local(true).data(true)
-					.clusterName("MagicLabs-ES-Cluster").node();
+			Node node = NodeBuilder.nodeBuilder().local(true).data(true).clusterName("MagicLabs-ES-Cluster").node();
 
 			Client client = node.client();
 			IndicesAdminClient indices = client.admin().indices();
@@ -43,29 +45,22 @@ public class ElasticMain {
 			}
 
 			ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetaData>> mappings = indices
-					.prepareGetMappings("test2").addTypes("account").get()
-					.getMappings();
+					.prepareGetMappings("test2").addTypes("account").get().getMappings();
 
-			if (mappings.get("test2") == null
-					|| mappings.get("test2").get("account") == null) {
+			if (mappings.get("test2") == null || mappings.get("test2").get("account") == null) {
 
-				String accountMapping = Resources
-						.toString(
-								Resources
-										.getResource("io/spacedog/services/account-mapping.json"),
-								AdminResource.UTF_8);
+				String accountMapping = Resources.toString(
+						Resources.getResource("io/spacedog/services/account-mapping.json"), AdminResource.UTF_8);
 
-				PutMappingRequest mappingRequest = new PutMappingRequest(
-						"test2").type("account").source(accountMapping);
+				PutMappingRequest mappingRequest = new PutMappingRequest("test2").type("account")
+						.source(accountMapping);
 
 				indices.putMapping(mappingRequest).get();
 			}
 
-			mappings = indices.prepareGetMappings("test2").addTypes("account")
-					.get().getMappings();
+			mappings = indices.prepareGetMappings("test2").addTypes("account").get().getMappings();
 
-			System.out.println(mappings.get("test2").get("account")
-					.getSourceAsMap());
+			System.out.println(mappings.get("test2").get("account").getSourceAsMap());
 
 		} catch (Throwable t) {
 			t.printStackTrace();

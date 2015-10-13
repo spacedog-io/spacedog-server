@@ -1,3 +1,6 @@
+/**
+ * © David Attias 2015
+ */
 package io.spacedog.services;
 
 import org.joda.time.DateTime;
@@ -13,8 +16,7 @@ import com.mashape.unirest.request.body.RequestBodyEntity;
 public class DataResourceTest extends AbstractTest {
 
 	@BeforeClass
-	public static void resetTestAccount() throws UnirestException,
-			InterruptedException {
+	public static void resetTestAccount() throws UnirestException, InterruptedException {
 		AdminResourceTest.resetTestAccount();
 		SchemaResourceTest.resetCarSchema();
 	}
@@ -22,8 +24,7 @@ public class DataResourceTest extends AbstractTest {
 	@Test
 	public void shouldCreateFindUpdateAndDelete() throws Exception {
 
-		JsonObject car = Json
-				.builder()
+		JsonObject car = Json.builder()
 				//
 				.add("serialNumber", "1234567890")
 				//
@@ -39,8 +40,7 @@ public class DataResourceTest extends AbstractTest {
 				//
 				.stObj("model")
 				//
-				.add("description",
-						"Cette voiture sent bon la France. Elle est inventive et raffinée.") //
+				.add("description", "Cette voiture sent bon la France. Elle est inventive et raffinée.") //
 				.add("fiscalPower", 8) //
 				.add("size", 4.67) //
 				.end() //
@@ -51,8 +51,7 @@ public class DataResourceTest extends AbstractTest {
 
 		// create
 
-		RequestBodyEntity req = preparePost("/v1/data/car",
-				AdminResourceTest.testClientKey()).body(car.toString());
+		RequestBodyEntity req = preparePost("/v1/data/car", AdminResourceTest.testClientKey()).body(car.toString());
 
 		DateTime beforeCreate = DateTime.now();
 		JsonObject result = post(req, 201).json();
@@ -67,15 +66,12 @@ public class DataResourceTest extends AbstractTest {
 
 		// find by id
 
-		GetRequest req1 = prepareGet("/v1/data/car/{id}",
-				AdminResourceTest.testClientKey()).routeParam("id", id);
+		GetRequest req1 = prepareGet("/v1/data/car/{id}", AdminResourceTest.testClientKey()).routeParam("id", id);
 		JsonObject res1 = get(req1, 200).json();
 
 		JsonObject meta1 = res1.get("meta").asObject();
-		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, meta1.get("createdBy")
-				.asString());
-		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, meta1.get("updatedBy")
-				.asString());
+		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, meta1.get("createdBy").asString());
+		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, meta1.get("updatedBy").asString());
 		DateTime createdAt = DateTime.parse(meta1.get("createdAt").asString());
 		assertTrue(createdAt.isAfter(beforeCreate.getMillis()));
 		assertTrue(createdAt.isBeforeNow());
@@ -84,18 +80,16 @@ public class DataResourceTest extends AbstractTest {
 
 		// find by full text search
 
-		GetRequest req1b = prepareGet("/v1/data/car?q={q}",
-				AdminResourceTest.testClientKey()).routeParam("q", "inVENt*");
+		GetRequest req1b = prepareGet("/v1/data/car?q={q}", AdminResourceTest.testClientKey()).routeParam("q",
+				"inVENt*");
 
 		JsonObject res1b = get(req1b, 200).json();
 		assertEquals(id, Json.get(res1b, "results.0.meta.id").asString());
 
 		// create user vince
 
-		RequestBodyEntity req1a = preparePost("/v1/user/",
-				AdminResourceTest.testClientKey()).body(
-				Json.builder().add("username", "vince")
-						.add("password", "hi vince")
+		RequestBodyEntity req1a = preparePost("/v1/user/", AdminResourceTest.testClientKey())
+				.body(Json.builder().add("username", "vince").add("password", "hi vince")
 						.add("email", "vince@spacedog.io").build().toString());
 
 		post(req1a, 201);
@@ -103,26 +97,21 @@ public class DataResourceTest extends AbstractTest {
 
 		// update
 
-		RequestBodyEntity req2 = preparePut("/v1/data/car/{id}",
-				AdminResourceTest.testClientKey()).routeParam("id", id)
-				.basicAuth("vince", "hi vince")
-				.body(new JsonObject().add("color", "blue").toString());
+		RequestBodyEntity req2 = preparePut("/v1/data/car/{id}", AdminResourceTest.testClientKey()).routeParam("id", id)
+				.basicAuth("vince", "hi vince").body(new JsonObject().add("color", "blue").toString());
 
 		DateTime beforeUpdate = DateTime.now();
 		put(req2, 200);
 
 		// check update is correct
 
-		GetRequest req3 = prepareGet("/v1/data/car/{id}",
-				AdminResourceTest.testClientKey()).routeParam("id", id);
+		GetRequest req3 = prepareGet("/v1/data/car/{id}", AdminResourceTest.testClientKey()).routeParam("id", id);
 		JsonObject res3 = get(req3, 200).json();
 
 		JsonObject meta3 = res3.get("meta").asObject();
-		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, meta3.get("createdBy")
-				.asString());
+		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, meta3.get("createdBy").asString());
 		assertEquals("vince", meta3.get("updatedBy").asString());
-		DateTime createdAtAfterUpdate = DateTime.parse(meta3.get("createdAt")
-				.asString());
+		DateTime createdAtAfterUpdate = DateTime.parse(meta3.get("createdAt").asString());
 		assertEquals(createdAt, createdAtAfterUpdate);
 		DateTime updatedAt = DateTime.parse(meta3.get("updatedAt").asString());
 		assertTrue(updatedAt.isAfter(beforeUpdate.getMillis()));
@@ -132,8 +121,8 @@ public class DataResourceTest extends AbstractTest {
 
 		// delete
 
-		HttpRequestWithBody req4 = prepareDelete("/v1/data/car/{id}",
-				AdminResourceTest.testClientKey()).routeParam("id", id);
+		HttpRequestWithBody req4 = prepareDelete("/v1/data/car/{id}", AdminResourceTest.testClientKey())
+				.routeParam("id", id);
 		delete(req4, 200);
 
 		// check delete is done

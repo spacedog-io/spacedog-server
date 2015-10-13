@@ -1,11 +1,14 @@
+/**
+ * © David Attias 2015
+ */
 package io.spacedog.services;
-
-import io.spacedog.services.SchemaValidator.InvalidSchemaException;
 
 import java.util.Optional;
 
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
+
+import io.spacedog.services.SchemaValidator.InvalidSchemaException;
 
 public class Schema {
 
@@ -26,6 +29,7 @@ public class Schema {
 		OBJECT, ARRAY, TEXT, STRING, BOOLEAN, GEOPOINT, NUMBER, //
 		DATE, TIME, TIMESTAMP, ENUM, AMOUNT, STASH, REF, FILE;
 
+		@Override
 		public String toString() {
 			return super.toString().toLowerCase();
 		}
@@ -57,13 +61,11 @@ public class Schema {
 		public void checkValue(JsonValue value) {
 			if (Json.isNull(value)) {
 				if (isRequired())
-					throw new InvalidDataObjectException(
-							"property [%s] is null but required", getName());
+					throw new InvalidDataObjectException("property [%s] is null but required", getName());
 			}
 		}
 
-		protected InvalidDataObjectException invalidType(String name,
-				JsonValue value) {
+		protected InvalidDataObjectException invalidType(String name, JsonValue value) {
 			// TODO Auto-generated method stub
 			return null;
 		}
@@ -75,12 +77,14 @@ public class Schema {
 		private int _min = 0;
 		private int _max = 1000;
 
+		@Override
 		public void check() {
 			super.check();
 			checkMinMax(_min, _max);
 			// TODO check regex is well formed
 		}
 
+		@Override
 		public void checkValue(JsonValue value) {
 
 			super.checkValue(value);
@@ -107,6 +111,7 @@ public class Schema {
 		private int _min = 0;
 		private int _max = 10000;
 
+		@Override
 		public void check() {
 			super.check();
 			checkMinMax(_min, _max);
@@ -124,6 +129,7 @@ public class Schema {
 		private boolean _lte = false;
 		private int _values;
 
+		@Override
 		public void check() {
 			super.check();
 			// TODO check gt is lesser than lt
@@ -137,6 +143,7 @@ public class Schema {
 		private boolean _lte = false;
 		private float _values;
 
+		@Override
 		public void check() {
 			super.check();
 			// TODO check gt is lesser than lt
@@ -146,6 +153,7 @@ public class Schema {
 	public class ObjectProperty extends Property {
 		private Property[] properties = null;
 
+		@Override
 		public void check() {
 			super.check();
 			for (Property property : properties) {
@@ -197,9 +205,8 @@ public class Schema {
 
 	public void checkObject(JsonObject object) {
 		object.forEach(member -> {
-			property(member.getName()).orElseThrow(
-					() -> new InvalidDataObjectException("")).checkValue(
-					member.getValue());
+			property(member.getName()).orElseThrow(() -> new InvalidDataObjectException(""))
+					.checkValue(member.getValue());
 		});
 	}
 
@@ -215,9 +222,8 @@ public class Schema {
 
 	private void checkMinMax(int _min, int _max) {
 		if (_min > _max)
-			throw new InvalidSchemaException(String.format(
-					"_min [%s] should not be greater than _max [%s]", _min,
-					_max));
+			throw new InvalidSchemaException(
+					String.format("_min [%s] should not be greater than _max [%s]", _min, _max));
 	}
 
 	public static Schema from(JsonValue json) {

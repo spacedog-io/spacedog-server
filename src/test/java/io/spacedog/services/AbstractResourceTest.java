@@ -1,6 +1,7 @@
+/**
+ * © David Attias 2015
+ */
 package io.spacedog.services;
-
-import io.spacedog.services.AbstractResource;
 
 import org.junit.Test;
 
@@ -11,17 +12,13 @@ public class AbstractResourceTest extends AbstractTest {
 
 	@Test
 	public void shouldConvertRuntimeExceptionToJsonError() {
-		JsonObject json = AbstractResource.toJsonObject(new RuntimeException(
-				new NullPointerException()));
+		JsonObject json = AbstractResource.toJsonObject(new RuntimeException(new NullPointerException()));
 
 		assertEquals("java.lang.RuntimeException", json.get("type").asString());
-		assertEquals("java.lang.NullPointerException", json.get("message")
-				.asString());
+		assertEquals("java.lang.NullPointerException", json.get("message").asString());
 		assertTrue(json.get("trace").asArray().size() > 5);
-		assertEquals("java.lang.NullPointerException", json.get("cause")
-				.asObject().get("type").asString());
-		assertEquals(JsonValue.NULL, json.get("cause").asObject()
-				.get("message"));
+		assertEquals("java.lang.NullPointerException", json.get("cause").asObject().get("type").asString());
+		assertEquals(JsonValue.NULL, json.get("cause").asObject().get("message"));
 		assertTrue(json.get("cause").asObject().get("trace").asArray().size() > 5);
 	}
 }

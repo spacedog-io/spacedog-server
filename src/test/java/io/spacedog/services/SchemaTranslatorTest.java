@@ -1,3 +1,6 @@
+/**
+ * © David Attias 2015
+ */
 package io.spacedog.services;
 
 import java.io.IOException;
@@ -17,8 +20,7 @@ public class SchemaTranslatorTest extends Assert {
 		Charset utf8 = Charset.forName("UTF-8");
 
 		// load schema
-		URL urlSchema = Resources
-				.getResource("io/spacedog/services/SchemaTranslatorTest-schema.json");
+		URL urlSchema = Resources.getResource("io/spacedog/services/SchemaTranslatorTest-schema.json");
 		String jsonSchema = Resources.toString(urlSchema, utf8);
 		JsonObject schema = JsonObject.readFrom(jsonSchema);
 
@@ -29,10 +31,8 @@ public class SchemaTranslatorTest extends Assert {
 		System.out.println(mapping.toString());
 
 		// load expected mapping
-		URL urlExpectedMapping = Resources
-				.getResource("io/spacedog/services/SchemaTranslatorTest-mapping.json");
-		String jsonExpectedMapping = Resources.toString(urlExpectedMapping,
-				utf8);
+		URL urlExpectedMapping = Resources.getResource("io/spacedog/services/SchemaTranslatorTest-mapping.json");
+		String jsonExpectedMapping = Resources.toString(urlExpectedMapping, utf8);
 		JsonObject expectedMapping = JsonObject.readFrom(jsonExpectedMapping);
 
 		// assert

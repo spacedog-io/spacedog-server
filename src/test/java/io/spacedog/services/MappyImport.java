@@ -1,3 +1,6 @@
+/**
+ * © David Attias 2015
+ */
 package io.spacedog.services;
 
 import com.eclipsesource.json.JsonObject;
@@ -18,13 +21,11 @@ public class MappyImport extends AbstractTest {
 		HttpRequestWithBody req1 = prepareDelete("/v1/admin/account/demo");
 		delete(req1, 200, 404);
 
-		RequestBodyEntity req2 = preparePost("/v1/admin/account/").body(
-				Json.builder().add("backendId", "demo").add("username", "demo")
-						.add("password", "hi demo")
+		RequestBodyEntity req2 = preparePost("/v1/admin/account/")
+				.body(Json.builder().add("backendId", "demo").add("username", "demo").add("password", "hi demo")
 						.add("email", "hello@spacedog.io").build().toString());
 
-		demoKey = post(req2, 201).response().getHeaders()
-				.get(AdminResource.BACKEND_KEY_HEADER).get(0);
+		demoKey = post(req2, 201).response().getHeaders().get(AdminResource.BACKEND_KEY_HEADER).get(0);
 
 		assertFalse(Strings.isNullOrEmpty(demoKey));
 
@@ -36,26 +37,19 @@ public class MappyImport extends AbstractTest {
 		try {
 			resetDemoAccount();
 
-			HttpRequestWithBody req2 = prepareDelete("/v1/schema/resto",
-					demoKey);
+			HttpRequestWithBody req2 = prepareDelete("/v1/schema/resto", demoKey);
 			delete(req2, 200, 404);
 
-			RequestBodyEntity req3 = preparePost("/v1/schema/resto", demoKey)
-					.body(buildRestoSchema().toString());
+			RequestBodyEntity req3 = preparePost("/v1/schema/resto", demoKey).body(buildRestoSchema().toString());
 
 			post(req3, 201);
 
 			for (double lat = 48; lat <= 49.5; lat += 0.1) {
 				for (double lon = 1.8; lon <= 2.9; lon += 0.1) {
 
-					HttpRequest req1 = Unirest
-							.get("http://search.mappy.net/search/1.0/find")
-							.queryString("max_results", "100")
-							.queryString("q", "restaurant")
-							.queryString(
-									"bbox",
-									"" + lat + ',' + lon + ',' + (lat + 0.1)
-											+ ',' + (lon + 0.1));
+					HttpRequest req1 = Unirest.get("http://search.mappy.net/search/1.0/find")
+							.queryString("max_results", "100").queryString("q", "restaurant")
+							.queryString("bbox", "" + lat + ',' + lon + ',' + (lat + 0.1) + ',' + (lon + 0.1));
 
 					// "48.671228,1.854415,49.034931,2.843185");
 
@@ -73,8 +67,7 @@ public class MappyImport extends AbstractTest {
 
 	private static void copyPoi(JsonValue jsonValue) {
 		JsonObject src = jsonValue.asObject();
-		JsonBuilder target = Json.builder()
-				.add("name", src.get("name").asString()) //
+		JsonBuilder target = Json.builder().add("name", src.get("name").asString()) //
 				.add("town", src.get("town").asString()) //
 				.add("zipcode", src.get("pCode").asString()) //
 				.add("way", src.get("way").asString()) //
@@ -93,25 +86,18 @@ public class MappyImport extends AbstractTest {
 			target = target.add("url", src.get("url").asString());
 
 		if (src.get("illustration") != null)
-			target = target.add("illustration", src.get("illustration")
-					.asObject().get("url").asString());
+			target = target.add("illustration", src.get("illustration").asObject().get("url").asString());
 
 		JsonValue allRubrics = src.get("allRubrics");
 		if (allRubrics != null && allRubrics.asArray().size() > 0) {
 			final JsonBuilder target2 = target.stArr("rubrics");
-			allRubrics.asArray().forEach(
-					rubric -> {
-						target2.addObj()
-								.add("rubricId",
-										rubric.asObject().get("id").asString()) //
-								.add("rubricLabel",
-										rubric.asObject().get("label")
-												.asString());
-					});
+			allRubrics.asArray().forEach(rubric -> {
+				target2.addObj().add("rubricId", rubric.asObject().get("id").asString()) //
+						.add("rubricLabel", rubric.asObject().get("label").asString());
+			});
 		}
 
-		RequestBodyEntity req = preparePost("/v1/data/resto", demoKey).body(
-				target.build().toString());
+		RequestBodyEntity req = preparePost("/v1/data/resto", demoKey).body(target.build().toString());
 
 		try {
 			post(req, 201);

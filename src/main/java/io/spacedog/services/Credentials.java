@@ -1,3 +1,6 @@
+/**
+ * © David Attias 2015
+ */
 package io.spacedog.services;
 
 import java.util.Optional;
@@ -37,7 +40,6 @@ public class Credentials {
 		// key name is default
 		if (backendKey != null)
 			return backendKey.name;
-		throw new RuntimeException(
-				"invalid credentials: apikey and user are null");
+		throw new RuntimeException("invalid credentials: apikey and user are null");
 	}
 }

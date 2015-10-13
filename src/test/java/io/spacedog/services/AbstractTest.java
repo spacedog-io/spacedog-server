@@ -1,3 +1,6 @@
+/**
+ * © David Attias 2015
+ */
 package io.spacedog.services;
 
 import java.util.List;
@@ -20,11 +23,8 @@ public abstract class AbstractTest extends Assert {
 
 	protected static void refreshIndex(String index) throws UnirestException {
 		System.out.println();
-		System.out
-				.println(String.format("Refresh index [%s] => %s", index,
-						Unirest.post("http://localhost:9200/{index}/_refresh")
-								.routeParam("index", index).asString()
-								.getStatusText()));
+		System.out.println(String.format("Refresh index [%s] => %s", index, Unirest
+				.post("http://localhost:9200/{index}/_refresh").routeParam("index", index).asString().getStatusText()));
 	}
 
 	protected static GetRequest prepareGet(String uri) {
@@ -43,8 +43,7 @@ public abstract class AbstractTest extends Assert {
 		return preparePost(uri, null);
 	}
 
-	protected static HttpRequestWithBody preparePost(String uri,
-			String spacedogKey) {
+	protected static HttpRequestWithBody preparePost(String uri, String spacedogKey) {
 		String url = new StringBuilder(backendDomain).append(uri).toString();
 		HttpRequestWithBody request = Unirest.post(url);
 		if (spacedogKey != null)
@@ -56,8 +55,7 @@ public abstract class AbstractTest extends Assert {
 		return preparePut(uri, null);
 	}
 
-	protected static HttpRequestWithBody preparePut(String uri,
-			String spacedogKey) {
+	protected static HttpRequestWithBody preparePut(String uri, String spacedogKey) {
 		String url = new StringBuilder(backendDomain).append(uri).toString();
 		HttpRequestWithBody request = Unirest.put(url);
 		if (spacedogKey != null)
@@ -69,8 +67,7 @@ public abstract class AbstractTest extends Assert {
 		return prepareDelete(uri, null);
 	}
 
-	protected static HttpRequestWithBody prepareDelete(String uri,
-			String spacedogKey) {
+	protected static HttpRequestWithBody prepareDelete(String uri, String spacedogKey) {
 		String url = new StringBuilder(backendDomain).append(uri).toString();
 		HttpRequestWithBody request = Unirest.delete(url);
 		if (spacedogKey != null)
@@ -90,55 +87,45 @@ public abstract class AbstractTest extends Assert {
 		return request;
 	}
 
-	protected static Result get(HttpRequest req, int... expectedStatus)
-			throws UnirestException {
+	protected static Result get(HttpRequest req, int... expectedStatus) throws UnirestException {
 		return exec(req.getHttpRequest(), null, expectedStatus);
 	}
 
-	protected static Result post(RequestBodyEntity req, int... expectedStatus)
-			throws UnirestException {
+	protected static Result post(RequestBodyEntity req, int... expectedStatus) throws UnirestException {
 		return exec(req.getHttpRequest(), req.getBody(), expectedStatus);
 	}
 
-	protected static Result delete(HttpRequestWithBody req,
-			int... expectedStatus) throws UnirestException {
+	protected static Result delete(HttpRequestWithBody req, int... expectedStatus) throws UnirestException {
 		return exec(req.getHttpRequest(), req.getBody(), expectedStatus);
 	}
 
-	protected static Result put(RequestBodyEntity req, int... expectedStatus)
-			throws UnirestException {
+	protected static Result put(RequestBodyEntity req, int... expectedStatus) throws UnirestException {
 		return exec(req.getHttpRequest(), req.getBody(), expectedStatus);
 	}
 
-	protected static Result options(HttpRequestWithBody req,
-			int... expectedStatus) throws UnirestException {
+	protected static Result options(HttpRequestWithBody req, int... expectedStatus) throws UnirestException {
 		return exec(req.getHttpRequest(), req.getBody(), expectedStatus);
 	}
 
-	private static Result exec(HttpRequest req, Object requestBody,
-			int... expectedStatus) throws UnirestException {
+	private static Result exec(HttpRequest req, Object requestBody, int... expectedStatus) throws UnirestException {
 
 		HttpResponse<String> resp = req.asString();
 
 		System.out.println();
-		System.out.println(String.format("%s %s => %s => %s",
-				req.getHttpMethod(), req.getUrl(), resp.getStatus(),
+		System.out.println(String.format("%s %s => %s => %s", req.getHttpMethod(), req.getUrl(), resp.getStatus(),
 				resp.getStatusText()));
 
 		req.getHeaders().forEach((key, value) -> printHeader(key, value));
 
 		if (requestBody != null)
-			System.out.println(String
-					.format("Request body = [%s]", requestBody));
+			System.out.println(String.format("Request body = [%s]", requestBody));
 
 		Result result = new Result(resp);
 
-		resp.getHeaders().forEach(
-				(key, value) -> System.out.println(String.format("=> %s : %s",
-						key, value)));
+		resp.getHeaders().forEach((key, value) -> System.out.println(String.format("=> %s : %s", key, value)));
 
-		System.out.println(String.format("=> Response body = [%s]", result
-				.isJson() ? Json.prettyString(result.json) : resp.getBody()));
+		System.out.println(String.format("=> Response body = [%s]",
+				result.isJson() ? Json.prettyString(result.json) : resp.getBody()));
 
 		assertTrue(Ints.contains(expectedStatus, resp.getStatus()));
 		return result;
@@ -146,10 +133,8 @@ public abstract class AbstractTest extends Assert {
 
 	private static void printHeader(String key, List<String> value) {
 		if (key.equals(AdminResource.AUTHORIZATION_HEADER)) {
-			AdminResource.decodeAuthorizationHeader(value.get(0)).ifPresent(
-					tokens -> System.out.println(String.format(
-							"%s %s => [Basic %s:%s]", key, value, tokens[0],
-							tokens[1])));
+			AdminResource.decodeAuthorizationHeader(value.get(0)).ifPresent(tokens -> System.out
+					.println(String.format("%s %s => [Basic %s:%s]", key, value, tokens[0], tokens[1])));
 			return;
 		}
 

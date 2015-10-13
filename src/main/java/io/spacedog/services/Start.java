@@ -1,3 +1,6 @@
+/**
+ * © David Attias 2015
+ */
 package io.spacedog.services;
 
 import java.io.IOException;
@@ -7,12 +10,12 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 
-import net.codestory.http.WebServer;
-import net.codestory.http.routes.Routes;
-
 import org.elasticsearch.client.Client;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
+
+import net.codestory.http.WebServer;
+import net.codestory.http.routes.Routes;
 
 public class Start {
 
@@ -72,34 +75,26 @@ public class Start {
 		}
 	}
 
-	private static void startElastic(String[] conf)
-			throws InterruptedException, ExecutionException, IOException {
+	private static void startElastic(String[] conf) throws InterruptedException, ExecutionException, IOException {
 
 		// Sets ElasticSearch data path
-		System.setProperty("es.path.data", Paths.get(conf[0]).resolve("data")
-				.toAbsolutePath().toString());
+		System.setProperty("es.path.data", Paths.get(conf[0]).resolve("data").toAbsolutePath().toString());
 
-		elasticNode = NodeBuilder.nodeBuilder().local(true).data(true)
-				.clusterName("spacedog-elastic-cluster").node();
+		elasticNode = NodeBuilder.nodeBuilder().local(true).data(true).clusterName("spacedog-elastic-cluster").node();
 
 		elasticClient = elasticNode.client();
 
 		AdminResource.get().initSpacedogIndex();
 	}
 
-	private static void startFluent(boolean ssl, String[] conf)
-			throws IOException {
+	private static void startFluent(boolean ssl, String[] conf) throws IOException {
 		if (ssl) {
 			// Force Fluent HTTP to production mode
 			System.setProperty("PROD_MODE", "true");
 
 			Path sslPath = Paths.get(conf[0]).resolve("ssl");
-			new WebServer().configure(Start::configure)
-					.startSSL(
-							443,
-							Arrays.asList(sslPath.resolve(conf[1]),
-									sslPath.resolve(conf[2])),
-							sslPath.resolve(conf[3]));
+			new WebServer().configure(Start::configure).startSSL(443,
+					Arrays.asList(sslPath.resolve(conf[1]), sslPath.resolve(conf[2])), sslPath.resolve(conf[3]));
 
 			HttpPermanentRedirect.start(80, "https://spacedog.io");
 

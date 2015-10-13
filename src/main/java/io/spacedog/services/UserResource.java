@@ -1,6 +1,11 @@
+/**
+ * © David Attias 2015
+ */
 package io.spacedog.services;
 
 import java.util.Collections;
+
+import com.eclipsesource.json.JsonObject;
 
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -9,8 +14,6 @@ import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.annotations.Put;
 import net.codestory.http.payload.Payload;
-
-import com.eclipsesource.json.JsonObject;
 
 @Prefix("/v1")
 public class UserResource extends AbstractResource {
@@ -30,11 +33,9 @@ public class UserResource extends AbstractResource {
 
 	static final String USER_TYPE = "user";
 
-	static final JsonObject USER_DEFAULT_SCHEMA = SchemaBuilder
-			.builder(USER_TYPE).id("username").add("username", "string")
-			.required().add("hashedPassword", "string").required()
-			.add("email", "string").required().add("accountId", "string")
-			.required().add("groups", "string").build();
+	static final JsonObject USER_DEFAULT_SCHEMA = SchemaBuilder.builder(USER_TYPE).id("username")
+			.add("username", "string").required().add("hashedPassword", "string").required().add("email", "string")
+			.required().add("accountId", "string").required().add("groups", "string").build();
 
 	@Get("/login")
 	@Get("/login/")
@@ -85,12 +86,10 @@ public class UserResource extends AbstractResource {
 			user.groups = Collections.singletonList(credentials.getBackendId());
 			user.checkUserInputValidity();
 
-			String userId = DataResource.get().createInternal(
-					credentials.getBackendId(), USER_TYPE,
+			String userId = DataResource.get().createInternal(credentials.getBackendId(), USER_TYPE,
 					// TODO find something better to avoid to many object format
 					// transformations
-					JsonObject.readFrom(getObjectMapper().writeValueAsString(
-							user)), credentials.getName());
+					JsonObject.readFrom(getObjectMapper().writeValueAsString(user)), credentials.getName());
 
 			return created("/v1", USER_TYPE, userId);
 
@@ -118,8 +117,7 @@ public class UserResource extends AbstractResource {
 	}
 
 	public static String getDefaultUserMapping() {
-		JsonObject schema = SchemaValidator.validate(USER_TYPE,
-				USER_DEFAULT_SCHEMA);
+		JsonObject schema = SchemaValidator.validate(USER_TYPE, USER_DEFAULT_SCHEMA);
 		return SchemaTranslator.translate(USER_TYPE, schema).toString();
 	}
 

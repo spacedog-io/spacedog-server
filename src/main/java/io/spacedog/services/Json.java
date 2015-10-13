@@ -1,3 +1,6 @@
+/**
+ * © David Attias 2015
+ */
 package io.spacedog.services;
 
 import java.util.HashSet;
@@ -52,8 +55,7 @@ public class Json {
 			fields.addAll(v2.asObject().names());
 
 			for (String fieldName : fields) {
-				if (!equals(v1.asObject().get(fieldName),
-						v2.asObject().get(fieldName))) {
+				if (!equals(v1.asObject().get(fieldName), v2.asObject().get(fieldName))) {
 					return false;
 				}
 			}
@@ -107,8 +109,7 @@ public class Json {
 		return builder.toString();
 	}
 
-	private static void prettyString(JsonValue json, StringBuilder builder,
-			int level) {
+	private static void prettyString(JsonValue json, StringBuilder builder, int level) {
 		if (json.isArray()) {
 			builder.append("[ ");
 			for (int i = 0; i < json.asArray().size(); i++) {

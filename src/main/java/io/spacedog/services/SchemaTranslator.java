@@ -1,3 +1,6 @@
+/**
+ * © David Attias 2015
+ */
 package io.spacedog.services;
 
 import com.eclipsesource.json.JsonObject;
@@ -5,8 +8,7 @@ import com.eclipsesource.json.JsonValue;
 
 public class SchemaTranslator {
 
-	private static JsonObject META_MAPPING = Json.builder()
-			.add("type", "object") //
+	private static JsonObject META_MAPPING = Json.builder().add("type", "object") //
 			.stObj("properties") //
 			.stObj("createdBy") //
 			.add("type", "string") //
@@ -42,18 +44,11 @@ public class SchemaTranslator {
 		String type = schema.getString("_type", "object");
 
 		if ("object".equals(type)) {
-			JsonBuilder builder = Json
-					.builder()
+			JsonBuilder builder = Json.builder()
 					// Enable _timestamp when I find out how to read/get it back
-					.stObj("_timestamp")
-					.add("enabled", false)
-					.end()
-					.add("dynamic", "strict")
+					.stObj("_timestamp").add("enabled", false).end().add("dynamic", "strict")
 					.add("date_detection", false)
-					.addJson(
-							"properties",
-							toElasticProperties(schema).add("meta",
-									META_MAPPING));
+					.addJson("properties", toElasticProperties(schema).add("meta", META_MAPPING));
 
 			JsonValue id = schema.get("_id");
 			if (id != null)
@@ -62,8 +57,7 @@ public class SchemaTranslator {
 
 			return builder.build();
 		} else
-			throw new IllegalArgumentException(String.format(
-					"Invalid schema root type [%s]", type));
+			throw new IllegalArgumentException(String.format("Invalid schema root type [%s]", type));
 	}
 
 	private static JsonObject toElasticProperties(JsonObject schema) {
@@ -71,8 +65,7 @@ public class SchemaTranslator {
 		JsonBuilder builder = Json.builder();
 		for (String key : schema.names()) {
 			if (key.charAt(0) != '_') {
-				builder.addJson(key,
-						toElasticProperty(key, schema.get(key).asObject()));
+				builder.addJson(key, toElasticProperty(key, schema.get(key).asObject()));
 			}
 		}
 		return builder.build();
@@ -128,8 +121,7 @@ public class SchemaTranslator {
 			mapping.add("type", "object");
 			mapping.add("enabled", false);
 		} else {
-			throw new IllegalArgumentException("Invalid type [" + type
-					+ "] for property [" + key + "]");
+			throw new IllegalArgumentException("Invalid type [" + type + "] for property [" + key + "]");
 		}
 		return mapping;
 	}

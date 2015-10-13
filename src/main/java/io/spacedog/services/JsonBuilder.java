@@ -1,3 +1,6 @@
+/**
+ * © David Attias 2015
+ */
 package io.spacedog.services;
 
 import com.eclipsesource.json.JsonArray;
@@ -206,9 +209,8 @@ public class JsonBuilder {
 		else if (value instanceof Boolean)
 			currentJsonArray.add((Boolean) value);
 		else
-			throw new IllegalArgumentException(String.format(
-					"invalif array value type [%s]", value.getClass()
-							.getSimpleName()));
+			throw new IllegalArgumentException(
+					String.format("invalif array value type [%s]", value.getClass().getSimpleName()));
 	}
 
 	//
@@ -220,10 +222,10 @@ public class JsonBuilder {
 	}
 
 	public JsonObject build() {
-		return parentBuilder == null ? currentJsonObject : parentBuilder
-				.build();
+		return parentBuilder == null ? currentJsonObject : parentBuilder.build();
 	}
 
+	@Override
 	public String toString() {
 		return build().toString();
 	}

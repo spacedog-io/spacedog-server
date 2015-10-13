@@ -1,3 +1,6 @@
+/**
+ * © David Attias 2015
+ */
 package io.spacedog.services;
 
 import com.eclipsesource.json.JsonObject;
@@ -74,13 +77,11 @@ public class SchemaBuilder {
 
 	private void checkCurrentPropertyExists() {
 		if (currentProperty == null)
-			throw new IllegalStateException(String.format(
-					"no current property to set in object [%s]",
-					currentObject.toString()));
+			throw new IllegalStateException(
+					String.format("no current property to set in object [%s]", currentObject.toString()));
 	}
 
-	private void checkCurrentPropertyByValidType(String fieldName,
-			Schema.PropertyTypes... validTypes) {
+	private void checkCurrentPropertyByValidType(String fieldName, Schema.PropertyTypes... validTypes) {
 		Schema.PropertyTypes propertyType = Schema.PropertyTypes
 				.valueOfIgnoreCase(this.currentProperty.get("_type").asString());
 
@@ -89,21 +90,18 @@ public class SchemaBuilder {
 				return;
 		}
 
-		throw new IllegalStateException(String.format(
-				"invalid property type [%s] for this field [%s]", propertyType,
-				fieldName));
+		throw new IllegalStateException(
+				String.format("invalid property type [%s] for this field [%s]", propertyType, fieldName));
 	}
 
-	private void checkCurrentPropertyByInvalidTypes(String fieldName,
-			Schema.PropertyTypes... invalidTypes) {
+	private void checkCurrentPropertyByInvalidTypes(String fieldName, Schema.PropertyTypes... invalidTypes) {
 		Schema.PropertyTypes propertyType = Schema.PropertyTypes
 				.valueOfIgnoreCase(this.currentProperty.get("_type").asString());
 
 		for (Schema.PropertyTypes invalidType : invalidTypes) {
 			if (propertyType.equals(invalidType))
-				throw new IllegalStateException(String.format(
-						"invalid property type [%s] for this field [%s]",
-						propertyType, fieldName));
+				throw new IllegalStateException(
+						String.format("invalid property type [%s] for this field [%s]", propertyType, fieldName));
 		}
 	}
 

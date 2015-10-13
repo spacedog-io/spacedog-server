@@ -1,14 +1,14 @@
+/**
+ * © David Attias 2015
+ */
 package io.spacedog.services;
-
-import io.spacedog.services.Json;
-import io.spacedog.services.JsonBuilder;
-import io.spacedog.services.SchemaValidator;
-import io.spacedog.services.SchemaValidator.InvalidSchemaException;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.eclipsesource.json.JsonObject;
+
+import io.spacedog.services.SchemaValidator.InvalidSchemaException;
 
 public class SchemaValidatorTest extends Assert {
 
@@ -18,21 +18,15 @@ public class SchemaValidatorTest extends Assert {
 		// no yet valid
 		// testValidSchema(Json.builder().stObj("car").add("_type", "stash"));
 
-		testValidSchema(Json.builder().stObj("car").stObj("color")
-				.add("_type", "enum").add("_required", true).end()
+		testValidSchema(Json.builder().stObj("car").stObj("color").add("_type", "enum").add("_required", true).end()
 				.stObj("model").add("_type", "string").add("_required", true));
-		testValidSchema(Json.builder().stObj("car").stObj("color")
-				.add("_type", "enum").add("_required", true).end()
-				.stObj("model").add("_type", "string").add("_required", true)
-				.end().stObj("descr").stObj("short").add("_type", "text").end()
-				.stObj("detailed").add("_type", "stash"));
-		testValidSchema(Json.builder().stObj("car").stObj("color")
-				.add("_type", "enum").add("_required", true)
-				.add("_array", true).end().stObj("model")
-				.add("_type", "object").add("_required", true)
-				.add("_array", true).stObj("name").add("_type", "string")
-				.add("_required", true).end().stObj("description")
-				.add("_type", "text"));
+		testValidSchema(Json.builder().stObj("car").stObj("color").add("_type", "enum").add("_required", true).end()
+				.stObj("model").add("_type", "string").add("_required", true).end().stObj("descr").stObj("short")
+				.add("_type", "text").end().stObj("detailed").add("_type", "stash"));
+		testValidSchema(Json.builder().stObj("car").stObj("color").add("_type", "enum").add("_required", true)
+				.add("_array", true).end().stObj("model").add("_type", "object").add("_required", true)
+				.add("_array", true).stObj("name").add("_type", "string").add("_required", true).end()
+				.stObj("description").add("_type", "text"));
 	}
 
 	private void testValidSchema(JsonBuilder builder) {
@@ -49,15 +43,14 @@ public class SchemaValidatorTest extends Assert {
 		testInvalidSchema(Json.builder().stObj("car").end().stObj("XXX"));
 		testInvalidSchema(Json.builder().stObj("car").add("_type", "XXX"));
 		testInvalidSchema(Json.builder().stObj("car").add("type", "XXX"));
-		testInvalidSchema(Json.builder().stObj("car").add("_type", "object")
-				.stObj("name").add("_type", "text").end().end()
-				.add("XXX", "hello"));
-		testInvalidSchema(Json.builder().stObj("car").add("_type", "object")
-				.stObj("name").add("_type", "text").add("_XXX", true));
-		testInvalidSchema(Json.builder().stObj("car").add("_type", "object")
-				.stObj("name").add("_type", "text").stObj("XXX"));
-		testInvalidSchema(Json.builder().stObj("car").add("_type", "object")
-				.stObj("name").add("_type", "text").add("XXX", true));
+		testInvalidSchema(Json.builder().stObj("car").add("_type", "object").stObj("name").add("_type", "text").end()
+				.end().add("XXX", "hello"));
+		testInvalidSchema(Json.builder().stObj("car").add("_type", "object").stObj("name").add("_type", "text")
+				.add("_XXX", true));
+		testInvalidSchema(
+				Json.builder().stObj("car").add("_type", "object").stObj("name").add("_type", "text").stObj("XXX"));
+		testInvalidSchema(
+				Json.builder().stObj("car").add("_type", "object").stObj("name").add("_type", "text").add("XXX", true));
 	}
 
 	private void testInvalidSchema(JsonBuilder builder) {

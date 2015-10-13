@@ -1,3 +1,6 @@
+/**
+ * © David Attias 2015
+ */
 package io.spacedog.services;
 
 import java.text.SimpleDateFormat;
@@ -20,8 +23,8 @@ public class QueryTest extends AbstractTest {
 		SchemaResourceTest.resetCarSchema();
 
 		for (int i = 0; i < 500; i++) {
-			RequestBodyEntity req2 = preparePost("/v1/data/car",
-					AdminResourceTest.testClientKey()).body(jsonCar(i).toString());
+			RequestBodyEntity req2 = preparePost("/v1/data/car", AdminResourceTest.testClientKey())
+					.body(jsonCar(i).toString());
 
 			post(req2, 201);
 		}
@@ -31,9 +34,7 @@ public class QueryTest extends AbstractTest {
 		calendar.roll(Calendar.DAY_OF_MONTH, false);
 		calendar.roll(Calendar.HOUR_OF_DAY, false);
 
-		return Json
-				.builder()
-				.add("serialNumber", String.valueOf(i))
+		return Json.builder().add("serialNumber", String.valueOf(i))
 				.add("buyDate", dateFormat.format(calendar.getTime()))
 				.add("buyTime", timeFormat.format(calendar.getTime()))
 				.add("buyTimestamp", timestampFormat.format(calendar.getTime())) //
@@ -93,23 +94,18 @@ public class QueryTest extends AbstractTest {
 
 		StringBuilder builder = new StringBuilder();
 		for (int j = 0; j < 50; j++) {
-			builder.append(dico.get((int) (Math.random() * dico.size())))
-					.append(' ');
+			builder.append(dico.get((int) (Math.random() * dico.size()))).append(' ');
 		}
 		return builder.toString();
 	}
 
-	private static Calendar calendar = new Calendar.Builder()
-			.setDate(2014, 12, 31).setTimeOfDay(15, 35, 0).build();
+	private static Calendar calendar = new Calendar.Builder().setDate(2014, 12, 31).setTimeOfDay(15, 35, 0).build();
 
-	private static SimpleDateFormat dateFormat = new SimpleDateFormat(
-			"YYYY-MM-dd");
+	private static SimpleDateFormat dateFormat = new SimpleDateFormat("YYYY-MM-dd");
 
-	private static SimpleDateFormat timeFormat = new SimpleDateFormat(
-			"HH:mm:ss");
+	private static SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
 
-	private static SimpleDateFormat timestampFormat = new SimpleDateFormat(
-			"YYYY-MM-dd'T'HH:mm:ss.SSSZ");
+	private static SimpleDateFormat timestampFormat = new SimpleDateFormat("YYYY-MM-dd'T'HH:mm:ss.SSSZ");
 
 	private static String dicoBase = "Avec ses voitures électriques, Tesla a rencontré un gros succès aux Etats-Unis (mais pas en Chine)."
 			+ " La société a décidé de s'ouvrir un nouveau marché bien plus large en proposant des batteries destinées à alimenter les foyers."
