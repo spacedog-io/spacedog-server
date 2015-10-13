@@ -7,7 +7,7 @@ Authenticate and authorize users. Save and search for data. Update and push cont
 - Sign up here : https://spacedog.io
 - Online documentation: https://spacedog.io/docs/user-guide/getting-started.html
 
-## User's Guide
+### User's Guide
 
 - [Getting started](src/jekyll/_user-guide/getting-started.md)
 - [Storing and searching data](src/jekyll/_user-guide/storing-and-searching-data.md)
@@ -15,7 +15,7 @@ Authenticate and authorize users. Save and search for data. Update and push cont
 - [Deploy to the cloud](src/jekyll/_user-guide/deploy-to-the-cloud.md)
 - [Configurations and contents](src/jekyll/_user-guide/configurations-and-contents.md)
 
-## Reference Guide
+### Reference Guide
 
 - [Configuration](src/jekyll/_reference-guide/configuration.md)
 - [Contents](src/jekyll/_reference-guide/contents.md)
