@@ -12,6 +12,7 @@ Authenticate and authorize users. Save and search for data. Update and push cont
 - [Getting started](src/jekyll/_user-guide/getting-started.md)
 - [Storing and searching data](src/jekyll/_user-guide/storing-and-searching-data.md)
 - [Defining schema](src/jekyll/_user-guide/defining-schema.md)
+- [Authenticate users](src/jekyll/_user-guide/authenticate-users.md)
 - [Deploy to the cloud](src/jekyll/_user-guide/deploy-to-the-cloud.md)
 - [Configurations and contents](src/jekyll/_user-guide/configurations-and-contents.md)
 

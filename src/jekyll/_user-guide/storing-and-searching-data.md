@@ -185,3 +185,5 @@ The system will reject all changes that might endanger retro compatibility. It m
 When developing a new release of your app, you usually need to make changes in your object schemas. You are only authorized with adding fields or changing validation to less restrictive rules.
 
 To delete the `car` schema, send a `DELETE /v1/schema/car`. It will also delete all the `car` objects.
+
+>>> Next: [Defining schema](defining-schema.md) >>>

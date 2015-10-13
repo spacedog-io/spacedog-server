@@ -41,3 +41,5 @@ Authorization Basic ZG9jOmhpIGRvYw==
 ```
 
 Be careful not to mix backend key and admin authorization.
+
+>>> Next: [Storing and searching data](storing-and-searching-data.md) >>>

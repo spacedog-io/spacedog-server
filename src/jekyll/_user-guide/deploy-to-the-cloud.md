@@ -135,3 +135,5 @@ Then to attach your file or file tree to a specific domain and URI, send a `PUT 
      "location" : "https://{hostname}:{port}/{uri}"
 }
 ```
+
+>>> Next: [Configurations and contents](configurations-and-contents.md) >>>
