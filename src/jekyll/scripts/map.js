@@ -127,7 +127,7 @@ function displayPois(data) {
 	return bounds;
 }
 
-function searchInPois(event) {
+function searchInPois() {
 	console.log('Searching in for pois ...');									
 
 	var q = $searchForm.find('input[name="q"]').val();
@@ -164,7 +164,7 @@ function searchInPois(event) {
 			}
 		}),
 		headers : {
-			'x-spacedog-backend-key':  'demo:client-app:a72c46fd-1882-4d77-a449-74a707e4e6e1'
+			'x-spacedog-backend-key':  'examples:default:2fd38b9c-4a9c-48f4-a266-08b48b845c35'
 		},
 		success: searchInOk,
 		error: searchNok
@@ -192,7 +192,7 @@ function searchOutPois() {
 			}
 		}),
 		headers : {
-			'x-spacedog-backend-key':  'demo:client-app:a72c46fd-1882-4d77-a449-74a707e4e6e1'
+			'x-spacedog-backend-key':  'examples:default:2fd38b9c-4a9c-48f4-a266-08b48b845c35'
 		},
 		success: searchOutOk,
 		error: searchNok
@@ -231,7 +231,7 @@ function initMap() {
 		mapTypeControl: false
 	});
 
-	//map.addListener('tilesloaded', searchBackspacePois);
+	google.maps.event.addListenerOnce(map, 'tilesloaded', searchInPois);	
 	$searchForm.submit(searchInPois)
 	$searchForm.find('input[name="q"]').focus();
 }

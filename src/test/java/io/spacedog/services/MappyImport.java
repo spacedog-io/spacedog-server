@@ -14,33 +14,34 @@ import com.mashape.unirest.request.body.RequestBodyEntity;
 
 public class MappyImport extends AbstractTest {
 
-	private static String demoKey;
+	private static String examplesKey;
 
 	public static void resetDemoAccount() throws UnirestException {
 
-		HttpRequestWithBody req1 = prepareDelete("/v1/admin/account/demo");
-		delete(req1, 200, 404);
+		HttpRequestWithBody req1 = prepareDelete("/v1/admin/account/examples").basicAuth("examples", "hi examples");
+		delete(req1, 200, 401);
 
 		RequestBodyEntity req2 = preparePost("/v1/admin/account/")
-				.body(Json.builder().add("backendId", "demo").add("username", "demo").add("password", "hi demo")
-						.add("email", "hello@spacedog.io").build().toString());
+				.body(Json.builder().add("backendId", "examples").add("username", "examples")
+						.add("password", "hi examples").add("email", "hello@spacedog.io").build().toString());
 
-		demoKey = post(req2, 201).response().getHeaders().get(AdminResource.BACKEND_KEY_HEADER).get(0);
+		examplesKey = post(req2, 201).response().getHeaders().get(AdminResource.BACKEND_KEY_HEADER).get(0);
 
-		assertFalse(Strings.isNullOrEmpty(demoKey));
+		assertFalse(Strings.isNullOrEmpty(examplesKey));
 
 		refreshIndex(AdminResource.SPACEDOG_INDEX);
-		refreshIndex("demo");
+		refreshIndex("examples");
 	}
 
 	public static void main(String[] args) {
 		try {
 			resetDemoAccount();
 
-			HttpRequestWithBody req2 = prepareDelete("/v1/schema/resto", demoKey);
+			HttpRequestWithBody req2 = prepareDelete("/v1/schema/resto").basicAuth("examples", "hi examples");
 			delete(req2, 200, 404);
 
-			RequestBodyEntity req3 = preparePost("/v1/schema/resto", demoKey).body(buildRestoSchema().toString());
+			RequestBodyEntity req3 = preparePost("/v1/schema/resto").basicAuth("examples", "hi examples")
+					.body(buildRestoSchema().toString());
 
 			post(req3, 201);
 
@@ -97,7 +98,7 @@ public class MappyImport extends AbstractTest {
 			});
 		}
 
-		RequestBodyEntity req = preparePost("/v1/data/resto", demoKey).body(target.build().toString());
+		RequestBodyEntity req = preparePost("/v1/data/resto", examplesKey).body(target.build().toString());
 
 		try {
 			post(req, 201);
