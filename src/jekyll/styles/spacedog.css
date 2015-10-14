@@ -97,7 +97,7 @@ nav button {
   background-color: transparent;
 }
 
-#register {
+#subscribe-form {
   padding: 0 16px 20px 16px;
   position: relative;
   display: inline-block;
@@ -105,14 +105,14 @@ nav button {
   background-color: #112365;
 }
 
-#register button,
-#register input {
+#subscribe-form button,
+#subscribe-form input {
   border-color: orange;
 }
 
-#register button:focus,
-#register button:hover,
-#register input:focus {
+#subscribe-form button:focus,
+#subscribe-form button:hover,
+#subscribe-form input:focus {
   border-color: red;
 }
 

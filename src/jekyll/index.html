@@ -7,6 +7,7 @@
 
 	<head>
 		{% include head.html %}
+	  	<script src="/scripts/home.js"></script>
 	</head>
 
   <body>
@@ -16,40 +17,30 @@
     <div class="banner">
 
 	    <div class="uvp">
+	    
 	    	<img src="/images/spacedog.png">
 	      	<h1>Smart backend for mobile and web applications.</h1>
 	      	<h5>Focus on creating amazing user experiences. Forget about server-side pain. Sign up and immediately access our backend services in the cloud. Save and search for data. Edit and push new contents. Deploy and publish resources and services.</h5>
 	  	 	</br>
-
-			<!-- Begin MailChimp Signup Form -->
 			
-			<div id="mc_embed_signup">
-			<form action="//space.us11.list-manage.com/subscribe/post?u=695c4d3705128a6eb146ca520&amp;id=2ec6d416a8" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate" target="_blank" novalidate>
+			<form id="subscribe-form" novalidate>
 
-					<div id="register">
-						<h5><bold>STAY INFORMED</bold></h5>
-						<input type="email" value="" name="EMAIL" class="form-field" id="mce-EMAIL" placeholder="Email address">
-				    	<button type="submit" name="subscribe" id="mc-embedded-subscribe">Register</button>
-				    </div>
-				    
-				    <br><br>
-					
-					<div id="mce-responses" class="clear">
-						<div class="response" id="mce-error-response" style="display:none"></div>
-						<div class="response" id="mce-success-response" style="display:none"></div>
-					</div>
+				<h5>Interested? Stay informed:</h5>
 
-					<!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
-				    <div style="position: absolute; left: -5000px;">
-				    	<input type="text" name="b_695c4d3705128a6eb146ca520_2ec6d416a8" tabindex="-1" value="">
-				    </div>
+				<div style="position: absolute; left: -5000px;">
+					<input type="hidden" name="id" value='2ec6d416a8'>
+					<input type="hidden" name="u" value='695c4d3705128a6eb146ca520'>
+					<!-- do not remove this or risk form bot signups-->
+					<input type="text" name="b_695c4d3705128a6eb146ca520_2ec6d416a8" tabindex="-1" value="">
+				</div>
+				
+				<input type="email" id="email" name="EMAIL" class="form-field" placeholder="Email address">
+				<button type="submit" id="subscribe">Subscribe</button>
+
+				<div id="subscribe-response">
+				</div>
 
 			</form>
-			</div>
-
-			<script type='text/javascript' src='//s3.amazonaws.com/downloads.mailchimp.com/js/mc-validate.js'></script><script type='text/javascript'>(function($) {window.fnames = new Array(); window.ftypes = new Array();fnames[0]='EMAIL';ftypes[0]='email';fnames[1]='FNAME';ftypes[1]='text';fnames[2]='LNAME';ftypes[2]='text';}(jQuery));var $mcj = jQuery.noConflict(true);</script>
-
-			<!--End MailChimp Signup Form -->
 
 	    </div>
 
