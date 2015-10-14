@@ -1,5 +1,7 @@
 /*
-*/
+ *  © David Attias 2015
+ */
+
 
 var	$consoleDiv;
 var	$alert;

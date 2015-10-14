@@ -1,5 +1,6 @@
 /*
-*/
+ *  © David Attias 2015
+ */
 
 var $signDiv;
 var $consoleDiv;
