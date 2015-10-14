@@ -50,6 +50,7 @@ function signIn(event) {
 	});
 
 	$('#sign-in').blur();
+
 	return false;
 }
 
@@ -57,18 +58,24 @@ function createAccount(event) {
 	console.log('Creating account...');
 	computeContextFromForm('#create-form');
 
-	$.ajax({
-		method: 'POST',
-		url: window.location.origin + '/v1/admin/account',
-		cache: false,
-		contentType: 'application/json; charset=UTF-8',
-		data: JSON.stringify(sessionStorage),
-		processData: false,
-		success: showConsole,
-		error: showError
-	});
+	if (sessionStorage.password != sessionStorage.passwordConfirmation) {
+		$alert.html('=> pasword confirmation is different');
+	}
+	else {
+		$.ajax({
+			method: 'POST',
+			url: window.location.origin + '/v1/admin/account',
+			cache: false,
+			contentType: 'application/json; charset=UTF-8',
+			data: JSON.stringify(sessionStorage),
+			processData: false,
+			success: showConsole,
+			error: showError
+		});
 
-	$('#create-account').blur();
+		$('#create-account').blur();
+	}
+	
 	return false;
 }
 
