@@ -6,6 +6,7 @@ package io.spacedog.services;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 import com.google.common.base.Strings;
@@ -72,6 +73,35 @@ public class Json {
 		}
 
 		return true;
+	}
+
+	public static JsonValue copy(JsonValue value) {
+
+		if (value.isNull())
+			return value;
+
+		if (value.isBoolean())
+			return value;
+
+		if (value.isNumber())
+			return JsonValue.valueOf(value.asDouble());
+
+		if (value.isString())
+			return JsonValue.valueOf(value.asString());
+
+		if (value.isObject()) {
+			JsonObject copy = new JsonObject();
+			value.asObject().forEach(member -> copy.add(member.getName(), copy(member.getValue())));
+			return copy;
+		}
+
+		if (value.isArray()) {
+			JsonArray copy = new JsonArray();
+			value.asArray().forEach(jsonValue -> copy.add(copy(jsonValue)));
+			return copy;
+		}
+
+		throw new RuntimeException(String.format("invalid JsonValue object [%s]", value));
 	}
 
 	public static JsonBuilder builder() {
