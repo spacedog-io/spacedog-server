@@ -143,9 +143,9 @@ Non `text` fields are also indexed for search but only the raw value will match 
 
 #### Update or delete a data object
 
-To update the car object, send a `PUT /v1/data/car/AVBNO3a-QyG1NXhw6uuH/1` where `AVBNO3a-QyG1NXhw6uuH` is the car identifier and where `1` is the object version. Add a body set to the updated car JSON. You'll get a regular  status response.
+To update the car object, send a `PUT /v1/data/car/{id}?version={current}` where `id` is the car identifier and `current` is the current object version. Add a body set to the updated car JSON. You'll get a regular status response.
 
-When updating a data object, the version is mandatory to alloy optimistic consistency check. More than one person or program might update the same object at the same time. This might end up with a data inconsistency. To avoid such problem, all data objects have a system managed version. Every time an object is updated, the provided version is compared to the one in store. Versions are different means that the object has been updated in the meantime by someone else. It results an error for the second to try an update.
+When updating a data object, the current object version can be used to enforce optimistic consistency check. More than one person or program might update the same object at the same time. This might end up with a data inconsistency. To avoid such problem, all data objects have a system managed version. Every time an object is updated, the provided version is compared to the one in store. Versions are different means that the object has been updated in the meantime by someone else. It results an error for the second to try an update.
 
 To delete the car object, send a `DELETE /v1/data/car/AVBNO3a-QyG1NXhw6uuH` and get a status response. No need to provide a version in this case since a delete will always win over an update.
 
