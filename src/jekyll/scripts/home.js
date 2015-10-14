@@ -9,16 +9,16 @@ var $response;
 
 function showError(jqxhr) {
 	console.log('jqxhr', jqxhr);
-	$response.html('<br><p>' +  jqxhr.statusText + ': ' + jqxhr.status + '</p>');
+	$response.html('<br><p>=> ' +  jqxhr.statusText + ': ' + jqxhr.status + '</p>');
 }
 
 function showSuccess(response) {
 	console.log('response', response);
 
 	if (response.msg)
-		$response.html('<br><p>' + response.msg + '</p>');
+		$response.html('<br><p>=> ' + response.msg + '</p>');
 	else
-		$response.html('<br><p>Error: no message.</p>');
+		$response.html('<br><p>=> Error: no message.</p>');
 }
 
 function subscribe(event) {
