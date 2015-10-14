@@ -9,7 +9,10 @@ import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.update.UpdateRequestBuilder;
+import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.common.base.Strings;
+import org.elasticsearch.index.engine.VersionConflictEngineException;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.joda.time.DateTime;
@@ -70,17 +73,17 @@ public class DataResource extends AbstractResource {
 			// object should be validated before saved
 			SchemaResource.getSchema(credentials.getBackendId(), type);
 
-			String id = createInternal(credentials.getBackendId(), type, JsonObject.readFrom(jsonBody),
+			IndexResponse response = createInternal(credentials.getBackendId(), type, JsonObject.readFrom(jsonBody),
 					credentials.getName());
 
-			return created("/v1/data", type, id);
+			return saved(true, "/v1/data", response.getType(), response.getId(), response.getVersion());
 
 		} catch (Throwable throwable) {
 			return error(throwable);
 		}
 	}
 
-	String createInternal(String index, String type, JsonObject object, String createdBy) {
+	IndexResponse createInternal(String index, String type, JsonObject object, String createdBy) {
 
 		String now = DateTime.now().toString();
 
@@ -89,14 +92,16 @@ public class DataResource extends AbstractResource {
 		object.remove("meta").add("meta", new JsonObject().add("createdBy", createdBy).add("updatedBy", createdBy)
 				.add("createdAt", now).add("updatedAt", now));
 
-		IndexResponse response = Start.getElasticClient().prepareIndex(index, type).setSource(object.toString()).get();
-
-		return response.getId();
+		return Start.getElasticClient().prepareIndex(index, type).setSource(object.toString()).get();
 	}
 
 	@Delete("/:type")
 	@Delete("/:type/")
 	public Payload deleteAll(String type, Context context) {
+		/*
+		 * TODO (1) this is not exactly right I might want to delete all objects
+		 * but keep the schema for future use. (2) Admin credentials?
+		 */
 		return SchemaResource.get().deleteSchema(type, context);
 	}
 
@@ -178,10 +183,24 @@ public class DataResource extends AbstractResource {
 					.remove("meta").add("meta", new JsonObject().add("updatedBy", credentials.getName())
 							.add("updatedAt", DateTime.now().toString()));
 
-			Start.getElasticClient().prepareUpdate(credentials.getBackendId(), type, objectId).setDoc(object.toString())
-					.get();
+			UpdateRequestBuilder update = Start.getElasticClient()
+					.prepareUpdate(credentials.getBackendId(), type, objectId).setDoc(object.toString());
 
-			return success();
+			String onVersion = context.get("version");
+
+			if (!Strings.isNullOrEmpty(onVersion))
+				try {
+					update.setVersion(Long.parseLong(onVersion));
+				} catch (NumberFormatException exc) {
+					return invalidParameters("version", onVersion, "provided version is not a valid long");
+				}
+
+			UpdateResponse response = update.get();
+
+			return saved(response.isCreated(), "/v1/data", response.getType(), response.getId(), response.getVersion());
+
+		} catch (VersionConflictEngineException exc) {
+			return error(HttpStatus.CONFLICT, exc);
 		} catch (Throwable throwable) {
 			return error(throwable);
 		}
@@ -218,23 +237,24 @@ public class DataResource extends AbstractResource {
 			request.types(type);
 		}
 
+		SearchSourceBuilder builder = SearchSourceBuilder.searchSource()
+				.from(context.request().query().getInteger("from", 0))
+				.size(context.request().query().getInteger("size", 10)).version(true)
+				.fetchSource(context.request().query().getBoolean("fetch-contents", true));
+
 		if (Strings.isNullOrEmpty(json)) {
-			SearchSourceBuilder builder = SearchSourceBuilder.searchSource()
-					.from(context.request().query().getInteger("from", 0))
-					.size(context.request().query().getInteger("size", 10))
-					.fetchSource(context.request().query().getBoolean("fetch-contents", true))
-					.query(QueryBuilders.matchAllQuery());
+			builder.query(QueryBuilders.matchAllQuery());
 
 			String queryText = context.get("q");
 			if (!Strings.isNullOrEmpty(queryText)) {
 				builder.query(QueryBuilders.simpleQueryStringQuery(queryText));
 			}
 
-			request.extraSource(builder);
-
 		} else {
 			request.source(json);
 		}
+
+		request.extraSource(builder);
 
 		return extractResults(Start.getElasticClient().search(request).get());
 	}

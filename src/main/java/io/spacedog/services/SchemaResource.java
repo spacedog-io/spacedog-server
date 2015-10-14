@@ -99,7 +99,7 @@ public class SchemaResource extends AbstractResource {
 
 			Start.getElasticClient().admin().indices().putMapping(putMappingRequest).get();
 
-			return created("/v1", "schema", type);
+			return saved(true, "/v1", "schema", type);
 
 		} catch (Throwable throwable) {
 			return error(throwable);

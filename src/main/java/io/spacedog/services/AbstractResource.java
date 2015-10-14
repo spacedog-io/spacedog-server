@@ -72,6 +72,24 @@ public abstract class AbstractResource {
 		return new Payload(JSON_CONTENT, "{\"success\":true}", HttpStatus.OK);
 	}
 
+	public static Payload saved(boolean created, String uri, String type, String id) {
+		return saved(created, uri, type, id, 0);
+	}
+
+	public static Payload saved(boolean created, String uri, String type, String id, long version) {
+		JsonBuilder builder = Json.builder() //
+				.add("success", true) //
+				.add("id", id) //
+				.add("type", type) //
+				.add("location", toUrl(BASE_URL, uri, type, id));
+
+		if (version > 0) //
+			builder.add("version", version);
+
+		return new Payload(JSON_CONTENT, builder.build().toString(), created ? HttpStatus.CREATED : HttpStatus.OK)
+				.withHeader(AbstractResource.HEADER_OBJECT_ID, id);
+	}
+
 	public static Payload error(int httpStatus) {
 		return error(httpStatus, null);
 	}
@@ -91,6 +109,9 @@ public abstract class AbstractResource {
 			return error(HttpStatus.NOT_FOUND, t);
 		}
 		if (t instanceof IllegalArgumentException) {
+			return error(HttpStatus.BAD_REQUEST, t);
+		}
+		if (t instanceof NumberFormatException) {
 			return error(HttpStatus.BAD_REQUEST, t);
 		}
 		if (t instanceof InvalidSchemaException) {
@@ -130,16 +151,6 @@ public abstract class AbstractResource {
 				builder = builder.stObj(parameters[0]).add("value", parameters[1]).add("message", parameters[2]);
 		}
 		return new Payload(JSON_CONTENT, builder.build().toString(), HttpStatus.BAD_REQUEST);
-	}
-
-	protected static Payload created(String uri, String type, String id) {
-		return new Payload(JSON_CONTENT,
-				Json.builder() //
-						.add("success", true) //
-						.add("id", id).add("type", type) //
-						.add("location", toUrl(BASE_URL, uri, type, id)) //
-						.build().toString(),
-				HttpStatus.CREATED).withHeader(AbstractResource.HEADER_OBJECT_ID, id);
 	}
 
 	protected static String toUrl(String baseUrl, String uri, String type, String id) {

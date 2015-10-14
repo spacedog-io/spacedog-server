@@ -5,6 +5,8 @@ package io.spacedog.services;
 
 import java.util.Collections;
 
+import org.elasticsearch.action.index.IndexResponse;
+
 import com.eclipsesource.json.JsonObject;
 
 import net.codestory.http.Context;
@@ -86,12 +88,12 @@ public class UserResource extends AbstractResource {
 			user.groups = Collections.singletonList(credentials.getBackendId());
 			user.checkUserInputValidity();
 
-			String userId = DataResource.get().createInternal(credentials.getBackendId(), USER_TYPE,
+			IndexResponse response = DataResource.get().createInternal(credentials.getBackendId(), USER_TYPE,
 					// TODO find something better to avoid to many object format
 					// transformations
 					JsonObject.readFrom(getObjectMapper().writeValueAsString(user)), credentials.getName());
 
-			return created("/v1", USER_TYPE, userId);
+			return saved(true, "/v1", USER_TYPE, response.getId(), response.getVersion());
 
 		} catch (Throwable throwable) {
 			return error(throwable);

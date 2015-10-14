@@ -133,8 +133,8 @@ public class AdminResource extends AbstractResource {
 			Start.getElasticClient().admin().indices().prepareCreate(account.backendId)
 					.addMapping(UserResource.USER_TYPE, UserResource.getDefaultUserMapping()).get();
 
-			return created("/v1/admin", ACCOUNT_TYPE, account.backendId).withHeader(AdminResource.BACKEND_KEY_HEADER,
-					account.defaultClientKey());
+			return saved(true, "/v1/admin", ACCOUNT_TYPE, account.backendId)
+					.withHeader(AdminResource.BACKEND_KEY_HEADER, account.defaultClientKey());
 
 		} catch (Throwable throwable) {
 			return error(throwable);

@@ -46,6 +46,7 @@ public class DataResourceTest2 extends AbstractTest {
 
 		assertEquals(true, result.get("success").asBoolean());
 		assertEquals("sale", result.get("type").asString());
+		assertEquals(1, result.get("version").asLong());
 		assertNotNull(result.get("id"));
 
 		String id = result.get("id").asString();
@@ -64,7 +65,11 @@ public class DataResourceTest2 extends AbstractTest {
 		assertTrue(createdAt.isAfter(beforeCreate.getMillis()));
 		assertTrue(createdAt.isBeforeNow());
 		assertEquals(meta1.get("updatedAt"), meta1.get("createdAt"));
-		assertTrue(Json.equals(sale, res1.remove("meta")));
+		assertEquals(1, meta1.get("version").asLong());
+		assertEquals("sale", meta1.get("type").asString());
+		assertEquals(id, meta1.get("id").asString());
+		// copy to be able to reuse the res1 object in the following
+		assertTrue(Json.equals(sale, Json.copy(res1).asObject().remove("meta")));
 
 		assertEquals("1234567890", res1.get("number").asString());
 		assertEquals(-55.6765, Json.get(res1, "where.lat").asFloat(), 0.00002);
@@ -90,7 +95,8 @@ public class DataResourceTest2 extends AbstractTest {
 
 		GetRequest req1b = prepareGet("/v1/data/sale?q=museum", AdminResourceTest.testClientKey());
 		JsonObject res1b = get(req1b, 200).json();
-		assertEquals(id, Json.get(res1b, "results.0.meta.id").asString());
+		assertEquals(1, Json.get(res1b, "total").asLong());
+		assertTrue(Json.equals(res1, Json.get(res1b, "results.0").asObject()));
 
 		// create user vince
 
@@ -100,15 +106,20 @@ public class DataResourceTest2 extends AbstractTest {
 		post(req1a, 201);
 		refreshIndex("test");
 
-		// update
+		// small update no version should succeed
 
-		JsonObject updateJson = Json.builder().stArr("items").addObj().add("quantity", 7).build();
+		JsonObject updateJson2 = Json.builder().stArr("items").addObj().add("quantity", 7).build();
 
 		RequestBodyEntity req2 = preparePut("/v1/data/sale/{id}", AdminResourceTest.testClientKey())
-				.routeParam("id", id).basicAuth("vince", "hi vince").body(updateJson.toString());
+				.routeParam("id", id).basicAuth("vince", "hi vince").body(updateJson2.toString());
 
 		DateTime beforeUpdate = DateTime.now();
-		put(req2, 200);
+		JsonObject res2 = put(req2, 200).json();
+
+		assertEquals(true, res2.get("success").asBoolean());
+		assertEquals("sale", res2.get("type").asString());
+		assertEquals(2, res2.get("version").asLong());
+		assertEquals(id, res2.get("id").asString());
 
 		// check update is correct
 
@@ -118,13 +129,72 @@ public class DataResourceTest2 extends AbstractTest {
 		JsonObject meta3 = res3.get("meta").asObject();
 		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, meta3.get("createdBy").asString());
 		assertEquals("vince", meta3.get("updatedBy").asString());
-		DateTime createdAtAfterUpdate = DateTime.parse(meta3.get("createdAt").asString());
-		assertEquals(createdAt, createdAtAfterUpdate);
+		DateTime createdAt3 = DateTime.parse(meta3.get("createdAt").asString());
+		assertEquals(createdAt, createdAt3);
 		DateTime updatedAt = DateTime.parse(meta3.get("updatedAt").asString());
 		assertTrue(updatedAt.isAfter(beforeUpdate.getMillis()));
 		assertTrue(updatedAt.isBeforeNow());
-		assertEquals("1234567890", res3.get("number").asString());
+		assertEquals(2, meta3.get("version").asLong());
+		assertEquals("sale", meta3.get("type").asString());
+		assertEquals(id, meta3.get("id").asString());
 		assertEquals(7, Json.get(res3, "items.0.quantity").asInt());
+		// check equality on what has not been updated
+		assertTrue(Json.equals(Json.copy(sale).asObject().remove("items"),
+				Json.copy(res3).asObject().remove("meta").remove("items")));
+
+		// update with invalid version should fail
+
+		JsonBuilder updateJson3b = Json.builder().add("number", "0987654321");
+
+		RequestBodyEntity req3b = preparePut("/v1/data/sale/{id}", AdminResourceTest.testClientKey())
+				.routeParam("id", id).queryString("version", "1").body(updateJson3b.toString());
+
+		JsonObject res3b = put(req3b, 409).json();
+
+		assertEquals(false, res3b.get("success").asBoolean());
+
+		// update with invalid version should fail
+
+		RequestBodyEntity req3c = preparePut("/v1/data/sale/{id}", AdminResourceTest.testClientKey())
+				.routeParam("id", id).queryString("version", "XXX").body(updateJson3b.toString());
+
+		JsonObject res3c = put(req3c, 400).json();
+
+		assertEquals(false, res3c.get("success").asBoolean());
+		assertEquals("XXX", Json.get(res3c, "invalidParameters.version.value").asString());
+
+		// update with correct version should succeed
+
+		RequestBodyEntity req3d = preparePut("/v1/data/sale/{id}", AdminResourceTest.testClientKey())
+				.routeParam("id", id).queryString("version", "2").body(updateJson3b.toString());
+
+		JsonObject res3d = put(req3d, 200).json();
+
+		assertEquals(true, res3d.get("success").asBoolean());
+		assertEquals("sale", res3d.get("type").asString());
+		assertEquals(3, res3d.get("version").asLong());
+		assertEquals(id, res3d.get("id").asString());
+
+		// check update is correct
+
+		GetRequest req3e = prepareGet("/v1/data/sale/{id}", AdminResourceTest.testClientKey()).routeParam("id", id);
+		JsonObject res3e = get(req3e, 200).json();
+
+		JsonObject meta3e = res3e.get("meta").asObject();
+		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, meta3e.get("createdBy").asString());
+		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, meta3e.get("updatedBy").asString());
+		DateTime createdAt3e = DateTime.parse(meta3.get("createdAt").asString());
+		assertEquals(createdAt, createdAt3e);
+		DateTime updatedAt3e = DateTime.parse(meta3e.get("updatedAt").asString());
+		assertTrue(updatedAt3e.isAfter(beforeUpdate.getMillis()));
+		assertTrue(updatedAt3e.isBeforeNow());
+		assertEquals(3, meta3e.get("version").asLong());
+		assertEquals("sale", meta3e.get("type").asString());
+		assertEquals(id, meta3e.get("id").asString());
+		assertEquals("0987654321", Json.get(res3e, "number").asString());
+		// check equality on what has not been updated
+		assertTrue(Json.equals(Json.copy(res3).asObject().remove("meta").remove("number"),
+				Json.copy(res3e).asObject().remove("meta").remove("number")));
 
 		// delete
 
