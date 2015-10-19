@@ -13,7 +13,7 @@ Documentation is divided into
 
 #### Sign up
 
-First, [sign up](/console.html) to the SpaceDog platform. Provide
+First, [sign up](/sign-up.html) to the SpaceDog platform. Provide
 
 - the account administrator username, password and email address,
 - the backend id wich will identify all API requests to this backend.
