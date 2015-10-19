@@ -3,8 +3,7 @@
  */
 package io.spacedog.services;
 
-import java.text.NumberFormat;
-import java.text.ParseException;
+import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.action.search.SearchRequest;
@@ -17,9 +16,10 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
-import com.eclipsesource.json.JsonObject;
-import com.eclipsesource.json.JsonValue;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 
+import io.spacedog.services.SchemaResource.NotFoundException;
 import net.codestory.http.Context;
 
 public class ElasticHelper {
@@ -41,7 +41,9 @@ public class ElasticHelper {
 		return response.getHits();
 	}
 
-	public static FilteredSearchBuilder searchBuilder(String index, String type) {
+	public static FilteredSearchBuilder searchBuilder(String index, String type)
+			throws NotFoundException, JsonProcessingException, IOException {
+
 		return new FilteredSearchBuilder(index, type);
 	}
 
@@ -52,7 +54,9 @@ public class ElasticHelper {
 		private QueryBuilder queryBuilder;
 		private AndFilterBuilder filterBuilder;
 
-		public FilteredSearchBuilder(String index, String type) {
+		public FilteredSearchBuilder(String index, String type)
+				throws NotFoundException, JsonProcessingException, IOException {
+
 			this.sourceBuilder = SearchSourceBuilder.searchSource();
 
 			this.searchRequest = new SearchRequest(index);
@@ -80,10 +84,10 @@ public class ElasticHelper {
 			return this;
 		}
 
-		public FilteredSearchBuilder applyFilters(JsonObject filters) {
+		public FilteredSearchBuilder applyFilters(JsonNode filters) {
 			filterBuilder = new AndFilterBuilder();
-			filters.forEach(member -> filterBuilder
-					.add(FilterBuilders.termFilter(member.getName(), toSimpleValue(member.getValue()))));
+			filters.fields().forEachRemaining(field -> filterBuilder
+					.add(FilterBuilders.termFilter(field.getKey(), toSimpleValue(field.getValue()))));
 			return this;
 		}
 
@@ -93,20 +97,16 @@ public class ElasticHelper {
 		}
 	}
 
-	public static Object toSimpleValue(JsonValue value) {
+	public static Object toSimpleValue(JsonNode value) {
 
 		if (value.isBoolean())
-			return value.asBoolean();
+			return value.booleanValue();
 
-		if (value.isString())
-			return value.asString();
+		if (value.isTextual())
+			return value.textValue();
 
 		if (value.isNumber())
-			try {
-				return NumberFormat.getInstance().parse(value.toString());
-			} catch (ParseException e) {
-				new RuntimeException(e);
-			}
+			return value.numberValue();
 
 		if (value.isNull())
 			return null;

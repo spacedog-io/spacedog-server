@@ -3,11 +3,14 @@
  */
 package io.spacedog.services;
 
+import java.io.IOException;
+
 import org.joda.time.DateTime;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.eclipsesource.json.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.GetRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
@@ -16,7 +19,7 @@ import com.mashape.unirest.request.body.RequestBodyEntity;
 public class DataResourceTest extends AbstractTest {
 
 	@BeforeClass
-	public static void resetTestAccount() throws UnirestException, InterruptedException {
+	public static void resetTestAccount() throws UnirestException, InterruptedException, IOException {
 		AdminResourceTest.resetTestAccount();
 		SchemaResourceTest.resetCarSchema();
 	}
@@ -24,29 +27,20 @@ public class DataResourceTest extends AbstractTest {
 	@Test
 	public void shouldCreateFindUpdateAndDelete() throws Exception {
 
-		JsonObject car = Json.builder()
-				//
-				.add("serialNumber", "1234567890")
-				//
-				.add("buyDate", "2015-01-09")
-				//
-				.add("buyTime", "15:37:00")
-				//
-				.add("buyTimestamp", "2015-01-09T15:37:00.123Z")
-				//
-				.add("color", "red")
-				//
-				.add("techChecked", false)
-				//
-				.stObj("model")
-				//
-				.add("description", "Cette voiture sent bon la France. Elle est inventive et raffinée.") //
-				.add("fiscalPower", 8) //
-				.add("size", 4.67) //
-				.end() //
-				.stObj("location") //
-				.add("lat", -55.6765) //
-				.add("lon", -54.6765) //
+		JsonNode car = Json.startObject() //
+				.put("serialNumber", "1234567890") //
+				.put("buyDate", "2015-01-09") //
+				.put("buyTime", "15:37:00") //
+				.put("buyTimestamp", "2015-01-09T15:37:00.123Z") //
+				.put("color", "red") //
+				.put("techChecked", false) //
+				.startObject("model") //
+				.put("description", "Cette voiture sent bon la France. Elle est inventive et raffinée.") //
+				.put("fiscalPower", 8) //
+				.put("size", 4.67) //
+				.end().startObject("location") //
+				.put("lat", -55.6765) //
+				.put("lon", -54.6765) //
 				.build();
 
 		// create
@@ -54,43 +48,43 @@ public class DataResourceTest extends AbstractTest {
 		RequestBodyEntity req = preparePost("/v1/data/car", AdminResourceTest.testClientKey()).body(car.toString());
 
 		DateTime beforeCreate = DateTime.now();
-		JsonObject result = post(req, 201).json();
+		JsonNode result = post(req, 201).jsonNode();
 
 		assertEquals(true, result.get("success").asBoolean());
-		assertEquals("car", result.get("type").asString());
+		assertEquals("car", result.get("type").asText());
 		assertNotNull(result.get("id"));
 
-		String id = result.get("id").asString();
+		String id = result.get("id").asText();
 
 		refreshIndex("test");
 
 		// find by id
 
 		GetRequest req1 = prepareGet("/v1/data/car/{id}", AdminResourceTest.testClientKey()).routeParam("id", id);
-		JsonObject res1 = get(req1, 200).json();
+		ObjectNode res1 = (ObjectNode) get(req1, 200).jsonNode();
 
-		JsonObject meta1 = res1.get("meta").asObject();
-		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, meta1.get("createdBy").asString());
-		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, meta1.get("updatedBy").asString());
-		DateTime createdAt = DateTime.parse(meta1.get("createdAt").asString());
+		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, res1.findValue("createdBy").asText());
+		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, res1.findValue("updatedBy").asText());
+		DateTime createdAt = DateTime.parse(res1.findValue("createdAt").asText());
 		assertTrue(createdAt.isAfter(beforeCreate.getMillis()));
 		assertTrue(createdAt.isBeforeNow());
-		assertEquals(meta1.get("updatedAt"), meta1.get("createdAt"));
-		assertTrue(Json.equals(car, res1.remove("meta")));
+		assertEquals(res1.findValue("updatedAt"), res1.findValue("createdAt"));
+
+		res1.remove("meta");
+		assertTrue(car.equals(res1));
 
 		// find by full text search
 
 		GetRequest req1b = prepareGet("/v1/data/car?q={q}", AdminResourceTest.testClientKey()).routeParam("q",
 				"inVENt*");
 
-		JsonObject res1b = get(req1b, 200).json();
-		assertEquals(id, Json.get(res1b, "results.0.meta.id").asString());
+		JsonNode res1b = get(req1b, 200).jsonNode();
+		assertEquals(id, res1b.get("results").get(0).get("meta").get("id").asText());
 
 		// create user vince
 
-		RequestBodyEntity req1a = preparePost("/v1/user/", AdminResourceTest.testClientKey())
-				.body(Json.builder().add("username", "vince").add("password", "hi vince")
-						.add("email", "vince@spacedog.io").build().toString());
+		RequestBodyEntity req1a = preparePost("/v1/user/", AdminResourceTest.testClientKey()).body(Json.startObject()
+				.put("username", "vince").put("password", "hi vince").put("email", "vince@spacedog.io").toString());
 
 		post(req1a, 201);
 		refreshIndex("test");
@@ -98,7 +92,7 @@ public class DataResourceTest extends AbstractTest {
 		// update
 
 		RequestBodyEntity req2 = preparePut("/v1/data/car/{id}", AdminResourceTest.testClientKey()).routeParam("id", id)
-				.basicAuth("vince", "hi vince").body(new JsonObject().add("color", "blue").toString());
+				.basicAuth("vince", "hi vince").body(Json.startObject().put("color", "blue").toString());
 
 		DateTime beforeUpdate = DateTime.now();
 		put(req2, 200);
@@ -106,18 +100,17 @@ public class DataResourceTest extends AbstractTest {
 		// check update is correct
 
 		GetRequest req3 = prepareGet("/v1/data/car/{id}", AdminResourceTest.testClientKey()).routeParam("id", id);
-		JsonObject res3 = get(req3, 200).json();
+		JsonNode res3 = get(req3, 200).jsonNode();
 
-		JsonObject meta3 = res3.get("meta").asObject();
-		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, meta3.get("createdBy").asString());
-		assertEquals("vince", meta3.get("updatedBy").asString());
-		DateTime createdAtAfterUpdate = DateTime.parse(meta3.get("createdAt").asString());
+		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, res3.findValue("createdBy").asText());
+		assertEquals("vince", res3.findValue("updatedBy").asText());
+		DateTime createdAtAfterUpdate = DateTime.parse(res3.findValue("createdAt").asText());
 		assertEquals(createdAt, createdAtAfterUpdate);
-		DateTime updatedAt = DateTime.parse(meta3.get("updatedAt").asString());
+		DateTime updatedAt = DateTime.parse(res3.findValue("updatedAt").asText());
 		assertTrue(updatedAt.isAfter(beforeUpdate.getMillis()));
 		assertTrue(updatedAt.isBeforeNow());
-		assertEquals("1234567890", res3.get("serialNumber").asString());
-		assertEquals("blue", res3.get("color").asString());
+		assertEquals("1234567890", res3.get("serialNumber").asText());
+		assertEquals("blue", res3.get("color").asText());
 
 		// delete
 
@@ -127,7 +120,7 @@ public class DataResourceTest extends AbstractTest {
 
 		// check delete is done
 
-		JsonObject res5 = get(req1, 404).json();
+		JsonNode res5 = get(req1, 404).jsonNode();
 		assertFalse(res5.get("success").asBoolean());
 	}
 }

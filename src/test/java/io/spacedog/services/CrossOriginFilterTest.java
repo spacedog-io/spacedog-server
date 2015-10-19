@@ -3,6 +3,8 @@
  */
 package io.spacedog.services;
 
+import java.io.IOException;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -15,7 +17,7 @@ import net.codestory.http.constants.Headers;
 public class CrossOriginFilterTest extends AbstractTest {
 
 	@BeforeClass
-	public static void resetTestAccount() throws UnirestException, InterruptedException {
+	public static void resetTestAccount() throws UnirestException, InterruptedException, IOException {
 		AdminResourceTest.resetTestAccount();
 	}
 

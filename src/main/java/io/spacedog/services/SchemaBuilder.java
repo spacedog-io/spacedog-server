@@ -3,87 +3,75 @@
  */
 package io.spacedog.services;
 
-import com.eclipsesource.json.JsonObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class SchemaBuilder {
 
 	public static SchemaBuilder builder(String type) {
-		SchemaBuilder builder = new SchemaBuilder();
-		JsonObject nextJson = new JsonObject();
-		builder.currentObject.add(type, nextJson);
-		return new SchemaBuilder(builder, nextJson);
+		return new SchemaBuilder(Json.startObject().startObject(type));
 	}
 
-	private SchemaBuilder parentBuilder;
-	private JsonObject currentObject;
-	private JsonObject currentProperty;
+	private JsonBuilder<ObjectNode> builder;
+	private String currentPropertyType;
 
-	private SchemaBuilder() {
-		this.currentObject = new JsonObject();
+	private SchemaBuilder(JsonBuilder<ObjectNode> builder) {
+		this.builder = builder;
 	}
 
-	private SchemaBuilder(SchemaBuilder parent, JsonObject current) {
-		this.parentBuilder = parent;
-		this.currentObject = current;
-		this.currentProperty = currentObject;
-	}
-
-	public SchemaBuilder add(String key, String type) {
-		currentProperty = new JsonObject();
-		currentProperty.add("_type", type);
-		currentObject.add(key, currentProperty);
+	public SchemaBuilder property(String key, String type) {
+		currentPropertyType = type;
+		builder.startObject(key).put("_type", type);
 		return this;
 	}
 
-	public SchemaBuilder startObject(String key) {
-		JsonObject nextJson = new JsonObject();
-		nextJson.add("_type", "object");
-		currentObject.add(key, nextJson);
-		return new SchemaBuilder(this, nextJson);
+	public SchemaBuilder objectProperty(String key) {
+		currentPropertyType = "object";
+		builder.startObject(key).put("_type", "object");
+		return this;
 	}
 
 	public SchemaBuilder end() {
-		return parentBuilder;
+		currentPropertyType = null;
+		builder.end();
+		return this;
 	}
 
-	public JsonObject build() {
-		return parentBuilder == null ? currentObject : parentBuilder.build();
+	public ObjectNode build() {
+		return builder.build();
 	}
 
 	public SchemaBuilder id(String key) {
-		currentObject.add("_id", key);
+		builder.put("_id", key);
 		return this;
 	}
 
 	public SchemaBuilder array() {
 		checkCurrentPropertyExists();
 		checkCurrentPropertyByInvalidTypes("_array", Schema.PropertyTypes.STASH);
-		currentProperty.add("_array", true);
+		builder.put("_array", true);
 		return this;
 	}
 
 	public SchemaBuilder required() {
 		checkCurrentPropertyExists();
-		currentProperty.add("_required", true);
+		builder.put("_required", true);
 		return this;
 	}
 
 	public SchemaBuilder language(String language) {
 		checkCurrentPropertyExists();
 		checkCurrentPropertyByValidType("_language", Schema.PropertyTypes.TEXT);
-		currentProperty.add("_language", language);
+		builder.put("_language", language);
 		return this;
 	}
 
 	private void checkCurrentPropertyExists() {
-		if (currentProperty == null)
-			throw new IllegalStateException(
-					String.format("no current property to set in object [%s]", currentObject.toString()));
+		if (currentPropertyType == null)
+			throw new IllegalStateException(String.format("no current property in [%s]", builder.toString()));
 	}
 
 	private void checkCurrentPropertyByValidType(String fieldName, Schema.PropertyTypes... validTypes) {
-		Schema.PropertyTypes propertyType = Schema.PropertyTypes
-				.valueOfIgnoreCase(this.currentProperty.get("_type").asString());
+		Schema.PropertyTypes propertyType = Schema.PropertyTypes.valueOfIgnoreCase(this.currentPropertyType);
 
 		for (Schema.PropertyTypes validType : validTypes) {
 			if (propertyType.equals(validType))
@@ -95,8 +83,7 @@ public class SchemaBuilder {
 	}
 
 	private void checkCurrentPropertyByInvalidTypes(String fieldName, Schema.PropertyTypes... invalidTypes) {
-		Schema.PropertyTypes propertyType = Schema.PropertyTypes
-				.valueOfIgnoreCase(this.currentProperty.get("_type").asString());
+		Schema.PropertyTypes propertyType = Schema.PropertyTypes.valueOfIgnoreCase(this.currentPropertyType);
 
 		for (Schema.PropertyTypes invalidType : invalidTypes) {
 			if (propertyType.equals(invalidType))

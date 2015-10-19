@@ -3,11 +3,15 @@
  */
 package io.spacedog.services;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.junit.Assert;
 
-import com.eclipsesource.json.JsonObject;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.primitives.Ints;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
@@ -87,27 +91,30 @@ public abstract class AbstractTest extends Assert {
 		return request;
 	}
 
-	protected static Result get(HttpRequest req, int... expectedStatus) throws UnirestException {
+	protected static Result get(HttpRequest req, int... expectedStatus) throws UnirestException, IOException {
 		return exec(req.getHttpRequest(), null, expectedStatus);
 	}
 
-	protected static Result post(RequestBodyEntity req, int... expectedStatus) throws UnirestException {
+	protected static Result post(RequestBodyEntity req, int... expectedStatus) throws UnirestException, IOException {
 		return exec(req.getHttpRequest(), req.getBody(), expectedStatus);
 	}
 
-	protected static Result delete(HttpRequestWithBody req, int... expectedStatus) throws UnirestException {
+	protected static Result delete(HttpRequestWithBody req, int... expectedStatus)
+			throws UnirestException, IOException {
 		return exec(req.getHttpRequest(), req.getBody(), expectedStatus);
 	}
 
-	protected static Result put(RequestBodyEntity req, int... expectedStatus) throws UnirestException {
+	protected static Result put(RequestBodyEntity req, int... expectedStatus) throws UnirestException, IOException {
 		return exec(req.getHttpRequest(), req.getBody(), expectedStatus);
 	}
 
-	protected static Result options(HttpRequestWithBody req, int... expectedStatus) throws UnirestException {
+	protected static Result options(HttpRequestWithBody req, int... expectedStatus)
+			throws UnirestException, IOException {
 		return exec(req.getHttpRequest(), req.getBody(), expectedStatus);
 	}
 
-	private static Result exec(HttpRequest req, Object requestBody, int... expectedStatus) throws UnirestException {
+	private static Result exec(HttpRequest req, Object requestBody, int... expectedStatus)
+			throws UnirestException, IOException {
 
 		HttpResponse<String> resp = req.asString();
 
@@ -118,14 +125,17 @@ public abstract class AbstractTest extends Assert {
 		req.getHeaders().forEach((key, value) -> printHeader(key, value));
 
 		if (requestBody != null)
-			System.out.println(String.format("Request body = [%s]", requestBody));
+			System.out.println(String.format("Request body: %s", requestBody));
 
 		Result result = new Result(resp);
 
-		resp.getHeaders().forEach((key, value) -> System.out.println(String.format("=> %s : %s", key, value)));
+		resp.getHeaders().forEach((key, value) -> System.out.println(String.format("=> %s: %s", key, value)));
 
-		System.out.println(String.format("=> Response body = [%s]",
-				result.isJson() ? Json.prettyString(result.json) : resp.getBody()));
+		System.out
+				.println(String.format("=> Response body: %s",
+						result.isJson()
+								? Json.getMapper().writerWithDefaultPrettyPrinter().writeValueAsString(result.jsonNode)
+								: resp.getBody()));
 
 		assertTrue(Ints.contains(expectedStatus, resp.getStatus()));
 		return result;
@@ -133,33 +143,45 @@ public abstract class AbstractTest extends Assert {
 
 	private static void printHeader(String key, List<String> value) {
 		if (key.equals(AdminResource.AUTHORIZATION_HEADER)) {
-			AdminResource.decodeAuthorizationHeader(value.get(0)).ifPresent(tokens -> System.out
-					.println(String.format("%s %s => [Basic %s:%s]", key, value, tokens[0], tokens[1])));
+			AdminResource.decodeAuthorizationHeader(value.get(0)).ifPresent(
+					tokens -> System.out.println(String.format("%s: %s (= %s:%s)", key, value, tokens[0], tokens[1])));
 			return;
 		}
 
-		System.out.println(String.format("%s : %s", key, value));
+		System.out.println(String.format("%s: %s", key, value));
 	}
 
 	public static class Result {
-		private JsonObject json;
+		private JsonNode jsonNode;
 		private HttpResponse<String> response;
 
-		public Result(HttpResponse<String> response) {
+		public Result(HttpResponse<String> response) throws JsonProcessingException, IOException {
 			this.response = response;
 
 			String body = response.getBody();
 			if (Json.isJson(body)) {
-				json = JsonObject.readFrom(body);
+				jsonNode = Json.readJsonNode(body);
 			}
 		}
 
 		public boolean isJson() {
-			return json != null;
+			return jsonNode != null;
 		}
 
-		public JsonObject json() {
-			return json;
+		public JsonNode jsonNode() {
+			return jsonNode;
+		}
+
+		public ObjectNode objectNode() {
+			if (!jsonNode.isObject())
+				throw new RuntimeException(String.format("not a json object but [%s]", jsonNode.getNodeType()));
+			return (ObjectNode) jsonNode;
+		}
+
+		public ArrayNode arrayNode() {
+			if (!jsonNode.isArray())
+				throw new RuntimeException(String.format("not a json array but [%s]", jsonNode.getNodeType()));
+			return (ArrayNode) jsonNode;
 		}
 
 		public HttpResponse<String> response() {

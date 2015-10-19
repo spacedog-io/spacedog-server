@@ -3,126 +3,127 @@
  */
 package io.spacedog.services;
 
-import com.eclipsesource.json.JsonObject;
-import com.eclipsesource.json.JsonValue;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class SchemaTranslator {
 
-	private static JsonObject META_MAPPING = Json.builder().add("type", "object") //
-			.stObj("properties") //
-			.stObj("createdBy") //
-			.add("type", "string") //
-			.add("index", "not_analyzed") //
+	private static JsonNode META_MAPPING = Json.startObject()//
+			.put("type", "object") //
+			.startObject("properties") //
+			.startObject("createdBy") //
+			.put("type", "string") //
+			.put("index", "not_analyzed") //
 			.end() //
-			.stObj("updatedBy") //
-			.add("type", "string") //
-			.add("index", "not_analyzed") //
+			.startObject("updatedBy") //
+			.put("type", "string") //
+			.put("index", "not_analyzed") //
 			.end() //
-			.stObj("createdAt") //
-			.add("type", "date") //
-			.add("format", "date_time") //
+			.startObject("createdAt") //
+			.put("type", "date") //
+			.put("format", "date_time") //
 			.end() //
-			.stObj("updatedAt") //
-			.add("type", "date") //
-			.add("format", "date_time") //
+			.startObject("updatedAt") //
+			.put("type", "date") //
+			.put("format", "date_time") //
 			.build(); //
 
-	public static JsonObject translate(String type, JsonObject schema) {
+	public static ObjectNode translate(String type, JsonNode schema) {
 
-		JsonObject subMapping = toElasticMapping(schema.get(type).asObject());
-		subMapping.add("_meta", schema);
+		ObjectNode subMapping = toElasticMapping(schema.get(type));
+		subMapping.set("_meta", schema);
 
-		JsonObject mapping = new JsonObject();
-		mapping.add(type, subMapping);
-
-		System.out.println(Json.prettyString(mapping));
-		return mapping;
+		return Json.startObject().putNode(type, subMapping).build();
 	}
 
-	private static JsonObject toElasticMapping(JsonObject schema) {
+	private static ObjectNode toElasticMapping(JsonNode schema) {
 
-		String type = schema.getString("_type", "object");
+		String type = schema.path("_type").asText("object");
+
+		ObjectNode propertiesNode = toElasticProperties(schema);
+		propertiesNode.set("meta", META_MAPPING);
 
 		if ("object".equals(type)) {
-			JsonBuilder builder = Json.builder()
+			JsonBuilder<ObjectNode> builder = Json.startObject()
 					// Enable _timestamp when I find out how to read/get it back
-					.stObj("_timestamp").add("enabled", false).end().add("dynamic", "strict")
-					.add("date_detection", false)
-					.addJson("properties", toElasticProperties(schema).add("meta", META_MAPPING));
+					.startObject("_timestamp")//
+					.put("enabled", false)//
+					.end()//
+					.put("dynamic", "strict")//
+					.put("date_detection", false)//
+					.putNode("properties", propertiesNode);
 
-			JsonValue id = schema.get("_id");
-			if (id != null)
-				builder = builder.stObj("_id") //
-						.add("path", id.asString()).end();
+			if (schema.has("_id"))
+				builder.startObject("_id").put("path", schema.get("_id").asText()).end();
 
 			return builder.build();
 		} else
-			throw new IllegalArgumentException(String.format("Invalid schema root type [%s]", type));
+			throw new IllegalArgumentException(String.format("invalid schema root type [%s]", type));
 	}
 
-	private static JsonObject toElasticProperties(JsonObject schema) {
+	private static ObjectNode toElasticProperties(JsonNode schema) {
 
-		JsonBuilder builder = Json.builder();
-		for (String key : schema.names()) {
+		JsonBuilder<ObjectNode> builder = Json.startObject();
+		schema.fieldNames().forEachRemaining(key -> {
 			if (key.charAt(0) != '_') {
-				builder.addJson(key, toElasticProperty(key, schema.get(key).asObject()));
+				builder.putNode(key, toElasticProperty(key, schema.get(key)));
 			}
-		}
+		});
 		return builder.build();
 	}
 
-	private static JsonValue toElasticProperty(String key, JsonObject schema) {
-		JsonObject mapping = new JsonObject();
-		String type = schema.getString("_type", "object");
+	private static ObjectNode toElasticProperty(String key, JsonNode schema) {
+		JsonBuilder<ObjectNode> mapping = Json.startObject();
+		String type = schema.path("_type").asText("object");
 
 		if ("text".equals(type)) {
-			mapping.add("type", "string");
-			mapping.add("index", "analyzed");
-			mapping.add("analyzer", schema.getString("_language", "english"));
+			mapping.put("type", "string");
+			mapping.put("index", "analyzed");
+			mapping.put("analyzer", schema.path("_language").asText("english"));
 		} else if ("string".equals(type)) {
-			mapping.add("type", "string");
-			mapping.add("index", "not_analyzed");
+			mapping.put("type", "string");
+			mapping.put("index", "not_analyzed");
 		} else if ("boolean".equals(type)) {
-			mapping.add("type", "boolean");
+			mapping.put("type", "boolean");
 		} else if ("integer".equals(type)) {
-			mapping.add("type", "integer");
-			mapping.add("coerce", "false");
+			mapping.put("type", "integer");
+			mapping.put("coerce", "false");
 		} else if ("long".equals(type)) {
-			mapping.add("type", "long");
-			mapping.add("coerce", "false");
+			mapping.put("type", "long");
+			mapping.put("coerce", "false");
 		} else if ("float".equals(type)) {
-			mapping.add("type", "float");
-			mapping.add("coerce", "false");
+			mapping.put("type", "float");
+			mapping.put("coerce", "false");
 		} else if ("double".equals(type)) {
-			mapping.add("type", "double");
-			mapping.add("coerce", "false");
+			mapping.put("type", "double");
+			mapping.put("coerce", "false");
 		} else if ("date".equals(type)) {
-			mapping.add("type", "date");
-			mapping.add("format", "date");
+			mapping.put("type", "date");
+			mapping.put("format", "date");
 		} else if ("time".equals(type)) {
-			mapping.add("type", "date");
-			mapping.add("format", "hour_minute_second");
+			mapping.put("type", "date");
+			mapping.put("format", "hour_minute_second");
 		} else if ("timestamp".equals(type)) {
-			mapping.add("type", "date");
-			mapping.add("format", "date_time");
+			mapping.put("type", "date");
+			mapping.put("format", "date_time");
 		} else if ("enum".equals(type)) {
-			mapping.add("type", "string");
-			mapping.add("index", "not_analyzed");
+			mapping.put("type", "string");
+			mapping.put("index", "not_analyzed");
 		} else if ("geopoint".equals(type)) {
-			mapping.add("type", "geo_point");
-			mapping.add("lat_lon", true);
-			mapping.add("geohash", true);
-			mapping.add("geohash_precision", "1m");
-			mapping.add("geohash_prefix", "true");
+			mapping.put("type", "geo_point");
+			mapping.put("lat_lon", true);
+			mapping.put("geohash", true);
+			mapping.put("geohash_precision", "1m");
+			mapping.put("geohash_prefix", "true");
 		} else if ("object".equals(type)) {
-			mapping.add("type", "object");
-			mapping.add("properties", toElasticProperties(schema));
+			mapping.put("type", "object");
+			mapping.putNode("properties", toElasticProperties(schema));
 		} else if ("stash".equals(type)) {
-			mapping.add("type", "object");
-			mapping.add("enabled", false);
+			mapping.put("type", "object");
+			mapping.put("enabled", false);
 		} else {
 			throw new IllegalArgumentException("Invalid type [" + type + "] for property [" + key + "]");
 		}
-		return mapping;
+		return mapping.build();
 	}
 }

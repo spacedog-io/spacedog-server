@@ -3,211 +3,174 @@
  */
 package io.spacedog.services;
 
-import com.eclipsesource.json.JsonArray;
-import com.eclipsesource.json.JsonObject;
-import com.eclipsesource.json.JsonValue;
+import java.util.LinkedList;
 
-public class JsonBuilder {
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-	private JsonBuilder parentBuilder = null;
-	private JsonObject currentJsonObject = null;
-	private JsonArray currentJsonArray = null;
+public class JsonBuilder<N extends JsonNode> {
 
-	JsonBuilder() {
-		this.currentJsonObject = new JsonObject();
+	private LinkedList<JsonNode> stack = new LinkedList<JsonNode>();
+
+	private ObjectNode checkCurrentIsObjectNode() {
+		JsonNode current = stack.getLast();
+		if (!current.isObject())
+			throw new IllegalStateException(
+					String.format("current node not an object but [%s]", current.getNodeType()));
+		return (ObjectNode) current;
 	}
 
-	private JsonBuilder(JsonBuilder parent, JsonObject current) {
-		this.parentBuilder = parent;
-		this.currentJsonObject = current;
-	}
-
-	private JsonBuilder(JsonBuilder parent, JsonArray current) {
-		this.parentBuilder = parent;
-		this.currentJsonArray = current;
+	private ArrayNode checkCurrentIsArrayNode() {
+		JsonNode current = stack.getLast();
+		if (!current.isArray())
+			throw new IllegalStateException(String.format("current node not an array but [%s]", current.getNodeType()));
+		return (ArrayNode) current;
 	}
 
 	//
 	// object methods
 	//
 
-	public JsonBuilder add(String key, String value) {
-		if (currentJsonObject == null)
-			throw new IllegalStateException("current json node not an object");
-
-		currentJsonObject.add(key, value);
+	public JsonBuilder<N> put(String key, String value) {
+		checkCurrentIsObjectNode().put(key, value);
 		return this;
 	}
 
-	public JsonBuilder add(String key, boolean value) {
-		if (currentJsonObject == null)
-			throw new IllegalStateException("current json node not an object");
-
-		currentJsonObject.add(key, value);
+	public JsonBuilder<N> put(String key, boolean value) {
+		checkCurrentIsObjectNode().put(key, value);
 		return this;
 	}
 
-	public JsonBuilder add(String key, int value) {
-		if (currentJsonObject == null)
-			throw new IllegalStateException("current json node not an object");
-
-		currentJsonObject.add(key, value);
+	public JsonBuilder<N> put(String key, int value) {
+		checkCurrentIsObjectNode().put(key, value);
 		return this;
 	}
 
-	public JsonBuilder add(String key, long value) {
-		if (currentJsonObject == null)
-			throw new IllegalStateException("current json node not an object");
-
-		currentJsonObject.add(key, value);
+	public JsonBuilder<N> put(String key, long value) {
+		checkCurrentIsObjectNode().put(key, value);
 		return this;
 	}
 
-	public JsonBuilder add(String key, double value) {
-		if (currentJsonObject == null)
-			throw new IllegalStateException("current json node not an object");
-
-		currentJsonObject.add(key, value);
+	public JsonBuilder<N> put(String key, double value) {
+		checkCurrentIsObjectNode().put(key, value);
 		return this;
 	}
 
-	public JsonBuilder add(String key, float value) {
-		if (currentJsonObject == null)
-			throw new IllegalStateException("current json node not an object");
-
-		currentJsonObject.add(key, value);
+	public JsonBuilder<N> put(String key, float value) {
+		checkCurrentIsObjectNode().put(key, value);
 		return this;
 	}
 
-	public JsonBuilder addJson(String key, JsonValue value) {
-		if (currentJsonObject == null)
-			throw new IllegalStateException("current json node not an object");
-
-		currentJsonObject.add(key, value);
+	public JsonBuilder<N> putNode(String key, JsonNode value) {
+		checkCurrentIsObjectNode().set(key, value);
 		return this;
 	}
 
-	public JsonBuilder addJson(String key, String jsonText) {
-		return addJson(key, JsonValue.readFrom(jsonText));
+	public JsonBuilder<N> putNode(String key, String jsonText) {
+		try {
+			checkCurrentIsObjectNode().set(key, Json.getMapper().readTree(jsonText));
+			return this;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 	}
 
-	public JsonBuilder stObj(String key) {
-		if (currentJsonObject == null)
-			throw new IllegalStateException("current json node not an object");
+	public JsonBuilder<N> startObject(String key) {
+		stack.add(checkCurrentIsObjectNode().putObject(key));
+		return this;
+	}
 
-		JsonObject nextJson = new JsonObject();
-		currentJsonObject.add(key, nextJson);
-		return new JsonBuilder(this, nextJson);
+	public JsonBuilder<N> startArray(String key) {
+		stack.add(checkCurrentIsObjectNode().putArray(key));
+		return this;
 	}
 
 	//
 	// array methods
 	//
 
-	public JsonBuilder stArr(String key) {
-		if (currentJsonObject == null)
-			throw new IllegalStateException("current json node not an object");
-
-		JsonArray nextJson = new JsonArray();
-		currentJsonObject.add(key, nextJson);
-		return new JsonBuilder(this, nextJson);
-	}
-
-	public JsonBuilder add(String value) {
-		if (currentJsonArray == null)
-			throw new IllegalStateException("current json node not an array");
-
-		currentJsonArray.add(value);
+	public JsonBuilder<N> add(String value) {
+		checkCurrentIsArrayNode().add(value);
 		return this;
 	}
 
-	public JsonBuilder add(boolean value) {
-		if (currentJsonArray == null)
-			throw new IllegalStateException("current json node not an array");
-
-		currentJsonArray.add(value);
+	public JsonBuilder<N> add(boolean value) {
+		checkCurrentIsArrayNode().add(value);
 		return this;
 	}
 
-	public JsonBuilder add(int value) {
-		if (currentJsonArray == null)
-			throw new IllegalStateException("current json node not an array");
-
-		currentJsonArray.add(value);
+	public JsonBuilder<N> add(int value) {
+		checkCurrentIsArrayNode().add(value);
 		return this;
 	}
 
-	public JsonBuilder add(long value) {
-		if (currentJsonArray == null)
-			throw new IllegalStateException("current json node not an array");
-
-		currentJsonArray.add(value);
+	public JsonBuilder<N> add(long value) {
+		checkCurrentIsArrayNode().add(value);
 		return this;
 	}
 
-	public JsonBuilder add(double value) {
-		if (currentJsonArray == null)
-			throw new IllegalStateException("current json node not an array");
-
-		currentJsonArray.add(value);
+	public JsonBuilder<N> add(double value) {
+		checkCurrentIsArrayNode().add(value);
 		return this;
 	}
 
-	public JsonBuilder add(float value) {
-		if (currentJsonArray == null)
-			throw new IllegalStateException("current json node not an array");
-
-		currentJsonArray.add(value);
+	public JsonBuilder<N> add(float value) {
+		checkCurrentIsArrayNode().add(value);
 		return this;
 	}
 
-	public JsonBuilder addJson(JsonValue jsonValue) {
-		if (currentJsonArray == null)
-			throw new IllegalStateException("current json node not an array");
-
-		currentJsonArray.add(jsonValue);
+	public JsonBuilder<N> addNode(JsonNode value) {
+		checkCurrentIsArrayNode().add(value);
 		return this;
 	}
 
-	public JsonBuilder addJson(String jsonText) {
-		return addJson(JsonValue.readFrom(jsonText));
-	}
-
-	public JsonBuilder addObj() {
-		if (currentJsonArray == null)
-			throw new IllegalStateException("current json node not an array");
-
-		JsonObject nextJson = new JsonObject();
-		currentJsonArray.add(nextJson);
-		return new JsonBuilder(this, nextJson);
-	}
-
-	public <T extends Object> JsonBuilder add(Iterable<T> values) {
-		if (currentJsonArray == null)
-			throw new IllegalStateException("current json node not an array");
-
-		for (Object value : values) {
-			addGenericToArray(value);
+	public JsonBuilder<N> addNode(String jsonText) {
+		try {
+			checkCurrentIsArrayNode().add(Json.getMapper().readTree(jsonText));
+			return this;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
 		}
+	}
 
+	public JsonBuilder<N> startObject() {
+		stack.add( //
+				stack.isEmpty() ? //
+						Json.getMapper().getNodeFactory().objectNode() //
+						: checkCurrentIsArrayNode().addObject());
+		return this;
+	}
+
+	public JsonBuilder<N> startArray() {
+		stack.add( //
+				stack.isEmpty() ? //
+						Json.getMapper().getNodeFactory().arrayNode() //
+						: checkCurrentIsArrayNode().addArray());
+		return this;
+	}
+
+	public <T extends Object> JsonBuilder<N> addAll(Iterable<T> values) {
+		for (Object value : values)
+			addGenericToArray(value);
 		return this;
 	}
 
 	private void addGenericToArray(Object value) {
 		if (value instanceof Integer)
-			currentJsonArray.add((Integer) value);
+			add((Integer) value);
 		else if (value instanceof Long)
-			currentJsonArray.add((Long) value);
+			add((Long) value);
 		else if (value instanceof Float)
-			currentJsonArray.add((Float) value);
+			add((Float) value);
 		else if (value instanceof Double)
-			currentJsonArray.add((Double) value);
+			add((Double) value);
 		else if (value instanceof String)
-			currentJsonArray.add((String) value);
-		else if (value instanceof JsonValue)
-			currentJsonArray.add((JsonValue) value);
+			add((String) value);
 		else if (value instanceof Boolean)
-			currentJsonArray.add((Boolean) value);
+			add((Boolean) value);
+		else if (value instanceof JsonNode)
+			addNode((JsonNode) value);
 		else
 			throw new IllegalArgumentException(
 					String.format("invalif array value type [%s]", value.getClass().getSimpleName()));
@@ -217,12 +180,15 @@ public class JsonBuilder {
 	// other methods
 	//
 
-	public JsonBuilder end() {
-		return parentBuilder;
+	public JsonBuilder<N> end() {
+		if (stack.size() > 1)
+			stack.removeLast();
+		return this;
 	}
 
-	public JsonObject build() {
-		return parentBuilder == null ? currentJsonObject : parentBuilder.build();
+	@SuppressWarnings("unchecked")
+	public N build() {
+		return (N) stack.getFirst();
 	}
 
 	@Override

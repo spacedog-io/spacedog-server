@@ -3,8 +3,10 @@
  */
 package io.spacedog.services;
 
-import com.eclipsesource.json.JsonObject;
-import com.eclipsesource.json.JsonValue;
+import java.io.IOException;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
@@ -16,26 +18,29 @@ public class MappyImport extends AbstractTest {
 
 	private static String examplesKey;
 
-	public static void resetDemoAccount() throws UnirestException {
+	public static void resetExamplesAccount() throws UnirestException, IOException {
 
 		HttpRequestWithBody req1 = prepareDelete("/v1/admin/account/examples").basicAuth("examples", "hi examples");
 		delete(req1, 200, 401);
 
+		refreshIndex("examples");
+		refreshIndex(AdminResource.ADMIN_INDEX);
+
 		RequestBodyEntity req2 = preparePost("/v1/admin/account/")
-				.body(Json.builder().add("backendId", "examples").add("username", "examples")
-						.add("password", "hi examples").add("email", "hello@spacedog.io").build().toString());
+				.body(Json.startObject().put("backendId", "examples").put("username", "examples")
+						.put("password", "hi examples").put("email", "hello@spacedog.io").toString());
 
 		examplesKey = post(req2, 201).response().getHeaders().get(AdminResource.BACKEND_KEY_HEADER).get(0);
 
 		assertFalse(Strings.isNullOrEmpty(examplesKey));
 
-		refreshIndex(AdminResource.SPACEDOG_INDEX);
+		refreshIndex(AdminResource.ADMIN_INDEX);
 		refreshIndex("examples");
 	}
 
 	public static void main(String[] args) {
 		try {
-			resetDemoAccount();
+			resetExamplesAccount();
 
 			HttpRequestWithBody req2 = prepareDelete("/v1/schema/resto").basicAuth("examples", "hi examples");
 			delete(req2, 200, 404);
@@ -45,18 +50,18 @@ public class MappyImport extends AbstractTest {
 
 			post(req3, 201);
 
-			for (double lat = 48; lat <= 49.5; lat += 0.1) {
+			for (double lat = 48.5; lat <= 49; lat += 0.1) {
 				for (double lon = 1.8; lon <= 2.9; lon += 0.1) {
 
 					HttpRequest req1 = Unirest.get("http://search.mappy.net/search/1.0/find")
-							.queryString("max_results", "100").queryString("q", "restaurant")
+							.queryString("max_results", "200").queryString("q", "restaurant")
 							.queryString("bbox", "" + lat + ',' + lon + ',' + (lat + 0.1) + ',' + (lon + 0.1));
 
 					// "48.671228,1.854415,49.034931,2.843185");
 
-					JsonObject res1 = get(req1, 200).json();
+					ObjectNode res1 = get(req1, 200).objectNode();
 
-					res1.get("pois").asArray().forEach(MappyImport::copyPoi);
+					res1.get("pois").forEach(MappyImport::copyPoi);
 				}
 			}
 
@@ -66,62 +71,64 @@ public class MappyImport extends AbstractTest {
 		}
 	}
 
-	private static void copyPoi(JsonValue jsonValue) {
-		JsonObject src = jsonValue.asObject();
-		JsonBuilder target = Json.builder().add("name", src.get("name").asString()) //
-				.add("town", src.get("town").asString()) //
-				.add("zipcode", src.get("pCode").asString()) //
-				.add("way", src.get("way").asString()) //
-				.stObj("where") //
-				.add("lat", src.get("lat").asDouble()) //
-				.add("lon", src.get("lng").asDouble()) //
+	private static void copyPoi(JsonNode src) {
+		JsonBuilder<ObjectNode> target = Json.startObject().put("name", src.get("name").asText()) //
+				.put("town", src.get("town").asText()) //
+				.put("zipcode", src.get("pCode").asText()) //
+				.put("way", src.get("way").asText()) //
+				.startObject("where") //
+				.put("lat", src.get("lat").asDouble()) //
+				.put("lon", src.get("lng").asDouble()) //
 				.end();
 
 		if (src.get("rubricId") != null)
-			target = target.add("mainRubricId", src.get("rubricId").asString());
+			target.put("mainRubricId", src.get("rubricId").asText());
 
 		if (src.get("phone") != null)
-			target = target.add("phone", src.get("phone").asString());
+			target.put("phone", src.get("phone").asText());
 
 		if (src.get("url") != null)
-			target = target.add("url", src.get("url").asString());
+			target.put("url", src.get("url").asText());
 
 		if (src.get("illustration") != null)
-			target = target.add("illustration", src.get("illustration").asObject().get("url").asString());
+			target.put("illustration", src.get("illustration").get("url").asText());
 
-		JsonValue allRubrics = src.get("allRubrics");
-		if (allRubrics != null && allRubrics.asArray().size() > 0) {
-			final JsonBuilder target2 = target.stArr("rubrics");
-			allRubrics.asArray().forEach(rubric -> {
-				target2.addObj().add("rubricId", rubric.asObject().get("id").asString()) //
-						.add("rubricLabel", rubric.asObject().get("label").asString());
+		JsonNode allRubrics = src.get("allRubrics");
+		if (allRubrics != null && allRubrics.size() > 0) {
+			target.startArray("rubrics");
+			allRubrics.forEach(rubric -> {
+				target.startObject().put("rubricId", rubric.get("id").asText()) //
+						.put("rubricLabel", rubric.get("label").asText()).end();
 			});
+			target.end();
 		}
 
-		RequestBodyEntity req = preparePost("/v1/data/resto", examplesKey).body(target.build().toString());
+		RequestBodyEntity req = preparePost("/v1/data/resto", examplesKey).body(target.toString());
 
 		try {
 			post(req, 201);
 		} catch (UnirestException e) {
 			throw new RuntimeException(e);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
-	public static JsonObject buildRestoSchema() {
+	public static ObjectNode buildRestoSchema() {
 		return SchemaBuilder.builder("resto") //
-				.add("name", "text").language("french").required() //
-				.add("where", "geopoint").required() //
-				.add("way", "text").language("french").required() //
-				.add("town", "text").language("french").required() //
-				.add("zipcode", "string").required() //
-				.add("mainRubricId", "string").required() //
-				.add("url", "string") //
-				.add("illustration", "string") //
-				.add("phone", "string") //
-				.startObject("rubrics").required() //
-				.array() //
-				.add("rubricId", "string").required() //
-				.add("rubricLabel", "text").language("french").required() //
+				.property("name", "text").language("french").required().end() //
+				.property("where", "geopoint").required().end() //
+				.property("way", "text").language("french").required().end() //
+				.property("town", "text").language("french").required().end() //
+				.property("zipcode", "string").required().end() //
+				.property("mainRubricId", "string").required().end() //
+				.property("url", "string").end() //
+				.property("illustration", "string").end() //
+				.property("phone", "string").end() //
+				.property("rubrics", "object").required().array() //
+				.property("rubricId", "string").required().end() //
+				.property("rubricLabel", "text").language("french").required().end() //
+				.end() //
 				.end() //
 				.build();
 	}

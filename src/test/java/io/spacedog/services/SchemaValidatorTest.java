@@ -6,7 +6,7 @@ package io.spacedog.services;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.eclipsesource.json.JsonObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.services.SchemaValidator.InvalidSchemaException;
 
@@ -16,45 +16,47 @@ public class SchemaValidatorTest extends Assert {
 	public void shouldSucceedToValidateSchema() {
 
 		// no yet valid
-		// testValidSchema(Json.builder().stObj("car").add("_type", "stash"));
+		// testValidSchema(Json.startObject().startObject("car").put("_type",
+		// "stash"));
 
-		testValidSchema(Json.builder().stObj("car").stObj("color").add("_type", "enum").add("_required", true).end()
-				.stObj("model").add("_type", "string").add("_required", true));
-		testValidSchema(Json.builder().stObj("car").stObj("color").add("_type", "enum").add("_required", true).end()
-				.stObj("model").add("_type", "string").add("_required", true).end().stObj("descr").stObj("short")
-				.add("_type", "text").end().stObj("detailed").add("_type", "stash"));
-		testValidSchema(Json.builder().stObj("car").stObj("color").add("_type", "enum").add("_required", true)
-				.add("_array", true).end().stObj("model").add("_type", "object").add("_required", true)
-				.add("_array", true).stObj("name").add("_type", "string").add("_required", true).end()
-				.stObj("description").add("_type", "text"));
+		testValidSchema(Json.startObject().startObject("car").startObject("color").put("_type", "enum")
+				.put("_required", true).end().startObject("model").put("_type", "string").put("_required", true));
+		testValidSchema(Json.startObject().startObject("car").startObject("color").put("_type", "enum")
+				.put("_required", true).end().startObject("model").put("_type", "string").put("_required", true).end()
+				.startObject("descr").startObject("short").put("_type", "text").end().startObject("detailed")
+				.put("_type", "stash"));
+		testValidSchema(Json.startObject().startObject("car").startObject("color").put("_type", "enum")
+				.put("_required", true).put("_array", true).end().startObject("model").put("_type", "object")
+				.put("_required", true).put("_array", true).startObject("name").put("_type", "string")
+				.put("_required", true).end().startObject("description").put("_type", "text"));
 	}
 
-	private void testValidSchema(JsonBuilder builder) {
-		JsonObject schema = builder.build();
+	private void testValidSchema(JsonBuilder<ObjectNode> builder) {
+		ObjectNode schema = builder.build();
 		System.out.println("Valid schema: " + schema.toString());
 		SchemaValidator.validate("car", schema);
 	}
 
 	@Test
 	public void shouldFailToValidateSchema() {
-		testInvalidSchema(Json.builder().add("XXX", "XXX"));
-		testInvalidSchema(Json.builder().add("car", "XXX"));
-		testInvalidSchema(Json.builder().stObj("car"));
-		testInvalidSchema(Json.builder().stObj("car").end().stObj("XXX"));
-		testInvalidSchema(Json.builder().stObj("car").add("_type", "XXX"));
-		testInvalidSchema(Json.builder().stObj("car").add("type", "XXX"));
-		testInvalidSchema(Json.builder().stObj("car").add("_type", "object").stObj("name").add("_type", "text").end()
-				.end().add("XXX", "hello"));
-		testInvalidSchema(Json.builder().stObj("car").add("_type", "object").stObj("name").add("_type", "text")
-				.add("_XXX", true));
-		testInvalidSchema(
-				Json.builder().stObj("car").add("_type", "object").stObj("name").add("_type", "text").stObj("XXX"));
-		testInvalidSchema(
-				Json.builder().stObj("car").add("_type", "object").stObj("name").add("_type", "text").add("XXX", true));
+		testInvalidSchema(Json.startObject().put("XXX", "XXX"));
+		testInvalidSchema(Json.startObject().put("car", "XXX"));
+		testInvalidSchema(Json.startObject().startObject("car"));
+		testInvalidSchema(Json.startObject().startObject("car").end().startObject("XXX"));
+		testInvalidSchema(Json.startObject().startObject("car").put("_type", "XXX"));
+		testInvalidSchema(Json.startObject().startObject("car").put("type", "XXX"));
+		testInvalidSchema(Json.startObject().startObject("car").put("_type", "object").startObject("name")
+				.put("_type", "text").end().end().put("XXX", "hello"));
+		testInvalidSchema(Json.startObject().startObject("car").put("_type", "object").startObject("name")
+				.put("_type", "text").put("_XXX", true));
+		testInvalidSchema(Json.startObject().startObject("car").put("_type", "object").startObject("name")
+				.put("_type", "text").startObject("XXX"));
+		testInvalidSchema(Json.startObject().startObject("car").put("_type", "object").startObject("name")
+				.put("_type", "text").put("XXX", true));
 	}
 
-	private void testInvalidSchema(JsonBuilder builder) {
-		JsonObject schema = builder.build();
+	private void testInvalidSchema(JsonBuilder<ObjectNode> builder) {
+		ObjectNode schema = builder.build();
 		System.out.println("Invalid schema: " + schema.toString());
 		try {
 			SchemaValidator.validate("car", schema);

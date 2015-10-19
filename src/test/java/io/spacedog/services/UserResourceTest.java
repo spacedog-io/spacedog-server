@@ -3,10 +3,12 @@
  */
 package io.spacedog.services;
 
+import java.io.IOException;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.eclipsesource.json.JsonObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.GetRequest;
 import com.mashape.unirest.request.body.RequestBodyEntity;
@@ -14,17 +16,17 @@ import com.mashape.unirest.request.body.RequestBodyEntity;
 public class UserResourceTest extends AbstractTest {
 
 	@BeforeClass
-	public static void resetTestAccount() throws UnirestException, InterruptedException {
+	public static void resetTestAccount() throws UnirestException, InterruptedException, IOException {
 		AdminResourceTest.resetTestAccount();
 	}
 
 	@Test
-	public void shouldSignUpSuccessfullyAndMore() throws UnirestException, InterruptedException {
+	public void shouldSignUpSuccessfullyAndMore() throws UnirestException, InterruptedException, IOException {
 
 		// vince sign up should succeed
 
-		RequestBodyEntity req1 = preparePost("/v1/user", AdminResourceTest.testClientKey()).body(Json.builder()
-				.add("username", "vince").add("password", "hi vince").add("email", "vince@dog.com").build().toString());
+		RequestBodyEntity req1 = preparePost("/v1/user", AdminResourceTest.testClientKey()).body(Json.startObject()
+				.put("username", "vince").put("password", "hi vince").put("email", "vince@dog.com").build().toString());
 
 		post(req1, 201);
 
@@ -35,13 +37,12 @@ public class UserResourceTest extends AbstractTest {
 		GetRequest req2 = prepareGet("/v1/user/vince", AdminResourceTest.testClientKey()).basicAuth("vince",
 				"hi vince");
 
-		JsonObject res2 = get(req2, 200).json();
+		ObjectNode res2 = get(req2, 200).objectNode();
 
-		assertTrue(
-				Json.equals(
-						Json.builder().add("username", "vince").add("hashedPassword", User.hashPassword("hi vince"))
-								.add("email", "vince@dog.com").stArr("groups").add("test").build(),
-						res2.remove("meta")));
+		assertEquals(
+				Json.startObject().put("username", "vince").put("hashedPassword", User.hashPassword("hi vince"))
+						.put("email", "vince@dog.com").startArray("groups").add("test").build(),
+				res2.deepCopy().without("meta"));
 
 		// get data with wrong username should fail
 
@@ -77,7 +78,7 @@ public class UserResourceTest extends AbstractTest {
 
 		RequestBodyEntity req8 = preparePut("/v1/user/vince", AdminResourceTest.testClientKey())
 				.basicAuth("vince", "hi vince")
-				.body(Json.builder().add("email", "bignose@magic.com").build().toString());
+				.body(Json.startObject().put("email", "bignose@magic.com").build().toString());
 
 		put(req8, 200);
 
@@ -86,14 +87,13 @@ public class UserResourceTest extends AbstractTest {
 		GetRequest req9 = prepareGet("/v1/user/vince", AdminResourceTest.testClientKey()).basicAuth("vince",
 				"hi vince");
 
-		JsonObject res9 = get(req9, 200).json();
+		ObjectNode res9 = get(req9, 200).objectNode();
 
-		assertEquals(Json.get(res9, "meta.version").asInt(), 2);
+		assertEquals(2, res9.get("meta").get("version").asInt());
 
-		assertTrue(
-				Json.equals(
-						Json.builder().add("username", "vince").add("hashedPassword", User.hashPassword("hi vince"))
-								.add("email", "bignose@magic.com").stArr("groups").add("test").build(),
-						res9.remove("meta")));
+		assertEquals(
+				Json.startObject().put("username", "vince").put("hashedPassword", User.hashPassword("hi vince"))
+						.put("email", "bignose@magic.com").startArray("groups").add("test").build(),
+				res9.deepCopy().without("meta"));
 	}
 }

@@ -5,8 +5,8 @@ package io.spacedog.services;
 
 import java.util.Optional;
 
-import com.eclipsesource.json.JsonObject;
-import com.eclipsesource.json.JsonValue;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.services.SchemaValidator.InvalidSchemaException;
 
@@ -58,14 +58,14 @@ public class Schema {
 			checkNotNullOrEmpty(name, "property name is null or empty");
 		}
 
-		public void checkValue(JsonValue value) {
+		public void checkValue(JsonNode value) {
 			if (Json.isNull(value)) {
 				if (isRequired())
 					throw new InvalidDataObjectException("property [%s] is null but required", getName());
 			}
 		}
 
-		protected InvalidDataObjectException invalidType(String name, JsonValue value) {
+		protected InvalidDataObjectException invalidType(String name, JsonNode value) {
 			// TODO Auto-generated method stub
 			return null;
 		}
@@ -85,12 +85,12 @@ public class Schema {
 		}
 
 		@Override
-		public void checkValue(JsonValue value) {
+		public void checkValue(JsonNode value) {
 
 			super.checkValue(value);
 
-			if (value.isString()) {
-				int length = value.asString().length();
+			if (value.isTextual()) {
+				int length = value.asText().length();
 				if (_min > length || _max < length)
 					throw new InvalidDataObjectException(
 							"property [%s] has a string value of length [%s], should be between [%s] and [%s]",
@@ -203,9 +203,9 @@ public class Schema {
 		}
 	}
 
-	public void checkObject(JsonObject object) {
-		object.forEach(member -> {
-			property(member.getName()).orElseThrow(() -> new InvalidDataObjectException(""))
+	public void checkObject(ObjectNode object) {
+		object.fields().forEachRemaining(member -> {
+			property(member.getKey()).orElseThrow(() -> new InvalidDataObjectException(""))
 					.checkValue(member.getValue());
 		});
 	}
@@ -226,7 +226,7 @@ public class Schema {
 					String.format("_min [%s] should not be greater than _max [%s]", _min, _max));
 	}
 
-	public static Schema from(JsonValue json) {
+	public static Schema from(JsonNode json) {
 
 		return null;
 	}

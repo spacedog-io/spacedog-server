@@ -3,6 +3,7 @@
  */
 package io.spacedog.services;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -10,7 +11,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.eclipsesource.json.JsonObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.body.RequestBodyEntity;
@@ -18,7 +19,7 @@ import com.mashape.unirest.request.body.RequestBodyEntity;
 public class QueryTest extends AbstractTest {
 
 	@Test
-	public void resetAndImportDataset() throws UnirestException {
+	public void resetAndImportDataset() throws UnirestException, IOException {
 		AdminResourceTest.resetTestAccount();
 		SchemaResourceTest.resetCarSchema();
 
@@ -30,23 +31,23 @@ public class QueryTest extends AbstractTest {
 		}
 	}
 
-	private JsonObject jsonCar(int i) {
+	private ObjectNode jsonCar(int i) {
 		calendar.roll(Calendar.DAY_OF_MONTH, false);
 		calendar.roll(Calendar.HOUR_OF_DAY, false);
 
-		return Json.builder().add("serialNumber", String.valueOf(i))
-				.add("buyDate", dateFormat.format(calendar.getTime()))
-				.add("buyTime", timeFormat.format(calendar.getTime()))
-				.add("buyTimestamp", timestampFormat.format(calendar.getTime())) //
-				.add("color", CarColor.values()[i % 4].toString()) //
-				.add("techChecked", i % 2 == 0) //
-				.stObj("location") //
-				.add("lat", 48.85341 + i / 100) //
-				.add("lon", 2.3488 + i / 100) //
+		return Json.startObject().put("serialNumber", String.valueOf(i))
+				.put("buyDate", dateFormat.format(calendar.getTime()))
+				.put("buyTime", timeFormat.format(calendar.getTime()))
+				.put("buyTimestamp", timestampFormat.format(calendar.getTime())) //
+				.put("color", CarColor.values()[i % 4].toString()) //
+				.put("techChecked", i % 2 == 0) //
+				.startObject("location") //
+				.put("lat", 48.85341 + i / 100) //
+				.put("lon", 2.3488 + i / 100) //
 				.end() //
-				.stObj("model").add("description", randomText()) //
-				.add("fiscalPower", i % 11 + 2) //
-				.add("size", Math.PI * i).build();
+				.startObject("model").put("description", randomText()) //
+				.put("fiscalPower", i % 11 + 2) //
+				.put("size", Math.PI * i).build();
 	}
 
 	public static class Car {

@@ -17,9 +17,9 @@ import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.common.base.Strings;
 import org.elasticsearch.search.SearchHits;
 
-import com.eclipsesource.json.JsonObject;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 
@@ -47,9 +47,9 @@ public class AdminResource extends AbstractResource {
 
 	// singleton ends
 
-	public static final String SPACEDOG_INDEX = "spacedog";
+	public static final String ADMIN_INDEX = "spacedog";
 	public static final String ACCOUNT_TYPE = "account";
-	private static final Set<String> INTERNAL_INDICES = Sets.newHashSet(SPACEDOG_INDEX);
+	private static final Set<String> INTERNAL_INDICES = Sets.newHashSet(ADMIN_INDEX);
 
 	public static final String BACKEND_KEY_HEADER = "x-spacedog-backend-key";
 	public static final String AUTHORIZATION_HEADER = "Authorization";
@@ -64,8 +64,8 @@ public class AdminResource extends AbstractResource {
 
 		IndicesAdminClient indices = Start.getElasticClient().admin().indices();
 
-		if (!indices.prepareExists(SPACEDOG_INDEX).get().isExists()) {
-			indices.prepareCreate(SPACEDOG_INDEX).addMapping(ACCOUNT_TYPE, accountMapping).get();
+		if (!indices.prepareExists(ADMIN_INDEX).get().isExists()) {
+			indices.prepareCreate(ADMIN_INDEX).addMapping(ACCOUNT_TYPE, accountMapping).get();
 		}
 	}
 
@@ -93,41 +93,41 @@ public class AdminResource extends AbstractResource {
 	@Get("/user/:username/check")
 	@Get("/user/:username/check")
 	public Payload checkUsername(String username) {
-		return checkExistence(SPACEDOG_INDEX, ACCOUNT_TYPE, "username", username);
+		return checkExistence(ADMIN_INDEX, ACCOUNT_TYPE, "username", username);
 	}
 
 	@Get("/backend/:id/check")
 	@Get("/backend/:id/check")
 	public Payload checkBackendId(String backendId) {
-		return checkExistence(SPACEDOG_INDEX, ACCOUNT_TYPE, "backendId", backendId);
+		return checkExistence(ADMIN_INDEX, ACCOUNT_TYPE, "backendId", backendId);
 	}
 
 	@Post("/account")
 	@Post("/account/")
 	public Payload signUp(String body, Context context) {
 		try {
-			JsonObject input = JsonObject.readFrom(body);
+			ObjectNode input = Json.readObjectNode(body);
 
 			Account account = new Account();
-			account.backendId = input.getString("backendId", null);
-			account.username = input.getString("username", null);
-			account.email = input.getString("email", null);
-			String password = input.getString("password", null);
+			account.backendId = input.get("backendId").textValue();
+			account.username = input.get("username").textValue();
+			account.email = input.get("email").textValue();
+			String password = input.get("password").textValue();
 			Account.checkPasswordValidity(password);
 			account.hashedPassword = User.hashPassword(password);
 			account.backendKey = new BackendKey();
 			account.checkAccountInputValidity();
 
-			if (ElasticHelper.search(SPACEDOG_INDEX, ACCOUNT_TYPE, "username", account.username).getTotalHits() > 0)
+			if (ElasticHelper.search(ADMIN_INDEX, ACCOUNT_TYPE, "username", account.username).getTotalHits() > 0)
 				return invalidParameters("username", account.username,
 						String.format("administrator username [%s] is not available", account.username));
 
-			if (ElasticHelper.search(SPACEDOG_INDEX, ACCOUNT_TYPE, "backendId", account.backendId).getTotalHits() > 0)
+			if (ElasticHelper.search(ADMIN_INDEX, ACCOUNT_TYPE, "backendId", account.backendId).getTotalHits() > 0)
 				return invalidParameters("backendId", account.backendId,
 						String.format("backend id [%s] is not available", account.backendId));
 
-			byte[] accountBytes = getObjectMapper().writeValueAsBytes(account);
-			Start.getElasticClient().prepareIndex(SPACEDOG_INDEX, ACCOUNT_TYPE).setSource(accountBytes).get();
+			byte[] accountBytes = Json.getMapper().writeValueAsBytes(account);
+			Start.getElasticClient().prepareIndex(ADMIN_INDEX, ACCOUNT_TYPE).setSource(accountBytes).get();
 
 			// backend index is named after the backend id
 			Start.getElasticClient().admin().indices().prepareCreate(account.backendId)
@@ -147,7 +147,7 @@ public class AdminResource extends AbstractResource {
 		try {
 			checkAdminCredentialsOnly(context);
 
-			GetResponse response = Start.getElasticClient().prepareGet(SPACEDOG_INDEX, ACCOUNT_TYPE, backendId).get();
+			GetResponse response = Start.getElasticClient().prepareGet(ADMIN_INDEX, ACCOUNT_TYPE, backendId).get();
 
 			if (!response.isExists())
 				return error(HttpStatus.NOT_FOUND, "account with id [%s] not found", backendId);
@@ -164,7 +164,7 @@ public class AdminResource extends AbstractResource {
 		try {
 			checkAdminCredentialsOnly(context);
 
-			DeleteResponse resp1 = Start.getElasticClient().prepareDelete(SPACEDOG_INDEX, ACCOUNT_TYPE, backendId)
+			DeleteResponse resp1 = Start.getElasticClient().prepareDelete(ADMIN_INDEX, ACCOUNT_TYPE, backendId)
 					.get();
 
 			if (!resp1.isFound())
@@ -238,7 +238,7 @@ public class AdminResource extends AbstractResource {
 		// check client id/secret pairs in spacedog
 		// index account objects
 
-		SearchHits accountHits = ElasticHelper.search(SPACEDOG_INDEX, ACCOUNT_TYPE, "backendId", backendId,
+		SearchHits accountHits = ElasticHelper.search(ADMIN_INDEX, ACCOUNT_TYPE, "backendId", backendId,
 				"backendKey.name", keyName, "backendKey.secret", keySecret);
 
 		if (accountHits.getTotalHits() == 0)
@@ -264,11 +264,11 @@ public class AdminResource extends AbstractResource {
 				throw new RuntimeException(String.format("more than one user with username [%s]", tokens.get()[0]));
 
 			return new Credentials(backendId,
-					getObjectMapper().readValue(userHits.getAt(0).getSourceRef().array(), User.class));
+					Json.getMapper().readValue(userHits.getAt(0).getSourceRef().array(), User.class));
 
 		} else {
 
-			Account account = getObjectMapper().readValue(accountHits.getAt(0).getSourceAsString(), Account.class);
+			Account account = Json.getMapper().readValue(accountHits.getAt(0).getSourceAsString(), Account.class);
 
 			return new Credentials(backendId, account.backendKey);
 		}
@@ -283,7 +283,7 @@ public class AdminResource extends AbstractResource {
 
 			// check admin users in spacedog index
 
-			SearchHits accountHits = ElasticHelper.search(SPACEDOG_INDEX, ACCOUNT_TYPE, "username", tokens.get()[0],
+			SearchHits accountHits = ElasticHelper.search(ADMIN_INDEX, ACCOUNT_TYPE, "username", tokens.get()[0],
 					"hashedPassword", User.hashPassword(tokens.get()[1]));
 
 			if (accountHits.getTotalHits() == 0)
@@ -293,7 +293,7 @@ public class AdminResource extends AbstractResource {
 				throw new RuntimeException(
 						String.format("more than one admin user with username [%s]", tokens.get()[0]));
 
-			return getObjectMapper().readValue(accountHits.getAt(0).getSourceAsString(), Account.class);
+			return Json.getMapper().readValue(accountHits.getAt(0).getSourceAsString(), Account.class);
 
 		} else
 			throw new AuthenticationException(String.format("no 'Authorization' header found", BACKEND_KEY_HEADER));

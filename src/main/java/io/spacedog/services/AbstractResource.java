@@ -3,6 +3,7 @@
  */
 package io.spacedog.services;
 
+import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.action.search.SearchResponse;
@@ -10,9 +11,9 @@ import org.elasticsearch.index.mapper.MergeMappingException;
 import org.elasticsearch.indices.IndexMissingException;
 import org.elasticsearch.search.SearchHit;
 
-import com.eclipsesource.json.JsonArray;
-import com.eclipsesource.json.JsonObject;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.services.Account.InvalidAccountException;
 import io.spacedog.services.SchemaResource.NotFoundException;
@@ -26,12 +27,6 @@ public abstract class AbstractResource {
 	public static final String HEADER_OBJECT_ID = "x-spacedog-object-id";
 	public static final String BASE_URL = "https://spacedog.io";
 
-	private static ObjectMapper objectMapper = new ObjectMapper();
-
-	protected static ObjectMapper getObjectMapper() {
-		return objectMapper;
-	}
-
 	protected Payload checkExistence(String index, String type, String field, String value) {
 		try {
 			return ElasticHelper.search(index, type, field, value).getTotalHits() == 0 ? Payload.notFound()
@@ -42,30 +37,27 @@ public abstract class AbstractResource {
 		}
 	}
 
-	public static String toJsonString(Throwable e) {
-		return toJsonObject(e).toString();
+	public static String toJsonString(Throwable t) {
+		return toJsonNode(t).toString();
 	}
 
-	public static JsonObject toJsonObject(Throwable e) {
-		return add(new JsonObject(), e);
-	}
-
-	private static JsonObject add(JsonObject error, Throwable t) {
-		JsonArray stack = new JsonArray();
-		error.add("type", t.getClass().getName()) //
-				.add("message", t.getMessage()) //
-				.add("trace", stack);
+	public static JsonNode toJsonNode(Throwable t) {
+		JsonBuilder<ObjectNode> builder = Json.startObject()//
+				.put("type", t.getClass().getName()) //
+				.put("message", t.getMessage()) //
+				.startArray("trace");
 
 		for (StackTraceElement element : t.getStackTrace()) {
-			stack.add(element.toString());
+			builder.add(element.toString());
 		}
 
+		builder.end();
+
 		if (t.getCause() != null) {
-			JsonObject cause = new JsonObject();
-			add(cause, t.getCause());
-			error.add("cause", cause);
+			builder.putNode("cause", toJsonNode(t.getCause()));
 		}
-		return error;
+
+		return builder.build();
 	}
 
 	public static Payload success() {
@@ -77,14 +69,14 @@ public abstract class AbstractResource {
 	}
 
 	public static Payload saved(boolean created, String uri, String type, String id, long version) {
-		JsonBuilder builder = Json.builder() //
-				.add("success", true) //
-				.add("id", id) //
-				.add("type", type) //
-				.add("location", toUrl(BASE_URL, uri, type, id));
+		JsonBuilder<ObjectNode> builder = Json.startObject() //
+				.put("success", true) //
+				.put("id", id) //
+				.put("type", type) //
+				.put("location", toUrl(BASE_URL, uri, type, id));
 
 		if (version > 0) //
-			builder.add("version", version);
+			builder.put("version", version);
 
 		return new Payload(JSON_CONTENT, builder.build().toString(), created ? HttpStatus.CREATED : HttpStatus.OK)
 				.withHeader(AbstractResource.HEADER_OBJECT_ID, id);
@@ -128,10 +120,10 @@ public abstract class AbstractResource {
 	}
 
 	public static Payload error(int httpStatus, Throwable throwable) {
-		JsonBuilder builder = Json.builder().add("success", false);
+		JsonBuilder<ObjectNode> builder = Json.startObject().put("success", false);
 		if (throwable != null)
-			builder.addJson("error", toJsonObject(throwable));
-		return new Payload(JSON_CONTENT, builder.build().toString(), httpStatus);
+			builder.putNode("error", toJsonNode(throwable));
+		return new Payload(JSON_CONTENT, builder.toString(), httpStatus);
 	}
 
 	public static Payload error(int httpStatus, String message, Object... args) {
@@ -144,27 +136,31 @@ public abstract class AbstractResource {
 	 * @return a bad request http payload with a json listing invalid parameters
 	 */
 	protected static Payload invalidParameters(String... parameters) {
-		JsonBuilder builder = Json.builder().add("success", false);
+		JsonBuilder<ObjectNode> builder = Json.startObject().put("success", false);
 		if (parameters.length > 0 && parameters.length % 3 == 0) {
-			builder = builder.stObj("invalidParameters");
+			builder.startObject("invalidParameters");
 			for (int i = 0; i < parameters.length; i += 3)
-				builder = builder.stObj(parameters[0]).add("value", parameters[1]).add("message", parameters[2]);
+				builder.startObject(parameters[0])//
+						.put("value", parameters[1])//
+						.put("message", parameters[2]);
 		}
-		return new Payload(JSON_CONTENT, builder.build().toString(), HttpStatus.BAD_REQUEST);
+		return new Payload(JSON_CONTENT, builder.toString(), HttpStatus.BAD_REQUEST);
 	}
 
 	protected static String toUrl(String baseUrl, String uri, String type, String id) {
 		return new StringBuilder(baseUrl).append(uri).append('/').append(type).append('/').append(id).toString();
 	}
 
-	protected Payload extractResults(SearchResponse response) {
-		JsonBuilder builder = Json.builder().add("took", response.getTookInMillis())
-				.add("total", response.getHits().getTotalHits()).stArr("results");
+	protected Payload extractResults(SearchResponse response) throws JsonProcessingException, IOException {
+		JsonBuilder<ObjectNode> builder = Json.startObject()//
+				.put("took", response.getTookInMillis())//
+				.put("total", response.getHits().getTotalHits())//
+				.startArray("results");
 
 		for (SearchHit hit : response.getHits().getHits()) {
-			JsonObject object = JsonObject.readFrom(hit.sourceAsString());
-			object.get("meta").asObject().add("id", hit.id()).add("type", hit.type()).add("version", hit.version());
-			builder.addJson(object);
+			JsonNode object = Json.getMapper().readTree(hit.sourceAsString());
+			((ObjectNode) object.get("meta")).put("id", hit.id()).put("type", hit.type()).put("version", hit.version());
+			builder.addNode(object);
 		}
 
 		return new Payload(JSON_CONTENT, builder.build().toString(), HttpStatus.OK);

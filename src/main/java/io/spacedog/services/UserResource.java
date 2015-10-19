@@ -7,7 +7,8 @@ import java.util.Collections;
 
 import org.elasticsearch.action.index.IndexResponse;
 
-import com.eclipsesource.json.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -35,9 +36,10 @@ public class UserResource extends AbstractResource {
 
 	static final String USER_TYPE = "user";
 
-	static final JsonObject USER_DEFAULT_SCHEMA = SchemaBuilder.builder(USER_TYPE).id("username")
-			.add("username", "string").required().add("hashedPassword", "string").required().add("email", "string")
-			.required().add("accountId", "string").required().add("groups", "string").build();
+	static final ObjectNode USER_DEFAULT_SCHEMA = SchemaBuilder.builder(USER_TYPE).id("username")
+			.property("username", "string").required().end().property("hashedPassword", "string").required().end()
+			.property("email", "string").required().end().property("accountId", "string").required().end()
+			.property("groups", "string").build();
 
 	@Get("/login")
 	@Get("/login/")
@@ -77,21 +79,19 @@ public class UserResource extends AbstractResource {
 			 * up users. Should common users be able to?
 			 */
 			Credentials credentials = AdminResource.checkCredentials(context);
-			JsonObject input = JsonObject.readFrom(body);
+			JsonNode input = Json.getMapper().readTree(body);
 
 			User user = new User();
-			user.username = input.getString("username", null);
-			user.email = input.getString("email", null);
-			String password = input.getString("password", null);
+			user.username = input.get("username").asText();
+			user.email = input.get("email").asText();
+			String password = input.get("password").asText();
 			User.checkPasswordValidity(password);
 			user.hashedPassword = User.hashPassword(password);
 			user.groups = Collections.singletonList(credentials.getBackendId());
 			user.checkUserInputValidity();
 
 			IndexResponse response = DataResource.get().createInternal(credentials.getBackendId(), USER_TYPE,
-					// TODO find something better to avoid to many object format
-					// transformations
-					JsonObject.readFrom(getObjectMapper().writeValueAsString(user)), credentials.getName());
+					Json.getMapper().valueToTree(user), credentials.getName());
 
 			return saved(true, "/v1", USER_TYPE, response.getId(), response.getVersion());
 
@@ -119,7 +119,7 @@ public class UserResource extends AbstractResource {
 	}
 
 	public static String getDefaultUserMapping() {
-		JsonObject schema = SchemaValidator.validate(USER_TYPE, USER_DEFAULT_SCHEMA);
+		JsonNode schema = SchemaValidator.validate(USER_TYPE, USER_DEFAULT_SCHEMA);
 		return SchemaTranslator.translate(USER_TYPE, schema).toString();
 	}
 

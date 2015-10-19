@@ -3,10 +3,13 @@
  */
 package io.spacedog.services;
 
+import java.io.IOException;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.eclipsesource.json.JsonObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.GetRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
@@ -15,21 +18,21 @@ import com.mashape.unirest.request.body.RequestBodyEntity;
 public class SchemaResourceTest extends AbstractTest {
 
 	@BeforeClass
-	public static void resetTestAccount() throws UnirestException, InterruptedException {
+	public static void resetTestAccount() throws UnirestException, InterruptedException, IOException {
 		AdminResourceTest.resetTestAccount();
 	}
 
 	@Test
-	public void shouldDeletePutAndGetCarSchema() throws UnirestException {
+	public void shouldDeletePutAndGetCarSchema() throws UnirestException, IOException {
 
 		resetCarSchema();
 
 		GetRequest req = prepareGet("/v1/schema/car", AdminResourceTest.testClientKey());
-		JsonObject res = get(req, 200).json();
-		assertTrue(Json.equals(buildCarSchema(), res));
+		JsonNode res = get(req, 200).jsonNode();
+		assertEquals(buildCarSchema(), res);
 	}
 
-	public static void resetCarSchema() throws UnirestException {
+	public static void resetCarSchema() throws UnirestException, IOException {
 
 		HttpRequestWithBody req1 = prepareDelete("/v1/schema/car").basicAuth("test", "hi test");
 		delete(req1, 200, 404);
@@ -39,24 +42,24 @@ public class SchemaResourceTest extends AbstractTest {
 		post(req2, 201);
 	}
 
-	public static JsonObject buildCarSchema() {
+	public static ObjectNode buildCarSchema() {
 		return SchemaBuilder.builder("car") //
-				.add("serialNumber", "string").required() //
-				.add("buyDate", "date").required() //
-				.add("buyTime", "time").required() //
-				.add("buyTimestamp", "timestamp").required() //
-				.add("color", "enum").required() //
-				.add("techChecked", "boolean").required() //
-				.startObject("model").required() //
-				.add("description", "text").language("french").required() //
-				.add("fiscalPower", "integer").required() //
-				.add("size", "float").required() //
+				.property("serialNumber", "string").required().end() //
+				.property("buyDate", "date").required().end() //
+				.property("buyTime", "time").required().end() //
+				.property("buyTimestamp", "timestamp").required().end() //
+				.property("color", "enum").required().end() //
+				.property("techChecked", "boolean").required().end() //
+				.objectProperty("model").required() //
+				.property("description", "text").language("french").required().end() //
+				.property("fiscalPower", "integer").required().end() //
+				.property("size", "float").required().end() //
 				.end() //
-				.add("location", "geopoint").required() //
+				.property("location", "geopoint").required().end() //
 				.build();
 	}
 
-	public static void resetSaleSchema() throws UnirestException {
+	public static void resetSaleSchema() throws UnirestException, IOException {
 		HttpRequestWithBody req1 = prepareDelete("/v1/schema/sale").basicAuth("test", "hi test");
 		delete(req1, 200, 404);
 
@@ -65,37 +68,35 @@ public class SchemaResourceTest extends AbstractTest {
 		post(req2, 201);
 	}
 
-	public static JsonObject buildSaleSchema() {
+	public static ObjectNode buildSaleSchema() {
 		return SchemaBuilder.builder("sale") //
-				.add("number", "string").required() //
-				.add("when", "timestamp").required() //
-				.add("where", "geopoint") //
-				.add("online", "boolean").required() //
-				.add("deliveryDate", "date").required() //
-				.add("deliveryTime", "time").required() //
-				.startObject("items").required() //
-				.array() //
-				.add("ref", "string").required() //
-				.add("description", "text").required() //
-				.language("english") //
-				.add("quantity", "integer") //
-				// .add("price", "amount").required() //
-				.add("type", "enum").required() //
+				.property("number", "string").required().end() //
+				.property("when", "timestamp").required().end() //
+				.property("where", "geopoint").end() //
+				.property("online", "boolean").required().end() //
+				.property("deliveryDate", "date").required().end() //
+				.property("deliveryTime", "time").required().end() //
+				.objectProperty("items").array().required() //
+				.property("ref", "string").required().end() //
+				.property("description", "text").language("english").required().end() //
+				.property("quantity", "integer").end() //
+				// .property("price", "amount").required().end() //
+				.property("type", "enum").required().end() //
 				.end() //
 				.build();
 	}
 
 	@Test
-	public void shouldDeletePutAndGetHomeSchema() throws UnirestException {
+	public void shouldDeletePutAndGetHomeSchema() throws UnirestException, IOException {
 
 		resetHomeSchema();
 
 		GetRequest req = prepareGet("/v1/schema/home", AdminResourceTest.testClientKey());
-		JsonObject res = get(req, 200).json();
-		assertTrue(Json.equals(buildHomeSchema(), res));
+		JsonNode res = get(req, 200).jsonNode();
+		assertEquals(buildHomeSchema(), res);
 	}
 
-	private static void resetHomeSchema() throws UnirestException {
+	private static void resetHomeSchema() throws UnirestException, IOException {
 		HttpRequestWithBody req1 = prepareDelete("/v1/schema/home").basicAuth("test", "hi test");
 		delete(req1, 200);
 
@@ -104,47 +105,47 @@ public class SchemaResourceTest extends AbstractTest {
 		post(req2, 201);
 	}
 
-	private static JsonObject buildHomeSchema() {
+	private static ObjectNode buildHomeSchema() {
 		return SchemaBuilder.builder("home") //
-				.add("type", "enum").required() //
-				.startObject("address").required() //
-				.add("number", "integer")//
-				.add("street", "text").required() //
-				.add("city", "string").required() //
-				.add("country", "string").required() // /
+				.property("type", "enum").required().end() //
+				.objectProperty("address").required() //
+				.property("number", "integer").end() //
+				.property("street", "text").required().end() //
+				.property("city", "string").required().end() //
+				.property("country", "string").required().end() // /
 				.end() //
-				.add("phone", "string")//
-				.add("location", "geopoint").required() //
+				.property("phone", "string").end() //
+				.property("location", "geopoint").required().end() //
 				.build();
 	}
 
 	@Test
-	public void shouldGetAllSchemas() throws UnirestException {
+	public void shouldGetAllSchemas() throws UnirestException, IOException {
 		resetCarSchema();
 		resetHomeSchema();
 		resetSaleSchema();
 
 		GetRequest req = prepareGet("/v1/schema", AdminResourceTest.testClientKey());
-		JsonObject result = get(req, 200).json();
+		JsonNode result = get(req, 200).jsonNode();
 
 		// user, car, sale and home
 		assertEquals(4, result.size());
-		JsonObject expected = Json.merger() //
-				.add(buildHomeSchema()) //
-				.add(buildCarSchema()) //
-				.add(buildSaleSchema()) //
-				.add(UserResource.USER_DEFAULT_SCHEMA) //
+		JsonNode expected = Json.merger() //
+				.merge(buildHomeSchema()) //
+				.merge(buildCarSchema()) //
+				.merge(buildSaleSchema()) //
+				.merge(UserResource.USER_DEFAULT_SCHEMA) //
 				.get();
 
-		assertTrue(Json.equals(expected, result));
+		assertEquals(expected, result);
 	}
 
 	@Test
-	public void shouldFailDueToInvalidSchema() throws UnirestException {
+	public void shouldFailDueToInvalidSchema() throws UnirestException, IOException {
 		shouldFailDueToInvalidSchema("{\"toto\":{\"_type\":\"XXX\"}}");
 	}
 
-	private void shouldFailDueToInvalidSchema(String jsonSchema) throws UnirestException {
+	private void shouldFailDueToInvalidSchema(String jsonSchema) throws UnirestException, IOException {
 		HttpRequestWithBody req1 = prepareDelete("/v1/schema/toto").basicAuth("test", "hi test");
 		delete(req1, 200);
 
@@ -153,16 +154,16 @@ public class SchemaResourceTest extends AbstractTest {
 	}
 
 	@Test
-	public void shouldFailToChangeCarSchema() throws UnirestException {
+	public void shouldFailToChangeCarSchema() throws UnirestException, IOException {
 
 		resetCarSchema();
 
-		JsonObject json = buildCarSchema();
-		json.get("car").asObject().get("color").asObject().set("_type", "date");
+		ObjectNode json = buildCarSchema();
+		json.with("car").with("color").put("_type", "date");
 		shouldFailToChangeSchema(json);
 	}
 
-	private void shouldFailToChangeSchema(JsonObject json) throws UnirestException {
+	private void shouldFailToChangeSchema(JsonNode json) throws UnirestException, IOException {
 		RequestBodyEntity req2 = preparePut("/v1/schema/car").basicAuth("test", "hi test").body(json.toString());
 		put(req2, 400);
 	}

@@ -3,6 +3,7 @@
  */
 package io.spacedog.services;
 
+import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.action.delete.DeleteResponse;
@@ -17,9 +18,11 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.joda.time.DateTime;
 
-import com.eclipsesource.json.JsonObject;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.services.ElasticHelper.FilteredSearchBuilder;
+import io.spacedog.services.SchemaResource.NotFoundException;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -73,7 +76,7 @@ public class DataResource extends AbstractResource {
 			// object should be validated before saved
 			SchemaResource.getSchema(credentials.getBackendId(), type);
 
-			IndexResponse response = createInternal(credentials.getBackendId(), type, JsonObject.readFrom(jsonBody),
+			IndexResponse response = createInternal(credentials.getBackendId(), type, Json.readObjectNode(jsonBody),
 					credentials.getName());
 
 			return saved(true, "/v1/data", response.getType(), response.getId(), response.getVersion());
@@ -83,14 +86,14 @@ public class DataResource extends AbstractResource {
 		}
 	}
 
-	IndexResponse createInternal(String index, String type, JsonObject object, String createdBy) {
+	IndexResponse createInternal(String index, String type, ObjectNode object, String createdBy) {
 
 		String now = DateTime.now().toString();
 
-		// remove then add meta to avoid developers to
+		// replace meta to avoid developers to
 		// set any meta fields directly
-		object.remove("meta").add("meta", new JsonObject().add("createdBy", createdBy).add("updatedBy", createdBy)
-				.add("createdAt", now).add("updatedAt", now));
+		object.set("meta", Json.startObject().put("createdBy", createdBy).put("updatedBy", createdBy)
+				.put("createdAt", now).put("updatedAt", now).build());
 
 		return Start.getElasticClient().prepareIndex(index, type).setSource(object.toString()).get();
 	}
@@ -121,8 +124,8 @@ public class DataResource extends AbstractResource {
 			if (!response.isExists())
 				return error(HttpStatus.NOT_FOUND, "object of type [%s] for id [%s] not found", type, objectId);
 
-			JsonObject object = JsonObject.readFrom(response.getSourceAsString());
-			object.get("meta").asObject().add("id", response.getId()).add("type", response.getType()).add("version",
+			ObjectNode object = Json.readObjectNode(response.getSourceAsString());
+			object.with("meta").put("id", response.getId()).put("type", response.getType()).put("version",
 					response.getVersion());
 
 			return new Payload(JSON_CONTENT, object.toString(), HttpStatus.OK);
@@ -160,7 +163,7 @@ public class DataResource extends AbstractResource {
 			Credentials credentials = AdminResource.checkCredentials(context);
 
 			FilteredSearchBuilder builder = ElasticHelper.searchBuilder(credentials.getBackendId(), type)
-					.applyContext(context).applyFilters(JsonObject.readFrom(jsonBody));
+					.applyContext(context).applyFilters(Json.readObjectNode(jsonBody));
 
 			return extractResults(builder.get());
 
@@ -178,10 +181,10 @@ public class DataResource extends AbstractResource {
 			// object should be validated before saved
 			SchemaResource.getSchema(credentials.getBackendId(), type);
 
-			JsonObject object = JsonObject.readFrom(jsonBody)
-					// removed to forbid developers the update of meta fields
-					.remove("meta").add("meta", new JsonObject().add("updatedBy", credentials.getName())
-							.add("updatedAt", DateTime.now().toString()));
+			ObjectNode object = Json.readObjectNode(jsonBody);
+			// removed to forbid developers the update of meta fields
+			object.with("meta").removeAll().put("updatedBy", credentials.getName()).put("updatedAt",
+					DateTime.now().toString());
 
 			UpdateRequestBuilder update = Start.getElasticClient()
 					.prepareUpdate(credentials.getBackendId(), type, objectId).setDoc(object.toString());
@@ -226,7 +229,7 @@ public class DataResource extends AbstractResource {
 	}
 
 	private Payload doSearch(String index, String type, String json, Context context)
-			throws InterruptedException, ExecutionException {
+			throws InterruptedException, ExecutionException, NotFoundException, JsonProcessingException, IOException {
 
 		SearchRequest request = new SearchRequest(index);
 

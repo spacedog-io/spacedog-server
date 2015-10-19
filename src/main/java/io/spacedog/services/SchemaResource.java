@@ -3,13 +3,16 @@
  */
 package io.spacedog.services;
 
+import java.io.IOException;
 import java.util.Optional;
 
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.indices.TypeMissingException;
 
-import com.eclipsesource.json.JsonObject;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.services.Json.JsonMerger;
 import net.codestory.http.Context;
@@ -46,8 +49,9 @@ public class SchemaResource extends AbstractResource {
 			Optional.ofNullable(resp.getMappings()).map(indexMap -> indexMap.get(credentials.getBackendId()))
 					.orElseThrow(() -> new NotFoundException(credentials.getBackendId())).forEach(typeAndMapping -> {
 						try {
-							jsonMerger.add(JsonObject.readFrom(typeAndMapping.value.source().string())
-									.get(typeAndMapping.key).asObject().get("_meta").asObject());
+							jsonMerger.merge(
+									(ObjectNode) Json.getMapper().readTree(typeAndMapping.value.source().string())
+											.get(typeAndMapping.key).get("_meta"));
 						} catch (Exception e) {
 							throw new RuntimeException(e);
 						}
@@ -71,7 +75,8 @@ public class SchemaResource extends AbstractResource {
 		}
 	}
 
-	public static JsonObject getSchema(String index, String type) throws NotFoundException {
+	public static ObjectNode getSchema(String index, String type)
+			throws NotFoundException, JsonProcessingException, IOException {
 		GetMappingsResponse resp = Start.getElasticClient().admin().indices().prepareGetMappings(index).addTypes(type)
 				.get();
 
@@ -79,7 +84,7 @@ public class SchemaResource extends AbstractResource {
 				.map(typeMap -> typeMap.get(type)).orElseThrow(() -> new NotFoundException(index, type)).source()
 				.toString();
 
-		return JsonObject.readFrom(source).get(type).asObject().get("_meta").asObject();
+		return (ObjectNode) Json.getMapper().readTree(source).get(type).get("_meta");
 	}
 
 	@Put("/:type")
@@ -90,7 +95,7 @@ public class SchemaResource extends AbstractResource {
 		try {
 			Account account = AdminResource.checkAdminCredentialsOnly(context);
 
-			JsonObject schema = SchemaValidator.validate(type, JsonObject.readFrom(newSchemaAsString));
+			JsonNode schema = SchemaValidator.validate(type, Json.getMapper().readTree(newSchemaAsString));
 
 			String elasticMapping = SchemaTranslator.translate(type, schema).toString();
 

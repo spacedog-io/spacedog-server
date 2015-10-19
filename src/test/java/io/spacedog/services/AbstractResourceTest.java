@@ -5,20 +5,19 @@ package io.spacedog.services;
 
 import org.junit.Test;
 
-import com.eclipsesource.json.JsonObject;
-import com.eclipsesource.json.JsonValue;
+import com.fasterxml.jackson.databind.JsonNode;
 
 public class AbstractResourceTest extends AbstractTest {
 
 	@Test
 	public void shouldConvertRuntimeExceptionToJsonError() {
-		JsonObject json = AbstractResource.toJsonObject(new RuntimeException(new NullPointerException()));
+		JsonNode json = AbstractResource.toJsonNode(new RuntimeException(new NullPointerException()));
 
-		assertEquals("java.lang.RuntimeException", json.get("type").asString());
-		assertEquals("java.lang.NullPointerException", json.get("message").asString());
-		assertTrue(json.get("trace").asArray().size() > 5);
-		assertEquals("java.lang.NullPointerException", json.get("cause").asObject().get("type").asString());
-		assertEquals(JsonValue.NULL, json.get("cause").asObject().get("message"));
-		assertTrue(json.get("cause").asObject().get("trace").asArray().size() > 5);
+		assertEquals("java.lang.RuntimeException", json.get("type").asText());
+		assertEquals("java.lang.NullPointerException", json.get("message").asText());
+		assertTrue(json.get("trace").size() > 5);
+		assertEquals("java.lang.NullPointerException", json.get("cause").get("type").asText());
+		assertTrue(json.get("cause").get("message").isNull());
+		assertTrue(json.get("cause").get("trace").size() > 5);
 	}
 }
