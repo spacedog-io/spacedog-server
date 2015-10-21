@@ -1,26 +1,28 @@
-    <header>
-      <nav>
-        <a class= "logo" href="/">{{ site.name }}</a>
-        
-        <ul>          
-          <li><a
-            {% if "/index.html" == page.url %} class='active' {% endif %}
-            href="/">Overview</a></li>
-            
-          <li><a
-            {% if "/examples.html" == page.url %} class='active' {% endif %}
-            href="/examples.html">Examples</a></li>
+    <header class='resp-header'>
 
-          <li><a
-            {% if page.url contains '/docs/' %} class='active' {% endif %}
-            href="/docs/user-guide/getting-started.html">Docs</a></li>
-
-          <li><a id="nav-console-lk"
-            {% if "/console.html" == page.url %} class='active' {% endif %}
-            >Console</a></li>
-            
-          <li><button id="nav-sign-bt">Sign in</a></li>
+        <div id='header-content'>
         
-        </ul>
-      </nav>    
+            <a class= "logo" href="/">{{ site.name }}</a>
+
+            <nav>
+
+                <a {% if "/index.html" == page.url %} class='active' {% endif %}
+                href="/">Overview</a>
+
+                <a {% if "/examples.html" == page.url %} class='active' {% endif %}
+                href="/examples.html">Examples</a>
+
+                <a {% if page.url contains '/docs/' %} class='active' {% endif %}
+                href="/docs/user-guide/getting-started.html">Docs</a>
+
+                <a id="nav-console-lk"
+                {% if "/console.html" == page.url %} class='active' {% endif %}
+                >Console</a>
+
+                <button id="nav-sign-bt">Log in</a>
+            </nav>
+            
+
+        </div>
+    
     </header>

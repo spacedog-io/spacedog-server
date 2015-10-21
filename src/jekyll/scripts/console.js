@@ -4,29 +4,20 @@
 
 
 var	$consoleDiv;
-var	$alert;
 var $results;
 
 function searchOk(data, textStatus, jqXHR) {
-	$alert.html('=> [' + data.total + '] result(s), [' + data.results.length + '] displayed, search took [' + data.took + '] millisecond(s)');
+	inform('[' + data.total + '] result(s), [' + data.results.length
+		 + '] displayed, search took [' + data.took + '] millisecond(s)');
 	console.log(data);
 	
 	$results.empty();
 	for (i=0; i < data.results.length; i++)
 		$results.append('<pre class="prettyprint"><code>'
 			 + JSON.stringify(data.results[i], null, 4)
-			 + '</code></pre><br>')
+			 + '</code></pre>')
 
 	prettyPrint();
-}
-
-function showError(jqxhr, textStatus, errorThrown) {
-	console.log(textStatus + ': ' + errorThrown);
-	console.log(jqxhr);
-
-	if (errorThrown) $alert.html('=> ' +  errorThrown);
-	else $alert.html('=> ' + textStatus);
-	if (jqxhr.responseJSON) $alert.append(': ' + jqxhr.responseJSON.error.message);
 }
 
 function searchObjects(event) {
@@ -54,9 +45,8 @@ function searchObjects(event) {
 
 function init() {
 
-		if (sessionStorage.signInOk) {
+		if (sessionStorage.logInOk) {
 			$consoleDiv = $('#console');
-			$alert = $('#search-alert');
 			$results = $('#console-results');
 
 			$('#user-info').html('<p>Hello [' + sessionStorage.username
@@ -70,7 +60,7 @@ function init() {
 
 		}
 		else {
-			window.location.assign('/sign-in.html');			
+			window.location.assign('/log-in.html');			
 		}
 
 }

@@ -164,7 +164,7 @@ function searchInPois() {
 			}
 		}),
 		headers : {
-			'x-spacedog-backend-key':  'examples:default:2fd38b9c-4a9c-48f4-a266-08b48b845c35'
+			'x-spacedog-backend-key':  'examples:default:da8cfff9-04e5-45f5-9814-618d21f339e9'
 		},
 		success: searchInOk,
 		error: searchNok
@@ -192,7 +192,7 @@ function searchOutPois() {
 			}
 		}),
 		headers : {
-			'x-spacedog-backend-key':  'examples:default:2fd38b9c-4a9c-48f4-a266-08b48b845c35'
+			'x-spacedog-backend-key':  'examples:default:da8cfff9-04e5-45f5-9814-618d21f339e9'
 		},
 		success: searchOutOk,
 		error: searchNok
@@ -203,6 +203,7 @@ function searchOutPois() {
 }
 
 function initMap() {
+	console.log('khkjh');
 	$searchForm = $('#map-search-form');
 	
 	$poiInfo = $('#poiInfo');

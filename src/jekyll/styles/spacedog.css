@@ -1,134 +1,163 @@
 
-/* Base Styles
+/* Body
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+* {
+/*  font-family: andale mono, sans-serif;*/
+  font-family: Lucida Sans Unicode, Lucida Grande, sans-serif;
+  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+}
 
 html,
 body {
-  height: 100%;
-  font-family: andale mono, consolas, sans-serif;
-  background-color: black;
   color: orange;
-  min-height:100%;
-  max-width: 100%;
-  padding:0;
-  margin:0;
+  background-color: black;
+  height: 100%;
+  width: 100%;
+  padding: 0;
+  margin: 0;
 }
 
-footer {
-  margin: 30px 0 5px 0;
-  width: 100%;
+.main {
+  margin: 0 auto;
+  max-width: 1100px;
   text-align: center;
 }
 
-header {
-  margin: 0;
-  padding: 10px 0;
-  top: 0;
-  height: 50px;
-  width: 100%;
-  position: fixed;
-  z-index: 100;
-  background-color: black;
-  border-bottom-width: 1px;
-  border-color: red;
-  border-bottom-style: inset;
+@media screen and (min-width:730px) {  
+  .resp-main {
+    margin-top: 65px;
+  }
 }
 
-header .logo {
-  float: left;
-  margin: 0;
-  padding: 10px 30px;
+
+/* Header
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+@media screen and (min-width:730px) {  
+
+  header {
+    top: 0;
+    position: fixed;    
+    z-index: 100;
+    width: 100%;
+    background-color: black;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-color: red;
+  }
+
+  #header-content {
+    margin: 0 auto;
+    max-width: 1100px;
+    text-align: right;
+  }
+
+  header .logo {
+    float: left;
+    margin-left: 30px;
+  }
+
+  header nav {
+    display: inline-block;
+    margin: 15px 30px 10px 0;
+  }
+
+  header nav a {
+    font-size: 1.2rem;
+    margin-right: 10px;  
+  }
+
 }
 
 .logo {
-  font-size: 2.2em;
-}
-
-nav ul {
-  margin: 0;
-  padding: 0 30px 0 0;
-  float: right;
-}
-
-nav li {
-  display:inline-block
+  font-size: 2.2rem;
 }
 
 .active {
   color: red;
 }
 
-a {
-  text-decoration: none;
-  color: orange;
-  cursor:pointer;
+/* Footer
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+footer {
+  width: 100%;
+  margin: 30px 0 5px 0;
+  text-align: center;
 }
 
-a:focus,
-a:hover {
-  color: red;
-  /* avoid blue box when pressing tab to get focus */
-  outline: 0;
+footer p {
+  display: inline-block;
+  margin: 0 5%;
 }
 
-nav a {
-  display:inline-block;
-  font-size:1.2em;
-  margin-left: 10px;
-  padding: 20px 0 20px 10px;
-}
-
-nav button {
-  margin-left: 20px;
-}
 
 /* Landing
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
-
-.banner {
-  margin-top: 73px;
-}
 
 .uvp {
   max-width: 700px;
   margin: 0 auto;
   padding: 2% 0 2% 0;
-  text-align:center;
-  background-color: transparent;
+  text-align: center;
 }
 
-#subscribe-form {
-  padding: 0 16px 20px 16px;
-  position: relative;
+@media screen and (max-width:729px) {
+  .uvp h1 { font-size: 1.8rem; }
+}
+
+.benefits {
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.benefit {
   display: inline-block;
-  border-radius: 15px;
-  background-color: #112365;
+  vertical-align: top;  
+  max-width: 360px;
+  margin: 10px 3%;
 }
 
-#subscribe-form button,
-#subscribe-form input {
+.benefit h5 {
+  text-transform: uppercase;
+}
+
+.action-div {
+  margin: 0 auto;
+  padding: 20px;
+  max-width: 500px;
+  border-radius: 20px;
+  background-color: #112365;
+  text-align: center;
+  display: inline-block;
+}
+
+.action-div button,
+.action-div .button,
+.action-div input {
+  margin: 0 10px 10px 0;
   border-color: orange;
 }
 
-#subscribe-form button:focus,
-#subscribe-form button:hover,
-#subscribe-form input:focus {
-  border-color: red;
-}
 
 /* Console Sign In
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
 #sign-div {
-  margin: 50px auto;
   text-align: center;
-  width: 500px;
+  max-width: 500px;
 }
 
-#sign-div h4,
-#sign-div p,
-#sign-div label {
-  color: beige;
+.log {
+  margin: 100px auto;
+}
+
+.sign {
+  margin: 50px auto;  
 }
 
 #sign-div .logo {
@@ -155,16 +184,13 @@ nav button {
 }
 
 
-
 /* Console Search
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
 #console {
   background-color: black;
   width: 100%;
-  height: 100%
-  display: none;
-  visibility: hidden;
+  height: 100%;
 }
 
 #console-menu {
@@ -173,25 +199,68 @@ nav button {
   padding: 0;
   margin: 0 30px;
   vertical-align: middle;
-  max-width: 380px;
+  max-width: 300px;
+  text-align: left;
+}
+
+#console-menu input {
+  margin-bottom: 10px;
 }
 
 #console-results {
-  margin: 90px 0 0 440px;
+  margin: 90px 0 0 360px;
   padding: 0;
-  vertical-align: middle;
+  vertical-align: left;
   background-color: black;
+  text-align: left;
 }
+
+.prettyprint {
+  display: block;
+  overflow: auto;
+  padding: 2px;
+  margin-bottom: 10px;
+  border: 10px solid darkorange;
+  border-radius: 10px;
+  width: 700px;
+}
+
 
 /* Documentation
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
-menu {
-  float: left;
-  margin: 0;
-  padding: 15px 30px;
-  max-width: 200px;
-  position: fixed;
+@media screen and (min-width:730px) {
+
+  menu {
+    float: left;
+    max-width: 220px;
+    position: fixed;
+    text-align: left;
+  }
+
+  .doc {
+    max-width: 1100px;
+    margin: 0 auto 70px 260px;
+    padding: 15px 30px 15px 30px;
+    color: beige;
+    text-align: left;
+  }
+
+}
+
+@media screen and (max-width:729px) {
+
+  menu {
+    text-align: left;
+  }
+
+  .doc {
+    margin: 0 auto 30px auto;
+    padding: 15px 30px 15px 30px;
+    color: beige;
+    text-align: left;
+  }
+
 }
 
 menu h5 {
@@ -200,42 +269,41 @@ menu h5 {
 
 menu ul {
   list-style-type: none;
-  padding: 0 0 0 10px;
-  margin: 0;
-  border-left : 1px solid red;
+  padding-left: 10px;
+  border-left: 1px solid red;
 }
 
-menu a {
-  display:inline-block;
-  position:relative;
+menu li {
+  margin-bottom: 5px;
 }
 
-.doc {
-  max-width: 800px;
-  margin: 70px auto 70px 260px;
-  padding: 15px 30px;
-  color: beige;
-  text-align:justify;
+.doc p,
+.doc h4,
+.doc h5,
+.doc table {
+  margin-bottom: 1em;
 }
 
 .doc table {
-  border-bottom: 1px solid beige;
-  border-right: 1px solid beige;
-  margin: 2em 0;
+  border: 5px solid orange;
+  border-radius: 20px;
+  padding: 5px;
 }
 
-.doc th,
+.doc th {
+  color: orange;
+  font-weight: 1000;
+}
+
 .doc td {
-  border-right: 1px solid beige;
-  border-bottom: 1px solid beige;
-  border-color: beige;
+  padding: 1px 5px;
 }
 
-/* Map demo
+/* Examples
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
 #map {
-  margin: 71px 0 0 0;
+  margin: 59px 0 0 0;
   padding: 0;
   height: 100%;
   width: 100%;
@@ -248,8 +316,6 @@ menu a {
   padding: 10px;
   background-color: black;
   border: 10px solid darkorange;
-  border-left-style: hidden;
-  border-right-style: hidden;
   border-radius: 10px;
 }
 
@@ -297,81 +363,68 @@ menu a {
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
 h1, h2, h3, h4, h5, h6 {
-  margin: 1rem 0;
-  font-weight: 100;
   color: orange;
+  margin: 0 0 1em 0;
+  line-height: 1.5em;
 }
 
-h1 { font-size: 2.6rem; line-height: 1.2;  }
-h2 { font-size: 2.2rem; line-height: 1.25; }
-h3 { font-size: 1.8rem; line-height: 1.3;  }
-h4 { font-size: 1.4rem; line-height: 1.35; }
-h5 { font-size: 1.2rem; line-height: 1.5;  }
-h6 { font-size: 1.1rem; line-height: 1.6;  }
 
-/* Buttons
-–––––––––––––––––––––––––––––––––––––––––––––––––– */
+h1 { font-size: 2.6rem; }
+h2 { font-size: 2.2rem; }
+h3 { font-size: 1.8rem; }
+h4 { font-size: 1.4rem; }
+h5 { font-size: 1.2rem; }
+h6 { font-size: 1.1rem; }
 
-button {
-  display: inline-block;
-  height: 2em;
-  padding: 10px 10px;
-  background-color: black;
-  color: orange;
-  font-weight: 100;
-  font-family: consolas, sans-serif;
-  vertical-align: middle;
-  font-size: 1.2em;
-  line-height: 1em;
-  text-transform: uppercase;
+p {
+  color: beige;
+  line-height: 1.3em;
+  margin: 0 0 1em 0;
+}
+
+a {
   text-decoration: none;
-  white-space: nowrap;
-  border-radius: 28px;
-  border: 2px solid red;
+  color: orange;
   cursor: pointer;
-  box-sizing: border-box;
+}
+
+a:focus,
+a:hover {
+  color: red;
   /* avoid blue box when pressing tab to get focus */
   outline: 0;
 }
 
-button:hover,
-button:focus {
-  color: #FFF;
-  background-color: red;
-}
+
 
 /* Forms
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
-.form-row {
-  position: relative;
-}
-
-input {
+input,
+button,
+.button {
+  padding: 0 10px;
   background-color: black;
   color: orange;
-  font-family: andale mono, consolas, sans-serif;
-  height: 2em;
-  padding: 10px;
-  margin: 0 10px 0 0;
-  text-align: left;
-  font-size: 1.2em;
-  text-decoration: none;
-  white-space: nowrap;
+  font-family: inherit;
+  font-size: 1.2rem;
   vertical-align: middle;
-  border: 1px solid red;  
-  cursor: text;
-  box-sizing: border-box;
+  border: 2px solid orange;
+  /* avoid blue box when pressing tab to get focus */
+  outline: 0;
+}
+
+button,
+.button {
+  text-transform: uppercase;
+  border-radius: 28px;
+  cursor: pointer;
 }
 
 /* Removes awkward default styles on some inputs for iOS */
-input[type="email"],
-input[type="number"],
-input[type="search"],
-input[type="text"],
-input[type="tel"],
-input[type="url"],
-input[type="password"],
+input,
+button,
+.button,
 textarea {
   -webkit-appearance: none;
      -moz-appearance: none;
@@ -384,40 +437,22 @@ textarea {
   padding-bottom: 6px;
 }
 
-input[type="email"]:focus,
-input[type="number"]:focus,
-input[type="search"]:focus,
-input[type="text"]:focus,
-input[type="tel"]:focus,
-input[type="url"]:focus,
-input[type="password"]:focus,
+button:hover,
+button:focus,
+.button:hover,
+.button:focus,
+input:focus,
 textarea:focus,
 select:focus {
+  border-color: red;
   background-color: red;
   color: #FFF;
-  outline: 0;
 }
 
 label,
 legend {
+  color: beige;
   display: block;
   margin-bottom: .5rem;
   font-weight: 600;
 }
-
-fieldset {
-  padding: 0;
-  border-width: 0;
-}
-
-input[type="checkbox"],
-input[type="radio"] {
-  display: inline;
-}
-
-label > .label-body {
-  display: inline-block;
-  margin-left: .5rem;
-  font-weight: normal;
-}
-

@@ -1,7 +1,8 @@
 
 .highlight  { 
-	padding: 0.2em 0.9em;
 	overflow: auto;
+	padding: 0.2em 0.9em;
+	margin-bottom: 1em;
 	border-bottom: 1px dotted #CCC;
 	border-left: 1px dotted #CCC;
 	border-color: beige;

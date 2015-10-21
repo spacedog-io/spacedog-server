@@ -13,12 +13,12 @@
 
   <body>
 
-    <div id="sign-div">
+    <div id="sign-div" class='sign'>
 
         <a class='logo' href="/">{{ site.name }}</a>
 
 		<form id="create-form">
-			<h4>Create an account</h4>
+			<h4>Please fill this sign up form to create your account</h4>
 			<br>
 			<label>Backend id</label>
 			<input type="text" name="backendId">
@@ -31,14 +31,15 @@
 			<label>Confirm Password</label>
 			<input type="password" name="passwordConfirmation">
 			<div class="sign-form-submit">
-	    		<button type="submit" id="create-account">Create</button>
+	    		<button type="submit" id="create-account">Create Account</button>
 	    	</div>
-   			<p id="sign-alert"></p>
 
+   			<div id="alert-div">
+   			</div>
     	</form>
 
-		<p>If you already have an account, <a href='/sign-in.html'>sign-in.</a></p>
 		<br>
+		<p>If you already have an account, <a href='/log-in.html'>log in.</a></p>
 		
     </div>
 

@@ -4,7 +4,6 @@
 
 var $signDiv;
 var $consoleDiv;
-var $alert;
 var $results;
 var $navSignBt;
 
@@ -16,26 +15,19 @@ function computeContextFromForm(form) {
 }
 
 function showConsole(_, _, jqxhr) {
-	sessionStorage.signInOk = 'true';
-	sessionStorage.spacedogKey = jqxhr.getResponseHeader('x-spacedog-backend-key');
+
+	// called after log in or sign up
+	if (jqxhr) {
+		sessionStorage.logInOk = 'true';
+		sessionStorage.spacedogKey = jqxhr.getResponseHeader('x-spacedog-backend-key');
+	}
+	
+	// or called when already logged in
 	window.location.assign('/console.html');
 }
 
-function showError(jqxhr, textStatus, errorThrown) {
-	console.log(textStatus + ': ' + errorThrown);
-	console.log(jqxhr);
-
-	if (errorThrown) $alert.html('=> ' +  errorThrown);
-	else $alert.html('=> ' + textStatus);
-
-	var message = _.get(jqxhr, 'responseJSON.error.message');
-	if (message) $alert.append(': ' + message);
-	var badParam = message = _.get(jqxhr, 'responseJSON.invalidParameters');
-	if (badParam) $alert.append(': ' + _(badParam).values().map('message'));
-}
-
-function signIn(event) {
-	console.log('Signing in...');
+function logIn(event) {
+	console.log('Logging in...');
 	computeContextFromForm('#sign-form');
 
 	$.ajax({
@@ -49,7 +41,7 @@ function signIn(event) {
 		error: showError
 	});
 
-	$('#sign-in').blur();
+	$('#log-in').blur();
 
 	return false;
 }
@@ -81,15 +73,16 @@ function createAccount(event) {
 
 function init() {
 
-	if (sessionStorage.signInOk) showConsole();
+	if (sessionStorage.logInOk) showConsole();
 	else {
 		$signDiv = $('#sign-div');
-		$alert = $('#sign-alert');
 
-		if (window.location.pathname == '/sign-in.html') {
-			$('#sign-form').submit(signIn);
-		} else {
-			$('#create-form').submit(createAccount);			
+		if (window.location.pathname == '/log-in.html') {
+			$signDiv.find('#sign-form').submit(logIn);
+			$signDiv.find('[name="username"]').focus();
+		} else if (window.location.pathname == '/sign-up.html') {
+			$signDiv.find('#create-form').submit(createAccount);			
+			$signDiv.find('[name="backendId"]').focus();
 		}
 	}
 }

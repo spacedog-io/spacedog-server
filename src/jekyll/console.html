@@ -8,6 +8,8 @@
 
 	<head>
 		{% include head.html %}
+		<link rel="stylesheet" href="/scripts/prettify/prettify.css"/>
+	  	<script src="/scripts/prettify/prettify.js"></script>	  	
 	  	<script src="/scripts/console.js"></script>
 	</head>
 
@@ -15,7 +17,7 @@
 
 	{% include header.html %}
 
-	<div id="console">
+	<div id="console" class='main resp-main'>
 
 		<div id="console-menu">
 
@@ -28,7 +30,8 @@
 			</form>	
 			<br>
 
-			<p id="search-alert">=></p>
+			<div id="alert-div">
+			</div>
 			
 		</div>
 	
