@@ -6,8 +6,60 @@
 <html>
 
 	<head>
-		{% include head.html %}
+
+	  	<style>
+
+			.uvp {
+			  max-width: 700px;
+			  margin: 0 auto;
+			  padding: 2% 0 2% 0;
+			  text-align: center;
+			}
+
+			@media screen and (max-width:729px) {
+			  .uvp h1 { font-size: 1.8rem; }
+			}
+
+			.benefits {
+			  max-width: 900px;
+			  margin: 0 auto;
+			  text-align: center;
+			}
+
+			.benefit {
+			  display: inline-block;
+			  vertical-align: top;  
+			  max-width: 360px;
+			  margin: 10px 3%;
+			}
+
+			.benefit h5 {
+			  text-transform: uppercase;
+			}
+
+			.action-div {
+			  margin: 0 auto;
+			  padding: 20px;
+			  max-width: 500px;
+			  border-radius: 20px;
+			  background-color: #112365;
+			  text-align: center;
+			  display: inline-block;
+			}
+
+			.action-div button,
+			.action-div .button,
+			.action-div input {
+			  margin: 0 10px 10px 0;
+			  border-color: orange;
+			}
+
+	  	</style>
+
+	  	{% include head.html %}
+
 	  	<script src="/scripts/home.js"></script>
+
 	</head>
 
   <body>
@@ -56,7 +108,7 @@
 		<br>
 		<form class='action-div' novalidate>
 
-			<h5>Stay informed! Subscribe to the SpaceDog news:</h5>
+			<h5>Don't miss any SpaceDog news.</h5>
 
 			<div style="position:fixed; left:-5000px;">
 				<input type="hidden" name="id" value='2ec6d416a8'>

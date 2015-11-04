@@ -9,11 +9,11 @@
                 <a {% if "/index.html" == page.url %} class='active' {% endif %}
                 href="/">Overview</a>
 
-                <a {% if "/examples.html" == page.url %} class='active' {% endif %}
-                href="/examples.html">Examples</a>
-
                 <a {% if page.url contains '/docs/' %} class='active' {% endif %}
                 href="/docs/user-guide/getting-started.html">Docs</a>
+
+                <a {% if "/examples/examples.html" == page.url %} class='active' {% endif %}
+                href="/examples/examples.html">Examples</a>
 
                 <a id="nav-console-lk"
                 {% if "/console.html" == page.url %} class='active' {% endif %}

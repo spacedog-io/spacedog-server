@@ -222,11 +222,11 @@ function initMap() {
 		streetViewControl: false,
 		panControl: true,
 		panControlOptions: {
-			position: google.maps.ControlPosition.TOP_RIGHT
+			position: google.maps.ControlPosition.RIGHT_BOTTOM
 		},
 		zoomControl: true,
 		zoomControlOptions: {
-			position: google.maps.ControlPosition.TOP_RIGHT,
+			position: google.maps.ControlPosition.RIGHT_BOTTOM,
 			style: google.maps.ZoomControlStyle.LARGE
 		},
 		mapTypeControl: false

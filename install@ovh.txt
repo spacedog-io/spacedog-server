@@ -42,10 +42,10 @@ rm -r bin
 rm install/spacedog-services-0.1.0-SNAPSHOT-bundle.tar.gz
 
 # copy release to server
-scp target/spacedog-services-0.1.0-SNAPSHOT-bundle.tar.gz root@ovh1:/root/spacedog/install
+scp target/services-0.1.0-SNAPSHOT-bundle.tar.gz root@spacedog.io:/root/spacedog/install
 
 # untar
-tar xvzf install/spacedog-services-0.1.0-SNAPSHOT-bundle.tar.gz
+tar xvzf install/services-0.1.0-SNAPSHOT-bundle.tar.gz
 
 ###
 ### copy ES data to ovh server

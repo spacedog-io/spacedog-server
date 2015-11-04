@@ -30,3 +30,6 @@ collections:
   reference-guide:
     output: true
     permalink: /docs/reference-guide/:path:output_ext
+  examples:
+    output: true
+    permalink: /examples/:path:output_ext

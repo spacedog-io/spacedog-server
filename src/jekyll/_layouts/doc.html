@@ -2,8 +2,85 @@
 <html>
 
 	<head>
+
+		<style>
+
+			@media screen and (min-width:730px) {
+
+			  menu {
+				float: left;
+				max-width: 220px;
+				position: fixed;
+				text-align: left;
+			  }
+
+			  .doc {
+				max-width: 1100px;
+				margin: 0 auto 70px 260px;
+				padding: 15px 30px 15px 30px;
+				color: beige;
+				text-align: left;
+			  }
+
+			}
+
+			@media screen and (max-width:729px) {
+
+			  menu {
+				text-align: left;
+			  }
+
+			  .doc {
+				margin: 0 auto 30px auto;
+				padding: 15px 30px 15px 30px;
+				color: beige;
+				text-align: left;
+			  }
+
+			}
+
+			menu h5 {
+			  color: beige;
+			}
+
+			menu ul {
+			  list-style-type: none;
+			  padding-left: 10px;
+			  border-left: 1px solid red;
+			}
+
+			menu li {
+			  margin-bottom: 0;
+			}
+
+			.doc p,
+			.doc h4,
+			.doc h5,
+			.doc table {
+			  margin-bottom: 1em;
+			}
+
+			.doc table {
+			  border: 5px solid orange;
+			  border-radius: 20px;
+			  padding: 5px;
+			}
+
+			.doc th {
+			  color: orange;
+			  font-weight: 1000;
+			}
+
+			.doc td {
+			  padding: 1px 5px;
+			}
+
+		</style>
+		
 	    {% include head.html %}
+
 		<link rel="stylesheet" href="/styles/highlight.css"/>
+
 	</head>
 
   <body>

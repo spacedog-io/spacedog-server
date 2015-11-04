@@ -1,0 +1,133 @@
+---
+
+---
+
+
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<style>
+		
+			#examples {
+			  text-align: center;
+			}
+
+			#intro {
+			  text-align: left;
+			  display: inline-block;
+			  max-width: 900px;
+			  margin-bottom: 50px;
+			}
+
+			.example {
+			  margin-bottom: 50px;
+			  display: inline-block;
+			  vertical-align: top;
+			  text-align: left;
+			  max-width: 900px;
+			}
+
+			.example img {
+			  display: inline-block;
+			  width: 390px;
+			  height: auto;
+			  border: 10px solid orange;
+			  border-radius: 20px;
+			}
+
+			.example-descrip {
+			  padding-right: 30px;
+			  margin: 0;
+			  display: inline-block;
+			  vertical-align: top;
+			  text-align: left;
+			  max-width: 500px;
+			}
+
+			iframe {
+			  position: fixed;
+			  display: none;
+			  background-color: orange;
+			  top: 10%;
+			  left: 10%;
+			  height: 80%;
+			  width: 80%;
+			  border: 20px solid orange;
+			  border-radius: 20px;
+			}
+
+			#close {
+			  position: fixed;
+			  display: none;
+			  top: 10%;
+			  right: 10%;
+			  z-index: 100;
+			  background-color: orange;
+			  color: black;
+			  border: 20px solid orange;
+			  border-radius: 20px;
+			}
+
+		</style>
+
+		{% include head.html %}
+		
+	  	<script>
+
+			function init() {
+				$('#openSearchForPlaces').on('click', function () {
+					$('#openSearchForPlaces').blur();
+					$('iframe').attr('src', '/examples/search-for-places.html');
+					$('iframe').css('display', 'block');
+					$('#close').css('display', 'block');
+				});
+				$('#close').on('click', function () {
+					$('iframe').attr('src', '');
+					$('iframe').css('display', 'none');
+					$('#close').css('display', 'none');
+				});
+			}
+
+			$(document).ready(init);
+
+	  	</script>
+	  	
+	</head>
+
+  <body>
+
+	{% include header.html %}
+
+	<div id='examples' class='main'>
+
+		<div id='intro'>
+			<h3>Application examples</h3>
+			<p>Check out these application examples demonstrating all the SpaceDog services. The source is available for review.</p>
+		</div>
+
+		<div class='example'>
+
+			<div class='example-descrip'>
+				<h5>Search for places</h5>
+				<p>This example shows places on a Google map. The user searches for places using a search text field and places are filtered to the map bounding box. </p>
+				<ul>
+				<li><a href='https://github.com/spacedog-io/services/blob/master/src/jekyll/_examples/search-for-places.html'>View the HTML of this example.</a></li>
+				<li><a href='https://github.com/spacedog-io/services/blob/master/src/jekyll/_examples/search-for-places.js'>View the JavaScript of this example.</a></li>
+				</ul>
+				<p>This demonstrates the datastore service used to store place objects and how to search for them using text matching and geographical queries.</p>
+				<button id='openSearchForPlaces'>Open example</button>
+			</div>
+			<img src='/images/map.png'>	
+
+		</div>
+
+	</div>
+	
+	<iframe></iframe>
+	<a id='close'>&#10006;</a>
+
+	{% include footer.html %}
+
+  </body>
+</html>

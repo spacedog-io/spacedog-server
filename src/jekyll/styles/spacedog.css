@@ -5,6 +5,8 @@
 * {
 /*  font-family: andale mono, sans-serif;*/
   font-family: Lucida Sans Unicode, Lucida Grande, sans-serif;
+/*  font-family: DIN Next W01 Regular, helvetica, arial, sans-serif; */
+
   box-sizing: border-box;
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
@@ -22,13 +24,14 @@ body {
 
 .main {
   margin: 0 auto;
+  padding: 0 30px;
   max-width: 1100px;
   text-align: center;
 }
 
 @media screen and (min-width:730px) {  
-  .resp-main {
-    margin-top: 65px;
+  .main {
+    margin-top: 80px;
   }
 }
 
@@ -95,56 +98,7 @@ footer p {
 }
 
 
-/* Landing
-–––––––––––––––––––––––––––––––––––––––––––––––––– */
-
-.uvp {
-  max-width: 700px;
-  margin: 0 auto;
-  padding: 2% 0 2% 0;
-  text-align: center;
-}
-
-@media screen and (max-width:729px) {
-  .uvp h1 { font-size: 1.8rem; }
-}
-
-.benefits {
-  max-width: 900px;
-  margin: 0 auto;
-  text-align: center;
-}
-
-.benefit {
-  display: inline-block;
-  vertical-align: top;  
-  max-width: 360px;
-  margin: 10px 3%;
-}
-
-.benefit h5 {
-  text-transform: uppercase;
-}
-
-.action-div {
-  margin: 0 auto;
-  padding: 20px;
-  max-width: 500px;
-  border-radius: 20px;
-  background-color: #112365;
-  text-align: center;
-  display: inline-block;
-}
-
-.action-div button,
-.action-div .button,
-.action-div input {
-  margin: 0 10px 10px 0;
-  border-color: orange;
-}
-
-
-/* Console Sign In
+/* Sign In
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
 #sign-div {
@@ -184,7 +138,7 @@ footer p {
 }
 
 
-/* Console Search
+/* Console
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
 #console {
@@ -224,120 +178,6 @@ footer p {
   border-radius: 10px;
   width: 700px;
 }
-
-
-/* Documentation
-–––––––––––––––––––––––––––––––––––––––––––––––––– */
-
-@media screen and (min-width:730px) {
-
-  menu {
-    float: left;
-    max-width: 220px;
-    position: fixed;
-    text-align: left;
-  }
-
-  .doc {
-    max-width: 1100px;
-    margin: 0 auto 70px 260px;
-    padding: 15px 30px 15px 30px;
-    color: beige;
-    text-align: left;
-  }
-
-}
-
-@media screen and (max-width:729px) {
-
-  menu {
-    text-align: left;
-  }
-
-  .doc {
-    margin: 0 auto 30px auto;
-    padding: 15px 30px 15px 30px;
-    color: beige;
-    text-align: left;
-  }
-
-}
-
-menu h5 {
-  color: beige;
-}
-
-menu ul {
-  list-style-type: none;
-  padding-left: 10px;
-  border-left: 1px solid red;
-}
-
-menu li {
-  margin-bottom: 5px;
-}
-
-.doc p,
-.doc h4,
-.doc h5,
-.doc table {
-  margin-bottom: 1em;
-}
-
-.doc table {
-  border: 5px solid orange;
-  border-radius: 20px;
-  padding: 5px;
-}
-
-.doc th {
-  color: orange;
-  font-weight: 1000;
-}
-
-.doc td {
-  padding: 1px 5px;
-}
-
-/* Examples
-–––––––––––––––––––––––––––––––––––––––––––––––––– */
-
-#map {
-  margin: 59px 0 0 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-}
-
-#map-search-form {
-  position: fixed;
-  top: 100px;
-  margin-left: 25px;
-  padding: 10px;
-  background-color: black;
-  border: 10px solid darkorange;
-  border-radius: 10px;
-}
-
-#poiInfo {
-  display: none;
-  color: black;
-}
-
-#poiInfo h1,
-#poiInfo p {
-  color: black;
-}
-
-#poiInfo a {
-  margin: 1rem 0 30px
-}
-
-#poiInfo img {
-  max-width: 100%;
-  max-height: 100%;
-}
-
 
 /* Placeholder color
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
