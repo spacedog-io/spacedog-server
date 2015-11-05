@@ -27,7 +27,7 @@ scp spacedog...crt Gandi...pem spacedog...der root@ovh1:/root/spacedog/ssl
 ###
 
 # ssh to ovh server
-ssh -l root ovh1
+ssh -l root spacedog.io
 
 ###
 ### Build and deploy
