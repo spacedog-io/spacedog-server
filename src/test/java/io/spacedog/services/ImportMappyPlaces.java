@@ -55,18 +55,23 @@ public class ImportMappyPlaces extends AbstractTest {
 
 			post(req3, 201);
 
-			for (double lat = 48.5; lat <= 49; lat += 0.01) {
-				for (double lon = 1.8; lon <= 2.9; lon += 0.01) {
+			double step = 0.03;
+
+			for (double lat = 48.5; lat <= 49; lat += step) {
+				for (double lon = 1.8; lon <= 2.9; lon += step) {
 
 					HttpRequest req1 = Unirest.get("http://search.mappy.net/search/1.0/find")
-							.queryString("max_results", "100").queryString("q", "restaurant")
-							.queryString("bbox", "" + lat + ',' + lon + ',' + (lat + 0.1) + ',' + (lon + 0.1));
+							.queryString("max_results", "100").queryString("extend_bbox", "0")
+							.queryString("q", "restaurant")
+							.queryString("bbox", "" + lat + ',' + lon + ',' + (lat + step) + ',' + (lon + step));
 
 					// "48.671228,1.854415,49.034931,2.843185");
 
 					ObjectNode res1 = get(req1, 200).objectNode();
 
-					res1.get("pois").forEach(ImportMappyPlaces::copyPoi);
+					JsonNode pois = res1.get("pois");
+					if (pois != null)
+						pois.forEach(ImportMappyPlaces::copyPoi);
 				}
 			}
 
