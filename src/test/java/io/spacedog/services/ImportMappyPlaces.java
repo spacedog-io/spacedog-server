@@ -14,7 +14,7 @@ import com.mashape.unirest.request.HttpRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
 import com.mashape.unirest.request.body.RequestBodyEntity;
 
-public class MappyImport extends AbstractTest {
+public class ImportMappyPlaces extends AbstractTest {
 
 	private static String examplesKey;
 
@@ -40,7 +40,12 @@ public class MappyImport extends AbstractTest {
 
 	public static void main(String[] args) {
 		try {
-			resetExamplesAccount();
+
+			/*
+			 * Uncomment this if you want to reset the "examples" account. Be
+			 * careful to copy the backend key to the console scripts.
+			 */
+			// resetExamplesAccount();
 
 			HttpRequestWithBody req2 = prepareDelete("/v1/schema/resto").basicAuth("examples", "hi examples");
 			delete(req2, 200, 404);
@@ -50,18 +55,18 @@ public class MappyImport extends AbstractTest {
 
 			post(req3, 201);
 
-			for (double lat = 48.5; lat <= 49; lat += 0.1) {
-				for (double lon = 1.8; lon <= 2.9; lon += 0.1) {
+			for (double lat = 48.5; lat <= 49; lat += 0.01) {
+				for (double lon = 1.8; lon <= 2.9; lon += 0.01) {
 
 					HttpRequest req1 = Unirest.get("http://search.mappy.net/search/1.0/find")
-							.queryString("max_results", "200").queryString("q", "restaurant")
+							.queryString("max_results", "100").queryString("q", "restaurant")
 							.queryString("bbox", "" + lat + ',' + lon + ',' + (lat + 0.1) + ',' + (lon + 0.1));
 
 					// "48.671228,1.854415,49.034931,2.843185");
 
 					ObjectNode res1 = get(req1, 200).objectNode();
 
-					res1.get("pois").forEach(MappyImport::copyPoi);
+					res1.get("pois").forEach(ImportMappyPlaces::copyPoi);
 				}
 			}
 
@@ -103,7 +108,8 @@ public class MappyImport extends AbstractTest {
 			target.end();
 		}
 
-		RequestBodyEntity req = preparePost("/v1/data/resto", examplesKey).body(target.toString());
+		RequestBodyEntity req = preparePost("/v1/data/resto").basicAuth("examples", "hi examples")
+				.body(target.toString());
 
 		try {
 			post(req, 201);
