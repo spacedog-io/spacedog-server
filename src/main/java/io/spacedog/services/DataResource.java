@@ -240,24 +240,24 @@ public class DataResource extends AbstractResource {
 			request.types(type);
 		}
 
-		SearchSourceBuilder builder = SearchSourceBuilder.searchSource()
-				.from(context.request().query().getInteger("from", 0))
-				.size(context.request().query().getInteger("size", 10)).version(true)
-				.fetchSource(context.request().query().getBoolean("fetch-contents", true));
-
 		if (Strings.isNullOrEmpty(json)) {
-			builder.query(QueryBuilders.matchAllQuery());
+
+			SearchSourceBuilder builder = SearchSourceBuilder.searchSource()
+					.from(context.request().query().getInteger("from", 0))
+					.size(context.request().query().getInteger("size", 10)).version(true)
+					.fetchSource(context.request().query().getBoolean("fetch-contents", true))
+					.query(QueryBuilders.matchAllQuery());
 
 			String queryText = context.get("q");
 			if (!Strings.isNullOrEmpty(queryText)) {
 				builder.query(QueryBuilders.simpleQueryStringQuery(queryText));
 			}
 
+			request.extraSource(builder);
+
 		} else {
 			request.source(json);
 		}
-
-		request.extraSource(builder);
 
 		return extractResults(Start.getElasticClient().search(request).get());
 	}
