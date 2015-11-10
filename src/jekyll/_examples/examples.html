@@ -10,63 +10,56 @@
 		<style>
 		
 			#examples {
-			  text-align: center;
-			}
-
-			#intro {
 			  text-align: left;
-			  display: inline-block;
-			  max-width: 900px;
-			  margin-bottom: 50px;
 			}
 
 			.example {
-			  margin-bottom: 50px;
 			  display: inline-block;
-			  vertical-align: top;
+			  vertical-align: middle;
 			  text-align: left;
-			  max-width: 900px;
+			  max-width: 1100px;
 			}
 
 			.example img {
 			  display: inline-block;
+			  vertical-align: middle;
 			  width: 390px;
 			  height: auto;
-			  border: 10px solid orange;
-			  border-radius: 20px;
+			  border-width: 5px;
+			  margin: 25px 0;
+			}
+
+			.example ul {
+				margin-left: 20px;
 			}
 
 			.example-descrip {
-			  padding-right: 30px;
-			  margin: 0;
 			  display: inline-block;
-			  vertical-align: top;
-			  text-align: left;
-			  max-width: 500px;
+			  vertical-align: middle;
+			  padding-right: 30px;
+			  max-width: 550px;
+			  margin: 25px 0;
 			}
 
 			iframe {
 			  position: fixed;
 			  display: none;
-			  background-color: orange;
-			  top: 10%;
-			  left: 10%;
-			  height: 80%;
-			  width: 80%;
-			  border: 20px solid orange;
-			  border-radius: 20px;
+			  z-index: 200;
+			  top: 0;
+			  height: 100%;
+			  width: 100%;
 			}
 
 			#close {
 			  position: fixed;
 			  display: none;
-			  top: 10%;
-			  right: 10%;
-			  z-index: 100;
-			  background-color: orange;
+			  top: 20px;
+			  right: 20px;
+			  z-index: 300;
 			  color: black;
-			  border: 20px solid orange;
-			  border-radius: 20px;
+			  background-color: rgb(255,200,0);
+			  border-style: solid;
+			  border-width: 12px;
 			}
 
 		</style>
@@ -78,14 +71,14 @@
 			function init() {
 				$('#openSearchForPlaces').on('click', function () {
 					$('#openSearchForPlaces').blur();
-					$('iframe').attr('src', '/examples/search-for-places.html');
 					$('iframe').css('display', 'block');
+					$('iframe').attr('src', '/examples/search-for-places.html');
 					$('#close').css('display', 'block');
 				});
 				$('#close').on('click', function () {
-					$('iframe').attr('src', '');
 					$('iframe').css('display', 'none');
 					$('#close').css('display', 'none');
+					$('iframe').attr('src', '');
 				});
 			}
 

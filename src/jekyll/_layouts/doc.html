@@ -11,42 +11,33 @@
 				float: left;
 				max-width: 220px;
 				position: fixed;
-				text-align: left;
 			  }
 
 			  .doc {
 				max-width: 1100px;
 				margin: 0 auto 70px 260px;
 				padding: 15px 30px 15px 30px;
-				color: beige;
-				text-align: left;
 			  }
 
 			}
 
-			@media screen and (max-width:729px) {
 
-			  menu {
-				text-align: left;
-			  }
+		  menu {
+			text-align: left;
+			margin-bottom: 30px;
+		  }
 
-			  .doc {
-				margin: 0 auto 30px auto;
-				padding: 15px 30px 15px 30px;
-				color: beige;
-				text-align: left;
-			  }
-
-			}
-
-			menu h5 {
-			  color: beige;
-			}
+		  .doc {
+			color: beige;
+			text-align: left;
+		  }
 
 			menu ul {
 			  list-style-type: none;
 			  padding-left: 10px;
-			  border-left: 1px solid red;
+			  border-left-style: solid;
+			  border-color: red;
+			  border-radius: 0;
 			}
 
 			menu li {
@@ -61,18 +52,22 @@
 			}
 
 			.doc table {
-			  border: 5px solid orange;
-			  border-radius: 20px;
+			  border-width: 5px;
+			  border-style: solid;
 			  padding: 5px;
 			}
 
 			.doc th {
-			  color: orange;
 			  font-weight: 1000;
 			}
 
 			.doc td {
 			  padding: 1px 5px;
+			  color: beige;
+			}
+
+			.doc ul {
+			  margin-left: 20px;
 			}
 
 		</style>
@@ -88,7 +83,7 @@
 
     {% include header.html %}
 
-	<div class='main resp-main'>
+	<div class='main'>
 
 		<menu>
 			<h5>User's guide</h5>
@@ -106,7 +101,7 @@
 			{% endfor %}
 			</ul>
 
-			</br>
+			<br>
 			<h5>Reference guide</h5>
 
 			<ul>

@@ -7,12 +7,12 @@ var $navConsoleLk;
 var $alert;
 
 function alert(message) {
-	$alert.html('<br><p>=> ' + message + '</p>');
+	$alert.html('<br><p>' + message + '</p>');
 	$alert.find('p').css('color', 'red');
 }
 
 function inform(message) {
-	$alert.html('<br><p>=> ' + message + '</p>');
+	$alert.html('<p>=> ' + message + '</p>');
 	$alert.find('p').css('color', 'beige');
 }
 

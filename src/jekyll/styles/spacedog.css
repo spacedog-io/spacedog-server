@@ -3,19 +3,26 @@
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
 * {
-/*  font-family: andale mono, sans-serif;*/
-  font-family: Lucida Sans Unicode, Lucida Grande, sans-serif;
-/*  font-family: DIN Next W01 Regular, helvetica, arial, sans-serif; */
-
   box-sizing: border-box;
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
+
+  color: rgb(255,200,0);
+  font-family: 'Ubuntu', sans-serif;
+  border-color: rgb(255,200,0);
+  border-width: 2px;
+  border-radius: 20px;
+  border-style: none;
+  padding: 0;
+
+/*  font-family: andale mono, sans-serif;*/
+/*  font-family: DIN Next W01 Regular, helvetica, arial, sans-serif; */
+/*  font-family: Lucida Sans Unicode, Lucida Grande, sans-serif; */
 }
 
 html,
 body {
-  color: orange;
-  background-color: black;
+  background-color: rgb(0,0,20) ;
   height: 100%;
   width: 100%;
   padding: 0;
@@ -43,40 +50,41 @@ body {
 
   header {
     top: 0;
-    position: fixed;    
+    position: fixed;
     z-index: 100;
+    background-color: inherit;
     width: 100%;
-    background-color: black;
-    border-bottom-width: 1px;
     border-bottom-style: solid;
     border-color: red;
+    border-radius: 0;
   }
+}
 
-  #header-content {
-    margin: 0 auto;
-    max-width: 1100px;
-    text-align: right;
-  }
+header nav {
+  display: inline-block;
+  margin: 4px 30px 4px 0;
+}
 
-  header .logo {
-    float: left;
-    margin-left: 30px;
-  }
+header nav a {
+  font-size: 1.2rem;
+  margin-right: 10px;  
+}
 
-  header nav {
-    display: inline-block;
-    margin: 15px 30px 10px 0;
-  }
+header .logo {
+  float: left;
+  margin-left: 30px;
+}
 
-  header nav a {
-    font-size: 1.2rem;
-    margin-right: 10px;  
-  }
 
+#header-content {
+  margin: 15px auto 10px auto;
+  max-width: 1100px;
+  text-align: right;
 }
 
 .logo {
   font-size: 2.2rem;
+  font-family: 'Orbitron', sans-serif;
 }
 
 .active {
@@ -103,7 +111,7 @@ footer p {
 
 #sign-div {
   text-align: center;
-  max-width: 500px;
+  max-width: 400px;
 }
 
 .log {
@@ -124,8 +132,8 @@ footer p {
   margin: 0;
   padding: 20px;
   text-align: center;
-  border: 15px solid darkorange;
-  border-radius: 20px;
+  border-style: solid;
+  border-width: 5px;
 }
 
 #sign-div input {
@@ -142,31 +150,37 @@ footer p {
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
 #console {
-  background-color: black;
   width: 100%;
   height: 100%;
-}
-
-#console-menu {
-  position: fixed;
-  float: left;
-  padding: 0;
-  margin: 0 30px;
-  vertical-align: middle;
-  max-width: 300px;
   text-align: left;
 }
 
-#console-menu input {
-  margin-bottom: 10px;
+@media screen and (min-width:730px) {  
+
+  #console-menu {
+    position: fixed;
+    float: left;
+    padding: 0;
+    margin-right: 30px;
+    vertical-align: middle;
+    max-width: 300px;
+    text-align: left;
+  }
+
+  #console-results {
+    margin: 90px 0 0 360px;
+  }
 }
 
 #console-results {
-  margin: 90px 0 0 360px;
   padding: 0;
   vertical-align: left;
-  background-color: black;
   text-align: left;
+}
+
+#console-menu input,
+#console-menu button {
+  margin-bottom: 15px;
 }
 
 .prettyprint {
@@ -174,9 +188,10 @@ footer p {
   overflow: auto;
   padding: 2px;
   margin-bottom: 10px;
-  border: 10px solid darkorange;
-  border-radius: 10px;
-  width: 700px;
+  border-style: solid;
+  border-width: 5px;
+  max-width: 700px;
+  overflow: auto;
 }
 
 /* Placeholder color
@@ -203,7 +218,6 @@ footer p {
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
 h1, h2, h3, h4, h5, h6 {
-  color: orange;
   margin: 0 0 1em 0;
   line-height: 1.5em;
 }
@@ -216,15 +230,21 @@ h4 { font-size: 1.4rem; }
 h5 { font-size: 1.2rem; }
 h6 { font-size: 1.1rem; }
 
-p {
+p,
+li,
+strong {
   color: beige;
   line-height: 1.3em;
-  margin: 0 0 1em 0;
+  margin-bottom: 1em;
+}
+
+strong {
+  font-weight: 999;
+  font-size: 1.2rem;
 }
 
 a {
   text-decoration: none;
-  color: orange;
   cursor: pointer;
 }
 
@@ -244,12 +264,11 @@ input,
 button,
 .button {
   padding: 0 10px;
-  background-color: black;
-  color: orange;
+  background-color: inherit;
   font-family: inherit;
   font-size: 1.2rem;
   vertical-align: middle;
-  border: 2px solid orange;
+  border-style: solid;
   /* avoid blue box when pressing tab to get focus */
   outline: 0;
 }

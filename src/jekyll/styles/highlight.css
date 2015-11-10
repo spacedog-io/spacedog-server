@@ -3,9 +3,10 @@
 	overflow: auto;
 	padding: 0.2em 0.9em;
 	margin-bottom: 1em;
-	border-bottom: 1px dotted #CCC;
-	border-left: 1px dotted #CCC;
+	border-bottom-style: dotted;
+	border-left-style: dotted;
 	border-color: beige;
+	border-radius: 0;
 	text-align: left;
 }
 
