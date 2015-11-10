@@ -164,7 +164,7 @@ function searchInPois() {
 			}
 		}),
 		headers : {
-			'x-spacedog-backend-key':  'examples:default:5fa2fb58-2307-47be-bb34-da4c782b2914'
+			'x-spacedog-backend-key':  'examples:default:cd9615b0-5d90-42c8-8cc5-dd43c20a63ef'
 		},
 		success: searchInOk,
 		error: searchNok
@@ -192,7 +192,7 @@ function searchOutPois() {
 			}
 		}),
 		headers : {
-			'x-spacedog-backend-key':  'examples:default:5fa2fb58-2307-47be-bb34-da4c782b2914'
+			'x-spacedog-backend-key':  'examples:default:cd9615b0-5d90-42c8-8cc5-dd43c20a63ef'
 		},
 		success: searchOutOk,
 		error: searchNok

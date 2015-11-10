@@ -48,14 +48,14 @@ public class ImportMappyPlaces extends AbstractTest {
 			// resetExamplesAccount();
 
 			HttpRequestWithBody req2 = prepareDelete("/v1/schema/resto").basicAuth("examples", "hi examples");
-			delete(req2, 200, 404);
+			delete(req2, 200, 404, 401);
 
 			RequestBodyEntity req3 = preparePost("/v1/schema/resto").basicAuth("examples", "hi examples")
 					.body(buildRestoSchema().toString());
 
 			post(req3, 201);
 
-			double step = 0.03;
+			double step = 0.02;
 
 			for (double lat = 48.5; lat <= 49; lat += step) {
 				for (double lon = 1.8; lon <= 2.9; lon += step) {
@@ -74,6 +74,9 @@ public class ImportMappyPlaces extends AbstractTest {
 						pois.forEach(ImportMappyPlaces::copyPoi);
 				}
 			}
+
+			refreshIndex("examples");
+			refreshIndex(AdminResource.ADMIN_INDEX);
 
 		} catch (Throwable t) {
 			t.printStackTrace();
