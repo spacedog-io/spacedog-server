@@ -96,4 +96,12 @@ public class UserResourceTest extends AbstractTest {
 						.put("email", "bignose@magic.com").startArray("groups").add("test").build(),
 				res9.deepCopy().without("meta"));
 	}
+
+	public static void createUser(String backendKey, String username, String password, String email)
+			throws UnirestException, IOException {
+		RequestBodyEntity req = preparePost("/v1/user/", backendKey).body(
+				Json.startObject().put("username", username).put("password", password).put("email", email).toString());
+
+		post(req, 201);
+	}
 }

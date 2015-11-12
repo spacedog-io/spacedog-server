@@ -28,17 +28,30 @@ public class DataResourceTest2 extends AbstractTest {
 	@Test
 	public void shouldCreateSearchUpdateAndDeleteSales() throws Exception {
 
-		ObjectNode sale = Json.startObject().put("number", "1234567890").startObject("where").put("lat", -55.6765)
-				.put("lon", -54.6765).end().put("when", "2015-01-09T15:37:00.123Z").put("online", false)
-				.put("deliveryDate", "2015-09-09").put("deliveryTime", "15:30:00").startArray("items").startObject()
-				.put("ref", "JDM").put("description", "2 rooms appartment in the heart of montmartre")
-				.put("quantity", 8)
+		ObjectNode sale = Json.startObject()//
+				.put("number", "1234567890")//
+				.startObject("where")//
+				.put("lat", -55.6765).put("lon", -54.6765)//
+				.end()//
+				.put("when", "2015-01-09T15:37:00.123Z")//
+				.put("online", false)//
+				.put("deliveryDate", "2015-09-09")//
+				.put("deliveryTime", "15:30:00")//
+				.startArray("items")//
+				.startObject()//
+				.put("ref", "JDM")//
+				.put("description", "2 rooms appartment in the heart of montmartre")//
+				.put("quantity", 8)//
 				// .put("price", "EUR230")
-				.put("type", "appartment").end().startObject().put("ref", "LOUVRE")
+				.put("type", "appartment")//
+				.end()//
+				.startObject()//
+				.put("ref", "LOUVRE")//
 				.put("description", "Louvre museum 2 days visit with a personal guide") //
 				.put("quantity", 2) //
 				// .put("price", "EUR54.25") //
-				.put("type", "visit").end() //
+				.put("type", "visit")//
+				.end() //
 				.build();
 
 		// create
@@ -98,19 +111,29 @@ public class DataResourceTest2 extends AbstractTest {
 		// assertEquals("EUR54.25", Json.get(res1, "items.1.price").asText());
 		assertEquals("visit", Json.get(res1, "items.1.type").asText());
 
-		// find by full text search
+		// find by simple text search
 
 		GetRequest req1b = prepareGet("/v1/data/sale?q=museum", AdminResourceTest.testClientKey());
 		JsonNode res1b = get(req1b, 200).jsonNode();
 		assertEquals(1, Json.get(res1b, "total").asLong());
 		assertEquals(res1, res1b.get("results").get(0));
 
+		// find by advanced text search
+
+		String query = Json.startObject()//
+				.startObject("query")//
+				.startObject("query_string")//
+				.put("query", "museum")//
+				.build().toString();
+
+		RequestBodyEntity req1c = preparePost("/v1/data/sale/search", AdminResourceTest.testClientKey()).body(query);
+		JsonNode res1c = post(req1c, 200).jsonNode();
+		assertEquals(1, Json.get(res1c, "total").asLong());
+		assertEquals(res1, res1c.get("results").get(0));
+
 		// create user vince
 
-		RequestBodyEntity req1a = preparePost("/v1/user/", AdminResourceTest.testClientKey()).body(Json.startObject()
-				.put("username", "vince").put("password", "hi vince").put("email", "vince@dog.com").toString());
-
-		post(req1a, 201);
+		UserResourceTest.createUser(AdminResourceTest.testClientKey(), "vince", "hi vince", "vince@dog.com");
 		refreshIndex("test");
 
 		// small update no version should succeed
