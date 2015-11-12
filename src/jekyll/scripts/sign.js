@@ -51,7 +51,7 @@ function createAccount(event) {
 	computeContextFromForm('#create-form');
 
 	if (sessionStorage.password != sessionStorage.passwordConfirmation) {
-		$alert.html('=> pasword confirmation is different');
+		alert('Error: pasword confirmation is incorect');
 	}
 	else {
 		$.ajax({
