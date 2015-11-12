@@ -55,7 +55,7 @@ public class ImportMappyPlaces extends AbstractTest {
 
 			post(req3, 201);
 
-			double step = 0.02;
+			double step = 0.01;
 
 			for (double lat = 48.5; lat <= 49; lat += step) {
 				for (double lon = 1.8; lon <= 2.9; lon += step) {
