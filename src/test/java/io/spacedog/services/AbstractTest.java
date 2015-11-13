@@ -21,6 +21,8 @@ import com.mashape.unirest.request.HttpRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
 import com.mashape.unirest.request.body.RequestBodyEntity;
 
+import io.spacedog.services.UserResourceTest.ClientUser;
+
 public abstract class AbstractTest extends Assert {
 
 	private static String backendDomain = "http://localhost:8080";
@@ -32,62 +34,92 @@ public abstract class AbstractTest extends Assert {
 	}
 
 	protected static GetRequest prepareGet(String uri) {
-		return prepareGet(uri, null);
+		return prepareGet(uri, null, null);
 	}
 
-	protected static GetRequest prepareGet(String uri, String spacedogKey) {
+	protected static GetRequest prepareGet(String uri, String backendKey) {
+		return prepareGet(uri, backendKey, null);
+	}
+
+	protected static GetRequest prepareGet(String uri, String backendKey, ClientUser user) {
 		String url = new StringBuilder(backendDomain).append(uri).toString();
 		GetRequest request = Unirest.get(url);
-		if (spacedogKey != null)
-			request.header(AdminResource.BACKEND_KEY_HEADER, spacedogKey);
+		if (backendKey != null)
+			request.header(AdminResource.BACKEND_KEY_HEADER, backendKey);
+		if (user != null)
+			request.basicAuth(user.username, user.password);
 		return request;
 	}
 
 	protected static HttpRequestWithBody preparePost(String uri) {
-		return preparePost(uri, null);
+		return preparePost(uri, null, null);
 	}
 
-	protected static HttpRequestWithBody preparePost(String uri, String spacedogKey) {
+	protected static HttpRequestWithBody preparePost(String uri, String backendKey) {
+		return preparePost(uri, backendKey, null);
+	}
+
+	protected static HttpRequestWithBody preparePost(String uri, String backendKey, ClientUser user) {
 		String url = new StringBuilder(backendDomain).append(uri).toString();
 		HttpRequestWithBody request = Unirest.post(url);
-		if (spacedogKey != null)
-			request.header(AdminResource.BACKEND_KEY_HEADER, spacedogKey);
+		if (backendKey != null)
+			request.header(AdminResource.BACKEND_KEY_HEADER, backendKey);
+		if (user != null)
+			request.basicAuth(user.username, user.password);
 		return request;
 	}
 
 	protected static HttpRequestWithBody preparePut(String uri) {
-		return preparePut(uri, null);
+		return preparePut(uri, null, null);
 	}
 
-	protected static HttpRequestWithBody preparePut(String uri, String spacedogKey) {
+	protected static HttpRequestWithBody preparePut(String uri, String backendKey) {
+		return preparePut(uri, backendKey, null);
+	}
+
+	protected static HttpRequestWithBody preparePut(String uri, String backendKey, ClientUser user) {
 		String url = new StringBuilder(backendDomain).append(uri).toString();
 		HttpRequestWithBody request = Unirest.put(url);
-		if (spacedogKey != null)
-			request.header(AdminResource.BACKEND_KEY_HEADER, spacedogKey);
+		if (backendKey != null)
+			request.header(AdminResource.BACKEND_KEY_HEADER, backendKey);
+		if (user != null)
+			request.basicAuth(user.username, user.password);
 		return request;
 	}
 
 	protected static HttpRequestWithBody prepareDelete(String uri) {
-		return prepareDelete(uri, null);
+		return prepareDelete(uri, null, null);
 	}
 
-	protected static HttpRequestWithBody prepareDelete(String uri, String spacedogKey) {
+	protected static HttpRequestWithBody prepareDelete(String uri, String backendKey) {
+		return prepareDelete(uri, backendKey, null);
+	}
+
+	protected static HttpRequestWithBody prepareDelete(String uri, String backendKey, ClientUser user) {
 		String url = new StringBuilder(backendDomain).append(uri).toString();
 		HttpRequestWithBody request = Unirest.delete(url);
-		if (spacedogKey != null)
-			request.header(AdminResource.BACKEND_KEY_HEADER, spacedogKey);
+		if (backendKey != null)
+			request.header(AdminResource.BACKEND_KEY_HEADER, backendKey);
+		if (user != null)
+			request.basicAuth(user.username, user.password);
 		return request;
 	}
 
 	protected HttpRequestWithBody prepareOptions(String uri) {
-		return prepareOptions(uri, null);
+		return prepareOptions(uri, null, null);
 	}
 
-	protected HttpRequestWithBody prepareOptions(String uri, String spacedogKey) {
+	protected HttpRequestWithBody prepareOptions(String uri, String backendKey) {
+		return prepareOptions(uri, backendKey, null);
+	}
+
+	protected HttpRequestWithBody prepareOptions(String uri, String backendKey, ClientUser user) {
 		String url = new StringBuilder(backendDomain).append(uri).toString();
 		HttpRequestWithBody request = Unirest.options(url);
-		if (spacedogKey != null)
-			request.header(AdminResource.BACKEND_KEY_HEADER, spacedogKey);
+		if (backendKey != null)
+			request.header(AdminResource.BACKEND_KEY_HEADER, backendKey);
+		if (user != null)
+			request.basicAuth(user.username, user.password);
 		return request;
 	}
 

@@ -12,13 +12,16 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.GetRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
 
+import io.spacedog.services.AdminResourceTest.ClientAccount;
 import net.codestory.http.constants.Headers;
 
 public class CrossOriginFilterTest extends AbstractTest {
 
+	private static ClientAccount testAccount;
+
 	@BeforeClass
 	public static void resetTestAccount() throws UnirestException, InterruptedException, IOException {
-		AdminResourceTest.resetTestAccount();
+		testAccount = AdminResourceTest.resetTestAccount();
 	}
 
 	@Test
@@ -26,7 +29,7 @@ public class CrossOriginFilterTest extends AbstractTest {
 
 		// CORS for simple requests
 
-		GetRequest req1 = prepareGet("/v1/data", AdminResourceTest.testClientKey());
+		GetRequest req1 = prepareGet("/v1/data", testAccount.backendKey);
 		Result res1 = get(req1, 200);
 
 		assertEquals("*", res1.response().getHeaders().getFirst(Headers.ACCESS_CONTROL_ALLOW_ORIGIN.toLowerCase()));
@@ -35,7 +38,7 @@ public class CrossOriginFilterTest extends AbstractTest {
 
 		// CORS pre-flight request
 
-		HttpRequestWithBody req2 = prepareOptions("/v1/user/mynameisperson", AdminResourceTest.testClientKey())
+		HttpRequestWithBody req2 = prepareOptions("/v1/user/mynameisperson", testAccount.backendKey)
 				.header(Headers.ORIGIN, "http://www.apple.com").header(Headers.ACCESS_CONTROL_REQUEST_METHOD, "PUT");
 
 		Result res2 = options(req2, 200);

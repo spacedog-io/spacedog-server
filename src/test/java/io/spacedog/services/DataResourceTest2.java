@@ -17,11 +17,15 @@ import com.mashape.unirest.request.GetRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
 import com.mashape.unirest.request.body.RequestBodyEntity;
 
+import io.spacedog.services.AdminResourceTest.ClientAccount;
+
 public class DataResourceTest2 extends AbstractTest {
+
+	private static ClientAccount testAccount;
 
 	@BeforeClass
 	public static void resetTestAccount() throws UnirestException, InterruptedException, IOException {
-		AdminResourceTest.resetTestAccount();
+		testAccount = AdminResourceTest.resetTestAccount();
 		SchemaResourceTest.resetSaleSchema();
 	}
 
@@ -56,7 +60,7 @@ public class DataResourceTest2 extends AbstractTest {
 
 		// create
 
-		RequestBodyEntity req = preparePost("/v1/data/sale", AdminResourceTest.testClientKey()).body(sale.toString());
+		RequestBodyEntity req = preparePost("/v1/data/sale", testAccount.backendKey).body(sale.toString());
 
 		DateTime beforeCreate = DateTime.now();
 		JsonNode result = post(req, 201).jsonNode();
@@ -72,7 +76,7 @@ public class DataResourceTest2 extends AbstractTest {
 
 		// find by id
 
-		GetRequest req1 = prepareGet("/v1/data/sale/{id}", AdminResourceTest.testClientKey()).routeParam("id", id);
+		GetRequest req1 = prepareGet("/v1/data/sale/{id}", testAccount.backendKey).routeParam("id", id);
 		ObjectNode res1 = get(req1, 200).objectNode();
 
 		JsonNode meta1 = res1.get("meta");
@@ -113,7 +117,7 @@ public class DataResourceTest2 extends AbstractTest {
 
 		// find by simple text search
 
-		GetRequest req1b = prepareGet("/v1/data/sale?q=museum", AdminResourceTest.testClientKey());
+		GetRequest req1b = prepareGet("/v1/data/sale?q=museum", testAccount.backendKey);
 		JsonNode res1b = get(req1b, 200).jsonNode();
 		assertEquals(1, Json.get(res1b, "total").asLong());
 		assertEquals(res1, res1b.get("results").get(0));
@@ -126,22 +130,22 @@ public class DataResourceTest2 extends AbstractTest {
 				.put("query", "museum")//
 				.build().toString();
 
-		RequestBodyEntity req1c = preparePost("/v1/data/sale/search", AdminResourceTest.testClientKey()).body(query);
+		RequestBodyEntity req1c = preparePost("/v1/data/sale/search", testAccount.backendKey).body(query);
 		JsonNode res1c = post(req1c, 200).jsonNode();
 		assertEquals(1, Json.get(res1c, "total").asLong());
 		assertEquals(res1, res1c.get("results").get(0));
 
 		// create user vince
 
-		UserResourceTest.createUser(AdminResourceTest.testClientKey(), "vince", "hi vince", "vince@dog.com");
+		UserResourceTest.createUser(testAccount.backendKey, "vince", "hi vince", "vince@dog.com");
 		refreshIndex("test");
 
 		// small update no version should succeed
 
 		JsonNode updateJson2 = Json.startObject().startArray("items").startObject().put("quantity", 7).build();
 
-		RequestBodyEntity req2 = preparePut("/v1/data/sale/{id}", AdminResourceTest.testClientKey())
-				.routeParam("id", id).basicAuth("vince", "hi vince").body(updateJson2.toString());
+		RequestBodyEntity req2 = preparePut("/v1/data/sale/{id}", testAccount.backendKey).routeParam("id", id)
+				.basicAuth("vince", "hi vince").body(updateJson2.toString());
 
 		DateTime beforeUpdate = DateTime.now();
 		JsonNode res2 = put(req2, 200).jsonNode();
@@ -153,7 +157,7 @@ public class DataResourceTest2 extends AbstractTest {
 
 		// check update is correct
 
-		GetRequest req3 = prepareGet("/v1/data/sale/{id}", AdminResourceTest.testClientKey()).routeParam("id", id);
+		GetRequest req3 = prepareGet("/v1/data/sale/{id}", testAccount.backendKey).routeParam("id", id);
 		ObjectNode res3 = get(req3, 200).objectNode();
 
 		JsonNode meta3 = res3.get("meta");
@@ -176,8 +180,8 @@ public class DataResourceTest2 extends AbstractTest {
 
 		ObjectNode updateJson3b = Json.startObject().put("number", "0987654321").build();
 
-		RequestBodyEntity req3b = preparePut("/v1/data/sale/{id}", AdminResourceTest.testClientKey())
-				.routeParam("id", id).queryString("version", "1").body(updateJson3b.toString());
+		RequestBodyEntity req3b = preparePut("/v1/data/sale/{id}", testAccount.backendKey).routeParam("id", id)
+				.queryString("version", "1").body(updateJson3b.toString());
 
 		JsonNode res3b = put(req3b, 409).jsonNode();
 
@@ -185,8 +189,8 @@ public class DataResourceTest2 extends AbstractTest {
 
 		// update with invalid version should fail
 
-		RequestBodyEntity req3c = preparePut("/v1/data/sale/{id}", AdminResourceTest.testClientKey())
-				.routeParam("id", id).queryString("version", "XXX").body(updateJson3b.toString());
+		RequestBodyEntity req3c = preparePut("/v1/data/sale/{id}", testAccount.backendKey).routeParam("id", id)
+				.queryString("version", "XXX").body(updateJson3b.toString());
 
 		JsonNode res3c = put(req3c, 400).jsonNode();
 
@@ -195,8 +199,8 @@ public class DataResourceTest2 extends AbstractTest {
 
 		// update with correct version should succeed
 
-		RequestBodyEntity req3d = preparePut("/v1/data/sale/{id}", AdminResourceTest.testClientKey())
-				.routeParam("id", id).queryString("version", "2").body(updateJson3b.toString());
+		RequestBodyEntity req3d = preparePut("/v1/data/sale/{id}", testAccount.backendKey).routeParam("id", id)
+				.queryString("version", "2").body(updateJson3b.toString());
 
 		JsonNode res3d = put(req3d, 200).jsonNode();
 
@@ -207,7 +211,7 @@ public class DataResourceTest2 extends AbstractTest {
 
 		// check update is correct
 
-		GetRequest req3e = prepareGet("/v1/data/sale/{id}", AdminResourceTest.testClientKey()).routeParam("id", id);
+		GetRequest req3e = prepareGet("/v1/data/sale/{id}", testAccount.backendKey).routeParam("id", id);
 		ObjectNode res3e = get(req3e, 200).objectNode();
 
 		JsonNode meta3e = res3e.get("meta");
@@ -228,8 +232,7 @@ public class DataResourceTest2 extends AbstractTest {
 
 		// delete
 
-		HttpRequestWithBody req4 = prepareDelete("/v1/data/sale/{id}", AdminResourceTest.testClientKey())
-				.routeParam("id", id);
+		HttpRequestWithBody req4 = prepareDelete("/v1/data/sale/{id}", testAccount.backendKey).routeParam("id", id);
 		delete(req4, 200);
 
 		// check delete is done

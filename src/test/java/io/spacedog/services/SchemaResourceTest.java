@@ -15,11 +15,15 @@ import com.mashape.unirest.request.GetRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
 import com.mashape.unirest.request.body.RequestBodyEntity;
 
+import io.spacedog.services.AdminResourceTest.ClientAccount;
+
 public class SchemaResourceTest extends AbstractTest {
+
+	private static ClientAccount testAccount;
 
 	@BeforeClass
 	public static void resetTestAccount() throws UnirestException, InterruptedException, IOException {
-		AdminResourceTest.resetTestAccount();
+		testAccount = AdminResourceTest.resetTestAccount();
 	}
 
 	@Test
@@ -27,19 +31,13 @@ public class SchemaResourceTest extends AbstractTest {
 
 		resetCarSchema();
 
-		GetRequest req = prepareGet("/v1/schema/car", AdminResourceTest.testClientKey());
+		GetRequest req = prepareGet("/v1/schema/car", testAccount.backendKey);
 		JsonNode res = get(req, 200).jsonNode();
 		assertEquals(buildCarSchema(), res);
 	}
 
 	public static void resetCarSchema() throws UnirestException, IOException {
-
-		HttpRequestWithBody req1 = prepareDelete("/v1/schema/car").basicAuth("test", "hi test");
-		delete(req1, 200, 404);
-
-		RequestBodyEntity req2 = preparePost("/v1/schema/car").basicAuth("test", "hi test")
-				.body(buildCarSchema().toString());
-		post(req2, 201);
+		resetSchema("car", buildCarSchema().toString(), "test", "hi test");
 	}
 
 	public static ObjectNode buildCarSchema() {
@@ -60,12 +58,7 @@ public class SchemaResourceTest extends AbstractTest {
 	}
 
 	public static void resetSaleSchema() throws UnirestException, IOException {
-		HttpRequestWithBody req1 = prepareDelete("/v1/schema/sale").basicAuth("test", "hi test");
-		delete(req1, 200, 404);
-
-		RequestBodyEntity req2 = preparePost("/v1/schema/sale").basicAuth("test", "hi test")
-				.body(buildSaleSchema().toString());
-		post(req2, 201);
+		resetSchema("sale", buildSaleSchema().toString(), "test", "hi test");
 	}
 
 	public static ObjectNode buildSaleSchema() {
@@ -91,18 +84,13 @@ public class SchemaResourceTest extends AbstractTest {
 
 		resetHomeSchema();
 
-		GetRequest req = prepareGet("/v1/schema/home", AdminResourceTest.testClientKey());
+		GetRequest req = prepareGet("/v1/schema/home", testAccount.backendKey);
 		JsonNode res = get(req, 200).jsonNode();
 		assertEquals(buildHomeSchema(), res);
 	}
 
 	private static void resetHomeSchema() throws UnirestException, IOException {
-		HttpRequestWithBody req1 = prepareDelete("/v1/schema/home").basicAuth("test", "hi test");
-		delete(req1, 200);
-
-		RequestBodyEntity req2 = preparePost("/v1/schema/home").basicAuth("test", "hi test")
-				.body(buildHomeSchema().toString());
-		post(req2, 201);
+		resetSchema("home", buildHomeSchema().toString(), "test", "hi test");
 	}
 
 	private static ObjectNode buildHomeSchema() {
@@ -125,7 +113,7 @@ public class SchemaResourceTest extends AbstractTest {
 		resetHomeSchema();
 		resetSaleSchema();
 
-		GetRequest req = prepareGet("/v1/schema", AdminResourceTest.testClientKey());
+		GetRequest req = prepareGet("/v1/schema", testAccount.backendKey);
 		JsonNode result = get(req, 200).jsonNode();
 
 		// user, car, sale and home
@@ -166,6 +154,17 @@ public class SchemaResourceTest extends AbstractTest {
 	private void shouldFailToChangeSchema(JsonNode json) throws UnirestException, IOException {
 		RequestBodyEntity req2 = preparePut("/v1/schema/car").basicAuth("test", "hi test").body(json.toString());
 		put(req2, 400);
+	}
+
+	public static void resetSchema(String schemaName, String schema, String username, String password)
+			throws UnirestException, IOException {
+		HttpRequestWithBody req1 = prepareDelete("/v1/schema/{name}").routeParam("name", schemaName).basicAuth(username,
+				password);
+		delete(req1, 200, 404);
+
+		RequestBodyEntity req2 = preparePost("/v1/schema/{name}").routeParam("name", schemaName)
+				.basicAuth(username, password).body(schema);
+		post(req2, 201);
 	}
 
 }

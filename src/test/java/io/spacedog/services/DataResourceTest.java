@@ -16,11 +16,15 @@ import com.mashape.unirest.request.GetRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
 import com.mashape.unirest.request.body.RequestBodyEntity;
 
+import io.spacedog.services.AdminResourceTest.ClientAccount;
+
 public class DataResourceTest extends AbstractTest {
+
+	private static ClientAccount testAccount;
 
 	@BeforeClass
 	public static void resetTestAccount() throws UnirestException, InterruptedException, IOException {
-		AdminResourceTest.resetTestAccount();
+		testAccount = AdminResourceTest.resetTestAccount();
 		SchemaResourceTest.resetCarSchema();
 	}
 
@@ -45,7 +49,7 @@ public class DataResourceTest extends AbstractTest {
 
 		// create
 
-		RequestBodyEntity req = preparePost("/v1/data/car", AdminResourceTest.testClientKey()).body(car.toString());
+		RequestBodyEntity req = preparePost("/v1/data/car", testAccount.backendKey).body(car.toString());
 
 		DateTime beforeCreate = DateTime.now();
 		JsonNode result = post(req, 201).jsonNode();
@@ -60,7 +64,7 @@ public class DataResourceTest extends AbstractTest {
 
 		// find by id
 
-		GetRequest req1 = prepareGet("/v1/data/car/{id}", AdminResourceTest.testClientKey()).routeParam("id", id);
+		GetRequest req1 = prepareGet("/v1/data/car/{id}", testAccount.backendKey).routeParam("id", id);
 		ObjectNode res1 = (ObjectNode) get(req1, 200).jsonNode();
 
 		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, res1.findValue("createdBy").asText());
@@ -75,15 +79,14 @@ public class DataResourceTest extends AbstractTest {
 
 		// find by full text search
 
-		GetRequest req1b = prepareGet("/v1/data/car?q={q}", AdminResourceTest.testClientKey()).routeParam("q",
-				"inVENt*");
+		GetRequest req1b = prepareGet("/v1/data/car?q={q}", testAccount.backendKey).routeParam("q", "inVENt*");
 
 		JsonNode res1b = get(req1b, 200).jsonNode();
 		assertEquals(id, res1b.get("results").get(0).get("meta").get("id").asText());
 
 		// create user vince
 
-		RequestBodyEntity req1a = preparePost("/v1/user/", AdminResourceTest.testClientKey()).body(Json.startObject()
+		RequestBodyEntity req1a = preparePost("/v1/user/", testAccount.backendKey).body(Json.startObject()
 				.put("username", "vince").put("password", "hi vince").put("email", "vince@spacedog.io").toString());
 
 		post(req1a, 201);
@@ -91,7 +94,7 @@ public class DataResourceTest extends AbstractTest {
 
 		// update
 
-		RequestBodyEntity req2 = preparePut("/v1/data/car/{id}", AdminResourceTest.testClientKey()).routeParam("id", id)
+		RequestBodyEntity req2 = preparePut("/v1/data/car/{id}", testAccount.backendKey).routeParam("id", id)
 				.basicAuth("vince", "hi vince").body(Json.startObject().put("color", "blue").toString());
 
 		DateTime beforeUpdate = DateTime.now();
@@ -99,7 +102,7 @@ public class DataResourceTest extends AbstractTest {
 
 		// check update is correct
 
-		GetRequest req3 = prepareGet("/v1/data/car/{id}", AdminResourceTest.testClientKey()).routeParam("id", id);
+		GetRequest req3 = prepareGet("/v1/data/car/{id}", testAccount.backendKey).routeParam("id", id);
 		JsonNode res3 = get(req3, 200).jsonNode();
 
 		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, res3.findValue("createdBy").asText());
@@ -114,8 +117,7 @@ public class DataResourceTest extends AbstractTest {
 
 		// delete
 
-		HttpRequestWithBody req4 = prepareDelete("/v1/data/car/{id}", AdminResourceTest.testClientKey())
-				.routeParam("id", id);
+		HttpRequestWithBody req4 = prepareDelete("/v1/data/car/{id}", testAccount.backendKey).routeParam("id", id);
 		delete(req4, 200);
 
 		// check delete is done

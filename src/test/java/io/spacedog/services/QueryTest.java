@@ -16,16 +16,19 @@ import com.google.common.collect.Lists;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.body.RequestBodyEntity;
 
+import io.spacedog.services.AdminResourceTest.ClientAccount;
+
 public class QueryTest extends AbstractTest {
+
+	private static ClientAccount testAccount;
 
 	@Test
 	public void resetAndImportDataset() throws UnirestException, IOException {
-		AdminResourceTest.resetTestAccount();
+		testAccount = AdminResourceTest.resetTestAccount();
 		SchemaResourceTest.resetCarSchema();
 
 		for (int i = 0; i < 500; i++) {
-			RequestBodyEntity req2 = preparePost("/v1/data/car", AdminResourceTest.testClientKey())
-					.body(jsonCar(i).toString());
+			RequestBodyEntity req2 = preparePost("/v1/data/car", testAccount.backendKey).body(jsonCar(i).toString());
 
 			post(req2, 201);
 		}

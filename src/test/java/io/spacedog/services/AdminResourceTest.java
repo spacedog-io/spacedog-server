@@ -19,17 +19,17 @@ public class AdminResourceTest extends AbstractTest {
 	@Test
 	public void shouldDeleteSignUpGetLoginTestAccount() throws UnirestException, InterruptedException, IOException {
 
-		resetTestAccount();
+		testAccount = resetTestAccount();
 
 		// get just created test account should succeed
 
-		GetRequest req1 = prepareGet("/v1/admin/account/test").basicAuth("test", "hi test");
+		GetRequest req1 = prepareGet("/v1/admin/account/test").basicAuth(testAccount.username, testAccount.password);
 		JsonNode res1 = get(req1, 200).jsonNode();
 
 		assertEquals("test", res1.get("backendId").asText());
 		assertEquals("test", res1.get("username").asText());
 		assertNotEquals("hi test", res1.get("hashedPassword").asText());
-		assertEquals("hello@spacedog.io", res1.get("email").asText());
+		assertEquals("david@spacedog.io", res1.get("email").asText());
 
 		// create new account with same username should fail
 
@@ -54,8 +54,8 @@ public class AdminResourceTest extends AbstractTest {
 		// admin user login should succeed
 
 		GetRequest req3 = prepareGet("/v1/admin/login").basicAuth("test", "hi test");
-		String loginKey = get(req3, 200).response().getHeaders().get(AdminResource.BACKEND_KEY_HEADER).get(0);
-		assertEquals(testClientKey, loginKey);
+		String backendKey = get(req3, 200).response().getHeaders().get(AdminResource.BACKEND_KEY_HEADER).get(0);
+		assertEquals(testAccount.backendKey, backendKey);
 
 		// no header no user login should fail
 
@@ -74,7 +74,7 @@ public class AdminResourceTest extends AbstractTest {
 
 		// data access with client key should succeed
 
-		GetRequest req7 = prepareGet("/v1/data", testClientKey);
+		GetRequest req7 = prepareGet("/v1/data", testAccount.backendKey);
 		JsonNode res7 = get(req7, 200).jsonNode();
 		assertEquals(0, res7.get("total").asInt());
 
@@ -86,13 +86,13 @@ public class AdminResourceTest extends AbstractTest {
 
 		// data access with admin user but client key should fail
 
-		GetRequest req8 = prepareGet("/v1/data", testClientKey).basicAuth("test", "hi test");
+		GetRequest req8 = prepareGet("/v1/data", testAccount.backendKey).basicAuth("test", "hi test");
 		get(req8, 401).jsonNode();
 
 		// let's create a common user in 'test' backend
 
-		RequestBodyEntity req9a = preparePost("/v1/user", testClientKey).body(Json.startObject().put("username", "john")
-				.put("password", "hi john").put("email", "john@dog.io").toString());
+		RequestBodyEntity req9a = preparePost("/v1/user", testAccount.backendKey).body(Json.startObject()
+				.put("username", "john").put("password", "hi john").put("email", "john@dog.io").toString());
 		post(req9a, 201);
 
 		refreshIndex("test");
@@ -104,14 +104,20 @@ public class AdminResourceTest extends AbstractTest {
 
 		// admin access with regular user and backend key should fail
 
-		GetRequest req10 = prepareGet("/v1/admin/account/test", testClientKey).basicAuth("john", "hi john");
+		GetRequest req10 = prepareGet("/v1/admin/account/test", testAccount.backendKey).basicAuth("john", "hi john");
 		get(req10, 401);
 
 	}
 
-	public static void resetTestAccount() throws UnirestException, IOException {
+	public static ClientAccount resetTestAccount() throws UnirestException, IOException {
+		return resetAccount("test", "test", "hi test", "david@spacedog.io");
+	}
 
-		HttpRequestWithBody req1 = prepareDelete("/v1/admin/account/test").basicAuth("test", "hi test");
+	public static ClientAccount resetAccount(String backendId, String username, String password, String email)
+			throws UnirestException, IOException {
+
+		HttpRequestWithBody req1 = prepareDelete("/v1/admin/account/{backendId}").routeParam("backendId", backendId)
+				.basicAuth(username, password);
 
 		// 401 Unauthorized is valid since if this account does not exist
 		// delete returns 401 because admin username and password
@@ -119,22 +125,36 @@ public class AdminResourceTest extends AbstractTest {
 		delete(req1, 200, 401);
 
 		refreshIndex(AdminResource.ADMIN_INDEX);
-		refreshIndex("test");
+		refreshIndex(backendId);
 
-		RequestBodyEntity req2 = preparePost("/v1/admin/account/").body(Json.startObject().put("backendId", "test")
-				.put("username", "test").put("password", "hi test").put("email", "hello@spacedog.io").toString());
+		RequestBodyEntity req2 = preparePost("/v1/admin/account/").body(Json.startObject().put("backendId", backendId)
+				.put("username", username).put("password", password).put("email", email).toString());
 
-		testClientKey = post(req2, 201).response().getHeaders().get(AdminResource.BACKEND_KEY_HEADER).get(0);
+		String backendKey = post(req2, 201).response().getHeaders().get(AdminResource.BACKEND_KEY_HEADER).get(0);
 
-		assertFalse(Strings.isNullOrEmpty(testClientKey));
+		assertFalse(Strings.isNullOrEmpty(backendKey));
 
 		refreshIndex(AdminResource.ADMIN_INDEX);
-		refreshIndex("test");
+		refreshIndex(backendId);
+
+		return new ClientAccount(backendId, username, password, email, backendKey);
 	}
 
-	public static String testClientKey() {
-		return testClientKey;
+	public static class ClientAccount {
+		String backendId;
+		String backendKey;
+		String username;
+		String password;
+		String email;
+
+		public ClientAccount(String backendId, String username, String password, String email, String backendKey) {
+			this.backendId = backendId;
+			this.backendKey = backendKey;
+			this.username = username;
+			this.password = password;
+			this.email = email;
+		}
 	}
 
-	private static String testClientKey;
+	private static ClientAccount testAccount;
 }
