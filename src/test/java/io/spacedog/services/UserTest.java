@@ -3,9 +3,10 @@
  */
 package io.spacedog.services;
 
+import org.junit.Assert;
 import org.junit.Test;
 
-public class UserTest extends AbstractTest {
+public class UserTest extends Assert {
 
 	@Test
 	public void shouldValidatePasswords() {

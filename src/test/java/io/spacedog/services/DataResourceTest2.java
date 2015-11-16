@@ -3,28 +3,24 @@
  */
 package io.spacedog.services;
 
-import java.io.IOException;
-
 import org.joda.time.DateTime;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
-import com.mashape.unirest.http.exceptions.UnirestException;
-import com.mashape.unirest.request.GetRequest;
-import com.mashape.unirest.request.HttpRequestWithBody;
-import com.mashape.unirest.request.body.RequestBodyEntity;
 
 import io.spacedog.services.AdminResourceTest.ClientAccount;
+import io.spacedog.services.UserResourceTest.ClientUser;
 
-public class DataResourceTest2 extends AbstractTest {
+public class DataResourceTest2 extends Assert {
 
 	private static ClientAccount testAccount;
 
 	@BeforeClass
-	public static void resetTestAccount() throws UnirestException, InterruptedException, IOException {
+	public static void resetTestAccount() throws Exception {
 		testAccount = AdminResourceTest.resetTestAccount();
 		SchemaResourceTest.resetSaleSchema();
 	}
@@ -60,67 +56,58 @@ public class DataResourceTest2 extends AbstractTest {
 
 		// create
 
-		RequestBodyEntity req = preparePost("/v1/data/sale", testAccount.backendKey).body(sale.toString());
+		SpaceResponse create = SpaceRequest.post("/v1/data/sale").backendKey(testAccount).body(sale.toString()).go(201)
+				.assertTrue("success").assertEquals("sale", "type").assertEquals(1, "version").assertNotNull("id");
 
-		DateTime beforeCreate = DateTime.now();
-		JsonNode result = post(req, 201).jsonNode();
+		String id = create.jsonNode().get("id").asText();
 
-		assertEquals(true, result.get("success").asBoolean());
-		assertEquals("sale", result.get("type").asText());
-		assertEquals(1, result.get("version").asLong());
-		assertNotNull(result.get("id"));
-
-		String id = result.get("id").asText();
-
-		refreshIndex("test");
+		SpaceRequest.refresh("test");
 
 		// find by id
 
-		GetRequest req1 = prepareGet("/v1/data/sale/{id}", testAccount.backendKey).routeParam("id", id);
-		ObjectNode res1 = get(req1, 200).objectNode();
+		SpaceResponse res1 = SpaceRequest.get("/v1/data/sale/{id}").backendKey(testAccount).routeParam("id", id)
+				.go(200);
 
-		JsonNode meta1 = res1.get("meta");
-		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, meta1.get("createdBy").asText());
-		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, meta1.get("updatedBy").asText());
-		DateTime createdAt = DateTime.parse(meta1.get("createdAt").asText());
-		assertTrue(createdAt.isAfter(beforeCreate.getMillis()));
+		DateTime createdAt = DateTime.parse(res1.getFromJson("meta.createdAt").asText());
+		assertTrue(createdAt.isAfter(create.before().getMillis()));
 		assertTrue(createdAt.isBeforeNow());
-		assertEquals(meta1.get("updatedAt"), meta1.get("createdAt"));
-		assertEquals(1, meta1.get("version").asLong());
-		assertEquals("sale", meta1.get("type").asText());
-		assertEquals(id, meta1.get("id").asText());
 
+		res1.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.createdBy")//
+				.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.updatedBy")//
+				.assertEquals(createdAt, "meta.updatedAt")//
+				.assertEquals(1, "meta.version")//
+				.assertEquals("sale", "meta.type")//
+				.assertEquals(id, "meta.id")//
+				.assertEquals("1234567890", "number")//
+				.assertEquals(-55.6765, "where.lat", 0.00002)//
+				.assertEquals(-54.6765, "where.lon", 0.00002)//
+				.assertEquals("2015-01-09T15:37:00.123Z", "when")//
+				.assertFalse("online")//
+				.assertEquals("2015-09-09", "deliveryDate")//
+				.assertEquals("15:30:00", "deliveryTime")//
+				.assertEquals(2, "items")//
+				.assertEquals("JDM", "items.0.ref")//
+				.assertEquals("2 rooms appartment in the heart of montmartre", "items.0.description")//
+				.assertEquals(8, "items.0.quantity")//
+				// .assertEquals("EUR230", "items.0.price")
+				.assertEquals("appartment", "items.0.type")//
+				.assertEquals("LOUVRE", "items.1.ref")//
+				.assertEquals("Louvre museum 2 days visit with a personal guide", "items.1.description")//
+				.assertEquals(2, "items.1.quantity")//
+				// assertEquals("EUR54.25", "items.1.price")
+				.assertEquals("visit", "items.1.type");
+
+		// TODO do we need to assert field by field and then full object with
+		// full object?
 		// copy to be able to reuse the res1 object in the following
-		ObjectNode res1Copy = res1.deepCopy();
-		res1Copy.remove("meta");
-		assertEquals(sale, res1Copy);
-
-		assertEquals("1234567890", res1.get("number").asText());
-		assertEquals(-55.6765, Json.get(res1, "where.lat").doubleValue(), 0.00002);
-		assertEquals(-54.6765, Json.get(res1, "where.lon").doubleValue(), 0.00002);
-		assertEquals("2015-01-09T15:37:00.123Z", res1.get("when").asText());
-		assertEquals(false, res1.get("online").asBoolean());
-		assertEquals("2015-09-09", res1.get("deliveryDate").asText());
-		assertEquals("15:30:00", res1.get("deliveryTime").asText());
-		assertEquals(2, res1.get("items").size());
-		assertEquals("JDM", Json.get(res1, "items.0.ref").asText());
-		assertEquals("2 rooms appartment in the heart of montmartre", Json.get(res1, "items.0.description").asText());
-		assertEquals(8, Json.get(res1, "items.0.quantity").asInt());
-		// assertEquals("EUR230", Json.get(res1, "items.0.price").asText());
-		assertEquals("appartment", Json.get(res1, "items.0.type").asText());
-		assertEquals("LOUVRE", Json.get(res1, "items.1.ref").asText());
-		assertEquals("Louvre museum 2 days visit with a personal guide",
-				Json.get(res1, "items.1.description").asText());
-		assertEquals(2, Json.get(res1, "items.1.quantity").asInt());
-		// assertEquals("EUR54.25", Json.get(res1, "items.1.price").asText());
-		assertEquals("visit", Json.get(res1, "items.1.type").asText());
+		res1.assertEqualsWithoutMeta(sale);
 
 		// find by simple text search
 
-		GetRequest req1b = prepareGet("/v1/data/sale?q=museum", testAccount.backendKey);
-		JsonNode res1b = get(req1b, 200).jsonNode();
-		assertEquals(1, Json.get(res1b, "total").asLong());
-		assertEquals(res1, res1b.get("results").get(0));
+		SpaceResponse res1b = SpaceRequest.get("/v1/data/sale?q=museum").backendKey(testAccount).go(200).assertEquals(1,
+				"total");
+
+		res1.assertEquals(res1b.getFromJson("results.0"));
 
 		// find by advanced text search
 
@@ -130,114 +117,89 @@ public class DataResourceTest2 extends AbstractTest {
 				.put("query", "museum")//
 				.build().toString();
 
-		RequestBodyEntity req1c = preparePost("/v1/data/sale/search", testAccount.backendKey).body(query);
-		JsonNode res1c = post(req1c, 200).jsonNode();
-		assertEquals(1, Json.get(res1c, "total").asLong());
-		assertEquals(res1, res1c.get("results").get(0));
+		SpaceResponse res1c = SpaceRequest.post("/v1/data/sale/search").backendKey(testAccount).body(query).go(200)
+				.assertEquals(1, "total");
+
+		res1.assertEquals(res1c.getFromJson("results.0"));
 
 		// create user vince
 
-		UserResourceTest.createUser(testAccount.backendKey, "vince", "hi vince", "vince@dog.com");
-		refreshIndex("test");
+		ClientUser vince = UserResourceTest.createUser(testAccount.backendKey, "vince", "hi vince", "vince@dog.com");
+
+		SpaceRequest.refresh(testAccount.backendId);
 
 		// small update no version should succeed
 
 		JsonNode updateJson2 = Json.startObject().startArray("items").startObject().put("quantity", 7).build();
 
-		RequestBodyEntity req2 = preparePut("/v1/data/sale/{id}", testAccount.backendKey).routeParam("id", id)
-				.basicAuth("vince", "hi vince").body(updateJson2.toString());
-
-		DateTime beforeUpdate = DateTime.now();
-		JsonNode res2 = put(req2, 200).jsonNode();
-
-		assertEquals(true, res2.get("success").asBoolean());
-		assertEquals("sale", res2.get("type").asText());
-		assertEquals(2, res2.get("version").asLong());
-		assertEquals(id, res2.get("id").asText());
+		SpaceResponse req2 = SpaceRequest.put("/v1/data/sale/{id}").backendKey(testAccount).routeParam("id", id)
+				.basicAuth(vince).body(updateJson2.toString()).go(200).assertTrue("success")
+				.assertEquals("sale", "type").assertEquals(2, "version").assertEquals(id, "id");
 
 		// check update is correct
 
-		GetRequest req3 = prepareGet("/v1/data/sale/{id}", testAccount.backendKey).routeParam("id", id);
-		ObjectNode res3 = get(req3, 200).objectNode();
+		SpaceResponse res3 = SpaceRequest.get("/v1/data/sale/{id}").backendKey(testAccount).routeParam("id", id)
+				.go(200);
 
-		JsonNode meta3 = res3.get("meta");
-		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, meta3.get("createdBy").asText());
-		assertEquals("vince", meta3.get("updatedBy").asText());
-		DateTime createdAt3 = DateTime.parse(meta3.get("createdAt").asText());
-		assertEquals(createdAt, createdAt3);
-		DateTime updatedAt = DateTime.parse(meta3.get("updatedAt").asText());
-		assertTrue(updatedAt.isAfter(beforeUpdate.getMillis()));
+		res3.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.createdBy").assertEquals("vince", "meta.updatedBy")
+				.assertEquals(createdAt, "meta.createdAt").assertEquals(2, "meta.version")
+				.assertEquals("sale", "meta.type").assertEquals(id, "meta.id").assertEquals(7, "items.0.quantity");
+
+		DateTime updatedAt = DateTime.parse(res3.getFromJson("meta.updatedAt").asText());
+		assertTrue(updatedAt.isAfter(req2.before().getMillis()));
 		assertTrue(updatedAt.isBeforeNow());
-		assertEquals(2, meta3.get("version").asLong());
-		assertEquals("sale", meta3.get("type").asText());
-		assertEquals(id, meta3.get("id").asText());
-		assertEquals(7, Json.get(res3, "items.0.quantity").asInt());
 
 		// check equality on what has not been updated
-		assertEquals(sale.deepCopy().without("items"), res3.deepCopy().without(Lists.newArrayList("meta", "items")));
+		assertEquals(sale.deepCopy().without("items"),
+				res3.objectNode().deepCopy().without(Lists.newArrayList("meta", "items")));
 
 		// update with invalid version should fail
 
 		ObjectNode updateJson3b = Json.startObject().put("number", "0987654321").build();
 
-		RequestBodyEntity req3b = preparePut("/v1/data/sale/{id}", testAccount.backendKey).routeParam("id", id)
-				.queryString("version", "1").body(updateJson3b.toString());
-
-		JsonNode res3b = put(req3b, 409).jsonNode();
-
-		assertEquals(false, res3b.get("success").asBoolean());
+		SpaceRequest.put("/v1/data/sale/{id}").backendKey(testAccount).routeParam("id", id).queryString("version", "1")
+				.body(updateJson3b.toString()).go(409).assertFalse("success");
 
 		// update with invalid version should fail
 
-		RequestBodyEntity req3c = preparePut("/v1/data/sale/{id}", testAccount.backendKey).routeParam("id", id)
-				.queryString("version", "XXX").body(updateJson3b.toString());
-
-		JsonNode res3c = put(req3c, 400).jsonNode();
-
-		assertEquals(false, res3c.get("success").asBoolean());
-		assertEquals("XXX", Json.get(res3c, "invalidParameters.version.value").asText());
+		SpaceRequest.put("/v1/data/sale/{id}").backendKey(testAccount).routeParam("id", id)
+				.queryString("version", "XXX").body(updateJson3b.toString()).go(400).assertFalse("success")
+				.assertEquals("XXX", "invalidParameters.version.value");
 
 		// update with correct version should succeed
 
-		RequestBodyEntity req3d = preparePut("/v1/data/sale/{id}", testAccount.backendKey).routeParam("id", id)
-				.queryString("version", "2").body(updateJson3b.toString());
+		SpaceResponse req3d = SpaceRequest.put("/v1/data/sale/{id}").backendKey(testAccount).routeParam("id", id)
+				.queryString("version", "2").body(updateJson3b.toString()).go(200);
 
-		JsonNode res3d = put(req3d, 200).jsonNode();
-
-		assertEquals(true, res3d.get("success").asBoolean());
-		assertEquals("sale", res3d.get("type").asText());
-		assertEquals(3, res3d.get("version").asLong());
-		assertEquals(id, res3d.get("id").asText());
+		req3d.assertTrue("success").assertEquals("sale", "type").assertEquals(3, "version").assertEquals(id, "id");
 
 		// check update is correct
 
-		GetRequest req3e = prepareGet("/v1/data/sale/{id}", testAccount.backendKey).routeParam("id", id);
-		ObjectNode res3e = get(req3e, 200).objectNode();
+		SpaceResponse res3e = SpaceRequest.get("/v1/data/sale/{id}").backendKey(testAccount).routeParam("id", id)
+				.go(200);
 
-		JsonNode meta3e = res3e.get("meta");
-		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, meta3e.get("createdBy").asText());
-		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, meta3e.get("updatedBy").asText());
-		DateTime createdAt3e = DateTime.parse(meta3.get("createdAt").asText());
+		res3e.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.createdBy")//
+				.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.updatedBy")//
+				.assertEquals(3, "meta.version").assertEquals("sale", "meta.type").assertEquals(id, "meta.id")
+				.assertEquals("0987654321", "number");
+
+		DateTime createdAt3e = DateTime.parse(res3e.getFromJson("meta.createdAt").asText());
 		assertEquals(createdAt, createdAt3e);
-		DateTime updatedAt3e = DateTime.parse(meta3e.get("updatedAt").asText());
-		assertTrue(updatedAt3e.isAfter(beforeUpdate.getMillis()));
+		DateTime updatedAt3e = DateTime.parse(res3e.getFromJson("meta.updatedAt").asText());
+		assertTrue(updatedAt3e.isAfter(req3d.before().getMillis()));
 		assertTrue(updatedAt3e.isBeforeNow());
-		assertEquals(3, meta3e.get("version").asLong());
-		assertEquals("sale", meta3e.get("type").asText());
-		assertEquals(id, meta3e.get("id").asText());
-		assertEquals("0987654321", Json.get(res3e, "number").asText());
+
 		// check equality on what has not been updated
-		assertEquals(res3.deepCopy().without(Lists.newArrayList("meta", "number")),
-				res3e.deepCopy().without(Lists.newArrayList("meta", "number")));
+		assertEquals(res3.objectNode().deepCopy().without(Lists.newArrayList("meta", "number")),
+				res3e.objectNode().deepCopy().without(Lists.newArrayList("meta", "number")));
 
 		// delete
 
-		HttpRequestWithBody req4 = prepareDelete("/v1/data/sale/{id}", testAccount.backendKey).routeParam("id", id);
-		delete(req4, 200);
+		SpaceRequest.delete("/v1/data/sale/{id}").backendKey(testAccount).routeParam("id", id).go(200);
 
 		// check delete is done
 
-		JsonNode res5 = get(req1, 404).jsonNode();
-		assertFalse(res5.get("success").asBoolean());
+		assertFalse(SpaceRequest.get("/v1/data/sale/{id}").backendKey(testAccount).routeParam("id", id).go(404)
+				.jsonNode().get("success").asBoolean());
 	}
 }

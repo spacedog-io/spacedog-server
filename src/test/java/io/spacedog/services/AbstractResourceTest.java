@@ -3,11 +3,12 @@
  */
 package io.spacedog.services;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-public class AbstractResourceTest extends AbstractTest {
+public class AbstractResourceTest extends Assert {
 
 	@Test
 	public void shouldConvertRuntimeExceptionToJsonError() {

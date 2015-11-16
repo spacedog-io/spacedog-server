@@ -3,34 +3,32 @@
  */
 package io.spacedog.services;
 
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
-import com.mashape.unirest.http.exceptions.UnirestException;
-import com.mashape.unirest.request.body.RequestBodyEntity;
 
 import io.spacedog.services.AdminResourceTest.ClientAccount;
 
-public class QueryTest extends AbstractTest {
+public class QueryTest extends Assert {
 
 	private static ClientAccount testAccount;
 
 	@Test
-	public void resetAndImportDataset() throws UnirestException, IOException {
+	public void resetAndImportDataset() throws Exception {
+
 		testAccount = AdminResourceTest.resetTestAccount();
+
 		SchemaResourceTest.resetCarSchema();
 
 		for (int i = 0; i < 500; i++) {
-			RequestBodyEntity req2 = preparePost("/v1/data/car", testAccount.backendKey).body(jsonCar(i).toString());
-
-			post(req2, 201);
+			SpaceRequest.post("/v1/data/car").backendKey(testAccount).body(jsonCar(i).toString()).go(201);
 		}
 	}
 

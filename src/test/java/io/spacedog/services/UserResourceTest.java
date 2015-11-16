@@ -3,44 +3,36 @@
  */
 package io.spacedog.services;
 
-import java.io.IOException;
-
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.mashape.unirest.http.exceptions.UnirestException;
-import com.mashape.unirest.request.GetRequest;
-import com.mashape.unirest.request.body.RequestBodyEntity;
 
 import io.spacedog.services.AdminResourceTest.ClientAccount;
 
-public class UserResourceTest extends AbstractTest {
+public class UserResourceTest extends Assert {
 
 	private static ClientAccount testAccount;
 
 	@BeforeClass
-	public static void resetTestAccount() throws UnirestException, InterruptedException, IOException {
+	public static void resetTestAccount() throws Exception {
 		testAccount = AdminResourceTest.resetTestAccount();
 	}
 
 	@Test
-	public void shouldSignUpSuccessfullyAndMore() throws UnirestException, InterruptedException, IOException {
+	public void shouldSignUpSuccessfullyAndMore() throws Exception {
 
 		// vince sign up should succeed
 
-		RequestBodyEntity req1 = preparePost("/v1/user", testAccount.backendKey).body(Json.startObject()
-				.put("username", "vince").put("password", "hi vince").put("email", "vince@dog.com").build().toString());
+		ClientUser vince = createUser(testAccount.backendKey, "vince", "hi vince", "vince@dog.com");
 
-		post(req1, 201);
-
-		refreshIndex("test");
+		SpaceRequest.refresh(testAccount);
 
 		// get vince user object should succeed
 
-		GetRequest req2 = prepareGet("/v1/user/vince", testAccount.backendKey).basicAuth("vince", "hi vince");
-
-		ObjectNode res2 = get(req2, 200).objectNode();
+		ObjectNode res2 = SpaceRequest.get("/v1/user/vince").backendKey(testAccount).basicAuth(vince).go(200)
+				.objectNode();
 
 		assertEquals(
 				Json.startObject().put("username", "vince").put("hashedPassword", User.hashPassword("hi vince"))
@@ -49,46 +41,33 @@ public class UserResourceTest extends AbstractTest {
 
 		// get data with wrong username should fail
 
-		GetRequest req5 = prepareGet("/v1/user/vince", testAccount.backendKey).basicAuth("XXX", "hi vince");
-
-		get(req5, 401);
+		SpaceRequest.get("/v1/user/vince").backendKey(testAccount).basicAuth("XXX", "hi vince").go(401);
 
 		// get data with wrong password should fail
 
-		GetRequest req3 = prepareGet("/v1/user/vince", testAccount.backendKey).basicAuth("vince", "XXX");
-
-		get(req3, 401);
+		SpaceRequest.get("/v1/user/vince").backendKey(testAccount).basicAuth("vince", "XXX").go(401);
 
 		// get data with wrong backend key should fail
 
-		GetRequest req4 = prepareGet("/v1/user/vince", "XXX").basicAuth("vince", "hi vince");
-
-		get(req4, 401);
+		SpaceRequest.get("/v1/user/vince").backendKey("XXX").basicAuth(vince).go(401);
 
 		// login shoud succeed
 
-		GetRequest req6 = prepareGet("/v1/login", testAccount.backendKey).basicAuth("vince", "hi vince");
-
-		get(req6, 200);
+		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth(vince).go(200);
 
 		// login with wrong password should fail
 
-		GetRequest req7 = prepareGet("/v1/login", testAccount.backendKey).basicAuth("vince", "XXX");
-
-		get(req7, 401);
+		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("vince", "XXX").go(401);
 
 		// email update should succeed
 
-		RequestBodyEntity req8 = preparePut("/v1/user/vince", testAccount.backendKey).basicAuth("vince", "hi vince")
-				.body(Json.startObject().put("email", "bignose@magic.com").build().toString());
+		SpaceRequest.put("/v1/user/vince").backendKey(testAccount).basicAuth(vince)
+				.body(Json.startObject().put("email", "bignose@magic.com").build().toString()).go(200);
 
-		put(req8, 200);
+		SpaceRequest.refresh(testAccount);
 
-		refreshIndex("test");
-
-		GetRequest req9 = prepareGet("/v1/user/vince", testAccount.backendKey).basicAuth("vince", "hi vince");
-
-		ObjectNode res9 = get(req9, 200).objectNode();
+		ObjectNode res9 = SpaceRequest.get("/v1/user/vince").backendKey(testAccount).basicAuth(vince).go(200)
+				.objectNode();
 
 		assertEquals(2, res9.get("meta").get("version").asInt());
 
@@ -99,11 +78,12 @@ public class UserResourceTest extends AbstractTest {
 	}
 
 	public static ClientUser createUser(String backendKey, String username, String password, String email)
-			throws UnirestException, IOException {
-		RequestBodyEntity req = preparePost("/v1/user/", backendKey).body(
-				Json.startObject().put("username", username).put("password", password).put("email", email).toString());
+			throws Exception {
 
-		String id = post(req, 201).objectNode().get("id").asText();
+		String id = SpaceRequest
+				.post("/v1/user/").backendKey(backendKey).body(Json.startObject().put("username", username)
+						.put("password", password).put("email", email).toString())
+				.go(201).objectNode().get("id").asText();
 
 		return new ClientUser(id, username, password, email);
 	}

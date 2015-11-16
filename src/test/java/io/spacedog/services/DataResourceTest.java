@@ -3,27 +3,22 @@
  */
 package io.spacedog.services;
 
-import java.io.IOException;
-
 import org.joda.time.DateTime;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.mashape.unirest.http.exceptions.UnirestException;
-import com.mashape.unirest.request.GetRequest;
-import com.mashape.unirest.request.HttpRequestWithBody;
-import com.mashape.unirest.request.body.RequestBodyEntity;
 
 import io.spacedog.services.AdminResourceTest.ClientAccount;
+import io.spacedog.services.UserResourceTest.ClientUser;
 
-public class DataResourceTest extends AbstractTest {
+public class DataResourceTest extends Assert {
 
 	private static ClientAccount testAccount;
 
 	@BeforeClass
-	public static void resetTestAccount() throws UnirestException, InterruptedException, IOException {
+	public static void resetTestAccount() throws Exception {
 		testAccount = AdminResourceTest.resetTestAccount();
 		SchemaResourceTest.resetCarSchema();
 	}
@@ -49,80 +44,65 @@ public class DataResourceTest extends AbstractTest {
 
 		// create
 
-		RequestBodyEntity req = preparePost("/v1/data/car", testAccount.backendKey).body(car.toString());
+		SpaceResponse create = SpaceRequest.post("/v1/data/car").backendKey(testAccount).body(car.toString()).go(201);
 
-		DateTime beforeCreate = DateTime.now();
-		JsonNode result = post(req, 201).jsonNode();
+		create.assertTrue("success").assertEquals("car", "type").assertNotNull("id");
 
-		assertEquals(true, result.get("success").asBoolean());
-		assertEquals("car", result.get("type").asText());
-		assertNotNull(result.get("id"));
+		String id = create.getFromJson("id").asText();
 
-		String id = result.get("id").asText();
-
-		refreshIndex("test");
+		SpaceRequest.refresh("test");
 
 		// find by id
 
-		GetRequest req1 = prepareGet("/v1/data/car/{id}", testAccount.backendKey).routeParam("id", id);
-		ObjectNode res1 = (ObjectNode) get(req1, 200).jsonNode();
+		SpaceResponse res1 = SpaceRequest.get("/v1/data/car/{id}").backendKey(testAccount).routeParam("id", id).go(200);
 
-		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, res1.findValue("createdBy").asText());
-		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, res1.findValue("updatedBy").asText());
-		DateTime createdAt = DateTime.parse(res1.findValue("createdAt").asText());
-		assertTrue(createdAt.isAfter(beforeCreate.getMillis()));
+		res1.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.createdBy")//
+				.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.updatedBy")//
+				.assertEqualsWithoutMeta(car);
+
+		DateTime createdAt = DateTime.parse(res1.getFromJson("meta.createdAt").asText());
+		assertTrue(createdAt.isAfter(create.before().getMillis()));
 		assertTrue(createdAt.isBeforeNow());
-		assertEquals(res1.findValue("updatedAt"), res1.findValue("createdAt"));
-
-		res1.remove("meta");
-		assertTrue(car.equals(res1));
+		assertEquals(res1.getFromJson("meta.updatedAt"), res1.getFromJson("meta.createdAt"));
 
 		// find by full text search
 
-		GetRequest req1b = prepareGet("/v1/data/car?q={q}", testAccount.backendKey).routeParam("q", "inVENt*");
-
-		JsonNode res1b = get(req1b, 200).jsonNode();
-		assertEquals(id, res1b.get("results").get(0).get("meta").get("id").asText());
+		SpaceRequest.get("/v1/data/car?q={q}").backendKey(testAccount).routeParam("q", "inVENt*").go(200)
+				.assertEquals(id, "results.0.meta.id");
 
 		// create user vince
 
-		RequestBodyEntity req1a = preparePost("/v1/user/", testAccount.backendKey).body(Json.startObject()
-				.put("username", "vince").put("password", "hi vince").put("email", "vince@spacedog.io").toString());
+		ClientUser vince = UserResourceTest.createUser(testAccount.backendKey, "vince", "hi vince",
+				"vince@spacedog.io");
 
-		post(req1a, 201);
-		refreshIndex("test");
+		SpaceRequest.refresh(testAccount.backendId);
 
 		// update
 
-		RequestBodyEntity req2 = preparePut("/v1/data/car/{id}", testAccount.backendKey).routeParam("id", id)
-				.basicAuth("vince", "hi vince").body(Json.startObject().put("color", "blue").toString());
-
-		DateTime beforeUpdate = DateTime.now();
-		put(req2, 200);
+		SpaceResponse req2 = SpaceRequest.put("/v1/data/car/{id}").backendKey(testAccount).routeParam("id", id)
+				.basicAuth(vince).body(Json.startObject().put("color", "blue").toString()).go(200);
 
 		// check update is correct
 
-		GetRequest req3 = prepareGet("/v1/data/car/{id}", testAccount.backendKey).routeParam("id", id);
-		JsonNode res3 = get(req3, 200).jsonNode();
+		SpaceResponse res3 = SpaceRequest.get("/v1/data/car/{id}").backendKey(testAccount).routeParam("id", id).go(200);
 
-		assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, res3.findValue("createdBy").asText());
-		assertEquals("vince", res3.findValue("updatedBy").asText());
-		DateTime createdAtAfterUpdate = DateTime.parse(res3.findValue("createdAt").asText());
-		assertEquals(createdAt, createdAtAfterUpdate);
+		res3.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.createdBy")//
+				.assertEquals("vince", "meta.updatedBy")//
+				.assertEquals(createdAt, "meta.createdAt")//
+				.assertEquals("1234567890", "serialNumber")//
+				.assertEquals("blue", "color");
+
 		DateTime updatedAt = DateTime.parse(res3.findValue("updatedAt").asText());
-		assertTrue(updatedAt.isAfter(beforeUpdate.getMillis()));
+		assertTrue(updatedAt.isAfter(req2.before().getMillis()));
 		assertTrue(updatedAt.isBeforeNow());
-		assertEquals("1234567890", res3.get("serialNumber").asText());
-		assertEquals("blue", res3.get("color").asText());
 
 		// delete
 
-		HttpRequestWithBody req4 = prepareDelete("/v1/data/car/{id}", testAccount.backendKey).routeParam("id", id);
-		delete(req4, 200);
+		SpaceRequest.delete("/v1/data/car/{id}").backendKey(testAccount).routeParam("id", id).go(200);
 
 		// check delete is done
 
-		JsonNode res5 = get(req1, 404).jsonNode();
-		assertFalse(res5.get("success").asBoolean());
+		assertFalse(SpaceRequest.get("/v1/data/car/{id}").backendKey(testAccount).routeParam("id", id).go(404)
+				.jsonNode().get("success").asBoolean());
 	}
 }

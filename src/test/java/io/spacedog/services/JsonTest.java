@@ -3,11 +3,12 @@
  */
 package io.spacedog.services;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-public class JsonTest extends AbstractTest {
+public class JsonTest extends Assert {
 
 	@Test
 	public void shouldFollowThePath() {

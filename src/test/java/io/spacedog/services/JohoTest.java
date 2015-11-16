@@ -3,23 +3,20 @@
  */
 package io.spacedog.services;
 
-import java.io.IOException;
 import java.util.Iterator;
 
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.mashape.unirest.http.exceptions.UnirestException;
-import com.mashape.unirest.request.GetRequest;
-import com.mashape.unirest.request.body.RequestBodyEntity;
 
 import io.spacedog.services.AdminResourceTest.ClientAccount;
 import io.spacedog.services.UserResourceTest.ClientUser;
 
-public class JohoTest extends AbstractTest {
+public class JohoTest extends Assert {
 
 	private static ClientAccount johoAccount;
 	private static ClientUser lui;
@@ -27,7 +24,7 @@ public class JohoTest extends AbstractTest {
 	private static ClientUser laCopine;
 
 	@BeforeClass
-	public static void resetFacebookBackend() throws UnirestException, InterruptedException, IOException {
+	public static void resetJohoBackend() throws Exception {
 
 		johoAccount = AdminResourceTest.resetAccount("joho", "joho", "hi joho", "david@spacedog.io");
 
@@ -39,7 +36,7 @@ public class JohoTest extends AbstractTest {
 		laCopine = UserResourceTest.createUser(johoAccount.backendKey, "la copine", "hi la copine",
 				"lacopine@chauffe.le");
 
-		refreshIndex("joho");
+		SpaceRequest.refresh(johoAccount);
 	}
 
 	static ObjectNode buildBigPostSchema() {
@@ -115,32 +112,27 @@ public class JohoTest extends AbstractTest {
 					.end()//
 					.build().toString();
 
-			RequestBodyEntity req = preparePost("/v1/data/bigpost", johoAccount.backendKey)
-					.basicAuth(user.username, user.password).body(bigPost);
-
-			return post(req, 201).objectNode().get("id").asText();
+			return SpaceRequest.post("/v1/data/bigpost").backendKey(johoAccount).basicAuth(user).body(bigPost).go(201)
+					.objectNode().get("id").asText();
 		}
 
 		@Override
 		public void addComment(String postId, String comment, ClientUser user) throws Exception {
 
-			GetRequest getRequest = prepareGet("/v1/data/bigpost/{id}", johoAccount.backendKey).routeParam("id",
-					postId);
-			ObjectNode bigPost = get(getRequest, 200).objectNode();
+			ObjectNode bigPost = SpaceRequest.get("/v1/data/bigpost/{id}").backendKey(johoAccount)
+					.routeParam("id", postId).go(200).objectNode();
 
 			((ArrayNode) bigPost.get("responses"))
 					.add(Json.startObject().put("title", comment).put("author", user.username).build());
 
-			RequestBodyEntity putRequest = preparePut("/v1/data/bigpost/{id}", johoAccount.backendKey)
-					.routeParam("id", postId).basicAuth(user.username, user.password).body(bigPost.toString());
-
-			put(putRequest, 200);
+			SpaceRequest.put("/v1/data/bigpost/{id}").backendKey(johoAccount).routeParam("id", postId).basicAuth(user)
+					.body(bigPost.toString()).go(200);
 		}
 
 		@Override
 		public Iterator<JsonNode> showWall() throws Exception {
 
-			refreshIndex("joho");
+			SpaceRequest.refresh(johoAccount);
 
 			String wallQuery = Json.startObject()//
 					.put("from", 0)//
@@ -156,10 +148,8 @@ public class JohoTest extends AbstractTest {
 					.startObject("match_all")//
 					.build().toString();
 
-			RequestBodyEntity req = preparePost("/v1/data/bigpost/search", johoAccount.backendKey).body(wallQuery);
-			JsonNode result = post(req, 200).jsonNode();
-
-			return result.get("results").elements();
+			return SpaceRequest.post("/v1/data/bigpost/search").backendKey(johoAccount).body(wallQuery).go(200)
+					.jsonNode().get("results").elements();
 		}
 	}
 
@@ -168,13 +158,10 @@ public class JohoTest extends AbstractTest {
 		@Override
 		public String createSubject(String subject, ClientUser user) throws Exception {
 
-			String smallPost = Json.startObject().put("title", subject) //
-					.build().toString();
+			String smallPost = Json.startObject().put("title", subject).build().toString();
 
-			RequestBodyEntity req = preparePost("/v1/data/smallpost", johoAccount.backendKey)
-					.basicAuth(user.username, user.password).body(smallPost);
-
-			return post(req, 201).objectNode().get("id").asText();
+			return SpaceRequest.post("/v1/data/smallpost").backendKey(johoAccount).basicAuth(user).body(smallPost)
+					.go(201).objectNode().get("id").asText();
 		}
 
 		@Override
@@ -184,16 +171,13 @@ public class JohoTest extends AbstractTest {
 					.put("parent", parentId)//
 					.build().toString();
 
-			RequestBodyEntity req = preparePost("/v1/data/smallpost", johoAccount.backendKey)
-					.basicAuth(user.username, user.password).body(smallPost);
-
-			post(req, 201);
+			SpaceRequest.post("/v1/data/smallpost").backendKey(johoAccount).basicAuth(user).body(smallPost).go(201);
 		}
 
 		@Override
 		public Iterator<JsonNode> showWall() throws Exception {
 
-			refreshIndex("joho");
+			SpaceRequest.refresh(johoAccount);
 
 			String subjectQuery = Json.startObject()//
 					.put("from", 0)//
@@ -217,11 +201,8 @@ public class JohoTest extends AbstractTest {
 					.put("field", "parent")//
 					.build().toString();
 
-			RequestBodyEntity rsubjectResquest = preparePost("/v1/data/smallpost/search", johoAccount.backendKey)
-					.body(subjectQuery);
-			JsonNode subjectResults = post(rsubjectResquest, 200).jsonNode();
-
-			Iterator<JsonNode> subjects = subjectResults.get("results").elements();
+			JsonNode subjectResults = SpaceRequest.post("/v1/data/smallpost/search").backendKey(johoAccount)
+					.body(subjectQuery).go(200).jsonNode();
 
 			JsonBuilder<ObjectNode> responsesQuery = Json.startObject()//
 					.put("from", 0)//
@@ -244,13 +225,13 @@ public class JohoTest extends AbstractTest {
 					.startObject("terms")//
 					.startArray("parent");
 
+			Iterator<JsonNode> subjects = subjectResults.get("results").elements();
+
 			while (subjects.hasNext())
 				responsesQuery.add(subjects.next().get("meta").get("id").asText());
 
-			RequestBodyEntity responsesRequest = preparePost("/v1/data/smallpost/search", johoAccount.backendKey)
-					.body(responsesQuery.build().toString());
-
-			post(responsesRequest, 200);
+			SpaceRequest.post("/v1/data/smallpost/search").backendKey(johoAccount)
+					.body(responsesQuery.build().toString()).go(200);
 
 			return subjectResults.get("results").elements();
 		}
