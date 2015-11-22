@@ -6,6 +6,7 @@ package io.spacedog.services;
 import org.junit.Assert;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.primitives.Ints;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
@@ -19,8 +20,11 @@ import io.spacedog.services.UserResourceTest.ClientUser;
 public class SpaceRequest {
 
 	static String backendDomain = "http://localhost:8080";
+	// static String backendDomain = "https://spacedog.io";
 
 	private HttpRequest request;
+
+	private JsonNode body;
 
 	public SpaceRequest(HttpRequest request) {
 		this.request = request;
@@ -31,9 +35,11 @@ public class SpaceRequest {
 	}
 
 	public static void refresh(String index) throws UnirestException {
+		String baseUrl = backendDomain.endsWith(":8080") ? backendDomain.replace(":8080", ":9200")
+				: backendDomain + ":9200";
 		System.out.println();
-		System.out.println(String.format("Refresh index [%s] => %s", index, Unirest
-				.post("http://localhost:9200/{index}/_refresh").routeParam("index", index).asString().getStatusText()));
+		System.out.println(String.format("Refresh index [%s] => %s", index,
+				Unirest.post(baseUrl + "/{index}/_refresh").routeParam("index", index).asString().getStatusText()));
 	}
 
 	public static SpaceRequest get(String uri) {
@@ -103,11 +109,12 @@ public class SpaceRequest {
 				String.format("%s requests don't take any body", request.getHttpMethod().name()));
 	}
 
-	public SpaceRequest body(JsonNode jsonBody) {
-		return body(jsonBody.toString());
+	public SpaceRequest body(JsonNode body) {
+		this.body = body;
+		return body(body.toString());
 	}
 
-	public SpaceRequest body(JsonBuilder<JsonNode> jsonBody) {
+	public SpaceRequest body(JsonBuilder<ObjectNode> jsonBody) {
 		return body(jsonBody.build());
 	}
 
@@ -127,7 +134,7 @@ public class SpaceRequest {
 	}
 
 	public SpaceResponse go(int... expectedStatus) throws Exception {
-		SpaceResponse spaceResponse = new SpaceResponse(request);
+		SpaceResponse spaceResponse = new SpaceResponse(request, body);
 		Assert.assertTrue(Ints.contains(expectedStatus, spaceResponse.httpResponse().getStatus()));
 		return spaceResponse;
 	}

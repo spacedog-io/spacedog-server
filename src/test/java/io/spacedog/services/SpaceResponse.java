@@ -16,16 +16,16 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.HttpRequest;
-import com.mashape.unirest.request.HttpRequestWithBody;
 
 public class SpaceResponse {
 
 	private HttpRequest httpRequest;
 	private HttpResponse<String> response;
 	private DateTime before;
-	private JsonNode jsonNode;
+	private JsonNode jsonResponseContent;
 
-	public SpaceResponse(HttpRequest request) throws JsonProcessingException, IOException, UnirestException {
+	public SpaceResponse(HttpRequest request, JsonNode jsonRequestContent)
+			throws JsonProcessingException, IOException, UnirestException {
 
 		this.httpRequest = request;
 		this.before = DateTime.now();
@@ -38,17 +38,19 @@ public class SpaceResponse {
 
 		httpRequest.getHeaders().forEach((key, value) -> printHeader(key, value));
 
-		if (httpRequest instanceof HttpRequestWithBody)
-			System.out.println(String.format("Request body: %s", ((HttpRequestWithBody) httpRequest).getBody()));
+		if (jsonRequestContent != null)
+			System.out.println(String.format("Request body: %s",
+					Json.getMapper().writerWithDefaultPrettyPrinter().writeValueAsString(jsonRequestContent)));
 
 		String responseBody = response.getBody();
 		if (Json.isJson(responseBody))
-			jsonNode = Json.readJsonNode(responseBody);
+			jsonResponseContent = Json.readJsonNode(responseBody);
 
 		response.getHeaders().forEach((key, value) -> System.out.println(String.format("=> %s: %s", key, value)));
 
-		System.out.println(String.format("=> Response body: %s", isJson()
-				? Json.getMapper().writerWithDefaultPrettyPrinter().writeValueAsString(jsonNode) : response.getBody()));
+		System.out.println(String.format("=> Response body: %s",
+				isJson() ? Json.getMapper().writerWithDefaultPrettyPrinter().writeValueAsString(jsonResponseContent)
+						: response.getBody()));
 
 	}
 
@@ -67,25 +69,25 @@ public class SpaceResponse {
 	}
 
 	public boolean isJson() {
-		return jsonNode != null;
+		return jsonResponseContent != null;
 	}
 
 	public JsonNode jsonNode() {
-		if (jsonNode == null)
+		if (jsonResponseContent == null)
 			throw new IllegalStateException("no json yet");
-		return jsonNode;
+		return jsonResponseContent;
 	}
 
 	public ObjectNode objectNode() {
 		if (!jsonNode().isObject())
-			throw new RuntimeException(String.format("not a json object but [%s]", jsonNode.getNodeType()));
-		return (ObjectNode) jsonNode;
+			throw new RuntimeException(String.format("not a json object but [%s]", jsonResponseContent.getNodeType()));
+		return (ObjectNode) jsonResponseContent;
 	}
 
 	public ArrayNode arrayNode() {
 		if (!jsonNode().isArray())
-			throw new RuntimeException(String.format("not a json array but [%s]", jsonNode.getNodeType()));
-		return (ArrayNode) jsonNode;
+			throw new RuntimeException(String.format("not a json array but [%s]", jsonResponseContent.getNodeType()));
+		return (ArrayNode) jsonResponseContent;
 	}
 
 	public HttpResponse<String> httpResponse() {
@@ -95,47 +97,47 @@ public class SpaceResponse {
 	}
 
 	public JsonNode getFromJson(String jsonPath) {
-		return Json.get(jsonNode, jsonPath);
+		return Json.get(jsonResponseContent, jsonPath);
 	}
 
 	public JsonNode findValue(String fieldName) {
-		return jsonNode.findValue(fieldName);
+		return jsonResponseContent.findValue(fieldName);
 	}
 
 	public SpaceResponse assertEquals(String expected, String jsonPath) {
-		Assert.assertEquals(expected, Json.get(jsonNode, jsonPath).textValue());
+		Assert.assertEquals(expected, Json.get(jsonResponseContent, jsonPath).textValue());
 		return this;
 	}
 
 	public SpaceResponse assertEquals(int expected, String jsonPath) {
-		JsonNode node = Json.get(jsonNode, jsonPath);
+		JsonNode node = Json.get(jsonResponseContent, jsonPath);
 		Assert.assertEquals(expected, //
 				node.isArray() || node.isObject() ? node.size() : node.intValue());
 		return this;
 	}
 
 	public SpaceResponse assertEquals(long expected, String jsonPath) {
-		Assert.assertEquals(expected, Json.get(jsonNode, jsonPath).longValue());
+		Assert.assertEquals(expected, Json.get(jsonResponseContent, jsonPath).longValue());
 		return this;
 	}
 
 	public SpaceResponse assertEquals(float expected, String jsonPath, float delta) {
-		Assert.assertEquals(expected, Json.get(jsonNode, jsonPath).floatValue(), delta);
+		Assert.assertEquals(expected, Json.get(jsonResponseContent, jsonPath).floatValue(), delta);
 		return this;
 	}
 
 	public SpaceResponse assertEquals(double expected, String jsonPath, double delta) {
-		Assert.assertEquals(expected, Json.get(jsonNode, jsonPath).doubleValue(), delta);
+		Assert.assertEquals(expected, Json.get(jsonResponseContent, jsonPath).doubleValue(), delta);
 		return this;
 	}
 
 	public SpaceResponse assertEquals(DateTime expected, String jsonPath) {
-		Assert.assertEquals(expected, DateTime.parse(Json.get(jsonNode, jsonPath).asText()));
+		Assert.assertEquals(expected, DateTime.parse(Json.get(jsonResponseContent, jsonPath).asText()));
 		return this;
 	}
 
 	public SpaceResponse assertEquals(JsonNode expected) {
-		Assert.assertEquals(expected, jsonNode);
+		Assert.assertEquals(expected, jsonResponseContent);
 		return this;
 	}
 
@@ -145,17 +147,17 @@ public class SpaceResponse {
 	}
 
 	public SpaceResponse assertNotNull(String jsonPath) {
-		Assert.assertFalse(Json.get(jsonNode, jsonPath).isNull());
+		Assert.assertFalse(Json.get(jsonResponseContent, jsonPath).isNull());
 		return this;
 	}
 
 	public SpaceResponse assertTrue(String jsonPath) {
-		Assert.assertTrue(Json.get(jsonNode, jsonPath).asBoolean());
+		Assert.assertTrue(Json.get(jsonResponseContent, jsonPath).asBoolean());
 		return this;
 	}
 
 	public SpaceResponse assertFalse(String jsonPath) {
-		Assert.assertFalse(Json.get(jsonNode, jsonPath).asBoolean());
+		Assert.assertFalse(Json.get(jsonResponseContent, jsonPath).asBoolean());
 		return this;
 	}
 

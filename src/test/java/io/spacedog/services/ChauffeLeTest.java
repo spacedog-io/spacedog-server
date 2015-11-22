@@ -16,27 +16,27 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.services.AdminResourceTest.ClientAccount;
 import io.spacedog.services.UserResourceTest.ClientUser;
 
-public class JohoTest extends Assert {
+public class ChauffeLeTest extends Assert {
 
-	private static ClientAccount johoAccount;
+	private static ClientAccount adminAccount;
 	private static ClientUser lui;
 	private static ClientUser elle;
 	private static ClientUser laCopine;
 
 	@BeforeClass
-	public static void resetJohoBackend() throws Exception {
+	public static void resetBackend() throws Exception {
 
-		johoAccount = AdminResourceTest.resetAccount("joho", "joho", "hi joho", "david@spacedog.io");
+		adminAccount = AdminResourceTest.resetAccount("chauffele", "admin", "hi admin", "david@spacedog.io");
 
-		SchemaResourceTest.resetSchema("bigpost", buildBigPostSchema().toString(), "joho", "hi joho");
-		SchemaResourceTest.resetSchema("smallpost", buildSmallPostSchema().toString(), "joho", "hi joho");
+		SchemaResourceTest.resetSchema("bigpost", buildBigPostSchema().toString(), "admin", "hi admin");
+		SchemaResourceTest.resetSchema("smallpost", buildSmallPostSchema().toString(), "admin", "hi admin");
 
-		lui = UserResourceTest.createUser(johoAccount.backendKey, "lui", "hi lui", "lui@chauffe.le");
-		elle = UserResourceTest.createUser(johoAccount.backendKey, "elle", "hi elle", "elle@chauffe.le");
-		laCopine = UserResourceTest.createUser(johoAccount.backendKey, "la copine", "hi la copine",
+		lui = UserResourceTest.createUser(adminAccount.backendKey, "lui", "hi lui", "lui@chauffe.le");
+		elle = UserResourceTest.createUser(adminAccount.backendKey, "elle", "hi elle", "elle@chauffe.le");
+		laCopine = UserResourceTest.createUser(adminAccount.backendKey, "la copine", "hi la copine",
 				"lacopine@chauffe.le");
 
-		SpaceRequest.refresh(johoAccount);
+		SpaceRequest.refresh(adminAccount);
 	}
 
 	static ObjectNode buildBigPostSchema() {
@@ -57,16 +57,16 @@ public class JohoTest extends Assert {
 	}
 
 	@Test
-	public void shouldSucceedTestingBigPostJoho() throws Exception {
-		chauffeLe(new BigPostJoho());
+	public void shouldSucceedTestingBigPostChauffeLe() throws Exception {
+		chauffeLe(new BigPost());
 	}
 
 	@Test
-	public void shouldSucceedTestingSmallPostJoho() throws Exception {
-		chauffeLe(new SmallPostJoho());
+	public void shouldSucceedTestingSmallPostChauffeLe() throws Exception {
+		chauffeLe(new SmallPost());
 	}
 
-	public void chauffeLe(Joho impl) throws Exception {
+	public void chauffeLe(ChauffeLeEngine impl) throws Exception {
 
 		String threadId = impl.createSubject("je suis partie en mission en argentine", lui);
 		impl.addComment(threadId, "tu connais ?", lui);
@@ -94,7 +94,7 @@ public class JohoTest extends Assert {
 		impl.showWall();
 	}
 
-	public interface Joho {
+	public interface ChauffeLeEngine {
 		String createSubject(String subject, ClientUser user) throws Exception;
 
 		void addComment(String threadId, String comment, ClientUser user) throws Exception;
@@ -102,7 +102,7 @@ public class JohoTest extends Assert {
 		Iterator<JsonNode> showWall() throws Exception;
 	}
 
-	public static class BigPostJoho implements Joho {
+	public static class BigPost implements ChauffeLeEngine {
 
 		@Override
 		public String createSubject(String subject, ClientUser user) throws Exception {
@@ -112,27 +112,27 @@ public class JohoTest extends Assert {
 					.end()//
 					.build().toString();
 
-			return SpaceRequest.post("/v1/data/bigpost").backendKey(johoAccount).basicAuth(user).body(bigPost).go(201)
+			return SpaceRequest.post("/v1/data/bigpost").backendKey(adminAccount).basicAuth(user).body(bigPost).go(201)
 					.objectNode().get("id").asText();
 		}
 
 		@Override
 		public void addComment(String postId, String comment, ClientUser user) throws Exception {
 
-			ObjectNode bigPost = SpaceRequest.get("/v1/data/bigpost/{id}").backendKey(johoAccount)
+			ObjectNode bigPost = SpaceRequest.get("/v1/data/bigpost/{id}").backendKey(adminAccount)
 					.routeParam("id", postId).go(200).objectNode();
 
 			((ArrayNode) bigPost.get("responses"))
 					.add(Json.startObject().put("title", comment).put("author", user.username).build());
 
-			SpaceRequest.put("/v1/data/bigpost/{id}").backendKey(johoAccount).routeParam("id", postId).basicAuth(user)
+			SpaceRequest.put("/v1/data/bigpost/{id}").backendKey(adminAccount).routeParam("id", postId).basicAuth(user)
 					.body(bigPost.toString()).go(200);
 		}
 
 		@Override
 		public Iterator<JsonNode> showWall() throws Exception {
 
-			SpaceRequest.refresh(johoAccount);
+			SpaceRequest.refresh(adminAccount);
 
 			String wallQuery = Json.startObject()//
 					.put("from", 0)//
@@ -148,19 +148,19 @@ public class JohoTest extends Assert {
 					.startObject("match_all")//
 					.build().toString();
 
-			return SpaceRequest.post("/v1/data/bigpost/search").backendKey(johoAccount).body(wallQuery).go(200)
+			return SpaceRequest.post("/v1/data/bigpost/search").backendKey(adminAccount).body(wallQuery).go(200)
 					.jsonNode().get("results").elements();
 		}
 	}
 
-	public static class SmallPostJoho implements Joho {
+	public static class SmallPost implements ChauffeLeEngine {
 
 		@Override
 		public String createSubject(String subject, ClientUser user) throws Exception {
 
 			String smallPost = Json.startObject().put("title", subject).build().toString();
 
-			return SpaceRequest.post("/v1/data/smallpost").backendKey(johoAccount).basicAuth(user).body(smallPost)
+			return SpaceRequest.post("/v1/data/smallpost").backendKey(adminAccount).basicAuth(user).body(smallPost)
 					.go(201).objectNode().get("id").asText();
 		}
 
@@ -171,13 +171,13 @@ public class JohoTest extends Assert {
 					.put("parent", parentId)//
 					.build().toString();
 
-			SpaceRequest.post("/v1/data/smallpost").backendKey(johoAccount).basicAuth(user).body(smallPost).go(201);
+			SpaceRequest.post("/v1/data/smallpost").backendKey(adminAccount).basicAuth(user).body(smallPost).go(201);
 		}
 
 		@Override
 		public Iterator<JsonNode> showWall() throws Exception {
 
-			SpaceRequest.refresh(johoAccount);
+			SpaceRequest.refresh(adminAccount);
 
 			String subjectQuery = Json.startObject()//
 					.put("from", 0)//
@@ -201,7 +201,7 @@ public class JohoTest extends Assert {
 					.put("field", "parent")//
 					.build().toString();
 
-			JsonNode subjectResults = SpaceRequest.post("/v1/data/smallpost/search").backendKey(johoAccount)
+			JsonNode subjectResults = SpaceRequest.post("/v1/data/smallpost/search").backendKey(adminAccount)
 					.body(subjectQuery).go(200).jsonNode();
 
 			JsonBuilder<ObjectNode> responsesQuery = Json.startObject()//
@@ -230,7 +230,7 @@ public class JohoTest extends Assert {
 			while (subjects.hasNext())
 				responsesQuery.add(subjects.next().get("meta").get("id").asText());
 
-			SpaceRequest.post("/v1/data/smallpost/search").backendKey(johoAccount)
+			SpaceRequest.post("/v1/data/smallpost/search").backendKey(adminAccount)
 					.body(responsesQuery.build().toString()).go(200);
 
 			return subjectResults.get("results").elements();
