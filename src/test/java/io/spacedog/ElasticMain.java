@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.services;
+package io.spacedog;
 
 import java.util.concurrent.ExecutionException;
 
@@ -17,6 +17,8 @@ import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 
 import com.google.common.io.Resources;
+
+import io.spacedog.services.AdminResource;
 
 public class ElasticMain {
 

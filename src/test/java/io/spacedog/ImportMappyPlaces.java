@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.services;
+package io.spacedog;
 
 import org.junit.Assert;
 
@@ -10,7 +10,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.request.HttpRequest;
 
+import io.spacedog.services.AdminResource;
 import io.spacedog.services.AdminResourceTest.ClientAccount;
+import io.spacedog.services.Json;
+import io.spacedog.services.JsonBuilder;
+import io.spacedog.services.SchemaBuilder;
+import io.spacedog.services.SpaceRequest;
 
 public class ImportMappyPlaces extends Assert {
 
