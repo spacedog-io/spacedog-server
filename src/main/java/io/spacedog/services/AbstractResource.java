@@ -3,20 +3,15 @@
  */
 package io.spacedog.services;
 
-import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
-import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.mapper.MergeMappingException;
 import org.elasticsearch.indices.IndexMissingException;
-import org.elasticsearch.search.SearchHit;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.services.Account.InvalidAccountException;
-import io.spacedog.services.SchemaResource.NotFoundException;
 import io.spacedog.services.SchemaValidator.InvalidSchemaException;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
@@ -151,18 +146,11 @@ public abstract class AbstractResource {
 		return new StringBuilder(baseUrl).append(uri).append('/').append(type).append('/').append(id).toString();
 	}
 
-	protected Payload extractResults(SearchResponse response) throws JsonProcessingException, IOException {
-		JsonBuilder<ObjectNode> builder = Json.startObject()//
-				.put("took", response.getTookInMillis())//
-				.put("total", response.getHits().getTotalHits())//
-				.startArray("results");
+	protected static String getReferenceType(String reference) {
+		return reference.split("/")[1];
+	}
 
-		for (SearchHit hit : response.getHits().getHits()) {
-			JsonNode object = Json.getMapper().readTree(hit.sourceAsString());
-			((ObjectNode) object.get("meta")).put("id", hit.id()).put("type", hit.type()).put("version", hit.version());
-			builder.addNode(object);
-		}
-
-		return new Payload(JSON_CONTENT, builder.build().toString(), HttpStatus.OK);
+	protected static String getReferenceId(String reference) {
+		return reference.split("/")[2];
 	}
 }

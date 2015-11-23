@@ -21,4 +21,10 @@ public class AbstractResourceTest extends Assert {
 		assertTrue(json.get("cause").get("message").isNull());
 		assertTrue(json.get("cause").get("trace").size() > 5);
 	}
+
+	@Test
+	public void shouldSucceedToSplitReferences() {
+		assertEquals("job", AbstractResource.getReferenceType("/job/engineer"));
+		assertEquals("engineer", AbstractResource.getReferenceId("/job/engineer"));
+	}
 }
