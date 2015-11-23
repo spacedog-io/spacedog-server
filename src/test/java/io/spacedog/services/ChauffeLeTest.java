@@ -18,6 +18,10 @@ import io.spacedog.services.UserResourceTest.ClientUser;
 
 public class ChauffeLeTest extends Assert {
 
+	private static final String ADMIN_PASSWORD = "hi chauffele";
+	private static final String ADMIN_USERNAME = "chauffele";
+	private static final String BACKEND_ID = "chauffele";
+
 	private static ClientAccount adminAccount;
 	private static ClientUser lui;
 	private static ClientUser elle;
@@ -26,10 +30,10 @@ public class ChauffeLeTest extends Assert {
 	@BeforeClass
 	public static void resetBackend() throws Exception {
 
-		adminAccount = AdminResourceTest.resetAccount("chauffele", "admin", "hi admin", "david@spacedog.io");
+		adminAccount = AdminResourceTest.resetAccount(BACKEND_ID, ADMIN_USERNAME, ADMIN_PASSWORD, "david@spacedog.io");
 
-		SchemaResourceTest.resetSchema("bigpost", buildBigPostSchema().toString(), "admin", "hi admin");
-		SchemaResourceTest.resetSchema("smallpost", buildSmallPostSchema().toString(), "admin", "hi admin");
+		SchemaResourceTest.resetSchema("bigpost", buildBigPostSchema(), ADMIN_USERNAME, ADMIN_PASSWORD);
+		SchemaResourceTest.resetSchema("smallpost", buildSmallPostSchema(), ADMIN_USERNAME, ADMIN_PASSWORD);
 
 		lui = UserResourceTest.createUser(adminAccount.backendKey, "lui", "hi lui", "lui@chauffe.le");
 		elle = UserResourceTest.createUser(adminAccount.backendKey, "elle", "hi elle", "elle@chauffe.le");
