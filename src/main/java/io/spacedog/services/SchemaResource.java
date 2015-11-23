@@ -127,17 +127,4 @@ public class SchemaResource extends AbstractResource {
 
 		return success();
 	}
-
-	@SuppressWarnings("serial")
-	public static class NotFoundException extends RuntimeException {
-
-		public NotFoundException(String repo, String type) {
-			super(String.format("type [%s] not found in repo [%s]", type, repo));
-		}
-
-		public NotFoundException(String repo) {
-			super(String.format("repo [%s] not found", repo));
-		}
-
-	}
 }

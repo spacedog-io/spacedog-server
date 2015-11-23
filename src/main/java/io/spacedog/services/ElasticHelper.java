@@ -19,7 +19,6 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 
-import io.spacedog.services.SchemaResource.NotFoundException;
 import net.codestory.http.Context;
 
 public class ElasticHelper {
