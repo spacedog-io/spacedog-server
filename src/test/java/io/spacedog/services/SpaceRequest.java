@@ -37,6 +37,10 @@ public class SpaceRequest {
 	public static void refresh(String index) throws UnirestException {
 		String baseUrl = backendDomain.endsWith(":8080") ? backendDomain.replace(":8080", ":9200")
 				: backendDomain + ":9200";
+
+		if (baseUrl.startsWith("https"))
+			baseUrl = baseUrl.replace("https", "http");
+
 		System.out.println();
 		System.out.println(String.format("Refresh index [%s] => %s", index,
 				Unirest.post(baseUrl + "/{index}/_refresh").routeParam("index", index).asString().getStatusText()));
