@@ -14,11 +14,11 @@ import com.google.common.base.Strings;
 
 public class Json {
 
-	public static JsonNode get(JsonNode json, String path) {
+	public static JsonNode get(JsonNode json, String propertyPath) {
 
 		JsonNode current = json;
 
-		for (String s : path.split("\\.")) {
+		for (String s : propertyPath.split("\\.")) {
 
 			if (current.isObject())
 				current = current.get(s);
@@ -28,6 +28,23 @@ public class Json {
 		}
 
 		return current;
+	}
+
+	public static void set(JsonNode object, String propertyPath, JsonNode value) {
+
+		int lastDotIndex = propertyPath.lastIndexOf('.');
+		String lastPathName = propertyPath.substring(lastDotIndex + 1);
+		if (lastDotIndex > -1) {
+			String parentPath = propertyPath.substring(0, lastDotIndex);
+			object = Json.get(object, parentPath);
+		}
+
+		if (object.isObject())
+			((ObjectNode) object).set(lastPathName, value);
+		else if (object.isArray())
+			((ArrayNode) object).set(Integer.parseInt(lastPathName), value);
+		else
+			throw new IllegalArgumentException(String.format("json node does not contain path [%s]", propertyPath));
 	}
 
 	public static JsonMerger merger() {
