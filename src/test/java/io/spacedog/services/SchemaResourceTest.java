@@ -30,7 +30,7 @@ public class SchemaResourceTest extends Assert {
 	}
 
 	public static void resetCarSchema() throws Exception {
-		resetSchema("car", buildCarSchema().toString(), "test", "hi test");
+		resetSchema("car", buildCarSchema(), "test", "hi test");
 	}
 
 	public static ObjectNode buildCarSchema() {
@@ -51,7 +51,7 @@ public class SchemaResourceTest extends Assert {
 	}
 
 	public static void resetSaleSchema() throws Exception {
-		resetSchema("sale", buildSaleSchema().toString(), "test", "hi test");
+		resetSchema("sale", buildSaleSchema(), "test", "hi test");
 	}
 
 	public static ObjectNode buildSaleSchema() {
@@ -81,7 +81,7 @@ public class SchemaResourceTest extends Assert {
 	}
 
 	private static void resetHomeSchema() throws Exception {
-		resetSchema("home", buildHomeSchema().toString(), "test", "hi test");
+		resetSchema("home", buildHomeSchema(), "test", "hi test");
 	}
 
 	private static ObjectNode buildHomeSchema() {
@@ -143,7 +143,11 @@ public class SchemaResourceTest extends Assert {
 		SpaceRequest.put("/v1/schema/car").basicAuth(testAccount).body(json.toString()).go(400);
 	}
 
-	public static void resetSchema(String schemaName, String schema, String username, String password)
+	public static void resetSchema(String schemaName, JsonNode schema, ClientAccount account) throws Exception {
+		resetSchema(schemaName, schema, account.username, account.password);
+	}
+
+	public static void resetSchema(String schemaName, JsonNode schema, String username, String password)
 			throws Exception {
 
 		SpaceRequest.delete("/v1/schema/{name}").routeParam("name", schemaName).basicAuth(username, password).go(200,
