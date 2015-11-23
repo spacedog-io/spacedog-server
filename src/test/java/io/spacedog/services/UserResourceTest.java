@@ -80,9 +80,8 @@ public class UserResourceTest extends Assert {
 	public static ClientUser createUser(String backendKey, String username, String password, String email)
 			throws Exception {
 
-		String id = SpaceRequest
-				.post("/v1/user/").backendKey(backendKey).body(Json.startObject().put("username", username)
-						.put("password", password).put("email", email).toString())
+		String id = SpaceRequest.post("/v1/user/").backendKey(backendKey)
+				.body(Json.startObject().put("username", username).put("password", password).put("email", email))
 				.go(201).objectNode().get("id").asText();
 
 		return new ClientUser(id, username, password, email);
@@ -100,6 +99,15 @@ public class UserResourceTest extends Assert {
 			this.password = password;
 			this.email = email;
 		}
+	}
+
+	public static void deleteUser(String string, ClientAccount account) throws Exception {
+		deleteUser(string, account.username, account.password);
+	}
+
+	public static void deleteUser(String username, String adminUsername, String password) throws Exception {
+		SpaceRequest.delete("/v1/user/{username}").routeParam("username", username).basicAuth(adminUsername, password)
+				.go(200, 404);
 	}
 
 }
