@@ -183,11 +183,11 @@ public class AdminResourceTest extends Assert {
 	}
 
 	public static class ClientAccount {
-		String backendId;
-		String backendKey;
-		String username;
-		String password;
-		String email;
+		public String backendId;
+		public String backendKey;
+		public String username;
+		public String password;
+		public String email;
 
 		public ClientAccount(String backendId, String username, String password, String email, String backendKey) {
 			this.backendId = backendId;
