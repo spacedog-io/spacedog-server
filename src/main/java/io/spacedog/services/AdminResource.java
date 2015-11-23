@@ -145,12 +145,14 @@ public class AdminResource extends AbstractResource {
 	@Get("/account/:id/")
 	public Payload get(String backendId, Context context) {
 		try {
-			checkAdminCredentialsOnly(context);
+			Account credentials = checkAdminCredentialsOnly(backendId, context);
 
-			GetResponse response = Start.getElasticClient().prepareGet(ADMIN_INDEX, ACCOUNT_TYPE, backendId).get();
+			GetResponse response = Start.getElasticClient().prepareGet(ADMIN_INDEX, ACCOUNT_TYPE, credentials.backendId)
+					.get();
 
 			if (!response.isExists())
-				return error(HttpStatus.NOT_FOUND, "account with id [%s] not found", backendId);
+				return error(HttpStatus.INTERNAL_SERVER_ERROR, "no account found for backend [%s] and admin user [%s]",
+						credentials.backendId, credentials.username);
 
 			return new Payload(JSON_CONTENT, response.getSourceAsBytes(), HttpStatus.OK);
 		} catch (Throwable throwable) {
@@ -162,19 +164,22 @@ public class AdminResource extends AbstractResource {
 	@Delete("/account/:id/")
 	public Payload delete(String backendId, Context context) {
 		try {
-			checkAdminCredentialsOnly(context);
+			Account credentials = checkAdminCredentialsOnly(backendId, context);
 
-			DeleteResponse resp1 = Start.getElasticClient().prepareDelete(ADMIN_INDEX, ACCOUNT_TYPE, backendId)
-					.get();
+			DeleteResponse resp1 = Start.getElasticClient()
+					.prepareDelete(ADMIN_INDEX, ACCOUNT_TYPE, credentials.backendId).get();
 
 			if (!resp1.isFound())
-				return error(HttpStatus.NOT_FOUND, "account with id [%s] not found", backendId);
+				return error(HttpStatus.INTERNAL_SERVER_ERROR, "no account found for backend [%s] and admin user [%s]",
+						credentials.backendId, credentials.username);
 
-			DeleteIndexResponse resp2 = Start.getElasticClient().admin().indices().prepareDelete(backendId).get();
+			DeleteIndexResponse resp2 = Start.getElasticClient().admin().indices().prepareDelete(credentials.backendId)
+					.get();
 
 			if (!resp2.isAcknowledged())
 				return error(HttpStatus.INTERNAL_SERVER_ERROR,
-						"internal index deletion not acknowledged for account and backend with id [%s] ", backendId);
+						"internal index deletion not acknowledged for account with backend [%s] ",
+						credentials.backendId);
 
 			return success();
 		} catch (Throwable throwable) {
@@ -272,6 +277,16 @@ public class AdminResource extends AbstractResource {
 
 			return new Credentials(backendId, account.backendKey);
 		}
+	}
+
+	public static Account checkAdminCredentialsOnly(String backendId, Context context)
+			throws JsonParseException, JsonMappingException, IOException {
+
+		Account account = checkAdminCredentialsOnly(context);
+		if (!account.backendId.equals(backendId))
+			throw new AuthenticationException(
+					String.format("invalid administrator username or password for backend [%s]", backendId));
+		return account;
 	}
 
 	public static Account checkAdminCredentialsOnly(Context context)
