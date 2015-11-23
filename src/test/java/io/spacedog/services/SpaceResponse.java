@@ -48,10 +48,12 @@ public class SpaceResponse {
 
 		response.getHeaders().forEach((key, value) -> System.out.println(String.format("=> %s: %s", key, value)));
 
-		System.out.println(String.format("=> Response body: %s",
-				isJson() ? Json.getMapper().writerWithDefaultPrettyPrinter().writeValueAsString(jsonResponseContent)
-						: response.getBody()));
+		String responseContent = isJson()
+				? Json.getMapper().writerWithDefaultPrettyPrinter().writeValueAsString(jsonResponseContent)
+				: response.getBody().length() < 550 ? response.getBody()
+						: response.getBody().substring(0, 500) + " ...";
 
+		System.out.println(String.format("=> Response body: %s", responseContent));
 	}
 
 	private static void printHeader(String key, List<String> value) {
