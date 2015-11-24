@@ -36,16 +36,22 @@ ssh -l root spacedog.io
 # package the soft
 mvn -DskipTests clean package
 
+# copy release to server
+scp target/services-0.2-bundle.tar.gz root@spacedog.io:/root/spacedog/install
+
+# go to bin folder on ovh server
+cd /spacedog/bin
+
+# stop server 
+sudo ./stop.sh
+
 # clean package on ovh server
 # be careful to keep the magic/data folder
 rm -r bin
-rm install/spacedog-services-0.1.0-SNAPSHOT-bundle.tar.gz
-
-# copy release to server
-scp target/services-0.1.1-bundle.tar.gz root@spacedog.io:/root/spacedog/install
+rm install/spacedog-services-0.1-bundle.tar.gz
 
 # untar
-tar xvzf install/services-0.1.1-bundle.tar.gz
+tar xvzf install/services-0.2-bundle.tar.gz
 
 ###
 ### copy ES data to ovh server
