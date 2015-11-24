@@ -13,8 +13,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceDogHelper;
+import io.spacedog.client.SpaceRequest;
 
 public class ChauffeLeTest extends Assert {
 
@@ -32,8 +32,8 @@ public class ChauffeLeTest extends Assert {
 
 		adminAccount = SpaceDogHelper.resetAccount(BACKEND_ID, ADMIN_USERNAME, ADMIN_PASSWORD, "david@spacedog.io");
 
-		SpaceDogHelper.resetSchema("bigpost", buildBigPostSchema(), ADMIN_USERNAME, ADMIN_PASSWORD);
-		SpaceDogHelper.resetSchema("smallpost", buildSmallPostSchema(), ADMIN_USERNAME, ADMIN_PASSWORD);
+		SpaceDogHelper.resetSchema(buildBigPostSchema(), adminAccount);
+		SpaceDogHelper.resetSchema(buildSmallPostSchema(), adminAccount);
 
 		lui = SpaceDogHelper.createUser(adminAccount.backendKey, "lui", "hi lui", "lui@chauffe.le");
 		elle = SpaceDogHelper.createUser(adminAccount.backendKey, "elle", "hi elle", "elle@chauffe.le");

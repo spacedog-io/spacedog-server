@@ -6,7 +6,6 @@ package io.spacedog.examples;
 import java.net.URL;
 import java.util.Iterator;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -14,26 +13,23 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.io.Resources;
 
 import io.spacedog.client.SpaceDogHelper;
-import io.spacedog.client.SpaceDogHelper.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.services.Json;
 import io.spacedog.services.JsonBuilder;
 import io.spacedog.services.SchemaBuilder2;
 import io.spacedog.services.UserResource;
 
-public class JohoInit extends Assert {
+public class JohoInit extends SpaceDogHelper {
 
 	private static final String BACKEND_ID = "joho2";
+	private static final String ADMIN_PASSWORD = "hi joho2";
+	private static final String ADMIN_USERNAME = "joho2";
 
-	private static final String ADMIN_PASSWORD = "hi joho";
+	private static Account johoAccount;
 
-	private static final String ADMIN_USERNAME = "joho";
-
-	private static SpaceDogHelper.Account johoAccount;
-
-	private static SpaceDogHelper.User fred;
-	private static SpaceDogHelper.User maelle;
-	private static SpaceDogHelper.User vincent;
+	private static User fred;
+	private static User maelle;
+	private static User vincent;
 
 	static ObjectNode buildDiscussionSchema() {
 		return SchemaBuilder2.builder("discussion") //
@@ -110,25 +106,25 @@ public class JohoInit extends Assert {
 	@Test
 	public void initAndFillJohoBackend() throws Exception {
 
-		// johoAccount = SpaceDogHelper.resetAccount(BACKEND_ID, ADMIN_USERNAME,
+		// johoAccount = resetAccount(BACKEND_ID, ADMIN_USERNAME,
 		// ADMIN_PASSWORD, "david@spacedog.io");
-		johoAccount = SpaceDogHelper.getAccount(BACKEND_ID, ADMIN_USERNAME, ADMIN_PASSWORD);
+		johoAccount = getAccount(BACKEND_ID, ADMIN_USERNAME, ADMIN_PASSWORD);
 
-		SpaceDogHelper.resetSchema("discussion", buildDiscussionSchema(), johoAccount);
-		SpaceDogHelper.resetSchema("message", buildMessageSchema(), johoAccount);
-		SpaceDogHelper.resetSchema("user", buildCustomUserSchema(), johoAccount);
-		SpaceDogHelper.resetSchema("themes", buildThemesSchema(), johoAccount);
-		SpaceDogHelper.resetSchema("services", buildServicesSchema(), johoAccount);
+		resetSchema(buildDiscussionSchema(), johoAccount);
+		resetSchema(buildMessageSchema(), johoAccount);
+		resetSchema(buildCustomUserSchema(), johoAccount);
+		resetSchema(buildThemesSchema(), johoAccount);
+		resetSchema(buildServicesSchema(), johoAccount);
 
-		SpaceDogHelper.deleteUser("fred", johoAccount);
+		deleteUser("fred", johoAccount);
 		fred = createUser(johoAccount.backendKey, "fred", "hi fred", "frederic.falliere@in-tact.fr", "Frédéric",
 				"Fallière", "Lead développeur", "Paris", "in-tact", "INTACT", 44.9, 2.4, "06 67 68 69 70",
 				"01 22 33 44 55", "http://offbeat.topix.com/pximg/KJUP13O61TTML7P3.jpg");
-		SpaceDogHelper.deleteUser("maelle", johoAccount);
+		deleteUser("maelle", johoAccount);
 		maelle = createUser(johoAccount.backendKey, "maelle", "hi maelle", "maelle.lepape@in-tact.fr", "Maëlle",
 				"Le Pape", "Développeur", "Paris", "in-tact", "INTACT", 44.9, 2.4, "06 67 68 69 70", "01 22 33 44 55",
 				"http://static.lexpress.fr/medias_10179/w_640,h_358,c_fill,g_center/v1423758015/le-pape-francois-le-12-fevrier-2015-a-l-ouverture-d-un-consistoire-sur-la-reforme-de-la-curie_5212121.jpg");
-		SpaceDogHelper.deleteUser("vincent", johoAccount);
+		deleteUser("vincent", johoAccount);
 		vincent = createUser(johoAccount.backendKey, "vincent", "hi vincent", "vincent.miramond@in-tact.fr", "Vincent",
 				"Miramond", "Directeur", "Paris", "in-tact", "INTACT", 44.9, 2.4, "06 67 68 69 70", "01 22 33 44 55",
 				"http://www.t83.fr/infos/wp-content/uploads/2015/08/Fred-01-gros-nez-620x658.jpg");
@@ -204,7 +200,7 @@ public class JohoInit extends Assert {
 		SpaceRequest.post("/v1/data/services").basicAuth(johoAccount).body(services).go(201);
 	}
 
-	public String createDiscussion(String title, String categoryCode, SpaceDogHelper.User user) throws Exception {
+	public String createDiscussion(String title, String categoryCode, User user) throws Exception {
 
 		JsonBuilder<ObjectNode> discussion = Json.startObject().put("title", title)//
 				.put("description", title).startObject("category").put("code", categoryCode);
@@ -212,7 +208,7 @@ public class JohoInit extends Assert {
 				.objectNode().get("id").asText();
 	}
 
-	public void createMessage(String discussionId, String text, SpaceDogHelper.User user) throws Exception {
+	public void createMessage(String discussionId, String text, User user) throws Exception {
 
 		JsonBuilder<ObjectNode> message = Json.startObject().put("text", text).put("discussionId", discussionId);
 		SpaceRequest.post("/v1/data/message").backendKey(johoAccount).basicAuth(user).body(message).go(201);

@@ -10,8 +10,8 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceDogHelper;
+import io.spacedog.client.SpaceRequest;
 
 public class SchemaResourceTest extends Assert {
 
@@ -31,7 +31,7 @@ public class SchemaResourceTest extends Assert {
 	}
 
 	public static void resetCarSchema() throws Exception {
-		SpaceDogHelper.resetSchema("car", buildCarSchema(), "test", "hi test");
+		SpaceDogHelper.resetSchema(buildCarSchema(), testAccount);
 	}
 
 	public static ObjectNode buildCarSchema() {
@@ -52,7 +52,7 @@ public class SchemaResourceTest extends Assert {
 	}
 
 	public static void resetSaleSchema() throws Exception {
-		SpaceDogHelper.resetSchema("sale", buildSaleSchema(), "test", "hi test");
+		SpaceDogHelper.resetSchema(buildSaleSchema(), testAccount);
 	}
 
 	public static ObjectNode buildSaleSchema() {
@@ -82,7 +82,7 @@ public class SchemaResourceTest extends Assert {
 	}
 
 	private static void resetHomeSchema() throws Exception {
-		SpaceDogHelper.resetSchema("home", buildHomeSchema(), "test", "hi test");
+		SpaceDogHelper.resetSchema(buildHomeSchema(), testAccount);
 	}
 
 	private static ObjectNode buildHomeSchema() {

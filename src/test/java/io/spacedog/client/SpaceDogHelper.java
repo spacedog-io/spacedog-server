@@ -60,12 +60,13 @@ public class SpaceDogHelper {
 				.go(200, 404);
 	}
 
-	public static void resetSchema(String schemaName, JsonNode schema, Account account) throws Exception {
-		resetSchema(schemaName, schema, account.username, account.password);
+	public static void resetSchema(JsonNode schema, Account account) throws Exception {
+		resetSchema(schema, account.username, account.password);
 	}
 
-	public static void resetSchema(String schemaName, JsonNode schema, String username, String password)
-			throws Exception {
+	public static void resetSchema(JsonNode schema, String username, String password) throws Exception {
+
+		String schemaName = schema.elements().next().asText();
 
 		SpaceRequest.delete("/v1/schema/{name}").routeParam("name", schemaName).basicAuth(username, password).go(200,
 				404);
