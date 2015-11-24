@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog;
+package io.spacedog.examples;
 
 import java.net.URL;
 import java.util.Iterator;
@@ -13,15 +13,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.io.Resources;
 
-import io.spacedog.services.AdminResourceTest;
-import io.spacedog.services.AdminResourceTest.ClientAccount;
+import io.spacedog.client.SpaceDogHelper;
+import io.spacedog.client.SpaceDogHelper.User;
+import io.spacedog.client.SpaceRequest;
 import io.spacedog.services.Json;
 import io.spacedog.services.JsonBuilder;
 import io.spacedog.services.SchemaBuilder2;
-import io.spacedog.services.SchemaResourceTest;
-import io.spacedog.services.SpaceRequest;
-import io.spacedog.services.UserResourceTest;
-import io.spacedog.services.UserResourceTest.ClientUser;
+import io.spacedog.services.UserResource;
 
 public class JohoInit extends Assert {
 
@@ -31,11 +29,11 @@ public class JohoInit extends Assert {
 
 	private static final String ADMIN_USERNAME = "joho";
 
-	private static ClientAccount johoAccount;
+	private static SpaceDogHelper.Account johoAccount;
 
-	private static ClientUser fred;
-	private static ClientUser maelle;
-	private static ClientUser vincent;
+	private static SpaceDogHelper.User fred;
+	private static SpaceDogHelper.User maelle;
+	private static SpaceDogHelper.User vincent;
 
 	static ObjectNode buildDiscussionSchema() {
 		return SchemaBuilder2.builder("discussion") //
@@ -69,12 +67,16 @@ public class JohoInit extends Assert {
 	}
 
 	static ObjectNode buildCustomUserSchema() {
-		return SchemaBuilder2.builder("customuser") //
+		return UserResource.getDefaultUserSchemaBuilder() //
 				.textProperty("firstname", "french", true)//
 				.textProperty("lastname", "french", true)//
 				.simpleProperty("job", "enum", true, false)//
-				.textProperty("town", "french", true)//
-				.stringProperty("service", true)//
+				.stringProperty("town", true)//
+				.startObjectProperty("service", true)//
+				.textProperty("name", "french", true)//
+				.stringProperty("code", true)//
+				.simpleProperty("where", "geopoint", true)//
+				.endObjectProperty()//
 				.stringProperty("mobile", true)//
 				.stringProperty("fixed", true)//
 				.stringProperty("avatar", true)//
@@ -96,28 +98,45 @@ public class JohoInit extends Assert {
 				.build();
 	}
 
+	static ObjectNode buildServicesSchema() {
+		return SchemaBuilder2.builder("services")//
+				.startObjectProperty("services", true, true)//
+				.textProperty("name", "french", true)//
+				.stringProperty("code", true)//
+				.simpleProperty("where", "geopoint", true)//
+				.build();
+	}
+
 	@Test
 	public void initAndFillJohoBackend() throws Exception {
 
-		johoAccount = AdminResourceTest.resetAccount(BACKEND_ID, ADMIN_USERNAME, ADMIN_PASSWORD, "david@spacedog.io");
-		// johoAccount = AdminResourceTest.getAccount(BACKEND_ID,
-		// ADMIN_USERNAME, ADMIN_PASSWORD);
+		// johoAccount = SpaceDogHelper.resetAccount(BACKEND_ID, ADMIN_USERNAME,
+		// ADMIN_PASSWORD, "david@spacedog.io");
+		johoAccount = SpaceDogHelper.getAccount(BACKEND_ID, ADMIN_USERNAME, ADMIN_PASSWORD);
 
-		SchemaResourceTest.resetSchema("discussion", buildDiscussionSchema(), johoAccount);
-		SchemaResourceTest.resetSchema("message", buildMessageSchema(), johoAccount);
-		SchemaResourceTest.resetSchema("customuser", buildCustomUserSchema(), johoAccount);
-		SchemaResourceTest.resetSchema("themes", buildThemesSchema(), johoAccount);
+		SpaceDogHelper.resetSchema("discussion", buildDiscussionSchema(), johoAccount);
+		SpaceDogHelper.resetSchema("message", buildMessageSchema(), johoAccount);
+		SpaceDogHelper.resetSchema("user", buildCustomUserSchema(), johoAccount);
+		SpaceDogHelper.resetSchema("themes", buildThemesSchema(), johoAccount);
+		SpaceDogHelper.resetSchema("services", buildServicesSchema(), johoAccount);
 
-		UserResourceTest.deleteUser("fred", johoAccount);
-		fred = UserResourceTest.createUser(johoAccount.backendKey, "fred", "hi fred", "hello@spacedog.io");
-		UserResourceTest.deleteUser("maelle", johoAccount);
-		maelle = UserResourceTest.createUser(johoAccount.backendKey, "maelle", "hi maelle", "hello@spacedog.io");
-		UserResourceTest.deleteUser("vincent", johoAccount);
-		vincent = UserResourceTest.createUser(johoAccount.backendKey, "vincent", "hi vincent", "hello@spacedog.io");
+		SpaceDogHelper.deleteUser("fred", johoAccount);
+		fred = createUser(johoAccount.backendKey, "fred", "hi fred", "frederic.falliere@in-tact.fr", "Frédéric",
+				"Fallière", "Lead développeur", "Paris", "in-tact", "INTACT", 44.9, 2.4, "06 67 68 69 70",
+				"01 22 33 44 55", "http://offbeat.topix.com/pximg/KJUP13O61TTML7P3.jpg");
+		SpaceDogHelper.deleteUser("maelle", johoAccount);
+		maelle = createUser(johoAccount.backendKey, "maelle", "hi maelle", "maelle.lepape@in-tact.fr", "Maëlle",
+				"Le Pape", "Développeur", "Paris", "in-tact", "INTACT", 44.9, 2.4, "06 67 68 69 70", "01 22 33 44 55",
+				"http://static.lexpress.fr/medias_10179/w_640,h_358,c_fill,g_center/v1423758015/le-pape-francois-le-12-fevrier-2015-a-l-ouverture-d-un-consistoire-sur-la-reforme-de-la-curie_5212121.jpg");
+		SpaceDogHelper.deleteUser("vincent", johoAccount);
+		vincent = createUser(johoAccount.backendKey, "vincent", "hi vincent", "vincent.miramond@in-tact.fr", "Vincent",
+				"Miramond", "Directeur", "Paris", "in-tact", "INTACT", 44.9, 2.4, "06 67 68 69 70", "01 22 33 44 55",
+				"http://www.t83.fr/infos/wp-content/uploads/2015/08/Fred-01-gros-nez-620x658.jpg");
 
 		SpaceRequest.refresh(johoAccount);
 
 		createThemes();
+		createServices();
 
 		String threadId = createDiscussion("je suis partie en mission en argentine", "RH", fred);
 		createMessage(threadId, "tu connais ?", fred);
@@ -145,27 +164,47 @@ public class JohoInit extends Assert {
 		showWall();
 	}
 
+	private User createUser(String backendKey, String username, String password, String email, String firstname,
+			String lastname, String job, String town, String serviceName, String serviceCode, double lat, double lon,
+			String mobile, String fixed, String avatarUrl) throws Exception {
+
+		ObjectNode user = Json.startObject().put("username", username)//
+				.put("password", password)//
+				.put("email", email)//
+				.put("firstname", firstname)//
+				.put("lastname", lastname)//
+				.put("town", town)//
+				.put("job", job)//
+				.put("mobile", mobile)//
+				.put("fixed", fixed)//
+				.put("avatar", avatarUrl)//
+				.startObject("service")//
+				.put("name", serviceName)//
+				.put("code", serviceCode)//
+				.startObject("where")//
+				.put("lat", lat)//
+				.put("lon", lon)//
+				.build();
+
+		String id = SpaceRequest.post("/v1/user/").backendKey(backendKey).body(user).go(201).objectNode().get("id")
+				.asText();
+
+		return new User(id, username, password, email);
+	}
+
 	private void createThemes() throws Exception {
-		URL themesUrl = Resources.getResource("io/spacedog/services/joho.themes.json");
-		JsonNode themes = Json.getMapper().readTree(themesUrl);
+		URL url = Resources.getResource("io/spacedog/examples/joho.themes.json");
+		JsonNode themes = Json.getMapper().readTree(url);
 		SpaceRequest.post("/v1/data/themes").basicAuth(johoAccount).body(themes).go(201);
 	}
 
-	// public void createTheme(String name, String code) throws Exception {
-	// JsonBuilder<ObjectNode> theme = Json.startObject().put("name",
-	// name).put("code", code);
-	// SpaceRequest.post("/v1/data/theme").basicAuth(johoAccount).body(theme).go(201);
-	// }
-	//
-	// public void createCategory(String name, String code, String theme) throws
-	// Exception {
-	// JsonBuilder<ObjectNode> category = Json.startObject().put("name",
-	// name).put("code", code).put("theme",
-	// "/theme/" + theme);
-	// SpaceRequest.post("/v1/data/category").basicAuth(johoAccount).body(category).go(201);
-	// }
+	private void createServices() throws Exception {
+		URL url = Resources.getResource("io/spacedog/examples/joho.services.json");
+		JsonNode services = Json.getMapper().readTree(url);
+		SpaceRequest.post("/v1/data/services").basicAuth(johoAccount).body(services).go(201);
+	}
 
-	public String createDiscussion(String title, String categoryCode, ClientUser user) throws Exception {
+	public String createDiscussion(String title, String categoryCode, SpaceDogHelper.User user) throws Exception {
 
 		JsonBuilder<ObjectNode> discussion = Json.startObject().put("title", title)//
 				.put("description", title).startObject("category").put("code", categoryCode);
@@ -173,7 +212,7 @@ public class JohoInit extends Assert {
 				.objectNode().get("id").asText();
 	}
 
-	public void createMessage(String discussionId, String text, ClientUser user) throws Exception {
+	public void createMessage(String discussionId, String text, SpaceDogHelper.User user) throws Exception {
 
 		JsonBuilder<ObjectNode> message = Json.startObject().put("text", text).put("discussionId", discussionId);
 		SpaceRequest.post("/v1/data/message").backendKey(johoAccount).basicAuth(user).body(message).go(201);

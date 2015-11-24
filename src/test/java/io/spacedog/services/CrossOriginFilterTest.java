@@ -7,16 +7,17 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import io.spacedog.services.AdminResourceTest.ClientAccount;
+import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceDogHelper;
 import net.codestory.http.constants.Headers;
 
 public class CrossOriginFilterTest extends Assert {
 
-	private static ClientAccount testAccount;
+	private static SpaceDogHelper.Account testAccount;
 
 	@BeforeClass
 	public static void resetTestAccount() throws Exception {
-		testAccount = AdminResourceTest.resetTestAccount();
+		testAccount = SpaceDogHelper.resetTestAccount();
 	}
 
 	@Test

@@ -10,15 +10,16 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.services.AdminResourceTest.ClientAccount;
+import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceDogHelper;
 
 public class SchemaResourceTest extends Assert {
 
-	private static ClientAccount testAccount;
+	private static SpaceDogHelper.Account testAccount;
 
 	@BeforeClass
 	public static void resetTestAccount() throws Exception {
-		testAccount = AdminResourceTest.resetTestAccount();
+		testAccount = SpaceDogHelper.resetTestAccount();
 	}
 
 	@Test
@@ -30,7 +31,7 @@ public class SchemaResourceTest extends Assert {
 	}
 
 	public static void resetCarSchema() throws Exception {
-		resetSchema("car", buildCarSchema(), "test", "hi test");
+		SpaceDogHelper.resetSchema("car", buildCarSchema(), "test", "hi test");
 	}
 
 	public static ObjectNode buildCarSchema() {
@@ -51,7 +52,7 @@ public class SchemaResourceTest extends Assert {
 	}
 
 	public static void resetSaleSchema() throws Exception {
-		resetSchema("sale", buildSaleSchema(), "test", "hi test");
+		SpaceDogHelper.resetSchema("sale", buildSaleSchema(), "test", "hi test");
 	}
 
 	public static ObjectNode buildSaleSchema() {
@@ -81,7 +82,7 @@ public class SchemaResourceTest extends Assert {
 	}
 
 	private static void resetHomeSchema() throws Exception {
-		resetSchema("home", buildHomeSchema(), "test", "hi test");
+		SpaceDogHelper.resetSchema("home", buildHomeSchema(), "test", "hi test");
 	}
 
 	private static ObjectNode buildHomeSchema() {
@@ -136,25 +137,7 @@ public class SchemaResourceTest extends Assert {
 
 		ObjectNode json = buildCarSchema();
 		json.with("car").with("color").put("_type", "date");
-		shouldFailToChangeSchema(json);
-	}
-
-	private void shouldFailToChangeSchema(JsonNode json) throws Exception {
-		SpaceRequest.put("/v1/schema/car").basicAuth(testAccount).body(json.toString()).go(400);
-	}
-
-	public static void resetSchema(String schemaName, JsonNode schema, ClientAccount account) throws Exception {
-		resetSchema(schemaName, schema, account.username, account.password);
-	}
-
-	public static void resetSchema(String schemaName, JsonNode schema, String username, String password)
-			throws Exception {
-
-		SpaceRequest.delete("/v1/schema/{name}").routeParam("name", schemaName).basicAuth(username, password).go(200,
-				404);
-
-		SpaceRequest.post("/v1/schema/{name}").routeParam("name", schemaName).basicAuth(username, password).body(schema)
-				.go(201);
+		SpaceRequest.put("/v1/schema/car").basicAuth(testAccount).body(json).go(400);
 	}
 
 }

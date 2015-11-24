@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.services;
+package io.spacedog.client;
 
 import org.junit.Assert;
 
@@ -14,8 +14,8 @@ import com.mashape.unirest.request.GetRequest;
 import com.mashape.unirest.request.HttpRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
 
-import io.spacedog.services.AdminResourceTest.ClientAccount;
-import io.spacedog.services.UserResourceTest.ClientUser;
+import io.spacedog.services.AdminResource;
+import io.spacedog.services.JsonBuilder;
 
 public class SpaceRequest {
 
@@ -30,7 +30,7 @@ public class SpaceRequest {
 		this.request = request;
 	}
 
-	public static void refresh(ClientAccount account) throws UnirestException {
+	public static void refresh(SpaceDogHelper.Account account) throws UnirestException {
 		refresh(account.backendId);
 	}
 
@@ -86,15 +86,15 @@ public class SpaceRequest {
 		return this;
 	}
 
-	public SpaceRequest backendKey(ClientAccount account) {
+	public SpaceRequest backendKey(SpaceDogHelper.Account account) {
 		return backendKey(account.backendKey);
 	}
 
-	public SpaceRequest basicAuth(ClientAccount account) {
+	public SpaceRequest basicAuth(SpaceDogHelper.Account account) {
 		return basicAuth(account.username, account.password);
 	}
 
-	public SpaceRequest basicAuth(ClientUser user) {
+	public SpaceRequest basicAuth(SpaceDogHelper.User user) {
 		return basicAuth(user.username, user.password);
 	}
 

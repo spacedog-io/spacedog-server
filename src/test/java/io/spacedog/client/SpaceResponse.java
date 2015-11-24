@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.services;
+package io.spacedog.client;
 
 import java.io.IOException;
 import java.util.List;
@@ -16,6 +16,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.HttpRequest;
+
+import io.spacedog.services.AdminResource;
+import io.spacedog.services.Json;
 
 public class SpaceResponse {
 

@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog;
+package io.spacedog.examples;
 
 import net.codestory.http.WebServer;
 import net.codestory.http.routes.Routes;

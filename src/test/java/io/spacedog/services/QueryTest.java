@@ -14,16 +14,17 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
-import io.spacedog.services.AdminResourceTest.ClientAccount;
+import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceDogHelper;
 
 public class QueryTest extends Assert {
 
-	private static ClientAccount testAccount;
+	private static SpaceDogHelper.Account testAccount;
 
 	@Test
 	public void resetAndImportDataset() throws Exception {
 
-		testAccount = AdminResourceTest.resetTestAccount();
+		testAccount = SpaceDogHelper.resetTestAccount();
 
 		SchemaResourceTest.resetCarSchema();
 

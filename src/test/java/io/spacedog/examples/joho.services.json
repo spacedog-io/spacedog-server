@@ -1,0 +1,19 @@
+{
+    "services" : [
+        {
+    		"name" : "In-tact",
+    		"code" : "INTACT",
+    		"where": {
+                "lat" : 44.9,
+                "lon" : 2.4
+    		}
+    	},{
+            "name" : "EDF San Francisco",
+            "code" : "EDFSF",
+            "where": {
+                "lat" : 39.7,
+                "lon" : -121.9
+            }
+        }
+    ]
+}

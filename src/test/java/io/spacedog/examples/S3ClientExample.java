@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog;
+package io.spacedog.examples;
 
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentials;

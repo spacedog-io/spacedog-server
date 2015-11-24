@@ -10,14 +10,15 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.services.AdminResourceTest.ClientAccount;
+import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceDogHelper;
 
 public class UserResourceTest extends Assert {
 
 	@Test
 	public void shouldSignUpSuccessfullyAndMore() throws Exception {
 
-		ClientAccount testAccount = AdminResourceTest.resetTestAccount();
+		SpaceDogHelper.Account testAccount = SpaceDogHelper.resetTestAccount();
 
 		// fails since invalid users
 
@@ -41,7 +42,7 @@ public class UserResourceTest extends Assert {
 
 		// vince sign up should succeed
 
-		ClientUser vince = createUser(testAccount.backendKey, "vince", "hi vince", "vince@dog.com");
+		SpaceDogHelper.User vince = SpaceDogHelper.createUser(testAccount.backendKey, "vince", "hi vince", "vince@dog.com");
 
 		SpaceRequest.refresh(testAccount);
 
@@ -96,11 +97,11 @@ public class UserResourceTest extends Assert {
 	@Test
 	public void shouldSetUserCustomScemaAndMore() throws Exception {
 
-		ClientAccount testAccount = AdminResourceTest.resetTestAccount();
+		SpaceDogHelper.Account testAccount = SpaceDogHelper.resetTestAccount();
 
 		// vince sign up should succeed
 
-		UserResourceTest.createUser(testAccount.backendKey, "vince", "hi vince", "vince@dog.com");
+		SpaceDogHelper.createUser(testAccount.backendKey, "vince", "hi vince", "vince@dog.com");
 
 		SpaceRequest.refresh(testAccount);
 
@@ -129,39 +130,6 @@ public class UserResourceTest extends Assert {
 		ObjectNode fredFromServer = SpaceRequest.get("/v1/user/fred").basicAuth(testAccount).go(200).objectNode();
 		assertEquals(fred.without("password"), //
 				fredFromServer.without(Arrays.asList("hashedPassword", "groups", "meta")));
-	}
-
-	public static ClientUser createUser(String backendKey, String username, String password, String email)
-			throws Exception {
-
-		String id = SpaceRequest.post("/v1/user/").backendKey(backendKey)
-				.body(Json.startObject().put("username", username).put("password", password).put("email", email))
-				.go(201).objectNode().get("id").asText();
-
-		return new ClientUser(id, username, password, email);
-	}
-
-	public static class ClientUser {
-		String id;
-		String username;
-		String password;
-		String email;
-
-		public ClientUser(String id, String username, String password, String email) {
-			this.id = id;
-			this.username = username;
-			this.password = password;
-			this.email = email;
-		}
-	}
-
-	public static void deleteUser(String string, ClientAccount account) throws Exception {
-		deleteUser(string, account.username, account.password);
-	}
-
-	public static void deleteUser(String username, String adminUsername, String password) throws Exception {
-		SpaceRequest.delete("/v1/user/{username}").routeParam("username", username).basicAuth(adminUsername, password)
-				.go(200, 404);
 	}
 
 }

@@ -12,16 +12,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
-import io.spacedog.services.AdminResourceTest.ClientAccount;
-import io.spacedog.services.UserResourceTest.ClientUser;
+import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceResponse;
+import io.spacedog.client.SpaceDogHelper;
 
 public class DataResourceTest2 extends Assert {
 
-	private static ClientAccount testAccount;
+	private static SpaceDogHelper.Account testAccount;
 
 	@BeforeClass
 	public static void resetTestAccount() throws Exception {
-		testAccount = AdminResourceTest.resetTestAccount();
+		testAccount = SpaceDogHelper.resetTestAccount();
 		SchemaResourceTest.resetSaleSchema();
 	}
 
@@ -124,7 +125,8 @@ public class DataResourceTest2 extends Assert {
 
 		// create user vince
 
-		ClientUser vince = UserResourceTest.createUser(testAccount.backendKey, "vince", "hi vince", "vince@dog.com");
+		SpaceDogHelper.User vince = SpaceDogHelper.createUser(testAccount.backendKey, "vince", "hi vince",
+				"vince@dog.com");
 
 		SpaceRequest.refresh(testAccount.backendId);
 

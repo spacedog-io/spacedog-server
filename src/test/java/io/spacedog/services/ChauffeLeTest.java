@@ -13,8 +13,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.services.AdminResourceTest.ClientAccount;
-import io.spacedog.services.UserResourceTest.ClientUser;
+import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceDogHelper;
 
 public class ChauffeLeTest extends Assert {
 
@@ -22,22 +22,22 @@ public class ChauffeLeTest extends Assert {
 	private static final String ADMIN_USERNAME = "chauffele";
 	private static final String BACKEND_ID = "chauffele";
 
-	private static ClientAccount adminAccount;
-	private static ClientUser lui;
-	private static ClientUser elle;
-	private static ClientUser laCopine;
+	private static SpaceDogHelper.Account adminAccount;
+	private static SpaceDogHelper.User lui;
+	private static SpaceDogHelper.User elle;
+	private static SpaceDogHelper.User laCopine;
 
 	@BeforeClass
 	public static void resetBackend() throws Exception {
 
-		adminAccount = AdminResourceTest.resetAccount(BACKEND_ID, ADMIN_USERNAME, ADMIN_PASSWORD, "david@spacedog.io");
+		adminAccount = SpaceDogHelper.resetAccount(BACKEND_ID, ADMIN_USERNAME, ADMIN_PASSWORD, "david@spacedog.io");
 
-		SchemaResourceTest.resetSchema("bigpost", buildBigPostSchema(), ADMIN_USERNAME, ADMIN_PASSWORD);
-		SchemaResourceTest.resetSchema("smallpost", buildSmallPostSchema(), ADMIN_USERNAME, ADMIN_PASSWORD);
+		SpaceDogHelper.resetSchema("bigpost", buildBigPostSchema(), ADMIN_USERNAME, ADMIN_PASSWORD);
+		SpaceDogHelper.resetSchema("smallpost", buildSmallPostSchema(), ADMIN_USERNAME, ADMIN_PASSWORD);
 
-		lui = UserResourceTest.createUser(adminAccount.backendKey, "lui", "hi lui", "lui@chauffe.le");
-		elle = UserResourceTest.createUser(adminAccount.backendKey, "elle", "hi elle", "elle@chauffe.le");
-		laCopine = UserResourceTest.createUser(adminAccount.backendKey, "la copine", "hi la copine",
+		lui = SpaceDogHelper.createUser(adminAccount.backendKey, "lui", "hi lui", "lui@chauffe.le");
+		elle = SpaceDogHelper.createUser(adminAccount.backendKey, "elle", "hi elle", "elle@chauffe.le");
+		laCopine = SpaceDogHelper.createUser(adminAccount.backendKey, "la copine", "hi la copine",
 				"lacopine@chauffe.le");
 
 		SpaceRequest.refresh(adminAccount);
@@ -99,9 +99,9 @@ public class ChauffeLeTest extends Assert {
 	}
 
 	public interface ChauffeLeEngine {
-		String createSubject(String subject, ClientUser user) throws Exception;
+		String createSubject(String subject, SpaceDogHelper.User user) throws Exception;
 
-		void addComment(String threadId, String comment, ClientUser user) throws Exception;
+		void addComment(String threadId, String comment, SpaceDogHelper.User user) throws Exception;
 
 		Iterator<JsonNode> showWall() throws Exception;
 	}
@@ -109,7 +109,7 @@ public class ChauffeLeTest extends Assert {
 	public static class BigPost implements ChauffeLeEngine {
 
 		@Override
-		public String createSubject(String subject, ClientUser user) throws Exception {
+		public String createSubject(String subject, SpaceDogHelper.User user) throws Exception {
 
 			String bigPost = Json.startObject().put("title", subject) //
 					.startArray("responses") //
@@ -121,7 +121,7 @@ public class ChauffeLeTest extends Assert {
 		}
 
 		@Override
-		public void addComment(String postId, String comment, ClientUser user) throws Exception {
+		public void addComment(String postId, String comment, SpaceDogHelper.User user) throws Exception {
 
 			ObjectNode bigPost = SpaceRequest.get("/v1/data/bigpost/{id}").backendKey(adminAccount)
 					.routeParam("id", postId).go(200).objectNode();
@@ -160,7 +160,7 @@ public class ChauffeLeTest extends Assert {
 	public static class SmallPost implements ChauffeLeEngine {
 
 		@Override
-		public String createSubject(String subject, ClientUser user) throws Exception {
+		public String createSubject(String subject, SpaceDogHelper.User user) throws Exception {
 
 			String smallPost = Json.startObject().put("title", subject).build().toString();
 
@@ -169,7 +169,7 @@ public class ChauffeLeTest extends Assert {
 		}
 
 		@Override
-		public void addComment(String parentId, String comment, ClientUser user) throws Exception {
+		public void addComment(String parentId, String comment, SpaceDogHelper.User user) throws Exception {
 
 			String smallPost = Json.startObject().put("title", comment)//
 					.put("parent", parentId)//

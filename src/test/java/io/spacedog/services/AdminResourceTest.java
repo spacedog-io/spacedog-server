@@ -7,18 +7,16 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Strings;
-import com.mashape.unirest.http.exceptions.UnirestException;
 
-import io.spacedog.services.UserResourceTest.ClientUser;
+import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceDogHelper;
 
 public class AdminResourceTest extends Assert {
 
 	@Test
 	public void shouldDeleteSignUpGetLoginTestAccount() throws Exception {
 
-		ClientAccount testAccount = resetTestAccount();
+		SpaceDogHelper.Account testAccount = SpaceDogHelper.resetTestAccount();
 
 		// get just created test account should succeed
 
@@ -82,7 +80,8 @@ public class AdminResourceTest extends Assert {
 
 		// let's create a common user in 'test' backend
 
-		ClientUser john = UserResourceTest.createUser(testAccount.backendKey, "john", "hi john", "john@dog.io");
+		SpaceDogHelper.User john = SpaceDogHelper.createUser(testAccount.backendKey, "john", "hi john",
+				"john@dog.io");
 
 		SpaceRequest.refresh("test");
 
@@ -99,8 +98,8 @@ public class AdminResourceTest extends Assert {
 	@Test
 	public void shouldFailToAccessAnotherAccountWithValidAdminUsername() throws Exception {
 
-		ClientAccount aaaa = resetAccount("aaaa", "aaaa", "hi aaaa", "hello@spacedog.io");
-		ClientAccount zzzz = resetAccount("zzzz", "zzzz", "hi zzzz", "hello@spacedog.io");
+		SpaceDogHelper.Account aaaa = SpaceDogHelper.resetAccount("aaaa", "aaaa", "hi aaaa", "hello@spacedog.io");
+		SpaceDogHelper.Account zzzz = SpaceDogHelper.resetAccount("zzzz", "zzzz", "hi zzzz", "hello@spacedog.io");
 
 		// should fail to get account since backend is not consistent with
 		// account
@@ -123,78 +122,5 @@ public class AdminResourceTest extends Assert {
 
 		SpaceRequest.delete("/v1/admin/account/aaaa").basicAuth(aaaa).go(200);
 		SpaceRequest.delete("/v1/admin/account/zzzz").basicAuth(zzzz).go(200);
-	}
-
-	public static ClientAccount resetTestAccount() throws Exception {
-		return resetAccount("test", "test", "hi test", "david@spacedog.io");
-	}
-
-	public static ClientAccount resetAccount(String backendId, String username, String password, String email)
-			throws Exception {
-		deleteAccount(backendId, username, password);
-		return createAccount(backendId, username, password, email);
-	}
-
-	public static ClientAccount createAccount(String backendId, String username, String password, String email)
-			throws Exception, UnirestException {
-		String backendKey = SpaceRequest.post("/v1/admin/account/")
-				.body(Json.startObject().put("backendId", backendId).put("username", username).put("password", password)
-						.put("email", email))
-				.go(201).httpResponse().getHeaders().get(AdminResource.BACKEND_KEY_HEADER).get(0);
-
-		assertFalse(Strings.isNullOrEmpty(backendKey));
-
-		SpaceRequest.refresh(AdminResource.ADMIN_INDEX);
-		SpaceRequest.refresh(backendId);
-
-		return new ClientAccount(backendId, username, password, email, backendKey);
-	}
-
-	public static void deleteAccount(String backendId, ClientAccount account) throws Exception, UnirestException {
-		deleteAccount(backendId, account.username, account.password);
-	}
-
-	public static void deleteAccount(String backendId, String username, String password)
-			throws Exception, UnirestException {
-		// 401 Unauthorized is valid since if this account does not exist
-		// delete returns 401 because admin username and password
-		// won't match any account
-
-		SpaceRequest.delete("/v1/admin/account/{backendId}").routeParam("backendId", backendId)
-				.basicAuth(username, password).go(200, 401);
-
-		SpaceRequest.refresh(AdminResource.ADMIN_INDEX);
-		SpaceRequest.refresh(backendId);
-	}
-
-	public static ClientAccount getAccount(String backendId, ClientAccount account) throws Exception {
-		return getAccount(backendId, account.username, account.password);
-	}
-
-	public static ClientAccount getAccount(String backendId, String username, String password) throws Exception {
-
-		ObjectNode account = SpaceRequest.get("/v1/admin/account/{backendId}").routeParam("backendId", backendId)
-				.basicAuth(username, password).go(200).objectNode();
-
-		String backendKey = backendId + ':' + account.get("backendKey").get("name").asText() + ':'
-				+ account.get("backendKey").get("secret").asText();
-
-		return new ClientAccount(backendId, username, password, account.get("email").asText(), backendKey);
-	}
-
-	public static class ClientAccount {
-		public String backendId;
-		public String backendKey;
-		public String username;
-		public String password;
-		public String email;
-
-		public ClientAccount(String backendId, String username, String password, String email, String backendKey) {
-			this.backendId = backendId;
-			this.backendKey = backendKey;
-			this.username = username;
-			this.password = password;
-			this.email = email;
-		}
 	}
 }
