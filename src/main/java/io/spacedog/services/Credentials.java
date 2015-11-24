@@ -8,12 +8,12 @@ import java.util.Optional;
 public class Credentials {
 
 	private String backendId;
-	private User user;
+	private String username;
 	private BackendKey backendKey;
 
-	public Credentials(String backendId, User user) {
+	public Credentials(String backendId, String username) {
 		this.backendId = backendId;
-		this.user = user;
+		this.username = username;
 	}
 
 	public Credentials(String backendId, BackendKey apiKey) {
@@ -25,18 +25,14 @@ public class Credentials {
 		return this.backendId;
 	}
 
-	public Optional<User> getUser() {
-		return Optional.ofNullable(this.user);
-	}
-
 	public Optional<BackendKey> getBackendKey() {
 		return Optional.ofNullable(this.backendKey);
 	}
 
 	public String getName() {
 		// username is first
-		if (user != null)
-			return user.username;
+		if (username != null)
+			return username;
 		// key name is default
 		if (backendKey != null)
 			return backendKey.name;

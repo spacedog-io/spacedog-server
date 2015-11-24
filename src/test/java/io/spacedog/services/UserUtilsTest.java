@@ -6,7 +6,7 @@ package io.spacedog.services;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class UserTest extends Assert {
+public class UserUtilsTest extends Assert {
 
 	@Test
 	public void shouldValidatePasswords() {
@@ -19,11 +19,11 @@ public class UserTest extends Assert {
 	}
 
 	private void checkHashIsStable(String password) {
-		assertEquals(User.hashPassword(password), User.hashPassword(password));
+		assertEquals(UserUtils.hashPassword(password), UserUtils.hashPassword(password));
 	}
 
 	private void checkHashAreDifferent(String password, String other) {
-		assertNotEquals(User.hashPassword(password), User.hashPassword(other));
+		assertNotEquals(UserUtils.hashPassword(password), UserUtils.hashPassword(other));
 	}
 
 }

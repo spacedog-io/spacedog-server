@@ -114,7 +114,7 @@ public class AdminResource extends AbstractResource {
 			account.email = input.get("email").textValue();
 			String password = input.get("password").textValue();
 			Account.checkPasswordValidity(password);
-			account.hashedPassword = User.hashPassword(password);
+			account.hashedPassword = UserUtils.hashPassword(password);
 			account.backendKey = new BackendKey();
 			account.checkAccountInputValidity();
 
@@ -206,7 +206,7 @@ public class AdminResource extends AbstractResource {
 
 		if (Strings.isNullOrEmpty(rawBackendKey)) {
 			Account account = checkAdminCredentialsOnly(context);
-			return new Credentials(account.backendId, account.adminUser());
+			return new Credentials(account.backendId, account.username);
 
 		} else {
 			return checkUserCredentialsOnly(context);
@@ -260,7 +260,7 @@ public class AdminResource extends AbstractResource {
 			// check users in user specific backend index
 
 			SearchHits userHits = ElasticHelper.search(backendId, UserResource.USER_TYPE, "username", tokens.get()[0],
-					"hashedPassword", User.hashPassword(tokens.get()[1]));
+					"hashedPassword", UserUtils.hashPassword(tokens.get()[1]));
 
 			if (userHits.getTotalHits() == 0)
 				throw new AuthenticationException("invalid username or password");
@@ -269,7 +269,7 @@ public class AdminResource extends AbstractResource {
 				throw new RuntimeException(String.format("more than one user with username [%s]", tokens.get()[0]));
 
 			return new Credentials(backendId,
-					Json.getMapper().readValue(userHits.getAt(0).getSourceRef().array(), User.class));
+					Json.readObjectNode(userHits.getAt(0).getSourceAsString()).get("username").asText());
 
 		} else {
 
@@ -299,7 +299,7 @@ public class AdminResource extends AbstractResource {
 			// check admin users in spacedog index
 
 			SearchHits accountHits = ElasticHelper.search(ADMIN_INDEX, ACCOUNT_TYPE, "username", tokens.get()[0],
-					"hashedPassword", User.hashPassword(tokens.get()[1]));
+					"hashedPassword", UserUtils.hashPassword(tokens.get()[1]));
 
 			if (accountHits.getTotalHits() == 0)
 				throw new AuthenticationException("invalid administrator username or password");

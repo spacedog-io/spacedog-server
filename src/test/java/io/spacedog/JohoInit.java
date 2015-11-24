@@ -14,13 +14,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.io.Resources;
 
 import io.spacedog.services.AdminResourceTest;
+import io.spacedog.services.AdminResourceTest.ClientAccount;
 import io.spacedog.services.Json;
 import io.spacedog.services.JsonBuilder;
 import io.spacedog.services.SchemaBuilder2;
 import io.spacedog.services.SchemaResourceTest;
 import io.spacedog.services.SpaceRequest;
 import io.spacedog.services.UserResourceTest;
-import io.spacedog.services.AdminResourceTest.ClientAccount;
 import io.spacedog.services.UserResourceTest.ClientUser;
 
 public class JohoInit extends Assert {
@@ -56,8 +56,7 @@ public class JohoInit extends Assert {
 				.textProperty("lastsname", "french", false)//
 				.stringProperty("username", false)//
 				.stringProperty("avatar", false)//
-				.simpleProperty("job", "enum", false)//
-				.stringProperty("code", false)//
+				.stringProperty("job", false)//
 				.endObjectProperty()//
 				.build();
 	}

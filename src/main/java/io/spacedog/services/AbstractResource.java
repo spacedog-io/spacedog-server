@@ -10,6 +10,7 @@ import org.elasticsearch.indices.IndexMissingException;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Strings;
 
 import io.spacedog.services.Account.InvalidAccountException;
 import io.spacedog.services.SchemaValidator.InvalidSchemaException;
@@ -30,6 +31,21 @@ public abstract class AbstractResource {
 		} catch (Throwable throwable) {
 			return error(throwable);
 		}
+	}
+
+	protected JsonNode checkNotNullOrEmpty(JsonNode input, String propertyPath, String type) {
+		JsonNode node = Json.get(input, propertyPath);
+		if (node == null || Strings.isNullOrEmpty(node.asText()))
+			throw new IllegalArgumentException(
+					String.format("property [%s] is required in type [%s]", propertyPath, type));
+		return node;
+	}
+
+	protected void checkNotPresent(JsonNode input, String propertyPath, String type) {
+		JsonNode node = Json.get(input, propertyPath);
+		if (node != null)
+			throw new IllegalArgumentException(
+					String.format("property [%s] is forbidden in type [%s]", propertyPath, type));
 	}
 
 	public static String toJsonString(Throwable t) {

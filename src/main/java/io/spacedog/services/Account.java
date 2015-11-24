@@ -3,8 +3,6 @@
  */
 package io.spacedog.services;
 
-import java.util.Collections;
-
 import com.google.common.base.Strings;
 
 public class Account {
@@ -53,14 +51,5 @@ public class Account {
 	public String defaultClientKey() {
 		return new StringBuilder(backendId).append(':').append(backendKey.name).append(':').append(backendKey.secret)
 				.toString();
-	}
-
-	public User adminUser() {
-		User user = new User();
-		user.username = username;
-		user.email = email;
-		user.hashedPassword = hashedPassword;
-		user.groups = Collections.emptyList();
-		return user;
 	}
 }

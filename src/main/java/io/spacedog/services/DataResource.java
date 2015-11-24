@@ -294,7 +294,7 @@ public class DataResource extends AbstractResource {
 
 		List<JsonNode> objects = new ArrayList<>();
 		for (SearchHit hit : response.getHits().getHits()) {
-			JsonNode object = Json.getMapper().readTree(hit.sourceAsString());
+			ObjectNode object = Json.readObjectNode(hit.sourceAsString());
 			((ObjectNode) object.get("meta")).put("id", hit.id()).put("type", hit.type()).put("version", hit.version());
 			objects.add(object);
 
@@ -326,7 +326,8 @@ public class DataResource extends AbstractResource {
 		Set<String> set = new HashSet<>(references);
 		set.remove(null);
 		Map<String, ObjectNode> results = new HashMap<>();
-		set.forEach(reference -> results.put(reference, doGet(getReferenceType(reference), getReferenceId(reference), credentials)));
+		set.forEach(reference -> results.put(reference,
+				doGet(getReferenceType(reference), getReferenceId(reference), credentials)));
 		return results;
 	}
 

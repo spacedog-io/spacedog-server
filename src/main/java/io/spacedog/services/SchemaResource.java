@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
+import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.indices.TypeMissingException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -49,9 +50,8 @@ public class SchemaResource extends AbstractResource {
 			Optional.ofNullable(resp.getMappings()).map(indexMap -> indexMap.get(credentials.getBackendId()))
 					.orElseThrow(() -> new NotFoundException(credentials.getBackendId())).forEach(typeAndMapping -> {
 						try {
-							jsonMerger.merge(
-									(ObjectNode) Json.getMapper().readTree(typeAndMapping.value.source().string())
-											.get(typeAndMapping.key).get("_meta"));
+							jsonMerger.merge((ObjectNode) Json.readObjectNode(typeAndMapping.value.source().string())
+									.get(typeAndMapping.key).get("_meta"));
 						} catch (Exception e) {
 							throw new RuntimeException(e);
 						}
@@ -84,25 +84,26 @@ public class SchemaResource extends AbstractResource {
 				.map(typeMap -> typeMap.get(type)).orElseThrow(() -> new NotFoundException(index, type)).source()
 				.toString();
 
-		return (ObjectNode) Json.getMapper().readTree(source).get(type).get("_meta");
+		return (ObjectNode) Json.readObjectNode(source).get(type).get("_meta");
 	}
 
 	@Put("/:type")
 	@Put("/:type/")
 	@Post("/:type")
 	@Post("/:type/")
-	public Payload updateSchema(String type, String newSchemaAsString, Context context) {
+	public Payload upsertSchema(String type, String newSchemaAsString, Context context) {
 		try {
 			Account account = AdminResource.checkAdminCredentialsOnly(context);
 
-			JsonNode schema = SchemaValidator.validate(type, Json.getMapper().readTree(newSchemaAsString));
+			JsonNode schema = SchemaValidator.validate(type, Json.readObjectNode(newSchemaAsString));
 
 			String elasticMapping = SchemaTranslator.translate(type, schema).toString();
 
 			PutMappingRequest putMappingRequest = new PutMappingRequest(account.backendId).type(type)
 					.source(elasticMapping);
 
-			Start.getElasticClient().admin().indices().putMapping(putMappingRequest).get();
+			PutMappingResponse putMappingResponse = Start.getElasticClient().admin().indices()
+					.putMapping(putMappingRequest).get();
 
 			return saved(true, "/v1", "schema", type);
 

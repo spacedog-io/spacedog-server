@@ -3,8 +3,6 @@
  */
 package io.spacedog.services;
 
-import java.util.Collections;
-
 import org.elasticsearch.action.index.IndexResponse;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -21,25 +19,41 @@ import net.codestory.http.payload.Payload;
 @Prefix("/v1")
 public class UserResource extends AbstractResource {
 
-	// singleton begin
+	//
+	// singleton
+	//
 
-	private static UserResource singleton = new UserResource();
+	private static AbstractResource singleton = new UserResource();
 
-	static UserResource get() {
+	static AbstractResource get() {
 		return singleton;
 	}
 
 	private UserResource() {
 	}
 
-	// singleton end
+	//
+	// default user type and schema
+	//
 
 	static final String USER_TYPE = "user";
 
-	static final ObjectNode USER_DEFAULT_SCHEMA = SchemaBuilder.builder(USER_TYPE).id("username")
-			.property("username", "string").required().end().property("hashedPassword", "string").required().end()
-			.property("email", "string").required().end().property("accountId", "string").required().end()
-			.property("groups", "string").build();
+	public static SchemaBuilder2 getDefaultUserSchemaBuilder() {
+		return SchemaBuilder2.builder(USER_TYPE, "username")//
+				.stringProperty("username", true)//
+				.stringProperty("hashedPassword", true)//
+				.stringProperty("email", true)//
+				.stringProperty("accountId", true)//
+				.stringProperty("groups", false, true);
+	}
+
+	public static ObjectNode getDefaultUserSchema() {
+		return getDefaultUserSchemaBuilder().build();
+	}
+
+	//
+	// services
+	//
 
 	@Get("/login")
 	@Get("/login/")
@@ -79,25 +93,32 @@ public class UserResource extends AbstractResource {
 			 * up users. Should common users be able to?
 			 */
 			Credentials credentials = AdminResource.checkCredentials(context);
-			JsonNode input = Json.getMapper().readTree(body);
 
-			User user = new User();
-			user.username = input.get("username").asText();
-			user.email = input.get("email").asText();
-			String password = input.get("password").asText();
-			User.checkPasswordValidity(password);
-			user.hashedPassword = User.hashPassword(password);
-			user.groups = Collections.singletonList(credentials.getBackendId());
-			user.checkUserInputValidity();
+			ObjectNode user = Json.readObjectNode(body);
+			checkNotNullOrEmpty(user, "username", USER_TYPE);
+			checkNotNullOrEmpty(user, "email", USER_TYPE);
+			checkNotPresent(user, "hashedPassword", USER_TYPE);
+			String password = checkNotNullOrEmpty(user, "password", USER_TYPE).asText();
+			UserUtils.checkPasswordValidity(password);
 
-			IndexResponse response = DataResource.get().createInternal(credentials.getBackendId(), USER_TYPE,
-					Json.getMapper().valueToTree(user), credentials.getName());
+			user.remove("password");
+			user.put("hashedPassword", UserUtils.hashPassword(password));
+			user.putArray("groups").add(credentials.getBackendId());
+
+			IndexResponse response = DataResource.get().createInternal(credentials.getBackendId(), USER_TYPE, user,
+					credentials.getName());
 
 			return saved(true, "/v1", USER_TYPE, response.getId(), response.getVersion());
 
 		} catch (Throwable throwable) {
 			return error(throwable);
 		}
+	}
+
+	protected ObjectNode checkObjectNode(JsonNode json) {
+		if (!json.isObject())
+			throw new IllegalArgumentException(String.format("json not an object but [%s]", json.getNodeType()));
+		return (ObjectNode) json;
 	}
 
 	@Get("/user/:id")
@@ -119,7 +140,7 @@ public class UserResource extends AbstractResource {
 	}
 
 	public static String getDefaultUserMapping() {
-		JsonNode schema = SchemaValidator.validate(USER_TYPE, USER_DEFAULT_SCHEMA);
+		JsonNode schema = SchemaValidator.validate(USER_TYPE, getDefaultUserSchema());
 		return SchemaTranslator.translate(USER_TYPE, schema).toString();
 	}
 

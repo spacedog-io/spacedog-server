@@ -3,32 +3,11 @@
  */
 package io.spacedog.services;
 
-import java.util.List;
-
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.xml.bind.DatatypeConverter;
 
-import com.google.common.base.Strings;
-
-import io.spacedog.services.Account.InvalidAccountException;
-
-public class User {
-
-	public String username;
-	public String email;
-	public String hashedPassword;
-	public List<String> groups;
-	public Meta meta;
-
-	public void checkUserInputValidity() {
-		if (Strings.isNullOrEmpty(email))
-			throw new InvalidAccountException("user email is null or empty");
-		if (Strings.isNullOrEmpty(username))
-			throw new InvalidAccountException("user name is null or empty");
-		if (Strings.isNullOrEmpty(hashedPassword))
-			throw new InvalidAccountException("password is null or empty");
-	}
+public class UserUtils {
 
 	/**
 	 * ******* README ******* For now, I use hard coded salt and iteration
@@ -49,7 +28,5 @@ public class User {
 	}
 
 	public static void checkPasswordValidity(String password) {
-		if (Strings.isNullOrEmpty(password))
-			throw new InvalidAccountException("password is null or empty");
 	}
 }

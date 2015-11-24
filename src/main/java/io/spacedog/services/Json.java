@@ -14,11 +14,17 @@ import com.google.common.base.Strings;
 
 public class Json {
 
+	/**
+	 * TODO returns null if does not find the property in this object. Should
+	 * return an optional.
+	 */
 	public static JsonNode get(JsonNode json, String propertyPath) {
 
 		JsonNode current = json;
 
 		for (String s : propertyPath.split("\\.")) {
+			if (current == null)
+				return null;
 
 			if (current.isObject())
 				current = current.get(s);
@@ -113,14 +119,14 @@ public class Json {
 	public static ObjectNode readObjectNode(String jsonObject) throws JsonProcessingException, IOException {
 		JsonNode object = jsonMapper.readTree(jsonObject);
 		if (!object.isObject())
-			throw new RuntimeException(String.format("not a json object but [%s]", object.getNodeType()));
+			throw new IllegalArgumentException(String.format("not a json object but [%s]", object.getNodeType()));
 		return (ObjectNode) object;
 	}
 
 	public static ArrayNode readArrayNode(String jsonArray) throws JsonProcessingException, IOException {
 		JsonNode object = jsonMapper.readTree(jsonArray);
 		if (!object.isArray())
-			throw new RuntimeException(String.format("not a json array but [%s]", object.getNodeType()));
+			throw new IllegalArgumentException(String.format("not a json array but [%s]", object.getNodeType()));
 		return (ArrayNode) object;
 	}
 

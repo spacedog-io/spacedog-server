@@ -112,7 +112,7 @@ public class SchemaResourceTest extends Assert {
 				.merge(buildHomeSchema()) //
 				.merge(buildCarSchema()) //
 				.merge(buildSaleSchema()) //
-				.merge(UserResource.USER_DEFAULT_SCHEMA) //
+				.merge(UserResource.getDefaultUserSchema()) //
 				.get();
 
 		assertEquals(expected, result);
