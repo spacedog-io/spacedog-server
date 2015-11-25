@@ -46,7 +46,8 @@ public class Start {
 		routes.add(DataResource.get()) //
 				.add(SchemaResource.get()) //
 				.add(UserResource.get()) //
-				.add(AdminResource.get());
+				.add(AdminResource.get())//
+				.add(BatchResource.get());
 
 		routes.filter(new CrossOriginFilter());
 	}

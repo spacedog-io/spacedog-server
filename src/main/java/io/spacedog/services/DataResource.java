@@ -54,10 +54,11 @@ public class DataResource extends AbstractResource {
 
 	@Get("")
 	@Get("/")
-	public Payload search(Context context) {
+	public Payload externalSearch(Context context) {
 		try {
 			Credentials credentials = AdminResource.checkCredentials(context);
-			return doSearch(credentials, null, null, context);
+			ObjectNode result = internalSearch(credentials, null, null, context);
+			return new Payload(JSON_CONTENT, result.toString(), HttpStatus.OK);
 		} catch (Throwable throwable) {
 			return error(throwable);
 		}
@@ -65,10 +66,11 @@ public class DataResource extends AbstractResource {
 
 	@Get("/:type")
 	@Get("/:type/")
-	public Payload search(String type, Context context) {
+	public Payload externalGetAll(String type, Context context) {
 		try {
 			Credentials credentials = AdminResource.checkCredentials(context);
-			return doSearch(credentials, type, null, context);
+			ObjectNode result = internalSearch(credentials, type, null, context);
+			return new Payload(JSON_CONTENT, result.toString(), HttpStatus.OK);
 		} catch (Throwable throwable) {
 			return error(throwable);
 		}
@@ -117,7 +119,7 @@ public class DataResource extends AbstractResource {
 	}
 
 	@Get("/:type/:id")
-	public Payload get(String type, String objectId, Context context) {
+	public Payload externalGet(String type, String objectId, Context context) {
 		try {
 			Credentials credentials = AdminResource.checkCredentials(context);
 
@@ -126,7 +128,7 @@ public class DataResource extends AbstractResource {
 			// TODO useful for security?
 			SchemaResource.getSchema(credentials.getBackendId(), type);
 
-			ObjectNode object = doGet(type, objectId, credentials);
+			ObjectNode object = internalGet(type, objectId, credentials);
 
 			return new Payload(JSON_CONTENT, object.toString(), HttpStatus.OK);
 		} catch (Throwable throwable) {
@@ -134,7 +136,7 @@ public class DataResource extends AbstractResource {
 		}
 	}
 
-	private ObjectNode doGet(String type, String objectId, Credentials credentials) {
+	public ObjectNode internalGet(String type, String objectId, Credentials credentials) {
 
 		GetResponse response = Start.getElasticClient().prepareGet(credentials.getBackendId(), type, objectId).get();
 
@@ -153,10 +155,11 @@ public class DataResource extends AbstractResource {
 
 	@Post("/search")
 	@Post("/search/")
-	public Payload searchAllTypes(String jsonBody, Context context) {
+	public Payload searchAllTypes(String body, Context context) {
 		try {
 			Credentials credentials = AdminResource.checkCredentials(context);
-			return doSearch(credentials, null, jsonBody, context);
+			ObjectNode result = internalSearch(credentials, null, body, context);
+			return new Payload(JSON_CONTENT, result.toString(), HttpStatus.OK);
 		} catch (Throwable throwable) {
 			return error(throwable);
 		}
@@ -164,10 +167,11 @@ public class DataResource extends AbstractResource {
 
 	@Post("/:type/search")
 	@Post("/:type/search/")
-	public Payload searchThisType(String type, String jsonBody, Context context) {
+	public Payload searchThisType(String type, String body, Context context) {
 		try {
 			Credentials credentials = AdminResource.checkCredentials(context);
-			return doSearch(credentials, type, jsonBody, context);
+			ObjectNode result = internalSearch(credentials, type, body, context);
+			return new Payload(JSON_CONTENT, result.toString(), HttpStatus.OK);
 		} catch (Throwable throwable) {
 			return error(throwable);
 		}
@@ -246,7 +250,7 @@ public class DataResource extends AbstractResource {
 		}
 	}
 
-	private Payload doSearch(Credentials credentials, String type, String json, Context context)
+	ObjectNode internalSearch(Credentials credentials, String type, String jsonQuery, Context context)
 			throws InterruptedException, ExecutionException, NotFoundException, JsonProcessingException, IOException {
 
 		String index = credentials.getBackendId();
@@ -261,7 +265,7 @@ public class DataResource extends AbstractResource {
 
 		SearchSourceBuilder builder = SearchSourceBuilder.searchSource().version(true);
 
-		if (Strings.isNullOrEmpty(json)) {
+		if (Strings.isNullOrEmpty(jsonQuery)) {
 
 			builder.from(context.request().query().getInteger("from", 0))
 					.size(context.request().query().getInteger("size", 10))
@@ -274,13 +278,11 @@ public class DataResource extends AbstractResource {
 			}
 
 		} else {
-			request.source(json);
+			request.source(jsonQuery);
 		}
 
 		request.extraSource(builder);
-		ObjectNode results = extractResults(Start.getElasticClient().search(request).get(), context, credentials);
-		return new Payload(JSON_CONTENT, results.toString(), HttpStatus.OK);
-
+		return extractResults(Start.getElasticClient().search(request).get(), context, credentials);
 	}
 
 	private ObjectNode extractResults(SearchResponse response, Context context, Credentials credentials)
@@ -303,7 +305,7 @@ public class DataResource extends AbstractResource {
 		}
 
 		if (fetchReferences) {
-			Map<String, ObjectNode> referencedObjects = getAll(references, credentials);
+			Map<String, ObjectNode> referencedObjects = getReferences(references, credentials);
 
 			for (int i = 0; i < objects.size(); i++) {
 				String reference = references.get(i);
@@ -322,12 +324,12 @@ public class DataResource extends AbstractResource {
 		return builder.build();
 	}
 
-	private Map<String, ObjectNode> getAll(List<String> references, Credentials credentials) {
+	private Map<String, ObjectNode> getReferences(List<String> references, Credentials credentials) {
 		Set<String> set = new HashSet<>(references);
 		set.remove(null);
 		Map<String, ObjectNode> results = new HashMap<>();
 		set.forEach(reference -> results.put(reference,
-				doGet(getReferenceType(reference), getReferenceId(reference), credentials)));
+				internalGet(getReferenceType(reference), getReferenceId(reference), credentials)));
 		return results;
 	}
 

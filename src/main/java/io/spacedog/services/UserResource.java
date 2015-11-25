@@ -23,9 +23,9 @@ public class UserResource extends AbstractResource {
 	// singleton
 	//
 
-	private static AbstractResource singleton = new UserResource();
+	private static UserResource singleton = new UserResource();
 
-	static AbstractResource get() {
+	static UserResource get() {
 		return singleton;
 	}
 
@@ -80,7 +80,7 @@ public class UserResource extends AbstractResource {
 	@Get("/user")
 	@Get("/user/")
 	public Payload getAll(Context context) {
-		return DataResource.get().search(USER_TYPE, context);
+		return DataResource.get().externalGetAll(USER_TYPE, context);
 	}
 
 	@Post("/user")
@@ -124,7 +124,7 @@ public class UserResource extends AbstractResource {
 	@Get("/user/:id")
 	@Get("/user/:id/")
 	public Payload get(String id, Context context) {
-		return DataResource.get().get(USER_TYPE, id, context);
+		return DataResource.get().externalGet(USER_TYPE, id, context);
 	}
 
 	@Put("/user/:id")
