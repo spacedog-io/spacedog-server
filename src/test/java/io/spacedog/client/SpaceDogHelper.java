@@ -42,6 +42,10 @@ public class SpaceDogHelper {
 		}
 	}
 
+	public static User createUser(Account account, String username, String password, String email) throws Exception {
+		return createUser(account.backendKey, username, password, email);
+	}
+
 	public static User createUser(String backendKey, String username, String password, String email) throws Exception {
 
 		String id = SpaceRequest.post("/v1/user/").backendKey(backendKey)
@@ -130,6 +134,10 @@ public class SpaceDogHelper {
 
 	public static Account resetTestAccount() throws Exception {
 		return resetAccount("test", "test", "hi test", "david@spacedog.io");
+	}
+
+	public static Account getTestAccount() throws Exception {
+		return getAccount("test", "test", "hi test");
 	}
 
 }

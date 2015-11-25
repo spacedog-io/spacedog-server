@@ -318,8 +318,11 @@ public class DataResource extends AbstractResource {
 				.put("took", response.getTookInMillis())//
 				.put("total", response.getHits().getTotalHits())//
 				.startArray("results");
-
 		objects.forEach(object -> builder.addNode(object));
+		builder.end();
+
+		if (response.getAggregations() != null)
+			builder.putNode("aggregations", Json.getMapper().valueToTree(response.getAggregations().asMap()));
 
 		return builder.build();
 	}
