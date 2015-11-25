@@ -5,27 +5,22 @@ package io.spacedog.services;
 
 import org.joda.time.DateTime;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import io.spacedog.client.SpaceDogHelper;
+import io.spacedog.client.SpaceDogHelper.Account;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
-import io.spacedog.client.SpaceDogHelper;
 
 public class DataResourceTest extends Assert {
 
-	private static SpaceDogHelper.Account testAccount;
-
-	@BeforeClass
-	public static void resetTestAccount() throws Exception {
-		testAccount = SpaceDogHelper.resetTestAccount();
-		SchemaResourceTest.resetCarSchema();
-	}
-
 	@Test
 	public void shouldCreateFindUpdateAndDelete() throws Exception {
+
+		Account testAccount = SpaceDogHelper.resetTestAccount();
+		SpaceDogHelper.resetSchema(SchemaResourceTest.buildCarSchema(), testAccount);
 
 		JsonNode car = Json.startObject() //
 				.put("serialNumber", "1234567890") //

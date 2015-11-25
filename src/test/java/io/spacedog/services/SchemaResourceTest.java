@@ -25,13 +25,9 @@ public class SchemaResourceTest extends Assert {
 	@Test
 	public void shouldDeletePutAndGetCarSchema() throws Exception {
 
-		resetCarSchema();
+		SpaceDogHelper.resetSchema(buildCarSchema(), testAccount);
 		assertEquals(buildCarSchema(), //
 				SpaceRequest.get("/v1/schema/car").backendKey(testAccount).go(200).jsonNode());
-	}
-
-	public static void resetCarSchema() throws Exception {
-		SpaceDogHelper.resetSchema(buildCarSchema(), testAccount);
 	}
 
 	public static ObjectNode buildCarSchema() {
@@ -49,10 +45,6 @@ public class SchemaResourceTest extends Assert {
 				.end() //
 				.property("location", "geopoint").required().end() //
 				.build();
-	}
-
-	public static void resetSaleSchema() throws Exception {
-		SpaceDogHelper.resetSchema(buildSaleSchema(), testAccount);
 	}
 
 	public static ObjectNode buildSaleSchema() {
@@ -76,13 +68,9 @@ public class SchemaResourceTest extends Assert {
 	@Test
 	public void shouldDeletePutAndGetHomeSchema() throws Exception {
 
-		resetHomeSchema();
+		SpaceDogHelper.resetSchema(buildHomeSchema(), testAccount);
 		assertEquals(buildHomeSchema(), //
 				SpaceRequest.get("/v1/schema/home").backendKey(testAccount).go(200).jsonNode());
-	}
-
-	private static void resetHomeSchema() throws Exception {
-		SpaceDogHelper.resetSchema(buildHomeSchema(), testAccount);
 	}
 
 	private static ObjectNode buildHomeSchema() {
@@ -101,9 +89,9 @@ public class SchemaResourceTest extends Assert {
 
 	@Test
 	public void shouldGetAllSchemas() throws Exception {
-		resetCarSchema();
-		resetHomeSchema();
-		resetSaleSchema();
+		SpaceDogHelper.resetSchema(buildCarSchema(), testAccount);
+		SpaceDogHelper.resetSchema(buildHomeSchema(), testAccount);
+		SpaceDogHelper.resetSchema(buildSaleSchema(), testAccount);
 
 		JsonNode result = SpaceRequest.get("/v1/schema").backendKey(testAccount).go(200).jsonNode();
 
@@ -133,7 +121,7 @@ public class SchemaResourceTest extends Assert {
 	@Test
 	public void shouldFailToChangeCarSchema() throws Exception {
 
-		resetCarSchema();
+		SpaceDogHelper.resetSchema(buildCarSchema(), testAccount);
 
 		ObjectNode json = buildCarSchema();
 		json.with("car").with("color").put("_type", "date");

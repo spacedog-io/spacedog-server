@@ -5,29 +5,24 @@ package io.spacedog.services;
 
 import org.joda.time.DateTime;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
+import io.spacedog.client.SpaceDogHelper;
+import io.spacedog.client.SpaceDogHelper.Account;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
-import io.spacedog.client.SpaceDogHelper;
 
 public class DataResourceTest2 extends Assert {
 
-	private static SpaceDogHelper.Account testAccount;
-
-	@BeforeClass
-	public static void resetTestAccount() throws Exception {
-		testAccount = SpaceDogHelper.resetTestAccount();
-		SchemaResourceTest.resetSaleSchema();
-	}
-
 	@Test
 	public void shouldCreateSearchUpdateAndDeleteSales() throws Exception {
+
+		Account testAccount = SpaceDogHelper.resetTestAccount();
+		SpaceDogHelper.resetSchema(SchemaResourceTest.buildSaleSchema(), testAccount);
 
 		ObjectNode sale = Json.startObject()//
 				.put("number", "1234567890")//

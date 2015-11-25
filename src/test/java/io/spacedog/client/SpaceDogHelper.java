@@ -66,7 +66,7 @@ public class SpaceDogHelper {
 
 	public static void resetSchema(JsonNode schema, String username, String password) throws Exception {
 
-		String schemaName = schema.elements().next().asText();
+		String schemaName = schema.fieldNames().next();
 
 		SpaceRequest.delete("/v1/schema/{name}").routeParam("name", schemaName).basicAuth(username, password).go(200,
 				404);

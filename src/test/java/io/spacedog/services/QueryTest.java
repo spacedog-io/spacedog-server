@@ -14,8 +14,8 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
-import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceDogHelper;
+import io.spacedog.client.SpaceRequest;
 
 public class QueryTest extends Assert {
 
@@ -26,7 +26,7 @@ public class QueryTest extends Assert {
 
 		testAccount = SpaceDogHelper.resetTestAccount();
 
-		SchemaResourceTest.resetCarSchema();
+		SpaceDogHelper.resetSchema(SchemaResourceTest.buildCarSchema(), testAccount);
 
 		for (int i = 0; i < 500; i++) {
 			SpaceRequest.post("/v1/data/car").backendKey(testAccount).body(jsonCar(i).toString()).go(201);
