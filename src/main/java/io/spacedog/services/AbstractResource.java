@@ -48,6 +48,15 @@ public abstract class AbstractResource {
 					String.format("property [%s] is forbidden in type [%s]", propertyPath, type));
 	}
 
+	protected String checkString(JsonNode input, String propertyPath, boolean required, String in) {
+		JsonNode node = Json.get(input, propertyPath);
+		if (required && node == null)
+			throw new IllegalArgumentException(String.format("property [%s] is mandatory in %s", propertyPath, in));
+		if (!node.isTextual())
+			throw new IllegalArgumentException(String.format("property [%s] must be textual", propertyPath));
+		return node.asText();
+	}
+
 	public static String toJsonString(Throwable t) {
 		return toJsonNode(t).toString();
 	}
@@ -163,10 +172,10 @@ public abstract class AbstractResource {
 	}
 
 	protected static String getReferenceType(String reference) {
-		return reference.split("/")[1];
+		return Utils.splitBySlash(reference)[0];
 	}
 
 	protected static String getReferenceId(String reference) {
-		return reference.split("/")[2];
+		return Utils.splitBySlash(reference)[1];
 	}
 }

@@ -22,7 +22,7 @@ public class Json {
 
 		JsonNode current = json;
 
-		for (String s : propertyPath.split("\\.")) {
+		for (String s : Utils.splitByDot(propertyPath)) {
 			if (current == null)
 				return null;
 
