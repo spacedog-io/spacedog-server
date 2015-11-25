@@ -13,10 +13,10 @@ import io.spacedog.services.Json;
 public class SpaceDogHelper {
 
 	public static class User {
-		String id;
+		public String id;
 		public String username;
-		String password;
-		String email;
+		public String password;
+		public String email;
 
 		public User(String id, String username, String password, String email) {
 			this.id = id;

@@ -22,8 +22,8 @@ import io.spacedog.services.UserResource;
 public class JohoInit extends SpaceDogHelper {
 
 	private static final String BACKEND_ID = "joho2";
-	private static final String ADMIN_PASSWORD = "hi joho2";
-	private static final String ADMIN_USERNAME = "joho2";
+	private static final String ADMIN_PASSWORD = "hi joho";
+	private static final String ADMIN_USERNAME = "joho";
 
 	private static Account johoAccount;
 
@@ -34,24 +34,30 @@ public class JohoInit extends SpaceDogHelper {
 	static ObjectNode buildDiscussionSchema() {
 		return SchemaBuilder2.builder("discussion") //
 				.textProperty("title", "french", true) //
-				.textProperty("description", "french", false) //
-				.startObjectProperty("theme", false)//
-				.textProperty("name", "french", false)//
-				.textProperty("description", "french", false)//
-				.stringProperty("code", false)//
-				.endObjectProperty()//
-				.startObjectProperty("category", true)//
-				.textProperty("name", "french", false)//
-				.textProperty("description", "french", false)//
+				.textProperty("description", "french", true) //
+				.startObjectProperty("theme", true)//
+				.textProperty("name", "french", true)//
+				.textProperty("description", "french", true)//
 				.stringProperty("code", true)//
 				.endObjectProperty()//
-				.startObjectProperty("author", false)//
-				.textProperty("firsname", "french", false)//
-				.textProperty("lastsname", "french", false)//
-				.stringProperty("username", false)//
-				.stringProperty("avatar", false)//
-				.stringProperty("job", false)//
+				.startObjectProperty("category", true)//
+				.textProperty("name", "french", true)//
+				.textProperty("description", "french", true)//
+				.stringProperty("code", true)//
 				.endObjectProperty()//
+				.startObjectProperty("author", true)//
+				.textProperty("firstname", "french", true)//
+				.textProperty("lastname", "french", true)//
+				.stringProperty("avatar", true)//
+				.stringProperty("job", true)//
+				.endObjectProperty()//
+				.startObjectProperty("lastMessage", true)//
+				.textProperty("text", "french", true)//
+				.startObjectProperty("author", true)//
+				.textProperty("firstname", "french", true)//
+				.textProperty("lastname", "french", true)//
+				.stringProperty("avatar", true)//
+				.stringProperty("job", true)//
 				.build();
 	}
 
@@ -59,6 +65,21 @@ public class JohoInit extends SpaceDogHelper {
 		return SchemaBuilder2.builder("message") //
 				.textProperty("text", "french", true)//
 				.stringProperty("discussionId", true)//
+				.startObjectProperty("author", true)//
+				.textProperty("firstname", "french", true)//
+				.textProperty("lastname", "french", true)//
+				.stringProperty("avatar", true)//
+				.stringProperty("job", true)//
+				.endObjectProperty()//
+				.startObjectProperty("responses", true, true)//
+				.textProperty("text", "french", true)//
+				.startObjectProperty("author", true)//
+				.textProperty("firstname", "french", true)//
+				.textProperty("lastname", "french", true)//
+				.stringProperty("avatar", true)//
+				.stringProperty("job", true)//
+				.endObjectProperty()//
+				.endObjectProperty()//
 				.build();
 	}
 
@@ -155,9 +176,19 @@ public class JohoInit extends SpaceDogHelper {
 
 		threadId = createDiscussion("et, euh, le plus fort", "RH", fred);
 		createMessage(threadId, "t'as des dauphins roses", fred);
-		createMessage(threadId, "nan", maelle);
+		String messageId = createMessage(threadId, "nan", maelle);
+
+		createResponse(messageId, "c'est quoi ça \"nan\" ?", vincent);
+		createResponse(messageId, "c'est français ?", vincent);
 
 		showWall();
+	}
+
+	private void createResponse(String messageId, String text, User user) throws Exception {
+		JsonBuilder<ObjectNode> message = Json.startObject().startObject("responses").put("text", text)//
+				.startObject("author").put("firstname", user.username).put("lastname", user.email);
+		SpaceRequest.put("/v1/data/message/{messageId}").routeParam("messageId", messageId).backendKey(johoAccount)
+				.basicAuth(user).body(message).go(200);
 	}
 
 	private User createUser(String backendKey, String username, String password, String email, String firstname,
@@ -208,10 +239,11 @@ public class JohoInit extends SpaceDogHelper {
 				.objectNode().get("id").asText();
 	}
 
-	public void createMessage(String discussionId, String text, User user) throws Exception {
+	public String createMessage(String discussionId, String text, User user) throws Exception {
 
 		JsonBuilder<ObjectNode> message = Json.startObject().put("text", text).put("discussionId", discussionId);
-		SpaceRequest.post("/v1/data/message").backendKey(johoAccount).basicAuth(user).body(message).go(201);
+		return SpaceRequest.post("/v1/data/message").backendKey(johoAccount).basicAuth(user).body(message).go(201)
+				.objectNode().get("id").asText();
 	}
 
 	public Iterator<JsonNode> showWall() throws Exception {
