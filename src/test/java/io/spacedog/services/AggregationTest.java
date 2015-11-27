@@ -21,7 +21,7 @@ public class AggregationTest {
 		SpaceDogHelper.createUser(testAccount, "donald", "hi donald", "donald@disney.com");
 		SpaceDogHelper.createUser(testAccount, "mickey", "hi mickey", "mickey@disney.com");
 
-		SpaceRequest.refresh(testAccount);
+		SpaceDogHelper.refresh(testAccount);
 
 		ObjectNode query = Json.startObject()//
 				.put("size", 0)//

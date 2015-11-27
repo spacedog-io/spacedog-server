@@ -97,7 +97,7 @@ public class UserResource extends AbstractResource {
 	@Get("/user")
 	@Get("/user/")
 	public Payload getAll(Context context) {
-		return DataResource.get().externalGetAll(USER_TYPE, context);
+		return DataResource.get().getAllForType(USER_TYPE, context);
 	}
 
 	@Post("/user")
@@ -129,7 +129,7 @@ public class UserResource extends AbstractResource {
 				user.put(HASHED_PASSWORD, UserUtils.hashPassword(password.asText()));
 			}
 
-			IndexResponse response = DataResource.get().createInternal(credentials.getBackendId(), USER_TYPE, user,
+			IndexResponse response = ElasticHelper.get().createObject(credentials.getBackendId(), USER_TYPE, user,
 					credentials.getName());
 
 			JsonBuilder<ObjectNode> savedBuilder = initSavedBuilder("/v1", USER_TYPE, response.getId(),
@@ -223,7 +223,8 @@ public class UserResource extends AbstractResource {
 			user.remove(PASSWORD_RESET_CODE);
 			user.put(HASHED_PASSWORD, UserUtils.hashPassword(password));
 
-			IndexResponse indexResponse = DataResource.get().fullUpdateInternal(USER_TYPE, id, 0, user, credentials);
+			IndexResponse indexResponse = ElasticHelper.get().updateObject(credentials.getBackendId(), USER_TYPE, id, 0,
+					user, credentials.getName());
 
 			return saved(false, "/v1", USER_TYPE, id, indexResponse.getVersion());
 

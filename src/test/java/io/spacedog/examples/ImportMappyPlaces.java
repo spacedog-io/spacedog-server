@@ -82,8 +82,8 @@ public class ImportMappyPlaces extends Assert {
 				}
 			}
 
-			SpaceRequest.refresh("examples");
-			SpaceRequest.refresh(AdminResource.ADMIN_INDEX);
+			SpaceDogHelper.refresh("examples");
+			SpaceDogHelper.refresh(AdminResource.ADMIN_INDEX);
 
 		} catch (Throwable t) {
 			t.printStackTrace();

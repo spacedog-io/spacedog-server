@@ -7,6 +7,7 @@ import org.junit.Assert;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
+import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
 import io.spacedog.services.AdminResource;
@@ -72,12 +73,26 @@ public class SpaceDogHelper {
 	}
 
 	public static void resetSchema(JsonNode schema, String username, String password) throws Exception {
+		deleteSchema(schema, username, password);
+		setSchema(schema, username, password);
+	}
 
+	public static void deleteSchema(JsonNode schema, Account account) throws Exception {
+		deleteSchema(schema, account.username, account.password);
+	}
+
+	public static void deleteSchema(JsonNode schema, String username, String password) throws Exception {
 		String schemaName = schema.fieldNames().next();
-
 		SpaceRequest.delete("/v1/schema/{name}").routeParam("name", schemaName).basicAuth(username, password).go(200,
 				404);
+	}
 
+	public static void setSchema(JsonNode schema, Account account) throws Exception {
+		setSchema(schema, account.username, account.password);
+	}
+
+	public static void setSchema(JsonNode schema, String username, String password) throws Exception {
+		String schemaName = schema.fieldNames().next();
 		SpaceRequest.post("/v1/schema/{name}").routeParam("name", schemaName).basicAuth(username, password).body(schema)
 				.go(201);
 	}
@@ -91,8 +106,8 @@ public class SpaceDogHelper {
 
 		Assert.assertFalse(Strings.isNullOrEmpty(backendKey));
 
-		SpaceRequest.refresh(AdminResource.ADMIN_INDEX);
-		SpaceRequest.refresh(backendId);
+		SpaceDogHelper.refresh(AdminResource.ADMIN_INDEX);
+		SpaceDogHelper.refresh(backendId);
 
 		return new Account(backendId, username, password, email, backendKey);
 	}
@@ -142,8 +157,8 @@ public class SpaceDogHelper {
 		SpaceRequest.delete("/v1/admin/account/{backendId}").routeParam("backendId", backendId)
 				.basicAuth(username, password).go(200, 401);
 
-		SpaceRequest.refresh(AdminResource.ADMIN_INDEX);
-		SpaceRequest.refresh(backendId);
+		SpaceDogHelper.refresh(AdminResource.ADMIN_INDEX);
+		SpaceDogHelper.refresh(backendId);
 	}
 
 	public static Account resetAccount(String backendId, String username, String password, String email)
@@ -165,6 +180,22 @@ public class SpaceDogHelper {
 	public static void printTestName(String testName) {
 		System.out.println();
 		System.out.println(String.format("==============%s==============", testName));
+	}
+
+	public static void refresh(Account account) throws UnirestException {
+		SpaceDogHelper.refresh(account.backendId);
+	}
+
+	public static void refresh(String index) throws UnirestException {
+		String baseUrl = SpaceRequest.backendDomain.endsWith(":8080") ? SpaceRequest.backendDomain.replace(":8080", ":9200")
+				: SpaceRequest.backendDomain + ":9200";
+	
+		if (baseUrl.startsWith("https"))
+			baseUrl = baseUrl.replace("https", "http");
+	
+		System.out.println();
+		System.out.println(String.format("Refresh index [%s] => %s", index,
+				Unirest.post(baseUrl + "/{index}/_refresh").routeParam("index", index).asString().getStatusText()));
 	}
 
 }

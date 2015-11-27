@@ -119,11 +119,12 @@ public class AdminResource extends AbstractResource {
 			account.backendKey = new BackendKey();
 			account.checkAccountInputValidity();
 
-			if (ElasticHelper.search(ADMIN_INDEX, ACCOUNT_TYPE, "username", account.username).getTotalHits() > 0)
+			if (ElasticHelper.get().search(ADMIN_INDEX, ACCOUNT_TYPE, "username", account.username).getTotalHits() > 0)
 				return invalidParameters("username", account.username,
 						String.format("administrator username [%s] is not available", account.username));
 
-			if (ElasticHelper.search(ADMIN_INDEX, ACCOUNT_TYPE, "backendId", account.backendId).getTotalHits() > 0)
+			if (ElasticHelper.get().search(ADMIN_INDEX, ACCOUNT_TYPE, "backendId", account.backendId)
+					.getTotalHits() > 0)
 				return invalidParameters("backendId", account.backendId,
 						String.format("backend id [%s] is not available", account.backendId));
 
@@ -241,7 +242,7 @@ public class AdminResource extends AbstractResource {
 		// check client id/secret pairs in spacedog
 		// index account objects
 
-		SearchHits accountHits = ElasticHelper.search(ADMIN_INDEX, ACCOUNT_TYPE, "backendId", backendId,
+		SearchHits accountHits = ElasticHelper.get().search(ADMIN_INDEX, ACCOUNT_TYPE, "backendId", backendId,
 				"backendKey.name", keyName, "backendKey.secret", keySecret);
 
 		if (accountHits.getTotalHits() == 0)
@@ -257,7 +258,8 @@ public class AdminResource extends AbstractResource {
 
 			// check users in user specific backend index
 
-			Optional<ObjectNode> user = ElasticHelper.get(backendId, UserResource.USER_TYPE, tokens.get()[0]);
+			Optional<ObjectNode> user = ElasticHelper.get().getObject(backendId, UserResource.USER_TYPE,
+					tokens.get()[0]);
 
 			if (user.isPresent()) {
 				String providedPassword = UserUtils.hashPassword(tokens.get()[1]);
@@ -295,7 +297,7 @@ public class AdminResource extends AbstractResource {
 
 			// check admin users in spacedog index
 
-			SearchHits accountHits = ElasticHelper.search(ADMIN_INDEX, ACCOUNT_TYPE, "username", tokens.get()[0],
+			SearchHits accountHits = ElasticHelper.get().search(ADMIN_INDEX, ACCOUNT_TYPE, "username", tokens.get()[0],
 					"hashedPassword", UserUtils.hashPassword(tokens.get()[1]));
 
 			if (accountHits.getTotalHits() == 0)

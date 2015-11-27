@@ -7,9 +7,14 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
+import org.elasticsearch.action.deletebyquery.DeleteByQueryRequestBuilder;
+import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.update.UpdateRequestBuilder;
+import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.common.base.Strings;
 import org.elasticsearch.index.query.AndFilterBuilder;
 import org.elasticsearch.index.query.FilterBuilders;
@@ -17,6 +22,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -26,7 +32,24 @@ import net.codestory.http.Context;
 
 public class ElasticHelper {
 
-	public static Optional<ObjectNode> get(String index, String type, String id) {
+	//
+	// singleton
+	//
+
+	private static ElasticHelper singleton = new ElasticHelper();
+
+	static ElasticHelper get() {
+		return singleton;
+	}
+
+	private ElasticHelper() {
+	}
+
+	//
+	// help methods
+	//
+
+	public Optional<ObjectNode> getObject(String index, String type, String id) {
 		GetResponse response = SpaceDogServices.getElasticClient().prepareGet(index, type, id).get();
 
 		if (!response.isExists())
@@ -42,7 +65,74 @@ public class ElasticHelper {
 		}
 	}
 
-	public static SearchHits search(String index, String type, String... terms) {
+	IndexResponse createObject(String index, String type, ObjectNode object, String createdBy) {
+
+		String now = DateTime.now().toString();
+
+		// replace meta to avoid developers to
+		// set any meta fields directly
+		object.set("meta",
+				Json.startObject()//
+						.put("createdBy", createdBy)//
+						.put("updatedBy", createdBy)//
+						.put("createdAt", now)//
+						.put("updatedAt", now)//
+						.build());
+
+		return SpaceDogServices.getElasticClient().prepareIndex(index, type)//
+				.setSource(object.toString()).get();
+	}
+
+	/**
+	 * TODO should i get id and type from the meta for more consistency ?
+	 */
+	public IndexResponse updateObject(String index, String type, String id, long version, ObjectNode object,
+			String updatedBy) {
+
+		object.remove("id");
+		object.remove("version");
+		object.remove("type");
+
+		AbstractResource.checkNotNullOrEmpty(object, "meta.createdBy", type);
+		AbstractResource.checkNotNullOrEmpty(object, "meta.createdAt", type);
+
+		object.with("meta").put("updatedBy", updatedBy);
+		object.with("meta").put("updatedAt", DateTime.now().toString());
+
+		return SpaceDogServices.getElasticClient().prepareIndex(index, type, id).setSource(object.toString())
+				.setVersion(version).get();
+	}
+
+	public UpdateResponse patchObject(String index, String type, String id, long version, ObjectNode object,
+			String updatedBy) {
+
+		object.with("meta").removeAll()//
+				.put("updatedBy", updatedBy)//
+				.put("updatedAt", DateTime.now().toString());
+
+		UpdateRequestBuilder update = SpaceDogServices.getElasticClient().prepareUpdate(index, type, id)
+				.setDoc(object.toString());
+
+		if (version > 0)
+			update.setVersion(version);
+
+		return update.get();
+	}
+
+	public DeleteByQueryResponse delete(String index, String query, String... types) {
+		if (Strings.isNullOrEmpty(query))
+			query = Json.startObject().startObject("query").startObject("match_all").toString();
+
+		DeleteByQueryRequestBuilder setSource = SpaceDogServices.getElasticClient().prepareDeleteByQuery(index)
+				.setSource(query);
+
+		if (types != null)
+			setSource.setTypes(types);
+
+		return setSource.get();
+	}
+
+	public SearchHits search(String index, String type, String... terms) {
 
 		if (terms.length % 2 == 1)
 			throw new RuntimeException(
@@ -59,7 +149,7 @@ public class ElasticHelper {
 		return response.getHits();
 	}
 
-	public static FilteredSearchBuilder searchBuilder(String index, String type)
+	public FilteredSearchBuilder searchBuilder(String index, String type)
 			throws NotFoundException, JsonProcessingException, IOException {
 
 		return new FilteredSearchBuilder(index, type);

@@ -45,7 +45,7 @@ public class UserResourceTest extends Assert {
 		SpaceDogHelper.User vince = SpaceDogHelper.createUser(testAccount.backendKey, "vince", "hi vince",
 				"vince@dog.com");
 
-		SpaceRequest.refresh(testAccount);
+		SpaceDogHelper.refresh(testAccount);
 
 		// get vince user object should succeed
 
@@ -82,7 +82,7 @@ public class UserResourceTest extends Assert {
 		SpaceRequest.put("/v1/user/vince").backendKey(testAccount).basicAuth(vince)
 				.body(Json.startObject().put("email", "bignose@magic.com").build().toString()).go(200);
 
-		SpaceRequest.refresh(testAccount);
+		SpaceDogHelper.refresh(testAccount);
 
 		ObjectNode res9 = SpaceRequest.get("/v1/user/vince").backendKey(testAccount).basicAuth(vince).go(200)
 				.objectNode();
@@ -176,7 +176,7 @@ public class UserResourceTest extends Assert {
 
 		SpaceDogHelper.createUser(testAccount.backendKey, "vince", "hi vince", "vince@dog.com");
 
-		SpaceRequest.refresh(testAccount);
+		SpaceDogHelper.refresh(testAccount);
 
 		// update user schema with custom schema
 

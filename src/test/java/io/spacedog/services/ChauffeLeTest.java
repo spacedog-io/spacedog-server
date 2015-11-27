@@ -40,7 +40,7 @@ public class ChauffeLeTest extends Assert {
 		laCopine = SpaceDogHelper.createUser(adminAccount.backendKey, "la copine", "hi la copine",
 				"lacopine@chauffe.le");
 
-		SpaceRequest.refresh(adminAccount);
+		SpaceDogHelper.refresh(adminAccount);
 	}
 
 	static ObjectNode buildBigPostSchema() {
@@ -136,7 +136,7 @@ public class ChauffeLeTest extends Assert {
 		@Override
 		public Iterator<JsonNode> showWall() throws Exception {
 
-			SpaceRequest.refresh(adminAccount);
+			SpaceDogHelper.refresh(adminAccount);
 
 			String wallQuery = Json.startObject()//
 					.put("from", 0)//
@@ -181,7 +181,7 @@ public class ChauffeLeTest extends Assert {
 		@Override
 		public Iterator<JsonNode> showWall() throws Exception {
 
-			SpaceRequest.refresh(adminAccount);
+			SpaceDogHelper.refresh(adminAccount);
 
 			String subjectQuery = Json.startObject()//
 					.put("from", 0)//

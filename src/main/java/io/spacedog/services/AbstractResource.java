@@ -5,9 +5,11 @@ package io.spacedog.services;
 
 import java.util.concurrent.ExecutionException;
 
+import org.elasticsearch.action.ShardOperationFailedException;
 import org.elasticsearch.index.engine.VersionConflictEngineException;
 import org.elasticsearch.index.mapper.MergeMappingException;
 import org.elasticsearch.indices.IndexMissingException;
+import org.elasticsearch.rest.RestStatus;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -26,7 +28,7 @@ public abstract class AbstractResource {
 
 	protected Payload checkExistence(String index, String type, String field, String value) {
 		try {
-			return ElasticHelper.search(index, type, field, value).getTotalHits() == 0 ? Payload.notFound()
+			return ElasticHelper.get().search(index, type, field, value).getTotalHits() == 0 ? Payload.notFound()
 					: Payload.ok();
 
 		} catch (Throwable throwable) {
@@ -34,7 +36,7 @@ public abstract class AbstractResource {
 		}
 	}
 
-	protected JsonNode checkNotNullOrEmpty(JsonNode input, String propertyPath, String type) {
+	public static JsonNode checkNotNullOrEmpty(JsonNode input, String propertyPath, String type) {
 		JsonNode node = Json.get(input, propertyPath);
 		if (node == null || Strings.isNullOrEmpty(node.asText()))
 			throw new IllegalArgumentException(
@@ -42,14 +44,14 @@ public abstract class AbstractResource {
 		return node;
 	}
 
-	protected void checkNotPresent(JsonNode input, String propertyPath, String type) {
+	public static void checkNotPresent(JsonNode input, String propertyPath, String type) {
 		JsonNode node = Json.get(input, propertyPath);
 		if (node != null)
 			throw new IllegalArgumentException(
 					String.format("property [%s] is forbidden in type [%s]", propertyPath, type));
 	}
 
-	protected String checkString(JsonNode input, String propertyPath, boolean required, String in) {
+	public static String checkString(JsonNode input, String propertyPath, boolean required, String in) {
 		JsonNode node = Json.get(input, propertyPath);
 		if (required && node == null)
 			throw new IllegalArgumentException(String.format("property [%s] is mandatory in %s", propertyPath, in));
@@ -106,6 +108,21 @@ public abstract class AbstractResource {
 			builder.put("version", version);
 
 		return builder;
+	}
+
+	public static Payload toPayload(RestStatus status, ShardOperationFailedException[] failures) {
+
+		if (status.getStatus() == 200)
+			return success();
+
+		JsonBuilder<ObjectNode> builder = Json.startObject().put("success", false)//
+				.startArray("error");
+
+		for (ShardOperationFailedException failure : failures)
+			builder.startObject().put("type", failure.getClass().getName()).put("message", failure.reason())
+					.put("shardId", failure.shardId()).end();
+
+		return new Payload(JSON_CONTENT, builder.toString(), status.getStatus());
 	}
 
 	public static Payload error(int httpStatus) {

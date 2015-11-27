@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.primitives.Ints;
 import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.GetRequest;
 import com.mashape.unirest.request.HttpRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
@@ -28,22 +27,6 @@ public class SpaceRequest {
 
 	public SpaceRequest(HttpRequest request) {
 		this.request = request;
-	}
-
-	public static void refresh(SpaceDogHelper.Account account) throws UnirestException {
-		refresh(account.backendId);
-	}
-
-	public static void refresh(String index) throws UnirestException {
-		String baseUrl = backendDomain.endsWith(":8080") ? backendDomain.replace(":8080", ":9200")
-				: backendDomain + ":9200";
-
-		if (baseUrl.startsWith("https"))
-			baseUrl = baseUrl.replace("https", "http");
-
-		System.out.println();
-		System.out.println(String.format("Refresh index [%s] => %s", index,
-				Unirest.post(baseUrl + "/{index}/_refresh").routeParam("index", index).asString().getStatusText()));
 	}
 
 	public static SpaceRequest get(String uri) {

@@ -83,7 +83,7 @@ public class AdminResourceTest extends Assert {
 		SpaceDogHelper.User john = SpaceDogHelper.createUser(testAccount.backendKey, "john", "hi john",
 				"john@dog.io");
 
-		SpaceRequest.refresh("test");
+		SpaceDogHelper.refresh("test");
 
 		// data access with common user but no client key should fail
 

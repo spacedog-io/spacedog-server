@@ -46,7 +46,7 @@ public class DataResourceTest extends Assert {
 
 		String id = create.getFromJson("id").asText();
 
-		SpaceRequest.refresh("test");
+		SpaceDogHelper.refresh("test");
 
 		// find by id
 
@@ -71,7 +71,7 @@ public class DataResourceTest extends Assert {
 		SpaceDogHelper.User vince = SpaceDogHelper.createUser(testAccount.backendKey, "vince", "hi vince",
 				"vince@spacedog.io");
 
-		SpaceRequest.refresh(testAccount.backendId);
+		SpaceDogHelper.refresh(testAccount.backendId);
 
 		// update
 

@@ -54,7 +54,8 @@ public class SpaceDogServices extends AbstractWebServer<SpaceDogServices> {
 				.add(SchemaResource.get()) //
 				.add(UserResource.get()) //
 				.add(AdminResource.get())//
-				.add(BatchResource.get());
+				.add(BatchResource.get())//
+				.add(SearchResource.get());
 
 		routes.filter(new CrossOriginFilter());
 	}

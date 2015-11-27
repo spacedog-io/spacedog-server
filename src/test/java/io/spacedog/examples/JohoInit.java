@@ -150,7 +150,7 @@ public class JohoInit extends SpaceDogHelper {
 				"Miramond", "Directeur", "Paris", "in-tact", "INTACT", 44.9, 2.4, "06 67 68 69 70", "01 22 33 44 55",
 				"http://www.t83.fr/infos/wp-content/uploads/2015/08/Fred-01-gros-nez-620x658.jpg");
 
-		SpaceRequest.refresh(johoAccount);
+		SpaceDogHelper.refresh(johoAccount);
 
 		createThemes();
 		createServices();
@@ -248,7 +248,7 @@ public class JohoInit extends SpaceDogHelper {
 
 	public Iterator<JsonNode> showWall() throws Exception {
 
-		SpaceRequest.refresh(johoAccount);
+		SpaceDogHelper.refresh(johoAccount);
 
 		JsonBuilder<ObjectNode> discussionQuery = Json.startObject()//
 				.put("from", 0)//
