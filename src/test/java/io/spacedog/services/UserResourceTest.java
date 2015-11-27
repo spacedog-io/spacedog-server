@@ -9,9 +9,11 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
+import com.google.common.base.Strings;
 
-import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceDogHelper;
+import io.spacedog.client.SpaceRequest;
 
 public class UserResourceTest extends Assert {
 
@@ -23,8 +25,6 @@ public class UserResourceTest extends Assert {
 		// fails since invalid users
 
 		SpaceRequest.post("/v1/user/").backendKey(testAccount).body(Json.startObject()).go(400);
-		SpaceRequest.post("/v1/user/").backendKey(testAccount).body(//
-				Json.startObject().put("username", "titi").put("email", "titi@dog.com")).go(400);
 		SpaceRequest.post("/v1/user/").backendKey(testAccount).body(//
 				Json.startObject().put("password", "hi titi").put("email", "titi@dog.com")).go(400);
 		SpaceRequest.post("/v1/user/").backendKey(testAccount).body(//
@@ -42,7 +42,8 @@ public class UserResourceTest extends Assert {
 
 		// vince sign up should succeed
 
-		SpaceDogHelper.User vince = SpaceDogHelper.createUser(testAccount.backendKey, "vince", "hi vince", "vince@dog.com");
+		SpaceDogHelper.User vince = SpaceDogHelper.createUser(testAccount.backendKey, "vince", "hi vince",
+				"vince@dog.com");
 
 		SpaceRequest.refresh(testAccount);
 
@@ -95,7 +96,79 @@ public class UserResourceTest extends Assert {
 	}
 
 	@Test
-	public void shouldSetUserCustomScemaAndMore() throws Exception {
+	public void shouldSetAndResetPassword() throws Exception {
+
+		SpaceDogHelper.Account testAccount = SpaceDogHelper.resetTestAccount();
+		SpaceDogHelper.createUser(testAccount, "toto", "hi toto", "toto@dog.com");
+
+		// sign up without password should succeed
+
+		String passwordResetCode = SpaceRequest.post("/v1/user/").backendKey(testAccount)
+				.body(Json.startObject().put("username", "titi").put("email", "titi@dog.com")).go(201)
+				.getFromJson("passwordResetCode").asText();
+
+		assertFalse(Strings.isNullOrEmpty(passwordResetCode));
+
+		// no password user login should fail
+		// I can not pass a null password anyway to the basicAuth method
+
+		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "XXX").go(401);
+
+		// no password user trying to create password with empty reset code
+		// should fail
+
+		SpaceRequest.post("/v1/user/{id}/password").routeParam("id", "titi").backendKey(testAccount)
+				.queryString("passwordResetCode", "").body(new TextNode("hi titi")).go(400);
+
+		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "hi titi").go(401);
+
+		// no password user setting password with wrong reset code should fail
+
+		SpaceRequest.post("/v1/user/{id}/password").routeParam("id", "titi").backendKey(testAccount)
+				.queryString("passwordResetCode", "XXX").body(new TextNode("hi titi")).go(400);
+
+		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "hi titi").go(401);
+
+		// no password user setting password with right reset code should
+		// succeed
+
+		SpaceRequest.post("/v1/user/{id}/password").routeParam("id", "titi").backendKey(testAccount)
+				.queryString("passwordResetCode", passwordResetCode).body(new TextNode("hi titi")).go(200);
+
+		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "hi titi").go(200);
+
+		// toto user changes titi password should fail
+
+		SpaceRequest.put("/v1/user/{id}/password").routeParam("id", "titi").backendKey(testAccount)
+				.basicAuth("toto", "hi toto").body(new TextNode("XXX")).go(401);
+
+		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "XXX").go(401);
+
+		// owner changes its user password should succeed
+
+		SpaceRequest.put("/v1/user/{id}/password").routeParam("id", "titi").backendKey(testAccount)
+				.basicAuth("titi", "hi titi").body(new TextNode("hi titi 2")).go(200);
+
+		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "hi titi 2").go(200);
+
+		// login with old password should fail
+
+		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "hi titi").go(401);
+
+		// admin user changes titi user password should succeed
+
+		SpaceRequest.put("/v1/user/{id}/password").routeParam("id", "titi").basicAuth("test", "hi test")
+				.body(new TextNode("hi titi 3")).go(200);
+
+		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "hi titi 3").go(200);
+
+		// login with old password should fail
+
+		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "hi titi 2").go(401);
+	}
+
+	@Test
+	public void shouldSetUserCustomSchemaAndMore() throws Exception {
 
 		SpaceDogHelper.Account testAccount = SpaceDogHelper.resetTestAccount();
 
@@ -105,7 +178,7 @@ public class UserResourceTest extends Assert {
 
 		SpaceRequest.refresh(testAccount);
 
-		// update test account user schema
+		// update user schema with custom schema
 
 		ObjectNode customUserSchema = UserResource.getDefaultUserSchemaBuilder()//
 				.stringProperty("firstname", true)//

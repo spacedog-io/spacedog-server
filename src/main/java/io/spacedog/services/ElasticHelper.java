@@ -4,8 +4,10 @@
 package io.spacedog.services;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.base.Strings;
@@ -18,10 +20,27 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import net.codestory.http.Context;
 
 public class ElasticHelper {
+
+	public static Optional<ObjectNode> get(String index, String type, String id) {
+		GetResponse response = SpaceDogServices.getElasticClient().prepareGet(index, type, id).get();
+
+		if (!response.isExists())
+			return Optional.empty();
+
+		try {
+			ObjectNode object = Json.readObjectNode(response.getSourceAsString());
+			object.with("meta").put("id", response.getId()).put("type", response.getType()).put("version",
+					response.getVersion());
+			return Optional.of(object);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 	public static SearchHits search(String index, String type, String... terms) {
 
@@ -34,7 +53,7 @@ public class ElasticHelper {
 			builder.add(FilterBuilders.termFilter(terms[i], terms[i + 1]));
 		}
 
-		SearchResponse response = Start.getElasticClient().prepareSearch(index).setTypes(type)
+		SearchResponse response = SpaceDogServices.getElasticClient().prepareSearch(index).setTypes(type)
 				.setQuery(QueryBuilders.filteredQuery(QueryBuilders.matchAllQuery(), builder)).get();
 
 		return response.getHits();
@@ -86,30 +105,13 @@ public class ElasticHelper {
 		public FilteredSearchBuilder applyFilters(JsonNode filters) {
 			filterBuilder = new AndFilterBuilder();
 			filters.fields().forEachRemaining(field -> filterBuilder
-					.add(FilterBuilders.termFilter(field.getKey(), toSimpleValue(field.getValue()))));
+					.add(FilterBuilders.termFilter(field.getKey(), Json.toSimpleValue(field.getValue()))));
 			return this;
 		}
 
 		public SearchResponse get() throws InterruptedException, ExecutionException {
 			searchRequest.source(sourceBuilder.query(QueryBuilders.filteredQuery(queryBuilder, filterBuilder)));
-			return Start.getElasticClient().search(searchRequest).get();
+			return SpaceDogServices.getElasticClient().search(searchRequest).get();
 		}
-	}
-
-	public static Object toSimpleValue(JsonNode value) {
-
-		if (value.isBoolean())
-			return value.booleanValue();
-
-		if (value.isTextual())
-			return value.textValue();
-
-		if (value.isNumber())
-			return value.numberValue();
-
-		if (value.isNull())
-			return null;
-
-		throw new RuntimeException("only supports simple types");
 	}
 }

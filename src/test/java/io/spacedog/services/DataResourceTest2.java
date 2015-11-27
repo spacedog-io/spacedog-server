@@ -160,8 +160,7 @@ public class DataResourceTest2 extends Assert {
 		// update with invalid version should fail
 
 		SpaceRequest.put("/v1/data/sale/{id}").backendKey(testAccount).routeParam("id", id)
-				.queryString("version", "XXX").body(updateJson3b.toString()).go(400).assertFalse("success")
-				.assertEquals("XXX", "invalidParameters.version.value");
+				.queryString("version", "XXX").body(updateJson3b.toString()).go(400).assertFalse("success");
 
 		// update with correct version should succeed
 

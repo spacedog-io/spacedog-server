@@ -6,6 +6,8 @@ package io.spacedog.services;
 import java.io.IOException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.util.DefaultIndenter;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -146,5 +148,23 @@ public class Json {
 		return new JsonBuilder<ArrayNode>().startArray();
 	}
 
-	public static ObjectMapper jsonMapper = new ObjectMapper();
+	public static ObjectMapper jsonMapper = new ObjectMapper().setDefaultPrettyPrinter(
+			new DefaultPrettyPrinter().withArrayIndenter(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE));
+
+	public static Object toSimpleValue(JsonNode value) {
+	
+		if (value.isBoolean())
+			return value.booleanValue();
+	
+		if (value.isTextual())
+			return value.textValue();
+	
+		if (value.isNumber())
+			return value.numberValue();
+	
+		if (value.isNull())
+			return null;
+	
+		throw new RuntimeException("only supports simple types");
+	}
 }

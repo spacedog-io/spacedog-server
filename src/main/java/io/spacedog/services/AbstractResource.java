@@ -5,6 +5,7 @@ package io.spacedog.services;
 
 import java.util.concurrent.ExecutionException;
 
+import org.elasticsearch.index.engine.VersionConflictEngineException;
 import org.elasticsearch.index.mapper.MergeMappingException;
 import org.elasticsearch.indices.IndexMissingException;
 
@@ -89,6 +90,12 @@ public abstract class AbstractResource {
 	}
 
 	public static Payload saved(boolean created, String uri, String type, String id, long version) {
+		JsonBuilder<ObjectNode> builder = initSavedBuilder(uri, type, id, version);
+		return new Payload(JSON_CONTENT, builder.build().toString(), created ? HttpStatus.CREATED : HttpStatus.OK)
+				.withHeader(AbstractResource.HEADER_OBJECT_ID, id);
+	}
+
+	protected static JsonBuilder<ObjectNode> initSavedBuilder(String uri, String type, String id, long version) {
 		JsonBuilder<ObjectNode> builder = Json.startObject() //
 				.put("success", true) //
 				.put("id", id) //
@@ -98,8 +105,7 @@ public abstract class AbstractResource {
 		if (version > 0) //
 			builder.put("version", version);
 
-		return new Payload(JSON_CONTENT, builder.build().toString(), created ? HttpStatus.CREATED : HttpStatus.OK)
-				.withHeader(AbstractResource.HEADER_OBJECT_ID, id);
+		return builder;
 	}
 
 	public static Payload error(int httpStatus) {
@@ -108,6 +114,9 @@ public abstract class AbstractResource {
 
 	public static Payload error(Throwable t) {
 
+		if (t instanceof VersionConflictEngineException) {
+			return error(HttpStatus.CONFLICT, t);
+		}
 		if (t instanceof AuthenticationException) {
 			return error(HttpStatus.UNAUTHORIZED, t);
 		}

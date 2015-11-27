@@ -52,4 +52,8 @@ public class Account {
 		return new StringBuilder(backendId).append(':').append(backendKey.name).append(':').append(backendKey.secret)
 				.toString();
 	}
+
+	public Credentials credentials() {
+		return new Credentials(backendId, username, true);
+	}
 }

@@ -9,17 +9,18 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.action.delete.DeleteResponse;
-import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
+import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
-import org.elasticsearch.index.engine.VersionConflictEngineException;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -105,21 +106,34 @@ public class DataResource extends AbstractResource {
 		object.set("meta", Json.startObject().put("createdBy", createdBy).put("updatedBy", createdBy)
 				.put("createdAt", now).put("updatedAt", now).build());
 
-		return Start.getElasticClient().prepareIndex(index, type).setSource(object.toString()).get();
+		return SpaceDogServices.getElasticClient().prepareIndex(index, type).setSource(object.toString()).get();
 	}
 
 	@Delete("/:type")
 	@Delete("/:type/")
 	public Payload deleteAll(String type, Context context) {
-		/*
-		 * TODO (1) this is not exactly right I might want to delete all objects
-		 * but keep the schema for future use. (2) Admin credentials?
-		 */
-		return SchemaResource.get().deleteSchema(type, context);
+		try {
+			Account spaceAccount = AdminResource.checkAdminCredentialsOnly(context);
+
+			// check if type is well defined
+			// throws a NotFoundException if not
+			// TODO useful for security?
+			SchemaResource.getSchema(spaceAccount.backendId, type);
+
+			DeleteByQueryResponse response = SpaceDogServices.getElasticClient()
+					.prepareDeleteByQuery(spaceAccount.backendId).setQuery(QueryBuilders.matchAllQuery()).get();
+
+			return response.status().getStatus() == 200 ? success()
+					: error(response.status().getStatus(), String.format(
+							"error deleting all documents of type [%s] in backend [%s]", type, spaceAccount.backendId));
+
+		} catch (Throwable throwable) {
+			return error(throwable);
+		}
 	}
 
 	@Get("/:type/:id")
-	public Payload externalGet(String type, String objectId, Context context) {
+	public Payload get(String type, String objectId, Context context) {
 		try {
 			Credentials credentials = AdminResource.checkCredentials(context);
 
@@ -128,28 +142,13 @@ public class DataResource extends AbstractResource {
 			// TODO useful for security?
 			SchemaResource.getSchema(credentials.getBackendId(), type);
 
-			ObjectNode object = internalGet(type, objectId, credentials);
+			Optional<ObjectNode> object = ElasticHelper.get(credentials.getBackendId(), type, objectId);
 
-			return new Payload(JSON_CONTENT, object.toString(), HttpStatus.OK);
+			return object.isPresent() ? new Payload(JSON_CONTENT, object.get().toString(), HttpStatus.OK)
+					: error(HttpStatus.NOT_FOUND);
+
 		} catch (Throwable throwable) {
 			return error(throwable);
-		}
-	}
-
-	public ObjectNode internalGet(String type, String objectId, Credentials credentials) {
-
-		GetResponse response = Start.getElasticClient().prepareGet(credentials.getBackendId(), type, objectId).get();
-
-		if (!response.isExists())
-			throw new NotFoundException(credentials.getBackendId(), type, objectId);
-
-		try {
-			ObjectNode object = Json.readObjectNode(response.getSourceAsString());
-			object.with("meta").put("id", response.getId()).put("type", response.getType()).put("version",
-					response.getVersion());
-			return object;
-		} catch (IOException e) {
-			throw new RuntimeException(e);
 		}
 	}
 
@@ -195,7 +194,7 @@ public class DataResource extends AbstractResource {
 	}
 
 	@Put("/:type/:id")
-	public Payload update(String type, String objectId, String jsonBody, Context context) {
+	public Payload update(String type, String id, String body, Context context) {
 		try {
 			Credentials credentials = AdminResource.checkCredentials(context);
 
@@ -203,32 +202,64 @@ public class DataResource extends AbstractResource {
 			// object should be validated before saved
 			SchemaResource.getSchema(credentials.getBackendId(), type);
 
-			ObjectNode object = Json.readObjectNode(jsonBody);
-			// removed to forbid developers the update of meta fields
-			object.with("meta").removeAll().put("updatedBy", credentials.getName()).put("updatedAt",
-					DateTime.now().toString());
+			ObjectNode object = Json.readObjectNode(body);
+			boolean strict = context.query().getBoolean("strict", false);
+			// TODO return better exception-message in case of invalid version
+			// format
+			long version = context.query().getLong("version", 0l);
 
-			UpdateRequestBuilder update = Start.getElasticClient()
-					.prepareUpdate(credentials.getBackendId(), type, objectId).setDoc(object.toString());
+			if (strict) {
 
-			String onVersion = context.get("version");
+				IndexResponse response = fullUpdateInternal(type, id, version, object, credentials);
+				return saved(false, "/v1/data", response.getType(), response.getId(), response.getVersion());
 
-			if (!Strings.isNullOrEmpty(onVersion))
-				try {
-					update.setVersion(Long.parseLong(onVersion));
-				} catch (NumberFormatException exc) {
-					return invalidParameters("version", onVersion, "provided version is not a valid long");
-				}
+			} else {
 
-			UpdateResponse response = update.get();
+				UpdateResponse response = partialUpdateInternal(type, id, version, object, credentials);
+				return saved(false, "/v1/data", response.getType(), response.getId(), response.getVersion());
+			}
 
-			return saved(response.isCreated(), "/v1/data", response.getType(), response.getId(), response.getVersion());
-
-		} catch (VersionConflictEngineException exc) {
-			return error(HttpStatus.CONFLICT, exc);
 		} catch (Throwable throwable) {
 			return error(throwable);
 		}
+	}
+
+	/**
+	 * TODO should i get id and type from the meta for more consistency ?
+	 */
+	public IndexResponse fullUpdateInternal(String type, String id, long version, ObjectNode object,
+			Credentials credentials) {
+
+		object.remove("id");
+		object.remove("version");
+		object.remove("type");
+
+		checkNotNullOrEmpty(object, "meta.createdBy", type);
+		checkNotNullOrEmpty(object, "meta.createdAt", type);
+
+		object.with("meta").put("updatedBy", credentials.getName());
+		object.with("meta").put("updatedAt", DateTime.now().toString());
+
+		IndexRequestBuilder index = SpaceDogServices.getElasticClient()
+				.prepareIndex(credentials.getBackendId(), type, id).setSource(object.toString()).setVersion(version);
+
+		return index.get();
+	}
+
+	public UpdateResponse partialUpdateInternal(String type, String id, long version, ObjectNode object,
+			Credentials credentials) {
+
+		object.with("meta").removeAll()//
+				.put("updatedBy", credentials.getName())//
+				.put("updatedAt", DateTime.now().toString());
+
+		UpdateRequestBuilder update = SpaceDogServices.getElasticClient()
+				.prepareUpdate(credentials.getBackendId(), type, id).setDoc(object.toString());
+
+		if (version > 0)
+			update.setVersion(version);
+
+		return update.get();
 	}
 
 	@Delete("/:type/:id")
@@ -241,8 +272,8 @@ public class DataResource extends AbstractResource {
 			// TODO useful for security?
 			SchemaResource.getSchema(credentials.getBackendId(), type);
 
-			DeleteResponse response = Start.getElasticClient().prepareDelete(credentials.getBackendId(), type, objectId)
-					.get();
+			DeleteResponse response = SpaceDogServices.getElasticClient()
+					.prepareDelete(credentials.getBackendId(), type, objectId).get();
 			return response.isFound() ? success()
 					: error(HttpStatus.NOT_FOUND, "object of type [%s] and id [%s] not found", type, objectId);
 		} catch (Throwable throwable) {
@@ -282,7 +313,7 @@ public class DataResource extends AbstractResource {
 		}
 
 		request.extraSource(builder);
-		return extractResults(Start.getElasticClient().search(request).get(), context, credentials);
+		return extractResults(SpaceDogServices.getElasticClient().search(request).get(), context, credentials);
 	}
 
 	private ObjectNode extractResults(SearchResponse response, Context context, Credentials credentials)
@@ -332,7 +363,10 @@ public class DataResource extends AbstractResource {
 		set.remove(null);
 		Map<String, ObjectNode> results = new HashMap<>();
 		set.forEach(reference -> results.put(reference,
-				internalGet(getReferenceType(reference), getReferenceId(reference), credentials)));
+				ElasticHelper.get(credentials.getBackendId(), getReferenceType(reference), getReferenceId(reference))
+						// TODO if bad reference, I put an empty object
+						// do we really want this ?
+						.orElse(Json.newObjectNode())));
 		return results;
 	}
 

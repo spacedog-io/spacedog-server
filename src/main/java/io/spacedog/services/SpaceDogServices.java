@@ -14,13 +14,20 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 
-import net.codestory.http.WebServer;
+import net.codestory.http.AbstractWebServer;
+import net.codestory.http.Request;
+import net.codestory.http.Response;
+import net.codestory.http.internal.Handler;
+import net.codestory.http.internal.HttpServerWrapper;
+import net.codestory.http.internal.SimpleServerWrapper;
 import net.codestory.http.routes.Routes;
+import net.codestory.http.websockets.WebSocketHandler;
 
-public class Start {
+public class SpaceDogServices extends AbstractWebServer<SpaceDogServices> {
 
 	private static Node elasticNode;
 	private static Client elasticClient;
+	private static SpaceDogServices webServices;
 
 	private final static String[] LocalhostConf = { "/Users/davattias/dev/spacedog" };
 
@@ -89,20 +96,31 @@ public class Start {
 	}
 
 	private static void startFluent(boolean ssl, String[] conf) throws IOException {
+
+		webServices = new SpaceDogServices().configure(SpaceDogServices::configure);
+
 		if (ssl) {
 			// Force Fluent HTTP to production mode
 			System.setProperty("PROD_MODE", "true");
 
 			Path sslPath = Paths.get(conf[0]).resolve("ssl");
-			new WebServer().configure(Start::configure).startSSL(443,
-					Arrays.asList(sslPath.resolve(conf[1]), sslPath.resolve(conf[2])), sslPath.resolve(conf[3]));
+			webServices.startSSL(443, Arrays.asList(sslPath.resolve(conf[1]), sslPath.resolve(conf[2])),
+					sslPath.resolve(conf[3]));
 
 			HttpPermanentRedirect.start(80, "https://spacedog.io");
 
 		} else {
-			new WebServer().configure(Start::configure).start(8080);
-
+			webServices.start(8080);
 			HttpPermanentRedirect.start(9090, "http://127.0.0.1:8080");
 		}
+	}
+
+	public static void executeInternalRequest(Request request, Response response) throws Exception {
+		webServices.routesProvider.get().apply(request, response);
+	}
+
+	@Override
+	protected HttpServerWrapper createHttpServer(Handler httpHandler, WebSocketHandler webSocketHandler) {
+		return new SimpleServerWrapper(httpHandler, webSocketHandler);
 	}
 }

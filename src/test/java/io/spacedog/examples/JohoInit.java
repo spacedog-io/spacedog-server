@@ -129,7 +129,7 @@ public class JohoInit extends SpaceDogHelper {
 
 		// johoAccount = resetAccount(BACKEND_ID, ADMIN_USERNAME,
 		// ADMIN_PASSWORD, "david@spacedog.io");
-		johoAccount = getAccount(BACKEND_ID, ADMIN_USERNAME, ADMIN_PASSWORD);
+		johoAccount = getOrCreateAccount(BACKEND_ID, ADMIN_USERNAME, ADMIN_PASSWORD, "david@spacedog.io");
 
 		resetSchema(buildDiscussionSchema(), johoAccount);
 		resetSchema(buildMessageSchema(), johoAccount);

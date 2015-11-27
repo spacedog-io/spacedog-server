@@ -7,6 +7,8 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.xml.bind.DatatypeConverter;
 
+import org.elasticsearch.common.base.Strings;
+
 public class UserUtils {
 
 	/**
@@ -28,5 +30,7 @@ public class UserUtils {
 	}
 
 	public static void checkPasswordValidity(String password) {
+		if (Strings.isNullOrEmpty(password))
+			throw new IllegalArgumentException("password is empty");
 	}
 }

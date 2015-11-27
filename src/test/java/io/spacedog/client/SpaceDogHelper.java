@@ -1,5 +1,7 @@
 package io.spacedog.client;
 
+import java.util.Optional;
+
 import org.junit.Assert;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -9,6 +11,7 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 
 import io.spacedog.services.AdminResource;
 import io.spacedog.services.Json;
+import io.spacedog.services.Utils;
 
 public class SpaceDogHelper {
 
@@ -94,19 +97,36 @@ public class SpaceDogHelper {
 		return new Account(backendId, username, password, email, backendKey);
 	}
 
-	public static Account getAccount(String backendId, Account account) throws Exception {
+	public static Optional<Account> getAccount(String backendId, Account account) throws Exception {
 		return getAccount(backendId, account.username, account.password);
 	}
 
-	public static Account getAccount(String backendId, String username, String password) throws Exception {
+	public static Optional<Account> getAccount(String backendId, String username, String password) throws Exception {
 
-		ObjectNode account = SpaceRequest.get("/v1/admin/account/{backendId}").routeParam("backendId", backendId)
-				.basicAuth(username, password).go(200).objectNode();
+		SpaceResponse response = SpaceRequest.get("/v1/admin/account/{backendId}").routeParam("backendId", backendId)
+				.basicAuth(username, password).go(200, 401);
 
-		String backendKey = backendId + ':' + account.get("backendKey").get("name").asText() + ':'
-				+ account.get("backendKey").get("secret").asText();
+		if (response.httpResponse().getStatus() == 200) {
+			ObjectNode account = response.objectNode();
 
-		return new Account(backendId, username, password, account.get("email").asText(), backendKey);
+			String backendKey = backendId + ':' + account.get("backendKey").get("name").asText() + ':'
+					+ account.get("backendKey").get("secret").asText();
+
+			return Optional.of(new Account(backendId, username, password, account.get("email").asText(), backendKey));
+		}
+		return Optional.empty();
+	}
+
+	public static Account getOrCreateTestAccount() throws Exception {
+		return getOrCreateAccount("test", "test", "hi test", "david@spacedog.io");
+	}
+
+	public static Account getOrCreateAccount(String backendId, String username, String password, String email)
+			throws Exception {
+		Optional<Account> opt = getAccount(backendId, username, password);
+		if (opt.isPresent())
+			return opt.get();
+		return createAccount(backendId, username, password, email);
 	}
 
 	public static void deleteAccount(String backendId, Account account) throws Exception, UnirestException {
@@ -133,11 +153,18 @@ public class SpaceDogHelper {
 	}
 
 	public static Account resetTestAccount() throws Exception {
+		StackTraceElement parentStackTraceElement = Utils.getParentStackTraceElement();
+		printTestName(parentStackTraceElement.getClassName() + '.' + parentStackTraceElement.getMethodName());
 		return resetAccount("test", "test", "hi test", "david@spacedog.io");
 	}
 
-	public static Account getTestAccount() throws Exception {
-		return getAccount("test", "test", "hi test");
+	public static void deleteAll(String type, Account account) throws Exception {
+		SpaceRequest.delete("/v1/data/{type}").routeParam("type", type).basicAuth(account).go(200);
+	}
+
+	public static void printTestName(String testName) {
+		System.out.println();
+		System.out.println(String.format("==============%s==============", testName));
 	}
 
 }

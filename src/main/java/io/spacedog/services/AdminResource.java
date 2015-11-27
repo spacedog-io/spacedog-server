@@ -19,6 +19,7 @@ import org.elasticsearch.search.SearchHits;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
@@ -62,7 +63,7 @@ public class AdminResource extends AbstractResource {
 		String accountMapping = Resources.toString(Resources.getResource("io/spacedog/services/account-mapping.json"),
 				UTF_8);
 
-		IndicesAdminClient indices = Start.getElasticClient().admin().indices();
+		IndicesAdminClient indices = SpaceDogServices.getElasticClient().admin().indices();
 
 		if (!indices.prepareExists(ADMIN_INDEX).get().isExists()) {
 			indices.prepareCreate(ADMIN_INDEX).addMapping(ACCOUNT_TYPE, accountMapping).get();
@@ -127,10 +128,10 @@ public class AdminResource extends AbstractResource {
 						String.format("backend id [%s] is not available", account.backendId));
 
 			byte[] accountBytes = Json.getMapper().writeValueAsBytes(account);
-			Start.getElasticClient().prepareIndex(ADMIN_INDEX, ACCOUNT_TYPE).setSource(accountBytes).get();
+			SpaceDogServices.getElasticClient().prepareIndex(ADMIN_INDEX, ACCOUNT_TYPE).setSource(accountBytes).get();
 
 			// backend index is named after the backend id
-			Start.getElasticClient().admin().indices().prepareCreate(account.backendId)
+			SpaceDogServices.getElasticClient().admin().indices().prepareCreate(account.backendId)
 					.addMapping(UserResource.USER_TYPE, UserResource.getDefaultUserMapping()).get();
 
 			return saved(true, "/v1/admin", ACCOUNT_TYPE, account.backendId)
@@ -147,8 +148,8 @@ public class AdminResource extends AbstractResource {
 		try {
 			Account credentials = checkAdminCredentialsOnly(backendId, context);
 
-			GetResponse response = Start.getElasticClient().prepareGet(ADMIN_INDEX, ACCOUNT_TYPE, credentials.backendId)
-					.get();
+			GetResponse response = SpaceDogServices.getElasticClient()
+					.prepareGet(ADMIN_INDEX, ACCOUNT_TYPE, credentials.backendId).get();
 
 			if (!response.isExists())
 				return error(HttpStatus.INTERNAL_SERVER_ERROR, "no account found for backend [%s] and admin user [%s]",
@@ -166,15 +167,15 @@ public class AdminResource extends AbstractResource {
 		try {
 			Account credentials = checkAdminCredentialsOnly(backendId, context);
 
-			DeleteResponse resp1 = Start.getElasticClient()
+			DeleteResponse resp1 = SpaceDogServices.getElasticClient()
 					.prepareDelete(ADMIN_INDEX, ACCOUNT_TYPE, credentials.backendId).get();
 
 			if (!resp1.isFound())
 				return error(HttpStatus.INTERNAL_SERVER_ERROR, "no account found for backend [%s] and admin user [%s]",
 						credentials.backendId, credentials.username);
 
-			DeleteIndexResponse resp2 = Start.getElasticClient().admin().indices().prepareDelete(credentials.backendId)
-					.get();
+			DeleteIndexResponse resp2 = SpaceDogServices.getElasticClient().admin().indices()
+					.prepareDelete(credentials.backendId).get();
 
 			if (!resp2.isAcknowledged())
 				return error(HttpStatus.INTERNAL_SERVER_ERROR,
@@ -204,13 +205,10 @@ public class AdminResource extends AbstractResource {
 
 		String rawBackendKey = context.header(BACKEND_KEY_HEADER);
 
-		if (Strings.isNullOrEmpty(rawBackendKey)) {
-			Account account = checkAdminCredentialsOnly(context);
-			return new Credentials(account.backendId, account.username);
-
-		} else {
+		if (Strings.isNullOrEmpty(rawBackendKey))
+			return checkAdminCredentialsOnly(context).credentials();
+		else
 			return checkUserCredentialsOnly(context);
-		}
 	}
 
 	protected static Credentials checkUserCredentialsOnly(Context context)
@@ -259,17 +257,16 @@ public class AdminResource extends AbstractResource {
 
 			// check users in user specific backend index
 
-			SearchHits userHits = ElasticHelper.search(backendId, UserResource.USER_TYPE, "username", tokens.get()[0],
-					"hashedPassword", UserUtils.hashPassword(tokens.get()[1]));
+			Optional<ObjectNode> user = ElasticHelper.get(backendId, UserResource.USER_TYPE, tokens.get()[0]);
 
-			if (userHits.getTotalHits() == 0)
-				throw new AuthenticationException("invalid username or password");
+			if (user.isPresent()) {
+				String providedPassword = UserUtils.hashPassword(tokens.get()[1]);
+				JsonNode expectedPassword = user.get().get("hashedPassword");
+				if (!Json.isNull(expectedPassword) && providedPassword.equals(expectedPassword.asText()))
+					return new Credentials(backendId, tokens.get()[0], false);
+			}
 
-			if (userHits.getTotalHits() > 1)
-				throw new RuntimeException(String.format("more than one user with username [%s]", tokens.get()[0]));
-
-			return new Credentials(backendId,
-					Json.readObjectNode(userHits.getAt(0).getSourceAsString()).get("username").asText());
+			throw new AuthenticationException("invalid username or password");
 
 		} else {
 

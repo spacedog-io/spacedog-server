@@ -42,7 +42,7 @@ public class SchemaResource extends AbstractResource {
 	public Payload getAll(Context context) {
 		try {
 			Credentials credentials = AdminResource.checkCredentials(context);
-			GetMappingsResponse resp = Start.getElasticClient().admin().indices()
+			GetMappingsResponse resp = SpaceDogServices.getElasticClient().admin().indices()
 					.prepareGetMappings(credentials.getBackendId()).get();
 
 			JsonMerger jsonMerger = Json.merger();
@@ -77,7 +77,7 @@ public class SchemaResource extends AbstractResource {
 
 	public static ObjectNode getSchema(String index, String type)
 			throws NotFoundException, JsonProcessingException, IOException {
-		GetMappingsResponse resp = Start.getElasticClient().admin().indices().prepareGetMappings(index).addTypes(type)
+		GetMappingsResponse resp = SpaceDogServices.getElasticClient().admin().indices().prepareGetMappings(index).addTypes(type)
 				.get();
 
 		String source = Optional.ofNullable(resp.getMappings()).map(indexMap -> indexMap.get(index))
@@ -102,7 +102,7 @@ public class SchemaResource extends AbstractResource {
 			PutMappingRequest putMappingRequest = new PutMappingRequest(account.backendId).type(type)
 					.source(elasticMapping);
 
-			PutMappingResponse putMappingResponse = Start.getElasticClient().admin().indices()
+			PutMappingResponse putMappingResponse = SpaceDogServices.getElasticClient().admin().indices()
 					.putMapping(putMappingRequest).get();
 
 			return saved(true, "/v1", "schema", type);
@@ -118,7 +118,7 @@ public class SchemaResource extends AbstractResource {
 		try {
 			Account account = AdminResource.checkAdminCredentialsOnly(context);
 
-			Start.getElasticClient().admin().indices().prepareDeleteMapping(account.backendId).setType(type).get();
+			SpaceDogServices.getElasticClient().admin().indices().prepareDeleteMapping(account.backendId).setType(type).get();
 
 		} catch (TypeMissingException exception) {
 			// ignored
