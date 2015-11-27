@@ -6,7 +6,6 @@ package io.spacedog.services;
 import java.util.Optional;
 
 import org.elasticsearch.action.delete.DeleteResponse;
-import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.update.UpdateResponse;
 
@@ -24,6 +23,10 @@ import net.codestory.http.payload.Payload;
 @Prefix("/v1/data")
 public class DataResource extends AbstractResource {
 
+	//
+	// singleton
+	//
+
 	private static DataResource singleton = new DataResource();
 
 	static DataResource get() {
@@ -39,7 +42,7 @@ public class DataResource extends AbstractResource {
 
 	@Get("")
 	@Get("/")
-	public Payload getAll(Context context) {
+	public Payload getAllTypes(Context context) {
 		try {
 			Credentials credentials = AdminResource.checkCredentials(context);
 			ObjectNode result = SearchResource.get()//
@@ -48,6 +51,12 @@ public class DataResource extends AbstractResource {
 		} catch (Throwable throwable) {
 			return error(throwable);
 		}
+	}
+
+	@Delete("")
+	@Delete("/")
+	public Payload deleteAllTypes(Context context) {
+		return SearchResource.get().deleteAllTypes(null, context);
 	}
 
 	@Get("/:type")
@@ -81,6 +90,12 @@ public class DataResource extends AbstractResource {
 		} catch (Throwable throwable) {
 			return error(throwable);
 		}
+	}
+
+	@Delete("/:type")
+	@Delete("/:type/")
+	public Payload deleteForType(String type, String query, Context context) {
+		return SearchResource.get().deleteForType(type, null, context);
 	}
 
 	@Get("/:type/:id")
@@ -130,36 +145,6 @@ public class DataResource extends AbstractResource {
 						object, credentials.getName());
 				return saved(false, "/v1/data", response.getType(), response.getId(), response.getVersion());
 			}
-
-		} catch (Throwable throwable) {
-			return error(throwable);
-		}
-	}
-
-	@Delete("/:type")
-	@Delete("/:type/")
-	public Payload deleteAll(String type, Context context) {
-		try {
-			Account adminAccount = AdminResource.checkAdminCredentialsOnly(context);
-
-			DeleteByQueryResponse response = ElasticHelper.get().delete(adminAccount.backendId, null, type);
-
-			return toPayload(response.status(), response.getIndex(adminAccount.backendId).getFailures());
-
-		} catch (Throwable throwable) {
-			return error(throwable);
-		}
-	}
-
-	@Delete("")
-	@Delete("/")
-	public Payload deleteQuery(String query, Context context) {
-		try {
-			Account adminAccount = AdminResource.checkAdminCredentialsOnly(context);
-
-			DeleteByQueryResponse response = ElasticHelper.get().delete(adminAccount.backendId, query, new String[0]);
-
-			return toPayload(response.status(), response.getIndex(adminAccount.backendId).getFailures());
 
 		} catch (Throwable throwable) {
 			return error(throwable);

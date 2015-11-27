@@ -206,31 +206,10 @@ public class DataResourceTest2 extends Assert {
 		SpaceDogHelper.setSchema(SchemaBuilder2.builder("message").textProperty("text", "english", true).build(),
 				testAccount);
 
-		// should successfuly create 4 messages
-		String soLongGuys = createLotsOfMessages(testAccount);
-		SpaceRequest.get("/v1/data/message").basicAuth(testAccount).go(200).assertEquals(4, "total");
+		// should successfully create 4 messages and 1 user
 
-		// should succeed to delete one message by id
-		SpaceRequest.delete("/v1/data/message/" + soLongGuys).basicAuth(testAccount).go(200);
-		SpaceDogHelper.refresh(testAccount);
-		SpaceRequest.get("/v1/data/message").basicAuth(testAccount).go(200).assertEquals(3, "total");
-		SpaceRequest.get("/v1/data/message/" + soLongGuys).basicAuth(testAccount).go(404);
+		SpaceDogHelper.createUser(testAccount, "riri", "hi riri", "riri@dog.com");
 
-		// should succeed to delete all messages by query
-		ObjectNode query = Json.startObject().startObject("query")//
-				.startObject("match").put("text", "up")//
-				.build();
-		SpaceRequest.delete("/v1/data").basicAuth(testAccount).body(query).go(200);
-		SpaceDogHelper.refresh(testAccount);
-		SpaceRequest.get("/v1/data/message").basicAuth(testAccount).go(200).assertEquals(2, "total");
-
-		// should succeed to delete all messages
-		SpaceRequest.delete("/v1/data/message").basicAuth(testAccount).go(200);
-		SpaceDogHelper.refresh(testAccount);
-		SpaceRequest.get("/v1/data/message").basicAuth(testAccount).go(200).assertEquals(0, "total");
-	}
-
-	private String createLotsOfMessages(Account testAccount) throws Exception {
 		SpaceRequest.post("/v1/data/message").basicAuth(testAccount)
 				.body(Json.startObject().put("text", "what's up?").build()).go(201);
 		SpaceRequest.post("/v1/data/message").basicAuth(testAccount)
@@ -242,7 +221,16 @@ public class DataResourceTest2 extends Assert {
 
 		SpaceDogHelper.refresh(testAccount);
 
-		return id;
-	}
+		SpaceRequest.get("/v1/data").basicAuth(testAccount).go(200).assertEquals(5, "total");
 
+		// should succeed to delete all users
+		SpaceRequest.delete("/v1/data/user").basicAuth(testAccount).go(200);
+		SpaceDogHelper.refresh(testAccount);
+		SpaceRequest.get("/v1/data").basicAuth(testAccount).go(200).assertEquals(4, "total");
+
+		// should succeed to delete all objects
+		SpaceRequest.delete("/v1/data").basicAuth(testAccount).go(200);
+		SpaceDogHelper.refresh(testAccount);
+		SpaceRequest.get("/v1/data").basicAuth(testAccount).go(200).assertEquals(0, "total");
+	}
 }

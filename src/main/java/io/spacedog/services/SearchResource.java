@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
+import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -25,12 +26,13 @@ import com.google.common.base.Strings;
 
 import io.spacedog.services.ElasticHelper.FilteredSearchBuilder;
 import net.codestory.http.Context;
+import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/v1/search")
+@Prefix("/v1")
 public class SearchResource extends AbstractResource {
 
 	//
@@ -62,6 +64,18 @@ public class SearchResource extends AbstractResource {
 		}
 	}
 
+	@Delete("/search")
+	@Delete("/search/")
+	public Payload deleteAllTypes(String query, Context context) {
+		try {
+			Account adminAccount = AdminResource.checkAdminCredentialsOnly(context);
+			DeleteByQueryResponse response = ElasticHelper.get().delete(adminAccount.backendId, query, new String[0]);
+			return toPayload(response.status(), response.getIndex(adminAccount.backendId).getFailures());
+		} catch (Throwable throwable) {
+			return error(throwable);
+		}
+	}
+
 	@Post("/search/:type")
 	@Post("/search/:type/")
 	public Payload searchForType(String type, String body, Context context) {
@@ -69,6 +83,18 @@ public class SearchResource extends AbstractResource {
 			Credentials credentials = AdminResource.checkCredentials(context);
 			ObjectNode result = searchInternal(credentials, type, body, context);
 			return new Payload(JSON_CONTENT, result.toString(), HttpStatus.OK);
+		} catch (Throwable throwable) {
+			return error(throwable);
+		}
+	}
+
+	@Delete("/search/:type")
+	@Delete("/search/:type/")
+	public Payload deleteForType(String type, String query, Context context) {
+		try {
+			Account adminAccount = AdminResource.checkAdminCredentialsOnly(context);
+			DeleteByQueryResponse response = ElasticHelper.get().delete(adminAccount.backendId, query, type);
+			return toPayload(response.status(), response.getIndex(adminAccount.backendId).getFailures());
 		} catch (Throwable throwable) {
 			return error(throwable);
 		}

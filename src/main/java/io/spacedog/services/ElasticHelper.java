@@ -120,6 +120,7 @@ public class ElasticHelper {
 	}
 
 	public DeleteByQueryResponse delete(String index, String query, String... types) {
+
 		if (Strings.isNullOrEmpty(query))
 			query = Json.startObject().startObject("query").startObject("match_all").toString();
 
