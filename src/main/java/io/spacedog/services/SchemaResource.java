@@ -5,13 +5,15 @@ package io.spacedog.services;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.indices.TypeMissingException;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -28,6 +30,10 @@ import net.codestory.http.payload.Payload;
 @Prefix("/v1/schema")
 public class SchemaResource extends AbstractResource {
 
+	//
+	// Singleton
+	//
+
 	private static SchemaResource singleton = new SchemaResource();
 
 	static SchemaResource get() {
@@ -37,31 +43,30 @@ public class SchemaResource extends AbstractResource {
 	private SchemaResource() {
 	}
 
+	//
+	// Routes
+	//
+
 	@Get("")
 	@Get("/")
-	public Payload getAll(Context context) {
-		try {
-			Credentials credentials = AdminResource.checkCredentials(context);
-			GetMappingsResponse resp = SpaceDogServices.getElasticClient().admin().indices()
-					.prepareGetMappings(credentials.getBackendId()).get();
+	public Payload getAll(Context context) throws JsonParseException, JsonMappingException, IOException {
+		Credentials credentials = AdminResource.checkCredentials(context);
+		GetMappingsResponse resp = SpaceDogServices.getElasticClient().admin().indices()
+				.prepareGetMappings(credentials.getBackendId()).get();
 
-			JsonMerger jsonMerger = Json.merger();
+		JsonMerger jsonMerger = Json.merger();
 
-			Optional.ofNullable(resp.getMappings()).map(indexMap -> indexMap.get(credentials.getBackendId()))
-					.orElseThrow(() -> new NotFoundException(credentials.getBackendId())).forEach(typeAndMapping -> {
-						try {
-							jsonMerger.merge((ObjectNode) Json.readObjectNode(typeAndMapping.value.source().string())
-									.get(typeAndMapping.key).get("_meta"));
-						} catch (Exception e) {
-							throw new RuntimeException(e);
-						}
-					});
+		Optional.ofNullable(resp.getMappings()).map(indexMap -> indexMap.get(credentials.getBackendId()))
+				.orElseThrow(() -> new NotFoundException(credentials.getBackendId())).forEach(typeAndMapping -> {
+					try {
+						jsonMerger.merge((ObjectNode) Json.readObjectNode(typeAndMapping.value.source().string())
+								.get(typeAndMapping.key).get("_meta"));
+					} catch (Exception e) {
+						throw new RuntimeException(e);
+					}
+				});
 
-			return new Payload(JSON_CONTENT, jsonMerger.get().toString(), HttpStatus.OK);
-
-		} catch (Throwable throwable) {
-			return error(throwable);
-		}
+		return new Payload(JSON_CONTENT, jsonMerger.get().toString(), HttpStatus.OK);
 	}
 
 	@Get("/:type")
@@ -71,14 +76,14 @@ public class SchemaResource extends AbstractResource {
 			Credentials credentials = AdminResource.checkCredentials(context);
 			return new Payload(JSON_CONTENT, getSchema(credentials.getBackendId(), type).toString(), HttpStatus.OK);
 		} catch (Throwable throwable) {
-			return error(throwable);
+			return PayloadHelper.error(throwable);
 		}
 	}
 
 	public static ObjectNode getSchema(String index, String type)
 			throws NotFoundException, JsonProcessingException, IOException {
-		GetMappingsResponse resp = SpaceDogServices.getElasticClient().admin().indices().prepareGetMappings(index).addTypes(type)
-				.get();
+		GetMappingsResponse resp = SpaceDogServices.getElasticClient().admin().indices().prepareGetMappings(index)
+				.addTypes(type).get();
 
 		String source = Optional.ofNullable(resp.getMappings()).map(indexMap -> indexMap.get(index))
 				.map(typeMap -> typeMap.get(type)).orElseThrow(() -> new NotFoundException(index, type)).source()
@@ -91,41 +96,29 @@ public class SchemaResource extends AbstractResource {
 	@Put("/:type/")
 	@Post("/:type")
 	@Post("/:type/")
-	public Payload upsertSchema(String type, String newSchemaAsString, Context context) {
-		try {
-			Account account = AdminResource.checkAdminCredentialsOnly(context);
+	public Payload upsertSchema(String type, String newSchemaAsString, Context context)
+			throws InterruptedException, ExecutionException, JsonParseException, JsonMappingException, IOException {
 
-			JsonNode schema = SchemaValidator.validate(type, Json.readObjectNode(newSchemaAsString));
-
-			String elasticMapping = SchemaTranslator.translate(type, schema).toString();
-
-			PutMappingRequest putMappingRequest = new PutMappingRequest(account.backendId).type(type)
-					.source(elasticMapping);
-
-			PutMappingResponse putMappingResponse = SpaceDogServices.getElasticClient().admin().indices()
-					.putMapping(putMappingRequest).get();
-
-			return saved(true, "/v1", "schema", type);
-
-		} catch (Throwable throwable) {
-			return error(throwable);
-		}
+		Account account = AdminResource.checkAdminCredentialsOnly(context);
+		JsonNode schema = SchemaValidator.validate(type, Json.readObjectNode(newSchemaAsString));
+		String elasticMapping = SchemaTranslator.translate(type, schema).toString();
+		PutMappingRequest putMappingRequest = new PutMappingRequest(account.backendId).type(type)
+				.source(elasticMapping);
+		SpaceDogServices.getElasticClient().admin().indices().putMapping(putMappingRequest).get();
+		return PayloadHelper.saved(true, "/v1", "schema", type);
 	}
 
 	@Delete("/:type")
 	@Delete("/:type/")
-	public Payload deleteSchema(String type, Context context) {
+	public Payload deleteSchema(String type, Context context)
+			throws JsonParseException, JsonMappingException, IOException {
 		try {
 			Account account = AdminResource.checkAdminCredentialsOnly(context);
-
-			SpaceDogServices.getElasticClient().admin().indices().prepareDeleteMapping(account.backendId).setType(type).get();
-
+			SpaceDogServices.getElasticClient().admin().indices().prepareDeleteMapping(account.backendId).setType(type)
+					.get();
 		} catch (TypeMissingException exception) {
 			// ignored
-		} catch (Throwable throwable) {
-			return error(throwable);
 		}
-
-		return success();
+		return PayloadHelper.success();
 	}
 }

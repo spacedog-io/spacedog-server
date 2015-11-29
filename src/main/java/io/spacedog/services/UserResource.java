@@ -3,8 +3,10 @@
  */
 package io.spacedog.services;
 
+import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
@@ -12,6 +14,9 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.common.base.Strings;
 import org.elasticsearch.script.ScriptService;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -69,80 +74,68 @@ public class UserResource extends AbstractResource {
 	}
 
 	//
-	// services
+	// Routes
 	//
 
 	@Get("/login")
 	@Get("/login/")
-	public Payload login(Context context) {
-		try {
-			AdminResource.checkUserCredentialsOnly(context);
-			return Payload.ok();
-		} catch (Throwable throwable) {
-			return error(throwable);
-		}
+	public Payload login(Context context) throws JsonParseException, JsonMappingException, IOException {
+		AdminResource.checkUserCredentialsOnly(context);
+		return Payload.ok();
 	}
 
 	@Get("/logout")
 	@Get("/logout/")
-	public Payload logout(Context context) {
-		try {
-			AdminResource.checkUserCredentialsOnly(context);
-			return Payload.ok();
-		} catch (Throwable throwable) {
-			return error(throwable);
-		}
+	public Payload logout(Context context) throws JsonParseException, JsonMappingException, IOException {
+		AdminResource.checkUserCredentialsOnly(context);
+		return Payload.ok();
 	}
 
 	@Get("/user")
 	@Get("/user/")
-	public Payload getAll(Context context) {
+	public Payload getAll(Context context)
+			throws NotFoundException, JsonProcessingException, InterruptedException, ExecutionException, IOException {
 		return DataResource.get().getAllForType(USER_TYPE, context);
 	}
 
 	@Post("/user")
 	@Post("/user/")
-	public Payload signUp(String body, Context context) {
-		try {
-			/**
-			 * TODO adjust this. Admin should be able to sign up users. But what
-			 * backend id if many in account? Backend key should be able to sign
-			 * up users. Should common users be able to?
-			 */
-			Credentials credentials = AdminResource.checkCredentials(context);
+	public Payload signUp(String body, Context context) throws JsonParseException, JsonMappingException, IOException {
+		/**
+		 * TODO adjust this. Admin should be able to sign up users. But what
+		 * backend id if many in account? Backend key should be able to sign up
+		 * users. Should common users be able to?
+		 */
+		Credentials credentials = AdminResource.checkCredentials(context);
 
-			ObjectNode user = Json.readObjectNode(body);
-			checkNotNullOrEmpty(user, USERNAME, USER_TYPE);
-			checkNotNullOrEmpty(user, EMAIL, USER_TYPE);
-			checkNotPresent(user, HASHED_PASSWORD, USER_TYPE);
-			user.putArray(GROUPS).add(credentials.getBackendId());
+		ObjectNode user = Json.readObjectNode(body);
+		checkNotNullOrEmpty(user, USERNAME, USER_TYPE);
+		checkNotNullOrEmpty(user, EMAIL, USER_TYPE);
+		checkNotPresent(user, HASHED_PASSWORD, USER_TYPE);
+		user.putArray(GROUPS).add(credentials.getBackendId());
 
-			// password management
+		// password management
 
-			JsonNode password = user.remove("password");
-			Optional<String> passwordResetCode = Optional.empty();
-			if (password == null || password.equals(NullNode.getInstance())) {
-				passwordResetCode = Optional.of(UUID.randomUUID().toString());
-				user.put(PASSWORD_RESET_CODE, passwordResetCode.get());
-			} else {
-				UserUtils.checkPasswordValidity(password.asText());
-				user.put(HASHED_PASSWORD, UserUtils.hashPassword(password.asText()));
-			}
-
-			IndexResponse response = ElasticHelper.get().createObject(credentials.getBackendId(), USER_TYPE, user,
-					credentials.getName());
-
-			JsonBuilder<ObjectNode> savedBuilder = initSavedBuilder("/v1", USER_TYPE, response.getId(),
-					response.getVersion());
-
-			passwordResetCode.ifPresent(code -> savedBuilder.put(PASSWORD_RESET_CODE, code));
-
-			return new Payload(JSON_CONTENT, savedBuilder.toString(), HttpStatus.CREATED)
-					.withHeader(AbstractResource.HEADER_OBJECT_ID, response.getId());
-
-		} catch (Throwable throwable) {
-			return error(throwable);
+		JsonNode password = user.remove("password");
+		Optional<String> passwordResetCode = Optional.empty();
+		if (password == null || password.equals(NullNode.getInstance())) {
+			passwordResetCode = Optional.of(UUID.randomUUID().toString());
+			user.put(PASSWORD_RESET_CODE, passwordResetCode.get());
+		} else {
+			UserUtils.checkPasswordValidity(password.asText());
+			user.put(HASHED_PASSWORD, UserUtils.hashPassword(password.asText()));
 		}
+
+		IndexResponse response = ElasticHelper.get().createObject(credentials.getBackendId(), USER_TYPE, user,
+				credentials.getName());
+
+		JsonBuilder<ObjectNode> savedBuilder = initSavedBuilder("/v1", USER_TYPE, response.getId(),
+				response.getVersion());
+
+		passwordResetCode.ifPresent(code -> savedBuilder.put(PASSWORD_RESET_CODE, code));
+
+		return new Payload(JSON_CONTENT, savedBuilder.toString(), HttpStatus.CREATED)
+				.withHeader(PayloadHelper.HEADER_OBJECT_ID, response.getId());
 	}
 
 	protected ObjectNode checkObjectNode(JsonNode json) {
@@ -153,114 +146,101 @@ public class UserResource extends AbstractResource {
 
 	@Get("/user/:id")
 	@Get("/user/:id/")
-	public Payload get(String id, Context context) {
+	public Payload get(String id, Context context) throws JsonParseException, JsonMappingException, IOException {
 		return DataResource.get().get(USER_TYPE, id, context);
 	}
 
 	@Put("/user/:id")
 	@Put("/user/:id/")
-	public Payload update(String id, String jsonBody, Context context) {
+	public Payload update(String id, String jsonBody, Context context)
+			throws JsonParseException, JsonMappingException, IOException {
 		return DataResource.get().update(USER_TYPE, id, jsonBody, context);
 	}
 
 	@Delete("/user/:id")
 	@Delete("/user/:id/")
-	public Payload delete(String id, Context context) {
+	public Payload delete(String id, Context context) throws JsonParseException, JsonMappingException, IOException {
 		return DataResource.get().delete(USER_TYPE, id, context);
 	}
 
 	@Delete("/user/:id/password")
 	@Delete("/user/:id/password")
-	public Payload deletePassword(String id, Context context) {
-		try {
-			Account account = AdminResource.checkAdminCredentialsOnly(context);
+	public Payload deletePassword(String id, Context context)
+			throws JsonParseException, JsonMappingException, IOException {
+		Account account = AdminResource.checkAdminCredentialsOnly(context);
 
-			UpdateResponse response = SpaceDogServices.getElasticClient()
-					.prepareUpdate(account.backendId, UserResource.USER_TYPE, id)//
-					.setScript("ctx._source.remove('hashedPassword');ctx._source.passwordResetCode=code;",
-							ScriptService.ScriptType.INLINE)//
-					.addScriptParam("code", UUID.randomUUID().toString())//
-					.get();
+		UpdateResponse response = SpaceDogServices.getElasticClient()
+				.prepareUpdate(account.backendId, UserResource.USER_TYPE, id)//
+				.setScript("ctx._source.remove('hashedPassword');ctx._source.passwordResetCode=code;",
+						ScriptService.ScriptType.INLINE)//
+				.addScriptParam("code", UUID.randomUUID().toString())//
+				.get();
 
-			return saved(false, "/v1/user", response.getType(), response.getId(), response.getVersion());
-
-		} catch (Throwable throwable) {
-			return error(throwable);
-		}
-
+		return PayloadHelper.saved(false, "/v1/user", response.getType(), response.getId(), response.getVersion());
 	}
 
 	@Post("/user/:id/password")
 	@Post("/user/:id/password")
-	public Payload initPassword(String id, String body, Context context) {
-		try {
-			Credentials credentials = AdminResource.checkCredentials(context);
+	public Payload initPassword(String id, String body, Context context)
+			throws JsonParseException, JsonMappingException, IOException {
+		Credentials credentials = AdminResource.checkCredentials(context);
 
-			// TODO do we need a password reset expire date to limit the reset
-			// time scope
-			String passwordResetCode = context.query().get(PASSWORD_RESET_CODE);
-			if (Strings.isNullOrEmpty(passwordResetCode))
-				throw new IllegalArgumentException("password reset code is empty");
+		// TODO do we need a password reset expire date to limit the reset
+		// time scope
+		String passwordResetCode = context.query().get(PASSWORD_RESET_CODE);
+		if (Strings.isNullOrEmpty(passwordResetCode))
+			throw new IllegalArgumentException("password reset code is empty");
+
+		String password = Json.readJsonNode(body).asText();
+		UserUtils.checkPasswordValidity(password);
+
+		GetResponse getResponse = SpaceDogServices.getElasticClient()
+				.prepareGet(credentials.getBackendId(), USER_TYPE, id).get();
+
+		if (!getResponse.isExists())
+			throw new NotFoundException(credentials.getBackendId(), USER_TYPE, id);
+
+		ObjectNode user = Json.readObjectNode(getResponse.getSourceAsString());
+
+		if (user.get(HASHED_PASSWORD) != null || user.get(PASSWORD_RESET_CODE) == null)
+			throw new IllegalArgumentException(String.format("user [%s] password has not been deleted", id));
+
+		if (!passwordResetCode.equals(user.get(PASSWORD_RESET_CODE).asText()))
+			throw new IllegalArgumentException(String.format("invalid password reset code [%s]", passwordResetCode));
+
+		user.remove(PASSWORD_RESET_CODE);
+		user.put(HASHED_PASSWORD, UserUtils.hashPassword(password));
+
+		IndexResponse indexResponse = ElasticHelper.get().updateObject(credentials.getBackendId(), USER_TYPE, id, 0,
+				user, credentials.getName());
+
+		return PayloadHelper.saved(false, "/v1", USER_TYPE, id, indexResponse.getVersion());
+	}
+
+	@Put("/user/:id/password")
+	@Put("/user/:id/password")
+	public Payload updatePassword(String id, String body, Context context)
+			throws JsonParseException, JsonMappingException, IOException {
+		Credentials credentials = AdminResource.checkCredentials(context);
+
+		if (credentials.isAdmin() || (credentials.isUser() && id.equals(credentials.getName()))) {
 
 			String password = Json.readJsonNode(body).asText();
 			UserUtils.checkPasswordValidity(password);
 
-			GetResponse getResponse = SpaceDogServices.getElasticClient()
-					.prepareGet(credentials.getBackendId(), USER_TYPE, id).get();
+			ObjectNode update = Json.startObject()//
+					.put(HASHED_PASSWORD, UserUtils.hashPassword(password))//
+					.putNode(PASSWORD_RESET_CODE, NullNode.getInstance())//
+					.build();
 
-			if (!getResponse.isExists())
-				throw new NotFoundException(credentials.getBackendId(), USER_TYPE, id);
+			UpdateResponse response = SpaceDogServices.getElasticClient()
+					.prepareUpdate(credentials.getBackendId(), UserResource.USER_TYPE, id).setDoc(update.toString())
+					.get();
 
-			ObjectNode user = Json.readObjectNode(getResponse.getSourceAsString());
+			return PayloadHelper.saved(false, "/v1/user", response.getType(), response.getId(), response.getVersion());
 
-			if (user.get(HASHED_PASSWORD) != null || user.get(PASSWORD_RESET_CODE) == null)
-				throw new IllegalArgumentException(String.format("user [%s] password has not been deleted", id));
-
-			if (!passwordResetCode.equals(user.get(PASSWORD_RESET_CODE).asText()))
-				throw new IllegalArgumentException(
-						String.format("invalid password reset code [%s]", passwordResetCode));
-
-			user.remove(PASSWORD_RESET_CODE);
-			user.put(HASHED_PASSWORD, UserUtils.hashPassword(password));
-
-			IndexResponse indexResponse = ElasticHelper.get().updateObject(credentials.getBackendId(), USER_TYPE, id, 0,
-					user, credentials.getName());
-
-			return saved(false, "/v1", USER_TYPE, id, indexResponse.getVersion());
-
-		} catch (Throwable throwable) {
-			return error(throwable);
-		}
-	}
-
-	@Put("/user/:id/password")
-	@Put("/user/:id/password")
-	public Payload updatePassword(String id, String body, Context context) {
-		try {
-			Credentials credentials = AdminResource.checkCredentials(context);
-
-			if (credentials.isAdmin() || (credentials.isUser() && id.equals(credentials.getName()))) {
-
-				String password = Json.readJsonNode(body).asText();
-				UserUtils.checkPasswordValidity(password);
-
-				ObjectNode update = Json.startObject()//
-						.put(HASHED_PASSWORD, UserUtils.hashPassword(password))//
-						.putNode(PASSWORD_RESET_CODE, NullNode.getInstance())//
-						.build();
-
-				UpdateResponse response = SpaceDogServices.getElasticClient()
-						.prepareUpdate(credentials.getBackendId(), UserResource.USER_TYPE, id).setDoc(update.toString())
-						.get();
-
-				return saved(false, "/v1/user", response.getType(), response.getId(), response.getVersion());
-
-			} else
-				throw new AuthenticationException("only the owner or admin users can update user passwords");
-
-		} catch (Throwable throwable) {
-			return error(throwable);
-		}
+		} else
+			throw new AuthenticationException("only the owner or admin users can update user passwords");
 	}
 
 	public static String getDefaultUserMapping() {

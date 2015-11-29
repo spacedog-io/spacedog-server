@@ -10,6 +10,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.amazonaws.util.StringInputStream;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -34,46 +36,40 @@ public class BatchResource extends AbstractResource {
 
 	@Post("")
 	@Post("/")
-	public Payload execute(String body, Context context) {
-		try {
-			Credentials credentials = AdminResource.checkCredentials(context);
-			ArrayNode requests = Json.readArrayNode(body);
-			JsonBuilder<ArrayNode> responses = Json.startArray();
+	public Payload execute(String body, Context context) throws JsonParseException, JsonMappingException, IOException {
+		Credentials credentials = AdminResource.checkCredentials(context);
+		ArrayNode requests = Json.readArrayNode(body);
+		JsonBuilder<ArrayNode> responses = Json.startArray();
 
-			// TODO use this boolean
-			boolean created = false;
+		// TODO use this boolean
+		boolean created = false;
 
-			BatchResponse response = new BatchResponse(context);
+		BatchResponse response = new BatchResponse(context);
 
-			for (JsonNode request : requests) {
-				// String uri = checkString(request, "uri", true, "batch request
-				// objects");
-				// String method = checkString(request, "method", true, "batch
-				// request objects");
-				// String[] uriTerms = Utils.splitBySlash(uri);
-				// if ("data".equals(uriTerms[0])) {
-				// if (Methods.GET.equals(method))
-				// responses.addNode(getData(request, uriTerms, context,
-				// credentials));
-				// }
+		for (JsonNode request : requests) {
+			// String uri = checkString(request, "uri", true, "batch request
+			// objects");
+			// String method = checkString(request, "method", true, "batch
+			// request objects");
+			// String[] uriTerms = Utils.splitBySlash(uri);
+			// if ("data".equals(uriTerms[0])) {
+			// if (Methods.GET.equals(method))
+			// responses.addNode(getData(request, uriTerms, context,
+			// credentials));
+			// }
 
-				// if (!request.isObject())
-				// throw new IllegalArgumentException(
-				// String.format("batch request not a json object but [%s]",
-				// request.getNodeType()));
-				//
-				// JsonRequest wrapper = new JsonRequest((ObjectNode) request,
-				// context);
-				// SpaceDogServices.executeInternalRequest(wrapper, wrapper);
-				// responses.addNode(wrapper.jsonContent());
-			}
-
-			return new Payload(JSON_CONTENT, responses.toString(), created ? HttpStatus.CREATED : HttpStatus.OK);
-
-		} catch (Throwable throwable) {
-			return error(throwable);
+			// if (!request.isObject())
+			// throw new IllegalArgumentException(
+			// String.format("batch request not a json object but [%s]",
+			// request.getNodeType()));
+			//
+			// JsonRequest wrapper = new JsonRequest((ObjectNode) request,
+			// context);
+			// SpaceDogServices.executeInternalRequest(wrapper, wrapper);
+			// responses.addNode(wrapper.jsonContent());
 		}
 
+		return new Payload(JSON_CONTENT, responses.toString(), created ? HttpStatus.CREATED : HttpStatus.OK);
 	}
 
 	//

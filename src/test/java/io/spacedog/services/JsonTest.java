@@ -25,4 +25,17 @@ public class JsonTest extends Assert {
 		Json.set(json, "riri.fifi.1.loulou", BooleanNode.TRUE);
 		assertEquals(true, Json.get(json, "riri.fifi.1.loulou").asBoolean());
 	}
+
+	@Test
+	public void shouldConvertRuntimeExceptionToJsonError() {
+		JsonNode json = Json.toJson(new RuntimeException(new NullPointerException()));
+
+		assertEquals("java.lang.RuntimeException", json.get("type").asText());
+		assertEquals("java.lang.NullPointerException", json.get("message").asText());
+		assertTrue(json.get("trace").size() > 5);
+		assertEquals("java.lang.NullPointerException", json.get("cause").get("type").asText());
+		assertTrue(json.get("cause").get("message").isNull());
+		assertTrue(json.get("cause").get("trace").size() > 5);
+	}
+
 }

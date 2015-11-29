@@ -76,19 +76,15 @@ public class AdminResource extends AbstractResource {
 	@Get("/account")
 	@Get("/account/")
 	public Payload getAll(Context context) {
-		try {
-			return Payload.unauthorized("spacedog.io");
+		return Payload.unauthorized("spacedog.io");
 
-			// checkAdminCredentialsOnly(context);
-			//
-			// SearchResponse response = Start.getElasticClient()
-			// .prepareSearch(SPACEDOG_INDEX).setTypes(ACCOUNT_TYPE)
-			// .setQuery(QueryBuilders.matchAllQuery()).get();
-			//
-			// return extractResults(response);
-		} catch (Throwable throwable) {
-			return error(throwable);
-		}
+		// checkAdminCredentialsOnly(context);
+		//
+		// SearchResponse response = Start.getElasticClient()
+		// .prepareSearch(SPACEDOG_INDEX).setTypes(ACCOUNT_TYPE)
+		// .setQuery(QueryBuilders.matchAllQuery()).get();
+		//
+		// return extractResults(response);
 	}
 
 	@Get("/user/:username/check")
@@ -105,100 +101,83 @@ public class AdminResource extends AbstractResource {
 
 	@Post("/account")
 	@Post("/account/")
-	public Payload signUp(String body, Context context) {
-		try {
-			ObjectNode input = Json.readObjectNode(body);
+	public Payload signUp(String body, Context context) throws IOException {
+		ObjectNode input = Json.readObjectNode(body);
 
-			Account account = new Account();
-			account.backendId = input.get("backendId").textValue();
-			account.username = input.get("username").textValue();
-			account.email = input.get("email").textValue();
-			String password = input.get("password").textValue();
-			Account.checkPasswordValidity(password);
-			account.hashedPassword = UserUtils.hashPassword(password);
-			account.backendKey = new BackendKey();
-			account.checkAccountInputValidity();
+		Account account = new Account();
+		account.backendId = input.get("backendId").textValue();
+		account.username = input.get("username").textValue();
+		account.email = input.get("email").textValue();
+		String password = input.get("password").textValue();
+		Account.checkPasswordValidity(password);
+		account.hashedPassword = UserUtils.hashPassword(password);
+		account.backendKey = new BackendKey();
+		account.checkAccountInputValidity();
 
-			if (ElasticHelper.get().search(ADMIN_INDEX, ACCOUNT_TYPE, "username", account.username).getTotalHits() > 0)
-				return invalidParameters("username", account.username,
-						String.format("administrator username [%s] is not available", account.username));
+		if (ElasticHelper.get().search(ADMIN_INDEX, ACCOUNT_TYPE, "username", account.username).getTotalHits() > 0)
+			return PayloadHelper.invalidParameters("username", account.username,
+					String.format("administrator username [%s] is not available", account.username));
 
-			if (ElasticHelper.get().search(ADMIN_INDEX, ACCOUNT_TYPE, "backendId", account.backendId)
-					.getTotalHits() > 0)
-				return invalidParameters("backendId", account.backendId,
-						String.format("backend id [%s] is not available", account.backendId));
+		if (ElasticHelper.get().search(ADMIN_INDEX, ACCOUNT_TYPE, "backendId", account.backendId).getTotalHits() > 0)
+			return PayloadHelper.invalidParameters("backendId", account.backendId,
+					String.format("backend id [%s] is not available", account.backendId));
 
-			byte[] accountBytes = Json.getMapper().writeValueAsBytes(account);
-			SpaceDogServices.getElasticClient().prepareIndex(ADMIN_INDEX, ACCOUNT_TYPE).setSource(accountBytes).get();
+		byte[] accountBytes = Json.getMapper().writeValueAsBytes(account);
+		SpaceDogServices.getElasticClient().prepareIndex(ADMIN_INDEX, ACCOUNT_TYPE).setSource(accountBytes).get();
 
-			// backend index is named after the backend id
-			SpaceDogServices.getElasticClient().admin().indices().prepareCreate(account.backendId)
-					.addMapping(UserResource.USER_TYPE, UserResource.getDefaultUserMapping()).get();
+		// backend index is named after the backend id
+		SpaceDogServices.getElasticClient().admin().indices().prepareCreate(account.backendId)
+				.addMapping(UserResource.USER_TYPE, UserResource.getDefaultUserMapping()).get();
 
-			return saved(true, "/v1/admin", ACCOUNT_TYPE, account.backendId)
-					.withHeader(AdminResource.BACKEND_KEY_HEADER, account.defaultClientKey());
-
-		} catch (Throwable throwable) {
-			return error(throwable);
-		}
+		return PayloadHelper.saved(true, "/v1/admin", ACCOUNT_TYPE, account.backendId)
+				.withHeader(AdminResource.BACKEND_KEY_HEADER, account.defaultClientKey());
 	}
 
 	@Get("/account/:id")
 	@Get("/account/:id/")
-	public Payload get(String backendId, Context context) {
-		try {
-			Account credentials = checkAdminCredentialsOnly(backendId, context);
+	public Payload get(String backendId, Context context) throws JsonParseException, JsonMappingException, IOException {
+		Account credentials = checkAdminCredentialsOnly(backendId, context);
 
-			GetResponse response = SpaceDogServices.getElasticClient()
-					.prepareGet(ADMIN_INDEX, ACCOUNT_TYPE, credentials.backendId).get();
+		GetResponse response = SpaceDogServices.getElasticClient()
+				.prepareGet(ADMIN_INDEX, ACCOUNT_TYPE, credentials.backendId).get();
 
-			if (!response.isExists())
-				return error(HttpStatus.INTERNAL_SERVER_ERROR, "no account found for backend [%s] and admin user [%s]",
-						credentials.backendId, credentials.username);
+		if (!response.isExists())
+			return PayloadHelper.error(HttpStatus.INTERNAL_SERVER_ERROR,
+					"no account found for backend [%s] and admin user [%s]", credentials.backendId,
+					credentials.username);
 
-			return new Payload(JSON_CONTENT, response.getSourceAsBytes(), HttpStatus.OK);
-		} catch (Throwable throwable) {
-			return error(throwable);
-		}
+		return new Payload(JSON_CONTENT, response.getSourceAsBytes(), HttpStatus.OK);
 	}
 
 	@Delete("/account/:id")
 	@Delete("/account/:id/")
-	public Payload delete(String backendId, Context context) {
-		try {
-			Account credentials = checkAdminCredentialsOnly(backendId, context);
+	public Payload delete(String backendId, Context context)
+			throws JsonParseException, JsonMappingException, IOException {
+		Account credentials = checkAdminCredentialsOnly(backendId, context);
 
-			DeleteResponse resp1 = SpaceDogServices.getElasticClient()
-					.prepareDelete(ADMIN_INDEX, ACCOUNT_TYPE, credentials.backendId).get();
+		DeleteResponse resp1 = SpaceDogServices.getElasticClient()
+				.prepareDelete(ADMIN_INDEX, ACCOUNT_TYPE, credentials.backendId).get();
 
-			if (!resp1.isFound())
-				return error(HttpStatus.INTERNAL_SERVER_ERROR, "no account found for backend [%s] and admin user [%s]",
-						credentials.backendId, credentials.username);
+		if (!resp1.isFound())
+			return PayloadHelper.error(HttpStatus.INTERNAL_SERVER_ERROR,
+					"no account found for backend [%s] and admin user [%s]", credentials.backendId,
+					credentials.username);
 
-			DeleteIndexResponse resp2 = SpaceDogServices.getElasticClient().admin().indices()
-					.prepareDelete(credentials.backendId).get();
+		DeleteIndexResponse resp2 = SpaceDogServices.getElasticClient().admin().indices()
+				.prepareDelete(credentials.backendId).get();
 
-			if (!resp2.isAcknowledged())
-				return error(HttpStatus.INTERNAL_SERVER_ERROR,
-						"internal index deletion not acknowledged for account with backend [%s] ",
-						credentials.backendId);
+		if (!resp2.isAcknowledged())
+			return PayloadHelper.error(HttpStatus.INTERNAL_SERVER_ERROR,
+					"internal index deletion not acknowledged for account with backend [%s] ", credentials.backendId);
 
-			return success();
-		} catch (Throwable throwable) {
-			return error(throwable);
-		}
+		return PayloadHelper.success();
 	}
 
 	@Get("/login")
 	@Get("/login/")
-	public Payload login(Context context) {
-		try {
-			Account account = checkAdminCredentialsOnly(context);
-
-			return Payload.ok().withHeader(AdminResource.BACKEND_KEY_HEADER, account.defaultClientKey());
-		} catch (Throwable throwable) {
-			return error(throwable);
-		}
+	public Payload login(Context context) throws JsonParseException, JsonMappingException, IOException {
+		Account account = checkAdminCredentialsOnly(context);
+		return Payload.ok().withHeader(AdminResource.BACKEND_KEY_HEADER, account.defaultClientKey());
 	}
 
 	public static Credentials checkCredentials(Context context)

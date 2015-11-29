@@ -167,4 +167,23 @@ public class Json {
 	
 		throw new RuntimeException("only supports simple types");
 	}
+
+	public static JsonNode toJson(Throwable t) {
+		JsonBuilder<ObjectNode> builder = startObject()//
+				.put("type", t.getClass().getName()) //
+				.put("message", t.getMessage()) //
+				.startArray("trace");
+	
+		for (StackTraceElement element : t.getStackTrace()) {
+			builder.add(element.toString());
+		}
+	
+		builder.end();
+	
+		if (t.getCause() != null) {
+			builder.putNode("cause", toJson(t.getCause()));
+		}
+	
+		return builder.build();
+	}
 }

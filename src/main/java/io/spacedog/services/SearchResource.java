@@ -19,7 +19,9 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
@@ -54,67 +56,48 @@ public class SearchResource extends AbstractResource {
 
 	@Post("/search")
 	@Post("/search/")
-	public Payload searchAllTypes(String body, Context context) {
-		try {
-			Credentials credentials = AdminResource.checkCredentials(context);
-			ObjectNode result = searchInternal(credentials, null, body, context);
-			return new Payload(JSON_CONTENT, result.toString(), HttpStatus.OK);
-		} catch (Throwable throwable) {
-			return error(throwable);
-		}
+	public Payload searchAllTypes(String body, Context context) throws JsonParseException, JsonMappingException,
+			IOException, NotFoundException, InterruptedException, ExecutionException {
+		Credentials credentials = AdminResource.checkCredentials(context);
+		ObjectNode result = searchInternal(credentials, null, body, context);
+		return new Payload(JSON_CONTENT, result.toString(), HttpStatus.OK);
 	}
 
 	@Delete("/search")
 	@Delete("/search/")
-	public Payload deleteAllTypes(String query, Context context) {
-		try {
-			Account adminAccount = AdminResource.checkAdminCredentialsOnly(context);
-			DeleteByQueryResponse response = ElasticHelper.get().delete(adminAccount.backendId, query, new String[0]);
-			return toPayload(response.status(), response.getIndex(adminAccount.backendId).getFailures());
-		} catch (Throwable throwable) {
-			return error(throwable);
-		}
+	public Payload deleteAllTypes(String query, Context context)
+			throws JsonParseException, JsonMappingException, IOException {
+		Account adminAccount = AdminResource.checkAdminCredentialsOnly(context);
+		DeleteByQueryResponse response = ElasticHelper.get().delete(adminAccount.backendId, query, new String[0]);
+		return PayloadHelper.toPayload(response.status(), response.getIndex(adminAccount.backendId).getFailures());
 	}
 
 	@Post("/search/:type")
 	@Post("/search/:type/")
-	public Payload searchForType(String type, String body, Context context) {
-		try {
-			Credentials credentials = AdminResource.checkCredentials(context);
-			ObjectNode result = searchInternal(credentials, type, body, context);
-			return new Payload(JSON_CONTENT, result.toString(), HttpStatus.OK);
-		} catch (Throwable throwable) {
-			return error(throwable);
-		}
+	public Payload searchForType(String type, String body, Context context) throws JsonParseException,
+			JsonMappingException, IOException, NotFoundException, InterruptedException, ExecutionException {
+		Credentials credentials = AdminResource.checkCredentials(context);
+		ObjectNode result = searchInternal(credentials, type, body, context);
+		return new Payload(JSON_CONTENT, result.toString(), HttpStatus.OK);
 	}
 
 	@Delete("/search/:type")
 	@Delete("/search/:type/")
-	public Payload deleteForType(String type, String query, Context context) {
-		try {
-			Account adminAccount = AdminResource.checkAdminCredentialsOnly(context);
-			DeleteByQueryResponse response = ElasticHelper.get().delete(adminAccount.backendId, query, type);
-			return toPayload(response.status(), response.getIndex(adminAccount.backendId).getFailures());
-		} catch (Throwable throwable) {
-			return error(throwable);
-		}
+	public Payload deleteForType(String type, String query, Context context)
+			throws JsonParseException, JsonMappingException, IOException {
+		Account adminAccount = AdminResource.checkAdminCredentialsOnly(context);
+		DeleteByQueryResponse response = ElasticHelper.get().delete(adminAccount.backendId, query, type);
+		return PayloadHelper.toPayload(response.status(), response.getIndex(adminAccount.backendId).getFailures());
 	}
 
 	@Post("/filter/:type")
 	@Post("/filter/:type")
-	public Payload filter(String type, String body, Context context) {
-		try {
-			Credentials credentials = AdminResource.checkCredentials(context);
-
-			FilteredSearchBuilder builder = ElasticHelper.get().searchBuilder(credentials.getBackendId(), type)
-					.applyContext(context).applyFilters(Json.readObjectNode(body));
-
-			return new Payload(JSON_CONTENT, extractResults(builder.get(), context, credentials).toString(),
-					HttpStatus.OK);
-
-		} catch (Throwable throwable) {
-			return error(throwable);
-		}
+	public Payload filter(String type, String body, Context context)
+			throws JsonParseException, JsonMappingException, IOException, InterruptedException, ExecutionException {
+		Credentials credentials = AdminResource.checkCredentials(context);
+		FilteredSearchBuilder builder = ElasticHelper.get().searchBuilder(credentials.getBackendId(), type)
+				.applyContext(context).applyFilters(Json.readObjectNode(body));
+		return new Payload(JSON_CONTENT, extractResults(builder.get(), context, credentials).toString(), HttpStatus.OK);
 	}
 
 	ObjectNode searchInternal(Credentials credentials, String type, String jsonQuery, Context context)

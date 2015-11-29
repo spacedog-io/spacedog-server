@@ -50,14 +50,15 @@ public class SpaceDogServices extends AbstractWebServer<SpaceDogServices> {
 	}
 
 	private static void configure(Routes routes) {
-		routes.add(DataResource.get()) //
-				.add(SchemaResource.get()) //
-				.add(UserResource.get()) //
+		routes.add(DataResource.get())//
+				.add(SchemaResource.get())//
+				.add(UserResource.get())//
 				.add(AdminResource.get())//
 				.add(BatchResource.get())//
 				.add(SearchResource.get());
 
-		routes.filter(new CrossOriginFilter());
+		routes.filter(new CrossOriginFilter())//
+				.filter(new ServiceErrorFilter());
 	}
 
 	public static void main(String[] args) {
