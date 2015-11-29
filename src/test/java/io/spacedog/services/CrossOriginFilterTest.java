@@ -4,24 +4,19 @@
 package io.spacedog.services;
 
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceDogHelper;
+import io.spacedog.client.SpaceDogHelper.Account;
+import io.spacedog.client.SpaceRequest;
 import net.codestory.http.constants.Headers;
 
 public class CrossOriginFilterTest extends Assert {
 
-	private static SpaceDogHelper.Account testAccount;
-
-	@BeforeClass
-	public static void resetTestAccount() throws Exception {
-		testAccount = SpaceDogHelper.resetTestAccount();
-	}
-
 	@Test
 	public void shouldReturnCORSHeaders() throws Exception {
+
+		Account testAccount = SpaceDogHelper.resetTestAccount();
 
 		// CORS for simple requests
 
@@ -43,7 +38,6 @@ public class CrossOriginFilterTest extends Assert {
 		assertEquals(CrossOriginFilter.ALLOW_METHODS,
 				req2headers.getFirst(Headers.ACCESS_CONTROL_ALLOW_METHODS.toLowerCase()));
 		assertEquals("31536000", req2headers.getFirst(Headers.ACCESS_CONTROL_MAX_AGE.toLowerCase()));
-
 	}
 
 }
