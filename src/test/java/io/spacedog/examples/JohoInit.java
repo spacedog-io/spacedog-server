@@ -185,8 +185,8 @@ public class JohoInit extends SpaceDogHelper {
 	}
 
 	private void createResponse(String messageId, String text, User user) throws Exception {
-		JsonBuilder<ObjectNode> message = Json.startObject().startObject("responses").put("text", text)//
-				.startObject("author").put("firstname", user.username).put("lastname", user.email);
+		JsonBuilder<ObjectNode> message = Json.objectBuilder().object("responses").put("text", text)//
+				.object("author").put("firstname", user.username).put("lastname", user.email);
 		SpaceRequest.put("/v1/data/message/{messageId}").routeParam("messageId", messageId).backendKey(johoAccount)
 				.basicAuth(user).body(message).go(200);
 	}
@@ -195,7 +195,7 @@ public class JohoInit extends SpaceDogHelper {
 			String lastname, String job, String town, String serviceName, String serviceCode, double lat, double lon,
 			String mobile, String fixed, String avatarUrl) throws Exception {
 
-		ObjectNode user = Json.startObject().put("username", username)//
+		ObjectNode user = Json.objectBuilder().put("username", username)//
 				.put("password", password)//
 				.put("email", email)//
 				.put("firstname", firstname)//
@@ -205,10 +205,10 @@ public class JohoInit extends SpaceDogHelper {
 				.put("mobile", mobile)//
 				.put("fixed", fixed)//
 				.put("avatar", avatarUrl)//
-				.startObject("service")//
+				.object("service")//
 				.put("name", serviceName)//
 				.put("code", serviceCode)//
-				.startObject("where")//
+				.object("where")//
 				.put("lat", lat)//
 				.put("lon", lon)//
 				.build();
@@ -233,15 +233,15 @@ public class JohoInit extends SpaceDogHelper {
 
 	public String createDiscussion(String title, String categoryCode, User user) throws Exception {
 
-		JsonBuilder<ObjectNode> discussion = Json.startObject().put("title", title)//
-				.put("description", title).startObject("category").put("code", categoryCode);
+		JsonBuilder<ObjectNode> discussion = Json.objectBuilder().put("title", title)//
+				.put("description", title).object("category").put("code", categoryCode);
 		return SpaceRequest.post("/v1/data/discussion").backendKey(johoAccount).basicAuth(user).body(discussion).go(201)
 				.objectNode().get("id").asText();
 	}
 
 	public String createMessage(String discussionId, String text, User user) throws Exception {
 
-		JsonBuilder<ObjectNode> message = Json.startObject().put("text", text).put("discussionId", discussionId);
+		JsonBuilder<ObjectNode> message = Json.objectBuilder().put("text", text).put("discussionId", discussionId);
 		return SpaceRequest.post("/v1/data/message").backendKey(johoAccount).basicAuth(user).body(message).go(201)
 				.objectNode().get("id").asText();
 	}
@@ -250,18 +250,18 @@ public class JohoInit extends SpaceDogHelper {
 
 		SpaceDogHelper.refresh(johoAccount);
 
-		JsonBuilder<ObjectNode> discussionQuery = Json.startObject()//
+		JsonBuilder<ObjectNode> discussionQuery = Json.objectBuilder()//
 				.put("from", 0)//
 				.put("size", 10)//
-				.startArray("sort")//
-				.startObject()//
-				.startObject("meta.updatedAt")//
+				.array("sort")//
+				.object()//
+				.object("meta.updatedAt")//
 				.put("order", "asc")//
 				.end()//
 				.end()//
 				.end()//
-				.startObject("query")//
-				.startObject("match_all");
+				.object("query")//
+				.object("match_all");
 
 		JsonNode subjectResults = SpaceRequest.post("/v1/data/discussion/search").backendKey(johoAccount)
 				.body(discussionQuery).go(200).jsonNode();
@@ -270,24 +270,24 @@ public class JohoInit extends SpaceDogHelper {
 
 		while (discussions.hasNext()) {
 
-			JsonBuilder<ObjectNode> messagesQuery = Json.startObject()//
+			JsonBuilder<ObjectNode> messagesQuery = Json.objectBuilder()//
 					.put("from", 0)//
 					.put("size", 10)//
-					.startArray("sort")//
-					.startObject()//
-					.startObject("meta.updatedAt")//
+					.array("sort")//
+					.object()//
+					.object("meta.updatedAt")//
 					.put("order", "asc")//
 					.end()//
 					.end()//
 					.end()//
-					.startObject("query")//
-					.startObject("filtered")//
-					.startObject("query")//
-					.startObject("match_all")//
+					.object("query")//
+					.object("filtered")//
+					.object("query")//
+					.object("match_all")//
 					.end()//
 					.end()//
-					.startObject("filter")//
-					.startObject("term")//
+					.object("filter")//
+					.object("term")//
 					.put("discussionId", discussions.next().get("meta").get("id").asText());
 
 			SpaceRequest.post("/v1/data/message/search").backendKey(johoAccount).body(messagesQuery).go(200);

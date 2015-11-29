@@ -140,12 +140,12 @@ public class Json {
 		return getMapper().getNodeFactory().arrayNode();
 	}
 
-	public static JsonBuilder<ObjectNode> startObject() {
-		return new JsonBuilder<ObjectNode>().startObject();
+	public static JsonBuilder<ObjectNode> objectBuilder() {
+		return new JsonBuilder<ObjectNode>().object();
 	}
 
-	public static JsonBuilder<ArrayNode> startArray() {
-		return new JsonBuilder<ArrayNode>().startArray();
+	public static JsonBuilder<ArrayNode> arrayBuilder() {
+		return new JsonBuilder<ArrayNode>().array();
 	}
 
 	public static ObjectMapper jsonMapper = new ObjectMapper().setDefaultPrettyPrinter(
@@ -169,10 +169,10 @@ public class Json {
 	}
 
 	public static JsonNode toJson(Throwable t) {
-		JsonBuilder<ObjectNode> builder = startObject()//
+		JsonBuilder<ObjectNode> builder = objectBuilder()//
 				.put("type", t.getClass().getName()) //
 				.put("message", t.getMessage()) //
-				.startArray("trace");
+				.array("trace");
 	
 		for (StackTraceElement element : t.getStackTrace()) {
 			builder.add(element.toString());
@@ -181,7 +181,7 @@ public class Json {
 		builder.end();
 	
 		if (t.getCause() != null) {
-			builder.putNode("cause", toJson(t.getCause()));
+			builder.node("cause", toJson(t.getCause()));
 		}
 	
 		return builder.build();

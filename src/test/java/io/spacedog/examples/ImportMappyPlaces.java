@@ -92,11 +92,11 @@ public class ImportMappyPlaces extends Assert {
 	}
 
 	private static void copyPoi(JsonNode src) {
-		JsonBuilder<ObjectNode> target = Json.startObject().put("name", src.get("name").asText()) //
+		JsonBuilder<ObjectNode> target = Json.objectBuilder().put("name", src.get("name").asText()) //
 				.put("town", src.get("town").asText()) //
 				.put("zipcode", src.get("pCode").asText()) //
 				.put("way", src.get("way").asText()) //
-				.startObject("where") //
+				.object("where") //
 				.put("lat", src.get("lat").asDouble()) //
 				.put("lon", src.get("lng").asDouble()) //
 				.end();
@@ -115,9 +115,9 @@ public class ImportMappyPlaces extends Assert {
 
 		JsonNode allRubrics = src.get("allRubrics");
 		if (allRubrics != null && allRubrics.size() > 0) {
-			target.startArray("rubrics");
+			target.array("rubrics");
 			allRubrics.forEach(rubric -> {
-				target.startObject().put("rubricId", rubric.get("id").asText()) //
+				target.object().put("rubricId", rubric.get("id").asText()) //
 						.put("rubricLabel", rubric.get("label").asText()).end();
 			});
 			target.end();

@@ -39,7 +39,7 @@ public class BatchResource extends AbstractResource {
 	public Payload execute(String body, Context context) throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = AdminResource.checkCredentials(context);
 		ArrayNode requests = Json.readArrayNode(body);
-		JsonBuilder<ArrayNode> responses = Json.startArray();
+		JsonBuilder<ArrayNode> responses = Json.arrayBuilder();
 
 		// TODO use this boolean
 		boolean created = false;

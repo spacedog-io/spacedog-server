@@ -111,8 +111,8 @@ public class ChauffeLeTest extends Assert {
 		@Override
 		public String createSubject(String subject, SpaceDogHelper.User user) throws Exception {
 
-			String bigPost = Json.startObject().put("title", subject) //
-					.startArray("responses") //
+			String bigPost = Json.objectBuilder().put("title", subject) //
+					.array("responses") //
 					.end()//
 					.build().toString();
 
@@ -127,7 +127,7 @@ public class ChauffeLeTest extends Assert {
 					.routeParam("id", postId).go(200).objectNode();
 
 			((ArrayNode) bigPost.get("responses"))
-					.add(Json.startObject().put("title", comment).put("author", user.username).build());
+					.add(Json.objectBuilder().put("title", comment).put("author", user.username).build());
 
 			SpaceRequest.put("/v1/data/bigpost/{id}").backendKey(adminAccount).routeParam("id", postId).basicAuth(user)
 					.body(bigPost.toString()).go(200);
@@ -138,18 +138,18 @@ public class ChauffeLeTest extends Assert {
 
 			SpaceDogHelper.refresh(adminAccount);
 
-			String wallQuery = Json.startObject()//
+			String wallQuery = Json.objectBuilder()//
 					.put("from", 0)//
 					.put("size", 10)//
-					.startArray("sort")//
-					.startObject()//
-					.startObject("meta.updatedAt")//
+					.array("sort")//
+					.object()//
+					.object("meta.updatedAt")//
 					.put("order", "asc")//
 					.end()//
 					.end()//
 					.end()//
-					.startObject("query")//
-					.startObject("match_all")//
+					.object("query")//
+					.object("match_all")//
 					.build().toString();
 
 			return SpaceRequest.post("/v1/data/bigpost/search").backendKey(adminAccount).body(wallQuery).go(200)
@@ -162,7 +162,7 @@ public class ChauffeLeTest extends Assert {
 		@Override
 		public String createSubject(String subject, SpaceDogHelper.User user) throws Exception {
 
-			String smallPost = Json.startObject().put("title", subject).build().toString();
+			String smallPost = Json.objectBuilder().put("title", subject).build().toString();
 
 			return SpaceRequest.post("/v1/data/smallpost").backendKey(adminAccount).basicAuth(user).body(smallPost)
 					.go(201).objectNode().get("id").asText();
@@ -171,7 +171,7 @@ public class ChauffeLeTest extends Assert {
 		@Override
 		public void addComment(String parentId, String comment, SpaceDogHelper.User user) throws Exception {
 
-			String smallPost = Json.startObject().put("title", comment)//
+			String smallPost = Json.objectBuilder().put("title", comment)//
 					.put("parent", parentId)//
 					.build().toString();
 
@@ -183,51 +183,51 @@ public class ChauffeLeTest extends Assert {
 
 			SpaceDogHelper.refresh(adminAccount);
 
-			String subjectQuery = Json.startObject()//
+			String subjectQuery = Json.objectBuilder()//
 					.put("from", 0)//
 					.put("size", 10)//
-					.startArray("sort")//
-					.startObject()//
-					.startObject("meta.updatedAt")//
+					.array("sort")//
+					.object()//
+					.object("meta.updatedAt")//
 					.put("order", "asc")//
 					.end()//
 					.end()//
 					.end()//
-					.startObject("query")//
-					.startObject("filtered")//
-					.startObject("query")//
-					.startObject("match_all")//
+					.object("query")//
+					.object("filtered")//
+					.object("query")//
+					.object("match_all")//
 					.end()//
 					.end()//
-					.startObject("filter")//
-					.startObject("not")//
-					.startObject("exists")//
+					.object("filter")//
+					.object("not")//
+					.object("exists")//
 					.put("field", "parent")//
 					.build().toString();
 
 			JsonNode subjectResults = SpaceRequest.post("/v1/data/smallpost/search").backendKey(adminAccount)
 					.body(subjectQuery).go(200).jsonNode();
 
-			JsonBuilder<ObjectNode> responsesQuery = Json.startObject()//
+			JsonBuilder<ObjectNode> responsesQuery = Json.objectBuilder()//
 					.put("from", 0)//
 					.put("size", 10)//
-					.startArray("sort")//
+					.array("sort")//
 					.add("parent")//
-					.startObject()//
-					.startObject("meta.updatedAt")//
+					.object()//
+					.object("meta.updatedAt")//
 					.put("order", "asc")//
 					.end()//
 					.end()//
 					.end()//
-					.startObject("query")//
-					.startObject("filtered")//
-					.startObject("query")//
-					.startObject("match_all")//
+					.object("query")//
+					.object("filtered")//
+					.object("query")//
+					.object("match_all")//
 					.end()//
 					.end()//
-					.startObject("filter")//
-					.startObject("terms")//
-					.startArray("parent");
+					.object("filter")//
+					.object("terms")//
+					.array("parent");
 
 			Iterator<JsonNode> subjects = subjectResults.get("results").elements();
 

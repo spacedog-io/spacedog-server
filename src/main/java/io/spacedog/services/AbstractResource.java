@@ -49,7 +49,7 @@ public abstract class AbstractResource {
 	}
 
 	protected static JsonBuilder<ObjectNode> initSavedBuilder(String uri, String type, String id, long version) {
-		JsonBuilder<ObjectNode> builder = Json.startObject() //
+		JsonBuilder<ObjectNode> builder = Json.objectBuilder() //
 				.put("success", true) //
 				.put("id", id) //
 				.put("type", type) //

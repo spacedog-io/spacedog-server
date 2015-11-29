@@ -13,21 +13,6 @@ public class JsonBuilder<N extends JsonNode> {
 
 	private LinkedList<JsonNode> stack = new LinkedList<JsonNode>();
 
-	private ObjectNode checkCurrentIsObjectNode() {
-		JsonNode current = stack.getLast();
-		if (!current.isObject())
-			throw new IllegalStateException(
-					String.format("current node not an object but [%s]", current.getNodeType()));
-		return (ObjectNode) current;
-	}
-
-	private ArrayNode checkCurrentIsArrayNode() {
-		JsonNode current = stack.getLast();
-		if (!current.isArray())
-			throw new IllegalStateException(String.format("current node not an array but [%s]", current.getNodeType()));
-		return (ArrayNode) current;
-	}
-
 	//
 	// object methods
 	//
@@ -62,12 +47,12 @@ public class JsonBuilder<N extends JsonNode> {
 		return this;
 	}
 
-	public JsonBuilder<N> putNode(String key, JsonNode value) {
+	public JsonBuilder<N> node(String key, JsonNode value) {
 		checkCurrentIsObjectNode().set(key, value);
 		return this;
 	}
 
-	public JsonBuilder<N> putNode(String key, String jsonText) {
+	public JsonBuilder<N> node(String key, String jsonText) {
 		try {
 			checkCurrentIsObjectNode().set(key, Json.getMapper().readTree(jsonText));
 			return this;
@@ -76,12 +61,12 @@ public class JsonBuilder<N extends JsonNode> {
 		}
 	}
 
-	public JsonBuilder<N> startObject(String key) {
+	public JsonBuilder<N> object(String key) {
 		stack.add(checkCurrentIsObjectNode().putObject(key));
 		return this;
 	}
 
-	public JsonBuilder<N> startArray(String key) {
+	public JsonBuilder<N> array(String key) {
 		stack.add(checkCurrentIsObjectNode().putArray(key));
 		return this;
 	}
@@ -120,12 +105,12 @@ public class JsonBuilder<N extends JsonNode> {
 		return this;
 	}
 
-	public JsonBuilder<N> addNode(JsonNode value) {
+	public JsonBuilder<N> node(JsonNode value) {
 		checkCurrentIsArrayNode().add(value);
 		return this;
 	}
 
-	public JsonBuilder<N> addNode(String jsonText) {
+	public JsonBuilder<N> node(String jsonText) {
 		try {
 			checkCurrentIsArrayNode().add(Json.getMapper().readTree(jsonText));
 			return this;
@@ -134,7 +119,7 @@ public class JsonBuilder<N extends JsonNode> {
 		}
 	}
 
-	public JsonBuilder<N> startObject() {
+	public JsonBuilder<N> object() {
 		stack.add( //
 				stack.isEmpty() ? //
 						Json.getMapper().getNodeFactory().objectNode() //
@@ -142,7 +127,7 @@ public class JsonBuilder<N extends JsonNode> {
 		return this;
 	}
 
-	public JsonBuilder<N> startArray() {
+	public JsonBuilder<N> array() {
 		stack.add( //
 				stack.isEmpty() ? //
 						Json.getMapper().getNodeFactory().arrayNode() //
@@ -154,26 +139,6 @@ public class JsonBuilder<N extends JsonNode> {
 		for (Object value : values)
 			addGenericToArray(value);
 		return this;
-	}
-
-	private void addGenericToArray(Object value) {
-		if (value instanceof Integer)
-			add((Integer) value);
-		else if (value instanceof Long)
-			add((Long) value);
-		else if (value instanceof Float)
-			add((Float) value);
-		else if (value instanceof Double)
-			add((Double) value);
-		else if (value instanceof String)
-			add((String) value);
-		else if (value instanceof Boolean)
-			add((Boolean) value);
-		else if (value instanceof JsonNode)
-			addNode((JsonNode) value);
-		else
-			throw new IllegalArgumentException(
-					String.format("invalif array value type [%s]", value.getClass().getSimpleName()));
 	}
 
 	//
@@ -194,5 +159,44 @@ public class JsonBuilder<N extends JsonNode> {
 	@Override
 	public String toString() {
 		return build().toString();
+	}
+
+	//
+	// implem methods
+	//
+
+	private ObjectNode checkCurrentIsObjectNode() {
+		JsonNode current = stack.getLast();
+		if (!current.isObject())
+			throw new IllegalStateException(
+					String.format("current node not an object but [%s]", current.getNodeType()));
+		return (ObjectNode) current;
+	}
+
+	private ArrayNode checkCurrentIsArrayNode() {
+		JsonNode current = stack.getLast();
+		if (!current.isArray())
+			throw new IllegalStateException(String.format("current node not an array but [%s]", current.getNodeType()));
+		return (ArrayNode) current;
+	}
+
+	private void addGenericToArray(Object value) {
+		if (value instanceof Integer)
+			add((Integer) value);
+		else if (value instanceof Long)
+			add((Long) value);
+		else if (value instanceof Float)
+			add((Float) value);
+		else if (value instanceof Double)
+			add((Double) value);
+		else if (value instanceof String)
+			add((String) value);
+		else if (value instanceof Boolean)
+			add((Boolean) value);
+		else if (value instanceof JsonNode)
+			node((JsonNode) value);
+		else
+			throw new IllegalArgumentException(
+					String.format("invalif array value type [%s]", value.getClass().getSimpleName()));
 	}
 }

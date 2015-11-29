@@ -32,8 +32,8 @@ public class ServiceErrorFilter implements Filter {
 				&& (payload.rawContentType() == null//
 						|| !payload.rawContentType().startsWith("application/json"))) {
 
-			JsonBuilder<ObjectNode> node = Json.startObject().put("success", false)//
-					.startObject("error");
+			JsonBuilder<ObjectNode> node = Json.objectBuilder().put("success", false)//
+					.object("error");
 
 			if (payload.code() == 404) {
 				node.put("message", String.format("[%s] is not a valid SpaceDog route", uri));

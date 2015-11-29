@@ -228,9 +228,9 @@ public class UserResource extends AbstractResource {
 			String password = Json.readJsonNode(body).asText();
 			UserUtils.checkPasswordValidity(password);
 
-			ObjectNode update = Json.startObject()//
+			ObjectNode update = Json.objectBuilder()//
 					.put(HASHED_PASSWORD, UserUtils.hashPassword(password))//
-					.putNode(PASSWORD_RESET_CODE, NullNode.getInstance())//
+					.node(PASSWORD_RESET_CODE, NullNode.getInstance())//
 					.build();
 
 			UpdateResponse response = SpaceDogServices.getElasticClient()

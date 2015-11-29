@@ -24,17 +24,17 @@ public class UserResourceTest extends Assert {
 
 		// fails since invalid users
 
-		SpaceRequest.post("/v1/user/").backendKey(testAccount).body(Json.startObject()).go(400);
+		SpaceRequest.post("/v1/user/").backendKey(testAccount).body(Json.objectBuilder()).go(400);
 		SpaceRequest.post("/v1/user/").backendKey(testAccount).body(//
-				Json.startObject().put("password", "hi titi").put("email", "titi@dog.com")).go(400);
+				Json.objectBuilder().put("password", "hi titi").put("email", "titi@dog.com")).go(400);
 		SpaceRequest.post("/v1/user/").backendKey(testAccount).body(//
-				Json.startObject().put("username", "titi").put("password", "hi titi")).go(400);
+				Json.objectBuilder().put("username", "titi").put("password", "hi titi")).go(400);
 
 		// fails to inject forged hashedPassword
 
 		SpaceRequest.post("/v1/user/").backendKey(testAccount)
 				.body(//
-						Json.startObject().put("username", "titi")//
+						Json.objectBuilder().put("username", "titi")//
 								.put("password", "hi titi")//
 								.put("email", "titi@dog.com")//
 								.put("hashedPassword", "hi titi"))
@@ -53,8 +53,8 @@ public class UserResourceTest extends Assert {
 				.objectNode();
 
 		assertEquals(
-				Json.startObject().put("username", "vince").put("hashedPassword", UserUtils.hashPassword("hi vince"))
-						.put("email", "vince@dog.com").startArray("groups").add("test").build(),
+				Json.objectBuilder().put("username", "vince").put("hashedPassword", UserUtils.hashPassword("hi vince"))
+						.put("email", "vince@dog.com").array("groups").add("test").build(),
 				res2.deepCopy().without("meta"));
 
 		// get data with wrong username should fail
@@ -80,7 +80,7 @@ public class UserResourceTest extends Assert {
 		// email update should succeed
 
 		SpaceRequest.put("/v1/user/vince").backendKey(testAccount).basicAuth(vince)
-				.body(Json.startObject().put("email", "bignose@magic.com").build().toString()).go(200);
+				.body(Json.objectBuilder().put("email", "bignose@magic.com").build().toString()).go(200);
 
 		SpaceDogHelper.refresh(testAccount);
 
@@ -90,8 +90,8 @@ public class UserResourceTest extends Assert {
 		assertEquals(2, res9.get("meta").get("version").asInt());
 
 		assertEquals(
-				Json.startObject().put("username", "vince").put("hashedPassword", UserUtils.hashPassword("hi vince"))
-						.put("email", "bignose@magic.com").startArray("groups").add("test").build(),
+				Json.objectBuilder().put("username", "vince").put("hashedPassword", UserUtils.hashPassword("hi vince"))
+						.put("email", "bignose@magic.com").array("groups").add("test").build(),
 				res9.deepCopy().without("meta"));
 	}
 
@@ -104,7 +104,7 @@ public class UserResourceTest extends Assert {
 		// sign up without password should succeed
 
 		String passwordResetCode = SpaceRequest.post("/v1/user/").backendKey(testAccount)
-				.body(Json.startObject().put("username", "titi").put("email", "titi@dog.com")).go(201)
+				.body(Json.objectBuilder().put("username", "titi").put("email", "titi@dog.com")).go(201)
 				.getFromJson("passwordResetCode").asText();
 
 		assertFalse(Strings.isNullOrEmpty(passwordResetCode));
@@ -189,7 +189,7 @@ public class UserResourceTest extends Assert {
 
 		// create new custom user
 
-		ObjectNode fred = Json.startObject().put("username", "fred")//
+		ObjectNode fred = Json.objectBuilder().put("username", "fred")//
 				.put("password", "hi fred")//
 				.put("email", "fred@dog.com")//
 				.put("firstname", "Frédérique")//

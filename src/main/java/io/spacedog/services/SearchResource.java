@@ -164,15 +164,15 @@ public class SearchResource extends AbstractResource {
 			}
 		}
 
-		JsonBuilder<ObjectNode> builder = Json.startObject()//
+		JsonBuilder<ObjectNode> builder = Json.objectBuilder()//
 				.put("took", response.getTookInMillis())//
 				.put("total", response.getHits().getTotalHits())//
-				.startArray("results");
-		objects.forEach(object -> builder.addNode(object));
+				.array("results");
+		objects.forEach(object -> builder.node(object));
 		builder.end();
 
 		if (response.getAggregations() != null)
-			builder.putNode("aggregations", Json.getMapper().valueToTree(response.getAggregations().asMap()));
+			builder.node("aggregations", Json.getMapper().valueToTree(response.getAggregations().asMap()));
 
 		return builder.build();
 	}

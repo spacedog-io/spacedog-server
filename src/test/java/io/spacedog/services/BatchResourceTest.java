@@ -21,11 +21,11 @@ public class BatchResourceTest extends Assert {
 		User user = SpaceDogHelper.createUser(testAccount.backendKey, "vince", "hi vince", "vince@dog.com");
 		User dave = SpaceDogHelper.createUser(testAccount.backendKey, "dave", "hi dave", "dave@dog.com");
 
-		ArrayNode batch = Json.startArray().startObject()//
+		ArrayNode batch = Json.arrayBuilder().object()//
 				.put("method", "GET")//
 				.put("uri", "/data/user/vince")//
 				.end()//
-				.startObject()//
+				.object()//
 				.put("method", "GET")//
 				.put("uri", "/data/user/dave")//
 				.end()//

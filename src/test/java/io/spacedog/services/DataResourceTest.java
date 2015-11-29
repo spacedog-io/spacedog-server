@@ -22,18 +22,18 @@ public class DataResourceTest extends Assert {
 		Account testAccount = SpaceDogHelper.resetTestAccount();
 		SpaceDogHelper.resetSchema(SchemaResourceTest.buildCarSchema(), testAccount);
 
-		JsonNode car = Json.startObject() //
+		JsonNode car = Json.objectBuilder() //
 				.put("serialNumber", "1234567890") //
 				.put("buyDate", "2015-01-09") //
 				.put("buyTime", "15:37:00") //
 				.put("buyTimestamp", "2015-01-09T15:37:00.123Z") //
 				.put("color", "red") //
 				.put("techChecked", false) //
-				.startObject("model") //
+				.object("model") //
 				.put("description", "Cette voiture sent bon la France. Elle est inventive et raffinée.") //
 				.put("fiscalPower", 8) //
 				.put("size", 4.67) //
-				.end().startObject("location") //
+				.end().object("location") //
 				.put("lat", -55.6765) //
 				.put("lon", -54.6765) //
 				.build();
@@ -76,7 +76,7 @@ public class DataResourceTest extends Assert {
 		// update
 
 		SpaceResponse req2 = SpaceRequest.put("/v1/data/car/{id}").backendKey(testAccount).routeParam("id", id)
-				.basicAuth(vince).body(Json.startObject().put("color", "blue").toString()).go(200);
+				.basicAuth(vince).body(Json.objectBuilder().put("color", "blue").toString()).go(200);
 
 		// check update is correct
 

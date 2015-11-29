@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class SchemaBuilder {
 
 	public static SchemaBuilder builder(String type) {
-		return new SchemaBuilder(Json.startObject().startObject(type));
+		return new SchemaBuilder(Json.objectBuilder().object(type));
 	}
 
 	private JsonBuilder<ObjectNode> builder;
@@ -20,13 +20,13 @@ public class SchemaBuilder {
 
 	public SchemaBuilder property(String key, String type) {
 		currentPropertyType = type;
-		builder.startObject(key).put("_type", type);
+		builder.object(key).put("_type", type);
 		return this;
 	}
 
 	public SchemaBuilder objectProperty(String key) {
 		currentPropertyType = "object";
-		builder.startObject(key).put("_type", "object");
+		builder.object(key).put("_type", "object");
 		return this;
 	}
 

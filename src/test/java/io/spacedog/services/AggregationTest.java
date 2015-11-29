@@ -23,11 +23,11 @@ public class AggregationTest {
 
 		SpaceDogHelper.refresh(testAccount);
 
-		ObjectNode query = Json.startObject()//
+		ObjectNode query = Json.objectBuilder()//
 				.put("size", 0)//
-				.startObject("aggs")//
-				.startObject("objectCount")//
-				.startObject("cardinality")//
+				.object("aggs")//
+				.object("objectCount")//
+				.object("cardinality")//
 				.put("field", "email")//
 				.build();
 

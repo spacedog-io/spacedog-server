@@ -59,9 +59,9 @@ public class PayloadHelper {
 	}
 
 	public static Payload error(int httpStatus, Throwable throwable) {
-		JsonBuilder<ObjectNode> builder = Json.startObject().put("success", false);
+		JsonBuilder<ObjectNode> builder = Json.objectBuilder().put("success", false);
 		if (throwable != null)
-			builder.putNode("error", Json.toJson(throwable));
+			builder.node("error", Json.toJson(throwable));
 		return new Payload(AbstractResource.JSON_CONTENT, builder.toString(), httpStatus);
 	}
 
@@ -79,11 +79,11 @@ public class PayloadHelper {
 	 * @return a bad request http payload with a json listing invalid parameters
 	 */
 	protected static Payload invalidParameters(String... parameters) {
-		JsonBuilder<ObjectNode> builder = Json.startObject().put("success", false);
+		JsonBuilder<ObjectNode> builder = Json.objectBuilder().put("success", false);
 		if (parameters.length > 0 && parameters.length % 3 == 0) {
-			builder.startObject("invalidParameters");
+			builder.object("invalidParameters");
 			for (int i = 0; i < parameters.length; i += 3)
-				builder.startObject(parameters[0])//
+				builder.object(parameters[0])//
 						.put("value", parameters[1])//
 						.put("message", parameters[2]);
 		}
@@ -95,11 +95,11 @@ public class PayloadHelper {
 		if (status.getStatus() == 200)
 			return success();
 
-		JsonBuilder<ObjectNode> builder = Json.startObject().put("success", false)//
-				.startArray("error");
+		JsonBuilder<ObjectNode> builder = Json.objectBuilder().put("success", false)//
+				.array("error");
 
 		for (ShardOperationFailedException failure : failures)
-			builder.startObject().put("type", failure.getClass().getName()).put("message", failure.reason())
+			builder.object().put("type", failure.getClass().getName()).put("message", failure.reason())
 					.put("shardId", failure.shardId()).end();
 
 		return new Payload(AbstractResource.JSON_CONTENT, builder.toString(), status.getStatus());

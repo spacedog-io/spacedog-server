@@ -13,14 +13,14 @@ public class JsonTest extends Assert {
 
 	@Test
 	public void shouldSucceedToGet() {
-		JsonNode json = Json.startObject().startObject("riri").startArray("fifi").add(12).startObject()
+		JsonNode json = Json.objectBuilder().object("riri").array("fifi").add(12).object()
 				.put("loulou", false).build();
 		assertEquals(false, Json.get(json, "riri.fifi.1.loulou").asBoolean());
 	}
 
 	@Test
 	public void shouldSucceedToSet() {
-		JsonNode json = Json.startObject().startObject("riri").startArray("fifi").add(12).startObject()
+		JsonNode json = Json.objectBuilder().object("riri").array("fifi").add(12).object()
 				.put("loulou", false).build();
 		Json.set(json, "riri.fifi.1.loulou", BooleanNode.TRUE);
 		assertEquals(true, Json.get(json, "riri.fifi.1.loulou").asBoolean());

@@ -24,24 +24,24 @@ public class DataResourceTest2 extends Assert {
 		Account testAccount = SpaceDogHelper.resetTestAccount();
 		SpaceDogHelper.resetSchema(SchemaResourceTest.buildSaleSchema(), testAccount);
 
-		ObjectNode sale = Json.startObject()//
+		ObjectNode sale = Json.objectBuilder()//
 				.put("number", "1234567890")//
-				.startObject("where")//
+				.object("where")//
 				.put("lat", -55.6765).put("lon", -54.6765)//
 				.end()//
 				.put("when", "2015-01-09T15:37:00.123Z")//
 				.put("online", false)//
 				.put("deliveryDate", "2015-09-09")//
 				.put("deliveryTime", "15:30:00")//
-				.startArray("items")//
-				.startObject()//
+				.array("items")//
+				.object()//
 				.put("ref", "JDM")//
 				.put("description", "2 rooms appartment in the heart of montmartre")//
 				.put("quantity", 8)//
 				// .put("price", "EUR230")
 				.put("type", "appartment")//
 				.end()//
-				.startObject()//
+				.object()//
 				.put("ref", "LOUVRE")//
 				.put("description", "Louvre museum 2 days visit with a personal guide") //
 				.put("quantity", 2) //
@@ -107,9 +107,9 @@ public class DataResourceTest2 extends Assert {
 
 		// find by advanced text search
 
-		String query = Json.startObject()//
-				.startObject("query")//
-				.startObject("query_string")//
+		String query = Json.objectBuilder()//
+				.object("query")//
+				.object("query_string")//
 				.put("query", "museum")//
 				.build().toString();
 
@@ -127,7 +127,7 @@ public class DataResourceTest2 extends Assert {
 
 		// small update no version should succeed
 
-		JsonNode updateJson2 = Json.startObject().startArray("items").startObject().put("quantity", 7).build();
+		JsonNode updateJson2 = Json.objectBuilder().array("items").object().put("quantity", 7).build();
 
 		SpaceResponse req2 = SpaceRequest.put("/v1/data/sale/{id}").backendKey(testAccount).routeParam("id", id)
 				.basicAuth(vince).body(updateJson2.toString()).go(200).assertTrue("success")
@@ -152,7 +152,7 @@ public class DataResourceTest2 extends Assert {
 
 		// update with invalid version should fail
 
-		ObjectNode updateJson3b = Json.startObject().put("number", "0987654321").build();
+		ObjectNode updateJson3b = Json.objectBuilder().put("number", "0987654321").build();
 
 		SpaceRequest.put("/v1/data/sale/{id}").backendKey(testAccount).routeParam("id", id).queryString("version", "1")
 				.body(updateJson3b.toString()).go(409).assertFalse("success");
@@ -211,13 +211,13 @@ public class DataResourceTest2 extends Assert {
 		SpaceDogHelper.createUser(testAccount, "riri", "hi riri", "riri@dog.com");
 
 		SpaceRequest.post("/v1/data/message").basicAuth(testAccount)
-				.body(Json.startObject().put("text", "what's up?").build()).go(201);
+				.body(Json.objectBuilder().put("text", "what's up?").build()).go(201);
 		SpaceRequest.post("/v1/data/message").basicAuth(testAccount)
-				.body(Json.startObject().put("text", "wanna drink something?").build()).go(201);
+				.body(Json.objectBuilder().put("text", "wanna drink something?").build()).go(201);
 		SpaceRequest.post("/v1/data/message").basicAuth(testAccount)
-				.body(Json.startObject().put("text", "pretty cool, hein?").build()).go(201);
+				.body(Json.objectBuilder().put("text", "pretty cool, hein?").build()).go(201);
 		String id = SpaceRequest.post("/v1/data/message").basicAuth(testAccount)
-				.body(Json.startObject().put("text", "so long guys").build()).go(201).getFromJson("id").asText();
+				.body(Json.objectBuilder().put("text", "so long guys").build()).go(201).getFromJson("id").asText();
 
 		SpaceDogHelper.refresh(testAccount);
 

@@ -30,7 +30,7 @@ public class AdminResourceTest extends Assert {
 
 		// create new account with same username should fail
 
-		JsonNode json2 = SpaceRequest.post("/v1/admin/account/").body(Json.startObject().put("backendId", "anothertest")
+		JsonNode json2 = SpaceRequest.post("/v1/admin/account/").body(Json.objectBuilder().put("backendId", "anothertest")
 				.put("username", "test").put("password", "hi test").put("email", "hello@spacedog.io").toString())
 				.go(400).jsonNode();
 
@@ -39,7 +39,7 @@ public class AdminResourceTest extends Assert {
 		// create new account with same backend id should fail
 
 		JsonNode json2b = SpaceRequest.post("/v1/admin/account/")
-				.body(Json.startObject().put("backendId", "test").put("username", "anotheruser")
+				.body(Json.objectBuilder().put("backendId", "test").put("username", "anotheruser")
 						.put("password", "hi anotheruser").put("email", "hello@spacedog.io").toString())
 				.go(400).jsonNode();
 

@@ -72,7 +72,7 @@ public class ElasticHelper {
 		// replace meta to avoid developers to
 		// set any meta fields directly
 		object.set("meta",
-				Json.startObject()//
+				Json.objectBuilder()//
 						.put("createdBy", createdBy)//
 						.put("updatedBy", createdBy)//
 						.put("createdAt", now)//
@@ -122,7 +122,7 @@ public class ElasticHelper {
 	public DeleteByQueryResponse delete(String index, String query, String... types) {
 
 		if (Strings.isNullOrEmpty(query))
-			query = Json.startObject().startObject("query").startObject("match_all").toString();
+			query = Json.objectBuilder().object("query").object("match_all").toString();
 
 		DeleteByQueryRequestBuilder setSource = SpaceDogServices.getElasticClient().prepareDeleteByQuery(index)
 				.setSource(query);
