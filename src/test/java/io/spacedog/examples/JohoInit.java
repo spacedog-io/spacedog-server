@@ -25,6 +25,10 @@ public class JohoInit extends SpaceDogHelper {
 	private static final String ADMIN_PASSWORD = "hi joho";
 	private static final String ADMIN_USERNAME = "joho";
 
+	// private static final String BACKEND_ID = "joho-recette";
+	// private static final String ADMIN_PASSWORD = "hi joho-recette";
+	// private static final String ADMIN_USERNAME = "joho-recette";
+
 	private static Account johoAccount;
 
 	private static User fred;
@@ -88,11 +92,12 @@ public class JohoInit extends SpaceDogHelper {
 				.textProperty("firstname", "french", true)//
 				.textProperty("lastname", "french", true)//
 				.simpleProperty("job", "enum", true, false)//
-				.stringProperty("town", true)//
-				.startObjectProperty("service", true)//
+				.startObjectProperty("site", true)//
 				.textProperty("name", "french", true)//
-				.stringProperty("code", true)//
+				.stringProperty("town", true)//
+				.stringProperty("address", true)//
 				.simpleProperty("where", "geopoint", true)//
+				.stringProperty("code", true)//
 				.endObjectProperty()//
 				.stringProperty("mobile", true)//
 				.stringProperty("fixed", true)//
@@ -115,12 +120,14 @@ public class JohoInit extends SpaceDogHelper {
 				.build();
 	}
 
-	static ObjectNode buildServicesSchema() {
-		return SchemaBuilder2.builder("services")//
-				.startObjectProperty("services", true, true)//
+	static ObjectNode buildSitesSchema() {
+		return SchemaBuilder2.builder("sites")//
+				.startObjectProperty("sites", true, true)//
 				.textProperty("name", "french", true)//
-				.stringProperty("code", true)//
+				.stringProperty("town", true)//
+				.stringProperty("address", true)//
 				.simpleProperty("where", "geopoint", true)//
+				.stringProperty("code", true)//
 				.build();
 	}
 
@@ -135,7 +142,7 @@ public class JohoInit extends SpaceDogHelper {
 		resetSchema(buildMessageSchema(), johoAccount);
 		resetSchema(buildCustomUserSchema(), johoAccount);
 		resetSchema(buildThemesSchema(), johoAccount);
-		resetSchema(buildServicesSchema(), johoAccount);
+		resetSchema(buildSitesSchema(), johoAccount);
 
 		deleteUser("fred", johoAccount);
 		fred = createUser(johoAccount.backendKey, "fred", "hi fred", "frederic.falliere@in-tact.fr", "Frédéric",
@@ -151,7 +158,7 @@ public class JohoInit extends SpaceDogHelper {
 				"http://www.t83.fr/infos/wp-content/uploads/2015/08/Fred-01-gros-nez-620x658.jpg");
 
 		createThemes();
-		createServices();
+		createSites();
 
 		String threadId = createDiscussion("je suis partie en mission en argentine", "RH", fred);
 		createMessage(threadId, "tu connais ?", fred);
@@ -198,13 +205,13 @@ public class JohoInit extends SpaceDogHelper {
 				.put("email", email)//
 				.put("firstname", firstname)//
 				.put("lastname", lastname)//
-				.put("town", town)//
 				.put("job", job)//
 				.put("mobile", mobile)//
 				.put("fixed", fixed)//
 				.put("avatar", avatarUrl)//
-				.object("service")//
+				.object("site")//
 				.put("name", serviceName)//
+				.put("town", town)//
 				.put("code", serviceCode)//
 				.object("where")//
 				.put("lat", lat)//
@@ -223,10 +230,10 @@ public class JohoInit extends SpaceDogHelper {
 		SpaceRequest.post("/v1/data/themes").basicAuth(johoAccount).body(themes).go(201);
 	}
 
-	private void createServices() throws Exception {
-		URL url = Resources.getResource("io/spacedog/examples/joho.services.json");
-		JsonNode services = Json.getMapper().readTree(url);
-		SpaceRequest.post("/v1/data/services").basicAuth(johoAccount).body(services).go(201);
+	private void createSites() throws Exception {
+		URL url = Resources.getResource("io/spacedog/examples/joho.sites.json");
+		JsonNode sites = Json.getMapper().readTree(url);
+		SpaceRequest.post("/v1/data/sites").basicAuth(johoAccount).body(sites).go(201);
 	}
 
 	public String createDiscussion(String title, String categoryCode, User user) throws Exception {

@@ -1,7 +1,8 @@
 {
-    "services" : [
+    "sites" : [
         {
     		"name" : "In-tact",
+    		"town" : "Paris",
     		"code" : "INTACT",
     		"where": {
                 "lat" : 44.9,
@@ -9,6 +10,7 @@
     		}
     	},{
             "name" : "EDF San Francisco",
+	    		"town" : "San Francisco",
             "code" : "EDFSF",
             "where": {
                 "lat" : 39.7,
