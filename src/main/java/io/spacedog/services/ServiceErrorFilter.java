@@ -37,9 +37,13 @@ public class ServiceErrorFilter implements Filter {
 
 			if (payload.code() == 404) {
 				node.put("message", String.format("[%s] is not a valid SpaceDog route", uri));
-				return new Payload(AbstractResource.JSON_CONTENT, node.toString(), 404);
+				return new Payload(AbstractResource.JSON_CONTENT, node.toString(), payload.code());
+			} else if (payload.code() == 405) {
+				node.put("message", String.format("method [%s] not valid SpaceDog route [%s]", context.method(), uri));
+				return new Payload(AbstractResource.JSON_CONTENT, node.toString(), payload.code());
 			} else {
-				node.put("message", "severe internal server error, no details available");
+				node.put("message",
+						String.format("sorry but no details available for this error code [%s]", payload.code()));
 				return new Payload(AbstractResource.JSON_CONTENT, node.toString(), payload.code());
 			}
 		}

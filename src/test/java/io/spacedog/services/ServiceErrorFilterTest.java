@@ -22,5 +22,11 @@ public class ServiceErrorFilterTest extends Assert {
 		SpaceRequest.get("/v1/toto").backendKey(testAccount).go(404)//
 				.assertFalse("success")//
 				.assertEquals("[/v1/toto] is not a valid SpaceDog route", "error.message");
+
+		// should fail to use this method for this valid route
+
+		SpaceRequest.put("/v1/login").basicAuth(testAccount).go(405)//
+				.assertFalse("success")//
+				.assertEquals("method [PUT] not valid SpaceDog route [/v1/login]", "error.message");
 	}
 }
