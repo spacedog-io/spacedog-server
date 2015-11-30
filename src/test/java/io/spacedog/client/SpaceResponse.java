@@ -60,13 +60,11 @@ public class SpaceResponse {
 	}
 
 	private static void printHeader(String key, List<String> value) {
-		if (key.equals(AdminResource.AUTHORIZATION_HEADER)) {
+		if (key.equals(AdminResource.AUTHORIZATION_HEADER))
 			AdminResource.decodeAuthorizationHeader(value.get(0)).ifPresent(
 					tokens -> System.out.println(String.format("%s: %s (= %s:%s)", key, value, tokens[0], tokens[1])));
-			return;
-		}
-
-		System.out.println(String.format("%s: %s", key, value));
+		else
+			System.out.println(String.format("%s: %s", key, value));
 	}
 
 	public DateTime before() {
