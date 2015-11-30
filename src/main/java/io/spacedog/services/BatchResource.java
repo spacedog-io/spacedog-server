@@ -9,7 +9,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import com.amazonaws.util.StringInputStream;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -142,7 +141,7 @@ public class BatchResource extends AbstractResource {
 
 		@Override
 		public InputStream inputStream() throws IOException {
-			return new StringInputStream(content());
+			return null; // new StringInputStream(content());
 		}
 
 		@Override
