@@ -50,7 +50,7 @@ public class ElasticHelper {
 	//
 
 	public Optional<ObjectNode> getObject(String index, String type, String id) {
-		GetResponse response = SpaceDogServices.getElasticClient().prepareGet(index, type, id).get();
+		GetResponse response = Start.getElasticClient().prepareGet(index, type, id).get();
 
 		if (!response.isExists())
 			return Optional.empty();
@@ -79,7 +79,7 @@ public class ElasticHelper {
 						.put("updatedAt", now)//
 						.build());
 
-		return SpaceDogServices.getElasticClient().prepareIndex(index, type)//
+		return Start.getElasticClient().prepareIndex(index, type)//
 				.setSource(object.toString()).get();
 	}
 
@@ -99,7 +99,7 @@ public class ElasticHelper {
 		object.with("meta").put("updatedBy", updatedBy);
 		object.with("meta").put("updatedAt", DateTime.now().toString());
 
-		return SpaceDogServices.getElasticClient().prepareIndex(index, type, id).setSource(object.toString())
+		return Start.getElasticClient().prepareIndex(index, type, id).setSource(object.toString())
 				.setVersion(version).get();
 	}
 
@@ -110,7 +110,7 @@ public class ElasticHelper {
 				.put("updatedBy", updatedBy)//
 				.put("updatedAt", DateTime.now().toString());
 
-		UpdateRequestBuilder update = SpaceDogServices.getElasticClient().prepareUpdate(index, type, id)
+		UpdateRequestBuilder update = Start.getElasticClient().prepareUpdate(index, type, id)
 				.setDoc(object.toString());
 
 		if (version > 0)
@@ -124,7 +124,7 @@ public class ElasticHelper {
 		if (Strings.isNullOrEmpty(query))
 			query = Json.objectBuilder().object("query").object("match_all").toString();
 
-		DeleteByQueryRequestBuilder setSource = SpaceDogServices.getElasticClient().prepareDeleteByQuery(index)
+		DeleteByQueryRequestBuilder setSource = Start.getElasticClient().prepareDeleteByQuery(index)
 				.setSource(query);
 
 		if (types != null)
@@ -144,7 +144,7 @@ public class ElasticHelper {
 			builder.add(FilterBuilders.termFilter(terms[i], terms[i + 1]));
 		}
 
-		SearchResponse response = SpaceDogServices.getElasticClient().prepareSearch(index).setTypes(type)
+		SearchResponse response = Start.getElasticClient().prepareSearch(index).setTypes(type)
 				.setQuery(QueryBuilders.filteredQuery(QueryBuilders.matchAllQuery(), builder)).get();
 
 		return response.getHits();
@@ -202,13 +202,13 @@ public class ElasticHelper {
 
 		public SearchResponse get() throws InterruptedException, ExecutionException {
 			searchRequest.source(sourceBuilder.query(QueryBuilders.filteredQuery(queryBuilder, filterBuilder)));
-			return SpaceDogServices.getElasticClient().search(searchRequest).get();
+			return Start.getElasticClient().search(searchRequest).get();
 		}
 	}
 
 	public void refresh(boolean refresh, String... indices) {
 		if (refresh) {
-			SpaceDogServices.getElasticClient().admin().indices().prepareRefresh(indices).get();
+			Start.getElasticClient().admin().indices().prepareRefresh(indices).get();
 		}
 	}
 }

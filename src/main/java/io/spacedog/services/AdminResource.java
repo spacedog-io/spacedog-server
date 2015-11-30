@@ -63,7 +63,7 @@ public class AdminResource extends AbstractResource {
 		String accountMapping = Resources.toString(Resources.getResource("io/spacedog/services/account-mapping.json"),
 				UTF_8);
 
-		IndicesAdminClient indices = SpaceDogServices.getElasticClient().admin().indices();
+		IndicesAdminClient indices = Start.getElasticClient().admin().indices();
 
 		if (!indices.prepareExists(ADMIN_INDEX).get().isExists()) {
 			indices.prepareCreate(ADMIN_INDEX).addMapping(ACCOUNT_TYPE, accountMapping).get();
@@ -125,10 +125,10 @@ public class AdminResource extends AbstractResource {
 					String.format("backend id [%s] is not available", account.backendId));
 
 		byte[] accountBytes = Json.getMapper().writeValueAsBytes(account);
-		SpaceDogServices.getElasticClient().prepareIndex(ADMIN_INDEX, ACCOUNT_TYPE).setSource(accountBytes).get();
+		Start.getElasticClient().prepareIndex(ADMIN_INDEX, ACCOUNT_TYPE).setSource(accountBytes).get();
 
 		// backend index is named after the backend id
-		SpaceDogServices.getElasticClient().admin().indices().prepareCreate(account.backendId)
+		Start.getElasticClient().admin().indices().prepareCreate(account.backendId)
 				.addMapping(UserResource.USER_TYPE, UserResource.getDefaultUserMapping()).get();
 
 		ElasticHelper.get().refresh(true, ADMIN_INDEX);
@@ -142,7 +142,7 @@ public class AdminResource extends AbstractResource {
 	public Payload get(String backendId, Context context) throws JsonParseException, JsonMappingException, IOException {
 		Account credentials = checkAdminCredentialsOnly(backendId, context);
 
-		GetResponse response = SpaceDogServices.getElasticClient()
+		GetResponse response = Start.getElasticClient()
 				.prepareGet(ADMIN_INDEX, ACCOUNT_TYPE, credentials.backendId).get();
 
 		if (!response.isExists())
@@ -161,7 +161,7 @@ public class AdminResource extends AbstractResource {
 
 		ElasticHelper.get().refresh(true, ADMIN_INDEX);
 
-		DeleteResponse accountDeleteResp = SpaceDogServices.getElasticClient()
+		DeleteResponse accountDeleteResp = Start.getElasticClient()
 				.prepareDelete(ADMIN_INDEX, ACCOUNT_TYPE, credentials.backendId).get();
 
 		if (!accountDeleteResp.isFound())
@@ -169,7 +169,7 @@ public class AdminResource extends AbstractResource {
 					"no account found for backend [%s] and admin user [%s]", credentials.backendId,
 					credentials.username);
 
-		DeleteIndexResponse indexDeleteResp = SpaceDogServices.getElasticClient().admin().indices()
+		DeleteIndexResponse indexDeleteResp = Start.getElasticClient().admin().indices()
 				.prepareDelete(credentials.backendId).get();
 
 		if (!indexDeleteResp.isAcknowledged())

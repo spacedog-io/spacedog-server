@@ -23,11 +23,11 @@ import net.codestory.http.internal.SimpleServerWrapper;
 import net.codestory.http.routes.Routes;
 import net.codestory.http.websockets.WebSocketHandler;
 
-public class SpaceDogServices extends AbstractWebServer<SpaceDogServices> {
+public class Start extends AbstractWebServer<Start> {
 
 	private static Node elasticNode;
 	private static Client elasticClient;
-	private static SpaceDogServices webServices;
+	private static Start webServices;
 
 	private final static String[] LocalhostConf = { "/Users/davattias/dev/spacedog" };
 
@@ -99,7 +99,7 @@ public class SpaceDogServices extends AbstractWebServer<SpaceDogServices> {
 
 	private static void startFluent(boolean ssl, String[] conf) throws IOException {
 
-		webServices = new SpaceDogServices().configure(SpaceDogServices::configure);
+		webServices = new Start().configure(Start::configure);
 
 		if (ssl) {
 			// Force Fluent HTTP to production mode

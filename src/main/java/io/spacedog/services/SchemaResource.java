@@ -51,7 +51,7 @@ public class SchemaResource extends AbstractResource {
 	@Get("/")
 	public Payload getAll(Context context) throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = AdminResource.checkCredentials(context);
-		GetMappingsResponse resp = SpaceDogServices.getElasticClient().admin().indices()
+		GetMappingsResponse resp = Start.getElasticClient().admin().indices()
 				.prepareGetMappings(credentials.getBackendId()).get();
 
 		JsonMerger jsonMerger = Json.merger();
@@ -82,7 +82,7 @@ public class SchemaResource extends AbstractResource {
 
 	public static ObjectNode getSchema(String index, String type)
 			throws NotFoundException, JsonProcessingException, IOException {
-		GetMappingsResponse resp = SpaceDogServices.getElasticClient().admin().indices().prepareGetMappings(index)
+		GetMappingsResponse resp = Start.getElasticClient().admin().indices().prepareGetMappings(index)
 				.addTypes(type).get();
 
 		String source = Optional.ofNullable(resp.getMappings()).map(indexMap -> indexMap.get(index))
@@ -104,7 +104,7 @@ public class SchemaResource extends AbstractResource {
 		String elasticMapping = SchemaTranslator.translate(type, schema).toString();
 		PutMappingRequest putMappingRequest = new PutMappingRequest(account.backendId).type(type)
 				.source(elasticMapping);
-		SpaceDogServices.getElasticClient().admin().indices().putMapping(putMappingRequest).get();
+		Start.getElasticClient().admin().indices().putMapping(putMappingRequest).get();
 		return PayloadHelper.saved(true, "/v1", "schema", type);
 	}
 
@@ -114,7 +114,7 @@ public class SchemaResource extends AbstractResource {
 			throws JsonParseException, JsonMappingException, IOException {
 		try {
 			Account account = AdminResource.checkAdminCredentialsOnly(context);
-			SpaceDogServices.getElasticClient().admin().indices().prepareDeleteMapping(account.backendId).setType(type)
+			Start.getElasticClient().admin().indices().prepareDeleteMapping(account.backendId).setType(type)
 					.get();
 		} catch (TypeMissingException exception) {
 			// ignored

@@ -170,7 +170,7 @@ public class UserResource extends AbstractResource {
 			throws JsonParseException, JsonMappingException, IOException {
 		Account account = AdminResource.checkAdminCredentialsOnly(context);
 
-		UpdateResponse response = SpaceDogServices.getElasticClient()
+		UpdateResponse response = Start.getElasticClient()
 				.prepareUpdate(account.backendId, UserResource.USER_TYPE, id)//
 				.setScript("ctx._source.remove('hashedPassword');ctx._source.passwordResetCode=code;",
 						ScriptService.ScriptType.INLINE)//
@@ -195,7 +195,7 @@ public class UserResource extends AbstractResource {
 		String password = Json.readJsonNode(body).asText();
 		UserUtils.checkPasswordValidity(password);
 
-		GetResponse getResponse = SpaceDogServices.getElasticClient()
+		GetResponse getResponse = Start.getElasticClient()
 				.prepareGet(credentials.getBackendId(), USER_TYPE, id).get();
 
 		if (!getResponse.isExists())
@@ -234,7 +234,7 @@ public class UserResource extends AbstractResource {
 					.node(PASSWORD_RESET_CODE, NullNode.getInstance())//
 					.build();
 
-			UpdateResponse response = SpaceDogServices.getElasticClient()
+			UpdateResponse response = Start.getElasticClient()
 					.prepareUpdate(credentials.getBackendId(), UserResource.USER_TYPE, id).setDoc(update.toString())
 					.get();
 

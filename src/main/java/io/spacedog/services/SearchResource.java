@@ -154,7 +154,7 @@ public class SearchResource extends AbstractResource {
 		}
 
 		request.extraSource(builder);
-		return extractResults(SpaceDogServices.getElasticClient().search(request).get(), context, credentials);
+		return extractResults(Start.getElasticClient().search(request).get(), context, credentials);
 	}
 
 	private ObjectNode extractResults(SearchResponse response, Context context, Credentials credentials)

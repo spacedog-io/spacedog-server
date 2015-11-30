@@ -151,7 +151,7 @@ public class DataResource extends AbstractResource {
 		// TODO useful for security?
 		SchemaResource.getSchema(credentials.getBackendId(), type);
 
-		DeleteResponse response = SpaceDogServices.getElasticClient()
+		DeleteResponse response = Start.getElasticClient()
 				.prepareDelete(credentials.getBackendId(), type, id).get();
 		return response.isFound() ? PayloadHelper.success()
 				: PayloadHelper.error(HttpStatus.NOT_FOUND, "object of type [%s] and id [%s] not found", type, id);
