@@ -29,6 +29,7 @@ import com.google.common.base.Strings;
 import io.spacedog.services.ElasticHelper.FilteredSearchBuilder;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
+import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.constants.HttpStatus;
@@ -36,6 +37,8 @@ import net.codestory.http.payload.Payload;
 
 @Prefix("/v1")
 public class SearchResource extends AbstractResource {
+
+	public static final String REFRESH = "refresh";
 
 	//
 	// singleton
@@ -54,11 +57,19 @@ public class SearchResource extends AbstractResource {
 	// Routes
 	//
 
+	@Get("/search")
+	@Get("/search/")
+	public Payload getSearchAllTypes(Context context) throws JsonParseException, JsonMappingException, IOException,
+			NotFoundException, InterruptedException, ExecutionException {
+		return postSearchAllTypes(null, context);
+	}
+
 	@Post("/search")
 	@Post("/search/")
-	public Payload searchAllTypes(String body, Context context) throws JsonParseException, JsonMappingException,
+	public Payload postSearchAllTypes(String body, Context context) throws JsonParseException, JsonMappingException,
 			IOException, NotFoundException, InterruptedException, ExecutionException {
 		Credentials credentials = AdminResource.checkCredentials(context);
+		refreshIfNecessary(credentials.getBackendId(), context, false);
 		ObjectNode result = searchInternal(credentials, null, body, context);
 		return new Payload(JSON_CONTENT, result.toString(), HttpStatus.OK);
 	}
@@ -68,33 +79,44 @@ public class SearchResource extends AbstractResource {
 	public Payload deleteAllTypes(String query, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
 		Account adminAccount = AdminResource.checkAdminCredentialsOnly(context);
+		refreshIfNecessary(adminAccount.backendId, context, true);
 		DeleteByQueryResponse response = ElasticHelper.get().delete(adminAccount.backendId, query, new String[0]);
 		return PayloadHelper.toPayload(response.status(), response.getIndex(adminAccount.backendId).getFailures());
 	}
 
+	@Get("/search/:type")
+	@Get("/search/:type/")
+	public Payload getSearchForType(String type, Context context) throws JsonParseException, JsonMappingException,
+			IOException, NotFoundException, InterruptedException, ExecutionException {
+		return postSearchForType(type, null, context);
+	}
+
 	@Post("/search/:type")
 	@Post("/search/:type/")
-	public Payload searchForType(String type, String body, Context context) throws JsonParseException,
+	public Payload postSearchForType(String type, String body, Context context) throws JsonParseException,
 			JsonMappingException, IOException, NotFoundException, InterruptedException, ExecutionException {
 		Credentials credentials = AdminResource.checkCredentials(context);
+		refreshIfNecessary(credentials.getBackendId(), context, false);
 		ObjectNode result = searchInternal(credentials, type, body, context);
 		return new Payload(JSON_CONTENT, result.toString(), HttpStatus.OK);
 	}
 
 	@Delete("/search/:type")
 	@Delete("/search/:type/")
-	public Payload deleteForType(String type, String query, Context context)
+	public Payload deleteSearchForType(String type, String query, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
 		Account adminAccount = AdminResource.checkAdminCredentialsOnly(context);
+		refreshIfNecessary(adminAccount.backendId, context, true);
 		DeleteByQueryResponse response = ElasticHelper.get().delete(adminAccount.backendId, query, type);
 		return PayloadHelper.toPayload(response.status(), response.getIndex(adminAccount.backendId).getFailures());
 	}
 
 	@Post("/filter/:type")
 	@Post("/filter/:type")
-	public Payload filter(String type, String body, Context context)
+	public Payload postFilterForType(String type, String body, Context context)
 			throws JsonParseException, JsonMappingException, IOException, InterruptedException, ExecutionException {
 		Credentials credentials = AdminResource.checkCredentials(context);
+		refreshIfNecessary(credentials.getBackendId(), context, false);
 		FilteredSearchBuilder builder = ElasticHelper.get().searchBuilder(credentials.getBackendId(), type)
 				.applyContext(context).applyFilters(Json.readObjectNode(body));
 		return new Payload(JSON_CONTENT, extractResults(builder.get(), context, credentials).toString(), HttpStatus.OK);

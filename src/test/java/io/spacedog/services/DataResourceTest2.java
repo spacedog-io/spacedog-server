@@ -57,12 +57,9 @@ public class DataResourceTest2 extends Assert {
 
 		String id = create.jsonNode().get("id").asText();
 
-		SpaceDogHelper.refresh("test");
-
 		// find by id
 
-		SpaceResponse res1 = SpaceRequest.get("/v1/data/sale/{id}").backendKey(testAccount).routeParam("id", id)
-				.go(200);
+		SpaceResponse res1 = SpaceRequest.get("/v1/data/sale/" + id).backendKey(testAccount).go(200);
 
 		DateTime createdAt = DateTime.parse(res1.getFromJson("meta.createdAt").asText());
 		assertTrue(createdAt.isAfter(create.before().getMillis()));
@@ -100,8 +97,8 @@ public class DataResourceTest2 extends Assert {
 
 		// find by simple text search
 
-		SpaceResponse res1b = SpaceRequest.get("/v1/data/sale?q=museum").backendKey(testAccount).go(200).assertEquals(1,
-				"total");
+		SpaceResponse res1b = SpaceRequest.get("/v1/search/sale?q=museum&refresh=true").backendKey(testAccount).go(200)
+				.assertEquals(1, "total");
 
 		res1.assertEquals(res1b.getFromJson("results.0"));
 
@@ -123,20 +120,17 @@ public class DataResourceTest2 extends Assert {
 		SpaceDogHelper.User vince = SpaceDogHelper.createUser(testAccount.backendKey, "vince", "hi vince",
 				"vince@dog.com");
 
-		SpaceDogHelper.refresh(testAccount.backendId);
-
 		// small update no version should succeed
 
 		JsonNode updateJson2 = Json.objectBuilder().array("items").object().put("quantity", 7).build();
 
-		SpaceResponse req2 = SpaceRequest.put("/v1/data/sale/{id}").backendKey(testAccount).routeParam("id", id)
-				.basicAuth(vince).body(updateJson2.toString()).go(200).assertTrue("success")
-				.assertEquals("sale", "type").assertEquals(2, "version").assertEquals(id, "id");
+		SpaceResponse req2 = SpaceRequest.put("/v1/data/sale/" + id).backendKey(testAccount).basicAuth(vince)
+				.body(updateJson2.toString()).go(200).assertTrue("success").assertEquals("sale", "type")
+				.assertEquals(2, "version").assertEquals(id, "id");
 
 		// check update is correct
 
-		SpaceResponse res3 = SpaceRequest.get("/v1/data/sale/{id}").backendKey(testAccount).routeParam("id", id)
-				.go(200);
+		SpaceResponse res3 = SpaceRequest.get("/v1/data/sale/" + id).backendKey(testAccount).go(200);
 
 		res3.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.createdBy").assertEquals("vince", "meta.updatedBy")
 				.assertEquals(createdAt, "meta.createdAt").assertEquals(2, "meta.version")
@@ -154,25 +148,24 @@ public class DataResourceTest2 extends Assert {
 
 		ObjectNode updateJson3b = Json.objectBuilder().put("number", "0987654321").build();
 
-		SpaceRequest.put("/v1/data/sale/{id}").backendKey(testAccount).routeParam("id", id).queryString("version", "1")
-				.body(updateJson3b.toString()).go(409).assertFalse("success");
+		SpaceRequest.put("/v1/data/sale/" + id + "?version=1").backendKey(testAccount).body(updateJson3b.toString())
+				.go(409).assertFalse("success");
 
 		// update with invalid version should fail
 
-		SpaceRequest.put("/v1/data/sale/{id}").backendKey(testAccount).routeParam("id", id)
-				.queryString("version", "XXX").body(updateJson3b.toString()).go(400).assertFalse("success");
+		SpaceRequest.put("/v1/data/sale/" + id + "?version=XXX").backendKey(testAccount).body(updateJson3b.toString())
+				.go(400).assertFalse("success");
 
 		// update with correct version should succeed
 
-		SpaceResponse req3d = SpaceRequest.put("/v1/data/sale/{id}").backendKey(testAccount).routeParam("id", id)
-				.queryString("version", "2").body(updateJson3b.toString()).go(200);
+		SpaceResponse req3d = SpaceRequest.put("/v1/data/sale/" + id + "?version=2").backendKey(testAccount)
+				.body(updateJson3b.toString()).go(200);
 
 		req3d.assertTrue("success").assertEquals("sale", "type").assertEquals(3, "version").assertEquals(id, "id");
 
 		// check update is correct
 
-		SpaceResponse res3e = SpaceRequest.get("/v1/data/sale/{id}").backendKey(testAccount).routeParam("id", id)
-				.go(200);
+		SpaceResponse res3e = SpaceRequest.get("/v1/data/sale/" + id).backendKey(testAccount).go(200);
 
 		res3e.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.createdBy")//
 				.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.updatedBy")//
@@ -191,12 +184,12 @@ public class DataResourceTest2 extends Assert {
 
 		// delete
 
-		SpaceRequest.delete("/v1/data/sale/{id}").backendKey(testAccount).routeParam("id", id).go(200);
+		SpaceRequest.delete("/v1/data/sale/" + id).backendKey(testAccount).go(200);
 
 		// check delete is done
 
-		assertFalse(SpaceRequest.get("/v1/data/sale/{id}").backendKey(testAccount).routeParam("id", id).go(404)
-				.jsonNode().get("success").asBoolean());
+		assertFalse(SpaceRequest.get("/v1/data/sale/" + id).backendKey(testAccount).go(404).jsonNode().get("success")
+				.asBoolean());
 	}
 
 	@Test
@@ -216,21 +209,17 @@ public class DataResourceTest2 extends Assert {
 				.body(Json.objectBuilder().put("text", "wanna drink something?").build()).go(201);
 		SpaceRequest.post("/v1/data/message").basicAuth(testAccount)
 				.body(Json.objectBuilder().put("text", "pretty cool, hein?").build()).go(201);
-		String id = SpaceRequest.post("/v1/data/message").basicAuth(testAccount)
+		SpaceRequest.post("/v1/data/message").basicAuth(testAccount)
 				.body(Json.objectBuilder().put("text", "so long guys").build()).go(201).getFromJson("id").asText();
 
-		SpaceDogHelper.refresh(testAccount);
-
-		SpaceRequest.get("/v1/data").basicAuth(testAccount).go(200).assertEquals(5, "total");
+		SpaceRequest.get("/v1/data?refresh=true").basicAuth(testAccount).go(200).assertEquals(5, "total");
 
 		// should succeed to delete all users
-		SpaceRequest.delete("/v1/data/user").basicAuth(testAccount).go(200);
-		SpaceDogHelper.refresh(testAccount);
+		SpaceRequest.delete("/v1/user").basicAuth(testAccount).go(200);
 		SpaceRequest.get("/v1/data").basicAuth(testAccount).go(200).assertEquals(4, "total");
 
 		// should succeed to delete all objects
 		SpaceRequest.delete("/v1/data").basicAuth(testAccount).go(200);
-		SpaceDogHelper.refresh(testAccount);
-		SpaceRequest.get("/v1/data").basicAuth(testAccount).go(200).assertEquals(0, "total");
+		SpaceRequest.get("/v1/data?refresh=true").basicAuth(testAccount).go(200).assertEquals(0, "total");
 	}
 }

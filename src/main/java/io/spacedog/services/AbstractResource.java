@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
+import net.codestory.http.Context;
 import net.codestory.http.payload.Payload;
 
 public abstract class AbstractResource {
@@ -22,6 +23,17 @@ public abstract class AbstractResource {
 		} catch (Throwable throwable) {
 			return PayloadHelper.error(throwable);
 		}
+	}
+
+	protected void refreshIfNecessary(String index, Context context, boolean defaultValue) {
+		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, defaultValue);
+		ElasticHelper.get().refresh(refresh, index);
+	}
+
+	protected ObjectNode checkObjectNode(JsonNode json) {
+		if (!json.isObject())
+			throw new IllegalArgumentException(String.format("json not an object but [%s]", json.getNodeType()));
+		return (ObjectNode) json;
 	}
 
 	public static JsonNode checkNotNullOrEmpty(JsonNode input, String propertyPath, String type) {

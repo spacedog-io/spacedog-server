@@ -205,4 +205,10 @@ public class ElasticHelper {
 			return SpaceDogServices.getElasticClient().search(searchRequest).get();
 		}
 	}
+
+	public void refresh(boolean refresh, String... indices) {
+		if (refresh) {
+			SpaceDogServices.getElasticClient().admin().indices().prepareRefresh(indices).get();
+		}
+	}
 }

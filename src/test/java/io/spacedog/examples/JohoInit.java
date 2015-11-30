@@ -150,8 +150,6 @@ public class JohoInit extends SpaceDogHelper {
 				"Miramond", "Directeur", "Paris", "in-tact", "INTACT", 44.9, 2.4, "06 67 68 69 70", "01 22 33 44 55",
 				"http://www.t83.fr/infos/wp-content/uploads/2015/08/Fred-01-gros-nez-620x658.jpg");
 
-		SpaceDogHelper.refresh(johoAccount);
-
 		createThemes();
 		createServices();
 
@@ -248,8 +246,6 @@ public class JohoInit extends SpaceDogHelper {
 
 	public Iterator<JsonNode> showWall() throws Exception {
 
-		SpaceDogHelper.refresh(johoAccount);
-
 		JsonBuilder<ObjectNode> discussionQuery = Json.objectBuilder()//
 				.put("from", 0)//
 				.put("size", 10)//
@@ -263,7 +259,7 @@ public class JohoInit extends SpaceDogHelper {
 				.object("query")//
 				.object("match_all");
 
-		JsonNode subjectResults = SpaceRequest.post("/v1/data/discussion/search").backendKey(johoAccount)
+		JsonNode subjectResults = SpaceRequest.post("/v1/search/discussion?refresh=true").backendKey(johoAccount)
 				.body(discussionQuery).go(200).jsonNode();
 
 		Iterator<JsonNode> discussions = subjectResults.get("results").elements();
@@ -290,7 +286,7 @@ public class JohoInit extends SpaceDogHelper {
 					.object("term")//
 					.put("discussionId", discussions.next().get("meta").get("id").asText());
 
-			SpaceRequest.post("/v1/data/message/search").backendKey(johoAccount).body(messagesQuery).go(200);
+			SpaceRequest.post("/v1/search/message").backendKey(johoAccount).body(messagesQuery).go(200);
 		}
 
 		return discussions;

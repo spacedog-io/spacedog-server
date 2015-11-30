@@ -45,8 +45,6 @@ public class UserResourceTest extends Assert {
 		SpaceDogHelper.User vince = SpaceDogHelper.createUser(testAccount.backendKey, "vince", "hi vince",
 				"vince@dog.com");
 
-		SpaceDogHelper.refresh(testAccount);
-
 		// get vince user object should succeed
 
 		ObjectNode res2 = SpaceRequest.get("/v1/user/vince").backendKey(testAccount).basicAuth(vince).go(200)
@@ -82,8 +80,6 @@ public class UserResourceTest extends Assert {
 		SpaceRequest.put("/v1/user/vince").backendKey(testAccount).basicAuth(vince)
 				.body(Json.objectBuilder().put("email", "bignose@magic.com").build().toString()).go(200);
 
-		SpaceDogHelper.refresh(testAccount);
-
 		ObjectNode res9 = SpaceRequest.get("/v1/user/vince").backendKey(testAccount).basicAuth(vince).go(200)
 				.objectNode();
 
@@ -117,37 +113,37 @@ public class UserResourceTest extends Assert {
 		// no password user trying to create password with empty reset code
 		// should fail
 
-		SpaceRequest.post("/v1/user/{id}/password").routeParam("id", "titi").backendKey(testAccount)
-				.queryString("passwordResetCode", "").body(new TextNode("hi titi")).go(400);
+		SpaceRequest.post("/v1/user/titi/password?passwordResetCode=").backendKey(testAccount)
+				.body(new TextNode("hi titi")).go(400);
 
 		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "hi titi").go(401);
 
 		// no password user setting password with wrong reset code should fail
 
-		SpaceRequest.post("/v1/user/{id}/password").routeParam("id", "titi").backendKey(testAccount)
-				.queryString("passwordResetCode", "XXX").body(new TextNode("hi titi")).go(400);
+		SpaceRequest.post("/v1/user/titi/password?passwordResetCode=XXX").backendKey(testAccount)
+				.body(new TextNode("hi titi")).go(400);
 
 		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "hi titi").go(401);
 
 		// no password user setting password with right reset code should
 		// succeed
 
-		SpaceRequest.post("/v1/user/{id}/password").routeParam("id", "titi").backendKey(testAccount)
-				.queryString("passwordResetCode", passwordResetCode).body(new TextNode("hi titi")).go(200);
+		SpaceRequest.post("/v1/user/titi/password?passwordResetCode=" + passwordResetCode).backendKey(testAccount)
+				.body(new TextNode("hi titi")).go(200);
 
 		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "hi titi").go(200);
 
 		// toto user changes titi password should fail
 
-		SpaceRequest.put("/v1/user/{id}/password").routeParam("id", "titi").backendKey(testAccount)
-				.basicAuth("toto", "hi toto").body(new TextNode("XXX")).go(401);
+		SpaceRequest.put("/v1/user/titi/password").backendKey(testAccount).basicAuth("toto", "hi toto")
+				.body(new TextNode("XXX")).go(401);
 
 		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "XXX").go(401);
 
 		// owner changes its user password should succeed
 
-		SpaceRequest.put("/v1/user/{id}/password").routeParam("id", "titi").backendKey(testAccount)
-				.basicAuth("titi", "hi titi").body(new TextNode("hi titi 2")).go(200);
+		SpaceRequest.put("/v1/user/titi/password").backendKey(testAccount).basicAuth("titi", "hi titi")
+				.body(new TextNode("hi titi 2")).go(200);
 
 		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "hi titi 2").go(200);
 
@@ -157,8 +153,7 @@ public class UserResourceTest extends Assert {
 
 		// admin user changes titi user password should succeed
 
-		SpaceRequest.put("/v1/user/{id}/password").routeParam("id", "titi").basicAuth("test", "hi test")
-				.body(new TextNode("hi titi 3")).go(200);
+		SpaceRequest.put("/v1/user/titi/password").basicAuth("test", "hi test").body(new TextNode("hi titi 3")).go(200);
 
 		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "hi titi 3").go(200);
 
@@ -175,8 +170,7 @@ public class UserResourceTest extends Assert {
 		// vince sign up should succeed
 
 		SpaceDogHelper.createUser(testAccount.backendKey, "vince", "hi vince", "vince@dog.com");
-
-		SpaceDogHelper.refresh(testAccount);
+		SpaceRequest.get("/v1/data?refresh=true").backendKey(testAccount).go(200).assertEquals(1, "total");
 
 		// update user schema with custom schema
 

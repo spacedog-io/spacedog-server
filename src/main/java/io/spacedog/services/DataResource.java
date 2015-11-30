@@ -50,6 +50,7 @@ public class DataResource extends AbstractResource {
 	public Payload getAllTypes(Context context)
 			throws NotFoundException, JsonProcessingException, InterruptedException, ExecutionException, IOException {
 		Credentials credentials = AdminResource.checkCredentials(context);
+		refreshIfNecessary(credentials.getBackendId(), context, false);
 		ObjectNode result = SearchResource.get()//
 				.searchInternal(credentials, null, null, context);
 		return new Payload(JSON_CONTENT, result.toString(), HttpStatus.OK);
@@ -66,6 +67,7 @@ public class DataResource extends AbstractResource {
 	public Payload getAllForType(String type, Context context)
 			throws NotFoundException, JsonProcessingException, InterruptedException, ExecutionException, IOException {
 		Credentials credentials = AdminResource.checkCredentials(context);
+		refreshIfNecessary(credentials.getBackendId(), context, false);
 		ObjectNode result = SearchResource.get()//
 				.searchInternal(credentials, type, null, context);
 		return new Payload(JSON_CONTENT, result.toString(), HttpStatus.OK);
@@ -73,7 +75,7 @@ public class DataResource extends AbstractResource {
 
 	@Post("/:type")
 	@Post("/:type/")
-	public Payload create(String type, String jsonBody, Context context)
+	public Payload create(String type, String body, Context context)
 			throws NotFoundException, JsonProcessingException, IOException {
 		Credentials credentials = AdminResource.checkCredentials(context);
 
@@ -82,16 +84,16 @@ public class DataResource extends AbstractResource {
 		SchemaResource.getSchema(credentials.getBackendId(), type);
 
 		IndexResponse response = ElasticHelper.get().createObject(credentials.getBackendId(), type,
-				Json.readObjectNode(jsonBody), credentials.getName());
+				Json.readObjectNode(body), credentials.getName());
 
 		return PayloadHelper.saved(true, "/v1/data", response.getType(), response.getId(), response.getVersion());
 	}
 
 	@Delete("/:type")
 	@Delete("/:type/")
-	public Payload deleteForType(String type, String query, Context context)
+	public Payload deleteForType(String type, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
-		return SearchResource.get().deleteForType(type, null, context);
+		return SearchResource.get().deleteSearchForType(type, null, context);
 	}
 
 	@Get("/:type/:id")
@@ -160,7 +162,7 @@ public class DataResource extends AbstractResource {
 	@Deprecated
 	public Payload searchAllTypes(String body, Context context) throws JsonParseException, JsonMappingException,
 			NotFoundException, IOException, InterruptedException, ExecutionException {
-		return SearchResource.get().searchAllTypes(body, context);
+		return SearchResource.get().postSearchAllTypes(body, context);
 	}
 
 	@Post("/:type/search")
@@ -168,7 +170,7 @@ public class DataResource extends AbstractResource {
 	@Deprecated
 	public Payload searchForType(String type, String body, Context context) throws JsonParseException,
 			JsonMappingException, NotFoundException, IOException, InterruptedException, ExecutionException {
-		return SearchResource.get().searchForType(type, body, context);
+		return SearchResource.get().postSearchForType(type, body, context);
 	}
 
 	@Post("/:type/filter")
@@ -176,7 +178,7 @@ public class DataResource extends AbstractResource {
 	@Deprecated
 	public Payload filter(String type, String body, Context context)
 			throws JsonParseException, JsonMappingException, IOException, InterruptedException, ExecutionException {
-		return SearchResource.get().filter(type, body, context);
+		return SearchResource.get().postFilterForType(type, body, context);
 	}
 
 }

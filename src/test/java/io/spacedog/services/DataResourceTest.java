@@ -46,11 +46,9 @@ public class DataResourceTest extends Assert {
 
 		String id = create.getFromJson("id").asText();
 
-		SpaceDogHelper.refresh("test");
-
 		// find by id
 
-		SpaceResponse res1 = SpaceRequest.get("/v1/data/car/{id}").backendKey(testAccount).routeParam("id", id).go(200);
+		SpaceResponse res1 = SpaceRequest.get("/v1/data/car/" + id).backendKey(testAccount).go(200);
 
 		res1.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.createdBy")//
 				.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.updatedBy")//
@@ -63,7 +61,7 @@ public class DataResourceTest extends Assert {
 
 		// find by full text search
 
-		SpaceRequest.get("/v1/data/car?q={q}").backendKey(testAccount).routeParam("q", "inVENt*").go(200)
+		SpaceRequest.get("/v1/search/car?q={q}&refresh=true").backendKey(testAccount).routeParam("q", "").go(200)
 				.assertEquals(id, "results.0.meta.id");
 
 		// create user vince
@@ -71,16 +69,14 @@ public class DataResourceTest extends Assert {
 		SpaceDogHelper.User vince = SpaceDogHelper.createUser(testAccount.backendKey, "vince", "hi vince",
 				"vince@spacedog.io");
 
-		SpaceDogHelper.refresh(testAccount.backendId);
-
 		// update
 
-		SpaceResponse req2 = SpaceRequest.put("/v1/data/car/{id}").backendKey(testAccount).routeParam("id", id)
-				.basicAuth(vince).body(Json.objectBuilder().put("color", "blue").toString()).go(200);
+		SpaceResponse req2 = SpaceRequest.put("/v1/data/car/" + id).backendKey(testAccount).basicAuth(vince)
+				.body(Json.objectBuilder().put("color", "blue").toString()).go(200);
 
 		// check update is correct
 
-		SpaceResponse res3 = SpaceRequest.get("/v1/data/car/{id}").backendKey(testAccount).routeParam("id", id).go(200);
+		SpaceResponse res3 = SpaceRequest.get("/v1/data/car/" + id).backendKey(testAccount).go(200);
 
 		res3.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.createdBy")//
 				.assertEquals("vince", "meta.updatedBy")//
@@ -94,11 +90,11 @@ public class DataResourceTest extends Assert {
 
 		// delete
 
-		SpaceRequest.delete("/v1/data/car/{id}").backendKey(testAccount).routeParam("id", id).go(200);
+		SpaceRequest.delete("/v1/data/car/" + id).backendKey(testAccount).go(200);
 
 		// check delete is done
 
-		assertFalse(SpaceRequest.get("/v1/data/car/{id}").backendKey(testAccount).routeParam("id", id).go(404)
-				.jsonNode().get("success").asBoolean());
+		assertFalse(SpaceRequest.get("/v1/data/car/" + id).backendKey(testAccount).go(404).jsonNode().get("success")
+				.asBoolean());
 	}
 }

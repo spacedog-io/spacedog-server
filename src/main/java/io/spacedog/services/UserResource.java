@@ -44,9 +44,9 @@ public class UserResource extends AbstractResource {
 	// singleton
 	//
 
-	private static UserResource singleton = new UserResource();
+	private static AbstractResource singleton = new UserResource();
 
-	static UserResource get() {
+	static AbstractResource get() {
 		return singleton;
 	}
 
@@ -98,6 +98,13 @@ public class UserResource extends AbstractResource {
 		return DataResource.get().getAllForType(USER_TYPE, context);
 	}
 
+	@Delete("/user")
+	@Delete("/user/")
+	public Payload deleteAll(Context context)
+			throws NotFoundException, JsonProcessingException, InterruptedException, ExecutionException, IOException {
+		return DataResource.get().deleteForType(USER_TYPE, context);
+	}
+
 	@Post("/user")
 	@Post("/user/")
 	public Payload signUp(String body, Context context) throws JsonParseException, JsonMappingException, IOException {
@@ -136,12 +143,6 @@ public class UserResource extends AbstractResource {
 
 		return new Payload(JSON_CONTENT, savedBuilder.toString(), HttpStatus.CREATED)
 				.withHeader(PayloadHelper.HEADER_OBJECT_ID, response.getId());
-	}
-
-	protected ObjectNode checkObjectNode(JsonNode json) {
-		if (!json.isObject())
-			throw new IllegalArgumentException(String.format("json not an object but [%s]", json.getNodeType()));
-		return (ObjectNode) json;
 	}
 
 	@Get("/user/:id")

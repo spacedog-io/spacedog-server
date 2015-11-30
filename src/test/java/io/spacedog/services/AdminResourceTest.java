@@ -8,8 +8,8 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceDogHelper;
+import io.spacedog.client.SpaceRequest;
 
 public class AdminResourceTest extends Assert {
 
@@ -30,8 +30,9 @@ public class AdminResourceTest extends Assert {
 
 		// create new account with same username should fail
 
-		JsonNode json2 = SpaceRequest.post("/v1/admin/account/").body(Json.objectBuilder().put("backendId", "anothertest")
-				.put("username", "test").put("password", "hi test").put("email", "hello@spacedog.io").toString())
+		JsonNode json2 = SpaceRequest.post("/v1/admin/account/")
+				.body(Json.objectBuilder().put("backendId", "anothertest").put("username", "test")
+						.put("password", "hi test").put("email", "hello@spacedog.io").toString())
 				.go(400).jsonNode();
 
 		assertEquals("test", json2.get("invalidParameters").get("username").get("value").asText());
@@ -80,14 +81,11 @@ public class AdminResourceTest extends Assert {
 
 		// let's create a common user in 'test' backend
 
-		SpaceDogHelper.User john = SpaceDogHelper.createUser(testAccount.backendKey, "john", "hi john",
-				"john@dog.io");
-
-		SpaceDogHelper.refresh("test");
+		SpaceDogHelper.User john = SpaceDogHelper.createUser(testAccount.backendKey, "john", "hi john", "john@dog.io");
 
 		// data access with common user but no client key should fail
 
-		SpaceRequest.get("/v1/data").basicAuth(john).go(401);
+		SpaceRequest.get("/v1/data?refresh=true").basicAuth(john).go(401);
 
 		// admin access with regular user and backend key should fail
 

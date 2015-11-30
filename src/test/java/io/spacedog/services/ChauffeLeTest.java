@@ -39,8 +39,6 @@ public class ChauffeLeTest extends Assert {
 		elle = SpaceDogHelper.createUser(adminAccount.backendKey, "elle", "hi elle", "elle@chauffe.le");
 		laCopine = SpaceDogHelper.createUser(adminAccount.backendKey, "la copine", "hi la copine",
 				"lacopine@chauffe.le");
-
-		SpaceDogHelper.refresh(adminAccount);
 	}
 
 	static ObjectNode buildBigPostSchema() {
@@ -129,14 +127,12 @@ public class ChauffeLeTest extends Assert {
 			((ArrayNode) bigPost.get("responses"))
 					.add(Json.objectBuilder().put("title", comment).put("author", user.username).build());
 
-			SpaceRequest.put("/v1/data/bigpost/{id}").backendKey(adminAccount).routeParam("id", postId).basicAuth(user)
+			SpaceRequest.put("/v1/data/bigpost/" + postId).backendKey(adminAccount).basicAuth(user)
 					.body(bigPost.toString()).go(200);
 		}
 
 		@Override
 		public Iterator<JsonNode> showWall() throws Exception {
-
-			SpaceDogHelper.refresh(adminAccount);
 
 			String wallQuery = Json.objectBuilder()//
 					.put("from", 0)//
@@ -152,7 +148,7 @@ public class ChauffeLeTest extends Assert {
 					.object("match_all")//
 					.build().toString();
 
-			return SpaceRequest.post("/v1/data/bigpost/search").backendKey(adminAccount).body(wallQuery).go(200)
+			return SpaceRequest.post("/v1/search/bigpost?refresh=true").backendKey(adminAccount).body(wallQuery).go(200)
 					.jsonNode().get("results").elements();
 		}
 	}
@@ -181,8 +177,6 @@ public class ChauffeLeTest extends Assert {
 		@Override
 		public Iterator<JsonNode> showWall() throws Exception {
 
-			SpaceDogHelper.refresh(adminAccount);
-
 			String subjectQuery = Json.objectBuilder()//
 					.put("from", 0)//
 					.put("size", 10)//
@@ -205,7 +199,7 @@ public class ChauffeLeTest extends Assert {
 					.put("field", "parent")//
 					.build().toString();
 
-			JsonNode subjectResults = SpaceRequest.post("/v1/data/smallpost/search").backendKey(adminAccount)
+			JsonNode subjectResults = SpaceRequest.post("/v1/search/smallpost?refresh=true").backendKey(adminAccount)
 					.body(subjectQuery).go(200).jsonNode();
 
 			JsonBuilder<ObjectNode> responsesQuery = Json.objectBuilder()//

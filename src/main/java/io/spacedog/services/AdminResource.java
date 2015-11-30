@@ -114,6 +114,8 @@ public class AdminResource extends AbstractResource {
 		account.backendKey = new BackendKey();
 		account.checkAccountInputValidity();
 
+		ElasticHelper.get().refresh(true, ADMIN_INDEX);
+
 		if (ElasticHelper.get().search(ADMIN_INDEX, ACCOUNT_TYPE, "username", account.username).getTotalHits() > 0)
 			return PayloadHelper.invalidParameters("username", account.username,
 					String.format("administrator username [%s] is not available", account.username));
@@ -128,6 +130,8 @@ public class AdminResource extends AbstractResource {
 		// backend index is named after the backend id
 		SpaceDogServices.getElasticClient().admin().indices().prepareCreate(account.backendId)
 				.addMapping(UserResource.USER_TYPE, UserResource.getDefaultUserMapping()).get();
+
+		ElasticHelper.get().refresh(true, ADMIN_INDEX);
 
 		return PayloadHelper.saved(true, "/v1/admin", ACCOUNT_TYPE, account.backendId)
 				.withHeader(AdminResource.BACKEND_KEY_HEADER, account.defaultClientKey());
@@ -155,20 +159,24 @@ public class AdminResource extends AbstractResource {
 			throws JsonParseException, JsonMappingException, IOException {
 		Account credentials = checkAdminCredentialsOnly(backendId, context);
 
-		DeleteResponse resp1 = SpaceDogServices.getElasticClient()
+		ElasticHelper.get().refresh(true, ADMIN_INDEX);
+
+		DeleteResponse accountDeleteResp = SpaceDogServices.getElasticClient()
 				.prepareDelete(ADMIN_INDEX, ACCOUNT_TYPE, credentials.backendId).get();
 
-		if (!resp1.isFound())
+		if (!accountDeleteResp.isFound())
 			return PayloadHelper.error(HttpStatus.INTERNAL_SERVER_ERROR,
 					"no account found for backend [%s] and admin user [%s]", credentials.backendId,
 					credentials.username);
 
-		DeleteIndexResponse resp2 = SpaceDogServices.getElasticClient().admin().indices()
+		DeleteIndexResponse indexDeleteResp = SpaceDogServices.getElasticClient().admin().indices()
 				.prepareDelete(credentials.backendId).get();
 
-		if (!resp2.isAcknowledged())
+		if (!indexDeleteResp.isAcknowledged())
 			return PayloadHelper.error(HttpStatus.INTERNAL_SERVER_ERROR,
 					"internal index deletion not acknowledged for account with backend [%s] ", credentials.backendId);
+
+		ElasticHelper.get().refresh(true, ADMIN_INDEX);
 
 		return PayloadHelper.success();
 	}

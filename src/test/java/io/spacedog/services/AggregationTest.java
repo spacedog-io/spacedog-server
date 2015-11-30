@@ -21,8 +21,6 @@ public class AggregationTest {
 		SpaceDogHelper.createUser(testAccount, "donald", "hi donald", "donald@disney.com");
 		SpaceDogHelper.createUser(testAccount, "mickey", "hi mickey", "mickey@disney.com");
 
-		SpaceDogHelper.refresh(testAccount);
-
 		ObjectNode query = Json.objectBuilder()//
 				.put("size", 0)//
 				.object("aggs")//
@@ -31,7 +29,7 @@ public class AggregationTest {
 				.put("field", "email")//
 				.build();
 
-		SpaceRequest.post("/v1/data/search").backendKey(testAccount).body(query).go(200).assertEquals(3,
+		SpaceRequest.post("/v1/search?refresh=true").backendKey(testAccount).body(query).go(200).assertEquals(3,
 				"aggregations.objectCount.value");
 
 	}
