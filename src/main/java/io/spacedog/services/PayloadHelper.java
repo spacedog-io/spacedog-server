@@ -21,6 +21,7 @@ import net.codestory.http.payload.Payload;
 
 public class PayloadHelper {
 
+	public static final String JSON_CONTENT = "application/json;charset=UTF-8";
 	public static final String HEADER_OBJECT_ID = "x-spacedog-object-id";
 
 	public static Payload error(Throwable t) {
@@ -149,6 +150,6 @@ public class PayloadHelper {
 	}
 
 	public static Payload json(byte[] content, int httpStatus) {
-		return new Payload(AbstractResource.JSON_CONTENT, content, httpStatus);
+		return new Payload(JSON_CONTENT, content, httpStatus);
 	}
 }
