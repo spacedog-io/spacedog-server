@@ -11,6 +11,7 @@ import org.elasticsearch.index.mapper.MergeMappingException;
 import org.elasticsearch.indices.IndexMissingException;
 import org.elasticsearch.rest.RestStatus;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.services.Account.InvalidAccountException;
@@ -62,7 +63,7 @@ public class PayloadHelper {
 		JsonBuilder<ObjectNode> builder = Json.objectBuilder().put("success", false);
 		if (throwable != null)
 			builder.node("error", Json.toJson(throwable));
-		return new Payload(AbstractResource.JSON_CONTENT, builder.toString(), httpStatus);
+		return json(builder, httpStatus);
 	}
 
 	public static Payload error(int httpStatus, String message, Object... args) {
@@ -87,7 +88,7 @@ public class PayloadHelper {
 						.put("value", parameters[1])//
 						.put("message", parameters[2]);
 		}
-		return new Payload(AbstractResource.JSON_CONTENT, builder.toString(), HttpStatus.BAD_REQUEST);
+		return json(builder, HttpStatus.BAD_REQUEST);
 	}
 
 	public static Payload toPayload(RestStatus status, ShardOperationFailedException[] failures) {
@@ -102,11 +103,11 @@ public class PayloadHelper {
 			builder.object().put("type", failure.getClass().getName()).put("message", failure.reason())
 					.put("shardId", failure.shardId()).end();
 
-		return new Payload(AbstractResource.JSON_CONTENT, builder.toString(), status.getStatus());
+		return json(builder, status.getStatus());
 	}
 
 	public static Payload success() {
-		return new Payload(AbstractResource.JSON_CONTENT, "{\"success\":true}", HttpStatus.OK);
+		return json("{\"success\":true}");
 	}
 
 	public static Payload saved(boolean created, String uri, String type, String id) {
@@ -115,7 +116,39 @@ public class PayloadHelper {
 
 	public static Payload saved(boolean created, String uri, String type, String id, long version) {
 		JsonBuilder<ObjectNode> builder = AbstractResource.initSavedBuilder(uri, type, id, version);
-		return new Payload(AbstractResource.JSON_CONTENT, builder.build().toString(),
-				created ? HttpStatus.CREATED : HttpStatus.OK).withHeader(HEADER_OBJECT_ID, id);
+		return json(builder, created ? HttpStatus.CREATED : HttpStatus.OK)//
+				.withHeader(HEADER_OBJECT_ID, id);
+	}
+
+	public static <N extends JsonNode> Payload json(JsonBuilder<N> content) {
+		return json(content.build());
+	}
+
+	public static Payload json(JsonNode content) {
+		return json(content.toString());
+	}
+
+	public static Payload json(String content) {
+		return json(content.getBytes(Utils.UTF8));
+	}
+
+	public static Payload json(byte[] content) {
+		return json(content, HttpStatus.OK);
+	}
+
+	public static <N extends JsonNode> Payload json(JsonBuilder<N> content, int httpStatus) {
+		return json(content.build(), httpStatus);
+	}
+
+	public static Payload json(JsonNode content, int httpStatus) {
+		return json(content.toString(), httpStatus);
+	}
+
+	public static Payload json(String content, int httpStatus) {
+		return json(content.getBytes(Utils.UTF8), httpStatus);
+	}
+
+	public static Payload json(byte[] content, int httpStatus) {
+		return new Payload(AbstractResource.JSON_CONTENT, content, httpStatus);
 	}
 }

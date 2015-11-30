@@ -141,7 +141,7 @@ public class UserResource extends AbstractResource {
 
 		passwordResetCode.ifPresent(code -> savedBuilder.put(PASSWORD_RESET_CODE, code));
 
-		return new Payload(JSON_CONTENT, savedBuilder.toString(), HttpStatus.CREATED)
+		return PayloadHelper.json(savedBuilder, HttpStatus.CREATED)//
 				.withHeader(PayloadHelper.HEADER_OBJECT_ID, response.getId());
 	}
 
@@ -170,8 +170,7 @@ public class UserResource extends AbstractResource {
 			throws JsonParseException, JsonMappingException, IOException {
 		Account account = AdminResource.checkAdminCredentialsOnly(context);
 
-		UpdateResponse response = Start.getElasticClient()
-				.prepareUpdate(account.backendId, UserResource.USER_TYPE, id)//
+		UpdateResponse response = Start.getElasticClient().prepareUpdate(account.backendId, UserResource.USER_TYPE, id)//
 				.setScript("ctx._source.remove('hashedPassword');ctx._source.passwordResetCode=code;",
 						ScriptService.ScriptType.INLINE)//
 				.addScriptParam("code", UUID.randomUUID().toString())//
@@ -195,8 +194,7 @@ public class UserResource extends AbstractResource {
 		String password = Json.readJsonNode(body).asText();
 		UserUtils.checkPasswordValidity(password);
 
-		GetResponse getResponse = Start.getElasticClient()
-				.prepareGet(credentials.getBackendId(), USER_TYPE, id).get();
+		GetResponse getResponse = Start.getElasticClient().prepareGet(credentials.getBackendId(), USER_TYPE, id).get();
 
 		if (!getResponse.isExists())
 			throw new NotFoundException(credentials.getBackendId(), USER_TYPE, id);

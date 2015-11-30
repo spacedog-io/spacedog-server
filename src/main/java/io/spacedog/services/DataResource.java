@@ -53,7 +53,7 @@ public class DataResource extends AbstractResource {
 		refreshIfNecessary(credentials.getBackendId(), context, false);
 		ObjectNode result = SearchResource.get()//
 				.searchInternal(credentials, null, null, context);
-		return new Payload(JSON_CONTENT, result.toString(), HttpStatus.OK);
+		return PayloadHelper.json(result);
 	}
 
 	@Delete("")
@@ -70,7 +70,7 @@ public class DataResource extends AbstractResource {
 		refreshIfNecessary(credentials.getBackendId(), context, false);
 		ObjectNode result = SearchResource.get()//
 				.searchInternal(credentials, type, null, context);
-		return new Payload(JSON_CONTENT, result.toString(), HttpStatus.OK);
+		return PayloadHelper.json(result);
 	}
 
 	@Post("/:type")
@@ -108,8 +108,7 @@ public class DataResource extends AbstractResource {
 
 		Optional<ObjectNode> object = ElasticHelper.get().getObject(credentials.getBackendId(), type, id);
 
-		return object.isPresent() ? new Payload(JSON_CONTENT, object.get().toString(), HttpStatus.OK)
-				: PayloadHelper.error(HttpStatus.NOT_FOUND);
+		return object.isPresent() ? PayloadHelper.json(object.get()) : PayloadHelper.error(HttpStatus.NOT_FOUND);
 	}
 
 	@Put("/:type/:id")
@@ -151,8 +150,7 @@ public class DataResource extends AbstractResource {
 		// TODO useful for security?
 		SchemaResource.getSchema(credentials.getBackendId(), type);
 
-		DeleteResponse response = Start.getElasticClient()
-				.prepareDelete(credentials.getBackendId(), type, id).get();
+		DeleteResponse response = Start.getElasticClient().prepareDelete(credentials.getBackendId(), type, id).get();
 		return response.isFound() ? PayloadHelper.success()
 				: PayloadHelper.error(HttpStatus.NOT_FOUND, "object of type [%s] and id [%s] not found", type, id);
 	}

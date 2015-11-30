@@ -142,7 +142,7 @@ public class AdminResource extends AbstractResource {
 	public Payload get(String backendId, Context context) throws JsonParseException, JsonMappingException, IOException {
 		Account credentials = checkAdminCredentialsOnly(backendId, context);
 
-		GetResponse response = Start.getElasticClient()
+		GetResponse response = Start.getElasticClient()//
 				.prepareGet(ADMIN_INDEX, ACCOUNT_TYPE, credentials.backendId).get();
 
 		if (!response.isExists())
@@ -150,7 +150,7 @@ public class AdminResource extends AbstractResource {
 					"no account found for backend [%s] and admin user [%s]", credentials.backendId,
 					credentials.username);
 
-		return new Payload(JSON_CONTENT, response.getSourceAsBytes(), HttpStatus.OK);
+		return PayloadHelper.json(response.getSourceAsBytes());
 	}
 
 	@Delete("/account/:id")

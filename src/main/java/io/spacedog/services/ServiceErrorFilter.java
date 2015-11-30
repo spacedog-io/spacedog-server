@@ -32,19 +32,21 @@ public class ServiceErrorFilter implements Filter {
 				&& (payload.rawContentType() == null//
 						|| !payload.rawContentType().startsWith("application/json"))) {
 
-			JsonBuilder<ObjectNode> node = Json.objectBuilder().put("success", false)//
+			JsonBuilder<ObjectNode> nodeBuilder = Json.objectBuilder()//
+					.put("success", false)//
 					.object("error");
 
 			if (payload.code() == 404) {
-				node.put("message", String.format("[%s] is not a valid SpaceDog route", uri));
-				return new Payload(AbstractResource.JSON_CONTENT, node.toString(), payload.code());
+				nodeBuilder.put("message", String.format("[%s] is not a valid SpaceDog route", uri));
+				return PayloadHelper.json(nodeBuilder, payload.code());
 			} else if (payload.code() == 405) {
-				node.put("message", String.format("method [%s] not valid SpaceDog route [%s]", context.method(), uri));
-				return new Payload(AbstractResource.JSON_CONTENT, node.toString(), payload.code());
+				nodeBuilder.put("message",
+						String.format("method [%s] not valid SpaceDog route [%s]", context.method(), uri));
+				return PayloadHelper.json(nodeBuilder, payload.code());
 			} else {
-				node.put("message",
+				nodeBuilder.put("message",
 						String.format("sorry but no details available for this error code [%s]", payload.code()));
-				return new Payload(AbstractResource.JSON_CONTENT, node.toString(), payload.code());
+				return PayloadHelper.json(nodeBuilder, payload.code());
 			}
 		}
 		return payload;

@@ -1,6 +1,10 @@
 package io.spacedog.services;
 
+import java.nio.charset.Charset;
+
 public class Utils {
+
+	public static final Charset UTF8 = Charset.forName("UTF-8");
 
 	public static StackTraceElement getStackTraceElement() {
 		return new Exception().getStackTrace()[1];

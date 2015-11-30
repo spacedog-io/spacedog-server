@@ -24,7 +24,6 @@ import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.annotations.Put;
-import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/v1/schema")
@@ -66,24 +65,20 @@ public class SchemaResource extends AbstractResource {
 					}
 				});
 
-		return new Payload(JSON_CONTENT, jsonMerger.get().toString(), HttpStatus.OK);
+		return PayloadHelper.json(jsonMerger.get());
 	}
 
 	@Get("/:type")
 	@Get("/:type/")
-	public Payload get(String type, Context context) {
-		try {
-			Credentials credentials = AdminResource.checkCredentials(context);
-			return new Payload(JSON_CONTENT, getSchema(credentials.getBackendId(), type).toString(), HttpStatus.OK);
-		} catch (Throwable throwable) {
-			return PayloadHelper.error(throwable);
-		}
+	public Payload get(String type, Context context) throws JsonParseException, JsonMappingException, IOException {
+		Credentials credentials = AdminResource.checkCredentials(context);
+		return PayloadHelper.json(getSchema(credentials.getBackendId(), type));
 	}
 
 	public static ObjectNode getSchema(String index, String type)
 			throws NotFoundException, JsonProcessingException, IOException {
-		GetMappingsResponse resp = Start.getElasticClient().admin().indices().prepareGetMappings(index)
-				.addTypes(type).get();
+		GetMappingsResponse resp = Start.getElasticClient().admin().indices().prepareGetMappings(index).addTypes(type)
+				.get();
 
 		String source = Optional.ofNullable(resp.getMappings()).map(indexMap -> indexMap.get(index))
 				.map(typeMap -> typeMap.get(type)).orElseThrow(() -> new NotFoundException(index, type)).source()
@@ -114,8 +109,7 @@ public class SchemaResource extends AbstractResource {
 			throws JsonParseException, JsonMappingException, IOException {
 		try {
 			Account account = AdminResource.checkAdminCredentialsOnly(context);
-			Start.getElasticClient().admin().indices().prepareDeleteMapping(account.backendId).setType(type)
-					.get();
+			Start.getElasticClient().admin().indices().prepareDeleteMapping(account.backendId).setType(type).get();
 		} catch (TypeMissingException exception) {
 			// ignored
 		}

@@ -32,7 +32,6 @@ import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
-import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/v1")
@@ -71,7 +70,7 @@ public class SearchResource extends AbstractResource {
 		Credentials credentials = AdminResource.checkCredentials(context);
 		refreshIfNecessary(credentials.getBackendId(), context, false);
 		ObjectNode result = searchInternal(credentials, null, body, context);
-		return new Payload(JSON_CONTENT, result.toString(), HttpStatus.OK);
+		return PayloadHelper.json(result);
 	}
 
 	@Delete("/search")
@@ -98,7 +97,7 @@ public class SearchResource extends AbstractResource {
 		Credentials credentials = AdminResource.checkCredentials(context);
 		refreshIfNecessary(credentials.getBackendId(), context, false);
 		ObjectNode result = searchInternal(credentials, type, body, context);
-		return new Payload(JSON_CONTENT, result.toString(), HttpStatus.OK);
+		return PayloadHelper.json(result);
 	}
 
 	@Delete("/search/:type")
@@ -119,7 +118,7 @@ public class SearchResource extends AbstractResource {
 		refreshIfNecessary(credentials.getBackendId(), context, false);
 		FilteredSearchBuilder builder = ElasticHelper.get().searchBuilder(credentials.getBackendId(), type)
 				.applyContext(context).applyFilters(Json.readObjectNode(body));
-		return new Payload(JSON_CONTENT, extractResults(builder.get(), context, credentials).toString(), HttpStatus.OK);
+		return PayloadHelper.json(extractResults(builder.get(), context, credentials));
 	}
 
 	ObjectNode searchInternal(Credentials credentials, String type, String jsonQuery, Context context)
