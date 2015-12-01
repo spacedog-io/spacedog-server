@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 
@@ -88,10 +89,15 @@ public class Start extends AbstractWebServer<Start> {
 
 	private static void startElastic(String[] conf) throws InterruptedException, ExecutionException, IOException {
 
-		// Sets ElasticSearch data path
-		System.setProperty("es.path.data", Paths.get(conf[0]).resolve("data").toAbsolutePath().toString());
-
-		elasticNode = NodeBuilder.nodeBuilder().local(true).data(true).clusterName("spacedog-elastic-cluster").node();
+		elasticNode = NodeBuilder.nodeBuilder()//
+				.local(true)//
+				.data(true)//
+				.clusterName("spacedog-elastic-cluster")//
+				.settings(ImmutableSettings.builder()//
+						.put("path.data", //
+								Paths.get(conf[0]).resolve("data").toAbsolutePath().toString())
+						.build())//
+				.node();
 
 		elasticClient = elasticNode.client();
 
