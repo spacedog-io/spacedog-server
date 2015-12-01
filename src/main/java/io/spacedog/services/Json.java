@@ -152,19 +152,19 @@ public class Json {
 			new DefaultPrettyPrinter().withArrayIndenter(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE));
 
 	public static Object toSimpleValue(JsonNode value) {
-	
+
 		if (value.isBoolean())
 			return value.booleanValue();
-	
+
 		if (value.isTextual())
 			return value.textValue();
-	
+
 		if (value.isNumber())
 			return value.numberValue();
-	
+
 		if (value.isNull())
 			return null;
-	
+
 		throw new RuntimeException("only supports simple types");
 	}
 
@@ -173,17 +173,42 @@ public class Json {
 				.put("type", t.getClass().getName()) //
 				.put("message", t.getMessage()) //
 				.array("trace");
-	
+
 		for (StackTraceElement element : t.getStackTrace()) {
 			builder.add(element.toString());
 		}
-	
+
 		builder.end();
-	
+
 		if (t.getCause() != null) {
 			builder.node("cause", toJson(t.getCause()));
 		}
-	
+
 		return builder.build();
+	}
+
+	enum Type {
+		String, Boolean, Integer, Long, Float, Double, Object, Array
+	};
+
+	public static boolean isOfType(Type expected, JsonNode node) {
+		switch (expected) {
+		case String:
+			return node.isTextual();
+		case Boolean:
+			return node.isBoolean();
+		case Long:
+			return node.isLong();
+		case Float:
+			return node.isFloat();
+		case Double:
+			return node.isDouble();
+		case Object:
+			return node.isObject();
+		case Array:
+			return node.isArray();
+		default:
+			return false;
+		}
 	}
 }
