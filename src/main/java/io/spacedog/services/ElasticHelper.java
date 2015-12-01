@@ -10,6 +10,7 @@ import java.util.concurrent.ExecutionException;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryRequestBuilder;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
@@ -84,23 +85,46 @@ public class ElasticHelper {
 	}
 
 	/**
-	 * TODO should i get id and type from the meta for more consistency ?
+	 * TODO do we need these two update methods or just one?
 	 */
 	public IndexResponse updateObject(String index, String type, String id, long version, ObjectNode object,
 			String updatedBy) {
 
-		object.remove("id");
-		object.remove("version");
-		object.remove("type");
+		object.with("meta").remove("id");
+		object.with("meta").remove("version");
+		object.with("meta").remove("type");
 
-		AbstractResource.checkNotNullOrEmpty(object, "meta.createdBy", type);
-		AbstractResource.checkNotNullOrEmpty(object, "meta.createdAt", type);
+		AbstractResource.checkStringNotNullOrEmpty(object, "meta.createdBy");
+		AbstractResource.checkStringNotNullOrEmpty(object, "meta.createdAt");
 
 		object.with("meta").put("updatedBy", updatedBy);
 		object.with("meta").put("updatedAt", DateTime.now().toString());
 
-		return Start.getElasticClient().prepareIndex(index, type, id).setSource(object.toString())
-				.setVersion(version).get();
+		IndexRequestBuilder builder = Start.getElasticClient().prepareIndex(index, type, id)
+				.setSource(object.toString());
+		if (version > 0)
+			builder.setVersion(version);
+		return builder.get();
+	}
+
+	public IndexResponse updateObject(String index, ObjectNode object, String updatedBy) {
+
+		String id = AbstractResource.checkStringNotNullOrEmpty(object, "meta.id");
+		String type = AbstractResource.checkStringNotNullOrEmpty(object, "meta.type");
+		long version = AbstractResource.checkLongNode(object, "meta.version", true).get().asLong();
+
+		AbstractResource.checkStringNotNullOrEmpty(object, "meta.createdBy");
+		AbstractResource.checkStringNotNullOrEmpty(object, "meta.createdAt");
+
+		object.with("meta").remove("id");
+		object.with("meta").remove("version");
+		object.with("meta").remove("type");
+
+		object.with("meta").put("updatedBy", updatedBy);
+		object.with("meta").put("updatedAt", DateTime.now().toString());
+
+		return Start.getElasticClient().prepareIndex(index, type, id).setSource(object.toString()).setVersion(version)
+				.get();
 	}
 
 	public UpdateResponse patchObject(String index, String type, String id, long version, ObjectNode object,
@@ -110,8 +134,7 @@ public class ElasticHelper {
 				.put("updatedBy", updatedBy)//
 				.put("updatedAt", DateTime.now().toString());
 
-		UpdateRequestBuilder update = Start.getElasticClient().prepareUpdate(index, type, id)
-				.setDoc(object.toString());
+		UpdateRequestBuilder update = Start.getElasticClient().prepareUpdate(index, type, id).setDoc(object.toString());
 
 		if (version > 0)
 			update.setVersion(version);
@@ -124,8 +147,7 @@ public class ElasticHelper {
 		if (Strings.isNullOrEmpty(query))
 			query = Json.objectBuilder().object("query").object("match_all").toString();
 
-		DeleteByQueryRequestBuilder setSource = Start.getElasticClient().prepareDeleteByQuery(index)
-				.setSource(query);
+		DeleteByQueryRequestBuilder setSource = Start.getElasticClient().prepareDeleteByQuery(index).setSource(query);
 
 		if (types != null)
 			setSource.setTypes(types);

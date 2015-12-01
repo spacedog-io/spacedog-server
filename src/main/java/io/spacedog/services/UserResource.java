@@ -12,7 +12,6 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.common.base.Strings;
-import org.elasticsearch.script.ScriptService;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -116,8 +115,8 @@ public class UserResource extends AbstractResource {
 		Credentials credentials = AdminResource.checkCredentials(context);
 
 		ObjectNode user = Json.readObjectNode(body);
-		checkNotNullOrEmpty(user, USERNAME, USER_TYPE);
-		checkNotNullOrEmpty(user, EMAIL, USER_TYPE);
+		checkStringNotNullOrEmpty(user, USERNAME);
+		checkStringNotNullOrEmpty(user, EMAIL);
 		checkNotPresent(user, HASHED_PASSWORD, USER_TYPE);
 		user.putArray(GROUPS).add(credentials.getBackendId());
 
@@ -136,8 +135,7 @@ public class UserResource extends AbstractResource {
 		IndexResponse response = ElasticHelper.get().createObject(credentials.getBackendId(), USER_TYPE, user,
 				credentials.getName());
 
-		JsonBuilder<ObjectNode> savedBuilder = initSavedBuilder("/v1", USER_TYPE, response.getId(),
-				response.getVersion());
+		JsonBuilder<ObjectNode> savedBuilder = PayloadHelper.savedBuilder("/v1", USER_TYPE, response.getId(), response.getVersion());
 
 		passwordResetCode.ifPresent(code -> savedBuilder.put(PASSWORD_RESET_CODE, code));
 
@@ -168,15 +166,32 @@ public class UserResource extends AbstractResource {
 	@Delete("/user/:id/password")
 	public Payload deletePassword(String id, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
+
 		Account account = AdminResource.checkAdminCredentialsOnly(context);
 
-		UpdateResponse response = Start.getElasticClient().prepareUpdate(account.backendId, UserResource.USER_TYPE, id)//
-				.setScript("ctx._source.remove('hashedPassword');ctx._source.passwordResetCode=code;",
-						ScriptService.ScriptType.INLINE)//
-				.addScriptParam("code", UUID.randomUUID().toString())//
-				.get();
+		// UpdateResponse response =
+		// Start.getElasticClient().prepareUpdate(account.backendId,
+		// UserResource.USER_TYPE, id)//
+		// .setScript(new Script(
+		// "ctx._source.remove('hashedPassword');ctx._source.passwordResetCode=code;",//
+		// ScriptType.INLINE,//
+		// "groovy",//
+		// Maps.))
+		// .addScriptParam("code", UUID.randomUUID().toString())//
+		// .get();
 
-		return PayloadHelper.saved(false, "/v1/user", response.getType(), response.getId(), response.getVersion());
+		ObjectNode user = ElasticHelper.get().getObject(account.backendId, USER_TYPE, id)//
+				.orElseThrow(() -> new NotFoundException(account.backendId, USER_TYPE, id));
+
+		String resetCode = UUID.randomUUID().toString();
+		user.remove(HASHED_PASSWORD);
+		user.put(PASSWORD_RESET_CODE, resetCode);
+
+		long newVersion = ElasticHelper.get().updateObject(account.backendId, user, account.username).getVersion();
+
+		return PayloadHelper.json(//
+				PayloadHelper.savedBuilder("/v1", USER_TYPE, id, newVersion).put(PASSWORD_RESET_CODE, resetCode), //
+				HttpStatus.OK);
 	}
 
 	@Post("/user/:id/password")

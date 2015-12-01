@@ -3,10 +3,13 @@
  */
 package io.spacedog.services;
 
+import java.util.Optional;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
+import io.spacedog.services.Json.Type;
 import net.codestory.http.Context;
 import net.codestory.http.payload.Payload;
 
@@ -24,28 +27,68 @@ public abstract class AbstractResource {
 		ElasticHelper.get().refresh(refresh, index);
 	}
 
-	public static ObjectNode checkObjectNode(JsonNode input, String propertyPath, boolean required) {
-		JsonNode node = Json.get(input, propertyPath);
-		if (required && node == null)
-			throw new IllegalArgumentException(String.format("property [%s] is required", propertyPath));
-		if (!node.isObject())
-			throw new IllegalArgumentException(
-					String.format("property [%s] not an object but [%s]", propertyPath, node.getNodeType()));
-		return (ObjectNode) node;
-	}
-
 	public static ObjectNode checkObjectNode(JsonNode node) {
 		if (!node.isObject())
 			throw new IllegalArgumentException(String.format("not a json object but [%s]", node.getNodeType()));
 		return (ObjectNode) node;
 	}
 
-	public static JsonNode checkNotNullOrEmpty(JsonNode input, String propertyPath, String type) {
-		JsonNode node = Json.get(input, propertyPath);
-		if (node == null || Strings.isNullOrEmpty(node.asText()))
+	public static String checkStringNotNullOrEmpty(JsonNode input, String propertyPath) {
+		String string = checkStringNode(input, propertyPath, true).get().asText();
+		if (Strings.isNullOrEmpty(string)) {
 			throw new IllegalArgumentException(
-					String.format("property [%s] is required in type [%s]", propertyPath, type));
-		return node;
+					String.format("property [%s] must not be empty in object [%s]", propertyPath, input));
+		}
+		return string;
+	}
+
+	public static Optional<JsonNode> checkStringNode(JsonNode input, String propertyPath, boolean required) {
+		return checkJsonNode(input, propertyPath, Type.String, required);
+	}
+
+	public static Optional<JsonNode> checkBooleanNode(JsonNode input, String propertyPath, boolean required) {
+		return checkJsonNode(input, propertyPath, Type.Boolean, required);
+	}
+
+	public static Optional<JsonNode> checkIntegerNode(JsonNode input, String propertyPath, boolean required) {
+		return checkJsonNode(input, propertyPath, Type.Integer, required);
+	}
+
+	public static Optional<JsonNode> checkLongNode(JsonNode input, String propertyPath, boolean required) {
+		return checkJsonNode(input, propertyPath, Type.Long, required);
+	}
+
+	public static Optional<JsonNode> checkFloatNode(JsonNode input, String propertyPath, boolean required) {
+		return checkJsonNode(input, propertyPath, Type.Float, required);
+	}
+
+	public static Optional<JsonNode> checkDoubleNode(JsonNode input, String propertyPath, boolean required) {
+		return checkJsonNode(input, propertyPath, Type.Double, required);
+	}
+
+	public static Optional<JsonNode> checkObjectNode(JsonNode input, String propertyPath, boolean required) {
+		return checkJsonNode(input, propertyPath, Type.Object, required);
+	}
+
+	public static Optional<JsonNode> checkArrayNode(JsonNode input, String propertyPath, boolean required) {
+		return checkJsonNode(input, propertyPath, Type.Array, required);
+	}
+
+	public static Optional<JsonNode> checkJsonNode(JsonNode input, String propertyPath, Json.Type expected,
+			boolean required) {
+		JsonNode node = Json.get(input, propertyPath);
+		if (node == null) {
+			if (required)
+				throw new IllegalArgumentException(
+						String.format("property [%s] must not be null but in object [%s]", propertyPath, input));
+			return Optional.ofNullable(null);
+		}
+		if (Json.isOfType(expected, node))
+			return Optional.of(node);
+		else
+			throw new IllegalArgumentException(//
+					String.format("property [%s] must be of type [%s] instead of [%s]", //
+							propertyPath, node.getNodeType(), expected));
 	}
 
 	public static void checkNotPresent(JsonNode input, String propertyPath, String type) {
@@ -53,28 +96,6 @@ public abstract class AbstractResource {
 		if (node != null)
 			throw new IllegalArgumentException(
 					String.format("property [%s] is forbidden in type [%s]", propertyPath, type));
-	}
-
-	public static String checkString(JsonNode input, String propertyPath, boolean required, String in) {
-		JsonNode node = Json.get(input, propertyPath);
-		if (required && node == null)
-			throw new IllegalArgumentException(String.format("property [%s] is mandatory in %s", propertyPath, in));
-		if (!node.isTextual())
-			throw new IllegalArgumentException(String.format("property [%s] must be textual", propertyPath));
-		return node.asText();
-	}
-
-	protected static JsonBuilder<ObjectNode> initSavedBuilder(String uri, String type, String id, long version) {
-		JsonBuilder<ObjectNode> builder = Json.objectBuilder() //
-				.put("success", true) //
-				.put("id", id) //
-				.put("type", type) //
-				.put("location", toUrl(BASE_URL, uri, type, id));
-
-		if (version > 0) //
-			builder.put("version", version);
-
-		return builder;
 	}
 
 	protected static String toUrl(String baseUrl, String uri, String type, String id) {

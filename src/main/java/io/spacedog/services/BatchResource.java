@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -116,12 +117,12 @@ public class BatchResource extends AbstractResource {
 
 		@Override
 		public String uri() {
-			return checkString(request, "uri", true, "batch request objects");
+			return checkStringNotNullOrEmpty(request, "uri");
 		}
 
 		@Override
 		public String method() {
-			return checkString(request, "method", true, "batch request objects");
+			return checkStringNotNullOrEmpty(request, "method");
 		}
 
 		@Override
@@ -196,21 +197,21 @@ public class BatchResource extends AbstractResource {
 
 				@Override
 				public Collection<String> keys() {
-					ObjectNode query = AbstractResource.checkObjectNode(request, "query", false);
-					return query == null ? Collections.emptyList() : Lists.newArrayList(query.fieldNames());
+					Optional<JsonNode> opt = AbstractResource.checkObjectNode(request, "query", false);
+					return opt.isPresent() ? Lists.newArrayList(opt.get().fieldNames()) : Collections.emptyList();
 				}
 
 				@Override
 				public Iterable<String> all(String name) {
-					ObjectNode query = AbstractResource.checkObjectNode(request, "query", false);
-					if (query == null)
+					Optional<JsonNode> opt = AbstractResource.checkObjectNode(request, "query", false);
+					if (opt.isPresent()) {
+						JsonNode paramNode = opt.get().get(name);
+						return paramNode.isArray()//
+								? () -> Iterators.transform(paramNode.elements(), node -> node.asText())//
+								: Collections.singleton(paramNode.asText());
+					} else
 						return null;
-					JsonNode paramNode = query.get(name);
-					return paramNode.isArray()//
-							? () -> Iterators.transform(paramNode.elements(), node -> node.asText())//
-							: Collections.singleton(paramNode.asText());
 				}
-
 			};
 		}
 

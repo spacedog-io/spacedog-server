@@ -111,12 +111,25 @@ public class PayloadHelper {
 		return json("{\"success\":true}");
 	}
 
+	public static JsonBuilder<ObjectNode> savedBuilder(String uri, String type, String id, long version) {
+		JsonBuilder<ObjectNode> builder = Json.objectBuilder() //
+				.put("success", true) //
+				.put("id", id) //
+				.put("type", type) //
+				.put("location", AbstractResource.toUrl(AbstractResource.BASE_URL, uri, type, id));
+
+		if (version > 0) //
+			builder.put("version", version);
+
+		return builder;
+	}
+
 	public static Payload saved(boolean created, String uri, String type, String id) {
 		return saved(created, uri, type, id, 0);
 	}
 
 	public static Payload saved(boolean created, String uri, String type, String id, long version) {
-		JsonBuilder<ObjectNode> builder = AbstractResource.initSavedBuilder(uri, type, id, version);
+		JsonBuilder<ObjectNode> builder = PayloadHelper.savedBuilder(uri, type, id, version);
 		return json(builder, created ? HttpStatus.CREATED : HttpStatus.OK)//
 				.withHeader(HEADER_OBJECT_ID, id);
 	}

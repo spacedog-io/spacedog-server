@@ -125,7 +125,7 @@ public class UserResourceTest extends Assert {
 
 		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "hi titi").go(401);
 
-		// no password user setting password with right reset code should
+		// titi inits its own password with right reset code should
 		// succeed
 
 		SpaceRequest.post("/v1/user/titi/password?passwordResetCode=" + passwordResetCode).backendKey(testAccount)
@@ -140,7 +140,7 @@ public class UserResourceTest extends Assert {
 
 		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "XXX").go(401);
 
-		// owner changes its user password should succeed
+		// titi changes its password should succeed
 
 		SpaceRequest.put("/v1/user/titi/password").backendKey(testAccount).basicAuth("titi", "hi titi")
 				.body(new TextNode("hi titi 2")).go(200);
@@ -154,12 +154,33 @@ public class UserResourceTest extends Assert {
 		// admin user changes titi user password should succeed
 
 		SpaceRequest.put("/v1/user/titi/password").basicAuth("test", "hi test").body(new TextNode("hi titi 3")).go(200);
-
 		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "hi titi 3").go(200);
 
 		// login with old password should fail
 
 		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "hi titi 2").go(401);
+
+		// admin deletes titi password should succeed
+
+		String newPasswordResetCode = SpaceRequest.delete("/v1/user/titi/password").basicAuth("test", "hi test").go(200)
+				.getFromJson("passwordResetCode").asText();
+
+		// titi login should fail
+
+		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "hi titi 3").go(401);
+
+		// titi inits its password with old reset code should fail
+
+		SpaceRequest.post("/v1/user/titi/password?passwordResetCode=" + passwordResetCode).backendKey(testAccount)
+				.body(new TextNode("hi titi")).go(400);
+
+		// titi inits its password with new reset code should fail
+
+		SpaceRequest.post("/v1/user/titi/password?passwordResetCode=" + newPasswordResetCode).backendKey(testAccount)
+				.body(new TextNode("hi titi")).go(200);
+
+		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "hi titi").go(200);
+
 	}
 
 	@Test

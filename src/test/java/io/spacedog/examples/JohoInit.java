@@ -92,10 +92,13 @@ public class JohoInit extends SpaceDogHelper {
 				.textProperty("firstname", "french", true)//
 				.textProperty("lastname", "french", true)//
 				.simpleProperty("job", "enum", true, false)//
+				.simpleProperty("service", "enum", true, false)//
 				.startObjectProperty("site", true)//
 				.textProperty("name", "french", true)//
+				.stringProperty("address1", true)//
+				.stringProperty("address2", false)//
 				.stringProperty("town", true)//
-				.stringProperty("address", true)//
+				.stringProperty("zipcode", true)//
 				.simpleProperty("where", "geopoint", true)//
 				.stringProperty("code", true)//
 				.endObjectProperty()//
@@ -124,8 +127,10 @@ public class JohoInit extends SpaceDogHelper {
 		return SchemaBuilder2.builder("sites")//
 				.startObjectProperty("sites", true, true)//
 				.textProperty("name", "french", true)//
+				.stringProperty("address1", true)//
+				.stringProperty("address2", false)//
 				.stringProperty("town", true)//
-				.stringProperty("address", true)//
+				.stringProperty("zipcode", true)//
 				.simpleProperty("where", "geopoint", true)//
 				.stringProperty("code", true)//
 				.build();
