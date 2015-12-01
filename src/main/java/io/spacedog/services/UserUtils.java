@@ -7,7 +7,7 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.xml.bind.DatatypeConverter;
 
-import org.elasticsearch.common.base.Strings;
+import com.google.common.base.Strings;
 
 public class UserUtils {
 
