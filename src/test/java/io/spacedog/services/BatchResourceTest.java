@@ -15,19 +15,20 @@ import io.spacedog.client.SpaceRequest;
 public class BatchResourceTest extends Assert {
 
 	@Test
-	public void shouldSignUpSuccessfullyAndMore() throws Exception {
+	public void shouldSuccessfullyExecuteBatch() throws Exception {
 
 		SpaceDogHelper.Account testAccount = SpaceDogHelper.resetTestAccount();
 		User user = SpaceDogHelper.createUser(testAccount.backendKey, "vince", "hi vince", "vince@dog.com");
 		User dave = SpaceDogHelper.createUser(testAccount.backendKey, "dave", "hi dave", "dave@dog.com");
 
-		ArrayNode batch = Json.arrayBuilder().object()//
+		ArrayNode batch = Json.arrayBuilder()//
+				.object()//
 				.put("method", "GET")//
-				.put("uri", "/data/user/vince")//
+				.put("uri", "/v1/data/user/vince")//
 				.end()//
 				.object()//
 				.put("method", "GET")//
-				.put("uri", "/data/user/dave")//
+				.put("uri", "/v1/data/user/dave")//
 				.end()//
 				.build();
 

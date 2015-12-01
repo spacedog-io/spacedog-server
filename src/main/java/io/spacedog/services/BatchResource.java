@@ -1,16 +1,18 @@
 package io.spacedog.services;
 
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -26,74 +28,82 @@ import net.codestory.http.Request;
 import net.codestory.http.Response;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
-import net.codestory.http.constants.HttpStatus;
+import net.codestory.http.constants.Headers;
 import net.codestory.http.payload.Payload;
-import net.codestory.http.types.ContentTypes;
 
 @Prefix("/v1/batch")
 public class BatchResource extends AbstractResource {
 
 	@Post("")
 	@Post("/")
-	public Payload execute(String body, Context context) throws JsonParseException, JsonMappingException, IOException {
-		Credentials credentials = AdminResource.checkCredentials(context);
+	public Payload execute(String body, Context context) throws Exception {
+
+		// TODO attach credentials to thread for sub request to bypass
+		// credentials gathering and don't forget to clean the thread before
+		// release
+		AdminResource.checkCredentials(context);
+
 		ArrayNode requests = Json.readArrayNode(body);
-		JsonBuilder<ArrayNode> responses = Json.arrayBuilder();
+		BatchResponse responseWrapper = new BatchResponse(requests.size(), context);
+		BatchStreaming streaming = new BatchStreaming();
+		streaming.write("[");
+		boolean comma = false;
 
-		// TODO use this boolean
-		boolean created = false;
+		for (JsonNode subRequest : requests) {
 
-		BatchResponse response = new BatchResponse(context);
+			if (comma)
+				streaming.write(",");
+			else
+				comma = true;
 
-		for (JsonNode request : requests) {
-			// String uri = checkString(request, "uri", true, "batch request
-			// objects");
-			// String method = checkString(request, "method", true, "batch
-			// request objects");
-			// String[] uriTerms = Utils.splitBySlash(uri);
-			// if ("data".equals(uriTerms[0])) {
-			// if (Methods.GET.equals(method))
-			// responses.addNode(getData(request, uriTerms, context,
-			// credentials));
-			// }
-
-			// if (!request.isObject())
-			// throw new IllegalArgumentException(
-			// String.format("batch request not a json object but [%s]",
-			// request.getNodeType()));
-			//
-			// JsonRequest wrapper = new JsonRequest((ObjectNode) request,
-			// context);
-			// SpaceDogServices.executeInternalRequest(wrapper, wrapper);
-			// responses.addNode(wrapper.jsonContent());
+			BatchSubRequest subRequestWrapper = new BatchSubRequest(checkObjectNode(subRequest), context);
+			Payload subRequestPayload = Start.executeInternalRequest(subRequestWrapper, responseWrapper);
+			streaming.write((byte[]) subRequestPayload.rawContent());
 		}
 
-		return new Payload(JSON_CONTENT, responses.toString(), created ? HttpStatus.CREATED : HttpStatus.OK);
+		streaming.write("]");
+		return PayloadHelper.json(streaming.getBytes());
 	}
 
-	//
-	// singleton
-	//
+	public class BatchStreaming {
 
-	private static BatchResource singleton = new BatchResource();
+		private ByteArrayOutputStream bytes;
+		private BufferedOutputStream buffer;
+		private PrintWriter writer;
 
-	static BatchResource get() {
-		return singleton;
+		public BatchStreaming() {
+			bytes = new ByteArrayOutputStream();
+			buffer = new BufferedOutputStream(bytes);
+			writer = new PrintWriter(buffer);
+		}
+
+		public byte[] getBytes() throws IOException {
+			buffer.close();
+			return bytes.toByteArray();
+		}
+
+		public BatchStreaming write(String string) {
+			writer.write(string);
+			writer.flush();
+			return this;
+		}
+
+		public BatchStreaming write(byte[] bytes) throws IOException {
+			buffer.write(bytes);
+			return this;
+		}
+
 	}
-
-	private BatchResource() {
-	}
-
 	//
 	// JsonRequest and JsonResponse
 	//
 
-	public class JsonRequest implements Request {
+	public class BatchSubRequest implements Request {
 
 		private ObjectNode request;
 		private Context context;
 
-		public JsonRequest(ObjectNode request, Context context) {
+		public BatchSubRequest(ObjectNode request, Context context) {
 			this.request = request;
 			this.context = context;
 		}
@@ -121,7 +131,7 @@ public class BatchResource extends AbstractResource {
 
 		@Override
 		public String contentType() {
-			return ContentTypes.get(".json");
+			return context.request().contentType();
 		}
 
 		@Override
@@ -136,12 +146,12 @@ public class BatchResource extends AbstractResource {
 
 		@Override
 		public String header(String name) {
-			return context.request().header(name);
+			return Headers.ACCEPT_ENCODING.equals(name) ? "" : context.request().header(name);
 		}
 
 		@Override
 		public InputStream inputStream() throws IOException {
-			return null; // new StringInputStream(content());
+			return new ByteArrayInputStream(content().getBytes(Utils.UTF8));
 		}
 
 		@Override
@@ -160,17 +170,17 @@ public class BatchResource extends AbstractResource {
 
 				@Override
 				public Iterator<Cookie> iterator() {
-					return JsonRequest.this.context.cookies().iterator();
+					return context.cookies().iterator();
 				}
 
 				@Override
 				public <T> T unwrap(Class<T> type) {
-					return JsonRequest.this.unwrap(type);
+					return BatchSubRequest.this.unwrap(type);
 				}
 
 				@Override
 				public Cookie get(String name) {
-					return JsonRequest.this.context.cookies().get(name);
+					return context.cookies().get(name);
 				}
 			};
 		}
@@ -181,21 +191,24 @@ public class BatchResource extends AbstractResource {
 
 				@Override
 				public <T> T unwrap(Class<T> type) {
-					return null;
+					return BatchSubRequest.this.unwrap(type);
 				}
 
 				@Override
 				public Collection<String> keys() {
-					return Lists.newArrayList(((ObjectNode) JsonRequest.this.request.get("query")).fieldNames());
+					ObjectNode query = AbstractResource.checkObjectNode(request, "query", false);
+					return query == null ? Collections.emptyList() : Lists.newArrayList(query.fieldNames());
 				}
 
 				@Override
 				public Iterable<String> all(String name) {
-					JsonNode jsonNode = ((ObjectNode) JsonRequest.this.request.get("query")).get(name);
-					if (jsonNode.isArray())
-						return () -> Iterators.transform(jsonNode.elements(), node -> node.asText());
-					else
-						return Collections.singleton(jsonNode.asText());
+					ObjectNode query = AbstractResource.checkObjectNode(request, "query", false);
+					if (query == null)
+						return null;
+					JsonNode paramNode = query.get(name);
+					return paramNode.isArray()//
+							? () -> Iterators.transform(paramNode.elements(), node -> node.asText())//
+							: Collections.singleton(paramNode.asText());
 				}
 
 			};
@@ -203,17 +216,27 @@ public class BatchResource extends AbstractResource {
 
 		@Override
 		public List<Part> parts() {
-			// no multipart post request in batch
+			// no multi part post request in batch
 			return Collections.emptyList();
 		}
 	}
 
 	public class BatchResponse implements Response {
+		private int closeCounter;
 		private Context context;
-		private long batchLength = 0;
+		private PrintWriter writer;
+		private ByteArrayOutputStream buffer;
 
-		public BatchResponse(Context context) {
+		public BatchResponse(int size, Context context) throws IOException {
+			this.closeCounter = size;
 			this.context = context;
+			this.buffer = new ByteArrayOutputStream();
+			this.writer = new PrintWriter(buffer);
+			this.writer.write('[');
+		}
+
+		public byte[] rawContent() {
+			return buffer.toByteArray();
 		}
 
 		@Override
@@ -223,40 +246,56 @@ public class BatchResource extends AbstractResource {
 
 		@Override
 		public void close() throws IOException {
-		}
-
-		public void batchClose() throws IOException {
-			context.response().close();
+			closeCounter = closeCounter - 1;
+			if (closeCounter == 0) {
+				writer.write(']');
+				// context.response().outputStream().write(buffer.toByteArray());
+				// context.response().close();
+			} else {
+				writer.write(',');
+				writer.flush();
+				System.out.println(buffer.toString());
+			}
 		}
 
 		@Override
 		public OutputStream outputStream() throws IOException {
-			return context.response().outputStream();
+			return this.buffer;
 		}
 
 		@Override
 		public void setContentLength(long length) {
-			context.response().setContentLength(this.batchLength + length);
+			// do not set the content length since it should be set before
+			// writing
 		}
 
 		@Override
 		public void setHeader(String name, String value) {
 			// TODO Auto-generated method stub
-
 		}
 
 		@Override
 		public void setStatus(int statusCode) {
 			// TODO Auto-generated method stub
-
 		}
 
 		@Override
 		public void setCookie(Cookie cookie) {
 			// TODO Auto-generated method stub
-
 		}
 
 	}
 
+	//
+	// singleton
+	//
+
+	private static BatchResource singleton = new BatchResource();
+
+	static BatchResource get() {
+		return singleton;
+	}
+
+	private BatchResource() {
+	}
 }

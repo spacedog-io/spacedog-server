@@ -20,6 +20,7 @@ import net.codestory.http.Response;
 import net.codestory.http.internal.Handler;
 import net.codestory.http.internal.HttpServerWrapper;
 import net.codestory.http.internal.SimpleServerWrapper;
+import net.codestory.http.payload.Payload;
 import net.codestory.http.routes.Routes;
 import net.codestory.http.websockets.WebSocketHandler;
 
@@ -117,8 +118,8 @@ public class Start extends AbstractWebServer<Start> {
 		}
 	}
 
-	public static void executeInternalRequest(Request request, Response response) throws Exception {
-		webServices.routesProvider.get().apply(request, response);
+	public static Payload executeInternalRequest(Request request, Response response) throws Exception {
+		return webServices.routesProvider.get().apply(request, response);
 	}
 
 	@Override

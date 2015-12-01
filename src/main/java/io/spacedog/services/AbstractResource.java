@@ -12,17 +12,11 @@ import net.codestory.http.payload.Payload;
 
 public abstract class AbstractResource {
 
-	public static final String JSON_CONTENT = "application/json;charset=UTF-8";
 	public static final String BASE_URL = "https://spacedog.io";
 
 	protected Payload checkExistence(String index, String type, String field, String value) {
-		try {
-			return ElasticHelper.get().search(index, type, field, value).getTotalHits() == 0 ? Payload.notFound()
-					: Payload.ok();
-
-		} catch (Throwable throwable) {
-			return PayloadHelper.error(throwable);
-		}
+		return ElasticHelper.get().search(index, type, field, value).getTotalHits() == 0 ? Payload.notFound()
+				: Payload.ok();
 	}
 
 	protected void refreshIfNecessary(String index, Context context, boolean defaultValue) {
@@ -30,10 +24,20 @@ public abstract class AbstractResource {
 		ElasticHelper.get().refresh(refresh, index);
 	}
 
-	protected ObjectNode checkObjectNode(JsonNode json) {
-		if (!json.isObject())
-			throw new IllegalArgumentException(String.format("json not an object but [%s]", json.getNodeType()));
-		return (ObjectNode) json;
+	public static ObjectNode checkObjectNode(JsonNode input, String propertyPath, boolean required) {
+		JsonNode node = Json.get(input, propertyPath);
+		if (required && node == null)
+			throw new IllegalArgumentException(String.format("property [%s] is required", propertyPath));
+		if (!node.isObject())
+			throw new IllegalArgumentException(
+					String.format("property [%s] not an object but [%s]", propertyPath, node.getNodeType()));
+		return (ObjectNode) node;
+	}
+
+	public static ObjectNode checkObjectNode(JsonNode node) {
+		if (!node.isObject())
+			throw new IllegalArgumentException(String.format("not a json object but [%s]", node.getNodeType()));
+		return (ObjectNode) node;
 	}
 
 	public static JsonNode checkNotNullOrEmpty(JsonNode input, String propertyPath, String type) {
