@@ -13,7 +13,7 @@ import io.spacedog.client.SpaceRequest;
 public class ServiceErrorFilterTest extends Assert {
 
 	@Test
-	public void shouldReturnCORSHeaders() throws Exception {
+	public void shouldCatchFluentResourceErrors() throws Exception {
 
 		Account testAccount = SpaceDogHelper.resetTestAccount();
 
