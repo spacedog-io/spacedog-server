@@ -29,19 +29,6 @@ import net.codestory.http.payload.Payload;
 public class DataResource extends AbstractResource {
 
 	//
-	// singleton
-	//
-
-	private static DataResource singleton = new DataResource();
-
-	static DataResource get() {
-		return singleton;
-	}
-
-	private DataResource() {
-	}
-
-	//
 	// Routes
 	//
 
@@ -177,6 +164,19 @@ public class DataResource extends AbstractResource {
 	public Payload filter(String type, String body, Context context)
 			throws JsonParseException, JsonMappingException, IOException, InterruptedException, ExecutionException {
 		return SearchResource.get().postFilterForType(type, body, context);
+	}
+
+	//
+	// singleton
+	//
+
+	private static DataResource singleton = new DataResource();
+
+	static DataResource get() {
+		return singleton;
+	}
+
+	private DataResource() {
 	}
 
 }
