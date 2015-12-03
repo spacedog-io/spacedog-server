@@ -20,8 +20,8 @@ public class CrossOriginFilterTest extends Assert {
 
 		// CORS for simple requests
 
-		com.mashape.unirest.http.Headers req1headers = SpaceRequest.get("/v1/data").backendKey(testAccount).go(200)
-				.httpResponse().getHeaders();
+		com.mashape.unirest.http.Headers req1headers = SpaceRequest.get("/v1/data?refresh=true").backendKey(testAccount)
+				.go(200).httpResponse().getHeaders();
 
 		assertEquals("*", req1headers.getFirst(Headers.ACCESS_CONTROL_ALLOW_ORIGIN.toLowerCase()));
 		assertEquals(CrossOriginFilter.ALLOW_METHODS,
