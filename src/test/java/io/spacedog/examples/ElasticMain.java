@@ -18,7 +18,7 @@ import org.elasticsearch.node.NodeBuilder;
 
 import com.google.common.io.Resources;
 
-import io.spacedog.services.AdminResource;
+import io.spacedog.services.Utils;
 
 public class ElasticMain {
 
@@ -51,8 +51,8 @@ public class ElasticMain {
 
 			if (mappings.get("test2") == null || mappings.get("test2").get("account") == null) {
 
-				String accountMapping = Resources.toString(
-						Resources.getResource("io/spacedog/services/account-mapping.json"), AdminResource.UTF_8);
+				String accountMapping = Resources
+						.toString(Resources.getResource("io/spacedog/services/account-mapping.json"), Utils.UTF8);
 
 				PutMappingRequest mappingRequest = new PutMappingRequest("test2").type("account")
 						.source(accountMapping);

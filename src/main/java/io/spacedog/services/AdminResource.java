@@ -4,7 +4,6 @@
 package io.spacedog.services;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.Base64;
 import java.util.Optional;
 import java.util.Set;
@@ -35,19 +34,6 @@ import net.codestory.http.payload.Payload;
 @Prefix("/v1/admin")
 public class AdminResource extends AbstractResource {
 
-	// singleton begins
-
-	private static AdminResource singleton = new AdminResource();
-
-	static AdminResource get() {
-		return singleton;
-	}
-
-	private AdminResource() {
-	}
-
-	// singleton ends
-
 	public static final String ADMIN_INDEX = "spacedog";
 	public static final String ACCOUNT_TYPE = "account";
 	private static final Set<String> INTERNAL_INDICES = Sets.newHashSet(ADMIN_INDEX);
@@ -56,12 +42,14 @@ public class AdminResource extends AbstractResource {
 	public static final String AUTHORIZATION_HEADER = "Authorization";
 	public static final String BASIC_AUTHENTICATION_SCHEME = "Basic";
 
-	public static final Charset UTF_8 = Charset.forName("UTF-8");
+	// properties
+
+	public static final String BACKEND_KEY = "backendKey";
 
 	void initSpacedogIndex() throws InterruptedException, ExecutionException, IOException {
 
 		String accountMapping = Resources.toString(Resources.getResource("io/spacedog/services/account-mapping.json"),
-				UTF_8);
+				Utils.UTF8);
 
 		IndicesAdminClient indices = Start.getElasticClient().admin().indices();
 
@@ -125,7 +113,8 @@ public class AdminResource extends AbstractResource {
 					String.format("backend id [%s] is not available", account.backendId));
 
 		byte[] accountBytes = Json.getMapper().writeValueAsBytes(account);
-		Start.getElasticClient().prepareIndex(ADMIN_INDEX, ACCOUNT_TYPE).setSource(accountBytes).get();
+		long version = Start.getElasticClient().prepareIndex(ADMIN_INDEX, ACCOUNT_TYPE).setSource(accountBytes).get()
+				.getVersion();
 
 		// backend index is named after the backend id
 		Start.getElasticClient().admin().indices().prepareCreate(account.backendId)
@@ -133,7 +122,11 @@ public class AdminResource extends AbstractResource {
 
 		ElasticHelper.get().refresh(true, ADMIN_INDEX);
 
-		return PayloadHelper.saved(true, "/v1/admin", ACCOUNT_TYPE, account.backendId)
+		ObjectNode payloadContent = PayloadHelper
+				.savedBuilder(true, "/v1/admin", ACCOUNT_TYPE, account.backendId, version)//
+				.put(AdminResource.BACKEND_KEY, account.defaultClientKey()).build();
+
+		return PayloadHelper.json(payloadContent, HttpStatus.CREATED)//
 				.withHeader(AdminResource.BACKEND_KEY_HEADER, account.defaultClientKey());
 	}
 
@@ -150,7 +143,7 @@ public class AdminResource extends AbstractResource {
 					"no account found for backend [%s] and admin user [%s]", credentials.backendId,
 					credentials.username);
 
-		return PayloadHelper.json(response.getSourceAsBytes());
+		return PayloadHelper.json(response.getSourceAsString());
 	}
 
 	@Delete("/account/:id")
@@ -316,7 +309,7 @@ public class AdminResource extends AbstractResource {
 		if (!schemeAndTokens[0].equalsIgnoreCase(BASIC_AUTHENTICATION_SCHEME))
 			throw new AuthenticationException("authorization scheme [%s] not supported", schemeAndTokens[0]);
 
-		byte[] encodedBytes = schemeAndTokens[1].getBytes(UTF_8);
+		byte[] encodedBytes = schemeAndTokens[1].getBytes(Utils.UTF8);
 
 		String decoded = null;
 
@@ -335,5 +328,18 @@ public class AdminResource extends AbstractResource {
 			throw new AuthenticationException("no password specified");
 
 		return Optional.of(tokens);
+	}
+
+	//
+	// singleton begins
+	//
+
+	private static AdminResource singleton = new AdminResource();
+
+	static AdminResource get() {
+		return singleton;
+	}
+
+	private AdminResource() {
 	}
 }

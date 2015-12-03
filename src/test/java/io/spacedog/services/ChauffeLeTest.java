@@ -18,11 +18,8 @@ import io.spacedog.client.SpaceRequest;
 
 public class ChauffeLeTest extends Assert {
 
-	private static final String ADMIN_PASSWORD = "hi chauffele";
-	private static final String ADMIN_USERNAME = "chauffele";
-	private static final String BACKEND_ID = "chauffele";
-
 	private static SpaceDogHelper.Account adminAccount;
+
 	private static SpaceDogHelper.User lui;
 	private static SpaceDogHelper.User elle;
 	private static SpaceDogHelper.User laCopine;
@@ -30,7 +27,7 @@ public class ChauffeLeTest extends Assert {
 	@BeforeClass
 	public static void resetBackend() throws Exception {
 
-		adminAccount = SpaceDogHelper.resetAccount(BACKEND_ID, ADMIN_USERNAME, ADMIN_PASSWORD, "david@spacedog.io");
+		adminAccount = SpaceDogHelper.resetTestAccount();
 
 		SpaceDogHelper.resetSchema(buildBigPostSchema(), adminAccount);
 		SpaceDogHelper.resetSchema(buildSmallPostSchema(), adminAccount);

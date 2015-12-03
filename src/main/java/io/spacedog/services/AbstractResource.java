@@ -6,7 +6,6 @@ package io.spacedog.services;
 import java.util.Optional;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
 import io.spacedog.services.Json.Type;
@@ -27,17 +26,10 @@ public abstract class AbstractResource {
 		ElasticHelper.get().refresh(refresh, index);
 	}
 
-	public static ObjectNode checkObjectNode(JsonNode node) {
-		if (!node.isObject())
-			throw new IllegalArgumentException(String.format("not a json object but [%s]", node.getNodeType()));
-		return (ObjectNode) node;
-	}
-
 	public static String checkStringNotNullOrEmpty(JsonNode input, String propertyPath) {
 		String string = checkStringNode(input, propertyPath, true).get().asText();
 		if (Strings.isNullOrEmpty(string)) {
-			throw new IllegalArgumentException(
-					String.format("property [%s] must not be empty in object [%s]", propertyPath, input));
+			throw new IllegalArgumentException(String.format("property [%s] must not be null or empty", propertyPath));
 		}
 		return string;
 	}
@@ -79,8 +71,7 @@ public abstract class AbstractResource {
 		JsonNode node = Json.get(input, propertyPath);
 		if (node == null) {
 			if (required)
-				throw new IllegalArgumentException(
-						String.format("property [%s] must not be null but in object [%s]", propertyPath, input));
+				throw new IllegalArgumentException(String.format("property [%s] must not be null", propertyPath));
 			return Optional.ofNullable(null);
 		}
 		if (Json.isOfType(expected, node))

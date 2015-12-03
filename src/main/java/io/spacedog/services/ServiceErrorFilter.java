@@ -34,18 +34,18 @@ public class ServiceErrorFilter implements Filter {
 
 			JsonBuilder<ObjectNode> nodeBuilder = Json.objectBuilder()//
 					.put("success", false)//
+					.put("status", payload.code())//
 					.object("error");
 
 			if (payload.code() == 404) {
-				nodeBuilder.put("message", String.format("[%s] is not a valid SpaceDog route", uri));
+				nodeBuilder.put("message", String.format("[%s] is not a valid SpaceDog path", uri));
 				return PayloadHelper.json(nodeBuilder, payload.code());
 			} else if (payload.code() == 405) {
 				nodeBuilder.put("message",
-						String.format("method [%s] not valid SpaceDog route [%s]", context.method(), uri));
+						String.format("method [%s] not valid for SpaceDog path [%s]", context.method(), uri));
 				return PayloadHelper.json(nodeBuilder, payload.code());
 			} else {
-				nodeBuilder.put("message",
-						String.format("sorry but no details available for this error code [%s]", payload.code()));
+				nodeBuilder.put("message", "sorry but no details available for this error");
 				return PayloadHelper.json(nodeBuilder, payload.code());
 			}
 		}

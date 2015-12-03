@@ -211,4 +211,10 @@ public class Json {
 			return false;
 		}
 	}
+
+	public static ObjectNode checkObject(JsonNode node) {
+		if (!node.isObject())
+			throw new IllegalArgumentException(String.format("not a json object but [%s]", node.getNodeType()));
+		return (ObjectNode) node;
+	}
 }

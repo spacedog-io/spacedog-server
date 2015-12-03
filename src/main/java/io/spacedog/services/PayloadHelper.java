@@ -21,7 +21,10 @@ import net.codestory.http.payload.Payload;
 
 public class PayloadHelper {
 
-	public static final String JSON_CONTENT = "application/json;charset=UTF-8";
+	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
+
+	public static final String JSON_CONTENT = "application/json";
+	public static final String JSON_CONTENT_UTF8 = JSON_CONTENT + ";charset=UTF-8";
 	public static final String HEADER_OBJECT_ID = "x-spacedog-object-id";
 
 	public static Payload error(Throwable t) {
@@ -61,7 +64,9 @@ public class PayloadHelper {
 	}
 
 	public static Payload error(int httpStatus, Throwable throwable) {
-		JsonBuilder<ObjectNode> builder = Json.objectBuilder().put("success", false);
+		JsonBuilder<ObjectNode> builder = Json.objectBuilder()//
+				.put("success", false)//
+				.put("status", httpStatus);
 		if (throwable != null)
 			builder.node("error", Json.toJson(throwable));
 		return json(builder, httpStatus);
@@ -108,12 +113,14 @@ public class PayloadHelper {
 	}
 
 	public static Payload success() {
-		return json("{\"success\":true}");
+		return json("{\"success\":true,\"status\":200}");
 	}
 
-	public static JsonBuilder<ObjectNode> savedBuilder(String uri, String type, String id, long version) {
+	public static JsonBuilder<ObjectNode> savedBuilder(boolean created, String uri, String type, String id,
+			long version) {
 		JsonBuilder<ObjectNode> builder = Json.objectBuilder() //
 				.put("success", true) //
+				.put("status", created ? HttpStatus.CREATED : HttpStatus.OK) //
 				.put("id", id) //
 				.put("type", type) //
 				.put("location", AbstractResource.toUrl(AbstractResource.BASE_URL, uri, type, id));
@@ -129,7 +136,7 @@ public class PayloadHelper {
 	}
 
 	public static Payload saved(boolean created, String uri, String type, String id, long version) {
-		JsonBuilder<ObjectNode> builder = PayloadHelper.savedBuilder(uri, type, id, version);
+		JsonBuilder<ObjectNode> builder = PayloadHelper.savedBuilder(created, uri, type, id, version);
 		return json(builder, created ? HttpStatus.CREATED : HttpStatus.OK)//
 				.withHeader(HEADER_OBJECT_ID, id);
 	}
@@ -143,10 +150,6 @@ public class PayloadHelper {
 	}
 
 	public static Payload json(String content) {
-		return json(content.getBytes(Utils.UTF8));
-	}
-
-	public static Payload json(byte[] content) {
 		return json(content, HttpStatus.OK);
 	}
 
@@ -159,10 +162,21 @@ public class PayloadHelper {
 	}
 
 	public static Payload json(String content, int httpStatus) {
-		return json(content.getBytes(Utils.UTF8), httpStatus);
+		return new Payload(JSON_CONTENT_UTF8, content, httpStatus);
 	}
 
-	public static Payload json(byte[] content, int httpStatus) {
-		return new Payload(JSON_CONTENT, content, httpStatus);
+	public static byte[] toBytes(Object content) {
+		if (content == null)
+			return EMPTY_BYTE_ARRAY;
+
+		if (content instanceof byte[])
+			return (byte[]) content;
+
+		return content.toString().getBytes(Utils.UTF8);
+	}
+
+	public static boolean isJson(Payload payload) {
+		return payload.rawContentType() == null ? false//
+				: payload.rawContentType().startsWith(JSON_CONTENT);
 	}
 }

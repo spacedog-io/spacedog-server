@@ -135,7 +135,8 @@ public class UserResource extends AbstractResource {
 		IndexResponse response = ElasticHelper.get().createObject(credentials.getBackendId(), USER_TYPE, user,
 				credentials.getName());
 
-		JsonBuilder<ObjectNode> savedBuilder = PayloadHelper.savedBuilder("/v1", USER_TYPE, response.getId(), response.getVersion());
+		JsonBuilder<ObjectNode> savedBuilder = PayloadHelper.savedBuilder(true, "/v1", USER_TYPE, response.getId(),
+				response.getVersion());
 
 		passwordResetCode.ifPresent(code -> savedBuilder.put(PASSWORD_RESET_CODE, code));
 
@@ -190,7 +191,7 @@ public class UserResource extends AbstractResource {
 		long newVersion = ElasticHelper.get().updateObject(account.backendId, user, account.username).getVersion();
 
 		return PayloadHelper.json(//
-				PayloadHelper.savedBuilder("/v1", USER_TYPE, id, newVersion).put(PASSWORD_RESET_CODE, resetCode), //
+				PayloadHelper.savedBuilder(false, "/v1", USER_TYPE, id, newVersion).put(PASSWORD_RESET_CODE, resetCode), //
 				HttpStatus.OK);
 	}
 
