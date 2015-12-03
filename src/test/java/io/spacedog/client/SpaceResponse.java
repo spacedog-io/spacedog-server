@@ -150,7 +150,9 @@ public class SpaceResponse {
 	}
 
 	public SpaceResponse assertNotNull(String jsonPath) {
-		Assert.assertFalse(Json.get(jsonResponseContent, jsonPath).isNull());
+		JsonNode node = Json.get(jsonResponseContent, jsonPath);
+		if (node == null || node.isNull())
+			Assert.fail(String.format("json property [%s] is null", jsonPath));
 		return this;
 	}
 
@@ -161,6 +163,31 @@ public class SpaceResponse {
 
 	public SpaceResponse assertFalse(String jsonPath) {
 		Assert.assertFalse(Json.get(jsonResponseContent, jsonPath).asBoolean());
+		return this;
+	}
+
+	public SpaceResponse assertDateIsValid(String jsonPath) {
+		assertNotNull(jsonPath);
+		JsonNode node = Json.get(jsonResponseContent, jsonPath);
+		if (node.isTextual()) {
+			try {
+				DateTime.parse(node.asText());
+				return this;
+			} catch (IllegalArgumentException e) {
+			}
+		}
+		Assert.fail(String.format(//
+				"json property [%s] with value [%s] is not a valid SpaceDog date", jsonPath, node));
+		return this;
+	}
+
+	public SpaceResponse assertDateIsRecent(String jsonPath) {
+		long now = DateTime.now().getMillis();
+		assertDateIsValid(jsonPath);
+		DateTime date = DateTime.parse(Json.get(jsonResponseContent, jsonPath).asText());
+		if (date.isAfter(now + 3000) || date.isBefore(now - 3000))
+			Assert.fail(String.format(//
+					"json property [%s] with value [%s] is not a recent (now +/- 3s) SpaceDog date", jsonPath, date));
 		return this;
 	}
 

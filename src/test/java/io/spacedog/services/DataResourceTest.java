@@ -48,20 +48,18 @@ public class DataResourceTest extends Assert {
 
 		// find by id
 
-		SpaceResponse res1 = SpaceRequest.get("/v1/data/car/" + id).backendKey(testAccount).go(200);
-
-		res1.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.createdBy")//
+		SpaceResponse res1 = SpaceRequest.get("/v1/data/car/" + id).backendKey(testAccount).go(200)//
+				.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.createdBy")//
 				.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.updatedBy")//
+				.assertDateIsRecent("meta.createdAt")//
 				.assertEqualsWithoutMeta(car);
 
 		DateTime createdAt = DateTime.parse(res1.getFromJson("meta.createdAt").asText());
-		assertTrue(createdAt.isAfter(create.before().getMillis()));
-		assertTrue(createdAt.isBeforeNow());
-		assertEquals(res1.getFromJson("meta.updatedAt"), res1.getFromJson("meta.createdAt"));
+		res1.assertEquals(createdAt, "meta.updatedAt");
 
 		// find by full text search
 
-		SpaceRequest.get("/v1/search/car?q={q}&refresh=true").backendKey(testAccount).routeParam("q", "").go(200)
+		SpaceRequest.get("/v1/search/car?q={q}&refresh=true").backendKey(testAccount).routeParam("q", "inVENT*").go(200)
 				.assertEquals(id, "results.0.meta.id");
 
 		// create user vince
@@ -71,22 +69,21 @@ public class DataResourceTest extends Assert {
 
 		// update
 
-		SpaceResponse req2 = SpaceRequest.put("/v1/data/car/" + id).backendKey(testAccount).basicAuth(vince)
+		SpaceRequest.put("/v1/data/car/" + id).backendKey(testAccount).basicAuth(vince)
 				.body(Json.objectBuilder().put("color", "blue").toString()).go(200);
 
 		// check update is correct
 
-		SpaceResponse res3 = SpaceRequest.get("/v1/data/car/" + id).backendKey(testAccount).go(200);
-
-		res3.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.createdBy")//
+		SpaceResponse res3 = SpaceRequest.get("/v1/data/car/" + id).backendKey(testAccount).go(200)//
+				.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.createdBy")//
 				.assertEquals("vince", "meta.updatedBy")//
 				.assertEquals(createdAt, "meta.createdAt")//
+				.assertDateIsRecent("meta.updatedAt")//
 				.assertEquals("1234567890", "serialNumber")//
 				.assertEquals("blue", "color");
 
 		DateTime updatedAt = DateTime.parse(res3.findValue("updatedAt").asText());
-		assertTrue(updatedAt.isAfter(req2.before().getMillis()));
-		assertTrue(updatedAt.isBeforeNow());
+		assertTrue(updatedAt.isAfter(createdAt));
 
 		// delete
 

@@ -59,15 +59,9 @@ public class DataResourceTest2 extends Assert {
 
 		// find by id
 
-		SpaceResponse res1 = SpaceRequest.get("/v1/data/sale/" + id).backendKey(testAccount).go(200);
-
-		DateTime createdAt = DateTime.parse(res1.getFromJson("meta.createdAt").asText());
-		assertTrue(createdAt.isAfter(create.before().getMillis()));
-		assertTrue(createdAt.isBeforeNow());
-
-		res1.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.createdBy")//
+		SpaceResponse res1 = SpaceRequest.get("/v1/data/sale/" + id).backendKey(testAccount).go(200)//
+				.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.createdBy")//
 				.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.updatedBy")//
-				.assertEquals(createdAt, "meta.updatedAt")//
 				.assertEquals(1, "meta.version")//
 				.assertEquals("sale", "meta.type")//
 				.assertEquals(id, "meta.id")//
@@ -89,6 +83,9 @@ public class DataResourceTest2 extends Assert {
 				.assertEquals(2, "items.1.quantity")//
 				// assertEquals("EUR54.25", "items.1.price")
 				.assertEquals("visit", "items.1.type");
+
+		DateTime createdAt = DateTime.parse(res1.getFromJson("meta.createdAt").asText());
+		res1.assertDateIsRecent("meta.createdAt").assertEquals(createdAt, "meta.updatedAt");
 
 		// TODO do we need to assert field by field and then full object with
 		// full object?
@@ -124,21 +121,24 @@ public class DataResourceTest2 extends Assert {
 
 		JsonNode updateJson2 = Json.objectBuilder().array("items").object().put("quantity", 7).build();
 
-		SpaceResponse req2 = SpaceRequest.put("/v1/data/sale/" + id).backendKey(testAccount).basicAuth(vince)
-				.body(updateJson2.toString()).go(200).assertTrue("success").assertEquals("sale", "type")
-				.assertEquals(2, "version").assertEquals(id, "id");
+		SpaceRequest.put("/v1/data/sale/" + id).backendKey(testAccount).basicAuth(vince).body(updateJson2.toString())
+				.go(200)//
+				.assertTrue("success")//
+				.assertEquals("sale", "type")//
+				.assertEquals(2, "version")//
+				.assertEquals(id, "id");
 
 		// check update is correct
 
-		SpaceResponse res3 = SpaceRequest.get("/v1/data/sale/" + id).backendKey(testAccount).go(200);
-
-		res3.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.createdBy").assertEquals("vince", "meta.updatedBy")
-				.assertEquals(createdAt, "meta.createdAt").assertEquals(2, "meta.version")
-				.assertEquals("sale", "meta.type").assertEquals(id, "meta.id").assertEquals(7, "items.0.quantity");
-
-		DateTime updatedAt = DateTime.parse(res3.getFromJson("meta.updatedAt").asText());
-		assertTrue(updatedAt.isAfter(req2.before().getMillis()));
-		assertTrue(updatedAt.isBeforeNow());
+		SpaceResponse res3 = SpaceRequest.get("/v1/data/sale/" + id).backendKey(testAccount).go(200)//
+				.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.createdBy")//
+				.assertEquals("vince", "meta.updatedBy")//
+				.assertEquals(createdAt, "meta.createdAt")//
+				.assertDateIsRecent("meta.updatedAt")//
+				.assertEquals(2, "meta.version")//
+				.assertEquals("sale", "meta.type")//
+				.assertEquals(id, "meta.id")//
+				.assertEquals(7, "items.0.quantity");
 
 		// check equality on what has not been updated
 		assertEquals(sale.deepCopy().without("items"),
@@ -175,7 +175,7 @@ public class DataResourceTest2 extends Assert {
 		DateTime createdAt3e = DateTime.parse(res3e.getFromJson("meta.createdAt").asText());
 		assertEquals(createdAt, createdAt3e);
 		DateTime updatedAt3e = DateTime.parse(res3e.getFromJson("meta.updatedAt").asText());
-		assertTrue(updatedAt3e.isAfter(req3d.before().getMillis()));
+		// assertTrue(updatedAt3e.isAfter(req3d.before().getMillis()));
 		assertTrue(updatedAt3e.isBeforeNow());
 
 		// check equality on what has not been updated
