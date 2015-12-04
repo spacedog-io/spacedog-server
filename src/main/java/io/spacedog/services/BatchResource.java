@@ -32,6 +32,10 @@ import net.codestory.http.payload.StreamingOutput;
 @Prefix("/v1/batch")
 public class BatchResource extends AbstractResource {
 
+	// query parameter names
+
+	private static final String STOP_ON_ERROR = "stopOnError";
+
 	@Post("")
 	@Post("/")
 	public Payload execute(String body, Context context) throws Exception {
@@ -40,6 +44,7 @@ public class BatchResource extends AbstractResource {
 		// following lambda function
 
 		ArrayNode requests = Json.readArrayNode(body);
+		boolean stopOnError = context.query().getBoolean(STOP_ON_ERROR, false);
 
 		StreamingOutput streamingOutput = output -> {
 
@@ -89,6 +94,8 @@ public class BatchResource extends AbstractResource {
 						output.write(String.format("{\"success\":%s,\"status\":%s}", //
 								payload.isSuccess(), payload.code()).getBytes(Utils.UTF8));
 					}
+					if (stopOnError && payload.isError())
+						break;
 				}
 			} finally {
 				SpaceContext.reset();

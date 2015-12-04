@@ -227,5 +227,26 @@ public class BatchResourceTest extends Assert {
 				Sets.newHashSet(response.getFromJson("5.content.results.0.code").asText(),
 						response.getFromJson("5.content.results.1.code").asText()));
 
+		// should succeed to stop on first batch request error
+
+		batch = Json.arrayBuilder()//
+				.object()//
+				.put("method", "GET")//
+				.put("path", "/v1/data/message")//
+				.end()//
+				.object()//
+				.put("method", "GET")//
+				.put("path", "/v1/data/XXX")//
+				.end()//
+				.object()//
+				.put("method", "GET")//
+				.put("path", "/v1/data/message")//
+				.end()//
+				.build();
+
+		SpaceRequest.post("/v1/batch?stopOnError=true").backendKey(testAccount).body(batch).go(200)//
+				.assertEquals(200, "0.status")//
+				.assertEquals(404, "1.status")//
+				.assertSizeEquals(2);
 	}
 }
