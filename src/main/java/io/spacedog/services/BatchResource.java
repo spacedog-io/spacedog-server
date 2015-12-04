@@ -36,49 +36,62 @@ public class BatchResource extends AbstractResource {
 	@Post("/")
 	public Payload execute(String body, Context context) throws Exception {
 
-		// TODO attach credentials to thread for sub request to bypass
-		// credentials gathering and don't forget to clean the thread before
-		// release
-		AdminResource.checkCredentials(context);
+		// do not put any checkCredentials here since it must be called in the
+		// following lambda function
+
 		ArrayNode requests = Json.readArrayNode(body);
 
 		StreamingOutput streamingOutput = output -> {
 
 			output.write("[".getBytes(Utils.UTF8));
 
-			for (int i = 0; i < requests.size(); i++) {
+			// Batch needs special care on space context and credentials
+			// since this code is executed by the fluent payload writer
+			// outside of the filter chain.
+			// I artificially reproduce the SpaceContext init filter
+			// mechanism and force the checkCredentials to avoid all sub
+			// requests to do the same.
+			// Use extra care before to change any of this.
+			try {
+				SpaceContext.init(context);
+				SpaceContext.checkCredentials();
 
-				if (i > 0)
-					output.write(",".getBytes(Utils.UTF8));
+				for (int i = 0; i < requests.size(); i++) {
 
-				Payload payload = null;
-				BatchRequestWrapper requestWrapper = new BatchRequestWrapper(//
-						Json.checkObject(requests.get(i)), context);
+					if (i > 0)
+						output.write(",".getBytes(Utils.UTF8));
 
-				try {
-					payload = Start.executeInternalRequest(//
-							requestWrapper, null);
-				} catch (Throwable t) {
-					payload = PayloadHelper.error(t);
-				}
+					Payload payload = null;
+					BatchJsonRequestWrapper requestWrapper = new BatchJsonRequestWrapper(//
+							Json.checkObject(requests.get(i)), context);
 
-				if (payload == null)
-					payload = new Payload(HttpStatus.INTERNAL_SERVER_ERROR);
-
-				if (PayloadHelper.isJson(payload)) {
-					if (payload.isSuccess()//
-							&& "GET".equalsIgnoreCase(requestWrapper.method())) {
-						output.write(String.format("{\"success\":true,\"status\":%s,\"content\":", payload.code())
-								.getBytes(Utils.UTF8));
-						output.write(PayloadHelper.toBytes(payload.rawContent()));
-						output.write("}".getBytes(Utils.UTF8));
-					} else {
-						output.write(PayloadHelper.toBytes(payload.rawContent()));
+					try {
+						payload = Start.executeInternalRequest(//
+								requestWrapper, null);
+					} catch (Throwable t) {
+						payload = PayloadHelper.error(t);
 					}
-				} else {
-					output.write(String.format("{\"success\":%s,\"status\":%s}", //
-							payload.isSuccess(), payload.code()).getBytes(Utils.UTF8));
+
+					if (payload == null)
+						payload = new Payload(HttpStatus.INTERNAL_SERVER_ERROR);
+
+					if (PayloadHelper.isJson(payload)) {
+						if (payload.isSuccess()//
+								&& "GET".equalsIgnoreCase(requestWrapper.method())) {
+							output.write(String.format("{\"success\":true,\"status\":%s,\"content\":", payload.code())
+									.getBytes(Utils.UTF8));
+							output.write(PayloadHelper.toBytes(payload.rawContent()));
+							output.write("}".getBytes(Utils.UTF8));
+						} else {
+							output.write(PayloadHelper.toBytes(payload.rawContent()));
+						}
+					} else {
+						output.write(String.format("{\"success\":%s,\"status\":%s}", //
+								payload.isSuccess(), payload.code()).getBytes(Utils.UTF8));
+					}
 				}
+			} finally {
+				SpaceContext.reset();
 			}
 
 			output.write("]".getBytes(Utils.UTF8));
@@ -91,12 +104,12 @@ public class BatchResource extends AbstractResource {
 	// BatchRequestWrapper
 	//
 
-	public class BatchRequestWrapper implements Request {
+	public class BatchJsonRequestWrapper implements Request {
 
 		private ObjectNode request;
 		private Context context;
 
-		public BatchRequestWrapper(ObjectNode request, Context context) {
+		public BatchJsonRequestWrapper(ObjectNode request, Context context) {
 			this.request = request;
 			this.context = context;
 		}
@@ -169,7 +182,7 @@ public class BatchResource extends AbstractResource {
 
 				@Override
 				public <T> T unwrap(Class<T> type) {
-					return BatchRequestWrapper.this.unwrap(type);
+					return BatchJsonRequestWrapper.this.unwrap(type);
 				}
 
 				@Override
@@ -185,7 +198,7 @@ public class BatchResource extends AbstractResource {
 
 				@Override
 				public <T> T unwrap(Class<T> type) {
-					return BatchRequestWrapper.this.unwrap(type);
+					return BatchJsonRequestWrapper.this.unwrap(type);
 				}
 
 				@Override

@@ -60,7 +60,8 @@ public class Start extends AbstractWebServer<Start> {
 				.add(SearchResource.get());
 
 		routes.filter(new CrossOriginFilter())//
-				.filter(new ServiceErrorFilter());
+				.filter(new ServiceErrorFilter())//
+				.filter(SpaceContext.filter());
 	}
 
 	public static void main(String[] args) {

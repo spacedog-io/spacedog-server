@@ -79,14 +79,14 @@ public class UserResource extends AbstractResource {
 	@Get("/login")
 	@Get("/login/")
 	public Payload login(Context context) throws JsonParseException, JsonMappingException, IOException {
-		AdminResource.checkUserCredentialsOnly(context);
+		SpaceContext.checkUserCredentials();
 		return Payload.ok();
 	}
 
 	@Get("/logout")
 	@Get("/logout/")
 	public Payload logout(Context context) throws JsonParseException, JsonMappingException, IOException {
-		AdminResource.checkUserCredentialsOnly(context);
+		SpaceContext.checkUserCredentials();
 		return Payload.ok();
 	}
 
@@ -112,13 +112,13 @@ public class UserResource extends AbstractResource {
 		 * backend id if many in account? Backend key should be able to sign up
 		 * users. Should common users be able to?
 		 */
-		Credentials credentials = AdminResource.checkCredentials(context);
+		Credentials credentials = SpaceContext.checkCredentials();
 
 		ObjectNode user = Json.readObjectNode(body);
 		checkStringNotNullOrEmpty(user, USERNAME);
 		checkStringNotNullOrEmpty(user, EMAIL);
 		checkNotPresent(user, HASHED_PASSWORD, USER_TYPE);
-		user.putArray(GROUPS).add(credentials.getBackendId());
+		user.putArray(GROUPS).add(credentials.backendId());
 
 		// password management
 
@@ -132,8 +132,8 @@ public class UserResource extends AbstractResource {
 			user.put(HASHED_PASSWORD, UserUtils.hashPassword(password.asText()));
 		}
 
-		IndexResponse response = ElasticHelper.get().createObject(credentials.getBackendId(), USER_TYPE, user,
-				credentials.getName());
+		IndexResponse response = ElasticHelper.get().createObject(credentials.backendId(), USER_TYPE, user,
+				credentials.name());
 
 		JsonBuilder<ObjectNode> savedBuilder = PayloadHelper.savedBuilder(true, "/v1", USER_TYPE, response.getId(),
 				response.getVersion());
@@ -168,7 +168,7 @@ public class UserResource extends AbstractResource {
 	public Payload deletePassword(String id, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
 
-		Account account = AdminResource.checkAdminCredentialsOnly(context);
+		Credentials credentials = SpaceContext.checkAdminCredentials();
 
 		// UpdateResponse response =
 		// Start.getElasticClient().prepareUpdate(account.backendId,
@@ -181,14 +181,14 @@ public class UserResource extends AbstractResource {
 		// .addScriptParam("code", UUID.randomUUID().toString())//
 		// .get();
 
-		ObjectNode user = ElasticHelper.get().getObject(account.backendId, USER_TYPE, id)//
-				.orElseThrow(() -> new NotFoundException(account.backendId, USER_TYPE, id));
+		ObjectNode user = ElasticHelper.get().getObject(credentials.backendId(), USER_TYPE, id)//
+				.orElseThrow(() -> new NotFoundException(credentials.backendId(), USER_TYPE, id));
 
 		String resetCode = UUID.randomUUID().toString();
 		user.remove(HASHED_PASSWORD);
 		user.put(PASSWORD_RESET_CODE, resetCode);
 
-		long newVersion = ElasticHelper.get().updateObject(account.backendId, user, account.username).getVersion();
+		long newVersion = ElasticHelper.get().updateObject(credentials.backendId(), user, credentials.name()).getVersion();
 
 		return PayloadHelper.json(//
 				PayloadHelper.savedBuilder(false, "/v1", USER_TYPE, id, newVersion).put(PASSWORD_RESET_CODE, resetCode), //
@@ -199,7 +199,7 @@ public class UserResource extends AbstractResource {
 	@Post("/user/:id/password")
 	public Payload initPassword(String id, String body, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
-		Credentials credentials = AdminResource.checkCredentials(context);
+		Credentials credentials = SpaceContext.checkCredentials();
 
 		// TODO do we need a password reset expire date to limit the reset
 		// time scope
@@ -210,10 +210,10 @@ public class UserResource extends AbstractResource {
 		String password = Json.readJsonNode(body).asText();
 		UserUtils.checkPasswordValidity(password);
 
-		GetResponse getResponse = Start.getElasticClient().prepareGet(credentials.getBackendId(), USER_TYPE, id).get();
+		GetResponse getResponse = Start.getElasticClient().prepareGet(credentials.backendId(), USER_TYPE, id).get();
 
 		if (!getResponse.isExists())
-			throw new NotFoundException(credentials.getBackendId(), USER_TYPE, id);
+			throw new NotFoundException(credentials.backendId(), USER_TYPE, id);
 
 		ObjectNode user = Json.readObjectNode(getResponse.getSourceAsString());
 
@@ -226,8 +226,8 @@ public class UserResource extends AbstractResource {
 		user.remove(PASSWORD_RESET_CODE);
 		user.put(HASHED_PASSWORD, UserUtils.hashPassword(password));
 
-		IndexResponse indexResponse = ElasticHelper.get().updateObject(credentials.getBackendId(), USER_TYPE, id, 0,
-				user, credentials.getName());
+		IndexResponse indexResponse = ElasticHelper.get().updateObject(credentials.backendId(), USER_TYPE, id, 0,
+				user, credentials.name());
 
 		return PayloadHelper.saved(false, "/v1", USER_TYPE, id, indexResponse.getVersion());
 	}
@@ -236,9 +236,9 @@ public class UserResource extends AbstractResource {
 	@Put("/user/:id/password")
 	public Payload updatePassword(String id, String body, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
-		Credentials credentials = AdminResource.checkCredentials(context);
+		Credentials credentials = SpaceContext.checkCredentials();
 
-		if (credentials.isAdmin() || (credentials.isUser() && id.equals(credentials.getName()))) {
+		if (credentials.isAdminAuthenticated() || (credentials.isUserAuthenticated() && id.equals(credentials.name()))) {
 
 			String password = Json.readJsonNode(body).asText();
 			UserUtils.checkPasswordValidity(password);
@@ -249,7 +249,7 @@ public class UserResource extends AbstractResource {
 					.build();
 
 			UpdateResponse response = Start.getElasticClient()
-					.prepareUpdate(credentials.getBackendId(), UserResource.USER_TYPE, id).setDoc(update.toString())
+					.prepareUpdate(credentials.backendId(), UserResource.USER_TYPE, id).setDoc(update.toString())
 					.get();
 
 			return PayloadHelper.saved(false, "/v1/user", response.getType(), response.getId(), response.getVersion());

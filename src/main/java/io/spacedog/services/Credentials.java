@@ -14,41 +14,56 @@ public class Credentials {
 	private BackendKey backendKey;
 	private boolean admin = false;
 
-	public Credentials(String backendId, String username, boolean admin) {
+	public static Credentials fromAdmin(String backendId, String username, BackendKey backendKey) {
+		return new Credentials(backendId, username, backendKey, true);
+	}
+
+	public static Credentials fromUser(String backendId, String username) {
+		return new Credentials(backendId, username, null, false);
+	}
+
+	public static Credentials fromKey(String backendId, BackendKey backendKey) {
+		return new Credentials(backendId, null, backendKey, false);
+	}
+
+	private Credentials(String backendId, String username, BackendKey backendKey, boolean admin) {
 		this.backendId = backendId;
 		this.username = username;
+		this.backendKey = backendKey;
 		this.admin = admin;
 	}
 
-	public Credentials(String backendId, BackendKey apiKey) {
-		this.backendId = backendId;
-		this.backendKey = apiKey;
-		this.admin = false;
-	}
-
-	public boolean isAdmin() {
+	public boolean isAdminAuthenticated() {
 		return admin;
 	}
 
-	public String getBackendId() {
+	public boolean isUserAuthenticated() {
+		return !Strings.isNullOrEmpty(username);
+	}
+
+	public String backendId() {
 		return this.backendId;
 	}
 
-	public Optional<BackendKey> getBackendKey() {
+	public Optional<BackendKey> backendKey() {
 		return Optional.ofNullable(this.backendKey);
 	}
 
-	public String getName() {
+	public Optional<String> backendKeyAsString() {
+		if (backendKey == null)
+			return Optional.empty();
+
+		return Optional.of(new StringBuilder(backendId).append(':').append(backendKey.name).append(':')
+				.append(backendKey.secret).toString());
+	}
+
+	public String name() {
 		// username is first
 		if (username != null)
 			return username;
 		// key name is default
 		if (backendKey != null)
 			return backendKey.name;
-		throw new RuntimeException("invalid credentials: apikey and user are null");
-	}
-
-	public boolean isUser() {
-		return !Strings.isNullOrEmpty(username);
+		throw new RuntimeException("invalid credentials: no key nor user data");
 	}
 }

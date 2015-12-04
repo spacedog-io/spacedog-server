@@ -4,45 +4,76 @@
 package io.spacedog.services;
 
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceDogHelper;
+import io.spacedog.client.SpaceDogHelper.Account;
+import io.spacedog.client.SpaceDogHelper.User;
 import io.spacedog.client.SpaceRequest;
 
 public class SchemaResourceTest extends Assert {
 
-	private static SpaceDogHelper.Account testAccount;
-
-	@BeforeClass
-	public static void resetTestAccount() throws Exception {
-		testAccount = SpaceDogHelper.resetTestAccount();
-	}
-
 	@Test
-	public void shouldDeletePutAndGetCarSchema() throws Exception {
+	public void shouldDeletePutAndGetSchemas() throws Exception {
 
+		Account testAccount = SpaceDogHelper.resetTestAccount();
+
+		// should succeed to create a user
+
+		User bob = SpaceDogHelper.createUser(testAccount, "bob", "hi bob", "bob@dog.com");
+
+		// should succeed to reset all schemas
 		SpaceDogHelper.resetSchema(buildCarSchema(), testAccount);
+		SpaceDogHelper.resetSchema(buildHomeSchema(), testAccount);
+		SpaceDogHelper.resetSchema(buildSaleSchema(), testAccount);
+
+		// should succeed to get schemas with simple backend key credentials
 		assertEquals(buildCarSchema(), //
 				SpaceRequest.get("/v1/schema/car").backendKey(testAccount).go(200).jsonNode());
+		assertEquals(buildHomeSchema(), //
+				SpaceRequest.get("/v1/schema/home").backendKey(testAccount).go(200).jsonNode());
+		assertEquals(buildSaleSchema(), //
+				SpaceRequest.get("/v1/schema/sale").backendKey(testAccount).go(200).jsonNode());
+
+		// should succeed to get all schemas with simple backend key credentials
+		SpaceRequest.get("/v1/schema").basicAuth(testAccount).go(200)//
+				.assertEquals(Json.merger() //
+						.merge(buildHomeSchema()) //
+						.merge(buildCarSchema()) //
+						.merge(buildSaleSchema()) //
+						.merge(UserResource.getDefaultUserSchema()) //
+						.get());
+
+		// should fail to delete schema with simple backend key credentials
+		SpaceRequest.delete("/v1/schema/toto").backendKey(testAccount).go(401);
+
+		// should fail to delete schema with simple user credentials
+		SpaceRequest.delete("/v1/schema/toto").basicAuth(bob).go(401);
+
+		// should succeed to delete a non existent schema
+		SpaceRequest.delete("/v1/schema/toto").basicAuth(testAccount).go(200);
+
+		// should fail to create an invalid schema
+		SpaceRequest.put("/v1/schema/toto").basicAuth(testAccount).body("{\"toto\":{\"_type\":\"XXX\"}}").go(400);
+
+		// should fail to change the car schema
+		ObjectNode json = buildCarSchema();
+		json.with("car").with("color").put("_type", "date");
+		SpaceRequest.put("/v1/schema/car").basicAuth(testAccount).body(json).go(400);
 	}
 
-	public static ObjectNode buildCarSchema() {
-		return SchemaBuilder.builder("car") //
-				.property("serialNumber", "string").required().end() //
-				.property("buyDate", "date").required().end() //
-				.property("buyTime", "time").required().end() //
-				.property("buyTimestamp", "timestamp").required().end() //
-				.property("color", "enum").required().end() //
-				.property("techChecked", "boolean").required().end() //
-				.objectProperty("model").required() //
-				.property("description", "text").language("french").required().end() //
-				.property("fiscalPower", "integer").required().end() //
-				.property("size", "float").required().end() //
+	private static ObjectNode buildHomeSchema() {
+		return SchemaBuilder.builder("home") //
+				.property("type", "enum").required().end() //
+				.objectProperty("address").required() //
+				.property("number", "integer").end() //
+				.property("street", "text").required().end() //
+				.property("city", "string").required().end() //
+				.property("country", "string").required().end() // /
 				.end() //
+				.property("phone", "string").end() //
 				.property("location", "geopoint").required().end() //
 				.build();
 	}
@@ -65,67 +96,21 @@ public class SchemaResourceTest extends Assert {
 				.build();
 	}
 
-	@Test
-	public void shouldDeletePutAndGetHomeSchema() throws Exception {
-
-		SpaceDogHelper.resetSchema(buildHomeSchema(), testAccount);
-		assertEquals(buildHomeSchema(), //
-				SpaceRequest.get("/v1/schema/home").backendKey(testAccount).go(200).jsonNode());
-	}
-
-	private static ObjectNode buildHomeSchema() {
-		return SchemaBuilder.builder("home") //
-				.property("type", "enum").required().end() //
-				.objectProperty("address").required() //
-				.property("number", "integer").end() //
-				.property("street", "text").required().end() //
-				.property("city", "string").required().end() //
-				.property("country", "string").required().end() // /
+	public static ObjectNode buildCarSchema() {
+		return SchemaBuilder.builder("car") //
+				.property("serialNumber", "string").required().end() //
+				.property("buyDate", "date").required().end() //
+				.property("buyTime", "time").required().end() //
+				.property("buyTimestamp", "timestamp").required().end() //
+				.property("color", "enum").required().end() //
+				.property("techChecked", "boolean").required().end() //
+				.objectProperty("model").required() //
+				.property("description", "text").language("french").required().end() //
+				.property("fiscalPower", "integer").required().end() //
+				.property("size", "float").required().end() //
 				.end() //
-				.property("phone", "string").end() //
 				.property("location", "geopoint").required().end() //
 				.build();
-	}
-
-	@Test
-	public void shouldGetAllSchemas() throws Exception {
-		SpaceDogHelper.resetSchema(buildCarSchema(), testAccount);
-		SpaceDogHelper.resetSchema(buildHomeSchema(), testAccount);
-		SpaceDogHelper.resetSchema(buildSaleSchema(), testAccount);
-
-		JsonNode result = SpaceRequest.get("/v1/schema").backendKey(testAccount).go(200).jsonNode();
-
-		// user, car, sale and home
-		assertEquals(4, result.size());
-		JsonNode expected = Json.merger() //
-				.merge(buildHomeSchema()) //
-				.merge(buildCarSchema()) //
-				.merge(buildSaleSchema()) //
-				.merge(UserResource.getDefaultUserSchema()) //
-				.get();
-
-		assertEquals(expected, result);
-	}
-
-	@Test
-	public void shouldFailDueToInvalidSchema() throws Exception {
-		shouldFailDueToInvalidSchema("{\"toto\":{\"_type\":\"XXX\"}}");
-	}
-
-	private void shouldFailDueToInvalidSchema(String jsonSchema) throws Exception {
-
-		SpaceRequest.delete("/v1/schema/toto").basicAuth(testAccount).go(200);
-		SpaceRequest.put("/v1/schema/toto").basicAuth(testAccount).body(jsonSchema).go(400);
-	}
-
-	@Test
-	public void shouldFailToChangeCarSchema() throws Exception {
-
-		SpaceDogHelper.resetSchema(buildCarSchema(), testAccount);
-
-		ObjectNode json = buildCarSchema();
-		json.with("car").with("color").put("_type", "date");
-		SpaceRequest.put("/v1/schema/car").basicAuth(testAccount).body(json).go(400);
 	}
 
 }

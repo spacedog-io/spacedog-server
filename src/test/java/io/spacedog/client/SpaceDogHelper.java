@@ -9,8 +9,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
-import io.spacedog.services.AdminResource;
 import io.spacedog.services.Json;
+import io.spacedog.services.SpaceContext;
 import io.spacedog.services.Utils;
 
 public class SpaceDogHelper {
@@ -98,7 +98,7 @@ public class SpaceDogHelper {
 		String backendKey = SpaceRequest.post("/v1/admin/account/")
 				.body(Json.objectBuilder().put("backendId", backendId).put("username", username)
 						.put("password", password).put("email", email))
-				.go(201).httpResponse().getHeaders().get(AdminResource.BACKEND_KEY_HEADER).get(0);
+				.go(201).httpResponse().getHeaders().get(SpaceContext.BACKEND_KEY_HEADER).get(0);
 
 		Assert.assertFalse(Strings.isNullOrEmpty(backendKey));
 

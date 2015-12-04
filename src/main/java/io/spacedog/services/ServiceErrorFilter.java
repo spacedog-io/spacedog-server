@@ -3,12 +3,11 @@ package io.spacedog.services;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import net.codestory.http.Context;
-import net.codestory.http.filters.Filter;
 import net.codestory.http.filters.PayloadSupplier;
 import net.codestory.http.payload.Payload;
 
 @SuppressWarnings("serial")
-public class ServiceErrorFilter implements Filter {
+public class ServiceErrorFilter implements SpaceFilter {
 
 	@Override
 	public Payload apply(String uri, Context context, PayloadSupplier nextFilter) throws Exception {
@@ -26,9 +25,9 @@ public class ServiceErrorFilter implements Filter {
 			payload = PayloadHelper.error(t);
 		}
 
-		if (uri.startsWith("/v") //
-				&& uri.charAt(2) == '1' //
-				&& payload.isError() //
+		// uri is already checked by SpaceFilter default matches method
+
+		if (payload.isError() //
 				&& (payload.rawContentType() == null//
 						|| !payload.rawContentType().startsWith("application/json"))) {
 

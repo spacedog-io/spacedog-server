@@ -9,6 +9,7 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.collect.Sets;
 
+import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
 
@@ -16,6 +17,12 @@ public class BatchResourceTest extends Assert {
 
 	@Test
 	public void shouldSuccessfullyExecuteBatch() throws Exception {
+
+		// we need to make sure the test account is reset and exists before to
+		// be able to
+		// reset it again by batch requests because we need the a
+
+		SpaceDogHelper.resetTestAccount();
 
 		// should succeed to reset test account and create message schema with
 		// admin credentials
@@ -71,7 +78,8 @@ public class BatchResourceTest extends Assert {
 		io.spacedog.client.SpaceDogHelper.Account testAccount = new io.spacedog.client.SpaceDogHelper.Account(//
 				"test", "test", "hi test", "test@dog.com", spaceResponse.getFromJson("2.backendKey").asText());
 
-		// should succeed to create dave and vince users and fetch them
+		// should succeed to create dave and vince users and fetch them with
+		// simple backend key credentials
 
 		batch = Json.arrayBuilder()//
 				.object()//

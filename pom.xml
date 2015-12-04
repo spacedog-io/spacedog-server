@@ -5,7 +5,7 @@
 
 	<groupId>io.spacedog</groupId>
 	<artifactId>services</artifactId>
-	<version>0.4</version>
+	<version>0.4.1-SNAPCHOT</version>
 	<packaging>jar</packaging>
 
 	<name>SpaceDog Web Services</name>

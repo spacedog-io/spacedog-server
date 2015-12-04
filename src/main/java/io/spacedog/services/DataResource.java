@@ -36,8 +36,8 @@ public class DataResource extends AbstractResource {
 	@Get("/")
 	public Payload getAllTypes(Context context)
 			throws NotFoundException, JsonProcessingException, InterruptedException, ExecutionException, IOException {
-		Credentials credentials = AdminResource.checkCredentials(context);
-		refreshIfNecessary(credentials.getBackendId(), context, false);
+		Credentials credentials = SpaceContext.checkCredentials();
+		refreshIfNecessary(credentials.backendId(), context, false);
 		ObjectNode result = SearchResource.get()//
 				.searchInternal(credentials, null, null, context);
 		return PayloadHelper.json(result);
@@ -53,8 +53,8 @@ public class DataResource extends AbstractResource {
 	@Get("/:type/")
 	public Payload getAllForType(String type, Context context)
 			throws NotFoundException, JsonProcessingException, InterruptedException, ExecutionException, IOException {
-		Credentials credentials = AdminResource.checkCredentials(context);
-		refreshIfNecessary(credentials.getBackendId(), context, false);
+		Credentials credentials = SpaceContext.checkCredentials();
+		refreshIfNecessary(credentials.backendId(), context, false);
 		ObjectNode result = SearchResource.get()//
 				.searchInternal(credentials, type, null, context);
 		return PayloadHelper.json(result);
@@ -64,14 +64,14 @@ public class DataResource extends AbstractResource {
 	@Post("/:type/")
 	public Payload create(String type, String body, Context context)
 			throws NotFoundException, JsonProcessingException, IOException {
-		Credentials credentials = AdminResource.checkCredentials(context);
+		Credentials credentials = SpaceContext.checkCredentials();
 
 		// check if type is well defined
 		// object should be validated before saved
-		SchemaResource.getSchema(credentials.getBackendId(), type);
+		SchemaResource.getSchema(credentials.backendId(), type);
 
-		IndexResponse response = ElasticHelper.get().createObject(credentials.getBackendId(), type,
-				Json.readObjectNode(body), credentials.getName());
+		IndexResponse response = ElasticHelper.get().createObject(credentials.backendId(), type,
+				Json.readObjectNode(body), credentials.name());
 
 		return PayloadHelper.saved(true, "/v1/data", response.getType(), response.getId(), response.getVersion());
 	}
@@ -86,14 +86,14 @@ public class DataResource extends AbstractResource {
 	@Get("/:type/:id")
 	public Payload get(String type, String id, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
-		Credentials credentials = AdminResource.checkCredentials(context);
+		Credentials credentials = SpaceContext.checkCredentials();
 
 		// check if type is well defined
 		// throws a NotFoundException if not
 		// TODO useful for security?
-		SchemaResource.getSchema(credentials.getBackendId(), type);
+		SchemaResource.getSchema(credentials.backendId(), type);
 
-		Optional<ObjectNode> object = ElasticHelper.get().getObject(credentials.getBackendId(), type, id);
+		Optional<ObjectNode> object = ElasticHelper.get().getObject(credentials.backendId(), type, id);
 
 		return object.isPresent() ? PayloadHelper.json(object.get()) : PayloadHelper.error(HttpStatus.NOT_FOUND);
 	}
@@ -101,11 +101,11 @@ public class DataResource extends AbstractResource {
 	@Put("/:type/:id")
 	public Payload update(String type, String id, String body, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
-		Credentials credentials = AdminResource.checkCredentials(context);
+		Credentials credentials = SpaceContext.checkCredentials();
 
 		// check if type is well defined
 		// object should be validated before saved
-		SchemaResource.getSchema(credentials.getBackendId(), type);
+		SchemaResource.getSchema(credentials.backendId(), type);
 
 		ObjectNode object = Json.readObjectNode(body);
 		boolean strict = context.query().getBoolean("strict", false);
@@ -115,14 +115,14 @@ public class DataResource extends AbstractResource {
 
 		if (strict) {
 
-			IndexResponse response = ElasticHelper.get().updateObject(credentials.getBackendId(), type, id, version,
-					object, credentials.getName());
+			IndexResponse response = ElasticHelper.get().updateObject(credentials.backendId(), type, id, version,
+					object, credentials.name());
 			return PayloadHelper.saved(false, "/v1/data", response.getType(), response.getId(), response.getVersion());
 
 		} else {
 
-			UpdateResponse response = ElasticHelper.get().patchObject(credentials.getBackendId(), type, id, version,
-					object, credentials.getName());
+			UpdateResponse response = ElasticHelper.get().patchObject(credentials.backendId(), type, id, version,
+					object, credentials.name());
 			return PayloadHelper.saved(false, "/v1/data", response.getType(), response.getId(), response.getVersion());
 		}
 	}
@@ -130,14 +130,14 @@ public class DataResource extends AbstractResource {
 	@Delete("/:type/:id")
 	public Payload delete(String type, String id, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
-		Credentials credentials = AdminResource.checkCredentials(context);
+		Credentials credentials = SpaceContext.checkCredentials();
 
 		// check if type is well defined
 		// throws a NotFoundException if not
 		// TODO useful for security?
-		SchemaResource.getSchema(credentials.getBackendId(), type);
+		SchemaResource.getSchema(credentials.backendId(), type);
 
-		DeleteResponse response = Start.getElasticClient().prepareDelete(credentials.getBackendId(), type, id).get();
+		DeleteResponse response = Start.getElasticClient().prepareDelete(credentials.backendId(), type, id).get();
 		return response.isFound() ? PayloadHelper.success()
 				: PayloadHelper.error(HttpStatus.NOT_FOUND, "object of type [%s] and id [%s] not found", type, id);
 	}

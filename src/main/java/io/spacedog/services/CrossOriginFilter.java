@@ -5,17 +5,18 @@ package io.spacedog.services;
 
 import net.codestory.http.Context;
 import net.codestory.http.constants.Headers;
-import net.codestory.http.filters.Filter;
 import net.codestory.http.filters.PayloadSupplier;
 import net.codestory.http.payload.Payload;
 
 @SuppressWarnings("serial")
-public class CrossOriginFilter implements Filter {
+public class CrossOriginFilter implements SpaceFilter {
 
 	public static final String ALLOW_METHODS = "GET, POST, PUT, DELETE, HEAD";
 
 	@Override
 	public Payload apply(String uri, Context context, PayloadSupplier nextFilter) throws Exception {
+
+		// uri is already checked by SpaceFilter default matches method
 
 		Payload payload = null;
 
@@ -28,6 +29,6 @@ public class CrossOriginFilter implements Filter {
 		}
 
 		return payload.withAllowMethods(ALLOW_METHODS) //
-				.withAllowHeaders(AdminResource.BACKEND_KEY_HEADER, Headers.AUTHORIZATION, Headers.CONTENT_TYPE);
+				.withAllowHeaders(SpaceContext.BACKEND_KEY_HEADER, Headers.AUTHORIZATION, Headers.CONTENT_TYPE);
 	}
 }

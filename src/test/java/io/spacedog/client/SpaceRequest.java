@@ -13,8 +13,8 @@ import com.mashape.unirest.request.GetRequest;
 import com.mashape.unirest.request.HttpRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
 
-import io.spacedog.services.AdminResource;
 import io.spacedog.services.JsonBuilder;
+import io.spacedog.services.SpaceContext;
 
 public class SpaceRequest {
 
@@ -65,7 +65,7 @@ public class SpaceRequest {
 
 	public SpaceRequest backendKey(String backendKey) {
 		if (backendKey != null)
-			request.header(AdminResource.BACKEND_KEY_HEADER, backendKey);
+			request.header(SpaceContext.BACKEND_KEY_HEADER, backendKey);
 		return this;
 	}
 

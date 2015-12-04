@@ -54,6 +54,6 @@ public class Account {
 	}
 
 	public Credentials credentials() {
-		return new Credentials(backendId, username, true);
+		return Credentials.fromAdmin(backendId, username, backendKey);
 	}
 }

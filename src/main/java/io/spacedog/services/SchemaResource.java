@@ -30,33 +30,20 @@ import net.codestory.http.payload.Payload;
 public class SchemaResource extends AbstractResource {
 
 	//
-	// Singleton
-	//
-
-	private static SchemaResource singleton = new SchemaResource();
-
-	static SchemaResource get() {
-		return singleton;
-	}
-
-	private SchemaResource() {
-	}
-
-	//
 	// Routes
 	//
 
 	@Get("")
 	@Get("/")
 	public Payload getAll(Context context) throws JsonParseException, JsonMappingException, IOException {
-		Credentials credentials = AdminResource.checkCredentials(context);
+		Credentials credentials = SpaceContext.checkCredentials();
 		GetMappingsResponse resp = Start.getElasticClient().admin().indices()
-				.prepareGetMappings(credentials.getBackendId()).get();
+				.prepareGetMappings(credentials.backendId()).get();
 
 		JsonMerger jsonMerger = Json.merger();
 
-		Optional.ofNullable(resp.getMappings()).map(indexMap -> indexMap.get(credentials.getBackendId()))
-				.orElseThrow(() -> new NotFoundException(credentials.getBackendId())).forEach(typeAndMapping -> {
+		Optional.ofNullable(resp.getMappings()).map(indexMap -> indexMap.get(credentials.backendId()))
+				.orElseThrow(() -> new NotFoundException(credentials.backendId())).forEach(typeAndMapping -> {
 					try {
 						jsonMerger.merge((ObjectNode) Json.readObjectNode(typeAndMapping.value.source().string())
 								.get(typeAndMapping.key).get("_meta"));
@@ -71,8 +58,8 @@ public class SchemaResource extends AbstractResource {
 	@Get("/:type")
 	@Get("/:type/")
 	public Payload get(String type, Context context) throws JsonParseException, JsonMappingException, IOException {
-		Credentials credentials = AdminResource.checkCredentials(context);
-		return PayloadHelper.json(getSchema(credentials.getBackendId(), type));
+		Credentials credentials = SpaceContext.checkCredentials();
+		return PayloadHelper.json(getSchema(credentials.backendId(), type));
 	}
 
 	public static ObjectNode getSchema(String index, String type)
@@ -94,10 +81,10 @@ public class SchemaResource extends AbstractResource {
 	public Payload upsertSchema(String type, String newSchemaAsString, Context context)
 			throws InterruptedException, ExecutionException, JsonParseException, JsonMappingException, IOException {
 
-		Account account = AdminResource.checkAdminCredentialsOnly(context);
+		Credentials credentials = SpaceContext.checkAdminCredentials();
 		JsonNode schema = SchemaValidator.validate(type, Json.readObjectNode(newSchemaAsString));
 		String elasticMapping = SchemaTranslator.translate(type, schema).toString();
-		PutMappingRequest putMappingRequest = new PutMappingRequest(account.backendId).type(type)
+		PutMappingRequest putMappingRequest = new PutMappingRequest(credentials.backendId()).type(type)
 				.source(elasticMapping);
 		Start.getElasticClient().admin().indices().putMapping(putMappingRequest).get();
 		return PayloadHelper.saved(true, "/v1", "schema", type);
@@ -108,11 +95,26 @@ public class SchemaResource extends AbstractResource {
 	public Payload deleteSchema(String type, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
 		try {
-			Account account = AdminResource.checkAdminCredentialsOnly(context);
-			Start.getElasticClient().admin().indices().prepareDeleteMapping(account.backendId).setType(type).get();
+			Credentials credentials = SpaceContext.checkAdminCredentials();
+			Start.getElasticClient().admin().indices().prepareDeleteMapping(credentials.backendId()).setType(type)
+					.get();
 		} catch (TypeMissingException exception) {
 			// ignored
 		}
 		return PayloadHelper.success();
 	}
+
+	//
+	// Singleton
+	//
+
+	private static SchemaResource singleton = new SchemaResource();
+
+	static SchemaResource get() {
+		return singleton;
+	}
+
+	private SchemaResource() {
+	}
+
 }

@@ -49,7 +49,7 @@ public class AdminResourceTest extends Assert {
 		// admin user login should succeed
 
 		String backendKey = SpaceRequest.get("/v1/admin/login").basicAuth(testAccount).go(200).httpResponse()
-				.getHeaders().get(AdminResource.BACKEND_KEY_HEADER).get(0);
+				.getHeaders().get(SpaceContext.BACKEND_KEY_HEADER).get(0);
 
 		assertEquals(testAccount.backendKey, backendKey);
 
@@ -94,7 +94,7 @@ public class AdminResourceTest extends Assert {
 	}
 
 	@Test
-	public void shouldFailToAccessAnotherAccountWithValidAdminUsername() throws Exception {
+	public void shouldFailToAccessNorDeleteAnotherAccountWithValidAdminCredentials() throws Exception {
 
 		SpaceDogHelper.Account aaaa = SpaceDogHelper.resetAccount("aaaa", "aaaa", "hi aaaa", "hello@spacedog.io");
 		SpaceDogHelper.Account zzzz = SpaceDogHelper.resetAccount("zzzz", "zzzz", "hi zzzz", "hello@spacedog.io");

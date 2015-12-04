@@ -17,8 +17,8 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.HttpRequest;
 
-import io.spacedog.services.AdminResource;
 import io.spacedog.services.Json;
+import io.spacedog.services.SpaceContext;
 
 public class SpaceResponse {
 
@@ -60,8 +60,8 @@ public class SpaceResponse {
 	}
 
 	private static void printHeader(String key, List<String> value) {
-		if (key.equals(AdminResource.AUTHORIZATION_HEADER))
-			AdminResource.decodeAuthorizationHeader(value.get(0)).ifPresent(
+		if (key.equals(SpaceContext.AUTHORIZATION_HEADER))
+			SpaceContext.decodeAuthorizationHeader(value.get(0)).ifPresent(
 					tokens -> System.out.println(String.format("%s: %s (= %s:%s)", key, value, tokens[0], tokens[1])));
 		else
 			System.out.println(String.format("%s: %s", key, value));
