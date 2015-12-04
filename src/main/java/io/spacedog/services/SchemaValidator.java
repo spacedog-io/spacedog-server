@@ -38,7 +38,7 @@ public class SchemaValidator {
 			checkIfInvalidField(rootObject, true, "_acl", "_id", "_type");
 			checkObjectProperties(type, rootObject);
 		} else
-			throw InvalidSchemaException.invalidObjectType(type, rootType);
+			throw InvalidSchemaException.invalidSchemaType(type, rootType);
 
 		return schema;
 	}
@@ -199,8 +199,8 @@ public class SchemaValidator {
 					Arrays.toString(expectedFiedNames)));
 		}
 
-		public static InvalidSchemaException invalidObjectType(String type, String rootType) {
-			return new InvalidSchemaException(String.format("invalid root object type [%s]", rootType));
+		public static InvalidSchemaException invalidSchemaType(String schemaName, String type) {
+			return new InvalidSchemaException(String.format("invalid schema type [%s]", type));
 		}
 
 		public static InvalidSchemaException invalidFieldValue(String fieldName, JsonNode fieldValue,
