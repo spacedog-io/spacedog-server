@@ -4,6 +4,9 @@
 package io.spacedog.services;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.DefaultIndenter;
@@ -13,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 
 public class Json {
 
@@ -216,5 +220,17 @@ public class Json {
 		if (!node.isObject())
 			throw new IllegalArgumentException(String.format("not a json object but [%s]", node.getNodeType()));
 		return (ObjectNode) node;
+	}
+
+	public static List<String> toList(JsonNode node) {
+		if (node.isArray())
+			return Lists.newArrayList(node.elements()).stream().map(element -> element.asText())
+					.collect(Collectors.toList());
+
+		if (node.isValueNode())
+			return Collections.singletonList(node.asText());
+
+		throw new IllegalArgumentException(
+				String.format("can not convert this json node [%s] to a list of strings", node));
 	}
 }

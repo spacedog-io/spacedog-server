@@ -1,6 +1,5 @@
 package io.spacedog.services;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
@@ -9,12 +8,14 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import net.codestory.http.Context;
 import net.codestory.http.Cookie;
@@ -24,7 +25,6 @@ import net.codestory.http.Query;
 import net.codestory.http.Request;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
-import net.codestory.http.constants.Headers;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 import net.codestory.http.payload.StreamingOutput;
@@ -161,22 +161,32 @@ public class BatchResource extends AbstractResource {
 
 		@Override
 		public List<String> headerNames() {
-			return context.request().headerNames();
+			Set<String> headerNames = Sets.newHashSet();
+			headerNames.addAll(context.request().headerNames());
+			checkObjectNode(request, "headers", false)//
+					.ifPresent(node -> Iterators.addAll(headerNames, node.fieldNames()));
+			return Lists.newArrayList(headerNames.iterator());
 		}
 
 		@Override
 		public List<String> headers(String name) {
+			Optional<JsonNode> headers = checkObjectNode(request, "headers." + name, false);
+			if (headers.isPresent())
+				return Json.toList(headers.get());
 			return context.request().headers(name);
 		}
 
 		@Override
 		public String header(String name) {
-			return Headers.ACCEPT_ENCODING.equals(name) ? "" : context.request().header(name);
+			Optional<JsonNode> header = checkObjectNode(request, "headers." + name, false);
+			if (header.isPresent())
+				return header.get().asText();
+			return context.request().header(name);
 		}
 
 		@Override
 		public InputStream inputStream() throws IOException {
-			return new ByteArrayInputStream(content().getBytes(Utils.UTF8));
+			throw new UnsupportedOperationException("batch wrapped request must not provide any input stream");
 		}
 
 		@Override
@@ -229,20 +239,17 @@ public class BatchResource extends AbstractResource {
 				public Iterable<String> all(String name) {
 					JsonNode paramNode = Json.get(request, "parameters." + name);
 
-					if (paramNode == null || paramNode.isNull())
+					if (Json.isNull(paramNode))
 						return Collections.emptyList();
 
-					return paramNode.isArray()//
-							? () -> Iterators.transform(paramNode.elements(), element -> element.asText())//
-							: Collections.singleton(paramNode.asText());
+					return Json.toList(paramNode);
 				}
 			};
 		}
 
 		@Override
 		public List<Part> parts() {
-			// no multi part post request in batch
-			return Collections.emptyList();
+			throw new UnsupportedOperationException("batch wrapped request must not provide parts");
 		}
 	}
 
