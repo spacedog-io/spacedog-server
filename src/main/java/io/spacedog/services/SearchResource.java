@@ -67,7 +67,7 @@ public class SearchResource extends AbstractResource {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		refreshIfNecessary(credentials.backendId(), context, true);
 		DeleteByQueryResponse response = ElasticHelper.get().delete(credentials.backendId(), query, new String[0]);
-		return PayloadHelper.toPayload(response.status(), response.getIndex(credentials.backendId()).getFailures());
+		return PayloadHelper.json(response.status(), response.getIndex(credentials.backendId()).getFailures());
 	}
 
 	@Get("/search/:type")
@@ -94,7 +94,7 @@ public class SearchResource extends AbstractResource {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		refreshIfNecessary(credentials.backendId(), context, true);
 		DeleteByQueryResponse response = ElasticHelper.get().delete(credentials.backendId(), query, type);
-		return PayloadHelper.toPayload(response.status(), response.getIndex(credentials.backendId()).getFailures());
+		return PayloadHelper.json(response.status(), response.getIndex(credentials.backendId()).getFailures());
 	}
 
 	@Post("/filter/:type")
@@ -117,7 +117,7 @@ public class SearchResource extends AbstractResource {
 		if (!Strings.isNullOrEmpty(type)) {
 			// check if type is well defined
 			// throws a NotFoundException if not
-			SchemaResource.getSchema(index, type);
+			ElasticHelper.get().getSchema(index, type);
 			request.types(type);
 		}
 

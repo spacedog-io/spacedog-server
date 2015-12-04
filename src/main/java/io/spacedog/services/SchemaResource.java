@@ -12,7 +12,6 @@ import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.indices.TypeMissingException;
 
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -59,19 +58,7 @@ public class SchemaResource extends AbstractResource {
 	@Get("/:type/")
 	public Payload get(String type, Context context) throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = SpaceContext.checkCredentials();
-		return PayloadHelper.json(getSchema(credentials.backendId(), type));
-	}
-
-	public static ObjectNode getSchema(String index, String type)
-			throws NotFoundException, JsonProcessingException, IOException {
-		GetMappingsResponse resp = Start.getElasticClient().admin().indices().prepareGetMappings(index).addTypes(type)
-				.get();
-
-		String source = Optional.ofNullable(resp.getMappings()).map(indexMap -> indexMap.get(index))
-				.map(typeMap -> typeMap.get(type)).orElseThrow(() -> new NotFoundException(index, type)).source()
-				.toString();
-
-		return (ObjectNode) Json.readObjectNode(source).get(type).get("_meta");
+		return PayloadHelper.json(ElasticHelper.get().getSchema(credentials.backendId(), type));
 	}
 
 	@Put("/:type")

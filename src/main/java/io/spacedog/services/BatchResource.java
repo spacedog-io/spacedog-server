@@ -34,32 +34,37 @@ public class BatchResource extends AbstractResource {
 
 	// query parameter names
 
-	private static final String STOP_ON_ERROR = "stopOnError";
+	private static final String STOP_ON_ERROR_QUERY_PARAM = "stopOnError";
 
 	@Post("")
 	@Post("/")
 	public Payload execute(String body, Context context) throws Exception {
 
+		Debug.resetBatchDebug();
+
 		// do not put any checkCredentials here since it must be called in the
 		// following lambda function
 
 		ArrayNode requests = Json.readArrayNode(body);
-		boolean stopOnError = context.query().getBoolean(STOP_ON_ERROR, false);
+
+		if (requests.size() > 10)
+			return PayloadHelper.error(HttpStatus.BAD_REQUEST, "batch are limited to 10 sub requests");
+
+		boolean stopOnError = context.query().getBoolean(STOP_ON_ERROR_QUERY_PARAM, false);
 
 		StreamingOutput streamingOutput = output -> {
 
-			output.write("[".getBytes(Utils.UTF8));
-
-			// Batch needs special care on space context and credentials
+			// Batch needs special care on SpaceContext and Credentials
 			// since this code is executed by the fluent payload writer
 			// outside of the filter chain.
-			// I artificially reproduce the SpaceContext init filter
-			// mechanism and force the checkCredentials to avoid all sub
-			// requests to do the same.
+			// I artificially reproduce the SpaceContext filter mechanism and
+			// force init of the SpaceContext for the whole batch an avoid one
+			// buildCredentials per sub request
 			// Use extra care before to change any of this.
 			try {
 				SpaceContext.init(context);
-				SpaceContext.checkCredentials();
+
+				output.write("{\"success\":true,\"status\":200,\"responses\":[".getBytes(Utils.UTF8));
 
 				for (int i = 0; i < requests.size(); i++) {
 
@@ -81,27 +86,34 @@ public class BatchResource extends AbstractResource {
 						payload = new Payload(HttpStatus.INTERNAL_SERVER_ERROR);
 
 					if (PayloadHelper.isJson(payload)) {
-						if (payload.isSuccess()//
-								&& "GET".equalsIgnoreCase(requestWrapper.method())) {
+
+						if (payload.isSuccess() && "GET".equalsIgnoreCase(requestWrapper.method())) {
+
 							output.write(String.format("{\"success\":true,\"status\":%s,\"content\":", payload.code())
 									.getBytes(Utils.UTF8));
 							output.write(PayloadHelper.toBytes(payload.rawContent()));
 							output.write("}".getBytes(Utils.UTF8));
-						} else {
+
+						} else
 							output.write(PayloadHelper.toBytes(payload.rawContent()));
-						}
-					} else {
-						output.write(String.format("{\"success\":%s,\"status\":%s}", //
-								payload.isSuccess(), payload.code()).getBytes(Utils.UTF8));
-					}
+
+					} else
+						output.write(PayloadHelper.toBytes(PayloadHelper.json(payload.code())));
+
 					if (stopOnError && payload.isError())
 						break;
 				}
+
+				if (SpaceContext.get().debug()) {
+					output.write(String.format("],\"debug\":%s}", Debug.buildDebugObjectNode().toString())//
+							.getBytes(Utils.UTF8));
+				} else
+					output.write("]}".getBytes(Utils.UTF8));
+
 			} finally {
 				SpaceContext.reset();
 			}
 
-			output.write("]".getBytes(Utils.UTF8));
 		};
 
 		return new Payload(PayloadHelper.JSON_CONTENT_UTF8, streamingOutput, HttpStatus.OK);
@@ -139,8 +151,7 @@ public class BatchResource extends AbstractResource {
 
 		@Override
 		public String content() throws IOException {
-			JsonNode node = checkObjectNode(request, "body", true).get();
-			return node.toString();
+			return checkJsonNode(request, "content", true).get().toString();
 		}
 
 		@Override

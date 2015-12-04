@@ -142,7 +142,7 @@ public class AdminResource extends AbstractResource {
 					"no account found for backend [%s] and admin user [%s]", credentials.backendId(),
 					credentials.name());
 
-		return PayloadHelper.json(response.getSourceAsString());
+		return new Payload(PayloadHelper.JSON_CONTENT_UTF8, response.getSourceAsString());
 	}
 
 	@Delete("/account/:id")
@@ -166,8 +166,7 @@ public class AdminResource extends AbstractResource {
 
 		if (!indexDeleteResp.isAcknowledged())
 			return PayloadHelper.error(HttpStatus.INTERNAL_SERVER_ERROR,
-					"internal index deletion not acknowledged for account with backend [%s] ",
-					credentials.backendId());
+					"internal index deletion not acknowledged for account with backend [%s] ", credentials.backendId());
 
 		ElasticHelper.get().refresh(true, ADMIN_INDEX);
 
@@ -178,9 +177,10 @@ public class AdminResource extends AbstractResource {
 	@Get("/login/")
 	public Payload login(Context context) throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
-		// TODO replace header by json in payload content
-		return Payload.ok().withHeader(SpaceContext.BACKEND_KEY_HEADER, //
-				credentials.backendKeyAsString().get());
+		String backendKey = credentials.backendKeyAsString().get();
+		// TODO return backend key in json only?
+		return PayloadHelper.json(PayloadHelper.minimalBuilder(HttpStatus.OK).put(BACKEND_KEY, backendKey))//
+				.withHeader(SpaceContext.BACKEND_KEY_HEADER, backendKey);
 	}
 
 	//

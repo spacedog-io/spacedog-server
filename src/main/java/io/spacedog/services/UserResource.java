@@ -40,19 +40,6 @@ public class UserResource extends AbstractResource {
 	private static final String PASSWORD_RESET_CODE = "passwordResetCode";
 
 	//
-	// singleton
-	//
-
-	private static AbstractResource singleton = new UserResource();
-
-	static AbstractResource get() {
-		return singleton;
-	}
-
-	private UserResource() {
-	}
-
-	//
 	// default user type and schema
 	//
 
@@ -80,14 +67,14 @@ public class UserResource extends AbstractResource {
 	@Get("/login/")
 	public Payload login(Context context) throws JsonParseException, JsonMappingException, IOException {
 		SpaceContext.checkUserCredentials();
-		return Payload.ok();
+		return PayloadHelper.success();
 	}
 
 	@Get("/logout")
 	@Get("/logout/")
 	public Payload logout(Context context) throws JsonParseException, JsonMappingException, IOException {
 		SpaceContext.checkUserCredentials();
-		return Payload.ok();
+		return PayloadHelper.success();
 	}
 
 	@Get("/user")
@@ -188,11 +175,12 @@ public class UserResource extends AbstractResource {
 		user.remove(HASHED_PASSWORD);
 		user.put(PASSWORD_RESET_CODE, resetCode);
 
-		long newVersion = ElasticHelper.get().updateObject(credentials.backendId(), user, credentials.name()).getVersion();
+		long newVersion = ElasticHelper.get().updateObject(credentials.backendId(), user, credentials.name())
+				.getVersion();
 
 		return PayloadHelper.json(//
-				PayloadHelper.savedBuilder(false, "/v1", USER_TYPE, id, newVersion).put(PASSWORD_RESET_CODE, resetCode), //
-				HttpStatus.OK);
+				PayloadHelper.savedBuilder(false, "/v1", USER_TYPE, id, newVersion)//
+						.put(PASSWORD_RESET_CODE, resetCode));
 	}
 
 	@Post("/user/:id/password")
@@ -226,8 +214,8 @@ public class UserResource extends AbstractResource {
 		user.remove(PASSWORD_RESET_CODE);
 		user.put(HASHED_PASSWORD, UserUtils.hashPassword(password));
 
-		IndexResponse indexResponse = ElasticHelper.get().updateObject(credentials.backendId(), USER_TYPE, id, 0,
-				user, credentials.name());
+		IndexResponse indexResponse = ElasticHelper.get().updateObject(credentials.backendId(), USER_TYPE, id, 0, user,
+				credentials.name());
 
 		return PayloadHelper.saved(false, "/v1", USER_TYPE, id, indexResponse.getVersion());
 	}
@@ -238,7 +226,8 @@ public class UserResource extends AbstractResource {
 			throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = SpaceContext.checkCredentials();
 
-		if (credentials.isAdminAuthenticated() || (credentials.isUserAuthenticated() && id.equals(credentials.name()))) {
+		if (credentials.isAdminAuthenticated()
+				|| (credentials.isUserAuthenticated() && id.equals(credentials.name()))) {
 
 			String password = Json.readJsonNode(body).asText();
 			UserUtils.checkPasswordValidity(password);
@@ -249,8 +238,7 @@ public class UserResource extends AbstractResource {
 					.build();
 
 			UpdateResponse response = Start.getElasticClient()
-					.prepareUpdate(credentials.backendId(), UserResource.USER_TYPE, id).setDoc(update.toString())
-					.get();
+					.prepareUpdate(credentials.backendId(), UserResource.USER_TYPE, id).setDoc(update.toString()).get();
 
 			return PayloadHelper.saved(false, "/v1/user", response.getType(), response.getId(), response.getVersion());
 
@@ -263,4 +251,16 @@ public class UserResource extends AbstractResource {
 		return SchemaTranslator.translate(USER_TYPE, schema).toString();
 	}
 
+	//
+	// singleton
+	//
+
+	private static AbstractResource singleton = new UserResource();
+
+	static AbstractResource get() {
+		return singleton;
+	}
+
+	private UserResource() {
+	}
 }

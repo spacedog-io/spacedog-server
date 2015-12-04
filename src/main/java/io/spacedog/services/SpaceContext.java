@@ -23,6 +23,7 @@ public class SpaceContext {
 	public static final String BASIC_AUTHENTICATION_SCHEME = "Basic";
 	public static final String AUTHORIZATION_HEADER = "Authorization";
 	public static final String BACKEND_KEY_HEADER = "x-spacedog-backend-key";
+	public static final String DEBUG_QUERY_PARAM = "debug";
 
 	private static ThreadLocal<SpaceContext> threadLocal = new ThreadLocal<SpaceContext>();
 
@@ -35,6 +36,10 @@ public class SpaceContext {
 
 	public Context context() {
 		return context;
+	}
+
+	public boolean debug() {
+		return context.query().getBoolean(DEBUG_QUERY_PARAM, false);
 	}
 
 	public static SpaceFilter filter() {
@@ -111,7 +116,7 @@ public class SpaceContext {
 	//
 
 	private void buildCredentials() throws IOException, JsonParseException, JsonMappingException {
-
+		Debug.credentialCheck();
 		credentials = Strings.isNullOrEmpty(context.header(BACKEND_KEY_HEADER))//
 				? buildAdminCredentials() : buildUserCredentials();
 	}

@@ -35,38 +35,38 @@ public abstract class AbstractResource {
 	}
 
 	public static Optional<JsonNode> checkStringNode(JsonNode input, String propertyPath, boolean required) {
-		return checkJsonNode(input, propertyPath, Type.String, required);
+		return checkJsonNodeOfType(input, propertyPath, Type.String, required);
 	}
 
 	public static Optional<JsonNode> checkBooleanNode(JsonNode input, String propertyPath, boolean required) {
-		return checkJsonNode(input, propertyPath, Type.Boolean, required);
+		return checkJsonNodeOfType(input, propertyPath, Type.Boolean, required);
 	}
 
 	public static Optional<JsonNode> checkIntegerNode(JsonNode input, String propertyPath, boolean required) {
-		return checkJsonNode(input, propertyPath, Type.Integer, required);
+		return checkJsonNodeOfType(input, propertyPath, Type.Integer, required);
 	}
 
 	public static Optional<JsonNode> checkLongNode(JsonNode input, String propertyPath, boolean required) {
-		return checkJsonNode(input, propertyPath, Type.Long, required);
+		return checkJsonNodeOfType(input, propertyPath, Type.Long, required);
 	}
 
 	public static Optional<JsonNode> checkFloatNode(JsonNode input, String propertyPath, boolean required) {
-		return checkJsonNode(input, propertyPath, Type.Float, required);
+		return checkJsonNodeOfType(input, propertyPath, Type.Float, required);
 	}
 
 	public static Optional<JsonNode> checkDoubleNode(JsonNode input, String propertyPath, boolean required) {
-		return checkJsonNode(input, propertyPath, Type.Double, required);
+		return checkJsonNodeOfType(input, propertyPath, Type.Double, required);
 	}
 
 	public static Optional<JsonNode> checkObjectNode(JsonNode input, String propertyPath, boolean required) {
-		return checkJsonNode(input, propertyPath, Type.Object, required);
+		return checkJsonNodeOfType(input, propertyPath, Type.Object, required);
 	}
 
 	public static Optional<JsonNode> checkArrayNode(JsonNode input, String propertyPath, boolean required) {
-		return checkJsonNode(input, propertyPath, Type.Array, required);
+		return checkJsonNodeOfType(input, propertyPath, Type.Array, required);
 	}
 
-	public static Optional<JsonNode> checkJsonNode(JsonNode input, String propertyPath, Json.Type expected,
+	public static Optional<JsonNode> checkJsonNodeOfType(JsonNode input, String propertyPath, Json.Type expected,
 			boolean required) {
 		JsonNode node = Json.get(input, propertyPath);
 		if (node == null) {
@@ -79,7 +79,17 @@ public abstract class AbstractResource {
 		else
 			throw new IllegalArgumentException(//
 					String.format("property [%s] must be of type [%s] instead of [%s]", //
-							propertyPath, node.getNodeType(), expected));
+							propertyPath, expected, node.getNodeType()));
+	}
+
+	public static Optional<JsonNode> checkJsonNode(JsonNode input, String propertyPath, boolean required) {
+		JsonNode node = Json.get(input, propertyPath);
+		if (node == null) {
+			if (required)
+				throw new IllegalArgumentException(String.format("property [%s] must not be null", propertyPath));
+			return Optional.ofNullable(null);
+		}
+		return Optional.of(node);
 	}
 
 	public static void checkNotPresent(JsonNode input, String propertyPath, String type) {

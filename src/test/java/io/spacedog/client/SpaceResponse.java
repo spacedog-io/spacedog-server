@@ -191,7 +191,7 @@ public class SpaceResponse {
 		return this;
 	}
 
-	public void assertSizeEquals(int size, String jsonPath) {
+	public SpaceResponse assertSizeEquals(int size, String jsonPath) {
 		assertJsonContent();
 		JsonNode node = Json.get(jsonResponseContent, jsonPath);
 		if (Json.isNull(node))
@@ -199,18 +199,21 @@ public class SpaceResponse {
 		if (size != node.size())
 			Assert.fail(String.format("expected size = [%s], json property [%s] node size = [%s]", //
 					size, jsonPath, node.size()));
+		return this;
 	}
 
-	public void assertSizeEquals(int size) {
+	public SpaceResponse assertSizeEquals(int size) {
 		assertJsonContent();
 		if (size != jsonResponseContent.size())
 			Assert.fail(String.format("expected size = [%s], root json node size = [%s]", //
 					size, jsonResponseContent.size()));
+		return this;
 	}
 
-	void assertJsonContent() {
+	public SpaceResponse assertJsonContent() {
 		if (jsonResponseContent == null)
 			Assert.fail("no response json content");
+		return this;
 	}
 
 }

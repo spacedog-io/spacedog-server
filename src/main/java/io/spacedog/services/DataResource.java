@@ -68,7 +68,7 @@ public class DataResource extends AbstractResource {
 
 		// check if type is well defined
 		// object should be validated before saved
-		SchemaResource.getSchema(credentials.backendId(), type);
+		ElasticHelper.get().getSchema(credentials.backendId(), type);
 
 		IndexResponse response = ElasticHelper.get().createObject(credentials.backendId(), type,
 				Json.readObjectNode(body), credentials.name());
@@ -91,11 +91,14 @@ public class DataResource extends AbstractResource {
 		// check if type is well defined
 		// throws a NotFoundException if not
 		// TODO useful for security?
-		SchemaResource.getSchema(credentials.backendId(), type);
+		ElasticHelper.get().getSchema(credentials.backendId(), type);
 
 		Optional<ObjectNode> object = ElasticHelper.get().getObject(credentials.backendId(), type, id);
 
-		return object.isPresent() ? PayloadHelper.json(object.get()) : PayloadHelper.error(HttpStatus.NOT_FOUND);
+		if (object.isPresent())
+			return PayloadHelper.json(object.get());
+
+		return PayloadHelper.error(HttpStatus.NOT_FOUND);
 	}
 
 	@Put("/:type/:id")
@@ -105,7 +108,7 @@ public class DataResource extends AbstractResource {
 
 		// check if type is well defined
 		// object should be validated before saved
-		SchemaResource.getSchema(credentials.backendId(), type);
+		ElasticHelper.get().getSchema(credentials.backendId(), type);
 
 		ObjectNode object = Json.readObjectNode(body);
 		boolean strict = context.query().getBoolean("strict", false);
@@ -135,11 +138,14 @@ public class DataResource extends AbstractResource {
 		// check if type is well defined
 		// throws a NotFoundException if not
 		// TODO useful for security?
-		SchemaResource.getSchema(credentials.backendId(), type);
+		ElasticHelper.get().getSchema(credentials.backendId(), type);
 
 		DeleteResponse response = Start.getElasticClient().prepareDelete(credentials.backendId(), type, id).get();
-		return response.isFound() ? PayloadHelper.success()
-				: PayloadHelper.error(HttpStatus.NOT_FOUND, "object of type [%s] and id [%s] not found", type, id);
+
+		if (response.isFound())
+			return PayloadHelper.success();
+
+		return PayloadHelper.error(HttpStatus.NOT_FOUND, "object of type [%s] and id [%s] not found", type, id);
 	}
 
 	@Post("/search")

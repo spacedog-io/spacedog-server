@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
+import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryRequestBuilder;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.get.GetResponse;
@@ -32,19 +33,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import net.codestory.http.Context;
 
 public class ElasticHelper {
-
-	//
-	// singleton
-	//
-
-	private static ElasticHelper singleton = new ElasticHelper();
-
-	static ElasticHelper get() {
-		return singleton;
-	}
-
-	private ElasticHelper() {
-	}
 
 	//
 	// help methods
@@ -195,7 +183,7 @@ public class ElasticHelper {
 			if (!Strings.isNullOrEmpty(type)) {
 				// check if type is well defined
 				// throws a NotFoundException if not
-				SchemaResource.getSchema(index, type);
+				ElasticHelper.get().getSchema(index, type);
 				this.searchRequest.types(type);
 			}
 
@@ -233,4 +221,30 @@ public class ElasticHelper {
 			Start.getElasticClient().admin().indices().prepareRefresh(indices).get();
 		}
 	}
+
+	public ObjectNode getSchema(String index, String type)
+			throws NotFoundException, JsonProcessingException, IOException {
+		GetMappingsResponse resp = Start.getElasticClient().admin().indices().prepareGetMappings(index).addTypes(type)
+				.get();
+
+		String source = Optional.ofNullable(resp.getMappings()).map(indexMap -> indexMap.get(index))
+				.map(typeMap -> typeMap.get(type)).orElseThrow(() -> new NotFoundException(index, type)).source()
+				.toString();
+
+		return (ObjectNode) Json.readObjectNode(source).get(type).get("_meta");
+	}
+
+	//
+	// singleton
+	//
+
+	private static ElasticHelper singleton = new ElasticHelper();
+
+	static ElasticHelper get() {
+		return singleton;
+	}
+
+	private ElasticHelper() {
+	}
+
 }

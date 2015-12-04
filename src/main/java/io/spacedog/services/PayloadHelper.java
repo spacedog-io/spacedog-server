@@ -27,6 +27,10 @@ public class PayloadHelper {
 	public static final String JSON_CONTENT_UTF8 = JSON_CONTENT + ";charset=UTF-8";
 	public static final String HEADER_OBJECT_ID = "x-spacedog-object-id";
 
+	public static Payload success() {
+		return json(HttpStatus.OK);
+	}
+
 	public static Payload error(Throwable t) {
 
 		if (t instanceof VersionConflictEngineException) {
@@ -63,21 +67,16 @@ public class PayloadHelper {
 		return error(HttpStatus.INTERNAL_SERVER_ERROR, t);
 	}
 
-	public static Payload error(int httpStatus, Throwable throwable) {
-		JsonBuilder<ObjectNode> builder = Json.objectBuilder()//
-				.put("success", false)//
-				.put("status", httpStatus);
-		if (throwable != null)
-			builder.node("error", Json.toJson(throwable));
-		return json(builder, httpStatus);
-	}
-
 	public static Payload error(int httpStatus, String message, Object... args) {
 		return error(httpStatus, new RuntimeException(String.format(message, args)));
 	}
 
 	public static Payload error(int httpStatus) {
-		return error(httpStatus, null);
+		return json(httpStatus);
+	}
+
+	public static Payload error(int httpStatus, Throwable throwable) {
+		return json(minimalBuilder(httpStatus).node("error", Json.toJson(throwable)), httpStatus);
 	}
 
 	/**
@@ -86,7 +85,8 @@ public class PayloadHelper {
 	 * @return a bad request http payload with a json listing invalid parameters
 	 */
 	protected static Payload invalidParameters(String... parameters) {
-		JsonBuilder<ObjectNode> builder = Json.objectBuilder().put("success", false);
+		JsonBuilder<ObjectNode> builder = minimalBuilder(HttpStatus.BAD_REQUEST);
+
 		if (parameters.length > 0 && parameters.length % 3 == 0) {
 			builder.object("invalidParameters");
 			for (int i = 0; i < parameters.length; i += 3)
@@ -94,33 +94,14 @@ public class PayloadHelper {
 						.put("value", parameters[1])//
 						.put("message", parameters[2]);
 		}
+
 		return json(builder, HttpStatus.BAD_REQUEST);
-	}
-
-	public static Payload toPayload(RestStatus status, ShardOperationFailedException[] failures) {
-
-		if (status.getStatus() == 200)
-			return success();
-
-		JsonBuilder<ObjectNode> builder = Json.objectBuilder().put("success", false)//
-				.array("error");
-
-		for (ShardOperationFailedException failure : failures)
-			builder.object().put("type", failure.getClass().getName()).put("message", failure.reason())
-					.put("shardId", failure.shardId()).end();
-
-		return json(builder, status.getStatus());
-	}
-
-	public static Payload success() {
-		return json("{\"success\":true,\"status\":200}");
 	}
 
 	public static JsonBuilder<ObjectNode> savedBuilder(boolean created, String uri, String type, String id,
 			long version) {
-		JsonBuilder<ObjectNode> builder = Json.objectBuilder() //
-				.put("success", true) //
-				.put("status", created ? HttpStatus.CREATED : HttpStatus.OK) //
+
+		JsonBuilder<ObjectNode> builder = minimalBuilder(created ? HttpStatus.CREATED : HttpStatus.OK) //
 				.put("id", id) //
 				.put("type", type) //
 				.put("location", AbstractResource.toUrl(AbstractResource.BASE_URL, uri, type, id));
@@ -141,28 +122,41 @@ public class PayloadHelper {
 				.withHeader(HEADER_OBJECT_ID, id);
 	}
 
+	public static Payload json(int httpStatus) {
+		return json(minimalBuilder(httpStatus), httpStatus);
+	}
+
 	public static <N extends JsonNode> Payload json(JsonBuilder<N> content) {
 		return json(content.build());
-	}
-
-	public static Payload json(JsonNode content) {
-		return json(content.toString());
-	}
-
-	public static Payload json(String content) {
-		return json(content, HttpStatus.OK);
 	}
 
 	public static <N extends JsonNode> Payload json(JsonBuilder<N> content, int httpStatus) {
 		return json(content.build(), httpStatus);
 	}
 
-	public static Payload json(JsonNode content, int httpStatus) {
-		return json(content.toString(), httpStatus);
+	public static Payload json(JsonNode content) {
+		return json(content, HttpStatus.OK);
 	}
 
-	public static Payload json(String content, int httpStatus) {
+	public static Payload json(JsonNode content, int httpStatus) {
+		if (content.isObject() && SpaceContext.get().debug())
+			((ObjectNode) content).set("debug", Debug.buildDebugObjectNode());
+
 		return new Payload(JSON_CONTENT_UTF8, content, httpStatus);
+	}
+
+	public static Payload json(RestStatus status, ShardOperationFailedException[] failures) {
+
+		if (status.getStatus() < 400)
+			return json(status.getStatus());
+
+		JsonBuilder<ObjectNode> builder = minimalBuilder(status.getStatus()).array("error");
+
+		for (ShardOperationFailedException failure : failures)
+			builder.object().put("type", failure.getClass().getName()).put("message", failure.reason())
+					.put("shardId", failure.shardId()).end();
+
+		return json(builder, status.getStatus());
 	}
 
 	public static byte[] toBytes(Object content) {
@@ -172,11 +166,18 @@ public class PayloadHelper {
 		if (content instanceof byte[])
 			return (byte[]) content;
 
+		if (content instanceof Payload)
+			return toBytes(((Payload) content).rawContent());
+
 		return content.toString().getBytes(Utils.UTF8);
 	}
 
 	public static boolean isJson(Payload payload) {
 		return payload.rawContentType() == null ? false//
 				: payload.rawContentType().startsWith(JSON_CONTENT);
+	}
+
+	public static JsonBuilder<ObjectNode> minimalBuilder(int status) {
+		return Json.objectBuilder().put("success", status < 400).put("status", status);
 	}
 }
