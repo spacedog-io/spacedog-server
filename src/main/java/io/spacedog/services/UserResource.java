@@ -158,7 +158,7 @@ public class UserResource extends AbstractResource {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 
 		// UpdateResponse response =
-		// Start.getElasticClient().prepareUpdate(account.backendId,
+		// Start.get().getElasticClient().prepareUpdate(account.backendId,
 		// UserResource.USER_TYPE, id)//
 		// .setScript(new Script(
 		// "ctx._source.remove('hashedPassword');ctx._source.passwordResetCode=code;",//
@@ -198,7 +198,8 @@ public class UserResource extends AbstractResource {
 		String password = Json.readJsonNode(body).asText();
 		UserUtils.checkPasswordValidity(password);
 
-		GetResponse getResponse = Start.getElasticClient().prepareGet(credentials.backendId(), USER_TYPE, id).get();
+		GetResponse getResponse = Start.get().getElasticClient().prepareGet(credentials.backendId(), USER_TYPE, id)
+				.get();
 
 		if (!getResponse.isExists())
 			throw new NotFoundException(credentials.backendId(), USER_TYPE, id);
@@ -237,7 +238,7 @@ public class UserResource extends AbstractResource {
 					.node(PASSWORD_RESET_CODE, NullNode.getInstance())//
 					.build();
 
-			UpdateResponse response = Start.getElasticClient()
+			UpdateResponse response = Start.get().getElasticClient()
 					.prepareUpdate(credentials.backendId(), UserResource.USER_TYPE, id).setDoc(update.toString()).get();
 
 			return PayloadHelper.saved(false, "/v1/user", response.getType(), response.getId(), response.getVersion());

@@ -42,7 +42,7 @@ public class AdminResource extends AbstractResource {
 		String accountMapping = Resources.toString(Resources.getResource("io/spacedog/services/account-mapping.json"),
 				Utils.UTF8);
 
-		IndicesAdminClient indices = Start.getElasticClient().admin().indices();
+		IndicesAdminClient indices = Start.get().getElasticClient().admin().indices();
 
 		if (!indices.prepareExists(ADMIN_INDEX).get().isExists()) {
 			indices.prepareCreate(ADMIN_INDEX).addMapping(ACCOUNT_TYPE, accountMapping).get();
@@ -61,7 +61,7 @@ public class AdminResource extends AbstractResource {
 
 		// checkAdminCredentialsOnly(context);
 		//
-		// SearchResponse response = Start.getElasticClient()
+		// SearchResponse response = Start.get().getElasticClient()
 		// .prepareSearch(SPACEDOG_INDEX).setTypes(ACCOUNT_TYPE)
 		// .setQuery(QueryBuilders.matchAllQuery()).get();
 		//
@@ -112,11 +112,11 @@ public class AdminResource extends AbstractResource {
 					String.format("backend id [%s] is not available", account.backendId));
 
 		byte[] accountBytes = Json.getMapper().writeValueAsBytes(account);
-		long version = Start.getElasticClient().prepareIndex(ADMIN_INDEX, ACCOUNT_TYPE).setSource(accountBytes).get()
-				.getVersion();
+		long version = Start.get().getElasticClient().prepareIndex(ADMIN_INDEX, ACCOUNT_TYPE).setSource(accountBytes)
+				.get().getVersion();
 
 		// backend index is named after the backend id
-		Start.getElasticClient().admin().indices().prepareCreate(account.backendId)
+		Start.get().getElasticClient().admin().indices().prepareCreate(account.backendId)
 				.addMapping(UserResource.USER_TYPE, UserResource.getDefaultUserMapping()).get();
 
 		ElasticHelper.get().refresh(true, ADMIN_INDEX);
@@ -134,7 +134,7 @@ public class AdminResource extends AbstractResource {
 	public Payload get(String backendId, Context context) throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = SpaceContext.checkAdminCredentialsFor(backendId);
 
-		GetResponse response = Start.getElasticClient()//
+		GetResponse response = Start.get().getElasticClient()//
 				.prepareGet(ADMIN_INDEX, ACCOUNT_TYPE, credentials.backendId()).get();
 
 		if (!response.isExists())
@@ -153,7 +153,7 @@ public class AdminResource extends AbstractResource {
 
 		ElasticHelper.get().refresh(true, ADMIN_INDEX);
 
-		DeleteResponse accountDeleteResp = Start.getElasticClient()
+		DeleteResponse accountDeleteResp = Start.get().getElasticClient()
 				.prepareDelete(ADMIN_INDEX, ACCOUNT_TYPE, credentials.backendId()).get();
 
 		if (!accountDeleteResp.isFound())
@@ -161,7 +161,7 @@ public class AdminResource extends AbstractResource {
 					"no account found for backend [%s] and admin user [%s]", credentials.backendId(),
 					credentials.name());
 
-		DeleteIndexResponse indexDeleteResp = Start.getElasticClient().admin().indices()
+		DeleteIndexResponse indexDeleteResp = Start.get().getElasticClient().admin().indices()
 				.prepareDelete(credentials.backendId()).get();
 
 		if (!indexDeleteResp.isAcknowledged())
@@ -184,7 +184,7 @@ public class AdminResource extends AbstractResource {
 	}
 
 	//
-	// singleton begins
+	// Singleton
 	//
 
 	private static AdminResource singleton = new AdminResource();

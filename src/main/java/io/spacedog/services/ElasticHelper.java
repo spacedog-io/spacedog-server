@@ -39,7 +39,7 @@ public class ElasticHelper {
 	//
 
 	public Optional<ObjectNode> getObject(String index, String type, String id) {
-		GetResponse response = Start.getElasticClient().prepareGet(index, type, id).get();
+		GetResponse response = Start.get().getElasticClient().prepareGet(index, type, id).get();
 
 		if (!response.isExists())
 			return Optional.empty();
@@ -68,7 +68,7 @@ public class ElasticHelper {
 						.put("updatedAt", now)//
 						.build());
 
-		return Start.getElasticClient().prepareIndex(index, type)//
+		return Start.get().getElasticClient().prepareIndex(index, type)//
 				.setSource(object.toString()).get();
 	}
 
@@ -88,7 +88,7 @@ public class ElasticHelper {
 		object.with("meta").put("updatedBy", updatedBy);
 		object.with("meta").put("updatedAt", DateTime.now().toString());
 
-		IndexRequestBuilder builder = Start.getElasticClient().prepareIndex(index, type, id)
+		IndexRequestBuilder builder = Start.get().getElasticClient().prepareIndex(index, type, id)
 				.setSource(object.toString());
 		if (version > 0)
 			builder.setVersion(version);
@@ -111,8 +111,8 @@ public class ElasticHelper {
 		object.with("meta").put("updatedBy", updatedBy);
 		object.with("meta").put("updatedAt", DateTime.now().toString());
 
-		return Start.getElasticClient().prepareIndex(index, type, id).setSource(object.toString()).setVersion(version)
-				.get();
+		return Start.get().getElasticClient().prepareIndex(index, type, id).setSource(object.toString())
+				.setVersion(version).get();
 	}
 
 	public UpdateResponse patchObject(String index, String type, String id, long version, ObjectNode object,
@@ -122,7 +122,8 @@ public class ElasticHelper {
 				.put("updatedBy", updatedBy)//
 				.put("updatedAt", DateTime.now().toString());
 
-		UpdateRequestBuilder update = Start.getElasticClient().prepareUpdate(index, type, id).setDoc(object.toString());
+		UpdateRequestBuilder update = Start.get().getElasticClient().prepareUpdate(index, type, id)
+				.setDoc(object.toString());
 
 		if (version > 0)
 			update.setVersion(version);
@@ -135,7 +136,8 @@ public class ElasticHelper {
 		if (Strings.isNullOrEmpty(query))
 			query = Json.objectBuilder().object("query").object("match_all").toString();
 
-		DeleteByQueryRequestBuilder setSource = Start.getElasticClient().prepareDeleteByQuery(index).setSource(query);
+		DeleteByQueryRequestBuilder setSource = Start.get().getElasticClient().prepareDeleteByQuery(index)
+				.setSource(query);
 
 		if (types != null)
 			setSource.setTypes(types);
@@ -154,7 +156,7 @@ public class ElasticHelper {
 			builder.add(FilterBuilders.termFilter(terms[i], terms[i + 1]));
 		}
 
-		SearchResponse response = Start.getElasticClient().prepareSearch(index).setTypes(type)
+		SearchResponse response = Start.get().getElasticClient().prepareSearch(index).setTypes(type)
 				.setQuery(QueryBuilders.filteredQuery(QueryBuilders.matchAllQuery(), builder)).get();
 
 		return response.getHits();
@@ -212,20 +214,20 @@ public class ElasticHelper {
 
 		public SearchResponse get() throws InterruptedException, ExecutionException {
 			searchRequest.source(sourceBuilder.query(QueryBuilders.filteredQuery(queryBuilder, filterBuilder)));
-			return Start.getElasticClient().search(searchRequest).get();
+			return Start.get().getElasticClient().search(searchRequest).get();
 		}
 	}
 
 	public void refresh(boolean refresh, String... indices) {
 		if (refresh) {
-			Start.getElasticClient().admin().indices().prepareRefresh(indices).get();
+			Start.get().getElasticClient().admin().indices().prepareRefresh(indices).get();
 		}
 	}
 
 	public ObjectNode getSchema(String index, String type)
 			throws NotFoundException, JsonProcessingException, IOException {
-		GetMappingsResponse resp = Start.getElasticClient().admin().indices().prepareGetMappings(index).addTypes(type)
-				.get();
+		GetMappingsResponse resp = Start.get().getElasticClient().admin().indices().prepareGetMappings(index)
+				.addTypes(type).get();
 
 		String source = Optional.ofNullable(resp.getMappings()).map(indexMap -> indexMap.get(index))
 				.map(typeMap -> typeMap.get(type)).orElseThrow(() -> new NotFoundException(index, type)).source()

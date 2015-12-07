@@ -140,7 +140,7 @@ public class DataResource extends AbstractResource {
 		// TODO useful for security?
 		ElasticHelper.get().getSchema(credentials.backendId(), type);
 
-		DeleteResponse response = Start.getElasticClient().prepareDelete(credentials.backendId(), type, id).get();
+		DeleteResponse response = Start.get().getElasticClient().prepareDelete(credentials.backendId(), type, id).get();
 
 		if (response.isFound())
 			return PayloadHelper.success();

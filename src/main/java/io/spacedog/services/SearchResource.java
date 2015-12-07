@@ -140,7 +140,7 @@ public class SearchResource extends AbstractResource {
 		}
 
 		request.extraSource(builder);
-		return extractResults(Start.getElasticClient().search(request).get(), context, credentials);
+		return extractResults(Start.get().getElasticClient().search(request).get(), context, credentials);
 	}
 
 	private ObjectNode extractResults(SearchResponse response, Context context, Credentials credentials)

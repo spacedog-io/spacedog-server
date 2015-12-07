@@ -8,12 +8,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
+
+import com.google.common.collect.Maps;
 
 import net.codestory.http.AbstractWebServer;
 import net.codestory.http.Request;
@@ -27,27 +30,70 @@ import net.codestory.http.websockets.WebSocketHandler;
 
 public class Start extends AbstractWebServer<Start> {
 
-	private static Node elasticNode;
-	private static Client elasticClient;
-	private static Start webServices;
+	public static class ProductionConfiguration {
 
-	private final static String[] LocalhostConf = { "/Users/davattias/dev/spacedog" };
+		private String homePath;
+		private String derFileName;
+		private String pemFileName;
+		private String crtFileName;
 
-	private final static String[] GoogleConf = { "/home/davattias/spacedog", //
-			"attias.space.certificate.191630.crt", //
-			"GandiStandardSSLCA.intermediate.pem", //
-			"attias.space.pkcs8.der" };
+		public ProductionConfiguration(String homePath) {
+			this(homePath, null, null, null);
+		}
 
-	private final static String[] OvhConf = { "/root/spacedog", //
-			"spacedog.io.certificate.210740.crt", //
-			"GandiStandardSSLCA.intermediate.pem", //
-			"spacedog.io.pkcs8.der" };
+		public ProductionConfiguration(String homePath, String crtFileName, String pemFileName, String derFileName) {
+			this.homePath = homePath;
+			this.crtFileName = crtFileName;
+			this.pemFileName = pemFileName;
+			this.derFileName = derFileName;
+		}
 
-	public static Node getElasticNode() {
+		public String getHomePath() {
+			return homePath;
+		}
+
+		public String getDerFileName() {
+			return derFileName;
+		}
+
+		public String getPemFileName() {
+			return pemFileName;
+		}
+
+		public String getCrtFileName() {
+			return crtFileName;
+		}
+
+		public boolean isSsl() {
+			return crtFileName != null;
+		}
+	}
+
+	private Node elasticNode;
+	private Client elasticClient;
+	private ProductionConfiguration configuration;
+
+	private static Map<String, ProductionConfiguration> configurations = Maps.newHashMap();
+
+	static {
+		configurations.put("Local", new ProductionConfiguration("/Users/davattias/dev/spacedog"));
+		configurations.put("AWS", new ProductionConfiguration("/home/ec2-user/spacedog"));
+		configurations.put("Google", //
+				new ProductionConfiguration("/home/davattias/spacedog", //
+						"attias.space.certificate.191630.crt", "GandiStandardSSLCA.intermediate.pem",
+						"attias.space.pkcs8.der"));
+		configurations.put("OVH", //
+				new ProductionConfiguration("/root/spacedog", //
+						"spacedog.io.certificate.210740.crt", "GandiStandardSSLCA.intermediate.pem",
+						"spacedog.io.pkcs8.der"));
+
+	}
+
+	public Node getElasticNode() {
 		return elasticNode;
 	}
 
-	public static Client getElasticClient() {
+	public Client getElasticClient() {
 		return elasticClient;
 	}
 
@@ -65,22 +111,12 @@ public class Start extends AbstractWebServer<Start> {
 	}
 
 	public static void main(String[] args) {
+
 		try {
-			boolean ssl = true;
-			String[] conf = OvhConf;
-
-			if (!Files.isDirectory(Paths.get(conf[0]))) {
-
-				conf = GoogleConf;
-
-				if (!Files.isDirectory(Paths.get(conf[0]))) {
-					conf = LocalhostConf;
-					ssl = false;
-				}
-			}
-
-			startElastic(conf);
-			startFluent(ssl, conf);
+			singleton = new Start();
+			singleton.chooseProductionConfiguration();
+			singleton.startElastic();
+			singleton.startFluent();
 
 		} catch (Throwable t) {
 			t.printStackTrace();
@@ -88,7 +124,17 @@ public class Start extends AbstractWebServer<Start> {
 		}
 	}
 
-	private static void startElastic(String[] conf) throws InterruptedException, ExecutionException, IOException {
+	private void chooseProductionConfiguration() {
+		for (ProductionConfiguration conf : configurations.values()) {
+			if (Files.isDirectory(Paths.get(conf.getHomePath()))) {
+				configuration = conf;
+				return;
+			}
+		}
+		configuration = configurations.get("Local");
+	}
+
+	private void startElastic() throws InterruptedException, ExecutionException, IOException {
 
 		elasticNode = NodeBuilder.nodeBuilder()//
 				.local(true)//
@@ -96,7 +142,7 @@ public class Start extends AbstractWebServer<Start> {
 				.clusterName("spacedog-elastic-cluster")//
 				.settings(ImmutableSettings.builder()//
 						.put("path.data", //
-								Paths.get(conf[0]).resolve("data").toAbsolutePath().toString())
+								Paths.get(configuration.getHomePath()).resolve("data").toAbsolutePath().toString())
 						.build())//
 				.node();
 
@@ -105,32 +151,48 @@ public class Start extends AbstractWebServer<Start> {
 		AdminResource.get().initSpacedogIndex();
 	}
 
-	private static void startFluent(boolean ssl, String[] conf) throws IOException {
+	private void startFluent() throws IOException {
 
-		webServices = new Start().configure(Start::configure);
+		singleton.configure(Start::configure);
 
-		if (ssl) {
+		if (configuration.isSsl()) {
 			// Force Fluent HTTP to production mode
 			System.setProperty("PROD_MODE", "true");
 
-			Path sslPath = Paths.get(conf[0]).resolve("ssl");
-			webServices.startSSL(443, Arrays.asList(sslPath.resolve(conf[1]), sslPath.resolve(conf[2])),
-					sslPath.resolve(conf[3]));
+			Path sslPath = Paths.get(configuration.getHomePath()).resolve("ssl");
+			singleton.startSSL(443,
+					Arrays.asList(sslPath.resolve(configuration.getCrtFileName()),
+							sslPath.resolve(configuration.getPemFileName())),
+					sslPath.resolve(configuration.getDerFileName()));
 
 			HttpPermanentRedirect.start(80, "https://spacedog.io");
 
 		} else {
-			webServices.start(8080);
+			singleton.start(8080);
 			HttpPermanentRedirect.start(9090, "http://127.0.0.1:8080");
 		}
 	}
 
 	public static Payload executeInternalRequest(Request request, Response response) throws Exception {
-		return webServices.routesProvider.get().apply(request, response);
+		return singleton.routesProvider.get().apply(request, response);
 	}
 
 	@Override
 	protected HttpServerWrapper createHttpServer(Handler httpHandler, WebSocketHandler webSocketHandler) {
 		return new SimpleServerWrapper(httpHandler, webSocketHandler);
 	}
+
+	//
+	// Singleton
+	//
+
+	private static Start singleton;
+
+	static Start get() {
+		return singleton;
+	}
+
+	private Start() {
+	}
+
 }

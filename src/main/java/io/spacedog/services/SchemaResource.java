@@ -36,7 +36,7 @@ public class SchemaResource extends AbstractResource {
 	@Get("/")
 	public Payload getAll(Context context) throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = SpaceContext.checkCredentials();
-		GetMappingsResponse resp = Start.getElasticClient().admin().indices()
+		GetMappingsResponse resp = Start.get().getElasticClient().admin().indices()
 				.prepareGetMappings(credentials.backendId()).get();
 
 		JsonMerger jsonMerger = Json.merger();
@@ -73,7 +73,7 @@ public class SchemaResource extends AbstractResource {
 		String elasticMapping = SchemaTranslator.translate(type, schema).toString();
 		PutMappingRequest putMappingRequest = new PutMappingRequest(credentials.backendId()).type(type)
 				.source(elasticMapping);
-		Start.getElasticClient().admin().indices().putMapping(putMappingRequest).get();
+		Start.get().getElasticClient().admin().indices().putMapping(putMappingRequest).get();
 		return PayloadHelper.saved(true, "/v1", "schema", type);
 	}
 
@@ -83,7 +83,7 @@ public class SchemaResource extends AbstractResource {
 			throws JsonParseException, JsonMappingException, IOException {
 		try {
 			Credentials credentials = SpaceContext.checkAdminCredentials();
-			Start.getElasticClient().admin().indices().prepareDeleteMapping(credentials.backendId()).setType(type)
+			Start.get().getElasticClient().admin().indices().prepareDeleteMapping(credentials.backendId()).setType(type)
 					.get();
 		} catch (TypeMissingException exception) {
 			// ignored
