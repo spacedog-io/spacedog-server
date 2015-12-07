@@ -4,6 +4,6 @@ if [ ! -f pid ]; then
         exit
 fi
 
-kill $(cat pid)
+sudo kill $(cat pid)
 rm pid
 echo "Stopping SpaceDog ..."
