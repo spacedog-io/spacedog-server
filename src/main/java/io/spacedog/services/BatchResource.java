@@ -76,8 +76,7 @@ public class BatchResource extends AbstractResource {
 							Json.checkObject(requests.get(i)), context);
 
 					try {
-						payload = Start.executeInternalRequest(//
-								requestWrapper, null);
+						payload = Start.get().executeRequest(requestWrapper, null);
 					} catch (Throwable t) {
 						payload = PayloadHelper.error(t);
 					}

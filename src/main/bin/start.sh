@@ -1,10 +1,10 @@
 #! /bin/bash
 if [ -f pid ]; then
-        echo "A pid file already exists"
+        echo "Error: pid file already exists!"
         exit
 fi
 
-sudo java -d64 -cp "libs/*" io.spacedog.services.Start >log 2>&1 &
+sudo java -d64 -cp "libs/*" io.spacedog.services.Start $HOME &>log &
 echo $! > pid
 
 echo "SpaceDog is starting ..."
