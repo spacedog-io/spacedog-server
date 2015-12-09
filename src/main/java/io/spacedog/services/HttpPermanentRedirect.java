@@ -37,7 +37,8 @@ public class HttpPermanentRedirect implements Container {
 	@Override
 	public void handle(Request request, Response response) {
 		try {
-			response.setValue("Location", destinationHostname + request.getPath());
+			// be careful to pass the entire request line with parameters
+			response.setValue("Location", destinationHostname + request.getTarget());
 			response.setStatus(Status.MOVED_PERMANENTLY);
 			response.setContentLength(0);
 			response.close();
