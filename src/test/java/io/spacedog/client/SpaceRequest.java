@@ -18,11 +18,10 @@ import io.spacedog.services.SpaceContext;
 
 public class SpaceRequest {
 
-	static String backendDomain = "http://localhost:8080";
-	// static String backendDomain = "https://spacedog.io";
-
+	private static String host;
+	private static int httpPort;
+	private static int sslPort;
 	private HttpRequest request;
-
 	private JsonNode body;
 
 	public SpaceRequest(HttpRequest request) {
@@ -30,37 +29,77 @@ public class SpaceRequest {
 	}
 
 	public static SpaceRequest get(String uri) {
-		String url = computeUrl(uri);
+		return get(true, uri);
+	}
+
+	public static SpaceRequest get(boolean ssl, String uri) {
+		String url = ssl ? computeSslUrl(uri) : computeHttpUrl(uri);
 		GetRequest request = Unirest.get(url);
 		return new SpaceRequest(request);
 	}
 
 	public static SpaceRequest post(String uri) {
-		String url = computeUrl(uri);
+		return post(true, uri);
+	}
+
+	public static SpaceRequest post(boolean ssl, String uri) {
+		String url = ssl ? computeSslUrl(uri) : computeHttpUrl(uri);
 		HttpRequestWithBody request = Unirest.post(url);
 		return new SpaceRequest(request);
 	}
 
 	public static SpaceRequest put(String uri) {
-		String url = computeUrl(uri);
+		return put(true, uri);
+	}
+
+	public static SpaceRequest put(boolean ssl, String uri) {
+		String url = ssl ? computeSslUrl(uri) : computeHttpUrl(uri);
 		HttpRequestWithBody request = Unirest.put(url);
 		return new SpaceRequest(request);
 	}
 
 	public static SpaceRequest delete(String uri) {
-		String url = computeUrl(uri);
+		return delete(true, uri);
+	}
+
+	public static SpaceRequest delete(boolean ssl, String uri) {
+		String url = ssl ? computeSslUrl(uri) : computeHttpUrl(uri);
 		HttpRequestWithBody request = Unirest.delete(url);
 		return new SpaceRequest(request);
 	}
 
 	public static SpaceRequest options(String uri) {
-		String url = computeUrl(uri);
+		return options(true, uri);
+	}
+
+	public static SpaceRequest options(boolean ssl, String uri) {
+		String url = ssl ? computeSslUrl(uri) : computeHttpUrl(uri);
 		HttpRequestWithBody request = Unirest.options(url);
 		return new SpaceRequest(request);
 	}
 
-	private static String computeUrl(String uri) {
-		return new StringBuilder(SpaceRequest.backendDomain).append(uri).toString();
+	public static void setTargetHostAndPorts(String host, int httpPort, int httpsPort) {
+		SpaceRequest.host = host;
+		SpaceRequest.httpPort = httpPort;
+		SpaceRequest.sslPort = httpsPort;
+	}
+
+	private static String computeSslUrl(String uri) {
+		if (host == null)
+			host = System.getProperty("host", "localhost");
+		if (sslPort == 0)
+			sslPort = Integer.valueOf(System.getProperty("sslPort", "8080"));
+		return sslPort == 443 ? "https://" + host + uri //
+				: "http://" + host + ':' + sslPort + uri;
+	}
+
+	private static String computeHttpUrl(String uri) {
+		if (host == null)
+			host = System.getProperty("host", "localhost");
+		if (httpPort == 0)
+			httpPort = Integer.valueOf(System.getProperty("httpPort", "9090"));
+		return httpPort == 80 ? "http://" + host + uri //
+				: "http://" + host + ':' + httpPort + uri;
 	}
 
 	public SpaceRequest backendKey(String backendKey) {

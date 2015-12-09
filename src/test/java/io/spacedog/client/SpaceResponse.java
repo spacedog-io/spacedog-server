@@ -23,7 +23,7 @@ import io.spacedog.services.SpaceContext;
 public class SpaceResponse {
 
 	private HttpRequest httpRequest;
-	private HttpResponse<String> response;
+	private HttpResponse<String> httpResponse;
 	private DateTime before;
 	private JsonNode jsonResponseContent;
 
@@ -33,11 +33,11 @@ public class SpaceResponse {
 		this.httpRequest = request;
 		this.before = DateTime.now();
 
-		response = httpRequest.asString();
+		httpResponse = httpRequest.asString();
 
 		System.out.println();
 		System.out.println(String.format("%s %s => %s => %s", httpRequest.getHttpMethod(), httpRequest.getUrl(),
-				response.getStatus(), response.getStatusText()));
+				httpResponse.getStatus(), httpResponse.getStatusText()));
 
 		httpRequest.getHeaders().forEach((key, value) -> printHeader(key, value));
 
@@ -45,16 +45,16 @@ public class SpaceResponse {
 			System.out.println(String.format("Request body: %s",
 					Json.getMapper().writerWithDefaultPrettyPrinter().writeValueAsString(jsonRequestContent)));
 
-		String responseBody = response.getBody();
+		String responseBody = httpResponse.getBody();
 		if (Json.isJson(responseBody))
 			jsonResponseContent = Json.readJsonNode(responseBody);
 
-		response.getHeaders().forEach((key, value) -> System.out.println(String.format("=> %s: %s", key, value)));
+		httpResponse.getHeaders().forEach((key, value) -> System.out.println(String.format("=> %s: %s", key, value)));
 
 		String responseContent = isJson()
 				? Json.getMapper().writerWithDefaultPrettyPrinter().writeValueAsString(jsonResponseContent)
-				: response.getBody().length() < 550 ? response.getBody()
-						: response.getBody().substring(0, 500) + " ...";
+				: httpResponse.getBody().length() < 550 ? httpResponse.getBody()
+						: httpResponse.getBody().substring(0, 500) + " ...";
 
 		System.out.println(String.format("=> Response body: %s", responseContent));
 	}
@@ -93,10 +93,14 @@ public class SpaceResponse {
 		return (ArrayNode) jsonResponseContent;
 	}
 
+	public HttpRequest httpRequest() {
+		return httpRequest;
+	}
+
 	public HttpResponse<String> httpResponse() {
-		if (response == null)
+		if (httpResponse == null)
 			throw new IllegalStateException("no response yet");
-		return response;
+		return httpResponse;
 	}
 
 	public JsonNode getFromJson(String jsonPath) {
