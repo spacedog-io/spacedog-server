@@ -34,7 +34,7 @@ public class DataResource extends AbstractResource {
 
 	@Get("")
 	@Get("/")
-	public Payload getAllTypes(Context context)
+	public Payload getAll(Context context)
 			throws NotFoundException, JsonProcessingException, InterruptedException, ExecutionException, IOException {
 		Credentials credentials = SpaceContext.checkCredentials();
 		refreshIfNecessary(credentials.backendId(), context, false);
@@ -45,13 +45,13 @@ public class DataResource extends AbstractResource {
 
 	@Delete("")
 	@Delete("/")
-	public Payload deleteAllTypes(Context context) throws JsonParseException, JsonMappingException, IOException {
+	public Payload deleteAll(Context context) throws JsonParseException, JsonMappingException, IOException {
 		return SearchResource.get().deleteAllTypes(null, context);
 	}
 
 	@Get("/:type")
 	@Get("/:type/")
-	public Payload getAllForType(String type, Context context)
+	public Payload getAll(String type, Context context)
 			throws NotFoundException, JsonProcessingException, InterruptedException, ExecutionException, IOException {
 		Credentials credentials = SpaceContext.checkCredentials();
 		refreshIfNecessary(credentials.backendId(), context, false);
@@ -62,7 +62,7 @@ public class DataResource extends AbstractResource {
 
 	@Post("/:type")
 	@Post("/:type/")
-	public Payload create(String type, String body, Context context)
+	public Payload post(String type, String body, Context context)
 			throws NotFoundException, JsonProcessingException, IOException {
 		Credentials credentials = SpaceContext.checkCredentials();
 
@@ -78,7 +78,7 @@ public class DataResource extends AbstractResource {
 
 	@Delete("/:type")
 	@Delete("/:type/")
-	public Payload deleteForType(String type, Context context)
+	public Payload deleteAll(String type, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
 		return SearchResource.get().deleteSearchForType(type, null, context);
 	}
@@ -102,7 +102,7 @@ public class DataResource extends AbstractResource {
 	}
 
 	@Put("/:type/:id")
-	public Payload update(String type, String id, String body, Context context)
+	public Payload put(String type, String id, String body, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = SpaceContext.checkCredentials();
 

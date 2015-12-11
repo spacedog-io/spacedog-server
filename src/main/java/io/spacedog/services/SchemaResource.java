@@ -65,7 +65,7 @@ public class SchemaResource extends AbstractResource {
 	@Put("/:type/")
 	@Post("/:type")
 	@Post("/:type/")
-	public Payload upsertSchema(String type, String newSchemaAsString, Context context)
+	public Payload putSchema(String type, String newSchemaAsString, Context context)
 			throws InterruptedException, ExecutionException, JsonParseException, JsonMappingException, IOException {
 
 		Credentials credentials = SpaceContext.checkAdminCredentials();

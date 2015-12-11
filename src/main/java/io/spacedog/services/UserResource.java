@@ -81,14 +81,14 @@ public class UserResource extends AbstractResource {
 	@Get("/user/")
 	public Payload getAll(Context context)
 			throws NotFoundException, JsonProcessingException, InterruptedException, ExecutionException, IOException {
-		return DataResource.get().getAllForType(USER_TYPE, context);
+		return DataResource.get().getAll(USER_TYPE, context);
 	}
 
 	@Delete("/user")
 	@Delete("/user/")
 	public Payload deleteAll(Context context)
 			throws NotFoundException, JsonProcessingException, InterruptedException, ExecutionException, IOException {
-		return DataResource.get().deleteForType(USER_TYPE, context);
+		return DataResource.get().deleteAll(USER_TYPE, context);
 	}
 
 	@Post("/user")
@@ -139,9 +139,9 @@ public class UserResource extends AbstractResource {
 
 	@Put("/user/:id")
 	@Put("/user/:id/")
-	public Payload update(String id, String jsonBody, Context context)
+	public Payload put(String id, String jsonBody, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
-		return DataResource.get().update(USER_TYPE, id, jsonBody, context);
+		return DataResource.get().put(USER_TYPE, id, jsonBody, context);
 	}
 
 	@Delete("/user/:id")
@@ -185,7 +185,7 @@ public class UserResource extends AbstractResource {
 
 	@Post("/user/:id/password")
 	@Post("/user/:id/password")
-	public Payload initPassword(String id, String body, Context context)
+	public Payload postPassword(String id, String body, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = SpaceContext.checkCredentials();
 
@@ -223,7 +223,7 @@ public class UserResource extends AbstractResource {
 
 	@Put("/user/:id/password")
 	@Put("/user/:id/password")
-	public Payload updatePassword(String id, String body, Context context)
+	public Payload putPassword(String id, String body, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = SpaceContext.checkCredentials();
 

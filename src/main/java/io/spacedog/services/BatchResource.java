@@ -38,7 +38,7 @@ public class BatchResource extends AbstractResource {
 
 	@Post("")
 	@Post("/")
-	public Payload execute(String body, Context context) throws Exception {
+	public Payload post(String body, Context context) throws Exception {
 
 		Debug.resetBatchDebug();
 
