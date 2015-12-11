@@ -1,9 +1,19 @@
-#! /bin/bash
-if [ ! -f pid ]; then
-        echo "No pid file found!"
-        exit
+#!/bin/bash
+
+if [ ! -f pid ]
+then
+	echo "No pid file found!"
+	exit -1
 fi
 
-sudo kill $(cat pid)
-rm pid
 echo "Stopping SpaceDog ..."
+kill $(cat pid)
+
+if [ $? -eq 0 ]
+then
+	rm pid
+	echo "Done."
+else
+	echo "Error."
+	exit -1
+fi

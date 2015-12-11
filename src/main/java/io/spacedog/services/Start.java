@@ -28,13 +28,10 @@ import net.codestory.http.websockets.WebSocketHandler;
 
 public class Start {
 
-	private static final String DEFAULT_SPACEDOG_HOME = "/home/spacedog";
-	private static final String DEFAULT_SPACEDOG_PROPERTIES_FILE = "/etc/spacedog.properties";
-
 	private Node elasticNode;
 	private Client elasticClient;
 	private MyFluentServer fluent;
-	private Properties configuration = new Properties();
+	private Configuration config;
 
 	public Node getElasticNode() {
 		return elasticNode;
@@ -44,52 +41,27 @@ public class Start {
 		return elasticClient;
 	}
 
-	public Path getSpaceDogHomePath() {
-		String path = configuration.getProperty("spacedog.home");
-		return path == null ? Paths.get(DEFAULT_SPACEDOG_HOME) : Paths.get(path);
-	}
-
-	public Path getElasticDataPath() {
-		String path = configuration.getProperty("spacedog.elastic.data");
-		return path == null ? //
-				getSpaceDogHomePath().resolve("data") : Paths.get(path);
-	}
-
-	public Path getDerPath() {
-		String path = configuration.getProperty("spacedog.ssl.der");
-		return path == null ? //
-				getSpaceDogHomePath().resolve("ssl/spacedog.io.pkcs8.der") : Paths.get(path);
-	}
-
-	public Path getPemPath() {
-		String path = configuration.getProperty("spacedog.ssl.pem");
-		return path == null ? //
-				getSpaceDogHomePath().resolve("ssl/GandiStandardSSLCA.intermediate.pem") : Paths.get(path);
-	}
-
-	public Path getCrtPath() {
-		String path = configuration.getProperty("spacedog.ssl.crt");
-		return path == null ? //
-				getSpaceDogHomePath().resolve("ssl/spacedog.io.certificate.210740.crt") : Paths.get(path);
-	}
-
-	public boolean isSsl() {
-		return Files.isReadable(getCrtPath());
-	}
-
 	public static void main(String[] args) {
 		try {
 			singleton = new Start();
-			singleton.startElastic();
+			singleton.startLocalElastic();
 			singleton.startFluent();
 
 		} catch (Throwable t) {
 			t.printStackTrace();
+			if (singleton != null) {
+				if (singleton.fluent != null)
+					singleton.elasticClient.close();
+				if (singleton.elasticClient != null)
+					singleton.elasticClient.close();
+				if (singleton.elasticNode != null)
+					singleton.elasticClient.close();
+			}
 			System.exit(-1);
 		}
 	}
 
-	private void startElastic() throws InterruptedException, ExecutionException, IOException {
+	private void startLocalElastic() throws InterruptedException, ExecutionException, IOException {
 
 		elasticNode = NodeBuilder.nodeBuilder()//
 				.local(true)//
@@ -97,7 +69,7 @@ public class Start {
 				.clusterName("spacedog-elastic-cluster")//
 				.settings(ImmutableSettings.builder()//
 						.put("path.data", //
-								getElasticDataPath().toAbsolutePath().toString())
+								config.getElasticDataPath().toAbsolutePath().toString())
 						.build())//
 				.node();
 
@@ -110,13 +82,13 @@ public class Start {
 		fluent = new MyFluentServer();
 		fluent.configure(Start::configure);
 
-		if (isSsl()) {
-			fluent.startSSL(443, Arrays.asList(getCrtPath(), getPemPath()), getDerPath());
-			HttpPermanentRedirect.start(80, "https://spacedog.io");
-		} else {
-			fluent.start(8080);
-			HttpPermanentRedirect.start(9090, "http://127.0.0.1:8080");
-		}
+		if (config.isSsl()) {
+			fluent.startSSL(config.getMainPort(), Arrays.asList(config.getCrtFilePath(), //
+					config.getPemFilePath()), config.getDerFilePath());
+		} else
+			fluent.start(config.getMainPort());
+
+		HttpPermanentRedirect.start(config.getRedirectPort(), config.getUrl());
 	}
 
 	private static void configure(Routes routes) {
@@ -159,31 +131,107 @@ public class Start {
 	}
 
 	private Start() throws IOException {
-		Path confPath = Paths.get(DEFAULT_SPACEDOG_PROPERTIES_FILE);
+		this.config = new Configuration();
+	}
 
-		if (Files.isReadable(confPath)) {
-			System.out.println("[SpaceDog] configuration file = " + confPath);
-			configuration.load(Files.newInputStream(confPath));
+	//
+	// Configuration
+	//
+
+	public static class Configuration {
+
+		private Properties configuration = new Properties();
+
+		public Configuration() throws IOException {
+			Path confPath = getConfigurationFilePath();
+			if (Files.isReadable(confPath)) {
+				System.out.println("[SpaceDog] configuration file = " + confPath);
+				configuration.load(Files.newInputStream(confPath));
+			}
+
+			if (!Files.isDirectory(getHomePath()))
+				throw new RuntimeException(String.format("SpaceDog home path not a directory [%s]", //
+						getHomePath()));
+
+			if (!Files.isDirectory(getElasticDataPath()))
+				throw new RuntimeException(String.format("SpaceDog data path not a directory [%s]", //
+						getElasticDataPath()));
+
+			System.out.println("[SpaceDog] url = " + getUrl());
+			System.out.println("[SpaceDog] main port = " + getMainPort());
+			System.out.println("[SpaceDog] redirect port = " + getRedirectPort());
+			System.out.println("[SpaceDog] home path = " + getHomePath());
+			System.out.println("[SpaceDog] data path = " + getElasticDataPath());
+			System.out.println("[SpaceDog] production = " + isProduction());
+
+			if (isProduction()) {
+				// Force Fluent HTTP to production mode
+				System.setProperty("PROD_MODE", "true");
+			}
+
+			if (isSsl()) {
+				System.out.println("[SpaceDog] .crt file = " + getCrtFilePath());
+				System.out.println("[SpaceDog] .pem file = " + getPemFilePath());
+				System.out.println("[SpaceDog] .der file = " + getDerFilePath());
+			}
 		}
 
-		if (!Files.isDirectory(getSpaceDogHomePath()))
-			throw new RuntimeException(String.format("SpaceDog home path not a directory [%s]", //
-					getSpaceDogHomePath()));
+		public Path getHomePath() {
+			String path = configuration.getProperty("spacedog.home.path");
+			return path == null //
+					? Paths.get(System.getProperty("user.home"), "spacedog")//
+					: Paths.get(path);
+		}
 
-		if (!Files.isDirectory(getElasticDataPath()))
-			throw new RuntimeException(String.format("SpaceDog data path not a directory [%s]", //
-					getElasticDataPath()));
+		public Path getConfigurationFilePath() {
+			String path = System.getProperty("spacedog.configuration.file");
+			return path == null //
+					? getHomePath().resolve("spacedog.properties")//
+					: Paths.get(path);
+		}
 
-		System.out.println("[SpaceDog] spacedog path = " + getSpaceDogHomePath());
-		System.out.println("[SpaceDog] data path = " + getElasticDataPath());
+		public String getUrl() {
+			return configuration.getProperty("spacedog.url", "https://spacedog.io");
+		}
 
-		if (isSsl()) {
-			// Force Fluent HTTP to production mode
-			System.setProperty("PROD_MODE", "true");
+		public int getMainPort() {
+			return Integer.valueOf(configuration.getProperty("spacedog.port.main", "4444"));
+		}
 
-			System.out.println("[SpaceDog] .crt file = " + getCrtPath());
-			System.out.println("[SpaceDog] .pem file = " + getPemPath());
-			System.out.println("[SpaceDog] .der file = " + getDerPath());
+		public int getRedirectPort() {
+			return Integer.valueOf(configuration.getProperty("spacedog.port.redirect", "8888"));
+		}
+
+		public Path getElasticDataPath() {
+			String path = configuration.getProperty("spacedog.data.path");
+			return path == null ? //
+					getHomePath().resolve("data") : Paths.get(path);
+		}
+
+		public Path getDerFilePath() {
+			String path = configuration.getProperty("spacedog.ssl.der.file");
+			return path == null ? //
+					getHomePath().resolve("ssl/spacedog.io.pkcs8.der") : Paths.get(path);
+		}
+
+		public Path getPemFilePath() {
+			String path = configuration.getProperty("spacedog.ssl.pem.file");
+			return path == null ? //
+					getHomePath().resolve("ssl/GandiStandardSSLCA.pem") : Paths.get(path);
+		}
+
+		public Path getCrtFilePath() {
+			String path = configuration.getProperty("spacedog.ssl.crt.file");
+			return path == null ? //
+					getHomePath().resolve("ssl/spacedog.io.certificate.crt") : Paths.get(path);
+		}
+
+		public boolean isProduction() {
+			return Boolean.valueOf(configuration.getProperty("spacedog.production", "false"));
+		}
+
+		public boolean isSsl() {
+			return Files.isReadable(getCrtFilePath());
 		}
 	}
 }

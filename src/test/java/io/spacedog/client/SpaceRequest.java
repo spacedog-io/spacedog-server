@@ -19,8 +19,10 @@ import io.spacedog.services.SpaceContext;
 public class SpaceRequest {
 
 	private static String host;
-	private static int httpPort;
-	private static int sslPort;
+	private static Integer mainPort;
+	private static Integer optionalPort;
+	private static Boolean ssl;
+
 	private HttpRequest request;
 	private JsonNode body;
 
@@ -33,7 +35,7 @@ public class SpaceRequest {
 	}
 
 	public static SpaceRequest get(boolean ssl, String uri) {
-		String url = ssl ? computeSslUrl(uri) : computeHttpUrl(uri);
+		String url = ssl ? computeMainUrl(uri) : computeOptionalUrl(uri);
 		GetRequest request = Unirest.get(url);
 		return new SpaceRequest(request);
 	}
@@ -43,7 +45,7 @@ public class SpaceRequest {
 	}
 
 	public static SpaceRequest post(boolean ssl, String uri) {
-		String url = ssl ? computeSslUrl(uri) : computeHttpUrl(uri);
+		String url = ssl ? computeMainUrl(uri) : computeOptionalUrl(uri);
 		HttpRequestWithBody request = Unirest.post(url);
 		return new SpaceRequest(request);
 	}
@@ -53,7 +55,7 @@ public class SpaceRequest {
 	}
 
 	public static SpaceRequest put(boolean ssl, String uri) {
-		String url = ssl ? computeSslUrl(uri) : computeHttpUrl(uri);
+		String url = ssl ? computeMainUrl(uri) : computeOptionalUrl(uri);
 		HttpRequestWithBody request = Unirest.put(url);
 		return new SpaceRequest(request);
 	}
@@ -63,7 +65,7 @@ public class SpaceRequest {
 	}
 
 	public static SpaceRequest delete(boolean ssl, String uri) {
-		String url = ssl ? computeSslUrl(uri) : computeHttpUrl(uri);
+		String url = ssl ? computeMainUrl(uri) : computeOptionalUrl(uri);
 		HttpRequestWithBody request = Unirest.delete(url);
 		return new SpaceRequest(request);
 	}
@@ -73,33 +75,33 @@ public class SpaceRequest {
 	}
 
 	public static SpaceRequest options(boolean ssl, String uri) {
-		String url = ssl ? computeSslUrl(uri) : computeHttpUrl(uri);
+		String url = ssl ? computeMainUrl(uri) : computeOptionalUrl(uri);
 		HttpRequestWithBody request = Unirest.options(url);
 		return new SpaceRequest(request);
 	}
 
-	public static void setTargetHostAndPorts(String host, int httpPort, int httpsPort) {
+	public static void setTargetHostAndPorts(String host, int httpPort, int sslPort) {
 		SpaceRequest.host = host;
-		SpaceRequest.httpPort = httpPort;
-		SpaceRequest.sslPort = httpsPort;
+		SpaceRequest.optionalPort = httpPort;
+		SpaceRequest.mainPort = sslPort;
 	}
 
-	private static String computeSslUrl(String uri) {
+	private static String computeMainUrl(String uri) {
 		if (host == null)
-			host = System.getProperty("host", "localhost");
-		if (sslPort == 0)
-			sslPort = Integer.valueOf(System.getProperty("sslPort", "8080"));
-		return sslPort == 443 ? "https://" + host + uri //
-				: "http://" + host + ':' + sslPort + uri;
+			host = System.getProperty("host", "127.0.0.1");
+		if (mainPort == null)
+			mainPort = Integer.valueOf(System.getProperty("mainPort", "4444"));
+		if (ssl == null)
+			ssl = Boolean.valueOf(System.getProperty("ssl", "false"));
+		return (ssl ? "https://" : "http://") + host + (mainPort == 443 ? "" : ":" + mainPort.intValue()) + uri;
 	}
 
-	private static String computeHttpUrl(String uri) {
+	private static String computeOptionalUrl(String uri) {
 		if (host == null)
 			host = System.getProperty("host", "localhost");
-		if (httpPort == 0)
-			httpPort = Integer.valueOf(System.getProperty("httpPort", "9090"));
-		return httpPort == 80 ? "http://" + host + uri //
-				: "http://" + host + ':' + httpPort + uri;
+		if (optionalPort == null)
+			optionalPort = Integer.valueOf(System.getProperty("optionalPort", "8888"));
+		return "http://" + host + (optionalPort == 80 ? "" : ":" + optionalPort.intValue()) + uri;
 	}
 
 	public SpaceRequest backendKey(String backendKey) {
