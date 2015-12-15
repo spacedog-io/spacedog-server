@@ -5,7 +5,7 @@
 
 	<groupId>io.spacedog</groupId>
 	<artifactId>services</artifactId>
-	<version>0.4.1-SNAPCHOT</version>
+	<version>0.4.1</version>
 	<packaging>jar</packaging>
 
 	<name>SpaceDog Web Services</name>
@@ -191,8 +191,7 @@
 		<dependency>
 			<groupId>com.mashape.unirest</groupId>
 			<artifactId>unirest-java</artifactId>
-			<version>1.4.5</version>
-			<scope>test</scope>
+			<version>1.4.7</version>
 		</dependency>
 		<dependency>
 			<groupId>com.amazonaws</groupId>
