@@ -173,9 +173,10 @@ public class SpaceContext {
 
 			if (user.isPresent()) {
 				String providedPassword = UserUtils.hashPassword(tokens.get()[1]);
-				JsonNode expectedPassword = user.get().get("hashedPassword");
+				JsonNode expectedPassword = user.get().get(UserResource.HASHED_PASSWORD);
 				if (!Json.isNull(expectedPassword) && providedPassword.equals(expectedPassword.asText()))
-					return Credentials.fromUser(backendId, tokens.get()[0]);
+					return Credentials.fromUser(backendId, tokens.get()[0],
+							user.get().get(UserResource.EMAIL).asText());
 			}
 
 			throw new AuthenticationException("invalid username or password");
@@ -206,7 +207,7 @@ public class SpaceContext {
 						String.format("more than one admin user with username [%s]", tokens.get()[0]));
 
 			Account account = Json.getMapper().readValue(accountHits.getAt(0).getSourceAsString(), Account.class);
-			return Credentials.fromAdmin(account.backendId, account.username, account.backendKey);
+			return Credentials.fromAdmin(account.backendId, account.username, account.email, account.backendKey);
 
 		} else
 			throw new AuthenticationException("no 'Authorization' header found");

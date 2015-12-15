@@ -41,8 +41,11 @@ public class SpaceResponse {
 
 		httpRequest.getHeaders().forEach((key, value) -> printHeader(key, value));
 
+		if (request.getBody() != null)
+			System.out.println(request.getBody().getEntity().getContentType());
+
 		if (jsonRequestContent != null)
-			System.out.println(String.format("Request body: %s",
+			System.out.println(String.format("Request content: %s",
 					Json.getMapper().writerWithDefaultPrettyPrinter().writeValueAsString(jsonRequestContent)));
 
 		String responseBody = httpResponse.getBody();

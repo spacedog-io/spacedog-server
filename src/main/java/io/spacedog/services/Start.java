@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
@@ -39,6 +40,10 @@ public class Start {
 
 	public Client getElasticClient() {
 		return elasticClient;
+	}
+
+	public Configuration configuration() {
+		return config;
 	}
 
 	public static void main(String[] args) {
@@ -97,6 +102,7 @@ public class Start {
 				.add(UserResource.get())//
 				.add(AdminResource.get())//
 				.add(BatchResource.get())//
+				.add(MailResource.get())//
 				.add(SearchResource.get());
 
 		routes.filter(new CrossOriginFilter())//
@@ -232,6 +238,14 @@ public class Start {
 
 		public boolean isSsl() {
 			return Files.isReadable(getCrtFilePath());
+		}
+
+		public Optional<String> getMailGunKey() {
+			return Optional.ofNullable(configuration.getProperty("spacedog.mailgun.key"));
+		}
+
+		public Optional<String> getMailGunDomain() {
+			return Optional.ofNullable(configuration.getProperty("spacedog.mailgun.domain"));
 		}
 	}
 }

@@ -3,6 +3,10 @@
  */
 package io.spacedog.client;
 
+import java.io.File;
+import java.util.Collection;
+import java.util.Optional;
+
 import org.junit.Assert;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -12,6 +16,7 @@ import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.request.GetRequest;
 import com.mashape.unirest.request.HttpRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
+import com.mashape.unirest.request.body.MultipartBody;
 
 import io.spacedog.services.JsonBuilder;
 import io.spacedog.services.SpaceContext;
@@ -165,5 +170,59 @@ public class SpaceRequest {
 		SpaceResponse spaceResponse = new SpaceResponse(request, body);
 		Assert.assertTrue(Ints.contains(expectedStatus, spaceResponse.httpResponse().getStatus()));
 		return spaceResponse;
+	}
+
+	public SpaceRequest field(String name, File value) {
+		Optional<MultipartBody> multipartBody = checkBodyIsMultipart();
+		if (multipartBody.isPresent())
+			multipartBody.get().field(name, value);
+		else
+			((HttpRequestWithBody) request).field(name, value);
+		return this;
+	}
+
+	public SpaceRequest field(String name, String value) {
+		return field(name, value, null);
+	}
+
+	public SpaceRequest field(String name, String value, String contentType) {
+		Optional<MultipartBody> multipartBody = checkBodyIsMultipart();
+		if (multipartBody.isPresent())
+			multipartBody.get().field(name, value, contentType);
+		else
+			((HttpRequestWithBody) request).field(name, value, contentType);
+		return this;
+	}
+
+	public SpaceRequest field(String name, Collection<?> value) {
+		Optional<MultipartBody> multipartBody = checkBodyIsMultipart();
+		if (multipartBody.isPresent())
+			multipartBody.get().field(name, value);
+		else
+			((HttpRequestWithBody) request).field(name, value);
+		return this;
+	}
+
+	private Optional<MultipartBody> checkBodyIsMultipart() {
+
+		HttpRequestWithBody requestWithBody = checkRequestWithBody();
+
+		if (requestWithBody.getBody() == null)
+			return Optional.empty();
+
+		if (requestWithBody.getBody() instanceof MultipartBody)
+			return Optional.of((MultipartBody) requestWithBody.getBody());
+
+		throw new IllegalStateException(String.format("request body is not multipart but [%s]", //
+				request.getBody().getClass().getName()));
+	}
+
+	private HttpRequestWithBody checkRequestWithBody() {
+
+		if (request instanceof HttpRequestWithBody)
+			return (HttpRequestWithBody) request;
+
+		throw new IllegalStateException(//
+				String.format("illegal for requests of type [%s]", request.getHttpMethod()));
 	}
 }

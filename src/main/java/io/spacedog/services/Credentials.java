@@ -11,24 +11,26 @@ public class Credentials {
 
 	private String backendId;
 	private String username;
+	private String email;
 	private BackendKey backendKey;
 	private boolean admin = false;
 
-	public static Credentials fromAdmin(String backendId, String username, BackendKey backendKey) {
-		return new Credentials(backendId, username, backendKey, true);
+	public static Credentials fromAdmin(String backendId, String username, String email, BackendKey backendKey) {
+		return new Credentials(backendId, username, email, backendKey, true);
 	}
 
-	public static Credentials fromUser(String backendId, String username) {
-		return new Credentials(backendId, username, null, false);
+	public static Credentials fromUser(String backendId, String username, String email) {
+		return new Credentials(backendId, username, email, null, false);
 	}
 
 	public static Credentials fromKey(String backendId, BackendKey backendKey) {
-		return new Credentials(backendId, null, backendKey, false);
+		return new Credentials(backendId, null, null, backendKey, false);
 	}
 
-	private Credentials(String backendId, String username, BackendKey backendKey, boolean admin) {
+	private Credentials(String backendId, String username, String email, BackendKey backendKey, boolean admin) {
 		this.backendId = backendId;
 		this.username = username;
+		this.email = email;
 		this.backendKey = backendKey;
 		this.admin = admin;
 	}
@@ -65,5 +67,9 @@ public class Credentials {
 		if (backendKey != null)
 			return backendKey.name;
 		throw new RuntimeException("invalid credentials: no key nor user data");
+	}
+
+	public Optional<String> email() {
+		return Optional.of(email);
 	}
 }

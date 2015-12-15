@@ -32,12 +32,12 @@ import net.codestory.http.payload.Payload;
 @Prefix("/v1")
 public class UserResource extends AbstractResource {
 
-	private static final String ACCOUNT_ID = "accountId";
-	private static final String GROUPS = "groups";
-	private static final String EMAIL = "email";
-	private static final String USERNAME = "username";
-	private static final String HASHED_PASSWORD = "hashedPassword";
-	private static final String PASSWORD_RESET_CODE = "passwordResetCode";
+	public static final String ACCOUNT_ID = "accountId";
+	public static final String GROUPS = "groups";
+	public static final String EMAIL = "email";
+	public static final String USERNAME = "username";
+	public static final String HASHED_PASSWORD = "hashedPassword";
+	public static final String PASSWORD_RESET_CODE = "passwordResetCode";
 
 	//
 	// default user type and schema
