@@ -23,7 +23,7 @@
 	<fileSets>
 		<fileSet>
 			<directory>src/main/bin</directory>
-			<outputDirectory>/</outputDirectory>
+			<outputDirectory></outputDirectory>
 			<lineEnding>unix</lineEnding>
 			<fileMode>0755</fileMode>
 			<includes>
@@ -32,7 +32,7 @@
 		</fileSet>
 		<fileSet>
 			<directory>src/main/bin</directory>
-			<outputDirectory>/</outputDirectory>
+			<outputDirectory></outputDirectory>
 			<lineEnding>unix</lineEnding>
 			<fileMode>0644</fileMode>
 			<excludes>

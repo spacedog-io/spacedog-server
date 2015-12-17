@@ -5,7 +5,7 @@
 
 	<groupId>io.spacedog</groupId>
 	<artifactId>services</artifactId>
-	<version>0.4.1</version>
+	<version>0.5</version>
 	<packaging>jar</packaging>
 
 	<name>SpaceDog Web Services</name>
@@ -80,7 +80,7 @@
 						<id>bundle</id>
 						<configuration>
 							<descriptors>
-								<descriptor>bundle.xml</descriptor>
+								<descriptor>assembly-bundle.xml</descriptor>
 							</descriptors>
 							<attach>false</attach>
 							<outputDirectory>${project.build.directory}</outputDirectory>
@@ -89,7 +89,21 @@
 						<goals>
 							<goal>single</goal>
 						</goals>
+					</execution>
 
+					<execution>
+						<id>tests</id>
+						<configuration>
+							<descriptors>
+								<descriptor>assembly-tests.xml</descriptor>
+							</descriptors>
+							<attach>false</attach>
+							<outputDirectory>${project.build.directory}</outputDirectory>
+						</configuration>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
 					</execution>
 
 				</executions>
