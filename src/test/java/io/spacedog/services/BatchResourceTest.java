@@ -12,7 +12,9 @@ import com.google.common.collect.Sets;
 import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
+import io.spacedog.client.SpaceSuite.TestAlways;
 
+@TestAlways
 public class BatchResourceTest extends Assert {
 
 	@Test

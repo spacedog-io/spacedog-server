@@ -10,7 +10,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceSuite.TestAlways;
 
+@TestAlways
 public class AdminResourceTest extends Assert {
 
 	@Test

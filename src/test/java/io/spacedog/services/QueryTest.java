@@ -16,7 +16,9 @@ import com.google.common.collect.Lists;
 
 import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceSuite.TestOncePerDay;
 
+@TestOncePerDay
 public class QueryTest extends Assert {
 
 	private static SpaceDogHelper.Account testAccount;

@@ -7,7 +7,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceDogHelper.Account;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceSuite.TestAlways;
 
+@TestAlways
 public class AggregationTest {
 
 	@Test
@@ -29,8 +31,8 @@ public class AggregationTest {
 				.put("field", "email")//
 				.build();
 
-		SpaceRequest.post("/v1/search?refresh=true").backendKey(testAccount).body(query).go(200).assertEquals(3,
-				"aggregations.objectCount.value");
+		SpaceRequest.post("/v1/search?refresh=true").backendKey(testAccount).body(query).go(200)//
+				.assertEquals(3, "aggregations.objectCount.value");
 
 	}
 

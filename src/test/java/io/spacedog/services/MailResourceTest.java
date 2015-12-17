@@ -6,7 +6,9 @@ import org.junit.Test;
 import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceDogHelper.Account;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceSuite.TestOncePerDay;
 
+@TestOncePerDay
 public class MailResourceTest extends Assert {
 
 	@Test

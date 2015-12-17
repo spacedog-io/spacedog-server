@@ -9,8 +9,10 @@ import org.junit.Test;
 import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceDogHelper.Account;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceSuite.TestAlways;
 import net.codestory.http.constants.Headers;
 
+@TestAlways
 public class CrossOriginFilterTest extends Assert {
 
 	@Test

@@ -9,7 +9,9 @@ import org.junit.Test;
 import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceDogHelper.Account;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceSuite.TestAlways;
 
+@TestAlways
 public class ServiceErrorFilterTest extends Assert {
 
 	@Test

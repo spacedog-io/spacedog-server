@@ -15,7 +15,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceSuite.TestAlways;
 
+@TestAlways
 public class ChauffeLeTest extends Assert {
 
 	private static SpaceDogHelper.Account adminAccount;

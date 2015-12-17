@@ -14,7 +14,9 @@ import com.google.common.base.Strings;
 
 import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceSuite.TestAlways;
 
+@TestAlways
 public class UserResourceTest extends Assert {
 
 	@Test
