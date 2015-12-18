@@ -93,6 +93,10 @@ public class SpaceRequest {
 		SpaceRequest.ssl = ssl;
 	}
 
+	public static String getTargetHost() {
+		return host;
+	}
+
 	private static String computeMainUrl(String uri) {
 		if (host == null)
 			host = System.getProperty("host", "127.0.0.1");
