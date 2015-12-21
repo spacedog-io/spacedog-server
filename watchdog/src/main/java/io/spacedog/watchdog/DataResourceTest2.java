@@ -91,7 +91,8 @@ public class DataResourceTest2 extends Assert {
 				.assertEquals("visit", "items.1.type");
 
 		DateTime createdAt = DateTime.parse(res1.getFromJson("meta.createdAt").asText());
-		res1.assertDateIsRecent("meta.createdAt").assertEquals(createdAt, "meta.updatedAt");
+		res1.assertDateIsRecent("meta.createdAt")//
+				.assertEquals(createdAt, "meta.updatedAt");
 
 		// TODO do we need to assert field by field and then full object with
 		// full object?
@@ -175,14 +176,12 @@ public class DataResourceTest2 extends Assert {
 
 		res3e.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.createdBy")//
 				.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.updatedBy")//
-				.assertEquals(3, "meta.version").assertEquals("sale", "meta.type").assertEquals(id, "meta.id")
-				.assertEquals("0987654321", "number");
-
-		DateTime createdAt3e = DateTime.parse(res3e.getFromJson("meta.createdAt").asText());
-		assertEquals(createdAt, createdAt3e);
-		DateTime updatedAt3e = DateTime.parse(res3e.getFromJson("meta.updatedAt").asText());
-		// assertTrue(updatedAt3e.isAfter(req3d.before().getMillis()));
-		assertTrue(updatedAt3e.isBeforeNow());
+				.assertEquals(3, "meta.version")//
+				.assertEquals("sale", "meta.type")//
+				.assertEquals(id, "meta.id")//
+				.assertEquals("0987654321", "number")//
+				.assertEquals(createdAt, "meta.createdAt")//
+				.assertDateIsRecent("meta.updatedAt");
 
 		// check equality on what has not been updated
 		assertEquals(res3.objectNode().deepCopy().without(Lists.newArrayList("meta", "number")),
