@@ -76,7 +76,7 @@ public class AdminResource extends AbstractResource {
 	@Get("/user/:username/check")
 	@Get("/user/:username/check")
 	public Payload checkUsername(String username) {
-		// TODO add a spacedog super admin key to log what admin app is checkend
+		// TODO add a spacedog super admin key to log what admin app is checking
 		// existence of an account by username. Everybody should not be able to
 		// do this.
 		return checkExistence(ADMIN_INDEX, ACCOUNT_TYPE, "username", username);
@@ -85,7 +85,7 @@ public class AdminResource extends AbstractResource {
 	@Get("/backend/:id/check")
 	@Get("/backend/:id/check")
 	public Payload checkBackendId(String backendId) {
-		// TODO add a spacedog super admin key to log what admin app is checkend
+		// TODO add a spacedog super admin key to log what admin app is checking
 		// existence of an account by backend id. Everybody should not be able
 		// to do this.
 		return checkExistence(ADMIN_INDEX, ACCOUNT_TYPE, "backendId", backendId);
