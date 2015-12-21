@@ -14,7 +14,6 @@ import org.elasticsearch.rest.RestStatus;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.services.Account.InvalidAccountException;
 import io.spacedog.services.SchemaValidator.InvalidSchemaException;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
@@ -41,9 +40,6 @@ public class PayloadHelper {
 		}
 		if (t instanceof AuthenticationException) {
 			return error(HttpStatus.UNAUTHORIZED, t);
-		}
-		if (t instanceof InvalidAccountException) {
-			return error(HttpStatus.BAD_REQUEST, t);
 		}
 		if (t instanceof NotFoundException) {
 			return error(HttpStatus.NOT_FOUND, t);
