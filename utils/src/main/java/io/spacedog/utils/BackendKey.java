@@ -50,7 +50,7 @@ public class BackendKey {
 			throw new IllegalArgumentException("backend id must not be null or empty");
 
 		if (!isIdValid(backendId))
-			throw new IllegalArgumentException("backend id must comply with these rukes: "//
+			throw new IllegalArgumentException("backend id must comply with these rules: "//
 					+ "is at least 4 characters long, "//
 					+ "is only composed of a-z and 0-9 characters, "//
 					+ "is lowercase,  "//
