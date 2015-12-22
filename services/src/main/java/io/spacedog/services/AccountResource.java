@@ -10,8 +10,10 @@ import java.util.concurrent.ExecutionException;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -21,6 +23,7 @@ import com.google.common.io.Resources;
 
 import io.spacedog.utils.BackendKey;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Passwords;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Utils;
@@ -67,11 +70,31 @@ public class AccountResource extends AbstractResource {
 
 		SpaceContext.checkSuperDogCredentials();
 
-		Start.get().getElasticClient().prepareSearch(ADMIN_INDEX).setTypes(ACCOUNT_TYPE)
-				.setQuery(QueryBuilders.matchAllQuery()).get();
+		SearchResponse response = Start.get().getElasticClient()//
+				.prepareSearch(ADMIN_INDEX)//
+				.setTypes(ACCOUNT_TYPE)//
+				.setVersion(true)//
+				.setQuery(QueryBuilders.matchAllQuery())//
+				.get();
 
-		// return extractResults(response);
-		return Payload.ok();
+		JsonBuilder<ObjectNode> builder = Json.objectBuilder()//
+				.put("took", response.getTookInMillis())//
+				.put("total", response.getHits().getTotalHits())//
+				.array("results");
+
+		for (SearchHit hit : response.getHits().getHits()) {
+			ObjectNode object = Json.readObjectNode(hit.sourceAsString());
+			// TODO remove this when all passwords have moved
+			// to dedicated indices
+			object.remove("hashedPassword");
+			object.with("meta")//
+					.put("id", hit.id())//
+					.put("type", hit.type())//
+					.put("version", hit.version());
+			builder.node(object);
+		}
+
+		return PayloadHelper.json(builder);
 	}
 
 	@Get("/account/username/:username")
@@ -144,8 +167,7 @@ public class AccountResource extends AbstractResource {
 
 	@Get("/account/:id")
 	@Get("/account/:id/")
-	public Payload getById(String backendId, Context context)
-			throws JsonParseException, JsonMappingException, IOException {
+	public Payload getById(String backendId) throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = SpaceContext.checkAdminCredentialsFor(backendId);
 
 		GetResponse response = Start.get().getElasticClient()//
@@ -156,7 +178,16 @@ public class AccountResource extends AbstractResource {
 					"no account found for backend [%s] and admin user [%s]", credentials.backendId(),
 					credentials.name());
 
-		return new Payload(PayloadHelper.JSON_CONTENT_UTF8, response.getSourceAsString());
+		ObjectNode object = Json.readObjectNode(response.getSourceAsString());
+		// TODO remove this when all passwords have moved
+		// to dedicated indices
+		object.remove("hashedPassword");
+		object.with("meta")//
+				.put("id", response.getId())//
+				.put("type", response.getType())//
+				.put("version", response.getVersion());
+
+		return PayloadHelper.json(object);
 	}
 
 	@Delete("/account/:id")

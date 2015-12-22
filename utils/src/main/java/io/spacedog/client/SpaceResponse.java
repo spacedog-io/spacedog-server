@@ -14,6 +14,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Iterators;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.HttpRequest;
@@ -238,10 +239,27 @@ public class SpaceResponse {
 		return this;
 	}
 
-	public SpaceResponse assertContains(String expected, String fieldName) {
+	public SpaceResponse assertContainsValue(String expected, String fieldName) {
 		assertJsonContent();
 		if (!jsonResponseContent.findValuesAsText(fieldName).contains(expected))
 			Assert.fail(String.format("no field named [%s] found with value [%s]", fieldName, expected));
+		return this;
+	}
+
+	public SpaceResponse assertArrayContains(JsonNode expected, String jsonPath) {
+		assertJsonContent();
+		if (!Iterators.contains(Json.get(jsonResponseContent, jsonPath).elements(), expected))
+			Assert.fail(String.format(//
+					"field named [%s] of type array does node contain node [%s]", jsonPath, expected));
+		return this;
+	}
+
+	public SpaceResponse assertNotPresent(String jsonPath) {
+		assertJsonContent();
+		JsonNode node = Json.get(jsonResponseContent, jsonPath);
+		if (node != null)
+			Assert.fail(String.format(//
+					"field named [%s] contains [%s]", jsonPath, node));
 		return this;
 	}
 

@@ -7,6 +7,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceRequest;
@@ -15,7 +16,7 @@ import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.watchdog.SpaceSuite.TestAlways;
 
 @TestAlways
-public class AdminResourceTest extends Assert {
+public class AccountResourceTest extends Assert {
 
 	@Test
 	public void deleteSignUpGetLoginTestAccount() throws Exception {
@@ -25,31 +26,40 @@ public class AdminResourceTest extends Assert {
 
 		// get just created test account should succeed
 
-		JsonNode res1 = SpaceRequest.get("/v1/admin/account/{backendId}").routeParam("backendId", "test")
-				.basicAuth(testAccount).go(200).jsonNode();
-
-		assertEquals("test", res1.get("backendId").asText());
-		assertEquals("test", res1.get("username").asText());
-		assertNotEquals("hi test", res1.get("hashedPassword").asText());
-		assertEquals("david@spacedog.io", res1.get("email").asText());
+		SpaceRequest.get("/v1/admin/account/{backendId}")//
+				.routeParam("backendId", "test")//
+				.basicAuth(testAccount).go(200)//
+				.assertEquals("test", "backendId")//
+				.assertEquals("test", "username")//
+				.assertEquals("david@spacedog.io", "email")//
+				.assertNotPresent("hashedPassword")//
+				.assertNotPresent("password");
 
 		// create new account with same username should fail
 
-		JsonNode json2 = SpaceRequest.post("/v1/admin/account/")
-				.body(Json.objectBuilder().put("backendId", "anothertest").put("username", "test")
-						.put("password", "hi test").put("email", "hello@spacedog.io").toString())
-				.go(400).jsonNode();
-
-		assertEquals("test", json2.get("invalidParameters").get("username").get("value").asText());
+		SpaceRequest.post("/v1/admin/account/")
+				.body(//
+						Json.objectBuilder()//
+								.put("backendId", "anothertest")//
+								.put("username", "test")//
+								.put("password", "hi test")//
+								.put("email", "hello@spacedog.io")//
+								.build())
+				.go(400)//
+				.assertEquals("test", "invalidParameters.username.value");
 
 		// create new account with same backend id should fail
 
-		JsonNode json2b = SpaceRequest.post("/v1/admin/account/")
-				.body(Json.objectBuilder().put("backendId", "test").put("username", "anotheruser")
-						.put("password", "hi anotheruser").put("email", "hello@spacedog.io").toString())
-				.go(400).jsonNode();
-
-		assertEquals("test", json2b.get("invalidParameters").get("backendId").get("value").asText());
+		SpaceRequest.post("/v1/admin/account/")
+				.body(//
+						Json.objectBuilder()//
+								.put("backendId", "test")//
+								.put("username", "anotheruser")//
+								.put("password", "hi anotheruser")//
+								.put("email", "hello@spacedog.io")//
+								.build())
+				.go(400)//
+				.assertEquals("test", "invalidParameters.backendId.value");
 
 		// admin user login should succeed
 
@@ -128,4 +138,30 @@ public class AdminResourceTest extends Assert {
 		SpaceRequest.delete("/v1/admin/account/aaaa").basicAuth(aaaa).go(200);
 		SpaceRequest.delete("/v1/admin/account/zzzz").basicAuth(zzzz).go(200);
 	}
+
+	@Test
+	public void testGetAllAccounts() throws Exception {
+
+		// prepare
+		SpaceDogHelper.printTestHeader();
+		SpaceDogHelper.Account aaaa = SpaceDogHelper.resetAccount("aaaa", "aaaa", "hi aaaa", "hello@spacedog.io");
+		SpaceDogHelper.Account zzzz = SpaceDogHelper.resetAccount("zzzz", "zzzz", "hi zzzz", "hello@spacedog.io");
+
+		// should succeed to get accounts
+		ObjectNode aaaaNode = SpaceRequest.get("/v1/admin/account/aaaa").basicAuth(aaaa).go(200).objectNode();
+		ObjectNode zzzzNode = SpaceRequest.get("/v1/admin/account/zzzz").basicAuth(zzzz).go(200).objectNode();
+
+		// fails to get all accounts because of credentials
+		SpaceRequest.get("/v1/admin/account").basicAuth(zzzz).go(401);
+
+		// succeed to get all accounts with superdog credentials
+		SpaceRequest.get("/v1/admin/account").promptAuth().go(200)//
+				.assertArrayContains(aaaaNode, "results")//
+				.assertArrayContains(zzzzNode, "results");
+
+		// should succeed to delete accounts
+		SpaceRequest.delete("/v1/admin/account/aaaa").basicAuth(aaaa).go(200);
+		SpaceRequest.delete("/v1/admin/account/zzzz").basicAuth(zzzz).go(200);
+	}
+
 }
