@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -157,6 +158,11 @@ public class SearchResource extends AbstractResource {
 		List<JsonNode> objects = new ArrayList<>();
 		for (SearchHit hit : response.getHits().getHits()) {
 			ObjectNode object = Json.readObjectNode(hit.sourceAsString());
+
+			// TODO remove this when hashed passwords have moved to dedicated
+			// indices
+			object.remove(UserResource.HASHED_PASSWORD);
+
 			((ObjectNode) object.get("meta")).put("id", hit.id()).put("type", hit.type()).put("version", hit.version());
 			objects.add(object);
 
@@ -191,14 +197,19 @@ public class SearchResource extends AbstractResource {
 		Set<String> set = new HashSet<>(references);
 		set.remove(null);
 		Map<String, ObjectNode> results = new HashMap<>();
-		set.forEach(
-				reference -> results.put(reference,
-						ElasticHelper.get()
-								.getObject(credentials.backendId(), getReferenceType(reference),
-										getReferenceId(reference))
-								// TODO if bad reference, I put an empty object
-								// do we really want this ?
-								.orElse(Json.newObjectNode())));
+		set.forEach(reference -> {
+			Optional<ObjectNode> object = ElasticHelper.get().getObject(//
+					credentials.backendId(), getReferenceType(reference), getReferenceId(reference));
+			if (object.isPresent()) {
+
+				// TODO remove this when hashed passwords have moved to
+				// dedicated indices
+				object.get().remove(UserResource.HASHED_PASSWORD);
+
+				results.put(reference, object.get());
+			} else
+				throw NotFoundException.object(getReferenceType(reference), getReferenceId(reference));
+		});
 		return results;
 	}
 

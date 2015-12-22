@@ -16,7 +16,6 @@ import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SchemaBuilder2;
-import io.spacedog.utils.Passwords;
 import io.spacedog.watchdog.SpaceSuite.TestAlways;
 
 @TestAlways
@@ -30,11 +29,20 @@ public class UserResourceTest extends Assert {
 
 		// fails since invalid users
 
+		// empty user body
 		SpaceRequest.post("/v1/user/").backendKey(testAccount).body(Json.objectBuilder()).go(400);
+		// no username
 		SpaceRequest.post("/v1/user/").backendKey(testAccount).body(//
 				Json.objectBuilder().put("password", "hi titi").put("email", "titi@dog.com")).go(400);
+		// no email
 		SpaceRequest.post("/v1/user/").backendKey(testAccount).body(//
 				Json.objectBuilder().put("username", "titi").put("password", "hi titi")).go(400);
+		// username too small
+		SpaceRequest.post("/v1/user/").backendKey(testAccount).body(//
+				Json.objectBuilder().put("username", "ti").put("password", "hi titi")).go(400);
+		// password too small
+		SpaceRequest.post("/v1/user/").backendKey(testAccount).body(//
+				Json.objectBuilder().put("username", "titi").put("password", "hi")).go(400);
 
 		// fails to inject forged hashedPassword
 
@@ -57,8 +65,12 @@ public class UserResourceTest extends Assert {
 				.objectNode();
 
 		assertEquals(
-				Json.objectBuilder().put("username", "vince").put("hashedPassword", Passwords.checkAndHash("hi vince"))
-						.put("email", "vince@dog.com").array("groups").add("test").build(),
+				Json.objectBuilder()//
+						.put("username", "vince")//
+						.put("email", "vince@dog.com")//
+						.array("groups")//
+						.add("test")//
+						.build(), //
 				res2.deepCopy().without("meta"));
 
 		// get data with wrong username should fail
@@ -92,8 +104,11 @@ public class UserResourceTest extends Assert {
 		assertEquals(2, res9.get("meta").get("version").asInt());
 
 		assertEquals(
-				Json.objectBuilder().put("username", "vince").put("hashedPassword", Passwords.checkAndHash("hi vince"))
-						.put("email", "bignose@magic.com").array("groups").add("test").build(),
+				Json.objectBuilder().put("username", "vince")//
+						.put("email", "bignose@magic.com")//
+						.array("groups")//
+						.add("test")//
+						.build(), //
 				res9.deepCopy().without("meta"));
 	}
 

@@ -96,8 +96,14 @@ public class DataResource extends AbstractResource {
 
 		Optional<ObjectNode> object = ElasticHelper.get().getObject(credentials.backendId(), type, id);
 
-		if (object.isPresent())
+		if (object.isPresent()) {
+
+			// TODO remove this when hashed passwords have moved to dedicated
+			// indices
+			object.get().remove(UserResource.HASHED_PASSWORD);
+
 			return PayloadHelper.json(object.get());
+		}
 
 		return PayloadHelper.error(HttpStatus.NOT_FOUND);
 	}
