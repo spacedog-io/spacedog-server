@@ -22,8 +22,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.Passwords;
 import io.spacedog.utils.SchemaBuilder2;
-import io.spacedog.utils.UserUtils;
+import io.spacedog.utils.Usernames;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -106,7 +107,8 @@ public class UserResource extends AbstractResource {
 		Credentials credentials = SpaceContext.checkCredentials();
 
 		ObjectNode user = Json.readObjectNode(body);
-		checkStringNotNullOrEmpty(user, USERNAME);
+		String username = checkStringNotNullOrEmpty(user, USERNAME);
+		Usernames.checkIfValid(username);
 		checkStringNotNullOrEmpty(user, EMAIL);
 		checkNotPresent(user, HASHED_PASSWORD, USER_TYPE);
 		user.putArray(GROUPS).add(credentials.backendId());
@@ -119,8 +121,7 @@ public class UserResource extends AbstractResource {
 			passwordResetCode = Optional.of(UUID.randomUUID().toString());
 			user.put(PASSWORD_RESET_CODE, passwordResetCode.get());
 		} else {
-			UserUtils.checkPasswordValidity(password.asText());
-			user.put(HASHED_PASSWORD, UserUtils.hashPassword(password.asText()));
+			user.put(HASHED_PASSWORD, Passwords.checkAndHash(password.asText()));
 		}
 
 		IndexResponse response = ElasticHelper.get().createObject(credentials.backendId(), USER_TYPE, user,
@@ -173,7 +174,7 @@ public class UserResource extends AbstractResource {
 		// .get();
 
 		ObjectNode user = ElasticHelper.get().getObject(credentials.backendId(), USER_TYPE, id)//
-				.orElseThrow(() -> new NotFoundException(credentials.backendId(), USER_TYPE, id));
+				.orElseThrow(() -> NotFoundException.object(USER_TYPE, id));
 
 		String resetCode = UUID.randomUUID().toString();
 		user.remove(HASHED_PASSWORD);
@@ -200,13 +201,13 @@ public class UserResource extends AbstractResource {
 			throw new IllegalArgumentException("password reset code is empty");
 
 		String password = Json.readJsonNode(body).asText();
-		UserUtils.checkPasswordValidity(password);
+		Passwords.checkIfValid(password);
 
 		GetResponse getResponse = Start.get().getElasticClient().prepareGet(credentials.backendId(), USER_TYPE, id)
 				.get();
 
 		if (!getResponse.isExists())
-			throw new NotFoundException(credentials.backendId(), USER_TYPE, id);
+			throw NotFoundException.object(USER_TYPE, id);
 
 		ObjectNode user = Json.readObjectNode(getResponse.getSourceAsString());
 
@@ -217,7 +218,7 @@ public class UserResource extends AbstractResource {
 			throw new IllegalArgumentException(String.format("invalid password reset code [%s]", passwordResetCode));
 
 		user.remove(PASSWORD_RESET_CODE);
-		user.put(HASHED_PASSWORD, UserUtils.hashPassword(password));
+		user.put(HASHED_PASSWORD, Passwords.checkAndHash(password));
 
 		IndexResponse indexResponse = ElasticHelper.get().updateObject(credentials.backendId(), USER_TYPE, id, 0, user,
 				credentials.name());
@@ -235,10 +236,10 @@ public class UserResource extends AbstractResource {
 				|| (credentials.isUserAuthenticated() && id.equals(credentials.name()))) {
 
 			String password = Json.readJsonNode(body).asText();
-			UserUtils.checkPasswordValidity(password);
+			Passwords.checkIfValid(password);
 
 			ObjectNode update = Json.objectBuilder()//
-					.put(HASHED_PASSWORD, UserUtils.hashPassword(password))//
+					.put(HASHED_PASSWORD, Passwords.checkAndHash(password))//
 					.node(PASSWORD_RESET_CODE, NullNode.getInstance())//
 					.build();
 

@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
@@ -103,6 +104,7 @@ public class Start {
 				.add(AdminResource.get())//
 				.add(BatchResource.get())//
 				.add(MailResource.get())//
+				.add(SnapshotResource.get())//
 				.add(SearchResource.get());
 
 		routes.filter(new CrossOriginFilter())//
@@ -149,6 +151,7 @@ public class Start {
 		private Properties configuration = new Properties();
 
 		public Configuration() throws IOException {
+
 			Path confPath = getConfigurationFilePath();
 			if (Files.isReadable(confPath)) {
 				System.out.println("[SpaceDog] configuration file = " + confPath);
@@ -163,11 +166,19 @@ public class Start {
 				throw new RuntimeException(String.format("SpaceDog data path not a directory [%s]", //
 						getElasticDataPath()));
 
+			if (!hasSuperDogs())
+				throw new RuntimeException("No superdog administrator defined in configuration");
+
 			System.out.println("[SpaceDog] url = " + getUrl());
 			System.out.println("[SpaceDog] main port = " + getMainPort());
 			System.out.println("[SpaceDog] redirect port = " + getRedirectPort());
 			System.out.println("[SpaceDog] home path = " + getHomePath());
 			System.out.println("[SpaceDog] data path = " + getElasticDataPath());
+			System.out.println("[SpaceDog] snapshots path = " + getSnapshotsPath());
+			System.out.println("[SpaceDog] snapshots bucket name = " + getSnapshotsBucketName());
+			System.out.println("[SpaceDog] snapshots bucket region = " + getSnapshotsBucketRegion());
+			System.out.println("[SpaceDog] david password = " + getSuperDogHashedPassword("david"));
+			System.out.println("[SpaceDog] david email = " + getSuperDogEmail("david"));
 			System.out.println("[SpaceDog] production = " + isProduction());
 
 			if (isProduction()) {
@@ -247,5 +258,39 @@ public class Start {
 		public Optional<String> getMailGunDomain() {
 			return Optional.ofNullable(configuration.getProperty("spacedog.mailgun.domain"));
 		}
+
+		public Path getSnapshotsPath() {
+			String path = configuration.getProperty("spacedog.snapshots.path");
+			return path == null ? getHomePath().resolve("snapshots") : Paths.get(path);
+		}
+
+		public Optional<String> getSnapshotsBucketName() {
+			return Optional.ofNullable(configuration.getProperty("spacedog.snapshots.bucket.name"));
+		}
+
+		public Optional<String> getSnapshotsBucketRegion() {
+			return Optional.ofNullable(configuration.getProperty("spacedog.snapshots.bucket.region"));
+		}
+
+		public Optional<String> getSuperDogHashedPassword(String username) {
+			return Optional.ofNullable(configuration.getProperty("spacedog.superdog." + username + ".password"));
+		}
+
+		public boolean hasSuperDogs() {
+			Enumeration<Object> keys = configuration.keys();
+			while (keys.hasMoreElements())
+				if (keys.nextElement().toString().startsWith("spacedog.superdog."))
+					return true;
+			return false;
+		}
+
+		public boolean isSuperDog(String username) {
+			return getSuperDogHashedPassword(username).isPresent();
+		}
+
+		public Optional<String> getSuperDogEmail(String username) {
+			return Optional.ofNullable(configuration.getProperty("spacedog.superdog." + username + ".email"));
+		}
+
 	}
 }

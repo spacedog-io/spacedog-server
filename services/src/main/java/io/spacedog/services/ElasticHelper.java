@@ -227,11 +227,17 @@ public class ElasticHelper {
 
 	public ObjectNode getSchema(String index, String type)
 			throws NotFoundException, JsonProcessingException, IOException {
-		GetMappingsResponse resp = Start.get().getElasticClient().admin().indices().prepareGetMappings(index)
-				.addTypes(type).get();
 
-		String source = Optional.ofNullable(resp.getMappings()).map(indexMap -> indexMap.get(index))
-				.map(typeMap -> typeMap.get(type)).orElseThrow(() -> new NotFoundException(index, type)).source()
+		GetMappingsResponse resp = Start.get().getElasticClient().admin().indices()//
+				.prepareGetMappings(index)//
+				.addTypes(type)//
+				.get();
+
+		String source = Optional.ofNullable(resp.getMappings())//
+				.map(indexMap -> indexMap.get(index))//
+				.map(typeMap -> typeMap.get(type))//
+				.orElseThrow(() -> NotFoundException.type(type))//
+				.source()//
 				.toString();
 
 		return (ObjectNode) Json.readObjectNode(source).get(type).get("_meta");

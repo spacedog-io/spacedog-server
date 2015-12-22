@@ -9,7 +9,17 @@ import javax.xml.bind.DatatypeConverter;
 
 import com.google.common.base.Strings;
 
-public class UserUtils {
+public class Passwords {
+
+	public static void main(String[] args) {
+		char[] password = System.console().readPassword("Enter your password: ");
+		System.out.println("Hashed password = " + hash(new String(password)));
+	}
+
+	public static String checkAndHash(String password) {
+		checkIfValid(password);
+		return hash(password);
+	}
 
 	/**
 	 * ******* README ******* For now, I use hard coded salt and iteration
@@ -18,7 +28,7 @@ public class UserUtils {
 	 * way. Salt and iterations could be saved in datastore close to the hashed
 	 * password.
 	 */
-	public static String hashPassword(String password) {
+	public static String hash(String password) {
 		try {
 			PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), "hjyuetcslhhjgl".getBytes(), 1000, 64 * 8);
 			SecretKeyFactory skf;
@@ -29,8 +39,16 @@ public class UserUtils {
 		}
 	}
 
-	public static void checkPasswordValidity(String password) {
+	public static void checkIfValid(String password) {
+		if (!isValid(password))
+			throw new IllegalArgumentException("password must be at least 6 characters long");
+	}
+
+	public static boolean isValid(String password) {
 		if (Strings.isNullOrEmpty(password))
-			throw new IllegalArgumentException("password is empty");
+			return false;
+		if (password.length() < 6)
+			return false;
+		return true;
 	}
 }

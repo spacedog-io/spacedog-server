@@ -16,25 +16,36 @@ public class Credentials {
 	private String email;
 	private BackendKey backendKey;
 	private boolean admin = false;
+	private boolean superDog;
 
 	public static Credentials fromAdmin(String backendId, String username, String email, BackendKey backendKey) {
-		return new Credentials(backendId, username, email, backendKey, true);
+		return new Credentials(backendId, username, email, backendKey, true, false);
 	}
 
 	public static Credentials fromUser(String backendId, String username, String email) {
-		return new Credentials(backendId, username, email, null, false);
+		return new Credentials(backendId, username, email, null, false, false);
 	}
 
 	public static Credentials fromKey(String backendId, BackendKey backendKey) {
-		return new Credentials(backendId, null, null, backendKey, false);
+		return new Credentials(backendId, null, null, backendKey, false, false);
 	}
 
-	private Credentials(String backendId, String username, String email, BackendKey backendKey, boolean admin) {
+	public static Credentials fromSuperDog(String username, String email) {
+		return new Credentials("spacedog", username, email, null, true, true);
+	}
+
+	private Credentials(String backendId, String username, String email, BackendKey backendKey, boolean admin,
+			boolean superDog) {
 		this.backendId = backendId;
 		this.username = username;
 		this.email = email;
 		this.backendKey = backendKey;
 		this.admin = admin;
+		this.superDog = superDog;
+	}
+
+	public boolean isSuperDogAuthenticated() {
+		return superDog;
 	}
 
 	public boolean isAdminAuthenticated() {

@@ -16,7 +16,7 @@ import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SchemaBuilder2;
-import io.spacedog.utils.UserUtils;
+import io.spacedog.utils.Passwords;
 import io.spacedog.watchdog.SpaceSuite.TestAlways;
 
 @TestAlways
@@ -57,7 +57,7 @@ public class UserResourceTest extends Assert {
 				.objectNode();
 
 		assertEquals(
-				Json.objectBuilder().put("username", "vince").put("hashedPassword", UserUtils.hashPassword("hi vince"))
+				Json.objectBuilder().put("username", "vince").put("hashedPassword", Passwords.checkAndHash("hi vince"))
 						.put("email", "vince@dog.com").array("groups").add("test").build(),
 				res2.deepCopy().without("meta"));
 
@@ -92,7 +92,7 @@ public class UserResourceTest extends Assert {
 		assertEquals(2, res9.get("meta").get("version").asInt());
 
 		assertEquals(
-				Json.objectBuilder().put("username", "vince").put("hashedPassword", UserUtils.hashPassword("hi vince"))
+				Json.objectBuilder().put("username", "vince").put("hashedPassword", Passwords.checkAndHash("hi vince"))
 						.put("email", "bignose@magic.com").array("groups").add("test").build(),
 				res9.deepCopy().without("meta"));
 	}

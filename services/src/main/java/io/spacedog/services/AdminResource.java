@@ -21,7 +21,7 @@ import com.google.common.io.Resources;
 import io.spacedog.utils.BackendKey;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceHeaders;
-import io.spacedog.utils.UserUtils;
+import io.spacedog.utils.Passwords;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -79,6 +79,10 @@ public class AdminResource extends AbstractResource {
 		// TODO add a spacedog super admin key to log what admin app is checking
 		// existence of an account by username. Everybody should not be able to
 		// do this.
+
+		if (Start.get().configuration().isSuperDog(username))
+			return Payload.ok();
+
 		return checkExistence(ADMIN_INDEX, ACCOUNT_TYPE, "username", username);
 	}
 
@@ -100,11 +104,14 @@ public class AdminResource extends AbstractResource {
 		account.backendId = input.get("backendId").textValue();
 		account.username = input.get("username").textValue();
 		account.email = input.get("email").textValue();
-		String password = input.get("password").textValue();
-		Account.checkPasswordValidity(password);
-		account.hashedPassword = UserUtils.hashPassword(password);
+		account.hashedPassword = Passwords.checkAndHash(//
+				input.get("password").textValue());
 		account.backendKey = new BackendKey();
 		account.checkAccountInputValidity();
+
+		if (Start.get().configuration().isSuperDog(account.username))
+			return PayloadHelper.invalidParameters("username", account.username,
+					String.format("administrator username [%s] is not available", account.username));
 
 		ElasticHelper.get().refresh(true, ADMIN_INDEX);
 

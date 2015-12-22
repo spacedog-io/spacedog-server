@@ -13,9 +13,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
 import io.spacedog.utils.Json;
+import io.spacedog.utils.Passwords;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.SpaceParams;
-import io.spacedog.utils.UserUtils;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 
@@ -80,6 +80,13 @@ public class SpaceContext {
 	//
 	// Check credentials static methods
 	//
+
+	public static Credentials checkSuperDogCredentials() throws JsonParseException, JsonMappingException, IOException {
+		Credentials credentials = checkCredentials();
+		if (credentials.isSuperDogAuthenticated())
+			return credentials;
+		throw new AuthenticationException("invalid superdog credentials");
+	}
 
 	public static Credentials checkAdminCredentials() throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = checkCredentials();
@@ -166,16 +173,19 @@ public class SpaceContext {
 
 		if (tokens.isPresent()) {
 
+			String username = tokens.get()[0];
+			String password = tokens.get()[1];
+
 			// check users in specific backend index
 
-			Optional<ObjectNode> user = ElasticHelper.get().getObject(backendId, UserResource.USER_TYPE,
-					tokens.get()[0]);
+			Optional<ObjectNode> user = ElasticHelper.get()//
+					.getObject(backendId, UserResource.USER_TYPE, username);
 
 			if (user.isPresent()) {
-				String providedPassword = UserUtils.hashPassword(tokens.get()[1]);
+				String providedPassword = Passwords.hash(password);
 				JsonNode expectedPassword = user.get().get(UserResource.HASHED_PASSWORD);
 				if (!Json.isNull(expectedPassword) && providedPassword.equals(expectedPassword.asText()))
-					return Credentials.fromUser(backendId, tokens.get()[0],
+					return Credentials.fromUser(backendId, username, //
 							user.get().get(UserResource.EMAIL).asText());
 			}
 
@@ -194,10 +204,27 @@ public class SpaceContext {
 
 		if (tokens.isPresent()) {
 
+			String username = tokens.get()[0];
+			String password = tokens.get()[1];
+
+			// check if superdog credentials
+
+			Optional<String> hashedPassword = Start.get()//
+					.configuration().getSuperDogHashedPassword(username);
+
+			if (hashedPassword.isPresent()) {
+
+				if (Passwords.hash(password).equals(hashedPassword.get()))
+					return Credentials.fromSuperDog(username, //
+							Start.get().configuration().getSuperDogEmail(username).get());
+
+				throw new AuthenticationException("invalid superdog username or password");
+			}
+
 			// check admin users in spacedog index
 
 			SearchHits accountHits = ElasticHelper.get().search(AdminResource.ADMIN_INDEX, AdminResource.ACCOUNT_TYPE,
-					"username", tokens.get()[0], "hashedPassword", UserUtils.hashPassword(tokens.get()[1]));
+					"username", username, "hashedPassword", Passwords.hash(password));
 
 			if (accountHits.getTotalHits() == 0)
 				throw new AuthenticationException("invalid administrator username or password");
@@ -243,6 +270,9 @@ public class SpaceContext {
 
 		if (tokens.length != 2)
 			throw new AuthenticationException("invalid authorization token");
+
+		if (Strings.isNullOrEmpty(tokens[0]))
+			throw new AuthenticationException("no username specified");
 
 		if (Strings.isNullOrEmpty(tokens[1]))
 			throw new AuthenticationException("no password specified");

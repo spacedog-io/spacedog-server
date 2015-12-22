@@ -6,6 +6,7 @@ package io.spacedog.services;
 import com.google.common.base.Strings;
 
 import io.spacedog.utils.BackendKey;
+import io.spacedog.utils.Usernames;
 
 public class Account {
 
@@ -17,6 +18,8 @@ public class Account {
 
 	public void checkAccountInputValidity() {
 
+		Usernames.checkIfValid(username);
+
 		BackendKey.checkIfIdIsValid(backendId);
 
 		if (Strings.isNullOrEmpty(email))
@@ -26,11 +29,6 @@ public class Account {
 			throw new IllegalArgumentException("account username is null or empty");
 
 		if (Strings.isNullOrEmpty(hashedPassword))
-			throw new IllegalArgumentException("account password is null or empty");
-	}
-
-	public static void checkPasswordValidity(String password) {
-		if (Strings.isNullOrEmpty(password))
 			throw new IllegalArgumentException("account password is null or empty");
 	}
 
