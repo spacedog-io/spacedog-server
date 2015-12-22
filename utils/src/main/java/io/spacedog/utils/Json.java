@@ -42,6 +42,13 @@ public class Json {
 		return current;
 	}
 
+	public static <T> T get(JsonNode json, String propertyPath, T defaultValue) {
+		JsonNode node = get(json, propertyPath);
+		if (Json.isNull(node))
+			return defaultValue;
+		return (T) Json.toSimpleValue(node);
+	}
+
 	public static void set(JsonNode object, String propertyPath, JsonNode value) {
 
 		int lastDotIndex = propertyPath.lastIndexOf('.');
@@ -232,5 +239,11 @@ public class Json {
 
 		throw new IllegalArgumentException(
 				String.format("can not convert this json node [%s] to a list of strings", node));
+	}
+
+	public static void checkIfPresent(ObjectNode jsonBody, String propertyPath) {
+		if (Json.isNull(get(jsonBody, propertyPath)))
+			throw new IllegalArgumentException(
+					String.format("JSON object does not contain this property [%s]", propertyPath));
 	}
 }
