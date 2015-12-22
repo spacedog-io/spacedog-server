@@ -145,7 +145,7 @@ public class SpaceContext {
 		if (Strings.isNullOrEmpty(backendId))
 			throw new AuthenticationException("invalid backend key [%s], no backend id specified", rawBackendKey);
 
-		if (AdminResource.INTERNAL_INDICES.contains(backendId))
+		if (AccountResource.INTERNAL_INDICES.contains(backendId))
 			throw new AuthenticationException("this backend id [%s] is reserved", backendId);
 
 		if (Strings.isNullOrEmpty(keyName))
@@ -159,7 +159,7 @@ public class SpaceContext {
 		// TODO an optim would be to ask the search method not to fetch object
 		// sources since we don't need them here
 
-		SearchHits accountHits = ElasticHelper.get().search(AdminResource.ADMIN_INDEX, AdminResource.ACCOUNT_TYPE,
+		SearchHits accountHits = ElasticHelper.get().search(AccountResource.ADMIN_INDEX, AccountResource.ACCOUNT_TYPE,
 				"backendId", backendId, "backendKey.name", keyName, "backendKey.secret", keySecret);
 
 		if (accountHits.getTotalHits() == 0)
@@ -223,7 +223,7 @@ public class SpaceContext {
 
 			// check admin users in spacedog index
 
-			SearchHits accountHits = ElasticHelper.get().search(AdminResource.ADMIN_INDEX, AdminResource.ACCOUNT_TYPE,
+			SearchHits accountHits = ElasticHelper.get().search(AccountResource.ADMIN_INDEX, AccountResource.ACCOUNT_TYPE,
 					"username", username, "hashedPassword", Passwords.hash(password));
 
 			if (accountHits.getTotalHits() == 0)

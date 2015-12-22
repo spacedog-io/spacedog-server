@@ -96,6 +96,10 @@ public class MailResource extends AbstractResource {
 				response.getStatus());
 	}
 
+	//
+	// Implementation
+	//
+
 	private String addFooterToTextMessage(String text, Credentials admin) {
 		if (Strings.isNullOrEmpty(text))
 			throw new IllegalArgumentException("mail text is empty");

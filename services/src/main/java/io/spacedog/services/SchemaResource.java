@@ -42,8 +42,10 @@ public class SchemaResource extends AbstractResource {
 
 		JsonMerger jsonMerger = Json.merger();
 
-		Optional.ofNullable(resp.getMappings()).map(indexMap -> indexMap.get(credentials.backendId()))
-				.orElseThrow(() -> new NotFoundException(credentials.backendId())).forEach(typeAndMapping -> {
+		Optional.ofNullable(resp.getMappings())//
+				.map(indexMap -> indexMap.get(credentials.backendId()))
+				.orElseThrow(() -> new NotFoundException(credentials.backendId()))//
+				.forEach(typeAndMapping -> {
 					try {
 						jsonMerger.merge((ObjectNode) Json.readObjectNode(typeAndMapping.value.source().string())
 								.get(typeAndMapping.key).get("_meta"));
@@ -57,7 +59,7 @@ public class SchemaResource extends AbstractResource {
 
 	@Get("/:type")
 	@Get("/:type/")
-	public Payload get(String type, Context context) throws JsonParseException, JsonMappingException, IOException {
+	public Payload get(String type) throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = SpaceContext.checkCredentials();
 		return PayloadHelper.json(ElasticHelper.get().getSchema(credentials.backendId(), type));
 	}
@@ -66,7 +68,7 @@ public class SchemaResource extends AbstractResource {
 	@Put("/:type/")
 	@Post("/:type")
 	@Post("/:type/")
-	public Payload putSchema(String type, String newSchemaAsString, Context context)
+	public Payload put(String type, String newSchemaAsString, Context context)
 			throws InterruptedException, ExecutionException, JsonParseException, JsonMappingException, IOException {
 
 		Credentials credentials = SpaceContext.checkAdminCredentials();
@@ -80,8 +82,7 @@ public class SchemaResource extends AbstractResource {
 
 	@Delete("/:type")
 	@Delete("/:type/")
-	public Payload deleteSchema(String type, Context context)
-			throws JsonParseException, JsonMappingException, IOException {
+	public Payload delete(String type) throws JsonParseException, JsonMappingException, IOException {
 		try {
 			Credentials credentials = SpaceContext.checkAdminCredentials();
 			Start.get().getElasticClient().admin().indices().prepareDeleteMapping(credentials.backendId()).setType(type)
@@ -104,5 +105,4 @@ public class SchemaResource extends AbstractResource {
 
 	private SchemaResource() {
 	}
-
 }

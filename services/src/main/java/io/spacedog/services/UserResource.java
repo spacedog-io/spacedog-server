@@ -86,14 +86,14 @@ public class UserResource extends AbstractResource {
 	@Get("/user/")
 	public Payload getAll(Context context)
 			throws NotFoundException, JsonProcessingException, InterruptedException, ExecutionException, IOException {
-		return DataResource.get().getAll(USER_TYPE, context);
+		return DataResource.get().getByType(USER_TYPE, context);
 	}
 
 	@Delete("/user")
 	@Delete("/user/")
 	public Payload deleteAll(Context context)
 			throws NotFoundException, JsonProcessingException, InterruptedException, ExecutionException, IOException {
-		return DataResource.get().deleteAll(USER_TYPE, context);
+		return DataResource.get().deleteByType(USER_TYPE, context);
 	}
 
 	@Post("/user")
@@ -139,7 +139,7 @@ public class UserResource extends AbstractResource {
 	@Get("/user/:id")
 	@Get("/user/:id/")
 	public Payload get(String id, Context context) throws JsonParseException, JsonMappingException, IOException {
-		return DataResource.get().get(USER_TYPE, id, context);
+		return DataResource.get().getById(USER_TYPE, id, context);
 	}
 
 	@Put("/user/:id")
@@ -152,7 +152,7 @@ public class UserResource extends AbstractResource {
 	@Delete("/user/:id")
 	@Delete("/user/:id/")
 	public Payload delete(String id, Context context) throws JsonParseException, JsonMappingException, IOException {
-		return DataResource.get().delete(USER_TYPE, id, context);
+		return DataResource.get().deleteById(USER_TYPE, id, context);
 	}
 
 	@Delete("/user/:id/password")

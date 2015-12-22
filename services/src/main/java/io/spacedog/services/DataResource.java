@@ -52,7 +52,7 @@ public class DataResource extends AbstractResource {
 
 	@Get("/:type")
 	@Get("/:type/")
-	public Payload getAll(String type, Context context)
+	public Payload getByType(String type, Context context)
 			throws NotFoundException, JsonProcessingException, InterruptedException, ExecutionException, IOException {
 		Credentials credentials = SpaceContext.checkCredentials();
 		refreshIfNecessary(credentials.backendId(), context, false);
@@ -79,13 +79,13 @@ public class DataResource extends AbstractResource {
 
 	@Delete("/:type")
 	@Delete("/:type/")
-	public Payload deleteAll(String type, Context context)
+	public Payload deleteByType(String type, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
 		return SearchResource.get().deleteSearchForType(type, null, context);
 	}
 
 	@Get("/:type/:id")
-	public Payload get(String type, String id, Context context)
+	public Payload getById(String type, String id, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = SpaceContext.checkCredentials();
 
@@ -138,7 +138,7 @@ public class DataResource extends AbstractResource {
 	}
 
 	@Delete("/:type/:id")
-	public Payload delete(String type, String id, Context context)
+	public Payload deleteById(String type, String id, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = SpaceContext.checkCredentials();
 

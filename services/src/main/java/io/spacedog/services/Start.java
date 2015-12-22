@@ -80,7 +80,7 @@ public class Start {
 				.node();
 
 		elasticClient = elasticNode.client();
-		AdminResource.get().initSpacedogIndex();
+		AccountResource.get().initSpacedogIndex();
 	}
 
 	private void startFluent() throws IOException {
@@ -101,7 +101,7 @@ public class Start {
 		routes.add(DataResource.get())//
 				.add(SchemaResource.get())//
 				.add(UserResource.get())//
-				.add(AdminResource.get())//
+				.add(AccountResource.get())//
 				.add(BatchResource.get())//
 				.add(MailResource.get())//
 				.add(SnapshotResource.get())//

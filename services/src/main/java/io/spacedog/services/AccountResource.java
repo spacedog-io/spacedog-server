@@ -11,6 +11,7 @@ import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.client.IndicesAdminClient;
+import org.elasticsearch.index.query.QueryBuilders;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -20,8 +21,8 @@ import com.google.common.io.Resources;
 
 import io.spacedog.utils.BackendKey;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Passwords;
+import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -32,13 +33,15 @@ import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/v1/admin")
-public class AdminResource extends AbstractResource {
+public class AccountResource extends AbstractResource {
 
 	public static final String ADMIN_INDEX = "spacedog";
 	public static final String ACCOUNT_TYPE = "account";
 	public static final Set<String> INTERNAL_INDICES = Sets.newHashSet(ADMIN_INDEX);
 
+	//
 	// properties
+	//
 
 	public static final String BACKEND_KEY = "backendKey";
 
@@ -54,28 +57,26 @@ public class AdminResource extends AbstractResource {
 		}
 	}
 
-	/**
-	 * Internal service only accessible to spacedog administrators.
-	 */
+	//
+	// Routes
+	//
+
 	@Get("/account")
 	@Get("/account/")
-	public Payload getAll(Context context) {
-		// TODO only spacedog super administrator authenticated should be able
-		// to review all accounts from a super admin console.
-		return Payload.unauthorized("spacedog.io");
+	public Payload getAll(Context context) throws JsonParseException, JsonMappingException, IOException {
 
-		// checkAdminCredentialsOnly(context);
-		//
-		// SearchResponse response = Start.get().getElasticClient()
-		// .prepareSearch(SPACEDOG_INDEX).setTypes(ACCOUNT_TYPE)
-		// .setQuery(QueryBuilders.matchAllQuery()).get();
-		//
+		SpaceContext.checkSuperDogCredentials();
+
+		Start.get().getElasticClient().prepareSearch(ADMIN_INDEX).setTypes(ACCOUNT_TYPE)
+				.setQuery(QueryBuilders.matchAllQuery()).get();
+
 		// return extractResults(response);
+		return Payload.ok();
 	}
 
-	@Get("/user/:username/check")
-	@Get("/user/:username/check")
-	public Payload checkUsername(String username) {
+	@Get("/account/username/:username")
+	@Get("/account/username/:username/")
+	public Payload getAccountUsernameExists(String username) {
 		// TODO add a spacedog super admin key to log what admin app is checking
 		// existence of an account by username. Everybody should not be able to
 		// do this.
@@ -86,18 +87,18 @@ public class AdminResource extends AbstractResource {
 		return checkExistence(ADMIN_INDEX, ACCOUNT_TYPE, "username", username);
 	}
 
-	@Get("/backend/:id/check")
-	@Get("/backend/:id/check")
-	public Payload checkBackendId(String backendId) {
+	@Get("/account/backendId/:id")
+	@Get("/account/backendId/:id/")
+	public Payload getAccountBackendIdExists(String id) {
 		// TODO add a spacedog super admin key to log what admin app is checking
 		// existence of an account by backend id. Everybody should not be able
 		// to do this.
-		return checkExistence(ADMIN_INDEX, ACCOUNT_TYPE, "backendId", backendId);
+		return checkExistence(ADMIN_INDEX, ACCOUNT_TYPE, "backendId", id);
 	}
 
 	@Post("/account")
 	@Post("/account/")
-	public Payload signUp(String body, Context context) throws IOException {
+	public Payload post(String body, Context context) throws IOException {
 		ObjectNode input = Json.readObjectNode(body);
 
 		Account account = new Account();
@@ -135,7 +136,7 @@ public class AdminResource extends AbstractResource {
 
 		ObjectNode payloadContent = PayloadHelper
 				.savedBuilder(true, "/v1/admin", ACCOUNT_TYPE, account.backendId, version)//
-				.put(AdminResource.BACKEND_KEY, account.defaultClientKey()).build();
+				.put(AccountResource.BACKEND_KEY, account.defaultClientKey()).build();
 
 		return PayloadHelper.json(payloadContent, HttpStatus.CREATED)//
 				.withHeader(SpaceHeaders.BACKEND_KEY, account.defaultClientKey());
@@ -143,7 +144,8 @@ public class AdminResource extends AbstractResource {
 
 	@Get("/account/:id")
 	@Get("/account/:id/")
-	public Payload get(String backendId, Context context) throws JsonParseException, JsonMappingException, IOException {
+	public Payload getById(String backendId, Context context)
+			throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = SpaceContext.checkAdminCredentialsFor(backendId);
 
 		GetResponse response = Start.get().getElasticClient()//
@@ -159,7 +161,7 @@ public class AdminResource extends AbstractResource {
 
 	@Delete("/account/:id")
 	@Delete("/account/:id/")
-	public Payload delete(String backendId, Context context)
+	public Payload deleteById(String backendId, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = SpaceContext.checkAdminCredentialsFor(backendId);
 
@@ -187,7 +189,7 @@ public class AdminResource extends AbstractResource {
 
 	@Get("/login")
 	@Get("/login/")
-	public Payload login(Context context) throws JsonParseException, JsonMappingException, IOException {
+	public Payload getLogin() throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		String backendKey = credentials.backendKeyAsString().get();
 		// TODO return backend key in json only?
@@ -199,12 +201,12 @@ public class AdminResource extends AbstractResource {
 	// Singleton
 	//
 
-	private static AdminResource singleton = new AdminResource();
+	private static AccountResource singleton = new AccountResource();
 
-	static AdminResource get() {
+	static AccountResource get() {
 		return singleton;
 	}
 
-	private AdminResource() {
+	private AccountResource() {
 	}
 }
