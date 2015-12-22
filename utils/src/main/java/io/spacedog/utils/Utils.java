@@ -1,6 +1,7 @@
 package io.spacedog.utils;
 
 import java.nio.charset.Charset;
+import java.util.Collection;
 
 public class Utils {
 
@@ -42,5 +43,9 @@ public class Utils {
 	public static boolean isDigit(char c) {
 		return c == '1' || c == '2' || c == '3' || c == '4' || c == '5' //
 				|| c == '6' || c == '7' || c == '8' || c == '9';
+	}
+
+	public static <E> boolean isNullOrEmpty(Collection<E> c) {
+		return c == null || c.isEmpty();
 	}
 }
