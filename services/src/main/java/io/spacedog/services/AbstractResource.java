@@ -9,8 +9,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Strings;
 
 import io.spacedog.utils.Json;
-import io.spacedog.utils.Utils;
 import io.spacedog.utils.Json.Type;
+import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.payload.Payload;
 
@@ -101,8 +101,8 @@ public abstract class AbstractResource {
 					String.format("property [%s] is forbidden in type [%s]", propertyPath, type));
 	}
 
-	protected static String toUrl(String baseUrl, String uri, String type, String id) {
-		return new StringBuilder(baseUrl).append(uri).append('/').append(type).append('/').append(id).toString();
+	protected static String toUrl(String uri, String type, String id) {
+		return new StringBuilder(BASE_URL).append(uri).append('/').append(type).append('/').append(id).toString();
 	}
 
 	protected static String getReferenceType(String reference) {

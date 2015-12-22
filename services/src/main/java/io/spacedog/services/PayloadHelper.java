@@ -103,7 +103,7 @@ public class PayloadHelper {
 		JsonBuilder<ObjectNode> builder = minimalBuilder(created ? HttpStatus.CREATED : HttpStatus.OK) //
 				.put("id", id) //
 				.put("type", type) //
-				.put("location", AbstractResource.toUrl(AbstractResource.BASE_URL, uri, type, id));
+				.put("location", AbstractResource.toUrl(uri, type, id));
 
 		if (version > 0) //
 			builder.put("version", version);
