@@ -21,7 +21,7 @@ public class SpaceSuite extends Suite {
 
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.TYPE)
-	public static @interface TestAlways {
+	public static @interface TestOften {
 	}
 
 	@Retention(RetentionPolicy.RUNTIME)

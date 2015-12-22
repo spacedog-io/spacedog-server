@@ -15,9 +15,9 @@ import io.spacedog.client.SpaceResponse;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SchemaBuilder2;
-import io.spacedog.watchdog.SpaceSuite.TestAlways;
+import io.spacedog.watchdog.SpaceSuite.TestOften;
 
-@TestAlways
+@TestOften
 public class BatchResourceTest extends Assert {
 
 	@Test

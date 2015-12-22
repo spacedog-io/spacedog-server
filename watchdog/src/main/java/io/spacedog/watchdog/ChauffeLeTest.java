@@ -18,9 +18,9 @@ import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SchemaBuilder;
-import io.spacedog.watchdog.SpaceSuite.TestAlways;
+import io.spacedog.watchdog.SpaceSuite.TestOften;
 
-@TestAlways
+@TestOften
 public class ChauffeLeTest extends Assert {
 
 	private static SpaceDogHelper.Account adminAccount;

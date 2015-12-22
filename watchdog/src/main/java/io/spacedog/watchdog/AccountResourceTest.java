@@ -13,9 +13,9 @@ import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceHeaders;
-import io.spacedog.watchdog.SpaceSuite.TestAlways;
+import io.spacedog.watchdog.SpaceSuite.TestOften;
 
-@TestAlways
+@TestOften
 public class AccountResourceTest extends Assert {
 
 	@Test

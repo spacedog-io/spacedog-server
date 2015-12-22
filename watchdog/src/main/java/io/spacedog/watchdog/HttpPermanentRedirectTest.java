@@ -8,10 +8,10 @@ import org.junit.Test;
 
 import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceDogHelper.Account;
-import io.spacedog.watchdog.SpaceSuite.TestAlways;
+import io.spacedog.watchdog.SpaceSuite.TestOften;
 import io.spacedog.client.SpaceRequest;
 
-@TestAlways
+@TestOften
 public class HttpPermanentRedirectTest extends Assert {
 
 	@Test

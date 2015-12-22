@@ -15,9 +15,9 @@ import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
 import io.spacedog.utils.BackendKey;
 import io.spacedog.utils.Json;
-import io.spacedog.watchdog.SpaceSuite.TestAlways;
+import io.spacedog.watchdog.SpaceSuite.TestOften;
 
-@TestAlways
+@TestOften
 public class DataResourceTest extends Assert {
 
 	@Test

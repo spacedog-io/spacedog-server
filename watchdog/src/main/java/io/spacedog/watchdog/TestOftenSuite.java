@@ -12,10 +12,10 @@ import com.amazonaws.services.sns.model.PublishRequest;
 
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.watchdog.SpaceSuite.Annotations;
-import io.spacedog.watchdog.SpaceSuite.TestAlways;
+import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @RunWith(SpaceSuite.class)
-@Annotations(TestAlways.class)
+@Annotations(TestOften.class)
 public class TestOftenSuite extends RunListener {
 
 	public void lambda() {
