@@ -39,7 +39,7 @@ public class ChauffeLeTest extends Assert {
 
 		lui = SpaceDogHelper.createUser(adminAccount.backendKey, "lui", "hi lui", "lui@chauffe.le");
 		elle = SpaceDogHelper.createUser(adminAccount.backendKey, "elle", "hi elle", "elle@chauffe.le");
-		laCopine = SpaceDogHelper.createUser(adminAccount.backendKey, "la copine", "hi la copine",
+		laCopine = SpaceDogHelper.createUser(adminAccount.backendKey, "lacopine", "hi la copine",
 				"lacopine@chauffe.le");
 	}
 
