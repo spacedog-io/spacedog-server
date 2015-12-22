@@ -75,7 +75,7 @@ public class SpaceResponse {
 			String decoded = new String(Base64.getDecoder().decode(//
 					schemeAndTokens[1].getBytes(Utils.UTF8)));
 			String[] tokens = decoded.split(":", 2);
-			System.out.println(String.format("%s: %s (= %s:%s)", key, value, tokens[0], tokens[1]));
+			System.out.println(String.format("%s: %s (%s)", key, value, tokens[0]));
 		} else
 			System.out.println(String.format("%s: %s", key, value));
 	}
@@ -161,6 +161,11 @@ public class SpaceResponse {
 		return this;
 	}
 
+	public SpaceResponse assertEquals(JsonNode expected, String jsonPath) {
+		Assert.assertEquals(expected, Json.get(jsonResponseContent, jsonPath));
+		return this;
+	}
+
 	public SpaceResponse assertEqualsWithoutMeta(JsonNode expected) {
 		Assert.assertEquals(expected, objectNode().deepCopy().without("meta"));
 		return this;
@@ -214,7 +219,7 @@ public class SpaceResponse {
 		if (Json.isNull(node))
 			Assert.fail("property [%s] is null");
 		if (size != node.size())
-			Assert.fail(String.format("expected size = [%s], json property [%s] node size = [%s]", //
+			Assert.fail(String.format("expected size [%s], json property [%s] node size [%s]", //
 					size, jsonPath, node.size()));
 		return this;
 	}
@@ -222,14 +227,21 @@ public class SpaceResponse {
 	public SpaceResponse assertSizeEquals(int size) {
 		assertJsonContent();
 		if (size != jsonResponseContent.size())
-			Assert.fail(String.format("expected size = [%s], root json node size = [%s]", //
+			Assert.fail(String.format("expected size [%s], root json node size [%s]", //
 					size, jsonResponseContent.size()));
 		return this;
 	}
 
 	public SpaceResponse assertJsonContent() {
 		if (jsonResponseContent == null)
-			Assert.fail("no response json content");
+			Assert.fail("response content is not json formatted");
+		return this;
+	}
+
+	public SpaceResponse assertContains(String expected, String fieldName) {
+		assertJsonContent();
+		if (!jsonResponseContent.findValuesAsText(fieldName).contains(expected))
+			Assert.fail(String.format("no field named [%s] found with value [%s]", fieldName, expected));
 		return this;
 	}
 
