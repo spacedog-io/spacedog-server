@@ -5,7 +5,11 @@ package io.spacedog.client;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
+
+import javax.swing.JOptionPane;
 
 import org.junit.Assert;
 
@@ -32,6 +36,8 @@ public class SpaceRequest {
 	private HttpRequest request;
 	private JsonNode body;
 
+	private static Map<String, String> users = new HashMap<>();
+
 	public SpaceRequest(HttpRequest request) {
 		this.request = request;
 	}
@@ -41,7 +47,8 @@ public class SpaceRequest {
 	}
 
 	public static SpaceRequest get(boolean ssl, String uri) {
-		String url = ssl ? computeMainUrl(uri) : computeOptionalUrl(uri);
+		String url = uri.startsWith("http") ? uri//
+				: ssl ? computeMainUrl(uri) : computeOptionalUrl(uri);
 		GetRequest request = Unirest.get(url);
 		return new SpaceRequest(request);
 	}
@@ -51,7 +58,8 @@ public class SpaceRequest {
 	}
 
 	public static SpaceRequest post(boolean ssl, String uri) {
-		String url = ssl ? computeMainUrl(uri) : computeOptionalUrl(uri);
+		String url = uri.startsWith("http") ? uri//
+				: ssl ? computeMainUrl(uri) : computeOptionalUrl(uri);
 		HttpRequestWithBody request = Unirest.post(url);
 		return new SpaceRequest(request);
 	}
@@ -61,7 +69,8 @@ public class SpaceRequest {
 	}
 
 	public static SpaceRequest put(boolean ssl, String uri) {
-		String url = ssl ? computeMainUrl(uri) : computeOptionalUrl(uri);
+		String url = uri.startsWith("http") ? uri//
+				: ssl ? computeMainUrl(uri) : computeOptionalUrl(uri);
 		HttpRequestWithBody request = Unirest.put(url);
 		return new SpaceRequest(request);
 	}
@@ -71,7 +80,8 @@ public class SpaceRequest {
 	}
 
 	public static SpaceRequest delete(boolean ssl, String uri) {
-		String url = ssl ? computeMainUrl(uri) : computeOptionalUrl(uri);
+		String url = uri.startsWith("http") ? uri//
+				: ssl ? computeMainUrl(uri) : computeOptionalUrl(uri);
 		HttpRequestWithBody request = Unirest.delete(url);
 		return new SpaceRequest(request);
 	}
@@ -81,7 +91,8 @@ public class SpaceRequest {
 	}
 
 	public static SpaceRequest options(boolean ssl, String uri) {
-		String url = ssl ? computeMainUrl(uri) : computeOptionalUrl(uri);
+		String url = uri.startsWith("http") ? uri//
+				: ssl ? computeMainUrl(uri) : computeOptionalUrl(uri);
 		HttpRequestWithBody request = Unirest.options(url);
 		return new SpaceRequest(request);
 	}
@@ -234,5 +245,22 @@ public class SpaceRequest {
 
 	public static void setLogDebug(boolean debug) {
 		SpaceRequest.debug = debug;
+	}
+
+	public SpaceRequest promptAuth() {
+		return promptAuth("david");
+	}
+
+	public SpaceRequest promptAuth(String username) {
+		String password = users.get(username);
+		if (password == null) {
+			if (System.console() == null) {
+				password = JOptionPane.showInputDialog(username + ": enter your password: ");
+			} else
+				password = new String(System.console()//
+						.readPassword(username + ": enter your password: "));
+			users.put(username, password);
+		}
+		return basicAuth(username, password);
 	}
 }
