@@ -58,7 +58,8 @@ public class SearchResource extends AbstractResource {
 	public Payload postSearchAllTypes(String body, Context context) throws JsonParseException, JsonMappingException,
 			IOException, NotFoundException, InterruptedException, ExecutionException {
 		Credentials credentials = SpaceContext.checkCredentials();
-		refreshIfNecessary(credentials.backendId(), context, false);
+		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, false);
+		ElasticHelper.get().refresh(refresh, credentials.backendId());
 		ObjectNode result = searchInternal(credentials, null, body, context);
 		return PayloadHelper.json(result);
 	}
@@ -68,7 +69,8 @@ public class SearchResource extends AbstractResource {
 	public Payload deleteAllTypes(String query, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
-		refreshIfNecessary(credentials.backendId(), context, true);
+		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, true);
+		ElasticHelper.get().refresh(refresh, credentials.backendId());
 		DeleteByQueryResponse response = ElasticHelper.get().delete(credentials.backendId(), query, new String[0]);
 		return PayloadHelper.json(response.status(), response.getIndex(credentials.backendId()).getFailures());
 	}
@@ -85,7 +87,8 @@ public class SearchResource extends AbstractResource {
 	public Payload postSearchForType(String type, String body, Context context) throws JsonParseException,
 			JsonMappingException, IOException, NotFoundException, InterruptedException, ExecutionException {
 		Credentials credentials = SpaceContext.checkCredentials();
-		refreshIfNecessary(credentials.backendId(), context, false);
+		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, false);
+		ElasticHelper.get().refresh(refresh, credentials.backendId());
 		ObjectNode result = searchInternal(credentials, type, body, context);
 		return PayloadHelper.json(result);
 	}
@@ -95,7 +98,8 @@ public class SearchResource extends AbstractResource {
 	public Payload deleteSearchForType(String type, String query, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
-		refreshIfNecessary(credentials.backendId(), context, true);
+		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, true);
+		ElasticHelper.get().refresh(refresh, credentials.backendId());
 		DeleteByQueryResponse response = ElasticHelper.get().delete(credentials.backendId(), query, type);
 		return PayloadHelper.json(response.status(), response.getIndex(credentials.backendId()).getFailures());
 	}
@@ -105,7 +109,8 @@ public class SearchResource extends AbstractResource {
 	public Payload postFilterForType(String type, String body, Context context)
 			throws JsonParseException, JsonMappingException, IOException, InterruptedException, ExecutionException {
 		Credentials credentials = SpaceContext.checkCredentials();
-		refreshIfNecessary(credentials.backendId(), context, false);
+		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, false);
+		ElasticHelper.get().refresh(refresh, credentials.backendId());
 		FilteredSearchBuilder builder = ElasticHelper.get().searchBuilder(credentials.backendId(), type)
 				.applyContext(context).applyFilters(Json.readObjectNode(body));
 		return PayloadHelper.json(extractResults(builder.get(), context, credentials));

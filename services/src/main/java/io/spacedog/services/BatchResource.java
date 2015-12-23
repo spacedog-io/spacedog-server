@@ -142,17 +142,17 @@ public class BatchResource extends AbstractResource {
 
 		@Override
 		public String uri() {
-			return checkStringNotNullOrEmpty(request, "path");
+			return Json.checkStringNotNullOrEmpty(request, "path");
 		}
 
 		@Override
 		public String method() {
-			return checkStringNotNullOrEmpty(request, "method");
+			return Json.checkStringNotNullOrEmpty(request, "method");
 		}
 
 		@Override
 		public String content() throws IOException {
-			return checkJsonNode(request, "content", true).get().toString();
+			return Json.checkJsonNode(request, "content", true).get().toString();
 		}
 
 		@Override
@@ -164,14 +164,14 @@ public class BatchResource extends AbstractResource {
 		public List<String> headerNames() {
 			Set<String> headerNames = Sets.newHashSet();
 			headerNames.addAll(context.request().headerNames());
-			checkObjectNode(request, "headers", false)//
+			Json.checkObject(request, "headers", false)//
 					.ifPresent(node -> Iterators.addAll(headerNames, node.fieldNames()));
 			return Lists.newArrayList(headerNames.iterator());
 		}
 
 		@Override
 		public List<String> headers(String name) {
-			Optional<JsonNode> headers = checkObjectNode(request, "headers." + name, false);
+			Optional<JsonNode> headers = Json.checkObject(request, "headers." + name, false);
 			if (headers.isPresent())
 				return Json.toList(headers.get());
 			return context.request().headers(name);
@@ -179,7 +179,7 @@ public class BatchResource extends AbstractResource {
 
 		@Override
 		public String header(String name) {
-			Optional<JsonNode> header = checkObjectNode(request, "headers." + name, false);
+			Optional<JsonNode> header = Json.checkObject(request, "headers." + name, false);
 			if (header.isPresent())
 				return header.get().asText();
 			return context.request().header(name);
@@ -232,7 +232,7 @@ public class BatchResource extends AbstractResource {
 
 				@Override
 				public Collection<String> keys() {
-					Optional<JsonNode> opt = AbstractResource.checkObjectNode(request, "parameters", false);
+					Optional<JsonNode> opt = Json.checkObject(request, "parameters", false);
 					return opt.isPresent() ? Lists.newArrayList(opt.get().fieldNames()) : Collections.emptyList();
 				}
 

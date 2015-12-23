@@ -107,10 +107,10 @@ public class UserResource extends AbstractResource {
 		Credentials credentials = SpaceContext.checkCredentials();
 
 		ObjectNode user = Json.readObjectNode(body);
-		String username = checkStringNotNullOrEmpty(user, USERNAME);
+		String username = Json.checkStringNotNullOrEmpty(user, USERNAME);
 		Usernames.checkIfValid(username);
-		checkStringNotNullOrEmpty(user, EMAIL);
-		checkNotPresent(user, HASHED_PASSWORD, USER_TYPE);
+		Json.checkStringNotNullOrEmpty(user, EMAIL);
+		Json.checkNotPresent(user, HASHED_PASSWORD, USER_TYPE);
 		user.putArray(GROUPS).add(credentials.backendId());
 
 		// password management

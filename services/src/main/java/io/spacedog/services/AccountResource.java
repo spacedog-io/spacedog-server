@@ -103,11 +103,10 @@ public class AccountResource extends AbstractResource {
 		// TODO add a spacedog super admin key to log what admin app is checking
 		// existence of an account by username. Everybody should not be able to
 		// do this.
-
 		if (Start.get().configuration().isSuperDog(username))
 			return Payload.ok();
-
-		return checkExistence(ADMIN_INDEX, ACCOUNT_TYPE, "username", username);
+		long totalHits = ElasticHelper.get().search(ADMIN_INDEX, ACCOUNT_TYPE, "username", username).getTotalHits();
+		return totalHits == 0 ? Payload.notFound() : Payload.ok();
 	}
 
 	@Get("/account/backendId/:id")
@@ -116,7 +115,8 @@ public class AccountResource extends AbstractResource {
 		// TODO add a spacedog super admin key to log what admin app is checking
 		// existence of an account by backend id. Everybody should not be able
 		// to do this.
-		return checkExistence(ADMIN_INDEX, ACCOUNT_TYPE, "backendId", id);
+		long totalHits = ElasticHelper.get().search(ADMIN_INDEX, ACCOUNT_TYPE, "backendId", id).getTotalHits();
+		return totalHits == 0 ? Payload.notFound() : Payload.ok();
 	}
 
 	@Post("/account")

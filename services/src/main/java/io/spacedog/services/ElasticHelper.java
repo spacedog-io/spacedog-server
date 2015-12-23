@@ -83,8 +83,8 @@ public class ElasticHelper {
 		object.with("meta").remove("version");
 		object.with("meta").remove("type");
 
-		AbstractResource.checkStringNotNullOrEmpty(object, "meta.createdBy");
-		AbstractResource.checkStringNotNullOrEmpty(object, "meta.createdAt");
+		Json.checkStringNotNullOrEmpty(object, "meta.createdBy");
+		Json.checkStringNotNullOrEmpty(object, "meta.createdAt");
 
 		object.with("meta").put("updatedBy", updatedBy);
 		object.with("meta").put("updatedAt", DateTime.now().toString());
@@ -98,12 +98,12 @@ public class ElasticHelper {
 
 	public IndexResponse updateObject(String index, ObjectNode object, String updatedBy) {
 
-		String id = AbstractResource.checkStringNotNullOrEmpty(object, "meta.id");
-		String type = AbstractResource.checkStringNotNullOrEmpty(object, "meta.type");
-		long version = AbstractResource.checkLongNode(object, "meta.version", true).get().asLong();
+		String id = Json.checkStringNotNullOrEmpty(object, "meta.id");
+		String type = Json.checkStringNotNullOrEmpty(object, "meta.type");
+		long version = Json.checkLongNode(object, "meta.version", true).get().asLong();
 
-		AbstractResource.checkStringNotNullOrEmpty(object, "meta.createdBy");
-		AbstractResource.checkStringNotNullOrEmpty(object, "meta.createdAt");
+		Json.checkStringNotNullOrEmpty(object, "meta.createdBy");
+		Json.checkStringNotNullOrEmpty(object, "meta.createdAt");
 
 		object.with("meta").remove("id");
 		object.with("meta").remove("version");

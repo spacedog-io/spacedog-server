@@ -38,7 +38,8 @@ public class DataResource extends AbstractResource {
 	public Payload getAll(Context context)
 			throws NotFoundException, JsonProcessingException, InterruptedException, ExecutionException, IOException {
 		Credentials credentials = SpaceContext.checkCredentials();
-		refreshIfNecessary(credentials.backendId(), context, false);
+		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, false);
+		ElasticHelper.get().refresh(refresh, credentials.backendId());
 		ObjectNode result = SearchResource.get()//
 				.searchInternal(credentials, null, null, context);
 		return PayloadHelper.json(result);
@@ -55,7 +56,8 @@ public class DataResource extends AbstractResource {
 	public Payload getByType(String type, Context context)
 			throws NotFoundException, JsonProcessingException, InterruptedException, ExecutionException, IOException {
 		Credentials credentials = SpaceContext.checkCredentials();
-		refreshIfNecessary(credentials.backendId(), context, false);
+		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, false);
+		ElasticHelper.get().refresh(refresh, credentials.backendId());
 		ObjectNode result = SearchResource.get()//
 				.searchInternal(credentials, type, null, context);
 		return PayloadHelper.json(result);

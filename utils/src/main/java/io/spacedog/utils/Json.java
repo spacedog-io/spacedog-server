@@ -6,6 +6,7 @@ package io.spacedog.utils;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -223,12 +224,6 @@ public class Json {
 		}
 	}
 
-	public static ObjectNode checkObject(JsonNode node) {
-		if (!node.isObject())
-			throw new IllegalArgumentException(String.format("not a json object but [%s]", node.getNodeType()));
-		return (ObjectNode) node;
-	}
-
 	public static List<String> toList(JsonNode node) {
 		if (node.isArray())
 			return Lists.newArrayList(node.elements()).stream().map(element -> element.asText())
@@ -241,9 +236,92 @@ public class Json {
 				String.format("can not convert this json node [%s] to a list of strings", node));
 	}
 
-	public static void checkIfPresent(ObjectNode jsonBody, String propertyPath) {
+	//
+	// check methods
+	//
+
+	public static ObjectNode checkObject(JsonNode node) {
+		if (!node.isObject())
+			throw new IllegalArgumentException(String.format("not a json object but [%s]", node.getNodeType()));
+		return (ObjectNode) node;
+	}
+
+	public static Optional<JsonNode> checkObject(JsonNode input, String propertyPath, boolean required) {
+		return checkJsonNodeOfType(input, propertyPath, Type.Object, required);
+	}
+
+	public static Optional<JsonNode> checkArrayNode(JsonNode input, String propertyPath, boolean required) {
+		return checkJsonNodeOfType(input, propertyPath, Type.Array, required);
+	}
+
+	public static void checkPresent(ObjectNode jsonBody, String propertyPath) {
 		if (Json.isNull(get(jsonBody, propertyPath)))
 			throw new IllegalArgumentException(
 					String.format("JSON object does not contain this property [%s]", propertyPath));
+	}
+
+	public static String checkStringNotNullOrEmpty(JsonNode input, String propertyPath) {
+		String string = checkStringNode(input, propertyPath, true).get().asText();
+		if (Strings.isNullOrEmpty(string)) {
+			throw new IllegalArgumentException(String.format("property [%s] must not be null or empty", propertyPath));
+		}
+		return string;
+	}
+
+	public static Optional<JsonNode> checkJsonNode(JsonNode input, String propertyPath, boolean required) {
+		JsonNode node = get(input, propertyPath);
+		if (node == null) {
+			if (required)
+				throw new IllegalArgumentException(String.format("property [%s] must not be null", propertyPath));
+			return Optional.ofNullable(null);
+		}
+		return Optional.of(node);
+	}
+
+	public static void checkNotPresent(JsonNode input, String propertyPath, String type) {
+		JsonNode node = get(input, propertyPath);
+		if (node != null)
+			throw new IllegalArgumentException(
+					String.format("property [%s] is forbidden in type [%s]", propertyPath, type));
+	}
+
+	public static Optional<JsonNode> checkStringNode(JsonNode input, String propertyPath, boolean required) {
+		return checkJsonNodeOfType(input, propertyPath, Type.String, required);
+	}
+
+	public static Optional<JsonNode> checkFloatNode(JsonNode input, String propertyPath, boolean required) {
+		return checkJsonNodeOfType(input, propertyPath, Type.Float, required);
+	}
+
+	public static Optional<JsonNode> checkDouble(JsonNode input, String propertyPath, boolean required) {
+		return checkJsonNodeOfType(input, propertyPath, Type.Double, required);
+	}
+
+	public static Optional<JsonNode> checkBooleanNode(JsonNode input, String propertyPath, boolean required) {
+		return checkJsonNodeOfType(input, propertyPath, Type.Boolean, required);
+	}
+
+	public static Optional<JsonNode> checkIntegerNode(JsonNode input, String propertyPath, boolean required) {
+		return checkJsonNodeOfType(input, propertyPath, Type.Integer, required);
+	}
+
+	public static Optional<JsonNode> checkLongNode(JsonNode input, String propertyPath, boolean required) {
+		return checkJsonNodeOfType(input, propertyPath, Type.Long, required);
+	}
+
+	private static Optional<JsonNode> checkJsonNodeOfType(JsonNode input, String propertyPath, Type expected,
+			boolean required) {
+		JsonNode node = get(input, propertyPath);
+		if (node == null) {
+			if (required)
+				throw new IllegalArgumentException(String.format("property [%s] must not be null", propertyPath));
+			return Optional.empty();
+		}
+		if (isOfType(expected, node))
+			return Optional.of(node);
+		else
+			throw new IllegalArgumentException(//
+					String.format("property [%s] must be of type [%s] instead of [%s]", //
+							propertyPath, expected, node.getNodeType()));
 	}
 }
