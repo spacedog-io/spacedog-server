@@ -11,8 +11,8 @@ public class Check {
 			throw new IllegalArgumentException(String.format("parameter [%s] is null or empty", paramName));
 	}
 
-	public static void notEmpty(Collection<?> value, String paramName) {
-		if (value.isEmpty())
+	public static void notNullOrEmpty(Collection<?> value, String paramName) {
+		if (Utils.isNullOrEmpty(value))
 			throw new IllegalArgumentException(String.format("parameter [%s] is empty", paramName));
 	}
 
