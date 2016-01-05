@@ -114,6 +114,9 @@ public class MailResource extends AbstractResource {
 			throw new IllegalArgumentException("mail html is empty");
 
 		int index = html.lastIndexOf("</html>");
+		if (index < 0)
+			throw new IllegalArgumentException("no html end tag");
+
 		return String.format(
 				"%s<p><p>---<p>This is an automatic email sent by the [%s] application.<p>Contact your administrator for more information [%s].</html>",
 				html.substring(0, index), admin.backendId().toUpperCase(), admin.email().get());

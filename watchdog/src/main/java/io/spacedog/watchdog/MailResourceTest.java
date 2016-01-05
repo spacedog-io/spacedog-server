@@ -5,8 +5,8 @@ import org.junit.Test;
 
 import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceDogHelper.Account;
-import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
 @TestOncePerDay
 public class MailResourceTest extends Assert {
@@ -42,6 +42,16 @@ public class MailResourceTest extends Assert {
 				.field("subject", "This is a test...")//
 				.field("text", "So don't bother read this!")//
 				.go(400);
+
+		// should fail since no html end tag
+
+		SpaceRequest.post("/v1/mail").basicAuth(account)//
+				.queryString("test", "true")//
+				.field("to", "platform@spacedog.io")//
+				.field("subject", "This is a test...")//
+				.field("html", "<html><h1>So don't bother read this!</h1>")//
+				.go(400);
+
 	}
 
 }
