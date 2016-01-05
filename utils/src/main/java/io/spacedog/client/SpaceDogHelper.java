@@ -51,7 +51,7 @@ public class SpaceDogHelper {
 
 	public static User createUser(String backendKey, String username, String password, String email) throws Exception {
 
-		String id = SpaceRequest.post("/v1/user/").backendKey(backendKey)
+		String id = SpaceRequest.post("/v1/user").backendKey(backendKey)
 				.body(Json.objectBuilder().put("username", username).put("password", password).put("email", email))
 				.go(201).objectNode().get("id").asText();
 
@@ -95,7 +95,7 @@ public class SpaceDogHelper {
 
 	public static Account createAccount(String backendId, String username, String password, String email)
 			throws Exception, UnirestException {
-		String backendKey = SpaceRequest.post("/v1/admin/account/")
+		String backendKey = SpaceRequest.post("/v1/admin/account")
 				.body(Json.objectBuilder().put("backendId", backendId).put("username", username)
 						.put("password", password).put("email", email))
 				.go(201).httpResponse().getHeaders().get(SpaceHeaders.BACKEND_KEY).get(0);
@@ -137,8 +137,8 @@ public class SpaceDogHelper {
 		return createAccount(backendId, username, password, email);
 	}
 
-	public static void deleteAccount(String backendId, Account account) throws Exception, UnirestException {
-		deleteAccount(backendId, account.username, account.password);
+	public static void deleteAccount(Account account) throws UnirestException, Exception {
+		deleteAccount(account.backendId, account.username, account.password);
 	}
 
 	public static void deleteAccount(String backendId, String username, String password)
