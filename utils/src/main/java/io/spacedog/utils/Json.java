@@ -121,6 +121,14 @@ public class Json {
 		return false;
 	}
 
+	public static boolean isJsonObject(String string) {
+		if (Strings.isNullOrEmpty(string))
+			return false;
+		string = string.trim();
+		return string.charAt(0) == '{'//
+				&& string.charAt(string.length() - 1) == '}';
+	}
+
 	public static boolean isNull(JsonNode value) {
 		return value == null || value.isNull();
 	}

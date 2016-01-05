@@ -55,4 +55,14 @@ public class JsonTest extends Assert {
 		assertEquals(Arrays.asList("true"), Json.toList(Json.getMapper().getNodeFactory().booleanNode(true)));
 	}
 
+	@Test
+	public void checkTheseStringsAreJsonObjectsOrNot() {
+		// true
+		assertTrue(Json.isJsonObject("{}"));
+		assertTrue(Json.isJsonObject(" {} "));
+
+		// false
+		assertFalse(Json.isJsonObject("{]"));
+		assertFalse(Json.isJsonObject("[}"));
+	}
 }
