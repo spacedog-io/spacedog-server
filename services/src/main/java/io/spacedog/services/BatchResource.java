@@ -60,7 +60,7 @@ public class BatchResource extends AbstractResource {
 			// since this code is executed by the fluent payload writer
 			// outside of the filter chain.
 			// I artificially reproduce the SpaceContext filter mechanism and
-			// force init of the SpaceContext for the whole batch an avoid one
+			// force init of the SpaceContext for the whole batch to avoid one
 			// buildCredentials per sub request
 			// Use extra care before to change any of this.
 			try {
