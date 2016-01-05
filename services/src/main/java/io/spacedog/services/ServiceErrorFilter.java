@@ -27,6 +27,10 @@ public class ServiceErrorFilter implements SpaceFilter {
 			payload = PayloadHelper.error(t);
 		}
 
+		if (payload == null)
+			payload = PayloadHelper.error(500, //
+					"unexpected null payload for [%s] request to [%s]", context.method(), uri);
+
 		// uri is already checked by SpaceFilter default matches method
 
 		if (payload.isError() //
