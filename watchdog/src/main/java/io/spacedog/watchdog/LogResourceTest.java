@@ -52,8 +52,8 @@ public class LogResourceTest extends Assert {
 		SpaceRequest.get("/v1/data/message").backendKey(testAccount).basicAuth(vince).go(200);
 
 		// get all test account logs
-		SpaceRequest.get("/v1/admin/log?size=7").basicAuth(testAccount).go(200)//
-				.assertSizeEquals(7, "results")//
+		SpaceRequest.get("/v1/admin/log?size=6").basicAuth(testAccount).go(200)//
+				.assertSizeEquals(6, "results")//
 				.assertEquals("GET", "results.0.method")//
 				.assertEquals("/v1/data/message", "results.0.path")//
 				.assertEquals("POST", "results.1.method")//
@@ -65,21 +65,23 @@ public class LogResourceTest extends Assert {
 				.assertEquals("POST", "results.4.method")//
 				.assertEquals("/v1/schema/message", "results.4.path")//
 				.assertEquals("POST", "results.5.method")//
-				.assertEquals("/v1/admin/account", "results.5.path")//
-				.assertEquals("DELETE", "results.6.method")//
-				.assertEquals("/v1/admin/account/test", "results.6.path");
+				.assertEquals("/v1/admin/account", "results.5.path");
+				// don't check the delete account request before post account
+				// because it sometimes fails normally with 401 (not authorized)
+				// and 401 requests are not associated with any backend
 
 		// get all test2 account logs
-		SpaceRequest.get("/v1/admin/log?size=3").basicAuth(test2Account).go(200)//
-				.assertSizeEquals(3, "results")//
+		SpaceRequest.get("/v1/admin/log?size=2").basicAuth(test2Account).go(200)//
+				.assertSizeEquals(2, "results")//
 				.assertEquals("POST", "results.0.method")//
 				.assertEquals("/v1/user", "results.0.path")//
 				.assertEquals("********", "results.0.jsonContent.password")//
 				.assertEquals("POST", "results.1.method")//
 				.assertEquals("/v1/admin/account", "results.1.path")//
-				.assertEquals("********", "results.1.jsonContent.password")//
-				.assertEquals("DELETE", "results.2.method")//
-				.assertEquals("/v1/admin/account/test2", "results.2.path");
+				.assertEquals("********", "results.1.jsonContent.password");
+				// don't check the delete account request before post account
+				// because it sometimes fails normally with 401 (not authorized)
+				// and 401 requests are not associated with any backend
 
 		// after account deletion, logs are not accessible to account
 		SpaceDogHelper.deleteAccount(testAccount);
