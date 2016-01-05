@@ -38,6 +38,9 @@ public class Json {
 
 			else if (current.isArray())
 				current = current.get(Integer.parseInt(s));
+
+			else
+				return null;
 		}
 
 		return current;

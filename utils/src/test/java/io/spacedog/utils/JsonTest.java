@@ -12,14 +12,15 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 
-import io.spacedog.utils.Json;
-
 public class JsonTest extends Assert {
 
 	@Test
 	public void shouldSucceedToGet() {
 		JsonNode json = Json.objectBuilder().object("riri").array("fifi").add(12).object().put("loulou", false).build();
+		assertEquals(12, Json.get(json, "riri.fifi.0").asInt());
 		assertEquals(false, Json.get(json, "riri.fifi.1.loulou").asBoolean());
+		assertNull(Json.get(json, "riri.name"));
+		assertNull(Json.get(json, "riri.fifi.1.loulou.name"));
 	}
 
 	@Test
