@@ -28,7 +28,7 @@ public class SpaceContext {
 	private static ThreadLocal<SpaceContext> threadLocal = new ThreadLocal<SpaceContext>();
 
 	private Context context;
-	private Credentials credentials;
+	private Optional<Credentials> credentials;
 
 	private SpaceContext(Context context) {
 		this.context = context;
@@ -112,23 +112,49 @@ public class SpaceContext {
 	}
 
 	public static Credentials checkCredentials() throws JsonParseException, JsonMappingException, IOException {
+		Optional<Credentials> credentials = getOrBuildCredentials();
+		if (!credentials.isPresent())
+			throw new AuthenticationException("no credentials found");
+		return credentials.get();
+	}
+
+	public static Optional<Credentials> getOrBuildCredentials()
+			throws JsonParseException, JsonMappingException, IOException {
 		SpaceContext local = get();
-		if (local.credentials == null)
-			local.buildCredentials();
+		if (local.credentials == null) {
+			Debug.credentialCheck();
+			local.credentials = Strings.isNullOrEmpty(local.context.header(SpaceHeaders.BACKEND_KEY))//
+					? SpaceContext.buildAdminCredentials(local.context)
+					: SpaceContext.buildUserCredentials(local.context);
+		}
 		return local.credentials;
+	}
+
+	public static void setCredentials(Credentials credentials, boolean override)
+			throws JsonParseException, JsonMappingException, IOException {
+		if (override || !getOrBuildCredentials().isPresent())
+			get().credentials = Optional.of(credentials);
+	}
+
+	public static Optional<Credentials> getCredentials() {
+		SpaceContext local = get();
+		return local.credentials == null ? Optional.empty() : local.credentials;
 	}
 
 	//
 	// Implementation
 	//
 
-	private void buildCredentials() throws IOException, JsonParseException, JsonMappingException {
-		Debug.credentialCheck();
-		credentials = Strings.isNullOrEmpty(context.header(SpaceHeaders.BACKEND_KEY))//
-				? buildAdminCredentials() : buildUserCredentials();
-	}
+	// private void buildCredentials() throws IOException, JsonParseException,
+	// JsonMappingException {
+	// Debug.credentialCheck();
+	// credentials =
+	// Strings.isNullOrEmpty(context.header(SpaceHeaders.BACKEND_KEY))//
+	// ? buildAdminCredentials(context) : buildUserCredentials(context);
+	// }
 
-	private Credentials buildUserCredentials() throws IOException, JsonParseException, JsonMappingException {
+	private static Optional<Credentials> buildUserCredentials(Context context)
+			throws IOException, JsonParseException, JsonMappingException {
 
 		String rawBackendKey = context.header(SpaceHeaders.BACKEND_KEY);
 
@@ -185,20 +211,25 @@ public class SpaceContext {
 				String providedPassword = Passwords.hash(password);
 				JsonNode expectedPassword = user.get().get(UserResource.HASHED_PASSWORD);
 				if (!Json.isNull(expectedPassword) && providedPassword.equals(expectedPassword.asText()))
-					return Credentials.fromUser(backendId, username, //
-							user.get().get(UserResource.EMAIL).asText());
+					return Optional.of(//
+							Credentials.fromUser(backendId, username, //
+									user.get().get(UserResource.EMAIL).asText()));
 			}
 
 			throw new AuthenticationException("invalid username or password");
 
 		} else {
 
-			Account account = Json.getMapper().readValue(accountHits.getAt(0).getSourceAsString(), Account.class);
-			return Credentials.fromKey(backendId, account.backendKey);
+			Account account = Json.getMapper().readValue(//
+					accountHits.getAt(0).getSourceAsString(), Account.class);
+
+			return Optional.of(//
+					Credentials.fromKey(backendId, account.backendKey));
 		}
 	}
 
-	private Credentials buildAdminCredentials() throws JsonParseException, JsonMappingException, IOException {
+	private static Optional<Credentials> buildAdminCredentials(Context context)
+			throws JsonParseException, JsonMappingException, IOException {
 
 		Optional<String[]> tokens = decodeAuthorizationHeader(context.header(SpaceHeaders.AUTHORIZATION));
 
@@ -215,16 +246,17 @@ public class SpaceContext {
 			if (hashedPassword.isPresent()) {
 
 				if (Passwords.hash(password).equals(hashedPassword.get()))
-					return Credentials.fromSuperDog(username, //
-							Start.get().configuration().getSuperDogEmail(username).get());
+					return Optional.of(//
+							Credentials.fromSuperDog(username, //
+									Start.get().configuration().getSuperDogEmail(username).get()));
 
 				throw new AuthenticationException("invalid superdog username or password");
 			}
 
 			// check admin users in spacedog index
 
-			SearchHits accountHits = ElasticHelper.get().search(AccountResource.ADMIN_INDEX, AccountResource.ACCOUNT_TYPE,
-					"username", username, "hashedPassword", Passwords.hash(password));
+			SearchHits accountHits = ElasticHelper.get().search(AccountResource.ADMIN_INDEX,
+					AccountResource.ACCOUNT_TYPE, "username", username, "hashedPassword", Passwords.hash(password));
 
 			if (accountHits.getTotalHits() == 0)
 				throw new AuthenticationException("invalid administrator username or password");
@@ -234,10 +266,11 @@ public class SpaceContext {
 						String.format("more than one admin user with username [%s]", tokens.get()[0]));
 
 			Account account = Json.getMapper().readValue(accountHits.getAt(0).getSourceAsString(), Account.class);
-			return Credentials.fromAdmin(account.backendId, account.username, account.email, account.backendKey);
+			return Optional.of(//
+					Credentials.fromAdmin(account.backendId, account.username, account.email, account.backendKey));
 
 		} else
-			throw new AuthenticationException("no 'Authorization' header found");
+			return Optional.empty();
 	}
 
 	public static Optional<String[]> decodeAuthorizationHeader(String authzHeaderValue) {

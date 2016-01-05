@@ -11,6 +11,10 @@ import io.spacedog.utils.BackendKey;
 
 public class Credentials {
 
+	public static enum Type {
+		KEY, USER, ADMIN, SUPERDOG
+	}
+
 	private String backendId;
 	private String username;
 	private String email;
@@ -84,5 +88,16 @@ public class Credentials {
 
 	public Optional<String> email() {
 		return Optional.of(email);
+	}
+
+	public Type type() {
+		if (isSuperDogAuthenticated())
+			return Type.SUPERDOG;
+		if (isAdminAuthenticated())
+			return Type.ADMIN;
+		if (isUserAuthenticated())
+			return Type.USER;
+		else
+			return Type.KEY;
 	}
 }

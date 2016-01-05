@@ -24,8 +24,8 @@ public class BatchResourceTest extends Assert {
 	public void executeBatch() throws Exception {
 
 		// we need to make sure the test account is reset and exists before to
-		// be able to
-		// reset it again by batch requests because we need the a
+		// be able to reset it again by batch requests because we need the
+		// account credentials to request the batch
 
 		SpaceDogHelper.printTestHeader();
 		SpaceDogHelper.resetTestAccount();
@@ -250,7 +250,7 @@ public class BatchResourceTest extends Assert {
 				.assertSizeEquals(2, "responses")//
 				.assertEquals(1, "debug.batchCredentialChecks");
 
-		// should fail since batch are limited to 20 sub requests
+		// should fail since batch are limited to 10 sub requests
 
 		JsonBuilder<ArrayNode> bigBatch = Json.arrayBuilder();
 		for (int i = 0; i < 11; i++)

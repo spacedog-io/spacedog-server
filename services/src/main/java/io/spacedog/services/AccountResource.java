@@ -48,15 +48,37 @@ public class AccountResource extends AbstractResource {
 
 	public static final String BACKEND_KEY = "backendKey";
 
+	//
+	// SpaceDog index init
+	//
+
 	void initSpacedogIndex() throws InterruptedException, ExecutionException, IOException {
 
-		String accountMapping = Resources.toString(Resources.getResource("io/spacedog/services/account-mapping.json"),
-				Utils.UTF8);
+		String accountMapping = Resources.toString(Resources.getResource(//
+				"io/spacedog/services/account-mapping.json"), Utils.UTF8);
+
+		String logMapping = Resources.toString(Resources.getResource(//
+				"io/spacedog/services/log-mapping.json"), Utils.UTF8);
 
 		IndicesAdminClient indices = Start.get().getElasticClient().admin().indices();
 
 		if (!indices.prepareExists(ADMIN_INDEX).get().isExists()) {
-			indices.prepareCreate(ADMIN_INDEX).addMapping(ACCOUNT_TYPE, accountMapping).get();
+
+			indices.prepareCreate(ADMIN_INDEX)//
+					.addMapping(ACCOUNT_TYPE, accountMapping)//
+					.addMapping(LogResource.TYPE, logMapping)//
+					.get();
+		} else {
+
+			indices.preparePutMapping(ADMIN_INDEX)//
+					.setType(ACCOUNT_TYPE)//
+					.setSource(accountMapping)//
+					.get();
+
+			indices.preparePutMapping(ADMIN_INDEX)//
+					.setType(LogResource.TYPE)//
+					.setSource(logMapping)//
+					.get();
 		}
 	}
 
@@ -156,6 +178,11 @@ public class AccountResource extends AbstractResource {
 				.addMapping(UserResource.USER_TYPE, UserResource.getDefaultUserMapping()).get();
 
 		ElasticHelper.get().refresh(true, ADMIN_INDEX);
+
+		// Account is created, new account credentials are valid and can be set
+		// in space context if none are set
+		SpaceContext.setCredentials(Credentials.fromAdmin(//
+				account.backendId, account.username, account.email, account.backendKey), false);
 
 		ObjectNode payloadContent = PayloadHelper
 				.savedBuilder(true, "/v1/admin", ACCOUNT_TYPE, account.backendId, version)//

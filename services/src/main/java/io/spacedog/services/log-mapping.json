@@ -1,0 +1,23 @@
+{
+    "log" : {
+        "dynamic" : "strict",
+        "properties" : {
+            "method" : {"type" : "string", "index" : "not_analyzed"},
+            "path" : {"type" : "string", "index" : "not_analyzed"},
+            "receivedAt" : {"type" : "date", "format" : "date_time"},
+            "processedIn" : {"type" : "long", "coerce" : false},
+            "credentials" : {
+                "type" : "object",
+                "properties" : {
+                    "backendId" : {"type" : "string", "index" : "not_analyzed"},
+                    "name" : {"type" : "string", "index" : "not_analyzed"},
+                    "type" : {"type" : "string", "index" : "not_analyzed"}
+                }
+            },
+            "query" : {"type" : "object", "enabled" : false},
+            "rawContent" : {"type" : "object", "enabled" : false},
+            "jsonContent" : {"type" : "object", "enabled" : false},
+            "response" : {"type" : "object", "enabled" : false}
+        }
+    }
+}

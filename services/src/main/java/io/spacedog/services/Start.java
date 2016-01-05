@@ -105,10 +105,12 @@ public class Start {
 				.add(BatchResource.get())//
 				.add(MailResource.get())//
 				.add(SnapshotResource.get())//
+				.add(LogResource.get())//
 				.add(SearchResource.get());
 
 		routes.filter(new CrossOriginFilter())//
 				.filter(SpaceContext.filter())//
+				.filter(LogResource.filter())//
 				.filter(new ServiceErrorFilter());
 	}
 
