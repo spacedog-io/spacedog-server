@@ -37,16 +37,22 @@ public class SnapshotResourceTest extends Assert {
 				.asText();
 
 		// fails since snapshot is not yet completed
+		// returns 400 if not yet restorable or if restoreInfo is null
 		SpaceResponse response = SpaceRequest.post("/v1/dog/snapshot/latest/restore")//
 				.promptAuth()//
 				.go(400);
 
 		// poll and wait for snapshot to complete
 		do {
+
 			response = SpaceRequest.get("/v1/dog/snapshot/latest")//
 					.promptAuth()//
 					.go(200)//
 					.assertEquals(firstSnapId, "id");
+
+			// let server work a bit
+			Thread.sleep(100);
+
 		} while (!response.jsonNode().get("state").asText().equalsIgnoreCase("SUCCESS"));
 
 		ObjectNode firstSnap = response.objectNode();

@@ -123,7 +123,8 @@ public class SnapshotResource extends AbstractResource {
 
 	@Post("/latest/restore")
 	@Post("/latest/restore/")
-	public Payload postSnapshotLatestRestore(Context context) throws JsonParseException, JsonMappingException, IOException {
+	public Payload postSnapshotLatestRestore(Context context)
+			throws JsonParseException, JsonMappingException, IOException {
 
 		SpaceContext.checkSuperDogCredentials();
 
@@ -191,6 +192,10 @@ public class SnapshotResource extends AbstractResource {
 				.setPartial(false)//
 				.get()//
 				.getRestoreInfo();
+
+		if (restore == null)
+			return PayloadHelper.error(400, //
+					"restore of snapshot [%s] failed: retry later", snapshot.id());
 
 		return PayloadHelper.json(restore.status().getStatus());
 	}
