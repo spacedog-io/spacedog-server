@@ -9,8 +9,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
-import com.google.common.base.Strings;
 
 import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceRequest;
@@ -121,11 +119,13 @@ public class UserResourceTest extends Assert {
 
 		// sign up without password should succeed
 
-		String passwordResetCode = SpaceRequest.post("/v1/user/").backendKey(testAccount)
-				.body(Json.objectBuilder().put("username", "titi").put("email", "titi@dog.com")).go(201)
-				.getFromJson("passwordResetCode").asText();
-
-		assertFalse(Strings.isNullOrEmpty(passwordResetCode));
+		String passwordResetCode = SpaceRequest.post("/v1/user/")//
+				.backendKey(testAccount)//
+				.body(Json.objectBuilder().put("username", "titi").put("email", "titi@dog.com"))//
+				.go(201)//
+				.assertNotNull("passwordResetCode")//
+				.getFromJson("passwordResetCode")//
+				.asText();
 
 		// no password user login should fail
 		// I can not pass a null password anyway to the basicAuth method
@@ -136,36 +136,35 @@ public class UserResourceTest extends Assert {
 		// should fail
 
 		SpaceRequest.post("/v1/user/titi/password?passwordResetCode=").backendKey(testAccount)
-				.body(new TextNode("hi titi")).go(400);
+				.field("password", "hi titi").go(400);
 
 		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "hi titi").go(401);
 
 		// no password user setting password with wrong reset code should fail
 
 		SpaceRequest.post("/v1/user/titi/password?passwordResetCode=XXX").backendKey(testAccount)
-				.body(new TextNode("hi titi")).go(400);
+				.field("password", "hi titi").go(400);
 
 		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "hi titi").go(401);
 
-		// titi inits its own password with right reset code should
-		// succeed
+		// titi inits its own password with right reset code should succeed
 
 		SpaceRequest.post("/v1/user/titi/password?passwordResetCode=" + passwordResetCode).backendKey(testAccount)
-				.body(new TextNode("hi titi")).go(200);
+				.field("password", "hi titi").go(200);
 
 		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "hi titi").go(200);
 
 		// toto user changes titi password should fail
 
 		SpaceRequest.put("/v1/user/titi/password").backendKey(testAccount).basicAuth("toto", "hi toto")
-				.body(new TextNode("XXX")).go(401);
+				.field("password", "XXX").go(401);
 
 		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "XXX").go(401);
 
 		// titi changes its password should succeed
 
 		SpaceRequest.put("/v1/user/titi/password").backendKey(testAccount).basicAuth("titi", "hi titi")
-				.body(new TextNode("hi titi 2")).go(200);
+				.field("password", "hi titi 2").go(200);
 
 		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "hi titi 2").go(200);
 
@@ -175,7 +174,8 @@ public class UserResourceTest extends Assert {
 
 		// admin user changes titi user password should succeed
 
-		SpaceRequest.put("/v1/user/titi/password").basicAuth("test", "hi test").body(new TextNode("hi titi 3")).go(200);
+		SpaceRequest.put("/v1/user/titi/password").basicAuth("test", "hi test")//
+				.field("password", "hi titi 3").go(200);
 		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "hi titi 3").go(200);
 
 		// login with old password should fail
@@ -194,15 +194,14 @@ public class UserResourceTest extends Assert {
 		// titi inits its password with old reset code should fail
 
 		SpaceRequest.post("/v1/user/titi/password?passwordResetCode=" + passwordResetCode).backendKey(testAccount)
-				.body(new TextNode("hi titi")).go(400);
+				.field("password", "hi titi").go(400);
 
 		// titi inits its password with new reset code should fail
 
 		SpaceRequest.post("/v1/user/titi/password?passwordResetCode=" + newPasswordResetCode).backendKey(testAccount)
-				.body(new TextNode("hi titi")).go(200);
+				.field("password", "hi titi").go(200);
 
 		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "hi titi").go(200);
-
 	}
 
 	@Test

@@ -74,10 +74,10 @@ public class LogResourceTest extends Assert {
 				.assertSizeEquals(3, "results")//
 				.assertEquals("POST", "results.0.method")//
 				.assertEquals("/v1/user", "results.0.path")//
-				.assertNotPresent("results.0.content.password")//
+				.assertEquals("********", "results.0.jsonContent.password")//
 				.assertEquals("POST", "results.1.method")//
 				.assertEquals("/v1/admin/account", "results.1.path")//
-				.assertNotPresent("results.1.content.password")//
+				.assertEquals("********", "results.1.jsonContent.password")//
 				.assertEquals("DELETE", "results.2.method")//
 				.assertEquals("/v1/admin/account/test2", "results.2.path");
 
@@ -87,5 +87,42 @@ public class LogResourceTest extends Assert {
 
 		SpaceDogHelper.deleteAccount(test2Account);
 		SpaceRequest.get("/v1/admin/log").basicAuth(test2Account).go(401);
+	}
+
+	@Test
+	public void checkPasswordsAreNotLogged() throws Exception {
+
+		SpaceDogHelper.printTestHeader();
+		Account testAccount = SpaceDogHelper.resetTestAccount();
+		SpaceDogHelper.createUser(testAccount, "fred", "hi fred", "fred@dog.com");
+
+		String passwordResetCode = SpaceRequest.delete("/v1/user/fred/password")//
+				.basicAuth(testAccount).go(200).getFromJson("passwordResetCode").asText();
+
+		SpaceRequest.post("/v1/user/fred/password?passwordResetCode=" + passwordResetCode)//
+				.backendKey(testAccount).field("password", "hi fred 2").go(200);
+
+		SpaceRequest.put("/v1/user/fred/password").backendKey(testAccount)//
+				.basicAuth("fred", "hi fred 2")//
+				.field("password", "hi fred 3").go(200);
+
+		SpaceRequest.get("/v1/admin/log?size=5").basicAuth(testAccount).go(200)//
+				.assertSizeEquals(5, "results")//
+				.assertEquals("PUT", "results.0.method")//
+				.assertEquals("/v1/user/fred/password", "results.0.path")//
+				.assertEquals("********", "results.0.query.password")//
+				.assertEquals("POST", "results.1.method")//
+				.assertEquals("/v1/user/fred/password", "results.1.path")//
+				.assertEquals("********", "results.1.query.password")//
+				.assertEquals(passwordResetCode, "results.1.query.passwordResetCode")//
+				.assertEquals("DELETE", "results.2.method")//
+				.assertEquals("/v1/user/fred/password", "results.2.path")//
+				.assertEquals(passwordResetCode, "results.2.response.passwordResetCode")//
+				.assertEquals("POST", "results.3.method")//
+				.assertEquals("/v1/user", "results.3.path")//
+				.assertEquals("********", "results.3.jsonContent.password")//
+				.assertEquals("POST", "results.4.method")//
+				.assertEquals("/v1/admin/account", "results.4.path")//
+				.assertEquals("********", "results.4.jsonContent.password");
 	}
 }

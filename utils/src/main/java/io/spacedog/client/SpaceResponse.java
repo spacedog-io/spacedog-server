@@ -14,6 +14,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Strings;
 import com.google.common.collect.Iterators;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
@@ -176,6 +177,13 @@ public class SpaceResponse {
 		JsonNode node = Json.get(jsonResponseContent, jsonPath);
 		if (node == null || node.isNull())
 			Assert.fail(String.format("json property [%s] is null", jsonPath));
+		return this;
+	}
+
+	public SpaceResponse assertNotNullOrEmpty(String jsonPath) {
+		JsonNode node = Json.get(jsonResponseContent, jsonPath);
+		if (Strings.isNullOrEmpty(node.asText()))
+			Assert.fail(String.format("json string property [%s] is null or empty", jsonPath));
 		return this;
 	}
 

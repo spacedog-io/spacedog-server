@@ -131,23 +131,18 @@ public class LogResource {
 			// else
 			// log.put("content", content);
 
-			if (Json.isJsonObject(content)) {
-				JsonNode node = Json.readJsonNode(content);
-
-				if (node.isObject())
-					((ObjectNode) node).without("password");
-
-				log.node("jsonContent", node);
-			} else
-				log.put("rawContent", content);
+			if (Json.isJsonObject(content))
+				log.node("jsonContent", Json.readJsonNode(content));
 		}
 
 		if (payload.rawContent() instanceof JsonNode)
 			log.node("response", (JsonNode) payload.rawContent());
 
+		JsonNode securedLog = Json.fullReplace(log.build(), "password", "********");
+
 		return Start.get().getElasticClient()//
 				.prepareIndex(AccountResource.ADMIN_INDEX, TYPE)//
-				.setSource(log.toString()).get().getId();
+				.setSource(securedLog.toString()).get().getId();
 	}
 
 	//

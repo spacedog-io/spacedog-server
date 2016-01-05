@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
@@ -335,4 +336,19 @@ public class Json {
 					String.format("property [%s] must be of type [%s] instead of [%s]", //
 							propertyPath, expected, node.getNodeType()));
 	}
+
+	public static JsonNode fullReplace(JsonNode node, String fieldName, String value) {
+		List<JsonNode> parents = node.findParents(fieldName);
+		for (JsonNode parent : parents)
+			((ObjectNode) parent).replace(fieldName, TextNode.valueOf(value));
+		return node;
+	}
+
+	public static JsonNode fullRemove(JsonNode node, String fieldName) {
+		List<JsonNode> parents = node.findParents(fieldName);
+		for (JsonNode parent : parents)
+			((ObjectNode) parent).remove(fieldName);
+		return node;
+	}
+
 }

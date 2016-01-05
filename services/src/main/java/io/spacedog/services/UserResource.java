@@ -37,6 +37,7 @@ import net.codestory.http.payload.Payload;
 @Prefix("/v1")
 public class UserResource extends AbstractResource {
 
+	private static final String PASSWORD = "password";
 	public static final String ACCOUNT_ID = "accountId";
 	public static final String GROUPS = "groups";
 	public static final String EMAIL = "email";
@@ -115,7 +116,7 @@ public class UserResource extends AbstractResource {
 
 		// password management
 
-		JsonNode password = user.remove("password");
+		JsonNode password = user.remove(PASSWORD);
 		Optional<String> passwordResetCode = Optional.empty();
 		if (password == null || password.equals(NullNode.getInstance())) {
 			passwordResetCode = Optional.of(UUID.randomUUID().toString());
@@ -190,7 +191,7 @@ public class UserResource extends AbstractResource {
 
 	@Post("/user/:id/password")
 	@Post("/user/:id/password")
-	public Payload postPassword(String id, String body, Context context)
+	public Payload postPassword(String id, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = SpaceContext.checkCredentials();
 
@@ -200,10 +201,11 @@ public class UserResource extends AbstractResource {
 		if (Strings.isNullOrEmpty(passwordResetCode))
 			throw new IllegalArgumentException("password reset code is empty");
 
-		String password = Json.readJsonNode(body).asText();
+		String password = context.get(PASSWORD);
 		Passwords.checkIfValid(password);
 
-		GetResponse getResponse = Start.get().getElasticClient().prepareGet(credentials.backendId(), USER_TYPE, id)
+		GetResponse getResponse = Start.get().getElasticClient()//
+				.prepareGet(credentials.backendId(), USER_TYPE, id)//
 				.get();
 
 		if (!getResponse.isExists())
@@ -228,14 +230,14 @@ public class UserResource extends AbstractResource {
 
 	@Put("/user/:id/password")
 	@Put("/user/:id/password")
-	public Payload putPassword(String id, String body, Context context)
+	public Payload putPassword(String id, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = SpaceContext.checkCredentials();
 
 		if (credentials.isAdminAuthenticated()
 				|| (credentials.isUserAuthenticated() && id.equals(credentials.name()))) {
 
-			String password = Json.readJsonNode(body).asText();
+			String password = context.get(PASSWORD);
 			Passwords.checkIfValid(password);
 
 			ObjectNode update = Json.objectBuilder()//
