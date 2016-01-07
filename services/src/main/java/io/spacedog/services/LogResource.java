@@ -5,7 +5,7 @@ import java.util.Optional;
 
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.FilterBuilders;
-import org.elasticsearch.index.query.FilteredQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.sort.SortOrder;
@@ -32,21 +32,46 @@ public class LogResource {
 	@Get("")
 	@Get("/")
 	public Payload getAll(Context context) throws JsonParseException, JsonMappingException, IOException {
+
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 
-		ElasticHelper.get().refresh(true, AccountResource.ADMIN_INDEX);
+		Optional<String> backendId = credentials.isSuperDogAuthenticated() ? Optional.empty()
+				: Optional.of(credentials.backendId());
 
-		FilteredQueryBuilder query = QueryBuilders.filteredQuery(//
-				QueryBuilders.matchAllQuery(), //
-				FilterBuilders.termFilter("credentials.backendId", credentials.backendId()));
+		return doGetLogs(backendId, //
+				context.request().query().getInteger("from", 0), //
+				context.request().query().getInteger("size", 10));
+	}
+
+	@Get("/:backendId")
+	@Get("/:backendId/")
+	public Payload getForBackend(String backendId, Context context)
+			throws JsonParseException, JsonMappingException, IOException {
+
+		SpaceContext.checkSuperDogCredentials();
+
+		return doGetLogs(Optional.of(backendId), //
+				context.request().query().getInteger("from", 0), //
+				context.request().query().getInteger("size", 10));
+	}
+
+	private Payload doGetLogs(Optional<String> backendId, int from, int size)
+			throws JsonParseException, JsonMappingException, IOException {
+
+		QueryBuilder query = backendId.isPresent()//
+				? QueryBuilders.filteredQuery(QueryBuilders.matchAllQuery(), //
+						FilterBuilders.termFilter("credentials.backendId", backendId.get()))//
+				: QueryBuilders.matchAllQuery();
+
+		ElasticHelper.get().refresh(true, AccountResource.ADMIN_INDEX);
 
 		SearchResponse response = Start.get().getElasticClient()//
 				.prepareSearch(AccountResource.ADMIN_INDEX)//
 				.setTypes(TYPE)//
 				.setQuery(query)//
 				.addSort("receivedAt", SortOrder.DESC)//
-				.setFrom(context.request().query().getInteger("from", 0))//
-				.setSize(context.request().query().getInteger("size", 10))//
+				.setFrom(from)//
+				.setSize(size)//
 				.get();
 
 		JsonBuilder<ObjectNode> builder = Json.objectBuilder()//
