@@ -176,6 +176,8 @@ public class Start {
 			System.out.println("[SpaceDog] redirect port = " + getRedirectPort());
 			System.out.println("[SpaceDog] home path = " + getHomePath());
 			System.out.println("[SpaceDog] data path = " + getElasticDataPath());
+			System.out.println("[SpaceDog] mail domain = " + getMailDomain());
+			System.out.println("[SpaceDog] mailgun key = " + getMailGunKey());
 			System.out.println("[SpaceDog] snapshots path = " + getSnapshotsPath());
 			System.out.println("[SpaceDog] snapshots bucket name = " + getSnapshotsBucketName());
 			System.out.println("[SpaceDog] snapshots bucket region = " + getSnapshotsBucketRegion());
@@ -257,8 +259,8 @@ public class Start {
 			return Optional.ofNullable(configuration.getProperty("spacedog.mailgun.key"));
 		}
 
-		public Optional<String> getMailGunDomain() {
-			return Optional.ofNullable(configuration.getProperty("spacedog.mailgun.domain"));
+		public Optional<String> getMailDomain() {
+			return Optional.ofNullable(configuration.getProperty("spacedog.mail.domain"));
 		}
 
 		public Path getSnapshotsPath() {

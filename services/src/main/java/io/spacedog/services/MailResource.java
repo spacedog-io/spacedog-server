@@ -49,18 +49,18 @@ public class MailResource extends AbstractResource {
 		String mailGunKey = Start.get().configuration().getMailGunKey().orElseThrow(//
 				() -> new RuntimeException("No mailgun key set in configuration"));
 
-		String mailGunDomain = Start.get().configuration().getMailGunDomain().orElseThrow(//
-				() -> new RuntimeException("No mailgun domain set in configuration"));
+		String mailDomain = Start.get().configuration().getMailDomain().orElseThrow(//
+				() -> new RuntimeException("No mail domain set in configuration"));
 
 		HttpRequestWithBody requestWithBody = Unirest.post("https://api.mailgun.net/v3/{domain}/messages")//
-				.routeParam("domain", mailGunDomain)//
+				.routeParam("domain", mailDomain)//
 				// TODO Fix this since it does not work.
 				// .queryString("o:testmode", context.query().getBoolean("test",
 				// false))//
 				.basicAuth("api", mailGunKey);
 
 		MultipartBody multipartBody = requestWithBody.field("from",
-				admin.backendId().toUpperCase() + " <no-reply@spacedog.io>");
+				admin.backendId().toUpperCase() + " <no-reply@api.spacedog.io>");
 
 		if (context.parts().isEmpty()) {
 			multipartBody.field(TO, context.get(TO));
