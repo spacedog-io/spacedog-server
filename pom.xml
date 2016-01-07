@@ -8,8 +8,15 @@
 	<artifactId>spacedog-parent</artifactId>
 	<version>${my-version}</version>
     <packaging>pom</packaging>
-
 	<name>SpaceDog Parent Project</name>
+
+	<properties>
+		<my-version>0.6</my-version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<maven.test.redirectTestOutputToFile>true</maven.test.redirectTestOutputToFile>
+	</properties>
 
 	<prerequisites>
 		<maven>3.3</maven>
@@ -21,14 +28,6 @@
         <module>watchdog</module>
         <module>examples</module>
     </modules>
-
-	<properties>
-		<my-version>0.6-SNAPSHOT</my-version>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>
-		<maven.test.redirectTestOutputToFile>true</maven.test.redirectTestOutputToFile>
-	</properties>
 
 	<build>
 		<pluginManagement>
