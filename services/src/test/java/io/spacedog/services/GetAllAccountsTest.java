@@ -29,7 +29,7 @@ public class GetAllAccountsTest extends Assert {
 		SpaceRequest.get("/v1/admin/account").basicAuth(zzzz).go(401);
 
 		// succeed to get all accounts with superdog credentials
-		SpaceRequest.get("/v1/admin/account").promptAuth().go(200)//
+		SpaceRequest.get("/v1/admin/account").superdogAuth().go(200)//
 				.assertArrayContains(aaaaNode, "results")//
 				.assertArrayContains(zzzzNode, "results");
 

@@ -4,12 +4,14 @@
 package io.spacedog.client;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Enumeration;
 import java.util.Optional;
-
-import javax.swing.JOptionPane;
+import java.util.Properties;
 
 import org.junit.Assert;
 
@@ -36,7 +38,8 @@ public class SpaceRequest {
 	private HttpRequest request;
 	private JsonNode body;
 
-	private static Map<String, String> users = new HashMap<>();
+	private static String superdogName;
+	private static String superdogPassword;
 
 	public SpaceRequest(HttpRequest request) {
 		this.request = request;
@@ -247,20 +250,32 @@ public class SpaceRequest {
 		SpaceRequest.debug = debug;
 	}
 
-	public SpaceRequest promptAuth() {
-		return promptAuth("david");
-	}
+	public SpaceRequest superdogAuth() {
+		if (superdogName == null) {
 
-	public SpaceRequest promptAuth(String username) {
-		String password = users.get(username);
-		if (password == null) {
-			if (System.console() == null) {
-				password = JOptionPane.showInputDialog(username + ": enter your password: ");
+			Path path = Paths.get(//
+					System.getProperty("user.home"), ".superdog");
+
+			if (Files.exists(path)) {
+
+				try {
+					Properties superdog = new Properties();
+					superdog.load(Files.newInputStream(path));
+					Enumeration<Object> keys = superdog.keys();
+					if (keys.hasMoreElements())
+						superdogPassword = superdog.getProperty(superdogName = keys.nextElement().toString());
+					else
+						throw new IllegalStateException(".superdog file is empty");
+
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+
 			} else
-				password = new String(System.console()//
-						.readPassword(username + ": enter your password: "));
-			users.put(username, password);
+				throw new IllegalStateException(//
+						String.format(".superdog file not found at [%s]", path.toAbsolutePath()));
 		}
-		return basicAuth(username, password);
+
+		return basicAuth(superdogName, superdogPassword);
 	}
 }
