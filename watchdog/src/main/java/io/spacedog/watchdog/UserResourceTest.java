@@ -161,6 +161,11 @@ public class UserResourceTest extends Assert {
 
 		SpaceRequest.get("/v1/login").backendKey(testAccount).basicAuth("titi", "XXX").go(401);
 
+		// titi changes its password should fail since password size < 6
+
+		SpaceRequest.put("/v1/user/titi/password").backendKey(testAccount).basicAuth("titi", "hi titi")
+				.field("password", "XXX").go(400);
+
 		// titi changes its password should succeed
 
 		SpaceRequest.put("/v1/user/titi/password").backendKey(testAccount).basicAuth("titi", "hi titi")

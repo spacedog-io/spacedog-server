@@ -40,15 +40,18 @@ public class Passwords {
 	}
 
 	public static void checkIfValid(String password) {
-		if (!isValid(password))
+		if (Strings.isNullOrEmpty(password))
+			throw new IllegalArgumentException("password is null or empty");
+		if (password.length() < 6)
 			throw new IllegalArgumentException("password must be at least 6 characters long");
 	}
 
 	public static boolean isValid(String password) {
-		if (Strings.isNullOrEmpty(password))
+		try {
+			checkIfValid(password);
+			return true;
+		} catch (IllegalArgumentException e) {
 			return false;
-		if (password.length() < 6)
-			return false;
-		return true;
+		}
 	}
 }
