@@ -106,6 +106,7 @@ public class Start {
 				.add(MailResource.get())//
 				.add(SnapshotResource.get())//
 				.add(LogResource.get())//
+				.add(PushResource.get())//
 				.add(SearchResource.get());
 
 		routes.filter(new CrossOriginFilter())//
