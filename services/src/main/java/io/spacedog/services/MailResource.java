@@ -9,6 +9,7 @@ import org.elasticsearch.common.base.Strings;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
@@ -45,6 +46,41 @@ public class MailResource extends AbstractResource {
 			throws JsonParseException, JsonMappingException, IOException, UnirestException {
 
 		Credentials admin = SpaceContext.checkAdminCredentials();
+		String from = admin.backendId().toUpperCase() + " <no-reply@api.spacedog.io>";
+		String to = null, cc = null, bcc = null, subject = null, text = null, html = null;
+
+		if (context.parts().isEmpty()) {
+			to = context.get(TO);
+			cc = context.get(CC);
+			bcc = context.get(BCC);
+			subject = context.get(SUBJECT);
+			if (!Strings.isNullOrEmpty(context.get(TEXT)))
+				text = addFooterToTextMessage(context.get(TEXT), admin);
+			if (!Strings.isNullOrEmpty(context.get(HTML)))
+				html = addFooterToHtmlMessage(context.get(HTML), admin);
+
+		} else
+			for (Part part : context.parts()) {
+				if (part.name().equals(TO))
+					to = part.content();
+				else if (part.name().equals(CC))
+					cc = part.content();
+				else if (part.name().equals(BCC))
+					bcc = part.content();
+				else if (part.name().equals(SUBJECT))
+					subject = part.content();
+				else if (part.name().equals(TEXT))
+					text = addFooterToTextMessage(part.content(), admin);
+				else if (part.name().equals(HTML))
+					html = addFooterToHtmlMessage(part.content(), admin);
+			}
+
+		ObjectNode response = send(from, to, cc, bcc, subject, text, html);
+		return PayloadHelper.json(response, response.get("status").asInt());
+	}
+
+	public ObjectNode send(String from, String to, String cc, String bcc, String subject, String text, String html)
+			throws JsonParseException, JsonMappingException, IOException, UnirestException {
 
 		String mailGunKey = Start.get().configuration().getMailGunKey().orElseThrow(//
 				() -> new RuntimeException("No mailgun key set in configuration"));
@@ -59,41 +95,19 @@ public class MailResource extends AbstractResource {
 				// false))//
 				.basicAuth("api", mailGunKey);
 
-		MultipartBody multipartBody = requestWithBody.field("from",
-				admin.backendId().toUpperCase() + " <no-reply@api.spacedog.io>");
+		MultipartBody multipartBody = requestWithBody.field("from", from)//
+				.field(TO, to)//
+				.field(CC, cc)//
+				.field(BCC, bcc)//
+				.field(SUBJECT, subject);
 
-		if (context.parts().isEmpty()) {
-			multipartBody.field(TO, context.get(TO));
-			multipartBody.field(CC, context.get(CC));
-			multipartBody.field(BCC, context.get(BCC));
-			multipartBody.field(SUBJECT, context.get(SUBJECT));
-			if (!Strings.isNullOrEmpty(context.get(TEXT)))
-				multipartBody.field(TEXT, addFooterToTextMessage(context.get(TEXT), admin));
-			if (!Strings.isNullOrEmpty(context.get(HTML)))
-				multipartBody.field(HTML, addFooterToHtmlMessage(context.get(HTML), admin));
-
-		} else
-			for (Part part : context.parts()) {
-				if (part.name().equals(TO))
-					multipartBody.field(part.name(), part.content(), part.contentType());
-				else if (part.name().equals(CC))
-					multipartBody.field(part.name(), part.content(), part.contentType());
-				else if (part.name().equals(BCC))
-					multipartBody.field(part.name(), part.content(), part.contentType());
-				else if (part.name().equals(SUBJECT))
-					multipartBody.field(part.name(), part.content(), part.contentType());
-				else if (part.name().equals(TEXT))
-					multipartBody.field(part.name(), //
-							addFooterToTextMessage(part.content(), admin), part.contentType());
-				else if (part.name().equals(HTML))
-					multipartBody.field(part.name(), //
-							addFooterToHtmlMessage(part.content(), admin), part.contentType());
-			}
+		if (!Strings.isNullOrEmpty(text))
+			multipartBody.field(TEXT, text);
+		if (!Strings.isNullOrEmpty(html))
+			multipartBody.field(HTML, html);
 
 		HttpResponse<String> response = requestWithBody.asString();
-		return PayloadHelper.json(
-				PayloadHelper.minimalBuilder(response.getStatus()).node("mailgun", response.getBody()),
-				response.getStatus());
+		return PayloadHelper.minimalBuilder(response.getStatus()).node("mailgun", response.getBody()).build();
 	}
 
 	//
