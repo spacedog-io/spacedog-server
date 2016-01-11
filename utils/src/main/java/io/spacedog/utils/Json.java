@@ -350,5 +350,4 @@ public class Json {
 			((ObjectNode) parent).remove(fieldName);
 		return node;
 	}
-
 }
