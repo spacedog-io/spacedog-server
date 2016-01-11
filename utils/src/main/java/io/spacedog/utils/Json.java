@@ -350,4 +350,10 @@ public class Json {
 			((ObjectNode) parent).remove(fieldName);
 		return node;
 	}
+
+	public static String checkString(JsonNode node) {
+		if (!node.isTextual())
+			throw new IllegalArgumentException(String.format("json node [%s] should be a string", node));
+		return node.asText();
+	}
 }
