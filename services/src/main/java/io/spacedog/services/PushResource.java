@@ -4,10 +4,15 @@ import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.action.index.IndexResponse;
+import org.joda.time.DateTime;
 
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.sns.AmazonSNSClient;
+import com.amazonaws.services.sns.model.PublishRequest;
+import com.amazonaws.services.sns.model.PublishResult;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
@@ -21,7 +26,9 @@ import net.codestory.http.payload.Payload;
 @Prefix("/v1")
 public class PushResource {
 
+	private static final String ALL_TOPIC_ARN = "arn:aws:sns:eu-west-1:309725721660:test-all";
 	public static final String TYPE = "device";
+	private AmazonSNSClient snsClient;
 
 	@Post("/device")
 	@Post("/device/")
@@ -32,14 +39,24 @@ public class PushResource {
 		if (!credentials.email().isPresent())
 			throw new IllegalArgumentException("credentials without any email address");
 
-		JsonBuilder<ObjectNode> device = Json.objectBuilder()//
-				.put("name", credentials.name())//
-				.put("email", credentials.email().get());
+		if (!getSnsClient().listSubscriptionsByTopic(ALL_TOPIC_ARN)//
+				.getSubscriptions().stream().anyMatch(//
+						subscription -> subscription.getEndpoint().equals(credentials.email().get()))) {
 
-		IndexResponse response = ElasticHelper.get().createObject(credentials.backendId(), TYPE, device.build(),
-				credentials.name());
+			JsonBuilder<ObjectNode> device = Json.objectBuilder()//
+					.put("name", credentials.name())//
+					.put("email", credentials.email().get());
 
-		return PayloadHelper.saved(true, "/v1/device", response.getType(), response.getId(), response.getVersion());
+			IndexResponse response = ElasticHelper.get().createObject(credentials.backendId(), TYPE, device.build(),
+					credentials.name());
+
+			getSnsClient().subscribe(ALL_TOPIC_ARN, //
+					"email", credentials.email().get());
+
+			return PayloadHelper.saved(true, "/v1/device", response.getType(), response.getId(), response.getVersion());
+		}
+
+		return PayloadHelper.success();
 	}
 
 	@Post("/device/push")
@@ -47,24 +64,25 @@ public class PushResource {
 	public Payload pushAll(Context context) throws JsonParseException, JsonMappingException, IOException,
 			UnirestException, NotFoundException, InterruptedException, ExecutionException {
 
-		Credentials admin = SpaceContext.checkAdminCredentials();
-		ElasticHelper.get().refresh(true, admin.backendId());
-		String from = admin.backendId().toUpperCase() + "-PUSH <no-reply@api.spacedog.io>";
+		SpaceContext.checkAdminCredentials();
 
-		ObjectNode result = SearchResource.get()//
-				.searchInternal(admin, TYPE, null, context);
+		String msg = "PUSH " + DateTime.now();
+		AmazonSNSClient snsClient = getSnsClient();
+		PublishResult result = snsClient.publish(new PublishRequest()//
+				.withTopicArn(ALL_TOPIC_ARN)//
+				.withSubject(msg)//
+				.withMessage(msg));
 
-		JsonBuilder<ObjectNode> response = PayloadHelper.minimalBuilder(200).array("mailgun");
+		return PayloadHelper.json(PayloadHelper.minimalBuilder(200)//
+				.put("messageId", result.getMessageId()).build(), 200);
+	}
 
-		JsonNode results = result.get("results");
-		for (int i = 0; i < results.size(); i++) {
-			String msg = "Hello " + results.get(i).get("name").asText();
-			ObjectNode mail = MailResource.get().send(from, results.get(i).get("email").asText(), null, null, msg, msg,
-					null);
-			response.node(mail);
+	AmazonSNSClient getSnsClient() {
+		if (snsClient == null) {
+			snsClient = new AmazonSNSClient();
+			snsClient.setRegion(Region.getRegion(Regions.EU_WEST_1));
 		}
-
-		return PayloadHelper.json(response.build(), 200);
+		return snsClient;
 	}
 
 	//
