@@ -75,10 +75,10 @@ public class LogResourceTest extends Assert {
 				.assertSizeEquals(2, "results")//
 				.assertEquals("POST", "results.0.method")//
 				.assertEquals("/v1/user", "results.0.path")//
-				.assertEquals("********", "results.0.jsonContent.password")//
+				.assertEquals("******", "results.0.jsonContent.password")//
 				.assertEquals("POST", "results.1.method")//
 				.assertEquals("/v1/admin/account", "results.1.path")//
-				.assertEquals("********", "results.1.jsonContent.password");
+				.assertEquals("******", "results.1.jsonContent.password");
 				// don't check the delete account request before post account
 				// because it sometimes fails normally with 401 (not authorized)
 				// and 401 requests are not associated with any backend
@@ -112,19 +112,54 @@ public class LogResourceTest extends Assert {
 				.assertSizeEquals(5, "results")//
 				.assertEquals("PUT", "results.0.method")//
 				.assertEquals("/v1/user/fred/password", "results.0.path")//
-				.assertEquals("********", "results.0.query.password")//
+				.assertEquals("******", "results.0.query.password")//
 				.assertEquals("POST", "results.1.method")//
 				.assertEquals("/v1/user/fred/password", "results.1.path")//
-				.assertEquals("********", "results.1.query.password")//
+				.assertEquals("******", "results.1.query.password")//
 				.assertEquals(passwordResetCode, "results.1.query.passwordResetCode")//
 				.assertEquals("DELETE", "results.2.method")//
 				.assertEquals("/v1/user/fred/password", "results.2.path")//
 				.assertEquals(passwordResetCode, "results.2.response.passwordResetCode")//
 				.assertEquals("POST", "results.3.method")//
 				.assertEquals("/v1/user", "results.3.path")//
-				.assertEquals("********", "results.3.jsonContent.password")//
+				.assertEquals("******", "results.3.jsonContent.password")//
 				.assertEquals("POST", "results.4.method")//
 				.assertEquals("/v1/admin/account", "results.4.path")//
-				.assertEquals("********", "results.4.jsonContent.password");
+				.assertEquals("******", "results.4.jsonContent.password");
+	}
+
+	@Test
+	public void deleteObsoleteLogs() throws Exception {
+
+		// prepare
+		SpaceDogHelper.printTestHeader();
+		Account testAccount = SpaceDogHelper.resetTestAccount();
+		SpaceDogHelper.createUser(testAccount, "fred", "hi fred", "fred@dog.com");
+		for (int i = 0; i < 5; i++)
+			SpaceRequest.get("/v1/data").basicAuth(testAccount).go(200);
+
+		// check everything is in place
+		SpaceRequest.get("/v1/admin/log?size=7").basicAuth(testAccount).go(200)//
+				.assertEquals("/v1/data", "results.0.path")//
+				.assertEquals("/v1/data", "results.1.path")//
+				.assertEquals("/v1/data", "results.2.path")//
+				.assertEquals("/v1/data", "results.3.path")//
+				.assertEquals("/v1/data", "results.4.path")//
+				.assertEquals("/v1/user", "results.5.path")//
+				.assertEquals("/v1/admin/account", "results.6.path");
+
+		// delete all logs but the 2 last requests
+		SpaceRequest.delete("/v1/admin/log/test?from=2").superdogAuth().go(200);
+
+		// check all test account logs are deleted but ...
+		SpaceRequest.get("/v1/admin/log?size=10").basicAuth(testAccount).go(200)//
+				.assertSizeEquals(3, "results")//
+				.assertEquals("DELETE", "results.0.method")//
+				.assertEquals("/v1/admin/log/test", "results.0.path")//
+				.assertEquals("GET", "results.1.method")//
+				.assertEquals("/v1/admin/log", "results.1.path")//
+				.assertEquals("GET", "results.2.method")//
+				.assertEquals("/v1/data", "results.2.path");
+
 	}
 }

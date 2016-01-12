@@ -38,6 +38,10 @@ public class Credentials {
 		return new Credentials("spacedog", username, email, null, true, true);
 	}
 
+	public static Credentials fromSuperDog(String backendId, String username, String email) {
+		return new Credentials(backendId, username, email, null, true, true);
+	}
+
 	private Credentials(String backendId, String username, String email, BackendKey backendKey, boolean admin,
 			boolean superDog) {
 		this.backendId = backendId;

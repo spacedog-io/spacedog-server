@@ -3,6 +3,7 @@ package io.spacedog.services;
 import java.io.IOException;
 import java.util.Optional;
 
+import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.FilterBuilders;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -20,6 +21,7 @@ import com.google.common.base.Strings;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import net.codestory.http.Context;
+import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
@@ -28,6 +30,10 @@ import net.codestory.http.payload.Payload;
 public class LogResource {
 
 	public static final String TYPE = "log";
+
+	//
+	// Routes
+	//
 
 	@Get("")
 	@Get("/")
@@ -38,9 +44,11 @@ public class LogResource {
 		Optional<String> backendId = credentials.isSuperDogAuthenticated() ? Optional.empty()
 				: Optional.of(credentials.backendId());
 
-		return doGetLogs(backendId, //
+		SearchResponse response = doGetLogs(backendId, //
 				context.request().query().getInteger("from", 0), //
 				context.request().query().getInteger("size", 10));
+
+		return extractLogs(response);
 	}
 
 	@Get("/:backendId")
@@ -50,40 +58,47 @@ public class LogResource {
 
 		SpaceContext.checkSuperDogCredentials();
 
-		return doGetLogs(Optional.of(backendId), //
+		SearchResponse response = doGetLogs(Optional.of(backendId), //
 				context.request().query().getInteger("from", 0), //
 				context.request().query().getInteger("size", 10));
+
+		return extractLogs(response);
 	}
 
-	private Payload doGetLogs(Optional<String> backendId, int from, int size)
+	@Delete("/:backendId")
+	@Delete("/:backendId/")
+	public Payload deleteForBackend(String backendId, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
 
-		QueryBuilder query = backendId.isPresent()//
-				? QueryBuilders.filteredQuery(QueryBuilders.matchAllQuery(), //
-						FilterBuilders.termFilter("credentials.backendId", backendId.get()))//
-				: QueryBuilders.matchAllQuery();
+		SpaceContext.checkSuperDogCredentialsFor(backendId);
 
-		ElasticHelper.get().refresh(true, AccountResource.ADMIN_INDEX);
+		SearchHit[] hits = doGetLogs(Optional.of(backendId), //
+				context.request().query().getInteger("from", 1000), 1)//
+						.getHits().getHits();
 
-		SearchResponse response = Start.get().getElasticClient()//
-				.prepareSearch(AccountResource.ADMIN_INDEX)//
+		if (hits == null || hits.length == 0)
+			// no log to delete
+			return PayloadHelper.success();
+
+		String receivedAt = Json.readObjectNode(hits[0].sourceAsString())//
+				.get("receivedAt").asText();
+
+		QueryBuilder query = QueryBuilders.filteredQuery(//
+				QueryBuilders.termQuery("credentials.backendId", backendId),
+				FilterBuilders.rangeFilter("receivedAt").lte(receivedAt));
+
+		DeleteByQueryResponse delete = Start.get().getElasticClient()//
+				.prepareDeleteByQuery(AccountResource.ADMIN_INDEX)//
 				.setTypes(TYPE)//
 				.setQuery(query)//
-				.addSort("receivedAt", SortOrder.DESC)//
-				.setFrom(from)//
-				.setSize(size)//
 				.get();
 
-		JsonBuilder<ObjectNode> builder = Json.objectBuilder()//
-				.put("took", response.getTookInMillis())//
-				.put("total", response.getHits().getTotalHits())//
-				.array("results");
-
-		for (SearchHit hit : response.getHits().getHits())
-			builder.node(hit.sourceAsString());
-
-		return PayloadHelper.json(builder);
+		return PayloadHelper.json(delete.status(), delete.getIndex(AccountResource.ADMIN_INDEX).getFailures());
 	}
+
+	//
+	// Filter
+	//
 
 	public static SpaceFilter filter() {
 
@@ -110,6 +125,41 @@ public class LogResource {
 
 			return payload;
 		};
+	}
+
+	//
+	// Implementation
+	//
+
+	private SearchResponse doGetLogs(Optional<String> backendId, int from, int size)
+			throws JsonParseException, JsonMappingException, IOException {
+
+		QueryBuilder query = backendId.isPresent()//
+				? QueryBuilders.termQuery("credentials.backendId", backendId.get())//
+				: QueryBuilders.matchAllQuery();
+
+		ElasticHelper.get().refresh(true, AccountResource.ADMIN_INDEX);
+
+		return Start.get().getElasticClient()//
+				.prepareSearch(AccountResource.ADMIN_INDEX)//
+				.setTypes(TYPE)//
+				.setQuery(query)//
+				.addSort("receivedAt", SortOrder.DESC)//
+				.setFrom(from)//
+				.setSize(size)//
+				.get();
+	}
+
+	private Payload extractLogs(SearchResponse response) {
+		JsonBuilder<ObjectNode> builder = Json.objectBuilder()//
+				.put("took", response.getTookInMillis())//
+				.put("total", response.getHits().getTotalHits())//
+				.array("results");
+
+		for (SearchHit hit : response.getHits().getHits())
+			builder.node(hit.sourceAsString());
+
+		return PayloadHelper.json(builder);
 	}
 
 	private String log(String uri, Context context, DateTime receivedAt, Payload payload)
@@ -163,7 +213,7 @@ public class LogResource {
 		if (payload.rawContent() instanceof JsonNode)
 			log.node("response", (JsonNode) payload.rawContent());
 
-		JsonNode securedLog = Json.fullReplace(log.build(), "password", "********");
+		JsonNode securedLog = Json.fullReplace(log.build(), "password", "******");
 
 		return Start.get().getElasticClient()//
 				.prepareIndex(AccountResource.ADMIN_INDEX, TYPE)//

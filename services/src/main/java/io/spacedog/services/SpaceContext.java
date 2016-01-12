@@ -88,6 +88,15 @@ public class SpaceContext {
 		throw new AuthenticationException("invalid superdog credentials");
 	}
 
+	public static Credentials checkSuperDogCredentialsFor(String backendId)
+			throws JsonParseException, JsonMappingException, IOException {
+		Credentials credentials = checkSuperDogCredentials();
+		credentials = Credentials.fromSuperDog(//
+				backendId, credentials.name(), credentials.email().get());
+		get().credentials = Optional.of(credentials);
+		return credentials;
+	}
+
 	public static Credentials checkAdminCredentials() throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = checkCredentials();
 		if (credentials.isAdminAuthenticated())
