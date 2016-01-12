@@ -97,6 +97,8 @@ public class AccountResource extends AbstractResource {
 				.setTypes(ACCOUNT_TYPE)//
 				.setVersion(true)//
 				.setQuery(QueryBuilders.matchAllQuery())//
+				.setFrom(context.request().query().getInteger("from", 0))//
+				.setSize(context.request().query().getInteger("size", 10))//
 				.get();
 
 		JsonBuilder<ObjectNode> builder = Json.objectBuilder()//
