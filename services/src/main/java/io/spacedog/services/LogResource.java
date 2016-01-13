@@ -13,6 +13,7 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -67,33 +68,20 @@ public class LogResource {
 
 	@Delete("/:backendId")
 	@Delete("/:backendId/")
-	public Payload deleteForBackend(String backendId, Context context)
+	public Payload purgeBackend(String backendId, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
 
 		SpaceContext.checkSuperDogCredentialsFor(backendId);
 
-		SearchHit[] hits = doGetLogs(Optional.of(backendId), //
-				context.request().query().getInteger("from", 1000), 1)//
-						.getHits().getHits();
+		Optional<DeleteByQueryResponse> response = doPurgeBackend(backendId, //
+				context.request().query().getInteger("from", 1000));
 
-		if (hits == null || hits.length == 0)
-			// no log to delete
-			return PayloadHelper.success();
+		// no delete response means no logs to delete means success
 
-		String receivedAt = Json.readObjectNode(hits[0].sourceAsString())//
-				.get("receivedAt").asText();
-
-		QueryBuilder query = QueryBuilders.filteredQuery(//
-				QueryBuilders.termQuery("credentials.backendId", backendId),
-				FilterBuilders.rangeFilter("receivedAt").lte(receivedAt));
-
-		DeleteByQueryResponse delete = Start.get().getElasticClient()//
-				.prepareDeleteByQuery(AccountResource.ADMIN_INDEX)//
-				.setTypes(TYPE)//
-				.setQuery(query)//
-				.get();
-
-		return PayloadHelper.json(delete.status(), delete.getIndex(AccountResource.ADMIN_INDEX).getFailures());
+		return response.isPresent()//
+				? PayloadHelper.json(response.get().status(), //
+						response.get().getIndex(AccountResource.ADMIN_INDEX).getFailures())
+				: PayloadHelper.success();
 	}
 
 	//
@@ -130,6 +118,32 @@ public class LogResource {
 	//
 	// Implementation
 	//
+
+	private Optional<DeleteByQueryResponse> doPurgeBackend(String backendId, int from)
+			throws JsonParseException, JsonMappingException, IOException, JsonProcessingException {
+
+		SearchHit[] hits = doGetLogs(Optional.of(backendId), from, 1)//
+				.getHits().getHits();
+
+		if (hits == null || hits.length == 0)
+			// no log to delete
+			return Optional.empty();
+
+		String receivedAt = Json.readObjectNode(hits[0].sourceAsString())//
+				.get("receivedAt").asText();
+
+		QueryBuilder query = QueryBuilders.filteredQuery(//
+				QueryBuilders.termQuery("credentials.backendId", backendId),
+				FilterBuilders.rangeFilter("receivedAt").lte(receivedAt));
+
+		DeleteByQueryResponse delete = Start.get().getElasticClient()//
+				.prepareDeleteByQuery(AccountResource.ADMIN_INDEX)//
+				.setTypes(TYPE)//
+				.setQuery(query)//
+				.get();
+
+		return Optional.of(delete);
+	}
 
 	private SearchResponse doGetLogs(Optional<String> backendId, int from, int size)
 			throws JsonParseException, JsonMappingException, IOException {
