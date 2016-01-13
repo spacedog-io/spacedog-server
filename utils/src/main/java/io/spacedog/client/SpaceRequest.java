@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.Enumeration;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -17,6 +16,7 @@ import org.junit.Assert;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Strings;
 import com.google.common.primitives.Ints;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.request.GetRequest;
@@ -29,11 +29,8 @@ import io.spacedog.utils.SpaceHeaders;
 
 public class SpaceRequest {
 
-	private static String host;
-	private static Integer mainPort;
-	private static Integer optionalPort;
-	private static Boolean ssl;
 	private static boolean debug = true;
+	private static SpaceTarget target = null;
 
 	private HttpRequest request;
 	private JsonNode body;
@@ -100,33 +97,25 @@ public class SpaceRequest {
 		return new SpaceRequest(request);
 	}
 
-	public static void setTargetHostAndPorts(String host, int mainPort, int optionalPort, boolean ssl) {
-		SpaceRequest.host = host;
-		SpaceRequest.optionalPort = optionalPort;
-		SpaceRequest.mainPort = mainPort;
-		SpaceRequest.ssl = ssl;
+	public static void setTarget(SpaceTarget target) {
+		SpaceRequest.target = target;
 	}
 
 	public static String getTargetHost() {
-		return host;
+		return target.host();
 	}
 
 	private static String computeMainUrl(String uri) {
-		if (host == null)
-			host = System.getProperty("host", "127.0.0.1");
-		if (mainPort == null)
-			mainPort = Integer.valueOf(System.getProperty("mainPort", "4444"));
-		if (ssl == null)
-			ssl = Boolean.valueOf(System.getProperty("ssl", "false"));
-		return (ssl ? "https://" : "http://") + host + (mainPort == 443 ? "" : ":" + mainPort.intValue()) + uri;
+		if (target == null)
+			target = SpaceTarget.valueOf(System.getProperty("target", "local"));
+		return (target.ssl() ? "https://" : "http://") + target.host()
+				+ (target.port() == 443 ? "" : ":" + target.port()) + uri;
 	}
 
 	private static String computeOptionalUrl(String uri) {
-		if (host == null)
-			host = System.getProperty("host", "localhost");
-		if (optionalPort == null)
-			optionalPort = Integer.valueOf(System.getProperty("optionalPort", "8888"));
-		return "http://" + host + (optionalPort == 80 ? "" : ":" + optionalPort.intValue()) + uri;
+		if (target == null)
+			target = SpaceTarget.valueOf(System.getProperty("target", "local"));
+		return "http://" + target.host() + (target.optionalPort() == 80 ? "" : ":" + target.optionalPort()) + uri;
 	}
 
 	public SpaceRequest backendKey(String backendKey) {
@@ -145,6 +134,10 @@ public class SpaceRequest {
 
 	public SpaceRequest basicAuth(SpaceDogHelper.User user) {
 		return basicAuth(user.username, user.password);
+	}
+
+	public SpaceRequest basicAuth(String[] credentials) {
+		return basicAuth(credentials[0], credentials[1]);
 	}
 
 	public SpaceRequest basicAuth(String username, String password) {
@@ -186,8 +179,12 @@ public class SpaceRequest {
 		return this;
 	}
 
+	public SpaceResponse go() throws Exception {
+		return new SpaceResponse(request, body, debug);
+	}
+
 	public SpaceResponse go(int... expectedStatus) throws Exception {
-		SpaceResponse spaceResponse = new SpaceResponse(request, body, debug);
+		SpaceResponse spaceResponse = go();
 		Assert.assertTrue(Ints.contains(expectedStatus, spaceResponse.httpResponse().getStatus()));
 		return spaceResponse;
 	}
@@ -254,18 +251,20 @@ public class SpaceRequest {
 		if (superdogName == null) {
 
 			Path path = Paths.get(//
-					System.getProperty("user.home"), ".superdog");
+					System.getProperty("user.home"), ".superdog.properties");
 
 			if (Files.exists(path)) {
-
 				try {
 					Properties superdog = new Properties();
 					superdog.load(Files.newInputStream(path));
-					Enumeration<Object> keys = superdog.keys();
-					if (keys.hasMoreElements())
-						superdogPassword = superdog.getProperty(superdogName = keys.nextElement().toString());
-					else
-						throw new IllegalStateException(".superdog file is empty");
+
+					superdogPassword = superdog.getProperty("superdog.password");
+					if (Strings.isNullOrEmpty(superdogPassword))
+						throw new IllegalArgumentException("password null or empty");
+
+					superdogName = superdog.getProperty("superdog.username");
+					if (Strings.isNullOrEmpty(superdogName))
+						throw new IllegalArgumentException("username null or empty");
 
 				} catch (IOException e) {
 					throw new RuntimeException(e);
@@ -273,7 +272,7 @@ public class SpaceRequest {
 
 			} else
 				throw new IllegalStateException(//
-						String.format(".superdog file not found at [%s]", path.toAbsolutePath()));
+						String.format(".superdog.properties file not found at [%s]", path.toAbsolutePath()));
 		}
 
 		return basicAuth(superdogName, superdogPassword);

@@ -11,6 +11,7 @@ import com.amazonaws.services.sns.AmazonSNSClient;
 import com.amazonaws.services.sns.model.PublishRequest;
 
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTarget;
 import io.spacedog.watchdog.SpaceSuite.Annotations;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
@@ -23,7 +24,7 @@ public class TestOftenSuite extends RunListener {
 		junit.addListener(this);
 
 		SpaceRequest.setLogDebug(false);
-		SpaceRequest.setTargetHostAndPorts("spacedog.io", 443, 80, true);
+		SpaceRequest.setTarget(SpaceTarget.production);
 
 		junit.run(TestOftenSuite.class);
 		sendNotification(SpaceRequest.getTargetHost() + " is up and running", //
