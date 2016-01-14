@@ -5,13 +5,8 @@ import org.junit.runner.RunWith;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.sns.AmazonSNSClient;
-import com.amazonaws.services.sns.model.PublishRequest;
-
+import io.spacedog.client.Space;
 import io.spacedog.client.SpaceRequest;
-import io.spacedog.client.SpaceTarget;
 import io.spacedog.watchdog.SpaceSuite.Annotations;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
@@ -20,14 +15,13 @@ import io.spacedog.watchdog.SpaceSuite.TestOften;
 public class TestOftenSuite extends RunListener {
 
 	public void lambda() {
+
 		JUnitCore junit = new JUnitCore();
 		junit.addListener(this);
-
-		SpaceRequest.setLogDebug(false);
-		SpaceRequest.setTarget(SpaceTarget.production);
-
 		junit.run(TestOftenSuite.class);
-		sendNotification(SpaceRequest.getTargetHost() + " is up and running", //
+
+		Space.get().sendNotification(//
+				SpaceRequest.getTarget().host() + " is up and running", //
 				"Everything is working properly.");
 	}
 
@@ -44,19 +38,10 @@ public class TestOftenSuite extends RunListener {
 		String msg = logBuilder.toString();
 		System.err.println(msg);
 
-		sendNotification(SpaceRequest.getTargetHost()//
+		Space.get().sendNotification(SpaceRequest.getTarget().host()//
 				+ " is DOWN DOWN DOWN", msg);
 
 		System.exit(-1);
-	}
-
-	private static void sendNotification(String subject, String msg) {
-		AmazonSNSClient snsClient = new AmazonSNSClient();
-		snsClient.setRegion(Region.getRegion(Regions.EU_WEST_1));
-		snsClient.publish(new PublishRequest()//
-				.withTopicArn("arn:aws:sns:eu-west-1:309725721660:watchdog")//
-				.withSubject(subject)//
-				.withMessage(msg));
 	}
 
 	public static void main(String[] args) {

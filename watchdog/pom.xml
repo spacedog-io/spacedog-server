@@ -68,16 +68,6 @@
 			<artifactId>spacedog-utils</artifactId>
 			<version>${my-version}</version>
 		</dependency>
-		<dependency>
-			<groupId>com.amazonaws</groupId>
-			<artifactId>aws-java-sdk-sns</artifactId>
-			<version>1.10.34</version>
-		</dependency>
-		<dependency>
-			<groupId>com.amazonaws</groupId>
-			<artifactId>aws-java-sdk-s3</artifactId>
-			<version>1.10.34</version>
-		</dependency>
 	</dependencies>
 
 </project>

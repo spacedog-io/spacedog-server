@@ -1,4 +1,4 @@
-package io.spacedog.admin;
+package io.spacedog.client;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,13 +14,11 @@ import com.amazonaws.services.sns.AmazonSNSClient;
 import com.amazonaws.services.sns.model.PublishRequest;
 import com.google.common.base.Strings;
 
-import io.spacedog.client.SpaceTarget;
-
-public class Cloud {
+public class Space {
 
 	private AmazonSNSClient snsClient;
 	private AmazonS3Client s3Client;
-	private SuperdogConfiguration configuration;
+	private Configuration configuration;
 
 	public void sendNotification(String title, String message) {
 		snsClient.publish(new PublishRequest()//
@@ -29,19 +27,21 @@ public class Cloud {
 				.withMessage(message));
 	}
 
-	public SuperdogConfiguration getSuperdogConfiguration() {
+	public Configuration configuration() {
 		try {
 			if (configuration == null) {
 
 				String userHome = System.getProperty("user.home");
 
 				if (!Strings.isNullOrEmpty(userHome)) {
-					Path path = Paths.get(userHome, "superdog.properties");
+					Path path = Paths.get(userHome, ".superdog.properties");
 					if (Files.exists(path))
-						configuration = new SuperdogConfiguration(Files.newInputStream(path));
-				} else
-					configuration = new SuperdogConfiguration(//
-							s3Client.getObject("spacedog-artefact", "superdog.properties")//
+						configuration = new Configuration(Files.newInputStream(path));
+				}
+
+				if (configuration == null)
+					configuration = new Configuration(//
+							get().s3Client.getObject("spacedog-artefact", "superdog.proerties")//
 									.getObjectContent());
 			}
 			return configuration;
@@ -51,29 +51,45 @@ public class Cloud {
 		}
 	}
 
-	public static class SuperdogConfiguration {
+	public static class Configuration {
 
 		private Properties properties;
 
-		private SuperdogConfiguration(InputStream stream) throws IOException {
+		private Configuration(InputStream stream) throws IOException {
 			properties = new Properties();
 			properties.load(stream);
 		}
 
-		public String username() {
-			return properties.getProperty("superdog.username");
+		public String superdogName() {
+			return getProperty("spacedog.superdog.username");
 		}
 
-		public String password() {
-			return properties.getProperty("superdog.password");
+		public String superdogPassword() {
+			return getProperty("spacedog.superdog.password");
 		}
 
 		public boolean debug() {
-			return Boolean.valueOf(properties.getProperty("superdog.debug", "false"));
+			return Boolean.valueOf(getProperty("spacedog.debug", "false"));
 		}
 
 		public SpaceTarget target() {
-			return SpaceTarget.valueOf(properties.getProperty("superdog.target", "local"));
+			return SpaceTarget.valueOf(getProperty("spacedog.target", "local"));
+		}
+
+		private String getProperty(String key, String defaultValue) {
+			String value = System.getProperty(key);
+			if (Strings.isNullOrEmpty(value))
+				value = properties.getProperty(key, defaultValue);
+			return value;
+		}
+
+		private String getProperty(String key) {
+			String value = System.getProperty(key);
+			if (Strings.isNullOrEmpty(value))
+				value = properties.getProperty(key);
+			if (Strings.isNullOrEmpty(value))
+				throw new IllegalStateException(String.format("configuration property [%s] not set", key));
+			return value;
 		}
 	}
 
@@ -81,13 +97,13 @@ public class Cloud {
 	// Singleton
 	//
 
-	private static Cloud singleton = new Cloud();
+	private static Space singleton = new Space();
 
-	static Cloud get() {
+	public static Space get() {
 		return singleton;
 	}
 
-	private Cloud() {
+	private Space() {
 		snsClient = new AmazonSNSClient();
 		snsClient.setRegion(Region.getRegion(Regions.EU_WEST_1));
 		s3Client = new AmazonS3Client();

@@ -4,19 +4,13 @@
 package io.spacedog.client;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.Properties;
 
 import org.junit.Assert;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Strings;
 import com.google.common.primitives.Ints;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.request.GetRequest;
@@ -24,19 +18,16 @@ import com.mashape.unirest.request.HttpRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
 import com.mashape.unirest.request.body.MultipartBody;
 
+import io.spacedog.client.Space.Configuration;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceHeaders;
 
 public class SpaceRequest {
-
-	private static boolean debug = true;
-	private static SpaceTarget target = null;
-
 	private HttpRequest request;
 	private JsonNode body;
 
-	private static String superdogName;
-	private static String superdogPassword;
+	private static SpaceTarget target = Space.get().configuration().target();
+	private static boolean debug = Space.get().configuration().debug();
 
 	public SpaceRequest(HttpRequest request) {
 		this.request = request;
@@ -101,21 +92,18 @@ public class SpaceRequest {
 		SpaceRequest.target = target;
 	}
 
-	public static String getTargetHost() {
-		return target.host();
+	public static SpaceTarget getTarget() {
+		return target;
 	}
 
 	private static String computeMainUrl(String uri) {
-		if (target == null)
-			target = SpaceTarget.valueOf(System.getProperty("target", "local"));
 		return (target.ssl() ? "https://" : "http://") + target.host()
 				+ (target.port() == 443 ? "" : ":" + target.port()) + uri;
 	}
 
 	private static String computeOptionalUrl(String uri) {
-		if (target == null)
-			target = SpaceTarget.valueOf(System.getProperty("target", "local"));
-		return "http://" + target.host() + (target.optionalPort() == 80 ? "" : ":" + target.optionalPort()) + uri;
+		return "http://" + target.host()//
+				+ (target.optionalPort() == 80 ? "" : ":" + target.optionalPort()) + uri;
 	}
 
 	public SpaceRequest backendKey(String backendKey) {
@@ -248,33 +236,7 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest superdogAuth() {
-		if (superdogName == null) {
-
-			Path path = Paths.get(//
-					System.getProperty("user.home"), ".superdog.properties");
-
-			if (Files.exists(path)) {
-				try {
-					Properties superdog = new Properties();
-					superdog.load(Files.newInputStream(path));
-
-					superdogPassword = superdog.getProperty("superdog.password");
-					if (Strings.isNullOrEmpty(superdogPassword))
-						throw new IllegalArgumentException("password null or empty");
-
-					superdogName = superdog.getProperty("superdog.username");
-					if (Strings.isNullOrEmpty(superdogName))
-						throw new IllegalArgumentException("username null or empty");
-
-				} catch (IOException e) {
-					throw new RuntimeException(e);
-				}
-
-			} else
-				throw new IllegalStateException(//
-						String.format(".superdog.properties file not found at [%s]", path.toAbsolutePath()));
-		}
-
-		return basicAuth(superdogName, superdogPassword);
+		Configuration conf = Space.get().configuration();
+		return basicAuth(conf.superdogName(), conf.superdogPassword());
 	}
 }
