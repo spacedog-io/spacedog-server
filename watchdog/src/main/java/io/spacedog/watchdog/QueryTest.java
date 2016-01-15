@@ -18,9 +18,7 @@ import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.GeoPoint;
 import io.spacedog.utils.Json;
-import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
-@TestOncePerDay
 public class QueryTest extends Assert {
 
 	@Test

@@ -88,45 +88,4 @@ public class SpaceSuite extends Suite {
 			throw new RuntimeException(e);
 		}
 	}
-
-	// private static List<Runner> computeRunners(Class<?> suiteClass) throws
-	// InitializationError {
-	// Class<? extends Annotation>[] annotations =
-	// checkSuiteAnnotations(suiteClass);
-	// ArrayList<Runner> runners = Lists.newArrayList();
-	// for (Class<?> testClass : findTestClasses(suiteClass))
-	// runners.add(new SpaceClassRunner(testClass, annotations));
-	// return runners;
-	// }
-	//
-	// private static class SpaceClassRunner extends BlockJUnit4ClassRunner {
-	//
-	// private Class<? extends Annotation>[] annotations;
-	//
-	// public SpaceClassRunner(Class<?> testClass, Class<? extends Annotation>[]
-	// annotations)
-	// throws InitializationError {
-	// super(testClass);
-	// this.annotations = annotations;
-	// }
-	//
-	// @Override
-	// protected List<FrameworkMethod> computeTestMethods() {
-	// return Arrays.stream(annotations)//
-	// .flatMap(annotation ->
-	// getTestClass().getAnnotatedMethods(annotation).stream())
-	// .collect(Collectors.toList());
-	// }
-	// }
-	//
-	// private static boolean isMethodAnnotationPresent(Class<?> klass, Class<?
-	// extends Annotation>[] annotations) {
-	// return Arrays.stream(klass.getDeclaredMethods())//
-	// .filter(method -> Arrays.stream(annotations)//
-	// .filter(annotation -> method.isAnnotationPresent(annotation))//
-	// .findAny()//
-	// .isPresent())//
-	// .findAny()//
-	// .isPresent();
-	// }
 }
