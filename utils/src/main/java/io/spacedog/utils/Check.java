@@ -16,4 +16,9 @@ public class Check {
 			throw new IllegalArgumentException(String.format("parameter [%s] is empty", paramName));
 	}
 
+	public static void isTrue(boolean condition, String message, Object... arguments) {
+		if (!condition)
+			throw new AssertionError(String.format(message, arguments));
+	}
+
 }
