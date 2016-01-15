@@ -11,7 +11,7 @@ import io.spacedog.client.SpaceRequest;
 
 public class Purge {
 
-	public void lambda() {
+	public void run() {
 
 		try {
 			int from = 0;
@@ -52,6 +52,6 @@ public class Purge {
 	}
 
 	public static void main(String[] args) {
-		new Purge().lambda();
+		new Purge().run();
 	}
 }

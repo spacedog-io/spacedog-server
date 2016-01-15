@@ -10,7 +10,7 @@ import io.spacedog.client.SpaceRequest;
 
 public class Watchdog extends RunListener {
 
-	public void lambda() {
+	public void run() {
 
 		JUnitCore junit = new JUnitCore();
 		junit.addListener(this);
@@ -48,6 +48,6 @@ public class Watchdog extends RunListener {
 	}
 
 	public static void main(String[] args) {
-		new Watchdog().lambda();
+		new Watchdog().run();
 	}
 }
