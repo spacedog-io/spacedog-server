@@ -15,7 +15,7 @@ public class Snapshot {
 	public void run() {
 
 		try {
-			SpaceRequest.post("/v1/dog/snapshot").superdogAuth().go(202);
+			SpaceRequest.post("/v1/snapshot").superdogAuth().go(202);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -28,7 +28,7 @@ public class Snapshot {
 	public void check() {
 
 		try {
-			ObjectNode node = SpaceRequest.get("/v1/dog/snapshot/latest")//
+			ObjectNode node = SpaceRequest.get("/v1/snapshot/latest")//
 					.superdogAuth()//
 					.go(200)//
 					.assertEquals("SUCCESS", "state")//

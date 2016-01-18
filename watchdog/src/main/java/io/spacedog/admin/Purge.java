@@ -20,7 +20,7 @@ public class Purge {
 
 			while (from + size < total) {
 				ObjectNode accounts;
-				accounts = SpaceRequest.get("/v1/admin/account")//
+				accounts = SpaceRequest.get("/v1/account")//
 						.queryString("from", String.valueOf(from))//
 						.queryString("size", String.valueOf(size))//
 						.superdogAuth()//
@@ -33,7 +33,7 @@ public class Purge {
 				Iterator<JsonNode> elements = accounts.get("results").elements();
 				while (elements.hasNext()) {
 					String backendId = elements.next().get("backendId").asText();
-					SpaceRequest.delete("/v1/admin/log/" + backendId)//
+					SpaceRequest.delete("/v1/log/" + backendId)//
 							.superdogAuth()//
 							.go(200);
 				}

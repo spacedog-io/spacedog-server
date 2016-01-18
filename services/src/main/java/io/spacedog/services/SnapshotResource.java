@@ -38,7 +38,7 @@ import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/v1/dog/snapshot")
+@Prefix("/v1")
 public class SnapshotResource extends AbstractResource {
 
 	private static final String PLATFORM_SNAPSHOT_PREFIX = "all";
@@ -49,8 +49,10 @@ public class SnapshotResource extends AbstractResource {
 	// routes
 	//
 
-	@Get("")
-	@Get("/")
+	@Get("/snapshot")
+	@Get("/snapshot/")
+	@Get("/dog/snapshot")
+	@Get("/dog/snapshot/")
 	public Payload getSnapshotAll() throws JsonParseException, JsonMappingException, IOException {
 
 		SpaceContext.checkAdminCredentials();
@@ -66,8 +68,10 @@ public class SnapshotResource extends AbstractResource {
 		return PayloadHelper.json(payload);
 	}
 
-	@Get("/latest")
-	@Get("/latest/")
+	@Get("/snapshot/latest")
+	@Get("/snapshot/latest/")
+	@Get("/dog/snapshot/latest")
+	@Get("/dog/snapshot/latest/")
 	public Payload getSnapshotLatest() throws JsonParseException, JsonMappingException, IOException {
 
 		SpaceContext.checkAdminCredentials();
@@ -76,8 +80,10 @@ public class SnapshotResource extends AbstractResource {
 				: PayloadHelper.json(snapshots.get(0).toJson());
 	}
 
-	@Get("/:snapshotId")
-	@Get("/:snapshotId/")
+	@Get("/snapshot/:snapshotId")
+	@Get("/snapshot/:snapshotId/")
+	@Get("/dog/snapshot/:snapshotId")
+	@Get("/dog/snapshot/:snapshotId/")
 	public Payload getSnapshotById(String snapshotId) throws JsonParseException, JsonMappingException, IOException {
 
 		SpaceContext.checkAdminCredentials();
@@ -85,8 +91,10 @@ public class SnapshotResource extends AbstractResource {
 		return PayloadHelper.json(snapshot.toJson());
 	}
 
-	@Post("")
-	@Post("/")
+	@Post("/snapshot")
+	@Post("/snapshot/")
+	@Post("/dog/snapshot")
+	@Post("/dog/snapshot/")
 	public Payload postSnapshot(Context context) throws JsonParseException, JsonMappingException, IOException {
 
 		SpaceContext.checkSuperDogCredentials();
@@ -121,8 +129,10 @@ public class SnapshotResource extends AbstractResource {
 		return PayloadHelper.json(jsonResponse, status);
 	}
 
-	@Post("/latest/restore")
-	@Post("/latest/restore/")
+	@Post("/snapshot/latest/restore")
+	@Post("/snapshot/latest/restore/")
+	@Post("/dog/snapshot/latest/restore")
+	@Post("/dog/snapshot/latest/restore/")
 	public Payload postSnapshotLatestRestore(Context context)
 			throws JsonParseException, JsonMappingException, IOException {
 
@@ -136,8 +146,10 @@ public class SnapshotResource extends AbstractResource {
 				context.query().getBoolean(WAIT_FOR_COMPLETION, false));
 	}
 
-	@Post("/:snapshotId/restore")
-	@Post("/:snapshotId/restore/")
+	@Post("/snapshot/:snapshotId/restore")
+	@Post("/snapshot/:snapshotId/restore/")
+	@Post("/dog/snapshot/:snapshotId/restore")
+	@Post("/dog/snapshot/:snapshotId/restore/")
 	public Payload postSnapshotRestoreById(String snapshotId, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
 

@@ -27,7 +27,7 @@ import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/v1/admin/log")
+@Prefix("/v1")
 public class LogResource {
 
 	public static final String TYPE = "log";
@@ -36,8 +36,10 @@ public class LogResource {
 	// Routes
 	//
 
-	@Get("")
-	@Get("/")
+	@Get("/log")
+	@Get("/log/")
+	@Get("/admin/log")
+	@Get("/admin/log/")
 	public Payload getAll(Context context) throws JsonParseException, JsonMappingException, IOException {
 
 		Credentials credentials = SpaceContext.checkAdminCredentials();
@@ -52,8 +54,10 @@ public class LogResource {
 		return extractLogs(response);
 	}
 
-	@Get("/:backendId")
-	@Get("/:backendId/")
+	@Get("/log/:backendId")
+	@Get("/log/:backendId/")
+	@Get("/admin/log/:backendId")
+	@Get("/admin/log/:backendId/")
 	public Payload getForBackend(String backendId, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
 
@@ -66,8 +70,10 @@ public class LogResource {
 		return extractLogs(response);
 	}
 
-	@Delete("/:backendId")
-	@Delete("/:backendId/")
+	@Delete("/log/:backendId")
+	@Delete("/log/:backendId/")
+	@Delete("/admin/log/:backendId")
+	@Delete("/admin/log/:backendId/")
 	public Payload purgeBackend(String backendId, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
 

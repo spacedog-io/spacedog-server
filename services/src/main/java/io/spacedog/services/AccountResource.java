@@ -35,7 +35,7 @@ import net.codestory.http.annotations.Prefix;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/v1/admin")
+@Prefix("/v1")
 public class AccountResource extends AbstractResource {
 
 	public static final String ADMIN_INDEX = "spacedog";
@@ -88,6 +88,8 @@ public class AccountResource extends AbstractResource {
 
 	@Get("/account")
 	@Get("/account/")
+	@Get("/admin/account")
+	@Get("/admin/account/")
 	public Payload getAll(Context context) throws JsonParseException, JsonMappingException, IOException {
 
 		SpaceContext.checkSuperDogCredentials();
@@ -123,6 +125,8 @@ public class AccountResource extends AbstractResource {
 
 	@Get("/account/username/:username")
 	@Get("/account/username/:username/")
+	@Get("/admin/account/username/:username")
+	@Get("/admin/account/username/:username/")
 	public Payload getAccountUsernameExists(String username) {
 		// TODO add a spacedog super admin key to log what admin app is checking
 		// existence of an account by username. Everybody should not be able to
@@ -135,6 +139,8 @@ public class AccountResource extends AbstractResource {
 
 	@Get("/account/backendId/:id")
 	@Get("/account/backendId/:id/")
+	@Get("/admin/account/backendId/:id")
+	@Get("/admin/account/backendId/:id/")
 	public Payload getAccountBackendIdExists(String id) {
 		// TODO add a spacedog super admin key to log what admin app is checking
 		// existence of an account by backend id. Everybody should not be able
@@ -145,6 +151,8 @@ public class AccountResource extends AbstractResource {
 
 	@Post("/account")
 	@Post("/account/")
+	@Post("/admin/account")
+	@Post("/admin/account/")
 	public Payload post(String body, Context context) throws IOException {
 		ObjectNode input = Json.readObjectNode(body);
 
@@ -196,6 +204,8 @@ public class AccountResource extends AbstractResource {
 
 	@Get("/account/:id")
 	@Get("/account/:id/")
+	@Get("/admin/account/:id")
+	@Get("/admin/account/:id/")
 	public Payload getById(String backendId) throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = SpaceContext.checkAdminCredentialsFor(backendId);
 
@@ -221,6 +231,8 @@ public class AccountResource extends AbstractResource {
 
 	@Delete("/account/:id")
 	@Delete("/account/:id/")
+	@Delete("/admin/account/:id")
+	@Delete("/admin/account/:id/")
 	public Payload deleteById(String backendId, Context context)
 			throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = SpaceContext.checkAdminCredentialsFor(backendId);
@@ -247,8 +259,10 @@ public class AccountResource extends AbstractResource {
 		return PayloadHelper.success();
 	}
 
-	@Get("/login")
-	@Get("/login/")
+	@Get("/account/login")
+	@Get("/account/login/")
+	@Get("/admin/login")
+	@Get("/admin/login/")
 	public Payload getLogin() throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		String backendKey = credentials.backendKeyAsString().get();
