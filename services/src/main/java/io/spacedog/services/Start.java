@@ -18,6 +18,10 @@ import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 
+import com.amazonaws.SDKGlobalConfiguration;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.profile.ProfilesConfigFile;
+
 import net.codestory.http.AbstractWebServer;
 import net.codestory.http.Request;
 import net.codestory.http.Response;
@@ -49,6 +53,7 @@ public class Start {
 
 	public static void main(String[] args) {
 		try {
+			configAwsCredentials();
 			singleton = new Start();
 			singleton.startLocalElastic();
 			singleton.startFluent();
@@ -65,6 +70,18 @@ public class Start {
 			}
 			System.exit(-1);
 		}
+	}
+
+	private static void configAwsCredentials() {
+		// get AWS credentials from system user ~/.aws/credentials
+		// set them in system properties for ElasticSearch to be able
+		// to retreive them since ES does not use the ProfileCredentialProvider
+		// class in its credentials provider chain
+		AWSCredentials credentials = new ProfilesConfigFile().getCredentials("default");
+		System.setProperty(SDKGlobalConfiguration.ACCESS_KEY_SYSTEM_PROPERTY, //
+				credentials.getAWSAccessKeyId());
+		System.setProperty(SDKGlobalConfiguration.SECRET_KEY_SYSTEM_PROPERTY, //
+				credentials.getAWSSecretKey());
 	}
 
 	private void startLocalElastic() throws InterruptedException, ExecutionException, IOException {
@@ -264,9 +281,9 @@ public class Start {
 			return Optional.ofNullable(configuration.getProperty("spacedog.mail.domain"));
 		}
 
-		public Path getSnapshotsPath() {
+		public Optional<Path> getSnapshotsPath() {
 			String path = configuration.getProperty("spacedog.snapshots.path");
-			return path == null ? getHomePath().resolve("snapshots") : Paths.get(path);
+			return path == null ? Optional.empty() : Optional.of(Paths.get(path));
 		}
 
 		public Optional<String> getSnapshotsBucketName() {

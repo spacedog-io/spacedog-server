@@ -315,15 +315,16 @@ public class SnapshotResource extends AbstractResource {
 
 				this.type = "s3";
 				this.settings = ImmutableSettings.builder()//
-						.put("bucket", conf.getSnapshotsBucketName())//
-						.put("region", conf.getSnapshotsBucketRegion())//
+						.put("bucket", conf.getSnapshotsBucketName().get())//
+						.put("region", conf.getSnapshotsBucketRegion().get())//
 						.put("base_path", this.id)//
 						.put("compress", true)//
 						.build();
 
-			} else if (Files.isDirectory(conf.getSnapshotsPath())) {
+			} else if (conf.getSnapshotsPath().isPresent()//
+					&& Files.isDirectory(conf.getSnapshotsPath().get())) {
 
-				Path location = conf.getSnapshotsPath().resolve(id);
+				Path location = conf.getSnapshotsPath().get().resolve(id);
 
 				try {
 					Files.createDirectories(location);
