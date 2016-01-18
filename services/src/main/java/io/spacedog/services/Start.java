@@ -225,7 +225,7 @@ public class Start {
 		public Path getConfigurationFilePath() {
 			String path = System.getProperty("spacedog.configuration.file");
 			return path == null //
-					? getHomePath().resolve("spacedog.properties")//
+					? getHomePath().resolve("spacedog.server.properties")//
 					: Paths.get(path);
 		}
 
@@ -314,5 +314,8 @@ public class Start {
 			return Optional.ofNullable(configuration.getProperty("spacedog.superdog." + username + ".email"));
 		}
 
+		public String superdogNotificationTopic() {
+			return configuration.getProperty("spacedog.superdog.notification.topic");
+		}
 	}
 }

@@ -15,7 +15,7 @@ import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
-public class AccountResourceTest extends Assert {
+public class AccountResourceTestOften extends Assert {
 
 	@Test
 	public void deleteSignUpGetLoginTestAccount() throws Exception {
@@ -112,8 +112,10 @@ public class AccountResourceTest extends Assert {
 
 		SpaceDogHelper.printTestHeader();
 
-		SpaceDogHelper.Account aaaa = SpaceDogHelper.resetAccount("aaaa", "aaaa", "hi aaaa", "hello@spacedog.io");
-		SpaceDogHelper.Account zzzz = SpaceDogHelper.resetAccount("zzzz", "zzzz", "hi zzzz", "hello@spacedog.io");
+		SpaceDogHelper.Account aaaa = SpaceDogHelper.resetAccount(//
+				"aaaa", "aaaa", "hi aaaa", "hello@spacedog.io", true);
+		SpaceDogHelper.Account zzzz = SpaceDogHelper.resetAccount(//
+				"zzzz", "zzzz", "hi zzzz", "hello@spacedog.io", true);
 
 		// should fail to get account since backend is not consistent with
 		// account

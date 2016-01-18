@@ -18,8 +18,10 @@ public class GetAllAccountsTest extends Assert {
 
 		// prepare
 		SpaceDogHelper.printTestHeader();
-		SpaceDogHelper.Account aaaa = SpaceDogHelper.resetAccount("aaaa", "aaaa", "hi aaaa", "hello@spacedog.io");
-		SpaceDogHelper.Account zzzz = SpaceDogHelper.resetAccount("zzzz", "zzzz", "hi zzzz", "hello@spacedog.io");
+		SpaceDogHelper.Account aaaa = SpaceDogHelper.resetAccount(//
+				"aaaa", "aaaa", "hi aaaa", "hello@spacedog.io", true);
+		SpaceDogHelper.Account zzzz = SpaceDogHelper.resetAccount(//
+				"zzzz", "zzzz", "hi zzzz", "hello@spacedog.io", true);
 
 		// should succeed to get accounts
 		ObjectNode aaaaNode = SpaceRequest.get("/v1/admin/account/aaaa").basicAuth(aaaa).go(200).objectNode();

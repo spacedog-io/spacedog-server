@@ -4,6 +4,7 @@
 package io.spacedog.services;
 
 import io.spacedog.utils.Utils;
+import net.codestory.http.Context;
 
 public abstract class AbstractResource {
 
@@ -19,5 +20,9 @@ public abstract class AbstractResource {
 
 	protected static String getReferenceId(String reference) {
 		return Utils.splitBySlash(reference)[1];
+	}
+
+	protected static boolean isTest(Context context) {
+		return context.query().getBoolean("test", false);
 	}
 }

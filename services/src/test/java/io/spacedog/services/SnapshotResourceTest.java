@@ -18,7 +18,7 @@ public class SnapshotResourceTest extends Assert {
 	public void snapshotAndRestoreMultipleTimes() throws Exception {
 
 		// create an account and add a user
-		Account aaaaAccount = SpaceDogHelper.resetAccount("aaaa", "aaaa", "hi aaaa", "aaaa@dog.com");
+		Account aaaaAccount = SpaceDogHelper.resetAccount("aaaa", "aaaa", "hi aaaa", "aaaa@dog.com", true);
 		SpaceDogHelper.createUser(aaaaAccount, "vince", "hi vince", "vince@dog.com");
 		SpaceRequest.get("/v1/user/vince").backendKey(aaaaAccount).go(200);
 
@@ -64,7 +64,7 @@ public class SnapshotResourceTest extends Assert {
 				.assertEquals(firstSnap);
 
 		// create another account and add a user
-		Account bbbbAccount = SpaceDogHelper.resetAccount("bbbb", "bbbb", "hi bbbb", "bbbb@dog.com");
+		Account bbbbAccount = SpaceDogHelper.resetAccount("bbbb", "bbbb", "hi bbbb", "bbbb@dog.com", true);
 		SpaceDogHelper.createUser(bbbbAccount, "fred", "hi fred", "fred@dog.com");
 		SpaceRequest.get("/v1/user/fred").backendKey(bbbbAccount).go(200);
 
@@ -88,7 +88,7 @@ public class SnapshotResourceTest extends Assert {
 				.assertEquals(firstSnap, "results.1");
 
 		// create another account and add a user
-		Account ccccAccount = SpaceDogHelper.resetAccount("cccc", "cccc", "hi cccc", "cccc@dog.com");
+		Account ccccAccount = SpaceDogHelper.resetAccount("cccc", "cccc", "hi cccc", "cccc@dog.com", true);
 		SpaceDogHelper.createUser(ccccAccount, "nath", "hi nath", "nath@dog.com");
 		SpaceRequest.get("/v1/user/nath").backendKey(ccccAccount).go(200);
 

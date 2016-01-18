@@ -93,12 +93,20 @@ public class SpaceDogHelper {
 		SpaceRequest.post("/v1/schema/" + schemaName).basicAuth(username, password).body(schema).go(201);
 	}
 
-	public static Account createAccount(String backendId, String username, String password, String email)
+	public static Account createAccount(String backendId, String username, String password, String email, boolean test)
 			throws Exception, UnirestException {
-		String backendKey = SpaceRequest.post("/v1/admin/account")
-				.body(Json.objectBuilder().put("backendId", backendId).put("username", username)
-						.put("password", password).put("email", email))
-				.go(201).httpResponse().getHeaders().get(SpaceHeaders.BACKEND_KEY).get(0);
+		String backendKey = SpaceRequest.post("/v1/admin/account")//
+				.forTesting(test)//
+				.body(Json.objectBuilder()//
+						.put("backendId", backendId)//
+						.put("username", username)//
+						.put("password", password)//
+						.put("email", email))//
+				.go(201)//
+				.httpResponse()//
+				.getHeaders()//
+				.get(SpaceHeaders.BACKEND_KEY)//
+				.get(0);
 
 		Assert.assertFalse(Strings.isNullOrEmpty(backendKey));
 
@@ -111,7 +119,8 @@ public class SpaceDogHelper {
 
 	public static Optional<Account> getAccount(String backendId, String username, String password) throws Exception {
 
-		SpaceResponse response = SpaceRequest.get("/v1/admin/account/" + backendId).basicAuth(username, password)
+		SpaceResponse response = SpaceRequest.get("/v1/admin/account/" + backendId)//
+				.basicAuth(username, password)//
 				.go(200, 401);
 
 		if (response.httpResponse().getStatus() == 200) {
@@ -126,15 +135,15 @@ public class SpaceDogHelper {
 	}
 
 	public static Account getOrCreateTestAccount() throws Exception {
-		return getOrCreateAccount("test", "test", "hi test", "david@spacedog.io");
+		return getOrCreateAccount("test", "test", "hi test", "david@spacedog.io", true);
 	}
 
-	public static Account getOrCreateAccount(String backendId, String username, String password, String email)
-			throws Exception {
+	public static Account getOrCreateAccount(String backendId, String username, String password, String email,
+			boolean test) throws Exception {
 		Optional<Account> opt = getAccount(backendId, username, password);
 		if (opt.isPresent())
 			return opt.get();
-		return createAccount(backendId, username, password, email);
+		return createAccount(backendId, username, password, email, test);
 	}
 
 	public static void deleteAccount(Account account) throws UnirestException, Exception {
@@ -150,14 +159,18 @@ public class SpaceDogHelper {
 		SpaceRequest.delete("/v1/admin/account/" + backendId).basicAuth(username, password).go(200, 401);
 	}
 
-	public static Account resetAccount(String backendId, String username, String password, String email)
-			throws Exception {
+	public static Account resetAccount(String backendId, String username, String password, String email,
+			boolean test) throws Exception {
 		deleteAccount(backendId, username, password);
-		return createAccount(backendId, username, password, email);
+		return createAccount(backendId, username, password, email, test);
 	}
 
 	public static Account resetTestAccount() throws Exception {
-		return resetAccount("test", "test", "hi test", "david@spacedog.io");
+		return resetTestAccount(true);
+	}
+
+	public static Account resetTestAccount(boolean forTesting) throws Exception {
+		return resetAccount("test", "test", "hi test", "david@spacedog.io", forTesting);
 	}
 
 	public static void printTestHeader() throws Exception {

@@ -17,7 +17,7 @@ public class SuperDogLogResourceTest extends Assert {
 		// create a test accounts and users
 		Account testAccount = SpaceDogHelper.resetTestAccount();
 		SpaceDogHelper.createUser(testAccount, "vince", "hi vince", "vince@dog.com");
-		Account test2Account = SpaceDogHelper.resetAccount("test2", "test2", "hi test2", "test2@dog.com");
+		Account test2Account = SpaceDogHelper.resetAccount("test2", "test2", "hi test2", "test2@dog.com", true);
 		SpaceDogHelper.createUser(test2Account, "fred", "hi fred", "fred@dog.com");
 
 		// get all test account logs

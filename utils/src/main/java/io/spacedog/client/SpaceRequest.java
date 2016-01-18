@@ -18,16 +18,12 @@ import com.mashape.unirest.request.HttpRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
 import com.mashape.unirest.request.body.MultipartBody;
 
-import io.spacedog.client.Space.Configuration;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceHeaders;
 
 public class SpaceRequest {
 	private HttpRequest request;
 	private JsonNode body;
-
-	private static SpaceTarget target = Space.get().configuration().target();
-	private static boolean debug = Space.get().configuration().debug();
 
 	public SpaceRequest(HttpRequest request) {
 		this.request = request;
@@ -88,20 +84,14 @@ public class SpaceRequest {
 		return new SpaceRequest(request);
 	}
 
-	public static void setTarget(SpaceTarget target) {
-		SpaceRequest.target = target;
-	}
-
-	public static SpaceTarget getTarget() {
-		return target;
-	}
-
 	private static String computeMainUrl(String uri) {
+		SpaceTarget target = SpaceRequestConfiguration.get().target();
 		return (target.ssl() ? "https://" : "http://") + target.host()
 				+ (target.port() == 443 ? "" : ":" + target.port()) + uri;
 	}
 
 	private static String computeOptionalUrl(String uri) {
+		SpaceTarget target = SpaceRequestConfiguration.get().target();
 		return "http://" + target.host()//
 				+ (target.optionalPort() == 80 ? "" : ":" + target.optionalPort()) + uri;
 	}
@@ -168,7 +158,7 @@ public class SpaceRequest {
 	}
 
 	public SpaceResponse go() throws Exception {
-		return new SpaceResponse(request, body, debug);
+		return new SpaceResponse(request, body, SpaceRequestConfiguration.get().debug());
 	}
 
 	public SpaceResponse go(int... expectedStatus) throws Exception {
@@ -232,11 +222,18 @@ public class SpaceRequest {
 	}
 
 	public static void setLogDebug(boolean debug) {
-		SpaceRequest.debug = debug;
+		SpaceRequestConfiguration.get().debug(debug);
 	}
 
 	public SpaceRequest superdogAuth() {
-		Configuration conf = Space.get().configuration();
+		SpaceRequestConfiguration conf = SpaceRequestConfiguration.get();
 		return basicAuth(conf.superdogName(), conf.superdogPassword());
 	}
+
+	public SpaceRequest forTesting(boolean test) {
+		if (test)
+			this.queryString("test", "true");
+		return this;
+	}
+
 }

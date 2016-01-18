@@ -23,7 +23,7 @@ public class LogResourceTest extends Assert {
 		Account testAccount = SpaceDogHelper.resetTestAccount();
 
 		// create test2 account
-		Account test2Account = SpaceDogHelper.resetAccount("test2", "test2", "hi test2", "test2@dog.com");
+		Account test2Account = SpaceDogHelper.resetAccount("test2", "test2", "hi test2", "test2@dog.com", true);
 
 		// create message schema in test backend
 		SpaceDogHelper.setSchema(//

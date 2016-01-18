@@ -5,8 +5,8 @@ import org.junit.runner.JUnitCore;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 
-import io.spacedog.client.Space;
-import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceRequestConfiguration;
+import io.spacedog.utils.Internals;
 
 public class Watchdog extends RunListener {
 
@@ -20,8 +20,9 @@ public class Watchdog extends RunListener {
 		if (6 <= hourOfDay && hourOfDay < 7) {
 			junit.run(TestAllSuite.class);
 
-			Space.get().sendNotification(//
-					SpaceRequest.getTarget().host() + " is up and running", //
+			Internals.get().notify(//
+					SpaceRequestConfiguration.get().superdogNotificationTopic(), //
+					SpaceRequestConfiguration.get().target().host() + " is up and running", //
 					"Everything is working properly.");
 		} else
 			junit.run(TestOftenSuite.class);
@@ -41,8 +42,10 @@ public class Watchdog extends RunListener {
 		String msg = logBuilder.toString();
 		System.err.println(msg);
 
-		Space.get().sendNotification(SpaceRequest.getTarget().host()//
-				+ " is DOWN DOWN DOWN", msg);
+		Internals.get().notify(//
+				SpaceRequestConfiguration.get().superdogNotificationTopic(), //
+				SpaceRequestConfiguration.get().target().host() + " is DOWN DOWN DOWN", //
+				msg);
 
 		System.exit(-1);
 	}

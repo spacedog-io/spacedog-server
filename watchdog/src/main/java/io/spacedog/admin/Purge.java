@@ -6,8 +6,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Throwables;
 
-import io.spacedog.client.Space;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceRequestConfiguration;
+import io.spacedog.utils.Internals;
 
 public class Purge {
 
@@ -39,14 +40,19 @@ public class Purge {
 				}
 			}
 
-			String message = SpaceRequest.getTarget().host() + " log purge OK";
-			Space.get().sendNotification(message, message);
+			String message = SpaceRequestConfiguration.get().target().host() + " log purge OK";
+			Internals.get().notify(//
+					SpaceRequestConfiguration.get().superdogNotificationTopic(), //
+					message, message);
 
 		} catch (Exception e) {
-			Space.get().sendNotification(//
-					SpaceRequest.getTarget().host() + " log purge ERROR", //
-					Throwables.getStackTraceAsString(e));
+
 			e.printStackTrace();
+
+			Internals.get().notify(//
+					SpaceRequestConfiguration.get().superdogNotificationTopic(), //
+					SpaceRequestConfiguration.get().target().host() + " log purge ERROR", //
+					Throwables.getStackTraceAsString(e));
 		}
 
 	}

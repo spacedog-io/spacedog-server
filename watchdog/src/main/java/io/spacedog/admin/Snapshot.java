@@ -6,9 +6,10 @@ import org.joda.time.DateTimeComparator;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Throwables;
 
-import io.spacedog.client.Space;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceRequestConfiguration;
 import io.spacedog.utils.Check;
+import io.spacedog.utils.Internals;
 
 public class Snapshot {
 
@@ -19,8 +20,10 @@ public class Snapshot {
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			Space.get().sendNotification(//
-					SpaceRequest.getTarget().host() + " snapshot ERROR", //
+
+			Internals.get().notify(//
+					SpaceRequestConfiguration.get().superdogNotificationTopic(), //
+					SpaceRequestConfiguration.get().target().host() + " snapshot ERROR", //
 					Throwables.getStackTraceAsString(e));
 		}
 	}
@@ -45,13 +48,18 @@ public class Snapshot {
 			Check.isTrue(difference < 1000 * 60 * 60, //
 					"snapshot took [%s], it should take less than one hour", difference);
 
-			String message = SpaceRequest.getTarget().host() + " snapshot OK";
-			Space.get().sendNotification(message, message);
+			String message = SpaceRequestConfiguration.get().target().host() + " snapshot OK";
+			Internals.get().notify(//
+					SpaceRequestConfiguration.get().superdogNotificationTopic(), //
+					message, message);
 
 		} catch (Exception e) {
+
 			e.printStackTrace();
-			Space.get().sendNotification(//
-					SpaceRequest.getTarget().host() + " snapshot ERROR", //
+
+			Internals.get().notify(//
+					SpaceRequestConfiguration.get().superdogNotificationTopic(), //
+					SpaceRequestConfiguration.get().target().host() + " snapshot ERROR", //
 					Throwables.getStackTraceAsString(e));
 		}
 	}

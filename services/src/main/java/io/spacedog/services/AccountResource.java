@@ -22,6 +22,7 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 
 import io.spacedog.utils.BackendKey;
+import io.spacedog.utils.Internals;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Passwords;
@@ -193,6 +194,12 @@ public class AccountResource extends AbstractResource {
 		// in space context if none are set
 		SpaceContext.setCredentials(Credentials.fromAdmin(//
 				account.backendId, account.username, account.email, account.backendKey), false);
+
+		if (!isTest(context))
+			Internals.get().notify(//
+					Start.get().configuration().superdogNotificationTopic(), //
+					String.format("%s got a new account", Start.get().configuration().getUrl()), //
+					String.format("account backend = %s\naccount email = %s", account.backendId, account.email));
 
 		ObjectNode payloadContent = PayloadHelper
 				.savedBuilder(true, "/v1/admin", ACCOUNT_TYPE, account.backendId, version)//
