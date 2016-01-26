@@ -97,13 +97,17 @@ public class PayloadHelper {
 		return json(builder, HttpStatus.BAD_REQUEST);
 	}
 
+	public static JsonBuilder<ObjectNode> savedBuilder(boolean created, String uri, String type, String id) {
+		return savedBuilder(created, uri, type, id, 0);
+	}
+
 	public static JsonBuilder<ObjectNode> savedBuilder(boolean created, String uri, String type, String id,
 			long version) {
 
 		JsonBuilder<ObjectNode> builder = minimalBuilder(created ? HttpStatus.CREATED : HttpStatus.OK) //
 				.put("id", id) //
 				.put("type", type) //
-				.put("location", AbstractResource.toUrl(uri, type, id));
+				.put("location", AbstractResource.spaceUrl(uri, type, id).toString());
 
 		if (version > 0) //
 			builder.put("version", version);

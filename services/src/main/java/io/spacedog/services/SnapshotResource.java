@@ -119,7 +119,7 @@ public class SnapshotResource extends AbstractResource {
 
 		JsonBuilder<ObjectNode> jsonResponse = PayloadHelper.minimalBuilder(status)//
 				.put("id", snapshotId)//
-				.put("location", toUrl("/v1/dog", "snapshot", snapshotId));
+				.put("location", spaceUrl("/v1/dog", "snapshot", snapshotId).toString());
 
 		if (response.getSnapshotInfo() != null) {
 			SpaceSnapshot info = new SpaceSnapshot(repoId, response.getSnapshotInfo());

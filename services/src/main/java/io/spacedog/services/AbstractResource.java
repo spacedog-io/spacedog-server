@@ -3,15 +3,32 @@
  */
 package io.spacedog.services;
 
+import io.spacedog.services.Start.Configuration;
+import io.spacedog.utils.Check;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 
 public abstract class AbstractResource {
 
-	public static final String BASE_URL = "https://spacedog.io";
+	public static final String SLASH = "/";
 
-	protected static String toUrl(String uri, String type, String id) {
-		return new StringBuilder(BASE_URL).append(uri).append('/').append(type).append('/').append(id).toString();
+	protected static StringBuilder spaceUrl(String uri, String type, String id) {
+		return spaceUrl(uri).append(SLASH).append(type).append(SLASH).append(id);
+	}
+
+	protected static StringBuilder spaceUrl(String uri) {
+		Check.notNullOrEmpty(uri, "URI");
+		Check.isTrue(uri.startsWith(SLASH), "URI must start with a /");
+		return spaceRootUrl().append(uri);
+	}
+
+	protected static StringBuilder spaceRootUrl() {
+		Configuration conf = Start.get().configuration();
+		StringBuilder builder = new StringBuilder(conf.getUrl());
+		int port = conf.getMainPort();
+		if (port != 443 && port != 80)
+			builder.append(':').append(port);
+		return builder;
 	}
 
 	protected static String getReferenceType(String reference) {
@@ -24,5 +41,10 @@ public abstract class AbstractResource {
 
 	protected static boolean isTest(Context context) {
 		return context.query().getBoolean("test", false);
+	}
+
+	protected static String get(Context context, String name, String defaultValue) {
+		String value = context.get(name);
+		return value == null ? defaultValue : value;
 	}
 }
