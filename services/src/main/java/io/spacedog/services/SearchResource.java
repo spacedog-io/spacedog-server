@@ -133,9 +133,9 @@ public class SearchResource extends AbstractResource {
 
 		if (Strings.isNullOrEmpty(jsonQuery)) {
 
-			builder.from(context.request().query().getInteger("from", 0))
-					.size(context.request().query().getInteger("size", 10))
-					.fetchSource(context.request().query().getBoolean("fetch-contents", true))
+			builder.from(context.query().getInteger("from", 0))//
+					.size(context.query().getInteger("size", 10))//
+					.fetchSource(context.query().getBoolean("fetch-contents", true))//
 					.query(QueryBuilders.matchAllQuery());
 
 			String queryText = context.get("q");
