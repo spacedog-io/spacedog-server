@@ -4,6 +4,7 @@
 package io.spacedog.client;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 
@@ -16,6 +17,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterators;
+import com.google.common.io.ByteStreams;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.HttpRequest;
@@ -46,8 +48,9 @@ public class SpaceResponse {
 
 			httpRequest.getHeaders().forEach((key, value) -> printHeader(key, value));
 
-			if (request.getBody() != null)
-				System.out.println(request.getBody().getEntity().getContentType());
+			if (request.getBody() != null //
+					&& request.getBody().getEntity().getContentType() != null)
+				System.out.println("content-type:" + request.getBody().getEntity().getContentType());
 
 			if (jsonRequestContent != null)
 				System.out.println(String.format("Request content: %s",
@@ -106,6 +109,14 @@ public class SpaceResponse {
 		if (!jsonNode().isArray())
 			throw new RuntimeException(String.format("not a json array but [%s]", jsonResponseContent.getNodeType()));
 		return (ArrayNode) jsonResponseContent;
+	}
+
+	public byte[] bytes() {
+		try {
+			return ByteStreams.toByteArray(this.httpResponse.getRawBody());
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public HttpRequest httpRequest() {
@@ -226,7 +237,7 @@ public class SpaceResponse {
 		assertJsonContent();
 		JsonNode node = Json.get(jsonResponseContent, jsonPath);
 		if (Json.isNull(node))
-			Assert.fail("property [%s] is null");
+			Assert.fail(String.format("property [%s] is null", jsonPath));
 		if (size != node.size())
 			Assert.fail(String.format("expected size [%s], json property [%s] node size [%s]", //
 					size, jsonPath, node.size()));
@@ -268,6 +279,13 @@ public class SpaceResponse {
 		if (node != null)
 			Assert.fail(String.format(//
 					"field named [%s] contains [%s]", jsonPath, node));
+		return this;
+	}
+
+	public SpaceResponse assertHeaderEquals(String expected, String headerName) {
+		if (!Arrays.asList(expected).equals(httpResponse.getHeaders().get(headerName)))
+			Assert.fail(String.format("response header [%s] not equal to [%s] but to %s", //
+					headerName, expected, httpResponse.getHeaders().get(headerName)));
 		return this;
 	}
 
