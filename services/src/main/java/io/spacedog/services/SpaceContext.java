@@ -97,13 +97,6 @@ public class SpaceContext {
 		return credentials;
 	}
 
-	public static Credentials checkAdminCredentials() throws JsonParseException, JsonMappingException, IOException {
-		Credentials credentials = checkCredentials();
-		if (credentials.isAdminAuthenticated())
-			return credentials;
-		throw new AuthenticationException("invalid administrator credentials");
-	}
-
 	public static Credentials checkAdminCredentialsFor(String backendId)
 			throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = checkAdminCredentials();
@@ -111,6 +104,21 @@ public class SpaceContext {
 			throw new AuthenticationException(
 					String.format("invalid administrator credentials for backend [%s]", backendId));
 		return credentials;
+	}
+
+	public static Credentials checkAdminCredentials() throws JsonParseException, JsonMappingException, IOException {
+		Credentials credentials = checkCredentials();
+		if (credentials.isAdminAuthenticated())
+			return credentials;
+		throw new AuthenticationException("invalid administrator credentials");
+	}
+
+	public static Credentials checkUserOrAdminCredentials()
+			throws JsonParseException, JsonMappingException, IOException {
+		Credentials credentials = checkCredentials();
+		if (credentials.isAdminAuthenticated() || credentials.isUserAuthenticated())
+			return credentials;
+		throw new AuthenticationException("invalid user or administrator credentials");
 	}
 
 	public static Credentials checkUserCredentials() throws IOException, JsonParseException, JsonMappingException {
