@@ -124,6 +124,8 @@ public class Start {
 				.add(SnapshotResource.get())//
 				.add(LogResource.get())//
 				.add(PushResource.get())//
+				.add(FileResource.get())//
+				.add(ShareResource.get())//
 				.add(SearchResource.get());
 
 		routes.filter(new CrossOriginFilter())//
@@ -199,8 +201,8 @@ public class Start {
 			System.out.println("[SpaceDog] snapshots path = " + getSnapshotsPath());
 			System.out.println("[SpaceDog] snapshots bucket name = " + getSnapshotsBucketName());
 			System.out.println("[SpaceDog] snapshots bucket region = " + getSnapshotsBucketRegion());
-			System.out.println("[SpaceDog] david password = " + getSuperDogHashedPassword("david"));
-			System.out.println("[SpaceDog] david email = " + getSuperDogEmail("david"));
+			System.out.println("[SpaceDog] david superdog password = " + getSuperDogHashedPassword("david"));
+			System.out.println("[SpaceDog] david superdog email = " + getSuperDogEmail("david"));
 			System.out.println("[SpaceDog] production = " + isProduction());
 
 			if (isProduction()) {

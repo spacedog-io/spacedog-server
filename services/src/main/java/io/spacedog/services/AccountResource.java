@@ -263,6 +263,9 @@ public class AccountResource extends AbstractResource {
 
 		ElasticHelper.get().refresh(true, ADMIN_INDEX);
 
+		FileResource.get().deleteAll();
+		ShareResource.get().deleteAll();
+
 		return PayloadHelper.success();
 	}
 
