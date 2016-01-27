@@ -11,6 +11,7 @@ import org.elasticsearch.index.mapper.MergeMappingException;
 import org.elasticsearch.indices.IndexMissingException;
 import org.elasticsearch.rest.RestStatus;
 
+import com.amazonaws.AmazonServiceException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -35,6 +36,9 @@ public class PayloadHelper {
 
 	public static Payload error(Throwable t) {
 
+		if (t instanceof AmazonServiceException) {
+			return error(((AmazonServiceException) t).getStatusCode(), t);
+		}
 		if (t instanceof VersionConflictEngineException) {
 			return error(HttpStatus.CONFLICT, t);
 		}
