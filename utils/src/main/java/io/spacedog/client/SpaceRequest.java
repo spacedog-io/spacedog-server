@@ -123,6 +123,16 @@ public class SpaceRequest {
 		return this;
 	}
 
+	public SpaceRequest body(byte[] bytes) {
+		if (request instanceof HttpRequestWithBody) {
+			((HttpRequestWithBody) request).body(bytes);
+			return this;
+		}
+
+		throw new IllegalStateException(
+				String.format("%s requests don't take any body", request.getHttpMethod().name()));
+	}
+
 	public SpaceRequest body(String body) {
 		if (request instanceof HttpRequestWithBody) {
 			((HttpRequestWithBody) request).body(body);
@@ -235,5 +245,4 @@ public class SpaceRequest {
 			this.queryString("test", "true");
 		return this;
 	}
-
 }
