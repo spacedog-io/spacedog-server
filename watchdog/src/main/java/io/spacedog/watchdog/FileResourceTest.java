@@ -5,7 +5,9 @@ import org.junit.Test;
 import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceDogHelper.Account;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
+@TestOncePerDay
 public class FileResourceTest {
 
 	private static final byte[] BYTES = "This is a test file!".getBytes();
