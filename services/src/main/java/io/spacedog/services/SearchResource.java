@@ -61,7 +61,7 @@ public class SearchResource extends AbstractResource {
 		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, false);
 		ElasticHelper.get().refresh(refresh, credentials.backendId());
 		ObjectNode result = searchInternal(credentials, null, body, context);
-		return PayloadHelper.json(result);
+		return Payloads.json(result);
 	}
 
 	@Delete("/search")
@@ -72,7 +72,7 @@ public class SearchResource extends AbstractResource {
 		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, true);
 		ElasticHelper.get().refresh(refresh, credentials.backendId());
 		DeleteByQueryResponse response = ElasticHelper.get().delete(credentials.backendId(), query, new String[0]);
-		return PayloadHelper.json(response.status(), response.getIndex(credentials.backendId()).getFailures());
+		return Payloads.json(response.status(), response.getIndex(credentials.backendId()).getFailures());
 	}
 
 	@Get("/search/:type")
@@ -90,7 +90,7 @@ public class SearchResource extends AbstractResource {
 		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, false);
 		ElasticHelper.get().refresh(refresh, credentials.backendId());
 		ObjectNode result = searchInternal(credentials, type, body, context);
-		return PayloadHelper.json(result);
+		return Payloads.json(result);
 	}
 
 	@Delete("/search/:type")
@@ -101,7 +101,7 @@ public class SearchResource extends AbstractResource {
 		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, true);
 		ElasticHelper.get().refresh(refresh, credentials.backendId());
 		DeleteByQueryResponse response = ElasticHelper.get().delete(credentials.backendId(), query, type);
-		return PayloadHelper.json(response.status(), response.getIndex(credentials.backendId()).getFailures());
+		return Payloads.json(response.status(), response.getIndex(credentials.backendId()).getFailures());
 	}
 
 	@Post("/filter/:type")
@@ -113,7 +113,7 @@ public class SearchResource extends AbstractResource {
 		ElasticHelper.get().refresh(refresh, credentials.backendId());
 		FilteredSearchBuilder builder = ElasticHelper.get().searchBuilder(credentials.backendId(), type)
 				.applyContext(context).applyFilters(Json.readObjectNode(body));
-		return PayloadHelper.json(extractResults(builder.get(), context, credentials));
+		return Payloads.json(extractResults(builder.get(), context, credentials));
 	}
 
 	ObjectNode searchInternal(Credentials credentials, String type, String jsonQuery, Context context)

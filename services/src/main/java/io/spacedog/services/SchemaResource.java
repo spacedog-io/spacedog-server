@@ -54,14 +54,14 @@ public class SchemaResource extends AbstractResource {
 					}
 				});
 
-		return PayloadHelper.json(jsonMerger.get());
+		return Payloads.json(jsonMerger.get());
 	}
 
 	@Get("/:type")
 	@Get("/:type/")
 	public Payload get(String type) throws JsonParseException, JsonMappingException, IOException {
 		Credentials credentials = SpaceContext.checkCredentials();
-		return PayloadHelper.json(ElasticHelper.get().getSchema(credentials.backendId(), type));
+		return Payloads.json(ElasticHelper.get().getSchema(credentials.backendId(), type));
 	}
 
 	@Put("/:type")
@@ -77,7 +77,7 @@ public class SchemaResource extends AbstractResource {
 		PutMappingRequest putMappingRequest = new PutMappingRequest(credentials.backendId()).type(type)
 				.source(elasticMapping);
 		Start.get().getElasticClient().admin().indices().putMapping(putMappingRequest).get();
-		return PayloadHelper.saved(true, "/v1", "schema", type);
+		return Payloads.saved(true, "/v1", "schema", type);
 	}
 
 	@Delete("/:type")
@@ -90,7 +90,7 @@ public class SchemaResource extends AbstractResource {
 		} catch (TypeMissingException exception) {
 			// ignored
 		}
-		return PayloadHelper.success();
+		return Payloads.success();
 	}
 
 	//

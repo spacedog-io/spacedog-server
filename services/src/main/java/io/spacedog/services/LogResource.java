@@ -85,9 +85,9 @@ public class LogResource {
 		// no delete response means no logs to delete means success
 
 		return response.isPresent()//
-				? PayloadHelper.json(response.get().status(), //
+				? Payloads.json(response.get().status(), //
 						response.get().getIndex(AccountResource.ADMIN_INDEX).getFailures())
-				: PayloadHelper.success();
+				: Payloads.success();
 	}
 
 	//
@@ -103,11 +103,11 @@ public class LogResource {
 			try {
 				payload = nextFilter.get();
 			} catch (Throwable t) {
-				payload = PayloadHelper.error(t);
+				payload = Payloads.error(t);
 			}
 
 			if (payload == null)
-				payload = PayloadHelper.error(500, //
+				payload = Payloads.error(500, //
 						"unexpected null payload for [%s] request to [%s]", context.method(), uri);
 
 			try {
@@ -179,7 +179,7 @@ public class LogResource {
 		for (SearchHit hit : response.getHits().getHits())
 			builder.node(hit.sourceAsString());
 
-		return PayloadHelper.json(builder);
+		return Payloads.json(builder);
 	}
 
 	private String log(String uri, Context context, DateTime receivedAt, Payload payload)

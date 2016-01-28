@@ -50,7 +50,7 @@ public class BatchResource extends AbstractResource {
 		ArrayNode requests = Json.readArrayNode(body);
 
 		if (requests.size() > 10)
-			return PayloadHelper.error(HttpStatus.BAD_REQUEST, "batch are limited to 10 sub requests");
+			return Payloads.error(HttpStatus.BAD_REQUEST, "batch are limited to 10 sub requests");
 
 		boolean stopOnError = context.query().getBoolean(STOP_ON_ERROR_QUERY_PARAM, false);
 
@@ -80,26 +80,26 @@ public class BatchResource extends AbstractResource {
 					try {
 						payload = Start.get().executeRequest(requestWrapper, null);
 					} catch (Throwable t) {
-						payload = PayloadHelper.error(t);
+						payload = Payloads.error(t);
 					}
 
 					if (payload == null)
 						payload = new Payload(HttpStatus.INTERNAL_SERVER_ERROR);
 
-					if (PayloadHelper.isJson(payload)) {
+					if (Payloads.isJson(payload)) {
 
 						if (payload.isSuccess() && "GET".equalsIgnoreCase(requestWrapper.method())) {
 
 							output.write(String.format("{\"success\":true,\"status\":%s,\"content\":", payload.code())
 									.getBytes(Utils.UTF8));
-							output.write(PayloadHelper.toBytes(payload.rawContent()));
+							output.write(Payloads.toBytes(payload.rawContent()));
 							output.write("}".getBytes(Utils.UTF8));
 
 						} else
-							output.write(PayloadHelper.toBytes(payload.rawContent()));
+							output.write(Payloads.toBytes(payload.rawContent()));
 
 					} else
-						output.write(PayloadHelper.toBytes(PayloadHelper.json(payload.code())));
+						output.write(Payloads.toBytes(Payloads.json(payload.code())));
 
 					if (stopOnError && payload.isError())
 						break;
@@ -117,7 +117,7 @@ public class BatchResource extends AbstractResource {
 
 		};
 
-		return new Payload(PayloadHelper.JSON_CONTENT_UTF8, streamingOutput, HttpStatus.OK);
+		return new Payload(Payloads.JSON_CONTENT_UTF8, streamingOutput, HttpStatus.OK);
 	}
 
 	//

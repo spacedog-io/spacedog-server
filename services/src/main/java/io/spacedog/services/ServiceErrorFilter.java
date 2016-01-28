@@ -21,14 +21,14 @@ public class ServiceErrorFilter implements SpaceFilter {
 		} catch (IllegalStateException e) {
 			// Fluent wraps non runtime exceptions into IllegalStateException
 			// let's unwrap them
-			payload = e.getCause() != null ? PayloadHelper.error(e.getCause())//
-					: PayloadHelper.error(e);
+			payload = e.getCause() != null ? Payloads.error(e.getCause())//
+					: Payloads.error(e);
 		} catch (Throwable t) {
-			payload = PayloadHelper.error(t);
+			payload = Payloads.error(t);
 		}
 
 		if (payload == null)
-			payload = PayloadHelper.error(500, //
+			payload = Payloads.error(500, //
 					"unexpected null payload for [%s] request to [%s]", context.method(), uri);
 
 		// uri is already checked by SpaceFilter default matches method
@@ -44,14 +44,14 @@ public class ServiceErrorFilter implements SpaceFilter {
 
 			if (payload.code() == 404) {
 				nodeBuilder.put("message", String.format("[%s] is not a valid SpaceDog path", uri));
-				return PayloadHelper.json(nodeBuilder, payload.code());
+				return Payloads.json(nodeBuilder, payload.code());
 			} else if (payload.code() == 405) {
 				nodeBuilder.put("message",
 						String.format("method [%s] not valid for SpaceDog path [%s]", context.method(), uri));
-				return PayloadHelper.json(nodeBuilder, payload.code());
+				return Payloads.json(nodeBuilder, payload.code());
 			} else {
 				nodeBuilder.put("message", "sorry but no details available for this error");
-				return PayloadHelper.json(nodeBuilder, payload.code());
+				return Payloads.json(nodeBuilder, payload.code());
 			}
 		}
 		return payload;

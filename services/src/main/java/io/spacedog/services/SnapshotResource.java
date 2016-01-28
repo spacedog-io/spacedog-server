@@ -58,14 +58,14 @@ public class SnapshotResource extends AbstractResource {
 		SpaceContext.checkAdminCredentials();
 		List<SpaceSnapshot> snapshots = getAllPlatformSnapshotsFromLatestToOldest();
 
-		JsonBuilder<ObjectNode> payload = PayloadHelper.minimalBuilder(200)//
+		JsonBuilder<ObjectNode> payload = Payloads.minimalBuilder(200)//
 				.put("total", snapshots.size())//
 				.array("results");
 
 		for (SpaceSnapshot snapshot : snapshots)
 			snapshot.addTo(payload);
 
-		return PayloadHelper.json(payload);
+		return Payloads.json(payload);
 	}
 
 	@Get("/snapshot/latest")
@@ -76,8 +76,8 @@ public class SnapshotResource extends AbstractResource {
 
 		SpaceContext.checkAdminCredentials();
 		List<SpaceSnapshot> snapshots = getAllPlatformSnapshotsFromLatestToOldest();
-		return snapshots.isEmpty() ? PayloadHelper.error(404)//
-				: PayloadHelper.json(snapshots.get(0).toJson());
+		return snapshots.isEmpty() ? Payloads.error(404)//
+				: Payloads.json(snapshots.get(0).toJson());
 	}
 
 	@Get("/snapshot/:snapshotId")
@@ -88,7 +88,7 @@ public class SnapshotResource extends AbstractResource {
 
 		SpaceContext.checkAdminCredentials();
 		SpaceSnapshot snapshot = doGetSnapshot(snapshotId);
-		return PayloadHelper.json(snapshot.toJson());
+		return Payloads.json(snapshot.toJson());
 	}
 
 	@Post("/snapshot")
@@ -117,7 +117,7 @@ public class SnapshotResource extends AbstractResource {
 		if (status == 200)
 			status = 201;
 
-		JsonBuilder<ObjectNode> jsonResponse = PayloadHelper.minimalBuilder(status)//
+		JsonBuilder<ObjectNode> jsonResponse = Payloads.minimalBuilder(status)//
 				.put("id", snapshotId)//
 				.put("location", spaceUrl("/v1/dog", "snapshot", snapshotId).toString());
 
@@ -126,7 +126,7 @@ public class SnapshotResource extends AbstractResource {
 			info.addTo(jsonResponse, "snapshot");
 		}
 
-		return PayloadHelper.json(jsonResponse, status);
+		return Payloads.json(jsonResponse, status);
 	}
 
 	@Post("/snapshot/latest/restore")
@@ -206,10 +206,10 @@ public class SnapshotResource extends AbstractResource {
 				.getRestoreInfo();
 
 		if (restore == null)
-			return PayloadHelper.error(400, //
+			return Payloads.error(400, //
 					"restore of snapshot [%s] failed: retry later", snapshot.id());
 
-		return PayloadHelper.json(restore.status().getStatus());
+		return Payloads.json(restore.status().getStatus());
 	}
 
 	private List<SpaceSnapshot> getAllPlatformSnapshotsFromLatestToOldest() {

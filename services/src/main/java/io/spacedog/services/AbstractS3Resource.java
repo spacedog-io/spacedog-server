@@ -85,9 +85,9 @@ public class AbstractS3Resource extends AbstractResource {
 		ObjectListing objects = s3.listObjects(request);
 
 		if (path.isPresent() && objects.getObjectSummaries().isEmpty())
-			return PayloadHelper.error(404);
+			return Payloads.error(404);
 
-		JsonBuilder<ObjectNode> response = PayloadHelper.minimalBuilder(200);
+		JsonBuilder<ObjectNode> response = Payloads.minimalBuilder(200);
 
 		if (objects.isTruncated())
 			response.put("next", toSpaceKeyFromS3Key(backendId, objects.getNextMarker()));
@@ -102,7 +102,7 @@ public class AbstractS3Resource extends AbstractResource {
 					.end();
 		}
 
-		return PayloadHelper.json(response);
+		return Payloads.json(response);
 	}
 
 	public Payload doDelete(String bucketName, Credentials credentials, Optional<String> path) {
@@ -110,7 +110,7 @@ public class AbstractS3Resource extends AbstractResource {
 		String s3Key = path.isPresent() ? String.join(SLASH, credentials.backendId(), path.get())
 				: credentials.backendId();
 
-		JsonBuilder<ObjectNode> builder = PayloadHelper.minimalBuilder(200).array("deleted");
+		JsonBuilder<ObjectNode> builder = Payloads.minimalBuilder(200).array("deleted");
 
 		// first try to delete this path as key
 
@@ -121,9 +121,9 @@ public class AbstractS3Resource extends AbstractResource {
 
 				if (isOwner(credentials, metadata)) {
 					s3.deleteObject(bucketName, s3Key);
-					return PayloadHelper.success();
+					return Payloads.success();
 				} else
-					return PayloadHelper.error(401);
+					return Payloads.error(401);
 
 			} else if (credentials.isAdminAuthenticated()) {
 				s3.deleteObject(bucketName, s3Key);
@@ -170,7 +170,7 @@ public class AbstractS3Resource extends AbstractResource {
 			} while (next != null);
 
 		}
-		return PayloadHelper.json(builder);
+		return Payloads.json(builder);
 	}
 
 	public Payload doUpload(String bucketName, String rootUri, Credentials credentials, String path, String fileName,
@@ -190,7 +190,7 @@ public class AbstractS3Resource extends AbstractResource {
 				s3Key, new ByteArrayInputStream(bytes), //
 				metadata));
 
-		return PayloadHelper.json(PayloadHelper.minimalBuilder(200)//
+		return Payloads.json(Payloads.minimalBuilder(200)//
 				.put("path", toSpaceKeyFromPath(path, fileName))//
 				.put("location", toLocation(rootUri, path, fileName)));
 	}

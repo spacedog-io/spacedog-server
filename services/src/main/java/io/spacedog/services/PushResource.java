@@ -78,7 +78,7 @@ public class PushResource {
 					protocol, endpoint);
 		}
 
-		return PayloadHelper.saved(false, "/v1", "device", URLEncoder.encode(endpointArn, "UTF-8"));
+		return Payloads.saved(false, "/v1", "device", URLEncoder.encode(endpointArn, "UTF-8"));
 	}
 
 	@Post("/device/:id/topics")
@@ -106,7 +106,7 @@ public class PushResource {
 				getSnsClient().subscribe(topicArn, "application", endpoint);
 		});
 
-		return PayloadHelper.saved(false, "/v1", "device", id);
+		return Payloads.saved(false, "/v1", "device", id);
 	}
 
 	@Post("/topic/:name/push")
@@ -124,14 +124,14 @@ public class PushResource {
 		Optional<Topic> topic = getTopicArn(name, credentials.backendId());
 
 		if (!topic.isPresent())
-			return PayloadHelper.error(404, "topic with name [%s] not found", name);
+			return Payloads.error(404, "topic with name [%s] not found", name);
 
 		PublishResult publish = getSnsClient().publish(new PublishRequest()//
 				.withTopicArn(topic.get().getTopicArn())//
 				.withSubject(message)//
 				.withMessage(message));
 
-		return PayloadHelper.json(PayloadHelper.minimalBuilder(200)//
+		return Payloads.json(Payloads.minimalBuilder(200)//
 				.put("messageId", publish.getMessageId()).build(), 200);
 	}
 
@@ -153,7 +153,7 @@ public class PushResource {
 				.withSubject(msg)//
 				.withMessage(msg));
 
-		return PayloadHelper.json(PayloadHelper.minimalBuilder(200)//
+		return Payloads.json(Payloads.minimalBuilder(200)//
 				.put("messageId", publish.getMessageId()).build(), 200);
 	}
 

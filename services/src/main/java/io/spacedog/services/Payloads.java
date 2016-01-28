@@ -22,7 +22,7 @@ import io.spacedog.utils.Utils;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
-public class PayloadHelper {
+public class Payloads {
 
 	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
@@ -124,7 +124,7 @@ public class PayloadHelper {
 	}
 
 	public static Payload saved(boolean created, String uri, String type, String id, long version) {
-		JsonBuilder<ObjectNode> builder = PayloadHelper.savedBuilder(created, uri, type, id, version);
+		JsonBuilder<ObjectNode> builder = Payloads.savedBuilder(created, uri, type, id, version);
 		return json(builder, created ? HttpStatus.CREATED : HttpStatus.OK)//
 				.withHeader(HEADER_OBJECT_ID, id);
 	}

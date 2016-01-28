@@ -76,7 +76,7 @@ public class MailResource extends AbstractResource {
 			}
 
 		ObjectNode response = send(from, to, cc, bcc, subject, text, html);
-		return PayloadHelper.json(response, response.get("status").asInt());
+		return Payloads.json(response, response.get("status").asInt());
 	}
 
 	public ObjectNode send(String from, String to, String cc, String bcc, String subject, String text, String html)
@@ -107,7 +107,7 @@ public class MailResource extends AbstractResource {
 			multipartBody.field(HTML, html);
 
 		HttpResponse<String> response = requestWithBody.asString();
-		return PayloadHelper.minimalBuilder(response.getStatus()).node("mailgun", response.getBody()).build();
+		return Payloads.minimalBuilder(response.getStatus()).node("mailgun", response.getBody()).build();
 	}
 
 	//

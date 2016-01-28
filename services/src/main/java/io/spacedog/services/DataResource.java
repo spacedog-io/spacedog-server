@@ -42,7 +42,7 @@ public class DataResource extends AbstractResource {
 		ElasticHelper.get().refresh(refresh, credentials.backendId());
 		ObjectNode result = SearchResource.get()//
 				.searchInternal(credentials, null, null, context);
-		return PayloadHelper.json(result);
+		return Payloads.json(result);
 	}
 
 	@Delete("")
@@ -60,7 +60,7 @@ public class DataResource extends AbstractResource {
 		ElasticHelper.get().refresh(refresh, credentials.backendId());
 		ObjectNode result = SearchResource.get()//
 				.searchInternal(credentials, type, null, context);
-		return PayloadHelper.json(result);
+		return Payloads.json(result);
 	}
 
 	@Post("/:type")
@@ -76,7 +76,7 @@ public class DataResource extends AbstractResource {
 		IndexResponse response = ElasticHelper.get().createObject(credentials.backendId(), type,
 				Json.readObjectNode(body), credentials.name());
 
-		return PayloadHelper.saved(true, "/v1/data", response.getType(), response.getId(), response.getVersion());
+		return Payloads.saved(true, "/v1/data", response.getType(), response.getId(), response.getVersion());
 	}
 
 	@Delete("/:type")
@@ -104,10 +104,10 @@ public class DataResource extends AbstractResource {
 			// indices
 			object.get().remove(UserResource.HASHED_PASSWORD);
 
-			return PayloadHelper.json(object.get());
+			return Payloads.json(object.get());
 		}
 
-		return PayloadHelper.error(HttpStatus.NOT_FOUND);
+		return Payloads.error(HttpStatus.NOT_FOUND);
 	}
 
 	@Put("/:type/:id")
@@ -129,13 +129,13 @@ public class DataResource extends AbstractResource {
 
 			IndexResponse response = ElasticHelper.get().updateObject(credentials.backendId(), type, id, version,
 					object, credentials.name());
-			return PayloadHelper.saved(false, "/v1/data", response.getType(), response.getId(), response.getVersion());
+			return Payloads.saved(false, "/v1/data", response.getType(), response.getId(), response.getVersion());
 
 		} else {
 
 			UpdateResponse response = ElasticHelper.get().patchObject(credentials.backendId(), type, id, version,
 					object, credentials.name());
-			return PayloadHelper.saved(false, "/v1/data", response.getType(), response.getId(), response.getVersion());
+			return Payloads.saved(false, "/v1/data", response.getType(), response.getId(), response.getVersion());
 		}
 	}
 
@@ -152,9 +152,9 @@ public class DataResource extends AbstractResource {
 		DeleteResponse response = Start.get().getElasticClient().prepareDelete(credentials.backendId(), type, id).get();
 
 		if (response.isFound())
-			return PayloadHelper.success();
+			return Payloads.success();
 
-		return PayloadHelper.error(HttpStatus.NOT_FOUND, "object of type [%s] and id [%s] not found", type, id);
+		return Payloads.error(HttpStatus.NOT_FOUND, "object of type [%s] and id [%s] not found", type, id);
 	}
 
 	@Post("/search")

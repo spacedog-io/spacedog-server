@@ -73,14 +73,14 @@ public class UserResource extends AbstractResource {
 	@Get("/login/")
 	public Payload login(Context context) throws JsonParseException, JsonMappingException, IOException {
 		SpaceContext.checkUserCredentials();
-		return PayloadHelper.success();
+		return Payloads.success();
 	}
 
 	@Get("/logout")
 	@Get("/logout/")
 	public Payload logout(Context context) throws JsonParseException, JsonMappingException, IOException {
 		SpaceContext.checkUserCredentials();
-		return PayloadHelper.success();
+		return Payloads.success();
 	}
 
 	@Get("/user")
@@ -128,13 +128,13 @@ public class UserResource extends AbstractResource {
 		IndexResponse response = ElasticHelper.get().createObject(credentials.backendId(), USER_TYPE, user,
 				credentials.name());
 
-		JsonBuilder<ObjectNode> savedBuilder = PayloadHelper.savedBuilder(true, "/v1", USER_TYPE, response.getId(),
+		JsonBuilder<ObjectNode> savedBuilder = Payloads.savedBuilder(true, "/v1", USER_TYPE, response.getId(),
 				response.getVersion());
 
 		passwordResetCode.ifPresent(code -> savedBuilder.put(PASSWORD_RESET_CODE, code));
 
-		return PayloadHelper.json(savedBuilder, HttpStatus.CREATED)//
-				.withHeader(PayloadHelper.HEADER_OBJECT_ID, response.getId());
+		return Payloads.json(savedBuilder, HttpStatus.CREATED)//
+				.withHeader(Payloads.HEADER_OBJECT_ID, response.getId());
 	}
 
 	@Get("/user/:id")
@@ -184,8 +184,8 @@ public class UserResource extends AbstractResource {
 		long newVersion = ElasticHelper.get().updateObject(credentials.backendId(), user, credentials.name())
 				.getVersion();
 
-		return PayloadHelper.json(//
-				PayloadHelper.savedBuilder(false, "/v1", USER_TYPE, id, newVersion)//
+		return Payloads.json(//
+				Payloads.savedBuilder(false, "/v1", USER_TYPE, id, newVersion)//
 						.put(PASSWORD_RESET_CODE, resetCode));
 	}
 
@@ -225,7 +225,7 @@ public class UserResource extends AbstractResource {
 		IndexResponse indexResponse = ElasticHelper.get().updateObject(credentials.backendId(), USER_TYPE, id, 0, user,
 				credentials.name());
 
-		return PayloadHelper.saved(false, "/v1", USER_TYPE, id, indexResponse.getVersion());
+		return Payloads.saved(false, "/v1", USER_TYPE, id, indexResponse.getVersion());
 	}
 
 	@Put("/user/:id/password")
@@ -248,7 +248,7 @@ public class UserResource extends AbstractResource {
 			UpdateResponse response = Start.get().getElasticClient()
 					.prepareUpdate(credentials.backendId(), UserResource.USER_TYPE, id).setDoc(update.toString()).get();
 
-			return PayloadHelper.saved(false, "/v1/user", response.getType(), response.getId(), response.getVersion());
+			return Payloads.saved(false, "/v1/user", response.getType(), response.getId(), response.getVersion());
 
 		} else
 			throw new AuthenticationException("only the owner or admin users can update user passwords");

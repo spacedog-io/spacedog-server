@@ -121,7 +121,7 @@ public class AccountResource extends AbstractResource {
 			builder.node(object);
 		}
 
-		return PayloadHelper.json(builder);
+		return Payloads.json(builder);
 	}
 
 	@Get("/account/username/:username")
@@ -167,17 +167,17 @@ public class AccountResource extends AbstractResource {
 		account.checkAccountInputValidity();
 
 		if (Start.get().configuration().isSuperDog(account.username))
-			return PayloadHelper.invalidParameters("username", account.username,
+			return Payloads.invalidParameters("username", account.username,
 					String.format("administrator username [%s] is not available", account.username));
 
 		ElasticHelper.get().refresh(true, ADMIN_INDEX);
 
 		if (ElasticHelper.get().search(ADMIN_INDEX, ACCOUNT_TYPE, "username", account.username).getTotalHits() > 0)
-			return PayloadHelper.invalidParameters("username", account.username,
+			return Payloads.invalidParameters("username", account.username,
 					String.format("administrator username [%s] is not available", account.username));
 
 		if (ElasticHelper.get().search(ADMIN_INDEX, ACCOUNT_TYPE, "backendId", account.backendId).getTotalHits() > 0)
-			return PayloadHelper.invalidParameters("backendId", account.backendId,
+			return Payloads.invalidParameters("backendId", account.backendId,
 					String.format("backend id [%s] is not available", account.backendId));
 
 		byte[] accountBytes = Json.getMapper().writeValueAsBytes(account);
@@ -201,11 +201,11 @@ public class AccountResource extends AbstractResource {
 					String.format("%s got a new account", Start.get().configuration().getUrl()), //
 					String.format("account backend = %s\naccount email = %s", account.backendId, account.email));
 
-		ObjectNode payloadContent = PayloadHelper
+		ObjectNode payloadContent = Payloads
 				.savedBuilder(true, "/v1/admin", ACCOUNT_TYPE, account.backendId, version)//
 				.put(AccountResource.BACKEND_KEY, account.defaultClientKey()).build();
 
-		return PayloadHelper.json(payloadContent, HttpStatus.CREATED)//
+		return Payloads.json(payloadContent, HttpStatus.CREATED)//
 				.withHeader(SpaceHeaders.BACKEND_KEY, account.defaultClientKey());
 	}
 
@@ -220,7 +220,7 @@ public class AccountResource extends AbstractResource {
 				.prepareGet(ADMIN_INDEX, ACCOUNT_TYPE, credentials.backendId()).get();
 
 		if (!response.isExists())
-			return PayloadHelper.error(HttpStatus.INTERNAL_SERVER_ERROR,
+			return Payloads.error(HttpStatus.INTERNAL_SERVER_ERROR,
 					"no account found for backend [%s] and admin user [%s]", credentials.backendId(),
 					credentials.name());
 
@@ -233,7 +233,7 @@ public class AccountResource extends AbstractResource {
 				.put("type", response.getType())//
 				.put("version", response.getVersion());
 
-		return PayloadHelper.json(object);
+		return Payloads.json(object);
 	}
 
 	@Delete("/account/:id")
@@ -250,7 +250,7 @@ public class AccountResource extends AbstractResource {
 				.prepareDelete(ADMIN_INDEX, ACCOUNT_TYPE, credentials.backendId()).get();
 
 		if (!accountDeleteResp.isFound())
-			return PayloadHelper.error(HttpStatus.INTERNAL_SERVER_ERROR,
+			return Payloads.error(HttpStatus.INTERNAL_SERVER_ERROR,
 					"no account found for backend [%s] and admin user [%s]", credentials.backendId(),
 					credentials.name());
 
@@ -258,7 +258,7 @@ public class AccountResource extends AbstractResource {
 				.prepareDelete(credentials.backendId()).get();
 
 		if (!indexDeleteResp.isAcknowledged())
-			return PayloadHelper.error(HttpStatus.INTERNAL_SERVER_ERROR,
+			return Payloads.error(HttpStatus.INTERNAL_SERVER_ERROR,
 					"internal index deletion not acknowledged for account with backend [%s] ", credentials.backendId());
 
 		ElasticHelper.get().refresh(true, ADMIN_INDEX);
@@ -266,7 +266,7 @@ public class AccountResource extends AbstractResource {
 		FileResource.get().deleteAll();
 		ShareResource.get().deleteAll();
 
-		return PayloadHelper.success();
+		return Payloads.success();
 	}
 
 	@Get("/account/login")
@@ -277,7 +277,7 @@ public class AccountResource extends AbstractResource {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		String backendKey = credentials.backendKeyAsString().get();
 		// TODO return backend key in json only?
-		return PayloadHelper.json(PayloadHelper.minimalBuilder(HttpStatus.OK).put(BACKEND_KEY, backendKey))//
+		return Payloads.json(Payloads.minimalBuilder(HttpStatus.OK).put(BACKEND_KEY, backendKey))//
 				.withHeader(SpaceHeaders.BACKEND_KEY, backendKey);
 	}
 
