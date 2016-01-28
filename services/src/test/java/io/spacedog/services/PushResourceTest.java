@@ -4,7 +4,6 @@
 package io.spacedog.services;
 
 import org.junit.Assert;
-import org.junit.Test;
 
 import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceRequest;
@@ -12,7 +11,7 @@ import io.spacedog.utils.Json;
 
 public class PushResourceTest extends Assert {
 
-	@Test
+	// @Test
 	public void subscribeToTopicsAndPush() throws Exception {
 
 		// prepare
