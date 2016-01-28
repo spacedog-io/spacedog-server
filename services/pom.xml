@@ -120,7 +120,7 @@
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-sns</artifactId>
-			<version>1.10.34</version>
+			<version>${aws-version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.elasticsearch</groupId>
