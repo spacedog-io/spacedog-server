@@ -2,7 +2,7 @@ package io.spacedog.client;
 
 public enum SpaceTarget {
 
-	local("localhost", 4444, 8888, false), //
+	local("localhost", 8443, 8080, false), //
 	staging("spacerepublic.net", 443, 80, true), //
 	production("spacedog.io", 443, 80, true);
 
