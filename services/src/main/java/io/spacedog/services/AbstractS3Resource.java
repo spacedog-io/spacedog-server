@@ -15,7 +15,6 @@ import org.joda.time.DateTime;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.Headers;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.DeleteObjectsRequest;
 import com.amazonaws.services.s3.model.DeleteObjectsRequest.KeyVersion;
@@ -31,6 +30,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
 import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.SpaceHeaders;
 import net.codestory.http.Context;
 import net.codestory.http.payload.Payload;
 
@@ -50,19 +50,19 @@ public class AbstractS3Resource extends AbstractResource {
 		try {
 			S3Object object = s3.getObject(bucketName, s3Key);
 
-			context.response().setHeader(Headers.CONTENT_LENGTH, //
+			context.response().setHeader(SpaceHeaders.CONTENT_LENGTH, //
 					String.valueOf(object.getObjectMetadata().getContentLength()));
-			context.response().setHeader(Headers.CONTENT_TYPE, //
+			context.response().setHeader(SpaceHeaders.CONTENT_TYPE, //
 					object.getObjectMetadata().getContentType());
-			context.response().setHeader(Headers.CONTENT_DISPOSITION, //
+			context.response().setHeader(SpaceHeaders.CONTENT_DISPOSITION, //
 					object.getObjectMetadata().getContentDisposition());
-			context.response().setHeader(Headers.CONTENT_ENCODING, //
+			context.response().setHeader(SpaceHeaders.CONTENT_ENCODING, //
 					object.getObjectMetadata().getContentEncoding());
-			context.response().setHeader(Headers.ETAG, //
+			context.response().setHeader(SpaceHeaders.ETAG, //
 					object.getObjectMetadata().getETag());
-			context.response().setHeader("x-amz-meta-owner", //
+			context.response().setHeader(SpaceHeaders.AMAZON_META_OWNER, //
 					object.getObjectMetadata().getUserMetaDataOf("owner"));
-			context.response().setHeader("x-amz-meta-owner-type", //
+			context.response().setHeader(SpaceHeaders.AMZ_META_OWNER_TYPE, //
 					object.getObjectMetadata().getUserMetaDataOf("owner-type"));
 
 			return object.getObjectContent();
