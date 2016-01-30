@@ -15,8 +15,7 @@ import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
@@ -91,7 +90,7 @@ public class AccountResource extends AbstractResource {
 	@Get("/account/")
 	@Get("/admin/account")
 	@Get("/admin/account/")
-	public Payload getAll(Context context) throws JsonParseException, JsonMappingException, IOException {
+	public Payload getAll(Context context) {
 
 		SpaceContext.checkSuperDogCredentials();
 
@@ -154,7 +153,7 @@ public class AccountResource extends AbstractResource {
 	@Post("/account/")
 	@Post("/admin/account")
 	@Post("/admin/account/")
-	public Payload post(String body, Context context) throws IOException {
+	public Payload post(String body, Context context) {
 		ObjectNode input = Json.readObjectNode(body);
 
 		Account account = new Account();
@@ -180,7 +179,14 @@ public class AccountResource extends AbstractResource {
 			return Payloads.invalidParameters("backendId", account.backendId,
 					String.format("backend id [%s] is not available", account.backendId));
 
-		byte[] accountBytes = Json.getMapper().writeValueAsBytes(account);
+		byte[] accountBytes;
+
+		try {
+			accountBytes = Json.getMapper().writeValueAsBytes(account);
+		} catch (JsonProcessingException e) {
+			throw new RuntimeException(e);
+		}
+
 		long version = Start.get().getElasticClient().prepareIndex(ADMIN_INDEX, ACCOUNT_TYPE).setSource(accountBytes)
 				.get().getVersion();
 
@@ -212,7 +218,7 @@ public class AccountResource extends AbstractResource {
 	@Get("/account/:id/")
 	@Get("/admin/account/:id")
 	@Get("/admin/account/:id/")
-	public Payload getById(String backendId) throws JsonParseException, JsonMappingException, IOException {
+	public Payload getById(String backendId) {
 		Credentials credentials = SpaceContext.checkAdminCredentialsFor(backendId);
 
 		GetResponse response = Start.get().getElasticClient()//
@@ -239,8 +245,7 @@ public class AccountResource extends AbstractResource {
 	@Delete("/account/:id/")
 	@Delete("/admin/account/:id")
 	@Delete("/admin/account/:id/")
-	public Payload deleteById(String backendId, Context context)
-			throws JsonParseException, JsonMappingException, IOException {
+	public Payload deleteById(String backendId, Context context) {
 		Credentials credentials = SpaceContext.checkAdminCredentialsFor(backendId);
 
 		ElasticHelper.get().refresh(true, ADMIN_INDEX);
@@ -274,7 +279,7 @@ public class AccountResource extends AbstractResource {
 	@Get("/account/login/")
 	@Get("/admin/login")
 	@Get("/admin/login/")
-	public Payload getLogin() throws JsonParseException, JsonMappingException, IOException {
+	public Payload getLogin() {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		String backendKey = credentials.backendKeyAsString().get();
 		// TODO return backend key in json only?

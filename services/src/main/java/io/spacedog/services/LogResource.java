@@ -12,9 +12,6 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.sort.SortOrder;
 import org.joda.time.DateTime;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
@@ -40,7 +37,7 @@ public class LogResource {
 	@Get("/log/")
 	@Get("/admin/log")
 	@Get("/admin/log/")
-	public Payload getAll(Context context) throws JsonParseException, JsonMappingException, IOException {
+	public Payload getAll(Context context) {
 
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 
@@ -58,8 +55,7 @@ public class LogResource {
 	@Get("/log/:backendId/")
 	@Get("/admin/log/:backendId")
 	@Get("/admin/log/:backendId/")
-	public Payload getForBackend(String backendId, Context context)
-			throws JsonParseException, JsonMappingException, IOException {
+	public Payload getForBackend(String backendId, Context context) {
 
 		SpaceContext.checkSuperDogCredentials();
 
@@ -74,8 +70,7 @@ public class LogResource {
 	@Delete("/log/:backendId/")
 	@Delete("/admin/log/:backendId")
 	@Delete("/admin/log/:backendId/")
-	public Payload purgeBackend(String backendId, Context context)
-			throws JsonParseException, JsonMappingException, IOException {
+	public Payload purgeBackend(String backendId, Context context) {
 
 		SpaceContext.checkSuperDogCredentialsFor(backendId);
 
@@ -125,8 +120,7 @@ public class LogResource {
 	// Implementation
 	//
 
-	private Optional<DeleteByQueryResponse> doPurgeBackend(String backendId, int from)
-			throws JsonParseException, JsonMappingException, IOException, JsonProcessingException {
+	private Optional<DeleteByQueryResponse> doPurgeBackend(String backendId, int from) {
 
 		SearchHit[] hits = doGetLogs(Optional.of(backendId), from, 1)//
 				.getHits().getHits();
@@ -151,8 +145,7 @@ public class LogResource {
 		return Optional.of(delete);
 	}
 
-	private SearchResponse doGetLogs(Optional<String> backendId, int from, int size)
-			throws JsonParseException, JsonMappingException, IOException {
+	private SearchResponse doGetLogs(Optional<String> backendId, int from, int size) {
 
 		QueryBuilder query = backendId.isPresent()//
 				? QueryBuilders.termQuery("credentials.backendId", backendId.get())//
@@ -182,8 +175,7 @@ public class LogResource {
 		return Payloads.json(builder);
 	}
 
-	private String log(String uri, Context context, DateTime receivedAt, Payload payload)
-			throws JsonParseException, JsonMappingException, IOException {
+	private String log(String uri, Context context, DateTime receivedAt, Payload payload) {
 
 		JsonBuilder<ObjectNode> log = Json.objectBuilder()//
 				.put("method", context.method())//
@@ -214,6 +206,8 @@ public class LogResource {
 			// this exception is thrown in batch request for get sub requests
 			// TODO: ignore this for now but refactor along batch service
 			// refactoring
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 
 		if (!Strings.isNullOrEmpty(content)) {

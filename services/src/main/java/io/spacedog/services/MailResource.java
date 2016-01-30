@@ -7,8 +7,6 @@ import java.io.IOException;
 
 import org.elasticsearch.common.base.Strings;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
@@ -42,45 +40,49 @@ public class MailResource extends AbstractResource {
 
 	@Post("")
 	@Post("/")
-	public Payload post(Context context)
-			throws JsonParseException, JsonMappingException, IOException, UnirestException {
+	public Payload post(Context context) {
 
-		Credentials admin = SpaceContext.checkAdminCredentials();
-		String from = admin.backendId().toUpperCase() + " <no-reply@api.spacedog.io>";
-		String to = null, cc = null, bcc = null, subject = null, text = null, html = null;
+		try {
+			Credentials admin = SpaceContext.checkAdminCredentials();
+			String from = admin.backendId().toUpperCase() + " <no-reply@api.spacedog.io>";
+			String to = null, cc = null, bcc = null, subject = null, text = null, html = null;
 
-		if (context.parts().isEmpty()) {
-			to = context.get(TO);
-			cc = context.get(CC);
-			bcc = context.get(BCC);
-			subject = context.get(SUBJECT);
-			if (!Strings.isNullOrEmpty(context.get(TEXT)))
-				text = addFooterToTextMessage(context.get(TEXT), admin);
-			if (!Strings.isNullOrEmpty(context.get(HTML)))
-				html = addFooterToHtmlMessage(context.get(HTML), admin);
+			if (context.parts().isEmpty()) {
+				to = context.get(TO);
+				cc = context.get(CC);
+				bcc = context.get(BCC);
+				subject = context.get(SUBJECT);
+				if (!Strings.isNullOrEmpty(context.get(TEXT)))
+					text = addFooterToTextMessage(context.get(TEXT), admin);
+				if (!Strings.isNullOrEmpty(context.get(HTML)))
+					html = addFooterToHtmlMessage(context.get(HTML), admin);
 
-		} else
-			for (Part part : context.parts()) {
-				if (part.name().equals(TO))
-					to = part.content();
-				else if (part.name().equals(CC))
-					cc = part.content();
-				else if (part.name().equals(BCC))
-					bcc = part.content();
-				else if (part.name().equals(SUBJECT))
-					subject = part.content();
-				else if (part.name().equals(TEXT))
-					text = addFooterToTextMessage(part.content(), admin);
-				else if (part.name().equals(HTML))
-					html = addFooterToHtmlMessage(part.content(), admin);
-			}
+			} else
+				for (Part part : context.parts()) {
+					if (part.name().equals(TO))
+						to = part.content();
+					else if (part.name().equals(CC))
+						cc = part.content();
+					else if (part.name().equals(BCC))
+						bcc = part.content();
+					else if (part.name().equals(SUBJECT))
+						subject = part.content();
+					else if (part.name().equals(TEXT))
+						text = addFooterToTextMessage(part.content(), admin);
+					else if (part.name().equals(HTML))
+						html = addFooterToHtmlMessage(part.content(), admin);
+				}
 
-		ObjectNode response = send(from, to, cc, bcc, subject, text, html);
-		return Payloads.json(response, response.get("status").asInt());
+			ObjectNode response = send(from, to, cc, bcc, subject, text, html);
+			return Payloads.json(response, response.get("status").asInt());
+
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+
 	}
 
-	public ObjectNode send(String from, String to, String cc, String bcc, String subject, String text, String html)
-			throws JsonParseException, JsonMappingException, IOException, UnirestException {
+	public ObjectNode send(String from, String to, String cc, String bcc, String subject, String text, String html) {
 
 		String mailGunKey = Start.get().configuration().mailGunKey();
 		String mailDomain = Start.get().configuration().mailDomain();
@@ -103,8 +105,12 @@ public class MailResource extends AbstractResource {
 		if (!Strings.isNullOrEmpty(html))
 			multipartBody.field(HTML, html);
 
-		HttpResponse<String> response = requestWithBody.asString();
-		return Payloads.minimalBuilder(response.getStatus()).node("mailgun", response.getBody()).build();
+		try {
+			HttpResponse<String> response = requestWithBody.asString();
+			return Payloads.minimalBuilder(response.getStatus()).node("mailgun", response.getBody()).build();
+		} catch (UnirestException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	//

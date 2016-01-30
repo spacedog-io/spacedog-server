@@ -3,12 +3,8 @@
  */
 package io.spacedog.services;
 
-import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
-
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -28,18 +24,14 @@ public class ShareResource extends AbstractS3Resource {
 
 	@Get("")
 	@Get("/")
-	public Object getAll(Context context) //
-			throws JsonParseException, JsonMappingException, IOException {
-
+	public Object getAll(Context context) {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		return doGet(SHARE_BUCKET, credentials.backendId(), Optional.empty(), context);
 	}
 
 	@Get("/:uuid/:fileName")
 	@Get("/:uuid/:fileName/")
-	public Object get(String uuid, String fileName, Context context) //
-			throws JsonParseException, JsonMappingException, IOException {
-
+	public Object get(String uuid, String fileName, Context context) {
 		// TODO better check ACL
 		Credentials credentials = SpaceContext.checkCredentials();
 		return doGet(SHARE_BUCKET, credentials.backendId(), Optional.of(String.join(SLASH, uuid, fileName)), context);
@@ -47,9 +39,7 @@ public class ShareResource extends AbstractS3Resource {
 
 	@Put("/:fileName")
 	@Put("/:fileName/")
-	public Payload put(String fileName, byte[] bytes, Context context) //
-			throws JsonParseException, JsonMappingException, IOException {
-
+	public Payload put(String fileName, byte[] bytes, Context context) {
 		Credentials credentials = SpaceContext.checkUserCredentials();
 		String uuid = UUID.randomUUID().toString();
 		return doUpload(SHARE_BUCKET, "/v1/share", credentials, uuid, fileName, bytes, context);
@@ -57,17 +47,14 @@ public class ShareResource extends AbstractS3Resource {
 
 	@Delete("")
 	@Delete("/")
-	public Payload deleteAll() throws JsonParseException, JsonMappingException, IOException {
-
+	public Payload deleteAll() {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		return doDelete(SHARE_BUCKET, credentials, Optional.empty());
 	}
 
 	@Delete("/:uuid/:fileName")
 	@Delete("/:uuid/:fileName/")
-	public Payload delete(String uuid, String fileName, Context context)
-			throws JsonParseException, JsonMappingException, IOException {
-
+	public Payload delete(String uuid, String fileName, Context context) {
 		Credentials credentials = SpaceContext.checkUserOrAdminCredentials();
 		return doDelete(SHARE_BUCKET, credentials, Optional.of(String.join(SLASH, uuid, fileName)));
 	}

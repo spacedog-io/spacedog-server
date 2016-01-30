@@ -1,11 +1,10 @@
 package io.spacedog.services;
 
-import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,11 +28,8 @@ import com.amazonaws.services.sns.model.PublishResult;
 import com.amazonaws.services.sns.model.SetEndpointAttributesRequest;
 import com.amazonaws.services.sns.model.Subscription;
 import com.amazonaws.services.sns.model.Topic;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.mashape.unirest.http.exceptions.UnirestException;
 
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Json;
@@ -50,8 +46,7 @@ public class PushResource {
 
 	@Post("/device")
 	@Post("/device/")
-	public Payload postDevice(String body, Context context)
-			throws JsonParseException, JsonMappingException, IOException {
+	public Payload postDevice(String body, Context context) {
 
 		Credentials credentials = SpaceContext.checkUserCredentials();
 
@@ -78,19 +73,28 @@ public class PushResource {
 					protocol, endpoint);
 		}
 
-		return Payloads.saved(false, "/v1", "device", URLEncoder.encode(endpointArn, "UTF-8"));
+		try {
+			return Payloads.saved(false, "/v1", "device", URLEncoder.encode(endpointArn, "UTF-8"));
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Post("/device/:id/topics")
 	@Post("/device/:id/topics/")
-	public Payload postDeviceToTopic(String id, String body, Context context)
-			throws JsonParseException, JsonMappingException, IOException {
+	public Payload postDeviceToTopic(String id, String body, Context context) {
 
 		Credentials credentials = SpaceContext.checkUserCredentials();
 
 		ObjectNode node = Json.readObjectNode(body);
 		JsonNode topics = Json.checkArrayNode(node, "topics", true).get();
-		String endpointArn = URLEncoder.encode(id, "UTF-8");
+
+		String endpointArn;
+		try {
+			endpointArn = URLEncoder.encode(id, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException(e);
+		}
 
 		String endpoint = getSnsClient().getEndpointAttributes(//
 				new GetEndpointAttributesRequest()//
@@ -111,9 +115,7 @@ public class PushResource {
 
 	@Post("/topic/:name/push")
 	@Post("/topic/:name/push/")
-	public Payload pushToTopic(String body, String name, Context context)
-			throws JsonParseException, JsonMappingException, IOException, UnirestException, NotFoundException,
-			InterruptedException, ExecutionException {
+	public Payload pushToTopic(String body, String name, Context context) {
 
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 
@@ -137,8 +139,7 @@ public class PushResource {
 
 	@Post("/device/push")
 	@Post("/device/push/")
-	public Payload pushAll(Context context) throws JsonParseException, JsonMappingException, IOException,
-			UnirestException, NotFoundException, InterruptedException, ExecutionException {
+	public Payload pushAll(Context context) {
 
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		Optional<Topic> topic = getTopicArn("all", credentials.backendId());

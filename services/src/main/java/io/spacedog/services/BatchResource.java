@@ -40,7 +40,7 @@ public class BatchResource extends AbstractResource {
 
 	@Post("")
 	@Post("/")
-	public Payload post(String body, Context context) throws Exception {
+	public Payload post(String body, Context context) {
 
 		Debug.resetBatchDebug();
 

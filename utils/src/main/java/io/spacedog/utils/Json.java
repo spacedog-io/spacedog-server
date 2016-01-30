@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.DefaultIndenter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -138,19 +137,23 @@ public class Json {
 		return Json.jsonMapper;
 	}
 
-	public static JsonNode readJsonNode(String jsonString) throws JsonProcessingException, IOException {
-		return jsonMapper.readTree(jsonString);
+	public static JsonNode readJsonNode(String jsonString) {
+		try {
+			return jsonMapper.readTree(jsonString);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
-	public static ObjectNode readObjectNode(String jsonObject) throws JsonProcessingException, IOException {
-		JsonNode object = jsonMapper.readTree(jsonObject);
+	public static ObjectNode readObjectNode(String jsonObject) {
+		JsonNode object = readJsonNode(jsonObject);
 		if (!object.isObject())
 			throw new IllegalArgumentException(String.format("not a json object but [%s]", object.getNodeType()));
 		return (ObjectNode) object;
 	}
 
-	public static ArrayNode readArrayNode(String jsonArray) throws JsonProcessingException, IOException {
-		JsonNode object = jsonMapper.readTree(jsonArray);
+	public static ArrayNode readArrayNode(String jsonArray) {
+		JsonNode object = readJsonNode(jsonArray);
 		if (!object.isArray())
 			throw new IllegalArgumentException(String.format("not a json array but [%s]", object.getNodeType()));
 		return (ArrayNode) object;

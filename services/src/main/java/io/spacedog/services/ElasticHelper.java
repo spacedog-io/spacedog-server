@@ -3,7 +3,6 @@
  */
 package io.spacedog.services;
 
-import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
@@ -26,7 +25,6 @@ import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.joda.time.DateTime;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -45,14 +43,10 @@ public class ElasticHelper {
 		if (!response.isExists())
 			return Optional.empty();
 
-		try {
-			ObjectNode object = Json.readObjectNode(response.getSourceAsString());
-			object.with("meta").put("id", response.getId()).put("type", response.getType()).put("version",
-					response.getVersion());
-			return Optional.of(object);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+		ObjectNode object = Json.readObjectNode(response.getSourceAsString());
+		object.with("meta").put("id", response.getId()).put("type", response.getType()).put("version",
+				response.getVersion());
+		return Optional.of(object);
 	}
 
 	IndexResponse createObject(String index, String type, ObjectNode object, String createdBy) {
@@ -163,9 +157,7 @@ public class ElasticHelper {
 		return response.getHits();
 	}
 
-	public FilteredSearchBuilder searchBuilder(String index, String type)
-			throws NotFoundException, JsonProcessingException, IOException {
-
+	public FilteredSearchBuilder searchBuilder(String index, String type) {
 		return new FilteredSearchBuilder(index, type);
 	}
 
@@ -176,8 +168,7 @@ public class ElasticHelper {
 		private QueryBuilder queryBuilder;
 		private AndFilterBuilder filterBuilder;
 
-		public FilteredSearchBuilder(String index, String type)
-				throws NotFoundException, JsonProcessingException, IOException {
+		public FilteredSearchBuilder(String index, String type) {
 
 			this.sourceBuilder = SearchSourceBuilder.searchSource();
 
@@ -225,8 +216,7 @@ public class ElasticHelper {
 		}
 	}
 
-	public ObjectNode getSchema(String index, String type)
-			throws NotFoundException, JsonProcessingException, IOException {
+	public ObjectNode getSchema(String index, String type) {
 
 		GetMappingsResponse resp = Start.get().getElasticClient().admin().indices()//
 				.prepareGetMappings(index)//

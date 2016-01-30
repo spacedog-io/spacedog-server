@@ -3,19 +3,14 @@
  */
 package io.spacedog.services;
 
-import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.common.base.Strings;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -71,35 +66,33 @@ public class UserResource extends AbstractResource {
 
 	@Get("/login")
 	@Get("/login/")
-	public Payload login(Context context) throws JsonParseException, JsonMappingException, IOException {
+	public Payload login(Context context) {
 		SpaceContext.checkUserCredentials();
 		return Payloads.success();
 	}
 
 	@Get("/logout")
 	@Get("/logout/")
-	public Payload logout(Context context) throws JsonParseException, JsonMappingException, IOException {
+	public Payload logout(Context context) {
 		SpaceContext.checkUserCredentials();
 		return Payloads.success();
 	}
 
 	@Get("/user")
 	@Get("/user/")
-	public Payload getAll(Context context)
-			throws NotFoundException, JsonProcessingException, InterruptedException, ExecutionException, IOException {
+	public Payload getAll(Context context) {
 		return DataResource.get().getByType(USER_TYPE, context);
 	}
 
 	@Delete("/user")
 	@Delete("/user/")
-	public Payload deleteAll(Context context)
-			throws NotFoundException, JsonProcessingException, InterruptedException, ExecutionException, IOException {
+	public Payload deleteAll(Context context) {
 		return DataResource.get().deleteByType(USER_TYPE, context);
 	}
 
 	@Post("/user")
 	@Post("/user/")
-	public Payload signUp(String body, Context context) throws JsonParseException, JsonMappingException, IOException {
+	public Payload signUp(String body, Context context) {
 		/**
 		 * TODO adjust this. Admin should be able to sign up users. But what
 		 * backend id if many in account? Backend key should be able to sign up
@@ -139,27 +132,25 @@ public class UserResource extends AbstractResource {
 
 	@Get("/user/:id")
 	@Get("/user/:id/")
-	public Payload get(String id, Context context) throws JsonParseException, JsonMappingException, IOException {
+	public Payload get(String id, Context context) {
 		return DataResource.get().getById(USER_TYPE, id, context);
 	}
 
 	@Put("/user/:id")
 	@Put("/user/:id/")
-	public Payload put(String id, String jsonBody, Context context)
-			throws JsonParseException, JsonMappingException, IOException {
+	public Payload put(String id, String jsonBody, Context context) {
 		return DataResource.get().put(USER_TYPE, id, jsonBody, context);
 	}
 
 	@Delete("/user/:id")
 	@Delete("/user/:id/")
-	public Payload delete(String id, Context context) throws JsonParseException, JsonMappingException, IOException {
+	public Payload delete(String id, Context context) {
 		return DataResource.get().deleteById(USER_TYPE, id, context);
 	}
 
 	@Delete("/user/:id/password")
 	@Delete("/user/:id/password")
-	public Payload deletePassword(String id, Context context)
-			throws JsonParseException, JsonMappingException, IOException {
+	public Payload deletePassword(String id, Context context) {
 
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 
@@ -191,8 +182,7 @@ public class UserResource extends AbstractResource {
 
 	@Post("/user/:id/password")
 	@Post("/user/:id/password")
-	public Payload postPassword(String id, Context context)
-			throws JsonParseException, JsonMappingException, IOException {
+	public Payload postPassword(String id, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 
 		// TODO do we need a password reset expire date to limit the reset
@@ -230,8 +220,7 @@ public class UserResource extends AbstractResource {
 
 	@Put("/user/:id/password")
 	@Put("/user/:id/password")
-	public Payload putPassword(String id, Context context)
-			throws JsonParseException, JsonMappingException, IOException {
+	public Payload putPassword(String id, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 
 		if (credentials.isAdminAuthenticated()

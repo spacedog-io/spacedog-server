@@ -3,7 +3,6 @@
  */
 package io.spacedog.services;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -20,9 +19,6 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
@@ -48,15 +44,13 @@ public class SearchResource extends AbstractResource {
 
 	@Get("/search")
 	@Get("/search/")
-	public Payload getSearchAllTypes(Context context) throws JsonParseException, JsonMappingException, IOException,
-			NotFoundException, InterruptedException, ExecutionException {
+	public Payload getSearchAllTypes(Context context) {
 		return postSearchAllTypes(null, context);
 	}
 
 	@Post("/search")
 	@Post("/search/")
-	public Payload postSearchAllTypes(String body, Context context) throws JsonParseException, JsonMappingException,
-			IOException, NotFoundException, InterruptedException, ExecutionException {
+	public Payload postSearchAllTypes(String body, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, false);
 		ElasticHelper.get().refresh(refresh, credentials.backendId());
@@ -66,8 +60,7 @@ public class SearchResource extends AbstractResource {
 
 	@Delete("/search")
 	@Delete("/search/")
-	public Payload deleteAllTypes(String query, Context context)
-			throws JsonParseException, JsonMappingException, IOException {
+	public Payload deleteAllTypes(String query, Context context) {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, true);
 		ElasticHelper.get().refresh(refresh, credentials.backendId());
@@ -77,15 +70,13 @@ public class SearchResource extends AbstractResource {
 
 	@Get("/search/:type")
 	@Get("/search/:type/")
-	public Payload getSearchForType(String type, Context context) throws JsonParseException, JsonMappingException,
-			IOException, NotFoundException, InterruptedException, ExecutionException {
+	public Payload getSearchForType(String type, Context context) {
 		return postSearchForType(type, null, context);
 	}
 
 	@Post("/search/:type")
 	@Post("/search/:type/")
-	public Payload postSearchForType(String type, String body, Context context) throws JsonParseException,
-			JsonMappingException, IOException, NotFoundException, InterruptedException, ExecutionException {
+	public Payload postSearchForType(String type, String body, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, false);
 		ElasticHelper.get().refresh(refresh, credentials.backendId());
@@ -95,8 +86,7 @@ public class SearchResource extends AbstractResource {
 
 	@Delete("/search/:type")
 	@Delete("/search/:type/")
-	public Payload deleteSearchForType(String type, String query, Context context)
-			throws JsonParseException, JsonMappingException, IOException {
+	public Payload deleteSearchForType(String type, String query, Context context) {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, true);
 		ElasticHelper.get().refresh(refresh, credentials.backendId());
@@ -106,53 +96,60 @@ public class SearchResource extends AbstractResource {
 
 	@Post("/filter/:type")
 	@Post("/filter/:type")
-	public Payload postFilterForType(String type, String body, Context context)
-			throws JsonParseException, JsonMappingException, IOException, InterruptedException, ExecutionException {
-		Credentials credentials = SpaceContext.checkCredentials();
-		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, false);
-		ElasticHelper.get().refresh(refresh, credentials.backendId());
-		FilteredSearchBuilder builder = ElasticHelper.get().searchBuilder(credentials.backendId(), type)
-				.applyContext(context).applyFilters(Json.readObjectNode(body));
-		return Payloads.json(extractResults(builder.get(), context, credentials));
+	public Payload postFilterForType(String type, String body, Context context) {
+		try {
+			Credentials credentials = SpaceContext.checkCredentials();
+			boolean refresh = context.query().getBoolean(SearchResource.REFRESH, false);
+			ElasticHelper.get().refresh(refresh, credentials.backendId());
+			FilteredSearchBuilder builder = ElasticHelper.get().searchBuilder(credentials.backendId(), type)
+					.applyContext(context).applyFilters(Json.readObjectNode(body));
+			return Payloads.json(extractResults(builder.get(), context, credentials));
+
+		} catch (InterruptedException | ExecutionException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
-	ObjectNode searchInternal(Credentials credentials, String type, String jsonQuery, Context context)
-			throws InterruptedException, ExecutionException, NotFoundException, JsonProcessingException, IOException {
+	ObjectNode searchInternal(Credentials credentials, String type, String jsonQuery, Context context) {
 
-		String index = credentials.backendId();
-		SearchRequest request = new SearchRequest(index);
+		try {
+			String index = credentials.backendId();
+			SearchRequest request = new SearchRequest(index);
 
-		if (!Strings.isNullOrEmpty(type)) {
-			// check if type is well defined
-			// throws a NotFoundException if not
-			ElasticHelper.get().getSchema(index, type);
-			request.types(type);
-		}
-
-		SearchSourceBuilder builder = SearchSourceBuilder.searchSource().version(true);
-
-		if (Strings.isNullOrEmpty(jsonQuery)) {
-
-			builder.from(context.query().getInteger("from", 0))//
-					.size(context.query().getInteger("size", 10))//
-					.fetchSource(context.query().getBoolean("fetch-contents", true))//
-					.query(QueryBuilders.matchAllQuery());
-
-			String queryText = context.get("q");
-			if (!Strings.isNullOrEmpty(queryText)) {
-				builder.query(QueryBuilders.simpleQueryStringQuery(queryText));
+			if (!Strings.isNullOrEmpty(type)) {
+				// check if type is well defined
+				// throws a NotFoundException if not
+				ElasticHelper.get().getSchema(index, type);
+				request.types(type);
 			}
 
-		} else {
-			request.source(jsonQuery);
-		}
+			SearchSourceBuilder builder = SearchSourceBuilder.searchSource().version(true);
 
-		request.extraSource(builder);
-		return extractResults(Start.get().getElasticClient().search(request).get(), context, credentials);
+			if (Strings.isNullOrEmpty(jsonQuery)) {
+
+				builder.from(context.query().getInteger("from", 0))//
+						.size(context.query().getInteger("size", 10))//
+						.fetchSource(context.query().getBoolean("fetch-contents", true))//
+						.query(QueryBuilders.matchAllQuery());
+
+				String queryText = context.get("q");
+				if (!Strings.isNullOrEmpty(queryText)) {
+					builder.query(QueryBuilders.simpleQueryStringQuery(queryText));
+				}
+
+			} else {
+				request.source(jsonQuery);
+			}
+
+			request.extraSource(builder);
+			return extractResults(Start.get().getElasticClient().search(request).get(), context, credentials);
+
+		} catch (InterruptedException | ExecutionException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
-	private ObjectNode extractResults(SearchResponse response, Context context, Credentials credentials)
-			throws JsonProcessingException, IOException {
+	private ObjectNode extractResults(SearchResponse response, Context context, Credentials credentials) {
 
 		String propertyPath = context.request().query().get("fetch-references");
 		boolean fetchReferences = !Strings.isNullOrEmpty(propertyPath);

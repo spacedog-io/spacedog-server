@@ -6,8 +6,6 @@ import java.util.Optional;
 
 import org.elasticsearch.search.SearchHits;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
@@ -81,15 +79,14 @@ public class SpaceContext {
 	// Check credentials static methods
 	//
 
-	public static Credentials checkSuperDogCredentials() throws JsonParseException, JsonMappingException, IOException {
+	public static Credentials checkSuperDogCredentials() {
 		Credentials credentials = checkCredentials();
 		if (credentials.isSuperDogAuthenticated())
 			return credentials;
 		throw new AuthenticationException("invalid superdog credentials");
 	}
 
-	public static Credentials checkSuperDogCredentialsFor(String backendId)
-			throws JsonParseException, JsonMappingException, IOException {
+	public static Credentials checkSuperDogCredentialsFor(String backendId) {
 		Credentials credentials = checkSuperDogCredentials();
 		credentials = Credentials.fromSuperDog(//
 				backendId, credentials.name(), credentials.email().get());
@@ -97,8 +94,7 @@ public class SpaceContext {
 		return credentials;
 	}
 
-	public static Credentials checkAdminCredentialsFor(String backendId)
-			throws JsonParseException, JsonMappingException, IOException {
+	public static Credentials checkAdminCredentialsFor(String backendId) {
 		Credentials credentials = checkAdminCredentials();
 		if (!credentials.backendId().equals(backendId))
 			throw new AuthenticationException(
@@ -106,37 +102,35 @@ public class SpaceContext {
 		return credentials;
 	}
 
-	public static Credentials checkAdminCredentials() throws JsonParseException, JsonMappingException, IOException {
+	public static Credentials checkAdminCredentials() {
 		Credentials credentials = checkCredentials();
 		if (credentials.isAdminAuthenticated())
 			return credentials;
 		throw new AuthenticationException("invalid administrator credentials");
 	}
 
-	public static Credentials checkUserOrAdminCredentials()
-			throws JsonParseException, JsonMappingException, IOException {
+	public static Credentials checkUserOrAdminCredentials() {
 		Credentials credentials = checkCredentials();
 		if (credentials.isAdminAuthenticated() || credentials.isUserAuthenticated())
 			return credentials;
 		throw new AuthenticationException("invalid user or administrator credentials");
 	}
 
-	public static Credentials checkUserCredentials() throws IOException, JsonParseException, JsonMappingException {
+	public static Credentials checkUserCredentials() {
 		Credentials credentials = checkCredentials();
 		if (credentials.isUserAuthenticated())
 			return credentials;
 		throw new AuthenticationException("invalid user credentials");
 	}
 
-	public static Credentials checkCredentials() throws JsonParseException, JsonMappingException, IOException {
+	public static Credentials checkCredentials() {
 		Optional<Credentials> credentials = getOrBuildCredentials();
 		if (!credentials.isPresent())
 			throw new AuthenticationException("no credentials found");
 		return credentials.get();
 	}
 
-	public static Optional<Credentials> getOrBuildCredentials()
-			throws JsonParseException, JsonMappingException, IOException {
+	public static Optional<Credentials> getOrBuildCredentials() {
 		SpaceContext local = get();
 		if (local.credentials == null) {
 			Debug.credentialCheck();
@@ -147,8 +141,7 @@ public class SpaceContext {
 		return local.credentials;
 	}
 
-	public static void setCredentials(Credentials credentials, boolean override)
-			throws JsonParseException, JsonMappingException, IOException {
+	public static void setCredentials(Credentials credentials, boolean override) {
 		if (override || !getOrBuildCredentials().isPresent())
 			get().credentials = Optional.of(credentials);
 	}
@@ -162,16 +155,7 @@ public class SpaceContext {
 	// Implementation
 	//
 
-	// private void buildCredentials() throws IOException, JsonParseException,
-	// JsonMappingException {
-	// Debug.credentialCheck();
-	// credentials =
-	// Strings.isNullOrEmpty(context.header(SpaceHeaders.BACKEND_KEY))//
-	// ? buildAdminCredentials(context) : buildUserCredentials(context);
-	// }
-
-	private static Optional<Credentials> buildUserCredentials(Context context)
-			throws IOException, JsonParseException, JsonMappingException {
+	private static Optional<Credentials> buildUserCredentials(Context context) {
 
 		String rawBackendKey = context.header(SpaceHeaders.BACKEND_KEY);
 
@@ -237,16 +221,19 @@ public class SpaceContext {
 
 		} else {
 
-			Account account = Json.getMapper().readValue(//
-					accountHits.getAt(0).getSourceAsString(), Account.class);
+			try {
+				Account account = Json.getMapper().readValue(//
+						accountHits.getAt(0).getSourceAsString(), Account.class);
+				return Optional.of(//
+						Credentials.fromKey(backendId, account.backendKey));
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
 
-			return Optional.of(//
-					Credentials.fromKey(backendId, account.backendKey));
 		}
 	}
 
-	private static Optional<Credentials> buildAdminCredentials(Context context)
-			throws JsonParseException, JsonMappingException, IOException {
+	private static Optional<Credentials> buildAdminCredentials(Context context) {
 
 		Optional<String[]> tokens = decodeAuthorizationHeader(context.header(SpaceHeaders.AUTHORIZATION));
 
@@ -282,9 +269,15 @@ public class SpaceContext {
 				throw new RuntimeException(
 						String.format("more than one admin user with username [%s]", tokens.get()[0]));
 
-			Account account = Json.getMapper().readValue(accountHits.getAt(0).getSourceAsString(), Account.class);
-			return Optional.of(//
-					Credentials.fromAdmin(account.backendId, account.username, account.email, account.backendKey));
+			try {
+				Account account = Json.getMapper().readValue(accountHits.getAt(0).getSourceAsString(), Account.class);
+
+				return Optional.of(//
+						Credentials.fromAdmin(account.backendId, account.username, account.email, account.backendKey));
+
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
 
 		} else
 			return Optional.empty();

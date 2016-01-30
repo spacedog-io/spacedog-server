@@ -22,8 +22,6 @@ import org.elasticsearch.snapshots.SnapshotInfo;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
@@ -52,7 +50,7 @@ public class SnapshotResource extends AbstractResource {
 	@Get("/snapshot/")
 	@Get("/dog/snapshot")
 	@Get("/dog/snapshot/")
-	public Payload getSnapshotAll() throws JsonParseException, JsonMappingException, IOException {
+	public Payload getSnapshotAll() {
 
 		SpaceContext.checkAdminCredentials();
 		List<SpaceSnapshot> snapshots = getAllPlatformSnapshotsFromLatestToOldest();
@@ -71,7 +69,7 @@ public class SnapshotResource extends AbstractResource {
 	@Get("/snapshot/latest/")
 	@Get("/dog/snapshot/latest")
 	@Get("/dog/snapshot/latest/")
-	public Payload getSnapshotLatest() throws JsonParseException, JsonMappingException, IOException {
+	public Payload getSnapshotLatest() {
 
 		SpaceContext.checkAdminCredentials();
 		List<SpaceSnapshot> snapshots = getAllPlatformSnapshotsFromLatestToOldest();
@@ -83,7 +81,7 @@ public class SnapshotResource extends AbstractResource {
 	@Get("/snapshot/:snapshotId/")
 	@Get("/dog/snapshot/:snapshotId")
 	@Get("/dog/snapshot/:snapshotId/")
-	public Payload getSnapshotById(String snapshotId) throws JsonParseException, JsonMappingException, IOException {
+	public Payload getSnapshotById(String snapshotId) {
 
 		SpaceContext.checkAdminCredentials();
 		SpaceSnapshot snapshot = doGetSnapshot(snapshotId);
@@ -94,7 +92,7 @@ public class SnapshotResource extends AbstractResource {
 	@Post("/snapshot/")
 	@Post("/dog/snapshot")
 	@Post("/dog/snapshot/")
-	public Payload postSnapshot(Context context) throws JsonParseException, JsonMappingException, IOException {
+	public Payload postSnapshot(Context context) {
 
 		SpaceContext.checkSuperDogCredentials();
 
@@ -132,8 +130,7 @@ public class SnapshotResource extends AbstractResource {
 	@Post("/snapshot/latest/restore/")
 	@Post("/dog/snapshot/latest/restore")
 	@Post("/dog/snapshot/latest/restore/")
-	public Payload postSnapshotLatestRestore(Context context)
-			throws JsonParseException, JsonMappingException, IOException {
+	public Payload postSnapshotLatestRestore(Context context) {
 
 		SpaceContext.checkSuperDogCredentials();
 
@@ -149,8 +146,7 @@ public class SnapshotResource extends AbstractResource {
 	@Post("/snapshot/:snapshotId/restore/")
 	@Post("/dog/snapshot/:snapshotId/restore")
 	@Post("/dog/snapshot/:snapshotId/restore/")
-	public Payload postSnapshotRestoreById(String snapshotId, Context context)
-			throws JsonParseException, JsonMappingException, IOException {
+	public Payload postSnapshotRestoreById(String snapshotId, Context context) {
 
 		SpaceContext.checkSuperDogCredentials();
 		SpaceSnapshot snapshot = doGetSnapshot(snapshotId);

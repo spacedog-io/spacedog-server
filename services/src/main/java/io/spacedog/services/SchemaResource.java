@@ -3,7 +3,6 @@
  */
 package io.spacedog.services;
 
-import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
@@ -11,8 +10,6 @@ import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.indices.TypeMissingException;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -35,7 +32,7 @@ public class SchemaResource extends AbstractResource {
 
 	@Get("")
 	@Get("/")
-	public Payload getAll(Context context) throws JsonParseException, JsonMappingException, IOException {
+	public Payload getAll(Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 		GetMappingsResponse resp = Start.get().getElasticClient().admin().indices()
 				.prepareGetMappings(credentials.backendId()).get();
@@ -59,7 +56,7 @@ public class SchemaResource extends AbstractResource {
 
 	@Get("/:type")
 	@Get("/:type/")
-	public Payload get(String type) throws JsonParseException, JsonMappingException, IOException {
+	public Payload get(String type) {
 		Credentials credentials = SpaceContext.checkCredentials();
 		return Payloads.json(ElasticHelper.get().getSchema(credentials.backendId(), type));
 	}
@@ -68,21 +65,25 @@ public class SchemaResource extends AbstractResource {
 	@Put("/:type/")
 	@Post("/:type")
 	@Post("/:type/")
-	public Payload put(String type, String newSchemaAsString, Context context)
-			throws InterruptedException, ExecutionException, JsonParseException, JsonMappingException, IOException {
+	public Payload put(String type, String newSchemaAsString, Context context) {
 
-		Credentials credentials = SpaceContext.checkAdminCredentials();
-		JsonNode schema = SchemaValidator.validate(type, Json.readObjectNode(newSchemaAsString));
-		String elasticMapping = SchemaTranslator.translate(type, schema).toString();
-		PutMappingRequest putMappingRequest = new PutMappingRequest(credentials.backendId()).type(type)
-				.source(elasticMapping);
-		Start.get().getElasticClient().admin().indices().putMapping(putMappingRequest).get();
-		return Payloads.saved(true, "/v1", "schema", type);
+		try {
+			Credentials credentials = SpaceContext.checkAdminCredentials();
+			JsonNode schema = SchemaValidator.validate(type, Json.readObjectNode(newSchemaAsString));
+			String elasticMapping = SchemaTranslator.translate(type, schema).toString();
+			PutMappingRequest putMappingRequest = new PutMappingRequest(credentials.backendId()).type(type)
+					.source(elasticMapping);
+			Start.get().getElasticClient().admin().indices().putMapping(putMappingRequest).get();
+			return Payloads.saved(true, "/v1", "schema", type);
+
+		} catch (InterruptedException | ExecutionException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Delete("/:type")
 	@Delete("/:type/")
-	public Payload delete(String type) throws JsonParseException, JsonMappingException, IOException {
+	public Payload delete(String type) {
 		try {
 			Credentials credentials = SpaceContext.checkAdminCredentials();
 			Start.get().getElasticClient().admin().indices().prepareDeleteMapping(credentials.backendId()).setType(type)

@@ -4,7 +4,6 @@
 package io.spacedog.services;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -24,8 +23,6 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
@@ -174,8 +171,7 @@ public class AbstractS3Resource extends AbstractResource {
 	}
 
 	public Payload doUpload(String bucketName, String rootUri, Credentials credentials, String path, String fileName,
-			byte[] bytes, Context context) //
-					throws JsonParseException, JsonMappingException, IOException {
+			byte[] bytes, Context context) {
 
 		String s3Key = toS3Key(credentials.backendId(), path, fileName);
 

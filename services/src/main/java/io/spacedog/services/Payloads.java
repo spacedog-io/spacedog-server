@@ -36,6 +36,9 @@ public class Payloads {
 
 	public static Payload error(Throwable t) {
 
+		if (t.getCause() != null)
+			return error(t.getCause());
+
 		if (t instanceof AmazonServiceException) {
 			return error(((AmazonServiceException) t).getStatusCode(), t);
 		}
@@ -61,10 +64,10 @@ public class Payloads {
 			return error(HttpStatus.BAD_REQUEST, t);
 		}
 		if (t instanceof ExecutionException) {
-			if (t.getCause() instanceof MergeMappingException)
-				return error(HttpStatus.BAD_REQUEST, t.getCause());
-			else
-				return error(HttpStatus.INTERNAL_SERVER_ERROR, t);
+			return error(HttpStatus.INTERNAL_SERVER_ERROR, t);
+		}
+		if (t instanceof MergeMappingException) {
+			return error(HttpStatus.BAD_REQUEST, t);
 		}
 
 		return error(HttpStatus.INTERNAL_SERVER_ERROR, t);

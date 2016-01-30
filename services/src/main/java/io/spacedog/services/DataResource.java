@@ -35,8 +35,7 @@ public class DataResource extends AbstractResource {
 
 	@Get("")
 	@Get("/")
-	public Payload getAll(Context context)
-			throws NotFoundException, JsonProcessingException, InterruptedException, ExecutionException, IOException {
+	public Payload getAll(Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, false);
 		ElasticHelper.get().refresh(refresh, credentials.backendId());
@@ -47,14 +46,13 @@ public class DataResource extends AbstractResource {
 
 	@Delete("")
 	@Delete("/")
-	public Payload deleteAll(Context context) throws JsonParseException, JsonMappingException, IOException {
+	public Payload deleteAll(Context context) {
 		return SearchResource.get().deleteAllTypes(null, context);
 	}
 
 	@Get("/:type")
 	@Get("/:type/")
-	public Payload getByType(String type, Context context)
-			throws NotFoundException, JsonProcessingException, InterruptedException, ExecutionException, IOException {
+	public Payload getByType(String type, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, false);
 		ElasticHelper.get().refresh(refresh, credentials.backendId());
@@ -81,14 +79,12 @@ public class DataResource extends AbstractResource {
 
 	@Delete("/:type")
 	@Delete("/:type/")
-	public Payload deleteByType(String type, Context context)
-			throws JsonParseException, JsonMappingException, IOException {
+	public Payload deleteByType(String type, Context context) {
 		return SearchResource.get().deleteSearchForType(type, null, context);
 	}
 
 	@Get("/:type/:id")
-	public Payload getById(String type, String id, Context context)
-			throws JsonParseException, JsonMappingException, IOException {
+	public Payload getById(String type, String id, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 
 		// check if type is well defined
@@ -111,8 +107,7 @@ public class DataResource extends AbstractResource {
 	}
 
 	@Put("/:type/:id")
-	public Payload put(String type, String id, String body, Context context)
-			throws JsonParseException, JsonMappingException, IOException {
+	public Payload put(String type, String id, String body, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 
 		// check if type is well defined
@@ -140,8 +135,7 @@ public class DataResource extends AbstractResource {
 	}
 
 	@Delete("/:type/:id")
-	public Payload deleteById(String type, String id, Context context)
-			throws JsonParseException, JsonMappingException, IOException {
+	public Payload deleteById(String type, String id, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 
 		// check if type is well defined
