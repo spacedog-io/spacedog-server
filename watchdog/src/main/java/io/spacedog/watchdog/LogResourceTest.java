@@ -17,7 +17,7 @@ public class LogResourceTest extends Assert {
 	@Test
 	public void doAFewThingsAndGetTheLogs() throws Exception {
 
-		SpaceDogHelper.printTestHeader();
+		SpaceDogHelper.prepareTest();
 
 		// create a test account
 		Account testAccount = SpaceDogHelper.resetTestAccount();
@@ -94,7 +94,7 @@ public class LogResourceTest extends Assert {
 	@Test
 	public void checkPasswordsAreNotLogged() throws Exception {
 
-		SpaceDogHelper.printTestHeader();
+		SpaceDogHelper.prepareTest();
 		Account testAccount = SpaceDogHelper.resetTestAccount();
 		SpaceDogHelper.createUser(testAccount, "fred", "hi fred", "fred@dog.com");
 
@@ -132,7 +132,7 @@ public class LogResourceTest extends Assert {
 	public void deleteObsoleteLogs() throws Exception {
 
 		// prepare
-		SpaceDogHelper.printTestHeader();
+		SpaceDogHelper.prepareTest();
 		Account testAccount = SpaceDogHelper.resetTestAccount();
 		SpaceDogHelper.createUser(testAccount, "fred", "hi fred", "fred@dog.com");
 		for (int i = 0; i < 5; i++)
@@ -166,7 +166,7 @@ public class LogResourceTest extends Assert {
 	@Test
 	public void superdogsCanBrowseAllAccountLogs() throws Exception {
 
-		SpaceDogHelper.printTestHeader();
+		SpaceDogHelper.prepareTest();
 
 		// create a test accounts and users
 		Account testAccount = SpaceDogHelper.resetTestAccount();

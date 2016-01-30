@@ -159,21 +159,20 @@ public class SpaceDogHelper {
 		SpaceRequest.delete("/v1/admin/account/" + backendId).basicAuth(username, password).go(200, 401);
 	}
 
-	public static Account resetAccount(String backendId, String username, String password, String email,
-			boolean test) throws Exception {
+	public static Account resetAccount(String backendId, String username, String password, String email, boolean forTesting)
+			throws Exception {
 		deleteAccount(backendId, username, password);
-		return createAccount(backendId, username, password, email, test);
+		return createAccount(backendId, username, password, email, forTesting);
 	}
 
 	public static Account resetTestAccount() throws Exception {
-		return resetTestAccount(true);
+		return resetAccount("test", "test", "hi test", "david@spacedog.io", true);
 	}
 
-	public static Account resetTestAccount(boolean forTesting) throws Exception {
-		return resetAccount("test", "test", "hi test", "david@spacedog.io", forTesting);
-	}
+	public static void prepareTest() throws Exception {
 
-	public static void printTestHeader() throws Exception {
+		SpaceRequest.setForTestingDefault(true);
+
 		StackTraceElement parentStackTraceElement = Utils.getParentStackTraceElement();
 		System.out.println(String.format("--- %s", //
 				parentStackTraceElement.getClassName()//

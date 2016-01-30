@@ -23,7 +23,7 @@ public class DataResourceTest extends Assert {
 	@Test
 	public void createFindUpdateAndDelete() throws Exception {
 
-		SpaceDogHelper.printTestHeader();
+		SpaceDogHelper.prepareTest();
 		Account testAccount = SpaceDogHelper.resetTestAccount();
 		SpaceDogHelper.resetSchema(SchemaResourceTest.buildCarSchema(), testAccount);
 

@@ -24,7 +24,7 @@ public class QueryTest extends Assert {
 	@Test
 	public void importCarDataset() throws Exception {
 
-		SpaceDogHelper.printTestHeader();
+		SpaceDogHelper.prepareTest();
 		SpaceDogHelper.Account testAccount = SpaceDogHelper.resetTestAccount();
 
 		SpaceDogHelper.resetSchema(SchemaResourceTest.buildCarSchema(), testAccount);

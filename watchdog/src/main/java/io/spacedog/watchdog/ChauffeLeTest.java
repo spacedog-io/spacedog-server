@@ -62,13 +62,13 @@ public class ChauffeLeTest extends Assert {
 
 	@Test
 	public void chauffeLeWithBigPost() throws Exception {
-		SpaceDogHelper.printTestHeader();
+		SpaceDogHelper.prepareTest();
 		chauffeLe(new BigPost());
 	}
 
 	@Test
 	public void chauffeLeWithSmallPost() throws Exception {
-		SpaceDogHelper.printTestHeader();
+		SpaceDogHelper.prepareTest();
 		chauffeLe(new SmallPost());
 	}
 

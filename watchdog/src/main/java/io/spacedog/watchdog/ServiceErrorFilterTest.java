@@ -17,7 +17,7 @@ public class ServiceErrorFilterTest extends Assert {
 	@Test
 	public void catchesFluentResourceErrors() throws Exception {
 
-		SpaceDogHelper.printTestHeader();
+		SpaceDogHelper.prepareTest();
 		Account testAccount = SpaceDogHelper.resetTestAccount();
 
 		// should fail to access invalid route

@@ -27,7 +27,7 @@ public class BatchResourceTest extends Assert {
 		// be able to reset it again by batch requests because we need the
 		// account credentials to request the batch
 
-		SpaceDogHelper.printTestHeader();
+		SpaceDogHelper.prepareTest();
 		SpaceDogHelper.resetTestAccount();
 
 		// should succeed to reset test account and create message schema with

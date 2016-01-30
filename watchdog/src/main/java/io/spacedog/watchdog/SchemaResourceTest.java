@@ -22,7 +22,7 @@ public class SchemaResourceTest extends Assert {
 	@Test
 	public void deletePutAndGetSchemas() throws Exception {
 
-		SpaceDogHelper.printTestHeader();
+		SpaceDogHelper.prepareTest();
 		Account testAccount = SpaceDogHelper.resetTestAccount();
 
 		// should succeed to create a user

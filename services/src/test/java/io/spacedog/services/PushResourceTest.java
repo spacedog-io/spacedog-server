@@ -15,7 +15,7 @@ public class PushResourceTest extends Assert {
 	public void subscribeToTopicsAndPush() throws Exception {
 
 		// prepare
-		SpaceDogHelper.printTestHeader();
+		SpaceDogHelper.prepareTest();
 		SpaceDogHelper.Account testAccount = SpaceDogHelper.resetTestAccount();
 		SpaceDogHelper.User vince = SpaceDogHelper.createUser(testAccount, "vince", "hi vince", "david@spacedog.io");
 		SpaceDogHelper.User fred = SpaceDogHelper.createUser(testAccount, "fred", "hi fred", "davattias@gmail.com");

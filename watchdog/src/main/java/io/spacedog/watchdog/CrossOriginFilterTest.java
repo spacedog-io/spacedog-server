@@ -18,7 +18,7 @@ public class CrossOriginFilterTest extends Assert {
 	@Test
 	public void returnCORSHeaders() throws Exception {
 
-		SpaceDogHelper.printTestHeader();
+		SpaceDogHelper.prepareTest();
 		Account testAccount = SpaceDogHelper.resetTestAccount();
 
 		// CORS for simple requests

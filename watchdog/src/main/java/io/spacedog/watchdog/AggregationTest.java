@@ -16,7 +16,7 @@ public class AggregationTest {
 	@Test
 	public void searchForAggregations() throws Exception {
 
-		SpaceDogHelper.printTestHeader();
+		SpaceDogHelper.prepareTest();
 		Account testAccount = SpaceDogHelper.resetTestAccount();
 
 		SpaceDogHelper.createUser(testAccount, "riri", "hi riri", "hello@disney.com");

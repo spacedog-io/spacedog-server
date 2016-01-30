@@ -26,7 +26,7 @@ public class DataResourceTest2 extends Assert {
 	@Test
 	public void createSearchUpdateAndDeleteSales() throws Exception {
 
-		SpaceDogHelper.printTestHeader();
+		SpaceDogHelper.prepareTest();
 		Account testAccount = SpaceDogHelper.resetTestAccount();
 		SpaceDogHelper.resetSchema(SchemaResourceTest.buildSaleSchema(), testAccount);
 
@@ -200,7 +200,7 @@ public class DataResourceTest2 extends Assert {
 	@Test
 	public void deleteObjects() throws Exception {
 
-		SpaceDogHelper.printTestHeader();
+		SpaceDogHelper.prepareTest();
 		Account testAccount = SpaceDogHelper.resetTestAccount();
 		SpaceDogHelper.setSchema(SchemaBuilder2.builder("message").textProperty("text", "english", true).build(),
 				testAccount);

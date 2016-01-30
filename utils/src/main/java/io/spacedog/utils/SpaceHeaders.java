@@ -3,6 +3,7 @@ package io.spacedog.utils;
 public abstract class SpaceHeaders {
 
 	public static final String BACKEND_KEY = "x-spacedog-backend-key";
+	public static final String SPACEDOG_TEST = "x-spacedog-test";
 	public static final String BASIC_SCHEME = "Basic";
 	public static final String ALLOW_METHODS = "GET, POST, PUT, DELETE, HEAD";
 
@@ -49,4 +50,6 @@ public abstract class SpaceHeaders {
 	public static final String ACCESS_CONTROL_ALLOW_ORIGIN = "Access-Control-Allow-Origin";
 	public static final String ACCESS_CONTROL_ALLOW_CREDENTIALS = "Access-Control-Allow-Credentials";
 	public static final String ORIGIN = "Origin";
+	public static final String AMZ_META_OWNER_TYPE = "x-amz-meta-owner-type";
+	public static final String AMAZON_META_OWNER = "x-amz-meta-owner";
 }

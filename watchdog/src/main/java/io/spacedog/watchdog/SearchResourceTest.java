@@ -21,7 +21,7 @@ public class SearchResourceTest extends Assert {
 	@Test
 	public void searchAndDeleteObjects() throws Exception {
 
-		SpaceDogHelper.printTestHeader();
+		SpaceDogHelper.prepareTest();
 		Account testAccount = SpaceDogHelper.resetTestAccount();
 		SpaceDogHelper.setSchema(SchemaBuilder2.builder("message").textProperty("text", "english", true).build(),
 				testAccount);

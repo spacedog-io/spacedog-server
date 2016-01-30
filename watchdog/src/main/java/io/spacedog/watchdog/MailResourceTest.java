@@ -14,7 +14,7 @@ public class MailResourceTest extends Assert {
 	@Test
 	public void postMails() throws Exception {
 
-		SpaceDogHelper.printTestHeader();
+		SpaceDogHelper.prepareTest();
 		Account account = SpaceDogHelper.resetTestAccount();
 
 		// should succeed to mail a simple text message

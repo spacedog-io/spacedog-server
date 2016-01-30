@@ -24,9 +24,12 @@ import io.spacedog.utils.SpaceHeaders;
 public class SpaceRequest {
 	private HttpRequest request;
 	private JsonNode body;
+	private static boolean forTestingDefault = false;
 
 	public SpaceRequest(HttpRequest request) {
 		this.request = request;
+		if (forTestingDefault)
+			this.header(SpaceHeaders.SPACEDOG_TEST, "true");
 	}
 
 	public static SpaceRequest get(String uri) {
@@ -242,7 +245,11 @@ public class SpaceRequest {
 
 	public SpaceRequest forTesting(boolean test) {
 		if (test)
-			this.queryString("test", "true");
+			this.header(SpaceHeaders.SPACEDOG_TEST, "true");
 		return this;
+	}
+
+	public static void setForTestingDefault(boolean value) {
+		forTestingDefault = value;
 	}
 }

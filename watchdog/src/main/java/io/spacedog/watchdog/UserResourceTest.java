@@ -22,7 +22,7 @@ public class UserResourceTest extends Assert {
 	@Test
 	public void userIsSigningUpAndMore() throws Exception {
 
-		SpaceDogHelper.printTestHeader();
+		SpaceDogHelper.prepareTest();
 		SpaceDogHelper.Account testAccount = SpaceDogHelper.resetTestAccount();
 
 		// fails since invalid users
@@ -113,7 +113,7 @@ public class UserResourceTest extends Assert {
 	@Test
 	public void setAndResetPassword() throws Exception {
 
-		SpaceDogHelper.printTestHeader();
+		SpaceDogHelper.prepareTest();
 		SpaceDogHelper.Account testAccount = SpaceDogHelper.resetTestAccount();
 		SpaceDogHelper.createUser(testAccount, "toto", "hi toto", "toto@dog.com");
 
@@ -212,7 +212,7 @@ public class UserResourceTest extends Assert {
 	@Test
 	public void setUserCustomSchemaAndMore() throws Exception {
 
-		SpaceDogHelper.printTestHeader();
+		SpaceDogHelper.prepareTest();
 		SpaceDogHelper.Account testAccount = SpaceDogHelper.resetTestAccount();
 
 		// vince sign up should succeed

@@ -21,7 +21,7 @@ public class AccountResourceTestOften extends Assert {
 	@Test
 	public void deleteSignUpGetLoginTestAccount() throws Exception {
 
-		SpaceDogHelper.printTestHeader();
+		SpaceDogHelper.prepareTest();
 		SpaceDogHelper.Account testAccount = SpaceDogHelper.resetTestAccount();
 
 		// get just created test account should succeed
@@ -111,7 +111,7 @@ public class AccountResourceTestOften extends Assert {
 	@Test
 	public void failToAccessNorDeleteAnotherAccountWithValidAdminCredentials() throws Exception {
 
-		SpaceDogHelper.printTestHeader();
+		SpaceDogHelper.prepareTest();
 
 		SpaceDogHelper.Account aaaa = SpaceDogHelper.resetAccount(//
 				"aaaa", "aaaa", "hi aaaa", "hello@spacedog.io", true);
@@ -145,7 +145,7 @@ public class AccountResourceTestOften extends Assert {
 	public void getAllAccounts() throws Exception {
 
 		// prepare
-		SpaceDogHelper.printTestHeader();
+		SpaceDogHelper.prepareTest();
 		SpaceDogHelper.Account aaaa = SpaceDogHelper.resetAccount(//
 				"aaaa", "aaaa", "hi aaaa", "hello@spacedog.io", true);
 		SpaceDogHelper.Account zzzz = SpaceDogHelper.resetAccount(//

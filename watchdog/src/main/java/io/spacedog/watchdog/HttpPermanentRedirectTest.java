@@ -17,7 +17,7 @@ public class HttpPermanentRedirectTest extends Assert {
 	@Test
 	public void beRedirectedToMainPort() throws Exception {
 
-		SpaceDogHelper.printTestHeader();
+		SpaceDogHelper.prepareTest();
 
 		// should redirect from http to https and get the root page
 
