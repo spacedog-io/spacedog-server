@@ -28,7 +28,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
-import io.spacedog.services.Start.Configuration;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Utils;
@@ -321,22 +320,22 @@ public class SnapshotResource extends AbstractResource {
 
 		private SpaceRepository(String id) {
 			this.id = id;
-			Configuration conf = Start.get().configuration();
+			StartConfiguration conf = Start.get().configuration();
 
-			if (conf.getSnapshotsBucketName().isPresent()) {
+			if (conf.snapshotsBucketName().isPresent()) {
 
 				this.type = "s3";
 				this.settings = ImmutableSettings.builder()//
-						.put("bucket", conf.getSnapshotsBucketName().get())//
-						.put("region", conf.getSnapshotsBucketRegion().get())//
+						.put("bucket", conf.snapshotsBucketName().get())//
+						.put("region", conf.snapshotsBucketRegion().get())//
 						.put("base_path", this.id)//
 						.put("compress", true)//
 						.build();
 
-			} else if (conf.getSnapshotsPath().isPresent()//
-					&& Files.isDirectory(conf.getSnapshotsPath().get())) {
+			} else if (conf.snapshotsPath().isPresent()//
+					&& Files.isDirectory(conf.snapshotsPath().get())) {
 
-				Path location = conf.getSnapshotsPath().get().resolve(id);
+				Path location = conf.snapshotsPath().get().resolve(id);
 
 				try {
 					Files.createDirectories(location);

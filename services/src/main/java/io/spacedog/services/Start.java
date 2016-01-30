@@ -4,13 +4,7 @@
 package io.spacedog.services;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.Optional;
-import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.client.Client;
@@ -33,7 +27,7 @@ public class Start {
 	private Node elasticNode;
 	private Client elasticClient;
 	private MyFluentServer fluent;
-	private Configuration config;
+	private StartConfiguration config;
 
 	public Node getElasticNode() {
 		return elasticNode;
@@ -43,7 +37,7 @@ public class Start {
 		return elasticClient;
 	}
 
-	public Configuration configuration() {
+	public StartConfiguration configuration() {
 		return config;
 	}
 
@@ -75,7 +69,7 @@ public class Start {
 				.clusterName("spacedog-elastic-cluster")//
 				.settings(ImmutableSettings.builder()//
 						.put("path.data", //
-								config.getElasticDataPath().toAbsolutePath().toString())
+								config.elasticDataPath().toAbsolutePath().toString())
 						.build())//
 				.node();
 
@@ -89,12 +83,16 @@ public class Start {
 		fluent.configure(Start::configure);
 
 		if (config.isSsl()) {
-			fluent.startSSL(config.getMainPort(), Arrays.asList(config.getCrtFilePath(), //
-					config.getPemFilePath()), config.getDerFilePath());
+			fluent.startSSL(//
+					config.mainPort(), //
+					Arrays.asList(//
+							config.crtFilePath().get(), //
+							config.pemFilePath().get()), //
+					config.derFilePath().get());
 		} else
-			fluent.start(config.getMainPort());
+			fluent.start(config.mainPort());
 
-		HttpPermanentRedirect.start(config.getRedirectPort(), config.getUrl());
+		HttpPermanentRedirect.start(config.redirectPort(), config.url());
 	}
 
 	private static void configure(Routes routes) {
@@ -144,163 +142,6 @@ public class Start {
 	}
 
 	private Start() throws IOException {
-		this.config = new Configuration();
-	}
-
-	//
-	// Configuration
-	//
-
-	public static class Configuration {
-
-		private Properties configuration = new Properties();
-
-		public Configuration() throws IOException {
-
-			Path confPath = getConfigurationFilePath();
-			if (Files.isReadable(confPath)) {
-				System.out.println("[SpaceDog] configuration file = " + confPath);
-				configuration.load(Files.newInputStream(confPath));
-			}
-
-			if (!Files.isDirectory(getHomePath()))
-				throw new RuntimeException(String.format("SpaceDog home path not a directory [%s]", //
-						getHomePath()));
-
-			if (!Files.isDirectory(getElasticDataPath()))
-				throw new RuntimeException(String.format("SpaceDog data path not a directory [%s]", //
-						getElasticDataPath()));
-
-			if (!hasSuperDogs())
-				throw new RuntimeException("No superdog administrator defined in configuration");
-
-			System.out.println("[SpaceDog] url = " + getUrl());
-			System.out.println("[SpaceDog] main port = " + getMainPort());
-			System.out.println("[SpaceDog] redirect port = " + getRedirectPort());
-			System.out.println("[SpaceDog] home path = " + getHomePath());
-			System.out.println("[SpaceDog] data path = " + getElasticDataPath());
-			System.out.println("[SpaceDog] mail domain = " + getMailDomain());
-			System.out.println("[SpaceDog] mailgun key = " + getMailGunKey());
-			System.out.println("[SpaceDog] snapshots path = " + getSnapshotsPath());
-			System.out.println("[SpaceDog] snapshots bucket name = " + getSnapshotsBucketName());
-			System.out.println("[SpaceDog] snapshots bucket region = " + getSnapshotsBucketRegion());
-			System.out.println("[SpaceDog] david superdog password = " + getSuperDogHashedPassword("david"));
-			System.out.println("[SpaceDog] david superdog email = " + getSuperDogEmail("david"));
-			System.out.println("[SpaceDog] production = " + isProduction());
-
-			if (isProduction()) {
-				// Force Fluent HTTP to production mode
-				System.setProperty("PROD_MODE", "true");
-			}
-
-			if (isSsl()) {
-				System.out.println("[SpaceDog] .crt file = " + getCrtFilePath());
-				System.out.println("[SpaceDog] .pem file = " + getPemFilePath());
-				System.out.println("[SpaceDog] .der file = " + getDerFilePath());
-			}
-		}
-
-		public Path getHomePath() {
-			String path = configuration.getProperty("spacedog.home.path");
-			return path == null //
-					? Paths.get(System.getProperty("user.home"), "spacedog")//
-					: Paths.get(path);
-		}
-
-		public Path getConfigurationFilePath() {
-			String path = System.getProperty("spacedog.configuration.file");
-			return path == null //
-					? getHomePath().resolve("spacedog.server.properties")//
-					: Paths.get(path);
-		}
-
-		public String getUrl() {
-			return configuration.getProperty("spacedog.url", "https://spacedog.io");
-		}
-
-		public int getMainPort() {
-			return Integer.valueOf(configuration.getProperty("spacedog.port.main", "4444"));
-		}
-
-		public int getRedirectPort() {
-			return Integer.valueOf(configuration.getProperty("spacedog.port.redirect", "8888"));
-		}
-
-		public Path getElasticDataPath() {
-			String path = configuration.getProperty("spacedog.data.path");
-			return path == null ? //
-					getHomePath().resolve("data") : Paths.get(path);
-		}
-
-		public Path getDerFilePath() {
-			String path = configuration.getProperty("spacedog.ssl.der.file");
-			return path == null ? //
-					getHomePath().resolve("ssl/spacedog.io.pkcs8.der") : Paths.get(path);
-		}
-
-		public Path getPemFilePath() {
-			String path = configuration.getProperty("spacedog.ssl.pem.file");
-			return path == null ? //
-					getHomePath().resolve("ssl/GandiStandardSSLCA.pem") : Paths.get(path);
-		}
-
-		public Path getCrtFilePath() {
-			String path = configuration.getProperty("spacedog.ssl.crt.file");
-			return path == null ? //
-					getHomePath().resolve("ssl/spacedog.io.certificate.crt") : Paths.get(path);
-		}
-
-		public boolean isProduction() {
-			return Boolean.valueOf(configuration.getProperty("spacedog.production", "false"));
-		}
-
-		public boolean isSsl() {
-			return Files.isReadable(getCrtFilePath());
-		}
-
-		public Optional<String> getMailGunKey() {
-			return Optional.ofNullable(configuration.getProperty("spacedog.mailgun.key"));
-		}
-
-		public Optional<String> getMailDomain() {
-			return Optional.ofNullable(configuration.getProperty("spacedog.mail.domain"));
-		}
-
-		public Optional<Path> getSnapshotsPath() {
-			String path = configuration.getProperty("spacedog.snapshots.path");
-			return path == null ? Optional.empty() : Optional.of(Paths.get(path));
-		}
-
-		public Optional<String> getSnapshotsBucketName() {
-			return Optional.ofNullable(configuration.getProperty("spacedog.snapshots.bucket.name"));
-		}
-
-		public Optional<String> getSnapshotsBucketRegion() {
-			return Optional.ofNullable(configuration.getProperty("spacedog.snapshots.bucket.region"));
-		}
-
-		public Optional<String> getSuperDogHashedPassword(String username) {
-			return Optional.ofNullable(configuration.getProperty("spacedog.superdog." + username + ".password"));
-		}
-
-		public boolean hasSuperDogs() {
-			Enumeration<Object> keys = configuration.keys();
-			while (keys.hasMoreElements())
-				if (keys.nextElement().toString().startsWith("spacedog.superdog."))
-					return true;
-			return false;
-		}
-
-		public boolean isSuperDog(String username) {
-			return getSuperDogHashedPassword(username).isPresent();
-		}
-
-		public Optional<String> getSuperDogEmail(String username) {
-			return Optional.ofNullable(configuration.getProperty("spacedog.superdog." + username + ".email"));
-		}
-
-		public String superdogNotificationTopic() {
-			return configuration.getProperty("spacedog.superdog.notification.topic");
-		}
+		this.config = new StartConfiguration();
 	}
 }

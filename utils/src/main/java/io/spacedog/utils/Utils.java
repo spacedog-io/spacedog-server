@@ -48,4 +48,8 @@ public class Utils {
 	public static <E> boolean isNullOrEmpty(Collection<E> c) {
 		return c == null || c.isEmpty();
 	}
+
+	public static void info(String message, Object... objects) {
+		System.out.println(String.format(message, objects));
+	}
 }

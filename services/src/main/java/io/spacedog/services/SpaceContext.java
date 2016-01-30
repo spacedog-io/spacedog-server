@@ -258,14 +258,14 @@ public class SpaceContext {
 			// check if superdog credentials
 
 			Optional<String> hashedPassword = Start.get()//
-					.configuration().getSuperDogHashedPassword(username);
+					.configuration().superdogHashedPassword(username);
 
 			if (hashedPassword.isPresent()) {
 
 				if (Passwords.hash(password).equals(hashedPassword.get()))
 					return Optional.of(//
 							Credentials.fromSuperDog(username, //
-									Start.get().configuration().getSuperDogEmail(username).get()));
+									Start.get().configuration().superdogEmail(username).get()));
 
 				throw new AuthenticationException("invalid superdog username or password");
 			}

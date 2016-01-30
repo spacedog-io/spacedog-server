@@ -82,11 +82,8 @@ public class MailResource extends AbstractResource {
 	public ObjectNode send(String from, String to, String cc, String bcc, String subject, String text, String html)
 			throws JsonParseException, JsonMappingException, IOException, UnirestException {
 
-		String mailGunKey = Start.get().configuration().getMailGunKey().orElseThrow(//
-				() -> new RuntimeException("No mailgun key set in configuration"));
-
-		String mailDomain = Start.get().configuration().getMailDomain().orElseThrow(//
-				() -> new RuntimeException("No mail domain set in configuration"));
+		String mailGunKey = Start.get().configuration().mailGunKey();
+		String mailDomain = Start.get().configuration().mailDomain();
 
 		HttpRequestWithBody requestWithBody = Unirest.post("https://api.mailgun.net/v3/{domain}/messages")//
 				.routeParam("domain", mailDomain)//
