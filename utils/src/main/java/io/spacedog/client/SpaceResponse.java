@@ -227,9 +227,9 @@ public class SpaceResponse {
 		long now = DateTime.now().getMillis();
 		assertDateIsValid(jsonPath);
 		DateTime date = DateTime.parse(Json.get(jsonResponseContent, jsonPath).asText());
-		if (date.isAfter(now + 3000) || date.isBefore(now - 3000))
+		if (date.isBefore(now - 3000) || date.isAfter(now + 3000))
 			Assert.fail(String.format(//
-					"json property [%s] with value [%s] is not a recent (now +/- 3s) SpaceDog date", jsonPath, date));
+					"json property [%s] with value [%s] is not a recent SpaceDog date (now +/- 3s)", jsonPath, date));
 		return this;
 	}
 
