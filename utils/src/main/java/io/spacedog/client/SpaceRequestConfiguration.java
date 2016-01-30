@@ -80,6 +80,11 @@ public class SpaceRequestConfiguration {
 					Path path = Paths.get(userHome, ".spacedog.client.properties");
 					if (Files.exists(path))
 						configuration = new SpaceRequestConfiguration(Files.newInputStream(path));
+					else {
+						path = Paths.get(userHome, "spacedog.client.properties");
+						if (Files.exists(path))
+							configuration = new SpaceRequestConfiguration(Files.newInputStream(path));
+					}
 				}
 
 				if (configuration == null)
