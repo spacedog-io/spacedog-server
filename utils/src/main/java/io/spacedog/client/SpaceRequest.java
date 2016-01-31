@@ -24,12 +24,11 @@ import io.spacedog.utils.SpaceHeaders;
 public class SpaceRequest {
 	private HttpRequest request;
 	private JsonNode body;
+	private Boolean forTesting = null;
 	private static boolean forTestingDefault = false;
 
 	public SpaceRequest(HttpRequest request) {
 		this.request = request;
-		if (forTestingDefault)
-			this.header(SpaceHeaders.SPACEDOG_TEST, "true");
 	}
 
 	public static SpaceRequest get(String uri) {
@@ -171,6 +170,9 @@ public class SpaceRequest {
 	}
 
 	public SpaceResponse go() throws Exception {
+		if ((forTesting == null && forTestingDefault) || forTesting)
+			this.header(SpaceHeaders.SPACEDOG_TEST, "true");
+
 		return new SpaceResponse(request, body, SpaceRequestConfiguration.get().debug());
 	}
 
@@ -243,9 +245,8 @@ public class SpaceRequest {
 		return basicAuth(conf.superdogName(), conf.superdogPassword());
 	}
 
-	public SpaceRequest forTesting(boolean test) {
-		if (test)
-			this.header(SpaceHeaders.SPACEDOG_TEST, "true");
+	public SpaceRequest forTesting(boolean forTesting) {
+		this.forTesting = forTesting;
 		return this;
 	}
 
