@@ -310,6 +310,7 @@ public class SnapshotResource extends AbstractResource {
 
 	private static class SpaceRepository {
 
+		private static final String BUCKET_SUFFIX = "snapshots";
 		private String type;
 		private Settings settings;
 		private String id;
@@ -318,18 +319,7 @@ public class SnapshotResource extends AbstractResource {
 			this.id = id;
 			StartConfiguration conf = Start.get().configuration();
 
-			if (conf.snapshotsBucketName().isPresent()) {
-
-				this.type = "s3";
-				this.settings = ImmutableSettings.builder()//
-						.put("bucket", conf.snapshotsBucketName().get())//
-						.put("region", conf.snapshotsBucketRegion().get())//
-						.put("base_path", this.id)//
-						.put("compress", true)//
-						.build();
-
-			} else if (conf.snapshotsPath().isPresent()//
-					&& Files.isDirectory(conf.snapshotsPath().get())) {
+			if (conf.snapshotsPath().isPresent()) {
 
 				Path location = conf.snapshotsPath().get().resolve(id);
 
@@ -346,8 +336,16 @@ public class SnapshotResource extends AbstractResource {
 						.put("location", location.toAbsolutePath().toString())//
 						.put("compress", true)//
 						.build();
-			} else
-				throw new RuntimeException("no snapshot repository configuration set");
+			} else {
+
+				this.type = "s3";
+				this.settings = ImmutableSettings.builder()//
+						.put("bucket", getBucketName(BUCKET_SUFFIX))//
+						.put("region", conf.awsRegion())//
+						.put("base_path", this.id)//
+						.put("compress", true)//
+						.build();
+			}
 		}
 
 		public String getId() {

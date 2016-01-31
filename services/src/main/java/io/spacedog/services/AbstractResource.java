@@ -50,4 +50,9 @@ public abstract class AbstractResource {
 		String value = context.get(name);
 		return value == null ? defaultValue : value;
 	}
+
+	public static String getBucketName(String bucketSuffix) {
+		return Start.get().configuration().getAwsBucketPrefix() + bucketSuffix;
+
+	}
 }

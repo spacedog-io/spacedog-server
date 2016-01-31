@@ -37,11 +37,12 @@ public class AbstractS3Resource extends AbstractResource {
 	private static MimetypesFileTypeMap typeMap = new MimetypesFileTypeMap();
 
 	static {
-		s3.setRegion(Region.getRegion(Regions.EU_WEST_1));
+		s3.setRegion(Region.getRegion(Regions.fromName(Start.get().configuration().awsRegion())));
 	}
 
-	public Object doGet(String bucketName, String backendId, Optional<String> path, Context context) {
+	public Object doGet(String bucketSuffix, String backendId, Optional<String> path, Context context) {
 
+		String bucketName = getBucketName(bucketSuffix);
 		String s3Key = path.isPresent() ? String.join(SLASH, backendId, path.get()) : backendId;
 
 		try {
@@ -102,8 +103,9 @@ public class AbstractS3Resource extends AbstractResource {
 		return Payloads.json(response);
 	}
 
-	public Payload doDelete(String bucketName, Credentials credentials, Optional<String> path) {
+	public Payload doDelete(String bucketSuffix, Credentials credentials, Optional<String> path) {
 
+		String bucketName = getBucketName(bucketSuffix);
 		String s3Key = path.isPresent() ? String.join(SLASH, credentials.backendId(), path.get())
 				: credentials.backendId();
 
@@ -170,9 +172,10 @@ public class AbstractS3Resource extends AbstractResource {
 		return Payloads.json(builder);
 	}
 
-	public Payload doUpload(String bucketName, String rootUri, Credentials credentials, String path, String fileName,
+	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, String path, String fileName,
 			byte[] bytes, Context context) {
 
+		String bucketName = getBucketName(bucketSuffix);
 		String s3Key = toS3Key(credentials.backendId(), path, fileName);
 
 		ObjectMetadata metadata = new ObjectMetadata();

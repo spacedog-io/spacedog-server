@@ -15,7 +15,7 @@ import net.codestory.http.payload.Payload;
 @Prefix("/v1/file")
 public class FileResource extends AbstractS3Resource {
 
-	private static final String FILE_BUCKET = "spacedog-files";
+	private static final String FILE_BUCKET_SUFFIX = "files";
 
 	//
 	// Routes
@@ -83,17 +83,17 @@ public class FileResource extends AbstractS3Resource {
 
 	private Object doGet(Optional<String> path, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
-		return doGet(FILE_BUCKET, credentials.backendId(), path, context);
+		return doGet(FILE_BUCKET_SUFFIX, credentials.backendId(), path, context);
 	}
 
 	private Payload doPut(String path, String fileName, byte[] bytes, Context context) {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
-		return doUpload(FILE_BUCKET, "/v1/file", credentials, path, fileName, bytes, context);
+		return doUpload(FILE_BUCKET_SUFFIX, "/v1/file", credentials, path, fileName, bytes, context);
 	}
 
 	private Payload doDelete(Optional<String> path) {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
-		return doDelete(FILE_BUCKET, credentials, path);
+		return doDelete(FILE_BUCKET_SUFFIX, credentials, path);
 	}
 
 	//

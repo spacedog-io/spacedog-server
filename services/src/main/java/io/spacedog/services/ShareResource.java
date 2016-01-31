@@ -16,7 +16,7 @@ import net.codestory.http.payload.Payload;
 @Prefix("/v1/share")
 public class ShareResource extends AbstractS3Resource {
 
-	private static final String SHARE_BUCKET = "spacedog-shared";
+	private static final String SHARE_BUCKET_SUFFIX = "shared";
 
 	//
 	// Routes
@@ -26,7 +26,7 @@ public class ShareResource extends AbstractS3Resource {
 	@Get("/")
 	public Object getAll(Context context) {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
-		return doGet(SHARE_BUCKET, credentials.backendId(), Optional.empty(), context);
+		return doGet(SHARE_BUCKET_SUFFIX, credentials.backendId(), Optional.empty(), context);
 	}
 
 	@Get("/:uuid/:fileName")
@@ -34,7 +34,8 @@ public class ShareResource extends AbstractS3Resource {
 	public Object get(String uuid, String fileName, Context context) {
 		// TODO better check ACL
 		Credentials credentials = SpaceContext.checkCredentials();
-		return doGet(SHARE_BUCKET, credentials.backendId(), Optional.of(String.join(SLASH, uuid, fileName)), context);
+		return doGet(SHARE_BUCKET_SUFFIX, credentials.backendId(), Optional.of(String.join(SLASH, uuid, fileName)),
+				context);
 	}
 
 	@Put("/:fileName")
@@ -42,21 +43,21 @@ public class ShareResource extends AbstractS3Resource {
 	public Payload put(String fileName, byte[] bytes, Context context) {
 		Credentials credentials = SpaceContext.checkUserCredentials();
 		String uuid = UUID.randomUUID().toString();
-		return doUpload(SHARE_BUCKET, "/v1/share", credentials, uuid, fileName, bytes, context);
+		return doUpload(SHARE_BUCKET_SUFFIX, "/v1/share", credentials, uuid, fileName, bytes, context);
 	}
 
 	@Delete("")
 	@Delete("/")
 	public Payload deleteAll() {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
-		return doDelete(SHARE_BUCKET, credentials, Optional.empty());
+		return doDelete(SHARE_BUCKET_SUFFIX, credentials, Optional.empty());
 	}
 
 	@Delete("/:uuid/:fileName")
 	@Delete("/:uuid/:fileName/")
 	public Payload delete(String uuid, String fileName, Context context) {
 		Credentials credentials = SpaceContext.checkUserOrAdminCredentials();
-		return doDelete(SHARE_BUCKET, credentials, Optional.of(String.join(SLASH, uuid, fileName)));
+		return doDelete(SHARE_BUCKET_SUFFIX, credentials, Optional.of(String.join(SLASH, uuid, fileName)));
 	}
 
 	//

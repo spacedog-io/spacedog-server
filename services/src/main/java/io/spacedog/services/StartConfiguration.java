@@ -25,6 +25,7 @@ public class StartConfiguration {
 		configuration.load(Files.newInputStream(configFilePath()));
 
 		check("production", isProduction(), true);
+		check("offline", isOffline(), true);
 
 		check("url", url(), true);
 		check("main port", mainPort(), true);
@@ -33,12 +34,13 @@ public class StartConfiguration {
 		checkPath("home path", homePath(), true, true);
 		checkPath("elasticsearch data path", elasticDataPath(), true, true);
 
+		check("AWS region", awsRegion(), true);
+		check("AWS bucket prefix", getAwsBucketPrefix(), true);
+
 		check("mail domain", mailDomain(), true);
 		check("mailgun key", mailGunKey(), true);
 
 		check("snapshots path", snapshotsPath(), false);
-		check("snapshots bucket name", snapshotsBucketName(), true);
-		check("snapshots bucket region", snapshotsBucketRegion(), true);
 
 		check("superdogs", superdogs(), true);
 		for (String superdog : superdogs()) {
@@ -52,8 +54,6 @@ public class StartConfiguration {
 		checkPath("SSL DER file path", derFilePath(), false, false);
 
 		check("superdog notification topic", superdogNotificationTopic(), true);
-		check("bucket root name", getBucketRootName(), true);
-		check("offline server", isOffline(), true);
 
 		if (isProduction()) {
 			// Force Fluent HTTP to production mode
@@ -152,6 +152,14 @@ public class StartConfiguration {
 		return Boolean.parseBoolean(configuration.getProperty("spacedog.production", "false"));
 	}
 
+	public String awsRegion() {
+		return configuration.getProperty("spacedog.aws.region");
+	}
+
+	public String getAwsBucketPrefix() {
+		return configuration.getProperty("spacedog.aws.bucket.prefix");
+	}
+
 	public boolean isSsl() {
 		return crtFilePath().isPresent();
 	}
@@ -169,27 +177,6 @@ public class StartConfiguration {
 				? Optional.empty()//
 				: Optional.of(Paths.get(configuration.getProperty("spacedog.snapshots.path")));
 	}
-
-	public Optional<String> snapshotsBucketName() {
-		return isProduction() //
-				? Optional.of(configuration.getProperty("spacedog.snapshots.bucket.name"))//
-				: Optional.empty();
-	}
-
-	public Optional<String> snapshotsBucketRegion() {
-		return isProduction() //
-				? Optional.of(configuration.getProperty("spacedog.snapshots.bucket.region"))//
-				: Optional.empty();
-	}
-
-	// public String[] superdogs() {
-	// String value = configuration.getProperty("spacedog.superdogs");
-	//
-	// if (Strings.isNullOrEmpty(value))
-	// return null;
-	//
-	// return value.split(", ");
-	// }
 
 	public List<String> superdogs() {
 		List<String> superdogs = Lists.newArrayList();
@@ -217,10 +204,6 @@ public class StartConfiguration {
 
 	public String superdogNotificationTopic() {
 		return configuration.getProperty("spacedog.superdog.notification.topic");
-	}
-
-	public String getBucketRootName() {
-		return configuration.getProperty("spacedog.bucket.root.name");
 	}
 
 	public boolean isOffline() {
