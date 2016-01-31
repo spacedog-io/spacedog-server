@@ -15,14 +15,14 @@ import org.simpleframework.transport.connect.SocketConnection;
 
 public class HttpPermanentRedirect implements Container {
 
-	private String destinationHostname;
+	private String targetUrl;
 	private SocketConnection socketConnection;
 
-	private HttpPermanentRedirect(int portToRedirect, String destinationHostname) throws IOException {
+	private HttpPermanentRedirect(int portToRedirect, String targetUrl) throws IOException {
 
 		// TODO Create an url from the destinationHostname to make sure
 		// we got the scheme and everything we need
-		this.destinationHostname = destinationHostname;
+		this.targetUrl = targetUrl;
 
 		// pools of 1 thread should be sufficient for this task
 		socketConnection = new SocketConnection( //
@@ -30,15 +30,15 @@ public class HttpPermanentRedirect implements Container {
 		socketConnection.connect(new InetSocketAddress(portToRedirect));
 	}
 
-	public static HttpPermanentRedirect start(int portToRedirect, String destinationHostname) throws IOException {
-		return new HttpPermanentRedirect(portToRedirect, destinationHostname);
+	public static HttpPermanentRedirect start(int portToRedirect, String targetUrl) throws IOException {
+		return new HttpPermanentRedirect(portToRedirect, targetUrl);
 	}
 
 	@Override
 	public void handle(Request request, Response response) {
 		try {
 			// be careful to pass the entire request line with parameters
-			response.setValue("Location", destinationHostname + request.getTarget());
+			response.setValue("Location", targetUrl + request.getTarget());
 			response.setStatus(Status.MOVED_PERMANENTLY);
 			response.setContentLength(0);
 			response.close();

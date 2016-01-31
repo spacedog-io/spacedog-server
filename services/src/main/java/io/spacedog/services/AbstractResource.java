@@ -14,23 +14,18 @@ public abstract class AbstractResource {
 
 	public static final String SLASH = "/";
 
-	protected static StringBuilder spaceUrl(String uri, String type, String id) {
+	public static StringBuilder spaceUrl(String uri, String type, String id) {
 		return spaceUrl(uri).append(SLASH).append(type).append(SLASH).append(id);
 	}
 
-	protected static StringBuilder spaceUrl(String uri) {
+	public static StringBuilder spaceUrl(String uri) {
 		Check.notNullOrEmpty(uri, "URI");
 		Check.isTrue(uri.startsWith(SLASH), "URI must start with a /");
 		return spaceRootUrl().append(uri);
 	}
 
-	protected static StringBuilder spaceRootUrl() {
-		StartConfiguration conf = Start.get().configuration();
-		StringBuilder builder = new StringBuilder(conf.url());
-		int port = conf.mainPort();
-		if (port != 443 && port != 80)
-			builder.append(':').append(port);
-		return builder;
+	public static StringBuilder spaceRootUrl() {
+		return new StringBuilder(Start.get().configuration().sslUrl());
 	}
 
 	protected static String getReferenceType(String reference) {

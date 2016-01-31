@@ -84,15 +84,16 @@ public class Start {
 
 		if (config.isSsl()) {
 			fluent.startSSL(//
-					config.mainPort(), //
+					config.sslPort(), //
 					Arrays.asList(//
 							config.crtFilePath().get(), //
 							config.pemFilePath().get()), //
 					config.derFilePath().get());
 		} else
-			fluent.start(config.mainPort());
+			fluent.start(config.sslPort());
 
-		HttpPermanentRedirect.start(config.redirectPort(), config.url());
+		HttpPermanentRedirect.start(config.nonSslPort(), //
+				configuration().sslUrl());
 	}
 
 	private static void configure(Routes routes) {

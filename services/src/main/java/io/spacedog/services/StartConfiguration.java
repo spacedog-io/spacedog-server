@@ -27,9 +27,10 @@ public class StartConfiguration {
 		check("production", isProduction(), true);
 		check("offline", isOffline(), true);
 
-		check("url", url(), true);
-		check("main port", mainPort(), true);
-		check("redirect port", redirectPort(), true);
+		check("ssl url", sslUrl(), true);
+		check("ssl port", sslPort(), true);
+		check("non ssl url", nonSslUrl(), true);
+		check("non ssl port", nonSslPort(), true);
 
 		checkPath("home path", homePath(), true, true);
 		checkPath("elasticsearch data path", elasticDataPath(), true, true);
@@ -112,16 +113,20 @@ public class StartConfiguration {
 				: Paths.get(path);
 	}
 
-	public String url() {
-		return configuration.getProperty("spacedog.url", "https://spacedog.io");
+	public String sslUrl() {
+		return configuration.getProperty("spacedog.url.ssl");
 	}
 
-	public int mainPort() {
-		return Integer.valueOf(configuration.getProperty("spacedog.port.main", "4444"));
+	public String nonSslUrl() {
+		return configuration.getProperty("spacedog.url.nonssl");
 	}
 
-	public int redirectPort() {
-		return Integer.valueOf(configuration.getProperty("spacedog.port.redirect", "8888"));
+	public int sslPort() {
+		return Integer.valueOf(configuration.getProperty("spacedog.port.ssl"));
+	}
+
+	public int nonSslPort() {
+		return Integer.valueOf(configuration.getProperty("spacedog.port.nonssl"));
 	}
 
 	public Path elasticDataPath() {
