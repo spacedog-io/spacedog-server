@@ -7,9 +7,9 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import io.spacedog.client.SpaceDogHelper;
-import io.spacedog.watchdog.SpaceSuite.TestOften;
+import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
-@TestOften
+@TestOncePerDay
 public class AccountResourceTestOncePerDay extends Assert {
 
 	@Test
