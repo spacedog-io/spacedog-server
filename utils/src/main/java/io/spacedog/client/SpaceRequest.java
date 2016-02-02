@@ -170,7 +170,8 @@ public class SpaceRequest {
 	}
 
 	public SpaceResponse go() throws Exception {
-		if ((forTesting == null && forTestingDefault) || forTesting)
+		if ((forTesting == null && forTestingDefault)//
+				|| (forTesting != null && forTesting))
 			this.header(SpaceHeaders.SPACEDOG_TEST, "true");
 
 		return new SpaceResponse(request, body, SpaceRequestConfiguration.get().debug());

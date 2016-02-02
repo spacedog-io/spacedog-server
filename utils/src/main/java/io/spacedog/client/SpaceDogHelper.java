@@ -7,6 +7,7 @@ import org.junit.Assert;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
+import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
 import io.spacedog.utils.Json;
@@ -159,8 +160,8 @@ public class SpaceDogHelper {
 		SpaceRequest.delete("/v1/admin/account/" + backendId).basicAuth(username, password).go(200, 401);
 	}
 
-	public static Account resetAccount(String backendId, String username, String password, String email, boolean forTesting)
-			throws Exception {
+	public static Account resetAccount(String backendId, String username, String password, String email,
+			boolean forTesting) throws Exception {
 		deleteAccount(backendId, username, password);
 		return createAccount(backendId, username, password, email, forTesting);
 	}
@@ -171,6 +172,7 @@ public class SpaceDogHelper {
 
 	public static void prepareTest() throws Exception {
 
+		Unirest.setTimeouts(10000, 40000);
 		SpaceRequest.setForTestingDefault(true);
 
 		StackTraceElement parentStackTraceElement = Utils.getParentStackTraceElement();
