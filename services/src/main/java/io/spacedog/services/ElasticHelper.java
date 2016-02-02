@@ -110,6 +110,10 @@ public class ElasticHelper {
 				.setVersion(version).get();
 	}
 
+	public UpdateResponse patchObject(String index, String type, String id, ObjectNode object, String updatedBy) {
+		return patchObject(index, type, id, 0, object, updatedBy);
+	}
+
 	public UpdateResponse patchObject(String index, String type, String id, long version, ObjectNode object,
 			String updatedBy) {
 

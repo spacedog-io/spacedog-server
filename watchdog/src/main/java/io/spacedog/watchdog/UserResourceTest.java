@@ -255,6 +255,7 @@ public class UserResourceTest extends Assert {
 	public static final String USERNAME = "username";
 	public static final String HASHED_PASSWORD = "hashedPassword";
 	public static final String PASSWORD_RESET_CODE = "passwordResetCode";
+	public static final String ENDPOINT_ARN = "endpointArn";
 
 	public static SchemaBuilder2 getDefaultUserSchemaBuilder() {
 		return SchemaBuilder2.builder(USER_TYPE, USERNAME)//
@@ -263,7 +264,8 @@ public class UserResourceTest extends Assert {
 				.stringProperty(PASSWORD_RESET_CODE, false)//
 				.stringProperty(EMAIL, true)//
 				.stringProperty(ACCOUNT_ID, true)//
-				.stringProperty(GROUPS, false, true);
+				.stringProperty(GROUPS, false, true)//
+				.stringProperty(ENDPOINT_ARN, false, false);
 	}
 
 	public static ObjectNode getDefaultUserSchema() {

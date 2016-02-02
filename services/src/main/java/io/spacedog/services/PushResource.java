@@ -3,11 +3,20 @@ package io.spacedog.services;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.elasticsearch.action.get.MultiGetResponse;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.common.collect.Sets;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.joda.time.DateTime;
 
 import com.amazonaws.regions.Region;
@@ -64,17 +73,24 @@ public class PushResource {
 
 		String endpointArn = createApplicationEndpoint(application.get().getPlatformApplicationArn(), endpoint);
 
+		// TODO handle more than one app
+		// TODO handle more than one endpoint per app
+		ElasticHelper.get().patchObject(credentials.backendId(), //
+				UserResource.USER_TYPE, //
+				credentials.name(), //
+				Json.objectBuilder().put(UserResource.ENDPOINT_ARN, endpointArn).build(), //
+				credentials.name());
+
 		String topicArn = createTopic("all", credentials.backendId());
 		Optional<Subscription> subscription = getSubscription(topicArn, protocol, endpoint);
 
 		if (!subscription.isPresent()) {
-
 			getSnsClient().subscribe(topicArn, //
 					protocol, endpoint);
 		}
 
 		try {
-			return Payloads.saved(false, "/v1", "device", URLEncoder.encode(endpointArn, "UTF-8"));
+			return Payloads.saved(false, "/v1", TYPE, URLEncoder.encode(endpointArn, "UTF-8"));
 		} catch (UnsupportedEncodingException e) {
 			throw new RuntimeException(e);
 		}
@@ -139,7 +155,7 @@ public class PushResource {
 
 	@Post("/device/push")
 	@Post("/device/push/")
-	public Payload pushAll(Context context) {
+	public Payload postPushAll(Context context) {
 
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		Optional<Topic> topic = getTopicArn("all", credentials.backendId());
@@ -158,9 +174,75 @@ public class PushResource {
 				.put("messageId", publish.getMessageId()).build(), 200);
 	}
 
+	@Post("/push")
+	@Post("/push/")
+	public Payload postPushBySearch(String body, Context context) {
+
+		Credentials credentials = SpaceContext.checkAdminCredentials();
+		ObjectNode node = Json.readObjectNode(body);
+		JsonNode query = Json.checkObject(node, "query", true).get();
+		JsonNode properties = Json.checkArrayNode(node, "properties", true).get();
+		String message = Json.checkStringNode(node, "message", true).get().asText();
+
+		Set<String> usernames = getUsernamesFromObjects(credentials, query, properties);
+		Set<String> endpointArns = getEndpointArnsFromUsers(credentials, usernames);
+
+		for (String endpointArn : endpointArns) {
+			getSnsClient().publish(new PublishRequest()//
+					.withTargetArn(endpointArn)//
+					.withMessage(message));
+		}
+
+		return Payloads.success();
+	}
+
 	//
 	// implementation
 	//
+
+	private Set<String> getEndpointArnsFromUsers(Credentials credentials, Set<String> usernames) {
+
+		// TODO how many users can I get in one request ?
+		MultiGetResponse multiGet = Start.get().getElasticClient().prepareMultiGet()
+				.add(credentials.backendId(), UserResource.USER_TYPE, usernames)//
+				.get();
+
+		Set<String> endpointArns = Sets.newHashSet();
+		multiGet.forEach(response -> endpointArns
+				.add(response.getResponse().getSourceAsMap().get(UserResource.ENDPOINT_ARN).toString()));
+
+		return endpointArns;
+	}
+
+	private Set<String> getUsernamesFromObjects(Credentials credentials, JsonNode query, JsonNode properties) {
+
+		String index = credentials.backendId();
+		SearchRequest request = new SearchRequest(index);
+		SearchSourceBuilder builder = SearchSourceBuilder.searchSource()//
+				.from(0)//
+				// TODO get objects 100 by 100
+				.size(1000)//
+				.fetchSource(true);
+
+		request.source(query.toString());
+		request.extraSource(builder);
+
+		try {
+			Set<String> usernames = Sets.newHashSet();
+			SearchResponse response = Start.get().getElasticClient().search(request).get();
+
+			for (SearchHit hit : response.getHits().getHits()) {
+				ObjectNode object = Json.readObjectNode(hit.sourceAsString());
+				for (Iterator<JsonNode> iterator = properties.elements(); iterator.hasNext();)
+					usernames.add(Json.get(object, iterator.next().asText()).asText());
+			}
+
+			return usernames;
+
+		} catch (InterruptedException | ExecutionException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 	AmazonSNSClient getSnsClient() {
 		if (snsClient == null) {

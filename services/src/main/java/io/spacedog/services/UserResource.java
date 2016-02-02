@@ -32,7 +32,8 @@ import net.codestory.http.payload.Payload;
 @Prefix("/v1")
 public class UserResource extends AbstractResource {
 
-	private static final String PASSWORD = "password";
+	public static final String ENDPOINT_ARN = "endpointArn";
+	public static final String PASSWORD = "password";
 	public static final String ACCOUNT_ID = "accountId";
 	public static final String GROUPS = "groups";
 	public static final String EMAIL = "email";
@@ -53,7 +54,8 @@ public class UserResource extends AbstractResource {
 				.stringProperty(PASSWORD_RESET_CODE, false)//
 				.stringProperty(EMAIL, true)//
 				.stringProperty(ACCOUNT_ID, true)//
-				.stringProperty(GROUPS, false, true);
+				.stringProperty(GROUPS, false, true)//
+				.stringProperty(ENDPOINT_ARN, false, false);
 	}
 
 	public static ObjectNode getDefaultUserSchema() {
@@ -252,9 +254,9 @@ public class UserResource extends AbstractResource {
 	// singleton
 	//
 
-	private static AbstractResource singleton = new UserResource();
+	private static UserResource singleton = new UserResource();
 
-	static AbstractResource get() {
+	static UserResource get() {
 		return singleton;
 	}
 
