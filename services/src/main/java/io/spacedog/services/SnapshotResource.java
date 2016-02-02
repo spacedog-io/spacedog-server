@@ -41,6 +41,7 @@ public class SnapshotResource extends AbstractResource {
 	private static final String PLATFORM_SNAPSHOT_PREFIX = "all";
 	private static final String ELASTIC_ALL = "_all";
 	private static final String WAIT_FOR_COMPLETION = "waitForCompletion";
+	private static final String BUCKET_SUFFIX = "snapshots";
 
 	//
 	// routes
@@ -310,7 +311,6 @@ public class SnapshotResource extends AbstractResource {
 
 	private static class SpaceRepository {
 
-		private static final String BUCKET_SUFFIX = "snapshots";
 		private String type;
 		private Settings settings;
 		private String id;
