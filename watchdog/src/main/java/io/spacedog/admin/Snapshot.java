@@ -4,12 +4,9 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeComparator;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Throwables;
 
 import io.spacedog.client.SpaceRequest;
-import io.spacedog.client.SpaceRequestConfiguration;
 import io.spacedog.utils.Check;
-import io.spacedog.utils.Internals;
 
 public class Snapshot {
 
@@ -19,16 +16,13 @@ public class Snapshot {
 			SpaceRequest.post("/v1/snapshot").superdogAuth().go(202);
 
 		} catch (Exception e) {
-			e.printStackTrace();
-
-			Internals.get().notify(//
-					SpaceRequestConfiguration.get().superdogNotificationTopic(), //
-					SpaceRequestConfiguration.get().target().host() + " snapshot ERROR", //
-					Throwables.getStackTraceAsString(e));
+			AdminJobs.error(this, e);
 		}
 	}
 
 	public void check() {
+
+		String message = null;
 
 		try {
 			ObjectNode node = SpaceRequest.get("/v1/snapshot/latest")//
@@ -40,27 +34,37 @@ public class Snapshot {
 			DateTime now = DateTime.now();
 			DateTime start = new DateTime(node.get("startTime").asLong());
 			DateTime end = new DateTime(node.get("endTime").asLong());
+			long difference = end.getMillis() - start.getMillis();
+
+			message = new StringBuilder("snapshot id = ")//
+					.append(node.get("id").asText())//
+					.append("\nrepository = ")//
+					.append(node.get("repository").asText())//
+					.append("\nstate = ")//
+					.append(node.get("state").asText())//
+					.append("\ntype = ")//
+					.append(node.get("type").asText())//
+					.append("\nstartTime = ")//
+					.append(start.toString())//
+					.append("\nendTime = ")//
+					.append(end.toString())//
+					.append("\nduration = ")//
+					.append(difference)//
+					.toString();
 
 			Check.isTrue(DateTimeComparator.getDateOnlyInstance().compare(now, start) == 0, //
 					"last snapshot took place [%s], it should have happen today");
 
-			long difference = end.toLocalTime().millisOfDay().getDifferenceAsLong(start);
 			Check.isTrue(difference < 1000 * 60 * 60, //
 					"snapshot took [%s], it should take less than one hour", difference);
 
-			String message = SpaceRequestConfiguration.get().target().host() + " snapshot OK";
-			Internals.get().notify(//
-					SpaceRequestConfiguration.get().superdogNotificationTopic(), //
-					message, message);
+			AdminJobs.ok(this, message);
 
 		} catch (Exception e) {
-
-			e.printStackTrace();
-
-			Internals.get().notify(//
-					SpaceRequestConfiguration.get().superdogNotificationTopic(), //
-					SpaceRequestConfiguration.get().target().host() + " snapshot ERROR", //
-					Throwables.getStackTraceAsString(e));
+			if (message == null)
+				AdminJobs.error(this, e);
+			else
+				AdminJobs.error(this, message, e);
 		}
 	}
 

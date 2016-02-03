@@ -4,11 +4,8 @@ import java.util.Iterator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Throwables;
 
 import io.spacedog.client.SpaceRequest;
-import io.spacedog.client.SpaceRequestConfiguration;
-import io.spacedog.utils.Internals;
 
 public class Purge {
 
@@ -16,12 +13,11 @@ public class Purge {
 
 		try {
 			int from = 0;
-			int size = 1;
-			int total = 101;
+			int size = 100;
+			int total = 0;
 
-			while (from + size < total) {
-				ObjectNode accounts;
-				accounts = SpaceRequest.get("/v1/account")//
+			do {
+				ObjectNode accounts = SpaceRequest.get("/v1/account")//
 						.queryString("from", String.valueOf(from))//
 						.queryString("size", String.valueOf(size))//
 						.superdogAuth()//
@@ -38,21 +34,13 @@ public class Purge {
 							.superdogAuth()//
 							.go(200);
 				}
-			}
 
-			String message = SpaceRequestConfiguration.get().target().host() + " log purge OK";
-			Internals.get().notify(//
-					SpaceRequestConfiguration.get().superdogNotificationTopic(), //
-					message, message);
+			} while (from < total);
+
+			AdminJobs.ok(this);
 
 		} catch (Exception e) {
-
-			e.printStackTrace();
-
-			Internals.get().notify(//
-					SpaceRequestConfiguration.get().superdogNotificationTopic(), //
-					SpaceRequestConfiguration.get().target().host() + " log purge ERROR", //
-					Throwables.getStackTraceAsString(e));
+			AdminJobs.error(this, e);
 		}
 
 	}

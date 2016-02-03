@@ -5,10 +5,7 @@ import org.junit.runner.JUnitCore;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 
-import com.google.common.base.Throwables;
-
-import io.spacedog.client.SpaceRequestConfiguration;
-import io.spacedog.utils.Internals;
+import io.spacedog.admin.AdminJobs;
 
 public class Watchdog extends RunListener {
 
@@ -22,34 +19,12 @@ public class Watchdog extends RunListener {
 			if (6 <= hourOfDay && hourOfDay < 7) {
 				junit.run(TestAllSuite.class);
 
-				Internals.get().notify(//
-						SpaceRequestConfiguration.get().superdogNotificationTopic(), //
-						SpaceRequestConfiguration.get().target().host() + " is up and running", //
-						"Everything is under control.");
+				AdminJobs.ok(this);
 			} else
 				junit.run(TestOftenSuite.class);
 
 		} catch (Exception e) {
-			e.printStackTrace();
-			error(Throwables.getStackTraceAsString(e));
-		}
-	}
-
-	public void run1() {
-		try {
-			JUnitCore junit = new JUnitCore();
-			junit.addListener(this);
-
-			junit.run(AccountResourceTestOncePerDay.class);
-
-			Internals.get().notify(//
-					SpaceRequestConfiguration.get().superdogNotificationTopic(), //
-					SpaceRequestConfiguration.get().target().host() + " is up and running", //
-					"Everything is under control.");
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			error(Throwables.getStackTraceAsString(e));
+			AdminJobs.error(this, e);
 		}
 	}
 
@@ -57,36 +32,20 @@ public class Watchdog extends RunListener {
 		try {
 			JUnitCore junit = new JUnitCore();
 			junit.addListener(this);
-
 			junit.run(DataResourceTest2.class);
-
-			Internals.get().notify(//
-					SpaceRequestConfiguration.get().superdogNotificationTopic(), //
-					SpaceRequestConfiguration.get().target().host() + " is seems OK", //
-					"Everything is under control.");
+			AdminJobs.ok(this);
 
 		} catch (Exception e) {
-			e.printStackTrace();
-			error(Throwables.getStackTraceAsString(e));
+			AdminJobs.error(this, e);
 		}
 	}
 
 	@Override
 	public void testFailure(Failure failure) {
-		StringBuilder builder = new StringBuilder().append(failure.getMessage())//
-				.append('\n').append(failure.getTrace());
-		error(builder.toString());
-	}
-
-	public void error(String message) {
-		System.err.println(message);
-
-		Internals.get().notify(//
-				SpaceRequestConfiguration.get().superdogNotificationTopic(), //
-				SpaceRequestConfiguration.get().target().host() + " is DOWN DOWN DOWN", //
-				message);
-
-		System.exit(-1);
+		AdminJobs.error(this,
+				new StringBuilder()//
+						.append(failure.getMessage()).append('\n')//
+						.append(failure.getTrace()).toString());
 	}
 
 	public static void main(String[] args) {
