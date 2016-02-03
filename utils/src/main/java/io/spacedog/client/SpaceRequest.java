@@ -37,7 +37,7 @@ public class SpaceRequest {
 
 	public static SpaceRequest get(boolean ssl, String uri) {
 		String url = uri.startsWith("http") ? uri//
-				: ssl ? computeMainUrl(uri) : computeOptionalUrl(uri);
+				: ssl ? computeSslUrl(uri) : computeNonSslUrl(uri);
 		GetRequest request = Unirest.get(url);
 		return new SpaceRequest(request);
 	}
@@ -48,7 +48,7 @@ public class SpaceRequest {
 
 	public static SpaceRequest post(boolean ssl, String uri) {
 		String url = uri.startsWith("http") ? uri//
-				: ssl ? computeMainUrl(uri) : computeOptionalUrl(uri);
+				: ssl ? computeSslUrl(uri) : computeNonSslUrl(uri);
 		HttpRequestWithBody request = Unirest.post(url);
 		return new SpaceRequest(request);
 	}
@@ -59,7 +59,7 @@ public class SpaceRequest {
 
 	public static SpaceRequest put(boolean ssl, String uri) {
 		String url = uri.startsWith("http") ? uri//
-				: ssl ? computeMainUrl(uri) : computeOptionalUrl(uri);
+				: ssl ? computeSslUrl(uri) : computeNonSslUrl(uri);
 		HttpRequestWithBody request = Unirest.put(url);
 		return new SpaceRequest(request);
 	}
@@ -70,7 +70,7 @@ public class SpaceRequest {
 
 	public static SpaceRequest delete(boolean ssl, String uri) {
 		String url = uri.startsWith("http") ? uri//
-				: ssl ? computeMainUrl(uri) : computeOptionalUrl(uri);
+				: ssl ? computeSslUrl(uri) : computeNonSslUrl(uri);
 		HttpRequestWithBody request = Unirest.delete(url);
 		return new SpaceRequest(request);
 	}
@@ -81,21 +81,21 @@ public class SpaceRequest {
 
 	public static SpaceRequest options(boolean ssl, String uri) {
 		String url = uri.startsWith("http") ? uri//
-				: ssl ? computeMainUrl(uri) : computeOptionalUrl(uri);
+				: ssl ? computeSslUrl(uri) : computeNonSslUrl(uri);
 		HttpRequestWithBody request = Unirest.options(url);
 		return new SpaceRequest(request);
 	}
 
-	private static String computeMainUrl(String uri) {
+	private static String computeSslUrl(String uri) {
 		SpaceTarget target = SpaceRequestConfiguration.get().target();
 		return (target.ssl() ? "https://" : "http://") + target.host()
-				+ (target.port() == 443 ? "" : ":" + target.port()) + uri;
+				+ (target.sslPort() == 443 ? "" : ":" + target.sslPort()) + uri;
 	}
 
-	private static String computeOptionalUrl(String uri) {
+	private static String computeNonSslUrl(String uri) {
 		SpaceTarget target = SpaceRequestConfiguration.get().target();
 		return "http://" + target.host()//
-				+ (target.optionalPort() == 80 ? "" : ":" + target.optionalPort()) + uri;
+				+ (target.nonSslPort() == 80 ? "" : ":" + target.nonSslPort()) + uri;
 	}
 
 	public SpaceRequest backendKey(String backendKey) {

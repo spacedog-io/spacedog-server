@@ -7,14 +7,14 @@ public enum SpaceTarget {
 	production("spacedog.io", 443, 80, true);
 
 	private String host;
-	private int mainPort;
-	private int optionalPort;
+	private int sslPort;
+	private int nonSslPort;
 	private boolean ssl;
 
-	private SpaceTarget(String host, int mainPort, int optionalPort, boolean ssl) {
+	private SpaceTarget(String host, int sslPort, int nonSslPort, boolean ssl) {
 		this.host = host;
-		this.mainPort = mainPort;
-		this.optionalPort = optionalPort;
+		this.sslPort = sslPort;
+		this.nonSslPort = nonSslPort;
 		this.ssl = ssl;
 	}
 
@@ -22,12 +22,12 @@ public enum SpaceTarget {
 		return host;
 	}
 
-	public int port() {
-		return mainPort;
+	public int sslPort() {
+		return sslPort;
 	}
 
-	public int optionalPort() {
-		return optionalPort;
+	public int nonSslPort() {
+		return nonSslPort;
 	}
 
 	public boolean ssl() {
