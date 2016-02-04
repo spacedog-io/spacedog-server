@@ -7,6 +7,8 @@ import java.io.File;
 import java.util.Collection;
 import java.util.Optional;
 
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.BasicHttpClientConnectionManager;
 import org.junit.Assert;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -27,6 +29,11 @@ public class SpaceRequest {
 	private Boolean forTesting = null;
 	private static boolean forTestingDefault = false;
 
+	static {
+		Unirest.setHttpClient(HttpClients.createMinimal(//
+				new BasicHttpClientConnectionManager()));
+	}
+
 	public SpaceRequest(HttpRequest request) {
 		this.request = request;
 	}
@@ -37,7 +44,8 @@ public class SpaceRequest {
 
 	public static SpaceRequest get(boolean ssl, String uri) {
 		String url = uri.startsWith("http") ? uri//
-				: ssl ? computeSslUrl(uri) : computeNonSslUrl(uri);
+				: ssl ? SpaceRequestConfiguration.get().target().sslUrl(uri)
+						: SpaceRequestConfiguration.get().target().nonSslUrl(uri);
 		GetRequest request = Unirest.get(url);
 		return new SpaceRequest(request);
 	}
@@ -48,7 +56,8 @@ public class SpaceRequest {
 
 	public static SpaceRequest post(boolean ssl, String uri) {
 		String url = uri.startsWith("http") ? uri//
-				: ssl ? computeSslUrl(uri) : computeNonSslUrl(uri);
+				: ssl ? SpaceRequestConfiguration.get().target().sslUrl(uri)
+						: SpaceRequestConfiguration.get().target().nonSslUrl(uri);
 		HttpRequestWithBody request = Unirest.post(url);
 		return new SpaceRequest(request);
 	}
@@ -59,7 +68,8 @@ public class SpaceRequest {
 
 	public static SpaceRequest put(boolean ssl, String uri) {
 		String url = uri.startsWith("http") ? uri//
-				: ssl ? computeSslUrl(uri) : computeNonSslUrl(uri);
+				: ssl ? SpaceRequestConfiguration.get().target().sslUrl(uri)
+						: SpaceRequestConfiguration.get().target().nonSslUrl(uri);
 		HttpRequestWithBody request = Unirest.put(url);
 		return new SpaceRequest(request);
 	}
@@ -70,7 +80,8 @@ public class SpaceRequest {
 
 	public static SpaceRequest delete(boolean ssl, String uri) {
 		String url = uri.startsWith("http") ? uri//
-				: ssl ? computeSslUrl(uri) : computeNonSslUrl(uri);
+				: ssl ? SpaceRequestConfiguration.get().target().sslUrl(uri)
+						: SpaceRequestConfiguration.get().target().nonSslUrl(uri);
 		HttpRequestWithBody request = Unirest.delete(url);
 		return new SpaceRequest(request);
 	}
@@ -81,21 +92,10 @@ public class SpaceRequest {
 
 	public static SpaceRequest options(boolean ssl, String uri) {
 		String url = uri.startsWith("http") ? uri//
-				: ssl ? computeSslUrl(uri) : computeNonSslUrl(uri);
+				: ssl ? SpaceRequestConfiguration.get().target().sslUrl(uri)//
+						: SpaceRequestConfiguration.get().target().nonSslUrl(uri);
 		HttpRequestWithBody request = Unirest.options(url);
 		return new SpaceRequest(request);
-	}
-
-	private static String computeSslUrl(String uri) {
-		SpaceTarget target = SpaceRequestConfiguration.get().target();
-		return (target.ssl() ? "https://" : "http://") + target.host()
-				+ (target.sslPort() == 443 ? "" : ":" + target.sslPort()) + uri;
-	}
-
-	private static String computeNonSslUrl(String uri) {
-		SpaceTarget target = SpaceRequestConfiguration.get().target();
-		return "http://" + target.host()//
-				+ (target.nonSslPort() == 80 ? "" : ":" + target.nonSslPort()) + uri;
 	}
 
 	public SpaceRequest backendKey(String backendKey) {

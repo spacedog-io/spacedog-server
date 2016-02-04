@@ -33,4 +33,32 @@ public enum SpaceTarget {
 	public boolean ssl() {
 		return ssl;
 	}
+
+	public StringBuilder sslUrlBuilder() {
+		return new StringBuilder(ssl ? "https://" : "http://")//
+				.append(host)//
+				.append(sslPort == 443 ? "" : ":" + sslPort);
+	}
+
+	public StringBuilder nonSslUrlBuilder() {
+		return new StringBuilder("http://")//
+				.append(host)//
+				.append(nonSslPort == 80 ? "" : ":" + nonSslPort);
+	}
+
+	public String sslUrl() {
+		return sslUrlBuilder().toString();
+	}
+
+	public String nonSslUrl() {
+		return nonSslUrlBuilder().toString();
+	}
+
+	public String sslUrl(String uri) {
+		return sslUrlBuilder().append(uri).toString();
+	}
+
+	public String nonSslUrl(String uri) {
+		return nonSslUrlBuilder().append(uri).toString();
+	}
 }
