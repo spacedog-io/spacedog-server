@@ -19,7 +19,7 @@ import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SchemaBuilder2;
 
-public class JohoInit extends SpaceDogHelper {
+public class Joho extends SpaceDogHelper {
 
 	private static final String BACKEND_ID = "joho2";
 	private static final String ADMIN_PASSWORD = "hi joho";

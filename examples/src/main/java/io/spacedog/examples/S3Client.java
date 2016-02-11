@@ -31,7 +31,7 @@ import com.google.common.collect.ImmutableList;
 /**
  * @author davattias
  */
-public class S3ClientExample {
+public class S3Client {
 
 	private static final Regions JOHO_REGION = Regions.EU_CENTRAL_1;
 	private static final String JOHO_BUCKET_NAME = "spacedog-joho";
