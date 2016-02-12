@@ -32,6 +32,7 @@ public class SpaceResponse {
 	private HttpResponse<String> httpResponse;
 	private DateTime before;
 	private JsonNode jsonResponseContent;
+	private long duration;
 
 	public SpaceResponse(HttpRequest request, JsonNode jsonRequestContent, boolean debug)
 			throws JsonProcessingException, IOException, UnirestException {
@@ -40,6 +41,7 @@ public class SpaceResponse {
 		this.before = DateTime.now();
 
 		httpResponse = httpRequest.asString();
+		this.duration = DateTime.now().getMillis() - this.before.getMillis();
 
 		if (debug) {
 			System.out.println();
@@ -62,6 +64,9 @@ public class SpaceResponse {
 			jsonResponseContent = Json.readJsonNode(responseBody);
 
 		if (debug) {
+
+			System.out.println(String.format("=> duration: [%sms]", duration));
+
 			httpResponse.getHeaders()
 					.forEach((key, value) -> System.out.println(String.format("=> %s: %s", key, value)));
 
