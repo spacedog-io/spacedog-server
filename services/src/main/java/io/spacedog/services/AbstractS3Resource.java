@@ -48,14 +48,10 @@ public class AbstractS3Resource extends AbstractResource {
 		try {
 			S3Object object = s3.getObject(bucketName, s3Key);
 
-			context.response().setHeader(SpaceHeaders.CONTENT_LENGTH, //
-					String.valueOf(object.getObjectMetadata().getContentLength()));
 			context.response().setHeader(SpaceHeaders.CONTENT_TYPE, //
 					object.getObjectMetadata().getContentType());
 			context.response().setHeader(SpaceHeaders.CONTENT_DISPOSITION, //
 					object.getObjectMetadata().getContentDisposition());
-			context.response().setHeader(SpaceHeaders.CONTENT_ENCODING, //
-					object.getObjectMetadata().getContentEncoding());
 			context.response().setHeader(SpaceHeaders.ETAG, //
 					object.getObjectMetadata().getETag());
 			context.response().setHeader(SpaceHeaders.AMAZON_META_OWNER, //
