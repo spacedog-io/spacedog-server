@@ -23,25 +23,19 @@ public class CrossOriginFilterTest extends Assert {
 
 		// CORS for simple requests
 
-		com.mashape.unirest.http.Headers req1headers = SpaceRequest.get("/v1/data?refresh=true").backendKey(testAccount)
-				.go(200).httpResponse().getHeaders();
-
-		assertEquals("*", req1headers.getFirst(SpaceHeaders.ACCESS_CONTROL_ALLOW_ORIGIN.toLowerCase()));
-		assertEquals(SpaceHeaders.ALLOW_METHODS,
-				req1headers.getFirst(SpaceHeaders.ACCESS_CONTROL_ALLOW_METHODS.toLowerCase()));
+		SpaceRequest.get("/v1/data?refresh=true").backendKey(testAccount).go(200)//
+				.assertHeaderEquals("*", SpaceHeaders.ACCESS_CONTROL_ALLOW_ORIGIN)//
+				.assertHeaderEquals(SpaceHeaders.ALLOW_METHODS, SpaceHeaders.ACCESS_CONTROL_ALLOW_METHODS);
 
 		// CORS pre-flight request
 
-		com.mashape.unirest.http.Headers req2headers = SpaceRequest.options("/v1/user/mynameisperson")
-				.backendKey(testAccount).header(SpaceHeaders.ORIGIN, "http://www.apple.com")
-				.header(SpaceHeaders.ACCESS_CONTROL_REQUEST_METHOD, "PUT").go(200).httpResponse().getHeaders();
-
-		assertEquals("http://www.apple.com",
-				req2headers.getFirst(SpaceHeaders.ACCESS_CONTROL_ALLOW_ORIGIN.toLowerCase()));
-
-		assertEquals(SpaceHeaders.ALLOW_METHODS,
-				req2headers.getFirst(SpaceHeaders.ACCESS_CONTROL_ALLOW_METHODS.toLowerCase()));
-		assertEquals("31536000", req2headers.getFirst(SpaceHeaders.ACCESS_CONTROL_MAX_AGE.toLowerCase()));
+		SpaceRequest.options("/v1/user/mynameisperson").backendKey(testAccount)
+				.header(SpaceHeaders.ORIGIN, "http://www.apple.com")
+				.header(SpaceHeaders.ACCESS_CONTROL_REQUEST_METHOD, "PUT")//
+				.go(200)//
+				.assertHeaderEquals("http://www.apple.com", SpaceHeaders.ACCESS_CONTROL_ALLOW_ORIGIN)//
+				.assertHeaderEquals(SpaceHeaders.ALLOW_METHODS, SpaceHeaders.ACCESS_CONTROL_ALLOW_METHODS)//
+				.assertHeaderEquals("31536000", SpaceHeaders.ACCESS_CONTROL_MAX_AGE);
 	}
 
 }

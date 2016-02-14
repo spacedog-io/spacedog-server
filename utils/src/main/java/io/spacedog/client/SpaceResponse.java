@@ -288,10 +288,32 @@ public class SpaceResponse {
 	}
 
 	public SpaceResponse assertHeaderEquals(String expected, String headerName) {
-		if (!Arrays.asList(expected).equals(httpResponse.getHeaders().get(headerName)))
+		// header name is converted to lower case to get around Unirest bug
+		// where header names are only lower cased
+		String lowerCasedHeaderName = headerName.toLowerCase();
+
+		if (!Arrays.asList(expected).equals(//
+				httpResponse.getHeaders().get(lowerCasedHeaderName)))
 			Assert.fail(String.format("response header [%s] not equal to [%s] but to %s", //
-					headerName, expected, httpResponse.getHeaders().get(headerName)));
+					headerName, expected, httpResponse.getHeaders().get(lowerCasedHeaderName)));
+
 		return this;
 	}
 
+	public SpaceResponse assertHeaderContains(String expected, String headerName) {
+		// header name is converted to lower case to get around Unirest bug
+		// where header names are only lower cased
+		String lowerCasedHeaderName = headerName.toLowerCase();
+
+		List<String> headerValue = httpResponse.getHeaders().get(lowerCasedHeaderName);
+
+		if (headerValue == null)
+			Assert.fail(String.format("no response header with name [%s]", headerName));
+
+		if (!headerValue.contains(expected))
+			Assert.fail(String.format("response header with name [%s] does not contain [%s] but %s", //
+					headerName, expected, headerValue));
+
+		return this;
+	}
 }

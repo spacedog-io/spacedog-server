@@ -4,6 +4,7 @@ public enum SpaceTarget {
 
 	local("localhost", 8443, 8080, false), //
 	staging("spacerepublic.net", 443, 80, true), //
+	apiprod("api.spacedog.io", 443, 80, true), //
 	production("spacedog.io", 443, 80, true);
 
 	private String host;
