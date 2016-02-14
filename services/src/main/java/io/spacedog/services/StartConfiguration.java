@@ -20,41 +20,41 @@ public class StartConfiguration {
 
 	public StartConfiguration() throws IOException {
 
-		checkPath("configuration file", configFilePath(), true, false);
+		checkPath("configuration file", configFilePath(), false);
 
 		configuration.load(Files.newInputStream(configFilePath()));
 
-		check("production", isProduction(), true);
-		check("offline", isOffline(), true);
+		check("production", isProduction());
+		check("offline", isOffline());
 
-		check("ssl url", sslUrl(), true);
-		check("ssl port", sslPort(), true);
-		check("non ssl url", nonSslUrl(), true);
-		check("non ssl port", nonSslPort(), true);
+		check("ssl url", sslUrl());
+		check("ssl port", sslPort());
+		check("non ssl url", nonSslUrl());
+		check("non ssl port", nonSslPort());
 
-		checkPath("home path", homePath(), true, true);
-		checkPath("elasticsearch data path", elasticDataPath(), true, true);
+		checkPath("home path", homePath(), true);
+		checkPath("elasticsearch data path", elasticDataPath(), true);
 
-		check("AWS region", awsRegion(), true);
-		check("AWS bucket prefix", getAwsBucketPrefix(), true);
+		check("AWS region", awsRegion());
+		check("AWS bucket prefix", getAwsBucketPrefix());
 
-		check("mail domain", mailDomain(), true);
-		check("mailgun key", mailGunKey(), true);
+		check("mail domain", mailDomain());
+		check("mailgun key", mailGunKey());
 
-		check("snapshots path", snapshotsPath(), false);
+		checkPath("snapshots path", snapshotsPath(), true);
 
-		check("superdogs", superdogs(), true);
+		check("superdogs", superdogs());
 		for (String superdog : superdogs()) {
-			check("superdog username", superdog, true);
-			check("superdog email", superdogEmail(superdog), true);
-			check("superdog hashed password", superdogHashedPassword(superdog), true);
+			check("superdog username", superdog);
+			check("superdog email", superdogEmail(superdog));
+			check("superdog hashed password", superdogHashedPassword(superdog));
 		}
 
-		checkPath("SSL CRT file path", crtFilePath(), false, false);
-		checkPath("SSL PEM file path", pemFilePath(), false, false);
-		checkPath("SSL DER file path", derFilePath(), false, false);
+		checkPath("SSL CRT file path", crtFilePath(), false);
+		checkPath("SSL PEM file path", pemFilePath(), false);
+		checkPath("SSL DER file path", derFilePath(), false);
 
-		check("superdog notification topic", superdogNotificationTopic(), true);
+		check("superdog notification topic", superdogNotificationTopic());
 
 		if (isProduction()) {
 			// Force Fluent HTTP to production mode
@@ -63,40 +63,35 @@ public class StartConfiguration {
 
 	}
 
-	private void check(String property, Object value, boolean required) {
+	private void check(String property, Object value) {
 
-		if (value != null && !value.toString().isEmpty())
-			Utils.info("[SpaceDog] setting %s = %s", property, value);
-
-		else if (required)
+		if (value == null || value.toString().isEmpty())
 			throw new IllegalArgumentException(String.format(//
 					"Configuration setting [%s] is required", property));
+
+		Utils.info("[SpaceDog] setting %s = %s", property, value);
 	}
 
-	private void checkPath(String property, Optional<Path> path, boolean required, boolean directory) {
+	private void checkPath(String property, Optional<Path> path, boolean directory) {
 		if (path.isPresent())
-			checkPath(property, path.get(), required, directory);
-		else
-			checkPath(property, (Path) null, required, directory);
+			checkPath(property, path.get(), directory);
 	}
 
-	private void checkPath(String property, Path path, boolean required, boolean directory) {
+	private void checkPath(String property, Path path, boolean directory) {
 
-		if (path != null) {
-
-			if (directory && !Files.isDirectory(path))
-				throw new IllegalArgumentException(String.format(//
-						"Configuration setting [%s] is not a directory", property));
-
-			if (!directory && !Files.isReadable(path))
-				throw new IllegalArgumentException(String.format(//
-						"Configuration setting [%s] is not a readable file", property));
-
-			Utils.info("[SpaceDog] setting %s = %s", property, path);
-
-		} else if (required)
+		if (path == null)
 			throw new IllegalArgumentException(String.format(//
 					"Configuration setting [%s] is required", property));
+
+		if (directory && !Files.isDirectory(path))
+			throw new IllegalArgumentException(String.format(//
+					"Configuration setting [%s] is not a directory", property));
+
+		if (!directory && !Files.isReadable(path))
+			throw new IllegalArgumentException(String.format(//
+					"Configuration setting [%s] is not a readable file", property));
+
+		Utils.info("[SpaceDog] setting %s = %s", property, path);
 	}
 
 	public Path homePath() {
@@ -178,9 +173,9 @@ public class StartConfiguration {
 	}
 
 	public Optional<Path> snapshotsPath() {
-		return isProduction()//
-				? Optional.empty()//
-				: Optional.of(Paths.get(configuration.getProperty("spacedog.snapshots.path")));
+		String path = configuration.getProperty("spacedog.snapshots.path");
+		return Strings.isNullOrEmpty(path) ? Optional.empty()//
+				: Optional.of(Paths.get(path));
 	}
 
 	public List<String> superdogs() {
