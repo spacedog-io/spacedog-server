@@ -7,7 +7,8 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
-import org.elasticsearch.action.deletebyquery.DeleteByQueryRequestBuilder;
+import org.elasticsearch.action.deletebyquery.DeleteByQueryAction;
+import org.elasticsearch.action.deletebyquery.DeleteByQueryRequest;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
@@ -16,10 +17,9 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
-import org.elasticsearch.common.base.Strings;
-import org.elasticsearch.index.query.AndFilterBuilder;
-import org.elasticsearch.index.query.FilterBuilders;
-import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.client.Client;
+import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -27,6 +27,7 @@ import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Strings;
 
 import io.spacedog.utils.Json;
 import net.codestory.http.Context;
@@ -50,7 +51,25 @@ public class ElasticHelper {
 	}
 
 	IndexResponse createObject(String index, String type, ObjectNode object, String createdBy) {
+		return createObject(index, type, Optional.empty(), object, createdBy);
+	}
 
+	IndexResponse createObject(String index, String type, String id, ObjectNode object, String createdBy) {
+		return createObject(index, type, Optional.of(id), object, createdBy);
+	}
+
+	IndexResponse createObject(String index, String type, Optional<String> id, ObjectNode object, String createdBy) {
+
+		object = setMetaBeforeCreate(object, createdBy);
+		Client elasticClient = Start.get().getElasticClient();
+
+		return (id.isPresent() //
+				? elasticClient.prepareIndex(index, type, id.get())//
+				: elasticClient.prepareIndex(index, type))//
+						.setSource(object.toString()).get();
+	}
+
+	private ObjectNode setMetaBeforeCreate(ObjectNode object, String createdBy) {
 		String now = DateTime.now().toString();
 
 		// replace meta to avoid developers to
@@ -63,8 +82,7 @@ public class ElasticHelper {
 						.put("updatedAt", now)//
 						.build());
 
-		return Start.get().getElasticClient().prepareIndex(index, type)//
-				.setSource(object.toString()).get();
+		return object;
 	}
 
 	/**
@@ -135,28 +153,33 @@ public class ElasticHelper {
 		if (Strings.isNullOrEmpty(query))
 			query = Json.objectBuilder().object("query").object("match_all").toString();
 
-		DeleteByQueryRequestBuilder setSource = Start.get().getElasticClient().prepareDeleteByQuery(index)
-				.setSource(query);
+		DeleteByQueryRequest delete = new DeleteByQueryRequest(index)//
+				.timeout(new TimeValue(60000))//
+				.source(query);
 
 		if (types != null)
-			setSource.setTypes(types);
+			delete.types(types);
 
-		return setSource.get();
+		try {
+			return Start.get().getElasticClient().execute(DeleteByQueryAction.INSTANCE, delete).get();
+		} catch (InterruptedException | ExecutionException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public SearchHits search(String index, String type, String... terms) {
 
 		if (terms.length % 2 == 1)
 			throw new RuntimeException(
-					String.format("invalid search terms [%s]: missing term value", terms.toString()));
+					String.format("invalid search terms [%s]: missing term value", String.join(", ", terms)));
 
-		AndFilterBuilder builder = new AndFilterBuilder();
+		BoolQueryBuilder builder = QueryBuilders.boolQuery();
 		for (int i = 0; i < terms.length; i = i + 2) {
-			builder.add(FilterBuilders.termFilter(terms[i], terms[i + 1]));
+			builder.filter(QueryBuilders.termQuery(terms[i], terms[i + 1]));
 		}
 
-		SearchResponse response = Start.get().getElasticClient().prepareSearch(index).setTypes(type)
-				.setQuery(QueryBuilders.filteredQuery(QueryBuilders.matchAllQuery(), builder)).get();
+		SearchResponse response = Start.get().getElasticClient()//
+				.prepareSearch(index).setTypes(type).setQuery(builder).get();
 
 		return response.getHits();
 	}
@@ -169,13 +192,12 @@ public class ElasticHelper {
 
 		private SearchRequest searchRequest;
 		private SearchSourceBuilder sourceBuilder;
-		private QueryBuilder queryBuilder;
-		private AndFilterBuilder filterBuilder;
+		private BoolQueryBuilder boolBuilder;
 
 		public FilteredSearchBuilder(String index, String type) {
 
 			this.sourceBuilder = SearchSourceBuilder.searchSource();
-
+			this.boolBuilder = QueryBuilders.boolQuery();
 			this.searchRequest = new SearchRequest(index);
 
 			if (!Strings.isNullOrEmpty(type)) {
@@ -194,22 +216,23 @@ public class ElasticHelper {
 
 			String queryText = context.get("q");
 			if (!Strings.isNullOrEmpty(queryText)) {
-				queryBuilder = QueryBuilders.simpleQueryStringQuery(queryText);
+				boolBuilder.must(QueryBuilders.simpleQueryStringQuery(queryText));
 			} else
-				queryBuilder = QueryBuilders.matchAllQuery();
+				boolBuilder.must(QueryBuilders.matchAllQuery());
 
 			return this;
 		}
 
 		public FilteredSearchBuilder applyFilters(JsonNode filters) {
-			filterBuilder = new AndFilterBuilder();
-			filters.fields().forEachRemaining(field -> filterBuilder
-					.add(FilterBuilders.termFilter(field.getKey(), Json.toSimpleValue(field.getValue()))));
+			filters.fields()
+					.forEachRemaining(field -> boolBuilder.filter(//
+							QueryBuilders.termQuery(field.getKey(), //
+									Json.toSimpleValue(field.getValue()))));
 			return this;
 		}
 
 		public SearchResponse get() throws InterruptedException, ExecutionException {
-			searchRequest.source(sourceBuilder.query(QueryBuilders.filteredQuery(queryBuilder, filterBuilder)));
+			searchRequest.source(sourceBuilder.query(boolBuilder));
 			return Start.get().getElasticClient().search(searchRequest).get();
 		}
 	}

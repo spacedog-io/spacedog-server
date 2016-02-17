@@ -20,7 +20,7 @@ public class PushResourceTest extends Assert {
 		// prepare
 		SpaceDogHelper.prepareTest();
 		SpaceDogHelper.Account testAccount = SpaceDogHelper.resetTestAccount();
-		SpaceDogHelper.resetSchema(buildSchema(), testAccount);
+		SpaceDogHelper.setSchema(buildSchema(), testAccount);
 		SpaceDogHelper.User vince = SpaceDogHelper.createUser(testAccount, "vince", "hi vince", "david@spacedog.io");
 		SpaceDogHelper.User nath = SpaceDogHelper.createUser(testAccount, "nath", "hi nath", "attias666@gmail.com");
 		SpaceDogHelper.User fred = SpaceDogHelper.createUser(testAccount, "fred", "hi fred", "davattias@gmail.com");

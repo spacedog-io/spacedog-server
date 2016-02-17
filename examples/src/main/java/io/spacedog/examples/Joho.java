@@ -143,11 +143,11 @@ public class Joho extends SpaceDogHelper {
 		// ADMIN_PASSWORD, "david@spacedog.io");
 		johoAccount = getOrCreateAccount(BACKEND_ID, ADMIN_USERNAME, ADMIN_PASSWORD, "david@spacedog.io", false);
 
-		resetSchema(buildDiscussionSchema(), johoAccount);
-		resetSchema(buildMessageSchema(), johoAccount);
-		resetSchema(buildCustomUserSchema(), johoAccount);
-		resetSchema(buildThemesSchema(), johoAccount);
-		resetSchema(buildSitesSchema(), johoAccount);
+		setSchema(buildDiscussionSchema(), johoAccount);
+		setSchema(buildMessageSchema(), johoAccount);
+		setSchema(buildCustomUserSchema(), johoAccount);
+		setSchema(buildThemesSchema(), johoAccount);
+		setSchema(buildSitesSchema(), johoAccount);
 
 		// deleteUser("fred", johoAccount);
 		// fred = createUser(johoAccount.backendKey, "fred", "hi fred",

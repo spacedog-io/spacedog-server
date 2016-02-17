@@ -187,8 +187,8 @@ public class AccountResource extends AbstractResource {
 			throw new RuntimeException(e);
 		}
 
-		long version = Start.get().getElasticClient().prepareIndex(ADMIN_INDEX, ACCOUNT_TYPE).setSource(accountBytes)
-				.get().getVersion();
+		long version = Start.get().getElasticClient().prepareIndex(ADMIN_INDEX, ACCOUNT_TYPE, account.backendId)
+				.setSource(accountBytes).get().getVersion();
 
 		// backend index is named after the backend id
 		Start.get().getElasticClient().admin().indices().prepareCreate(account.backendId)

@@ -5,7 +5,7 @@ import java.util.Optional;
 
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.index.query.FilterBuilders;
+import org.elasticsearch.action.support.QuerySourceBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
@@ -35,6 +35,8 @@ public class LogResource {
 
 	@Get("/log")
 	@Get("/log/")
+	// TODO in the near future
+	// remove all admin/log routes
 	@Get("/admin/log")
 	@Get("/admin/log/")
 	public Payload getAll(Context context) {
@@ -80,9 +82,7 @@ public class LogResource {
 		// no delete response means no logs to delete means success
 
 		return response.isPresent()//
-				? Payloads.json(response.get().status(), //
-						response.get().getIndex(AccountResource.ADMIN_INDEX).getFailures())
-				: Payloads.success();
+				? Payloads.json(response.get()) : Payloads.success();
 	}
 
 	//
@@ -132,15 +132,13 @@ public class LogResource {
 		String receivedAt = Json.readObjectNode(hits[0].sourceAsString())//
 				.get("receivedAt").asText();
 
-		QueryBuilder query = QueryBuilders.filteredQuery(//
-				QueryBuilders.termQuery("credentials.backendId", backendId),
-				FilterBuilders.rangeFilter("receivedAt").lte(receivedAt));
+		String query = new QuerySourceBuilder().setQuery(//
+				QueryBuilders.boolQuery()//
+						.filter(QueryBuilders.termQuery("credentials.backendId", backendId))//
+						.filter(QueryBuilders.rangeQuery("receivedAt").lte(receivedAt)))
+				.toString();
 
-		DeleteByQueryResponse delete = Start.get().getElasticClient()//
-				.prepareDeleteByQuery(AccountResource.ADMIN_INDEX)//
-				.setTypes(TYPE)//
-				.setQuery(query)//
-				.get();
+		DeleteByQueryResponse delete = ElasticHelper.get().delete(AccountResource.ADMIN_INDEX, query, TYPE);
 
 		return Optional.of(delete);
 	}

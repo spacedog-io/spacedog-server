@@ -14,7 +14,6 @@ import java.util.regex.Pattern;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.common.collect.Sets;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.joda.time.DateTime;
@@ -39,6 +38,7 @@ import com.amazonaws.services.sns.model.Subscription;
 import com.amazonaws.services.sns.model.Topic;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Sets;
 
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Json;

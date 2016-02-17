@@ -38,15 +38,19 @@ public class SpaceResponse {
 			throws JsonProcessingException, IOException, UnirestException {
 
 		this.httpRequest = request;
+
+		if (debug) {
+			System.out.println();
+			System.out.print(String.format("%s %s => ", httpRequest.getHttpMethod(), httpRequest.getUrl()));
+		}
+
 		this.before = DateTime.now();
 
 		httpResponse = httpRequest.asString();
 		this.duration = DateTime.now().getMillis() - this.before.getMillis();
 
 		if (debug) {
-			System.out.println();
-			System.out.println(String.format("%s %s => %s => %s", httpRequest.getHttpMethod(), httpRequest.getUrl(),
-					httpResponse.getStatus(), httpResponse.getStatusText()));
+			System.out.println(String.format("%s (%s)", httpResponse.getStatus(), httpResponse.getStatusText()));
 
 			httpRequest.getHeaders().forEach((key, value) -> printHeader(key, value));
 

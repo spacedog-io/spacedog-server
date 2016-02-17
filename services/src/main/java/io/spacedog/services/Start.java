@@ -5,12 +5,14 @@ package io.spacedog.services;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.client.Client;
-import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.settings.Settings.Builder;
 import org.elasticsearch.node.Node;
-import org.elasticsearch.node.NodeBuilder;
+import org.elasticsearch.plugin.deletebyquery.DeleteByQueryPlugin;
 
 import net.codestory.http.AbstractWebServer;
 import net.codestory.http.Request;
@@ -63,15 +65,23 @@ public class Start {
 
 	private void startLocalElastic() throws InterruptedException, ExecutionException, IOException {
 
-		elasticNode = NodeBuilder.nodeBuilder()//
-				.local(true)//
-				.data(true)//
-				.clusterName("spacedog-elastic-cluster")//
-				.settings(ImmutableSettings.builder()//
-						.put("path.data", //
-								config.elasticDataPath().toAbsolutePath().toString())
-						.build())//
-				.node();
+		Builder builder = Settings.builder()//
+				.put("node.local", true)//
+				.put("node.data", true)//
+				.put("cluster.name", "spacedog-elastic-cluster")//
+				.put("path.home", //
+						config.homePath().toAbsolutePath().toString())
+				.put("path.data", //
+						config.elasticDataPath().toAbsolutePath().toString());
+
+		if (config.snapshotsPath().isPresent())
+			builder.put("path.repo", //
+					config.snapshotsPath().get().toAbsolutePath().toString());
+
+		elasticNode = new SpaceNode(builder.build(), //
+				Collections.singleton(DeleteByQueryPlugin.class));
+
+		elasticNode.start();
 
 		elasticClient = elasticNode.client();
 		AccountResource.get().initSpacedogIndex();

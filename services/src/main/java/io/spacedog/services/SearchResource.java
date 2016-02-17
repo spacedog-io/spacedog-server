@@ -64,8 +64,8 @@ public class SearchResource extends AbstractResource {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, true);
 		ElasticHelper.get().refresh(refresh, credentials.backendId());
-		DeleteByQueryResponse response = ElasticHelper.get().delete(credentials.backendId(), query, new String[0]);
-		return Payloads.json(response.status(), response.getIndex(credentials.backendId()).getFailures());
+		DeleteByQueryResponse response = ElasticHelper.get().delete(credentials.backendId(), query);
+		return Payloads.json(response);
 	}
 
 	@Get("/search/:type")
@@ -87,11 +87,13 @@ public class SearchResource extends AbstractResource {
 	@Delete("/search/:type")
 	@Delete("/search/:type/")
 	public Payload deleteSearchForType(String type, String query, Context context) {
+
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, true);
 		ElasticHelper.get().refresh(refresh, credentials.backendId());
+
 		DeleteByQueryResponse response = ElasticHelper.get().delete(credentials.backendId(), query, type);
-		return Payloads.json(response.status(), response.getIndex(credentials.backendId()).getFailures());
+		return Payloads.json(response);
 	}
 
 	@Post("/filter/:type")

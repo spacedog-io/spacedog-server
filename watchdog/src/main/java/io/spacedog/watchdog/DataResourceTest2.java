@@ -28,7 +28,7 @@ public class DataResourceTest2 extends Assert {
 
 		SpaceDogHelper.prepareTest();
 		Account testAccount = SpaceDogHelper.resetTestAccount();
-		SpaceDogHelper.resetSchema(SchemaResourceTest.buildSaleSchema(), testAccount);
+		SpaceDogHelper.setSchema(SchemaResourceTest.buildSaleSchema(), testAccount);
 
 		ObjectNode sale = Json.objectBuilder()//
 				.put("number", "1234567890")//
@@ -221,11 +221,56 @@ public class DataResourceTest2 extends Assert {
 		SpaceRequest.get("/v1/data?refresh=true").basicAuth(testAccount).go(200).assertEquals(5, "total");
 
 		// should succeed to delete all users
-		SpaceRequest.delete("/v1/user").basicAuth(testAccount).go(200);
-		SpaceRequest.get("/v1/data").basicAuth(testAccount).go(200).assertEquals(4, "total");
+		SpaceRequest.delete("/v1/user").basicAuth(testAccount).go(200)//
+				.assertEquals(1, "totalDeleted");
+		SpaceRequest.get("/v1/data?refresh=true").basicAuth(testAccount).go(200)//
+				.assertEquals(4, "total");
 
 		// should succeed to delete all objects
-		SpaceRequest.delete("/v1/data").basicAuth(testAccount).go(200);
+		SpaceRequest.delete("/v1/data").basicAuth(testAccount).go(200)//
+				.assertEquals(4, "totalDeleted");
 		SpaceRequest.get("/v1/data?refresh=true").basicAuth(testAccount).go(200).assertEquals(0, "total");
+	}
+
+	@Test
+	public void testAllObjectIdStrategies() throws Exception {
+
+		SpaceDogHelper.prepareTest();
+		Account testAccount = SpaceDogHelper.resetTestAccount();
+
+		SpaceDogHelper.setSchema(SchemaBuilder2.builder("msg1")//
+				.stringProperty("text", true).build(), testAccount);
+
+		ObjectNode json = Json.objectBuilder().put("text", "id=???").build();
+		String id = SpaceRequest.post("/v1/data/msg1").basicAuth(testAccount)//
+				.body(json).go(201)//
+				.getFromJson("id").asText();
+		SpaceRequest.get("/v1/data/msg1/" + id).basicAuth(testAccount).go(200)//
+				.assertEquals("id=???", "text");
+
+		json = Json.objectBuilder().put("text", "id=1").build();
+		SpaceRequest.post("/v1/data/msg1?id=1").basicAuth(testAccount)//
+				.body(json).go(201);
+		SpaceRequest.get("/v1/data/msg1/1").basicAuth(testAccount).go(200)//
+				.assertEquals("id=1", "text");
+
+		SpaceDogHelper.setSchema(SchemaBuilder2.builder("msg2", "code")//
+				.stringProperty("code", true)//
+				.stringProperty("text", true).build(), testAccount);
+
+		json = Json.objectBuilder().put("text", "id=2")//
+				.put("code", "2").build();
+		SpaceRequest.post("/v1/data/msg2").basicAuth(testAccount)//
+				.body(json).go(201);
+		SpaceRequest.get("/v1/data/msg2/2").basicAuth(testAccount).go(200)//
+				.assertEquals("id=2", "text");
+
+		json = Json.objectBuilder().put("text", "id=3")//
+				.put("code", "3").build();
+		SpaceRequest.post("/v1/data/msg2?id=XXX").basicAuth(testAccount)//
+				.body(json).go(201);
+		SpaceRequest.get("/v1/data/msg2/3").basicAuth(testAccount).go(200)//
+				.assertEquals("id=3", "text");
+
 	}
 }

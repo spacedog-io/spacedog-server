@@ -25,7 +25,7 @@ public class DataResourceTest extends Assert {
 
 		SpaceDogHelper.prepareTest();
 		Account testAccount = SpaceDogHelper.resetTestAccount();
-		SpaceDogHelper.resetSchema(SchemaResourceTest.buildCarSchema(), testAccount);
+		SpaceDogHelper.setSchema(SchemaResourceTest.buildCarSchema(), testAccount);
 
 		JsonNode car = Json.objectBuilder() //
 				.put("serialNumber", "1234567890") //

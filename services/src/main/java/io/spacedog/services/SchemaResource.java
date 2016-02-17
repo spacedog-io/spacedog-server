@@ -8,7 +8,6 @@ import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
-import org.elasticsearch.indices.TypeMissingException;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -84,14 +83,17 @@ public class SchemaResource extends AbstractResource {
 	@Delete("/:type")
 	@Delete("/:type/")
 	public Payload delete(String type) {
-		try {
-			Credentials credentials = SpaceContext.checkAdminCredentials();
-			Start.get().getElasticClient().admin().indices().prepareDeleteMapping(credentials.backendId()).setType(type)
-					.get();
-		} catch (TypeMissingException exception) {
-			// ignored
-		}
-		return Payloads.success();
+		// try {
+		// Credentials credentials = SpaceContext.checkAdminCredentials();
+		// Start.get().getElasticClient().admin().indices().prepareDeleteMapping(credentials.backendId()).setType(type)
+		// .get();
+		// } catch (TypeMissingException exception) {
+		// // ignored
+		// }
+		// return Payloads.success();
+
+		// 501 = Not implemented
+		return Payloads.error(501);
 	}
 
 	//

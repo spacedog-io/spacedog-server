@@ -5,11 +5,11 @@ package io.spacedog.services;
 
 import java.util.concurrent.ExecutionException;
 
+import org.elasticsearch.ResourceNotFoundException;
 import org.elasticsearch.action.ShardOperationFailedException;
+import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.index.engine.VersionConflictEngineException;
 import org.elasticsearch.index.mapper.MergeMappingException;
-import org.elasticsearch.indices.IndexMissingException;
-import org.elasticsearch.rest.RestStatus;
 
 import com.amazonaws.AmazonServiceException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -51,7 +51,7 @@ public class Payloads {
 		if (t instanceof NotFoundException) {
 			return error(HttpStatus.NOT_FOUND, t);
 		}
-		if (t instanceof IndexMissingException) {
+		if (t instanceof ResourceNotFoundException) {
 			return error(HttpStatus.NOT_FOUND, t);
 		}
 		if (t instanceof IllegalArgumentException) {
@@ -155,18 +155,38 @@ public class Payloads {
 		return new Payload(JSON_CONTENT_UTF8, content, httpStatus);
 	}
 
-	public static Payload json(RestStatus status, ShardOperationFailedException[] failures) {
+	public static Payload json(int status, ShardOperationFailedException[] failures) {
 
-		if (status.getStatus() < 400)
-			return json(status.getStatus());
+		if (status < 400)
+			return json(status);
 
-		JsonBuilder<ObjectNode> builder = minimalBuilder(status.getStatus()).array("error");
+		JsonBuilder<ObjectNode> builder = minimalBuilder(status).array("error");
 
 		for (ShardOperationFailedException failure : failures)
 			builder.object().put("type", failure.getClass().getName()).put("message", failure.reason())
 					.put("shardId", failure.shardId()).end();
 
-		return json(builder, status.getStatus());
+		return json(builder, status);
+	}
+
+	public static Payload json(DeleteByQueryResponse response) {
+
+		if (response.isTimedOut())
+			return error(504, //
+					"the delete by query operation timed out, some objects might have been deleted");
+
+		if (response.getTotalFound() != response.getTotalDeleted())
+			return error(500,
+					String.format(//
+							"the delete by query operation failed to delete all objects found, "
+									+ "objects found [%s], objects deleted [%s]",
+							response.getTotalFound(), response.getTotalDeleted()));
+
+		if (response.getShardFailures().length > 0)
+			return json(500, response.getShardFailures());
+
+		return json(minimalBuilder(200)//
+				.put("totalDeleted", response.getTotalDeleted()));
 	}
 
 	public static byte[] toBytes(Object content) {

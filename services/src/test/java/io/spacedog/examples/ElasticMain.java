@@ -11,8 +11,8 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
+import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.indices.IndexAlreadyExistsException;
-import org.elasticsearch.indices.IndexMissingException;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 
@@ -33,7 +33,7 @@ public class ElasticMain {
 			try {
 				indices.prepareDelete("test2").get();
 
-			} catch (IndexMissingException e) {
+			} catch (IndexNotFoundException e) {
 				// ignored
 			}
 

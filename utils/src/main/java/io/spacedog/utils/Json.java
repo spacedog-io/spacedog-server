@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
@@ -175,8 +176,15 @@ public class Json {
 		return new JsonBuilder<ArrayNode>().array();
 	}
 
-	public static ObjectMapper jsonMapper = new ObjectMapper().setDefaultPrettyPrinter(
-			new DefaultPrettyPrinter().withArrayIndenter(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE));
+	public static ObjectMapper jsonMapper;
+
+	static {
+		jsonMapper = new ObjectMapper()//
+				.setDefaultPrettyPrinter(new DefaultPrettyPrinter()//
+						.withArrayIndenter(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE))//
+				.registerModule(new JodaModule())//
+				.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+	}
 
 	public static Object toSimpleValue(JsonNode value) {
 

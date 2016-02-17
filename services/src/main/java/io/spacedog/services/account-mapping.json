@@ -1,9 +1,6 @@
 {
     "account" : {
         "dynamic" : "strict",
-        "_id" : {
-            "path" : "backendId"
-        },
         "properties" : {
             "backendId" : {"type" : "string", "index" : "not_analyzed"},
             "username" : {"type" : "string", "index" : "not_analyzed"},

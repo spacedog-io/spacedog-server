@@ -14,7 +14,6 @@ import org.elasticsearch.action.admin.cluster.repositories.put.PutRepositoryResp
 import org.elasticsearch.action.admin.cluster.snapshots.create.CreateSnapshotResponse;
 import org.elasticsearch.action.admin.indices.close.CloseIndexResponse;
 import org.elasticsearch.action.support.IndicesOptions;
-import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.repositories.RepositoryMissingException;
 import org.elasticsearch.snapshots.RestoreInfo;
@@ -332,14 +331,14 @@ public class SnapshotResource extends AbstractResource {
 				}
 
 				this.type = "fs";
-				this.settings = ImmutableSettings.builder()//
+				this.settings = Settings.builder()//
 						.put("location", location.toAbsolutePath().toString())//
 						.put("compress", true)//
 						.build();
 			} else {
 
 				this.type = "s3";
-				this.settings = ImmutableSettings.builder()//
+				this.settings = Settings.builder()//
 						.put("bucket", getBucketName(BUCKET_SUFFIX))//
 						.put("region", conf.awsRegion())//
 						.put("base_path", this.id)//
