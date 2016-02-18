@@ -8,11 +8,11 @@ import io.spacedog.utils.Internals;
 public class AdminJobs {
 
 	public static void ok(Object context) {
-		notify(context, " is up and runing", "Everything is working properly.");
+		notify(context, " is OK OK OK", "Everything is working properly.");
 	}
 
 	public static void ok(Object context, String message) {
-		notify(context, " is up and runing", message);
+		notify(context, " is OK OK OK", message);
 	}
 
 	public static void error(Object context, Throwable t) {
@@ -33,10 +33,10 @@ public class AdminJobs {
 		Internals.get().notify(//
 				SpaceRequestConfiguration.get().superdogNotificationTopic(), //
 				new StringBuilder(context.getClass().getSimpleName())//
+						.append(titleSuffix)//
 						.append(" (")//
 						.append(SpaceRequestConfiguration.get().target().host())//
 						.append(")")//
-						.append(titleSuffix)//
 						.toString(), //
 				message);
 	}

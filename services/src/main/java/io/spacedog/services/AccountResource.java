@@ -204,10 +204,11 @@ public class AccountResource extends AbstractResource {
 		if (!isTest(context))
 			Internals.get().notify(//
 					Start.get().configuration().superdogNotificationTopic(), //
-					String.format("%s got a new account", Start.get().configuration().sslUrl()), //
+					String.format("New account (%s)",
+							AbstractResource.spaceUrl("/v1", ACCOUNT_TYPE, account.backendId).toString()), //
 					String.format("account backend = %s\naccount email = %s", account.backendId, account.email));
 
-		ObjectNode payloadContent = Payloads.savedBuilder(true, "/v1/admin", ACCOUNT_TYPE, account.backendId, version)//
+		ObjectNode payloadContent = Payloads.savedBuilder(true, "/v1", ACCOUNT_TYPE, account.backendId, version)//
 				.put(AccountResource.BACKEND_KEY, account.defaultClientKey()).build();
 
 		return Payloads.json(payloadContent, HttpStatus.CREATED)//
