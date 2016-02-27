@@ -30,6 +30,7 @@ import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.ClusterAdminClient;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.IndexNotFoundException;
 
@@ -156,6 +157,7 @@ public class ElasticClient {
 				.prepareCreate(toIndex0(backendId, type))//
 				.addMapping(type, mapping)//
 				.addAlias(new Alias(toAlias(backendId, type)))//
+				.setSettings(Settings.builder().put("number_of_shards", 1).build())//
 				.get();
 
 		if (!createIndexResponse.isAcknowledged())
