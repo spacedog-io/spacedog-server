@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 
-import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.settings.Settings.Builder;
 import org.elasticsearch.node.Node;
@@ -27,7 +26,7 @@ import net.codestory.http.websockets.WebSocketHandler;
 public class Start {
 
 	private Node elasticNode;
-	private Client elasticClient;
+	private ElasticClient elasticClient;
 	private MyFluentServer fluent;
 	private StartConfiguration config;
 
@@ -35,7 +34,7 @@ public class Start {
 		return elasticNode;
 	}
 
-	public Client getElasticClient() {
+	public ElasticClient getElasticClient() {
 		return elasticClient;
 	}
 
@@ -78,13 +77,14 @@ public class Start {
 			builder.put("path.repo", //
 					config.snapshotsPath().get().toAbsolutePath().toString());
 
-		elasticNode = new SpaceNode(builder.build(), //
+		elasticNode = new ElasticNode(builder.build(), //
 				Collections.singleton(DeleteByQueryPlugin.class));
 
 		elasticNode.start();
 
-		elasticClient = elasticNode.client();
-		AccountResource.get().initSpacedogIndex();
+		elasticClient = new ElasticClient(elasticNode.client());
+
+		AccountResource.get().initSpacedogBackend();
 	}
 
 	private void startFluent() throws IOException {

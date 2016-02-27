@@ -49,7 +49,9 @@ public class PushResourceTest extends Assert {
 		SpaceRequest.post("/v1/data/message").backendKey(testAccount)//
 				.body(createMessage("philippe")).go(201);
 
-		ObjectNode pushBody = Json.objectBuilder().object("query")//
+		ObjectNode pushBody = Json.objectBuilder()//
+				.put("type", "message")//
+				.object("query")//
 				.object("match_all")//
 				.end()//
 				.end()//

@@ -138,7 +138,8 @@ public class LogResource {
 						.filter(QueryBuilders.rangeQuery("receivedAt").lte(receivedAt)))
 				.toString();
 
-		DeleteByQueryResponse delete = ElasticHelper.get().delete(AccountResource.ADMIN_INDEX, query, TYPE);
+		DeleteByQueryResponse delete = Start.get().getElasticClient()//
+				.deleteByQuery(AccountResource.ADMIN_BACKEND, TYPE, query);
 
 		return Optional.of(delete);
 	}
@@ -149,10 +150,10 @@ public class LogResource {
 				? QueryBuilders.termQuery("credentials.backendId", backendId.get())//
 				: QueryBuilders.matchAllQuery();
 
-		ElasticHelper.get().refresh(true, AccountResource.ADMIN_INDEX);
+		DataStore.get().refreshType(true, AccountResource.ADMIN_BACKEND, TYPE);
 
 		return Start.get().getElasticClient()//
-				.prepareSearch(AccountResource.ADMIN_INDEX)//
+				.prepareSearch(AccountResource.ADMIN_BACKEND, TYPE)//
 				.setTypes(TYPE)//
 				.setQuery(query)//
 				.addSort("receivedAt", SortOrder.DESC)//
@@ -228,7 +229,7 @@ public class LogResource {
 		JsonNode securedLog = Json.fullReplace(log.build(), "password", "******");
 
 		return Start.get().getElasticClient()//
-				.prepareIndex(AccountResource.ADMIN_INDEX, TYPE)//
+				.prepareIndex(AccountResource.ADMIN_BACKEND, TYPE)//
 				.setSource(securedLog.toString()).get().getId();
 	}
 

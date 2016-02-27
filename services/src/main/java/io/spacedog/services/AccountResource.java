@@ -7,11 +7,9 @@ import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 
@@ -38,9 +36,9 @@ import net.codestory.http.payload.Payload;
 @Prefix("/v1")
 public class AccountResource extends AbstractResource {
 
-	public static final String ADMIN_INDEX = "spacedog";
+	public static final String ADMIN_BACKEND = "spacedog";
 	public static final String ACCOUNT_TYPE = "account";
-	public static final Set<String> INTERNAL_INDICES = Sets.newHashSet(ADMIN_INDEX);
+	public static final Set<String> INTERNAL_BACKENDS = Sets.newHashSet(ADMIN_BACKEND);
 
 	//
 	// properties
@@ -52,34 +50,25 @@ public class AccountResource extends AbstractResource {
 	// SpaceDog index init
 	//
 
-	void initSpacedogIndex() throws InterruptedException, ExecutionException, IOException {
+	void initSpacedogBackend() throws InterruptedException, ExecutionException, IOException {
+
+		ElasticClient client = Start.get().getElasticClient();
 
 		String accountMapping = Resources.toString(Resources.getResource(//
 				"io/spacedog/services/account-mapping.json"), Utils.UTF8);
 
+		if (!client.exists(ADMIN_BACKEND, ACCOUNT_TYPE))
+			client.createIndex(ADMIN_BACKEND, ACCOUNT_TYPE, accountMapping);
+		else
+			client.putMapping(ADMIN_BACKEND, ACCOUNT_TYPE, accountMapping);
+
 		String logMapping = Resources.toString(Resources.getResource(//
 				"io/spacedog/services/log-mapping.json"), Utils.UTF8);
 
-		IndicesAdminClient indices = Start.get().getElasticClient().admin().indices();
-
-		if (!indices.prepareExists(ADMIN_INDEX).get().isExists()) {
-
-			indices.prepareCreate(ADMIN_INDEX)//
-					.addMapping(ACCOUNT_TYPE, accountMapping)//
-					.addMapping(LogResource.TYPE, logMapping)//
-					.get();
-		} else {
-
-			indices.preparePutMapping(ADMIN_INDEX)//
-					.setType(ACCOUNT_TYPE)//
-					.setSource(accountMapping)//
-					.get();
-
-			indices.preparePutMapping(ADMIN_INDEX)//
-					.setType(LogResource.TYPE)//
-					.setSource(logMapping)//
-					.get();
-		}
+		if (!client.exists(ADMIN_BACKEND, LogResource.TYPE))
+			client.createIndex(ADMIN_BACKEND, LogResource.TYPE, logMapping);
+		else
+			client.putMapping(ADMIN_BACKEND, LogResource.TYPE, logMapping);
 	}
 
 	//
@@ -95,7 +84,7 @@ public class AccountResource extends AbstractResource {
 		SpaceContext.checkSuperDogCredentials();
 
 		SearchResponse response = Start.get().getElasticClient()//
-				.prepareSearch(ADMIN_INDEX)//
+				.prepareSearch(ADMIN_BACKEND, ACCOUNT_TYPE)//
 				.setTypes(ACCOUNT_TYPE)//
 				.setVersion(true)//
 				.setQuery(QueryBuilders.matchAllQuery())//
@@ -133,7 +122,7 @@ public class AccountResource extends AbstractResource {
 		// do this.
 		if (Start.get().configuration().isSuperDog(username))
 			return Payload.ok();
-		long totalHits = ElasticHelper.get().search(ADMIN_INDEX, ACCOUNT_TYPE, "username", username).getTotalHits();
+		long totalHits = DataStore.get().search(ADMIN_BACKEND, ACCOUNT_TYPE, "username", username).getTotalHits();
 		return totalHits == 0 ? Payload.notFound() : Payload.ok();
 	}
 
@@ -145,7 +134,7 @@ public class AccountResource extends AbstractResource {
 		// TODO add a spacedog super admin key to log what admin app is checking
 		// existence of an account by backend id. Everybody should not be able
 		// to do this.
-		long totalHits = ElasticHelper.get().search(ADMIN_INDEX, ACCOUNT_TYPE, "backendId", id).getTotalHits();
+		long totalHits = DataStore.get().search(ADMIN_BACKEND, ACCOUNT_TYPE, "backendId", id).getTotalHits();
 		return totalHits == 0 ? Payload.notFound() : Payload.ok();
 	}
 
@@ -169,13 +158,13 @@ public class AccountResource extends AbstractResource {
 			return Payloads.invalidParameters("username", account.username,
 					String.format("administrator username [%s] is not available", account.username));
 
-		ElasticHelper.get().refresh(true, ADMIN_INDEX);
+		DataStore.get().refreshType(ADMIN_BACKEND, ACCOUNT_TYPE);
 
-		if (ElasticHelper.get().search(ADMIN_INDEX, ACCOUNT_TYPE, "username", account.username).getTotalHits() > 0)
+		if (DataStore.get().search(ADMIN_BACKEND, ACCOUNT_TYPE, "username", account.username).getTotalHits() > 0)
 			return Payloads.invalidParameters("username", account.username,
 					String.format("administrator username [%s] is not available", account.username));
 
-		if (ElasticHelper.get().search(ADMIN_INDEX, ACCOUNT_TYPE, "backendId", account.backendId).getTotalHits() > 0)
+		if (DataStore.get().search(ADMIN_BACKEND, ACCOUNT_TYPE, "backendId", account.backendId).getTotalHits() > 0)
 			return Payloads.invalidParameters("backendId", account.backendId,
 					String.format("backend id [%s] is not available", account.backendId));
 
@@ -187,14 +176,15 @@ public class AccountResource extends AbstractResource {
 			throw new RuntimeException(e);
 		}
 
-		long version = Start.get().getElasticClient().prepareIndex(ADMIN_INDEX, ACCOUNT_TYPE, account.backendId)
-				.setSource(accountBytes).get().getVersion();
+		long version = Start.get().getElasticClient()//
+				.index(ADMIN_BACKEND, ACCOUNT_TYPE, account.backendId, accountBytes)//
+				.getVersion();
 
 		// backend index is named after the backend id
-		Start.get().getElasticClient().admin().indices().prepareCreate(account.backendId)
-				.addMapping(UserResource.USER_TYPE, UserResource.getDefaultUserMapping()).get();
+		Start.get().getElasticClient().createIndex(//
+				account.backendId, UserResource.USER_TYPE, UserResource.getDefaultUserMapping());
 
-		ElasticHelper.get().refresh(true, ADMIN_INDEX);
+		DataStore.get().refreshType(ADMIN_BACKEND, ACCOUNT_TYPE);
 
 		// Account is created, new account credentials are valid and can be set
 		// in space context if none are set
@@ -223,7 +213,7 @@ public class AccountResource extends AbstractResource {
 		Credentials credentials = SpaceContext.checkAdminCredentialsFor(backendId);
 
 		GetResponse response = Start.get().getElasticClient()//
-				.prepareGet(ADMIN_INDEX, ACCOUNT_TYPE, credentials.backendId()).get();
+				.get(ADMIN_BACKEND, ACCOUNT_TYPE, credentials.backendId());
 
 		if (!response.isExists())
 			return Payloads.error(HttpStatus.INTERNAL_SERVER_ERROR,
@@ -249,24 +239,20 @@ public class AccountResource extends AbstractResource {
 	public Payload deleteById(String backendId, Context context) {
 		Credentials credentials = SpaceContext.checkAdminCredentialsFor(backendId);
 
-		ElasticHelper.get().refresh(true, ADMIN_INDEX);
+		DataStore.get().refreshType(ADMIN_BACKEND, ACCOUNT_TYPE);
 
-		DeleteResponse accountDeleteResp = Start.get().getElasticClient()
-				.prepareDelete(ADMIN_INDEX, ACCOUNT_TYPE, credentials.backendId()).get();
+		DeleteResponse accountDeleteResp = Start.get().getElasticClient()//
+				.delete(ADMIN_BACKEND, ACCOUNT_TYPE, credentials.backendId());
 
 		if (!accountDeleteResp.isFound())
 			return Payloads.error(HttpStatus.INTERNAL_SERVER_ERROR,
 					"no account found for backend [%s] and admin user [%s]", credentials.backendId(),
 					credentials.name());
 
-		DeleteIndexResponse indexDeleteResp = Start.get().getElasticClient().admin().indices()
-				.prepareDelete(credentials.backendId()).get();
+		Start.get().getElasticClient()//
+				.deleteAllIndices(credentials.backendId());
 
-		if (!indexDeleteResp.isAcknowledged())
-			return Payloads.error(HttpStatus.INTERNAL_SERVER_ERROR,
-					"internal index deletion not acknowledged for account with backend [%s] ", credentials.backendId());
-
-		ElasticHelper.get().refresh(true, ADMIN_INDEX);
+		DataStore.get().refreshType(ADMIN_BACKEND, ACCOUNT_TYPE);
 
 		if (!isTest(context) || !Start.get().configuration().isOffline()) {
 			FileResource.get().deleteAll();

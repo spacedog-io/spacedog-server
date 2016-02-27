@@ -39,7 +39,7 @@ public class DataResource extends AbstractResource {
 	public Payload getAll(Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, false);
-		ElasticHelper.get().refresh(refresh, credentials.backendId());
+		DataStore.get().refreshBackend(refresh, credentials.backendId());
 		ObjectNode result = SearchResource.get()//
 				.searchInternal(credentials, null, null, context);
 		return Payloads.json(result);
@@ -56,7 +56,7 @@ public class DataResource extends AbstractResource {
 	public Payload getByType(String type, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, false);
-		ElasticHelper.get().refresh(refresh, credentials.backendId());
+		DataStore.get().refreshType(refresh, credentials.backendId(), type);
 		ObjectNode result = SearchResource.get()//
 				.searchInternal(credentials, type, null, context);
 		return Payloads.json(result);
@@ -68,7 +68,8 @@ public class DataResource extends AbstractResource {
 			throws NotFoundException, JsonProcessingException, IOException {
 
 		Credentials credentials = SpaceContext.checkCredentials();
-		ObjectNode schema = ElasticHelper.get().getSchema(credentials.backendId(), type);
+		ObjectNode schema = Start.get().getElasticClient()//
+				.getSchema(credentials.backendId(), type);
 		ObjectNode object = Json.readObjectNode(body);
 
 		/*
@@ -82,7 +83,7 @@ public class DataResource extends AbstractResource {
 				? (context.get("id") == null ? Optional.empty() : Optional.of(context.get("id")))//
 				: Optional.of(Json.get(object, idProperty.asText()).asText());
 
-		IndexResponse response = ElasticHelper.get().createObject(//
+		IndexResponse response = DataStore.get().createObject(//
 				credentials.backendId(), type, id, object, credentials.name());
 		return Payloads.saved(true, "/v1/data", response.getType(), response.getId(), response.getVersion());
 	}
@@ -100,9 +101,9 @@ public class DataResource extends AbstractResource {
 		// check if type is well defined
 		// throws a NotFoundException if not
 		// TODO useful for security?
-		ElasticHelper.get().getSchema(credentials.backendId(), type);
+		Start.get().getElasticClient().getSchema(credentials.backendId(), type);
 
-		Optional<ObjectNode> object = ElasticHelper.get().getObject(credentials.backendId(), type, id);
+		Optional<ObjectNode> object = DataStore.get().getObject(credentials.backendId(), type, id);
 
 		if (object.isPresent()) {
 
@@ -122,7 +123,8 @@ public class DataResource extends AbstractResource {
 
 		// check if type is well defined
 		// object should be validated before saved
-		ObjectNode schema = ElasticHelper.get().getSchema(credentials.backendId(), type);
+		ObjectNode schema = Start.get().getElasticClient()//
+				.getSchema(credentials.backendId(), type);
 
 		ObjectNode object = Json.readObjectNode(body);
 
@@ -144,14 +146,14 @@ public class DataResource extends AbstractResource {
 
 		if (strict) {
 
-			IndexResponse response = ElasticHelper.get().updateObject(credentials.backendId(), type, id, version,
-					object, credentials.name());
+			IndexResponse response = DataStore.get().updateObject(credentials.backendId(), type, id, version, object,
+					credentials.name());
 			return Payloads.saved(false, "/v1/data", response.getType(), response.getId(), response.getVersion());
 
 		} else {
 
-			UpdateResponse response = ElasticHelper.get().patchObject(credentials.backendId(), type, id, version,
-					object, credentials.name());
+			UpdateResponse response = DataStore.get().patchObject(credentials.backendId(), type, id, version, object,
+					credentials.name());
 			return Payloads.saved(false, "/v1/data", response.getType(), response.getId(), response.getVersion());
 		}
 	}
@@ -163,9 +165,10 @@ public class DataResource extends AbstractResource {
 		// check if type is well defined
 		// throws a NotFoundException if not
 		// TODO useful for security?
-		ElasticHelper.get().getSchema(credentials.backendId(), type);
+		Start.get().getElasticClient()//
+				.getSchema(credentials.backendId(), type);
 
-		DeleteResponse response = Start.get().getElasticClient().prepareDelete(credentials.backendId(), type, id).get();
+		DeleteResponse response = Start.get().getElasticClient().delete(credentials.backendId(), type, id);
 
 		if (response.isFound())
 			return Payloads.success();

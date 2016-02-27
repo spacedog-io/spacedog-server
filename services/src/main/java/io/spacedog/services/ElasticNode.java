@@ -8,11 +8,10 @@ import org.elasticsearch.node.Node;
 import org.elasticsearch.node.internal.InternalSettingsPreparer;
 import org.elasticsearch.plugins.Plugin;
 
-public class SpaceNode extends Node {
+public class ElasticNode extends Node {
 
-	protected SpaceNode(Settings settings, Collection<Class<? extends Plugin>> classpathPlugins) {
+	protected ElasticNode(Settings settings, Collection<Class<? extends Plugin>> classpathPlugins) {
 		super(InternalSettingsPreparer.prepareEnvironment(settings, null), //
 				Version.CURRENT, classpathPlugins);
 	}
-
 }

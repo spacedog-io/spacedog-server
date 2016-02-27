@@ -227,7 +227,7 @@ public class UserResourceTest extends Assert {
 				.stringProperty("lastname", true)//
 				.build();
 
-		SpaceRequest.put("/v1/schema/user").basicAuth(testAccount).body(customUserSchema).go(201);
+		SpaceRequest.put("/v1/schema/user").basicAuth(testAccount).body(customUserSchema).go(200);
 
 		// create new custom user
 

@@ -52,13 +52,13 @@ public class SchemaResourceTest extends Assert {
 						.get());
 
 		// should fail to delete schema with simple backend key credentials
-		// SpaceRequest.delete("/v1/schema/toto").backendKey(testAccount).go(401);
+		SpaceRequest.delete("/v1/schema/toto").backendKey(testAccount).go(401);
 
 		// should fail to delete schema with simple user credentials
-		// SpaceRequest.delete("/v1/schema/toto").basicAuth(bob).go(401);
+		SpaceRequest.delete("/v1/schema/toto").basicAuth(bob).go(401);
 
-		// should succeed to delete a non existent schema
-		// SpaceRequest.delete("/v1/schema/toto").basicAuth(testAccount).go(200);
+		// should fail to delete a non existent schema
+		SpaceRequest.delete("/v1/schema/toto").basicAuth(testAccount).go(404);
 
 		// should fail to create an invalid schema
 		SpaceRequest.put("/v1/schema/toto").basicAuth(testAccount).body("{\"toto\":{\"_type\":\"XXX\"}}").go(400);

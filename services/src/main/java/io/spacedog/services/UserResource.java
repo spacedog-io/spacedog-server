@@ -125,7 +125,7 @@ public class UserResource extends AbstractResource {
 			user.put(HASHED_PASSWORD, Passwords.checkAndHash(password.asText()));
 		}
 
-		IndexResponse response = ElasticHelper.get().createObject(//
+		IndexResponse response = DataStore.get().createObject(//
 				credentials.backendId(), USER_TYPE, username, user, credentials.name());
 
 		JsonBuilder<ObjectNode> savedBuilder = Payloads.savedBuilder(true, "/v1", USER_TYPE, response.getId(),
@@ -172,14 +172,14 @@ public class UserResource extends AbstractResource {
 		// .addScriptParam("code", UUID.randomUUID().toString())//
 		// .get();
 
-		ObjectNode user = ElasticHelper.get().getObject(credentials.backendId(), USER_TYPE, id)//
+		ObjectNode user = DataStore.get().getObject(credentials.backendId(), USER_TYPE, id)//
 				.orElseThrow(() -> NotFoundException.object(USER_TYPE, id));
 
 		String resetCode = UUID.randomUUID().toString();
 		user.remove(HASHED_PASSWORD);
 		user.put(PASSWORD_RESET_CODE, resetCode);
 
-		long newVersion = ElasticHelper.get().updateObject(credentials.backendId(), user, credentials.name())
+		long newVersion = DataStore.get().updateObject(credentials.backendId(), user, credentials.name())
 				.getVersion();
 
 		return Payloads.json(//
@@ -202,8 +202,7 @@ public class UserResource extends AbstractResource {
 		Passwords.checkIfValid(password);
 
 		GetResponse getResponse = Start.get().getElasticClient()//
-				.prepareGet(credentials.backendId(), USER_TYPE, id)//
-				.get();
+				.get(credentials.backendId(), USER_TYPE, id);
 
 		if (!getResponse.isExists())
 			throw NotFoundException.object(USER_TYPE, id);
@@ -219,7 +218,7 @@ public class UserResource extends AbstractResource {
 		user.remove(PASSWORD_RESET_CODE);
 		user.put(HASHED_PASSWORD, Passwords.checkAndHash(password));
 
-		IndexResponse indexResponse = ElasticHelper.get().updateObject(credentials.backendId(), USER_TYPE, id, 0, user,
+		IndexResponse indexResponse = DataStore.get().updateObject(credentials.backendId(), USER_TYPE, id, 0, user,
 				credentials.name());
 
 		return Payloads.saved(false, "/v1", USER_TYPE, id, indexResponse.getVersion());
