@@ -151,13 +151,18 @@ public class ElasticClient {
 	// admin methods
 	//
 
-	public void createIndex(String backendId, String type, String mapping) {
+	public void createIndex(String backendId, String type, String mapping, int shards, int replicas) {
+
+		Settings settings = Settings.builder()//
+				.put("number_of_shards", shards)//
+				.put("number_of_replicas", replicas)//
+				.build();
 
 		CreateIndexResponse createIndexResponse = internalClient.admin().indices()//
 				.prepareCreate(toIndex0(backendId, type))//
 				.addMapping(type, mapping)//
 				.addAlias(new Alias(toAlias(backendId, type)))//
-				.setSettings(Settings.builder().put("number_of_shards", 1).build())//
+				.setSettings(settings)//
 				.get();
 
 		if (!createIndexResponse.isAcknowledged())

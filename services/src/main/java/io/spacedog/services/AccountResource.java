@@ -24,6 +24,7 @@ import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Passwords;
 import io.spacedog.utils.SpaceHeaders;
+import io.spacedog.utils.SpaceParams;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -57,18 +58,18 @@ public class AccountResource extends AbstractResource {
 		String accountMapping = Resources.toString(Resources.getResource(//
 				"io/spacedog/services/account-mapping.json"), Utils.UTF8);
 
-		if (!client.exists(ADMIN_BACKEND, ACCOUNT_TYPE))
-			client.createIndex(ADMIN_BACKEND, ACCOUNT_TYPE, accountMapping);
-		else
+		if (client.exists(ADMIN_BACKEND, ACCOUNT_TYPE))
 			client.putMapping(ADMIN_BACKEND, ACCOUNT_TYPE, accountMapping);
+		else
+			client.createIndex(ADMIN_BACKEND, ACCOUNT_TYPE, accountMapping, 1, 1);
 
 		String logMapping = Resources.toString(Resources.getResource(//
 				"io/spacedog/services/log-mapping.json"), Utils.UTF8);
 
-		if (!client.exists(ADMIN_BACKEND, LogResource.TYPE))
-			client.createIndex(ADMIN_BACKEND, LogResource.TYPE, logMapping);
-		else
+		if (client.exists(ADMIN_BACKEND, LogResource.TYPE))
 			client.putMapping(ADMIN_BACKEND, LogResource.TYPE, logMapping);
+		else
+			client.createIndex(ADMIN_BACKEND, LogResource.TYPE, logMapping, 1, 1);
 	}
 
 	//
@@ -180,9 +181,11 @@ public class AccountResource extends AbstractResource {
 				.index(ADMIN_BACKEND, ACCOUNT_TYPE, account.backendId, accountBytes)//
 				.getVersion();
 
-		// backend index is named after the backend id
+		int shards = context.query().getInteger(SpaceParams.SHARDS, 1);
+		int replicas = context.query().getInteger(SpaceParams.REPLICAS, 1);
+
 		Start.get().getElasticClient().createIndex(//
-				account.backendId, UserResource.USER_TYPE, UserResource.getDefaultUserMapping());
+				account.backendId, UserResource.USER_TYPE, UserResource.getDefaultUserMapping(), shards, replicas);
 
 		DataStore.get().refreshType(ADMIN_BACKEND, ACCOUNT_TYPE);
 

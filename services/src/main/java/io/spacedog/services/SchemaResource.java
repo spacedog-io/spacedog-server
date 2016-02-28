@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Json.JsonMerger;
+import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -75,10 +76,13 @@ public class SchemaResource extends AbstractResource {
 		ElasticClient elastic = Start.get().getElasticClient();
 		boolean indexExists = elastic.exists(backendId, type);
 
-		if (!indexExists)
-			elastic.createIndex(backendId, type, mapping);
-		else
+		if (indexExists)
 			elastic.putMapping(backendId, type, mapping);
+		else {
+			int shards = context.query().getInteger(SpaceParams.SHARDS, 1);
+			int replicas = context.query().getInteger(SpaceParams.REPLICAS, 1);
+			elastic.createIndex(backendId, type, mapping, shards, replicas);
+		}
 
 		return Payloads.saved(!indexExists, "/v1", "schema", type);
 	}
