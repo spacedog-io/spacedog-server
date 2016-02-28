@@ -254,4 +254,14 @@ public class SpaceRequest {
 	public static void setForTestingDefault(boolean value) {
 		forTestingDefault = value;
 	}
+
+	public static String getBackendKey(JsonNode account) {
+		return new StringBuilder(account.get("backendId").asText())//
+				.append(':')//
+				.append(account.get("backendKey").get("name").asText())//
+				.append(':')//
+				.append(account.get("backendKey").get("secret").asText())//
+				.toString();
+	}
+
 }

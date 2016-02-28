@@ -33,22 +33,26 @@ public class SuperDogStatus extends Assert {
 		while (elements.hasNext()) {
 			JsonNode account = elements.next();
 			String backendId = account.get("backendId").asText();
-			String backendKey = getBackendKey(account);
+			// String backendKey = getBackendKey(account);
 
 			log();
 			log("**** %s ****", backendId);
 
-			long total = SpaceRequest.get("/v1/data")//
-					.queryString("size", "0")//
-					.backendKey(backendKey)//
-					.go(200)//
-					.getFromJson("total")//
-					.asLong();
+			// TODO count backend objects when superdogs
+			// can access /v1/data like a regular backend admin
 
-			log("Total number of objects = %s", total);
+			// long total = SpaceRequest.get("/v1/data")//
+			// .queryString("size", "0")//
+			// .superdogAuth()//
+			// .go(200)//
+			// .getFromJson("total")//
+			// .asLong();
+			//
+			// log("Total number of objects = %s", total);
 
-			ObjectNode log = SpaceRequest.get("/v1/admin/log/" + backendId)//
+			ObjectNode log = SpaceRequest.get("/v1/log/" + backendId)//
 					.queryString("size", "1")//
+					.queryString("logType", "ADMIN")//
 					.superdogAuth()//
 					.go(200)//
 					.objectNode();
@@ -56,15 +60,6 @@ public class SuperDogStatus extends Assert {
 			log(log.get("results").get(0));
 		}
 
-	}
-
-	private static String getBackendKey(JsonNode account) {
-		return new StringBuilder(account.get("backendId").asText())//
-				.append(':')//
-				.append(account.get("backendKey").get("name").asText())//
-				.append(':')//
-				.append(account.get("backendKey").get("secret").asText())//
-				.toString();
 	}
 
 	private static void log() {
