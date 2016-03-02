@@ -79,8 +79,8 @@ public class SchemaResource extends AbstractResource {
 		if (indexExists)
 			elastic.putMapping(backendId, type, mapping);
 		else {
-			int shards = context.query().getInteger(SpaceParams.SHARDS, 1);
-			int replicas = context.query().getInteger(SpaceParams.REPLICAS, 1);
+			int shards = context.query().getInteger(SpaceParams.SHARDS, SHARDS_DEFAULT);
+			int replicas = context.query().getInteger(SpaceParams.REPLICAS, REPLICAS_DEFAULT);
 			elastic.createIndex(backendId, type, mapping, shards, replicas);
 		}
 

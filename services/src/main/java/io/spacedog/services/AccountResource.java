@@ -61,7 +61,7 @@ public class AccountResource extends AbstractResource {
 		if (client.exists(ADMIN_BACKEND, ACCOUNT_TYPE))
 			client.putMapping(ADMIN_BACKEND, ACCOUNT_TYPE, accountMapping);
 		else
-			client.createIndex(ADMIN_BACKEND, ACCOUNT_TYPE, accountMapping, 1, 1);
+			client.createIndex(ADMIN_BACKEND, ACCOUNT_TYPE, accountMapping, SHARDS_DEFAULT, REPLICAS_DEFAULT);
 
 		String logMapping = Resources.toString(Resources.getResource(//
 				"io/spacedog/services/log-mapping.json"), Utils.UTF8);
@@ -69,7 +69,7 @@ public class AccountResource extends AbstractResource {
 		if (client.exists(ADMIN_BACKEND, LogResource.TYPE))
 			client.putMapping(ADMIN_BACKEND, LogResource.TYPE, logMapping);
 		else
-			client.createIndex(ADMIN_BACKEND, LogResource.TYPE, logMapping, 1, 1);
+			client.createIndex(ADMIN_BACKEND, LogResource.TYPE, logMapping, SHARDS_DEFAULT, REPLICAS_DEFAULT);
 	}
 
 	//
@@ -181,8 +181,8 @@ public class AccountResource extends AbstractResource {
 				.index(ADMIN_BACKEND, ACCOUNT_TYPE, account.backendId, accountBytes)//
 				.getVersion();
 
-		int shards = context.query().getInteger(SpaceParams.SHARDS, 1);
-		int replicas = context.query().getInteger(SpaceParams.REPLICAS, 1);
+		int shards = context.query().getInteger(SpaceParams.SHARDS, SHARDS_DEFAULT);
+		int replicas = context.query().getInteger(SpaceParams.REPLICAS, REPLICAS_DEFAULT);
 
 		Start.get().getElasticClient().createIndex(//
 				account.backendId, UserResource.USER_TYPE, UserResource.getDefaultUserMapping(), shards, replicas);

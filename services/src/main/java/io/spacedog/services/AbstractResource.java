@@ -13,6 +13,8 @@ import net.codestory.http.Context;
 public abstract class AbstractResource {
 
 	public static final String SLASH = "/";
+	public static final int SHARDS_DEFAULT = 1;
+	public static final int REPLICAS_DEFAULT = 0;
 
 	public static StringBuilder spaceUrl(String uri, String type, String id) {
 		return spaceUrl(uri).append(SLASH).append(type).append(SLASH).append(id);
