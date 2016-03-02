@@ -72,6 +72,9 @@ public class Migrate {
 				.put("node.master", true)//
 				.put("node.data", true)//
 				.put("cluster.name", "spacedog-elastic-cluster")//
+				// disable rebalance to avoid automatic rebalance
+				// when a temporary second node appears
+				.put("cluster.routing.rebalance.enable", "none")//
 				.put("path.home", //
 						config.homePath().toAbsolutePath().toString())
 				.put("path.data", //
@@ -118,27 +121,45 @@ public class Migrate {
 				while (types.hasNext()) {
 					String type = types.next();
 					MappingMetaData mapping = mappings.get(backendId).get(type);
-					SchemaIndex index = new SchemaIndex(backendId, type, mapping.source().string());
-					index.migrate();
+					OneIndexPerType index = new OneIndexPerType(backendId, type, mapping.source().string());
+					index.createIndex();
+					index.migrateDocuments();
 				}
+				client.admin().indices().prepareDelete(backendId).get();
 			}
 		}
 	}
 
-	public class SchemaIndex {
+	public class OneIndexPerType {
 
 		private String backendId;
 		private String type;
 		private String mapping;
 		private int reindexed;
 
-		public SchemaIndex(String backendId, String type, String mapping) {
+		public OneIndexPerType(String backendId, String type, String mapping) {
 			this.backendId = backendId;
 			this.type = type;
 			this.mapping = mapping;
 		}
 
-		public void migrate() {
+		public void createIndex() {
+			ObjectNode json = Json.readObjectNode(mapping);
+			// remove any _id mapping field since it is not allowed
+			// in 2.x mappings
+			((ObjectNode) json.get(type)).remove("_id");
+
+			try {
+				elastic.createIndex(backendId, type, json.toString(), //
+						AbstractResource.SHARDS_DEFAULT, //
+						AbstractResource.REPLICAS_DEFAULT);
+			} catch (IndexAlreadyExistsException e) {
+				// TODO ignored for testing but to be removed
+				// for the final tests and production
+			}
+		}
+
+		public void migrateDocuments() {
 			ObjectNode json = Json.readObjectNode(mapping);
 			// remove any _id mapping field since it is not allowed
 			// in 2.x mappings
@@ -156,18 +177,19 @@ public class Migrate {
 			SearchResponse response = client.prepareSearch(backendId)//
 					.setTypes(type).setSize(100).setScroll(TimeValue.timeValueMinutes(1))//
 					.setQuery(QueryBuilders.matchAllQuery()).get();
-			reindex(response.getHits());
+			reIndex(response.getHits());
 			String scrollId = response.getScrollId();
 			do {
 				response = client.prepareSearchScroll(scrollId)//
 						.setScroll(TimeValue.timeValueMinutes(1)).get();
-				reindex(response.getHits());
+				reIndex(response.getHits());
 			} while (response.getHits().getHits().length == 100);
 
+			client.admin().indices().prepareSyncedFlush(elastic.toAlias(backendId, type)).get();
 			log("/%s/%s => %s reindexed", elastic.toAlias(backendId, type), type, reindexed);
 		}
 
-		void reindex(SearchHits hits) {
+		void reIndex(SearchHits hits) {
 			if (hits.getHits().length > 0) {
 				BulkRequestBuilder request = client.prepareBulk();
 				for (SearchHit hit : hits) {
