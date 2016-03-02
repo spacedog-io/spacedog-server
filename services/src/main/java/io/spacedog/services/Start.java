@@ -8,6 +8,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 
+import org.elasticsearch.client.Client;
+import org.elasticsearch.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.settings.Settings.Builder;
 import org.elasticsearch.node.Node;
@@ -46,6 +48,7 @@ public class Start {
 		try {
 			singleton = new Start();
 			singleton.startLocalElastic();
+			AccountResource.get().initSpacedogBackend();
 			singleton.startFluent();
 
 		} catch (Throwable t) {
@@ -68,6 +71,9 @@ public class Start {
 				.put("node.master", true)//
 				.put("node.data", true)//
 				.put("cluster.name", "spacedog-elastic-cluster")//
+				// disable rebalance to avoid automatic rebalance
+				// when a temporary second node appears
+				.put("cluster.routing.rebalance.enable", "none")//
 				.put("path.home", //
 						config.homePath().toAbsolutePath().toString())
 				.put("path.data", //
@@ -81,10 +87,19 @@ public class Start {
 				Collections.singleton(DeleteByQueryPlugin.class));
 
 		elasticNode.start();
+		Client client = elasticNode.client();
+		elasticClient = new ElasticClient(client);
 
-		elasticClient = new ElasticClient(elasticNode.client());
+		// wait for cluster to fully initialize and turn asynchronously from
+		// RED status to YELLOW or GREEN before to initialize anything else
+		// wait only for 5 seconds maximum
 
-		AccountResource.get().initSpacedogBackend();
+		while (true) {
+			Thread.sleep(1000);
+			ClusterHealthStatus status = client.admin().cluster().prepareHealth().get().getStatus();
+			if (!ClusterHealthStatus.RED.equals(status))
+				return;
+		}
 	}
 
 	private void startFluent() throws IOException {
