@@ -65,7 +65,7 @@ public class Start {
 	private void startLocalElastic() throws InterruptedException, ExecutionException, IOException {
 
 		Builder builder = Settings.builder()//
-				.put("node.local", true)//
+				.put("node.master", true)//
 				.put("node.data", true)//
 				.put("cluster.name", "spacedog-elastic-cluster")//
 				.put("path.home", //
