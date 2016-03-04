@@ -45,6 +45,10 @@ public class SpaceDogHelper {
 		}
 	}
 
+	public static User createUser(Account account, String username, String password) throws Exception {
+		return createUser(account, username, password, "david@spacedog.io");
+	}
+
 	public static User createUser(Account account, String username, String password, String email) throws Exception {
 		return createUser(account.backendKey, username, password, email);
 	}
