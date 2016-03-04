@@ -5,7 +5,6 @@ package io.spacedog.services;
 
 import java.io.IOException;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetResponse;
@@ -51,7 +50,7 @@ public class AccountResource extends AbstractResource {
 	// SpaceDog index init
 	//
 
-	void initSpacedogBackend() throws InterruptedException, ExecutionException, IOException {
+	void initSpacedogBackend() throws IOException {
 
 		ElasticClient client = Start.get().getElasticClient();
 
@@ -61,7 +60,7 @@ public class AccountResource extends AbstractResource {
 		if (client.exists(ADMIN_BACKEND, ACCOUNT_TYPE))
 			client.putMapping(ADMIN_BACKEND, ACCOUNT_TYPE, accountMapping);
 		else
-			client.createIndex(ADMIN_BACKEND, ACCOUNT_TYPE, accountMapping, SHARDS_DEFAULT, REPLICAS_DEFAULT);
+			client.createIndex(ADMIN_BACKEND, ACCOUNT_TYPE, accountMapping);
 
 		String logMapping = Resources.toString(Resources.getResource(//
 				"io/spacedog/services/log-mapping.json"), Utils.UTF8);
@@ -69,7 +68,7 @@ public class AccountResource extends AbstractResource {
 		if (client.exists(ADMIN_BACKEND, LogResource.TYPE))
 			client.putMapping(ADMIN_BACKEND, LogResource.TYPE, logMapping);
 		else
-			client.createIndex(ADMIN_BACKEND, LogResource.TYPE, logMapping, SHARDS_DEFAULT, REPLICAS_DEFAULT);
+			client.createIndex(ADMIN_BACKEND, LogResource.TYPE, logMapping);
 	}
 
 	//

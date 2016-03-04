@@ -150,9 +150,7 @@ public class Migrate {
 			((ObjectNode) json.get(type)).remove("_id");
 
 			try {
-				elastic.createIndex(backendId, type, json.toString(), //
-						AbstractResource.SHARDS_DEFAULT, //
-						AbstractResource.REPLICAS_DEFAULT);
+				elastic.createIndex(backendId, type, json.toString());
 			} catch (IndexAlreadyExistsException e) {
 				// TODO ignored for testing but to be removed
 				// for the final tests and production
