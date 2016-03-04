@@ -176,6 +176,23 @@ public class Json {
 		return new JsonBuilder<ArrayNode>().array();
 	}
 
+	// TODO add tests
+	public static ObjectNode object(Object... elements) {
+		// TODO check this test
+		// TODO better message
+		if (elements.length % 2 != 0)
+			throw Exceptions.illegalArgument("elements are not pairs");
+
+		JsonBuilder<ObjectNode> builder = Json.objectBuilder();
+
+		// TODO convert values to the right type
+		// not only strings
+		for (int i = 0; i < elements.length; i = i + 2)
+			builder.put(elements[i].toString(), elements[i + 1].toString());
+
+		return builder.build();
+	}
+
 	public static ObjectMapper jsonMapper;
 
 	static {
