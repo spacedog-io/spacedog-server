@@ -114,7 +114,7 @@ public class ElasticClient {
 		try {
 			return Start.get().getElasticClient().execute(DeleteByQueryAction.INSTANCE, delete).get();
 		} catch (ExecutionException | InterruptedException e) {
-			throw Exceptions.wrap(e);
+			throw Exceptions.runtime(e);
 		}
 	}
 
@@ -133,7 +133,7 @@ public class ElasticClient {
 		try {
 			return Start.get().getElasticClient().execute(DeleteByQueryAction.INSTANCE, delete).get();
 		} catch (ExecutionException | InterruptedException e) {
-			throw Exceptions.wrap(e);
+			throw Exceptions.runtime(e);
 		}
 	}
 
@@ -151,6 +151,10 @@ public class ElasticClient {
 	// admin methods
 	//
 
+	public void createIndex(String backendId, String type, String mapping) {
+		createIndex(backendId, type, mapping, AbstractResource.SHARDS_DEFAULT, AbstractResource.REPLICAS_DEFAULT);
+	}
+
 	public void createIndex(String backendId, String type, String mapping, int shards, int replicas) {
 
 		Settings settings = Settings.builder()//
@@ -166,7 +170,7 @@ public class ElasticClient {
 				.get();
 
 		if (!createIndexResponse.isAcknowledged())
-			throw Exceptions.wrap(//
+			throw Exceptions.runtime(//
 					"index [%s] creation not acknowledged by the whole cluster", //
 					toIndex0(backendId, type));
 	}
@@ -185,7 +189,7 @@ public class ElasticClient {
 				.get();
 
 		if (!deleteIndexResponse.isAcknowledged())
-			throw Exceptions.wrap(//
+			throw Exceptions.runtime(//
 					"backend [%s] deletion not acknowledged by the whole cluster", //
 					backendId);
 	}
@@ -240,7 +244,7 @@ public class ElasticClient {
 				.get();
 
 		if (!putMappingResponse.isAcknowledged())
-			throw Exceptions.wrap(//
+			throw Exceptions.runtime(//
 					"mapping [%s] update not acknowledged by the whole cluster", //
 					type);
 	}
@@ -251,7 +255,7 @@ public class ElasticClient {
 				.get();
 
 		if (!closeIndexResponse.isAcknowledged())
-			throw Exceptions.wrap(//
+			throw Exceptions.runtime(//
 					"close all backends not acknowledged by the whole cluster");
 	}
 
