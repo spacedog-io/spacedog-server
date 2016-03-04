@@ -159,8 +159,8 @@ public class AccountResourceTestOften extends Assert {
 
 		// succeed to get all accounts with superdog credentials
 		SpaceRequest.get("/v1/admin/account").superdogAuth().go(200)//
-				.assertArrayContains(aaaaNode, "results")//
-				.assertArrayContains(zzzzNode, "results");
+				.assertContains(aaaaNode, "results")//
+				.assertContains(zzzzNode, "results");
 
 		// should succeed to delete accounts
 		SpaceRequest.delete("/v1/admin/account/aaaa").basicAuth(aaaa).go(200);

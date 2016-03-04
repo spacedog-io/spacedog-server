@@ -137,6 +137,30 @@ public class Joho extends SpaceDogHelper {
 	}
 
 	@Test
+	public void createJoho2InstallationIndex() throws Exception {
+
+		SpaceRequest.delete("/v1/schema/installation")//
+				.basicAuth(johoAccount)//
+				.go(200, 404);
+
+		ObjectNode installationSchema = SchemaBuilder2.builder("installation")//
+				.stringProperty("appId", true)//
+				.stringProperty("deviceToken", true)//
+				.stringProperty("providerId", true)//
+				.stringProperty("userId", true)//
+				.startObjectProperty("tags", false)//
+				.stringProperty("key", true)//
+				.stringProperty("value", true)//
+				.endObjectProperty()//
+				.build();
+
+		SpaceRequest.put("/v1/schema/installation")//
+				.basicAuth(johoAccount)//
+				.body(installationSchema)//
+				.go(201);
+	}
+
+	@Test
 	public void initAndFillJohoBackend() throws Exception {
 
 		// johoAccount = resetAccount(BACKEND_ID, ADMIN_USERNAME,

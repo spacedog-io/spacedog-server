@@ -48,7 +48,7 @@ public class Start {
 		try {
 			singleton = new Start();
 			singleton.startLocalElastic();
-			AccountResource.get().initSpacedogBackend();
+			singleton.initServices();
 			singleton.startFluent();
 
 		} catch (Throwable t) {
@@ -102,6 +102,10 @@ public class Start {
 		}
 	}
 
+	private void initServices() throws IOException {
+		AccountResource.get().initSpacedogBackend();
+	}
+
 	private void startFluent() throws IOException {
 
 		fluent = new MyFluentServer();
@@ -130,7 +134,8 @@ public class Start {
 				.add(MailResource.get())//
 				.add(SnapshotResource.get())//
 				.add(LogResource.get())//
-				.add(PushResource.get())//
+				// .add(PushResource.get())//
+				.add(PushResource2.get())//
 				.add(FileResource.get())//
 				.add(ShareResource.get())//
 				.add(SearchResource.get());
