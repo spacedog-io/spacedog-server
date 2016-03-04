@@ -12,12 +12,12 @@ import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.update.UpdateResponse;
 
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.utils.Json;
+import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -38,7 +38,7 @@ public class DataResource extends AbstractResource {
 	@Get("/")
 	public Payload getAll(Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
-		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, false);
+		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
 		DataStore.get().refreshBackend(refresh, credentials.backendId());
 		ObjectNode result = SearchResource.get()//
 				.searchInternal(credentials, null, null, context);
@@ -55,7 +55,7 @@ public class DataResource extends AbstractResource {
 	@Get("/:type/")
 	public Payload getByType(String type, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
-		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, false);
+		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
 		DataStore.get().refreshType(refresh, credentials.backendId(), type);
 		ObjectNode result = SearchResource.get()//
 				.searchInternal(credentials, type, null, context);
@@ -64,8 +64,7 @@ public class DataResource extends AbstractResource {
 
 	@Post("/:type")
 	@Post("/:type/")
-	public Payload post(String type, String body, Context context)
-			throws NotFoundException, JsonProcessingException, IOException {
+	public Payload post(String type, String body, Context context) {
 
 		Credentials credentials = SpaceContext.checkCredentials();
 		ObjectNode schema = Start.get().getElasticClient()//
@@ -95,6 +94,7 @@ public class DataResource extends AbstractResource {
 	}
 
 	@Get("/:type/:id")
+	@Get("/:type/:id/")
 	public Payload getById(String type, String id, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 

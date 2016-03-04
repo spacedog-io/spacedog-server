@@ -26,6 +26,7 @@ import com.google.common.base.Strings;
 import io.spacedog.services.DataStore.FilteredSearchBuilder;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -35,8 +36,6 @@ import net.codestory.http.payload.Payload;
 
 @Prefix("/v1")
 public class SearchResource extends AbstractResource {
-
-	public static final String REFRESH = "refresh";
 
 	//
 	// Routes
@@ -52,7 +51,7 @@ public class SearchResource extends AbstractResource {
 	@Post("/search/")
 	public Payload postSearchAllTypes(String body, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
-		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, false);
+		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
 		DataStore.get().refreshBackend(refresh, credentials.backendId());
 		ObjectNode result = searchInternal(credentials, null, body, context);
 		return Payloads.json(result);
@@ -62,7 +61,7 @@ public class SearchResource extends AbstractResource {
 	@Delete("/search/")
 	public Payload deleteAllTypes(String query, Context context) {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
-		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, true);
+		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, true);
 		DataStore.get().refreshBackend(refresh, credentials.backendId());
 		DeleteByQueryResponse response = Start.get().getElasticClient()//
 				.deleteByQuery(credentials.backendId(), query);
@@ -79,7 +78,7 @@ public class SearchResource extends AbstractResource {
 	@Post("/search/:type/")
 	public Payload postSearchForType(String type, String body, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
-		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, false);
+		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
 		DataStore.get().refreshType(refresh, credentials.backendId(), type);
 		ObjectNode result = searchInternal(credentials, type, body, context);
 		return Payloads.json(result);
@@ -90,7 +89,7 @@ public class SearchResource extends AbstractResource {
 	public Payload deleteSearchForType(String type, String query, Context context) {
 
 		Credentials credentials = SpaceContext.checkAdminCredentials();
-		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, true);
+		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, true);
 		DataStore.get().refreshType(refresh, credentials.backendId(), type);
 
 		DeleteByQueryResponse response = Start.get().getElasticClient()//
@@ -104,7 +103,7 @@ public class SearchResource extends AbstractResource {
 	public Payload postFilterForType(String type, String body, Context context) {
 		try {
 			Credentials credentials = SpaceContext.checkCredentials();
-			boolean refresh = context.query().getBoolean(SearchResource.REFRESH, false);
+			boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
 			DataStore.get().refreshType(refresh, credentials.backendId(), type);
 			FilteredSearchBuilder builder = DataStore.get().searchBuilder(credentials.backendId(), type)
 					.applyContext(context).applyFilters(Json.readObjectNode(body));
