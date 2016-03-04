@@ -238,39 +238,51 @@ public class DataResourceTest2 extends Assert {
 		SpaceDogHelper.prepareTest();
 		Account testAccount = SpaceDogHelper.resetTestAccount();
 
+		// creates msg1 schema with auto generated id strategy
+
 		SpaceDogHelper.setSchema(SchemaBuilder2.builder("msg1")//
 				.stringProperty("text", true).build(), testAccount);
 
-		ObjectNode json = Json.objectBuilder().put("text", "id=???").build();
-		String id = SpaceRequest.post("/v1/data/msg1").basicAuth(testAccount)//
-				.body(json).go(201)//
-				.getFromJson("id").asText();
-		SpaceRequest.get("/v1/data/msg1/" + id).basicAuth(testAccount).go(200)//
-				.assertEquals("id=???", "text");
+		// creates a msg1 object with auto generated id
 
-		json = Json.objectBuilder().put("text", "id=1").build();
+		String id = SpaceRequest.post("/v1/data/msg1").basicAuth(testAccount)//
+				.body(Json.object("text", "id=?")).go(201)//
+				.getFromJson("id").asText();
+
+		SpaceRequest.get("/v1/data/msg1/" + id).basicAuth(testAccount).go(200)//
+				.assertEquals("id=?", "text");
+
+		// creates a msg1 object with self provided id
+
 		SpaceRequest.post("/v1/data/msg1?id=1").basicAuth(testAccount)//
-				.body(json).go(201);
+				.body(Json.object("text", "id=1")).go(201);
+
 		SpaceRequest.get("/v1/data/msg1/1").basicAuth(testAccount).go(200)//
 				.assertEquals("id=1", "text");
+
+		// creates msg2 schema with id pointing to code
 
 		SpaceDogHelper.setSchema(SchemaBuilder2.builder("msg2", "code")//
 				.stringProperty("code", true)//
 				.stringProperty("text", true).build(), testAccount);
 
-		json = Json.objectBuilder().put("text", "id=2")//
-				.put("code", "2").build();
-		SpaceRequest.post("/v1/data/msg2").basicAuth(testAccount)//
-				.body(json).go(201);
-		SpaceRequest.get("/v1/data/msg2/2").basicAuth(testAccount).go(200)//
-				.assertEquals("id=2", "text");
+		// creates a msg2 object with id = code = 2
 
-		json = Json.objectBuilder().put("text", "id=3")//
-				.put("code", "3").build();
+		SpaceRequest.post("/v1/data/msg2").basicAuth(testAccount)//
+				.body(Json.object("text", "id=code=2", "code", "2")).go(201);
+
+		SpaceRequest.get("/v1/data/msg2/2").basicAuth(testAccount).go(200)//
+				.assertEquals("id=code=2", "text")//
+				.assertEquals("2", "code");
+
+		// creates a msg2 object with id = code = 3
+
 		SpaceRequest.post("/v1/data/msg2?id=XXX").basicAuth(testAccount)//
-				.body(json).go(201);
+				.body(Json.object("text", "id=code=3", "code", "3")).go(201);
+
 		SpaceRequest.get("/v1/data/msg2/3").basicAuth(testAccount).go(200)//
-				.assertEquals("id=3", "text");
+				.assertEquals("id=code=3", "text")//
+				.assertEquals("3", "code");
 
 	}
 }
