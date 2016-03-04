@@ -29,14 +29,14 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.utils.Json;
 
-public class Migrate {
+public class UpgradeElasticData {
 
 	private Node node;
 	private ElasticClient elastic;
 	private StartConfiguration config;
 	private Client client;
 
-	private Migrate() throws IOException {
+	private UpgradeElasticData() throws IOException {
 		this.config = new StartConfiguration();
 	}
 
@@ -45,7 +45,7 @@ public class Migrate {
 		System.setProperty("spacedog.configuration.file",
 				"/Users/davattias/dev/spacedog/local/spacedog.server.properties");
 
-		Migrate singleton = new Migrate();
+		UpgradeElasticData singleton = new UpgradeElasticData();
 
 		try {
 			singleton.startLocalElastic();
