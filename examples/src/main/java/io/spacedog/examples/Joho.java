@@ -75,6 +75,11 @@ public class Joho extends SpaceDogHelper {
 				.stringProperty("avatar", true)//
 				.stringProperty("job", true)//
 				.endObjectProperty()//
+				.startObjectProperty("category", true)//
+				.textProperty("name", "french", true)//
+				.textProperty("description", "french", true)//
+				.stringProperty("code", true)//
+				.endObjectProperty()//
 				.startObjectProperty("responses", true, true)//
 				.textProperty("text", "french", true)//
 				.startObjectProperty("author", true)//
