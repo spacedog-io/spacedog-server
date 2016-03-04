@@ -193,7 +193,7 @@ public class Json {
 		return builder.build();
 	}
 
-	public static ObjectMapper jsonMapper;
+	private static ObjectMapper jsonMapper;
 
 	static {
 		jsonMapper = new ObjectMapper()//

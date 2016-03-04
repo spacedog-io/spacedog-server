@@ -24,8 +24,11 @@ import org.elasticsearch.node.Node;
 import org.elasticsearch.plugin.deletebyquery.DeleteByQueryPlugin;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.joda.time.DateTime;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 
 import io.spacedog.utils.Json;
 
@@ -52,7 +55,7 @@ public class UpgradeElasticData {
 			singleton.waitForClusterInit();
 			singleton.removeReplicas();
 			singleton.waitForClusterInit();
-			singleton.migrate();
+			singleton.upgrade();
 
 		} catch (Throwable t) {
 			t.printStackTrace();
@@ -106,11 +109,9 @@ public class UpgradeElasticData {
 				.get();
 	}
 
-	private void migrate() throws IOException {
+	private void upgrade() throws IOException {
 		ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetaData>> mappings = client.admin().indices()
 				.prepareGetMappings("*").get().getMappings();
-
-		log("Mappings: %s", mappings);
 
 		Iterator<String> indices = mappings.keysIt();
 		while (indices.hasNext()) {
@@ -121,6 +122,7 @@ public class UpgradeElasticData {
 				while (types.hasNext()) {
 					String type = types.next();
 					MappingMetaData mapping = mappings.get(backendId).get(type);
+					log("/%s/%s/mapping: %s", backendId, type, mapping.sourceAsMap());
 					OneIndexPerType index = new OneIndexPerType(backendId, type, mapping.source().string());
 					index.createIndex();
 					index.migrateDocuments();
@@ -175,8 +177,10 @@ public class UpgradeElasticData {
 			SearchResponse response = client.prepareSearch(backendId)//
 					.setTypes(type).setSize(100).setScroll(TimeValue.timeValueMinutes(1))//
 					.setQuery(QueryBuilders.matchAllQuery()).get();
+
 			reIndex(response.getHits());
 			String scrollId = response.getScrollId();
+
 			do {
 				response = client.prepareSearchScroll(scrollId)//
 						.setScroll(TimeValue.timeValueMinutes(1)).get();
@@ -190,10 +194,13 @@ public class UpgradeElasticData {
 		void reIndex(SearchHits hits) {
 			if (hits.getHits().length > 0) {
 				BulkRequestBuilder request = client.prepareBulk();
+
 				for (SearchHit hit : hits) {
-					// elastic.index(index, type, hit.getId(), hit.source());
+					String source = hit.sourceAsString();
+					if ("spacedog".equals(backendId) && "account".equals(type))
+						source = upgradeAccountSource(source);
 					request.add(client.prepareIndex(elastic.toAlias(backendId, type), //
-							type, hit.getId()).setSource(hit.source()));
+							type, hit.getId()).setSource(source));
 				}
 
 				BulkItemResponse[] responses = request.get().getItems();
@@ -205,6 +212,20 @@ public class UpgradeElasticData {
 						reindexed++;
 				}
 			}
+		}
+
+		private String upgradeAccountSource(String source) {
+			ObjectNode account = Json.readObjectNode(source);
+			JsonNode date = Json.get(account, "backendKey.generatedAt");
+
+			if (date.isLong()) {
+				Json.set(account, "backendKey.generatedAt", //
+						TextNode.valueOf(new DateTime(date.asLong()).toString()));
+
+				log("/%s/%s/%s/backendKey/generatedAt => [%s] => [%s]", backendId, type, //
+						account.get("backendId").asText(), date, Json.get(account, "backendKey.generatedAt"));
+			}
+			return account.toString();
 		}
 	}
 
