@@ -59,6 +59,7 @@ public class ShareResourceTest {
 
 		String pngPath = json.get("path").asText();
 		String pngLocation = json.get("location").asText();
+		String pngS3Location = json.get("s3").asText();
 
 		// list all shared files should return tweeter.png path only
 		SpaceRequest.get("/v1/share").basicAuth(testAccount).go(200)//
@@ -81,6 +82,16 @@ public class ShareResourceTest {
 
 		Assert.assertTrue(Arrays.equals(pngBytes, downloadedBytes));
 
+		// download shared png file through S3 direct access
+
+		downloadedBytes = SpaceRequest.get(pngS3Location).go(200)//
+				// .assertHeaderEquals("image/png", "content-type")//
+				.assertHeaderEquals("vince", "x-amz-meta-owner")//
+				.assertHeaderEquals("USER", "x-amz-meta-owner-type")//
+				.bytes();
+
+		Assert.assertTrue(Arrays.equals(pngBytes, downloadedBytes));
+
 		// share small text file
 		json = SpaceRequest.put("/v1/share/test.txt")//
 				.backendKey(testAccount).basicAuth(fred)//
@@ -90,6 +101,7 @@ public class ShareResourceTest {
 
 		String txtPath = json.get("path").asText();
 		String txtLocation = json.get("location").asText();
+		String txtS3Location = json.get("s3").asText();
 
 		// list all shared files should return 2 paths
 		// get first page with only one path
@@ -122,6 +134,16 @@ public class ShareResourceTest {
 
 		// download shared text file
 		String stringContent = SpaceRequest.get(txtLocation).backendKey(testAccount).go(200)//
+				// .assertHeaderEquals("text/plain", "content-type")//
+				.assertHeaderEquals("fred", "x-amz-meta-owner")//
+				.assertHeaderEquals("USER", "x-amz-meta-owner-type")//
+				.httpResponse().getBody();
+
+		Assert.assertEquals(FILE_CONTENT, stringContent);
+
+		// download shared text file through direct S3 access
+
+		stringContent = SpaceRequest.get(txtS3Location).go(200)//
 				// .assertHeaderEquals("text/plain", "content-type")//
 				.assertHeaderEquals("fred", "x-amz-meta-owner")//
 				.assertHeaderEquals("USER", "x-amz-meta-owner-type")//

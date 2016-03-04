@@ -187,7 +187,8 @@ public class AbstractS3Resource extends AbstractResource {
 
 		return Payloads.json(Payloads.minimalBuilder(200)//
 				.put("path", toSpaceKeyFromPath(path, fileName))//
-				.put("location", toLocation(rootUri, path, fileName)));
+				.put("location", toSpaceLocation(rootUri, path, fileName))//
+				.put("s3", toS3Location(bucketName, s3Key)));
 	}
 
 	//
@@ -219,7 +220,13 @@ public class AbstractS3Resource extends AbstractResource {
 				: new StringBuilder(SLASH).append(path).append(SLASH).append(fileName).toString();
 	}
 
-	private String toLocation(String root, String path, String fileName) {
+	private String toSpaceLocation(String root, String path, String fileName) {
 		return spaceUrl(root).append(toSpaceKeyFromPath(path, fileName)).toString();
 	}
+
+	private String toS3Location(String bucketName, String s3Key) {
+		return new StringBuilder("https://").append(bucketName)//
+				.append(".s3.amazonaws.com/").append(s3Key).toString();
+	}
+
 }
