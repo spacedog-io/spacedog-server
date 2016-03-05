@@ -21,7 +21,7 @@ public class HttpPermanentRedirectTest extends Assert {
 
 		// should redirect from http to https and get the root page
 
-		SpaceRequest.get(false, "/").go(301)//
-				.assertHeaderEquals(SpaceRequestConfiguration.get().target().sslUrl("/"), "location");
+		SpaceRequest.get(true, "/").go(301)//
+				.assertHeaderEquals(SpaceRequestConfiguration.get().target().url("/"), "location");
 	}
 }

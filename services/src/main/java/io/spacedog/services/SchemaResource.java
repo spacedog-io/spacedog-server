@@ -84,7 +84,7 @@ public class SchemaResource extends AbstractResource {
 			elastic.createIndex(backendId, type, mapping, shards, replicas);
 		}
 
-		return Payloads.saved(!indexExists, "/v1", "schema", type);
+		return Payloads.saved(!indexExists, credentials.backendId(), "/v1", "schema", type);
 	}
 
 	@Delete("/:type")

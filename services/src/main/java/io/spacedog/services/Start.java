@@ -130,6 +130,7 @@ public class Start {
 				.add(SchemaResource.get())//
 				.add(UserResource.get())//
 				.add(AccountResource.get())//
+				.add(BackendResource.get())//
 				.add(BatchResource.get())//
 				.add(MailResource.get())//
 				.add(SnapshotResource.get())//

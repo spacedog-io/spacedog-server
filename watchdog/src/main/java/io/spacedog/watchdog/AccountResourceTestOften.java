@@ -30,7 +30,7 @@ public class AccountResourceTestOften extends Assert {
 				.basicAuth(testAccount).go(200)//
 				.assertEquals("test", "backendId")//
 				.assertEquals("test", "username")//
-				.assertEquals("david@spacedog.io", "email")//
+				.assertEquals("hello@spacedog.io", "email")//
 				.assertNotPresent("hashedPassword")//
 				.assertNotPresent("password");
 

@@ -14,7 +14,6 @@ import org.elasticsearch.action.admin.indices.alias.Alias;
 import org.elasticsearch.action.admin.indices.close.CloseIndexResponse;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
-import org.elasticsearch.action.admin.indices.get.GetIndexResponse;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.action.delete.DeleteResponse;
@@ -267,15 +266,15 @@ public class ElasticClient {
 	// to index help methods
 	//
 
-	public Stream<String> toIndicesStream(String backendId) {
-
+	public Stream<String> indices() {
 		// TODO if too many customers, my cluster might have too many indices
 		// for this to work correctly
-		GetIndexResponse response = internalClient.admin().indices().prepareGetIndex().get();
+		return Arrays.stream(internalClient.admin().indices().prepareGetIndex().get().indices());
+	}
 
+	public Stream<String> toIndicesStream(String backendId) {
 		String prefix = backendId + "-";
-
-		return Arrays.stream(response.indices())//
+		return indices()//
 				.filter(indexName -> indexName.startsWith(prefix));
 	}
 

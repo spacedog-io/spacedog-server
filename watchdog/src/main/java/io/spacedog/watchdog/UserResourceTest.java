@@ -62,13 +62,8 @@ public class UserResourceTest extends Assert {
 		ObjectNode res2 = SpaceRequest.get("/v1/user/vince").backendKey(testAccount).basicAuth(vince).go(200)
 				.objectNode();
 
-		assertEquals(
-				Json.objectBuilder()//
-						.put("username", "vince")//
-						.put("email", "vince@dog.com")//
-						.array("groups")//
-						.add("test")//
-						.build(), //
+		assertEquals(//
+				Json.object("username", "vince", "email", "vince@dog.com"), //
 				res2.deepCopy().without("meta"));
 
 		// get data with wrong username should fail
@@ -101,12 +96,8 @@ public class UserResourceTest extends Assert {
 
 		assertEquals(2, res9.get("meta").get("version").asInt());
 
-		assertEquals(
-				Json.objectBuilder().put("username", "vince")//
-						.put("email", "bignose@magic.com")//
-						.array("groups")//
-						.add("test")//
-						.build(), //
+		assertEquals(//
+				Json.object("username", "vince", "email", "bignose@magic.com"), //
 				res9.deepCopy().without("meta"));
 	}
 

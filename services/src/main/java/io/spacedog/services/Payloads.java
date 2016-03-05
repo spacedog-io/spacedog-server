@@ -3,6 +3,7 @@
  */
 package io.spacedog.services;
 
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.ResourceNotFoundException;
@@ -104,32 +105,33 @@ public class Payloads {
 		return json(builder, HttpStatus.BAD_REQUEST);
 	}
 
-	public static JsonBuilder<ObjectNode> savedBuilder(boolean created, String uri, String type, String id) {
-		return savedBuilder(created, uri, type, id, 0);
+	public static JsonBuilder<ObjectNode> savedBuilder(boolean created, String backendId, String uri, String type,
+			String id) {
+		return savedBuilder(created, backendId, uri, type, id, 0);
 	}
 
-	public static JsonBuilder<ObjectNode> savedBuilder(boolean created, String uri, String type, String id,
-			long version) {
+	public static Payload saved(boolean created, String backendId, String uri, String type, String id) {
+		return saved(created, backendId, uri, type, id, 0);
+	}
+
+	public static Payload saved(boolean created, String backendId, String uri, String type, String id, long version) {
+		JsonBuilder<ObjectNode> builder = Payloads.savedBuilder(created, backendId, uri, type, id, version);
+		return json(builder, created ? HttpStatus.CREATED : HttpStatus.OK)//
+				.withHeader(HEADER_OBJECT_ID, id);
+	}
+
+	public static JsonBuilder<ObjectNode> savedBuilder(boolean created, String backendId, String uri, String type,
+			String id, long version) {
 
 		JsonBuilder<ObjectNode> builder = minimalBuilder(created ? HttpStatus.CREATED : HttpStatus.OK) //
 				.put("id", id) //
 				.put("type", type) //
-				.put("location", AbstractResource.spaceUrl(uri, type, id).toString());
+				.put("location", AbstractResource.spaceUrl(Optional.ofNullable(backendId), uri, type, id).toString());
 
 		if (version > 0) //
 			builder.put("version", version);
 
 		return builder;
-	}
-
-	public static Payload saved(boolean created, String uri, String type, String id) {
-		return saved(created, uri, type, id, 0);
-	}
-
-	public static Payload saved(boolean created, String uri, String type, String id, long version) {
-		JsonBuilder<ObjectNode> builder = Payloads.savedBuilder(created, uri, type, id, version);
-		return json(builder, created ? HttpStatus.CREATED : HttpStatus.OK)//
-				.withHeader(HEADER_OBJECT_ID, id);
 	}
 
 	public static Payload json(int httpStatus) {

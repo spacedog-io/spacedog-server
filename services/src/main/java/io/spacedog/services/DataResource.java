@@ -84,7 +84,9 @@ public class DataResource extends AbstractResource {
 
 		IndexResponse response = DataStore.get().createObject(//
 				credentials.backendId(), type, id, object, credentials.name());
-		return Payloads.saved(true, "/v1/data", response.getType(), response.getId(), response.getVersion());
+
+		return Payloads.saved(true, credentials.backendId(), "/v1/data", response.getType(), response.getId(),
+				response.getVersion());
 	}
 
 	@Delete("/:type")
@@ -148,13 +150,15 @@ public class DataResource extends AbstractResource {
 
 			IndexResponse response = DataStore.get().updateObject(credentials.backendId(), type, id, version, object,
 					credentials.name());
-			return Payloads.saved(false, "/v1/data", response.getType(), response.getId(), response.getVersion());
+			return Payloads.saved(false, credentials.backendId(), "/v1/data", response.getType(), response.getId(),
+					response.getVersion());
 
 		} else {
 
 			UpdateResponse response = DataStore.get().patchObject(credentials.backendId(), type, id, version, object,
 					credentials.name());
-			return Payloads.saved(false, "/v1/data", response.getType(), response.getId(), response.getVersion());
+			return Payloads.saved(false, credentials.backendId(), "/v1/data", response.getType(), response.getId(),
+					response.getVersion());
 		}
 	}
 
@@ -162,16 +166,19 @@ public class DataResource extends AbstractResource {
 	public Payload deleteById(String type, String id, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 
-		// check if type is well defined
-		// throws a NotFoundException if not
-		// TODO useful for security?
-		Start.get().getElasticClient()//
-				.getSchema(credentials.backendId(), type);
-
-		DeleteResponse response = Start.get().getElasticClient().delete(credentials.backendId(), type, id);
-
-		if (response.isFound())
-			return Payloads.success();
+		ElasticClient elastic = Start.get().getElasticClient();
+		Optional<ObjectNode> object = DataStore.get().getObject(credentials.backendId(), type, id);
+		if (object.isPresent()) {
+			if (credentials.name().equals(Json.get(object.get(), "meta.createdBy").asText())) {
+				DeleteResponse response = elastic.delete(credentials.backendId(), type, id);
+				return response.isFound() //
+						? Payloads.success() //
+						: Payloads.error(HttpStatus.INTERNAL_SERVER_ERROR, //
+								"failed to delete object of type [%s] and id [%s]", type, id);
+			} else
+				return Payloads.error(HttpStatus.UNAUTHORIZED, //
+						"not the owner of object of type [%s] and id [%s]", type, id);
+		}
 
 		return Payloads.error(HttpStatus.NOT_FOUND, "object of type [%s] and id [%s] not found", type, id);
 	}

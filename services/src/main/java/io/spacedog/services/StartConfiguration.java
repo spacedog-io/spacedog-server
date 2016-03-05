@@ -109,7 +109,14 @@ public class StartConfiguration {
 	}
 
 	public String sslUrl() {
-		return configuration.getProperty("spacedog.url.ssl");
+		return sslUrl(Optional.empty());
+	}
+
+	public String sslUrl(Optional<String> backendId) {
+		String url = configuration.getProperty("spacedog.url.ssl");
+		return backendId.isPresent()//
+				? String.format(url, backendId.get() + '.')//
+				: String.format(url, "");
 	}
 
 	public String nonSslUrl() {

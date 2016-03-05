@@ -166,14 +166,38 @@ public class SpaceDogHelper {
 		SpaceRequest.delete("/v1/admin/account/" + backendId).basicAuth(username, password).go(200, 401);
 	}
 
+	public static Account resetTestAccount() throws Exception {
+		return resetAccount("test", "test", "hi test");
+	}
+
+	public static Account resetAccount(String backendId, String username, String password) throws Exception {
+		return resetAccount(backendId, username, password, "hello@spacedog.io", true);
+	}
+
 	public static Account resetAccount(String backendId, String username, String password, String email,
 			boolean forTesting) throws Exception {
 		deleteAccount(backendId, username, password);
 		return createAccount(backendId, username, password, email, forTesting);
 	}
 
-	public static Account resetTestAccount() throws Exception {
-		return resetAccount("test", "test", "hi test", "david@spacedog.io", true);
+	public static Account resetBackend(String backendId, String username, String password) throws Exception {
+
+		SpaceRequest.delete("/v1/backend/" + backendId).basicAuth(username, password).go(200, 401, 404);
+
+		SpaceRequest.post("/v1/backend/" + backendId)//
+				.forTesting(true)//
+				.body(Json.object(//
+						"username", username, //
+						"password", password, //
+						"email", "hello@spacedog.io"))//
+				.go(201);
+
+		return new Account(backendId, username, password, "hello@spacedog.io", null);
+	}
+
+	public static void prepareTest(String backendId) throws Exception {
+		prepareTest();
+		SpaceRequest.setDefaultBackend(backendId);
 	}
 
 	public static void prepareTest() throws Exception {

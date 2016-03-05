@@ -2,20 +2,20 @@ package io.spacedog.client;
 
 public enum SpaceTarget {
 
-	local("localhost", 8443, 8080, false), //
+	local("lvh.me", 8443, 8080, false), //
 	staging("spacerepublic.net", 443, 80, true), //
 	apiprod("api.spacedog.io", 443, 80, true), //
 	production("spacedog.io", 443, 80, true);
 
 	private String host;
-	private int sslPort;
-	private int nonSslPort;
+	private int port;
+	private int redirectedPort;
 	private boolean ssl;
 
-	private SpaceTarget(String host, int sslPort, int nonSslPort, boolean ssl) {
+	private SpaceTarget(String host, int port, int redirectedPort, boolean ssl) {
 		this.host = host;
-		this.sslPort = sslPort;
-		this.nonSslPort = nonSslPort;
+		this.port = port;
+		this.redirectedPort = redirectedPort;
 		this.ssl = ssl;
 	}
 
@@ -23,43 +23,59 @@ public enum SpaceTarget {
 		return host;
 	}
 
-	public int sslPort() {
-		return sslPort;
+	public int port() {
+		return port;
 	}
 
-	public int nonSslPort() {
-		return nonSslPort;
+	public int redirectedPort() {
+		return redirectedPort;
 	}
 
 	public boolean ssl() {
 		return ssl;
 	}
 
-	public StringBuilder sslUrlBuilder() {
+	public StringBuilder urlBuilder() {
 		return new StringBuilder(ssl ? "https://" : "http://")//
 				.append(host)//
-				.append(sslPort == 443 ? "" : ":" + sslPort);
+				.append(port == 443 ? "" : ":" + port);
 	}
 
-	public StringBuilder nonSslUrlBuilder() {
+	public StringBuilder urlBuilder(String backendId) {
+		return new StringBuilder(ssl ? "https://" : "http://")//
+				.append(backendId)//
+				.append('.')//
+				.append(host)//
+				.append(port == 443 ? "" : ":" + port);
+	}
+
+	public StringBuilder redirectedUrlBuilder() {
 		return new StringBuilder("http://")//
 				.append(host)//
-				.append(nonSslPort == 80 ? "" : ":" + nonSslPort);
+				.append(redirectedPort == 80 ? "" : ":" + redirectedPort);
 	}
 
-	public String sslUrl() {
-		return sslUrlBuilder().toString();
+	public StringBuilder redirectedUrlBuilder(String backendId) {
+		return new StringBuilder("http://")//
+				.append(backendId)//
+				.append('.')//
+				.append(host)//
+				.append(redirectedPort == 80 ? "" : ":" + redirectedPort);
 	}
 
-	public String nonSslUrl() {
-		return nonSslUrlBuilder().toString();
+	public String url() {
+		return urlBuilder().toString();
 	}
 
-	public String sslUrl(String uri) {
-		return sslUrlBuilder().append(uri).toString();
+	public String redirectedUrl() {
+		return redirectedUrlBuilder().toString();
 	}
 
-	public String nonSslUrl(String uri) {
-		return nonSslUrlBuilder().append(uri).toString();
+	public String url(String uri) {
+		return urlBuilder().append(uri).toString();
+	}
+
+	public String redirectedUrl(String uri) {
+		return redirectedUrlBuilder().append(uri).toString();
 	}
 }

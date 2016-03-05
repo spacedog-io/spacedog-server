@@ -2,6 +2,7 @@ package io.spacedog.services;
 
 import java.io.IOException;
 import java.util.Base64;
+import java.util.Iterator;
 import java.util.Optional;
 
 import org.elasticsearch.search.SearchHits;
@@ -9,7 +10,9 @@ import org.elasticsearch.search.SearchHits;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
+import com.google.common.net.HttpHeaders;
 
+import io.spacedog.utils.BackendKey;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Passwords;
 import io.spacedog.utils.SpaceHeaders;
@@ -134,16 +137,18 @@ public class SpaceContext {
 		SpaceContext local = get();
 		if (local.credentials == null) {
 			Debug.credentialCheck();
-			local.credentials = Strings.isNullOrEmpty(local.context.header(SpaceHeaders.BACKEND_KEY))//
-					? SpaceContext.buildAdminCredentials(local.context)
-					: SpaceContext.buildUserCredentials(local.context);
+			if (getBackendIdFromHostName(local.context).isPresent())
+				local.credentials = SpaceContext.buildNewGenerationCredentials(local.context);
+			else
+				local.credentials = Strings.isNullOrEmpty(local.context.header(SpaceHeaders.BACKEND_KEY))//
+						? SpaceContext.buildAdminCredentials(local.context)
+						: SpaceContext.buildUserCredentials(local.context);
 		}
 		return local.credentials;
 	}
 
-	public static void setCredentials(Credentials credentials, boolean override) {
-		if (override || !getOrBuildCredentials().isPresent())
-			get().credentials = Optional.of(credentials);
+	public static void setCredentials(Credentials credentials) {
+		get().credentials = Optional.of(credentials);
 	}
 
 	public static Optional<Credentials> getCredentials() {
@@ -154,6 +159,77 @@ public class SpaceContext {
 	//
 	// Implementation
 	//
+
+	private static Optional<Credentials> buildNewGenerationCredentials(Context context) {
+
+		String backendId = getBackendIdFromHostName(context).get();
+
+		if (AccountResource.INTERNAL_BACKENDS.contains(backendId))
+			throw new AuthenticationException("this backend id [%s] is reserved", backendId);
+
+		Optional<String[]> tokens = decodeAuthorizationHeader(context.header(SpaceHeaders.AUTHORIZATION));
+
+		if (tokens.isPresent()) {
+
+			String username = tokens.get()[0];
+			String password = tokens.get()[1];
+
+			// check if superdog credentials
+
+			Optional<String> hashedPassword = Start.get()//
+					.configuration().superdogHashedPassword(username);
+
+			if (hashedPassword.isPresent()) {
+
+				if (Passwords.hash(password).equals(hashedPassword.get()))
+					return Optional.of(//
+							Credentials.fromSuperDog(username, //
+									Start.get().configuration().superdogEmail(username).get()));
+
+				// TODO for now let's consider that superdogs, admin and regular
+				// users can have the same usernames. this method first check
+				// superdogs then admin and users. we could change this and
+				// uncomment this:
+
+				// throw new AuthenticationException("invalid superdog username
+				// or password");
+			}
+
+			// TODO move this to a specialized UserResource method ?
+
+			Optional<ObjectNode> user = DataStore.get()//
+					.getObject(backendId, UserResource.USER_TYPE, username);
+
+			if (user.isPresent()) {
+				String providedPassword = Passwords.hash(password);
+				JsonNode expectedPassword = user.get().get(UserResource.HASHED_PASSWORD);
+				if (!Json.isNull(expectedPassword) && providedPassword.equals(expectedPassword.asText())) {
+					String email = user.get().get(UserResource.EMAIL).asText();
+					Iterator<JsonNode> groups = user.get().path(UserResource.GROUPS).elements();
+					while (groups.hasNext())
+						if (UserResource.ADMIN_GROUP.equals(groups.next().asText()))
+							return Optional.of(Credentials.fromAdmin(backendId, username, email, null));
+
+					return Optional.of(Credentials.fromUser(backendId, username, email));
+				}
+			}
+
+			throw new AuthenticationException("invalid username or password");
+
+		}
+
+		return Optional.of(Credentials.fromKey(backendId, new BackendKey()));
+	}
+
+	private static Optional<String> getBackendIdFromHostName(Context context) {
+		String host = context.request().header(HttpHeaders.HOST);
+		String[] terms = host.split("\\.");
+		if (terms.length == 3)
+			return Optional.of(terms[0]);
+		if (terms.length == 2 && terms[1].equalsIgnoreCase("localhost"))
+			return Optional.of(terms[0]);
+		return Optional.empty();
+	}
 
 	private static Optional<Credentials> buildUserCredentials(Context context) {
 
@@ -259,8 +335,8 @@ public class SpaceContext {
 
 			// check admin users in spacedog index
 
-			SearchHits accountHits = DataStore.get().search(AccountResource.ADMIN_BACKEND,
-					AccountResource.ACCOUNT_TYPE, "username", username, "hashedPassword", Passwords.hash(password));
+			SearchHits accountHits = DataStore.get().search(AccountResource.ADMIN_BACKEND, AccountResource.ACCOUNT_TYPE,
+					"username", username, "hashedPassword", Passwords.hash(password));
 
 			if (accountHits.getTotalHits() == 0)
 				throw new AuthenticationException("invalid administrator username or password");

@@ -4,6 +4,7 @@
 package io.spacedog.services;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.Set;
 
 import org.elasticsearch.action.delete.DeleteResponse;
@@ -191,16 +192,17 @@ public class AccountResource extends AbstractResource {
 		// Account is created, new account credentials are valid and can be set
 		// in space context if none are set
 		SpaceContext.setCredentials(Credentials.fromAdmin(//
-				account.backendId, account.username, account.email, account.backendKey), false);
+				account.backendId, account.username, account.email, account.backendKey));
 
 		if (!isTest(context))
 			Internals.get().notify(//
 					Start.get().configuration().superdogNotificationTopic(), //
 					String.format("New account (%s)",
-							AbstractResource.spaceUrl("/v1", ACCOUNT_TYPE, account.backendId).toString()), //
+							AbstractResource.spaceUrl(Optional.empty(), "/v1", ACCOUNT_TYPE, account.backendId)
+									.toString()), //
 					String.format("account backend = %s\naccount email = %s", account.backendId, account.email));
 
-		ObjectNode payloadContent = Payloads.savedBuilder(true, "/v1", ACCOUNT_TYPE, account.backendId, version)//
+		ObjectNode payloadContent = Payloads.savedBuilder(true, null, "/v1", ACCOUNT_TYPE, account.backendId, version)//
 				.put(AccountResource.BACKEND_KEY, account.defaultClientKey()).build();
 
 		return Payloads.json(payloadContent, HttpStatus.CREATED)//
