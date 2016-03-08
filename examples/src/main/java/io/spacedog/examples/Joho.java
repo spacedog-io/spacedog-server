@@ -145,7 +145,7 @@ public class Joho extends SpaceDogHelper {
 	public void createJoho2InstallationIndex() throws Exception {
 
 		SpaceRequest.delete("/v1/schema/installation")//
-				.basicAuth(johoAccount)//
+				.basicAuth(ADMIN_USERNAME, ADMIN_PASSWORD)//
 				.go(200, 404);
 
 		ObjectNode installationSchema = SchemaBuilder2.builder("installation")//
@@ -160,7 +160,7 @@ public class Joho extends SpaceDogHelper {
 				.build();
 
 		SpaceRequest.put("/v1/schema/installation")//
-				.basicAuth(johoAccount)//
+				.basicAuth(ADMIN_USERNAME, ADMIN_PASSWORD)//
 				.body(installationSchema)//
 				.go(201);
 	}
