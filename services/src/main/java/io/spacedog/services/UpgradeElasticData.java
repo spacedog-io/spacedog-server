@@ -45,9 +45,6 @@ public class UpgradeElasticData {
 
 	public static void main(String[] args) throws Exception {
 
-		System.setProperty("spacedog.configuration.file",
-				"/Users/davattias/dev/spacedog/local/spacedog.server.properties");
-
 		UpgradeElasticData singleton = new UpgradeElasticData();
 
 		try {
