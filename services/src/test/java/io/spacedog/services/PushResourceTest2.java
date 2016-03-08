@@ -111,6 +111,17 @@ public class PushResourceTest2 extends Assert {
 				.assertContains(toJsonTag("bonjour", "toi"))//
 				.assertSizeEquals(1);
 
+		// add again the same tag is ok and there is no duplicate as a result
+
+		SpaceRequest.post("/v1/installation/" + nathInstallId + "/tags")//
+				.backendKey(testAccount).basicAuth(nath)//
+				.body(toJsonTag("bonjour", "toi")).go(200);
+
+		SpaceRequest.get("/v1/installation/" + nathInstallId + "/tags")//
+				.backendKey(testAccount).basicAuth(nath).go(200)//
+				.assertContains(toJsonTag("bonjour", "toi"))//
+				.assertSizeEquals(1);
+
 		// add bonjour/toi tag to vince install
 
 		SpaceRequest.post("/v1/installation/" + vinceInstallId + "/tags")//
