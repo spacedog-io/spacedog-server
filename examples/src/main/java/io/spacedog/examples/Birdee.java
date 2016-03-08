@@ -3,12 +3,15 @@
  */
 package io.spacedog.examples;
 
+import org.joda.time.DateTime;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceResponse;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SchemaBuilder2;
 
@@ -170,6 +173,52 @@ public class Birdee extends SpaceDogHelper {
 				.backendKey(adminAccount)//
 				.body(device)//
 				.go(201);
+	}
+
+	public void cmsJob() throws Exception {
+
+		// récupération de tous les articles du CMS
+		ObjectNode[] articles = null;
+
+		for (ObjectNode article : articles) {
+
+			SpaceResponse response = SpaceRequest.get("/v1/data/news/" + article.get("id").asText())//
+					.backendKey(adminAccount)//
+					.body(article)//
+					.go(200, 404);
+
+			if (response.httpResponse().getStatus() == 404) {
+
+				// convert article to news
+				ObjectNode news = null;
+
+				SpaceRequest.post("/v1/data/news")//
+						.backendKey(adminAccount)//
+						.body(news)//
+						.go(201);
+			}
+
+			if (response.httpResponse().getStatus() == 200) {
+
+				ObjectNode news = response.objectNode();
+
+				// check if changed after last update in news
+				if (DateTime.parse(news.get("meta").get("updatedAt").asText()).isBefore(//
+						DateTime.parse(article.get("updatedAt").asText()))) {
+
+					// update news from article
+					// news.set(...)
+
+					SpaceRequest.put("/v1/data/news/" + article.get("id").asText())//
+							.backendKey(adminAccount)//
+							.body(news)//
+							.go(200);
+				}
+
+			}
+
+		}
+
 	}
 
 	public void pushJob() throws Exception {

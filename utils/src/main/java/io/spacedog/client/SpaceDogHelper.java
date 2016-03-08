@@ -45,6 +45,10 @@ public class SpaceDogHelper {
 		}
 	}
 
+	public static User createUser(Account account, String username, String password) throws Exception {
+		return createUser(account, username, password, "david@spacedog.io");
+	}
+
 	public static User createUser(Account account, String username, String password, String email) throws Exception {
 		return createUser(account.backendKey, username, password, email);
 	}
@@ -66,18 +70,21 @@ public class SpaceDogHelper {
 		SpaceRequest.delete("/v1/user/" + username).basicAuth(adminUsername, password).go(200, 404);
 	}
 
-	public static void resetSchema(JsonNode schema, Account account) throws Exception {
-		resetSchema(schema, account.username, account.password);
-	}
-
-	public static void resetSchema(JsonNode schema, String username, String password) throws Exception {
-		deleteSchema(schema, username, password);
-		setSchema(schema, username, password);
-	}
-
-	public static void deleteSchema(JsonNode schema, Account account) throws Exception {
-		deleteSchema(schema, account.username, account.password);
-	}
+	// public static void resetSchema(JsonNode schema, Account account) throws
+	// Exception {
+	// resetSchema(schema, account.username, account.password);
+	// }
+	//
+	// public static void resetSchema(JsonNode schema, String username, String
+	// password) throws Exception {
+	// deleteSchema(schema, username, password);
+	// setSchema(schema, username, password);
+	// }
+	//
+	// public static void deleteSchema(JsonNode schema, Account account) throws
+	// Exception {
+	// deleteSchema(schema, account.username, account.password);
+	// }
 
 	public static void deleteSchema(JsonNode schema, String username, String password) throws Exception {
 		String schemaName = schema.fieldNames().next();

@@ -7,16 +7,12 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.elasticsearch.action.get.MultiGetResponse;
-import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.common.collect.Sets;
 import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.joda.time.DateTime;
 
 import com.amazonaws.regions.Region;
@@ -39,6 +35,7 @@ import com.amazonaws.services.sns.model.Subscription;
 import com.amazonaws.services.sns.model.Topic;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Sets;
 
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Json;
@@ -75,7 +72,7 @@ public class PushResource {
 
 		// TODO handle more than one app
 		// TODO handle more than one endpoint per app
-		ElasticHelper.get().patchObject(credentials.backendId(), //
+		DataStore.get().patchObject(credentials.backendId(), //
 				UserResource.USER_TYPE, //
 				credentials.name(), //
 				Json.objectBuilder().put(UserResource.ENDPOINT_ARN, endpointArn).build(), //
@@ -180,11 +177,12 @@ public class PushResource {
 
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		ObjectNode node = Json.readObjectNode(body);
+		String type = Json.checkStringNode(node, "type", true).get().asText();
 		JsonNode query = Json.checkObject(node, "query", true).get();
 		JsonNode properties = Json.checkArrayNode(node, "properties", true).get();
 		String message = Json.checkStringNode(node, "message", true).get().asText();
 
-		Set<String> usernames = getUsernamesFromObjects(credentials, query, properties);
+		Set<String> usernames = getUsernamesFromObjects(credentials.backendId(), type, query, properties);
 		Set<String> endpointArns = getEndpointArnsFromUsers(credentials, usernames);
 
 		for (String endpointArn : endpointArns) {
@@ -203,9 +201,8 @@ public class PushResource {
 	private Set<String> getEndpointArnsFromUsers(Credentials credentials, Set<String> usernames) {
 
 		// TODO how many users can I get in one request ?
-		MultiGetResponse multiGet = Start.get().getElasticClient().prepareMultiGet()
-				.add(credentials.backendId(), UserResource.USER_TYPE, usernames)//
-				.get();
+		MultiGetResponse multiGet = Start.get().getElasticClient().multiGet(//
+				credentials.backendId(), UserResource.USER_TYPE, usernames);
 
 		Set<String> endpointArns = Sets.newHashSet();
 		multiGet.forEach(response -> endpointArns
@@ -214,34 +211,25 @@ public class PushResource {
 		return endpointArns;
 	}
 
-	private Set<String> getUsernamesFromObjects(Credentials credentials, JsonNode query, JsonNode properties) {
+	private Set<String> getUsernamesFromObjects(String backendId, String type, JsonNode query, JsonNode properties) {
 
-		String index = credentials.backendId();
-		SearchRequest request = new SearchRequest(index);
-		SearchSourceBuilder builder = SearchSourceBuilder.searchSource()//
-				.from(0)//
+		SearchResponse response = Start.get().getElasticClient()//
+				.prepareSearch(backendId, type)//
+				.setFrom(0)//
 				// TODO get objects 100 by 100
-				.size(1000)//
-				.fetchSource(true);
+				.setSize(1000)//
+				.setFetchSource(true)//
+				.setSource(query.toString())//
+				.get();
 
-		request.source(query.toString());
-		request.extraSource(builder);
-
-		try {
-			Set<String> usernames = Sets.newHashSet();
-			SearchResponse response = Start.get().getElasticClient().search(request).get();
-
-			for (SearchHit hit : response.getHits().getHits()) {
-				ObjectNode object = Json.readObjectNode(hit.sourceAsString());
-				for (Iterator<JsonNode> iterator = properties.elements(); iterator.hasNext();)
-					usernames.add(Json.get(object, iterator.next().asText()).asText());
-			}
-
-			return usernames;
-
-		} catch (InterruptedException | ExecutionException e) {
-			throw new RuntimeException(e);
+		Set<String> usernames = Sets.newHashSet();
+		for (SearchHit hit : response.getHits().getHits()) {
+			ObjectNode object = Json.readObjectNode(hit.sourceAsString());
+			for (Iterator<JsonNode> iterator = properties.elements(); iterator.hasNext();)
+				usernames.add(Json.get(object, iterator.next().asText()).asText());
 		}
+
+		return usernames;
 	}
 
 	AmazonSNSClient getSnsClient() {

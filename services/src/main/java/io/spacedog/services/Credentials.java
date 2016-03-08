@@ -3,6 +3,7 @@
  */
 package io.spacedog.services;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 import com.google.common.base.Strings;
@@ -12,7 +13,11 @@ import io.spacedog.utils.BackendKey;
 public class Credentials {
 
 	public static enum Type {
-		KEY, USER, ADMIN, SUPERDOG
+		KEY, USER, ADMIN, SUPERDOG;
+
+		public Type[] lowerOrEqual() {
+			return Arrays.copyOf(values(), ordinal() + 1);
+		}
 	}
 
 	private String backendId;

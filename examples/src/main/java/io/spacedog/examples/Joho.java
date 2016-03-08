@@ -75,6 +75,11 @@ public class Joho extends SpaceDogHelper {
 				.stringProperty("avatar", true)//
 				.stringProperty("job", true)//
 				.endObjectProperty()//
+				.startObjectProperty("category", true)//
+				.textProperty("name", "french", true)//
+				.textProperty("description", "french", true)//
+				.stringProperty("code", true)//
+				.endObjectProperty()//
 				.startObjectProperty("responses", true, true)//
 				.textProperty("text", "french", true)//
 				.startObjectProperty("author", true)//
@@ -137,17 +142,41 @@ public class Joho extends SpaceDogHelper {
 	}
 
 	@Test
+	public void createJoho2InstallationIndex() throws Exception {
+
+		SpaceRequest.delete("/v1/schema/installation")//
+				.basicAuth(johoAccount)//
+				.go(200, 404);
+
+		ObjectNode installationSchema = SchemaBuilder2.builder("installation")//
+				.stringProperty("appId", true)//
+				.stringProperty("deviceToken", true)//
+				.stringProperty("providerId", true)//
+				.stringProperty("userId", true)//
+				.startObjectProperty("tags", false)//
+				.stringProperty("key", true)//
+				.stringProperty("value", true)//
+				.endObjectProperty()//
+				.build();
+
+		SpaceRequest.put("/v1/schema/installation")//
+				.basicAuth(johoAccount)//
+				.body(installationSchema)//
+				.go(201);
+	}
+
+	@Test
 	public void initAndFillJohoBackend() throws Exception {
 
 		// johoAccount = resetAccount(BACKEND_ID, ADMIN_USERNAME,
 		// ADMIN_PASSWORD, "david@spacedog.io");
 		johoAccount = getOrCreateAccount(BACKEND_ID, ADMIN_USERNAME, ADMIN_PASSWORD, "david@spacedog.io", false);
 
-		resetSchema(buildDiscussionSchema(), johoAccount);
-		resetSchema(buildMessageSchema(), johoAccount);
-		resetSchema(buildCustomUserSchema(), johoAccount);
-		resetSchema(buildThemesSchema(), johoAccount);
-		resetSchema(buildSitesSchema(), johoAccount);
+		setSchema(buildDiscussionSchema(), johoAccount);
+		setSchema(buildMessageSchema(), johoAccount);
+		setSchema(buildCustomUserSchema(), johoAccount);
+		setSchema(buildThemesSchema(), johoAccount);
+		setSchema(buildSitesSchema(), johoAccount);
 
 		// deleteUser("fred", johoAccount);
 		// fred = createUser(johoAccount.backendKey, "fred", "hi fred",

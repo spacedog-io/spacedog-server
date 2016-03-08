@@ -27,7 +27,7 @@ public class QueryTest extends Assert {
 		SpaceDogHelper.prepareTest();
 		SpaceDogHelper.Account testAccount = SpaceDogHelper.resetTestAccount();
 
-		SpaceDogHelper.resetSchema(SchemaResourceTest.buildCarSchema(), testAccount);
+		SpaceDogHelper.setSchema(SchemaResourceTest.buildCarSchema(), testAccount);
 
 		for (int i = 0; i < 500; i++) {
 			SpaceRequest.post("/v1/data/car").backendKey(testAccount).body(jsonCar(i).toString()).go(201);

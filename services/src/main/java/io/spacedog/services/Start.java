@@ -5,12 +5,15 @@ package io.spacedog.services;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.client.Client;
-import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.cluster.health.ClusterHealthStatus;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.settings.Settings.Builder;
 import org.elasticsearch.node.Node;
-import org.elasticsearch.node.NodeBuilder;
+import org.elasticsearch.plugin.deletebyquery.DeleteByQueryPlugin;
 
 import net.codestory.http.AbstractWebServer;
 import net.codestory.http.Request;
@@ -25,7 +28,7 @@ import net.codestory.http.websockets.WebSocketHandler;
 public class Start {
 
 	private Node elasticNode;
-	private Client elasticClient;
+	private ElasticClient elasticClient;
 	private MyFluentServer fluent;
 	private StartConfiguration config;
 
@@ -33,7 +36,7 @@ public class Start {
 		return elasticNode;
 	}
 
-	public Client getElasticClient() {
+	public ElasticClient getElasticClient() {
 		return elasticClient;
 	}
 
@@ -45,6 +48,7 @@ public class Start {
 		try {
 			singleton = new Start();
 			singleton.startLocalElastic();
+			singleton.initServices();
 			singleton.startFluent();
 
 		} catch (Throwable t) {
@@ -63,18 +67,43 @@ public class Start {
 
 	private void startLocalElastic() throws InterruptedException, ExecutionException, IOException {
 
-		elasticNode = NodeBuilder.nodeBuilder()//
-				.local(true)//
-				.data(true)//
-				.clusterName("spacedog-elastic-cluster")//
-				.settings(ImmutableSettings.builder()//
-						.put("path.data", //
-								config.elasticDataPath().toAbsolutePath().toString())
-						.build())//
-				.node();
+		Builder builder = Settings.builder()//
+				.put("node.master", true)//
+				.put("node.data", true)//
+				.put("cluster.name", "spacedog-elastic-cluster")//
+				// disable rebalance to avoid automatic rebalance
+				// when a temporary second node appears
+				.put("cluster.routing.rebalance.enable", "none")//
+				.put("path.home", //
+						config.homePath().toAbsolutePath().toString())
+				.put("path.data", //
+						config.elasticDataPath().toAbsolutePath().toString());
 
-		elasticClient = elasticNode.client();
-		AccountResource.get().initSpacedogIndex();
+		if (config.snapshotsPath().isPresent())
+			builder.put("path.repo", //
+					config.snapshotsPath().get().toAbsolutePath().toString());
+
+		elasticNode = new ElasticNode(builder.build(), //
+				Collections.singleton(DeleteByQueryPlugin.class));
+
+		elasticNode.start();
+		Client client = elasticNode.client();
+		elasticClient = new ElasticClient(client);
+
+		// wait for cluster to fully initialize and turn asynchronously from
+		// RED status to YELLOW or GREEN before to initialize anything else
+		// wait only for 5 seconds maximum
+
+		while (true) {
+			Thread.sleep(1000);
+			ClusterHealthStatus status = client.admin().cluster().prepareHealth().get().getStatus();
+			if (!ClusterHealthStatus.RED.equals(status))
+				return;
+		}
+	}
+
+	private void initServices() throws IOException {
+		AccountResource.get().initSpacedogBackend();
 	}
 
 	private void startFluent() throws IOException {
@@ -105,7 +134,8 @@ public class Start {
 				.add(MailResource.get())//
 				.add(SnapshotResource.get())//
 				.add(LogResource.get())//
-				.add(PushResource.get())//
+				// .add(PushResource.get())//
+				.add(PushResource2.get())//
 				.add(FileResource.get())//
 				.add(ShareResource.get())//
 				.add(SearchResource.get());

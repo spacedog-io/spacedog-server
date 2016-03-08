@@ -5,9 +5,8 @@ package io.spacedog.services;
 
 import java.io.IOException;
 
-import org.elasticsearch.common.base.Strings;
-
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Strings;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;

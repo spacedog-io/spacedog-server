@@ -30,9 +30,9 @@ public class SchemaResourceTest extends Assert {
 		User bob = SpaceDogHelper.createUser(testAccount, "bob", "hi bob", "bob@dog.com");
 
 		// should succeed to reset all schemas
-		SpaceDogHelper.resetSchema(buildCarSchema(), testAccount);
-		SpaceDogHelper.resetSchema(buildHomeSchema(), testAccount);
-		SpaceDogHelper.resetSchema(buildSaleSchema(), testAccount);
+		SpaceDogHelper.setSchema(buildCarSchema(), testAccount);
+		SpaceDogHelper.setSchema(buildHomeSchema(), testAccount);
+		SpaceDogHelper.setSchema(buildSaleSchema(), testAccount);
 
 		// should succeed to get schemas with simple backend key credentials
 		assertEquals(buildCarSchema(), //
@@ -57,13 +57,16 @@ public class SchemaResourceTest extends Assert {
 		// should fail to delete schema with simple user credentials
 		SpaceRequest.delete("/v1/schema/toto").basicAuth(bob).go(401);
 
-		// should succeed to delete a non existent schema
-		SpaceRequest.delete("/v1/schema/toto").basicAuth(testAccount).go(200);
+		// should fail to delete a non existent schema
+		SpaceRequest.delete("/v1/schema/toto").basicAuth(testAccount).go(404);
+
+		// should succeed to delete a schema and all its documents
+		SpaceRequest.delete("/v1/schema/sale").basicAuth(testAccount).go(200);
 
 		// should fail to create an invalid schema
 		SpaceRequest.put("/v1/schema/toto").basicAuth(testAccount).body("{\"toto\":{\"_type\":\"XXX\"}}").go(400);
 
-		// should fail to change the car schema
+		// should fail to change the car schema color property type
 		ObjectNode json = buildCarSchema();
 		json.with("car").with("color").put("_type", "date");
 		SpaceRequest.put("/v1/schema/car").basicAuth(testAccount).body(json).go(400);

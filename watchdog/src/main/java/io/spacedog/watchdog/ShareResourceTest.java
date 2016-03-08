@@ -171,7 +171,7 @@ public class ShareResourceTest {
 		SpaceRequest.delete("/v1/share").basicAuth(vince).go(401);
 		SpaceRequest.delete("/v1/share").basicAuth(testAccount).go(200)//
 				.assertSizeEquals(1, "deleted")//
-				.assertArrayContains(TextNode.valueOf(pngPath), "deleted");
+				.assertContains(TextNode.valueOf(pngPath), "deleted");
 
 		SpaceRequest.get("/v1/share").basicAuth(testAccount).go(200)//
 				.assertSizeEquals(0, "results");

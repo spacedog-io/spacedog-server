@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
@@ -175,8 +176,32 @@ public class Json {
 		return new JsonBuilder<ArrayNode>().array();
 	}
 
-	public static ObjectMapper jsonMapper = new ObjectMapper().setDefaultPrettyPrinter(
-			new DefaultPrettyPrinter().withArrayIndenter(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE));
+	// TODO add tests
+	public static ObjectNode object(Object... elements) {
+		// TODO check this test
+		// TODO better message
+		if (elements.length % 2 != 0)
+			throw Exceptions.illegalArgument("elements are not pairs");
+
+		JsonBuilder<ObjectNode> builder = Json.objectBuilder();
+
+		// TODO convert values to the right type
+		// not only strings
+		for (int i = 0; i < elements.length; i = i + 2)
+			builder.put(elements[i].toString(), elements[i + 1].toString());
+
+		return builder.build();
+	}
+
+	private static ObjectMapper jsonMapper;
+
+	static {
+		jsonMapper = new ObjectMapper()//
+				.setDefaultPrettyPrinter(new DefaultPrettyPrinter()//
+						.withArrayIndenter(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE))//
+				.registerModule(new JodaModule())//
+				.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+	}
 
 	public static Object toSimpleValue(JsonNode value) {
 

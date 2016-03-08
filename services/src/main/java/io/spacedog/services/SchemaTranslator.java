@@ -47,17 +47,10 @@ public class SchemaTranslator {
 		propertiesNode.set("meta", META_MAPPING);
 
 		if ("object".equals(type)) {
-			JsonBuilder<ObjectNode> builder = Json.objectBuilder()
-					// Enable _timestamp when I find out how to read/get it back
-					.object("_timestamp")//
-					.put("enabled", false)//
-					.end()//
+			JsonBuilder<ObjectNode> builder = Json.objectBuilder()//
 					.put("dynamic", "strict")//
 					.put("date_detection", false)//
 					.node("properties", propertiesNode);
-
-			if (schema.has("_id"))
-				builder.object("_id").put("path", schema.get("_id").asText()).end();
 
 			return builder.build();
 		} else

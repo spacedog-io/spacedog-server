@@ -38,15 +38,19 @@ public class SpaceResponse {
 			throws JsonProcessingException, IOException, UnirestException {
 
 		this.httpRequest = request;
+
+		if (debug) {
+			System.out.println();
+			System.out.print(String.format("%s %s => ", httpRequest.getHttpMethod(), httpRequest.getUrl()));
+		}
+
 		this.before = DateTime.now();
 
 		httpResponse = httpRequest.asString();
 		this.duration = DateTime.now().getMillis() - this.before.getMillis();
 
 		if (debug) {
-			System.out.println();
-			System.out.println(String.format("%s %s => %s => %s", httpRequest.getHttpMethod(), httpRequest.getUrl(),
-					httpResponse.getStatus(), httpResponse.getStatusText()));
+			System.out.println(String.format("%s (%s)", httpResponse.getStatus(), httpResponse.getStatusText()));
 
 			httpRequest.getHeaders().forEach((key, value) -> printHeader(key, value));
 
@@ -270,11 +274,19 @@ public class SpaceResponse {
 		return this;
 	}
 
-	public SpaceResponse assertArrayContains(JsonNode expected, String jsonPath) {
+	public SpaceResponse assertContains(JsonNode expected) {
+		assertJsonContent();
+		if (!Iterators.contains(jsonResponseContent.elements(), expected))
+			Assert.fail(String.format(//
+					"response does not contain [%s]", expected));
+		return this;
+	}
+
+	public SpaceResponse assertContains(JsonNode expected, String jsonPath) {
 		assertJsonContent();
 		if (!Iterators.contains(Json.get(jsonResponseContent, jsonPath).elements(), expected))
 			Assert.fail(String.format(//
-					"field named [%s] of type array does node contain node [%s]", jsonPath, expected));
+					"field [%s] does not contain [%s]", jsonPath, expected));
 		return this;
 	}
 

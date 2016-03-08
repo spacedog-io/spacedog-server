@@ -13,7 +13,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
-import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
@@ -23,9 +23,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
-import io.spacedog.services.ElasticHelper.FilteredSearchBuilder;
+import io.spacedog.services.DataStore.FilteredSearchBuilder;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -35,8 +36,6 @@ import net.codestory.http.payload.Payload;
 
 @Prefix("/v1")
 public class SearchResource extends AbstractResource {
-
-	public static final String REFRESH = "refresh";
 
 	//
 	// Routes
@@ -52,8 +51,8 @@ public class SearchResource extends AbstractResource {
 	@Post("/search/")
 	public Payload postSearchAllTypes(String body, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
-		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, false);
-		ElasticHelper.get().refresh(refresh, credentials.backendId());
+		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
+		DataStore.get().refreshBackend(refresh, credentials.backendId());
 		ObjectNode result = searchInternal(credentials, null, body, context);
 		return Payloads.json(result);
 	}
@@ -62,10 +61,11 @@ public class SearchResource extends AbstractResource {
 	@Delete("/search/")
 	public Payload deleteAllTypes(String query, Context context) {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
-		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, true);
-		ElasticHelper.get().refresh(refresh, credentials.backendId());
-		DeleteByQueryResponse response = ElasticHelper.get().delete(credentials.backendId(), query, new String[0]);
-		return Payloads.json(response.status(), response.getIndex(credentials.backendId()).getFailures());
+		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, true);
+		DataStore.get().refreshBackend(refresh, credentials.backendId());
+		DeleteByQueryResponse response = Start.get().getElasticClient()//
+				.deleteByQuery(credentials.backendId(), query);
+		return Payloads.json(response);
 	}
 
 	@Get("/search/:type")
@@ -78,8 +78,8 @@ public class SearchResource extends AbstractResource {
 	@Post("/search/:type/")
 	public Payload postSearchForType(String type, String body, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
-		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, false);
-		ElasticHelper.get().refresh(refresh, credentials.backendId());
+		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
+		DataStore.get().refreshType(refresh, credentials.backendId(), type);
 		ObjectNode result = searchInternal(credentials, type, body, context);
 		return Payloads.json(result);
 	}
@@ -87,11 +87,15 @@ public class SearchResource extends AbstractResource {
 	@Delete("/search/:type")
 	@Delete("/search/:type/")
 	public Payload deleteSearchForType(String type, String query, Context context) {
+
 		Credentials credentials = SpaceContext.checkAdminCredentials();
-		boolean refresh = context.query().getBoolean(SearchResource.REFRESH, true);
-		ElasticHelper.get().refresh(refresh, credentials.backendId());
-		DeleteByQueryResponse response = ElasticHelper.get().delete(credentials.backendId(), query, type);
-		return Payloads.json(response.status(), response.getIndex(credentials.backendId()).getFailures());
+		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, true);
+		DataStore.get().refreshType(refresh, credentials.backendId(), type);
+
+		DeleteByQueryResponse response = Start.get().getElasticClient()//
+				.deleteByQuery(credentials.backendId(), type, query);
+
+		return Payloads.json(response);
 	}
 
 	@Post("/filter/:type")
@@ -99,9 +103,9 @@ public class SearchResource extends AbstractResource {
 	public Payload postFilterForType(String type, String body, Context context) {
 		try {
 			Credentials credentials = SpaceContext.checkCredentials();
-			boolean refresh = context.query().getBoolean(SearchResource.REFRESH, false);
-			ElasticHelper.get().refresh(refresh, credentials.backendId());
-			FilteredSearchBuilder builder = ElasticHelper.get().searchBuilder(credentials.backendId(), type)
+			boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
+			DataStore.get().refreshType(refresh, credentials.backendId(), type);
+			FilteredSearchBuilder builder = DataStore.get().searchBuilder(credentials.backendId(), type)
 					.applyContext(context).applyFilters(Json.readObjectNode(body));
 			return Payloads.json(extractResults(builder.get(), context, credentials));
 
@@ -112,41 +116,29 @@ public class SearchResource extends AbstractResource {
 
 	ObjectNode searchInternal(Credentials credentials, String type, String jsonQuery, Context context) {
 
-		try {
-			String index = credentials.backendId();
-			SearchRequest request = new SearchRequest(index);
+		ElasticClient elastic = Start.get().getElasticClient();
+		SearchRequestBuilder search = Strings.isNullOrEmpty(type)//
+				? elastic.prepareSearch(credentials.backendId())//
+				: elastic.prepareSearch(credentials.backendId(), type).setTypes(type);
 
-			if (!Strings.isNullOrEmpty(type)) {
-				// check if type is well defined
-				// throws a NotFoundException if not
-				ElasticHelper.get().getSchema(index, type);
-				request.types(type);
-			}
+		if (Strings.isNullOrEmpty(jsonQuery)) {
 
-			SearchSourceBuilder builder = SearchSourceBuilder.searchSource().version(true);
+			search.setFrom(context.query().getInteger("from", 0))//
+					.setSize(context.query().getInteger("size", 10))//
+					.setFetchSource(context.query().getBoolean("fetch-contents", true))//
+					.setQuery(QueryBuilders.matchAllQuery())//
+					.setVersion(true);
 
-			if (Strings.isNullOrEmpty(jsonQuery)) {
+			String queryText = context.get("q");
+			if (!Strings.isNullOrEmpty(queryText))
+				search.setQuery(QueryBuilders.simpleQueryStringQuery(queryText));
 
-				builder.from(context.query().getInteger("from", 0))//
-						.size(context.query().getInteger("size", 10))//
-						.fetchSource(context.query().getBoolean("fetch-contents", true))//
-						.query(QueryBuilders.matchAllQuery());
-
-				String queryText = context.get("q");
-				if (!Strings.isNullOrEmpty(queryText)) {
-					builder.query(QueryBuilders.simpleQueryStringQuery(queryText));
-				}
-
-			} else {
-				request.source(jsonQuery);
-			}
-
-			request.extraSource(builder);
-			return extractResults(Start.get().getElasticClient().search(request).get(), context, credentials);
-
-		} catch (InterruptedException | ExecutionException e) {
-			throw new RuntimeException(e);
+		} else {
+			search.setExtraSource(SearchSourceBuilder.searchSource().version(true).buildAsBytes());
+			search.setSource(jsonQuery);
 		}
+
+		return extractResults(search.get(), context, credentials);
 	}
 
 	private ObjectNode extractResults(SearchResponse response, Context context, Credentials credentials) {
@@ -200,7 +192,7 @@ public class SearchResource extends AbstractResource {
 		set.remove(null);
 		Map<String, ObjectNode> results = new HashMap<>();
 		set.forEach(reference -> {
-			Optional<ObjectNode> object = ElasticHelper.get().getObject(//
+			Optional<ObjectNode> object = DataStore.get().getObject(//
 					credentials.backendId(), getReferenceType(reference), getReferenceId(reference));
 			if (object.isPresent()) {
 

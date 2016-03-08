@@ -3,9 +3,10 @@
  */
 package io.spacedog.utils;
 
-import java.util.Date;
 import java.util.UUID;
 import java.util.regex.Pattern;
+
+import org.joda.time.DateTime;
 
 import com.google.common.base.Strings;
 
@@ -15,7 +16,7 @@ public class BackendKey {
 
 	public String name;
 	public String secret;
-	public Date generatedAt;
+	public DateTime generatedAt;
 
 	public BackendKey() {
 		this(DEFAULT_BACKEND_KEY_NAME);
@@ -24,7 +25,7 @@ public class BackendKey {
 	public BackendKey(String name) {
 		this.name = name;
 		this.secret = UUID.randomUUID().toString();
-		this.generatedAt = new Date();
+		this.generatedAt = DateTime.now();
 	}
 
 	//

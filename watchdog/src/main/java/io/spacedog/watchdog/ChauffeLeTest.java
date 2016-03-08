@@ -34,8 +34,8 @@ public class ChauffeLeTest extends Assert {
 
 		adminAccount = SpaceDogHelper.resetTestAccount();
 
-		SpaceDogHelper.resetSchema(buildBigPostSchema(), adminAccount);
-		SpaceDogHelper.resetSchema(buildSmallPostSchema(), adminAccount);
+		SpaceDogHelper.setSchema(buildBigPostSchema(), adminAccount);
+		SpaceDogHelper.setSchema(buildSmallPostSchema(), adminAccount);
 
 		lui = SpaceDogHelper.createUser(adminAccount.backendKey, "lui", "hi lui", "lui@chauffe.le");
 		elle = SpaceDogHelper.createUser(adminAccount.backendKey, "elle", "hi elle", "elle@chauffe.le");

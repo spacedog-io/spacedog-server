@@ -3,18 +3,18 @@
  */
 package io.spacedog.services;
 
-import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
+import org.elasticsearch.cluster.metadata.MappingMetaData;
+import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.indices.TypeMissingException;
 
+import com.carrotsearch.hppc.cursors.ObjectCursor;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Json.JsonMerger;
+import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -34,22 +34,20 @@ public class SchemaResource extends AbstractResource {
 	@Get("/")
 	public Payload getAll(Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
-		GetMappingsResponse resp = Start.get().getElasticClient().admin().indices()
-				.prepareGetMappings(credentials.backendId()).get();
-
+		ElasticClient elastic = Start.get().getElasticClient();
+		GetMappingsResponse resp = elastic.getMappings(credentials.backendId());
 		JsonMerger jsonMerger = Json.merger();
 
-		Optional.ofNullable(resp.getMappings())//
-				.map(indexMap -> indexMap.get(credentials.backendId()))
-				.orElseThrow(() -> new NotFoundException(credentials.backendId()))//
-				.forEach(typeAndMapping -> {
-					try {
-						jsonMerger.merge((ObjectNode) Json.readObjectNode(typeAndMapping.value.source().string())
-								.get(typeAndMapping.key).get("_meta"));
-					} catch (Exception e) {
-						throw new RuntimeException(e);
-					}
-				});
+		for (ObjectCursor<ImmutableOpenMap<String, MappingMetaData>> indexMappings : resp.getMappings().values()) {
+			for (ObjectCursor<MappingMetaData> mapping : indexMappings.value.values()) {
+				try {
+					ObjectNode source = Json.readObjectNode(mapping.value.source().string());
+					jsonMerger.merge((ObjectNode) source.get(mapping.value.type()).get("_meta"));
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+			}
+		}
 
 		return Payloads.json(jsonMerger.get());
 	}
@@ -58,27 +56,35 @@ public class SchemaResource extends AbstractResource {
 	@Get("/:type/")
 	public Payload get(String type) {
 		Credentials credentials = SpaceContext.checkCredentials();
-		return Payloads.json(ElasticHelper.get().getSchema(credentials.backendId(), type));
+		return Payloads.json(//
+				Start.get().getElasticClient().getSchema(credentials.backendId(), type));
 	}
 
 	@Put("/:type")
 	@Put("/:type/")
+	// TODO deprecate POST since we pass the type as parameter ?
 	@Post("/:type")
 	@Post("/:type/")
 	public Payload put(String type, String newSchemaAsString, Context context) {
 
-		try {
-			Credentials credentials = SpaceContext.checkAdminCredentials();
-			JsonNode schema = SchemaValidator.validate(type, Json.readObjectNode(newSchemaAsString));
-			String elasticMapping = SchemaTranslator.translate(type, schema).toString();
-			PutMappingRequest putMappingRequest = new PutMappingRequest(credentials.backendId()).type(type)
-					.source(elasticMapping);
-			Start.get().getElasticClient().admin().indices().putMapping(putMappingRequest).get();
-			return Payloads.saved(true, "/v1", "schema", type);
+		Credentials credentials = SpaceContext.checkAdminCredentials();
 
-		} catch (InterruptedException | ExecutionException e) {
-			throw new RuntimeException(e);
+		JsonNode schema = SchemaValidator.validate(type, Json.readObjectNode(newSchemaAsString));
+		String mapping = SchemaTranslator.translate(type, schema).toString();
+
+		String backendId = credentials.backendId();
+		ElasticClient elastic = Start.get().getElasticClient();
+		boolean indexExists = elastic.exists(backendId, type);
+
+		if (indexExists)
+			elastic.putMapping(backendId, type, mapping);
+		else {
+			int shards = context.query().getInteger(SpaceParams.SHARDS, SHARDS_DEFAULT);
+			int replicas = context.query().getInteger(SpaceParams.REPLICAS, REPLICAS_DEFAULT);
+			elastic.createIndex(backendId, type, mapping, shards, replicas);
 		}
+
+		return Payloads.saved(!indexExists, "/v1", "schema", type);
 	}
 
 	@Delete("/:type")
@@ -86,8 +92,7 @@ public class SchemaResource extends AbstractResource {
 	public Payload delete(String type) {
 		try {
 			Credentials credentials = SpaceContext.checkAdminCredentials();
-			Start.get().getElasticClient().admin().indices().prepareDeleteMapping(credentials.backendId()).setType(type)
-					.get();
+			Start.get().getElasticClient().deleteIndex(credentials.backendId(), type);
 		} catch (TypeMissingException exception) {
 			// ignored
 		}

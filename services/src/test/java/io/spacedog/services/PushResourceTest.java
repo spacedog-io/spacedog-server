@@ -20,7 +20,7 @@ public class PushResourceTest extends Assert {
 		// prepare
 		SpaceDogHelper.prepareTest();
 		SpaceDogHelper.Account testAccount = SpaceDogHelper.resetTestAccount();
-		SpaceDogHelper.resetSchema(buildSchema(), testAccount);
+		SpaceDogHelper.setSchema(buildSchema(), testAccount);
 		SpaceDogHelper.User vince = SpaceDogHelper.createUser(testAccount, "vince", "hi vince", "david@spacedog.io");
 		SpaceDogHelper.User nath = SpaceDogHelper.createUser(testAccount, "nath", "hi nath", "attias666@gmail.com");
 		SpaceDogHelper.User fred = SpaceDogHelper.createUser(testAccount, "fred", "hi fred", "davattias@gmail.com");
@@ -49,7 +49,9 @@ public class PushResourceTest extends Assert {
 		SpaceRequest.post("/v1/data/message").backendKey(testAccount)//
 				.body(createMessage("philippe")).go(201);
 
-		ObjectNode pushBody = Json.objectBuilder().object("query")//
+		ObjectNode pushBody = Json.objectBuilder()//
+				.put("type", "message")//
+				.object("query")//
 				.object("match_all")//
 				.end()//
 				.end()//

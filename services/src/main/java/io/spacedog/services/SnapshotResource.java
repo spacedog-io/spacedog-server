@@ -12,9 +12,7 @@ import java.util.stream.Collectors;
 
 import org.elasticsearch.action.admin.cluster.repositories.put.PutRepositoryResponse;
 import org.elasticsearch.action.admin.cluster.snapshots.create.CreateSnapshotResponse;
-import org.elasticsearch.action.admin.indices.close.CloseIndexResponse;
 import org.elasticsearch.action.support.IndicesOptions;
-import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.repositories.RepositoryMissingException;
 import org.elasticsearch.snapshots.RestoreInfo;
@@ -39,7 +37,6 @@ import net.codestory.http.payload.Payload;
 public class SnapshotResource extends AbstractResource {
 
 	private static final String PLATFORM_SNAPSHOT_PREFIX = "all";
-	private static final String ELASTIC_ALL = "_all";
 	private static final String WAIT_FOR_COMPLETION = "waitForCompletion";
 	private static final String BUCKET_SUFFIX = "snapshots";
 
@@ -101,7 +98,7 @@ public class SnapshotResource extends AbstractResource {
 		String repoId = getCurrentSnapshotRepository();
 
 		// TODO rename correctly the snapshot repository
-		CreateSnapshotResponse response = Start.get().getElasticClient().admin().cluster()//
+		CreateSnapshotResponse response = Start.get().getElasticClient().cluster()//
 				.prepareCreateSnapshot(repoId, snapshotId)//
 				.setIndicesOptions(IndicesOptions.fromOptions(false, false, true, true))//
 				.setWaitForCompletion(context.query().getBoolean(WAIT_FOR_COMPLETION, false))//
@@ -185,16 +182,10 @@ public class SnapshotResource extends AbstractResource {
 					"snapshot [%s] is not restorable, state is [%s]", //
 					snapshot.id(), snapshot.info.state().toString()));
 
-		// close all indices before restore
-		CloseIndexResponse closeIndexResponse = Start.get().getElasticClient().admin().indices()
-				.prepareClose(ELASTIC_ALL)//
-				.setIndicesOptions(IndicesOptions.fromOptions(false, true, true, false))//
-				.get();
+		// close all backend indices before restore
+		Start.get().getElasticClient().closeAllBackendIndices();
 
-		if (!closeIndexResponse.isAcknowledged())
-			throw new RuntimeException("failed to close all indices");
-
-		RestoreInfo restore = Start.get().getElasticClient().admin().cluster()//
+		RestoreInfo restore = Start.get().getElasticClient().cluster()//
 				.prepareRestoreSnapshot(snapshot.repositoryId(), snapshot.id())//
 				.setWaitForCompletion(waitForCompletion)//
 				.setPartial(false)//
@@ -211,12 +202,12 @@ public class SnapshotResource extends AbstractResource {
 	private List<SpaceSnapshot> getAllPlatformSnapshotsFromLatestToOldest() {
 
 		return Lists.reverse(//
-				Start.get().getElasticClient().admin().cluster()//
+				Start.get().getElasticClient().cluster()//
 						.prepareGetRepositories()//
 						.get()//
 						.repositories()//
 						.stream()//
-						.flatMap(repo -> Start.get().getElasticClient().admin().cluster()//
+						.flatMap(repo -> Start.get().getElasticClient().cluster()//
 								.prepareGetSnapshots(repo.name())//
 								.get()//
 								.getSnapshots()//
@@ -287,7 +278,7 @@ public class SnapshotResource extends AbstractResource {
 		String currentRepositoryId = DateTime.now().withZone(DateTimeZone.UTC).toString("yyyy-ww");
 
 		try {
-			Start.get().getElasticClient().admin().cluster()//
+			Start.get().getElasticClient().cluster()//
 					.prepareGetRepositories(currentRepositoryId)//
 					.get();
 
@@ -295,7 +286,7 @@ public class SnapshotResource extends AbstractResource {
 
 			SpaceRepository repo = new SpaceRepository(currentRepositoryId);
 
-			PutRepositoryResponse putRepositoryResponse = Start.get().getElasticClient().admin().cluster()//
+			PutRepositoryResponse putRepositoryResponse = Start.get().getElasticClient().cluster()//
 					.preparePutRepository(repo.getId())//
 					.setType(repo.getType())//
 					.setSettings(repo.getSettings())//
@@ -332,14 +323,14 @@ public class SnapshotResource extends AbstractResource {
 				}
 
 				this.type = "fs";
-				this.settings = ImmutableSettings.builder()//
+				this.settings = Settings.builder()//
 						.put("location", location.toAbsolutePath().toString())//
 						.put("compress", true)//
 						.build();
 			} else {
 
 				this.type = "s3";
-				this.settings = ImmutableSettings.builder()//
+				this.settings = Settings.builder()//
 						.put("bucket", getBucketName(BUCKET_SUFFIX))//
 						.put("region", conf.awsRegion())//
 						.put("base_path", this.id)//
