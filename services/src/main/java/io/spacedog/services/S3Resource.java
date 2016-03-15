@@ -224,7 +224,7 @@ public class S3Resource extends Resource {
 	}
 
 	private String toSpaceLocation(String backendId, String root, String path, String fileName) {
-		return spaceUrl(Optional.of(backendId), root)//
+		return spaceUrl(backendId, root)//
 				.append(toSpaceKeyFromPath(path, fileName)).toString();
 	}
 

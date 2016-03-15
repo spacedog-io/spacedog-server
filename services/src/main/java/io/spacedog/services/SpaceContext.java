@@ -193,7 +193,7 @@ public class SpaceContext {
 		}
 
 		if (Strings.isNullOrEmpty(backendId))
-			backendId = BackendResource.API;
+			backendId = Resource.ROOT_BACKEND;
 
 		Optional<String[]> tokens = decodeAuthorizationHeader(context.header(SpaceHeaders.AUTHORIZATION));
 
@@ -202,7 +202,7 @@ public class SpaceContext {
 			String username = tokens.get()[0];
 			String password = tokens.get()[1];
 
-			String backendToCheck = username.startsWith("superdog-") ? BackendResource.API : backendId;
+			String backendToCheck = username.startsWith("superdog-") ? Resource.ROOT_BACKEND : backendId;
 			Optional<Credentials> credentials = UserResource.get().checkCredentials(backendToCheck, username, password);
 
 			if (credentials.isPresent()) {

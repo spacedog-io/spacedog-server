@@ -3,7 +3,6 @@
  */
 package io.spacedog.services;
 
-import java.util.Optional;
 import java.util.Set;
 
 import com.google.common.base.Strings;
@@ -17,20 +16,28 @@ import net.codestory.http.Context;
 public abstract class Resource {
 
 	public static final String SLASH = "/";
+
 	public static final int SHARDS_DEFAULT = 1;
 	public static final int REPLICAS_DEFAULT = 0;
 
-	public static StringBuilder spaceUrl(Optional<String> backendId, String uri, String type, String id) {
+	public static final String ROOT_BACKEND = "api";
+	public static final String SPACEDOG_BACKEND = "spacedog";
+	public static final Set<String> INTERNAL_BACKENDS = Sets.newHashSet(SPACEDOG_BACKEND);
+
+	// Field names
+	public static final String BACKEND_ID = "backendId";
+
+	public static StringBuilder spaceUrl(String backendId, String uri, String type, String id) {
 		return spaceUrl(backendId, uri).append(SLASH).append(type).append(SLASH).append(id);
 	}
 
-	public static StringBuilder spaceUrl(Optional<String> backendId, String uri) {
+	public static StringBuilder spaceUrl(String backendId, String uri) {
 		Check.notNullOrEmpty(uri, "URI");
 		Check.isTrue(uri.startsWith(SLASH), "URI must start with a /");
 		return spaceRootUrl(backendId).append(uri);
 	}
 
-	public static StringBuilder spaceRootUrl(Optional<String> backendId) {
+	public static StringBuilder spaceRootUrl(String backendId) {
 		return new StringBuilder(Start.get().configuration().sslUrl(backendId));
 	}
 
@@ -56,8 +63,4 @@ public abstract class Resource {
 		return Start.get().configuration().getAwsBucketPrefix() + bucketSuffix;
 
 	}
-
-	public static final String SPACEDOG_BACKEND = "spacedog";
-	public static final Set<String> INTERNAL_BACKENDS = Sets.newHashSet(SPACEDOG_BACKEND);
-	public static final String BACKEND_ID = "backendId";
 }

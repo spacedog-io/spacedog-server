@@ -3,7 +3,6 @@
  */
 package io.spacedog.services;
 
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -27,7 +26,6 @@ import net.codestory.http.payload.Payload;
 public class BackendResource extends Resource {
 
 	private static final String TYPE = "backend";
-	public static final String API = "api";
 
 	//
 	// Routes
@@ -64,11 +62,10 @@ public class BackendResource extends Resource {
 		if (!isTest(context))
 			Internals.get().notify(//
 					Start.get().configuration().superdogNotificationTopic(), //
-					String.format("New backend (%s)",
-							Resource.spaceUrl(Optional.empty(), "/1", TYPE, backendId).toString()), //
+					String.format("New backend (%s)", Resource.spaceUrl(backendId, "/1/backend").toString()), //
 					String.format("backend id = %s\nadmin email = %s", backendId, signing.email));
 
-		return Payloads.saved(true, backendId, "/1", TYPE, backendId);
+		return Payloads.saved(true, backendId, "/1/backend", TYPE, backendId, true);
 	}
 
 	@Get("/backend")

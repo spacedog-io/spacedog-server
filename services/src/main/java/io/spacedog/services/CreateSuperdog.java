@@ -52,7 +52,7 @@ public class CreateSuperdog {
 
 			String now = DateTime.now().toString();
 			ObjectNode credentials = Json.object(//
-					UserResource.BACKEND_ID, BackendResource.API, //
+					UserResource.BACKEND_ID, Resource.ROOT_BACKEND, //
 					UserResource.USERNAME, username, //
 					UserResource.CREDENTIALS_LEVEL, Level.SUPERDOG.toString(), //
 					UserResource.EMAIL, email, //
@@ -61,7 +61,7 @@ public class CreateSuperdog {
 					UserResource.UPDATED_AT, now);
 
 			elastic.index(Resource.SPACEDOG_BACKEND, UserResource.CREDENTIALS_TYPE, //
-					UserResource.toCredentialsId(BackendResource.API, username), credentials.toString());
+					UserResource.toCredentialsId(Resource.ROOT_BACKEND, username), credentials.toString());
 
 			log("Superdog credentials [api-%s] indexed in [spacedog-credentials]", username);
 

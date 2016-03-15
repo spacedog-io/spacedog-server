@@ -3,7 +3,6 @@
  */
 package io.spacedog.services;
 
-import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.ResourceNotFoundException;
@@ -116,22 +115,41 @@ public class Payloads {
 	}
 
 	public static Payload saved(boolean created, String backendId, String uri, String type, String id) {
-		return saved(created, backendId, uri, type, id, 0);
+		return saved(created, backendId, uri, type, id, 0, true);
+	}
+
+	public static Payload saved(boolean created, String backendId, String uri, String type, String id,
+			boolean isUriFinal) {
+		return saved(created, backendId, uri, type, id, 0, isUriFinal);
 	}
 
 	public static Payload saved(boolean created, String backendId, String uri, String type, String id, long version) {
-		JsonBuilder<ObjectNode> builder = Payloads.savedBuilder(created, backendId, uri, type, id, version);
+		return saved(created, backendId, uri, type, id, version, false);
+	}
+
+	public static Payload saved(boolean created, String backendId, String uri, String type, String id, long version,
+			boolean isUriFinal) {
+		JsonBuilder<ObjectNode> builder = Payloads.savedBuilder(created, backendId, uri, type, id, version, isUriFinal);
 		return json(builder, created ? HttpStatus.CREATED : HttpStatus.OK)//
 				.withHeader(HEADER_OBJECT_ID, id);
 	}
 
 	public static JsonBuilder<ObjectNode> savedBuilder(boolean created, String backendId, String uri, String type,
 			String id, long version) {
+		return savedBuilder(created, backendId, uri, type, id, version, false);
+	}
+
+	public static JsonBuilder<ObjectNode> savedBuilder(boolean created, String backendId, String uri, String type,
+			String id, long version, boolean isUriFinal) {
 
 		JsonBuilder<ObjectNode> builder = minimalBuilder(created ? HttpStatus.CREATED : HttpStatus.OK) //
 				.put("id", id) //
-				.put("type", type) //
-				.put("location", Resource.spaceUrl(Optional.ofNullable(backendId), uri, type, id).toString());
+				.put("type", type);
+
+		if (isUriFinal)
+			builder.put("location", Resource.spaceUrl(backendId, uri).toString());
+		else
+			builder.put("location", Resource.spaceUrl(backendId, uri, type, id).toString());
 
 		if (version > 0) //
 			builder.put("version", version);

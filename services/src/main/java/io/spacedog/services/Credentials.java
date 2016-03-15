@@ -40,12 +40,12 @@ public class Credentials {
 	}
 
 	public static Credentials fromSuperDog(String username, String email) {
-		return new Credentials(BackendResource.API, username, email, true, true);
+		return new Credentials(Resource.ROOT_BACKEND, username, email, true, true);
 	}
 
 	public static Credentials fromSuperDog(String backendId, String username, String email) {
 		if (Strings.isNullOrEmpty(backendId))
-			backendId = BackendResource.API;
+			backendId = Resource.ROOT_BACKEND;
 		return new Credentials(backendId, username, email, true, true);
 	}
 
@@ -102,6 +102,6 @@ public class Credentials {
 	}
 
 	public boolean isRootBackend() {
-		return BackendResource.API.equals(backendId);
+		return Resource.ROOT_BACKEND.equals(backendId);
 	}
 }
