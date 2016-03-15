@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceDogHelper;
+import io.spacedog.client.SpaceDogHelper.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
@@ -16,48 +17,13 @@ import io.spacedog.utils.SchemaBuilder;
 
 public class ImportMappyPlaces extends Assert {
 
-	private static SpaceDogHelper.Backend examplesAccount;
-
-	// public static void resetExamplesAccount() throws UnirestException,
-	// IOException {
-	//
-	// HttpRequestWithBody req1 =
-	// delete("/v1/admin/account/examples").basicAuth("examples", "hi
-	// examples");
-	// delete(req1, 200, 401);
-	//
-	// refresh("examples");
-	// refresh(AdminResource.ADMIN_INDEX);
-	//
-	// RequestBodyEntity req2 = SpacePostRequest.post("/v1/admin/account/")
-	// .body(Json.startObject().put("backendId", "examples").put("username",
-	// "examples")
-	// .put("password", "hi examples").put("email",
-	// "hello@spacedog.io").toString());
-	//
-	// examplesAccount = post(req2,
-	// 201).response().getHeaders().get(AdminResource.BACKEND_KEY_HEADER).get(0);
-	//
-	// assertFalse(Strings.isNullOrEmpty(examplesAccount));
-	//
-	// refresh(AdminResource.ADMIN_INDEX);
-	// refresh("examples");
-	// }
+	private static Backend backend = new Backend("examples", "examples", "hi examples", "david@spacedog.io");
 
 	public static void main(String[] args) {
 		try {
 
-			/*
-			 * Uncomment this if you want to reset the "examples" account. Be
-			 * careful to copy the backend key to the console scripts.
-			 */
-			// examplesAccount = AdminResourceTest.resetAccount("examples",
-			// "examples", "hi examples",
-			// "hello@spacedog.io");
-
-			SpaceRequest.delete("/1/schema/resto").basicAuth(examplesAccount).go(200, 404, 401);
-
-			SpaceRequest.post("/1/schema/resto").basicAuth(examplesAccount).body(buildRestoSchema().toString()).go(201);
+			SpaceDogHelper.resetBackend(backend, false);
+			SpaceRequest.post("/1/schema/resto").basicAuth(backend).body(buildRestoSchema()).go(201);
 
 			double step = 0.01;
 
@@ -118,7 +84,7 @@ public class ImportMappyPlaces extends Assert {
 		}
 
 		try {
-			SpaceRequest.post("/1/data/resto").basicAuth(examplesAccount).body(target.toString()).go(201);
+			SpaceRequest.post("/1/data/resto").basicAuth(backend).body(target).go(201);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
