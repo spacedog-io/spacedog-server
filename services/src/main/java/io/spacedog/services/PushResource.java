@@ -45,7 +45,7 @@ import net.codestory.http.annotations.Put;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/v1")
+@Prefix("/1")
 public class PushResource extends Resource {
 
 	private AmazonSNSClient snsClient;
@@ -275,7 +275,7 @@ public class PushResource extends Resource {
 	}
 
 	//
-	// implementation
+	// Implementation
 	//
 
 	public Payload upsertInstallation(Optional<String> id, String body, Context context) {
@@ -301,7 +301,7 @@ public class PushResource extends Resource {
 
 		if (id.isPresent()) {
 			DataStore.get().patchObject(credentials.backendId(), TYPE, id.get(), installation, credentials.name());
-			return Payloads.saved(false, credentials.backendId(), "/v1", TYPE, id.get());
+			return Payloads.saved(false, credentials.backendId(), "/1", TYPE, id.get());
 		} else
 			return DataResource.get().post(TYPE, installation.toString(), context);
 
@@ -335,7 +335,7 @@ public class PushResource extends Resource {
 							break;
 						}
 						// tag already exists => nothing to save
-						return Payloads.saved(false, credentials.backendId(), "/v1", TYPE, id);
+						return Payloads.saved(false, credentials.backendId(), "/1", TYPE, id);
 					}
 				}
 			}
@@ -345,7 +345,7 @@ public class PushResource extends Resource {
 		}
 
 		DataStore.get().updateObject(credentials.backendId(), installation.get(), credentials.name());
-		return Payloads.saved(false, credentials.backendId(), "/v1", TYPE, id);
+		return Payloads.saved(false, credentials.backendId(), "/1", TYPE, id);
 	}
 
 	private String toFieldPath(String... strings) {

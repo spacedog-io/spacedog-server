@@ -42,12 +42,11 @@ import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
-import net.codestory.http.annotations.Prefix;
 import net.codestory.http.annotations.Put;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/v1")
+//@Prefix("/1")
 public class UserResource extends Resource {
 
 	//
@@ -121,30 +120,38 @@ public class UserResource extends Resource {
 	// Routes
 	//
 
-	@Get("/login")
-	@Get("/login/")
+	@Get("/v1/login")
+	@Get("/v1/login/")
+	@Get("/1/login")
+	@Get("/1/login/")
 	public Payload login(Context context) {
 		SpaceContext.checkUserCredentials();
 		return Payloads.success();
 	}
 
-	@Get("/logout")
-	@Get("/logout/")
+	@Get("/v1/logout")
+	@Get("/v1/logout/")
+	@Get("/1/logout")
+	@Get("/1/logout/")
 	public Payload logout(Context context) {
 		SpaceContext.checkUserCredentials();
 		return Payloads.success();
 	}
 
-	@Get("/user")
-	@Get("/user/")
+	@Get("/v1/user")
+	@Get("/v1/user/")
+	@Get("/1/user")
+	@Get("/1/user/")
 	public Payload getAll(Context context) {
 		// TODO access to /0/data/user and /0/user should be consistent
 		SpaceContext.checkAdminCredentials();
 		return DataResource.get().getByType(USER_TYPE, context);
 	}
 
-	@Delete("/user")
-	@Delete("/user/")
+	@Delete("/v1/user")
+	@Delete("/v1/user/")
+	@Delete("/1/user")
+	@Delete("/1/user/")
 	public Payload deleteAll(Context context) {
 		// TODO access to /0/data/user and /0/user should be consistent
 		Credentials credentials = SpaceContext.checkSuperAdminCredentials();
@@ -191,8 +198,10 @@ public class UserResource extends Resource {
 		return Payloads.json(Payloads.minimalBuilder(200).put("totalDeleted", totalDeleted));
 	}
 
-	@Post("/user")
-	@Post("/user/")
+	@Post("/v1/user")
+	@Post("/v1/user/")
+	@Post("/1/user")
+	@Post("/1/user/")
 	public Payload signUp(String body, Context context) {
 
 		/**
@@ -221,7 +230,7 @@ public class UserResource extends Resource {
 		user.indexCredentials();
 		user.indexUser();
 
-		JsonBuilder<ObjectNode> savedBuilder = Payloads.savedBuilder(true, credentials.backendId(), "/v1", USER_TYPE,
+		JsonBuilder<ObjectNode> savedBuilder = Payloads.savedBuilder(true, credentials.backendId(), "/1", USER_TYPE,
 				user.username);
 
 		if (user.passwordResetCode.isPresent())
@@ -231,24 +240,30 @@ public class UserResource extends Resource {
 				.withHeader(Payloads.HEADER_OBJECT_ID, user.username);
 	}
 
-	@Get("/user/:username")
-	@Get("/user/:username/")
+	@Get("/v1/user/:username")
+	@Get("/v1/user/:username/")
+	@Get("/1/user/:username")
+	@Get("/1/user/:username/")
 	public Payload get(String username, Context context) {
 		// TODO access to /0/data/user and /0/user should be consistent
 		SpaceContext.checkUserCredentials(username);
 		return DataResource.get().getById(USER_TYPE, username, context);
 	}
 
-	@Put("/user/:username")
-	@Put("/user/:username/")
+	@Put("/v1/user/:username")
+	@Put("/v1/user/:username/")
+	@Put("/1/user/:username")
+	@Put("/1/user/:username/")
 	public Payload put(String username, String jsonBody, Context context) {
 		// TODO access to /0/data/user and /0/user should be consistent
 		SpaceContext.checkUserCredentials(username);
 		return DataResource.get().put(USER_TYPE, username, jsonBody, context);
 	}
 
-	@Delete("/user/:username")
-	@Delete("/user/:username/")
+	@Delete("/v1/user/:username")
+	@Delete("/v1/user/:username/")
+	@Delete("/1/user/:username")
+	@Delete("/1/user/:username/")
 	public Payload delete(String username, Context context) {
 		// TODO access to /0/data/user and /0/user should be consistent
 		Credentials credentials = SpaceContext.checkUserCredentials(username);
@@ -256,8 +271,10 @@ public class UserResource extends Resource {
 		return DataResource.get().deleteById(USER_TYPE, username, context);
 	}
 
-	@Delete("/user/:username/password")
-	@Delete("/user/:username/password")
+	@Delete("/v1/user/:username/password")
+	@Delete("/v1/user/:username/password")
+	@Delete("/1/user/:username/password")
+	@Delete("/1/user/:username/password")
 	public Payload deletePassword(String username, Context context) {
 
 		Credentials credentials = SpaceContext.checkAdminCredentials();
@@ -270,12 +287,14 @@ public class UserResource extends Resource {
 				.get();
 
 		return Payloads.json(//
-				Payloads.savedBuilder(false, credentials.backendId(), "/v1", USER_TYPE, username)//
+				Payloads.savedBuilder(false, credentials.backendId(), "/1", USER_TYPE, username)//
 						.put(PASSWORD_RESET_CODE, passwordResetCode));
 	}
 
-	@Post("/user/:username/password")
-	@Post("/user/:username/password")
+	@Post("/v1/user/:username/password")
+	@Post("/v1/user/:username/password")
+	@Post("/1/user/:username/password")
+	@Post("/1/user/:username/password")
 	public Payload postPassword(String username, Context context) {
 
 		String backendId = SpaceContext.checkCredentials().backendId();
@@ -302,11 +321,13 @@ public class UserResource extends Resource {
 
 		IndexResponse indexResponse = indexCredentials(backendId, username, credentials);
 
-		return Payloads.saved(false, backendId, "/v1", USER_TYPE, username, indexResponse.getVersion());
+		return Payloads.saved(false, backendId, "/1", USER_TYPE, username, indexResponse.getVersion());
 	}
 
-	@Put("/user/:id/password")
-	@Put("/user/:id/password")
+	@Put("/v1/user/:id/password")
+	@Put("/v1/user/:id/password")
+	@Put("/1/user/:id/password")
+	@Put("/1/user/:id/password")
 	public Payload putPassword(String username, Context context) {
 
 		Credentials credentials = SpaceContext.checkUserCredentials(username);
@@ -319,7 +340,7 @@ public class UserResource extends Resource {
 						PASSWORD_RESET_CODE, null)//
 				.get();
 
-		return Payloads.saved(false, credentials.backendId(), "/v1/user", USER_TYPE, username, response.getVersion());
+		return Payloads.saved(false, credentials.backendId(), "/1/user", USER_TYPE, username, response.getVersion());
 	}
 
 	//

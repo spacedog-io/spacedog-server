@@ -11,24 +11,18 @@ public class SpaceFilterTest extends Assert {
 	public void ShouldSucceedToMatchUris() {
 		SpaceFilter filter = (uri, context, nextFilter) -> Payload.ok();
 
-		assertTrue(filter.matches("/v1", null));
-		assertTrue(filter.matches("/v7", null));
+		assertTrue(filter.matches("/1/", null));
 		assertTrue(filter.matches("/v1/", null));
-		assertTrue(filter.matches("/v1/data", null));
-		assertTrue(filter.matches("/v2/data", null));
-		assertTrue(filter.matches("/v3/data", null));
-		assertTrue(filter.matches("/v4/data", null));
-		assertTrue(filter.matches("/v5/data", null));
-		assertTrue(filter.matches("/v6/data", null));
-		assertTrue(filter.matches("/v7/data", null));
-		assertTrue(filter.matches("/v8/data", null));
-		assertTrue(filter.matches("/v9/user/david", null));
+		assertTrue(filter.matches("/1/data", null));
+		assertTrue(filter.matches("/v1/user", null));
 	}
 
 	@Test
 	public void ShouldFailToMatchUris() {
 		SpaceFilter filter = (uri, context, nextFilter) -> Payload.ok();
 
+		assertFalse(filter.matches("/2", null));
+		assertFalse(filter.matches("/v2", null));
 		assertFalse(filter.matches("/v11", null));
 		assertFalse(filter.matches("/v1x/data", null));
 		assertFalse(filter.matches("v1/data", null));

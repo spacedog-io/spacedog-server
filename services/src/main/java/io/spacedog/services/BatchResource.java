@@ -31,7 +31,7 @@ import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 import net.codestory.http.payload.StreamingOutput;
 
-@Prefix("/v1/batch")
+@Prefix("/1/batch")
 public class BatchResource extends Resource {
 
 	// query parameter names

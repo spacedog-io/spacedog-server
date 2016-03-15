@@ -16,10 +16,8 @@ import com.mashape.unirest.request.body.MultipartBody;
 import net.codestory.http.Context;
 import net.codestory.http.Part;
 import net.codestory.http.annotations.Post;
-import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/v1/mail")
 public class MailResource extends Resource {
 
 	//
@@ -37,8 +35,10 @@ public class MailResource extends Resource {
 	// Routes
 	//
 
-	@Post("")
-	@Post("/")
+	@Post("/v1/mail")
+	@Post("/v1/mail/")
+	@Post("/1/mail")
+	@Post("/1/mail/")
 	public Payload post(Context context) {
 
 		try {
@@ -81,6 +81,10 @@ public class MailResource extends Resource {
 
 	}
 
+	//
+	// Implementation
+	//
+
 	public ObjectNode send(String from, String to, String cc, String bcc, String subject, String text, String html) {
 
 		String mailGunKey = Start.get().configuration().mailGunKey();
@@ -111,10 +115,6 @@ public class MailResource extends Resource {
 			throw new RuntimeException(e);
 		}
 	}
-
-	//
-	// Implementation
-	//
 
 	private String addFooterToTextMessage(String text, Credentials admin) {
 		if (Strings.isNullOrEmpty(text))

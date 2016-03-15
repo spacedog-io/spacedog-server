@@ -35,23 +35,23 @@ public class ShareResourceTest {
 		User fred = SpaceDogHelper.createUser(testAccount, "fred", "hi fred", "fred@dog.com");
 
 		// only admin can get all shared locations
-		SpaceRequest.get("/v1/share").go(401);
-		SpaceRequest.get("/v1/share").backend(testAccount).go(401);
-		SpaceRequest.get("/v1/share").basicAuth(vince).go(401);
+		SpaceRequest.get("/1/share").go(401);
+		SpaceRequest.get("/1/share").backend(testAccount).go(401);
+		SpaceRequest.get("/1/share").basicAuth(vince).go(401);
 
 		// this account is brand new, no shared files
-		SpaceRequest.get("/v1/share").basicAuth(testAccount).go(200)//
+		SpaceRequest.get("/1/share").basicAuth(testAccount).go(200)//
 				.assertSizeEquals(0, "results");
 
 		// only users and admins are allowed to share files
-		SpaceRequest.put("/v1/share/tweeter.png").go(401);
-		SpaceRequest.put("/v1/share/tweeter.png").backend(testAccount).go(401);
+		SpaceRequest.put("/1/share/tweeter.png").go(401);
+		SpaceRequest.put("/1/share/tweeter.png").backend(testAccount).go(401);
 
 		// share a small png file
 		byte[] pngBytes = Resources.toByteArray(//
 				Resources.getResource("io/spacedog/watchdog/tweeter.png"));
 
-		JsonNode json = SpaceRequest.put("/v1/share/tweeter.png")//
+		JsonNode json = SpaceRequest.put("/1/share/tweeter.png")//
 				.backend(testAccount)//
 				.basicAuth(vince)//
 				.body(pngBytes)//
@@ -62,7 +62,7 @@ public class ShareResourceTest {
 		String pngS3Location = json.get("s3").asText();
 
 		// list all shared files should return tweeter.png path only
-		SpaceRequest.get("/v1/share").basicAuth(testAccount).go(200)//
+		SpaceRequest.get("/1/share").basicAuth(testAccount).go(200)//
 				.assertSizeEquals(1, "results")//
 				.assertEquals(pngPath, "results.0.path");
 
@@ -93,7 +93,7 @@ public class ShareResourceTest {
 		Assert.assertTrue(Arrays.equals(pngBytes, downloadedBytes));
 
 		// share small text file
-		json = SpaceRequest.put("/v1/share/test.txt")//
+		json = SpaceRequest.put("/1/share/test.txt")//
 				.backend(testAccount).basicAuth(fred)//
 				.body(FILE_CONTENT.getBytes())//
 				.go(200)//
@@ -105,7 +105,7 @@ public class ShareResourceTest {
 
 		// list all shared files should return 2 paths
 		// get first page with only one path
-		json = SpaceRequest.get("/v1/share")//
+		json = SpaceRequest.get("/1/share")//
 				.queryString("size", "1")//
 				.basicAuth(testAccount)//
 				.go(200)//
@@ -118,7 +118,7 @@ public class ShareResourceTest {
 		String next = json.get("next").asText();
 
 		// get second (and last) page with only one path
-		json = SpaceRequest.get("/v1/share")//
+		json = SpaceRequest.get("/1/share")//
 				.queryString("size", "1")//
 				.queryString("next", next)//
 				.basicAuth(testAccount)//
@@ -160,20 +160,20 @@ public class ShareResourceTest {
 		SpaceRequest.delete(txtLocation).backend(testAccount).basicAuth(fred).go(200);
 
 		// list of shared files should only return the png file path
-		SpaceRequest.get("/v1/share").basicAuth(testAccount).go(200)//
+		SpaceRequest.get("/1/share").basicAuth(testAccount).go(200)//
 				.assertSizeEquals(1, "results")//
 				.assertEquals(pngPath, "results.0.path");
 
 		// only admin can delete all shared files
-		SpaceRequest.delete("/v1/share").go(401);
-		SpaceRequest.delete("/v1/share").backend(testAccount).go(401);
-		SpaceRequest.delete("/v1/share").basicAuth(fred).go(401);
-		SpaceRequest.delete("/v1/share").basicAuth(vince).go(401);
-		SpaceRequest.delete("/v1/share").basicAuth(testAccount).go(200)//
+		SpaceRequest.delete("/1/share").go(401);
+		SpaceRequest.delete("/1/share").backend(testAccount).go(401);
+		SpaceRequest.delete("/1/share").basicAuth(fred).go(401);
+		SpaceRequest.delete("/1/share").basicAuth(vince).go(401);
+		SpaceRequest.delete("/1/share").basicAuth(testAccount).go(200)//
 				.assertSizeEquals(1, "deleted")//
 				.assertContains(TextNode.valueOf(pngPath), "deleted");
 
-		SpaceRequest.get("/v1/share").basicAuth(testAccount).go(200)//
+		SpaceRequest.get("/1/share").basicAuth(testAccount).go(200)//
 				.assertSizeEquals(0, "results");
 
 	}

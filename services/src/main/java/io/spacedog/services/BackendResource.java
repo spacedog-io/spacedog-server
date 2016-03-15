@@ -23,7 +23,7 @@ import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/v1")
+@Prefix("/1")
 public class BackendResource extends Resource {
 
 	private static final String TYPE = "backend";
@@ -65,10 +65,10 @@ public class BackendResource extends Resource {
 			Internals.get().notify(//
 					Start.get().configuration().superdogNotificationTopic(), //
 					String.format("New backend (%s)",
-							Resource.spaceUrl(Optional.empty(), "/v1", TYPE, backendId).toString()), //
+							Resource.spaceUrl(Optional.empty(), "/1", TYPE, backendId).toString()), //
 					String.format("backend id = %s\nadmin email = %s", backendId, signing.email));
 
-		return Payloads.saved(true, backendId, "/v1", TYPE, backendId);
+		return Payloads.saved(true, backendId, "/1", TYPE, backendId);
 	}
 
 	@Get("/backend")

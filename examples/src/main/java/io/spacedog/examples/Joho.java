@@ -145,7 +145,7 @@ public class Joho extends SpaceDogHelper {
 	@Test
 	public void createJoho2InstallationIndex() throws Exception {
 
-		SpaceRequest.delete("/v1/schema/installation")//
+		SpaceRequest.delete("/1/schema/installation")//
 				.basicAuth(BACKEND_ID, ADMIN_USERNAME, ADMIN_PASSWORD)//
 				.go(200, 404);
 
@@ -160,7 +160,7 @@ public class Joho extends SpaceDogHelper {
 				.endObjectProperty()//
 				.build();
 
-		SpaceRequest.put("/v1/schema/installation")//
+		SpaceRequest.put("/1/schema/installation")//
 				.basicAuth(BACKEND_ID, ADMIN_USERNAME, ADMIN_PASSWORD)//
 				.body(installationSchema)//
 				.go(201);
@@ -239,7 +239,7 @@ public class Joho extends SpaceDogHelper {
 	private void createResponse(String messageId, String text, User user) throws Exception {
 		JsonBuilder<ObjectNode> message = Json.objectBuilder().object("responses").put("text", text)//
 				.object("author").put("firstname", user.username).put("lastname", user.email);
-		SpaceRequest.put("/v1/data/message/{messageId}").routeParam("messageId", messageId).backend(johoAccount)
+		SpaceRequest.put("/1/data/message/{messageId}").routeParam("messageId", messageId).backend(johoAccount)
 				.basicAuth(user).body(message).go(200);
 	}
 
@@ -265,7 +265,7 @@ public class Joho extends SpaceDogHelper {
 				.put("lon", lon)//
 				.build();
 
-		String id = SpaceRequest.post("/v1/user/").backend(backend).body(user).go(201).objectNode().get("id").asText();
+		String id = SpaceRequest.post("/1/user/").backend(backend).body(user).go(201).objectNode().get("id").asText();
 
 		return new User(backend.backendId, id, username, password, email);
 	}
@@ -273,27 +273,27 @@ public class Joho extends SpaceDogHelper {
 	private void createThemes() throws Exception {
 		URL url = Resources.getResource("io/spacedog/examples/joho.themes.json");
 		JsonNode themes = Json.getMapper().readTree(url);
-		SpaceRequest.post("/v1/data/themes").basicAuth(johoAccount).body(themes).go(201);
+		SpaceRequest.post("/1/data/themes").basicAuth(johoAccount).body(themes).go(201);
 	}
 
 	private void createSites() throws Exception {
 		URL url = Resources.getResource("io/spacedog/examples/joho.sites.json");
 		JsonNode sites = Json.getMapper().readTree(url);
-		SpaceRequest.post("/v1/data/sites").basicAuth(johoAccount).body(sites).go(201);
+		SpaceRequest.post("/1/data/sites").basicAuth(johoAccount).body(sites).go(201);
 	}
 
 	public String createDiscussion(String title, String categoryCode, User user) throws Exception {
 
 		JsonBuilder<ObjectNode> discussion = Json.objectBuilder().put("title", title)//
 				.put("description", title).object("category").put("code", categoryCode);
-		return SpaceRequest.post("/v1/data/discussion").backend(johoAccount).basicAuth(user).body(discussion).go(201)
+		return SpaceRequest.post("/1/data/discussion").backend(johoAccount).basicAuth(user).body(discussion).go(201)
 				.objectNode().get("id").asText();
 	}
 
 	public String createMessage(String discussionId, String text, User user) throws Exception {
 
 		JsonBuilder<ObjectNode> message = Json.objectBuilder().put("text", text).put("discussionId", discussionId);
-		return SpaceRequest.post("/v1/data/message").backend(johoAccount).basicAuth(user).body(message).go(201)
+		return SpaceRequest.post("/1/data/message").backend(johoAccount).basicAuth(user).body(message).go(201)
 				.objectNode().get("id").asText();
 	}
 
@@ -312,7 +312,7 @@ public class Joho extends SpaceDogHelper {
 				.object("query")//
 				.object("match_all");
 
-		JsonNode subjectResults = SpaceRequest.post("/v1/search/discussion?refresh=true").backend(johoAccount)
+		JsonNode subjectResults = SpaceRequest.post("/1/search/discussion?refresh=true").backend(johoAccount)
 				.body(discussionQuery).go(200).jsonNode();
 
 		Iterator<JsonNode> discussions = subjectResults.get("results").elements();
@@ -339,7 +339,7 @@ public class Joho extends SpaceDogHelper {
 					.object("term")//
 					.put("discussionId", discussions.next().get("meta").get("id").asText());
 
-			SpaceRequest.post("/v1/search/message").backend(johoAccount).body(messagesQuery).go(200);
+			SpaceRequest.post("/1/search/message").backend(johoAccount).body(messagesQuery).go(200);
 		}
 
 		return discussions;

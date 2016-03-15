@@ -67,7 +67,7 @@ public class Birdee extends SpaceDogHelper {
 				+ "'query':{'match_all':{}}"//
 				+ "}";
 
-		JsonNode news = SpaceRequest.post("/v1/search/news?refresh=true")//
+		JsonNode news = SpaceRequest.post("/1/search/news?refresh=true")//
 				.backend(adminAccount).body(query).go(200).jsonNode();
 
 		query = "{'from':0, 'size':10,"//
@@ -77,7 +77,7 @@ public class Birdee extends SpaceDogHelper {
 				+ "'filter':{'term':{'userId':'%s'}}"//
 				+ "}";
 
-		JsonNode statuses = SpaceRequest.post("/v1/search/status?refresh=true")//
+		JsonNode statuses = SpaceRequest.post("/1/search/status?refresh=true")//
 				.backend(adminAccount)//
 				.body(String.format(query, userId))//
 				.go(200)//
@@ -99,12 +99,12 @@ public class Birdee extends SpaceDogHelper {
 				.put("processed", favorite)//
 				.build();
 
-		SpaceRequest.post("/v1/data/status")//
+		SpaceRequest.post("/1/data/status")//
 				.backend(adminAccount).body(status).go(201);
 	}
 
 	public void seen(String statusId) throws Exception {
-		SpaceRequest.put("/v1/data/status/" + statusId)//
+		SpaceRequest.put("/1/data/status/" + statusId)//
 				.backend(adminAccount)//
 				.body("{'seen':true}").go(200);
 	}
@@ -114,7 +114,7 @@ public class Birdee extends SpaceDogHelper {
 	}
 
 	public void read(String statusId) throws Exception {
-		SpaceRequest.put("/v1/data/status/" + statusId)//
+		SpaceRequest.put("/1/data/status/" + statusId)//
 				.backend(adminAccount)//
 				.body("{'read':true}").go(200);
 	}
@@ -124,7 +124,7 @@ public class Birdee extends SpaceDogHelper {
 	}
 
 	public void favorite(String statusId) throws Exception {
-		SpaceRequest.put("/v1/data/status/" + statusId)//
+		SpaceRequest.put("/1/data/status/" + statusId)//
 				.backend(adminAccount)//
 				.body("{'favorite':true}").go(200);
 	}
@@ -135,7 +135,7 @@ public class Birdee extends SpaceDogHelper {
 
 			article.set("pushed", BooleanNode.FALSE);
 
-			SpaceRequest.post("/v1/data/news")//
+			SpaceRequest.post("/1/data/news")//
 					.backend(adminAccount)//
 					.body(article)//
 					.go(201);
@@ -169,7 +169,7 @@ public class Birdee extends SpaceDogHelper {
 				.put("userId", userId)//
 				.build();
 
-		SpaceRequest.post("/v1/device")//
+		SpaceRequest.post("/1/device")//
 				.backend(adminAccount)//
 				.body(device)//
 				.go(201);
@@ -182,7 +182,7 @@ public class Birdee extends SpaceDogHelper {
 
 		for (ObjectNode article : articles) {
 
-			SpaceResponse response = SpaceRequest.get("/v1/data/news/" + article.get("id").asText())//
+			SpaceResponse response = SpaceRequest.get("/1/data/news/" + article.get("id").asText())//
 					.backend(adminAccount)//
 					.body(article)//
 					.go(200, 404);
@@ -192,7 +192,7 @@ public class Birdee extends SpaceDogHelper {
 				// convert article to news
 				ObjectNode news = null;
 
-				SpaceRequest.post("/v1/data/news")//
+				SpaceRequest.post("/1/data/news")//
 						.backend(adminAccount)//
 						.body(news)//
 						.go(201);
@@ -209,7 +209,7 @@ public class Birdee extends SpaceDogHelper {
 					// update news from article
 					// news.set(...)
 
-					SpaceRequest.put("/v1/data/news/" + article.get("id").asText())//
+					SpaceRequest.put("/1/data/news/" + article.get("id").asText())//
 							.backend(adminAccount)//
 							.body(news)//
 							.go(200);
@@ -229,10 +229,10 @@ public class Birdee extends SpaceDogHelper {
 				+ "'filter':{'term':{'pushed':false}}"//
 				+ "}";
 
-		JsonNode news = SpaceRequest.post("/v1/search/news?refresh=true")//
+		JsonNode news = SpaceRequest.post("/1/search/news?refresh=true")//
 				.backend(adminAccount).body(query).go(200).jsonNode();
 
-		JsonNode statuses = SpaceRequest.post("/v1/search/status?refresh=true")//
+		JsonNode statuses = SpaceRequest.post("/1/search/status?refresh=true")//
 				.backend(adminAccount)//
 				.body(query)//
 				.go(200)//
@@ -245,7 +245,7 @@ public class Birdee extends SpaceDogHelper {
 
 		// if message to be pushed is for all
 
-		SpaceRequest.post("/v1/topic/all/push")//
+		SpaceRequest.post("/1/topic/all/push")//
 				.backend(adminAccount)//
 				.body(Json.objectBuilder().put("message", message).toString())//
 				.go(200);
@@ -263,12 +263,12 @@ public class Birdee extends SpaceDogHelper {
 				+ "'filter':{'term':{'userId':'%s'}}"//
 				+ "}";
 
-		JsonNode device = SpaceRequest.post("/v1/search/device?refresh=true")//
+		JsonNode device = SpaceRequest.post("/1/search/device?refresh=true")//
 				.backend(adminAccount).body(String.format(query, userId)).go(200).jsonNode();
 
 		// push to device
 
-		SpaceRequest.post("/v1/device/{id}/push")//
+		SpaceRequest.post("/1/device/{id}/push")//
 				.backend(adminAccount)//
 				.routeParam("id", device.get("id").asText())//
 				.body(Json.objectBuilder().put("message", message).toString())//
@@ -278,13 +278,13 @@ public class Birdee extends SpaceDogHelper {
 
 		String statusId = null;
 
-		SpaceRequest.put("/v1/data/status/" + statusId)//
+		SpaceRequest.put("/1/data/status/" + statusId)//
 				.backend(adminAccount)//
 				.body("{'processed':true}").go(200);
 
 		String newsId = null;
 
-		SpaceRequest.put("/v1/data/news/" + newsId)//
+		SpaceRequest.put("/1/data/news/" + newsId)//
 				.backend(adminAccount)//
 				.body("{'processed':true}").go(200);
 	}

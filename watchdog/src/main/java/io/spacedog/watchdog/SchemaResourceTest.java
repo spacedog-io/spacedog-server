@@ -36,14 +36,14 @@ public class SchemaResourceTest extends Assert {
 
 		// should succeed to get schemas with simple backend key credentials
 		assertEquals(buildCarSchema(), //
-				SpaceRequest.get("/v1/schema/car").backend(testAccount).go(200).jsonNode());
+				SpaceRequest.get("/1/schema/car").backend(testAccount).go(200).jsonNode());
 		assertEquals(buildHomeSchema(), //
-				SpaceRequest.get("/v1/schema/home").backend(testAccount).go(200).jsonNode());
+				SpaceRequest.get("/1/schema/home").backend(testAccount).go(200).jsonNode());
 		assertEquals(buildSaleSchema(), //
-				SpaceRequest.get("/v1/schema/sale").backend(testAccount).go(200).jsonNode());
+				SpaceRequest.get("/1/schema/sale").backend(testAccount).go(200).jsonNode());
 
 		// should succeed to get all schemas with simple backend key credentials
-		SpaceRequest.get("/v1/schema").basicAuth(testAccount).go(200)//
+		SpaceRequest.get("/1/schema").basicAuth(testAccount).go(200)//
 				.assertEquals(Json.merger() //
 						.merge(buildHomeSchema()) //
 						.merge(buildCarSchema()) //
@@ -52,24 +52,24 @@ public class SchemaResourceTest extends Assert {
 						.get());
 
 		// should fail to delete schema with simple backend key credentials
-		SpaceRequest.delete("/v1/schema/toto").backend(testAccount).go(401);
+		SpaceRequest.delete("/1/schema/toto").backend(testAccount).go(401);
 
 		// should fail to delete schema with simple user credentials
-		SpaceRequest.delete("/v1/schema/toto").basicAuth(bob).go(401);
+		SpaceRequest.delete("/1/schema/toto").basicAuth(bob).go(401);
 
 		// should fail to delete a non existent schema
-		SpaceRequest.delete("/v1/schema/toto").basicAuth(testAccount).go(404);
+		SpaceRequest.delete("/1/schema/toto").basicAuth(testAccount).go(404);
 
 		// should succeed to delete a schema and all its documents
-		SpaceRequest.delete("/v1/schema/sale").basicAuth(testAccount).go(200);
+		SpaceRequest.delete("/1/schema/sale").basicAuth(testAccount).go(200);
 
 		// should fail to create an invalid schema
-		SpaceRequest.put("/v1/schema/toto").basicAuth(testAccount).body("{\"toto\":{\"_type\":\"XXX\"}}").go(400);
+		SpaceRequest.put("/1/schema/toto").basicAuth(testAccount).body("{\"toto\":{\"_type\":\"XXX\"}}").go(400);
 
 		// should fail to change the car schema color property type
 		ObjectNode json = buildCarSchema();
 		json.with("car").with("color").put("_type", "date");
-		SpaceRequest.put("/v1/schema/car").basicAuth(testAccount).body(json).go(400);
+		SpaceRequest.put("/1/schema/car").basicAuth(testAccount).body(json).go(400);
 	}
 
 	private static ObjectNode buildHomeSchema() {

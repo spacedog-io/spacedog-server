@@ -13,7 +13,7 @@ import net.codestory.http.annotations.Prefix;
 import net.codestory.http.annotations.Put;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/v1/share")
+@Prefix("/1/share")
 public class ShareResource extends S3Resource {
 
 	private static final String SHARE_BUCKET_SUFFIX = "shared";
@@ -43,7 +43,7 @@ public class ShareResource extends S3Resource {
 	public Payload put(String fileName, byte[] bytes, Context context) {
 		Credentials credentials = SpaceContext.checkUserCredentials();
 		String uuid = UUID.randomUUID().toString();
-		return doUpload(SHARE_BUCKET_SUFFIX, "/v1/share", credentials, uuid, fileName, bytes, context);
+		return doUpload(SHARE_BUCKET_SUFFIX, "/1/share", credentials, uuid, fileName, bytes, context);
 	}
 
 	@Delete("")

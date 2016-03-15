@@ -23,20 +23,21 @@ import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
-import net.codestory.http.annotations.Prefix;
 import net.codestory.http.annotations.Put;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/v1/data")
+//@Prefix("/1/data")
 public class DataResource extends Resource {
 
 	//
 	// Routes
 	//
 
-	@Get("")
-	@Get("/")
+	@Get("/v1/data")
+	@Get("/v1/data/")
+	@Get("/1/data")
+	@Get("/1/data/")
 	public Payload getAll(Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
@@ -46,16 +47,20 @@ public class DataResource extends Resource {
 		return Payloads.json(result);
 	}
 
-	@Delete("")
-	@Delete("/")
+	@Delete("/v1/data")
+	@Delete("/v1/data/")
+	@Delete("/1/data")
+	@Delete("/1/data/")
 	public Payload deleteAll(Context context) {
 		// TODO not implemented since it would also delete super admins
 		// return SearchResource.get().deleteAllTypes(null, context);
 		return Payloads.error(HttpStatus.NOT_IMPLEMENTED);
 	}
 
-	@Get("/:type")
-	@Get("/:type/")
+	@Get("/v1/data/:type")
+	@Get("/v1/data/:type/")
+	@Get("/1/data/:type")
+	@Get("/1/data/:type/")
 	public Payload getByType(String type, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
@@ -65,8 +70,10 @@ public class DataResource extends Resource {
 		return Payloads.json(result);
 	}
 
-	@Post("/:type")
-	@Post("/:type/")
+	@Post("/v1/data/:type")
+	@Post("/v1/data/:type/")
+	@Post("/1/data/:type")
+	@Post("/1/data/:type/")
 	public Payload post(String type, String body, Context context) {
 
 		Credentials credentials = SpaceContext.checkCredentials();
@@ -88,18 +95,22 @@ public class DataResource extends Resource {
 		IndexResponse response = DataStore.get().createObject(//
 				credentials.backendId(), type, id, object, credentials.name());
 
-		return Payloads.saved(true, credentials.backendId(), "/v1/data", response.getType(), response.getId(),
+		return Payloads.saved(true, credentials.backendId(), "/1/data", response.getType(), response.getId(),
 				response.getVersion());
 	}
 
-	@Delete("/:type")
-	@Delete("/:type/")
+	@Delete("/v1/data/:type")
+	@Delete("/v1/data/:type/")
+	@Delete("/1/data/:type")
+	@Delete("/1/data/:type/")
 	public Payload deleteByType(String type, Context context) {
 		return SearchResource.get().deleteSearchForType(type, null, context);
 	}
 
-	@Get("/:type/:id")
-	@Get("/:type/:id/")
+	@Get("/v1/data/:type/:id")
+	@Get("/v1/data/:type/:id/")
+	@Get("/1/data/:type/:id")
+	@Get("/1/data/:type/:id/")
 	public Payload getById(String type, String id, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 
@@ -122,7 +133,10 @@ public class DataResource extends Resource {
 		return Payloads.error(HttpStatus.NOT_FOUND);
 	}
 
-	@Put("/:type/:id")
+	@Put("/v1/data/:type/:id")
+	@Put("/v1/data/:type/:id/")
+	@Put("/1/data/:type/:id")
+	@Put("/1/data/:type/:id/")
 	public Payload put(String type, String id, String body, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 
@@ -153,19 +167,22 @@ public class DataResource extends Resource {
 
 			IndexResponse response = DataStore.get().updateObject(credentials.backendId(), type, id, version, object,
 					credentials.name());
-			return Payloads.saved(false, credentials.backendId(), "/v1/data", response.getType(), response.getId(),
+			return Payloads.saved(false, credentials.backendId(), "/1/data", response.getType(), response.getId(),
 					response.getVersion());
 
 		} else {
 
 			UpdateResponse response = DataStore.get().patchObject(credentials.backendId(), type, id, version, object,
 					credentials.name());
-			return Payloads.saved(false, credentials.backendId(), "/v1/data", response.getType(), response.getId(),
+			return Payloads.saved(false, credentials.backendId(), "/1/data", response.getType(), response.getId(),
 					response.getVersion());
 		}
 	}
 
-	@Delete("/:type/:id")
+	@Delete("/v1/data/:type/:id")
+	@Delete("/v1/data/:type/:id/")
+	@Delete("/1/data/:type/:id")
+	@Delete("/1/data/:type/:id/")
 	public Payload deleteById(String type, String id, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 
@@ -186,28 +203,24 @@ public class DataResource extends Resource {
 		return Payloads.error(HttpStatus.NOT_FOUND, "object of type [%s] and id [%s] not found", type, id);
 	}
 
-	@Post("/search")
-	@Post("/search/")
+	@Post("/v1/data/search")
+	@Post("/v1/data/search/")
+	@Post("/1/data/search")
+	@Post("/1/data/search/")
 	@Deprecated
 	public Payload searchAllTypes(String body, Context context) throws JsonParseException, JsonMappingException,
 			NotFoundException, IOException, InterruptedException, ExecutionException {
 		return SearchResource.get().postSearchAllTypes(body, context);
 	}
 
-	@Post("/:type/search")
-	@Post("/:type/search/")
+	@Post("/v1/data/:type/search")
+	@Post("/v1/data/:type/search/")
+	@Post("/1/data/:type/search")
+	@Post("/1/data/:type/search/")
 	@Deprecated
 	public Payload searchForType(String type, String body, Context context) throws JsonParseException,
 			JsonMappingException, NotFoundException, IOException, InterruptedException, ExecutionException {
 		return SearchResource.get().postSearchForType(type, body, context);
-	}
-
-	@Post("/:type/filter")
-	@Post("/:type/filter/")
-	@Deprecated
-	public Payload filter(String type, String body, Context context)
-			throws JsonParseException, JsonMappingException, IOException, InterruptedException, ExecutionException {
-		return SearchResource.get().postFilterForType(type, body, context);
 	}
 
 	//

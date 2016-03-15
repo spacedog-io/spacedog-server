@@ -27,7 +27,7 @@ public class BackendResourceTestOften extends Assert {
 
 		// get just created test account should succeed
 
-		SpaceRequest.get("/v1/backend?refresh=true")//
+		SpaceRequest.get("/1/backend?refresh=true")//
 				.basicAuth(testBackend).go(200)//
 				.assertEquals("test", "backendId")//
 				.assertEquals("test", "superAdmins.0.username")//
@@ -40,7 +40,7 @@ public class BackendResourceTestOften extends Assert {
 
 		// create new account with same backend id should fail
 
-		SpaceRequest.post("/v1/backend/test")
+		SpaceRequest.post("/1/backend/test")
 				.body(//
 						Json.objectBuilder()//
 								.put("backendId", "test")//
@@ -53,29 +53,29 @@ public class BackendResourceTestOften extends Assert {
 
 		// admin user login should succeed
 
-		SpaceRequest.get("/v1/login").basicAuth(testBackend).go(200);
+		SpaceRequest.get("/1/login").basicAuth(testBackend).go(200);
 
 		// no header no user login should fail
 
-		SpaceRequest.get("/v1/login").go(401);
+		SpaceRequest.get("/1/login").go(401);
 
 		// invalid admin username login should fail
 
-		SpaceRequest.get("/v1/login").basicAuth(testBackend, "XXX", "hi test").go(401);
+		SpaceRequest.get("/1/login").basicAuth(testBackend, "XXX", "hi test").go(401);
 
 		// invalid admin password login should fail
 
-		SpaceRequest.get("/v1/login").basicAuth(testBackend, "test", "hi XXX").go(401);
+		SpaceRequest.get("/1/login").basicAuth(testBackend, "test", "hi XXX").go(401);
 
 		// data access with key credentials should succeed
 
-		SpaceRequest.get("/v1/data?refresh=true").backend(testBackend).go(200)//
+		SpaceRequest.get("/1/data?refresh=true").backend(testBackend).go(200)//
 				.assertSizeEquals(1, "results")//
 				.assertEquals("test", "results.0.username");
 
 		// data access with admin user should succeed
 
-		SpaceRequest.get("/v1/data").basicAuth(testBackend).go(200)//
+		SpaceRequest.get("/1/data").basicAuth(testBackend).go(200)//
 				.assertSizeEquals(1, "results")//
 				.assertEquals("test", "results.0.username");
 
@@ -85,7 +85,7 @@ public class BackendResourceTestOften extends Assert {
 
 		// admin access with regular user and backend key should fail
 
-		SpaceRequest.get("/v1/backend").basicAuth(john).go(401);
+		SpaceRequest.get("/1/backend").basicAuth(john).go(401);
 
 	}
 
@@ -100,36 +100,36 @@ public class BackendResourceTestOften extends Assert {
 
 		// super admin gets his backend
 
-		ObjectNode aaaaNode = SpaceRequest.get("/v1/backend").basicAuth(aaaa).go(200).objectNode();
-		ObjectNode zzzzNode = SpaceRequest.get("/v1/backend").basicAuth(zzzz).go(200).objectNode();
+		ObjectNode aaaaNode = SpaceRequest.get("/1/backend").basicAuth(aaaa).go(200).objectNode();
+		ObjectNode zzzzNode = SpaceRequest.get("/1/backend").basicAuth(zzzz).go(200).objectNode();
 
 		// superdog gets all backends
 
-		SpaceRequest.get("/v1/backend").superdogAuth().go(200)//
+		SpaceRequest.get("/1/backend").superdogAuth().go(200)//
 				.assertContains(aaaaNode, "results")//
 				.assertContains(zzzzNode, "results");
 
 		// super admin fails to access a backend he does not own
 
-		SpaceRequest.get("/v1/backend").basicAuth("aaaa", zzzz.username, zzzz.password).go(401);
-		SpaceRequest.get("/v1/backend").basicAuth("zzzz", aaaa.username, aaaa.username).go(401);
+		SpaceRequest.get("/1/backend").basicAuth("aaaa", zzzz.username, zzzz.password).go(401);
+		SpaceRequest.get("/1/backend").basicAuth("zzzz", aaaa.username, aaaa.username).go(401);
 
 		// super admin fails to delete a backend he does not own
 
-		SpaceRequest.delete("/v1/backend").basicAuth("aaaa", zzzz.username, zzzz.password).go(401);
-		SpaceRequest.delete("/v1/backend").basicAuth("zzzz", aaaa.username, aaaa.username).go(401);
+		SpaceRequest.delete("/1/backend").basicAuth("aaaa", zzzz.username, zzzz.password).go(401);
+		SpaceRequest.delete("/1/backend").basicAuth("zzzz", aaaa.username, aaaa.username).go(401);
 
 		// super admin fails to delete himself
 		// since backends must at least have one super admin
 
 		// TODO does not work yet
-		// SpaceRequest.delete("/v1/user/aaaa").basicAuth(aaaa).go(400);
-		// SpaceRequest.delete("/v1/user/zzzz").basicAuth(zzzz).go(400);
+		// SpaceRequest.delete("/1/user/aaaa").basicAuth(aaaa).go(400);
+		// SpaceRequest.delete("/1/user/zzzz").basicAuth(zzzz).go(400);
 
 		// super admin can delete his backend
 
-		SpaceRequest.delete("/v1/backend").basicAuth(aaaa).go(200);
-		SpaceRequest.delete("/v1/backend").basicAuth(zzzz).go(200);
+		SpaceRequest.delete("/1/backend").basicAuth(aaaa).go(200);
+		SpaceRequest.delete("/1/backend").basicAuth(zzzz).go(200);
 	}
 
 }

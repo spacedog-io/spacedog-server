@@ -44,7 +44,7 @@ import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/v1")
+@Prefix("/1")
 public class PushResourceOld {
 
 	public static final String TYPE = "device";
@@ -87,7 +87,7 @@ public class PushResourceOld {
 		}
 
 		try {
-			return Payloads.saved(false, credentials.backendId(), "/v1", TYPE, URLEncoder.encode(endpointArn, "UTF-8"));
+			return Payloads.saved(false, credentials.backendId(), "/1", TYPE, URLEncoder.encode(endpointArn, "UTF-8"));
 		} catch (UnsupportedEncodingException e) {
 			throw new RuntimeException(e);
 		}
@@ -123,7 +123,7 @@ public class PushResourceOld {
 				getSnsClient().subscribe(topicArn, "application", endpoint);
 		});
 
-		return Payloads.saved(false, credentials.backendId(), "/v1", "device", id);
+		return Payloads.saved(false, credentials.backendId(), "/1", "device", id);
 	}
 
 	@Post("/topic/:name/push")

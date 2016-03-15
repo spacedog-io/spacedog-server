@@ -20,7 +20,7 @@ public class SuperDogStatus extends Assert {
 
 		SpaceRequest.setLogDebug(false);
 
-		ObjectNode accounts = SpaceRequest.get("/v1/backend").queryString("size", "100")//
+		ObjectNode accounts = SpaceRequest.get("/1/backend").queryString("size", "100")//
 				.superdogAuth().go(200).objectNode();
 
 		log("[%s] backends:", accounts.get("total").asLong());
@@ -39,9 +39,9 @@ public class SuperDogStatus extends Assert {
 			log("**** %s ****", backendId);
 
 			// TODO count backend objects when superdogs
-			// can access /v1/data like a regular backend admin
+			// can access /1/data like a regular backend admin
 
-			// long total = SpaceRequest.get("/v1/data")//
+			// long total = SpaceRequest.get("/1/data")//
 			// .queryString("size", "0")//
 			// .superdogAuth()//
 			// .go(200)//
@@ -50,7 +50,7 @@ public class SuperDogStatus extends Assert {
 			//
 			// log("Total number of objects = %s", total);
 
-			ObjectNode log = SpaceRequest.get("/v1/log/" + backendId)//
+			ObjectNode log = SpaceRequest.get("/1/log/" + backendId)//
 					.queryString("size", "1")//
 					.queryString("logType", "ADMIN")//
 					.superdogAuth()//

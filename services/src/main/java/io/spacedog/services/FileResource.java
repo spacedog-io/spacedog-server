@@ -12,7 +12,7 @@ import net.codestory.http.annotations.Prefix;
 import net.codestory.http.annotations.Put;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/v1/file")
+@Prefix("/1/file")
 public class FileResource extends S3Resource {
 
 	private static final String FILE_BUCKET_SUFFIX = "files";
@@ -88,7 +88,7 @@ public class FileResource extends S3Resource {
 
 	private Payload doPut(String path, String fileName, byte[] bytes, Context context) {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
-		return doUpload(FILE_BUCKET_SUFFIX, "/v1/file", credentials, path, fileName, bytes, context);
+		return doUpload(FILE_BUCKET_SUFFIX, "/1/file", credentials, path, fileName, bytes, context);
 	}
 
 	private Payload doDelete(Optional<String> path) {

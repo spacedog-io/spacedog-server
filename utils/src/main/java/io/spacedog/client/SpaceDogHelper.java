@@ -45,7 +45,7 @@ public class SpaceDogHelper {
 	}
 
 	public static User createUser(Backend backend, String username, String password, String email) throws Exception {
-		String id = SpaceRequest.post("/v1/user").backend(backend)
+		String id = SpaceRequest.post("/1/user").backend(backend)
 				.body(Json.objectBuilder().put("username", username).put("password", password).put("email", email))
 				.go(201).objectNode().get("id").asText();
 
@@ -53,7 +53,7 @@ public class SpaceDogHelper {
 	}
 
 	public static void deleteUser(String username, Backend account) throws Exception {
-		SpaceRequest.delete("/v1/user/" + username).basicAuth(account).go(200, 404);
+		SpaceRequest.delete("/1/user/" + username).basicAuth(account).go(200, 404);
 	}
 
 	// public static void resetSchema(JsonNode schema, Account account) throws
@@ -74,12 +74,12 @@ public class SpaceDogHelper {
 
 	public static void deleteSchema(JsonNode schema, Backend backend) throws Exception {
 		String schemaName = schema.fieldNames().next();
-		SpaceRequest.delete("/v1/schema/" + schemaName).basicAuth(backend).go(200, 404);
+		SpaceRequest.delete("/1/schema/" + schemaName).basicAuth(backend).go(200, 404);
 	}
 
 	public static void setSchema(JsonNode schema, Backend backend) throws Exception {
 		String schemaName = schema.fieldNames().next();
-		SpaceRequest.post("/v1/schema/" + schemaName).basicAuth(backend).body(schema).go(201);
+		SpaceRequest.post("/1/schema/" + schemaName).basicAuth(backend).body(schema).go(201);
 	}
 
 	public static Backend createBackend(Backend backend) throws UnirestException, Exception {
@@ -98,7 +98,7 @@ public class SpaceDogHelper {
 				.put("password", password)//
 				.put("email", email);
 
-		SpaceRequest.post("/v1/backend/" + backendId)//
+		SpaceRequest.post("/1/backend/" + backendId)//
 				.forTesting(test)//
 				.body(body)//
 				.go(201);
@@ -114,7 +114,7 @@ public class SpaceDogHelper {
 	// public static Optional<Backend> getAccount(String backendId, String
 	// username, String password) throws Exception {
 	//
-	// SpaceResponse response = SpaceRequest.get("/v1/admin/account/" +
+	// SpaceResponse response = SpaceRequest.get("/1/admin/account/" +
 	// backendId)//
 	// .basicAuth(backendId, username, password)//
 	// .go(200, 401);
@@ -156,7 +156,7 @@ public class SpaceDogHelper {
 		// delete returns 401 because admin username and password
 		// won't match any account
 
-		SpaceRequest.delete("/v1/backend")//
+		SpaceRequest.delete("/1/backend")//
 				.basicAuth(backendId, username, password).go(200, 401);
 	}
 
@@ -190,6 +190,6 @@ public class SpaceDogHelper {
 	}
 
 	public static void deleteAll(String type, Backend account) throws Exception {
-		SpaceRequest.delete("/v1/data/" + type).basicAuth(account).go(200);
+		SpaceRequest.delete("/1/data/" + type).basicAuth(account).go(200);
 	}
 }

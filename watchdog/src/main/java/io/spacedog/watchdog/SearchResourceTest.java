@@ -36,35 +36,35 @@ public class SearchResourceTest extends Assert {
 
 		SpaceDogHelper.createUser(testAccount, "riri", "hi riri", "riri@disney.com");
 
-		SpaceRequest.post("/v1/data/rubric").basicAuth(testAccount)//
+		SpaceRequest.post("/1/data/rubric").basicAuth(testAccount)//
 				.body(Json.object("name", "riri, fifi and loulou")).go(201);
 
-		SpaceRequest.post("/v1/data/message").basicAuth(testAccount)//
+		SpaceRequest.post("/1/data/message").basicAuth(testAccount)//
 				.body(Json.object("text", "what's up?")).go(201);
-		SpaceRequest.post("/v1/data/message").basicAuth(testAccount)//
+		SpaceRequest.post("/1/data/message").basicAuth(testAccount)//
 				.body(Json.object("text", "wanna drink something?")).go(201);
-		SpaceRequest.post("/v1/data/message").basicAuth(testAccount)//
+		SpaceRequest.post("/1/data/message").basicAuth(testAccount)//
 				.body(Json.object("text", "pretty cool, hein?")).go(201);
-		SpaceRequest.post("/v1/data/message").basicAuth(testAccount)//
+		SpaceRequest.post("/1/data/message").basicAuth(testAccount)//
 				.body(Json.object("text", "so long guys")).go(201);
 
-		SpaceRequest.get("/v1/data?refresh=true").basicAuth(testAccount).go(200)//
+		SpaceRequest.get("/1/data?refresh=true").basicAuth(testAccount).go(200)//
 				.assertEquals(7, "total");
 
 		// deletes messages containing 'up' by query
 
 		ObjectNode query = Json.objectBuilder().object("query")//
 				.object("match").put("text", "up").build();
-		SpaceRequest.delete("/v1/search/message").basicAuth(testAccount).body(query).go(200);
-		SpaceRequest.get("/v1/data/message?refresh=true").basicAuth(testAccount).go(200)//
+		SpaceRequest.delete("/1/search/message").basicAuth(testAccount).body(query).go(200);
+		SpaceRequest.get("/1/data/message?refresh=true").basicAuth(testAccount).go(200)//
 				.assertEquals(3, "total");
 
 		// deletes data objects containing 'wanna' or 'riri' but not users
 
 		query = Json.objectBuilder().object("query")//
 				.object("match").put("_all", "wanna riri").build();
-		SpaceRequest.delete("/v1/search").basicAuth(testAccount).body(query).go(200);
-		SpaceRequest.get("/v1/data?refresh=true").basicAuth(testAccount).go(200)//
+		SpaceRequest.delete("/1/search").basicAuth(testAccount).body(query).go(200);
+		SpaceRequest.get("/1/data?refresh=true").basicAuth(testAccount).go(200)//
 				.assertEquals(4, "total");
 	}
 }

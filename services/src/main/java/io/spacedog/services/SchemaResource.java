@@ -23,7 +23,7 @@ import net.codestory.http.annotations.Prefix;
 import net.codestory.http.annotations.Put;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/v1/schema")
+@Prefix("/1/schema")
 public class SchemaResource extends Resource {
 
 	//
@@ -62,7 +62,6 @@ public class SchemaResource extends Resource {
 
 	@Put("/:type")
 	@Put("/:type/")
-	// TODO deprecate POST since we pass the type as parameter ?
 	@Post("/:type")
 	@Post("/:type/")
 	public Payload put(String type, String newSchemaAsString, Context context) {
@@ -84,7 +83,7 @@ public class SchemaResource extends Resource {
 			elastic.createIndex(backendId, type, mapping, shards, replicas);
 		}
 
-		return Payloads.saved(!indexExists, credentials.backendId(), "/v1", "schema", type);
+		return Payloads.saved(!indexExists, credentials.backendId(), "/1", "schema", type);
 	}
 
 	@Delete("/:type")

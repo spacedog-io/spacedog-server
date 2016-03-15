@@ -35,13 +35,13 @@ public class BatchResourceTest extends Assert {
 
 		ArrayNode batch = Json.arrayBuilder()//
 				.object()//
-				.put("method", "GET").put("path", "/v1/backend")//
+				.put("method", "GET").put("path", "/1/backend")//
 				.end()//
 				.object()//
-				.put("method", "DELETE").put("path", "/v1/backend")//
+				.put("method", "DELETE").put("path", "/1/backend")//
 				.end()//
 				.object()//
-				.put("method", "POST").put("path", "/v1/backend/test")//
+				.put("method", "POST").put("path", "/1/backend/test")//
 				.object("content")//
 				.put("username", "test")//
 				.put("password", "hi test")//
@@ -49,18 +49,18 @@ public class BatchResourceTest extends Assert {
 				.end()//
 				.end()//
 				.object()//
-				.put("method", "POST").put("path", "/v1/schema/message")//
+				.put("method", "POST").put("path", "/1/schema/message")//
 				.node("content",
 						SchemaBuilder2.builder("message", "code")//
 								.stringProperty("code", true)//
 								.textProperty("text", "english", true).toString())//
 				.end()//
 				.object()//
-				.put("method", "GET").put("path", "/v1/login")//
+				.put("method", "GET").put("path", "/1/login")//
 				.end()//
 				.build();
 
-		SpaceResponse spaceResponse = SpaceRequest.post("/v1/batch?debug=true")//
+		SpaceResponse spaceResponse = SpaceRequest.post("/1/batch?debug=true")//
 				.superdogAuth("test").body(batch).go(200);
 
 		int accountGetStatus = Json.get(spaceResponse.jsonNode(), "responses.0.status").asInt();
@@ -89,7 +89,7 @@ public class BatchResourceTest extends Assert {
 
 		batch = Json.arrayBuilder()//
 				.object()//
-				.put("method", "POST").put("path", "/v1/user")//
+				.put("method", "POST").put("path", "/1/user")//
 				.object("content")//
 				.put("username", "vince")//
 				.put("password", "hi vince")//
@@ -97,7 +97,7 @@ public class BatchResourceTest extends Assert {
 				.end()//
 				.end()//
 				.object()//
-				.put("method", "POST").put("path", "/v1/user")//
+				.put("method", "POST").put("path", "/1/user")//
 				.object("content")//
 				.put("username", "dave")//
 				.put("password", "hi dave")//
@@ -105,14 +105,14 @@ public class BatchResourceTest extends Assert {
 				.end()//
 				.end()//
 				.object()//
-				.put("method", "GET").put("path", "/v1/user/vince")//
+				.put("method", "GET").put("path", "/1/user/vince")//
 				.end()//
 				.object()//
-				.put("method", "GET").put("path", "/v1/data/user/dave")//
+				.put("method", "GET").put("path", "/1/data/user/dave")//
 				.end()//
 				.build();
 
-		SpaceRequest.post("/v1/batch?debug=true").basicAuth(testAccount).body(batch).go(200)//
+		SpaceRequest.post("/1/batch?debug=true").basicAuth(testAccount).body(batch).go(200)//
 				.assertEquals("vince", "responses.0.id")//
 				.assertEquals("dave", "responses.1.id")//
 				.assertEquals("vince", "responses.2.content.username")//
@@ -124,31 +124,31 @@ public class BatchResourceTest extends Assert {
 
 		batch = Json.arrayBuilder()//
 				.object()//
-				.put("method", "POST").put("path", "/v1/user")//
+				.put("method", "POST").put("path", "/1/user")//
 				.object("content")//
 				.put("username", "fred")//
 				.put("password", "hi fred")//
 				.end()//
 				.end()//
 				.object()//
-				.put("method", "GET").put("path", "/v1/toto")//
+				.put("method", "GET").put("path", "/1/toto")//
 				.end()//
 				.object()//
-				.put("method", "GET").put("path", "/v1/user/vince")//
+				.put("method", "GET").put("path", "/1/user/vince")//
 				.end()//
 				.object()//
-				.put("method", "POST").put("path", "/v1/user")//
+				.put("method", "POST").put("path", "/1/user")//
 				.end()//
 				.object()//
-				.put("method", "DELETE").put("path", "/v1/user")//
+				.put("method", "DELETE").put("path", "/1/user")//
 				.end()//
 				.object()//
-				.put("method", "PUT").put("path", "/v1/user/vince/password")//
+				.put("method", "PUT").put("path", "/1/user/vince/password")//
 				.put("content", "hi vince 2")//
 				.end()//
 				.build();
 
-		SpaceRequest.post("/v1/batch?debug=true").backend(testAccount).body(batch).go(200)//
+		SpaceRequest.post("/1/batch?debug=true").backend(testAccount).body(batch).go(200)//
 				.assertEquals(400, "responses.0.status")//
 				.assertEquals(404, "responses.1.status")//
 				.assertEquals(401, "responses.2.status")//
@@ -161,47 +161,47 @@ public class BatchResourceTest extends Assert {
 
 		batch = Json.arrayBuilder()//
 				.object()//
-				.put("method", "POST").put("path", "/v1/data/message")//
+				.put("method", "POST").put("path", "/1/data/message")//
 				.object("content")//
 				.put("code", "1")//
 				.put("text", "Hi guys!")//
 				.end()//
 				.end()//
 				.object()//
-				.put("method", "POST").put("path", "/v1/data/message")//
+				.put("method", "POST").put("path", "/1/data/message")//
 				.object("content")//
 				.put("code", "2")//
 				.put("text", "Pretty cool, huhh?")//
 				.end()//
 				.end()//
 				.object()//
-				.put("method", "GET").put("path", "/v1/data/message")//
+				.put("method", "GET").put("path", "/1/data/message")//
 				.object("parameters")//
 				.put("refresh", true)//
 				.end()//
 				.end()//
 				.object()//
-				.put("method", "PUT").put("path", "/v1/data/message/1")//
+				.put("method", "PUT").put("path", "/1/data/message/1")//
 				.object("content")//
 				.put("code", "0")//
 				.put("text", "Hi guys, what's up?")//
 				.end()//
 				.end()//
 				.object()//
-				.put("method", "PUT").put("path", "/v1/data/message/2")//
+				.put("method", "PUT").put("path", "/1/data/message/2")//
 				.object("content")//
 				.put("text", "Pretty cool, huhhhhh?")//
 				.end()//
 				.end()//
 				.object()//
-				.put("method", "GET").put("path", "/v1/data/message")//
+				.put("method", "GET").put("path", "/1/data/message")//
 				.object("parameters")//
 				.put("refresh", true)//
 				.end()//
 				.end()//
 				.build();
 
-		SpaceResponse response = SpaceRequest.post("/v1/batch?debug=true").backend(testAccount).body(batch).go(200)//
+		SpaceResponse response = SpaceRequest.post("/1/batch?debug=true").backend(testAccount).body(batch).go(200)//
 				.assertEquals(201, "responses.0.status")//
 				.assertEquals("1", "responses.0.id")//
 				.assertEquals(201, "responses.1.status")//
@@ -226,17 +226,17 @@ public class BatchResourceTest extends Assert {
 
 		batch = Json.arrayBuilder()//
 				.object()//
-				.put("method", "GET").put("path", "/v1/data/message")//
+				.put("method", "GET").put("path", "/1/data/message")//
 				.end()//
 				.object()//
-				.put("method", "GET").put("path", "/v1/data/XXX")//
+				.put("method", "GET").put("path", "/1/data/XXX")//
 				.end()//
 				.object()//
-				.put("method", "GET").put("path", "/v1/data/message")//
+				.put("method", "GET").put("path", "/1/data/message")//
 				.end()//
 				.build();
 
-		SpaceRequest.post("/v1/batch?stopOnError=true&debug=true").backend(testAccount).body(batch).go(200)//
+		SpaceRequest.post("/1/batch?stopOnError=true&debug=true").backend(testAccount).body(batch).go(200)//
 				.assertEquals(200, "responses.0.status")//
 				.assertEquals(404, "responses.1.status")//
 				.assertSizeEquals(2, "responses")//
@@ -246,9 +246,9 @@ public class BatchResourceTest extends Assert {
 
 		JsonBuilder<ArrayNode> bigBatch = Json.arrayBuilder();
 		for (int i = 0; i < 11; i++)
-			bigBatch.object().put("method", "GET").put("path", "/v1/login").end();
+			bigBatch.object().put("method", "GET").put("path", "/1/login").end();
 
-		SpaceRequest.post("/v1/batch?debug=true").backend(testAccount).body(bigBatch.build()).go(400)//
+		SpaceRequest.post("/1/batch?debug=true").backend(testAccount).body(bigBatch.build()).go(400)//
 				.assertEquals("batch are limited to 10 sub requests", "error.message")//
 				.assertEquals(0, "debug.batchCredentialChecks");
 

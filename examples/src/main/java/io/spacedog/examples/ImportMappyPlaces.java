@@ -55,10 +55,9 @@ public class ImportMappyPlaces extends Assert {
 			// "examples", "hi examples",
 			// "hello@spacedog.io");
 
-			SpaceRequest.delete("/v1/schema/resto").basicAuth(examplesAccount).go(200, 404, 401);
+			SpaceRequest.delete("/1/schema/resto").basicAuth(examplesAccount).go(200, 404, 401);
 
-			SpaceRequest.post("/v1/schema/resto").basicAuth(examplesAccount).body(buildRestoSchema().toString())
-					.go(201);
+			SpaceRequest.post("/1/schema/resto").basicAuth(examplesAccount).body(buildRestoSchema().toString()).go(201);
 
 			double step = 0.01;
 
@@ -119,7 +118,7 @@ public class ImportMappyPlaces extends Assert {
 		}
 
 		try {
-			SpaceRequest.post("/v1/data/resto").basicAuth(examplesAccount).body(target.toString()).go(201);
+			SpaceRequest.post("/1/data/resto").basicAuth(examplesAccount).body(target.toString()).go(201);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

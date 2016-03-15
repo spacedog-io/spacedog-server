@@ -32,24 +32,27 @@ import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
-import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/v1")
+//@Prefix("/1")
 public class SearchResource extends Resource {
 
 	//
 	// Routes
 	//
 
-	@Get("/search")
-	@Get("/search/")
+	@Get("/v1/search")
+	@Get("/v1/search/")
+	@Get("/1/search")
+	@Get("/1/search/")
 	public Payload getSearchAllTypes(Context context) {
 		return postSearchAllTypes(null, context);
 	}
 
-	@Post("/search")
-	@Post("/search/")
+	@Post("/v1/search")
+	@Post("/v1/search/")
+	@Post("/1/search")
+	@Post("/1/search/")
 	public Payload postSearchAllTypes(String body, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
@@ -58,8 +61,10 @@ public class SearchResource extends Resource {
 		return Payloads.json(result);
 	}
 
-	@Delete("/search")
-	@Delete("/search/")
+	@Delete("/v1/search")
+	@Delete("/v1/search/")
+	@Delete("/1/search")
+	@Delete("/1/search/")
 	public Payload deleteAllTypes(String query, Context context) {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, true);
@@ -69,14 +74,18 @@ public class SearchResource extends Resource {
 		return Payloads.json(response);
 	}
 
-	@Get("/search/:type")
-	@Get("/search/:type/")
+	@Get("/v1/search/:type")
+	@Get("/v1/search/:type/")
+	@Get("/1/search/:type")
+	@Get("/1/search/:type/")
 	public Payload getSearchForType(String type, Context context) {
 		return postSearchForType(type, null, context);
 	}
 
-	@Post("/search/:type")
-	@Post("/search/:type/")
+	@Post("/v1/search/:type")
+	@Post("/v1/search/:type/")
+	@Post("/1/search/:type")
+	@Post("/1/search/:type/")
 	public Payload postSearchForType(String type, String body, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
@@ -85,8 +94,10 @@ public class SearchResource extends Resource {
 		return Payloads.json(result);
 	}
 
-	@Delete("/search/:type")
-	@Delete("/search/:type/")
+	@Delete("/v1/search/:type")
+	@Delete("/v1/search/:type/")
+	@Delete("/1/search/:type")
+	@Delete("/1/search/:type/")
 	public Payload deleteSearchForType(String type, String query, Context context) {
 
 		Credentials credentials = SpaceContext.checkAdminCredentials();
@@ -99,8 +110,8 @@ public class SearchResource extends Resource {
 		return Payloads.json(response);
 	}
 
-	@Post("/filter/:type")
-	@Post("/filter/:type")
+	@Post("/1/filter/:type")
+	@Post("/1/filter/:type")
 	public Payload postFilterForType(String type, String body, Context context) {
 		try {
 			Credentials credentials = SpaceContext.checkCredentials();
@@ -114,6 +125,10 @@ public class SearchResource extends Resource {
 			throw new RuntimeException(e);
 		}
 	}
+
+	//
+	// implementation
+	//
 
 	ObjectNode searchInternal(Credentials credentials, String type, String jsonQuery, Context context) {
 

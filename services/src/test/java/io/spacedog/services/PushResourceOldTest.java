@@ -28,25 +28,25 @@ public class PushResourceOldTest extends Assert {
 				"davattias@gmail.com");
 
 		// subscribe
-		String vinceDeviceId = SpaceRequest.post("/v1/device").backend(testAccount).basicAuth(vince)//
+		String vinceDeviceId = SpaceRequest.post("/1/device").backend(testAccount).basicAuth(vince)//
 				.body(Json.objectBuilder().put("endpoint", "vince-iphone")//
 						.put("appName", "spacedog-supervisor"))//
 				.go(200, 201).objectNode().get("id").asText();
 
-		String fredDeviceId = SpaceRequest.post("/v1/device").backend(testAccount).basicAuth(fred)//
+		String fredDeviceId = SpaceRequest.post("/1/device").backend(testAccount).basicAuth(fred)//
 				.body(Json.objectBuilder().put("endpoint", "vince-iphone")//
 						.put("appName", "spacedog-supervisor"))//
 				.go(200, 201).objectNode().get("id").asText();
 
-		String nathDeviceId = SpaceRequest.post("/v1/device").backend(testAccount).basicAuth(nath)//
+		String nathDeviceId = SpaceRequest.post("/1/device").backend(testAccount).basicAuth(nath)//
 				.body(Json.objectBuilder().put("endpoint", "vince-iphone")//
 						.put("appName", "spacedog-supervisor"))//
 				.go(200, 201).objectNode().get("id").asText();
 
-		SpaceRequest.post("/v1/data/message").backend(testAccount)//
+		SpaceRequest.post("/1/data/message").backend(testAccount)//
 				.body(createMessage("vince")).go(201);
 
-		SpaceRequest.post("/v1/data/message").backend(testAccount)//
+		SpaceRequest.post("/1/data/message").backend(testAccount)//
 				.body(createMessage("philippe")).go(201);
 
 		ObjectNode pushBody = Json.objectBuilder()//
@@ -61,11 +61,11 @@ public class PushResourceOldTest extends Assert {
 				.end()//
 				.put("message", "Hi dogs").build();
 
-		SpaceRequest.post("/v1/push").basicAuth(testAccount)//
+		SpaceRequest.post("/1/push").basicAuth(testAccount)//
 				.body(pushBody).go(200);
 
 		// push all
-		SpaceRequest.post("/v1/device/push").basicAuth(testAccount).go(200);
+		SpaceRequest.post("/1/device/push").basicAuth(testAccount).go(200);
 	}
 
 	private ObjectNode buildSchema() {

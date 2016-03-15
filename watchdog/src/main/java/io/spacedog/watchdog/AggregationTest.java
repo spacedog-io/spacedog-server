@@ -35,7 +35,7 @@ public class AggregationTest {
 
 		// 4 => 3 distinct disney user emails (hello, donald, mickey)
 		// and 1 admin email
-		SpaceRequest.post("/v1/search?refresh=true").backend(testAccount).body(query).go(200)//
+		SpaceRequest.post("/1/search?refresh=true").backend(testAccount).body(query).go(200)//
 				.assertEquals(4, "aggregations.objectCount.value");
 
 	}

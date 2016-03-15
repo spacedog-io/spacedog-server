@@ -34,7 +34,7 @@ import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/v1")
+@Prefix("/1")
 public class SnapshotResource extends Resource {
 
 	private static final String PLATFORM_SNAPSHOT_PREFIX = "all";
@@ -47,8 +47,6 @@ public class SnapshotResource extends Resource {
 
 	@Get("/snapshot")
 	@Get("/snapshot/")
-	@Get("/dog/snapshot")
-	@Get("/dog/snapshot/")
 	public Payload getSnapshotAll() {
 
 		SpaceContext.checkAdminCredentials(false);
@@ -66,8 +64,6 @@ public class SnapshotResource extends Resource {
 
 	@Get("/snapshot/latest")
 	@Get("/snapshot/latest/")
-	@Get("/dog/snapshot/latest")
-	@Get("/dog/snapshot/latest/")
 	public Payload getSnapshotLatest() {
 
 		SpaceContext.checkAdminCredentials(false);
@@ -76,10 +72,8 @@ public class SnapshotResource extends Resource {
 				: Payloads.json(snapshots.get(0).toJson());
 	}
 
-	@Get("/snapshot/:snapshotId")
-	@Get("/snapshot/:snapshotId/")
-	@Get("/dog/snapshot/:snapshotId")
-	@Get("/dog/snapshot/:snapshotId/")
+	@Get("/snapshot/:id")
+	@Get("/snapshot/:id/")
 	public Payload getSnapshotById(String snapshotId) {
 
 		SpaceContext.checkAdminCredentials(false);
@@ -89,8 +83,6 @@ public class SnapshotResource extends Resource {
 
 	@Post("/snapshot")
 	@Post("/snapshot/")
-	@Post("/dog/snapshot")
-	@Post("/dog/snapshot/")
 	public Payload postSnapshot(Context context) {
 
 		SpaceContext.checkSuperDogCredentials(false);
@@ -115,7 +107,7 @@ public class SnapshotResource extends Resource {
 
 		JsonBuilder<ObjectNode> jsonResponse = Payloads.minimalBuilder(status)//
 				.put("id", snapshotId)//
-				.put("location", spaceUrl(Optional.empty(), "/v1/dog", "snapshot", snapshotId).toString());
+				.put("location", spaceUrl(Optional.empty(), "/1", "snapshot", snapshotId).toString());
 
 		if (response.getSnapshotInfo() != null) {
 			SpaceSnapshot info = new SpaceSnapshot(repoId, response.getSnapshotInfo());
@@ -127,8 +119,6 @@ public class SnapshotResource extends Resource {
 
 	@Post("/snapshot/latest/restore")
 	@Post("/snapshot/latest/restore/")
-	@Post("/dog/snapshot/latest/restore")
-	@Post("/dog/snapshot/latest/restore/")
 	public Payload postSnapshotLatestRestore(Context context) {
 
 		SpaceContext.checkSuperDogCredentials(false);
@@ -141,10 +131,8 @@ public class SnapshotResource extends Resource {
 				context.query().getBoolean(WAIT_FOR_COMPLETION, false));
 	}
 
-	@Post("/snapshot/:snapshotId/restore")
-	@Post("/snapshot/:snapshotId/restore/")
-	@Post("/dog/snapshot/:snapshotId/restore")
-	@Post("/dog/snapshot/:snapshotId/restore/")
+	@Post("/snapshot/:id/restore")
+	@Post("/snapshot/:id/restore/")
 	public Payload postSnapshotRestoreById(String snapshotId, Context context) {
 
 		SpaceContext.checkSuperDogCredentials(false);
