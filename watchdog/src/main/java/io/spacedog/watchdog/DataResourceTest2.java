@@ -27,8 +27,8 @@ public class DataResourceTest2 extends Assert {
 	public void createSearchUpdateAndDeleteSales() throws Exception {
 
 		SpaceDogHelper.prepareTest();
-		Backend testAccount = SpaceDogHelper.resetTestBackend();
-		SpaceDogHelper.setSchema(SchemaResourceTest.buildSaleSchema(), testAccount);
+		Backend testBackend = SpaceDogHelper.resetTestBackend();
+		SpaceDogHelper.setSchema(SchemaResourceTest.buildSaleSchema(), testBackend);
 
 		ObjectNode sale = Json.objectBuilder()//
 				.put("number", "1234567890")//
@@ -58,14 +58,14 @@ public class DataResourceTest2 extends Assert {
 
 		// create
 
-		SpaceResponse create = SpaceRequest.post("/1/data/sale").backend(testAccount).body(sale.toString()).go(201)
+		SpaceResponse create = SpaceRequest.post("/1/data/sale").backend(testBackend).body(sale.toString()).go(201)
 				.assertTrue("success").assertEquals("sale", "type").assertEquals(1, "version").assertNotNull("id");
 
 		String id = create.jsonNode().get("id").asText();
 
 		// find by id
 
-		SpaceResponse res1 = SpaceRequest.get("/1/data/sale/" + id).backend(testAccount).go(200)//
+		SpaceResponse res1 = SpaceRequest.get("/1/data/sale/" + id).backend(testBackend).go(200)//
 				.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.createdBy")//
 				.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.updatedBy")//
 				.assertEquals(1, "meta.version")//
@@ -101,7 +101,7 @@ public class DataResourceTest2 extends Assert {
 
 		// find by simple text search
 
-		SpaceResponse res1b = SpaceRequest.get("/1/search/sale?q=museum&refresh=true").backend(testAccount).go(200)
+		SpaceResponse res1b = SpaceRequest.get("/1/search/sale?q=museum&refresh=true").backend(testBackend).go(200)
 				.assertEquals(1, "total");
 
 		res1.assertEquals(res1b.getFromJson("results.0"));
@@ -114,20 +114,20 @@ public class DataResourceTest2 extends Assert {
 				.put("query", "museum")//
 				.build().toString();
 
-		SpaceResponse res1c = SpaceRequest.post("/1/data/sale/search").backend(testAccount).body(query).go(200)
+		SpaceResponse res1c = SpaceRequest.post("/1/data/sale/search").backend(testBackend).body(query).go(200)
 				.assertEquals(1, "total");
 
 		res1.assertEquals(res1c.getFromJson("results.0"));
 
 		// create user vince
 
-		SpaceDogHelper.User vince = SpaceDogHelper.createUser(testAccount, "vince", "hi vince", "vince@dog.com");
+		SpaceDogHelper.User vince = SpaceDogHelper.createUser(testBackend, "vince", "hi vince", "vince@dog.com");
 
 		// small update no version should succeed
 
 		JsonNode updateJson2 = Json.objectBuilder().array("items").object().put("quantity", 7).build();
 
-		SpaceRequest.put("/1/data/sale/" + id).backend(testAccount).basicAuth(vince).body(updateJson2.toString())
+		SpaceRequest.put("/1/data/sale/" + id).backend(testBackend).basicAuth(vince).body(updateJson2.toString())
 				.go(200)//
 				.assertTrue("success")//
 				.assertEquals("sale", "type")//
@@ -136,7 +136,7 @@ public class DataResourceTest2 extends Assert {
 
 		// check update is correct
 
-		SpaceResponse res3 = SpaceRequest.get("/1/data/sale/" + id).backend(testAccount).go(200)//
+		SpaceResponse res3 = SpaceRequest.get("/1/data/sale/" + id).backend(testBackend).go(200)//
 				.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.createdBy")//
 				.assertEquals("vince", "meta.updatedBy")//
 				.assertEquals(createdAt, "meta.createdAt")//
@@ -154,24 +154,24 @@ public class DataResourceTest2 extends Assert {
 
 		ObjectNode updateJson3b = Json.objectBuilder().put("number", "0987654321").build();
 
-		SpaceRequest.put("/1/data/sale/" + id + "?version=1").backend(testAccount).body(updateJson3b.toString()).go(409)
+		SpaceRequest.put("/1/data/sale/" + id + "?version=1").backend(testBackend).body(updateJson3b.toString()).go(409)
 				.assertFalse("success");
 
 		// update with invalid version should fail
 
-		SpaceRequest.put("/1/data/sale/" + id + "?version=XXX").backend(testAccount).body(updateJson3b.toString())
+		SpaceRequest.put("/1/data/sale/" + id + "?version=XXX").backend(testBackend).body(updateJson3b.toString())
 				.go(400).assertFalse("success");
 
 		// update with correct version should succeed
 
-		SpaceResponse req3d = SpaceRequest.put("/1/data/sale/" + id + "?version=2").backend(testAccount)
+		SpaceResponse req3d = SpaceRequest.put("/1/data/sale/" + id + "?version=2").backend(testBackend)
 				.body(updateJson3b.toString()).go(200);
 
 		req3d.assertTrue("success").assertEquals("sale", "type").assertEquals(3, "version").assertEquals(id, "id");
 
 		// check update is correct
 
-		SpaceResponse res3e = SpaceRequest.get("/1/data/sale/" + id).backend(testAccount).go(200);
+		SpaceResponse res3e = SpaceRequest.get("/1/data/sale/" + id).backend(testBackend).go(200);
 
 		res3e.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.createdBy")//
 				.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.updatedBy")//
@@ -188,11 +188,11 @@ public class DataResourceTest2 extends Assert {
 
 		// delete
 
-		SpaceRequest.delete("/1/data/sale/" + id).backend(testAccount).go(200);
+		SpaceRequest.delete("/1/data/sale/" + id).backend(testBackend).go(200);
 
 		// check delete is done
 
-		assertFalse(SpaceRequest.get("/1/data/sale/" + id).backend(testAccount).go(404).jsonNode().get("success")
+		assertFalse(SpaceRequest.get("/1/data/sale/" + id).backend(testBackend).go(404).jsonNode().get("success")
 				.asBoolean());
 	}
 
@@ -200,36 +200,36 @@ public class DataResourceTest2 extends Assert {
 	public void deleteObjects() throws Exception {
 
 		SpaceDogHelper.prepareTest();
-		Backend testAccount = SpaceDogHelper.resetTestBackend();
+		Backend testBackend = SpaceDogHelper.resetTestBackend();
 		ObjectNode schema = SchemaBuilder2.builder("message")//
 				.textProperty("text", "english", true).build();
-		SpaceDogHelper.setSchema(schema, testAccount);
+		SpaceDogHelper.setSchema(schema, testBackend);
 
 		// should successfully create 4 messages and 1 user
 
-		SpaceDogHelper.createUser(testAccount, "riri", "hi riri", "riri@dog.com");
+		SpaceDogHelper.createUser(testBackend, "riri", "hi riri", "riri@dog.com");
 
-		SpaceRequest.post("/1/data/message").basicAuth(testAccount)
+		SpaceRequest.post("/1/data/message").basicAuth(testBackend)
 				.body(Json.objectBuilder().put("text", "what's up?").build()).go(201);
-		SpaceRequest.post("/1/data/message").basicAuth(testAccount)
+		SpaceRequest.post("/1/data/message").basicAuth(testBackend)
 				.body(Json.objectBuilder().put("text", "wanna drink something?").build()).go(201);
-		SpaceRequest.post("/1/data/message").basicAuth(testAccount)
+		SpaceRequest.post("/1/data/message").basicAuth(testBackend)
 				.body(Json.objectBuilder().put("text", "pretty cool, hein?").build()).go(201);
-		SpaceRequest.post("/1/data/message").basicAuth(testAccount)
+		SpaceRequest.post("/1/data/message").basicAuth(testBackend)
 				.body(Json.objectBuilder().put("text", "so long guys").build()).go(201).getFromJson("id").asText();
 
-		SpaceRequest.get("/1/data?refresh=true").basicAuth(testAccount).go(200).assertEquals(6, "total");
+		SpaceRequest.get("/1/data?refresh=true").basicAuth(testBackend).go(200).assertEquals(6, "total");
 
 		// should succeed to delete all users
-		SpaceRequest.delete("/1/user").basicAuth(testAccount).go(200)//
+		SpaceRequest.delete("/1/user").basicAuth(testBackend).go(200)//
 				.assertEquals(1, "totalDeleted");
-		SpaceRequest.get("/1/data?refresh=true").basicAuth(testAccount).go(200)//
+		SpaceRequest.get("/1/data?refresh=true").basicAuth(testBackend).go(200)//
 				.assertEquals(5, "total");
 
 		// should succeed to delete all messages
-		SpaceRequest.delete("/1/data/message").basicAuth(testAccount).go(200)//
+		SpaceRequest.delete("/1/data/message").basicAuth(testBackend).go(200)//
 				.assertEquals(4, "totalDeleted");
-		SpaceRequest.get("/1/data?refresh=true").basicAuth(testAccount).go(200)//
+		SpaceRequest.get("/1/data?refresh=true").basicAuth(testBackend).go(200)//
 				.assertEquals(1, "total");
 	}
 
@@ -237,51 +237,51 @@ public class DataResourceTest2 extends Assert {
 	public void testAllObjectIdStrategies() throws Exception {
 
 		SpaceDogHelper.prepareTest();
-		Backend testAccount = SpaceDogHelper.resetTestBackend();
+		Backend testBackend = SpaceDogHelper.resetTestBackend();
 
 		// creates msg1 schema with auto generated id strategy
 
 		SpaceDogHelper.setSchema(SchemaBuilder2.builder("msg1")//
-				.stringProperty("text", true).build(), testAccount);
+				.stringProperty("text", true).build(), testBackend);
 
 		// creates a msg1 object with auto generated id
 
-		String id = SpaceRequest.post("/1/data/msg1").basicAuth(testAccount)//
+		String id = SpaceRequest.post("/1/data/msg1").basicAuth(testBackend)//
 				.body(Json.object("text", "id=?")).go(201)//
 				.getFromJson("id").asText();
 
-		SpaceRequest.get("/1/data/msg1/" + id).basicAuth(testAccount).go(200)//
+		SpaceRequest.get("/1/data/msg1/" + id).basicAuth(testBackend).go(200)//
 				.assertEquals("id=?", "text");
 
 		// creates a msg1 object with self provided id
 
-		SpaceRequest.post("/1/data/msg1?id=1").basicAuth(testAccount)//
+		SpaceRequest.post("/1/data/msg1?id=1").basicAuth(testBackend)//
 				.body(Json.object("text", "id=1")).go(201);
 
-		SpaceRequest.get("/1/data/msg1/1").basicAuth(testAccount).go(200)//
+		SpaceRequest.get("/1/data/msg1/1").basicAuth(testBackend).go(200)//
 				.assertEquals("id=1", "text");
 
 		// creates msg2 schema with id pointing to code
 
 		SpaceDogHelper.setSchema(SchemaBuilder2.builder("msg2", "code")//
 				.stringProperty("code", true)//
-				.stringProperty("text", true).build(), testAccount);
+				.stringProperty("text", true).build(), testBackend);
 
 		// creates a msg2 object with id = code = 2
 
-		SpaceRequest.post("/1/data/msg2").basicAuth(testAccount)//
+		SpaceRequest.post("/1/data/msg2").basicAuth(testBackend)//
 				.body(Json.object("text", "id=code=2", "code", "2")).go(201);
 
-		SpaceRequest.get("/1/data/msg2/2").basicAuth(testAccount).go(200)//
+		SpaceRequest.get("/1/data/msg2/2").basicAuth(testBackend).go(200)//
 				.assertEquals("id=code=2", "text")//
 				.assertEquals("2", "code");
 
 		// creates a msg2 object with id = code = 3
 
-		SpaceRequest.post("/1/data/msg2?id=XXX").basicAuth(testAccount)//
+		SpaceRequest.post("/1/data/msg2?id=XXX").basicAuth(testBackend)//
 				.body(Json.object("text", "id=code=3", "code", "3")).go(201);
 
-		SpaceRequest.get("/1/data/msg2/3").basicAuth(testAccount).go(200)//
+		SpaceRequest.get("/1/data/msg2/3").basicAuth(testBackend).go(200)//
 				.assertEquals("id=code=3", "text")//
 				.assertEquals("3", "code");
 

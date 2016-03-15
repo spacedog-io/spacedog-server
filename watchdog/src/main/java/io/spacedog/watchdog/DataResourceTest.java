@@ -24,8 +24,8 @@ public class DataResourceTest extends Assert {
 	public void createFindUpdateAndDelete() throws Exception {
 
 		SpaceDogHelper.prepareTest();
-		Backend testAccount = SpaceDogHelper.resetTestBackend();
-		SpaceDogHelper.setSchema(SchemaResourceTest.buildCarSchema(), testAccount);
+		Backend testBackend = SpaceDogHelper.resetTestBackend();
+		SpaceDogHelper.setSchema(SchemaResourceTest.buildCarSchema(), testBackend);
 
 		JsonNode car = Json.objectBuilder() //
 				.put("serialNumber", "1234567890") //
@@ -45,7 +45,7 @@ public class DataResourceTest extends Assert {
 
 		// create
 
-		SpaceResponse create = SpaceRequest.post("/1/data/car").backend(testAccount).body(car.toString()).go(201);
+		SpaceResponse create = SpaceRequest.post("/1/data/car").backend(testBackend).body(car.toString()).go(201);
 
 		create.assertTrue("success").assertEquals("car", "type").assertNotNull("id");
 
@@ -53,7 +53,7 @@ public class DataResourceTest extends Assert {
 
 		// find by id
 
-		SpaceResponse res1 = SpaceRequest.get("/1/data/car/" + id).backend(testAccount).go(200)//
+		SpaceResponse res1 = SpaceRequest.get("/1/data/car/" + id).backend(testBackend).go(200)//
 				.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.createdBy")//
 				.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.updatedBy")//
 				.assertDateIsRecent("meta.createdAt")//
@@ -64,21 +64,21 @@ public class DataResourceTest extends Assert {
 
 		// find by full text search
 
-		SpaceRequest.get("/1/search/car?q={q}&refresh=true").backend(testAccount).routeParam("q", "inVENT*").go(200)
+		SpaceRequest.get("/1/search/car?q={q}&refresh=true").backend(testBackend).routeParam("q", "inVENT*").go(200)
 				.assertEquals(id, "results.0.meta.id");
 
 		// create user vince
 
-		SpaceDogHelper.User vince = SpaceDogHelper.createUser(testAccount, "vince", "hi vince", "vince@spacedog.io");
+		SpaceDogHelper.User vince = SpaceDogHelper.createUser(testBackend, "vince", "hi vince", "vince@spacedog.io");
 
 		// update
 
-		SpaceRequest.put("/1/data/car/" + id).backend(testAccount).basicAuth(vince)
+		SpaceRequest.put("/1/data/car/" + id).backend(testBackend).basicAuth(vince)
 				.body(Json.objectBuilder().put("color", "blue").toString()).go(200);
 
 		// check update is correct
 
-		SpaceResponse res3 = SpaceRequest.get("/1/data/car/" + id).backend(testAccount).go(200)//
+		SpaceResponse res3 = SpaceRequest.get("/1/data/car/" + id).backend(testBackend).go(200)//
 				.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.createdBy")//
 				.assertEquals("vince", "meta.updatedBy")//
 				.assertEquals(createdAt, "meta.createdAt")//
@@ -91,11 +91,11 @@ public class DataResourceTest extends Assert {
 
 		// delete
 
-		SpaceRequest.delete("/1/data/car/" + id).backend(testAccount).go(200);
+		SpaceRequest.delete("/1/data/car/" + id).backend(testBackend).go(200);
 
 		// check delete is done
 
-		assertFalse(SpaceRequest.get("/1/data/car/" + id).backend(testAccount).go(404).jsonNode().get("success")
+		assertFalse(SpaceRequest.get("/1/data/car/" + id).backend(testBackend).go(404).jsonNode().get("success")
 				.asBoolean());
 	}
 }

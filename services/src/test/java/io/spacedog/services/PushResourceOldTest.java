@@ -19,34 +19,34 @@ public class PushResourceOldTest extends Assert {
 
 		// prepare
 		SpaceDogHelper.prepareTest();
-		SpaceDogHelper.Backend testAccount = SpaceDogHelper.resetTestBackend();
-		SpaceDogHelper.setSchema(buildSchema(), testAccount);
-		SpaceDogHelper.User vince = SpaceDogHelper.createUser(testAccount, "vince", "hi vince", "david@spacedog.io");
-		SpaceDogHelper.User nath = SpaceDogHelper.createUser(testAccount, "nath", "hi nath", "attias666@gmail.com");
-		SpaceDogHelper.User fred = SpaceDogHelper.createUser(testAccount, "fred", "hi fred", "davattias@gmail.com");
-		SpaceDogHelper.User philippe = SpaceDogHelper.createUser(testAccount, "philippe", "hi philippe",
+		SpaceDogHelper.Backend testBackend = SpaceDogHelper.resetTestBackend();
+		SpaceDogHelper.setSchema(buildSchema(), testBackend);
+		SpaceDogHelper.User vince = SpaceDogHelper.createUser(testBackend, "vince", "hi vince", "david@spacedog.io");
+		SpaceDogHelper.User nath = SpaceDogHelper.createUser(testBackend, "nath", "hi nath", "attias666@gmail.com");
+		SpaceDogHelper.User fred = SpaceDogHelper.createUser(testBackend, "fred", "hi fred", "davattias@gmail.com");
+		SpaceDogHelper.User philippe = SpaceDogHelper.createUser(testBackend, "philippe", "hi philippe",
 				"davattias@gmail.com");
 
 		// subscribe
-		String vinceDeviceId = SpaceRequest.post("/1/device").backend(testAccount).basicAuth(vince)//
+		String vinceDeviceId = SpaceRequest.post("/1/device").backend(testBackend).basicAuth(vince)//
 				.body(Json.objectBuilder().put("endpoint", "vince-iphone")//
 						.put("appName", "spacedog-supervisor"))//
 				.go(200, 201).objectNode().get("id").asText();
 
-		String fredDeviceId = SpaceRequest.post("/1/device").backend(testAccount).basicAuth(fred)//
+		String fredDeviceId = SpaceRequest.post("/1/device").backend(testBackend).basicAuth(fred)//
 				.body(Json.objectBuilder().put("endpoint", "vince-iphone")//
 						.put("appName", "spacedog-supervisor"))//
 				.go(200, 201).objectNode().get("id").asText();
 
-		String nathDeviceId = SpaceRequest.post("/1/device").backend(testAccount).basicAuth(nath)//
+		String nathDeviceId = SpaceRequest.post("/1/device").backend(testBackend).basicAuth(nath)//
 				.body(Json.objectBuilder().put("endpoint", "vince-iphone")//
 						.put("appName", "spacedog-supervisor"))//
 				.go(200, 201).objectNode().get("id").asText();
 
-		SpaceRequest.post("/1/data/message").backend(testAccount)//
+		SpaceRequest.post("/1/data/message").backend(testBackend)//
 				.body(createMessage("vince")).go(201);
 
-		SpaceRequest.post("/1/data/message").backend(testAccount)//
+		SpaceRequest.post("/1/data/message").backend(testBackend)//
 				.body(createMessage("philippe")).go(201);
 
 		ObjectNode pushBody = Json.objectBuilder()//
@@ -61,11 +61,11 @@ public class PushResourceOldTest extends Assert {
 				.end()//
 				.put("message", "Hi dogs").build();
 
-		SpaceRequest.post("/1/push").basicAuth(testAccount)//
+		SpaceRequest.post("/1/push").basicAuth(testBackend)//
 				.body(pushBody).go(200);
 
 		// push all
-		SpaceRequest.post("/1/device/push").basicAuth(testAccount).go(200);
+		SpaceRequest.post("/1/device/push").basicAuth(testBackend).go(200);
 	}
 
 	private ObjectNode buildSchema() {

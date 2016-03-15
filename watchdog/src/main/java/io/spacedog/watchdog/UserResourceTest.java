@@ -24,29 +24,29 @@ public class UserResourceTest extends Assert {
 	public void userIsSigningUpAndMore() throws Exception {
 
 		SpaceDogHelper.prepareTest();
-		SpaceDogHelper.Backend testAccount = SpaceDogHelper.resetTestBackend();
+		SpaceDogHelper.Backend testBackend = SpaceDogHelper.resetTestBackend();
 
 		// fails since invalid users
 
 		// empty user body
-		SpaceRequest.post("/1/user/").backend(testAccount)//
+		SpaceRequest.post("/1/user/").backend(testBackend)//
 				.body(Json.objectBuilder()).go(400);
 		// no username
-		SpaceRequest.post("/1/user/").backend(testAccount)//
+		SpaceRequest.post("/1/user/").backend(testBackend)//
 				.body(Json.object("password", "hi titi", "email", "titi@dog.com")).go(400);
 		// no email
-		SpaceRequest.post("/1/user/").backend(testAccount)//
+		SpaceRequest.post("/1/user/").backend(testBackend)//
 				.body(Json.object("username", "titi", "password", "hi titi")).go(400);
 		// username too small
-		SpaceRequest.post("/1/user/").backend(testAccount)//
+		SpaceRequest.post("/1/user/").backend(testBackend)//
 				.body(Json.object("username", "ti", "password", "hi titi")).go(400);
 		// password too small
-		SpaceRequest.post("/1/user/").backend(testAccount)//
+		SpaceRequest.post("/1/user/").backend(testBackend)//
 				.body(Json.object("username", "titi", "password", "hi")).go(400);
 
 		// fails to inject forged hashedPassword
 
-		SpaceRequest.post("/1/user/").backend(testAccount)
+		SpaceRequest.post("/1/user/").backend(testBackend)
 				.body(//
 						Json.object("username", "titi", "password", "hi titi", //
 								"email", "titi@dog.com", "hashedPassword", "hi titi"))
@@ -54,7 +54,7 @@ public class UserResourceTest extends Assert {
 
 		// vince sign up should succeed
 
-		SpaceDogHelper.User vince = SpaceDogHelper.createUser(testAccount, "vince", "hi vince", "vince@dog.com");
+		SpaceDogHelper.User vince = SpaceDogHelper.createUser(testBackend, "vince", "hi vince", "vince@dog.com");
 
 		// get vince user object should succeed
 
@@ -66,11 +66,11 @@ public class UserResourceTest extends Assert {
 
 		// get data with wrong username should fail
 
-		SpaceRequest.get("/1/user/vince").basicAuth(testAccount, "XXX", "hi vince").go(401);
+		SpaceRequest.get("/1/user/vince").basicAuth(testBackend, "XXX", "hi vince").go(401);
 
 		// get data with wrong password should fail
 
-		SpaceRequest.get("/1/user/vince").basicAuth(testAccount, "vince", "XXX").go(401);
+		SpaceRequest.get("/1/user/vince").basicAuth(testBackend, "vince", "XXX").go(401);
 
 		// get data with wrong backend id should fail
 
@@ -83,7 +83,7 @@ public class UserResourceTest extends Assert {
 
 		// login with wrong password should fail
 
-		SpaceRequest.get("/1/login").basicAuth(testAccount, "vince", "XXX").go(401);
+		SpaceRequest.get("/1/login").basicAuth(testBackend, "vince", "XXX").go(401);
 
 		// email update should succeed
 
@@ -101,13 +101,13 @@ public class UserResourceTest extends Assert {
 	public void setAndResetPassword() throws Exception {
 
 		SpaceDogHelper.prepareTest();
-		SpaceDogHelper.Backend testAccount = SpaceDogHelper.resetTestBackend();
-		SpaceDogHelper.createUser(testAccount, "toto", "hi toto", "toto@dog.com");
+		SpaceDogHelper.Backend testBackend = SpaceDogHelper.resetTestBackend();
+		SpaceDogHelper.createUser(testBackend, "toto", "hi toto", "toto@dog.com");
 
 		// sign up without password should succeed
 
 		String passwordResetCode = SpaceRequest.post("/1/user/")//
-				.backend(testAccount)//
+				.backend(testBackend)//
 				.body(Json.object("username", "titi", "email", "titi@dog.com"))//
 				.go(201)//
 				.assertNotNull("passwordResetCode")//
@@ -117,95 +117,95 @@ public class UserResourceTest extends Assert {
 		// no password user login should fail
 		// I can not pass a null password anyway to the basicAuth method
 
-		SpaceRequest.get("/1/login").basicAuth(testAccount, "titi", "XXX").go(401);
+		SpaceRequest.get("/1/login").basicAuth(testBackend, "titi", "XXX").go(401);
 
 		// no password user trying to create password with empty reset code
 		// should fail
 
-		SpaceRequest.post("/1/user/titi/password?passwordResetCode=").backend(testAccount)//
+		SpaceRequest.post("/1/user/titi/password?passwordResetCode=").backend(testBackend)//
 				.field("password", "hi titi").go(400);
 
-		SpaceRequest.get("/1/login").basicAuth(testAccount, "titi", "hi titi").go(401);
+		SpaceRequest.get("/1/login").basicAuth(testBackend, "titi", "hi titi").go(401);
 
 		// no password user setting password with wrong reset code should fail
 
-		SpaceRequest.post("/1/user/titi/password?passwordResetCode=XXX").backend(testAccount)
+		SpaceRequest.post("/1/user/titi/password?passwordResetCode=XXX").backend(testBackend)
 				.field("password", "hi titi").go(400);
 
-		SpaceRequest.get("/1/login").basicAuth(testAccount, "titi", "hi titi").go(401);
+		SpaceRequest.get("/1/login").basicAuth(testBackend, "titi", "hi titi").go(401);
 
 		// titi inits its own password with right reset code should succeed
 
 		SpaceRequest.post("/1/user/titi/password?passwordResetCode=" + passwordResetCode)//
-				.backend(testAccount).field("password", "hi titi").go(200);
+				.backend(testBackend).field("password", "hi titi").go(200);
 
-		SpaceRequest.get("/1/login").basicAuth(testAccount, "titi", "hi titi").go(200);
+		SpaceRequest.get("/1/login").basicAuth(testBackend, "titi", "hi titi").go(200);
 
 		// toto user changes titi password should fail
 
-		SpaceRequest.put("/1/user/titi/password").basicAuth(testAccount, "toto", "hi toto")//
+		SpaceRequest.put("/1/user/titi/password").basicAuth(testBackend, "toto", "hi toto")//
 				.field("password", "XXX").go(401);
 
-		SpaceRequest.get("/1/login").basicAuth(testAccount, "titi", "XXX").go(401);
+		SpaceRequest.get("/1/login").basicAuth(testBackend, "titi", "XXX").go(401);
 
 		// titi changes its password should fail since password size < 6
 
-		SpaceRequest.put("/1/user/titi/password").basicAuth(testAccount, "titi", "hi titi")//
+		SpaceRequest.put("/1/user/titi/password").basicAuth(testBackend, "titi", "hi titi")//
 				.field("password", "XXX").go(400);
 
 		// titi changes its password should succeed
 
-		SpaceRequest.put("/1/user/titi/password").basicAuth(testAccount, "titi", "hi titi")
+		SpaceRequest.put("/1/user/titi/password").basicAuth(testBackend, "titi", "hi titi")
 				.field("password", "hi titi 2").go(200);
 
-		SpaceRequest.get("/1/login").basicAuth(testAccount, "titi", "hi titi 2").go(200);
+		SpaceRequest.get("/1/login").basicAuth(testBackend, "titi", "hi titi 2").go(200);
 
 		// login with old password should fail
 
-		SpaceRequest.get("/1/login").basicAuth(testAccount, "titi", "hi titi").go(401);
+		SpaceRequest.get("/1/login").basicAuth(testBackend, "titi", "hi titi").go(401);
 
 		// admin user changes titi user password should succeed
 
-		SpaceRequest.put("/1/user/titi/password").basicAuth(testAccount, "test", "hi test")//
+		SpaceRequest.put("/1/user/titi/password").basicAuth(testBackend, "test", "hi test")//
 				.field("password", "hi titi 3").go(200);
-		SpaceRequest.get("/1/login").basicAuth(testAccount, "titi", "hi titi 3").go(200);
+		SpaceRequest.get("/1/login").basicAuth(testBackend, "titi", "hi titi 3").go(200);
 
 		// login with old password should fail
 
-		SpaceRequest.get("/1/login").basicAuth(testAccount, "titi", "hi titi 2").go(401);
+		SpaceRequest.get("/1/login").basicAuth(testBackend, "titi", "hi titi 2").go(401);
 
 		// admin deletes titi password should succeed
 
 		String newPasswordResetCode = SpaceRequest.delete("/1/user/titi/password")
-				.basicAuth(testAccount, "test", "hi test").go(200).getFromJson("passwordResetCode").asText();
+				.basicAuth(testBackend, "test", "hi test").go(200).getFromJson("passwordResetCode").asText();
 
 		// titi login should fail
 
-		SpaceRequest.get("/1/login").basicAuth(testAccount, "titi", "hi titi 3").go(401);
+		SpaceRequest.get("/1/login").basicAuth(testBackend, "titi", "hi titi 3").go(401);
 
 		// titi inits its password with old reset code should fail
 
 		SpaceRequest.post("/1/user/titi/password?passwordResetCode=" + passwordResetCode)//
-				.backend(testAccount).field("password", "hi titi").go(400);
+				.backend(testBackend).field("password", "hi titi").go(400);
 
 		// titi inits its password with new reset code should fail
 
 		SpaceRequest.post("/1/user/titi/password?passwordResetCode=" + newPasswordResetCode)//
-				.backend(testAccount).field("password", "hi titi").go(200);
+				.backend(testBackend).field("password", "hi titi").go(200);
 
-		SpaceRequest.get("/1/login").basicAuth(testAccount, "titi", "hi titi").go(200);
+		SpaceRequest.get("/1/login").basicAuth(testBackend, "titi", "hi titi").go(200);
 	}
 
 	@Test
 	public void setUserCustomSchemaAndMore() throws Exception {
 
 		SpaceDogHelper.prepareTest();
-		Backend testAccount = SpaceDogHelper.resetTestBackend();
+		Backend testBackend = SpaceDogHelper.resetTestBackend();
 
 		// vince sign up should succeed
 
-		SpaceDogHelper.createUser(testAccount, "vince", "hi vince", "vince@dog.com");
-		SpaceRequest.get("/1/data?refresh=true").backend(testAccount).go(200)//
+		SpaceDogHelper.createUser(testBackend, "vince", "hi vince", "vince@dog.com");
+		SpaceRequest.get("/1/data?refresh=true").backend(testBackend).go(200)//
 				.assertEquals(2, "total");
 
 		// update user schema with custom schema
@@ -215,19 +215,19 @@ public class UserResourceTest extends Assert {
 				.stringProperty("lastname", true)//
 				.build();
 
-		SpaceRequest.put("/1/schema/user").basicAuth(testAccount).body(customUserSchema).go(200);
+		SpaceRequest.put("/1/schema/user").basicAuth(testBackend).body(customUserSchema).go(200);
 
 		// create new custom user
 
 		ObjectNode fred = Json.object("username", "fred", "password", "hi fred", //
 				"email", "fred@dog.com", "firstname", "Frédérique", "lastname", "Fallière");
 
-		SpaceRequest.post("/1/user/").backend(testAccount).body(fred).go(201);
+		SpaceRequest.post("/1/user/").backend(testBackend).body(fred).go(201);
 
 		// get the brand new user and check properties are correct
 
 		ObjectNode fredFromServer = SpaceRequest.get("/1/user/fred")//
-				.basicAuth(testAccount).go(200).objectNode();
+				.basicAuth(testBackend).go(200).objectNode();
 		assertEquals(fred.without("password"), //
 				fredFromServer.without(Arrays.asList("hashedPassword", "groups", "meta")));
 	}

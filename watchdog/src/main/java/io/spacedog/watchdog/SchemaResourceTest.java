@@ -23,27 +23,27 @@ public class SchemaResourceTest extends Assert {
 	public void deletePutAndGetSchemas() throws Exception {
 
 		SpaceDogHelper.prepareTest();
-		Backend testAccount = SpaceDogHelper.resetTestBackend();
+		Backend testBackend = SpaceDogHelper.resetTestBackend();
 
 		// should succeed to create a user
 
-		User bob = SpaceDogHelper.createUser(testAccount, "bob", "hi bob", "bob@dog.com");
+		User bob = SpaceDogHelper.createUser(testBackend, "bob", "hi bob", "bob@dog.com");
 
 		// should succeed to reset all schemas
-		SpaceDogHelper.setSchema(buildCarSchema(), testAccount);
-		SpaceDogHelper.setSchema(buildHomeSchema(), testAccount);
-		SpaceDogHelper.setSchema(buildSaleSchema(), testAccount);
+		SpaceDogHelper.setSchema(buildCarSchema(), testBackend);
+		SpaceDogHelper.setSchema(buildHomeSchema(), testBackend);
+		SpaceDogHelper.setSchema(buildSaleSchema(), testBackend);
 
 		// should succeed to get schemas with simple backend key credentials
 		assertEquals(buildCarSchema(), //
-				SpaceRequest.get("/1/schema/car").backend(testAccount).go(200).jsonNode());
+				SpaceRequest.get("/1/schema/car").backend(testBackend).go(200).jsonNode());
 		assertEquals(buildHomeSchema(), //
-				SpaceRequest.get("/1/schema/home").backend(testAccount).go(200).jsonNode());
+				SpaceRequest.get("/1/schema/home").backend(testBackend).go(200).jsonNode());
 		assertEquals(buildSaleSchema(), //
-				SpaceRequest.get("/1/schema/sale").backend(testAccount).go(200).jsonNode());
+				SpaceRequest.get("/1/schema/sale").backend(testBackend).go(200).jsonNode());
 
 		// should succeed to get all schemas with simple backend key credentials
-		SpaceRequest.get("/1/schema").basicAuth(testAccount).go(200)//
+		SpaceRequest.get("/1/schema").basicAuth(testBackend).go(200)//
 				.assertEquals(Json.merger() //
 						.merge(buildHomeSchema()) //
 						.merge(buildCarSchema()) //
@@ -52,24 +52,24 @@ public class SchemaResourceTest extends Assert {
 						.get());
 
 		// should fail to delete schema with simple backend key credentials
-		SpaceRequest.delete("/1/schema/toto").backend(testAccount).go(401);
+		SpaceRequest.delete("/1/schema/toto").backend(testBackend).go(401);
 
 		// should fail to delete schema with simple user credentials
 		SpaceRequest.delete("/1/schema/toto").basicAuth(bob).go(401);
 
 		// should fail to delete a non existent schema
-		SpaceRequest.delete("/1/schema/toto").basicAuth(testAccount).go(404);
+		SpaceRequest.delete("/1/schema/toto").basicAuth(testBackend).go(404);
 
 		// should succeed to delete a schema and all its documents
-		SpaceRequest.delete("/1/schema/sale").basicAuth(testAccount).go(200);
+		SpaceRequest.delete("/1/schema/sale").basicAuth(testBackend).go(200);
 
 		// should fail to create an invalid schema
-		SpaceRequest.put("/1/schema/toto").basicAuth(testAccount).body("{\"toto\":{\"_type\":\"XXX\"}}").go(400);
+		SpaceRequest.put("/1/schema/toto").basicAuth(testBackend).body("{\"toto\":{\"_type\":\"XXX\"}}").go(400);
 
 		// should fail to change the car schema color property type
 		ObjectNode json = buildCarSchema();
 		json.with("car").with("color").put("_type", "date");
-		SpaceRequest.put("/1/schema/car").basicAuth(testAccount).body(json).go(400);
+		SpaceRequest.put("/1/schema/car").basicAuth(testBackend).body(json).go(400);
 	}
 
 	private static ObjectNode buildHomeSchema() {

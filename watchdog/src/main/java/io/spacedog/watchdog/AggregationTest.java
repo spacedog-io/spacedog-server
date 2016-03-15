@@ -17,13 +17,13 @@ public class AggregationTest {
 	public void searchForAggregations() throws Exception {
 
 		SpaceDogHelper.prepareTest();
-		Backend testAccount = SpaceDogHelper.resetTestBackend();
+		Backend testBackend = SpaceDogHelper.resetTestBackend();
 
-		SpaceDogHelper.createUser(testAccount, "riri", "hi riri", "hello@disney.com");
-		SpaceDogHelper.createUser(testAccount, "fifi", "hi fifi", "hello@disney.com");
-		SpaceDogHelper.createUser(testAccount, "loulou", "hi loulou", "hello@disney.com");
-		SpaceDogHelper.createUser(testAccount, "donald", "hi donald", "donald@disney.com");
-		SpaceDogHelper.createUser(testAccount, "mickey", "hi mickey", "mickey@disney.com");
+		SpaceDogHelper.createUser(testBackend, "riri", "hi riri", "hello@disney.com");
+		SpaceDogHelper.createUser(testBackend, "fifi", "hi fifi", "hello@disney.com");
+		SpaceDogHelper.createUser(testBackend, "loulou", "hi loulou", "hello@disney.com");
+		SpaceDogHelper.createUser(testBackend, "donald", "hi donald", "donald@disney.com");
+		SpaceDogHelper.createUser(testBackend, "mickey", "hi mickey", "mickey@disney.com");
 
 		ObjectNode query = Json.objectBuilder()//
 				.put("size", 0)//
@@ -35,7 +35,7 @@ public class AggregationTest {
 
 		// 4 => 3 distinct disney user emails (hello, donald, mickey)
 		// and 1 admin email
-		SpaceRequest.post("/1/search?refresh=true").backend(testAccount).body(query).go(200)//
+		SpaceRequest.post("/1/search?refresh=true").backend(testBackend).body(query).go(200)//
 				.assertEquals(4, "aggregations.objectCount.value");
 
 	}

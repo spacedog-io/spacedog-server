@@ -18,17 +18,17 @@ public class ServiceErrorFilterTest extends Assert {
 	public void catchesFluentResourceErrors() throws Exception {
 
 		SpaceDogHelper.prepareTest();
-		Backend testAccount = SpaceDogHelper.resetTestBackend();
+		Backend testBackend = SpaceDogHelper.resetTestBackend();
 
 		// should fail to access invalid route
 
-		SpaceRequest.get("/1/toto").backend(testAccount).go(404)//
+		SpaceRequest.get("/1/toto").backend(testBackend).go(404)//
 				.assertFalse("success")//
 				.assertEquals("[/1/toto] not a valid path", "error.message");
 
 		// should fail to use this method for this valid route
 
-		SpaceRequest.put("/1/login").basicAuth(testAccount).go(405)//
+		SpaceRequest.put("/1/login").basicAuth(testBackend).go(405)//
 				.assertFalse("success")//
 				.assertEquals("method [PUT] not valid for path [/1/login]", "error.message");
 	}
