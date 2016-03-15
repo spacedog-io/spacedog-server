@@ -204,11 +204,6 @@ public class UserResource extends Resource {
 	@Post("/1/user/")
 	public Payload signUp(String body, Context context) {
 
-		/**
-		 * TODO adjust this. Admin should be able to sign up users. But what
-		 * backend id if many in account? Backend key should be able to sign up
-		 * users. Should common users be able to?
-		 */
 		Credentials credentials = SpaceContext.checkCredentials();
 		UserSignUp user = new UserSignUp(credentials.backendId(), Level.USER, body);
 
