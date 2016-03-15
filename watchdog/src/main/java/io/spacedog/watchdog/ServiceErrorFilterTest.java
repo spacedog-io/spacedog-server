@@ -8,8 +8,8 @@ import org.junit.Test;
 
 import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceDogHelper.Backend;
-import io.spacedog.watchdog.SpaceSuite.TestOften;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
 public class ServiceErrorFilterTest extends Assert {
@@ -22,14 +22,14 @@ public class ServiceErrorFilterTest extends Assert {
 
 		// should fail to access invalid route
 
-		SpaceRequest.get("/v1/toto").backend(testAccount).go(404)//
+		SpaceRequest.get("/1/toto").backend(testAccount).go(404)//
 				.assertFalse("success")//
-				.assertEquals("[/v1/toto] is not a valid SpaceDog path", "error.message");
+				.assertEquals("[/1/toto] not a valid path", "error.message");
 
 		// should fail to use this method for this valid route
 
-		SpaceRequest.put("/v1/login").basicAuth(testAccount).go(405)//
+		SpaceRequest.put("/1/login").basicAuth(testAccount).go(405)//
 				.assertFalse("success")//
-				.assertEquals("method [PUT] not valid for SpaceDog path [/v1/login]", "error.message");
+				.assertEquals("method [PUT] not valid for path [/1/login]", "error.message");
 	}
 }

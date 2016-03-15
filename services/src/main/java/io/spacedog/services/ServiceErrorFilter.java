@@ -43,14 +43,15 @@ public class ServiceErrorFilter implements SpaceFilter {
 					.object("error");
 
 			if (payload.code() == 404) {
-				nodeBuilder.put("message", String.format("[%s] is not a valid SpaceDog path", uri));
+				nodeBuilder.put("message", //
+						String.format("[%s] not a valid path", uri));
 				return Payloads.json(nodeBuilder, payload.code());
 			} else if (payload.code() == 405) {
-				nodeBuilder.put("message",
-						String.format("method [%s] not valid for SpaceDog path [%s]", context.method(), uri));
+				nodeBuilder.put("message", //
+						String.format("method [%s] not valid for path [%s]", context.method(), uri));
 				return Payloads.json(nodeBuilder, payload.code());
 			} else {
-				nodeBuilder.put("message", "sorry but no details available for this error");
+				nodeBuilder.put("message", "no details available for this error");
 				return Payloads.json(nodeBuilder, payload.code());
 			}
 		}
