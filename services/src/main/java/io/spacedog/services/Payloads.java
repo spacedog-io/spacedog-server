@@ -131,7 +131,7 @@ public class Payloads {
 		JsonBuilder<ObjectNode> builder = minimalBuilder(created ? HttpStatus.CREATED : HttpStatus.OK) //
 				.put("id", id) //
 				.put("type", type) //
-				.put("location", AbstractResource.spaceUrl(Optional.ofNullable(backendId), uri, type, id).toString());
+				.put("location", Resource.spaceUrl(Optional.ofNullable(backendId), uri, type, id).toString());
 
 		if (version > 0) //
 			builder.put("version", version);

@@ -14,7 +14,7 @@ import net.codestory.http.annotations.Put;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/v1/share")
-public class ShareResource extends AbstractS3Resource {
+public class ShareResource extends S3Resource {
 
 	private static final String SHARE_BUCKET_SUFFIX = "shared";
 

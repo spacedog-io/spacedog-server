@@ -30,7 +30,7 @@ import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/v1")
-public class LogResource extends AbstractResource {
+public class LogResource extends Resource {
 
 	public static final String TYPE = "log";
 

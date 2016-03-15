@@ -36,7 +36,7 @@ import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/v1")
-public class SearchResource extends AbstractResource {
+public class SearchResource extends Resource {
 
 	//
 	// Routes

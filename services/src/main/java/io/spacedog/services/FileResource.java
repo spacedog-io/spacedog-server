@@ -13,7 +13,7 @@ import net.codestory.http.annotations.Put;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/v1/file")
-public class FileResource extends AbstractS3Resource {
+public class FileResource extends S3Resource {
 
 	private static final String FILE_BUCKET_SUFFIX = "files";
 

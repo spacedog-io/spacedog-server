@@ -24,7 +24,7 @@ import net.codestory.http.annotations.Put;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/v1/schema")
-public class SchemaResource extends AbstractResource {
+public class SchemaResource extends Resource {
 
 	//
 	// Routes

@@ -20,7 +20,7 @@ import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/v1/mail")
-public class MailResource extends AbstractResource {
+public class MailResource extends Resource {
 
 	//
 	// MailGun parameter names

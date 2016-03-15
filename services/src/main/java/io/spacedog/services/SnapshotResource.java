@@ -35,7 +35,7 @@ import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/v1")
-public class SnapshotResource extends AbstractResource {
+public class SnapshotResource extends Resource {
 
 	private static final String PLATFORM_SNAPSHOT_PREFIX = "all";
 	private static final String WAIT_FOR_COMPLETION = "waitForCompletion";

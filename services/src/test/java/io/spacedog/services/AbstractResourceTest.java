@@ -10,7 +10,7 @@ public class AbstractResourceTest extends Assert {
 
 	@Test
 	public void shouldSucceedToSplitReferences() {
-		assertEquals("job", AbstractResource.getReferenceType("/job/engineer"));
-		assertEquals("engineer", AbstractResource.getReferenceId("/job/engineer"));
+		assertEquals("job", Resource.getReferenceType("/job/engineer"));
+		assertEquals("engineer", Resource.getReferenceId("/job/engineer"));
 	}
 }

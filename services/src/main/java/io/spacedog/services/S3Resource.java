@@ -31,7 +31,7 @@ import io.spacedog.utils.SpaceHeaders;
 import net.codestory.http.Context;
 import net.codestory.http.payload.Payload;
 
-public class AbstractS3Resource extends AbstractResource {
+public class S3Resource extends Resource {
 
 	private static AmazonS3Client s3 = new AmazonS3Client();
 	private static MimetypesFileTypeMap typeMap = new MimetypesFileTypeMap();

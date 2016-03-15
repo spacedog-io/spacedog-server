@@ -60,7 +60,7 @@ public class CreateSuperdog {
 					UserResource.CREATED_AT, now, //
 					UserResource.UPDATED_AT, now);
 
-			elastic.index(AbstractResource.SPACEDOG_BACKEND, UserResource.CREDENTIALS_TYPE, //
+			elastic.index(Resource.SPACEDOG_BACKEND, UserResource.CREDENTIALS_TYPE, //
 					UserResource.toCredentialsId(BackendResource.API, username), credentials.toString());
 
 			log("Superdog credentials [api-%s] indexed in [spacedog-credentials]", username);

@@ -48,7 +48,7 @@ import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/v1")
-public class UserResource extends AbstractResource {
+public class UserResource extends Resource {
 
 	//
 	// user constants and schema
@@ -156,7 +156,7 @@ public class UserResource extends AbstractResource {
 
 		QuerySourceBuilder query = new QuerySourceBuilder().setQuery(//
 				QueryBuilders.boolQuery()//
-						.must(QueryBuilders.termQuery(AbstractResource.BACKEND_ID, credentials.backendId()))//
+						.must(QueryBuilders.termQuery(Resource.BACKEND_ID, credentials.backendId()))//
 						.mustNot(QueryBuilders.termQuery(CREDENTIALS_LEVEL, Level.SUPER_ADMIN.toString())));
 
 		SearchResponse search = elastic.prepareSearch(SPACEDOG_BACKEND, CREDENTIALS_TYPE)//
@@ -458,7 +458,7 @@ public class UserResource extends AbstractResource {
 
 	void deleteAllBackendCredentials(String backendId) {
 		String query = new QuerySourceBuilder().setQuery(//
-				QueryBuilders.termQuery(AbstractResource.BACKEND_ID, backendId)).toString();
+				QueryBuilders.termQuery(Resource.BACKEND_ID, backendId)).toString();
 		ElasticClient elastic = Start.get().getElasticClient();
 		elastic.refreshType(SPACEDOG_BACKEND, CREDENTIALS_TYPE);
 		elastic.deleteByQuery(SPACEDOG_BACKEND, CREDENTIALS_TYPE, query);

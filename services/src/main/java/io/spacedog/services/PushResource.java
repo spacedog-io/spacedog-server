@@ -46,7 +46,7 @@ import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/v1")
-public class PushResource extends AbstractResource {
+public class PushResource extends Resource {
 
 	private AmazonSNSClient snsClient;
 

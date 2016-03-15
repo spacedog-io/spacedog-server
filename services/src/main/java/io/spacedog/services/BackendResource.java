@@ -24,7 +24,7 @@ import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/v1")
-public class BackendResource extends AbstractResource {
+public class BackendResource extends Resource {
 
 	private static final String TYPE = "backend";
 	public static final String API = "api";
@@ -65,7 +65,7 @@ public class BackendResource extends AbstractResource {
 			Internals.get().notify(//
 					Start.get().configuration().superdogNotificationTopic(), //
 					String.format("New backend (%s)",
-							AbstractResource.spaceUrl(Optional.empty(), "/v1", TYPE, backendId).toString()), //
+							Resource.spaceUrl(Optional.empty(), "/v1", TYPE, backendId).toString()), //
 					String.format("backend id = %s\nadmin email = %s", backendId, signing.email));
 
 		return Payloads.saved(true, backendId, "/v1", TYPE, backendId);

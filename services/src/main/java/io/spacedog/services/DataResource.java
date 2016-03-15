@@ -29,7 +29,7 @@ import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/v1/data")
-public class DataResource extends AbstractResource {
+public class DataResource extends Resource {
 
 	//
 	// Routes

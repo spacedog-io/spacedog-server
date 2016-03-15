@@ -166,7 +166,7 @@ public class ElasticClient {
 	//
 
 	public void createIndex(String backendId, String type, String mapping) {
-		createIndex(backendId, type, mapping, AbstractResource.SHARDS_DEFAULT, AbstractResource.REPLICAS_DEFAULT);
+		createIndex(backendId, type, mapping, Resource.SHARDS_DEFAULT, Resource.REPLICAS_DEFAULT);
 	}
 
 	public void createIndex(String backendId, String type, String mapping, int shards, int replicas) {

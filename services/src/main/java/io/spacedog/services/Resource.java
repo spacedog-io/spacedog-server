@@ -14,7 +14,7 @@ import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 
-public abstract class AbstractResource {
+public abstract class Resource {
 
 	public static final String SLASH = "/";
 	public static final int SHARDS_DEFAULT = 1;
