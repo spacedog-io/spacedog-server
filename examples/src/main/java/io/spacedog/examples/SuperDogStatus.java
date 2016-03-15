@@ -20,16 +20,16 @@ public class SuperDogStatus extends Assert {
 
 		SpaceRequest.setLogDebug(false);
 
-		ObjectNode accounts = SpaceRequest.get("/1/backend").queryString("size", "100")//
+		ObjectNode backends = SpaceRequest.get("/1/backend").queryString("size", "100")//
 				.superdogAuth().go(200).objectNode();
 
-		log("[%s] backends:", accounts.get("total").asLong());
+		log("[%s] backends:", backends.get("total").asLong());
 
-		Iterator<JsonNode> elements = accounts.get("results").elements();
+		Iterator<JsonNode> elements = backends.get("results").elements();
 		while (elements.hasNext())
 			log("\t%s", elements.next().get("backendId").asText());
 
-		elements = accounts.get("results").elements();
+		elements = backends.get("results").elements();
 		while (elements.hasNext()) {
 			JsonNode account = elements.next();
 			String backendId = account.get("backendId").asText();
@@ -50,16 +50,14 @@ public class SuperDogStatus extends Assert {
 			//
 			// log("Total number of objects = %s", total);
 
-			ObjectNode log = SpaceRequest.get("/1/log/" + backendId)//
-					.queryString("size", "1")//
-					.queryString("logType", "ADMIN")//
-					.superdogAuth()//
+			ObjectNode log = SpaceRequest.get("/1/log?size=1&logType=ADMIN")//
+					.superdogAuth(backendId)//
 					.go(200)//
 					.objectNode();
+
 			log("Last user request:");
 			log(log.get("results").get(0));
 		}
-
 	}
 
 	private static void log() {
@@ -73,5 +71,4 @@ public class SuperDogStatus extends Assert {
 	private static void log(String string, Object... args) {
 		System.out.println(String.format(string, args));
 	}
-
 }
