@@ -56,22 +56,6 @@ public class SpaceDogHelper {
 		SpaceRequest.delete("/1/user/" + username).basicAuth(account).go(200, 404);
 	}
 
-	// public static void resetSchema(JsonNode schema, Account account) throws
-	// Exception {
-	// resetSchema(schema, account.username, account.password);
-	// }
-	//
-	// public static void resetSchema(JsonNode schema, String username, String
-	// password) throws Exception {
-	// deleteSchema(schema, username, password);
-	// setSchema(schema, username, password);
-	// }
-	//
-	// public static void deleteSchema(JsonNode schema, Account account) throws
-	// Exception {
-	// deleteSchema(schema, account.username, account.password);
-	// }
-
 	public static void deleteSchema(JsonNode schema, Backend backend) throws Exception {
 		String schemaName = schema.fieldNames().next();
 		SpaceRequest.delete("/1/schema/" + schemaName).basicAuth(backend).go(200, 404);
@@ -90,8 +74,8 @@ public class SpaceDogHelper {
 		return createBackend(backend.backendId, backend.username, backend.password, backend.email, test);
 	}
 
-	public static Backend createBackend(String backendId, String username, String password, String email, boolean test)
-			throws Exception, UnirestException {
+	public static Backend createBackend(String backendId, String username, String password, String email,
+			boolean forTesting) throws Exception, UnirestException {
 
 		JsonBuilder<ObjectNode> body = Json.objectBuilder()//
 				.put("username", username)//
@@ -99,48 +83,12 @@ public class SpaceDogHelper {
 				.put("email", email);
 
 		SpaceRequest.post("/1/backend/" + backendId)//
-				.forTesting(test)//
+				.forTesting(forTesting)//
 				.body(body)//
 				.go(201);
 
 		return new Backend(backendId, username, password, email);
 	}
-
-	// public static Optional<Backend> getAccount(String backendId, Backend
-	// account) throws Exception {
-	// return getAccount(backendId, account.username, account.password);
-	// }
-
-	// public static Optional<Backend> getAccount(String backendId, String
-	// username, String password) throws Exception {
-	//
-	// SpaceResponse response = SpaceRequest.get("/1/admin/account/" +
-	// backendId)//
-	// .basicAuth(backendId, username, password)//
-	// .go(200, 401);
-	//
-	// if (response.httpResponse().getStatus() == 200) {
-	// ObjectNode account = response.objectNode();
-	//
-	// return Optional.of(new Backend(backendId, username, password,
-	// account.get("email").asText()));
-	// }
-	// return Optional.empty();
-	// }
-
-	// public static Backend getOrCreateTestAccount() throws Exception {
-	// return getOrCreateAccount("test", "test", "hi test", "david@spacedog.io",
-	// true);
-	// }
-
-	// public static Backend getOrCreateAccount(String backendId, String
-	// username, String password, String email,
-	// boolean test) throws Exception {
-	// Optional<Backend> opt = getAccount(backendId, username, password);
-	// if (opt.isPresent())
-	// return opt.get();
-	// return createAccount(backendId, username, password, email, test);
-	// }
 
 	public static void deleteTestBackend() throws UnirestException, Exception {
 		deleteBackend("test", "test", "hi test");
@@ -155,7 +103,6 @@ public class SpaceDogHelper {
 		// 401 Unauthorized is valid since if this account does not exist
 		// delete returns 401 because admin username and password
 		// won't match any account
-
 		SpaceRequest.delete("/1/backend")//
 				.basicAuth(backendId, username, password).go(200, 401);
 	}

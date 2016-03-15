@@ -61,14 +61,6 @@ public class PushResource extends Resource {
 	public static final String TAG_KEY = "key";
 	public static final String TAG_VALUE = "value";
 
-	// public static final String DEVICE_TYPE = "deviceType";
-	// public static final String DEVICE_VERSION = "deviceVersion";
-	// public static final String OS_TYPE = "osType";
-	// public static final String OS_VERSION = "osVersion";
-	// public static final String PUSH_TYPE = "pushType";
-	// public static final String APP_VERSION = "appVersion";
-	// public static final String APP_NAME = "appName";
-
 	// push field names
 	private static final String MESSAGE = "message";
 
@@ -81,39 +73,6 @@ public class PushResource extends Resource {
 		WNS, // Windows Notification Service
 		MPNS; // Microsoft Push Notification Service
 	}
-
-	//
-	// default user type and schema
-	//
-
-	// public static SchemaBuilder2 getDefaultInstallationSchemaBuilder() {
-	// return SchemaBuilder2.builder(TYPE)//
-	// .stringProperty(APP_ID, true)//
-	// .stringProperty(USER_ID, false)//
-	// .stringProperty(APP_NAME, false)//
-	// .stringProperty(APP_VERSION, false)//
-	// .stringProperty(DEVICE_TOKEN, true)//
-	// .stringProperty(PUSH_TYPE, false)//
-	// .stringProperty(OS_TYPE, false)//
-	// .stringProperty(OS_VERSION, false)//
-	// .stringProperty(DEVICE_TYPE, false)//
-	// .stringProperty(DEVICE_VERSION, false)//
-	// .stringProperty(PROVIDER_ID, true)//
-	// .startObjectProperty(TAGS, false)//
-	// .stringProperty(TAG_KEY, true)//
-	// .stringProperty(TAG_VALUE, true)//
-	// .endObjectProperty();
-	// }
-	//
-	// public static ObjectNode getDefaultInstallationSchema() {
-	// return getDefaultInstallationSchemaBuilder().build();
-	// }
-	//
-	// public static String getDefaultInstallationMapping() {
-	// JsonNode schema = SchemaValidator.validate(TYPE,
-	// getDefaultInstallationSchema());
-	// return SchemaTranslator.translate(TYPE, schema).toString();
-	// }
 
 	//
 	// Routes

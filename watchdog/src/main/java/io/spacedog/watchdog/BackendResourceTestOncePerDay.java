@@ -10,13 +10,13 @@ import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
 @TestOncePerDay
-public class AccountResourceTestOncePerDay extends Assert {
+public class BackendResourceTestOncePerDay extends Assert {
 
 	@Test
-	public void createAccountSendNotificationToSuperDogs() throws Exception {
+	public void createBackendSendsNotificationToSuperDogs() throws Exception {
 
 		SpaceDogHelper.prepareTest();
-		// notification is only sent if test = false
+		// notification is only sent if forTesting = false
 		SpaceDogHelper.resetBackend("test", "test", "hi test", "david@spacedog.io", false);
 	}
 }

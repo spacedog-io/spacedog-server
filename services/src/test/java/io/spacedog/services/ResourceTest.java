@@ -6,7 +6,7 @@ package io.spacedog.services;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class AbstractResourceTest extends Assert {
+public class ResourceTest extends Assert {
 
 	@Test
 	public void shouldSucceedToSplitReferences() {
