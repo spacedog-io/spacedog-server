@@ -3,7 +3,7 @@ package io.spacedog.watchdog;
 import org.junit.Test;
 
 import io.spacedog.client.SpaceDogHelper;
-import io.spacedog.client.SpaceDogHelper.Account;
+import io.spacedog.client.SpaceDogHelper.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
@@ -15,7 +15,7 @@ public class FileResourceTest {
 	@Test
 	public void test() throws Exception {
 
-		Account testAccount = SpaceDogHelper.resetTestAccount();
+		Backend testAccount = SpaceDogHelper.resetTestBackend();
 
 		SpaceRequest.get("/v1/file").basicAuth(testAccount).go(200)//
 				.assertSizeEquals(0, "results");
@@ -30,8 +30,8 @@ public class FileResourceTest {
 		SpaceRequest.get("/v1/file").basicAuth(testAccount).go(200)//
 				.assertSizeEquals(6, "results");
 
-		SpaceRequest.get("/v1/file/app.html").backendKey(testAccount).go(200);
-		SpaceRequest.get("/v1/file/css/black.css").backendKey(testAccount).go(200);
+		SpaceRequest.get("/v1/file/app.html").backend(testAccount).go(200);
+		SpaceRequest.get("/v1/file/css/black.css").backend(testAccount).go(200);
 
 		SpaceRequest.get("/v1/file/images").basicAuth(testAccount).go(200)//
 				.assertSizeEquals(2, "results");
@@ -42,7 +42,7 @@ public class FileResourceTest {
 		SpaceRequest.get("/v1/file").basicAuth(testAccount).go(200)//
 				.assertSizeEquals(4, "results");
 
-		SpaceRequest.get("/v1/file/css/black.css").backendKey(testAccount).go(404);
+		SpaceRequest.get("/v1/file/css/black.css").backend(testAccount).go(404);
 
 		SpaceRequest.delete("/v1/file").basicAuth(testAccount).go(200)//
 				.assertSizeEquals(4, "deleted");

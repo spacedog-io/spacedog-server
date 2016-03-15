@@ -16,6 +16,7 @@ import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
+import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryAction;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryRequest;
@@ -25,6 +26,7 @@ import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.Client;
@@ -79,6 +81,10 @@ public class ElasticClient {
 		return internalClient.prepareSearch(toAlias(backendId, type));
 	}
 
+	public SearchScrollRequestBuilder prepareSearchScroll(String scrollId) {
+		return internalClient.prepareSearchScroll(scrollId);
+	}
+
 	//
 	// shortcut methods
 	//
@@ -95,8 +101,17 @@ public class ElasticClient {
 		return internalClient.prepareGet(toAlias(backend, type), type, id).get();
 	}
 
+	public boolean exists(String backend, String type, String id) {
+		return internalClient.prepareGet(toAlias(backend, type), type, id)//
+				.setFetchSource(false).get().isExists();
+	}
+
 	public DeleteResponse delete(String backend, String type, String id) {
 		return internalClient.prepareDelete(toAlias(backend, type), type, id).get();
+	}
+
+	public BulkRequestBuilder prepareBulk() {
+		return internalClient.prepareBulk();
 	}
 
 	public DeleteByQueryResponse deleteByQuery(String backendId, String query) {
@@ -106,7 +121,7 @@ public class ElasticClient {
 		if (Strings.isNullOrEmpty(query))
 			query = Json.objectBuilder().object("query").object("match_all").toString();
 
-		DeleteByQueryRequest delete = new DeleteByQueryRequest(toIndices(backendId))//
+		DeleteByQueryRequest delete = new DeleteByQueryRequest(toDataIndices(backendId))//
 				.timeout(new TimeValue(60000))//
 				.source(query);
 
@@ -184,13 +199,16 @@ public class ElasticClient {
 
 	public void deleteAllIndices(String backendId) {
 
-		DeleteIndexResponse deleteIndexResponse = internalClient.admin().indices().prepareDelete(toIndices(backendId))
-				.get();
+		String[] indices = toIndices(backendId);
 
-		if (!deleteIndexResponse.isAcknowledged())
-			throw Exceptions.runtime(//
-					"backend [%s] deletion not acknowledged by the whole cluster", //
-					backendId);
+		if (indices != null && indices.length > 0) {
+			DeleteIndexResponse deleteIndexResponse = internalClient.admin().indices().prepareDelete(indices).get();
+
+			if (!deleteIndexResponse.isAcknowledged())
+				throw Exceptions.runtime(//
+						"backend [%s] deletion not acknowledged by the whole cluster", //
+						backendId);
+		}
 	}
 
 	public void deleteIndex(String backendId, String type) {
@@ -222,7 +240,7 @@ public class ElasticClient {
 		return (ObjectNode) Json.readObjectNode(source).get(type).get("_meta");
 	}
 
-	public boolean exists(String backendId, String type) {
+	public boolean existsIndex(String backendId, String type) {
 		try {
 			return internalClient.admin().indices()//
 					.prepareTypesExists(toAlias(backendId, type))//
@@ -248,14 +266,24 @@ public class ElasticClient {
 					type);
 	}
 
+	public void deleteAllBackendIndices() {
+		DeleteIndexResponse response = internalClient.admin().indices().prepareDelete("_all")//
+				.setIndicesOptions(IndicesOptions.fromOptions(false, true, true, true))//
+				.get();
+
+		if (!response.isAcknowledged())
+			throw Exceptions.runtime(//
+					"delete all indices not acknowledged by the cluster");
+	}
+
 	public void closeAllBackendIndices() {
 		CloseIndexResponse closeIndexResponse = internalClient.admin().indices().prepareClose("_all")//
-				.setIndicesOptions(IndicesOptions.fromOptions(false, true, true, false))//
+				.setIndicesOptions(IndicesOptions.fromOptions(false, true, true, true))//
 				.get();
 
 		if (!closeIndexResponse.isAcknowledged())
 			throw Exceptions.runtime(//
-					"close all backends not acknowledged by the whole cluster");
+					"close all indices not acknowledged by the cluster");
 	}
 
 	public ClusterAdminClient cluster() {
@@ -280,6 +308,15 @@ public class ElasticClient {
 
 	public String[] toIndices(String backendId) {
 		return toIndicesStream(backendId).toArray(String[]::new);
+	}
+
+	/**
+	 * All data indices but users.
+	 */
+	public String[] toDataIndices(String backendId) {
+		return toIndicesStream(backendId)//
+				.filter(index -> !UserResource.USER_TYPE.equals(index.split("-", 3)[1]))//
+				.toArray(String[]::new);
 	}
 
 	public String toIndex0(String backendId, String type) {

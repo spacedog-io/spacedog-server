@@ -175,6 +175,9 @@ public class AbstractS3Resource extends AbstractResource {
 		String s3Key = toS3Key(credentials.backendId(), path, fileName);
 
 		ObjectMetadata metadata = new ObjectMetadata();
+		// TODO
+		// use the provided content-type if specific first
+		// if none derive from file extension
 		metadata.setContentType(typeMap.getContentType(fileName));
 		metadata.setContentLength(Long.valueOf(context.header("Content-Length")));
 		metadata.setContentDisposition(String.format("attachment; filename=\"%s\"", fileName));

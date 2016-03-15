@@ -20,7 +20,7 @@ public class SuperDogStatus extends Assert {
 
 		SpaceRequest.setLogDebug(false);
 
-		ObjectNode accounts = SpaceRequest.get("/v1/admin/account").queryString("size", "100")//
+		ObjectNode accounts = SpaceRequest.get("/v1/backend").queryString("size", "100")//
 				.superdogAuth().go(200).objectNode();
 
 		log("[%s] backends:", accounts.get("total").asLong());

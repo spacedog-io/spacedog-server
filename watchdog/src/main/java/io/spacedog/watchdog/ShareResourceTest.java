@@ -15,7 +15,7 @@ import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
 import io.spacedog.client.SpaceDogHelper;
-import io.spacedog.client.SpaceDogHelper.Account;
+import io.spacedog.client.SpaceDogHelper.Backend;
 import io.spacedog.client.SpaceDogHelper.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
@@ -30,13 +30,13 @@ public class ShareResourceTest {
 	public void shareListAndGetFiles() throws Exception {
 
 		// prepare
-		Account testAccount = SpaceDogHelper.resetTestAccount();
+		Backend testAccount = SpaceDogHelper.resetTestBackend();
 		User vince = SpaceDogHelper.createUser(testAccount, "vince", "hi vince", "vince@dog.com");
 		User fred = SpaceDogHelper.createUser(testAccount, "fred", "hi fred", "fred@dog.com");
 
 		// only admin can get all shared locations
 		SpaceRequest.get("/v1/share").go(401);
-		SpaceRequest.get("/v1/share").backendKey(testAccount).go(401);
+		SpaceRequest.get("/v1/share").backend(testAccount).go(401);
 		SpaceRequest.get("/v1/share").basicAuth(vince).go(401);
 
 		// this account is brand new, no shared files
@@ -45,14 +45,14 @@ public class ShareResourceTest {
 
 		// only users and admins are allowed to share files
 		SpaceRequest.put("/v1/share/tweeter.png").go(401);
-		SpaceRequest.put("/v1/share/tweeter.png").backendKey(testAccount).go(401);
+		SpaceRequest.put("/v1/share/tweeter.png").backend(testAccount).go(401);
 
 		// share a small png file
 		byte[] pngBytes = Resources.toByteArray(//
 				Resources.getResource("io/spacedog/watchdog/tweeter.png"));
 
 		JsonNode json = SpaceRequest.put("/v1/share/tweeter.png")//
-				.backendKey(testAccount)//
+				.backend(testAccount)//
 				.basicAuth(vince)//
 				.body(pngBytes)//
 				.go(200).jsonNode();
@@ -73,7 +73,7 @@ public class ShareResourceTest {
 
 		// download shared png file
 		byte[] downloadedBytes = SpaceRequest.get(pngLocation)//
-				.backendKey(testAccount)//
+				.backend(testAccount)//
 				.go(200)//
 				// .assertHeaderEquals("image/png", "content-type")//
 				.assertHeaderEquals("vince", "x-amz-meta-owner")//
@@ -94,7 +94,7 @@ public class ShareResourceTest {
 
 		// share small text file
 		json = SpaceRequest.put("/v1/share/test.txt")//
-				.backendKey(testAccount).basicAuth(fred)//
+				.backend(testAccount).basicAuth(fred)//
 				.body(FILE_CONTENT.getBytes())//
 				.go(200)//
 				.jsonNode();
@@ -133,7 +133,7 @@ public class ShareResourceTest {
 		Assert.assertTrue(all.contains(txtPath));
 
 		// download shared text file
-		String stringContent = SpaceRequest.get(txtLocation).backendKey(testAccount).go(200)//
+		String stringContent = SpaceRequest.get(txtLocation).backend(testAccount).go(200)//
 				// .assertHeaderEquals("text/plain", "content-type")//
 				.assertHeaderEquals("fred", "x-amz-meta-owner")//
 				.assertHeaderEquals("USER", "x-amz-meta-owner-type")//
@@ -153,11 +153,11 @@ public class ShareResourceTest {
 
 		// only admin or owner can delete a shared file
 		SpaceRequest.delete(txtLocation).go(401);
-		SpaceRequest.delete(txtLocation).backendKey(testAccount).go(401);
-		SpaceRequest.delete(txtLocation).backendKey(testAccount).basicAuth(vince).go(401);
+		SpaceRequest.delete(txtLocation).backend(testAccount).go(401);
+		SpaceRequest.delete(txtLocation).backend(testAccount).basicAuth(vince).go(401);
 
 		// owner (fred) can delete its own shared file (test.txt)
-		SpaceRequest.delete(txtLocation).backendKey(testAccount).basicAuth(fred).go(200);
+		SpaceRequest.delete(txtLocation).backend(testAccount).basicAuth(fred).go(200);
 
 		// list of shared files should only return the png file path
 		SpaceRequest.get("/v1/share").basicAuth(testAccount).go(200)//
@@ -166,7 +166,7 @@ public class ShareResourceTest {
 
 		// only admin can delete all shared files
 		SpaceRequest.delete("/v1/share").go(401);
-		SpaceRequest.delete("/v1/share").backendKey(testAccount).go(401);
+		SpaceRequest.delete("/v1/share").backend(testAccount).go(401);
 		SpaceRequest.delete("/v1/share").basicAuth(fred).go(401);
 		SpaceRequest.delete("/v1/share").basicAuth(vince).go(401);
 		SpaceRequest.delete("/v1/share").basicAuth(testAccount).go(200)//

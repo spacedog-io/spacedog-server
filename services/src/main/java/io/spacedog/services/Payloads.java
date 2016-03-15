@@ -11,6 +11,7 @@ import org.elasticsearch.action.ShardOperationFailedException;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.index.engine.VersionConflictEngineException;
 import org.elasticsearch.index.mapper.MergeMappingException;
+import org.elasticsearch.index.mapper.StrictDynamicMappingException;
 
 import com.amazonaws.AmazonServiceException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -19,6 +20,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.services.SchemaValidator.InvalidSchemaException;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.NotFoundException;
 import io.spacedog.utils.Utils;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
@@ -46,7 +48,7 @@ public class Payloads {
 		if (t instanceof VersionConflictEngineException) {
 			return error(HttpStatus.CONFLICT, t);
 		}
-		if (t instanceof AuthenticationException) {
+		if (t instanceof AuthorizationException) {
 			return error(HttpStatus.UNAUTHORIZED, t);
 		}
 		if (t instanceof NotFoundException) {
@@ -59,6 +61,9 @@ public class Payloads {
 			return error(HttpStatus.BAD_REQUEST, t);
 		}
 		if (t instanceof NumberFormatException) {
+			return error(HttpStatus.BAD_REQUEST, t);
+		}
+		if (t instanceof StrictDynamicMappingException) {
 			return error(HttpStatus.BAD_REQUEST, t);
 		}
 		if (t instanceof InvalidSchemaException) {

@@ -26,6 +26,7 @@ import com.google.common.collect.Lists;
 
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.NotFoundException;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Get;
@@ -50,7 +51,7 @@ public class SnapshotResource extends AbstractResource {
 	@Get("/dog/snapshot/")
 	public Payload getSnapshotAll() {
 
-		SpaceContext.checkAdminCredentials();
+		SpaceContext.checkAdminCredentials(false);
 		List<SpaceSnapshot> snapshots = getAllPlatformSnapshotsFromLatestToOldest();
 
 		JsonBuilder<ObjectNode> payload = Payloads.minimalBuilder(200)//
@@ -69,7 +70,7 @@ public class SnapshotResource extends AbstractResource {
 	@Get("/dog/snapshot/latest/")
 	public Payload getSnapshotLatest() {
 
-		SpaceContext.checkAdminCredentials();
+		SpaceContext.checkAdminCredentials(false);
 		List<SpaceSnapshot> snapshots = getAllPlatformSnapshotsFromLatestToOldest();
 		return snapshots.isEmpty() ? Payloads.error(404)//
 				: Payloads.json(snapshots.get(0).toJson());
@@ -81,7 +82,7 @@ public class SnapshotResource extends AbstractResource {
 	@Get("/dog/snapshot/:snapshotId/")
 	public Payload getSnapshotById(String snapshotId) {
 
-		SpaceContext.checkAdminCredentials();
+		SpaceContext.checkAdminCredentials(false);
 		SpaceSnapshot snapshot = doGetSnapshot(snapshotId);
 		return Payloads.json(snapshot.toJson());
 	}
@@ -92,7 +93,7 @@ public class SnapshotResource extends AbstractResource {
 	@Post("/dog/snapshot/")
 	public Payload postSnapshot(Context context) {
 
-		SpaceContext.checkSuperDogCredentials();
+		SpaceContext.checkSuperDogCredentials(false);
 
 		String snapshotId = computeSnapshotName(PLATFORM_SNAPSHOT_PREFIX);
 		String repoId = getCurrentSnapshotRepository();
@@ -100,10 +101,10 @@ public class SnapshotResource extends AbstractResource {
 		// TODO rename correctly the snapshot repository
 		CreateSnapshotResponse response = Start.get().getElasticClient().cluster()//
 				.prepareCreateSnapshot(repoId, snapshotId)//
-				.setIndicesOptions(IndicesOptions.fromOptions(false, false, true, true))//
+				.setIndicesOptions(IndicesOptions.fromOptions(false, true, true, true))//
 				.setWaitForCompletion(context.query().getBoolean(WAIT_FOR_COMPLETION, false))//
 				.setIncludeGlobalState(true)//
-				.setPartial(true)//
+				.setPartial(false)//
 				.get();
 
 		int status = response.status().getStatus();
@@ -130,7 +131,7 @@ public class SnapshotResource extends AbstractResource {
 	@Post("/dog/snapshot/latest/restore/")
 	public Payload postSnapshotLatestRestore(Context context) {
 
-		SpaceContext.checkSuperDogCredentials();
+		SpaceContext.checkSuperDogCredentials(false);
 
 		List<SpaceSnapshot> snapshots = getAllPlatformSnapshotsFromLatestToOldest();
 		if (Utils.isNullOrEmpty(snapshots))
@@ -146,7 +147,7 @@ public class SnapshotResource extends AbstractResource {
 	@Post("/dog/snapshot/:snapshotId/restore/")
 	public Payload postSnapshotRestoreById(String snapshotId, Context context) {
 
-		SpaceContext.checkSuperDogCredentials();
+		SpaceContext.checkSuperDogCredentials(false);
 		SpaceSnapshot snapshot = doGetSnapshot(snapshotId);
 		return doRestore(snapshot, //
 				context.query().getBoolean(WAIT_FOR_COMPLETION, false));
@@ -183,12 +184,15 @@ public class SnapshotResource extends AbstractResource {
 					snapshot.id(), snapshot.info.state().toString()));
 
 		// close all backend indices before restore
-		Start.get().getElasticClient().closeAllBackendIndices();
+		Start.get().getElasticClient().deleteAllBackendIndices();
 
 		RestoreInfo restore = Start.get().getElasticClient().cluster()//
 				.prepareRestoreSnapshot(snapshot.repositoryId(), snapshot.id())//
 				.setWaitForCompletion(waitForCompletion)//
+				.setIndicesOptions(IndicesOptions.fromOptions(false, true, true, true))//
 				.setPartial(false)//
+				.setIncludeAliases(true)//
+				.setRestoreGlobalState(true)//
 				.get()//
 				.getRestoreInfo();
 

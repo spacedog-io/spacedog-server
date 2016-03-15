@@ -3,9 +3,7 @@
  */
 package io.spacedog.client;
 
-import java.io.File;
-import java.util.Collection;
-import java.util.Optional;
+import java.util.Map;
 
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.BasicHttpClientConnectionManager;
@@ -13,42 +11,61 @@ import org.junit.Assert;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
 import com.google.common.primitives.Ints;
+import com.mashape.unirest.http.HttpMethod;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.request.GetRequest;
 import com.mashape.unirest.request.HttpRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
-import com.mashape.unirest.request.body.MultipartBody;
 
+import io.spacedog.client.SpaceDogHelper.Backend;
+import io.spacedog.client.SpaceDogHelper.User;
+import io.spacedog.utils.BackendKey;
+import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceHeaders;
 
 public class SpaceRequest {
-	private HttpRequest request;
-	private JsonNode body;
+	private JsonNode bodyJson;
 	private Boolean forTesting = null;
+	private HttpMethod method;
+	private String uri;
+	private Object body;
+	private Map<String, String> routeParams = Maps.newHashMap();
+	private Map<String, String> queryStrings = Maps.newHashMap();
+	private Map<String, String> headers = Maps.newHashMap();
+	private Map<String, String> fields = Maps.newHashMap();
+	private String password;
+	private String username;
+	private boolean redirected = false;
 	private static boolean forTestingDefault = false;
-	private static Optional<String> defaultBackendId = Optional.empty();
+	// private static Optional<String> defaultBackendId = Optional.empty();
+	private String backendId;
 
 	static {
 		Unirest.setHttpClient(HttpClients.createMinimal(//
 				new BasicHttpClientConnectionManager()));
 	}
 
-	public SpaceRequest(HttpRequest request) {
-		this.request = request;
+	public SpaceRequest(String uri, HttpMethod method) {
+		this.uri = uri;
+		this.method = method;
 	}
 
-	private static String computeUrl(boolean redirected, String uri) {
-		if (uri.startsWith("http"))
+	private String computeUrl() {
+		if (uri.startsWith("http:"))
 			return uri;
 
 		SpaceTarget target = SpaceRequestConfiguration.get().target();
 
-		if (defaultBackendId.isPresent()) {
+		if (!Strings.isNullOrEmpty(backendId) //
+				&& SpaceRequestConfiguration.get().subdomains()) {
+
 			StringBuilder builder = redirected //
-					? target.redirectedUrlBuilder(defaultBackendId.get()) //
-					: target.urlBuilder(defaultBackendId.get());
+					? target.redirectedUrlBuilder(backendId) //
+					: target.urlBuilder(backendId);
 
 			return builder.append(uri).toString();
 		}
@@ -57,105 +74,72 @@ public class SpaceRequest {
 	}
 
 	public static SpaceRequest get(String uri) {
-		return get(false, uri);
-	}
-
-	public static SpaceRequest get(boolean redirected, String uri) {
-		String url = computeUrl(redirected, uri);
-		GetRequest request = Unirest.get(url);
-		return new SpaceRequest(request);
+		return new SpaceRequest(uri, HttpMethod.GET);
 	}
 
 	public static SpaceRequest post(String uri) {
-		return post(false, uri);
-	}
-
-	public static SpaceRequest post(boolean redirected, String uri) {
-		String url = computeUrl(redirected, uri);
-		HttpRequestWithBody request = Unirest.post(url);
-		return new SpaceRequest(request);
+		return new SpaceRequest(uri, HttpMethod.POST);
 	}
 
 	public static SpaceRequest put(String uri) {
-		return put(false, uri);
-	}
-
-	public static SpaceRequest put(boolean redirected, String uri) {
-		String url = computeUrl(redirected, uri);
-		HttpRequestWithBody request = Unirest.put(url);
-		return new SpaceRequest(request);
+		return new SpaceRequest(uri, HttpMethod.PUT);
 	}
 
 	public static SpaceRequest delete(String uri) {
-		return delete(false, uri);
-	}
-
-	public static SpaceRequest delete(boolean redirected, String uri) {
-		String url = computeUrl(redirected, uri);
-		HttpRequestWithBody request = Unirest.delete(url);
-		return new SpaceRequest(request);
+		return new SpaceRequest(uri, HttpMethod.DELETE);
 	}
 
 	public static SpaceRequest options(String uri) {
-		return options(false, uri);
+		return new SpaceRequest(uri, HttpMethod.OPTIONS);
 	}
 
-	public static SpaceRequest options(boolean redirected, String uri) {
-		String url = computeUrl(redirected, uri);
-		HttpRequestWithBody request = Unirest.options(url);
-		return new SpaceRequest(request);
+	public SpaceRequest backend(Backend backend) {
+		return backendId(backend.backendId);
 	}
 
 	public SpaceRequest backendKey(String backendKey) {
-		if (backendKey != null)
-			request.header(SpaceHeaders.BACKEND_KEY, backendKey);
+		return backendId(BackendKey.extractBackendId(backendKey));
+	}
+
+	public SpaceRequest backendId(String backendId) {
+		if (!Strings.isNullOrEmpty(this.backendId))
+			Exceptions.runtime("backend already set");
+		this.backendId = backendId;
 		return this;
 	}
 
-	public SpaceRequest backendKey(SpaceDogHelper.Account account) {
-		return backendKey(account.backendKey);
+	public SpaceRequest basicAuth(Backend account) {
+		return basicAuth(account.backendId, account.username, account.password);
 	}
 
-	public SpaceRequest basicAuth(SpaceDogHelper.Account account) {
-		return basicAuth(account.username, account.password);
+	public SpaceRequest basicAuth(User user) {
+		return basicAuth(user.backendId, user.username, user.password);
 	}
 
-	public SpaceRequest basicAuth(SpaceDogHelper.User user) {
-		return basicAuth(user.username, user.password);
+	public SpaceRequest basicAuth(Backend backend, String username, String password) {
+		return basicAuth(backend.backendId, username, password);
 	}
 
-	public SpaceRequest basicAuth(String[] credentials) {
-		return basicAuth(credentials[0], credentials[1]);
-	}
-
-	public SpaceRequest basicAuth(String username, String password) {
-		request.basicAuth(username, password);
-		return this;
+	public SpaceRequest basicAuth(String backendId, String username, String password) {
+		this.username = username;
+		this.password = password;
+		return backendId(backendId);
 	}
 
 	public SpaceRequest body(byte[] bytes) {
-		if (request instanceof HttpRequestWithBody) {
-			((HttpRequestWithBody) request).body(bytes);
-			return this;
-		}
-
-		throw new IllegalStateException(
-				String.format("%s requests don't take any body", request.getHttpMethod().name()));
+		this.body = bytes;
+		return this;
 	}
 
 	public SpaceRequest body(String body) {
-		if (request instanceof HttpRequestWithBody) {
-			((HttpRequestWithBody) request).body(body);
-			return this;
-		}
-
-		throw new IllegalStateException(
-				String.format("%s requests don't take any body", request.getHttpMethod().name()));
+		this.body = body;
+		return this;
 	}
 
 	public SpaceRequest body(JsonNode body) {
-		this.body = body;
-		return body(body.toString());
+		this.bodyJson = body;
+		this.body = body.toString();
+		return this;
 	}
 
 	public SpaceRequest body(JsonBuilder<ObjectNode> jsonBody) {
@@ -163,26 +147,23 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest routeParam(String name, String value) {
-		request.routeParam(name, value);
+		this.routeParams.put(name, value);
 		return this;
 	}
 
 	public SpaceRequest queryString(String name, String value) {
-		request.queryString(name, value);
+		this.queryStrings.put(name, value);
 		return this;
 	}
 
 	public SpaceRequest header(String name, String value) {
-		request.header(name, value);
+		this.headers.put(name, value);
 		return this;
 	}
 
-	public SpaceResponse go() throws Exception {
-		if ((forTesting == null && forTestingDefault)//
-				|| (forTesting != null && forTesting))
-			this.header(SpaceHeaders.SPACEDOG_TEST, "true");
-
-		return new SpaceResponse(request, body, SpaceRequestConfiguration.get().debug());
+	public SpaceRequest redirected(boolean redirected) {
+		this.redirected = redirected;
+		return this;
 	}
 
 	public SpaceResponse go(int... expectedStatus) throws Exception {
@@ -191,67 +172,121 @@ public class SpaceRequest {
 		return spaceResponse;
 	}
 
-	public SpaceRequest field(String name, File value) {
-		Optional<MultipartBody> multipartBody = checkBodyIsMultipart();
-		if (multipartBody.isPresent())
-			multipartBody.get().field(name, value);
-		else
-			((HttpRequestWithBody) request).field(name, value);
-		return this;
+	public SpaceResponse go() throws Exception {
+		if ((forTesting == null && forTestingDefault)//
+				|| (forTesting != null && forTesting))
+			this.header(SpaceHeaders.SPACEDOG_TEST, "true");
+
+		if (!SpaceRequestConfiguration.get().subdomains())
+			header(SpaceHeaders.BACKEND_KEY, computeBackendKey());
+
+		HttpRequest request = (method == HttpMethod.GET || method == HttpMethod.HEAD) //
+				? new GetRequest(method, computeUrl())//
+				: new HttpRequestWithBody(method, computeUrl());
+
+		if (!Strings.isNullOrEmpty(username))
+			request.basicAuth(username, password);
+
+		this.headers.forEach((key, value) -> request.header(key, value));
+		this.queryStrings.forEach((key, value) -> request.queryString(key, value));
+		this.routeParams.forEach((key, value) -> request.routeParam(key, value));
+
+		if (request instanceof HttpRequestWithBody) {
+			HttpRequestWithBody requestWithBody = (HttpRequestWithBody) request;
+			this.fields.forEach((key, value) -> requestWithBody.field(key, value));
+			if (body instanceof byte[])
+				requestWithBody.body((byte[]) body);
+			if (body instanceof String)
+				requestWithBody.body((String) body);
+		}
+
+		return new SpaceResponse(request, bodyJson, SpaceRequestConfiguration.get().debug());
+	}
+
+	private String computeBackendKey() {
+		if (Strings.isNullOrEmpty(backendId))
+			backendId = "api";
+		return backendId + ":default:blablabla";
 	}
 
 	public SpaceRequest field(String name, String value) {
-		return field(name, value, null);
-	}
-
-	public SpaceRequest field(String name, String value, String contentType) {
-		Optional<MultipartBody> multipartBody = checkBodyIsMultipart();
-		if (multipartBody.isPresent())
-			multipartBody.get().field(name, value, contentType);
-		else
-			((HttpRequestWithBody) request).field(name, value, contentType);
+		this.fields.put(name, value);
 		return this;
 	}
 
-	public SpaceRequest field(String name, Collection<?> value) {
-		Optional<MultipartBody> multipartBody = checkBodyIsMultipart();
-		if (multipartBody.isPresent())
-			multipartBody.get().field(name, value);
-		else
-			((HttpRequestWithBody) request).field(name, value);
-		return this;
-	}
+	// public SpaceRequest field(String name, File value) {
+	// this.fields.put(name, value.getAbsolutePath());
+	//
+	// Optional<MultipartBody> multipartBody = checkBodyIsMultipart();
+	// if (multipartBody.isPresent())
+	// multipartBody.get().field(name, value);
+	// else
+	// ((HttpRequestWithBody) request).field(name, value);
+	//
+	// return this;
+	// }
 
-	private Optional<MultipartBody> checkBodyIsMultipart() {
+	// public SpaceRequest field(String name, String value, String contentType)
+	// {
+	//
+	// Optional<MultipartBody> multipartBody = checkBodyIsMultipart();
+	// if (multipartBody.isPresent())
+	// multipartBody.get().field(name, value, contentType);
+	// else
+	// ((HttpRequestWithBody) request).field(name, value, contentType);
+	//
+	// return this;
+	// }
 
-		HttpRequestWithBody requestWithBody = checkRequestWithBody();
+	// public SpaceRequest field(String name, Collection<?> value) {
+	// Optional<MultipartBody> multipartBody = checkBodyIsMultipart();
+	// if (multipartBody.isPresent())
+	// multipartBody.get().field(name, value);
+	// else
+	// ((HttpRequestWithBody) request).field(name, value);
+	// return this;
+	// }
 
-		if (requestWithBody.getBody() == null)
-			return Optional.empty();
-
-		if (requestWithBody.getBody() instanceof MultipartBody)
-			return Optional.of((MultipartBody) requestWithBody.getBody());
-
-		throw new IllegalStateException(String.format("request body is not multipart but [%s]", //
-				request.getBody().getClass().getName()));
-	}
-
-	private HttpRequestWithBody checkRequestWithBody() {
-
-		if (request instanceof HttpRequestWithBody)
-			return (HttpRequestWithBody) request;
-
-		throw new IllegalStateException(//
-				String.format("illegal for requests of type [%s]", request.getHttpMethod()));
-	}
+	// private Optional<MultipartBody> checkBodyIsMultipart() {
+	//
+	// HttpRequestWithBody requestWithBody = checkRequestWithBody();
+	//
+	// if (requestWithBody.getBody() == null)
+	// return Optional.empty();
+	//
+	// if (requestWithBody.getBody() instanceof MultipartBody)
+	// return Optional.of((MultipartBody) requestWithBody.getBody());
+	//
+	// throw new IllegalStateException(String.format("request body is not
+	// multipart but [%s]", //
+	// request.getBody().getClass().getName()));
+	// }
+	//
+	// private HttpRequestWithBody checkRequestWithBody() {
+	//
+	// if (request instanceof HttpRequestWithBody)
+	// return (HttpRequestWithBody) request;
+	//
+	// throw new IllegalStateException(//
+	// String.format("illegal for requests of type [%s]",
+	// request.getHttpMethod()));
+	// }
 
 	public static void setLogDebug(boolean debug) {
 		SpaceRequestConfiguration.get().debug(debug);
 	}
 
 	public SpaceRequest superdogAuth() {
+		return superdogAuth((String) null);
+	}
+
+	public SpaceRequest superdogAuth(Backend backend) {
+		return superdogAuth(backend.backendId);
+	}
+
+	public SpaceRequest superdogAuth(String backendId) {
 		SpaceRequestConfiguration conf = SpaceRequestConfiguration.get();
-		return basicAuth(conf.superdogName(), conf.superdogPassword());
+		return basicAuth(backendId, conf.superdogName(), conf.superdogPassword());
 	}
 
 	public SpaceRequest forTesting(boolean forTesting) {
@@ -272,8 +307,8 @@ public class SpaceRequest {
 				.toString();
 	}
 
-	public static void setDefaultBackend(String backendId) {
-		defaultBackendId = Optional.of(backendId);
-	}
+	// public static void setDefaultBackend(String backendId) {
+	// defaultBackendId = Optional.of(backendId);
+	// }
 
 }

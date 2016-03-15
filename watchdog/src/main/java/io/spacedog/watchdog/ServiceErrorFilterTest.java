@@ -7,7 +7,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import io.spacedog.client.SpaceDogHelper;
-import io.spacedog.client.SpaceDogHelper.Account;
+import io.spacedog.client.SpaceDogHelper.Backend;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 import io.spacedog.client.SpaceRequest;
 
@@ -18,11 +18,11 @@ public class ServiceErrorFilterTest extends Assert {
 	public void catchesFluentResourceErrors() throws Exception {
 
 		SpaceDogHelper.prepareTest();
-		Account testAccount = SpaceDogHelper.resetTestAccount();
+		Backend testAccount = SpaceDogHelper.resetTestBackend();
 
 		// should fail to access invalid route
 
-		SpaceRequest.get("/v1/toto").backendKey(testAccount).go(404)//
+		SpaceRequest.get("/v1/toto").backend(testAccount).go(404)//
 				.assertFalse("success")//
 				.assertEquals("[/v1/toto] is not a valid SpaceDog path", "error.message");
 

@@ -74,7 +74,7 @@ public class SchemaResource extends AbstractResource {
 
 		String backendId = credentials.backendId();
 		ElasticClient elastic = Start.get().getElasticClient();
-		boolean indexExists = elastic.exists(backendId, type);
+		boolean indexExists = elastic.existsIndex(backendId, type);
 
 		if (indexExists)
 			elastic.putMapping(backendId, type, mapping);

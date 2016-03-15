@@ -4,8 +4,10 @@
 package io.spacedog.services;
 
 import java.util.Optional;
+import java.util.Set;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 
 import io.spacedog.utils.Check;
 import io.spacedog.utils.SpaceHeaders;
@@ -54,4 +56,8 @@ public abstract class AbstractResource {
 		return Start.get().configuration().getAwsBucketPrefix() + bucketSuffix;
 
 	}
+
+	public static final String SPACEDOG_BACKEND = "spacedog";
+	public static final Set<String> INTERNAL_BACKENDS = Sets.newHashSet(SPACEDOG_BACKEND);
+	public static final String BACKEND_ID = "backendId";
 }

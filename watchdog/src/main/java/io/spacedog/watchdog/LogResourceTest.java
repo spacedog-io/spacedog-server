@@ -4,7 +4,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import io.spacedog.client.SpaceDogHelper;
-import io.spacedog.client.SpaceDogHelper.Account;
+import io.spacedog.client.SpaceDogHelper.Backend;
 import io.spacedog.client.SpaceDogHelper.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
@@ -20,10 +20,10 @@ public class LogResourceTest extends Assert {
 		SpaceDogHelper.prepareTest();
 
 		// create a test account
-		Account testAccount = SpaceDogHelper.resetTestAccount();
+		Backend testAccount = SpaceDogHelper.resetTestBackend();
 
 		// create test2 account
-		Account test2Account = SpaceDogHelper.resetAccount("test2", "test2", "hi test2", "test2@dog.com", true);
+		Backend test2Account = SpaceDogHelper.resetBackend("test2", "test2", "hi test2", "test2@dog.com", true);
 
 		// create message schema in test backend
 		SpaceDogHelper.setSchema(//
@@ -36,20 +36,20 @@ public class LogResourceTest extends Assert {
 
 		// create message in test backend
 		String id = SpaceRequest.post("/v1/data/message")//
-				.backendKey(testAccount)//
+				.backend(testAccount)//
 				.body(Json.objectBuilder().put("text", "What's up boys?").toString())//
 				.go(201)//
 				.getFromJson("id")//
 				.asText();
 
 		// find message by id in test backend
-		SpaceRequest.get("/v1/data/message/" + id).backendKey(testAccount).go(200);
+		SpaceRequest.get("/v1/data/message/" + id).backend(testAccount).go(200);
 
 		// create user in test backend
 		User vince = SpaceDogHelper.createUser(testAccount, "vince", "hi vince", "vince@dog.com");
 
 		// find all messages in test backend
-		SpaceRequest.get("/v1/data/message").backendKey(testAccount).basicAuth(vince).go(200);
+		SpaceRequest.get("/v1/data/message").backend(testAccount).basicAuth(vince).go(200);
 
 		// get all test account logs
 		SpaceRequest.get("/v1/log?size=6").basicAuth(testAccount).go(200)//
@@ -65,7 +65,7 @@ public class LogResourceTest extends Assert {
 				.assertEquals("POST", "results.4.method")//
 				.assertEquals("/v1/schema/message", "results.4.path")//
 				.assertEquals("POST", "results.5.method")//
-				.assertEquals("/v1/admin/account", "results.5.path");
+				.assertEquals("/v1/backend/test", "results.5.path");
 				// don't check the delete account request before post account
 				// because it sometimes fails normally with 401 (not authorized)
 				// and 401 requests are not associated with any backend
@@ -77,17 +77,17 @@ public class LogResourceTest extends Assert {
 				.assertEquals("/v1/user", "results.0.path")//
 				.assertEquals("******", "results.0.jsonContent.password")//
 				.assertEquals("POST", "results.1.method")//
-				.assertEquals("/v1/admin/account", "results.1.path")//
+				.assertEquals("/v1/backend/test2", "results.1.path")//
 				.assertEquals("******", "results.1.jsonContent.password");
 				// don't check the delete account request before post account
 				// because it sometimes fails normally with 401 (not authorized)
 				// and 401 requests are not associated with any backend
 
 		// after account deletion, logs are not accessible to account
-		SpaceDogHelper.deleteAccount(testAccount);
+		SpaceDogHelper.deleteBackend(testAccount);
 		SpaceRequest.get("/v1/log").basicAuth(testAccount).go(401);
 
-		SpaceDogHelper.deleteAccount(test2Account);
+		SpaceDogHelper.deleteBackend(test2Account);
 		SpaceRequest.get("/v1/log").basicAuth(test2Account).go(401);
 	}
 
@@ -95,17 +95,17 @@ public class LogResourceTest extends Assert {
 	public void checkPasswordsAreNotLogged() throws Exception {
 
 		SpaceDogHelper.prepareTest();
-		Account testAccount = SpaceDogHelper.resetTestAccount();
+		Backend testAccount = SpaceDogHelper.resetTestBackend();
 		SpaceDogHelper.createUser(testAccount, "fred", "hi fred", "fred@dog.com");
 
 		String passwordResetCode = SpaceRequest.delete("/v1/user/fred/password")//
 				.basicAuth(testAccount).go(200).getFromJson("passwordResetCode").asText();
 
 		SpaceRequest.post("/v1/user/fred/password?passwordResetCode=" + passwordResetCode)//
-				.backendKey(testAccount).field("password", "hi fred 2").go(200);
+				.backend(testAccount).field("password", "hi fred 2").go(200);
 
-		SpaceRequest.put("/v1/user/fred/password").backendKey(testAccount)//
-				.basicAuth("fred", "hi fred 2")//
+		SpaceRequest.put("/v1/user/fred/password").backend(testAccount)//
+				.basicAuth(testAccount.backendId, "fred", "hi fred 2")//
 				.field("password", "hi fred 3").go(200);
 
 		SpaceRequest.get("/v1/log?size=5").basicAuth(testAccount).go(200)//
@@ -124,7 +124,7 @@ public class LogResourceTest extends Assert {
 				.assertEquals("/v1/user", "results.3.path")//
 				.assertEquals("******", "results.3.jsonContent.password")//
 				.assertEquals("POST", "results.4.method")//
-				.assertEquals("/v1/admin/account", "results.4.path")//
+				.assertEquals("/v1/backend/test", "results.4.path")//
 				.assertEquals("******", "results.4.jsonContent.password");
 	}
 
@@ -133,29 +133,29 @@ public class LogResourceTest extends Assert {
 
 		// prepare
 		SpaceDogHelper.prepareTest();
-		Account testAccount = SpaceDogHelper.resetTestAccount();
-		SpaceDogHelper.createUser(testAccount, "fred", "hi fred", "fred@dog.com");
+		Backend testBackend = SpaceDogHelper.resetTestBackend();
+		SpaceDogHelper.createUser(testBackend, "fred", "hi fred", "fred@dog.com");
 		for (int i = 0; i < 5; i++)
-			SpaceRequest.get("/v1/data").basicAuth(testAccount).go(200);
+			SpaceRequest.get("/v1/data").basicAuth(testBackend).go(200);
 
 		// check everything is in place
-		SpaceRequest.get("/v1/log?size=7").basicAuth(testAccount).go(200)//
+		SpaceRequest.get("/v1/log?size=7").basicAuth(testBackend).go(200)//
 				.assertEquals("/v1/data", "results.0.path")//
 				.assertEquals("/v1/data", "results.1.path")//
 				.assertEquals("/v1/data", "results.2.path")//
 				.assertEquals("/v1/data", "results.3.path")//
 				.assertEquals("/v1/data", "results.4.path")//
 				.assertEquals("/v1/user", "results.5.path")//
-				.assertEquals("/v1/admin/account", "results.6.path");
+				.assertEquals("/v1/backend/test", "results.6.path");
 
 		// delete all logs but the 2 last requests
-		SpaceRequest.delete("/v1/log/test?from=2").superdogAuth().go(200);
+		SpaceRequest.delete("/v1/log?from=2").superdogAuth(testBackend).go(200);
 
 		// check all test account logs are deleted but ...
-		SpaceRequest.get("/v1/log?size=10").basicAuth(testAccount).go(200)//
+		SpaceRequest.get("/v1/log?size=10").basicAuth(testBackend).go(200)//
 				.assertSizeEquals(3, "results")//
 				.assertEquals("DELETE", "results.0.method")//
-				.assertEquals("/v1/log/test", "results.0.path")//
+				.assertEquals("/v1/log", "results.0.path")//
 				.assertEquals("GET", "results.1.method")//
 				.assertEquals("/v1/log", "results.1.path")//
 				.assertEquals("GET", "results.2.method")//
@@ -169,33 +169,33 @@ public class LogResourceTest extends Assert {
 		SpaceDogHelper.prepareTest();
 
 		// create test accounts and users
-		Account testAccount = SpaceDogHelper.resetTestAccount();
-		SpaceDogHelper.createUser(testAccount, "vince", "hi vince", "vince@dog.com");
-		Account test2Account = SpaceDogHelper.resetAccount("test2", "test2", "hi test2", "test2@dog.com", true);
-		SpaceDogHelper.createUser(test2Account, "fred", "hi fred", "fred@dog.com");
+		Backend testBackend = SpaceDogHelper.resetTestBackend();
+		SpaceDogHelper.createUser(testBackend, "vince", "hi vince", "vince@dog.com");
+		Backend test2Backend = SpaceDogHelper.resetBackend("test2", "test2", "hi test2", "test2@dog.com", true);
+		SpaceDogHelper.createUser(test2Backend, "fred", "hi fred", "fred@dog.com");
 
 		// get all test account logs
-		SpaceRequest.get("/v1/log/test?size=2")//
-				.superdogAuth()//
+		SpaceRequest.get("/v1/log?size=2")//
+				.superdogAuth(testBackend)//
 				.go(200)//
 				.assertSizeEquals(2, "results")//
 				.assertEquals("POST", "results.0.method")//
 				.assertEquals("/v1/user", "results.0.path")//
 				.assertEquals("vince", "results.0.response.id")//
 				.assertEquals("POST", "results.1.method")//
-				.assertEquals("/v1/admin/account", "results.1.path")//
+				.assertEquals("/v1/backend/test", "results.1.path")//
 				.assertEquals("test", "results.1.response.id");
 
 		// get all test2 account logs
-		SpaceRequest.get("/v1/log/test2?size=2")//
-				.superdogAuth()//
+		SpaceRequest.get("/v1/log?size=2")//
+				.superdogAuth("test2")//
 				.go(200)//
 				.assertSizeEquals(2, "results")//
 				.assertEquals("POST", "results.0.method")//
 				.assertEquals("/v1/user", "results.0.path")//
 				.assertEquals("fred", "results.0.response.id")//
 				.assertEquals("POST", "results.1.method")//
-				.assertEquals("/v1/admin/account", "results.1.path")//
+				.assertEquals("/v1/backend/test2", "results.1.path")//
 				.assertEquals("test2", "results.1.response.id");
 
 		// get all accounts logs
@@ -204,50 +204,50 @@ public class LogResourceTest extends Assert {
 				.go(200)//
 				.assertSizeEquals(8, "results")//
 				.assertEquals("GET", "results.0.method")//
-				.assertEquals("/v1/log/test2", "results.0.path")//
+				.assertEquals("/v1/log", "results.0.path")//
 				.assertEquals("GET", "results.1.method")//
-				.assertEquals("/v1/log/test", "results.1.path")//
+				.assertEquals("/v1/log", "results.1.path")//
 				.assertEquals("POST", "results.2.method")//
 				.assertEquals("/v1/user", "results.2.path")//
 				.assertEquals("fred", "results.2.response.id")//
 				.assertEquals("POST", "results.3.method")//
-				.assertEquals("/v1/admin/account", "results.3.path")//
+				.assertEquals("/v1/backend/test2", "results.3.path")//
 				.assertEquals("test2", "results.3.response.id")//
 				.assertEquals("DELETE", "results.4.method")//
-				.assertEquals("/v1/admin/account/test2", "results.4.path")//
+				.assertEquals("/v1/backend", "results.4.path")//
 				.assertEquals("POST", "results.5.method")//
 				.assertEquals("/v1/user", "results.5.path")//
 				.assertEquals("vince", "results.5.response.id")//
 				.assertEquals("POST", "results.6.method")//
-				.assertEquals("/v1/admin/account", "results.6.path")//
+				.assertEquals("/v1/backend/test", "results.6.path")//
 				.assertEquals("test", "results.6.response.id")//
 				.assertEquals("DELETE", "results.7.method")//
-				.assertEquals("/v1/admin/account/test", "results.7.path");
+				.assertEquals("/v1/backend", "results.7.path");
 
 		// after account deletion, logs are still accessible to superdogs
-		SpaceDogHelper.deleteAccount(testAccount);
-		SpaceDogHelper.deleteAccount(test2Account);
+		SpaceDogHelper.deleteBackend(testBackend);
+		SpaceDogHelper.deleteBackend(test2Backend);
 		SpaceRequest.get("/v1/log?size=3")//
 				.superdogAuth()//
 				.go(200)//
 				.assertSizeEquals(3, "results")//
 				.assertEquals("DELETE", "results.0.method")//
-				.assertEquals("/v1/admin/account/test2", "results.0.path")//
+				.assertEquals("/v1/backend", "results.0.path")//
 				.assertEquals("DELETE", "results.1.method")//
-				.assertEquals("/v1/admin/account/test", "results.1.path")//
+				.assertEquals("/v1/backend", "results.1.path")//
 				.assertEquals("GET", "results.2.method")//
 				.assertEquals("/v1/log", "results.2.path")//
 				.assertEquals("8", "results.2.query.size");
 
 		// use logType=ADMIN to filter and only get admin and lower logs
-		SpaceRequest.get("/v1/log?size=3&logType=ADMIN")//
+		SpaceRequest.get("/v1/log?size=3&logType=SUPER_ADMIN")//
 				.superdogAuth()//
 				.go(200)//
 				.assertSizeEquals(3, "results")//
 				.assertEquals("DELETE", "results.0.method")//
-				.assertEquals("/v1/admin/account/test2", "results.0.path")//
+				.assertEquals("/v1/backend", "results.0.path")//
 				.assertEquals("DELETE", "results.1.method")//
-				.assertEquals("/v1/admin/account/test", "results.1.path")//
+				.assertEquals("/v1/backend", "results.1.path")//
 				.assertEquals("POST", "results.2.method")//
 				.assertEquals("/v1/user", "results.2.path")//
 				.assertEquals("fred", "results.2.response.id");

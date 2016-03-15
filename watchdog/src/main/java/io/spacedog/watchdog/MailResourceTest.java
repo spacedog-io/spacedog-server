@@ -4,7 +4,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import io.spacedog.client.SpaceDogHelper;
-import io.spacedog.client.SpaceDogHelper.Account;
+import io.spacedog.client.SpaceDogHelper.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
@@ -15,7 +15,7 @@ public class MailResourceTest extends Assert {
 	public void postMails() throws Exception {
 
 		SpaceDogHelper.prepareTest();
-		Account account = SpaceDogHelper.resetTestAccount();
+		Backend account = SpaceDogHelper.resetTestBackend();
 
 		// should succeed to mail a simple text message
 

@@ -26,6 +26,7 @@ import com.google.common.base.Strings;
 import io.spacedog.services.DataStore.FilteredSearchBuilder;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.NotFoundException;
 import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;

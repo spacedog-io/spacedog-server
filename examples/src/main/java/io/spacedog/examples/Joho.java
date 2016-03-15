@@ -24,12 +24,13 @@ public class Joho extends SpaceDogHelper {
 	private static final String BACKEND_ID = "joho2";
 	private static final String ADMIN_PASSWORD = "hi joho";
 	private static final String ADMIN_USERNAME = "joho";
+	private static final String ADMIN_EMAIL = "david@spacedog.io";
 
 	// private static final String BACKEND_ID = "johorecette";
 	// private static final String ADMIN_PASSWORD = "hi johorecette";
 	// private static final String ADMIN_USERNAME = "johorecette";
 
-	private static Account johoAccount;
+	private static Backend johoAccount = new Backend(BACKEND_ID, ADMIN_USERNAME, ADMIN_PASSWORD, ADMIN_EMAIL);
 
 	private static User fred;
 	private static User maelle;
@@ -145,7 +146,7 @@ public class Joho extends SpaceDogHelper {
 	public void createJoho2InstallationIndex() throws Exception {
 
 		SpaceRequest.delete("/v1/schema/installation")//
-				.basicAuth(ADMIN_USERNAME, ADMIN_PASSWORD)//
+				.basicAuth(BACKEND_ID, ADMIN_USERNAME, ADMIN_PASSWORD)//
 				.go(200, 404);
 
 		ObjectNode installationSchema = SchemaBuilder2.builder("installation")//
@@ -160,7 +161,7 @@ public class Joho extends SpaceDogHelper {
 				.build();
 
 		SpaceRequest.put("/v1/schema/installation")//
-				.basicAuth(ADMIN_USERNAME, ADMIN_PASSWORD)//
+				.basicAuth(BACKEND_ID, ADMIN_USERNAME, ADMIN_PASSWORD)//
 				.body(installationSchema)//
 				.go(201);
 	}
@@ -168,9 +169,7 @@ public class Joho extends SpaceDogHelper {
 	@Test
 	public void initAndFillJohoBackend() throws Exception {
 
-		// johoAccount = resetAccount(BACKEND_ID, ADMIN_USERNAME,
-		// ADMIN_PASSWORD, "david@spacedog.io");
-		johoAccount = getOrCreateAccount(BACKEND_ID, ADMIN_USERNAME, ADMIN_PASSWORD, "david@spacedog.io", false);
+		// johoAccount = resetAccount(johoAccount);
 
 		setSchema(buildDiscussionSchema(), johoAccount);
 		setSchema(buildMessageSchema(), johoAccount);
@@ -240,11 +239,11 @@ public class Joho extends SpaceDogHelper {
 	private void createResponse(String messageId, String text, User user) throws Exception {
 		JsonBuilder<ObjectNode> message = Json.objectBuilder().object("responses").put("text", text)//
 				.object("author").put("firstname", user.username).put("lastname", user.email);
-		SpaceRequest.put("/v1/data/message/{messageId}").routeParam("messageId", messageId).backendKey(johoAccount)
+		SpaceRequest.put("/v1/data/message/{messageId}").routeParam("messageId", messageId).backend(johoAccount)
 				.basicAuth(user).body(message).go(200);
 	}
 
-	private User createUser(String backendKey, String username, String password, String email, String firstname,
+	private User createUser(Backend backend, String username, String password, String email, String firstname,
 			String lastname, String job, String town, String serviceName, String serviceCode, double lat, double lon,
 			String mobile, String fixed, String avatarUrl) throws Exception {
 
@@ -266,10 +265,9 @@ public class Joho extends SpaceDogHelper {
 				.put("lon", lon)//
 				.build();
 
-		String id = SpaceRequest.post("/v1/user/").backendKey(backendKey).body(user).go(201).objectNode().get("id")
-				.asText();
+		String id = SpaceRequest.post("/v1/user/").backend(backend).body(user).go(201).objectNode().get("id").asText();
 
-		return new User(id, username, password, email);
+		return new User(backend.backendId, id, username, password, email);
 	}
 
 	private void createThemes() throws Exception {
@@ -288,14 +286,14 @@ public class Joho extends SpaceDogHelper {
 
 		JsonBuilder<ObjectNode> discussion = Json.objectBuilder().put("title", title)//
 				.put("description", title).object("category").put("code", categoryCode);
-		return SpaceRequest.post("/v1/data/discussion").backendKey(johoAccount).basicAuth(user).body(discussion).go(201)
+		return SpaceRequest.post("/v1/data/discussion").backend(johoAccount).basicAuth(user).body(discussion).go(201)
 				.objectNode().get("id").asText();
 	}
 
 	public String createMessage(String discussionId, String text, User user) throws Exception {
 
 		JsonBuilder<ObjectNode> message = Json.objectBuilder().put("text", text).put("discussionId", discussionId);
-		return SpaceRequest.post("/v1/data/message").backendKey(johoAccount).basicAuth(user).body(message).go(201)
+		return SpaceRequest.post("/v1/data/message").backend(johoAccount).basicAuth(user).body(message).go(201)
 				.objectNode().get("id").asText();
 	}
 
@@ -314,7 +312,7 @@ public class Joho extends SpaceDogHelper {
 				.object("query")//
 				.object("match_all");
 
-		JsonNode subjectResults = SpaceRequest.post("/v1/search/discussion?refresh=true").backendKey(johoAccount)
+		JsonNode subjectResults = SpaceRequest.post("/v1/search/discussion?refresh=true").backend(johoAccount)
 				.body(discussionQuery).go(200).jsonNode();
 
 		Iterator<JsonNode> discussions = subjectResults.get("results").elements();
@@ -341,7 +339,7 @@ public class Joho extends SpaceDogHelper {
 					.object("term")//
 					.put("discussionId", discussions.next().get("meta").get("id").asText());
 
-			SpaceRequest.post("/v1/search/message").backendKey(johoAccount).body(messagesQuery).go(200);
+			SpaceRequest.post("/v1/search/message").backend(johoAccount).body(messagesQuery).go(200);
 		}
 
 		return discussions;

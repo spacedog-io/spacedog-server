@@ -32,6 +32,10 @@ public class SpaceRequestConfiguration {
 		return getProperty("spacedog.superdog.notification.topic");
 	}
 
+	public boolean subdomains() {
+		return Boolean.valueOf(getProperty("spacedog.subdomains", "false"));
+	}
+
 	public boolean debug() {
 		return Boolean.valueOf(getProperty("spacedog.debug", "false"));
 	}

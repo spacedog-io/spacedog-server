@@ -1,19 +1,17 @@
 package io.spacedog.services;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.elasticsearch.action.get.MultiGetResponse;
-import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
-import org.joda.time.DateTime;
+import org.elasticsearch.search.SearchHits;
 
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
@@ -24,212 +22,334 @@ import com.amazonaws.services.sns.model.GetEndpointAttributesResult;
 import com.amazonaws.services.sns.model.InvalidParameterException;
 import com.amazonaws.services.sns.model.ListPlatformApplicationsRequest;
 import com.amazonaws.services.sns.model.ListPlatformApplicationsResult;
-import com.amazonaws.services.sns.model.ListSubscriptionsByTopicResult;
-import com.amazonaws.services.sns.model.ListTopicsResult;
 import com.amazonaws.services.sns.model.NotFoundException;
 import com.amazonaws.services.sns.model.PlatformApplication;
 import com.amazonaws.services.sns.model.PublishRequest;
-import com.amazonaws.services.sns.model.PublishResult;
 import com.amazonaws.services.sns.model.SetEndpointAttributesRequest;
-import com.amazonaws.services.sns.model.Subscription;
-import com.amazonaws.services.sns.model.Topic;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Sets;
+import com.fasterxml.jackson.databind.node.TextNode;
+import com.google.common.collect.Iterators;
 
-import io.spacedog.utils.Check;
+import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
+import net.codestory.http.annotations.Delete;
+import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
+import net.codestory.http.annotations.Put;
+import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/v1")
-public class PushResource {
+public class PushResource extends AbstractResource {
 
-	public static final String TYPE = "device";
 	private AmazonSNSClient snsClient;
 
-	@Post("/device")
-	@Post("/device/")
-	public Payload postDevice(String body, Context context) {
+	public static final String TYPE = "installation";
 
-		Credentials credentials = SpaceContext.checkUserCredentials();
+	// installation field names
+	public static final String APP_ID = "appId";
+	public static final String USER_ID = "userId";
+	public static final String DEVICE_TOKEN = "deviceToken";
+	public static final String PROVIDER_ID = "providerId";
+	public static final String TAGS = "tags";
+	public static final String TAG_KEY = "key";
+	public static final String TAG_VALUE = "value";
 
-		ObjectNode node = Json.readObjectNode(body);
-		String protocol = Json.checkStringNotNullOrEmpty(node, "protocol");
-		String endpoint = Json.checkStringNotNullOrEmpty(node, "endpoint");
+	// public static final String DEVICE_TYPE = "deviceType";
+	// public static final String DEVICE_VERSION = "deviceVersion";
+	// public static final String OS_TYPE = "osType";
+	// public static final String OS_VERSION = "osVersion";
+	// public static final String PUSH_TYPE = "pushType";
+	// public static final String APP_VERSION = "appVersion";
+	// public static final String APP_NAME = "appName";
 
-		if (!protocol.equals("application"))
-			throw new IllegalArgumentException(String.format("invalid protocol [%s]", protocol));
+	// push field names
+	private static final String MESSAGE = "message";
 
-		String appName = Json.checkStringNotNullOrEmpty(node, "appName");
-		Optional<PlatformApplication> application = getApplication(credentials.backendId(), appName);
-		if (!application.isPresent())
-			throw new IllegalArgumentException(String.format("invalid mobile application name [%s]", appName));
-
-		String endpointArn = createApplicationEndpoint(application.get().getPlatformApplicationArn(), endpoint);
-
-		// TODO handle more than one app
-		// TODO handle more than one endpoint per app
-		DataStore.get().patchObject(credentials.backendId(), //
-				UserResource.USER_TYPE, //
-				credentials.name(), //
-				Json.objectBuilder().put(UserResource.ENDPOINT_ARN, endpointArn).build(), //
-				credentials.name());
-
-		String topicArn = createTopic("all", credentials.backendId());
-		Optional<Subscription> subscription = getSubscription(topicArn, protocol, endpoint);
-
-		if (!subscription.isPresent()) {
-			getSnsClient().subscribe(topicArn, //
-					protocol, endpoint);
-		}
-
-		try {
-			return Payloads.saved(false, credentials.backendId(), "/v1", TYPE, URLEncoder.encode(endpointArn, "UTF-8"));
-		} catch (UnsupportedEncodingException e) {
-			throw new RuntimeException(e);
-		}
+	public static enum PushServices {
+		APNS, // Apple Push Notification Service
+		APNS_SANDBOX, // Sandbox version of APNS
+		ADM, // Amazon Device Messaging
+		GCM, // Google Cloud Messaging
+		BAIDU, // Baidu CloudMessaging Service
+		WNS, // Windows Notification Service
+		MPNS; // Microsoft Push Notification Service
 	}
 
-	@Post("/device/:id/topics")
-	@Post("/device/:id/topics/")
-	public Payload postDeviceToTopic(String id, String body, Context context) {
+	//
+	// default user type and schema
+	//
 
-		Credentials credentials = SpaceContext.checkUserCredentials();
+	// public static SchemaBuilder2 getDefaultInstallationSchemaBuilder() {
+	// return SchemaBuilder2.builder(TYPE)//
+	// .stringProperty(APP_ID, true)//
+	// .stringProperty(USER_ID, false)//
+	// .stringProperty(APP_NAME, false)//
+	// .stringProperty(APP_VERSION, false)//
+	// .stringProperty(DEVICE_TOKEN, true)//
+	// .stringProperty(PUSH_TYPE, false)//
+	// .stringProperty(OS_TYPE, false)//
+	// .stringProperty(OS_VERSION, false)//
+	// .stringProperty(DEVICE_TYPE, false)//
+	// .stringProperty(DEVICE_VERSION, false)//
+	// .stringProperty(PROVIDER_ID, true)//
+	// .startObjectProperty(TAGS, false)//
+	// .stringProperty(TAG_KEY, true)//
+	// .stringProperty(TAG_VALUE, true)//
+	// .endObjectProperty();
+	// }
+	//
+	// public static ObjectNode getDefaultInstallationSchema() {
+	// return getDefaultInstallationSchemaBuilder().build();
+	// }
+	//
+	// public static String getDefaultInstallationMapping() {
+	// JsonNode schema = SchemaValidator.validate(TYPE,
+	// getDefaultInstallationSchema());
+	// return SchemaTranslator.translate(TYPE, schema).toString();
+	// }
 
-		ObjectNode node = Json.readObjectNode(body);
-		JsonNode topics = Json.checkArrayNode(node, "topics", true).get();
+	//
+	// Routes
+	//
 
-		String endpointArn;
-		try {
-			endpointArn = URLEncoder.encode(id, "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			throw new RuntimeException(e);
-		}
-
-		String endpoint = getSnsClient().getEndpointAttributes(//
-				new GetEndpointAttributesRequest()//
-						.withEndpointArn(endpointArn))
-				.getAttributes().get("Token");
-
-		topics.elements().forEachRemaining(element -> {
-			String topicName = Json.checkString(element);
-			String topicArn = createTopic(topicName, credentials.backendId());
-			Optional<Subscription> subscription = getSubscription(topicArn, "application", endpoint);
-
-			if (!subscription.isPresent())
-				getSnsClient().subscribe(topicArn, "application", endpoint);
-		});
-
-		return Payloads.saved(false, credentials.backendId(), "/v1", "device", id);
+	@Get("/installation")
+	@Get("/installation/")
+	public Payload getAll(Context context) {
+		SpaceContext.checkAdminCredentials();
+		return DataResource.get().getByType(TYPE, context);
 	}
 
-	@Post("/topic/:name/push")
-	@Post("/topic/:name/push/")
-	public Payload pushToTopic(String body, String name, Context context) {
-
-		Credentials credentials = SpaceContext.checkAdminCredentials();
-
-		Check.notNullOrEmpty(name, "topic name");
-		ObjectNode node = Json.readObjectNode(body);
-		String message = Json.checkStringNotNullOrEmpty(node, "message");
-
-		Optional<Topic> topic = getTopicArn(name, credentials.backendId());
-
-		if (!topic.isPresent())
-			return Payloads.error(404, "topic with name [%s] not found", name);
-
-		PublishResult publish = getSnsClient().publish(new PublishRequest()//
-				.withTopicArn(topic.get().getTopicArn())//
-				.withSubject(message)//
-				.withMessage(message));
-
-		return Payloads.json(Payloads.minimalBuilder(200)//
-				.put("messageId", publish.getMessageId()).build(), 200);
+	@Post("/installation")
+	@Post("/installation/")
+	public Payload post(String body, Context context) {
+		return upsertInstallation(Optional.empty(), body, context);
 	}
 
-	@Post("/device/push")
-	@Post("/device/push/")
-	public Payload postPushAll(Context context) {
-
-		Credentials credentials = SpaceContext.checkAdminCredentials();
-		Optional<Topic> topic = getTopicArn("all", credentials.backendId());
-
-		if (!topic.isPresent())
-			throw new IllegalStateException(String.format(//
-					"topic [all] not found for backend [%s]", credentials.backendId()));
-
-		String msg = "PUSH " + credentials.backendId() + ' ' + DateTime.now();
-		PublishResult publish = getSnsClient().publish(new PublishRequest()//
-				.withTopicArn(topic.get().getTopicArn())//
-				.withSubject(msg)//
-				.withMessage(msg));
-
-		return Payloads.json(Payloads.minimalBuilder(200)//
-				.put("messageId", publish.getMessageId()).build(), 200);
+	@Delete("/installation")
+	@Delete("/installation/")
+	public Payload deleteAll(Context context) {
+		return DataResource.get().deleteByType(TYPE, context);
 	}
 
+	@Get("/installation/:id")
+	@Get("/installation/:id/")
+	public Payload get(String id, Context context) {
+		return DataResource.get().getById(TYPE, id, context);
+	}
+
+	@Delete("/installation/:id")
+	@Delete("/installation/:id/")
+	public Payload delete(String id, Context context) {
+		return DataResource.get().deleteById(TYPE, id, context);
+	}
+
+	@Put("/installation/:id")
+	@Put("/installation/:id/")
+	public Payload put(String id, String body, Context context) {
+		return upsertInstallation(Optional.of(id), body, context);
+	}
+
+	@Get("/installation/:id/tags")
+	@Get("/installation/:id/tags/")
+	public Payload getTags(String id, Context context) {
+		Credentials credentials = SpaceContext.checkCredentials();
+		Optional<ObjectNode> object = DataStore.get().getObject(credentials.backendId(), TYPE, id);
+
+		if (object.isPresent())
+			return Payloads.json(//
+					object.get().has(TAGS) //
+							? object.get().get(TAGS) //
+							: Json.newArrayNode());
+
+		return Payloads.error(HttpStatus.NOT_FOUND);
+	}
+
+	@Post("/installation/:id/tags")
+	@Post("/installation/:id/tags/")
+	public Payload postTags(String id, String body, Context context) {
+		return updateTags(id, body, false, false);
+	}
+
+	@Put("/installation/:id/tags")
+	@Put("/installation/:id/tags/")
+	public Payload putTags(String id, String body, Context context) {
+		return updateTags(id, body, true, false);
+
+	}
+
+	@Delete("/installation/:id/tags")
+	@Delete("/installation/:id/tags/")
+	public Payload deleteTags(String id, String body, Context context) {
+		return updateTags(id, body, false, true);
+	}
+
+	/**
+	 * Check this page for specific json messages:
+	 * http://docs.aws.amazon.com/sns/latest/dg/mobile-push-send-custommessage.
+	 * html
+	 */
 	@Post("/push")
 	@Post("/push/")
-	public Payload postPushBySearch(String body, Context context) {
+	@Post("/installation/push")
+	@Post("/installation/push/")
+	public Payload push(String body, Context context) {
 
-		Credentials credentials = SpaceContext.checkAdminCredentials();
-		ObjectNode node = Json.readObjectNode(body);
-		String type = Json.checkStringNode(node, "type", true).get().asText();
-		JsonNode query = Json.checkObject(node, "query", true).get();
-		JsonNode properties = Json.checkArrayNode(node, "properties", true).get();
-		String message = Json.checkStringNode(node, "message", true).get().asText();
+		Credentials credentials = SpaceContext.checkUserCredentials();
 
-		Set<String> usernames = getUsernamesFromObjects(credentials.backendId(), type, query, properties);
-		Set<String> endpointArns = getEndpointArnsFromUsers(credentials, usernames);
+		ObjectNode push = Json.readObjectNode(body);
+		String appId = Json.checkStringNode(push, APP_ID, true).get().asText();
+		JsonNode message = Json.checkJsonNode(push, MESSAGE, true).get();
+		JsonNode tags = push.get(TAGS);
 
-		for (String endpointArn : endpointArns) {
-			getSnsClient().publish(new PublishRequest()//
-					.withTargetArn(endpointArn)//
-					.withMessage(message));
+		BoolQueryBuilder query = QueryBuilders.boolQuery()//
+				.filter(QueryBuilders.termQuery(APP_ID, appId));
+
+		if (tags != null) {
+			Iterator<JsonNode> tagsIterator = tags.isObject()//
+					? Iterators.singletonIterator(tags) : tags.elements();
+
+			while (tagsIterator.hasNext()) {
+				JsonNode tag = tagsIterator.next();
+				query.filter(//
+						QueryBuilders.termQuery(//
+								toFieldPath(TAGS, TAG_KEY), //
+								tag.get(TAG_KEY).asText()))//
+						.filter(QueryBuilders.termQuery(//
+								toFieldPath(TAGS, TAG_VALUE), //
+								tag.get(TAG_VALUE).asText()));
+			}
 		}
 
-		return Payloads.success();
+		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
+		DataStore.get().refreshType(refresh, credentials.backendId(), TYPE);
+
+		// TODO use a scroll to push to all installations found
+		SearchHits hits = Start.get().getElasticClient()//
+				.prepareSearch(credentials.backendId(), TYPE)//
+				.setQuery(query)//
+				.setFrom(0)//
+				.setSize(1000)//
+				.setVersion(false)//
+				.setFetchSource(new String[] { USER_ID, DEVICE_TOKEN, PROVIDER_ID }, null)//
+				.get()//
+				.getHits();
+
+		if (hits.totalHits() > 1000)
+			return Payloads.error(HttpStatus.NOT_IMPLEMENTED, //
+					"push to [%s] installations not yet implemented", hits.totalHits());
+
+		JsonBuilder<ObjectNode> builder = Payloads.minimalBuilder(200)//
+				.array("pushedTo");
+
+		for (SearchHit hit : hits.getHits()) {
+			ObjectNode installation = Json.readObjectNode(hit.sourceAsString());
+
+			if (!isTest(context)) {
+				PublishRequest request = new PublishRequest()//
+						.withTargetArn(installation.get(PROVIDER_ID).asText());
+
+				if (message.isObject()) {
+					request.withMessageStructure("json")//
+							.withMessage(message.toString());
+				} else
+					request.withMessage(message.asText());
+
+				getSnsClient().publish(request);
+			}
+
+			builder.object()//
+					.put(USER_ID, installation.get(USER_ID).asText())//
+					.put(DEVICE_TOKEN, installation.get(DEVICE_TOKEN).asText())//
+					.put(PROVIDER_ID, installation.get(PROVIDER_ID).asText())//
+					.end();
+		}
+
+		return Payloads.json(builder);
 	}
 
 	//
 	// implementation
 	//
 
-	private Set<String> getEndpointArnsFromUsers(Credentials credentials, Set<String> usernames) {
+	public Payload upsertInstallation(Optional<String> id, String body, Context context) {
 
-		// TODO how many users can I get in one request ?
-		MultiGetResponse multiGet = Start.get().getElasticClient().multiGet(//
-				credentials.backendId(), UserResource.USER_TYPE, usernames);
+		Credentials credentials = SpaceContext.checkCredentials();
 
-		Set<String> endpointArns = Sets.newHashSet();
-		multiGet.forEach(response -> endpointArns
-				.add(response.getResponse().getSourceAsMap().get(UserResource.ENDPOINT_ARN).toString()));
+		ObjectNode installation = Json.readObjectNode(body);
+		String deviceToken = Json.checkStringNotNullOrEmpty(installation, DEVICE_TOKEN);
+		String appId = Json.checkStringNotNullOrEmpty(installation, APP_ID);
 
-		return endpointArns;
-	}
+		// remove all fields that should not be set by client code
+		installation.remove(Arrays.asList(USER_ID, PROVIDER_ID));
 
-	private Set<String> getUsernamesFromObjects(String backendId, String type, JsonNode query, JsonNode properties) {
-
-		SearchResponse response = Start.get().getElasticClient()//
-				.prepareSearch(backendId, type)//
-				.setFrom(0)//
-				// TODO get objects 100 by 100
-				.setSize(1000)//
-				.setFetchSource(true)//
-				.setSource(query.toString())//
-				.get();
-
-		Set<String> usernames = Sets.newHashSet();
-		for (SearchHit hit : response.getHits().getHits()) {
-			ObjectNode object = Json.readObjectNode(hit.sourceAsString());
-			for (Iterator<JsonNode> iterator = properties.elements(); iterator.hasNext();)
-				usernames.add(Json.get(object, iterator.next().asText()).asText());
+		if (isTest(context)) {
+			installation.set(PROVIDER_ID, TextNode.valueOf("XXXXXXXXXXXXXXXX"));
+		} else {
+			String providerId = createApplicationEndpoint(credentials.backendId(), appId, deviceToken);
+			installation.set(PROVIDER_ID, TextNode.valueOf(providerId));
 		}
 
-		return usernames;
+		if (credentials.isUserAuthenticated())
+			installation.set(USER_ID, TextNode.valueOf(credentials.name()));
+
+		if (id.isPresent()) {
+			DataStore.get().patchObject(credentials.backendId(), TYPE, id.get(), installation, credentials.name());
+			return Payloads.saved(false, credentials.backendId(), "/v1", TYPE, id.get());
+		} else
+			return DataResource.get().post(TYPE, installation.toString(), context);
+
+	}
+
+	private Payload updateTags(String id, String body, boolean strict, boolean delete) {
+
+		Credentials credentials = SpaceContext.checkCredentials();
+		Optional<ObjectNode> installation = DataStore.get().getObject(credentials.backendId(), TYPE, id);
+
+		if (!installation.isPresent())
+			return Payloads.json(404);
+
+		if (strict) {
+			ArrayNode tags = Json.readArrayNode(body);
+			installation.get().set(TAGS, tags);
+		} else {
+			ObjectNode newTag = Json.readObjectNode(body);
+			String tagKey = Json.checkStringNotNullOrEmpty(newTag, TAG_KEY);
+			String tagValue = Json.checkStringNotNullOrEmpty(newTag, TAG_VALUE);
+
+			boolean updated = false;
+			if (installation.get().has(TAGS)) {
+				Iterator<JsonNode> tags = installation.get().get(TAGS).elements();
+				while (tags.hasNext() && !updated) {
+					ObjectNode tag = (ObjectNode) tags.next();
+					if (tagKey.equals(tag.get(TAG_KEY).asText())//
+							&& tagValue.equals(tag.get(TAG_VALUE).asText())) {
+						if (delete) {
+							tags.remove();
+							break;
+						}
+						// tag already exists => nothing to save
+						return Payloads.saved(false, credentials.backendId(), "/v1", TYPE, id);
+					}
+				}
+			}
+
+			if (!delete)
+				installation.get().withArray(TAGS).add(newTag);
+		}
+
+		DataStore.get().updateObject(credentials.backendId(), installation.get(), credentials.name());
+		return Payloads.saved(false, credentials.backendId(), "/v1", TYPE, id);
+	}
+
+	private String toFieldPath(String... strings) {
+		return String.join(".", strings);
 	}
 
 	AmazonSNSClient getSnsClient() {
@@ -240,33 +360,38 @@ public class PushResource {
 		return snsClient;
 	}
 
-	Optional<PlatformApplication> getApplication(String backendId, String appName) {
+	Optional<PlatformApplication> getApplication(String backendId, String appId) {
 
-		final String internalName = backendId + '-' + appName;
+		final String internalName = appId;
 		Optional<String> nextToken = Optional.empty();
 
 		do {
+			ListPlatformApplicationsRequest listAppRequest = new ListPlatformApplicationsRequest();
 
-			ListPlatformApplicationsResult listApplications = nextToken.isPresent()//
-					? getSnsClient().listPlatformApplications(
-							new ListPlatformApplicationsRequest().withNextToken(nextToken.get()))//
-					: getSnsClient().listPlatformApplications();
+			if (nextToken.isPresent())
+				listAppRequest.withNextToken(nextToken.get());
 
-			nextToken = Optional.ofNullable(listApplications.getNextToken());
+			ListPlatformApplicationsResult listAppResult = getSnsClient().listPlatformApplications(listAppRequest);
 
-			Optional<PlatformApplication> myTopic = listApplications.getPlatformApplications().stream()//
-					.filter(application -> application.getAttributes().get("name").equals(internalName))//
-					.findAny();
+			nextToken = Optional.ofNullable(listAppResult.getNextToken());
 
-			if (myTopic.isPresent())
-				return myTopic;
+			for (PlatformApplication application : listAppResult.getPlatformApplications())
+				if (application.getPlatformApplicationArn().endsWith(internalName))
+					return Optional.of(application);
 
 		} while (nextToken.isPresent());
 
 		return Optional.empty();
 	}
 
-	String createApplicationEndpoint(String applicationArn, String endpoint) {
+	String createApplicationEndpoint(String backendId, String appId, String deviceToken) {
+
+		Optional<PlatformApplication> application = getApplication(backendId, appId);
+
+		if (!application.isPresent())
+			throw Exceptions.illegalArgument("invalid mobile	application id [%s]", appId);
+
+		String applicationArn = application.get().getPlatformApplicationArn();
 
 		String endpointArn = null;
 
@@ -275,7 +400,7 @@ public class PushResource {
 					.createPlatformEndpoint(//
 							new CreatePlatformEndpointRequest()//
 									.withPlatformApplicationArn(applicationArn)//
-									.withToken(endpoint))//
+									.withToken(deviceToken))//
 					.getEndpointArn();
 
 		} catch (InvalidParameterException e) {
@@ -303,7 +428,7 @@ public class PushResource {
 			GetEndpointAttributesResult endpointAttributes = getSnsClient()
 					.getEndpointAttributes(new GetEndpointAttributesRequest().withEndpointArn(endpointArn));
 
-			updateNeeded = !endpointAttributes.getAttributes().get("Token").equals(endpoint)
+			updateNeeded = !endpointAttributes.getAttributes().get("Token").equals(deviceToken)
 					|| !endpointAttributes.getAttributes().get("Enabled").equalsIgnoreCase("true");
 
 		} catch (NotFoundException nfe) {
@@ -319,7 +444,7 @@ public class PushResource {
 			// The platform endpoint is out of sync with the current data;
 			// update the token and enable it.
 			Map<String, String> attribs = new HashMap<String, String>();
-			attribs.put("Token", endpoint);
+			attribs.put("Token", deviceToken);
 			attribs.put("Enabled", "true");
 			getSnsClient().setEndpointAttributes(//
 					new SetEndpointAttributesRequest()//
@@ -328,61 +453,6 @@ public class PushResource {
 		}
 
 		return endpointArn;
-	}
-
-	String createTopic(String name, String backendId) {
-		final String internalName = backendId + '-' + name;
-		return getSnsClient().createTopic(internalName).getTopicArn();
-	}
-
-	Optional<Topic> getTopicArn(String name, String backendId) {
-
-		final String internalName = backendId + '-' + name;
-		Optional<String> nextToken = Optional.empty();
-
-		do {
-
-			ListTopicsResult listTopics = nextToken.isPresent()//
-					? getSnsClient().listTopics(nextToken.get())//
-					: getSnsClient().listTopics();
-
-			nextToken = Optional.ofNullable(listTopics.getNextToken());
-
-			Optional<Topic> myTopic = listTopics.getTopics().stream()//
-					.filter(topic -> topic.getTopicArn().endsWith(internalName))//
-					.findAny();
-
-			if (myTopic.isPresent())
-				return myTopic;
-
-		} while (nextToken.isPresent());
-
-		return Optional.empty();
-	}
-
-	Optional<Subscription> getSubscription(String topicArn, String protocol, String endpoint) {
-
-		Optional<String> nextToken = Optional.empty();
-
-		do {
-
-			ListSubscriptionsByTopicResult listSubscriptions = nextToken.isPresent()//
-					? getSnsClient().listSubscriptionsByTopic(topicArn, nextToken.get())//
-					: getSnsClient().listSubscriptionsByTopic(topicArn);
-
-			nextToken = Optional.ofNullable(listSubscriptions.getNextToken());
-
-			Optional<Subscription> mySubscription = listSubscriptions.getSubscriptions().stream()//
-					.filter(subscription -> subscription.getProtocol().equals(protocol)//
-							&& subscription.getEndpoint().equals(endpoint))//
-					.findAny();
-
-			if (mySubscription.isPresent())
-				return mySubscription;
-
-		} while (nextToken.isPresent());
-
-		return Optional.empty();
 	}
 
 	//

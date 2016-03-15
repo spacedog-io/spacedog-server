@@ -21,7 +21,7 @@ public class Birdee extends SpaceDogHelper {
 	private static final String ADMIN_PASSWORD = "hi birdee";
 	private static final String ADMIN_USERNAME = "birdee";
 
-	private static Account adminAccount;
+	private static Backend adminAccount;
 
 	private static User fred;
 	private static User maelle;
@@ -68,7 +68,7 @@ public class Birdee extends SpaceDogHelper {
 				+ "}";
 
 		JsonNode news = SpaceRequest.post("/v1/search/news?refresh=true")//
-				.backendKey(adminAccount).body(query).go(200).jsonNode();
+				.backend(adminAccount).body(query).go(200).jsonNode();
 
 		query = "{'from':0, 'size':10,"//
 				+ "'sort':[{'meta.updatedAt':{'order':'asc'}}],"//
@@ -78,7 +78,7 @@ public class Birdee extends SpaceDogHelper {
 				+ "}";
 
 		JsonNode statuses = SpaceRequest.post("/v1/search/status?refresh=true")//
-				.backendKey(adminAccount)//
+				.backend(adminAccount)//
 				.body(String.format(query, userId))//
 				.go(200)//
 				.jsonNode();
@@ -100,12 +100,12 @@ public class Birdee extends SpaceDogHelper {
 				.build();
 
 		SpaceRequest.post("/v1/data/status")//
-				.backendKey(adminAccount).body(status).go(201);
+				.backend(adminAccount).body(status).go(201);
 	}
 
 	public void seen(String statusId) throws Exception {
 		SpaceRequest.put("/v1/data/status/" + statusId)//
-				.backendKey(adminAccount)//
+				.backend(adminAccount)//
 				.body("{'seen':true}").go(200);
 	}
 
@@ -115,7 +115,7 @@ public class Birdee extends SpaceDogHelper {
 
 	public void read(String statusId) throws Exception {
 		SpaceRequest.put("/v1/data/status/" + statusId)//
-				.backendKey(adminAccount)//
+				.backend(adminAccount)//
 				.body("{'read':true}").go(200);
 	}
 
@@ -125,7 +125,7 @@ public class Birdee extends SpaceDogHelper {
 
 	public void favorite(String statusId) throws Exception {
 		SpaceRequest.put("/v1/data/status/" + statusId)//
-				.backendKey(adminAccount)//
+				.backend(adminAccount)//
 				.body("{'favorite':true}").go(200);
 	}
 
@@ -136,7 +136,7 @@ public class Birdee extends SpaceDogHelper {
 			article.set("pushed", BooleanNode.FALSE);
 
 			SpaceRequest.post("/v1/data/news")//
-					.backendKey(adminAccount)//
+					.backend(adminAccount)//
 					.body(article)//
 					.go(201);
 		}
@@ -170,7 +170,7 @@ public class Birdee extends SpaceDogHelper {
 				.build();
 
 		SpaceRequest.post("/v1/device")//
-				.backendKey(adminAccount)//
+				.backend(adminAccount)//
 				.body(device)//
 				.go(201);
 	}
@@ -183,7 +183,7 @@ public class Birdee extends SpaceDogHelper {
 		for (ObjectNode article : articles) {
 
 			SpaceResponse response = SpaceRequest.get("/v1/data/news/" + article.get("id").asText())//
-					.backendKey(adminAccount)//
+					.backend(adminAccount)//
 					.body(article)//
 					.go(200, 404);
 
@@ -193,7 +193,7 @@ public class Birdee extends SpaceDogHelper {
 				ObjectNode news = null;
 
 				SpaceRequest.post("/v1/data/news")//
-						.backendKey(adminAccount)//
+						.backend(adminAccount)//
 						.body(news)//
 						.go(201);
 			}
@@ -210,7 +210,7 @@ public class Birdee extends SpaceDogHelper {
 					// news.set(...)
 
 					SpaceRequest.put("/v1/data/news/" + article.get("id").asText())//
-							.backendKey(adminAccount)//
+							.backend(adminAccount)//
 							.body(news)//
 							.go(200);
 				}
@@ -230,10 +230,10 @@ public class Birdee extends SpaceDogHelper {
 				+ "}";
 
 		JsonNode news = SpaceRequest.post("/v1/search/news?refresh=true")//
-				.backendKey(adminAccount).body(query).go(200).jsonNode();
+				.backend(adminAccount).body(query).go(200).jsonNode();
 
 		JsonNode statuses = SpaceRequest.post("/v1/search/status?refresh=true")//
-				.backendKey(adminAccount)//
+				.backend(adminAccount)//
 				.body(query)//
 				.go(200)//
 				.jsonNode();
@@ -246,7 +246,7 @@ public class Birdee extends SpaceDogHelper {
 		// if message to be pushed is for all
 
 		SpaceRequest.post("/v1/topic/all/push")//
-				.backendKey(adminAccount)//
+				.backend(adminAccount)//
 				.body(Json.objectBuilder().put("message", message).toString())//
 				.go(200);
 
@@ -264,12 +264,12 @@ public class Birdee extends SpaceDogHelper {
 				+ "}";
 
 		JsonNode device = SpaceRequest.post("/v1/search/device?refresh=true")//
-				.backendKey(adminAccount).body(String.format(query, userId)).go(200).jsonNode();
+				.backend(adminAccount).body(String.format(query, userId)).go(200).jsonNode();
 
 		// push to device
 
 		SpaceRequest.post("/v1/device/{id}/push")//
-				.backendKey(adminAccount)//
+				.backend(adminAccount)//
 				.routeParam("id", device.get("id").asText())//
 				.body(Json.objectBuilder().put("message", message).toString())//
 				.go(200);
@@ -279,13 +279,13 @@ public class Birdee extends SpaceDogHelper {
 		String statusId = null;
 
 		SpaceRequest.put("/v1/data/status/" + statusId)//
-				.backendKey(adminAccount)//
+				.backend(adminAccount)//
 				.body("{'processed':true}").go(200);
 
 		String newsId = null;
 
 		SpaceRequest.put("/v1/data/news/" + newsId)//
-				.backendKey(adminAccount)//
+				.backend(adminAccount)//
 				.body("{'processed':true}").go(200);
 	}
 

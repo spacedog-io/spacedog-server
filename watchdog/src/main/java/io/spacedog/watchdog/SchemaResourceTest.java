@@ -9,7 +9,7 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceDogHelper;
-import io.spacedog.client.SpaceDogHelper.Account;
+import io.spacedog.client.SpaceDogHelper.Backend;
 import io.spacedog.client.SpaceDogHelper.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
@@ -23,7 +23,7 @@ public class SchemaResourceTest extends Assert {
 	public void deletePutAndGetSchemas() throws Exception {
 
 		SpaceDogHelper.prepareTest();
-		Account testAccount = SpaceDogHelper.resetTestAccount();
+		Backend testAccount = SpaceDogHelper.resetTestBackend();
 
 		// should succeed to create a user
 
@@ -36,11 +36,11 @@ public class SchemaResourceTest extends Assert {
 
 		// should succeed to get schemas with simple backend key credentials
 		assertEquals(buildCarSchema(), //
-				SpaceRequest.get("/v1/schema/car").backendKey(testAccount).go(200).jsonNode());
+				SpaceRequest.get("/v1/schema/car").backend(testAccount).go(200).jsonNode());
 		assertEquals(buildHomeSchema(), //
-				SpaceRequest.get("/v1/schema/home").backendKey(testAccount).go(200).jsonNode());
+				SpaceRequest.get("/v1/schema/home").backend(testAccount).go(200).jsonNode());
 		assertEquals(buildSaleSchema(), //
-				SpaceRequest.get("/v1/schema/sale").backendKey(testAccount).go(200).jsonNode());
+				SpaceRequest.get("/v1/schema/sale").backend(testAccount).go(200).jsonNode());
 
 		// should succeed to get all schemas with simple backend key credentials
 		SpaceRequest.get("/v1/schema").basicAuth(testAccount).go(200)//
@@ -52,7 +52,7 @@ public class SchemaResourceTest extends Assert {
 						.get());
 
 		// should fail to delete schema with simple backend key credentials
-		SpaceRequest.delete("/v1/schema/toto").backendKey(testAccount).go(401);
+		SpaceRequest.delete("/v1/schema/toto").backend(testAccount).go(401);
 
 		// should fail to delete schema with simple user credentials
 		SpaceRequest.delete("/v1/schema/toto").basicAuth(bob).go(401);

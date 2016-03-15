@@ -11,11 +11,6 @@ import com.google.common.base.Strings;
 
 public class Passwords {
 
-	public static void main(String[] args) {
-		char[] password = System.console().readPassword("Enter your password: ");
-		System.out.println("Hashed password = " + hash(new String(password)));
-	}
-
 	public static String checkAndHash(String password) {
 		checkIfValid(password);
 		return hash(password);

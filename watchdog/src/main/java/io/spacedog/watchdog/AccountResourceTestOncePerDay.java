@@ -17,6 +17,6 @@ public class AccountResourceTestOncePerDay extends Assert {
 
 		SpaceDogHelper.prepareTest();
 		// notification is only sent if test = false
-		SpaceDogHelper.resetAccount("test", "test", "hi test", "david@spacedog.io", false);
+		SpaceDogHelper.resetBackend("test", "test", "hi test", "david@spacedog.io", false);
 	}
 }

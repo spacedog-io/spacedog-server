@@ -30,8 +30,8 @@ public class Purge {
 				Iterator<JsonNode> elements = accounts.get("results").elements();
 				while (elements.hasNext()) {
 					String backendId = elements.next().get("backendId").asText();
-					SpaceRequest.delete("/v1/log/" + backendId)//
-							.superdogAuth()//
+					SpaceRequest.delete("/v1/log")//
+							.superdogAuth(backendId)//
 							.go(200);
 				}
 

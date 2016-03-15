@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceDogHelper;
+import io.spacedog.client.SpaceDogHelper.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
 import io.spacedog.utils.Json;
@@ -24,26 +25,24 @@ public class BatchResourceTest extends Assert {
 	public void executeBatch() throws Exception {
 
 		// we need to make sure the test account is reset and exists before to
-		// be able to reset it again by batch requests because we need the
-		// account credentials to request the batch
+		// be able to reset it again by batch requests
 
 		SpaceDogHelper.prepareTest();
-		SpaceDogHelper.resetTestAccount();
+		SpaceDogHelper.resetTestBackend();
 
 		// should succeed to reset test account and create message schema with
 		// admin credentials
 
 		ArrayNode batch = Json.arrayBuilder()//
 				.object()//
-				.put("method", "GET").put("path", "/v1/admin/account/test")//
+				.put("method", "GET").put("path", "/v1/backend")//
 				.end()//
 				.object()//
-				.put("method", "DELETE").put("path", "/v1/admin/account/test")//
+				.put("method", "DELETE").put("path", "/v1/backend")//
 				.end()//
 				.object()//
-				.put("method", "POST").put("path", "/v1/admin/account")//
+				.put("method", "POST").put("path", "/v1/backend/test")//
 				.object("content")//
-				.put("backendId", "test")//
 				.put("username", "test")//
 				.put("password", "hi test")//
 				.put("email", "test@dog.com")//
@@ -61,8 +60,8 @@ public class BatchResourceTest extends Assert {
 				.end()//
 				.build();
 
-		SpaceResponse spaceResponse = SpaceRequest.post("/v1/batch?debug=true").basicAuth("test", "hi test").body(batch)
-				.go(200);
+		SpaceResponse spaceResponse = SpaceRequest.post("/v1/batch?debug=true")//
+				.superdogAuth("test").body(batch).go(200);
 
 		int accountGetStatus = Json.get(spaceResponse.jsonNode(), "responses.0.status").asInt();
 
@@ -76,16 +75,14 @@ public class BatchResourceTest extends Assert {
 
 		spaceResponse.assertTrue("responses.2.success")//
 				.assertEquals("test", "responses.2.id")//
-				.assertEquals("account", "responses.2.type")//
+				.assertEquals("backend", "responses.2.type")//
 				.assertTrue("responses.3.success")//
 				.assertEquals("message", "responses.3.id")//
 				.assertEquals("schema", "responses.3.type")//
 				.assertTrue("responses.4.success")//
 				.assertEquals(1, "debug.batchCredentialChecks");
 
-		io.spacedog.client.SpaceDogHelper.Account testAccount = new io.spacedog.client.SpaceDogHelper.Account(//
-				"test", "test", "hi test", "test@dog.com",
-				spaceResponse.getFromJson("responses.2.backendKey").asText());
+		Backend testAccount = new Backend("test", "test", "hi test", "test@dog.com");
 
 		// should succeed to create dave and vince users and fetch them with
 		// simple backend key credentials
@@ -115,7 +112,7 @@ public class BatchResourceTest extends Assert {
 				.end()//
 				.build();
 
-		SpaceRequest.post("/v1/batch?debug=true").backendKey(testAccount).body(batch).go(200)//
+		SpaceRequest.post("/v1/batch?debug=true").basicAuth(testAccount).body(batch).go(200)//
 				.assertEquals("vince", "responses.0.id")//
 				.assertEquals("dave", "responses.1.id")//
 				.assertEquals("vince", "responses.2.content.username")//
@@ -151,17 +148,12 @@ public class BatchResourceTest extends Assert {
 				.end()//
 				.build();
 
-		SpaceRequest.post("/v1/batch?debug=true").backendKey(testAccount).body(batch).go(200)//
-				.assertFalse("responses.0.success")//
+		SpaceRequest.post("/v1/batch?debug=true").backend(testAccount).body(batch).go(200)//
 				.assertEquals(400, "responses.0.status")//
-				.assertFalse("responses.1.success")//
 				.assertEquals(404, "responses.1.status")//
-				.assertEquals("vince", "responses.2.content.username")//
-				.assertFalse("responses.3.success")//
+				.assertEquals(401, "responses.2.status")//
 				.assertEquals(400, "responses.3.status")//
-				.assertFalse("responses.4.success")//
 				.assertEquals(401, "responses.4.status")//
-				.assertFalse("responses.5.success")//
 				.assertEquals(401, "responses.5.status")//
 				.assertEquals(1, "debug.batchCredentialChecks");
 
@@ -209,7 +201,7 @@ public class BatchResourceTest extends Assert {
 				.end()//
 				.build();
 
-		SpaceResponse response = SpaceRequest.post("/v1/batch?debug=true").backendKey(testAccount).body(batch).go(200)//
+		SpaceResponse response = SpaceRequest.post("/v1/batch?debug=true").backend(testAccount).body(batch).go(200)//
 				.assertEquals(201, "responses.0.status")//
 				.assertEquals("1", "responses.0.id")//
 				.assertEquals(201, "responses.1.status")//
@@ -244,7 +236,7 @@ public class BatchResourceTest extends Assert {
 				.end()//
 				.build();
 
-		SpaceRequest.post("/v1/batch?stopOnError=true&debug=true").backendKey(testAccount).body(batch).go(200)//
+		SpaceRequest.post("/v1/batch?stopOnError=true&debug=true").backend(testAccount).body(batch).go(200)//
 				.assertEquals(200, "responses.0.status")//
 				.assertEquals(404, "responses.1.status")//
 				.assertSizeEquals(2, "responses")//
@@ -256,7 +248,7 @@ public class BatchResourceTest extends Assert {
 		for (int i = 0; i < 11; i++)
 			bigBatch.object().put("method", "GET").put("path", "/v1/login").end();
 
-		SpaceRequest.post("/v1/batch?debug=true").backendKey(testAccount).body(bigBatch.build()).go(400)//
+		SpaceRequest.post("/v1/batch?debug=true").backend(testAccount).body(bigBatch.build()).go(400)//
 				.assertEquals("batch are limited to 10 sub requests", "error.message")//
 				.assertEquals(0, "debug.batchCredentialChecks");
 

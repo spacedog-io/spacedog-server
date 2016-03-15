@@ -1,4 +1,4 @@
-package io.spacedog.services;
+package io.spacedog.utils;
 
 @SuppressWarnings("serial")
 public class NotFoundException extends RuntimeException {

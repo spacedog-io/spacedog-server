@@ -6,16 +6,14 @@ package io.spacedog.services;
 import java.util.Arrays;
 import java.util.Optional;
 
-import com.google.common.base.Strings;
-
-import io.spacedog.utils.BackendKey;
+import org.elasticsearch.common.Strings;
 
 public class Credentials {
 
-	public static enum Type {
-		KEY, USER, ADMIN, SUPERDOG;
+	public static enum Level {
+		KEY, USER, OPERATOR, ADMIN, SUPER_ADMIN, SUPERDOG;
 
-		public Type[] lowerOrEqual() {
+		public Level[] lowerOrEqual() {
 			return Arrays.copyOf(values(), ordinal() + 1);
 		}
 	}
@@ -23,90 +21,87 @@ public class Credentials {
 	private String backendId;
 	private String username;
 	private String email;
-	private BackendKey backendKey;
-	private boolean admin = false;
-	private boolean superDog;
+	private Level level;
 
-	public static Credentials fromAdmin(String backendId, String username, String email, BackendKey backendKey) {
-		return new Credentials(backendId, username, email, backendKey, true, false);
+	public static Credentials fromAdmin(String backendId, String username, String email) {
+		return new Credentials(backendId, username, email, true, false);
 	}
 
 	public static Credentials fromUser(String backendId, String username, String email) {
-		return new Credentials(backendId, username, email, null, false, false);
+		return new Credentials(backendId, username, email, false, false);
 	}
 
-	public static Credentials fromKey(String backendId, BackendKey backendKey) {
-		return new Credentials(backendId, null, null, backendKey, false, false);
+	public static Credentials fromUser(String backendId, String username, String email, Level level) {
+		return new Credentials(backendId, username, email, level);
+	}
+
+	public static Credentials fromKey(String backendId) {
+		return new Credentials(backendId);
 	}
 
 	public static Credentials fromSuperDog(String username, String email) {
-		return new Credentials("spacedog", username, email, null, true, true);
+		return new Credentials(BackendResource.API, username, email, true, true);
 	}
 
 	public static Credentials fromSuperDog(String backendId, String username, String email) {
-		return new Credentials(backendId, username, email, null, true, true);
+		if (Strings.isNullOrEmpty(backendId))
+			backendId = BackendResource.API;
+		return new Credentials(backendId, username, email, true, true);
 	}
 
-	private Credentials(String backendId, String username, String email, BackendKey backendKey, boolean admin,
-			boolean superDog) {
+	private Credentials(String backendId, String username, String email, boolean admin, boolean superDog) {
+		this(backendId, username, email, superDog ? Level.SUPERDOG : admin ? Level.ADMIN : Level.USER);
+	}
+
+	private Credentials(String backendId) {
+		this.backendId = backendId;
+		this.level = Level.KEY;
+	}
+
+	public Credentials(String backendId, String username, String email, Level level) {
 		this.backendId = backendId;
 		this.username = username;
 		this.email = email;
-		this.backendKey = backendKey;
-		this.admin = admin;
-		this.superDog = superDog;
+		this.level = level;
 	}
 
 	public boolean isSuperDogAuthenticated() {
-		return superDog;
+		return Level.SUPERDOG.equals(level);
 	}
 
 	public boolean isAdminAuthenticated() {
-		return admin;
+		return level.ordinal() >= Level.ADMIN.ordinal();
 	}
 
 	public boolean isUserAuthenticated() {
-		return !Strings.isNullOrEmpty(username);
+		return level.ordinal() >= Level.USER.ordinal();
+	}
+
+	public boolean isSuperAdminAuthenticated() {
+		return level.ordinal() >= Level.SUPER_ADMIN.ordinal();
 	}
 
 	public String backendId() {
 		return this.backendId;
 	}
 
-	public Optional<BackendKey> backendKey() {
-		return Optional.ofNullable(this.backendKey);
-	}
-
-	public Optional<String> backendKeyAsString() {
-		if (backendKey == null)
-			return Optional.empty();
-
-		return Optional.of(new StringBuilder(backendId).append(':').append(backendKey.name).append(':')
-				.append(backendKey.secret).toString());
+	public void backendId(String backendId) {
+		this.backendId = backendId;
 	}
 
 	public String name() {
-		// username is first
-		if (username != null)
-			return username;
-		// key name is default
-		if (backendKey != null)
-			return backendKey.name;
-		throw new RuntimeException("invalid credentials: no key nor user data");
+		return username == null ? "default" : username;
 	}
 
 	public Optional<String> email() {
 		return Optional.of(email);
 	}
 
-	public Type type() {
-		if (isSuperDogAuthenticated())
-			return Type.SUPERDOG;
-		if (isAdminAuthenticated())
-			return Type.ADMIN;
-		if (isUserAuthenticated())
-			return Type.USER;
-		else
-			return Type.KEY;
+	public Level type() {
+		return level;
+	}
+
+	public boolean isRootBackend() {
+		return BackendResource.API.equals(backendId);
 	}
 }

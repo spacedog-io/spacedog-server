@@ -303,7 +303,7 @@ public class Json {
 	public static String checkStringNotNullOrEmpty(JsonNode input, String propertyPath) {
 		String string = checkStringNode(input, propertyPath, true).get().asText();
 		if (Strings.isNullOrEmpty(string)) {
-			throw new IllegalArgumentException(String.format("property [%s] must not be null or empty", propertyPath));
+			throw new IllegalArgumentException(String.format("property [%s] is missing", propertyPath));
 		}
 		return string;
 	}
@@ -312,7 +312,7 @@ public class Json {
 		JsonNode node = get(input, propertyPath);
 		if (node == null) {
 			if (required)
-				throw new IllegalArgumentException(String.format("property [%s] must not be null", propertyPath));
+				throw new IllegalArgumentException(String.format("property [%s] is missing", propertyPath));
 			return Optional.ofNullable(null);
 		}
 		return Optional.of(node);
@@ -354,7 +354,7 @@ public class Json {
 		JsonNode node = get(input, propertyPath);
 		if (node == null) {
 			if (required)
-				throw new IllegalArgumentException(String.format("property [%s] must not be null", propertyPath));
+				throw new IllegalArgumentException(String.format("property [%s] is missing", propertyPath));
 			return Optional.empty();
 		}
 		if (isOfType(expected, node))

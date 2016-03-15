@@ -58,4 +58,10 @@ public class BackendKey {
 					+ "does not conbtain 'spacedog'");
 	}
 
+	public static String extractBackendId(String backendKey) {
+		int indexOf = backendKey.indexOf(':');
+		// if invalid backendKey, do not extract and return the whole key
+		return indexOf > 0 ? backendKey.substring(0, indexOf) : backendKey;
+	}
+
 }

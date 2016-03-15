@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.utils.Json;
+import io.spacedog.utils.NotFoundException;
 import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -48,7 +49,9 @@ public class DataResource extends AbstractResource {
 	@Delete("")
 	@Delete("/")
 	public Payload deleteAll(Context context) {
-		return SearchResource.get().deleteAllTypes(null, context);
+		// TODO not implemented since it would also delete super admins
+		// return SearchResource.get().deleteAllTypes(null, context);
+		return Payloads.error(HttpStatus.NOT_IMPLEMENTED);
 	}
 
 	@Get("/:type")

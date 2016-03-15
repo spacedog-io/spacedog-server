@@ -25,12 +25,12 @@ public class QueryTest extends Assert {
 	public void importCarDataset() throws Exception {
 
 		SpaceDogHelper.prepareTest();
-		SpaceDogHelper.Account testAccount = SpaceDogHelper.resetTestAccount();
+		SpaceDogHelper.Backend testAccount = SpaceDogHelper.resetTestBackend();
 
 		SpaceDogHelper.setSchema(SchemaResourceTest.buildCarSchema(), testAccount);
 
 		for (int i = 0; i < 500; i++) {
-			SpaceRequest.post("/v1/data/car").backendKey(testAccount).body(jsonCar(i).toString()).go(201);
+			SpaceRequest.post("/v1/data/car").backend(testAccount).body(jsonCar(i).toString()).go(201);
 		}
 	}
 

@@ -7,7 +7,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import io.spacedog.client.SpaceDogHelper;
-import io.spacedog.client.SpaceDogHelper.Account;
+import io.spacedog.client.SpaceDogHelper.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
@@ -19,17 +19,17 @@ public class CrossOriginFilterTest extends Assert {
 	public void returnCORSHeaders() throws Exception {
 
 		SpaceDogHelper.prepareTest();
-		Account testAccount = SpaceDogHelper.resetTestAccount();
+		Backend testAccount = SpaceDogHelper.resetTestBackend();
 
 		// CORS for simple requests
 
-		SpaceRequest.get("/v1/data?refresh=true").backendKey(testAccount).go(200)//
+		SpaceRequest.get("/v1/data?refresh=true").backend(testAccount).go(200)//
 				.assertHeaderEquals("*", SpaceHeaders.ACCESS_CONTROL_ALLOW_ORIGIN)//
 				.assertHeaderEquals(SpaceHeaders.ALLOW_METHODS, SpaceHeaders.ACCESS_CONTROL_ALLOW_METHODS);
 
 		// CORS pre-flight request
 
-		SpaceRequest.options("/v1/user/mynameisperson").backendKey(testAccount)
+		SpaceRequest.options("/v1/user/mynameisperson").backend(testAccount)
 				.header(SpaceHeaders.ORIGIN, "http://www.apple.com")
 				.header(SpaceHeaders.ACCESS_CONTROL_REQUEST_METHOD, "PUT")//
 				.go(200)//

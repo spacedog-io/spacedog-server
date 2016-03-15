@@ -9,7 +9,7 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceDogHelper;
-import io.spacedog.client.SpaceDogHelper.Account;
+import io.spacedog.client.SpaceDogHelper.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SchemaBuilder2;
@@ -21,38 +21,50 @@ public class SearchResourceTest extends Assert {
 	@Test
 	public void searchAndDeleteObjects() throws Exception {
 
+		// prepare
+
 		SpaceDogHelper.prepareTest();
-		Account testAccount = SpaceDogHelper.resetTestAccount();
-		SpaceDogHelper.setSchema(SchemaBuilder2.builder("message").textProperty("text", "english", true).build(),
-				testAccount);
+		Backend testAccount = SpaceDogHelper.resetTestBackend();
+		ObjectNode message = SchemaBuilder2.builder("message")//
+				.textProperty("text", "english", true).build();
+		SpaceDogHelper.setSchema(message, testAccount);
+		ObjectNode rubric = SchemaBuilder2.builder("rubric")//
+				.textProperty("name", "english", true).build();
+		SpaceDogHelper.setSchema(rubric, testAccount);
 
-		// should successfully create 4 messages and 1 user
+		// creates 4 messages, 1 rubric and 1 user
 
-		SpaceDogHelper.createUser(testAccount, "riri", "hi riri", "riri@dog.com");
+		SpaceDogHelper.createUser(testAccount, "riri", "hi riri", "riri@disney.com");
 
-		SpaceRequest.post("/v1/data/message").basicAuth(testAccount)
-				.body(Json.objectBuilder().put("text", "what's up?").build()).go(201);
-		SpaceRequest.post("/v1/data/message").basicAuth(testAccount)
-				.body(Json.objectBuilder().put("text", "wanna drink something?").build()).go(201);
-		SpaceRequest.post("/v1/data/message").basicAuth(testAccount)
-				.body(Json.objectBuilder().put("text", "pretty cool, hein?").build()).go(201);
-		SpaceRequest.post("/v1/data/message").basicAuth(testAccount)
-				.body(Json.objectBuilder().put("text", "so long guys").build()).go(201).getFromJson("id").asText();
+		SpaceRequest.post("/v1/data/rubric").basicAuth(testAccount)//
+				.body(Json.object("name", "riri, fifi and loulou")).go(201);
 
-		SpaceRequest.get("/v1/data?refresh=true").basicAuth(testAccount).go(200).assertEquals(5, "total");
+		SpaceRequest.post("/v1/data/message").basicAuth(testAccount)//
+				.body(Json.object("text", "what's up?")).go(201);
+		SpaceRequest.post("/v1/data/message").basicAuth(testAccount)//
+				.body(Json.object("text", "wanna drink something?")).go(201);
+		SpaceRequest.post("/v1/data/message").basicAuth(testAccount)//
+				.body(Json.object("text", "pretty cool, hein?")).go(201);
+		SpaceRequest.post("/v1/data/message").basicAuth(testAccount)//
+				.body(Json.object("text", "so long guys")).go(201);
 
-		// should succeed to delete message containing 'up' by query
+		SpaceRequest.get("/v1/data?refresh=true").basicAuth(testAccount).go(200)//
+				.assertEquals(7, "total");
+
+		// deletes messages containing 'up' by query
+
 		ObjectNode query = Json.objectBuilder().object("query")//
-				.object("match").put("text", "up")//
-				.build();
+				.object("match").put("text", "up").build();
 		SpaceRequest.delete("/v1/search/message").basicAuth(testAccount).body(query).go(200);
-		SpaceRequest.get("/v1/data/message?refresh=true").basicAuth(testAccount).go(200).assertEquals(3, "total");
+		SpaceRequest.get("/v1/data/message?refresh=true").basicAuth(testAccount).go(200)//
+				.assertEquals(3, "total");
 
-		// should succeed to delete objects containing 'wanna' and 'riri'
+		// deletes data objects containing 'wanna' or 'riri' but not users
+
 		query = Json.objectBuilder().object("query")//
-				.object("match").put("_all", "wanna riri")//
-				.build();
+				.object("match").put("_all", "wanna riri").build();
 		SpaceRequest.delete("/v1/search").basicAuth(testAccount).body(query).go(200);
-		SpaceRequest.get("/v1/data?refresh=true").basicAuth(testAccount).go(200).assertEquals(2, "total");
+		SpaceRequest.get("/v1/data?refresh=true").basicAuth(testAccount).go(200)//
+				.assertEquals(4, "total");
 	}
 }

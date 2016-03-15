@@ -16,11 +16,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import com.google.common.io.Resources;
 
-import io.spacedog.services.Credentials.Type;
+import io.spacedog.services.Credentials.Level;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceParams;
+import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -28,9 +30,26 @@ import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/v1")
-public class LogResource {
+public class LogResource extends AbstractResource {
 
 	public static final String TYPE = "log";
+
+	//
+	// init
+	//
+
+	void init() throws IOException {
+
+		ElasticClient client = Start.get().getElasticClient();
+
+		String mapping = Resources.toString(Resources.getResource(//
+				"io/spacedog/services/log-mapping.json"), Utils.UTF8);
+
+		if (client.existsIndex(SPACEDOG_BACKEND, TYPE))
+			client.putMapping(SPACEDOG_BACKEND, TYPE, mapping);
+		else
+			client.createIndex(SPACEDOG_BACKEND, TYPE, mapping);
+	}
 
 	//
 	// Routes
@@ -40,14 +59,14 @@ public class LogResource {
 	@Get("/log/")
 	public Payload getAll(Context context) {
 
-		Credentials credentials = SpaceContext.checkAdminCredentials();
+		Credentials credentials = SpaceContext.checkAdminCredentials(false);
 
-		Optional<String> backendId = credentials.isSuperDogAuthenticated() ? Optional.empty()
-				: Optional.of(credentials.backendId());
+		Optional<String> backendId = credentials.isRootBackend() //
+				? Optional.empty() : Optional.of(credentials.backendId());
 
 		String logType = context.query().get(SpaceParams.LOG_TYPE);
-		Optional<Type> type = Strings.isNullOrEmpty(logType) ? Optional.empty()//
-				: Optional.of(Type.valueOf(logType));
+		Optional<Level> type = Strings.isNullOrEmpty(logType) ? Optional.empty()//
+				: Optional.of(Level.valueOf(logType));
 
 		SearchResponse response = doGetLogs(backendId, //
 				context.query().getInteger("from", 0), //
@@ -57,31 +76,13 @@ public class LogResource {
 		return extractLogs(response);
 	}
 
-	@Get("/log/:backendId")
-	@Get("/log/:backendId/")
-	public Payload getForBackend(String backendId, Context context) {
+	@Delete("/log")
+	@Delete("/log/")
+	public Payload purgeBackend(Context context) {
 
-		SpaceContext.checkSuperDogCredentials();
+		Credentials credentials = SpaceContext.checkSuperDogCredentials(true);
 
-		String logType = context.query().get(SpaceParams.LOG_TYPE);
-		Optional<Type> type = Strings.isNullOrEmpty(logType) ? Optional.empty()//
-				: Optional.of(Type.valueOf(logType));
-
-		SearchResponse response = doGetLogs(Optional.of(backendId), //
-				context.request().query().getInteger("from", 0), //
-				context.request().query().getInteger("size", 10), //
-				type);
-
-		return extractLogs(response);
-	}
-
-	@Delete("/log/:backendId")
-	@Delete("/log/:backendId/")
-	public Payload purgeBackend(String backendId, Context context) {
-
-		SpaceContext.checkSuperDogCredentialsFor(backendId);
-
-		Optional<DeleteByQueryResponse> response = doPurgeBackend(backendId, //
+		Optional<DeleteByQueryResponse> response = doPurgeBackend(credentials.backendId(), //
 				context.request().query().getInteger("from", 1000));
 
 		// no delete response means no logs to delete means success
@@ -144,12 +145,12 @@ public class LogResource {
 				.toString();
 
 		DeleteByQueryResponse delete = Start.get().getElasticClient()//
-				.deleteByQuery(AccountResource.ADMIN_BACKEND, TYPE, query);
+				.deleteByQuery(SPACEDOG_BACKEND, TYPE, query);
 
 		return Optional.of(delete);
 	}
 
-	private SearchResponse doGetLogs(Optional<String> backendId, int from, int size, Optional<Credentials.Type> type) {
+	private SearchResponse doGetLogs(Optional<String> backendId, int from, int size, Optional<Credentials.Level> type) {
 
 		BoolQueryBuilder query = QueryBuilders.boolQuery();
 
@@ -160,10 +161,10 @@ public class LogResource {
 			query.filter(QueryBuilders.termsQuery("credentials.type", //
 					Lists.newArrayList(type.get().lowerOrEqual())));
 
-		DataStore.get().refreshType(true, AccountResource.ADMIN_BACKEND, TYPE);
+		DataStore.get().refreshType(true, SPACEDOG_BACKEND, TYPE);
 
 		return Start.get().getElasticClient()//
-				.prepareSearch(AccountResource.ADMIN_BACKEND, TYPE)//
+				.prepareSearch(SPACEDOG_BACKEND, TYPE)//
 				.setTypes(TYPE)//
 				.setQuery(query)//
 				.addSort("receivedAt", SortOrder.DESC)//
@@ -239,7 +240,7 @@ public class LogResource {
 		JsonNode securedLog = Json.fullReplace(log.build(), "password", "******");
 
 		return Start.get().getElasticClient()//
-				.prepareIndex(AccountResource.ADMIN_BACKEND, TYPE)//
+				.prepareIndex(SPACEDOG_BACKEND, TYPE)//
 				.setSource(securedLog.toString()).get().getId();
 	}
 

@@ -7,8 +7,6 @@ import org.junit.Assert;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.request.HttpRequest;
 
 import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceRequest;
@@ -18,7 +16,7 @@ import io.spacedog.utils.SchemaBuilder;
 
 public class ImportMappyPlaces extends Assert {
 
-	private static SpaceDogHelper.Account examplesAccount;
+	private static SpaceDogHelper.Backend examplesAccount;
 
 	// public static void resetExamplesAccount() throws UnirestException,
 	// IOException {
@@ -67,15 +65,16 @@ public class ImportMappyPlaces extends Assert {
 			for (double lat = 48.5; lat <= 49; lat += step) {
 				for (double lon = 1.8; lon <= 2.9; lon += step) {
 
-					HttpRequest req1 = Unirest.get("http://search.mappy.net/search/1.0/find")//
+					// "48.671228,1.854415,49.034931,2.843185");
+
+					JsonNode pois = SpaceRequest.get("http://search.mappy.net/search/1.0/find")//
 							.queryString("max_results", "100")//
 							.queryString("extend_bbox", "0")//
 							.queryString("q", "restaurant")//
-							.queryString("bbox", "" + lat + ',' + lon + ',' + (lat + step) + ',' + (lon + step));
-
-					// "48.671228,1.854415,49.034931,2.843185");
-
-					JsonNode pois = new SpaceRequest(req1).go(200).objectNode().get("pois");
+							.queryString("bbox", "" + lat + ',' + lon + ',' + (lat + step) + ',' + (lon + step))//
+							.go(200)//
+							.objectNode()//
+							.get("pois");
 
 					if (pois != null)
 						pois.forEach(ImportMappyPlaces::copyPoi);
