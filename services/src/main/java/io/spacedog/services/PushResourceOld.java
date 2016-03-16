@@ -73,7 +73,7 @@ public class PushResourceOld {
 		// TODO handle more than one app
 		// TODO handle more than one endpoint per app
 		DataStore.get().patchObject(credentials.backendId(), //
-				UserResource.USER_TYPE, //
+				UserResource.TYPE, //
 				credentials.name(), //
 				Json.objectBuilder().put("endpoint", endpointArn).build(), //
 				credentials.name());
@@ -202,7 +202,7 @@ public class PushResourceOld {
 
 		// TODO how many users can I get in one request ?
 		MultiGetResponse multiGet = Start.get().getElasticClient().multiGet(//
-				credentials.backendId(), UserResource.USER_TYPE, usernames);
+				credentials.backendId(), UserResource.TYPE, usernames);
 
 		Set<String> endpointArns = Sets.newHashSet();
 		multiGet.forEach(

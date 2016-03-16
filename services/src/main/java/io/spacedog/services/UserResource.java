@@ -38,10 +38,10 @@ public class UserResource extends Resource {
 	// User constants and schema
 	//
 
-	static final String USER_TYPE = "user";
+	public static final String TYPE = "user";
 
 	public static SchemaBuilder2 getDefaultUserSchemaBuilder() {
-		return SchemaBuilder2.builder(USER_TYPE, USERNAME)//
+		return SchemaBuilder2.builder(TYPE, USERNAME)//
 				.stringProperty(USERNAME, true)//
 				.stringProperty(EMAIL, true);
 	}
@@ -51,8 +51,8 @@ public class UserResource extends Resource {
 	}
 
 	public static String getDefaultUserMapping() {
-		JsonNode schema = SchemaValidator.validate(USER_TYPE, getDefaultUserSchema());
-		return SchemaTranslator.translate(USER_TYPE, schema).toString();
+		JsonNode schema = SchemaValidator.validate(TYPE, getDefaultUserSchema());
+		return SchemaTranslator.translate(TYPE, schema).toString();
 	}
 
 	//
@@ -64,9 +64,8 @@ public class UserResource extends Resource {
 	@Get("/1/user")
 	@Get("/1/user/")
 	public Payload getAll(Context context) {
-		// TODO access to /0/data/user and /0/user should be consistent
 		SpaceContext.checkAdminCredentials();
-		return DataResource.get().getByType(USER_TYPE, context);
+		return DataResource.get().getByType(TYPE, context);
 	}
 
 	@Delete("/v1/user")
@@ -74,17 +73,15 @@ public class UserResource extends Resource {
 	@Delete("/1/user")
 	@Delete("/1/user/")
 	public Payload deleteAll(Context context) {
-		// TODO access to /0/data/user and /0/user should be consistent
 		Credentials credentials = SpaceContext.checkSuperAdminCredentials();
 		ElasticClient elastic = Start.get().getElasticClient();
 
 		elastic.refreshType(SPACEDOG_BACKEND, CredentialsResource.TYPE);
 
-		// delete all backend credentials and users but super admins
-
+		// delete all backend users and only users
 		QuerySourceBuilder query = new QuerySourceBuilder().setQuery(//
 				QueryBuilders.boolQuery()//
-						.must(QueryBuilders.termQuery(Resource.BACKEND_ID, credentials.backendId()))//
+						.must(QueryBuilders.termQuery(BACKEND_ID, credentials.backendId()))//
 						.must(QueryBuilders.termQuery(CREDENTIALS_LEVEL, Level.USER.toString())));
 
 		SearchResponse search = elastic.prepareSearch(SPACEDOG_BACKEND, CredentialsResource.TYPE)//
@@ -104,7 +101,7 @@ public class UserResource extends Resource {
 						elastic.toAlias(SPACEDOG_BACKEND, CredentialsResource.TYPE), CredentialsResource.TYPE,
 						hit.getId()));
 				bulk.add(new DeleteRequest(//
-						elastic.toAlias(credentials.backendId(), USER_TYPE), USER_TYPE,
+						elastic.toAlias(credentials.backendId(), TYPE), TYPE,
 						CredentialsResource.fromCredentialsId(hit.getId())[1]));
 			}
 			bulk.get();
@@ -126,29 +123,27 @@ public class UserResource extends Resource {
 	@Post("/1/user/")
 	public Payload signUp(String body, Context context) {
 
-		Credentials requestCredentials = SpaceContext.checkCredentials();
-		SignUp userSignUp = new SignUp(requestCredentials.backendId(), Level.USER, body);
+		Credentials credentials = SpaceContext.checkCredentials();
+		SignUp userSignUp = new SignUp(credentials.backendId(), Level.USER, body);
 
-		if (requestCredentials.isAtLeastAdmin())
-			userSignUp.createdBy = Optional.of(requestCredentials.name());
+		if (credentials.isAtLeastUser())
+			userSignUp.createdBy = Optional.of(credentials.name());
 
-		// TODO
-		// who cares? replace obsolete user object if the credentials part is ok
 		if (exists(userSignUp.credentials.backendId(), userSignUp.credentials.name()))
 			throw Exceptions.illegalArgument(//
-					"user for backend [%s] with usename [%s] already exists", //
-					userSignUp.credentials.backendId(), userSignUp.credentials.name());
+					"user [%s] for backend [%s] already exists", //
+					userSignUp.credentials.name(), userSignUp.credentials.backendId());
 
 		CredentialsResource.get().create(userSignUp);
 
 		DataStore.get().createObject(userSignUp.credentials.backendId(), //
-				USER_TYPE, //
+				TYPE, //
 				userSignUp.credentials.name(), //
 				userSignUp.data, //
 				userSignUp.createdBy.isPresent() ? userSignUp.createdBy.get() : userSignUp.credentials.name());
 
-		JsonBuilder<ObjectNode> savedBuilder = Payloads.savedBuilder(true, requestCredentials.backendId(), "/1",
-				USER_TYPE, userSignUp.credentials.name());
+		JsonBuilder<ObjectNode> savedBuilder = Payloads.savedBuilder(true, credentials.backendId(), "/1", TYPE,
+				userSignUp.credentials.name());
 
 		if (userSignUp.passwordResetCode.isPresent())
 			savedBuilder.put(PASSWORD_RESET_CODE, userSignUp.passwordResetCode.get());
@@ -162,9 +157,8 @@ public class UserResource extends Resource {
 	@Get("/1/user/:username")
 	@Get("/1/user/:username/")
 	public Payload get(String username, Context context) {
-		// TODO access to /0/data/user and /0/user should be consistent
 		SpaceContext.checkUserCredentials(username);
-		return DataResource.get().getById(USER_TYPE, username, context);
+		return DataResource.get().getById(TYPE, username, context);
 	}
 
 	@Put("/v1/user/:username")
@@ -172,9 +166,10 @@ public class UserResource extends Resource {
 	@Put("/1/user/:username")
 	@Put("/1/user/:username/")
 	public Payload put(String username, String jsonBody, Context context) {
-		// TODO access to /0/data/user and /0/user should be consistent
+		// TODO check that this can not be used to create new users
+		// without credentials
 		SpaceContext.checkUserCredentials(username);
-		return DataResource.get().put(USER_TYPE, username, jsonBody, context);
+		return DataResource.get().put(TYPE, username, jsonBody, context);
 	}
 
 	@Delete("/v1/user/:username")
@@ -185,7 +180,7 @@ public class UserResource extends Resource {
 		// TODO access to /0/data/user and /0/user should be consistent
 		Credentials credentials = SpaceContext.checkUserCredentials(username);
 		CredentialsResource.get().delete(credentials.backendId(), username);
-		return DataResource.get().deleteById(USER_TYPE, username, context);
+		return DataResource.get().deleteById(TYPE, username, context);
 	}
 
 	@Delete("/v1/user/:username/password")
@@ -198,8 +193,8 @@ public class UserResource extends Resource {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		String passwordResetCode = CredentialsResource.get().doDeletePassword(credentials.backendId(), username);
 		return Payloads.json(//
-				Payloads.savedBuilder(false, credentials.backendId(), "/1", USER_TYPE, username)//
-						.put(Resource.PASSWORD_RESET_CODE, passwordResetCode));
+				Payloads.savedBuilder(false, credentials.backendId(), "/1", TYPE, username)//
+						.put(PASSWORD_RESET_CODE, passwordResetCode));
 	}
 
 	@Post("/v1/user/:username/password")
@@ -211,7 +206,7 @@ public class UserResource extends Resource {
 		// manage admin users with another resource ?
 		String backendId = SpaceContext.checkCredentials().backendId();
 		IndexResponse response = CredentialsResource.get().doPostPassword(backendId, username, context);
-		return Payloads.saved(false, backendId, "/1", USER_TYPE, username, response.getVersion());
+		return Payloads.saved(false, backendId, "/1", TYPE, username, response.getVersion());
 	}
 
 	@Put("/v1/user/:username/password")
@@ -223,7 +218,7 @@ public class UserResource extends Resource {
 		// manage admin users with another resource ?
 		Credentials credentials = SpaceContext.checkUserCredentials(username);
 		UpdateResponse response = CredentialsResource.get().doPutPassword(credentials.backendId(), username, context);
-		return Payloads.saved(false, credentials.backendId(), "/1/user", USER_TYPE, username, response.getVersion());
+		return Payloads.saved(false, credentials.backendId(), "/1/user", TYPE, username, response.getVersion());
 	}
 
 	//
@@ -231,11 +226,11 @@ public class UserResource extends Resource {
 	//
 
 	boolean exists(String backendId, String username) {
-		return Start.get().getElasticClient().exists(backendId, USER_TYPE, username);
+		return Start.get().getElasticClient().exists(backendId, TYPE, username);
 	}
 
 	GetResponse get(String backendId, String username, boolean throwNotFound) {
-		GetResponse response = Start.get().getElasticClient().get(backendId, USER_TYPE, username);
+		GetResponse response = Start.get().getElasticClient().get(backendId, TYPE, username);
 
 		if (throwNotFound && !response.isExists())
 			throw Exceptions.notFound("no user found for username [%s] in backend [%s]", username, backendId);

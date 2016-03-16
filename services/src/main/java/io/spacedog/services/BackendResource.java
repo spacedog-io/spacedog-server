@@ -49,7 +49,7 @@ public class BackendResource extends Resource {
 		if (!isTest(context))
 			Internals.get().notify(//
 					Start.get().configuration().superdogNotificationTopic(), //
-					String.format("New backend (%s)", Resource.spaceUrl(backendId, "/1/backend").toString()), //
+					String.format("New backend (%s)", spaceUrl(backendId, "/1/backend").toString()), //
 					String.format("backend id = %s\nadmin email = %s", backendId,
 							backendSignUp.credentials.email().get()));
 

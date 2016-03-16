@@ -327,7 +327,7 @@ public class ElasticClient {
 	 */
 	public String[] toDataIndices(String backendId) {
 		return toIndicesStream(backendId)//
-				.filter(index -> !UserResource.USER_TYPE.equals(index.split("-", 3)[1]))//
+				.filter(index -> !UserResource.TYPE.equals(index.split("-", 3)[1]))//
 				.toArray(String[]::new);
 	}
 
