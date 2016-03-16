@@ -176,10 +176,6 @@ public class SearchResource extends Resource {
 		for (SearchHit hit : response.getHits().getHits()) {
 			ObjectNode object = Json.readObjectNode(hit.sourceAsString());
 
-			// TODO remove this when hashed passwords have moved to dedicated
-			// indices
-			object.remove(UserResource.HASHED_PASSWORD);
-
 			((ObjectNode) object.get("meta")).put("id", hit.id()).put("type", hit.type()).put("version", hit.version());
 			objects.add(object);
 
@@ -217,14 +213,9 @@ public class SearchResource extends Resource {
 		set.forEach(reference -> {
 			Optional<ObjectNode> object = DataStore.get().getObject(//
 					credentials.backendId(), getReferenceType(reference), getReferenceId(reference));
-			if (object.isPresent()) {
-
-				// TODO remove this when hashed passwords have moved to
-				// dedicated indices
-				object.get().remove(UserResource.HASHED_PASSWORD);
-
+			if (object.isPresent())
 				results.put(reference, object.get());
-			} else
+			else
 				throw NotFoundException.object(getReferenceType(reference), getReferenceId(reference));
 		});
 		return results;

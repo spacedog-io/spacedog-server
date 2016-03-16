@@ -26,6 +26,14 @@ public abstract class Resource {
 
 	// Field names
 	public static final String BACKEND_ID = "backendId";
+	public static final String PASSWORD = "password";
+	public static final String EMAIL = "email";
+	public static final String USERNAME = "username";
+	public static final String UPDATED_AT = "updatedAt";
+	public static final String CREATED_AT = "createdAt";
+	public static final String HASHED_PASSWORD = "hashedPassword";
+	public static final String PASSWORD_RESET_CODE = "passwordResetCode";
+	public static final String CREDENTIALS_LEVEL = "level";
 
 	public static StringBuilder spaceUrl(String backendId, String uri, String type, String id) {
 		return spaceUrl(backendId, uri).append(SLASH).append(type).append(SLASH).append(id);

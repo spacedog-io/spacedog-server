@@ -92,13 +92,15 @@ public class Start {
 
 				log("Upgrading account [%s] ...", backendId);
 
-				SearchHit[] users = elastic.prepareSearch(backendId, "user")//
-						.setTypes("user").setSize(1000).get()//
-						.getHits().getHits();
+				if (elastic.existsIndex(backendId, "user")) {
+					SearchHit[] users = elastic.prepareSearch(backendId, "user")//
+							.setTypes("user").setSize(1000).get()//
+							.getHits().getHits();
 
-				for (SearchHit user : users) {
-					createUserCredentials(backendId, user);
-					upgradeUserData(backendId, user);
+					for (SearchHit user : users) {
+						createUserCredentials(backendId, user);
+						upgradeUserData(backendId, user);
+					}
 				}
 
 				upgradeSuperAdmin(backendId, source);
@@ -114,38 +116,29 @@ public class Start {
 
 	void upgradeSuperAdmin(String backendId, Map<String, Object> source) {
 		String now = DateTime.now().toString();
-		String username = source.get(UserResource.USERNAME).toString();
+		String username = source.get(Resource.USERNAME).toString();
 		String hashedPassword = source.get(UserResource.HASHED_PASSWORD).toString();
-		String email = source.get(UserResource.EMAIL).toString();
+		String email = source.get(Resource.EMAIL).toString();
 
 		ObjectNode credentials = Json.object(//
 				UserResource.BACKEND_ID, backendId, //
-				UserResource.USERNAME, username, //
+				Resource.USERNAME, username, //
 				UserResource.HASHED_PASSWORD, hashedPassword, //
-				UserResource.EMAIL, email, //
+				Resource.EMAIL, email, //
 				UserResource.CREDENTIALS_LEVEL, Level.SUPER_ADMIN, //
 				UserResource.CREATED_AT, now, //
 				UserResource.UPDATED_AT, now);
 
-		UserResource.get().indexCredentials(backendId, username, credentials);
+		CredentialsResource.get().index(backendId, username, credentials);
 		credentialsCount++;
-
-		ObjectNode user = Json.object(//
-				UserResource.USERNAME, username, //
-				UserResource.EMAIL, email);
-
-		DataStore.get().createObject(backendId, UserResource.USER_TYPE, //
-				username, user, username);
-
-		userCount++;
 	}
 
 	private void createUserCredentials(String backendId, SearchHit user) {
 		Map<String, Object> userMap = user.getSource();
 
-		String username = userMap.get(UserResource.USERNAME).toString();
+		String username = userMap.get(Resource.USERNAME).toString();
 		String hashedPassword = userMap.get(UserResource.HASHED_PASSWORD).toString();
-		String email = userMap.get(UserResource.EMAIL).toString();
+		String email = userMap.get(Resource.EMAIL).toString();
 		@SuppressWarnings("unchecked")
 		Map<String, Object> meta = (Map<String, Object>) userMap.get("meta");
 		String createdAt = meta.get(UserResource.CREATED_AT).toString();
@@ -155,24 +148,24 @@ public class Start {
 
 		ObjectNode credentials = Json.object(//
 				UserResource.BACKEND_ID, backendId, //
-				UserResource.USERNAME, username, //
+				Resource.USERNAME, username, //
 				UserResource.HASHED_PASSWORD, hashedPassword, //
-				UserResource.EMAIL, email, //
+				Resource.EMAIL, email, //
 				UserResource.CREDENTIALS_LEVEL, Level.USER, //
 				UserResource.CREATED_AT, createdAt, //
 				UserResource.UPDATED_AT, updatedAt);
 
-		UserResource.get().indexCredentials(backendId, username, credentials);
+		CredentialsResource.get().index(backendId, username, credentials);
 		credentialsCount++;
 	}
 
 	private void upgradeUserData(String backendId, SearchHit user) {
 		Map<String, Object> userMap = user.getSource();
-		String username = userMap.get(UserResource.USERNAME).toString();
+		String username = userMap.get(Resource.USERNAME).toString();
 
 		userMap.remove(UserResource.HASHED_PASSWORD);
 		userMap.remove(UserResource.PASSWORD_RESET_CODE);
-		userMap.remove(UserResource.PASSWORD);
+		userMap.remove(Resource.PASSWORD);
 		userMap.remove("groups");
 
 		elastic.prepareIndex(backendId, "user", username).setSource(userMap).get();
@@ -222,7 +215,7 @@ public class Start {
 
 	private void initServices() throws IOException {
 		LogResource.get().init();
-		UserResource.get().init();
+		CredentialsResource.get().init();
 	}
 
 	private void startFluent() throws IOException {
@@ -247,6 +240,7 @@ public class Start {
 	private static void configure(Routes routes) {
 		routes.add(DataResource.get())//
 				.add(SchemaResource.get())//
+				.add(CredentialsResource.get())//
 				.add(UserResource.get())//
 				.add(BackendResource.get())//
 				.add(BatchResource.get())//

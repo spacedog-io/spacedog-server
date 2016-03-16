@@ -27,6 +27,7 @@ public class SnapshotResourceTest extends Assert {
 
 		// creates backend and user
 		SpaceDogHelper.createBackend(aaaaBackend);
+		SpaceDogHelper.initUserDefaultSchema(aaaaBackend);
 		SpaceDogHelper.createUser(aaaaBackend, "vince", "hi vince");
 		SpaceRequest.get("/1/user/vince").basicAuth(aaaaBackend).go(200);
 
@@ -73,6 +74,7 @@ public class SnapshotResourceTest extends Assert {
 
 		// creates another backend and user
 		SpaceDogHelper.createBackend(bbbbBackend);
+		SpaceDogHelper.initUserDefaultSchema(bbbbBackend);
 		SpaceDogHelper.createUser(bbbbBackend, "fred", "hi fred");
 		SpaceRequest.get("/1/user/fred").basicAuth(bbbbBackend).go(200);
 
@@ -97,6 +99,7 @@ public class SnapshotResourceTest extends Assert {
 
 		// create another account and add a user
 		SpaceDogHelper.createBackend(ccccBackend);
+		SpaceDogHelper.initUserDefaultSchema(ccccBackend);
 		SpaceDogHelper.createUser(ccccBackend, "nath", "hi nath");
 		SpaceRequest.get("/1/user/nath").basicAuth(ccccBackend).go(200);
 

@@ -203,7 +203,7 @@ public class SpaceContext {
 			String password = tokens.get()[1];
 
 			String backendToCheck = username.startsWith("superdog-") ? Resource.ROOT_BACKEND : backendId;
-			Optional<Credentials> credentials = UserResource.get().checkCredentials(backendToCheck, username, password);
+			Optional<Credentials> credentials = CredentialsResource.get().check(backendToCheck, username, password);
 
 			if (credentials.isPresent()) {
 				// force to requested backendId for superdogs

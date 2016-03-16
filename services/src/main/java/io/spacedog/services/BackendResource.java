@@ -10,8 +10,7 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
 import io.spacedog.services.Credentials.Level;
-import io.spacedog.services.UserResource.UserSignUp;
-import io.spacedog.utils.Exceptions;
+import io.spacedog.services.CredentialsResource.SignUp;
 import io.spacedog.utils.Internals;
 import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
@@ -38,25 +37,21 @@ public class BackendResource extends Resource {
 			return Payloads.invalidParameters("backendId", backendId,
 					String.format("backend id [%s] not available", backendId));
 
-		UserSignUp signing = UserResource.get().new UserSignUp(backendId, Level.SUPER_ADMIN, body);
-
-		if (signing.existsCredentials())
-			throw Exceptions.illegalArgument(//
-					"user credentials for backend [%s] with usename [%s] already exists", //
-					signing.backendId, signing.username);
-
-		signing.indexCredentials();
+		SignUp backendSignUp = new SignUp(backendId, Level.SUPER_ADMIN, body);
+		CredentialsResource.get().create(backendSignUp);
 
 		// after backend is created, new admin credentials are valid
 		// and can be set in space context if none are set
 		SpaceContext.setCredentials(//
-				Credentials.fromAdmin(backendId, signing.username, signing.email));
+				Credentials.fromAdmin(backendId, backendSignUp.credentials.name(),
+						backendSignUp.credentials.email().get()));
 
 		if (!isTest(context))
 			Internals.get().notify(//
 					Start.get().configuration().superdogNotificationTopic(), //
 					String.format("New backend (%s)", Resource.spaceUrl(backendId, "/1/backend").toString()), //
-					String.format("backend id = %s\nadmin email = %s", backendId, signing.email));
+					String.format("backend id = %s\nadmin email = %s", backendId,
+							backendSignUp.credentials.email().get()));
 
 		return Payloads.saved(true, backendId, "/1/backend", TYPE, backendId, true);
 	}
@@ -69,12 +64,12 @@ public class BackendResource extends Resource {
 
 		if (credentials.isRootBackend()) {
 			if (credentials.isSuperDogAuthenticated())
-				return UserResource.get().getAllSuperAdmins(refresh);
+				return CredentialsResource.get().getAllSuperAdmins(refresh);
 
 			throw new AuthorizationException("no subdomain found: access <backendId>.spacedog.io");
 		}
 
-		return UserResource.get().getAllSuperAdmins(credentials.backendId(), refresh);
+		return CredentialsResource.get().getAllSuperAdmins(credentials.backendId(), refresh);
 
 	}
 
@@ -83,7 +78,7 @@ public class BackendResource extends Resource {
 	public Payload delete(Context context) {
 		Credentials credentials = SpaceContext.checkSuperAdminCredentials();
 
-		UserResource.get().deleteAllBackendCredentials(credentials.backendId());
+		CredentialsResource.get().deleteAll(credentials.backendId());
 		Start.get().getElasticClient().deleteAllIndices(credentials.backendId());
 
 		if (!isTest(context) && !Start.get().configuration().isOffline()) {
@@ -112,9 +107,9 @@ public class BackendResource extends Resource {
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery()//
 				.filter(QueryBuilders.termQuery(BACKEND_ID, backendId));
 
-		elastic.refreshType(SPACEDOG_BACKEND, UserResource.CREDENTIALS_TYPE);
+		elastic.refreshType(SPACEDOG_BACKEND, CredentialsResource.TYPE);
 
-		long totalHits = elastic.prepareSearch(SPACEDOG_BACKEND, UserResource.CREDENTIALS_TYPE)//
+		long totalHits = elastic.prepareSearch(SPACEDOG_BACKEND, CredentialsResource.TYPE)//
 				.setQuery(new QuerySourceBuilder().setQuery(boolQueryBuilder).toString())//
 				.setSize(0)//
 				.get()//
