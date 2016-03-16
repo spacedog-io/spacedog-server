@@ -104,6 +104,7 @@ public class DataResource extends Resource {
 	@Delete("/1/data/:type")
 	@Delete("/1/data/:type/")
 	public Payload deleteByType(String type, Context context) {
+		SpaceContext.checkAdminCredentials();
 		return SearchResource.get().deleteSearchForType(type, null, context);
 	}
 
@@ -113,24 +114,11 @@ public class DataResource extends Resource {
 	@Get("/1/data/:type/:id/")
 	public Payload getById(String type, String id, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
-
-		// check if type is well defined
-		// throws a NotFoundException if not
-		// TODO useful for security?
-		Start.get().getElasticClient().getSchema(credentials.backendId(), type);
-
 		Optional<ObjectNode> object = DataStore.get().getObject(credentials.backendId(), type, id);
-
-		if (object.isPresent()) {
-
-			// TODO remove this when hashed passwords have moved to dedicated
-			// indices
-			object.get().remove(UserResource.HASHED_PASSWORD);
-
+		if (object.isPresent())
 			return Payloads.json(object.get());
-		}
-
-		return Payloads.error(HttpStatus.NOT_FOUND);
+		else
+			return Payloads.error(HttpStatus.NOT_FOUND);
 	}
 
 	@Put("/v1/data/:type/:id")
@@ -185,9 +173,9 @@ public class DataResource extends Resource {
 	@Delete("/1/data/:type/:id/")
 	public Payload deleteById(String type, String id, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
-
 		ElasticClient elastic = Start.get().getElasticClient();
 		Optional<ObjectNode> object = DataStore.get().getObject(credentials.backendId(), type, id);
+
 		if (object.isPresent()) {
 			if (credentials.name().equals(Json.get(object.get(), "meta.createdBy").asText())) {
 				DeleteResponse response = elastic.delete(credentials.backendId(), type, id);

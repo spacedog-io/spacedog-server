@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
@@ -63,6 +64,8 @@ public class UserResource extends Resource {
 	@Get("/v1/user/")
 	@Get("/1/user")
 	@Get("/1/user/")
+	@Get("/1/data/user")
+	@Get("/1/data/user/")
 	public Payload getAll(Context context) {
 		SpaceContext.checkAdminCredentials();
 		return DataResource.get().getByType(TYPE, context);
@@ -72,6 +75,8 @@ public class UserResource extends Resource {
 	@Delete("/v1/user/")
 	@Delete("/1/user")
 	@Delete("/1/user/")
+	@Delete("/1/data/user")
+	@Delete("/1/data/user/")
 	public Payload deleteAll(Context context) {
 		Credentials credentials = SpaceContext.checkSuperAdminCredentials();
 		ElasticClient elastic = Start.get().getElasticClient();
@@ -121,6 +126,8 @@ public class UserResource extends Resource {
 	@Post("/v1/user/")
 	@Post("/1/user")
 	@Post("/1/user/")
+	@Post("/1/data/user")
+	@Post("/1/data/user/")
 	public Payload signUp(String body, Context context) {
 
 		Credentials credentials = SpaceContext.checkCredentials();
@@ -156,6 +163,8 @@ public class UserResource extends Resource {
 	@Get("/v1/user/:username/")
 	@Get("/1/user/:username")
 	@Get("/1/user/:username/")
+	@Get("/1/data/user/:username")
+	@Get("/1/data/user/:username/")
 	public Payload get(String username, Context context) {
 		SpaceContext.checkUserCredentials(username);
 		return DataResource.get().getById(TYPE, username, context);
@@ -165,6 +174,8 @@ public class UserResource extends Resource {
 	@Put("/v1/user/:username/")
 	@Put("/1/user/:username")
 	@Put("/1/user/:username/")
+	@Put("/1/data/user/:username")
+	@Put("/1/data/user/:username/")
 	public Payload put(String username, String jsonBody, Context context) {
 		// TODO check that this can not be used to create new users
 		// without credentials
@@ -176,11 +187,17 @@ public class UserResource extends Resource {
 	@Delete("/v1/user/:username/")
 	@Delete("/1/user/:username")
 	@Delete("/1/user/:username/")
+	@Delete("/1/data/user/:username")
+	@Delete("/1/data/user/:username/")
 	public Payload delete(String username, Context context) {
-		// TODO access to /0/data/user and /0/user should be consistent
 		Credentials credentials = SpaceContext.checkUserCredentials(username);
-		CredentialsResource.get().delete(credentials.backendId(), username);
-		return DataResource.get().deleteById(TYPE, username, context);
+		ElasticClient elastic = Start.get().getElasticClient();
+
+		elastic.delete(credentials.backendId(), TYPE, username);
+		DeleteResponse response = CredentialsResource.get().delete(credentials.backendId(), username);
+
+		return response.isFound() ? Payloads.success() //
+				: Payloads.error(HttpStatus.NOT_FOUND, "user [%s] not found", username);
 	}
 
 	@Delete("/v1/user/:username/password")

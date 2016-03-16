@@ -66,6 +66,8 @@ public class SearchResource extends Resource {
 	@Delete("/1/search")
 	@Delete("/1/search/")
 	public Payload deleteAllTypes(String query, Context context) {
+		// TODO delete special types like user the right way
+		// credentials and user data at the same time
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, true);
 		DataStore.get().refreshBackend(refresh, credentials.backendId());
@@ -100,6 +102,8 @@ public class SearchResource extends Resource {
 	@Delete("/1/search/:type/")
 	public Payload deleteSearchForType(String type, String query, Context context) {
 
+		// TODO delete special types like user the right way
+		// credentials and user data at the same time
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, true);
 		DataStore.get().refreshType(refresh, credentials.backendId(), type);

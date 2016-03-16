@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceDogHelper.Backend;
+import io.spacedog.client.SpaceDogHelper.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
@@ -20,10 +21,54 @@ import io.spacedog.watchdog.SpaceSuite.TestOften;
 public class UserResourceTest extends Assert {
 
 	@Test
+	public void dataEndpointsBehaveTheSameThanUserEnpoints() throws Exception {
+
+		// prepare
+		SpaceDogHelper.prepareTest();
+		Backend testBackend = SpaceDogHelper.resetTestBackend();
+		SpaceDogHelper.initUserDefaultSchema(testBackend);
+		User vince = SpaceDogHelper.createUser(testBackend, "vince", "hi vince");
+		User fred = SpaceDogHelper.createUser(testBackend, "fred", "hi fred");
+
+		// vince can login
+		SpaceRequest.get("/1/login").userAuth(vince).go(200);
+
+		// puts vince data object
+		SpaceRequest.put("/1/data/user/vince").userAuth(vince)//
+				.body(Json.object("email", "vince@dog.com")).go(200);
+		SpaceRequest.get("/1/login").userAuth(vince).go(200);
+
+		// gets vince data object
+		SpaceRequest.get("/1/data/user/vince").userAuth(vince).go(200)//
+				.assertEquals("vince", "username")//
+				.assertEquals("vince@dog.com", "email");
+
+		// get all data returns vince
+		SpaceRequest.get("/1/data?refresh=true").adminAuth(testBackend).go(200)//
+				.assertContainsValue("vince", "username")//
+				.assertContainsValue("fred", "username");
+
+		// get all data of type user returns vince
+		SpaceRequest.get("/1/data/user").adminAuth(testBackend).go(200)//
+				.assertContainsValue("vince", "username")//
+				.assertContainsValue("fred", "username");
+
+		// deletes object vince
+		SpaceRequest.delete("/1/data/user/vince").userAuth(vince).go(200);
+		SpaceRequest.get("/1/login").userAuth(vince).go(401);
+
+		// deletes all objects of type user
+		SpaceRequest.delete("/1/data/user").adminAuth(testBackend).go(200)//
+				.assertEquals(1, "totalDeleted");
+		SpaceRequest.get("/1/data?refresh=true").adminAuth(testBackend).go(200)//
+				.assertSizeEquals(0, "total");
+	}
+
+	@Test
 	public void userIsSigningUpAndMore() throws Exception {
 
 		SpaceDogHelper.prepareTest();
-		SpaceDogHelper.Backend testBackend = SpaceDogHelper.resetTestBackend();
+		Backend testBackend = SpaceDogHelper.resetTestBackend();
 		SpaceDogHelper.initUserDefaultSchema(testBackend);
 
 		// fails since invalid users
