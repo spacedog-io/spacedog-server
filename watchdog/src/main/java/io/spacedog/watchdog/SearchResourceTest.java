@@ -40,35 +40,35 @@ public class SearchResourceTest extends Assert {
 
 		SpaceDogHelper.createUser(testBackend, "riri", "hi riri", "riri@disney.com");
 
-		SpaceRequest.post("/1/data/rubric").basicAuth(testBackend)//
+		SpaceRequest.post("/1/data/rubric").adminAuth(testBackend)//
 				.body(Json.object("name", "riri, fifi and loulou")).go(201);
 
-		SpaceRequest.post("/1/data/message").basicAuth(testBackend)//
+		SpaceRequest.post("/1/data/message").adminAuth(testBackend)//
 				.body(Json.object("text", "what's up?")).go(201);
-		SpaceRequest.post("/1/data/message").basicAuth(testBackend)//
+		SpaceRequest.post("/1/data/message").adminAuth(testBackend)//
 				.body(Json.object("text", "wanna drink something?")).go(201);
-		SpaceRequest.post("/1/data/message").basicAuth(testBackend)//
+		SpaceRequest.post("/1/data/message").adminAuth(testBackend)//
 				.body(Json.object("text", "pretty cool, hein?")).go(201);
-		SpaceRequest.post("/1/data/message").basicAuth(testBackend)//
+		SpaceRequest.post("/1/data/message").adminAuth(testBackend)//
 				.body(Json.object("text", "so long guys")).go(201);
 
-		SpaceRequest.get("/1/data?refresh=true").basicAuth(testBackend).go(200)//
+		SpaceRequest.get("/1/data?refresh=true").adminAuth(testBackend).go(200)//
 				.assertEquals(6, "total");
 
 		// deletes messages containing 'up' by query
 
 		ObjectNode query = Json.objectBuilder().object("query")//
 				.object("match").put("text", "up").build();
-		SpaceRequest.delete("/1/search/message").basicAuth(testBackend).body(query).go(200);
-		SpaceRequest.get("/1/data/message?refresh=true").basicAuth(testBackend).go(200)//
+		SpaceRequest.delete("/1/search/message").adminAuth(testBackend).body(query).go(200);
+		SpaceRequest.get("/1/data/message?refresh=true").adminAuth(testBackend).go(200)//
 				.assertEquals(3, "total");
 
 		// deletes data objects containing 'wanna' or 'riri' but not users
 
 		query = Json.objectBuilder().object("query")//
 				.object("match").put("_all", "wanna riri").build();
-		SpaceRequest.delete("/1/search").basicAuth(testBackend).body(query).go(200);
-		SpaceRequest.get("/1/data?refresh=true").basicAuth(testBackend).go(200)//
+		SpaceRequest.delete("/1/search").adminAuth(testBackend).body(query).go(200);
+		SpaceRequest.get("/1/data?refresh=true").adminAuth(testBackend).go(200)//
 				.assertEquals(3, "total");
 	}
 }

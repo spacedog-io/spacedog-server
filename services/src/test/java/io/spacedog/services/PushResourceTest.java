@@ -44,7 +44,7 @@ public class PushResourceTest extends Assert {
 				.build();
 
 		SpaceRequest.put("/1/schema/installation")//
-				.basicAuth(testBackend).body(installationSchema).go(201);
+				.adminAuth(testBackend).body(installationSchema).go(201);
 
 		// unauthenticated user installs myairport
 		// and fails to set unauthenticated userId
@@ -56,7 +56,7 @@ public class PushResourceTest extends Assert {
 				.objectNode().get("id").asText();
 
 		SpaceRequest.get("/1/installation/" + installId)//
-				.basicAuth(testBackend).go(200)//
+				.adminAuth(testBackend).go(200)//
 				.assertEquals("myairport", "appId")//
 				.assertEquals("token-unknown", "deviceToken")//
 				.assertNotPresent("userId")//
@@ -74,12 +74,12 @@ public class PushResourceTest extends Assert {
 		// install update should succeed
 
 		SpaceRequest.put("/1/installation/" + vinceInstallId)//
-				.backend(testBackend).basicAuth(vince)//
+				.backend(testBackend).userAuth(vince)//
 				.body(Json.object("deviceToken", "super-token-vince", "appId", "joho"))//
 				.go(200);
 
 		SpaceRequest.get("/1/installation/" + vinceInstallId)//
-				.backend(testBackend).basicAuth(vince)//
+				.backend(testBackend).userAuth(vince)//
 				.go(200)//
 				.assertEquals("joho", "appId")//
 				.assertEquals("super-token-vince", "deviceToken")//
@@ -89,13 +89,13 @@ public class PushResourceTest extends Assert {
 		// user fails to get all installations
 
 		SpaceRequest.get("/1/installation")//
-				.backend(testBackend).basicAuth(vince)//
+				.backend(testBackend).userAuth(vince)//
 				.go(401);
 
 		// admin succeed to get all installations
 
 		SpaceRequest.get("/1/installation?refresh=true")//
-				.basicAuth(testBackend)//
+				.adminAuth(testBackend)//
 				.go(200)//
 				.assertSizeEquals(4, "results")//
 				.assertContainsValue("token-unknown", "deviceToken")//
@@ -106,44 +106,44 @@ public class PushResourceTest extends Assert {
 		// add bonjour/toi tag to nath install
 
 		SpaceRequest.post("/1/installation/" + nathInstallId + "/tags")//
-				.backend(testBackend).basicAuth(nath)//
+				.backend(testBackend).userAuth(nath)//
 				.body(toJsonTag("bonjour", "toi")).go(200);
 
 		SpaceRequest.get("/1/installation/" + nathInstallId + "/tags")//
-				.backend(testBackend).basicAuth(nath).go(200)//
+				.backend(testBackend).userAuth(nath).go(200)//
 				.assertContains(toJsonTag("bonjour", "toi"))//
 				.assertSizeEquals(1);
 
 		// add again the same tag is ok and there is no duplicate as a result
 
 		SpaceRequest.post("/1/installation/" + nathInstallId + "/tags")//
-				.backend(testBackend).basicAuth(nath)//
+				.backend(testBackend).userAuth(nath)//
 				.body(toJsonTag("bonjour", "toi")).go(200);
 
 		SpaceRequest.get("/1/installation/" + nathInstallId + "/tags")//
-				.backend(testBackend).basicAuth(nath).go(200)//
+				.backend(testBackend).userAuth(nath).go(200)//
 				.assertContains(toJsonTag("bonjour", "toi"))//
 				.assertSizeEquals(1);
 
 		// add bonjour/toi tag to vince install
 
 		SpaceRequest.post("/1/installation/" + vinceInstallId + "/tags")//
-				.backend(testBackend).basicAuth(vince)//
+				.backend(testBackend).userAuth(vince)//
 				.body(toJsonTag("bonjour", "toi")).go(200);
 
 		SpaceRequest.get("/1/installation/" + vinceInstallId + "/tags")//
-				.backend(testBackend).basicAuth(vince).go(200)//
+				.backend(testBackend).userAuth(vince).go(200)//
 				.assertContains(toJsonTag("bonjour", "toi"))//
 				.assertSizeEquals(1);
 
 		// add hi/there tag to vince install
 
 		SpaceRequest.post("/1/installation/" + vinceInstallId + "/tags")//
-				.backend(testBackend).basicAuth(vince)//
+				.backend(testBackend).userAuth(vince)//
 				.body(toJsonTag("hi", "there")).go(200);
 
 		SpaceRequest.get("/1/installation/" + vinceInstallId + "/tags")//
-				.backend(testBackend).basicAuth(vince).go(200)//
+				.backend(testBackend).userAuth(vince).go(200)//
 				.assertContains(toJsonTag("bonjour", "toi"))//
 				.assertContains(toJsonTag("hi", "there"))//
 				.assertSizeEquals(2);
@@ -151,32 +151,32 @@ public class PushResourceTest extends Assert {
 		// delete bonjour/toi tag from vince install
 
 		SpaceRequest.delete("/1/installation/" + vinceInstallId + "/tags")//
-				.backend(testBackend).basicAuth(vince)//
+				.backend(testBackend).userAuth(vince)//
 				.body(toJsonTag("bonjour", "toi")).go(200);
 
 		SpaceRequest.get("/1/installation/" + vinceInstallId + "/tags")//
-				.backend(testBackend).basicAuth(vince).go(200)//
+				.backend(testBackend).userAuth(vince).go(200)//
 				.assertContains(toJsonTag("hi", "there"))//
 				.assertSizeEquals(1);
 
 		// delete hi/there tag from vince install
 
 		SpaceRequest.delete("/1/installation/" + vinceInstallId + "/tags")//
-				.backend(testBackend).basicAuth(vince)//
+				.backend(testBackend).userAuth(vince)//
 				.body(toJsonTag("hi", "there")).go(200);
 
 		SpaceRequest.get("/1/installation/" + vinceInstallId + "/tags")//
-				.backend(testBackend).basicAuth(vince).go(200)//
+				.backend(testBackend).userAuth(vince).go(200)//
 				.assertSizeEquals(0);
 
 		// set all vince install tags to bonjour/toi and hi/there
 
 		SpaceRequest.put("/1/installation/" + vinceInstallId + "/tags")//
-				.backend(testBackend).basicAuth(vince)//
+				.backend(testBackend).userAuth(vince)//
 				.body(toJsonTags("hi", "there", "bonjour", "toi")).go(200);
 
 		SpaceRequest.get("/1/installation/" + vinceInstallId + "/tags")//
-				.backend(testBackend).basicAuth(vince).go(200)//
+				.backend(testBackend).userAuth(vince).go(200)//
 				.assertContains(toJsonTag("bonjour", "toi"))//
 				.assertContains(toJsonTag("hi", "there"))//
 				.assertSizeEquals(2);
@@ -184,11 +184,11 @@ public class PushResourceTest extends Assert {
 		// set all fred install tags to bonjour/toi
 
 		SpaceRequest.put("/1/installation/" + fredInstallId + "/tags")//
-				.backend(testBackend).basicAuth(fred)//
+				.backend(testBackend).userAuth(fred)//
 				.body(toJsonTags("bonjour", "toi")).go(200);
 
 		SpaceRequest.get("/1/installation/" + fredInstallId + "/tags")//
-				.backend(testBackend).basicAuth(fred).go(200)//
+				.backend(testBackend).userAuth(fred).go(200)//
 				.assertContains(toJsonTag("bonjour", "toi"))//
 				.assertSizeEquals(1);
 
@@ -200,7 +200,7 @@ public class PushResourceTest extends Assert {
 				.build();
 
 		SpaceRequest.post("/1/push?refresh=true")//
-				.backend(testBackend).basicAuth(vince)//
+				.backend(testBackend).userAuth(vince)//
 				.body(push)//
 				.go(200)//
 				.assertSizeEquals(2, "pushedTo")//
@@ -212,7 +212,7 @@ public class PushResourceTest extends Assert {
 		push.set("tags", toJsonTag("bonjour", "toi"));
 
 		SpaceRequest.post("/1/push")//
-				.backend(testBackend).basicAuth(vince)//
+				.backend(testBackend).userAuth(vince)//
 				.body(push)//
 				.go(200)//
 				.assertSizeEquals(2, "pushedTo")//
@@ -224,7 +224,7 @@ public class PushResourceTest extends Assert {
 		push.set("tags", toJsonTags("bonjour", "toi", "hi", "there"));
 
 		SpaceRequest.post("/1/push")//
-				.backend(testBackend).basicAuth(vince)//
+				.backend(testBackend).userAuth(vince)//
 				.body(push)//
 				.go(200)//
 				.assertSizeEquals(1, "pushedTo")//
@@ -246,13 +246,13 @@ public class PushResourceTest extends Assert {
 			throws Exception {
 
 		String installId = SpaceRequest.post("/1/installation")//
-				.backend(account).basicAuth(user)//
+				.backend(account).userAuth(user)//
 				.body(Json.object("deviceToken", "token-" + user.username, "appId", appId))//
 				.go(201)//
 				.objectNode().get("id").asText();
 
 		SpaceRequest.get("/1/installation/" + installId)//
-				.basicAuth(account).go(200)//
+				.adminAuth(account).go(200)//
 				.assertEquals(appId, "appId")//
 				.assertEquals("token-" + user.username, "deviceToken")//
 				.assertEquals(user.username, "userId")//

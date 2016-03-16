@@ -136,7 +136,7 @@ public class Joho extends SpaceDogHelper {
 	@Test
 	public void createJoho2InstallationIndex() throws Exception {
 
-		SpaceRequest.delete("/1/schema/installation").basicAuth(backend).go(200, 404);
+		SpaceRequest.delete("/1/schema/installation").adminAuth(backend).go(200, 404);
 
 		ObjectNode schema = SchemaBuilder2.builder("installation")//
 				.stringProperty("appId", true)//
@@ -149,7 +149,7 @@ public class Joho extends SpaceDogHelper {
 				.endObjectProperty()//
 				.build();
 
-		SpaceRequest.put("/1/schema/installation").basicAuth(backend).body(schema).go(201);
+		SpaceRequest.put("/1/schema/installation").adminAuth(backend).body(schema).go(201);
 	}
 
 	@Test
@@ -170,7 +170,7 @@ public class Joho extends SpaceDogHelper {
 	public void createResponse(String messageId, String text, User user) throws Exception {
 		JsonBuilder<ObjectNode> message = Json.objectBuilder().object("responses").put("text", text)//
 				.object("author").put("firstname", user.username).put("lastname", user.email);
-		SpaceRequest.put("/1/data/message/" + messageId).basicAuth(user).body(message).go(200);
+		SpaceRequest.put("/1/data/message/" + messageId).userAuth(user).body(message).go(200);
 	}
 
 	public User createUser(Backend backend, String username, String password, String email, String firstname,
@@ -203,26 +203,26 @@ public class Joho extends SpaceDogHelper {
 	private void createThemes() throws Exception {
 		URL url = Resources.getResource("io/spacedog/examples/joho.themes.json");
 		JsonNode themes = Json.getMapper().readTree(url);
-		SpaceRequest.post("/1/data/themes").basicAuth(backend).body(themes).go(201);
+		SpaceRequest.post("/1/data/themes").adminAuth(backend).body(themes).go(201);
 	}
 
 	private void createSites() throws Exception {
 		URL url = Resources.getResource("io/spacedog/examples/joho.sites.json");
 		JsonNode sites = Json.getMapper().readTree(url);
-		SpaceRequest.post("/1/data/sites").basicAuth(backend).body(sites).go(201);
+		SpaceRequest.post("/1/data/sites").adminAuth(backend).body(sites).go(201);
 	}
 
 	public String createDiscussion(String title, String categoryCode, User user) throws Exception {
 
 		JsonBuilder<ObjectNode> discussion = Json.objectBuilder().put("title", title)//
 				.put("description", title).object("category").put("code", categoryCode);
-		return SpaceRequest.post("/1/data/discussion").basicAuth(user).body(discussion).go(201)//
+		return SpaceRequest.post("/1/data/discussion").userAuth(user).body(discussion).go(201)//
 				.objectNode().get("id").asText();
 	}
 
 	public String createMessage(String discussionId, String text, User user) throws Exception {
 		ObjectNode message = Json.object("text", text, "discussionId", discussionId);
-		return SpaceRequest.post("/1/data/message").basicAuth(user).body(message).go(201)//
+		return SpaceRequest.post("/1/data/message").userAuth(user).body(message).go(201)//
 				.objectNode().get("id").asText();
 	}
 

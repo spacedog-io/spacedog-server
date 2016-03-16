@@ -29,7 +29,7 @@ public class SnapshotResourceTest extends Assert {
 		SpaceDogHelper.createBackend(aaaaBackend);
 		SpaceDogHelper.initUserDefaultSchema(aaaaBackend);
 		SpaceDogHelper.createUser(aaaaBackend, "vince", "hi vince");
-		SpaceRequest.get("/1/user/vince").basicAuth(aaaaBackend).go(200);
+		SpaceRequest.get("/1/user/vince").adminAuth(aaaaBackend).go(200);
 
 		// deletes the current repository to force repo creation by this test
 		// use full url to avoid delete by mistake any prod repo
@@ -76,7 +76,7 @@ public class SnapshotResourceTest extends Assert {
 		SpaceDogHelper.createBackend(bbbbBackend);
 		SpaceDogHelper.initUserDefaultSchema(bbbbBackend);
 		SpaceDogHelper.createUser(bbbbBackend, "fred", "hi fred");
-		SpaceRequest.get("/1/user/fred").basicAuth(bbbbBackend).go(200);
+		SpaceRequest.get("/1/user/fred").adminAuth(bbbbBackend).go(200);
 
 		// second snapshot (returns 201 since wait for completion true, 202
 		// otherwise)
@@ -101,7 +101,7 @@ public class SnapshotResourceTest extends Assert {
 		SpaceDogHelper.createBackend(ccccBackend);
 		SpaceDogHelper.initUserDefaultSchema(ccccBackend);
 		SpaceDogHelper.createUser(ccccBackend, "nath", "hi nath");
-		SpaceRequest.get("/1/user/nath").basicAuth(ccccBackend).go(200);
+		SpaceRequest.get("/1/user/nath").adminAuth(ccccBackend).go(200);
 
 		// third snapshot (returns 200 since wait for completion true, 202
 		// otherwise)
@@ -131,9 +131,9 @@ public class SnapshotResourceTest extends Assert {
 				.go(200);
 
 		// check only account aaaa and user vince are present
-		SpaceRequest.get("/1/user/vince").basicAuth(aaaaBackend).go(200);
-		SpaceRequest.get("/1/user/fred").basicAuth(bbbbBackend).go(401);
-		SpaceRequest.get("/1/user/nath").basicAuth(ccccBackend).go(401);
+		SpaceRequest.get("/1/user/vince").adminAuth(aaaaBackend).go(200);
+		SpaceRequest.get("/1/user/fred").adminAuth(bbbbBackend).go(401);
+		SpaceRequest.get("/1/user/nath").adminAuth(ccccBackend).go(401);
 
 		// restore to second (middle) snapshot
 		SpaceRequest.post("/1/snapshot/{id}/restore")//
@@ -144,9 +144,9 @@ public class SnapshotResourceTest extends Assert {
 
 		// check only aaaa and bbbb accounts are present
 		// check only vince and fred users are present
-		SpaceRequest.get("/1/user/vince").basicAuth(aaaaBackend).go(200);
-		SpaceRequest.get("/1/user/fred").basicAuth(bbbbBackend).go(200);
-		SpaceRequest.get("/1/user/nath").basicAuth(ccccBackend).go(401);
+		SpaceRequest.get("/1/user/vince").adminAuth(aaaaBackend).go(200);
+		SpaceRequest.get("/1/user/fred").adminAuth(bbbbBackend).go(200);
+		SpaceRequest.get("/1/user/nath").adminAuth(ccccBackend).go(401);
 
 		// restore to latest (third) snapshot
 		SpaceRequest.post("/1/snapshot/{id}/restore")//
@@ -156,19 +156,19 @@ public class SnapshotResourceTest extends Assert {
 				.go(200);
 
 		// check all accounts and users are present
-		SpaceRequest.get("/1/user/vince").basicAuth(aaaaBackend).go(200);
-		SpaceRequest.get("/1/user/fred").basicAuth(bbbbBackend).go(200);
-		SpaceRequest.get("/1/user/nath").basicAuth(ccccBackend).go(200);
+		SpaceRequest.get("/1/user/vince").adminAuth(aaaaBackend).go(200);
+		SpaceRequest.get("/1/user/fred").adminAuth(bbbbBackend).go(200);
+		SpaceRequest.get("/1/user/nath").adminAuth(ccccBackend).go(200);
 
 		// delete all accounts and internal indices
-		SpaceRequest.delete("/1/backend").basicAuth(aaaaBackend).go(200);
-		SpaceRequest.delete("/1/backend").basicAuth(bbbbBackend).go(200);
-		SpaceRequest.delete("/1/backend").basicAuth(ccccBackend).go(200);
+		SpaceRequest.delete("/1/backend").adminAuth(aaaaBackend).go(200);
+		SpaceRequest.delete("/1/backend").adminAuth(bbbbBackend).go(200);
+		SpaceRequest.delete("/1/backend").adminAuth(ccccBackend).go(200);
 
 		// check all accounts are deleted
-		SpaceRequest.get("/1/user/vince").basicAuth(aaaaBackend).go(401);
-		SpaceRequest.get("/1/user/fred").basicAuth(bbbbBackend).go(401);
-		SpaceRequest.get("/1/user/nath").basicAuth(ccccBackend).go(401);
+		SpaceRequest.get("/1/user/vince").adminAuth(aaaaBackend).go(401);
+		SpaceRequest.get("/1/user/fred").adminAuth(bbbbBackend).go(401);
+		SpaceRequest.get("/1/user/nath").adminAuth(ccccBackend).go(401);
 
 		// restore to latest (third) snapshot
 		SpaceRequest.post("/1/snapshot/latest/restore")//
@@ -177,9 +177,9 @@ public class SnapshotResourceTest extends Assert {
 				.go(200);
 
 		// check all accounts and users are back
-		SpaceRequest.get("/1/user/vince").basicAuth(aaaaBackend).go(200);
-		SpaceRequest.get("/1/user/fred").basicAuth(bbbbBackend).go(200);
-		SpaceRequest.get("/1/user/nath").basicAuth(ccccBackend).go(200);
+		SpaceRequest.get("/1/user/vince").adminAuth(aaaaBackend).go(200);
+		SpaceRequest.get("/1/user/fred").adminAuth(bbbbBackend).go(200);
+		SpaceRequest.get("/1/user/nath").adminAuth(ccccBackend).go(200);
 
 		// check that restore to an invalid snapshot id fails
 		SpaceRequest.post("/1/snapshot/xxxx/restore")//
@@ -189,13 +189,13 @@ public class SnapshotResourceTest extends Assert {
 
 		// check account administrator can not restore the platform
 		SpaceRequest.post("/1/snapshot/latest/restore")//
-				.basicAuth(aaaaBackend)//
+				.adminAuth(aaaaBackend)//
 				.go(401);
 
 		// clean up
-		SpaceRequest.delete("/1/backend").basicAuth(aaaaBackend).go(200);
-		SpaceRequest.delete("/1/backend").basicAuth(bbbbBackend).go(200);
-		SpaceRequest.delete("/1/backend").basicAuth(ccccBackend).go(200);
+		SpaceRequest.delete("/1/backend").adminAuth(aaaaBackend).go(200);
+		SpaceRequest.delete("/1/backend").adminAuth(bbbbBackend).go(200);
+		SpaceRequest.delete("/1/backend").adminAuth(ccccBackend).go(200);
 
 		// check snapshot list did not change since last snapshot
 		SpaceRequest.get("/1/snapshot")//

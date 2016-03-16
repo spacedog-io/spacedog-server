@@ -108,11 +108,11 @@ public class SpaceRequest {
 		return this;
 	}
 
-	public SpaceRequest basicAuth(Backend account) {
+	public SpaceRequest adminAuth(Backend account) {
 		return basicAuth(account.backendId, account.username, account.password);
 	}
 
-	public SpaceRequest basicAuth(User user) {
+	public SpaceRequest userAuth(User user) {
 		return basicAuth(user.backendId, user.username, user.password);
 	}
 

@@ -74,7 +74,7 @@ public class DataResourceTest extends Assert {
 
 		// update
 
-		SpaceRequest.put("/1/data/car/" + id).backend(testBackend).basicAuth(vince)
+		SpaceRequest.put("/1/data/car/" + id).backend(testBackend).userAuth(vince)
 				.body(Json.objectBuilder().put("color", "blue").toString()).go(200);
 
 		// check update is correct

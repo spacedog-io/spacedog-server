@@ -68,17 +68,17 @@ public class SpaceDogHelper {
 	}
 
 	public static void deleteUser(String username, Backend account) throws Exception {
-		SpaceRequest.delete("/1/user/" + username).basicAuth(account).go(200, 404);
+		SpaceRequest.delete("/1/user/" + username).adminAuth(account).go(200, 404);
 	}
 
 	public static void deleteSchema(JsonNode schema, Backend backend) throws Exception {
 		String schemaName = schema.fieldNames().next();
-		SpaceRequest.delete("/1/schema/" + schemaName).basicAuth(backend).go(200, 404);
+		SpaceRequest.delete("/1/schema/" + schemaName).adminAuth(backend).go(200, 404);
 	}
 
 	public static void setSchema(JsonNode schema, Backend backend) throws Exception {
 		String schemaName = schema.fieldNames().next();
-		SpaceRequest.post("/1/schema/" + schemaName).basicAuth(backend).body(schema).go(201);
+		SpaceRequest.post("/1/schema/" + schemaName).adminAuth(backend).body(schema).go(201);
 	}
 
 	public static Backend createBackend(Backend backend) throws UnirestException, Exception {
@@ -152,6 +152,6 @@ public class SpaceDogHelper {
 	}
 
 	public static void deleteAll(String type, Backend account) throws Exception {
-		SpaceRequest.delete("/1/data/" + type).basicAuth(account).go(200);
+		SpaceRequest.delete("/1/data/" + type).adminAuth(account).go(200);
 	}
 }

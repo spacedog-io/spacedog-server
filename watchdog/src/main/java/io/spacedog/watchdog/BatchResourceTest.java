@@ -116,7 +116,7 @@ public class BatchResourceTest extends Assert {
 				.end()//
 				.build();
 
-		SpaceRequest.post("/1/batch?debug=true").basicAuth(testBackend).body(batch).go(200)//
+		SpaceRequest.post("/1/batch?debug=true").adminAuth(testBackend).body(batch).go(200)//
 				.assertEquals("vince", "responses.1.id")//
 				.assertEquals("dave", "responses.2.id")//
 				.assertEquals("vince", "responses.3.content.username")//

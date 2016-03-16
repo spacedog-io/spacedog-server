@@ -19,7 +19,7 @@ public class MailResourceTest extends Assert {
 
 		// should succeed to mail a simple text message
 
-		SpaceRequest.post("/1/mail").basicAuth(account)//
+		SpaceRequest.post("/1/mail").adminAuth(account)//
 				.queryString("test", "true")//
 				.field("to", "platform@spacedog.io")//
 				.field("subject", "This is a test...")//
@@ -28,7 +28,7 @@ public class MailResourceTest extends Assert {
 
 		// should succeed to mail a simple html message
 
-		SpaceRequest.post("/1/mail").basicAuth(account)//
+		SpaceRequest.post("/1/mail").adminAuth(account)//
 				.queryString("test", "true")//
 				.field("to", "platform@spacedog.io")//
 				.field("subject", "This is a test...")//
@@ -37,7 +37,7 @@ public class MailResourceTest extends Assert {
 
 		// should fail since no 'to' field
 
-		SpaceRequest.post("/1/mail").basicAuth(account)//
+		SpaceRequest.post("/1/mail").adminAuth(account)//
 				.queryString("test", "true")//
 				.field("subject", "This is a test...")//
 				.field("text", "So don't bother read this!")//
@@ -45,7 +45,7 @@ public class MailResourceTest extends Assert {
 
 		// should fail since no html end tag
 
-		SpaceRequest.post("/1/mail").basicAuth(account)//
+		SpaceRequest.post("/1/mail").adminAuth(account)//
 				.queryString("test", "true")//
 				.field("to", "platform@spacedog.io")//
 				.field("subject", "This is a test...")//

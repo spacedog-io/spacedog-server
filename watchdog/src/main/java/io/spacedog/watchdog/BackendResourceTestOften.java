@@ -28,7 +28,7 @@ public class BackendResourceTestOften extends Assert {
 		// gets backend info
 
 		SpaceRequest.get("/1/backend")//
-				.basicAuth(testBackend).go(200)//
+				.adminAuth(testBackend).go(200)//
 				.assertEquals("test", "backendId")//
 				.assertEquals("test", "superAdmins.0.username")//
 				.assertEquals("hello@spacedog.io", "superAdmins.0.email");
@@ -40,7 +40,7 @@ public class BackendResourceTestOften extends Assert {
 
 		// fails to return users before user schema is set
 
-		SpaceRequest.get("/1/user").basicAuth(testBackend).go(404);
+		SpaceRequest.get("/1/user").adminAuth(testBackend).go(404);
 
 		// creates new backend with different id but same username
 
@@ -57,7 +57,7 @@ public class BackendResourceTestOften extends Assert {
 
 		// admin successfully logins
 
-		SpaceRequest.get("/1/login").basicAuth(testBackend).go(200);
+		SpaceRequest.get("/1/login").adminAuth(testBackend).go(200);
 
 		// login fails if no backend nor user set
 
@@ -78,7 +78,7 @@ public class BackendResourceTestOften extends Assert {
 
 		// data access with admin user succeeds
 
-		SpaceRequest.get("/1/data").basicAuth(testBackend).go(200)//
+		SpaceRequest.get("/1/data").adminAuth(testBackend).go(200)//
 				.assertSizeEquals(0, "results");
 
 		// let's create a common user
@@ -88,7 +88,7 @@ public class BackendResourceTestOften extends Assert {
 
 		// user fails to get backend data since it is restricted to admins
 
-		SpaceRequest.get("/1/backend").basicAuth(john).go(401);
+		SpaceRequest.get("/1/backend").userAuth(john).go(401);
 
 	}
 
@@ -103,8 +103,8 @@ public class BackendResourceTestOften extends Assert {
 
 		// super admin gets his backend
 
-		ObjectNode aaaaNode = SpaceRequest.get("/1/backend").basicAuth(aaaa).go(200).objectNode();
-		ObjectNode zzzzNode = SpaceRequest.get("/1/backend").basicAuth(zzzz).go(200).objectNode();
+		ObjectNode aaaaNode = SpaceRequest.get("/1/backend").adminAuth(aaaa).go(200).objectNode();
+		ObjectNode zzzzNode = SpaceRequest.get("/1/backend").adminAuth(zzzz).go(200).objectNode();
 
 		// superdog gets all backends
 
@@ -131,8 +131,8 @@ public class BackendResourceTestOften extends Assert {
 
 		// super admin can delete his backend
 
-		SpaceRequest.delete("/1/backend").basicAuth(aaaa).go(200);
-		SpaceRequest.delete("/1/backend").basicAuth(zzzz).go(200);
+		SpaceRequest.delete("/1/backend").adminAuth(aaaa).go(200);
+		SpaceRequest.delete("/1/backend").adminAuth(zzzz).go(200);
 	}
 
 }

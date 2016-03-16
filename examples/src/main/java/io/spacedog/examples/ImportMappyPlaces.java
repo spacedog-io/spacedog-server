@@ -23,7 +23,7 @@ public class ImportMappyPlaces extends Assert {
 		try {
 
 			SpaceDogHelper.resetBackend(backend, false);
-			SpaceRequest.post("/1/schema/resto").basicAuth(backend).body(buildRestoSchema()).go(201);
+			SpaceRequest.post("/1/schema/resto").adminAuth(backend).body(buildRestoSchema()).go(201);
 
 			double step = 0.01;
 
@@ -84,7 +84,7 @@ public class ImportMappyPlaces extends Assert {
 		}
 
 		try {
-			SpaceRequest.post("/1/data/resto").basicAuth(backend).body(target).go(201);
+			SpaceRequest.post("/1/data/resto").adminAuth(backend).body(target).go(201);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

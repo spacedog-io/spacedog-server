@@ -120,7 +120,7 @@ public class ChauffeLeTest extends Assert {
 					.end()//
 					.build().toString();
 
-			return SpaceRequest.post("/1/data/bigpost").backend(backend).basicAuth(user).body(bigPost).go(201)
+			return SpaceRequest.post("/1/data/bigpost").backend(backend).userAuth(user).body(bigPost).go(201)
 					.objectNode().get("id").asText();
 		}
 
@@ -133,7 +133,7 @@ public class ChauffeLeTest extends Assert {
 			((ArrayNode) bigPost.get("responses"))
 					.add(Json.objectBuilder().put("title", comment).put("author", user.username).build());
 
-			SpaceRequest.put("/1/data/bigpost/" + postId).backend(backend).basicAuth(user).body(bigPost.toString())
+			SpaceRequest.put("/1/data/bigpost/" + postId).backend(backend).userAuth(user).body(bigPost.toString())
 					.go(200);
 		}
 
@@ -166,7 +166,7 @@ public class ChauffeLeTest extends Assert {
 
 			String smallPost = Json.objectBuilder().put("title", subject).build().toString();
 
-			return SpaceRequest.post("/1/data/smallpost").backend(backend).basicAuth(user).body(smallPost).go(201)
+			return SpaceRequest.post("/1/data/smallpost").backend(backend).userAuth(user).body(smallPost).go(201)
 					.objectNode().get("id").asText();
 		}
 
@@ -177,7 +177,7 @@ public class ChauffeLeTest extends Assert {
 					.put("parent", parentId)//
 					.build().toString();
 
-			SpaceRequest.post("/1/data/smallpost").backend(backend).basicAuth(user).body(smallPost).go(201);
+			SpaceRequest.post("/1/data/smallpost").backend(backend).userAuth(user).body(smallPost).go(201);
 		}
 
 		@Override

@@ -28,17 +28,17 @@ public class PushResourceOldTest extends Assert {
 				"davattias@gmail.com");
 
 		// subscribe
-		String vinceDeviceId = SpaceRequest.post("/1/device").backend(testBackend).basicAuth(vince)//
+		String vinceDeviceId = SpaceRequest.post("/1/device").backend(testBackend).userAuth(vince)//
 				.body(Json.objectBuilder().put("endpoint", "vince-iphone")//
 						.put("appName", "spacedog-supervisor"))//
 				.go(200, 201).objectNode().get("id").asText();
 
-		String fredDeviceId = SpaceRequest.post("/1/device").backend(testBackend).basicAuth(fred)//
+		String fredDeviceId = SpaceRequest.post("/1/device").backend(testBackend).userAuth(fred)//
 				.body(Json.objectBuilder().put("endpoint", "vince-iphone")//
 						.put("appName", "spacedog-supervisor"))//
 				.go(200, 201).objectNode().get("id").asText();
 
-		String nathDeviceId = SpaceRequest.post("/1/device").backend(testBackend).basicAuth(nath)//
+		String nathDeviceId = SpaceRequest.post("/1/device").backend(testBackend).userAuth(nath)//
 				.body(Json.objectBuilder().put("endpoint", "vince-iphone")//
 						.put("appName", "spacedog-supervisor"))//
 				.go(200, 201).objectNode().get("id").asText();
@@ -61,11 +61,11 @@ public class PushResourceOldTest extends Assert {
 				.end()//
 				.put("message", "Hi dogs").build();
 
-		SpaceRequest.post("/1/push").basicAuth(testBackend)//
+		SpaceRequest.post("/1/push").adminAuth(testBackend)//
 				.body(pushBody).go(200);
 
 		// push all
-		SpaceRequest.post("/1/device/push").basicAuth(testBackend).go(200);
+		SpaceRequest.post("/1/device/push").adminAuth(testBackend).go(200);
 	}
 
 	private ObjectNode buildSchema() {

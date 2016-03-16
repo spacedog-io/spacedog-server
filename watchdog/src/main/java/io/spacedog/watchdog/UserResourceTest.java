@@ -58,7 +58,7 @@ public class UserResourceTest extends Assert {
 
 		// get vince user object should succeed
 
-		ObjectNode res2 = SpaceRequest.get("/1/user/vince").basicAuth(vince).go(200).objectNode();
+		ObjectNode res2 = SpaceRequest.get("/1/user/vince").userAuth(vince).go(200).objectNode();
 
 		assertEquals(//
 				Json.object("username", "vince", "email", "vince@dog.com"), //
@@ -79,7 +79,7 @@ public class UserResourceTest extends Assert {
 
 		// login shoud succeed
 
-		SpaceRequest.get("/1/login").basicAuth(vince).go(200);
+		SpaceRequest.get("/1/login").userAuth(vince).go(200);
 
 		// login with wrong password should fail
 
@@ -87,10 +87,10 @@ public class UserResourceTest extends Assert {
 
 		// email update should succeed
 
-		SpaceRequest.put("/1/user/vince").basicAuth(vince)//
+		SpaceRequest.put("/1/user/vince").userAuth(vince)//
 				.body(Json.object("email", "bignose@magic.com")).go(200);
 
-		ObjectNode res9 = SpaceRequest.get("/1/user/vince").basicAuth(vince).go(200)//
+		ObjectNode res9 = SpaceRequest.get("/1/user/vince").userAuth(vince).go(200)//
 				.assertEquals("vince", "username")//
 				.assertEquals("bignose@magic.com", "email")//
 				.assertEquals(2, "meta.version")//
@@ -219,7 +219,7 @@ public class UserResourceTest extends Assert {
 				.stringProperty("lastname", true)//
 				.build();
 
-		SpaceRequest.put("/1/schema/user").basicAuth(testBackend).body(customUserSchema).go(200);
+		SpaceRequest.put("/1/schema/user").adminAuth(testBackend).body(customUserSchema).go(200);
 
 		// create new custom user
 
@@ -231,7 +231,7 @@ public class UserResourceTest extends Assert {
 		// get the brand new user and check properties are correct
 
 		ObjectNode fredFromServer = SpaceRequest.get("/1/user/fred")//
-				.basicAuth(testBackend).go(200).objectNode();
+				.adminAuth(testBackend).go(200).objectNode();
 		assertEquals(fred.without("password"), //
 				fredFromServer.without(Arrays.asList("hashedPassword", "groups", "meta")));
 	}

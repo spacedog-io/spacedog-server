@@ -37,10 +37,10 @@ public class ShareResourceTest {
 		// only admin can get all shared locations
 		SpaceRequest.get("/1/share").go(401);
 		SpaceRequest.get("/1/share").backend(testBackend).go(401);
-		SpaceRequest.get("/1/share").basicAuth(vince).go(401);
+		SpaceRequest.get("/1/share").userAuth(vince).go(401);
 
 		// this account is brand new, no shared files
-		SpaceRequest.get("/1/share").basicAuth(testBackend).go(200)//
+		SpaceRequest.get("/1/share").adminAuth(testBackend).go(200)//
 				.assertSizeEquals(0, "results");
 
 		// only users and admins are allowed to share files
@@ -53,7 +53,7 @@ public class ShareResourceTest {
 
 		JsonNode json = SpaceRequest.put("/1/share/tweeter.png")//
 				.backend(testBackend)//
-				.basicAuth(vince)//
+				.userAuth(vince)//
 				.body(pngBytes)//
 				.go(200).jsonNode();
 
@@ -62,7 +62,7 @@ public class ShareResourceTest {
 		String pngS3Location = json.get("s3").asText();
 
 		// list all shared files should return tweeter.png path only
-		SpaceRequest.get("/1/share").basicAuth(testBackend).go(200)//
+		SpaceRequest.get("/1/share").adminAuth(testBackend).go(200)//
 				.assertSizeEquals(1, "results")//
 				.assertEquals(pngPath, "results.0.path");
 
@@ -94,7 +94,7 @@ public class ShareResourceTest {
 
 		// share small text file
 		json = SpaceRequest.put("/1/share/test.txt")//
-				.backend(testBackend).basicAuth(fred)//
+				.backend(testBackend).userAuth(fred)//
 				.body(FILE_CONTENT.getBytes())//
 				.go(200)//
 				.jsonNode();
@@ -107,7 +107,7 @@ public class ShareResourceTest {
 		// get first page with only one path
 		json = SpaceRequest.get("/1/share")//
 				.queryString("size", "1")//
-				.basicAuth(testBackend)//
+				.adminAuth(testBackend)//
 				.go(200)//
 				.assertSizeEquals(1, "results")//
 				.jsonNode();
@@ -121,7 +121,7 @@ public class ShareResourceTest {
 		json = SpaceRequest.get("/1/share")//
 				.queryString("size", "1")//
 				.queryString("next", next)//
-				.basicAuth(testBackend)//
+				.adminAuth(testBackend)//
 				.go(200)//
 				.assertSizeEquals(1, "results")//
 				.assertNotPresent("next")//
@@ -154,26 +154,26 @@ public class ShareResourceTest {
 		// only admin or owner can delete a shared file
 		SpaceRequest.delete(txtLocation).go(401);
 		SpaceRequest.delete(txtLocation).backend(testBackend).go(401);
-		SpaceRequest.delete(txtLocation).backend(testBackend).basicAuth(vince).go(401);
+		SpaceRequest.delete(txtLocation).backend(testBackend).userAuth(vince).go(401);
 
 		// owner (fred) can delete its own shared file (test.txt)
-		SpaceRequest.delete(txtLocation).backend(testBackend).basicAuth(fred).go(200);
+		SpaceRequest.delete(txtLocation).backend(testBackend).userAuth(fred).go(200);
 
 		// list of shared files should only return the png file path
-		SpaceRequest.get("/1/share").basicAuth(testBackend).go(200)//
+		SpaceRequest.get("/1/share").adminAuth(testBackend).go(200)//
 				.assertSizeEquals(1, "results")//
 				.assertEquals(pngPath, "results.0.path");
 
 		// only admin can delete all shared files
 		SpaceRequest.delete("/1/share").go(401);
 		SpaceRequest.delete("/1/share").backend(testBackend).go(401);
-		SpaceRequest.delete("/1/share").basicAuth(fred).go(401);
-		SpaceRequest.delete("/1/share").basicAuth(vince).go(401);
-		SpaceRequest.delete("/1/share").basicAuth(testBackend).go(200)//
+		SpaceRequest.delete("/1/share").userAuth(fred).go(401);
+		SpaceRequest.delete("/1/share").userAuth(vince).go(401);
+		SpaceRequest.delete("/1/share").adminAuth(testBackend).go(200)//
 				.assertSizeEquals(1, "deleted")//
 				.assertContains(TextNode.valueOf(pngPath), "deleted");
 
-		SpaceRequest.get("/1/share").basicAuth(testBackend).go(200)//
+		SpaceRequest.get("/1/share").adminAuth(testBackend).go(200)//
 				.assertSizeEquals(0, "results");
 
 	}

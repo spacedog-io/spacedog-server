@@ -128,7 +128,7 @@ public class DataResourceTest2 extends Assert {
 
 		JsonNode updateJson2 = Json.objectBuilder().array("items").object().put("quantity", 7).build();
 
-		SpaceRequest.put("/1/data/sale/" + id).backend(testBackend).basicAuth(vince).body(updateJson2.toString())
+		SpaceRequest.put("/1/data/sale/" + id).backend(testBackend).userAuth(vince).body(updateJson2.toString())
 				.go(200)//
 				.assertTrue("success")//
 				.assertEquals("sale", "type")//
@@ -213,27 +213,27 @@ public class DataResourceTest2 extends Assert {
 
 		SpaceDogHelper.createUser(testBackend, "riri", "hi riri", "riri@dog.com");
 
-		SpaceRequest.post("/1/data/message").basicAuth(testBackend)
+		SpaceRequest.post("/1/data/message").adminAuth(testBackend)
 				.body(Json.objectBuilder().put("text", "what's up?").build()).go(201);
-		SpaceRequest.post("/1/data/message").basicAuth(testBackend)
+		SpaceRequest.post("/1/data/message").adminAuth(testBackend)
 				.body(Json.objectBuilder().put("text", "wanna drink something?").build()).go(201);
-		SpaceRequest.post("/1/data/message").basicAuth(testBackend)
+		SpaceRequest.post("/1/data/message").adminAuth(testBackend)
 				.body(Json.objectBuilder().put("text", "pretty cool, hein?").build()).go(201);
-		SpaceRequest.post("/1/data/message").basicAuth(testBackend)
+		SpaceRequest.post("/1/data/message").adminAuth(testBackend)
 				.body(Json.objectBuilder().put("text", "so long guys").build()).go(201).getFromJson("id").asText();
 
-		SpaceRequest.get("/1/data?refresh=true").basicAuth(testBackend).go(200).assertEquals(5, "total");
+		SpaceRequest.get("/1/data?refresh=true").adminAuth(testBackend).go(200).assertEquals(5, "total");
 
 		// should succeed to delete all users
-		SpaceRequest.delete("/1/user").basicAuth(testBackend).go(200)//
+		SpaceRequest.delete("/1/user").adminAuth(testBackend).go(200)//
 				.assertEquals(1, "totalDeleted");
-		SpaceRequest.get("/1/data?refresh=true").basicAuth(testBackend).go(200)//
+		SpaceRequest.get("/1/data?refresh=true").adminAuth(testBackend).go(200)//
 				.assertEquals(4, "total");
 
 		// should succeed to delete all messages
-		SpaceRequest.delete("/1/data/message").basicAuth(testBackend).go(200)//
+		SpaceRequest.delete("/1/data/message").adminAuth(testBackend).go(200)//
 				.assertEquals(4, "totalDeleted");
-		SpaceRequest.get("/1/data?refresh=true").basicAuth(testBackend).go(200)//
+		SpaceRequest.get("/1/data?refresh=true").adminAuth(testBackend).go(200)//
 				.assertEquals(0, "total");
 	}
 
@@ -250,19 +250,19 @@ public class DataResourceTest2 extends Assert {
 
 		// creates a msg1 object with auto generated id
 
-		String id = SpaceRequest.post("/1/data/msg1").basicAuth(testBackend)//
+		String id = SpaceRequest.post("/1/data/msg1").adminAuth(testBackend)//
 				.body(Json.object("text", "id=?")).go(201)//
 				.getFromJson("id").asText();
 
-		SpaceRequest.get("/1/data/msg1/" + id).basicAuth(testBackend).go(200)//
+		SpaceRequest.get("/1/data/msg1/" + id).adminAuth(testBackend).go(200)//
 				.assertEquals("id=?", "text");
 
 		// creates a msg1 object with self provided id
 
-		SpaceRequest.post("/1/data/msg1?id=1").basicAuth(testBackend)//
+		SpaceRequest.post("/1/data/msg1?id=1").adminAuth(testBackend)//
 				.body(Json.object("text", "id=1")).go(201);
 
-		SpaceRequest.get("/1/data/msg1/1").basicAuth(testBackend).go(200)//
+		SpaceRequest.get("/1/data/msg1/1").adminAuth(testBackend).go(200)//
 				.assertEquals("id=1", "text");
 
 		// creates msg2 schema with id pointing to code
@@ -273,19 +273,19 @@ public class DataResourceTest2 extends Assert {
 
 		// creates a msg2 object with id = code = 2
 
-		SpaceRequest.post("/1/data/msg2").basicAuth(testBackend)//
+		SpaceRequest.post("/1/data/msg2").adminAuth(testBackend)//
 				.body(Json.object("text", "id=code=2", "code", "2")).go(201);
 
-		SpaceRequest.get("/1/data/msg2/2").basicAuth(testBackend).go(200)//
+		SpaceRequest.get("/1/data/msg2/2").adminAuth(testBackend).go(200)//
 				.assertEquals("id=code=2", "text")//
 				.assertEquals("2", "code");
 
 		// creates a msg2 object with id = code = 3
 
-		SpaceRequest.post("/1/data/msg2?id=XXX").basicAuth(testBackend)//
+		SpaceRequest.post("/1/data/msg2?id=XXX").adminAuth(testBackend)//
 				.body(Json.object("text", "id=code=3", "code", "3")).go(201);
 
-		SpaceRequest.get("/1/data/msg2/3").basicAuth(testBackend).go(200)//
+		SpaceRequest.get("/1/data/msg2/3").adminAuth(testBackend).go(200)//
 				.assertEquals("id=code=3", "text")//
 				.assertEquals("3", "code");
 
