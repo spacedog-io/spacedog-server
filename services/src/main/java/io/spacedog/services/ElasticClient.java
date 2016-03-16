@@ -70,15 +70,20 @@ public class ElasticClient {
 		return internalClient.prepareUpdate(toAlias(backendId, type), type, id);
 	}
 
-	public SearchRequestBuilder prepareSearch(String backendId) {
-		Check.notNullOrEmpty(backendId, "backendId");
-		return internalClient.prepareSearch(toIndices(backendId));
+	public SearchRequestBuilder prepareSearch() {
+		// forbid any non very specific index list
+		// to avoid the risk of mixing indices from different backend
+		// to avoid for example empty index list resulting to
+		// indices of all backend
+		return internalClient.prepareSearch()//
+				.setIndicesOptions(IndicesOptions.fromOptions(false, false, false, false));
 	}
 
 	public SearchRequestBuilder prepareSearch(String backendId, String type) {
 		Check.notNullOrEmpty(backendId, "backendId");
 		Check.notNullOrEmpty(type, "type");
-		return internalClient.prepareSearch(toAlias(backendId, type));
+		return internalClient.prepareSearch(toAlias(backendId, type))//
+				.setIndicesOptions(IndicesOptions.fromOptions(false, false, false, false));
 	}
 
 	public SearchScrollRequestBuilder prepareSearchScroll(String scrollId) {
@@ -199,7 +204,7 @@ public class ElasticClient {
 
 	public void deleteAllIndices(String backendId) {
 
-		String[] indices = toIndices(backendId);
+		String[] indices = toIndices(backendId, false);
 
 		if (indices != null && indices.length > 0) {
 			DeleteIndexResponse deleteIndexResponse = internalClient.admin().indices().prepareDelete(indices).get();
@@ -307,7 +312,14 @@ public class ElasticClient {
 	}
 
 	public String[] toIndices(String backendId) {
-		return toIndicesStream(backendId).toArray(String[]::new);
+		return toIndices(backendId, true);
+	}
+
+	public String[] toIndices(String backendId, boolean throwIfNoneFound) {
+		String[] indices = toIndicesStream(backendId).toArray(String[]::new);
+		if (throwIfNoneFound && indices.length == 0)
+			throw Exceptions.notFound("no schema found for backend [%s]", backendId);
+		return indices;
 	}
 
 	/**

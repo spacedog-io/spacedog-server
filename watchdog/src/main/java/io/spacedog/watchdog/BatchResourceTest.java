@@ -89,6 +89,10 @@ public class BatchResourceTest extends Assert {
 
 		batch = Json.arrayBuilder()//
 				.object()//
+				.put("method", "POST").put("path", "/1/schema/user")//
+				.node("content", SpaceDogHelper.getDefaultUserSchemaBuilder().toString())//
+				.end()//
+				.object()//
 				.put("method", "POST").put("path", "/1/user")//
 				.object("content")//
 				.put("username", "vince")//
@@ -113,10 +117,10 @@ public class BatchResourceTest extends Assert {
 				.build();
 
 		SpaceRequest.post("/1/batch?debug=true").basicAuth(testBackend).body(batch).go(200)//
-				.assertEquals("vince", "responses.0.id")//
-				.assertEquals("dave", "responses.1.id")//
-				.assertEquals("vince", "responses.2.content.username")//
-				.assertEquals("dave", "responses.3.content.username")//
+				.assertEquals("vince", "responses.1.id")//
+				.assertEquals("dave", "responses.2.id")//
+				.assertEquals("vince", "responses.3.content.username")//
+				.assertEquals("dave", "responses.4.content.username")//
 				.assertEquals(1, "debug.batchCredentialChecks");
 
 		// should succeed to returns errors when batch requests are invalid, not

@@ -14,7 +14,6 @@ import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceDogHelper.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.SchemaBuilder2;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
@@ -25,6 +24,7 @@ public class UserResourceTest extends Assert {
 
 		SpaceDogHelper.prepareTest();
 		SpaceDogHelper.Backend testBackend = SpaceDogHelper.resetTestBackend();
+		SpaceDogHelper.initUserDefaultSchema(testBackend);
 
 		// fails since invalid users
 
@@ -100,8 +100,11 @@ public class UserResourceTest extends Assert {
 	@Test
 	public void setAndResetPassword() throws Exception {
 
+		// prepare
+
 		SpaceDogHelper.prepareTest();
 		SpaceDogHelper.Backend testBackend = SpaceDogHelper.resetTestBackend();
+		SpaceDogHelper.initUserDefaultSchema(testBackend);
 		SpaceDogHelper.createUser(testBackend, "toto", "hi toto", "toto@dog.com");
 
 		// sign up without password should succeed
@@ -201,16 +204,17 @@ public class UserResourceTest extends Assert {
 
 		SpaceDogHelper.prepareTest();
 		Backend testBackend = SpaceDogHelper.resetTestBackend();
+		SpaceDogHelper.initUserDefaultSchema(testBackend);
 
 		// vince sign up should succeed
 
 		SpaceDogHelper.createUser(testBackend, "vince", "hi vince", "vince@dog.com");
 		SpaceRequest.get("/1/data?refresh=true").backend(testBackend).go(200)//
-				.assertEquals(2, "total");
+				.assertEquals(1, "total");
 
 		// update user schema with custom schema
 
-		ObjectNode customUserSchema = getDefaultUserSchemaBuilder()//
+		ObjectNode customUserSchema = SpaceDogHelper.getDefaultUserSchemaBuilder()//
 				.stringProperty("firstname", true)//
 				.stringProperty("lastname", true)//
 				.build();
@@ -230,20 +234,5 @@ public class UserResourceTest extends Assert {
 				.basicAuth(testBackend).go(200).objectNode();
 		assertEquals(fred.without("password"), //
 				fredFromServer.without(Arrays.asList("hashedPassword", "groups", "meta")));
-	}
-
-	static final String USER_TYPE = "user";
-
-	public static final String EMAIL = "email";
-	public static final String USERNAME = "username";
-
-	public static SchemaBuilder2 getDefaultUserSchemaBuilder() {
-		return SchemaBuilder2.builder(USER_TYPE, USERNAME)//
-				.stringProperty(USERNAME, true)//
-				.stringProperty(EMAIL, true);
-	}
-
-	public static ObjectNode getDefaultUserSchema() {
-		return getDefaultUserSchemaBuilder().build();
 	}
 }

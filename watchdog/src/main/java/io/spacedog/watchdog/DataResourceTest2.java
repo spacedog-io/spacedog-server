@@ -121,6 +121,7 @@ public class DataResourceTest2 extends Assert {
 
 		// create user vince
 
+		SpaceDogHelper.initUserDefaultSchema(testBackend);
 		SpaceDogHelper.User vince = SpaceDogHelper.createUser(testBackend, "vince", "hi vince", "vince@dog.com");
 
 		// small update no version should succeed
@@ -199,8 +200,11 @@ public class DataResourceTest2 extends Assert {
 	@Test
 	public void deleteObjects() throws Exception {
 
+		// prepare
+
 		SpaceDogHelper.prepareTest();
 		Backend testBackend = SpaceDogHelper.resetTestBackend();
+		SpaceDogHelper.initUserDefaultSchema(testBackend);
 		ObjectNode schema = SchemaBuilder2.builder("message")//
 				.textProperty("text", "english", true).build();
 		SpaceDogHelper.setSchema(schema, testBackend);
@@ -218,19 +222,19 @@ public class DataResourceTest2 extends Assert {
 		SpaceRequest.post("/1/data/message").basicAuth(testBackend)
 				.body(Json.objectBuilder().put("text", "so long guys").build()).go(201).getFromJson("id").asText();
 
-		SpaceRequest.get("/1/data?refresh=true").basicAuth(testBackend).go(200).assertEquals(6, "total");
+		SpaceRequest.get("/1/data?refresh=true").basicAuth(testBackend).go(200).assertEquals(5, "total");
 
 		// should succeed to delete all users
 		SpaceRequest.delete("/1/user").basicAuth(testBackend).go(200)//
 				.assertEquals(1, "totalDeleted");
 		SpaceRequest.get("/1/data?refresh=true").basicAuth(testBackend).go(200)//
-				.assertEquals(5, "total");
+				.assertEquals(4, "total");
 
 		// should succeed to delete all messages
 		SpaceRequest.delete("/1/data/message").basicAuth(testBackend).go(200)//
 				.assertEquals(4, "totalDeleted");
 		SpaceRequest.get("/1/data?refresh=true").basicAuth(testBackend).go(200)//
-				.assertEquals(1, "total");
+				.assertEquals(0, "total");
 	}
 
 	@Test

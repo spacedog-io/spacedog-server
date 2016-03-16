@@ -6,6 +6,7 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.SchemaBuilder2;
 import io.spacedog.utils.Utils;
 
 public class SpaceDogHelper {
@@ -40,13 +41,27 @@ public class SpaceDogHelper {
 		}
 	}
 
+	public static SchemaBuilder2 getDefaultUserSchemaBuilder() {
+		return SchemaBuilder2.builder("user", "username")//
+				.stringProperty("username", true)//
+				.stringProperty("email", true);
+	}
+
+	public static void initUserDefaultSchema(Backend backend) throws Exception {
+		initUserSchema(backend, getDefaultUserSchemaBuilder().build());
+	}
+
+	public static void initUserSchema(Backend backend, ObjectNode schema) throws Exception {
+		setSchema(schema, backend);
+	}
+
 	public static User createUser(Backend account, String username, String password) throws Exception {
 		return createUser(account, username, password, "david@spacedog.io");
 	}
 
 	public static User createUser(Backend backend, String username, String password, String email) throws Exception {
 		String id = SpaceRequest.post("/1/user").backend(backend)
-				.body(Json.objectBuilder().put("username", username).put("password", password).put("email", email))
+				.body(Json.object("username", username, "password", password, "email", email))//
 				.go(201).objectNode().get("id").asText();
 
 		return new User(backend.backendId, id, username, password, email);

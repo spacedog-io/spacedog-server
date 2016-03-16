@@ -24,6 +24,7 @@ public class SchemaResourceTest extends Assert {
 
 		SpaceDogHelper.prepareTest();
 		Backend testBackend = SpaceDogHelper.resetTestBackend();
+		SpaceDogHelper.initUserDefaultSchema(testBackend);
 
 		// should succeed to create a user
 
@@ -48,7 +49,7 @@ public class SchemaResourceTest extends Assert {
 						.merge(buildHomeSchema()) //
 						.merge(buildCarSchema()) //
 						.merge(buildSaleSchema()) //
-						.merge(UserResourceTest.getDefaultUserSchema()) //
+						.merge(SpaceDogHelper.getDefaultUserSchemaBuilder().build()) //
 						.get());
 
 		// should fail to delete schema with simple backend key credentials

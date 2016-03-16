@@ -50,7 +50,7 @@ import net.codestory.http.payload.Payload;
 public class UserResource extends Resource {
 
 	//
-	// user constants and schema
+	// User constants and schema
 	//
 
 	static final String USER_TYPE = "user";
@@ -77,7 +77,7 @@ public class UserResource extends Resource {
 	}
 
 	//
-	// credentials constants and schema
+	// Credentials constants and schema
 	//
 
 	public static final String CREDENTIALS_TYPE = "credentials";
@@ -164,7 +164,7 @@ public class UserResource extends Resource {
 		QuerySourceBuilder query = new QuerySourceBuilder().setQuery(//
 				QueryBuilders.boolQuery()//
 						.must(QueryBuilders.termQuery(Resource.BACKEND_ID, credentials.backendId()))//
-						.mustNot(QueryBuilders.termQuery(CREDENTIALS_LEVEL, Level.SUPER_ADMIN.toString())));
+						.must(QueryBuilders.termQuery(CREDENTIALS_LEVEL, Level.USER.toString())));
 
 		SearchResponse search = elastic.prepareSearch(SPACEDOG_BACKEND, CREDENTIALS_TYPE)//
 				.setQuery(query.toString())//

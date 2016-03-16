@@ -24,10 +24,14 @@ public class SearchResourceTest extends Assert {
 		// prepare
 
 		SpaceDogHelper.prepareTest();
+
 		Backend testBackend = SpaceDogHelper.resetTestBackend();
+		SpaceDogHelper.initUserDefaultSchema(testBackend);
+
 		ObjectNode message = SchemaBuilder2.builder("message")//
 				.textProperty("text", "english", true).build();
 		SpaceDogHelper.setSchema(message, testBackend);
+
 		ObjectNode rubric = SchemaBuilder2.builder("rubric")//
 				.textProperty("name", "english", true).build();
 		SpaceDogHelper.setSchema(rubric, testBackend);
@@ -49,7 +53,7 @@ public class SearchResourceTest extends Assert {
 				.body(Json.object("text", "so long guys")).go(201);
 
 		SpaceRequest.get("/1/data?refresh=true").basicAuth(testBackend).go(200)//
-				.assertEquals(7, "total");
+				.assertEquals(6, "total");
 
 		// deletes messages containing 'up' by query
 
@@ -65,6 +69,6 @@ public class SearchResourceTest extends Assert {
 				.object("match").put("_all", "wanna riri").build();
 		SpaceRequest.delete("/1/search").basicAuth(testBackend).body(query).go(200);
 		SpaceRequest.get("/1/data?refresh=true").basicAuth(testBackend).go(200)//
-				.assertEquals(4, "total");
+				.assertEquals(3, "total");
 	}
 }

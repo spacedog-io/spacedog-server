@@ -14,6 +14,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceDogHelper;
+import io.spacedog.client.SpaceDogHelper.Backend;
+import io.spacedog.client.SpaceDogHelper.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
@@ -23,23 +25,24 @@ import io.spacedog.watchdog.SpaceSuite.TestOften;
 @TestOften
 public class ChauffeLeTest extends Assert {
 
-	private static SpaceDogHelper.Backend adminAccount;
+	private static Backend backend;
 
-	private static SpaceDogHelper.User lui;
-	private static SpaceDogHelper.User elle;
-	private static SpaceDogHelper.User laCopine;
+	private static User lui;
+	private static User elle;
+	private static User laCopine;
 
 	@BeforeClass
 	public static void resetBackend() throws Exception {
 
-		adminAccount = SpaceDogHelper.resetTestBackend();
+		backend = SpaceDogHelper.resetTestBackend();
+		SpaceDogHelper.initUserDefaultSchema(backend);
 
-		SpaceDogHelper.setSchema(buildBigPostSchema(), adminAccount);
-		SpaceDogHelper.setSchema(buildSmallPostSchema(), adminAccount);
+		SpaceDogHelper.setSchema(buildBigPostSchema(), backend);
+		SpaceDogHelper.setSchema(buildSmallPostSchema(), backend);
 
-		lui = SpaceDogHelper.createUser(adminAccount, "lui", "hi lui", "lui@chauffe.le");
-		elle = SpaceDogHelper.createUser(adminAccount, "elle", "hi elle", "elle@chauffe.le");
-		laCopine = SpaceDogHelper.createUser(adminAccount, "lacopine", "hi la copine", "lacopine@chauffe.le");
+		lui = SpaceDogHelper.createUser(backend, "lui", "hi lui", "lui@chauffe.le");
+		elle = SpaceDogHelper.createUser(backend, "elle", "hi elle", "elle@chauffe.le");
+		laCopine = SpaceDogHelper.createUser(backend, "lacopine", "hi la copine", "lacopine@chauffe.le");
 	}
 
 	static ObjectNode buildBigPostSchema() {
@@ -117,20 +120,20 @@ public class ChauffeLeTest extends Assert {
 					.end()//
 					.build().toString();
 
-			return SpaceRequest.post("/1/data/bigpost").backend(adminAccount).basicAuth(user).body(bigPost).go(201)
+			return SpaceRequest.post("/1/data/bigpost").backend(backend).basicAuth(user).body(bigPost).go(201)
 					.objectNode().get("id").asText();
 		}
 
 		@Override
 		public void addComment(String postId, String comment, SpaceDogHelper.User user) throws Exception {
 
-			ObjectNode bigPost = SpaceRequest.get("/1/data/bigpost/{id}").backend(adminAccount).routeParam("id", postId)
+			ObjectNode bigPost = SpaceRequest.get("/1/data/bigpost/{id}").backend(backend).routeParam("id", postId)
 					.go(200).objectNode();
 
 			((ArrayNode) bigPost.get("responses"))
 					.add(Json.objectBuilder().put("title", comment).put("author", user.username).build());
 
-			SpaceRequest.put("/1/data/bigpost/" + postId).backend(adminAccount).basicAuth(user).body(bigPost.toString())
+			SpaceRequest.put("/1/data/bigpost/" + postId).backend(backend).basicAuth(user).body(bigPost.toString())
 					.go(200);
 		}
 
@@ -151,7 +154,7 @@ public class ChauffeLeTest extends Assert {
 					.object("match_all")//
 					.build().toString();
 
-			return SpaceRequest.post("/1/search/bigpost?refresh=true").backend(adminAccount).body(wallQuery).go(200)
+			return SpaceRequest.post("/1/search/bigpost?refresh=true").backend(backend).body(wallQuery).go(200)
 					.jsonNode().get("results").elements();
 		}
 	}
@@ -163,7 +166,7 @@ public class ChauffeLeTest extends Assert {
 
 			String smallPost = Json.objectBuilder().put("title", subject).build().toString();
 
-			return SpaceRequest.post("/1/data/smallpost").backend(adminAccount).basicAuth(user).body(smallPost).go(201)
+			return SpaceRequest.post("/1/data/smallpost").backend(backend).basicAuth(user).body(smallPost).go(201)
 					.objectNode().get("id").asText();
 		}
 
@@ -174,7 +177,7 @@ public class ChauffeLeTest extends Assert {
 					.put("parent", parentId)//
 					.build().toString();
 
-			SpaceRequest.post("/1/data/smallpost").backend(adminAccount).basicAuth(user).body(smallPost).go(201);
+			SpaceRequest.post("/1/data/smallpost").backend(backend).basicAuth(user).body(smallPost).go(201);
 		}
 
 		@Override
@@ -202,7 +205,7 @@ public class ChauffeLeTest extends Assert {
 					.put("field", "parent")//
 					.build().toString();
 
-			JsonNode subjectResults = SpaceRequest.post("/1/search/smallpost?refresh=true").backend(adminAccount)
+			JsonNode subjectResults = SpaceRequest.post("/1/search/smallpost?refresh=true").backend(backend)
 					.body(subjectQuery).go(200).jsonNode();
 
 			JsonBuilder<ObjectNode> responsesQuery = Json.objectBuilder()//
@@ -231,7 +234,7 @@ public class ChauffeLeTest extends Assert {
 			while (subjects.hasNext())
 				responsesQuery.add(subjects.next().get("meta").get("id").asText());
 
-			SpaceRequest.post("/1/data/smallpost/search").backend(adminAccount).body(responsesQuery.build().toString())
+			SpaceRequest.post("/1/data/smallpost/search").backend(backend).body(responsesQuery.build().toString())
 					.go(200);
 
 			return subjectResults.get("results").elements();

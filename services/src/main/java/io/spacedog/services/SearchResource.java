@@ -132,10 +132,17 @@ public class SearchResource extends Resource {
 
 	ObjectNode searchInternal(Credentials credentials, String type, String jsonQuery, Context context) {
 
+		SearchRequestBuilder search = null;
 		ElasticClient elastic = Start.get().getElasticClient();
-		SearchRequestBuilder search = Strings.isNullOrEmpty(type)//
-				? elastic.prepareSearch(credentials.backendId())//
-				: elastic.prepareSearch(credentials.backendId(), type).setTypes(type);
+
+		if (Strings.isNullOrEmpty(type)) {
+			String[] indices = elastic.toIndices(credentials.backendId(), false);
+			if (indices.length == 0)
+				return Json.objectBuilder().put("took", 0).put("total", 0).array("results").build();
+			else
+				search = elastic.prepareSearch().setIndices(indices);
+		} else
+			search = elastic.prepareSearch(credentials.backendId(), type).setTypes(type);
 
 		if (Strings.isNullOrEmpty(jsonQuery)) {
 

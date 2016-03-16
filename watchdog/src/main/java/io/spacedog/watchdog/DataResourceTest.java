@@ -25,6 +25,7 @@ public class DataResourceTest extends Assert {
 
 		SpaceDogHelper.prepareTest();
 		Backend testBackend = SpaceDogHelper.resetTestBackend();
+		SpaceDogHelper.initUserDefaultSchema(testBackend);
 		SpaceDogHelper.setSchema(SchemaResourceTest.buildCarSchema(), testBackend);
 
 		JsonNode car = Json.objectBuilder() //

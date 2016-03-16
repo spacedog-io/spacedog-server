@@ -18,6 +18,7 @@ public class AggregationTest {
 
 		SpaceDogHelper.prepareTest();
 		Backend testBackend = SpaceDogHelper.resetTestBackend();
+		SpaceDogHelper.initUserDefaultSchema(testBackend);
 
 		SpaceDogHelper.createUser(testBackend, "riri", "hi riri", "hello@disney.com");
 		SpaceDogHelper.createUser(testBackend, "fifi", "hi fifi", "hello@disney.com");
@@ -36,7 +37,7 @@ public class AggregationTest {
 		// 4 => 3 distinct disney user emails (hello, donald, mickey)
 		// and 1 admin email
 		SpaceRequest.post("/1/search?refresh=true").backend(testBackend).body(query).go(200)//
-				.assertEquals(4, "aggregations.objectCount.value");
+				.assertEquals(3, "aggregations.objectCount.value");
 
 	}
 

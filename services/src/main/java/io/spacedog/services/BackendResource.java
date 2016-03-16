@@ -3,17 +3,16 @@
  */
 package io.spacedog.services;
 
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.elasticsearch.action.support.QuerySourceBuilder;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 
 import io.spacedog.services.Credentials.Level;
 import io.spacedog.services.UserResource.UserSignUp;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Internals;
-import io.spacedog.utils.Json;
-import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -30,11 +29,12 @@ public class BackendResource extends Resource {
 	//
 	// Routes
 	//
+
 	@Post("/backend/:id")
 	@Post("/backend/:id/")
 	public Payload post(String backendId, String body, Context context) {
 
-		if (Start.get().getElasticClient().existsIndex(backendId, UserResource.USER_TYPE))
+		if (existsBackend(backendId))
 			return Payloads.invalidParameters("backendId", backendId,
 					String.format("backend id [%s] not available", backendId));
 
@@ -45,17 +45,10 @@ public class BackendResource extends Resource {
 					"user credentials for backend [%s] with usename [%s] already exists", //
 					signing.backendId, signing.username);
 
-		int shards = context.query().getInteger(SpaceParams.SHARDS, SHARDS_DEFAULT);
-		int replicas = context.query().getInteger(SpaceParams.REPLICAS, REPLICAS_DEFAULT);
-
-		Start.get().getElasticClient().createIndex(//
-				backendId, UserResource.USER_TYPE, UserResource.getDefaultUserMapping(), shards, replicas);
-
 		signing.indexCredentials();
-		signing.indexUser();
 
-		// Backend is created, new admin credentials are valid and can be set
-		// in space context if none are set
+		// after backend is created, new admin credentials are valid
+		// and can be set in space context if none are set
 		SpaceContext.setCredentials(//
 				Credentials.fromAdmin(backendId, signing.username, signing.email));
 
@@ -112,21 +105,30 @@ public class BackendResource extends Resource {
 	// Implementation
 	//
 
-	// TODO not use yet but who knows
-	public Payload getAllBackendsFromIndices() {
+	public boolean existsBackend(String backendId) {
 
-		Set<String> indices = Start.get().getElasticClient().indices()//
-				.map(index -> index.split("-", 2)[0])//
-				.collect(Collectors.toSet());
+		ElasticClient elastic = Start.get().getElasticClient();
 
-		JsonBuilder<ObjectNode> builder = Json.objectBuilder()//
-				.put("total", indices.size())//
-				.array("results");
+		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery()//
+				.filter(QueryBuilders.termQuery(BACKEND_ID, backendId));
 
-		for (String indice : indices)
-			builder.add(indice);
+		elastic.refreshType(SPACEDOG_BACKEND, UserResource.CREDENTIALS_TYPE);
 
-		return Payloads.json(builder);
+		long totalHits = elastic.prepareSearch(SPACEDOG_BACKEND, UserResource.CREDENTIALS_TYPE)//
+				.setQuery(new QuerySourceBuilder().setQuery(boolQueryBuilder).toString())//
+				.setSize(0)//
+				.get()//
+				.getHits()//
+				.getTotalHits();
+
+		if (totalHits > 0)
+			return true;
+
+		return getAllBackendIndices().anyMatch(index -> index[0].equals(backendId));
+	}
+
+	public Stream<String[]> getAllBackendIndices() {
+		return Start.get().getElasticClient().indices().map(index -> index.split("-", 2));
 	}
 
 	//
