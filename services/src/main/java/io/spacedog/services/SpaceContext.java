@@ -82,10 +82,10 @@ public class SpaceContext {
 
 	public static Credentials checkSuperDogCredentials(boolean checkCustomerBackend) {
 		Credentials credentials = checkCredentials(checkCustomerBackend);
-		if (credentials.isSuperDogAuthenticated())
+		if (credentials.isSuperDog())
 			return credentials;
 		throw new AuthorizationException("invalid superdog credentials of name [%s] and type [%s]", credentials.name(),
-				credentials.type());
+				credentials.level());
 	}
 
 	public static Credentials checkSuperAdminCredentials() {
@@ -94,10 +94,10 @@ public class SpaceContext {
 
 	public static Credentials checkSuperAdminCredentials(boolean checkCustomerBackend) {
 		Credentials credentials = checkCredentials(checkCustomerBackend);
-		if (credentials.isSuperAdminAuthenticated())
+		if (credentials.isAtLeastSuperAdmin())
 			return credentials;
 		throw new AuthorizationException("invalid super administrator credentials of name [%s] and type [%s]",
-				credentials.name(), credentials.type());
+				credentials.name(), credentials.level());
 	}
 
 	public static Credentials checkAdminCredentials() {
@@ -106,10 +106,10 @@ public class SpaceContext {
 
 	public static Credentials checkAdminCredentials(boolean checkCustomerBackend) {
 		Credentials credentials = checkCredentials(checkCustomerBackend);
-		if (credentials.isAdminAuthenticated())
+		if (credentials.isAtLeastAdmin())
 			return credentials;
 		throw new AuthorizationException("invalid administrator credentials of name [%s] and type [%s]",
-				credentials.name(), credentials.type());
+				credentials.name(), credentials.level());
 	}
 
 	public static Credentials checkUserOrAdminCredentials() {
@@ -118,10 +118,10 @@ public class SpaceContext {
 
 	public static Credentials checkUserOrAdminCredentials(boolean checkCustomerBackend) {
 		Credentials credentials = checkCredentials(checkCustomerBackend);
-		if (credentials.isAdminAuthenticated() || credentials.isUserAuthenticated())
+		if (credentials.isAtLeastAdmin() || credentials.isAtLeastUser())
 			return credentials;
 		throw new AuthorizationException("invalid user or administrator credentials of name [%s] and type [%s]",
-				credentials.name(), credentials.type());
+				credentials.name(), credentials.level());
 	}
 
 	public static Credentials checkUserCredentials() {
@@ -131,7 +131,7 @@ public class SpaceContext {
 	public static Credentials checkUserCredentials(String username) {
 		Credentials credentials = checkUserCredentials(true);
 
-		if (credentials.isAdminAuthenticated() || credentials.name().equals(username))
+		if (credentials.isAtLeastAdmin() || credentials.name().equals(username))
 			return credentials;
 
 		throw new AuthorizationException(credentials);
@@ -139,10 +139,10 @@ public class SpaceContext {
 
 	public static Credentials checkUserCredentials(boolean checkCustomerBackend) {
 		Credentials credentials = checkCredentials(checkCustomerBackend);
-		if (credentials.isUserAuthenticated())
+		if (credentials.isAtLeastUser())
 			return credentials;
 		throw new AuthorizationException("invalid user credentials of name [%s] and type [%s]", credentials.name(),
-				credentials.type());
+				credentials.level());
 	}
 
 	public static Credentials checkCredentials() {
@@ -213,7 +213,7 @@ public class SpaceContext {
 				throw new AuthorizationException("invalid username or password");
 		}
 
-		return Optional.of(Credentials.fromKey(backendId));
+		return Optional.of(new Credentials(backendId));
 	}
 
 	public static Optional<String[]> decodeAuthorizationHeader(String authzHeaderValue) {

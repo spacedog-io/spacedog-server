@@ -198,7 +198,7 @@ public class LogResource extends Resource {
 			log.object("credentials")//
 					.put("backendId", credentials.get().backendId())//
 					.put("name", credentials.get().name())//
-					.put("type", credentials.get().type().toString())//
+					.put("type", credentials.get().level().toString())//
 					.end();
 
 		if (!context.query().keys().isEmpty()) {

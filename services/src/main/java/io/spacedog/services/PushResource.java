@@ -255,7 +255,7 @@ public class PushResource extends Resource {
 			installation.set(PROVIDER_ID, TextNode.valueOf(providerId));
 		}
 
-		if (credentials.isUserAuthenticated())
+		if (credentials.isAtLeastUser())
 			installation.set(USER_ID, TextNode.valueOf(credentials.name()));
 
 		if (id.isPresent()) {

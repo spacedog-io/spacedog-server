@@ -6,8 +6,6 @@ package io.spacedog.services;
 import java.util.Arrays;
 import java.util.Optional;
 
-import org.elasticsearch.common.Strings;
-
 public class Credentials {
 
 	public static enum Level {
@@ -23,37 +21,7 @@ public class Credentials {
 	private String email;
 	private Level level;
 
-	public static Credentials fromAdmin(String backendId, String username, String email) {
-		return new Credentials(backendId, username, email, true, false);
-	}
-
-	public static Credentials fromUser(String backendId, String username, String email) {
-		return new Credentials(backendId, username, email, false, false);
-	}
-
-	public static Credentials fromUser(String backendId, String username, String email, Level level) {
-		return new Credentials(backendId, username, email, level);
-	}
-
-	public static Credentials fromKey(String backendId) {
-		return new Credentials(backendId);
-	}
-
-	public static Credentials fromSuperDog(String username, String email) {
-		return new Credentials(Resource.ROOT_BACKEND, username, email, true, true);
-	}
-
-	public static Credentials fromSuperDog(String backendId, String username, String email) {
-		if (Strings.isNullOrEmpty(backendId))
-			backendId = Resource.ROOT_BACKEND;
-		return new Credentials(backendId, username, email, true, true);
-	}
-
-	private Credentials(String backendId, String username, String email, boolean admin, boolean superDog) {
-		this(backendId, username, email, superDog ? Level.SUPERDOG : admin ? Level.ADMIN : Level.USER);
-	}
-
-	private Credentials(String backendId) {
+	public Credentials(String backendId) {
 		this.backendId = backendId;
 		this.level = Level.KEY;
 	}
@@ -65,20 +33,20 @@ public class Credentials {
 		this.level = level;
 	}
 
-	public boolean isSuperDogAuthenticated() {
+	public boolean isSuperDog() {
 		return Level.SUPERDOG.equals(level);
 	}
 
-	public boolean isAdminAuthenticated() {
+	public boolean isAtLeastSuperAdmin() {
+		return level.ordinal() >= Level.SUPER_ADMIN.ordinal();
+	}
+
+	public boolean isAtLeastAdmin() {
 		return level.ordinal() >= Level.ADMIN.ordinal();
 	}
 
-	public boolean isUserAuthenticated() {
+	public boolean isAtLeastUser() {
 		return level.ordinal() >= Level.USER.ordinal();
-	}
-
-	public boolean isSuperAdminAuthenticated() {
-		return level.ordinal() >= Level.SUPER_ADMIN.ordinal();
 	}
 
 	public String backendId() {
@@ -97,7 +65,7 @@ public class Credentials {
 		return Optional.of(email);
 	}
 
-	public Level type() {
+	public Level level() {
 		return level;
 	}
 

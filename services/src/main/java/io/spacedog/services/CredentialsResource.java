@@ -128,7 +128,7 @@ public class CredentialsResource extends Resource {
 		if (!Json.isNull(credentials.get(HASHED_PASSWORD)) || Json.isNull(credentials.get(PASSWORD_RESET_CODE)))
 			throw Exceptions.illegalArgument("user [%s] password has not been deleted", username);
 
-		if (!passwordResetCode.equals(credentials.get(Resource.PASSWORD_RESET_CODE).asText()))
+		if (!passwordResetCode.equals(credentials.get(PASSWORD_RESET_CODE).asText()))
 			throw Exceptions.illegalArgument("invalid password reset code [%s]", passwordResetCode);
 
 		credentials.remove(PASSWORD_RESET_CODE);
@@ -143,8 +143,8 @@ public class CredentialsResource extends Resource {
 		Passwords.checkIfValid(password);
 
 		return prepareUpdate(backendId, username)//
-				.setDoc(Resource.HASHED_PASSWORD, Passwords.checkAndHash(password), //
-						Resource.PASSWORD_RESET_CODE, null)//
+				.setDoc(HASHED_PASSWORD, Passwords.checkAndHash(password), //
+						PASSWORD_RESET_CODE, null)//
 				.get();
 	}
 
@@ -186,17 +186,17 @@ public class CredentialsResource extends Resource {
 
 	Optional<Credentials> check(String backendId, String username, String password) {
 
-		GetResponse response = CredentialsResource.get().get(backendId, username, false);
+		GetResponse response = get(backendId, username, false);
 
 		if (response.isExists()) {
 			String providedPassword = Passwords.hash(password);
 			Map<String, Object> credentials = response.getSourceAsMap();
-			Object expectedPassword = credentials.get(Resource.HASHED_PASSWORD);
+			Object expectedPassword = credentials.get(HASHED_PASSWORD);
 
 			if (expectedPassword != null && providedPassword.equals(expectedPassword.toString())) {
-				Object email = credentials.get(CredentialsResource.EMAIL);
-				Level level = Level.valueOf(credentials.get(Resource.CREDENTIALS_LEVEL).toString());
-				return Optional.of(Credentials.fromUser(backendId, username, //
+				Object email = credentials.get(EMAIL);
+				Level level = Level.valueOf(credentials.get(CREDENTIALS_LEVEL).toString());
+				return Optional.of(new Credentials(backendId, username, //
 						email == null ? null : email.toString(), level));
 			}
 		}
@@ -233,14 +233,14 @@ public class CredentialsResource extends Resource {
 				BACKEND_ID, credentials.backendId(), //
 				USERNAME, credentials.name(), //
 				EMAIL, credentials.email().get(), //
-				CREDENTIALS_LEVEL, credentials.type().toString(), //
+				CREDENTIALS_LEVEL, credentials.level().toString(), //
 				CREATED_AT, now, //
 				UPDATED_AT, now);
 
 		if (signUp.hashedPassword.isPresent())
-			json.put(Resource.HASHED_PASSWORD, signUp.hashedPassword.get());
+			json.put(HASHED_PASSWORD, signUp.hashedPassword.get());
 		else
-			json.put(Resource.PASSWORD_RESET_CODE, signUp.passwordResetCode.get());
+			json.put(PASSWORD_RESET_CODE, signUp.passwordResetCode.get());
 
 		return index(credentials.backendId(), credentials.name(), json);
 	}
@@ -257,7 +257,7 @@ public class CredentialsResource extends Resource {
 
 	DeleteByQueryResponse deleteAll(String backendId) {
 		String query = new QuerySourceBuilder().setQuery(//
-				QueryBuilders.termQuery(Resource.BACKEND_ID, backendId)).toString();
+				QueryBuilders.termQuery(BACKEND_ID, backendId)).toString();
 		ElasticClient elastic = Start.get().getElasticClient();
 		elastic.refreshType(SPACEDOG_BACKEND, TYPE);
 		return elastic.deleteByQuery(SPACEDOG_BACKEND, TYPE, query);
@@ -268,7 +268,7 @@ public class CredentialsResource extends Resource {
 		ElasticClient elastic = Start.get().getElasticClient();
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery()//
-				.filter(QueryBuilders.termQuery(Resource.CREDENTIALS_LEVEL, Level.SUPER_ADMIN.toString()));
+				.filter(QueryBuilders.termQuery(CREDENTIALS_LEVEL, Level.SUPER_ADMIN.toString()));
 
 		elastic.refreshType(SPACEDOG_BACKEND, TYPE);
 
@@ -313,7 +313,7 @@ public class CredentialsResource extends Resource {
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery()//
 				.filter(QueryBuilders.termQuery(BACKEND_ID, backendId))//
-				.filter(QueryBuilders.termQuery(Resource.CREDENTIALS_LEVEL, Level.SUPER_ADMIN.toString()));
+				.filter(QueryBuilders.termQuery(CREDENTIALS_LEVEL, Level.SUPER_ADMIN.toString()));
 
 		elastic.refreshType(SPACEDOG_BACKEND, TYPE);
 

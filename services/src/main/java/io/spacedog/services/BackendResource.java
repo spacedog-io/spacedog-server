@@ -43,8 +43,8 @@ public class BackendResource extends Resource {
 		// after backend is created, new admin credentials are valid
 		// and can be set in space context if none are set
 		SpaceContext.setCredentials(//
-				Credentials.fromAdmin(backendId, backendSignUp.credentials.name(),
-						backendSignUp.credentials.email().get()));
+				new Credentials(backendId, backendSignUp.credentials.name(), //
+						backendSignUp.credentials.email().get(), Level.SUPER_ADMIN));
 
 		if (!isTest(context))
 			Internals.get().notify(//
@@ -63,7 +63,7 @@ public class BackendResource extends Resource {
 		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
 
 		if (credentials.isRootBackend()) {
-			if (credentials.isSuperDogAuthenticated())
+			if (credentials.isSuperDog())
 				return CredentialsResource.get().getAllSuperAdmins(refresh);
 
 			throw new AuthorizationException("no subdomain found: access <backendId>.spacedog.io");

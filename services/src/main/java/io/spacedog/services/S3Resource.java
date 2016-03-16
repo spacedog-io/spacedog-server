@@ -112,7 +112,7 @@ public class S3Resource extends Resource {
 		try {
 			ObjectMetadata metadata = s3.getObjectMetadata(bucketName, s3Key);
 
-			if (credentials.isUserAuthenticated()) {
+			if (credentials.isAtLeastUser()) {
 
 				if (isOwner(credentials, metadata)) {
 					s3.deleteObject(bucketName, s3Key);
@@ -120,7 +120,7 @@ public class S3Resource extends Resource {
 				} else
 					return Payloads.error(401);
 
-			} else if (credentials.isAdminAuthenticated()) {
+			} else if (credentials.isAtLeastAdmin()) {
 				s3.deleteObject(bucketName, s3Key);
 				builder.add(path.get());
 			}
@@ -133,7 +133,7 @@ public class S3Resource extends Resource {
 
 		// second delete all files with this path as prefix
 
-		if (credentials.isAdminAuthenticated()) {
+		if (credentials.isAtLeastAdmin()) {
 
 			String next = null;
 
@@ -182,7 +182,7 @@ public class S3Resource extends Resource {
 		metadata.setContentLength(Long.valueOf(context.header("Content-Length")));
 		metadata.setContentDisposition(String.format("attachment; filename=\"%s\"", fileName));
 		metadata.addUserMetadata("owner", credentials.name());
-		metadata.addUserMetadata("owner-type", credentials.type().toString());
+		metadata.addUserMetadata("owner-type", credentials.level().toString());
 
 		s3.putObject(new PutObjectRequest(bucketName, //
 				s3Key, new ByteArrayInputStream(bytes), //
@@ -200,7 +200,7 @@ public class S3Resource extends Resource {
 
 	private boolean isOwner(Credentials credentials, ObjectMetadata metadata) {
 		return credentials.name().equals(metadata.getUserMetaDataOf("owner")) //
-				&& credentials.type().toString().equals(metadata.getUserMetaDataOf("owner-type"));
+				&& credentials.level().toString().equals(metadata.getUserMetaDataOf("owner-type"));
 	}
 
 	private String toS3Key(String backendId, String path, String name) {

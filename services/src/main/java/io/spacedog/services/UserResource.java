@@ -129,7 +129,7 @@ public class UserResource extends Resource {
 		Credentials requestCredentials = SpaceContext.checkCredentials();
 		SignUp userSignUp = new SignUp(requestCredentials.backendId(), Level.USER, body);
 
-		if (requestCredentials.isAdminAuthenticated())
+		if (requestCredentials.isAtLeastAdmin())
 			userSignUp.createdBy = Optional.of(requestCredentials.name());
 
 		// TODO

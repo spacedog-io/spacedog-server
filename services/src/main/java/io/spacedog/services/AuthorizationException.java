@@ -11,7 +11,7 @@ public class AuthorizationException extends RuntimeException {
 	}
 
 	public AuthorizationException(Credentials credentials) {
-		this("user [%s] of type [%s] not authorized", credentials.name(), credentials.type());
+		this("user [%s] of type [%s] not authorized", credentials.name(), credentials.level());
 	}
 
 	public AuthorizationException(String message, Object... parameters) {
