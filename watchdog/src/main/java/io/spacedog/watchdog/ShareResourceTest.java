@@ -31,6 +31,7 @@ public class ShareResourceTest {
 
 		// prepare
 		Backend testBackend = SpaceDogHelper.resetTestBackend();
+		SpaceDogHelper.initUserDefaultSchema(testBackend);
 		User vince = SpaceDogHelper.createUser(testBackend, "vince", "hi vince", "vince@dog.com");
 		User fred = SpaceDogHelper.createUser(testBackend, "fred", "hi fred", "fred@dog.com");
 
@@ -67,14 +68,7 @@ public class ShareResourceTest {
 				.assertEquals(pngPath, "results.0.path");
 
 		// Anonymous are allowed to access shared files if they get the location
-		// but they need to provide the backend key until the backendId is part
-		// of the host
-		SpaceRequest.get(pngLocation).go(401);
-
-		// download shared png file
-		byte[] downloadedBytes = SpaceRequest.get(pngLocation)//
-				.backend(testBackend)//
-				.go(200)//
+		byte[] downloadedBytes = SpaceRequest.get(pngLocation).go(200)//
 				// .assertHeaderEquals("image/png", "content-type")//
 				.assertHeaderEquals("vince", "x-amz-meta-owner")//
 				.assertHeaderEquals("USER", "x-amz-meta-owner-type")//
