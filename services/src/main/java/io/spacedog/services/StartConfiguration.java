@@ -4,13 +4,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Enumeration;
-import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 
 import io.spacedog.utils.Utils;
 
@@ -42,13 +39,6 @@ public class StartConfiguration {
 		check("mailgun key", mailGunKey());
 
 		checkPath("snapshots path", snapshotsPath(), true);
-
-		check("superdogs", superdogs());
-		for (String superdog : superdogs()) {
-			check("superdog username", superdog);
-			check("superdog email", superdogEmail(superdog));
-			check("superdog hashed password", superdogHashedPassword(superdog));
-		}
 
 		checkPath("SSL CRT file path", crtFilePath(), false);
 		checkPath("SSL PEM file path", pemFilePath(), false);
@@ -183,30 +173,6 @@ public class StartConfiguration {
 		String path = configuration.getProperty("spacedog.snapshots.path");
 		return Strings.isNullOrEmpty(path) ? Optional.empty()//
 				: Optional.of(Paths.get(path));
-	}
-
-	public List<String> superdogs() {
-		List<String> superdogs = Lists.newArrayList();
-		Enumeration<Object> keys = configuration.keys();
-		while (keys.hasMoreElements()) {
-			String value = keys.nextElement().toString();
-			if (value.startsWith("spacedog.superdog.")//
-					&& value.endsWith(".email"))
-				superdogs.add(value.substring(18, value.length() - 6));
-		}
-		return superdogs;
-	}
-
-	public Optional<String> superdogHashedPassword(String username) {
-		return Optional.ofNullable(configuration.getProperty("spacedog.superdog." + username + ".password"));
-	}
-
-	public boolean isSuperDog(String username) {
-		return superdogHashedPassword(username).isPresent();
-	}
-
-	public Optional<String> superdogEmail(String username) {
-		return Optional.ofNullable(configuration.getProperty("spacedog.superdog." + username + ".email"));
 	}
 
 	public String superdogNotificationTopic() {
