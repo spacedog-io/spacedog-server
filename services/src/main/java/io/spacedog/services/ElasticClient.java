@@ -127,7 +127,7 @@ public class ElasticClient {
 			query = Json.objectBuilder().object("query").object("match_all").toString();
 
 		DeleteByQueryRequest delete = new DeleteByQueryRequest(toDataIndices(backendId))//
-				.timeout(new TimeValue(60000))//
+				.timeout(TimeValue.timeValueMinutes(2))//
 				.source(query);
 
 		try {
