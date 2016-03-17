@@ -135,20 +135,20 @@ function searchInPois() {
 	
 	$.ajax({
 		method: "POST",
-		url: window.location.origin + "/v1/data/resto/search",
+		url: backendUrl('examples', '/1/search/resto'),
 		processData: false,
 		data: JSON.stringify({
 			from: 0,
 			size: 100,
 			sort: ['illustration'],
 			query: {
-				filtered: {
-					query: {
+				bool: {
+					must: {
 						"query_string": {query: q}
 					},
 					filter: {
 						"geo_bounding_box": {
-							"resto.where": {
+							"where": {
 								"top_left": {
 									lat: map.getBounds().getNorthEast().lat(),
 									lon: map.getBounds().getSouthWest().lng()
@@ -163,9 +163,6 @@ function searchInPois() {
 				}
 			}
 		}),
-		headers : {
-			'x-spacedog-backend-key':  'examples:default:cd9615b0-5d90-42c8-8cc5-dd43c20a63ef'
-		},
 		success: searchInOk,
 		error: searchNok
 	});
@@ -182,7 +179,7 @@ function searchOutPois() {
 	
 	$.ajax({
 		method: "POST",
-		url: window.location.origin + "/v1/data/resto/search",
+		url: backendUrl('examples', "/1/search/resto"),
 		processData: false,
 		data: JSON.stringify({
 			from: 0,
@@ -191,9 +188,6 @@ function searchOutPois() {
 				"query_string": {query: q}
 			}
 		}),
-		headers : {
-			'x-spacedog-backend-key':  'examples:default:cd9615b0-5d90-42c8-8cc5-dd43c20a63ef'
-		},
 		success: searchOutOk,
 		error: searchNok
 	});
@@ -203,7 +197,6 @@ function searchOutPois() {
 }
 
 function initMap() {
-	console.log('khkjh');
 	$searchForm = $('#map-search-form');
 	
 	$poiInfo = $('#poiInfo');

@@ -25,7 +25,7 @@ function searchObjects(event) {
 
 	$.ajax({
 		method: "GET",
-		url: window.location.origin + "/v1/data",
+		url: backendUrl("/1/data"),
 		cache: false,
 		headers : {
 			Authorization: 'Basic ' + btoa(sessionStorage.username + ':' + sessionStorage.password)
@@ -50,7 +50,7 @@ function init() {
 			$results = $('#console-results');
 
 			$('#user-info').html('<p>Hello [' + sessionStorage.username
-					 + ']</p><p>Your spacedog key is</p><p>' + sessionStorage.spacedogKey + '</p>');
+					 + ']</p><p>Your backend is [' + sessionStorage.backendId + ']</p>');
 
 			$('#console-search-form').submit(searchObjects);
 			

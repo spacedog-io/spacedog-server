@@ -19,7 +19,7 @@ function showConsole(_, _, jqxhr) {
 	// called after log in or sign up
 	if (jqxhr) {
 		sessionStorage.logInOk = 'true';
-		sessionStorage.spacedogKey = jqxhr.getResponseHeader('x-spacedog-backend-key');
+		//sessionStorage.spacedogKey = jqxhr.getResponseHeader('x-spacedog-backend-key');
 	}
 	
 	// or called when already logged in
@@ -32,7 +32,7 @@ function logIn(event) {
 
 	$.ajax({
 		method: "GET",
-		url: window.location.origin + "/v1/admin/login",
+		url: backendUrl("/1/admin/login"),
 		cache: false,
 		headers : {
 			Authorization: 'Basic ' + btoa(sessionStorage.username + ':' + sessionStorage.password)
@@ -56,7 +56,7 @@ function createAccount(event) {
 	else {
 		$.ajax({
 			method: 'POST',
-			url: window.location.origin + '/v1/admin/account',
+			url: window.location.origin + '/1/backend/' + sessionStorage.backendId,
 			cache: false,
 			contentType: 'application/json; charset=UTF-8',
 			data: JSON.stringify(sessionStorage),
@@ -79,7 +79,7 @@ function init() {
 
 		if (window.location.pathname == '/log-in.html') {
 			$signDiv.find('#sign-form').submit(logIn);
-			$signDiv.find('[name="username"]').focus();
+			$signDiv.find('[name="backendId"]').focus();
 		} else if (window.location.pathname == '/sign-up.html') {
 			$signDiv.find('#create-form').submit(createAccount);			
 			$signDiv.find('[name="backendId"]').focus();

@@ -6,6 +6,14 @@ var $navLogInBt;
 var $navConsoleLk;
 var $alert;
 
+function backendUrl(path) {
+	return backendUrl(sessionStorage.backendId, path);
+}
+
+function backendUrl(backendId, path) {
+	return location.protocol + '//' + backendId + '.' + location.host + path;
+}
+
 function alert(message) {
 	$alert.html('<br><p>' + message + '</p>');
 	$alert.find('p').css('color', 'red');
