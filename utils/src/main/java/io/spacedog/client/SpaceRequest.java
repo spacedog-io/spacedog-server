@@ -55,7 +55,8 @@ public class SpaceRequest {
 	}
 
 	private String computeUrl() {
-		if (uri.startsWith("http:"))
+		// works for both http and https urls
+		if (uri.startsWith("http"))
 			return uri;
 
 		SpaceTarget target = SpaceRequestConfiguration.get().target();
