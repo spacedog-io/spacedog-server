@@ -6,11 +6,8 @@ var $navLogInBt;
 var $navConsoleLk;
 var $alert;
 
-function backendUrl(path) {
-	return backendUrl(sessionStorage.backendId, path);
-}
-
-function backendUrl(backendId, path) {
+function backendUrl(path, backendId) {
+	if (!backendId) backendId = sessionStorage.backendId;
 	return location.protocol + '//' + backendId + '.' + location.host + path;
 }
 

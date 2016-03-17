@@ -135,7 +135,7 @@ function searchInPois() {
 	
 	$.ajax({
 		method: "POST",
-		url: backendUrl('examples', '/1/search/resto'),
+		url: backendUrl('/1/search/resto', 'examples'),
 		processData: false,
 		data: JSON.stringify({
 			from: 0,
@@ -179,7 +179,7 @@ function searchOutPois() {
 	
 	$.ajax({
 		method: "POST",
-		url: backendUrl('examples', "/1/search/resto"),
+		url: backendUrl('/1/search/resto', 'examples'),
 		processData: false,
 		data: JSON.stringify({
 			from: 0,
