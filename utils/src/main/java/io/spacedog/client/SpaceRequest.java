@@ -36,7 +36,7 @@ public class SpaceRequest {
 	private Map<String, String> routeParams = Maps.newHashMap();
 	private Map<String, String> queryStrings = Maps.newHashMap();
 	private Map<String, String> headers = Maps.newHashMap();
-	private Map<String, String> fields = Maps.newHashMap();
+	private Map<String, Object> fields = Maps.newHashMap();
 	private String password;
 	private String username;
 	private boolean redirected = false;
@@ -194,10 +194,11 @@ public class SpaceRequest {
 
 		if (request instanceof HttpRequestWithBody) {
 			HttpRequestWithBody requestWithBody = (HttpRequestWithBody) request;
-			this.fields.forEach((key, value) -> requestWithBody.field(key, value));
-			if (body instanceof byte[])
+			if (!fields.isEmpty())
+				requestWithBody.fields(fields);
+			else if (body instanceof byte[])
 				requestWithBody.body((byte[]) body);
-			if (body instanceof String)
+			else if (body instanceof String)
 				requestWithBody.body((String) body);
 		}
 
