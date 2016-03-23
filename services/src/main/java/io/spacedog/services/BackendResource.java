@@ -17,10 +17,8 @@ import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
-import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/1")
 public class BackendResource extends Resource {
 
 	private static final String TYPE = "backend";
@@ -29,8 +27,8 @@ public class BackendResource extends Resource {
 	// Routes
 	//
 
-	@Post("/backend/:id")
-	@Post("/backend/:id/")
+	@Post("/1/backend/:id")
+	@Post("/1/backend/:id/")
 	public Payload post(String backendId, String body, Context context) {
 
 		if (existsBackend(backendId))
@@ -56,8 +54,8 @@ public class BackendResource extends Resource {
 		return Payloads.saved(true, backendId, "/1/backend", TYPE, backendId, true);
 	}
 
-	@Get("/backend")
-	@Get("/backend/")
+	@Get("/1/backend")
+	@Get("/1/backend/")
 	public Payload getAll(Context context) {
 		Credentials credentials = SpaceContext.checkAdminCredentials(false);
 		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
@@ -73,8 +71,8 @@ public class BackendResource extends Resource {
 
 	}
 
-	@Delete("/backend")
-	@Delete("/backend/")
+	@Delete("/1/backend")
+	@Delete("/1/backend/")
 	public Payload delete(Context context) {
 		Credentials credentials = SpaceContext.checkSuperAdminCredentials();
 
@@ -89,8 +87,10 @@ public class BackendResource extends Resource {
 		return Payloads.success();
 	}
 
-	@Get("/admin/login")
-	@Get("/admin/login/")
+	@Get("/v1/admin/login")
+	@Get("/v1/admin/login/")
+	@Get("/1/admin/login")
+	@Get("/1/admin/login/")
 	public Payload getLogin() {
 		SpaceContext.checkAdminCredentials();
 		return Payloads.success();
