@@ -17,7 +17,7 @@ public class Purge {
 			int total = 0;
 
 			do {
-				ObjectNode accounts = SpaceRequest.get("/1/account")//
+				ObjectNode accounts = SpaceRequest.get("/1/backend")//
 						.queryString("from", String.valueOf(from))//
 						.queryString("size", String.valueOf(size))//
 						.superdogAuth()//
