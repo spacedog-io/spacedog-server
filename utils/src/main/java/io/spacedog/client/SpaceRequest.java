@@ -279,7 +279,7 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest superdogAuth() {
-		return superdogAuth((String) null);
+		return superdogAuth("api");
 	}
 
 	public SpaceRequest superdogAuth(Backend backend) {
