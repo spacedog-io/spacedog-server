@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 
 import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceDogHelper.Backend;
@@ -19,6 +20,19 @@ import io.spacedog.utils.SchemaBuilder2;
 
 public class PushResourceTest extends Assert {
 
+	private static final String ID = "id";
+	private static final String MESSAGE = "message";
+	private static final String APNS = "APNS";
+	private static final String GCM = "GCM";
+	private static final String VALUE = "value";
+	private static final String KEY = "key";
+	private static final String TAGS = "tags";
+	private static final String USER_ID = "userId";
+	private static final String ENDPOINT = "endpoint";
+	private static final String TOKEN = "token";
+	private static final String PUSH_SERVICE = "pushService";
+	private static final String APP_ID = "appId";
+
 	@Test
 	public void usersInstallAppAndPush() throws Exception {
 
@@ -26,6 +40,7 @@ public class PushResourceTest extends Assert {
 		SpaceDogHelper.prepareTest();
 		Backend testBackend = SpaceDogHelper.resetTestBackend();
 		SpaceDogHelper.initUserDefaultSchema(testBackend);
+		User dave = SpaceDogHelper.createUser(testBackend, "dave", "hi dave");
 		User vince = SpaceDogHelper.createUser(testBackend, "vince", "hi vince");
 		User fred = SpaceDogHelper.createUser(testBackend, "fred", "hi fred");
 		User nath = SpaceDogHelper.createUser(testBackend, "nath", "hi nath");
@@ -33,88 +48,83 @@ public class PushResourceTest extends Assert {
 		// create installation schema
 
 		ObjectNode installationSchema = SchemaBuilder2.builder("installation")//
-				.stringProperty("appId", true)//
-				.stringProperty("deviceToken", true)//
-				.stringProperty("providerId", true)//
-				.stringProperty("userId", false)//
-				.startObjectProperty("tags", false)//
-				.stringProperty("key", true)//
-				.stringProperty("value", true)//
+				.stringProperty(APP_ID, true)//
+				.stringProperty(PUSH_SERVICE, true)//
+				.stringProperty(TOKEN, true)//
+				.stringProperty(ENDPOINT, true)//
+				.stringProperty(USER_ID, false)//
+				.startObjectProperty(TAGS, false)//
+				.stringProperty(KEY, true)//
+				.stringProperty(VALUE, true)//
 				.endObjectProperty()//
 				.build();
 
 		SpaceRequest.put("/1/schema/installation")//
 				.adminAuth(testBackend).body(installationSchema).go(201);
 
-		// unauthenticated user installs myairport
-		// and fails to set unauthenticated userId
+		// unauthenticated user installs joho
+		// and fails to force set installation userId and endpoint fields
 
-		String installId = SpaceRequest.post("/1/installation")//
+		String unknownInstallId = SpaceRequest.post("/1/installation")//
 				.backend(testBackend)//
-				.body(Json.object("deviceToken", "token-unknown", "appId", "myairport", "userId", "david"))//
+				.body(Json.object(TOKEN, "token-unknown", APP_ID, "joho", PUSH_SERVICE, GCM, //
+						USER_ID, "XXX", ENDPOINT, "XXX"))//
 				.go(201)//
-				.objectNode().get("id").asText();
+				.objectNode().get(ID).asText();
 
-		SpaceRequest.get("/1/installation/" + installId)//
+		SpaceRequest.get("/1/installation/" + unknownInstallId)//
 				.adminAuth(testBackend).go(200)//
-				.assertEquals("myairport", "appId")//
-				.assertEquals("token-unknown", "deviceToken")//
-				.assertNotPresent("userId")//
-				.assertNotPresent("tags");
+				.assertEquals("joho", APP_ID)//
+				.assertEquals(GCM, PUSH_SERVICE)//
+				.assertEquals("token-unknown", TOKEN)//
+				.assertEquals("FAKE_ENDPOINT_FOR_TESTING", ENDPOINT)//
+				.assertNotPresent(USER_ID)//
+				.assertNotPresent(TAGS);
 
 		// vince and fred install joho
 
-		String vinceInstallId = installApplication("joho", testBackend, vince);
-		String fredInstallId = installApplication("joho", testBackend, fred);
+		String vinceInstallId = installApplication("joho", GCM, testBackend, vince);
+		String fredInstallId = installApplication("joho", APNS, testBackend, fred);
+		String daveInstallId = installApplication("joho", APNS, testBackend, dave);
 
-		// vince and fred installs birdee
+		// nath installs birdee
 
-		String nathInstallId = installApplication("birdee", testBackend, nath);
+		String nathInstallId = installApplication("birdee", APNS, testBackend, nath);
 
-		// install update should succeed
+		// vince updates its installation
 
 		SpaceRequest.put("/1/installation/" + vinceInstallId)//
 				.backend(testBackend).userAuth(vince)//
-				.body(Json.object("deviceToken", "super-token-vince", "appId", "joho"))//
+				.body(Json.object(TOKEN, "super-token-vince", APP_ID, "joho", PUSH_SERVICE, GCM))//
 				.go(200);
 
 		SpaceRequest.get("/1/installation/" + vinceInstallId)//
 				.backend(testBackend).userAuth(vince)//
 				.go(200)//
-				.assertEquals("joho", "appId")//
-				.assertEquals("super-token-vince", "deviceToken")//
-				.assertEquals("vince", "userId")//
-				.assertNotPresent("tags");
+				.assertEquals("joho", APP_ID)//
+				.assertEquals("super-token-vince", TOKEN)//
+				.assertEquals("vince", USER_ID)//
+				.assertNotPresent(TAGS);
 
-		// user fails to get all installations
+		// vince fails to get all installations since not admin
 
 		SpaceRequest.get("/1/installation")//
 				.backend(testBackend).userAuth(vince)//
 				.go(401);
 
-		// admin succeed to get all installations
+		// admin gets all installations
 
 		SpaceRequest.get("/1/installation?refresh=true")//
 				.adminAuth(testBackend)//
 				.go(200)//
-				.assertSizeEquals(4, "results")//
-				.assertContainsValue("token-unknown", "deviceToken")//
-				.assertContainsValue("super-token-vince", "deviceToken")//
-				.assertContainsValue("token-fred", "deviceToken")//
-				.assertContainsValue("token-nath", "deviceToken");
+				.assertSizeEquals(5, "results")//
+				.assertContainsValue(unknownInstallId, ID)//
+				.assertContainsValue(daveInstallId, ID)//
+				.assertContainsValue(vinceInstallId, ID)//
+				.assertContainsValue(fredInstallId, ID)//
+				.assertContainsValue(nathInstallId, ID);
 
-		// add bonjour/toi tag to nath install
-
-		SpaceRequest.post("/1/installation/" + nathInstallId + "/tags")//
-				.backend(testBackend).userAuth(nath)//
-				.body(toJsonTag("bonjour", "toi")).go(200);
-
-		SpaceRequest.get("/1/installation/" + nathInstallId + "/tags")//
-				.backend(testBackend).userAuth(nath).go(200)//
-				.assertContains(toJsonTag("bonjour", "toi"))//
-				.assertSizeEquals(1);
-
-		// add again the same tag is ok and there is no duplicate as a result
+		// nath adds bonjour/toi tag to her install
 
 		SpaceRequest.post("/1/installation/" + nathInstallId + "/tags")//
 				.backend(testBackend).userAuth(nath)//
@@ -125,7 +135,19 @@ public class PushResourceTest extends Assert {
 				.assertContains(toJsonTag("bonjour", "toi"))//
 				.assertSizeEquals(1);
 
-		// add bonjour/toi tag to vince install
+		// nath adds again the same tag and it changes nothing
+		// there is no duplicate as a result
+
+		SpaceRequest.post("/1/installation/" + nathInstallId + "/tags")//
+				.backend(testBackend).userAuth(nath)//
+				.body(toJsonTag("bonjour", "toi")).go(200);
+
+		SpaceRequest.get("/1/installation/" + nathInstallId + "/tags")//
+				.backend(testBackend).userAuth(nath).go(200)//
+				.assertContains(toJsonTag("bonjour", "toi"))//
+				.assertSizeEquals(1);
+
+		// vince adds bonjour/toi tag to his install
 
 		SpaceRequest.post("/1/installation/" + vinceInstallId + "/tags")//
 				.backend(testBackend).userAuth(vince)//
@@ -136,7 +158,7 @@ public class PushResourceTest extends Assert {
 				.assertContains(toJsonTag("bonjour", "toi"))//
 				.assertSizeEquals(1);
 
-		// add hi/there tag to vince install
+		// vince adds hi/there tag to his install
 
 		SpaceRequest.post("/1/installation/" + vinceInstallId + "/tags")//
 				.backend(testBackend).userAuth(vince)//
@@ -148,7 +170,7 @@ public class PushResourceTest extends Assert {
 				.assertContains(toJsonTag("hi", "there"))//
 				.assertSizeEquals(2);
 
-		// delete bonjour/toi tag from vince install
+		// vince deletes bonjour/toi tag from his install
 
 		SpaceRequest.delete("/1/installation/" + vinceInstallId + "/tags")//
 				.backend(testBackend).userAuth(vince)//
@@ -159,7 +181,7 @@ public class PushResourceTest extends Assert {
 				.assertContains(toJsonTag("hi", "there"))//
 				.assertSizeEquals(1);
 
-		// delete hi/there tag from vince install
+		// vince deletes hi/there tag from his install
 
 		SpaceRequest.delete("/1/installation/" + vinceInstallId + "/tags")//
 				.backend(testBackend).userAuth(vince)//
@@ -169,7 +191,7 @@ public class PushResourceTest extends Assert {
 				.backend(testBackend).userAuth(vince).go(200)//
 				.assertSizeEquals(0);
 
-		// set all vince install tags to bonjour/toi and hi/there
+		// vince sets all his install tags to bonjour/toi and hi/there
 
 		SpaceRequest.put("/1/installation/" + vinceInstallId + "/tags")//
 				.backend(testBackend).userAuth(vince)//
@@ -181,7 +203,7 @@ public class PushResourceTest extends Assert {
 				.assertContains(toJsonTag("hi", "there"))//
 				.assertSizeEquals(2);
 
-		// set all fred install tags to bonjour/toi
+		// fred sets all his install tags to bonjour/toi
 
 		SpaceRequest.put("/1/installation/" + fredInstallId + "/tags")//
 				.backend(testBackend).userAuth(fred)//
@@ -192,71 +214,93 @@ public class PushResourceTest extends Assert {
 				.assertContains(toJsonTag("bonjour", "toi"))//
 				.assertSizeEquals(1);
 
-		// push to all joho users
+		// vince pushes to all joho users
 
-		ObjectNode push = Json.objectBuilder()//
-				.put("appId", "joho")//
-				.put("message", "This is a push!")//
-				.build();
+		ObjectNode push = Json.object(APP_ID, "joho", MESSAGE, "This is a push!");
+
+		SpaceRequest.post("/1/push?refresh=true")//
+				.backend(testBackend).userAuth(vince)//
+				.body(push)//
+				.go(200)//
+				.assertSizeEquals(4, "pushedTo")//
+				.assertContainsValue(unknownInstallId, ID)//
+				.assertContainsValue("dave", USER_ID)//
+				.assertContainsValue("vince", USER_ID)//
+				.assertContainsValue("fred", USER_ID);
+
+		// vince pushes to APNS only joho users
+
+		push.set(PUSH_SERVICE, TextNode.valueOf(APNS));
 
 		SpaceRequest.post("/1/push?refresh=true")//
 				.backend(testBackend).userAuth(vince)//
 				.body(push)//
 				.go(200)//
 				.assertSizeEquals(2, "pushedTo")//
-				.assertContainsValue("vince", "userId")//
-				.assertContainsValue("fred", "userId");
+				.assertContainsValue("dave", USER_ID)//
+				.assertContainsValue("fred", USER_ID);
 
-		// push to joho users with tag bonjour/toi
+		// vince pushes to APNS only joho users with tag bonjour/toi
 
-		push.set("tags", toJsonTag("bonjour", "toi"));
-
-		SpaceRequest.post("/1/push")//
-				.backend(testBackend).userAuth(vince)//
-				.body(push)//
-				.go(200)//
-				.assertSizeEquals(2, "pushedTo")//
-				.assertContainsValue("vince", "userId")//
-				.assertContainsValue("fred", "userId");
-
-		// push to joho users with tags bonjour/toi and hi/there
-
-		push.set("tags", toJsonTags("bonjour", "toi", "hi", "there"));
+		push.set(TAGS, toJsonTag("bonjour", "toi"));
 
 		SpaceRequest.post("/1/push")//
 				.backend(testBackend).userAuth(vince)//
 				.body(push)//
 				.go(200)//
 				.assertSizeEquals(1, "pushedTo")//
-				.assertContainsValue("vince", "userId");
+				.assertContainsValue("fred", USER_ID);
+
+		// vince pushes to all joho users with tag bonjour/toi
+
+		push.remove(PUSH_SERVICE);
+
+		SpaceRequest.post("/1/push")//
+				.backend(testBackend).userAuth(vince)//
+				.body(push)//
+				.go(200)//
+				.assertSizeEquals(2, "pushedTo")//
+				.assertContainsValue("vince", USER_ID)//
+				.assertContainsValue("fred", USER_ID);
+
+		// vince pushes to all joho users with tags bonjour/toi and hi/there
+
+		push.set(TAGS, toJsonTags("bonjour", "toi", "hi", "there"));
+
+		SpaceRequest.post("/1/push")//
+				.backend(testBackend).userAuth(vince)//
+				.body(push)//
+				.go(200)//
+				.assertSizeEquals(1, "pushedTo")//
+				.assertContainsValue("vince", USER_ID);
 	}
 
 	private ObjectNode toJsonTag(String key, String value) {
-		return Json.object("key", key, "value", value);
+		return Json.object(KEY, key, VALUE, value);
 	}
 
 	private ArrayNode toJsonTags(String... strings) {
 		JsonBuilder<ArrayNode> array = Json.arrayBuilder();
 		for (int i = 0; i < strings.length; i = i + 2)
-			array.object().put("key", strings[i]).put("value", strings[i + 1]).end();
+			array.object().put(KEY, strings[i]).put(VALUE, strings[i + 1]).end();
 		return array.build();
 	}
 
-	private String installApplication(String appId, SpaceDogHelper.Backend account, SpaceDogHelper.User user)
-			throws Exception {
+	private String installApplication(String appId, String pushService, Backend account, User user) throws Exception {
 
 		String installId = SpaceRequest.post("/1/installation")//
 				.backend(account).userAuth(user)//
-				.body(Json.object("deviceToken", "token-" + user.username, "appId", appId))//
+				.body(Json.object(TOKEN, "token-" + user.username, APP_ID, appId, PUSH_SERVICE, pushService))//
 				.go(201)//
-				.objectNode().get("id").asText();
+				.objectNode().get(ID).asText();
 
 		SpaceRequest.get("/1/installation/" + installId)//
 				.adminAuth(account).go(200)//
-				.assertEquals(appId, "appId")//
-				.assertEquals("token-" + user.username, "deviceToken")//
-				.assertEquals(user.username, "userId")//
-				.assertNotPresent("tags");
+				.assertEquals(appId, APP_ID)//
+				.assertEquals(pushService, PUSH_SERVICE)//
+				.assertEquals("token-" + user.username, TOKEN)//
+				.assertEquals(user.username, USER_ID)//
+				.assertNotPresent(TAGS);
 
 		return installId;
 	}

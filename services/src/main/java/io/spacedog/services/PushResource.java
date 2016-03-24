@@ -54,9 +54,10 @@ public class PushResource extends Resource {
 
 	// installation field names
 	public static final String APP_ID = "appId";
+	public static final String PUSH_SERVICE = "pushService";
 	public static final String USER_ID = "userId";
-	public static final String DEVICE_TOKEN = "deviceToken";
-	public static final String PROVIDER_ID = "providerId";
+	public static final String TOKEN = "token";
+	public static final String ENDPOINT = "endpoint";
 	public static final String TAGS = "tags";
 	public static final String TAG_KEY = "key";
 	public static final String TAG_VALUE = "value";
@@ -163,13 +164,17 @@ public class PushResource extends Resource {
 		Credentials credentials = SpaceContext.checkUserCredentials();
 
 		ObjectNode push = Json.readObjectNode(body);
-		String appId = Json.checkStringNode(push, APP_ID, true).get().asText();
+		String appId = Json.checkStringNotNullOrEmpty(push, APP_ID);
 		JsonNode message = Json.checkJsonNode(push, MESSAGE, true).get();
-		JsonNode tags = push.get(TAGS);
 
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
 				.filter(QueryBuilders.termQuery(APP_ID, appId));
 
+		Optional<String> service = Json.checkString(push, PUSH_SERVICE);
+		if (service.isPresent())
+			query.filter(QueryBuilders.termQuery(PUSH_SERVICE, service.get()));
+
+		JsonNode tags = push.get(TAGS);
 		if (tags != null) {
 			Iterator<JsonNode> tagsIterator = tags.isObject()//
 					? Iterators.singletonIterator(tags) : tags.elements();
@@ -196,7 +201,7 @@ public class PushResource extends Resource {
 				.setFrom(0)//
 				.setSize(1000)//
 				.setVersion(false)//
-				.setFetchSource(new String[] { USER_ID, DEVICE_TOKEN, PROVIDER_ID }, null)//
+				.setFetchSource(new String[] { USER_ID, ENDPOINT }, null)//
 				.get()//
 				.getHits();
 
@@ -212,7 +217,7 @@ public class PushResource extends Resource {
 
 			if (!isTest(context)) {
 				PublishRequest request = new PublishRequest()//
-						.withTargetArn(installation.get(PROVIDER_ID).asText());
+						.withTargetArn(installation.get(ENDPOINT).asText());
 
 				if (message.isObject()) {
 					request.withMessageStructure("json")//
@@ -223,11 +228,10 @@ public class PushResource extends Resource {
 				getSnsClient().publish(request);
 			}
 
-			builder.object()//
-					.put(USER_ID, installation.get(USER_ID).asText())//
-					.put(DEVICE_TOKEN, installation.get(DEVICE_TOKEN).asText())//
-					.put(PROVIDER_ID, installation.get(PROVIDER_ID).asText())//
-					.end();
+			builder.object().put(ID, hit.getId());
+			Json.checkString(installation, USER_ID)//
+					.ifPresent(userId -> builder.put(USER_ID, userId));
+			builder.end();
 		}
 
 		return Payloads.json(builder);
@@ -242,17 +246,18 @@ public class PushResource extends Resource {
 		Credentials credentials = SpaceContext.checkCredentials();
 
 		ObjectNode installation = Json.readObjectNode(body);
-		String deviceToken = Json.checkStringNotNullOrEmpty(installation, DEVICE_TOKEN);
+		String token = Json.checkStringNotNullOrEmpty(installation, TOKEN);
 		String appId = Json.checkStringNotNullOrEmpty(installation, APP_ID);
+		PushServices service = PushServices.valueOf(Json.checkStringNotNullOrEmpty(installation, PUSH_SERVICE));
 
 		// remove all fields that should not be set by client code
-		installation.remove(Arrays.asList(USER_ID, PROVIDER_ID));
+		installation.remove(Arrays.asList(USER_ID, ENDPOINT));
 
 		if (isTest(context)) {
-			installation.set(PROVIDER_ID, TextNode.valueOf("XXXXXXXXXXXXXXXX"));
+			installation.set(ENDPOINT, TextNode.valueOf("FAKE_ENDPOINT_FOR_TESTING"));
 		} else {
-			String providerId = createApplicationEndpoint(credentials.backendId(), appId, deviceToken);
-			installation.set(PROVIDER_ID, TextNode.valueOf(providerId));
+			String endpoint = createApplicationEndpoint(credentials.backendId(), appId, service, token);
+			installation.set(ENDPOINT, TextNode.valueOf(endpoint));
 		}
 
 		if (credentials.isAtLeastUser())
@@ -319,9 +324,9 @@ public class PushResource extends Resource {
 		return snsClient;
 	}
 
-	Optional<PlatformApplication> getApplication(String backendId, String appId) {
+	Optional<PlatformApplication> getApplication(String backendId, String appId, PushServices service) {
 
-		final String internalName = appId;
+		final String internalName = String.join("/", "app", service.toString(), appId);
 		Optional<String> nextToken = Optional.empty();
 
 		do {
@@ -343,12 +348,13 @@ public class PushResource extends Resource {
 		return Optional.empty();
 	}
 
-	String createApplicationEndpoint(String backendId, String appId, String deviceToken) {
+	String createApplicationEndpoint(String backendId, String appId, PushServices service, String token) {
 
-		Optional<PlatformApplication> application = getApplication(backendId, appId);
+		Optional<PlatformApplication> application = getApplication(backendId, appId, service);
 
 		if (!application.isPresent())
-			throw Exceptions.illegalArgument("invalid mobile	application id [%s]", appId);
+			throw Exceptions.illegalArgument("mobile	application [%s] push service [%s] not registered in AWS",
+					appId, service);
 
 		String applicationArn = application.get().getPlatformApplicationArn();
 
@@ -359,7 +365,7 @@ public class PushResource extends Resource {
 					.createPlatformEndpoint(//
 							new CreatePlatformEndpointRequest()//
 									.withPlatformApplicationArn(applicationArn)//
-									.withToken(deviceToken))//
+									.withToken(token))//
 					.getEndpointArn();
 
 		} catch (InvalidParameterException e) {
@@ -387,7 +393,7 @@ public class PushResource extends Resource {
 			GetEndpointAttributesResult endpointAttributes = getSnsClient()
 					.getEndpointAttributes(new GetEndpointAttributesRequest().withEndpointArn(endpointArn));
 
-			updateNeeded = !endpointAttributes.getAttributes().get("Token").equals(deviceToken)
+			updateNeeded = !endpointAttributes.getAttributes().get("Token").equals(token)
 					|| !endpointAttributes.getAttributes().get("Enabled").equalsIgnoreCase("true");
 
 		} catch (NotFoundException nfe) {
@@ -403,7 +409,7 @@ public class PushResource extends Resource {
 			// The platform endpoint is out of sync with the current data;
 			// update the token and enable it.
 			Map<String, String> attribs = new HashMap<String, String>();
-			attribs.put("Token", deviceToken);
+			attribs.put("Token", token);
 			attribs.put("Enabled", "true");
 			getSnsClient().setEndpointAttributes(//
 					new SetEndpointAttributesRequest()//

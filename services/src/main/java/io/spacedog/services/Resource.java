@@ -25,6 +25,7 @@ public abstract class Resource {
 	public static final Set<String> INTERNAL_BACKENDS = Sets.newHashSet(SPACEDOG_BACKEND);
 
 	// Field names
+	public static final String ID = "id";
 	public static final String BACKEND_ID = "backendId";
 	public static final String PASSWORD = "password";
 	public static final String EMAIL = "email";
