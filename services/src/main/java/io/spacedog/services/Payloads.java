@@ -114,13 +114,13 @@ public class Payloads {
 		return savedBuilder(created, backendId, uri, type, id, 0);
 	}
 
-	public static Payload saved(boolean created, String backendId, String uri, String type, String id) {
-		return saved(created, backendId, uri, type, id, 0, true);
-	}
-
 	public static Payload saved(boolean created, String backendId, String uri, String type, String id,
 			boolean isUriFinal) {
 		return saved(created, backendId, uri, type, id, 0, isUriFinal);
+	}
+
+	public static Payload saved(boolean created, String backendId, String uri, String type, String id) {
+		return saved(created, backendId, uri, type, id, 0, false);
 	}
 
 	public static Payload saved(boolean created, String backendId, String uri, String type, String id, long version) {
