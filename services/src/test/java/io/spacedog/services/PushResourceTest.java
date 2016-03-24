@@ -8,7 +8,6 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
 
 import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceDogHelper.Backend;
@@ -20,6 +19,7 @@ import io.spacedog.utils.SchemaBuilder2;
 
 public class PushResourceTest extends Assert {
 
+	private static final String USERS_ONLY = "usersOnly";
 	private static final String ID = "id";
 	private static final String MESSAGE = "message";
 	private static final String APNS = "APNS";
@@ -214,7 +214,8 @@ public class PushResourceTest extends Assert {
 				.assertContains(toJsonTag("bonjour", "toi"))//
 				.assertSizeEquals(1);
 
-		// vince pushes to all joho users
+		// vince pushes to all joho installations
+		// this means users and anonymous installations
 
 		ObjectNode push = Json.object(APP_ID, "joho", MESSAGE, "This is a push!");
 
@@ -228,9 +229,23 @@ public class PushResourceTest extends Assert {
 				.assertContainsValue("vince", USER_ID)//
 				.assertContainsValue("fred", USER_ID);
 
+		// vince pushes to all joho users
+		// this means excluding anonymous installations
+
+		push.put(USERS_ONLY, true);
+
+		SpaceRequest.post("/1/push?refresh=true")//
+				.backend(testBackend).userAuth(vince)//
+				.body(push)//
+				.go(200)//
+				.assertSizeEquals(3, "pushedTo")//
+				.assertContainsValue("dave", USER_ID)//
+				.assertContainsValue("vince", USER_ID)//
+				.assertContainsValue("fred", USER_ID);
+
 		// vince pushes to APNS only joho users
 
-		push.set(PUSH_SERVICE, TextNode.valueOf(APNS));
+		push.put(PUSH_SERVICE, APNS);
 
 		SpaceRequest.post("/1/push?refresh=true")//
 				.backend(testBackend).userAuth(vince)//

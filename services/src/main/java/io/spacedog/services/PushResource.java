@@ -64,6 +64,7 @@ public class PushResource extends Resource {
 
 	// push field names
 	private static final String MESSAGE = "message";
+	private static final String USERS_ONLY = "usersOnly";
 
 	public static enum PushServices {
 		APNS, // Apple Push Notification Service
@@ -173,6 +174,10 @@ public class PushResource extends Resource {
 		Optional<String> service = Json.checkString(push, PUSH_SERVICE);
 		if (service.isPresent())
 			query.filter(QueryBuilders.termQuery(PUSH_SERVICE, service.get()));
+
+		boolean usersOnly = Json.checkBoolean(push, USERS_ONLY, false);
+		if (usersOnly)
+			query.filter(QueryBuilders.existsQuery(USER_ID));
 
 		JsonNode tags = push.get(TAGS);
 		if (tags != null) {

@@ -337,6 +337,10 @@ public class Json {
 		return checkJsonNodeOfType(input, propertyPath, Type.Double, required);
 	}
 
+	public static boolean checkBoolean(JsonNode push, String path, boolean defaultValue) {
+		return checkBoolean(push, path).orElse(defaultValue);
+	}
+
 	public static Optional<Boolean> checkBoolean(JsonNode push, String path) {
 		return checkBooleanNode(push, path, false).flatMap(node -> Optional.of(node.asBoolean()));
 	}
