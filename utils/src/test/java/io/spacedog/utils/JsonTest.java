@@ -15,7 +15,7 @@ import com.fasterxml.jackson.databind.node.BooleanNode;
 public class JsonTest extends Assert {
 
 	@Test
-	public void shouldSucceedToGet() {
+	public void shouldGet() {
 		JsonNode json = Json.objectBuilder().object("riri").array("fifi").add(12).object().put("loulou", false).build();
 		assertEquals(12, Json.get(json, "riri.fifi.0").asInt());
 		assertEquals(false, Json.get(json, "riri.fifi.1.loulou").asBoolean());
@@ -24,7 +24,7 @@ public class JsonTest extends Assert {
 	}
 
 	@Test
-	public void shouldSucceedToSet() {
+	public void shouldSet() {
 		JsonNode json = Json.objectBuilder().object("riri").array("fifi").add(12).object().put("loulou", false).build();
 		Json.set(json, "riri.fifi.1.loulou", BooleanNode.TRUE);
 		assertEquals(true, Json.get(json, "riri.fifi.1.loulou").asBoolean());
@@ -64,5 +64,17 @@ public class JsonTest extends Assert {
 		// false
 		assertFalse(Json.isJsonObject("{]"));
 		assertFalse(Json.isJsonObject("[}"));
+	}
+
+	@Test
+	public void shouldCheckStringFields() {
+		JsonNode node = Json.object("name", "david", "age", 3);
+		assertEquals("david", Json.checkString(node, "name").get());
+		assertFalse(Json.checkString(node, "city").isPresent());
+		try {
+			Json.checkString(node, "age");
+			fail();
+		} catch (IllegalArgumentException e) {
+		}
 	}
 }

@@ -17,6 +17,22 @@ public class JsonBuilder<N extends JsonNode> {
 	// object methods
 	//
 
+	public JsonBuilder<N> put(String key, Object value) {
+		if (value instanceof Boolean)
+			put(key, (boolean) value);
+		else if (value instanceof Integer)
+			put(key, (int) value);
+		else if (value instanceof Long)
+			put(key, (long) value);
+		else if (value instanceof Double)
+			put(key, (double) value);
+		else if (value instanceof Float)
+			put(key, (float) value);
+		else if (value instanceof String)
+			put(key, (String) value);
+		return this;
+	}
+
 	public JsonBuilder<N> put(String key, String value) {
 		checkCurrentIsObjectNode().put(key, value);
 		return this;

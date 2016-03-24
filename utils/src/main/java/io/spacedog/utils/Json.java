@@ -178,17 +178,13 @@ public class Json {
 
 	// TODO add tests
 	public static ObjectNode object(Object... elements) {
-		// TODO check this test
-		// TODO better message
 		if (elements.length % 2 != 0)
-			throw Exceptions.illegalArgument("elements are not pairs");
+			throw Exceptions.illegalArgument("odd number of elements");
 
 		JsonBuilder<ObjectNode> builder = Json.objectBuilder();
 
-		// TODO convert values to the right type
-		// not only strings
 		for (int i = 0; i < elements.length; i = i + 2)
-			builder.put(elements[i].toString(), elements[i + 1].toString());
+			builder.put(elements[i].toString(), elements[i + 1]);
 
 		return builder.build();
 	}
@@ -325,24 +321,40 @@ public class Json {
 					String.format("property [%s] is forbidden in type [%s]", propertyPath, type));
 	}
 
+	public static Optional<String> checkString(JsonNode push, String path) {
+		return checkStringNode(push, path, false).flatMap(node -> Optional.of(node.asText()));
+	}
+
 	public static Optional<JsonNode> checkStringNode(JsonNode input, String propertyPath, boolean required) {
 		return checkJsonNodeOfType(input, propertyPath, Type.String, required);
 	}
 
-	public static Optional<JsonNode> checkFloatNode(JsonNode input, String propertyPath, boolean required) {
-		return checkJsonNodeOfType(input, propertyPath, Type.Float, required);
+	public static Optional<Double> checkDouble(JsonNode push, String path) {
+		return checkDoubleNode(push, path, false).flatMap(node -> Optional.of(node.asDouble()));
 	}
 
-	public static Optional<JsonNode> checkDouble(JsonNode input, String propertyPath, boolean required) {
+	public static Optional<JsonNode> checkDoubleNode(JsonNode input, String propertyPath, boolean required) {
 		return checkJsonNodeOfType(input, propertyPath, Type.Double, required);
+	}
+
+	public static Optional<Boolean> checkBoolean(JsonNode push, String path) {
+		return checkBooleanNode(push, path, false).flatMap(node -> Optional.of(node.asBoolean()));
 	}
 
 	public static Optional<JsonNode> checkBooleanNode(JsonNode input, String propertyPath, boolean required) {
 		return checkJsonNodeOfType(input, propertyPath, Type.Boolean, required);
 	}
 
+	public static Optional<Integer> checkInteger(JsonNode push, String path) {
+		return checkIntegerNode(push, path, false).flatMap(node -> Optional.of(node.asInt()));
+	}
+
 	public static Optional<JsonNode> checkIntegerNode(JsonNode input, String propertyPath, boolean required) {
 		return checkJsonNodeOfType(input, propertyPath, Type.Integer, required);
+	}
+
+	public static Optional<Long> checkLong(JsonNode push, String path) {
+		return checkLongNode(push, path, false).flatMap(node -> Optional.of(node.asLong()));
 	}
 
 	public static Optional<JsonNode> checkLongNode(JsonNode input, String propertyPath, boolean required) {
@@ -354,7 +366,7 @@ public class Json {
 		JsonNode node = get(input, propertyPath);
 		if (node == null) {
 			if (required)
-				throw new IllegalArgumentException(String.format("property [%s] is missing", propertyPath));
+				throw Exceptions.illegalArgument("property [%s] is missing", propertyPath);
 			return Optional.empty();
 		}
 		if (isOfType(expected, node))
