@@ -5,7 +5,6 @@ package io.spacedog.services;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -14,6 +13,7 @@ import org.elasticsearch.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.settings.Settings.Builder;
 import org.elasticsearch.node.Node;
+import org.elasticsearch.plugin.cloud.aws.CloudAwsPlugin;
 import org.elasticsearch.plugin.deletebyquery.DeleteByQueryPlugin;
 import org.elasticsearch.search.SearchHit;
 import org.joda.time.DateTime;
@@ -195,7 +195,8 @@ public class Start {
 					config.snapshotsPath().get().toAbsolutePath().toString());
 
 		elasticNode = new ElasticNode(builder.build(), //
-				Collections.singleton(DeleteByQueryPlugin.class));
+				DeleteByQueryPlugin.class, //
+				CloudAwsPlugin.class);
 
 		elasticNode.start();
 		Client client = elasticNode.client();

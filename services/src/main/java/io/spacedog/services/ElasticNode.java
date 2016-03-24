@@ -1,6 +1,6 @@
 package io.spacedog.services;
 
-import java.util.Collection;
+import java.util.Arrays;
 
 import org.elasticsearch.Version;
 import org.elasticsearch.common.settings.Settings;
@@ -10,8 +10,9 @@ import org.elasticsearch.plugins.Plugin;
 
 public class ElasticNode extends Node {
 
-	protected ElasticNode(Settings settings, Collection<Class<? extends Plugin>> classpathPlugins) {
+	@SafeVarargs
+	protected ElasticNode(Settings settings, Class<? extends Plugin>... plugins) {
 		super(InternalSettingsPreparer.prepareEnvironment(settings, null), //
-				Version.CURRENT, classpathPlugins);
+				Version.CURRENT, Arrays.asList(plugins));
 	}
 }
