@@ -7,12 +7,11 @@ import java.util.Iterator;
 
 import org.junit.Assert;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceRequest;
-import io.spacedog.utils.Json;
+import io.spacedog.utils.Utils;
 
 public class SuperDogStatus extends Assert {
 
@@ -23,11 +22,11 @@ public class SuperDogStatus extends Assert {
 		ObjectNode backends = SpaceRequest.get("/1/backend").queryString("size", "100")//
 				.superdogAuth().go(200).objectNode();
 
-		log("[%s] backends:", backends.get("total").asLong());
+		Utils.info("[%s] backends:", backends.get("total").asLong());
 
 		Iterator<JsonNode> elements = backends.get("results").elements();
 		while (elements.hasNext())
-			log("\t%s", elements.next().get("backendId").asText());
+			Utils.info("\t%s", elements.next().get("backendId").asText());
 
 		elements = backends.get("results").elements();
 		while (elements.hasNext()) {
@@ -35,8 +34,8 @@ public class SuperDogStatus extends Assert {
 			String backendId = account.get("backendId").asText();
 			// String backendKey = getBackendKey(account);
 
-			log();
-			log("**** %s ****", backendId);
+			Utils.info();
+			Utils.info("**** %s ****", backendId);
 
 			// TODO count backend objects when superdogs
 			// can access /1/data like a regular backend admin
@@ -55,20 +54,8 @@ public class SuperDogStatus extends Assert {
 					.go(200)//
 					.objectNode();
 
-			log("Last user request:");
-			log(log.get("results").get(0));
+			Utils.info("Last user request:");
+			Utils.info("results", log.get("results").get(0));
 		}
-	}
-
-	private static void log() {
-		System.out.println();
-	}
-
-	private static void log(JsonNode node) throws JsonProcessingException {
-		log(Json.getMapper().writerWithDefaultPrettyPrinter().writeValueAsString(node));
-	}
-
-	private static void log(String string, Object... args) {
-		System.out.println(String.format(string, args));
 	}
 }

@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.services.Credentials.Level;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Passwords;
+import io.spacedog.utils.Utils;
 
 public class CreateSuperdog {
 
@@ -64,7 +65,7 @@ public class CreateSuperdog {
 					CredentialsResource.toCredentialsId(Resource.ROOT_BACKEND, username), //
 					credentials.toString());
 
-			log("Superdog credentials [api-%s] indexed in [spacedog-credentials]", username);
+			Utils.info("Superdog credentials [api-%s] indexed in [spacedog-credentials]", username);
 
 		} catch (Throwable t) {
 			t.printStackTrace();
@@ -73,9 +74,4 @@ public class CreateSuperdog {
 				client.close();
 		}
 	}
-
-	private static void log(String string, Object... args) {
-		System.out.println(String.format(string, args));
-	}
-
 }

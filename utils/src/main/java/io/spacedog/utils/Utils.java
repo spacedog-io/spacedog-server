@@ -3,6 +3,9 @@ package io.spacedog.utils;
 import java.nio.charset.Charset;
 import java.util.Collection;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+
 public class Utils {
 
 	public static final Charset UTF8 = Charset.forName("UTF-8");
@@ -49,7 +52,16 @@ public class Utils {
 		return c == null || c.isEmpty();
 	}
 
+	public static void info() {
+		System.out.println("---");
+	}
+
 	public static void info(String message, Object... objects) {
 		System.out.println(String.format(message, objects));
+	}
+
+	public static void info(String nodeName, JsonNode node) throws JsonProcessingException {
+		Utils.info("%s = %s", nodeName, //
+				Json.getMapper().writerWithDefaultPrettyPrinter().writeValueAsString(node));
 	}
 }
