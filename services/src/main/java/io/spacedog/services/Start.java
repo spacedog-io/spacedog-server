@@ -5,7 +5,6 @@ package io.spacedog.services;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.client.Client;
@@ -15,13 +14,8 @@ import org.elasticsearch.common.settings.Settings.Builder;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.plugin.cloud.aws.CloudAwsPlugin;
 import org.elasticsearch.plugin.deletebyquery.DeleteByQueryPlugin;
-import org.elasticsearch.search.SearchHit;
-import org.joda.time.DateTime;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import io.spacedog.services.Credentials.Level;
-import io.spacedog.utils.Json;
+import io.spacedog.utils.Utils;
 import net.codestory.http.AbstractWebServer;
 import net.codestory.http.Request;
 import net.codestory.http.Response;
@@ -40,8 +34,6 @@ public class Start {
 	private ElasticClient elastic;
 	private MyFluentServer fluent;
 	private StartConfiguration config;
-	private int credentialsCount = 0;
-	private int userCount = 0;
 
 	public Node getElasticNode() {
 		return elasticNode;
@@ -78,102 +70,7 @@ public class Start {
 	}
 
 	private void upgrade() throws IOException {
-
-		if (elastic.existsIndex("spacedog", "account")) {
-
-			SearchHit[] accounts = elastic.prepareSearch("spacedog", "account")//
-					.setTypes("account").setSize(100).get()//
-					.getHits().getHits();
-
-			for (SearchHit account : accounts) {
-				Map<String, Object> source = account.getSource();
-
-				String backendId = source.get(UserResource.BACKEND_ID).toString();
-
-				log("Upgrading account [%s] ...", backendId);
-
-				if (elastic.existsIndex(backendId, "user")) {
-					SearchHit[] users = elastic.prepareSearch(backendId, "user")//
-							.setTypes("user").setSize(1000).get()//
-							.getHits().getHits();
-
-					for (SearchHit user : users) {
-						createUserCredentials(backendId, user);
-						upgradeUserData(backendId, user);
-					}
-				}
-
-				upgradeSuperAdmin(backendId, source);
-			}
-
-			elastic.deleteIndex("spacedog", "account");
-		}
-
-		log("Credentials created = %s", credentialsCount);
-		log("User data created or updated = %s", userCount);
-
-	}
-
-	void upgradeSuperAdmin(String backendId, Map<String, Object> source) {
-		String now = DateTime.now().toString();
-		String username = source.get(Resource.USERNAME).toString();
-		String hashedPassword = source.get(UserResource.HASHED_PASSWORD).toString();
-		String email = source.get(Resource.EMAIL).toString();
-
-		ObjectNode credentials = Json.object(//
-				UserResource.BACKEND_ID, backendId, //
-				Resource.USERNAME, username, //
-				UserResource.HASHED_PASSWORD, hashedPassword, //
-				Resource.EMAIL, email, //
-				UserResource.CREDENTIALS_LEVEL, Level.SUPER_ADMIN, //
-				UserResource.CREATED_AT, now, //
-				UserResource.UPDATED_AT, now);
-
-		CredentialsResource.get().index(backendId, username, credentials);
-		credentialsCount++;
-	}
-
-	private void createUserCredentials(String backendId, SearchHit user) {
-		Map<String, Object> userMap = user.getSource();
-
-		String username = userMap.get(Resource.USERNAME).toString();
-		String hashedPassword = userMap.get(UserResource.HASHED_PASSWORD).toString();
-		String email = userMap.get(Resource.EMAIL).toString();
-		@SuppressWarnings("unchecked")
-		Map<String, Object> meta = (Map<String, Object>) userMap.get("meta");
-		String createdAt = meta.get(UserResource.CREATED_AT).toString();
-		String updatedAt = meta.get(UserResource.UPDATED_AT).toString();
-
-		log("Upgrading backend [%s] user [%s] ...", backendId, username);
-
-		ObjectNode credentials = Json.object(//
-				UserResource.BACKEND_ID, backendId, //
-				Resource.USERNAME, username, //
-				UserResource.HASHED_PASSWORD, hashedPassword, //
-				Resource.EMAIL, email, //
-				UserResource.CREDENTIALS_LEVEL, Level.USER, //
-				UserResource.CREATED_AT, createdAt, //
-				UserResource.UPDATED_AT, updatedAt);
-
-		CredentialsResource.get().index(backendId, username, credentials);
-		credentialsCount++;
-	}
-
-	private void upgradeUserData(String backendId, SearchHit user) {
-		Map<String, Object> userMap = user.getSource();
-		String username = userMap.get(Resource.USERNAME).toString();
-
-		userMap.remove(UserResource.HASHED_PASSWORD);
-		userMap.remove(UserResource.PASSWORD_RESET_CODE);
-		userMap.remove(Resource.PASSWORD);
-		userMap.remove("groups");
-
-		elastic.prepareIndex(backendId, "user", username).setSource(userMap).get();
-		userCount++;
-	}
-
-	private static void log(String string, Object... args) {
-		System.out.println(String.format(string, args));
+		Utils.info("[SpaceDog] Nothing to upgrade");
 	}
 
 	private void startLocalElastic() throws InterruptedException, ExecutionException, IOException {
