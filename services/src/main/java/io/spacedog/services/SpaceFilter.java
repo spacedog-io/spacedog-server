@@ -8,6 +8,6 @@ public interface SpaceFilter extends Filter {
 
 	@Override
 	default boolean matches(String uri, Context context) {
-		return uri.startsWith("/1/") || uri.startsWith("/v1/");
+		return true;
 	}
 }
