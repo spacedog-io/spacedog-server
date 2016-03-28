@@ -123,16 +123,13 @@ public class Start {
 
 		if (config.isSsl()) {
 			fluent.startSSL(//
-					config.sslPort(), //
+					config.apiPort(), //
 					Arrays.asList(//
 							config.crtFilePath().get(), //
 							config.pemFilePath().get()), //
 					config.derFilePath().get());
 		} else
-			fluent.start(config.sslPort());
-
-		HttpPermanentRedirect.start(config.nonSslPort(), //
-				configuration().sslUrl());
+			fluent.start(config.apiPort());
 	}
 
 	private static void configure(Routes routes) {

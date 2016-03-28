@@ -39,7 +39,7 @@ public abstract class Resource {
 	}
 
 	public static StringBuilder spaceRootUrl(String backendId) {
-		return new StringBuilder(Start.get().configuration().sslUrl(backendId));
+		return new StringBuilder(Start.get().configuration().apiUrl(backendId));
 	}
 
 	protected static String getReferenceType(String reference) {
