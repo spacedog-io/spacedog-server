@@ -11,7 +11,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 
 import io.spacedog.services.Credentials.Level;
 import io.spacedog.services.CredentialsResource.SignUp;
-import io.spacedog.utils.BackendKey;
+import io.spacedog.utils.Backends;
 import io.spacedog.utils.Internals;
 import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
@@ -32,7 +32,7 @@ public class BackendResource extends Resource {
 	@Post("/1/backend/:id/")
 	public Payload post(String backendId, String body, Context context) {
 
-		BackendKey.checkIfIdIsValid(backendId);
+		Backends.checkIfIdIsValid(backendId);
 
 		if (existsBackend(backendId))
 			return Payloads.invalidParameters("backendId", backendId,
