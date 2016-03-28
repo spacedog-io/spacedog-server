@@ -2,7 +2,6 @@ package io.spacedog.utils;
 
 public abstract class SpaceHeaders {
 
-	public static final String BACKEND_KEY = "x-spacedog-backend-key";
 	public static final String SPACEDOG_TEST = "x-spacedog-test";
 	public static final String BASIC_SCHEME = "Basic";
 	public static final String ALLOW_METHODS = "GET, POST, PUT, DELETE, HEAD";
