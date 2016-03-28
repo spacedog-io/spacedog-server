@@ -15,7 +15,7 @@ import org.joda.time.DateTime;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.services.Credentials.Level;
-import io.spacedog.utils.BackendKey;
+import io.spacedog.utils.Backends;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Passwords;
 import io.spacedog.utils.Utils;
@@ -54,7 +54,7 @@ public class CreateSuperdog {
 
 			String now = DateTime.now().toString();
 			ObjectNode credentials = Json.object(//
-					Resource.BACKEND_ID, BackendKey.ROOT_API, //
+					Resource.BACKEND_ID, Backends.ROOT_API, //
 					Resource.USERNAME, username, //
 					Resource.CREDENTIALS_LEVEL, Level.SUPERDOG.toString(), //
 					Resource.EMAIL, email, //
@@ -63,7 +63,7 @@ public class CreateSuperdog {
 					Resource.UPDATED_AT, now);
 
 			elastic.index(Resource.SPACEDOG_BACKEND, CredentialsResource.TYPE, //
-					CredentialsResource.toCredentialsId(BackendKey.ROOT_API, username), //
+					CredentialsResource.toCredentialsId(Backends.ROOT_API, username), //
 					credentials.toString());
 
 			Utils.info("Superdog credentials [api-%s] indexed in [spacedog-credentials]", username);

@@ -13,7 +13,7 @@ import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
-import io.spacedog.utils.BackendKey;
+import io.spacedog.utils.Backends;
 import io.spacedog.utils.Json;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
@@ -55,8 +55,8 @@ public class DataResourceTestOften extends Assert {
 		// find by id
 
 		SpaceResponse res1 = SpaceRequest.get("/1/data/car/" + id).backend(testBackend).go(200)//
-				.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.createdBy")//
-				.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.updatedBy")//
+				.assertEquals(Backends.DEFAULT_USERNAME, "meta.createdBy")//
+				.assertEquals(Backends.DEFAULT_USERNAME, "meta.updatedBy")//
 				.assertDateIsRecent("meta.createdAt")//
 				.assertEqualsWithoutMeta(car);
 
@@ -80,7 +80,7 @@ public class DataResourceTestOften extends Assert {
 		// check update is correct
 
 		SpaceResponse res3 = SpaceRequest.get("/1/data/car/" + id).backend(testBackend).go(200)//
-				.assertEquals(BackendKey.DEFAULT_BACKEND_KEY_NAME, "meta.createdBy")//
+				.assertEquals(Backends.DEFAULT_USERNAME, "meta.createdBy")//
 				.assertEquals("vince", "meta.updatedBy")//
 				.assertEquals(createdAt, "meta.createdAt")//
 				.assertDateIsRecent("meta.updatedAt")//
