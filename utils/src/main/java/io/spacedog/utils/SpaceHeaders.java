@@ -4,7 +4,6 @@ public abstract class SpaceHeaders {
 
 	// SpaceDog custom headers
 
-	public static final String BACKEND_KEY = "x-spacedog-backend-key";
 	public static final String SPACEDOG_TEST = "x-spacedog-test";
 	public static final String SPACEDOG_DEBUG = "x-spacedog-debug";
 	public static final String SPACEDOG_OWNER = "x-spacedog-owner";
