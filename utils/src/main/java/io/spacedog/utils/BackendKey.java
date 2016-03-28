@@ -12,6 +12,8 @@ import com.google.common.base.Strings;
 
 public class BackendKey {
 
+	public static final String ROOT_API = "api";
+
 	public static final String DEFAULT_BACKEND_KEY_NAME = "default";
 
 	public String name;
@@ -42,6 +44,9 @@ public class BackendKey {
 		if (backendId.indexOf("spacedog") > -1)
 			return false;
 
+		if (backendId.startsWith(ROOT_API))
+			return false;
+
 		return true;
 	}
 
@@ -55,7 +60,8 @@ public class BackendKey {
 					+ "is at least 4 characters long, "//
 					+ "is only composed of a-z and 0-9 characters, "//
 					+ "is lowercase,  "//
-					+ "does not conbtain 'spacedog'");
+					+ "does not start with 'api',  "//
+					+ "does not contain 'spacedog'");
 	}
 
 	public static String extractBackendId(String backendKey) {

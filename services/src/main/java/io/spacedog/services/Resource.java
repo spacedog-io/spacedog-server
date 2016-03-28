@@ -3,10 +3,7 @@
  */
 package io.spacedog.services;
 
-import java.util.Set;
-
 import com.google.common.base.Strings;
-import com.google.common.collect.Sets;
 
 import io.spacedog.utils.Check;
 import io.spacedog.utils.SpaceHeaders;
@@ -20,9 +17,7 @@ public abstract class Resource {
 	public static final int SHARDS_DEFAULT = 1;
 	public static final int REPLICAS_DEFAULT = 0;
 
-	public static final String ROOT_BACKEND = "api";
 	public static final String SPACEDOG_BACKEND = "spacedog";
-	public static final Set<String> INTERNAL_BACKENDS = Sets.newHashSet(SPACEDOG_BACKEND);
 
 	// Field names
 	public static final String ID = "id";

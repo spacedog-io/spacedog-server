@@ -6,6 +6,8 @@ package io.spacedog.services;
 import java.util.Arrays;
 import java.util.Optional;
 
+import io.spacedog.utils.BackendKey;
+
 public class Credentials {
 
 	public static enum Level {
@@ -70,6 +72,6 @@ public class Credentials {
 	}
 
 	public boolean isRootBackend() {
-		return Resource.ROOT_BACKEND.equals(backendId);
+		return BackendKey.ROOT_API.equals(backendId);
 	}
 }

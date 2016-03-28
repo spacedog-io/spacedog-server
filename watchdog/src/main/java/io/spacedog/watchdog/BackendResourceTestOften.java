@@ -135,4 +135,28 @@ public class BackendResourceTestOften extends Assert {
 		SpaceRequest.delete("/1/backend").adminAuth(zzzz).go(200);
 	}
 
+	@Test
+	public void invalidBackendIdentifiers() throws Exception {
+
+		// prepare
+		SpaceDogHelper.deleteTestBackend();
+		ObjectNode body = Json.object("username", "test", //
+				"password", "hi test", "email", "hello@spacedog.io");
+
+		// fails to create a backend whom id contains invalid characters
+		SpaceRequest.post("/1/backend/xxx-xxx").body(body).go(400);
+
+		// fails to create a backend whom id is not lowercase
+		SpaceRequest.post("/1/backend/XXXX").body(body).go(400);
+
+		// fails to create backend whom id is not at least 4 characters long
+		SpaceRequest.post("/1/backend/xxx").body(body).go(400);
+
+		// user fails to create a backend whom id contains spacedog
+		SpaceRequest.post("/1/backend/xxxspacedogxxx").body(body).go(400);
+
+		// user fails to create a backend whom id starts with api
+		SpaceRequest.post("/1/backend/apixxx").body(body).go(400);
+	}
+
 }

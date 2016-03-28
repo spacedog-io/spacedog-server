@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
 import io.spacedog.utils.Json;
-import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SchemaBuilder2;
 import io.spacedog.utils.Utils;
 
@@ -92,10 +91,8 @@ public class SpaceDogHelper {
 	public static Backend createBackend(String backendId, String username, String password, String email,
 			boolean forTesting) throws Exception, UnirestException {
 
-		JsonBuilder<ObjectNode> body = Json.objectBuilder()//
-				.put("username", username)//
-				.put("password", password)//
-				.put("email", email);
+		ObjectNode body = Json.object("username", username, //
+				"password", password, "email", email);
 
 		SpaceRequest.post("/1/backend/" + backendId)//
 				.forTesting(forTesting)//

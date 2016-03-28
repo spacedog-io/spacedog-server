@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
+import io.spacedog.utils.BackendKey;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.NotFoundException;
@@ -107,7 +108,7 @@ public class SnapshotResource extends Resource {
 
 		JsonBuilder<ObjectNode> jsonResponse = Payloads.minimalBuilder(status)//
 				.put("id", snapshotId)//
-				.put("location", spaceUrl(ROOT_BACKEND, "/1", "snapshot", snapshotId).toString());
+				.put("location", spaceUrl(BackendKey.ROOT_API, "/1", "snapshot", snapshotId).toString());
 
 		if (response.getSnapshotInfo() != null) {
 			SpaceSnapshot info = new SpaceSnapshot(repoId, response.getSnapshotInfo());

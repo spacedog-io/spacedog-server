@@ -6,6 +6,7 @@ import java.util.Optional;
 import com.google.common.base.Strings;
 import com.google.common.net.HttpHeaders;
 
+import io.spacedog.utils.BackendKey;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.SpaceParams;
 import io.spacedog.utils.Utils;
@@ -193,7 +194,7 @@ public class SpaceContext {
 		}
 
 		if (Strings.isNullOrEmpty(backendId))
-			backendId = Resource.ROOT_BACKEND;
+			backendId = BackendKey.ROOT_API;
 
 		Optional<String[]> tokens = decodeAuthorizationHeader(context.header(SpaceHeaders.AUTHORIZATION));
 
@@ -202,7 +203,7 @@ public class SpaceContext {
 			String username = tokens.get()[0];
 			String password = tokens.get()[1];
 
-			String backendToCheck = username.startsWith("superdog-") ? Resource.ROOT_BACKEND : backendId;
+			String backendToCheck = username.startsWith("superdog-") ? BackendKey.ROOT_API : backendId;
 			Optional<Credentials> credentials = CredentialsResource.get().check(backendToCheck, username, password);
 
 			if (credentials.isPresent()) {
