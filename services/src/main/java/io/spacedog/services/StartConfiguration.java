@@ -25,10 +25,8 @@ public class StartConfiguration {
 		check("production", isProduction());
 		check("offline", isOffline());
 
-		check("ssl url", sslUrl());
-		check("ssl port", sslPort());
-		check("non ssl url", nonSslUrl());
-		check("non ssl port", nonSslPort());
+		check("api url", apiUrl());
+		check("api port", apiPort());
 
 		checkPath("elastic data path", elasticDataPath(), true);
 		check("elastic http enabled", isElasticHttpEnabled());
@@ -62,27 +60,19 @@ public class StartConfiguration {
 				: Paths.get(path);
 	}
 
-	public String sslUrl() {
-		return sslUrl(null);
+	public String apiUrl() {
+		return apiUrl("api");
 	}
 
-	public String sslUrl(String backendId) {
-		String url = configuration.getProperty("spacedog.url.ssl");
+	public String apiUrl(String backendId) {
+		String url = configuration.getProperty("spacedog.api.url");
 		return Strings.isNullOrEmpty(backendId)//
-				? String.format(url, "")//
+				? String.format(url, "api.")//
 				: String.format(url, backendId + '.');
 	}
 
-	public String nonSslUrl() {
-		return configuration.getProperty("spacedog.url.nonssl");
-	}
-
-	public int sslPort() {
-		return Integer.valueOf(configuration.getProperty("spacedog.port.ssl"));
-	}
-
-	public int nonSslPort() {
-		return Integer.valueOf(configuration.getProperty("spacedog.port.nonssl"));
+	public int apiPort() {
+		return Integer.valueOf(configuration.getProperty("spacedog.api.port"));
 	}
 
 	public Path elasticDataPath() {
