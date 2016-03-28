@@ -67,17 +67,13 @@ public class SpaceRequest {
 
 		SpaceTarget target = configuration().target();
 
-		if (!Strings.isNullOrEmpty(backendId) //
-				&& configuration().subdomains()) {
-
-			StringBuilder builder = redirected //
-					? target.redirectedUrlBuilder(backendId) //
-					: target.urlBuilder(backendId);
-
-			return builder.append(uri).toString();
+		if (SpaceRequestConfiguration.get().subdomains()) {
+			if (Strings.isNullOrEmpty(backendId))
+				backendId = "api";
+			return target.url(backendId, uri).toString();
 		}
 
-		return redirected ? target.redirectedUrl(uri) : target.url(uri);
+		return target.url(uri);
 	}
 
 	public static SpaceRequest get(String uri) {

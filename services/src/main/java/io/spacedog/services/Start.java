@@ -114,10 +114,7 @@ public class Start {
 
 		fluent = new MyFluentServer();
 		fluent.configure(Start::configure);
-		fluent.start(config.sslPort());
-
-		HttpPermanentRedirect.start(config.nonSslPort(), //
-				configuration().sslUrl());
+		fluent.start(config.apiPort());
 	}
 
 	private static void configure(Routes routes) {
