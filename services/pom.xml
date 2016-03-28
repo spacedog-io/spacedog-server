@@ -38,34 +38,6 @@
 		<plugins>
 
 			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>exec-maven-plugin</artifactId>
-				<version>1.4.0</version>
-				<executions>
-
-					<!-- this exec conf is ignored in eclipse by configuration -->
-					<execution>
-						<id>jekyll</id>
-						<phase>compile</phase>
-						<goals>
-							<goal>exec</goal>
-						</goals>
-						<configuration>
-							<executable>/usr/local/bin/jekyll</executable>
-							<arguments>
-								<argument>build</argument>
-								<argument>--source</argument>
-								<argument>${project.basedir}/src/jekyll</argument>
-								<argument>--destination</argument>
-								<argument>${project.build.directory}/classes/app</argument>
-							</arguments>
-						</configuration>
-					</execution>
-
-				</executions>
-			</plugin>
-
-			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<version>2.5.3</version>
 				<executions>
