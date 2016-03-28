@@ -6,7 +6,7 @@ package io.spacedog.services;
 import java.util.Arrays;
 import java.util.Optional;
 
-import io.spacedog.utils.BackendKey;
+import io.spacedog.utils.Backends;
 
 public class Credentials {
 
@@ -72,6 +72,6 @@ public class Credentials {
 	}
 
 	public boolean isRootBackend() {
-		return BackendKey.ROOT_API.equals(backendId);
+		return Backends.ROOT_API.equals(backendId);
 	}
 }

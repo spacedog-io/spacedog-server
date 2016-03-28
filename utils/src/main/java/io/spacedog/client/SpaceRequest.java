@@ -22,7 +22,6 @@ import com.mashape.unirest.request.HttpRequestWithBody;
 
 import io.spacedog.client.SpaceDogHelper.Backend;
 import io.spacedog.client.SpaceDogHelper.User;
-import io.spacedog.utils.BackendKey;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceHeaders;
@@ -87,10 +86,6 @@ public class SpaceRequest {
 
 	public SpaceRequest backend(Backend backend) {
 		return backendId(backend.backendId);
-	}
-
-	public SpaceRequest backendKey(String backendKey) {
-		return backendId(BackendKey.extractBackendId(backendKey));
 	}
 
 	public SpaceRequest backendId(String backendId) {
