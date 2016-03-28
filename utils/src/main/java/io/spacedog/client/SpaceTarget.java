@@ -28,12 +28,6 @@ public enum SpaceTarget {
 		return ssl;
 	}
 
-	private StringBuilder urlBuilder() {
-		return new StringBuilder(ssl ? "https://" : "http://")//
-				.append(host)//
-				.append(port == 443 ? "" : ":" + port);
-	}
-
 	private StringBuilder urlBuilder(String backendId) {
 		return new StringBuilder(ssl ? "https://" : "http://")//
 				.append(backendId)//
@@ -42,12 +36,8 @@ public enum SpaceTarget {
 				.append(port == 443 ? "" : ":" + port);
 	}
 
-	public String url() {
-		return urlBuilder().toString();
-	}
-
-	public String url(String uri) {
-		return urlBuilder().append(uri).toString();
+	public String url(String backendId) {
+		return urlBuilder(backendId).toString();
 	}
 
 	public String url(String backendId, String uri) {
