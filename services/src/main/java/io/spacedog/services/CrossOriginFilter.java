@@ -27,6 +27,6 @@ public class CrossOriginFilter implements SpaceFilter {
 		}
 
 		return payload.withAllowMethods(SpaceHeaders.ALLOW_METHODS) //
-				.withAllowHeaders(SpaceHeaders.BACKEND_KEY, SpaceHeaders.AUTHORIZATION, SpaceHeaders.CONTENT_TYPE);
+				.withAllowHeaders(SpaceHeaders.AUTHORIZATION, SpaceHeaders.CONTENT_TYPE);
 	}
 }

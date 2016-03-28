@@ -29,8 +29,8 @@ import io.spacedog.utils.SpaceHeaders;
 
 public class SpaceRequest {
 	private JsonNode bodyJson;
-	private Boolean forTesting = null;
 	private HttpMethod method;
+	private String backendId;
 	private String uri;
 	private Object body;
 	private Map<String, String> routeParams = Maps.newHashMap();
@@ -39,10 +39,8 @@ public class SpaceRequest {
 	private Map<String, Object> fields = Maps.newHashMap();
 	private String password;
 	private String username;
-	private boolean redirected = false;
+	private Boolean forTesting = null;
 	private static boolean forTestingDefault = false;
-	// private static Optional<String> defaultBackendId = Optional.empty();
-	private String backendId;
 
 	static {
 		Unirest.setHttpClient(HttpClients.createMinimal(//
@@ -61,13 +59,10 @@ public class SpaceRequest {
 
 		SpaceTarget target = SpaceRequestConfiguration.get().target();
 
-		if (SpaceRequestConfiguration.get().subdomains()) {
-			if (Strings.isNullOrEmpty(backendId))
-				backendId = "api";
-			return target.url(backendId, uri).toString();
-		}
+		if (Strings.isNullOrEmpty(backendId))
+			backendId = "api";
 
-		return target.url(uri);
+		return target.url(backendId, uri).toString();
 	}
 
 	public static SpaceRequest get(String uri) {
@@ -158,11 +153,6 @@ public class SpaceRequest {
 		return this;
 	}
 
-	public SpaceRequest redirected(boolean redirected) {
-		this.redirected = redirected;
-		return this;
-	}
-
 	public SpaceResponse go(int... expectedStatus) throws Exception {
 		SpaceResponse spaceResponse = go();
 		Assert.assertTrue(Ints.contains(expectedStatus, spaceResponse.httpResponse().getStatus()));
@@ -173,9 +163,6 @@ public class SpaceRequest {
 		if ((forTesting == null && forTestingDefault)//
 				|| (forTesting != null && forTesting))
 			this.header(SpaceHeaders.SPACEDOG_TEST, "true");
-
-		if (!SpaceRequestConfiguration.get().subdomains())
-			header(SpaceHeaders.BACKEND_KEY, computeBackendKey());
 
 		HttpRequest request = (method == HttpMethod.GET || method == HttpMethod.HEAD) //
 				? new GetRequest(method, computeUrl())//
@@ -199,12 +186,6 @@ public class SpaceRequest {
 		}
 
 		return new SpaceResponse(request, bodyJson, SpaceRequestConfiguration.get().debug());
-	}
-
-	private String computeBackendKey() {
-		if (Strings.isNullOrEmpty(backendId))
-			backendId = "api";
-		return backendId + ":default:blablabla";
 	}
 
 	public SpaceRequest field(String name, String value) {

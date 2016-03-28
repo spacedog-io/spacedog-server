@@ -7,6 +7,7 @@ import com.google.common.base.Strings;
 import com.google.common.net.HttpHeaders;
 
 import io.spacedog.utils.BackendKey;
+import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
@@ -20,16 +21,23 @@ public class SpaceContext {
 	private static ThreadLocal<SpaceContext> threadLocal = new ThreadLocal<SpaceContext>();
 
 	private Context context;
+	private String subdomain;
 	private Optional<Credentials> credentials;
-	private Optional<String> subdomain = Optional.empty();
 
 	private SpaceContext(Context context) {
 		this.context = context;
-		String[] terms = context.request().header(HttpHeaders.HOST).split("\\.");
-		this.subdomain = terms.length == 3 ? Optional.of(terms[0]) : Optional.empty();
+		extractSubdomain(context);
 	}
 
-	public static Optional<String> subdomain() {
+	private void extractSubdomain(Context context) {
+		String host = context.request().header(HttpHeaders.HOST);
+		String[] terms = host.split("\\.");
+		if (terms.length != 3)
+			throw Exceptions.illegalArgument("host [%s] not valid: missing backend subdomain", host);
+		this.subdomain = terms[0];
+	}
+
+	public static String subdomain() {
 		return get().subdomain;
 	}
 
@@ -68,7 +76,7 @@ public class SpaceContext {
 	public static SpaceContext get() {
 		SpaceContext context = threadLocal.get();
 		if (context == null)
-			throw new RuntimeException("unexpected error: no thread local context set");
+			throw Exceptions.runtime("no thread local context set");
 		return context;
 	}
 
@@ -189,17 +197,7 @@ public class SpaceContext {
 
 	private static Optional<Credentials> buildNewGenCredentials(Context context) {
 
-		String backendId = subdomain().orElse(null);
-
-		if (backendId == null) {
-			String rawBackendKey = context.header(SpaceHeaders.BACKEND_KEY);
-			if (!Strings.isNullOrEmpty(rawBackendKey))
-				backendId = rawBackendKey.split(":", 2)[0];
-		}
-
-		if (Strings.isNullOrEmpty(backendId))
-			backendId = BackendKey.ROOT_API;
-
+		String backendId = subdomain();
 		Optional<String[]> tokens = decodeAuthorizationHeader(context.header(SpaceHeaders.AUTHORIZATION));
 
 		if (tokens.isPresent()) {
