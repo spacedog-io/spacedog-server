@@ -8,7 +8,6 @@ import com.google.common.net.HttpHeaders;
 
 import io.spacedog.utils.BackendKey;
 import io.spacedog.utils.SpaceHeaders;
-import io.spacedog.utils.SpaceParams;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 
@@ -34,8 +33,8 @@ public class SpaceContext {
 		return get().subdomain;
 	}
 
-	public boolean debug() {
-		return context.query().getBoolean(SpaceParams.DEBUG_QUERY_PARAM, false);
+	public Context context() {
+		return context;
 	}
 
 	public static SpaceFilter filter() {

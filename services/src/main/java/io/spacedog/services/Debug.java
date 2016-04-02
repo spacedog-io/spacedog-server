@@ -3,6 +3,7 @@ package io.spacedog.services;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.utils.Json;
+import io.spacedog.utils.SpaceParams;
 
 public class Debug {
 
@@ -28,6 +29,10 @@ public class Debug {
 
 	public static ObjectNode buildDebugObjectNode() {
 		return Json.objectBuilder().put("batchCredentialChecks", batchCrendentialChecks()).build();
+	}
+
+	public static boolean isTrue() {
+		return SpaceContext.get().context().query().getBoolean(SpaceParams.DEBUG_QUERY_PARAM, false);
 	}
 
 }

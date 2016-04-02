@@ -105,7 +105,7 @@ public class BatchResource extends Resource {
 						break;
 				}
 
-				if (SpaceContext.get().debug()) {
+				if (Debug.isTrue()) {
 					output.write(String.format("],\"debug\":%s}", Debug.buildDebugObjectNode().toString())//
 							.getBytes(Utils.UTF8));
 				} else

@@ -174,7 +174,7 @@ public class Payloads {
 	}
 
 	public static Payload json(JsonNode content, int httpStatus) {
-		if (content.isObject() && SpaceContext.get().debug())
+		if (content.isObject() && Debug.isTrue())
 			((ObjectNode) content).set("debug", Debug.buildDebugObjectNode());
 
 		return new Payload(JSON_CONTENT_UTF8, content, httpStatus);
