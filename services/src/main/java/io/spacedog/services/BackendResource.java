@@ -47,7 +47,7 @@ public class BackendResource extends Resource {
 				new Credentials(backendId, backendSignUp.credentials.name(), //
 						backendSignUp.credentials.email().get(), Level.SUPER_ADMIN));
 
-		if (!isTest(context))
+		if (!SpaceContext.isTest())
 			Internals.get().notify(//
 					Start.get().configuration().superdogNotificationTopic(), //
 					String.format("New backend (%s)", spaceRootUrl(backendId).toString()), //
@@ -82,7 +82,7 @@ public class BackendResource extends Resource {
 		CredentialsResource.get().deleteAll(credentials.backendId());
 		Start.get().getElasticClient().deleteAllIndices(credentials.backendId());
 
-		if (!isTest(context) && !Start.get().configuration().isOffline()) {
+		if (!SpaceContext.isTest() && !Start.get().configuration().isOffline()) {
 			FileResource.get().deleteAll();
 			ShareResource.get().deleteAll();
 		}

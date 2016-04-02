@@ -220,7 +220,7 @@ public class PushResource extends Resource {
 		for (SearchHit hit : hits.getHits()) {
 			ObjectNode installation = Json.readObjectNode(hit.sourceAsString());
 
-			if (!isTest(context)) {
+			if (!SpaceContext.isTest()) {
 				PublishRequest request = new PublishRequest()//
 						.withTargetArn(installation.get(ENDPOINT).asText());
 
@@ -258,7 +258,7 @@ public class PushResource extends Resource {
 		// remove all fields that should not be set by client code
 		installation.remove(Arrays.asList(USER_ID, ENDPOINT));
 
-		if (isTest(context)) {
+		if (SpaceContext.isTest()) {
 			installation.set(ENDPOINT, TextNode.valueOf("FAKE_ENDPOINT_FOR_TESTING"));
 		} else {
 			String endpoint = createApplicationEndpoint(credentials.backendId(), appId, service, token);

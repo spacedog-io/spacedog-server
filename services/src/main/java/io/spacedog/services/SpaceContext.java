@@ -72,6 +72,11 @@ public class SpaceContext {
 		return context;
 	}
 
+	public static boolean isTest() {
+		String header = get().context().header(SpaceHeaders.SPACEDOG_TEST);
+		return Strings.isNullOrEmpty(header) ? false : Boolean.parseBoolean(header);
+	}
+
 	//
 	// Check credentials static methods
 	//
