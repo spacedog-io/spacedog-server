@@ -3,23 +3,18 @@
  */
 package io.spacedog.services;
 
-import java.util.concurrent.ExecutionException;
-
-import org.elasticsearch.ResourceNotFoundException;
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.ShardOperationFailedException;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
-import org.elasticsearch.index.engine.VersionConflictEngineException;
-import org.elasticsearch.index.mapper.MergeMappingException;
-import org.elasticsearch.index.mapper.StrictDynamicMappingException;
 
 import com.amazonaws.AmazonServiceException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.services.SchemaValidator.InvalidSchemaException;
+import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
-import io.spacedog.utils.NotFoundException;
+import io.spacedog.utils.SpaceException;
 import io.spacedog.utils.Utils;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
@@ -37,49 +32,27 @@ public class Payloads {
 	}
 
 	public static Payload error(Throwable t) {
+		return error(status(t), t);
+	}
 
+	public static int status(Throwable t) {
+
+		if (t instanceof IllegalArgumentException)
+			return HttpStatus.BAD_REQUEST;
+		if (t instanceof AmazonServiceException)
+			return ((AmazonServiceException) t).getStatusCode();
+		if (t instanceof SpaceException)
+			return ((SpaceException) t).httpStatus();
+		if (t instanceof ElasticsearchException)
+			return ((ElasticsearchException) t).status().getStatus();
 		if (t.getCause() != null)
-			return error(t.getCause());
+			return status(t.getCause());
 
-		if (t instanceof AmazonServiceException) {
-			return error(((AmazonServiceException) t).getStatusCode(), t);
-		}
-		if (t instanceof VersionConflictEngineException) {
-			return error(HttpStatus.CONFLICT, t);
-		}
-		if (t instanceof AuthorizationException) {
-			return error(HttpStatus.UNAUTHORIZED, t);
-		}
-		if (t instanceof NotFoundException) {
-			return error(HttpStatus.NOT_FOUND, t);
-		}
-		if (t instanceof ResourceNotFoundException) {
-			return error(HttpStatus.NOT_FOUND, t);
-		}
-		if (t instanceof IllegalArgumentException) {
-			return error(HttpStatus.BAD_REQUEST, t);
-		}
-		if (t instanceof NumberFormatException) {
-			return error(HttpStatus.BAD_REQUEST, t);
-		}
-		if (t instanceof StrictDynamicMappingException) {
-			return error(HttpStatus.BAD_REQUEST, t);
-		}
-		if (t instanceof InvalidSchemaException) {
-			return error(HttpStatus.BAD_REQUEST, t);
-		}
-		if (t instanceof ExecutionException) {
-			return error(HttpStatus.INTERNAL_SERVER_ERROR, t);
-		}
-		if (t instanceof MergeMappingException) {
-			return error(HttpStatus.BAD_REQUEST, t);
-		}
-
-		return error(HttpStatus.INTERNAL_SERVER_ERROR, t);
+		return HttpStatus.INTERNAL_SERVER_ERROR;
 	}
 
 	public static Payload error(int httpStatus, String message, Object... args) {
-		return error(httpStatus, new RuntimeException(String.format(message, args)));
+		return error(httpStatus, Exceptions.runtime(message, args));
 	}
 
 	public static Payload error(int httpStatus) {
@@ -87,7 +60,7 @@ public class Payloads {
 	}
 
 	public static Payload error(int httpStatus, Throwable throwable) {
-		return json(minimalBuilder(httpStatus).node("error", Json.toJson(throwable)), httpStatus);
+		return json(minimalBuilder(httpStatus).node("error", Json.toJson(throwable, Debug.isTrue())), httpStatus);
 	}
 
 	/**

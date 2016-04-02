@@ -32,7 +32,7 @@ public class JsonTest extends Assert {
 
 	@Test
 	public void shouldConvertRuntimeExceptionToJsonError() {
-		JsonNode json = Json.toJson(new RuntimeException(new NullPointerException()));
+		JsonNode json = Json.toJson(new RuntimeException(new NullPointerException()), true);
 
 		assertEquals("java.lang.RuntimeException", json.get("type").asText());
 		assertEquals("java.lang.NullPointerException", json.get("message").asText());

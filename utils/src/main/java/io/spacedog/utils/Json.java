@@ -213,26 +213,27 @@ public class Json {
 		if (value.isNull())
 			return null;
 
-		throw new RuntimeException("only supports simple types");
+		throw Exceptions.runtime("only supports simple types");
 	}
 
-	public static JsonNode toJson(Throwable t) {
-		JsonBuilder<ObjectNode> builder = objectBuilder()//
+	public static JsonNode toJson(Throwable t, boolean withTraces) {
+		ObjectNode json = newObjectNode()//
 				.put("type", t.getClass().getName()) //
-				.put("message", t.getMessage()) //
-				.array("trace");
+				.put("message", t.getMessage());
 
-		for (StackTraceElement element : t.getStackTrace()) {
-			builder.add(element.toString());
+		if (withTraces) {
+			ArrayNode array = json.putArray("trace");
+
+			for (StackTraceElement element : t.getStackTrace()) {
+				array.add(element.toString());
+			}
 		}
-
-		builder.end();
 
 		if (t.getCause() != null) {
-			builder.node("cause", toJson(t.getCause()));
+			json.set("cause", toJson(t.getCause(), withTraces));
 		}
 
-		return builder.build();
+		return json;
 	}
 
 	public enum Type {

@@ -1,25 +1,28 @@
 package io.spacedog.utils;
 
-@SuppressWarnings("serial")
-public class NotFoundException extends RuntimeException {
+import org.apache.http.HttpStatus;
 
-	public NotFoundException(String message) {
-		super(message);
+public class NotFoundException extends SpaceException {
+
+	private static final long serialVersionUID = 5495027748335056224L;
+
+	public NotFoundException(String message, Object... args) {
+		super(HttpStatus.SC_NOT_FOUND, message, args);
 	}
 
 	public static NotFoundException type(String type) {
-		return new NotFoundException(String.format("object type [%s] not found", type));
+		return new NotFoundException("no object of type [%s] found", type);
 	}
 
 	public static NotFoundException object(String type, String objectId) {
-		return new NotFoundException(String.format("[%] object with id [%s] not found", type, objectId));
+		return new NotFoundException("object [%s] of type [%s] not found", objectId, type);
 	}
 
 	public static NotFoundException backend(String backendId) {
-		return new NotFoundException(String.format("backend with id [%s] not found", backendId));
+		return new NotFoundException("backend [%s] not found", backendId);
 	}
 
 	public static NotFoundException snapshot(String snapshotId) {
-		return new NotFoundException(String.format("snapshot with id [%s] not found", snapshotId));
+		return new NotFoundException("snapshot [%s] not found", snapshotId);
 	}
 }

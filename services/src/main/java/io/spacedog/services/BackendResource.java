@@ -67,7 +67,7 @@ public class BackendResource extends Resource {
 			if (credentials.isSuperDog())
 				return CredentialsResource.get().getAllSuperAdmins(refresh);
 
-			throw new AuthorizationException("no subdomain found: access <backendId>.spacedog.io");
+			throw new AuthorizationException("no backend subdomain found");
 		}
 
 		return CredentialsResource.get().getAllSuperAdmins(credentials.backendId(), refresh);

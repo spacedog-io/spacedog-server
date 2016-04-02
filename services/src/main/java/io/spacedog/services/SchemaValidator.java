@@ -7,8 +7,12 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
 
+import org.apache.http.HttpStatus;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+
+import io.spacedog.utils.SpaceException;
 
 public class SchemaValidator {
 
@@ -186,32 +190,31 @@ public class SchemaValidator {
 								: value.isArray() ? "array" : value.isBoolean() ? "boolean" : "null";
 	}
 
-	public static class InvalidSchemaException extends RuntimeException {
+	public static class InvalidSchemaException extends SpaceException {
 
 		private static final long serialVersionUID = 6335047694807220133L;
 
-		public InvalidSchemaException(String message) {
-			super(message);
+		public InvalidSchemaException(String message, Object... args) {
+			super(HttpStatus.SC_BAD_REQUEST, message, args);
 		}
 
 		public static InvalidSchemaException invalidField(String fieldName, String... expectedFiedNames) {
-			return new InvalidSchemaException(String.format("invalid field [%s]: expected fields are %s", fieldName,
-					Arrays.toString(expectedFiedNames)));
+			return new InvalidSchemaException("field [%s] invalid: expected fields %s", fieldName,
+					Arrays.toString(expectedFiedNames));
 		}
 
 		public static InvalidSchemaException invalidSchemaType(String schemaName, String type) {
-			return new InvalidSchemaException(String.format("invalid schema type [%s]", type));
+			return new InvalidSchemaException("schema type [%s] invalid", type);
 		}
 
 		public static InvalidSchemaException invalidFieldValue(String fieldName, JsonNode fieldValue,
 				JsonNode anticipatedFieldValue) {
-			return new InvalidSchemaException(String.format("schema field [%s] equal to [%s] should be equal to [%s]",
-					fieldName, fieldValue, anticipatedFieldValue));
+			return new InvalidSchemaException("schema field [%s] equal to [%s] should be equal to [%s]", fieldName,
+					fieldValue, anticipatedFieldValue);
 		}
 
 		public static InvalidSchemaException noProperty(String propertyName) {
-			return new InvalidSchemaException(
-					String.format("property [%s] of type [object] has no properties", propertyName));
+			return new InvalidSchemaException("property [%s] of type [object] has no properties", propertyName);
 		}
 	}
 

@@ -161,7 +161,7 @@ public class SpaceContext {
 		if (checkCustomerBackend //
 				&& credentials.get().isRootBackend())
 			throw new AuthorizationException(//
-					"no customer backend subdomain found: use <backendId>.spacedog.io");
+					"no customer backend subdomain found");
 		return credentials.get();
 	}
 
