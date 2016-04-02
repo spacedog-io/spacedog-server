@@ -8,6 +8,7 @@ image/ief		ief IEF
 image/jpeg		jpeg jpg jpe JPG
 image/tiff		tiff tif TIFF TIF
 image/png		png PNG
+application/javascript	js JS
 application/postscript	ai eps ps
 application/rtf		rtf RTF
 application/x-tex	tex TEX
@@ -16,9 +17,9 @@ application/x-troff	t tr roff
 audio/basic		au
 audio/midi		midi mid
 audio/x-aifc		aifc
-audio/x-aiff            aif aiff
+audio/x-aiff		aif aiff
 audio/x-mpeg		mpeg mpg
-audio/x-wav             wav
+audio/x-wav     wav
 video/mpeg		mpeg mpg mpe
-video/quicktime		qt mov
-video/x-msvideo		avi
+video/quicktime	qt mov
+video/x-msvideo	avi

@@ -19,6 +19,7 @@ import io.spacedog.client.SpaceDogHelper.Backend;
 import io.spacedog.client.SpaceDogHelper.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
 @TestOncePerDay
@@ -44,16 +45,15 @@ public class ShareResourceTest {
 		SpaceRequest.get("/1/share").adminAuth(testBackend).go(200)//
 				.assertSizeEquals(0, "results");
 
-		// only users and admins are allowed to share files
+		// anonymous users are not allowed to share files
 		SpaceRequest.put("/1/share/tweeter.png").go(401);
 		SpaceRequest.put("/1/share/tweeter.png").backend(testBackend).go(401);
 
-		// share a small png file
+		// vince shares a small png file
 		byte[] pngBytes = Resources.toByteArray(//
 				Resources.getResource("io/spacedog/watchdog/tweeter.png"));
 
 		JsonNode json = SpaceRequest.put("/1/share/tweeter.png")//
-				.backend(testBackend)//
 				.userAuth(vince)//
 				.body(pngBytes)//
 				.go(200).jsonNode();
@@ -62,33 +62,30 @@ public class ShareResourceTest {
 		String pngLocation = json.get("location").asText();
 		String pngS3Location = json.get("s3").asText();
 
-		// list all shared files should return tweeter.png path only
+		// admin lists all shared files should return tweeter.png path only
 		SpaceRequest.get("/1/share").adminAuth(testBackend).go(200)//
 				.assertSizeEquals(1, "results")//
 				.assertEquals(pngPath, "results.0.path");
 
-		// Anonymous are allowed to access shared files if they get the location
+		// anonymous gets shared file with its location
 		byte[] downloadedBytes = SpaceRequest.get(pngLocation).go(200)//
-				// .assertHeaderEquals("image/png", "content-type")//
-				.assertHeaderEquals("vince", "x-amz-meta-owner")//
-				.assertHeaderEquals("USER", "x-amz-meta-owner-type")//
+				.assertHeaderEquals("gzip", SpaceHeaders.CONTENT_ENCODING)//
+				.assertHeaderEquals("image/png", SpaceHeaders.CONTENT_TYPE)//
+				.assertHeaderEquals("vince", SpaceHeaders.SPACEDOG_OWNER)//
 				.bytes();
 
 		Assert.assertTrue(Arrays.equals(pngBytes, downloadedBytes));
 
 		// download shared png file through S3 direct access
-
 		downloadedBytes = SpaceRequest.get(pngS3Location).go(200)//
-				// .assertHeaderEquals("image/png", "content-type")//
-				.assertHeaderEquals("vince", "x-amz-meta-owner")//
-				.assertHeaderEquals("USER", "x-amz-meta-owner-type")//
+				.assertHeaderEquals("image/png", SpaceHeaders.CONTENT_TYPE)//
 				.bytes();
 
 		Assert.assertTrue(Arrays.equals(pngBytes, downloadedBytes));
 
 		// share small text file
 		json = SpaceRequest.put("/1/share/test.txt")//
-				.backend(testBackend).userAuth(fred)//
+				.userAuth(fred)//
 				.body(FILE_CONTENT.getBytes())//
 				.go(200)//
 				.jsonNode();
@@ -99,8 +96,7 @@ public class ShareResourceTest {
 
 		// list all shared files should return 2 paths
 		// get first page with only one path
-		json = SpaceRequest.get("/1/share")//
-				.queryString("size", "1")//
+		json = SpaceRequest.get("/1/share?size=1")//
 				.adminAuth(testBackend)//
 				.go(200)//
 				.assertSizeEquals(1, "results")//
@@ -112,9 +108,7 @@ public class ShareResourceTest {
 		String next = json.get("next").asText();
 
 		// get second (and last) page with only one path
-		json = SpaceRequest.get("/1/share")//
-				.queryString("size", "1")//
-				.queryString("next", next)//
+		json = SpaceRequest.get("/1/share?size=1&next=" + next)//
 				.adminAuth(testBackend)//
 				.go(200)//
 				.assertSizeEquals(1, "results")//
@@ -128,19 +122,16 @@ public class ShareResourceTest {
 
 		// download shared text file
 		String stringContent = SpaceRequest.get(txtLocation).backend(testBackend).go(200)//
-				// .assertHeaderEquals("text/plain", "content-type")//
-				.assertHeaderEquals("fred", "x-amz-meta-owner")//
-				.assertHeaderEquals("USER", "x-amz-meta-owner-type")//
+				.assertHeaderEquals("gzip", SpaceHeaders.CONTENT_ENCODING)//
+				.assertHeaderEquals("text/plain", SpaceHeaders.CONTENT_TYPE)//
+				.assertHeaderEquals("fred", SpaceHeaders.SPACEDOG_OWNER)//
 				.httpResponse().getBody();
 
 		Assert.assertEquals(FILE_CONTENT, stringContent);
 
 		// download shared text file through direct S3 access
-
 		stringContent = SpaceRequest.get(txtS3Location).go(200)//
-				// .assertHeaderEquals("text/plain", "content-type")//
-				.assertHeaderEquals("fred", "x-amz-meta-owner")//
-				.assertHeaderEquals("USER", "x-amz-meta-owner-type")//
+				.assertHeaderEquals("text/plain", SpaceHeaders.CONTENT_TYPE)//
 				.httpResponse().getBody();
 
 		Assert.assertEquals(FILE_CONTENT, stringContent);
@@ -148,10 +139,10 @@ public class ShareResourceTest {
 		// only admin or owner can delete a shared file
 		SpaceRequest.delete(txtLocation).go(401);
 		SpaceRequest.delete(txtLocation).backend(testBackend).go(401);
-		SpaceRequest.delete(txtLocation).backend(testBackend).userAuth(vince).go(401);
+		SpaceRequest.delete(txtLocation).userAuth(vince).go(401);
 
 		// owner (fred) can delete its own shared file (test.txt)
-		SpaceRequest.delete(txtLocation).backend(testBackend).userAuth(fred).go(200);
+		SpaceRequest.delete(txtLocation).userAuth(fred).go(200);
 
 		// list of shared files should only return the png file path
 		SpaceRequest.get("/1/share").adminAuth(testBackend).go(200)//

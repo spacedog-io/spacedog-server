@@ -47,19 +47,15 @@ public class S3Resource extends Resource {
 
 		try {
 			S3Object object = s3.getObject(bucketName, s3Key);
+			ObjectMetadata metadata = object.getObjectMetadata();
 
-			context.response().setHeader(SpaceHeaders.CONTENT_TYPE, //
-					object.getObjectMetadata().getContentType());
-			context.response().setHeader(SpaceHeaders.CONTENT_DISPOSITION, //
-					object.getObjectMetadata().getContentDisposition());
-			context.response().setHeader(SpaceHeaders.ETAG, //
-					object.getObjectMetadata().getETag());
-			context.response().setHeader(SpaceHeaders.AMAZON_META_OWNER, //
-					object.getObjectMetadata().getUserMetaDataOf("owner"));
-			context.response().setHeader(SpaceHeaders.AMZ_META_OWNER_TYPE, //
-					object.getObjectMetadata().getUserMetaDataOf("owner-type"));
-
-			return object.getObjectContent();
+			return new Payload(metadata.getContentType(), object.getObjectContent())//
+					.withHeader(SpaceHeaders.CONTENT_DISPOSITION, //
+							metadata.getContentDisposition())//
+					.withHeader(SpaceHeaders.ETAG, //
+							metadata.getETag())//
+					.withHeader(SpaceHeaders.SPACEDOG_OWNER, //
+							metadata.getUserMetaDataOf("owner"));
 
 		} catch (AmazonS3Exception e) {
 

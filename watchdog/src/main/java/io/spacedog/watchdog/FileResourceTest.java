@@ -5,6 +5,7 @@ import org.junit.Test;
 import io.spacedog.client.SpaceDogHelper;
 import io.spacedog.client.SpaceDogHelper.Backend;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
 @TestOncePerDay
@@ -30,8 +31,14 @@ public class FileResourceTest {
 		SpaceRequest.get("/1/file").adminAuth(testBackend).go(200)//
 				.assertSizeEquals(6, "results");
 
-		SpaceRequest.get("/1/file/app.html").backend(testBackend).go(200);
-		SpaceRequest.get("/1/file/css/black.css").backend(testBackend).go(200);
+		SpaceRequest.get("/1/file/app.html").backend(testBackend).go(200)//
+				.assertHeaderEquals("text/html", SpaceHeaders.CONTENT_TYPE);
+
+		SpaceRequest.get("/1/file/app.js").backend(testBackend).go(200)//
+				.assertHeaderEquals("application/javascript", SpaceHeaders.CONTENT_TYPE);
+
+		SpaceRequest.get("/1/file/css/black.css").backend(testBackend).go(200)//
+				.assertHeaderEquals("text/html", SpaceHeaders.CONTENT_TYPE);
 
 		SpaceRequest.get("/1/file/images").adminAuth(testBackend).go(200)//
 				.assertSizeEquals(2, "results");
