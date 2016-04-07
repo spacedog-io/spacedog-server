@@ -63,7 +63,7 @@ public class PushResourceTest extends Assert {
 				.adminAuth(testBackend).body(installationSchema).go(201);
 
 		// unauthenticated user installs joho
-		// and fails to force set installation userId and endpoint fields
+		// and fails to set installation userId and endpoint fields
 
 		String unknownInstallId = SpaceRequest.post("/1/installation")//
 				.backend(testBackend)//
@@ -220,10 +220,10 @@ public class PushResourceTest extends Assert {
 		ObjectNode push = Json.object(APP_ID, "joho", MESSAGE, "This is a push!");
 
 		SpaceRequest.post("/1/push?refresh=true")//
-				.backend(testBackend).userAuth(vince)//
+				.userAuth(vince)//
 				.body(push)//
 				.go(200)//
-				.assertSizeEquals(4, "pushedTo")//
+				.assertSizeEquals(4, "log")//
 				.assertContainsValue(unknownInstallId, ID)//
 				.assertContainsValue("dave", USER_ID)//
 				.assertContainsValue("vince", USER_ID)//
@@ -235,10 +235,10 @@ public class PushResourceTest extends Assert {
 		push.put(USERS_ONLY, true);
 
 		SpaceRequest.post("/1/push?refresh=true")//
-				.backend(testBackend).userAuth(vince)//
+				.userAuth(vince)//
 				.body(push)//
 				.go(200)//
-				.assertSizeEquals(3, "pushedTo")//
+				.assertSizeEquals(3, "log")//
 				.assertContainsValue("dave", USER_ID)//
 				.assertContainsValue("vince", USER_ID)//
 				.assertContainsValue("fred", USER_ID);
@@ -248,10 +248,10 @@ public class PushResourceTest extends Assert {
 		push.put(PUSH_SERVICE, APNS);
 
 		SpaceRequest.post("/1/push?refresh=true")//
-				.backend(testBackend).userAuth(vince)//
+				.userAuth(vince)//
 				.body(push)//
 				.go(200)//
-				.assertSizeEquals(2, "pushedTo")//
+				.assertSizeEquals(2, "log")//
 				.assertContainsValue("dave", USER_ID)//
 				.assertContainsValue("fred", USER_ID);
 
@@ -260,10 +260,10 @@ public class PushResourceTest extends Assert {
 		push.set(TAGS, toJsonTag("bonjour", "toi"));
 
 		SpaceRequest.post("/1/push")//
-				.backend(testBackend).userAuth(vince)//
+				.userAuth(vince)//
 				.body(push)//
 				.go(200)//
-				.assertSizeEquals(1, "pushedTo")//
+				.assertSizeEquals(1, "log")//
 				.assertContainsValue("fred", USER_ID);
 
 		// vince pushes to all joho users with tag bonjour/toi
@@ -271,10 +271,10 @@ public class PushResourceTest extends Assert {
 		push.remove(PUSH_SERVICE);
 
 		SpaceRequest.post("/1/push")//
-				.backend(testBackend).userAuth(vince)//
+				.userAuth(vince)//
 				.body(push)//
 				.go(200)//
-				.assertSizeEquals(2, "pushedTo")//
+				.assertSizeEquals(2, "log")//
 				.assertContainsValue("vince", USER_ID)//
 				.assertContainsValue("fred", USER_ID);
 
@@ -283,11 +283,20 @@ public class PushResourceTest extends Assert {
 		push.set(TAGS, toJsonTags("bonjour", "toi", "hi", "there"));
 
 		SpaceRequest.post("/1/push")//
-				.backend(testBackend).userAuth(vince)//
+				.userAuth(vince)//
 				.body(push)//
 				.go(200)//
-				.assertSizeEquals(1, "pushedTo")//
+				.assertSizeEquals(1, "log")//
 				.assertContainsValue("vince", USER_ID);
+
+		// vince gets 404 when he pushes to invalid app id
+
+		push = Json.object(APP_ID, "XXX", MESSAGE, "This is a push!");
+
+		SpaceRequest.post("/1/push")//
+				.userAuth(vince)//
+				.body(push)//
+				.go(404);
 	}
 
 	private ObjectNode toJsonTag(String key, String value) {

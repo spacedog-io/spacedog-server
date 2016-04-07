@@ -17,6 +17,7 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sns.AmazonSNSClient;
 import com.amazonaws.services.sns.model.CreatePlatformEndpointRequest;
+import com.amazonaws.services.sns.model.EndpointDisabledException;
 import com.amazonaws.services.sns.model.GetEndpointAttributesRequest;
 import com.amazonaws.services.sns.model.GetEndpointAttributesResult;
 import com.amazonaws.services.sns.model.InvalidParameterException;
@@ -24,6 +25,7 @@ import com.amazonaws.services.sns.model.ListPlatformApplicationsRequest;
 import com.amazonaws.services.sns.model.ListPlatformApplicationsResult;
 import com.amazonaws.services.sns.model.NotFoundException;
 import com.amazonaws.services.sns.model.PlatformApplication;
+import com.amazonaws.services.sns.model.PlatformApplicationDisabledException;
 import com.amazonaws.services.sns.model.PublishRequest;
 import com.amazonaws.services.sns.model.SetEndpointAttributesRequest;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -214,37 +216,74 @@ public class PushResource extends Resource {
 			return Payloads.error(HttpStatus.NOT_IMPLEMENTED, //
 					"push to [%s] installations not yet implemented", hits.totalHits());
 
-		JsonBuilder<ObjectNode> builder = Payloads.minimalBuilder(200)//
-				.array("pushedTo");
+		boolean failures = false;
+		boolean successes = false;
+		ArrayNode log = Json.newArrayNode();
 
 		for (SearchHit hit : hits.getHits()) {
 			ObjectNode installation = Json.readObjectNode(hit.sourceAsString());
 
-			if (!SpaceContext.isTest()) {
-				PublishRequest request = new PublishRequest()//
-						.withTargetArn(installation.get(ENDPOINT).asText());
+			PublishRequest pushRequest = new PublishRequest()//
+					.withTargetArn(installation.get(ENDPOINT).asText());
 
-				if (message.isObject()) {
-					request.withMessageStructure("json")//
-							.withMessage(message.toString());
-				} else
-					request.withMessage(message.asText());
+			if (message.isObject()) {
+				pushRequest.withMessageStructure("json")//
+						.withMessage(message.toString());
+			} else {
+				String text = message.asText();
+				ObjectNode json = Json.object("default", text, //
+						"APNS", String.format("{\"aps\":{\"alert\": \"%s\"} }", text), //
+						"APNS_SANDBOX", String.format("{\"aps\":{\"alert\":\"%s\"}}", text), //
+						"GCM", String.format("{ \"data\": { \"message\": \"%s\" } }", text), //
+						"ADM", String.format("{ \"data\": { \"message\": \"%s\" } }", text), //
+						"BAIDU", String.format("{\"title\":\"%s\",\"description\":\"%s\"}", text, text));
 
-				getSnsClient().publish(request);
+				pushRequest.withMessageStructure("json")//
+						.withMessage(json.toString());
 			}
 
-			builder.object().put(ID, hit.getId());
+			ObjectNode logItem = log.addObject();
+			logItem.put(ID, hit.getId());
 			Json.checkString(installation, USER_ID)//
-					.ifPresent(userId -> builder.put(USER_ID, userId));
-			builder.end();
+					.ifPresent(userId -> logItem.put(USER_ID, userId));
+
+			try {
+				if (!SpaceContext.isTest())
+					getSnsClient().publish(pushRequest);
+				successes = true;
+			} catch (Exception e) {
+				failures = true;
+				logItem.put("errorMessage", e.getMessage());
+				if (e instanceof EndpointDisabledException)
+					removeEndpointQuietly(credentials.backendId(), hit.getId());
+				if (e instanceof PlatformApplicationDisabledException)
+					break;
+			}
 		}
 
-		return Payloads.json(builder);
+		int httpStatus = log.size() == 0 ? HttpStatus.NOT_FOUND //
+				: successes ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
+
+		JsonBuilder<ObjectNode> builder = Payloads.minimalBuilder(httpStatus)//
+				.put("failures", failures)//
+				.node("log", log);
+
+		return Payloads.json(builder, httpStatus);
 	}
 
 	//
 	// Implementation
 	//
+
+	private void removeEndpointQuietly(String backend, String id) {
+		try {
+			Start.get().getElasticClient().delete(backend, TYPE, id);
+		} catch (Exception e) {
+			System.err.println(String.format(//
+					"[Warning] failed to delete disabled installation [%s] of backend [%s]", id, backend));
+			e.printStackTrace();
+		}
+	}
 
 	public Payload upsertInstallation(Optional<String> id, String body, Context context) {
 
