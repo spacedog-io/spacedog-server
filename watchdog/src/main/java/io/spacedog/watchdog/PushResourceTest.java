@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.services;
+package io.spacedog.watchdog;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -15,8 +15,9 @@ import io.spacedog.client.SpaceDogHelper.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
-import io.spacedog.utils.SchemaBuilder2;
+import io.spacedog.watchdog.SpaceSuite.TestOften;
 
+@TestOften
 public class PushResourceTest extends Assert {
 
 	private static final String USERS_ONLY = "usersOnly";
@@ -39,28 +40,12 @@ public class PushResourceTest extends Assert {
 		// prepare
 		SpaceDogHelper.prepareTest();
 		Backend testBackend = SpaceDogHelper.resetTestBackend();
+		SpaceDogHelper.initPushDefaultSchema(testBackend);
 		SpaceDogHelper.initUserDefaultSchema(testBackend);
 		User dave = SpaceDogHelper.createUser(testBackend, "dave", "hi dave");
 		User vince = SpaceDogHelper.createUser(testBackend, "vince", "hi vince");
 		User fred = SpaceDogHelper.createUser(testBackend, "fred", "hi fred");
 		User nath = SpaceDogHelper.createUser(testBackend, "nath", "hi nath");
-
-		// create installation schema
-
-		ObjectNode installationSchema = SchemaBuilder2.builder("installation")//
-				.stringProperty(APP_ID, true)//
-				.stringProperty(PUSH_SERVICE, true)//
-				.stringProperty(TOKEN, true)//
-				.stringProperty(ENDPOINT, true)//
-				.stringProperty(USER_ID, false)//
-				.startObjectProperty(TAGS, false)//
-				.stringProperty(KEY, true)//
-				.stringProperty(VALUE, true)//
-				.endObjectProperty()//
-				.build();
-
-		SpaceRequest.put("/1/schema/installation")//
-				.adminAuth(testBackend).body(installationSchema).go(201);
 
 		// unauthenticated user installs joho
 		// and fails to set installation userId and endpoint fields

@@ -37,6 +37,7 @@ import com.google.common.collect.Iterators;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.SchemaBuilder2;
 import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -76,6 +77,23 @@ public class PushResource extends Resource {
 		BAIDU, // Baidu CloudMessaging Service
 		WNS, // Windows Notification Service
 		MPNS; // Microsoft Push Notification Service
+	}
+
+	//
+	// Schema
+	//
+
+	public static SchemaBuilder2 getDefaultInstallationSchema() {
+		return SchemaBuilder2.builder("installation")//
+				.stringProperty(APP_ID, true)//
+				.stringProperty(PUSH_SERVICE, true)//
+				.stringProperty(TOKEN, true)//
+				.stringProperty(ENDPOINT, true)//
+				.stringProperty(USER_ID, false)//
+				.startObjectProperty(TAGS, false)//
+				.stringProperty(TAG_KEY, true)//
+				.stringProperty(TAG_VALUE, true)//
+				.endObjectProperty();
 	}
 
 	//

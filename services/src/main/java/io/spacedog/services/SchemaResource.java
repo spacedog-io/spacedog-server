@@ -5,6 +5,7 @@ package io.spacedog.services;
 
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.cluster.metadata.MappingMetaData;
+import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.indices.TypeMissingException;
 
@@ -12,6 +13,7 @@ import com.carrotsearch.hppc.cursors.ObjectCursor;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Json.JsonMerger;
 import io.spacedog.utils.SpaceParams;
@@ -68,7 +70,12 @@ public class SchemaResource extends Resource {
 
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 
-		JsonNode schema = SchemaValidator.validate(type, Json.readObjectNode(newSchemaAsString));
+		JsonNode schema = Strings.isNullOrEmpty(newSchemaAsString) ? getDefaultSchema(type) //
+				: SchemaValidator.validate(type, Json.readObjectNode(newSchemaAsString));
+
+		if (schema == null)
+			throw Exceptions.illegalArgument("no default schema for type [%s]", type);
+
 		String mapping = SchemaTranslator.translate(type, schema).toString();
 
 		String backendId = credentials.backendId();
@@ -96,6 +103,18 @@ public class SchemaResource extends Resource {
 			// ignored
 		}
 		return Payloads.success();
+	}
+
+	//
+	// Implementation
+	//
+
+	private JsonNode getDefaultSchema(String type) {
+		if (PushResource.TYPE.equals(type))
+			return PushResource.getDefaultInstallationSchema().build();
+		if (UserResource.TYPE.equals(type))
+			return UserResource.getDefaultUserSchema().build();
+		return null;
 	}
 
 	//

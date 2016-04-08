@@ -44,11 +44,11 @@ public class CredentialsResource extends Resource {
 	public static final String TYPE = "credentials";
 
 	//
-	// Credentials constants and schema
+	// init
 	//
 
-	public static ObjectNode getCredentialsSchema() {
-		return SchemaBuilder2.builder(TYPE)//
+	void init() {
+		ObjectNode schema = SchemaBuilder2.builder(TYPE)//
 				.stringProperty(USERNAME, true)//
 				.stringProperty(BACKEND_ID, true)//
 				.stringProperty(CREDENTIALS_LEVEL, true)//
@@ -58,24 +58,16 @@ public class CredentialsResource extends Resource {
 				.stringProperty(CREATED_AT, true)//
 				.stringProperty(UPDATED_AT, true)//
 				.build();
-	}
 
-	public static String getCredentialsMapping() {
-		JsonNode schema = SchemaValidator.validate(TYPE, getCredentialsSchema());
-		return SchemaTranslator.translate(TYPE, schema).toString();
-	}
+		SchemaValidator.validate(TYPE, schema);
+		String mapping = SchemaTranslator.translate(TYPE, schema).toString();
 
-	//
-	// init
-	//
-
-	void init() {
 		ElasticClient elastic = Start.get().getElasticClient();
 
 		if (elastic.existsIndex(SPACEDOG_BACKEND, TYPE))
-			elastic.putMapping(SPACEDOG_BACKEND, TYPE, getCredentialsMapping());
+			elastic.putMapping(SPACEDOG_BACKEND, TYPE, mapping);
 		else
-			elastic.createIndex(SPACEDOG_BACKEND, TYPE, getCredentialsMapping());
+			elastic.createIndex(SPACEDOG_BACKEND, TYPE, mapping);
 	}
 
 	//

@@ -43,13 +43,17 @@ public class SchemaResourceTest extends Assert {
 		assertEquals(buildSaleSchema(), //
 				SpaceRequest.get("/1/schema/sale").backend(testBackend).go(200).jsonNode());
 
+		// admin gets the default user schema
+		ObjectNode userSchema = SpaceRequest.get("/1/schema/user")//
+				.adminAuth(testBackend).go(200).objectNode();
+
 		// should succeed to get all schemas with simple backend key credentials
 		SpaceRequest.get("/1/schema").adminAuth(testBackend).go(200)//
 				.assertEquals(Json.merger() //
 						.merge(buildHomeSchema()) //
 						.merge(buildCarSchema()) //
 						.merge(buildSaleSchema()) //
-						.merge(SpaceDogHelper.getDefaultUserSchemaBuilder().build()) //
+						.merge(userSchema) //
 						.get());
 
 		// should fail to delete schema with simple backend key credentials

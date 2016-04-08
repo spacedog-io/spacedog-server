@@ -85,7 +85,7 @@ public class Joho extends SpaceDogHelper {
 	}
 
 	static ObjectNode buildCustomUserSchema() {
-		return UserResource.getDefaultUserSchemaBuilder() //
+		return UserResource.getDefaultUserSchema() //
 				.textProperty("firstname", "french", true)//
 				.textProperty("lastname", "french", true)//
 				.simpleProperty("job", "enum", true, false)//
@@ -135,21 +135,8 @@ public class Joho extends SpaceDogHelper {
 
 	@Test
 	public void createJoho2InstallationIndex() throws Exception {
-
 		SpaceRequest.delete("/1/schema/installation").adminAuth(backend).go(200, 404);
-
-		ObjectNode schema = SchemaBuilder2.builder("installation")//
-				.stringProperty("appId", true)//
-				.stringProperty("deviceToken", true)//
-				.stringProperty("providerId", true)//
-				.stringProperty("userId", true)//
-				.startObjectProperty("tags", false)//
-				.stringProperty("key", true)//
-				.stringProperty("value", true)//
-				.endObjectProperty()//
-				.build();
-
-		SpaceRequest.put("/1/schema/installation").adminAuth(backend).body(schema).go(201);
+		SpaceRequest.put("/1/schema/installation").adminAuth(backend).go(201);
 	}
 
 	@Test

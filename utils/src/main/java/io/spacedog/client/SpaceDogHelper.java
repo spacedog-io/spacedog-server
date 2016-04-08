@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
 import io.spacedog.utils.Json;
-import io.spacedog.utils.SchemaBuilder2;
 import io.spacedog.utils.Utils;
 
 public class SpaceDogHelper {
@@ -40,14 +39,12 @@ public class SpaceDogHelper {
 		}
 	}
 
-	public static SchemaBuilder2 getDefaultUserSchemaBuilder() {
-		return SchemaBuilder2.builder("user", "username")//
-				.stringProperty("username", true)//
-				.stringProperty("email", true);
+	public static void initPushDefaultSchema(Backend backend) throws Exception {
+		SpaceRequest.post("/1/schema/installation").adminAuth(backend).go(201);
 	}
 
 	public static void initUserDefaultSchema(Backend backend) throws Exception {
-		initUserSchema(backend, getDefaultUserSchemaBuilder().build());
+		SpaceRequest.post("/1/schema/user").adminAuth(backend).go(201);
 	}
 
 	public static void initUserSchema(Backend backend, ObjectNode schema) throws Exception {

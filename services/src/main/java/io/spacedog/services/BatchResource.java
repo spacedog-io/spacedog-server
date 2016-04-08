@@ -152,7 +152,11 @@ public class BatchResource extends Resource {
 
 		@Override
 		public String content() throws IOException {
-			return Json.checkJsonNode(request, "content", true).get().toString();
+			JsonNode content = request.get("content");
+			return content == null ? null : content.toString();
+
+			// return Json.checkJsonNode(request, "content",
+			// true).get().toString();
 		}
 
 		@Override

@@ -136,11 +136,12 @@ public class Start {
 	}
 
 	private static void configure(Routes routes) {
-		routes.add(DataResource.get())//
+		routes.add(BackendResource.get())//
+				.add(AdminResource.get())//
+				.add(DataResource.get())//
 				.add(SchemaResource.get())//
 				.add(CredentialsResource.get())//
 				.add(UserResource.get())//
-				.add(BackendResource.get())//
 				.add(BatchResource.get())//
 				.add(MailResource.get())//
 				.add(SnapshotResource.get())//

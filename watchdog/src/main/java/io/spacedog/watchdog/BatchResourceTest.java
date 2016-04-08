@@ -90,7 +90,6 @@ public class BatchResourceTest extends Assert {
 		batch = Json.arrayBuilder()//
 				.object()//
 				.put("method", "POST").put("path", "/1/schema/user")//
-				.node("content", SpaceDogHelper.getDefaultUserSchemaBuilder().toString())//
 				.end()//
 				.object()//
 				.put("method", "POST").put("path", "/1/user")//

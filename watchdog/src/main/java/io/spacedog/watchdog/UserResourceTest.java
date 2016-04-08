@@ -28,7 +28,7 @@ public class UserResourceTest extends Assert {
 		Backend testBackend = SpaceDogHelper.resetTestBackend();
 		SpaceDogHelper.initUserDefaultSchema(testBackend);
 		User vince = SpaceDogHelper.createUser(testBackend, "vince", "hi vince");
-		User fred = SpaceDogHelper.createUser(testBackend, "fred", "hi fred");
+		SpaceDogHelper.createUser(testBackend, "fred", "hi fred");
 
 		// vince can login
 		SpaceRequest.get("/1/login").userAuth(vince).go(200);
@@ -135,7 +135,7 @@ public class UserResourceTest extends Assert {
 		SpaceRequest.put("/1/user/vince").userAuth(vince)//
 				.body(Json.object("email", "bignose@magic.com")).go(200);
 
-		ObjectNode res9 = SpaceRequest.get("/1/user/vince").userAuth(vince).go(200)//
+		SpaceRequest.get("/1/user/vince").userAuth(vince).go(200)//
 				.assertEquals("vince", "username")//
 				.assertEquals("bignose@magic.com", "email")//
 				.assertEquals(2, "meta.version")//
@@ -257,14 +257,22 @@ public class UserResourceTest extends Assert {
 		SpaceRequest.get("/1/data?refresh=true").backend(testBackend).go(200)//
 				.assertEquals(1, "total");
 
+		// gets the default user schema from server
+
+		ObjectNode userSchema = SpaceRequest.get("/1/schema/user")//
+				.adminAuth(testBackend).go(200).objectNode();
+
 		// update user schema with custom schema
 
-		ObjectNode customUserSchema = SpaceDogHelper.getDefaultUserSchemaBuilder()//
-				.stringProperty("firstname", true)//
-				.stringProperty("lastname", true)//
-				.build();
+		userSchema.with("user").with("firstname")//
+				.put("_type", "string")//
+				.put("_required", true);
 
-		SpaceRequest.put("/1/schema/user").adminAuth(testBackend).body(customUserSchema).go(200);
+		userSchema.with("user").with("lastname")//
+				.put("_type", "string")//
+				.put("_required", true);
+
+		SpaceRequest.put("/1/schema/user").adminAuth(testBackend).body(userSchema).go(200);
 
 		// create new custom user
 

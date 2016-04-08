@@ -17,7 +17,6 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.services.Credentials.Level;
@@ -41,19 +40,10 @@ public class UserResource extends Resource {
 
 	public static final String TYPE = "user";
 
-	public static SchemaBuilder2 getDefaultUserSchemaBuilder() {
+	public static SchemaBuilder2 getDefaultUserSchema() {
 		return SchemaBuilder2.builder(TYPE, USERNAME)//
 				.stringProperty(USERNAME, true)//
 				.stringProperty(EMAIL, true);
-	}
-
-	public static ObjectNode getDefaultUserSchema() {
-		return getDefaultUserSchemaBuilder().build();
-	}
-
-	public static String getDefaultUserMapping() {
-		JsonNode schema = SchemaValidator.validate(TYPE, getDefaultUserSchema());
-		return SchemaTranslator.translate(TYPE, schema).toString();
 	}
 
 	//
