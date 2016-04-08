@@ -139,6 +139,7 @@ public class Json {
 	}
 
 	public static JsonNode readJsonNode(String jsonString) {
+		Check.notNullOrEmpty(jsonString, "jsonString");
 		try {
 			return jsonMapper.readTree(jsonString);
 		} catch (IOException e) {
