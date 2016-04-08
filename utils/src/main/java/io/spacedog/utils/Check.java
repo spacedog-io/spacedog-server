@@ -8,12 +8,12 @@ public class Check {
 
 	public static void notNullOrEmpty(String value, String paramName) {
 		if (Strings.isNullOrEmpty(value))
-			throw new IllegalArgumentException(String.format("parameter [%s] must not be null or empty", paramName));
+			throw Exceptions.illegalArgument("parameter [%s] null or empty", paramName);
 	}
 
 	public static void notNullOrEmpty(Collection<?> value, String paramName) {
 		if (Utils.isNullOrEmpty(value))
-			throw new IllegalArgumentException(String.format("parameter [%s] must not be empty", paramName));
+			throw Exceptions.illegalArgument("parameter [%s] null or empty", paramName);
 	}
 
 	public static void isTrue(boolean condition, String message, Object... arguments) {
