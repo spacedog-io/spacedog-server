@@ -82,6 +82,8 @@ public class Start {
 				// disable rebalance to avoid automatic rebalance
 				// when a temporary second node appears
 				.put("cluster.routing.rebalance.enable", "none")//
+				.put("http.enabled", //
+						config.isElasticHttpEnabled())//
 				.put("path.home", //
 						config.homePath().toAbsolutePath().toString())
 				.put("path.data", //

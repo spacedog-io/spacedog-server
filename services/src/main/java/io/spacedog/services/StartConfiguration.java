@@ -30,7 +30,8 @@ public class StartConfiguration {
 		check("non ssl port", nonSslPort());
 
 		checkPath("home path", homePath(), true);
-		checkPath("elasticsearch data path", elasticDataPath(), true);
+		checkPath("elastic data path", elasticDataPath(), true);
+		check("elastic http enabled", isElasticHttpEnabled());
 
 		check("AWS region", awsRegion());
 		check("AWS bucket prefix", getAwsBucketPrefix());
@@ -181,5 +182,9 @@ public class StartConfiguration {
 
 	public boolean isOffline() {
 		return Boolean.parseBoolean(configuration.getProperty("spacedog.offline", "false"));
+	}
+
+	public boolean isElasticHttpEnabled() {
+		return Boolean.parseBoolean(configuration.getProperty("spacedog.elastic.http.enabled", "false"));
 	}
 }
