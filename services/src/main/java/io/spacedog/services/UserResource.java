@@ -57,7 +57,7 @@ public class UserResource extends Resource {
 	@Get("/1/data/user")
 	@Get("/1/data/user/")
 	public Payload getAll(Context context) {
-		SpaceContext.checkAdminCredentials();
+		SpaceContext.checkUserCredentials();
 		return DataResource.get().getByType(TYPE, context);
 	}
 
