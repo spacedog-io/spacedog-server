@@ -21,6 +21,7 @@ public class StartConfiguration {
 
 		configuration.load(Files.newInputStream(configFilePath()));
 
+		checkPath("home path", homePath(), true);
 		check("production", isProduction());
 		check("offline", isOffline());
 
@@ -29,60 +30,22 @@ public class StartConfiguration {
 		check("non ssl url", nonSslUrl());
 		check("non ssl port", nonSslPort());
 
-		checkPath("home path", homePath(), true);
 		checkPath("elastic data path", elasticDataPath(), true);
 		check("elastic http enabled", isElasticHttpEnabled());
+		checkPath("elastic snapshots path", snapshotsPath(), true);
 
 		check("AWS region", awsRegion());
 		check("AWS bucket prefix", getAwsBucketPrefix());
+		check("AWS superdog notification topic", superdogAwsNotificationTopic());
 
 		check("mail domain", mailDomain());
 		check("mailgun key", mailGunKey());
-
-		checkPath("snapshots path", snapshotsPath(), true);
-
-		checkPath("SSL CRT file path", crtFilePath(), false);
-		checkPath("SSL PEM file path", pemFilePath(), false);
-		checkPath("SSL DER file path", derFilePath(), false);
-
-		check("superdog notification topic", superdogNotificationTopic());
 
 		if (isProduction()) {
 			// Force Fluent HTTP to production mode
 			System.setProperty("PROD_MODE", "true");
 		}
 
-	}
-
-	private void check(String property, Object value) {
-
-		if (value == null || value.toString().isEmpty())
-			throw new IllegalArgumentException(String.format(//
-					"Configuration setting [%s] is required", property));
-
-		Utils.info("[SpaceDog] setting %s = %s", property, value);
-	}
-
-	private void checkPath(String property, Optional<Path> path, boolean directory) {
-		if (path.isPresent())
-			checkPath(property, path.get(), directory);
-	}
-
-	private void checkPath(String property, Path path, boolean directory) {
-
-		if (path == null)
-			throw new IllegalArgumentException(String.format(//
-					"Configuration setting [%s] is required", property));
-
-		if (directory && !Files.isDirectory(path))
-			throw new IllegalArgumentException(String.format(//
-					"Configuration setting [%s] is not a directory", property));
-
-		if (!directory && !Files.isReadable(path))
-			throw new IllegalArgumentException(String.format(//
-					"Configuration setting [%s] is not a readable file", property));
-
-		Utils.info("[SpaceDog] setting %s = %s", property, path);
 	}
 
 	public Path homePath() {
@@ -123,27 +86,9 @@ public class StartConfiguration {
 	}
 
 	public Path elasticDataPath() {
-		String path = configuration.getProperty("spacedog.data.path");
+		String path = configuration.getProperty("spacedog.elastic.data.path");
 		return path == null ? //
 				homePath().resolve("data") : Paths.get(path);
-	}
-
-	public Optional<Path> derFilePath() {
-		String path = configuration.getProperty("spacedog.ssl.der.file");
-		return Strings.isNullOrEmpty(path) ? Optional.empty()//
-				: Optional.of(Paths.get(path));
-	}
-
-	public Optional<Path> pemFilePath() {
-		String path = configuration.getProperty("spacedog.ssl.pem.file");
-		return Strings.isNullOrEmpty(path) ? Optional.empty()//
-				: Optional.of(Paths.get(path));
-	}
-
-	public Optional<Path> crtFilePath() {
-		String path = configuration.getProperty("spacedog.ssl.crt.file");
-		return Strings.isNullOrEmpty(path) ? Optional.empty()//
-				: Optional.of(Paths.get(path));
 	}
 
 	public boolean isProduction() {
@@ -158,12 +103,8 @@ public class StartConfiguration {
 		return configuration.getProperty("spacedog.aws.bucket.prefix");
 	}
 
-	public boolean isSsl() {
-		return crtFilePath().isPresent();
-	}
-
 	public String mailGunKey() {
-		return configuration.getProperty("spacedog.mailgun.key");
+		return configuration.getProperty("spacedog.mail.mailgun.key");
 	}
 
 	public String mailDomain() {
@@ -171,13 +112,13 @@ public class StartConfiguration {
 	}
 
 	public Optional<Path> snapshotsPath() {
-		String path = configuration.getProperty("spacedog.snapshots.path");
+		String path = configuration.getProperty("spacedog.elastic.snapshots.path");
 		return Strings.isNullOrEmpty(path) ? Optional.empty()//
 				: Optional.of(Paths.get(path));
 	}
 
-	public String superdogNotificationTopic() {
-		return configuration.getProperty("spacedog.superdog.notification.topic");
+	public String superdogAwsNotificationTopic() {
+		return configuration.getProperty("spacedog.aws.superdog.notification.topic");
 	}
 
 	public boolean isOffline() {
@@ -187,4 +128,40 @@ public class StartConfiguration {
 	public boolean isElasticHttpEnabled() {
 		return Boolean.parseBoolean(configuration.getProperty("spacedog.elastic.http.enabled", "false"));
 	}
+
+	//
+	// Implementation
+	//
+
+	private void check(String property, Object value) {
+
+		if (value == null || value.toString().isEmpty())
+			throw new IllegalArgumentException(String.format(//
+					"Configuration setting [%s] is required", property));
+
+		Utils.info("[SpaceDog] setting %s = %s", property, value);
+	}
+
+	private void checkPath(String property, Optional<Path> path, boolean directory) {
+		if (path.isPresent())
+			checkPath(property, path.get(), directory);
+	}
+
+	private void checkPath(String property, Path path, boolean directory) {
+
+		if (path == null)
+			throw new IllegalArgumentException(String.format(//
+					"Configuration setting [%s] is required", property));
+
+		if (directory && !Files.isDirectory(path))
+			throw new IllegalArgumentException(String.format(//
+					"Configuration setting [%s] is not a directory", property));
+
+		if (!directory && !Files.isReadable(path))
+			throw new IllegalArgumentException(String.format(//
+					"Configuration setting [%s] is not a readable file", property));
+
+		Utils.info("[SpaceDog] setting %s = %s", property, path);
+	}
+
 }

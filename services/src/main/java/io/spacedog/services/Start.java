@@ -4,7 +4,6 @@
 package io.spacedog.services;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.client.Client;
@@ -122,16 +121,7 @@ public class Start {
 
 		fluent = new MyFluentServer();
 		fluent.configure(Start::configure);
-
-		if (config.isSsl()) {
-			fluent.startSSL(//
-					config.sslPort(), //
-					Arrays.asList(//
-							config.crtFilePath().get(), //
-							config.pemFilePath().get()), //
-					config.derFilePath().get());
-		} else
-			fluent.start(config.sslPort());
+		fluent.start(config.sslPort());
 
 		HttpPermanentRedirect.start(config.nonSslPort(), //
 				configuration().sslUrl());
