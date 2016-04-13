@@ -78,21 +78,16 @@ public class SpaceDogHelper {
 	}
 
 	public static Backend createBackend(Backend backend) throws UnirestException, Exception {
-		return createBackend(backend, true);
+		return createBackend(backend.backendId, backend.username, backend.password, backend.email);
 	}
 
-	public static Backend createBackend(Backend backend, boolean test) throws UnirestException, Exception {
-		return createBackend(backend.backendId, backend.username, backend.password, backend.email, test);
-	}
-
-	public static Backend createBackend(String backendId, String username, String password, String email,
-			boolean forTesting) throws Exception, UnirestException {
+	public static Backend createBackend(String backendId, String username, String password, String email)
+			throws Exception, UnirestException {
 
 		ObjectNode body = Json.object("username", username, //
 				"password", password, "email", email);
 
 		SpaceRequest.post("/1/backend/" + backendId)//
-				.forTesting(forTesting)//
 				.body(body)//
 				.go(201);
 
@@ -103,8 +98,8 @@ public class SpaceDogHelper {
 		deleteBackend("test", "test", "hi test");
 	}
 
-	public static void deleteBackend(Backend account) throws UnirestException, Exception {
-		deleteBackend(account.backendId, account.username, account.password);
+	public static void deleteBackend(Backend backend) throws UnirestException, Exception {
+		deleteBackend(backend.backendId, backend.username, backend.password);
 	}
 
 	public static void deleteBackend(String backendId, String username, String password)
@@ -121,24 +116,29 @@ public class SpaceDogHelper {
 	}
 
 	public static Backend resetBackend(String backendId, String username, String password) throws Exception {
-		return resetBackend(backendId, username, password, "hello@spacedog.io", true);
+		return resetBackend(backendId, username, password, "hello@spacedog.io");
 	}
 
-	public static Backend resetBackend(Backend backend, boolean forTesting) throws Exception {
-		return resetBackend(backend.backendId, backend.username, backend.password, backend.email, forTesting);
+	public static Backend resetBackend(Backend backend) throws Exception {
+		return resetBackend(backend.backendId, backend.username, backend.password, backend.email);
 	}
 
-	public static Backend resetBackend(String backendId, String username, String password, String email,
-			boolean forTesting) throws Exception {
+	public static Backend resetBackend(String backendId, String username, String password, String email)
+			throws Exception {
 		deleteBackend(backendId, username, password);
-		return createBackend(backendId, username, password, email, forTesting);
+		return createBackend(backendId, username, password, email);
 	}
 
 	public static void prepareTest() throws Exception {
+		prepareTest(true);
+	}
 
-		SpaceRequest.setForTestingDefault(true);
+	public static void prepareTest(boolean forTesting) throws Exception {
+
+		SpaceRequest.setForTestingDefault(forTesting);
 
 		StackTraceElement parentStackTraceElement = Utils.getParentStackTraceElement();
+		System.out.println();
 		System.out.println(String.format("--- %s", //
 				parentStackTraceElement.getClassName()//
 						+ '.' + parentStackTraceElement.getMethodName())

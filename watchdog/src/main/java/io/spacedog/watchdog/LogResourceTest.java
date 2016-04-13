@@ -183,7 +183,8 @@ public class LogResourceTest extends Assert {
 		Backend testBackend = SpaceDogHelper.resetTestBackend();
 		SpaceDogHelper.initUserDefaultSchema(testBackend);
 		SpaceDogHelper.createUser(testBackend, "vince", "hi vince", "vince@dog.com");
-		Backend test2Backend = SpaceDogHelper.resetBackend("test2", "test2", "hi test2", "test2@dog.com", true);
+
+		Backend test2Backend = SpaceDogHelper.resetBackend("test2", "test2", "hi test2", "test2@dog.com");
 		SpaceDogHelper.initUserDefaultSchema(test2Backend);
 		SpaceDogHelper.createUser(test2Backend, "fred", "hi fred", "fred@dog.com");
 

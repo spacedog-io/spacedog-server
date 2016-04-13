@@ -16,6 +16,7 @@ public class FileResourceTest {
 	@Test
 	public void test() throws Exception {
 
+		SpaceDogHelper.prepareTest(false);
 		Backend testBackend = SpaceDogHelper.resetTestBackend();
 
 		SpaceRequest.get("/1/file").adminAuth(testBackend).go(200)//
@@ -38,7 +39,7 @@ public class FileResourceTest {
 				.assertHeaderEquals("application/javascript", SpaceHeaders.CONTENT_TYPE);
 
 		SpaceRequest.get("/1/file/css/black.css").backend(testBackend).go(200)//
-				.assertHeaderEquals("text/html", SpaceHeaders.CONTENT_TYPE);
+				.assertHeaderEquals("text/css", SpaceHeaders.CONTENT_TYPE);
 
 		SpaceRequest.get("/1/file/images").adminAuth(testBackend).go(200)//
 				.assertSizeEquals(2, "results");

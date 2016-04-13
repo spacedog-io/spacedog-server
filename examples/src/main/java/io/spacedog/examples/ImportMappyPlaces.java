@@ -22,7 +22,8 @@ public class ImportMappyPlaces extends Assert {
 	public static void main(String[] args) {
 		try {
 
-			SpaceDogHelper.resetBackend(backend, false);
+			SpaceRequest.setForTestingDefault(false);
+			SpaceDogHelper.resetBackend(backend);
 			SpaceRequest.post("/1/schema/resto").adminAuth(backend).body(buildRestoSchema()).go(201);
 
 			double step = 0.01;

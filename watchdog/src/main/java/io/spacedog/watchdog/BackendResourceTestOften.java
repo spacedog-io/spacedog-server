@@ -22,8 +22,7 @@ public class BackendResourceTestOften extends Assert {
 	public void deleteSignUpGetLoginTestBackend() throws Exception {
 
 		SpaceDogHelper.prepareTest();
-		Backend testBackend = new Backend("test", "test", "hi test", "hello@spacedog.io");
-		SpaceDogHelper.resetBackend(testBackend, true);
+		Backend testBackend = SpaceDogHelper.resetTestBackend();
 
 		// gets backend info
 

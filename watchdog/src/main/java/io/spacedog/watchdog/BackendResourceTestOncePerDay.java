@@ -15,8 +15,8 @@ public class BackendResourceTestOncePerDay extends Assert {
 	@Test
 	public void createBackendSendsNotificationToSuperDogs() throws Exception {
 
-		SpaceDogHelper.prepareTest();
 		// notification is only sent if forTesting = false
-		SpaceDogHelper.resetBackend("test", "test", "hi test", "david@spacedog.io", false);
+		SpaceDogHelper.prepareTest(false);
+		SpaceDogHelper.resetTestBackend();
 	}
 }
