@@ -156,7 +156,7 @@ public class UserResource extends Resource {
 	@Get("/1/data/user/:username")
 	@Get("/1/data/user/:username/")
 	public Payload get(String username, Context context) {
-		SpaceContext.checkUserCredentials(username);
+		SpaceContext.checkUserCredentials();
 		return DataResource.get().getById(TYPE, username, context);
 	}
 
