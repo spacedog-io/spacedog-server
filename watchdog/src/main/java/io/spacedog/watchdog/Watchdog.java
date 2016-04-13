@@ -9,7 +9,7 @@ import io.spacedog.admin.AdminJobs;
 
 public class Watchdog extends RunListener {
 
-	public void run() {
+	public String run() {
 		try {
 			JUnitCore junit = new JUnitCore();
 			junit.addListener(this);
@@ -23,20 +23,22 @@ public class Watchdog extends RunListener {
 			} else
 				junit.run(TestOftenSuite.class);
 
+			return "OK";
+
 		} catch (Exception e) {
-			AdminJobs.error(this, e);
+			return AdminJobs.error(this, e);
 		}
 	}
 
-	public void runMinimal() {
+	public String runMinimal() {
 		try {
 			JUnitCore junit = new JUnitCore();
 			junit.addListener(this);
 			junit.run(DataResourceTest2.class);
-			AdminJobs.ok(this);
+			return AdminJobs.ok(this);
 
 		} catch (Exception e) {
-			AdminJobs.error(this, e);
+			return AdminJobs.error(this, e);
 		}
 	}
 

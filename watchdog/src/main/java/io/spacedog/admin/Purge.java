@@ -9,7 +9,7 @@ import io.spacedog.client.SpaceRequest;
 
 public class Purge {
 
-	public void run() {
+	public String run() {
 
 		try {
 			int from = 0;
@@ -37,12 +37,11 @@ public class Purge {
 
 			} while (from < total);
 
-			AdminJobs.ok(this);
+			return AdminJobs.ok(this);
 
 		} catch (Exception e) {
-			AdminJobs.error(this, e);
+			return AdminJobs.error(this, e);
 		}
-
 	}
 
 	public static void main(String[] args) {

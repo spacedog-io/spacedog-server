@@ -10,17 +10,18 @@ import io.spacedog.utils.Check;
 
 public class Snapshot {
 
-	public void run() {
+	public String run() {
 
 		try {
 			SpaceRequest.post("/1/snapshot").superdogAuth().go(202);
+			return "OK";
 
 		} catch (Exception e) {
-			AdminJobs.error(this, e);
+			return AdminJobs.error(this, e);
 		}
 	}
 
-	public void check() {
+	public String check() {
 
 		String message = null;
 
@@ -58,13 +59,13 @@ public class Snapshot {
 			Check.isTrue(difference < 1000 * 60 * 60, //
 					"snapshot took [%s], it should take less than one hour", difference);
 
-			AdminJobs.ok(this, message);
+			return AdminJobs.ok(this, message);
 
 		} catch (Exception e) {
 			if (message == null)
-				AdminJobs.error(this, e);
+				return AdminJobs.error(this, e);
 			else
-				AdminJobs.error(this, message, e);
+				return AdminJobs.error(this, message, e);
 		}
 	}
 

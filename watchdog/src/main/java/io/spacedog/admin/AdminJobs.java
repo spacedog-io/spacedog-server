@@ -7,20 +7,24 @@ import io.spacedog.utils.Internals;
 
 public class AdminJobs {
 
-	public static void ok(Object context) {
+	public static String ok(Object context) {
 		notify(context, " is OK OK OK", "Everything is working properly.");
+		return "OK";
 	}
 
-	public static void ok(Object context, String message) {
+	public static String ok(Object context, String message) {
 		notify(context, " is OK OK OK", message);
+		return "OK";
 	}
 
-	public static void error(Object context, Throwable t) {
+	public static String error(Object context, Throwable t) {
 		error(context, Throwables.getStackTraceAsString(t));
+		return t.getMessage();
 	}
 
-	public static void error(Object context, String message, Throwable t) {
+	public static String error(Object context, String message, Throwable t) {
 		error(context, message + "\n\n" + Throwables.getStackTraceAsString(t));
+		return t.getMessage();
 	}
 
 	public static void error(Object context, String message) {
