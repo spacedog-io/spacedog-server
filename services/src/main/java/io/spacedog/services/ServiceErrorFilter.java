@@ -1,10 +1,18 @@
 package io.spacedog.services;
 
+import java.io.IOException;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.utils.Internals;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
+import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.filters.PayloadSupplier;
 import net.codestory.http.payload.Payload;
 
@@ -28,8 +36,11 @@ public class ServiceErrorFilter implements SpaceFilter {
 		}
 
 		if (payload == null)
-			payload = Payloads.error(500, //
+			payload = Payloads.error(HttpStatus.INTERNAL_SERVER_ERROR, //
 					"unexpected null payload for [%s] request to [%s]", context.method(), uri);
+
+		if (payload.code() == HttpStatus.INTERNAL_SERVER_ERROR)
+			notifyInternalErrorToSuperdogs(uri, context, payload);
 
 		// uri is already checked by SpaceFilter default matches method
 
@@ -42,11 +53,11 @@ public class ServiceErrorFilter implements SpaceFilter {
 					.put("status", payload.code())//
 					.object("error");
 
-			if (payload.code() == 404) {
+			if (payload.code() == HttpStatus.NOT_FOUND) {
 				nodeBuilder.put("message", //
 						String.format("[%s] not a valid path", uri));
 				return Payloads.json(nodeBuilder, payload.code());
-			} else if (payload.code() == 405) {
+			} else if (payload.code() == HttpStatus.METHOD_NOT_ALLOWED) {
 				nodeBuilder.put("message", //
 						String.format("method [%s] not valid for path [%s]", context.method(), uri));
 				return Payloads.json(nodeBuilder, payload.code());
@@ -57,4 +68,47 @@ public class ServiceErrorFilter implements SpaceFilter {
 		}
 		return payload;
 	}
+
+	private void notifyInternalErrorToSuperdogs(String uri, Context context, Payload payload) throws IOException {
+		try {
+			StringBuilder builder = new StringBuilder();
+			builder.append(context.request().method())//
+					.append(' ').append(uri).append(" => 500\n");
+
+			appendMap(builder, "Request parameters", context.query().keyValues());
+			appendMap(builder, "Request headers", context.request().headers());
+
+			appendBody(builder, "Request body", context.request().content());
+			appendBody(builder, "Response body", payload.rawContent().toString());
+
+			Internals.get().notify(//
+					Start.get().configuration().superdogAwsNotificationTopic(), //
+					String.format("%s is 500 500 500", uri), //
+					builder.toString());
+
+		} catch (Throwable t) {
+			Utils.warn("failed to notify superdogs of an internal error", t);
+		}
+	}
+
+	private void appendMap(StringBuilder builder, String name, Map<?, ?> map) {
+		builder.append(name).append(" =\n");
+		for (Entry<?, ?> entry : map.entrySet()) {
+			builder.append('\t')//
+					.append(entry.getKey())//
+					.append(" : ")//
+					.append(entry.getValue())//
+					.append('\n');
+		}
+	}
+
+	private void appendBody(StringBuilder builder, String name, String body) throws JsonProcessingException {
+		builder.append(name).append(" = ");
+		if (Json.isJson(body))
+			body = Json.getMapper().writerWithDefaultPrettyPrinter()//
+					.writeValueAsString(Json.readJsonNode(body));
+		builder.append(body)//
+				.append('\n');
+	}
+
 }

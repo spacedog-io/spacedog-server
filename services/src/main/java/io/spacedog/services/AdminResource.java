@@ -3,6 +3,7 @@
  */
 package io.spacedog.services;
 
+import io.spacedog.utils.Exceptions;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.payload.Payload;
 
@@ -19,6 +20,12 @@ public class AdminResource extends Resource {
 	public Payload getLogin() {
 		SpaceContext.checkAdminCredentials();
 		return Payloads.success();
+	}
+
+	@Get("/1/admin/return500")
+	@Get("/1/admin/return500")
+	public Payload getLog() {
+		throw Exceptions.runtime("this route always returns http code 500");
 	}
 
 	//

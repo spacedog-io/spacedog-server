@@ -12,7 +12,7 @@ import io.spacedog.client.SpaceRequest;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
-public class ServiceErrorFilterTest extends Assert {
+public class ServiceErrorFilterTestOften extends Assert {
 
 	@Test
 	public void catchesFluentResourceErrors() throws Exception {

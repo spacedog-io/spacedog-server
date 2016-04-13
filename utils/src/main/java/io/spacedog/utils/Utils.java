@@ -68,4 +68,9 @@ public class Utils {
 		Utils.info("%s = %s", nodeName, //
 				Json.getMapper().writerWithDefaultPrettyPrinter().writeValueAsString(node));
 	}
+
+	public static void warn(String message, Throwable t) {
+		System.err.println("[SpaceDog Warning] " + message);
+		t.printStackTrace();
+	}
 }
