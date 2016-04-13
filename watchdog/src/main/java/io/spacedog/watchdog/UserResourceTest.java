@@ -33,31 +33,31 @@ public class UserResourceTest extends Assert {
 		// vince can login
 		SpaceRequest.get("/1/login").userAuth(vince).go(200);
 
-		// puts vince data object
+		// vince puts his data object
 		SpaceRequest.put("/1/data/user/vince").userAuth(vince)//
 				.body(Json.object("email", "vince@dog.com")).go(200);
 		SpaceRequest.get("/1/login").userAuth(vince).go(200);
 
-		// gets vince data object
+		// vince gets his data object
 		SpaceRequest.get("/1/data/user/vince").userAuth(vince).go(200)//
 				.assertEquals("vince", "username")//
 				.assertEquals("vince@dog.com", "email");
 
-		// get all data returns vince
+		// admin gets all data and it returns vince
 		SpaceRequest.get("/1/data?refresh=true").adminAuth(testBackend).go(200)//
 				.assertContainsValue("vince", "username")//
 				.assertContainsValue("fred", "username");
 
-		// get all data of type user returns vince
+		// admin gets all data of type user and it returns vince
 		SpaceRequest.get("/1/data/user").adminAuth(testBackend).go(200)//
 				.assertContainsValue("vince", "username")//
 				.assertContainsValue("fred", "username");
 
-		// deletes object vince
+		// vince deletes his user object
 		SpaceRequest.delete("/1/data/user/vince").userAuth(vince).go(200);
 		SpaceRequest.get("/1/login").userAuth(vince).go(401);
 
-		// deletes all objects of type user
+		// admin deletes all objects of type user
 		SpaceRequest.delete("/1/data/user").adminAuth(testBackend).go(200)//
 				.assertEquals(1, "totalDeleted");
 		SpaceRequest.get("/1/data?refresh=true").adminAuth(testBackend).go(200)//
@@ -97,41 +97,33 @@ public class UserResourceTest extends Assert {
 								"email", "titi@dog.com", "hashedPassword", "hi titi"))
 				.go(400);
 
-		// vince sign up should succeed
-
+		// vince signs up
 		SpaceDogHelper.User vince = SpaceDogHelper.createUser(testBackend, "vince", "hi vince", "vince@dog.com");
 
-		// get vince user object should succeed
-
+		// vince gets his user data
 		ObjectNode res2 = SpaceRequest.get("/1/user/vince").userAuth(vince).go(200).objectNode();
 
 		assertEquals(//
 				Json.object("username", "vince", "email", "vince@dog.com"), //
 				res2.deepCopy().without("meta"));
 
-		// get data with wrong username should fail
-
+		// vince fails to get his user data if wrong username
 		SpaceRequest.get("/1/user/vince").basicAuth(testBackend, "XXX", "hi vince").go(401);
 
-		// get data with wrong password should fail
-
+		// vince fails to get his user data if wrong password
 		SpaceRequest.get("/1/user/vince").basicAuth(testBackend, "vince", "XXX").go(401);
 
-		// get data with wrong backend id should fail
-
+		// vince fails to get his user data if wrong backend id
 		SpaceRequest.get("/1/user/vince")//
 				.basicAuth("XXX", vince.username, vince.password).go(401);
 
-		// login shoud succeed
-
+		// vince succeeds to login
 		SpaceRequest.get("/1/login").userAuth(vince).go(200);
 
-		// login with wrong password should fail
-
+		// vince fails to login if wrong password
 		SpaceRequest.get("/1/login").basicAuth(testBackend, "vince", "XXX").go(401);
 
-		// email update should succeed
-
+		// vince updates his email
 		SpaceRequest.put("/1/user/vince").userAuth(vince)//
 				.body(Json.object("email", "bignose@magic.com")).go(200);
 
@@ -140,6 +132,32 @@ public class UserResourceTest extends Assert {
 				.assertEquals("bignose@magic.com", "email")//
 				.assertEquals(2, "meta.version")//
 				.objectNode();
+	}
+
+	@Test
+	public void usersCanReadOtherUsersPersonalData() throws Exception {
+
+		// prepare
+		SpaceDogHelper.prepareTest();
+		Backend testBackend = SpaceDogHelper.resetTestBackend();
+		SpaceDogHelper.initUserDefaultSchema(testBackend);
+		User fred = SpaceDogHelper.createUser(testBackend, "fred", "hi fred");
+		User vince = SpaceDogHelper.createUser(testBackend, "vince", "hi vince");
+
+		// anonymous fails to get vince user object
+		SpaceRequest.get("/1/user/vince").go(401);
+
+		// anonymous fails to get all user objects
+		SpaceRequest.get("/1/user").go(401);
+
+		// fred gets vince user object
+		SpaceRequest.get("/1/user/vince").userAuth(fred).go(200);
+
+		// fred gets all its fellow user objects
+		SpaceRequest.get("/1/user?refresh=true").userAuth(fred).go(200)//
+				.assertSizeEquals(2, "results")//
+				.assertContainsValue("vince", "id")//
+				.assertContainsValue("fred", "id");
 	}
 
 	@Test
