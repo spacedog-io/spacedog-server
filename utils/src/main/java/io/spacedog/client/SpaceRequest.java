@@ -7,7 +7,6 @@ import java.util.Map;
 
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.BasicHttpClientConnectionManager;
-import org.junit.Assert;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -15,6 +14,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.primitives.Ints;
 import com.mashape.unirest.http.HttpMethod;
+import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.request.GetRequest;
 import com.mashape.unirest.request.HttpRequest;
@@ -168,9 +168,12 @@ public class SpaceRequest {
 	}
 
 	public SpaceResponse go(int... expectedStatus) throws Exception {
-		SpaceResponse spaceResponse = go();
-		Assert.assertTrue(Ints.contains(expectedStatus, spaceResponse.httpResponse().getStatus()));
-		return spaceResponse;
+		SpaceResponse response = go();
+		HttpResponse<String> httpResponse = response.httpResponse();
+		if (!Ints.contains(expectedStatus, httpResponse.getStatus()))
+			throw Exceptions.runtime("[%s %s] returns status [%s] and payload [%s]", method, uri,
+					httpResponse.getStatusText(), httpResponse.getBody());
+		return response;
 	}
 
 	public SpaceResponse go() throws Exception {
