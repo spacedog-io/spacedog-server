@@ -130,18 +130,22 @@ public class SpaceDogHelper {
 	}
 
 	public static void prepareTest() throws Exception {
-		prepareTest(true);
+		prepareTestInternal(true);
 	}
 
 	public static void prepareTest(boolean forTesting) throws Exception {
+		prepareTestInternal(forTesting);
+	}
+
+	private static void prepareTestInternal(boolean forTesting) throws Exception {
 
 		SpaceRequest.setForTestingDefault(forTesting);
-
-		StackTraceElement parentStackTraceElement = Utils.getParentStackTraceElement();
+		StackTraceElement grandParentStackTraceElement = Utils.getGrandParentStackTraceElement();
 		System.out.println();
+
 		System.out.println(String.format("--- %s", //
-				parentStackTraceElement.getClassName()//
-						+ '.' + parentStackTraceElement.getMethodName())
+				grandParentStackTraceElement.getClassName()//
+						+ '.' + grandParentStackTraceElement.getMethodName())
 				+ "()");
 	}
 

@@ -18,6 +18,7 @@ public class SnapshotResourceTest extends Assert {
 	public void snapshotAndRestoreMultipleTimes() throws Exception {
 
 		// prepare
+		SpaceDogHelper.prepareTest();
 		Backend aaaaBackend = new Backend("aaaa", "aaaa", "hi aaaa", "aaaa@dog.com");
 		Backend bbbbBackend = new Backend("bbbb", "bbbb", "hi bbbb", "bbbb@dog.com");
 		Backend ccccBackend = new Backend("cccc", "cccc", "hi cccc", "cccc@dog.com");

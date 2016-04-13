@@ -18,6 +18,10 @@ public class Utils {
 		return new Exception().getStackTrace()[2];
 	}
 
+	public static StackTraceElement getGrandParentStackTraceElement() {
+		return new Exception().getStackTrace()[3];
+	}
+
 	public static String[] splitByDot(String propertyPath) {
 		propertyPath = propertyPath.trim();
 		if (propertyPath.startsWith("."))
