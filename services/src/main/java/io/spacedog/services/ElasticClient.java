@@ -10,6 +10,7 @@ import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.ActionRequestBuilder;
 import org.elasticsearch.action.ActionResponse;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.indices.alias.Alias;
 import org.elasticsearch.action.admin.indices.close.CloseIndexResponse;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
@@ -31,6 +32,9 @@ import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.ClusterAdminClient;
+import org.elasticsearch.client.Requests;
+import org.elasticsearch.cluster.health.ClusterHealthStatus;
+import org.elasticsearch.common.Priority;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.IndexNotFoundException;
@@ -192,6 +196,32 @@ public class ElasticClient {
 			throw Exceptions.runtime(//
 					"index [%s] creation not acknowledged by the whole cluster", //
 					toIndex0(backendId, type));
+	}
+
+	public void ensureGreen() {
+		ensureGreen("_all");
+	}
+
+	public void ensureGreen(String backendId, String type) {
+		ensureGreen(toAlias(backendId, type));
+	}
+
+	public void ensureGreen(String... indices) {
+		ClusterHealthResponse response = this.internalClient.admin().cluster()
+				.health(Requests.clusterHealthRequest(indices)//
+						.timeout(TimeValue.timeValueSeconds(30))//
+						.waitForGreenStatus()//
+						.waitForEvents(Priority.LANGUID)//
+						.waitForRelocatingShards(0))//
+				.actionGet();
+
+		if (response.isTimedOut())
+			throw Exceptions.runtime("ensure indices %s status are green timed out", //
+					Arrays.toString(indices));
+
+		if (!response.getStatus().equals(ClusterHealthStatus.GREEN))
+			throw Exceptions.runtime("indices %s failed to turn green", //
+					Arrays.toString(indices));
 	}
 
 	public void refreshType(String backendId, String type) {

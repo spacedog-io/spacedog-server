@@ -102,8 +102,9 @@ public class Start {
 
 		// wait for cluster to fully initialize and turn asynchronously from
 		// RED status to YELLOW or GREEN before to initialize anything else
-		// wait only for 5 seconds maximum
+		// wait for 10 seconds maximum
 
+		// elastic.ensureGreen();
 		while (true) {
 			Thread.sleep(1000);
 			ClusterHealthStatus status = client.admin().cluster().prepareHealth().get().getStatus();
