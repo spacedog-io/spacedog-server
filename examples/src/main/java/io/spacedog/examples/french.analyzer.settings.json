@@ -1,0 +1,50 @@
+{
+		"number_of_shards": "1",
+		"number_of_replicas": "0",
+      "analysis":{  
+         "filter":{  
+            "french_elision":{  
+               "type":"elision",
+               "articles":[  
+                  "l",
+                  "m",
+                  "t",
+                  "qu",
+                  "n",
+                  "s",
+                  "j",
+                  "d",
+                  "c",
+                  "jusqu",
+                  "quoiqu",
+                  "lorsqu",
+                  "puisqu"
+               ]
+            },
+            "french_stop":{  
+               "type":"stop",
+               "stopwords":"_french_"
+            },
+            "light_french_stemmer":{  
+               "type":"stemmer",
+               "language":"light_french"
+            },
+            "french_stemmer":{  
+               "type":"stemmer",
+               "language":"french"
+            }
+         },
+         "analyzer":{  
+            "french":{  
+               "tokenizer":"standard",
+               "filter":[  
+                  "lowercase",
+                  "french_elision",
+                  "asciifolding",
+                  "french_stop",
+                  "light_french_stemmer"
+               ]
+            }
+         }
+      }
+}
