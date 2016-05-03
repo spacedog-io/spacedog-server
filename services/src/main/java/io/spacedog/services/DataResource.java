@@ -146,10 +146,10 @@ public class DataResource extends Resource {
 						type, id, idPath.get(), idValue.asText()));
 		}
 
-		boolean strict = context.query().getBoolean("strict", false);
+		boolean strict = context.query().getBoolean(SpaceParams.STRICT, false);
 		// TODO return better exception-message in case of invalid version
 		// format
-		long version = context.query().getLong("version", 0l);
+		long version = context.query().getLong(SpaceParams.VERSION, 0l);
 
 		if (strict) {
 
