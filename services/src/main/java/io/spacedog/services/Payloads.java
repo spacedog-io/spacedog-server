@@ -60,7 +60,8 @@ public class Payloads {
 	}
 
 	public static Payload error(int httpStatus, Throwable throwable) {
-		return json(minimalBuilder(httpStatus).node("error", Json.toJson(throwable, Debug.isTrue())), httpStatus);
+		JsonNode errorNode = Json.toJson(throwable, Debug.isTrue() || httpStatus >= 500);
+		return json(minimalBuilder(httpStatus).node("error", errorNode), httpStatus);
 	}
 
 	/**
