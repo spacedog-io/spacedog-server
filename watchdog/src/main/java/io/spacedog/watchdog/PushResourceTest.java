@@ -20,6 +20,8 @@ import io.spacedog.watchdog.SpaceSuite.TestOften;
 @TestOften
 public class PushResourceTest extends Assert {
 
+	private static final String PUSHED_TO = "pushedTo";
+	private static final String FAILURES = "failures";
 	private static final String USERS_ONLY = "usersOnly";
 	private static final String ID = "id";
 	private static final String MESSAGE = "message";
@@ -208,7 +210,8 @@ public class PushResourceTest extends Assert {
 				.userAuth(vince)//
 				.body(push)//
 				.go(200)//
-				.assertSizeEquals(4, "log")//
+				.assertFalse(FAILURES)//
+				.assertSizeEquals(4, PUSHED_TO)//
 				.assertContainsValue(unknownInstallId, ID)//
 				.assertContainsValue("dave", USER_ID)//
 				.assertContainsValue("vince", USER_ID)//
@@ -223,7 +226,8 @@ public class PushResourceTest extends Assert {
 				.userAuth(vince)//
 				.body(push)//
 				.go(200)//
-				.assertSizeEquals(3, "log")//
+				.assertFalse(FAILURES)//
+				.assertSizeEquals(3, PUSHED_TO)//
 				.assertContainsValue("dave", USER_ID)//
 				.assertContainsValue("vince", USER_ID)//
 				.assertContainsValue("fred", USER_ID);
@@ -236,7 +240,8 @@ public class PushResourceTest extends Assert {
 				.userAuth(vince)//
 				.body(push)//
 				.go(200)//
-				.assertSizeEquals(2, "log")//
+				.assertFalse(FAILURES)//
+				.assertSizeEquals(2, PUSHED_TO)//
 				.assertContainsValue("dave", USER_ID)//
 				.assertContainsValue("fred", USER_ID);
 
@@ -248,7 +253,8 @@ public class PushResourceTest extends Assert {
 				.userAuth(vince)//
 				.body(push)//
 				.go(200)//
-				.assertSizeEquals(1, "log")//
+				.assertFalse(FAILURES)//
+				.assertSizeEquals(1, PUSHED_TO)//
 				.assertContainsValue("fred", USER_ID);
 
 		// vince pushes to all joho users with tag bonjour/toi
@@ -259,7 +265,8 @@ public class PushResourceTest extends Assert {
 				.userAuth(vince)//
 				.body(push)//
 				.go(200)//
-				.assertSizeEquals(2, "log")//
+				.assertFalse(FAILURES)//
+				.assertSizeEquals(2, PUSHED_TO)//
 				.assertContainsValue("vince", USER_ID)//
 				.assertContainsValue("fred", USER_ID);
 
@@ -271,7 +278,8 @@ public class PushResourceTest extends Assert {
 				.userAuth(vince)//
 				.body(push)//
 				.go(200)//
-				.assertSizeEquals(1, "log")//
+				.assertFalse(FAILURES)//
+				.assertSizeEquals(1, PUSHED_TO)//
 				.assertContainsValue("vince", USER_ID);
 
 		// vince gets 404 when he pushes to invalid app id
@@ -282,6 +290,34 @@ public class PushResourceTest extends Assert {
 				.userAuth(vince)//
 				.body(push)//
 				.go(404);
+
+		// vinces deletes by mistake dave's installation
+		// vince pushes to all joho installations
+		// and gets an push error for dave's installation
+
+		ObjectNode daveInstall = SpaceRequest.get("/1/data/installation/" + daveInstallId)//
+				.userAuth(vince).go(200).objectNode();
+
+		daveInstall.remove(ENDPOINT);
+
+		SpaceRequest.put("/1/data/installation/" + daveInstallId)//
+				.queryString("strict", "true")//
+				.userAuth(vince)//
+				.body(daveInstall)//
+				.go(200);
+
+		SpaceRequest.post("/1/push?refresh=true")//
+				.userAuth(vince)//
+				.body(Json.object(APP_ID, "joho", MESSAGE, "This is a push!"))//
+				.go(200)//
+				.assertTrue(FAILURES)//
+				.assertSizeEquals(4, PUSHED_TO)//
+				.assertContainsValue(unknownInstallId, ID)//
+				.assertContainsValue("dave", USER_ID)//
+				.assertContainsValue("property [endpoint] is missing", "message")//
+				.assertContainsValue("vince", USER_ID)//
+				.assertContainsValue("fred", USER_ID);
+
 	}
 
 	private ObjectNode toJsonTag(String key, String value) {
@@ -295,16 +331,16 @@ public class PushResourceTest extends Assert {
 		return array.build();
 	}
 
-	private String installApplication(String appId, String pushService, Backend account, User user) throws Exception {
+	private String installApplication(String appId, String pushService, Backend backend, User user) throws Exception {
 
 		String installId = SpaceRequest.post("/1/installation")//
-				.backend(account).userAuth(user)//
+				.userAuth(user)//
 				.body(Json.object(TOKEN, "token-" + user.username, APP_ID, appId, PUSH_SERVICE, pushService))//
 				.go(201)//
 				.objectNode().get(ID).asText();
 
 		SpaceRequest.get("/1/installation/" + installId)//
-				.adminAuth(account).go(200)//
+				.adminAuth(backend).go(200)//
 				.assertEquals(appId, APP_ID)//
 				.assertEquals(pushService, PUSH_SERVICE)//
 				.assertEquals("token-" + user.username, TOKEN)//

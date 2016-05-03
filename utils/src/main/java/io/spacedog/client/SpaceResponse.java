@@ -295,7 +295,16 @@ public class SpaceResponse {
 		JsonNode node = Json.get(jsonResponseContent, jsonPath);
 		if (node != null)
 			Assert.fail(String.format(//
-					"field named [%s] contains [%s]", jsonPath, node));
+					"json path [%s] contains [%s]", jsonPath, node));
+		return this;
+	}
+
+	public SpaceResponse assertPresent(String jsonPath) {
+		assertJsonContent();
+		JsonNode node = Json.get(jsonResponseContent, jsonPath);
+		if (node == null)
+			Assert.fail(String.format(//
+					"json path [%s] not found", jsonPath));
 		return this;
 	}
 

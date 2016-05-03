@@ -65,7 +65,11 @@ public class PushResource extends Resource {
 	public static final String TAG_KEY = "key";
 	public static final String TAG_VALUE = "value";
 
-	// push field names
+	// push response field names
+	public static final String PUSHED_TO = "pushedTo";
+	public static final String FAILURES = "failures";
+
+	// push request field names
 	private static final String MESSAGE = "message";
 	private static final String USERS_ONLY = "usersOnly";
 
@@ -187,6 +191,7 @@ public class PushResource extends Resource {
 		ObjectNode push = Json.readObjectNode(body);
 		String appId = Json.checkStringNotNullOrEmpty(push, APP_ID);
 		JsonNode message = Json.checkJsonNode(push, MESSAGE, true).get();
+		String snsJsonMessage = computeSnsJsonMessage(message);
 
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
 				.filter(QueryBuilders.termQuery(APP_ID, appId));
@@ -236,55 +241,45 @@ public class PushResource extends Resource {
 
 		boolean failures = false;
 		boolean successes = false;
-		ArrayNode log = Json.newArrayNode();
+		ArrayNode pushedTo = Json.newArrayNode();
 
 		for (SearchHit hit : hits.getHits()) {
-			ObjectNode installation = Json.readObjectNode(hit.sourceAsString());
-
-			PublishRequest pushRequest = new PublishRequest()//
-					.withTargetArn(installation.get(ENDPOINT).asText());
-
-			if (message.isObject()) {
-				pushRequest.withMessageStructure("json")//
-						.withMessage(message.toString());
-			} else {
-				String text = message.asText();
-				ObjectNode json = Json.object("default", text, //
-						"APNS", String.format("{\"aps\":{\"alert\": \"%s\"} }", text), //
-						"APNS_SANDBOX", String.format("{\"aps\":{\"alert\":\"%s\"}}", text), //
-						"GCM", String.format("{ \"data\": { \"message\": \"%s\" } }", text), //
-						"ADM", String.format("{ \"data\": { \"message\": \"%s\" } }", text), //
-						"BAIDU", String.format("{\"title\":\"%s\",\"description\":\"%s\"}", text, text));
-
-				pushRequest.withMessageStructure("json")//
-						.withMessage(json.toString());
-			}
-
-			ObjectNode logItem = log.addObject();
-			logItem.put(ID, hit.getId());
-			Json.checkString(installation, USER_ID)//
-					.ifPresent(userId -> logItem.put(USER_ID, userId));
-
+			ObjectNode logItem = pushedTo.addObject();
 			try {
+				logItem.put(ID, hit.getId());
+				ObjectNode installation = Json.readObjectNode(hit.sourceAsString());
+				Json.checkString(installation, USER_ID)//
+						.ifPresent(userId -> logItem.put(USER_ID, userId));
+				String endpoint = Json.checkStringNotNullOrEmpty(installation, ENDPOINT);
+
+				PublishRequest pushRequest = new PublishRequest()//
+						.withTargetArn(endpoint)//
+						.withMessageStructure("json")//
+						.withMessage(snsJsonMessage);
+
 				if (!SpaceContext.isTest())
 					getSnsClient().publish(pushRequest);
+
 				successes = true;
+
 			} catch (Exception e) {
 				failures = true;
-				logItem.put("errorMessage", e.getMessage());
+				logItem.set(ERROR, Json.toJson(e, Debug.isTrue()));
+
 				if (e instanceof EndpointDisabledException)
 					removeEndpointQuietly(credentials.backendId(), hit.getId());
+
 				if (e instanceof PlatformApplicationDisabledException)
 					break;
 			}
 		}
 
-		int httpStatus = log.size() == 0 ? HttpStatus.NOT_FOUND //
+		int httpStatus = pushedTo.size() == 0 ? HttpStatus.NOT_FOUND //
 				: successes ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
 
 		JsonBuilder<ObjectNode> builder = Payloads.minimalBuilder(httpStatus)//
-				.put("failures", failures)//
-				.node("log", log);
+				.put(FAILURES, failures)//
+				.node(PUSHED_TO, pushedTo);
 
 		return Payloads.json(builder, httpStatus);
 	}
@@ -292,6 +287,21 @@ public class PushResource extends Resource {
 	//
 	// Implementation
 	//
+
+	private String computeSnsJsonMessage(JsonNode message) {
+		if (message.isObject())
+			return message.toString();
+
+		String text = message.asText();
+		ObjectNode json = Json.object("default", text, //
+				"APNS", String.format("{\"aps\":{\"alert\": \"%s\"} }", text), //
+				"APNS_SANDBOX", String.format("{\"aps\":{\"alert\":\"%s\"}}", text), //
+				"GCM", String.format("{ \"data\": { \"message\": \"%s\" } }", text), //
+				"ADM", String.format("{ \"data\": { \"message\": \"%s\" } }", text), //
+				"BAIDU", String.format("{\"title\":\"%s\",\"description\":\"%s\"}", text, text));
+
+		return json.toString();
+	}
 
 	private void removeEndpointQuietly(String backend, String id) {
 		try {
