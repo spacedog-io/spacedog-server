@@ -3,6 +3,7 @@
  */
 package io.spacedog.services;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,8 +16,12 @@ import java.util.concurrent.ExecutionException;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.common.xcontent.ToXContent;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.json.JsonXContent;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.aggregations.InternalAggregations;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -24,6 +29,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
 import io.spacedog.services.DataStore.FilteredSearchBuilder;
+import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.NotFoundException;
@@ -201,11 +207,32 @@ public class SearchResource extends Resource {
 				.put("took", response.getTookInMillis())//
 				.put("total", response.getHits().getTotalHits())//
 				.array("results");
+
 		objects.forEach(object -> builder.node(object));
 		builder.end();
 
-		if (response.getAggregations() != null)
-			builder.node("aggregations", Json.getMapper().valueToTree(response.getAggregations().asMap()));
+		if (response.getAggregations() != null) {
+			// TODO find a safe and efficient solution to add aggregations to
+			// payload.
+			// Direct json serialization from response.getAggregations().asMap()
+			// results in errors because of getters like:
+			// InternalTerms$Bucket.getDocCountError(InternalTerms.java:83) that
+			// can throw state exceptions.
+			// The following solution is safer but inefficient. It fixes issue
+			// #1.
+			try {
+				InternalAggregations aggs = (InternalAggregations) response.getAggregations();
+				XContentBuilder jsonXBuilder = JsonXContent.contentBuilder();
+				jsonXBuilder.startObject();
+				aggs.toXContentInternal(jsonXBuilder, ToXContent.EMPTY_PARAMS);
+				jsonXBuilder.endObject();
+				// TODO this is so inefficient
+				// SearchResponse -> Json String -> JsonNode -> Payload
+				builder.node("aggregations", jsonXBuilder.string());
+			} catch (IOException e) {
+				throw Exceptions.runtime("failed to convert aggregations into json", e);
+			}
+		}
 
 		return builder.build();
 	}

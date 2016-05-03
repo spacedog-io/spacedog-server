@@ -71,4 +71,43 @@ public class SearchResourceTest extends Assert {
 		SpaceRequest.get("/1/data?refresh=true").adminAuth(testBackend).go(200)//
 				.assertEquals(3, "total");
 	}
+
+	@Test
+	public void aggregateToGetDistinctUserEmails() throws Exception {
+
+		// prepare backend
+
+		SpaceDogHelper.prepareTest();
+		Backend testBackend = SpaceDogHelper.resetTestBackend();
+		SpaceDogHelper.initUserDefaultSchema(testBackend);
+
+		// creates 5 users but whith only 3 distinct emails
+
+		SpaceDogHelper.createUser(testBackend, "riri", "hi riri", "hello@disney.com");
+		SpaceDogHelper.createUser(testBackend, "fifi", "hi fifi", "hello@disney.com");
+		SpaceDogHelper.createUser(testBackend, "loulou", "hi loulou", "hello@disney.com");
+		SpaceDogHelper.createUser(testBackend, "donald", "hi donald", "donald@disney.com");
+		SpaceDogHelper.createUser(testBackend, "mickey", "hi mickey", "mickey@disney.com");
+
+		// search with 'terms' aggregation to get
+		// all 3 distinct emails hello, donald and mickey @disney.com
+		// the super admin who has created the backend is not a user
+
+		ObjectNode query = Json.objectBuilder()//
+				.put("size", 0)//
+				.object("aggs")//
+				.object("distinctEmails")//
+				.object("terms")//
+				.put("field", "email")//
+				.build();
+
+		SpaceRequest.post("/1/search?refresh=true").backend(testBackend).body(query).go(200)//
+				.assertEquals(0, "results")//
+				.assertEquals(3, "aggregations.distinctEmails.buckets")//
+				.assertContainsValue("hello@disney.com", "key")//
+				.assertContainsValue("donald@disney.com", "key")//
+				.assertContainsValue("mickey@disney.com", "key");
+
+	}
+
 }
