@@ -312,6 +312,10 @@ public class SpaceRequest {
 				.toString();
 	}
 
+	public SpaceRequest debugServer() {
+		return header(SpaceHeaders.SPACEDOG_DEBUG, "true");
+	}
+
 	// public static void setDefaultBackend(String backendId) {
 	// defaultBackendId = Optional.of(backendId);
 	// }

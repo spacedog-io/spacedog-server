@@ -2,13 +2,19 @@ package io.spacedog.utils;
 
 public abstract class SpaceHeaders {
 
+	// SpaceDog custom headers
+
 	public static final String BACKEND_KEY = "x-spacedog-backend-key";
 	public static final String SPACEDOG_TEST = "x-spacedog-test";
-	public static final String BASIC_SCHEME = "Basic";
-	public static final String ALLOW_METHODS = "GET, POST, PUT, DELETE, HEAD";
+	public static final String SPACEDOG_DEBUG = "x-spacedog-debug";
 	public static final String SPACEDOG_OWNER = "x-spacedog-owner";
 
-	// From CodeStory
+	// Common values
+
+	public static final String BASIC_SCHEME = "Basic";
+	public static final String ALLOW_METHODS = "GET, POST, PUT, DELETE, HEAD";
+
+	// Common headers from CodeStory
 
 	public static final String ACCEPT = "Accept";
 	public static final String ACCEPT_CHARSET = "Accept-Charset";

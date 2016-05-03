@@ -20,11 +20,15 @@ public class SpaceContext {
 	private static ThreadLocal<SpaceContext> threadLocal = new ThreadLocal<SpaceContext>();
 
 	private Context context;
+	private boolean isTest;
+	private boolean isDebug;
 	private Optional<Credentials> credentials;
 	private Optional<String> subdomain = Optional.empty();
 
 	private SpaceContext(Context context) {
 		this.context = context;
+		this.isTest = Boolean.parseBoolean(context().header(SpaceHeaders.SPACEDOG_TEST));
+		this.isDebug = Boolean.parseBoolean(context().header(SpaceHeaders.SPACEDOG_DEBUG));
 		String[] terms = context.request().header(HttpHeaders.HOST).split("\\.");
 		this.subdomain = terms.length == 3 ? Optional.of(terms[0]) : Optional.empty();
 	}
@@ -73,8 +77,11 @@ public class SpaceContext {
 	}
 
 	public static boolean isTest() {
-		String header = get().context().header(SpaceHeaders.SPACEDOG_TEST);
-		return Strings.isNullOrEmpty(header) ? false : Boolean.parseBoolean(header);
+		return get().isTest;
+	}
+
+	public static boolean isDebug() {
+		return get().isDebug;
 	}
 
 	//

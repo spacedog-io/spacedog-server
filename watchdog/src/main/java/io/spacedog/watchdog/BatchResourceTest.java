@@ -60,8 +60,8 @@ public class BatchResourceTest extends Assert {
 				.end()//
 				.build();
 
-		SpaceResponse spaceResponse = SpaceRequest.post("/1/batch?debug=true")//
-				.superdogAuth("test").body(batch).go(200);
+		SpaceResponse spaceResponse = SpaceRequest.post("/1/batch")//
+				.debugServer().superdogAuth("test").body(batch).go(200);
 
 		int accountGetStatus = Json.get(spaceResponse.jsonNode(), "responses.0.status").asInt();
 
@@ -115,7 +115,7 @@ public class BatchResourceTest extends Assert {
 				.end()//
 				.build();
 
-		SpaceRequest.post("/1/batch?debug=true").adminAuth(testBackend).body(batch).go(200)//
+		SpaceRequest.post("/1/batch").debugServer().adminAuth(testBackend).body(batch).go(200)//
 				.assertEquals("vince", "responses.1.id")//
 				.assertEquals("dave", "responses.2.id")//
 				.assertEquals("vince", "responses.3.content.username")//
@@ -151,7 +151,7 @@ public class BatchResourceTest extends Assert {
 				.end()//
 				.build();
 
-		SpaceRequest.post("/1/batch?debug=true").backend(testBackend).body(batch).go(200)//
+		SpaceRequest.post("/1/batch").debugServer().backend(testBackend).body(batch).go(200)//
 				.assertEquals(400, "responses.0.status")//
 				.assertEquals(404, "responses.1.status")//
 				.assertEquals(401, "responses.2.status")//
@@ -204,7 +204,8 @@ public class BatchResourceTest extends Assert {
 				.end()//
 				.build();
 
-		SpaceResponse response = SpaceRequest.post("/1/batch?debug=true").backend(testBackend).body(batch).go(200)//
+		SpaceResponse response = SpaceRequest.post("/1/batch")//
+				.debugServer().backend(testBackend).body(batch).go(200)//
 				.assertEquals(201, "responses.0.status")//
 				.assertEquals("1", "responses.0.id")//
 				.assertEquals(201, "responses.1.status")//
@@ -239,7 +240,8 @@ public class BatchResourceTest extends Assert {
 				.end()//
 				.build();
 
-		SpaceRequest.post("/1/batch?stopOnError=true&debug=true").backend(testBackend).body(batch).go(200)//
+		SpaceRequest.post("/1/batch?stopOnError=true")//
+				.debugServer().backend(testBackend).body(batch).go(200)//
 				.assertEquals(200, "responses.0.status")//
 				.assertEquals(404, "responses.1.status")//
 				.assertSizeEquals(2, "responses")//
@@ -251,7 +253,8 @@ public class BatchResourceTest extends Assert {
 		for (int i = 0; i < 11; i++)
 			bigBatch.object().put("method", "GET").put("path", "/1/login").end();
 
-		SpaceRequest.post("/1/batch?debug=true").backend(testBackend).body(bigBatch.build()).go(400)//
+		SpaceRequest.post("/1/batch").debugServer().backend(testBackend)//
+				.body(bigBatch.build()).go(400)//
 				.assertEquals("batch are limited to 10 sub requests", "error.message")//
 				.assertEquals(0, "debug.batchCredentialChecks");
 
