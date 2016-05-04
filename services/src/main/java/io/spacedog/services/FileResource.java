@@ -5,6 +5,7 @@ package io.spacedog.services;
 
 import java.util.Optional;
 
+import io.spacedog.utils.Uris;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -15,7 +16,7 @@ import net.codestory.http.payload.Payload;
 @Prefix("/1/file")
 public class FileResource extends S3Resource {
 
-	private static final String FILE_BUCKET_SUFFIX = "files";
+	static final String FILE_BUCKET_SUFFIX = "files";
 
 	//
 	// Routes
@@ -24,19 +25,19 @@ public class FileResource extends S3Resource {
 	@Get("")
 	@Get("/")
 	public Object getAll(Context context) {
-		return doGet(Optional.empty(), context);
+		return doGet(Uris.ROOT_PATH, context);
 	}
 
 	@Get("/:fileName")
 	@Get("/:fileName/")
 	public Object get(String fileName, Context context) {
-		return doGet(Optional.of(fileName), context);
+		return doGet(Uris.toPath(fileName), context);
 	}
 
 	@Get("/:a/:fileName")
 	@Get("/:a/:fileName/")
 	public Object get(String a, String fileName, Context context) {
-		return doGet(Optional.of(String.join(SLASH, a, fileName)), context);
+		return doGet(Uris.toPath(a, fileName), context);
 	}
 
 	@Put("/:fileName")
@@ -81,7 +82,7 @@ public class FileResource extends S3Resource {
 		return doDelete(Optional.of(String.join(SLASH, a, b, c)));
 	}
 
-	private Object doGet(Optional<String> path, Context context) {
+	private Object doGet(String[] path, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 		return doGet(FILE_BUCKET_SUFFIX, credentials.backendId(), path, context);
 	}

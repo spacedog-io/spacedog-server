@@ -44,9 +44,7 @@ public class ServiceErrorFilter implements SpaceFilter {
 
 		// uri is already checked by SpaceFilter default matches method
 
-		if (payload.isError() //
-				&& (payload.rawContentType() == null//
-						|| !payload.rawContentType().startsWith("application/json"))) {
+		if (payload.isError() && payload.rawContent() == null) {
 
 			JsonBuilder<ObjectNode> nodeBuilder = Json.objectBuilder()//
 					.put("success", false)//

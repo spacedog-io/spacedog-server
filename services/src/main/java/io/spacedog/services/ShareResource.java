@@ -6,6 +6,7 @@ package io.spacedog.services;
 import java.util.Optional;
 import java.util.UUID;
 
+import io.spacedog.utils.Uris;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -26,7 +27,7 @@ public class ShareResource extends S3Resource {
 	@Get("/")
 	public Object getAll(Context context) {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
-		return doGet(SHARE_BUCKET_SUFFIX, credentials.backendId(), Optional.empty(), context);
+		return doGet(SHARE_BUCKET_SUFFIX, credentials.backendId(), Uris.ROOT_PATH, context);
 	}
 
 	@Get("/:uuid/:fileName")
@@ -34,8 +35,7 @@ public class ShareResource extends S3Resource {
 	public Object get(String uuid, String fileName, Context context) {
 		// TODO better check ACL
 		Credentials credentials = SpaceContext.checkCredentials();
-		return doGet(SHARE_BUCKET_SUFFIX, credentials.backendId(), Optional.of(String.join(SLASH, uuid, fileName)),
-				context);
+		return doGet(SHARE_BUCKET_SUFFIX, credentials.backendId(), Uris.toPath(uuid, fileName), context);
 	}
 
 	@Put("/:fileName")

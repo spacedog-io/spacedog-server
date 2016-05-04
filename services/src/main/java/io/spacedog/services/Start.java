@@ -147,7 +147,8 @@ public class Start {
 		routes.filter(new CrossOriginFilter())//
 				.filter(SpaceContext.filter())//
 				.filter(LogResource.filter())//
-				.filter(new ServiceErrorFilter());
+				.filter(new ServiceErrorFilter())//
+				.filter(WebResource.get().filter());
 	}
 
 	private static class MyFluentServer extends AbstractWebServer<MyFluentServer> {

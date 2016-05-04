@@ -128,6 +128,10 @@ public class SpaceResponse {
 		}
 	}
 
+	public String string() {
+		return this.httpResponse.getBody();
+	}
+
 	public HttpRequest httpRequest() {
 		return httpRequest;
 	}
@@ -336,5 +340,9 @@ public class SpaceResponse {
 					headerName, expected, headerValue));
 
 		return this;
+	}
+
+	public void assertBodyEquals(String expected) {
+		Assert.assertEquals(expected, string());
 	}
 }

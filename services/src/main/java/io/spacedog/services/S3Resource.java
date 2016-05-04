@@ -28,7 +28,9 @@ import com.google.common.base.Strings;
 
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceHeaders;
+import io.spacedog.utils.Uris;
 import net.codestory.http.Context;
+import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
 public class S3Resource extends Resource {
@@ -40,30 +42,35 @@ public class S3Resource extends Resource {
 		s3.setRegion(Region.getRegion(Regions.fromName(Start.get().configuration().awsRegion())));
 	}
 
-	public Object doGet(String bucketSuffix, String backendId, Optional<String> path, Context context) {
+	public Payload doGet(String bucketSuffix, String backendId, String[] path, Context context) {
+		return doGet(bucketSuffix, backendId, path, false, context);
+	}
+
+	public Payload doGet(String bucketSuffix, String backendId, String[] path, boolean web, Context context) {
 
 		String bucketName = getBucketName(bucketSuffix);
-		String s3Key = path.isPresent() ? String.join(SLASH, backendId, path.get()) : backendId;
+		String s3Key = path.length > 0 ? backendId + Uris.join(path) : backendId;
 
-		try {
-			S3Object object = s3.getObject(bucketName, s3Key);
-			ObjectMetadata metadata = object.getObjectMetadata();
+		Optional<Payload> optional = getContent(bucketName, s3Key, context);
+		if (optional.isPresent())
+			return optional.get();
 
-			return new Payload(metadata.getContentType(), object.getObjectContent())//
-					.withHeader(SpaceHeaders.CONTENT_DISPOSITION, //
-							metadata.getContentDisposition())//
-					.withHeader(SpaceHeaders.ETAG, //
-							metadata.getETag())//
-					.withHeader(SpaceHeaders.SPACEDOG_OWNER, //
-							metadata.getUserMetaDataOf("owner"));
+		if (web) {
+			optional = getContent(bucketName, String.join(SLASH, s3Key, "index.html"), context);
+			if (optional.isPresent())
+				return optional.get();
 
-		} catch (AmazonS3Exception e) {
+			optional = getContent(bucketName, String.join(SLASH, backendId, "404.html"), context);
+			if (optional.isPresent())
+				return optional.get().withCode(HttpStatus.NOT_FOUND);
 
-			// 404 is OK, just continue to the next part of this method
-			if (e.getStatusCode() != 404)
-				throw e;
+			return Payload.notFound();
 		}
 
+		return listFolder(bucketName, backendId, s3Key, context);
+	}
+
+	private Payload listFolder(String bucketName, String backendId, String s3Key, Context context) {
 		ListObjectsRequest request = new ListObjectsRequest()//
 				.withBucketName(bucketName)//
 				.withPrefix(s3Key + SLASH)//
@@ -74,7 +81,9 @@ public class S3Resource extends Resource {
 
 		ObjectListing objects = s3.listObjects(request);
 
-		if (path.isPresent() && objects.getObjectSummaries().isEmpty())
+		// only root path allows empty list
+		if (objects.getObjectSummaries().isEmpty() //
+				&& !backendId.equals(s3Key))
 			return Payloads.error(404);
 
 		JsonBuilder<ObjectNode> response = Payloads.minimalBuilder(200);
@@ -93,6 +102,33 @@ public class S3Resource extends Resource {
 		}
 
 		return Payloads.json(response);
+	}
+
+	private Optional<Payload> getContent(String bucketName, String s3Key, Context context) {
+		try {
+			S3Object object = s3.getObject(bucketName, s3Key);
+			ObjectMetadata metadata = object.getObjectMetadata();
+
+			Payload payload = new Payload(metadata.getContentType(), object.getObjectContent())//
+					.withHeader(SpaceHeaders.ETAG, //
+							metadata.getETag())//
+					.withHeader(SpaceHeaders.SPACEDOG_OWNER, //
+							metadata.getUserMetaDataOf("owner"));
+
+			if (context.query().getBoolean("withContentDisposition", false))
+				payload = payload.withHeader(SpaceHeaders.CONTENT_DISPOSITION, //
+						metadata.getContentDisposition());
+
+			return Optional.of(payload);
+
+		} catch (AmazonS3Exception e) {
+
+			// 404 is OK
+			if (e.getStatusCode() == 404)
+				return Optional.empty();
+
+			throw e;
+		}
 	}
 
 	public Payload doDelete(String bucketSuffix, Credentials credentials, Optional<String> path) {

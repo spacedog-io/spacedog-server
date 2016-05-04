@@ -3,6 +3,7 @@
  */
 package io.spacedog.client;
 
+import java.io.IOException;
 import java.util.Map;
 
 import org.apache.http.impl.client.HttpClients;
@@ -12,6 +13,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
+import com.google.common.io.Resources;
 import com.google.common.primitives.Ints;
 import com.mashape.unirest.http.HttpMethod;
 import com.mashape.unirest.http.HttpResponse;
@@ -109,8 +111,8 @@ public class SpaceRequest {
 		return this;
 	}
 
-	public SpaceRequest adminAuth(Backend account) {
-		return basicAuth(account.backendId, account.username, account.password);
+	public SpaceRequest adminAuth(Backend backend) {
+		return basicAuth(backend.backendId, backend.username, backend.password);
 	}
 
 	public SpaceRequest userAuth(User user) {
@@ -145,6 +147,10 @@ public class SpaceRequest {
 
 	public SpaceRequest body(JsonBuilder<ObjectNode> jsonBody) {
 		return body(jsonBody.build());
+	}
+
+	public SpaceRequest resource(String path) throws IOException {
+		return body(Resources.toByteArray(Resources.getResource(path)));
 	}
 
 	public SpaceRequest routeParam(String name, String value) {
