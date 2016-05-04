@@ -16,6 +16,7 @@
             },
             "query" : {"type" : "object", "enabled" : false},
             "jsonContent" : {"type" : "object", "enabled" : false},
+            "status" : {"type" : "integer", "coerce" : false},
             "response" : {"type" : "object", "enabled" : false}
         }
     }

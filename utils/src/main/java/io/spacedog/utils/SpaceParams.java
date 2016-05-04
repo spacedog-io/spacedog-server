@@ -8,5 +8,5 @@ public class SpaceParams {
 	public static final String REFRESH = "refresh";
 	public static final String STRICT = "strict";
 	public static final String VERSION = "version";
-
+	public static final String MIN_STATUS = "minStatus";
 }

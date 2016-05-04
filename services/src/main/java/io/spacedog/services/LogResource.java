@@ -68,9 +68,14 @@ public class LogResource extends Resource {
 		Optional<Level> type = Strings.isNullOrEmpty(logType) ? Optional.empty()//
 				: Optional.of(Level.valueOf(logType));
 
+		String minStatus = context.query().get(SpaceParams.MIN_STATUS);
+		Optional<Integer> optMinStatus = Strings.isNullOrEmpty(minStatus) ? Optional.empty()//
+				: Optional.of(Integer.parseInt(minStatus));
+
 		SearchResponse response = doGetLogs(backendId, //
 				context.query().getInteger("from", 0), //
 				context.query().getInteger("size", 10), //
+				optMinStatus, //
 				type);
 
 		return extractLogs(response);
@@ -128,7 +133,7 @@ public class LogResource extends Resource {
 
 	private Optional<DeleteByQueryResponse> doPurgeBackend(String backendId, int from) {
 
-		SearchHit[] hits = doGetLogs(Optional.of(backendId), from, 1, Optional.empty())//
+		SearchHit[] hits = doGetLogs(Optional.of(backendId), from, 1, Optional.empty(), Optional.empty())//
 				.getHits().getHits();
 
 		if (hits == null || hits.length == 0)
@@ -150,12 +155,16 @@ public class LogResource extends Resource {
 		return Optional.of(delete);
 	}
 
-	private SearchResponse doGetLogs(Optional<String> backendId, int from, int size, Optional<Credentials.Level> type) {
+	private SearchResponse doGetLogs(Optional<String> backendId, int from, int size, Optional<Integer> minStatus,
+			Optional<Credentials.Level> type) {
 
 		BoolQueryBuilder query = QueryBuilders.boolQuery();
 
 		if (backendId.isPresent())
 			query.filter(QueryBuilders.termQuery("credentials.backendId", backendId.get()));
+
+		if (minStatus.isPresent())
+			query.filter(QueryBuilders.rangeQuery("status").gte(minStatus.get()));
 
 		if (type.isPresent())
 			query.filter(QueryBuilders.termsQuery("credentials.type", //
@@ -234,8 +243,12 @@ public class LogResource extends Resource {
 				log.node("jsonContent", Json.readJsonNode(content));
 		}
 
-		if (payload.rawContent() instanceof JsonNode)
-			log.node("response", (JsonNode) payload.rawContent());
+		if (payload != null) {
+			log.put("status", payload.code());
+
+			if (payload.rawContent() instanceof JsonNode)
+				log.node("response", (JsonNode) payload.rawContent());
+		}
 
 		JsonNode securedLog = Json.fullReplace(log.build(), "password", "******");
 

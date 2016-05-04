@@ -298,4 +298,20 @@ public class LogResourceTest extends Assert {
 				.assertEquals("/1/user", "results.1.path")//
 				.assertEquals("vince", "results.1.response.id");
 	}
+
+	@Test
+	public void filterErrorLogs() throws Exception {
+
+		// prepare
+		SpaceRequest.post("/1/backend/test").go(400);
+		SpaceRequest.get("/1/login").backendId("test").go(401);
+
+		// super admins gets the last 2 requests with status >= 400
+		SpaceRequest.get("/1/log?minStatus=400&size=2").superdogAuth().go(200)//
+				.assertSizeEquals(2, "results")//
+				.assertEquals("/1/login", "results.0.path")//
+				.assertEquals(401, "results.0.status")//
+				.assertEquals("/1/backend/test", "results.1.path")//
+				.assertEquals(400, "results.1.status");
+	}
 }
