@@ -140,7 +140,6 @@ public class Start {
 				.add(SnapshotResource.get())//
 				.add(LogResource.get())//
 				.add(PushResource.get())//
-				.add(FileResource.get())//
 				.add(ShareResource.get())//
 				.add(SearchResource.get());
 
@@ -148,7 +147,8 @@ public class Start {
 				.filter(SpaceContext.filter())//
 				.filter(LogResource.filter())//
 				.filter(new ServiceErrorFilter())//
-				.filter(WebResource.get().filter());
+				.filter(WebResource.get().filter())//
+				.filter(FileResource.get().filter());
 	}
 
 	private static class MyFluentServer extends AbstractWebServer<MyFluentServer> {

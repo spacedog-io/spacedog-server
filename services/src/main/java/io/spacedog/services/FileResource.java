@@ -3,17 +3,14 @@
  */
 package io.spacedog.services;
 
-import java.util.Optional;
+import com.mashape.unirest.http.HttpMethod;
 
+import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Uris;
 import net.codestory.http.Context;
-import net.codestory.http.annotations.Delete;
-import net.codestory.http.annotations.Get;
-import net.codestory.http.annotations.Prefix;
-import net.codestory.http.annotations.Put;
+import net.codestory.http.filters.PayloadSupplier;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/1/file")
 public class FileResource extends S3Resource {
 
 	static final String FILE_BUCKET_SUFFIX = "files";
@@ -22,79 +19,58 @@ public class FileResource extends S3Resource {
 	// Routes
 	//
 
-	@Get("")
-	@Get("/")
-	public Object getAll(Context context) {
-		return doGet(Uris.ROOT_PATH, context);
+	public SpaceFilter filter() {
+
+		return new SpaceFilter() {
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public boolean matches(String uri, Context context) {
+				return uri.startsWith("/1/file");
+			}
+
+			@Override
+			public Payload apply(String uri, Context context, PayloadSupplier nextFilter) throws Exception {
+				if (context.method().equals(HttpMethod.GET.name()))
+					return get(toWebPath(uri), context);
+				if (context.method().equals(HttpMethod.PUT.name()))
+					return put(toWebPath(uri), context.request().contentAsBytes(), context);
+				if (context.method().equals(HttpMethod.DELETE.name()))
+					return delete(toWebPath(uri));
+
+				throw Exceptions.runtime("[%s] path is invalid for [%s] method", uri, context.method());
+			}
+
+		};
 	}
 
-	@Get("/:fileName")
-	@Get("/:fileName/")
-	public Object get(String fileName, Context context) {
-		return doGet(Uris.toPath(fileName), context);
-	}
+	//
+	// Implementation
+	//
 
-	@Get("/:a/:fileName")
-	@Get("/:a/:fileName/")
-	public Object get(String a, String fileName, Context context) {
-		return doGet(Uris.toPath(a, fileName), context);
-	}
-
-	@Put("/:fileName")
-	@Put("/:fileName/")
-	public Payload put(String fileName, byte[] bytes, Context context) {
-		return doPut(null, fileName, bytes, context);
-	}
-
-	@Put("/:a/:fileName")
-	@Put("/:a/:fileName/")
-	public Payload put(String a, String fileName, byte[] bytes, Context context) {
-		return doPut(a, fileName, bytes, context);
-	}
-
-	@Put("/:a/:b/:fileName")
-	@Put("/:a/:b/:fileName/")
-	public Payload put(String a, String b, String fileName, byte[] bytes, Context context) {
-		return doPut(String.join(SLASH, a, b), fileName, bytes, context);
-	}
-
-	@Delete("")
-	@Delete("/")
-	public Payload deleteAll() {
-		return doDelete(Optional.empty());
-	}
-
-	@Delete("/:a")
-	@Delete("/:a/")
-	public Payload delete(String a) {
-		return doDelete(Optional.of(a));
-	}
-
-	@Delete("/:a/:b")
-	@Delete("/:a/:b/")
-	public Payload delete(String a, String b) {
-		return doDelete(Optional.of(String.join(SLASH, a, b)));
-	}
-
-	@Delete("/:a/:b/:c")
-	@Delete("/:a/:b/:c/")
-	public Payload delete(String a, String b, String c) {
-		return doDelete(Optional.of(String.join(SLASH, a, b, c)));
-	}
-
-	private Object doGet(String[] path, Context context) {
+	Payload get(String[] path, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 		return doGet(FILE_BUCKET_SUFFIX, credentials.backendId(), path, context);
 	}
 
-	private Payload doPut(String path, String fileName, byte[] bytes, Context context) {
+	Payload put(String[] path, byte[] bytes, Context context) {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
-		return doUpload(FILE_BUCKET_SUFFIX, "/1/file", credentials, path, fileName, bytes, context);
+		return doUpload(FILE_BUCKET_SUFFIX, "/1/file", credentials, path, bytes, context);
 	}
 
-	private Payload doDelete(Optional<String> path) {
+	Payload deleteAll() {
+		return delete(Uris.ROOT_PATH);
+	}
+
+	Payload delete(String[] path) {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		return doDelete(FILE_BUCKET_SUFFIX, credentials, path);
+	}
+
+	private static String[] toWebPath(String uri) {
+		// remove '/1/file'
+		return Uris.split(uri.substring(7));
 	}
 
 	//

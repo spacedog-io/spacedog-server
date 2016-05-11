@@ -26,6 +26,7 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
+import io.spacedog.services.S3Resource.S3Key;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Uris;
@@ -49,7 +50,7 @@ public class S3Resource extends Resource {
 	public Payload doGet(String bucketSuffix, String backendId, String[] path, boolean web, Context context) {
 
 		String bucketName = getBucketName(bucketSuffix);
-		String s3Key = path.length > 0 ? backendId + Uris.join(path) : backendId;
+		String s3Key = S3Key.get(backendId).add(path).toString();
 
 		Optional<Payload> optional = getContent(bucketName, s3Key, context);
 		if (optional.isPresent())
@@ -77,7 +78,7 @@ public class S3Resource extends Resource {
 				.withMaxKeys(context.query().getInteger("size", 100));
 
 		if (!Strings.isNullOrEmpty(context.get("next")))
-			request.setMarker(toS3Key(backendId, context.get("next")));
+			request.setMarker(S3Key.get(backendId).add(context.get("next")).toString());
 
 		ObjectListing objects = s3.listObjects(request);
 
@@ -131,11 +132,10 @@ public class S3Resource extends Resource {
 		}
 	}
 
-	public Payload doDelete(String bucketSuffix, Credentials credentials, Optional<String> path) {
+	public Payload doDelete(String bucketSuffix, Credentials credentials, String[] path) {
 
 		String bucketName = getBucketName(bucketSuffix);
-		String s3Key = path.isPresent() ? String.join(SLASH, credentials.backendId(), path.get())
-				: credentials.backendId();
+		String s3Key = S3Key.get(credentials.backendId()).add(path).toString();
 
 		JsonBuilder<ObjectNode> builder = Payloads.minimalBuilder(200).array("deleted");
 
@@ -154,7 +154,7 @@ public class S3Resource extends Resource {
 
 			} else if (credentials.isAtLeastAdmin()) {
 				s3.deleteObject(bucketName, s3Key);
-				builder.add(path.get());
+				builder.add(Uris.join(path));
 			}
 
 		} catch (AmazonS3Exception e) {
@@ -200,11 +200,12 @@ public class S3Resource extends Resource {
 		return Payloads.json(builder);
 	}
 
-	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, String path, String fileName,
-			byte[] bytes, Context context) {
+	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, String[] path, byte[] bytes,
+			Context context) {
 
+		String fileName = path[path.length - 1];
 		String bucketName = getBucketName(bucketSuffix);
-		String s3Key = toS3Key(credentials.backendId(), path, fileName);
+		String s3Key = S3Key.get(credentials.backendId()).add(path).toString();
 
 		ObjectMetadata metadata = new ObjectMetadata();
 		// TODO
@@ -221,8 +222,8 @@ public class S3Resource extends Resource {
 				metadata));
 
 		return Payloads.json(Payloads.minimalBuilder(200)//
-				.put("path", toSpaceKeyFromPath(path, fileName))//
-				.put("location", toSpaceLocation(credentials.backendId(), rootUri, path, fileName))//
+				.put("path", Uris.join(path))//
+				.put("location", toSpaceLocation(credentials.backendId(), rootUri, path))//
 				.put("s3", toS3Location(bucketName, s3Key)));
 	}
 
@@ -235,29 +236,13 @@ public class S3Resource extends Resource {
 				&& credentials.level().toString().equals(metadata.getUserMetaDataOf("owner-type"));
 	}
 
-	private String toS3Key(String backendId, String path, String name) {
-		return Strings.isNullOrEmpty(path)//
-				? String.join(SLASH, backendId, name) //
-				: String.join(SLASH, backendId, path, name);
-	}
-
-	private String toS3Key(String backendId, String spaceKey) {
-		return new StringBuilder(backendId).append(spaceKey).toString();
-	}
-
 	private String toSpaceKeyFromS3Key(String backendId, String s3Key) {
 		return s3Key.substring(backendId.length());
 	}
 
-	private String toSpaceKeyFromPath(String path, String fileName) {
-		return Strings.isNullOrEmpty(path)//
-				? new StringBuilder(SLASH).append(fileName).toString()//
-				: new StringBuilder(SLASH).append(path).append(SLASH).append(fileName).toString();
-	}
-
-	private String toSpaceLocation(String backendId, String root, String path, String fileName) {
+	private String toSpaceLocation(String backendId, String root, String[] path) {
 		return spaceUrl(backendId, root)//
-				.append(toSpaceKeyFromPath(path, fileName)).toString();
+				.append(Uris.join(path)).toString();
 	}
 
 	private String toS3Location(String bucketName, String s3Key) {
@@ -265,4 +250,51 @@ public class S3Resource extends Resource {
 				.append(".s3.amazonaws.com/").append(s3Key).toString();
 	}
 
+	public static class S3Key {
+
+		boolean slashIsNeeded = false;
+		private StringBuilder builder;
+
+		public S3Key() {
+			this.builder = new StringBuilder();
+		}
+
+		public S3Key add(String... names) {
+			if (names != null)
+				for (String name : names)
+					add(name);
+
+			return this;
+		}
+
+		public S3Key add(String name) {
+			if (Strings.isNullOrEmpty(name))
+				return this;
+
+			if (slashIsNeeded)
+				if (name.startsWith(SLASH))
+					builder.append(name);
+				else
+					builder.append(SLASH).append(name);
+			else if (name.startsWith(SLASH))
+				builder.append(name.substring(1));
+			else
+				builder.append(name);
+
+			slashIsNeeded = !name.endsWith(SLASH);
+			return this;
+		}
+
+		@Override
+		public String toString() {
+			String result = builder.toString();
+			if (result.endsWith(SLASH))
+				result = result.substring(0, result.length() - 1);
+			return result;
+		}
+
+		public static S3Key get(String... names) {
+			return new S3Key().add(names);
+		}
+	}
 }

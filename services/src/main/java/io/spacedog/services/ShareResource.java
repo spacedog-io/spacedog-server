@@ -3,7 +3,6 @@
  */
 package io.spacedog.services;
 
-import java.util.Optional;
 import java.util.UUID;
 
 import io.spacedog.utils.Uris;
@@ -43,21 +42,21 @@ public class ShareResource extends S3Resource {
 	public Payload put(String fileName, byte[] bytes, Context context) {
 		Credentials credentials = SpaceContext.checkUserCredentials();
 		String uuid = UUID.randomUUID().toString();
-		return doUpload(SHARE_BUCKET_SUFFIX, "/1/share", credentials, uuid, fileName, bytes, context);
+		return doUpload(SHARE_BUCKET_SUFFIX, "/1/share", credentials, Uris.toPath(uuid, fileName), bytes, context);
 	}
 
 	@Delete("")
 	@Delete("/")
 	public Payload deleteAll() {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
-		return doDelete(SHARE_BUCKET_SUFFIX, credentials, Optional.empty());
+		return doDelete(SHARE_BUCKET_SUFFIX, credentials, Uris.ROOT_PATH);
 	}
 
 	@Delete("/:uuid/:fileName")
 	@Delete("/:uuid/:fileName/")
 	public Payload delete(String uuid, String fileName, Context context) {
 		Credentials credentials = SpaceContext.checkUserOrAdminCredentials();
-		return doDelete(SHARE_BUCKET_SUFFIX, credentials, Optional.of(String.join(SLASH, uuid, fileName)));
+		return doDelete(SHARE_BUCKET_SUFFIX, credentials, Uris.toPath(uuid, fileName));
 	}
 
 	//

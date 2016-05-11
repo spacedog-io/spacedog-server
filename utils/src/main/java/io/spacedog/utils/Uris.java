@@ -21,14 +21,16 @@ public class Uris {
 		return uri.split(SLASH);
 	}
 
-	public static String join(String[] parts) {
-		if (parts == null || parts.length == 0)
-			return SLASH;
+	public static String join(String... parts) {
 		return SLASH + String.join(SLASH, parts);
 	}
 
 	public static String[] toPath(String... parts) {
 		return parts;
+	}
+
+	public static boolean isRoot(String... parts) {
+		return parts == null || parts.length == 0;
 	}
 
 }
