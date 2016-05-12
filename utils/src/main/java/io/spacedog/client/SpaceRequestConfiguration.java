@@ -15,7 +15,15 @@ public class SpaceRequestConfiguration {
 
 	private Properties properties;
 
-	private SpaceRequestConfiguration(InputStream stream) throws IOException {
+	public SpaceRequestConfiguration() {
+		properties = new Properties();
+	}
+
+	public SpaceRequestConfiguration(Properties properties) {
+		properties = new Properties(properties);
+	}
+
+	public SpaceRequestConfiguration(InputStream stream) throws IOException {
 		properties = new Properties();
 		properties.load(stream);
 	}

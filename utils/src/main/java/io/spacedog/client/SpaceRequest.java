@@ -4,6 +4,8 @@
 package io.spacedog.client;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 
 import org.apache.http.impl.client.HttpClients;
@@ -42,9 +44,11 @@ public class SpaceRequest {
 	private String password;
 	private String username;
 	private boolean redirected = false;
-	private static boolean forTestingDefault = false;
-	// private static Optional<String> defaultBackendId = Optional.empty();
 	private String backendId;
+
+	// static defaults
+	private static boolean forTestingDefault = false;
+	private static SpaceRequestConfiguration configurationDefault;
 
 	static {
 		Unirest.setHttpClient(HttpClients.createMinimal(//
@@ -61,10 +65,10 @@ public class SpaceRequest {
 		if (uri.startsWith("http"))
 			return uri;
 
-		SpaceTarget target = SpaceRequestConfiguration.get().target();
+		SpaceTarget target = configuration().target();
 
 		if (!Strings.isNullOrEmpty(backendId) //
-				&& SpaceRequestConfiguration.get().subdomains()) {
+				&& configuration().subdomains()) {
 
 			StringBuilder builder = redirected //
 					? target.redirectedUrlBuilder(backendId) //
@@ -139,6 +143,10 @@ public class SpaceRequest {
 		return this;
 	}
 
+	public SpaceRequest body(Path path) throws IOException {
+		return body(Files.readAllBytes(path));
+	}
+
 	public SpaceRequest body(JsonNode body) {
 		this.bodyJson = body;
 		this.body = body.toString();
@@ -187,7 +195,7 @@ public class SpaceRequest {
 				|| (forTesting != null && forTesting))
 			this.header(SpaceHeaders.SPACEDOG_TEST, "true");
 
-		if (!SpaceRequestConfiguration.get().subdomains())
+		if (!configuration().subdomains())
 			header(SpaceHeaders.BACKEND_KEY, computeBackendKey());
 
 		HttpRequest request = (method == HttpMethod.GET || method == HttpMethod.HEAD) //
@@ -211,7 +219,7 @@ public class SpaceRequest {
 				requestWithBody.body((String) body);
 		}
 
-		return new SpaceResponse(request, bodyJson, SpaceRequestConfiguration.get().debug());
+		return new SpaceResponse(request, bodyJson, configuration().debug());
 	}
 
 	private String computeBackendKey() {
@@ -284,7 +292,7 @@ public class SpaceRequest {
 	// }
 
 	public static void setLogDebug(boolean debug) {
-		SpaceRequestConfiguration.get().debug(debug);
+		configuration().debug(debug);
 	}
 
 	public SpaceRequest superdogAuth() {
@@ -296,7 +304,7 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest superdogAuth(String backendId) {
-		SpaceRequestConfiguration conf = SpaceRequestConfiguration.get();
+		SpaceRequestConfiguration conf = configuration();
 		return basicAuth(backendId, conf.superdogName(), conf.superdogPassword());
 	}
 
@@ -307,6 +315,16 @@ public class SpaceRequest {
 
 	public static void setForTestingDefault(boolean value) {
 		forTestingDefault = value;
+	}
+
+	public static void setConfigurationDefault(SpaceRequestConfiguration configuration) {
+		configurationDefault = configuration;
+	}
+
+	public static SpaceRequestConfiguration configuration() {
+		if (configurationDefault == null)
+			configurationDefault = SpaceRequestConfiguration.get();
+		return configurationDefault;
 	}
 
 	public static String getBackendKey(JsonNode account) {
