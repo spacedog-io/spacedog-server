@@ -99,6 +99,7 @@ public class S3Resource extends Resource {
 					.put("path", toSpaceKeyFromS3Key(backendId, summary.getKey()))//
 					.put("size", summary.getSize())//
 					.put("lastModified", new DateTime(summary.getLastModified().getTime()).toString())//
+					.put("etag", summary.getETag())//
 					.end();
 		}
 
