@@ -7,7 +7,7 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 
-public class SpaceDogHelper {
+public class SpaceClient {
 
 	public static class User {
 		public String id;

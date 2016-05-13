@@ -13,9 +13,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.SpaceDogHelper;
-import io.spacedog.client.SpaceDogHelper.Backend;
-import io.spacedog.client.SpaceDogHelper.User;
+import io.spacedog.client.SpaceClient;
+import io.spacedog.client.SpaceClient.Backend;
+import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
@@ -34,15 +34,15 @@ public class ChauffeLeTestOften extends Assert {
 	@BeforeClass
 	public static void resetBackend() throws Exception {
 
-		backend = SpaceDogHelper.resetTestBackend();
-		SpaceDogHelper.initUserDefaultSchema(backend);
+		backend = SpaceClient.resetTestBackend();
+		SpaceClient.initUserDefaultSchema(backend);
 
-		SpaceDogHelper.setSchema(buildBigPostSchema(), backend);
-		SpaceDogHelper.setSchema(buildSmallPostSchema(), backend);
+		SpaceClient.setSchema(buildBigPostSchema(), backend);
+		SpaceClient.setSchema(buildSmallPostSchema(), backend);
 
-		lui = SpaceDogHelper.createUser(backend, "lui", "hi lui", "lui@chauffe.le");
-		elle = SpaceDogHelper.createUser(backend, "elle", "hi elle", "elle@chauffe.le");
-		laCopine = SpaceDogHelper.createUser(backend, "lacopine", "hi la copine", "lacopine@chauffe.le");
+		lui = SpaceClient.createUser(backend, "lui", "hi lui", "lui@chauffe.le");
+		elle = SpaceClient.createUser(backend, "elle", "hi elle", "elle@chauffe.le");
+		laCopine = SpaceClient.createUser(backend, "lacopine", "hi la copine", "lacopine@chauffe.le");
 	}
 
 	static ObjectNode buildBigPostSchema() {
@@ -64,13 +64,13 @@ public class ChauffeLeTestOften extends Assert {
 
 	@Test
 	public void chauffeLeWithBigPost() throws Exception {
-		SpaceDogHelper.prepareTest();
+		SpaceClient.prepareTest();
 		chauffeLe(new BigPost());
 	}
 
 	@Test
 	public void chauffeLeWithSmallPost() throws Exception {
-		SpaceDogHelper.prepareTest();
+		SpaceClient.prepareTest();
 		chauffeLe(new SmallPost());
 	}
 
@@ -103,9 +103,9 @@ public class ChauffeLeTestOften extends Assert {
 	}
 
 	public interface ChauffeLeEngine {
-		String createSubject(String subject, SpaceDogHelper.User user) throws Exception;
+		String createSubject(String subject, SpaceClient.User user) throws Exception;
 
-		void addComment(String threadId, String comment, SpaceDogHelper.User user) throws Exception;
+		void addComment(String threadId, String comment, SpaceClient.User user) throws Exception;
 
 		Iterator<JsonNode> showWall() throws Exception;
 	}
@@ -113,7 +113,7 @@ public class ChauffeLeTestOften extends Assert {
 	public static class BigPost implements ChauffeLeEngine {
 
 		@Override
-		public String createSubject(String subject, SpaceDogHelper.User user) throws Exception {
+		public String createSubject(String subject, SpaceClient.User user) throws Exception {
 
 			String bigPost = Json.objectBuilder().put("title", subject) //
 					.array("responses") //
@@ -125,7 +125,7 @@ public class ChauffeLeTestOften extends Assert {
 		}
 
 		@Override
-		public void addComment(String postId, String comment, SpaceDogHelper.User user) throws Exception {
+		public void addComment(String postId, String comment, SpaceClient.User user) throws Exception {
 
 			ObjectNode bigPost = SpaceRequest.get("/1/data/bigpost/{id}").backend(backend).routeParam("id", postId)
 					.go(200).objectNode();
@@ -162,7 +162,7 @@ public class ChauffeLeTestOften extends Assert {
 	public static class SmallPost implements ChauffeLeEngine {
 
 		@Override
-		public String createSubject(String subject, SpaceDogHelper.User user) throws Exception {
+		public String createSubject(String subject, SpaceClient.User user) throws Exception {
 
 			String smallPost = Json.objectBuilder().put("title", subject).build().toString();
 
@@ -171,7 +171,7 @@ public class ChauffeLeTestOften extends Assert {
 		}
 
 		@Override
-		public void addComment(String parentId, String comment, SpaceDogHelper.User user) throws Exception {
+		public void addComment(String parentId, String comment, SpaceClient.User user) throws Exception {
 
 			String smallPost = Json.objectBuilder().put("title", comment)//
 					.put("parent", parentId)//

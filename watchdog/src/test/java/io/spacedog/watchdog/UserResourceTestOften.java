@@ -10,9 +10,9 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.SpaceDogHelper;
-import io.spacedog.client.SpaceDogHelper.Backend;
-import io.spacedog.client.SpaceDogHelper.User;
+import io.spacedog.client.SpaceClient;
+import io.spacedog.client.SpaceClient.Backend;
+import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
@@ -24,11 +24,11 @@ public class UserResourceTestOften extends Assert {
 	public void dataEndpointsBehaveTheSameThanUserEnpoints() throws Exception {
 
 		// prepare
-		SpaceDogHelper.prepareTest();
-		Backend testBackend = SpaceDogHelper.resetTestBackend();
-		SpaceDogHelper.initUserDefaultSchema(testBackend);
-		User vince = SpaceDogHelper.createUser(testBackend, "vince", "hi vince");
-		SpaceDogHelper.createUser(testBackend, "fred", "hi fred");
+		SpaceClient.prepareTest();
+		Backend testBackend = SpaceClient.resetTestBackend();
+		SpaceClient.initUserDefaultSchema(testBackend);
+		User vince = SpaceClient.createUser(testBackend, "vince", "hi vince");
+		SpaceClient.createUser(testBackend, "fred", "hi fred");
 
 		// vince can login
 		SpaceRequest.get("/1/login").userAuth(vince).go(200);
@@ -67,9 +67,9 @@ public class UserResourceTestOften extends Assert {
 	@Test
 	public void userIsSigningUpAndMore() throws Exception {
 
-		SpaceDogHelper.prepareTest();
-		Backend testBackend = SpaceDogHelper.resetTestBackend();
-		SpaceDogHelper.initUserDefaultSchema(testBackend);
+		SpaceClient.prepareTest();
+		Backend testBackend = SpaceClient.resetTestBackend();
+		SpaceClient.initUserDefaultSchema(testBackend);
 
 		// fails since invalid users
 
@@ -98,7 +98,7 @@ public class UserResourceTestOften extends Assert {
 				.go(400);
 
 		// vince signs up
-		SpaceDogHelper.User vince = SpaceDogHelper.createUser(testBackend, "vince", "hi vince", "vince@dog.com");
+		SpaceClient.User vince = SpaceClient.createUser(testBackend, "vince", "hi vince", "vince@dog.com");
 
 		// vince gets his user data
 		ObjectNode res2 = SpaceRequest.get("/1/user/vince").userAuth(vince).go(200).objectNode();
@@ -138,11 +138,11 @@ public class UserResourceTestOften extends Assert {
 	public void usersCanReadOtherUsersPersonalData() throws Exception {
 
 		// prepare
-		SpaceDogHelper.prepareTest();
-		Backend testBackend = SpaceDogHelper.resetTestBackend();
-		SpaceDogHelper.initUserDefaultSchema(testBackend);
-		User fred = SpaceDogHelper.createUser(testBackend, "fred", "hi fred");
-		User vince = SpaceDogHelper.createUser(testBackend, "vince", "hi vince");
+		SpaceClient.prepareTest();
+		Backend testBackend = SpaceClient.resetTestBackend();
+		SpaceClient.initUserDefaultSchema(testBackend);
+		User fred = SpaceClient.createUser(testBackend, "fred", "hi fred");
+		User vince = SpaceClient.createUser(testBackend, "vince", "hi vince");
 
 		// anonymous fails to get vince user object
 		SpaceRequest.get("/1/user/vince").go(401);
@@ -165,10 +165,10 @@ public class UserResourceTestOften extends Assert {
 
 		// prepare
 
-		SpaceDogHelper.prepareTest();
-		SpaceDogHelper.Backend testBackend = SpaceDogHelper.resetTestBackend();
-		SpaceDogHelper.initUserDefaultSchema(testBackend);
-		SpaceDogHelper.createUser(testBackend, "toto", "hi toto", "toto@dog.com");
+		SpaceClient.prepareTest();
+		SpaceClient.Backend testBackend = SpaceClient.resetTestBackend();
+		SpaceClient.initUserDefaultSchema(testBackend);
+		SpaceClient.createUser(testBackend, "toto", "hi toto", "toto@dog.com");
 
 		// sign up without password should succeed
 
@@ -265,13 +265,13 @@ public class UserResourceTestOften extends Assert {
 	@Test
 	public void setUserCustomSchemaAndMore() throws Exception {
 
-		SpaceDogHelper.prepareTest();
-		Backend testBackend = SpaceDogHelper.resetTestBackend();
-		SpaceDogHelper.initUserDefaultSchema(testBackend);
+		SpaceClient.prepareTest();
+		Backend testBackend = SpaceClient.resetTestBackend();
+		SpaceClient.initUserDefaultSchema(testBackend);
 
 		// vince sign up should succeed
 
-		SpaceDogHelper.createUser(testBackend, "vince", "hi vince", "vince@dog.com");
+		SpaceClient.createUser(testBackend, "vince", "hi vince", "vince@dog.com");
 		SpaceRequest.get("/1/data?refresh=true").backend(testBackend).go(200)//
 				.assertEquals(1, "total");
 

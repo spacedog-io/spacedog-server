@@ -6,7 +6,7 @@ package io.spacedog.watchdog;
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.spacedog.client.SpaceDogHelper;
+import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceRequestConfiguration;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
@@ -17,7 +17,7 @@ public class HttpPermanentRedirectTest extends Assert {
 	@Test
 	public void beRedirectedToMainPort() throws Exception {
 
-		SpaceDogHelper.prepareTest();
+		SpaceClient.prepareTest();
 
 		// should redirect from http to https and get the root page
 

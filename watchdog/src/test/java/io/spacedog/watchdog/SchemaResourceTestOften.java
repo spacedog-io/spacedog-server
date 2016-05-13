@@ -8,9 +8,9 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.SpaceDogHelper;
-import io.spacedog.client.SpaceDogHelper.Backend;
-import io.spacedog.client.SpaceDogHelper.User;
+import io.spacedog.client.SpaceClient;
+import io.spacedog.client.SpaceClient.Backend;
+import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SchemaBuilder;
@@ -22,18 +22,18 @@ public class SchemaResourceTestOften extends Assert {
 	@Test
 	public void deletePutAndGetSchemas() throws Exception {
 
-		SpaceDogHelper.prepareTest();
-		Backend testBackend = SpaceDogHelper.resetTestBackend();
-		SpaceDogHelper.initUserDefaultSchema(testBackend);
+		SpaceClient.prepareTest();
+		Backend testBackend = SpaceClient.resetTestBackend();
+		SpaceClient.initUserDefaultSchema(testBackend);
 
 		// should succeed to create a user
 
-		User bob = SpaceDogHelper.createUser(testBackend, "bob", "hi bob", "bob@dog.com");
+		User bob = SpaceClient.createUser(testBackend, "bob", "hi bob", "bob@dog.com");
 
 		// should succeed to reset all schemas
-		SpaceDogHelper.setSchema(buildCarSchema(), testBackend);
-		SpaceDogHelper.setSchema(buildHomeSchema(), testBackend);
-		SpaceDogHelper.setSchema(buildSaleSchema(), testBackend);
+		SpaceClient.setSchema(buildCarSchema(), testBackend);
+		SpaceClient.setSchema(buildHomeSchema(), testBackend);
+		SpaceClient.setSchema(buildSaleSchema(), testBackend);
 
 		// should succeed to get schemas with simple backend key credentials
 		assertEquals(buildCarSchema(), //

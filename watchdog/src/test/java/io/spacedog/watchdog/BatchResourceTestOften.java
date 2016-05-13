@@ -9,8 +9,8 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.collect.Sets;
 
-import io.spacedog.client.SpaceDogHelper;
-import io.spacedog.client.SpaceDogHelper.Backend;
+import io.spacedog.client.SpaceClient;
+import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
 import io.spacedog.utils.Json;
@@ -27,8 +27,8 @@ public class BatchResourceTestOften extends Assert {
 		// we need to make sure the test account is reset and exists before to
 		// be able to reset it again by batch requests
 
-		SpaceDogHelper.prepareTest();
-		SpaceDogHelper.resetTestBackend();
+		SpaceClient.prepareTest();
+		SpaceClient.resetTestBackend();
 
 		// should succeed to reset test account and create message schema with
 		// admin credentials

@@ -9,8 +9,8 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import io.spacedog.client.SpaceDogHelper;
-import io.spacedog.client.SpaceDogHelper.Backend;
+import io.spacedog.client.SpaceClient;
+import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
 import io.spacedog.utils.BackendKey;
@@ -23,10 +23,10 @@ public class DataResourceTestOften extends Assert {
 	@Test
 	public void createFindUpdateAndDelete() throws Exception {
 
-		SpaceDogHelper.prepareTest();
-		Backend testBackend = SpaceDogHelper.resetTestBackend();
-		SpaceDogHelper.initUserDefaultSchema(testBackend);
-		SpaceDogHelper.setSchema(SchemaResourceTestOften.buildCarSchema(), testBackend);
+		SpaceClient.prepareTest();
+		Backend testBackend = SpaceClient.resetTestBackend();
+		SpaceClient.initUserDefaultSchema(testBackend);
+		SpaceClient.setSchema(SchemaResourceTestOften.buildCarSchema(), testBackend);
 
 		JsonNode car = Json.objectBuilder() //
 				.put("serialNumber", "1234567890") //
@@ -70,7 +70,7 @@ public class DataResourceTestOften extends Assert {
 
 		// create user vince
 
-		SpaceDogHelper.User vince = SpaceDogHelper.createUser(testBackend, "vince", "hi vince", "vince@spacedog.io");
+		SpaceClient.User vince = SpaceClient.createUser(testBackend, "vince", "hi vince", "vince@spacedog.io");
 
 		// update
 

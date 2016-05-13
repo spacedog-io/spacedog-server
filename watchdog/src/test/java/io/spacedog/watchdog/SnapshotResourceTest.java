@@ -7,8 +7,8 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.SpaceDogHelper;
-import io.spacedog.client.SpaceDogHelper.Backend;
+import io.spacedog.client.SpaceClient;
+import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
 
@@ -18,18 +18,18 @@ public class SnapshotResourceTest extends Assert {
 	public void snapshotAndRestoreMultipleTimes() throws Exception {
 
 		// prepare
-		SpaceDogHelper.prepareTest();
+		SpaceClient.prepareTest();
 		Backend aaaaBackend = new Backend("aaaa", "aaaa", "hi aaaa", "aaaa@dog.com");
 		Backend bbbbBackend = new Backend("bbbb", "bbbb", "hi bbbb", "bbbb@dog.com");
 		Backend ccccBackend = new Backend("cccc", "cccc", "hi cccc", "cccc@dog.com");
-		SpaceDogHelper.deleteBackend(aaaaBackend);
-		SpaceDogHelper.deleteBackend(bbbbBackend);
-		SpaceDogHelper.deleteBackend(ccccBackend);
+		SpaceClient.deleteBackend(aaaaBackend);
+		SpaceClient.deleteBackend(bbbbBackend);
+		SpaceClient.deleteBackend(ccccBackend);
 
 		// creates backend and user
-		SpaceDogHelper.createBackend(aaaaBackend);
-		SpaceDogHelper.initUserDefaultSchema(aaaaBackend);
-		SpaceDogHelper.createUser(aaaaBackend, "vince", "hi vince");
+		SpaceClient.createBackend(aaaaBackend);
+		SpaceClient.initUserDefaultSchema(aaaaBackend);
+		SpaceClient.createUser(aaaaBackend, "vince", "hi vince");
 		SpaceRequest.get("/1/user/vince").adminAuth(aaaaBackend).go(200);
 
 		// deletes the current repository to force repo creation by this test
@@ -74,9 +74,9 @@ public class SnapshotResourceTest extends Assert {
 				.assertEquals(firstSnap);
 
 		// creates another backend and user
-		SpaceDogHelper.createBackend(bbbbBackend);
-		SpaceDogHelper.initUserDefaultSchema(bbbbBackend);
-		SpaceDogHelper.createUser(bbbbBackend, "fred", "hi fred");
+		SpaceClient.createBackend(bbbbBackend);
+		SpaceClient.initUserDefaultSchema(bbbbBackend);
+		SpaceClient.createUser(bbbbBackend, "fred", "hi fred");
 		SpaceRequest.get("/1/user/fred").adminAuth(bbbbBackend).go(200);
 
 		// second snapshot (returns 201 since wait for completion true, 202
@@ -99,9 +99,9 @@ public class SnapshotResourceTest extends Assert {
 				.assertEquals(firstSnap, "results.1");
 
 		// create another account and add a user
-		SpaceDogHelper.createBackend(ccccBackend);
-		SpaceDogHelper.initUserDefaultSchema(ccccBackend);
-		SpaceDogHelper.createUser(ccccBackend, "nath", "hi nath");
+		SpaceClient.createBackend(ccccBackend);
+		SpaceClient.initUserDefaultSchema(ccccBackend);
+		SpaceClient.createUser(ccccBackend, "nath", "hi nath");
 		SpaceRequest.get("/1/user/nath").adminAuth(ccccBackend).go(200);
 
 		// third snapshot (returns 200 since wait for completion true, 202

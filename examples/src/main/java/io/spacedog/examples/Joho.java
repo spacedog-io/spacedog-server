@@ -12,14 +12,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.io.Resources;
 
-import io.spacedog.client.SpaceDogHelper;
+import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.services.UserResource;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SchemaBuilder2;
 
-public class Joho extends SpaceDogHelper {
+public class Joho extends SpaceClient {
 
 	public final static Backend JOHO2 = new Backend("joho2", "joho", "hi joho", "david@spacedog.io");
 	public final static Backend JOHORECETTE = new Backend("johorecette", "johorecette", "hi johorecette",

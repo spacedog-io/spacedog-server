@@ -8,9 +8,9 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.SpaceDogHelper;
-import io.spacedog.client.SpaceDogHelper.Backend;
-import io.spacedog.client.SpaceDogHelper.User;
+import io.spacedog.client.SpaceClient;
+import io.spacedog.client.SpaceClient.Backend;
+import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
@@ -21,8 +21,8 @@ public class BackendResourceTestOften extends Assert {
 	@Test
 	public void deleteSignUpGetLoginTestBackend() throws Exception {
 
-		SpaceDogHelper.prepareTest();
-		Backend testBackend = SpaceDogHelper.resetTestBackend();
+		SpaceClient.prepareTest();
+		Backend testBackend = SpaceClient.resetTestBackend();
 
 		// gets backend info
 
@@ -43,7 +43,7 @@ public class BackendResourceTestOften extends Assert {
 
 		// creates new backend with different id but same username
 
-		SpaceDogHelper.resetBackend("test1", "test", "hi test");
+		SpaceClient.resetBackend("test1", "test", "hi test");
 
 		// fails to create new backend with non available id
 
@@ -82,8 +82,8 @@ public class BackendResourceTestOften extends Assert {
 
 		// let's create a common user
 
-		SpaceDogHelper.initUserDefaultSchema(testBackend);
-		User john = SpaceDogHelper.createUser(testBackend, "john", "hi john", "john@dog.io");
+		SpaceClient.initUserDefaultSchema(testBackend);
+		User john = SpaceClient.createUser(testBackend, "john", "hi john", "john@dog.io");
 
 		// user fails to get backend data since it is restricted to admins
 
@@ -96,9 +96,9 @@ public class BackendResourceTestOften extends Assert {
 
 		// prepare
 
-		SpaceDogHelper.prepareTest();
-		Backend aaaa = SpaceDogHelper.resetBackend("aaaa", "aaaa", "hi aaaa");
-		Backend zzzz = SpaceDogHelper.resetBackend("zzzz", "zzzz", "hi zzzz");
+		SpaceClient.prepareTest();
+		Backend aaaa = SpaceClient.resetBackend("aaaa", "aaaa", "hi aaaa");
+		Backend zzzz = SpaceClient.resetBackend("zzzz", "zzzz", "hi zzzz");
 
 		// super admin gets his backend
 
@@ -138,7 +138,7 @@ public class BackendResourceTestOften extends Assert {
 	public void invalidBackendIdentifiers() throws Exception {
 
 		// prepare
-		SpaceDogHelper.deleteTestBackend();
+		SpaceClient.deleteTestBackend();
 		ObjectNode body = Json.object("username", "test", //
 				"password", "hi test", "email", "hello@spacedog.io");
 

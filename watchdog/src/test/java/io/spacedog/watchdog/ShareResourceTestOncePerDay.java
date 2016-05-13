@@ -14,9 +14,9 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
-import io.spacedog.client.SpaceDogHelper;
-import io.spacedog.client.SpaceDogHelper.Backend;
-import io.spacedog.client.SpaceDogHelper.User;
+import io.spacedog.client.SpaceClient;
+import io.spacedog.client.SpaceClient.Backend;
+import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceHeaders;
@@ -31,10 +31,10 @@ public class ShareResourceTestOncePerDay {
 	public void shareListAndGetFiles() throws Exception {
 
 		// prepare
-		Backend testBackend = SpaceDogHelper.resetTestBackend();
-		SpaceDogHelper.initUserDefaultSchema(testBackend);
-		User vince = SpaceDogHelper.createUser(testBackend, "vince", "hi vince", "vince@dog.com");
-		User fred = SpaceDogHelper.createUser(testBackend, "fred", "hi fred", "fred@dog.com");
+		Backend testBackend = SpaceClient.resetTestBackend();
+		SpaceClient.initUserDefaultSchema(testBackend);
+		User vince = SpaceClient.createUser(testBackend, "vince", "hi vince", "vince@dog.com");
+		User fred = SpaceClient.createUser(testBackend, "fred", "hi fred", "fred@dog.com");
 
 		// only admin can get all shared locations
 		SpaceRequest.get("/1/share").go(401);

@@ -3,8 +3,8 @@ package io.spacedog.watchdog;
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.spacedog.client.SpaceDogHelper;
-import io.spacedog.client.SpaceDogHelper.Backend;
+import io.spacedog.client.SpaceClient;
+import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
@@ -14,8 +14,8 @@ public class MailResourceTestOncePerDay extends Assert {
 	@Test
 	public void postMails() throws Exception {
 
-		SpaceDogHelper.prepareTest();
-		Backend account = SpaceDogHelper.resetTestBackend();
+		SpaceClient.prepareTest();
+		Backend account = SpaceClient.resetTestBackend();
 
 		// should succeed to mail a simple text message
 

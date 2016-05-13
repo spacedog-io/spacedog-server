@@ -3,9 +3,9 @@ package io.spacedog.watchdog;
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.spacedog.client.SpaceDogHelper;
-import io.spacedog.client.SpaceDogHelper.Backend;
-import io.spacedog.client.SpaceDogHelper.User;
+import io.spacedog.client.SpaceClient;
+import io.spacedog.client.SpaceClient.Backend;
+import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SchemaBuilder2;
@@ -17,23 +17,23 @@ public class LogResourceTestOften extends Assert {
 	@Test
 	public void doAFewThingsAndGetTheLogs() throws Exception {
 
-		SpaceDogHelper.prepareTest();
+		SpaceClient.prepareTest();
 
 		// create a test account
-		Backend testBackend = SpaceDogHelper.resetTestBackend();
+		Backend testBackend = SpaceClient.resetTestBackend();
 
 		// create test2 account
-		Backend test2Backend = SpaceDogHelper.resetBackend("test2", "test2", "hi test2");
+		Backend test2Backend = SpaceClient.resetBackend("test2", "test2", "hi test2");
 
 		// create message schema in test backend
-		SpaceDogHelper.setSchema(//
+		SpaceClient.setSchema(//
 				SchemaBuilder2.builder("message")//
 						.textProperty("text", "english", true).build(),
 				testBackend);
 
 		// create a user in test2 backend
-		SpaceDogHelper.initUserDefaultSchema(test2Backend);
-		SpaceDogHelper.createUser(test2Backend, "fred", "hi fred", "fred@dog.com");
+		SpaceClient.initUserDefaultSchema(test2Backend);
+		SpaceClient.createUser(test2Backend, "fred", "hi fred", "fred@dog.com");
 
 		// create message in test backend
 		String id = SpaceRequest.post("/1/data/message")//
@@ -47,8 +47,8 @@ public class LogResourceTestOften extends Assert {
 		SpaceRequest.get("/1/data/message/" + id).backend(testBackend).go(200);
 
 		// create user in test backend
-		SpaceDogHelper.initUserDefaultSchema(testBackend);
-		User vince = SpaceDogHelper.createUser(testBackend, "vince", "hi vince", "vince@dog.com");
+		SpaceClient.initUserDefaultSchema(testBackend);
+		User vince = SpaceClient.createUser(testBackend, "vince", "hi vince", "vince@dog.com");
 
 		// find all messages in test backend
 		SpaceRequest.get("/1/data/message").backend(testBackend).userAuth(vince).go(200);
@@ -90,20 +90,20 @@ public class LogResourceTestOften extends Assert {
 				// and 401 requests are not associated with any backend
 
 		// after account deletion, logs are not accessible to account
-		SpaceDogHelper.deleteBackend(testBackend);
+		SpaceClient.deleteBackend(testBackend);
 		SpaceRequest.get("/1/log").adminAuth(testBackend).go(401);
 
-		SpaceDogHelper.deleteBackend(test2Backend);
+		SpaceClient.deleteBackend(test2Backend);
 		SpaceRequest.get("/1/log").adminAuth(test2Backend).go(401);
 	}
 
 	@Test
 	public void checkPasswordsAreNotLogged() throws Exception {
 
-		SpaceDogHelper.prepareTest();
-		Backend testBackend = SpaceDogHelper.resetTestBackend();
-		SpaceDogHelper.initUserDefaultSchema(testBackend);
-		SpaceDogHelper.createUser(testBackend, "fred", "hi fred", "fred@dog.com");
+		SpaceClient.prepareTest();
+		Backend testBackend = SpaceClient.resetTestBackend();
+		SpaceClient.initUserDefaultSchema(testBackend);
+		SpaceClient.createUser(testBackend, "fred", "hi fred", "fred@dog.com");
 
 		String passwordResetCode = SpaceRequest.delete("/1/user/fred/password")//
 				.adminAuth(testBackend).go(200).getFromJson("passwordResetCode").asText();
@@ -141,10 +141,10 @@ public class LogResourceTestOften extends Assert {
 	public void deleteObsoleteLogs() throws Exception {
 
 		// prepare
-		SpaceDogHelper.prepareTest();
-		Backend testBackend = SpaceDogHelper.resetTestBackend();
-		SpaceDogHelper.initUserDefaultSchema(testBackend);
-		SpaceDogHelper.createUser(testBackend, "fred", "hi fred", "fred@dog.com");
+		SpaceClient.prepareTest();
+		Backend testBackend = SpaceClient.resetTestBackend();
+		SpaceClient.initUserDefaultSchema(testBackend);
+		SpaceClient.createUser(testBackend, "fred", "hi fred", "fred@dog.com");
 		for (int i = 0; i < 5; i++)
 			SpaceRequest.get("/1/data").adminAuth(testBackend).go(200);
 
@@ -177,16 +177,16 @@ public class LogResourceTestOften extends Assert {
 	@Test
 	public void superdogsCanBrowseAllAccountLogs() throws Exception {
 
-		SpaceDogHelper.prepareTest();
+		SpaceClient.prepareTest();
 
 		// create test accounts and users
-		Backend testBackend = SpaceDogHelper.resetTestBackend();
-		SpaceDogHelper.initUserDefaultSchema(testBackend);
-		SpaceDogHelper.createUser(testBackend, "vince", "hi vince", "vince@dog.com");
+		Backend testBackend = SpaceClient.resetTestBackend();
+		SpaceClient.initUserDefaultSchema(testBackend);
+		SpaceClient.createUser(testBackend, "vince", "hi vince", "vince@dog.com");
 
-		Backend test2Backend = SpaceDogHelper.resetBackend("test2", "test2", "hi test2", "test2@dog.com");
-		SpaceDogHelper.initUserDefaultSchema(test2Backend);
-		SpaceDogHelper.createUser(test2Backend, "fred", "hi fred", "fred@dog.com");
+		Backend test2Backend = SpaceClient.resetBackend("test2", "test2", "hi test2", "test2@dog.com");
+		SpaceClient.initUserDefaultSchema(test2Backend);
+		SpaceClient.createUser(test2Backend, "fred", "hi fred", "fred@dog.com");
 
 		// get all test account logs
 		SpaceRequest.get("/1/log?size=3")//
@@ -247,8 +247,8 @@ public class LogResourceTestOften extends Assert {
 				.assertEquals("/1/backend", "results.9.path");
 
 		// after account deletion, logs are still accessible to superdogs
-		SpaceDogHelper.deleteBackend(testBackend);
-		SpaceDogHelper.deleteBackend(test2Backend);
+		SpaceClient.deleteBackend(testBackend);
+		SpaceClient.deleteBackend(test2Backend);
 		SpaceRequest.get("/1/log?size=3")//
 				.superdogAuth()//
 				.go(200)//

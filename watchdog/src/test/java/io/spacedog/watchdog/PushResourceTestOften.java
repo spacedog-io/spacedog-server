@@ -9,9 +9,9 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.SpaceDogHelper;
-import io.spacedog.client.SpaceDogHelper.Backend;
-import io.spacedog.client.SpaceDogHelper.User;
+import io.spacedog.client.SpaceClient;
+import io.spacedog.client.SpaceClient.Backend;
+import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
@@ -40,14 +40,14 @@ public class PushResourceTestOften extends Assert {
 	public void usersInstallAppAndPush() throws Exception {
 
 		// prepare
-		SpaceDogHelper.prepareTest();
-		Backend testBackend = SpaceDogHelper.resetTestBackend();
-		SpaceDogHelper.initPushDefaultSchema(testBackend);
-		SpaceDogHelper.initUserDefaultSchema(testBackend);
-		User dave = SpaceDogHelper.createUser(testBackend, "dave", "hi dave");
-		User vince = SpaceDogHelper.createUser(testBackend, "vince", "hi vince");
-		User fred = SpaceDogHelper.createUser(testBackend, "fred", "hi fred");
-		User nath = SpaceDogHelper.createUser(testBackend, "nath", "hi nath");
+		SpaceClient.prepareTest();
+		Backend testBackend = SpaceClient.resetTestBackend();
+		SpaceClient.initPushDefaultSchema(testBackend);
+		SpaceClient.initUserDefaultSchema(testBackend);
+		User dave = SpaceClient.createUser(testBackend, "dave", "hi dave");
+		User vince = SpaceClient.createUser(testBackend, "vince", "hi vince");
+		User fred = SpaceClient.createUser(testBackend, "fred", "hi fred");
+		User nath = SpaceClient.createUser(testBackend, "nath", "hi nath");
 
 		// unauthenticated user installs joho
 		// and fails to set installation userId and endpoint fields

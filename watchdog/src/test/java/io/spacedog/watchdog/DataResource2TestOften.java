@@ -11,8 +11,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
-import io.spacedog.client.SpaceDogHelper;
-import io.spacedog.client.SpaceDogHelper.Backend;
+import io.spacedog.client.SpaceClient;
+import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
 import io.spacedog.utils.BackendKey;
@@ -26,9 +26,9 @@ public class DataResource2TestOften extends Assert {
 	@Test
 	public void createSearchUpdateAndDeleteSales() throws Exception {
 
-		SpaceDogHelper.prepareTest();
-		Backend testBackend = SpaceDogHelper.resetTestBackend();
-		SpaceDogHelper.setSchema(SchemaResourceTestOften.buildSaleSchema(), testBackend);
+		SpaceClient.prepareTest();
+		Backend testBackend = SpaceClient.resetTestBackend();
+		SpaceClient.setSchema(SchemaResourceTestOften.buildSaleSchema(), testBackend);
 
 		ObjectNode sale = Json.objectBuilder()//
 				.put("number", "1234567890")//
@@ -121,8 +121,8 @@ public class DataResource2TestOften extends Assert {
 
 		// create user vince
 
-		SpaceDogHelper.initUserDefaultSchema(testBackend);
-		SpaceDogHelper.User vince = SpaceDogHelper.createUser(testBackend, "vince", "hi vince", "vince@dog.com");
+		SpaceClient.initUserDefaultSchema(testBackend);
+		SpaceClient.User vince = SpaceClient.createUser(testBackend, "vince", "hi vince", "vince@dog.com");
 
 		// small update no version should succeed
 
@@ -202,16 +202,16 @@ public class DataResource2TestOften extends Assert {
 
 		// prepare
 
-		SpaceDogHelper.prepareTest();
-		Backend testBackend = SpaceDogHelper.resetTestBackend();
-		SpaceDogHelper.initUserDefaultSchema(testBackend);
+		SpaceClient.prepareTest();
+		Backend testBackend = SpaceClient.resetTestBackend();
+		SpaceClient.initUserDefaultSchema(testBackend);
 		ObjectNode schema = SchemaBuilder2.builder("message")//
 				.textProperty("text", "english", true).build();
-		SpaceDogHelper.setSchema(schema, testBackend);
+		SpaceClient.setSchema(schema, testBackend);
 
 		// should successfully create 4 messages and 1 user
 
-		SpaceDogHelper.createUser(testBackend, "riri", "hi riri", "riri@dog.com");
+		SpaceClient.createUser(testBackend, "riri", "hi riri", "riri@dog.com");
 
 		SpaceRequest.post("/1/data/message").adminAuth(testBackend)
 				.body(Json.objectBuilder().put("text", "what's up?").build()).go(201);
@@ -240,12 +240,12 @@ public class DataResource2TestOften extends Assert {
 	@Test
 	public void testAllObjectIdStrategies() throws Exception {
 
-		SpaceDogHelper.prepareTest();
-		Backend testBackend = SpaceDogHelper.resetTestBackend();
+		SpaceClient.prepareTest();
+		Backend testBackend = SpaceClient.resetTestBackend();
 
 		// creates msg1 schema with auto generated id strategy
 
-		SpaceDogHelper.setSchema(SchemaBuilder2.builder("msg1")//
+		SpaceClient.setSchema(SchemaBuilder2.builder("msg1")//
 				.stringProperty("text", true).build(), testBackend);
 
 		// creates a msg1 object with auto generated id
@@ -267,7 +267,7 @@ public class DataResource2TestOften extends Assert {
 
 		// creates msg2 schema with id pointing to code
 
-		SpaceDogHelper.setSchema(SchemaBuilder2.builder("msg2", "code")//
+		SpaceClient.setSchema(SchemaBuilder2.builder("msg2", "code")//
 				.stringProperty("code", true)//
 				.stringProperty("text", true).build(), testBackend);
 

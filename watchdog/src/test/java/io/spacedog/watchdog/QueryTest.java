@@ -14,7 +14,7 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
-import io.spacedog.client.SpaceDogHelper;
+import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.GeoPoint;
 import io.spacedog.utils.Json;
@@ -24,10 +24,10 @@ public class QueryTest extends Assert {
 	@Test
 	public void importCarDataset() throws Exception {
 
-		SpaceDogHelper.prepareTest();
-		SpaceDogHelper.Backend testBackend = SpaceDogHelper.resetTestBackend();
+		SpaceClient.prepareTest();
+		SpaceClient.Backend testBackend = SpaceClient.resetTestBackend();
 
-		SpaceDogHelper.setSchema(SchemaResourceTestOften.buildCarSchema(), testBackend);
+		SpaceClient.setSchema(SchemaResourceTestOften.buildCarSchema(), testBackend);
 
 		for (int i = 0; i < 500; i++) {
 			SpaceRequest.post("/1/data/car").backend(testBackend).body(jsonCar(i).toString()).go(201);

@@ -6,8 +6,8 @@ package io.spacedog.watchdog;
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.spacedog.client.SpaceDogHelper;
-import io.spacedog.client.SpaceDogHelper.Backend;
+import io.spacedog.client.SpaceClient;
+import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
@@ -17,8 +17,8 @@ public class ServiceErrorFilterTestOften extends Assert {
 	@Test
 	public void catchesFluentResourceErrors() throws Exception {
 
-		SpaceDogHelper.prepareTest();
-		Backend testBackend = SpaceDogHelper.resetTestBackend();
+		SpaceClient.prepareTest();
+		Backend testBackend = SpaceClient.resetTestBackend();
 
 		// should fail to access invalid route
 

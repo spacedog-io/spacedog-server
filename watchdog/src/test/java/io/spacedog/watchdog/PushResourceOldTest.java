@@ -7,7 +7,7 @@ import org.junit.Assert;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.SpaceDogHelper;
+import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SchemaBuilder;
@@ -18,13 +18,13 @@ public class PushResourceOldTest extends Assert {
 	public void subscribeToTopicsAndPush() throws Exception {
 
 		// prepare
-		SpaceDogHelper.prepareTest();
-		SpaceDogHelper.Backend testBackend = SpaceDogHelper.resetTestBackend();
-		SpaceDogHelper.setSchema(buildSchema(), testBackend);
-		SpaceDogHelper.User vince = SpaceDogHelper.createUser(testBackend, "vince", "hi vince", "david@spacedog.io");
-		SpaceDogHelper.User nath = SpaceDogHelper.createUser(testBackend, "nath", "hi nath", "attias666@gmail.com");
-		SpaceDogHelper.User fred = SpaceDogHelper.createUser(testBackend, "fred", "hi fred", "davattias@gmail.com");
-		SpaceDogHelper.User philippe = SpaceDogHelper.createUser(testBackend, "philippe", "hi philippe",
+		SpaceClient.prepareTest();
+		SpaceClient.Backend testBackend = SpaceClient.resetTestBackend();
+		SpaceClient.setSchema(buildSchema(), testBackend);
+		SpaceClient.User vince = SpaceClient.createUser(testBackend, "vince", "hi vince", "david@spacedog.io");
+		SpaceClient.User nath = SpaceClient.createUser(testBackend, "nath", "hi nath", "attias666@gmail.com");
+		SpaceClient.User fred = SpaceClient.createUser(testBackend, "fred", "hi fred", "davattias@gmail.com");
+		SpaceClient.User philippe = SpaceClient.createUser(testBackend, "philippe", "hi philippe",
 				"davattias@gmail.com");
 
 		// subscribe

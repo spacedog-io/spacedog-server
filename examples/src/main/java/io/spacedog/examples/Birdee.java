@@ -9,13 +9,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.SpaceDogHelper;
+import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SchemaBuilder2;
 
-public class Birdee extends SpaceDogHelper {
+public class Birdee extends SpaceClient {
 
 	private static final String BACKEND_ID = "birdee-dev";
 	private static final String ADMIN_PASSWORD = "hi birdee";

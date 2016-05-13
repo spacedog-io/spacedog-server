@@ -8,8 +8,8 @@ import org.junit.Assert;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.SpaceDogHelper;
-import io.spacedog.client.SpaceDogHelper.Backend;
+import io.spacedog.client.SpaceClient;
+import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
@@ -23,7 +23,7 @@ public class ImportMappyPlaces extends Assert {
 		try {
 
 			SpaceRequest.setForTestingDefault(false);
-			SpaceDogHelper.resetBackend(backend);
+			SpaceClient.resetBackend(backend);
 			SpaceRequest.post("/1/schema/resto").adminAuth(backend).body(buildRestoSchema()).go(201);
 
 			double step = 0.01;

@@ -8,8 +8,8 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.SpaceDogHelper;
-import io.spacedog.client.SpaceDogHelper.Backend;
+import io.spacedog.client.SpaceClient;
+import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SchemaBuilder2;
@@ -23,22 +23,22 @@ public class SearchResourceTestOften extends Assert {
 
 		// prepare
 
-		SpaceDogHelper.prepareTest();
+		SpaceClient.prepareTest();
 
-		Backend testBackend = SpaceDogHelper.resetTestBackend();
-		SpaceDogHelper.initUserDefaultSchema(testBackend);
+		Backend testBackend = SpaceClient.resetTestBackend();
+		SpaceClient.initUserDefaultSchema(testBackend);
 
 		ObjectNode message = SchemaBuilder2.builder("message")//
 				.textProperty("text", "english", true).build();
-		SpaceDogHelper.setSchema(message, testBackend);
+		SpaceClient.setSchema(message, testBackend);
 
 		ObjectNode rubric = SchemaBuilder2.builder("rubric")//
 				.textProperty("name", "english", true).build();
-		SpaceDogHelper.setSchema(rubric, testBackend);
+		SpaceClient.setSchema(rubric, testBackend);
 
 		// creates 4 messages, 1 rubric and 1 user
 
-		SpaceDogHelper.createUser(testBackend, "riri", "hi riri", "riri@disney.com");
+		SpaceClient.createUser(testBackend, "riri", "hi riri", "riri@disney.com");
 
 		SpaceRequest.post("/1/data/rubric").adminAuth(testBackend)//
 				.body(Json.object("name", "riri, fifi and loulou")).go(201);
@@ -77,17 +77,17 @@ public class SearchResourceTestOften extends Assert {
 
 		// prepare backend
 
-		SpaceDogHelper.prepareTest();
-		Backend testBackend = SpaceDogHelper.resetTestBackend();
-		SpaceDogHelper.initUserDefaultSchema(testBackend);
+		SpaceClient.prepareTest();
+		Backend testBackend = SpaceClient.resetTestBackend();
+		SpaceClient.initUserDefaultSchema(testBackend);
 
 		// creates 5 users but whith only 3 distinct emails
 
-		SpaceDogHelper.createUser(testBackend, "riri", "hi riri", "hello@disney.com");
-		SpaceDogHelper.createUser(testBackend, "fifi", "hi fifi", "hello@disney.com");
-		SpaceDogHelper.createUser(testBackend, "loulou", "hi loulou", "hello@disney.com");
-		SpaceDogHelper.createUser(testBackend, "donald", "hi donald", "donald@disney.com");
-		SpaceDogHelper.createUser(testBackend, "mickey", "hi mickey", "mickey@disney.com");
+		SpaceClient.createUser(testBackend, "riri", "hi riri", "hello@disney.com");
+		SpaceClient.createUser(testBackend, "fifi", "hi fifi", "hello@disney.com");
+		SpaceClient.createUser(testBackend, "loulou", "hi loulou", "hello@disney.com");
+		SpaceClient.createUser(testBackend, "donald", "hi donald", "donald@disney.com");
+		SpaceClient.createUser(testBackend, "mickey", "hi mickey", "mickey@disney.com");
 
 		// search with 'terms' aggregation to get
 		// all 3 distinct emails hello, donald and mickey @disney.com
