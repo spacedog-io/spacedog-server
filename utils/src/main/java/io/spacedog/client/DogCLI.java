@@ -4,7 +4,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
 import com.google.common.base.Strings;
 
-public class DogCli {
+public class DogCLI {
 
 	public static void main(String... args) throws Exception {
 
