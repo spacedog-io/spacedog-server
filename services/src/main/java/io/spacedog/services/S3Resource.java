@@ -26,6 +26,7 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
+import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Uris;
@@ -181,6 +182,9 @@ public class S3Resource extends Resource {
 
 	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, String[] path, byte[] bytes,
 			Context context) {
+
+		if (path.length < 2)
+			throw Exceptions.illegalArgument("no prefix in file path [%s]", Uris.join(path));
 
 		String fileName = path[path.length - 1];
 		String bucketName = getBucketName(bucketSuffix);

@@ -35,13 +35,15 @@ public class WebResource extends S3Resource {
 			@Override
 			public Payload apply(String uri, Context context, PayloadSupplier nextFilter) throws Exception {
 
-				if (HttpMethod.GET.name().equals(context.method()))
+				String method = context.method();
+
+				if (HttpMethod.GET.name().equals(method))
 					return doGet(toWebPath(uri), context);
 
-				if (HttpMethod.HEAD.name().equals(context.method()))
+				if (HttpMethod.HEAD.name().equals(method))
 					return doHead(toWebPath(uri), context);
 
-				throw Exceptions.runtime("path [%s] invalid for method [%s]", uri, context.method());
+				throw Exceptions.runtime("path [%s] invalid for method [%s]", uri, method);
 			}
 
 		};
@@ -53,7 +55,12 @@ public class WebResource extends S3Resource {
 
 	private Payload doGet(String[] path, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
-		Optional<Payload> payload = doGet(FileResource.FILE_BUCKET_SUFFIX, credentials.backendId(), path, context);
+
+		if (path.length == 0)
+			throw Exceptions.illegalArgument("web prefix not specified");
+
+		Optional<Payload> payload = doGet(FileResource.FILE_BUCKET_SUFFIX, //
+				credentials.backendId(), path, context);
 
 		if (payload.isPresent())
 			return payload.get();
@@ -65,7 +72,7 @@ public class WebResource extends S3Resource {
 			return payload.get();
 
 		payload = doGet(FileResource.FILE_BUCKET_SUFFIX, credentials.backendId(), //
-				new String[] { "404.html" }, context);
+				new String[] { path[0], "404.html" }, context);
 
 		if (payload.isPresent())
 			return payload.get().withCode(HttpStatus.NOT_FOUND);

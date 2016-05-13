@@ -25,58 +25,68 @@ public class WebResourceTest {
 		SpaceRequest.get("/1/file").adminAuth(testBackend).go(200)//
 				.assertSizeEquals(0, "results");
 
-		// upload web site
-		upload("/index.html");
-		upload("/toto.html");
-		upload("/404.html", HTML_404);
-		upload("/a/b/index.html");
-		upload("/a/b/toto.html");
+		// upload without prefix is illegal
+		SpaceRequest.put("/1/file/XXX.html").adminAuth(testBackend)//
+				.body("<h1>Hello</h1>").go(400);
 
-		// browse web pages
-		browse("/index.html");
-		browse("/toto.html");
-		browse("", html("/index.html"));
-		browse("/", html("/index.html"));
-		browse("/a/b/index.html");
-		browse("/a/b/toto.html");
-		browse("/a/b", html("/a/b/index.html"));
-		browse("/a/b/", html("/a/b/index.html"));
+		// admin uploads web site at prefix 'www'
+		upload("www", "/index.html");
+		upload("www", "/toto.html");
+		upload("www", "/a/b/index.html");
+		upload("www", "/a/b/toto.html");
 
-		// get 404 for bad uris
-		notFound("/index");
-		notFound("/c");
-		notFound("/a/");
-		notFound("/a/b/c/index.html");
+		// anonymous user can browse 'www' pages
+		browse("www", "/index.html");
+		browse("www", "/toto.html");
+		browse("www", "", html("/index.html"));
+		browse("www", "/", html("/index.html"));
+		browse("www", "/a/b/index.html");
+		browse("www", "/a/b/toto.html");
+		browse("www", "/a/b", html("/a/b/index.html"));
+		browse("www", "/a/b/", html("/a/b/index.html"));
+
+		// admin uploads custom 404.html file to 'www'
+		upload("www", "/404.html", HTML_404);
+
+		// if users browses invalid 'www' URIs
+		// the server returns 'www' custom 404 file
+		notFound("www", "/index");
+		notFound("www", "/c");
+		notFound("www", "/a/");
+		notFound("www", "/a/b/c/index.html");
+
+		// browse without prefix is illegal
+		SpaceRequest.get("/1/web").backend(testBackend).go(400);
 	}
 
-	private void upload(String uri) throws Exception {
-		upload(uri, html(uri));
+	private void upload(String prefix, String uri) throws Exception {
+		upload(prefix, uri, html(uri));
 	}
 
-	private void upload(String uri, String html) throws Exception {
-		SpaceRequest.put("/1/file" + uri).adminAuth(testBackend).body(html).go(200);
+	private void upload(String prefix, String uri, String html) throws Exception {
+		SpaceRequest.put("/1/file/" + prefix + uri).adminAuth(testBackend).body(html).go(200);
 	}
 
 	private String html(String uri) {
 		return String.format("<h1>This is %s</h1>", uri);
 	}
 
-	private void browse(String uri) throws Exception {
-		browse(uri, html(uri), "text/html");
+	private void browse(String prefix, String uri) throws Exception {
+		browse(prefix, uri, html(uri), "text/html");
 	}
 
-	private void browse(String uri, String expectedBody) throws Exception {
-		browse(uri, expectedBody, "text/html");
+	private void browse(String prefix, String uri, String expectedBody) throws Exception {
+		browse(prefix, uri, expectedBody, "text/html");
 	}
 
-	private void browse(String uri, String expectedBody, String expectedContentType) throws Exception {
-		SpaceRequest.get("/1/web" + uri).backend(testBackend).go(200)//
+	private void browse(String prefix, String uri, String expectedBody, String expectedContentType) throws Exception {
+		SpaceRequest.get("/1/web/" + prefix + uri).backend(testBackend).go(200)//
 				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE)//
 				.assertBodyEquals(expectedBody);
 	}
 
-	private void notFound(String uri) throws Exception {
-		SpaceRequest.get("/1/web" + uri).backend(testBackend).go(404)//
+	private void notFound(String prefix, String uri) throws Exception {
+		SpaceRequest.get("/1/web/" + prefix + uri).backend(testBackend).go(404)//
 				.assertHeaderEquals("text/html", SpaceHeaders.CONTENT_TYPE)//
 				.assertBodyEquals(HTML_404);
 	}

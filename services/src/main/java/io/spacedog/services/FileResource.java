@@ -35,16 +35,18 @@ public class FileResource extends S3Resource {
 			@Override
 			public Payload apply(String uri, Context context, PayloadSupplier nextFilter) throws Exception {
 
-				if (HttpMethod.GET.name().equals(context.method()))
+				String method = context.method();
+
+				if (HttpMethod.GET.name().equals(method))
 					return get(toWebPath(uri), context);
 
-				if (HttpMethod.PUT.name().equals(context.method()))
+				if (HttpMethod.PUT.name().equals(method))
 					return put(toWebPath(uri), context.request().contentAsBytes(), context);
 
-				if (HttpMethod.DELETE.name().equals(context.method()))
+				if (HttpMethod.DELETE.name().equals(method))
 					return delete(toWebPath(uri));
 
-				throw Exceptions.runtime("path [%s] invalid for method [%s]", uri, context.method());
+				throw Exceptions.runtime("path [%s] invalid for method [%s]", uri, method);
 			}
 
 		};
