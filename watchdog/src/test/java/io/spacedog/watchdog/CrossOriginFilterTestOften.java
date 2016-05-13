@@ -13,7 +13,7 @@ import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
-public class CrossOriginFilterTest extends Assert {
+public class CrossOriginFilterTestOften extends Assert {
 
 	@Test
 	public void returnCORSHeaders() throws Exception {

@@ -1,4 +1,4 @@
-package io.spacedog.services;
+package io.spacedog.watchdog;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;

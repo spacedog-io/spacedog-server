@@ -9,7 +9,7 @@ import io.spacedog.client.SpaceRequest;
 import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
 @TestOncePerDay
-public class MailResourceTest extends Assert {
+public class MailResourceTestOncePerDay extends Assert {
 
 	@Test
 	public void postMails() throws Exception {

@@ -19,7 +19,7 @@ import io.spacedog.utils.SchemaBuilder2;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
-public class BatchResourceTest extends Assert {
+public class BatchResourceTestOften extends Assert {
 
 	@Test
 	public void executeBatch() throws Exception {

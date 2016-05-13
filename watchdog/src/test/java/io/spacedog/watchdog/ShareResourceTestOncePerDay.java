@@ -23,7 +23,7 @@ import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
 @TestOncePerDay
-public class ShareResourceTest {
+public class ShareResourceTestOncePerDay {
 
 	private static final String FILE_CONTENT = "This is a test file!";
 

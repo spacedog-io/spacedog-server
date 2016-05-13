@@ -18,7 +18,7 @@ import io.spacedog.utils.Json;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
-public class UserResourceTest extends Assert {
+public class UserResourceTestOften extends Assert {
 
 	@Test
 	public void dataEndpointsBehaveTheSameThanUserEnpoints() throws Exception {

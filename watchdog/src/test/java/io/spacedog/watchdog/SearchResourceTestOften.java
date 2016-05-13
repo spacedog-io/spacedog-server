@@ -16,7 +16,7 @@ import io.spacedog.utils.SchemaBuilder2;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
-public class SearchResourceTest extends Assert {
+public class SearchResourceTestOften extends Assert {
 
 	@Test
 	public void searchAndDeleteObjects() throws Exception {

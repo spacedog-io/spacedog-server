@@ -23,7 +23,7 @@ import io.spacedog.utils.SchemaBuilder;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
-public class ChauffeLeTest extends Assert {
+public class ChauffeLeTestOften extends Assert {
 
 	private static Backend backend;
 

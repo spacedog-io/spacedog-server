@@ -17,7 +17,7 @@ import io.spacedog.utils.SchemaBuilder;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
-public class SchemaResourceTest extends Assert {
+public class SchemaResourceTestOften extends Assert {
 
 	@Test
 	public void deletePutAndGetSchemas() throws Exception {

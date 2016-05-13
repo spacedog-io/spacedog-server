@@ -12,7 +12,7 @@ import io.spacedog.utils.SchemaBuilder2;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
-public class LogResourceTest extends Assert {
+public class LogResourceTestOften extends Assert {
 
 	@Test
 	public void doAFewThingsAndGetTheLogs() throws Exception {

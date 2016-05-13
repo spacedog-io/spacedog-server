@@ -13,29 +13,16 @@ public class Watchdog extends RunListener {
 		try {
 			JUnitCore junit = new JUnitCore();
 			junit.addListener(this);
+			junit.run(TestOftenSuite.class);
 
 			int hourOfDay = DateTime.now().hourOfDay().get();
-
 			if (6 <= hourOfDay && hourOfDay < 7) {
-				junit.run(TestAllSuite.class);
 
+				junit.run(TestOncePerDaySuite.class);
 				AdminJobs.ok(this);
-			} else
-				junit.run(TestOftenSuite.class);
+			}
 
 			return "OK";
-
-		} catch (Exception e) {
-			return AdminJobs.error(this, e);
-		}
-	}
-
-	public String runMinimal() {
-		try {
-			JUnitCore junit = new JUnitCore();
-			junit.addListener(this);
-			junit.run(DataResourceTest2.class);
-			return AdminJobs.ok(this);
 
 		} catch (Exception e) {
 			return AdminJobs.error(this, e);

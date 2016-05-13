@@ -9,7 +9,7 @@ import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
 @TestOncePerDay
-public class WebResourceTest {
+public class WebResourceTestOncePerDay {
 
 	private static final String HTML_404 = "<h1>404</h1>";
 

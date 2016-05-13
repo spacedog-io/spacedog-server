@@ -18,7 +18,7 @@ import io.spacedog.utils.Json;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
-public class DataResourceTest extends Assert {
+public class DataResourceTestOften extends Assert {
 
 	@Test
 	public void createFindUpdateAndDelete() throws Exception {
@@ -26,7 +26,7 @@ public class DataResourceTest extends Assert {
 		SpaceDogHelper.prepareTest();
 		Backend testBackend = SpaceDogHelper.resetTestBackend();
 		SpaceDogHelper.initUserDefaultSchema(testBackend);
-		SpaceDogHelper.setSchema(SchemaResourceTest.buildCarSchema(), testBackend);
+		SpaceDogHelper.setSchema(SchemaResourceTestOften.buildCarSchema(), testBackend);
 
 		JsonNode car = Json.objectBuilder() //
 				.put("serialNumber", "1234567890") //

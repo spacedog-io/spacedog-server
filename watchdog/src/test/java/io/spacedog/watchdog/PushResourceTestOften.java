@@ -18,7 +18,7 @@ import io.spacedog.utils.JsonBuilder;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
-public class PushResourceTest extends Assert {
+public class PushResourceTestOften extends Assert {
 
 	private static final String PUSHED_TO = "pushedTo";
 	private static final String FAILURES = "failures";

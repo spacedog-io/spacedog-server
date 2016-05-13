@@ -9,7 +9,7 @@ import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
 @TestOncePerDay
-public class FileResourceTest {
+public class FileResourceTestOncePerDay {
 
 	private static final byte[] BYTES = "This is a test file!".getBytes();
 

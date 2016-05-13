@@ -30,6 +30,13 @@
 				<include>**</include>
 			</includes>
 		</fileSet>
+		<fileSet>
+			<directory>target/test-classes</directory>
+			<outputDirectory></outputDirectory>
+			<includes>
+				<include>**</include>
+			</includes>
+		</fileSet>
 	</fileSets>
 
 </assembly>

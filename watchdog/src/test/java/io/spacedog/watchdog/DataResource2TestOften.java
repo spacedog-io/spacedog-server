@@ -21,14 +21,14 @@ import io.spacedog.utils.SchemaBuilder2;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
-public class DataResourceTest2 extends Assert {
+public class DataResource2TestOften extends Assert {
 
 	@Test
 	public void createSearchUpdateAndDeleteSales() throws Exception {
 
 		SpaceDogHelper.prepareTest();
 		Backend testBackend = SpaceDogHelper.resetTestBackend();
-		SpaceDogHelper.setSchema(SchemaResourceTest.buildSaleSchema(), testBackend);
+		SpaceDogHelper.setSchema(SchemaResourceTestOften.buildSaleSchema(), testBackend);
 
 		ObjectNode sale = Json.objectBuilder()//
 				.put("number", "1234567890")//

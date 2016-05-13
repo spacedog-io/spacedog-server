@@ -1,4 +1,4 @@
-package io.spacedog.client;
+package io.spacedog.watchdog;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -11,6 +11,9 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.io.Resources;
+
+import io.spacedog.client.FileSynchronizer;
+import io.spacedog.client.SpaceDogHelper;
 
 public class FileSynchronizerTest extends Assert {
 
