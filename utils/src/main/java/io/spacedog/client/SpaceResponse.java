@@ -50,7 +50,7 @@ public class SpaceResponse {
 		this.duration = DateTime.now().getMillis() - this.before.getMillis();
 
 		if (debug) {
-			System.out.println(String.format("%s (%s)", httpResponse.getStatus(), httpResponse.getStatusText()));
+			Utils.info("%s (%s)", httpResponse.getStatus(), httpResponse.getStatusText());
 
 			httpRequest.getHeaders().forEach((key, value) -> printHeader(key, value));
 
@@ -59,27 +59,28 @@ public class SpaceResponse {
 				System.out.println("content-type:" + request.getBody().getEntity().getContentType());
 
 			if (jsonRequestContent != null)
-				System.out.println(String.format("Request content: %s",
-						Json.getMapper().writerWithDefaultPrettyPrinter().writeValueAsString(jsonRequestContent)));
+				Utils.info("Request content: %s",
+						Json.getMapper().writerWithDefaultPrettyPrinter().writeValueAsString(jsonRequestContent));
 		}
 
-		String responseBody = httpResponse.getBody();
-		if (Json.isJson(responseBody))
-			jsonResponseContent = Json.readJsonNode(responseBody);
+		String body = httpResponse.getBody();
+		if (Json.isJson(body))
+			jsonResponseContent = Json.readJsonNode(body);
 
 		if (debug) {
 
-			System.out.println(String.format("=> duration: [%sms]", duration));
+			Utils.info("=> duration: [%sms]", duration);
 
-			httpResponse.getHeaders()
-					.forEach((key, value) -> System.out.println(String.format("=> %s: %s", key, value)));
+			httpResponse.getHeaders().forEach((key, value) -> Utils.info("=> %s: %s", key, value));
 
-			String responseContent = isJson()
-					? Json.getMapper().writerWithDefaultPrettyPrinter().writeValueAsString(jsonResponseContent)
-					: httpResponse.getBody().length() < 550 ? httpResponse.getBody()
-							: httpResponse.getBody().substring(0, 500) + " ...";
+			if (body != null) {
+				String prettyBody = jsonResponseContent != null
+						? Json.getMapper().writerWithDefaultPrettyPrinter()//
+								.writeValueAsString(jsonResponseContent)
+						: body.length() < 550 ? body : body.substring(0, 500) + " ...";
 
-			System.out.println(String.format("=> Response body: %s", responseContent));
+				Utils.info("=> Response body: %s", prettyBody);
+			}
 		}
 	}
 
@@ -89,9 +90,9 @@ public class SpaceResponse {
 			String decoded = new String(Base64.getDecoder().decode(//
 					schemeAndTokens[1].getBytes(Utils.UTF8)));
 			String[] tokens = decoded.split(":", 2);
-			System.out.println(String.format("%s: %s (%s)", key, value, tokens[0]));
+			Utils.info("%s: %s (%s)", key, value, tokens[0]);
 		} else
-			System.out.println(String.format("%s: %s", key, value));
+			Utils.info("%s: %s", key, value);
 	}
 
 	public DateTime before() {
