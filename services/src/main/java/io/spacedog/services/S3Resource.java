@@ -43,25 +43,25 @@ public class S3Resource extends Resource {
 	}
 
 	public Optional<Payload> doGet(String bucketSuffix, String backendId, String[] path, Context context) {
+		return doGet(true, bucketSuffix, backendId, path, context);
+	}
+
+	public Optional<Payload> doGet(boolean withContent, String bucketSuffix, String backendId, String[] path,
+			Context context) {
 
 		String bucketName = getBucketName(bucketSuffix);
 		String s3Key = S3Key.get(backendId).add(path).toString();
 
+		Object fileContent = "";
+		ObjectMetadata metadata = null;
+
 		try {
-			S3Object object = s3.getObject(bucketName, s3Key);
-			ObjectMetadata metadata = object.getObjectMetadata();
-
-			Payload payload = new Payload(metadata.getContentType(), object.getObjectContent())//
-					.withHeader(SpaceHeaders.ETAG, //
-							metadata.getETag())//
-					.withHeader(SpaceHeaders.SPACEDOG_OWNER, //
-							metadata.getUserMetaDataOf("owner"));
-
-			if (context.query().getBoolean("withContentDisposition", false))
-				payload = payload.withHeader(SpaceHeaders.CONTENT_DISPOSITION, //
-						metadata.getContentDisposition());
-
-			return Optional.of(payload);
+			if (withContent) {
+				S3Object object = s3.getObject(bucketName, s3Key);
+				metadata = object.getObjectMetadata();
+				fileContent = object.getObjectContent();
+			} else
+				metadata = s3.getObjectMetadata(bucketName, s3Key);
 
 		} catch (AmazonS3Exception e) {
 
@@ -71,6 +71,17 @@ public class S3Resource extends Resource {
 
 			throw e;
 		}
+
+		Payload payload = new Payload(metadata.getContentType(), fileContent)//
+				.withHeader(SpaceHeaders.ETAG, metadata.getETag())//
+				.withHeader(SpaceHeaders.SPACEDOG_OWNER, //
+						metadata.getUserMetaDataOf("owner"));
+
+		if (context.query().getBoolean("withContentDisposition", false))
+			payload = payload.withHeader(SpaceHeaders.CONTENT_DISPOSITION, //
+					metadata.getContentDisposition());
+
+		return Optional.of(payload);
 	}
 
 	public Payload doList(String bucketSuffix, String backendId, String[] path, Context context) {

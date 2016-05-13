@@ -54,34 +54,39 @@ public class WebResource extends S3Resource {
 	//
 
 	private Payload doGet(String[] path, Context context) {
-		Credentials credentials = SpaceContext.checkCredentials();
-
-		if (path.length == 0)
-			throw Exceptions.illegalArgument("web prefix not specified");
-
-		Optional<Payload> payload = doGet(FileResource.FILE_BUCKET_SUFFIX, //
-				credentials.backendId(), path, context);
-
-		if (payload.isPresent())
-			return payload.get();
-
-		payload = doGet(FileResource.FILE_BUCKET_SUFFIX, credentials.backendId(),
-				ObjectArrays.concat(path, "index.html"), context);
-
-		if (payload.isPresent())
-			return payload.get();
-
-		payload = doGet(FileResource.FILE_BUCKET_SUFFIX, credentials.backendId(), //
-				new String[] { path[0], "404.html" }, context);
-
-		if (payload.isPresent())
-			return payload.get().withCode(HttpStatus.NOT_FOUND);
-
-		return Payload.notFound();
+		return doGet(true, path, context);
 	}
 
 	private Payload doHead(String[] path, Context context) {
-		return null;
+		return doGet(false, path, context);
+	}
+
+	private Payload doGet(boolean withContent, String[] path, Context context) {
+
+		Credentials credentials = SpaceContext.checkCredentials();
+
+		if (path.length > 0) {
+
+			Optional<Payload> payload = doGet(withContent, FileResource.FILE_BUCKET_SUFFIX, //
+					credentials.backendId(), path, context);
+
+			if (payload.isPresent())
+				return payload.get();
+
+			payload = doGet(withContent, FileResource.FILE_BUCKET_SUFFIX, credentials.backendId(),
+					ObjectArrays.concat(path, "index.html"), context);
+
+			if (payload.isPresent())
+				return payload.get();
+
+			payload = doGet(withContent, FileResource.FILE_BUCKET_SUFFIX, credentials.backendId(), //
+					new String[] { path[0], "404.html" }, context);
+
+			if (payload.isPresent())
+				return payload.get().withCode(HttpStatus.NOT_FOUND);
+		}
+
+		return Payload.notFound();
 	}
 
 	private static String[] toWebPath(String uri) {

@@ -100,6 +100,10 @@ public class SpaceRequest {
 		return new SpaceRequest(uri, HttpMethod.OPTIONS);
 	}
 
+	public static SpaceRequest head(String uri) {
+		return new SpaceRequest(uri, HttpMethod.HEAD);
+	}
+
 	public SpaceRequest backend(Backend backend) {
 		return backendId(backend.backendId);
 	}

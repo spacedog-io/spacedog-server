@@ -146,8 +146,10 @@ public class Start {
 		routes.filter(new CrossOriginFilter())//
 				.filter(SpaceContext.filter())//
 				.filter(LogResource.filter())//
-				.filter(new ServiceErrorFilter())//
+				// web filter before error filter
+				// so web errors are html pages
 				.filter(WebResource.get().filter())//
+				.filter(new ServiceErrorFilter())//
 				.filter(FileResource.get().filter());
 	}
 

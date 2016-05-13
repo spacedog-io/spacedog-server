@@ -48,15 +48,16 @@ public class WebResourceTest {
 		// admin uploads custom 404.html file to 'www'
 		upload("www", "/404.html", HTML_404);
 
-		// if users browses invalid 'www' URIs
+		// if user browses invalid 'www' URIs
 		// the server returns 'www' custom 404 file
 		notFound("www", "/index");
 		notFound("www", "/c");
 		notFound("www", "/a/");
 		notFound("www", "/a/b/c/index.html");
 
-		// browse without prefix is illegal
-		SpaceRequest.get("/1/web").backend(testBackend).go(400);
+		// browse without prefix returns default not found html page
+		SpaceRequest.get("/1/web").backend(testBackend).go(404)//
+				.assertHeaderEquals("text/html", SpaceHeaders.CONTENT_TYPE);
 	}
 
 	private void upload(String prefix, String uri) throws Exception {
@@ -80,6 +81,9 @@ public class WebResourceTest {
 	}
 
 	private void browse(String prefix, String uri, String expectedBody, String expectedContentType) throws Exception {
+		SpaceRequest.head("/1/web/" + prefix + uri).backend(testBackend).go(200)//
+				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE);
+
 		SpaceRequest.get("/1/web/" + prefix + uri).backend(testBackend).go(200)//
 				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE)//
 				.assertBodyEquals(expectedBody);
