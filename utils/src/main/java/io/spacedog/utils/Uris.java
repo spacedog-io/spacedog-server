@@ -5,7 +5,7 @@ import com.google.common.base.Strings;
 public class Uris {
 
 	public static final String SLASH = "/";
-	public static final String[] ROOT_PATH = new String[0];
+	public static final String[] ROOT = new String[0];
 
 	public static String trimSlash(String uri) {
 		return uri.endsWith(SLASH) ? uri.substring(0, uri.length() - 1) : uri;
@@ -13,7 +13,7 @@ public class Uris {
 
 	public static String[] split(String uri) {
 		if (Strings.isNullOrEmpty(uri) || uri.equals(SLASH))
-			return ROOT_PATH;
+			return ROOT;
 		if (uri.startsWith(SLASH))
 			uri = uri.substring(1);
 		if (uri.endsWith(SLASH))
@@ -32,5 +32,4 @@ public class Uris {
 	public static boolean isRoot(String... parts) {
 		return parts == null || parts.length == 0;
 	}
-
 }

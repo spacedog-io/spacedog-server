@@ -3,6 +3,8 @@
  */
 package io.spacedog.services;
 
+import java.util.Optional;
+
 import com.mashape.unirest.http.HttpMethod;
 
 import io.spacedog.utils.Exceptions;
@@ -32,14 +34,17 @@ public class FileResource extends S3Resource {
 
 			@Override
 			public Payload apply(String uri, Context context, PayloadSupplier nextFilter) throws Exception {
-				if (context.method().equals(HttpMethod.GET.name()))
+
+				if (HttpMethod.GET.name().equals(context.method()))
 					return get(toWebPath(uri), context);
-				if (context.method().equals(HttpMethod.PUT.name()))
+
+				if (HttpMethod.PUT.name().equals(context.method()))
 					return put(toWebPath(uri), context.request().contentAsBytes(), context);
-				if (context.method().equals(HttpMethod.DELETE.name()))
+
+				if (HttpMethod.DELETE.name().equals(context.method()))
 					return delete(toWebPath(uri));
 
-				throw Exceptions.runtime("[%s] path is invalid for [%s] method", uri, context.method());
+				throw Exceptions.runtime("path [%s] invalid for method [%s]", uri, context.method());
 			}
 
 		};
@@ -51,7 +56,12 @@ public class FileResource extends S3Resource {
 
 	Payload get(String[] path, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
-		return doGet(FILE_BUCKET_SUFFIX, credentials.backendId(), path, context);
+		Optional<Payload> payload = doGet(FILE_BUCKET_SUFFIX, credentials.backendId(), path, context);
+
+		if (payload.isPresent())
+			return payload.get();
+
+		return doList(FILE_BUCKET_SUFFIX, credentials.backendId(), path, context);
 	}
 
 	Payload put(String[] path, byte[] bytes, Context context) {
@@ -60,7 +70,7 @@ public class FileResource extends S3Resource {
 	}
 
 	Payload deleteAll() {
-		return delete(Uris.ROOT_PATH);
+		return delete(Uris.ROOT);
 	}
 
 	Payload delete(String[] path) {
@@ -69,7 +79,7 @@ public class FileResource extends S3Resource {
 	}
 
 	private static String[] toWebPath(String uri) {
-		// remove '/1/file'
+		// removes '/1/file'
 		return Uris.split(uri.substring(7));
 	}
 

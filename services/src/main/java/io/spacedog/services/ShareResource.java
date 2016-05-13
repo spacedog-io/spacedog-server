@@ -3,6 +3,7 @@
  */
 package io.spacedog.services;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import io.spacedog.utils.Uris;
@@ -11,6 +12,7 @@ import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.annotations.Put;
+import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/1/share")
@@ -26,15 +28,17 @@ public class ShareResource extends S3Resource {
 	@Get("/")
 	public Object getAll(Context context) {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
-		return doGet(SHARE_BUCKET_SUFFIX, credentials.backendId(), Uris.ROOT_PATH, context);
+		return doList(SHARE_BUCKET_SUFFIX, credentials.backendId(), Uris.ROOT, context);
 	}
 
 	@Get("/:uuid/:fileName")
 	@Get("/:uuid/:fileName/")
-	public Object get(String uuid, String fileName, Context context) {
+	public Payload get(String uuid, String fileName, Context context) {
 		// TODO better check ACL
 		Credentials credentials = SpaceContext.checkCredentials();
-		return doGet(SHARE_BUCKET_SUFFIX, credentials.backendId(), Uris.toPath(uuid, fileName), context);
+		Optional<Payload> payload = doGet(SHARE_BUCKET_SUFFIX, credentials.backendId(), //
+				Uris.toPath(uuid, fileName), context);
+		return payload.isPresent() ? payload.get() : Payloads.error(HttpStatus.NOT_FOUND);
 	}
 
 	@Put("/:fileName")
@@ -49,7 +53,7 @@ public class ShareResource extends S3Resource {
 	@Delete("/")
 	public Payload deleteAll() {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
-		return doDelete(SHARE_BUCKET_SUFFIX, credentials, Uris.ROOT_PATH);
+		return doDelete(SHARE_BUCKET_SUFFIX, credentials, Uris.ROOT);
 	}
 
 	@Delete("/:uuid/:fileName")
