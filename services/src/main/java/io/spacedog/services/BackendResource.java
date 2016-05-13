@@ -35,7 +35,7 @@ public class BackendResource extends Resource {
 		BackendKey.checkIfIdIsValid(backendId);
 
 		if (existsBackend(backendId))
-			return Payloads.invalidParameters("backendId", backendId,
+			return JsonPayload.invalidParameters("backendId", backendId,
 					String.format("backend id [%s] not available", backendId));
 
 		SignUp backendSignUp = new SignUp(backendId, Level.SUPER_ADMIN, body);
@@ -54,7 +54,7 @@ public class BackendResource extends Resource {
 					String.format("backend id = %s\nadmin email = %s", backendId,
 							backendSignUp.credentials.email().get()));
 
-		return Payloads.saved(true, backendId, "/1/backend", TYPE, backendId, true);
+		return JsonPayload.saved(true, backendId, "/1/backend", TYPE, backendId, true);
 	}
 
 	@Get("/1/backend")
@@ -87,7 +87,7 @@ public class BackendResource extends Resource {
 			ShareResource.get().deleteAll();
 		}
 
-		return Payloads.success();
+		return JsonPayload.success();
 	}
 
 	@Get("/v1/admin/login")
@@ -96,7 +96,7 @@ public class BackendResource extends Resource {
 	@Get("/1/admin/login/")
 	public Payload getLogin() {
 		SpaceContext.checkAdminCredentials();
-		return Payloads.success();
+		return JsonPayload.success();
 	}
 
 	//

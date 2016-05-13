@@ -93,7 +93,7 @@ public class LogResource extends Resource {
 		// no delete response means no logs to delete means success
 
 		return response.isPresent()//
-				? Payloads.json(response.get()) : Payloads.success();
+				? JsonPayload.json(response.get()) : JsonPayload.success();
 	}
 
 	//
@@ -109,11 +109,11 @@ public class LogResource extends Resource {
 			try {
 				payload = nextFilter.get();
 			} catch (Throwable t) {
-				payload = Payloads.error(t);
+				payload = JsonPayload.error(t);
 			}
 
 			if (payload == null)
-				payload = Payloads.error(500, //
+				payload = JsonPayload.error(500, //
 						"unexpected null payload for [%s] request to [%s]", context.method(), uri);
 
 			try {
@@ -191,7 +191,7 @@ public class LogResource extends Resource {
 		for (SearchHit hit : response.getHits().getHits())
 			builder.node(hit.sourceAsString());
 
-		return Payloads.json(builder);
+		return JsonPayload.json(builder);
 	}
 
 	private String log(String uri, Context context, DateTime receivedAt, Payload payload) {

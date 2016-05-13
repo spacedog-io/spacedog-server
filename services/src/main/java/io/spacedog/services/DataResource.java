@@ -44,7 +44,7 @@ public class DataResource extends Resource {
 		DataStore.get().refreshBackend(refresh, credentials.backendId());
 		ObjectNode result = SearchResource.get()//
 				.searchInternal(credentials, null, null, context);
-		return Payloads.json(result);
+		return JsonPayload.json(result);
 	}
 
 	@Delete("/v1/data")
@@ -54,7 +54,7 @@ public class DataResource extends Resource {
 	public Payload deleteAll(Context context) {
 		// TODO not implemented since it would also delete super admins
 		// return SearchResource.get().deleteAllTypes(null, context);
-		return Payloads.error(HttpStatus.NOT_IMPLEMENTED);
+		return JsonPayload.error(HttpStatus.NOT_IMPLEMENTED);
 	}
 
 	@Get("/v1/data/:type")
@@ -67,7 +67,7 @@ public class DataResource extends Resource {
 		DataStore.get().refreshType(refresh, credentials.backendId(), type);
 		ObjectNode result = SearchResource.get()//
 				.searchInternal(credentials, type, null, context);
-		return Payloads.json(result);
+		return JsonPayload.json(result);
 	}
 
 	@Post("/v1/data/:type")
@@ -95,7 +95,7 @@ public class DataResource extends Resource {
 		IndexResponse response = DataStore.get().createObject(//
 				credentials.backendId(), type, id, object, credentials.name());
 
-		return Payloads.saved(true, credentials.backendId(), "/1/data", response.getType(), response.getId(),
+		return JsonPayload.saved(true, credentials.backendId(), "/1/data", response.getType(), response.getId(),
 				response.getVersion());
 	}
 
@@ -116,9 +116,9 @@ public class DataResource extends Resource {
 		Credentials credentials = SpaceContext.checkCredentials();
 		Optional<ObjectNode> object = DataStore.get().getObject(credentials.backendId(), type, id);
 		if (object.isPresent())
-			return Payloads.json(object.get());
+			return JsonPayload.json(object.get());
 		else
-			return Payloads.error(HttpStatus.NOT_FOUND);
+			return JsonPayload.error(HttpStatus.NOT_FOUND);
 	}
 
 	@Put("/v1/data/:type/:id")
@@ -155,14 +155,14 @@ public class DataResource extends Resource {
 
 			IndexResponse response = DataStore.get().updateObject(credentials.backendId(), type, id, version, object,
 					credentials.name());
-			return Payloads.saved(false, credentials.backendId(), "/1/data", response.getType(), response.getId(),
+			return JsonPayload.saved(false, credentials.backendId(), "/1/data", response.getType(), response.getId(),
 					response.getVersion());
 
 		} else {
 
 			UpdateResponse response = DataStore.get().patchObject(credentials.backendId(), type, id, version, object,
 					credentials.name());
-			return Payloads.saved(false, credentials.backendId(), "/1/data", response.getType(), response.getId(),
+			return JsonPayload.saved(false, credentials.backendId(), "/1/data", response.getType(), response.getId(),
 					response.getVersion());
 		}
 	}
@@ -180,15 +180,15 @@ public class DataResource extends Resource {
 			if (credentials.name().equals(Json.get(object.get(), "meta.createdBy").asText())) {
 				DeleteResponse response = elastic.delete(credentials.backendId(), type, id);
 				return response.isFound() //
-						? Payloads.success() //
-						: Payloads.error(HttpStatus.INTERNAL_SERVER_ERROR, //
+						? JsonPayload.success() //
+						: JsonPayload.error(HttpStatus.INTERNAL_SERVER_ERROR, //
 								"failed to delete object of type [%s] and id [%s]", type, id);
 			} else
-				return Payloads.error(HttpStatus.UNAUTHORIZED, //
+				return JsonPayload.error(HttpStatus.UNAUTHORIZED, //
 						"not the owner of object of type [%s] and id [%s]", type, id);
 		}
 
-		return Payloads.error(HttpStatus.NOT_FOUND, "object of type [%s] and id [%s] not found", type, id);
+		return JsonPayload.error(HttpStatus.NOT_FOUND, "object of type [%s] and id [%s] not found", type, id);
 	}
 
 	@Post("/v1/data/search")

@@ -80,7 +80,7 @@ public class CredentialsResource extends Resource {
 	@Get("/1/login/")
 	public Payload login(Context context) {
 		SpaceContext.checkUserCredentials();
-		return Payloads.success();
+		return JsonPayload.success();
 	}
 
 	@Get("/v1/logout")
@@ -89,7 +89,7 @@ public class CredentialsResource extends Resource {
 	@Get("/1/logout/")
 	public Payload logout(Context context) {
 		SpaceContext.checkUserCredentials();
-		return Payloads.success();
+		return JsonPayload.success();
 	}
 
 	public String doDeletePassword(String backendId, String username) {
@@ -296,7 +296,7 @@ public class CredentialsResource extends Resource {
 			builder.end().end();
 		}
 
-		return Payloads.json(builder);
+		return JsonPayload.json(builder);
 	}
 
 	public Payload getAllSuperAdmins(String backendId, boolean refresh) {
@@ -324,7 +324,7 @@ public class CredentialsResource extends Resource {
 			builder.node(Json.object(USERNAME, hit.getSource().get(USERNAME).toString(), //
 					EMAIL, hit.getSource().get(EMAIL).toString()));
 
-		return Payloads.json(builder);
+		return JsonPayload.json(builder);
 	}
 
 	static String toCredentialsId(String backendId, String username) {

@@ -149,12 +149,12 @@ public class PushResource extends Resource {
 		Optional<ObjectNode> object = DataStore.get().getObject(credentials.backendId(), TYPE, id);
 
 		if (object.isPresent())
-			return Payloads.json(//
+			return JsonPayload.json(//
 					object.get().has(TAGS) //
 							? object.get().get(TAGS) //
 							: Json.newArrayNode());
 
-		return Payloads.error(HttpStatus.NOT_FOUND);
+		return JsonPayload.error(HttpStatus.NOT_FOUND);
 	}
 
 	@Post("/installation/:id/tags")
@@ -237,7 +237,7 @@ public class PushResource extends Resource {
 				.getHits();
 
 		if (hits.totalHits() > 1000)
-			return Payloads.error(HttpStatus.NOT_IMPLEMENTED, //
+			return JsonPayload.error(HttpStatus.NOT_IMPLEMENTED, //
 					"push to [%s] installations not yet implemented", hits.totalHits());
 
 		boolean failures = false;
@@ -278,11 +278,11 @@ public class PushResource extends Resource {
 		int httpStatus = pushedTo.size() == 0 ? HttpStatus.NOT_FOUND //
 				: successes ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
 
-		JsonBuilder<ObjectNode> builder = Payloads.minimalBuilder(httpStatus)//
+		JsonBuilder<ObjectNode> builder = JsonPayload.minimalBuilder(httpStatus)//
 				.put(FAILURES, failures)//
 				.node(PUSHED_TO, pushedTo);
 
-		return Payloads.json(builder, httpStatus);
+		return JsonPayload.json(builder, httpStatus);
 	}
 
 	//
@@ -338,7 +338,7 @@ public class PushResource extends Resource {
 
 		if (id.isPresent()) {
 			DataStore.get().patchObject(credentials.backendId(), TYPE, id.get(), installation, credentials.name());
-			return Payloads.saved(false, credentials.backendId(), "/1", TYPE, id.get());
+			return JsonPayload.saved(false, credentials.backendId(), "/1", TYPE, id.get());
 		} else
 			return DataResource.get().post(TYPE, installation.toString(), context);
 
@@ -350,7 +350,7 @@ public class PushResource extends Resource {
 		Optional<ObjectNode> installation = DataStore.get().getObject(credentials.backendId(), TYPE, id);
 
 		if (!installation.isPresent())
-			return Payloads.json(404);
+			return JsonPayload.json(404);
 
 		if (strict) {
 			ArrayNode tags = Json.readArrayNode(body);
@@ -372,7 +372,7 @@ public class PushResource extends Resource {
 							break;
 						}
 						// tag already exists => nothing to save
-						return Payloads.saved(false, credentials.backendId(), "/1", TYPE, id);
+						return JsonPayload.saved(false, credentials.backendId(), "/1", TYPE, id);
 					}
 				}
 			}
@@ -382,7 +382,7 @@ public class PushResource extends Resource {
 		}
 
 		DataStore.get().updateObject(credentials.backendId(), installation.get(), credentials.name());
-		return Payloads.saved(false, credentials.backendId(), "/1", TYPE, id);
+		return JsonPayload.saved(false, credentials.backendId(), "/1", TYPE, id);
 	}
 
 	private String toFieldPath(String... strings) {

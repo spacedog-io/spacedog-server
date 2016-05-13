@@ -51,14 +51,14 @@ public class SchemaResource extends Resource {
 			}
 		}
 
-		return Payloads.json(jsonMerger.get());
+		return JsonPayload.json(jsonMerger.get());
 	}
 
 	@Get("/:type")
 	@Get("/:type/")
 	public Payload get(String type) {
 		Credentials credentials = SpaceContext.checkCredentials();
-		return Payloads.json(//
+		return JsonPayload.json(//
 				Start.get().getElasticClient().getSchema(credentials.backendId(), type));
 	}
 
@@ -90,7 +90,7 @@ public class SchemaResource extends Resource {
 			elastic.createIndex(backendId, type, mapping, shards, replicas);
 		}
 
-		return Payloads.saved(!indexExists, credentials.backendId(), "/1", "schema", type);
+		return JsonPayload.saved(!indexExists, credentials.backendId(), "/1", "schema", type);
 	}
 
 	@Delete("/:type")
@@ -102,7 +102,7 @@ public class SchemaResource extends Resource {
 		} catch (TypeMissingException exception) {
 			// ignored
 		}
-		return Payloads.success();
+		return JsonPayload.success();
 	}
 
 	//

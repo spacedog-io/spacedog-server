@@ -73,7 +73,7 @@ public class MailResource extends Resource {
 				}
 
 			ObjectNode response = send(from, to, cc, bcc, subject, text, html);
-			return Payloads.json(response, response.get("status").asInt());
+			return JsonPayload.json(response, response.get("status").asInt());
 
 		} catch (IOException e) {
 			throw new RuntimeException(e);
@@ -110,7 +110,7 @@ public class MailResource extends Resource {
 
 		try {
 			HttpResponse<String> response = requestWithBody.asString();
-			return Payloads.minimalBuilder(response.getStatus()).node("mailgun", response.getBody()).build();
+			return JsonPayload.minimalBuilder(response.getStatus()).node("mailgun", response.getBody()).build();
 		} catch (UnirestException e) {
 			throw new RuntimeException(e);
 		}

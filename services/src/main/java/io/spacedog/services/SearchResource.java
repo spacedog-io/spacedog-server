@@ -64,7 +64,7 @@ public class SearchResource extends Resource {
 		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
 		DataStore.get().refreshBackend(refresh, credentials.backendId());
 		ObjectNode result = searchInternal(credentials, null, body, context);
-		return Payloads.json(result);
+		return JsonPayload.json(result);
 	}
 
 	@Delete("/v1/search")
@@ -79,7 +79,7 @@ public class SearchResource extends Resource {
 		DataStore.get().refreshBackend(refresh, credentials.backendId());
 		DeleteByQueryResponse response = Start.get().getElasticClient()//
 				.deleteByQuery(credentials.backendId(), query);
-		return Payloads.json(response);
+		return JsonPayload.json(response);
 	}
 
 	@Get("/v1/search/:type")
@@ -99,7 +99,7 @@ public class SearchResource extends Resource {
 		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
 		DataStore.get().refreshType(refresh, credentials.backendId(), type);
 		ObjectNode result = searchInternal(credentials, type, body, context);
-		return Payloads.json(result);
+		return JsonPayload.json(result);
 	}
 
 	@Delete("/v1/search/:type")
@@ -117,7 +117,7 @@ public class SearchResource extends Resource {
 		DeleteByQueryResponse response = Start.get().getElasticClient()//
 				.deleteByQuery(credentials.backendId(), type, query);
 
-		return Payloads.json(response);
+		return JsonPayload.json(response);
 	}
 
 	@Post("/1/filter/:type")
@@ -129,7 +129,7 @@ public class SearchResource extends Resource {
 			DataStore.get().refreshType(refresh, credentials.backendId(), type);
 			FilteredSearchBuilder builder = DataStore.get().searchBuilder(credentials.backendId(), type)
 					.applyContext(context).applyFilters(Json.readObjectNode(body));
-			return Payloads.json(extractResults(builder.get(), context, credentials));
+			return JsonPayload.json(extractResults(builder.get(), context, credentials));
 
 		} catch (InterruptedException | ExecutionException e) {
 			throw new RuntimeException(e);

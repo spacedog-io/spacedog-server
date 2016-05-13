@@ -88,7 +88,7 @@ public class PushResourceOld {
 		}
 
 		try {
-			return Payloads.saved(false, credentials.backendId(), "/1", TYPE, URLEncoder.encode(endpointArn, "UTF-8"));
+			return JsonPayload.saved(false, credentials.backendId(), "/1", TYPE, URLEncoder.encode(endpointArn, "UTF-8"));
 		} catch (UnsupportedEncodingException e) {
 			throw new RuntimeException(e);
 		}
@@ -124,7 +124,7 @@ public class PushResourceOld {
 				getSnsClient().subscribe(topicArn, "application", endpoint);
 		});
 
-		return Payloads.saved(false, credentials.backendId(), "/1", "device", id);
+		return JsonPayload.saved(false, credentials.backendId(), "/1", "device", id);
 	}
 
 	@Post("/topic/:name/push")
@@ -140,14 +140,14 @@ public class PushResourceOld {
 		Optional<Topic> topic = getTopicArn(name, credentials.backendId());
 
 		if (!topic.isPresent())
-			return Payloads.error(404, "topic with name [%s] not found", name);
+			return JsonPayload.error(404, "topic with name [%s] not found", name);
 
 		PublishResult publish = getSnsClient().publish(new PublishRequest()//
 				.withTopicArn(topic.get().getTopicArn())//
 				.withSubject(message)//
 				.withMessage(message));
 
-		return Payloads.json(Payloads.minimalBuilder(200)//
+		return JsonPayload.json(JsonPayload.minimalBuilder(200)//
 				.put("messageId", publish.getMessageId()).build(), 200);
 	}
 
@@ -168,7 +168,7 @@ public class PushResourceOld {
 				.withSubject(msg)//
 				.withMessage(msg));
 
-		return Payloads.json(Payloads.minimalBuilder(200)//
+		return JsonPayload.json(JsonPayload.minimalBuilder(200)//
 				.put("messageId", publish.getMessageId()).build(), 200);
 	}
 
@@ -192,7 +192,7 @@ public class PushResourceOld {
 					.withMessage(message));
 		}
 
-		return Payloads.success();
+		return JsonPayload.success();
 	}
 
 	//

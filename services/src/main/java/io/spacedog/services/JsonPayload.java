@@ -19,7 +19,7 @@ import io.spacedog.utils.Utils;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
-public class Payloads {
+public class JsonPayload {
 
 	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
@@ -103,7 +103,7 @@ public class Payloads {
 
 	public static Payload saved(boolean created, String backendId, String uri, String type, String id, long version,
 			boolean isUriFinal) {
-		JsonBuilder<ObjectNode> builder = Payloads.savedBuilder(created, backendId, uri, type, id, version, isUriFinal);
+		JsonBuilder<ObjectNode> builder = JsonPayload.savedBuilder(created, backendId, uri, type, id, version, isUriFinal);
 		return json(builder, created ? HttpStatus.CREATED : HttpStatus.OK)//
 				.withHeader(HEADER_OBJECT_ID, id);
 	}

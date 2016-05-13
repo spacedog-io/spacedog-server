@@ -19,7 +19,7 @@ public class AdminResource extends Resource {
 	@Get("/1/admin/login/")
 	public Payload getLogin() {
 		SpaceContext.checkAdminCredentials();
-		return Payloads.success();
+		return JsonPayload.success();
 	}
 
 	@Get("/1/admin/return500")

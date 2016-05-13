@@ -29,14 +29,14 @@ public class ServiceErrorFilter implements SpaceFilter {
 		} catch (IllegalStateException e) {
 			// Fluent wraps non runtime exceptions into IllegalStateException
 			// let's unwrap them
-			payload = e.getCause() != null ? Payloads.error(e.getCause())//
-					: Payloads.error(e);
+			payload = e.getCause() != null ? JsonPayload.error(e.getCause())//
+					: JsonPayload.error(e);
 		} catch (Throwable t) {
-			payload = Payloads.error(t);
+			payload = JsonPayload.error(t);
 		}
 
 		if (payload == null)
-			payload = Payloads.error(HttpStatus.INTERNAL_SERVER_ERROR, //
+			payload = JsonPayload.error(HttpStatus.INTERNAL_SERVER_ERROR, //
 					"unexpected null payload for [%s] request to [%s]", context.method(), uri);
 
 		if (payload.code() == HttpStatus.INTERNAL_SERVER_ERROR)
@@ -54,14 +54,14 @@ public class ServiceErrorFilter implements SpaceFilter {
 			if (payload.code() == HttpStatus.NOT_FOUND) {
 				nodeBuilder.put("message", //
 						String.format("[%s] not a valid path", uri));
-				return Payloads.json(nodeBuilder, payload.code());
+				return JsonPayload.json(nodeBuilder, payload.code());
 			} else if (payload.code() == HttpStatus.METHOD_NOT_ALLOWED) {
 				nodeBuilder.put("message", //
 						String.format("method [%s] not valid for path [%s]", context.method(), uri));
-				return Payloads.json(nodeBuilder, payload.code());
+				return JsonPayload.json(nodeBuilder, payload.code());
 			} else {
 				nodeBuilder.put("message", "no details available for this error");
-				return Payloads.json(nodeBuilder, payload.code());
+				return JsonPayload.json(nodeBuilder, payload.code());
 			}
 		}
 		return payload;

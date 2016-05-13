@@ -109,7 +109,7 @@ public class UserResource extends Resource {
 			totalDeleted += hits.length;
 		}
 
-		return Payloads.json(Payloads.minimalBuilder(200).put("totalDeleted", totalDeleted));
+		return JsonPayload.json(JsonPayload.minimalBuilder(200).put("totalDeleted", totalDeleted));
 	}
 
 	@Post("/v1/user")
@@ -139,14 +139,14 @@ public class UserResource extends Resource {
 				userSignUp.data, //
 				userSignUp.createdBy.isPresent() ? userSignUp.createdBy.get() : userSignUp.credentials.name());
 
-		JsonBuilder<ObjectNode> savedBuilder = Payloads.savedBuilder(true, credentials.backendId(), "/1", TYPE,
+		JsonBuilder<ObjectNode> savedBuilder = JsonPayload.savedBuilder(true, credentials.backendId(), "/1", TYPE,
 				userSignUp.credentials.name());
 
 		if (userSignUp.passwordResetCode.isPresent())
 			savedBuilder.put(PASSWORD_RESET_CODE, userSignUp.passwordResetCode.get());
 
-		return Payloads.json(savedBuilder, HttpStatus.CREATED)//
-				.withHeader(Payloads.HEADER_OBJECT_ID, userSignUp.credentials.name());
+		return JsonPayload.json(savedBuilder, HttpStatus.CREATED)//
+				.withHeader(JsonPayload.HEADER_OBJECT_ID, userSignUp.credentials.name());
 	}
 
 	@Get("/v1/user/:username")
@@ -186,8 +186,8 @@ public class UserResource extends Resource {
 		elastic.delete(credentials.backendId(), TYPE, username);
 		DeleteResponse response = CredentialsResource.get().delete(credentials.backendId(), username);
 
-		return response.isFound() ? Payloads.success() //
-				: Payloads.error(HttpStatus.NOT_FOUND, "user [%s] not found", username);
+		return response.isFound() ? JsonPayload.success() //
+				: JsonPayload.error(HttpStatus.NOT_FOUND, "user [%s] not found", username);
 	}
 
 	@Delete("/v1/user/:username/password")
@@ -199,8 +199,8 @@ public class UserResource extends Resource {
 		// manage admin users with another resource ?
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		String passwordResetCode = CredentialsResource.get().doDeletePassword(credentials.backendId(), username);
-		return Payloads.json(//
-				Payloads.savedBuilder(false, credentials.backendId(), "/1", TYPE, username)//
+		return JsonPayload.json(//
+				JsonPayload.savedBuilder(false, credentials.backendId(), "/1", TYPE, username)//
 						.put(PASSWORD_RESET_CODE, passwordResetCode));
 	}
 
@@ -213,7 +213,7 @@ public class UserResource extends Resource {
 		// manage admin users with another resource ?
 		String backendId = SpaceContext.checkCredentials().backendId();
 		IndexResponse response = CredentialsResource.get().doPostPassword(backendId, username, context);
-		return Payloads.saved(false, backendId, "/1", TYPE, username, response.getVersion());
+		return JsonPayload.saved(false, backendId, "/1", TYPE, username, response.getVersion());
 	}
 
 	@Put("/v1/user/:username/password")
@@ -225,7 +225,7 @@ public class UserResource extends Resource {
 		// manage admin users with another resource ?
 		Credentials credentials = SpaceContext.checkUserCredentials(username);
 		UpdateResponse response = CredentialsResource.get().doPutPassword(credentials.backendId(), username, context);
-		return Payloads.saved(false, credentials.backendId(), "/1/user", TYPE, username, response.getVersion());
+		return JsonPayload.saved(false, credentials.backendId(), "/1/user", TYPE, username, response.getVersion());
 	}
 
 	//

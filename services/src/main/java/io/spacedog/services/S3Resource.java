@@ -102,9 +102,9 @@ public class S3Resource extends Resource {
 		// only root path allows empty list
 		if (objects.getObjectSummaries().isEmpty() //
 				&& !backendId.equals(s3Key))
-			return Payloads.error(404);
+			return JsonPayload.error(404);
 
-		JsonBuilder<ObjectNode> response = Payloads.minimalBuilder(200);
+		JsonBuilder<ObjectNode> response = JsonPayload.minimalBuilder(200);
 
 		if (objects.isTruncated())
 			response.put("next", toSpaceKeyFromS3Key(backendId, objects.getNextMarker()));
@@ -120,7 +120,7 @@ public class S3Resource extends Resource {
 					.end();
 		}
 
-		return Payloads.json(response);
+		return JsonPayload.json(response);
 	}
 
 	public Payload doDelete(String bucketSuffix, Credentials credentials, String[] path) {
@@ -128,7 +128,7 @@ public class S3Resource extends Resource {
 		String bucketName = getBucketName(bucketSuffix);
 		String s3Key = S3Key.get(credentials.backendId()).add(path).toString();
 
-		JsonBuilder<ObjectNode> builder = Payloads.minimalBuilder(200).array("deleted");
+		JsonBuilder<ObjectNode> builder = JsonPayload.minimalBuilder(200).array("deleted");
 
 		// first try to delete this path as key
 
@@ -139,9 +139,9 @@ public class S3Resource extends Resource {
 
 				if (isOwner(credentials, metadata)) {
 					s3.deleteObject(bucketName, s3Key);
-					return Payloads.success();
+					return JsonPayload.success();
 				} else
-					return Payloads.error(401);
+					return JsonPayload.error(401);
 
 			} else if (credentials.isAtLeastAdmin()) {
 				s3.deleteObject(bucketName, s3Key);
@@ -188,7 +188,7 @@ public class S3Resource extends Resource {
 			} while (next != null);
 
 		}
-		return Payloads.json(builder);
+		return JsonPayload.json(builder);
 	}
 
 	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, String[] path, byte[] bytes,
@@ -215,7 +215,7 @@ public class S3Resource extends Resource {
 				s3Key, new ByteArrayInputStream(bytes), //
 				metadata));
 
-		return Payloads.json(Payloads.minimalBuilder(200)//
+		return JsonPayload.json(JsonPayload.minimalBuilder(200)//
 				.put("path", Uris.join(path))//
 				.put("location", toSpaceLocation(credentials.backendId(), rootUri, path))//
 				.put("s3", toS3Location(bucketName, s3Key)));

@@ -38,7 +38,7 @@ public class ShareResource extends S3Resource {
 		Credentials credentials = SpaceContext.checkCredentials();
 		Optional<Payload> payload = doGet(SHARE_BUCKET_SUFFIX, credentials.backendId(), //
 				Uris.toPath(uuid, fileName), context);
-		return payload.isPresent() ? payload.get() : Payloads.error(HttpStatus.NOT_FOUND);
+		return payload.isPresent() ? payload.get() : JsonPayload.error(HttpStatus.NOT_FOUND);
 	}
 
 	@Put("/:fileName")
