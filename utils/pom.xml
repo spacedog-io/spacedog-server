@@ -42,7 +42,7 @@
 						<id>bundle</id>
 						<configuration>
 							<descriptors>
-								<descriptor>assembly.xml</descriptor>
+								<descriptor>assembly-cli.xml</descriptor>
 							</descriptors>
 							<attach>false</attach>
 							<outputDirectory>${project.build.directory}</outputDirectory>
