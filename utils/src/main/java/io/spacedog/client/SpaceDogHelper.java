@@ -141,12 +141,11 @@ public class SpaceDogHelper {
 
 		SpaceRequest.setForTestingDefault(forTesting);
 		StackTraceElement grandParentStackTraceElement = Utils.getGrandParentStackTraceElement();
-		System.out.println();
 
-		System.out.println(String.format("--- %s", //
-				grandParentStackTraceElement.getClassName()//
-						+ '.' + grandParentStackTraceElement.getMethodName())
-				+ "()");
+		Utils.info();
+		Utils.info("--- %s.%s() ---", //
+				grandParentStackTraceElement.getClassName(), //
+				grandParentStackTraceElement.getMethodName());
 	}
 
 	public static void deleteAll(String type, Backend account) throws Exception {

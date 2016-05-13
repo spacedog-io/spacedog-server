@@ -40,8 +40,8 @@ public class SpaceResponse {
 		this.httpRequest = request;
 
 		if (debug) {
-			System.out.println();
-			System.out.print(String.format("%s %s => ", httpRequest.getHttpMethod(), httpRequest.getUrl()));
+			Utils.info();
+			Utils.info("%s %s => ", httpRequest.getHttpMethod(), httpRequest.getUrl());
 		}
 
 		this.before = DateTime.now();
@@ -56,7 +56,7 @@ public class SpaceResponse {
 
 			if (request.getBody() != null //
 					&& request.getBody().getEntity().getContentType() != null)
-				System.out.println("content-type:" + request.getBody().getEntity().getContentType());
+				Utils.info("content-type:" + request.getBody().getEntity().getContentType());
 
 			if (jsonRequestContent != null)
 				Utils.info("Request content: %s",

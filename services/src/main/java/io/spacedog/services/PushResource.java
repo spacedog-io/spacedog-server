@@ -39,6 +39,7 @@ import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SchemaBuilder2;
 import io.spacedog.utils.SpaceParams;
+import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -442,7 +443,7 @@ public class PushResource extends Resource {
 
 		} catch (InvalidParameterException e) {
 			String message = e.getErrorMessage();
-			System.out.println("Exception message: " + message);
+			Utils.info("Exception message: %s", message);
 			Pattern p = Pattern.compile(".*Endpoint (arn:aws:sns[^ ]+) already exists " + "with the same token.*");
 			Matcher m = p.matcher(message);
 			if (m.matches()) {
