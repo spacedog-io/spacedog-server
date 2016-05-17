@@ -47,11 +47,11 @@ public class Json {
 		return current;
 	}
 
-	public static <T> T get(JsonNode json, String propertyPath, T defaultValue) {
+	public static Object get(JsonNode json, String propertyPath, Object defaultValue) {
 		JsonNode node = get(json, propertyPath);
 		if (Json.isNull(node))
 			return defaultValue;
-		return (T) Json.toSimpleValue(node);
+		return Json.toSimpleValue(node);
 	}
 
 	public static void set(JsonNode object, String propertyPath, JsonNode value) {
