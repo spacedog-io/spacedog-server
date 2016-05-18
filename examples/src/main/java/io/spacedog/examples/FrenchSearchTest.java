@@ -101,7 +101,7 @@ public class FrenchSearchTest extends Assert {
 		if (indices.prepareExists(INDEX).get().isExists())
 			indices.prepareDelete(INDEX).get();
 
-		new ElasticClient(client).ensureGreen();
+		new ElasticClient(client).ensureAllIndicesGreen();
 
 		URL url = Resources.getResource("io/spacedog/examples/french.analyzer.settings.json");
 		JsonNode customfrenchAnalyser = Json.getMapper().readTree(url);

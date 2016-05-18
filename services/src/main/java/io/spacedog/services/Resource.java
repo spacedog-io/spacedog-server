@@ -10,10 +10,6 @@ import net.codestory.http.Context;
 public abstract class Resource {
 
 	public static final String SLASH = "/";
-
-	public static final int SHARDS_DEFAULT = 1;
-	public static final int REPLICAS_DEFAULT = 0;
-
 	public static final String SPACEDOG_BACKEND = "spacedog";
 
 	// Field names

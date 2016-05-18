@@ -67,7 +67,7 @@ public class CredentialsResource extends Resource {
 		if (elastic.existsIndex(SPACEDOG_BACKEND, TYPE))
 			elastic.putMapping(SPACEDOG_BACKEND, TYPE, mapping);
 		else
-			elastic.createIndex(SPACEDOG_BACKEND, TYPE, mapping);
+			elastic.createIndex(SPACEDOG_BACKEND, TYPE, mapping, false);
 	}
 
 	//

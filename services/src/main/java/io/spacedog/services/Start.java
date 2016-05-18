@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.client.Client;
-import org.elasticsearch.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.settings.Settings.Builder;
 import org.elasticsearch.node.Node;
@@ -101,16 +100,9 @@ public class Start {
 		elastic = new ElasticClient(client);
 
 		// wait for cluster to fully initialize and turn asynchronously from
-		// RED status to YELLOW or GREEN before to initialize anything else
-		// wait for 10 seconds maximum
-
-		// elastic.ensureGreen();
-		while (true) {
-			Thread.sleep(1000);
-			ClusterHealthStatus status = client.admin().cluster().prepareHealth().get().getStatus();
-			if (!ClusterHealthStatus.RED.equals(status))
-				return;
-		}
+		// RED status to GREEN before to initialize anything else
+		// wait for 30 seconds maximum
+		elastic.ensureAllIndicesGreen();
 	}
 
 	private void initServices() throws IOException {

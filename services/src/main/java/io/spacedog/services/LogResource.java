@@ -48,7 +48,7 @@ public class LogResource extends Resource {
 		if (client.existsIndex(SPACEDOG_BACKEND, TYPE))
 			client.putMapping(SPACEDOG_BACKEND, TYPE, mapping);
 		else
-			client.createIndex(SPACEDOG_BACKEND, TYPE, mapping);
+			client.createIndex(SPACEDOG_BACKEND, TYPE, mapping, false);
 	}
 
 	//

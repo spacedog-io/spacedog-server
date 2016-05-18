@@ -45,6 +45,8 @@ import com.google.common.base.Strings;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.SpaceParams;
+import io.spacedog.utils.Utils;
 
 public class ElasticClient {
 
@@ -174,11 +176,11 @@ public class ElasticClient {
 	// admin methods
 	//
 
-	public void createIndex(String backendId, String type, String mapping) {
-		createIndex(backendId, type, mapping, Resource.SHARDS_DEFAULT, Resource.REPLICAS_DEFAULT);
+	public void createIndex(String backendId, String type, String mapping, boolean async) {
+		createIndex(backendId, type, mapping, async, SpaceParams.SHARDS_DEFAULT, SpaceParams.REPLICAS_DEFAULT);
 	}
 
-	public void createIndex(String backendId, String type, String mapping, int shards, int replicas) {
+	public void createIndex(String backendId, String type, String mapping, boolean async, int shards, int replicas) {
 
 		Settings settings = Settings.builder()//
 				.put("number_of_shards", shards)//
@@ -196,9 +198,12 @@ public class ElasticClient {
 			throw Exceptions.runtime(//
 					"index [%s] creation not acknowledged by the whole cluster", //
 					toIndex0(backendId, type));
+
+		if (!async)
+			ensureGreen(backendId, type);
 	}
 
-	public void ensureGreen() {
+	public void ensureAllIndicesGreen() {
 		ensureGreen("_all");
 	}
 
@@ -207,21 +212,26 @@ public class ElasticClient {
 	}
 
 	public void ensureGreen(String... indices) {
+		String indicesString = Arrays.toString(indices);
+		Utils.info("Ensure indices %s are green ...", indicesString);
+
 		ClusterHealthResponse response = this.internalClient.admin().cluster()
 				.health(Requests.clusterHealthRequest(indices)//
 						.timeout(TimeValue.timeValueSeconds(30))//
 						.waitForGreenStatus()//
-						.waitForEvents(Priority.LANGUID)//
+						.waitForEvents(Priority.LOW)//
 						.waitForRelocatingShards(0))//
 				.actionGet();
 
 		if (response.isTimedOut())
 			throw Exceptions.runtime("ensure indices %s status are green timed out", //
-					Arrays.toString(indices));
+					indicesString);
 
 		if (!response.getStatus().equals(ClusterHealthStatus.GREEN))
 			throw Exceptions.runtime("indices %s failed to turn green", //
-					Arrays.toString(indices));
+					indicesString);
+
+		Utils.info("indices %s are green!", indicesString);
 	}
 
 	public void refreshType(String backendId, String type) {

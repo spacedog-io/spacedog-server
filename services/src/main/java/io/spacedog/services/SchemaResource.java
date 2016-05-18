@@ -85,9 +85,10 @@ public class SchemaResource extends Resource {
 		if (indexExists)
 			elastic.putMapping(backendId, type, mapping);
 		else {
-			int shards = context.query().getInteger(SpaceParams.SHARDS, SHARDS_DEFAULT);
-			int replicas = context.query().getInteger(SpaceParams.REPLICAS, REPLICAS_DEFAULT);
-			elastic.createIndex(backendId, type, mapping, shards, replicas);
+			int shards = context.query().getInteger(SpaceParams.SHARDS, SpaceParams.SHARDS_DEFAULT);
+			int replicas = context.query().getInteger(SpaceParams.REPLICAS, SpaceParams.REPLICAS_DEFAULT);
+			boolean async = context.query().getBoolean(SpaceParams.ASYNC, SpaceParams.ASYNC_DEFAULT);
+			elastic.createIndex(backendId, type, mapping, async, shards, replicas);
 		}
 
 		return JsonPayload.saved(!indexExists, credentials.backendId(), "/1", "schema", type);
