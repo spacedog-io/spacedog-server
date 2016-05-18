@@ -57,7 +57,7 @@ public class Utils {
 	}
 
 	public static void info() {
-		System.out.println("---");
+		System.out.println();
 	}
 
 	public static void info(String message, Object... objects) {
