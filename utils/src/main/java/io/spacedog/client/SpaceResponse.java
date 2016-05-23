@@ -41,7 +41,7 @@ public class SpaceResponse {
 
 		if (debug) {
 			Utils.info();
-			Utils.info("%s %s => ", httpRequest.getHttpMethod(), httpRequest.getUrl());
+			Utils.infoNoLn("%s %s => ", httpRequest.getHttpMethod(), httpRequest.getUrl());
 		}
 
 		this.before = DateTime.now();

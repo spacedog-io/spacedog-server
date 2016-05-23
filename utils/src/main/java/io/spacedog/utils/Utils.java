@@ -60,8 +60,12 @@ public class Utils {
 		System.out.println();
 	}
 
-	public static void info(String message, Object... objects) {
-		System.out.println(String.format(message, objects));
+	public static void info(String message, Object... arguments) {
+		System.out.println(String.format(message, arguments));
+	}
+
+	public static void infoNoLn(String message, Object... arguments) {
+		System.out.print(String.format(message, arguments));
 	}
 
 	public static void info(String nodeName, JsonNode node) throws JsonProcessingException {
