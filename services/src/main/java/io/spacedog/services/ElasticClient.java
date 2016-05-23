@@ -303,6 +303,7 @@ public class ElasticClient {
 				.preparePutMapping(toAlias(backendId, type))//
 				.setType(type)//
 				.setSource(mapping)//
+				.setUpdateAllTypes(true)//
 				.get();
 
 		if (!putMappingResponse.isAcknowledged())
