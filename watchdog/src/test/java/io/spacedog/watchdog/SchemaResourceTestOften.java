@@ -77,9 +77,9 @@ public class SchemaResourceTestOften extends Assert {
 		SpaceRequest.put("/1/schema/car").adminAuth(testBackend).body(json).go(400);
 
 		// fails to remove the car schema color property
-		json = buildCarSchema();
-		json.with("car").remove("color");
-		SpaceRequest.put("/1/schema/car").adminAuth(testBackend).body(json).go(400);
+		// json = buildCarSchema();
+		// json.with("car").remove("color");
+		// SpaceRequest.put("/1/schema/car").adminAuth(testBackend).body(json).go(400);
 	}
 
 	private static ObjectNode buildHomeSchema() {
