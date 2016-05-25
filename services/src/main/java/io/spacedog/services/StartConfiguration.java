@@ -9,6 +9,7 @@ import java.util.Properties;
 
 import com.google.common.base.Strings;
 
+import io.spacedog.utils.Backends;
 import io.spacedog.utils.Utils;
 
 public class StartConfiguration {
@@ -61,14 +62,14 @@ public class StartConfiguration {
 	}
 
 	public String apiUrl() {
-		return apiUrl("api");
+		return apiUrl(Backends.ROOT_API);
 	}
 
 	public String apiUrl(String backendId) {
 		String url = configuration.getProperty("spacedog.api.url");
-		return Strings.isNullOrEmpty(backendId)//
-				? String.format(url, "api.")//
-				: String.format(url, backendId + '.');
+		if (Strings.isNullOrEmpty(backendId))
+			backendId = Backends.ROOT_API;
+		return String.format(url, backendId + '.');
 	}
 
 	public int apiPort() {

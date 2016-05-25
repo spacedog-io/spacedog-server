@@ -12,6 +12,7 @@ import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTarget;
 import io.spacedog.utils.Json;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
@@ -158,4 +159,25 @@ public class BackendResourceTestOften extends Assert {
 		SpaceRequest.post("/1/backend/apixxx").body(body).go(400);
 	}
 
+	@Test
+	public void pingServerToCheckItIsUpAndRunning() throws Exception {
+
+		// prepare
+		SpaceClient.prepareTest();
+		SpaceTarget target = SpaceRequest.configuration().target();
+
+		// successfully pings server to check it is up and running
+		SpaceRequest.get("").go(200);
+		SpaceRequest.get("/").go(200);
+
+		// successfully pings localhost without any backend subdomain
+		// this can and must be tested on local server only
+		if (target.equals(SpaceTarget.local))
+			SpaceRequest.get("http://localhost:8443").go(200);
+
+		// successfully pings server with an ip address
+		// this can and must be tested on local server only
+		if (target.equals(SpaceTarget.local))
+			SpaceRequest.get("http://127.0.0.1:8443").go(200);
+	}
 }

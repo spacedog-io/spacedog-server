@@ -28,6 +28,12 @@ public class BackendResource extends Resource {
 	// Routes
 	//
 
+	@Get("")
+	@Get("/")
+	public Payload ping() {
+		return JsonPayload.success();
+	}
+
 	@Post("/1/backend/:id")
 	@Post("/1/backend/:id/")
 	public Payload post(String backendId, String body, Context context) {

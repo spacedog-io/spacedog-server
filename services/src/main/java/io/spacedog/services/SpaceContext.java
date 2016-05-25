@@ -36,9 +36,10 @@ public class SpaceContext {
 	private void extractSubdomain(Context context) {
 		String host = context.request().header(HttpHeaders.HOST);
 		String[] terms = host.split("\\.");
-		if (terms.length != 3)
-			throw Exceptions.illegalArgument("host [%s] not valid: missing backend subdomain", host);
-		this.subdomain = terms[0];
+		if (terms.length == 3)
+			this.subdomain = terms[0];
+		else
+			this.subdomain = Backends.ROOT_API;
 	}
 
 	public static String subdomain() {

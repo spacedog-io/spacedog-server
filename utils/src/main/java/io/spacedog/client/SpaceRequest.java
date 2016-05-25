@@ -26,6 +26,7 @@ import com.mashape.unirest.request.HttpRequestWithBody;
 
 import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceClient.User;
+import io.spacedog.utils.Backends;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceHeaders;
@@ -66,7 +67,7 @@ public class SpaceRequest {
 		SpaceTarget target = configuration().target();
 
 		if (Strings.isNullOrEmpty(backendId))
-			backendId = "api";
+			backendId = Backends.ROOT_API;
 
 		return target.url(backendId, uri).toString();
 	}
@@ -273,7 +274,7 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest superdogAuth() {
-		return superdogAuth("api");
+		return superdogAuth(Backends.ROOT_API);
 	}
 
 	public SpaceRequest superdogAuth(Backend backend) {
