@@ -10,12 +10,14 @@ import java.util.concurrent.ExecutionException;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.update.UpdateResponse;
+import org.elasticsearch.common.Strings;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;
 import io.spacedog.utils.SpaceParams;
@@ -87,16 +89,27 @@ public class DataResource extends Resource {
 		 * contains the property path, (3) id is provided with the 'id' query
 		 * parameter
 		 */
-		JsonNode idProperty = schema.path(type).path("_id");
-		Optional<String> id = idProperty.isMissingNode() //
-				? (context.get("id") == null ? Optional.empty() : Optional.of(context.get("id")))//
-				: Optional.of(Json.get(object, idProperty.asText()).asText());
+		Optional<String> id = Optional.empty();
+		JsonNode idPropertyName = schema.path(type).path("_id");
+
+		if (idPropertyName.isTextual()) {
+			JsonNode idPropertyValue = Json.get(object, idPropertyName.asText());
+
+			if (idPropertyValue == null)
+				throw Exceptions.illegalArgument("id property [%s] of type [%s] is null or missing", //
+						idPropertyName.asText(), type);
+
+			id = Optional.of(idPropertyValue.asText());
+
+		} else if (!Strings.isNullOrEmpty(context.get("id")))
+			id = Optional.of(context.get("id"));
 
 		IndexResponse response = DataStore.get().createObject(//
 				credentials.backendId(), type, id, object, credentials.name());
 
 		return JsonPayload.saved(true, credentials.backendId(), "/1/data", response.getType(), response.getId(),
 				response.getVersion());
+
 	}
 
 	@Delete("/v1/data/:type")
@@ -184,8 +197,9 @@ public class DataResource extends Resource {
 						: JsonPayload.error(HttpStatus.INTERNAL_SERVER_ERROR, //
 								"failed to delete object of type [%s] and id [%s]", type, id);
 			} else
-				return JsonPayload.error(HttpStatus.UNAUTHORIZED, //
-						"not the owner of object of type [%s] and id [%s]", type, id);
+				return JsonPayload.error(HttpStatus.FORBIDDEN, //
+						"[%s] not owner of object of type [%s] and id [%s]", //
+						credentials.name(), type, id);
 		}
 
 		return JsonPayload.error(HttpStatus.NOT_FOUND, "object of type [%s] and id [%s] not found", type, id);
