@@ -2,6 +2,8 @@ package io.spacedog.utils;
 
 import java.util.Collection;
 
+import org.apache.http.HttpStatus;
+
 import com.google.common.base.Strings;
 
 public class Check {
@@ -22,7 +24,11 @@ public class Check {
 	}
 
 	public static void isTrue(boolean condition, String message, Object... arguments) {
+		isTrue(condition, HttpStatus.SC_BAD_REQUEST, message, arguments);
+	}
+
+	public static void isTrue(boolean condition, int httpStatus, String message, Object... arguments) {
 		if (!condition)
-			throw new AssertionError(String.format(message, arguments));
+			throw Exceptions.space(httpStatus, message, arguments);
 	}
 }

@@ -29,6 +29,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
 import io.spacedog.services.DataStore.FilteredSearchBuilder;
+import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
@@ -156,8 +157,12 @@ public class SearchResource extends Resource {
 
 		if (Strings.isNullOrEmpty(jsonQuery)) {
 
-			search.setFrom(context.query().getInteger("from", 0))//
-					.setSize(context.query().getInteger("size", 10))//
+			int from = context.query().getInteger("from", 0);
+			int size = context.query().getInteger("size", 10);
+			Check.isTrue(from + size <= 10000, "from + size is greater than 10.000");
+
+			search.setFrom(from)//
+					.setSize(size)//
 					.setFetchSource(context.query().getBoolean("fetch-contents", true))//
 					.setQuery(QueryBuilders.matchAllQuery())//
 					.setVersion(true);

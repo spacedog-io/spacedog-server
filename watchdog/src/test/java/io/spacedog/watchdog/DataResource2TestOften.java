@@ -3,6 +3,11 @@
  */
 package io.spacedog.watchdog;
 
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
 import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.Test;
@@ -10,6 +15,7 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceClient.Backend;
@@ -244,32 +250,32 @@ public class DataResource2TestOften extends Assert {
 		SpaceClient.prepareTest();
 		Backend testBackend = SpaceClient.resetTestBackend();
 
-		// creates msg1 schema with auto generated id strategy
+		// creates message schema with auto generated id strategy
 
-		SpaceClient.setSchema(SchemaBuilder2.builder("msg1")//
+		SpaceClient.setSchema(SchemaBuilder2.builder("message")//
 				.stringProperty("text", true).build(), testBackend);
 
-		// creates a msg1 object with auto generated id
+		// creates a message object with auto generated id
 
-		String id = SpaceRequest.post("/1/data/msg1").adminAuth(testBackend)//
+		String id = SpaceRequest.post("/1/data/message").adminAuth(testBackend)//
 				.body(Json.object("text", "id=?")).go(201)//
 				.getFromJson("id").asText();
 
-		SpaceRequest.get("/1/data/msg1/" + id).adminAuth(testBackend).go(200)//
+		SpaceRequest.get("/1/data/message/" + id).adminAuth(testBackend).go(200)//
 				.assertEquals("id=?", "text");
 
-		// creates a msg1 object with self provided id
+		// creates a message object with self provided id
 
-		SpaceRequest.post("/1/data/msg1?id=1").adminAuth(testBackend)//
+		SpaceRequest.post("/1/data/message?id=1").adminAuth(testBackend)//
 				.body(Json.object("text", "id=1")).go(201);
 
-		SpaceRequest.get("/1/data/msg1/1").adminAuth(testBackend).go(200)//
+		SpaceRequest.get("/1/data/message/1").adminAuth(testBackend).go(200)//
 				.assertEquals("id=1", "text");
 
-		// fails to create a msg1 object with id subkey
+		// fails to create a message object with id subkey
 		// since not compliant with schema
 
-		SpaceRequest.post("/1/data/msg1").adminAuth(testBackend)//
+		SpaceRequest.post("/1/data/message").adminAuth(testBackend)//
 				.body(Json.object("text", "id=2", "id", 2)).go(400);
 
 		// creates msg2 schema with code property as id
@@ -307,5 +313,73 @@ public class DataResource2TestOften extends Assert {
 
 		SpaceRequest.post("/1/data/msg2?id=XXX").adminAuth(testBackend)//
 				.body(Json.object("text", "no code")).go(400);
+	}
+
+	@Test
+	public void testFromAndSizeParameters() throws Exception {
+
+		// prepare
+
+		SpaceClient.prepareTest();
+		Backend backend = SpaceClient.resetTestBackend();
+
+		SpaceClient.setSchema(SchemaBuilder2.builder("message")//
+				.stringProperty("text", true).build(), backend);
+
+		SpaceRequest.post("/1/data/message").backend(backend)//
+				.body("text", "hello").go(201);
+		SpaceRequest.post("/1/data/message").backend(backend)//
+				.body("text", "bonjour").go(201);
+		SpaceRequest.post("/1/data/message").backend(backend)//
+				.body("text", "guttentag").go(201);
+		SpaceRequest.post("/1/data/message").backend(backend)//
+				.body("text", "hola").go(201);
+
+		// fetches messages by 4 pages of 1 object
+
+		Set<String> messages = Sets.newHashSet();
+		messages.addAll(fetchMessages(backend, 0, 1));
+		messages.addAll(fetchMessages(backend, 1, 1));
+		messages.addAll(fetchMessages(backend, 2, 1));
+		messages.addAll(fetchMessages(backend, 3, 1));
+
+		assertEquals(Sets.newHashSet("hello", "bonjour", "guttentag", "hola"), messages);
+
+		// fetches messages by 2 pages of 2 objects
+
+		messages.clear();
+		messages.addAll(fetchMessages(backend, 0, 2));
+		messages.addAll(fetchMessages(backend, 2, 2));
+
+		assertEquals(Sets.newHashSet("hello", "bonjour", "guttentag", "hola"), messages);
+
+		// fetches messages by a single page of 4 objects
+
+		messages.clear();
+		messages.addAll(fetchMessages(backend, 0, 4));
+
+		assertEquals(Sets.newHashSet("hello", "bonjour", "guttentag", "hola"), messages);
+
+		// fails to fetch messages if from + size > 10000
+
+		SpaceRequest.get("/1/data/message?from=9999&size=10").backend(backend).go(400);
+
+	}
+
+	private Collection<String> fetchMessages(Backend backend, int from, int size) throws Exception {
+		JsonNode results = SpaceRequest.get("/1/data/message?refresh=true")//
+				.queryString("from", Integer.toString(from))//
+				.queryString("size", Integer.toString(size))//
+				.backend(backend).go(200)//
+				.assertEquals(4, "total")//
+				.assertSizeEquals(size, "results")//
+				.getFromJson("results");
+
+		List<String> messages = Lists.newArrayList();
+		Iterator<JsonNode> elements = results.elements();
+		while (elements.hasNext())
+			messages.add(elements.next().get("text").asText());
+
+		return messages;
 	}
 }

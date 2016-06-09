@@ -28,6 +28,7 @@ import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceClient.User;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceHeaders;
 
@@ -137,6 +138,10 @@ public class SpaceRequest {
 
 	public SpaceRequest body(Path path) throws IOException {
 		return body(Files.readAllBytes(path));
+	}
+
+	public SpaceRequest body(Object... elements) {
+		return body(Json.object(elements));
 	}
 
 	public SpaceRequest body(JsonNode body) {
