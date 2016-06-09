@@ -31,6 +31,7 @@ import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Uris;
 import net.codestory.http.Context;
+import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
 public class S3Resource extends Resource {
@@ -141,7 +142,7 @@ public class S3Resource extends Resource {
 					s3.deleteObject(bucketName, s3Key);
 					return JsonPayload.success();
 				} else
-					return JsonPayload.error(401);
+					return JsonPayload.error(HttpStatus.FORBIDDEN);
 
 			} else if (credentials.isAtLeastAdmin()) {
 				s3.deleteObject(bucketName, s3Key);
@@ -150,7 +151,7 @@ public class S3Resource extends Resource {
 
 		} catch (AmazonS3Exception e) {
 
-			if (e.getStatusCode() != 404)
+			if (e.getStatusCode() != HttpStatus.NOT_FOUND)
 				throw e;
 		}
 
@@ -193,6 +194,11 @@ public class S3Resource extends Resource {
 
 	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, String[] path, byte[] bytes,
 			Context context) {
+
+		// TODO check if this upload does not replace an older upload
+		// in this case, check crdentials and owner rights
+		// should return FORBIDDEN if user not the owner of previous file
+		// admin can replace whatever they need to replace?
 
 		if (path.length < 2)
 			throw Exceptions.illegalArgument("no prefix in file path [%s]", Uris.join(path));

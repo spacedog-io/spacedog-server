@@ -139,7 +139,7 @@ public class ShareResourceTestOncePerDay {
 		// only admin or owner can delete a shared file
 		SpaceRequest.delete(txtLocation).go(401);
 		SpaceRequest.delete(txtLocation).backend(testBackend).go(401);
-		SpaceRequest.delete(txtLocation).userAuth(vince).go(401);
+		SpaceRequest.delete(txtLocation).userAuth(vince).go(403);
 
 		// owner (fred) can delete its own shared file (test.txt)
 		SpaceRequest.delete(txtLocation).userAuth(fred).go(200);
