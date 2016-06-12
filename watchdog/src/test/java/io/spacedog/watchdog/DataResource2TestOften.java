@@ -276,40 +276,40 @@ public class DataResource2TestOften extends Assert {
 		SpaceRequest.post("/1/data/message").adminAuth(test)//
 				.body("text", "id=2", "id", 2).go(400);
 
-		// creates msg2 schema with code property as id
+		// creates message2 schema with code property as id
 
-		SpaceClient.setSchema(SchemaBuilder2.builder("msg2", "code")//
+		SpaceClient.setSchema(SchemaBuilder2.builder("message2", "code")//
 				.stringProperty("code", true)//
 				.stringProperty("text", true).build(), test);
 
-		// creates a msg2 object with code = 2
+		// creates a message2 object with code = 2
 
-		SpaceRequest.post("/1/data/msg2").adminAuth(test)//
+		SpaceRequest.post("/1/data/message2").adminAuth(test)//
 				.body("text", "id=code=2", "code", "2").go(201);
 
-		SpaceRequest.get("/1/data/msg2/2").adminAuth(test).go(200)//
+		SpaceRequest.get("/1/data/message2/2").adminAuth(test).go(200)//
 				.assertEquals("id=code=2", "text")//
 				.assertEquals("2", "code");
 
-		// creates a msg2 object with code = 3
+		// creates a message2 object with code = 3
 		// and the id param is transparent
 
-		SpaceRequest.post("/1/data/msg2?id=XXX").adminAuth(test)//
+		SpaceRequest.post("/1/data/message2?id=XXX").adminAuth(test)//
 				.body("text", "id=code=3", "code", "3").go(201);
 
-		SpaceRequest.get("/1/data/msg2/3").adminAuth(test).go(200)//
+		SpaceRequest.get("/1/data/message2/3").adminAuth(test).go(200)//
 				.assertEquals("id=code=3", "text")//
 				.assertEquals("3", "code");
 
-		// fails to create a msg2 object without any code
+		// fails to create a message2 object without any code
 
-		SpaceRequest.post("/1/data/msg2").adminAuth(test)//
+		SpaceRequest.post("/1/data/message2").adminAuth(test)//
 				.body("text", "no code").go(400);
 
-		// fails to create a msg2 object without any code
+		// fails to create a message2 object without any code
 		// and the id param is still transparent
 
-		SpaceRequest.post("/1/data/msg2?id=XXX").adminAuth(test)//
+		SpaceRequest.post("/1/data/message2?id=XXX").adminAuth(test)//
 				.body("text", "no code").go(400);
 	}
 
