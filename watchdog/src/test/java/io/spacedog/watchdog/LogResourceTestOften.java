@@ -12,6 +12,7 @@ import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
+import io.spacedog.utils.Backends;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SchemaBuilder2;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
@@ -315,5 +316,29 @@ public class LogResourceTestOften extends Assert {
 				.assertEquals("/1/data", "results.9.path")//
 				.assertEquals("/1/backend/test", "results.10.path")//
 				.assertEquals("/1/backend", "results.11.path");
+	}
+
+	@Test
+	public void pingRequestAreNotLogged() throws Exception {
+
+		SpaceClient.prepareTest();
+
+		// load balancer pings a SpaceDog instance
+
+		SpaceRequest.get("").go(200);
+
+		// this ping should not be present in logs
+
+		JsonNode results = SpaceRequest.get("/1/log")//
+				.size(3).superdogAuth().go(200).getFromJson("results");
+
+		Iterator<JsonNode> elements = results.elements();
+		while (elements.hasNext()) {
+			JsonNode element = elements.next();
+			if (element.get("path").asText().equals("/")
+					&& element.get("credentials").get("backendId").asText().equals(Backends.ROOT_API))
+				Assert.fail();
+		}
+
 	}
 }

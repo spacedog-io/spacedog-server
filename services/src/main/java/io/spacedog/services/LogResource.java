@@ -27,6 +27,7 @@ import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Prefix;
+import net.codestory.http.filters.PayloadSupplier;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/1")
@@ -102,28 +103,44 @@ public class LogResource extends Resource {
 
 	public static SpaceFilter filter() {
 
-		return (uri, context, nextFilter) -> {
-			Payload payload = null;
-			DateTime receivedAt = DateTime.now();
+		return new SpaceFilter() {
 
-			try {
-				payload = nextFilter.get();
-			} catch (Throwable t) {
-				payload = JsonPayload.error(t);
+			private static final long serialVersionUID = 5621427145724229373L;
+
+			@Override
+			public boolean matches(String uri, Context context) {
+
+				// https://api.spacedog.io ping requests should not be logged
+				if (uri.isEmpty() || uri.equals(SLASH))
+					return !SpaceContext.getCredentials().isRootBackend();
+
+				return true;
 			}
 
-			if (payload == null)
-				payload = JsonPayload.error(500, //
-						"unexpected null payload for [%s] request to [%s]", context.method(), uri);
+			@Override
+			public Payload apply(String uri, Context context, PayloadSupplier nextFilter) throws Exception {
+				Payload payload = null;
+				DateTime receivedAt = DateTime.now();
 
-			try {
-				get().log(uri, context, receivedAt, payload);
-			} catch (Exception e) {
-				// TODO: log platform unexpected error with a true logger
-				e.printStackTrace();
+				try {
+					payload = nextFilter.get();
+				} catch (Throwable t) {
+					payload = JsonPayload.error(t);
+				}
+
+				if (payload == null)
+					payload = JsonPayload.error(500, //
+							"unexpected null payload for [%s] request to [%s]", context.method(), uri);
+
+				try {
+					get().log(uri, context, receivedAt, payload);
+				} catch (Exception e) {
+					// TODO: log platform unexpected error with a true logger
+					e.printStackTrace();
+				}
+
+				return payload;
 			}
-
-			return payload;
 		};
 	}
 
