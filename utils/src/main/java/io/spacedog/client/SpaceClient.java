@@ -51,8 +51,8 @@ public class SpaceClient {
 		setSchema(schema, backend);
 	}
 
-	public static User createUser(Backend account, String username, String password) throws Exception {
-		return createUser(account, username, password, "david@spacedog.io");
+	public static User createUser(Backend backend, String username, String password) throws Exception {
+		return createUser(backend, username, password, "david@spacedog.io");
 	}
 
 	public static User createUser(Backend backend, String username, String password, String email) throws Exception {
@@ -63,8 +63,8 @@ public class SpaceClient {
 		return new User(backend.backendId, id, username, password, email);
 	}
 
-	public static void deleteUser(String username, Backend account) throws Exception {
-		SpaceRequest.delete("/1/user/" + username).adminAuth(account).go(200, 404);
+	public static void deleteUser(String username, Backend backend) throws Exception {
+		SpaceRequest.delete("/1/user/" + username).adminAuth(backend).go(200, 404);
 	}
 
 	public static void deleteSchema(JsonNode schema, Backend backend) throws Exception {
@@ -104,9 +104,9 @@ public class SpaceClient {
 
 	public static void deleteBackend(String backendId, String username, String password)
 			throws Exception, UnirestException {
-		// 401 Unauthorized is valid since if this account does not exist
+		// 401 Unauthorized is valid since if this backend does not exist
 		// delete returns 401 because admin username and password
-		// won't match any account
+		// won't match any backend
 		SpaceRequest.delete("/1/backend")//
 				.basicAuth(backendId, username, password).go(200, 401);
 	}
@@ -148,7 +148,7 @@ public class SpaceClient {
 				grandParentStackTraceElement.getMethodName());
 	}
 
-	public static void deleteAll(String type, Backend account) throws Exception {
-		SpaceRequest.delete("/1/data/" + type).adminAuth(account).go(200);
+	public static void deleteAll(String type, Backend backend) throws Exception {
+		SpaceRequest.delete("/1/data/" + type).adminAuth(backend).go(200);
 	}
 }
