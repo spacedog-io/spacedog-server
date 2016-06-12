@@ -168,6 +168,18 @@ public class SpaceRequest {
 		return this;
 	}
 
+	public SpaceRequest size(int size) {
+		return this.queryString("size", String.valueOf(size));
+	}
+
+	public SpaceRequest from(int from) {
+		return this.queryString("from", String.valueOf(from));
+	}
+
+	public SpaceRequest refresh(boolean refresh) {
+		return this.queryString("refresh", String.valueOf(refresh));
+	}
+
 	public SpaceRequest header(String name, String value) {
 		this.headers.put(name, value);
 		return this;
