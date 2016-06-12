@@ -23,27 +23,14 @@ public class SpaceContext {
 	private Context context;
 	private boolean isTest;
 	private boolean isDebug;
-	private String subdomain;
-	private Optional<Credentials> credentials;
+	private Credentials credentials;
+	private boolean authorizationChecked;
 
 	private SpaceContext(Context context) {
 		this.context = context;
 		this.isTest = Boolean.parseBoolean(context().header(SpaceHeaders.SPACEDOG_TEST));
 		this.isDebug = Boolean.parseBoolean(context().header(SpaceHeaders.SPACEDOG_DEBUG));
-		extractSubdomain(context);
-	}
-
-	private void extractSubdomain(Context context) {
-		String host = context.request().header(HttpHeaders.HOST);
-		String[] terms = host.split("\\.");
-		if (terms.length == 3)
-			this.subdomain = terms[0];
-		else
-			this.subdomain = Backends.ROOT_API;
-	}
-
-	public static String subdomain() {
-		return get().subdomain;
+		this.credentials = new Credentials(extractSubdomain(context));
 	}
 
 	public Context context() {
@@ -96,6 +83,14 @@ public class SpaceContext {
 	//
 	// Check credentials static methods
 	//
+
+	public static SpaceFilter checkAuthorizationFilter() {
+
+		return (uri, context, nextFilter) -> {
+			get().checkAuthorization();
+			return nextFilter.get();
+		};
+	}
 
 	public static Credentials checkSuperDogCredentials() {
 		return checkSuperDogCredentials(true);
@@ -162,8 +157,7 @@ public class SpaceContext {
 		Credentials credentials = checkCredentials(checkCustomerBackend);
 		if (credentials.isAtLeastUser())
 			return credentials;
-		throw new AuthorizationException("invalid user credentials of name [%s] and type [%s]", credentials.name(),
-				credentials.level());
+		throw new AuthorizationException("unsufficient credentials level of [%s]", credentials.level());
 	}
 
 	public static Credentials checkCredentials() {
@@ -171,60 +165,54 @@ public class SpaceContext {
 	}
 
 	public static Credentials checkCredentials(boolean checkCustomerBackend) {
-		Optional<Credentials> credentials = buildCredentials();
-		if (!credentials.isPresent())
-			throw new AuthorizationException("no credentials found");
-		if (checkCustomerBackend //
-				&& credentials.get().isRootBackend())
+		Credentials credentials = getCredentials();
+		if (checkCustomerBackend && credentials.isRootBackend())
 			throw new AuthorizationException(//
 					"no customer backend subdomain found");
-		return credentials.get();
+		return credentials;
 	}
 
 	public static void setCredentials(Credentials credentials) {
-		get().credentials = Optional.of(credentials);
+		get().credentials = credentials;
 	}
 
-	public static Optional<Credentials> getCredentials() {
-		SpaceContext local = get();
-		return local.credentials == null ? Optional.empty() : local.credentials;
-	}
-
-	public static Optional<Credentials> buildCredentials() {
-		SpaceContext local = get();
-		if (local.credentials == null) {
-			Debug.credentialCheck();
-			local.credentials = buildNewGenCredentials(local.context);
-		}
-		return local.credentials;
+	public static Credentials getCredentials() {
+		return get().credentials;
 	}
 
 	//
 	// Implementation
 	//
 
-	private static Optional<Credentials> buildNewGenCredentials(Context context) {
+	private String extractSubdomain(Context context) {
+		String host = context.request().header(HttpHeaders.HOST);
+		String[] terms = host.split("\\.");
+		return terms.length == 3 ? terms[0] : Backends.ROOT_API;
+	}
 
-		String backendId = subdomain();
-		Optional<String[]> tokens = decodeAuthorizationHeader(context.header(SpaceHeaders.AUTHORIZATION));
+	private void checkAuthorization() {
+		if (!authorizationChecked) {
+			authorizationChecked = true;
+			Debug.credentialCheck();
 
-		if (tokens.isPresent()) {
+			Optional<String[]> tokens = decodeAuthorizationHeader(context.header(SpaceHeaders.AUTHORIZATION));
 
-			String username = tokens.get()[0];
-			String password = tokens.get()[1];
+			if (tokens.isPresent()) {
 
-			String backendToCheck = username.startsWith("superdog-") ? Backends.ROOT_API : backendId;
-			Optional<Credentials> credentials = CredentialsResource.get().check(backendToCheck, username, password);
+				String username = tokens.get()[0];
+				String password = tokens.get()[1];
 
-			if (credentials.isPresent()) {
-				// force to requested backendId for superdogs
-				credentials.get().backendId(backendId);
-				return credentials;
-			} else
-				throw new AuthorizationException("invalid username or password");
+				String backendToCheck = username.startsWith("superdog-") ? Backends.ROOT_API : credentials.backendId();
+				Optional<Credentials> userCredentials = CredentialsResource.get().check(backendToCheck, username,
+						password);
+
+				if (userCredentials.isPresent())
+					credentials.setUserCredentials(userCredentials.get());
+				else
+					throw new AuthorizationException("invalid username or password for backend [%s]",
+							credentials.backendId());
+			}
 		}
-
-		return Optional.of(new Credentials(backendId));
 	}
 
 	public static Optional<String[]> decodeAuthorizationHeader(String authzHeaderValue) {

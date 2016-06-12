@@ -35,6 +35,12 @@ public class Credentials {
 		this.level = level;
 	}
 
+	public void setUserCredentials(Credentials userCredentials) {
+		this.username = userCredentials.username;
+		this.email = userCredentials.email;
+		this.level = userCredentials.level;
+	}
+
 	public boolean isSuperDog() {
 		return Level.SUPERDOG.equals(level);
 	}

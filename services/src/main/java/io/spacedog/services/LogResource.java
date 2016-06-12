@@ -196,25 +196,22 @@ public class LogResource extends Resource {
 
 	private String log(String uri, Context context, DateTime receivedAt, Payload payload) {
 
-		JsonBuilder<ObjectNode> log = Json.objectBuilder()//
-				.put("method", context.method())//
-				.put("path", uri)//
-				.put("receivedAt", receivedAt.toString())//
-				.put("processedIn", DateTime.now().getMillis() - receivedAt.getMillis());
+		ObjectNode log = Json.object(//
+				"method", context.method(), "path", uri, //
+				"receivedAt", receivedAt.toString(), "processedIn",
+				DateTime.now().getMillis() - receivedAt.getMillis());
 
-		Optional<Credentials> credentials = SpaceContext.getCredentials();
-		if (credentials.isPresent())
-			log.object("credentials")//
-					.put("backendId", credentials.get().backendId())//
-					.put("name", credentials.get().name())//
-					.put("type", credentials.get().level().toString())//
-					.end();
+		Credentials credentials = SpaceContext.getCredentials();
+		ObjectNode logCredentials = log.putObject("credentials");
+		logCredentials.put("backendId", credentials.backendId());
+		logCredentials.put("type", credentials.level().toString());
+		if (!credentials.level().equals(Level.KEY))
+			logCredentials.put("name", credentials.name());
 
 		if (!context.query().keys().isEmpty()) {
-			log.object("query");
+			ObjectNode logQuery = log.putObject("query");
 			for (String key : context.query().keys())
-				log.put(key, context.get(key));
-			log.end();
+				logQuery.put(key, context.get(key));
 		}
 
 		String content = null;
@@ -240,17 +237,17 @@ public class LogResource extends Resource {
 			// log.put("content", content);
 
 			if (Json.isJsonObject(content))
-				log.node("jsonContent", Json.readJsonNode(content));
+				log.set("jsonContent", Json.readJsonNode(content));
 		}
 
 		if (payload != null) {
 			log.put("status", payload.code());
 
 			if (payload.rawContent() instanceof JsonNode)
-				log.node("response", (JsonNode) payload.rawContent());
+				log.set("response", (JsonNode) payload.rawContent());
 		}
 
-		JsonNode securedLog = Json.fullReplace(log.build(), "password", "******");
+		JsonNode securedLog = Json.fullReplace(log, "password", "******");
 
 		return Start.get().getElasticClient()//
 				.prepareIndex(SPACEDOG_BACKEND, TYPE)//
