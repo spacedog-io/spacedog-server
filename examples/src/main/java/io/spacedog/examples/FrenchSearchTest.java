@@ -104,12 +104,11 @@ public class FrenchSearchTest extends Assert {
 		new ElasticClient(client).ensureAllIndicesGreen();
 
 		URL url = Resources.getResource("io/spacedog/examples/french.analyzer.settings.json");
-		JsonNode customfrenchAnalyser = Json.getMapper().readTree(url);
+		JsonNode customfrenchAnalyser = Json.readNode(url);
 
 		indices.prepareCreate(INDEX)//
 				.setSettings(customfrenchAnalyser.toString())//
 				.addMapping(TYPE, FIELD_NAME, "type=string,analyzer=french")//
 				.get();
 	}
-
 }

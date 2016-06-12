@@ -59,13 +59,12 @@ public class SpaceResponse {
 				Utils.info("content-type:" + request.getBody().getEntity().getContentType());
 
 			if (jsonRequestContent != null)
-				Utils.info("Request content: %s",
-						Json.getMapper().writerWithDefaultPrettyPrinter().writeValueAsString(jsonRequestContent));
+				Utils.info("Request content: %s", Json.writePretty(jsonRequestContent));
 		}
 
 		String body = httpResponse.getBody();
 		if (Json.isJson(body))
-			jsonResponseContent = Json.readJsonNode(body);
+			jsonResponseContent = Json.readNode(body);
 
 		if (debug) {
 
@@ -74,9 +73,8 @@ public class SpaceResponse {
 			httpResponse.getHeaders().forEach((key, value) -> Utils.info("=> %s: %s", key, value));
 
 			if (body != null) {
-				String prettyBody = jsonResponseContent != null
-						? Json.getMapper().writerWithDefaultPrettyPrinter()//
-								.writeValueAsString(jsonResponseContent)
+				String prettyBody = jsonResponseContent != null //
+						? Json.writePretty(jsonResponseContent) //
 						: body.length() < 550 ? body : body.substring(0, 500) + " ...";
 
 				Utils.info("=> Response body: %s", prettyBody);

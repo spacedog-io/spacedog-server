@@ -70,7 +70,7 @@ public class JsonBuilder<N extends JsonNode> {
 
 	public JsonBuilder<N> node(String key, String jsonText) {
 		try {
-			checkCurrentIsObjectNode().set(key, Json.getMapper().readTree(jsonText));
+			checkCurrentIsObjectNode().set(key, Json.readNode(jsonText));
 			return this;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -128,7 +128,7 @@ public class JsonBuilder<N extends JsonNode> {
 
 	public JsonBuilder<N> node(String jsonText) {
 		try {
-			checkCurrentIsArrayNode().add(Json.getMapper().readTree(jsonText));
+			checkCurrentIsArrayNode().add(Json.readNode(jsonText));
 			return this;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -136,18 +136,14 @@ public class JsonBuilder<N extends JsonNode> {
 	}
 
 	public JsonBuilder<N> object() {
-		stack.add( //
-				stack.isEmpty() ? //
-						Json.getMapper().getNodeFactory().objectNode() //
-						: checkCurrentIsArrayNode().addObject());
+		stack.add(stack.isEmpty() ? Json.object() //
+				: checkCurrentIsArrayNode().addObject());
 		return this;
 	}
 
 	public JsonBuilder<N> array() {
-		stack.add( //
-				stack.isEmpty() ? //
-						Json.getMapper().getNodeFactory().arrayNode() //
-						: checkCurrentIsArrayNode().addArray());
+		stack.add(stack.isEmpty() ? Json.array() //
+				: checkCurrentIsArrayNode().addArray());
 		return this;
 	}
 

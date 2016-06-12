@@ -47,7 +47,7 @@ public class BatchResource extends Resource {
 		// do not put any checkCredentials here since it must be called in the
 		// following lambda function
 
-		ArrayNode requests = Json.readArrayNode(body);
+		ArrayNode requests = Json.readArray(body);
 
 		if (requests.size() > 10)
 			return JsonPayload.error(HttpStatus.BAD_REQUEST, "batch are limited to 10 sub requests");
@@ -177,7 +177,7 @@ public class BatchResource extends Resource {
 		public List<String> headers(String name) {
 			Optional<JsonNode> headers = Json.checkObject(request, "headers." + name, false);
 			if (headers.isPresent())
-				return Json.toList(headers.get());
+				return Json.toStrings(headers.get());
 			return context.request().headers(name);
 		}
 
@@ -247,7 +247,7 @@ public class BatchResource extends Resource {
 					if (Json.isNull(paramNode))
 						return Collections.emptyList();
 
-					return Json.toList(paramNode);
+					return Json.toStrings(paramNode);
 				}
 			};
 		}

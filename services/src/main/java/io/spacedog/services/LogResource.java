@@ -157,7 +157,7 @@ public class LogResource extends Resource {
 			// no log to delete
 			return Optional.empty();
 
-		String receivedAt = Json.readObjectNode(hits[0].sourceAsString())//
+		String receivedAt = Json.readObject(hits[0].sourceAsString())//
 				.get("receivedAt").asText();
 
 		String query = new QuerySourceBuilder().setQuery(//
@@ -253,8 +253,8 @@ public class LogResource extends Resource {
 			// else
 			// log.put("content", content);
 
-			if (Json.isJsonObject(content))
-				log.set("jsonContent", Json.readJsonNode(content));
+			if (Json.isObject(content))
+				log.set("jsonContent", Json.readNode(content));
 		}
 
 		if (payload != null) {

@@ -189,9 +189,9 @@ public class PushResource extends Resource {
 
 		Credentials credentials = SpaceContext.checkUserCredentials();
 
-		ObjectNode push = Json.readObjectNode(body);
+		ObjectNode push = Json.readObject(body);
 		String appId = Json.checkStringNotNullOrEmpty(push, APP_ID);
-		JsonNode message = Json.checkJsonNode(push, MESSAGE, true).get();
+		JsonNode message = Json.checkNode(push, MESSAGE, true).get();
 		String snsJsonMessage = computeSnsJsonMessage(message);
 
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
@@ -248,7 +248,7 @@ public class PushResource extends Resource {
 			ObjectNode logItem = pushedTo.addObject();
 			try {
 				logItem.put(ID, hit.getId());
-				ObjectNode installation = Json.readObjectNode(hit.sourceAsString());
+				ObjectNode installation = Json.readObject(hit.sourceAsString());
 				Json.checkString(installation, USER_ID)//
 						.ifPresent(userId -> logItem.put(USER_ID, userId));
 				String endpoint = Json.checkStringNotNullOrEmpty(installation, ENDPOINT);
@@ -318,7 +318,7 @@ public class PushResource extends Resource {
 
 		Credentials credentials = SpaceContext.checkCredentials();
 
-		ObjectNode installation = Json.readObjectNode(body);
+		ObjectNode installation = Json.readObject(body);
 		String token = Json.checkStringNotNullOrEmpty(installation, TOKEN);
 		String appId = Json.checkStringNotNullOrEmpty(installation, APP_ID);
 		PushServices service = PushServices.valueOf(Json.checkStringNotNullOrEmpty(installation, PUSH_SERVICE));
@@ -353,10 +353,10 @@ public class PushResource extends Resource {
 			return JsonPayload.json(404);
 
 		if (strict) {
-			ArrayNode tags = Json.readArrayNode(body);
+			ArrayNode tags = Json.readArray(body);
 			installation.get().set(TAGS, tags);
 		} else {
-			ObjectNode newTag = Json.readObjectNode(body);
+			ObjectNode newTag = Json.readObject(body);
 			String tagKey = Json.checkStringNotNullOrEmpty(newTag, TAG_KEY);
 			String tagValue = Json.checkStringNotNullOrEmpty(newTag, TAG_VALUE);
 

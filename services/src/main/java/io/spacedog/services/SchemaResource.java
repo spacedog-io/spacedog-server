@@ -43,7 +43,7 @@ public class SchemaResource extends Resource {
 		for (ObjectCursor<ImmutableOpenMap<String, MappingMetaData>> indexMappings : mappings.values()) {
 			for (ObjectCursor<MappingMetaData> mapping : indexMappings.value.values()) {
 				try {
-					ObjectNode source = Json.readObjectNode(mapping.value.source().string());
+					ObjectNode source = Json.readObject(mapping.value.source().string());
 					jsonMerger.merge((ObjectNode) source.get(mapping.value.type()).get("_meta"));
 				} catch (Exception e) {
 					throw new RuntimeException(e);
@@ -71,7 +71,7 @@ public class SchemaResource extends Resource {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 
 		JsonNode schema = Strings.isNullOrEmpty(newSchemaAsString) ? getDefaultSchema(type) //
-				: SchemaValidator.validate(type, Json.readObjectNode(newSchemaAsString));
+				: SchemaValidator.validate(type, Json.readObject(newSchemaAsString));
 
 		if (schema == null)
 			throw Exceptions.illegalArgument("no default schema for type [%s]", type);

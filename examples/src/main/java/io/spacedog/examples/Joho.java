@@ -189,13 +189,13 @@ public class Joho extends SpaceClient {
 
 	private void createThemes() throws Exception {
 		URL url = Resources.getResource("io/spacedog/examples/joho.themes.json");
-		JsonNode themes = Json.getMapper().readTree(url);
+		JsonNode themes = Json.readNode(url);
 		SpaceRequest.post("/1/data/themes").adminAuth(backend).body(themes).go(201);
 	}
 
 	private void createSites() throws Exception {
 		URL url = Resources.getResource("io/spacedog/examples/joho.sites.json");
-		JsonNode sites = Json.getMapper().readTree(url);
+		JsonNode sites = Json.readNode(url);
 		SpaceRequest.post("/1/data/sites").adminAuth(backend).body(sites).go(201);
 	}
 

@@ -4,11 +4,13 @@
 package io.spacedog.utils;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.DefaultIndenter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -68,7 +70,8 @@ public class Json {
 		else if (object.isArray())
 			((ArrayNode) object).set(Integer.parseInt(lastPathName), value);
 		else
-			throw new IllegalArgumentException(String.format("json node does not contain path [%s]", propertyPath));
+			throw Exceptions.illegalArgument(//
+					"json node does not contain path [%s]", propertyPath);
 	}
 
 	public static JsonMerger merger() {
@@ -94,12 +97,12 @@ public class Json {
 
 	}
 
-	public static boolean isJson(String body) {
+	public static boolean isJson(String string) {
 
-		if (Strings.isNullOrEmpty(body))
+		if (Strings.isNullOrEmpty(string))
 			return false;
 
-		switch (body.charAt(0)) {
+		switch (string.charAt(0)) {
 		case 'n':
 		case 't':
 		case 'f':
@@ -122,7 +125,7 @@ public class Json {
 		return false;
 	}
 
-	public static boolean isJsonObject(String string) {
+	public static boolean isObject(String string) {
 		if (Strings.isNullOrEmpty(string))
 			return false;
 		string = string.trim();
@@ -138,7 +141,7 @@ public class Json {
 		return Json.jsonMapper;
 	}
 
-	public static JsonNode readJsonNode(String jsonString) {
+	public static JsonNode readNode(String jsonString) {
 		Check.notNullOrEmpty(jsonString, "jsonString");
 		try {
 			return jsonMapper.readTree(jsonString);
@@ -147,17 +150,35 @@ public class Json {
 		}
 	}
 
-	public static ObjectNode readObjectNode(String jsonObject) {
-		JsonNode object = readJsonNode(jsonObject);
+	public static JsonNode readNode(URL url) {
+		Check.notNull(url, "url");
+		try {
+			return jsonMapper.readTree(url);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public static String writePretty(JsonNode node) {
+		try {
+			return getMapper().writerWithDefaultPrettyPrinter()//
+					.writeValueAsString(node);
+		} catch (JsonProcessingException e) {
+			throw Exceptions.runtime(e);
+		}
+	}
+
+	public static ObjectNode readObject(String jsonObject) {
+		JsonNode object = readNode(jsonObject);
 		if (!object.isObject())
-			throw new IllegalArgumentException(String.format("not a json object but [%s]", object.getNodeType()));
+			throw Exceptions.illegalArgument("not a json object but [%s]", object.getNodeType());
 		return (ObjectNode) object;
 	}
 
-	public static ArrayNode readArrayNode(String jsonArray) {
-		JsonNode object = readJsonNode(jsonArray);
+	public static ArrayNode readArray(String jsonArray) {
+		JsonNode object = readNode(jsonArray);
 		if (!object.isArray())
-			throw new IllegalArgumentException(String.format("not a json array but [%s]", object.getNodeType()));
+			throw Exceptions.illegalArgument("not a json array but [%s]", object.getNodeType());
 		return (ArrayNode) object;
 	}
 
@@ -273,25 +294,45 @@ public class Json {
 		}
 	}
 
-	public static List<String> toList(JsonNode node) {
+	public static List<String> toStrings(JsonNode node) {
 		if (node.isArray())
-			return Lists.newArrayList(node.elements()).stream().map(element -> element.asText())
+			return Lists.newArrayList(node.elements())//
+					.stream().map(element -> element.asText())//
+					.collect(Collectors.toList());
+
+		if (node.isObject())
+			return Lists.newArrayList(node.elements())//
+					.stream().map(element -> element.asText())//
 					.collect(Collectors.toList());
 
 		if (node.isValueNode())
 			return Collections.singletonList(node.asText());
 
-		throw new IllegalArgumentException(
-				String.format("can not convert this json node [%s] to a list of strings", node));
+		throw Exceptions.illegalArgument(//
+				"can not convert this json node [%s] to a list of strings", node);
 	}
 
+	public static JsonNode fullReplace(JsonNode node, String fieldName, String value) {
+		List<JsonNode> parents = node.findParents(fieldName);
+		for (JsonNode parent : parents)
+			((ObjectNode) parent).replace(fieldName, TextNode.valueOf(value));
+		return node;
+	}
+
+	public static JsonNode fullRemove(JsonNode node, String fieldName) {
+		List<JsonNode> parents = node.findParents(fieldName);
+		for (JsonNode parent : parents)
+			((ObjectNode) parent).remove(fieldName);
+		return node;
+	}
 	//
 	// check methods
 	//
 
 	public static ObjectNode checkObject(JsonNode node) {
 		if (!node.isObject())
-			throw new IllegalArgumentException(String.format("not a json object but [%s]", node.getNodeType()));
+			throw Exceptions.illegalArgument(//
+					"not a json object but [%s]", node.getNodeType());
 		return (ObjectNode) node;
 	}
 
@@ -299,43 +340,56 @@ public class Json {
 		return checkJsonNodeOfType(input, propertyPath, Type.Object, required);
 	}
 
-	public static Optional<JsonNode> checkArrayNode(JsonNode input, String propertyPath, boolean required) {
+	public static ArrayNode checkArray(JsonNode node) {
+		if (!node.isArray())
+			throw Exceptions.illegalArgument(//
+					"not a json array but [%s]", node.getNodeType());
+		return (ArrayNode) node;
+	}
+
+	public static Optional<JsonNode> checkArray(JsonNode input, String propertyPath, boolean required) {
 		return checkJsonNodeOfType(input, propertyPath, Type.Array, required);
 	}
 
-	public static void checkPresent(ObjectNode jsonBody, String propertyPath) {
-		if (Json.isNull(get(jsonBody, propertyPath)))
-			throw new IllegalArgumentException(
-					String.format("JSON object does not contain this property [%s]", propertyPath));
-	}
-
-	public static String checkStringNotNullOrEmpty(JsonNode input, String propertyPath) {
-		String string = checkStringNode(input, propertyPath, true).get().asText();
-		if (Strings.isNullOrEmpty(string)) {
-			throw new IllegalArgumentException(String.format("property [%s] is missing", propertyPath));
-		}
-		return string;
-	}
-
-	public static Optional<JsonNode> checkJsonNode(JsonNode input, String propertyPath, boolean required) {
+	public static Optional<JsonNode> checkNode(JsonNode input, String propertyPath, boolean required) {
 		JsonNode node = get(input, propertyPath);
 		if (node == null) {
 			if (required)
-				throw new IllegalArgumentException(String.format("property [%s] is missing", propertyPath));
+				throw Exceptions.illegalArgument("property [%s] is missing", propertyPath);
 			return Optional.ofNullable(null);
 		}
 		return Optional.of(node);
 	}
 
+	public static void checkPresent(ObjectNode jsonBody, String propertyPath) {
+		if (Json.isNull(get(jsonBody, propertyPath)))
+			throw Exceptions.illegalArgument(//
+					"JSON object does not contain this property [%s]", propertyPath);
+	}
+
 	public static void checkNotPresent(JsonNode input, String propertyPath, String type) {
 		JsonNode node = get(input, propertyPath);
 		if (node != null)
-			throw new IllegalArgumentException(
-					String.format("property [%s] is forbidden in type [%s]", propertyPath, type));
+			throw Exceptions.illegalArgument(//
+					"property [%s] is forbidden in type [%s]", propertyPath, type);
 	}
 
-	public static Optional<String> checkString(JsonNode push, String path) {
-		return checkStringNode(push, path, false).flatMap(node -> Optional.of(node.asText()));
+	public static String checkString(JsonNode node) {
+		if (!node.isTextual())
+			throw Exceptions.runtime("json node [%s] should be a string", node);
+		return node.asText();
+	}
+
+	public static String checkStringNotNullOrEmpty(JsonNode input, String propertyPath) {
+		String string = checkStringNode(input, propertyPath, true).get().asText();
+		if (Strings.isNullOrEmpty(string))
+			throw Exceptions.illegalArgument("property [%s] is missing", propertyPath);
+
+		return string;
+	}
+
+	public static Optional<String> checkString(JsonNode input, String path) {
+		return checkStringNode(input, path, false).flatMap(node -> Optional.of(node.asText()));
 	}
 
 	public static Optional<JsonNode> checkStringNode(JsonNode input, String propertyPath, boolean required) {
@@ -350,28 +404,28 @@ public class Json {
 		return checkJsonNodeOfType(input, propertyPath, Type.Double, required);
 	}
 
-	public static boolean checkBoolean(JsonNode push, String path, boolean defaultValue) {
-		return checkBoolean(push, path).orElse(defaultValue);
+	public static boolean checkBoolean(JsonNode input, String path, boolean defaultValue) {
+		return checkBoolean(input, path).orElse(defaultValue);
 	}
 
-	public static Optional<Boolean> checkBoolean(JsonNode push, String path) {
-		return checkBooleanNode(push, path, false).flatMap(node -> Optional.of(node.asBoolean()));
+	public static Optional<Boolean> checkBoolean(JsonNode input, String path) {
+		return checkBooleanNode(input, path, false).flatMap(node -> Optional.of(node.asBoolean()));
 	}
 
 	public static Optional<JsonNode> checkBooleanNode(JsonNode input, String propertyPath, boolean required) {
 		return checkJsonNodeOfType(input, propertyPath, Type.Boolean, required);
 	}
 
-	public static Optional<Integer> checkInteger(JsonNode push, String path) {
-		return checkIntegerNode(push, path, false).flatMap(node -> Optional.of(node.asInt()));
+	public static Optional<Integer> checkInteger(JsonNode input, String path) {
+		return checkIntegerNode(input, path, false).flatMap(node -> Optional.of(node.asInt()));
 	}
 
 	public static Optional<JsonNode> checkIntegerNode(JsonNode input, String propertyPath, boolean required) {
 		return checkJsonNodeOfType(input, propertyPath, Type.Integer, required);
 	}
 
-	public static Optional<Long> checkLong(JsonNode push, String path) {
-		return checkLongNode(push, path, false).flatMap(node -> Optional.of(node.asLong()));
+	public static Optional<Long> checkLong(JsonNode input, String path) {
+		return checkLongNode(input, path, false).flatMap(node -> Optional.of(node.asLong()));
 	}
 
 	public static Optional<JsonNode> checkLongNode(JsonNode input, String propertyPath, boolean required) {
@@ -389,28 +443,9 @@ public class Json {
 		if (isOfType(expected, node))
 			return Optional.of(node);
 		else
-			throw new IllegalArgumentException(//
-					String.format("property [%s] must be of type [%s] instead of [%s]", //
-							propertyPath, expected, node.getNodeType()));
+			throw Exceptions.illegalArgument(//
+					"property [%s] must be of type [%s] instead of [%s]", //
+					propertyPath, expected, node.getNodeType());
 	}
 
-	public static JsonNode fullReplace(JsonNode node, String fieldName, String value) {
-		List<JsonNode> parents = node.findParents(fieldName);
-		for (JsonNode parent : parents)
-			((ObjectNode) parent).replace(fieldName, TextNode.valueOf(value));
-		return node;
-	}
-
-	public static JsonNode fullRemove(JsonNode node, String fieldName) {
-		List<JsonNode> parents = node.findParents(fieldName);
-		for (JsonNode parent : parents)
-			((ObjectNode) parent).remove(fieldName);
-		return node;
-	}
-
-	public static String checkString(JsonNode node) {
-		if (!node.isTextual())
-			throw new IllegalArgumentException(String.format("json node [%s] should be a string", node));
-		return node.asText();
-	}
 }

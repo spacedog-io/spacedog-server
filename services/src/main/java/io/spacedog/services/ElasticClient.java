@@ -290,7 +290,7 @@ public class ElasticClient {
 		String source = getMappings(backendId, type).getMappings()//
 				.iterator().next().value.get(type).source().toString();
 
-		return (ObjectNode) Json.readObjectNode(source).get(type).get("_meta");
+		return (ObjectNode) Json.readObject(source).get(type).get("_meta");
 	}
 
 	public boolean existsIndex(String backendId, String type) {

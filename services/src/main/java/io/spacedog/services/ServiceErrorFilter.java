@@ -102,11 +102,11 @@ public class ServiceErrorFilter implements SpaceFilter {
 
 	private void appendBody(StringBuilder builder, String name, String body) throws JsonProcessingException {
 		builder.append(name).append(" = ");
+
 		if (Json.isJson(body))
-			body = Json.getMapper().writerWithDefaultPrettyPrinter()//
-					.writeValueAsString(Json.readJsonNode(body));
-		builder.append(body)//
-				.append('\n');
+			body = Json.writePretty(Json.readNode(body));
+
+		builder.append(body).append('\n');
 	}
 
 }

@@ -23,7 +23,7 @@ public class SchemaTranslatorTest extends Assert {
 
 		// load schema
 		URL urlSchema = Resources.getResource("io/spacedog/services/SchemaTranslatorTest-schema.json");
-		JsonNode schema = Json.getMapper().readTree(urlSchema);
+		JsonNode schema = Json.readNode(urlSchema);
 
 		// validate and translate
 		SchemaValidator.validate("myschema", schema);
@@ -33,7 +33,7 @@ public class SchemaTranslatorTest extends Assert {
 
 		// load expected mapping
 		URL urlExpectedMapping = Resources.getResource("io/spacedog/services/SchemaTranslatorTest-mapping.json");
-		JsonNode expectedMapping = Json.getMapper().readTree(urlExpectedMapping);
+		JsonNode expectedMapping = Json.readNode(urlExpectedMapping);
 
 		// assert
 		assertEquals(mapping, expectedMapping);

@@ -115,7 +115,7 @@ public class CredentialsResource extends Resource {
 		Passwords.checkIfValid(password);
 
 		GetResponse getResponse = get(backendId, username, true);
-		ObjectNode credentials = Json.readObjectNode(getResponse.getSourceAsString());
+		ObjectNode credentials = Json.readObject(getResponse.getSourceAsString());
 
 		if (!Json.isNull(credentials.get(HASHED_PASSWORD)) || Json.isNull(credentials.get(PASSWORD_RESET_CODE)))
 			throw Exceptions.illegalArgument("user [%s] password has not been deleted", username);
@@ -154,7 +154,7 @@ public class CredentialsResource extends Resource {
 
 		SignUp(String backendId, Level level, String body) {
 
-			data = Json.readObjectNode(body);
+			data = Json.readObject(body);
 			String email = Json.checkStringNotNullOrEmpty(data, EMAIL);
 			String username = Json.checkStringNotNullOrEmpty(data, USERNAME);
 			Usernames.checkIfValid(username);

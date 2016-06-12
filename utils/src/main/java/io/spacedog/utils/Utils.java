@@ -69,8 +69,7 @@ public class Utils {
 	}
 
 	public static void info(String nodeName, JsonNode node) throws JsonProcessingException {
-		Utils.info("%s = %s", nodeName, //
-				Json.getMapper().writerWithDefaultPrettyPrinter().writeValueAsString(node));
+		Utils.info("%s = %s", nodeName, Json.writePretty(node));
 	}
 
 	public static void warn(String message, Throwable t) {

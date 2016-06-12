@@ -11,6 +11,8 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
+import com.fasterxml.jackson.databind.node.IntNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 
 public class JsonTest extends Assert {
 
@@ -38,32 +40,31 @@ public class JsonTest extends Assert {
 		assertEquals("java.lang.NullPointerException", json.get("message").asText());
 		assertTrue(json.get("trace").size() > 5);
 		assertEquals("java.lang.NullPointerException", json.get("cause").get("type").asText());
-		assertTrue(json.get("cause").get("message").isNull());
+		assertNull(json.get("cause").get("message"));
 		assertTrue(json.get("cause").get("trace").size() > 5);
 	}
 
 	@Test
 	public void shouldConvertJsonToStringList() {
 		// array nodes
-		assertEquals(Collections.emptyList(), Json.toList(Json.array()));
-		assertEquals(Arrays.asList("toto", "200", "true"),
-				Json.toList(Json.array().add("toto").add(200).add(true)));
+		assertEquals(Collections.emptyList(), Json.toStrings(Json.array()));
+		assertEquals(Arrays.asList("toto", "200", "true"), Json.toStrings(Json.array().add("toto").add(200).add(true)));
 
 		// value nodes
-		assertEquals(Arrays.asList("toto"), Json.toList(Json.getMapper().getNodeFactory().textNode("toto")));
-		assertEquals(Arrays.asList("200"), Json.toList(Json.getMapper().getNodeFactory().numberNode(200)));
-		assertEquals(Arrays.asList("true"), Json.toList(Json.getMapper().getNodeFactory().booleanNode(true)));
+		assertEquals(Arrays.asList("toto"), Json.toStrings(TextNode.valueOf("toto")));
+		assertEquals(Arrays.asList("200"), Json.toStrings(IntNode.valueOf(200)));
+		assertEquals(Arrays.asList("true"), Json.toStrings(BooleanNode.valueOf(true)));
 	}
 
 	@Test
 	public void checkTheseStringsAreJsonObjectsOrNot() {
 		// true
-		assertTrue(Json.isJsonObject("{}"));
-		assertTrue(Json.isJsonObject(" {} "));
+		assertTrue(Json.isObject("{}"));
+		assertTrue(Json.isObject(" {} "));
 
 		// false
-		assertFalse(Json.isJsonObject("{]"));
-		assertFalse(Json.isJsonObject("[}"));
+		assertFalse(Json.isObject("{]"));
+		assertFalse(Json.isObject("[}"));
 	}
 
 	@Test

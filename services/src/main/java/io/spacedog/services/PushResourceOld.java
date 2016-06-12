@@ -57,7 +57,7 @@ public class PushResourceOld {
 
 		Credentials credentials = SpaceContext.checkUserCredentials();
 
-		ObjectNode node = Json.readObjectNode(body);
+		ObjectNode node = Json.readObject(body);
 		String protocol = Json.checkStringNotNullOrEmpty(node, "protocol");
 		String endpoint = Json.checkStringNotNullOrEmpty(node, "endpoint");
 
@@ -100,8 +100,8 @@ public class PushResourceOld {
 
 		Credentials credentials = SpaceContext.checkUserCredentials();
 
-		ObjectNode node = Json.readObjectNode(body);
-		JsonNode topics = Json.checkArrayNode(node, "topics", true).get();
+		ObjectNode node = Json.readObject(body);
+		JsonNode topics = Json.checkArray(node, "topics", true).get();
 
 		String endpointArn;
 		try {
@@ -134,7 +134,7 @@ public class PushResourceOld {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 
 		Check.notNullOrEmpty(name, "topic name");
-		ObjectNode node = Json.readObjectNode(body);
+		ObjectNode node = Json.readObject(body);
 		String message = Json.checkStringNotNullOrEmpty(node, "message");
 
 		Optional<Topic> topic = getTopicArn(name, credentials.backendId());
@@ -177,10 +177,10 @@ public class PushResourceOld {
 	public Payload postPushBySearch(String body, Context context) {
 
 		Credentials credentials = SpaceContext.checkAdminCredentials();
-		ObjectNode node = Json.readObjectNode(body);
+		ObjectNode node = Json.readObject(body);
 		String type = Json.checkStringNode(node, "type", true).get().asText();
 		JsonNode query = Json.checkObject(node, "query", true).get();
-		JsonNode properties = Json.checkArrayNode(node, "properties", true).get();
+		JsonNode properties = Json.checkArray(node, "properties", true).get();
 		String message = Json.checkStringNode(node, "message", true).get().asText();
 
 		Set<String> usernames = getUsernamesFromObjects(credentials.backendId(), type, query, properties);
@@ -225,7 +225,7 @@ public class PushResourceOld {
 
 		Set<String> usernames = Sets.newHashSet();
 		for (SearchHit hit : response.getHits().getHits()) {
-			ObjectNode object = Json.readObjectNode(hit.sourceAsString());
+			ObjectNode object = Json.readObject(hit.sourceAsString());
 			for (Iterator<JsonNode> iterator = properties.elements(); iterator.hasNext();)
 				usernames.add(Json.get(object, iterator.next().asText()).asText());
 		}

@@ -129,7 +129,7 @@ public class SearchResource extends Resource {
 			boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
 			DataStore.get().refreshType(refresh, credentials.backendId(), type);
 			FilteredSearchBuilder builder = DataStore.get().searchBuilder(credentials.backendId(), type)
-					.applyContext(context).applyFilters(Json.readObjectNode(body));
+					.applyContext(context).applyFilters(Json.readObject(body));
 			return JsonPayload.json(extractResults(builder.get(), context, credentials));
 
 		} catch (InterruptedException | ExecutionException e) {
@@ -189,7 +189,7 @@ public class SearchResource extends Resource {
 
 		List<JsonNode> objects = new ArrayList<>();
 		for (SearchHit hit : response.getHits().getHits()) {
-			ObjectNode object = Json.readObjectNode(hit.sourceAsString());
+			ObjectNode object = Json.readObject(hit.sourceAsString());
 
 			((ObjectNode) object.get("meta")).put("id", hit.id()).put("type", hit.type()).put("version", hit.version());
 			objects.add(object);

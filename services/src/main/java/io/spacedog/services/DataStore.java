@@ -37,7 +37,7 @@ public class DataStore {
 		if (!response.isExists())
 			return Optional.empty();
 
-		ObjectNode object = Json.readObjectNode(response.getSourceAsString());
+		ObjectNode object = Json.readObject(response.getSourceAsString());
 		object.with("meta").put("id", response.getId()).put("type", response.getType()).put("version",
 				response.getVersion());
 		return Optional.of(object);
