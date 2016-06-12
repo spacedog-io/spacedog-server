@@ -13,20 +13,20 @@ public class WebResourceTestOncePerDay {
 
 	private static final String HTML_404 = "<h1>404</h1>";
 
-	private static Backend testBackend;
+	private static Backend test;
 
 	@Test
 	public void test() throws Exception {
 
 		// prepare
 		SpaceClient.prepareTest(false);
-		testBackend = SpaceClient.resetTestBackend();
+		test = SpaceClient.resetTestBackend();
 
-		SpaceRequest.get("/1/file").adminAuth(testBackend).go(200)//
+		SpaceRequest.get("/1/file").adminAuth(test).go(200)//
 				.assertSizeEquals(0, "results");
 
 		// upload without prefix is illegal
-		SpaceRequest.put("/1/file/XXX.html").adminAuth(testBackend)//
+		SpaceRequest.put("/1/file/XXX.html").adminAuth(test)//
 				.body("<h1>Hello</h1>").go(400);
 
 		// admin uploads web site at prefix 'www'
@@ -56,7 +56,7 @@ public class WebResourceTestOncePerDay {
 		notFound("www", "/a/b/c/index.html");
 
 		// browse without prefix returns default not found html page
-		SpaceRequest.get("/1/web").backend(testBackend).go(404)//
+		SpaceRequest.get("/1/web").backend(test).go(404)//
 				.assertHeaderEquals("text/html", SpaceHeaders.CONTENT_TYPE);
 	}
 
@@ -65,7 +65,7 @@ public class WebResourceTestOncePerDay {
 	}
 
 	private void upload(String prefix, String uri, String html) throws Exception {
-		SpaceRequest.put("/1/file/" + prefix + uri).adminAuth(testBackend).body(html).go(200);
+		SpaceRequest.put("/1/file/" + prefix + uri).adminAuth(test).body(html).go(200);
 	}
 
 	private String html(String uri) {
@@ -81,16 +81,16 @@ public class WebResourceTestOncePerDay {
 	}
 
 	private void browse(String prefix, String uri, String expectedBody, String expectedContentType) throws Exception {
-		SpaceRequest.head("/1/web/" + prefix + uri).backend(testBackend).go(200)//
+		SpaceRequest.head("/1/web/" + prefix + uri).backend(test).go(200)//
 				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE);
 
-		SpaceRequest.get("/1/web/" + prefix + uri).backend(testBackend).go(200)//
+		SpaceRequest.get("/1/web/" + prefix + uri).backend(test).go(200)//
 				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE)//
 				.assertBodyEquals(expectedBody);
 	}
 
 	private void notFound(String prefix, String uri) throws Exception {
-		SpaceRequest.get("/1/web/" + prefix + uri).backend(testBackend).go(404)//
+		SpaceRequest.get("/1/web/" + prefix + uri).backend(test).go(404)//
 				.assertHeaderEquals("text/html", SpaceHeaders.CONTENT_TYPE)//
 				.assertBodyEquals(HTML_404);
 	}

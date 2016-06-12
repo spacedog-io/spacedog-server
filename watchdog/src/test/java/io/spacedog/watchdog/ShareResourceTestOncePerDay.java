@@ -31,23 +31,23 @@ public class ShareResourceTestOncePerDay {
 	public void shareListAndGetFiles() throws Exception {
 
 		// prepare
-		Backend testBackend = SpaceClient.resetTestBackend();
-		SpaceClient.initUserDefaultSchema(testBackend);
-		User vince = SpaceClient.createUser(testBackend, "vince", "hi vince", "vince@dog.com");
-		User fred = SpaceClient.createUser(testBackend, "fred", "hi fred", "fred@dog.com");
+		Backend test = SpaceClient.resetTestBackend();
+		SpaceClient.initUserDefaultSchema(test);
+		User vince = SpaceClient.createUser(test, "vince", "hi vince", "vince@dog.com");
+		User fred = SpaceClient.createUser(test, "fred", "hi fred", "fred@dog.com");
 
 		// only admin can get all shared locations
 		SpaceRequest.get("/1/share").go(401);
-		SpaceRequest.get("/1/share").backend(testBackend).go(401);
+		SpaceRequest.get("/1/share").backend(test).go(401);
 		SpaceRequest.get("/1/share").userAuth(vince).go(401);
 
 		// this account is brand new, no shared files
-		SpaceRequest.get("/1/share").adminAuth(testBackend).go(200)//
+		SpaceRequest.get("/1/share").adminAuth(test).go(200)//
 				.assertSizeEquals(0, "results");
 
 		// anonymous users are not allowed to share files
 		SpaceRequest.put("/1/share/tweeter.png").go(401);
-		SpaceRequest.put("/1/share/tweeter.png").backend(testBackend).go(401);
+		SpaceRequest.put("/1/share/tweeter.png").backend(test).go(401);
 
 		// vince shares a small png file
 		byte[] pngBytes = Resources.toByteArray(//
@@ -63,7 +63,7 @@ public class ShareResourceTestOncePerDay {
 		String pngS3Location = json.get("s3").asText();
 
 		// admin lists all shared files should return tweeter.png path only
-		SpaceRequest.get("/1/share").adminAuth(testBackend).go(200)//
+		SpaceRequest.get("/1/share").adminAuth(test).go(200)//
 				.assertSizeEquals(1, "results")//
 				.assertEquals(pngPath, "results.0.path");
 
@@ -96,8 +96,9 @@ public class ShareResourceTestOncePerDay {
 
 		// list all shared files should return 2 paths
 		// get first page with only one path
-		json = SpaceRequest.get("/1/share?size=1")//
-				.adminAuth(testBackend)//
+		json = SpaceRequest.get("/1/share")//
+				.size(1)//
+				.adminAuth(test)//
 				.go(200)//
 				.assertSizeEquals(1, "results")//
 				.jsonNode();
@@ -108,8 +109,9 @@ public class ShareResourceTestOncePerDay {
 		String next = json.get("next").asText();
 
 		// get second (and last) page with only one path
-		json = SpaceRequest.get("/1/share?size=1&next=" + next)//
-				.adminAuth(testBackend)//
+		json = SpaceRequest.get("/1/share?next=" + next)//
+				.size(1)//
+				.adminAuth(test)//
 				.go(200)//
 				.assertSizeEquals(1, "results")//
 				.assertNotPresent("next")//
@@ -121,7 +123,7 @@ public class ShareResourceTestOncePerDay {
 		Assert.assertTrue(all.contains(txtPath));
 
 		// download shared text file
-		String stringContent = SpaceRequest.get(txtLocation).backend(testBackend).go(200)//
+		String stringContent = SpaceRequest.get(txtLocation).backend(test).go(200)//
 				.assertHeaderEquals("gzip", SpaceHeaders.CONTENT_ENCODING)//
 				.assertHeaderEquals("text/plain", SpaceHeaders.CONTENT_TYPE)//
 				.assertHeaderEquals("fred", SpaceHeaders.SPACEDOG_OWNER)//
@@ -138,27 +140,27 @@ public class ShareResourceTestOncePerDay {
 
 		// only admin or owner can delete a shared file
 		SpaceRequest.delete(txtLocation).go(401);
-		SpaceRequest.delete(txtLocation).backend(testBackend).go(401);
+		SpaceRequest.delete(txtLocation).backend(test).go(401);
 		SpaceRequest.delete(txtLocation).userAuth(vince).go(403);
 
 		// owner (fred) can delete its own shared file (test.txt)
 		SpaceRequest.delete(txtLocation).userAuth(fred).go(200);
 
 		// list of shared files should only return the png file path
-		SpaceRequest.get("/1/share").adminAuth(testBackend).go(200)//
+		SpaceRequest.get("/1/share").adminAuth(test).go(200)//
 				.assertSizeEquals(1, "results")//
 				.assertEquals(pngPath, "results.0.path");
 
 		// only admin can delete all shared files
 		SpaceRequest.delete("/1/share").go(401);
-		SpaceRequest.delete("/1/share").backend(testBackend).go(401);
+		SpaceRequest.delete("/1/share").backend(test).go(401);
 		SpaceRequest.delete("/1/share").userAuth(fred).go(401);
 		SpaceRequest.delete("/1/share").userAuth(vince).go(401);
-		SpaceRequest.delete("/1/share").adminAuth(testBackend).go(200)//
+		SpaceRequest.delete("/1/share").adminAuth(test).go(200)//
 				.assertSizeEquals(1, "deleted")//
 				.assertContains(TextNode.valueOf(pngPath), "deleted");
 
-		SpaceRequest.get("/1/share").adminAuth(testBackend).go(200)//
+		SpaceRequest.get("/1/share").adminAuth(test).go(200)//
 				.assertSizeEquals(0, "results");
 
 	}

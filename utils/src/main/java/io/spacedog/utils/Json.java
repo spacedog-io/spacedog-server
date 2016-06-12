@@ -89,7 +89,7 @@ public class Json {
 		}
 
 		public ObjectNode get() {
-			return merged == null ? newObjectNode() : merged;
+			return merged == null ? object() : merged;
 		}
 
 	}
@@ -161,11 +161,7 @@ public class Json {
 		return (ArrayNode) object;
 	}
 
-	public static ObjectNode newObjectNode() {
-		return getMapper().getNodeFactory().objectNode();
-	}
-
-	public static ArrayNode newArrayNode() {
+	public static ArrayNode array() {
 		return getMapper().getNodeFactory().arrayNode();
 	}
 
@@ -182,12 +178,28 @@ public class Json {
 		if (elements.length % 2 != 0)
 			throw Exceptions.illegalArgument("odd number of elements");
 
-		JsonBuilder<ObjectNode> builder = Json.objectBuilder();
+		ObjectNode object = getMapper().getNodeFactory().objectNode();
 
 		for (int i = 0; i < elements.length; i = i + 2)
-			builder.put(elements[i].toString(), elements[i + 1]);
+			set(object, elements[i].toString(), elements[i + 1]);
 
-		return builder.build();
+		return object;
+	}
+
+	public static ObjectNode set(ObjectNode object, String key, Object value) {
+		if (value instanceof Boolean)
+			object.put(key, (boolean) value);
+		else if (value instanceof Integer)
+			object.put(key, (int) value);
+		else if (value instanceof Long)
+			object.put(key, (long) value);
+		else if (value instanceof Double)
+			object.put(key, (double) value);
+		else if (value instanceof Float)
+			object.put(key, (float) value);
+		else if (value instanceof String)
+			object.put(key, (String) value);
+		return object;
 	}
 
 	private static ObjectMapper jsonMapper;
@@ -218,9 +230,8 @@ public class Json {
 	}
 
 	public static JsonNode toJson(Throwable t, boolean withTraces) {
-		ObjectNode json = newObjectNode()//
-				.put("type", t.getClass().getName()) //
-				.put("message", t.getMessage());
+		ObjectNode json = object("type", t.getClass().getName(), //
+				"message", t.getMessage());
 
 		if (withTraces) {
 			ArrayNode array = json.putArray("trace");

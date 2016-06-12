@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
-import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 
 public class SpaceClient {
@@ -57,7 +56,7 @@ public class SpaceClient {
 
 	public static User createUser(Backend backend, String username, String password, String email) throws Exception {
 		String id = SpaceRequest.post("/1/user").backend(backend)
-				.body(Json.object("username", username, "password", password, "email", email))//
+				.body("username", username, "password", password, "email", email)//
 				.go(201).objectNode().get("id").asText();
 
 		return new User(backend.backendId, id, username, password, email);
@@ -84,11 +83,8 @@ public class SpaceClient {
 	public static Backend createBackend(String backendId, String username, String password, String email)
 			throws Exception, UnirestException {
 
-		ObjectNode body = Json.object("username", username, //
-				"password", password, "email", email);
-
 		SpaceRequest.post("/1/backend/" + backendId)//
-				.body(body)//
+				.body("username", username, "password", password, "email", email)//
 				.go(201);
 
 		return new Backend(backendId, username, password, email);

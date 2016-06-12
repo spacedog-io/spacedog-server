@@ -152,7 +152,7 @@ public class PushResource extends Resource {
 			return JsonPayload.json(//
 					object.get().has(TAGS) //
 							? object.get().get(TAGS) //
-							: Json.newArrayNode());
+							: Json.array());
 
 		return JsonPayload.error(HttpStatus.NOT_FOUND);
 	}
@@ -242,7 +242,7 @@ public class PushResource extends Resource {
 
 		boolean failures = false;
 		boolean successes = false;
-		ArrayNode pushedTo = Json.newArrayNode();
+		ArrayNode pushedTo = Json.array();
 
 		for (SearchHit hit : hits.getHits()) {
 			ObjectNode logItem = pushedTo.addObject();

@@ -24,9 +24,9 @@ public class DataResourceTestOften extends Assert {
 	public void createFindUpdateAndDelete() throws Exception {
 
 		SpaceClient.prepareTest();
-		Backend testBackend = SpaceClient.resetTestBackend();
-		SpaceClient.initUserDefaultSchema(testBackend);
-		SpaceClient.setSchema(SchemaResourceTestOften.buildCarSchema(), testBackend);
+		Backend test = SpaceClient.resetTestBackend();
+		SpaceClient.initUserDefaultSchema(test);
+		SpaceClient.setSchema(SchemaResourceTestOften.buildCarSchema(), test);
 
 		JsonNode car = Json.objectBuilder() //
 				.put("serialNumber", "1234567890") //
@@ -46,15 +46,13 @@ public class DataResourceTestOften extends Assert {
 
 		// create
 
-		SpaceResponse create = SpaceRequest.post("/1/data/car").backend(testBackend).body(car.toString()).go(201);
-
-		create.assertTrue("success").assertEquals("car", "type").assertNotNull("id");
-
-		String id = create.getFromJson("id").asText();
+		String id = SpaceRequest.post("/1/data/car").backend(test).body(car).go(201)//
+				.assertTrue("success").assertEquals("car", "type").assertNotNull("id")//
+				.getFromJson("id").asText();
 
 		// find by id
 
-		SpaceResponse res1 = SpaceRequest.get("/1/data/car/" + id).backend(testBackend).go(200)//
+		SpaceResponse res1 = SpaceRequest.get("/1/data/car/" + id).backend(test).go(200)//
 				.assertEquals(Backends.DEFAULT_USERNAME, "meta.createdBy")//
 				.assertEquals(Backends.DEFAULT_USERNAME, "meta.updatedBy")//
 				.assertDateIsRecent("meta.createdAt")//
@@ -65,21 +63,18 @@ public class DataResourceTestOften extends Assert {
 
 		// find by full text search
 
-		SpaceRequest.get("/1/search/car?q={q}&refresh=true").backend(testBackend).routeParam("q", "inVENT*").go(200)
+		SpaceRequest.get("/1/search/car?q={q}").refresh(true).backend(test).routeParam("q", "inVENT*").go(200)
 				.assertEquals(id, "results.0.meta.id");
 
 		// create user vince
 
-		SpaceClient.User vince = SpaceClient.createUser(testBackend, "vince", "hi vince", "vince@spacedog.io");
+		SpaceClient.User vince = SpaceClient.createUser(test, "vince", "hi vince");
 
 		// update
 
-		SpaceRequest.put("/1/data/car/" + id).backend(testBackend).userAuth(vince)
-				.body(Json.objectBuilder().put("color", "blue").toString()).go(200);
+		SpaceRequest.put("/1/data/car/" + id).userAuth(vince).body("color", "blue").go(200);
 
-		// check update is correct
-
-		SpaceResponse res3 = SpaceRequest.get("/1/data/car/" + id).backend(testBackend).go(200)//
+		SpaceResponse res3 = SpaceRequest.get("/1/data/car/" + id).backend(test).go(200)//
 				.assertEquals(Backends.DEFAULT_USERNAME, "meta.createdBy")//
 				.assertEquals("vince", "meta.updatedBy")//
 				.assertEquals(createdAt, "meta.createdAt")//
@@ -92,11 +87,7 @@ public class DataResourceTestOften extends Assert {
 
 		// delete
 
-		SpaceRequest.delete("/1/data/car/" + id).backend(testBackend).go(200);
-
-		// check delete is done
-
-		assertFalse(SpaceRequest.get("/1/data/car/" + id).backend(testBackend).go(404).jsonNode().get("success")
-				.asBoolean());
+		SpaceRequest.delete("/1/data/car/" + id).backend(test).go(200);
+		SpaceRequest.get("/1/data/car/" + id).backend(test).go(404);
 	}
 }

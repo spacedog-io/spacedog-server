@@ -208,9 +208,9 @@ public class Joho extends SpaceClient {
 	}
 
 	public String createMessage(String discussionId, String text, User user) throws Exception {
-		ObjectNode message = Json.object("text", text, "discussionId", discussionId);
-		return SpaceRequest.post("/1/data/message").userAuth(user).body(message).go(201)//
-				.objectNode().get("id").asText();
+		return SpaceRequest.post("/1/data/message").userAuth(user)//
+				.body("text", text, "discussionId", discussionId)//
+				.go(201).objectNode().get("id").asText();
 	}
 
 	public Iterator<JsonNode> showWall() throws Exception {
@@ -228,7 +228,7 @@ public class Joho extends SpaceClient {
 				.object("query")//
 				.object("match_all");
 
-		JsonNode subjectResults = SpaceRequest.post("/1/search/discussion?refresh=true").backend(backend)
+		JsonNode subjectResults = SpaceRequest.post("/1/search/discussion").refresh(true).backend(backend)
 				.body(discussionQuery).go(200).jsonNode();
 
 		Iterator<JsonNode> discussions = subjectResults.get("results").elements();

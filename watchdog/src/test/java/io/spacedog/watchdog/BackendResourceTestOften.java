@@ -23,24 +23,24 @@ public class BackendResourceTestOften extends Assert {
 	public void deleteSignUpGetLoginTestBackend() throws Exception {
 
 		SpaceClient.prepareTest();
-		Backend testBackend = SpaceClient.resetTestBackend();
+		Backend test = SpaceClient.resetTestBackend();
 
 		// gets backend info
 
 		SpaceRequest.get("/1/backend")//
-				.adminAuth(testBackend).go(200)//
+				.adminAuth(test).go(200)//
 				.assertEquals("test", "backendId")//
 				.assertEquals("test", "superAdmins.0.username")//
 				.assertEquals("hello@spacedog.io", "superAdmins.0.email");
 
 		// empty backend returns no data
 
-		SpaceRequest.get("/1/data?refresh=true").backend(testBackend).go(200)//
+		SpaceRequest.get("/1/data").refresh(true).backend(test).go(200)//
 				.assertSizeEquals(0, "results");
 
 		// fails to return users before user schema is set
 
-		SpaceRequest.get("/1/user").adminAuth(testBackend).go(404);
+		SpaceRequest.get("/1/user").adminAuth(test).go(404);
 
 		// creates new backend with different id but same username
 
@@ -49,15 +49,14 @@ public class BackendResourceTestOften extends Assert {
 		// fails to create new backend with non available id
 
 		SpaceRequest.post("/1/backend/test")
-				.body(//
-						Json.object("backendId", "test", "username", "anotheruser", //
-								"password", "hi anotheruser", "email", "hello@spacedog.io"))
+				.body("backendId", "test", "username", "anotheruser", //
+						"password", "hi anotheruser", "email", "hello@spacedog.io")//
 				.go(400)//
 				.assertEquals("test", "invalidParameters.backendId.value");
 
 		// admin successfully logins
 
-		SpaceRequest.get("/1/login").adminAuth(testBackend).go(200);
+		SpaceRequest.get("/1/login").adminAuth(test).go(200);
 
 		// login fails if no backend nor user set
 
@@ -65,26 +64,26 @@ public class BackendResourceTestOften extends Assert {
 
 		// invalid admin username login fails
 
-		SpaceRequest.get("/1/login").basicAuth(testBackend, "XXX", "hi test").go(401);
+		SpaceRequest.get("/1/login").basicAuth(test, "XXX", "hi test").go(401);
 
 		// invalid admin password login fails
 
-		SpaceRequest.get("/1/login").basicAuth(testBackend, "test", "hi XXX").go(401);
+		SpaceRequest.get("/1/login").basicAuth(test, "test", "hi XXX").go(401);
 
 		// data access with without credentials succeeds
 
-		SpaceRequest.get("/1/data?refresh=true").backend(testBackend).go(200)//
+		SpaceRequest.get("/1/data").refresh(true).backend(test).go(200)//
 				.assertSizeEquals(0, "results");
 
 		// data access with admin user succeeds
 
-		SpaceRequest.get("/1/data").adminAuth(testBackend).go(200)//
+		SpaceRequest.get("/1/data").adminAuth(test).go(200)//
 				.assertSizeEquals(0, "results");
 
 		// let's create a common user
 
-		SpaceClient.initUserDefaultSchema(testBackend);
-		User john = SpaceClient.createUser(testBackend, "john", "hi john", "john@dog.io");
+		SpaceClient.initUserDefaultSchema(test);
+		User john = SpaceClient.createUser(test, "john", "hi john", "john@dog.io");
 
 		// user fails to get backend data since it is restricted to admins
 

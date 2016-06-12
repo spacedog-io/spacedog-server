@@ -154,7 +154,7 @@ public class ChauffeLeTestOften extends Assert {
 					.object("match_all")//
 					.build().toString();
 
-			return SpaceRequest.post("/1/search/bigpost?refresh=true").backend(backend).body(wallQuery).go(200)
+			return SpaceRequest.post("/1/search/bigpost").refresh(true).backend(backend).body(wallQuery).go(200)
 					.jsonNode().get("results").elements();
 		}
 	}
@@ -205,7 +205,7 @@ public class ChauffeLeTestOften extends Assert {
 					.put("field", "parent")//
 					.build().toString();
 
-			JsonNode subjectResults = SpaceRequest.post("/1/search/smallpost?refresh=true").backend(backend)
+			JsonNode subjectResults = SpaceRequest.post("/1/search/smallpost").refresh(true).backend(backend)
 					.body(subjectQuery).go(200).jsonNode();
 
 			JsonBuilder<ObjectNode> responsesQuery = Json.objectBuilder()//

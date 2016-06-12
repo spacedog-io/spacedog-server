@@ -45,9 +45,9 @@ public class JsonTest extends Assert {
 	@Test
 	public void shouldConvertJsonToStringList() {
 		// array nodes
-		assertEquals(Collections.emptyList(), Json.toList(Json.newArrayNode()));
+		assertEquals(Collections.emptyList(), Json.toList(Json.array()));
 		assertEquals(Arrays.asList("toto", "200", "true"),
-				Json.toList(Json.newArrayNode().add("toto").add(200).add(true)));
+				Json.toList(Json.array().add("toto").add(200).add(true)));
 
 		// value nodes
 		assertEquals(Arrays.asList("toto"), Json.toList(Json.getMapper().getNodeFactory().textNode("toto")));
