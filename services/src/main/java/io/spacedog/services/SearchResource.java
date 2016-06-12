@@ -147,7 +147,7 @@ public class SearchResource extends Resource {
 		ElasticClient elastic = Start.get().getElasticClient();
 
 		if (Strings.isNullOrEmpty(type)) {
-			String[] indices = elastic.toIndices(credentials.backendId(), false);
+			String[] indices = elastic.toIndices(credentials.backendId());
 			if (indices.length == 0)
 				return Json.objectBuilder().put("took", 0).put("total", 0).array("results").build();
 			else

@@ -3,7 +3,6 @@
  */
 package io.spacedog.services;
 
-import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
@@ -37,10 +36,11 @@ public class SchemaResource extends Resource {
 	public Payload getAll(Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 		ElasticClient elastic = Start.get().getElasticClient();
-		GetMappingsResponse resp = elastic.getMappings(credentials.backendId());
+		ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetaData>> mappings;
+		mappings = elastic.getMappings(credentials.backendId());
 		JsonMerger jsonMerger = Json.merger();
 
-		for (ObjectCursor<ImmutableOpenMap<String, MappingMetaData>> indexMappings : resp.getMappings().values()) {
+		for (ObjectCursor<ImmutableOpenMap<String, MappingMetaData>> indexMappings : mappings.values()) {
 			for (ObjectCursor<MappingMetaData> mapping : indexMappings.value.values()) {
 				try {
 					ObjectNode source = Json.readObjectNode(mapping.value.source().string());

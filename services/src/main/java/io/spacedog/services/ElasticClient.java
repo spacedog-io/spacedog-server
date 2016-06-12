@@ -34,7 +34,9 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.client.ClusterAdminClient;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
+import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.Priority;
+import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.IndexNotFoundException;
@@ -244,7 +246,7 @@ public class ElasticClient {
 
 	public void deleteAllIndices(String backendId) {
 
-		String[] indices = toIndices(backendId, false);
+		String[] indices = toIndices(backendId);
 
 		if (indices != null && indices.length > 0) {
 			DeleteIndexResponse deleteIndexResponse = internalClient.admin().indices().prepareDelete(indices).get();
@@ -260,11 +262,17 @@ public class ElasticClient {
 		internalClient.admin().indices().prepareDelete(toAlias(backendId, type)).get();
 	}
 
-	public GetMappingsResponse getMappings(String backendId) {
+	public ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetaData>> getMappings(String backendId) {
 		Check.notNullOrEmpty(backendId, "backendId");
+
+		String[] indices = toIndices(backendId);
+		if (indices.length == 0)
+			return ImmutableOpenMap.of();
+
 		return internalClient.admin().indices()//
-				.prepareGetMappings(toIndices(backendId))//
-				.get();
+				.prepareGetMappings(indices)//
+				.get()//
+				.getMappings();
 	}
 
 	public GetMappingsResponse getMappings(String backendId, String type) {
@@ -353,14 +361,7 @@ public class ElasticClient {
 	}
 
 	public String[] toIndices(String backendId) {
-		return toIndices(backendId, true);
-	}
-
-	public String[] toIndices(String backendId, boolean throwIfNoneFound) {
-		String[] indices = toIndicesStream(backendId).toArray(String[]::new);
-		if (throwIfNoneFound && indices.length == 0)
-			throw Exceptions.notFound("no schema found for backend [%s]", backendId);
-		return indices;
+		return toIndicesStream(backendId).toArray(String[]::new);
 	}
 
 	/**

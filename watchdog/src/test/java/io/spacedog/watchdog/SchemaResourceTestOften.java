@@ -22,33 +22,40 @@ public class SchemaResourceTestOften extends Assert {
 	@Test
 	public void deletePutAndGetSchemas() throws Exception {
 
+		// prepare
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
+
+		// anonymous gets all backend schema
+		// if no schema returns empty object
+		SpaceRequest.get("/1/schema").backend(test).go(200)//
+				.assertEquals(Json.merger().get());
+
+		// admin creates user default schema
 		SpaceClient.initUserDefaultSchema(test);
 
-		// should succeed to create a user
-
+		// bob signs up
 		User bob = SpaceClient.createUser(test, "bob", "hi bob", "bob@dog.com");
 
-		// should succeed to reset all schemas
+		// admin creates car, home and sale schemas
 		SpaceClient.setSchema(buildCarSchema(), test);
 		SpaceClient.setSchema(buildHomeSchema(), test);
 		SpaceClient.setSchema(buildSaleSchema(), test);
 
-		// should succeed to get schemas with simple backend key credentials
-		assertEquals(buildCarSchema(), //
-				SpaceRequest.get("/1/schema/car").backend(test).go(200).jsonNode());
-		assertEquals(buildHomeSchema(), //
-				SpaceRequest.get("/1/schema/home").backend(test).go(200).jsonNode());
-		assertEquals(buildSaleSchema(), //
-				SpaceRequest.get("/1/schema/sale").backend(test).go(200).jsonNode());
+		// anonymous gets car, home and sale schemas
+		SpaceRequest.get("/1/schema/car").backend(test).go(200)//
+				.assertEquals(buildCarSchema());
+		SpaceRequest.get("/1/schema/home").backend(test).go(200)//
+				.assertEquals(buildHomeSchema());
+		SpaceRequest.get("/1/schema/sale").backend(test).go(200)//
+				.assertEquals(buildSaleSchema());
 
 		// admin gets the default user schema
 		ObjectNode userSchema = SpaceRequest.get("/1/schema/user")//
 				.adminAuth(test).go(200).objectNode();
 
-		// should succeed to get all schemas with simple backend key credentials
-		SpaceRequest.get("/1/schema").adminAuth(test).go(200)//
+		// anonymous gets all schemas
+		SpaceRequest.get("/1/schema").backend(test).go(200)//
 				.assertEquals(Json.merger() //
 						.merge(buildHomeSchema()) //
 						.merge(buildCarSchema()) //
@@ -56,22 +63,23 @@ public class SchemaResourceTestOften extends Assert {
 						.merge(userSchema) //
 						.get());
 
-		// should fail to delete schema with simple backend key credentials
-		SpaceRequest.delete("/1/schema/toto").backend(test).go(401);
+		// anonymous is not allowed to delete schema
+		SpaceRequest.delete("/1/schema/sale").backend(test).go(401);
 
-		// should fail to delete schema with simple user credentials
-		SpaceRequest.delete("/1/schema/toto").userAuth(bob).go(401);
+		// user is not allowed to delete schema
+		SpaceRequest.delete("/1/schema/sale").userAuth(bob).go(401);
 
-		// should fail to delete a non existent schema
-		SpaceRequest.delete("/1/schema/toto").adminAuth(test).go(404);
+		// admin fails to delete a non existing schema
+		SpaceRequest.delete("/1/schema/XXX").adminAuth(test).go(404);
 
-		// should succeed to delete a schema and all its documents
+		// admin deletes a schema and all its objects
 		SpaceRequest.delete("/1/schema/sale").adminAuth(test).go(200);
 
-		// should fail to create an invalid schema
-		SpaceRequest.put("/1/schema/toto").adminAuth(test).body("{\"toto\":{\"_type\":\"XXX\"}}").go(400);
+		// admin fails to create an invalid schema
+		SpaceRequest.put("/1/schema/toto").adminAuth(test)//
+				.body("{\"toto\":{\"_type\":\"XXX\"}}").go(400);
 
-		// should fail to change the car schema color property type
+		// admin fails to update car schema color property type
 		ObjectNode json = buildCarSchema();
 		json.with("car").with("color").put("_type", "date");
 		SpaceRequest.put("/1/schema/car").adminAuth(test).body(json).go(400);
