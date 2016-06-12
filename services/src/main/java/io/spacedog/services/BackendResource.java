@@ -12,6 +12,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import io.spacedog.services.Credentials.Level;
 import io.spacedog.services.CredentialsResource.SignUp;
 import io.spacedog.utils.Backends;
+import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Internals;
 import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
@@ -32,6 +33,17 @@ public class BackendResource extends Resource {
 	@Get("/")
 	public Payload ping() {
 		return JsonPayload.success();
+	}
+
+	@Post("")
+	@Post("/")
+	@Post("/1")
+	@Post("/1/")
+	public Payload post(String body, Context context) {
+		Credentials credentials = SpaceContext.getCredentials();
+		if (credentials.isRootBackend())
+			throw Exceptions.illegalArgument("[api] not available to identify a new backend");
+		return post(credentials.backendId(), body, context);
 	}
 
 	@Post("/1/backend/:id")
