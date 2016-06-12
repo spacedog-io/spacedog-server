@@ -79,6 +79,15 @@ public class SchemaBuilder {
 		return this;
 	}
 
+	public SchemaBuilder extra(Object... extra) {
+		return extra(Json.object(extra));
+	}
+
+	public SchemaBuilder extra(ObjectNode extra) {
+		builder.node("_extra", extra);
+		return this;
+	}
+
 	private void checkCurrentPropertyExists() {
 		if (currentPropertyType == null)
 			throw new IllegalStateException(String.format("no current property in [%s]", builder.toString()));

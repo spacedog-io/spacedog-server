@@ -139,4 +139,24 @@ public class SchemaResourceTestOften extends Assert {
 				.build();
 	}
 
+	@Test
+	public void saveCustomerExtraDataInSchema() throws Exception {
+
+		// prepare
+		SpaceClient.prepareTest();
+		Backend test = SpaceClient.resetTestBackend();
+
+		ObjectNode schema = SchemaBuilder.builder("home") //
+				.extra("global-scope", true)//
+				.property("type", "enum").required().extra("global-scope", false).end() //
+				.objectProperty("address").required().extra("global-scope", false)//
+				.property("street", "text").required().extra("global-scope", false).end() //
+				.build();
+
+		SpaceClient.setSchema(schema, test);
+
+		SpaceRequest.get("/1/schema/home").backend(test).go(200)//
+				.assertEquals(schema);
+	}
+
 }

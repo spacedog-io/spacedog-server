@@ -35,11 +35,12 @@ public class SchemaValidator {
 
 		if (rootType.equals("object")) {
 			checkField(rootObject, "_id", false, JsonType.STRING);
+			checkField(rootObject, "_extra", false, JsonType.OBJECT);
 			Optional<JsonNode> opt = checkField(rootObject, "_acl", false, JsonType.OBJECT);
-			if (opt.isPresent()) {
+			if (opt.isPresent())
 				checkAcl(type, opt.get());
-			}
-			checkIfInvalidField(rootObject, true, "_acl", "_id", "_type");
+
+			checkIfInvalidField(rootObject, true, "_acl", "_id", "_type", "_extra");
 			checkObjectProperties(type, rootObject);
 		} else
 			throw InvalidSchemaException.invalidSchemaType(type, rootType);
@@ -65,7 +66,9 @@ public class SchemaValidator {
 		checkField(json, "_type", false, JsonType.STRING, TextNode.valueOf("object"));
 		checkField(json, "_required", false, JsonType.BOOLEAN);
 		checkField(json, "_array", false, JsonType.BOOLEAN);
-		checkIfInvalidField(json, true, "_type", "_required", "_array");
+		checkField(json, "_extra", false, JsonType.OBJECT);
+
+		checkIfInvalidField(json, true, "_type", "_required", "_array", "_extra");
 		checkObjectProperties(propertyName, json);
 	}
 
@@ -114,25 +117,29 @@ public class SchemaValidator {
 			throws InvalidSchemaException {
 		checkField(json, "_required", false, JsonType.BOOLEAN);
 		checkField(json, "_array", false, JsonType.BOOLEAN);
-		checkIfInvalidField(json, false, "_type", "_required", "_array");
+		checkField(json, "_extra", false, JsonType.OBJECT);
+		checkIfInvalidField(json, false, "_type", "_required", "_array", "_extra");
 	}
 
 	private static void checkStashProperty(String type, JsonNode json) {
 		checkField(json, "_required", false, JsonType.BOOLEAN);
-		checkIfInvalidField(json, false, "_type", "_required");
+		checkField(json, "_extra", false, JsonType.OBJECT);
+		checkIfInvalidField(json, false, "_type", "_required", "_extra");
 	}
 
 	private static void checkEnumProperty(String propertyName, JsonNode json) throws InvalidSchemaException {
 		checkField(json, "_required", false, JsonType.BOOLEAN);
 		checkField(json, "_array", false, JsonType.BOOLEAN);
-		checkIfInvalidField(json, false, "_type", "_required", "_array");
+		checkField(json, "_extra", false, JsonType.OBJECT);
+		checkIfInvalidField(json, false, "_type", "_required", "_array", "_extra");
 	}
 
 	private static void checkTextProperty(String propertyName, JsonNode json) throws InvalidSchemaException {
-		checkIfInvalidField(json, false, "_type", "_required", "_language", "_array");
+		checkIfInvalidField(json, false, "_type", "_required", "_language", "_array", "_extra");
 		checkField(json, "_required", false, JsonType.BOOLEAN);
 		checkField(json, "_language", false, JsonType.STRING);
 		checkField(json, "_array", false, JsonType.BOOLEAN);
+		checkField(json, "_extra", false, JsonType.OBJECT);
 	}
 
 	private static void checkIfInvalidField(JsonNode json, boolean checkSettingsOnly, String... validFieldNames) {
