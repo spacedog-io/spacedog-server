@@ -27,6 +27,16 @@ public class CrossOriginFilterTestOften extends Assert {
 				.assertHeaderEquals("*", SpaceHeaders.ACCESS_CONTROL_ALLOW_ORIGIN)//
 				.assertHeaderEquals(SpaceHeaders.ALLOW_METHODS, SpaceHeaders.ACCESS_CONTROL_ALLOW_METHODS);
 
+		// TODO make this work
+		// Unirest seems to have bugs in getting header value as list
+
+		// .assertHeaderEquals(SpaceHeaders.AUTHORIZATION,
+		// SpaceHeaders.ACCESS_CONTROL_ALLOW_HEADERS)//
+		// .assertHeaderContains(SpaceHeaders.CONTENT_TYPE,
+		// SpaceHeaders.ACCESS_CONTROL_ALLOW_HEADERS)//
+		// .assertHeaderContains(SpaceHeaders.SPACEDOG_TEST,
+		// SpaceHeaders.ACCESS_CONTROL_ALLOW_HEADERS);
+
 		// CORS pre-flight request
 
 		SpaceRequest.options("/v1/user/mynameisperson").backend(test)
