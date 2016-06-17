@@ -7,20 +7,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class SchemaBuilder {
 
-	public static enum PropertyTypes {
-		OBJECT, ARRAY, TEXT, STRING, BOOLEAN, GEOPOINT, NUMBER, //
-		DATE, TIME, TIMESTAMP, ENUM, AMOUNT, STASH, REF, FILE;
-
-		@Override
-		public String toString() {
-			return super.toString().toLowerCase();
-		}
-
-		public static PropertyTypes valueOfIgnoreCase(String value) {
-			return valueOf(value.toUpperCase());
-		}
-	}
-
 	public static SchemaBuilder builder(String type) {
 		return new SchemaBuilder(Json.objectBuilder().object(type));
 	}
@@ -61,7 +47,7 @@ public class SchemaBuilder {
 
 	public SchemaBuilder array() {
 		checkCurrentPropertyExists();
-		checkCurrentPropertyByInvalidTypes("_array", PropertyTypes.STASH);
+		checkCurrentPropertyByInvalidTypes("_array", SchemaType.STASH);
 		builder.put("_array", true);
 		return this;
 	}
@@ -74,7 +60,7 @@ public class SchemaBuilder {
 
 	public SchemaBuilder language(String language) {
 		checkCurrentPropertyExists();
-		checkCurrentPropertyByValidType("_language", PropertyTypes.TEXT);
+		checkCurrentPropertyByValidType("_language", SchemaType.TEXT);
 		builder.put("_language", language);
 		return this;
 	}
@@ -93,10 +79,10 @@ public class SchemaBuilder {
 			throw new IllegalStateException(String.format("no current property in [%s]", builder.toString()));
 	}
 
-	private void checkCurrentPropertyByValidType(String fieldName, PropertyTypes... validTypes) {
-		PropertyTypes propertyType = PropertyTypes.valueOfIgnoreCase(this.currentPropertyType);
+	private void checkCurrentPropertyByValidType(String fieldName, SchemaType... validTypes) {
+		SchemaType propertyType = SchemaType.valueOfNoCase(this.currentPropertyType);
 
-		for (PropertyTypes validType : validTypes) {
+		for (SchemaType validType : validTypes) {
 			if (propertyType.equals(validType))
 				return;
 		}
@@ -105,13 +91,13 @@ public class SchemaBuilder {
 				String.format("invalid property type [%s] for this field [%s]", propertyType, fieldName));
 	}
 
-	private void checkCurrentPropertyByInvalidTypes(String fieldName, PropertyTypes... invalidTypes) {
-		PropertyTypes propertyType = PropertyTypes.valueOfIgnoreCase(this.currentPropertyType);
+	private void checkCurrentPropertyByInvalidTypes(String fieldName, SchemaType... invalidTypes) {
+		SchemaType propertyType = SchemaType.valueOfNoCase(this.currentPropertyType);
 
-		for (PropertyTypes invalidType : invalidTypes) {
+		for (SchemaType invalidType : invalidTypes) {
 			if (propertyType.equals(invalidType))
-				throw new IllegalStateException(
-						String.format("invalid property type [%s] for this field [%s]", propertyType, fieldName));
+				throw Exceptions.illegalState("invalid property type [%s] for this field [%s]", //
+						propertyType, fieldName);
 		}
 	}
 

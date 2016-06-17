@@ -12,6 +12,7 @@ import org.apache.http.HttpStatus;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
+import io.spacedog.utils.SchemaType;
 import io.spacedog.utils.SpaceException;
 
 public class SchemaValidator {
@@ -20,126 +21,91 @@ public class SchemaValidator {
 		OBJECT, ARRAY, BOOLEAN, STRING, NUMBER
 	}
 
-	public static JsonNode validate(String type, JsonNode schema) throws InvalidSchemaException {
+	public static JsonNode validate(String type, JsonNode schema) throws SchemaException {
 
-		JsonNode rootObject = checkField(schema, type, true, JsonType.OBJECT).get();
+		JsonNode rootObjectSchema = checkField(schema, type, true, JsonType.OBJECT).get();
 
 		checkIfInvalidField(schema, false, type);
 
-		String rootType = checkField(rootObject, "_type", false, JsonType.STRING).orElse(TextNode.valueOf("object"))
-				.asText();
+		String rootType = checkField(rootObjectSchema, "_type", false, JsonType.STRING)//
+				.orElse(TextNode.valueOf("object")).asText();
 
-		// if (rootType.equals("stash")) {
-		// checkStashProperty(type, rootObject);
-		// } else
+		if (SchemaType.OBJECT.equals(rootType)) {
+			checkCommonDirectives(rootObjectSchema);
+			checkField(rootObjectSchema, "_id", false, JsonType.STRING);
 
-		if (rootType.equals("object")) {
-			checkField(rootObject, "_id", false, JsonType.STRING);
-			checkField(rootObject, "_extra", false, JsonType.OBJECT);
-			Optional<JsonNode> opt = checkField(rootObject, "_acl", false, JsonType.OBJECT);
+			Optional<JsonNode> opt = checkField(rootObjectSchema, "_acl", false, JsonType.OBJECT);
 			if (opt.isPresent())
 				checkAcl(type, opt.get());
 
-			checkIfInvalidField(rootObject, true, "_acl", "_id", "_type", "_extra");
-			checkObjectProperties(type, rootObject);
+			checkObjectProperties(type, rootObjectSchema);
 		} else
-			throw InvalidSchemaException.invalidSchemaType(type, rootType);
+			throw SchemaException.invalidType(type, rootType);
 
 		return schema;
 	}
 
-	private static void checkAcl(String type, JsonNode json) throws InvalidSchemaException {
+	private static void checkAcl(String type, JsonNode json) throws SchemaException {
 		// TODO implement this
 	}
 
-	private static void checkObjectProperties(String propertyName, JsonNode json) {
-		Iterable<String> fieldNames = () -> json.fieldNames();
+	private static void checkObjectProperties(String propertyName, JsonNode propertySchema) {
+		Iterable<String> fieldNames = () -> propertySchema.fieldNames();
 
-		StreamSupport.stream(fieldNames.spliterator(), false).filter(name -> name.charAt(0) != '_').findFirst()
-				.orElseThrow(() -> InvalidSchemaException.noProperty(propertyName));
+		StreamSupport.stream(fieldNames.spliterator(), false)//
+				.filter(name -> name.charAt(0) != '_')//
+				.findFirst()//
+				.orElseThrow(() -> SchemaException.noFields(propertyName));
 
-		StreamSupport.stream(fieldNames.spliterator(), false).filter(name -> name.charAt(0) != '_')
-				.forEach(name -> checkProperty(name, json.get(name)));
+		StreamSupport.stream(fieldNames.spliterator(), false)//
+				.filter(name -> name.charAt(0) != '_')//
+				.forEach(name -> checkProperty(name, propertySchema.get(name)));
 	}
 
-	private static void checkObjectProperty(String propertyName, JsonNode json) throws InvalidSchemaException {
-		checkField(json, "_type", false, JsonType.STRING, TextNode.valueOf("object"));
-		checkField(json, "_required", false, JsonType.BOOLEAN);
-		checkField(json, "_array", false, JsonType.BOOLEAN);
-		checkField(json, "_extra", false, JsonType.OBJECT);
+	private static void checkProperty(String propertyName, JsonNode propertySchema) throws SchemaException {
 
-		checkIfInvalidField(json, true, "_type", "_required", "_array", "_extra");
-		checkObjectProperties(propertyName, json);
-	}
+		if (!propertySchema.isObject())
+			throw new SchemaException("invalid schema [%s] for field [%s]", //
+					propertySchema, propertyName);
 
-	private static void checkProperty(String propertyName, JsonNode jsonObject) throws InvalidSchemaException {
+		Optional<JsonNode> optional = checkField(propertySchema, "_type", false, JsonType.STRING);
+		String propertyType = optional.isPresent() ? optional.get().asText() : "object";
 
-		if (!jsonObject.isObject())
-			throw new InvalidSchemaException(
-					String.format("invalid value [%s] for object property [%s]", jsonObject, propertyName));
+		if (!SchemaType.isValid(propertyType))
+			throw new SchemaException("invalid type [%s] for field [%s]", propertyType, propertyName);
 
-		Optional<JsonNode> optType = checkField(jsonObject, "_type", false, JsonType.STRING);
-		String type = optType.isPresent() ? optType.get().asText() : "object";
+		checkCommonDirectives(propertySchema);
 
-		if (type.equals("text"))
-			checkTextProperty(propertyName, jsonObject);
-		else if (type.equals("string"))
-			checkSimpleProperty(jsonObject, propertyName, type);
-		else if (type.equals("date"))
-			checkSimpleProperty(jsonObject, propertyName, type);
-		else if (type.equals("time"))
-			checkSimpleProperty(jsonObject, propertyName, type);
-		else if (type.equals("timestamp"))
-			checkSimpleProperty(jsonObject, propertyName, type);
-		else if (type.equals("integer"))
-			checkSimpleProperty(jsonObject, propertyName, type);
-		else if (type.equals("long"))
-			checkSimpleProperty(jsonObject, propertyName, type);
-		else if (type.equals("float"))
-			checkSimpleProperty(jsonObject, propertyName, type);
-		else if (type.equals("double"))
-			checkSimpleProperty(jsonObject, propertyName, type);
-		else if (type.equals("boolean"))
-			checkSimpleProperty(jsonObject, propertyName, type);
-		else if (type.equals("object"))
-			checkObjectProperty(propertyName, jsonObject);
-		else if (type.equals("enum"))
-			checkEnumProperty(propertyName, jsonObject);
-		else if (type.equals("geopoint"))
-			checkSimpleProperty(jsonObject, propertyName, type);
-		else if (type.equals("stash"))
-			checkStashProperty(propertyName, jsonObject);
+		if (SchemaType.OBJECT.equals(propertyType))
+			checkObjectProperties(propertyName, propertySchema);
 		else
-			throw new InvalidSchemaException("Invalid field type: " + type);
+			checkNoFields(propertyName, propertySchema);
+
 	}
 
-	private static void checkSimpleProperty(JsonNode json, String propertyName, String propertyType)
-			throws InvalidSchemaException {
-		checkField(json, "_required", false, JsonType.BOOLEAN);
-		checkField(json, "_array", false, JsonType.BOOLEAN);
-		checkField(json, "_extra", false, JsonType.OBJECT);
-		checkIfInvalidField(json, false, "_type", "_required", "_array", "_extra");
+	private static void checkCommonDirectives(JsonNode propertySchema) {
+		checkField(propertySchema, "_required", false, JsonType.BOOLEAN);
+		checkField(propertySchema, "_array", false, JsonType.BOOLEAN);
+		checkField(propertySchema, "_extra", false, JsonType.OBJECT);
+		checkField(propertySchema, "_values", false, JsonType.ARRAY);
+		checkField(propertySchema, "_examples", false, JsonType.ARRAY);
+		checkField(propertySchema, "_language", false, JsonType.STRING);
+		checkField(propertySchema, "_gt", false, JsonType.NUMBER);
+		checkField(propertySchema, "_gte", false, JsonType.NUMBER);
+		checkField(propertySchema, "_lt", false, JsonType.NUMBER);
+		checkField(propertySchema, "_lte", false, JsonType.NUMBER);
+		checkField(propertySchema, "_pattern", false, JsonType.STRING);
 	}
 
-	private static void checkStashProperty(String type, JsonNode json) {
-		checkField(json, "_required", false, JsonType.BOOLEAN);
-		checkField(json, "_extra", false, JsonType.OBJECT);
-		checkIfInvalidField(json, false, "_type", "_required", "_extra");
-	}
+	private static void checkNoFields(String propertyName, JsonNode propertySchema) throws SchemaException {
+		Iterable<String> fieldNames = () -> propertySchema.fieldNames();
 
-	private static void checkEnumProperty(String propertyName, JsonNode json) throws InvalidSchemaException {
-		checkField(json, "_required", false, JsonType.BOOLEAN);
-		checkField(json, "_array", false, JsonType.BOOLEAN);
-		checkField(json, "_extra", false, JsonType.OBJECT);
-		checkIfInvalidField(json, false, "_type", "_required", "_array", "_extra");
-	}
-
-	private static void checkTextProperty(String propertyName, JsonNode json) throws InvalidSchemaException {
-		checkIfInvalidField(json, false, "_type", "_required", "_language", "_array", "_extra");
-		checkField(json, "_required", false, JsonType.BOOLEAN);
-		checkField(json, "_language", false, JsonType.STRING);
-		checkField(json, "_array", false, JsonType.BOOLEAN);
-		checkField(json, "_extra", false, JsonType.OBJECT);
+		StreamSupport.stream(fieldNames.spliterator(), false)//
+				.filter(name -> name.charAt(0) != '_')//
+				.findAny()//
+				.ifPresent(name -> {
+					throw SchemaException.invalidField(name);
+				});
 	}
 
 	private static void checkIfInvalidField(JsonNode json, boolean checkSettingsOnly, String... validFieldNames) {
@@ -147,35 +113,28 @@ public class SchemaValidator {
 		Iterable<String> fieldNames = () -> json.fieldNames();
 
 		StreamSupport.stream(fieldNames.spliterator(), false)
-				.filter(name -> checkSettingsOnly ? name.charAt(0) == ('_') : true).filter(name -> {
+				.filter(name -> checkSettingsOnly ? name.charAt(0) == ('_') : true)//
+				.filter(name -> {
 					for (String validName : validFieldNames) {
 						if (name.equals(validName))
 							return false;
 					}
 					return true;
-				}).findFirst().ifPresent(name -> {
-					throw InvalidSchemaException.invalidField(name, validFieldNames);
-				});
-	}
-
-	private static void checkField(JsonNode jsonObject, String fieldName, boolean required, JsonType fieldType,
-			JsonNode anticipatedFieldValue) throws InvalidSchemaException {
-
-		checkField(jsonObject, fieldName, required, fieldType) //
-				.ifPresent(fieldValue -> {
-					if (!fieldValue.equals(anticipatedFieldValue))
-						throw InvalidSchemaException.invalidFieldValue(fieldName, fieldValue, anticipatedFieldValue);
+				})//
+				.findFirst()//
+				.ifPresent(name -> {
+					throw SchemaException.invalidField(name, validFieldNames);
 				});
 	}
 
 	private static Optional<JsonNode> checkField(JsonNode jsonObject, String fieldName, boolean required,
-			JsonType fieldType) throws InvalidSchemaException {
+			JsonType fieldType) throws SchemaException {
 
 		JsonNode fieldValue = jsonObject.get(fieldName);
 
 		if (fieldValue == null)
 			if (required)
-				throw new InvalidSchemaException("This schema field is required: " + fieldName);
+				throw new SchemaException("field [%s] required", fieldName);
 			else
 				return Optional.empty();
 
@@ -186,8 +145,8 @@ public class SchemaValidator {
 				|| (fieldValue.isNumber() && fieldType == JsonType.NUMBER))
 			return Optional.of(fieldValue);
 
-		throw new InvalidSchemaException(String.format("Invalid type [%s] for schema field [%s]. Must be [%s]",
-				getJsonType(fieldValue), fieldName, fieldType));
+		throw new SchemaException("invalid type [%s] for schema field [%s]. Must be [%s]", //
+				getJsonType(fieldValue), fieldName, fieldType);
 	}
 
 	private static String getJsonType(JsonNode value) {
@@ -197,31 +156,25 @@ public class SchemaValidator {
 								: value.isArray() ? "array" : value.isBoolean() ? "boolean" : "null";
 	}
 
-	public static class InvalidSchemaException extends SpaceException {
+	public static class SchemaException extends SpaceException {
 
 		private static final long serialVersionUID = 6335047694807220133L;
 
-		public InvalidSchemaException(String message, Object... args) {
+		public SchemaException(String message, Object... args) {
 			super(HttpStatus.SC_BAD_REQUEST, message, args);
 		}
 
-		public static InvalidSchemaException invalidField(String fieldName, String... expectedFiedNames) {
-			return new InvalidSchemaException("field [%s] invalid: expected fields %s", fieldName,
+		private static SchemaException invalidField(String fieldName, String... expectedFiedNames) {
+			return new SchemaException("invalid field [%s]: expected fields %s", fieldName,
 					Arrays.toString(expectedFiedNames));
 		}
 
-		public static InvalidSchemaException invalidSchemaType(String schemaName, String type) {
-			return new InvalidSchemaException("schema type [%s] invalid", type);
+		private static SchemaException invalidType(String schemaName, String type) {
+			return new SchemaException("invalid schema type [%s]", type);
 		}
 
-		public static InvalidSchemaException invalidFieldValue(String fieldName, JsonNode fieldValue,
-				JsonNode anticipatedFieldValue) {
-			return new InvalidSchemaException("schema field [%s] equal to [%s] should be equal to [%s]", fieldName,
-					fieldValue, anticipatedFieldValue);
-		}
-
-		public static InvalidSchemaException noProperty(String propertyName) {
-			return new InvalidSchemaException("property [%s] of type [object] has no properties", propertyName);
+		private static SchemaException noFields(String fieldName) {
+			return new SchemaException("no fields in sub object [%s]", fieldName);
 		}
 	}
 

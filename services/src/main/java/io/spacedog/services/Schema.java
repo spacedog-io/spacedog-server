@@ -8,7 +8,7 @@ import java.util.Optional;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.services.SchemaValidator.InvalidSchemaException;
+import io.spacedog.services.SchemaValidator.SchemaException;
 import io.spacedog.utils.Json;
 
 public class Schema {
@@ -209,7 +209,7 @@ public class Schema {
 
 	private void checkMinMax(int _min, int _max) {
 		if (_min > _max)
-			throw new InvalidSchemaException(
+			throw new SchemaException(
 					String.format("_min [%s] should not be greater than _max [%s]", _min, _max));
 	}
 
