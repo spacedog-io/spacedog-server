@@ -6,6 +6,7 @@ package io.spacedog.services;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 
@@ -54,7 +55,7 @@ public class SchemaTranslator {
 
 			return builder.build();
 		} else
-			throw new IllegalArgumentException(String.format("invalid schema root type [%s]", type));
+			throw Exceptions.illegalArgument("invalid schema root type [%s]", type);
 	}
 
 	private static ObjectNode toElasticProperties(JsonNode schema) {
@@ -118,7 +119,7 @@ public class SchemaTranslator {
 			mapping.put("type", "object");
 			mapping.put("enabled", false);
 		} else {
-			throw new IllegalArgumentException("Invalid type [" + type + "] for property [" + key + "]");
+			throw Exceptions.illegalArgument("invalid type [%s] for property [%s]", type, key);
 		}
 		return mapping.build();
 	}

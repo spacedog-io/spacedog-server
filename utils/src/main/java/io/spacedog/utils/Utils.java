@@ -69,7 +69,7 @@ public class Utils {
 	}
 
 	public static void info(String nodeName, JsonNode node) throws JsonProcessingException {
-		Utils.info("%s = %s", nodeName, Json.writePretty(node));
+		Utils.info("%s = %s", nodeName, Json.toPrettyString(node));
 	}
 
 	public static void warn(String message, Throwable t) {

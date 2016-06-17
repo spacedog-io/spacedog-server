@@ -223,7 +223,7 @@ public class DataStore {
 			filters.fields()
 					.forEachRemaining(field -> boolBuilder.filter(//
 							QueryBuilders.termQuery(field.getKey(), //
-									Json.toSimpleValue(field.getValue()))));
+									Json.toValue(field.getValue()))));
 			return this;
 		}
 

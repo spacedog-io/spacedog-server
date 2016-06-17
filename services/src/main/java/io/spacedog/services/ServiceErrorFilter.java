@@ -104,7 +104,7 @@ public class ServiceErrorFilter implements SpaceFilter {
 		builder.append(name).append(" = ");
 
 		if (Json.isJson(body))
-			body = Json.writePretty(Json.readNode(body));
+			body = Json.toPrettyString(Json.readNode(body));
 
 		builder.append(body).append('\n');
 	}

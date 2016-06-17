@@ -78,4 +78,16 @@ public class JsonTest extends Assert {
 		} catch (IllegalArgumentException e) {
 		}
 	}
+
+	@Test
+	public void testToArrayNode() {
+		assertEquals(Json.arrayBuilder().add(1).add("vince").array().add(1).add(2).build(), //
+				Json.toArrayNode(new Object[] { 1, "vince", new int[] { 1, 2 } }));
+	}
+
+	@Test
+	public void testToArray() {
+		assertTrue(Arrays.deepEquals(new Object[] { 1, "vince", new Object[] { 1, 2 } }, //
+				Json.toArray(Json.arrayBuilder().add(1).add("vince").array().add(1).add(2).build())));
+	}
 }

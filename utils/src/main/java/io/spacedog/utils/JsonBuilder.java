@@ -30,6 +30,10 @@ public class JsonBuilder<N extends JsonNode> {
 			put(key, (float) value);
 		else if (value instanceof String)
 			put(key, (String) value);
+		else
+			throw Exceptions.illegalArgument("invalid value type [%s]", //
+					value.getClass().getSimpleName());
+
 		return this;
 	}
 

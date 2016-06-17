@@ -4,6 +4,7 @@
 package io.spacedog.utils;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
@@ -16,6 +17,12 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.BooleanNode;
+import com.fasterxml.jackson.databind.node.DoubleNode;
+import com.fasterxml.jackson.databind.node.FloatNode;
+import com.fasterxml.jackson.databind.node.IntNode;
+import com.fasterxml.jackson.databind.node.LongNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
@@ -53,7 +60,7 @@ public class Json {
 		JsonNode node = get(json, propertyPath);
 		if (Json.isNull(node))
 			return defaultValue;
-		return Json.toSimpleValue(node);
+		return Json.toValue(node);
 	}
 
 	public static void set(JsonNode object, String propertyPath, JsonNode value) {
@@ -141,6 +148,15 @@ public class Json {
 		return Json.jsonMapper;
 	}
 
+	public static String toPrettyString(JsonNode node) {
+		try {
+			return getMapper().writerWithDefaultPrettyPrinter()//
+					.writeValueAsString(node);
+		} catch (JsonProcessingException e) {
+			throw Exceptions.runtime(e);
+		}
+	}
+
 	public static JsonNode readNode(String jsonString) {
 		Check.notNullOrEmpty(jsonString, "jsonString");
 		try {
@@ -159,15 +175,6 @@ public class Json {
 		}
 	}
 
-	public static String writePretty(JsonNode node) {
-		try {
-			return getMapper().writerWithDefaultPrettyPrinter()//
-					.writeValueAsString(node);
-		} catch (JsonProcessingException e) {
-			throw Exceptions.runtime(e);
-		}
-	}
-
 	public static ObjectNode readObject(String jsonObject) {
 		JsonNode object = readNode(jsonObject);
 		if (!object.isObject())
@@ -180,10 +187,6 @@ public class Json {
 		if (!object.isArray())
 			throw Exceptions.illegalArgument("not a json array but [%s]", object.getNodeType());
 		return (ArrayNode) object;
-	}
-
-	public static ArrayNode array() {
-		return getMapper().getNodeFactory().arrayNode();
 	}
 
 	public static JsonBuilder<ObjectNode> objectBuilder() {
@@ -202,24 +205,20 @@ public class Json {
 		ObjectNode object = getMapper().getNodeFactory().objectNode();
 
 		for (int i = 0; i < elements.length; i = i + 2)
-			set(object, elements[i].toString(), elements[i + 1]);
+			object.set(elements[i].toString(), toNode(elements[i + 1]));
 
 		return object;
 	}
 
+	public static ArrayNode array(Object... elements) {
+		ArrayNode array = getMapper().getNodeFactory().arrayNode();
+		for (int i = 0; i < elements.length; i++)
+			array.add(toNode(elements[i]));
+		return array;
+	}
+
 	public static ObjectNode set(ObjectNode object, String key, Object value) {
-		if (value instanceof Boolean)
-			object.put(key, (boolean) value);
-		else if (value instanceof Integer)
-			object.put(key, (int) value);
-		else if (value instanceof Long)
-			object.put(key, (long) value);
-		else if (value instanceof Double)
-			object.put(key, (double) value);
-		else if (value instanceof Float)
-			object.put(key, (float) value);
-		else if (value instanceof String)
-			object.put(key, (String) value);
+		object.set(key, toNode(value));
 		return object;
 	}
 
@@ -233,7 +232,7 @@ public class Json {
 				.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 	}
 
-	public static Object toSimpleValue(JsonNode value) {
+	public static Object toValue(JsonNode value) {
 
 		if (value.isBoolean())
 			return value.booleanValue();
@@ -244,10 +243,51 @@ public class Json {
 		if (value.isNumber())
 			return value.numberValue();
 
+		if (value.isArray())
+			return toArray((ArrayNode) value);
+
 		if (value.isNull())
 			return null;
 
-		throw Exceptions.runtime("only supports simple types");
+		throw Exceptions.illegalArgument("only supports simple types");
+	}
+
+	public static Object[] toArray(ArrayNode arrayNode) {
+		Object[] array = new Object[arrayNode.size()];
+		for (int i = 0; i < array.length; i++)
+			array[i] = toValue(arrayNode.get(i));
+		return array;
+	}
+
+	public static JsonNode toNode(Object value) {
+		if (value == null)
+			return NullNode.instance;
+		if (value instanceof JsonNode)
+			return (JsonNode) value;
+		if (value instanceof Boolean)
+			return BooleanNode.valueOf((boolean) value);
+		else if (value instanceof Integer)
+			return IntNode.valueOf((int) value);
+		else if (value instanceof Long)
+			return LongNode.valueOf((long) value);
+		else if (value instanceof Double)
+			return DoubleNode.valueOf((double) value);
+		else if (value instanceof Float)
+			return FloatNode.valueOf((float) value);
+		else if (value instanceof String)
+			return TextNode.valueOf((String) value);
+		else if (value.getClass().isArray())
+			return toArrayNode(value);
+
+		throw Exceptions.illegalArgument("invalid value type [%s]", //
+				value.getClass().getSimpleName());
+	}
+
+	public static ArrayNode toArrayNode(Object array) {
+		ArrayNode arrayNode = Json.array();
+		for (int i = 0; i < Array.getLength(array); i++)
+			arrayNode.add(toNode(Array.get(array, i)));
+		return arrayNode;
 	}
 
 	public static JsonNode toJson(Throwable t, boolean withTraces) {
@@ -447,5 +487,4 @@ public class Json {
 					"property [%s] must be of type [%s] instead of [%s]", //
 					propertyPath, expected, node.getNodeType());
 	}
-
 }

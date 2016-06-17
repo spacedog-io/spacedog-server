@@ -25,4 +25,8 @@ public class Exceptions {
 	public static SpaceException space(int httpStatus, Throwable cause, String message, Object... arguments) {
 		return new SpaceException(httpStatus, cause, message, arguments);
 	}
+
+	public static IllegalStateException illegalState(String message, Object... arguments) {
+		return new IllegalStateException(String.format(message, arguments));
+	}
 }

@@ -59,7 +59,7 @@ public class SpaceResponse {
 				Utils.info("content-type:" + request.getBody().getEntity().getContentType());
 
 			if (jsonRequestContent != null)
-				Utils.info("Request content: %s", Json.writePretty(jsonRequestContent));
+				Utils.info("Request content: %s", Json.toPrettyString(jsonRequestContent));
 		}
 
 		String body = httpResponse.getBody();
@@ -74,7 +74,7 @@ public class SpaceResponse {
 
 			if (body != null) {
 				String prettyBody = jsonResponseContent != null //
-						? Json.writePretty(jsonResponseContent) //
+						? Json.toPrettyString(jsonResponseContent) //
 						: body.length() < 550 ? body : body.substring(0, 500) + " ...";
 
 				Utils.info("=> Response body: %s", prettyBody);
