@@ -138,6 +138,7 @@ public class BackendResourceTestOften extends Assert {
 	public void invalidBackendIdentifiers() throws Exception {
 
 		// prepare
+		SpaceClient.prepareTest();
 		SpaceClient.deleteTestBackend();
 		ObjectNode body = Json.object("username", "test", //
 				"password", "hi test", "email", "hello@spacedog.io");
