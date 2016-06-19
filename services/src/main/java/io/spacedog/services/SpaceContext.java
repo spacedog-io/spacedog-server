@@ -100,8 +100,8 @@ public class SpaceContext {
 		Credentials credentials = checkCredentials(checkCustomerBackend);
 		if (credentials.isSuperDog())
 			return credentials;
-		throw new AuthorizationException("invalid superdog credentials of name [%s] and type [%s]", credentials.name(),
-				credentials.level());
+		throw new AuthorizationException("[%s][%s] has invalid superdog credentials", //
+				credentials.level(), credentials.name());
 	}
 
 	public static Credentials checkSuperAdminCredentials() {
@@ -112,8 +112,8 @@ public class SpaceContext {
 		Credentials credentials = checkCredentials(checkCustomerBackend);
 		if (credentials.isAtLeastSuperAdmin())
 			return credentials;
-		throw new AuthorizationException("invalid super administrator credentials of name [%s] and type [%s]",
-				credentials.name(), credentials.level());
+		throw new AuthorizationException("[%s][%s] has invalid super admin credentials", //
+				credentials.level(), credentials.name());
 	}
 
 	public static Credentials checkAdminCredentials() {
@@ -124,8 +124,8 @@ public class SpaceContext {
 		Credentials credentials = checkCredentials(checkCustomerBackend);
 		if (credentials.isAtLeastAdmin())
 			return credentials;
-		throw new AuthorizationException("invalid administrator credentials of name [%s] and type [%s]",
-				credentials.name(), credentials.level());
+		throw new AuthorizationException("[%s][%s] has invalid admin credentials", //
+				credentials.level(), credentials.name());
 	}
 
 	public static Credentials checkUserOrAdminCredentials() {
@@ -136,8 +136,8 @@ public class SpaceContext {
 		Credentials credentials = checkCredentials(checkCustomerBackend);
 		if (credentials.isAtLeastAdmin() || credentials.isAtLeastUser())
 			return credentials;
-		throw new AuthorizationException("invalid user or administrator credentials of name [%s] and type [%s]",
-				credentials.name(), credentials.level());
+		throw new AuthorizationException("[%s][%s] has invalid user or admin credentials", //
+				credentials.level(), credentials.name());
 	}
 
 	public static Credentials checkUserCredentials() {
@@ -157,7 +157,7 @@ public class SpaceContext {
 		Credentials credentials = checkCredentials(checkCustomerBackend);
 		if (credentials.isAtLeastUser())
 			return credentials;
-		throw new AuthorizationException("unsufficient credentials level of [%s]", credentials.level());
+		throw new AuthorizationException("unsufficient credentials level [%s]", credentials.level());
 	}
 
 	public static Credentials checkCredentials() {

@@ -128,10 +128,9 @@ public class DataResource extends Resource {
 	public Payload getById(String type, String id, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 		Optional<ObjectNode> object = DataStore.get().getObject(credentials.backendId(), type, id);
-		if (object.isPresent())
-			return JsonPayload.json(object.get());
-		else
-			return JsonPayload.error(HttpStatus.NOT_FOUND);
+		return object.isPresent() //
+				? JsonPayload.json(object.get()) //
+				: JsonPayload.error(HttpStatus.NOT_FOUND);
 	}
 
 	@Put("/v1/data/:type/:id")
