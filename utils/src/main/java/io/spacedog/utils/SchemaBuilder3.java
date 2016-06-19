@@ -71,6 +71,11 @@ public class SchemaBuilder3 {
 		return builder.build();
 	}
 
+	@Override
+	public String toString() {
+		return builder.build().toString();
+	}
+
 	public SchemaBuilder3 id(String key) {
 		builder.put("_id", key);
 		return this;
@@ -118,6 +123,12 @@ public class SchemaBuilder3 {
 
 	public SchemaBuilder3 extra(ObjectNode extra) {
 		builder.node("_extra", extra);
+		return this;
+	}
+
+	public SchemaBuilder3 labels(String... labels) {
+		builder.node("_label", Json.object(//
+				Arrays.copyOf(labels, labels.length, Object[].class)));
 		return this;
 	}
 

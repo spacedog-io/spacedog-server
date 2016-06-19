@@ -93,7 +93,7 @@ public class Colibee extends SpaceClient {
 	static ObjectNode buildConsultantSchema() {
 		return SchemaBuilder3.builder("consultant") //
 				.bool("membreColibee")//
-				.string("membreNumero").examples("01234567")//
+				.string("membreNumero").examples("01234567").labels("fr", "N° de membre")//
 				.text("resume")//
 				.enumm("typePrestations").array().examples("William")//
 				.enumm("secteurActivites").array().examples("Automobile")//
