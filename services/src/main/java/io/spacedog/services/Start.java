@@ -77,6 +77,10 @@ public class Start {
 				.put("node.master", true)//
 				.put("node.data", true)//
 				.put("cluster.name", CLUSTER_NAME)//
+				// disable automatic index creation
+				.put("action.auto_create_index", false)//
+				// disable dynamic indexing
+				.put("index.mapper.dynamic", false)//
 				// disable rebalance to avoid automatic rebalance
 				// when a temporary second node appears
 				.put("cluster.routing.rebalance.enable", "none")//
@@ -129,6 +133,7 @@ public class Start {
 				.add(LogResource.get())//
 				.add(PushResource.get())//
 				.add(ShareResource.get())//
+				.add(StashResource.get())//
 				.add(SearchResource.get());
 
 		routes.filter(new CrossOriginFilter())//
