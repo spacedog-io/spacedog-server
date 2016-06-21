@@ -291,20 +291,20 @@ public class Json {
 	}
 
 	public static JsonNode toJson(Throwable t, boolean withTraces) {
-		ObjectNode json = object("type", t.getClass().getName(), //
-				"message", t.getMessage());
+		ObjectNode json = object("type", t.getClass().getName());
+
+		if (!Strings.isNullOrEmpty(t.getMessage()))//
+			json.put("message", t.getMessage());
 
 		if (withTraces) {
 			ArrayNode array = json.putArray("trace");
-
 			for (StackTraceElement element : t.getStackTrace()) {
 				array.add(element.toString());
 			}
 		}
 
-		if (t.getCause() != null) {
+		if (t.getCause() != null)
 			json.set("cause", toJson(t.getCause(), withTraces));
-		}
 
 		return json;
 	}
