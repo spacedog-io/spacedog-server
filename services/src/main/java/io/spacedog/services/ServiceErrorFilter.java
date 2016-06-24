@@ -37,7 +37,7 @@ public class ServiceErrorFilter implements SpaceFilter {
 
 		if (payload == null)
 			payload = JsonPayload.error(HttpStatus.INTERNAL_SERVER_ERROR, //
-					"unexpected null payload for [%s] request to [%s]", context.method(), uri);
+					"[%s][%s] response payload is null", context.method(), uri);
 
 		if (payload.code() == HttpStatus.INTERNAL_SERVER_ERROR)
 			notifyInternalErrorToSuperdogs(uri, context, payload);
