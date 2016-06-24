@@ -43,8 +43,10 @@ public class SchemaResource extends Resource {
 		for (ObjectCursor<ImmutableOpenMap<String, MappingMetaData>> indexMappings : mappings.values()) {
 			for (ObjectCursor<MappingMetaData> mapping : indexMappings.value.values()) {
 				try {
-					ObjectNode source = Json.readObject(mapping.value.source().string());
-					jsonMerger.merge((ObjectNode) source.get(mapping.value.type()).get("_meta"));
+					ObjectNode source = (ObjectNode) Json.readObject(mapping.value.source().string())//
+							.get(mapping.value.type());
+					if (source.hasNonNull("_meta"))
+						jsonMerger.merge((ObjectNode) source.get("_meta"));
 				} catch (Exception e) {
 					throw new RuntimeException(e);
 				}
