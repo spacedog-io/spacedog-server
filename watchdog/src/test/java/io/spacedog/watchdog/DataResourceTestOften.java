@@ -63,7 +63,7 @@ public class DataResourceTestOften extends Assert {
 
 		// find by full text search
 
-		SpaceRequest.get("/1/search/car?q={q}").refresh(true).backend(test).routeParam("q", "inVENT*").go(200)
+		SpaceRequest.get("/1/search/car?q={q}").refresh().backend(test).routeParam("q", "inVENT*").go(200)
 				.assertEquals(id, "results.0.meta.id");
 
 		// create user vince

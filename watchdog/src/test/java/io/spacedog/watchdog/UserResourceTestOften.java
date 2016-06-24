@@ -44,7 +44,7 @@ public class UserResourceTestOften extends Assert {
 				.assertEquals("vince@dog.com", "email");
 
 		// admin gets all data and it returns vince
-		SpaceRequest.get("/1/data").refresh(true).adminAuth(test).go(200)//
+		SpaceRequest.get("/1/data").refresh().adminAuth(test).go(200)//
 				.assertContainsValue("vince", "username")//
 				.assertContainsValue("fred", "username");
 
@@ -60,7 +60,7 @@ public class UserResourceTestOften extends Assert {
 		// admin deletes all objects of type user
 		SpaceRequest.delete("/1/data/user").adminAuth(test).go(200)//
 				.assertEquals(1, "totalDeleted");
-		SpaceRequest.get("/1/data").refresh(true).adminAuth(test).go(200)//
+		SpaceRequest.get("/1/data").refresh().adminAuth(test).go(200)//
 				.assertSizeEquals(0, "total");
 	}
 
@@ -152,7 +152,7 @@ public class UserResourceTestOften extends Assert {
 		SpaceRequest.get("/1/user/vince").userAuth(fred).go(200);
 
 		// fred gets all its fellow user objects
-		SpaceRequest.get("/1/user").refresh(true).userAuth(fred).go(200)//
+		SpaceRequest.get("/1/user").refresh().userAuth(fred).go(200)//
 				.assertSizeEquals(2, "results")//
 				.assertContainsValue("vince", "id")//
 				.assertContainsValue("fred", "id");
@@ -270,7 +270,7 @@ public class UserResourceTestOften extends Assert {
 		// vince sign up should succeed
 
 		SpaceClient.createUser(test, "vince", "hi vince");
-		SpaceRequest.get("/1/data").refresh(true).backend(test).go(200)//
+		SpaceRequest.get("/1/data").refresh().backend(test).go(200)//
 				.assertEquals(1, "total");
 
 		// gets the default user schema from server

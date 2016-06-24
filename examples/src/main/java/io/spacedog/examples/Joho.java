@@ -228,7 +228,7 @@ public class Joho extends SpaceClient {
 				.object("query")//
 				.object("match_all");
 
-		JsonNode subjectResults = SpaceRequest.post("/1/search/discussion").refresh(true).backend(backend)
+		JsonNode subjectResults = SpaceRequest.post("/1/search/discussion").refresh().backend(backend)
 				.body(discussionQuery).go(200).jsonNode();
 
 		Iterator<JsonNode> discussions = subjectResults.get("results").elements();

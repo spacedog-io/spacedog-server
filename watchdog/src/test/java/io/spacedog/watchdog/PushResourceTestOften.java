@@ -101,7 +101,7 @@ public class PushResourceTestOften extends Assert {
 
 		// admin gets all installations
 
-		SpaceRequest.get("/1/installation").refresh(true)//
+		SpaceRequest.get("/1/installation").refresh()//
 				.adminAuth(test)//
 				.go(200)//
 				.assertSizeEquals(5, "results")//
@@ -207,7 +207,7 @@ public class PushResourceTestOften extends Assert {
 		ObjectNode push = Json.object(APP_ID, "joho", MESSAGE, "This is a push!");
 
 		SpaceRequest.post("/1/push")//
-				.refresh(true)//
+				.refresh()//
 				.userAuth(vince)//
 				.body(push)//
 				.go(200)//
@@ -223,7 +223,7 @@ public class PushResourceTestOften extends Assert {
 
 		push.put(USERS_ONLY, true);
 
-		SpaceRequest.post("/1/push").refresh(true)//
+		SpaceRequest.post("/1/push").refresh()//
 				.userAuth(vince)//
 				.body(push)//
 				.go(200)//
@@ -237,7 +237,7 @@ public class PushResourceTestOften extends Assert {
 
 		push.put(PUSH_SERVICE, APNS);
 
-		SpaceRequest.post("/1/push").refresh(true)//
+		SpaceRequest.post("/1/push").refresh()//
 				.userAuth(vince)//
 				.body(push)//
 				.go(200)//
@@ -307,7 +307,7 @@ public class PushResourceTestOften extends Assert {
 				.body(daveInstall)//
 				.go(200);
 
-		SpaceRequest.post("/1/push").refresh(true)//
+		SpaceRequest.post("/1/push").refresh()//
 				.userAuth(vince)//
 				.body(APP_ID, "joho", MESSAGE, "This is a push!")//
 				.go(200)//

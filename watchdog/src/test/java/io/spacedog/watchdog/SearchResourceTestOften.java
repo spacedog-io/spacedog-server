@@ -52,7 +52,7 @@ public class SearchResourceTestOften extends Assert {
 		SpaceRequest.post("/1/data/message").adminAuth(test)//
 				.body("text", "so long guys").go(201);
 
-		SpaceRequest.get("/1/data").refresh(true).adminAuth(test).go(200)//
+		SpaceRequest.get("/1/data").refresh().adminAuth(test).go(200)//
 				.assertEquals(6, "total");
 
 		// deletes messages containing 'up' by query
@@ -60,7 +60,7 @@ public class SearchResourceTestOften extends Assert {
 		ObjectNode query = Json.objectBuilder().object("query")//
 				.object("match").put("text", "up").build();
 		SpaceRequest.delete("/1/search/message").adminAuth(test).body(query).go(200);
-		SpaceRequest.get("/1/data/message").refresh(true).adminAuth(test).go(200)//
+		SpaceRequest.get("/1/data/message").refresh().adminAuth(test).go(200)//
 				.assertEquals(3, "total");
 
 		// deletes data objects containing 'wanna' or 'riri' but not users
@@ -68,7 +68,7 @@ public class SearchResourceTestOften extends Assert {
 		query = Json.objectBuilder().object("query")//
 				.object("match").put("_all", "wanna riri").build();
 		SpaceRequest.delete("/1/search").adminAuth(test).body(query).go(200);
-		SpaceRequest.get("/1/data").refresh(true).adminAuth(test).go(200)//
+		SpaceRequest.get("/1/data").refresh().adminAuth(test).go(200)//
 				.assertEquals(3, "total");
 	}
 
@@ -101,7 +101,7 @@ public class SearchResourceTestOften extends Assert {
 				.put("field", "email")//
 				.build();
 
-		SpaceRequest.post("/1/search").refresh(true).backend(test).body(query).go(200)//
+		SpaceRequest.post("/1/search").refresh().backend(test).body(query).go(200)//
 				.assertEquals(0, "results")//
 				.assertEquals(3, "aggregations.distinctEmails.buckets")//
 				.assertContainsValue("hello@disney.com", "key")//

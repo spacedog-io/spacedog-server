@@ -176,8 +176,8 @@ public class SpaceRequest {
 		return this.queryString("from", String.valueOf(from));
 	}
 
-	public SpaceRequest refresh(boolean refresh) {
-		return this.queryString("refresh", String.valueOf(refresh));
+	public SpaceRequest refresh() {
+		return this.queryString("refresh", "true");
 	}
 
 	public SpaceRequest header(String name, String value) {

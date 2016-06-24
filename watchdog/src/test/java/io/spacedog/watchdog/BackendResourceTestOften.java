@@ -35,7 +35,7 @@ public class BackendResourceTestOften extends Assert {
 
 		// empty backend returns no data
 
-		SpaceRequest.get("/1/data").refresh(true).backend(test).go(200)//
+		SpaceRequest.get("/1/data").refresh().backend(test).go(200)//
 				.assertSizeEquals(0, "results");
 
 		// fails to return users before user schema is set
@@ -72,7 +72,7 @@ public class BackendResourceTestOften extends Assert {
 
 		// data access with without credentials succeeds
 
-		SpaceRequest.get("/1/data").refresh(true).backend(test).go(200)//
+		SpaceRequest.get("/1/data").refresh().backend(test).go(200)//
 				.assertSizeEquals(0, "results");
 
 		// data access with admin user succeeds

@@ -108,7 +108,7 @@ public class DataResource2TestOften extends Assert {
 
 		// find by simple text search
 
-		SpaceResponse res1b = SpaceRequest.get("/1/search/sale?q=museum").refresh(true).backend(test).go(200)
+		SpaceResponse res1b = SpaceRequest.get("/1/search/sale?q=museum").refresh().backend(test).go(200)
 				.assertEquals(1, "total");
 
 		res1.assertEquals(res1b.getFromJson("results.0"));
@@ -226,19 +226,19 @@ public class DataResource2TestOften extends Assert {
 		SpaceRequest.post("/1/data/message").adminAuth(test)//
 				.body("text", "so long guys").go(201);
 
-		SpaceRequest.get("/1/data").refresh(true).adminAuth(test).go(200)//
+		SpaceRequest.get("/1/data").refresh().adminAuth(test).go(200)//
 				.assertEquals(5, "total");
 
 		// should succeed to delete all users
 		SpaceRequest.delete("/1/user").adminAuth(test).go(200)//
 				.assertEquals(1, "totalDeleted");
-		SpaceRequest.get("/1/data").refresh(true).adminAuth(test).go(200)//
+		SpaceRequest.get("/1/data").refresh().adminAuth(test).go(200)//
 				.assertEquals(4, "total");
 
 		// should succeed to delete all messages
 		SpaceRequest.delete("/1/data/message").adminAuth(test).go(200)//
 				.assertEquals(4, "totalDeleted");
-		SpaceRequest.get("/1/data").refresh(true).adminAuth(test).go(200)//
+		SpaceRequest.get("/1/data").refresh().adminAuth(test).go(200)//
 				.assertEquals(0, "total");
 	}
 
@@ -366,7 +366,7 @@ public class DataResource2TestOften extends Assert {
 
 	private Collection<String> fetchMessages(Backend backend, int from, int size) throws Exception {
 		JsonNode results = SpaceRequest.get("/1/data/message")//
-				.refresh(true).from(from).size(size)//
+				.refresh().from(from).size(size)//
 				.backend(backend).go(200)//
 				.assertEquals(4, "total")//
 				.assertSizeEquals(size, "results")//

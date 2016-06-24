@@ -65,13 +65,13 @@ public class StashResourceTestOften extends Assert {
 		// only admin gets all stash objects
 		SpaceRequest.get("/1/stash").backend(test).go(401);
 		SpaceRequest.get("/1/stash").userAuth(vince).go(401);
-		SpaceRequest.get("/1/stash").refresh(true).adminAuth(test).go(200)//
+		SpaceRequest.get("/1/stash").refresh().adminAuth(test).go(200)//
 				.assertSizeEquals(2, "results")//
 				.assertEquals(animals, "results.0")//
 				.assertEquals(jobs, "results.1");
 
 		// stash objects are also data objects
-		SpaceRequest.get("/1/data").refresh(true).backend(test).go(200)//
+		SpaceRequest.get("/1/data").refresh().backend(test).go(200)//
 				.assertSizeEquals(3, "results")//
 				.assertContainsValue("animals", "id")//
 				.assertContainsValue("jobs", "id")//

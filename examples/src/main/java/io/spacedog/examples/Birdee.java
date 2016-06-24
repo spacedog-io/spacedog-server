@@ -67,7 +67,7 @@ public class Birdee extends SpaceClient {
 				+ "'query':{'match_all':{}}"//
 				+ "}";
 
-		JsonNode news = SpaceRequest.post("/1/search/news").refresh(true)//
+		JsonNode news = SpaceRequest.post("/1/search/news").refresh()//
 				.backend(adminAccount).body(query).go(200).jsonNode();
 
 		query = "{'from':0, 'size':10,"//
@@ -77,7 +77,7 @@ public class Birdee extends SpaceClient {
 				+ "'filter':{'term':{'userId':'%s'}}"//
 				+ "}";
 
-		JsonNode statuses = SpaceRequest.post("/1/search/status").refresh(true)//
+		JsonNode statuses = SpaceRequest.post("/1/search/status").refresh()//
 				.backend(adminAccount)//
 				.body(String.format(query, userId))//
 				.go(200)//
@@ -229,10 +229,10 @@ public class Birdee extends SpaceClient {
 				+ "'filter':{'term':{'pushed':false}}"//
 				+ "}";
 
-		JsonNode news = SpaceRequest.post("/1/search/news").refresh(true)//
+		JsonNode news = SpaceRequest.post("/1/search/news").refresh()//
 				.backend(adminAccount).body(query).go(200).jsonNode();
 
-		JsonNode statuses = SpaceRequest.post("/1/search/status").refresh(true)//
+		JsonNode statuses = SpaceRequest.post("/1/search/status").refresh()//
 				.backend(adminAccount)//
 				.body(query)//
 				.go(200)//
@@ -263,7 +263,7 @@ public class Birdee extends SpaceClient {
 				+ "'filter':{'term':{'userId':'%s'}}"//
 				+ "}";
 
-		JsonNode device = SpaceRequest.post("/1/search/device").refresh(true)//
+		JsonNode device = SpaceRequest.post("/1/search/device").refresh()//
 				.backend(adminAccount).body(String.format(query, userId)).go(200).jsonNode();
 
 		// push to device
