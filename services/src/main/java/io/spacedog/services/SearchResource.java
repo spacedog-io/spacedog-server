@@ -149,7 +149,7 @@ public class SearchResource extends Resource {
 		if (Strings.isNullOrEmpty(type)) {
 			String[] indices = elastic.toIndices(credentials.backendId());
 			if (indices.length == 0)
-				return Json.objectBuilder().put("took", 0).put("total", 0).array("results").build();
+				return Json.object("took", 0, "total", 0, "results", Json.array());
 			else
 				search = elastic.prepareSearch().setIndices(indices);
 		} else
@@ -159,7 +159,7 @@ public class SearchResource extends Resource {
 
 			int from = context.query().getInteger("from", 0);
 			int size = context.query().getInteger("size", 10);
-			Check.isTrue(from + size <= 10000, "from + size is greater than 10.000");
+			Check.isTrue(from + size <= 1000, "from + size is greater than 1000");
 
 			search.setFrom(from)//
 					.setSize(size)//
@@ -191,7 +191,7 @@ public class SearchResource extends Resource {
 		for (SearchHit hit : response.getHits().getHits()) {
 			ObjectNode object = Json.readObject(hit.sourceAsString());
 
-			((ObjectNode) object.get("meta")).put("id", hit.id()).put("type", hit.type()).put("version", hit.version());
+			object.with("meta").put("id", hit.id()).put("type", hit.type()).put("version", hit.version());
 			objects.add(object);
 
 			if (fetchReferences)
