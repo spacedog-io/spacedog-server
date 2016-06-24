@@ -81,6 +81,7 @@ public class JsonGenerator {
 			if (fieldIsArray)
 				builder.array(fieldKey)//
 						.node(generateValue(path, fieldSchema))//
+						.node(generateValue(path, fieldSchema))//
 						.end();
 			else
 				builder.node(fieldKey, generateValue(path, fieldSchema));
