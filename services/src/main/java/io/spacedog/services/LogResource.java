@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
+import com.mashape.unirest.http.HttpMethod;
 
 import io.spacedog.services.Credentials.Level;
 import io.spacedog.utils.Json;
@@ -260,7 +261,8 @@ public class LogResource extends Resource {
 		if (payload != null) {
 			log.put("status", payload.code());
 
-			if (payload.rawContent() instanceof JsonNode)
+			if (isNotGetLogRequest(context) //
+					&& payload.rawContent() instanceof JsonNode)
 				log.set("response", (JsonNode) payload.rawContent());
 		}
 
@@ -269,6 +271,11 @@ public class LogResource extends Resource {
 		return Start.get().getElasticClient()//
 				.prepareIndex(SPACEDOG_BACKEND, TYPE)//
 				.setSource(securedLog.toString()).get().getId();
+	}
+
+	private boolean isNotGetLogRequest(Context context) {
+		return !(HttpMethod.GET.toString().equals(context.method()) //
+				&& context.uri().equals("/1/log"));
 	}
 
 	//

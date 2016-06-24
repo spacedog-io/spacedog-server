@@ -339,6 +339,15 @@ public class LogResourceTestOften extends Assert {
 					&& element.get("credentials").get("backendId").asText().equals(Backends.ROOT_API))
 				Assert.fail();
 		}
-
 	}
+
+	@Test
+	public void getLogResponsesAreNotLogged() throws Exception {
+
+		SpaceClient.prepareTest();
+		SpaceRequest.get("/1/log").superdogAuth().go(200);
+		SpaceRequest.get("/1/log").size(1).superdogAuth().go(200)//
+				.assertNotPresent("results.0.response");
+	}
+
 }
