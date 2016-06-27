@@ -1,6 +1,8 @@
 package io.spacedog.services;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map.Entry;
 import java.util.Optional;
 
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
@@ -13,6 +15,7 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -22,6 +25,7 @@ import com.mashape.unirest.http.HttpMethod;
 import io.spacedog.services.Credentials.Level;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.SpaceParams;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
@@ -230,6 +234,18 @@ public class LogResource extends Resource {
 			ObjectNode logQuery = log.putObject("query");
 			for (String key : context.query().keys())
 				logQuery.put(key, context.get(key));
+		}
+
+		for (Entry<String, List<String>> entry : context.request().headers().entrySet()) {
+			if (!entry.getKey().equalsIgnoreCase(SpaceHeaders.AUTHORIZATION)) {
+				if (entry.getValue().size() == 1)
+					log.with("headers").put(entry.getKey(), entry.getValue().get(0));
+				else if (entry.getValue().size() > 1) {
+					ArrayNode array = log.with("headers").putArray(entry.getKey());
+					for (String string : entry.getValue())
+						array.add(string);
+				}
+			}
 		}
 
 		String content = null;
