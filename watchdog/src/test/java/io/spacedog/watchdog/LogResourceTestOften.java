@@ -369,4 +369,23 @@ public class LogResourceTestOften extends Assert {
 				.assertEquals("GREEN", "results.0.headers.x-color-list.2");
 	}
 
+	@Test
+	public void checkThatInvalidJsonContentDoesNotCrashLogging() throws Exception {
+
+		// prepare
+		SpaceClient.prepareTest();
+		Backend test = new Backend("test", "test", "hi test", "test@me.com");
+		SpaceClient.deleteBackend(test);
+
+		// fail to create backend with invalid body
+		SpaceRequest.post("/1").backend(test).body("XXX").go(400);
+
+		// but logs the failed request without the json content
+		SpaceRequest.get("/1/log").size(1).superdogAuth().go(200)//
+				.assertEquals("POST", "results.0.method")//
+				.assertEquals("/1", "results.0.path")//
+				.assertEquals("test", "results.0.credentials.backendId")//
+				.assertEquals(400, "results.0.status")//
+				.assertNotPresent("results.0.jsonContent");
+	}
 }

@@ -271,7 +271,11 @@ public class LogResource extends Resource {
 			// log.put("content", content);
 
 			if (Json.isObject(content))
-				log.set("jsonContent", Json.readNode(content));
+				try {
+					log.set("jsonContent", Json.readNode(content));
+				} catch (Exception e) {
+					// I just do not log the content if I can not parse it
+				}
 		}
 
 		if (payload != null) {
