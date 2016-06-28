@@ -14,6 +14,10 @@ public class Exceptions {
 		return new IllegalArgumentException(String.format(message, arguments));
 	}
 
+	public static IllegalArgumentException illegalArgument(Throwable t) {
+		return new IllegalArgumentException(t);
+	}
+
 	public static NotFoundException notFound(String message, Object... arguments) {
 		return new NotFoundException(String.format(message, arguments));
 	}

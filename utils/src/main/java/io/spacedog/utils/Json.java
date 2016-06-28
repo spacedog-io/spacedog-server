@@ -162,7 +162,7 @@ public class Json {
 		try {
 			return jsonMapper.readTree(jsonString);
 		} catch (IOException e) {
-			throw new RuntimeException(e);
+			throw Exceptions.illegalArgument(e);
 		}
 	}
 
@@ -171,7 +171,7 @@ public class Json {
 		try {
 			return jsonMapper.readTree(url);
 		} catch (IOException e) {
-			throw new RuntimeException(e);
+			throw Exceptions.illegalArgument(e);
 		}
 	}
 
