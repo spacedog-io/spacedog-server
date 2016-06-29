@@ -40,7 +40,7 @@ public class Colibee extends SpaceClient {
 
 		resetBackend(backend);
 		initUserDefaultSchema(backend);
-		william = createUser(backend, "william", "hi willian");
+		william = createUser(backend, "william", "hi william");
 
 		initGenerator();
 		initReferences();
@@ -131,7 +131,7 @@ public class Colibee extends SpaceClient {
 
 		references.set("typesPrestation",
 				Json.object("management-transition", "Management de transition", //
-						"Conseil en stratégie", "conseil-strategie", //
+						"conseil-strategie", "Conseil en stratégie", //
 						"conseil-management", "Conseil en management", //
 						"conseil-système-information", "Conseil en systèmes d'information", //
 						"assistance-maitrise-oeuvre", "Assistance à maîtrise d'œuvre"));
@@ -160,14 +160,14 @@ public class Colibee extends SpaceClient {
 				.bool("membreColibee")//
 				.string("membreNumero").examples("01234567").labels("fr", "N° de membre")//
 				.text("resume")//
-				.enumm("typePrestations").array().examples("William")//
-				.enumm("secteurActivites").array().examples("Automobile")//
-				.enumm("savoirFaires").array().examples("Big data")//
-				.enumm("fonctions").array().examples("FSI | Risque client")//
-				.enumm("outils").array().examples("Clickview")//
+				.enumm("typePrestations").array().examples("Management de transition", "Conseil en stratégie")//
+				.enumm("secteurActivites").array().examples("Automobile", "Assurance vie")//
+				.enumm("savoirFaires").array().examples("Big data", "Audit")//
+				.enumm("fonctions").array().examples("FSI | Risque client", "FSI | Derivatives")//
+				.enumm("outils").array().examples("Clickview", "Ariba")//
 
 				.object("langues").array()//
-				.string("langue").examples("Français")//
+				.string("langue").examples("Français", "Anglais")//
 				.enumm("niveau").examples("Excellent")//
 				.close()//
 
@@ -212,26 +212,35 @@ public class Colibee extends SpaceClient {
 				.close()//
 
 				.object("cv").array()//
-				.text("titre").french().examples("Directeur de projet")//
-				.date("date").examples("2016-05-12")//
+				.text("titre").french().examples("Directeur de projet", "Auditeur")//
+				.date("date").examples("2012-05-12", "2016-05-13")//
 				.enumm("type").examples("Chronologique")//
-				.text("note").french().examples("CV pour la proposition BNP")//
+				.text("note").french().examples("CV pour la proposition BNP", "CV pour Total")//
 				.string("url")//
 				.bool("archive")//
 				.close()//
 
 				.object("experiences").array()//
-				.text("fonction").examples("Chef de projet")//
-				.text("raisonSociale").french().examples("Orange SA")//
-				.date("du").examples("2016-01-23")//
-				.date("au").examples("2016-03-07")//
-				.text("localisation").examples("Paris")//
+				.text("fonction").examples("Chef de projet", "Chef de produit")//
+				.text("raisonSociale").french().examples("Orange SA", "Bull SA")//
+				.date("du").examples("2011-01-23", "2013-07-02")//
+				.date("au").examples("2013-03-07", "2015-01-23")//
+				.text("localisation").examples("Paris", "Puteaux")//
+				.text("description")//
+				.close()//
+
+				.object("formations").array()//
+				.text("titre").french().examples("Diplôme HEC", "Master 2 Pro")//
+				.text("ecole").french().examples("HEC", "Université Paris 1 Panthéon-Sorbonne")//
+				.text("region").french().examples("Région de Paris, France")//
+				.date("du").examples("2005-09-01", "2007-09-01")//
+				.date("au").examples("2007-06-30", "2009-06-30")//
 				.text("description")//
 				.close()//
 
 				.object("indispos").array()//
-				.timestamp("debut").examples("2016-07-01T14:00:00.000Z")//
-				.timestamp("fin").examples("2016-07-18T23:00:00.000Z")//
+				.timestamp("debut").examples("2016-07-01T14:00:00.000Z", "2016-07-12T14:00:00.000Z")//
+				.timestamp("fin").examples("2016-07-04T23:00:00.000Z", "2016-07-18T14:00:00.000Z")//
 				.bool("probablement")//
 				.text("note").french().examples("En vacances.")//
 				.close()//
@@ -249,20 +258,26 @@ public class Colibee extends SpaceClient {
 				.bool("public")//
 				.string("statut")//
 				.string("resultat").examples("En cours")//
-				.string("typePrestation").array().examples("Conseil en stratégie")//
+				.string("typePrestation").array().examples("Conseil en stratégie", "Conseil en marketing")//
 				.string("secteurActivite").examples("Assurance vie")//
-				.string("fonctions").array().examples("Achats | biens & services")//
-				.string("methodes").array().examples("Audit")//
-				.string("outils").array().examples("Ariba")//
+				.string("fonctions").array().examples("Achats | biens & services", "FSI | Acturiat")//
+				.string("methodes").array().examples("Audit", "Cadrage")//
+				.string("outils").array().examples("Ariba", "Essbase")//
 				.string("langues").array().examples("Français", "Anglais")//
 
-				.text("ville").french().examples("Boulogne Billancourt")//
+				.object("lieu")//
+				.text("ville").french().examples("Paris")//
 				.string("pays").examples("FR")//
+				.geopoint("geopoint")//
+				.close()//
+
 				.date("demarreLe").examples("2016-09-10")//
 				.date("termineLe").examples("2016-12-24")//
+				.string("missionEffectueePar").examples("william")//
 				.integer("charge").examples(25)//
 				.integer("rythme").examples(3)//
 				.string("deplacement").examples("Ponctuels")//
+
 				.object("client")//
 				.text("raisonSociale").french().examples("Airbus")//
 				.text("nom").french().examples("Jérôme")//
@@ -270,10 +285,18 @@ public class Colibee extends SpaceClient {
 				.string("tel").examples("+33 6 62 78 34 56")//
 				.string("email").examples("jdupont@airbus.com")//
 				.close()//
+
+				.object("candidatures").array()//
+				.string("par").examples("william", "david", "vincent")//
+				.timestamp("le").examples("2016-07-01T14:00:00.000Z", "2016-07-03T14:00:00.000Z")//
+				.string("statut").examples("en-cours", "accepte", "refuse")//
+				.close()//
+
 				.timestamp("identifieeLe").examples("2016-07-01T14:00:00.000Z")//
 				.timestamp("ouverteLe").examples("2016-07-01T14:00:00.000Z")//
 				.timestamp("fermeeLe").examples("2016-07-01T14:00:00.000Z")//
 				.string("motifPerdue").examples("Prix")//
+
 				.build();
 	}
 
@@ -314,7 +337,7 @@ public class Colibee extends SpaceClient {
 		return SchemaBuilder3.builder("message") //
 				.text("texte").french()//
 				.string("discussionId")//
-				.object("reponses")//
+				.object("reponses").array()//
 				.text("texte").french()//
 				.timestamp("ecritLe")//
 				.string("ecritPar")//
