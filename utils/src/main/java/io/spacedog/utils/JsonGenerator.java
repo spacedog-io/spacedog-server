@@ -55,16 +55,17 @@ public class JsonGenerator {
 
 	public ObjectNode gen(ObjectNode schema) {
 		LinkedList<String> stack = new LinkedList<String>();
-		return generateObject(stack, (ObjectNode) schema.elements().next());
+		return generateObject(stack, (ObjectNode) schema.elements().next(), 0);
 	}
 
-	private ObjectNode generateObject(LinkedList<String> stack, ObjectNode schema) {
+	private ObjectNode generateObject(LinkedList<String> stack, ObjectNode schema, int index) {
 		JsonBuilder<ObjectNode> builder = Json.objectBuilder();
-		generateFields(stack, builder, schema);
+		generateFields(stack, builder, schema, index);
 		return builder.build();
 	}
 
-	private void generateFields(LinkedList<String> path, JsonBuilder<ObjectNode> builder, ObjectNode schema) {
+	private void generateFields(LinkedList<String> path, JsonBuilder<ObjectNode> builder, ObjectNode schema,
+			int index) {
 		Iterator<Entry<String, JsonNode>> fields = schema.fields();
 		while (fields.hasNext()) {
 			Entry<String, JsonNode> field = fields.next();
@@ -80,18 +81,18 @@ public class JsonGenerator {
 
 			if (fieldIsArray)
 				builder.array(fieldKey)//
-						.node(generateValue(path, fieldSchema))//
-						.node(generateValue(path, fieldSchema))//
+						.node(generateValue(path, fieldSchema, index))//
+						.node(generateValue(path, fieldSchema, index + 1))//
 						.end();
 			else
-				builder.node(fieldKey, generateValue(path, fieldSchema));
+				builder.node(fieldKey, generateValue(path, fieldSchema, index));
 
 			path.removeLast();
 
 		}
 	}
 
-	private JsonNode generateValue(LinkedList<String> path, ObjectNode schema) {
+	private JsonNode generateValue(LinkedList<String> path, ObjectNode schema, int index) {
 
 		String stringPath = String.join(".", path.toArray(new String[path.size()]));
 		List<Object> list = map.get(stringPath);
@@ -100,17 +101,21 @@ public class JsonGenerator {
 
 		JsonNode values = Json.get(schema, "_values");
 		if (values != null) {
-			if (values.isArray())
+			if (values.isArray()) {
+				if (index < values.size())
+					return values.get(index);
 				return values.get(random.nextInt(values.size()));
-			else
+			} else
 				return values;
 		}
 
 		JsonNode examples = Json.get(schema, "_examples");
 		if (examples != null) {
-			if (examples.isArray())
+			if (examples.isArray()) {
+				if (index < examples.size())
+					return examples.get(index);
 				return examples.get(random.nextInt(examples.size()));
-			else
+			} else
 				return examples;
 		}
 
@@ -142,7 +147,7 @@ public class JsonGenerator {
 		else if ("geopoint".equals(type))
 			return Json.object("lat", -55.6765, "lon", -54.6765);
 		else if ("object".equals(type))
-			return generateObject(path, schema);
+			return generateObject(path, schema, index);
 
 		return NullNode.getInstance();
 	}
