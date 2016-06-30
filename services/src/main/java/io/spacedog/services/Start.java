@@ -6,9 +6,13 @@ package io.spacedog.services;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
+import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
+import org.elasticsearch.action.support.QuerySourceBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.settings.Settings.Builder;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.plugin.cloud.aws.CloudAwsPlugin;
 import org.elasticsearch.plugin.deletebyquery.DeleteByQueryPlugin;
@@ -68,7 +72,43 @@ public class Start {
 	}
 
 	private void upgrade() throws IOException {
-		Utils.info("[SpaceDog] Nothing to upgrade");
+		// Utils.info("[SpaceDog] Nothing to upgrade");
+		deletePingRequestsFromLogs();
+		deleteGetLogRequestsFromLogs();
+	}
+
+	private void deleteGetLogRequestsFromLogs() {
+		Utils.info("[SpaceDog] Deleting [GET] [/1/log] requests from logs ...");
+
+		BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery()//
+				.filter(QueryBuilders.termQuery("method", "GET"))//
+				.filter(QueryBuilders.termQuery("path", "/1/log"));
+
+		String querySource = new QuerySourceBuilder()//
+				.setQuery(queryBuilder)//
+				.toString();
+
+		DeleteByQueryResponse response = get().getElasticClient()//
+				.deleteByQuery(Resource.SPACEDOG_BACKEND, LogResource.TYPE, querySource);
+
+		Utils.info("[SpaceDog] [%s] logs deleted", response.getTotalDeleted());
+	}
+
+	private void deletePingRequestsFromLogs() {
+		Utils.info("[SpaceDog] Deleting [GET] [/] requests from logs ...");
+
+		BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery()//
+				.filter(QueryBuilders.termQuery("method", "GET"))//
+				.filter(QueryBuilders.termQuery("path", "/"));
+
+		String querySource = new QuerySourceBuilder()//
+				.setQuery(queryBuilder)//
+				.toString();
+
+		DeleteByQueryResponse response = get().getElasticClient()//
+				.deleteByQuery(Resource.SPACEDOG_BACKEND, LogResource.TYPE, querySource);
+
+		Utils.info("[SpaceDog] [%s] logs deleted", response.getTotalDeleted());
 	}
 
 	private void startLocalElastic() throws InterruptedException, ExecutionException, IOException {
