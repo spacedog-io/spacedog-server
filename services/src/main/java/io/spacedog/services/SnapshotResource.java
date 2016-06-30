@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
 import io.spacedog.utils.Backends;
+import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.NotFoundException;
@@ -89,7 +90,7 @@ public class SnapshotResource extends Resource {
 		SpaceContext.checkSuperDogCredentials(false);
 
 		String snapshotId = computeSnapshotName(PLATFORM_SNAPSHOT_PREFIX);
-		String repoId = getCurrentSnapshotRepository();
+		String repoId = checkCurrentRepository();
 
 		// TODO rename correctly the snapshot repository
 		CreateSnapshotResponse response = Start.get().getElasticClient().cluster()//
@@ -126,7 +127,7 @@ public class SnapshotResource extends Resource {
 
 		List<SpaceSnapshot> snapshots = getAllPlatformSnapshotsFromLatestToOldest();
 		if (Utils.isNullOrEmpty(snapshots))
-			throw new IllegalArgumentException("snapshot repository doesn't contain any snapshot");
+			throw Exceptions.illegalArgument("snapshot repository doesn't contain any snapshot");
 
 		return doRestore(snapshots.get(0), //
 				context.query().getBoolean(WAIT_FOR_COMPLETION, false));
@@ -164,13 +165,13 @@ public class SnapshotResource extends Resource {
 	private Payload doRestore(SpaceSnapshot snapshot, boolean waitForCompletion) {
 
 		if (!snapshot.info.state().completed())
-			throw new IllegalArgumentException(String.format(//
-					"snapshot [%s] is not yet completed", snapshot.id()));
+			throw Exceptions.illegalArgument(//
+					"snapshot [%s] is not yet completed", snapshot.id());
 
 		if (!snapshot.info.state().restorable())
-			throw new IllegalArgumentException(String.format(//
+			throw Exceptions.illegalArgument(//
 					"snapshot [%s] is not restorable, state is [%s]", //
-					snapshot.id(), snapshot.info.state().toString()));
+					snapshot.id(), snapshot.info.state().toString());
 
 		// close all backend indices before restore
 		Start.get().getElasticClient().deleteAllBackendIndices();
@@ -266,9 +267,9 @@ public class SnapshotResource extends Resource {
 		}
 	}
 
-	private String getCurrentSnapshotRepository() {
+	private String checkCurrentRepository() {
 
-		String currentRepositoryId = DateTime.now().withZone(DateTimeZone.UTC).toString("yyyy-ww");
+		String currentRepositoryId = SpaceRepository.getCurrentRepositoryId();
 
 		try {
 			Start.get().getElasticClient().cluster()//
@@ -286,14 +287,37 @@ public class SnapshotResource extends Resource {
 					.get();
 
 			if (!putRepositoryResponse.isAcknowledged())
-				throw new RuntimeException(//
+				throw Exceptions.runtime(//
 						"failed to create current snapshot repository: no details available");
 		}
 
 		return currentRepositoryId;
 	}
 
-	private static class SpaceRepository {
+	public void deleteObsoleteRepositories() {
+
+		String currentRepositoryId = SpaceRepository.getCurrentRepositoryId();
+		String obsoleteRepositoryId = SpaceRepository.getPreviousRepositoryId(currentRepositoryId, 4);
+
+		while (true) {
+			try {
+				Utils.info("[SpaceDog] deleting obsolete repository [%s] ...", obsoleteRepositoryId);
+
+				Start.get().getElasticClient().cluster()//
+						.prepareDeleteRepository(obsoleteRepositoryId)//
+						.get();
+
+				obsoleteRepositoryId = SpaceRepository.getPreviousRepositoryId(//
+						obsoleteRepositoryId, 1);
+
+			} catch (RepositoryMissingException e) {
+				break;
+			}
+		}
+
+	}
+
+	static class SpaceRepository {
 
 		private String type;
 		private Settings settings;
@@ -310,9 +334,9 @@ public class SnapshotResource extends Resource {
 				try {
 					Files.createDirectories(location);
 				} catch (IOException e) {
-					throw new RuntimeException(String.format(//
+					throw Exceptions.runtime(//
 							"failed to create snapshot repository [%s] type [fs] at location [%s]", //
-							id, location));
+							id, location);
 				}
 
 				this.type = "fs";
@@ -342,6 +366,28 @@ public class SnapshotResource extends Resource {
 
 		public String getType() {
 			return this.type;
+		}
+
+		public static String getCurrentRepositoryId() {
+			return DateTime.now().withZone(DateTimeZone.UTC).toString("yyyy-ww");
+		}
+
+		public static String getPreviousRepositoryId(String repositoryId, int i) {
+			int yyyy = Integer.parseInt(repositoryId.substring(0, 4));
+			int ww = Integer.parseInt(repositoryId.substring(5));
+			while (i > 0) {
+				i = i - 1;
+				ww = ww - 1;
+				if (ww == 0) {
+					ww = 52;
+					yyyy = yyyy - 1;
+				}
+			}
+			return toRepositoryId(yyyy, ww);
+		}
+
+		public static String toRepositoryId(int yyyy, int ww) {
+			return String.valueOf(yyyy) + '-' + (ww < 10 ? "0" : "") + String.valueOf(ww);
 		}
 	}
 

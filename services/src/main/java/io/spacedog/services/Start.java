@@ -55,6 +55,7 @@ public class Start {
 			singleton.startLocalElastic();
 			singleton.initServices();
 			singleton.upgrade();
+			singleton.deleteOldRepositories();
 			singleton.startFluent();
 
 		} catch (Throwable t) {
@@ -69,6 +70,10 @@ public class Start {
 			}
 			System.exit(-1);
 		}
+	}
+
+	private void deleteOldRepositories() {
+		SnapshotResource.get().deleteObsoleteRepositories();
 	}
 
 	private void upgrade() throws IOException {
