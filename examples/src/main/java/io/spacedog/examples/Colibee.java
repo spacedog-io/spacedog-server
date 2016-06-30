@@ -3,9 +3,13 @@
  */
 package io.spacedog.examples;
 
+import java.util.Iterator;
+import java.util.List;
+
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 
 import io.spacedog.client.SpaceClient;
@@ -53,13 +57,25 @@ public class Colibee extends SpaceClient {
 
 	private void initGenerator() throws Exception {
 
+		// photo
+
 		byte[] bytes = Resources.toByteArray(//
-				Resources.getResource("io/spacedog/examples/consultant.png"));
+				Resources.getResource("io/spacedog/examples/ma-tronche.png"));
 
 		String url = SpaceRequest.put("/1/share/ma-tronche.png").userAuth(william)//
 				.body(bytes).go(200).getFromJson("s3").asText();
 
-		generator.reg("identite.photo", url);
+		generator.regPath("identite.photo", url);
+
+		// cv
+
+		bytes = Resources.toByteArray(//
+				Resources.getResource("io/spacedog/examples/mon-cv.pdf"));
+
+		url = SpaceRequest.put("/1/share/mon-cv.pdf").userAuth(william)//
+				.body(bytes).go(200).getFromJson("s3").asText();
+
+		generator.regPath("cv.url", url);
 	}
 
 	private void initConsultantWilliam() throws Exception {
@@ -108,38 +124,40 @@ public class Colibee extends SpaceClient {
 		message.put("discussionId", discussionId);
 		SpaceRequest.post("/1/data/message")//
 				.userAuth(william).body(message).go(201);
-
 	}
 
 	private void initReferences() throws Exception {
-
 		ObjectNode references = Json.object();
 
-		references.set("secteurs", Json.object("asset-management", "Asset Management", //
+		references.set("secteur", Json.object("asset-management", "Asset Management", //
 				"assurance-vie", "Assurance vie", "automobile", "Automobile"));
 
-		references.set("methodes", Json.object("agile-scrum", "Agile / SCRUM", "audit", //
+		references.set("methode", Json.object("agile-scrum", "Agile / SCRUM", "audit", //
 				"Audit", "big-data", "Big Data", "cadrage", "Cadrage"));
 
-		references.set("outils", Json.object("ariba", "Ariba", "essbase", "Essbase", //
+		references.set("outil", Json.object("ariba", "Ariba", "essbase", "Essbase", //
 				"hfm", "HFM", "hp", "HP"));
 
-		references.set("fonctions", Json.object("achat-bien-service", "Achats | biens & services", //
+		references.set("fonction", Json.object("achat-bien-service", "Achats | biens & services", //
 				"fsi-acturiat", "FSI | Acturiat", "fsi-derivative", "FSI | Derivatives"));
 
-		references.set("langues", Json.object("fr", "Français", "en", "Anglais", "de", "Allemand"));
+		references.set("langue", Json.object("fr", "Français", "en", "Anglais", "de", "Allemand"));
 
-		references.set("typesPrestation",
+		references.set("niveauLangue", Json.object("excellent", "Excellent", "bon", "Bon", "moyen", "Moyen"));
+
+		references.set("nationalite", Json.object("fr", "Française", "en", "Anglaise", "de", "Allemande"));
+
+		references.set("typePrestation",
 				Json.object("management-transition", "Management de transition", //
 						"conseil-strategie", "Conseil en stratégie", //
 						"conseil-management", "Conseil en management", //
 						"conseil-système-information", "Conseil en systèmes d'information", //
 						"assistance-maitrise-oeuvre", "Assistance à maîtrise d'œuvre"));
 
-		references.set("rythmesMission", Json.object("temps-plein", "Temps plein", //
+		references.set("rythmeMission", Json.object("temps-plein", "Temps plein", //
 				"temps-partiel", "Temps partiel"));
 
-		references.set("deplacements", Json.object("aucun", "Aucun", "ponctuel", "Ponctuels", //
+		references.set("freqDeplacement", Json.object("aucun", "Aucun", "ponctuel", "Ponctuels", //
 				"regulier", "Réguliers"));
 
 		references.set("statutOpportunite", Json.object("identifie", "Identifiée", "ouverte", "Ouverte", //
@@ -151,8 +169,26 @@ public class Colibee extends SpaceClient {
 		references.set("motifPerdue", Json.object("prix", "Prix", "pas-de-profil", "Pas de profil", //
 				"profil-non-retenu", "Profil non retenu"));
 
+		references.set("typeCV", Json.object("chronologique", "CV chronologique", "theme", "CV par thème", //
+				"snapshot", "CV snapshot", "autre", "Autre"));
+
+		references.set("zoneMobilite", Json.object("local", "Local", "france", "France", "etranger", "Etranger"));
+
+		references.set("statutCandidature", Json.object("en-cours", "En cours", "ok", "Acceptée", "ko", "Refusée"));
+
 		SpaceRequest.put("/1/stash").adminAuth(backend).go(200);
 		SpaceRequest.put("/1/stash/references").adminAuth(backend).body(references).go(201);
+
+		registerReferencesInGenerator(references);
+	}
+
+	private void registerReferencesInGenerator(ObjectNode references) {
+		Iterator<String> types = references.fieldNames();
+		while (types.hasNext()) {
+			String type = types.next();
+			List<String> values = Lists.newArrayList(references.get(type).fieldNames());
+			generator.regType(type, values);
+		}
 	}
 
 	static ObjectNode buildConsultantSchema() {
@@ -160,15 +196,15 @@ public class Colibee extends SpaceClient {
 				.bool("membreColibee")//
 				.string("membreNumero").examples("01234567").labels("fr", "N° de membre")//
 				.text("resume")//
-				.enumm("typePrestations").array().examples("Management de transition", "Conseil en stratégie")//
-				.enumm("secteurActivites").array().examples("Automobile", "Assurance vie")//
-				.enumm("savoirFaires").array().examples("Big data", "Audit")//
-				.enumm("fonctions").array().examples("FSI | Risque client", "FSI | Derivatives")//
-				.enumm("outils").array().examples("Clickview", "Ariba")//
+				.enumm("typesPrestation").array().enumType("typePrestation")//
+				.enumm("secteurs").array().enumType("secteur")//
+				.enumm("methodes").array().enumType("methode")//
+				.enumm("fonctions").array().enumType("fonction")//
+				.enumm("outils").array().enumType("outil")//
 
 				.object("langues").array()//
-				.string("langue").examples("Français", "Anglais")//
-				.enumm("niveau").examples("Excellent")//
+				.string("langue").enumType("langue")//
+				.enumm("niveau").enumType("niveauLangue")//
 				.close()//
 
 				.object("identite")//
@@ -178,7 +214,7 @@ public class Colibee extends SpaceClient {
 				.string("photo")//
 				.date("indepDepuisLe")//
 				.date("dateDeNaissance") //
-				.enumm("nationalite").examples("Française") //
+				.enumm("nationalite").enumType("nationalite")//
 				.string("emailColibee").examples("william@colibee.net")//
 				.string("emailSecondaire").examples("william@gmail.com")//
 				.string("telMobile").examples("+ 33 6 62 01 67 56")//
@@ -203,9 +239,9 @@ public class Colibee extends SpaceClient {
 				.close()//
 
 				.object("prefMission")//
-				.enumm("zoneMobilite").examples("Local")//
-				.enumm("freqDeplacement").examples("Mensuel")//
-				.enumm("rythmeTravail").examples("Temps complet")//
+				.enumm("zoneMobilite").enumType("zoneMobilite")//
+				.enumm("freqDeplacement").enumType("freqDeplacement")//
+				.enumm("rythmeTravail").enumType("rythmeMission")//
 				.integer("tarifCible").examples(1200)//
 				.integer("tarifMin").examples(800)//
 				.text("note").examples("J'accepte le temps partiel si nécessaire.")//
@@ -214,7 +250,7 @@ public class Colibee extends SpaceClient {
 				.object("cv").array()//
 				.text("titre").french().examples("Directeur de projet", "Auditeur")//
 				.date("date").examples("2012-05-12", "2016-05-13")//
-				.enumm("type").examples("Chronologique")//
+				.enumm("type").enumType("typeCV")//
 				.text("note").french().examples("CV pour la proposition BNP", "CV pour Total")//
 				.string("url")//
 				.bool("archive")//
@@ -238,9 +274,9 @@ public class Colibee extends SpaceClient {
 				.text("description")//
 				.close()//
 
-				.object("indispos").array()//
-				.timestamp("debut").examples("2016-07-01T14:00:00.000Z", "2016-07-12T14:00:00.000Z")//
-				.timestamp("fin").examples("2016-07-04T23:00:00.000Z", "2016-07-18T14:00:00.000Z")//
+				.object("dispos").array()//
+				.date("debut").examples("2016-07-01", "2016-07-12")//
+				.date("fin").examples("2016-07-04", "2016-07-18")//
 				.bool("probablement")//
 				.text("note").french().examples("En vacances.")//
 				.close()//
@@ -256,14 +292,14 @@ public class Colibee extends SpaceClient {
 				.text("contribution").french()//
 				.text("commentaires").french()//
 				.bool("public")//
-				.string("statut")//
-				.string("resultat").examples("En cours")//
-				.string("typePrestation").array().examples("Conseil en stratégie", "Conseil en marketing")//
-				.string("secteurActivite").examples("Assurance vie")//
-				.string("fonctions").array().examples("Achats | biens & services", "FSI | Acturiat")//
-				.string("methodes").array().examples("Audit", "Cadrage")//
-				.string("outils").array().examples("Ariba", "Essbase")//
-				.string("langues").array().examples("Français", "Anglais")//
+				.string("statut").enumType("statutOpportunite")//
+				.string("resultat").enumType("resultatOpportunite")//
+				.string("typePrestation").array().enumType("typePrestation")//
+				.string("secteurActivite").enumType("secteur")//
+				.string("fonctions").array().enumType("fonction")//
+				.string("methodes").array().enumType("methode")//
+				.string("outils").array().enumType("outil")//
+				.string("langues").array().enumType("langue")//
 
 				.object("lieu")//
 				.text("ville").french().examples("Paris")//
@@ -276,7 +312,7 @@ public class Colibee extends SpaceClient {
 				.string("missionEffectueePar").examples("william")//
 				.integer("charge").examples(25)//
 				.integer("rythme").examples(3)//
-				.string("deplacement").examples("Ponctuels")//
+				.string("freqDeplacement").enumType("freqDeplacement")//
 
 				.object("client")//
 				.text("raisonSociale").french().examples("Airbus")//
@@ -289,13 +325,13 @@ public class Colibee extends SpaceClient {
 				.object("candidatures").array()//
 				.string("par").examples("william", "david", "vincent")//
 				.timestamp("le").examples("2016-07-01T14:00:00.000Z", "2016-07-03T14:00:00.000Z")//
-				.string("statut").examples("en-cours", "accepte", "refuse")//
+				.string("statut").enumType("statutCandidature")//
 				.close()//
 
 				.timestamp("identifieeLe").examples("2016-07-01T14:00:00.000Z")//
 				.timestamp("ouverteLe").examples("2016-07-01T14:00:00.000Z")//
 				.timestamp("fermeeLe").examples("2016-07-01T14:00:00.000Z")//
-				.string("motifPerdue").examples("Prix")//
+				.string("motifPerdue").enumType("motifPerdue")//
 
 				.build();
 	}

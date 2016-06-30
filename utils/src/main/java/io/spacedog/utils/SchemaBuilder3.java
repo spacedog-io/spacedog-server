@@ -126,6 +126,11 @@ public class SchemaBuilder3 {
 		return this;
 	}
 
+	public SchemaBuilder3 enumType(String type) {
+		builder.put("_enumType", type);
+		return this;
+	}
+
 	public SchemaBuilder3 labels(String... labels) {
 		builder.node("_label", Json.object(//
 				Arrays.copyOf(labels, labels.length, Object[].class)));

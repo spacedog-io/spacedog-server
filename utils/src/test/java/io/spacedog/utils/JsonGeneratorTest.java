@@ -20,8 +20,8 @@ public class JsonGeneratorTest extends Assert {
 				.build();
 
 		JsonGenerator generator = new JsonGenerator();
-		generator.reg("name", "vince", "william");
-		generator.reg("address.name", "vince", "william");
+		generator.regPath("name", "vince", "william");
+		generator.regPath("address.name", "vince", "william");
 		ObjectNode person = generator.gen(schema);
 		Utils.info(Json.toPrettyString(person));
 	}

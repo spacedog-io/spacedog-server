@@ -25,32 +25,37 @@ import com.google.common.collect.Maps;
 
 public class JsonGenerator {
 
-	private Map<String, List<Object>> map = Maps.newHashMap();
+	private Map<String, List<Object>> paths = Maps.newHashMap();
+	private Map<String, List<String>> types = Maps.newHashMap();
 	private Random random = new Random();
 
 	public JsonGenerator() {
 	}
 
-	public void reg(String path, Object value) {
-		List<Object> values = map.get(path);
+	public void regPath(String path, Object value) {
+		List<Object> values = paths.get(path);
 		if (values == null) {
 			values = Lists.newArrayList();
-			map.put(path, values);
+			paths.put(path, values);
 		}
 		values.add(value);
 	}
 
-	public void reg(String path, List<Object> moreValues) {
-		List<Object> values = map.get(path);
+	public void regPath(String path, List<Object> moreValues) {
+		List<Object> values = paths.get(path);
 		if (values == null) {
 			values = Lists.newArrayList();
-			map.put(path, values);
+			paths.put(path, values);
 		}
 		values.addAll(moreValues);
 	}
 
-	public void reg(String path, Object... moreValues) {
-		reg(path, Arrays.asList(moreValues));
+	public void regPath(String path, Object... moreValues) {
+		regPath(path, Arrays.asList(moreValues));
+	}
+
+	public void regType(String type, List<String> values) {
+		types.put(type, values);
 	}
 
 	public ObjectNode gen(ObjectNode schema) {
@@ -95,7 +100,7 @@ public class JsonGenerator {
 	private JsonNode generateValue(LinkedList<String> path, ObjectNode schema, int index) {
 
 		String stringPath = String.join(".", path.toArray(new String[path.size()]));
-		List<Object> list = map.get(stringPath);
+		List<Object> list = paths.get(stringPath);
 		if (list != null)
 			return Json.toNode(list.get(random.nextInt(list.size())));
 
@@ -107,6 +112,15 @@ public class JsonGenerator {
 				return values.get(random.nextInt(values.size()));
 			} else
 				return values;
+		}
+
+		JsonNode enumType = Json.get(schema, "_enumType");
+		if (enumType != null) {
+			if (types.containsKey(enumType.asText())) {
+				List<String> typeValues = types.get(enumType.asText());
+				String value = typeValues.get(random.nextInt(typeValues.size()));
+				return Json.toNode(value);
+			}
 		}
 
 		JsonNode examples = Json.get(schema, "_examples");
