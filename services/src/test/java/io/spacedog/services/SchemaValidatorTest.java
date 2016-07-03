@@ -48,6 +48,8 @@ public class SchemaValidatorTest extends Assert {
 				.object("XXX"));
 		testInvalidSchema(Json.objectBuilder().object("car").put("_type", "object").object("name").put("_type", "text")
 				.put("XXX", true));
+		testInvalidSchema(Json.objectBuilder().object("car").object("color").put("_type", "enum").put("_required", true)
+				.end().object("").put("_type", "string").put("_required", true));
 	}
 
 	private void testInvalidSchema(JsonBuilder<ObjectNode> builder) {

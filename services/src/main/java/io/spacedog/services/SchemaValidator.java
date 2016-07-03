@@ -4,6 +4,7 @@
 package io.spacedog.services;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
 
@@ -11,6 +12,7 @@ import org.apache.http.HttpStatus;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import com.google.common.base.Strings;
 
 import io.spacedog.utils.SchemaType;
 import io.spacedog.utils.SpaceException;
@@ -50,16 +52,25 @@ public class SchemaValidator {
 	}
 
 	private static void checkObjectProperties(String propertyName, JsonNode propertySchema) {
-		Iterable<String> fieldNames = () -> propertySchema.fieldNames();
 
-		StreamSupport.stream(fieldNames.spliterator(), false)//
-				.filter(name -> name.charAt(0) != '_')//
-				.findFirst()//
-				.orElseThrow(() -> SchemaException.noFields(propertyName));
+		boolean noFields = true;
+		Iterator<String> names = propertySchema.fieldNames();
 
-		StreamSupport.stream(fieldNames.spliterator(), false)//
-				.filter(name -> name.charAt(0) != '_')//
-				.forEach(name -> checkProperty(name, propertySchema.get(name)));
+		while (names.hasNext()) {
+			String name = names.next();
+
+			if (Strings.isNullOrEmpty(name))
+				throw new SchemaException(//
+						"schema object field [%s] contains empty field names", propertyName);
+
+			if (name.charAt(0) != '_') {
+				noFields = false;
+				checkProperty(name, propertySchema.get(name));
+			}
+		}
+
+		if (noFields)
+			throw SchemaException.noFields(propertyName);
 	}
 
 	private static void checkProperty(String propertyName, JsonNode propertySchema) throws SchemaException {
