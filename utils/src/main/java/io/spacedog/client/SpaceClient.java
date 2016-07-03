@@ -54,6 +54,14 @@ public class SpaceClient {
 		return createUser(backend, username, password, "david@spacedog.io");
 	}
 
+	public static User createUser(User user) throws Exception {
+		String id = SpaceRequest.post("/1/user").backendId(user.backendId)
+				.body("username", user.username, "password", user.password, "email", user.email)//
+				.go(201).objectNode().get("id").asText();
+
+		return new User(user.backendId, id, user.username, user.password, user.email);
+	}
+
 	public static User createUser(Backend backend, String username, String password, String email) throws Exception {
 		String id = SpaceRequest.post("/1/user").backend(backend)
 				.body("username", username, "password", password, "email", email)//
@@ -64,6 +72,11 @@ public class SpaceClient {
 
 	public static void deleteUser(String username, Backend backend) throws Exception {
 		SpaceRequest.delete("/1/user/" + username).adminAuth(backend).go(200, 404);
+	}
+
+	public static void resetSchema(JsonNode schema, Backend backend) throws Exception {
+		deleteSchema(schema, backend);
+		setSchema(schema, backend);
 	}
 
 	public static void deleteSchema(JsonNode schema, Backend backend) throws Exception {

@@ -34,6 +34,7 @@ public class Colibee extends SpaceClient {
 
 	public Colibee() throws Exception {
 		backend = new Backend("colibee", "colibee", "hi colibee", "david@spacedog.io");
+		william = new User("colibee", "william", "william", "hi william", "william@me.com");
 		generator = new JsonGenerator();
 	}
 
@@ -42,17 +43,22 @@ public class Colibee extends SpaceClient {
 
 		SpaceRequest.configuration().target(SpaceTarget.production);
 
-		resetBackend(backend);
-		initUserDefaultSchema(backend);
-		william = createUser(backend, "william", "hi william");
+		// resetBackend();
 
 		initGenerator();
 		initReferences();
 		initConsultantWilliam();
-		initOpportuniteAirbus();
+		initOpportunites();
 		initGroupeFinance();
 		initRdvWilliam();
 		initDiscussionBale3();
+	}
+
+	@SuppressWarnings("unused")
+	private void resetBackend() throws Exception {
+		resetBackend(backend);
+		initUserDefaultSchema(backend);
+		william = createUser(william);
 	}
 
 	private void initGenerator() throws Exception {
@@ -80,24 +86,33 @@ public class Colibee extends SpaceClient {
 
 	private void initConsultantWilliam() throws Exception {
 		schemaConsultant = buildConsultantSchema();
-		setSchema(schemaConsultant, backend);
+		resetSchema(schemaConsultant, backend);
 
 		ObjectNode consultantWilliam = generator.gen(schemaConsultant);
 		SpaceRequest.post("/1/data/consultant?id=william")//
 				.userAuth(william).body(consultantWilliam).go(201);
 	}
 
-	private void initOpportuniteAirbus() throws Exception {
+	private void initOpportunites() throws Exception {
 		schemaOpportunite = buildOpportuniteSchema();
-		setSchema(schemaOpportunite, backend);
-		ObjectNode opportuniteAirbus = generator.gen(schemaOpportunite);
+		resetSchema(schemaOpportunite, backend);
+
 		SpaceRequest.post("/1/data/opportunite?id=airbus")//
-				.userAuth(william).body(opportuniteAirbus).go(201);
+				.userAuth(william).body(generator.gen(schemaOpportunite, 0)).go(201);
+
+		SpaceRequest.post("/1/data/opportunite?id=total")//
+				.userAuth(william).body(generator.gen(schemaOpportunite, 1)).go(201);
+
+		SpaceRequest.post("/1/data/opportunite?id=edf")//
+				.userAuth(william).body(generator.gen(schemaOpportunite, 2)).go(201);
+
+		SpaceRequest.post("/1/data/opportunite?id=suez")//
+				.userAuth(william).body(generator.gen(schemaOpportunite, 3)).go(201);
 	}
 
 	private void initGroupeFinance() throws Exception {
 		schemaGroupe = buildGroupeSchema();
-		setSchema(schemaGroupe, backend);
+		resetSchema(schemaGroupe, backend);
 		ObjectNode groupeFinance = generator.gen(schemaGroupe);
 		SpaceRequest.post("/1/data/groupe?id=finance")//
 				.userAuth(william).body(groupeFinance).go(201);
@@ -105,7 +120,7 @@ public class Colibee extends SpaceClient {
 
 	private void initRdvWilliam() throws Exception {
 		schemaRdv = buildRdvSchema();
-		setSchema(schemaRdv, backend);
+		resetSchema(schemaRdv, backend);
 		ObjectNode rdvWilliam = generator.gen(schemaRdv);
 		SpaceRequest.post("/1/data/rdv?id=william")//
 				.userAuth(william).body(rdvWilliam).go(201);
@@ -113,13 +128,13 @@ public class Colibee extends SpaceClient {
 
 	private void initDiscussionBale3() throws Exception {
 		schemaDiscussion = buildDiscussionSchema();
-		setSchema(schemaDiscussion, backend);
+		resetSchema(schemaDiscussion, backend);
 		ObjectNode bale3 = generator.gen(schemaDiscussion);
 		String discussionId = SpaceRequest.post("/1/data/discussion?id=bale3")//
 				.userAuth(william).body(bale3).go(201).getFromJson("id").asText();
 
 		schemaMessage = buildMessageSchema();
-		setSchema(schemaMessage, backend);
+		resetSchema(schemaMessage, backend);
 		ObjectNode message = generator.gen(schemaMessage);
 		message.put("discussionId", discussionId);
 		SpaceRequest.post("/1/data/message")//
@@ -177,7 +192,7 @@ public class Colibee extends SpaceClient {
 		references.set("statutCandidature", Json.object("en-cours", "En cours", "ok", "Acceptée", "ko", "Refusée"));
 
 		SpaceRequest.put("/1/stash").adminAuth(backend).go(200);
-		SpaceRequest.put("/1/stash/references").adminAuth(backend).body(references).go(201);
+		SpaceRequest.put("/1/stash/references").adminAuth(backend).body(references).go(200, 201);
 
 		registerReferencesInGenerator(references);
 	}
