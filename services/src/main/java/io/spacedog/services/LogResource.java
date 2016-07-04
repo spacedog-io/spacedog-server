@@ -237,14 +237,20 @@ public class LogResource extends Resource {
 		}
 
 		for (Entry<String, List<String>> entry : context.request().headers().entrySet()) {
-			if (!entry.getKey().equalsIgnoreCase(SpaceHeaders.AUTHORIZATION)) {
-				if (entry.getValue().size() == 1)
-					log.with("headers").put(entry.getKey(), entry.getValue().get(0));
-				else if (entry.getValue().size() > 1) {
-					ArrayNode array = log.with("headers").putArray(entry.getKey());
-					for (String string : entry.getValue())
-						array.add(string);
-				}
+			if (entry.getKey().equalsIgnoreCase(SpaceHeaders.AUTHORIZATION))
+				continue;
+			if (entry.getKey().equalsIgnoreCase(SpaceHeaders.USER_AGENT)) {
+				String userAgent = entry.getValue().toString();
+				log.with("headers").put(entry.getKey(), //
+						userAgent.substring(1, userAgent.length() - 1));
+				continue;
+			}
+			if (entry.getValue().size() == 1)
+				log.with("headers").put(entry.getKey(), entry.getValue().get(0));
+			else if (entry.getValue().size() > 1) {
+				ArrayNode array = log.with("headers").putArray(entry.getKey());
+				for (String string : entry.getValue())
+					array.add(string);
 			}
 		}
 
