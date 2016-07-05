@@ -14,7 +14,6 @@ import com.google.common.io.Resources;
 
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
-import io.spacedog.client.SpaceTarget;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonGenerator;
 import io.spacedog.utils.SchemaBuilder3;
@@ -35,23 +34,28 @@ public class Colibee extends SpaceClient {
 	public Colibee() throws Exception {
 		backend = new Backend("colibee", "colibee", "hi colibee", "david@spacedog.io");
 		william = new User("colibee", "william", "william", "hi william", "william@me.com");
+
 		generator = new JsonGenerator();
+		generator.regPath("identite.photo", //
+				"https://spacedog-dev-files.s3.amazonaws.com/colibee/tmp/ma-tronche.png");
+		generator.regPath("cv.url", //
+				"https://spacedog-dev-files.s3.amazonaws.com/colibee/tmp/mon-cv.pdf");
 	}
 
 	@Test
 	public void initColibeeBackend() throws Exception {
 
-		SpaceRequest.configuration().target(SpaceTarget.production);
+		// SpaceRequest.configuration().target(SpaceTarget.production);
 
 		// resetBackend();
 
-		initGenerator();
-		initReferences();
-		initConsultantWilliam();
-		initOpportunites();
-		initGroupeFinance();
-		initRdvWilliam();
-		initDiscussionBale3();
+		// initTmpFiles();
+		// initReferences();
+		// initConsultantWilliam();
+		// initOpportunites();
+		// initGroupeFinance();
+		// initRdv();
+		// initDiscussionBale3();
 	}
 
 	@SuppressWarnings("unused")
@@ -61,27 +65,23 @@ public class Colibee extends SpaceClient {
 		william = createUser(william);
 	}
 
-	private void initGenerator() throws Exception {
+	private void initTmpFiles() throws Exception {
 
 		// photo
 
 		byte[] bytes = Resources.toByteArray(//
 				Resources.getResource("io/spacedog/examples/ma-tronche.png"));
 
-		String url = SpaceRequest.put("/1/share/ma-tronche.png").userAuth(william)//
-				.body(bytes).go(200).getFromJson("s3").asText();
-
-		generator.regPath("identite.photo", url);
+		SpaceRequest.put("/1/file/tmp/ma-tronche.png").adminAuth(backend)//
+				.body(bytes).go(200);
 
 		// cv
 
 		bytes = Resources.toByteArray(//
 				Resources.getResource("io/spacedog/examples/mon-cv.pdf"));
 
-		url = SpaceRequest.put("/1/share/mon-cv.pdf").userAuth(william)//
-				.body(bytes).go(200).getFromJson("s3").asText();
-
-		generator.regPath("cv.url", url);
+		SpaceRequest.put("/1/file/tmp/mon-cv.pdf").adminAuth(backend)//
+				.body(bytes).go(200);
 	}
 
 	private void initConsultantWilliam() throws Exception {
@@ -118,12 +118,11 @@ public class Colibee extends SpaceClient {
 				.userAuth(william).body(groupeFinance).go(201);
 	}
 
-	private void initRdvWilliam() throws Exception {
+	private void initRdv() throws Exception {
 		schemaRdv = buildRdvSchema();
 		resetSchema(schemaRdv, backend);
-		ObjectNode rdvWilliam = generator.gen(schemaRdv);
-		SpaceRequest.post("/1/data/rdv?id=william")//
-				.userAuth(william).body(rdvWilliam).go(201);
+		ObjectNode rdv = generator.gen(schemaRdv);
+		SpaceRequest.post("/1/data/rdv").userAuth(william).body(rdv).go(201);
 	}
 
 	private void initDiscussionBale3() throws Exception {
@@ -365,13 +364,25 @@ public class Colibee extends SpaceClient {
 	private ObjectNode buildRdvSchema() {
 		return SchemaBuilder3.builder("rdv") //
 				.text("titre").french()//
+				.string("status").examples("demande")//
 				.string("categorie").examples("Présentation client")//
-				.timestamp("debut")//
-				.timestamp("fin")//
 				.text("lieu")//
-				.string("participants").array()//
-				.text("commentaires")//
+				.string("participants").array().examples("william", "vincent")//
 				// animateur = owner of object
+				.text("commentaire")//
+
+				.object("quand")//
+				.date("date").examples("2016-08-13")//
+				.time("debut").examples("15:00:00")//
+				.time("fin").examples("16:30:00")//
+				.close()
+
+				.object("dispos").array()//
+				.date("date").examples("2016-08-02", "2016-08-13")//
+				.time("debut").examples("14:00:00", "15:00:00")//
+				.time("fin").examples("15:30:00", "16:30:00")//
+				.close()
+
 				.build();
 	}
 
