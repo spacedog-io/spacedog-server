@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 
+import org.apache.http.Header;
 import org.joda.time.DateTime;
 import org.junit.Assert;
 
@@ -54,12 +55,14 @@ public class SpaceResponse {
 
 			httpRequest.getHeaders().forEach((key, value) -> printHeader(key, value));
 
-			if (request.getBody() != null //
-					&& request.getBody().getEntity().getContentType() != null)
-				Utils.info("content-type:" + request.getBody().getEntity().getContentType());
+			if (request.getBody() != null) {
+				Header header = request.getBody().getEntity().getContentType();
+				if (header != null)
+					Utils.info("%s: [%s]", header.getName(), header.getValue());
+			}
 
 			if (jsonRequestContent != null)
-				Utils.info("Request content: %s", Json.toPrettyString(jsonRequestContent));
+				Utils.info("Request body: %s", Json.toPrettyString(jsonRequestContent));
 		}
 
 		String body = httpResponse.getBody();
