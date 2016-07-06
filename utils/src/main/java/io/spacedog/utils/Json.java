@@ -352,10 +352,12 @@ public class Json {
 				"can not convert this json node [%s] to a list of strings", node);
 	}
 
-	public static JsonNode fullReplace(JsonNode node, String fieldName, String value) {
+	public static JsonNode fullReplaceTextualFields(JsonNode node, String fieldName, String value) {
 		List<JsonNode> parents = node.findParents(fieldName);
-		for (JsonNode parent : parents)
-			((ObjectNode) parent).replace(fieldName, TextNode.valueOf(value));
+		for (JsonNode parent : parents) {
+			if (parent.get(fieldName).isTextual())
+				((ObjectNode) parent).set(fieldName, TextNode.valueOf(value));
+		}
 		return node;
 	}
 

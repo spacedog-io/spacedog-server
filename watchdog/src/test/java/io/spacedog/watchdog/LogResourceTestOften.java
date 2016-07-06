@@ -6,6 +6,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceClient.Backend;
@@ -15,6 +16,7 @@ import io.spacedog.client.SpaceResponse;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SchemaBuilder2;
+import io.spacedog.utils.SchemaBuilder3;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
@@ -141,6 +143,27 @@ public class LogResourceTestOften extends Assert {
 				.assertEquals("DELETE", "results.6.method")//
 				.assertEquals("/1/backend", "results.6.path")//
 				.assertEquals("test", "results.6.credentials.backendId");
+	}
+
+	@Test
+	public void checkLogFilterDoesNotRemoveAnyPasswordSchemaProperty() throws Exception {
+
+		// prepare
+		SpaceClient.prepareTest();
+		Backend test = SpaceClient.resetTestBackend();
+
+		// custom schema with password property is valid
+		ObjectNode schema = SchemaBuilder3.builder("credentials").string("password").build();
+		SpaceClient.setSchema(schema, test);
+
+		// schema password properties are not scrambled
+		SpaceRequest.get("/1/schema/credentials").backend(test).go(200)//
+				.assertEquals("string", "credentials.password._type");
+
+		// log password filter only scramble text fields
+		SpaceRequest.get("/1/log").size(2).adminAuth(test).go(200)//
+				.assertEquals("string", "results.0.response.credentials.password._type")//
+				.assertEquals("string", "results.1.jsonContent.credentials.password._type");
 	}
 
 	@Test

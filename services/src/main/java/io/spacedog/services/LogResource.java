@@ -232,8 +232,11 @@ public class LogResource extends Resource {
 
 		if (!context.query().keys().isEmpty()) {
 			ObjectNode logQuery = log.putObject("query");
-			for (String key : context.query().keys())
-				logQuery.put(key, context.get(key));
+			for (String key : context.query().keys()) {
+				String value = key.equals(PASSWORD) //
+						? "******" : context.get(key);
+				logQuery.put(key, value);
+			}
 		}
 
 		for (Entry<String, List<String>> entry : context.request().headers().entrySet()) {
@@ -278,7 +281,10 @@ public class LogResource extends Resource {
 
 			if (Json.isObject(content))
 				try {
-					log.set("jsonContent", Json.readNode(content));
+					JsonNode securedContent = Json.fullReplaceTextualFields(//
+							Json.readNode(content), "password", "******");
+
+					log.set("jsonContent", securedContent);
 				} catch (Exception e) {
 					// I just do not log the content if I can not parse it
 				}
@@ -292,11 +298,9 @@ public class LogResource extends Resource {
 				log.set("response", (JsonNode) payload.rawContent());
 		}
 
-		JsonNode securedLog = Json.fullReplace(log, "password", "******");
-
 		return Start.get().getElasticClient()//
 				.prepareIndex(SPACEDOG_BACKEND, TYPE)//
-				.setSource(securedLog.toString()).get().getId();
+				.setSource(log.toString()).get().getId();
 	}
 
 	private boolean isNotGetLogRequest(Context context) {
