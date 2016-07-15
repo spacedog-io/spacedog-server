@@ -5,8 +5,6 @@ package io.spacedog.services;
 
 import java.util.stream.Stream;
 
-import org.elasticsearch.action.support.QuerySourceBuilder;
-import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
 import io.spacedog.services.Credentials.Level;
@@ -125,13 +123,10 @@ public class BackendResource extends Resource {
 
 		ElasticClient elastic = Start.get().getElasticClient();
 
-		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery()//
-				.filter(QueryBuilders.termQuery(BACKEND_ID, backendId));
-
 		elastic.refreshType(SPACEDOG_BACKEND, CredentialsResource.TYPE);
 
 		long totalHits = elastic.prepareSearch(SPACEDOG_BACKEND, CredentialsResource.TYPE)//
-				.setQuery(new QuerySourceBuilder().setQuery(boolQueryBuilder).toString())//
+				.setQuery(QueryBuilders.termQuery(BACKEND_ID, backendId))//
 				.setSize(0)//
 				.get()//
 				.getHits()//
