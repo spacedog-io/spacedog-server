@@ -14,6 +14,7 @@ import com.google.common.io.Resources;
 
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTarget;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonGenerator;
 import io.spacedog.utils.SchemaBuilder3;
@@ -34,28 +35,27 @@ public class Colibee extends SpaceClient {
 	public Colibee() throws Exception {
 		backend = new Backend("colibee", "colibee", "hi colibee", "david@spacedog.io");
 		william = new User("colibee", "william", "william", "hi william", "william@me.com");
-
 		generator = new JsonGenerator();
+
+		SpaceRequest.configuration().target(SpaceTarget.production);
+		// resetBackend();
+
 		generator.regPath("identite.photo", //
-				"https://spacedog-dev-files.s3.amazonaws.com/colibee/tmp/ma-tronche.png");
+				SpaceRequest.configuration().target().url(backend.backendId, "/1/file/tmp/ma-tronche.png"));
 		generator.regPath("cv.url", //
-				"https://spacedog-dev-files.s3.amazonaws.com/colibee/tmp/mon-cv.pdf");
+				SpaceRequest.configuration().target().url(backend.backendId, "/1/file/tmp/mon-cv.pdf"));
 	}
 
 	@Test
 	public void initColibeeBackend() throws Exception {
 
-		// SpaceRequest.configuration().target(SpaceTarget.production);
-
-		// resetBackend();
-
-		// initTmpFiles();
-		// initReferences();
-		// initConsultantWilliam();
-		// initOpportunites();
-		// initGroupeFinance();
-		// initRdv();
-		// initDiscussionBale3();
+		initTmpFiles();
+		initReferences();
+		initConsultant();
+		initOpportunites();
+		initGroupeFinance();
+		initRdv();
+		initDiscussionBale3();
 	}
 
 	@SuppressWarnings("unused")
@@ -84,13 +84,21 @@ public class Colibee extends SpaceClient {
 				.body(bytes).go(200);
 	}
 
-	private void initConsultantWilliam() throws Exception {
+	private void initConsultant() throws Exception {
 		schemaConsultant = buildConsultantSchema();
 		resetSchema(schemaConsultant, backend);
 
-		ObjectNode consultantWilliam = generator.gen(schemaConsultant);
 		SpaceRequest.post("/1/data/consultant?id=william")//
-				.userAuth(william).body(consultantWilliam).go(201);
+				.userAuth(william).body(generator.gen(schemaConsultant)).go(201);
+
+		SpaceRequest.post("/1/data/consultant?id=vince")//
+				.userAuth(william).body(generator.gen(schemaConsultant)).go(201);
+
+		SpaceRequest.post("/1/data/consultant?id=david")//
+				.userAuth(william).body(generator.gen(schemaConsultant)).go(201);
+
+		SpaceRequest.post("/1/data/consultant?id=fred")//
+				.userAuth(william).body(generator.gen(schemaConsultant)).go(201);
 	}
 
 	private void initOpportunites() throws Exception {
@@ -209,6 +217,7 @@ public class Colibee extends SpaceClient {
 		return SchemaBuilder3.builder("consultant") //
 				.bool("membreColibee")//
 				.string("membreNumero").examples("01234567").labels("fr", "N° de membre")//
+				.string("contactsColibee").array().examples("mallet", "dupont")//
 				.text("resume")//
 				.enumm("typesPrestation").array().enumType("typePrestation")//
 				.enumm("secteurs").array().enumType("secteur")//
@@ -291,6 +300,8 @@ public class Colibee extends SpaceClient {
 				.object("dispos").array()//
 				.date("debut").examples("2016-07-01", "2016-07-12")//
 				.date("fin").examples("2016-07-04", "2016-07-18")//
+				.text("titre").examples("Dispo 2 jours sur trois", "Disponible sur Toulouse")//
+				.text("lieu").examples("à Paris", "à Toulouse")//
 				.bool("probablement")//
 				.text("note").french().examples("En vacances.")//
 				.close()//
@@ -342,6 +353,17 @@ public class Colibee extends SpaceClient {
 				.string("statut").enumType("statutCandidature")//
 				.close()//
 
+				.object("meteo").array()//
+				.timestamp("quand").examples("2016-07-12T14:00:00.000Z", "2016-08-02T14:00:00.000Z")//
+				.string("statut").examples("beau", "variable", "orage")//
+				.close()//
+
+				.object("bilan")//
+				.string("evaluation").examples("insuffisant", "satisfaisant", "excellent")//
+				.timestamp("quand").examples("2016-07-12T14:00:00.000Z")//
+				.text("notes")//
+				.close()//
+
 				.timestamp("identifieeLe").examples("2016-07-01T14:00:00.000Z")//
 				.timestamp("ouverteLe").examples("2016-07-01T14:00:00.000Z")//
 				.timestamp("fermeeLe").examples("2016-07-01T14:00:00.000Z")//
@@ -354,9 +376,9 @@ public class Colibee extends SpaceClient {
 		return SchemaBuilder3.builder("groupe") //
 				.text("titre").french()//
 				.text("description").french()//
-				.bool("membreOnly")//
-				.string("animateur")//
-				.string("consultants").array()//
+				.bool("membreColibeeOnly")//
+				.string("membres").array().examples("william", "david")//
+				.string("demandesAdhesion").array().examples("vincent", "fred")//
 				.build();
 
 	}
@@ -391,7 +413,7 @@ public class Colibee extends SpaceClient {
 				.text("titre").french()//
 				.string("statut").examples("open", "close")//
 				.timestamp("fermeeLe")//
-				.string("fermeePar")//
+				.string("fermeePar").examples("william")//
 				.build();
 	}
 
@@ -402,7 +424,7 @@ public class Colibee extends SpaceClient {
 				.object("reponses").array()//
 				.text("texte").french()//
 				.timestamp("ecritLe")//
-				.string("ecritPar")//
+				.string("ecritPar").examples("william", "david", "vince")//
 				.close()//
 				.build();
 	}
