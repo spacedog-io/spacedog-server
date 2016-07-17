@@ -6,6 +6,8 @@ package io.spacedog.watchdog;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.node.TextNode;
+
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceClient.User;
@@ -50,7 +52,11 @@ public class CredentialsResourceTestOften extends Assert {
 		// vince gets his credentials
 		SpaceRequest.get("/1/credentials/vince").userAuth(vince).go(200)//
 				.assertEquals("vince", "username")//
-				.assertEquals("vince@dog.com", "email");
+				.assertEquals("vince@dog.com", "email")//
+				.assertEquals("USER", "level")//
+				.assertNotPresent("roles")//
+				.assertDateIsRecent("createdAt")//
+				.assertDateIsRecent("updatedAt");
 
 		// vince fails to get his credentials if wrong username
 		SpaceRequest.get("/1/credentials/vince").basicAuth(test, "XXX", "hi vince").go(401);
@@ -230,4 +236,43 @@ public class CredentialsResourceTestOften extends Assert {
 		// fred fails to login since backend is brand new
 		SpaceRequest.get("/1/login").userAuth(fred).go(401);
 	}
+
+	@Test
+	public void getPutAndDeleteUserCredentialsRoles() throws Exception {
+
+		// prepare
+		SpaceClient.prepareTest();
+		Backend test = SpaceClient.resetTestBackend();
+		User fred = SpaceClient.newCredentials(test, "fred", "hi fred", "fred@dog.com");
+
+		// fred gets his credentials roles
+		SpaceRequest.get("/1/credentials/fred/roles").userAuth(fred).go(200)//
+				.assertSizeEquals(0);
+
+		// fred fails to set a role since he is no admin
+		SpaceRequest.put("/1/credentials/fred/roles/silver").userAuth(fred).go(401);
+
+		// admin sets fred's roles
+		SpaceRequest.put("/1/credentials/fred/roles/silver").adminAuth(test).go(200);
+		SpaceRequest.put("/1/credentials/fred/roles/gold").adminAuth(test).go(200);
+		SpaceRequest.get("/1/credentials/fred/roles").adminAuth(test).go(200)//
+				.assertSizeEquals(2)//
+				.assertContains(TextNode.valueOf("silver"))//
+				.assertContains(TextNode.valueOf("gold"));
+
+		// fred fails to delete one of his roles since he is no admin
+		SpaceRequest.delete("/1/credentials/fred/roles/silver").userAuth(fred).go(401);
+
+		// admin deletes one of fred's roles
+		SpaceRequest.delete("/1/credentials/fred/roles/gold").adminAuth(test).go(200);
+		SpaceRequest.get("/1/credentials/fred/roles").adminAuth(test).go(200)//
+				.assertSizeEquals(1)//
+				.assertContains(TextNode.valueOf("silver"));
+
+		// admin deletes all fred's roles
+		SpaceRequest.delete("/1/credentials/fred/roles").adminAuth(test).go(200);
+		SpaceRequest.get("/1/credentials/fred/roles").userAuth(fred).go(200)//
+				.assertSizeEquals(0);
+	}
+
 }

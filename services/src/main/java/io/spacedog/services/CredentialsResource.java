@@ -3,6 +3,7 @@
  */
 package io.spacedog.services;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -32,6 +33,7 @@ import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Passwords;
+import io.spacedog.utils.Roles;
 import io.spacedog.utils.SchemaBuilder2;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -54,6 +56,7 @@ public class CredentialsResource extends Resource {
 				.stringProperty(USERNAME, true)//
 				.stringProperty(BACKEND_ID, true)//
 				.stringProperty(CREDENTIALS_LEVEL, true)//
+				.stringProperty(ROLES, false, true)//
 				.stringProperty(HASHED_PASSWORD, false)//
 				.stringProperty(PASSWORD_RESET_CODE, false)//
 				.stringProperty(EMAIL, true)//
@@ -198,11 +201,78 @@ public class CredentialsResource extends Resource {
 		Passwords.checkIfValid(password);
 
 		UpdateResponse response = prepareUpdate(credentials.backendId(), username)//
-				.setDoc(CredentialsResource.HASHED_PASSWORD, Passwords.checkAndHash(password), //
-						CredentialsResource.PASSWORD_RESET_CODE, null)//
+				.setDoc(HASHED_PASSWORD, Passwords.checkAndHash(password), //
+						PASSWORD_RESET_CODE, null)//
 				.get();
 
 		return JsonPayload.saved(false, credentials.backendId(), "/1", TYPE, username, response.getVersion());
+	}
+
+	@Get("/1/credentials/:username/roles")
+	@Get("/1/credentials/:username/roles/")
+	public Object getRoles(String username, Context context) {
+		String backendId = SpaceContext.checkUserCredentials(username).backendId();
+		Object roles = get(backendId, username, true).getSource().get(ROLES);
+		return roles == null ? Collections.EMPTY_LIST : roles;
+	}
+
+	@Delete("/1/credentials/:username/roles")
+	@Delete("/1/credentials/:username/roles/")
+	public Payload deleteAllRoles(String username, Context context) {
+
+		String backendId = SpaceContext.checkAdminCredentials().backendId();
+
+		UpdateResponse response = prepareUpdate(backendId, username)//
+				.setDoc(ROLES, null)//
+				.get();
+
+		return JsonPayload.saved(false, backendId, "/1", TYPE, username, response.getVersion());
+	}
+
+	@Put("/1/credentials/:username/roles/:role")
+	@Put("/1/credentials/:username/roles/:role/")
+	public Payload putRole(String username, String role, Context context) {
+
+		String backendId = SpaceContext.checkAdminCredentials().backendId();
+		Roles.checkIfValid(role);
+
+		@SuppressWarnings("unchecked")
+		List<String> roles = (List<String>) get(backendId, username, true)//
+				.getSource().get(ROLES);
+
+		if (roles == null)
+			roles = Lists.newArrayList(role);
+
+		else if (!roles.contains(role))
+			roles.add(role);
+
+		UpdateResponse response = prepareUpdate(backendId, username)//
+				.setDoc(ROLES, roles)//
+				.get();
+
+		return JsonPayload.saved(false, backendId, "/1", TYPE, username, response.getVersion());
+	}
+
+	@Delete("/1/credentials/:username/roles/:role")
+	@Delete("/1/credentials/:username/roles/:role/")
+	public Payload deleteRole(String username, String role, Context context) {
+
+		String backendId = SpaceContext.checkAdminCredentials().backendId();
+
+		@SuppressWarnings("unchecked")
+		List<String> roles = (List<String>) get(backendId, username, true)//
+				.getSource().get(ROLES);
+
+		if (roles == null || !roles.contains(role))
+			return JsonPayload.error(HttpStatus.NOT_FOUND);
+
+		roles.remove(role);
+
+		UpdateResponse response = prepareUpdate(backendId, username)//
+				.setDoc(ROLES, roles)//
+				.get();
+
+		return JsonPayload.saved(false, backendId, "/1", TYPE, username, response.getVersion());
 	}
 
 	//

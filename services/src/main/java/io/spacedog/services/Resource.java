@@ -23,6 +23,7 @@ public abstract class Resource {
 	public static final String HASHED_PASSWORD = "hashedPassword";
 	public static final String PASSWORD_RESET_CODE = "passwordResetCode";
 	public static final String CREDENTIALS_LEVEL = "level";
+	public static final String ROLES = "roles";
 	public static final String ERROR = "error";
 
 	public static StringBuilder spaceUrl(String backendId, String uri, String type, String id) {
