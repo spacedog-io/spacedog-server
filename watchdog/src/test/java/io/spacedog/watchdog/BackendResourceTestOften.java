@@ -82,8 +82,7 @@ public class BackendResourceTestOften extends Assert {
 
 		// let's create a common user
 
-		SpaceClient.initUserDefaultSchema(test);
-		User john = SpaceClient.createUser(test, "john", "hi john", "john@dog.io");
+		User john = SpaceClient.newCredentials(test, "john", "hi john", "john@dog.io");
 
 		// user fails to get backend data since it is restricted to admins
 

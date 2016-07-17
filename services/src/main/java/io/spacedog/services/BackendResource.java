@@ -8,10 +8,10 @@ import java.util.stream.Stream;
 import org.elasticsearch.index.query.QueryBuilders;
 
 import io.spacedog.services.Credentials.Level;
-import io.spacedog.services.CredentialsResource.SignUp;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Internals;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -40,7 +40,7 @@ public class BackendResource extends Resource {
 	public Payload post(String body, Context context) {
 		Credentials credentials = SpaceContext.getCredentials();
 		if (credentials.isRootBackend())
-			throw Exceptions.illegalArgument("[api] not available to identify a new backend");
+			throw Exceptions.illegalArgument("[api] not a valid backend id");
 		return post(credentials.backendId(), body, context);
 	}
 
@@ -54,21 +54,20 @@ public class BackendResource extends Resource {
 			return JsonPayload.invalidParameters("backendId", backendId,
 					String.format("backend id [%s] not available", backendId));
 
-		SignUp backendSignUp = new SignUp(backendId, Level.SUPER_ADMIN, body);
-		CredentialsResource.get().create(backendSignUp);
+		Credentials credentials = Credentials.signUp(backendId, //
+				Level.SUPER_ADMIN, Json.readObject(body));
+		CredentialsResource.get().create(credentials);
 
 		// after backend is created, new admin credentials are valid
 		// and can be set in space context if none are set
-		SpaceContext.setCredentials(//
-				new Credentials(backendId, backendSignUp.credentials.name(), //
-						backendSignUp.credentials.email().get(), Level.SUPER_ADMIN));
+		SpaceContext.setCredentials(credentials);
 
 		if (!SpaceContext.isTest())
 			Internals.get().notify(//
 					Start.get().configuration().superdogAwsNotificationTopic(), //
 					String.format("New backend (%s)", spaceRootUrl(backendId).toString()), //
-					String.format("backend id = %s\nadmin email = %s", backendId,
-							backendSignUp.credentials.email().get()));
+					String.format("backend id = %s\nadmin email = %s", //
+							backendId, credentials.email().get()));
 
 		return JsonPayload.saved(true, backendId, "/1/backend", TYPE, backendId, true);
 	}

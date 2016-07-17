@@ -89,10 +89,7 @@ public class BatchResourceTestOften extends Assert {
 
 		batch = Json.arrayBuilder()//
 				.object()//
-				.put("method", "POST").put("path", "/1/schema/user")//
-				.end()//
-				.object()//
-				.put("method", "POST").put("path", "/1/user")//
+				.put("method", "POST").put("path", "/1/credentials")//
 				.object("content")//
 				.put("username", "vince")//
 				.put("password", "hi vince")//
@@ -100,7 +97,7 @@ public class BatchResourceTestOften extends Assert {
 				.end()//
 				.end()//
 				.object()//
-				.put("method", "POST").put("path", "/1/user")//
+				.put("method", "POST").put("path", "/1/credentials")//
 				.object("content")//
 				.put("username", "dave")//
 				.put("password", "hi dave")//
@@ -108,18 +105,18 @@ public class BatchResourceTestOften extends Assert {
 				.end()//
 				.end()//
 				.object()//
-				.put("method", "GET").put("path", "/1/user/vince")//
+				.put("method", "GET").put("path", "/1/credentials/vince")//
 				.end()//
 				.object()//
-				.put("method", "GET").put("path", "/1/data/user/dave")//
+				.put("method", "GET").put("path", "/1/credentials/dave")//
 				.end()//
 				.build();
 
 		SpaceRequest.post("/1/batch").debugServer().adminAuth(testBackend).body(batch).go(200)//
-				.assertEquals("vince", "responses.1.id")//
-				.assertEquals("dave", "responses.2.id")//
-				.assertEquals("vince", "responses.3.content.username")//
-				.assertEquals("dave", "responses.4.content.username")//
+				.assertEquals("vince", "responses.0.id")//
+				.assertEquals("dave", "responses.1.id")//
+				.assertEquals("vince", "responses.2.content.username")//
+				.assertEquals("dave", "responses.3.content.username")//
 				.assertEquals(1, "debug.batchCredentialChecks");
 
 		// should succeed to returns errors when batch requests are invalid, not
@@ -127,7 +124,7 @@ public class BatchResourceTestOften extends Assert {
 
 		batch = Json.arrayBuilder()//
 				.object()//
-				.put("method", "POST").put("path", "/1/user")//
+				.put("method", "POST").put("path", "/1/credentials")//
 				.object("content")//
 				.put("username", "fred")//
 				.put("password", "hi fred")//
@@ -143,9 +140,6 @@ public class BatchResourceTestOften extends Assert {
 				.put("method", "POST").put("path", "/1/user")//
 				.end()//
 				.object()//
-				.put("method", "DELETE").put("path", "/1/user")//
-				.end()//
-				.object()//
 				.put("method", "PUT").put("path", "/1/user/vince/password")//
 				.put("content", "hi vince 2")//
 				.end()//
@@ -154,10 +148,9 @@ public class BatchResourceTestOften extends Assert {
 		SpaceRequest.post("/1/batch").debugServer().backend(testBackend).body(batch).go(200)//
 				.assertEquals(400, "responses.0.status")//
 				.assertEquals(404, "responses.1.status")//
-				.assertEquals(401, "responses.2.status")//
-				.assertEquals(400, "responses.3.status")//
+				.assertEquals(404, "responses.2.status")//
+				.assertEquals(404, "responses.3.status")//
 				.assertEquals(401, "responses.4.status")//
-				.assertEquals(401, "responses.5.status")//
 				.assertEquals(1, "debug.batchCredentialChecks");
 
 		// should succeed to create and update messages by batch

@@ -1,7 +1,6 @@
 package io.spacedog.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
 import io.spacedog.utils.Utils;
@@ -42,36 +41,30 @@ public class SpaceClient {
 		SpaceRequest.post("/1/schema/installation").adminAuth(backend).go(201);
 	}
 
-	public static void initUserDefaultSchema(Backend backend) throws Exception {
-		SpaceRequest.post("/1/schema/user").adminAuth(backend).go(201);
+	public static User newCredentials(Backend backend, String username, String password) throws Exception {
+		return newCredentials(backend, username, password, "david@spacedog.io");
 	}
 
-	public static void initUserSchema(Backend backend, ObjectNode schema) throws Exception {
-		setSchema(schema, backend);
+	public static User newCredentials(Backend backend, String username, String password, String email)
+			throws Exception {
+		return newCredentials(backend.backendId, username, password, email);
 	}
 
-	public static User createUser(Backend backend, String username, String password) throws Exception {
-		return createUser(backend, username, password, "david@spacedog.io");
+	public static User newCredentials(User user) throws Exception {
+		return newCredentials(user.backendId, user.username, user.password, user.email);
 	}
 
-	public static User createUser(User user) throws Exception {
-		String id = SpaceRequest.post("/1/user").backendId(user.backendId)
-				.body("username", user.username, "password", user.password, "email", user.email)//
-				.go(201).objectNode().get("id").asText();
-
-		return new User(user.backendId, id, user.username, user.password, user.email);
-	}
-
-	public static User createUser(Backend backend, String username, String password, String email) throws Exception {
-		String id = SpaceRequest.post("/1/user").backend(backend)
+	public static User newCredentials(String backendId, String username, String password, String email)
+			throws Exception {
+		String id = SpaceRequest.post("/1/credentials").backendId(backendId)
 				.body("username", username, "password", password, "email", email)//
 				.go(201).objectNode().get("id").asText();
 
-		return new User(backend.backendId, id, username, password, email);
+		return new User(backendId, id, username, password, email);
 	}
 
-	public static void deleteUser(String username, Backend backend) throws Exception {
-		SpaceRequest.delete("/1/user/" + username).adminAuth(backend).go(200, 404);
+	public static void deleteCredentials(String username, Backend backend) throws Exception {
+		SpaceRequest.delete("/1/credentials/" + username).adminAuth(backend).go(200, 404);
 	}
 
 	public static void resetSchema(JsonNode schema, Backend backend) throws Exception {

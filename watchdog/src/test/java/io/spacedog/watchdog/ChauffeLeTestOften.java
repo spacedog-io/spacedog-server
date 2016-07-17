@@ -35,14 +35,13 @@ public class ChauffeLeTestOften extends Assert {
 	public static void resetBackend() throws Exception {
 
 		backend = SpaceClient.resetTestBackend();
-		SpaceClient.initUserDefaultSchema(backend);
 
 		SpaceClient.setSchema(buildBigPostSchema(), backend);
 		SpaceClient.setSchema(buildSmallPostSchema(), backend);
 
-		lui = SpaceClient.createUser(backend, "lui", "hi lui", "lui@chauffe.le");
-		elle = SpaceClient.createUser(backend, "elle", "hi elle", "elle@chauffe.le");
-		laCopine = SpaceClient.createUser(backend, "lacopine", "hi la copine", "lacopine@chauffe.le");
+		lui = SpaceClient.newCredentials(backend, "lui", "hi lui", "lui@chauffe.le");
+		elle = SpaceClient.newCredentials(backend, "elle", "hi elle", "elle@chauffe.le");
+		laCopine = SpaceClient.newCredentials(backend, "lacopine", "hi la copine", "lacopine@chauffe.le");
 	}
 
 	static ObjectNode buildBigPostSchema() {
@@ -154,8 +153,8 @@ public class ChauffeLeTestOften extends Assert {
 					.object("match_all")//
 					.build().toString();
 
-			return SpaceRequest.post("/1/search/bigpost").refresh().backend(backend).body(wallQuery).go(200)
-					.jsonNode().get("results").elements();
+			return SpaceRequest.post("/1/search/bigpost").refresh().backend(backend).body(wallQuery).go(200).jsonNode()
+					.get("results").elements();
 		}
 	}
 

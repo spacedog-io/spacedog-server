@@ -25,7 +25,6 @@ public class DataResourceTestOften extends Assert {
 
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
-		SpaceClient.initUserDefaultSchema(test);
 		SpaceClient.setSchema(SchemaResourceTestOften.buildCarSchema(), test);
 
 		JsonNode car = Json.objectBuilder() //
@@ -68,7 +67,7 @@ public class DataResourceTestOften extends Assert {
 
 		// create user vince
 
-		SpaceClient.User vince = SpaceClient.createUser(test, "vince", "hi vince");
+		SpaceClient.User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
 
 		// update
 

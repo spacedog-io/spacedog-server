@@ -128,8 +128,7 @@ public class DataResource2TestOften extends Assert {
 
 		// create user vince
 
-		SpaceClient.initUserDefaultSchema(test);
-		User vince = SpaceClient.createUser(test, "vince", "hi vince", "vince@dog.com");
+		User vince = SpaceClient.newCredentials(test, "vince", "hi vince", "vince@dog.com");
 
 		// small update no version should succeed
 
@@ -208,14 +207,11 @@ public class DataResource2TestOften extends Assert {
 
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
-		SpaceClient.initUserDefaultSchema(test);
 		ObjectNode schema = SchemaBuilder2.builder("message")//
 				.textProperty("text", "english", true).build();
 		SpaceClient.setSchema(schema, test);
 
-		// should successfully create 4 messages and 1 user
-
-		SpaceClient.createUser(test, "riri", "hi riri");
+		// should successfully create 4 messages
 
 		SpaceRequest.post("/1/data/message").adminAuth(test)//
 				.body("text", "what's up?").go(201);
@@ -226,12 +222,6 @@ public class DataResource2TestOften extends Assert {
 		SpaceRequest.post("/1/data/message").adminAuth(test)//
 				.body("text", "so long guys").go(201);
 
-		SpaceRequest.get("/1/data").refresh().adminAuth(test).go(200)//
-				.assertEquals(5, "total");
-
-		// should succeed to delete all users
-		SpaceRequest.delete("/1/user").adminAuth(test).go(200)//
-				.assertEquals(1, "totalDeleted");
 		SpaceRequest.get("/1/data").refresh().adminAuth(test).go(200)//
 				.assertEquals(4, "total");
 

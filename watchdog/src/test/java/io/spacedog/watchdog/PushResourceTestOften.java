@@ -43,11 +43,10 @@ public class PushResourceTestOften extends Assert {
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
 		SpaceClient.initPushDefaultSchema(test);
-		SpaceClient.initUserDefaultSchema(test);
-		User dave = SpaceClient.createUser(test, "dave", "hi dave");
-		User vince = SpaceClient.createUser(test, "vince", "hi vince");
-		User fred = SpaceClient.createUser(test, "fred", "hi fred");
-		User nath = SpaceClient.createUser(test, "nath", "hi nath");
+		User dave = SpaceClient.newCredentials(test, "dave", "hi dave");
+		User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
+		User fred = SpaceClient.newCredentials(test, "fred", "hi fred");
+		User nath = SpaceClient.newCredentials(test, "nath", "hi nath");
 
 		// unauthenticated user installs joho
 		// and fails to set installation userId and endpoint fields

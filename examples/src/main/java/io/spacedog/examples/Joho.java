@@ -14,7 +14,6 @@ import com.google.common.io.Resources;
 
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
-import io.spacedog.services.UserResource;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SchemaBuilder2;
@@ -85,7 +84,9 @@ public class Joho extends SpaceClient {
 	}
 
 	static ObjectNode buildCustomUserSchema() {
-		return UserResource.getDefaultUserSchema() //
+		return SchemaBuilder2.builder("user", "username")//
+				.stringProperty("username", true)//
+				.stringProperty("email", true)//
 				.textProperty("firstname", "french", true)//
 				.textProperty("lastname", "french", true)//
 				.simpleProperty("job", "enum", true, false)//

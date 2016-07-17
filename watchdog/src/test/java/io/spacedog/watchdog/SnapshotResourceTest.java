@@ -28,8 +28,7 @@ public class SnapshotResourceTest extends Assert {
 
 		// creates backend and user
 		SpaceClient.createBackend(aaaaBackend);
-		SpaceClient.initUserDefaultSchema(aaaaBackend);
-		SpaceClient.createUser(aaaaBackend, "vince", "hi vince");
+		SpaceClient.newCredentials(aaaaBackend, "vince", "hi vince");
 		SpaceRequest.get("/1/user/vince").adminAuth(aaaaBackend).go(200);
 
 		// deletes the current repository to force repo creation by this test
@@ -75,8 +74,7 @@ public class SnapshotResourceTest extends Assert {
 
 		// creates another backend and user
 		SpaceClient.createBackend(bbbbBackend);
-		SpaceClient.initUserDefaultSchema(bbbbBackend);
-		SpaceClient.createUser(bbbbBackend, "fred", "hi fred");
+		SpaceClient.newCredentials(bbbbBackend, "fred", "hi fred");
 		SpaceRequest.get("/1/user/fred").adminAuth(bbbbBackend).go(200);
 
 		// second snapshot (returns 201 since wait for completion true, 202
@@ -100,8 +98,7 @@ public class SnapshotResourceTest extends Assert {
 
 		// create another account and add a user
 		SpaceClient.createBackend(ccccBackend);
-		SpaceClient.initUserDefaultSchema(ccccBackend);
-		SpaceClient.createUser(ccccBackend, "nath", "hi nath");
+		SpaceClient.newCredentials(ccccBackend, "nath", "hi nath");
 		SpaceRequest.get("/1/user/nath").adminAuth(ccccBackend).go(200);
 
 		// third snapshot (returns 200 since wait for completion true, 202

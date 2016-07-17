@@ -3,7 +3,6 @@
  */
 package io.spacedog.services;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -34,9 +33,12 @@ import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Passwords;
 import io.spacedog.utils.SchemaBuilder2;
-import io.spacedog.utils.Usernames;
 import net.codestory.http.Context;
+import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
+import net.codestory.http.annotations.Post;
+import net.codestory.http.annotations.Put;
+import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
 public class CredentialsResource extends Resource {
@@ -92,20 +94,77 @@ public class CredentialsResource extends Resource {
 		return JsonPayload.success();
 	}
 
-	public String doDeletePassword(String backendId, String username) {
+	@Post("/1/credentials")
+	@Post("/1/credentials/")
+	public Payload post(String body, Context context) {
 
+		String backendId = SpaceContext.checkCredentials().backendId();
+
+		Credentials credentials = Credentials.signUp(backendId, //
+				Level.USER, Json.readObject(body));
+
+		if (exists(credentials))
+			throw Exceptions.illegalArgument(//
+					"username [%s] for backend [%s] already exists", //
+					credentials.name(), credentials.backendId());
+
+		CredentialsResource.get().create(credentials);
+
+		JsonBuilder<ObjectNode> savedBuilder = JsonPayload.savedBuilder(true, //
+				credentials.backendId(), "/1", TYPE, credentials.name());
+
+		if (credentials.passwordResetCode().isPresent())
+			savedBuilder.put(PASSWORD_RESET_CODE, credentials.passwordResetCode().get());
+
+		return JsonPayload.json(savedBuilder, HttpStatus.CREATED)//
+				.withHeader(JsonPayload.HEADER_OBJECT_ID, credentials.name());
+	}
+
+	@Get("/1/credentials/:username")
+	@Get("/1/credentials/:username/")
+	public Payload getById(String username, Context context) {
+		Credentials credentials = SpaceContext.checkUserCredentials(username);
+		GetResponse response = get(credentials.backendId(), username, false);
+		Map<String, Object> data = response.getSourceAsMap();
+		return JsonPayload.json(//
+				Json.object(USERNAME, data.get(USERNAME), //
+						EMAIL, data.get(EMAIL), //
+						CREDENTIALS_LEVEL, data.get(CREDENTIALS_LEVEL), //
+						CREATED_AT, data.get(CREATED_AT), //
+						UPDATED_AT, data.get(UPDATED_AT)));
+	}
+
+	@Delete("/1/credentials/:username")
+	@Delete("/1/credentials/:username/")
+	public Payload deleteById(String username, Context context) {
+		Credentials credentials = SpaceContext.checkUserCredentials(username);
+		DeleteResponse response = delete(credentials.backendId(), username);
+		return response.isFound() ? JsonPayload.success() //
+				: JsonPayload.error(HttpStatus.NOT_FOUND);
+	}
+
+	@Delete("/1/credentials/:username/password")
+	@Delete("/1/credentials/:username/password/")
+	public Payload deletePassword(String username, Context context) {
+		String backendId = SpaceContext.checkAdminCredentials().backendId();
 		String passwordResetCode = UUID.randomUUID().toString();
 
 		prepareUpdate(backendId, username)//
-				.setDoc(HASHED_PASSWORD, null, //
-						PASSWORD_RESET_CODE, passwordResetCode, //
-						UPDATED_AT, DateTime.now())//
+				.setDoc(CredentialsResource.HASHED_PASSWORD, null, //
+						CredentialsResource.PASSWORD_RESET_CODE, passwordResetCode, //
+						CredentialsResource.UPDATED_AT, DateTime.now())//
 				.get();
 
-		return passwordResetCode;
+		return JsonPayload.json(//
+				JsonPayload.savedBuilder(false, backendId, "/1", TYPE, username)//
+						.put(PASSWORD_RESET_CODE, passwordResetCode));
 	}
 
-	public IndexResponse doPostPassword(String backendId, String username, Context context) {
+	@Post("/1/credentials/:username/password")
+	@Post("/1/credentials/:username/password/")
+	public Payload postPassword(String username, Context context) {
+		String backendId = SpaceContext.checkCredentials().backendId();
+
 		// TODO do we need a password reset expire date to limit the reset
 		// time scope
 		String passwordResetCode = context.query().get(PASSWORD_RESET_CODE);
@@ -118,58 +177,37 @@ public class CredentialsResource extends Resource {
 		ObjectNode credentials = Json.readObject(getResponse.getSourceAsString());
 
 		if (!Json.isNull(credentials.get(HASHED_PASSWORD)) || Json.isNull(credentials.get(PASSWORD_RESET_CODE)))
-			throw Exceptions.illegalArgument("user [%s] password has not been deleted", username);
+			throw Exceptions.illegalArgument("[%s] password must be deleted before reset", username);
 
 		if (!passwordResetCode.equals(credentials.get(PASSWORD_RESET_CODE).asText()))
 			throw Exceptions.illegalArgument("invalid password reset code [%s]", passwordResetCode);
 
 		credentials.remove(PASSWORD_RESET_CODE);
 		credentials.put(HASHED_PASSWORD, Passwords.checkAndHash(password));
+		IndexResponse indexResponse = index(backendId, username, credentials);
 
-		return index(backendId, username, credentials);
+		return JsonPayload.saved(false, backendId, "/1", TYPE, username, indexResponse.getVersion());
 	}
 
-	public UpdateResponse doPutPassword(String backendId, String username, Context context) {
+	@Put("/1/credentials/:username/password")
+	@Put("/1/credentials/:username/password/")
+	public Payload putPassword(String username, Context context) {
 
+		Credentials credentials = SpaceContext.checkUserCredentials(username);
 		String password = context.get(PASSWORD);
 		Passwords.checkIfValid(password);
 
-		return prepareUpdate(backendId, username)//
-				.setDoc(HASHED_PASSWORD, Passwords.checkAndHash(password), //
-						PASSWORD_RESET_CODE, null)//
+		UpdateResponse response = prepareUpdate(credentials.backendId(), username)//
+				.setDoc(CredentialsResource.HASHED_PASSWORD, Passwords.checkAndHash(password), //
+						CredentialsResource.PASSWORD_RESET_CODE, null)//
 				.get();
+
+		return JsonPayload.saved(false, credentials.backendId(), "/1", TYPE, username, response.getVersion());
 	}
 
 	//
 	// Implementation
 	//
-
-	static class SignUp {
-
-		ObjectNode data;
-		Credentials credentials;
-		Optional<String> createdBy = Optional.empty();
-		Optional<String> hashedPassword = Optional.empty();
-		Optional<String> passwordResetCode = Optional.empty();
-
-		SignUp(String backendId, Level level, String body) {
-
-			data = Json.readObject(body);
-			String email = Json.checkStringNotNullOrEmpty(data, EMAIL);
-			String username = Json.checkStringNotNullOrEmpty(data, USERNAME);
-			Usernames.checkIfValid(username);
-
-			credentials = new Credentials(backendId, username, email, level);
-			JsonNode password = data.get(PASSWORD);
-
-			if (Json.isNull(password))
-				passwordResetCode = Optional.of(UUID.randomUUID().toString());
-			else
-				hashedPassword = Optional.of(Passwords.checkAndHash(password.asText()));
-
-			data.remove(Arrays.asList(PASSWORD, CREDENTIALS_LEVEL, BACKEND_ID));
-		}
-	}
 
 	UpdateRequestBuilder prepareUpdate(String backendId, String username) {
 		return Start.get().getElasticClient().prepareUpdate(SPACEDOG_BACKEND, TYPE,
@@ -196,6 +234,10 @@ public class CredentialsResource extends Resource {
 		return Optional.empty();
 	}
 
+	boolean exists(Credentials credentials) {
+		return exists(credentials.backendId(), credentials.name());
+	}
+
 	boolean exists(String backendId, String username) {
 		return Start.get().getElasticClient().exists(SPACEDOG_BACKEND, TYPE, //
 				toCredentialsId(backendId, username));
@@ -211,9 +253,7 @@ public class CredentialsResource extends Resource {
 		return response;
 	}
 
-	IndexResponse create(SignUp signUp) {
-
-		Credentials credentials = signUp.credentials;
+	IndexResponse create(Credentials credentials) {
 
 		if (exists(credentials.backendId(), credentials.name()))
 			throw Exceptions.illegalArgument(//
@@ -229,10 +269,11 @@ public class CredentialsResource extends Resource {
 				CREATED_AT, now, //
 				UPDATED_AT, now);
 
-		if (signUp.hashedPassword.isPresent())
-			json.put(HASHED_PASSWORD, signUp.hashedPassword.get());
-		else
-			json.put(PASSWORD_RESET_CODE, signUp.passwordResetCode.get());
+		if (credentials.hashedPassword().isPresent())
+			json.put(HASHED_PASSWORD, credentials.hashedPassword().get());
+
+		else if (credentials.passwordResetCode().isPresent())
+			json.put(PASSWORD_RESET_CODE, credentials.passwordResetCode().get());
 
 		return index(credentials.backendId(), credentials.name(), json);
 	}

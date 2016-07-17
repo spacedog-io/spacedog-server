@@ -115,8 +115,6 @@ public class SchemaResource extends Resource {
 	private JsonNode getDefaultSchema(String type) {
 		if (PushResource.TYPE.equals(type))
 			return PushResource.getDefaultInstallationSchema().build();
-		if (UserResource.TYPE.equals(type))
-			return UserResource.getDefaultUserSchema().build();
 		return null;
 	}
 

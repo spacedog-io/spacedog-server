@@ -23,10 +23,10 @@ public class PushResourceOldTest extends Assert {
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
 		SpaceClient.setSchema(buildSchema(), test);
-		User vince = SpaceClient.createUser(test, "vince", "hi vince");
-		User nath = SpaceClient.createUser(test, "nath", "hi nath");
-		User fred = SpaceClient.createUser(test, "fred", "hi fred");
-		User philippe = SpaceClient.createUser(test, "philippe", "hi philippe");
+		User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
+		User nath = SpaceClient.newCredentials(test, "nath", "hi nath");
+		User fred = SpaceClient.newCredentials(test, "fred", "hi fred");
+		User philippe = SpaceClient.newCredentials(test, "philippe", "hi philippe");
 
 		// subscribe
 		String vinceDeviceId = SpaceRequest.post("/1/device").userAuth(vince)//

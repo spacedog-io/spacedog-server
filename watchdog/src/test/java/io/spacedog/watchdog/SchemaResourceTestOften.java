@@ -31,11 +31,8 @@ public class SchemaResourceTestOften extends Assert {
 		SpaceRequest.get("/1/schema").backend(test).go(200)//
 				.assertEquals(Json.merger().get());
 
-		// admin creates user default schema
-		SpaceClient.initUserDefaultSchema(test);
-
 		// bob signs up
-		User bob = SpaceClient.createUser(test, "bob", "hi bob", "bob@dog.com");
+		User bob = SpaceClient.newCredentials(test, "bob", "hi bob", "bob@dog.com");
 
 		// admin creates car, home and sale schemas
 		SpaceClient.setSchema(buildCarSchema(), test);
@@ -50,17 +47,12 @@ public class SchemaResourceTestOften extends Assert {
 		SpaceRequest.get("/1/schema/sale").backend(test).go(200)//
 				.assertEquals(buildSaleSchema());
 
-		// admin gets the default user schema
-		ObjectNode userSchema = SpaceRequest.get("/1/schema/user")//
-				.adminAuth(test).go(200).objectNode();
-
 		// anonymous gets all schemas
 		SpaceRequest.get("/1/schema").backend(test).go(200)//
 				.assertEquals(Json.merger() //
 						.merge(buildHomeSchema()) //
 						.merge(buildCarSchema()) //
 						.merge(buildSaleSchema()) //
-						.merge(userSchema) //
 						.get());
 
 		// anonymous is not allowed to delete schema

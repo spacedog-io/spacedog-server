@@ -12,7 +12,7 @@ import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.SchemaBuilder2;
+import io.spacedog.utils.SchemaBuilder3;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
@@ -24,21 +24,17 @@ public class SearchResourceTestOften extends Assert {
 		// prepare
 
 		SpaceClient.prepareTest();
-
 		Backend test = SpaceClient.resetTestBackend();
-		SpaceClient.initUserDefaultSchema(test);
 
-		ObjectNode message = SchemaBuilder2.builder("message")//
-				.textProperty("text", "english", true).build();
-		SpaceClient.setSchema(message, test);
+		SpaceClient.setSchema(//
+				SchemaBuilder3.builder("message").text("text").build(), //
+				test);
 
-		ObjectNode rubric = SchemaBuilder2.builder("rubric")//
-				.textProperty("name", "english", true).build();
-		SpaceClient.setSchema(rubric, test);
+		SpaceClient.setSchema(//
+				SchemaBuilder3.builder("rubric").text("name").build(), //
+				test);
 
-		// creates 4 messages, 1 rubric and 1 user
-
-		SpaceClient.createUser(test, "riri", "hi riri");
+		// creates 4 messages and 1 rubric
 
 		SpaceRequest.post("/1/data/rubric").adminAuth(test)//
 				.body("name", "riri, fifi and loulou").go(201);
@@ -53,7 +49,7 @@ public class SearchResourceTestOften extends Assert {
 				.body("text", "so long guys").go(201);
 
 		SpaceRequest.get("/1/data").refresh().adminAuth(test).go(200)//
-				.assertEquals(6, "total");
+				.assertEquals(5, "total");
 
 		// deletes messages containing 'up' by query
 
@@ -69,44 +65,46 @@ public class SearchResourceTestOften extends Assert {
 				.object("match").put("_all", "wanna riri").build();
 		SpaceRequest.delete("/1/search").adminAuth(test).body(query).go(200);
 		SpaceRequest.get("/1/data").refresh().adminAuth(test).go(200)//
-				.assertEquals(3, "total");
+				.assertEquals(2, "total");
 	}
 
 	@Test
-	public void aggregateToGetDistinctUserEmails() throws Exception {
+	public void aggregateToGetDistinctCityNames() throws Exception {
 
 		// prepare backend
 
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
-		SpaceClient.initUserDefaultSchema(test);
 
-		// creates 5 users but whith only 3 distinct emails
+		SpaceClient.setSchema(//
+				SchemaBuilder3.builder("city").string("name").build(), //
+				test);
 
-		SpaceClient.createUser(test, "riri", "hi riri", "hello@disney.com");
-		SpaceClient.createUser(test, "fifi", "hi fifi", "hello@disney.com");
-		SpaceClient.createUser(test, "loulou", "hi loulou", "hello@disney.com");
-		SpaceClient.createUser(test, "donald", "hi donald", "donald@disney.com");
-		SpaceClient.createUser(test, "mickey", "hi mickey", "mickey@disney.com");
+		// creates 5 cities but whith only 3 distinct names
+
+		SpaceRequest.post("/1/data/city").backend(test).body("name", "Paris").go(201);
+		SpaceRequest.post("/1/data/city").backend(test).body("name", "Bordeaux").go(201);
+		SpaceRequest.post("/1/data/city").backend(test).body("name", "Nice").go(201);
+		SpaceRequest.post("/1/data/city").backend(test).body("name", "Paris").go(201);
+		SpaceRequest.post("/1/data/city").backend(test).body("name", "Nice").go(201);
 
 		// search with 'terms' aggregation to get
-		// all 3 distinct emails hello, donald and mickey @disney.com
-		// the super admin who has created the backend is not a user
+		// all 3 distinct city names Paris, Bordeaux and Nice
 
 		ObjectNode query = Json.objectBuilder()//
 				.put("size", 0)//
 				.object("aggs")//
-				.object("distinctEmails")//
+				.object("distinctCities")//
 				.object("terms")//
-				.put("field", "email")//
+				.put("field", "name")//
 				.build();
 
 		SpaceRequest.post("/1/search").refresh().backend(test).body(query).go(200)//
 				.assertEquals(0, "results")//
-				.assertEquals(3, "aggregations.distinctEmails.buckets")//
-				.assertContainsValue("hello@disney.com", "key")//
-				.assertContainsValue("donald@disney.com", "key")//
-				.assertContainsValue("mickey@disney.com", "key");
+				.assertEquals(3, "aggregations.distinctCities.buckets")//
+				.assertContainsValue("Paris", "key")//
+				.assertContainsValue("Bordeaux", "key")//
+				.assertContainsValue("Nice", "key");
 
 	}
 

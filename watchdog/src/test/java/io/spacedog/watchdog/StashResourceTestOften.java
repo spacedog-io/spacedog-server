@@ -24,8 +24,7 @@ public class StashResourceTestOften extends Assert {
 		// prepare
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
-		SpaceClient.initUserDefaultSchema(test);
-		User vince = SpaceClient.createUser(test, "vince", "hi vince");
+		User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
 
 		ObjectNode animals = Json.object("lion", "Lion", "tiger", "Tiger");
 		ObjectNode jobs = Json.object("sailor", Json.array("Sailor", "Marin"), //
@@ -72,10 +71,9 @@ public class StashResourceTestOften extends Assert {
 
 		// stash objects are also data objects
 		SpaceRequest.get("/1/data").refresh().backend(test).go(200)//
-				.assertSizeEquals(3, "results")//
+				.assertSizeEquals(2, "results")//
 				.assertContainsValue("animals", "id")//
-				.assertContainsValue("jobs", "id")//
-				.assertContainsValue("vince", "id");
+				.assertContainsValue("jobs", "id");
 
 		// only admin deletes stash objects
 		SpaceRequest.delete("/1/stash/jobs").backend(test).go(401);
