@@ -3,7 +3,7 @@
  */
 package io.spacedog.services;
 
-import java.util.Collections;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -16,13 +16,12 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.support.QuerySourceBuilder;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
-import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.joda.time.DateTime;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -111,13 +110,13 @@ public class CredentialsResource extends Resource {
 					"username [%s] for backend [%s] already exists", //
 					credentials.name(), credentials.backendId());
 
-		CredentialsResource.get().create(credentials);
+		index(credentials);
 
 		JsonBuilder<ObjectNode> savedBuilder = JsonPayload.savedBuilder(true, //
 				credentials.backendId(), "/1", TYPE, credentials.name());
 
-		if (credentials.passwordResetCode().isPresent())
-			savedBuilder.put(PASSWORD_RESET_CODE, credentials.passwordResetCode().get());
+		if (credentials.passwordResetCode() != null)
+			savedBuilder.put(PASSWORD_RESET_CODE, credentials.passwordResetCode());
 
 		return JsonPayload.json(savedBuilder, HttpStatus.CREATED)//
 				.withHeader(JsonPayload.HEADER_OBJECT_ID, credentials.name());
@@ -126,15 +125,15 @@ public class CredentialsResource extends Resource {
 	@Get("/1/credentials/:username")
 	@Get("/1/credentials/:username/")
 	public Payload getById(String username, Context context) {
-		Credentials credentials = SpaceContext.checkUserCredentials(username);
-		GetResponse response = get(credentials.backendId(), username, false);
-		Map<String, Object> data = response.getSourceAsMap();
+		String backendId = SpaceContext.checkUserCredentials(username).backendId();
+		Credentials credentials = get(backendId, username, true).get();
 		return JsonPayload.json(//
-				Json.object(USERNAME, data.get(USERNAME), //
-						EMAIL, data.get(EMAIL), //
-						CREDENTIALS_LEVEL, data.get(CREDENTIALS_LEVEL), //
-						CREATED_AT, data.get(CREATED_AT), //
-						UPDATED_AT, data.get(UPDATED_AT)));
+				Json.object(USERNAME, credentials.name(), //
+						EMAIL, credentials.email().get(), //
+						CREDENTIALS_LEVEL, credentials.level().name(), //
+						ROLES, credentials.roles(), //
+						CREATED_AT, credentials.createdAt(), //
+						UPDATED_AT, credentials.updatedAt()));
 	}
 
 	@Delete("/1/credentials/:username")
@@ -150,17 +149,15 @@ public class CredentialsResource extends Resource {
 	@Delete("/1/credentials/:username/password/")
 	public Payload deletePassword(String username, Context context) {
 		String backendId = SpaceContext.checkAdminCredentials().backendId();
-		String passwordResetCode = UUID.randomUUID().toString();
+		Credentials credentials = get(backendId, username, true).get();
 
-		prepareUpdate(backendId, username)//
-				.setDoc(CredentialsResource.HASHED_PASSWORD, null, //
-						CredentialsResource.PASSWORD_RESET_CODE, passwordResetCode, //
-						CredentialsResource.UPDATED_AT, DateTime.now())//
-				.get();
+		credentials.hashedPassword(null);
+		credentials.passwordResetCode(UUID.randomUUID().toString());
+		index(credentials);
 
 		return JsonPayload.json(//
 				JsonPayload.savedBuilder(false, backendId, "/1", TYPE, username)//
-						.put(PASSWORD_RESET_CODE, passwordResetCode));
+						.put(PASSWORD_RESET_CODE, credentials.passwordResetCode()));
 	}
 
 	@Post("/1/credentials/:username/password")
@@ -176,18 +173,17 @@ public class CredentialsResource extends Resource {
 		String password = context.get(PASSWORD);
 		Passwords.checkIfValid(password);
 
-		GetResponse getResponse = get(backendId, username, true);
-		ObjectNode credentials = Json.readObject(getResponse.getSourceAsString());
+		Credentials credentials = get(backendId, username, true).get();
 
-		if (!Json.isNull(credentials.get(HASHED_PASSWORD)) || Json.isNull(credentials.get(PASSWORD_RESET_CODE)))
+		if (credentials.hashedPassword() != null || credentials.passwordResetCode() == null)
 			throw Exceptions.illegalArgument("[%s] password must be deleted before reset", username);
 
-		if (!passwordResetCode.equals(credentials.get(PASSWORD_RESET_CODE).asText()))
+		if (!passwordResetCode.equals(credentials.passwordResetCode()))
 			throw Exceptions.illegalArgument("invalid password reset code [%s]", passwordResetCode);
 
-		credentials.remove(PASSWORD_RESET_CODE);
-		credentials.put(HASHED_PASSWORD, Passwords.checkAndHash(password));
-		IndexResponse indexResponse = index(backendId, username, credentials);
+		credentials.passwordResetCode(null);
+		credentials.hashedPassword(Passwords.checkAndHash(password));
+		IndexResponse indexResponse = index(credentials);
 
 		return JsonPayload.saved(false, backendId, "/1", TYPE, username, indexResponse.getVersion());
 	}
@@ -196,37 +192,36 @@ public class CredentialsResource extends Resource {
 	@Put("/1/credentials/:username/password/")
 	public Payload putPassword(String username, Context context) {
 
-		Credentials credentials = SpaceContext.checkUserCredentials(username);
+		String backendId = SpaceContext.checkUserCredentials(username).backendId();
+		Credentials credentials = get(backendId, username, true).get();
+
 		String password = context.get(PASSWORD);
 		Passwords.checkIfValid(password);
 
-		UpdateResponse response = prepareUpdate(credentials.backendId(), username)//
-				.setDoc(HASHED_PASSWORD, Passwords.checkAndHash(password), //
-						PASSWORD_RESET_CODE, null)//
-				.get();
+		credentials.passwordResetCode(null);
+		credentials.hashedPassword(Passwords.checkAndHash(password));
+		IndexResponse response = index(credentials);
 
-		return JsonPayload.saved(false, credentials.backendId(), "/1", TYPE, username, response.getVersion());
+		return JsonPayload.saved(false, credentials.backendId(), "/1", TYPE, username, //
+				response.getVersion());
 	}
 
 	@Get("/1/credentials/:username/roles")
 	@Get("/1/credentials/:username/roles/")
 	public Object getRoles(String username, Context context) {
 		String backendId = SpaceContext.checkUserCredentials(username).backendId();
-		Object roles = get(backendId, username, true).getSource().get(ROLES);
-		return roles == null ? Collections.EMPTY_LIST : roles;
+		return get(backendId, username, true).get().roles();
 	}
 
 	@Delete("/1/credentials/:username/roles")
 	@Delete("/1/credentials/:username/roles/")
 	public Payload deleteAllRoles(String username, Context context) {
-
 		String backendId = SpaceContext.checkAdminCredentials().backendId();
-
-		UpdateResponse response = prepareUpdate(backendId, username)//
-				.setDoc(ROLES, null)//
-				.get();
-
-		return JsonPayload.saved(false, backendId, "/1", TYPE, username, response.getVersion());
+		Credentials credentials = get(backendId, username, true).get();
+		credentials.roles().clear();
+		IndexResponse response = index(credentials);
+		return JsonPayload.saved(false, backendId, "/1", TYPE, username, //
+				response.getVersion());
 	}
 
 	@Put("/1/credentials/:username/roles/:role")
@@ -235,44 +230,30 @@ public class CredentialsResource extends Resource {
 
 		String backendId = SpaceContext.checkAdminCredentials().backendId();
 		Roles.checkIfValid(role);
+		Credentials credentials = get(backendId, username, true).get();
 
-		@SuppressWarnings("unchecked")
-		List<String> roles = (List<String>) get(backendId, username, true)//
-				.getSource().get(ROLES);
+		if (!credentials.roles().contains(role)) {
+			credentials.roles().add(role);
+			index(credentials);
+		}
 
-		if (roles == null)
-			roles = Lists.newArrayList(role);
-
-		else if (!roles.contains(role))
-			roles.add(role);
-
-		UpdateResponse response = prepareUpdate(backendId, username)//
-				.setDoc(ROLES, roles)//
-				.get();
-
-		return JsonPayload.saved(false, backendId, "/1", TYPE, username, response.getVersion());
+		return JsonPayload.saved(false, backendId, "/1", TYPE, username);
 	}
 
 	@Delete("/1/credentials/:username/roles/:role")
 	@Delete("/1/credentials/:username/roles/:role/")
 	public Payload deleteRole(String username, String role, Context context) {
-
 		String backendId = SpaceContext.checkAdminCredentials().backendId();
+		Credentials credentials = get(backendId, username, true).get();
 
-		@SuppressWarnings("unchecked")
-		List<String> roles = (List<String>) get(backendId, username, true)//
-				.getSource().get(ROLES);
+		if (credentials.roles().contains(role)) {
+			credentials.roles().remove(role);
+			IndexResponse response = index(credentials);
+			return JsonPayload.saved(false, backendId, "/1", TYPE, username, //
+					response.getVersion());
+		}
 
-		if (roles == null || !roles.contains(role))
-			return JsonPayload.error(HttpStatus.NOT_FOUND);
-
-		roles.remove(role);
-
-		UpdateResponse response = prepareUpdate(backendId, username)//
-				.setDoc(ROLES, roles)//
-				.get();
-
-		return JsonPayload.saved(false, backendId, "/1", TYPE, username, response.getVersion());
+		return JsonPayload.error(HttpStatus.NOT_FOUND);
 	}
 
 	//
@@ -286,18 +267,13 @@ public class CredentialsResource extends Resource {
 
 	Optional<Credentials> check(String backendId, String username, String password) {
 
-		GetResponse response = get(backendId, username, false);
+		Optional<Credentials> credentials = get(backendId, username, false);
 
-		if (response.isExists()) {
+		if (credentials.isPresent()) {
 			String providedPassword = Passwords.hash(password);
-			Map<String, Object> credentials = response.getSourceAsMap();
-			Object expectedPassword = credentials.get(HASHED_PASSWORD);
-
-			if (expectedPassword != null && providedPassword.equals(expectedPassword.toString())) {
-				Object email = credentials.get(EMAIL);
-				Level level = Level.valueOf(credentials.get(CREDENTIALS_LEVEL).toString());
-				return Optional.of(new Credentials(backendId, username, //
-						email == null ? null : email.toString(), level));
+			if (credentials.get().hashedPassword() != null //
+					&& providedPassword.equals(credentials.get().hashedPassword())) {
+				return credentials;
 			}
 		}
 
@@ -313,44 +289,46 @@ public class CredentialsResource extends Resource {
 				toCredentialsId(backendId, username));
 	}
 
-	GetResponse get(String backendId, String username, boolean throwNotFound) {
-		GetResponse response = Start.get().getElasticClient().get(SPACEDOG_BACKEND, TYPE, //
-				toCredentialsId(backendId, username));
+	Optional<Credentials> get(String backendId, String username, boolean throwNotFound) {
+		Credentials credentials = SpaceContext.getCredentials();
 
-		if (throwNotFound && !response.isExists())
-			throw Exceptions.notFound("no credentials found for username [%s] in backend [%s]", username, backendId);
+		if (credentials.name().equals(username) //
+				&& credentials.backendId().equals(backendId))
+			return Optional.of(credentials);
 
-		return response;
+		GetResponse response = Start.get().getElasticClient().get(//
+				SPACEDOG_BACKEND, TYPE, toCredentialsId(backendId, username));
+
+		if (!response.isExists()) {
+			if (throwNotFound)
+				throw Exceptions.notFound(//
+						"no credentials found for username [%s] in backend [%s]", //
+						username, backendId);
+			else
+				return Optional.empty();
+		}
+
+		try {
+			return Optional.of(Json.getMapper().readValue(//
+					response.getSourceAsString(), Credentials.class));
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
+		}
 	}
 
-	IndexResponse create(Credentials credentials) {
+	IndexResponse index(Credentials credentials) {
+		try {
+			credentials.updatedAt(DateTime.now().toString());
+			if (credentials.createdAt() == null)
+				credentials.createdAt(credentials.updatedAt());
 
-		if (exists(credentials.backendId(), credentials.name()))
-			throw Exceptions.illegalArgument(//
-					"user credentials for backend [%s] with usename [%s] already exists", //
-					credentials.backendId(), credentials.name());
+			return Start.get().getElasticClient().index(SPACEDOG_BACKEND, TYPE, //
+					toCredentialsId(credentials.backendId(), credentials.name()), //
+					Json.getMapper().writeValueAsString(credentials));
 
-		String now = DateTime.now().toString();
-		ObjectNode json = Json.object(//
-				BACKEND_ID, credentials.backendId(), //
-				USERNAME, credentials.name(), //
-				EMAIL, credentials.email().get(), //
-				CREDENTIALS_LEVEL, credentials.level().toString(), //
-				CREATED_AT, now, //
-				UPDATED_AT, now);
-
-		if (credentials.hashedPassword().isPresent())
-			json.put(HASHED_PASSWORD, credentials.hashedPassword().get());
-
-		else if (credentials.passwordResetCode().isPresent())
-			json.put(PASSWORD_RESET_CODE, credentials.passwordResetCode().get());
-
-		return index(credentials.backendId(), credentials.name(), json);
-	}
-
-	IndexResponse index(String backendId, String username, JsonNode credentials) {
-		return Start.get().getElasticClient().index(SPACEDOG_BACKEND, TYPE, //
-				toCredentialsId(backendId, username), credentials.toString());
+		} catch (JsonProcessingException e) {
+			throw Exceptions.runtime(e);
+		}
 	}
 
 	DeleteResponse delete(String backendId, String username) {

@@ -54,7 +54,7 @@ public class CredentialsResourceTestOften extends Assert {
 				.assertEquals("vince", "username")//
 				.assertEquals("vince@dog.com", "email")//
 				.assertEquals("USER", "level")//
-				.assertNotPresent("roles")//
+				.assertSizeEquals(0, "roles")//
 				.assertDateIsRecent("createdAt")//
 				.assertDateIsRecent("updatedAt");
 
@@ -153,8 +153,10 @@ public class CredentialsResourceTestOften extends Assert {
 
 		// titi inits its own password with right reset code should succeed
 
-		SpaceRequest.post("/1/credentials/titi/password?passwordResetCode=" + passwordResetCode)//
-				.backend(test).field("password", "hi titi").go(200);
+		SpaceRequest.post("/1/credentials/titi/password").backend(test)//
+				.field("passwordResetCode", passwordResetCode)//
+				.field("password", "hi titi")//
+				.go(200);
 
 		SpaceRequest.get("/1/login").basicAuth(test, "titi", "hi titi").go(200);
 

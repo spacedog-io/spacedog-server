@@ -56,7 +56,7 @@ public class BackendResource extends Resource {
 
 		Credentials credentials = Credentials.signUp(backendId, //
 				Level.SUPER_ADMIN, Json.readObject(body));
-		CredentialsResource.get().create(credentials);
+		CredentialsResource.get().index(credentials);
 
 		// after backend is created, new admin credentials are valid
 		// and can be set in space context if none are set

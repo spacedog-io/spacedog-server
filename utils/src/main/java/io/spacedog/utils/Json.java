@@ -6,6 +6,7 @@ package io.spacedog.utils;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.net.URL;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -278,6 +279,8 @@ public class Json {
 			return TextNode.valueOf((String) value);
 		else if (value.getClass().isArray())
 			return toArrayNode(value);
+		else if (value instanceof Collection<?>)
+			return toCollectionNode((Collection<?>) value);
 
 		throw Exceptions.illegalArgument("invalid value type [%s]", //
 				value.getClass().getSimpleName());
@@ -287,6 +290,13 @@ public class Json {
 		ArrayNode arrayNode = Json.array();
 		for (int i = 0; i < Array.getLength(array); i++)
 			arrayNode.add(toNode(Array.get(array, i)));
+		return arrayNode;
+	}
+
+	public static ArrayNode toCollectionNode(Collection<?> collection) {
+		ArrayNode arrayNode = Json.array();
+		for (Object element : collection)
+			arrayNode.add(toNode(element));
 		return arrayNode;
 	}
 

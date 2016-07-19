@@ -16,7 +16,7 @@ public class AuthorizationException extends SpaceException {
 	}
 
 	public AuthorizationException(Credentials credentials) {
-		this("user [%s] of type [%s] not authorized", credentials.name(), credentials.level());
+		this("user [%s] of level [%s] not authorized", credentials.name(), credentials.level());
 	}
 
 	public AuthorizationException(String message, Object... parameters) {

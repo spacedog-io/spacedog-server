@@ -201,16 +201,19 @@ public class SpaceContext {
 
 				String username = tokens.get()[0];
 				String password = tokens.get()[1];
+				boolean superdog = username.startsWith("superdog-");
+				String backendId = credentials.backendId();
 
-				String backendToCheck = username.startsWith("superdog-") ? Backends.ROOT_API : credentials.backendId();
-				Optional<Credentials> userCredentials = CredentialsResource.get().check(backendToCheck, username,
-						password);
+				Optional<Credentials> userCredentials = CredentialsResource.get().check(//
+						superdog ? Backends.ROOT_API : backendId, //
+						username, password);
 
-				if (userCredentials.isPresent())
-					credentials.setUserCredentials(userCredentials.get());
-				else
-					throw new AuthorizationException("invalid username or password for backend [%s]",
-							credentials.backendId());
+				if (userCredentials.isPresent()) {
+					credentials = userCredentials.get();
+					if (superdog)
+						credentials.backendId(backendId);
+				} else
+					throw new AuthorizationException("invalid username or password for backend [%s]", backendId);
 			}
 		}
 	}
