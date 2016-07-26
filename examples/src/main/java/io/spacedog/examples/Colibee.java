@@ -231,8 +231,8 @@ public class Colibee extends SpaceClient {
 				.close()//
 
 				.object("identite")//
-				.string("prenom").examples("William") //
-				.string("nom").examples("Lopez", "Miramond", "Attias") //
+				.text("prenom").examples("William") //
+				.text("nom").examples("Lopez", "Miramond", "Attias") //
 				.text("titre").french().examples("Chef de projet")//
 				.string("photo")//
 				.date("indepDepuisLe")//
