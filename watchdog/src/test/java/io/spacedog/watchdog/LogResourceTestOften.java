@@ -353,7 +353,7 @@ public class LogResourceTestOften extends Assert {
 		// this ping should not be present in logs
 
 		JsonNode results = SpaceRequest.get("/1/log")//
-				.size(3).superdogAuth().go(200).getFromJson("results");
+				.size(5).superdogAuth().go(200).getFromJson("results");
 
 		Iterator<JsonNode> elements = results.elements();
 		while (elements.hasNext()) {
@@ -365,50 +365,42 @@ public class LogResourceTestOften extends Assert {
 	}
 
 	@Test
-	public void checkThatGetLogResponsesAreNotLogged() throws Exception {
+	public void testSpecialCases() throws Exception {
 
+		// prepare
 		SpaceClient.prepareTest();
-		SpaceRequest.get("/1/log").superdogAuth().go(200);
-		SpaceRequest.get("/1/log").size(1).superdogAuth().go(200)//
+		Backend test = SpaceClient.resetTestBackend();
+
+		// fails to search because invalid body
+		SpaceRequest.put("/1/schema/toto").adminAuth(test).body("XXX").go(400);
+
+		// but logs the failed request without the json content
+		SpaceRequest.get("/1/log").size(1).adminAuth(test).go(200)//
+				.assertEquals("PUT", "results.0.method")//
+				.assertEquals("/1/schema/toto", "results.0.path")//
+				.assertEquals("test", "results.0.credentials.backendId")//
+				.assertEquals(400, "results.0.status")//
+				.assertNotPresent("results.0.jsonContent");
+
+		// check that log responses are not logged
+		SpaceRequest.get("/1/log").adminAuth(test).go(200);
+		SpaceRequest.get("/1/log").size(1).adminAuth(test).go(200)//
 				.assertEquals("GET", "results.0.method")//
 				.assertEquals("/1/log", "results.0.path")//
 				.assertNotPresent("results.0.response");
-	}
 
-	@Test
-	public void checkThatHeadersAreLogged() throws Exception {
-
-		SpaceClient.prepareTest();
-		SpaceRequest.get("/1/log").superdogAuth()//
+		// Headers are logged
+		SpaceRequest.get("/1/log").adminAuth(test)//
 				.header("x-empty", "")//
 				.header("x-color", "YELLOW")//
 				.header("x-color-list", "RED,BLUE,GREEN")//
 				.go(200);
-		SpaceRequest.get("/1/log").size(1).superdogAuth().go(200)//
+
+		SpaceRequest.get("/1/log").size(1).adminAuth(test).go(200)//
 				.assertNotPresent("results.0.headers.x-empty")//
 				.assertEquals("YELLOW", "results.0.headers.x-color")//
 				.assertEquals("RED", "results.0.headers.x-color-list.0")//
 				.assertEquals("BLUE", "results.0.headers.x-color-list.1")//
 				.assertEquals("GREEN", "results.0.headers.x-color-list.2");
-	}
-
-	@Test
-	public void checkThatInvalidJsonContentDoesNotCrashLogging() throws Exception {
-
-		// prepare
-		SpaceClient.prepareTest();
-		Backend test = new Backend("test", "test", "hi test", "test@me.com");
-		SpaceClient.deleteBackend(test);
-
-		// fail to create backend with invalid body
-		SpaceRequest.post("/1").backend(test).body("XXX").go(400);
-
-		// but logs the failed request without the json content
-		SpaceRequest.get("/1/log").size(1).superdogAuth().go(200)//
-				.assertEquals("POST", "results.0.method")//
-				.assertEquals("/1", "results.0.path")//
-				.assertEquals("test", "results.0.credentials.backendId")//
-				.assertEquals(400, "results.0.status")//
-				.assertNotPresent("results.0.jsonContent");
 	}
 }
