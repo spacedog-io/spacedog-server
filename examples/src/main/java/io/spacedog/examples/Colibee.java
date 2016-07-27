@@ -50,11 +50,11 @@ public class Colibee extends SpaceClient {
 
 		// initTmpFiles();
 		// initReferences();
-		initConsultant();
+		// initConsultant();
 		// initOpportunites();
 		// initGroupeFinance();
 		// initRdv();
-		// initDiscussionBale3();
+		initDiscussionBale3();
 		// initColibee();
 	}
 
@@ -377,17 +377,6 @@ public class Colibee extends SpaceClient {
 				.build();
 	}
 
-	private ObjectNode buildGroupeSchema() {
-		return SchemaBuilder3.builder("groupe") //
-				.text("titre").french()//
-				.text("description").french()//
-				.bool("membreColibeeOnly")//
-				.string("membres").array().examples("william", "david")//
-				.string("demandesAdhesion").array().examples("vincent", "fred")//
-				.build();
-
-	}
-
 	private ObjectNode buildRdvSchema() {
 		return SchemaBuilder3.builder("rdv") //
 				.text("titre").french()//
@@ -413,9 +402,21 @@ public class Colibee extends SpaceClient {
 				.build();
 	}
 
+	private ObjectNode buildGroupeSchema() {
+		return SchemaBuilder3.builder("groupe") //
+				.text("titre").french()//
+				.text("description").french()//
+				.bool("membreColibeeOnly")//
+				.string("membres").array().examples("william", "david")//
+				.string("demandesAdhesion").array().examples("vincent", "fred")//
+				.build();
+	}
+
 	private ObjectNode buildDiscussionSchema() {
 		return SchemaBuilder3.builder("discussion") //
 				.text("titre").french()//
+				.text("description").french()//
+				.string("groupeId").examples("finance")//
 				.string("statut").examples("open", "close")//
 				.timestamp("fermeeLe")//
 				.string("fermeePar").examples("william")//
@@ -425,12 +426,14 @@ public class Colibee extends SpaceClient {
 	private ObjectNode buildMessageSchema() {
 		return SchemaBuilder3.builder("message") //
 				.text("texte").french()//
-				.string("discussionId")//
+				.string("discussionId").examples("bale3")//
+
 				.object("reponses").array()//
 				.text("texte").french()//
 				.timestamp("ecritLe")//
 				.string("ecritPar").examples("william", "david", "vince")//
 				.close()//
+
 				.build();
 	}
 
