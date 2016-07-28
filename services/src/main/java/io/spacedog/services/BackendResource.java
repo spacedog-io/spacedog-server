@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 import org.elasticsearch.index.query.QueryBuilders;
 
 import io.spacedog.services.Credentials.Level;
+import io.spacedog.utils.AuthenticationException;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Internals;
@@ -82,7 +83,7 @@ public class BackendResource extends Resource {
 			if (credentials.isSuperDog())
 				return CredentialsResource.get().getAllSuperAdmins(refresh);
 
-			throw new AuthorizationException("no backend subdomain found");
+			throw new AuthenticationException("no backend subdomain found");
 		}
 
 		return CredentialsResource.get().getAllSuperAdmins(credentials.backendId(), refresh);

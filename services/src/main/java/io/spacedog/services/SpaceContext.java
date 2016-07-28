@@ -6,6 +6,7 @@ import java.util.Optional;
 import com.google.common.base.Strings;
 import com.google.common.net.HttpHeaders;
 
+import io.spacedog.utils.AuthenticationException;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.SpaceHeaders;
@@ -100,7 +101,7 @@ public class SpaceContext {
 		Credentials credentials = checkCredentials(checkCustomerBackend);
 		if (credentials.isSuperDog())
 			return credentials;
-		throw new AuthorizationException("[%s][%s] has invalid superdog credentials", //
+		throw new AuthenticationException("[%s][%s] has invalid superdog credentials", //
 				credentials.level(), credentials.name());
 	}
 
@@ -112,7 +113,7 @@ public class SpaceContext {
 		Credentials credentials = checkCredentials(checkCustomerBackend);
 		if (credentials.isAtLeastSuperAdmin())
 			return credentials;
-		throw new AuthorizationException("[%s][%s] has invalid super admin credentials", //
+		throw new AuthenticationException("[%s][%s] has invalid super admin credentials", //
 				credentials.level(), credentials.name());
 	}
 
@@ -124,7 +125,7 @@ public class SpaceContext {
 		Credentials credentials = checkCredentials(checkCustomerBackend);
 		if (credentials.isAtLeastAdmin())
 			return credentials;
-		throw new AuthorizationException("[%s][%s] has invalid admin credentials", //
+		throw new AuthenticationException("[%s][%s] has invalid admin credentials", //
 				credentials.level(), credentials.name());
 	}
 
@@ -136,7 +137,7 @@ public class SpaceContext {
 		Credentials credentials = checkCredentials(checkCustomerBackend);
 		if (credentials.isAtLeastAdmin() || credentials.isAtLeastUser())
 			return credentials;
-		throw new AuthorizationException("[%s][%s] has invalid user or admin credentials", //
+		throw new AuthenticationException("[%s][%s] has invalid user or admin credentials", //
 				credentials.level(), credentials.name());
 	}
 
@@ -150,14 +151,17 @@ public class SpaceContext {
 		if (credentials.isAtLeastAdmin() || credentials.name().equals(username))
 			return credentials;
 
-		throw new AuthorizationException(credentials);
+		throw new AuthenticationException(//
+				"credentials username [%s] of level [%s] not authorized", //
+				credentials.name(), credentials.level());
 	}
 
 	public static Credentials checkUserCredentials(boolean checkCustomerBackend) {
 		Credentials credentials = checkCredentials(checkCustomerBackend);
 		if (credentials.isAtLeastUser())
 			return credentials;
-		throw new AuthorizationException("unsufficient credentials level [%s]", credentials.level());
+		throw new AuthenticationException("unsufficient credentials level [%s]", //
+				credentials.level());
 	}
 
 	public static Credentials checkCredentials() {
@@ -167,7 +171,7 @@ public class SpaceContext {
 	public static Credentials checkCredentials(boolean checkCustomerBackend) {
 		Credentials credentials = getCredentials();
 		if (checkCustomerBackend && credentials.isRootBackend())
-			throw new AuthorizationException(//
+			throw new AuthenticationException(//
 					"no customer backend subdomain found");
 		return credentials;
 	}
@@ -213,7 +217,7 @@ public class SpaceContext {
 					if (superdog)
 						credentials.backendId(backendId);
 				} else
-					throw new AuthorizationException("invalid username or password for backend [%s]", backendId);
+					throw new AuthenticationException("invalid username or password for backend [%s]", backendId);
 			}
 		}
 	}
@@ -226,13 +230,13 @@ public class SpaceContext {
 		String[] schemeAndTokens = authzHeaderValue.split(" ", 2);
 
 		if (schemeAndTokens.length != 2)
-			throw new AuthorizationException("invalid authorization header");
+			throw new AuthenticationException("invalid authorization header");
 
 		if (Strings.isNullOrEmpty(schemeAndTokens[0]))
-			throw new AuthorizationException("no authorization scheme specified");
+			throw new AuthenticationException("no authorization scheme specified");
 
 		if (!schemeAndTokens[0].equalsIgnoreCase(SpaceHeaders.BASIC_SCHEME))
-			throw new AuthorizationException("authorization scheme [%s] not supported", schemeAndTokens[0]);
+			throw new AuthenticationException("authorization scheme [%s] not supported", schemeAndTokens[0]);
 
 		byte[] encodedBytes = schemeAndTokens[1].getBytes(Utils.UTF8);
 
@@ -241,19 +245,19 @@ public class SpaceContext {
 		try {
 			decoded = new String(Base64.getDecoder().decode(encodedBytes));
 		} catch (IllegalArgumentException e) {
-			throw new AuthorizationException("authorization token is not base 64 encoded", e);
+			throw new AuthenticationException(e, "authorization token is not base 64 encoded");
 		}
 
 		String[] tokens = decoded.split(":", 2);
 
 		if (tokens.length != 2)
-			throw new AuthorizationException("invalid authorization token");
+			throw new AuthenticationException("invalid authorization token");
 
 		if (Strings.isNullOrEmpty(tokens[0]))
-			throw new AuthorizationException("no username specified");
+			throw new AuthenticationException("no username specified");
 
 		if (Strings.isNullOrEmpty(tokens[1]))
-			throw new AuthorizationException("no password specified");
+			throw new AuthenticationException("no password specified");
 
 		return Optional.of(tokens);
 	}

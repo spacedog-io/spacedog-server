@@ -2,40 +2,44 @@ package io.spacedog.utils;
 
 public class Exceptions {
 
-	public static RuntimeException runtime(String message, Object... arguments) {
-		return new RuntimeException(String.format(message, arguments));
+	public static RuntimeException runtime(String message, Object... args) {
+		return new RuntimeException(String.format(message, args));
 	}
 
 	public static RuntimeException runtime(Throwable t) {
 		return new RuntimeException(t);
 	}
 
-	public static IllegalArgumentException illegalArgument(String message, Object... arguments) {
-		return new IllegalArgumentException(String.format(message, arguments));
+	public static IllegalArgumentException illegalArgument(String message, Object... args) {
+		return new IllegalArgumentException(String.format(message, args));
 	}
 
 	public static IllegalArgumentException illegalArgument(Throwable t) {
 		return new IllegalArgumentException(t);
 	}
 
-	public static NotFoundException notFound(String message, Object... arguments) {
-		return new NotFoundException(String.format(message, arguments));
+	public static NotFoundException notFound(String message, Object... args) {
+		return new NotFoundException(String.format(message, args));
 	}
 
-	public static SpaceException space(int httpStatus, String message, Object... arguments) {
-		return new SpaceException(httpStatus, message, arguments);
+	public static SpaceException space(int httpStatus, String message, Object... args) {
+		return new SpaceException(httpStatus, message, args);
 	}
 
-	public static SpaceException space(int httpStatus, Throwable cause, String message, Object... arguments) {
-		return new SpaceException(httpStatus, cause, message, arguments);
+	public static SpaceException space(int httpStatus, Throwable cause, String message, Object... args) {
+		return new SpaceException(httpStatus, cause, message, args);
 	}
 
-	public static IllegalStateException illegalState(String message, Object... arguments) {
-		return new IllegalStateException(String.format(message, arguments));
+	public static IllegalStateException illegalState(String message, Object... args) {
+		return new IllegalStateException(String.format(message, args));
 	}
 
-	public static ForbiddenException forbidden(String message, Object... arguments) {
-		return new ForbiddenException(String.format(message, arguments));
+	public static ForbiddenException forbidden(String message, Object... args) {
+		return new ForbiddenException(message, args);
+	}
+
+	public static AuthenticationException invalidAuthentication(String message, Object... args) {
+		return new AuthenticationException(message, args);
 	}
 
 }
