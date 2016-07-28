@@ -10,7 +10,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
@@ -140,9 +139,8 @@ public class CredentialsResource extends Resource {
 	@Delete("/1/credentials/:username/")
 	public Payload deleteById(String username, Context context) {
 		Credentials credentials = SpaceContext.checkUserCredentials(username);
-		DeleteResponse response = delete(credentials.backendId(), username);
-		return response.isFound() ? JsonPayload.success() //
-				: JsonPayload.error(HttpStatus.NOT_FOUND);
+		delete(credentials.backendId(), username);
+		return JsonPayload.success();
 	}
 
 	@Delete("/1/credentials/:username/password")
@@ -331,9 +329,9 @@ public class CredentialsResource extends Resource {
 		}
 	}
 
-	DeleteResponse delete(String backendId, String username) {
-		return Start.get().getElasticClient().delete(SPACEDOG_BACKEND, TYPE, //
-				toCredentialsId(backendId, username));
+	void delete(String backendId, String username) {
+		Start.get().getElasticClient().delete(SPACEDOG_BACKEND, TYPE, //
+				toCredentialsId(backendId, username), true);
 	}
 
 	DeleteByQueryResponse deleteAll(String backendId) {
@@ -341,7 +339,7 @@ public class CredentialsResource extends Resource {
 				QueryBuilders.termQuery(BACKEND_ID, backendId)).toString();
 		ElasticClient elastic = Start.get().getElasticClient();
 		elastic.refreshType(SPACEDOG_BACKEND, TYPE);
-		return elastic.deleteByQuery(SPACEDOG_BACKEND, TYPE, query);
+		return elastic.deleteByQuery(query, SPACEDOG_BACKEND, TYPE);
 	}
 
 	public Payload getAllSuperAdmins(boolean refresh) {

@@ -9,25 +9,65 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.services.SchemaValidator.SchemaException;
+import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 
 public class Schema {
 
-	@SuppressWarnings("serial")
-	public static class InvalidDataObjectException extends RuntimeException {
+	private String name;
+	private ObjectNode node;
+	private Property[] properties;
 
-		public InvalidDataObjectException(String message) {
-			super(message);
-		}
-
-		public InvalidDataObjectException(String message, Object... args) {
-			super(String.format(message, args));
-		}
-
+	public Schema(String name, ObjectNode node) {
+		this.name = name;
+		this.node = node;
 	}
 
-	private String _id;
-	private Property[] properties;
+	public ObjectNode rootNode() {
+		return node;
+	}
+
+	public ObjectNode contentNode() {
+		return (ObjectNode) node.get(name);
+	}
+
+	public boolean hasIdPath() {
+		return contentNode().has("_id");
+	}
+
+	public String idPath() {
+		return contentNode().get("_id").asText();
+	}
+
+	//
+	// draft implementation for future use
+	//
+
+	public void check() {
+		// checkNotNullOrEmpty(_id, "schema _id is null or empty");
+		for (Property property : properties) {
+			property.check();
+		}
+	}
+
+	public void checkObject(ObjectNode object) {
+		object.fields().forEachRemaining(member -> {
+			property(member.getKey()).orElseThrow(() -> Exceptions.illegalArgument(""))//
+					.checkValue(member.getValue());
+		});
+	}
+
+	private Optional<Property> property(String name) {
+		return null;
+	}
+
+	private void checkNotNullOrEmpty(String _id2, String string) {
+	}
+
+	private void checkMinMax(int _min, int _max) {
+		if (_min > _max)
+			throw new SchemaException("_min [%s] should not be greater than _max [%s]", _min, _max);
+	}
 
 	public abstract class Property {
 		private String name;
@@ -48,15 +88,9 @@ public class Schema {
 		public void checkValue(JsonNode value) {
 			if (Json.isNull(value)) {
 				if (isRequired())
-					throw new InvalidDataObjectException("property [%s] is null but required", getName());
+					throw Exceptions.illegalArgument("property [%s] is null but required", getName());
 			}
 		}
-
-		protected InvalidDataObjectException invalidType(String name, JsonNode value) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
 	}
 
 	public class StringProperty extends Property {
@@ -73,24 +107,19 @@ public class Schema {
 
 		@Override
 		public void checkValue(JsonNode value) {
-
 			super.checkValue(value);
-
 			if (value.isTextual()) {
 				int length = value.asText().length();
 				if (_min > length || _max < length)
-					throw new InvalidDataObjectException(
+					throw Exceptions.illegalArgument(
 							"property [%s] has a string value of length [%s], should be between [%s] and [%s]",
 							getName(), length, _min, _max);
 				if (regex != null) {
 					// TODO
 				}
-
 			} else
-				throw invalidType(getName(), value);
-
+				throw Exceptions.illegalArgument("", getName(), value);
 		}
-
 	}
 
 	public class TextProperty extends Property {
@@ -123,20 +152,6 @@ public class Schema {
 		}
 	}
 
-	public class FloatProperty extends Property {
-		private Float _gt = null;
-		private boolean _gte = false;
-		private Float _lt = null;
-		private boolean _lte = false;
-		private float _values;
-
-		@Override
-		public void check() {
-			super.check();
-			// TODO check gt is lesser than lt
-		}
-	}
-
 	public class ObjectProperty extends Property {
 		private Property[] properties = null;
 
@@ -147,74 +162,5 @@ public class Schema {
 				property.check();
 			}
 		}
-	}
-
-	public class DateProperty extends Property {
-	}
-
-	public class TimeProperty extends Property {
-	}
-
-	public class TimestampProperty extends Property {
-	}
-
-	public class EnumProperty extends Property {
-		private String[] _values;
-	}
-
-	public class GeopointProperty extends Property {
-	}
-
-	public class StashProperty extends Property {
-	}
-
-	public class AmountProperty extends Property {
-		private String[] currencies;
-	}
-
-	public class ReferenceProperty extends Property {
-		private String _refType; // TODO or _refSchemaId
-		// TODO revoir le nom : propriétés à recopier ici pour permettre les
-		// recherches jointes
-		private String[] _searchProperties;
-	}
-
-	public class FileProperty extends Property {
-		private String[] _contentTypes;
-	}
-
-	public void check() {
-		checkNotNullOrEmpty(_id, "schema _id is null or empty");
-		for (Property property : properties) {
-			property.check();
-		}
-	}
-
-	public void checkObject(ObjectNode object) {
-		object.fields().forEachRemaining(member -> {
-			property(member.getKey()).orElseThrow(() -> new InvalidDataObjectException(""))
-					.checkValue(member.getValue());
-		});
-	}
-
-	private Optional<Property> property(String name) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private void checkNotNullOrEmpty(String _id2, String string) {
-		// TODO Auto-generated method stub
-
-	}
-
-	private void checkMinMax(int _min, int _max) {
-		if (_min > _max)
-			throw new SchemaException(
-					String.format("_min [%s] should not be greater than _max [%s]", _min, _max));
-	}
-
-	public static Schema from(JsonNode json) {
-
-		return null;
 	}
 }

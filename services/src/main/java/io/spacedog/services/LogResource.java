@@ -172,7 +172,7 @@ public class LogResource extends Resource {
 				.toString();
 
 		DeleteByQueryResponse delete = Start.get().getElasticClient()//
-				.deleteByQuery(SPACEDOG_BACKEND, TYPE, query);
+				.deleteByQuery(query, SPACEDOG_BACKEND, TYPE);
 
 		return Optional.of(delete);
 	}

@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
@@ -33,7 +32,6 @@ import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
-import io.spacedog.utils.NotFoundException;
 import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -79,7 +77,7 @@ public class SearchResource extends Resource {
 		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, true);
 		DataStore.get().refreshBackend(refresh, credentials.backendId());
 		DeleteByQueryResponse response = Start.get().getElasticClient()//
-				.deleteByQuery(credentials.backendId(), query);
+				.deleteByQuery(query, credentials.backendId());
 		return JsonPayload.json(response);
 	}
 
@@ -116,7 +114,7 @@ public class SearchResource extends Resource {
 		DataStore.get().refreshType(refresh, credentials.backendId(), type);
 
 		DeleteByQueryResponse response = Start.get().getElasticClient()//
-				.deleteByQuery(credentials.backendId(), type, query);
+				.deleteByQuery(query, credentials.backendId(), type);
 
 		return JsonPayload.json(response);
 	}
@@ -247,12 +245,9 @@ public class SearchResource extends Resource {
 		set.remove(null);
 		Map<String, ObjectNode> results = new HashMap<>();
 		set.forEach(reference -> {
-			Optional<ObjectNode> object = DataStore.get().getObject(//
-					credentials.backendId(), getReferenceType(reference), getReferenceId(reference));
-			if (object.isPresent())
-				results.put(reference, object.get());
-			else
-				throw NotFoundException.object(getReferenceType(reference), getReferenceId(reference));
+			ObjectNode object = DataStore.get().getObject(credentials.backendId(), //
+					getReferenceType(reference), getReferenceId(reference));
+			results.put(reference, object);
 		});
 		return results;
 	}

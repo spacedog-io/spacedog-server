@@ -1,7 +1,5 @@
 package io.spacedog.services;
 
-import java.util.Optional;
-
 import org.elasticsearch.action.index.IndexResponse;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -15,7 +13,6 @@ import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.annotations.Put;
-import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/1/stash")
@@ -88,9 +85,8 @@ public class StashResource2 {
 	@Get("/:id/data/")
 	public Payload getDataById(String id, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
-		Optional<ObjectNode> object = DataStore.get().getObject(credentials.backendId(), TYPE, id);
-		return object.isPresent() ? JsonPayload.json(object.get().get("data"))
-				: JsonPayload.error(HttpStatus.NOT_FOUND);
+		ObjectNode object = DataStore.get().getObject(credentials.backendId(), TYPE, id);
+		return JsonPayload.json(object.get("data"));
 	}
 
 	//

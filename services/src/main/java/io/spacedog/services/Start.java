@@ -94,7 +94,7 @@ public class Start {
 				.toString();
 
 		DeleteByQueryResponse response = get().getElasticClient()//
-				.deleteByQuery(Resource.SPACEDOG_BACKEND, LogResource.TYPE, querySource);
+				.deleteByQuery(querySource, Resource.SPACEDOG_BACKEND, LogResource.TYPE);
 
 		Utils.info("[SpaceDog] [%s] logs deleted", response.getTotalDeleted());
 	}
@@ -111,7 +111,7 @@ public class Start {
 				.toString();
 
 		DeleteByQueryResponse response = get().getElasticClient()//
-				.deleteByQuery(Resource.SPACEDOG_BACKEND, LogResource.TYPE, querySource);
+				.deleteByQuery(querySource, Resource.SPACEDOG_BACKEND, LogResource.TYPE);
 
 		Utils.info("[SpaceDog] [%s] logs deleted", response.getTotalDeleted());
 	}

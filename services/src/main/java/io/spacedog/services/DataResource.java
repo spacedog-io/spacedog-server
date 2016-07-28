@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
-import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.common.Strings;
@@ -79,7 +78,7 @@ public class DataResource extends Resource {
 	public Payload post(String type, String body, Context context) {
 
 		Credentials credentials = SpaceContext.checkCredentials();
-		ObjectNode schema = Start.get().getElasticClient()//
+		Schema schema = Start.get().getElasticClient()//
 				.getSchema(credentials.backendId(), type);
 		ObjectNode object = Json.readObject(body);
 
@@ -90,14 +89,13 @@ public class DataResource extends Resource {
 		 * parameter
 		 */
 		Optional<String> id = Optional.empty();
-		JsonNode idPropertyName = schema.path(type).path("_id");
 
-		if (idPropertyName.isTextual()) {
-			JsonNode idPropertyValue = Json.get(object, idPropertyName.asText());
+		if (schema.hasIdPath()) {
+			JsonNode idPropertyValue = Json.get(object, schema.idPath());
 
 			if (idPropertyValue == null)
 				throw Exceptions.illegalArgument("id property [%s] of type [%s] is null or missing", //
-						idPropertyName.asText(), type);
+						schema.idPath(), type);
 
 			id = Optional.of(idPropertyValue.asText());
 
@@ -127,10 +125,8 @@ public class DataResource extends Resource {
 	@Get("/1/data/:type/:id/")
 	public Payload getById(String type, String id, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
-		Optional<ObjectNode> object = DataStore.get().getObject(credentials.backendId(), type, id);
-		return object.isPresent() //
-				? JsonPayload.json(object.get()) //
-				: JsonPayload.error(HttpStatus.NOT_FOUND);
+		ObjectNode object = DataStore.get().getObject(credentials.backendId(), type, id);
+		return JsonPayload.json(object);
 	}
 
 	@Put("/v1/data/:type/:id")
@@ -142,20 +138,17 @@ public class DataResource extends Resource {
 
 		// check if type is well defined
 		// object should be validated before saved
-		ObjectNode schema = Start.get().getElasticClient()//
+		Schema schema = Start.get().getElasticClient()//
 				.getSchema(credentials.backendId(), type);
 
 		ObjectNode object = Json.readObject(body);
 
-		Optional<String> idPath = schema.has("_id") //
-				? Optional.of(schema.get("_id").asText()) : Optional.empty();
-
-		if (idPath.isPresent()) {
-			JsonNode idValue = Json.get(object, idPath.get());
+		if (schema.hasIdPath()) {
+			JsonNode idValue = Json.get(object, schema.idPath());
 			if (!Json.isNull(idValue) && !id.equals(idValue.asText()))
-				throw new IllegalArgumentException(String.format(//
-						"property [%s/%s/%s] represents the object id and can not be updated to [%s]", //
-						type, id, idPath.get(), idValue.asText()));
+				throw Exceptions.illegalArgument(//
+						"property [%s/%s/%s] is the object id and can not be updated to [%s]", //
+						type, id, schema.idPath(), idValue.asText());
 		}
 
 		boolean strict = context.query().getBoolean(SpaceParams.STRICT, false);
@@ -186,22 +179,14 @@ public class DataResource extends Resource {
 	public Payload deleteById(String type, String id, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 		ElasticClient elastic = Start.get().getElasticClient();
-		Optional<ObjectNode> object = DataStore.get().getObject(credentials.backendId(), type, id);
+		ObjectNode object = DataStore.get().getObject(credentials.backendId(), type, id);
 
-		if (object.isPresent()) {
-			if (credentials.name().equals(Json.get(object.get(), "meta.createdBy").asText())) {
-				DeleteResponse response = elastic.delete(credentials.backendId(), type, id);
-				return response.isFound() //
-						? JsonPayload.success() //
-						: JsonPayload.error(HttpStatus.INTERNAL_SERVER_ERROR, //
-								"failed to delete object of type [%s] and id [%s]", type, id);
-			} else
-				return JsonPayload.error(HttpStatus.FORBIDDEN, //
-						"[%s] not owner of object of type [%s] and id [%s]", //
-						credentials.name(), type, id);
-		}
-
-		return JsonPayload.error(HttpStatus.NOT_FOUND, "object of type [%s] and id [%s] not found", type, id);
+		if (credentials.name().equals(Json.get(object, "meta.createdBy").asText())) {
+			elastic.delete(credentials.backendId(), type, id, true);
+			return JsonPayload.success();
+		} else
+			throw Exceptions.forbidden(//
+					"not owner of object of type [%s] and id [%s]", type, id);
 	}
 
 	@Post("/v1/data/search")

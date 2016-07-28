@@ -1,6 +1,5 @@
 package io.spacedog.services;
 
-import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
@@ -119,12 +118,9 @@ public class StashResource {
 	@Delete("/:id/")
 	public Payload delete(String id, Context context) {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
-
-		DeleteResponse delete = Start.get().getElasticClient()//
-				.delete(credentials.backendId(), TYPE, id);
-
-		return delete.isFound() ? JsonPayload.success() //
-				: JsonPayload.error(HttpStatus.NOT_FOUND);
+		Start.get().getElasticClient()//
+				.delete(credentials.backendId(), TYPE, id, true);
+		return JsonPayload.success();
 	}
 
 	//

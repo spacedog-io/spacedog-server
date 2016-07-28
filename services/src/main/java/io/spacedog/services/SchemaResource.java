@@ -60,8 +60,9 @@ public class SchemaResource extends Resource {
 	@Get("/:type/")
 	public Payload get(String type) {
 		Credentials credentials = SpaceContext.checkCredentials();
-		return JsonPayload.json(//
-				Start.get().getElasticClient().getSchema(credentials.backendId(), type));
+		return JsonPayload.json(Start.get()//
+				.getElasticClient().getSchema(credentials.backendId(), type)//
+				.rootNode());
 	}
 
 	@Put("/:type")

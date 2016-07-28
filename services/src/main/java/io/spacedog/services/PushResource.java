@@ -146,15 +146,12 @@ public class PushResource extends Resource {
 	@Get("/installation/:id/tags/")
 	public Payload getTags(String id, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
-		Optional<ObjectNode> object = DataStore.get().getObject(credentials.backendId(), TYPE, id);
+		ObjectNode object = DataStore.get().getObject(credentials.backendId(), TYPE, id);
 
-		if (object.isPresent())
-			return JsonPayload.json(//
-					object.get().has(TAGS) //
-							? object.get().get(TAGS) //
-							: Json.array());
-
-		return JsonPayload.error(HttpStatus.NOT_FOUND);
+		return JsonPayload.json(//
+				object.has(TAGS) //
+						? object.get(TAGS) //
+						: Json.array());
 	}
 
 	@Post("/installation/:id/tags")
@@ -306,7 +303,7 @@ public class PushResource extends Resource {
 
 	private void removeEndpointQuietly(String backend, String id) {
 		try {
-			Start.get().getElasticClient().delete(backend, TYPE, id);
+			Start.get().getElasticClient().delete(backend, TYPE, id, true);
 		} catch (Exception e) {
 			System.err.println(String.format(//
 					"[Warning] failed to delete disabled installation [%s] of backend [%s]", id, backend));
@@ -347,22 +344,19 @@ public class PushResource extends Resource {
 	private Payload updateTags(String id, String body, boolean strict, boolean delete) {
 
 		Credentials credentials = SpaceContext.checkCredentials();
-		Optional<ObjectNode> installation = DataStore.get().getObject(credentials.backendId(), TYPE, id);
-
-		if (!installation.isPresent())
-			return JsonPayload.json(404);
+		ObjectNode installation = DataStore.get().getObject(credentials.backendId(), TYPE, id);
 
 		if (strict) {
 			ArrayNode tags = Json.readArray(body);
-			installation.get().set(TAGS, tags);
+			installation.set(TAGS, tags);
 		} else {
 			ObjectNode newTag = Json.readObject(body);
 			String tagKey = Json.checkStringNotNullOrEmpty(newTag, TAG_KEY);
 			String tagValue = Json.checkStringNotNullOrEmpty(newTag, TAG_VALUE);
 
 			boolean updated = false;
-			if (installation.get().has(TAGS)) {
-				Iterator<JsonNode> tags = installation.get().get(TAGS).elements();
+			if (installation.has(TAGS)) {
+				Iterator<JsonNode> tags = installation.get(TAGS).elements();
 				while (tags.hasNext() && !updated) {
 					ObjectNode tag = (ObjectNode) tags.next();
 					if (tagKey.equals(tag.get(TAG_KEY).asText())//
@@ -378,10 +372,10 @@ public class PushResource extends Resource {
 			}
 
 			if (!delete)
-				installation.get().withArray(TAGS).add(newTag);
+				installation.withArray(TAGS).add(newTag);
 		}
 
-		DataStore.get().updateObject(credentials.backendId(), installation.get(), credentials.name());
+		DataStore.get().updateObject(credentials.backendId(), installation, credentials.name());
 		return JsonPayload.saved(false, credentials.backendId(), "/1", TYPE, id);
 	}
 

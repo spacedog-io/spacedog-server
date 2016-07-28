@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
 import io.spacedog.utils.Json;
+import io.spacedog.utils.NotFoundException;
 import net.codestory.http.Context;
 
 public class DataStore {
@@ -31,16 +32,20 @@ public class DataStore {
 	// help methods
 	//
 
-	public Optional<ObjectNode> getObject(String backendId, String type, String id) {
+	public ObjectNode getObject(String backendId, String type, String id) {
 		GetResponse response = Start.get().getElasticClient().get(backendId, type, id);
 
 		if (!response.isExists())
-			return Optional.empty();
+			throw NotFoundException.object(type, id);
 
 		ObjectNode object = Json.readObject(response.getSourceAsString());
-		object.with("meta").put("id", response.getId()).put("type", response.getType()).put("version",
-				response.getVersion());
-		return Optional.of(object);
+
+		object.with("meta")//
+				.put("id", response.getId())//
+				.put("type", response.getType())//
+				.put("version", response.getVersion());
+
+		return object;
 	}
 
 	IndexResponse createObject(String backendId, String type, ObjectNode object, String createdBy) {

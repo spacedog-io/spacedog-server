@@ -119,41 +119,29 @@ public class ElasticClient {
 				.setFetchSource(false).get().isExists();
 	}
 
-	public DeleteResponse delete(String backend, String type, String id) {
-		return internalClient.prepareDelete(toAlias(backend, type), type, id).get();
+	public boolean delete(String backendId, String type, String id, boolean throwNotFound) {
+		DeleteResponse response = internalClient.prepareDelete(toAlias(backendId, type), type, id).get();
+		if (response.isFound())
+			return true;
+		if (throwNotFound)
+			throw Exceptions.notFound("object of type [%s] and id [%s] not found", type, id);
+		return false;
 	}
 
 	public BulkRequestBuilder prepareBulk() {
 		return internalClient.prepareBulk();
 	}
 
-	public DeleteByQueryResponse deleteByQuery(String backendId, String query) {
+	public DeleteByQueryResponse deleteByQuery(String query, String backendId, String... types) {
 
 		Check.notNullOrEmpty(backendId, "backendId");
 
 		if (Strings.isNullOrEmpty(query))
 			query = Json.objectBuilder().object("query").object("match_all").toString();
 
-		DeleteByQueryRequest delete = new DeleteByQueryRequest(toDataIndices(backendId))//
-				.timeout(TimeValue.timeValueMinutes(2))//
-				.source(query);
+		String[] indices = types == null ? toIndices(backendId) : toAliases(backendId, types);
 
-		try {
-			return Start.get().getElasticClient().execute(DeleteByQueryAction.INSTANCE, delete).get();
-		} catch (ExecutionException | InterruptedException e) {
-			throw Exceptions.runtime(e);
-		}
-	}
-
-	public DeleteByQueryResponse deleteByQuery(String backendId, String type, String query) {
-
-		Check.notNullOrEmpty(backendId, "backendId");
-		Check.notNullOrEmpty(type, "type");
-
-		if (Strings.isNullOrEmpty(query))
-			query = Json.objectBuilder().object("query").object("match_all").toString();
-
-		DeleteByQueryRequest delete = new DeleteByQueryRequest(toAlias(backendId, type))//
+		DeleteByQueryRequest delete = new DeleteByQueryRequest(indices)//
 				.timeout(new TimeValue(60000))//
 				.source(query);
 
@@ -285,12 +273,14 @@ public class ElasticClient {
 				.get();
 	}
 
-	public ObjectNode getSchema(String backendId, String type) {
+	public Schema getSchema(String backendId, String type) {
+
+		// TODO what if this type is unknown?
 
 		String source = getMappings(backendId, type).getMappings()//
 				.iterator().next().value.get(type).source().toString();
-
-		return (ObjectNode) Json.readObject(source).get(type).get("_meta");
+		return new Schema(type, //
+				(ObjectNode) Json.readObject(source).get(type).get("_meta"));
 	}
 
 	public boolean existsIndex(String backendId, String type) {
@@ -383,6 +373,12 @@ public class ElasticClient {
 
 	public String toAlias(String backendId, String type) {
 		return String.join("-", backendId, type);
+	}
+
+	public String[] toAliases(String backendId, String... types) {
+		return Arrays.stream(types)//
+				.map(type -> toAlias(backendId, type))//
+				.toArray(String[]::new);
 	}
 
 	//

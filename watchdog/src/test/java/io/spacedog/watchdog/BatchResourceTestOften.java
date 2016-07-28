@@ -205,17 +205,17 @@ public class BatchResourceTestOften extends Assert {
 				.assertEquals("2", "responses.1.id")//
 				.assertEquals(200, "responses.2.status")//
 				.assertEquals(2, "responses.2.content.total")//
-				.assertEquals(200, "responses.3.status")//
+				.assertEquals(400, "responses.3.status")//
 				.assertEquals(200, "responses.4.status")//
 				.assertEquals(200, "responses.5.status")//
 				.assertEquals(2, "responses.5.content.total")//
 				.assertEquals(1, "debug.batchCredentialChecks");
 
-		assertEquals(Sets.newHashSet("Hi guys, what's up?", "Pretty cool, huhhhhh?"),
+		assertEquals(Sets.newHashSet("Hi guys!", "Pretty cool, huhhhhh?"),
 				Sets.newHashSet(response.getFromJson("responses.5.content.results.0.text").asText(),
 						response.getFromJson("responses.5.content.results.1.text").asText()));
 
-		assertEquals(Sets.newHashSet("0", "2"),
+		assertEquals(Sets.newHashSet("1", "2"),
 				Sets.newHashSet(response.getFromJson("responses.5.content.results.0.code").asText(),
 						response.getFromJson("responses.5.content.results.1.code").asText()));
 
