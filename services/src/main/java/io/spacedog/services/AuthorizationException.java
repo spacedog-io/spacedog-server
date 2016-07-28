@@ -3,27 +3,27 @@
  */
 package io.spacedog.services;
 
-import org.apache.http.HttpStatus;
-
 import io.spacedog.utils.SpaceException;
+import net.codestory.http.constants.HttpStatus;
 
 public class AuthorizationException extends SpaceException {
 
 	private static final long serialVersionUID = 25496310542011899L;
 
 	public AuthorizationException(String message) {
-		super(HttpStatus.SC_UNAUTHORIZED, message);
+		super(HttpStatus.UNAUTHORIZED, message);
 	}
 
+	@Deprecated
 	public AuthorizationException(Credentials credentials) {
 		this("user [%s] of level [%s] not authorized", credentials.name(), credentials.level());
 	}
 
 	public AuthorizationException(String message, Object... parameters) {
-		super(HttpStatus.SC_UNAUTHORIZED, message, parameters);
+		super(HttpStatus.UNAUTHORIZED, message, parameters);
 	}
 
-	public AuthorizationException(String message, IllegalArgumentException cause) {
-		super(HttpStatus.SC_UNAUTHORIZED, cause, message);
+	public AuthorizationException(String message, Throwable cause) {
+		super(HttpStatus.UNAUTHORIZED, cause, message);
 	}
 }

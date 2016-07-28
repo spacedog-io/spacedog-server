@@ -184,15 +184,16 @@ public class JsonBuilder<N extends JsonNode> {
 	private ObjectNode checkCurrentIsObjectNode() {
 		JsonNode current = stack.getLast();
 		if (!current.isObject())
-			throw new IllegalStateException(
-					String.format("current node not an object but [%s]", current.getNodeType()));
+			throw Exceptions.illegalState("current node not an object but [%s]", //
+					current.getNodeType());
 		return (ObjectNode) current;
 	}
 
 	private ArrayNode checkCurrentIsArrayNode() {
 		JsonNode current = stack.getLast();
 		if (!current.isArray())
-			throw new IllegalStateException(String.format("current node not an array but [%s]", current.getNodeType()));
+			throw Exceptions.illegalState("current node not an array but [%s]", //
+					current.getNodeType());
 		return (ArrayNode) current;
 	}
 
@@ -212,7 +213,7 @@ public class JsonBuilder<N extends JsonNode> {
 		else if (value instanceof JsonNode)
 			node((JsonNode) value);
 		else
-			throw new IllegalArgumentException(
-					String.format("invalif array value type [%s]", value.getClass().getSimpleName()));
+			throw Exceptions.illegalArgument("invalif array value type [%s]", //
+					value.getClass().getSimpleName());
 	}
 }

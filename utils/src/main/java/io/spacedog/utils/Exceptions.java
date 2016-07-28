@@ -33,4 +33,9 @@ public class Exceptions {
 	public static IllegalStateException illegalState(String message, Object... arguments) {
 		return new IllegalStateException(String.format(message, arguments));
 	}
+
+	public static ForbiddenException forbidden(String message, Object... arguments) {
+		return new ForbiddenException(String.format(message, arguments));
+	}
+
 }

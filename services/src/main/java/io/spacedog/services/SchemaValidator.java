@@ -8,14 +8,13 @@ import java.util.Iterator;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
 
-import org.apache.http.HttpStatus;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
 
 import io.spacedog.utils.SchemaType;
 import io.spacedog.utils.SpaceException;
+import net.codestory.http.constants.HttpStatus;
 
 public class SchemaValidator {
 
@@ -172,7 +171,7 @@ public class SchemaValidator {
 		private static final long serialVersionUID = 6335047694807220133L;
 
 		public SchemaException(String message, Object... args) {
-			super(HttpStatus.SC_BAD_REQUEST, message, args);
+			super(HttpStatus.BAD_REQUEST, message, args);
 		}
 
 		private static SchemaException invalidField(String fieldName, String... expectedFiedNames) {

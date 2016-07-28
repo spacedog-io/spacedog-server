@@ -1,13 +1,11 @@
 package io.spacedog.utils;
 
-import org.apache.http.HttpStatus;
-
 public class NotFoundException extends SpaceException {
 
 	private static final long serialVersionUID = 5495027748335056224L;
 
 	public NotFoundException(String message, Object... args) {
-		super(HttpStatus.SC_NOT_FOUND, message, args);
+		super(404, message, args);
 	}
 
 	public static NotFoundException type(String type) {
