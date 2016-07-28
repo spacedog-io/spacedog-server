@@ -355,11 +355,13 @@ public class ElasticClient {
 	}
 
 	/**
-	 * All data indices but users.
+	 * TODO use this in the future to distinguish data indices and internal
+	 * backend indices. This means all data indices must be rename with the
+	 * following pattern: backendId-data-indexName
 	 */
 	public String[] toDataIndices(String backendId) {
 		return toIndicesStream(backendId)//
-				.filter(index -> !UserResource.TYPE.equals(index.split("-", 3)[1]))//
+				.filter(index -> "data".equals(index.split("-", 3)[1]))//
 				.toArray(String[]::new);
 	}
 
