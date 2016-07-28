@@ -145,13 +145,13 @@ public class Json {
 		return value == null || value.isNull();
 	}
 
-	public static ObjectMapper getMapper() {
+	public static ObjectMapper mapper() {
 		return Json.jsonMapper;
 	}
 
 	public static String toPrettyString(JsonNode node) {
 		try {
-			return getMapper().writerWithDefaultPrettyPrinter()//
+			return mapper().writerWithDefaultPrettyPrinter()//
 					.writeValueAsString(node);
 		} catch (JsonProcessingException e) {
 			throw Exceptions.runtime(e);
@@ -203,7 +203,7 @@ public class Json {
 		if (elements.length % 2 != 0)
 			throw Exceptions.illegalArgument("odd number of elements");
 
-		ObjectNode object = getMapper().getNodeFactory().objectNode();
+		ObjectNode object = mapper().getNodeFactory().objectNode();
 
 		for (int i = 0; i < elements.length; i = i + 2)
 			object.set(elements[i].toString(), toNode(elements[i + 1]));
@@ -212,7 +212,7 @@ public class Json {
 	}
 
 	public static ArrayNode array(Object... elements) {
-		ArrayNode array = getMapper().getNodeFactory().arrayNode();
+		ArrayNode array = mapper().getNodeFactory().arrayNode();
 		for (int i = 0; i < elements.length; i++)
 			array.add(toNode(elements[i]));
 		return array;

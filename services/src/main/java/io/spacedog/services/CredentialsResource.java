@@ -307,7 +307,7 @@ public class CredentialsResource extends Resource {
 		}
 
 		try {
-			return Optional.of(Json.getMapper().readValue(//
+			return Optional.of(Json.mapper().readValue(//
 					response.getSourceAsString(), Credentials.class));
 		} catch (IOException e) {
 			throw Exceptions.runtime(e);
@@ -322,7 +322,7 @@ public class CredentialsResource extends Resource {
 
 			return Start.get().getElasticClient().index(SPACEDOG_BACKEND, TYPE, //
 					toCredentialsId(credentials.backendId(), credentials.name()), //
-					Json.getMapper().writeValueAsString(credentials));
+					Json.mapper().writeValueAsString(credentials));
 
 		} catch (JsonProcessingException e) {
 			throw Exceptions.runtime(e);
