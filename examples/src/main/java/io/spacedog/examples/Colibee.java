@@ -25,13 +25,6 @@ public class Colibee extends SpaceClient {
 	private static final Backend DEV = new Backend(//
 			"colidev", "colidev", "hi colidev", "david@spacedog.io");
 
-	private ObjectNode schema;
-	private ObjectNode schemaOpportunite;
-	private ObjectNode schemaGroupe;
-	private ObjectNode schemaRdv;
-	private ObjectNode schemaDiscussion;
-	private ObjectNode schemaMessage;
-
 	private Backend backend;
 	private JsonGenerator generator;
 
@@ -81,35 +74,35 @@ public class Colibee extends SpaceClient {
 	}
 
 	private void initConsultant() throws Exception {
-		schema = buildConsultantSchema();
-		resetSchema(schema, backend);
+		Schema schemaConcultant = buildConsultantSchema();
+		resetSchema(schemaConcultant, backend);
 
 		SpaceRequest.post("/1/data/consultant?id=william")//
-				.adminAuth(backend).body(generator.gen(schema, 0)).go(201);
+				.adminAuth(backend).body(generator.gen(schemaConcultant, 0)).go(201);
 
 		SpaceRequest.post("/1/data/consultant?id=vince")//
-				.adminAuth(backend).body(generator.gen(schema, 1)).go(201);
+				.adminAuth(backend).body(generator.gen(schemaConcultant, 1)).go(201);
 
 		SpaceRequest.post("/1/data/consultant?id=david")//
-				.adminAuth(backend).body(generator.gen(schema, 2)).go(201);
+				.adminAuth(backend).body(generator.gen(schemaConcultant, 2)).go(201);
 
 		SpaceRequest.post("/1/data/consultant?id=fred")//
-				.adminAuth(backend).body(generator.gen(schema, 3)).go(201);
+				.adminAuth(backend).body(generator.gen(schemaConcultant, 3)).go(201);
 	}
 
 	private void initColibee() throws Exception {
-		schema = buildColibeeSchema();
-		resetSchema(schema, backend);
+		Schema schemaColibee = buildColibeeSchema();
+		resetSchema(schemaColibee, backend);
 
 		SpaceRequest.post("/1/data/colibee?id=olivier")//
-				.adminAuth(backend).body(generator.gen(schema, 0)).go(201);
+				.adminAuth(backend).body(generator.gen(schemaColibee, 0)).go(201);
 
 		SpaceRequest.post("/1/data/colibee?id=philippe")//
-				.adminAuth(backend).body(generator.gen(schema, 1)).go(201);
+				.adminAuth(backend).body(generator.gen(schemaColibee, 1)).go(201);
 	}
 
 	private void initOpportunites() throws Exception {
-		schemaOpportunite = buildOpportuniteSchema();
+		Schema schemaOpportunite = buildOpportuniteSchema();
 		resetSchema(schemaOpportunite, backend);
 
 		SpaceRequest.post("/1/data/opportunite?id=airbus")//
@@ -126,7 +119,7 @@ public class Colibee extends SpaceClient {
 	}
 
 	private void initGroupeFinance() throws Exception {
-		schemaGroupe = buildGroupeSchema();
+		Schema schemaGroupe = buildGroupeSchema();
 		resetSchema(schemaGroupe, backend);
 		ObjectNode groupeFinance = generator.gen(schemaGroupe);
 		SpaceRequest.post("/1/data/groupe?id=finance")//
@@ -134,20 +127,20 @@ public class Colibee extends SpaceClient {
 	}
 
 	private void initRdv() throws Exception {
-		schemaRdv = buildRdvSchema();
+		Schema schemaRdv = buildRdvSchema();
 		resetSchema(schemaRdv, backend);
 		ObjectNode rdv = generator.gen(schemaRdv);
 		SpaceRequest.post("/1/data/rdv").adminAuth(backend).body(rdv).go(201);
 	}
 
 	private void initDiscussionBale3() throws Exception {
-		schemaDiscussion = buildDiscussionSchema();
+		Schema schemaDiscussion = buildDiscussionSchema();
 		resetSchema(schemaDiscussion, backend);
 		ObjectNode bale3 = generator.gen(schemaDiscussion);
 		String discussionId = SpaceRequest.post("/1/data/discussion?id=bale3")//
 				.adminAuth(backend).body(bale3).go(201).getFromJson("id").asText();
 
-		schemaMessage = buildMessageSchema();
+		Schema schemaMessage = buildMessageSchema();
 		resetSchema(schemaMessage, backend);
 		ObjectNode message = generator.gen(schemaMessage);
 		message.put("discussionId", discussionId);
@@ -220,7 +213,7 @@ public class Colibee extends SpaceClient {
 		}
 	}
 
-	static ObjectNode buildConsultantSchema() {
+	static Schema buildConsultantSchema() {
 		return Schema.builder("consultant") //
 				.bool("membreColibee")//
 				.string("membreNumero").examples("01234567").labels("fr", "N° de membre")//
@@ -317,7 +310,7 @@ public class Colibee extends SpaceClient {
 				.build();
 	}
 
-	private ObjectNode buildOpportuniteSchema() {
+	static Schema buildOpportuniteSchema() {
 		return Schema.builder("opportunite") //
 				.text("titre").french().examples("Audit financier")//
 				.text("contexte").french()//
@@ -380,7 +373,7 @@ public class Colibee extends SpaceClient {
 				.build();
 	}
 
-	private ObjectNode buildGroupeSchema() {
+	static Schema buildGroupeSchema() {
 		return Schema.builder("groupe") //
 				.text("titre").french()//
 				.text("description").french()//
@@ -391,7 +384,7 @@ public class Colibee extends SpaceClient {
 
 	}
 
-	private ObjectNode buildRdvSchema() {
+	static Schema buildRdvSchema() {
 		return Schema.builder("rdv") //
 				.text("titre").french()//
 				.string("status").examples("demande")//
@@ -416,7 +409,7 @@ public class Colibee extends SpaceClient {
 				.build();
 	}
 
-	private ObjectNode buildDiscussionSchema() {
+	static Schema buildDiscussionSchema() {
 		return Schema.builder("discussion") //
 				.text("titre").french()//
 				.text("description").french()//
@@ -427,7 +420,7 @@ public class Colibee extends SpaceClient {
 				.build();
 	}
 
-	private ObjectNode buildMessageSchema() {
+	static Schema buildMessageSchema() {
 		return Schema.builder("message") //
 				.text("texte").french()//
 				.string("discussionId").examples("bale3")//
@@ -441,7 +434,7 @@ public class Colibee extends SpaceClient {
 				.build();
 	}
 
-	static ObjectNode buildColibeeSchema() {
+	static Schema buildColibeeSchema() {
 		return Schema.builder("colibee") //
 				.string("prenom").examples("Olivier", "Philippe") //
 				.string("nom").examples("Martinez", "Germain") //

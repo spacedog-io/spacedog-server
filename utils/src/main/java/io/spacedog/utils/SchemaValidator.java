@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.services;
+package io.spacedog.utils;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -13,8 +13,6 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
 
 import io.spacedog.utils.SchemaBuilder.SchemaType;
-import io.spacedog.utils.SpaceException;
-import net.codestory.http.constants.HttpStatus;
 
 public class SchemaValidator {
 
@@ -22,7 +20,7 @@ public class SchemaValidator {
 		OBJECT, ARRAY, BOOLEAN, STRING, NUMBER
 	}
 
-	public static JsonNode validate(String type, JsonNode schema) throws SchemaException {
+	static JsonNode validate(String type, JsonNode schema) throws SchemaException {
 
 		JsonNode rootObjectSchema = checkField(schema, type, true, JsonType.OBJECT).get();
 
@@ -171,7 +169,7 @@ public class SchemaValidator {
 		private static final long serialVersionUID = 6335047694807220133L;
 
 		public SchemaException(String message, Object... args) {
-			super(HttpStatus.BAD_REQUEST, message, args);
+			super(400, message, args);
 		}
 
 		private static SchemaException invalidField(String fieldName, String... expectedFiedNames) {

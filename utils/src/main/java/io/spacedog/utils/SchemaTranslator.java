@@ -1,14 +1,10 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.services;
+package io.spacedog.utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Json;
-import io.spacedog.utils.JsonBuilder;
 
 public class SchemaTranslator {
 
@@ -32,7 +28,7 @@ public class SchemaTranslator {
 			.put("format", "date_time") //
 			.build(); //
 
-	public static ObjectNode translate(String type, JsonNode schema) {
+	static ObjectNode translate(String type, JsonNode schema) {
 
 		ObjectNode subMapping = toElasticMapping(schema.get(type));
 		subMapping.set("_meta", schema);

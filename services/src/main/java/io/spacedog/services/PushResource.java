@@ -88,7 +88,7 @@ public class PushResource extends Resource {
 	// Schema
 	//
 
-	public static ObjectNode getDefaultInstallationSchema() {
+	public static Schema getDefaultInstallationSchema() {
 		return Schema.builder("installation")//
 				.string(APP_ID)//
 				.string(PUSH_SERVICE)//

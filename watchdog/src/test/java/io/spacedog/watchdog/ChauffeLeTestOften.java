@@ -44,7 +44,7 @@ public class ChauffeLeTestOften extends Assert {
 		laCopine = SpaceClient.newCredentials(backend, "lacopine", "hi la copine", "lacopine@chauffe.le");
 	}
 
-	static ObjectNode buildBigPostSchema() {
+	static Schema buildBigPostSchema() {
 		return Schema.builder("bigpost") //
 				.text("title").french()//
 
@@ -56,7 +56,7 @@ public class ChauffeLeTestOften extends Assert {
 				.build();
 	}
 
-	static ObjectNode buildSmallPostSchema() {
+	static Schema buildSmallPostSchema() {
 		return Schema.builder("smallpost") //
 				.text("title").french()//
 				.string("parent")//

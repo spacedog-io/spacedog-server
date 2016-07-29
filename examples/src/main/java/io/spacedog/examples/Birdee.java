@@ -27,14 +27,14 @@ public class Birdee extends SpaceClient {
 	private static User maelle;
 	private static User vincent;
 
-	static ObjectNode buildDeviceSchema() {
+	static Schema buildDeviceSchema() {
 		return Schema.builder("device")//
 				.string("id")//
 				.string("userId")//
 				.build();
 	}
 
-	static ObjectNode buildStatusSchema() {
+	static Schema buildStatusSchema() {
 		return Schema.builder("status") //
 				.string("newsId")//
 				.string("userId")//
@@ -49,7 +49,7 @@ public class Birdee extends SpaceClient {
 				.build();
 	}
 
-	static ObjectNode buildNewsAllSchema() {
+	static Schema buildNewsAllSchema() {
 		return Schema.builder("news") //
 				.string("newsId")//
 				// portfolio not required

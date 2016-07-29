@@ -65,7 +65,7 @@ public class PushResourceOldTest extends Assert {
 		SpaceRequest.post("/1/device/push").adminAuth(test).go(200);
 	}
 
-	private ObjectNode buildSchema() {
+	private Schema buildSchema() {
 		return Schema.builder("message") //
 				.text("text").french()//
 				.string("author")//

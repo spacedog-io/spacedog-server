@@ -6,7 +6,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceClient.Backend;
@@ -142,8 +141,8 @@ public class LogResourceTestOften extends Assert {
 		Backend test = SpaceClient.resetTestBackend();
 
 		// custom schema with password property is valid
-		ObjectNode schema = Schema.builder("credentials").string("password").build();
-		SpaceClient.setSchema(schema, test);
+		SpaceClient.setSchema(//
+				Schema.builder("credentials").string("password").build(), test);
 
 		// schema password properties are not scrambled
 		SpaceRequest.get("/1/schema/credentials").backend(test).go(200)//

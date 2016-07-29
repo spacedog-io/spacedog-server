@@ -26,7 +26,7 @@ public class Joho extends SpaceClient {
 
 	private static Backend backend = JOHO2;
 
-	static ObjectNode buildDiscussionSchema() {
+	static Schema buildDiscussionSchema() {
 		return Schema.builder("discussion") //
 				.text("title").french() //
 				.text("description").french() //
@@ -60,7 +60,7 @@ public class Joho extends SpaceClient {
 				.build();
 	}
 
-	static ObjectNode buildMessageSchema() {
+	static Schema buildMessageSchema() {
 		return Schema.builder("message") //
 				.text("text").french()//
 				.string("discussionId")//
@@ -91,7 +91,7 @@ public class Joho extends SpaceClient {
 				.build();
 	}
 
-	static ObjectNode buildCustomUserSchema() {
+	static Schema buildCustomUserSchema() {
 		return Schema.builder("user")//
 				.id("username")//
 				.string("username")//
@@ -117,7 +117,7 @@ public class Joho extends SpaceClient {
 				.build();
 	}
 
-	static ObjectNode buildThemesSchema() {
+	static Schema buildThemesSchema() {
 		return Schema.builder("themes")//
 				.object("themes").array()//
 				.text("name").french()//
@@ -133,7 +133,7 @@ public class Joho extends SpaceClient {
 				.build();
 	}
 
-	static ObjectNode buildSitesSchema() {
+	static Schema buildSitesSchema() {
 		return Schema.builder("sites")//
 				.object("sites").array()//
 				.text("name").french()//

@@ -15,23 +15,40 @@ public class Schema {
 		this.node = node;
 	}
 
-	public ObjectNode rootNode() {
+	public String name() {
+		return name;
+	}
+
+	public ObjectNode node() {
 		return node;
 	}
 
-	public ObjectNode contentNode() {
+	public ObjectNode content() {
 		return (ObjectNode) node.get(name);
 	}
 
 	public boolean hasIdPath() {
-		return contentNode().has("_id");
+		return content().has("_id");
 	}
 
 	public String idPath() {
-		return contentNode().get("_id").asText();
+		return content().get("_id").asText();
 	}
 
 	public static SchemaBuilder builder(String name) {
 		return SchemaBuilder.builder(name);
+	}
+
+	public void validate() {
+		SchemaValidator.validate(name, node);
+	}
+
+	public ObjectNode translate() {
+		return SchemaTranslator.translate(name, node);
+	}
+
+	@Override
+	public String toString() {
+		return node.toString();
 	}
 }

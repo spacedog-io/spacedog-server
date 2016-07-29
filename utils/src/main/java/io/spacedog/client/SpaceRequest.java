@@ -30,6 +30,7 @@ import io.spacedog.utils.Backends;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.Schema;
 import io.spacedog.utils.SpaceHeaders;
 
 public class SpaceRequest {
@@ -133,6 +134,11 @@ public class SpaceRequest {
 
 	public SpaceRequest body(String body) {
 		this.body = body;
+		return this;
+	}
+
+	public SpaceRequest body(Schema schema) {
+		this.body = schema.toString();
 		return this;
 	}
 

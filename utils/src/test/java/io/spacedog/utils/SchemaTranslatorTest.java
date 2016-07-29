@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.services;
+package io.spacedog.utils;
 
 import java.io.IOException;
 import java.net.URL;
@@ -14,6 +14,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.io.Resources;
 
 import io.spacedog.utils.Json;
+import io.spacedog.utils.SchemaTranslator;
+import io.spacedog.utils.SchemaValidator;
 
 public class SchemaTranslatorTest extends Assert {
 

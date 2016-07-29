@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class SchemaBuilder {
 
 	public static SchemaBuilder builder(String type) {
-		return new SchemaBuilder(Json.objectBuilder().object(type));
+		return new SchemaBuilder(type);
 	}
 
 	public SchemaBuilder object(String key) {
@@ -75,13 +75,13 @@ public class SchemaBuilder {
 		return this;
 	}
 
-	public ObjectNode build() {
-		return builder.build();
+	public Schema build() {
+		return new Schema(name, builder.build());
 	}
 
 	@Override
 	public String toString() {
-		return builder.build().toString();
+		return build().toString();
 	}
 
 	public SchemaBuilder id(String key) {
@@ -181,11 +181,13 @@ public class SchemaBuilder {
 	// Implementation
 	//
 
+	private String name;
 	private JsonBuilder<ObjectNode> builder;
 	private SchemaType currentPropertyType = SchemaType.OBJECT;
 
-	private SchemaBuilder(JsonBuilder<ObjectNode> builder) {
-		this.builder = builder;
+	private SchemaBuilder(String name) {
+		this.name = name;
+		this.builder = Json.objectBuilder().object(name);
 	}
 
 	private SchemaBuilder property(String key, SchemaType type) {

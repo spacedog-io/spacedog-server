@@ -58,13 +58,13 @@ public class JsonGenerator {
 		types.put(type, values);
 	}
 
-	public ObjectNode gen(ObjectNode schema) {
+	public ObjectNode gen(Schema schema) {
 		return gen(schema, 0);
 	}
 
-	public ObjectNode gen(ObjectNode schema, int index) {
+	public ObjectNode gen(Schema schema, int index) {
 		LinkedList<String> stack = new LinkedList<String>();
-		return generateObject(stack, (ObjectNode) schema.elements().next(), index);
+		return generateObject(stack, (ObjectNode) schema.node().elements().next(), index);
 	}
 
 	private ObjectNode generateObject(LinkedList<String> stack, ObjectNode schema, int index) {

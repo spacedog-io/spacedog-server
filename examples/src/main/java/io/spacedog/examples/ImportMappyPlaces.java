@@ -91,7 +91,7 @@ public class ImportMappyPlaces extends Assert {
 		}
 	}
 
-	public static ObjectNode buildRestoSchema() {
+	public static Schema buildRestoSchema() {
 		return Schema.builder("resto") //
 				.text("name").french() //
 				.geopoint("where") //

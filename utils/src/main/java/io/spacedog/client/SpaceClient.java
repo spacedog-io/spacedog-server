@@ -1,8 +1,8 @@
 package io.spacedog.client;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
+import io.spacedog.utils.Schema;
 import io.spacedog.utils.Utils;
 
 public class SpaceClient {
@@ -67,19 +67,18 @@ public class SpaceClient {
 		SpaceRequest.delete("/1/credentials/" + username).adminAuth(backend).go(200, 404);
 	}
 
-	public static void resetSchema(JsonNode schema, Backend backend) throws Exception {
+	public static void resetSchema(Schema schema, Backend backend) throws Exception {
 		deleteSchema(schema, backend);
 		setSchema(schema, backend);
 	}
 
-	public static void deleteSchema(JsonNode schema, Backend backend) throws Exception {
-		String schemaName = schema.fieldNames().next();
-		SpaceRequest.delete("/1/schema/" + schemaName).adminAuth(backend).go(200, 404);
+	public static void deleteSchema(Schema schema, Backend backend) throws Exception {
+		SpaceRequest.delete("/1/schema/" + schema.name()).adminAuth(backend).go(200, 404);
 	}
 
-	public static void setSchema(JsonNode schema, Backend backend) throws Exception {
-		String schemaName = schema.fieldNames().next();
-		SpaceRequest.post("/1/schema/" + schemaName).adminAuth(backend).body(schema).go(201);
+	public static void setSchema(Schema schema, Backend backend) throws Exception {
+		SpaceRequest.post("/1/schema/" + schema.name())//
+				.adminAuth(backend).body(schema.toString()).go(201);
 	}
 
 	public static Backend createBackend(Backend backend) throws UnirestException, Exception {

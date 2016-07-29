@@ -50,7 +50,7 @@ public class CredentialsResource extends Resource {
 	//
 
 	void init() {
-		ObjectNode schema = Schema.builder(TYPE)//
+		Schema schema = Schema.builder(TYPE)//
 				.string(USERNAME)//
 				.string(BACKEND_ID)//
 				.string(CREDENTIALS_LEVEL)//
@@ -62,8 +62,8 @@ public class CredentialsResource extends Resource {
 				.string(UPDATED_AT)//
 				.build();
 
-		SchemaValidator.validate(TYPE, schema);
-		String mapping = SchemaTranslator.translate(TYPE, schema).toString();
+		schema.validate();
+		String mapping = schema.translate().toString();
 
 		ElasticClient elastic = Start.get().getElasticClient();
 

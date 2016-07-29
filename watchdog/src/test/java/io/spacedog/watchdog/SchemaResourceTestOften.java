@@ -6,8 +6,6 @@ package io.spacedog.watchdog;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceClient.User;
@@ -41,18 +39,18 @@ public class SchemaResourceTestOften extends Assert {
 
 		// anonymous gets car, home and sale schemas
 		SpaceRequest.get("/1/schema/car").backend(test).go(200)//
-				.assertEquals(buildCarSchema());
+				.assertEquals(buildCarSchema().node());
 		SpaceRequest.get("/1/schema/home").backend(test).go(200)//
-				.assertEquals(buildHomeSchema());
+				.assertEquals(buildHomeSchema().node());
 		SpaceRequest.get("/1/schema/sale").backend(test).go(200)//
-				.assertEquals(buildSaleSchema());
+				.assertEquals(buildSaleSchema().node());
 
 		// anonymous gets all schemas
 		SpaceRequest.get("/1/schema").backend(test).go(200)//
 				.assertEquals(Json.merger() //
-						.merge(buildHomeSchema()) //
-						.merge(buildCarSchema()) //
-						.merge(buildSaleSchema()) //
+						.merge(buildHomeSchema().node()) //
+						.merge(buildCarSchema().node()) //
+						.merge(buildSaleSchema().node()) //
 						.get());
 
 		// anonymous is not allowed to delete schema
@@ -72,9 +70,9 @@ public class SchemaResourceTestOften extends Assert {
 				.body("{\"toto\":{\"_type\":\"XXX\"}}").go(400);
 
 		// admin fails to update car schema color property type
-		ObjectNode json = buildCarSchema();
-		json.with("car").with("color").put("_type", "date");
-		SpaceRequest.put("/1/schema/car").adminAuth(test).body(json).go(400);
+		Schema carSchema = buildCarSchema();
+		carSchema.node().with("car").with("color").put("_type", "date");
+		SpaceRequest.put("/1/schema/car").adminAuth(test).body(carSchema).go(400);
 
 		// fails to remove the car schema color property
 		// json = buildCarSchema();
@@ -82,7 +80,7 @@ public class SchemaResourceTestOften extends Assert {
 		// SpaceRequest.put("/1/schema/car").adminAuth(testBackend).body(json).go(400);
 	}
 
-	private static ObjectNode buildHomeSchema() {
+	private static Schema buildHomeSchema() {
 		return Schema.builder("home") //
 				.enumm("type")//
 				.string("phone")//
@@ -98,7 +96,7 @@ public class SchemaResourceTestOften extends Assert {
 				.build();
 	}
 
-	public static ObjectNode buildSaleSchema() {
+	public static Schema buildSaleSchema() {
 		return Schema.builder("sale") //
 				.string("number") //
 				.timestamp("when") //
@@ -117,7 +115,7 @@ public class SchemaResourceTestOften extends Assert {
 				.build();
 	}
 
-	public static ObjectNode buildCarSchema() {
+	public static Schema buildCarSchema() {
 		return Schema.builder("car") //
 				.string("serialNumber")//
 				.date("buyDate")//
@@ -143,7 +141,7 @@ public class SchemaResourceTestOften extends Assert {
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
 
-		ObjectNode schema = Schema.builder("home") //
+		Schema schema = Schema.builder("home") //
 				.extra("global-scope", true)//
 				.enumm("type").required().extra("global-scope", false)//
 				.object("address").required().extra("global-scope", false)//
@@ -153,7 +151,7 @@ public class SchemaResourceTestOften extends Assert {
 		SpaceClient.setSchema(schema, test);
 
 		SpaceRequest.get("/1/schema/home").backend(test).go(200)//
-				.assertEquals(schema);
+				.assertEquals(schema.node());
 	}
 
 }
