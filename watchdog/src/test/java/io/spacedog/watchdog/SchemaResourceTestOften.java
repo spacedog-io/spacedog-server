@@ -13,7 +13,7 @@ import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.SchemaBuilder;
+import io.spacedog.utils.Schema;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
@@ -83,51 +83,56 @@ public class SchemaResourceTestOften extends Assert {
 	}
 
 	private static ObjectNode buildHomeSchema() {
-		return SchemaBuilder.builder("home") //
-				.property("type", "enum").required().end() //
-				.objectProperty("address").required() //
-				.property("number", "integer").end() //
-				.property("street", "text").required().end() //
-				.property("city", "string").required().end() //
-				.property("country", "string").required().end() // /
-				.end() //
-				.property("phone", "string").end() //
-				.property("location", "geopoint").required().end() //
+		return Schema.builder("home") //
+				.enumm("type")//
+				.string("phone")//
+				.geopoint("location")//
+
+				.object("address") //
+				.integer("number")//
+				.text("street")//
+				.string("city")//
+				.string("country")//
+				.close() //
+
 				.build();
 	}
 
 	public static ObjectNode buildSaleSchema() {
-		return SchemaBuilder.builder("sale") //
-				.property("number", "string").required().end() //
-				.property("when", "timestamp").required().end() //
-				.property("where", "geopoint").end() //
-				.property("online", "boolean").required().end() //
-				.property("deliveryDate", "date").required().end() //
-				.property("deliveryTime", "time").required().end() //
-				.objectProperty("items").array().required() //
-				.property("ref", "string").required().end() //
-				.property("description", "text").language("english").required().end() //
-				.property("quantity", "integer").end() //
-				// .property("price", "amount").required().end() //
-				.property("type", "enum").required().end() //
-				.end() //
+		return Schema.builder("sale") //
+				.string("number") //
+				.timestamp("when") //
+				.geopoint("where") //
+				.bool("online")//
+				.date("deliveryDate") //
+				.time("deliveryTime")//
+
+				.object("items").array() //
+				.string("ref")//
+				.text("description").english()//
+				.integer("quantity")//
+				.enumm("type")//
+				.close() //
+
 				.build();
 	}
 
 	public static ObjectNode buildCarSchema() {
-		return SchemaBuilder.builder("car") //
-				.property("serialNumber", "string").required().end() //
-				.property("buyDate", "date").required().end() //
-				.property("buyTime", "time").required().end() //
-				.property("buyTimestamp", "timestamp").required().end() //
-				.property("color", "enum").required().end() //
-				.property("techChecked", "boolean").required().end() //
-				.objectProperty("model").required() //
-				.property("description", "text").language("french").required().end() //
-				.property("fiscalPower", "integer").required().end() //
-				.property("size", "float").required().end() //
-				.end() //
-				.property("location", "geopoint").required().end() //
+		return Schema.builder("car") //
+				.string("serialNumber")//
+				.date("buyDate")//
+				.time("buyTime")//
+				.timestamp("buyTimestamp") //
+				.enumm("color")//
+				.bool("techChecked") //
+				.geopoint("location") //
+
+				.object("model")//
+				.text("description").french()//
+				.integer("fiscalPower")//
+				.floatt("size")//
+				.close() //
+
 				.build();
 	}
 
@@ -138,11 +143,11 @@ public class SchemaResourceTestOften extends Assert {
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
 
-		ObjectNode schema = SchemaBuilder.builder("home") //
+		ObjectNode schema = Schema.builder("home") //
 				.extra("global-scope", true)//
-				.property("type", "enum").required().extra("global-scope", false).end() //
-				.objectProperty("address").required().extra("global-scope", false)//
-				.property("street", "text").required().extra("global-scope", false).end() //
+				.enumm("type").required().extra("global-scope", false)//
+				.object("address").required().extra("global-scope", false)//
+				.text("street").required().extra("global-scope", false) //
 				.build();
 
 		SpaceClient.setSchema(schema, test);

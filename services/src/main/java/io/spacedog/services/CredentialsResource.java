@@ -32,7 +32,7 @@ import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Passwords;
 import io.spacedog.utils.Roles;
-import io.spacedog.utils.SchemaBuilder2;
+import io.spacedog.utils.Schema;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -50,16 +50,16 @@ public class CredentialsResource extends Resource {
 	//
 
 	void init() {
-		ObjectNode schema = SchemaBuilder2.builder(TYPE)//
-				.stringProperty(USERNAME, true)//
-				.stringProperty(BACKEND_ID, true)//
-				.stringProperty(CREDENTIALS_LEVEL, true)//
-				.stringProperty(ROLES, false, true)//
-				.stringProperty(HASHED_PASSWORD, false)//
-				.stringProperty(PASSWORD_RESET_CODE, false)//
-				.stringProperty(EMAIL, true)//
-				.stringProperty(CREATED_AT, true)//
-				.stringProperty(UPDATED_AT, true)//
+		ObjectNode schema = Schema.builder(TYPE)//
+				.string(USERNAME)//
+				.string(BACKEND_ID)//
+				.string(CREDENTIALS_LEVEL)//
+				.string(ROLES).array()//
+				.string(HASHED_PASSWORD)//
+				.string(PASSWORD_RESET_CODE)//
+				.string(EMAIL)//
+				.string(CREATED_AT)//
+				.string(UPDATED_AT)//
 				.build();
 
 		SchemaValidator.validate(TYPE, schema);

@@ -13,7 +13,7 @@ import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
-import io.spacedog.utils.SchemaBuilder;
+import io.spacedog.utils.Schema;
 
 public class ImportMappyPlaces extends Assert {
 
@@ -92,21 +92,22 @@ public class ImportMappyPlaces extends Assert {
 	}
 
 	public static ObjectNode buildRestoSchema() {
-		return SchemaBuilder.builder("resto") //
-				.property("name", "text").language("french").required().end() //
-				.property("where", "geopoint").required().end() //
-				.property("way", "text").language("french").required().end() //
-				.property("town", "text").language("french").required().end() //
-				.property("zipcode", "string").required().end() //
-				.property("mainRubricId", "string").required().end() //
-				.property("url", "string").end() //
-				.property("illustration", "string").end() //
-				.property("phone", "string").end() //
-				.property("rubrics", "object").required().array() //
-				.property("rubricId", "string").required().end() //
-				.property("rubricLabel", "text").language("french").required().end() //
-				.end() //
-				.end() //
+		return Schema.builder("resto") //
+				.text("name").french() //
+				.geopoint("where") //
+				.text("way").french() //
+				.text("town").french()//
+				.string("zipcode")//
+				.string("mainRubricId")//
+				.string("url")//
+				.string("illustration")//
+				.string("phone")//
+
+				.object("rubrics").array() //
+				.string("rubricId") //
+				.text("rubricLabel").french()//
+				.close() //
+
 				.build();
 	}
 }

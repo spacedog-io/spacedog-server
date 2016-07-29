@@ -10,7 +10,7 @@ public class JsonGeneratorTest extends Assert {
 	@Test
 	public void test() {
 
-		ObjectNode schema = SchemaBuilder3.builder("person")//
+		ObjectNode schema = Schema.builder("person")//
 				.string("name")//
 				.object("address")//
 				.string("street")//

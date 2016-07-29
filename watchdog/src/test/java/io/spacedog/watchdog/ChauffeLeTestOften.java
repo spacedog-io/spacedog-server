@@ -19,7 +19,7 @@ import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
-import io.spacedog.utils.SchemaBuilder;
+import io.spacedog.utils.Schema;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
@@ -45,19 +45,21 @@ public class ChauffeLeTestOften extends Assert {
 	}
 
 	static ObjectNode buildBigPostSchema() {
-		return SchemaBuilder.builder("bigpost") //
-				.property("title", "text").language("french").required().end() //
-				.objectProperty("responses").array() //
-				.property("title", "text").language("french").required().end() //
-				.property("author", "string").required().end() //
-				.end() //
+		return Schema.builder("bigpost") //
+				.text("title").french()//
+
+				.object("responses").array() //
+				.text("title").french()//
+				.string("author") //
+				.close() //
+
 				.build();
 	}
 
 	static ObjectNode buildSmallPostSchema() {
-		return SchemaBuilder.builder("smallpost") //
-				.property("title", "text").language("french").required().end() //
-				.property("parent", "string").end()//
+		return Schema.builder("smallpost") //
+				.text("title").french()//
+				.string("parent")//
 				.build();
 	}
 

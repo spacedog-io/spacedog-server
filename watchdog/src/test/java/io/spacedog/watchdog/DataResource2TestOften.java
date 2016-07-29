@@ -24,7 +24,7 @@ import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.SchemaBuilder2;
+import io.spacedog.utils.Schema;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
@@ -207,9 +207,9 @@ public class DataResource2TestOften extends Assert {
 
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
-		ObjectNode schema = SchemaBuilder2.builder("message")//
-				.textProperty("text", "english", true).build();
-		SpaceClient.setSchema(schema, test);
+		SpaceClient.setSchema(//
+				Schema.builder("message").text("text").build(), //
+				test);
 
 		// should successfully create 4 messages
 
@@ -240,8 +240,9 @@ public class DataResource2TestOften extends Assert {
 
 		// creates message schema with auto generated id strategy
 
-		SpaceClient.setSchema(SchemaBuilder2.builder("message")//
-				.stringProperty("text", true).build(), test);
+		SpaceClient.setSchema(//
+				Schema.builder("message").string("text").build(), //
+				test);
 
 		// creates a message object with auto generated id
 
@@ -268,9 +269,8 @@ public class DataResource2TestOften extends Assert {
 
 		// creates message2 schema with code property as id
 
-		SpaceClient.setSchema(SchemaBuilder2.builder("message2", "code")//
-				.stringProperty("code", true)//
-				.stringProperty("text", true).build(), test);
+		SpaceClient.setSchema(Schema.builder("message2").id("code")//
+				.string("code").string("text").build(), test);
 
 		// creates a message2 object with code = 2
 
@@ -311,8 +311,9 @@ public class DataResource2TestOften extends Assert {
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
 
-		SpaceClient.setSchema(SchemaBuilder2.builder("message")//
-				.stringProperty("text", true).build(), test);
+		SpaceClient.setSchema(//
+				Schema.builder("message").string("text").build(), //
+				test);
 
 		SpaceRequest.post("/1/data/message").backend(test)//
 				.body("text", "hello").go(201);

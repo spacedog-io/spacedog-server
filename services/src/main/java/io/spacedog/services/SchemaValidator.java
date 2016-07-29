@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
 
-import io.spacedog.utils.SchemaType;
+import io.spacedog.utils.SchemaBuilder.SchemaType;
 import io.spacedog.utils.SpaceException;
 import net.codestory.http.constants.HttpStatus;
 

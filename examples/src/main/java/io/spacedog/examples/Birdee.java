@@ -13,7 +13,7 @@ import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.SchemaBuilder2;
+import io.spacedog.utils.Schema;
 
 public class Birdee extends SpaceClient {
 
@@ -28,35 +28,35 @@ public class Birdee extends SpaceClient {
 	private static User vincent;
 
 	static ObjectNode buildDeviceSchema() {
-		return SchemaBuilder2.builder("device") //
-				.stringProperty("id", true)//
-				.stringProperty("userId", true)//
+		return Schema.builder("device")//
+				.string("id")//
+				.string("userId")//
 				.build();
 	}
 
 	static ObjectNode buildStatusSchema() {
-		return SchemaBuilder2.builder("status") //
-				.stringProperty("newsId", true)//
-				.stringProperty("userId", true)//
+		return Schema.builder("status") //
+				.string("newsId")//
+				.string("userId")//
 				// I need portfolio ids for users to filter
-				.stringProperty("portfolioId", false, true)//
-				.stringProperty("url", true)//
-				.simpleProperty("type", "enum", true)//
-				.simpleProperty("read", "boolean", true)//
-				.simpleProperty("seen", "boolean", true)//
-				.simpleProperty("favorite", "boolean", true)//
-				.simpleProperty("processed", "boolean", true)//
+				.string("portfolioId").array()//
+				.string("url")//
+				.enumm("type")//
+				.bool("read")//
+				.bool("seen")//
+				.bool("favorite")//
+				.bool("processed")//
 				.build();
 	}
 
 	static ObjectNode buildNewsAllSchema() {
-		return SchemaBuilder2.builder("news") //
-				.stringProperty("newsId", true)//
+		return Schema.builder("news") //
+				.string("newsId")//
 				// portfolio not required
-				.stringProperty("portfolioId", false, true)//
-				.simpleProperty("type", "enum", true)//
-				.stringProperty("url", true)//
-				.simpleProperty("processed", "boolean", true)//
+				.string("portfolioId").array()//
+				.enumm("type")//
+				.string("url")//
+				.bool("processed")//
 				.build();
 	}
 

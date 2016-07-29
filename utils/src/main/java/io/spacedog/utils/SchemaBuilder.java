@@ -3,6 +3,8 @@
  */
 package io.spacedog.utils;
 
+import java.util.Arrays;
+
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class SchemaBuilder {
@@ -11,26 +13,63 @@ public class SchemaBuilder {
 		return new SchemaBuilder(Json.objectBuilder().object(type));
 	}
 
-	private JsonBuilder<ObjectNode> builder;
-	private String currentPropertyType;
-
-	private SchemaBuilder(JsonBuilder<ObjectNode> builder) {
-		this.builder = builder;
+	public SchemaBuilder object(String key) {
+		return property(key, SchemaType.OBJECT);
 	}
 
-	public SchemaBuilder property(String key, String type) {
-		currentPropertyType = type;
-		builder.object(key).put("_type", type);
-		return this;
+	public SchemaBuilder enumm(String key) {
+		return property(key, SchemaType.ENUM);
 	}
 
-	public SchemaBuilder objectProperty(String key) {
-		currentPropertyType = "object";
-		builder.object(key).put("_type", "object");
-		return this;
+	public SchemaBuilder string(String key) {
+		return property(key, SchemaType.STRING);
 	}
 
-	public SchemaBuilder end() {
+	public SchemaBuilder text(String key) {
+		return property(key, SchemaType.TEXT);
+	}
+
+	public SchemaBuilder bool(String key) {
+		return property(key, SchemaType.BOOLEAN);
+	}
+
+	public SchemaBuilder integer(String key) {
+		return property(key, SchemaType.INTEGER);
+	}
+
+	public SchemaBuilder longg(String key) {
+		return property(key, SchemaType.LONG);
+	}
+
+	public SchemaBuilder floatt(String key) {
+		return property(key, SchemaType.FLOAT);
+	}
+
+	public SchemaBuilder doublee(String key) {
+		return property(key, SchemaType.DOUBLE);
+	}
+
+	public SchemaBuilder geopoint(String key) {
+		return property(key, SchemaType.GEOPOINT);
+	}
+
+	public SchemaBuilder date(String key) {
+		return property(key, SchemaType.DATE);
+	}
+
+	public SchemaBuilder time(String key) {
+		return property(key, SchemaType.TIME);
+	}
+
+	public SchemaBuilder timestamp(String key) {
+		return property(key, SchemaType.TIMESTAMP);
+	}
+
+	public SchemaBuilder stash(String key) {
+		return property(key, SchemaType.STASH);
+	}
+
+	public SchemaBuilder close() {
 		currentPropertyType = null;
 		builder.end();
 		return this;
@@ -38,6 +77,11 @@ public class SchemaBuilder {
 
 	public ObjectNode build() {
 		return builder.build();
+	}
+
+	@Override
+	public String toString() {
+		return builder.build().toString();
 	}
 
 	public SchemaBuilder id(String key) {
@@ -58,6 +102,26 @@ public class SchemaBuilder {
 		return this;
 	}
 
+	public SchemaBuilder values(Object... values) {
+		checkCurrentPropertyExists();
+		builder.array("_values").addAll(Arrays.asList(values)).end();
+		return this;
+	}
+
+	public SchemaBuilder examples(Object... examples) {
+		checkCurrentPropertyExists();
+		builder.array("_examples").addAll(Arrays.asList(examples)).end();
+		return this;
+	}
+
+	public SchemaBuilder french() {
+		return language("french");
+	}
+
+	public SchemaBuilder english() {
+		return language("english");
+	}
+
 	public SchemaBuilder language(String language) {
 		checkCurrentPropertyExists();
 		checkCurrentPropertyByValidType("_language", SchemaType.TEXT);
@@ -74,31 +138,85 @@ public class SchemaBuilder {
 		return this;
 	}
 
+	public SchemaBuilder enumType(String type) {
+		builder.put("_enumType", type);
+		return this;
+	}
+
+	public SchemaBuilder labels(String... labels) {
+		builder.node("_label", Json.object(//
+				Arrays.copyOf(labels, labels.length, Object[].class)));
+		return this;
+	}
+
+	public static enum SchemaType {
+
+		OBJECT, TEXT, STRING, BOOLEAN, GEOPOINT, INTEGER, FLOAT, LONG, //
+		DOUBLE, DATE, TIME, TIMESTAMP, ENUM, STASH;
+
+		@Override
+		public String toString() {
+			return name().toLowerCase();
+		}
+
+		public boolean equals(String string) {
+			return this.toString().equals(string);
+		}
+
+		public static SchemaType valueOfNoCase(String value) {
+			return valueOf(value.toUpperCase());
+		}
+
+		public static boolean isValid(String value) {
+			try {
+				valueOfNoCase(value);
+				return true;
+			} catch (Exception e) {
+				return false;
+			}
+		}
+	}
+
+	//
+	// Implementation
+	//
+
+	private JsonBuilder<ObjectNode> builder;
+	private SchemaType currentPropertyType = SchemaType.OBJECT;
+
+	private SchemaBuilder(JsonBuilder<ObjectNode> builder) {
+		this.builder = builder;
+	}
+
+	private SchemaBuilder property(String key, SchemaType type) {
+		if (currentPropertyType != SchemaType.OBJECT)
+			builder.end();
+
+		currentPropertyType = type;
+		builder.object(key).put("_type", type.toString());
+		return this;
+	}
+
 	private void checkCurrentPropertyExists() {
 		if (currentPropertyType == null)
-			throw new IllegalStateException(String.format("no current property in [%s]", builder.toString()));
+			throw Exceptions.illegalState("no current property in [%s]", builder);
 	}
 
 	private void checkCurrentPropertyByValidType(String fieldName, SchemaType... validTypes) {
-		SchemaType propertyType = SchemaType.valueOfNoCase(this.currentPropertyType);
 
-		for (SchemaType validType : validTypes) {
-			if (propertyType.equals(validType))
+		for (SchemaType validType : validTypes)
+			if (currentPropertyType.equals(validType))
 				return;
-		}
 
-		throw new IllegalStateException(
-				String.format("invalid property type [%s] for this field [%s]", propertyType, fieldName));
+		throw Exceptions.illegalState("invalid property type [%s] for this field [%s]", //
+				currentPropertyType, fieldName);
 	}
 
 	private void checkCurrentPropertyByInvalidTypes(String fieldName, SchemaType... invalidTypes) {
-		SchemaType propertyType = SchemaType.valueOfNoCase(this.currentPropertyType);
 
-		for (SchemaType invalidType : invalidTypes) {
-			if (propertyType.equals(invalidType))
+		for (SchemaType invalidType : invalidTypes)
+			if (currentPropertyType.equals(invalidType))
 				throw Exceptions.illegalState("invalid property type [%s] for this field [%s]", //
-						propertyType, fieldName);
-		}
+						currentPropertyType, fieldName);
 	}
-
 }

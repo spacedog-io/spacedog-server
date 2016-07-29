@@ -5,7 +5,7 @@ import org.elasticsearch.action.index.IndexResponse;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.utils.Json;
-import io.spacedog.utils.SchemaBuilder3;
+import io.spacedog.utils.Schema;
 import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -38,7 +38,7 @@ public class StashResource2 {
 	@Post("")
 	@Post("/")
 	public Payload createIndex(Context context) {
-		String schema = SchemaBuilder3.builder(TYPE).stash("data").toString();
+		String schema = Schema.builder(TYPE).stash("data").toString();
 		return SchemaResource.get().put(TYPE, schema, context);
 	}
 

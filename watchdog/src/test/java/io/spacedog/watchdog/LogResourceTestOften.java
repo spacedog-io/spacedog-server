@@ -15,8 +15,7 @@ import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.SchemaBuilder2;
-import io.spacedog.utils.SchemaBuilder3;
+import io.spacedog.utils.Schema;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
@@ -32,8 +31,7 @@ public class LogResourceTestOften extends Assert {
 
 		// create message schema in test backend
 		SpaceClient.setSchema(//
-				SchemaBuilder2.builder("message")//
-						.textProperty("text", "english", true).build(),
+				Schema.builder("message").text("text").build(), //
 				test);
 
 		// create a user in test2 backend
@@ -144,7 +142,7 @@ public class LogResourceTestOften extends Assert {
 		Backend test = SpaceClient.resetTestBackend();
 
 		// custom schema with password property is valid
-		ObjectNode schema = SchemaBuilder3.builder("credentials").string("password").build();
+		ObjectNode schema = Schema.builder("credentials").string("password").build();
 		SpaceClient.setSchema(schema, test);
 
 		// schema password properties are not scrambled

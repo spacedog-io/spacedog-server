@@ -319,11 +319,11 @@ public class Json {
 		return json;
 	}
 
-	public enum Type {
+	public enum JsonType {
 		String, Boolean, Integer, Long, Float, Double, Object, Array
 	};
 
-	public static boolean isOfType(Type expected, JsonNode node) {
+	public static boolean isOfType(JsonType expected, JsonNode node) {
 		switch (expected) {
 		case String:
 			return node.isTextual();
@@ -389,7 +389,7 @@ public class Json {
 	}
 
 	public static Optional<JsonNode> checkObject(JsonNode input, String propertyPath, boolean required) {
-		return checkJsonNodeOfType(input, propertyPath, Type.Object, required);
+		return checkJsonNodeOfType(input, propertyPath, JsonType.Object, required);
 	}
 
 	public static ArrayNode checkArray(JsonNode node) {
@@ -400,7 +400,7 @@ public class Json {
 	}
 
 	public static Optional<JsonNode> checkArray(JsonNode input, String propertyPath, boolean required) {
-		return checkJsonNodeOfType(input, propertyPath, Type.Array, required);
+		return checkJsonNodeOfType(input, propertyPath, JsonType.Array, required);
 	}
 
 	public static Optional<JsonNode> checkNode(JsonNode input, String propertyPath, boolean required) {
@@ -445,7 +445,7 @@ public class Json {
 	}
 
 	public static Optional<JsonNode> checkStringNode(JsonNode input, String propertyPath, boolean required) {
-		return checkJsonNodeOfType(input, propertyPath, Type.String, required);
+		return checkJsonNodeOfType(input, propertyPath, JsonType.String, required);
 	}
 
 	public static Optional<Double> checkDouble(JsonNode push, String path) {
@@ -453,7 +453,7 @@ public class Json {
 	}
 
 	public static Optional<JsonNode> checkDoubleNode(JsonNode input, String propertyPath, boolean required) {
-		return checkJsonNodeOfType(input, propertyPath, Type.Double, required);
+		return checkJsonNodeOfType(input, propertyPath, JsonType.Double, required);
 	}
 
 	public static boolean checkBoolean(JsonNode input, String path, boolean defaultValue) {
@@ -465,7 +465,7 @@ public class Json {
 	}
 
 	public static Optional<JsonNode> checkBooleanNode(JsonNode input, String propertyPath, boolean required) {
-		return checkJsonNodeOfType(input, propertyPath, Type.Boolean, required);
+		return checkJsonNodeOfType(input, propertyPath, JsonType.Boolean, required);
 	}
 
 	public static Optional<Integer> checkInteger(JsonNode input, String path) {
@@ -473,7 +473,7 @@ public class Json {
 	}
 
 	public static Optional<JsonNode> checkIntegerNode(JsonNode input, String propertyPath, boolean required) {
-		return checkJsonNodeOfType(input, propertyPath, Type.Integer, required);
+		return checkJsonNodeOfType(input, propertyPath, JsonType.Integer, required);
 	}
 
 	public static Optional<Long> checkLong(JsonNode input, String path) {
@@ -481,10 +481,10 @@ public class Json {
 	}
 
 	public static Optional<JsonNode> checkLongNode(JsonNode input, String propertyPath, boolean required) {
-		return checkJsonNodeOfType(input, propertyPath, Type.Long, required);
+		return checkJsonNodeOfType(input, propertyPath, JsonType.Long, required);
 	}
 
-	private static Optional<JsonNode> checkJsonNodeOfType(JsonNode input, String propertyPath, Type expected,
+	private static Optional<JsonNode> checkJsonNodeOfType(JsonNode input, String propertyPath, JsonType expected,
 			boolean required) {
 		JsonNode node = get(input, propertyPath);
 		if (node == null) {

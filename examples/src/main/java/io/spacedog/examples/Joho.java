@@ -16,7 +16,7 @@ import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
-import io.spacedog.utils.SchemaBuilder2;
+import io.spacedog.utils.Schema;
 
 public class Joho extends SpaceClient {
 
@@ -27,110 +27,122 @@ public class Joho extends SpaceClient {
 	private static Backend backend = JOHO2;
 
 	static ObjectNode buildDiscussionSchema() {
-		return SchemaBuilder2.builder("discussion") //
-				.textProperty("title", "french", true) //
-				.textProperty("description", "french", true) //
-				.startObjectProperty("theme", true)//
-				.textProperty("name", "french", true)//
-				.textProperty("description", "french", true)//
-				.stringProperty("code", true)//
-				.endObjectProperty()//
-				.startObjectProperty("category", true)//
-				.textProperty("name", "french", true)//
-				.textProperty("description", "french", true)//
-				.stringProperty("code", true)//
-				.endObjectProperty()//
-				.startObjectProperty("author", true)//
-				.textProperty("firstname", "french", true)//
-				.textProperty("lastname", "french", true)//
-				.stringProperty("avatar", true)//
-				.stringProperty("job", true)//
-				.endObjectProperty()//
-				.startObjectProperty("lastMessage", true)//
-				.textProperty("text", "french", true)//
-				.startObjectProperty("author", true)//
-				.textProperty("firstname", "french", true)//
-				.textProperty("lastname", "french", true)//
-				.stringProperty("avatar", true)//
-				.stringProperty("job", true)//
+		return Schema.builder("discussion") //
+				.text("title").french() //
+				.text("description").french() //
+
+				.object("theme")//
+				.text("name").french()//
+				.text("description").french()//
+				.string("code")//
+				.close()//
+
+				.object("category")//
+				.text("name").french()//
+				.text("description").french()//
+				.string("code")//
+				.close()//
+
+				.object("author")//
+				.text("firstname").french()//
+				.text("lastname").french()//
+				.string("avatar")//
+				.string("job")//
+				.close()//
+
+				.object("lastMessage")//
+				.text("text").french()//
+				.object("author")//
+				.text("firstname").french()//
+				.text("lastname").french()//
+				.string("avatar")//
+				.string("job")//
 				.build();
 	}
 
 	static ObjectNode buildMessageSchema() {
-		return SchemaBuilder2.builder("message") //
-				.textProperty("text", "french", true)//
-				.stringProperty("discussionId", true)//
-				.startObjectProperty("author", true)//
-				.textProperty("firstname", "french", true)//
-				.textProperty("lastname", "french", true)//
-				.stringProperty("avatar", true)//
-				.stringProperty("job", true)//
-				.endObjectProperty()//
-				.startObjectProperty("category", true)//
-				.textProperty("name", "french", true)//
-				.textProperty("description", "french", true)//
-				.stringProperty("code", true)//
-				.endObjectProperty()//
-				.startObjectProperty("responses", true, true)//
-				.textProperty("text", "french", true)//
-				.startObjectProperty("author", true)//
-				.textProperty("firstname", "french", true)//
-				.textProperty("lastname", "french", true)//
-				.stringProperty("avatar", true)//
-				.stringProperty("job", true)//
-				.endObjectProperty()//
-				.endObjectProperty()//
+		return Schema.builder("message") //
+				.text("text").french()//
+				.string("discussionId")//
+
+				.object("author")//
+				.text("firstname").french()//
+				.text("lastname").french()//
+				.string("avatar")//
+				.string("job")//
+				.close()//
+
+				.object("category")//
+				.text("name").french()//
+				.text("description").french()//
+				.string("code")//
+				.close()//
+
+				.object("responses").array()//
+				.text("text").french()//
+				.object("author")//
+				.text("firstname").french()//
+				.text("lastname").french()//
+				.string("avatar")//
+				.string("job")//
+				.close()//
+				.close()
+
 				.build();
 	}
 
 	static ObjectNode buildCustomUserSchema() {
-		return SchemaBuilder2.builder("user", "username")//
-				.stringProperty("username", true)//
-				.stringProperty("email", true)//
-				.textProperty("firstname", "french", true)//
-				.textProperty("lastname", "french", true)//
-				.simpleProperty("job", "enum", true, false)//
-				.simpleProperty("service", "enum", true, false)//
-				.startObjectProperty("site", true)//
-				.textProperty("name", "french", true)//
-				.stringProperty("address1", true)//
-				.stringProperty("address2", false)//
-				.stringProperty("town", true)//
-				.stringProperty("zipcode", true)//
-				.simpleProperty("where", "geopoint", true)//
-				.stringProperty("code", true)//
-				.endObjectProperty()//
-				.stringProperty("mobile", true)//
-				.stringProperty("fixed", true)//
-				.stringProperty("avatar", true)//
+		return Schema.builder("user")//
+				.id("username")//
+				.string("username")//
+				.string("email")//
+				.text("firstname").french()//
+				.text("lastname").french()//
+				.enumm("job")//
+				.enumm("service")//
+				.string("mobile")//
+				.string("fixed")//
+				.string("avatar")//
+
+				.object("site")//
+				.text("name").french()//
+				.string("address1")//
+				.string("address2")//
+				.string("town")//
+				.string("zipcode")//
+				.geopoint("where")//
+				.string("code")//
+				.close()//
+
 				.build();
 	}
 
 	static ObjectNode buildThemesSchema() {
-		return SchemaBuilder2.builder("themes")//
-				.startObjectProperty("themes", true, true)//
-				.textProperty("name", "french", true)//
-				.textProperty("description", "french", true)//
-				.stringProperty("code", true)//
-				.startObjectProperty("categories", true, true)//
-				.textProperty("name", "french", true)//
-				.textProperty("description", "french", true)//
-				.stringProperty("code", true)//
-				.endObjectProperty()//
-				.endObjectProperty()//
+		return Schema.builder("themes")//
+				.object("themes").array()//
+				.text("name").french()//
+				.text("description").french()//
+				.string("code")//
+
+				.object("categories").array()//
+				.text("name").french()//
+				.text("description").french()//
+				.string("code")//
+				.close()//
+
 				.build();
 	}
 
 	static ObjectNode buildSitesSchema() {
-		return SchemaBuilder2.builder("sites")//
-				.startObjectProperty("sites", true, true)//
-				.textProperty("name", "french", true)//
-				.stringProperty("address1", true)//
-				.stringProperty("address2", false)//
-				.stringProperty("town", true)//
-				.stringProperty("zipcode", true)//
-				.simpleProperty("where", "geopoint", true)//
-				.stringProperty("code", true)//
+		return Schema.builder("sites")//
+				.object("sites").array()//
+				.text("name").french()//
+				.string("address1")//
+				.string("address2")//
+				.string("town")//
+				.string("zipcode")//
+				.geopoint("where")//
+				.string("code")//
 				.build();
 	}
 

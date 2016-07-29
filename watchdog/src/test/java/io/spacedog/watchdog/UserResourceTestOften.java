@@ -9,7 +9,7 @@ import org.junit.Test;
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
-import io.spacedog.utils.SchemaBuilder3;
+import io.spacedog.utils.Schema;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
@@ -29,7 +29,7 @@ public class UserResourceTestOften extends Assert {
 
 		// sets user schema
 		SpaceClient.setSchema(//
-				SchemaBuilder3.builder("user").text("firstname").text("lastname").build(), //
+				Schema.builder("user").text("firstname").text("lastname").build(), //
 				test);
 
 		// add user data to vince credentials

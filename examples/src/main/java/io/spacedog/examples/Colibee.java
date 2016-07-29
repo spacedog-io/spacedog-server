@@ -16,7 +16,7 @@ import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonGenerator;
-import io.spacedog.utils.SchemaBuilder3;
+import io.spacedog.utils.Schema;
 
 public class Colibee extends SpaceClient {
 
@@ -221,7 +221,7 @@ public class Colibee extends SpaceClient {
 	}
 
 	static ObjectNode buildConsultantSchema() {
-		return SchemaBuilder3.builder("consultant") //
+		return Schema.builder("consultant") //
 				.bool("membreColibee")//
 				.string("membreNumero").examples("01234567").labels("fr", "N° de membre")//
 				.string("contactsColibee").array().examples("olivier", "philippe")//
@@ -318,7 +318,7 @@ public class Colibee extends SpaceClient {
 	}
 
 	private ObjectNode buildOpportuniteSchema() {
-		return SchemaBuilder3.builder("opportunite") //
+		return Schema.builder("opportunite") //
 				.text("titre").french().examples("Audit financier")//
 				.text("contexte").french()//
 				.text("objectif").french()//
@@ -380,8 +380,19 @@ public class Colibee extends SpaceClient {
 				.build();
 	}
 
+	private ObjectNode buildGroupeSchema() {
+		return Schema.builder("groupe") //
+				.text("titre").french()//
+				.text("description").french()//
+				.bool("membreColibeeOnly")//
+				.string("membres").array().examples("william", "david")//
+				.string("demandesAdhesion").array().examples("vincent", "fred")//
+				.build();
+
+	}
+
 	private ObjectNode buildRdvSchema() {
-		return SchemaBuilder3.builder("rdv") //
+		return Schema.builder("rdv") //
 				.text("titre").french()//
 				.string("status").examples("demande")//
 				.string("categorie").examples("Présentation client")//
@@ -405,18 +416,8 @@ public class Colibee extends SpaceClient {
 				.build();
 	}
 
-	private ObjectNode buildGroupeSchema() {
-		return SchemaBuilder3.builder("groupe") //
-				.text("titre").french()//
-				.text("description").french()//
-				.bool("membreColibeeOnly")//
-				.string("membres").array().examples("william", "david")//
-				.string("demandesAdhesion").array().examples("vincent", "fred")//
-				.build();
-	}
-
 	private ObjectNode buildDiscussionSchema() {
-		return SchemaBuilder3.builder("discussion") //
+		return Schema.builder("discussion") //
 				.text("titre").french()//
 				.text("description").french()//
 				.string("groupeId").examples("finance")//
@@ -427,7 +428,7 @@ public class Colibee extends SpaceClient {
 	}
 
 	private ObjectNode buildMessageSchema() {
-		return SchemaBuilder3.builder("message") //
+		return Schema.builder("message") //
 				.text("texte").french()//
 				.string("discussionId").examples("bale3")//
 
@@ -441,7 +442,7 @@ public class Colibee extends SpaceClient {
 	}
 
 	static ObjectNode buildColibeeSchema() {
-		return SchemaBuilder3.builder("colibee") //
+		return Schema.builder("colibee") //
 				.string("prenom").examples("Olivier", "Philippe") //
 				.string("nom").examples("Martinez", "Germain") //
 				.text("titre").french().examples("PDG", "Directeur RH")//

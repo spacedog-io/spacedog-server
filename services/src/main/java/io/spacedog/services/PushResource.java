@@ -37,7 +37,7 @@ import com.google.common.collect.Iterators;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
-import io.spacedog.utils.SchemaBuilder2;
+import io.spacedog.utils.Schema;
 import io.spacedog.utils.SpaceParams;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
@@ -88,17 +88,18 @@ public class PushResource extends Resource {
 	// Schema
 	//
 
-	public static SchemaBuilder2 getDefaultInstallationSchema() {
-		return SchemaBuilder2.builder("installation")//
-				.stringProperty(APP_ID, true)//
-				.stringProperty(PUSH_SERVICE, true)//
-				.stringProperty(TOKEN, true)//
-				.stringProperty(ENDPOINT, true)//
-				.stringProperty(USER_ID, false)//
-				.startObjectProperty(TAGS, false)//
-				.stringProperty(TAG_KEY, true)//
-				.stringProperty(TAG_VALUE, true)//
-				.endObjectProperty();
+	public static ObjectNode getDefaultInstallationSchema() {
+		return Schema.builder("installation")//
+				.string(APP_ID)//
+				.string(PUSH_SERVICE)//
+				.string(TOKEN)//
+				.string(ENDPOINT)//
+				.string(USER_ID)//
+				.object(TAGS).array()//
+				.string(TAG_KEY)//
+				.string(TAG_VALUE)//
+				.close()//
+				.build();
 	}
 
 	//

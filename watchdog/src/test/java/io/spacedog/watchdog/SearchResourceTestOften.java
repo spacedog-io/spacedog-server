@@ -12,7 +12,7 @@ import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.SchemaBuilder3;
+import io.spacedog.utils.Schema;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
@@ -27,11 +27,11 @@ public class SearchResourceTestOften extends Assert {
 		Backend test = SpaceClient.resetTestBackend();
 
 		SpaceClient.setSchema(//
-				SchemaBuilder3.builder("message").text("text").build(), //
+				Schema.builder("message").text("text").build(), //
 				test);
 
 		SpaceClient.setSchema(//
-				SchemaBuilder3.builder("rubric").text("name").build(), //
+				Schema.builder("rubric").text("name").build(), //
 				test);
 
 		// creates 4 messages and 1 rubric
@@ -77,7 +77,7 @@ public class SearchResourceTestOften extends Assert {
 		Backend test = SpaceClient.resetTestBackend();
 
 		SpaceClient.setSchema(//
-				SchemaBuilder3.builder("city").string("name").build(), //
+				Schema.builder("city").string("name").build(), //
 				test);
 
 		// creates 5 cities but whith only 3 distinct names

@@ -15,7 +15,7 @@ import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
-import io.spacedog.utils.SchemaBuilder2;
+import io.spacedog.utils.Schema;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
@@ -51,9 +51,8 @@ public class BatchResourceTestOften extends Assert {
 				.object()//
 				.put("method", "POST").put("path", "/1/schema/message")//
 				.node("content",
-						SchemaBuilder2.builder("message", "code")//
-								.stringProperty("code", true)//
-								.textProperty("text", "english", true).toString())//
+						Schema.builder("message").id("code")//
+								.string("code").text("text").toString())//
 				.end()//
 				.object()//
 				.put("method", "GET").put("path", "/1/login")//

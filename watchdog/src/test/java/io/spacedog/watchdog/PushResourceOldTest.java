@@ -12,7 +12,7 @@ import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.SchemaBuilder;
+import io.spacedog.utils.Schema;
 
 public class PushResourceOldTest extends Assert {
 
@@ -66,13 +66,15 @@ public class PushResourceOldTest extends Assert {
 	}
 
 	private ObjectNode buildSchema() {
-		return SchemaBuilder.builder("message") //
-				.property("text", "text").language("french").required().end() //
-				.property("author", "string").required().end() //
-				.objectProperty("responses").array() //
-				.property("text", "text").language("french").required().end() //
-				.property("author", "string").required().end() //
-				.end() //
+		return Schema.builder("message") //
+				.text("text").french()//
+				.string("author")//
+
+				.object("responses").array() //
+				.text("text").french()//
+				.string("author")//
+				.close() //
+
 				.build();
 	}
 
