@@ -81,6 +81,10 @@ public class SpaceContext {
 		return get().isDebug;
 	}
 
+	public static String backendId() {
+		return getCredentials().backendId();
+	}
+
 	//
 	// Check credentials static methods
 	//

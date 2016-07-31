@@ -33,38 +33,38 @@ public class LogResourceTestOften extends Assert {
 				Schema.builder("message").text("text").build(), //
 				test);
 
+		// create user in test backend
+		User user = SpaceClient.newCredentials(test, "user", "hi user");
+
 		// create a user in test2 backend
-		SpaceClient.newCredentials(test2, "fred", "hi fred");
+		User user2 = SpaceClient.newCredentials(test2, "user2", "hi user2");
 
 		// create message in test backend
 		String id = SpaceRequest.post("/1/data/message")//
-				.backend(test)//
+				.userAuth(user)//
 				.body("text", "What's up boys?")//
 				.go(201)//
 				.getFromJson("id")//
 				.asText();
 
 		// find message by id in test backend
-		SpaceRequest.get("/1/data/message/" + id).backend(test).go(200);
-
-		// create user in test backend
-		User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
+		SpaceRequest.get("/1/data/message/" + id).userAuth(user).go(200);
 
 		// find all messages in test backend
-		SpaceRequest.get("/1/data/message").userAuth(vince).go(200);
+		SpaceRequest.get("/1/data/message").userAuth(user).go(200);
 
 		// get all test backend logs
 		SpaceRequest.get("/1/log").size(8).adminAuth(test).go(200)//
 				.assertSizeEquals(8, "results")//
 				.assertEquals("GET", "results.0.method")//
 				.assertEquals("/1/data/message", "results.0.path")//
-				.assertEquals("POST", "results.1.method")//
-				.assertEquals("/1/credentials", "results.1.path")//
-				.assertEquals("GET", "results.2.method")//
-				.assertEquals("/1/data/message/" + id, "results.2.path")//
+				.assertEquals("GET", "results.1.method")//
+				.assertEquals("/1/data/message/" + id, "results.1.path")//
+				.assertEquals("POST", "results.2.method")//
+				.assertEquals("/1/data/message", "results.2.path")//
 				.assertEquals("POST", "results.3.method")//
-				.assertEquals("/1/data/message", "results.3.path")//
-				.assertEquals("POST", "results.4.method")//
+				.assertEquals("/1/credentials", "results.3.path")//
+				.assertEquals("PUT", "results.4.method")//
 				.assertEquals("/1/schema/message", "results.4.path")//
 				.assertEquals("POST", "results.5.method")//
 				.assertEquals("/1/backend/test", "results.5.path")//
@@ -262,7 +262,7 @@ public class LogResourceTestOften extends Assert {
 		// creates test backend and user
 		Backend test = SpaceClient.resetTestBackend();
 		SpaceRequest.get("/1/data").backend(test).go(200);
-		SpaceRequest.get("/1/data/user").backend(test).go(404);
+		SpaceRequest.get("/1/data/user").backend(test).go(403);
 		User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
 		SpaceRequest.get("/1/credentials/vince").userAuth(vince).go(200);
 
@@ -270,7 +270,7 @@ public class LogResourceTestOften extends Assert {
 		// logs
 		SpaceRequest.get("/1/log?minStatus=400").size(1).superdogAuth(test).go(200)//
 				.assertEquals("/1/data/user", "results.0.path")//
-				.assertEquals(404, "results.0.status");
+				.assertEquals(403, "results.0.status");
 
 		// superdog filters test backend logs to only get SUPER_ADMIN and lower
 		// logs

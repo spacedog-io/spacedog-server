@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
+import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;
 import net.codestory.http.Context;
@@ -173,13 +174,12 @@ public class DataStore {
 	public SearchHits search(String backendId, String type, String... terms) {
 
 		if (terms.length % 2 == 1)
-			throw new RuntimeException(
-					String.format("invalid search terms [%s]: missing term value", String.join(", ", terms)));
+			throw Exceptions.illegalArgument(//
+					"invalid search terms [%s]: missing term value", String.join(", ", terms));
 
 		BoolQueryBuilder builder = QueryBuilders.boolQuery();
-		for (int i = 0; i < terms.length; i = i + 2) {
+		for (int i = 0; i < terms.length; i = i + 2)
 			builder.filter(QueryBuilders.termQuery(terms[i], terms[i + 1]));
-		}
 
 		SearchResponse response = Start.get().getElasticClient()//
 				.prepareSearch(backendId, type).setTypes(type).setQuery(builder).get();

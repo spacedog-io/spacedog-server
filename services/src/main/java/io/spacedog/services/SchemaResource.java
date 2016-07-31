@@ -95,6 +95,8 @@ public class SchemaResource extends Resource {
 			elastic.createIndex(backendId, type, mapping, async, shards, replicas);
 		}
 
+		DataAccessControl.save(backendId, type, schema.acl());
+
 		return JsonPayload.saved(!indexExists, credentials.backendId(), "/1", "schema", type);
 	}
 

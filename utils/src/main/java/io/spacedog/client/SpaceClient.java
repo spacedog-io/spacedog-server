@@ -1,5 +1,6 @@
 package io.spacedog.client;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
 import io.spacedog.utils.Schema;
@@ -77,8 +78,14 @@ public class SpaceClient {
 	}
 
 	public static void setSchema(Schema schema, Backend backend) throws Exception {
-		SpaceRequest.post("/1/schema/" + schema.name())//
-				.adminAuth(backend).body(schema.toString()).go(201);
+		SpaceRequest.put("/1/schema/" + schema.name())//
+				.adminAuth(backend).body(schema).go(200, 201);
+	}
+
+	public static Schema getSchema(String name, Backend backend) throws Exception {
+		ObjectNode node = SpaceRequest.get("/1/schema/" + name)//
+				.adminAuth(backend).go(200).objectNode();
+		return new Schema(name, node);
 	}
 
 	public static Backend createBackend(Backend backend) throws UnirestException, Exception {

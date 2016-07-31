@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceClient.Backend;
+import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Schema;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
@@ -22,7 +23,7 @@ public class UserResourceTestOften extends Assert {
 		Backend test = SpaceClient.resetTestBackend();
 
 		// vince gets credentials
-		SpaceClient.newCredentials(test, "vince", "hi vince");
+		User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
 
 		// there is no default user schema
 		SpaceRequest.get("/1/schema/user").backend(test).go(404);
@@ -33,7 +34,7 @@ public class UserResourceTestOften extends Assert {
 				test);
 
 		// add user data to vince credentials
-		SpaceRequest.post("/1/user?id=vince").backend(test)//
+		SpaceRequest.post("/1/user?id=vince").userAuth(vince)//
 				.body("firstname", "Vincent", "lastname", "Miramond")//
 				.go(201);
 
@@ -41,13 +42,10 @@ public class UserResourceTestOften extends Assert {
 				.assertEquals("Vincent", "firstname");
 
 		// create new custom user
-		SpaceRequest.post("/1/credentials/").backend(test)//
-				.body("username", "fred", "password", "hi fred", "email", "fred@dog.com")//
-				.go(201);
+		User fred = SpaceClient.newCredentials(test, "fred", "hi fred");
+		SpaceRequest.get("/1/login").userAuth(fred).go(200);
 
-		SpaceRequest.get("/1/login").basicAuth("test", "fred", "hi fred").go(200);
-
-		SpaceRequest.post("/1/user?id=fred").backend(test)//
+		SpaceRequest.post("/1/user?id=fred").userAuth(fred)//
 				.body("firstname", "Frédérique", "lastname", "Fallière")//
 				.go(201);
 

@@ -69,11 +69,9 @@ public class StashResourceTestOften extends Assert {
 				.assertEquals(animals, "results.0")//
 				.assertEquals(jobs, "results.1");
 
-		// stash objects are also data objects
-		SpaceRequest.get("/1/data").refresh().backend(test).go(200)//
-				.assertSizeEquals(2, "results")//
-				.assertContainsValue("animals", "id")//
-				.assertContainsValue("jobs", "id");
+		// stash objects are not data objects
+		SpaceRequest.get("/1/data").refresh().adminAuth(test).go(200)//
+				.assertSizeEquals(0, "results");
 
 		// only admin deletes stash objects
 		SpaceRequest.delete("/1/stash/jobs").backend(test).go(401);

@@ -8,11 +8,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-import com.beust.jcommander.internal.Sets;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Sets;
 
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Json;
@@ -26,7 +26,7 @@ setterVisibility = Visibility.NONE)
 public class Credentials {
 
 	public static enum Level {
-		KEY, USER, OPERATOR, ADMIN, SUPER_ADMIN, SUPERDOG;
+		KEY, USER, ADMIN, SUPER_ADMIN, SUPERDOG;
 
 		public Level[] lowerOrEqual() {
 			return Arrays.copyOf(values(), ordinal() + 1);
@@ -149,7 +149,21 @@ public class Credentials {
 	public Set<String> roles() {
 		if (roles == null)
 			roles = Sets.newHashSet();
+
+		roles.add(defaultRole());
 		return roles;
+	}
+
+	private String defaultRole() {
+		if (Level.USER.equals(level))
+			return "user";
+		if (Level.ADMIN.equals(level))
+			return "admin";
+		if (Level.SUPER_ADMIN.equals(level))
+			return "admin";
+		if (Level.SUPERDOG.equals(level))
+			return "admin";
+		return "key";
 	}
 
 	public void roles(Set<String> value) {

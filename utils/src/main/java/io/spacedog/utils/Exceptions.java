@@ -18,8 +18,8 @@ public class Exceptions {
 		return new IllegalArgumentException(t);
 	}
 
-	public static NotFoundException notFound(String message, Object... args) {
-		return new NotFoundException(String.format(message, args));
+	public static NotFoundException notFound(String backendId, String type, String id) {
+		return new NotFoundException("[%s][%s] not found in backend [%s]", type, id, backendId);
 	}
 
 	public static SpaceException space(int httpStatus, String message, Object... args) {

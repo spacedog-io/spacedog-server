@@ -10,7 +10,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceClient;
@@ -19,6 +18,7 @@ import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Schema;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
@@ -53,6 +53,7 @@ public class ChauffeLeTestOften extends Assert {
 				.string("author") //
 				.close() //
 
+				.acl("user", DataPermission.create, DataPermission.search, DataPermission.update_all)//
 				.build();
 	}
 
@@ -77,69 +78,66 @@ public class ChauffeLeTestOften extends Assert {
 
 	public void chauffeLe(ChauffeLeEngine impl) throws Exception {
 
-		String threadId = impl.createSubject("je suis partie en mission en argentine", lui);
-		impl.addComment(threadId, "tu connais ?", lui);
-		impl.addComment(threadId, "hein, heu nan je ne parle pas espagnol", elle);
-		impl.addComment(threadId, "un pays génial, à la base, j'étais juste partie qq mois pour bosser", lui);
-		impl.addComment(threadId, "et puis finalement je suis resté un an", lui);
-		impl.addComment(threadId, "ha ouais.", elle);
+		String threadId = impl.createSubject(lui, "je suis partie en mission en argentine");
+		impl.addComment(lui, threadId, "tu connais ?");
+		impl.addComment(elle, threadId, "hein, heu nan je ne parle pas espagnol");
+		impl.addComment(lui, threadId, "un pays génial, à la base, j'étais juste partie qq mois pour bosser");
+		impl.addComment(lui, threadId, "et puis finalement je suis resté un an");
+		impl.addComment(elle, threadId, "ha ouais.");
 
-		threadId = impl.createSubject("ALORS ??? ton RDV TINDER ??", laCopine);
-		impl.addComment(threadId, "il tourne autour du pot", elle);
-		impl.addComment(threadId, "CHAUFFE LE !!!!!!!!!!", laCopine);
+		threadId = impl.createSubject(laCopine, "ALORS ??? ton RDV TINDER ??");
+		impl.addComment(elle, threadId, "il tourne autour du pot");
+		impl.addComment(laCopine, threadId, "CHAUFFE LE !!!!!!!!!!");
 
-		threadId = impl.createSubject("j'ai traversé la pampa", lui);
-		impl.addComment(threadId, "j'ai même été boire du café en Colombie, hein", lui);
-		impl.addComment(threadId, "mais que du café ;-)", lui);
-		impl.addComment(threadId, "hein hein", elle);
-		impl.addComment(threadId, "j'ai vu de la végétation, des arbres immenses...", lui);
+		threadId = impl.createSubject(lui, "j'ai traversé la pampa");
+		impl.addComment(lui, threadId, "j'ai même été boire du café en Colombie, hein");
+		impl.addComment(lui, threadId, "mais que du café ;-)");
+		impl.addComment(elle, threadId, "hein hein");
+		impl.addComment(lui, threadId, "j'ai vu de la végétation, des arbres immenses...");
 
-		threadId = impl.createSubject("CHAUFFE LE !!!!!!", laCopine);
+		threadId = impl.createSubject(laCopine, "CHAUFFE LE !!!!!!");
 
-		threadId = impl.createSubject("et, euh, le plus fort", lui);
-		impl.addComment(threadId, "t'as des dauphins roses", lui);
-		impl.addComment(threadId, "nan", elle);
+		threadId = impl.createSubject(lui, "et, euh, le plus fort");
+		impl.addComment(lui, threadId, "t'as des dauphins roses");
+		impl.addComment(elle, threadId, "nan");
 
-		impl.showWall();
+		impl.showWall(lui);
 	}
 
 	public interface ChauffeLeEngine {
-		String createSubject(String subject, SpaceClient.User user) throws Exception;
 
-		void addComment(String threadId, String comment, SpaceClient.User user) throws Exception;
+		String createSubject(User user, String subject) throws Exception;
 
-		Iterator<JsonNode> showWall() throws Exception;
+		void addComment(User user, String threadId, String comment) throws Exception;
+
+		Iterator<JsonNode> showWall(User user) throws Exception;
 	}
 
 	public static class BigPost implements ChauffeLeEngine {
 
 		@Override
-		public String createSubject(String subject, SpaceClient.User user) throws Exception {
+		public String createSubject(User user, String subject) throws Exception {
 
-			String bigPost = Json.objectBuilder().put("title", subject) //
-					.array("responses") //
-					.end()//
-					.build().toString();
-
-			return SpaceRequest.post("/1/data/bigpost").backend(backend).userAuth(user).body(bigPost).go(201)
+			return SpaceRequest.post("/1/data/bigpost").userAuth(user)//
+					.body("title", subject, "responses", Json.array())//
+					.go(201)//
 					.objectNode().get("id").asText();
 		}
 
 		@Override
-		public void addComment(String postId, String comment, SpaceClient.User user) throws Exception {
+		public void addComment(User user, String postId, String comment) throws Exception {
 
-			ObjectNode bigPost = SpaceRequest.get("/1/data/bigpost/{id}").backend(backend).routeParam("id", postId)
-					.go(200).objectNode();
+			ObjectNode bigPost = SpaceRequest.get("/1/data/bigpost/" + postId)//
+					.userAuth(user).go(200).objectNode();
 
-			((ArrayNode) bigPost.get("responses"))
-					.add(Json.objectBuilder().put("title", comment).put("author", user.username).build());
+			bigPost.withArray("responses")//
+					.add(Json.object("title", comment, "author", user.username));
 
-			SpaceRequest.put("/1/data/bigpost/" + postId).backend(backend).userAuth(user).body(bigPost.toString())
-					.go(200);
+			SpaceRequest.put("/1/data/bigpost/" + postId).userAuth(user).body(bigPost).go(200);
 		}
 
 		@Override
-		public Iterator<JsonNode> showWall() throws Exception {
+		public Iterator<JsonNode> showWall(User user) throws Exception {
 
 			String wallQuery = Json.objectBuilder()//
 					.put("from", 0)//
@@ -155,36 +153,31 @@ public class ChauffeLeTestOften extends Assert {
 					.object("match_all")//
 					.build().toString();
 
-			return SpaceRequest.post("/1/search/bigpost").refresh().backend(backend).body(wallQuery).go(200).jsonNode()
-					.get("results").elements();
+			return SpaceRequest.post("/1/search/bigpost").refresh().userAuth(user)//
+					.body(wallQuery).go(200).jsonNode().get("results").elements();
 		}
 	}
 
 	public static class SmallPost implements ChauffeLeEngine {
 
 		@Override
-		public String createSubject(String subject, SpaceClient.User user) throws Exception {
+		public String createSubject(User user, String subject) throws Exception {
 
-			String smallPost = Json.objectBuilder().put("title", subject).build().toString();
-
-			return SpaceRequest.post("/1/data/smallpost").backend(backend).userAuth(user).body(smallPost).go(201)
-					.objectNode().get("id").asText();
+			return SpaceRequest.post("/1/data/smallpost").userAuth(user)//
+					.body("title", subject).go(201).objectNode().get("id").asText();
 		}
 
 		@Override
-		public void addComment(String parentId, String comment, SpaceClient.User user) throws Exception {
+		public void addComment(SpaceClient.User user, String parentId, String comment) throws Exception {
 
-			String smallPost = Json.objectBuilder().put("title", comment)//
-					.put("parent", parentId)//
-					.build().toString();
-
-			SpaceRequest.post("/1/data/smallpost").backend(backend).userAuth(user).body(smallPost).go(201);
+			SpaceRequest.post("/1/data/smallpost").userAuth(user)//
+					.body("title", comment, "parent", parentId).go(201);
 		}
 
 		@Override
-		public Iterator<JsonNode> showWall() throws Exception {
+		public Iterator<JsonNode> showWall(User user) throws Exception {
 
-			String subjectQuery = Json.objectBuilder()//
+			ObjectNode subjectQuery = Json.objectBuilder()//
 					.put("from", 0)//
 					.put("size", 10)//
 					.array("sort")//
@@ -204,10 +197,10 @@ public class ChauffeLeTestOften extends Assert {
 					.object("not")//
 					.object("exists")//
 					.put("field", "parent")//
-					.build().toString();
+					.build();
 
-			JsonNode subjectResults = SpaceRequest.post("/1/search/smallpost").refresh().backend(backend)
-					.body(subjectQuery).go(200).jsonNode();
+			JsonNode subjectResults = SpaceRequest.post("/1/search/smallpost")//
+					.refresh().userAuth(user).body(subjectQuery).go(200).jsonNode();
 
 			JsonBuilder<ObjectNode> responsesQuery = Json.objectBuilder()//
 					.put("from", 0)//
@@ -235,8 +228,8 @@ public class ChauffeLeTestOften extends Assert {
 			while (subjects.hasNext())
 				responsesQuery.add(subjects.next().get("meta").get("id").asText());
 
-			SpaceRequest.post("/1/data/smallpost/search").backend(backend).body(responsesQuery.build().toString())
-					.go(200);
+			SpaceRequest.post("/1/search/smallpost")//
+					.userAuth(user).body(responsesQuery.build()).go(200);
 
 			return subjectResults.get("results").elements();
 		}

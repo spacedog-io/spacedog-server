@@ -22,7 +22,6 @@ import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
-import io.spacedog.utils.Backends;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Schema;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
@@ -36,6 +35,7 @@ public class DataResource2TestOften extends Assert {
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
 		SpaceClient.setSchema(SchemaResourceTestOften.buildSaleSchema(), test);
+		User fred = SpaceClient.newCredentials(test, "fred", "hi fred");
 
 		ObjectNode sale = Json.objectBuilder()//
 				.put("number", "1234567890")//
@@ -65,16 +65,20 @@ public class DataResource2TestOften extends Assert {
 
 		// create
 
-		SpaceResponse create = SpaceRequest.post("/1/data/sale").backend(test).body(sale).go(201).assertTrue("success")
-				.assertEquals("sale", "type").assertEquals(1, "version").assertNotNull("id");
+		SpaceResponse create = SpaceRequest.post("/1/data/sale")//
+				.userAuth(fred).body(sale).go(201)//
+				.assertTrue("success")//
+				.assertEquals("sale", "type")//
+				.assertEquals(1, "version")//
+				.assertNotNull("id");
 
 		String id = create.jsonNode().get("id").asText();
 
 		// find by id
 
-		SpaceResponse res1 = SpaceRequest.get("/1/data/sale/" + id).backend(test).go(200)//
-				.assertEquals(Backends.DEFAULT_USERNAME, "meta.createdBy")//
-				.assertEquals(Backends.DEFAULT_USERNAME, "meta.updatedBy")//
+		SpaceResponse res1 = SpaceRequest.get("/1/data/sale/" + id).userAuth(fred).go(200)//
+				.assertEquals("fred", "meta.createdBy")//
+				.assertEquals("fred", "meta.updatedBy")//
 				.assertEquals(1, "meta.version")//
 				.assertEquals("sale", "meta.type")//
 				.assertEquals(id, "meta.id")//
@@ -108,8 +112,8 @@ public class DataResource2TestOften extends Assert {
 
 		// find by simple text search
 
-		SpaceResponse res1b = SpaceRequest.get("/1/search/sale?q=museum").refresh().backend(test).go(200)
-				.assertEquals(1, "total");
+		SpaceResponse res1b = SpaceRequest.get("/1/search/sale?q=museum")//
+				.refresh().userAuth(fred).go(200).assertEquals(1, "total");
 
 		res1.assertEquals(res1b.getFromJson("results.0"));
 
@@ -121,20 +125,16 @@ public class DataResource2TestOften extends Assert {
 				.put("query", "museum")//
 				.build().toString();
 
-		SpaceResponse res1c = SpaceRequest.post("/1/data/sale/search").backend(test).body(query).go(200).assertEquals(1,
-				"total");
+		SpaceResponse res1c = SpaceRequest.post("/1/search/sale")//
+				.userAuth(fred).body(query).go(200).assertEquals(1, "total");
 
 		res1.assertEquals(res1c.getFromJson("results.0"));
-
-		// create user vince
-
-		User vince = SpaceClient.newCredentials(test, "vince", "hi vince", "vince@dog.com");
 
 		// small update no version should succeed
 
 		JsonNode updateJson2 = Json.objectBuilder().array("items").object().put("quantity", 7).build();
 
-		SpaceRequest.put("/1/data/sale/" + id).userAuth(vince).body(updateJson2).go(200)//
+		SpaceRequest.put("/1/data/sale/" + id).userAuth(fred).body(updateJson2).go(200)//
 				.assertTrue("success")//
 				.assertEquals("sale", "type")//
 				.assertEquals(2, "version")//
@@ -142,9 +142,9 @@ public class DataResource2TestOften extends Assert {
 
 		// check update is correct
 
-		SpaceResponse res3 = SpaceRequest.get("/1/data/sale/" + id).backend(test).go(200)//
-				.assertEquals(Backends.DEFAULT_USERNAME, "meta.createdBy")//
-				.assertEquals("vince", "meta.updatedBy")//
+		SpaceResponse res3 = SpaceRequest.get("/1/data/sale/" + id).userAuth(fred).go(200)//
+				.assertEquals("fred", "meta.createdBy")//
+				.assertEquals("fred", "meta.updatedBy")//
 				.assertEquals(createdAt, "meta.createdAt")//
 				.assertDateIsRecent("meta.updatedAt")//
 				.assertEquals(2, "meta.version")//
@@ -158,18 +158,18 @@ public class DataResource2TestOften extends Assert {
 
 		// update with invalid version should fail
 
-		SpaceRequest.put("/1/data/sale/" + id + "?version=1").backend(test)//
+		SpaceRequest.put("/1/data/sale/" + id).userAuth(fred).queryString("version", "1")//
 				.body("number", "0987654321").go(409).assertFalse("success");
 
 		// update with invalid version should fail
 
-		SpaceRequest.put("/1/data/sale/" + id + "?version=XXX").backend(test)//
+		SpaceRequest.put("/1/data/sale/" + id + "?version=XXX").userAuth(fred)//
 				.body("number", "0987654321").go(400).assertFalse("success");
 
 		// update with correct version should succeed
 
-		SpaceResponse req3d = SpaceRequest.put("/1/data/sale/" + id + "?version=2").backend(test)
-				.body("number", "0987654321").go(200);
+		SpaceResponse req3d = SpaceRequest.put("/1/data/sale/" + id).userAuth(fred)//
+				.queryString("version", "2").body("number", "0987654321").go(200);
 
 		req3d.assertTrue("success").assertEquals("sale", "type").assertEquals(3, "version").assertEquals(id, "id");
 
@@ -177,8 +177,8 @@ public class DataResource2TestOften extends Assert {
 
 		SpaceResponse res3e = SpaceRequest.get("/1/data/sale/" + id).backend(test).go(200);
 
-		res3e.assertEquals(Backends.DEFAULT_USERNAME, "meta.createdBy")//
-				.assertEquals(Backends.DEFAULT_USERNAME, "meta.updatedBy")//
+		res3e.assertEquals("fred", "meta.createdBy")//
+				.assertEquals("fred", "meta.updatedBy")//
 				.assertEquals(3, "meta.version")//
 				.assertEquals("sale", "meta.type")//
 				.assertEquals(id, "meta.id")//
@@ -190,14 +190,15 @@ public class DataResource2TestOften extends Assert {
 		assertEquals(res3.objectNode().deepCopy().without(Lists.newArrayList("meta", "number")),
 				res3e.objectNode().deepCopy().without(Lists.newArrayList("meta", "number")));
 
-		// fails to delete this sale since vince not the owner
-
+		// vince fails to update nor delete this sale since not the owner
+		User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
+		SpaceRequest.put("/1/data/sale/" + id).userAuth(vince)//
+				.body("number", "0123456789").go(403);
 		SpaceRequest.delete("/1/data/sale/" + id).userAuth(vince).go(403);
 
-		// deletes this sale since 'default' is the owner
-
-		SpaceRequest.delete("/1/data/sale/" + id).backend(test).go(200);
-		SpaceRequest.get("/1/data/sale/" + id).backend(test).go(404);
+		// fred deletes this sale since he is the owner
+		SpaceRequest.delete("/1/data/sale/" + id).userAuth(fred).go(200);
+		SpaceRequest.get("/1/data/sale/" + id).userAuth(fred).go(404);
 	}
 
 	@Test
@@ -310,55 +311,55 @@ public class DataResource2TestOften extends Assert {
 
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
+		User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
 
 		SpaceClient.setSchema(//
 				Schema.builder("message").string("text").build(), //
 				test);
 
-		SpaceRequest.post("/1/data/message").backend(test)//
+		SpaceRequest.post("/1/data/message").userAuth(vince)//
 				.body("text", "hello").go(201);
-		SpaceRequest.post("/1/data/message").backend(test)//
+		SpaceRequest.post("/1/data/message").userAuth(vince)//
 				.body("text", "bonjour").go(201);
-		SpaceRequest.post("/1/data/message").backend(test)//
+		SpaceRequest.post("/1/data/message").userAuth(vince)//
 				.body("text", "guttentag").go(201);
-		SpaceRequest.post("/1/data/message").backend(test)//
+		SpaceRequest.post("/1/data/message").userAuth(vince)//
 				.body("text", "hola").go(201);
 
 		// fetches messages by 4 pages of 1 object
 
 		Set<String> messages = Sets.newHashSet();
-		messages.addAll(fetchMessages(test, 0, 1));
-		messages.addAll(fetchMessages(test, 1, 1));
-		messages.addAll(fetchMessages(test, 2, 1));
-		messages.addAll(fetchMessages(test, 3, 1));
+		messages.addAll(fetchMessages(vince, 0, 1));
+		messages.addAll(fetchMessages(vince, 1, 1));
+		messages.addAll(fetchMessages(vince, 2, 1));
+		messages.addAll(fetchMessages(vince, 3, 1));
 
 		assertEquals(Sets.newHashSet("hello", "bonjour", "guttentag", "hola"), messages);
 
 		// fetches messages by 2 pages of 2 objects
 
 		messages.clear();
-		messages.addAll(fetchMessages(test, 0, 2));
-		messages.addAll(fetchMessages(test, 2, 2));
+		messages.addAll(fetchMessages(vince, 0, 2));
+		messages.addAll(fetchMessages(vince, 2, 2));
 
 		assertEquals(Sets.newHashSet("hello", "bonjour", "guttentag", "hola"), messages);
 
 		// fetches messages by a single page of 4 objects
 
 		messages.clear();
-		messages.addAll(fetchMessages(test, 0, 4));
+		messages.addAll(fetchMessages(vince, 0, 4));
 
 		assertEquals(Sets.newHashSet("hello", "bonjour", "guttentag", "hola"), messages);
 
 		// fails to fetch messages if from + size > 10000
 
-		SpaceRequest.get("/1/data/message").from(9999).size(10).backend(test).go(400);
-
+		SpaceRequest.get("/1/data/message").from(9999).size(10).userAuth(vince).go(400);
 	}
 
-	private Collection<String> fetchMessages(Backend backend, int from, int size) throws Exception {
+	private Collection<String> fetchMessages(User user, int from, int size) throws Exception {
 		JsonNode results = SpaceRequest.get("/1/data/message")//
 				.refresh().from(from).size(size)//
-				.backend(backend).go(200)//
+				.userAuth(user).go(200)//
 				.assertEquals(4, "total")//
 				.assertSizeEquals(size, "results")//
 				.getFromJson("results");

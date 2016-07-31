@@ -10,7 +10,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
@@ -27,11 +26,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
-import io.spacedog.services.DataStore.FilteredSearchBuilder;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -60,9 +59,10 @@ public class SearchResource extends Resource {
 	@Post("/1/search/")
 	public Payload postSearchAllTypes(String body, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
+		String[] types = DataAccessControl.types(DataPermission.search, credentials);
 		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
 		DataStore.get().refreshBackend(refresh, credentials.backendId());
-		ObjectNode result = searchInternal(credentials, null, body, context);
+		ObjectNode result = searchInternal(body, credentials, context, types);
 		return JsonPayload.json(result);
 	}
 
@@ -74,10 +74,11 @@ public class SearchResource extends Resource {
 		// TODO delete special types like user the right way
 		// credentials and user data at the same time
 		Credentials credentials = SpaceContext.checkAdminCredentials();
+		String[] types = DataAccessControl.types(DataPermission.delete_all, credentials);
 		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, true);
 		DataStore.get().refreshBackend(refresh, credentials.backendId());
 		DeleteByQueryResponse response = Start.get().getElasticClient()//
-				.deleteByQuery(query, credentials.backendId());
+				.deleteByQuery(query, credentials.backendId(), types);
 		return JsonPayload.json(response);
 	}
 
@@ -95,10 +96,13 @@ public class SearchResource extends Resource {
 	@Post("/1/search/:type/")
 	public Payload postSearchForType(String type, String body, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
-		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
-		DataStore.get().refreshType(refresh, credentials.backendId(), type);
-		ObjectNode result = searchInternal(credentials, type, body, context);
-		return JsonPayload.json(result);
+		if (DataAccessControl.check(credentials, type, DataPermission.search)) {
+			boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
+			DataStore.get().refreshType(refresh, credentials.backendId(), type);
+			ObjectNode result = searchInternal(body, credentials, context, type);
+			return JsonPayload.json(result);
+		}
+		throw Exceptions.forbidden("forbidden to search [%s] objects", type);
 	}
 
 	@Delete("/v1/search/:type")
@@ -106,52 +110,53 @@ public class SearchResource extends Resource {
 	@Delete("/1/search/:type")
 	@Delete("/1/search/:type/")
 	public Payload deleteSearchForType(String type, String query, Context context) {
-
-		// TODO delete special types like user the right way
-		// credentials and user data at the same time
 		Credentials credentials = SpaceContext.checkAdminCredentials();
-		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, true);
-		DataStore.get().refreshType(refresh, credentials.backendId(), type);
+		if (DataAccessControl.check(credentials, type, DataPermission.delete_all)) {
 
-		DeleteByQueryResponse response = Start.get().getElasticClient()//
-				.deleteByQuery(query, credentials.backendId(), type);
-
-		return JsonPayload.json(response);
-	}
-
-	@Post("/1/filter/:type")
-	@Post("/1/filter/:type")
-	public Payload postFilterForType(String type, String body, Context context) {
-		try {
-			Credentials credentials = SpaceContext.checkCredentials();
-			boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
+			boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, true);
 			DataStore.get().refreshType(refresh, credentials.backendId(), type);
-			FilteredSearchBuilder builder = DataStore.get().searchBuilder(credentials.backendId(), type)
-					.applyContext(context).applyFilters(Json.readObject(body));
-			return JsonPayload.json(extractResults(builder.get(), context, credentials));
 
-		} catch (InterruptedException | ExecutionException e) {
-			throw new RuntimeException(e);
+			DeleteByQueryResponse response = Start.get().getElasticClient()//
+					.deleteByQuery(query, credentials.backendId(), type);
+
+			return JsonPayload.json(response);
 		}
+		throw Exceptions.forbidden("forbidden to delete [%s] objects", type);
 	}
+
+	// @Post("/1/filter/:type")
+	// @Post("/1/filter/:type")
+	// public Payload postFilterForType(String type, String body, Context
+	// context) {
+	// try {
+	// Credentials credentials = SpaceContext.checkCredentials();
+	// boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
+	// DataStore.get().refreshType(refresh, credentials.backendId(), type);
+	// FilteredSearchBuilder builder =
+	// DataStore.get().searchBuilder(credentials.backendId(), type)
+	// .applyContext(context).applyFilters(Json.readObject(body));
+	// return JsonPayload.json(extractResults(builder.get(), context,
+	// credentials));
+	//
+	// } catch (InterruptedException | ExecutionException e) {
+	// throw new RuntimeException(e);
+	// }
+	// }
 
 	//
 	// implementation
 	//
 
-	ObjectNode searchInternal(Credentials credentials, String type, String jsonQuery, Context context) {
+	ObjectNode searchInternal(String jsonQuery, Credentials credentials, Context context, String... types) {
 
 		SearchRequestBuilder search = null;
 		ElasticClient elastic = Start.get().getElasticClient();
+		String[] aliases = elastic.toAliases(credentials.backendId(), types);
 
-		if (Strings.isNullOrEmpty(type)) {
-			String[] indices = elastic.toIndices(credentials.backendId());
-			if (indices.length == 0)
-				return Json.object("took", 0, "total", 0, "results", Json.array());
-			else
-				search = elastic.prepareSearch().setIndices(indices);
-		} else
-			search = elastic.prepareSearch(credentials.backendId(), type).setTypes(type);
+		if (aliases.length == 0)
+			return Json.object("took", 0, "total", 0, "results", Json.array());
+
+		search = elastic.prepareSearch().setIndices(aliases).setTypes(types);
 
 		if (Strings.isNullOrEmpty(jsonQuery)) {
 

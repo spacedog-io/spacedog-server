@@ -138,6 +138,7 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest body(Schema schema) {
+		this.bodyJson = schema.node();
 		this.body = schema.toString();
 		return this;
 	}

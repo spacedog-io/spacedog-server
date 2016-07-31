@@ -179,6 +179,7 @@ public class Start {
 				.add(PushResource.get())//
 				.add(ShareResource.get())//
 				.add(StashResource.get())//
+				.add(SettingsResource.get())//
 				.add(SearchResource.get());
 
 		routes.filter(new CrossOriginFilter())//

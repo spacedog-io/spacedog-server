@@ -3,6 +3,11 @@
  */
 package io.spacedog.utils;
 
+import java.util.HashMap;
+import java.util.Set;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class Schema {
@@ -50,5 +55,27 @@ public class Schema {
 	@Override
 	public String toString() {
 		return node.toString();
+	}
+
+	public DataTypeAccessControl acl() {
+		JsonNode acl = content().get("_acl");
+		if (acl == null)
+			return null;
+
+		try {
+			return Json.mapper().treeToValue(acl, DataTypeAccessControl.class);
+		} catch (JsonProcessingException e) {
+			// TODO add an more explicit message
+			throw Exceptions.illegalArgument(e);
+		}
+	}
+
+	public void acl(DataTypeAccessControl acl) {
+		content().set("_acl", Json.mapper().valueToTree(acl));
+	}
+
+	public static class DataTypeAccessControl extends HashMap<String, Set<DataPermission>> {
+
+		private static final long serialVersionUID = 7433673020746769733L;
 	}
 }

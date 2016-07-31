@@ -16,16 +16,13 @@ public class CredentialsTest extends Assert {
 				new Level[] { Level.KEY, Level.USER }, //
 				Level.USER.lowerOrEqual());
 		assertArrayEquals(//
-				new Level[] { Level.KEY, Level.USER, Level.OPERATOR }, //
-				Level.OPERATOR.lowerOrEqual());
-		assertArrayEquals(//
-				new Level[] { Level.KEY, Level.USER, Level.OPERATOR, Level.ADMIN }, //
+				new Level[] { Level.KEY, Level.USER, Level.ADMIN }, //
 				Level.ADMIN.lowerOrEqual());
 		assertArrayEquals(//
-				new Level[] { Level.KEY, Level.USER, Level.OPERATOR, Level.ADMIN, Level.SUPER_ADMIN }, //
+				new Level[] { Level.KEY, Level.USER, Level.ADMIN, Level.SUPER_ADMIN }, //
 				Level.SUPER_ADMIN.lowerOrEqual());
 		assertArrayEquals(//
-				new Level[] { Level.KEY, Level.USER, Level.OPERATOR, Level.ADMIN, Level.SUPER_ADMIN, Level.SUPERDOG }, //
+				new Level[] { Level.KEY, Level.USER, Level.ADMIN, Level.SUPER_ADMIN, Level.SUPERDOG }, //
 				Level.SUPERDOG.lowerOrEqual());
 	}
 }

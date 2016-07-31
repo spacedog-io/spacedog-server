@@ -13,7 +13,6 @@ import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
-import io.spacedog.utils.Backends;
 import io.spacedog.utils.Json;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
@@ -26,6 +25,7 @@ public class DataResourceTestOften extends Assert {
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
 		SpaceClient.setSchema(SchemaResourceTestOften.buildCarSchema(), test);
+		SpaceClient.User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
 
 		JsonNode car = Json.objectBuilder() //
 				.put("serialNumber", "1234567890") //
@@ -45,15 +45,15 @@ public class DataResourceTestOften extends Assert {
 
 		// create
 
-		String id = SpaceRequest.post("/1/data/car").backend(test).body(car).go(201)//
+		String id = SpaceRequest.post("/1/data/car").userAuth(vince).body(car).go(201)//
 				.assertTrue("success").assertEquals("car", "type").assertNotNull("id")//
 				.getFromJson("id").asText();
 
 		// find by id
 
-		SpaceResponse res1 = SpaceRequest.get("/1/data/car/" + id).backend(test).go(200)//
-				.assertEquals(Backends.DEFAULT_USERNAME, "meta.createdBy")//
-				.assertEquals(Backends.DEFAULT_USERNAME, "meta.updatedBy")//
+		SpaceResponse res1 = SpaceRequest.get("/1/data/car/" + id).userAuth(vince).go(200)//
+				.assertEquals("vince", "meta.createdBy")//
+				.assertEquals("vince", "meta.updatedBy")//
 				.assertDateIsRecent("meta.createdAt")//
 				.assertEqualsWithoutMeta(car);
 
@@ -62,19 +62,16 @@ public class DataResourceTestOften extends Assert {
 
 		// find by full text search
 
-		SpaceRequest.get("/1/search/car?q={q}").refresh().backend(test).routeParam("q", "inVENT*").go(200)
+		SpaceRequest.get("/1/search/car").refresh()//
+				.userAuth(vince).queryString("q", "inVENT*").go(200)//
 				.assertEquals(id, "results.0.meta.id");
-
-		// create user vince
-
-		SpaceClient.User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
 
 		// update
 
 		SpaceRequest.put("/1/data/car/" + id).userAuth(vince).body("color", "blue").go(200);
 
 		SpaceResponse res3 = SpaceRequest.get("/1/data/car/" + id).backend(test).go(200)//
-				.assertEquals(Backends.DEFAULT_USERNAME, "meta.createdBy")//
+				.assertEquals("vince", "meta.createdBy")//
 				.assertEquals("vince", "meta.updatedBy")//
 				.assertEquals(createdAt, "meta.createdAt")//
 				.assertDateIsRecent("meta.updatedAt")//
@@ -86,7 +83,7 @@ public class DataResourceTestOften extends Assert {
 
 		// delete
 
-		SpaceRequest.delete("/1/data/car/" + id).backend(test).go(200);
-		SpaceRequest.get("/1/data/car/" + id).backend(test).go(404);
+		SpaceRequest.delete("/1/data/car/" + id).userAuth(vince).go(200);
+		SpaceRequest.get("/1/data/car/" + id).userAuth(vince).go(404);
 	}
 }

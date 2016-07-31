@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceClient.Backend;
+import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Schema;
@@ -75,6 +76,7 @@ public class SearchResourceTestOften extends Assert {
 
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
+		User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
 
 		SpaceClient.setSchema(//
 				Schema.builder("city").string("name").build(), //
@@ -82,11 +84,11 @@ public class SearchResourceTestOften extends Assert {
 
 		// creates 5 cities but whith only 3 distinct names
 
-		SpaceRequest.post("/1/data/city").backend(test).body("name", "Paris").go(201);
-		SpaceRequest.post("/1/data/city").backend(test).body("name", "Bordeaux").go(201);
-		SpaceRequest.post("/1/data/city").backend(test).body("name", "Nice").go(201);
-		SpaceRequest.post("/1/data/city").backend(test).body("name", "Paris").go(201);
-		SpaceRequest.post("/1/data/city").backend(test).body("name", "Nice").go(201);
+		SpaceRequest.post("/1/data/city").userAuth(vince).body("name", "Paris").go(201);
+		SpaceRequest.post("/1/data/city").userAuth(vince).body("name", "Bordeaux").go(201);
+		SpaceRequest.post("/1/data/city").userAuth(vince).body("name", "Nice").go(201);
+		SpaceRequest.post("/1/data/city").userAuth(vince).body("name", "Paris").go(201);
+		SpaceRequest.post("/1/data/city").userAuth(vince).body("name", "Nice").go(201);
 
 		// search with 'terms' aggregation to get
 		// all 3 distinct city names Paris, Bordeaux and Nice
@@ -99,7 +101,7 @@ public class SearchResourceTestOften extends Assert {
 				.put("field", "name")//
 				.build();
 
-		SpaceRequest.post("/1/search").refresh().backend(test).body(query).go(200)//
+		SpaceRequest.post("/1/search").refresh().userAuth(vince).body(query).go(200)//
 				.assertEquals(0, "results")//
 				.assertEquals(3, "aggregations.distinctCities.buckets")//
 				.assertContainsValue("Paris", "key")//

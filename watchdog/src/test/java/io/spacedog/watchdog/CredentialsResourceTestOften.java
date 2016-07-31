@@ -54,7 +54,7 @@ public class CredentialsResourceTestOften extends Assert {
 				.assertEquals("vince", "username")//
 				.assertEquals("vince@dog.com", "email")//
 				.assertEquals("USER", "level")//
-				.assertSizeEquals(0, "roles")//
+				.assertSizeEquals(1, "roles")//
 				.assertDateIsRecent("createdAt")//
 				.assertDateIsRecent("updatedAt");
 
@@ -249,7 +249,8 @@ public class CredentialsResourceTestOften extends Assert {
 
 		// fred gets his credentials roles
 		SpaceRequest.get("/1/credentials/fred/roles").userAuth(fred).go(200)//
-				.assertSizeEquals(0);
+				.assertSizeEquals(1)//
+				.assertEquals("user", "0");
 
 		// fred fails to set a role since he is no admin
 		SpaceRequest.put("/1/credentials/fred/roles/silver").userAuth(fred).go(401);
@@ -258,7 +259,8 @@ public class CredentialsResourceTestOften extends Assert {
 		SpaceRequest.put("/1/credentials/fred/roles/silver").adminAuth(test).go(200);
 		SpaceRequest.put("/1/credentials/fred/roles/gold").adminAuth(test).go(200);
 		SpaceRequest.get("/1/credentials/fred/roles").adminAuth(test).go(200)//
-				.assertSizeEquals(2)//
+				.assertSizeEquals(3)//
+				.assertContains(TextNode.valueOf("user"))//
 				.assertContains(TextNode.valueOf("silver"))//
 				.assertContains(TextNode.valueOf("gold"));
 
@@ -268,13 +270,15 @@ public class CredentialsResourceTestOften extends Assert {
 		// admin deletes one of fred's roles
 		SpaceRequest.delete("/1/credentials/fred/roles/gold").adminAuth(test).go(200);
 		SpaceRequest.get("/1/credentials/fred/roles").adminAuth(test).go(200)//
-				.assertSizeEquals(1)//
+				.assertSizeEquals(2)//
+				.assertContains(TextNode.valueOf("user"))//
 				.assertContains(TextNode.valueOf("silver"));
 
 		// admin deletes all fred's roles
 		SpaceRequest.delete("/1/credentials/fred/roles").adminAuth(test).go(200);
 		SpaceRequest.get("/1/credentials/fred/roles").userAuth(fred).go(200)//
-				.assertSizeEquals(0);
+				.assertSizeEquals(1)//
+				.assertEquals("user", "0");
 	}
 
 }

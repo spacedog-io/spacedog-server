@@ -8,13 +8,17 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.Schema;
+import io.spacedog.utils.Schema.DataTypeAccessControl;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
@@ -42,13 +46,28 @@ public class PushResourceTestOften extends Assert {
 		// prepare
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
-		SpaceClient.initPushDefaultSchema(test);
+
+		// prepare users
 		User dave = SpaceClient.newCredentials(test, "dave", "hi dave");
 		User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
 		User fred = SpaceClient.newCredentials(test, "fred", "hi fred");
 		User nath = SpaceClient.newCredentials(test, "nath", "hi nath");
 
-		// unauthenticated user installs joho
+		// prepare installation schema
+		SpaceClient.initPushDefaultSchema(test);
+
+		// add create permission to guest requests
+		Schema schema = SpaceClient.getSchema("installation", test);
+		DataTypeAccessControl acl = new DataTypeAccessControl();
+		acl.put("key", Sets.newHashSet(DataPermission.create, DataPermission.update));
+		acl.put("user", Sets.newHashSet(DataPermission.create, DataPermission.read, //
+				DataPermission.update));
+		acl.put("admin", Sets.newHashSet(DataPermission.create, DataPermission.update_all, //
+				DataPermission.search, DataPermission.delete_all));
+		schema.acl(acl);
+		SpaceClient.setSchema(schema, test);
+
+		// non authenticated user installs joho
 		// and fails to set installation userId and endpoint fields
 
 		String unknownInstallId = SpaceRequest.post("/1/installation")//
@@ -291,33 +310,15 @@ public class PushResourceTestOften extends Assert {
 				.body(push)//
 				.go(404);
 
-		// vinces deletes by mistake dave's installation
-		// vince pushes to all joho installations
-		// and gets an push error for dave's installation
+		// vince can not read, update nor delete dave's installation
 
-		ObjectNode daveInstall = SpaceRequest.get("/1/data/installation/" + daveInstallId)//
-				.userAuth(vince).go(200).objectNode();
-
-		daveInstall.remove(ENDPOINT);
+		SpaceRequest.get("/1/data/installation/" + daveInstallId)//
+				.userAuth(vince).go(403);
 
 		SpaceRequest.put("/1/data/installation/" + daveInstallId)//
-				.queryString("strict", "true")//
 				.userAuth(vince)//
-				.body(daveInstall)//
-				.go(200);
-
-		SpaceRequest.post("/1/push").refresh()//
-				.userAuth(vince)//
-				.body(APP_ID, "joho", MESSAGE, "This is a push!")//
-				.go(200)//
-				.assertTrue(FAILURES)//
-				.assertSizeEquals(4, PUSHED_TO)//
-				.assertContainsValue(unknownInstallId, ID)//
-				.assertContainsValue("dave", USER_ID)//
-				.assertContainsValue("property [endpoint] is missing", "message")//
-				.assertContainsValue("vince", USER_ID)//
-				.assertContainsValue("fred", USER_ID);
-
+				.body(APP_ID, "joho2")//
+				.go(403);
 	}
 
 	private ObjectNode toJsonTag(String key, String value) {

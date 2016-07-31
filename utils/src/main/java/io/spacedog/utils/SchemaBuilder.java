@@ -6,15 +6,14 @@ package io.spacedog.utils;
 import java.util.Arrays;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Sets;
+
+import io.spacedog.utils.Schema.DataTypeAccessControl;
 
 public class SchemaBuilder {
 
 	public static SchemaBuilder builder(String type) {
 		return new SchemaBuilder(type);
-	}
-
-	public SchemaBuilder object(String key) {
-		return property(key, SchemaType.OBJECT);
 	}
 
 	public SchemaBuilder enumm(String key) {
@@ -69,6 +68,10 @@ public class SchemaBuilder {
 		return property(key, SchemaType.STASH);
 	}
 
+	public SchemaBuilder object(String key) {
+		return property(key, SchemaType.OBJECT);
+	}
+
 	public SchemaBuilder close() {
 		currentPropertyType = null;
 		builder.end();
@@ -76,12 +79,23 @@ public class SchemaBuilder {
 	}
 
 	public Schema build() {
-		return new Schema(name, builder.build());
+		ObjectNode node = builder.build();
+		if (acl != null)
+			node.with(name).set("_acl", Json.mapper().valueToTree(acl));
+		return new Schema(name, node);
 	}
 
 	@Override
 	public String toString() {
 		return build().toString();
+	}
+
+	public SchemaBuilder acl(String role, DataPermission... permissions) {
+		if (acl == null)
+			acl = new DataTypeAccessControl();
+
+		acl.put(role, Sets.newHashSet(permissions));
+		return this;
 	}
 
 	public SchemaBuilder id(String key) {
@@ -183,6 +197,7 @@ public class SchemaBuilder {
 
 	private String name;
 	private JsonBuilder<ObjectNode> builder;
+	private DataTypeAccessControl acl;
 	private SchemaType currentPropertyType = SchemaType.OBJECT;
 
 	private SchemaBuilder(String name) {

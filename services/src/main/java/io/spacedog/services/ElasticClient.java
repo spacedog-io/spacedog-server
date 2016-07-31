@@ -125,7 +125,7 @@ public class ElasticClient {
 		if (response.isFound())
 			return true;
 		if (throwNotFound)
-			throw Exceptions.notFound("object of type [%s] and id [%s] not found", type, id);
+			throw Exceptions.notFound(backendId, type, id);
 		return false;
 	}
 

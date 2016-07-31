@@ -299,9 +299,7 @@ public class CredentialsResource extends Resource {
 
 		if (!response.isExists()) {
 			if (throwNotFound)
-				throw Exceptions.notFound(//
-						"no credentials found for username [%s] in backend [%s]", //
-						username, backendId);
+				throw Exceptions.notFound(backendId, TYPE, username);
 			else
 				return Optional.empty();
 		}
