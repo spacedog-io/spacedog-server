@@ -35,7 +35,7 @@ import net.codestory.http.annotations.Prefix;
 import net.codestory.http.filters.PayloadSupplier;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/1")
+@Prefix("/1/log")
 public class LogResource extends Resource {
 
 	public static final String TYPE = "log";
@@ -61,8 +61,8 @@ public class LogResource extends Resource {
 	// Routes
 	//
 
-	@Get("/log")
-	@Get("/log/")
+	@Get("")
+	@Get("/")
 	public Payload getAll(Context context) {
 
 		Credentials credentials = SpaceContext.checkAdminCredentials(false);
@@ -87,8 +87,8 @@ public class LogResource extends Resource {
 		return extractLogs(response);
 	}
 
-	@Delete("/log")
-	@Delete("/log/")
+	@Delete("")
+	@Delete("/")
 	public Payload purgeBackend(Context context) {
 
 		Credentials credentials = SpaceContext.checkSuperDogCredentials(true);

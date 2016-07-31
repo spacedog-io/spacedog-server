@@ -13,8 +13,6 @@ public class AdminResource extends Resource {
 	// Routes
 	//
 
-	@Get("/v1/admin/login")
-	@Get("/v1/admin/login/")
 	@Get("/1/admin/login")
 	@Get("/1/admin/login/")
 	public Payload getLogin() {

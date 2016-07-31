@@ -106,15 +106,6 @@ public class BackendResource extends Resource {
 		return JsonPayload.success();
 	}
 
-	@Get("/v1/admin/login")
-	@Get("/v1/admin/login/")
-	@Get("/1/admin/login")
-	@Get("/1/admin/login/")
-	public Payload getLogin() {
-		SpaceContext.checkAdminCredentials();
-		return JsonPayload.success();
-	}
-
 	//
 	// Implementation
 	//

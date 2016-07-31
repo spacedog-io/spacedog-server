@@ -77,8 +77,6 @@ public class CredentialsResource extends Resource {
 	// Routes
 	//
 
-	@Get("/v1/login")
-	@Get("/v1/login/")
 	@Get("/1/login")
 	@Get("/1/login/")
 	public Payload login(Context context) {
@@ -86,8 +84,6 @@ public class CredentialsResource extends Resource {
 		return JsonPayload.success();
 	}
 
-	@Get("/v1/logout")
-	@Get("/v1/logout/")
 	@Get("/1/logout")
 	@Get("/1/logout/")
 	public Payload logout(Context context) {

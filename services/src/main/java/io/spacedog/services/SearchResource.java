@@ -27,36 +27,33 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
 import io.spacedog.utils.Check;
+import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
-import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
+import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
 
-//@Prefix("/1")
+@Prefix("/1/search")
 public class SearchResource extends Resource {
 
 	//
 	// Routes
 	//
 
-	@Get("/v1/search")
-	@Get("/v1/search/")
-	@Get("/1/search")
-	@Get("/1/search/")
+	@Get("")
+	@Get("/")
 	public Payload getSearchAllTypes(Context context) {
 		return postSearchAllTypes(null, context);
 	}
 
-	@Post("/v1/search")
-	@Post("/v1/search/")
-	@Post("/1/search")
-	@Post("/1/search/")
+	@Post("")
+	@Post("/")
 	public Payload postSearchAllTypes(String body, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 		String[] types = DataAccessControl.types(DataPermission.search, credentials);
@@ -66,10 +63,8 @@ public class SearchResource extends Resource {
 		return JsonPayload.json(result);
 	}
 
-	@Delete("/v1/search")
-	@Delete("/v1/search/")
-	@Delete("/1/search")
-	@Delete("/1/search/")
+	@Delete("")
+	@Delete("/")
 	public Payload deleteAllTypes(String query, Context context) {
 		// TODO delete special types like user the right way
 		// credentials and user data at the same time
@@ -82,18 +77,14 @@ public class SearchResource extends Resource {
 		return JsonPayload.json(response);
 	}
 
-	@Get("/v1/search/:type")
-	@Get("/v1/search/:type/")
-	@Get("/1/search/:type")
-	@Get("/1/search/:type/")
+	@Get("/:type")
+	@Get("/:type/")
 	public Payload getSearchForType(String type, Context context) {
 		return postSearchForType(type, null, context);
 	}
 
-	@Post("/v1/search/:type")
-	@Post("/v1/search/:type/")
-	@Post("/1/search/:type")
-	@Post("/1/search/:type/")
+	@Post("/:type")
+	@Post("/:type/")
 	public Payload postSearchForType(String type, String body, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 		if (DataAccessControl.check(credentials, type, DataPermission.search)) {
@@ -105,10 +96,8 @@ public class SearchResource extends Resource {
 		throw Exceptions.forbidden("forbidden to search [%s] objects", type);
 	}
 
-	@Delete("/v1/search/:type")
-	@Delete("/v1/search/:type/")
-	@Delete("/1/search/:type")
-	@Delete("/1/search/:type/")
+	@Delete("/:type")
+	@Delete("/:type/")
 	public Payload deleteSearchForType(String type, String query, Context context) {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		if (DataAccessControl.check(credentials, type, DataPermission.delete_all)) {

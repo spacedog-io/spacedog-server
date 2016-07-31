@@ -35,8 +35,6 @@ public class MailResource extends Resource {
 	// Routes
 	//
 
-	@Post("/v1/mail")
-	@Post("/v1/mail/")
 	@Post("/1/mail")
 	@Post("/1/mail/")
 	public Payload post(Context context) {

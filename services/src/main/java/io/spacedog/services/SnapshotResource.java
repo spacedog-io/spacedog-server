@@ -36,7 +36,7 @@ import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/1")
+@Prefix("/1/snapshot")
 public class SnapshotResource extends Resource {
 
 	private static final String PLATFORM_SNAPSHOT_PREFIX = "all";
@@ -47,8 +47,8 @@ public class SnapshotResource extends Resource {
 	// routes
 	//
 
-	@Get("/snapshot")
-	@Get("/snapshot/")
+	@Get("")
+	@Get("/")
 	public Payload getSnapshotAll() {
 
 		SpaceContext.checkAdminCredentials(false);
@@ -64,8 +64,8 @@ public class SnapshotResource extends Resource {
 		return JsonPayload.json(payload);
 	}
 
-	@Get("/snapshot/latest")
-	@Get("/snapshot/latest/")
+	@Get("/latest")
+	@Get("/latest/")
 	public Payload getSnapshotLatest() {
 
 		SpaceContext.checkAdminCredentials(false);
@@ -74,8 +74,8 @@ public class SnapshotResource extends Resource {
 				: JsonPayload.json(snapshots.get(0).toJson());
 	}
 
-	@Get("/snapshot/:id")
-	@Get("/snapshot/:id/")
+	@Get("/:id")
+	@Get("/:id/")
 	public Payload getSnapshotById(String snapshotId) {
 
 		SpaceContext.checkAdminCredentials(false);
@@ -83,8 +83,8 @@ public class SnapshotResource extends Resource {
 		return JsonPayload.json(snapshot.toJson());
 	}
 
-	@Post("/snapshot")
-	@Post("/snapshot/")
+	@Post("")
+	@Post("/")
 	public Payload postSnapshot(Context context) {
 
 		SpaceContext.checkSuperDogCredentials(false);
@@ -119,8 +119,8 @@ public class SnapshotResource extends Resource {
 		return JsonPayload.json(jsonResponse, status);
 	}
 
-	@Post("/snapshot/latest/restore")
-	@Post("/snapshot/latest/restore/")
+	@Post("/latest/restore")
+	@Post("/latest/restore/")
 	public Payload postSnapshotLatestRestore(Context context) {
 
 		SpaceContext.checkSuperDogCredentials(false);
@@ -133,8 +133,8 @@ public class SnapshotResource extends Resource {
 				context.query().getBoolean(WAIT_FOR_COMPLETION, false));
 	}
 
-	@Post("/snapshot/:id/restore")
-	@Post("/snapshot/:id/restore/")
+	@Post("/:id/restore")
+	@Post("/:id/restore/")
 	public Payload postSnapshotRestoreById(String snapshotId, Context context) {
 
 		SpaceContext.checkSuperDogCredentials(false);

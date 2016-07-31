@@ -12,45 +12,40 @@ import org.elasticsearch.common.Strings;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Schema;
 import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
+import net.codestory.http.annotations.Prefix;
 import net.codestory.http.annotations.Put;
 import net.codestory.http.payload.Payload;
 
-//@Prefix("/1/data")
+@Prefix("/1/data")
 public class DataResource extends Resource {
 
 	//
 	// Routes
 	//
 
-	@Get("/v1/data")
-	@Get("/v1/data/")
-	@Get("/1/data")
-	@Get("/1/data/")
+	@Get("")
+	@Get("/")
 	public Payload getAll(Context context) {
 		return SearchResource.get().getSearchAllTypes(context);
 	}
 
-	@Get("/v1/data/:type")
-	@Get("/v1/data/:type/")
-	@Get("/1/data/:type")
-	@Get("/1/data/:type/")
+	@Get("/:type")
+	@Get("/:type/")
 	public Payload getByType(String type, Context context) {
 		return SearchResource.get().getSearchForType(type, context);
 	}
 
-	@Post("/v1/data/:type")
-	@Post("/v1/data/:type/")
-	@Post("/1/data/:type")
-	@Post("/1/data/:type/")
+	@Post("/:type")
+	@Post("/:type/")
 	public Payload post(String type, String body, Context context) {
 
 		Credentials credentials = SpaceContext.checkCredentials();
@@ -91,18 +86,14 @@ public class DataResource extends Resource {
 		throw Exceptions.forbidden("forbidden to create [%s] objects", type);
 	}
 
-	@Delete("/v1/data/:type")
-	@Delete("/v1/data/:type/")
-	@Delete("/1/data/:type")
-	@Delete("/1/data/:type/")
+	@Delete("/:type")
+	@Delete("/:type/")
 	public Payload deleteByType(String type, Context context) {
 		return SearchResource.get().deleteSearchForType(type, null, context);
 	}
 
-	@Get("/v1/data/:type/:id")
-	@Get("/v1/data/:type/:id/")
-	@Get("/1/data/:type/:id")
-	@Get("/1/data/:type/:id/")
+	@Get("/:type/:id")
+	@Get("/:type/:id/")
 	public Payload getById(String type, String id, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 		if (DataAccessControl.check(credentials, type, DataPermission.read_all, DataPermission.search)) {
@@ -121,10 +112,8 @@ public class DataResource extends Resource {
 		throw Exceptions.forbidden("forbidden to read [%s] objects", type);
 	}
 
-	@Put("/v1/data/:type/:id")
-	@Put("/v1/data/:type/:id/")
-	@Put("/1/data/:type/:id")
-	@Put("/1/data/:type/:id/")
+	@Put("/:type/:id")
+	@Put("/:type/:id/")
 	public Payload put(String type, String id, String body, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 
@@ -164,10 +153,8 @@ public class DataResource extends Resource {
 		}
 	}
 
-	@Delete("/v1/data/:type/:id")
-	@Delete("/v1/data/:type/:id/")
-	@Delete("/1/data/:type/:id")
-	@Delete("/1/data/:type/:id/")
+	@Delete("/:type/:id")
+	@Delete("/:type/:id/")
 	public Payload deleteById(String type, String id, Context context) {
 		Credentials credentials = SpaceContext.checkCredentials();
 		ElasticClient elastic = Start.get().getElasticClient();
@@ -187,24 +174,6 @@ public class DataResource extends Resource {
 						"not the owner of object of type [%s] and id [%s]", type, id);
 		}
 		throw Exceptions.forbidden("forbidden to delete [%s] objects", type);
-	}
-
-	@Post("/v1/data/search")
-	@Post("/v1/data/search/")
-	@Post("/1/data/search")
-	@Post("/1/data/search/")
-	@Deprecated
-	public Payload searchAllTypes(String body, Context context) {
-		return SearchResource.get().postSearchAllTypes(body, context);
-	}
-
-	@Post("/v1/data/:type/search")
-	@Post("/v1/data/:type/search/")
-	@Post("/1/data/:type/search")
-	@Post("/1/data/:type/search/")
-	@Deprecated
-	public Payload searchForType(String type, String body, Context context) {
-		return SearchResource.get().postSearchForType(type, body, context);
 	}
 
 	//

@@ -23,7 +23,7 @@ public class CrossOriginFilterTestOften extends Assert {
 
 		// CORS for simple requests
 
-		SpaceRequest.get("/v1/data").refresh().backend(test).go(200)//
+		SpaceRequest.get("/1/data").refresh().backend(test).go(200)//
 				.assertHeaderEquals("*", SpaceHeaders.ACCESS_CONTROL_ALLOW_ORIGIN)//
 				.assertHeaderEquals(SpaceHeaders.ALLOW_METHODS, SpaceHeaders.ACCESS_CONTROL_ALLOW_METHODS);
 
