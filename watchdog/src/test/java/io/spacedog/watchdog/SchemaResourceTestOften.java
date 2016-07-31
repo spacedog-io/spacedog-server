@@ -54,10 +54,10 @@ public class SchemaResourceTestOften extends Assert {
 						.get());
 
 		// anonymous is not allowed to delete schema
-		SpaceRequest.delete("/1/schema/sale").backend(test).go(401);
+		SpaceRequest.delete("/1/schema/sale").backend(test).go(403);
 
 		// user is not allowed to delete schema
-		SpaceRequest.delete("/1/schema/sale").userAuth(bob).go(401);
+		SpaceRequest.delete("/1/schema/sale").userAuth(bob).go(403);
 
 		// admin fails to delete a non existing schema
 		SpaceRequest.delete("/1/schema/XXX").adminAuth(test).go(404);

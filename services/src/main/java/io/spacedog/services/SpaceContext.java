@@ -9,6 +9,7 @@ import com.google.common.net.HttpHeaders;
 import io.spacedog.utils.AuthenticationException;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.ForbiddenException;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
@@ -105,8 +106,7 @@ public class SpaceContext {
 		Credentials credentials = checkCredentials(checkCustomerBackend);
 		if (credentials.isSuperDog())
 			return credentials;
-		throw new AuthenticationException("[%s][%s] has invalid superdog credentials", //
-				credentials.level(), credentials.name());
+		throw insufficientCredentials(credentials);
 	}
 
 	public static Credentials checkSuperAdminCredentials() {
@@ -117,8 +117,7 @@ public class SpaceContext {
 		Credentials credentials = checkCredentials(checkCustomerBackend);
 		if (credentials.isAtLeastSuperAdmin())
 			return credentials;
-		throw new AuthenticationException("[%s][%s] has invalid super admin credentials", //
-				credentials.level(), credentials.name());
+		throw insufficientCredentials(credentials);
 	}
 
 	public static Credentials checkAdminCredentials() {
@@ -129,8 +128,7 @@ public class SpaceContext {
 		Credentials credentials = checkCredentials(checkCustomerBackend);
 		if (credentials.isAtLeastAdmin())
 			return credentials;
-		throw new AuthenticationException("[%s][%s] has invalid admin credentials", //
-				credentials.level(), credentials.name());
+		throw insufficientCredentials(credentials);
 	}
 
 	public static Credentials checkUserOrAdminCredentials() {
@@ -141,8 +139,7 @@ public class SpaceContext {
 		Credentials credentials = checkCredentials(checkCustomerBackend);
 		if (credentials.isAtLeastAdmin() || credentials.isAtLeastUser())
 			return credentials;
-		throw new AuthenticationException("[%s][%s] has invalid user or admin credentials", //
-				credentials.level(), credentials.name());
+		throw insufficientCredentials(credentials);
 	}
 
 	public static Credentials checkUserCredentials() {
@@ -155,17 +152,14 @@ public class SpaceContext {
 		if (credentials.isAtLeastAdmin() || credentials.name().equals(username))
 			return credentials;
 
-		throw new AuthenticationException(//
-				"credentials username [%s] of level [%s] not authorized", //
-				credentials.name(), credentials.level());
+		throw insufficientCredentials(credentials);
 	}
 
 	public static Credentials checkUserCredentials(boolean checkCustomerBackend) {
 		Credentials credentials = checkCredentials(checkCustomerBackend);
 		if (credentials.isAtLeastUser())
 			return credentials;
-		throw new AuthenticationException("unsufficient credentials level [%s]", //
-				credentials.level());
+		throw insufficientCredentials(credentials);
 	}
 
 	public static Credentials checkCredentials() {
@@ -175,8 +169,7 @@ public class SpaceContext {
 	public static Credentials checkCredentials(boolean checkCustomerBackend) {
 		Credentials credentials = getCredentials();
 		if (checkCustomerBackend && credentials.isRootBackend())
-			throw new AuthenticationException(//
-					"no customer backend subdomain found");
+			throw Exceptions.illegalArgument("host doesn't specify any backend id");
 		return credentials;
 	}
 
@@ -191,6 +184,11 @@ public class SpaceContext {
 	//
 	// Implementation
 	//
+
+	private static ForbiddenException insufficientCredentials(Credentials credentials) {
+		return Exceptions.forbidden("[%s][%s] has insufficient credentials", //
+				credentials.level(), credentials.name());
+	}
 
 	private String extractSubdomain(Context context) {
 		String host = context.request().header(HttpHeaders.HOST);

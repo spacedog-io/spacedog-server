@@ -69,11 +69,11 @@ public class CredentialsResourceTestOften extends Assert {
 				.basicAuth("XXX", vince.username, vince.password).go(401);
 
 		// anonymous fails to get vince credentials
-		SpaceRequest.get("/1/credentials/vince").backend(test).go(401);
+		SpaceRequest.get("/1/credentials/vince").backend(test).go(403);
 
 		// another user fails to get vince credentials
 		User fred = SpaceClient.newCredentials(test, "fred", "hi fred");
-		SpaceRequest.get("/1/credentials/vince").userAuth(fred).go(401);
+		SpaceRequest.get("/1/credentials/vince").userAuth(fred).go(403);
 
 		// vince succeeds to login
 		SpaceRequest.get("/1/login").userAuth(vince).go(200);
@@ -96,10 +96,10 @@ public class CredentialsResourceTestOften extends Assert {
 		SpaceRequest.get("/1/login").userAuth(fred).go(200);
 
 		// anonymous fails to deletes vince credentials
-		SpaceRequest.delete("/1/credentials/vince").backend(test).go(401);
+		SpaceRequest.delete("/1/credentials/vince").backend(test).go(403);
 
 		// fred fails to delete vince credentials
-		SpaceRequest.delete("/1/credentials/vince").userAuth(fred).go(401);
+		SpaceRequest.delete("/1/credentials/vince").userAuth(fred).go(403);
 
 		// fred deletes his own credentials
 		SpaceRequest.delete("/1/credentials/fred").userAuth(fred).go(200);
@@ -163,7 +163,7 @@ public class CredentialsResourceTestOften extends Assert {
 		// toto user changes titi password should fail
 
 		SpaceRequest.put("/1/credentials/titi/password").basicAuth(test, "toto", "hi toto")//
-				.field("password", "XXX").go(401);
+				.field("password", "XXX").go(403);
 
 		SpaceRequest.get("/1/login").basicAuth(test, "titi", "XXX").go(401);
 
@@ -253,7 +253,7 @@ public class CredentialsResourceTestOften extends Assert {
 				.assertEquals("user", "0");
 
 		// fred fails to set a role since he is no admin
-		SpaceRequest.put("/1/credentials/fred/roles/silver").userAuth(fred).go(401);
+		SpaceRequest.put("/1/credentials/fred/roles/silver").userAuth(fred).go(403);
 
 		// admin sets fred's roles
 		SpaceRequest.put("/1/credentials/fred/roles/silver").adminAuth(test).go(200);
@@ -265,7 +265,7 @@ public class CredentialsResourceTestOften extends Assert {
 				.assertContains(TextNode.valueOf("gold"));
 
 		// fred fails to delete one of his roles since he is no admin
-		SpaceRequest.delete("/1/credentials/fred/roles/silver").userAuth(fred).go(401);
+		SpaceRequest.delete("/1/credentials/fred/roles/silver").userAuth(fred).go(403);
 
 		// admin deletes one of fred's roles
 		SpaceRequest.delete("/1/credentials/fred/roles/gold").adminAuth(test).go(200);

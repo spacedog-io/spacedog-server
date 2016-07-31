@@ -60,7 +60,7 @@ public class BackendResourceTestOften extends Assert {
 
 		// login fails if no backend nor user set
 
-		SpaceRequest.get("/1/login").go(401);
+		SpaceRequest.get("/1/login").go(400);
 
 		// invalid admin username login fails
 
@@ -86,8 +86,7 @@ public class BackendResourceTestOften extends Assert {
 
 		// user fails to get backend data since it is restricted to admins
 
-		SpaceRequest.get("/1/backend").userAuth(john).go(401);
-
+		SpaceRequest.get("/1/backend").userAuth(john).go(403);
 	}
 
 	@Test

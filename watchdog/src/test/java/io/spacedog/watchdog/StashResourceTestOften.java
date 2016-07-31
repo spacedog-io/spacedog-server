@@ -43,8 +43,8 @@ public class StashResourceTestOften extends Assert {
 		SpaceRequest.get("/1/stash/animals").backend(test).go(404);
 
 		// only admin are allowed to create stash objects
-		SpaceRequest.put("/1/stash/animals").backend(test).body(animals).go(401);
-		SpaceRequest.put("/1/stash/animals").userAuth(vince).body(animals).go(401);
+		SpaceRequest.put("/1/stash/animals").backend(test).body(animals).go(403);
+		SpaceRequest.put("/1/stash/animals").userAuth(vince).body(animals).go(403);
 		SpaceRequest.put("/1/stash/animals").adminAuth(test).body(animals).go(201);
 
 		// anonymous gets stash objects
@@ -52,8 +52,8 @@ public class StashResourceTestOften extends Assert {
 
 		// only admin can update stash objects
 		animals.put("puma", "Puma");
-		SpaceRequest.put("/1/stash/animals").backend(test).body(animals).go(401);
-		SpaceRequest.put("/1/stash/animals").userAuth(vince).body(animals).go(401);
+		SpaceRequest.put("/1/stash/animals").backend(test).body(animals).go(403);
+		SpaceRequest.put("/1/stash/animals").userAuth(vince).body(animals).go(403);
 		SpaceRequest.put("/1/stash/animals").adminAuth(test).body(animals).go(200);
 		SpaceRequest.get("/1/stash/animals").backend(test).go(200).assertEquals(animals);
 
@@ -62,8 +62,8 @@ public class StashResourceTestOften extends Assert {
 		SpaceRequest.get("/1/stash/jobs").backend(test).go(200).assertEquals(jobs);
 
 		// only admin gets all stash objects
-		SpaceRequest.get("/1/stash").backend(test).go(401);
-		SpaceRequest.get("/1/stash").userAuth(vince).go(401);
+		SpaceRequest.get("/1/stash").backend(test).go(403);
+		SpaceRequest.get("/1/stash").userAuth(vince).go(403);
 		SpaceRequest.get("/1/stash").refresh().adminAuth(test).go(200)//
 				.assertSizeEquals(2, "results")//
 				.assertEquals(animals, "results.0")//
@@ -74,8 +74,8 @@ public class StashResourceTestOften extends Assert {
 				.assertSizeEquals(0, "results");
 
 		// only admin deletes stash objects
-		SpaceRequest.delete("/1/stash/jobs").backend(test).go(401);
-		SpaceRequest.delete("/1/stash/jobs").userAuth(vince).go(401);
+		SpaceRequest.delete("/1/stash/jobs").backend(test).go(403);
+		SpaceRequest.delete("/1/stash/jobs").userAuth(vince).go(403);
 		SpaceRequest.delete("/1/stash/jobs").adminAuth(test).go(200);
 		SpaceRequest.delete("/1/stash/animals").adminAuth(test).go(200);
 

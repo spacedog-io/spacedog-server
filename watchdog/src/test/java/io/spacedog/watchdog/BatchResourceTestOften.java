@@ -149,7 +149,7 @@ public class BatchResourceTestOften extends Assert {
 				.assertEquals(404, "responses.1.status")//
 				.assertEquals(404, "responses.2.status")//
 				.assertEquals(403, "responses.3.status")//
-				.assertEquals(401, "responses.4.status")//
+				.assertEquals(403, "responses.4.status")//
 				.assertEquals(1, "debug.batchCredentialChecks");
 
 		// should succeed to create and update messages by batch

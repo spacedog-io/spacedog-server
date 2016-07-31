@@ -115,7 +115,7 @@ public class PushResourceTestOften extends Assert {
 
 		SpaceRequest.get("/1/installation")//
 				.backend(test).userAuth(vince)//
-				.go(401);
+				.go(403);
 
 		// admin gets all installations
 

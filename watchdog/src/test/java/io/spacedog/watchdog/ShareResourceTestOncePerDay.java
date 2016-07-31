@@ -35,18 +35,19 @@ public class ShareResourceTestOncePerDay {
 		User vince = SpaceClient.newCredentials(test, "vince", "hi vince", "vince@dog.com");
 		User fred = SpaceClient.newCredentials(test, "fred", "hi fred", "fred@dog.com");
 
+		// fails since no backend specified
+		SpaceRequest.get("/1/share").go(400);
+
 		// only admin can get all shared locations
-		SpaceRequest.get("/1/share").go(401);
-		SpaceRequest.get("/1/share").backend(test).go(401);
-		SpaceRequest.get("/1/share").userAuth(vince).go(401);
+		SpaceRequest.get("/1/share").backend(test).go(403);
+		SpaceRequest.get("/1/share").userAuth(vince).go(403);
 
 		// this account is brand new, no shared files
 		SpaceRequest.get("/1/share").adminAuth(test).go(200)//
 				.assertSizeEquals(0, "results");
 
 		// anonymous users are not allowed to share files
-		SpaceRequest.put("/1/share/tweeter.png").go(401);
-		SpaceRequest.put("/1/share/tweeter.png").backend(test).go(401);
+		SpaceRequest.put("/1/share/tweeter.png").backend(test).go(403);
 
 		// vince shares a small png file
 		byte[] pngBytes = Resources.toByteArray(//
@@ -138,8 +139,8 @@ public class ShareResourceTestOncePerDay {
 		Assert.assertEquals(FILE_CONTENT, stringContent);
 
 		// only admin or owner can delete a shared file
-		SpaceRequest.delete(txtLocation).go(401);
-		SpaceRequest.delete(txtLocation).backend(test).go(401);
+		SpaceRequest.delete(txtLocation).go(403);
+		SpaceRequest.delete(txtLocation).backend(test).go(403);
 		SpaceRequest.delete(txtLocation).userAuth(vince).go(403);
 
 		// owner (fred) can delete its own shared file (test.txt)
@@ -151,10 +152,9 @@ public class ShareResourceTestOncePerDay {
 				.assertEquals(pngPath, "results.0.path");
 
 		// only admin can delete all shared files
-		SpaceRequest.delete("/1/share").go(401);
-		SpaceRequest.delete("/1/share").backend(test).go(401);
-		SpaceRequest.delete("/1/share").userAuth(fred).go(401);
-		SpaceRequest.delete("/1/share").userAuth(vince).go(401);
+		SpaceRequest.delete("/1/share").backend(test).go(403);
+		SpaceRequest.delete("/1/share").userAuth(fred).go(403);
+		SpaceRequest.delete("/1/share").userAuth(vince).go(403);
 		SpaceRequest.delete("/1/share").adminAuth(test).go(200)//
 				.assertSizeEquals(1, "deleted")//
 				.assertContains(TextNode.valueOf(pngPath), "deleted");

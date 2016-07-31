@@ -31,7 +31,7 @@ public class QueryTest extends Assert {
 		SpaceClient.setSchema(SchemaResourceTestOften.buildCarSchema(), test);
 
 		for (int i = 0; i < 500; i++)
-			SpaceRequest.post("/1/data/car").backend(test).body(jsonCar(i)).go(201);
+			SpaceRequest.post("/1/data/car").adminAuth(test).body(jsonCar(i)).go(201);
 	}
 
 	private ObjectNode jsonCar(int i) {
