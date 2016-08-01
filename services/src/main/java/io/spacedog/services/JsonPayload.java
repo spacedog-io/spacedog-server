@@ -61,7 +61,7 @@ public class JsonPayload {
 
 	public static Payload error(int httpStatus, Throwable throwable) {
 		JsonNode errorNode = Json.toJson(throwable, Debug.isTrue() || httpStatus >= 500);
-		return json(minimalBuilder(httpStatus).node("error", errorNode), httpStatus);
+		return json(builder(httpStatus).node("error", errorNode), httpStatus);
 	}
 
 	/**
@@ -70,7 +70,7 @@ public class JsonPayload {
 	 * @return a bad request http payload with a json listing invalid parameters
 	 */
 	protected static Payload invalidParameters(String... parameters) {
-		JsonBuilder<ObjectNode> builder = minimalBuilder(HttpStatus.BAD_REQUEST);
+		JsonBuilder<ObjectNode> builder = builder(HttpStatus.BAD_REQUEST);
 
 		if (parameters.length > 0 && parameters.length % 3 == 0) {
 			builder.object("invalidParameters");
@@ -83,9 +83,9 @@ public class JsonPayload {
 		return json(builder, HttpStatus.BAD_REQUEST);
 	}
 
-	public static JsonBuilder<ObjectNode> savedBuilder(boolean created, String backendId, String uri, String type,
+	public static JsonBuilder<ObjectNode> builder(boolean created, String backendId, String uri, String type,
 			String id) {
-		return savedBuilder(created, backendId, uri, type, id, 0);
+		return builder(created, backendId, uri, type, id, 0);
 	}
 
 	public static Payload saved(boolean created, String backendId, String uri, String type, String id,
@@ -103,20 +103,20 @@ public class JsonPayload {
 
 	public static Payload saved(boolean created, String backendId, String uri, String type, String id, long version,
 			boolean isUriFinal) {
-		JsonBuilder<ObjectNode> builder = JsonPayload.savedBuilder(created, backendId, uri, type, id, version, isUriFinal);
+		JsonBuilder<ObjectNode> builder = JsonPayload.builder(created, backendId, uri, type, id, version, isUriFinal);
 		return json(builder, created ? HttpStatus.CREATED : HttpStatus.OK)//
 				.withHeader(HEADER_OBJECT_ID, id);
 	}
 
-	public static JsonBuilder<ObjectNode> savedBuilder(boolean created, String backendId, String uri, String type,
-			String id, long version) {
-		return savedBuilder(created, backendId, uri, type, id, version, false);
+	public static JsonBuilder<ObjectNode> builder(boolean created, String backendId, String uri, String type, String id,
+			long version) {
+		return builder(created, backendId, uri, type, id, version, false);
 	}
 
-	public static JsonBuilder<ObjectNode> savedBuilder(boolean created, String backendId, String uri, String type,
-			String id, long version, boolean isUriFinal) {
+	public static JsonBuilder<ObjectNode> builder(boolean created, String backendId, String uri, String type, String id,
+			long version, boolean isUriFinal) {
 
-		JsonBuilder<ObjectNode> builder = minimalBuilder(created ? HttpStatus.CREATED : HttpStatus.OK) //
+		JsonBuilder<ObjectNode> builder = builder(created ? HttpStatus.CREATED : HttpStatus.OK) //
 				.put("id", id) //
 				.put("type", type);
 
@@ -132,7 +132,7 @@ public class JsonPayload {
 	}
 
 	public static Payload json(int httpStatus) {
-		return json(minimalBuilder(httpStatus), httpStatus);
+		return json(builder(httpStatus), httpStatus);
 	}
 
 	public static <N extends JsonNode> Payload json(JsonBuilder<N> content) {
@@ -159,7 +159,7 @@ public class JsonPayload {
 		if (status < 400)
 			return json(status);
 
-		JsonBuilder<ObjectNode> builder = minimalBuilder(status).array("error");
+		JsonBuilder<ObjectNode> builder = builder(status).array("error");
 
 		for (ShardOperationFailedException failure : failures)
 			builder.object().put("type", failure.getClass().getName()).put("message", failure.reason())
@@ -184,7 +184,7 @@ public class JsonPayload {
 		if (response.getShardFailures().length > 0)
 			return json(500, response.getShardFailures());
 
-		return json(minimalBuilder(200)//
+		return json(builder()//
 				.put("totalDeleted", response.getTotalDeleted()));
 	}
 
@@ -206,7 +206,11 @@ public class JsonPayload {
 				: payload.rawContentType().startsWith(JSON_CONTENT);
 	}
 
-	public static JsonBuilder<ObjectNode> minimalBuilder(int status) {
+	public static JsonBuilder<ObjectNode> builder() {
+		return builder();
+	}
+
+	public static JsonBuilder<ObjectNode> builder(int status) {
 		return Json.objectBuilder().put("success", status < 400).put("status", status);
 	}
 }

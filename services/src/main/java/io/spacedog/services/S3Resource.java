@@ -105,7 +105,7 @@ public class S3Resource extends Resource {
 				&& !backendId.equals(s3Key))
 			return JsonPayload.error(404);
 
-		JsonBuilder<ObjectNode> response = JsonPayload.minimalBuilder(200);
+		JsonBuilder<ObjectNode> response = JsonPayload.builder();
 
 		if (objects.isTruncated())
 			response.put("next", toSpaceKeyFromS3Key(backendId, objects.getNextMarker()));
@@ -129,7 +129,7 @@ public class S3Resource extends Resource {
 		String bucketName = getBucketName(bucketSuffix);
 		String s3Key = S3Key.get(credentials.backendId()).add(path).toString();
 
-		JsonBuilder<ObjectNode> builder = JsonPayload.minimalBuilder(200).array("deleted");
+		JsonBuilder<ObjectNode> builder = JsonPayload.builder().array("deleted");
 
 		// first try to delete this path as key
 
@@ -221,7 +221,7 @@ public class S3Resource extends Resource {
 				s3Key, new ByteArrayInputStream(bytes), //
 				metadata));
 
-		return JsonPayload.json(JsonPayload.minimalBuilder(200)//
+		return JsonPayload.json(JsonPayload.builder()//
 				.put("path", Uris.join(path))//
 				.put("location", toSpaceLocation(credentials.backendId(), rootUri, path))//
 				.put("s3", toS3Location(bucketName, s3Key)));

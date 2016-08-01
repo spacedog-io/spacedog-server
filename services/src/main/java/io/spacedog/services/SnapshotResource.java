@@ -54,7 +54,7 @@ public class SnapshotResource extends Resource {
 		SpaceContext.checkAdminCredentials(false);
 		List<SpaceSnapshot> snapshots = getAllPlatformSnapshotsFromLatestToOldest();
 
-		JsonBuilder<ObjectNode> payload = JsonPayload.minimalBuilder(200)//
+		JsonBuilder<ObjectNode> payload = JsonPayload.builder()//
 				.put("total", snapshots.size())//
 				.array("results");
 
@@ -107,7 +107,7 @@ public class SnapshotResource extends Resource {
 		if (status == 200)
 			status = 201;
 
-		JsonBuilder<ObjectNode> jsonResponse = JsonPayload.minimalBuilder(status)//
+		JsonBuilder<ObjectNode> jsonResponse = JsonPayload.builder(status)//
 				.put("id", snapshotId)//
 				.put("location", spaceUrl(Backends.ROOT_API, "/1", "snapshot", snapshotId).toString());
 

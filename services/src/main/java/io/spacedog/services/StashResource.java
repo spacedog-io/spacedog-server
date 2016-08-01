@@ -53,7 +53,7 @@ public class StashResource {
 				.setQuery(QueryBuilders.matchAllQuery())//
 				.get();
 
-		JsonBuilder<ObjectNode> builder = JsonPayload.minimalBuilder(HttpStatus.OK)//
+		JsonBuilder<ObjectNode> builder = JsonPayload.builder()//
 				.put("took", response.getTookInMillis())//
 				.put("total", response.getHits().getTotalHits())//
 				.array("results");

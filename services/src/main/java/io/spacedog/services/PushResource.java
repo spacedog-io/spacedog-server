@@ -276,7 +276,7 @@ public class PushResource extends Resource {
 		int httpStatus = pushedTo.size() == 0 ? HttpStatus.NOT_FOUND //
 				: successes ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
 
-		JsonBuilder<ObjectNode> builder = JsonPayload.minimalBuilder(httpStatus)//
+		JsonBuilder<ObjectNode> builder = JsonPayload.builder(httpStatus)//
 				.put(FAILURES, failures)//
 				.node(PUSHED_TO, pushedTo);
 

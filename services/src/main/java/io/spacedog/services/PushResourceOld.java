@@ -88,7 +88,8 @@ public class PushResourceOld {
 		}
 
 		try {
-			return JsonPayload.saved(false, credentials.backendId(), "/1", TYPE, URLEncoder.encode(endpointArn, "UTF-8"));
+			return JsonPayload.saved(false, credentials.backendId(), "/1", TYPE,
+					URLEncoder.encode(endpointArn, "UTF-8"));
 		} catch (UnsupportedEncodingException e) {
 			throw new RuntimeException(e);
 		}
@@ -147,7 +148,7 @@ public class PushResourceOld {
 				.withSubject(message)//
 				.withMessage(message));
 
-		return JsonPayload.json(JsonPayload.minimalBuilder(200)//
+		return JsonPayload.json(JsonPayload.builder()//
 				.put("messageId", publish.getMessageId()).build(), 200);
 	}
 
@@ -168,7 +169,7 @@ public class PushResourceOld {
 				.withSubject(msg)//
 				.withMessage(msg));
 
-		return JsonPayload.json(JsonPayload.minimalBuilder(200)//
+		return JsonPayload.json(JsonPayload.builder()//
 				.put("messageId", publish.getMessageId()).build(), 200);
 	}
 

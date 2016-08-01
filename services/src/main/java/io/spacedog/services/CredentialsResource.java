@@ -107,7 +107,7 @@ public class CredentialsResource extends Resource {
 
 		index(credentials);
 
-		JsonBuilder<ObjectNode> savedBuilder = JsonPayload.savedBuilder(true, //
+		JsonBuilder<ObjectNode> savedBuilder = JsonPayload.builder(true, //
 				credentials.backendId(), "/1", TYPE, credentials.name());
 
 		if (credentials.passwordResetCode() != null)
@@ -150,7 +150,7 @@ public class CredentialsResource extends Resource {
 		index(credentials);
 
 		return JsonPayload.json(//
-				JsonPayload.savedBuilder(false, backendId, "/1", TYPE, username)//
+				JsonPayload.builder(false, backendId, "/1", TYPE, username)//
 						.put(PASSWORD_RESET_CODE, credentials.passwordResetCode()));
 	}
 

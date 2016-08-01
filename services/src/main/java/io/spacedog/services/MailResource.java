@@ -108,7 +108,7 @@ public class MailResource extends Resource {
 
 		try {
 			HttpResponse<String> response = requestWithBody.asString();
-			return JsonPayload.minimalBuilder(response.getStatus()).node("mailgun", response.getBody()).build();
+			return JsonPayload.builder(response.getStatus()).node("mailgun", response.getBody()).build();
 		} catch (UnirestException e) {
 			throw new RuntimeException(e);
 		}
