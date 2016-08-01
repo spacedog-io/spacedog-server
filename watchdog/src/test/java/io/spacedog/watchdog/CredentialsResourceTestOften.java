@@ -140,22 +140,22 @@ public class CredentialsResourceTestOften extends Assert {
 		// should fail
 
 		SpaceRequest.post("/1/credentials/titi/password?passwordResetCode=").backend(test)//
-				.field("password", "hi titi").go(400);
+				.formField("password", "hi titi").go(400);
 
 		SpaceRequest.get("/1/login").basicAuth(test, "titi", "hi titi").go(401);
 
 		// no password user setting password with wrong reset code should fail
 
 		SpaceRequest.post("/1/credentials/titi/password?passwordResetCode=XXX").backend(test)
-				.field("password", "hi titi").go(400);
+				.formField("password", "hi titi").go(400);
 
 		SpaceRequest.get("/1/login").basicAuth(test, "titi", "hi titi").go(401);
 
 		// titi inits its own password with right reset code should succeed
 
 		SpaceRequest.post("/1/credentials/titi/password").backend(test)//
-				.field("passwordResetCode", passwordResetCode)//
-				.field("password", "hi titi")//
+				.formField("passwordResetCode", passwordResetCode)//
+				.formField("password", "hi titi")//
 				.go(200);
 
 		SpaceRequest.get("/1/login").basicAuth(test, "titi", "hi titi").go(200);
@@ -163,19 +163,19 @@ public class CredentialsResourceTestOften extends Assert {
 		// toto user changes titi password should fail
 
 		SpaceRequest.put("/1/credentials/titi/password").basicAuth(test, "toto", "hi toto")//
-				.field("password", "XXX").go(403);
+				.formField("password", "XXX").go(403);
 
 		SpaceRequest.get("/1/login").basicAuth(test, "titi", "XXX").go(401);
 
 		// titi changes its password should fail since password size < 6
 
 		SpaceRequest.put("/1/credentials/titi/password").basicAuth(test, "titi", "hi titi")//
-				.field("password", "XXX").go(400);
+				.formField("password", "XXX").go(400);
 
 		// titi changes its password should succeed
 
 		SpaceRequest.put("/1/credentials/titi/password").basicAuth(test, "titi", "hi titi")
-				.field("password", "hi titi 2").go(200);
+				.formField("password", "hi titi 2").go(200);
 
 		SpaceRequest.get("/1/login").basicAuth(test, "titi", "hi titi 2").go(200);
 
@@ -186,7 +186,7 @@ public class CredentialsResourceTestOften extends Assert {
 		// admin user changes titi user password should succeed
 
 		SpaceRequest.put("/1/credentials/titi/password").basicAuth(test, "test", "hi test")//
-				.field("password", "hi titi 3").go(200);
+				.formField("password", "hi titi 3").go(200);
 		SpaceRequest.get("/1/login").basicAuth(test, "titi", "hi titi 3").go(200);
 
 		// login with old password should fail
@@ -205,12 +205,12 @@ public class CredentialsResourceTestOften extends Assert {
 		// titi inits its password with old reset code should fail
 
 		SpaceRequest.post("/1/credentials/titi/password?passwordResetCode=" + passwordResetCode)//
-				.backend(test).field("password", "hi titi").go(400);
+				.backend(test).formField("password", "hi titi").go(400);
 
 		// titi inits its password with new reset code should fail
 
 		SpaceRequest.post("/1/credentials/titi/password?passwordResetCode=" + newPasswordResetCode)//
-				.backend(test).field("password", "hi titi").go(200);
+				.backend(test).formField("password", "hi titi").go(200);
 
 		SpaceRequest.get("/1/login").basicAuth(test, "titi", "hi titi").go(200);
 	}

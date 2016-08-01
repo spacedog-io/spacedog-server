@@ -40,9 +40,9 @@ public class SpaceRequest {
 	private String uri;
 	private Object body;
 	private Map<String, String> routeParams = Maps.newHashMap();
-	private Map<String, String> queryStrings = Maps.newHashMap();
+	private Map<String, String> queryParams = Maps.newHashMap();
 	private Map<String, String> headers = Maps.newHashMap();
-	private Map<String, Object> fields = Maps.newHashMap();
+	private Map<String, Object> formFields = Maps.newHashMap();
 	private String password;
 	private String username;
 	private Boolean forTesting = null;
@@ -170,21 +170,21 @@ public class SpaceRequest {
 		return this;
 	}
 
-	public SpaceRequest queryString(String name, String value) {
-		this.queryStrings.put(name, value);
+	public SpaceRequest queryParam(String name, String value) {
+		this.queryParams.put(name, value);
 		return this;
 	}
 
 	public SpaceRequest size(int size) {
-		return this.queryString("size", String.valueOf(size));
+		return this.queryParam("size", String.valueOf(size));
 	}
 
 	public SpaceRequest from(int from) {
-		return this.queryString("from", String.valueOf(from));
+		return this.queryParam("from", String.valueOf(from));
 	}
 
 	public SpaceRequest refresh() {
-		return this.queryString("refresh", "true");
+		return this.queryParam("refresh", "true");
 	}
 
 	public SpaceRequest header(String name, String value) {
@@ -214,13 +214,13 @@ public class SpaceRequest {
 			request.basicAuth(username, password);
 
 		this.headers.forEach((key, value) -> request.header(key, value));
-		this.queryStrings.forEach((key, value) -> request.queryString(key, value));
+		this.queryParams.forEach((key, value) -> request.queryString(key, value));
 		this.routeParams.forEach((key, value) -> request.routeParam(key, value));
 
 		if (request instanceof HttpRequestWithBody) {
 			HttpRequestWithBody requestWithBody = (HttpRequestWithBody) request;
-			if (!fields.isEmpty())
-				requestWithBody.fields(fields);
+			if (!formFields.isEmpty())
+				requestWithBody.fields(formFields);
 			else if (body instanceof byte[])
 				requestWithBody.body((byte[]) body);
 			else if (body instanceof String)
@@ -230,8 +230,8 @@ public class SpaceRequest {
 		return new SpaceResponse(request, bodyJson, configuration().debug());
 	}
 
-	public SpaceRequest field(String name, String value) {
-		this.fields.put(name, value);
+	public SpaceRequest formField(String name, String value) {
+		this.formFields.put(name, value);
 		return this;
 	}
 

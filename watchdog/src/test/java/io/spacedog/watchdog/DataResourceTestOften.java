@@ -63,7 +63,7 @@ public class DataResourceTestOften extends Assert {
 		// find by full text search
 
 		SpaceRequest.get("/1/search/car").refresh()//
-				.userAuth(vince).queryString("q", "inVENT*").go(200)//
+				.userAuth(vince).queryParam("q", "inVENT*").go(200)//
 				.assertEquals(id, "results.0.meta.id");
 
 		// update

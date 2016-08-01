@@ -271,7 +271,7 @@ public class Birdee extends SpaceClient {
 		SpaceRequest.post("/1/device/{id}/push")//
 				.backend(adminAccount)//
 				.routeParam("id", device.get("id").asText())//
-				.body(Json.objectBuilder().put("message", message).toString())//
+				.body("message", message)//
 				.go(200);
 
 		// set pushed to true for all processed object
@@ -280,7 +280,8 @@ public class Birdee extends SpaceClient {
 
 		SpaceRequest.put("/1/data/status/" + statusId)//
 				.backend(adminAccount)//
-				.body("{'processed':true}").go(200);
+				.body("processed", true)//
+				.go(200);
 
 		String newsId = null;
 

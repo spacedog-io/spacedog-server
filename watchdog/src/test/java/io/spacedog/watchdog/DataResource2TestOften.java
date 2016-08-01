@@ -158,7 +158,7 @@ public class DataResource2TestOften extends Assert {
 
 		// update with invalid version should fail
 
-		SpaceRequest.put("/1/data/sale/" + id).userAuth(fred).queryString("version", "1")//
+		SpaceRequest.put("/1/data/sale/" + id).userAuth(fred).queryParam("version", "1")//
 				.body("number", "0987654321").go(409).assertFalse("success");
 
 		// update with invalid version should fail
@@ -169,7 +169,7 @@ public class DataResource2TestOften extends Assert {
 		// update with correct version should succeed
 
 		SpaceResponse req3d = SpaceRequest.put("/1/data/sale/" + id).userAuth(fred)//
-				.queryString("version", "2").body("number", "0987654321").go(200);
+				.queryParam("version", "2").body("number", "0987654321").go(200);
 
 		req3d.assertTrue("success").assertEquals("sale", "type").assertEquals(3, "version").assertEquals(id, "id");
 

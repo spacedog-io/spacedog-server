@@ -82,7 +82,7 @@ public class SnapshotResourceTest extends Assert {
 		// otherwise)
 		response = SpaceRequest.post("/1/snapshot")//
 				.superdogAuth()//
-				.queryString("waitForCompletion", "true")//
+				.queryParam("waitForCompletion", "true")//
 				.go(201)//
 				.assertEquals(repository, "snapshot.repository")//
 				.assertEquals("SUCCESS", "snapshot.state")//
@@ -106,7 +106,7 @@ public class SnapshotResourceTest extends Assert {
 		// otherwise)
 		response = SpaceRequest.post("/1/snapshot")//
 				.superdogAuth()//
-				.queryString("waitForCompletion", "true")//
+				.queryParam("waitForCompletion", "true")//
 				.go(201)//
 				.assertEquals(repository, "snapshot.repository")//
 				.assertEquals("SUCCESS", "snapshot.state")//
@@ -125,7 +125,7 @@ public class SnapshotResourceTest extends Assert {
 		// restore to oldest snapshot
 		SpaceRequest.post("/1/snapshot/{id}/restore")//
 				.routeParam("id", firstSnapId)//
-				.queryString("waitForCompletion", "true")//
+				.queryParam("waitForCompletion", "true")//
 				.superdogAuth()//
 				.go(200);
 
@@ -137,7 +137,7 @@ public class SnapshotResourceTest extends Assert {
 		// restore to second (middle) snapshot
 		SpaceRequest.post("/1/snapshot/{id}/restore")//
 				.routeParam("id", secondSnapId)//
-				.queryString("waitForCompletion", "true")//
+				.queryParam("waitForCompletion", "true")//
 				.superdogAuth()//
 				.go(200);
 
@@ -150,7 +150,7 @@ public class SnapshotResourceTest extends Assert {
 		// restore to latest (third) snapshot
 		SpaceRequest.post("/1/snapshot/{id}/restore")//
 				.routeParam("id", thirdSnapId)//
-				.queryString("waitForCompletion", "true")//
+				.queryParam("waitForCompletion", "true")//
 				.superdogAuth()//
 				.go(200);
 
@@ -171,7 +171,7 @@ public class SnapshotResourceTest extends Assert {
 
 		// restore to latest (third) snapshot
 		SpaceRequest.post("/1/snapshot/latest/restore")//
-				.queryString("waitForCompletion", "true")//
+				.queryParam("waitForCompletion", "true")//
 				.superdogAuth()//
 				.go(200);
 
@@ -182,7 +182,7 @@ public class SnapshotResourceTest extends Assert {
 
 		// check that restore to an invalid snapshot id fails
 		SpaceRequest.post("/1/snapshot/xxxx/restore")//
-				.queryString("waitForCompletion", "true")//
+				.queryParam("waitForCompletion", "true")//
 				.superdogAuth()//
 				.go(404);
 

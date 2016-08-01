@@ -20,36 +20,36 @@ public class MailResourceTestOncePerDay extends Assert {
 		// should succeed to mail a simple text message
 
 		SpaceRequest.post("/1/mail").adminAuth(test)//
-				.queryString("test", "true")//
-				.field("to", "platform@spacedog.io")//
-				.field("subject", "This is a test...")//
-				.field("text", "So don't bother read this!")//
+				.queryParam("test", "true")//
+				.formField("to", "platform@spacedog.io")//
+				.formField("subject", "This is a test...")//
+				.formField("text", "So don't bother read this!")//
 				.go(200);
 
 		// should succeed to mail a simple html message
 
 		SpaceRequest.post("/1/mail").adminAuth(test)//
-				.queryString("test", "true")//
-				.field("to", "platform@spacedog.io")//
-				.field("subject", "This is a test...")//
-				.field("html", "<html><h1>So don't bother read this!</h1></html>")//
+				.queryParam("test", "true")//
+				.formField("to", "platform@spacedog.io")//
+				.formField("subject", "This is a test...")//
+				.formField("html", "<html><h1>So don't bother read this!</h1></html>")//
 				.go(200);
 
 		// should fail since no 'to' field
 
 		SpaceRequest.post("/1/mail").adminAuth(test)//
-				.queryString("test", "true")//
-				.field("subject", "This is a test...")//
-				.field("text", "So don't bother read this!")//
+				.queryParam("test", "true")//
+				.formField("subject", "This is a test...")//
+				.formField("text", "So don't bother read this!")//
 				.go(400);
 
 		// should fail since no html end tag
 
 		SpaceRequest.post("/1/mail").adminAuth(test)//
-				.queryString("test", "true")//
-				.field("to", "platform@spacedog.io")//
-				.field("subject", "This is a test...")//
-				.field("html", "<html><h1>So don't bother read this!</h1>")//
+				.queryParam("test", "true")//
+				.formField("to", "platform@spacedog.io")//
+				.formField("subject", "This is a test...")//
+				.formField("html", "<html><h1>So don't bother read this!</h1>")//
 				.go(400);
 
 	}

@@ -34,10 +34,10 @@ public class ImportMappyPlaces extends Assert {
 					// "48.671228,1.854415,49.034931,2.843185");
 
 					JsonNode pois = SpaceRequest.get("http://search.mappy.net/search/1.0/find")//
-							.queryString("max_results", "100")//
-							.queryString("extend_bbox", "0")//
-							.queryString("q", "restaurant")//
-							.queryString("bbox", "" + lat + ',' + lon + ',' + (lat + step) + ',' + (lon + step))//
+							.queryParam("max_results", "100")//
+							.queryParam("extend_bbox", "0")//
+							.queryParam("q", "restaurant")//
+							.queryParam("bbox", "" + lat + ',' + lon + ',' + (lat + step) + ',' + (lon + step))//
 							.go(200)//
 							.objectNode()//
 							.get("pois");

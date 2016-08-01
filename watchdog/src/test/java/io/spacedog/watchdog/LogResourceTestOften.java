@@ -104,11 +104,11 @@ public class LogResourceTestOften extends Assert {
 				.adminAuth(test).go(200).getFromJson("passwordResetCode").asText();
 
 		SpaceRequest.post("/1/user/fred/password?passwordResetCode=" + passwordResetCode)//
-				.backend(test).field("password", "hi fred 2").go(200);
+				.backend(test).formField("password", "hi fred 2").go(200);
 
 		SpaceRequest.put("/1/user/fred/password").backend(test)//
 				.basicAuth(test.backendId, "fred", "hi fred 2")//
-				.field("password", "hi fred 3").go(200);
+				.formField("password", "hi fred 3").go(200);
 
 		SpaceRequest.get("/1/log").size(7).adminAuth(test).go(200)//
 				.assertSizeEquals(7, "results")//
