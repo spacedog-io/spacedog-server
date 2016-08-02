@@ -20,6 +20,11 @@ import io.spacedog.utils.SchemaBuilder3;
 
 public class Colibee extends SpaceClient {
 
+	private static final Backend PROD = new Backend(//
+			"colibee", "colibee", "hi colibee", "david@spacedog.io");
+	private static final Backend DEV = new Backend(//
+			"colidev", "colidev", "hi colidev", "david@spacedog.io");
+
 	private ObjectNode schema;
 	private ObjectNode schemaOpportunite;
 	private ObjectNode schemaGroupe;
@@ -31,12 +36,11 @@ public class Colibee extends SpaceClient {
 	private JsonGenerator generator;
 
 	public Colibee() throws Exception {
-		backend = new Backend("colibee", "colibee", "hi colibee", "david@spacedog.io");
-		generator = new JsonGenerator();
-
+		backend = DEV;
 		// SpaceRequest.configuration().target(SpaceTarget.production);
 		// resetBackend(backend);
 
+		generator = new JsonGenerator();
 		generator.regPath("photo", //
 				SpaceRequest.configuration().target().url(backend.backendId, "/1/file/tmp/ma-tronche.png"));
 		generator.regPath("identite.photo", //
@@ -47,14 +51,13 @@ public class Colibee extends SpaceClient {
 
 	@Test
 	public void initColibeeBackend() throws Exception {
-
 		// initTmpFiles();
 		// initReferences();
 		// initConsultant();
 		// initOpportunites();
 		// initGroupeFinance();
 		// initRdv();
-		initDiscussionBale3();
+		// initDiscussionBale3();
 		// initColibee();
 	}
 
