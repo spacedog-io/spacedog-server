@@ -42,4 +42,9 @@ public class Exceptions {
 		return new AuthenticationException(message, args);
 	}
 
+	public static ForbiddenException insufficientCredentials(Credentials credentials) {
+		return forbidden("[%s][%s] has insufficient credentials", //
+				credentials.level(), credentials.name());
+	}
+
 }

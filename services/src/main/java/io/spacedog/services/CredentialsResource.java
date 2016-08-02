@@ -21,18 +21,21 @@ import org.elasticsearch.search.SearchHit;
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import io.spacedog.services.Credentials.Level;
 import io.spacedog.utils.Check;
+import io.spacedog.utils.Credentials;
+import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Passwords;
 import io.spacedog.utils.Roles;
 import io.spacedog.utils.Schema;
+import io.spacedog.utils.Usernames;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -97,8 +100,8 @@ public class CredentialsResource extends Resource {
 
 		String backendId = SpaceContext.checkCredentials().backendId();
 
-		Credentials credentials = Credentials.signUp(backendId, //
-				Level.USER, Json.readObject(body));
+		Credentials credentials = signUp(//
+				backendId, Level.USER, Json.readObject(body));
 
 		if (exists(credentials))
 			throw Exceptions.illegalArgument(//
@@ -248,6 +251,29 @@ public class CredentialsResource extends Resource {
 		}
 
 		return JsonPayload.error(HttpStatus.NOT_FOUND);
+	}
+
+	//
+	// Internal services
+	//
+
+	public Credentials signUp(String backendId, Level level, ObjectNode data) {
+
+		Credentials credentials = new Credentials(backendId);
+		credentials.name(Json.checkStringNotNullOrEmpty(data, Resource.USERNAME));
+		Usernames.checkIfValid(credentials.name());
+
+		credentials.email(Json.checkStringNotNullOrEmpty(data, Resource.EMAIL));
+		credentials.level(level);
+
+		JsonNode password = data.get(Resource.PASSWORD);
+
+		if (Json.isNull(password))
+			credentials.passwordResetCode(UUID.randomUUID().toString());
+		else
+			credentials.hashedPassword(Passwords.checkAndHash(password.asText()));
+
+		return credentials;
 	}
 
 	//

@@ -1,23 +1,15 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.services;
+package io.spacedog.utils;
 
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
-
-import io.spacedog.utils.Backends;
-import io.spacedog.utils.Json;
-import io.spacedog.utils.Passwords;
-import io.spacedog.utils.Usernames;
 
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, //
 getterVisibility = Visibility.NONE, //
@@ -49,25 +41,6 @@ public class Credentials {
 	public Credentials(String backendId) {
 		this.backendId = backendId;
 		this.level = Level.KEY;
-	}
-
-	public static Credentials signUp(String backendId, Level level, ObjectNode data) {
-
-		Credentials credentials = new Credentials(backendId);
-		credentials.username = Json.checkStringNotNullOrEmpty(data, Resource.USERNAME);
-		Usernames.checkIfValid(credentials.username);
-
-		credentials.email = Json.checkStringNotNullOrEmpty(data, Resource.EMAIL);
-		credentials.level = level;
-
-		JsonNode password = data.get(Resource.PASSWORD);
-
-		if (Json.isNull(password))
-			credentials.passwordResetCode = UUID.randomUUID().toString();
-		else
-			credentials.hashedPassword = Passwords.checkAndHash(password.asText());
-
-		return credentials;
 	}
 
 	public boolean isSuperDog() {

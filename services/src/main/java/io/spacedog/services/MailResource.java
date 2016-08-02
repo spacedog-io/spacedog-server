@@ -13,6 +13,7 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.HttpRequestWithBody;
 import com.mashape.unirest.request.body.MultipartBody;
 
+import io.spacedog.utils.Credentials;
 import net.codestory.http.Context;
 import net.codestory.http.Part;
 import net.codestory.http.annotations.Post;

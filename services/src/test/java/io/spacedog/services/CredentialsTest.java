@@ -3,7 +3,7 @@ package io.spacedog.services;
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.spacedog.services.Credentials.Level;
+import io.spacedog.utils.Credentials.Level;
 
 public class CredentialsTest extends Assert {
 

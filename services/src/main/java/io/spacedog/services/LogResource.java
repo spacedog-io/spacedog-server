@@ -22,12 +22,13 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.mashape.unirest.http.HttpMethod;
 
-import io.spacedog.services.Credentials.Level;
+import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.SpaceParams;
 import io.spacedog.utils.Utils;
+import io.spacedog.utils.Credentials.Level;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;

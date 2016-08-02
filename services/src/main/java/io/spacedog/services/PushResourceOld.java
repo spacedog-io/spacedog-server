@@ -38,6 +38,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
 import io.spacedog.utils.Check;
+import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;

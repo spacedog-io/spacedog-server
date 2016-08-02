@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import com.mashape.unirest.http.HttpMethod;
 
+import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Uris;
 import net.codestory.http.Context;

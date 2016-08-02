@@ -14,11 +14,11 @@ import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.services.Credentials.Level;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Passwords;
 import io.spacedog.utils.Utils;
+import io.spacedog.utils.Credentials.Level;
 
 public class CreateSuperdog {
 

@@ -4,6 +4,7 @@ import org.elasticsearch.action.index.IndexResponse;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Schema;
 import io.spacedog.utils.SpaceParams;

@@ -6,6 +6,7 @@ package io.spacedog.services;
 import java.util.Optional;
 import java.util.UUID;
 
+import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Uris;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;

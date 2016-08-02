@@ -12,6 +12,7 @@ import org.elasticsearch.common.Strings;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.utils.Credentials;
 import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;

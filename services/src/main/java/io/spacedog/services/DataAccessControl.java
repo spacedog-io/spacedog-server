@@ -13,6 +13,7 @@ import com.google.common.collect.Sets;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;
+import io.spacedog.utils.Credentials;
 import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Schema.DataTypeAccessControl;
 

@@ -9,6 +9,7 @@ import org.elasticsearch.search.SearchHit;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.utils.Check;
+import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceParams;
