@@ -24,15 +24,16 @@ public class SpaceContext {
 
 	private Context context;
 	private boolean isTest;
-	private boolean isDebug;
+	private Debug debug;
 	private Credentials credentials;
 	private boolean authorizationChecked;
 
 	private SpaceContext(Context context) {
 		this.context = context;
 		this.isTest = Boolean.parseBoolean(context().header(SpaceHeaders.SPACEDOG_TEST));
-		this.isDebug = Boolean.parseBoolean(context().header(SpaceHeaders.SPACEDOG_DEBUG));
 		this.credentials = new Credentials(extractSubdomain(context));
+		this.debug = new Debug(//
+				Boolean.parseBoolean(context().header(SpaceHeaders.SPACEDOG_DEBUG)));
 	}
 
 	public Context context() {
@@ -61,7 +62,6 @@ public class SpaceContext {
 
 	public static void reset() {
 		threadLocal.set(null);
-		Debug.resetBatchDebug();
 	}
 
 	public static void init(Context context) {
@@ -80,7 +80,11 @@ public class SpaceContext {
 	}
 
 	public static boolean isDebug() {
-		return get().isDebug;
+		return get().debug.isTrue();
+	}
+
+	public static Debug debug() {
+		return get().debug;
 	}
 
 	public static String backendId() {
@@ -195,7 +199,7 @@ public class SpaceContext {
 	private void checkAuthorizationHeader() {
 		if (!authorizationChecked) {
 			authorizationChecked = true;
-			Debug.credentialCheck();
+			SpaceContext.debug().credentialCheck();
 
 			Optional<String[]> tokens = decodeAuthorizationHeader(context.header(SpaceHeaders.AUTHORIZATION));
 

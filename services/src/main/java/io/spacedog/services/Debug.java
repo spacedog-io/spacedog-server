@@ -6,31 +6,22 @@ import io.spacedog.utils.Json;
 
 public class Debug {
 
-	private static ThreadLocal<Integer> batchDebug;
+	private boolean debug = false;
+	private int batchCredentialChecks = 0;
 
-	static {
-		batchDebug = new ThreadLocal<>();
-		resetBatchDebug();
+	public Debug(boolean debug) {
+		this.debug = debug;
 	}
 
-	public static void resetBatchDebug() {
-		batchDebug.set(Integer.valueOf(0));
+	public boolean isTrue() {
+		return debug;
 	}
 
-	public static void credentialCheck() {
-		Integer value = batchDebug.get();
-		batchDebug.set(value == null ? 1 : Integer.valueOf(value + 1));
+	public void credentialCheck() {
+		batchCredentialChecks++;
 	}
 
-	public static int batchCrendentialChecks() {
-		return batchDebug.get();
-	}
-
-	public static ObjectNode buildDebugObjectNode() {
-		return Json.object("batchCredentialChecks", batchCrendentialChecks());
-	}
-
-	public static boolean isTrue() {
-		return SpaceContext.isDebug();
+	public ObjectNode toNode() {
+		return Json.object("batchCredentialChecks", batchCredentialChecks);
 	}
 }

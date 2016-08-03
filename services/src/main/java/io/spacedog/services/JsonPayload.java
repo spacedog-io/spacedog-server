@@ -60,7 +60,7 @@ public class JsonPayload {
 	}
 
 	public static Payload error(int httpStatus, Throwable throwable) {
-		JsonNode errorNode = Json.toJson(throwable, Debug.isTrue() || httpStatus >= 500);
+		JsonNode errorNode = Json.toJson(throwable, SpaceContext.isDebug() || httpStatus >= 500);
 		return json(builder(httpStatus).node("error", errorNode), httpStatus);
 	}
 
@@ -148,8 +148,8 @@ public class JsonPayload {
 	}
 
 	public static Payload json(JsonNode content, int httpStatus) {
-		if (content.isObject() && Debug.isTrue())
-			((ObjectNode) content).set("debug", Debug.buildDebugObjectNode());
+		if (content.isObject() && SpaceContext.isDebug())
+			((ObjectNode) content).set("debug", SpaceContext.debug().toNode());
 
 		return new Payload(JSON_CONTENT_UTF8, content, httpStatus);
 	}
