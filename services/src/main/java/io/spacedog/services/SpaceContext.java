@@ -47,25 +47,17 @@ public class SpaceContext {
 		return (uri, context, nextFilter) -> {
 			if (threadLocal.get() == null) {
 				try {
-					init(context);
+					threadLocal.set(new SpaceContext(context));
 					return nextFilter.get();
 
 				} finally {
-					reset();
+					threadLocal.set(null);
 				}
 			} else
 				// means there is another filter higher in the stack managing
 				// the space context
 				return nextFilter.get();
 		};
-	}
-
-	public static void reset() {
-		threadLocal.set(null);
-	}
-
-	public static void init(Context context) {
-		threadLocal.set(new SpaceContext(context));
 	}
 
 	public static SpaceContext get() {
