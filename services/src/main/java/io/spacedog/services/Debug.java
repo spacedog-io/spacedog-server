@@ -27,7 +27,7 @@ public class Debug {
 	}
 
 	public static ObjectNode buildDebugObjectNode() {
-		return Json.objectBuilder().put("batchCredentialChecks", batchCrendentialChecks()).build();
+		return Json.object("batchCredentialChecks", batchCrendentialChecks());
 	}
 
 	public static boolean isTrue() {

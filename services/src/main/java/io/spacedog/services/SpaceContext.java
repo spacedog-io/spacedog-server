@@ -61,6 +61,7 @@ public class SpaceContext {
 
 	public static void reset() {
 		threadLocal.set(null);
+		Debug.resetBatchDebug();
 	}
 
 	public static void init(Context context) {
@@ -93,7 +94,7 @@ public class SpaceContext {
 	public static SpaceFilter checkAuthorizationFilter() {
 
 		return (uri, context, nextFilter) -> {
-			get().checkAuthorization();
+			get().checkAuthorizationHeader();
 			return nextFilter.get();
 		};
 	}
@@ -191,7 +192,7 @@ public class SpaceContext {
 		return terms.length == 3 ? terms[0] : Backends.ROOT_API;
 	}
 
-	private void checkAuthorization() {
+	private void checkAuthorizationHeader() {
 		if (!authorizationChecked) {
 			authorizationChecked = true;
 			Debug.credentialCheck();

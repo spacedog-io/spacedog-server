@@ -18,7 +18,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import io.spacedog.utils.Json;
-import io.spacedog.utils.Utils;
+import io.spacedog.utils.JsonBuilder;
 import net.codestory.http.Context;
 import net.codestory.http.Cookie;
 import net.codestory.http.Cookies;
@@ -29,7 +29,6 @@ import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
-import net.codestory.http.payload.StreamingOutput;
 
 @Prefix("/1/batch")
 public class BatchResource extends Resource {
@@ -38,14 +37,13 @@ public class BatchResource extends Resource {
 
 	private static final String STOP_ON_ERROR_QUERY_PARAM = "stopOnError";
 
+	//
+	// Routes
+	//
+
 	@Post("")
 	@Post("/")
 	public Payload post(String body, Context context) {
-
-		Debug.resetBatchDebug();
-
-		// do not put any checkCredentials here since it must be called in the
-		// following lambda function
 
 		ArrayNode requests = Json.readArray(body);
 
@@ -53,71 +51,37 @@ public class BatchResource extends Resource {
 			return JsonPayload.error(HttpStatus.BAD_REQUEST, "batch are limited to 10 sub requests");
 
 		boolean stopOnError = context.query().getBoolean(STOP_ON_ERROR_QUERY_PARAM, false);
+		JsonBuilder<ObjectNode> batchPayload = JsonPayload.builder().array("responses");
 
-		StreamingOutput streamingOutput = output -> {
+		for (int i = 0; i < requests.size(); i++) {
 
-			// Batch needs special care on SpaceContext and Credentials
-			// since this code is executed by the fluent payload writer
-			// outside of the filter chain.
-			// I artificially reproduce the SpaceContext filter mechanism and
-			// force init of the SpaceContext for the whole batch to avoid one
-			// buildCredentials per sub request
-			// Use extra care before to change any of this.
+			Payload requestPayload = null;
+			BatchJsonRequestWrapper requestWrapper = new BatchJsonRequestWrapper(//
+					Json.checkObject(requests.get(i)), context);
+
 			try {
-				SpaceContext.init(context);
-
-				output.write("{\"success\":true,\"status\":200,\"responses\":[".getBytes(Utils.UTF8));
-
-				for (int i = 0; i < requests.size(); i++) {
-
-					if (i > 0)
-						output.write(",".getBytes(Utils.UTF8));
-
-					Payload payload = null;
-					BatchJsonRequestWrapper requestWrapper = new BatchJsonRequestWrapper(//
-							Json.checkObject(requests.get(i)), context);
-
-					try {
-						payload = Start.get().executeRequest(requestWrapper, null);
-					} catch (Throwable t) {
-						payload = JsonPayload.error(t);
-					}
-
-					if (payload == null)
-						payload = new Payload(HttpStatus.INTERNAL_SERVER_ERROR);
-
-					if (JsonPayload.isJson(payload)) {
-
-						if (payload.isSuccess() && "GET".equalsIgnoreCase(requestWrapper.method())) {
-
-							output.write(String.format("{\"success\":true,\"status\":%s,\"content\":", payload.code())
-									.getBytes(Utils.UTF8));
-							output.write(JsonPayload.toBytes(payload.rawContent()));
-							output.write("}".getBytes(Utils.UTF8));
-
-						} else
-							output.write(JsonPayload.toBytes(payload.rawContent()));
-
-					} else
-						output.write(JsonPayload.toBytes(JsonPayload.json(payload.code())));
-
-					if (stopOnError && payload.isError())
-						break;
-				}
-
-				if (Debug.isTrue()) {
-					output.write(String.format("],\"debug\":%s}", Debug.buildDebugObjectNode().toString())//
-							.getBytes(Utils.UTF8));
-				} else
-					output.write("]}".getBytes(Utils.UTF8));
-
-			} finally {
-				SpaceContext.reset();
+				requestPayload = Start.get().executeRequest(requestWrapper, null);
+			} catch (Throwable t) {
+				requestPayload = JsonPayload.error(t);
 			}
 
-		};
+			if (requestPayload == null)
+				requestPayload = new Payload(HttpStatus.INTERNAL_SERVER_ERROR);
 
-		return new Payload(JsonPayload.JSON_CONTENT_UTF8, streamingOutput, HttpStatus.OK);
+			if (requestPayload.isSuccess() && "GET".equalsIgnoreCase(requestWrapper.method())) {
+
+				batchPayload.object()//
+						.put("success", true)//
+						.put("status", requestPayload.code())//
+						.node("content", JsonPayload.toJsonNode(requestPayload))//
+						.end();
+			} else
+				batchPayload.node(JsonPayload.toJsonNode(requestPayload));
+
+			if (stopOnError && requestPayload.isError())
+				break;
+		}
+		return JsonPayload.json(batchPayload);
 	}
 
 	//
@@ -137,7 +101,8 @@ public class BatchResource extends Resource {
 		@Override
 		@SuppressWarnings("unchecked")
 		public <T> T unwrap(Class<T> type) {
-			return type.isInstance(request) ? (T) request : type.isInstance(context) ? (T) context : null;
+			return type.isInstance(request) //
+					? (T) request : type.isInstance(context) ? (T) context : null;
 		}
 
 		@Override
@@ -154,9 +119,6 @@ public class BatchResource extends Resource {
 		public String content() throws IOException {
 			JsonNode content = request.get("content");
 			return content == null ? null : content.toString();
-
-			// return Json.checkJsonNode(request, "content",
-			// true).get().toString();
 		}
 
 		@Override
@@ -191,7 +153,8 @@ public class BatchResource extends Resource {
 
 		@Override
 		public InputStream inputStream() throws IOException {
-			throw new UnsupportedOperationException("batch wrapped request must not provide any input stream");
+			throw new UnsupportedOperationException(//
+					"batch wrapped request must not provide any input stream");
 		}
 
 		@Override
@@ -254,7 +217,8 @@ public class BatchResource extends Resource {
 
 		@Override
 		public List<Part> parts() {
-			throw new UnsupportedOperationException("batch wrapped request must not provide parts");
+			throw new UnsupportedOperationException(//
+					"batch wrapped request must not provide parts");
 		}
 	}
 

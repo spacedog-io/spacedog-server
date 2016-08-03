@@ -207,10 +207,24 @@ public class JsonPayload {
 	}
 
 	public static JsonBuilder<ObjectNode> builder() {
-		return builder();
+		return builder(200);
 	}
 
 	public static JsonBuilder<ObjectNode> builder(int status) {
 		return Json.objectBuilder().put("success", status < 400).put("status", status);
 	}
+
+	public static JsonNode toJsonNode(Payload payload) {
+
+		Object rawContent = payload.rawContent();
+		if (rawContent instanceof JsonNode)
+			return (JsonNode) rawContent;
+		if (rawContent instanceof String)
+			return Json.readNode((String) rawContent);
+
+		return JsonPayload.builder(payload.code()).build();
+		// throw Exceptions.illegalArgument("non json payload: [%s]",
+		// rawContent);
+	}
+
 }

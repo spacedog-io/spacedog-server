@@ -14,7 +14,6 @@ import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Schema;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
@@ -35,11 +34,9 @@ public class BatchResourceTestOften extends Assert {
 
 		ArrayNode batch = Json.arrayBuilder()//
 				.object()//
-				.put("method", "GET").put("path", "/1/backend")//
-				.end()//
-				.object()//
 				.put("method", "DELETE").put("path", "/1/backend")//
 				.end()//
+
 				.object()//
 				.put("method", "POST").put("path", "/1/backend/test")//
 				.object("content")//
@@ -48,37 +45,34 @@ public class BatchResourceTestOften extends Assert {
 				.put("email", "test@dog.com")//
 				.end()//
 				.end()//
+
+				.object()//
+				.put("method", "GET").put("path", "/1/backend")//
+				.end()//
+
 				.object()//
 				.put("method", "POST").put("path", "/1/schema/message")//
 				.node("content",
 						Schema.builder("message").id("code")//
 								.string("code").text("text").toString())//
 				.end()//
+
 				.object()//
 				.put("method", "GET").put("path", "/1/login")//
 				.end()//
 				.build();
 
-		SpaceResponse spaceResponse = SpaceRequest.post("/1/batch")//
-				.debugServer().superdogAuth("test").body(batch).go(200);
-
-		int accountGetStatus = Json.get(spaceResponse.jsonNode(), "responses.0.status").asInt();
-
-		if (accountGetStatus == 200)
-			spaceResponse.assertEquals(200, "responses.0.status")//
-					.assertEquals("test", "responses.0.content.backendId")//
-					.assertEquals(200, "responses.1.status");
-		else
-			spaceResponse.assertEquals(404, "responses.0.status")//
-					.assertEquals(404, "responses.1.status");
-
-		spaceResponse.assertTrue("responses.2.success")//
-				.assertEquals("test", "responses.2.id")//
-				.assertEquals("backend", "responses.2.type")//
-				.assertTrue("responses.3.success")//
+		SpaceRequest.post("/1/batch").debugServer().superdogAuth("test").body(batch).go(200)//
+				.assertEquals(201, "responses.1.status")//
+				.assertEquals("test", "responses.1.id")//
+				.assertEquals(200, "responses.2.status")//
+				.assertEquals("test", "responses.2.content.backendId")//
+				.assertEquals("test", "responses.2.content.superAdmins.0.username")//
+				.assertEquals("test@dog.com", "responses.2.content.superAdmins.0.email")//
+				.assertEquals(201, "responses.3.status")//
 				.assertEquals("message", "responses.3.id")//
 				.assertEquals("schema", "responses.3.type")//
-				.assertTrue("responses.4.success")//
+				.assertEquals(200, "responses.4.status")//
 				.assertEquals(1, "debug.batchCredentialChecks");
 
 		Backend test = new Backend("test", "test", "hi test", "test@dog.com");
@@ -95,6 +89,7 @@ public class BatchResourceTestOften extends Assert {
 				.put("email", "vince@dog.com")//
 				.end()//
 				.end()//
+
 				.object()//
 				.put("method", "POST").put("path", "/1/credentials")//
 				.object("content")//
@@ -103,9 +98,11 @@ public class BatchResourceTestOften extends Assert {
 				.put("email", "dave@dog.com")//
 				.end()//
 				.end()//
+
 				.object()//
 				.put("method", "GET").put("path", "/1/credentials/vince")//
 				.end()//
+
 				.object()//
 				.put("method", "GET").put("path", "/1/credentials/dave")//
 				.end()//
@@ -118,7 +115,7 @@ public class BatchResourceTestOften extends Assert {
 				.assertEquals("dave", "responses.3.content.username")//
 				.assertEquals(1, "debug.batchCredentialChecks");
 
-		// should succeed to returns errors when batch requests are invalid, not
+		// should succeed to return errors when batch requests are invalid, not
 		// found, unauthorized, ...
 
 		batch = Json.arrayBuilder()//
@@ -129,15 +126,19 @@ public class BatchResourceTestOften extends Assert {
 				.put("password", "hi fred")//
 				.end()//
 				.end()//
+
 				.object()//
 				.put("method", "GET").put("path", "/1/toto")//
 				.end()//
+
 				.object()//
 				.put("method", "GET").put("path", "/1/user/vince")//
 				.end()//
+
 				.object()//
 				.put("method", "POST").put("path", "/1/user")//
 				.end()//
+
 				.object()//
 				.put("method", "PUT").put("path", "/1/user/vince/password")//
 				.put("content", "hi vince 2")//
@@ -162,6 +163,7 @@ public class BatchResourceTestOften extends Assert {
 				.put("text", "Hi guys!")//
 				.end()//
 				.end()//
+
 				.object()//
 				.put("method", "POST").put("path", "/1/data/message")//
 				.object("content")//
@@ -169,12 +171,14 @@ public class BatchResourceTestOften extends Assert {
 				.put("text", "Pretty cool, huhh?")//
 				.end()//
 				.end()//
+
 				.object()//
 				.put("method", "GET").put("path", "/1/data/message")//
 				.object("parameters")//
 				.put("refresh", true)//
 				.end()//
 				.end()//
+
 				.object()//
 				.put("method", "PUT").put("path", "/1/data/message/1")//
 				.object("content")//
@@ -182,12 +186,14 @@ public class BatchResourceTestOften extends Assert {
 				.put("text", "Hi guys, what's up?")//
 				.end()//
 				.end()//
+
 				.object()//
 				.put("method", "PUT").put("path", "/1/data/message/2")//
 				.object("content")//
 				.put("text", "Pretty cool, huhhhhh?")//
 				.end()//
 				.end()//
+
 				.object()//
 				.put("method", "GET").put("path", "/1/data/message")//
 				.object("parameters")//
@@ -224,9 +230,11 @@ public class BatchResourceTestOften extends Assert {
 				.object()//
 				.put("method", "GET").put("path", "/1/data/message")//
 				.end()//
+
 				.object()//
 				.put("method", "GET").put("path", "/1/data/XXX")//
 				.end()//
+
 				.object()//
 				.put("method", "GET").put("path", "/1/data/message")//
 				.end()//
@@ -241,14 +249,11 @@ public class BatchResourceTestOften extends Assert {
 
 		// should fail since batch are limited to 10 sub requests
 
-		JsonBuilder<ArrayNode> bigBatch = Json.arrayBuilder();
+		ArrayNode bigBatch = Json.array();
 		for (int i = 0; i < 11; i++)
-			bigBatch.object().put("method", "GET").put("path", "/1/login").end();
+			bigBatch.add(Json.object("method", "GET", "path", "/1/login"));
 
-		SpaceRequest.post("/1/batch").debugServer().backend(test)//
-				.body(bigBatch.build()).go(400)//
-				.assertEquals("batch are limited to 10 sub requests", "error.message")//
-				.assertEquals(0, "debug.batchCredentialChecks");
-
+		SpaceRequest.post("/1/batch").debugServer().backend(test).body(bigBatch).go(400)//
+				.assertEquals("batch are limited to 10 sub requests", "error.message");
 	}
 }
