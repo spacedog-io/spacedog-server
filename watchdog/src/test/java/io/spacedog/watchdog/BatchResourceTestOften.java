@@ -132,15 +132,11 @@ public class BatchResourceTestOften extends Assert {
 				.end()//
 
 				.object()//
-				.put("method", "GET").put("path", "/1/user/vince")//
+				.put("method", "DELETE").put("path", "/1/credentials/vince")//
 				.end()//
 
 				.object()//
-				.put("method", "POST").put("path", "/1/user")//
-				.end()//
-
-				.object()//
-				.put("method", "PUT").put("path", "/1/user/vince/password")//
+				.put("method", "PUT").put("path", "/1/credentials/vince/password")//
 				.put("content", "hi vince 2")//
 				.end()//
 				.build();
@@ -148,9 +144,8 @@ public class BatchResourceTestOften extends Assert {
 		SpaceRequest.post("/1/batch").debugServer().backend(test).body(batch).go(200)//
 				.assertEquals(400, "responses.0.status")//
 				.assertEquals(404, "responses.1.status")//
-				.assertEquals(404, "responses.2.status")//
+				.assertEquals(403, "responses.2.status")//
 				.assertEquals(403, "responses.3.status")//
-				.assertEquals(403, "responses.4.status")//
 				.assertEquals(1, "debug.batchCredentialChecks");
 
 		// should succeed to create and update messages by batch

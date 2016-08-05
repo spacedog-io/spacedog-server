@@ -3,20 +3,35 @@
  */
 package io.spacedog.services;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import io.spacedog.utils.Credentials;
+import io.spacedog.utils.Json;
+import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.Schema;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Put;
+import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
 public class UserResource extends Resource {
 
 	//
-	// User constants
+	// User constants and schema
 	//
 
 	public static final String TYPE = "user";
+
+	public static Schema getDefaultUserSchema() {
+		return Schema.builder(TYPE)//
+				.id(USERNAME)//
+				.string(USERNAME)//
+				.string(EMAIL)//
+				.build();
+	}
 
 	//
 	// Routes
@@ -30,8 +45,26 @@ public class UserResource extends Resource {
 
 	@Post("/1/user")
 	@Post("/1/user/")
-	public Payload post(String body, Context context) {
-		return DataResource.get().post(TYPE, body, context);
+	@Post("/1/data/user")
+	@Post("/1/data/user/")
+	public Payload signUp(String body, Context context) {
+
+		Credentials credentials = CredentialsResource.get().create(body);
+		SpaceContext.setCredentials(credentials);
+
+		ObjectNode node = Json.readObject(body);
+		node.remove(PASSWORD);
+		body = node.toString();
+		DataResource.get().post(TYPE, body, context);
+
+		JsonBuilder<ObjectNode> builder = JsonPayload.builder(true, //
+				credentials.backendId(), "/1", TYPE, credentials.name());
+
+		if (credentials.passwordResetCode() != null)
+			builder.put(PASSWORD_RESET_CODE, credentials.passwordResetCode());
+
+		return JsonPayload.json(builder, HttpStatus.CREATED)//
+				.withHeader(JsonPayload.HEADER_OBJECT_ID, credentials.name());
 	}
 
 	@Get("/1/user/:username")
@@ -48,24 +81,27 @@ public class UserResource extends Resource {
 
 	@Delete("/1/user/:username")
 	@Delete("/1/user/:username/")
+	@Delete("/1/data/user/:username")
+	@Delete("/1/data/user/:username/")
 	public Payload delete(String username, Context context) {
+		CredentialsResource.get().deleteById(username);
 		return DataResource.get().deleteById(TYPE, username, context);
 	}
 
 	@Delete("/1/user/:username/password")
-	@Delete("/1/user/:username/password/")
+	@Delete("/1/user/:username/password")
 	public Payload deletePassword(String username, Context context) {
 		return CredentialsResource.get().deletePassword(username, context);
 	}
 
 	@Post("/1/user/:username/password")
-	@Post("/1/user/:username/password/")
+	@Post("/1/user/:username/password")
 	public Payload postPassword(String username, Context context) {
 		return CredentialsResource.get().postPassword(username, context);
 	}
 
 	@Put("/1/user/:username/password")
-	@Put("/1/user/:username/password/")
+	@Put("/1/user/:username/password")
 	public Payload putPassword(String username, Context context) {
 		return CredentialsResource.get().putPassword(username, context);
 	}
