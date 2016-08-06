@@ -6,6 +6,7 @@ package io.spacedog.client;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.http.impl.client.HttpClients;
@@ -45,6 +46,7 @@ public class SpaceRequest {
 	private Map<String, Object> formFields = Maps.newHashMap();
 	private String password;
 	private String username;
+	private String bearerToken;
 	private Boolean forTesting = null;
 
 	// static defaults
@@ -127,6 +129,15 @@ public class SpaceRequest {
 		return backendId(backendId);
 	}
 
+	public SpaceRequest bearerAuth(Backend backend, String accessToken) {
+		return bearerAuth(backend.backendId, accessToken);
+	}
+
+	public SpaceRequest bearerAuth(String backendId, String accessToken) {
+		this.bearerToken = accessToken;
+		return backendId(backendId);
+	}
+
 	public SpaceRequest body(byte[] bytes) {
 		this.body = bytes;
 		return this;
@@ -201,7 +212,7 @@ public class SpaceRequest {
 		return response;
 	}
 
-	public SpaceResponse go() throws Exception {
+	public SpaceResponse go() {
 		if ((forTesting == null && forTestingDefault)//
 				|| (forTesting != null && forTesting))
 			this.header(SpaceHeaders.SPACEDOG_TEST, "true");
@@ -212,6 +223,10 @@ public class SpaceRequest {
 
 		if (!Strings.isNullOrEmpty(username))
 			request.basicAuth(username, password);
+
+		else if (!Strings.isNullOrEmpty(bearerToken))
+			request.header(SpaceHeaders.AUTHORIZATION, //
+					String.join(" ", SpaceHeaders.BEARER_SCHEME, bearerToken));
 
 		this.headers.forEach((key, value) -> request.header(key, value));
 		this.queryParams.forEach((key, value) -> request.queryString(key, value));
@@ -340,6 +355,18 @@ public class SpaceRequest {
 
 	public SpaceRequest debugServer() {
 		return header(SpaceHeaders.SPACEDOG_DEBUG, "true");
+	}
+
+	public SpaceRequest cookies(String... cookies) {
+		for (String cookie : cookies)
+			header(SpaceHeaders.COOKIE, cookie);
+		return this;
+	}
+
+	public SpaceRequest cookies(List<String> cookies) {
+		for (String cookie : cookies)
+			header(SpaceHeaders.COOKIE, cookie);
+		return this;
 	}
 
 	// public static void setDefaultBackend(String backendId) {

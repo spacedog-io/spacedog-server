@@ -15,6 +15,7 @@ import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceException;
+import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Utils;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
@@ -25,7 +26,6 @@ public class JsonPayload {
 
 	public static final String JSON_CONTENT = "application/json";
 	public static final String JSON_CONTENT_UTF8 = JSON_CONTENT + ";charset=UTF-8";
-	public static final String HEADER_OBJECT_ID = "x-spacedog-object-id";
 
 	public static Payload success() {
 		return json(HttpStatus.OK);
@@ -105,7 +105,7 @@ public class JsonPayload {
 			boolean isUriFinal) {
 		JsonBuilder<ObjectNode> builder = JsonPayload.builder(created, backendId, uri, type, id, version, isUriFinal);
 		return json(builder, created ? HttpStatus.CREATED : HttpStatus.OK)//
-				.withHeader(HEADER_OBJECT_ID, id);
+				.withHeader(SpaceHeaders.SPACEDOG_OBJECT_ID, id);
 	}
 
 	public static JsonBuilder<ObjectNode> builder(boolean created, String backendId, String uri, String type, String id,

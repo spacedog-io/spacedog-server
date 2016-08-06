@@ -9,6 +9,7 @@ import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Schema;
+import io.spacedog.utils.SpaceHeaders;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -64,7 +65,7 @@ public class UserResource extends Resource {
 			builder.put(PASSWORD_RESET_CODE, credentials.passwordResetCode());
 
 		return JsonPayload.json(builder, HttpStatus.CREATED)//
-				.withHeader(JsonPayload.HEADER_OBJECT_ID, credentials.name());
+				.withHeader(SpaceHeaders.SPACEDOG_OBJECT_ID, credentials.name());
 	}
 
 	@Get("/1/user/:username")

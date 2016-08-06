@@ -10,6 +10,10 @@ public class Exceptions {
 		return new RuntimeException(t);
 	}
 
+	public static RuntimeException runtime(Throwable t, String message, Object... args) {
+		return new RuntimeException(String.format(message, args), t);
+	}
+
 	public static IllegalArgumentException illegalArgument(String message, Object... args) {
 		return new IllegalArgumentException(String.format(message, args));
 	}

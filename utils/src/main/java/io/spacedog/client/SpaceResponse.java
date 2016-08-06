@@ -5,14 +5,13 @@ package io.spacedog.client;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 import org.apache.http.Header;
 import org.joda.time.DateTime;
 import org.junit.Assert;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -23,6 +22,8 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.HttpRequest;
 
+import io.spacedog.utils.AuthorizationHeader;
+import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Utils;
@@ -31,12 +32,12 @@ public class SpaceResponse {
 
 	private HttpRequest httpRequest;
 	private HttpResponse<String> httpResponse;
+	private SpaceHeaders headers;
 	private DateTime before;
 	private JsonNode jsonResponseContent;
 	private long duration;
 
-	public SpaceResponse(HttpRequest request, JsonNode jsonRequestContent, boolean debug)
-			throws JsonProcessingException, IOException, UnirestException {
+	public SpaceResponse(HttpRequest request, JsonNode jsonRequestContent, boolean debug) {
 
 		this.httpRequest = request;
 
@@ -47,8 +48,15 @@ public class SpaceResponse {
 
 		this.before = DateTime.now();
 
-		httpResponse = httpRequest.asString();
+		try {
+			this.httpResponse = httpRequest.asString();
+		} catch (UnirestException e) {
+			throw Exceptions.runtime(e, "request [%s][%s] request failed", //
+					httpRequest.getHttpMethod(), httpRequest.getUrl());
+		}
+
 		this.duration = DateTime.now().getMillis() - this.before.getMillis();
+		this.headers = new SpaceHeaders(httpResponse().getHeaders());
 
 		if (debug) {
 			Utils.info("%s (%s)", httpResponse.getStatus(), httpResponse.getStatusText());
@@ -73,7 +81,7 @@ public class SpaceResponse {
 
 			Utils.info("=> duration: [%sms]", duration);
 
-			httpResponse.getHeaders().forEach((key, value) -> Utils.info("=> %s: %s", key, value));
+			this.headers.forEach((key, value) -> Utils.info("=> %s: %s", key, value));
 
 			if (body != null) {
 				String prettyBody = jsonResponseContent != null //
@@ -86,14 +94,14 @@ public class SpaceResponse {
 	}
 
 	private static void printHeader(String key, List<String> value) {
-		if (key.equals(SpaceHeaders.AUTHORIZATION)) {
-			String[] schemeAndTokens = value.get(0).split(" ", 2);
-			String decoded = new String(Base64.getDecoder().decode(//
-					schemeAndTokens[1].getBytes(Utils.UTF8)));
-			String[] tokens = decoded.split(":", 2);
-			Utils.info("%s: %s (%s)", key, value, tokens[0]);
-		} else
-			Utils.info("%s: %s", key, value);
+		if (AuthorizationHeader.isKey(key)) {
+			AuthorizationHeader authHeader = new AuthorizationHeader(value);
+			if (authHeader.isBasic()) {
+				Utils.info("Authorization: [Basic %s:*******]", authHeader.username());
+				return;
+			}
+		}
+		Utils.info("%s: %s", key, value);
 	}
 
 	public DateTime before() {
@@ -112,13 +120,13 @@ public class SpaceResponse {
 
 	public ObjectNode objectNode() {
 		if (!jsonNode().isObject())
-			throw new RuntimeException(String.format("not a json object but [%s]", jsonResponseContent.getNodeType()));
+			throw Exceptions.runtime("not a json object but [%s]", jsonResponseContent.getNodeType());
 		return (ObjectNode) jsonResponseContent;
 	}
 
 	public ArrayNode arrayNode() {
 		if (!jsonNode().isArray())
-			throw new RuntimeException(String.format("not a json array but [%s]", jsonResponseContent.getNodeType()));
+			throw Exceptions.runtime("not a json array but [%s]", jsonResponseContent.getNodeType());
 		return (ArrayNode) jsonResponseContent;
 	}
 
@@ -142,6 +150,18 @@ public class SpaceResponse {
 		if (httpResponse == null)
 			throw new IllegalStateException("no response yet");
 		return httpResponse;
+	}
+
+	public String headerFirst(String name) {
+		return headers.first(name);
+	}
+
+	public List<String> header(String name) {
+		return headers.get(name);
+	}
+
+	public void forEachHeader(BiConsumer<String, List<String>> action) {
+		this.headers.forEach(action);
 	}
 
 	public JsonNode getFromJson(String jsonPath) {
@@ -315,24 +335,15 @@ public class SpaceResponse {
 	}
 
 	public SpaceResponse assertHeaderEquals(String expected, String headerName) {
-		// header name is converted to lower case to get around Unirest bug
-		// where header names are only lower cased
-		String lowerCasedHeaderName = headerName.toLowerCase();
-
-		if (!Arrays.asList(expected).equals(//
-				httpResponse.getHeaders().get(lowerCasedHeaderName)))
+		if (!Arrays.asList(expected).equals(headers.get(headerName)))
 			Assert.fail(String.format("response header [%s] not equal to [%s] but to %s", //
-					headerName, expected, httpResponse.getHeaders().get(lowerCasedHeaderName)));
+					headerName, expected, headers.get(headerName)));
 
 		return this;
 	}
 
 	public SpaceResponse assertHeaderContains(String expected, String headerName) {
-		// header name is converted to lower case to get around Unirest bug
-		// where header names are only lower cased
-		String lowerCasedHeaderName = headerName.toLowerCase();
-
-		List<String> headerValue = httpResponse.getHeaders().get(lowerCasedHeaderName);
+		List<String> headerValue = headers.get(headerName);
 
 		if (headerValue == null)
 			Assert.fail(String.format("no response header with name [%s]", headerName));

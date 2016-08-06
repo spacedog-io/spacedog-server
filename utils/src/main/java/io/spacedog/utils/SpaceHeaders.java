@@ -1,16 +1,23 @@
 package io.spacedog.utils;
 
-public abstract class SpaceHeaders {
+import java.util.List;
+import java.util.function.BiConsumer;
+
+import com.mashape.unirest.http.Headers;
+
+public class SpaceHeaders {
 
 	// SpaceDog custom headers
 
 	public static final String SPACEDOG_TEST = "x-spacedog-test";
 	public static final String SPACEDOG_DEBUG = "x-spacedog-debug";
 	public static final String SPACEDOG_OWNER = "x-spacedog-owner";
+	public static final String SPACEDOG_OBJECT_ID = "x-spacedog-object-id";
 
 	// Common values
 
 	public static final String BASIC_SCHEME = "Basic";
+	public static final String BEARER_SCHEME = "Bearer";
 	public static final String ALLOW_METHODS = "GET, POST, PUT, DELETE, HEAD";
 
 	// Common headers from CodeStory
@@ -56,4 +63,28 @@ public abstract class SpaceHeaders {
 	public static final String ACCESS_CONTROL_ALLOW_ORIGIN = "Access-Control-Allow-Origin";
 	public static final String ACCESS_CONTROL_ALLOW_CREDENTIALS = "Access-Control-Allow-Credentials";
 	public static final String ORIGIN = "Origin";
+
+	// fields
+
+	private Headers headers;
+
+	public SpaceHeaders(Headers headers) {
+		this.headers = headers;
+	}
+
+	public String first(String name) {
+		// header name is converted to lower case to get around Unirest bug
+		// where header names are only lower cased
+		return headers.getFirst(name.trim().toLowerCase());
+	}
+
+	public List<String> get(String name) {
+		// header name is converted to lower case to get around Unirest bug
+		// where header names are only lower cased
+		return headers.get(name.trim().toLowerCase());
+	}
+
+	public void forEach(BiConsumer<String, List<String>> action) {
+		this.headers.forEach(action);
+	}
 }
