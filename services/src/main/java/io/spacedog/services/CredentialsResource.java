@@ -15,9 +15,11 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.support.QuerySourceBuilder;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
+import org.elasticsearch.common.Strings;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -26,15 +28,20 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceResponse;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.LinkedinSettings;
+import io.spacedog.utils.NotFoundException;
 import io.spacedog.utils.Passwords;
 import io.spacedog.utils.Roles;
 import io.spacedog.utils.Schema;
+import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Usernames;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -47,6 +54,7 @@ import net.codestory.http.payload.Payload;
 public class CredentialsResource extends Resource {
 
 	public static final String TYPE = "credentials";
+	private static final String LINKEDIN_SETTINGS_ID = "linkedin";
 
 	//
 	// init
@@ -58,6 +66,8 @@ public class CredentialsResource extends Resource {
 				.string(BACKEND_ID)//
 				.string(CREDENTIALS_LEVEL)//
 				.string(ROLES).array()//
+				.string(ACCESS_TOKEN)//
+				.string(ACCESS_TOKEN_EXPIRES_AT)//
 				.string(HASHED_PASSWORD)//
 				.string(PASSWORD_RESET_CODE)//
 				.string(EMAIL)//
@@ -107,7 +117,78 @@ public class CredentialsResource extends Resource {
 			savedBuilder.put(PASSWORD_RESET_CODE, credentials.passwordResetCode());
 
 		return JsonPayload.json(savedBuilder, HttpStatus.CREATED)//
-				.withHeader(JsonPayload.HEADER_OBJECT_ID, credentials.name());
+				.withHeader(SpaceHeaders.SPACEDOG_OBJECT_ID, credentials.name());
+	}
+
+	@Get("/1/credentials/linkedin")
+	@Get("/1/credentials/linkedin/")
+	@Post("/1/credentials/linkedin")
+	@Post("/1/credentials/linkedin/")
+	public Payload postLinkedin(Context context) {
+
+		String backendId = SpaceContext.checkCredentials(true).backendId();
+		LinkedinSettings settings = null;
+
+		try {
+			settings = Json.mapper().readValue(//
+					SettingsResource.get().doGet(LINKEDIN_SETTINGS_ID), //
+					LinkedinSettings.class);
+		} catch (IOException e) {
+			throw Exceptions.runtime(e, "invalid linkedin settings");
+		}
+
+		String code = context.get("code");
+		String redirectUri = context.get("redirect_uri");
+		if (Strings.isNullOrEmpty(redirectUri))
+			redirectUri = spaceUrl(backendId, "/1/credentials/linkedin").toString();
+		DateTime expiresAt = DateTime.now();
+
+		SpaceResponse response = SpaceRequest//
+				.post("https://www.linkedin.com/oauth/v2/accessToken")//
+				.queryParam("grant_type", "authorization_code")//
+				.queryParam("client_id", settings.clientId)//
+				.queryParam("client_secret", settings.clientSecret)//
+				.queryParam("redirect_uri", settings.redirectUri)//
+				.queryParam("code", code)//
+				.go();
+
+		if (response.httpResponse().getStatus() >= 400)
+			return JsonPayload.error(response.httpResponse().getStatus(), //
+					response.getFromJson("error_description").asText());
+
+		String accessToken = response.objectNode().get("access_token").asText();
+		expiresAt = expiresAt.plus(response.objectNode().get("expires_in").asLong());
+
+		response = SpaceRequest//
+				.get("https://api.linkedin.com/v1/people/~:(id,email-address)")//
+				.bearerAuth(backendId, accessToken)//
+				.queryParam("format", "json")//
+				.go();
+
+		if (response.httpResponse().getStatus() >= 400)
+			return JsonPayload.error(response.httpResponse().getStatus(), //
+					response.getFromJson("error_description").asText());
+
+		String id = response.objectNode().get("id").asText();
+		String email = response.objectNode().get("emailAddress").asText();
+
+		Credentials credentials = get(backendId, id, false)//
+				.orElse(new Credentials(backendId, id, Level.USER));
+
+		boolean isNew = credentials.createdAt() == null;
+
+		credentials.email(email);
+		credentials.accessToken(accessToken);
+		credentials.accessTokenExpiresAt(expiresAt);
+
+		index(credentials);
+
+		JsonBuilder<ObjectNode> builder = JsonPayload.builder(isNew, //
+				backendId, "/1", TYPE, id);
+
+		return JsonPayload.json(builder, HttpStatus.CREATED)//
+				.withHeader(SpaceHeaders.SPACEDOG_OBJECT_ID, credentials.name())//
+				.withHeader("access_token", accessToken);
 	}
 
 	@Get("/1/credentials/:username")
@@ -138,6 +219,9 @@ public class CredentialsResource extends Resource {
 		String backendId = SpaceContext.checkAdminCredentials().backendId();
 		Credentials credentials = get(backendId, username, true).get();
 
+		if (Strings.isNullOrEmpty(credentials.hashedPassword()))
+			throw new NotFoundException("no password to delete");
+
 		credentials.hashedPassword(null);
 		credentials.passwordResetCode(UUID.randomUUID().toString());
 		index(credentials);
@@ -154,7 +238,7 @@ public class CredentialsResource extends Resource {
 
 		// TODO do we need a password reset expire date to limit the reset
 		// time scope
-		String passwordResetCode = context.query().get(PASSWORD_RESET_CODE);
+		String passwordResetCode = context.get(PASSWORD_RESET_CODE);
 		Check.notNullOrEmpty(passwordResetCode, PASSWORD_RESET_CODE);
 
 		String password = context.get(PASSWORD);
@@ -250,7 +334,7 @@ public class CredentialsResource extends Resource {
 	Credentials create(String body) {
 		String backendId = SpaceContext.backendId();
 
-		Credentials credentials = signUp(//
+		Credentials credentials = regularSignUp(//
 				backendId, Level.USER, Json.readObject(body));
 
 		if (exists(credentials))
@@ -262,7 +346,7 @@ public class CredentialsResource extends Resource {
 		return credentials;
 	}
 
-	Credentials signUp(String backendId, Level level, ObjectNode data) {
+	Credentials regularSignUp(String backendId, Level level, ObjectNode data) {
 
 		Credentials credentials = new Credentials(backendId);
 		credentials.name(Json.checkStringNotNullOrEmpty(data, Resource.USERNAME));
@@ -305,6 +389,23 @@ public class CredentialsResource extends Resource {
 		return Optional.empty();
 	}
 
+	Optional<Credentials> check(String backendId, String accessToken) {
+
+		SearchHits hits = Start.get().getElasticClient().prepareSearch(backendId, TYPE)//
+				.setQuery(QueryBuilders.termQuery(ACCESS_TOKEN, accessToken))//
+				.get()//
+				.getHits();
+
+		if (hits.totalHits() == 1)
+			return Optional.of(toCredentials(hits.getAt(0).getSourceAsString()));
+
+		if (hits.totalHits() == 0)
+			return Optional.empty();
+
+		throw Exceptions.runtime("access token [%s] associated with [%s] credentials", //
+				accessToken, hits.totalHits());
+	}
+
 	boolean exists(Credentials credentials) {
 		return exists(credentials.backendId(), credentials.name());
 	}
@@ -330,10 +431,12 @@ public class CredentialsResource extends Resource {
 			else
 				return Optional.empty();
 		}
+		return Optional.of(toCredentials(response.getSourceAsString()));
+	}
 
+	private Credentials toCredentials(String json) {
 		try {
-			return Optional.of(Json.mapper().readValue(//
-					response.getSourceAsString(), Credentials.class));
+			return Json.mapper().readValue(json, Credentials.class);
 		} catch (IOException e) {
 			throw Exceptions.runtime(e);
 		}

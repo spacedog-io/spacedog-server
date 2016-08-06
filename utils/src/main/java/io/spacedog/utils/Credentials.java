@@ -7,6 +7,8 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.Set;
 
+import org.joda.time.DateTime;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.google.common.collect.Sets;
@@ -30,6 +32,8 @@ public class Credentials {
 	private String email;
 	private Level level;
 	private Set<String> roles;
+	private String accessToken;
+	private DateTime accessTokenExpiresAt;
 	private String passwordResetCode;
 	private String hashedPassword;
 	private String createdAt;
@@ -41,6 +45,12 @@ public class Credentials {
 	public Credentials(String backendId) {
 		this.backendId = backendId;
 		this.level = Level.KEY;
+	}
+
+	public Credentials(String backendId, String name, Level level) {
+		this.backendId = backendId;
+		this.username = name;
+		this.level = level;
 	}
 
 	public boolean isSuperDog() {
@@ -101,6 +111,22 @@ public class Credentials {
 
 	public void level(Level value) {
 		this.level = value;
+	}
+
+	public String accessToken() {
+		return accessToken;
+	}
+
+	public void accessToken(String accessToken) {
+		this.accessToken = accessToken;
+	}
+
+	public DateTime accessTokenExpiresAt() {
+		return accessTokenExpiresAt;
+	}
+
+	public void accessTokenExpiresAt(DateTime accessTokenExpiresAt) {
+		this.accessTokenExpiresAt = accessTokenExpiresAt;
 	}
 
 	public String hashedPassword() {

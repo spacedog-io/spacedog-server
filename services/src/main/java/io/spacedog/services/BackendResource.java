@@ -88,7 +88,7 @@ public class BackendResource extends Resource {
 			return JsonPayload.invalidParameters("backendId", backendId,
 					String.format("backend id [%s] not available", backendId));
 
-		Credentials credentials = CredentialsResource.get().signUp(//
+		Credentials credentials = CredentialsResource.get().regularSignUp(//
 				backendId, Level.SUPER_ADMIN, Json.readObject(body));
 		CredentialsResource.get().index(credentials);
 

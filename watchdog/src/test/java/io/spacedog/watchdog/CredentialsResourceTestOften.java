@@ -281,4 +281,69 @@ public class CredentialsResourceTestOften extends Assert {
 				.assertEquals("user", "0");
 	}
 
+	@Test
+	public void linkedinSignUpAndMore() throws Exception {
+
+		// prepare
+		SpaceClient.prepareTest();
+		Backend test = SpaceClient.resetTestBackend();
+
+		// no linkedin settings means no linkedin credentials
+		SpaceRequest.post("/1/credentials/linkedin").backend(test).go(404);
+
+		// admin sets linkedin settings
+		String redirectUri = SpaceRequest.configuration().target()//
+				.url(test.backendId, "/1/credentials/linkedin");
+		SpaceRequest.put("/1/settings/linkedin")//
+				.adminAuth(test)//
+				.body("clientId", "78uk3jfazu0wj2", "clientSecret", "42AfVLDNEXtgO9CG", //
+						"redirectUri", redirectUri)//
+				.go(201);
+
+		// fails to create linkedin credentials if no authorization code
+		SpaceRequest.post("/1/credentials/linkedin").backend(test).go(400);
+
+		// fails to create linkedin credentials if invalid authorization code
+		SpaceRequest.post("/1/credentials/linkedin").backend(test)//
+				.formField("code", "XXX")//
+				.go(401);
+
+		// fred signs up with linkedin
+
+		// SpaceResponse response = SpaceRequest//
+		// .get("https://www.linkedin.com/oauth/v2/authorization")//
+		// .queryParam("response_type", "code")//
+		// .queryParam("redirect_uri", redirectUri)//
+		// .queryParam("client_id", "78uk3jfazu0wj2")//
+		// .queryParam("state", "thisisit")//
+		// .go(303);
+		//
+		// List<String> cookies = response.header(SpaceHeaders.SET_COOKIE);
+		// String location = response.headerFirst(SpaceHeaders.LOCATION);
+		//
+		// SpaceRequest.get(location)//
+		// .cookies(cookies)//
+		// .go();
+		//
+		// String linkedinLogin = "XXX", linkedinPassword = "XXX";
+		// SpaceRequest.post("https://www.linkedin.com/uas/login-submit")//
+		// .formField("session_key", linkedinLogin)//
+		// .formField("session_password", linkedinPassword)//
+		// .go(200);
+		//
+		// String authorizationCode = "XXX";
+		//
+		// response = SpaceRequest.post("/1/credentials/linkedin")//
+		// .backend(test)//
+		// .formField("code", authorizationCode)//
+		// .formField("redirect_uri", redirectUri)//
+		// .go(201);
+		//
+		// String accessToken = response.headerFirst("access_token");
+		// String id = response.headerFirst(SpaceHeaders.SPACEDOG_OBJECT_ID);
+		//
+		// SpaceRequest.get("/1/credentials/" + id).bearerAuth(test,
+		// accessToken).go(200);
+	}
+
 }

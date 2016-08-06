@@ -1,17 +1,15 @@
 package io.spacedog.services;
 
-import java.util.Base64;
 import java.util.Optional;
 
-import com.google.common.base.Strings;
 import com.google.common.net.HttpHeaders;
 
 import io.spacedog.utils.AuthenticationException;
+import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.SpaceHeaders;
-import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 
 /**
@@ -192,67 +190,37 @@ public class SpaceContext {
 		if (!authorizationChecked) {
 			authorizationChecked = true;
 			SpaceContext.debug().credentialCheck();
+			String backendId = backendId();
+			String headerValue = context.header(SpaceHeaders.AUTHORIZATION);
 
-			Optional<String[]> tokens = decodeAuthorizationHeader(context.header(SpaceHeaders.AUTHORIZATION));
+			if (headerValue != null) {
+				boolean superdog = false;
+				Optional<Credentials> userCredentials = Optional.empty();
+				AuthorizationHeader authHeader = new AuthorizationHeader(headerValue);
+				if (authHeader.isBasic()) {
+					superdog = authHeader.username().startsWith("superdog-");
 
-			if (tokens.isPresent()) {
+					userCredentials = CredentialsResource.get().check(//
+							superdog ? Backends.ROOT_API : backendId, //
+							authHeader.username(), authHeader.password());
 
-				String username = tokens.get()[0];
-				String password = tokens.get()[1];
-				boolean superdog = username.startsWith("superdog-");
-				String backendId = credentials.backendId();
+					if (!userCredentials.isPresent())
+						throw new AuthenticationException("invalid username or password for backend [%s]", backendId);
 
-				Optional<Credentials> userCredentials = CredentialsResource.get().check(//
-						superdog ? Backends.ROOT_API : backendId, //
-						username, password);
+				} else if (authHeader.isBearer()) {
+					userCredentials = CredentialsResource.get().check(backendId, authHeader.token());
 
-				if (userCredentials.isPresent()) {
-					credentials = userCredentials.get();
-					if (superdog)
-						credentials.backendId(backendId);
-				} else
-					throw new AuthenticationException("invalid username or password for backend [%s]", backendId);
+					if (!userCredentials.isPresent())
+						throw new AuthenticationException("invalid access token for backend [%s]", backendId);
+				}
+
+				credentials = userCredentials.get();
+
+				// sets superdog backend id to the request backend id
+				if (superdog)
+					credentials.backendId(backendId);
 			}
+
 		}
-	}
-
-	public static Optional<String[]> decodeAuthorizationHeader(String authzHeaderValue) {
-
-		if (Strings.isNullOrEmpty(authzHeaderValue))
-			return Optional.empty();
-
-		String[] schemeAndTokens = authzHeaderValue.split(" ", 2);
-
-		if (schemeAndTokens.length != 2)
-			throw new AuthenticationException("invalid authorization header");
-
-		if (Strings.isNullOrEmpty(schemeAndTokens[0]))
-			throw new AuthenticationException("no authorization scheme specified");
-
-		if (!schemeAndTokens[0].equalsIgnoreCase(SpaceHeaders.BASIC_SCHEME))
-			throw new AuthenticationException("authorization scheme [%s] not supported", schemeAndTokens[0]);
-
-		byte[] encodedBytes = schemeAndTokens[1].getBytes(Utils.UTF8);
-
-		String decoded = null;
-
-		try {
-			decoded = new String(Base64.getDecoder().decode(encodedBytes));
-		} catch (IllegalArgumentException e) {
-			throw new AuthenticationException(e, "authorization token is not base 64 encoded");
-		}
-
-		String[] tokens = decoded.split(":", 2);
-
-		if (tokens.length != 2)
-			throw new AuthenticationException("invalid authorization token");
-
-		if (Strings.isNullOrEmpty(tokens[0]))
-			throw new AuthenticationException("no username specified");
-
-		if (Strings.isNullOrEmpty(tokens[1]))
-			throw new AuthenticationException("no password specified");
-
-		return Optional.of(tokens);
 	}
 }
