@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.UUID;
 
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.get.GetResponse;
@@ -37,7 +36,6 @@ import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.LinkedinSettings;
-import io.spacedog.utils.NotFoundException;
 import io.spacedog.utils.Passwords;
 import io.spacedog.utils.Roles;
 import io.spacedog.utils.Schema;
@@ -92,15 +90,29 @@ public class CredentialsResource extends Resource {
 
 	@Get("/1/login")
 	@Get("/1/login/")
+	@Post("/1/login")
+	@Post("/1/login/")
 	public Payload login(Context context) {
-		SpaceContext.checkUserCredentials();
+		Credentials credentials = SpaceContext.checkUserCredentials();
+		if (credentials.isPasswordChecked()) {
+			credentials.newAccessToken(//
+					context.query().getBoolean("expiresEarly", false));
+			index(credentials);
+			return JsonPayload.json(Json.object(//
+					"accessToken", credentials.accessToken(), //
+					"expiresIn", credentials.accessTokenExpiresIn()));
+		}
 		return JsonPayload.success();
 	}
 
 	@Get("/1/logout")
 	@Get("/1/logout/")
+	@Post("/1/logout")
+	@Post("/1/logout/")
 	public Payload logout(Context context) {
-		SpaceContext.checkUserCredentials();
+		Credentials credentials = SpaceContext.checkUserCredentials();
+		credentials.deleteAccessToken();
+		index(credentials);
 		return JsonPayload.success();
 	}
 
@@ -110,13 +122,16 @@ public class CredentialsResource extends Resource {
 
 		Credentials credentials = create(body);
 
-		JsonBuilder<ObjectNode> savedBuilder = JsonPayload.builder(true, //
-				credentials.backendId(), "/1", TYPE, credentials.name());
+		JsonBuilder<ObjectNode> builder = JsonPayload //
+				.builder(true, credentials.backendId(), "/1", TYPE, credentials.name());
 
 		if (credentials.passwordResetCode() != null)
-			savedBuilder.put(PASSWORD_RESET_CODE, credentials.passwordResetCode());
+			builder.put(PASSWORD_RESET_CODE, credentials.passwordResetCode());
+		else
+			builder.put(ACCESS_TOKEN, credentials.accessToken())//
+					.put(EXPIRES_IN, credentials.accessTokenExpiresIn());
 
-		return JsonPayload.json(savedBuilder, HttpStatus.CREATED)//
+		return JsonPayload.json(builder, HttpStatus.CREATED)//
 				.withHeader(SpaceHeaders.SPACEDOG_OBJECT_ID, credentials.name());
 	}
 
@@ -178,17 +193,17 @@ public class CredentialsResource extends Resource {
 		boolean isNew = credentials.createdAt() == null;
 
 		credentials.email(email);
-		credentials.accessToken(accessToken);
-		credentials.accessTokenExpiresAt(expiresAt);
+		credentials.setAccessToken(accessToken, expiresAt);
 
 		index(credentials);
 
-		JsonBuilder<ObjectNode> builder = JsonPayload.builder(isNew, //
-				backendId, "/1", TYPE, id);
+		JsonBuilder<ObjectNode> builder = JsonPayload//
+				.builder(isNew, backendId, "/1", TYPE, id)//
+				.put(ACCESS_TOKEN, credentials.accessToken())//
+				.put(EXPIRES_IN, credentials.accessTokenExpiresIn());
 
 		return JsonPayload.json(builder, HttpStatus.CREATED)//
-				.withHeader(SpaceHeaders.SPACEDOG_OBJECT_ID, credentials.name())//
-				.withHeader("access_token", accessToken);
+				.withHeader(SpaceHeaders.SPACEDOG_OBJECT_ID, credentials.name());
 	}
 
 	@Get("/1/credentials/:username")
@@ -216,14 +231,11 @@ public class CredentialsResource extends Resource {
 	@Delete("/1/credentials/:username/password")
 	@Delete("/1/credentials/:username/password/")
 	public Payload deletePassword(String username, Context context) {
+
 		String backendId = SpaceContext.checkAdminCredentials().backendId();
+
 		Credentials credentials = get(backendId, username, true).get();
-
-		if (Strings.isNullOrEmpty(credentials.hashedPassword()))
-			throw new NotFoundException("no password to delete");
-
-		credentials.hashedPassword(null);
-		credentials.passwordResetCode(UUID.randomUUID().toString());
+		credentials.resetPassword();
 		index(credentials);
 
 		return JsonPayload.json(//
@@ -245,18 +257,15 @@ public class CredentialsResource extends Resource {
 		Passwords.checkIfValid(password);
 
 		Credentials credentials = get(backendId, username, true).get();
-
-		if (credentials.hashedPassword() != null || credentials.passwordResetCode() == null)
-			throw Exceptions.illegalArgument("[%s] password must be deleted before reset", username);
-
-		if (!passwordResetCode.equals(credentials.passwordResetCode()))
-			throw Exceptions.illegalArgument("invalid password reset code [%s]", passwordResetCode);
-
-		credentials.passwordResetCode(null);
-		credentials.hashedPassword(Passwords.checkAndHash(password));
+		credentials.setPassword(password, passwordResetCode);
 		IndexResponse indexResponse = index(credentials);
 
-		return JsonPayload.saved(false, backendId, "/1", TYPE, username, indexResponse.getVersion());
+		JsonBuilder<ObjectNode> builder = JsonPayload//
+				.builder(false, backendId, "/1", TYPE, username, indexResponse.getVersion())//
+				.put(ACCESS_TOKEN, credentials.accessToken())//
+				.put(EXPIRES_IN, credentials.accessTokenExpiresIn());
+
+		return JsonPayload.json(builder);
 	}
 
 	@Put("/1/credentials/:username/password")
@@ -269,12 +278,15 @@ public class CredentialsResource extends Resource {
 		String password = context.get(PASSWORD);
 		Passwords.checkIfValid(password);
 
-		credentials.passwordResetCode(null);
-		credentials.hashedPassword(Passwords.checkAndHash(password));
+		credentials.setPassword(password);
 		IndexResponse response = index(credentials);
 
-		return JsonPayload.saved(false, credentials.backendId(), "/1", TYPE, username, //
-				response.getVersion());
+		JsonBuilder<ObjectNode> builder = JsonPayload//
+				.builder(false, backendId, "/1", TYPE, username, response.getVersion())//
+				.put(ACCESS_TOKEN, credentials.accessToken())//
+				.put(EXPIRES_IN, credentials.accessTokenExpiresIn());
+
+		return JsonPayload.json(builder);
 	}
 
 	@Get("/1/credentials/:username/roles")
@@ -358,9 +370,9 @@ public class CredentialsResource extends Resource {
 		JsonNode password = data.get(Resource.PASSWORD);
 
 		if (Json.isNull(password))
-			credentials.passwordResetCode(UUID.randomUUID().toString());
+			credentials.resetPassword();
 		else
-			credentials.hashedPassword(Passwords.checkAndHash(password.asText()));
+			credentials.setPassword(password.asText());
 
 		return credentials;
 	}
@@ -378,31 +390,38 @@ public class CredentialsResource extends Resource {
 
 		Optional<Credentials> credentials = get(backendId, username, false);
 
-		if (credentials.isPresent()) {
-			String providedPassword = Passwords.hash(password);
-			if (credentials.get().hashedPassword() != null //
-					&& providedPassword.equals(credentials.get().hashedPassword())) {
-				return credentials;
-			}
-		}
+		if (credentials.isPresent() //
+				&& credentials.get().checkPassword(password))
+			return credentials;
 
 		return Optional.empty();
 	}
 
 	Optional<Credentials> check(String backendId, String accessToken) {
 
-		SearchHits hits = Start.get().getElasticClient().prepareSearch(backendId, TYPE)//
-				.setQuery(QueryBuilders.termQuery(ACCESS_TOKEN, accessToken))//
+		Start.get().getElasticClient()//
+				.refreshType(SPACEDOG_BACKEND, TYPE);
+
+		SearchHits hits = Start.get().getElasticClient()//
+				.prepareSearch(SPACEDOG_BACKEND, TYPE)//
+				.setQuery(QueryBuilders.boolQuery()//
+						.must(QueryBuilders.termQuery(BACKEND_ID, backendId))//
+						.must(QueryBuilders.termQuery(ACCESS_TOKEN, accessToken)))//
 				.get()//
 				.getHits();
 
-		if (hits.totalHits() == 1)
-			return Optional.of(toCredentials(hits.getAt(0).getSourceAsString()));
+		if (hits.totalHits() == 1) {
+			Credentials credentials = toCredentials(hits.getAt(0).getSourceAsString());
+			if (credentials.accessTokenExpiresIn() == 0)
+				throw Exceptions.invalidAuthentication("access token has expired");
+			return Optional.of(credentials);
+		}
 
 		if (hits.totalHits() == 0)
 			return Optional.empty();
 
-		throw Exceptions.runtime("access token [%s] associated with [%s] credentials", //
+		throw Exceptions.runtime(//
+				"access token [%s] associated with too many credentials [%s]", //
 				accessToken, hits.totalHits());
 	}
 

@@ -3,9 +3,11 @@
  */
 package io.spacedog.watchdog;
 
+import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
 import io.spacedog.client.SpaceClient;
@@ -80,6 +82,90 @@ public class CredentialsResourceTestOften extends Assert {
 
 		// vince fails to login if wrong password
 		SpaceRequest.get("/1/login").basicAuth(test, "vince", "XXX").go(401);
+	}
+
+	@Test
+	public void testAccessTokenAndExpiration() throws Exception {
+
+		// prepare
+		SpaceClient.prepareTest();
+		Backend test = SpaceClient.resetTestBackend();
+		Backend test2 = SpaceClient.resetTest2Backend();
+
+		// fails to access backend if unknown token
+		SpaceRequest.get("/1/data").bearerAuth(test, "XXX").go(401);
+
+		// vince signs up and get a brand new access token
+		User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
+
+		// vince request fails because wrong backend
+		SpaceRequest.get("/1/data").bearerAuth(test2, vince.accessToken).go(401);
+
+		// vince request succeeds since valid [backend / access token] pair
+		SpaceRequest.get("/1/data").bearerAuth(vince).go(200);
+
+		// vince logs out and cancels its access token
+		SpaceRequest.get("/1/logout").bearerAuth(vince).go(200);
+
+		// vince fails to logout a second time
+		// since its access token is canceled
+		SpaceRequest.get("/1/logout").bearerAuth(vince).go(401);
+
+		// vince fails to access backend
+		// since its access token is canceled
+		SpaceRequest.get("/1/data").bearerAuth(vince).go(401);
+
+		// vince fails to login with its canceled access token
+		SpaceRequest.get("/1/login").bearerAuth(vince).go(401);
+
+		// vince logs in again
+		ObjectNode node = SpaceRequest.get("/1/login").userAuth(vince).go(200).objectNode();
+		vince.accessToken = node.get("accessToken").asText();
+		long expiresIn = node.get("expiresIn").asLong();
+		vince.expiresAt = DateTime.now().plus(expiresIn);
+		assertTrue(expiresIn < (1000 * 60 * 60 * 24));
+
+		// vince can access backend again with its brand new access token
+		SpaceRequest.get("/1/data").bearerAuth(vince).go(200);
+
+		// if vince logs in again with access token
+		// its access token is not reset
+		String vinceOldAccessToken = vince.accessToken;
+		SpaceRequest.get("/1/login").bearerAuth(vince).go(200)//
+				.assertNotPresent("accessToken");
+
+		// vince can access backend with its old token
+		// since it has not changed
+		SpaceRequest.get("/1/data").bearerAuth(test, vinceOldAccessToken).go(200);
+
+		// if vince logs in again with its password
+		// its access token is reset
+		node = SpaceRequest.get("/1/login").userAuth(vince).go(200).objectNode();
+		vince.accessToken = node.get("accessToken").asText();
+		expiresIn = node.get("expiresIn").asLong();
+		vince.expiresAt = DateTime.now().plus(expiresIn);
+
+		// vince fails to access backend with its old token
+		// since it has been reset
+		SpaceRequest.get("/1/data").bearerAuth(test, vinceOldAccessToken).go(401);
+
+		// vince logs out and cancels its access token
+		SpaceRequest.get("/1/logout").bearerAuth(vince).go(200);
+
+		// vince logs in with token expiration of 2 seconds
+		node = SpaceRequest.get("/1/login").userAuth(vince)//
+				.queryParam("expiresEarly", "true")//
+				.go(200).objectNode();
+
+		vince.accessToken = node.get("accessToken").asText();
+		expiresIn = node.get("expiresIn").asLong();
+		vince.expiresAt = DateTime.now().plus(expiresIn);
+
+		assertTrue(expiresIn < 2000);
+
+		// vince access token expires after 2 seconds
+		Thread.sleep(2000);
+		SpaceRequest.get("/1/data").bearerAuth(vince).go(401);
 	}
 
 	@Test
@@ -339,7 +425,7 @@ public class CredentialsResourceTestOften extends Assert {
 		// .formField("redirect_uri", redirectUri)//
 		// .go(201);
 		//
-		// String accessToken = response.headerFirst("access_token");
+		// String accessToken = response.getFronJson("accessToken");
 		// String id = response.headerFirst(SpaceHeaders.SPACEDOG_OBJECT_ID);
 		//
 		// SpaceRequest.get("/1/credentials/" + id).bearerAuth(test,

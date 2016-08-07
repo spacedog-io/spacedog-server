@@ -21,6 +21,7 @@ public abstract class Resource {
 	public static final String UPDATED_AT = "updatedAt";
 	public static final String CREATED_AT = "createdAt";
 	public static final String ACCESS_TOKEN = "accessToken";
+	public static final String EXPIRES_IN = "expiresIn";
 	public static final String ACCESS_TOKEN_EXPIRES_AT = "accessTokenExpiresAt";
 	public static final String HASHED_PASSWORD = "hashedPassword";
 	public static final String PASSWORD_RESET_CODE = "passwordResetCode";

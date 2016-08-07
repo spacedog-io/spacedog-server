@@ -1,5 +1,7 @@
 package io.spacedog.client;
 
+import org.joda.time.DateTime;
+
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
@@ -9,11 +11,13 @@ import io.spacedog.utils.Utils;
 public class SpaceClient {
 
 	public static class User {
+		public String backendId;
 		public String id;
 		public String username;
 		public String password;
 		public String email;
-		public String backendId;
+		public String accessToken;
+		public DateTime expiresAt;
 
 		public User(String backendId, String id, String username, String password, String email) {
 			this.backendId = backendId;
@@ -21,6 +25,13 @@ public class SpaceClient {
 			this.username = username;
 			this.password = password;
 			this.email = email;
+		}
+
+		public User(String backendId, String id, String username, String password, String email, //
+				String accessToken, DateTime expiresAt) {
+			this(backendId, id, username, password, email);
+			this.accessToken = accessToken;
+			this.expiresAt = expiresAt;
 		}
 	}
 
@@ -57,11 +68,15 @@ public class SpaceClient {
 
 	public static User newCredentials(String backendId, String username, String password, String email)
 			throws Exception {
-		String id = SpaceRequest.post("/1/credentials").backendId(backendId)
+		ObjectNode node = SpaceRequest.post("/1/credentials").backendId(backendId)
 				.body("username", username, "password", password, "email", email)//
-				.go(201).objectNode().get("id").asText();
+				.go(201).objectNode();
 
-		return new User(backendId, id, username, password, email);
+		return new User(backendId, //
+				node.get("id").asText(), //
+				username, password, email, //
+				node.get("accessToken").asText(), //
+				DateTime.now().plus(node.get("expiresIn").asLong()));
 	}
 
 	public static void deleteCredentials(String username, Backend backend) throws Exception {
@@ -121,6 +136,10 @@ public class SpaceClient {
 
 	public static Backend resetTestBackend() throws Exception {
 		return resetBackend("test", "test", "hi test");
+	}
+
+	public static Backend resetTest2Backend() throws Exception {
+		return resetBackend("test2", "test2", "hi test2");
 	}
 
 	public static Backend resetBackend(String backendId, String username, String password) throws Exception {

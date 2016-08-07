@@ -4,13 +4,16 @@
 package io.spacedog.utils;
 
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Sets;
 
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, //
@@ -38,6 +41,9 @@ public class Credentials {
 	private String hashedPassword;
 	private String createdAt;
 	private String updatedAt;
+
+	@JsonIgnore
+	private boolean passwordChecked;
 
 	public Credentials() {
 	}
@@ -117,32 +123,26 @@ public class Credentials {
 		return accessToken;
 	}
 
-	public void accessToken(String accessToken) {
+	public void setAccessToken(String accessToken, DateTime accessTokenExpiresAt) {
 		this.accessToken = accessToken;
-	}
-
-	public DateTime accessTokenExpiresAt() {
-		return accessTokenExpiresAt;
-	}
-
-	public void accessTokenExpiresAt(DateTime accessTokenExpiresAt) {
 		this.accessTokenExpiresAt = accessTokenExpiresAt;
 	}
 
-	public String hashedPassword() {
-		return hashedPassword;
+	public long accessTokenExpiresIn() {
+		if (accessTokenExpiresAt == null)
+			return 0;
+		long expiresIn = accessTokenExpiresAt.getMillis() - DateTime.now().getMillis();
+		if (expiresIn < 0)
+			return 0;
+		return expiresIn;
 	}
 
-	public void hashedPassword(String value) {
-		hashedPassword = value;
+	public boolean isPasswordChecked() {
+		return passwordChecked;
 	}
 
 	public String passwordResetCode() {
 		return passwordResetCode;
-	}
-
-	public void passwordResetCode(String value) {
-		passwordResetCode = value;
 	}
 
 	public Set<String> roles() {
@@ -187,5 +187,68 @@ public class Credentials {
 
 	public boolean isRootBackend() {
 		return Backends.ROOT_API.equals(backendId);
+	}
+
+	//
+	// Business logic
+	//
+
+	public boolean checkPassword(String passwordToCheck) {
+		if (hashedPassword == null)
+			return false;
+
+		String hashedPasswordToCheck = Passwords.hash(passwordToCheck);
+		if (hashedPassword.equals(hashedPasswordToCheck)) {
+			passwordChecked = true;
+			return true;
+		}
+		return false;
+	}
+
+	public void resetPassword() {
+		hashedPassword = null;
+		passwordResetCode = UUID.randomUUID().toString();
+		deleteAccessToken();
+	}
+
+	public void setPassword(String password, String passwordResetCode) {
+		Check.notNullOrEmpty(password, "password");
+		Check.notNullOrEmpty(passwordResetCode, "passwordResetCode");
+
+		if (hashedPassword != null || passwordResetCode == null)
+			throw Exceptions.illegalArgument(//
+					"credentials [%s] password must be deleted before reset", username);
+
+		if (!this.passwordResetCode.equals(passwordResetCode))
+			throw Exceptions.illegalArgument(//
+					"password reset code [%s] invalid", passwordResetCode);
+
+		setPassword(password);
+	}
+
+	public boolean setPassword(String password) {
+		Check.notNullOrEmpty(password, "password");
+		hashedPassword = Passwords.checkAndHash(password);
+		passwordChecked = true;
+		passwordResetCode = null;
+		newAccessToken();
+		return true;
+	}
+
+	public void newAccessToken() {
+		newAccessToken(false);
+	}
+
+	public void newAccessToken(boolean expiresEarly) {
+		// expires in 24 hours or in 2 seconds for testing
+		long expiresIn = expiresEarly ? 1000 * 2 : 1000 * 60 * 60 * 24;
+		accessTokenExpiresAt = DateTime.now().plus(expiresIn);
+		accessToken = new String(Base64.getEncoder().encode(//
+				UUID.randomUUID().toString().getBytes(Utils.UTF8)));
+	}
+
+	public void deleteAccessToken() {
+		accessToken = null;
+		accessTokenExpiresAt = null;
 	}
 }

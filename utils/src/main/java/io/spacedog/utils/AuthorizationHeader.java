@@ -107,6 +107,6 @@ public class AuthorizationHeader {
 
 	@Override
 	public String toString() {
-		return String.join(" ", SpaceHeaders.AUTHORIZATION, scheme, token);
+		return Utils.concat(SpaceHeaders.AUTHORIZATION, ": ", scheme, " ", token);
 	}
 }

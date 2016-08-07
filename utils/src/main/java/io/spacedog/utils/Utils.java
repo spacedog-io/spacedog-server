@@ -10,6 +10,13 @@ public class Utils {
 
 	public static final Charset UTF8 = Charset.forName("UTF-8");
 
+	public static String concat(Object... objects) {
+		StringBuilder builder = new StringBuilder();
+		for (Object object : objects)
+			builder.append(object.toString());
+		return builder.toString();
+	}
+
 	public static StackTraceElement getStackTraceElement() {
 		return new Exception().getStackTrace()[1];
 	}

@@ -129,6 +129,10 @@ public class SpaceRequest {
 		return backendId(backendId);
 	}
 
+	public SpaceRequest bearerAuth(User fred) {
+		return bearerAuth(fred.backendId, fred.accessToken);
+	}
+
 	public SpaceRequest bearerAuth(Backend backend, String accessToken) {
 		return bearerAuth(backend.backendId, accessToken);
 	}
