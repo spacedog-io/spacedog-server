@@ -20,7 +20,7 @@ public class SchemaTranslatorTest extends Assert {
 		// Charset utf8 = Charset.forName("UTF-8");
 
 		// load schema
-		URL urlSchema = Resources.getResource("io/spacedog/services/SchemaTranslatorTest-schema.json");
+		URL urlSchema = Resources.getResource("io/spacedog/utils/SchemaTranslatorTest-schema.json");
 		JsonNode schema = Json.readNode(urlSchema);
 
 		// validate and translate
@@ -30,7 +30,7 @@ public class SchemaTranslatorTest extends Assert {
 		System.out.println(mapping.toString());
 
 		// load expected mapping
-		URL urlExpectedMapping = Resources.getResource("io/spacedog/services/SchemaTranslatorTest-mapping.json");
+		URL urlExpectedMapping = Resources.getResource("io/spacedog/utils/SchemaTranslatorTest-mapping.json");
 		JsonNode expectedMapping = Json.readNode(urlExpectedMapping);
 
 		// assert
