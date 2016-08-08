@@ -4,6 +4,7 @@
 package io.spacedog.utils;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Set;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -66,8 +67,7 @@ public class Schema {
 		try {
 			return Json.mapper().treeToValue(acl, SchemaAclSettings.class);
 		} catch (JsonProcessingException e) {
-			// TODO add an more explicit message
-			throw Exceptions.illegalArgument(e);
+			throw Exceptions.illegalArgument(e, "invalid schema [_acl] json field");
 		}
 	}
 
@@ -75,9 +75,18 @@ public class Schema {
 		content().set("_acl", Json.mapper().valueToTree(acl));
 	}
 
+	public void acl(String role, HashSet<DataPermission> permissions) {
+		SchemaAclSettings acl = acl();
+		acl.put(role, permissions);
+		acl(acl);
+	}
+
 	public static class SchemaAclSettings extends HashMap<String, Set<DataPermission>> {
 
 		private static final long serialVersionUID = 7433673020746769733L;
+
+		public SchemaAclSettings() {
+		}
 
 		// TODO create a single default singleton instance
 		public static SchemaAclSettings defaultSettings() {

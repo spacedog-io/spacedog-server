@@ -22,6 +22,10 @@ public class Exceptions {
 		return new IllegalArgumentException(t);
 	}
 
+	public static IllegalArgumentException illegalArgument(Throwable t, String message, Object... args) {
+		return new IllegalArgumentException(String.format(message, args), t);
+	}
+
 	public static NotFoundException notFound(String backendId, String type, String id) {
 		return new NotFoundException("[%s][%s] not found in backend [%s]", type, id, backendId);
 	}

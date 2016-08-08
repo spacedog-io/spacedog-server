@@ -43,4 +43,9 @@ public class DataAclSettings extends HashMap<String, SchemaAclSettings> {
 
 		return types.toArray(new String[types.size()]);
 	}
+
+	public DataAclSettings add(Schema schema) {
+		put(schema.name(), schema.acl());
+		return this;
+	}
 }

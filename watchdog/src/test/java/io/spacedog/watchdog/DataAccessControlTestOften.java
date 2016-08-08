@@ -37,12 +37,13 @@ public class DataAccessControlTestOften extends Assert {
 		SpaceClient.setSchema(//
 				Schema.builder("message").text("text").build(), test);
 
-		// get and check schema acl settings
-		String body = SpaceRequest.get("/1/settings/acl")//
+		// get global acl settings
+		String body = SpaceRequest.get("/1/settings/dataAcl")//
 				.backend(test).go(200).httpResponse().getBody();
 		DataAclSettings acl = Json.mapper().readValue(//
 				body, DataAclSettings.class);
 
+		// check global acl settings
 		assertEquals(1, acl.size());
 		SchemaAclSettings messageAcl = acl.get("message");
 		assertEquals(3, messageAcl.size());
@@ -66,7 +67,7 @@ public class DataAccessControlTestOften extends Assert {
 		assertEquals(Sets.newHashSet(DataPermission.search), messageAcl.get("admin"));
 
 		// get new message acl settings from global settings
-		body = SpaceRequest.get("/1/settings/acl")//
+		body = SpaceRequest.get("/1/settings/dataAcl")//
 				.backend(test).go(200).httpResponse().getBody();
 		acl = Json.mapper().readValue(//
 				body, DataAclSettings.class);
@@ -100,7 +101,7 @@ public class DataAccessControlTestOften extends Assert {
 				DataPermission.read_all, DataPermission.update_all, DataPermission.create, DataPermission.delete_all));
 		acl.put("message", messageAcl);
 
-		SpaceRequest.put("/1/settings/acl").adminAuth(test)//
+		SpaceRequest.put("/1/settings/dataAcl").adminAuth(test)//
 				.body(Json.mapper().writeValueAsString(acl)).go(200);
 
 		// dave has the platine role

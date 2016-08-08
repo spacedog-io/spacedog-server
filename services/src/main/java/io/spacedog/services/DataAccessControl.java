@@ -17,7 +17,7 @@ import io.spacedog.utils.Schema.SchemaAclSettings;
 
 public class DataAccessControl {
 
-	private static final String ACL_SETTINGS_ID = "acl";
+	public static final String ACL_SETTINGS_ID = "dataAcl";
 
 	public static boolean check(String type, DataPermission... permissions) {
 		return check(SpaceContext.checkCredentials(), type, permissions);
