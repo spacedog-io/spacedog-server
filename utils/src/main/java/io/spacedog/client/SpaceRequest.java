@@ -207,7 +207,7 @@ public class SpaceRequest {
 		return this;
 	}
 
-	public SpaceResponse go(int... expectedStatus) throws Exception {
+	public SpaceResponse go(int... expectedStatus) {
 		SpaceResponse response = go();
 		HttpResponse<String> httpResponse = response.httpResponse();
 		if (!Ints.contains(expectedStatus, httpResponse.getStatus()))
