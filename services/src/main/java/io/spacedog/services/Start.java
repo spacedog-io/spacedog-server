@@ -55,7 +55,6 @@ public class Start {
 			singleton.startLocalElastic();
 			singleton.initServices();
 			singleton.upgrade();
-			singleton.deleteOldRepositories();
 			singleton.startFluent();
 
 		} catch (Throwable t) {
@@ -72,14 +71,11 @@ public class Start {
 		}
 	}
 
-	private void deleteOldRepositories() {
-		SnapshotResource.get().deleteObsoleteRepositories();
-	}
-
 	private void upgrade() throws IOException {
 		// Utils.info("[SpaceDog] Nothing to upgrade");
 		deletePingRequestsFromLogs();
 		deleteGetLogRequestsFromLogs();
+		SnapshotResource.get().deleteObsoleteRepositories();
 	}
 
 	private void deleteGetLogRequestsFromLogs() {

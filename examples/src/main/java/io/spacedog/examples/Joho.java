@@ -8,15 +8,21 @@ import java.util.Iterator;
 
 import org.junit.Test;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.services.DataAccessControl;
+import io.spacedog.utils.DataAclSettings;
+import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Schema;
+import io.spacedog.utils.Schema.SchemaAclSettings;
 
 public class Joho extends SpaceClient {
 
@@ -28,6 +34,12 @@ public class Joho extends SpaceClient {
 
 	static Schema buildDiscussionSchema() {
 		return Schema.builder("discussion") //
+
+				.acl("user", DataPermission.create, DataPermission.search, //
+						DataPermission.update_all, DataPermission.delete)//
+				.acl("admin", DataPermission.create, DataPermission.search, //
+						DataPermission.update_all, DataPermission.delete_all)//
+
 				.text("title").french() //
 				.text("description").french() //
 
@@ -62,6 +74,12 @@ public class Joho extends SpaceClient {
 
 	static Schema buildMessageSchema() {
 		return Schema.builder("message") //
+
+				.acl("user", DataPermission.create, DataPermission.search, //
+						DataPermission.update_all, DataPermission.delete)//
+				.acl("admin", DataPermission.create, DataPermission.search, //
+						DataPermission.update_all, DataPermission.delete_all)//
+
 				.text("text").french()//
 				.string("discussionId")//
 
@@ -94,6 +112,12 @@ public class Joho extends SpaceClient {
 	static Schema buildCustomUserSchema() {
 		return Schema.builder("user")//
 				.id("username")//
+
+				.acl("user", DataPermission.create, DataPermission.search, //
+						DataPermission.update, DataPermission.delete)//
+				.acl("admin", DataPermission.create, DataPermission.search, //
+						DataPermission.update_all, DataPermission.delete_all)//
+
 				.string("username")//
 				.string("email")//
 				.text("firstname").french()//
@@ -119,6 +143,12 @@ public class Joho extends SpaceClient {
 
 	static Schema buildThemesSchema() {
 		return Schema.builder("themes")//
+
+				.acl("key", DataPermission.search)//
+				.acl("user", DataPermission.search)//
+				.acl("admin", DataPermission.create, DataPermission.search, //
+						DataPermission.update_all, DataPermission.delete_all)//
+
 				.object("themes").array()//
 				.text("name").french()//
 				.text("description").french()//
@@ -135,6 +165,12 @@ public class Joho extends SpaceClient {
 
 	static Schema buildSitesSchema() {
 		return Schema.builder("sites")//
+
+				.acl("key", DataPermission.search)//
+				.acl("user", DataPermission.search)//
+				.acl("admin", DataPermission.create, DataPermission.search, //
+						DataPermission.update_all, DataPermission.delete_all)//
+
 				.object("sites").array()//
 				.text("name").french()//
 				.string("address1")//
@@ -146,25 +182,45 @@ public class Joho extends SpaceClient {
 				.build();
 	}
 
-	@Test
-	public void createJoho2InstallationIndex() throws Exception {
+	public void createInstallationSchema() {
 		SpaceRequest.delete("/1/schema/installation").adminAuth(backend).go(200, 404);
 		SpaceRequest.put("/1/schema/installation").adminAuth(backend).go(201);
 	}
 
 	@Test
-	public void initAndFillJohoBackend() throws Exception {
+	public void updateAllSchemaAclSettings() throws JsonProcessingException {
+
+		DataAclSettings acl = new DataAclSettings();
+
+		acl.add(buildDiscussionSchema())//
+				.add(buildMessageSchema())//
+				.add(buildCustomUserSchema())//
+				.add(buildThemesSchema())//
+				.add(buildSitesSchema());
+
+		SchemaAclSettings schemaAcl = new SchemaAclSettings();
+		schemaAcl.put("user", Sets.newHashSet(DataPermission.create, //
+				DataPermission.read, DataPermission.update, DataPermission.delete));
+		schemaAcl.put("admin", Sets.newHashSet(DataPermission.search, //
+				DataPermission.update_all, DataPermission.delete_all));
+		acl.put("installation", schemaAcl);
+
+		SpaceRequest.put("/1/settings/" + DataAccessControl.ACL_SETTINGS_ID)//
+				.adminAuth(backend).body(Json.mapper().valueToTree(acl)).go(201, 200);
+	}
+
+	public void initAndFillJohoBackend() {
 
 		// resetAccount(johoAccount);
 
-		setSchema(buildDiscussionSchema(), backend);
-		setSchema(buildMessageSchema(), backend);
-		setSchema(buildCustomUserSchema(), backend);
-		setSchema(buildThemesSchema(), backend);
-		setSchema(buildSitesSchema(), backend);
+		// setSchema(buildDiscussionSchema(), backend);
+		// setSchema(buildMessageSchema(), backend);
+		// setSchema(buildCustomUserSchema(), backend);
+		// setSchema(buildThemesSchema(), backend);
+		// setSchema(buildSitesSchema(), backend);
 
-		createThemes();
-		createSites();
+		// createThemes();
+		// createSites();
 	}
 
 	public void createResponse(String messageId, String text, User user) throws Exception {
