@@ -190,6 +190,8 @@ public class Joho extends SpaceClient {
 	@Test
 	public void updateAllSchemaAclSettings() throws JsonProcessingException {
 
+		// SpaceRequest.configuration().target(SpaceTarget.production);
+
 		DataAclSettings acl = new DataAclSettings();
 
 		acl.add(buildDiscussionSchema())//
@@ -205,8 +207,9 @@ public class Joho extends SpaceClient {
 				DataPermission.update_all, DataPermission.delete_all));
 		acl.put("installation", schemaAcl);
 
+		JsonNode aclBody = Json.mapper().valueToTree(acl);
 		SpaceRequest.put("/1/settings/" + DataAccessControl.ACL_SETTINGS_ID)//
-				.adminAuth(backend).body(Json.mapper().valueToTree(acl)).go(201, 200);
+				.adminAuth(backend).body(aclBody).go(201, 200);
 	}
 
 	public void initAndFillJohoBackend() {
