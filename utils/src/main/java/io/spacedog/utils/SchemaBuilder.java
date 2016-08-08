@@ -8,7 +8,7 @@ import java.util.Arrays;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
-import io.spacedog.utils.Schema.DataTypeAccessControl;
+import io.spacedog.utils.Schema.SchemaAclSettings;
 
 public class SchemaBuilder {
 
@@ -92,7 +92,7 @@ public class SchemaBuilder {
 
 	public SchemaBuilder acl(String role, DataPermission... permissions) {
 		if (acl == null)
-			acl = new DataTypeAccessControl();
+			acl = new SchemaAclSettings();
 
 		acl.put(role, Sets.newHashSet(permissions));
 		return this;
@@ -197,7 +197,7 @@ public class SchemaBuilder {
 
 	private String name;
 	private JsonBuilder<ObjectNode> builder;
-	private DataTypeAccessControl acl;
+	private SchemaAclSettings acl;
 	private SchemaType currentPropertyType = SchemaType.OBJECT;
 
 	private SchemaBuilder(String name) {

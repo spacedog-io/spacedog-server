@@ -18,7 +18,7 @@ import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Schema;
-import io.spacedog.utils.Schema.DataTypeAccessControl;
+import io.spacedog.utils.Schema.SchemaAclSettings;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
@@ -58,7 +58,7 @@ public class PushResourceTestOften extends Assert {
 
 		// add create permission to guest requests
 		Schema schema = SpaceClient.getSchema("installation", test);
-		DataTypeAccessControl acl = new DataTypeAccessControl();
+		SchemaAclSettings acl = new SchemaAclSettings();
 		acl.put("key", Sets.newHashSet(DataPermission.create, DataPermission.update));
 		acl.put("user", Sets.newHashSet(DataPermission.create, DataPermission.read, //
 				DataPermission.update));

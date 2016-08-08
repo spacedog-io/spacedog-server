@@ -9,6 +9,7 @@ import java.util.Set;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Sets;
 
 public class Schema {
 
@@ -57,25 +58,41 @@ public class Schema {
 		return node.toString();
 	}
 
-	public DataTypeAccessControl acl() {
+	public SchemaAclSettings acl() {
 		JsonNode acl = content().get("_acl");
 		if (acl == null)
 			return null;
 
 		try {
-			return Json.mapper().treeToValue(acl, DataTypeAccessControl.class);
+			return Json.mapper().treeToValue(acl, SchemaAclSettings.class);
 		} catch (JsonProcessingException e) {
 			// TODO add an more explicit message
 			throw Exceptions.illegalArgument(e);
 		}
 	}
 
-	public void acl(DataTypeAccessControl acl) {
+	public void acl(SchemaAclSettings acl) {
 		content().set("_acl", Json.mapper().valueToTree(acl));
 	}
 
-	public static class DataTypeAccessControl extends HashMap<String, Set<DataPermission>> {
+	public static class SchemaAclSettings extends HashMap<String, Set<DataPermission>> {
 
 		private static final long serialVersionUID = 7433673020746769733L;
+
+		// TODO create a single default singleton instance
+		public static SchemaAclSettings defaultSettings() {
+
+			SchemaAclSettings roles = new SchemaAclSettings();
+
+			roles.put("key", Sets.newHashSet(DataPermission.read_all));
+
+			roles.put("user", Sets.newHashSet(DataPermission.create, //
+					DataPermission.update, DataPermission.search, DataPermission.delete));
+
+			roles.put("admin", Sets.newHashSet(DataPermission.create, //
+					DataPermission.update_all, DataPermission.search, DataPermission.delete_all));
+
+			return roles;
+		}
 	}
 }
