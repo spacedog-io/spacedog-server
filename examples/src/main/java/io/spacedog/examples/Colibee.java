@@ -8,19 +8,25 @@ import java.util.List;
 
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.services.DataAccessControl;
+import io.spacedog.utils.DataAclSettings;
+import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonGenerator;
 import io.spacedog.utils.Schema;
+import io.spacedog.utils.Schema.SchemaAclSettings;
 
 public class Colibee extends SpaceClient {
 
-	private static final Backend PROD = new Backend(//
+	private static final Backend RECETTE = new Backend(//
 			"colibee", "colibee", "hi colibee", "david@spacedog.io");
 	private static final Backend DEV = new Backend(//
 			"colidev", "colidev", "hi colidev", "david@spacedog.io");
@@ -42,7 +48,7 @@ public class Colibee extends SpaceClient {
 				SpaceRequest.configuration().target().url(backend.backendId, "/1/file/tmp/mon-cv.pdf"));
 	}
 
-	@Test
+	// @Test
 	public void initColibeeBackend() throws Exception {
 		// initTmpFiles();
 		// initReferences();
@@ -52,6 +58,33 @@ public class Colibee extends SpaceClient {
 		// initRdv();
 		// initDiscussionBale3();
 		// initColibee();
+	}
+
+	@Test
+	public void initColibeeDataAclSettings() {
+
+		SchemaAclSettings roles = new SchemaAclSettings();
+
+		roles.put("key", Sets.newHashSet(DataPermission.create, //
+				DataPermission.update_all, DataPermission.search, DataPermission.delete_all));
+
+		roles.put("admin", Sets.newHashSet(DataPermission.create, //
+				DataPermission.update_all, DataPermission.search, DataPermission.delete_all));
+
+		DataAclSettings acl = new DataAclSettings();
+
+		acl.put("consultant", roles);
+		acl.put("opportunite", roles);
+		acl.put("groupe", roles);
+		acl.put("rdv", roles);
+		acl.put("discussion", roles);
+		acl.put("message", roles);
+		acl.put("colibee", roles);
+
+		JsonNode aclBody = Json.mapper().valueToTree(acl);
+		SpaceRequest.put("/1/settings/" + DataAccessControl.ACL_SETTINGS_ID)//
+				.adminAuth(backend).body(aclBody).go(201, 200);
+
 	}
 
 	private void initTmpFiles() throws Exception {
