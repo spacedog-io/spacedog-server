@@ -14,7 +14,6 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.support.QuerySourceBuilder;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
-import org.elasticsearch.common.Strings;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
@@ -24,6 +23,7 @@ import org.joda.time.DateTime;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -52,7 +52,7 @@ import net.codestory.http.payload.Payload;
 public class CredentialsResource extends Resource {
 
 	public static final String TYPE = "credentials";
-	private static final String LINKEDIN_SETTINGS_ID = "linkedin";
+	public static final String LINKEDIN_SETTINGS_ID = "linkedin";
 
 	//
 	// init
@@ -142,6 +142,7 @@ public class CredentialsResource extends Resource {
 	public Payload postLinkedin(Context context) {
 
 		String backendId = SpaceContext.checkCredentials(true).backendId();
+		String code = Check.notNullOrEmpty(context.get("code"), "code");
 		LinkedinSettings settings = null;
 
 		try {
@@ -152,18 +153,18 @@ public class CredentialsResource extends Resource {
 			throw Exceptions.runtime(e, "invalid linkedin settings");
 		}
 
-		String code = context.get("code");
 		String redirectUri = context.get("redirect_uri");
 		if (Strings.isNullOrEmpty(redirectUri))
-			redirectUri = spaceUrl(backendId, "/1/credentials/linkedin").toString();
-		DateTime expiresAt = DateTime.now();
+			redirectUri = settings.redirectUri;
+		Check.notNullOrEmpty(redirectUri, "redirect_uri");
 
+		DateTime expiresAt = DateTime.now();
 		SpaceResponse response = SpaceRequest//
 				.post("https://www.linkedin.com/oauth/v2/accessToken")//
 				.queryParam("grant_type", "authorization_code")//
 				.queryParam("client_id", settings.clientId)//
 				.queryParam("client_secret", settings.clientSecret)//
-				.queryParam("redirect_uri", settings.redirectUri)//
+				.queryParam("redirect_uri", redirectUri)//
 				.queryParam("code", code)//
 				.go();
 

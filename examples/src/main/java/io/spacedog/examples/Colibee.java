@@ -16,11 +16,14 @@ import com.google.common.io.Resources;
 
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTarget;
+import io.spacedog.services.CredentialsResource;
 import io.spacedog.services.DataAccessControl;
 import io.spacedog.utils.DataAclSettings;
 import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonGenerator;
+import io.spacedog.utils.LinkedinSettings;
 import io.spacedog.utils.Schema;
 import io.spacedog.utils.Schema.SchemaAclSettings;
 
@@ -36,7 +39,7 @@ public class Colibee extends SpaceClient {
 
 	public Colibee() throws Exception {
 		backend = DEV;
-		// SpaceRequest.configuration().target(SpaceTarget.production);
+		SpaceRequest.configuration().target(SpaceTarget.production);
 		// resetBackend(backend);
 
 		generator = new JsonGenerator();
@@ -60,7 +63,7 @@ public class Colibee extends SpaceClient {
 		// initColibee();
 	}
 
-	@Test
+	// @Test
 	public void initColibeeDataAclSettings() {
 
 		SchemaAclSettings roles = new SchemaAclSettings();
@@ -84,6 +87,20 @@ public class Colibee extends SpaceClient {
 		JsonNode aclBody = Json.mapper().valueToTree(acl);
 		SpaceRequest.put("/1/settings/" + DataAccessControl.ACL_SETTINGS_ID)//
 				.adminAuth(backend).body(aclBody).go(201, 200);
+
+	}
+
+	@Test
+	public void initColibeeLinkedSettings() {
+
+		LinkedinSettings settings = new LinkedinSettings();
+		settings.clientId = "77132d5dz6b13x";
+		settings.clientSecret = "4IKSyUxys06GKyn4";
+		settings.redirectUri = "https://colidev.www.spacedog.io/login/linkedin/callback";
+
+		JsonNode settingsNode = Json.mapper().valueToTree(settings);
+		SpaceRequest.put("/1/settings/" + CredentialsResource.LINKEDIN_SETTINGS_ID)//
+				.adminAuth(backend).body(settingsNode).go(201);
 
 	}
 

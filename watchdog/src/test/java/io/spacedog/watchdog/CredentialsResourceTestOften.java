@@ -7,6 +7,7 @@ import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
@@ -15,6 +16,7 @@ import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.LinkedinSettings;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
@@ -373,36 +375,61 @@ public class CredentialsResourceTestOften extends Assert {
 		// prepare
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
-
-		// no linkedin settings means no linkedin credentials
-		SpaceRequest.post("/1/credentials/linkedin").backend(test).go(404);
-
-		// admin sets linkedin settings
 		String redirectUri = SpaceRequest.configuration().target()//
 				.url(test.backendId, "/1/credentials/linkedin");
+
+		// no linkedin settings means no linkedin credentials
+		SpaceRequest.post("/1/credentials/linkedin")//
+				.formField("code", "XXX")//
+				.formField("redirect_uri", "XXX")//
+				.backend(test).go(404);
+
+		// admin sets linkedin settings without redirect uri
+		LinkedinSettings settings = new LinkedinSettings();
+		settings.clientId = "78uk3jfazu0wj2";
+		settings.clientSecret = "42AfVLDNEXtgO9CG";
+
+		JsonNode settingsNode = Json.mapper().valueToTree(settings);
 		SpaceRequest.put("/1/settings/linkedin")//
-				.adminAuth(test)//
-				.body("clientId", "78uk3jfazu0wj2", "clientSecret", "42AfVLDNEXtgO9CG", //
-						"redirectUri", redirectUri)//
-				.go(201);
+				.adminAuth(test).body(settingsNode).go(201);
 
 		// fails to create linkedin credentials if no authorization code
-		SpaceRequest.post("/1/credentials/linkedin").backend(test).go(400);
+		SpaceRequest.post("/1/credentials/linkedin")//
+				.formField("redirect_uri", redirectUri).backend(test).go(400);
 
-		// fails to create linkedin credentials if invalid authorization code
+		// fails to create linkedin credentials if no redirect_uri
+		// in parameters nor settings
+		SpaceRequest.post("/1/credentials/linkedin")//
+				.formField("code", "XXX").backend(test).go(400);
+
+		// fails to create linkedin credentials if invalid code
 		SpaceRequest.post("/1/credentials/linkedin").backend(test)//
 				.formField("code", "XXX")//
+				.formField("redirect_uri", redirectUri)//
 				.go(401);
 
-		// fred signs up with linkedin
+		// admin sets linkedin settings with redirect uri
+		settings.redirectUri = redirectUri;
+		settingsNode = Json.mapper().valueToTree(settings);
+		SpaceRequest.put("/1/settings/linkedin")//
+				.adminAuth(test).body(settingsNode).go(200);
 
-		// SpaceResponse response = SpaceRequest//
-		// .get("https://www.linkedin.com/oauth/v2/authorization")//
-		// .queryParam("response_type", "code")//
-		// .queryParam("redirect_uri", redirectUri)//
-		// .queryParam("client_id", "78uk3jfazu0wj2")//
-		// .queryParam("state", "thisisit")//
-		// .go(303);
+		// fails to create linkedin credentials if invalid code
+		// redirectUri is not necessary because found in settings
+		SpaceRequest.post("/1/credentials/linkedin")//
+				.formField("code", "XXX").backend(test).go(401);
+
+		// start linkedin authentication process to display
+		// url to call inside the browser for testing
+
+		SpaceRequest//
+				.get("https://www.linkedin.com/oauth/v2/authorization")//
+				.queryParam("response_type", "code")//
+				.queryParam("state", "thisisit")//
+				.queryParam("redirect_uri", redirectUri)//
+				.queryParam("client_id", settings.clientId)//
+				.go(303);
+
 		//
 		// List<String> cookies = response.header(SpaceHeaders.SET_COOKIE);
 		// String location = response.headerFirst(SpaceHeaders.LOCATION);
