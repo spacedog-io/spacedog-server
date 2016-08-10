@@ -15,7 +15,7 @@ import io.spacedog.watchdog.SpaceSuite.TestOften;
 public class ServiceErrorFilterTestOften extends Assert {
 
 	@Test
-	public void catchesFluentResourceErrors() throws Exception {
+	public void catchesFluentResourceErrors() {
 
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();

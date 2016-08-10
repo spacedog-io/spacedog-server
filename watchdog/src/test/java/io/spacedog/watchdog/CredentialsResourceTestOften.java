@@ -23,7 +23,7 @@ import io.spacedog.watchdog.SpaceSuite.TestOften;
 public class CredentialsResourceTestOften extends Assert {
 
 	@Test
-	public void userIsSigningUpAndMore() throws Exception {
+	public void userIsSigningUpAndMore() {
 
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
@@ -87,7 +87,7 @@ public class CredentialsResourceTestOften extends Assert {
 	}
 
 	@Test
-	public void testAccessTokenAndExpiration() throws Exception {
+	public void testAccessTokenAndExpiration() throws InterruptedException {
 
 		// prepare
 		SpaceClient.prepareTest();
@@ -171,7 +171,7 @@ public class CredentialsResourceTestOften extends Assert {
 	}
 
 	@Test
-	public void deleteCredentials() throws Exception {
+	public void deleteCredentials() {
 
 		// prepare
 		SpaceClient.prepareTest();
@@ -203,7 +203,7 @@ public class CredentialsResourceTestOften extends Assert {
 	}
 
 	@Test
-	public void setAndResetPassword() throws Exception {
+	public void setAndResetPassword() {
 
 		// prepare
 
@@ -304,7 +304,7 @@ public class CredentialsResourceTestOften extends Assert {
 	}
 
 	@Test
-	public void credentialsAreDeletedWhenBackendIsDeleted() throws Exception {
+	public void credentialsAreDeletedWhenBackendIsDeleted() {
 
 		// prepare
 		SpaceClient.prepareTest();
@@ -328,7 +328,7 @@ public class CredentialsResourceTestOften extends Assert {
 	}
 
 	@Test
-	public void getPutAndDeleteUserCredentialsRoles() throws Exception {
+	public void getPutAndDeleteUserCredentialsRoles() {
 
 		// prepare
 		SpaceClient.prepareTest();
@@ -370,7 +370,7 @@ public class CredentialsResourceTestOften extends Assert {
 	}
 
 	@Test
-	public void linkedinSignUpAndMore() throws Exception {
+	public void linkedinSignUpAndMore() {
 
 		// prepare
 		SpaceClient.prepareTest();

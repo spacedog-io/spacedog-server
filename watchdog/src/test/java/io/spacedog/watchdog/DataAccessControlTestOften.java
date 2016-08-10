@@ -3,6 +3,7 @@
  */
 package io.spacedog.watchdog;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
@@ -10,6 +11,9 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.beust.jcommander.internal.Maps;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceClient;
@@ -27,7 +31,7 @@ import io.spacedog.watchdog.SpaceSuite.TestOften;
 public class DataAccessControlTestOften extends Assert {
 
 	@Test
-	public void testSchemaAclManagement() throws Exception {
+	public void testSchemaAclManagement() throws JsonParseException, JsonMappingException, IOException {
 
 		// prepare
 		SpaceClient.prepareTest();
@@ -80,7 +84,7 @@ public class DataAccessControlTestOften extends Assert {
 	}
 
 	@Test
-	public void testDataAccessWithRolesAndPermissions() throws Exception {
+	public void testDataAccessWithRolesAndPermissions() throws JsonProcessingException {
 
 		// prepare
 		SpaceClient.prepareTest();

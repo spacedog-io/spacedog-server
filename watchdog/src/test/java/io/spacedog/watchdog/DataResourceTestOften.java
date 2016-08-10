@@ -20,7 +20,7 @@ import io.spacedog.watchdog.SpaceSuite.TestOften;
 public class DataResourceTestOften extends Assert {
 
 	@Test
-	public void createFindUpdateAndDelete() throws Exception {
+	public void createFindUpdateAndDelete() {
 
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();

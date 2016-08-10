@@ -20,7 +20,7 @@ import io.spacedog.watchdog.SpaceSuite.TestOften;
 public class SearchResourceTestOften extends Assert {
 
 	@Test
-	public void searchAndDeleteObjects() throws Exception {
+	public void searchAndDeleteObjects() {
 
 		// prepare
 
@@ -70,7 +70,7 @@ public class SearchResourceTestOften extends Assert {
 	}
 
 	@Test
-	public void aggregateToGetDistinctCityNames() throws Exception {
+	public void aggregateToGetDistinctCityNames() {
 
 		// prepare backend
 

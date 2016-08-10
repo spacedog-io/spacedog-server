@@ -21,7 +21,7 @@ import io.spacedog.watchdog.SpaceSuite.TestOften;
 public class LogResourceTestOften extends Assert {
 
 	@Test
-	public void doAFewThingsAndGetTheLogs() throws Exception {
+	public void doAFewThingsAndGetTheLogs() {
 
 		// prepare
 		SpaceClient.prepareTest();
@@ -94,7 +94,7 @@ public class LogResourceTestOften extends Assert {
 	}
 
 	@Test
-	public void checkPasswordsAreNotLogged() throws Exception {
+	public void checkPasswordsAreNotLogged() {
 
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
@@ -134,7 +134,7 @@ public class LogResourceTestOften extends Assert {
 	}
 
 	@Test
-	public void checkLogFilterDoesNotRemoveAnyPasswordSchemaProperty() throws Exception {
+	public void checkLogFilterDoesNotRemoveAnyPasswordSchemaProperty() {
 
 		// prepare
 		SpaceClient.prepareTest();
@@ -155,7 +155,7 @@ public class LogResourceTestOften extends Assert {
 	}
 
 	@Test
-	public void deleteObsoleteLogs() throws Exception {
+	public void deleteObsoleteLogs() {
 
 		// prepare
 		SpaceClient.prepareTest();
@@ -192,7 +192,7 @@ public class LogResourceTestOften extends Assert {
 	}
 
 	@Test
-	public void superdogsCanBrowseAllBackendLogs() throws Exception {
+	public void superdogsCanBrowseAllBackendLogs() {
 
 		SpaceClient.prepareTest();
 
@@ -255,7 +255,7 @@ public class LogResourceTestOften extends Assert {
 	}
 
 	@Test
-	public void filterLogs() throws Exception {
+	public void filterLogs() {
 
 		SpaceClient.prepareTest();
 
@@ -314,7 +314,7 @@ public class LogResourceTestOften extends Assert {
 	}
 
 	@Test
-	public void pingRequestAreNotLogged() throws Exception {
+	public void pingRequestAreNotLogged() {
 
 		SpaceClient.prepareTest();
 
@@ -337,7 +337,7 @@ public class LogResourceTestOften extends Assert {
 	}
 
 	@Test
-	public void testSpecialCases() throws Exception {
+	public void testSpecialCases() {
 
 		// prepare
 		SpaceClient.prepareTest();

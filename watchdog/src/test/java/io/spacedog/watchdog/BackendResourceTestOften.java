@@ -20,7 +20,7 @@ import io.spacedog.watchdog.SpaceSuite.TestOften;
 public class BackendResourceTestOften extends Assert {
 
 	@Test
-	public void deleteSignUpGetLoginTestBackend() throws Exception {
+	public void deleteSignUpGetLoginTestBackend() {
 
 		// prepare
 		SpaceClient.prepareTest();
@@ -91,7 +91,7 @@ public class BackendResourceTestOften extends Assert {
 	}
 
 	@Test
-	public void AdminCreatesGetsAndDeletesItsBackend() throws Exception {
+	public void AdminCreatesGetsAndDeletesItsBackend() {
 
 		// prepare
 
@@ -134,7 +134,7 @@ public class BackendResourceTestOften extends Assert {
 	}
 
 	@Test
-	public void invalidBackendIdentifiers() throws Exception {
+	public void invalidBackendIdentifiers() {
 
 		// prepare
 		SpaceClient.prepareTest();
@@ -159,7 +159,7 @@ public class BackendResourceTestOften extends Assert {
 	}
 
 	@Test
-	public void pingServerToCheckItIsUpAndRunning() throws Exception {
+	public void pingServerToCheckItIsUpAndRunning() {
 
 		// prepare
 		SpaceClient.prepareTest();

@@ -17,7 +17,7 @@ import io.spacedog.utils.Schema;
 public class PushResourceOldTest extends Assert {
 
 	// @Test
-	public void subscribeToTopicsAndPush() throws Exception {
+	public void subscribeToTopicsAndPush() {
 
 		// prepare
 		SpaceClient.prepareTest();

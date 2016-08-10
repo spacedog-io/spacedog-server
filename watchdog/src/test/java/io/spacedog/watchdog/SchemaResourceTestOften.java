@@ -18,7 +18,7 @@ import io.spacedog.watchdog.SpaceSuite.TestOften;
 public class SchemaResourceTestOften extends Assert {
 
 	@Test
-	public void deletePutAndGetSchemas() throws Exception {
+	public void deletePutAndGetSchemas() {
 
 		// prepare
 		SpaceClient.prepareTest();
@@ -135,7 +135,7 @@ public class SchemaResourceTestOften extends Assert {
 	}
 
 	@Test
-	public void saveCustomerExtraDataInSchema() throws Exception {
+	public void saveCustomerExtraDataInSchema() {
 
 		// prepare
 		SpaceClient.prepareTest();

@@ -16,7 +16,7 @@ import io.spacedog.client.SpaceResponse;
 public class SnapshotResourceTest extends Assert {
 
 	@Test
-	public void snapshotAndRestoreMultipleTimes() throws Exception {
+	public void snapshotAndRestoreMultipleTimes() throws InterruptedException {
 
 		// prepare
 		SpaceClient.prepareTest();

@@ -21,7 +21,7 @@ import io.spacedog.watchdog.SpaceSuite.TestOften;
 public class BatchResourceTestOften extends Assert {
 
 	@Test
-	public void executeBatch() throws Exception {
+	public void executeBatch() {
 
 		// we need to make sure the test account is reset and exists before to
 		// be able to reset it again by batch requests

@@ -12,7 +12,7 @@ import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 public class MailResourceTestOncePerDay extends Assert {
 
 	@Test
-	public void postMails() throws Exception {
+	public void postMails() {
 
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();

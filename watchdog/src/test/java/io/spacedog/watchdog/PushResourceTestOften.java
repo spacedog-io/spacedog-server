@@ -41,7 +41,7 @@ public class PushResourceTestOften extends Assert {
 	private static final String APP_ID = "appId";
 
 	@Test
-	public void usersInstallAppAndPush() throws Exception {
+	public void usersInstallAppAndPush() {
 
 		// prepare
 		SpaceClient.prepareTest();
@@ -332,7 +332,7 @@ public class PushResourceTestOften extends Assert {
 		return array.build();
 	}
 
-	private String installApplication(String appId, String pushService, Backend backend, User user) throws Exception {
+	private String installApplication(String appId, String pushService, Backend backend, User user) {
 
 		String installId = SpaceRequest.post("/1/installation")//
 				.userAuth(user)//

@@ -14,7 +14,7 @@ import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 public class BackendResourceTestOncePerDay extends Assert {
 
 	@Test
-	public void createBackendSendsNotificationToSuperDogs() throws Exception {
+	public void createBackendSendsNotificationToSuperDogs() {
 
 		SpaceClient.prepareTest();
 		Backend test = new Backend("test", "test", "hi test", "david@spacedog.io");

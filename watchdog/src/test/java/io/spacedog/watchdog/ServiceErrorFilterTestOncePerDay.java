@@ -11,7 +11,7 @@ import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 public class ServiceErrorFilterTestOncePerDay extends Assert {
 
 	@Test
-	public void notifySuperdogsForInternalServerErrors() throws Exception {
+	public void notifySuperdogsForInternalServerErrors() {
 
 		// prepare
 		SpaceClient.prepareTest();

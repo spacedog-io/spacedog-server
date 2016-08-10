@@ -23,7 +23,7 @@ import io.spacedog.utils.Json;
 public class QueryTest extends Assert {
 
 	@Test
-	public void importCarDataset() throws Exception {
+	public void importCarDataset() {
 
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();

@@ -1,5 +1,6 @@
 package io.spacedog.watchdog;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Set;
 
@@ -28,7 +29,7 @@ public class ShareResourceTestOncePerDay {
 	private static final String FILE_CONTENT = "This is a test file!";
 
 	@Test
-	public void shareListAndGetFiles() throws Exception {
+	public void shareListAndGetFiles() throws IOException {
 
 		// prepare
 		Backend test = SpaceClient.resetTestBackend();

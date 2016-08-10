@@ -22,7 +22,7 @@ import io.spacedog.watchdog.SpaceSuite.TestOften;
 public class UserResourceTestOften extends Assert {
 
 	@Test
-	public void dataEndpointsBehaveTheSameThanUserEnpoints() throws Exception {
+	public void dataEndpointsBehaveTheSameThanUserEnpoints() {
 
 		// prepare
 		SpaceClient.prepareTest();
@@ -81,7 +81,7 @@ public class UserResourceTestOften extends Assert {
 	}
 
 	@Test
-	public void userIsSigningUpAndMore() throws Exception {
+	public void userIsSigningUpAndMore() {
 
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
@@ -157,7 +157,7 @@ public class UserResourceTestOften extends Assert {
 	}
 
 	@Test
-	public void usersCanReadOtherUsersPersonalData() throws Exception {
+	public void usersCanReadOtherUsersPersonalData() {
 
 		// prepare
 		SpaceClient.prepareTest();
@@ -197,7 +197,7 @@ public class UserResourceTestOften extends Assert {
 	}
 
 	@Test
-	public void setAndResetPassword() throws Exception {
+	public void setAndResetPassword() {
 
 		// prepare
 
@@ -307,7 +307,7 @@ public class UserResourceTestOften extends Assert {
 	}
 
 	@Test
-	public void setUserCustomSchemaAndMore() throws Exception {
+	public void setUserCustomSchemaAndMore() {
 
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();

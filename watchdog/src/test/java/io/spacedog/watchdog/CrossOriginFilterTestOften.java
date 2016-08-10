@@ -16,7 +16,7 @@ import io.spacedog.watchdog.SpaceSuite.TestOften;
 public class CrossOriginFilterTestOften extends Assert {
 
 	@Test
-	public void returnCORSHeaders() throws Exception {
+	public void returnCORSHeaders() {
 
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();

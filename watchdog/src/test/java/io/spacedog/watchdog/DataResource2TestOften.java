@@ -30,7 +30,7 @@ import io.spacedog.watchdog.SpaceSuite.TestOften;
 public class DataResource2TestOften extends Assert {
 
 	@Test
-	public void createSearchUpdateAndDeleteSales() throws Exception {
+	public void createSearchUpdateAndDeleteSales() {
 
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
@@ -202,7 +202,7 @@ public class DataResource2TestOften extends Assert {
 	}
 
 	@Test
-	public void deleteObjects() throws Exception {
+	public void deleteObjects() {
 
 		// prepare
 
@@ -234,7 +234,7 @@ public class DataResource2TestOften extends Assert {
 	}
 
 	@Test
-	public void testAllObjectIdStrategies() throws Exception {
+	public void testAllObjectIdStrategies() {
 
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
@@ -305,7 +305,7 @@ public class DataResource2TestOften extends Assert {
 	}
 
 	@Test
-	public void testFromAndSizeParameters() throws Exception {
+	public void testFromAndSizeParameters() {
 
 		// prepare
 
@@ -356,7 +356,7 @@ public class DataResource2TestOften extends Assert {
 		SpaceRequest.get("/1/data/message").from(9999).size(10).userAuth(vince).go(400);
 	}
 
-	private Collection<String> fetchMessages(User user, int from, int size) throws Exception {
+	private Collection<String> fetchMessages(User user, int from, int size) {
 		JsonNode results = SpaceRequest.get("/1/data/message")//
 				.refresh().from(from).size(size)//
 				.userAuth(user).go(200)//

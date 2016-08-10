@@ -16,7 +16,7 @@ public class WebResourceTestOncePerDay {
 	private static Backend test;
 
 	@Test
-	public void test() throws Exception {
+	public void test() {
 
 		// prepare
 		SpaceClient.prepareTest(false);
@@ -60,11 +60,11 @@ public class WebResourceTestOncePerDay {
 				.assertHeaderEquals("text/html", SpaceHeaders.CONTENT_TYPE);
 	}
 
-	private void upload(String prefix, String uri) throws Exception {
+	private void upload(String prefix, String uri) {
 		upload(prefix, uri, html(uri));
 	}
 
-	private void upload(String prefix, String uri, String html) throws Exception {
+	private void upload(String prefix, String uri, String html) {
 		SpaceRequest.put("/1/file/" + prefix + uri).adminAuth(test).body(html).go(200);
 	}
 
@@ -72,15 +72,15 @@ public class WebResourceTestOncePerDay {
 		return String.format("<h1>This is %s</h1>", uri);
 	}
 
-	private void browse(String prefix, String uri) throws Exception {
+	private void browse(String prefix, String uri) {
 		browse(prefix, uri, html(uri), "text/html");
 	}
 
-	private void browse(String prefix, String uri, String expectedBody) throws Exception {
+	private void browse(String prefix, String uri, String expectedBody) {
 		browse(prefix, uri, expectedBody, "text/html");
 	}
 
-	private void browse(String prefix, String uri, String expectedBody, String expectedContentType) throws Exception {
+	private void browse(String prefix, String uri, String expectedBody, String expectedContentType) {
 		SpaceRequest.head("/1/web/" + prefix + uri).backend(test).go(200)//
 				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE);
 
@@ -89,7 +89,7 @@ public class WebResourceTestOncePerDay {
 				.assertBodyEquals(expectedBody);
 	}
 
-	private void notFound(String prefix, String uri) throws Exception {
+	private void notFound(String prefix, String uri) {
 		SpaceRequest.get("/1/web/" + prefix + uri).backend(test).go(404)//
 				.assertHeaderEquals("text/html", SpaceHeaders.CONTENT_TYPE)//
 				.assertBodyEquals(HTML_404);

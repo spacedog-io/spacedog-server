@@ -86,7 +86,7 @@ public class FileSynchronizer {
 	private FileSynchronizer() {
 	}
 
-	public void synch() throws Exception {
+	public void synch() throws IOException {
 		Check.notNull(source, "source");
 		Check.notNullOrEmpty(backendId, "backend id");
 		Check.notNullOrEmpty(prefix, "prefix");
@@ -119,7 +119,7 @@ public class FileSynchronizer {
 	// Implementation
 	//
 
-	private void synchFromServer() throws Exception {
+	private void synchFromServer() throws IOException {
 		SpaceResponse response = SpaceRequest.get("/1/file/" + prefix)//
 				.basicAuth(backendId, login, password)//
 				.go(200, 404);
@@ -132,7 +132,7 @@ public class FileSynchronizer {
 		}
 	}
 
-	private void check(JsonNode file) throws Exception {
+	private void check(JsonNode file) throws IOException {
 		String webPath = file.get("path").asText();
 		// removes slash, prefix and slash
 		String relativePath = webPath.substring(prefix.length() + 2);
@@ -148,7 +148,7 @@ public class FileSynchronizer {
 			delete(webPath);
 	}
 
-	private void synchFromLocal() throws Exception {
+	private void synchFromLocal() throws IOException {
 
 		Files.walk(Paths.get(source))//
 				.filter(path -> !path.getFileName().toString().startsWith("."))//
@@ -166,7 +166,7 @@ public class FileSynchronizer {
 		return Uris.join(prefix, Paths.get(source).relativize(filePath).toString());
 	}
 
-	private void delete(String webPath) throws Exception {
+	private void delete(String webPath) {
 		SpaceRequest.delete("/1/file" + webPath)//
 				.basicAuth(backendId, login, password)//
 				.go(200);

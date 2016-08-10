@@ -19,7 +19,7 @@ import io.spacedog.watchdog.SpaceSuite.TestOften;
 public class StashResourceTestOften extends Assert {
 
 	@Test
-	public void createGetAndDeleteStashObjects() throws Exception {
+	public void createGetAndDeleteStashObjects() {
 
 		// prepare
 		SpaceClient.prepareTest();

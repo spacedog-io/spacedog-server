@@ -20,7 +20,7 @@ public class FileSynchronizerTest extends Assert {
 	private Path source;
 
 	@Test
-	public void test() throws Exception {
+	public void test() throws IOException {
 
 		// prepare temp folder to synch
 		source = Files.createTempDirectory(this.getClass().getSimpleName());
