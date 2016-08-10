@@ -96,7 +96,7 @@ public class BackendResource extends Resource {
 		// and can be set in space context if none are set
 		SpaceContext.setCredentials(credentials);
 
-		if (!SpaceContext.isTest())
+		if (context.query().getBoolean(SpaceParams.NOTIF, true))
 			Internals.get().notify(//
 					Start.get().configuration().superdogAwsNotificationTopic(), //
 					String.format("New backend (%s)", spaceRootUrl(backendId).toString()), //

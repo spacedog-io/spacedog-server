@@ -22,6 +22,7 @@ public class BackendResourceTestOften extends Assert {
 	@Test
 	public void deleteSignUpGetLoginTestBackend() throws Exception {
 
+		// prepare
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
 

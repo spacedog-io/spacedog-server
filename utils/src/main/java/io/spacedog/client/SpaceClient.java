@@ -3,9 +3,9 @@ package io.spacedog.client;
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.mashape.unirest.http.exceptions.UnirestException;
 
 import io.spacedog.utils.Schema;
+import io.spacedog.utils.SpaceParams;
 import io.spacedog.utils.Utils;
 
 public class SpaceClient {
@@ -101,13 +101,20 @@ public class SpaceClient {
 		return new Schema(name, node);
 	}
 
-	public static Backend createBackend(Backend backend) throws UnirestException, Exception {
-		return createBackend(backend.backendId, backend.username, backend.password, backend.email);
+	public static Backend createBackend(Backend backend) {
+		return createBackend(backend, false);
 	}
 
-	public static Backend createBackend(String backendId, String username, String password, String email) {
+	public static Backend createBackend(Backend backend, boolean notification) {
+		return createBackend(backend.backendId, backend.username, //
+				backend.password, backend.email, notification);
+	}
+
+	public static Backend createBackend(String backendId, String username, String password, //
+			String email, boolean notification) {
 
 		SpaceRequest.post("/1/backend/" + backendId)//
+				.queryParam(SpaceParams.NOTIF, Boolean.toString(notification))//
 				.body("username", username, "password", password, "email", email)//
 				.go(201);
 
@@ -148,7 +155,7 @@ public class SpaceClient {
 
 	public static Backend resetBackend(String backendId, String username, String password, String email) {
 		deleteBackend(backendId, username, password);
-		return createBackend(backendId, username, password, email);
+		return createBackend(backendId, username, password, email, false);
 	}
 
 	public static void prepareTest() {
