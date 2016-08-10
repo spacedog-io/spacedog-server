@@ -56,6 +56,10 @@ public class SpaceRequestConfiguration {
 		properties.setProperty("spacedog.target", target.toString());
 	}
 
+	public int httpTimeoutMillis() {
+		return Integer.valueOf(configuration.getProperty("spacedog.http.timeout", "10000"));
+	}
+
 	private String getProperty(String key, String defaultValue) {
 		String value = System.getProperty(key);
 		if (Strings.isNullOrEmpty(value))

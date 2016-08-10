@@ -340,11 +340,12 @@ public class SpaceRequest {
 
 	public static void setConfigurationDefault(SpaceRequestConfiguration configuration) {
 		configurationDefault = configuration;
+		Unirest.setTimeouts(configuration.httpTimeoutMillis(), configuration.httpTimeoutMillis());
 	}
 
 	public static SpaceRequestConfiguration configuration() {
 		if (configurationDefault == null)
-			configurationDefault = SpaceRequestConfiguration.get();
+			setConfigurationDefault(SpaceRequestConfiguration.get());
 		return configurationDefault;
 	}
 
