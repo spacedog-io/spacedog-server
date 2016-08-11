@@ -41,7 +41,7 @@ public class MailResource extends Resource {
 	public Payload post(Context context) {
 
 		try {
-			Credentials admin = SpaceContext.checkAdminCredentials();
+			Credentials admin = SpaceContext.checkUserCredentials();
 			String from = admin.backendId().toUpperCase() + " <no-reply@api.spacedog.io>";
 			String to = null, cc = null, bcc = null, subject = null, text = null, html = null;
 
