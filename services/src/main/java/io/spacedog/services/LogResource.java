@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchResponse;
@@ -23,12 +24,12 @@ import com.google.common.io.Resources;
 import com.mashape.unirest.http.HttpMethod;
 
 import io.spacedog.utils.Credentials;
+import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.SpaceParams;
 import io.spacedog.utils.Utils;
-import io.spacedog.utils.Credentials.Level;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -224,48 +225,32 @@ public class LogResource extends Resource {
 				"receivedAt", receivedAt.toString(), "processedIn",
 				DateTime.now().getMillis() - receivedAt.getMillis());
 
-		Credentials credentials = SpaceContext.getCredentials();
-		ObjectNode logCredentials = log.putObject("credentials");
-		logCredentials.put("backendId", credentials.backendId());
-		logCredentials.put("type", credentials.level().toString());
-		if (!credentials.level().equals(Level.KEY))
-			logCredentials.put("name", credentials.name());
+		addCredentials(log);
+		addQuery(log, context);
+		addHeaders(log, context.request().headers().entrySet());
+		addRequestContent(log, context);
+		addPayload(log, payload, context);
 
-		if (!context.query().keys().isEmpty()) {
-			ObjectNode logQuery = log.putObject("query");
-			for (String key : context.query().keys()) {
-				String value = key.equals(PASSWORD) //
-						? "******" : context.get(key);
-				logQuery.put(key, value);
-			}
+		return Start.get().getElasticClient()//
+				.prepareIndex(SPACEDOG_BACKEND, TYPE)//
+				.setSource(log.toString()).get().getId();
+	}
+
+	private void addPayload(ObjectNode log, Payload payload, Context context) {
+		if (payload != null) {
+			log.put("status", payload.code());
+
+			if (isNotGetLogRequest(context) //
+					&& payload.rawContent() instanceof JsonNode)
+				log.set("response", (JsonNode) payload.rawContent());
 		}
+	}
 
-		for (Entry<String, List<String>> entry : context.request().headers().entrySet()) {
-			if (entry.getKey().equalsIgnoreCase(SpaceHeaders.AUTHORIZATION))
-				continue;
-			if (entry.getKey().equalsIgnoreCase(SpaceHeaders.USER_AGENT)) {
-				String userAgent = entry.getValue().toString();
-				log.with("headers").put(entry.getKey(), //
-						userAgent.substring(1, userAgent.length() - 1));
-				continue;
-			}
-			if (entry.getValue().size() == 1)
-				log.with("headers").put(entry.getKey(), entry.getValue().get(0));
-			else if (entry.getValue().size() > 1) {
-				ArrayNode array = log.with("headers").putArray(entry.getKey());
-				for (String string : entry.getValue())
-					array.add(string);
-			}
-		}
-
+	private void addRequestContent(ObjectNode log, Context context) {
 		String content = null;
 
 		try {
 			content = context.request().content();
-		} catch (IllegalArgumentException e) {
-			// this exception is thrown in batch request for get sub requests
-			// TODO: ignore this for now but refactor along batch service
-			// refactoring
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -290,18 +275,56 @@ public class LogResource extends Resource {
 					// I just do not log the content if I can not parse it
 				}
 		}
+	}
 
-		if (payload != null) {
-			log.put("status", payload.code());
+	private void addQuery(ObjectNode log, Context context) {
+		if (context.query().keys().isEmpty())
+			return;
 
-			if (isNotGetLogRequest(context) //
-					&& payload.rawContent() instanceof JsonNode)
-				log.set("response", (JsonNode) payload.rawContent());
+		ObjectNode logQuery = log.putObject("query");
+		for (String key : context.query().keys()) {
+			String value = key.equals(PASSWORD) //
+					? "******" : context.get(key);
+			logQuery.put(key, value);
 		}
+	}
 
-		return Start.get().getElasticClient()//
-				.prepareIndex(SPACEDOG_BACKEND, TYPE)//
-				.setSource(log.toString()).get().getId();
+	private void addCredentials(ObjectNode log) {
+		Credentials credentials = SpaceContext.getCredentials();
+		ObjectNode logCredentials = log.putObject("credentials");
+		logCredentials.put("backendId", credentials.backendId());
+		logCredentials.put("type", credentials.level().toString());
+		if (!credentials.level().equals(Level.KEY))
+			logCredentials.put("name", credentials.name());
+	}
+
+	private void addHeaders(ObjectNode log, Set<Entry<String, List<String>>> headers) {
+
+		for (Entry<String, List<String>> header : headers) {
+
+			String key = header.getKey();
+			List<String> values = header.getValue();
+
+			if (key.equalsIgnoreCase(SpaceHeaders.AUTHORIZATION))
+				continue;
+
+			if (Utils.isNullOrEmpty(values))
+				continue;
+
+			if (key.equalsIgnoreCase(SpaceHeaders.USER_AGENT)) {
+				log.with("headers").put(key, values.toString()//
+						.substring(1, values.toString().length() - 1));
+				return;
+			}
+
+			if (values.size() == 1)
+				log.with("headers").put(key, values.get(0));
+			else if (values.size() > 1) {
+				ArrayNode array = log.with("headers").putArray(key);
+				for (String string : values)
+					array.add(string);
+			}
+		}
 	}
 
 	private boolean isNotGetLogRequest(Context context) {

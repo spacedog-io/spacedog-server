@@ -6,6 +6,7 @@ import java.util.Map.Entry;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Strings;
 
 import io.spacedog.utils.Internals;
 import io.spacedog.utils.Json;
@@ -92,10 +93,18 @@ public class ServiceErrorFilter implements SpaceFilter {
 	private void appendMap(StringBuilder builder, String name, Map<?, ?> map) {
 		builder.append(name).append(" =\n");
 		for (Entry<?, ?> entry : map.entrySet()) {
+			Object value = entry.getValue();
+
+			if (value == null)
+				continue;
+
+			if (Strings.isNullOrEmpty(value.toString()))
+				continue;
+
 			builder.append('\t')//
 					.append(entry.getKey())//
 					.append(" : ")//
-					.append(entry.getValue())//
+					.append(value)//
 					.append('\n');
 		}
 	}

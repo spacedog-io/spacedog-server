@@ -37,7 +37,7 @@ public class LogResourceTestOften extends Assert {
 		User user = SpaceClient.newCredentials(test, "user", "hi user");
 
 		// create a user in test2 backend
-		User user2 = SpaceClient.newCredentials(test2, "user2", "hi user2");
+		SpaceClient.newCredentials(test2, "user2", "hi user2");
 
 		// create message in test backend
 		String id = SpaceRequest.post("/1/data/message")//
@@ -257,6 +257,7 @@ public class LogResourceTestOften extends Assert {
 	@Test
 	public void filterLogs() {
 
+		// prepare
 		SpaceClient.prepareTest();
 
 		// creates test backend and user
@@ -361,15 +362,17 @@ public class LogResourceTestOften extends Assert {
 				.assertEquals("/1/log", "results.0.path")//
 				.assertNotPresent("results.0.response");
 
-		// Headers are logged
+		// Headers are logged if not empty
 		SpaceRequest.get("/1/log").adminAuth(test)//
 				.header("x-empty", "")//
+				.header("x-blank", " ")//
 				.header("x-color", "YELLOW")//
 				.header("x-color-list", "RED,BLUE,GREEN")//
 				.go(200);
 
 		SpaceRequest.get("/1/log").size(1).adminAuth(test).go(200)//
 				.assertNotPresent("results.0.headers.x-empty")//
+				.assertNotPresent("results.0.headers.x-blank")//
 				.assertEquals("YELLOW", "results.0.headers.x-color")//
 				.assertEquals("RED", "results.0.headers.x-color-list.0")//
 				.assertEquals("BLUE", "results.0.headers.x-color-list.1")//
