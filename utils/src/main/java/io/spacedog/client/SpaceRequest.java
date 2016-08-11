@@ -8,9 +8,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.BasicHttpClientConnectionManager;
+import org.apache.http.Header;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -27,14 +27,17 @@ import com.mashape.unirest.request.HttpRequestWithBody;
 
 import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceClient.User;
+import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Schema;
 import io.spacedog.utils.SpaceHeaders;
+import io.spacedog.utils.Utils;
 
 public class SpaceRequest {
+
 	private JsonNode bodyJson;
 	private HttpMethod method;
 	private String backendId;
@@ -53,10 +56,10 @@ public class SpaceRequest {
 	private static boolean forTestingDefault = false;
 	private static SpaceRequestConfiguration configurationDefault;
 
-	static {
-		Unirest.setHttpClient(HttpClients.createMinimal(//
-				new BasicHttpClientConnectionManager()));
-	}
+	// static {
+	// Unirest.setHttpClient(HttpClients.createMinimal(//
+	// new BasicHttpClientConnectionManager()));
+	// }
 
 	public SpaceRequest(String uri, HttpMethod method) {
 		this.uri = uri;
@@ -152,18 +155,16 @@ public class SpaceRequest {
 		return this;
 	}
 
-	public SpaceRequest body(Schema schema) {
-		this.bodyJson = schema.node();
-		this.body = schema.toString();
-		return this;
-	}
-
 	public SpaceRequest body(Path path) throws IOException {
 		return body(Files.readAllBytes(path));
 	}
 
 	public SpaceRequest body(Object... elements) {
 		return body(Json.object(elements));
+	}
+
+	public SpaceRequest body(Schema schema) {
+		return body(schema.node());
 	}
 
 	public SpaceRequest body(JsonNode body) {
@@ -246,7 +247,7 @@ public class SpaceRequest {
 				requestWithBody.body((String) body);
 		}
 
-		return new SpaceResponse(request, bodyJson, configuration().debug());
+		return new SpaceResponse(this, request);
 	}
 
 	public SpaceRequest formField(String name, String value) {
@@ -372,6 +373,39 @@ public class SpaceRequest {
 		for (String cookie : cookies)
 			header(SpaceHeaders.COOKIE, cookie);
 		return this;
+	}
+
+	public void printRequest(HttpRequest httpRequest) {
+		Utils.info("%s %s", httpRequest.getHttpMethod(), httpRequest.getUrl());
+
+		Utils.info("Request headers:");
+		httpRequest.getHeaders().forEach((key, value) -> printRequestHeader(key, value));
+
+		if (httpRequest.getBody() != null) {
+			Header header = httpRequest.getBody().getEntity().getContentType();
+			if (header != null)
+				Utils.info("  %s: [%s]", header.getName(), header.getValue());
+		}
+
+		if (!formFields.isEmpty()) {
+			Utils.info("Request form body:");
+			for (Entry<String, Object> entry : formFields.entrySet())
+				Utils.info("  %s = %s", entry.getKey(), entry.getValue());
+		}
+
+		if (bodyJson != null)
+			Utils.info("Request Json body: %s", Json.toPrettyString(bodyJson));
+	}
+
+	private void printRequestHeader(String key, List<String> value) {
+		if (AuthorizationHeader.isKey(key)) {
+			AuthorizationHeader authHeader = new AuthorizationHeader(value);
+			if (authHeader.isBasic()) {
+				Utils.info("  Authorization: [Basic %s:*******]", authHeader.username());
+				return;
+			}
+		}
+		Utils.info("  %s: %s", key, value);
 	}
 
 	// public static void setDefaultBackend(String backendId) {

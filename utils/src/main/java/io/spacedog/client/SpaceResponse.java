@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiConsumer;
 
-import org.apache.http.Header;
 import org.joda.time.DateTime;
 import org.junit.Assert;
 
@@ -22,7 +21,6 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.HttpRequest;
 
-import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceHeaders;
@@ -37,13 +35,16 @@ public class SpaceResponse {
 	private JsonNode jsonResponseContent;
 	private long duration;
 
-	public SpaceResponse(HttpRequest request, JsonNode jsonRequestContent, boolean debug) {
+	public SpaceResponse(SpaceRequest spaceRequest, HttpRequest httpRequest) {
 
-		this.httpRequest = request;
+		this.httpRequest = httpRequest;
+		boolean debug = SpaceRequest.configuration().debug();
 
 		if (debug) {
 			Utils.info();
-			Utils.infoNoLn("%s %s => ", httpRequest.getHttpMethod(), httpRequest.getUrl());
+			spaceRequest.printRequest(httpRequest);
+			Utils.info();
+			Utils.infoNoLn("=>>> ");
 		}
 
 		this.before = DateTime.now();
@@ -59,49 +60,31 @@ public class SpaceResponse {
 		this.headers = new SpaceHeaders(httpResponse().getHeaders());
 
 		if (debug) {
-			Utils.info("%s (%s)", httpResponse.getStatus(), httpResponse.getStatusText());
+			Utils.info("%s (%s) in %s ms", httpResponse.getStatusText(), //
+					httpResponse.getStatus(), duration);
 
-			httpRequest.getHeaders().forEach((key, value) -> printHeader(key, value));
-
-			if (request.getBody() != null) {
-				Header header = request.getBody().getEntity().getContentType();
-				if (header != null)
-					Utils.info("%s: [%s]", header.getName(), header.getValue());
-			}
-
-			if (jsonRequestContent != null)
-				Utils.info("Request body: %s", Json.toPrettyString(jsonRequestContent));
+			Utils.info("Response headers:");
+			this.headers.forEach((key, value) -> Utils.info("  %s: %s", key, value));
 		}
 
 		String body = httpResponse.getBody();
-		if (Json.isJson(body))
-			jsonResponseContent = Json.readNode(body);
+
+		try {
+			if (Json.isJson(body))
+				jsonResponseContent = Json.readNode(body);
+		} catch (Exception e) {
+			// not really a json body
+		}
 
 		if (debug) {
-
-			Utils.info("=> duration: [%sms]", duration);
-
-			this.headers.forEach((key, value) -> Utils.info("=> %s: %s", key, value));
-
 			if (body != null) {
 				String prettyBody = jsonResponseContent != null //
 						? Json.toPrettyString(jsonResponseContent) //
 						: body.length() < 550 ? body : body.substring(0, 500) + " ...";
 
-				Utils.info("=> Response body: %s", prettyBody);
+				Utils.info("Response body: %s", prettyBody);
 			}
 		}
-	}
-
-	private static void printHeader(String key, List<String> value) {
-		if (AuthorizationHeader.isKey(key)) {
-			AuthorizationHeader authHeader = new AuthorizationHeader(value);
-			if (authHeader.isBasic()) {
-				Utils.info("Authorization: [Basic %s:*******]", authHeader.username());
-				return;
-			}
-		}
-		Utils.info("%s: %s", key, value);
 	}
 
 	public DateTime before() {

@@ -64,7 +64,15 @@
 			<artifactId>unirest-java</artifactId>
 			<version>1.4.7</version>
 		</dependency>
-		<dependency>
+ 		<dependency>
+			<!-- 	Unirest dependency
+			fixed version to avoid bug HTTPCLIENT-1610
+			causing linkedin requests without response -->
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.4.1</version>
+		</dependency>
+ 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 			<version>18.0</version>
