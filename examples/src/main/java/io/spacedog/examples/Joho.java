@@ -16,6 +16,7 @@ import com.google.common.io.Resources;
 
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTarget;
 import io.spacedog.services.DataAccessControl;
 import io.spacedog.utils.DataAclSettings;
 import io.spacedog.utils.DataPermission;
@@ -30,7 +31,7 @@ public class Joho extends SpaceClient {
 	public final static Backend JOHORECETTE = new Backend("johorecette", "johorecette", "hi johorecette",
 			"david@spacedog.io");
 
-	private static Backend backend = JOHO2;
+	private static Backend backend = JOHORECETTE;
 
 	static Schema buildDiscussionSchema() {
 		return Schema.builder("discussion") //
@@ -114,7 +115,7 @@ public class Joho extends SpaceClient {
 				.id("username")//
 
 				.acl("user", DataPermission.create, DataPermission.search, //
-						DataPermission.update, DataPermission.delete)//
+						DataPermission.update_all, DataPermission.delete)//
 				.acl("admin", DataPermission.create, DataPermission.search, //
 						DataPermission.update_all, DataPermission.delete_all)//
 
@@ -144,7 +145,6 @@ public class Joho extends SpaceClient {
 	static Schema buildThemesSchema() {
 		return Schema.builder("themes")//
 
-				.acl("key", DataPermission.search)//
 				.acl("user", DataPermission.search)//
 				.acl("admin", DataPermission.create, DataPermission.search, //
 						DataPermission.update_all, DataPermission.delete_all)//
@@ -166,7 +166,6 @@ public class Joho extends SpaceClient {
 	static Schema buildSitesSchema() {
 		return Schema.builder("sites")//
 
-				.acl("key", DataPermission.search)//
 				.acl("user", DataPermission.search)//
 				.acl("admin", DataPermission.create, DataPermission.search, //
 						DataPermission.update_all, DataPermission.delete_all)//
@@ -190,7 +189,7 @@ public class Joho extends SpaceClient {
 	@Test
 	public void updateAllSchemaAclSettings() throws JsonProcessingException {
 
-		// SpaceRequest.configuration().target(SpaceTarget.production);
+		SpaceRequest.configuration().target(SpaceTarget.production);
 
 		DataAclSettings acl = new DataAclSettings();
 
