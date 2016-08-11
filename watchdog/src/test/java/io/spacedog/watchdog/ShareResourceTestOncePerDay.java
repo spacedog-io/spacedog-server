@@ -70,7 +70,7 @@ public class ShareResourceTestOncePerDay {
 
 		// anonymous gets shared file with its location
 		byte[] downloadedBytes = SpaceRequest.get(pngLocation).go(200)//
-				.assertHeaderEquals("gzip", SpaceHeaders.CONTENT_ENCODING)//
+				// .assertHeaderEquals("gzip", SpaceHeaders.CONTENT_ENCODING)//
 				.assertHeaderEquals("image/png", SpaceHeaders.CONTENT_TYPE)//
 				.assertHeaderEquals("vince", SpaceHeaders.SPACEDOG_OWNER)//
 				.bytes();
@@ -125,7 +125,7 @@ public class ShareResourceTestOncePerDay {
 
 		// download shared text file
 		String stringContent = SpaceRequest.get(txtLocation).backend(test).go(200)//
-				.assertHeaderEquals("gzip", SpaceHeaders.CONTENT_ENCODING)//
+				// .assertHeaderEquals("gzip", SpaceHeaders.CONTENT_ENCODING)//
 				.assertHeaderEquals("text/plain", SpaceHeaders.CONTENT_TYPE)//
 				.assertHeaderEquals("fred", SpaceHeaders.SPACEDOG_OWNER)//
 				.httpResponse().getBody();

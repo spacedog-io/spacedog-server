@@ -428,7 +428,7 @@ public class CredentialsResourceTestOften extends Assert {
 				.queryParam("state", "thisisit")//
 				.queryParam("redirect_uri", redirectUri)//
 				.queryParam("client_id", settings.clientId)//
-				.go(303);
+				.go(200, 303);
 
 		//
 		// List<String> cookies = response.header(SpaceHeaders.SET_COOKIE);
