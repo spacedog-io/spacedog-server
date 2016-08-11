@@ -2,10 +2,14 @@ package io.spacedog.services;
 
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateResponse;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceParams;
@@ -29,23 +33,37 @@ public class SettingsResource {
 	// Routes
 	//
 
-	@Put("")
-	@Put("/")
-	public Payload makeSureIndexIsThere() {
+	@Get("")
+	@Get("/")
+	public Payload getAll(Context context) {
 
-		String backendId = SpaceContext.checkAdminCredentials().backendId();
+		String backendId = SpaceContext.backendId();
 		ElasticClient elastic = Start.get().getElasticClient();
 
-		if (!elastic.existsIndex(backendId, TYPE)) {
-			Context context = SpaceContext.get().context();
-			int shards = context.query().getInteger(SpaceParams.SHARDS, SpaceParams.SHARDS_DEFAULT);
-			int replicas = context.query().getInteger(SpaceParams.REPLICAS, SpaceParams.REPLICAS_DEFAULT);
-			boolean async = context.query().getBoolean(SpaceParams.ASYNC, SpaceParams.ASYNC_DEFAULT);
+		if (!elastic.existsIndex(backendId, TYPE))
+			return JsonPayload.json(JsonPayload.builder()//
+					.put("took", 0).put("total", 0).object("results"));
 
-			ObjectNode mapping = Json.object(TYPE, Json.object("enabled", false));
-			elastic.createIndex(backendId, TYPE, mapping.toString(), async, shards, replicas);
-		}
-		return JsonPayload.success();
+		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
+		DataStore.get().refreshType(refresh, backendId, TYPE);
+
+		int from = context.query().getInteger("from", 0);
+		int size = context.query().getInteger("size", 10);
+		Check.isTrue(from + size <= 1000, "from + size is greater than 1000");
+
+		SearchResponse response = elastic.prepareSearch(backendId, TYPE)//
+				.setTypes(TYPE)//
+				.setFrom(from)//
+				.setSize(size)//
+				.setQuery(QueryBuilders.matchAllQuery())//
+				.get();
+
+		ObjectNode results = Json.object();
+
+		for (SearchHit hit : response.getHits().getHits())
+			results.set(hit.getId(), Json.readNode(hit.sourceAsString()));
+
+		return JsonPayload.json(results);
 	}
 
 	@Delete("")
@@ -74,7 +92,7 @@ public class SettingsResource {
 	@Delete("/:id")
 	@Delete("/:id/")
 	public Payload delete(String id) {
-		delete(id);
+		doDelete(id);
 		return JsonPayload.success();
 	}
 
@@ -101,7 +119,7 @@ public class SettingsResource {
 		ElasticClient elastic = Start.get().getElasticClient();
 
 		// Make sure index is created before to save anything
-		makeSureIndexIsThere();
+		makeSureIndexIsCreated();
 
 		return elastic.prepareIndex(backendId, TYPE, id)//
 				.setSource(body).get();
@@ -113,7 +131,7 @@ public class SettingsResource {
 		ElasticClient elastic = Start.get().getElasticClient();
 
 		// Make sure index is created before to save anything
-		makeSureIndexIsThere();
+		makeSureIndexIsCreated();
 
 		return elastic.prepareUpdate(backendId, TYPE, id)//
 				.setDoc(body).get();
@@ -123,6 +141,22 @@ public class SettingsResource {
 		String backendId = SpaceContext.checkAdminCredentials().backendId();
 		ElasticClient elastic = Start.get().getElasticClient();
 		return elastic.delete(backendId, TYPE, id, true);
+	}
+
+	private void makeSureIndexIsCreated() {
+
+		String backendId = SpaceContext.checkAdminCredentials().backendId();
+		ElasticClient elastic = Start.get().getElasticClient();
+
+		if (!elastic.existsIndex(backendId, TYPE)) {
+			Context context = SpaceContext.get().context();
+			int shards = context.query().getInteger(SpaceParams.SHARDS, SpaceParams.SHARDS_DEFAULT);
+			int replicas = context.query().getInteger(SpaceParams.REPLICAS, SpaceParams.REPLICAS_DEFAULT);
+			boolean async = context.query().getBoolean(SpaceParams.ASYNC, SpaceParams.ASYNC_DEFAULT);
+
+			ObjectNode mapping = Json.object(TYPE, Json.object("enabled", false));
+			elastic.createIndex(backendId, TYPE, mapping.toString(), async, shards, replicas);
+		}
 	}
 
 	//

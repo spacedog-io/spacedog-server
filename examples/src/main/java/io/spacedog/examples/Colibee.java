@@ -16,7 +16,6 @@ import com.google.common.io.Resources;
 
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
-import io.spacedog.client.SpaceTarget;
 import io.spacedog.services.CredentialsResource;
 import io.spacedog.services.DataAccessControl;
 import io.spacedog.utils.DataAclSettings;
@@ -38,10 +37,6 @@ public class Colibee extends SpaceClient {
 	private JsonGenerator generator;
 
 	public Colibee() throws Exception {
-		backend = DEV;
-		SpaceRequest.configuration().target(SpaceTarget.production);
-		// resetBackend(backend);
-
 		generator = new JsonGenerator();
 		generator.regPath("photo", //
 				SpaceRequest.configuration().target().url(backend.backendId, "/1/file/tmp/ma-tronche.png"));
@@ -51,10 +46,17 @@ public class Colibee extends SpaceClient {
 				SpaceRequest.configuration().target().url(backend.backendId, "/1/file/tmp/mon-cv.pdf"));
 	}
 
-	// @Test
+	@Test
 	public void initColibeeBackend() throws Exception {
+
+		backend = DEV;
+		// SpaceRequest.configuration().target(SpaceTarget.production);
+
+		// initDataAclSettings();
+		// initLinkedinSettings();
+
 		// initTmpFiles();
-		// initReferences();
+		initReferences();
 		// initConsultant();
 		// initOpportunites();
 		// initGroupeFinance();
@@ -63,8 +65,7 @@ public class Colibee extends SpaceClient {
 		// initColibee();
 	}
 
-	// @Test
-	public void initColibeeDataAclSettings() {
+	private void initDataAclSettings() {
 
 		SchemaAclSettings roles = new SchemaAclSettings();
 
@@ -90,8 +91,7 @@ public class Colibee extends SpaceClient {
 
 	}
 
-	@Test
-	public void initColibeeLinkedSettings() {
+	private void initLinkedinSettings() {
 
 		LinkedinSettings settings = new LinkedinSettings();
 		settings.clientId = "77132d5dz6b13x";
@@ -248,8 +248,7 @@ public class Colibee extends SpaceClient {
 
 		references.set("statutCandidature", Json.object("en-cours", "En cours", "ok", "Acceptée", "ko", "Refusée"));
 
-		SpaceRequest.put("/1/stash").adminAuth(backend).go(200);
-		SpaceRequest.put("/1/stash/references").adminAuth(backend).body(references).go(200, 201);
+		SpaceRequest.put("/1/settings/references").adminAuth(backend).body(references).go(200, 201);
 
 		registerReferencesInGenerator(references);
 	}
@@ -263,7 +262,7 @@ public class Colibee extends SpaceClient {
 		}
 	}
 
-	static Schema buildConsultantSchema() {
+	private static Schema buildConsultantSchema() {
 		return Schema.builder("consultant") //
 				.bool("membreColibee")//
 				.string("membreNumero").examples("01234567").labels("fr", "N° de membre")//
@@ -360,7 +359,7 @@ public class Colibee extends SpaceClient {
 				.build();
 	}
 
-	static Schema buildOpportuniteSchema() {
+	private static Schema buildOpportuniteSchema() {
 		return Schema.builder("opportunite") //
 				.text("titre").french().examples("Audit financier")//
 				.text("contexte").french()//
@@ -423,7 +422,7 @@ public class Colibee extends SpaceClient {
 				.build();
 	}
 
-	static Schema buildGroupeSchema() {
+	private static Schema buildGroupeSchema() {
 		return Schema.builder("groupe") //
 				.text("titre").french()//
 				.text("description").french()//
@@ -434,7 +433,7 @@ public class Colibee extends SpaceClient {
 
 	}
 
-	static Schema buildRdvSchema() {
+	private static Schema buildRdvSchema() {
 		return Schema.builder("rdv") //
 				.text("titre").french()//
 				.string("status").examples("demande")//
@@ -459,7 +458,7 @@ public class Colibee extends SpaceClient {
 				.build();
 	}
 
-	static Schema buildDiscussionSchema() {
+	private static Schema buildDiscussionSchema() {
 		return Schema.builder("discussion") //
 				.text("titre").french()//
 				.text("description").french()//
@@ -470,7 +469,7 @@ public class Colibee extends SpaceClient {
 				.build();
 	}
 
-	static Schema buildMessageSchema() {
+	private static Schema buildMessageSchema() {
 		return Schema.builder("message") //
 				.text("texte").french()//
 				.string("discussionId").examples("bale3")//
@@ -484,7 +483,7 @@ public class Colibee extends SpaceClient {
 				.build();
 	}
 
-	static Schema buildColibeeSchema() {
+	private static Schema buildColibeeSchema() {
 		return Schema.builder("colibee") //
 				.string("prenom").examples("Olivier", "Philippe") //
 				.string("nom").examples("Martinez", "Germain") //
