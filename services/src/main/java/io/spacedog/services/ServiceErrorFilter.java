@@ -1,6 +1,7 @@
 package io.spacedog.services;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -74,8 +75,8 @@ public class ServiceErrorFilter implements SpaceFilter {
 			builder.append(context.request().method())//
 					.append(' ').append(uri).append(" => 500\n");
 
-			appendMap(builder, "Request parameters", context.query().keyValues());
-			appendMap(builder, "Request headers", context.request().headers());
+			appendQueryParams(builder, context.query().keyValues());
+			appendHeaders(builder, context.request().headers());
 
 			appendBody(builder, "Request body", context.request().content());
 			appendBody(builder, "Response body", payload.rawContent().toString());
@@ -90,21 +91,32 @@ public class ServiceErrorFilter implements SpaceFilter {
 		}
 	}
 
-	private void appendMap(StringBuilder builder, String name, Map<?, ?> map) {
-		builder.append(name).append(" =\n");
-		for (Entry<?, ?> entry : map.entrySet()) {
-			Object value = entry.getValue();
+	private void appendQueryParams(StringBuilder builder, Map<String, String> map) {
+		builder.append("Request parameters =\n");
+		for (Entry<String, String> entry : map.entrySet()) {
 
-			if (value == null)
-				continue;
-
-			if (Strings.isNullOrEmpty(value.toString()))
+			if (Strings.isNullOrEmpty(entry.getValue()))
 				continue;
 
 			builder.append('\t')//
 					.append(entry.getKey())//
 					.append(" : ")//
-					.append(value)//
+					.append(entry.getValue())//
+					.append('\n');
+		}
+	}
+
+	private void appendHeaders(StringBuilder builder, Map<String, List<String>> map) {
+		builder.append("Request headers =\n");
+		for (Entry<String, List<String>> entry : map.entrySet()) {
+
+			if (Utils.isNullOrEmpty(entry.getValue()))
+				continue;
+
+			builder.append('\t')//
+					.append(entry.getKey())//
+					.append(" : ")//
+					.append(entry.getValue())//
 					.append('\n');
 		}
 	}
