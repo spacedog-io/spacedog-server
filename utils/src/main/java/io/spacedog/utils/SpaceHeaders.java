@@ -1,8 +1,10 @@
 package io.spacedog.utils;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiConsumer;
 
+import com.google.common.collect.Maps;
 import com.mashape.unirest.http.Headers;
 
 public class SpaceHeaders {
@@ -66,25 +68,27 @@ public class SpaceHeaders {
 
 	// fields
 
-	private Headers headers;
+	private Map<String, List<String>> headerMap;
 
 	public SpaceHeaders(Headers headers) {
-		this.headers = headers;
+		headerMap = Maps.newHashMap();
+		headers.forEach((name, value) -> headerMap.put(name.trim().toLowerCase(), value));
 	}
 
 	public String first(String name) {
-		// header name is converted to lower case to get around Unirest bug
-		// where header names are only lower cased
-		return headers.getFirst(name.trim().toLowerCase());
+		List<String> list = get(name);
+		if (!Utils.isNullOrEmpty(list))
+			return list.get(0);
+		return null;
 	}
 
 	public List<String> get(String name) {
 		// header name is converted to lower case to get around Unirest bug
 		// where header names are only lower cased
-		return headers.get(name.trim().toLowerCase());
+		return headerMap.get(name.trim().toLowerCase());
 	}
 
 	public void forEach(BiConsumer<String, List<String>> action) {
-		this.headers.forEach(action);
+		headerMap.forEach(action);
 	}
 }
