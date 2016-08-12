@@ -121,7 +121,7 @@ public class CredentialsResourceTestOften extends Assert {
 		SpaceRequest.get("/1/login").bearerAuth(vince).go(401);
 
 		// vince logs in again
-		ObjectNode node = SpaceRequest.get("/1/login").userAuth(vince).go(200).objectNode();
+		ObjectNode node = SpaceRequest.get("/1/login").basicAuth(vince).go(200).objectNode();
 		vince.accessToken = node.get("accessToken").asText();
 		long expiresIn = node.get("expiresIn").asLong();
 		vince.expiresAt = DateTime.now().plus(expiresIn);
@@ -142,7 +142,7 @@ public class CredentialsResourceTestOften extends Assert {
 
 		// if vince logs in again with its password
 		// its access token is reset
-		node = SpaceRequest.get("/1/login").userAuth(vince).go(200).objectNode();
+		node = SpaceRequest.get("/1/login").basicAuth(vince).go(200).objectNode();
 		vince.accessToken = node.get("accessToken").asText();
 		expiresIn = node.get("expiresIn").asLong();
 		vince.expiresAt = DateTime.now().plus(expiresIn);
@@ -155,7 +155,7 @@ public class CredentialsResourceTestOften extends Assert {
 		SpaceRequest.get("/1/logout").bearerAuth(vince).go(200);
 
 		// vince logs in with token expiration of 2 seconds
-		node = SpaceRequest.get("/1/login").userAuth(vince)//
+		node = SpaceRequest.get("/1/login").basicAuth(vince)//
 				.queryParam("expiresEarly", "true")//
 				.go(200).objectNode();
 

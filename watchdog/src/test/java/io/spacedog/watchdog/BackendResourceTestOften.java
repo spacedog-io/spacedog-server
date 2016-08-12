@@ -112,13 +112,17 @@ public class BackendResourceTestOften extends Assert {
 
 		// super admin fails to access a backend he does not own
 
-		SpaceRequest.get("/1/backend").basicAuth("aaaa", zzzz.username, zzzz.password).go(401);
-		SpaceRequest.get("/1/backend").basicAuth("zzzz", aaaa.username, aaaa.username).go(401);
+		SpaceRequest.get("/1/backend")//
+				.basicAuth("aaaa", zzzz.adminUser.username, zzzz.adminUser.password).go(401);
+		SpaceRequest.get("/1/backend")//
+				.basicAuth("zzzz", aaaa.adminUser.username, aaaa.adminUser.username).go(401);
 
 		// super admin fails to delete a backend he does not own
 
-		SpaceRequest.delete("/1/backend").basicAuth("aaaa", zzzz.username, zzzz.password).go(401);
-		SpaceRequest.delete("/1/backend").basicAuth("zzzz", aaaa.username, aaaa.username).go(401);
+		SpaceRequest.delete("/1/backend")//
+				.basicAuth("aaaa", zzzz.adminUser.username, zzzz.adminUser.password).go(401);
+		SpaceRequest.delete("/1/backend")//
+				.basicAuth("zzzz", aaaa.adminUser.username, aaaa.adminUser.username).go(401);
 
 		// super admin fails to delete himself
 		// since backends must at least have one super admin

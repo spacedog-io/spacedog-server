@@ -11,8 +11,8 @@ import io.spacedog.utils.Utils;
 public class SpaceClient {
 
 	public static class User {
-		public String backendId;
 		public String id;
+		public String backendId;
 		public String username;
 		public String password;
 		public String email;
@@ -20,8 +20,8 @@ public class SpaceClient {
 		public DateTime expiresAt;
 
 		public User(String backendId, String id, String username, String password, String email) {
-			this.backendId = backendId;
 			this.id = id;
+			this.backendId = backendId;
 			this.username = username;
 			this.password = password;
 			this.email = email;
@@ -36,16 +36,13 @@ public class SpaceClient {
 	}
 
 	public static class Backend {
+
 		public String backendId;
-		public String username;
-		public String password;
-		public String email;
+		public User adminUser;
 
 		public Backend(String backendId, String username, String password, String email) {
 			this.backendId = backendId;
-			this.username = username;
-			this.password = password;
-			this.email = email;
+			this.adminUser = new User(backendId, username, username, password, email);
 		}
 	}
 
@@ -54,7 +51,11 @@ public class SpaceClient {
 	}
 
 	public static User newCredentials(Backend backend, String username, String password) {
-		return newCredentials(backend, username, password, "david@spacedog.io");
+		return newCredentials(backend.backendId, username, password);
+	}
+
+	public static User newCredentials(String backendId, String username, String password) {
+		return newCredentials(backendId, username, password, "david@spacedog.io");
 	}
 
 	public static User newCredentials(Backend backend, String username, String password, String email) {
@@ -66,13 +67,16 @@ public class SpaceClient {
 	}
 
 	public static User newCredentials(String backendId, String username, String password, String email) {
-		ObjectNode node = SpaceRequest.post("/1/credentials").backendId(backendId)
+		String userId = SpaceRequest.post("/1/credentials").backendId(backendId)
 				.body("username", username, "password", password, "email", email)//
-				.go(201).objectNode();
+				.go(201).getFromJson("id").asText();
+
+		ObjectNode node = SpaceRequest.get("/1/login")//
+				.basicAuth(backendId, username, password)//
+				.go(200).objectNode();
 
 		return new User(backendId, //
-				node.get("id").asText(), //
-				username, password, email, //
+				userId, username, password, email, //
 				node.get("accessToken").asText(), //
 				DateTime.now().plus(node.get("expiresIn").asLong()));
 	}
@@ -106,8 +110,8 @@ public class SpaceClient {
 	}
 
 	public static Backend createBackend(Backend backend, boolean notification) {
-		return createBackend(backend.backendId, backend.username, //
-				backend.password, backend.email, notification);
+		return createBackend(backend.backendId, backend.adminUser.username, //
+				backend.adminUser.password, backend.adminUser.email, notification);
 	}
 
 	public static Backend createBackend(String backendId, String username, String password, //
@@ -126,7 +130,7 @@ public class SpaceClient {
 	}
 
 	public static void deleteBackend(Backend backend) {
-		deleteBackend(backend.backendId, backend.username, backend.password);
+		deleteBackend(backend.backendId, backend.adminUser.username, backend.adminUser.password);
 	}
 
 	public static void deleteBackend(String backendId, String username, String password) {
@@ -150,7 +154,8 @@ public class SpaceClient {
 	}
 
 	public static Backend resetBackend(Backend backend) {
-		return resetBackend(backend.backendId, backend.username, backend.password, backend.email);
+		return resetBackend(backend.backendId, backend.adminUser.username, //
+				backend.adminUser.password, backend.adminUser.email);
 	}
 
 	public static Backend resetBackend(String backendId, String username, String password, String email) {

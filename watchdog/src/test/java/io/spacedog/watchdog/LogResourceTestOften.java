@@ -62,28 +62,32 @@ public class LogResourceTestOften extends Assert {
 				.assertEquals("/1/data/message/" + id, "results.1.path")//
 				.assertEquals("POST", "results.2.method")//
 				.assertEquals("/1/data/message", "results.2.path")//
-				.assertEquals("POST", "results.3.method")//
-				.assertEquals("/1/credentials", "results.3.path")//
-				.assertEquals("PUT", "results.4.method")//
-				.assertEquals("/1/schema/message", "results.4.path")//
-				.assertEquals("POST", "results.5.method")//
-				.assertEquals("/1/backend/test", "results.5.path")//
-				.assertEquals("DELETE", "results.6.method")//
-				.assertEquals("/1/backend", "results.6.path")//
-				.assertEquals("test", "results.6.credentials.backendId");
+				.assertEquals("GET", "results.3.method")//
+				.assertEquals("/1/login", "results.3.path")//
+				.assertEquals("POST", "results.4.method")//
+				.assertEquals("/1/credentials", "results.4.path")//
+				.assertEquals("PUT", "results.5.method")//
+				.assertEquals("/1/schema/message", "results.5.path")//
+				.assertEquals("POST", "results.6.method")//
+				.assertEquals("/1/backend/test", "results.6.path")//
+				.assertEquals("DELETE", "results.7.method")//
+				.assertEquals("/1/backend", "results.7.path")//
+				.assertEquals("test", "results.7.credentials.backendId");
 
 		// get all test2 backend logs
 		SpaceRequest.get("/1/log").size(4).adminAuth(test2).go(200)//
 				.assertSizeEquals(4, "results")//
-				.assertEquals("POST", "results.0.method")//
-				.assertEquals("/1/credentials", "results.0.path")//
-				.assertEquals("******", "results.0.jsonContent.password")//
+				.assertEquals("GET", "results.0.method")//
+				.assertEquals("/1/login", "results.0.path")//
 				.assertEquals("POST", "results.1.method")//
-				.assertEquals("/1/backend/test2", "results.1.path")//
+				.assertEquals("/1/credentials", "results.1.path")//
 				.assertEquals("******", "results.1.jsonContent.password")//
-				.assertEquals("DELETE", "results.2.method")//
-				.assertEquals("/1/backend", "results.2.path")//
-				.assertEquals("test2", "results.2.credentials.backendId");
+				.assertEquals("POST", "results.2.method")//
+				.assertEquals("/1/backend/test2", "results.2.path")//
+				.assertEquals("******", "results.2.jsonContent.password")//
+				.assertEquals("DELETE", "results.3.method")//
+				.assertEquals("/1/backend", "results.3.path")//
+				.assertEquals("test2", "results.3.credentials.backendId");
 
 		// after backend deletion, logs are not accessible to backend
 		SpaceClient.deleteBackend(test);
@@ -122,15 +126,17 @@ public class LogResourceTestOften extends Assert {
 				.assertEquals("DELETE", "results.2.method")//
 				.assertEquals("/1/user/fred/password", "results.2.path")//
 				.assertEquals(passwordResetCode, "results.2.response.passwordResetCode")//
-				.assertEquals("POST", "results.3.method")//
-				.assertEquals("/1/credentials", "results.3.path")//
-				.assertEquals("******", "results.3.jsonContent.password")//
+				.assertEquals("GET", "results.3.method")//
+				.assertEquals("/1/login", "results.3.path")//
 				.assertEquals("POST", "results.4.method")//
-				.assertEquals("/1/backend/test", "results.4.path")//
+				.assertEquals("/1/credentials", "results.4.path")//
 				.assertEquals("******", "results.4.jsonContent.password")//
-				.assertEquals("DELETE", "results.5.method")//
-				.assertEquals("/1/backend", "results.5.path")//
-				.assertEquals("test", "results.5.credentials.backendId");
+				.assertEquals("POST", "results.5.method")//
+				.assertEquals("/1/backend/test", "results.5.path")//
+				.assertEquals("******", "results.5.jsonContent.password")//
+				.assertEquals("DELETE", "results.6.method")//
+				.assertEquals("/1/backend", "results.6.path")//
+				.assertEquals("test", "results.6.credentials.backendId");
 	}
 
 	@Test
@@ -166,15 +172,16 @@ public class LogResourceTestOften extends Assert {
 			SpaceRequest.get("/1/data").adminAuth(test).go(200);
 
 		// check everything is in place
-		SpaceRequest.get("/1/log").size(8).adminAuth(test).go(200)//
+		SpaceRequest.get("/1/log").size(9).adminAuth(test).go(200)//
 				.assertEquals("/1/data", "results.0.path")//
 				.assertEquals("/1/data", "results.1.path")//
 				.assertEquals("/1/data", "results.2.path")//
 				.assertEquals("/1/data", "results.3.path")//
 				.assertEquals("/1/data", "results.4.path")//
-				.assertEquals("/1/credentials", "results.5.path")//
-				.assertEquals("/1/backend/test", "results.6.path")//
-				.assertEquals("/1/backend", "results.7.path");
+				.assertEquals("/1/login", "results.5.path")//
+				.assertEquals("/1/credentials", "results.6.path")//
+				.assertEquals("/1/backend/test", "results.7.path")//
+				.assertEquals("/1/backend", "results.8.path");
 
 		// delete all logs but the 2 last requests
 		SpaceRequest.delete("/1/log").from(2).superdogAuth(test).go(200);
@@ -206,22 +213,26 @@ public class LogResourceTestOften extends Assert {
 		// superdog gets all backends logs
 		SpaceResponse response = SpaceRequest.get("/1/log").size(20).superdogAuth().go(200);
 		removeOtherThenTestLogs(response);
-		response.assertEquals("/1/credentials", "results.0.path")//
+		response.assertEquals("/1/login", "results.0.path")//
 				.assertEquals("test2", "results.0.credentials.backendId")//
 				.assertEquals("/1/credentials", "results.1.path")//
-				.assertEquals("test", "results.1.credentials.backendId")//
-				.assertEquals("/1/backend/test2", "results.2.path")//
-				.assertEquals("/1/backend", "results.3.path")//
-				.assertEquals("test2", "results.3.credentials.backendId")//
-				.assertEquals("/1/backend/test", "results.4.path")//
+				.assertEquals("test2", "results.1.credentials.backendId")//
+				.assertEquals("/1/login", "results.2.path")//
+				.assertEquals("test", "results.2.credentials.backendId")//
+				.assertEquals("/1/credentials", "results.3.path")//
+				.assertEquals("test", "results.3.credentials.backendId")//
+				.assertEquals("/1/backend/test2", "results.4.path")//
 				.assertEquals("/1/backend", "results.5.path")//
-				.assertEquals("test", "results.5.credentials.backendId");
+				.assertEquals("test2", "results.5.credentials.backendId")//
+				.assertEquals("/1/backend/test", "results.6.path")//
+				.assertEquals("/1/backend", "results.7.path")//
+				.assertEquals("test", "results.7.credentials.backendId");
 
 		// after backend deletion, logs are still accessible to superdogs
 		SpaceClient.deleteBackend(test);
 		SpaceClient.deleteBackend(test2);
 
-		response = SpaceRequest.get("/1/log").size(10).superdogAuth().go(200);
+		response = SpaceRequest.get("/1/log").size(15).superdogAuth().go(200);
 		removeOtherThenTestLogs(response);
 		response.assertEquals("DELETE", "results.0.method")//
 				.assertEquals("/1/backend", "results.0.path")//
@@ -229,12 +240,18 @@ public class LogResourceTestOften extends Assert {
 				.assertEquals("DELETE", "results.1.method")//
 				.assertEquals("/1/backend", "results.1.path")//
 				.assertEquals("test", "results.1.credentials.backendId")//
-				.assertEquals("POST", "results.2.method")//
-				.assertEquals("/1/credentials", "results.2.path")//
+				.assertEquals("GET", "results.2.method")//
+				.assertEquals("/1/login", "results.2.path")//
 				.assertEquals("test2", "results.2.credentials.backendId")//
 				.assertEquals("POST", "results.3.method")//
 				.assertEquals("/1/credentials", "results.3.path")//
-				.assertEquals("test", "results.3.credentials.backendId");
+				.assertEquals("test2", "results.3.credentials.backendId")//
+				.assertEquals("GET", "results.4.method")//
+				.assertEquals("/1/login", "results.4.path")//
+				.assertEquals("test", "results.4.credentials.backendId")//
+				.assertEquals("POST", "results.5.method")//
+				.assertEquals("/1/credentials", "results.5.path")//
+				.assertEquals("test", "results.5.credentials.backendId");
 	}
 
 	/**
@@ -275,20 +292,22 @@ public class LogResourceTestOften extends Assert {
 
 		// superdog filters test backend logs to only get SUPER_ADMIN and lower
 		// logs
-		SpaceRequest.get("/1/log?logType=SUPER_ADMIN").size(6).superdogAuth(test).go(200)//
+		SpaceRequest.get("/1/log?logType=SUPER_ADMIN").size(7).superdogAuth(test).go(200)//
 				.assertEquals("/1/credentials/vince", "results.0.path")//
-				.assertEquals("/1/credentials", "results.1.path")//
-				.assertEquals("/1/data/user", "results.2.path")//
-				.assertEquals("/1/data", "results.3.path")//
-				.assertEquals("/1/backend/test", "results.4.path")//
-				.assertEquals("/1/backend", "results.5.path");
+				.assertEquals("/1/login", "results.1.path")//
+				.assertEquals("/1/credentials", "results.2.path")//
+				.assertEquals("/1/data/user", "results.3.path")//
+				.assertEquals("/1/data", "results.4.path")//
+				.assertEquals("/1/backend/test", "results.5.path")//
+				.assertEquals("/1/backend", "results.6.path");
 
 		// superdog filters test backend log to only get USER and lower logs
-		SpaceRequest.get("/1/log?logType=USER").size(5).superdogAuth(test).go(200)//
+		SpaceRequest.get("/1/log?logType=USER").size(7).superdogAuth(test).go(200)//
 				.assertEquals("/1/credentials/vince", "results.0.path")//
-				.assertEquals("/1/credentials", "results.1.path")//
-				.assertEquals("/1/data/user", "results.2.path")//
-				.assertEquals("/1/data", "results.3.path");
+				.assertEquals("/1/login", "results.1.path")//
+				.assertEquals("/1/credentials", "results.2.path")//
+				.assertEquals("/1/data/user", "results.3.path")//
+				.assertEquals("/1/data", "results.4.path");
 
 		// superdog filters test backend log to only get KEY and lower logs
 		SpaceRequest.get("/1/log?logType=KEY").size(3).superdogAuth(test).go(200)//
@@ -297,7 +316,7 @@ public class LogResourceTestOften extends Assert {
 				.assertEquals("/1/data", "results.2.path");
 
 		// superdog gets all test backend logs
-		SpaceRequest.get("/1/log").size(12).superdogAuth(test).go(200)//
+		SpaceRequest.get("/1/log").size(15).superdogAuth(test).go(200)//
 				.assertEquals("/1/log", "results.0.path")//
 				.assertEquals("KEY", "results.0.query.logType")//
 				.assertEquals("/1/log", "results.1.path")//
@@ -307,11 +326,12 @@ public class LogResourceTestOften extends Assert {
 				.assertEquals("/1/log", "results.3.path")//
 				.assertEquals("400", "results.3.query.minStatus")//
 				.assertEquals("/1/credentials/vince", "results.4.path")//
-				.assertEquals("/1/credentials", "results.5.path")//
-				.assertEquals("/1/data/user", "results.6.path")//
-				.assertEquals("/1/data", "results.7.path")//
-				.assertEquals("/1/backend/test", "results.8.path")//
-				.assertEquals("/1/backend", "results.9.path");
+				.assertEquals("/1/login", "results.5.path")//
+				.assertEquals("/1/credentials", "results.6.path")//
+				.assertEquals("/1/data/user", "results.7.path")//
+				.assertEquals("/1/data", "results.8.path")//
+				.assertEquals("/1/backend/test", "results.9.path")//
+				.assertEquals("/1/backend", "results.10.path");
 	}
 
 	@Test

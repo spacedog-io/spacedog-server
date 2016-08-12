@@ -231,7 +231,6 @@ public class Credentials {
 		hashedPassword = Passwords.checkAndHash(password);
 		passwordChecked = true;
 		passwordResetCode = null;
-		newAccessToken();
 		return true;
 	}
 

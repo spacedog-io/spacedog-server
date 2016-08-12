@@ -115,10 +115,21 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest adminAuth(Backend backend) {
-		return basicAuth(backend.backendId, backend.username, backend.password);
+		return userAuth(backend.adminUser);
 	}
 
 	public SpaceRequest userAuth(User user) {
+		if (user.accessToken == null)
+			return basicAuth(user.backendId, user.username, user.password);
+		else
+			return bearerAuth(user.backendId, user.accessToken);
+	}
+
+	public SpaceRequest basicAuth(Backend backend) {
+		return basicAuth(backend.adminUser);
+	}
+
+	public SpaceRequest basicAuth(User user) {
 		return basicAuth(user.backendId, user.username, user.password);
 	}
 
@@ -132,8 +143,12 @@ public class SpaceRequest {
 		return backendId(backendId);
 	}
 
-	public SpaceRequest bearerAuth(User fred) {
-		return bearerAuth(fred.backendId, fred.accessToken);
+	public SpaceRequest bearerAuth(Backend backend) {
+		return bearerAuth(backend.adminUser);
+	}
+
+	public SpaceRequest bearerAuth(User user) {
+		return bearerAuth(user.backendId, user.accessToken);
 	}
 
 	public SpaceRequest bearerAuth(Backend backend, String accessToken) {

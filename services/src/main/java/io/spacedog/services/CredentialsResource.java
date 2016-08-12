@@ -127,9 +127,6 @@ public class CredentialsResource extends Resource {
 
 		if (credentials.passwordResetCode() != null)
 			builder.put(PASSWORD_RESET_CODE, credentials.passwordResetCode());
-		else
-			builder.put(ACCESS_TOKEN, credentials.accessToken())//
-					.put(EXPIRES_IN, credentials.accessTokenExpiresIn());
 
 		return JsonPayload.json(builder, HttpStatus.CREATED)//
 				.withHeader(SpaceHeaders.SPACEDOG_OBJECT_ID, credentials.name());
@@ -239,9 +236,9 @@ public class CredentialsResource extends Resource {
 		credentials.resetPassword();
 		index(credentials);
 
-		return JsonPayload.json(//
-				JsonPayload.builder(false, backendId, "/1", TYPE, username)//
-						.put(PASSWORD_RESET_CODE, credentials.passwordResetCode()));
+		return JsonPayload.json(JsonPayload//
+				.builder(false, backendId, "/1", TYPE, username)//
+				.put(PASSWORD_RESET_CODE, credentials.passwordResetCode()));
 	}
 
 	@Post("/1/credentials/:username/password")
@@ -261,12 +258,8 @@ public class CredentialsResource extends Resource {
 		credentials.setPassword(password, passwordResetCode);
 		IndexResponse indexResponse = index(credentials);
 
-		JsonBuilder<ObjectNode> builder = JsonPayload//
-				.builder(false, backendId, "/1", TYPE, username, indexResponse.getVersion())//
-				.put(ACCESS_TOKEN, credentials.accessToken())//
-				.put(EXPIRES_IN, credentials.accessTokenExpiresIn());
-
-		return JsonPayload.json(builder);
+		return JsonPayload.json(JsonPayload.builder(//
+				false, backendId, "/1", TYPE, username, indexResponse.getVersion()));
 	}
 
 	@Put("/1/credentials/:username/password")
@@ -282,12 +275,8 @@ public class CredentialsResource extends Resource {
 		credentials.setPassword(password);
 		IndexResponse response = index(credentials);
 
-		JsonBuilder<ObjectNode> builder = JsonPayload//
-				.builder(false, backendId, "/1", TYPE, username, response.getVersion())//
-				.put(ACCESS_TOKEN, credentials.accessToken())//
-				.put(EXPIRES_IN, credentials.accessTokenExpiresIn());
-
-		return JsonPayload.json(builder);
+		return JsonPayload.json(JsonPayload.builder(//
+				false, backendId, "/1", TYPE, username, response.getVersion()));
 	}
 
 	@Get("/1/credentials/:username/roles")
