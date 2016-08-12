@@ -12,7 +12,6 @@ import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Internals;
-import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -88,9 +87,8 @@ public class BackendResource extends Resource {
 			return JsonPayload.invalidParameters("backendId", backendId,
 					String.format("backend id [%s] not available", backendId));
 
-		Credentials credentials = CredentialsResource.get().regularSignUp(//
-				backendId, Level.SUPER_ADMIN, Json.readObject(body));
-		CredentialsResource.get().index(credentials);
+		Credentials credentials = CredentialsResource.get()//
+				.create(backendId, body, Level.SUPER_ADMIN);
 
 		// after backend is created, new admin credentials are valid
 		// and can be set in space context if none are set

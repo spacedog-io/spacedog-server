@@ -6,6 +6,7 @@ package io.spacedog.services;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.utils.Credentials;
+import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Schema;
@@ -50,7 +51,9 @@ public class UserResource extends Resource {
 	@Post("/1/data/user/")
 	public Payload signUp(String body, Context context) {
 
-		Credentials credentials = CredentialsResource.get().create(body);
+		Credentials credentials = CredentialsResource.get()//
+				.create(SpaceContext.backendId(), body, Level.USER);
+
 		SpaceContext.setCredentials(credentials);
 
 		ObjectNode node = Json.readObject(body);

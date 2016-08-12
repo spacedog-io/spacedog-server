@@ -120,7 +120,7 @@ public class CredentialsResource extends Resource {
 	@Post("/1/credentials/")
 	public Payload post(String body, Context context) {
 
-		Credentials credentials = create(body);
+		Credentials credentials = create(SpaceContext.backendId(), body, Level.USER);
 
 		JsonBuilder<ObjectNode> builder = JsonPayload //
 				.builder(true, credentials.backendId(), "/1", TYPE, credentials.name());
@@ -333,24 +333,11 @@ public class CredentialsResource extends Resource {
 	// Internal services
 	//
 
-	Credentials create(String body) {
-		String backendId = SpaceContext.backendId();
-
-		Credentials credentials = regularSignUp(//
-				backendId, Level.USER, Json.readObject(body));
-
-		if (exists(credentials))
-			throw Exceptions.illegalArgument(//
-					"[%s][%s] credentials already exists", //
-					credentials.backendId(), credentials.name());
-
-		index(credentials);
-		return credentials;
-	}
-
-	Credentials regularSignUp(String backendId, Level level, ObjectNode data) {
+	Credentials create(String backendId, String body, Level level) {
 
 		Credentials credentials = new Credentials(backendId);
+
+		ObjectNode data = Json.readObject(body);
 		credentials.name(Json.checkStringNotNullOrEmpty(data, Resource.USERNAME));
 		Usernames.checkIfValid(credentials.name());
 
@@ -364,6 +351,12 @@ public class CredentialsResource extends Resource {
 		else
 			credentials.setPassword(password.asText());
 
+		if (exists(credentials))
+			throw Exceptions.illegalArgument(//
+					"[%s][%s] credentials already exists", //
+					credentials.backendId(), credentials.name());
+
+		index(credentials);
 		return credentials;
 	}
 
