@@ -35,4 +35,25 @@ public class UtilsTest extends Assert {
 		assertTrue(Utils.isNullOrEmpty(new HashSet<>()));
 		assertFalse(Utils.isNullOrEmpty(Arrays.asList("toto")));
 	}
+
+	@Test
+	public void testRemoveSuffix() {
+		assertEquals("toto", Utils.removeSuffix("toto", "titi"));
+		assertEquals("toto", Utils.removeSuffix("tototiti", "titi"));
+		assertEquals("tititoto", Utils.removeSuffix("tititoto", "titi"));
+		assertEquals("toto", Utils.removeSuffix("toto", ""));
+		assertEquals("", Utils.removeSuffix("titi", "titi"));
+		assertEquals("", Utils.removeSuffix("", "titi"));
+	}
+
+	@Test
+	public void testRemovePreffix() {
+		assertEquals("toto", Utils.removePreffix("toto", "titi"));
+		assertEquals("toto", Utils.removePreffix("tititoto", "titi"));
+		assertEquals("tototiti", Utils.removePreffix("tototiti", "titi"));
+		assertEquals("toto", Utils.removePreffix("toto", ""));
+		assertEquals("", Utils.removePreffix("titi", "titi"));
+		assertEquals("", Utils.removePreffix("", "titi"));
+	}
+
 }

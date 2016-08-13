@@ -31,6 +31,7 @@ import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Uris;
+import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
@@ -288,10 +289,7 @@ public class S3Resource extends Resource {
 
 		@Override
 		public String toString() {
-			String result = builder.toString();
-			if (result.endsWith(SLASH))
-				result = result.substring(0, result.length() - 1);
-			return result;
+			return Utils.removeSuffix(builder.toString(), SLASH);
 		}
 
 		public static S3Key get(String... names) {

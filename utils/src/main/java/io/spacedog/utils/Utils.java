@@ -5,17 +5,15 @@ import java.util.Collection;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Strings;
 
 public class Utils {
 
 	public static final Charset UTF8 = Charset.forName("UTF-8");
 
-	public static String concat(Object... objects) {
-		StringBuilder builder = new StringBuilder();
-		for (Object object : objects)
-			builder.append(object.toString());
-		return builder.toString();
-	}
+	//
+	// Exceptions utils
+	//
 
 	public static StackTraceElement getStackTraceElement() {
 		return new Exception().getStackTrace()[1];
@@ -27,6 +25,17 @@ public class Utils {
 
 	public static StackTraceElement getGrandParentStackTraceElement() {
 		return new Exception().getStackTrace()[3];
+	}
+
+	//
+	// Strings utils
+	//
+
+	public static String concat(Object... objects) {
+		StringBuilder builder = new StringBuilder();
+		for (Object object : objects)
+			builder.append(object.toString());
+		return builder.toString();
 	}
 
 	public static String[] splitByDot(String propertyPath) {
@@ -46,6 +55,20 @@ public class Utils {
 			propertyPath = propertyPath.substring(0, propertyPath.length() - 1);
 		return propertyPath.split("/");
 	}
+
+	public static String removePreffix(String s, String preffix) {
+		return s.startsWith(preffix) ? s.substring(preffix.length()) : s;
+	}
+
+	public static String removeSuffix(String s, String suffix) {
+		if (Strings.isNullOrEmpty(suffix))
+			return s;
+		return s.endsWith(suffix) ? s.substring(0, s.length() - suffix.length()) : s;
+	}
+
+	//
+	// Others
+	//
 
 	public static String toUri(String[] uriTerms) {
 		StringBuilder builder = new StringBuilder();
