@@ -66,9 +66,9 @@ public class BatchResourceTestOften extends Assert {
 				.assertEquals(201, "responses.1.status")//
 				.assertEquals("test", "responses.1.id")//
 				.assertEquals(200, "responses.2.status")//
-				.assertEquals("test", "responses.2.content.backendId")//
-				.assertEquals("test", "responses.2.content.superAdmins.0.username")//
-				.assertEquals("test@dog.com", "responses.2.content.superAdmins.0.email")//
+				.assertEquals("test", "responses.2.content.results.0.backendId")//
+				.assertEquals("test", "responses.2.content.results.0.username")//
+				.assertEquals("test@dog.com", "responses.2.content.results.0.email")//
 				.assertEquals(201, "responses.3.status")//
 				.assertEquals("message", "responses.3.id")//
 				.assertEquals("schema", "responses.3.type")//

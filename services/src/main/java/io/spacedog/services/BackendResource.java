@@ -3,15 +3,19 @@
  */
 package io.spacedog.services;
 
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.elasticsearch.index.query.QueryBuilders;
+
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Internals;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -49,16 +53,22 @@ public class BackendResource extends Resource {
 	public Payload getAll(Context context) {
 		Credentials credentials = SpaceContext.checkAdminCredentials(false);
 		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
+		Set<Credentials> superAdmins = null;
 
 		if (credentials.isRootBackend()) {
 			if (credentials.isSuperDog())
-				return CredentialsResource.get().getAllSuperAdmins(refresh);
+				superAdmins = CredentialsResource.get().getAllSuperAdmins(refresh);
+			else
+				throw Exceptions.insufficientCredentials(credentials);
+		} else
+			superAdmins = CredentialsResource.get().getBackendSuperAdmins(credentials.backendId(), refresh);
 
-			throw Exceptions.insufficientCredentials(credentials);
-		}
+		ArrayNode results = Json.array();
+		for (Credentials superAdmin : superAdmins)
+			results.add(Json.object(BACKEND_ID, superAdmin.backendId(), //
+					USERNAME, superAdmin.name(), EMAIL, superAdmin.email().get()));
 
-		return CredentialsResource.get().getAllSuperAdmins(credentials.backendId(), refresh);
-
+		return JsonPayload.json(Json.object("total", superAdmins.size(), "results", results));
 	}
 
 	@Delete("/1/backend")

@@ -153,18 +153,6 @@ public class Credentials {
 		return roles;
 	}
 
-	private String defaultRole() {
-		if (Level.USER.equals(level))
-			return "user";
-		if (Level.ADMIN.equals(level))
-			return "admin";
-		if (Level.SUPER_ADMIN.equals(level))
-			return "admin";
-		if (Level.SUPERDOG.equals(level))
-			return "admin";
-		return "key";
-	}
-
 	public void roles(Set<String> value) {
 		roles = value;
 	}
@@ -187,6 +175,37 @@ public class Credentials {
 
 	public boolean isRootBackend() {
 		return Backends.ROOT_API.equals(backendId);
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((backendId == null) ? 0 : backendId.hashCode());
+		result = prime * result + ((username == null) ? 0 : username.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Credentials other = (Credentials) obj;
+		if (backendId == null) {
+			if (other.backendId != null)
+				return false;
+		} else if (!backendId.equals(other.backendId))
+			return false;
+		if (username == null) {
+			if (other.username != null)
+				return false;
+		} else if (!username.equals(other.username))
+			return false;
+		return true;
 	}
 
 	//
@@ -249,5 +268,21 @@ public class Credentials {
 	public void deleteAccessToken() {
 		accessToken = null;
 		accessTokenExpiresAt = null;
+	}
+
+	//
+	// implementation
+	//
+
+	private String defaultRole() {
+		if (Level.USER.equals(level))
+			return "user";
+		if (Level.ADMIN.equals(level))
+			return "admin";
+		if (Level.SUPER_ADMIN.equals(level))
+			return "admin";
+		if (Level.SUPERDOG.equals(level))
+			return "admin";
+		return "key";
 	}
 }

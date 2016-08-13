@@ -4,28 +4,25 @@
 package io.spacedog.services;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.support.QuerySourceBuilder;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
-import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.joda.time.DateTime;
 
+import com.beust.jcommander.internal.Sets;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
@@ -213,13 +210,7 @@ public class CredentialsResource extends Resource {
 	public Payload getById(String username, Context context) {
 		String backendId = SpaceContext.checkUserCredentials(username).backendId();
 		Credentials credentials = get(backendId, username, true).get();
-		return JsonPayload.json(//
-				Json.object(USERNAME, credentials.name(), //
-						EMAIL, credentials.email().get(), //
-						CREDENTIALS_LEVEL, credentials.level().name(), //
-						ROLES, credentials.roles(), //
-						CREATED_AT, credentials.createdAt(), //
-						UPDATED_AT, credentials.updatedAt()));
+		return JsonPayload.json(fromCredentials(credentials));
 	}
 
 	@Delete("/1/credentials/:username")
@@ -440,12 +431,23 @@ public class CredentialsResource extends Resource {
 		return Optional.of(toCredentials(response.getSourceAsString()));
 	}
 
-	private Credentials toCredentials(String json) {
+	Credentials toCredentials(String json) {
 		try {
 			return Json.mapper().readValue(json, Credentials.class);
 		} catch (IOException e) {
 			throw Exceptions.runtime(e);
 		}
+	}
+
+	ObjectNode fromCredentials(Credentials credentials) {
+		return Json.object(//
+				BACKEND_ID, credentials.backendId(), //
+				USERNAME, credentials.name(), //
+				EMAIL, credentials.email().get(), //
+				CREDENTIALS_LEVEL, credentials.level().name(), //
+				ROLES, credentials.roles(), //
+				CREATED_AT, credentials.createdAt(), //
+				UPDATED_AT, credentials.updatedAt());
 	}
 
 	IndexResponse index(Credentials credentials) {
@@ -476,76 +478,43 @@ public class CredentialsResource extends Resource {
 		return elastic.deleteByQuery(query, SPACEDOG_BACKEND, TYPE);
 	}
 
-	public Payload getAllSuperAdmins(boolean refresh) {
+	public Set<Credentials> getAllSuperAdmins(boolean refresh) {
 
-		ElasticClient elastic = Start.get().getElasticClient();
-
-		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery()//
+		QueryBuilder query = QueryBuilders.boolQuery()//
 				.filter(QueryBuilders.termQuery(CREDENTIALS_LEVEL, Level.SUPER_ADMIN.toString()));
 
-		elastic.refreshType(SPACEDOG_BACKEND, TYPE);
+		return getSuperAdmins(query, refresh);
 
-		SearchHit[] hits = elastic.prepareSearch(SPACEDOG_BACKEND, TYPE)//
-				.setQuery(new QuerySourceBuilder().setQuery(boolQueryBuilder).toString())//
-				.setSize(1000)//
-				.get()//
-				.getHits()//
-				.hits();
-
-		Map<String, List<ObjectNode>> backends = Maps.newHashMap();
-
-		for (SearchHit hit : hits) {
-			String[] strings = fromCredentialsId(hit.getId());
-			List<ObjectNode> superAdmins = backends.get(strings[0]);
-			if (superAdmins == null) {
-				superAdmins = Lists.newArrayList();
-				backends.put(strings[0], superAdmins);
-			}
-			superAdmins.add(Json.object(USERNAME, strings[0], EMAIL, hit.getSource().get(EMAIL).toString()));
-		}
-
-		JsonBuilder<ObjectNode> builder = Json.objectBuilder()//
-				.put("total", hits.length)//
-				.array("results");
-
-		for (Entry<String, List<ObjectNode>> entry : backends.entrySet()) {
-			builder.object()//
-					.put(BACKEND_ID, entry.getKey())//
-					.array("superAdmins");
-			for (ObjectNode superAdmin : entry.getValue())
-				builder.node(superAdmin);
-			builder.end().end();
-		}
-
-		return JsonPayload.json(builder);
 	}
 
-	public Payload getAllSuperAdmins(String backendId, boolean refresh) {
+	public Set<Credentials> getBackendSuperAdmins(String backendId, boolean refresh) {
 
-		ElasticClient elastic = Start.get().getElasticClient();
-
-		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery()//
+		QueryBuilder query = QueryBuilders.boolQuery()//
 				.filter(QueryBuilders.termQuery(BACKEND_ID, backendId))//
 				.filter(QueryBuilders.termQuery(CREDENTIALS_LEVEL, Level.SUPER_ADMIN.toString()));
 
+		return getSuperAdmins(query, refresh);
+	}
+
+	private Set<Credentials> getSuperAdmins(QueryBuilder query, boolean refresh) {
+
+		ElasticClient elastic = Start.get().getElasticClient();
 		elastic.refreshType(SPACEDOG_BACKEND, TYPE);
 
-		SearchHit[] hits = elastic.prepareSearch(SPACEDOG_BACKEND, TYPE)//
-				.setQuery(new QuerySourceBuilder().setQuery(boolQueryBuilder).toString())//
+		SearchHit[] hits = elastic//
+				.prepareSearch(SPACEDOG_BACKEND, TYPE)//
+				.setQuery(query)//
 				.setSize(1000)//
 				.get()//
 				.getHits()//
 				.hits();
 
-		JsonBuilder<ObjectNode> builder = Json.objectBuilder()//
-				.put(BACKEND_ID, backendId)//
-				.array("superAdmins");
+		Set<Credentials> superAdmins = Sets.newHashSet();
 
 		for (SearchHit hit : hits)
-			builder.node(Json.object(USERNAME, hit.getSource().get(USERNAME).toString(), //
-					EMAIL, hit.getSource().get(EMAIL).toString()));
+			superAdmins.add(toCredentials(hit.getSourceAsString()));
 
-		return JsonPayload.json(builder);
+		return superAdmins;
 	}
 
 	static String toCredentialsId(String backendId, String username) {
