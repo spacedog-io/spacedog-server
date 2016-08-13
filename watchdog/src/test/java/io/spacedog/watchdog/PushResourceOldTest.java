@@ -26,18 +26,22 @@ public class PushResourceOldTest extends Assert {
 		User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
 		User nath = SpaceClient.newCredentials(test, "nath", "hi nath");
 		User fred = SpaceClient.newCredentials(test, "fred", "hi fred");
-		User philippe = SpaceClient.newCredentials(test, "philippe", "hi philippe");
+		// User philippe =
+		SpaceClient.newCredentials(test, "philippe", "hi philippe");
 
 		// subscribe
-		String vinceDeviceId = SpaceRequest.post("/1/device").userAuth(vince)//
+		// String vinceDeviceId =
+		SpaceRequest.post("/1/device").userAuth(vince)//
 				.body("endpoint", "vince-iphone", "appName", "spacedog-supervisor")//
 				.go(200, 201).objectNode().get("id").asText();
 
-		String fredDeviceId = SpaceRequest.post("/1/device").userAuth(fred)//
+		// String fredDeviceId =
+		SpaceRequest.post("/1/device").userAuth(fred)//
 				.body("endpoint", "vince-iphone", "appName", "spacedog-supervisor")//
 				.go(200, 201).objectNode().get("id").asText();
 
-		String nathDeviceId = SpaceRequest.post("/1/device").userAuth(nath)//
+		// String nathDeviceId =
+		SpaceRequest.post("/1/device").userAuth(nath)//
 				.body("endpoint", "vince-iphone", "appName", "spacedog-supervisor")//
 				.go(200, 201).objectNode().get("id").asText();
 

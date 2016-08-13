@@ -14,18 +14,11 @@ import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Schema;
+import io.spacedog.utils.Utils;
 
 public class Birdee extends SpaceClient {
 
-	private static final String BACKEND_ID = "birdee-dev";
-	private static final String ADMIN_PASSWORD = "hi birdee";
-	private static final String ADMIN_USERNAME = "birdee";
-
 	private static Backend adminAccount;
-
-	private static User fred;
-	private static User maelle;
-	private static User vincent;
 
 	static Schema buildDeviceSchema() {
 		return Schema.builder("device")//
@@ -60,7 +53,7 @@ public class Birdee extends SpaceClient {
 				.build();
 	}
 
-	public JsonNode getNews(String userId) throws Exception {
+	JsonNode getNews(String userId) {
 
 		String query = "{'from':0, 'size':10,"//
 				+ "'sort':[{'meta.updatedAt':{'order':'asc'}}],"//
@@ -83,11 +76,13 @@ public class Birdee extends SpaceClient {
 				.go(200)//
 				.jsonNode();
 
+		Utils.info("statuses", statuses);
+
 		return news;
 	}
 
-	public void createStatus(String userId, String newsId, String url, //
-			boolean read, boolean seen, boolean favorite) throws Exception {
+	void createStatus(String userId, String newsId, String url, //
+			boolean read, boolean seen, boolean favorite) {
 
 		JsonNode status = Json.objectBuilder()//
 				.put("userId", userId)//
@@ -103,33 +98,33 @@ public class Birdee extends SpaceClient {
 				.backend(adminAccount).body(status).go(201);
 	}
 
-	public void seen(String statusId) throws Exception {
+	void seen(String statusId) {
 		SpaceRequest.put("/1/data/status/" + statusId)//
 				.backend(adminAccount)//
 				.body("{'seen':true}").go(200);
 	}
 
-	public void seen(String userId, String newsId, String url) throws Exception {
+	void seen(String userId, String newsId, String url) {
 		createStatus(userId, newsId, url, false, true, false);
 	}
 
-	public void read(String statusId) throws Exception {
+	void read(String statusId) {
 		SpaceRequest.put("/1/data/status/" + statusId)//
 				.backend(adminAccount)//
 				.body("{'read':true}").go(200);
 	}
 
-	public void read(String userId, String newsId, String url) throws Exception {
+	void read(String userId, String newsId, String url) {
 		createStatus(userId, newsId, url, true, false, false);
 	}
 
-	public void favorite(String statusId) throws Exception {
+	void favorite(String statusId) {
 		SpaceRequest.put("/1/data/status/" + statusId)//
 				.backend(adminAccount)//
 				.body("{'favorite':true}").go(200);
 	}
 
-	public void newNews(ObjectNode[] articles) throws Exception {
+	void newNews(ObjectNode[] articles) {
 
 		for (ObjectNode article : articles) {
 
@@ -142,7 +137,7 @@ public class Birdee extends SpaceClient {
 		}
 	}
 
-	public void newNews(ObjectNode[] articles, String[] userIds) throws Exception {
+	void newNews(ObjectNode[] articles, String[] userIds) {
 
 		for (String userId : userIds) {
 
@@ -158,7 +153,7 @@ public class Birdee extends SpaceClient {
 		}
 	}
 
-	public void registerDevice(String userId, String token) throws Exception {
+	void registerDevice(String userId, String token) {
 
 		// device schema must have been customized to accept userId field
 
@@ -175,10 +170,10 @@ public class Birdee extends SpaceClient {
 				.go(201);
 	}
 
-	public void cmsJob() throws Exception {
+	void cmsJob() {
 
 		// récupération de tous les articles du CMS
-		ObjectNode[] articles = null;
+		ObjectNode[] articles = new ObjectNode[0];
 
 		for (ObjectNode article : articles) {
 
@@ -221,7 +216,7 @@ public class Birdee extends SpaceClient {
 
 	}
 
-	public void pushJob() throws Exception {
+	void pushJob() {
 
 		String query = "{'from':0, 'size':100,"//
 				+ "'query':{'filtered':{"//
@@ -231,12 +226,14 @@ public class Birdee extends SpaceClient {
 
 		JsonNode news = SpaceRequest.post("/1/search/news").refresh()//
 				.backend(adminAccount).body(query).go(200).jsonNode();
+		Utils.info("news", news);
 
 		JsonNode statuses = SpaceRequest.post("/1/search/status").refresh()//
 				.backend(adminAccount)//
 				.body(query)//
 				.go(200)//
 				.jsonNode();
+		Utils.info("statuses", statuses);
 
 		// for all non pushed status or news, decide what to do
 		// ...
