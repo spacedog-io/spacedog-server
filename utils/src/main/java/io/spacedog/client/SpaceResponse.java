@@ -341,4 +341,12 @@ public class SpaceResponse {
 	public void assertBodyEquals(String expected) {
 		Assert.assertEquals(expected, string());
 	}
+
+	public <K> K toObject(Class<K> objectClass) {
+		try {
+			return Json.mapper().readValue(httpResponse.getBody(), objectClass);
+		} catch (IOException e) {
+			throw Exceptions.runtime(e, "invalid [%s] json object", objectClass.getSimpleName());
+		}
+	}
 }

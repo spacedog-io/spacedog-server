@@ -7,7 +7,6 @@ import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
@@ -15,8 +14,8 @@ import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.utils.CredentialsSettings;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.LinkedinSettings;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
@@ -370,7 +369,7 @@ public class CredentialsResourceTestOften extends Assert {
 	}
 
 	@Test
-	public void linkedinSignUpAndMore() {
+	public void linkedinSignUp() {
 
 		// prepare
 		SpaceClient.prepareTest();
@@ -382,16 +381,13 @@ public class CredentialsResourceTestOften extends Assert {
 		SpaceRequest.post("/1/credentials/linkedin")//
 				.formField("code", "XXX")//
 				.formField("redirect_uri", "XXX")//
-				.backend(test).go(404);
+				.backend(test).go(400);
 
 		// admin sets linkedin settings without redirect uri
-		LinkedinSettings settings = new LinkedinSettings();
-		settings.clientId = "78uk3jfazu0wj2";
-		settings.clientSecret = "42AfVLDNEXtgO9CG";
-
-		JsonNode settingsNode = Json.mapper().valueToTree(settings);
-		SpaceRequest.put("/1/settings/linkedin")//
-				.adminAuth(test).body(settingsNode).go(201);
+		CredentialsSettings settings = new CredentialsSettings();
+		settings.linkedinId = "78uk3jfazu0wj2";
+		settings.linkedinSecret = "42AfVLDNEXtgO9CG";
+		SpaceClient.saveSettings(test, settings);
 
 		// fails to create linkedin credentials if no authorization code
 		SpaceRequest.post("/1/credentials/linkedin")//
@@ -409,54 +405,47 @@ public class CredentialsResourceTestOften extends Assert {
 				.go(401);
 
 		// admin sets linkedin settings with redirect uri
-		settings.redirectUri = redirectUri;
-		settingsNode = Json.mapper().valueToTree(settings);
-		SpaceRequest.put("/1/settings/linkedin")//
-				.adminAuth(test).body(settingsNode).go(200);
+		settings.linkedinRedirectUri = redirectUri;
+		SpaceClient.saveSettings(test, settings);
 
 		// fails to create linkedin credentials if invalid code
 		// redirectUri is not necessary because found in settings
 		SpaceRequest.post("/1/credentials/linkedin")//
 				.formField("code", "XXX").backend(test).go(401);
-
-		// start linkedin authentication process to display
-		// url to call inside the browser for testing
-
-		SpaceRequest//
-				.get("https://www.linkedin.com/oauth/v2/authorization")//
-				.queryParam("response_type", "code")//
-				.queryParam("state", "thisisit")//
-				.queryParam("redirect_uri", redirectUri)//
-				.queryParam("client_id", settings.clientId)//
-				.go(200, 303);
-
-		//
-		// List<String> cookies = response.header(SpaceHeaders.SET_COOKIE);
-		// String location = response.headerFirst(SpaceHeaders.LOCATION);
-		//
-		// SpaceRequest.get(location)//
-		// .cookies(cookies)//
-		// .go();
-		//
-		// String linkedinLogin = "XXX", linkedinPassword = "XXX";
-		// SpaceRequest.post("https://www.linkedin.com/uas/login-submit")//
-		// .formField("session_key", linkedinLogin)//
-		// .formField("session_password", linkedinPassword)//
-		// .go(200);
-		//
-		// String authorizationCode = "XXX";
-		//
-		// response = SpaceRequest.post("/1/credentials/linkedin")//
-		// .backend(test)//
-		// .formField("code", authorizationCode)//
-		// .formField("redirect_uri", redirectUri)//
-		// .go(201);
-		//
-		// String accessToken = response.getFronJson("accessToken");
-		// String id = response.headerFirst(SpaceHeaders.SPACEDOG_OBJECT_ID);
-		//
-		// SpaceRequest.get("/1/credentials/" + id).bearerAuth(test,
-		// accessToken).go(200);
 	}
 
+	@Test
+	public void disableGuestSignUp() {
+
+		// prepare
+		SpaceClient.prepareTest();
+		Backend test = SpaceClient.resetTestBackend();
+
+		// admin disables guest sign up
+		CredentialsSettings settings = new CredentialsSettings();
+		settings.disableGuestSignUp = true;
+		SpaceClient.saveSettings(test, settings);
+
+		// guest can not create credentials
+		SpaceRequest.post("/1/credentials").backend(test)//
+				.body("username", "vince", "password", "hi vince", "email", "vince@dog.com")//
+				.go(403);
+
+		// admin fails to create credentials if no email
+		SpaceRequest.post("/1/credentials").adminAuth(test)//
+				.body("username", "vince")//
+				.go(400);
+
+		// admin can create credentials for someone
+		String resetCode = SpaceRequest.post("/1/credentials").adminAuth(test)//
+				.body("username", "vince", "email", "vince@dog.com")//
+				.go(201).getFromJson("passwordResetCode").asText();
+
+		// someone can set password if he receives a password reset code
+		SpaceRequest.post("/1/credentials/vince/password")//
+				.backend(test)//
+				.queryParam("passwordResetCode", resetCode)//
+				.formField("password", "hi vince")//
+				.go(200);
+	}
 }

@@ -5,6 +5,7 @@ import org.joda.time.DateTime;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.utils.Schema;
+import io.spacedog.utils.Settings;
 import io.spacedog.utils.SpaceParams;
 import io.spacedog.utils.Utils;
 
@@ -184,5 +185,14 @@ public class SpaceClient {
 
 	public static void deleteAll(String type, Backend backend) {
 		SpaceRequest.delete("/1/data/" + type).adminAuth(backend).go(200);
+	}
+
+	public static void saveSettings(Backend test, Settings settings) {
+		SpaceRequest.put("/1/settings/" + settings.id()).adminAuth(test).body(settings).go(200, 201);
+	}
+
+	public static <K extends Settings> K loadSettings(Backend backend, Class<K> settingsClass) {
+		return SpaceRequest.get("/1/settings/" + Settings.id(settingsClass))//
+				.backend(backend).go(200).toObject(settingsClass);
 	}
 }

@@ -4,13 +4,10 @@
 package io.spacedog.watchdog;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.beust.jcommander.internal.Maps;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -20,11 +17,10 @@ import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
-import io.spacedog.utils.DataAclSettings;
 import io.spacedog.utils.DataPermission;
-import io.spacedog.utils.Json;
 import io.spacedog.utils.Schema;
 import io.spacedog.utils.Schema.SchemaAclSettings;
+import io.spacedog.utils.SchemaSettings;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
@@ -41,15 +37,12 @@ public class DataAccessControlTestOften extends Assert {
 		SpaceClient.setSchema(//
 				Schema.builder("message").text("text").build(), test);
 
-		// get global acl settings
-		String body = SpaceRequest.get("/1/settings/dataAcl")//
-				.backend(test).go(200).httpResponse().getBody();
-		DataAclSettings acl = Json.mapper().readValue(//
-				body, DataAclSettings.class);
+		// get global schema settings
+		SchemaSettings settings = SpaceClient.loadSettings(test, SchemaSettings.class);
 
 		// check global acl settings
-		assertEquals(1, acl.size());
-		SchemaAclSettings messageAcl = acl.get("message");
+		assertEquals(1, settings.acl.size());
+		SchemaAclSettings messageAcl = settings.acl.get("message");
 		assertEquals(3, messageAcl.size());
 		assertEquals(Sets.newHashSet(DataPermission.read_all), messageAcl.get("key"));
 		assertEquals(Sets.newHashSet(DataPermission.create, DataPermission.update, //
@@ -71,14 +64,11 @@ public class DataAccessControlTestOften extends Assert {
 		assertEquals(Sets.newHashSet(DataPermission.search), messageAcl.get("admin"));
 
 		// get new message acl settings from global settings
-		body = SpaceRequest.get("/1/settings/dataAcl")//
-				.backend(test).go(200).httpResponse().getBody();
-		acl = Json.mapper().readValue(//
-				body, DataAclSettings.class);
+		settings = SpaceClient.loadSettings(test, SchemaSettings.class);
 
 		// check new global acl settings
-		assertEquals(1, acl.size());
-		messageAcl = acl.get("message");
+		assertEquals(1, settings.acl.size());
+		messageAcl = settings.acl.get("message");
 		assertEquals(1, messageAcl.size());
 		assertEquals(Sets.newHashSet(DataPermission.search), messageAcl.get("admin"));
 	}
@@ -94,19 +84,18 @@ public class DataAccessControlTestOften extends Assert {
 		SpaceClient.setSchema(//
 				Schema.builder("message").text("text").build(), test);
 
-		// ACL
-		Map<String, Map<String, Set<DataPermission>>> acl = Maps.newHashMap();
-		Map<String, Set<DataPermission>> messageAcl = Maps.newHashMap();
+		// Schema settings
+		SchemaSettings settings = new SchemaSettings();
+		SchemaAclSettings messageAcl = new SchemaAclSettings();
 		messageAcl.put("iron", Sets.newHashSet(DataPermission.read_all));
 		messageAcl.put("silver", Sets.newHashSet(DataPermission.read_all, DataPermission.update_all));
 		messageAcl.put("gold", Sets.newHashSet(//
 				DataPermission.read_all, DataPermission.update_all, DataPermission.create));
-		messageAcl.put("platine", Sets.newHashSet(//
-				DataPermission.read_all, DataPermission.update_all, DataPermission.create, DataPermission.delete_all));
-		acl.put("message", messageAcl);
+		messageAcl.put("platine", Sets.newHashSet(DataPermission.read_all, //
+				DataPermission.update_all, DataPermission.create, DataPermission.delete_all));
+		settings.acl.put("message", messageAcl);
 
-		SpaceRequest.put("/1/settings/dataAcl").adminAuth(test)//
-				.body(Json.mapper().writeValueAsString(acl)).go(200);
+		SpaceClient.saveSettings(test, settings);
 
 		// dave has the platine role
 		// he's got all the rights

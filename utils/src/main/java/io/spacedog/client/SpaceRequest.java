@@ -33,6 +33,7 @@ import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Schema;
+import io.spacedog.utils.Settings;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Utils;
 
@@ -178,6 +179,10 @@ public class SpaceRequest {
 		return body(Json.object(elements));
 	}
 
+	public SpaceRequest body(Settings settings) {
+		return body(Json.mapper().valueToTree(settings));
+	}
+
 	public SpaceRequest body(Schema schema) {
 		return body(schema.node());
 	}
@@ -192,8 +197,12 @@ public class SpaceRequest {
 		return body(jsonBody.build());
 	}
 
-	public SpaceRequest resource(String path) throws IOException {
-		return body(Resources.toByteArray(Resources.getResource(path)));
+	public SpaceRequest resource(String path) {
+		try {
+			return body(Resources.toByteArray(Resources.getResource(path)));
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
+		}
 	}
 
 	public SpaceRequest routeParam(String name, String value) {

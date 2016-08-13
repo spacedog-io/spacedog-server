@@ -8,7 +8,6 @@ import java.util.Iterator;
 
 import org.junit.Test;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
@@ -16,22 +15,172 @@ import com.google.common.io.Resources;
 
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
-import io.spacedog.client.SpaceTarget;
-import io.spacedog.services.DataAccessControl;
-import io.spacedog.utils.DataAclSettings;
 import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Schema;
 import io.spacedog.utils.Schema.SchemaAclSettings;
+import io.spacedog.utils.SchemaSettings;
 
 public class Joho extends SpaceClient {
 
-	public final static Backend JOHO2 = new Backend("joho2", "joho", "hi joho", "david@spacedog.io");
-	public final static Backend JOHORECETTE = new Backend("johorecette", "johorecette", "hi johorecette",
-			"david@spacedog.io");
+	final static Backend JOHO2 = new Backend("joho2", "joho", "hi joho", "david@spacedog.io");
+	final static Backend JOHORECETTE = new Backend("johorecette", "johorecette", "hi johorecette", "david@spacedog.io");
 
-	private static Backend backend = JOHORECETTE;
+	private Backend backend;
+
+	@Test
+	public void updateJohoBackend() {
+
+		backend = JOHO2;
+
+		// SpaceRequest.configuration().target(SpaceTarget.production);
+
+		// setSchemaSettings();
+
+		// setSchema(buildDiscussionSchema(), backend);
+		// setSchema(buildMessageSchema(), backend);
+		// setSchema(buildCustomUserSchema(), backend);
+		// setSchema(buildThemesSchema(), backend);
+		// setSchema(buildSitesSchema(), backend);
+
+		// createInstallationSchema();
+
+		// createThemes();
+		// createSites();
+	}
+
+	void setSchemaSettings() {
+
+		SchemaSettings settings = new SchemaSettings();
+
+		settings.add(buildDiscussionSchema())//
+				.add(buildMessageSchema())//
+				.add(buildCustomUserSchema())//
+				.add(buildThemesSchema())//
+				.add(buildSitesSchema());
+
+		SchemaAclSettings schemaAcl = new SchemaAclSettings();
+		schemaAcl.put("user", Sets.newHashSet(DataPermission.create, //
+				DataPermission.read, DataPermission.update, DataPermission.delete));
+		schemaAcl.put("admin", Sets.newHashSet(DataPermission.search, //
+				DataPermission.update_all, DataPermission.delete_all));
+		settings.acl.put("installation", schemaAcl);
+
+		SpaceClient.saveSettings(backend, settings);
+	}
+
+	void createInstallationSchema() {
+		SpaceRequest.delete("/1/schema/installation").adminAuth(backend).go(200, 404);
+		SpaceRequest.put("/1/schema/installation").adminAuth(backend).go(201);
+	}
+
+	void createResponse(String messageId, String text, User user) {
+		JsonBuilder<ObjectNode> message = Json.objectBuilder().object("responses").put("text", text)//
+				.object("author").put("firstname", user.username).put("lastname", user.email);
+		SpaceRequest.put("/1/data/message/" + messageId).userAuth(user).body(message).go(200);
+	}
+
+	User createUser(Backend backend, String username, String password, String email, String firstname, String lastname,
+			String job, String town, String serviceName, String serviceCode, double lat, double lon, String mobile,
+			String fixed, String avatarUrl) {
+
+		ObjectNode user = Json.objectBuilder().put("username", username)//
+				.put("password", password)//
+				.put("email", email)//
+				.put("firstname", firstname)//
+				.put("lastname", lastname)//
+				.put("job", job)//
+				.put("mobile", mobile)//
+				.put("fixed", fixed)//
+				.put("avatar", avatarUrl)//
+				.object("site")//
+				.put("name", serviceName)//
+				.put("town", town)//
+				.put("code", serviceCode)//
+				.object("where")//
+				.put("lat", lat)//
+				.put("lon", lon)//
+				.build();
+
+		String id = SpaceRequest.post("/1/user/").backend(backend).body(user).go(201).objectNode().get("id").asText();
+
+		return new User(backend.backendId, id, username, password, email);
+	}
+
+	void createThemes() {
+		URL url = Resources.getResource("io/spacedog/examples/joho.themes.json");
+		JsonNode themes = Json.readNode(url);
+		SpaceRequest.post("/1/data/themes").adminAuth(backend).body(themes).go(201);
+	}
+
+	void createSites() {
+		URL url = Resources.getResource("io/spacedog/examples/joho.sites.json");
+		JsonNode sites = Json.readNode(url);
+		SpaceRequest.post("/1/data/sites").adminAuth(backend).body(sites).go(201);
+	}
+
+	String createDiscussion(String title, String categoryCode, User user) {
+
+		JsonBuilder<ObjectNode> discussion = Json.objectBuilder().put("title", title)//
+				.put("description", title).object("category").put("code", categoryCode);
+		return SpaceRequest.post("/1/data/discussion").userAuth(user).body(discussion).go(201)//
+				.objectNode().get("id").asText();
+	}
+
+	String createMessage(String discussionId, String text, User user) {
+		return SpaceRequest.post("/1/data/message").userAuth(user)//
+				.body("text", text, "discussionId", discussionId)//
+				.go(201).objectNode().get("id").asText();
+	}
+
+	Iterator<JsonNode> showWall() {
+
+		JsonBuilder<ObjectNode> discussionQuery = Json.objectBuilder()//
+				.put("from", 0)//
+				.put("size", 10)//
+				.array("sort")//
+				.object()//
+				.object("meta.updatedAt")//
+				.put("order", "asc")//
+				.end()//
+				.end()//
+				.end()//
+				.object("query")//
+				.object("match_all");
+
+		JsonNode subjectResults = SpaceRequest.post("/1/search/discussion").refresh().backend(backend)
+				.body(discussionQuery).go(200).jsonNode();
+
+		Iterator<JsonNode> discussions = subjectResults.get("results").elements();
+
+		while (discussions.hasNext()) {
+
+			JsonBuilder<ObjectNode> messagesQuery = Json.objectBuilder()//
+					.put("from", 0)//
+					.put("size", 10)//
+					.array("sort")//
+					.object()//
+					.object("meta.updatedAt")//
+					.put("order", "asc")//
+					.end()//
+					.end()//
+					.end()//
+					.object("query")//
+					.object("filtered")//
+					.object("query")//
+					.object("match_all")//
+					.end()//
+					.end()//
+					.object("filter")//
+					.object("term")//
+					.put("discussionId", discussions.next().get("meta").get("id").asText());
+
+			SpaceRequest.post("/1/search/message").backend(backend).body(messagesQuery).go(200);
+		}
+
+		return discussions;
+	}
 
 	static Schema buildDiscussionSchema() {
 		return Schema.builder("discussion") //
@@ -179,156 +328,5 @@ public class Joho extends SpaceClient {
 				.geopoint("where")//
 				.string("code")//
 				.build();
-	}
-
-	public void createInstallationSchema() {
-		SpaceRequest.delete("/1/schema/installation").adminAuth(backend).go(200, 404);
-		SpaceRequest.put("/1/schema/installation").adminAuth(backend).go(201);
-	}
-
-	@Test
-	public void updateAllSchemaAclSettings() throws JsonProcessingException {
-
-		SpaceRequest.configuration().target(SpaceTarget.production);
-
-		DataAclSettings acl = new DataAclSettings();
-
-		acl.add(buildDiscussionSchema())//
-				.add(buildMessageSchema())//
-				.add(buildCustomUserSchema())//
-				.add(buildThemesSchema())//
-				.add(buildSitesSchema());
-
-		SchemaAclSettings schemaAcl = new SchemaAclSettings();
-		schemaAcl.put("user", Sets.newHashSet(DataPermission.create, //
-				DataPermission.read, DataPermission.update, DataPermission.delete));
-		schemaAcl.put("admin", Sets.newHashSet(DataPermission.search, //
-				DataPermission.update_all, DataPermission.delete_all));
-		acl.put("installation", schemaAcl);
-
-		JsonNode aclBody = Json.mapper().valueToTree(acl);
-		SpaceRequest.put("/1/settings/" + DataAccessControl.ACL_SETTINGS_ID)//
-				.adminAuth(backend).body(aclBody).go(201, 200);
-	}
-
-	public void initAndFillJohoBackend() {
-
-		// resetAccount(johoAccount);
-
-		// setSchema(buildDiscussionSchema(), backend);
-		// setSchema(buildMessageSchema(), backend);
-		// setSchema(buildCustomUserSchema(), backend);
-		// setSchema(buildThemesSchema(), backend);
-		// setSchema(buildSitesSchema(), backend);
-
-		// createThemes();
-		// createSites();
-	}
-
-	public void createResponse(String messageId, String text, User user) throws Exception {
-		JsonBuilder<ObjectNode> message = Json.objectBuilder().object("responses").put("text", text)//
-				.object("author").put("firstname", user.username).put("lastname", user.email);
-		SpaceRequest.put("/1/data/message/" + messageId).userAuth(user).body(message).go(200);
-	}
-
-	public User createUser(Backend backend, String username, String password, String email, String firstname,
-			String lastname, String job, String town, String serviceName, String serviceCode, double lat, double lon,
-			String mobile, String fixed, String avatarUrl) throws Exception {
-
-		ObjectNode user = Json.objectBuilder().put("username", username)//
-				.put("password", password)//
-				.put("email", email)//
-				.put("firstname", firstname)//
-				.put("lastname", lastname)//
-				.put("job", job)//
-				.put("mobile", mobile)//
-				.put("fixed", fixed)//
-				.put("avatar", avatarUrl)//
-				.object("site")//
-				.put("name", serviceName)//
-				.put("town", town)//
-				.put("code", serviceCode)//
-				.object("where")//
-				.put("lat", lat)//
-				.put("lon", lon)//
-				.build();
-
-		String id = SpaceRequest.post("/1/user/").backend(backend).body(user).go(201).objectNode().get("id").asText();
-
-		return new User(backend.backendId, id, username, password, email);
-	}
-
-	private void createThemes() throws Exception {
-		URL url = Resources.getResource("io/spacedog/examples/joho.themes.json");
-		JsonNode themes = Json.readNode(url);
-		SpaceRequest.post("/1/data/themes").adminAuth(backend).body(themes).go(201);
-	}
-
-	private void createSites() throws Exception {
-		URL url = Resources.getResource("io/spacedog/examples/joho.sites.json");
-		JsonNode sites = Json.readNode(url);
-		SpaceRequest.post("/1/data/sites").adminAuth(backend).body(sites).go(201);
-	}
-
-	public String createDiscussion(String title, String categoryCode, User user) throws Exception {
-
-		JsonBuilder<ObjectNode> discussion = Json.objectBuilder().put("title", title)//
-				.put("description", title).object("category").put("code", categoryCode);
-		return SpaceRequest.post("/1/data/discussion").userAuth(user).body(discussion).go(201)//
-				.objectNode().get("id").asText();
-	}
-
-	public String createMessage(String discussionId, String text, User user) throws Exception {
-		return SpaceRequest.post("/1/data/message").userAuth(user)//
-				.body("text", text, "discussionId", discussionId)//
-				.go(201).objectNode().get("id").asText();
-	}
-
-	public Iterator<JsonNode> showWall() throws Exception {
-
-		JsonBuilder<ObjectNode> discussionQuery = Json.objectBuilder()//
-				.put("from", 0)//
-				.put("size", 10)//
-				.array("sort")//
-				.object()//
-				.object("meta.updatedAt")//
-				.put("order", "asc")//
-				.end()//
-				.end()//
-				.end()//
-				.object("query")//
-				.object("match_all");
-
-		JsonNode subjectResults = SpaceRequest.post("/1/search/discussion").refresh().backend(backend)
-				.body(discussionQuery).go(200).jsonNode();
-
-		Iterator<JsonNode> discussions = subjectResults.get("results").elements();
-
-		while (discussions.hasNext()) {
-
-			JsonBuilder<ObjectNode> messagesQuery = Json.objectBuilder()//
-					.put("from", 0)//
-					.put("size", 10)//
-					.array("sort")//
-					.object()//
-					.object("meta.updatedAt")//
-					.put("order", "asc")//
-					.end()//
-					.end()//
-					.end()//
-					.object("query")//
-					.object("filtered")//
-					.object("query")//
-					.object("match_all")//
-					.end()//
-					.end()//
-					.object("filter")//
-					.object("term")//
-					.put("discussionId", discussions.next().get("meta").get("id").asText());
-
-			SpaceRequest.post("/1/search/message").backend(backend).body(messagesQuery).go(200);
-		}
-
-		return discussions;
 	}
 }

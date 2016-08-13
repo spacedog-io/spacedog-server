@@ -3,19 +3,35 @@
  */
 package io.spacedog.utils;
 
-import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import io.spacedog.utils.Schema.SchemaAclSettings;
 
-public class DataAclSettings extends HashMap<String, SchemaAclSettings> {
+public class SchemaSettings extends Settings {
 
-	private static final long serialVersionUID = 4064111112532790399L;
+	public static final long serialVersionUID = 4064111112532790399L;
+
+	public Map<String, SchemaAclSettings> acl;
+
+	public SchemaSettings() {
+		acl = Maps.newHashMap();
+	}
+
+	public SchemaSettings add(Schema schema) {
+		acl.put(schema.name(), schema.acl());
+		return this;
+	}
+
+	//
+	// acl business logic
+	//
 
 	public boolean check(String type, String role, DataPermission permission) {
-		SchemaAclSettings roles = get(type);
+		SchemaAclSettings roles = acl.get(type);
 		if (roles == null)
 			roles = SchemaAclSettings.defaultSettings();
 		Set<DataPermission> permissions = roles.get(role);
@@ -36,16 +52,11 @@ public class DataAclSettings extends HashMap<String, SchemaAclSettings> {
 	public String[] types(DataPermission permission, Credentials credentials) {
 		Set<String> types = Sets.newHashSet();
 
-		for (String type : keySet())
+		for (String type : acl.keySet())
 			for (String role : credentials.roles())
 				if (check(type, role, permission))
 					types.add(type);
 
 		return types.toArray(new String[types.size()]);
-	}
-
-	public DataAclSettings add(Schema schema) {
-		put(schema.name(), schema.acl());
-		return this;
 	}
 }

@@ -3,7 +3,6 @@ package io.spacedog.utils;
 import java.nio.charset.Charset;
 import java.util.Collection;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Strings;
 
@@ -98,7 +97,7 @@ public class Utils {
 		System.out.print(String.format(message, arguments));
 	}
 
-	public static void info(String nodeName, JsonNode node) throws JsonProcessingException {
+	public static void info(String nodeName, JsonNode node) {
 		Utils.info("%s = %s", nodeName, Json.toPrettyString(node));
 	}
 

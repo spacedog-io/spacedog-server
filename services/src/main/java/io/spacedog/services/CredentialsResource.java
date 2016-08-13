@@ -32,10 +32,10 @@ import io.spacedog.client.SpaceResponse;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
+import io.spacedog.utils.CredentialsSettings;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
-import io.spacedog.utils.LinkedinSettings;
 import io.spacedog.utils.Passwords;
 import io.spacedog.utils.Roles;
 import io.spacedog.utils.Schema;
@@ -52,7 +52,6 @@ import net.codestory.http.payload.Payload;
 public class CredentialsResource extends Resource {
 
 	public static final String TYPE = "credentials";
-	public static final String LINKEDIN_SETTINGS_ID = "linkedin";
 
 	//
 	// init
@@ -120,6 +119,10 @@ public class CredentialsResource extends Resource {
 	@Post("/1/credentials/")
 	public Payload post(String body, Context context) {
 
+		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
+		if (settings.disableGuestSignUp)
+			SpaceContext.checkAdminCredentials();
+
 		Credentials credentials = create(SpaceContext.backendId(), body, Level.USER);
 
 		JsonBuilder<ObjectNode> builder = JsonPayload //
@@ -132,35 +135,33 @@ public class CredentialsResource extends Resource {
 				.withHeader(SpaceHeaders.SPACEDOG_OBJECT_ID, credentials.name());
 	}
 
-	@Get("/1/credentials/linkedin")
-	@Get("/1/credentials/linkedin/")
+	@Get("/1/login/linkedin")
+	@Get("/1/login/linkedin/")
+	@Post("/1/login/linkedin")
+	@Post("/1/login/linkedin/")
+	// route '/1/credentials/linkedin' is deprecated
 	@Post("/1/credentials/linkedin")
 	@Post("/1/credentials/linkedin/")
-	public Payload postLinkedin(Context context) {
+	public Payload linkedinLogin(Context context) {
 
-		String backendId = SpaceContext.checkCredentials(true).backendId();
+		String backendId = SpaceContext.checkCredentials().backendId();
 		String code = Check.notNullOrEmpty(context.get("code"), "code");
-		LinkedinSettings settings = null;
 
-		try {
-			settings = Json.mapper().readValue(//
-					SettingsResource.get().doGet(LINKEDIN_SETTINGS_ID), //
-					LinkedinSettings.class);
-		} catch (IOException e) {
-			throw Exceptions.runtime(e, "invalid linkedin settings");
-		}
+		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
+		if (Strings.isNullOrEmpty(settings.linkedinId))
+			throw Exceptions.illegalArgument("no linkedin client id found in credentials settings");
 
 		String redirectUri = context.get("redirect_uri");
 		if (Strings.isNullOrEmpty(redirectUri))
-			redirectUri = settings.redirectUri;
+			redirectUri = settings.linkedinRedirectUri;
 		Check.notNullOrEmpty(redirectUri, "redirect_uri");
 
 		DateTime expiresAt = DateTime.now();
 		SpaceResponse response = SpaceRequest//
 				.post("https://www.linkedin.com/oauth/v2/accessToken")//
 				.queryParam("grant_type", "authorization_code")//
-				.queryParam("client_id", settings.clientId)//
-				.queryParam("client_secret", settings.clientSecret)//
+				.queryParam("client_id", settings.linkedinId)//
+				.queryParam("client_secret", settings.linkedinSecret)//
 				.queryParam("redirect_uri", redirectUri)//
 				.queryParam("code", code)//
 				.go();
@@ -179,7 +180,10 @@ public class CredentialsResource extends Resource {
 				.go();
 
 		if (response.httpResponse().getStatus() >= 400)
-			return JsonPayload.error(response.httpResponse().getStatus(), //
+			throw Exceptions.runtime(//
+					"linkedin error when fetching id and email: " + //
+							"linkedin http status [%s], linkedin error message [%s]", //
+					response.httpResponse().getStatus(), //
 					response.getFromJson("error_description").asText());
 
 		String id = response.objectNode().get("id").asText();
@@ -563,5 +567,6 @@ public class CredentialsResource extends Resource {
 	}
 
 	private CredentialsResource() {
+		SettingsResource.get().registerSettingsClass(CredentialsSettings.class);
 	}
 }

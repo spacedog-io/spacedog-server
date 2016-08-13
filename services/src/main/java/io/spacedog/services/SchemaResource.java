@@ -16,6 +16,7 @@ import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Json.JsonMerger;
 import io.spacedog.utils.Schema;
+import io.spacedog.utils.SchemaSettings;
 import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -96,7 +97,7 @@ public class SchemaResource extends Resource {
 			elastic.createIndex(backendId, type, mapping, async, shards, replicas);
 		}
 
-		DataAccessControl.save(backendId, type, schema.acl());
+		DataAccessControl.save(type, schema.acl());
 
 		return JsonPayload.saved(!indexExists, credentials.backendId(), "/1", "schema", type);
 	}
@@ -134,5 +135,6 @@ public class SchemaResource extends Resource {
 	}
 
 	private SchemaResource() {
+		SettingsResource.get().registerSettingsClass(SchemaSettings.class);
 	}
 }

@@ -5,30 +5,26 @@ package io.spacedog.examples;
 
 import org.junit.Test;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
-import io.spacedog.services.DataAccessControl;
-import io.spacedog.utils.DataAclSettings;
 import io.spacedog.utils.DataPermission;
-import io.spacedog.utils.Json;
 import io.spacedog.utils.Schema.SchemaAclSettings;
+import io.spacedog.utils.SchemaSettings;
 
 public class GestionDeCrises extends SpaceClient {
 
-	public final static Backend backend = new Backend("gdcadmin", "gdcadmin", "hi gdcadmin", "david@spacedog.io");
-
 	@Test
-	public void updateDataAclSettings() throws JsonProcessingException {
+	public void updateSchemaSettings() {
 
 		// SpaceRequest.configuration().target(SpaceTarget.production);
 
-		DataAclSettings acl = new DataAclSettings();
+		Backend backend = new Backend("gdcadmin", "gdcadmin", "hi gdcadmin", "david@spacedog.io");
+
+		SchemaSettings settings = new SchemaSettings();
 		SchemaAclSettings schemaAcl = new SchemaAclSettings();
-		acl.put("app", schemaAcl);
+		settings.acl.put("app", schemaAcl);
 
 		schemaAcl.put("key", Sets.newHashSet(DataPermission.create, //
 				DataPermission.search, DataPermission.update_all, DataPermission.delete));
@@ -37,8 +33,7 @@ public class GestionDeCrises extends SpaceClient {
 		schemaAcl.put("admin", Sets.newHashSet(DataPermission.create, //
 				DataPermission.search, DataPermission.update_all, DataPermission.delete_all));
 
-		JsonNode aclBody = Json.mapper().valueToTree(acl);
-		SpaceRequest.put("/1/settings/" + DataAccessControl.ACL_SETTINGS_ID)//
-				.superdogAuth(backend).body(aclBody).go(201, 200);
+		SpaceRequest.put("/1/settings/schema")//
+				.superdogAuth(backend).body(settings).go(201, 200);
 	}
 }

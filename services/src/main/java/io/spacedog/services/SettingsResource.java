@@ -1,5 +1,8 @@
 package io.spacedog.services;
 
+import java.io.IOException;
+import java.util.Map;
+
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
@@ -7,11 +10,15 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 
+import com.beust.jcommander.internal.Maps;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.NotFoundException;
+import io.spacedog.utils.Settings;
 import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -28,6 +35,12 @@ public class SettingsResource {
 	//
 
 	public static final String TYPE = "settings";
+
+	//
+	// Fields
+	//
+
+	private Map<String, Class<? extends Settings>> registeredSettingsClasses;
 
 	//
 	// Routes
@@ -116,13 +129,53 @@ public class SettingsResource {
 	public IndexResponse doPut(String id, String body) {
 
 		String backendId = SpaceContext.checkAdminCredentials().backendId();
-		ElasticClient elastic = Start.get().getElasticClient();
+
+		// Check settings object is valid
+		checkSettingsValid(id, body);
 
 		// Make sure index is created before to save anything
 		makeSureIndexIsCreated();
 
-		return elastic.prepareIndex(backendId, TYPE, id)//
+		return Start.get().getElasticClient().prepareIndex(backendId, TYPE, id)//
 				.setSource(body).get();
+	}
+
+	public <K extends Settings> K load(Class<K> settingsClass) {
+		String id = Settings.id(settingsClass);
+		try {
+			String json = doGet(id);
+			return Json.mapper().readValue(json, settingsClass);
+		} catch (NotFoundException nfe) {
+			// settings not set yet, return a default instance
+			try {
+				return settingsClass.newInstance();
+			} catch (InstantiationException | IllegalAccessException e) {
+				throw Exceptions.runtime(e, "invalid settings class [%s]", //
+						settingsClass.getSimpleName());
+			}
+		} catch (IOException e) {
+			throw Exceptions.runtime(e, "invalid [%s] settings", id);
+		}
+	}
+
+	public void save(Settings settings) {
+		try {
+			SettingsResource.get().doPut(settings.id(), //
+					Json.mapper().writeValueAsString(settings));
+		} catch (JsonProcessingException e) {
+			throw Exceptions.runtime(e);
+		}
+	}
+
+	private void checkSettingsValid(String id, String body) {
+		try {
+
+			if (registeredSettingsClasses.containsKey(id))
+				Json.mapper().readValue(body, registeredSettingsClasses.get(id));
+
+		} catch (IOException e) {
+			throw Exceptions.illegalArgument(e, "invalid [%s] settings", id);
+		}
 	}
 
 	public UpdateResponse doPatch(String id, String body) {
@@ -141,6 +194,13 @@ public class SettingsResource {
 		String backendId = SpaceContext.checkAdminCredentials().backendId();
 		ElasticClient elastic = Start.get().getElasticClient();
 		return elastic.delete(backendId, TYPE, id, true);
+	}
+
+	<K extends Settings> void registerSettingsClass(Class<K> settingsClass) {
+		if (registeredSettingsClasses == null)
+			registeredSettingsClasses = Maps.newHashMap();
+
+		registeredSettingsClasses.put(Settings.id(settingsClass), settingsClass);
 	}
 
 	private void makeSureIndexIsCreated() {
@@ -171,5 +231,4 @@ public class SettingsResource {
 
 	private SettingsResource() {
 	}
-
 }
