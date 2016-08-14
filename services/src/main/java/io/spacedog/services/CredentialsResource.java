@@ -171,7 +171,7 @@ public class CredentialsResource extends Resource {
 		expiresAt = expiresAt.plus(response.objectNode().get("expires_in").asLong());
 
 		response = SpaceRequest//
-				.get("https://api.linkedin.com/v1/people/~:(id,email-address)")//
+				.get("https://api.linkedin.com/v1/people/~:(email-address)")//
 				.bearerAuth(backendId, accessToken)//
 				.queryParam("format", "json")//
 				.go();
@@ -183,11 +183,10 @@ public class CredentialsResource extends Resource {
 					response.httpResponse().getStatus(), //
 					response.getString("error_description"));
 
-		String id = response.objectNode().get("id").asText();
 		String email = response.objectNode().get("emailAddress").asText();
 
-		Credentials credentials = get(backendId, id, false)//
-				.orElse(new Credentials(backendId, id, Level.USER));
+		Credentials credentials = get(backendId, email, false)//
+				.orElse(new Credentials(backendId, email, Level.USER));
 
 		boolean isNew = credentials.createdAt() == null;
 
@@ -197,7 +196,7 @@ public class CredentialsResource extends Resource {
 		index(credentials);
 
 		JsonBuilder<ObjectNode> builder = JsonPayload//
-				.builder(isNew, backendId, "/1", TYPE, id)//
+				.builder(isNew, backendId, "/1", TYPE, email)//
 				.put(ACCESS_TOKEN, credentials.accessToken())//
 				.put(EXPIRES_IN, credentials.accessTokenExpiresIn());
 
