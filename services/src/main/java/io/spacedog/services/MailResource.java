@@ -14,6 +14,8 @@ import com.mashape.unirest.request.HttpRequestWithBody;
 import com.mashape.unirest.request.body.MultipartBody;
 
 import io.spacedog.utils.Credentials;
+import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.MailSettings;
 import net.codestory.http.Context;
 import net.codestory.http.Part;
 import net.codestory.http.annotations.Post;
@@ -40,9 +42,12 @@ public class MailResource extends Resource {
 	@Post("/1/mail/")
 	public Payload post(Context context) {
 
+		MailSettings settings = SettingsResource.get().load(MailSettings.class);
+		Credentials credentials = settings.enableUserFullAccess //
+				? SpaceContext.checkUserCredentials()//
+				: SpaceContext.checkAdminCredentials();
 		try {
-			Credentials admin = SpaceContext.checkUserCredentials();
-			String from = admin.backendId().toUpperCase() + " <no-reply@api.spacedog.io>";
+			String from = credentials.backendId().toUpperCase() + " <no-reply@api.spacedog.io>";
 			String to = null, cc = null, bcc = null, subject = null, text = null, html = null;
 
 			if (context.parts().isEmpty()) {
@@ -51,9 +56,9 @@ public class MailResource extends Resource {
 				bcc = context.get(BCC);
 				subject = context.get(SUBJECT);
 				if (!Strings.isNullOrEmpty(context.get(TEXT)))
-					text = addFooterToTextMessage(context.get(TEXT), admin);
+					text = addFooterToTextMessage(context.get(TEXT), credentials);
 				if (!Strings.isNullOrEmpty(context.get(HTML)))
-					html = addFooterToHtmlMessage(context.get(HTML), admin);
+					html = addFooterToHtmlMessage(context.get(HTML), credentials);
 
 			} else
 				for (Part part : context.parts()) {
@@ -66,16 +71,16 @@ public class MailResource extends Resource {
 					else if (part.name().equals(SUBJECT))
 						subject = part.content();
 					else if (part.name().equals(TEXT))
-						text = addFooterToTextMessage(part.content(), admin);
+						text = addFooterToTextMessage(part.content(), credentials);
 					else if (part.name().equals(HTML))
-						html = addFooterToHtmlMessage(part.content(), admin);
+						html = addFooterToHtmlMessage(part.content(), credentials);
 				}
 
 			ObjectNode response = send(from, to, cc, bcc, subject, text, html);
 			return JsonPayload.json(response, response.get("status").asInt());
 
 		} catch (IOException e) {
-			throw new RuntimeException(e);
+			throw Exceptions.runtime(e);
 		}
 
 	}
@@ -92,8 +97,7 @@ public class MailResource extends Resource {
 		HttpRequestWithBody requestWithBody = Unirest.post("https://api.mailgun.net/v3/{domain}/messages")//
 				.routeParam("domain", mailDomain)//
 				// TODO Fix this since it does not work.
-				// .queryString("o:testmode", context.query().getBoolean("test",
-				// false))//
+				// .queryString("o:testmode", SpaceContext.isTest()//
 				.basicAuth("api", mailGunKey);
 
 		MultipartBody multipartBody = requestWithBody.field("from", from)//
@@ -111,13 +115,13 @@ public class MailResource extends Resource {
 			HttpResponse<String> response = requestWithBody.asString();
 			return JsonPayload.builder(response.getStatus()).node("mailgun", response.getBody()).build();
 		} catch (UnirestException e) {
-			throw new RuntimeException(e);
+			throw Exceptions.runtime(e);
 		}
 	}
 
 	private String addFooterToTextMessage(String text, Credentials admin) {
 		if (Strings.isNullOrEmpty(text))
-			throw new IllegalArgumentException("mail text is empty");
+			throw Exceptions.illegalArgument("mail text is empty");
 
 		return String.format(
 				"%s\n\n---\nThis is an automatic email sent by the [%s] application.\nContact your administrator for more information [%s].",
@@ -126,11 +130,11 @@ public class MailResource extends Resource {
 
 	private String addFooterToHtmlMessage(String html, Credentials admin) {
 		if (Strings.isNullOrEmpty(html))
-			throw new IllegalArgumentException("mail html is empty");
+			throw Exceptions.illegalArgument("mail html is empty");
 
 		int index = html.lastIndexOf("</html>");
 		if (index < 0)
-			throw new IllegalArgumentException("no html end tag");
+			throw Exceptions.illegalArgument("no html end tag");
 
 		return String.format(
 				"%s<p><p>---<p>This is an automatic email sent by the [%s] application.<p>Contact your administrator for more information [%s].</html>",

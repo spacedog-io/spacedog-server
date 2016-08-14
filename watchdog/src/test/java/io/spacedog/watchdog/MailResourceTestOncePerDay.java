@@ -5,7 +5,9 @@ import org.junit.Test;
 
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceClient.Backend;
+import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.utils.MailSettings;
 import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
 @TestOncePerDay
@@ -16,42 +18,41 @@ public class MailResourceTestOncePerDay extends Assert {
 
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
+		User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
 
-		// should succeed to mail a simple text message
+		// by default users can not send emails
+		SpaceRequest.post("/1/mail").userAuth(vince).go(403);
 
+		// admin emails a simple text message
 		SpaceRequest.post("/1/mail").adminAuth(test)//
-				.queryParam("test", "true")//
 				.formField("to", "platform@spacedog.io")//
 				.formField("subject", "This is a test...")//
 				.formField("text", "So don't bother read this!")//
 				.go(200);
 
-		// should succeed to mail a simple html message
+		// admin allows users to send emails
+		MailSettings settings = new MailSettings();
+		settings.enableUserFullAccess = true;
+		SpaceClient.saveSettings(test, settings);
 
-		SpaceRequest.post("/1/mail").adminAuth(test)//
-				.queryParam("test", "true")//
+		// now vince can email a simple html message
+		SpaceRequest.post("/1/mail").userAuth(vince)//
 				.formField("to", "platform@spacedog.io")//
 				.formField("subject", "This is a test...")//
 				.formField("html", "<html><h1>So don't bother read this!</h1></html>")//
 				.go(200);
 
-		// should fail since no 'to' field
-
-		SpaceRequest.post("/1/mail").adminAuth(test)//
-				.queryParam("test", "true")//
+		// vince fails to email since no 'to' field
+		SpaceRequest.post("/1/mail").userAuth(vince)//
 				.formField("subject", "This is a test...")//
 				.formField("text", "So don't bother read this!")//
 				.go(400);
 
-		// should fail since no html end tag
-
-		SpaceRequest.post("/1/mail").adminAuth(test)//
-				.queryParam("test", "true")//
+		// vince fails to email since no html end tag
+		SpaceRequest.post("/1/mail").userAuth(vince)//
 				.formField("to", "platform@spacedog.io")//
 				.formField("subject", "This is a test...")//
 				.formField("html", "<html><h1>So don't bother read this!</h1>")//
 				.go(400);
-
 	}
-
 }
