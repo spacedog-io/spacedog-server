@@ -19,8 +19,8 @@ import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Schema;
-import io.spacedog.utils.Schema.SchemaAclSettings;
 import io.spacedog.utils.SchemaSettings;
+import io.spacedog.utils.SchemaSettings.SchemaAcl;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
@@ -42,7 +42,7 @@ public class DataAccessControlTestOften extends Assert {
 
 		// check global acl settings
 		assertEquals(1, settings.acl.size());
-		SchemaAclSettings messageAcl = settings.acl.get("message");
+		SchemaAcl messageAcl = settings.acl.get("message");
 		assertEquals(3, messageAcl.size());
 		assertEquals(Sets.newHashSet(DataPermission.read_all), messageAcl.get("key"));
 		assertEquals(Sets.newHashSet(DataPermission.create, DataPermission.update, //
@@ -86,7 +86,7 @@ public class DataAccessControlTestOften extends Assert {
 
 		// Schema settings
 		SchemaSettings settings = new SchemaSettings();
-		SchemaAclSettings messageAcl = new SchemaAclSettings();
+		SchemaAcl messageAcl = new SchemaAcl();
 		messageAcl.put("iron", Sets.newHashSet(DataPermission.read_all));
 		messageAcl.put("silver", Sets.newHashSet(DataPermission.read_all, DataPermission.update_all));
 		messageAcl.put("gold", Sets.newHashSet(//

@@ -10,8 +10,8 @@ import com.google.common.collect.Sets;
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.DataPermission;
-import io.spacedog.utils.Schema.SchemaAclSettings;
 import io.spacedog.utils.SchemaSettings;
+import io.spacedog.utils.SchemaSettings.SchemaAcl;
 
 public class GestionDeCrises extends SpaceClient {
 
@@ -23,7 +23,7 @@ public class GestionDeCrises extends SpaceClient {
 		Backend backend = new Backend("gdcadmin", "gdcadmin", "hi gdcadmin", "david@spacedog.io");
 
 		SchemaSettings settings = new SchemaSettings();
-		SchemaAclSettings schemaAcl = new SchemaAclSettings();
+		SchemaAcl schemaAcl = new SchemaAcl();
 		settings.acl.put("app", schemaAcl);
 
 		schemaAcl.put("key", Sets.newHashSet(DataPermission.create, //

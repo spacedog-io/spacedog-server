@@ -19,8 +19,8 @@ import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Schema;
-import io.spacedog.utils.Schema.SchemaAclSettings;
 import io.spacedog.utils.SchemaSettings;
+import io.spacedog.utils.SchemaSettings.SchemaAcl;
 
 public class Joho extends SpaceClient {
 
@@ -60,7 +60,7 @@ public class Joho extends SpaceClient {
 				.add(buildThemesSchema())//
 				.add(buildSitesSchema());
 
-		SchemaAclSettings schemaAcl = new SchemaAclSettings();
+		SchemaAcl schemaAcl = new SchemaAcl();
 		schemaAcl.put("user", Sets.newHashSet(DataPermission.create, //
 				DataPermission.read, DataPermission.update, DataPermission.delete));
 		schemaAcl.put("admin", Sets.newHashSet(DataPermission.search, //

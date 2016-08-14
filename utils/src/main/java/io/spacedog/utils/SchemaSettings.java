@@ -3,22 +3,19 @@
  */
 package io.spacedog.utils;
 
-import java.util.Map;
+import java.util.HashMap;
 import java.util.Set;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-
-import io.spacedog.utils.Schema.SchemaAclSettings;
 
 public class SchemaSettings extends Settings {
 
 	public static final long serialVersionUID = 4064111112532790399L;
 
-	public Map<String, SchemaAclSettings> acl;
+	public SchemaAclMap acl;
 
 	public SchemaSettings() {
-		acl = Maps.newHashMap();
+		acl = new SchemaAclMap();
 	}
 
 	public SchemaSettings add(Schema schema) {
@@ -31,9 +28,9 @@ public class SchemaSettings extends Settings {
 	//
 
 	public boolean check(String type, String role, DataPermission permission) {
-		SchemaAclSettings roles = acl.get(type);
+		SchemaAcl roles = acl.get(type);
 		if (roles == null)
-			roles = SchemaAclSettings.defaultSettings();
+			roles = SchemaAcl.defaultAcl();
 		Set<DataPermission> permissions = roles.get(role);
 		if (permissions == null)
 			return false;
@@ -58,5 +55,31 @@ public class SchemaSettings extends Settings {
 					types.add(type);
 
 		return types.toArray(new String[types.size()]);
+	}
+
+	public static class SchemaAclMap extends HashMap<String, SchemaAcl> {
+
+		private static final long serialVersionUID = 8813814959454404912L;
+	}
+
+	public static class SchemaAcl extends HashMap<String, Set<DataPermission>> {
+
+		private static final long serialVersionUID = 7433673020746769733L;
+
+		// TODO create a single default singleton instance
+		public static SchemaAcl defaultAcl() {
+
+			SchemaAcl roles = new SchemaAcl();
+
+			roles.put("key", Sets.newHashSet(DataPermission.read_all));
+
+			roles.put("user", Sets.newHashSet(DataPermission.create, //
+					DataPermission.update, DataPermission.search, DataPermission.delete));
+
+			roles.put("admin", Sets.newHashSet(DataPermission.create, //
+					DataPermission.update_all, DataPermission.search, DataPermission.delete_all));
+
+			return roles;
+		}
 	}
 }

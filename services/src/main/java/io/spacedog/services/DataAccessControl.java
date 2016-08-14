@@ -5,8 +5,8 @@ package io.spacedog.services;
 
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.DataPermission;
-import io.spacedog.utils.Schema.SchemaAclSettings;
 import io.spacedog.utils.SchemaSettings;
+import io.spacedog.utils.SchemaSettings.SchemaAcl;
 
 public class DataAccessControl {
 
@@ -24,12 +24,12 @@ public class DataAccessControl {
 				.types(permission, credentials);
 	}
 
-	public static void save(String type, SchemaAclSettings schemaAcl) {
+	public static void save(String type, SchemaAcl schemaAcl) {
 
 		SchemaSettings settings = SettingsResource.get().load(SchemaSettings.class);
 
 		if (schemaAcl == null && !settings.acl.containsKey(type))
-			schemaAcl = SchemaAclSettings.defaultSettings();
+			schemaAcl = SchemaAcl.defaultAcl();
 
 		settings.acl.put(type, schemaAcl);
 

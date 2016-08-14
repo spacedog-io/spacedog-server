@@ -25,6 +25,7 @@ public class SpaceContext {
 	private Debug debug;
 	private Credentials credentials;
 	private boolean authorizationChecked;
+	private boolean isForced;
 
 	private SpaceContext(Context context) {
 		this.context = context;
@@ -34,8 +35,20 @@ public class SpaceContext {
 				Boolean.parseBoolean(context().header(SpaceHeaders.SPACEDOG_DEBUG)));
 	}
 
+	private SpaceContext(Credentials credentials, boolean test, boolean debug) {
+		this.isForced = true;
+		this.isTest = test;
+		this.credentials = credentials;
+		this.debug = new Debug(debug);
+	}
+
 	public Context context() {
 		return context;
+	}
+
+	public static boolean isSetAuthorized() {
+		SpaceContext spaceContext = threadLocal.get();
+		return spaceContext == null || spaceContext.isForced;
 	}
 
 	public static SpaceFilter filter() {
@@ -43,7 +56,7 @@ public class SpaceContext {
 		// uri is already checked by SpaceFilter default matches method
 
 		return (uri, context, nextFilter) -> {
-			if (threadLocal.get() == null) {
+			if (isSetAuthorized()) {
 				try {
 					threadLocal.set(new SpaceContext(context));
 					return nextFilter.get();
@@ -79,6 +92,13 @@ public class SpaceContext {
 
 	public static String backendId() {
 		return getCredentials().backendId();
+	}
+
+	static void forceContext(Credentials credentials, boolean test, boolean debug) {
+		if (isSetAuthorized())
+			threadLocal.set(new SpaceContext(credentials, test, debug));
+		else
+			throw Exceptions.runtime("overriding non null context is illegal");
 	}
 
 	//

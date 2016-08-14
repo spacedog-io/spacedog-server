@@ -19,8 +19,8 @@ import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonGenerator;
 import io.spacedog.utils.Schema;
-import io.spacedog.utils.Schema.SchemaAclSettings;
 import io.spacedog.utils.SchemaSettings;
+import io.spacedog.utils.SchemaSettings.SchemaAcl;
 
 public class Colibee extends SpaceClient {
 
@@ -64,7 +64,7 @@ public class Colibee extends SpaceClient {
 
 	void initDataAclSettings() {
 
-		SchemaAclSettings roles = new SchemaAclSettings();
+		SchemaAcl roles = new SchemaAcl();
 
 		roles.put("key", Sets.newHashSet(DataPermission.create, //
 				DataPermission.update_all, DataPermission.search, DataPermission.delete_all));

@@ -17,6 +17,12 @@ import org.elasticsearch.node.Node;
 import org.elasticsearch.plugin.cloud.aws.CloudAwsPlugin;
 import org.elasticsearch.plugin.deletebyquery.DeleteByQueryPlugin;
 
+import io.spacedog.utils.Credentials;
+import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
+import io.spacedog.utils.NotFoundException;
+import io.spacedog.utils.SchemaSettings;
+import io.spacedog.utils.SchemaSettings.SchemaAclMap;
 import io.spacedog.utils.Utils;
 import net.codestory.http.AbstractWebServer;
 import net.codestory.http.Request;
@@ -73,9 +79,35 @@ public class Start {
 
 	private void upgrade() throws IOException {
 		// Utils.info("[SpaceDog] Nothing to upgrade");
+		convertDataAclToSchemaSettings();
 		deletePingRequestsFromLogs();
 		deleteGetLogRequestsFromLogs();
 		SnapshotResource.get().deleteObsoleteRepositories();
+	}
+
+	private void convertDataAclToSchemaSettings() {
+		for (Credentials credentials : CredentialsResource.get().getAllSuperAdmins(true)) {
+			if (!credentials.isRootBackend()) {
+				try {
+					SpaceContext.forceContext(credentials, false, false);
+					String dataAclJson = SettingsResource.get().doGet("dataAcl");
+					SchemaAclMap map = Json.mapper().readValue(dataAclJson, SchemaAclMap.class);
+					Utils.info("Backend [%s] data acl settings = %s", credentials.backendId(), map);
+					SchemaSettings settings = SettingsResource.get().load(SchemaSettings.class);
+					Utils.info("Backend [%s] schema acl map = %s", credentials.backendId(), settings.acl);
+					if (settings.acl.isEmpty()) {
+						settings.acl = map;
+						Utils.info("Saving new schema settings for backend [%s]", credentials.backendId());
+						SettingsResource.get().save(settings);
+					}
+				} catch (NotFoundException e) {
+					// data acl not found => nothing to do
+					continue;
+				} catch (IOException e) {
+					throw Exceptions.runtime(e);
+				}
+			}
+		}
 	}
 
 	private void deleteGetLogRequestsFromLogs() {
