@@ -46,7 +46,7 @@ public class Linkedin extends SpaceClient {
 		// admin pre registers some credentials for a new user
 		String resetCode = SpaceRequest.post("/1/credentials").adminAuth(test)//
 				.body("username", "dave", "email", "attias666@gmail.com")//
-				.go(201).getFromJson("passwordRestCode").asText();
+				.go(201).getString("passwordRestCode");
 
 		// start linkedin authentication process to display
 		// url to call inside the browser for testing

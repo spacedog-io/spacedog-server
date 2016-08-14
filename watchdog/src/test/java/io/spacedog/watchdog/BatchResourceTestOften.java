@@ -212,12 +212,12 @@ public class BatchResourceTestOften extends Assert {
 				.assertEquals(1, "debug.batchCredentialChecks");
 
 		assertEquals(Sets.newHashSet("Hi guys!", "Pretty cool, huhhhhh?"),
-				Sets.newHashSet(response.getFromJson("responses.5.content.results.0.text").asText(),
-						response.getFromJson("responses.5.content.results.1.text").asText()));
+				Sets.newHashSet(response.getString("responses.5.content.results.0.text"),
+						response.getString("responses.5.content.results.1.text")));
 
 		assertEquals(Sets.newHashSet("1", "2"),
-				Sets.newHashSet(response.getFromJson("responses.5.content.results.0.code").asText(),
-						response.getFromJson("responses.5.content.results.1.code").asText()));
+				Sets.newHashSet(response.getString("responses.5.content.results.0.code"),
+						response.getString("responses.5.content.results.1.code")));
 
 		// should succeed to stop on first batch request error
 

@@ -427,8 +427,10 @@ public class Json {
 	}
 
 	public static String checkString(JsonNode node) {
+		if (node == null)
+			return null;
 		if (!node.isTextual())
-			throw Exceptions.runtime("json node [%s] should be a string", node);
+			throw Exceptions.runtime("json node [%s] not a string", node);
 		return node.asText();
 	}
 

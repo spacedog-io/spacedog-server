@@ -43,8 +43,7 @@ public class SnapshotResourceTest extends Assert {
 		String firstSnapId = SpaceRequest.post("/1/snapshot")//
 				.superdogAuth()//
 				.go(202)//
-				.getFromJson("id")//
-				.asText();
+				.getString("id");
 
 		// fails since snapshot is not yet completed
 		// returns 400 if not yet restorable or if restoreInfo is null
@@ -88,8 +87,8 @@ public class SnapshotResourceTest extends Assert {
 				.assertEquals("SUCCESS", "snapshot.state")//
 				.assertEquals("all", "snapshot.type");
 
-		ObjectNode secondSnap = (ObjectNode) response.getFromJson("snapshot");
-		String secondSnapId = response.getFromJson("id").asText();
+		ObjectNode secondSnap = (ObjectNode) response.get("snapshot");
+		String secondSnapId = response.getString("id");
 
 		SpaceRequest.get("/1/snapshot")//
 				.superdogAuth()//
@@ -112,8 +111,8 @@ public class SnapshotResourceTest extends Assert {
 				.assertEquals("SUCCESS", "snapshot.state")//
 				.assertEquals("all", "snapshot.type");
 
-		ObjectNode thirdSnap = (ObjectNode) response.getFromJson("snapshot");
-		String thirdSnapId = response.getFromJson("id").asText();
+		ObjectNode thirdSnap = (ObjectNode) response.get("snapshot");
+		String thirdSnapId = response.getString("id");
 
 		SpaceRequest.get("/1/snapshot")//
 				.superdogAuth()//

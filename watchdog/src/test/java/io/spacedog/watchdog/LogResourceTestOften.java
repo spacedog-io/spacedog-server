@@ -44,8 +44,7 @@ public class LogResourceTestOften extends Assert {
 				.userAuth(user)//
 				.body("text", "What's up boys?")//
 				.go(201)//
-				.getFromJson("id")//
-				.asText();
+				.getString("id");
 
 		// find message by id in test backend
 		SpaceRequest.get("/1/data/message/" + id).userAuth(user).go(200);
@@ -105,7 +104,7 @@ public class LogResourceTestOften extends Assert {
 		SpaceClient.newCredentials(test, "fred", "hi fred");
 
 		String passwordResetCode = SpaceRequest.delete("/1/user/fred/password")//
-				.adminAuth(test).go(200).getFromJson("passwordResetCode").asText();
+				.adminAuth(test).go(200).getString("passwordResetCode");
 
 		SpaceRequest.post("/1/user/fred/password?passwordResetCode=" + passwordResetCode)//
 				.backend(test).formField("password", "hi fred 2").go(200);
@@ -346,7 +345,7 @@ public class LogResourceTestOften extends Assert {
 		// this ping should not be present in logs
 
 		JsonNode results = SpaceRequest.get("/1/log")//
-				.size(5).superdogAuth().go(200).getFromJson("results");
+				.size(5).superdogAuth().go(200).get("results");
 
 		Iterator<JsonNode> elements = results.elements();
 		while (elements.hasNext()) {

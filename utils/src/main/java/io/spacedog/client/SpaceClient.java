@@ -70,7 +70,7 @@ public class SpaceClient {
 	public static User newCredentials(String backendId, String username, String password, String email) {
 		String userId = SpaceRequest.post("/1/credentials").backendId(backendId)
 				.body("username", username, "password", password, "email", email)//
-				.go(201).getFromJson("id").asText();
+				.go(201).getString("id");
 
 		ObjectNode node = SpaceRequest.get("/1/login")//
 				.basicAuth(backendId, username, password)//

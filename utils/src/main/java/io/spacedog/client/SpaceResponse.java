@@ -147,8 +147,12 @@ public class SpaceResponse {
 		this.headers.forEach(action);
 	}
 
-	public JsonNode getFromJson(String jsonPath) {
+	public JsonNode get(String jsonPath) {
 		return Json.get(jsonResponseContent, jsonPath);
+	}
+
+	public String getString(String jsonPath) {
+		return Json.checkString(Json.get(jsonResponseContent, jsonPath));
 	}
 
 	public JsonNode findValue(String fieldName) {

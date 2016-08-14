@@ -175,7 +175,7 @@ public class Colibee extends SpaceClient {
 		resetSchema(schemaDiscussion, backend);
 		ObjectNode bale3 = generator.gen(schemaDiscussion);
 		String discussionId = SpaceRequest.post("/1/data/discussion?id=bale3")//
-				.adminAuth(backend).body(bale3).go(201).getFromJson("id").asText();
+				.adminAuth(backend).body(bale3).go(201).getString("id");
 
 		Schema schemaMessage = buildMessageSchema();
 		resetSchema(schemaMessage, backend);

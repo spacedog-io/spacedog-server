@@ -125,7 +125,7 @@ public class FileSynchronizer {
 				.go(200, 404);
 
 		if (response.httpResponse().getStatus() == 200) {
-			Iterator<JsonNode> elements = response.getFromJson("results").elements();
+			Iterator<JsonNode> elements = response.get("results").elements();
 			while (elements.hasNext()) {
 				check(elements.next());
 			}

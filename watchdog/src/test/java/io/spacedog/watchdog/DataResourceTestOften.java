@@ -47,7 +47,7 @@ public class DataResourceTestOften extends Assert {
 
 		String id = SpaceRequest.post("/1/data/car").userAuth(vince).body(car).go(201)//
 				.assertTrue("success").assertEquals("car", "type").assertNotNull("id")//
-				.getFromJson("id").asText();
+				.getString("id");
 
 		// find by id
 
@@ -57,7 +57,7 @@ public class DataResourceTestOften extends Assert {
 				.assertDateIsRecent("meta.createdAt")//
 				.assertEqualsWithoutMeta(car);
 
-		DateTime createdAt = DateTime.parse(res1.getFromJson("meta.createdAt").asText());
+		DateTime createdAt = DateTime.parse(res1.getString("meta.createdAt"));
 		res1.assertEquals(createdAt, "meta.updatedAt");
 
 		// find by full text search

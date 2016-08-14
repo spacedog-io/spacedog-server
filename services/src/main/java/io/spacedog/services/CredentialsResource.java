@@ -165,7 +165,7 @@ public class CredentialsResource extends Resource {
 
 		if (response.httpResponse().getStatus() >= 400)
 			return JsonPayload.error(response.httpResponse().getStatus(), //
-					response.getFromJson("error_description").asText());
+					response.getString("error_description"));
 
 		String accessToken = response.objectNode().get("access_token").asText();
 		expiresAt = expiresAt.plus(response.objectNode().get("expires_in").asLong());
@@ -181,7 +181,7 @@ public class CredentialsResource extends Resource {
 					"linkedin error when fetching id and email: " + //
 							"linkedin http status [%s], linkedin error message [%s]", //
 					response.httpResponse().getStatus(), //
-					response.getFromJson("error_description").asText());
+					response.getString("error_description"));
 
 		String id = response.objectNode().get("id").asText();
 		String email = response.objectNode().get("emailAddress").asText();

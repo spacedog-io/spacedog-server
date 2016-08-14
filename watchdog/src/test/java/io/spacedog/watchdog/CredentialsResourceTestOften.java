@@ -215,8 +215,7 @@ public class CredentialsResourceTestOften extends Assert {
 		String passwordResetCode = SpaceRequest.post("/1/credentials/").backend(test)//
 				.body("username", "titi", "email", "titi@dog.com").go(201)//
 				.assertNotNull("passwordResetCode")//
-				.getFromJson("passwordResetCode")//
-				.asText();
+				.getString("passwordResetCode");
 
 		// no password user login should fail
 		// I can not pass a null password anyway to the basicAuth method
@@ -283,7 +282,7 @@ public class CredentialsResourceTestOften extends Assert {
 		// admin deletes titi password should succeed
 
 		String newPasswordResetCode = SpaceRequest.delete("/1/credentials/titi/password")
-				.basicAuth(test, "test", "hi test").go(200).getFromJson("passwordResetCode").asText();
+				.basicAuth(test, "test", "hi test").go(200).getString("passwordResetCode");
 
 		// titi login should fail
 
@@ -439,7 +438,7 @@ public class CredentialsResourceTestOften extends Assert {
 		// admin can create credentials for someone
 		String resetCode = SpaceRequest.post("/1/credentials").adminAuth(test)//
 				.body("username", "vince", "email", "vince@dog.com")//
-				.go(201).getFromJson("passwordResetCode").asText();
+				.go(201).getString("passwordResetCode");
 
 		// someone can set password if he receives a password reset code
 		SpaceRequest.post("/1/credentials/vince/password")//

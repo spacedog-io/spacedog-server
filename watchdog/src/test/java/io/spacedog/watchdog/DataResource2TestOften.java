@@ -101,7 +101,7 @@ public class DataResource2TestOften extends Assert {
 				// assertEquals("EUR54.25", "items.1.price")
 				.assertEquals("visit", "items.1.type");
 
-		DateTime createdAt = DateTime.parse(res1.getFromJson("meta.createdAt").asText());
+		DateTime createdAt = DateTime.parse(res1.getString("meta.createdAt"));
 		res1.assertDateIsRecent("meta.createdAt")//
 				.assertEquals(createdAt, "meta.updatedAt");
 
@@ -115,7 +115,7 @@ public class DataResource2TestOften extends Assert {
 		SpaceResponse res1b = SpaceRequest.get("/1/search/sale?q=museum")//
 				.refresh().userAuth(fred).go(200).assertEquals(1, "total");
 
-		res1.assertEquals(res1b.getFromJson("results.0"));
+		res1.assertEquals(res1b.get("results.0"));
 
 		// find by advanced text search
 
@@ -128,7 +128,7 @@ public class DataResource2TestOften extends Assert {
 		SpaceResponse res1c = SpaceRequest.post("/1/search/sale")//
 				.userAuth(fred).body(query).go(200).assertEquals(1, "total");
 
-		res1.assertEquals(res1c.getFromJson("results.0"));
+		res1.assertEquals(res1c.get("results.0"));
 
 		// small update no version should succeed
 
@@ -249,7 +249,7 @@ public class DataResource2TestOften extends Assert {
 
 		String id = SpaceRequest.post("/1/data/message").adminAuth(test)//
 				.body("text", "id=?").go(201)//
-				.getFromJson("id").asText();
+				.getString("id");
 
 		SpaceRequest.get("/1/data/message/" + id).adminAuth(test).go(200)//
 				.assertEquals("id=?", "text");
@@ -362,7 +362,7 @@ public class DataResource2TestOften extends Assert {
 				.userAuth(user).go(200)//
 				.assertEquals(4, "total")//
 				.assertSizeEquals(size, "results")//
-				.getFromJson("results");
+				.get("results");
 
 		List<String> messages = Lists.newArrayList();
 		Iterator<JsonNode> elements = results.elements();
