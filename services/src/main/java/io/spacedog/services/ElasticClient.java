@@ -1,6 +1,7 @@
 package io.spacedog.services;
 
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
@@ -29,6 +30,7 @@ import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.action.support.IndicesOptions;
+import org.elasticsearch.action.support.QuerySourceBuilder;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.ClusterAdminClient;
@@ -40,6 +42,9 @@ import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.IndexNotFoundException;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
@@ -103,21 +108,72 @@ public class ElasticClient {
 	// shortcut methods
 	//
 
-	public IndexResponse index(String backend, String type, String id, byte[] source) {
-		return prepareIndex(backend, type, id).setSource(source).get();
+	public IndexResponse index(String backend, String type, String source) {
+		return index(backend, type, source, false);
+	}
+
+	public IndexResponse index(String backend, String type, String source, boolean refresh) {
+		return prepareIndex(backend, type).setSource(source).setRefresh(refresh).get();
 	}
 
 	public IndexResponse index(String backend, String type, String id, String source) {
-		return prepareIndex(backend, type, id).setSource(source).get();
+		return index(backend, type, id, source, false);
+	}
+
+	public IndexResponse index(String backend, String type, String id, String source, boolean refresh) {
+		return prepareIndex(backend, type, id).setSource(source).setRefresh(refresh).get();
+	}
+
+	public IndexResponse index(String backend, String type, String id, byte[] source) {
+		return index(backend, type, id, source, false);
+	}
+
+	public IndexResponse index(String backend, String type, String id, byte[] source, boolean refresh) {
+		return prepareIndex(backend, type, id).setSource(source).setRefresh(refresh).get();
 	}
 
 	public GetResponse get(String backend, String type, String id) {
-		return internalClient.prepareGet(toAlias(backend, type), type, id).get();
+		return get(backend, type, id, false);
+	}
+
+	public GetResponse get(String backend, String type, String id, boolean throwNotFound) {
+		GetResponse response = internalClient.prepareGet(toAlias(backend, type), type, id).get();
+
+		if (!response.isExists() && throwNotFound)
+			throw Exceptions.notFound(backend, type, id);
+
+		return response;
+	}
+
+	public Optional<SearchHit> get(String backend, String type, QueryBuilder query) {
+		SearchHits hits = internalClient.prepareSearch(toAlias(backend, type))//
+				.setTypes(type)//
+				.setQuery(query)//
+				.get()//
+				.getHits();
+
+		if (hits.getTotalHits() == 0)
+			return Optional.empty();
+		else if (hits.getTotalHits() == 1)
+			return Optional.of(hits.getAt(0));
+
+		throw Exceptions.runtime(//
+				"unicity violation in [%s] data collection", type);
 	}
 
 	public boolean exists(String backend, String type, String id) {
 		return internalClient.prepareGet(toAlias(backend, type), type, id)//
 				.setFetchSource(false).get().isExists();
+	}
+
+	public boolean exists(String backend, String type, QueryBuilder query) {
+		return internalClient.prepareSearch(toAlias(backend, type))//
+				.setTypes(type)//
+				.setQuery(query)//
+				.setFetchSource(false)//
+				.get()//
+				.getHits()//
+				.getTotalHits() > 0;
 	}
 
 	public boolean delete(String backendId, String type, String id, boolean throwNotFound) {
@@ -131,6 +187,21 @@ public class ElasticClient {
 
 	public BulkRequestBuilder prepareBulk() {
 		return internalClient.prepareBulk();
+	}
+
+	public DeleteByQueryResponse deleteByQuery(String backendId, QueryBuilder query, String... types) {
+		Check.notNullOrEmpty(backendId, "backendId");
+
+		DeleteByQueryRequest request = new DeleteByQueryRequest(toAliases(backendId, types))//
+				.timeout(new TimeValue(60000))//
+				.source(new QuerySourceBuilder().setQuery(query));
+
+		try {
+			return Start.get().getElasticClient().execute(//
+					DeleteByQueryAction.INSTANCE, request).get();
+		} catch (ExecutionException | InterruptedException e) {
+			throw Exceptions.runtime(e);
+		}
 	}
 
 	public DeleteByQueryResponse deleteByQuery(String query, String backendId, String... types) {

@@ -58,7 +58,7 @@ public class Start {
 	public static void main(String[] args) {
 		try {
 			singleton = new Start();
-			singleton.startLocalElastic();
+			singleton.startElasticNode();
 			singleton.initServices();
 			singleton.upgrade();
 			singleton.startFluent();
@@ -144,7 +144,7 @@ public class Start {
 		Utils.info("[SpaceDog] [%s] logs deleted", response.getTotalDeleted());
 	}
 
-	private void startLocalElastic() throws InterruptedException, ExecutionException, IOException {
+	private void startElasticNode() throws InterruptedException, ExecutionException, IOException {
 
 		Builder builder = Settings.builder()//
 				.put("node.master", true)//
@@ -173,13 +173,16 @@ public class Start {
 				CloudAwsPlugin.class);
 
 		elasticNode.start();
-		Client client = elasticNode.client();
-		elastic = new ElasticClient(client);
+		setElasticClient(elasticNode.client());
 
 		// wait for cluster to fully initialize and turn asynchronously from
 		// RED status to GREEN before to initialize anything else
 		// wait for 30 seconds maximum
 		elastic.ensureAllIndicesGreen();
+	}
+
+	void setElasticClient(Client client) {
+		this.elastic = new ElasticClient(client);
 	}
 
 	private void initServices() throws IOException {

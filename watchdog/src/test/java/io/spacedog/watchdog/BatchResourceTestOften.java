@@ -7,6 +7,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceClient;
@@ -39,6 +40,9 @@ public class BatchResourceTestOften extends Assert {
 
 				.object()//
 				.put("method", "POST").put("path", "/1/backend/test")//
+				.object("parameters")//
+				.put("notif", false)//
+				.end()//
 				.object("content")//
 				.put("username", "test")//
 				.put("password", "hi test")//
@@ -99,20 +103,32 @@ public class BatchResourceTestOften extends Assert {
 				.end()//
 				.end()//
 
+				.build();
+
+		ObjectNode node = SpaceRequest.post("/1/batch")//
+				.debugServer().adminAuth(test).body(batch).go(200)//
+				.objectNode();
+
+		String vinceId = Json.get(node, "responses.0.id").asText();
+		String daveId = Json.get(node, "responses.1.id").asText();
+
+		// should succeed to fetch dave and vince credentials
+
+		batch = Json.arrayBuilder()//
 				.object()//
-				.put("method", "GET").put("path", "/1/credentials/vince")//
+				.put("method", "GET").put("path", "/1/credentials/" + vinceId)//
 				.end()//
 
 				.object()//
-				.put("method", "GET").put("path", "/1/credentials/dave")//
+				.put("method", "GET").put("path", "/1/credentials/" + daveId)//
 				.end()//
 				.build();
 
 		SpaceRequest.post("/1/batch").debugServer().adminAuth(test).body(batch).go(200)//
-				.assertEquals("vince", "responses.0.id")//
-				.assertEquals("dave", "responses.1.id")//
-				.assertEquals("vince", "responses.2.content.username")//
-				.assertEquals("dave", "responses.3.content.username")//
+				.assertEquals(vinceId, "responses.0.content.id")//
+				.assertEquals("vince", "responses.0.content.username")//
+				.assertEquals(daveId, "responses.1.content.id")//
+				.assertEquals("dave", "responses.1.content.username")//
 				.assertEquals(1, "debug.batchCredentialChecks");
 
 		// should succeed to return errors when batch requests are invalid, not

@@ -232,8 +232,8 @@ public class LogResource extends Resource {
 		addPayload(log, payload, context);
 
 		return Start.get().getElasticClient()//
-				.prepareIndex(SPACEDOG_BACKEND, TYPE)//
-				.setSource(log.toString()).get().getId();
+				.index(SPACEDOG_BACKEND, TYPE, log.toString())//
+				.getId();
 	}
 
 	private void addPayload(ObjectNode log, Payload payload, Context context) {

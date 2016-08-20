@@ -98,7 +98,7 @@ public class BackendResource extends Resource {
 					String.format("backend id [%s] not available", backendId));
 
 		Credentials credentials = CredentialsResource.get()//
-				.create(backendId, body, Level.SUPER_ADMIN);
+				.create(backendId, Level.SUPER_ADMIN, body);
 
 		// after backend is created, new admin credentials are valid
 		// and can be set in space context if none are set

@@ -50,10 +50,8 @@ public class UserResource extends Resource {
 	@Post("/1/data/user")
 	@Post("/1/data/user/")
 	public Payload signUp(String body, Context context) {
-
 		Credentials credentials = CredentialsResource.get()//
-				.create(SpaceContext.backendId(), body, Level.USER);
-
+				.create(SpaceContext.backendId(), Level.USER, body, true);
 		SpaceContext.setCredentials(credentials);
 
 		ObjectNode node = Json.readObject(body);
@@ -88,26 +86,33 @@ public class UserResource extends Resource {
 	@Delete("/1/data/user/:username")
 	@Delete("/1/data/user/:username/")
 	public Payload delete(String username, Context context) {
-		CredentialsResource.get().deleteById(username);
+		CredentialsResource.get().deleteById(//
+				Credentials.toLegacyId(SpaceContext.backendId(), username));
 		return DataResource.get().deleteById(TYPE, username, context);
 	}
 
 	@Delete("/1/user/:username/password")
 	@Delete("/1/user/:username/password")
 	public Payload deletePassword(String username, Context context) {
-		return CredentialsResource.get().deletePassword(username, context);
+		return CredentialsResource.get().deletePassword(//
+				Credentials.toLegacyId(SpaceContext.backendId(), username), //
+				context);
 	}
 
 	@Post("/1/user/:username/password")
 	@Post("/1/user/:username/password")
 	public Payload postPassword(String username, Context context) {
-		return CredentialsResource.get().postPassword(username, context);
+		return CredentialsResource.get().postPassword(//
+				Credentials.toLegacyId(SpaceContext.backendId(), username), //
+				context);
 	}
 
 	@Put("/1/user/:username/password")
 	@Put("/1/user/:username/password")
 	public Payload putPassword(String username, Context context) {
-		return CredentialsResource.get().putPassword(username, context);
+		return CredentialsResource.get().putPassword(//
+				Credentials.toLegacyId(SpaceContext.backendId(), username), //
+				context);
 	}
 
 	//

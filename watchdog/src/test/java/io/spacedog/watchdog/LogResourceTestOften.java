@@ -101,29 +101,33 @@ public class LogResourceTestOften extends Assert {
 
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
-		SpaceClient.newCredentials(test, "fred", "hi fred");
+		User fred = SpaceClient.newCredentials(test, "fred", "hi fred");
 
-		String passwordResetCode = SpaceRequest.delete("/1/user/fred/password")//
-				.adminAuth(test).go(200).getString("passwordResetCode");
+		String passwordResetCode = SpaceRequest.delete("/1/credentials/{id}/password")//
+				.routeParam("id", fred.id).adminAuth(test).go(200)//
+				.getString("passwordResetCode");
 
-		SpaceRequest.post("/1/user/fred/password?passwordResetCode=" + passwordResetCode)//
+		SpaceRequest.post("/1/credentials/{id}/password")//
+				.routeParam("id", fred.id)//
+				.queryParam("passwordResetCode", passwordResetCode)//
 				.backend(test).formField("password", "hi fred 2").go(200);
 
-		SpaceRequest.put("/1/user/fred/password").backend(test)//
+		SpaceRequest.put("/1/credentials/{id}/password").backend(test)//
+				.routeParam("id", fred.id)//
 				.basicAuth(test.backendId, "fred", "hi fred 2")//
 				.formField("password", "hi fred 3").go(200);
 
 		SpaceRequest.get("/1/log").size(7).adminAuth(test).go(200)//
 				.assertSizeEquals(7, "results")//
 				.assertEquals("PUT", "results.0.method")//
-				.assertEquals("/1/user/fred/password", "results.0.path")//
+				.assertEquals("/1/credentials/" + fred.id + "/password", "results.0.path")//
 				.assertEquals("******", "results.0.query.password")//
 				.assertEquals("POST", "results.1.method")//
-				.assertEquals("/1/user/fred/password", "results.1.path")//
+				.assertEquals("/1/credentials/" + fred.id + "/password", "results.1.path")//
 				.assertEquals("******", "results.1.query.password")//
 				.assertEquals(passwordResetCode, "results.1.query.passwordResetCode")//
 				.assertEquals("DELETE", "results.2.method")//
-				.assertEquals("/1/user/fred/password", "results.2.path")//
+				.assertEquals("/1/credentials/" + fred.id + "/password", "results.2.path")//
 				.assertEquals(passwordResetCode, "results.2.response.passwordResetCode")//
 				.assertEquals("GET", "results.3.method")//
 				.assertEquals("/1/login", "results.3.path")//
@@ -281,7 +285,7 @@ public class LogResourceTestOften extends Assert {
 		SpaceRequest.get("/1/data").backend(test).go(200);
 		SpaceRequest.get("/1/data/user").backend(test).go(403);
 		User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
-		SpaceRequest.get("/1/credentials/vince").userAuth(vince).go(200);
+		SpaceRequest.get("/1/credentials/" + vince.id).userAuth(vince).go(200);
 
 		// superdog filters test backend log to only get status 400 and higher
 		// logs
@@ -292,7 +296,7 @@ public class LogResourceTestOften extends Assert {
 		// superdog filters test backend logs to only get SUPER_ADMIN and lower
 		// logs
 		SpaceRequest.get("/1/log?logType=SUPER_ADMIN").size(7).superdogAuth(test).go(200)//
-				.assertEquals("/1/credentials/vince", "results.0.path")//
+				.assertEquals("/1/credentials/" + vince.id, "results.0.path")//
 				.assertEquals("/1/login", "results.1.path")//
 				.assertEquals("/1/credentials", "results.2.path")//
 				.assertEquals("/1/data/user", "results.3.path")//
@@ -302,7 +306,7 @@ public class LogResourceTestOften extends Assert {
 
 		// superdog filters test backend log to only get USER and lower logs
 		SpaceRequest.get("/1/log?logType=USER").size(7).superdogAuth(test).go(200)//
-				.assertEquals("/1/credentials/vince", "results.0.path")//
+				.assertEquals("/1/credentials/" + vince.id, "results.0.path")//
 				.assertEquals("/1/login", "results.1.path")//
 				.assertEquals("/1/credentials", "results.2.path")//
 				.assertEquals("/1/data/user", "results.3.path")//
@@ -324,7 +328,7 @@ public class LogResourceTestOften extends Assert {
 				.assertEquals("SUPER_ADMIN", "results.2.query.logType")//
 				.assertEquals("/1/log", "results.3.path")//
 				.assertEquals("400", "results.3.query.minStatus")//
-				.assertEquals("/1/credentials/vince", "results.4.path")//
+				.assertEquals("/1/credentials/" + vince.id, "results.4.path")//
 				.assertEquals("/1/login", "results.5.path")//
 				.assertEquals("/1/credentials", "results.6.path")//
 				.assertEquals("/1/data/user", "results.7.path")//

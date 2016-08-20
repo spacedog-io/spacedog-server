@@ -44,6 +44,10 @@ public class Credentials {
 
 	@JsonIgnore
 	private boolean passwordChecked;
+	@JsonIgnore
+	private String id;
+	@JsonIgnore
+	private long version;
 
 	public Credentials() {
 	}
@@ -89,6 +93,22 @@ public class Credentials {
 
 	public String backendId() {
 		return this.backendId;
+	}
+
+	public String id() {
+		return id;
+	}
+
+	public void id(String id) {
+		this.id = id;
+	}
+
+	public long version() {
+		return version;
+	}
+
+	public void version(long version) {
+		this.version = version;
 	}
 
 	public void backendId(String backendId) {
@@ -284,5 +304,17 @@ public class Credentials {
 		if (Level.SUPERDOG.equals(level))
 			return "admin";
 		return "key";
+	}
+
+	public void setLegacyId() {
+		this.id = toLegacyId(backendId, username);
+	}
+
+	public static String[] fromLegacyId(String id) {
+		return id.split("-", 2);
+	}
+
+	public static String toLegacyId(String backendId, String username) {
+		return String.join("-", backendId, username);
 	}
 }

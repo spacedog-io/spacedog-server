@@ -161,10 +161,10 @@ public class SpaceContext {
 		return checkUserCredentials(true);
 	}
 
-	public static Credentials checkUserCredentials(String username) {
+	public static Credentials checkUserCredentials(String id) {
 		Credentials credentials = checkUserCredentials(true);
 
-		if (credentials.isAtLeastAdmin() || credentials.name().equals(username))
+		if (credentials.isAtLeastAdmin() || credentials.id().equals(id))
 			return credentials;
 
 		throw Exceptions.insufficientCredentials(credentials);
@@ -220,7 +220,7 @@ public class SpaceContext {
 				if (authHeader.isBasic()) {
 					superdog = authHeader.username().startsWith("superdog-");
 
-					userCredentials = CredentialsResource.get().check(//
+					userCredentials = CredentialsResource.get().checkUsernamePassword(//
 							superdog ? Backends.ROOT_API : backendId, //
 							authHeader.username(), authHeader.password());
 
@@ -228,7 +228,7 @@ public class SpaceContext {
 						throw new AuthenticationException("invalid username or password for backend [%s]", backendId);
 
 				} else if (authHeader.isBearer()) {
-					userCredentials = CredentialsResource.get().check(backendId, authHeader.token());
+					userCredentials = CredentialsResource.get().checkToken(backendId, authHeader.token());
 
 					if (!userCredentials.isPresent())
 						throw new AuthenticationException("invalid access token for backend [%s]", backendId);

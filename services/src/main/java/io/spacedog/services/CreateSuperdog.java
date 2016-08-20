@@ -10,20 +10,10 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.settings.Settings.Builder;
 import org.elasticsearch.node.NodeBuilder;
-import org.joda.time.DateTime;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import io.spacedog.utils.Backends;
-import io.spacedog.utils.Json;
-import io.spacedog.utils.Passwords;
 import io.spacedog.utils.Utils;
-import io.spacedog.utils.Credentials.Level;
 
 public class CreateSuperdog {
-
-	private static Client client;
-	private static ElasticClient elastic;
 
 	public static void main(String[] args) throws Exception {
 
@@ -39,6 +29,8 @@ public class CreateSuperdog {
 			password = new String(console.readPassword("Enter password: "));
 		}
 
+		Client client = null;
+
 		try {
 			Builder builder = Settings.builder()//
 					.put("path.home", Paths.get(System.getProperty("user.home"), "spacedog"))//
@@ -48,25 +40,13 @@ public class CreateSuperdog {
 					.client(true)//
 					.clusterName(Start.CLUSTER_NAME)//
 					.settings(builder)//
-					.build().start().client();
+					.build()//
+					.start()//
+					.client();
 
-			elastic = new ElasticClient(client);
-
-			String now = DateTime.now().toString();
-			ObjectNode credentials = Json.object(//
-					Resource.BACKEND_ID, Backends.ROOT_API, //
-					Resource.USERNAME, username, //
-					Resource.CREDENTIALS_LEVEL, Level.SUPERDOG.toString(), //
-					Resource.EMAIL, email, //
-					Resource.HASHED_PASSWORD, Passwords.checkAndHash(password), //
-					Resource.CREATED_AT, now, //
-					Resource.UPDATED_AT, now);
-
-			elastic.index(Resource.SPACEDOG_BACKEND, CredentialsResource.TYPE, //
-					CredentialsResource.toCredentialsId(Backends.ROOT_API, username), //
-					credentials.toString());
-
-			Utils.info("Superdog credentials [api-%s] indexed in [spacedog-credentials]", username);
+			Start.get().setElasticClient(client);
+			CredentialsResource.get().createSuperdog(username, password, email);
+			Utils.info("Superdog credentials [%s] indexed in [spacedog-credentials]", username);
 
 		} catch (Throwable t) {
 			t.printStackTrace();

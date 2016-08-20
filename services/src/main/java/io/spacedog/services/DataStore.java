@@ -63,10 +63,9 @@ public class DataStore {
 		object = setMetaBeforeCreate(object, createdBy);
 		ElasticClient elasticClient = Start.get().getElasticClient();
 
-		return (id.isPresent() //
-				? elasticClient.prepareIndex(backendId, type, id.get())//
-				: elasticClient.prepareIndex(backendId, type))//
-						.setSource(object.toString()).get();
+		return id.isPresent() //
+				? elasticClient.index(backendId, type, id.get(), object.toString())//
+				: elasticClient.index(backendId, type, object.toString());
 	}
 
 	private ObjectNode setMetaBeforeCreate(ObjectNode object, String createdBy) {
