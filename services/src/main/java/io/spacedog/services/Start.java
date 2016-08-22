@@ -79,27 +79,33 @@ public class Start {
 
 	private void upgradeAndCleanUp() throws IOException {
 		// Utils.info("[SpaceDog] Nothing to upgrade");
-		convertDataAclToSchemaSettings();
 		deletePingRequestsFromLogs();
 		deleteGetLogRequestsFromLogs();
+		convertDataAclToSchemaSettings();
 		SnapshotResource.get().deleteMissingRepositories();
 		SnapshotResource.get().deleteObsoleteRepositories();
 	}
 
 	private void convertDataAclToSchemaSettings() {
+		Utils.info("[SpaceDog] Upgrading data acl to schema acl settings ...");
+
 		for (Credentials credentials : CredentialsResource.get().getAllSuperAdmins(true)) {
 			if (!credentials.isRootBackend()) {
 				try {
 					SpaceContext.forceContext(credentials, false, false);
 					String dataAclJson = SettingsResource.get().doGet("dataAcl");
 					SchemaAclMap map = Json.mapper().readValue(dataAclJson, SchemaAclMap.class);
-					Utils.info("Backend [%s] data acl settings = %s", credentials.backendId(), map);
+					Utils.info("[SpaceDog] Backend [%s] data acl settings = %s", credentials.backendId(), map);
 					SchemaSettings settings = SettingsResource.get().load(SchemaSettings.class);
-					Utils.info("Backend [%s] schema acl map = %s", credentials.backendId(), settings.acl);
+					Utils.info("[SpaceDog] Backend [%s] schema acl map = %s", credentials.backendId(), settings.acl);
 					if (settings.acl.isEmpty()) {
 						settings.acl = map;
-						Utils.info("Saving new schema settings for backend [%s]", credentials.backendId());
+						Utils.info("[SpaceDog] Saving new schema settings for backend [%s] ...",
+								credentials.backendId());
 						SettingsResource.get().save(settings);
+						Utils.info("[SpaceDog] Deleting old data acl settings for backend [%s] ...",
+								credentials.backendId());
+						SettingsResource.get().delete("dataAcl");
 					}
 				} catch (NotFoundException e) {
 					// data acl not found => nothing to do
