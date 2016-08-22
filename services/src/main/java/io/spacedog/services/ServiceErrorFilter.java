@@ -78,8 +78,9 @@ public class ServiceErrorFilter implements SpaceFilter {
 			appendQueryParams(builder, context.query().keyValues());
 			appendHeaders(builder, context.request().headers());
 
-			appendBody(builder, "Request body", context.request().content());
-			appendBody(builder, "Response body", payload.rawContent().toString());
+			if (!context.request().isUrlEncodedForm())
+				appendContent(builder, "Request body", context.request().content());
+			appendContent(builder, "Response body", payload.rawContent().toString());
 
 			Internals.get().notify(//
 					Start.get().configuration().superdogAwsNotificationTopic(), //
@@ -92,7 +93,7 @@ public class ServiceErrorFilter implements SpaceFilter {
 	}
 
 	private void appendQueryParams(StringBuilder builder, Map<String, String> map) {
-		builder.append("Request parameters =\n");
+		builder.append("Request parameters :\n");
 		for (Entry<String, String> entry : map.entrySet()) {
 
 			if (Strings.isNullOrEmpty(entry.getValue()))
@@ -100,14 +101,14 @@ public class ServiceErrorFilter implements SpaceFilter {
 
 			builder.append('\t')//
 					.append(entry.getKey())//
-					.append(" : ")//
+					.append(" = ")//
 					.append(entry.getValue())//
 					.append('\n');
 		}
 	}
 
 	private void appendHeaders(StringBuilder builder, Map<String, List<String>> map) {
-		builder.append("Request headers =\n");
+		builder.append("Request headers :\n");
 		for (Entry<String, List<String>> entry : map.entrySet()) {
 
 			if (Utils.isNullOrEmpty(entry.getValue()))
@@ -115,19 +116,18 @@ public class ServiceErrorFilter implements SpaceFilter {
 
 			builder.append('\t')//
 					.append(entry.getKey())//
-					.append(" : ")//
+					.append(" = ")//
 					.append(entry.getValue())//
 					.append('\n');
 		}
 	}
 
-	private void appendBody(StringBuilder builder, String name, String body) throws JsonProcessingException {
-		builder.append(name).append(" = ");
+	private void appendContent(StringBuilder builder, String name, String body) throws JsonProcessingException {
+		builder.append(name).append(" : ");
 
 		if (Json.isJson(body))
 			body = Json.toPrettyString(Json.readNode(body));
 
 		builder.append(body).append('\n');
 	}
-
 }
