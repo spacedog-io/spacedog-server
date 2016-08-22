@@ -231,22 +231,25 @@ public class UserResourceTestOften extends Assert {
 		// no password user trying to create password with empty reset code
 		// should fail
 
-		SpaceRequest.post("/1/user/titi/password?passwordResetCode=").backend(test)//
+		SpaceRequest.post("/1/user/titi/password").backend(test)//
+				.queryParam("passwordResetCode", "")//
 				.formField("password", "hi titi").go(400);
 
 		SpaceRequest.get("/1/login").basicAuth(test, "titi", "hi titi").go(401);
 
 		// no password user setting password with wrong reset code should fail
 
-		SpaceRequest.post("/1/user/titi/password?passwordResetCode=XXX").backend(test)//
+		SpaceRequest.post("/1/user/titi/password").backend(test)//
+				.queryParam("passwordResetCode", "XXX")//
 				.formField("password", "hi titi").go(400);
 
 		SpaceRequest.get("/1/login").basicAuth(test, "titi", "hi titi").go(401);
 
 		// titi inits its own password with right reset code should succeed
 
-		SpaceRequest.post("/1/user/titi/password?passwordResetCode=" + passwordResetCode)//
-				.backend(test).formField("password", "hi titi").go(200);
+		SpaceRequest.post("/1/user/titi/password").backend(test)//
+				.queryParam("passwordResetCode", passwordResetCode)//
+				.formField("password", "hi titi").go(200);
 
 		SpaceRequest.get("/1/login").basicAuth(test, "titi", "hi titi").go(200);
 
@@ -294,13 +297,15 @@ public class UserResourceTestOften extends Assert {
 
 		// titi inits its password with old reset code should fail
 
-		SpaceRequest.post("/1/user/titi/password?passwordResetCode=" + passwordResetCode)//
-				.backend(test).formField("password", "hi titi").go(400);
+		SpaceRequest.post("/1/user/titi/password").backend(test)//
+				.queryParam("passwordResetCode", passwordResetCode)//
+				.formField("password", "hi titi").go(400);
 
 		// titi inits its password with new reset code should fail
 
-		SpaceRequest.post("/1/user/titi/password?passwordResetCode=" + newPasswordResetCode)//
-				.backend(test).formField("password", "hi titi").go(200);
+		SpaceRequest.post("/1/user/titi/password").backend(test)//
+				.queryParam("passwordResetCode", newPasswordResetCode)//
+				.formField("password", "hi titi").go(200);
 
 		SpaceRequest.get("/1/login").basicAuth(test, "titi", "hi titi").go(200);
 	}
