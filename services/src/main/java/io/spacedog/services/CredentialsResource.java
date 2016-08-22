@@ -192,7 +192,7 @@ public class CredentialsResource extends Resource {
 
 		if (isNew) {
 			if (settings.disableGuestSignUp)
-				throw Exceptions.forbidden("no guest sign up allowed");
+				throw Exceptions.forbidden("guest sign up is disabled");
 
 			credentials = create(credentials);
 		} else
