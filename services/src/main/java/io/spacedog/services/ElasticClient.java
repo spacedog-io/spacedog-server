@@ -275,7 +275,7 @@ public class ElasticClient {
 
 	public void ensureGreen(String... indices) {
 		String indicesString = Arrays.toString(indices);
-		Utils.info("Ensure indices %s are green ...", indicesString);
+		Utils.info("[SpaceDog] Ensure indices %s are green ...", indicesString);
 
 		ClusterHealthResponse response = this.internalClient.admin().cluster()
 				.health(Requests.clusterHealthRequest(indices)//
@@ -293,7 +293,7 @@ public class ElasticClient {
 			throw Exceptions.runtime("indices %s failed to turn green", //
 					indicesString);
 
-		Utils.info("indices %s are green!", indicesString);
+		Utils.info("[SpaceDog] indices %s are green!", indicesString);
 	}
 
 	public void refreshType(String backendId, String type) {
