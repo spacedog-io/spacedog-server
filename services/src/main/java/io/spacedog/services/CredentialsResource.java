@@ -153,6 +153,7 @@ public class CredentialsResource extends Resource {
 		Check.notNullOrEmpty(redirectUri, "redirect_uri");
 
 		DateTime expiresAt = DateTime.now();
+
 		SpaceResponse response = SpaceRequest//
 				.post("https://www.linkedin.com/oauth/v2/accessToken")//
 				.queryParam("grant_type", "authorization_code")//
@@ -162,9 +163,7 @@ public class CredentialsResource extends Resource {
 				.queryParam("code", code)//
 				.go();
 
-		if (response.httpResponse().getStatus() >= 400)
-			return JsonPayload.error(response.httpResponse().getStatus(), //
-					response.getString("error_description"));
+		checkLinkedinError(response, "linkedin error fetching access token");
 
 		String accessToken = response.objectNode().get("access_token").asText();
 		expiresAt = expiresAt.plus(response.objectNode().get("expires_in").asLong());
@@ -175,16 +174,13 @@ public class CredentialsResource extends Resource {
 				.queryParam("format", "json")//
 				.go();
 
-		if (response.httpResponse().getStatus() >= 400)
-			throw Exceptions.runtime(//
-					"error fetching email: linkedin http status [%s], linkedin error message [%s]", //
-					response.httpResponse().getStatus(), //
-					response.getString("error_description"));
+		checkLinkedinError(response, "linkedin error fetching email");
 
 		String email = response.objectNode().get("emailAddress").asText();
 
 		Credentials credentials = getByName(backendId, email, false)//
 				.orElse(new Credentials(backendId, email, Level.USER));
+
 		credentials.email(email);
 		credentials.setExternalAccessToken(accessToken, expiresAt);
 
@@ -525,6 +521,18 @@ public class CredentialsResource extends Resource {
 	//
 	// Implementation
 	//
+
+	private void checkLinkedinError(SpaceResponse response, String messageIntro) {
+		if (response.httpResponse().getStatus() >= 400) {
+
+			String details = response.has("error_description") //
+					? response.getString("error_description")//
+					: "no linkedin error description";
+
+			throw Exceptions.space(response.httpResponse().getStatus(), //
+					"%s: %s", messageIntro, details);
+		}
+	}
 
 	private QueryBuilder toQuery(String backendId, String username) {
 		return QueryBuilders.boolQuery()//
