@@ -60,7 +60,7 @@ public class Start {
 			singleton = new Start();
 			singleton.startElasticNode();
 			singleton.initServices();
-			singleton.upgrade();
+			singleton.upgradeAndCleanUp();
 			singleton.startFluent();
 
 		} catch (Throwable t) {
@@ -77,11 +77,12 @@ public class Start {
 		}
 	}
 
-	private void upgrade() throws IOException {
+	private void upgradeAndCleanUp() throws IOException {
 		// Utils.info("[SpaceDog] Nothing to upgrade");
 		convertDataAclToSchemaSettings();
 		deletePingRequestsFromLogs();
 		deleteGetLogRequestsFromLogs();
+		SnapshotResource.get().deleteMissingRepositories();
 		SnapshotResource.get().deleteObsoleteRepositories();
 	}
 

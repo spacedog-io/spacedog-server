@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import org.elasticsearch.action.admin.cluster.repositories.put.PutRepositoryResponse;
 import org.elasticsearch.action.admin.cluster.snapshots.create.CreateSnapshotResponse;
 import org.elasticsearch.action.support.IndicesOptions;
+import org.elasticsearch.cluster.metadata.RepositoryMetaData;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.repositories.RepositoryMissingException;
 import org.elasticsearch.snapshots.RestoreInfo;
@@ -294,18 +295,48 @@ public class SnapshotResource extends Resource {
 		return currentRepositoryId;
 	}
 
+	public void deleteMissingRepositories() {
+
+		Utils.info("[SpaceDog] deleting missing repositories ...");
+
+		List<RepositoryMetaData> repositories = Start.get().getElasticClient().cluster()//
+				.prepareGetRepositories().get().repositories();
+
+		for (RepositoryMetaData repository : repositories) {
+			try {
+				Start.get().getElasticClient().cluster()//
+						.prepareVerifyRepository(repository.name()).get();
+
+				Utils.info("[SpaceDog] repository [%s] OK", repository.name());
+
+			} catch (RepositoryMissingException e) {
+
+				Start.get().getElasticClient().cluster()//
+						.prepareDeleteRepository(repository.name()).get();
+
+				Utils.info("[SpaceDog] repository [%s] deleted because missing", repository.name());
+			}
+		}
+	}
+
+	/**
+	 * TODO does not delete very obsolete repo if one is missing in between
+	 */
 	public void deleteObsoleteRepositories() {
+
+		Utils.info("[SpaceDog] deleting obsolete repositories ...");
 
 		String currentRepositoryId = SpaceRepository.getCurrentRepositoryId();
 		String obsoleteRepositoryId = SpaceRepository.getPreviousRepositoryId(currentRepositoryId, 4);
 
 		while (true) {
 			try {
-				Utils.info("[SpaceDog] deleting obsolete repository [%s] ...", obsoleteRepositoryId);
 
 				Start.get().getElasticClient().cluster()//
 						.prepareDeleteRepository(obsoleteRepositoryId)//
 						.get();
+
+				Utils.info("[SpaceDog] repository [%s] deleted because obsolete", obsoleteRepositoryId);
 
 				obsoleteRepositoryId = SpaceRepository.getPreviousRepositoryId(//
 						obsoleteRepositoryId, 1);
@@ -314,7 +345,6 @@ public class SnapshotResource extends Resource {
 				break;
 			}
 		}
-
 	}
 
 	static class SpaceRepository {
