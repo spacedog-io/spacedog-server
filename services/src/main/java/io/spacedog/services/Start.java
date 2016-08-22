@@ -209,7 +209,6 @@ public class Start {
 				.add(LogResource.get())//
 				.add(PushResource.get())//
 				.add(ShareResource.get())//
-				.add(StashResource.get())//
 				.add(SettingsResource.get())//
 				.add(SearchResource.get());
 
