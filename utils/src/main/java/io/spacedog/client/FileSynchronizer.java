@@ -180,7 +180,7 @@ public class FileSynchronizer {
 			String webPath = toWebPath(filePath);
 			SpaceRequest.put("/1/file" + webPath)//
 					.basicAuth(backendId, login, password)//
-					.body(filePath)//
+					.bodyFromPath(filePath)//
 					.go(200);
 
 			uploaded.add(webPath);

@@ -171,8 +171,12 @@ public class SpaceRequest {
 		return this;
 	}
 
-	public SpaceRequest body(Path path) throws IOException {
-		return body(Files.readAllBytes(path));
+	public SpaceRequest bodyFromPath(Path path) {
+		try {
+			return body(Files.readAllBytes(path));
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
+		}
 	}
 
 	public SpaceRequest body(Object... elements) {
