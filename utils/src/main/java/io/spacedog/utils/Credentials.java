@@ -143,11 +143,6 @@ public class Credentials {
 		return accessToken;
 	}
 
-	public void setAccessToken(String accessToken, DateTime accessTokenExpiresAt) {
-		this.accessToken = accessToken;
-		this.accessTokenExpiresAt = accessTokenExpiresAt;
-	}
-
 	public long accessTokenExpiresIn() {
 		if (accessTokenExpiresAt == null)
 			return 0;
@@ -288,6 +283,13 @@ public class Credentials {
 	public void deleteAccessToken() {
 		accessToken = null;
 		accessTokenExpiresAt = null;
+	}
+
+	public void setExternalAccessToken(String accessToken, DateTime accessTokenExpiresAt) {
+		this.accessToken = accessToken;
+		this.accessTokenExpiresAt = accessTokenExpiresAt;
+		this.passwordResetCode = null;
+		this.hashedPassword = null;
 	}
 
 	//

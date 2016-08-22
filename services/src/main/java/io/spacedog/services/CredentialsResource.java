@@ -177,8 +177,7 @@ public class CredentialsResource extends Resource {
 
 		if (response.httpResponse().getStatus() >= 400)
 			throw Exceptions.runtime(//
-					"linkedin error when fetching id and email: " + //
-							"linkedin http status [%s], linkedin error message [%s]", //
+					"error fetching email: linkedin http status [%s], linkedin error message [%s]", //
 					response.httpResponse().getStatus(), //
 					response.getString("error_description"));
 
@@ -186,15 +185,18 @@ public class CredentialsResource extends Resource {
 
 		Credentials credentials = getByName(backendId, email, false)//
 				.orElse(new Credentials(backendId, email, Level.USER));
+		credentials.email(email);
+		credentials.setExternalAccessToken(accessToken, expiresAt);
 
 		boolean isNew = credentials.createdAt() == null;
 
-		credentials.email(email);
-		credentials.setAccessToken(accessToken, expiresAt);
+		if (isNew) {
+			if (settings.disableGuestSignUp)
+				throw Exceptions.forbidden("no guest sign up allowed");
 
-		credentials = isNew //
-				? create(credentials) //
-				: update(credentials);
+			credentials = create(credentials);
+		} else
+			credentials = update(credentials);
 
 		JsonBuilder<ObjectNode> builder = JsonPayload//
 				.builder(isNew, backendId, "/1", TYPE, //
@@ -564,10 +566,6 @@ public class CredentialsResource extends Resource {
 				ROLES, credentials.roles(), //
 				CREATED_AT, credentials.createdAt(), //
 				UPDATED_AT, credentials.updatedAt());
-	}
-
-	private boolean exists(String id) {
-		return Start.get().getElasticClient().exists(SPACEDOG_BACKEND, TYPE, id);
 	}
 
 	private boolean exists(String backendId, String username) {
