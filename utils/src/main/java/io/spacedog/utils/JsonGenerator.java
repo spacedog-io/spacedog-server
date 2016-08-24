@@ -163,7 +163,7 @@ public class JsonGenerator {
 		else if ("enum".equals(type))
 			return TextNode.valueOf("blue");
 		else if ("geopoint".equals(type))
-			return Json.object("lat", -55.6765, "lon", -54.6765);
+			return Json.object("lat", 48 + random.nextDouble(), "lon", 2 + random.nextDouble());
 		else if ("object".equals(type))
 			return generateObject(path, schema, index);
 
