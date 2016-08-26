@@ -17,7 +17,10 @@ import org.elasticsearch.node.Node;
 import org.elasticsearch.plugin.cloud.aws.CloudAwsPlugin;
 import org.elasticsearch.plugin.deletebyquery.DeleteByQueryPlugin;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import io.spacedog.utils.Credentials;
+import io.spacedog.utils.CredentialsSettings;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;
@@ -82,6 +85,7 @@ public class Start {
 		deletePingRequestsFromLogs();
 		deleteGetLogRequestsFromLogs();
 		convertDataAclToSchemaSettings();
+		convertLinkedinToCredentialsSettings();
 		SnapshotResource.get().deleteMissingRepositories();
 		SnapshotResource.get().deleteObsoleteRepositories();
 	}
@@ -112,6 +116,41 @@ public class Start {
 					continue;
 				} catch (IOException e) {
 					throw Exceptions.runtime(e);
+				}
+			}
+		}
+	}
+
+	private void convertLinkedinToCredentialsSettings() {
+		Utils.info("[SpaceDog] Upgrading linkedin to credentials settings ...");
+
+		for (Credentials credentials : CredentialsResource.get().getAllSuperAdmins(true)) {
+			if (!credentials.isRootBackend()) {
+				try {
+					SpaceContext.forceContext(credentials, false, false);
+
+					String linkedinJson = SettingsResource.get().doGet("linkedin");
+					ObjectNode linkedin = Json.readObject(linkedinJson);
+					Utils.info("[SpaceDog] Backend [%s] linkedin settings = %s", //
+							credentials.backendId(), linkedin);
+
+					CredentialsSettings settings = new CredentialsSettings();
+					settings.disableGuestSignUp = false;
+					settings.linkedinId = linkedin.get("clientId").asText();
+					settings.linkedinSecret = linkedin.get("clientSecret").asText();
+					settings.linkedinRedirectUri = linkedin.get("redirectUri").asText();
+
+					Utils.info("[SpaceDog] Saving new credentials settings for backend [%s] ...",
+							credentials.backendId());
+					SettingsResource.get().save(settings);
+
+					Utils.info("[SpaceDog] Deleting old linkedin settings for backend [%s] ...",
+							credentials.backendId());
+					SettingsResource.get().delete("linkedin");
+
+				} catch (NotFoundException e) {
+					// no linkedin settings => do nothing
+					continue;
 				}
 			}
 		}
