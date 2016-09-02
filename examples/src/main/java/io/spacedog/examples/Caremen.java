@@ -31,15 +31,15 @@ public class Caremen extends SpaceClient {
 		SpaceRequest.configuration().target(SpaceTarget.production);
 
 		// initCourses();
-		// initDrivers();
+		initDrivers();
 	}
 
 	void initCourses() {
-		Schema schemaCourse = buildCourseSchema();
-		resetSchema(schemaCourse, backend);
+		Schema schema = buildCourseSchema();
+		resetSchema(schema, backend);
 
-		SpaceRequest.post("/1/data/course?id=davidhome")//
-				.adminAuth(backend).body(generator.gen(schemaCourse, 0)).go(201);
+		SpaceRequest.post("/1/data/course?id=home")//
+				.adminAuth(backend).body(generator.gen(schema, 0)).go(201);
 	}
 
 	static Schema buildCourseSchema() {
@@ -72,8 +72,16 @@ public class Caremen extends SpaceClient {
 
 				.object("driver")//
 				.string("id").examples("robert")//
-				.string("firstname").examples("robert")//
+				.string("firstname").examples("Robert")//
+				.string("lastname").examples("Morgan")//
 				.string("phone").examples("+ 33 6 42 01 67 56")//
+				.string("photo")
+				.examples("http://s3-eu-west-1.amazonaws.com/spacedog-artefact/SpaceDog-Logo-Transp-130px.png")//
+
+				.object("lastLocation")//
+				.geopoint("where")//
+				.timestamp("when")//
+				.close()
 
 				.object("car")//
 				.string("brand").examples("Peugeot", "Renault")//
@@ -86,11 +94,11 @@ public class Caremen extends SpaceClient {
 	}
 
 	void initDrivers() {
-		Schema schemaCourse = buildDriverSchema();
-		resetSchema(schemaCourse, backend);
+		Schema schema = buildDriverSchema();
+		resetSchema(schema, backend);
 
 		SpaceRequest.post("/1/data/driver?id=robert")//
-				.adminAuth(backend).body(generator.gen(schemaCourse, 0)).go(201);
+				.adminAuth(backend).body(generator.gen(schema, 0)).go(201);
 	}
 
 	static Schema buildDriverSchema() {
@@ -101,12 +109,25 @@ public class Caremen extends SpaceClient {
 				.acl("admin", DataPermission.create, DataPermission.search, DataPermission.update_all,
 						DataPermission.delete_all)//
 
+				.string("status").examples("working")//
 				.string("firstname").examples("Robert")//
 				.string("lastname").examples("Morgan")//
-				.text("address").french().examples("52 rue Michel Ange 75016 Paris")//
+				.text("homeAddress").french().examples("52 rue Michel Ange 75016 Paris")//
 				.string("phone").examples("+ 33 6 42 01 67 56")//
 				.string("photo")
 				.examples("http://s3-eu-west-1.amazonaws.com/spacedog-artefact/SpaceDog-Logo-Transp-130px.png")//
+
+				.object("lastLocation")//
+				.geopoint("where")//
+				.timestamp("when")//
+				.close()
+
+				.object("car")//
+				.string("type").examples("berline", "van", "break")//
+				.string("brand").examples("Peugeot", "Renault")//
+				.string("model").examples("508", "Laguna", "Talisman")//
+				.string("color").examples("black", "white", "pink")//
+				.close()//
 
 				.object("RIB")//
 				.text("bankName").french().examples("Société Générale")//
