@@ -9,8 +9,10 @@ import com.google.common.base.Strings;
 
 public class Usernames {
 
-	private static final Pattern USERNAME_PATTERN = Pattern.compile("[a-zA-Z0-9@\\.]{3,}");
+	private static final Pattern USERNAME_PATTERN = Pattern.compile(//
+			"[a-z0-9_%@+\\-\\.]{3,}", Pattern.CASE_INSENSITIVE);
 
+	// valid emails must be accepted as valid usernames
 	public static boolean isValid(String username) {
 		if (Strings.isNullOrEmpty(username))
 			return false;
