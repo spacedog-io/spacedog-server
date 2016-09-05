@@ -62,7 +62,7 @@ public class Colibee extends SpaceClient {
 		// initColibee();
 	}
 
-	void initDataAclSettings() {
+	void initSchemaSettings() {
 
 		SchemaAcl roles = new SchemaAcl();
 

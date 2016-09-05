@@ -30,8 +30,19 @@ public class Caremen extends SpaceClient {
 		backend = DEV;
 		SpaceRequest.configuration().target(SpaceTarget.production);
 
+		initInstallations();
 		// initCourses();
-		initDrivers();
+		// initDrivers();
+	}
+
+	void initInstallations() {
+		SpaceRequest.delete("/1/schema/installation").adminAuth(backend).go(200, 404);
+		SpaceRequest.put("/1/schema/installation").adminAuth(backend).go(201);
+		Schema schema = SpaceClient.getSchema("installation", backend);
+		schema.acl("key", DataPermission.create, DataPermission.read, DataPermission.update, DataPermission.delete);
+		schema.acl("user", DataPermission.create, DataPermission.read, DataPermission.update, DataPermission.delete);
+		schema.acl("admin", DataPermission.search, DataPermission.update_all, DataPermission.delete_all);
+		SpaceClient.setSchema(schema, backend);
 	}
 
 	void initCourses() {
