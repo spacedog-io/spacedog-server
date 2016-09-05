@@ -141,21 +141,27 @@ public class SettingsResource {
 	}
 
 	public <K extends Settings> K load(Class<K> settingsClass) {
-		String id = Settings.id(settingsClass);
-		try {
-			String json = doGet(id);
-			return Json.mapper().readValue(json, settingsClass);
-		} catch (NotFoundException nfe) {
-			// settings not set yet, return a default instance
+		K settings = SpaceContext.getCachedSettings(settingsClass);
+		if (settings == null) {
+			String id = Settings.id(settingsClass);
+
 			try {
-				return settingsClass.newInstance();
-			} catch (InstantiationException | IllegalAccessException e) {
-				throw Exceptions.runtime(e, "invalid settings class [%s]", //
-						settingsClass.getSimpleName());
+				String json = doGet(id);
+				settings = Json.mapper().readValue(json, settingsClass);
+			} catch (NotFoundException nfe) {
+				// settings not set yet, return a default instance
+				try {
+					settings = settingsClass.newInstance();
+				} catch (InstantiationException | IllegalAccessException e) {
+					throw Exceptions.runtime(e, "invalid settings class [%s]", //
+							settingsClass.getSimpleName());
+				}
+			} catch (IOException e) {
+				throw Exceptions.runtime(e, "invalid [%s] settings", id);
 			}
-		} catch (IOException e) {
-			throw Exceptions.runtime(e, "invalid [%s] settings", id);
 		}
+		SpaceContext.setCachedSettings(settings);
+		return settings;
 	}
 
 	public void save(Settings settings) {
@@ -165,6 +171,8 @@ public class SettingsResource {
 		} catch (JsonProcessingException e) {
 			throw Exceptions.runtime(e);
 		}
+
+		SpaceContext.setCachedSettings(settings);
 	}
 
 	private void checkSettingsValid(String id, String body) {
