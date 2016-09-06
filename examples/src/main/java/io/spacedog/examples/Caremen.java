@@ -30,9 +30,17 @@ public class Caremen extends SpaceClient {
 		backend = DEV;
 		SpaceRequest.configuration().target(SpaceTarget.production);
 
-		initInstallations();
+		// resetBackend(backend);
+		// initInstallations();
 		// initCourses();
 		// initDrivers();
+		// initUsers();
+	}
+
+	void initUsers() {
+		SpaceClient.newCredentials(backend, "flavien", "hi flavien", "flavien.dibello@in-tact.fr");
+		User marcel = SpaceClient.newCredentials(backend, "marcel", "hi marcel", "marcel@caremen.com");
+		SpaceRequest.put("/1/credentials/" + marcel.id + "/roles/driver").adminAuth(backend).go(200);
 	}
 
 	void initInstallations() {
