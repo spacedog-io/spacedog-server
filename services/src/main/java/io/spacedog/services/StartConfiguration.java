@@ -44,6 +44,7 @@ public class StartConfiguration {
 		check("AWS superdog notification topic", superdogAwsNotificationTopic());
 
 		check("mail domain", mailDomain());
+		check("mail smtp debug", mailSmtpDebug());
 		check("mailgun key", mailGunKey());
 
 		if (isProduction()) {
@@ -106,6 +107,10 @@ public class StartConfiguration {
 
 	public String mailDomain() {
 		return configuration.getProperty("spacedog.mail.domain");
+	}
+
+	public boolean mailSmtpDebug() {
+		return Boolean.parseBoolean(configuration.getProperty("spacedog.mail.smtp.debug", "false"));
 	}
 
 	public Optional<Path> snapshotsPath() {

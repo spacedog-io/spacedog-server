@@ -4,6 +4,12 @@
 package io.spacedog.services;
 
 import java.io.IOException;
+import java.net.URL;
+
+import org.apache.commons.mail.Email;
+import org.apache.commons.mail.ImageHtmlEmail;
+import org.apache.commons.mail.SimpleEmail;
+import org.apache.commons.mail.resolver.DataSourceUrlResolver;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
@@ -15,7 +21,10 @@ import com.mashape.unirest.request.body.MultipartBody;
 
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.MailSettings;
+import io.spacedog.utils.MailSettings.MailGunSettings;
+import io.spacedog.utils.MailSettings.SmtpSettings;
 import net.codestory.http.Context;
 import net.codestory.http.Part;
 import net.codestory.http.annotations.Post;
@@ -33,6 +42,7 @@ public class MailResource extends Resource {
 	private static final String BCC = "bcc";
 	private static final String CC = "cc";
 	private static final String TO = "to";
+	private static final String FROM = "from";
 
 	//
 	// Routes
@@ -46,74 +56,166 @@ public class MailResource extends Resource {
 		Credentials credentials = settings.enableUserFullAccess //
 				? SpaceContext.checkUserCredentials()//
 				: SpaceContext.checkAdminCredentials();
-		try {
-			String from = credentials.backendId().toUpperCase() + " <no-reply@api.spacedog.io>";
-			String to = null, cc = null, bcc = null, subject = null, text = null, html = null;
 
-			if (context.parts().isEmpty()) {
-				to = context.get(TO);
-				cc = context.get(CC);
-				bcc = context.get(BCC);
-				subject = context.get(SUBJECT);
-				if (!Strings.isNullOrEmpty(context.get(TEXT)))
-					text = addFooterToTextMessage(context.get(TEXT), credentials);
-				if (!Strings.isNullOrEmpty(context.get(HTML)))
-					html = addFooterToHtmlMessage(context.get(HTML), credentials);
+		Message message = toMessage(credentials, context);
 
-			} else
-				for (Part part : context.parts()) {
-					if (part.name().equals(TO))
-						to = part.content();
-					else if (part.name().equals(CC))
-						cc = part.content();
-					else if (part.name().equals(BCC))
-						bcc = part.content();
-					else if (part.name().equals(SUBJECT))
-						subject = part.content();
-					else if (part.name().equals(TEXT))
-						text = addFooterToTextMessage(part.content(), credentials);
-					else if (part.name().equals(HTML))
-						html = addFooterToHtmlMessage(part.content(), credentials);
-				}
+		if (settings.smtp != null)
+			return emailViaSmtp(credentials, settings.smtp, message);
 
-			ObjectNode response = send(from, to, cc, bcc, subject, text, html);
-			return JsonPayload.json(response, response.get("status").asInt());
+		if (settings.mailgun != null)
+			return emailViaGun(credentials, settings.mailgun, message);
 
-		} catch (IOException e) {
-			throw Exceptions.runtime(e);
-		}
-
+		MailGunSettings defaultMailGunSettings = new MailGunSettings();
+		defaultMailGunSettings.key = Start.get().configuration().mailGunKey();
+		defaultMailGunSettings.domain = Start.get().configuration().mailDomain();
+		return emailViaGun(credentials, defaultMailGunSettings, message);
 	}
 
 	//
 	// Implementation
 	//
 
-	public ObjectNode send(String from, String to, String cc, String bcc, String subject, String text, String html) {
+	private static class Message {
+		public String from;
+		public String to;
+		public String cc;
+		public String bcc;
+		public String subject;
+		public String text;
+		public String html;
+	}
 
-		String mailGunKey = Start.get().configuration().mailGunKey();
-		String mailDomain = Start.get().configuration().mailDomain();
+	private Message toMessage(Credentials credentials, Context context) {
+		Message message = new Message();
+
+		if (context.parts().isEmpty()) {
+			message.from = context.get(FROM);
+			message.to = context.get(TO);
+			message.cc = context.get(CC);
+			message.bcc = context.get(BCC);
+			message.subject = context.get(SUBJECT);
+			message.text = context.get(TEXT);
+			message.html = context.get(HTML);
+
+		} else
+			for (Part part : context.parts()) {
+				try {
+					if (part.name().equals(FROM))
+						message.from = part.content();
+					if (part.name().equals(TO))
+						message.to = part.content();
+					else if (part.name().equals(CC))
+						message.cc = part.content();
+					else if (part.name().equals(BCC))
+						message.bcc = part.content();
+					else if (part.name().equals(SUBJECT))
+						message.subject = part.content();
+					else if (part.name().equals(TEXT))
+						message.text = part.content();
+					else if (part.name().equals(HTML))
+						message.html = part.content();
+
+				} catch (IOException e) {
+					throw Exceptions.illegalArgument(e, "invalid [%s] part in multipart request", part.name());
+				}
+			}
+
+		if (!Strings.isNullOrEmpty(message.text))
+			message.text = addFooterToTextMessage(context.get(TEXT), credentials);
+		if (!Strings.isNullOrEmpty(message.html))
+			message.html = addFooterToHtmlMessage(context.get(HTML), credentials);
+
+		return message;
+	}
+
+	private Payload emailViaGun(Credentials credentials, MailGunSettings settings, Message message) {
+		message.from = credentials.backendId().toUpperCase() + " <no-reply@" + settings.domain + ">";
+		ObjectNode response = mailgun(message, settings);
+		return JsonPayload.json(response, response.get("status").asInt());
+	}
+
+	private Payload emailViaSmtp(Credentials credentials, SmtpSettings settings, Message message) {
+
+		Email email = null;
+
+		try {
+			if (!Strings.isNullOrEmpty(message.html)) {
+				ImageHtmlEmail imageHtmlEmail = new ImageHtmlEmail();
+				imageHtmlEmail.setHtmlMsg(message.html);
+				imageHtmlEmail.setDataSourceResolver(new DataSourceUrlResolver(//
+						new URL("http://www.apache.org")));
+				if (!Strings.isNullOrEmpty(message.text))
+					imageHtmlEmail.setTextMsg(message.text);
+				email = imageHtmlEmail;
+
+			} else if (!Strings.isNullOrEmpty(message.text)) {
+				SimpleEmail simpleEmail = new SimpleEmail();
+				simpleEmail.setMsg(message.text);
+				email = simpleEmail;
+
+			} else
+				throw Exceptions.illegalArgument("no text or html message");
+
+			email.setDebug(Start.get().configuration().mailSmtpDebug());
+
+			if (message.from != null)
+				email.setFrom(message.from);
+			if (message.to != null)
+				email.addTo(message.to);
+			if (message.cc != null)
+				email.addCc(message.cc);
+			if (message.bcc != null)
+				email.addBcc(message.bcc);
+			if (message.subject != null)
+				email.setSubject(message.subject);
+
+			email.setAuthentication(settings.login, settings.password);
+			email.setStartTLSRequired(settings.startTlsRequired);
+			email.setHostName(settings.host);
+
+			String msgId = email.send();
+
+			return JsonPayload.json(Json.object("messageId", msgId));
+
+		} catch (IllegalArgumentException e) {
+			throw e;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw Exceptions.illegalArgument(e);
+		}
+
+	}
+
+	private ObjectNode mailgun(Message message, MailGunSettings settings) {
 
 		HttpRequestWithBody requestWithBody = Unirest.post("https://api.mailgun.net/v3/{domain}/messages")//
-				.routeParam("domain", mailDomain)//
+				.routeParam("domain", settings.domain)//
 				// TODO Fix this since it does not work.
 				// .queryString("o:testmode", SpaceContext.isTest()//
-				.basicAuth("api", mailGunKey);
+				.basicAuth("api", settings.key);
 
-		MultipartBody multipartBody = requestWithBody.field("from", from)//
-				.field(TO, to)//
-				.field(CC, cc)//
-				.field(BCC, bcc)//
-				.field(SUBJECT, subject);
+		MultipartBody multipartBody = requestWithBody.field("from", message.from)//
+				.field(TO, message.to)//
+				.field(CC, message.cc)//
+				.field(BCC, message.bcc)//
+				.field(SUBJECT, message.subject);
 
-		if (!Strings.isNullOrEmpty(text))
-			multipartBody.field(TEXT, text);
-		if (!Strings.isNullOrEmpty(html))
-			multipartBody.field(HTML, html);
+		if (!Strings.isNullOrEmpty(message.text))
+			multipartBody.field(TEXT, message.text);
+		if (!Strings.isNullOrEmpty(message.html))
+			multipartBody.field(HTML, message.html);
 
 		try {
 			HttpResponse<String> response = requestWithBody.asString();
-			return JsonPayload.builder(response.getStatus()).node("mailgun", response.getBody()).build();
+			if (Json.isJson(response.getBody()))
+				return JsonPayload.builder(response.getStatus())//
+						.node("mailgun", response.getBody())//
+						.build();
+			else
+				return JsonPayload.builder(response.getStatus())//
+						.put("mailgun", response.getBody())//
+						.build();
+
 		} catch (UnirestException e) {
 			throw Exceptions.runtime(e);
 		}

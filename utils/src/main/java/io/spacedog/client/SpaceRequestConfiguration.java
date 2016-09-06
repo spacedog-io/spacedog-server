@@ -60,6 +60,18 @@ public class SpaceRequestConfiguration {
 		return Integer.valueOf(configuration.getProperty("spacedog.http.timeout", "10000"));
 	}
 
+	public String smtpLogin() {
+		return getProperty("spacedog.mail.smtp.login");
+	}
+
+	public String smtpPassword() {
+		return getProperty("spacedog.mail.smtp.password");
+	}
+
+	//
+	// Implementation
+	//
+
 	private String getProperty(String key, String defaultValue) {
 		String value = System.getProperty(key);
 		if (Strings.isNullOrEmpty(value))
