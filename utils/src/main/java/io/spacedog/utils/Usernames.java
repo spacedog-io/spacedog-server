@@ -3,25 +3,18 @@
  */
 package io.spacedog.utils;
 
-import java.util.regex.Pattern;
-
-import com.google.common.base.Strings;
+import java.util.Optional;
 
 public class Usernames {
 
-	private static final Pattern USERNAME_PATTERN = Pattern.compile(//
-			"[a-z0-9_%@+\\-\\.]{3,}", Pattern.CASE_INSENSITIVE);
+	public static final String USERNAME_DEFAULT_REGEX = "[a-zA-Z0-9_%@+\\-\\.]{3,}";
 
-	// valid emails must be accepted as valid usernames
-	public static boolean isValid(String username) {
-		if (Strings.isNullOrEmpty(username))
-			return false;
-		return USERNAME_PATTERN.matcher(username).matches();
+	public static void checkValid(String username) {
+		checkValid(username, Optional.empty());
 	}
 
-	public static void checkIfValid(String username) {
-		if (!isValid(username))
-			throw Exceptions.illegalArgument("invalid username: does not comply %s regex", //
-					USERNAME_PATTERN.pattern());
+	public static void checkValid(String username, Optional<String> regex) {
+		Check.matchRegex(regex.orElse(USERNAME_DEFAULT_REGEX), username, "username");
 	}
+
 }

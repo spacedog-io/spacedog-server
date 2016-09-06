@@ -152,5 +152,6 @@ public class MailResource extends Resource {
 	}
 
 	private MailResource() {
+		SettingsResource.get().registerSettingsClass(MailSettings.class);
 	}
 }

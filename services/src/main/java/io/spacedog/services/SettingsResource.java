@@ -6,13 +6,12 @@ import java.util.Map;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 
-import com.beust.jcommander.internal.Maps;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Maps;
 
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
@@ -91,13 +90,41 @@ public class SettingsResource {
 	@Get("/:id")
 	@Get("/:id/")
 	public Payload get(String id) {
-		return new Payload(JsonPayload.JSON_CONTENT_UTF8, doGet(id));
+
+		String settingsAsString = null;
+
+		if (registeredSettingsClasses.containsKey(id)) {
+			try {
+				Settings settings = load(registeredSettingsClasses.get(id));
+				settingsAsString = Json.mapper().writeValueAsString(settings);
+
+			} catch (JsonProcessingException e) {
+				throw Exceptions.runtime(e, "invalid [%s] settings");
+			}
+		} else
+			settingsAsString = load(id);
+
+		return new Payload(JsonPayload.JSON_CONTENT_UTF8, settingsAsString);
 	}
 
 	@Put("/:id")
 	@Put("/:id/")
 	public Payload put(String id, String body) {
-		IndexResponse response = doPut(id, body);
+
+		SpaceContext.checkAdminCredentials();
+		IndexResponse response = null;
+
+		if (registeredSettingsClasses.containsKey(id)) {
+			try {
+				Settings settings = Json.mapper().readValue(body, registeredSettingsClasses.get(id));
+				response = save(settings);
+
+			} catch (IOException e) {
+				throw Exceptions.illegalArgument(e, "invalid [%s] settings", id);
+			}
+		} else
+			response = save(id, body);
+
 		return JsonPayload.saved(response.isCreated(), SpaceContext.backendId(), "/1", //
 				response.getType(), response.getId(), response.getVersion());
 	}
@@ -105,7 +132,7 @@ public class SettingsResource {
 	@Delete("/:id")
 	@Delete("/:id/")
 	public Payload delete(String id) {
-		doDelete(id);
+		deleteInternal(id);
 		return JsonPayload.success();
 	}
 
@@ -113,40 +140,13 @@ public class SettingsResource {
 	// Internal services
 	//
 
-	public String doGet(String id) {
-
-		String backendId = SpaceContext.backendId();
-		ElasticClient elastic = Start.get().getElasticClient();
-
-		if (elastic.existsIndex(backendId, TYPE)) {
-			GetResponse response = elastic.get(backendId, TYPE, id);
-			if (response.isExists())
-				return response.getSourceAsString();
-		}
-		throw Exceptions.notFound(backendId, TYPE, id);
-	}
-
-	public IndexResponse doPut(String id, String body) {
-
-		String backendId = SpaceContext.checkAdminCredentials().backendId();
-
-		// Check settings object is valid
-		checkSettingsValid(id, body);
-
-		// Make sure index is created before to save anything
-		makeSureIndexIsCreated();
-
-		return Start.get().getElasticClient().prepareIndex(backendId, TYPE, id)//
-				.setSource(body).get();
-	}
-
 	public <K extends Settings> K load(Class<K> settingsClass) {
 		K settings = SpaceContext.getCachedSettings(settingsClass);
 		if (settings == null) {
 			String id = Settings.id(settingsClass);
 
 			try {
-				String json = doGet(id);
+				String json = load(id);
 				settings = Json.mapper().readValue(json, settingsClass);
 			} catch (NotFoundException nfe) {
 				// settings not set yet, return a default instance
@@ -164,41 +164,18 @@ public class SettingsResource {
 		return settings;
 	}
 
-	public void save(Settings settings) {
+	public IndexResponse save(Settings settings) {
 		try {
-			SettingsResource.get().doPut(settings.id(), //
-					Json.mapper().writeValueAsString(settings));
+			String settingsAsString = Json.mapper().writeValueAsString(settings);
+			IndexResponse response = save(settings.id(), settingsAsString);
+			SpaceContext.setCachedSettings(settings);
+			return response;
 		} catch (JsonProcessingException e) {
 			throw Exceptions.runtime(e);
 		}
-
-		SpaceContext.setCachedSettings(settings);
 	}
 
-	private void checkSettingsValid(String id, String body) {
-		try {
-
-			if (registeredSettingsClasses.containsKey(id))
-				Json.mapper().readValue(body, registeredSettingsClasses.get(id));
-
-		} catch (IOException e) {
-			throw Exceptions.illegalArgument(e, "invalid [%s] settings", id);
-		}
-	}
-
-	public UpdateResponse doPatch(String id, String body) {
-
-		String backendId = SpaceContext.checkAdminCredentials().backendId();
-		ElasticClient elastic = Start.get().getElasticClient();
-
-		// Make sure index is created before to save anything
-		makeSureIndexIsCreated();
-
-		return elastic.prepareUpdate(backendId, TYPE, id)//
-				.setDoc(body).get();
-	}
-
-	public boolean doDelete(String id) {
+	public boolean deleteInternal(String id) {
 		String backendId = SpaceContext.checkAdminCredentials().backendId();
 		ElasticClient elastic = Start.get().getElasticClient();
 		return elastic.delete(backendId, TYPE, id, true);
@@ -209,6 +186,31 @@ public class SettingsResource {
 			registeredSettingsClasses = Maps.newHashMap();
 
 		registeredSettingsClasses.put(Settings.id(settingsClass), settingsClass);
+	}
+
+	//
+	// implementation
+	//
+
+	private String load(String id) {
+		String backendId = SpaceContext.backendId();
+		ElasticClient elastic = Start.get().getElasticClient();
+
+		if (elastic.existsIndex(backendId, TYPE)) {
+			GetResponse response = elastic.get(backendId, TYPE, id);
+			if (response.isExists())
+				return response.getSourceAsString();
+		}
+		throw Exceptions.notFound(backendId, TYPE, id);
+	}
+
+	private IndexResponse save(String id, String body) {
+		// Make sure index is created before to save anything
+		makeSureIndexIsCreated();
+
+		return Start.get().getElasticClient()//
+				.prepareIndex(SpaceContext.backendId(), TYPE, id)//
+				.setSource(body).get();
 	}
 
 	private void makeSureIndexIsCreated() {

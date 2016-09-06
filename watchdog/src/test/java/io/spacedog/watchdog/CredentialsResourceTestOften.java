@@ -472,4 +472,53 @@ public class CredentialsResourceTestOften extends Assert {
 				.formField("password", "hi vince")//
 				.go(200);
 	}
+
+	@Test
+	public void testUsernameAndPasswordRegexSettings() {
+
+		// prepare
+		SpaceClient.prepareTest();
+		Backend test = SpaceClient.resetTestBackend();
+
+		// get default username and password settings
+		CredentialsSettings settings = SpaceClient.loadSettings(test, CredentialsSettings.class);
+		assertNotNull(settings.usernameRegex);
+		assertNotNull(settings.passwordRegex);
+
+		// invalid username considering default username regex
+		SpaceRequest.post("/1/credentials").backend(test)//
+				.body("username", "vi", "password", "hi", "email", "vince@dog.com")//
+				.go(400);
+
+		// invalid password considering default password regex
+		SpaceRequest.post("/1/credentials").backend(test)//
+				.body("username", "vince", "password", "hi", "email", "vince@dog.com")//
+				.go(400);
+
+		// valid username and password considering default credentials settings
+		SpaceRequest.post("/1/credentials").backend(test)//
+				.body("username", "vince", "password", "hi vince", "email", "vince@dog.com")//
+				.go(201);
+
+		// set username and password specific regex
+		settings.usernameRegex = "[a-zA-Z]{3,}";
+		settings.passwordRegex = "[a-zA-Z]{3,}";
+		SpaceClient.saveSettings(test, settings);
+
+		// invalid username considering new username regex
+		SpaceRequest.post("/1/credentials").backend(test)//
+				.body("username", "nath.lopez", "password", "hi nath", "email", "nath@dog.com")//
+				.go(400);
+
+		// invalid password considering new password regex
+		SpaceRequest.post("/1/credentials").backend(test)//
+				.body("username", "nathlopez", "password", "hi nath", "email", "nath@dog.com")//
+				.go(400);
+
+		// valid username and password considering credentials settings
+		SpaceRequest.post("/1/credentials").backend(test)//
+				.body("username", "nathlopez", "password", "hinath", "email", "nath@dog.com")//
+				.go(201);
+	}
+
 }

@@ -245,7 +245,7 @@ public class Credentials {
 		deleteAccessToken();
 	}
 
-	public void setPassword(String password, String passwordResetCode) {
+	public void setPassword(String password, String passwordResetCode, Optional<String> regex) {
 		Check.notNullOrEmpty(password, "password");
 		Check.notNullOrEmpty(passwordResetCode, "passwordResetCode");
 
@@ -257,12 +257,11 @@ public class Credentials {
 			throw Exceptions.illegalArgument(//
 					"password reset code [%s] invalid", passwordResetCode);
 
-		setPassword(password);
+		setPassword(password, regex);
 	}
 
-	public boolean setPassword(String password) {
-		Check.notNullOrEmpty(password, "password");
-		hashedPassword = Passwords.checkAndHash(password);
+	public boolean setPassword(String password, Optional<String> regex) {
+		hashedPassword = Passwords.checkAndHash(password, regex);
 		passwordChecked = true;
 		passwordResetCode = null;
 		return true;

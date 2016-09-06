@@ -32,7 +32,6 @@ import io.spacedog.utils.CredentialsSettings;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
-import io.spacedog.utils.Passwords;
 import io.spacedog.utils.Roles;
 import io.spacedog.utils.Schema;
 import io.spacedog.utils.SpaceHeaders;
@@ -241,13 +240,12 @@ public class CredentialsResource extends Resource {
 		// TODO do we need a password reset expire date to limit the reset
 		// time scope
 		String passwordResetCode = context.get(PASSWORD_RESET_CODE);
-		Check.notNullOrEmpty(passwordResetCode, PASSWORD_RESET_CODE);
-
 		String password = context.get(PASSWORD);
-		Passwords.checkIfValid(password);
 
 		Credentials credentials = getById(id, true).get();
-		credentials.setPassword(password, passwordResetCode);
+		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
+		credentials.setPassword(password, passwordResetCode, //
+				Optional.of(settings.passwordRegex()));
 		credentials = update(credentials);
 
 		return JsonPayload.saved(false, credentials.backendId(), //
@@ -258,12 +256,11 @@ public class CredentialsResource extends Resource {
 	@Put("/1/credentials/:id/password/")
 	public Payload putPassword(String id, Context context) {
 		SpaceContext.checkUserCredentials(id);
-		Credentials credentials = getById(id, true).get();
-
 		String password = context.get(PASSWORD);
-		Passwords.checkIfValid(password);
 
-		credentials.setPassword(password);
+		Credentials credentials = getById(id, true).get();
+		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
+		credentials.setPassword(password, Optional.of(settings.passwordRegex()));
 		credentials = update(credentials);
 
 		return JsonPayload.saved(false, credentials.backendId(), //
@@ -329,11 +326,12 @@ public class CredentialsResource extends Resource {
 
 	Credentials create(String backendId, Level level, String body, boolean legacyId) {
 
+		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
 		Credentials credentials = new Credentials(backendId);
 
 		ObjectNode data = Json.readObject(body);
 		credentials.name(Json.checkStringNotNullOrEmpty(data, Resource.USERNAME));
-		Usernames.checkIfValid(credentials.name());
+		Usernames.checkValid(credentials.name(), Optional.of(settings.usernameRegex()));
 
 		if (legacyId)
 			credentials.setLegacyId();
@@ -346,7 +344,7 @@ public class CredentialsResource extends Resource {
 		if (Json.isNull(password))
 			credentials.resetPassword();
 		else
-			credentials.setPassword(password.asText());
+			credentials.setPassword(password.asText(), Optional.of(settings.passwordRegex()));
 
 		return create(credentials);
 	}
@@ -511,10 +509,10 @@ public class CredentialsResource extends Resource {
 	}
 
 	Credentials createSuperdog(String username, String password, String email) {
-		Usernames.checkIfValid(username);
+		Usernames.checkValid(username);
 		Credentials credentials = new Credentials(Backends.ROOT_API, username, Level.SUPERDOG);
 		credentials.email(email);
-		credentials.setPassword(Passwords.checkAndHash(password));
+		credentials.setPassword(password, Optional.empty());
 		return create(credentials);
 	}
 

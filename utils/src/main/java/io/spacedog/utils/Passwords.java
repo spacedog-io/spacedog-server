@@ -3,17 +3,31 @@
  */
 package io.spacedog.utils;
 
+import java.util.Optional;
+
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.xml.bind.DatatypeConverter;
 
-import com.google.common.base.Strings;
-
 public class Passwords {
 
+	public static final String PASSWORD_DEFAULT_REGEX = ".{6,}";
+
 	public static String checkAndHash(String password) {
-		checkIfValid(password);
+		return checkAndHash(password, Optional.empty());
+	}
+
+	public static String checkAndHash(String password, Optional<String> regex) {
+		checkValid(password, regex);
 		return hash(password);
+	}
+
+	public static void checkValid(String password) {
+		checkValid(password, Optional.empty());
+	}
+
+	public static void checkValid(String password, Optional<String> regex) {
+		Check.matchRegex(regex.orElse(PASSWORD_DEFAULT_REGEX), password, "password");
 	}
 
 	/**
@@ -34,19 +48,4 @@ public class Passwords {
 		}
 	}
 
-	public static void checkIfValid(String password) {
-		if (Strings.isNullOrEmpty(password))
-			throw new IllegalArgumentException("password is null or empty");
-		if (password.length() < 6)
-			throw new IllegalArgumentException("password must be at least 6 characters long");
-	}
-
-	public static boolean isValid(String password) {
-		try {
-			checkIfValid(password);
-			return true;
-		} catch (IllegalArgumentException e) {
-			return false;
-		}
-	}
 }

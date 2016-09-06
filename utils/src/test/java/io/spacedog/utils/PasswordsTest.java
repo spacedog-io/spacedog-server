@@ -10,16 +10,25 @@ public class PasswordsTest extends Assert {
 
 	@Test
 	public void thesePasswordsAreValid() {
-		Passwords.checkIfValid("123456");
-		Passwords.checkIfValid("abcdefg");
+		Passwords.checkValid("123456");
+		Passwords.checkValid("abcdefg");
+		Passwords.checkValid("_-)!ç!!è§(");
 	}
 
 	@Test
 	public void thesePasswordsAreNotValid() {
-		assertFalse(Passwords.isValid(null));
-		assertFalse(Passwords.isValid(""));
-		assertFalse(Passwords.isValid("1"));
-		assertFalse(Passwords.isValid("12345"));
+		checkNotValid(null);
+		checkNotValid("");
+		checkNotValid("1");
+		checkNotValid("12345");
+	}
+
+	private void checkNotValid(String password) {
+		try {
+			Passwords.checkValid(password);
+			fail(String.format("password [%s] shouldn't be valid", password));
+		} catch (IllegalArgumentException e) {
+		}
 	}
 
 	@Test

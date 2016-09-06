@@ -10,29 +10,37 @@ public class UsernamesTest extends Assert {
 
 	@Test
 	public void theseUsernamesAreValid() {
-		Usernames.checkIfValid("123");
-		Usernames.checkIfValid("___");
-		Usernames.checkIfValid("---");
-		Usernames.checkIfValid("%%%");
-		Usernames.checkIfValid("@@@");
-		Usernames.checkIfValid("+++");
-		Usernames.checkIfValid("1234");
-		Usernames.checkIfValid("abcde");
-		Usernames.checkIfValid("1aBcDe");
-		Usernames.checkIfValid("aBcDe3");
-		Usernames.checkIfValid("_kj-ljn@lkj%lkj+kkj");
-		Usernames.checkIfValid("vince.mira@toto.fr");
-		Usernames.checkIfValid("vince-mira@toto.fr");
+		Usernames.checkValid("123");
+		Usernames.checkValid("___");
+		Usernames.checkValid("---");
+		Usernames.checkValid("%%%");
+		Usernames.checkValid("@@@");
+		Usernames.checkValid("+++");
+		Usernames.checkValid("1234");
+		Usernames.checkValid("abcde");
+		Usernames.checkValid("1aBcDe");
+		Usernames.checkValid("aBcDe3");
+		Usernames.checkValid("_kj-ljn@lkj%lkj+kkj");
+		Usernames.checkValid("vince.mira@toto.fr");
+		Usernames.checkValid("vince-mira@toto.fr");
 	}
 
 	@Test
 	public void theseUsernamesAreNotValid() {
-		assertFalse(Usernames.isValid(null));
-		assertFalse(Usernames.isValid(""));
-		assertFalse(Usernames.isValid("a"));
-		assertFalse(Usernames.isValid("ab"));
-		assertFalse(Usernames.isValid("la copine"));
-		assertFalse(Usernames.isValid("la,copine"));
-		assertFalse(Usernames.isValid("la/copine"));
+		checkNotValid(null);
+		checkNotValid("");
+		checkNotValid("a");
+		checkNotValid("ab");
+		checkNotValid("la copine");
+		checkNotValid("la,copine");
+		checkNotValid("la/copine");
+	}
+
+	private void checkNotValid(String username) {
+		try {
+			Usernames.checkValid(username);
+			fail(String.format("username [%s] shouldn't be valid", username));
+		} catch (IllegalArgumentException e) {
+		}
 	}
 }
