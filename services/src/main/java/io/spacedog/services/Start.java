@@ -51,7 +51,7 @@ public class Start {
 
 	public static void main(String[] args) {
 		try {
-			singleton = new Start();
+			get();
 			singleton.startElasticNode();
 			singleton.initServices();
 			singleton.upgradeAndCleanUp();
@@ -215,10 +215,12 @@ public class Start {
 	private static Start singleton;
 
 	static Start get() {
+		if (singleton == null)
+			singleton = new Start();
 		return singleton;
 	}
 
-	private Start() throws IOException {
+	private Start() {
 		this.config = new StartConfiguration();
 	}
 }

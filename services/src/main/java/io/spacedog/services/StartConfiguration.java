@@ -10,17 +10,23 @@ import java.util.Properties;
 import com.google.common.base.Strings;
 
 import io.spacedog.utils.Backends;
+import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Utils;
 
 public class StartConfiguration {
 
 	private Properties configuration = new Properties();
 
-	public StartConfiguration() throws IOException {
+	public StartConfiguration() {
 
 		checkPath("configuration file", configFilePath(), false);
 
-		configuration.load(Files.newInputStream(configFilePath()));
+		try {
+			configuration.load(Files.newInputStream(configFilePath()));
+		} catch (IOException e) {
+			throw Exceptions.runtime(e, //
+					"error loading [%s] configuration file", configFilePath());
+		}
 
 		checkPath("home path", homePath(), true);
 		check("production", isProduction());
