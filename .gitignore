@@ -3,3 +3,5 @@
 data/
 target/
 _site/
+*.launch
+
