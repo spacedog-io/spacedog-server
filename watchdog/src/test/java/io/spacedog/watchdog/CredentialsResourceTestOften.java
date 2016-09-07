@@ -390,52 +390,6 @@ public class CredentialsResourceTestOften extends Assert {
 	}
 
 	@Test
-	public void linkedinSignUp() {
-
-		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		String redirectUri = SpaceRequest.configuration().target()//
-				.url(test.backendId, "/1/credentials/linkedin");
-
-		// no linkedin settings means no linkedin credentials
-		SpaceRequest.post("/1/credentials/linkedin")//
-				.formField("code", "XXX")//
-				.formField("redirect_uri", "XXX")//
-				.backend(test).go(400);
-
-		// admin sets linkedin settings without redirect uri
-		CredentialsSettings settings = new CredentialsSettings();
-		settings.linkedinId = "78uk3jfazu0wj2";
-		settings.linkedinSecret = "42AfVLDNEXtgO9CG";
-		SpaceClient.saveSettings(test, settings);
-
-		// fails to create linkedin credentials if no authorization code
-		SpaceRequest.post("/1/credentials/linkedin")//
-				.formField("redirect_uri", redirectUri).backend(test).go(400);
-
-		// fails to create linkedin credentials if no redirect_uri
-		// in parameters nor settings
-		SpaceRequest.post("/1/credentials/linkedin")//
-				.formField("code", "XXX").backend(test).go(400);
-
-		// fails to create linkedin credentials if invalid code
-		SpaceRequest.post("/1/credentials/linkedin").backend(test)//
-				.formField("code", "XXX")//
-				.formField("redirect_uri", redirectUri)//
-				.go(401);
-
-		// admin sets linkedin settings with redirect uri
-		settings.linkedinRedirectUri = redirectUri;
-		SpaceClient.saveSettings(test, settings);
-
-		// fails to create linkedin credentials if invalid code
-		// redirectUri is not necessary because found in settings
-		SpaceRequest.post("/1/credentials/linkedin")//
-				.formField("code", "XXX").backend(test).go(401);
-	}
-
-	@Test
 	public void disableGuestSignUp() {
 
 		// prepare

@@ -19,7 +19,7 @@ public class Linkedin extends SpaceClient {
 		Backend test = SpaceClient.resetTestBackend();
 
 		// credentials settings with guest sign up disabled
-		CredentialsSettings settings = setCredentialsSettings(test, true);
+		CredentialsSettings settings = setCredentialsSettings(test, false);
 
 		// start linkedin authentication process to display
 		// url to call inside the browser for testing
@@ -31,6 +31,19 @@ public class Linkedin extends SpaceClient {
 				.queryParam("redirect_uri", settings.linkedinRedirectUri)//
 				.queryParam("client_id", settings.linkedinId)//
 				.go(200, 303);
+	}
+
+	@Test
+	public void getMyLinkedinProfil() {
+
+		// prepare
+		SpaceClient.prepareTest();
+
+		// get my profil
+		SpaceRequest.get("/1/linkedin/people/me/firstName,picture-url,location,summary")//
+				.bearerAuth("XXXXXXXXXXXX")//
+				.backendId("test")//
+				.go(200);
 	}
 
 	@Test
@@ -65,8 +78,8 @@ public class Linkedin extends SpaceClient {
 		CredentialsSettings settings = new CredentialsSettings();
 
 		settings.disableGuestSignUp = disableGuestSignUp;
-		settings.linkedinId = "78uk3jfazu0wj2";
-		settings.linkedinSecret = "42AfVLDNEXtgO9CG";
+		settings.linkedinId = SpaceRequest.configuration().linkedinClientId();
+		settings.linkedinSecret = SpaceRequest.configuration().linkedinClientSecret();
 		settings.linkedinRedirectUri = SpaceRequest.configuration().target()//
 				.url(backend.backendId, "/1/login/linkedin");
 

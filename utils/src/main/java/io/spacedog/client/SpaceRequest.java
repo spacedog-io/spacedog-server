@@ -157,8 +157,13 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest bearerAuth(String backendId, String accessToken) {
-		this.bearerToken = accessToken;
+		bearerAuth(accessToken);
 		return backendId(backendId);
+	}
+
+	public SpaceRequest bearerAuth(String accessToken) {
+		this.bearerToken = accessToken;
+		return this;
 	}
 
 	public SpaceRequest body(byte[] bytes) {

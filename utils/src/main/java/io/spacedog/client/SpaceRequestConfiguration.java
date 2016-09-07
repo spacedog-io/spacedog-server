@@ -68,6 +68,14 @@ public class SpaceRequestConfiguration {
 		return getProperty("spacedog.mail.smtp.password");
 	}
 
+	public String linkedinClientId() {
+		return getProperty("spacedog.linkedin.client.id");
+	}
+
+	public String linkedinClientSecret() {
+		return getProperty("spacedog.linkedin.client.secret");
+	}
+
 	//
 	// Implementation
 	//

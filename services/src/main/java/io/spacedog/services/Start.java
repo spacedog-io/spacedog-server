@@ -171,6 +171,7 @@ public class Start {
 				.add(DataResource.get())//
 				.add(SchemaResource.get())//
 				.add(CredentialsResource.get())//
+				.add(LinkedinResource.get())//
 				.add(UserResource.get())//
 				.add(BatchResource.get())//
 				.add(MailResource.get())//

@@ -22,10 +22,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
-import io.spacedog.client.SpaceRequest;
-import io.spacedog.client.SpaceResponse;
 import io.spacedog.utils.Backends;
-import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.CredentialsSettings;
@@ -125,79 +122,6 @@ public class CredentialsResource extends Resource {
 
 		if (credentials.passwordResetCode() != null)
 			builder.put(PASSWORD_RESET_CODE, credentials.passwordResetCode());
-
-		return JsonPayload.json(builder, HttpStatus.CREATED)//
-				.withHeader(SpaceHeaders.SPACEDOG_OBJECT_ID, credentials.id());
-	}
-
-	@Get("/1/login/linkedin")
-	@Get("/1/login/linkedin/")
-	@Post("/1/login/linkedin")
-	@Post("/1/login/linkedin/")
-	// route '/1/credentials/linkedin' is deprecated
-	@Post("/1/credentials/linkedin")
-	@Post("/1/credentials/linkedin/")
-	public Payload linkedinLogin(Context context) {
-
-		String backendId = SpaceContext.checkCredentials().backendId();
-		String code = Check.notNullOrEmpty(context.get("code"), "code");
-
-		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
-		if (Strings.isNullOrEmpty(settings.linkedinId))
-			throw Exceptions.illegalArgument("no linkedin client id found in credentials settings");
-
-		String redirectUri = context.get("redirect_uri");
-		if (Strings.isNullOrEmpty(redirectUri))
-			redirectUri = settings.linkedinRedirectUri;
-		Check.notNullOrEmpty(redirectUri, "redirect_uri");
-
-		DateTime expiresAt = DateTime.now();
-
-		SpaceResponse response = SpaceRequest//
-				.post("https://www.linkedin.com/oauth/v2/accessToken")//
-				.queryParam("grant_type", "authorization_code")//
-				.queryParam("client_id", settings.linkedinId)//
-				.queryParam("client_secret", settings.linkedinSecret)//
-				.queryParam("redirect_uri", redirectUri)//
-				.queryParam("code", code)//
-				.go();
-
-		checkLinkedinError(response, "linkedin error fetching access token");
-
-		String accessToken = response.objectNode().get("access_token").asText();
-		expiresAt = expiresAt.plus(response.objectNode().get("expires_in").asLong());
-
-		response = SpaceRequest//
-				.get("https://api.linkedin.com/v1/people/~:(email-address)")//
-				.bearerAuth(backendId, accessToken)//
-				.queryParam("format", "json")//
-				.go();
-
-		checkLinkedinError(response, "linkedin error fetching email");
-
-		String email = response.objectNode().get("emailAddress").asText();
-
-		Credentials credentials = getByName(backendId, email, false)//
-				.orElse(new Credentials(backendId, email, Level.USER));
-
-		credentials.email(email);
-		credentials.setExternalAccessToken(accessToken, expiresAt);
-
-		boolean isNew = credentials.createdAt() == null;
-
-		if (isNew) {
-			if (settings.disableGuestSignUp)
-				throw Exceptions.forbidden("guest sign up is disabled");
-
-			credentials = create(credentials);
-		} else
-			credentials = update(credentials);
-
-		JsonBuilder<ObjectNode> builder = JsonPayload//
-				.builder(isNew, backendId, "/1", TYPE, //
-						credentials.id(), credentials.version())//
-				.put(ACCESS_TOKEN, credentials.accessToken())//
-				.put(EXPIRES_IN, credentials.accessTokenExpiresIn());
 
 		return JsonPayload.json(builder, HttpStatus.CREATED)//
 				.withHeader(SpaceHeaders.SPACEDOG_OBJECT_ID, credentials.id());
@@ -519,18 +443,6 @@ public class CredentialsResource extends Resource {
 	//
 	// Implementation
 	//
-
-	private void checkLinkedinError(SpaceResponse response, String messageIntro) {
-		if (response.httpResponse().getStatus() >= 400) {
-
-			String details = response.has("error_description") //
-					? response.getString("error_description")//
-					: "no linkedin error description";
-
-			throw Exceptions.space(response.httpResponse().getStatus(), //
-					"%s: %s", messageIntro, details);
-		}
-	}
 
 	private QueryBuilder toQuery(String backendId, String username) {
 		return QueryBuilders.boolQuery()//
