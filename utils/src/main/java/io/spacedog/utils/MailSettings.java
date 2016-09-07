@@ -15,5 +15,6 @@ public class MailSettings extends Settings {
 		public String login;
 		public String password;
 		public boolean startTlsRequired;
+		public boolean sslOnConnect;
 	}
 }

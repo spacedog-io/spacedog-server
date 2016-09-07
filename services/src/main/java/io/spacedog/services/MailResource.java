@@ -170,6 +170,7 @@ public class MailResource extends Resource {
 				email.setSubject(message.subject);
 
 			email.setAuthentication(settings.login, settings.password);
+			email.setSSLOnConnect(settings.sslOnConnect);
 			email.setStartTLSRequired(settings.startTlsRequired);
 			email.setHostName(settings.host);
 

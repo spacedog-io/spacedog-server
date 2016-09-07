@@ -82,16 +82,26 @@ public class MailResourceTestOncePerDay extends Assert {
 		settings.mailgun = null;
 		settings.smtp = new SmtpSettings();
 		settings.smtp.host = "smtp.gmail.com";
+		settings.smtp.startTlsRequired = true;
+		settings.smtp.sslOnConnect = true;
 		settings.smtp.login = SpaceRequest.configuration().smtpLogin();
 		settings.smtp.password = SpaceRequest.configuration().smtpPassword();
-		settings.smtp.startTlsRequired = true;
 		SpaceClient.saveSettings(test, settings);
 
 		// load your HTML email template
 		String emailBody = Resources.toString(//
 				Resources.getResource("io/spacedog/watchdog/email.html"), Utils.UTF8);
 
-		// vince fails to email since no html end tag
+		// vince emails a text message via smtp
+		SpaceRequest.post("/1/mail").userAuth(vince)//
+				.formField("to", DEFAULT_TO)//
+				.formField("from", "davattias@gmail.com")//
+				.formField("subject", DEFAULT_SUBJECT)//
+				.formField("text", DEFAULT_TEXT)//
+				.go(200)//
+				.assertPresent("messageId");
+
+		// vince emails an html message via smtp
 		SpaceRequest.post("/1/mail").userAuth(vince)//
 				.formField("to", DEFAULT_TO)//
 				.formField("from", "davattias@gmail.com")//

@@ -23,7 +23,7 @@ import io.spacedog.utils.Utils;
 public class SmtpEmail extends Assert {
 
 	@Test
-	public void test() throws Exception {
+	public void testJavaxMail() throws Exception {
 		Properties props = System.getProperties();
 		props.put("mail.smtps.host", "smtp.gmail.com");
 		props.put("mail.smtps.auth", "true");
@@ -74,6 +74,7 @@ public class SmtpEmail extends Assert {
 		email.setAuthentication(SpaceRequest.configuration().smtpLogin(), //
 				SpaceRequest.configuration().smtpPassword());
 		email.setStartTLSRequired(true);
+		email.setSSLOnConnect(true);
 		email.send();
 	}
 }
