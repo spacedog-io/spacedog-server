@@ -5,6 +5,8 @@ package io.spacedog.examples;
 
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTarget;
@@ -30,17 +32,17 @@ public class Caremen extends SpaceClient {
 		backend = DEV;
 		SpaceRequest.configuration().target(SpaceTarget.production);
 
-		// resetBackend(backend);
-		// initInstallations();
-		// initCourses();
-		// initDrivers();
-		// initUsers();
+		resetBackend(backend);
+		initInstallations();
+		initCourses();
+		initDrivers();
+		initPassengers();
 	}
 
-	void initUsers() {
+	void initPassengers() {
 		SpaceClient.newCredentials(backend, "flavien", "hi flavien", "flavien.dibello@in-tact.fr");
-		User marcel = SpaceClient.newCredentials(backend, "marcel", "hi marcel", "marcel@caremen.com");
-		SpaceRequest.put("/1/credentials/" + marcel.id + "/roles/driver").adminAuth(backend).go(200);
+		SpaceClient.newCredentials(backend, "aurelien", "hi aurelien", "aurelien.gustan@in-tact.fr");
+		SpaceClient.newCredentials(backend, "david", "hi david", "david.attias@in-tact.fr");
 	}
 
 	void initInstallations() {
@@ -116,18 +118,31 @@ public class Caremen extends SpaceClient {
 		Schema schema = buildDriverSchema();
 		resetSchema(schema, backend);
 
-		SpaceRequest.post("/1/data/driver?id=robert")//
-				.adminAuth(backend).body(generator.gen(schema, 0)).go(201);
+		createDriver("marcel", schema);
+		createDriver("gerard", schema);
+		createDriver("robert", schema);
+	}
+
+	void createDriver(String username, Schema schema) {
+		User credentials = SpaceClient.newCredentials(backend, username, "hi " + username, username + "@caremen.com");
+		SpaceRequest.put("/1/credentials/" + credentials.id + "/roles/driver").adminAuth(backend).go(200);
+
+		ObjectNode driver = generator.gen(schema, 0);
+		driver.put("credentialsId", credentials.id);
+		driver.put("firstname", credentials.username);
+		driver.put("lastname", credentials.username.charAt(0) + ".");
+		SpaceRequest.post("/1/data/driver").adminAuth(backend).body(driver).go(201);
 	}
 
 	static Schema buildDriverSchema() {
 		return Schema.builder("driver") //
 
 				.acl("key", DataPermission.read_all)//
-				.acl("driver", DataPermission.create, DataPermission.read, DataPermission.update)//
+				.acl("driver", DataPermission.search, DataPermission.update_all)//
 				.acl("admin", DataPermission.create, DataPermission.search, DataPermission.update_all,
 						DataPermission.delete_all)//
 
+				.string("credentialsId").examples("khljgGFJHfvlkHMhjh")//
 				.string("status").examples("working")//
 				.string("firstname").examples("Robert")//
 				.string("lastname").examples("Morgan")//
