@@ -50,7 +50,29 @@ public class CredentialsResourceTestOften extends Assert {
 				.body("username", "titi", "password", "hi").go(400);
 
 		// vince signs up
-		User vince = SpaceClient.newCredentials(test, "vince", "hi vince", "vince@dog.com");
+		String vinceId = SpaceRequest.post("/1/credentials").backend(test)
+				.body("username", "vince", "password", "hi vince", "email", "vince@dog.com")//
+				.go(201).getString("id");
+
+		// vince logs in
+		ObjectNode node = SpaceRequest.get("/1/login")//
+				.basicAuth(test.backendId, "vince", "hi vince").go(200)//
+				.assertPresent("accessToken")//
+				.assertPresent("expiresIn")//
+				.assertEquals(vinceId, "credentials.id")//
+				.assertEquals("test", "credentials.backendId")//
+				.assertEquals("vince", "credentials.username")//
+				.assertEquals("vince@dog.com", "credentials.email")//
+				.assertEquals("USER", "credentials.level")//
+				.assertSizeEquals(1, "credentials.roles")//
+				.assertEquals("user", "credentials.roles.0")//
+				.assertPresent("credentials.createdAt")//
+				.assertPresent("credentials.updatedAt")//
+				.objectNode();
+
+		User vince = new User("test", vinceId, "vince", "hi vince", "vince@dog.com", //
+				node.get("accessToken").asText(), //
+				DateTime.now().plus(node.get("expiresIn").asLong()));
 
 		// vince gets his credentials
 		SpaceRequest.get("/1/credentials/" + vince.id).userAuth(vince).go(200)//
@@ -133,7 +155,7 @@ public class CredentialsResourceTestOften extends Assert {
 		// its access token is not reset
 		String vinceOldAccessToken = vince.accessToken;
 		SpaceRequest.get("/1/login").bearerAuth(vince).go(200)//
-				.assertNotPresent("accessToken");
+				.assertEquals(vinceOldAccessToken, "accessToken");
 
 		// vince can access backend with its old token
 		// since it has not changed

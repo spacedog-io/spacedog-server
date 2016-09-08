@@ -68,16 +68,17 @@ public class SpaceClient {
 	}
 
 	public static User newCredentials(String backendId, String username, String password, String email) {
-		String userId = SpaceRequest.post("/1/credentials").backendId(backendId)
+		SpaceRequest.post("/1/credentials").backendId(backendId)
 				.body("username", username, "password", password, "email", email)//
-				.go(201).getString("id");
+				.go(201);
 
 		ObjectNode node = SpaceRequest.get("/1/login")//
 				.basicAuth(backendId, username, password)//
 				.go(200).objectNode();
 
 		return new User(backendId, //
-				userId, username, password, email, //
+				node.get("credentials").get("id").asText(), //
+				username, password, email, //
 				node.get("accessToken").asText(), //
 				DateTime.now().plus(node.get("expiresIn").asLong()));
 	}

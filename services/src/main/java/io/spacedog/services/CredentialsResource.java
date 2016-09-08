@@ -89,11 +89,11 @@ public class CredentialsResource extends Resource {
 			credentials.newAccessToken(//
 					context.query().getBoolean("expiresEarly", false));
 			credentials = update(credentials);
-			return JsonPayload.json(Json.object(//
-					"accessToken", credentials.accessToken(), //
-					"expiresIn", credentials.accessTokenExpiresIn()));
 		}
-		return JsonPayload.success();
+		return JsonPayload.json(Json.object(//
+				"accessToken", credentials.accessToken(), //
+				"expiresIn", credentials.accessTokenExpiresIn(), //
+				"credentials", fromCredentials(credentials)));
 	}
 
 	@Get("/1/logout")
