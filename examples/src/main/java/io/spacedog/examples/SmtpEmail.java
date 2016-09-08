@@ -25,11 +25,11 @@ public class SmtpEmail extends Assert {
 	@Test
 	public void testJavaxMail() throws Exception {
 		Properties props = System.getProperties();
-		props.put("mail.smtps.host", "smtp.gmail.com");
+		props.put("mail.smtps.host", "mail.gandi.net");
 		props.put("mail.smtps.auth", "true");
 		Session session = Session.getInstance(props, null);
 		Message msg = new MimeMessage(session);
-		msg.setFrom(new InternetAddress("davattias@gmail.com"));
+		msg.setFrom(new InternetAddress("david@spacedog.io"));
 
 		msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse("hello@spacedog.io", false));
 		msg.setSubject("Javax Mail test " + System.currentTimeMillis());
@@ -37,7 +37,7 @@ public class SmtpEmail extends Assert {
 		msg.setHeader("X-Mailer", "Space Example");
 		msg.setSentDate(new Date());
 		SMTPTransport t = (SMTPTransport) session.getTransport("smtps");
-		t.connect("smtp.gmail.com", //
+		t.connect("mail.gandi.net", //
 				SpaceRequest.configuration().smtpLogin(), //
 				SpaceRequest.configuration().smtpPassword());
 		t.sendMessage(msg, msg.getAllRecipients());
@@ -59,9 +59,9 @@ public class SmtpEmail extends Assert {
 		ImageHtmlEmail email = new ImageHtmlEmail();
 		email.setDebug(true);
 		email.setDataSourceResolver(new DataSourceUrlResolver(url));
-		email.setHostName("smtp.gmail.com");
+		email.setHostName("mail.gandi.net");
 		email.addTo("hello@spacedog.io", "Hello SpaceDog");
-		email.setFrom("davattias@gmail.com", "David Attias");
+		email.setFrom("david@spacedog.io", "David Attias");
 		email.setSubject("Test email with inline image");
 
 		// set the html message
@@ -73,7 +73,7 @@ public class SmtpEmail extends Assert {
 		// send the email
 		email.setAuthentication(SpaceRequest.configuration().smtpLogin(), //
 				SpaceRequest.configuration().smtpPassword());
-		email.setStartTLSRequired(true);
+		email.setStartTLSRequired(false);
 		email.setSSLOnConnect(true);
 		email.send();
 	}

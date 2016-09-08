@@ -19,6 +19,7 @@ import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 @TestOncePerDay
 public class MailResourceTestOncePerDay extends Assert {
 
+	private static final String DEFAULT_FROM = "david@spacedog.io";
 	private static final String DEFAULT_TO = "platform@spacedog.io";
 	private static final String DEFAULT_TEXT = "So don't bother read this!";
 	private static final String DEFAULT_SUBJECT = "SpaceDog Email Test ...";
@@ -81,8 +82,8 @@ public class MailResourceTestOncePerDay extends Assert {
 		// admin sets smtp settings
 		settings.mailgun = null;
 		settings.smtp = new SmtpSettings();
-		settings.smtp.host = "smtp.gmail.com";
-		settings.smtp.startTlsRequired = true;
+		settings.smtp.host = "mail.gandi.net";
+		settings.smtp.startTlsRequired = false;
 		settings.smtp.sslOnConnect = true;
 		settings.smtp.login = SpaceRequest.configuration().smtpLogin();
 		settings.smtp.password = SpaceRequest.configuration().smtpPassword();
@@ -95,7 +96,7 @@ public class MailResourceTestOncePerDay extends Assert {
 		// vince emails a text message via smtp
 		SpaceRequest.post("/1/mail").userAuth(vince)//
 				.formField("to", DEFAULT_TO)//
-				.formField("from", "davattias@gmail.com")//
+				.formField("from", DEFAULT_FROM)//
 				.formField("subject", DEFAULT_SUBJECT)//
 				.formField("text", DEFAULT_TEXT)//
 				.go(200)//
@@ -104,7 +105,7 @@ public class MailResourceTestOncePerDay extends Assert {
 		// vince emails an html message via smtp
 		SpaceRequest.post("/1/mail").userAuth(vince)//
 				.formField("to", DEFAULT_TO)//
-				.formField("from", "davattias@gmail.com")//
+				.formField("from", DEFAULT_FROM)//
 				.formField("subject", DEFAULT_SUBJECT)//
 				.formField("html", emailBody)//
 				.formField("text", DEFAULT_TEXT)//
