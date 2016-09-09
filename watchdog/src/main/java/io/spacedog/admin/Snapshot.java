@@ -10,6 +10,9 @@ import io.spacedog.utils.Check;
 
 public class Snapshot {
 
+	private static final String RUN_CONTEXT = "Snapshot Run";
+	private static final String CHECK_CONTEXT = "Snapshot Check";
+
 	public String run() {
 
 		try {
@@ -17,7 +20,7 @@ public class Snapshot {
 			return "OK";
 
 		} catch (Exception e) {
-			return AdminJobs.error(this, e);
+			return AdminJobs.error(RUN_CONTEXT, e);
 		}
 	}
 
@@ -54,18 +57,18 @@ public class Snapshot {
 					.toString();
 
 			Check.isTrue(DateTimeComparator.getDateOnlyInstance().compare(now, start) == 0, //
-					"last snapshot took place [%s], it should have happen today");
+					"last snapshot started [%s], it should have happen today", start);
 
 			Check.isTrue(difference < 1000 * 60 * 60, //
 					"snapshot took [%s], it should take less than one hour", difference);
 
-			return AdminJobs.ok(this, message);
+			return AdminJobs.ok(CHECK_CONTEXT, message);
 
 		} catch (Exception e) {
 			if (message == null)
-				return AdminJobs.error(this, e);
+				return AdminJobs.error(CHECK_CONTEXT, e);
 			else
-				return AdminJobs.error(this, message, e);
+				return AdminJobs.error(CHECK_CONTEXT, message, e);
 		}
 	}
 
