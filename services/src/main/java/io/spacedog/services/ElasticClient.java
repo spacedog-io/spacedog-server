@@ -176,12 +176,15 @@ public class ElasticClient {
 				.getTotalHits() > 0;
 	}
 
-	public boolean delete(String backendId, String type, String id, boolean throwNotFound) {
-		DeleteResponse response = internalClient.prepareDelete(toAlias(backendId, type), type, id).get();
+	public boolean delete(String backendId, String type, String id, boolean refresh, boolean throwNotFound) {
+		DeleteResponse response = internalClient.prepareDelete(//
+				toAlias(backendId, type), type, id).setRefresh(refresh).get();
+
 		if (response.isFound())
 			return true;
 		if (throwNotFound)
 			throw Exceptions.notFound(backendId, type, id);
+
 		return false;
 	}
 

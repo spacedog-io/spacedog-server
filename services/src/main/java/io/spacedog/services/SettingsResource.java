@@ -178,7 +178,7 @@ public class SettingsResource {
 	public boolean deleteInternal(String id) {
 		String backendId = SpaceContext.checkAdminCredentials().backendId();
 		ElasticClient elastic = Start.get().getElasticClient();
-		return elastic.delete(backendId, TYPE, id, true);
+		return elastic.delete(backendId, TYPE, id, false, true);
 	}
 
 	<K extends Settings> void registerSettingsClass(Class<K> settingsClass) {

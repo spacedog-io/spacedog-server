@@ -305,7 +305,7 @@ public class PushResource extends Resource {
 
 	private void removeEndpointQuietly(String backend, String id) {
 		try {
-			Start.get().getElasticClient().delete(backend, TYPE, id, true);
+			Start.get().getElasticClient().delete(backend, TYPE, id, false, true);
 		} catch (Exception e) {
 			System.err.println(String.format(//
 					"[Warning] failed to delete disabled installation [%s] of backend [%s]", id, backend));

@@ -161,14 +161,14 @@ public class DataResource extends Resource {
 		ElasticClient elastic = Start.get().getElasticClient();
 
 		if (DataAccessControl.check(credentials, type, DataPermission.delete_all)) {
-			elastic.delete(credentials.backendId(), type, id, true);
+			elastic.delete(credentials.backendId(), type, id, false, true);
 			return JsonPayload.success();
 
 		} else if (DataAccessControl.check(credentials, type, DataPermission.delete)) {
 			ObjectNode object = DataStore.get().getObject(credentials.backendId(), type, id);
 
 			if (credentials.name().equals(Json.get(object, "meta.createdBy").asText())) {
-				elastic.delete(credentials.backendId(), type, id, true);
+				elastic.delete(credentials.backendId(), type, id, false, true);
 				return JsonPayload.success();
 			} else
 				throw Exceptions.forbidden(//

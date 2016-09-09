@@ -398,10 +398,9 @@ public class CredentialsResource extends Resource {
 
 	void delete(String id) {
 		ElasticClient elastic = Start.get().getElasticClient();
-		// refresh before not necessary since delete by id
-		elastic.delete(SPACEDOG_BACKEND, TYPE, id, true);
-		// refresh after necessary for check methods
-		elastic.refreshType(SPACEDOG_BACKEND, TYPE);
+		// index refresh before not necessary since delete by id
+		// index refresh after delete is necessary
+		elastic.delete(SPACEDOG_BACKEND, TYPE, id, true, true);
 	}
 
 	DeleteByQueryResponse deleteAll(String backendId) {
