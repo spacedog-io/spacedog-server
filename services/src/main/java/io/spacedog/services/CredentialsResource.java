@@ -420,7 +420,7 @@ public class CredentialsResource extends Resource {
 		QueryBuilder query = QueryBuilders.boolQuery()//
 				.filter(QueryBuilders.termQuery(CREDENTIALS_LEVEL, Level.SUPER_ADMIN.toString()));
 
-		return getSuperAdmins(query, refresh);
+		return queryCredentials(query, refresh);
 	}
 
 	Set<Credentials> getBackendSuperAdmins(String backendId, boolean refresh) {
@@ -428,7 +428,7 @@ public class CredentialsResource extends Resource {
 				.filter(QueryBuilders.termQuery(BACKEND_ID, backendId))//
 				.filter(QueryBuilders.termQuery(CREDENTIALS_LEVEL, Level.SUPER_ADMIN.toString()));
 
-		return getSuperAdmins(query, refresh);
+		return queryCredentials(query, refresh);
 	}
 
 	Credentials createSuperdog(String username, String password, String email) {
@@ -490,9 +490,10 @@ public class CredentialsResource extends Resource {
 				toQuery(backendId, username));
 	}
 
-	private Set<Credentials> getSuperAdmins(QueryBuilder query, boolean refresh) {
+	private Set<Credentials> queryCredentials(QueryBuilder query, boolean refresh) {
 		ElasticClient elastic = Start.get().getElasticClient();
-		elastic.refreshType(SPACEDOG_BACKEND, TYPE);
+		if (refresh)
+			elastic.refreshType(SPACEDOG_BACKEND, TYPE);
 
 		SearchHit[] hits = elastic//
 				.prepareSearch(SPACEDOG_BACKEND, TYPE)//
@@ -502,12 +503,12 @@ public class CredentialsResource extends Resource {
 				.getHits()//
 				.hits();
 
-		Set<Credentials> superAdmins = Sets.newHashSet();
+		Set<Credentials> credentialsSet = Sets.newHashSet();
 
 		for (SearchHit hit : hits)
-			superAdmins.add(toCredentials(hit));
+			credentialsSet.add(toCredentials(hit));
 
-		return superAdmins;
+		return credentialsSet;
 	}
 
 	//
