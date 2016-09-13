@@ -11,6 +11,7 @@ import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTarget;
 import io.spacedog.utils.DataPermission;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonGenerator;
 import io.spacedog.utils.Schema;
 
@@ -37,6 +38,7 @@ public class Caremen extends SpaceClient {
 		initCourses();
 		initDrivers();
 		initPassengers();
+		initCarTypes();
 	}
 
 	void initPassengers() {
@@ -138,6 +140,7 @@ public class Caremen extends SpaceClient {
 		return Schema.builder("driver") //
 
 				.acl("key", DataPermission.read_all)//
+				.acl("user", DataPermission.search)//
 				.acl("driver", DataPermission.search, DataPermission.update_all)//
 				.acl("admin", DataPermission.create, DataPermission.search, DataPermission.update_all,
 						DataPermission.delete_all)//
@@ -172,4 +175,49 @@ public class Caremen extends SpaceClient {
 				.close()//
 				.build();
 	}
+
+	void initCarTypes() {
+
+		ObjectNode node = Json.objectBuilder()//
+				.object("berline")//
+				.put("name", "Berline")//
+				.put("description", "Standard")//
+				.put("minimumPrice", 10)//
+				.put("passengers", 4)//
+				.end()//
+
+				.object("premium")//
+				.put("name", "BERLINE PREMIUM")//
+				.put("description", "Haut de gamme")//
+				.put("minimumPrice", 15)//
+				.put("passengers", 4)//
+				.end()//
+
+				.object("green")//
+				.put("name", "GREEN BERLINE")//
+				.put("description", "Electric cars")//
+				.put("minimumPrice", 15)//
+				.put("passengers", 4)//
+				.end()//
+
+				.object("break")//
+				.put("name", "BREAK")//
+				.put("description", "Grand coffre")//
+				.put("minimumPrice", 15)//
+				.put("passengers", 4)//
+				.end()//
+
+				.object("van")//
+				.put("name", "VAN")//
+				.put("description", "Mini bus")//
+				.put("minimumPrice", 15)//
+				.put("passengers", 6)//
+				.end()//
+
+				.build();
+
+		SpaceRequest.put("/1/settings/carTypes")//
+				.adminAuth(backend).body(node).go(201);
+	}
+
 }
