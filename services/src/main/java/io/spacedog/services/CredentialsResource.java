@@ -374,7 +374,7 @@ public class CredentialsResource extends Resource {
 
 	Credentials create(Credentials credentials) {
 
-		// This is the only place where name unicity is checked
+		// This is the only place where name uniqueness is checked
 		if (exists(credentials.backendId(), credentials.name()))
 			throw Exceptions.illegalArgument(//
 					"[%s][%s] credentials already exists", //
