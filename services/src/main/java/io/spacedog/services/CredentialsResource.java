@@ -10,19 +10,21 @@ import java.util.Set;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.joda.time.DateTime;
 
-import com.beust.jcommander.internal.Sets;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 
 import io.spacedog.utils.Backends;
+import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.CredentialsSettings;
@@ -104,6 +106,32 @@ public class CredentialsResource extends Resource {
 		Credentials credentials = SpaceContext.checkUserCredentials();
 		credentials.deleteAccessToken();
 		update(credentials);
+		return JsonPayload.success();
+	}
+
+	@Get("/1/credentials")
+	@Get("/1/credentials/")
+	public Payload getAll(Context context) {
+		// TODO add more settings and permissions to control this
+		// credentials check
+		SpaceContext.checkUserCredentials();
+		return JsonPayload.json(fromCredentialsSet(getCredentials(toQuery(context))));
+	}
+
+	@Delete("/1/credentials")
+	@Delete("/1/credentials/")
+	public Payload deleteAll(Context context) {
+		SpaceContext.checkSuperAdminCredentials();
+		ElasticClient elastic = Start.get().getElasticClient();
+		BoolQueryBuilder query = toQuery(context).query;
+
+		// super admins can only be deleted when backend is deleted
+		query.mustNot(QueryBuilders.termQuery(CREDENTIALS_LEVEL, "SUPER_ADMIN"));
+		elastic.deleteByQuery(SPACEDOG_BACKEND, query, TYPE);
+
+		// allways refresh after credentials index updates
+		elastic.refreshType(SPACEDOG_BACKEND, TYPE);
+
 		return JsonPayload.success();
 	}
 
@@ -416,19 +444,19 @@ public class CredentialsResource extends Resource {
 		return response;
 	}
 
-	Set<Credentials> getAllSuperAdmins(boolean refresh) {
-		QueryBuilder query = QueryBuilders.boolQuery()//
+	Set<Credentials> getAllSuperAdmins() {
+		BoolQueryBuilder query = QueryBuilders.boolQuery()//
 				.filter(QueryBuilders.termQuery(CREDENTIALS_LEVEL, Level.SUPER_ADMIN.toString()));
 
-		return queryCredentials(query, refresh);
+		return getCredentials(new BoolSearchQuery(SPACEDOG_BACKEND, TYPE, query));
 	}
 
-	Set<Credentials> getBackendSuperAdmins(String backendId, boolean refresh) {
-		QueryBuilder query = QueryBuilders.boolQuery()//
+	Set<Credentials> getBackendSuperAdmins(String backendId) {
+		BoolQueryBuilder query = QueryBuilders.boolQuery()//
 				.filter(QueryBuilders.termQuery(BACKEND_ID, backendId))//
 				.filter(QueryBuilders.termQuery(CREDENTIALS_LEVEL, Level.SUPER_ADMIN.toString()));
 
-		return queryCredentials(query, refresh);
+		return getCredentials(new BoolSearchQuery(SPACEDOG_BACKEND, TYPE, query));
 	}
 
 	Credentials createSuperdog(String username, String password, String email) {
@@ -443,7 +471,31 @@ public class CredentialsResource extends Resource {
 	// Implementation
 	//
 
-	private QueryBuilder toQuery(String backendId, String username) {
+	private BoolSearchQuery toQuery(Context context) {
+		BoolQueryBuilder query = QueryBuilders.boolQuery()//
+				.filter(QueryBuilders.termQuery(BACKEND_ID, SpaceContext.backendId()));
+
+		String username = context.get(USERNAME);
+		if (!Strings.isNullOrEmpty(username))
+			query.filter(QueryBuilders.termQuery(USERNAME, username));
+
+		String email = context.get(EMAIL);
+		if (!Strings.isNullOrEmpty(email))
+			query.filter(QueryBuilders.termQuery(EMAIL, email));
+
+		String level = context.get(CREDENTIALS_LEVEL);
+		if (!Strings.isNullOrEmpty(level))
+			query.filter(QueryBuilders.termQuery(CREDENTIALS_LEVEL, level));
+
+		BoolSearchQuery elasticQuery = new BoolSearchQuery(SPACEDOG_BACKEND, TYPE, query);
+
+		elasticQuery.from = context.query().getInteger("from", 0);
+		elasticQuery.size = context.query().getInteger("size", 10);
+
+		return elasticQuery;
+	}
+
+	private BoolQueryBuilder toQuery(String backendId, String username) {
 		return QueryBuilders.boolQuery()//
 				.must(QueryBuilders.termQuery(BACKEND_ID, backendId)) //
 				.must(QueryBuilders.termQuery(USERNAME, username));
@@ -473,6 +525,13 @@ public class CredentialsResource extends Resource {
 		}
 	}
 
+	private ObjectNode fromCredentialsSet(Set<Credentials> set) {
+		ArrayNode results = Json.array();
+		for (Credentials credentials : set)
+			results.add(fromCredentials(credentials));
+		return Json.object("total", set.size(), "results", results);
+	}
+
 	private ObjectNode fromCredentials(Credentials credentials) {
 		return Json.object(//
 				ID, credentials.id(), //
@@ -490,15 +549,15 @@ public class CredentialsResource extends Resource {
 				toQuery(backendId, username));
 	}
 
-	private Set<Credentials> queryCredentials(QueryBuilder query, boolean refresh) {
+	private Set<Credentials> getCredentials(BoolSearchQuery query) {
 		ElasticClient elastic = Start.get().getElasticClient();
-		if (refresh)
-			elastic.refreshType(SPACEDOG_BACKEND, TYPE);
+		Check.isTrue(query.from + query.size <= 1000, "from + size is greater than 1000");
 
 		SearchHit[] hits = elastic//
-				.prepareSearch(SPACEDOG_BACKEND, TYPE)//
-				.setQuery(query)//
-				.setSize(1000)//
+				.prepareSearch(query.backendId, query.type)//
+				.setQuery(query.query)//
+				.setFrom(query.from)//
+				.setSize(query.size)//
 				.get()//
 				.getHits()//
 				.hits();

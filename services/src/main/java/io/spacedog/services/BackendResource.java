@@ -52,16 +52,15 @@ public class BackendResource extends Resource {
 	@Get("/1/backend/")
 	public Payload getAll(Context context) {
 		Credentials credentials = SpaceContext.checkAdminCredentials(false);
-		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
 		Set<Credentials> superAdmins = null;
 
 		if (credentials.isRootBackend()) {
 			if (credentials.isSuperDog())
-				superAdmins = CredentialsResource.get().getAllSuperAdmins(refresh);
+				superAdmins = CredentialsResource.get().getAllSuperAdmins();
 			else
 				throw Exceptions.insufficientCredentials(credentials);
 		} else
-			superAdmins = CredentialsResource.get().getBackendSuperAdmins(credentials.backendId(), refresh);
+			superAdmins = CredentialsResource.get().getBackendSuperAdmins(credentials.backendId());
 
 		ArrayNode results = Json.array();
 		for (Credentials superAdmin : superAdmins)

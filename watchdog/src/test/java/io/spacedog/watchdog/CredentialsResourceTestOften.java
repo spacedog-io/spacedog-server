@@ -224,6 +224,69 @@ public class CredentialsResourceTestOften extends Assert {
 	}
 
 	@Test
+	public void searchAndDeleteCredentials() {
+
+		// prepare
+		SpaceClient.prepareTest();
+		Backend test = SpaceClient.resetTestBackend();
+		User fred = SpaceClient.newCredentials(test, "fred", "hi fred");
+		User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
+
+		// vince searches for all credentials
+		SpaceRequest.get("/1/credentials").userAuth(vince).go(200)//
+				.assertEquals(3, "total")//
+				.assertSizeEquals(3, "results")//
+				.assertContainsValue("test", "username")//
+				.assertContainsValue("vince", "username")//
+				.assertContainsValue("fred", "username");
+
+		// super admin searches for user credentials
+		SpaceRequest.get("/1/credentials?level=USER").adminAuth(test).go(200)//
+				.assertEquals(2, "total")//
+				.assertSizeEquals(2, "results")//
+				.assertContainsValue("vince", "username")//
+				.assertContainsValue("fred", "username");
+
+		// fred searches for credentials with a specified email
+		SpaceRequest.get("/1/credentials")//
+				.queryParam("email", "david@spacedog.io")//
+				.userAuth(fred).go(200)//
+				.assertEquals(2, "total")//
+				.assertSizeEquals(2, "results")//
+				.assertContainsValue("vince", "username")//
+				.assertContainsValue("fred", "username");
+
+		// vince searches for credentials with specified username
+		SpaceRequest.get("/1/credentials?username=fred").userAuth(vince).go(200)//
+				.assertSizeEquals(1, "results")//
+				.assertContainsValue("fred", "username")//
+				.assertContainsValue("david@spacedog.io", "email")//
+				.assertContainsValue("USER", "level");
+
+		// super admin deletes credentials with specified username
+		SpaceRequest.delete("/1/credentials?username=fred").adminAuth(test).go(200);
+
+		SpaceRequest.get("/1/credentials").adminAuth(test).go(200)//
+				.assertSizeEquals(2, "results")//
+				.assertContainsValue("test", "username")//
+				.assertContainsValue("vince", "username");
+
+		// super admin deletes credentials with specified level
+		SpaceRequest.delete("/1/credentials?level=USER").adminAuth(test).go(200);
+
+		SpaceRequest.get("/1/credentials").adminAuth(test).go(200)//
+				.assertSizeEquals(1, "results")//
+				.assertContainsValue("test", "username");
+
+		// super admin deletes all credentials but himself
+		SpaceRequest.delete("/1/credentials").adminAuth(test).go(200);
+
+		SpaceRequest.get("/1/credentials").adminAuth(test).go(200)//
+				.assertSizeEquals(1, "results")//
+				.assertContainsValue("test", "username");
+	}
+
+	@Test
 	public void setAndResetPassword() {
 
 		// prepare
