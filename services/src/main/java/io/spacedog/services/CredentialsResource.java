@@ -141,7 +141,7 @@ public class CredentialsResource extends Resource {
 
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
 		if (settings.disableGuestSignUp)
-			SpaceContext.checkAdminCredentials();
+			SpaceContext.checkUserCredentials();
 
 		Credentials credentials = create(SpaceContext.backendId(), Level.USER, body);
 

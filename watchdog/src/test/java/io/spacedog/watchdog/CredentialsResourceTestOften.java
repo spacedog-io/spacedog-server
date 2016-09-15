@@ -486,6 +486,7 @@ public class CredentialsResourceTestOften extends Assert {
 		// prepare
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
+		User fred = SpaceClient.newCredentials(test, "fred", "hi fred");
 
 		// admin disables guest sign up
 		CredentialsSettings settings = new CredentialsSettings();
@@ -497,13 +498,13 @@ public class CredentialsResourceTestOften extends Assert {
 				.body("username", "vince", "password", "hi vince", "email", "vince@dog.com")//
 				.go(403);
 
-		// admin fails to create credentials if no email
-		SpaceRequest.post("/1/credentials").adminAuth(test)//
+		// fred fails to create credentials if no email
+		SpaceRequest.post("/1/credentials").userAuth(fred)//
 				.body("username", "vince")//
 				.go(400);
 
-		// admin can create credentials for someone
-		ObjectNode node = SpaceRequest.post("/1/credentials").adminAuth(test)//
+		// fred can create credentials for someone
+		ObjectNode node = SpaceRequest.post("/1/credentials").userAuth(fred)//
 				.body("username", "vince", "email", "vince@dog.com")//
 				.go(201).objectNode();
 
