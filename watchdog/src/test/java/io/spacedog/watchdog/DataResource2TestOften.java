@@ -32,11 +32,19 @@ public class DataResource2TestOften extends Assert {
 	@Test
 	public void createSearchUpdateAndDeleteSales() {
 
+		// prepare
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
 		SpaceClient.setSchema(SchemaResourceTestOften.buildSaleSchema(), test);
 		User fred = SpaceClient.newCredentials(test, "fred", "hi fred");
 
+		// fred fails to create a sale with no body
+		SpaceRequest.post("/1/data/sale").userAuth(fred).go(400);
+
+		// fred fails to create a sale with an empty json object body
+		SpaceRequest.post("/1/data/sale").userAuth(fred).body("{}").go(400);
+
+		// fred creates a new sale object
 		ObjectNode sale = Json.objectBuilder()//
 				.put("number", "1234567890")//
 				.object("where")//
@@ -63,16 +71,13 @@ public class DataResource2TestOften extends Assert {
 				.end() //
 				.build();
 
-		// create
-
-		SpaceResponse create = SpaceRequest.post("/1/data/sale")//
+		String id = SpaceRequest.post("/1/data/sale")//
 				.userAuth(fred).body(sale).go(201)//
 				.assertTrue("success")//
 				.assertEquals("sale", "type")//
 				.assertEquals(1, "version")//
-				.assertNotNull("id");
-
-		String id = create.jsonNode().get("id").asText();
+				.assertNotNull("id")//
+				.getString("id");
 
 		// find by id
 

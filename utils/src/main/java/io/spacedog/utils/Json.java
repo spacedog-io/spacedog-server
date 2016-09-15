@@ -159,7 +159,7 @@ public class Json {
 	}
 
 	public static JsonNode readNode(String jsonString) {
-		Check.notNullOrEmpty(jsonString, "jsonString");
+		Check.notNullOrEmpty(jsonString, "JSON");
 		try {
 			return jsonMapper.readTree(jsonString);
 		} catch (IOException e) {
