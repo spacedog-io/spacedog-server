@@ -54,6 +54,12 @@ public class CredentialsResourceTestOften extends Assert {
 				.body("username", "vince", "password", "hi vince", "email", "vince@dog.com")//
 				.go(201).getString("id");
 
+		// vince fails to sign up again since his credentials already exixts
+		SpaceRequest.post("/1/credentials").backend(test)
+				.body("username", "vince", "password", "hello boby", "email", "vince@dog.com")//
+				.go(400)//
+				.assertEquals("already-exists", "error.code");
+
 		// vince logs in
 		ObjectNode node = SpaceRequest.get("/1/login")//
 				.basicAuth(test.backendId, "vince", "hi vince").go(200)//

@@ -376,9 +376,7 @@ public class CredentialsResource extends Resource {
 
 		// This is the only place where name uniqueness is checked
 		if (exists(credentials.backendId(), credentials.name()))
-			throw Exceptions.illegalArgument(//
-					"[%s][%s] credentials already exists", //
-					credentials.backendId(), credentials.name());
+			throw Exceptions.alreadyExists(TYPE, credentials.name());
 
 		try {
 			String now = DateTime.now().toString();

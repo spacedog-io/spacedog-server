@@ -300,21 +300,24 @@ public class Json {
 		return arrayNode;
 	}
 
-	public static JsonNode toJson(Throwable t, boolean withTraces) {
-		ObjectNode json = object("type", t.getClass().getName());
+	public static JsonNode toJson(Throwable t, boolean debug) {
+		ObjectNode json = object();
+
+		if (t instanceof SpaceException)
+			json.put("code", ((SpaceException) t).code());
 
 		if (!Strings.isNullOrEmpty(t.getMessage()))//
 			json.put("message", t.getMessage());
 
-		if (withTraces) {
+		if (debug) {
+			json.put("type", t.getClass().getName());
 			ArrayNode array = json.putArray("trace");
-			for (StackTraceElement element : t.getStackTrace()) {
+			for (StackTraceElement element : t.getStackTrace())
 				array.add(element.toString());
-			}
 		}
 
 		if (t.getCause() != null)
-			json.set("cause", toJson(t.getCause(), withTraces));
+			json.set("cause", toJson(t.getCause(), debug));
 
 		return json;
 	}

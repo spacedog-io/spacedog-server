@@ -55,4 +55,9 @@ public class Exceptions {
 				credentials.level(), credentials.name());
 	}
 
+	public static SpaceException alreadyExists(String type, String value) {
+		return new SpaceException(400, "already-exists", "[%s][%s] already exists", //
+				type, value);
+	}
+
 }
