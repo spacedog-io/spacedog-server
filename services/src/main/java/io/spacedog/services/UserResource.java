@@ -50,11 +50,11 @@ public class UserResource extends Resource {
 	@Post("/1/data/user")
 	@Post("/1/data/user/")
 	public Payload signUp(String body, Context context) {
+		ObjectNode node = Json.readObject(body);
 		Credentials credentials = CredentialsResource.get()//
-				.create(SpaceContext.backendId(), Level.USER, body, true);
+				.create(SpaceContext.backendId(), Level.USER, node, true);
 		SpaceContext.setCredentials(credentials);
 
-		ObjectNode node = Json.readObject(body);
 		node.remove(PASSWORD);
 		body = node.toString();
 		DataResource.get().post(TYPE, body, context);

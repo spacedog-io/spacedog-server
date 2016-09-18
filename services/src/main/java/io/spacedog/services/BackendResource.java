@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 import org.elasticsearch.index.query.QueryBuilders;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Credentials;
@@ -96,8 +97,9 @@ public class BackendResource extends Resource {
 			return JsonPayload.invalidParameters("backendId", backendId,
 					String.format("backend id [%s] not available", backendId));
 
+		ObjectNode data = Json.readObject(body);
 		Credentials credentials = CredentialsResource.get()//
-				.create(backendId, Level.SUPER_ADMIN, body);
+				.create(backendId, Level.SUPER_ADMIN, data);
 
 		// after backend is created, new admin credentials are valid
 		// and can be set in space context if none are set

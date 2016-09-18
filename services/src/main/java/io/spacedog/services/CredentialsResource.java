@@ -143,7 +143,10 @@ public class CredentialsResource extends Resource {
 		if (settings.disableGuestSignUp)
 			SpaceContext.checkUserCredentials();
 
-		Credentials credentials = create(SpaceContext.backendId(), Level.USER, body);
+		ObjectNode data = Json.readObject(body);
+		Level level = extractAndCheckLevel(data, Level.USER);
+
+		Credentials credentials = create(SpaceContext.backendId(), level, data);
 
 		JsonBuilder<ObjectNode> builder = JsonPayload //
 				.builder(true, credentials.backendId(), "/1", TYPE, credentials.id());
@@ -272,16 +275,15 @@ public class CredentialsResource extends Resource {
 	// Internal services
 	//
 
-	Credentials create(String backendId, Level level, String body) {
-		return create(backendId, level, body, false);
+	Credentials create(String backendId, Level level, ObjectNode data) {
+		return create(backendId, level, data, false);
 	}
 
-	Credentials create(String backendId, Level level, String body, boolean legacyId) {
+	Credentials create(String backendId, Level level, ObjectNode data, boolean legacyId) {
 
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
 		Credentials credentials = new Credentials(backendId);
 
-		ObjectNode data = Json.readObject(body);
 		credentials.name(Json.checkStringNotNullOrEmpty(data, Resource.USERNAME));
 		Usernames.checkValid(credentials.name(), Optional.of(settings.usernameRegex()));
 
@@ -468,6 +470,17 @@ public class CredentialsResource extends Resource {
 	//
 	// Implementation
 	//
+
+	private Level extractAndCheckLevel(ObjectNode fields, Level defaultLevel) {
+		String value = fields.path(CREDENTIALS_LEVEL).asText();
+		if (Strings.isNullOrEmpty(value))
+			return defaultLevel;
+		Level level = Level.valueOf(value);
+		Credentials credentials = SpaceContext.getCredentials();
+		if (level.ordinal() > credentials.level().ordinal())
+			throw Exceptions.insufficientCredentials(credentials);
+		return level;
+	}
 
 	private BoolSearchQuery toQuery(Context context) {
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//

@@ -27,25 +27,23 @@ public class CredentialsResourceTestOften extends Assert {
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
 
-		// fails since invalid bodies
-
-		// empty user body
+		// fails since empty user body
 		SpaceRequest.post("/1/credentials/").backend(test)//
 				.body(Json.object()).go(400);
 
-		// no username
+		// fails since no username
 		SpaceRequest.post("/1/credentials/").backend(test)//
 				.body("password", "hi titi", "email", "titi@dog.com").go(400);
 
-		// no email
+		// fails since no email
 		SpaceRequest.post("/1/credentials/").backend(test)//
 				.body("username", "titi", "password", "hi titi").go(400);
 
-		// username too small
+		// fails since username too small
 		SpaceRequest.post("/1/credentials/").backend(test)//
 				.body("username", "ti", "password", "hi titi").go(400);
 
-		// password too small
+		// fails since password too small
 		SpaceRequest.post("/1/credentials/").backend(test)//
 				.body("username", "titi", "password", "hi").go(400);
 
@@ -564,6 +562,34 @@ public class CredentialsResourceTestOften extends Assert {
 		// valid username and password considering credentials settings
 		SpaceRequest.post("/1/credentials").backend(test)//
 				.body("username", "nathlopez", "password", "hinath", "email", "nath@dog.com")//
+				.go(201);
+	}
+
+	@Test
+	public void adminCreatesOthersAdminCredentials() {
+
+		// prepare
+		SpaceClient.prepareTest();
+		Backend test = SpaceClient.resetTestBackend();
+		User fred = SpaceClient.newCredentials(test, "fred", "hi fred");
+
+		// fred fails to create admin credentials
+		SpaceRequest.post("/1/credentials").userAuth(fred)
+				.body("username", "vince", "password", "hi vince", "email", "vince@dog.com", "level", "ADMIN")//
+				.go(403);
+
+		// test (backend default superadmin) creates credentials for new
+		// superadmin
+		SpaceRequest.post("/1/credentials").adminAuth(test)
+				.body("username", "superadmin", "password", "hi superadmin", //
+						"email", "superadmin@dog.com", "level", "SUPER_ADMIN")//
+				.go(201);
+
+		// superadmin creates credentials for new admin
+		SpaceRequest.post("/1/credentials")//
+				.basicAuth("test", "superadmin", "hi superadmin")//
+				.body("username", "admin1", "password", "hi admin1", //
+						"email", "admin1@dog.com", "level", "ADMIN")//
 				.go(201);
 	}
 
