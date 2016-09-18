@@ -210,14 +210,17 @@ public class CredentialsResource extends Resource {
 	@Put("/1/credentials/:id/password")
 	@Put("/1/credentials/:id/password/")
 	public Payload putPassword(String id, Context context) {
-		SpaceContext.checkUserCredentials(id);
-		String password = context.get(PASSWORD);
+		Credentials principal = SpaceContext.checkUserCredentials(id);
+		if (!principal.isPasswordChecked())
+			throw Exceptions.passwordMustBeChallenged();
 
 		Credentials credentials = getById(id, true).get();
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
-		credentials.setPassword(password, Optional.of(settings.passwordRegex()));
-		credentials = update(credentials);
 
+		String password = context.get(PASSWORD);
+		credentials.setPassword(password, Optional.of(settings.passwordRegex()));
+
+		credentials = update(credentials);
 		return JsonPayload.saved(false, credentials.backendId(), //
 				"/1", TYPE, credentials.id(), credentials.version());
 	}

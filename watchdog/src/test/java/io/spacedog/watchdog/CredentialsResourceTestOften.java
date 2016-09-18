@@ -593,4 +593,30 @@ public class CredentialsResourceTestOften extends Assert {
 				.go(201);
 	}
 
+	@Test
+	public void passwordIsChangedOnlyIfPasswordHasBeenChecked() {
+
+		// TODO move these tests to the setAndResetPasswords test
+
+		// prepare
+		SpaceClient.prepareTest();
+		Backend test = SpaceClient.resetTestBackend();
+		User fred = SpaceClient.newCredentials(test, "fred", "hi fred");
+
+		// fred fails to update his password
+		// since his password is not challenged
+		// because authentication is done with access token
+		SpaceRequest.put("/1/credentials/" + fred.id + "/password")//
+				.userAuth(fred)//
+				.formField("password", "hello fred")//
+				.go(403)//
+				.assertEquals("password-challenged", "error.code");
+
+		// fred updates his password since his password is challenged
+		// because authentication is done with username and password
+		SpaceRequest.put("/1/credentials/" + fred.id + "/password")//
+				.basicAuth(fred.backendId, fred.username, fred.password)//
+				.formField("password", "hello fred")//
+				.go(200);
+	}
 }

@@ -60,4 +60,8 @@ public class Exceptions {
 				type, value);
 	}
 
+	public static SpaceException passwordMustBeChallenged() {
+		return new SpaceException(403, "password-challenged", "password must be challenged");
+	}
+
 }
