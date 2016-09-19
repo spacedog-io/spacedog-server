@@ -41,9 +41,6 @@ public class DataResource2TestOften extends Assert {
 		// fred fails to create a sale with no body
 		SpaceRequest.post("/1/data/sale").userAuth(fred).go(400);
 
-		// fred fails to create a sale with an empty json object body
-		SpaceRequest.post("/1/data/sale").userAuth(fred).body("{}").go(400);
-
 		// fred creates a new sale object
 		ObjectNode sale = Json.objectBuilder()//
 				.put("number", "1234567890")//
