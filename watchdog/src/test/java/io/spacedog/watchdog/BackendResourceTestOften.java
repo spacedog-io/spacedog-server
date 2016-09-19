@@ -8,11 +8,13 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Iterators;
 
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceResponse;
 import io.spacedog.client.SpaceTarget;
 import io.spacedog.utils.Json;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
@@ -103,11 +105,22 @@ public class BackendResourceTestOften extends Assert {
 		JsonNode zzzzSuperAdmin = SpaceRequest.get("/1/backend").adminAuth(zzzz).go(200)//
 				.objectNode().get("results").get(0);
 
-		// superdog gets all backends
+		// superdog browse all backends and finds aaaa and zzzz
 
-		SpaceRequest.get("/1/backend").superdogAuth().go(200)//
-				.assertContains(aaaaSuperAdmin, "results")//
-				.assertContains(zzzzSuperAdmin, "results");
+		boolean aaaaFound = false, zzzzFound = false;
+		int from = 0, size = 100, total = 0;
+
+		do {
+			SpaceResponse response = SpaceRequest.get("/1/backend").from(from).size(size)//
+					.superdogAuth().go(200);
+
+			aaaaFound = Iterators.contains(response.get("results").elements(), aaaaSuperAdmin);
+			zzzzFound = Iterators.contains(response.get("results").elements(), zzzzSuperAdmin);
+
+			total = response.get("total").asInt();
+			from = from + size;
+
+		} while (aaaaFound && zzzzFound && from < total);
 
 		// super admin fails to access a backend he does not own
 

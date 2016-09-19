@@ -5,7 +5,6 @@ package io.spacedog.services;
 
 import java.io.IOException;
 import java.util.Optional;
-import java.util.Set;
 
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.get.GetResponse;
@@ -21,7 +20,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
-import com.google.common.collect.Sets;
+import com.google.common.collect.Lists;
 
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Check;
@@ -115,7 +114,7 @@ public class CredentialsResource extends Resource {
 		// TODO add more settings and permissions to control this
 		// credentials check
 		SpaceContext.checkUserCredentials();
-		return JsonPayload.json(fromCredentialsSet(getCredentials(toQuery(context))));
+		return JsonPayload.json(fromCredentialsSearch(getCredentials(toQuery(context))));
 	}
 
 	@Delete("/1/credentials")
@@ -478,19 +477,19 @@ public class CredentialsResource extends Resource {
 		return response;
 	}
 
-	Set<Credentials> getAllSuperAdmins() {
+	SearchResults<Credentials> getAllSuperAdmins(int from, int size) {
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
 				.filter(QueryBuilders.termQuery(CREDENTIALS_LEVEL, Level.SUPER_ADMIN.toString()));
 
-		return getCredentials(new BoolSearchQuery(SPACEDOG_BACKEND, TYPE, query));
+		return getCredentials(new BoolSearch(SPACEDOG_BACKEND, TYPE, query, from, size));
 	}
 
-	Set<Credentials> getBackendSuperAdmins(String backendId) {
+	SearchResults<Credentials> getBackendSuperAdmins(String backendId, int from, int size) {
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
 				.filter(QueryBuilders.termQuery(BACKEND_ID, backendId))//
 				.filter(QueryBuilders.termQuery(CREDENTIALS_LEVEL, Level.SUPER_ADMIN.toString()));
 
-		return getCredentials(new BoolSearchQuery(SPACEDOG_BACKEND, TYPE, query));
+		return getCredentials(new BoolSearch(SPACEDOG_BACKEND, TYPE, query, from, size));
 	}
 
 	Credentials createSuperdog(String username, String password, String email) {
@@ -516,7 +515,7 @@ public class CredentialsResource extends Resource {
 		return level;
 	}
 
-	private BoolSearchQuery toQuery(Context context) {
+	private BoolSearch toQuery(Context context) {
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
 				.filter(QueryBuilders.termQuery(BACKEND_ID, SpaceContext.backendId()));
 
@@ -532,12 +531,11 @@ public class CredentialsResource extends Resource {
 		if (!Strings.isNullOrEmpty(level))
 			query.filter(QueryBuilders.termQuery(CREDENTIALS_LEVEL, level));
 
-		BoolSearchQuery elasticQuery = new BoolSearchQuery(SPACEDOG_BACKEND, TYPE, query);
+		BoolSearch search = new BoolSearch(SPACEDOG_BACKEND, TYPE, query, //
+				context.query().getInteger("from", 0), //
+				context.query().getInteger("size", 10));
 
-		elasticQuery.from = context.query().getInteger("from", 0);
-		elasticQuery.size = context.query().getInteger("size", 10);
-
-		return elasticQuery;
+		return search;
 	}
 
 	private BoolQueryBuilder toQuery(String backendId, String username) {
@@ -570,11 +568,11 @@ public class CredentialsResource extends Resource {
 		}
 	}
 
-	private ObjectNode fromCredentialsSet(Set<Credentials> set) {
+	private ObjectNode fromCredentialsSearch(SearchResults<Credentials> response) {
 		ArrayNode results = Json.array();
-		for (Credentials credentials : set)
+		for (Credentials credentials : response.results)
 			results.add(fromCredentials(credentials));
-		return Json.object("total", set.size(), "results", results);
+		return Json.object("total", response.total, "results", results);
 	}
 
 	private ObjectNode fromCredentials(Credentials credentials) {
@@ -594,25 +592,30 @@ public class CredentialsResource extends Resource {
 				toQuery(backendId, username));
 	}
 
-	private Set<Credentials> getCredentials(BoolSearchQuery query) {
+	private SearchResults<Credentials> getCredentials(BoolSearch query) {
 		ElasticClient elastic = Start.get().getElasticClient();
 		Check.isTrue(query.from + query.size <= 1000, "from + size is greater than 1000");
 
-		SearchHit[] hits = elastic//
+		SearchHits hits = elastic//
 				.prepareSearch(query.backendId, query.type)//
 				.setQuery(query.query)//
 				.setFrom(query.from)//
 				.setSize(query.size)//
 				.get()//
-				.getHits()//
-				.hits();
+				.getHits();
 
-		Set<Credentials> credentialsSet = Sets.newHashSet();
+		SearchResults<Credentials> response = new SearchResults<Credentials>();
+		response.backendId = query.backendId;
+		response.type = query.type;
+		response.from = query.from;
+		response.size = query.size;
+		response.total = hits.totalHits();
+		response.results = Lists.newArrayList();
 
 		for (SearchHit hit : hits)
-			credentialsSet.add(toCredentials(hit));
+			response.results.add(toCredentials(hit));
 
-		return credentialsSet;
+		return response;
 	}
 
 	//

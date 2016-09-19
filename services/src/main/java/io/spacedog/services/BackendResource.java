@@ -3,7 +3,6 @@
  */
 package io.spacedog.services;
 
-import java.util.Set;
 import java.util.stream.Stream;
 
 import org.elasticsearch.index.query.QueryBuilders;
@@ -53,22 +52,25 @@ public class BackendResource extends Resource {
 	@Get("/1/backend/")
 	public Payload getAll(Context context) {
 		Credentials credentials = SpaceContext.checkAdminCredentials(false);
-		Set<Credentials> superAdmins = null;
+		SearchResults<Credentials> superAdmins = null;
+
+		int from = context.query().getInteger("from", 0);
+		int size = context.query().getInteger("size", 10);
 
 		if (credentials.isRootBackend()) {
 			if (credentials.isSuperDog())
-				superAdmins = CredentialsResource.get().getAllSuperAdmins();
+				superAdmins = CredentialsResource.get().getAllSuperAdmins(from, size);
 			else
 				throw Exceptions.insufficientCredentials(credentials);
 		} else
-			superAdmins = CredentialsResource.get().getBackendSuperAdmins(credentials.backendId());
+			superAdmins = CredentialsResource.get().getBackendSuperAdmins(credentials.backendId(), from, size);
 
 		ArrayNode results = Json.array();
-		for (Credentials superAdmin : superAdmins)
+		for (Credentials superAdmin : superAdmins.results)
 			results.add(Json.object(BACKEND_ID, superAdmin.backendId(), //
 					USERNAME, superAdmin.name(), EMAIL, superAdmin.email().get()));
 
-		return JsonPayload.json(Json.object("total", superAdmins.size(), "results", results));
+		return JsonPayload.json(Json.object("total", superAdmins.total, "results", results));
 	}
 
 	@Delete("/1/backend")
