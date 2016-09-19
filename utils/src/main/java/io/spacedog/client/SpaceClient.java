@@ -1,5 +1,7 @@
 package io.spacedog.client;
 
+import java.util.Optional;
+
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -72,15 +74,27 @@ public class SpaceClient {
 				.body("username", username, "password", password, "email", email)//
 				.go(201);
 
-		ObjectNode node = SpaceRequest.get("/1/login")//
-				.basicAuth(backendId, username, password)//
-				.go(200).objectNode();
+		return login(backendId, username, password);
+	}
 
-		return new User(backendId, //
-				node.get("credentials").get("id").asText(), //
-				username, password, email, //
-				node.get("accessToken").asText(), //
-				DateTime.now().plus(node.get("expiresIn").asLong()));
+	public static User login(String backendId, String username, String password) {
+		return login(backendId, username, password, 200).get();
+	}
+
+	public static Optional<User> login(String backendId, String username, String password, int... statuses) {
+		SpaceResponse response = SpaceRequest.get("/1/login")//
+				.basicAuth(backendId, username, password)//
+				.go(statuses);
+
+		if (response.httpResponse().getStatus() != 200)
+			return Optional.empty();
+
+		return Optional.of(new User(backendId, //
+				response.get("credentials").get("id").asText(), //
+				username, password, //
+				response.get("credentials").get("id").asText(), //
+				response.get("accessToken").asText(), //
+				DateTime.now().plus(response.get("expiresIn").asLong())));
 	}
 
 	public static void deleteCredentials(String username, Backend backend) {
