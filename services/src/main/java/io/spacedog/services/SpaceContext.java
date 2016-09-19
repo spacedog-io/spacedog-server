@@ -203,6 +203,11 @@ public class SpaceContext {
 		return checkCredentials(true);
 	}
 
+	public static void checkPasswordHasBeenChallenged() {
+		if (!getCredentials().isPasswordChecked())
+			throw Exceptions.passwordMustBeChallenged();
+	}
+
 	public static Credentials checkCredentials(boolean checkCustomerBackend) {
 		Credentials credentials = getCredentials();
 		if (checkCustomerBackend && credentials.isRootBackend())
