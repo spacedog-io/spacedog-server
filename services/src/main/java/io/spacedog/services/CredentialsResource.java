@@ -174,6 +174,38 @@ public class CredentialsResource extends Resource {
 		return JsonPayload.success();
 	}
 
+	@Put("/1/credentials/:id")
+	@Put("/1/credentials/:id/")
+	public Payload put(String id, String body, Context context) {
+		SpaceContext.checkUserCredentials(id);
+		SpaceContext.checkPasswordHasBeenChallenged();
+
+		ObjectNode data = Json.readObject(body);
+		Credentials credentials = getById(id, true).get();
+		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
+
+		String username = data.path(USERNAME).asText();
+		if (!Strings.isNullOrEmpty(username)) {
+			Usernames.checkValid(username, Optional.of(settings.usernameRegex()));
+			credentials.name(username);
+		}
+
+		// TODO check email with minimal regex
+		String email = data.path(EMAIL).asText();
+		if (!Strings.isNullOrEmpty(email))
+			credentials.email(email);
+
+		String password = data.path(PASSWORD).asText();
+		if (!Strings.isNullOrEmpty(password))
+			credentials.setPassword(password, Optional.of(settings.passwordRegex()));
+
+		// TODO check if at least one field has been changed
+		// before credentials update
+		credentials = update(credentials);
+		return JsonPayload.saved(false, credentials.backendId(), //
+				"/1", TYPE, credentials.id(), credentials.version());
+	}
+
 	@Delete("/1/credentials/:id/password")
 	@Delete("/1/credentials/:id/password/")
 	public Payload deletePassword(String id, Context context) {
@@ -210,9 +242,8 @@ public class CredentialsResource extends Resource {
 	@Put("/1/credentials/:id/password")
 	@Put("/1/credentials/:id/password/")
 	public Payload putPassword(String id, Context context) {
-		Credentials principal = SpaceContext.checkUserCredentials(id);
-		if (!principal.isPasswordChecked())
-			throw Exceptions.passwordMustBeChallenged();
+		SpaceContext.checkUserCredentials(id);
+		SpaceContext.checkPasswordHasBeenChallenged();
 
 		Credentials credentials = getById(id, true).get();
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
@@ -287,16 +318,16 @@ public class CredentialsResource extends Resource {
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
 		Credentials credentials = new Credentials(backendId);
 
-		credentials.name(Json.checkStringNotNullOrEmpty(data, Resource.USERNAME));
+		credentials.name(Json.checkStringNotNullOrEmpty(data, USERNAME));
 		Usernames.checkValid(credentials.name(), Optional.of(settings.usernameRegex()));
 
 		if (legacyId)
 			credentials.setLegacyId();
 
-		credentials.email(Json.checkStringNotNullOrEmpty(data, Resource.EMAIL));
+		credentials.email(Json.checkStringNotNullOrEmpty(data, EMAIL));
 		credentials.level(level);
 
-		JsonNode password = data.get(Resource.PASSWORD);
+		JsonNode password = data.get(PASSWORD);
 
 		if (Json.isNull(password))
 			credentials.resetPassword();
