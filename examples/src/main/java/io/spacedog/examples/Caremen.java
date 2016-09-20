@@ -3,8 +3,13 @@
  */
 package io.spacedog.examples;
 
+import java.util.Optional;
+
+import org.elasticsearch.action.support.QuerySourceBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceClient;
@@ -21,11 +26,7 @@ public class Caremen extends SpaceClient {
 			"caredev", "caredev", "hi caredev", "david@spacedog.io");
 
 	private Backend backend;
-	private JsonGenerator generator;
-
-	public Caremen() {
-		generator = new JsonGenerator();
-	}
+	private JsonGenerator generator = new JsonGenerator();
 
 	@Test
 	public void initCaremenBackend() {
@@ -33,12 +34,14 @@ public class Caremen extends SpaceClient {
 		backend = DEV;
 		SpaceRequest.configuration().target(SpaceTarget.production);
 
-		resetBackend(backend);
-		initInstallations();
-		initCourses();
-		initDrivers();
-		initPassengers();
-		initCarTypes();
+		// resetBackend(backend);
+		// initInstallations();
+		// initCourses();
+		// initDrivers();
+		// initPassengers();
+		// initCarTypes();
+
+		moveCourseDrivers();
 	}
 
 	void initPassengers() {
@@ -107,6 +110,7 @@ public class Caremen extends SpaceClient {
 				.close()
 
 				.object("car")//
+				.string("type").examples("berline", "van", "break")//
 				.string("brand").examples("Peugeot", "Renault")//
 				.string("model").examples("508", "Laguna", "Talisman")//
 				.string("color").examples("black", "white", "pink")//
@@ -126,7 +130,14 @@ public class Caremen extends SpaceClient {
 	}
 
 	void createDriver(String username, Schema schema) {
-		User credentials = SpaceClient.newCredentials(backend, username, "hi " + username, username + "@caremen.com");
+		String password = "hi " + username;
+		String email = username + "@caremen.com";
+
+		Optional<User> optional = SpaceClient.login(backend.backendId, username, password, 200, 401);
+
+		User credentials = optional.isPresent() ? optional.get() //
+				: SpaceClient.newCredentials(backend, username, password, email);
+
 		SpaceRequest.put("/1/credentials/" + credentials.id + "/roles/driver").adminAuth(backend).go(200);
 
 		ObjectNode driver = generator.gen(schema, 0);
@@ -178,36 +189,41 @@ public class Caremen extends SpaceClient {
 
 	void initCarTypes() {
 
-		ObjectNode node = Json.objectBuilder()//
-				.object("berline")//
+		ArrayNode node = Json.arrayBuilder()//
+				.object()//
+				.put("type", "berline")//
 				.put("name", "Berline")//
 				.put("description", "Standard")//
 				.put("minimumPrice", 10)//
 				.put("passengers", 4)//
 				.end()//
 
-				.object("premium")//
+				.object()//
+				.put("type", "premium")//
 				.put("name", "BERLINE PREMIUM")//
 				.put("description", "Haut de gamme")//
 				.put("minimumPrice", 15)//
 				.put("passengers", 4)//
 				.end()//
 
-				.object("green")//
+				.object()//
+				.put("type", "green")//
 				.put("name", "GREEN BERLINE")//
 				.put("description", "Electric cars")//
 				.put("minimumPrice", 15)//
 				.put("passengers", 4)//
 				.end()//
 
-				.object("break")//
+				.object()//
+				.put("type", "break")//
 				.put("name", "BREAK")//
 				.put("description", "Grand coffre")//
 				.put("minimumPrice", 15)//
 				.put("passengers", 4)//
 				.end()//
 
-				.object("van")//
+				.object()//
+				.put("type", "van")//
 				.put("name", "VAN")//
 				.put("description", "Mini bus")//
 				.put("minimumPrice", 15)//
@@ -218,6 +234,28 @@ public class Caremen extends SpaceClient {
 
 		SpaceRequest.put("/1/settings/carTypes")//
 				.adminAuth(backend).body(node).go(201);
+	}
+
+	public void moveCourseDrivers() {
+
+		QuerySourceBuilder source = new QuerySourceBuilder();
+		source.setQuery(QueryBuilders.termQuery("status", "accepted"));
+
+		SpaceRequest.post("/1/search/course").adminAuth(backend)//
+				.body(source.toString()).size(100).go(200);
+
+		ObjectNode courseUpdate = Json.objectBuilder().object("driver")//
+				.object("lastLocation")//
+				.object("where")//
+				.put("lat", 23.78)//
+				.put("lon", 45.89)//
+				.end()//
+				.end()//
+				.end()//
+				.build();
+
+		SpaceRequest.put("/1/data/course/kjhgkjhgkjhvhkv").adminAuth(backend)//
+				.body(courseUpdate).go(200);
 	}
 
 }
