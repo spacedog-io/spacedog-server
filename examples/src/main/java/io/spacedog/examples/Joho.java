@@ -4,12 +4,10 @@
 package io.spacedog.examples;
 
 import java.net.URL;
-import java.util.Iterator;
 
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 
@@ -17,7 +15,6 @@ import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Schema;
 import io.spacedog.utils.SchemaSettings;
 import io.spacedog.utils.SchemaSettings.SchemaAcl;
@@ -43,6 +40,7 @@ public class Joho extends SpaceClient {
 		// setSchema(buildCustomUserSchema(), backend);
 		// setSchema(buildThemesSchema(), backend);
 		// setSchema(buildSitesSchema(), backend);
+		// setSchema(buildSondageSchema(), backend);
 
 		// createInstallationSchema();
 
@@ -58,6 +56,7 @@ public class Joho extends SpaceClient {
 				.add(buildMessageSchema())//
 				.add(buildCustomUserSchema())//
 				.add(buildThemesSchema())//
+				.add(buildSondageSchema())//
 				.add(buildSitesSchema());
 
 		SchemaAcl schemaAcl = new SchemaAcl();
@@ -75,39 +74,6 @@ public class Joho extends SpaceClient {
 		SpaceRequest.put("/1/schema/installation").adminAuth(backend).go(201);
 	}
 
-	void createResponse(String messageId, String text, User user) {
-		JsonBuilder<ObjectNode> message = Json.objectBuilder().object("responses").put("text", text)//
-				.object("author").put("firstname", user.username).put("lastname", user.email);
-		SpaceRequest.put("/1/data/message/" + messageId).userAuth(user).body(message).go(200);
-	}
-
-	User createUser(Backend backend, String username, String password, String email, String firstname, String lastname,
-			String job, String town, String serviceName, String serviceCode, double lat, double lon, String mobile,
-			String fixed, String avatarUrl) {
-
-		ObjectNode user = Json.objectBuilder().put("username", username)//
-				.put("password", password)//
-				.put("email", email)//
-				.put("firstname", firstname)//
-				.put("lastname", lastname)//
-				.put("job", job)//
-				.put("mobile", mobile)//
-				.put("fixed", fixed)//
-				.put("avatar", avatarUrl)//
-				.object("site")//
-				.put("name", serviceName)//
-				.put("town", town)//
-				.put("code", serviceCode)//
-				.object("where")//
-				.put("lat", lat)//
-				.put("lon", lon)//
-				.build();
-
-		String id = SpaceRequest.post("/1/user/").backend(backend).body(user).go(201).objectNode().get("id").asText();
-
-		return new User(backend.backendId, id, username, password, email);
-	}
-
 	void createThemes() {
 		URL url = Resources.getResource("io/spacedog/examples/joho.themes.json");
 		JsonNode themes = Json.readNode(url);
@@ -118,68 +84,6 @@ public class Joho extends SpaceClient {
 		URL url = Resources.getResource("io/spacedog/examples/joho.sites.json");
 		JsonNode sites = Json.readNode(url);
 		SpaceRequest.post("/1/data/sites").adminAuth(backend).body(sites).go(201);
-	}
-
-	String createDiscussion(String title, String categoryCode, User user) {
-
-		JsonBuilder<ObjectNode> discussion = Json.objectBuilder().put("title", title)//
-				.put("description", title).object("category").put("code", categoryCode);
-		return SpaceRequest.post("/1/data/discussion").userAuth(user).body(discussion).go(201)//
-				.objectNode().get("id").asText();
-	}
-
-	String createMessage(String discussionId, String text, User user) {
-		return SpaceRequest.post("/1/data/message").userAuth(user)//
-				.body("text", text, "discussionId", discussionId)//
-				.go(201).objectNode().get("id").asText();
-	}
-
-	Iterator<JsonNode> showWall() {
-
-		JsonBuilder<ObjectNode> discussionQuery = Json.objectBuilder()//
-				.put("from", 0)//
-				.put("size", 10)//
-				.array("sort")//
-				.object()//
-				.object("meta.updatedAt")//
-				.put("order", "asc")//
-				.end()//
-				.end()//
-				.end()//
-				.object("query")//
-				.object("match_all");
-
-		JsonNode subjectResults = SpaceRequest.post("/1/search/discussion").refresh().backend(backend)
-				.body(discussionQuery).go(200).jsonNode();
-
-		Iterator<JsonNode> discussions = subjectResults.get("results").elements();
-
-		while (discussions.hasNext()) {
-
-			JsonBuilder<ObjectNode> messagesQuery = Json.objectBuilder()//
-					.put("from", 0)//
-					.put("size", 10)//
-					.array("sort")//
-					.object()//
-					.object("meta.updatedAt")//
-					.put("order", "asc")//
-					.end()//
-					.end()//
-					.end()//
-					.object("query")//
-					.object("filtered")//
-					.object("query")//
-					.object("match_all")//
-					.end()//
-					.end()//
-					.object("filter")//
-					.object("term")//
-					.put("discussionId", discussions.next().get("meta").get("id").asText());
-
-			SpaceRequest.post("/1/search/message").backend(backend).body(messagesQuery).go(200);
-		}
-
-		return discussions;
 	}
 
 	static Schema buildDiscussionSchema() {
@@ -329,4 +233,26 @@ public class Joho extends SpaceClient {
 				.string("code")//
 				.build();
 	}
+
+	static Schema buildSondageSchema() {
+		return Schema.builder("sondage")//
+
+				.acl("user", DataPermission.search, DataPermission.update_all)//
+				.acl("admin", DataPermission.create, DataPermission.search, //
+						DataPermission.update_all, DataPermission.delete_all)//
+
+				.text("question").french()//
+				.string("status")//
+
+				.object("choices").array()//
+				.text("title").french()//
+
+				.object("answers").array()//
+				.string("userId").array()//
+				.close()
+
+				.close()//
+				.build();
+	}
+
 }
