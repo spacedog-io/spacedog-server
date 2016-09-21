@@ -3,6 +3,7 @@
  */
 package io.spacedog.services;
 
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
@@ -170,15 +171,15 @@ public class DataStore {
 	// }
 	// }
 
-	public SearchHits search(String backendId, String type, String... terms) {
+	public SearchHits search(String backendId, String type, Object... terms) {
 
 		if (terms.length % 2 == 1)
 			throw Exceptions.illegalArgument(//
-					"invalid search terms [%s]: missing term value", String.join(", ", terms));
+					"invalid search terms %s: missing term value", Arrays.toString(terms));
 
 		BoolQueryBuilder builder = QueryBuilders.boolQuery();
 		for (int i = 0; i < terms.length; i = i + 2)
-			builder.filter(QueryBuilders.termQuery(terms[i], terms[i + 1]));
+			builder.filter(QueryBuilders.termQuery(terms[i].toString(), terms[i + 1]));
 
 		SearchResponse response = Start.get().getElasticClient()//
 				.prepareSearch(backendId, type).setTypes(type).setQuery(builder).get();
