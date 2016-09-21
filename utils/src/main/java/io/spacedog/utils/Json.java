@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.joda.time.DateTime;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.DefaultIndenter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
@@ -277,6 +279,8 @@ public class Json {
 			return FloatNode.valueOf((float) value);
 		else if (value instanceof String)
 			return TextNode.valueOf((String) value);
+		else if (value instanceof DateTime)
+			return TextNode.valueOf(value.toString());
 		else if (value.getClass().isArray())
 			return toArrayNode(value);
 		else if (value instanceof Collection<?>)
