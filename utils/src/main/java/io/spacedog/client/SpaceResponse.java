@@ -326,6 +326,24 @@ public class SpaceResponse {
 		return this;
 	}
 
+	public SpaceResponse assertString(String jsonPath) {
+		assertPresent(jsonPath);
+		JsonNode node = Json.get(jsonResponseContent, jsonPath);
+		if (!node.isTextual())
+			Assert.fail(String.format(//
+					"json path [%s] not string", jsonPath));
+		return this;
+	}
+
+	public SpaceResponse assertInteger(String jsonPath) {
+		assertPresent(jsonPath);
+		JsonNode node = Json.get(jsonResponseContent, jsonPath);
+		if (!node.isInt())
+			Assert.fail(String.format(//
+					"json path [%s] not integer", jsonPath));
+		return this;
+	}
+
 	public SpaceResponse assertHeaderEquals(String expected, String headerName) {
 		if (!Arrays.asList(expected).equals(headers.get(headerName)))
 			Assert.fail(String.format("response header [%s] not equal to [%s] but to %s", //
@@ -358,4 +376,5 @@ public class SpaceResponse {
 			throw Exceptions.runtime(e, "invalid [%s] json object", objectClass.getSimpleName());
 		}
 	}
+
 }
