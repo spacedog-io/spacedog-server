@@ -37,17 +37,28 @@ public class Caremen extends SpaceClient {
 		// resetBackend(backend);
 		// initInstallations();
 		// initCourses();
-		// initDrivers();
-		// initPassengers();
+		initDrivers();
+		initPassengers();
 		// initCarTypes();
 
-		moveCourseDrivers();
+		// moveCourseDrivers();
 	}
 
 	void initPassengers() {
-		SpaceClient.newCredentials(backend, "flavien", "hi flavien", "flavien.dibello@in-tact.fr");
-		SpaceClient.newCredentials(backend, "aurelien", "hi aurelien", "aurelien.gustan@in-tact.fr");
-		SpaceClient.newCredentials(backend, "david", "hi david", "david.attias@in-tact.fr");
+		createPassenger("flavien");
+		createPassenger("aurelien");
+		createPassenger("david");
+		createPassenger("philippe");
+	}
+
+	User createPassenger(String username) {
+		String password = "hi " + username;
+		String email = "david@spacedog.io";
+
+		Optional<User> optional = SpaceClient.login(backend.backendId, username, password, 200, 401);
+
+		return optional.isPresent() ? optional.get() //
+				: SpaceClient.newCredentials(backend, username, password, email);
 	}
 
 	void initInstallations() {
@@ -127,6 +138,7 @@ public class Caremen extends SpaceClient {
 		createDriver("marcel", schema);
 		createDriver("gerard", schema);
 		createDriver("robert", schema);
+		createDriver("suzanne", schema);
 	}
 
 	void createDriver(String username, Schema schema) {
