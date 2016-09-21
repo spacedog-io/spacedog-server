@@ -154,6 +154,10 @@ public class JsonPayload {
 		return new Payload(JSON_CONTENT_UTF8, content, httpStatus);
 	}
 
+	public static Payload json(String content, int httpStatus) {
+		return new Payload(JSON_CONTENT_UTF8, content, httpStatus);
+	}
+
 	public static Payload json(int status, ShardOperationFailedException[] failures) {
 
 		if (status < 400)
