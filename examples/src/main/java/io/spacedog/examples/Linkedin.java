@@ -78,8 +78,8 @@ public class Linkedin extends SpaceClient {
 		CredentialsSettings settings = new CredentialsSettings();
 
 		settings.disableGuestSignUp = disableGuestSignUp;
-		settings.linkedinId = SpaceRequest.configuration().linkedinClientId();
-		settings.linkedinSecret = SpaceRequest.configuration().linkedinClientSecret();
+		settings.linkedinId = SpaceRequest.configuration().testLinkedinClientId();
+		settings.linkedinSecret = SpaceRequest.configuration().testLinkedinClientSecret();
 		settings.linkedinRedirectUri = SpaceRequest.configuration().target()//
 				.url(backend.backendId, "/1/login/linkedin");
 

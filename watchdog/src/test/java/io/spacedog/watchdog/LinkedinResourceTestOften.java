@@ -32,8 +32,8 @@ public class LinkedinResourceTestOften extends Assert {
 
 		// admin sets linkedin settings without redirect uri
 		CredentialsSettings settings = new CredentialsSettings();
-		settings.linkedinId = SpaceRequest.configuration().linkedinClientId();
-		settings.linkedinSecret = SpaceRequest.configuration().linkedinClientSecret();
+		settings.linkedinId = SpaceRequest.configuration().testLinkedinClientId();
+		settings.linkedinSecret = SpaceRequest.configuration().testLinkedinClientSecret();
 		SpaceClient.saveSettings(test, settings);
 
 		// fails to create linkedin credentials if no authorization code

@@ -85,8 +85,8 @@ public class MailResourceTestOncePerDay extends Assert {
 		settings.smtp.host = "mail.gandi.net";
 		settings.smtp.startTlsRequired = false;
 		settings.smtp.sslOnConnect = true;
-		settings.smtp.login = SpaceRequest.configuration().smtpLogin();
-		settings.smtp.password = SpaceRequest.configuration().smtpPassword();
+		settings.smtp.login = SpaceRequest.configuration().testSmtpLogin();
+		settings.smtp.password = SpaceRequest.configuration().testSmtpPassword();
 		SpaceClient.saveSettings(test, settings);
 
 		// load your HTML email template

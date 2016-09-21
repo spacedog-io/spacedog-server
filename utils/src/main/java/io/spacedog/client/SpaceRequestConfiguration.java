@@ -60,20 +60,20 @@ public class SpaceRequestConfiguration {
 		return Integer.valueOf(configuration.getProperty("spacedog.http.timeout", "10000"));
 	}
 
-	public String smtpLogin() {
-		return getProperty("spacedog.mail.smtp.login");
+	public String testSmtpLogin() {
+		return getProperty("spacedog.test.smtp.login");
 	}
 
-	public String smtpPassword() {
-		return getProperty("spacedog.mail.smtp.password");
+	public String testSmtpPassword() {
+		return getProperty("spacedog.test.smtp.password");
 	}
 
-	public String linkedinClientId() {
-		return getProperty("spacedog.linkedin.client.id");
+	public String testLinkedinClientId() {
+		return getProperty("spacedog.test.linkedin.client.id");
 	}
 
-	public String linkedinClientSecret() {
-		return getProperty("spacedog.linkedin.client.secret");
+	public String testLinkedinClientSecret() {
+		return getProperty("spacedog.test.linkedin.client.secret");
 	}
 
 	public String cesioSuperAdminUsername() {
@@ -88,14 +88,14 @@ public class SpaceRequestConfiguration {
 	// Implementation
 	//
 
-	private String getProperty(String key, String defaultValue) {
+	public String getProperty(String key, String defaultValue) {
 		String value = System.getProperty(key);
 		if (Strings.isNullOrEmpty(value))
 			value = properties.getProperty(key, defaultValue);
 		return value;
 	}
 
-	private String getProperty(String key) {
+	public String getProperty(String key) {
 		String value = System.getProperty(key);
 		if (Strings.isNullOrEmpty(value))
 			value = properties.getProperty(key);
