@@ -169,6 +169,7 @@ public class Start {
 		routes.add(BackendResource.get())//
 				.add(AdminResource.get())//
 				.add(DataResource.get())//
+				.add(LafargeCesioResource.get())//
 				.add(SchemaResource.get())//
 				.add(CredentialsResource.get())//
 				.add(LinkedinResource.get())//

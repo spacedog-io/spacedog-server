@@ -76,6 +76,14 @@ public class SpaceRequestConfiguration {
 		return getProperty("spacedog.linkedin.client.secret");
 	}
 
+	public String cesioSuperAdminUsername() {
+		return getProperty("spacedog.cesio.superadmin.username");
+	}
+
+	public String cesioSuperAdminPassword() {
+		return getProperty("spacedog.cesio.superadmin.password");
+	}
+
 	//
 	// Implementation
 	//
