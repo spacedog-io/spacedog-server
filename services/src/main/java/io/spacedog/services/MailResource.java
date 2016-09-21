@@ -75,7 +75,7 @@ public class MailResource extends Resource {
 	// Implementation
 	//
 
-	private static class Message {
+	static class Message {
 		public String from;
 		public String to;
 		public String cc;
@@ -128,13 +128,13 @@ public class MailResource extends Resource {
 		return message;
 	}
 
-	private Payload emailViaGun(Credentials credentials, MailGunSettings settings, Message message) {
+	Payload emailViaGun(Credentials credentials, MailGunSettings settings, Message message) {
 		message.from = credentials.backendId().toUpperCase() + " <no-reply@" + settings.domain + ">";
 		ObjectNode response = mailgun(message, settings);
 		return JsonPayload.json(response, response.get("status").asInt());
 	}
 
-	private Payload emailViaSmtp(Credentials credentials, SmtpSettings settings, Message message) {
+	Payload emailViaSmtp(Credentials credentials, SmtpSettings settings, Message message) {
 
 		Email email = null;
 

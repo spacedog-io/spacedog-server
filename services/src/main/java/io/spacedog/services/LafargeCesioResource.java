@@ -27,10 +27,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import io.spacedog.services.MailResource.Message;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.MailSettings;
 import io.spacedog.utils.Schema;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Get;
@@ -106,6 +108,8 @@ public class LafargeCesioResource extends Resource {
 				DataStore.get().createObject(credentials.backendId(), PLAYER_TYPE, //
 						Optional.of("" + player.id), Json.mapper().valueToTree(player), //
 						credentials.name());
+
+				sendActivationCode(credentials, player);
 
 				return wrapResponse(201, player.toNode());
 			}
@@ -224,6 +228,28 @@ public class LafargeCesioResource extends Resource {
 	//
 	// Implementation
 	//
+
+	private void sendActivationCode(Credentials credentials, Player player) {
+
+		Message message = new Message();
+
+		message.text = "Hi, \r\n\r\n";
+		message.text += "Please find your unique activation code : \r\n\r\n";
+		message.text += "Email : {$user->getEmail()}\r\n";
+		message.text += "Code : {$user->getCode()}\r\n\r\n";
+		message.text += "You will need it when you will log in to play the game. \r\n\r\n";
+		message.text += "Enjoy ! \r\n\r\n";
+		message.text += "The CESIO TEAM \r\n";
+
+		message.subject = "CESIO GAME - activation code";
+		message.from = "cesio@lafargeholcimweb.com";
+		message.to = player.email;
+
+		MailSettings settings = SettingsResource.get().load(MailSettings.class);
+
+		if (settings.smtp != null)
+			MailResource.get().emailViaSmtp(credentials, settings.smtp, message);
+	}
 
 	private JsonNode toLeaderboard(List<HighScore> highScores) {
 		highScores.sort(null);
