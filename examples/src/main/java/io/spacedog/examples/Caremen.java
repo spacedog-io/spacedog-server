@@ -4,11 +4,13 @@
 package io.spacedog.examples;
 
 import java.util.Optional;
+import java.util.Random;
 
 import org.elasticsearch.action.support.QuerySourceBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -27,6 +29,7 @@ public class Caremen extends SpaceClient {
 
 	private Backend backend;
 	private JsonGenerator generator = new JsonGenerator();
+	private Random random = new Random();
 
 	@Test
 	public void initCaremenBackend() {
@@ -38,7 +41,7 @@ public class Caremen extends SpaceClient {
 		// initInstallations();
 		// initCourses();
 		initDrivers();
-		initPassengers();
+		// initPassengers();
 		// initCarTypes();
 
 		// moveCourseDrivers();
@@ -139,11 +142,15 @@ public class Caremen extends SpaceClient {
 		createDriver("gerard", schema);
 		createDriver("robert", schema);
 		createDriver("suzanne", schema);
+
+		for (int i = 0; i < 10; i++)
+			createDriver("driver-" + i, schema);
+
 	}
 
 	void createDriver(String username, Schema schema) {
 		String password = "hi " + username;
-		String email = username + "@caremen.com";
+		String email = (username.startsWith("driver") ? "driver" : username) + "@caremen.com";
 
 		Optional<User> optional = SpaceClient.login(backend.backendId, username, password, 200, 401);
 
@@ -153,10 +160,16 @@ public class Caremen extends SpaceClient {
 		SpaceRequest.put("/1/credentials/" + credentials.id + "/roles/driver").adminAuth(backend).go(200);
 
 		ObjectNode driver = generator.gen(schema, 0);
+		driver.put("status", "working");
 		driver.put("credentialsId", credentials.id);
 		driver.put("firstname", credentials.username);
 		driver.put("lastname", credentials.username.charAt(0) + ".");
+		JsonNode where = Json.object("lat", 48.844 + (random.nextFloat() / 10), //
+				"lon", 2.282 + (random.nextFloat() / 10));
+		Json.set(driver, "lastLocation.where", where);
+
 		SpaceRequest.post("/1/data/driver").adminAuth(backend).body(driver).go(201);
+
 	}
 
 	static Schema buildDriverSchema() {
