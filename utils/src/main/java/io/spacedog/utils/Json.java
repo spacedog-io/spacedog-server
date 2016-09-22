@@ -66,7 +66,8 @@ public class Json {
 		return Json.toValue(node);
 	}
 
-	public static void set(JsonNode object, String propertyPath, JsonNode value) {
+	public static JsonNode set(JsonNode object, String propertyPath, Object value) {
+		JsonNode node = toNode(value);
 
 		int lastDotIndex = propertyPath.lastIndexOf('.');
 		String lastPathName = propertyPath.substring(lastDotIndex + 1);
@@ -76,12 +77,14 @@ public class Json {
 		}
 
 		if (object.isObject())
-			((ObjectNode) object).set(lastPathName, value);
+			((ObjectNode) object).set(lastPathName, node);
 		else if (object.isArray())
-			((ArrayNode) object).set(Integer.parseInt(lastPathName), value);
+			((ArrayNode) object).set(Integer.parseInt(lastPathName), node);
 		else
 			throw Exceptions.illegalArgument(//
 					"json node does not contain path [%s]", propertyPath);
+
+		return object;
 	}
 
 	public static JsonMerger merger() {
@@ -218,11 +221,6 @@ public class Json {
 		for (int i = 0; i < elements.length; i++)
 			array.add(toNode(elements[i]));
 		return array;
-	}
-
-	public static ObjectNode set(ObjectNode object, String key, Object value) {
-		object.set(key, toNode(value));
-		return object;
 	}
 
 	private static ObjectMapper jsonMapper;
