@@ -16,23 +16,48 @@ import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.MailSettings;
+import io.spacedog.utils.MailSettings.SmtpSettings;
 
 public class LafargeCesioTest extends Assert {
+
+	private static final String VINCE_EMAIL = "attias666@gmail.com";
+	private static final String DAVID_EMAIL = "david@spacedog.io";
 
 	@Test
 	public void testLafargeHolcimCesioApi() {
 
-		// prepare
-
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		SpaceClient.setSchema(LafargeCesioResource.playerSchema(), test);
+		/**
+		 * To test the php backend, uncomment these lines and comment the whole
+		 * 'prepare' section. Be carefull that the following is specific to the
+		 * spacedog backend (1) /api/leaderboard?size=1 (2) set vince score date
+		 * to now minus 8 days
+		 */
 
 		// SpaceRequest.configuration().target(SpaceTarget.production);
 		// Backend test = new Backend(//
 		// "cesio", SpaceRequest.configuration().cesioSuperAdminUsername(), //
 		// SpaceRequest.configuration().cesioSuperAdminPassword(), //
 		// "david@spacedog.io");
+
+		// prepare
+		SpaceClient.prepareTest();
+		Backend test = SpaceClient.resetTestBackend();
+		SpaceClient.setSchema(LafargeCesioResource.playerSchema(), test);
+
+		MailSettings settings = new MailSettings();
+		settings.enableUserFullAccess = false;
+		settings.smtp = new SmtpSettings();
+		settings.smtp.startTlsRequired = true;
+		settings.smtp.sslOnConnect = true;
+		settings.smtp.host = SpaceRequest.configuration()//
+				.getProperty("spacedog.cesio.smtp.host");
+		settings.smtp.login = SpaceRequest.configuration()//
+				.getProperty("spacedog.cesio.smtp.login");
+		settings.smtp.password = SpaceRequest.configuration()//
+				.getProperty("spacedog.cesio.smtp.password");
+
+		SpaceClient.saveSettings(test, settings);
 
 		// create account fails since email parameter is missing
 		SpaceRequest.post("/api/user/create").backend(test).go(400)//
@@ -46,7 +71,10 @@ public class LafargeCesioTest extends Assert {
 
 		// fails since email domain not lafargeholcim.com
 		SpaceRequest.post("/api/user/create").backend(test)//
-				.formField("email", "david@spacedog.io")//
+				// force forTesting header to false
+				// to have the production behavior on this
+				.forTesting(false)//
+				.formField("email", DAVID_EMAIL)//
 				.go(400)//
 				.assertEquals(error("Email is not in domain : lafargeholcim.com"));
 
@@ -58,26 +86,26 @@ public class LafargeCesioTest extends Assert {
 
 		// fails since country parameter is missing
 		SpaceRequest.post("/api/user/create").backend(test)//
-				.formField("email", "david.attias@lafargeholcim.com")//
+				.formField("email", DAVID_EMAIL)//
 				.go(400)//
 				.assertEquals(error("Missing parameter: country"));
 
 		// fails since country is empty
 		SpaceRequest.post("/api/user/create").backend(test)//
-				.formField("email", "david.attias@lafargeholcim.com")//
+				.formField("email", DAVID_EMAIL)//
 				.formField("country", "")//
 				.go(400)//
 				.assertEquals(error("country is empty"));
 
 		// creates a new user account
 		JsonNode account = SpaceRequest.post("/api/user/create").backend(test)//
-				.formField("email", "david.martin@lafargeholcim.com")//
+				.formField("email", DAVID_EMAIL)//
 				.formField("country", "24")//
 				.go(201)//
 				.assertEquals(1, "response")//
 				.assertEquals("", "message")//
 				.assertPresent("data.id")//
-				.assertEquals("david.martin@lafargeholcim.com", "data.email")//
+				.assertEquals(DAVID_EMAIL, "data.email")//
 				.assertEquals("24", "data.country")//
 				// only in this case, code is returned as an int
 				.assertInteger("data.code")//
@@ -90,13 +118,13 @@ public class LafargeCesioTest extends Assert {
 
 		// create account fails since already exists
 		SpaceRequest.post("/api/user/create").backend(test)//
-				.formField("email", "david.martin@lafargeholcim.com")//
+				.formField("email", DAVID_EMAIL)//
 				.formField("country", "24")//
 				.go(400)//
 				.assertEquals(0, "response")//
 				.assertEquals("user exists", "message")//
 				.assertEquals(idDavid, "data.id")//
-				.assertEquals("david.martin@lafargeholcim.com", "data.email")//
+				.assertEquals(DAVID_EMAIL, "data.email")//
 				.assertEquals("24", "data.country")//
 				// in this case, code is returned as a string
 				.assertEquals("" + codeDavid, "data.code");
@@ -105,7 +133,7 @@ public class LafargeCesioTest extends Assert {
 		// new user account has id = last user account id + 1
 		int idVince = Integer.valueOf(idDavid) + 1;
 		int codeVince = SpaceRequest.post("/api/user/create").backend(test)//
-				.formField("email", "vince.dupont@lafargeholcim.com")//
+				.formField("email", VINCE_EMAIL)//
 				.formField("country", "32")//
 				.go(201)//
 				.assertEquals("" + idVince, "data.id")//
@@ -123,40 +151,40 @@ public class LafargeCesioTest extends Assert {
 
 		// login fails since code is missing
 		SpaceRequest.post("/api/user/login").backend(test)//
-				.formField("email", "david.martin@lafargeholcim.com")//
+				.formField("email", DAVID_EMAIL)//
 				.go(400)//
 				.assertEquals(error("Missing parameter: code"));
 
 		// login fails since code is empty
 		SpaceRequest.post("/api/user/login").backend(test)//
-				.formField("email", "david.martin@lafargeholcim.com")//
+				.formField("email", DAVID_EMAIL)//
 				.formField("code", "")//
 				.go(400)//
 				.assertEquals(error("code is empty"));
 
 		// login fails since code is invalid
 		SpaceRequest.post("/api/user/login").backend(test)//
-				.formField("email", "david.martin@lafargeholcim.com")//
+				.formField("email", DAVID_EMAIL)//
 				.formField("code", "XXX")//
 				.go(400)//
 				.assertEquals(error("Connexion Error"));
 
 		// login succeeds
 		SpaceRequest.post("/api/user/login").backend(test)//
-				.formField("email", "david.martin@lafargeholcim.com")//
+				.formField("email", DAVID_EMAIL)//
 				.formField("code", "" + codeDavid)//
 				.go(201)//
 				.assertEquals(1, "response")//
 				.assertEquals("", "message")//
 				.assertEquals(idDavid, "data.id")//
-				.assertEquals("david.martin@lafargeholcim.com", "data.email")//
+				.assertEquals(DAVID_EMAIL, "data.email")//
 				.assertEquals("24", "data.country")//
 				// in this case, code is returned as a string
 				.assertEquals("" + codeDavid, "data.code");
 
 		// david gets no scores
 		SpaceRequest.post("/api/score/get").backend(test)//
-				.formField("email", "david.martin@lafargeholcim.com")//
+				.formField("email", DAVID_EMAIL)//
 				.formField("code", "" + codeDavid)//
 				.go(400)//
 				.assertEquals(error("No scores"));
@@ -171,7 +199,7 @@ public class LafargeCesioTest extends Assert {
 
 		// david sets level 1 score
 		SpaceRequest.post("/api/score/set").backend(test)//
-				.formField("email", "david.martin@lafargeholcim.com")//
+				.formField("email", DAVID_EMAIL)//
 				.formField("code", "" + codeDavid)//
 				.formField("level", "1")//
 				.formField("score", "123")//
@@ -180,7 +208,7 @@ public class LafargeCesioTest extends Assert {
 
 		// david sets lower level 1 score
 		SpaceRequest.post("/api/score/set").backend(test)//
-				.formField("email", "david.martin@lafargeholcim.com")//
+				.formField("email", DAVID_EMAIL)//
 				.formField("code", "" + codeDavid)//
 				.formField("level", "1")//
 				.formField("score", "111")//
@@ -189,7 +217,7 @@ public class LafargeCesioTest extends Assert {
 
 		// david sets higher level 1 score
 		SpaceRequest.post("/api/score/set").backend(test)//
-				.formField("email", "david.martin@lafargeholcim.com")//
+				.formField("email", DAVID_EMAIL)//
 				.formField("code", "" + codeDavid)//
 				.formField("level", "1")//
 				.formField("score", "133")//
@@ -198,7 +226,7 @@ public class LafargeCesioTest extends Assert {
 
 		// david sets same level 1 score
 		SpaceRequest.post("/api/score/set").backend(test)//
-				.formField("email", "david.martin@lafargeholcim.com")//
+				.formField("email", DAVID_EMAIL)//
 				.formField("code", "" + codeDavid)//
 				.formField("level", "1")//
 				.formField("score", "133")//
@@ -207,7 +235,7 @@ public class LafargeCesioTest extends Assert {
 
 		// david gets score
 		SpaceRequest.post("/api/score/get").backend(test)//
-				.formField("email", "david.martin@lafargeholcim.com")//
+				.formField("email", DAVID_EMAIL)//
 				.formField("code", "" + codeDavid)//
 				.go(201)//
 				.assertEquals(1, "response")//
@@ -218,7 +246,7 @@ public class LafargeCesioTest extends Assert {
 
 		// david sets level 2 score
 		SpaceRequest.post("/api/score/set").backend(test)//
-				.formField("email", "david.martin@lafargeholcim.com")//
+				.formField("email", DAVID_EMAIL)//
 				.formField("code", "" + codeDavid)//
 				.formField("level", "2")//
 				.formField("score", "43")//
@@ -227,7 +255,7 @@ public class LafargeCesioTest extends Assert {
 
 		// david gets score
 		SpaceRequest.post("/api/score/get").backend(test)//
-				.formField("email", "david.martin@lafargeholcim.com")//
+				.formField("email", DAVID_EMAIL)//
 				.formField("code", "" + codeDavid)//
 				.go(201)//
 				.assertEquals(1, "response")//
@@ -244,7 +272,7 @@ public class LafargeCesioTest extends Assert {
 
 		// vince sets level 2 score
 		SpaceRequest.post("/api/score/set").backend(test)//
-				.formField("email", "vince.dupont@lafargeholcim.com")//
+				.formField("email", VINCE_EMAIL)//
 				.formField("code", "" + codeVince)//
 				.formField("level", "2")//
 				.formField("score", "143")//
@@ -253,10 +281,10 @@ public class LafargeCesioTest extends Assert {
 
 		// gets leaderboard
 
-		ObjectNode david = Json.object("email", "david.martin@lafargeholcim.com", //
+		ObjectNode david = Json.object("email", DAVID_EMAIL, //
 				"country_id", "24", "somme", "176");
 
-		ObjectNode vince = Json.object("email", "vince.dupont@lafargeholcim.com", //
+		ObjectNode vince = Json.object("email", VINCE_EMAIL, //
 				"country_id", "32", "somme", "143");
 
 		ArrayNode today = Json.array(david, vince);

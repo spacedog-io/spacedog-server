@@ -70,7 +70,7 @@ public class LafargeCesioResource extends Resource {
 		try {
 			Player player = new Player();
 			player.email = extract(EMAIL);
-			validateEmail(player.email);
+			validateEmail(player.email, SpaceContext.isTest());
 			player.country = extractInt(COUNTRY);
 
 			Start.get().getElasticClient().refreshType(//
@@ -80,9 +80,8 @@ public class LafargeCesioResource extends Resource {
 					credentials.backendId(), PLAYER_TYPE, EMAIL, player.email);
 
 			if (hits.totalHits() > 0) {
-				ObjectNode data = Json.readObject(hits.getAt(0).getSourceAsString());
-				data.remove("meta");
-				player = Json.mapper().treeToValue(data, Player.class);
+				player = Json.mapper().readValue(//
+						hits.getAt(0).getSourceAsString(), Player.class);
 				return wrapResponse(400, "user exists", player.toNodeWithStringCode());
 
 			} else {
@@ -114,6 +113,8 @@ public class LafargeCesioResource extends Resource {
 				return wrapResponse(201, player.toNode());
 			}
 
+		} catch (CesioException e) {
+			return wrapResponse(e);
 		} catch (Throwable t) {
 			t.printStackTrace();
 			return wrapResponse(t);
@@ -164,6 +165,8 @@ public class LafargeCesioResource extends Resource {
 			save(player);
 			return wrapResponse(201);
 
+		} catch (CesioException e) {
+			return wrapResponse(e);
 		} catch (Throwable t) {
 			t.printStackTrace();
 			return wrapResponse(t);
@@ -186,6 +189,8 @@ public class LafargeCesioResource extends Resource {
 
 			return wrapResponse(201, player.toScoresNode());
 
+		} catch (CesioException e) {
+			return wrapResponse(e);
 		} catch (Throwable t) {
 			t.printStackTrace();
 			return wrapResponse(t);
@@ -198,26 +203,25 @@ public class LafargeCesioResource extends Resource {
 	public Payload leaderboard() {
 		Credentials credentials = forceLafargeCredentials();
 		ElasticClient elastic = Start.get().getElasticClient();
+
 		List<HighScore> highScores = Lists.newArrayList();
+		int size = SpaceContext.isTest() ? 1 : 100;
+		int from = 0;
 
 		try {
+
 			elastic.refreshType(credentials.backendId(), PLAYER_TYPE);
-			SearchHits hits = elastic.prepareSearch(credentials.backendId(), PLAYER_TYPE)//
-					.setQuery(QueryBuilders.matchAllQuery())//
-					.setSize(100)//
-					.get()//
-					.getHits();
+			long total = getPlayerCount(credentials);
 
-			for (SearchHit searchHit : hits) {
-				Player player = Json.mapper().readValue(//
-						searchHit.sourceAsString(), Player.class);
-
-				HighScore highScore = player.highScore();
-				if (highScore.date != null)
-					highScores.add(highScore);
+			while (from < total) {
+				getHighScores(credentials, highScores, from, size);
+				from = from + size;
 			}
 
 			return wrapResponse(201, toLeaderboard(highScores));
+
+		} catch (CesioException e) {
+			return wrapResponse(e);
 		} catch (Throwable t) {
 			t.printStackTrace();
 			return wrapResponse(t);
@@ -229,18 +233,52 @@ public class LafargeCesioResource extends Resource {
 	// Implementation
 	//
 
+	private long getPlayerCount(Credentials credentials) {
+
+		return Start.get().getElasticClient()//
+				.prepareSearch(credentials.backendId(), PLAYER_TYPE)//
+				.setQuery(QueryBuilders.matchAllQuery())//
+				.setSize(0)//
+				.get()//
+				.getHits()//
+				.totalHits();
+	}
+
+	private void getHighScores(Credentials credentials, List<HighScore> highScores, int from, int size)
+			throws IOException, JsonParseException, JsonMappingException {
+
+		SearchHits hits = Start.get().getElasticClient()//
+				.prepareSearch(credentials.backendId(), PLAYER_TYPE)//
+				.setQuery(QueryBuilders.matchAllQuery())//
+				.setFrom(from).setSize(size)//
+				.get()//
+				.getHits();
+
+		for (SearchHit searchHit : hits) {
+			Player player = Json.mapper().readValue(//
+					searchHit.sourceAsString(), Player.class);
+
+			HighScore highScore = player.highScore();
+			if (highScore.date != null)
+				highScores.add(highScore);
+		}
+	}
+
 	private void sendActivationCode(Credentials credentials, Player player) {
 
 		Message message = new Message();
 
-		message.text = "Hi, \r\n\r\n";
-		message.text += "Please find your unique activation code : \r\n\r\n";
-		message.text += "Email : {$user->getEmail()}\r\n";
-		message.text += "Code : {$user->getCode()}\r\n\r\n";
-		message.text += "You will need it when you will log in to play the game. \r\n\r\n";
-		message.text += "Enjoy ! \r\n\r\n";
-		message.text += "The CESIO TEAM \r\n";
+		StringBuilder builder = new StringBuilder();
 
+		builder.append("Hi, \n\n");
+		builder.append("Please find your unique activation code : \n\n");
+		builder.append("Email : ").append(player.email).append("\n");
+		builder.append("Code : ").append(player.code).append("\n\n");
+		builder.append("You will need it when you will log in to play the game. \n\n");
+		builder.append("Enjoy ! \n\n");
+		builder.append("The CESIO TEAM \n");
+
+		message.text = builder.toString();
 		message.subject = "CESIO GAME - activation code";
 		message.from = "cesio@lafargeholcimweb.com";
 		message.to = player.email;
@@ -348,11 +386,12 @@ public class LafargeCesioResource extends Resource {
 		return paramValue;
 	}
 
-	private void validateEmail(String email) {
-		if (!email.endsWith("@lafargeholcim.com"))
+	private void validateEmail(String email, boolean forTesting) {
+		if (!forTesting && !email.endsWith("@lafargeholcim.com"))
 			throw new CesioException("Email is not in domain : lafargeholcim.com");
 
-		String regex = "^[-a-z0-9!#$%&'*+\\/=?^_`{|}~]+(\\.[-a-z0-9!#$%&'*+\\/=?^_`{|}~]+)*@lafargeholcim.com";
+		String regex = "^[-a-z0-9!#$%&'*+\\/=?^_`{|}~]+(\\.[-a-z0-9!#$%&'*+\\/=?^_`{|}~]+)*"//
+				+ "@[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
 
 		if (!Pattern.matches(regex, email))
 			throw new CesioException("Invalid Email");
