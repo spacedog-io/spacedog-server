@@ -65,9 +65,17 @@ public class MailResource extends Resource {
 		if (settings.mailgun != null)
 			return emailViaGun(credentials, settings.mailgun, message);
 
+		// if default spacedog mailgun settings ...
 		MailGunSettings defaultMailGunSettings = new MailGunSettings();
 		defaultMailGunSettings.key = Start.get().configuration().mailGunKey();
 		defaultMailGunSettings.domain = Start.get().configuration().mailDomain();
+
+		// ... add a footer to the message
+		if (!Strings.isNullOrEmpty(message.text))
+			message.text = addFooterToTextMessage(context.get(TEXT), credentials);
+		if (!Strings.isNullOrEmpty(message.html))
+			message.html = addFooterToHtmlMessage(context.get(HTML), credentials);
+
 		return emailViaGun(credentials, defaultMailGunSettings, message);
 	}
 
@@ -119,11 +127,6 @@ public class MailResource extends Resource {
 					throw Exceptions.illegalArgument(e, "invalid [%s] part in multipart request", part.name());
 				}
 			}
-
-		if (!Strings.isNullOrEmpty(message.text))
-			message.text = addFooterToTextMessage(context.get(TEXT), credentials);
-		if (!Strings.isNullOrEmpty(message.html))
-			message.html = addFooterToHtmlMessage(context.get(HTML), credentials);
 
 		return message;
 	}
