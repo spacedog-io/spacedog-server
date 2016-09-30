@@ -39,12 +39,14 @@ public class Caremen extends SpaceClient {
 
 		// resetBackend(backend);
 		// initInstallations();
-		// initCourses();
-		initDrivers();
+		// initVehiculeTypes();
+
 		// initPassengers();
-		// initCarTypes();
+		// initDrivers();
+		// initCourses();
 
 		// moveCourseDrivers();
+
 	}
 
 	void initPassengers() {
@@ -78,21 +80,38 @@ public class Caremen extends SpaceClient {
 		Schema schema = buildCourseSchema();
 		resetSchema(schema, backend);
 
-		SpaceRequest.post("/1/data/course?id=home")//
-				.adminAuth(backend).body(generator.gen(schema, 0)).go(201);
+		createCourse("9 rue Titon Paris", "27 rue de la Roquette Paris", schema);
+		createCourse("32 rue Monge Paris", "58 boulevard Raspail Paris", schema);
+		createCourse("44 avenue Parmentier Paris", "58 boulevard Soult Paris", schema);
+		createCourse("4 boulevard de Port-Royal Paris", "22 rue de l'Université Paris", schema);
+		createCourse("112 rue la Fayette Paris", "67 avenue de Wagram Paris", schema);
+	}
+
+	void createCourse(String from, String to, Schema schema) {
+		ObjectNode node = generator.gen(schema, 0);
+		node.remove("history");
+		node.remove("driver");
+		node.with("from").put("address", from);
+		node.with("to").put("address", to);
+
+		SpaceRequest.post("/1/data/course")//
+				.adminAuth(backend).body(node).go(201);
 	}
 
 	static Schema buildCourseSchema() {
 		return Schema.builder("course") //
 
-				.acl("key", DataPermission.search)//
-				.acl("user", DataPermission.create, DataPermission.read, DataPermission.update)//
+				.acl("user", DataPermission.create, DataPermission.read, //
+						DataPermission.search, DataPermission.update)//
 				.acl("driver", DataPermission.search, DataPermission.update_all)//
-				.acl("admin", DataPermission.create, DataPermission.search, DataPermission.update_all,
-						DataPermission.delete_all)//
+				.acl("admin", DataPermission.create, DataPermission.search, //
+						DataPermission.update_all, DataPermission.delete_all)//
 
-				.string("status").examples("requested", "accepted") //
-				.string("carType").examples("berline", "van", "break")//
+				.string("status").examples("requested") //
+				.string("customerId").examples("david") //
+				.string("requestedVehiculeType").examples("berline") //
+				.timestamp("requestedPickupTimestamp").examples("2016-07-12T14:00:00.000Z") //
+				.timestamp("pickupTimestamp").examples("2016-07-12T14:00:00.000Z") //
 
 				.object("from")//
 				.text("address").french().examples("8 rue Titon 75011 Paris") //
@@ -104,26 +123,21 @@ public class Caremen extends SpaceClient {
 				.geopoint("geopoint")//
 				.close()//
 
-				.object("history").array()//
-				.string("event").examples("requested", "accepted")//
-				.string("by").examples("robert", "marcel")//
+				.object("events").array()//
+				.string("type").examples("requested", "accepted")//
+				.string("by").examples("David", "Vince", "Nathalie")//
 				.timestamp("when").examples("2016-07-12T14:00:00.000Z", "2016-08-02T14:00:00.000Z")//
 				.close()//
 
 				.object("driver")//
-				.string("id").examples("robert")//
+				.string("driverId").examples("robert")//
 				.string("firstname").examples("Robert")//
 				.string("lastname").examples("Morgan")//
 				.string("phone").examples("+ 33 6 42 01 67 56")//
 				.string("photo")
 				.examples("http://s3-eu-west-1.amazonaws.com/spacedog-artefact/SpaceDog-Logo-Transp-130px.png")//
 
-				.object("lastLocation")//
-				.geopoint("where")//
-				.timestamp("when")//
-				.close()
-
-				.object("car")//
+				.object("vehicule")//
 				.string("type").examples("berline", "van", "break")//
 				.string("brand").examples("Peugeot", "Renault")//
 				.string("model").examples("508", "Laguna", "Talisman")//
@@ -175,7 +189,6 @@ public class Caremen extends SpaceClient {
 	static Schema buildDriverSchema() {
 		return Schema.builder("driver") //
 
-				.acl("key", DataPermission.read_all)//
 				.acl("user", DataPermission.search)//
 				.acl("driver", DataPermission.search, DataPermission.update_all)//
 				.acl("admin", DataPermission.create, DataPermission.search, DataPermission.update_all,
@@ -195,7 +208,7 @@ public class Caremen extends SpaceClient {
 				.timestamp("when")//
 				.close()
 
-				.object("car")//
+				.object("vehicule")//
 				.string("type").examples("berline", "van", "break")//
 				.string("brand").examples("Peugeot", "Renault")//
 				.string("model").examples("508", "Laguna", "Talisman")//
@@ -212,7 +225,7 @@ public class Caremen extends SpaceClient {
 				.build();
 	}
 
-	void initCarTypes() {
+	void initVehiculeTypes() {
 
 		ArrayNode node = Json.arrayBuilder()//
 				.object()//
