@@ -196,6 +196,11 @@ public class SpaceResponse {
 		return this;
 	}
 
+	public SpaceResponse assertEquals(boolean expected, String jsonPath) {
+		Assert.assertEquals(expected, Json.get(jsonResponseContent, jsonPath).asBoolean());
+		return this;
+	}
+
 	public SpaceResponse assertEquals(JsonNode expected) {
 		Assert.assertEquals(expected, jsonResponseContent);
 		return this;
