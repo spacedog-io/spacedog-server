@@ -17,6 +17,7 @@ public abstract class Resource {
 	public static final String BACKEND_ID = "backendId";
 	public static final String PASSWORD = "password";
 	public static final String EMAIL = "email";
+	public static final String ENABLED = "enabled";
 	public static final String USERNAME = "username";
 	public static final String UPDATED_AT = "updatedAt";
 	public static final String CREATED_AT = "createdAt";

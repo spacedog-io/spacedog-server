@@ -54,6 +54,7 @@ public class CredentialsResource extends Resource {
 		Schema schema = Schema.builder(TYPE)//
 				.string(USERNAME)//
 				.string(BACKEND_ID)//
+				.bool(ENABLED)//
 				.string(CREDENTIALS_LEVEL)//
 				.string(ROLES).array()//
 				.string(ACCESS_TOKEN)//
@@ -251,6 +252,23 @@ public class CredentialsResource extends Resource {
 		credentials.setPassword(password, Optional.of(settings.passwordRegex()));
 
 		credentials = update(credentials);
+		return JsonPayload.saved(false, credentials.backendId(), //
+				"/1", TYPE, credentials.id(), credentials.version());
+	}
+
+	@Put("/1/credentials/:id/enabled")
+	@Put("/1/credentials/:id/enabled/")
+	public Payload putEnabled(String id, String body, Context context) {
+		SpaceContext.checkAdminCredentials();
+
+		JsonNode enabled = Json.readNode(body);
+		if (!enabled.isBoolean())
+			throw Exceptions.illegalArgument("body not a boolean but [%s]", body);
+
+		Credentials credentials = getById(id, true).get();
+		credentials.enabled(enabled.asBoolean());
+		credentials = update(credentials);
+
 		return JsonPayload.saved(false, credentials.backendId(), //
 				"/1", TYPE, credentials.id(), credentials.version());
 	}
@@ -581,6 +599,7 @@ public class CredentialsResource extends Resource {
 				BACKEND_ID, credentials.backendId(), //
 				USERNAME, credentials.name(), //
 				EMAIL, credentials.email().get(), //
+				ENABLED, credentials.enabled(), //
 				CREDENTIALS_LEVEL, credentials.level().name(), //
 				ROLES, credentials.roles(), //
 				CREATED_AT, credentials.createdAt(), //

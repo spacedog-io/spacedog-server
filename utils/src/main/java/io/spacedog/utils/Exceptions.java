@@ -56,12 +56,17 @@ public class Exceptions {
 	}
 
 	public static SpaceException alreadyExists(String type, String value) {
-		return new SpaceException(400, "already-exists", "[%s][%s] already exists", //
+		return new SpaceException("already-exists", 400, "[%s][%s] already exists", //
 				type, value);
 	}
 
 	public static SpaceException passwordMustBeChallenged() {
-		return new SpaceException(403, "password-challenged", "password must be challenged");
+		return new SpaceException("unchallenged-password", 403, "password must be challenged");
+	}
+
+	public static SpaceException disabledCredentials(Credentials credentials) {
+		return new SpaceException("disabled-credentials", 401, "[%s][%s] credentials disabled", //
+				credentials.level(), credentials.name());
 	}
 
 }

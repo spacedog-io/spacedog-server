@@ -8,10 +8,10 @@ public class SpaceException extends RuntimeException {
 	private String code;
 
 	public SpaceException(int httpStatus, String message, Object... args) {
-		this(httpStatus, fromStatusToCode(httpStatus), message, args);
+		this(fromStatusToCode(httpStatus), httpStatus, message, args);
 	}
 
-	public SpaceException(int httpStatus, String code, String message, Object... args) {
+	public SpaceException(String code, int httpStatus, String message, Object... args) {
 		super(String.format(message, args));
 		this.httpStatus = httpStatus;
 		this.code = code;

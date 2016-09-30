@@ -34,6 +34,7 @@ public class Credentials {
 	private String username;
 	private String email;
 	private Level level;
+	private boolean enabled = true;
 	private Set<String> roles;
 	private String accessToken;
 	private DateTime accessTokenExpiresAt;
@@ -158,6 +159,14 @@ public class Credentials {
 
 	public String passwordResetCode() {
 		return passwordResetCode;
+	}
+
+	public boolean enabled() {
+		return this.enabled;
+	}
+
+	public void enabled(boolean enabled) {
+		this.enabled = enabled;
 	}
 
 	public Set<String> roles() {

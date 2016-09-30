@@ -67,6 +67,7 @@ public class CredentialsResourceTestOften extends Assert {
 				.assertEquals("test", "credentials.backendId")//
 				.assertEquals("vince", "credentials.username")//
 				.assertEquals("vince@dog.com", "credentials.email")//
+				.assertEquals(true, "credentials.enabled")//
 				.assertEquals("USER", "credentials.level")//
 				.assertSizeEquals(1, "credentials.roles")//
 				.assertEquals("user", "credentials.roles.0")//
@@ -610,7 +611,7 @@ public class CredentialsResourceTestOften extends Assert {
 				.userAuth(fred)//
 				.formField("password", "hello fred")//
 				.go(403)//
-				.assertEquals("password-challenged", "error.code");
+				.assertEquals("unchallenged-password", "error.code");
 
 		// fred updates his password since his password is challenged
 		// because authentication is done with username and password
@@ -632,7 +633,7 @@ public class CredentialsResourceTestOften extends Assert {
 		// since password must be challenged
 		SpaceRequest.put("/1/credentials/" + fred.id).bearerAuth(fred)//
 				.body(Json.object("username", "fred2")).go(403)//
-				.assertEquals("password-challenged", "error.code");
+				.assertEquals("unchallenged-password", "error.code");
 
 		// fred updates his username with a challenged password
 		SpaceRequest.put("/1/credentials/" + fred.id).basicAuth(fred)//
@@ -652,7 +653,7 @@ public class CredentialsResourceTestOften extends Assert {
 		// since principal password must be challenged
 		SpaceRequest.put("/1/credentials/" + fred.id).bearerAuth(fred)//
 				.body(Json.object("password", "hi fred2")).go(403)//
-				.assertEquals("password-challenged", "error.code");
+				.assertEquals("unchallenged-password", "error.code");
 
 		// fred updates his password
 		SpaceRequest.put("/1/credentials/" + fred.id).basicAuth(fred)//
@@ -667,4 +668,60 @@ public class CredentialsResourceTestOften extends Assert {
 		// fred logs in with his new username and password
 		fred = SpaceClient.login("test", "fred2", "hi fred2");
 	}
+
+	@Test
+	public void disableCredentials() {
+
+		// prepare
+		SpaceClient.prepareTest();
+		Backend test = SpaceClient.resetTestBackend();
+		User fred = SpaceClient.newCredentials(test, "fred", "hi fred");
+
+		// fred logs in
+		SpaceRequest.get("/1/login").userAuth(fred).go(200);
+
+		// anonymous fails to disable fred's credentials
+		SpaceRequest.put("/1/credentials/" + fred.id + "/enabled")//
+				.body(Json.toNode(false)).backend(test).go(403);
+
+		// fred fails to disable his credentials
+		SpaceRequest.put("/1/credentials/" + fred.id + "/enabled")//
+				.body(Json.toNode(false)).userAuth(fred).go(403);
+
+		// admin fails to disable fred's credentials because body not a boolean
+		SpaceRequest.put("/1/credentials/" + fred.id + "/enabled")//
+				.body(Json.toNode("false")).adminAuth(test).go(400);
+
+		// only admin can disable fred's credentials
+		SpaceRequest.put("/1/credentials/" + fred.id + "/enabled")//
+				.body(Json.toNode(false)).adminAuth(test).go(200);
+
+		// fred fails to login from now on
+		SpaceRequest.get("/1/login").userAuth(fred).go(401)//
+				.assertEquals("disabled-credentials", "error.code");
+
+		// fred fails to access any other resources from now on
+		SpaceRequest.get("/1/data").userAuth(fred).go(401)//
+				.assertEquals("disabled-credentials", "error.code");
+
+		// fred fails to update his credentials from now on
+		SpaceRequest.put("/1/credentials/" + fred.id).userAuth(fred)//
+				.body("username", "fredy").go(401);
+
+		// anonymous fails to enable fred's credentials
+		SpaceRequest.put("/1/credentials/" + fred.id + "/enabled")//
+				.body(Json.toNode(true)).backend(test).go(403);
+
+		// fred fails to enable his credentials
+		SpaceRequest.put("/1/credentials/" + fred.id + "/enabled")//
+				.body(Json.toNode(true)).userAuth(fred).go(401);
+
+		// only admin can enable fred's credentials
+		SpaceRequest.put("/1/credentials/" + fred.id + "/enabled")//
+				.body(Json.toNode(true)).adminAuth(test).go(200);
+
+		// fred logs in again normally
+		SpaceRequest.get("/1/login").userAuth(fred).go(200);
+	}
+
 }

@@ -247,19 +247,24 @@ public class SpaceContext {
 				if (authHeader.isBasic()) {
 					superdog = authHeader.username().startsWith("superdog-");
 
-					userCredentials = CredentialsResource.get().checkUsernamePassword(//
-							superdog ? Backends.ROOT_API : backendId, //
-							authHeader.username(), authHeader.password());
+					userCredentials = CredentialsResource.get()//
+							.checkUsernamePassword(//
+									superdog ? Backends.ROOT_API : backendId, //
+									authHeader.username(), authHeader.password());
 
 					if (!userCredentials.isPresent())
 						throw new AuthenticationException("invalid username or password for backend [%s]", backendId);
 
 				} else if (authHeader.isBearer()) {
-					userCredentials = CredentialsResource.get().checkToken(backendId, authHeader.token());
+					userCredentials = CredentialsResource.get()//
+							.checkToken(backendId, authHeader.token());
 
 					if (!userCredentials.isPresent())
 						throw new AuthenticationException("invalid access token for backend [%s]", backendId);
 				}
+
+				if (!userCredentials.get().enabled())
+					throw Exceptions.disabledCredentials(userCredentials.get());
 
 				credentials = userCredentials.get();
 
