@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -289,8 +290,15 @@ public class PushResource extends Resource {
 	//
 
 	private String computeSnsJsonMessage(JsonNode message) {
-		if (message.isObject())
-			return message.toString();
+		if (message.isObject()) {
+			ObjectNode awsStylePushMessage = Json.object();
+			Iterator<Entry<String, JsonNode>> fields = message.fields();
+			while (fields.hasNext()) {
+				Entry<String, JsonNode> field = fields.next();
+				awsStylePushMessage.put(field.getKey(), field.getValue().toString());
+			}
+			return awsStylePushMessage.toString();
+		}
 
 		String text = message.asText();
 		ObjectNode json = Json.object("default", text, //
