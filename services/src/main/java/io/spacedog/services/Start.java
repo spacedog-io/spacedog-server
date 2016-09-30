@@ -61,7 +61,7 @@ public class Start {
 			t.printStackTrace();
 			if (singleton != null) {
 				if (singleton.fluent != null)
-					singleton.elastic.close();
+					singleton.fluent.stop();
 				if (singleton.elastic != null)
 					singleton.elastic.close();
 				if (singleton.elasticNode != null)
