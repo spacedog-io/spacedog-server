@@ -1,6 +1,7 @@
 package io.spacedog.services;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -10,6 +11,7 @@ import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.QuerySourceBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.sort.SortOrder;
@@ -21,7 +23,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
-import com.mashape.unirest.http.HttpMethod;
 
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
@@ -33,6 +34,7 @@ import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
+import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.filters.PayloadSupplier;
 import net.codestory.http.payload.Payload;
@@ -67,7 +69,7 @@ public class LogResource extends Resource {
 	@Get("/")
 	public Payload getAll(Context context) {
 
-		Credentials credentials = SpaceContext.checkAdminCredentials(false);
+		Credentials credentials = SpaceContext.checkSuperAdminCredentials(false);
 
 		Optional<String> backendId = credentials.isRootBackend() //
 				? Optional.empty() : Optional.of(credentials.backendId());
@@ -85,6 +87,34 @@ public class LogResource extends Resource {
 				context.query().getInteger("size", 10), //
 				optMinStatus, //
 				type);
+
+		return extractLogs(response);
+	}
+
+	@Post("/search")
+	@Post("/search/")
+	public Payload search(String body, Context context) {
+
+		Credentials credentials = SpaceContext.checkAdminCredentials(false);
+
+		QueryBuilder query = QueryBuilders.wrapperQuery(body);
+
+		if (!credentials.isRootBackend())
+			query = QueryBuilders.boolQuery()//
+					.filter(query)//
+					.filter(QueryBuilders.termQuery("credentials.backendId", //
+							credentials.backendId()));
+
+		DataStore.get().refreshType(true, SPACEDOG_BACKEND, TYPE);
+
+		SearchResponse response = Start.get().getElasticClient()//
+				.prepareSearch(SPACEDOG_BACKEND, TYPE)//
+				.setTypes(TYPE)//
+				.setQuery(query)//
+				.setFrom(context.query().getInteger("from", 0)) //
+				.setSize(context.query().getInteger("size", 10)) //
+				.addSort("receivedAt", SortOrder.DESC)//
+				.get();
 
 		return extractLogs(response);
 	}
@@ -221,59 +251,63 @@ public class LogResource extends Resource {
 	private String log(String uri, Context context, DateTime receivedAt, Payload payload) {
 
 		ObjectNode log = Json.object(//
-				"method", context.method(), "path", uri, //
-				"receivedAt", receivedAt.toString(), "processedIn",
-				DateTime.now().getMillis() - receivedAt.getMillis());
+				"method", context.method(), //
+				"path", uri, //
+				"receivedAt", receivedAt.toString(), //
+				"processedIn", DateTime.now().getMillis() - receivedAt.getMillis(), //
+				"status", payload == null ? 500 : payload.code());
 
 		addCredentials(log);
 		addQuery(log, context);
 		addHeaders(log, context.request().headers().entrySet());
-		addRequestContent(log, context);
-		addPayload(log, payload, context);
+		addRequestPayload(log, context);
+		addResponsePayload(log, payload, context);
 
 		return Start.get().getElasticClient()//
 				.index(SPACEDOG_BACKEND, TYPE, log.toString())//
 				.getId();
 	}
 
-	private void addPayload(ObjectNode log, Payload payload, Context context) {
+	private void addResponsePayload(ObjectNode log, Payload payload, Context context) {
 		if (payload != null) {
-			log.put("status", payload.code());
-
-			if (isNotGetLogRequest(context) //
-					&& payload.rawContent() instanceof JsonNode)
-				log.set("response", (JsonNode) payload.rawContent());
+			if (payload.rawContent() instanceof ObjectNode) {
+				ObjectNode node = (ObjectNode) payload.rawContent();
+				ObjectNode response = log.putObject("response");
+				// log the whole json payload but 'results'
+				Iterator<Entry<String, JsonNode>> fields = node.fields();
+				while (fields.hasNext()) {
+					Entry<String, JsonNode> field = fields.next();
+					if (!field.getKey().equals("results"))
+						response.set(field.getKey(), field.getValue());
+				}
+			}
 		}
 	}
 
-	private void addRequestContent(ObjectNode log, Context context) {
-		String content = null;
+	private void addRequestPayload(ObjectNode log, Context context) {
 
 		try {
-			content = context.request().content();
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+			String content = context.request().content();
 
-		if (!Strings.isNullOrEmpty(content)) {
+			if (!Strings.isNullOrEmpty(content)) {
 
-			// TODO: fix the content type problem
-			// String contentType = context.request().contentType();
-			// log.put("contentType", contentType);
-			// if (PayloadHelper.JSON_CONTENT.equals(contentType))
-			// log.node("content", content);
-			// else
-			// log.put("content", content);
+				// TODO: fix the content type problem
+				// String contentType = context.request().contentType();
+				// log.put("contentType", contentType);
+				// if (PayloadHelper.JSON_CONTENT.equals(contentType))
+				// log.node("content", content);
+				// else
+				// log.put("content", content);
 
-			if (Json.isObject(content))
-				try {
+				if (Json.isObject(content)) {
 					JsonNode securedContent = Json.fullReplaceTextualFields(//
 							Json.readNode(content), "password", "******");
 
 					log.set("jsonContent", securedContent);
-				} catch (Exception e) {
-					// I just do not log the content if I can not parse it
 				}
+			}
+		} catch (Exception e) {
+			log.set("jsonContent", Json.object("error", Json.toJson(e, true)));
 		}
 	}
 
@@ -325,11 +359,6 @@ public class LogResource extends Resource {
 					array.add(string);
 			}
 		}
-	}
-
-	private boolean isNotGetLogRequest(Context context) {
-		return !(HttpMethod.GET.toString().equals(context.method()) //
-				&& context.uri().equals("/1/log"));
 	}
 
 	//
