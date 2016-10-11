@@ -6,8 +6,6 @@ package io.spacedog.examples;
 import java.util.Optional;
 import java.util.Random;
 
-import org.elasticsearch.action.support.QuerySourceBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -41,22 +39,21 @@ public class Caremen extends SpaceClient {
 		// initInstallations();
 		// initVehiculeTypes();
 
-		// initPassengers();
-		// initDrivers();
-		// initCourses();
+		// resetSchema(buildCourseSchema(), backend);
+		// resetSchema(buildDriverSchema(), backend);
 
-		// moveCourseDrivers();
-
+		// createCustomers();
+		// createDrivers();
 	}
 
-	void initPassengers() {
-		createPassenger("flavien");
-		createPassenger("aurelien");
-		createPassenger("david");
-		createPassenger("philippe");
+	void createCustomers() {
+		createCustomer("flavien");
+		createCustomer("aurelien");
+		createCustomer("david");
+		createCustomer("philippe");
 	}
 
-	User createPassenger(String username) {
+	User createCustomer(String username) {
 		String password = "hi " + username;
 		String email = "david@spacedog.io";
 
@@ -76,28 +73,6 @@ public class Caremen extends SpaceClient {
 		SpaceClient.setSchema(schema, backend);
 	}
 
-	void initCourses() {
-		Schema schema = buildCourseSchema();
-		resetSchema(schema, backend);
-
-		createCourse("9 rue Titon Paris", "27 rue de la Roquette Paris", schema);
-		createCourse("32 rue Monge Paris", "58 boulevard Raspail Paris", schema);
-		createCourse("44 avenue Parmentier Paris", "58 boulevard Soult Paris", schema);
-		createCourse("4 boulevard de Port-Royal Paris", "22 rue de l'Université Paris", schema);
-		createCourse("112 rue la Fayette Paris", "67 avenue de Wagram Paris", schema);
-	}
-
-	void createCourse(String from, String to, Schema schema) {
-		ObjectNode node = generator.gen(schema, 0);
-		node.remove("history");
-		node.remove("driver");
-		node.with("from").put("address", from);
-		node.with("to").put("address", to);
-
-		SpaceRequest.post("/1/data/course")//
-				.adminAuth(backend).body(node).go(201);
-	}
-
 	static Schema buildCourseSchema() {
 		return Schema.builder("course") //
 
@@ -112,6 +87,10 @@ public class Caremen extends SpaceClient {
 				.string("requestedVehiculeType").examples("berline") //
 				.timestamp("requestedPickupTimestamp").examples("2016-07-12T14:00:00.000Z") //
 				.timestamp("pickupTimestamp").examples("2016-07-12T14:00:00.000Z") //
+				.timestamp("dropoffTimestamp").examples("2016-07-12T14:00:00.000Z") //
+				.floatt("fare").examples(23.82)// in euros
+				.longg("time").examples(1234567)// in millis
+				.integer("distance").examples(12345)// in meters
 
 				.object("from")//
 				.text("address").french().examples("8 rue Titon 75011 Paris") //
@@ -131,6 +110,7 @@ public class Caremen extends SpaceClient {
 
 				.object("driver")//
 				.string("driverId").examples("robert")//
+				.floatt("gain").examples("10.23")//
 				.string("firstname").examples("Robert")//
 				.string("lastname").examples("Morgan")//
 				.string("phone").examples("+ 33 6 42 01 67 56")//
@@ -148,18 +128,13 @@ public class Caremen extends SpaceClient {
 				.build();
 	}
 
-	void initDrivers() {
+	void createDrivers() {
 		Schema schema = buildDriverSchema();
-		resetSchema(schema, backend);
 
 		createDriver("marcel", schema);
 		createDriver("gerard", schema);
 		createDriver("robert", schema);
 		createDriver("suzanne", schema);
-
-		for (int i = 0; i < 10; i++)
-			createDriver("driver-" + i, schema);
-
 	}
 
 	void createDriver(String username, Schema schema) {
@@ -273,27 +248,4 @@ public class Caremen extends SpaceClient {
 		SpaceRequest.put("/1/settings/carTypes")//
 				.adminAuth(backend).body(node).go(201);
 	}
-
-	public void moveCourseDrivers() {
-
-		QuerySourceBuilder source = new QuerySourceBuilder();
-		source.setQuery(QueryBuilders.termQuery("status", "accepted"));
-
-		SpaceRequest.post("/1/search/course").adminAuth(backend)//
-				.body(source.toString()).size(100).go(200);
-
-		ObjectNode courseUpdate = Json.objectBuilder().object("driver")//
-				.object("lastLocation")//
-				.object("where")//
-				.put("lat", 23.78)//
-				.put("lon", 45.89)//
-				.end()//
-				.end()//
-				.end()//
-				.build();
-
-		SpaceRequest.put("/1/data/course/kjhgkjhgkjhvhkv").adminAuth(backend)//
-				.body(courseUpdate).go(200);
-	}
-
 }
