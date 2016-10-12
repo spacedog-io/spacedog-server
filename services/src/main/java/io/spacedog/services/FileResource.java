@@ -78,7 +78,7 @@ public class FileResource extends S3Resource {
 
 	Payload delete(String[] path) {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
-		return doDelete(FILE_BUCKET_SUFFIX, credentials, path);
+		return doDelete(FILE_BUCKET_SUFFIX, credentials, path, false, false);
 	}
 
 	private static String[] toWebPath(String uri) {

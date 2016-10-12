@@ -19,7 +19,9 @@ import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.ShareSettings;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
@@ -29,7 +31,7 @@ public class ShareResourceTestOncePerDay {
 	private static final String FILE_CONTENT = "This is a test file!";
 
 	@Test
-	public void shareListAndGetFiles() throws IOException {
+	public void shareWithDefaultSettings() throws IOException {
 
 		// prepare
 		Backend test = SpaceClient.resetTestBackend();
@@ -163,6 +165,100 @@ public class ShareResourceTestOncePerDay {
 		SpaceRequest.get("/1/share").adminAuth(test).go(200)//
 				.assertSizeEquals(0, "results");
 
+		// share small text file
+		txtLocation = SpaceRequest.put("/1/share/test.txt")//
+				.userAuth(fred)//
+				.body(FILE_CONTENT.getBytes())//
+				.go(200)//
+				.getString("location");
+
+		// admin can delete shared file (test.txt) even if not owner
+		// with default share ACL settings
+		SpaceRequest.delete(txtLocation).adminAuth(test).go(200);
+		SpaceRequest.get("/1/share").adminAuth(test).go(200)//
+				.assertSizeEquals(0, "results");
+
+	}
+
+	@Test
+	public void shareWithCustomSettings() throws IOException {
+
+		// prepare
+		Backend test = SpaceClient.resetTestBackend();
+		User vince = SpaceClient.newCredentials(test, "vince", "hi vince", "vince@dog.com");
+		User fred = SpaceClient.newCredentials(test, "fred", "hi fred", "fred@dog.com");
+		byte[] pngBytes = Resources.toByteArray(//
+				Resources.getResource("io/spacedog/watchdog/tweeter.png"));
+
+		// super admin sets custom share permissions
+		ShareSettings settings = new ShareSettings();
+		settings.enableS3Location = false;
+		settings.acl.put("key", Sets.newHashSet(DataPermission.create));
+		settings.acl.put("user", Sets.newHashSet(DataPermission.create, DataPermission.read, //
+				DataPermission.delete));
+		settings.acl.put("admin", Sets.newHashSet(DataPermission.delete_all, DataPermission.search));
+		SpaceClient.saveSettings(test, settings);
+
+		// only admin can get all shared locations
+		SpaceRequest.get("/1/share").backend(test).go(403);
+		SpaceRequest.get("/1/share").userAuth(vince).go(403);
+
+		// backend contains no shared file
+		SpaceRequest.get("/1/share").adminAuth(test).go(200)//
+				.assertSizeEquals(0, "results");
+
+		// anonymous is allowed to share a file
+		String location = SpaceRequest.post("/1/share/guest.png")//
+				.backend(test).body(pngBytes).go(200)//
+				.assertNotPresent("s3")//
+				.getString("location");
+
+		// backend contains 1 shared file
+		SpaceRequest.get("/1/share").adminAuth(test).go(200)//
+				.assertSizeEquals(1, "results");
+
+		// nobody is allowed to read this file
+		SpaceRequest.get(location).go(403);
+		SpaceRequest.get(location).userAuth(fred).go(403);
+		SpaceRequest.get(location).userAuth(vince).go(403);
+		SpaceRequest.get(location).adminAuth(test).go(403);
+
+		// nobody is allowed to read this file but super admins
+		// since they got delete_all permission
+		SpaceRequest.delete(location).go(403);
+		SpaceRequest.delete(location).userAuth(fred).go(403);
+		SpaceRequest.delete(location).userAuth(vince).go(403);
+		SpaceRequest.delete(location).adminAuth(test).go(200);
+
+		// backend contains no shared file
+		SpaceRequest.get("/1/share").adminAuth(test).go(200)//
+				.assertSizeEquals(0, "results");
+
+		// vince is allowed to share a file
+		location = SpaceRequest.post("/1/share/vince.png")//
+				.userAuth(vince).body(pngBytes).go(200)//
+				.assertNotPresent("s3")//
+				.getString("location");
+
+		// backend contains 1 shared file
+		SpaceRequest.get("/1/share").adminAuth(test).go(200)//
+				.assertSizeEquals(1, "results");
+
+		// nobody is allowed to read this file but vince the owner
+		SpaceRequest.get(location).go(403);
+		SpaceRequest.get(location).userAuth(fred).go(403);
+		SpaceRequest.get(location).adminAuth(test).go(403);
+		SpaceRequest.get(location).userAuth(vince).go(200);
+
+		// nobody is allowed to delete this file
+		// but vince the owner (and super admins)
+		SpaceRequest.delete(location).go(403);
+		SpaceRequest.delete(location).userAuth(fred).go(403);
+		SpaceRequest.delete(location).userAuth(vince).go(200);
+
+		// backend contains no shared file
+		SpaceRequest.get("/1/share").adminAuth(test).go(200)//
+				.assertSizeEquals(0, "results");
 	}
 
 	void upload(String putUrl, String content, String contentType, String fileName, String username, String userType)
@@ -182,4 +278,5 @@ public class ShareResourceTestOncePerDay {
 
 		Assert.assertEquals(200, response.getStatus());
 	}
+
 }

@@ -168,21 +168,6 @@ public class SpaceContext {
 		throw Exceptions.insufficientCredentials(credentials);
 	}
 
-	public static Credentials checkUserOrAdminCredentials() {
-		return checkUserOrAdminCredentials(true);
-	}
-
-	public static Credentials checkUserOrAdminCredentials(boolean checkCustomerBackend) {
-		Credentials credentials = checkCredentials(checkCustomerBackend);
-		if (credentials.isAtLeastAdmin() || credentials.isAtLeastUser())
-			return credentials;
-		throw Exceptions.insufficientCredentials(credentials);
-	}
-
-	public static Credentials checkUserCredentials() {
-		return checkUserCredentials(true);
-	}
-
 	public static Credentials checkUserCredentials(String id) {
 		Credentials credentials = checkUserCredentials(true);
 
@@ -190,6 +175,10 @@ public class SpaceContext {
 			return credentials;
 
 		throw Exceptions.insufficientCredentials(credentials);
+	}
+
+	public static Credentials checkUserCredentials() {
+		return checkUserCredentials(true);
 	}
 
 	public static Credentials checkUserCredentials(boolean checkCustomerBackend) {

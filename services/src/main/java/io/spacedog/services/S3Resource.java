@@ -46,25 +46,39 @@ public class S3Resource extends Resource {
 	}
 
 	public Optional<Payload> doGet(String bucketSuffix, String backendId, String[] path, Context context) {
-		return doGet(true, bucketSuffix, backendId, path, context);
+		return doGet(bucketSuffix, backendId, path, context, false);
+	}
+
+	public Optional<Payload> doGet(String bucketSuffix, String backendId, String[] path, Context context,
+			boolean checkOwnership) {
+		return doGet(true, bucketSuffix, backendId, path, context, checkOwnership);
 	}
 
 	public Optional<Payload> doGet(boolean withContent, String bucketSuffix, String backendId, String[] path,
 			Context context) {
+		return doGet(withContent, bucketSuffix, backendId, path, context, false);
+	}
+
+	private Optional<Payload> doGet(boolean withContent, String bucketSuffix, String backendId, String[] path,
+			Context context, boolean checkOwnership) {
 
 		String bucketName = getBucketName(bucketSuffix);
 		String s3Key = S3Key.get(backendId).add(path).toString();
 
 		Object fileContent = "";
 		ObjectMetadata metadata = null;
+		String owner = null;
 
 		try {
 			if (withContent) {
 				S3Object object = s3.getObject(bucketName, s3Key);
 				metadata = object.getObjectMetadata();
+				owner = getOrCheckOwnership(metadata, checkOwnership);
 				fileContent = object.getObjectContent();
-			} else
+			} else {
 				metadata = s3.getObjectMetadata(bucketName, s3Key);
+				owner = getOrCheckOwnership(metadata, checkOwnership);
+			}
 
 		} catch (AmazonS3Exception e) {
 
@@ -77,8 +91,7 @@ public class S3Resource extends Resource {
 
 		Payload payload = new Payload(metadata.getContentType(), fileContent)//
 				.withHeader(SpaceHeaders.ETAG, metadata.getETag())//
-				.withHeader(SpaceHeaders.SPACEDOG_OWNER, //
-						metadata.getUserMetaDataOf("owner"));
+				.withHeader(SpaceHeaders.SPACEDOG_OWNER, owner);
 
 		if (context.query().getBoolean("withContentDisposition", false))
 			payload = payload.withHeader(SpaceHeaders.CONTENT_DISPOSITION, //
@@ -126,7 +139,8 @@ public class S3Resource extends Resource {
 		return JsonPayload.json(response);
 	}
 
-	public Payload doDelete(String bucketSuffix, Credentials credentials, String[] path) {
+	public Payload doDelete(String bucketSuffix, Credentials credentials, String[] path, boolean fileOnly,
+			boolean checkOwnership) {
 
 		String bucketName = getBucketName(bucketSuffix);
 		String s3Key = S3Key.get(credentials.backendId()).add(path).toString();
@@ -138,18 +152,10 @@ public class S3Resource extends Resource {
 		try {
 			ObjectMetadata metadata = s3.getObjectMetadata(bucketName, s3Key);
 
-			if (credentials.isAtLeastUser()) {
+			getOrCheckOwnership(metadata, checkOwnership);
 
-				if (isOwner(credentials, metadata)) {
-					s3.deleteObject(bucketName, s3Key);
-					return JsonPayload.success();
-				} else
-					return JsonPayload.error(HttpStatus.FORBIDDEN);
-
-			} else if (credentials.isAtLeastAdmin()) {
-				s3.deleteObject(bucketName, s3Key);
-				builder.add(Uris.join(path));
-			}
+			s3.deleteObject(bucketName, s3Key);
+			builder.add(Uris.join(path));
 
 		} catch (AmazonS3Exception e) {
 
@@ -159,7 +165,7 @@ public class S3Resource extends Resource {
 
 		// second delete all files with this path as prefix
 
-		if (credentials.isAtLeastAdmin()) {
+		if (!fileOnly) {
 
 			String next = null;
 
@@ -196,6 +202,11 @@ public class S3Resource extends Resource {
 
 	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, String[] path, byte[] bytes,
 			Context context) {
+		return doUpload(bucketSuffix, rootUri, credentials, path, bytes, context, true);
+	}
+
+	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, String[] path, byte[] bytes,
+			Context context, boolean enableS3Location) {
 
 		// TODO check if this upload does not replace an older upload
 		// in this case, check crdentials and owner rights
@@ -223,19 +234,35 @@ public class S3Resource extends Resource {
 				s3Key, new ByteArrayInputStream(bytes), //
 				metadata));
 
-		return JsonPayload.json(JsonPayload.builder()//
+		JsonBuilder<ObjectNode> builder = JsonPayload.builder()//
 				.put("path", Uris.join(path))//
-				.put("location", toSpaceLocation(credentials.backendId(), rootUri, path))//
-				.put("s3", toS3Location(bucketName, s3Key)));
+				.put("location", toSpaceLocation(credentials.backendId(), rootUri, path));
+
+		if (enableS3Location)
+			builder.put("s3", toS3Location(bucketName, s3Key));
+
+		return JsonPayload.json(builder);
 	}
 
 	//
 	// Implementation
 	//
 
-	private boolean isOwner(Credentials credentials, ObjectMetadata metadata) {
-		return credentials.name().equals(metadata.getUserMetaDataOf("owner")) //
-				&& credentials.level().toString().equals(metadata.getUserMetaDataOf("owner-type"));
+	private String getOrCheckOwnership(ObjectMetadata metadata, boolean checkOwnership) {
+
+		String owner = metadata.getUserMetaDataOf("owner");
+		Credentials credentials = SpaceContext.getCredentials();
+
+		if (!checkOwnership)
+			return owner;
+
+		String ownerLevel = metadata.getUserMetaDataOf("owner-type");
+
+		if (credentials.name().equals(owner) //
+				&& credentials.level().toString().equals(ownerLevel))
+			return owner;
+
+		throw Exceptions.insufficientCredentials(credentials);
 	}
 
 	private String toSpaceKeyFromS3Key(String backendId, String s3Key) {
