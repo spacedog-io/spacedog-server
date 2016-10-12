@@ -197,6 +197,10 @@ public class Credentials {
 		updatedAt = value;
 	}
 
+	public boolean isBrandNew() {
+		return updatedAt == null ? true : updatedAt.equals(createdAt);
+	}
+
 	public boolean isRootBackend() {
 		return Backends.ROOT_API.equals(backendId);
 	}

@@ -33,8 +33,79 @@ public class LinkedinResource {
 	// TODO deprecated
 	@Post("/1/credentials/linkedin")
 	@Post("/1/credentials/linkedin/")
-	public Payload linkedinLogin(Context context) {
+	public Payload getLogin(Context context) {
+		Credentials credentials = login(context);
 
+		JsonBuilder<ObjectNode> builder = JsonPayload//
+				.builder(credentials.isBrandNew(), credentials.backendId(), "/1", //
+						CredentialsResource.TYPE, credentials.id(), credentials.version())//
+				.put(CredentialsResource.ACCESS_TOKEN, credentials.accessToken())//
+				.put(CredentialsResource.EXPIRES_IN, credentials.accessTokenExpiresIn());
+
+		return JsonPayload.json(builder, HttpStatus.CREATED)//
+				.withHeader(SpaceHeaders.SPACEDOG_OBJECT_ID, credentials.id());
+	}
+
+	@Get("/1/login/linkedin/redirect")
+	@Get("/1/login/linkedin/redirect/")
+	public Payload getRedirectLogin(Context context) {
+
+		Credentials credentials = login(context);
+		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
+
+		String redirectUri = context.get("redirect_uri");
+		if (Strings.isNullOrEmpty(redirectUri))
+			redirectUri = settings.linkedinRedirectUri;
+		Check.notNullOrEmpty(redirectUri, "redirect_uri");
+		String state = context.get("state");
+		Check.notNullOrEmpty(state, "state");
+
+		StringBuilder location = new StringBuilder(redirectUri)//
+				.append("#state=").append(state)//
+				.append("&access_token=").append(credentials.accessToken())//
+				.append("&expires=").append(credentials.accessTokenExpiresIn());
+
+		return new Payload(302).withHeader(SpaceHeaders.LOCATION, location.toString());
+	}
+
+	@Get("/1/linkedin/people/me/:fields")
+	@Get("/1/linkedin/people/me/:fields/")
+	public Payload get(String fields, Context context) {
+
+		Credentials credentials = SpaceContext.checkUserCredentials();
+
+		SpaceResponse response = SpaceRequest//
+				.get("https://api.linkedin.com/v1/people/~:({fields})")//
+				.bearerAuth(credentials.accessToken())//
+				.routeParam("fields", fields)//
+				.queryParam("format", "json")//
+				.go();
+
+		checkLinkedinError(response, "linkedin error fetching your profil");
+		return JsonPayload.json(response.objectNode());
+	}
+
+	//
+	// implementation
+	//
+
+	private void checkLinkedinError(SpaceResponse response, String messageIntro) {
+		if (response.httpResponse().getStatus() >= 400) {
+
+			String details = response.has("error_description") //
+					? response.getString("error_description")//
+					: "no linkedin error description";
+
+			throw Exceptions.space(response.httpResponse().getStatus(), //
+					"%s: %s", messageIntro, details);
+		}
+	}
+
+	//
+	// Implementation
+	//
+
+	private Credentials login(Context context) {
 		String backendId = SpaceContext.checkCredentials().backendId();
 		String code = Check.notNullOrEmpty(context.get("code"), "code");
 
@@ -90,47 +161,7 @@ public class LinkedinResource {
 		} else
 			credentials = credentialsResource.update(credentials);
 
-		JsonBuilder<ObjectNode> builder = JsonPayload//
-				.builder(isNew, backendId, "/1", CredentialsResource.TYPE, //
-						credentials.id(), credentials.version())//
-				.put(CredentialsResource.ACCESS_TOKEN, credentials.accessToken())//
-				.put(CredentialsResource.EXPIRES_IN, credentials.accessTokenExpiresIn());
-
-		return JsonPayload.json(builder, HttpStatus.CREATED)//
-				.withHeader(SpaceHeaders.SPACEDOG_OBJECT_ID, credentials.id());
-	}
-
-	@Get("/1/linkedin/people/me/:fields")
-	@Get("/1/linkedin/people/me/:fields/")
-	public Payload get(String fields, Context context) {
-
-		Credentials credentials = SpaceContext.checkUserCredentials();
-
-		SpaceResponse response = SpaceRequest//
-				.get("https://api.linkedin.com/v1/people/~:({fields})")//
-				.bearerAuth(credentials.accessToken())//
-				.routeParam("fields", fields)//
-				.queryParam("format", "json")//
-				.go();
-
-		checkLinkedinError(response, "linkedin error fetching your profil");
-		return JsonPayload.json(response.objectNode());
-	}
-
-	//
-	// implementation
-	//
-
-	private void checkLinkedinError(SpaceResponse response, String messageIntro) {
-		if (response.httpResponse().getStatus() >= 400) {
-
-			String details = response.has("error_description") //
-					? response.getString("error_description")//
-					: "no linkedin error description";
-
-			throw Exceptions.space(response.httpResponse().getStatus(), //
-					"%s: %s", messageIntro, details);
-		}
+		return credentials;
 	}
 
 	//

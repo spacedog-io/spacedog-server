@@ -16,16 +16,16 @@ import io.spacedog.watchdog.SpaceSuite.TestOften;
 public class LinkedinResourceTestOften extends Assert {
 
 	@Test
-	public void linkedinSignUp() {
+	public void login() {
 
 		// prepare
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
 		String redirectUri = SpaceRequest.configuration().target()//
-				.url(test.backendId, "/1/credentials/linkedin");
+				.url(test.backendId, "/1/login/linkedin");
 
 		// no linkedin settings means no linkedin credentials
-		SpaceRequest.post("/1/credentials/linkedin")//
+		SpaceRequest.post("/1/login/linkedin")//
 				.formField("code", "XXX")//
 				.formField("redirect_uri", "XXX")//
 				.backend(test).go(400);
@@ -37,16 +37,16 @@ public class LinkedinResourceTestOften extends Assert {
 		SpaceClient.saveSettings(test, settings);
 
 		// fails to create linkedin credentials if no authorization code
-		SpaceRequest.post("/1/credentials/linkedin")//
+		SpaceRequest.post("/1/login/linkedin")//
 				.formField("redirect_uri", redirectUri).backend(test).go(400);
 
 		// fails to create linkedin credentials if no redirect_uri
 		// in parameters nor settings
-		SpaceRequest.post("/1/credentials/linkedin")//
+		SpaceRequest.post("/1/login/linkedin")//
 				.formField("code", "XXX").backend(test).go(400);
 
 		// fails to create linkedin credentials if invalid code
-		SpaceRequest.post("/1/credentials/linkedin").backend(test)//
+		SpaceRequest.post("/1/login/linkedin").backend(test)//
 				.formField("code", "XXX")//
 				.formField("redirect_uri", redirectUri)//
 				.go(401);
@@ -57,7 +57,7 @@ public class LinkedinResourceTestOften extends Assert {
 
 		// fails to create linkedin credentials if invalid code
 		// redirectUri is not necessary because found in settings
-		SpaceRequest.post("/1/credentials/linkedin")//
+		SpaceRequest.post("/1/login/linkedin")//
 				.formField("code", "XXX").backend(test).go(401);
 	}
 }
