@@ -63,7 +63,8 @@ public class LinkedinResource {
 		StringBuilder location = new StringBuilder(redirectUri)//
 				.append("#state=").append(state)//
 				.append("&access_token=").append(credentials.accessToken())//
-				.append("&expires=").append(credentials.accessTokenExpiresIn());
+				.append("&expires=").append(credentials.accessTokenExpiresIn())//
+				.append("&credentialsId=").append(credentials.id());
 
 		return new Payload(302).withHeader(SpaceHeaders.LOCATION, location.toString());
 	}
