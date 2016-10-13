@@ -162,7 +162,7 @@ public class Start {
 	private void startFluent() throws IOException {
 		fluent = new MyFluentServer();
 		fluent.configure(Start::configure);
-		fluent.start(config.apiPort());
+		fluent.start(config.serverPort());
 	}
 
 	private static void configure(Routes routes) {

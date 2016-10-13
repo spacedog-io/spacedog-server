@@ -31,9 +31,9 @@ public class StartConfiguration {
 		checkPath("home path", homePath(), true);
 		check("production", isProduction());
 		check("offline", isOffline());
+		check("server port", serverPort());
 
 		check("api url", apiUrl());
-		check("api port", apiPort());
 
 		checkPath("elastic data path", elasticDataPath(), true);
 		check("elastic http enabled", isElasticHttpEnabled());
@@ -73,14 +73,22 @@ public class StartConfiguration {
 	}
 
 	public String apiUrl(String backendId) {
-		String url = configuration.getProperty("spacedog.api.url");
 		if (Strings.isNullOrEmpty(backendId))
 			backendId = Backends.ROOT_API;
-		return String.format(url, backendId + '.');
+		return new StringBuilder(apiUrlScheme()).append("://")//
+				.append(backendId).append(apiUrlBase()).toString();
 	}
 
-	public int apiPort() {
-		return Integer.valueOf(configuration.getProperty("spacedog.api.port"));
+	public String apiUrlBase() {
+		return configuration.getProperty("spacedog.api.url.base");
+	}
+
+	public String apiUrlScheme() {
+		return configuration.getProperty("spacedog.api.url.scheme");
+	}
+
+	public int serverPort() {
+		return Integer.valueOf(configuration.getProperty("spacedog.server.port"));
 	}
 
 	public Path elasticDataPath() {

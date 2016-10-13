@@ -56,6 +56,8 @@ public class Utils {
 	}
 
 	public static String removePreffix(String s, String preffix) {
+		if (Strings.isNullOrEmpty(preffix))
+			return s;
 		return s.startsWith(preffix) ? s.substring(preffix.length()) : s;
 	}
 

@@ -13,6 +13,7 @@ import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Settings;
 import io.spacedog.utils.SpaceHeaders;
+import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 
 /**
@@ -217,9 +218,11 @@ public class SpaceContext {
 	//
 
 	private String extractSubdomain(Context context) {
+		String urlBase = Start.get().configuration().apiUrlBase();
 		String host = context.request().header(HttpHeaders.HOST);
-		String[] terms = host.split("\\.");
-		return terms.length == 3 ? terms[0] : Backends.ROOT_API;
+		return host.endsWith(urlBase) //
+				? Utils.removeSuffix(host, urlBase) //
+				: Backends.ROOT_API;
 	}
 
 	private void checkAuthorizationHeader() {

@@ -4,6 +4,7 @@ public enum SpaceTarget {
 
 	local("lvh.me", 8443, false), //
 	staging("spacerepublic.net", 443, true), //
+	colibee("colibee.spacerepublic.net", 80, false), //
 	production("spacedog.io", 443, true);
 
 	private String host;
