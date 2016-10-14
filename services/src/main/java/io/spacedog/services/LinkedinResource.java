@@ -14,6 +14,7 @@ import io.spacedog.utils.CredentialsSettings;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceHeaders;
+import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
@@ -59,6 +60,11 @@ public class LinkedinResource {
 		Check.notNullOrEmpty(redirectUri, "redirect_uri");
 		String state = context.get("state");
 		Check.notNullOrEmpty(state, "state");
+
+		// TODO remove this when mikael finds out why
+		// the redirect_uri is passed with a ';' suffix
+		// in mobile app
+		redirectUri = Utils.removePreffix(redirectUri, ";");
 
 		StringBuilder location = new StringBuilder(redirectUri)//
 				.append("#state=").append(state)//
@@ -118,6 +124,11 @@ public class LinkedinResource {
 		if (Strings.isNullOrEmpty(redirectUri))
 			redirectUri = settings.linkedinRedirectUri;
 		Check.notNullOrEmpty(redirectUri, "redirect_uri");
+
+		// TODO remove this when mikael finds out why
+		// the redirect_uri is passed with a ';' suffix
+		// in mobile app
+		redirectUri = Utils.removePreffix(redirectUri, ";");
 
 		DateTime expiresAt = DateTime.now();
 
