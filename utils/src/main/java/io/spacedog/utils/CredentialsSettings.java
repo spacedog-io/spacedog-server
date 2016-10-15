@@ -8,7 +8,9 @@ public class CredentialsSettings extends Settings {
 	public String passwordRegex = Passwords.PASSWORD_DEFAULT_REGEX;
 	public String linkedinId;
 	public String linkedinSecret;
+	@Deprecated
 	public String linkedinRedirectUri;
+	public String linkedinFinalRedirectUri;
 
 	public String usernameRegex() {
 		return usernameRegex == null ? Usernames.USERNAME_DEFAULT_REGEX : usernameRegex;

@@ -37,7 +37,7 @@ public class Linkedin extends SpaceClient {
 		Backend test = SpaceClient.resetTestBackend();
 
 		// credentials settings with guest sign up enabled
-		CredentialsSettings settings = defaultCredentialsSettings(false);
+		CredentialsSettings settings = defaultCredentialsSettings(false, test);
 		SpaceClient.saveSettings(test, settings);
 
 		// login succeeds
@@ -53,7 +53,7 @@ public class Linkedin extends SpaceClient {
 		Backend test = SpaceClient.resetTestBackend();
 
 		// set credentials settings with guest sign up disabled
-		CredentialsSettings settings = defaultCredentialsSettings(true);
+		CredentialsSettings settings = defaultCredentialsSettings(true, test);
 		SpaceClient.saveSettings(test, settings);
 
 		// login fails since guest sign in is disabled
@@ -70,7 +70,7 @@ public class Linkedin extends SpaceClient {
 		Backend test = SpaceClient.resetTestBackend();
 
 		// set credentials settings with guest sign up disabled
-		CredentialsSettings settings = defaultCredentialsSettings(true);
+		CredentialsSettings settings = defaultCredentialsSettings(true, test);
 		SpaceClient.saveSettings(test, settings);
 
 		// admin pre registers some credentials for a new user
@@ -94,7 +94,7 @@ public class Linkedin extends SpaceClient {
 		Backend test = SpaceClient.resetTestBackend();
 
 		// set credentials settings with guest sign up disabled
-		CredentialsSettings settings = defaultCredentialsSettings(true);
+		CredentialsSettings settings = defaultCredentialsSettings(true, test);
 		settings.linkedinSecret = "XXX";
 		SpaceClient.saveSettings(test, settings);
 
@@ -111,7 +111,7 @@ public class Linkedin extends SpaceClient {
 		Backend test = SpaceClient.resetTestBackend();
 
 		// credentials settings with guest sign up enabled
-		CredentialsSettings settings = defaultCredentialsSettings(false);
+		CredentialsSettings settings = defaultCredentialsSettings(false, test);
 		SpaceClient.saveSettings(test, settings);
 
 		// login succeeds
@@ -128,7 +128,7 @@ public class Linkedin extends SpaceClient {
 		Backend test = SpaceClient.resetTestBackend();
 
 		// set credentials settings with guest sign up disabled
-		CredentialsSettings settings = defaultCredentialsSettings(true);
+		CredentialsSettings settings = defaultCredentialsSettings(true, test);
 		settings.linkedinSecret = "XXX";
 		SpaceClient.saveSettings(test, settings);
 
@@ -159,11 +159,12 @@ public class Linkedin extends SpaceClient {
 		Runtime.getRuntime().exec("open " + url.toString());
 	}
 
-	private CredentialsSettings defaultCredentialsSettings(boolean disableGuestSignUp) {
+	private CredentialsSettings defaultCredentialsSettings(boolean disableGuestSignUp, Backend backend) {
 		CredentialsSettings settings = new CredentialsSettings();
 		settings.disableGuestSignUp = disableGuestSignUp;
 		settings.linkedinId = SpaceRequest.configuration().testLinkedinClientId();
 		settings.linkedinSecret = SpaceRequest.configuration().testLinkedinClientSecret();
+		settings.linkedinFinalRedirectUri = SpaceRequest.configuration().target().url(backend.backendId);
 		return settings;
 	}
 }

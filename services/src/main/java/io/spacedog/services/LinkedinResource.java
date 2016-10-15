@@ -54,21 +54,25 @@ public class LinkedinResource extends Resource {
 	@Get("/1/login/linkedin/redirect/")
 	public Payload getRedirectLogin(Context context) {
 
-		String redirectUri = context.get("redirect_uri");
+		String finalRedirectUri = context.get("redirect_uri");
 		String state = context.get("state");
 
-		if (Strings.isNullOrEmpty(redirectUri))
-			// no redirect_uri means this is a test
-			// redirect to this server root url
-			redirectUri = spaceRootUrl(SpaceContext.backendId()).toString();
-		else
+		if (Strings.isNullOrEmpty(finalRedirectUri)) {
+			finalRedirectUri = SettingsResource.get()//
+					.load(CredentialsSettings.class)//
+					.linkedinFinalRedirectUri;
+
+			if (Strings.isNullOrEmpty(finalRedirectUri))
+				throw Exceptions.illegalArgument(//
+						"credentials settings [linkedinFinalRedirectUri] is required");
+		} else
 			// TODO remove this when mikael finds out why
 			// the redirect_uri is passed with a ';' suffix
 			// in mobile apps
-			redirectUri = Utils.removeSuffix(redirectUri, ";");
+			finalRedirectUri = Utils.removeSuffix(finalRedirectUri, ";");
 
 		Escaper paramEscaper = UrlEscapers.urlPathSegmentEscaper();
-		StringBuilder location = new StringBuilder(redirectUri)//
+		StringBuilder location = new StringBuilder(finalRedirectUri)//
 				.append("#state=");
 
 		if (state != null)
@@ -129,7 +133,9 @@ public class LinkedinResource extends Resource {
 				message.append(": ").append(response.getString("error"));
 
 			if (response.has("error_description"))
-				message.append(" (").append(response.getString("error_description")).append(")");
+				message.append(" (")//
+						.append(response.getString("error_description"))//
+						.append(")");
 
 			throw Exceptions.space(response.httpResponse().getStatus(), message.toString());
 		}
@@ -145,12 +151,13 @@ public class LinkedinResource extends Resource {
 
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
 		if (Strings.isNullOrEmpty(settings.linkedinId))
-			throw Exceptions.illegalArgument("credentials settings linkedin client id is required");
+			throw Exceptions.illegalArgument("credentials settings [linkedinId] is required");
 
 		String redirectUri = context.get("redirect_uri");
 
-		// no redirect_uri means this is a test
-		// in this case, redirect_uri = this service uri
+		// no redirect_uri in context means
+		// redirect_uri = this current resource uri
+		// useful when spacedog is directly used as redirect_uri
 		if (Strings.isNullOrEmpty(redirectUri))
 			redirectUri = spaceUrl(backendId, context.uri()).toString();
 		else

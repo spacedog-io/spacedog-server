@@ -40,24 +40,17 @@ public class LinkedinResourceTestOften extends Assert {
 		SpaceRequest.post("/1/login/linkedin")//
 				.formField("redirect_uri", redirectUri).backend(test).go(400);
 
-		// fails to create linkedin credentials if no redirect_uri
-		// in parameters nor settings
-		SpaceRequest.post("/1/login/linkedin")//
-				.formField("code", "XXX").backend(test).go(400);
-
 		// fails to create linkedin credentials if invalid code
 		SpaceRequest.post("/1/login/linkedin").backend(test)//
 				.formField("code", "XXX")//
 				.formField("redirect_uri", redirectUri)//
 				.go(401);
 
-		// admin sets linkedin settings with redirect uri
-		settings.linkedinRedirectUri = redirectUri;
-		SpaceClient.saveSettings(test, settings);
-
 		// fails to create linkedin credentials if invalid code
-		// redirectUri is not necessary because found in settings
+		// if no redirect_uri parameter is set spacedog uses
+		// its default redirect uri
 		SpaceRequest.post("/1/login/linkedin")//
-				.formField("code", "XXX").backend(test).go(401);
+				.formField("code", "XXX").backend(test)//
+				.go(401);
 	}
 }
