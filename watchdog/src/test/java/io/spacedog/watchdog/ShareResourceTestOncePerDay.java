@@ -38,9 +38,6 @@ public class ShareResourceTestOncePerDay {
 		User vince = SpaceClient.newCredentials(test, "vince", "hi vince", "vince@dog.com");
 		User fred = SpaceClient.newCredentials(test, "fred", "hi fred", "fred@dog.com");
 
-		// fails since no backend specified
-		SpaceRequest.get("/1/share").go(400);
-
 		// only admin can get all shared locations
 		SpaceRequest.get("/1/share").backend(test).go(403);
 		SpaceRequest.get("/1/share").userAuth(vince).go(403);
