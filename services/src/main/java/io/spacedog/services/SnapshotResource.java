@@ -52,7 +52,7 @@ public class SnapshotResource extends Resource {
 	@Get("/")
 	public Payload getSnapshotAll() {
 
-		SpaceContext.checkAdminCredentials(false);
+		SpaceContext.checkAdminCredentials();
 		List<SpaceSnapshot> snapshots = getAllPlatformSnapshotsFromLatestToOldest();
 
 		JsonBuilder<ObjectNode> payload = JsonPayload.builder()//
@@ -69,7 +69,7 @@ public class SnapshotResource extends Resource {
 	@Get("/latest/")
 	public Payload getSnapshotLatest() {
 
-		SpaceContext.checkAdminCredentials(false);
+		SpaceContext.checkAdminCredentials();
 		List<SpaceSnapshot> snapshots = getAllPlatformSnapshotsFromLatestToOldest();
 		return snapshots.isEmpty() ? JsonPayload.error(404)//
 				: JsonPayload.json(snapshots.get(0).toJson());
@@ -79,7 +79,7 @@ public class SnapshotResource extends Resource {
 	@Get("/:id/")
 	public Payload getSnapshotById(String snapshotId) {
 
-		SpaceContext.checkAdminCredentials(false);
+		SpaceContext.checkAdminCredentials();
 		SpaceSnapshot snapshot = doGetSnapshot(snapshotId);
 		return JsonPayload.json(snapshot.toJson());
 	}
@@ -88,7 +88,7 @@ public class SnapshotResource extends Resource {
 	@Post("/")
 	public Payload postSnapshot(Context context) {
 
-		SpaceContext.checkSuperDogCredentials(false);
+		SpaceContext.checkSuperDogCredentials();
 
 		String snapshotId = computeSnapshotName(PLATFORM_SNAPSHOT_PREFIX);
 		String repoId = checkCurrentRepository();
@@ -124,7 +124,7 @@ public class SnapshotResource extends Resource {
 	@Post("/latest/restore/")
 	public Payload postSnapshotLatestRestore(Context context) {
 
-		SpaceContext.checkSuperDogCredentials(false);
+		SpaceContext.checkSuperDogCredentials();
 
 		List<SpaceSnapshot> snapshots = getAllPlatformSnapshotsFromLatestToOldest();
 		if (Utils.isNullOrEmpty(snapshots))
@@ -138,7 +138,7 @@ public class SnapshotResource extends Resource {
 	@Post("/:id/restore/")
 	public Payload postSnapshotRestoreById(String snapshotId, Context context) {
 
-		SpaceContext.checkSuperDogCredentials(false);
+		SpaceContext.checkSuperDogCredentials();
 		SpaceSnapshot snapshot = doGetSnapshot(snapshotId);
 		return doRestore(snapshot, //
 				context.query().getBoolean(WAIT_FOR_COMPLETION, false));

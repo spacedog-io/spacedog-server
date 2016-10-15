@@ -36,10 +36,9 @@ public class SchemaResource extends Resource {
 	@Get("")
 	@Get("/")
 	public Payload getAll(Context context) {
-		Credentials credentials = SpaceContext.checkCredentials();
 		ElasticClient elastic = Start.get().getElasticClient();
 		ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetaData>> mappings;
-		mappings = elastic.getMappings(credentials.backendId());
+		mappings = elastic.getMappings(SpaceContext.backendId());
 		JsonMerger jsonMerger = Json.merger();
 
 		for (ObjectCursor<ImmutableOpenMap<String, MappingMetaData>> indexMappings : mappings.values()) {
@@ -61,10 +60,11 @@ public class SchemaResource extends Resource {
 	@Get("/:type")
 	@Get("/:type/")
 	public Payload get(String type) {
-		Credentials credentials = SpaceContext.checkCredentials();
-		return JsonPayload.json(Start.get()//
-				.getElasticClient().getSchema(credentials.backendId(), type)//
-				.node());
+		return JsonPayload.json(//
+				Start.get()//
+						.getElasticClient()//
+						.getSchema(SpaceContext.backendId(), type)//
+						.node());
 	}
 
 	@Put("/:type")

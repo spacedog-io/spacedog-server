@@ -93,7 +93,7 @@ public class Colibee extends SpaceClient {
 		settings.disableGuestSignUp = true;
 		settings.linkedinId = "77132d5dz6b13x";
 		settings.linkedinSecret = "4IKSyUxys06GKyn4";
-		settings.linkedinRedirectUri = "https://colidev.www.spacedog.io/login/linkedin/callback";
+		settings.linkedinFinalRedirectUri = "https://colidev.www.spacedog.io/login/linkedin/callback";
 
 		SpaceRequest.put("/1/settings/credentials")//
 				.adminAuth(backend).body(settings).go(201);

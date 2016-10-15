@@ -51,7 +51,7 @@ public class BackendResource extends Resource {
 	@Get("/1/backend")
 	@Get("/1/backend/")
 	public Payload getAll(Context context) {
-		Credentials credentials = SpaceContext.checkAdminCredentials(false);
+		Credentials credentials = SpaceContext.checkAdminCredentials();
 		SearchResults<Credentials> superAdmins = null;
 
 		int from = context.query().getInteger("from", 0);

@@ -50,7 +50,7 @@ public class DataResource extends Resource {
 	@Post("/:type/")
 	public Payload post(String type, String body, Context context) {
 
-		Credentials credentials = SpaceContext.checkCredentials();
+		Credentials credentials = SpaceContext.getCredentials();
 		if (DataAccessControl.check(credentials, type, DataPermission.create)) {
 
 			Check.notNullOrEmpty(body, "JSON body");
@@ -98,7 +98,7 @@ public class DataResource extends Resource {
 	@Get("/:type/:id")
 	@Get("/:type/:id/")
 	public Payload getById(String type, String id, Context context) {
-		Credentials credentials = SpaceContext.checkCredentials();
+		Credentials credentials = SpaceContext.getCredentials();
 		if (DataAccessControl.check(credentials, type, DataPermission.read_all, DataPermission.search)) {
 			return JsonPayload.json(DataStore.get()//
 					.getObject(credentials.backendId(), type, id));
@@ -118,7 +118,7 @@ public class DataResource extends Resource {
 	@Put("/:type/:id")
 	@Put("/:type/:id/")
 	public Payload put(String type, String id, String body, Context context) {
-		Credentials credentials = SpaceContext.checkCredentials();
+		Credentials credentials = SpaceContext.getCredentials();
 
 		checkPutPermissions(type, id, credentials);
 
@@ -159,7 +159,7 @@ public class DataResource extends Resource {
 	@Delete("/:type/:id")
 	@Delete("/:type/:id/")
 	public Payload deleteById(String type, String id, Context context) {
-		Credentials credentials = SpaceContext.checkCredentials();
+		Credentials credentials = SpaceContext.getCredentials();
 		ElasticClient elastic = Start.get().getElasticClient();
 
 		if (DataAccessControl.check(credentials, type, DataPermission.delete_all)) {

@@ -137,72 +137,45 @@ public class SpaceContext {
 	}
 
 	public static Credentials checkSuperDogCredentials() {
-		return checkSuperDogCredentials(true);
-	}
-
-	public static Credentials checkSuperDogCredentials(boolean checkCustomerBackend) {
-		Credentials credentials = checkCredentials(checkCustomerBackend);
+		Credentials credentials = getCredentials();
 		if (credentials.isSuperDog())
 			return credentials;
 		throw Exceptions.insufficientCredentials(credentials);
 	}
 
 	public static Credentials checkSuperAdminCredentials() {
-		return checkSuperAdminCredentials(true);
-	}
-
-	public static Credentials checkSuperAdminCredentials(boolean checkCustomerBackend) {
-		Credentials credentials = checkCredentials(checkCustomerBackend);
+		Credentials credentials = getCredentials();
 		if (credentials.isAtLeastSuperAdmin())
 			return credentials;
 		throw Exceptions.insufficientCredentials(credentials);
 	}
 
 	public static Credentials checkAdminCredentials() {
-		return checkAdminCredentials(true);
-	}
-
-	public static Credentials checkAdminCredentials(boolean checkCustomerBackend) {
-		Credentials credentials = checkCredentials(checkCustomerBackend);
+		Credentials credentials = getCredentials();
 		if (credentials.isAtLeastAdmin())
 			return credentials;
 		throw Exceptions.insufficientCredentials(credentials);
 	}
 
-	public static Credentials checkUserCredentials(String id) {
-		Credentials credentials = checkUserCredentials(true);
+	public static Credentials checkUserCredentials(String credentialsId) {
+		Credentials credentials = checkUserCredentials();
 
-		if (credentials.isAtLeastAdmin() || credentials.id().equals(id))
+		if (credentials.isAtLeastAdmin() || credentials.id().equals(credentialsId))
 			return credentials;
 
 		throw Exceptions.insufficientCredentials(credentials);
 	}
 
 	public static Credentials checkUserCredentials() {
-		return checkUserCredentials(true);
-	}
-
-	public static Credentials checkUserCredentials(boolean checkCustomerBackend) {
-		Credentials credentials = checkCredentials(checkCustomerBackend);
+		Credentials credentials = getCredentials();
 		if (credentials.isAtLeastUser())
 			return credentials;
 		throw Exceptions.insufficientCredentials(credentials);
 	}
 
-	public static Credentials checkCredentials() {
-		return checkCredentials(true);
-	}
-
 	public static void checkPasswordHasBeenChallenged() {
 		if (!getCredentials().isPasswordChecked())
 			throw Exceptions.passwordMustBeChallenged();
-	}
-
-	public static Credentials checkCredentials(boolean checkCustomerBackend) {
-		Credentials credentials = getCredentials();
-		if (checkCustomerBackend && credentials.isRootBackend())
-			throw Exceptions.illegalArgument("host doesn't specify any backend id");
-		return credentials;
 	}
 
 	public static void setCredentials(Credentials credentials) {

@@ -58,9 +58,9 @@ public class BackendResourceTestOften extends Assert {
 
 		SpaceRequest.get("/1/login").adminAuth(test).go(200);
 
-		// login fails if no backend nor user set
-
-		SpaceRequest.get("/1/login").go(400);
+		// login is not possible for anonymous users
+		SpaceRequest.get("/1/login").go(403);
+		SpaceRequest.get("/1/login").backend(test).go(403);
 
 		// invalid admin username login fails
 

@@ -56,7 +56,7 @@ public class SearchResource extends Resource {
 	@Post("")
 	@Post("/")
 	public Payload postSearchAllTypes(String body, Context context) {
-		Credentials credentials = SpaceContext.checkCredentials();
+		Credentials credentials = SpaceContext.getCredentials();
 		String[] types = DataAccessControl.types(DataPermission.search, credentials);
 		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
 		DataStore.get().refreshBackend(refresh, credentials.backendId());
@@ -87,7 +87,7 @@ public class SearchResource extends Resource {
 	@Post("/:type")
 	@Post("/:type/")
 	public Payload postSearchForType(String type, String body, Context context) {
-		Credentials credentials = SpaceContext.checkCredentials();
+		Credentials credentials = SpaceContext.getCredentials();
 		if (DataAccessControl.check(credentials, type, DataPermission.search)) {
 			boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
 			DataStore.get().refreshType(refresh, credentials.backendId(), type);

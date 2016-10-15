@@ -58,7 +58,7 @@ public class FileResource extends S3Resource {
 	//
 
 	Payload get(String[] path, Context context) {
-		Credentials credentials = SpaceContext.checkCredentials();
+		Credentials credentials = SpaceContext.getCredentials();
 		Optional<Payload> payload = doGet(FILE_BUCKET_SUFFIX, credentials.backendId(), path, context);
 
 		if (payload.isPresent())

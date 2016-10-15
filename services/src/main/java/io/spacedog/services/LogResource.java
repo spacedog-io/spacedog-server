@@ -69,7 +69,7 @@ public class LogResource extends Resource {
 	@Get("/")
 	public Payload getAll(Context context) {
 
-		Credentials credentials = SpaceContext.checkSuperAdminCredentials(false);
+		Credentials credentials = SpaceContext.checkSuperAdminCredentials();
 
 		Optional<String> backendId = credentials.isRootBackend() //
 				? Optional.empty() : Optional.of(credentials.backendId());
@@ -95,7 +95,7 @@ public class LogResource extends Resource {
 	@Post("/search/")
 	public Payload search(String body, Context context) {
 
-		Credentials credentials = SpaceContext.checkAdminCredentials(false);
+		Credentials credentials = SpaceContext.checkAdminCredentials();
 
 		QueryBuilder query = QueryBuilders.wrapperQuery(body);
 
@@ -123,7 +123,7 @@ public class LogResource extends Resource {
 	@Delete("/")
 	public Payload purgeBackend(Context context) {
 
-		Credentials credentials = SpaceContext.checkSuperDogCredentials(true);
+		Credentials credentials = SpaceContext.checkSuperDogCredentials();
 
 		Optional<DeleteByQueryResponse> response = doPurgeBackend(credentials.backendId(), //
 				context.request().query().getInteger("from", 1000));

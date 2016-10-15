@@ -148,7 +148,7 @@ public class PushResource extends Resource {
 	@Get("/installation/:id/tags")
 	@Get("/installation/:id/tags/")
 	public Payload getTags(String id, Context context) {
-		Credentials credentials = SpaceContext.checkCredentials();
+		Credentials credentials = SpaceContext.getCredentials();
 		ObjectNode object = DataStore.get().getObject(credentials.backendId(), TYPE, id);
 
 		return JsonPayload.json(//
@@ -323,7 +323,7 @@ public class PushResource extends Resource {
 
 	public Payload upsertInstallation(Optional<String> id, String body, Context context) {
 
-		Credentials credentials = SpaceContext.checkCredentials();
+		Credentials credentials = SpaceContext.getCredentials();
 
 		ObjectNode installation = Json.readObject(body);
 		String token = Json.checkStringNotNullOrEmpty(installation, TOKEN);
@@ -353,7 +353,7 @@ public class PushResource extends Resource {
 
 	private Payload updateTags(String id, String body, boolean strict, boolean delete) {
 
-		Credentials credentials = SpaceContext.checkCredentials();
+		Credentials credentials = SpaceContext.getCredentials();
 		ObjectNode installation = DataStore.get().getObject(credentials.backendId(), TYPE, id);
 
 		if (strict) {

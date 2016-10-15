@@ -39,12 +39,11 @@ public class ShareResource extends S3Resource {
 	@Get("/:uuid/:fileName")
 	@Get("/:uuid/:fileName/")
 	public Payload get(String uuid, String fileName, Context context) {
-		Credentials credentials = SpaceContext.checkCredentials();
 
 		boolean checkOwnership = checkPermissionAndIsOwnershipRequired(//
 				DataPermission.read, DataPermission.read_all);
 
-		Optional<Payload> payload = doGet(SHARE_BUCKET_SUFFIX, credentials.backendId(), //
+		Optional<Payload> payload = doGet(SHARE_BUCKET_SUFFIX, SpaceContext.backendId(), //
 				Uris.toPath(uuid, fileName), context, checkOwnership);
 
 		return payload.isPresent() ? payload.get() : JsonPayload.error(HttpStatus.NOT_FOUND);
@@ -73,7 +72,7 @@ public class ShareResource extends S3Resource {
 	@Delete("/:uuid/:fileName")
 	@Delete("/:uuid/:fileName/")
 	public Payload delete(String uuid, String fileName, Context context) {
-		Credentials credentials = SpaceContext.checkCredentials();
+		Credentials credentials = SpaceContext.getCredentials();
 
 		boolean checkOwnership = checkPermissionAndIsOwnershipRequired(//
 				DataPermission.delete, DataPermission.delete_all);
@@ -87,7 +86,7 @@ public class ShareResource extends S3Resource {
 	//
 
 	private Credentials checkPermission(DataPermission... permissions) {
-		Credentials credentials = SpaceContext.checkCredentials();
+		Credentials credentials = SpaceContext.getCredentials();
 		ShareSettings settings = SettingsResource.get().load(ShareSettings.class);
 
 		if (settings.check(credentials, permissions))
@@ -100,7 +99,7 @@ public class ShareResource extends S3Resource {
 			DataPermission ownerchipRequiredPermission, //
 			DataPermission ownerchipNotRequiredPermission) {
 
-		Credentials credentials = SpaceContext.checkCredentials();
+		Credentials credentials = SpaceContext.getCredentials();
 		ShareSettings settings = SettingsResource.get().load(ShareSettings.class);
 
 		if (settings.check(credentials, ownerchipNotRequiredPermission))

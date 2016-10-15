@@ -8,7 +8,6 @@ import java.util.Optional;
 import com.google.common.collect.ObjectArrays;
 import com.mashape.unirest.http.HttpMethod;
 
-import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Uris;
 import net.codestory.http.Context;
@@ -64,23 +63,23 @@ public class WebResource extends S3Resource {
 
 	private Payload doGet(boolean withContent, String[] path, Context context) {
 
-		Credentials credentials = SpaceContext.checkCredentials();
+		String backendId = SpaceContext.backendId();
 
 		if (path.length > 0) {
 
 			Optional<Payload> payload = doGet(withContent, FileResource.FILE_BUCKET_SUFFIX, //
-					credentials.backendId(), path, context);
+					backendId, path, context);
 
 			if (payload.isPresent())
 				return payload.get();
 
-			payload = doGet(withContent, FileResource.FILE_BUCKET_SUFFIX, credentials.backendId(),
+			payload = doGet(withContent, FileResource.FILE_BUCKET_SUFFIX, backendId,
 					ObjectArrays.concat(path, "index.html"), context);
 
 			if (payload.isPresent())
 				return payload.get();
 
-			payload = doGet(withContent, FileResource.FILE_BUCKET_SUFFIX, credentials.backendId(), //
+			payload = doGet(withContent, FileResource.FILE_BUCKET_SUFFIX, backendId, //
 					new String[] { path[0], "404.html" }, context);
 
 			if (payload.isPresent())
