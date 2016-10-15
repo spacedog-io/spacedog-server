@@ -25,10 +25,10 @@ public class LinkedinResourceTestOften extends Assert {
 				.url(test.backendId, "/1/login/linkedin");
 
 		// no linkedin settings means no linkedin credentials
-		SpaceRequest.post("/1/login/linkedin")//
+		SpaceRequest.post("/1/login/linkedin").backend(test)//
 				.formField("code", "XXX")//
 				.formField("redirect_uri", "XXX")//
-				.backend(test).go(400);
+				.go(400);
 
 		// admin sets linkedin settings without redirect uri
 		CredentialsSettings settings = new CredentialsSettings();
@@ -37,8 +37,15 @@ public class LinkedinResourceTestOften extends Assert {
 		SpaceClient.saveSettings(test, settings);
 
 		// fails to create linkedin credentials if no authorization code
-		SpaceRequest.post("/1/login/linkedin")//
-				.formField("redirect_uri", redirectUri).backend(test).go(400);
+		SpaceRequest.post("/1/login/linkedin").backend(test)//
+				.formField("redirect_uri", redirectUri)//
+				.go(400);
+
+		// fails to create linkedin credentials if invalid redirect_uri
+		SpaceRequest.post("/1/login/linkedin").backend(test)//
+				.formField("code", "XXX")//
+				.formField("redirect_uri", "XXX")//
+				.go(400);
 
 		// fails to create linkedin credentials if invalid code
 		SpaceRequest.post("/1/login/linkedin").backend(test)//
@@ -49,8 +56,8 @@ public class LinkedinResourceTestOften extends Assert {
 		// fails to create linkedin credentials if invalid code
 		// if no redirect_uri parameter is set spacedog uses
 		// its default redirect uri
-		SpaceRequest.post("/1/login/linkedin")//
-				.formField("code", "XXX").backend(test)//
+		SpaceRequest.post("/1/login/linkedin").backend(test)//
+				.formField("code", "XXX")//
 				.go(401);
 	}
 }

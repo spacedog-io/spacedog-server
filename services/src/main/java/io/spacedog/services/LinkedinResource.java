@@ -126,18 +126,27 @@ public class LinkedinResource extends Resource {
 
 	private void checkLinkedinError(SpaceResponse response, String messageIntro) {
 
-		if (response.httpResponse().getStatus() >= 400) {
+		int httpStatus = response.httpResponse().getStatus();
+
+		if (httpStatus >= 400) {
+
+			String error = response.getString("error");
+			String description = response.getString("error_description");
 			StringBuilder message = new StringBuilder(messageIntro);
 
-			if (response.has("error"))
-				message.append(": ").append(response.getString("error"));
+			if (!Strings.isNullOrEmpty(error)) {
+				message.append(": ").append(error);
 
-			if (response.has("error_description"))
-				message.append(" (")//
-						.append(response.getString("error_description"))//
-						.append(")");
+				if (!Strings.isNullOrEmpty(description))
+					message.append(" (").append(description).append(")");
 
-			throw Exceptions.space(response.httpResponse().getStatus(), message.toString());
+				// linkedin return 500 for an invalid redirect_uri
+				// WTF! let's consider this is a 400
+				if (error.equals("invalid_redirect_uri"))
+					httpStatus = 400;
+			}
+
+			throw Exceptions.space(httpStatus, message.toString());
 		}
 	}
 
