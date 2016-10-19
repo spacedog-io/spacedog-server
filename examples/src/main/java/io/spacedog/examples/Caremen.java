@@ -40,27 +40,67 @@ public class Caremen extends SpaceClient {
 		// initVehiculeTypes();
 
 		// resetSchema(buildCourseSchema(), backend);
-		// resetSchema(buildDriverSchema(), backend);
+		// setSchema(buildDriverSchema(), backend);
+		// resetSchema(buildCustomerSchema(), backend);
+		// resetSchema(buildDriverLogSchema(), backend);
 
 		// createCustomers();
 		// createDrivers();
 	}
 
 	void createCustomers() {
-		createCustomer("flavien");
-		createCustomer("aurelien");
-		createCustomer("david");
-		createCustomer("philippe");
+		Schema schema = buildCustomerSchema();
+
+		createCustomer("flavien", schema);
+		createCustomer("aurelien", schema);
+		createCustomer("david", schema);
+		createCustomer("philippe", schema);
 	}
 
-	User createCustomer(String username) {
+	User createCustomer(String username, Schema schema) {
 		String password = "hi " + username;
 		String email = "david@spacedog.io";
 
 		Optional<User> optional = SpaceClient.login(backend.backendId, username, password, 200, 401);
 
-		return optional.isPresent() ? optional.get() //
+		User credentials = optional.isPresent() ? optional.get()
 				: SpaceClient.newCredentials(backend, username, password, email);
+
+		SpaceRequest.put("/1/credentials/" + credentials.id + "/roles/customer")//
+				.adminAuth(backend).go(200);
+
+		ObjectNode customer = generator.gen(schema, 0);
+		customer.put("credentialsId", credentials.id);
+		customer.put("firstname", credentials.username);
+		customer.put("lastname", credentials.username.charAt(0) + ".");
+		customer.put("phone", "0033662627520");
+		SpaceRequest.post("/1/data/customer").userAuth(credentials).body(customer).go(201);
+
+		return credentials;
+	}
+
+	static Schema buildCustomerSchema() {
+		return Schema.builder("customer") //
+
+				.acl("customer", DataPermission.create, DataPermission.search, //
+						DataPermission.update)//
+				.acl("admin", DataPermission.search, DataPermission.update_all, //
+						DataPermission.delete_all)//
+
+				.string("credentialsId").examples("khljgGFJHfvlkHMhjh")//
+				.string("firstname").examples("Robert")//
+				.string("lastname").examples("Morgan")//
+				.string("phone").examples("+ 33 6 42 01 67 56")//
+
+				.object("billing")//
+				.text("name").french().examples("In-tact SARL")//
+				.text("street").french().examples("9 rue Titon")//
+				.string("zipcode").examples("75011")//
+				.text("town").examples("Paris")//
+				.close()//
+
+				.close()//
+				.build();
 	}
 
 	void initInstallations() {
@@ -76,7 +116,7 @@ public class Caremen extends SpaceClient {
 	static Schema buildCourseSchema() {
 		return Schema.builder("course") //
 
-				.acl("user", DataPermission.create, DataPermission.read, //
+				.acl("customer", DataPermission.create, DataPermission.read, //
 						DataPermission.search, DataPermission.update)//
 				.acl("driver", DataPermission.search, DataPermission.update_all)//
 				.acl("admin", DataPermission.create, DataPermission.search, //
@@ -84,7 +124,7 @@ public class Caremen extends SpaceClient {
 
 				.string("status").examples("requested") //
 				.string("customerId").examples("david") //
-				.string("requestedVehiculeType").examples("berline") //
+				.string("requestedVehiculeType").examples("classic") //
 				.timestamp("requestedPickupTimestamp").examples("2016-07-12T14:00:00.000Z") //
 				.timestamp("pickupTimestamp").examples("2016-07-12T14:00:00.000Z") //
 				.timestamp("dropoffTimestamp").examples("2016-07-12T14:00:00.000Z") //
@@ -102,12 +142,6 @@ public class Caremen extends SpaceClient {
 				.geopoint("geopoint")//
 				.close()//
 
-				.object("events").array()//
-				.string("type").examples("requested", "accepted")//
-				.string("by").examples("David", "Vince", "Nathalie")//
-				.timestamp("when").examples("2016-07-12T14:00:00.000Z", "2016-08-02T14:00:00.000Z")//
-				.close()//
-
 				.object("driver")//
 				.string("driverId").examples("robert")//
 				.floatt("gain").examples("10.23")//
@@ -118,7 +152,7 @@ public class Caremen extends SpaceClient {
 				.examples("http://s3-eu-west-1.amazonaws.com/spacedog-artefact/SpaceDog-Logo-Transp-130px.png")//
 
 				.object("vehicule")//
-				.string("type").examples("berline", "van", "break")//
+				.string("type").examples("classic")//
 				.string("brand").examples("Peugeot", "Renault")//
 				.string("model").examples("508", "Laguna", "Talisman")//
 				.string("color").examples("black", "white", "pink")//
@@ -158,13 +192,12 @@ public class Caremen extends SpaceClient {
 		Json.set(driver, "lastLocation.where", where);
 
 		SpaceRequest.post("/1/data/driver").adminAuth(backend).body(driver).go(201);
-
 	}
 
 	static Schema buildDriverSchema() {
 		return Schema.builder("driver") //
 
-				.acl("user", DataPermission.search)//
+				.acl("customer", DataPermission.search)//
 				.acl("driver", DataPermission.search, DataPermission.update_all)//
 				.acl("admin", DataPermission.create, DataPermission.search, DataPermission.update_all,
 						DataPermission.delete_all)//
@@ -184,7 +217,7 @@ public class Caremen extends SpaceClient {
 				.close()
 
 				.object("vehicule")//
-				.string("type").examples("berline", "van", "break")//
+				.string("type").examples("classic")//
 				.string("brand").examples("Peugeot", "Renault")//
 				.string("model").examples("508", "Laguna", "Talisman")//
 				.string("color").examples("black", "white", "pink")//
@@ -200,12 +233,31 @@ public class Caremen extends SpaceClient {
 				.build();
 	}
 
+	static Schema buildDriverLogSchema() {
+		return Schema.builder("driverlog") //
+
+				.acl("driver", DataPermission.create)//
+				.acl("admin", DataPermission.search, DataPermission.delete_all)//
+
+				.string("driverId").examples("robert")//
+				.geopoint("where")//
+
+				.object("course")//
+				.string("id").examples("robert")//
+				.string("statusUpdatedTo").examples("accepted", "waiting")//
+				.string("statusUpdatedFrom").examples("requested", "accepted")//
+				.close()//
+
+				.close()//
+				.build();
+	}
+
 	void initVehiculeTypes() {
 
 		ArrayNode node = Json.arrayBuilder()//
 				.object()//
-				.put("type", "berline")//
-				.put("name", "Berline")//
+				.put("type", "classic")//
+				.put("name", "Berline Classic")//
 				.put("description", "Standard")//
 				.put("minimumPrice", 10)//
 				.put("passengers", 4)//
@@ -213,7 +265,7 @@ public class Caremen extends SpaceClient {
 
 				.object()//
 				.put("type", "premium")//
-				.put("name", "BERLINE PREMIUM")//
+				.put("name", "Berline Premium")//
 				.put("description", "Haut de gamme")//
 				.put("minimumPrice", 15)//
 				.put("passengers", 4)//
