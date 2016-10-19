@@ -192,7 +192,7 @@ public class PushResource extends Resource {
 		ObjectNode push = Json.readObject(body);
 		String appId = Json.checkStringNotNullOrEmpty(push, APP_ID);
 		JsonNode message = Json.checkNode(push, MESSAGE, true).get();
-		String snsJsonMessage = computeSnsJsonMessage(message);
+		ObjectNode snsJsonMessage = convertJsonMessageToSnsMessage(message);
 
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
 				.filter(QueryBuilders.termQuery(APP_ID, appId));
@@ -256,7 +256,7 @@ public class PushResource extends Resource {
 				PublishRequest pushRequest = new PublishRequest()//
 						.withTargetArn(endpoint)//
 						.withMessageStructure("json")//
-						.withMessage(snsJsonMessage);
+						.withMessage(snsJsonMessage.toString());
 
 				if (!SpaceContext.isTest())
 					getSnsClient().publish(pushRequest);
@@ -289,26 +289,37 @@ public class PushResource extends Resource {
 	// Implementation
 	//
 
-	private String computeSnsJsonMessage(JsonNode message) {
+	static ObjectNode convertJsonMessageToSnsMessage(JsonNode message) {
+
 		if (message.isObject()) {
 			ObjectNode awsStylePushMessage = Json.object();
 			Iterator<Entry<String, JsonNode>> fields = message.fields();
 			while (fields.hasNext()) {
 				Entry<String, JsonNode> field = fields.next();
-				awsStylePushMessage.put(field.getKey(), field.getValue().toString());
+				if (field.getValue().isObject())
+					awsStylePushMessage.put(field.getKey(), field.getValue().toString());
+				else
+					// be careful not to 'toString' simple text values
+					// because it would double quote stringified objects
+					awsStylePushMessage.set(field.getKey(), field.getValue());
 			}
-			return awsStylePushMessage.toString();
+			return awsStylePushMessage;
 		}
 
-		String text = message.asText();
-		ObjectNode json = Json.object("default", text, //
-				"APNS", String.format("{\"aps\":{\"alert\": \"%s\"} }", text), //
-				"APNS_SANDBOX", String.format("{\"aps\":{\"alert\":\"%s\"}}", text), //
-				"GCM", String.format("{ \"data\": { \"message\": \"%s\" } }", text), //
-				"ADM", String.format("{ \"data\": { \"message\": \"%s\" } }", text), //
-				"BAIDU", String.format("{\"title\":\"%s\",\"description\":\"%s\"}", text, text));
+		if (message.isTextual()) {
+			String text = message.asText();
+			ObjectNode awsStylePushMessage = Json.object("default", text, //
+					"APNS", String.format("{\"aps\":{\"alert\": \"%s\"} }", text), //
+					"APNS_SANDBOX", String.format("{\"aps\":{\"alert\":\"%s\"}}", text), //
+					"GCM", String.format("{ \"data\": { \"message\": \"%s\" } }", text), //
+					"ADM", String.format("{ \"data\": { \"message\": \"%s\" } }", text), //
+					"BAIDU", String.format("{\"title\":\"%s\",\"description\":\"%s\"}", text, text));
 
-		return json.toString();
+			return awsStylePushMessage;
+		}
+
+		throw Exceptions.illegalArgument("push message [%s][%s] is invalid", //
+				message.getNodeType(), message);
 	}
 
 	private void removeEndpointQuietly(String backend, String id) {
