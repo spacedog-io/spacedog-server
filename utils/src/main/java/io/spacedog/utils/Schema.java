@@ -86,4 +86,11 @@ public class Schema {
 		acl.put(role, permissions);
 		acl(acl);
 	}
+
+	public static void checkName(String name) {
+		if (reservedNames.contains(name))
+			throw Exceptions.illegalArgument("schema name [%s] is reserved", name);
+	}
+
+	private static Set<String> reservedNames = Sets.newHashSet("settings");
 }

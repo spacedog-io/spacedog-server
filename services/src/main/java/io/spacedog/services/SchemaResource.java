@@ -60,6 +60,8 @@ public class SchemaResource extends Resource {
 	@Get("/:type")
 	@Get("/:type/")
 	public Payload get(String type) {
+
+		Schema.checkName(type);
 		return JsonPayload.json(//
 				Start.get()//
 						.getElasticClient()//
@@ -69,11 +71,13 @@ public class SchemaResource extends Resource {
 
 	@Put("/:type")
 	@Put("/:type/")
+	// deprecated
 	@Post("/:type")
 	@Post("/:type/")
 	public Payload put(String type, String newSchemaAsString, Context context) {
 
 		Credentials credentials = SpaceContext.checkAdminCredentials();
+		Schema.checkName(type);
 
 		Schema schema = Strings.isNullOrEmpty(newSchemaAsString) ? getDefaultSchema(type) //
 				: new Schema(type, Json.readObject(newSchemaAsString));
@@ -108,8 +112,7 @@ public class SchemaResource extends Resource {
 		try {
 			Credentials credentials = SpaceContext.checkAdminCredentials();
 			Start.get().getElasticClient().deleteIndex(credentials.backendId(), type);
-		} catch (TypeMissingException exception) {
-			// ignored
+		} catch (TypeMissingException ignored) {
 		}
 		return JsonPayload.success();
 	}

@@ -154,4 +154,16 @@ public class SchemaResourceTestOften extends Assert {
 				.assertEquals(schema.node());
 	}
 
+	@Test
+	public void schemaNameSettingsIsReserved() {
+
+		// prepare
+		SpaceClient.prepareTest();
+		Backend test = SpaceClient.resetTestBackend();
+
+		// settings is a reserved schema name
+		SpaceRequest.get("/1/schema/settings").backend(test).go(400);
+		SpaceRequest.put("/1/schema/settings").adminAuth(test).go(400);
+	}
+
 }
