@@ -40,7 +40,7 @@ public class Caremen extends SpaceClient {
 		// initVehiculeTypes();
 
 		// resetSchema(buildCourseSchema(), backend);
-		// setSchema(buildDriverSchema(), backend);
+		// resetSchema(buildDriverSchema(), backend);
 		// resetSchema(buildCustomerSchema(), backend);
 		// resetSchema(buildDriverLogSchema(), backend);
 
@@ -237,7 +237,8 @@ public class Caremen extends SpaceClient {
 		return Schema.builder("driverlog") //
 
 				.acl("driver", DataPermission.create)//
-				.acl("admin", DataPermission.search, DataPermission.delete_all)//
+				.acl("admin", DataPermission.create, DataPermission.search, //
+						DataPermission.delete_all)//
 
 				.string("driverId").examples("robert")//
 				.geopoint("where")//
