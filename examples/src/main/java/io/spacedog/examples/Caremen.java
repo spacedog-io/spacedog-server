@@ -9,7 +9,6 @@ import java.util.Random;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceClient;
@@ -257,8 +256,8 @@ public class Caremen extends SpaceClient {
 
 	void initVehiculeTypes() {
 
-		ArrayNode node = Json.arrayBuilder()//
-				.object()//
+		ObjectNode node = Json.objectBuilder()//
+				.object("classic")//
 				.put("type", "classic")//
 				.put("name", "Berline Classic")//
 				.put("description", "Standard")//
@@ -266,7 +265,7 @@ public class Caremen extends SpaceClient {
 				.put("passengers", 4)//
 				.end()//
 
-				.object()//
+				.object("premium")//
 				.put("type", "premium")//
 				.put("name", "Berline Premium")//
 				.put("description", "Haut de gamme")//
@@ -274,7 +273,7 @@ public class Caremen extends SpaceClient {
 				.put("passengers", 4)//
 				.end()//
 
-				.object()//
+				.object("green")//
 				.put("type", "green")//
 				.put("name", "GREEN BERLINE")//
 				.put("description", "Electric cars")//
@@ -282,7 +281,7 @@ public class Caremen extends SpaceClient {
 				.put("passengers", 4)//
 				.end()//
 
-				.object()//
+				.object("break")//
 				.put("type", "break")//
 				.put("name", "BREAK")//
 				.put("description", "Grand coffre")//
@@ -290,7 +289,7 @@ public class Caremen extends SpaceClient {
 				.put("passengers", 4)//
 				.end()//
 
-				.object()//
+				.object("van")//
 				.put("type", "van")//
 				.put("name", "VAN")//
 				.put("description", "Mini bus")//
@@ -300,7 +299,7 @@ public class Caremen extends SpaceClient {
 
 				.build();
 
-		SpaceRequest.put("/1/settings/carTypes")//
+		SpaceRequest.put("/1/settings/vehiculeTypes")//
 				.adminAuth(backend).body(node).go(201);
 	}
 }
