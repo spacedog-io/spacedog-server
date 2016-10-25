@@ -39,10 +39,10 @@ public class Caremen extends SpaceClient {
 		// initInstallations();
 		// initVehiculeTypes();
 
-		// resetSchema(buildCourseSchema(), backend);
-		// resetSchema(buildDriverSchema(), backend);
-		// resetSchema(buildCustomerSchema(), backend);
-		// resetSchema(buildDriverLogSchema(), backend);
+		// setSchema(buildCourseSchema(), backend);
+		// setSchema(buildDriverSchema(), backend);
+		// setSchema(buildCustomerSchema(), backend);
+		// setSchema(buildDriverLogSchema(), backend);
 
 		// createCustomers();
 		// createDrivers();
@@ -221,6 +221,7 @@ public class Caremen extends SpaceClient {
 				.string("brand").examples("Peugeot", "Renault")//
 				.string("model").examples("508", "Laguna", "Talisman")//
 				.string("color").examples("black", "white", "pink")//
+				.string("licencePlate").examples("BM-500-RF")//
 				.close()//
 
 				.object("RIB")//
@@ -245,6 +246,7 @@ public class Caremen extends SpaceClient {
 
 				.object("course")//
 				.string("id").examples("robert")//
+				.string("status").examples("accepted", "waiting")//
 				.string("statusUpdatedTo").examples("accepted", "waiting")//
 				.string("statusUpdatedFrom").examples("requested", "accepted")//
 				.close()//
