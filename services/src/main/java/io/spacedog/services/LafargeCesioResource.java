@@ -277,6 +277,7 @@ public class LafargeCesioResource extends Resource {
 		builder.append("You will need it when you will log in to play the game. \n\n");
 		builder.append("Enjoy ! \n\n");
 		builder.append("The CESIO TEAM \n");
+		builder.append("https://goo.gl/AtWpvq \n");
 
 		message.text = builder.toString();
 		message.subject = "CESIO GAME - activation code";
