@@ -18,6 +18,7 @@ public class StartConfiguration {
 	private static final String SPACEDOG_HOME_PATH = "spacedog.home.path";
 	private static final String SPACEDOG_CONFIGURATION_FILE = "spacedog.configuration.file";
 	private static final String SPACEDOG_ELASTIC_HTTP_ENABLED = "spacedog.elastic.http.enabled";
+	private static final String SPACEDOG_ELASTIC_NETWORK_HOST = "spacedog.elastic.network.host";
 	private static final String SPACEDOG_OFFLINE = "spacedog.offline";
 	private static final String SPACEDOG_AWS_SUPERDOG_NOTIFICATION_TOPIC = "spacedog.aws.superdog.notification.topic";
 	private static final String SPACEDOG_ELASTIC_SNAPSHOTS_PATH = "spacedog.elastic.snapshots.path";
@@ -157,6 +158,11 @@ public class StartConfiguration {
 	public boolean isElasticHttpEnabled() {
 		return Boolean.parseBoolean(//
 				configuration.getProperty(SPACEDOG_ELASTIC_HTTP_ENABLED, "false"));
+	}
+
+	public String elasticNetworkHost() {
+		String ip = configuration.getProperty(SPACEDOG_ELASTIC_NETWORK_HOST);
+		return Strings.isNullOrEmpty(ip) ? "127.0.0.1" : ip;
 	}
 
 	//

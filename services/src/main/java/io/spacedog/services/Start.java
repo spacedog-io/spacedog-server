@@ -128,6 +128,8 @@ public class Start {
 				.put("cluster.routing.rebalance.enable", "none")//
 				.put("http.enabled", //
 						config.isElasticHttpEnabled())//
+				.put("network.host", //
+						config.elasticNetworkHost())//
 				.put("path.home", //
 						config.homePath().toAbsolutePath().toString())
 				.put("path.data", //
