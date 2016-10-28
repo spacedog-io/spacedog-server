@@ -2,7 +2,6 @@ package io.spacedog.services;
 
 import org.joda.time.DateTime;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.escape.Escaper;
 import com.google.common.net.UrlEscapers;
@@ -14,14 +13,12 @@ import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.CredentialsSettings;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceException;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
-import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
 public class LinkedinResource extends Resource {
@@ -40,14 +37,11 @@ public class LinkedinResource extends Resource {
 	public Payload getLogin(Context context) {
 		Credentials credentials = login(context);
 
-		JsonBuilder<ObjectNode> builder = JsonPayload//
-				.builder(credentials.isBrandNew(), credentials.backendId(), "/1", //
-						CredentialsResource.TYPE, credentials.id(), credentials.version())//
-				.put(CredentialsResource.ACCESS_TOKEN, credentials.accessToken())//
-				.put(CredentialsResource.EXPIRES_IN, credentials.accessTokenExpiresIn());
-
-		return JsonPayload.json(builder, HttpStatus.CREATED)//
-				.withHeader(SpaceHeaders.SPACEDOG_OBJECT_ID, credentials.id());
+		return JsonPayload.json(//
+				JsonPayload.builder()//
+						.put(ACCESS_TOKEN, credentials.accessToken()) //
+						.put(EXPIRES_IN, credentials.accessTokenExpiresIn()) //
+						.node(CREDENTIALS, credentials.toJson()));
 	}
 
 	@Get("/1/login/linkedin/redirect")

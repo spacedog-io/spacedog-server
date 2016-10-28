@@ -4,31 +4,14 @@
 package io.spacedog.services;
 
 import io.spacedog.utils.Check;
+import io.spacedog.utils.SpaceFieldNames;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 
-public abstract class Resource {
+public abstract class Resource implements SpaceFieldNames {
 
 	public static final String SLASH = "/";
 	public static final String SPACEDOG_BACKEND = "spacedog";
-
-	// Field names
-	public static final String ID = "id";
-	public static final String BACKEND_ID = "backendId";
-	public static final String PASSWORD = "password";
-	public static final String EMAIL = "email";
-	public static final String ENABLED = "enabled";
-	public static final String USERNAME = "username";
-	public static final String UPDATED_AT = "updatedAt";
-	public static final String CREATED_AT = "createdAt";
-	public static final String ACCESS_TOKEN = "accessToken";
-	public static final String EXPIRES_IN = "expiresIn";
-	public static final String ACCESS_TOKEN_EXPIRES_AT = "accessTokenExpiresAt";
-	public static final String HASHED_PASSWORD = "hashedPassword";
-	public static final String PASSWORD_RESET_CODE = "passwordResetCode";
-	public static final String CREDENTIALS_LEVEL = "level";
-	public static final String ROLES = "roles";
-	public static final String ERROR = "error";
 
 	public static StringBuilder spaceUrl(String backendId, String uri, String type, String id) {
 		return spaceUrl(backendId, uri).append(SLASH).append(type).append(SLASH).append(id);

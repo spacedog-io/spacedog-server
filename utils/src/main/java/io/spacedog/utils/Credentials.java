@@ -14,6 +14,7 @@ import org.joda.time.DateTime;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, //
@@ -302,6 +303,19 @@ public class Credentials {
 		this.accessTokenExpiresAt = accessTokenExpiresAt;
 		this.passwordResetCode = null;
 		this.hashedPassword = null;
+	}
+
+	public ObjectNode toJson() {
+		return Json.object(//
+				SpaceFieldNames.ID, id(), //
+				SpaceFieldNames.BACKEND_ID, backendId(), //
+				SpaceFieldNames.USERNAME, name(), //
+				SpaceFieldNames.EMAIL, email().get(), //
+				SpaceFieldNames.ENABLED, enabled(), //
+				SpaceFieldNames.CREDENTIALS_LEVEL, level().name(), //
+				SpaceFieldNames.ROLES, roles(), //
+				SpaceFieldNames.CREATED_AT, createdAt(), //
+				SpaceFieldNames.UPDATED_AT, updatedAt());
 	}
 
 	//

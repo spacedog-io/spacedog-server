@@ -92,10 +92,11 @@ public class CredentialsResource extends Resource {
 					context.query().getBoolean("expiresEarly", false));
 			credentials = update(credentials);
 		}
-		return JsonPayload.json(Json.object(//
-				"accessToken", credentials.accessToken(), //
-				"expiresIn", credentials.accessTokenExpiresIn(), //
-				"credentials", fromCredentials(credentials)));
+		return JsonPayload.json(//
+				JsonPayload.builder()//
+						.put(ACCESS_TOKEN, credentials.accessToken()) //
+						.put(EXPIRES_IN, credentials.accessTokenExpiresIn()) //
+						.node(CREDENTIALS, credentials.toJson()));
 	}
 
 	@Get("/1/logout")
@@ -163,7 +164,7 @@ public class CredentialsResource extends Resource {
 	public Payload getById(String id, Context context) {
 		SpaceContext.checkUserCredentials(id);
 		Credentials credentials = getById(id, true).get();
-		return JsonPayload.json(fromCredentials(credentials));
+		return JsonPayload.json(credentials.toJson());
 	}
 
 	@Delete("/1/credentials/:id")
@@ -589,21 +590,8 @@ public class CredentialsResource extends Resource {
 	private ObjectNode fromCredentialsSearch(SearchResults<Credentials> response) {
 		ArrayNode results = Json.array();
 		for (Credentials credentials : response.results)
-			results.add(fromCredentials(credentials));
+			results.add(credentials.toJson());
 		return Json.object("total", response.total, "results", results);
-	}
-
-	private ObjectNode fromCredentials(Credentials credentials) {
-		return Json.object(//
-				ID, credentials.id(), //
-				BACKEND_ID, credentials.backendId(), //
-				USERNAME, credentials.name(), //
-				EMAIL, credentials.email().get(), //
-				ENABLED, credentials.enabled(), //
-				CREDENTIALS_LEVEL, credentials.level().name(), //
-				ROLES, credentials.roles(), //
-				CREATED_AT, credentials.createdAt(), //
-				UPDATED_AT, credentials.updatedAt());
 	}
 
 	private boolean exists(String backendId, String username) {
