@@ -23,6 +23,15 @@ import io.spacedog.watchdog.SpaceSuite.TestOften;
 public class BackendResourceTestOften extends Assert {
 
 	@Test
+	public void rootBackendShallNotBeDeleted() {
+		// prepare
+		SpaceClient.prepareTest();
+
+		// root backend can not be deleted
+		SpaceRequest.delete("/1/backend").superdogAuth().go(400);
+	}
+
+	@Test
 	public void deleteSignUpGetLoginTestBackend() {
 
 		// prepare

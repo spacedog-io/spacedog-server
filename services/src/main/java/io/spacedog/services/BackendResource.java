@@ -37,17 +37,6 @@ public class BackendResource extends Resource {
 		return JsonPayload.success();
 	}
 
-	@Post("")
-	@Post("/")
-	@Post("/1")
-	@Post("/1/")
-	public Payload post(String body, Context context) {
-		Credentials credentials = SpaceContext.getCredentials();
-		if (credentials.isRootBackend())
-			throw Exceptions.illegalArgument("[api] not a valid backend id");
-		return post(credentials.backendId(), body, context);
-	}
-
 	@Get("/1/backend")
 	@Get("/1/backend/")
 	public Payload getAll(Context context) {
@@ -77,6 +66,9 @@ public class BackendResource extends Resource {
 	@Delete("/1/backend/")
 	public Payload delete(Context context) {
 		Credentials credentials = SpaceContext.checkSuperAdminCredentials();
+
+		if (credentials.isRootBackend())
+			throw Exceptions.illegalArgument("backend [api] shall not be deleted");
 
 		CredentialsResource.get().deleteAll(credentials.backendId());
 		Start.get().getElasticClient().deleteAllIndices(credentials.backendId());
