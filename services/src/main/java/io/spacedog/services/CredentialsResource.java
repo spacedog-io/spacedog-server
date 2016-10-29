@@ -170,9 +170,26 @@ public class CredentialsResource extends Resource {
 	@Delete("/1/credentials/:id")
 	@Delete("/1/credentials/:id/")
 	public Payload deleteById(String id) {
-		SpaceContext.checkUserCredentials(id);
-		delete(id);
-		return JsonPayload.success();
+		Credentials requester = SpaceContext.checkUserCredentials(id);
+		Credentials recipient = getById(id, true).get();
+
+		if (requester.isSuperDog() //
+				|| requester.id().equals(recipient.id()) //
+				|| (requester.isAtLeastAdmin() //
+						&& requester.backendId().equals(recipient.backendId())
+						&& requester.level().ordinal() >= recipient.level().ordinal())) {
+
+			if (recipient.level().equals(Level.SUPER_ADMIN)) {
+				if (getBackendSuperAdmins(recipient.backendId(), 0, 0).total == 1)
+					throw Exceptions.forbidden("backend [%s] must at least have one superadmin", //
+							recipient.backendId());
+			}
+
+			delete(id);
+			return JsonPayload.success();
+		}
+
+		throw Exceptions.insufficientCredentials(requester);
 	}
 
 	@Put("/1/credentials/:id")

@@ -22,8 +22,50 @@ import io.spacedog.watchdog.SpaceSuite.TestOften;
 public class CredentialsResourceTestOften extends Assert {
 
 	@Test
+	public void deleteSuperAdminCredentials() {
+
+		// prepare
+		SpaceClient.prepareTest();
+		Backend test = SpaceClient.resetTestBackend();
+		Backend test2 = SpaceClient.resetTest2Backend();
+
+		test.adminUser = SpaceClient.login("test", "test", "hi test");
+		test2.adminUser = SpaceClient.login("test2", "test2", "hi test2");
+		User superdog = SpaceClient.login("api", SpaceRequest.configuration().superdogName(), //
+				SpaceRequest.configuration().superdogPassword());
+
+		// forbidden to delete superadmin if last superadmin of backend
+		SpaceRequest.delete("/1/credentials/" + test.adminUser.id).adminAuth(test).go(403);
+		SpaceRequest.delete("/1/credentials/" + test.adminUser.id).superdogAuth().go(403);
+
+		// superadmin test can create another superadmin (test1)
+		SpaceRequest.post("/1/credentials").adminAuth(test)//
+				.body("username", "test1", "password", "hi test1", //
+						"email", "test1@test.com", "level", "SUPER_ADMIN")//
+				.go(201);
+
+		User test1 = SpaceClient.login("test", "test1", "hi test1");
+
+		// superadmin test can delete superadmin test1
+		SpaceRequest.delete("/1/credentials/" + test1.id).adminAuth(test).go(200);
+
+		// test1 can no longer login
+		SpaceClient.login("test", "test1", "hi test1", 401);
+
+		// superadmin test fails to delete superdog david
+		SpaceRequest.delete("/1/credentials/" + superdog.id).adminAuth(test).go(403);
+
+		// superadmin test fails to delete superadmin of another backend
+		SpaceRequest.delete("/1/credentials/" + test2.adminUser.id).adminAuth(test).go(403);
+
+		// superadmin test2 fails to delete superadmin of another backend
+		SpaceRequest.delete("/1/credentials/" + test.adminUser.id).adminAuth(test2).go(403);
+	}
+
+	@Test
 	public void userIsSigningUpAndMore() {
 
+		// prepare
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
 
