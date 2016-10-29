@@ -32,6 +32,7 @@ public class StartConfiguration {
 	private static final String SPACEDOG_SERVER_PORT = "spacedog.server.port";
 	private static final String SPACEDOG_API_URL_SCHEME = "spacedog.api.url.scheme";
 	private static final String SPACEDOG_API_URL_BASE = "spacedog.api.url.base";
+
 	private Properties configuration = new Properties();
 
 	public StartConfiguration() {
@@ -54,6 +55,7 @@ public class StartConfiguration {
 
 		checkPath(SPACEDOG_ELASTIC_DATA_PATH, elasticDataPath(), true);
 		check(SPACEDOG_ELASTIC_HTTP_ENABLED, isElasticHttpEnabled());
+		check(SPACEDOG_ELASTIC_NETWORK_HOST, elasticNetworkHost());
 		checkPath(SPACEDOG_ELASTIC_SNAPSHOTS_PATH, snapshotsPath(), true);
 
 		check(SPACEDOG_AWS_REGION, awsRegion());
