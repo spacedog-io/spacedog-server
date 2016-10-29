@@ -42,6 +42,10 @@ public class Exceptions {
 		return new IllegalStateException(String.format(message, args));
 	}
 
+	public static IllegalStateException illegalState(Throwable t, String message, Object... args) {
+		return new IllegalStateException(String.format(message, args), t);
+	}
+
 	public static ForbiddenException forbidden(String message, Object... args) {
 		return new ForbiddenException(message, args);
 	}

@@ -1,6 +1,8 @@
 package io.spacedog.services;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -164,7 +166,14 @@ public class StartConfiguration {
 
 	public String elasticNetworkHost() {
 		String ip = configuration.getProperty(SPACEDOG_ELASTIC_NETWORK_HOST);
-		return Strings.isNullOrEmpty(ip) ? "127.0.0.1" : ip;
+		if (!Strings.isNullOrEmpty(ip))
+			return ip;
+
+		try {
+			return InetAddress.getLocalHost().getHostAddress();
+		} catch (UnknownHostException e) {
+			throw Exceptions.illegalState(e, "no IP address for server");
+		}
 	}
 
 	//
