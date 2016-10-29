@@ -1,5 +1,8 @@
 package io.spacedog.watchdog;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Assert;
@@ -16,7 +19,7 @@ import io.spacedog.client.SpaceResponse;
 public class SnapshotResourceTest extends Assert {
 
 	@Test
-	public void snapshotAndRestoreMultipleTimes() throws InterruptedException {
+	public void snapshotAndRestoreMultipleTimes() throws InterruptedException, UnknownHostException {
 
 		// prepare
 		SpaceClient.prepareTest();
@@ -35,7 +38,8 @@ public class SnapshotResourceTest extends Assert {
 		// deletes the current repository to force repo creation by this test
 		// use full url to avoid delete by mistake any prod repo
 		String repository = DateTime.now().withZone(DateTimeZone.UTC).toString("yyyy-ww");
-		SpaceRequest.delete("http://localhost:9200/_snapshot/{repoId}")//
+		String ip = InetAddress.getLocalHost().getHostAddress();
+		SpaceRequest.delete("http://" + ip + ":9200/_snapshot/{repoId}")//
 				.routeParam("repoId", repository)//
 				.go(200, 404);
 
