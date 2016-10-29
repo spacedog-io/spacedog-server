@@ -4,12 +4,11 @@
 package io.spacedog.services;
 
 import java.io.Console;
-import java.nio.file.Paths;
+import java.net.InetAddress;
 
-import org.elasticsearch.client.Client;
+import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.settings.Settings.Builder;
-import org.elasticsearch.node.NodeBuilder;
+import org.elasticsearch.common.transport.InetSocketTransportAddress;
 
 import io.spacedog.utils.Utils;
 
@@ -29,20 +28,17 @@ public class CreateSuperdog {
 			password = new String(console.readPassword("Enter password: "));
 		}
 
-		Client client = null;
+		TransportClient client = null;
 
 		try {
-			Builder builder = Settings.builder()//
-					.put("path.home", Paths.get(System.getProperty("user.home"), "spacedog"))//
-					.put("http.enabled", false);
 
-			client = NodeBuilder.nodeBuilder()//
-					.client(true)//
-					.clusterName(Start.CLUSTER_NAME)//
-					.settings(builder)//
-					.build()//
-					.start()//
-					.client();
+			Settings settings = Settings.settingsBuilder()//
+					.put("cluster.name", Start.CLUSTER_NAME).build();
+
+			client = TransportClient.builder().settings(settings).build();
+			client.addTransportAddress(new InetSocketTransportAddress(//
+					InetAddress.getByName(Start.get().configuration().elasticNetworkHost()), //
+					9300));
 
 			Start.get().setElasticClient(client);
 			CredentialsResource.get().createSuperdog(username, password, email);
