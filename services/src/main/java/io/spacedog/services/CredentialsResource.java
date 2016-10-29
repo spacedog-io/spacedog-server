@@ -179,6 +179,7 @@ public class CredentialsResource extends Resource {
 						&& requester.backendId().equals(recipient.backendId())
 						&& requester.level().ordinal() >= recipient.level().ordinal())) {
 
+			// forbidden to delete last backend superadmin
 			if (recipient.level().equals(Level.SUPER_ADMIN)) {
 				if (getBackendSuperAdmins(recipient.backendId(), 0, 0).total == 1)
 					throw Exceptions.forbidden("backend [%s] must at least have one superadmin", //
