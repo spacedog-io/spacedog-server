@@ -41,10 +41,10 @@ public class Caremen extends SpaceClient {
 		// setSchema(buildCourseSchema(), backend);
 		// setSchema(buildDriverSchema(), backend);
 		// setSchema(buildCustomerSchema(), backend);
-		// setSchema(buildDriverLogSchema(), backend);
+		// setSchema(buildCourseLogSchema(), backend);
 
 		// createCustomers();
-		// createDrivers();
+		createDrivers();
 	}
 
 	void createCustomers() {
@@ -127,6 +127,7 @@ public class Caremen extends SpaceClient {
 				.timestamp("requestedPickupTimestamp").examples("2016-07-12T14:00:00.000Z") //
 				.timestamp("pickupTimestamp").examples("2016-07-12T14:00:00.000Z") //
 				.timestamp("dropoffTimestamp").examples("2016-07-12T14:00:00.000Z") //
+				.text("noteForDriver")//
 				.floatt("fare").examples(23.82)// in euros
 				.longg("time").examples(1234567)// in millis
 				.integer("distance").examples(12345)// in meters
@@ -155,6 +156,7 @@ public class Caremen extends SpaceClient {
 				.string("brand").examples("Peugeot", "Renault")//
 				.string("model").examples("508", "Laguna", "Talisman")//
 				.string("color").examples("black", "white", "pink")//
+				.string("licencePlate").examples("BM-500-FG")//
 				.close()//
 
 				.close()//
@@ -233,22 +235,17 @@ public class Caremen extends SpaceClient {
 				.build();
 	}
 
-	static Schema buildDriverLogSchema() {
-		return Schema.builder("driverlog") //
+	static Schema buildCourseLogSchema() {
+		return Schema.builder("courselog") //
 
 				.acl("driver", DataPermission.create)//
 				.acl("admin", DataPermission.create, DataPermission.search, //
 						DataPermission.delete_all)//
 
-				.string("driverId").examples("robert")//
+				.string("courseId")//
+				.string("driverId")//
+				.string("status")//
 				.geopoint("where")//
-
-				.object("course")//
-				.string("id").examples("robert")//
-				.string("status").examples("accepted", "waiting")//
-				.string("statusUpdatedTo").examples("accepted", "waiting")//
-				.string("statusUpdatedFrom").examples("requested", "accepted")//
-				.close()//
 
 				.close()//
 				.build();
