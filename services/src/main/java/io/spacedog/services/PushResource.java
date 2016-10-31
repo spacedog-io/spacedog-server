@@ -145,6 +145,35 @@ public class PushResource extends Resource {
 		return upsertInstallation(Optional.of(id), body, context);
 	}
 
+	@Post("/installation/:id/push")
+	@Post("/installation/:id/push/")
+	public Payload pushById(String id, String body, Context context) {
+
+		Credentials credentials = SpaceContext.checkUserCredentials();
+		ObjectNode snsJsonMessage = convertJsonMessageToSnsMessage(Json.readNode(body));
+		ObjectNode installation = DataStore.get().getObject(credentials.backendId(), TYPE, id);
+		String endpoint = Json.checkStringNotNullOrEmpty(installation, ENDPOINT);
+
+		try {
+			PublishRequest pushRequest = new PublishRequest()//
+					.withTargetArn(endpoint)//
+					.withMessageStructure("json")//
+					.withMessage(snsJsonMessage.toString());
+
+			if (!SpaceContext.isTest())
+				getSnsClient().publish(pushRequest);
+
+			return JsonPayload.success();
+
+		} catch (Exception e) {
+
+			if (e instanceof EndpointDisabledException)
+				removeEndpointQuietly(credentials.backendId(), id);
+
+			return JsonPayload.error(400, e);
+		}
+	}
+
 	@Get("/installation/:id/tags")
 	@Get("/installation/:id/tags/")
 	public Payload getTags(String id, Context context) {
@@ -185,7 +214,7 @@ public class PushResource extends Resource {
 	@Post("/push/")
 	@Post("/installation/push")
 	@Post("/installation/push/")
-	public Payload push(String body, Context context) {
+	public Payload pushByTags(String body, Context context) {
 
 		Credentials credentials = SpaceContext.checkUserCredentials();
 
@@ -238,7 +267,7 @@ public class PushResource extends Resource {
 
 		if (hits.totalHits() > 1000)
 			return JsonPayload.error(HttpStatus.NOT_IMPLEMENTED, //
-					"push to [%s] installations not yet implemented", hits.totalHits());
+					"push to [%s] installations is a premium feature", hits.totalHits());
 
 		boolean failures = false;
 		boolean successes = false;

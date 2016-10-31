@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceClient;
@@ -87,17 +88,28 @@ public class PushResourceTestOften extends Assert {
 				.assertNotPresent(TAGS);
 
 		// vince and fred install joho
-
 		String vinceInstallId = installApplication("joho", GCM, test, vince);
 		String fredInstallId = installApplication("joho", APNS, test, fred);
 		String daveInstallId = installApplication("joho", APNS, test, dave);
 
-		// nath installs birdee
+		// vince pushes a simple message to fred
+		SpaceRequest.post("/1/installation/" + fredInstallId + "/push")//
+				.userAuth(vince).body(new TextNode("coucou")).go(200);
 
+		// vince pushes a complex message to dave
+		SpaceRequest.post("/1/installation/" + daveInstallId + "/push")//
+				.userAuth(vince)//
+				.body("APNS", Json.object("aps", Json.object("alert", "coucou")))//
+				.go(200);
+
+		// vince fails to push to invalid installation id
+		SpaceRequest.post("/1/installation/XXX/push")//
+				.userAuth(vince).body(new TextNode("coucou")).go(404);
+
+		// nath installs birdee
 		String nathInstallId = installApplication("birdee", APNS, test, nath);
 
 		// vince updates its installation
-
 		SpaceRequest.put("/1/installation/" + vinceInstallId)//
 				.backend(test).userAuth(vince)//
 				.body(TOKEN, "super-token-vince", APP_ID, "joho", PUSH_SERVICE, GCM)//
