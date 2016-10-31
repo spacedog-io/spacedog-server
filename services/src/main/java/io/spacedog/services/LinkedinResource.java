@@ -41,6 +41,9 @@ public class LinkedinResource extends Resource {
 				JsonPayload.builder()//
 						.put(ACCESS_TOKEN, credentials.accessToken()) //
 						.put(EXPIRES_IN, credentials.accessTokenExpiresIn()) //
+						// TODO deprecated
+						// remove the id when colibee is fixed
+						.put(ID, credentials.id()) //
 						.node(CREDENTIALS, credentials.toJson()));
 	}
 
