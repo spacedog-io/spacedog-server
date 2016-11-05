@@ -44,7 +44,7 @@ public class Caremen extends SpaceClient {
 		// setSchema(buildCourseLogSchema(), backend);
 
 		// createCustomers();
-		createDrivers();
+		// createDrivers();
 	}
 
 	void createCustomers() {
@@ -81,7 +81,7 @@ public class Caremen extends SpaceClient {
 	static Schema buildCustomerSchema() {
 		return Schema.builder("customer") //
 
-				.acl("customer", DataPermission.create, DataPermission.search, //
+				.acl("user", DataPermission.create, DataPermission.search, //
 						DataPermission.update)//
 				.acl("admin", DataPermission.search, DataPermission.update_all, //
 						DataPermission.delete_all)//
@@ -115,7 +115,7 @@ public class Caremen extends SpaceClient {
 	static Schema buildCourseSchema() {
 		return Schema.builder("course") //
 
-				.acl("customer", DataPermission.create, DataPermission.read, //
+				.acl("user", DataPermission.create, DataPermission.read, //
 						DataPermission.search, DataPermission.update)//
 				.acl("driver", DataPermission.search, DataPermission.update_all)//
 				.acl("admin", DataPermission.create, DataPermission.search, //
@@ -198,7 +198,7 @@ public class Caremen extends SpaceClient {
 	static Schema buildDriverSchema() {
 		return Schema.builder("driver") //
 
-				.acl("customer", DataPermission.search)//
+				.acl("user", DataPermission.search)//
 				.acl("driver", DataPermission.search, DataPermission.update_all)//
 				.acl("admin", DataPermission.create, DataPermission.search, DataPermission.update_all,
 						DataPermission.delete_all)//
