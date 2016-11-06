@@ -1,9 +1,12 @@
 package io.spacedog.utils;
 
+import java.util.Map;
+
 public class MailSettings extends Settings {
 	public boolean enableUserFullAccess;
 	public MailGunSettings mailgun;
 	public SmtpSettings smtp;
+	public Map<String, MailTemplate> templates;
 
 	public static class MailGunSettings {
 		public String domain;

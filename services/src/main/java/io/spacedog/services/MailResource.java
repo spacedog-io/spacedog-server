@@ -5,6 +5,7 @@ package io.spacedog.services;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 
 import org.apache.commons.mail.Email;
 import org.apache.commons.mail.ImageHtmlEmail;
@@ -13,6 +14,7 @@ import org.apache.commons.mail.resolver.DataSourceUrlResolver;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
@@ -57,7 +59,64 @@ public class MailResource extends Resource {
 				? SpaceContext.checkUserCredentials()//
 				: SpaceContext.checkAdminCredentials();
 
-		Message message = toMessage(credentials, context);
+		return email(credentials, toMessage(credentials, context));
+	}
+
+	//
+	// Implementation
+	//
+
+	static class Message {
+		public String from;
+		public List<String> to;
+		public List<String> cc;
+		public List<String> bcc;
+		public String subject;
+		public String text;
+		public String html;
+	}
+
+	private Message toMessage(Credentials credentials, Context context) {
+		Message message = new Message();
+
+		if (context.parts().isEmpty()) {
+			message.from = context.get(FROM);
+			message.to = Lists.newArrayList(context.get(TO));
+			message.cc = Lists.newArrayList(context.get(CC));
+			message.bcc = Lists.newArrayList(context.get(BCC));
+			message.subject = context.get(SUBJECT);
+			message.text = context.get(TEXT);
+			message.html = context.get(HTML);
+
+		} else
+			for (Part part : context.parts()) {
+				try {
+					if (part.name().equals(FROM))
+						message.from = part.content();
+					if (part.name().equals(TO))
+						message.to = Lists.newArrayList(part.content());
+					else if (part.name().equals(CC))
+						message.cc = Lists.newArrayList(part.content());
+					else if (part.name().equals(BCC))
+						message.bcc = Lists.newArrayList(part.content());
+					else if (part.name().equals(SUBJECT))
+						message.subject = part.content();
+					else if (part.name().equals(TEXT))
+						message.text = part.content();
+					else if (part.name().equals(HTML))
+						message.html = part.content();
+
+				} catch (IOException e) {
+					throw Exceptions.illegalArgument(e, "invalid [%s] part in multipart request", part.name());
+				}
+			}
+
+		return message;
+	}
+
+	public Payload email(Credentials credentials, Message message) {
+
+		MailSettings settings = SettingsResource.get().load(MailSettings.class);
 
 		if (settings.smtp != null)
 			return emailViaSmtp(credentials, settings.smtp, message);
@@ -72,63 +131,11 @@ public class MailResource extends Resource {
 
 		// ... add a footer to the message
 		if (!Strings.isNullOrEmpty(message.text))
-			message.text = addFooterToTextMessage(context.get(TEXT), credentials);
+			message.text = addFooterToTextMessage(message.text, credentials.backendId());
 		if (!Strings.isNullOrEmpty(message.html))
-			message.html = addFooterToHtmlMessage(context.get(HTML), credentials);
+			message.html = addFooterToHtmlMessage(message.html, credentials.backendId());
 
 		return emailViaGun(credentials, defaultMailGunSettings, message);
-	}
-
-	//
-	// Implementation
-	//
-
-	static class Message {
-		public String from;
-		public String to;
-		public String cc;
-		public String bcc;
-		public String subject;
-		public String text;
-		public String html;
-	}
-
-	private Message toMessage(Credentials credentials, Context context) {
-		Message message = new Message();
-
-		if (context.parts().isEmpty()) {
-			message.from = context.get(FROM);
-			message.to = context.get(TO);
-			message.cc = context.get(CC);
-			message.bcc = context.get(BCC);
-			message.subject = context.get(SUBJECT);
-			message.text = context.get(TEXT);
-			message.html = context.get(HTML);
-
-		} else
-			for (Part part : context.parts()) {
-				try {
-					if (part.name().equals(FROM))
-						message.from = part.content();
-					if (part.name().equals(TO))
-						message.to = part.content();
-					else if (part.name().equals(CC))
-						message.cc = part.content();
-					else if (part.name().equals(BCC))
-						message.bcc = part.content();
-					else if (part.name().equals(SUBJECT))
-						message.subject = part.content();
-					else if (part.name().equals(TEXT))
-						message.text = part.content();
-					else if (part.name().equals(HTML))
-						message.html = part.content();
-
-				} catch (IOException e) {
-					throw Exceptions.illegalArgument(e, "invalid [%s] part in multipart request", part.name());
-				}
-			}
-
-		return message;
 	}
 
 	Payload emailViaGun(Credentials credentials, MailGunSettings settings, Message message) {
@@ -164,11 +171,14 @@ public class MailResource extends Resource {
 			if (message.from != null)
 				email.setFrom(message.from);
 			if (message.to != null)
-				email.addTo(message.to);
+				for (String to : message.to)
+					email.addTo(to);
 			if (message.cc != null)
-				email.addCc(message.cc);
+				for (String cc : message.cc)
+					email.addCc(cc);
 			if (message.bcc != null)
-				email.addBcc(message.bcc);
+				for (String bcc : message.bcc)
+					email.addBcc(bcc);
 			if (message.subject != null)
 				email.setSubject(message.subject);
 
@@ -199,13 +209,23 @@ public class MailResource extends Resource {
 				.basicAuth("api", settings.key);
 
 		MultipartBody multipartBody = requestWithBody.field("from", message.from)//
-				.field(TO, message.to)//
-				.field(CC, message.cc)//
-				.field(BCC, message.bcc)//
 				.field(SUBJECT, message.subject);
+
+		if (message.to != null)
+			for (String to : message.to)
+				multipartBody.field(TO, to);
+
+		if (message.cc != null)
+			for (String cc : message.cc)
+				multipartBody.field(CC, cc);
+
+		if (message.bcc != null)
+			for (String bcc : message.bcc)
+				multipartBody.field(BCC, bcc);
 
 		if (!Strings.isNullOrEmpty(message.text))
 			multipartBody.field(TEXT, message.text);
+
 		if (!Strings.isNullOrEmpty(message.html))
 			multipartBody.field(HTML, message.html);
 
@@ -225,16 +245,16 @@ public class MailResource extends Resource {
 		}
 	}
 
-	private String addFooterToTextMessage(String text, Credentials admin) {
+	private String addFooterToTextMessage(String text, String backendId) {
 		if (Strings.isNullOrEmpty(text))
 			throw Exceptions.illegalArgument("mail text is empty");
 
 		return String.format(
-				"%s\n\n---\nThis is an automatic email sent by the [%s] application.\nContact your administrator for more information [%s].",
-				text, admin.backendId().toUpperCase(), admin.email().get());
+				"%s\n\n---\nThis is an automatic email sent by the [%s] application.\nContact your administrator for more information.",
+				text, backendId.toUpperCase());
 	}
 
-	private String addFooterToHtmlMessage(String html, Credentials admin) {
+	private String addFooterToHtmlMessage(String html, String backendId) {
 		if (Strings.isNullOrEmpty(html))
 			throw Exceptions.illegalArgument("mail html is empty");
 
@@ -243,8 +263,8 @@ public class MailResource extends Resource {
 			throw Exceptions.illegalArgument("no html end tag");
 
 		return String.format(
-				"%s<p><p>---<p>This is an automatic email sent by the [%s] application.<p>Contact your administrator for more information [%s].</html>",
-				html.substring(0, index), admin.backendId().toUpperCase(), admin.email().get());
+				"%s<p><p>---<p>This is an automatic email sent by the [%s] application.<p>Contact your administrator for more information.</html>",
+				html.substring(0, index), backendId.toUpperCase());
 	}
 
 	//

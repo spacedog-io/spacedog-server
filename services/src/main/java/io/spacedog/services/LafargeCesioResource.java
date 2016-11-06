@@ -282,7 +282,7 @@ public class LafargeCesioResource extends Resource {
 		message.text = builder.toString();
 		message.subject = "CESIO GAME - activation code";
 		message.from = "cesio@lafargeholcimweb.com";
-		message.to = player.email;
+		message.to = Lists.newArrayList(player.email);
 
 		MailSettings settings = SettingsResource.get().load(MailSettings.class);
 

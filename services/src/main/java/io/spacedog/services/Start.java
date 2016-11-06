@@ -178,6 +178,7 @@ public class Start {
 				.add(UserResource.get())//
 				.add(BatchResource.get())//
 				.add(MailResource.get())//
+				.add(MailPebbleResource.get())//
 				.add(SnapshotResource.get())//
 				.add(LogResource.get())//
 				.add(PushResource.get())//
