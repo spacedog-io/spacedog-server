@@ -281,14 +281,8 @@ public class Credentials {
 		return true;
 	}
 
-	public void newAccessToken() {
-		newAccessToken(false);
-	}
-
-	public void newAccessToken(boolean expiresEarly) {
-		// expires in 24 hours or in 2 seconds for testing
-		long expiresIn = expiresEarly ? 1000 * 2 : 1000 * 60 * 60 * 24;
-		accessTokenExpiresAt = DateTime.now().plus(expiresIn);
+	public void newAccessToken(long lifetime) {
+		accessTokenExpiresAt = DateTime.now().plus(lifetime);
 		accessToken = new String(Base64.getEncoder().encode(//
 				UUID.randomUUID().toString().getBytes(Utils.UTF8)));
 	}

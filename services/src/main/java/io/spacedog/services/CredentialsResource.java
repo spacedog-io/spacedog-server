@@ -87,11 +87,18 @@ public class CredentialsResource extends Resource {
 	@Post("/1/login/")
 	public Payload login(Context context) {
 		Credentials credentials = SpaceContext.checkUserCredentials();
+
 		if (credentials.isPasswordChecked()) {
-			credentials.newAccessToken(//
-					context.query().getBoolean("expiresEarly", false));
+			CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
+			long lifetime = context.query().getLong("lifetime", settings.sessionMaximumLifetime);
+			if (lifetime > settings.sessionMaximumLifetime)
+				throw Exceptions.forbidden("maximum access token lifetime is [%s] milliseconds", //
+						settings.sessionMaximumLifetime);
+
+			credentials.newAccessToken(lifetime);
 			credentials = update(credentials);
 		}
+
 		return JsonPayload.json(//
 				JsonPayload.builder()//
 						.put(ACCESS_TOKEN, credentials.accessToken()) //

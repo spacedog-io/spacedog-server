@@ -22,12 +22,20 @@ public class SpaceClient {
 		public String accessToken;
 		public DateTime expiresAt;
 
-		public User(String backendId, String id, String username, String password, String email) {
-			this.id = id;
+		public User(String backendId, String username, String password) {
 			this.backendId = backendId;
 			this.username = username;
 			this.password = password;
+		}
+
+		public User(String backendId, String username, String password, String email) {
+			this(backendId, username, password);
 			this.email = email;
+		}
+
+		public User(String backendId, String id, String username, String password, String email) {
+			this(backendId, username, password, email);
+			this.id = id;
 		}
 
 		public User(String backendId, String id, String username, String password, String email, //
@@ -70,31 +78,63 @@ public class SpaceClient {
 	}
 
 	public static User newCredentials(String backendId, String username, String password, String email) {
-		SpaceRequest.post("/1/credentials").backendId(backendId)
-				.body("username", username, "password", password, "email", email)//
-				.go(201);
+		return login(createCredentials(backendId, username, password, email));
+	}
 
-		return login(backendId, username, password);
+	public static User createCredentials(String backendId, String username, String password) {
+		return createCredentials(backendId, username, password, "david@spacedog.io");
+	}
+
+	public static User createCredentials(String backendId, String username, String password, String email) {
+		String id = SpaceRequest.post("/1/credentials").backendId(backendId)
+				.body("username", username, "password", password, "email", email)//
+				.go(201).getString("id");
+
+		return new User(backendId, id, username, password, email);
 	}
 
 	public static User login(String backendId, String username, String password) {
-		return login(backendId, username, password, 200).get();
+		return login(new User(backendId, username, password));
 	}
 
 	public static Optional<User> login(String backendId, String username, String password, int... statuses) {
-		SpaceResponse response = SpaceRequest.get("/1/login")//
-				.basicAuth(backendId, username, password)//
-				.go(statuses);
+		return login(new User(backendId, username, password), statuses);
+	}
+
+	public static User login(User user) {
+		return login(user, 200).get();
+	}
+
+	public static Optional<User> login(User user, int... statuses) {
+		return login(Optional.empty(), user, statuses);
+	}
+
+	public static User login(long lifetime, User user) {
+		return login(Optional.of(lifetime), user, 200).get();
+	}
+
+	public static Optional<User> login(long lifetime, User user, int... statuses) {
+		return login(Optional.of(lifetime), user, statuses);
+	}
+
+	private static Optional<User> login(Optional<Long> lifetime, User user, int... statuses) {
+		SpaceRequest request = SpaceRequest.get("/1/login")//
+				.userAuth(user);
+
+		if (lifetime.isPresent())
+			request.queryParam("lifetime", lifetime.get().toString());
+
+		SpaceResponse response = request.go(statuses);
 
 		if (response.httpResponse().getStatus() != 200)
 			return Optional.empty();
 
-		return Optional.of(new User(backendId, //
-				response.get("credentials").get("id").asText(), //
-				username, password, //
-				response.get("credentials").get("id").asText(), //
-				response.get("accessToken").asText(), //
-				DateTime.now().plus(response.get("expiresIn").asLong())));
+		user.id = response.get("credentials").get("id").asText();
+		user.email = response.get("credentials").get("email").asText();
+		user.accessToken = response.get("accessToken").asText();
+		user.expiresAt = DateTime.now().plus(response.get("expiresIn").asLong());
+
+		return Optional.of(user);
 	}
 
 	public static void deleteCredentials(String username, Backend backend) {
