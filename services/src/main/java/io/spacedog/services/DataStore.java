@@ -34,6 +34,10 @@ public class DataStore {
 	// help methods
 	//
 
+	public boolean isType(String backendId, String type) {
+		return Start.get().getElasticClient().existsIndex(backendId, type);
+	}
+
 	public ObjectNode getObject(String backendId, String type, String id) {
 		GetResponse response = Start.get().getElasticClient().get(backendId, type, id);
 

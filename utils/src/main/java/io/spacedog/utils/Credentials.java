@@ -182,6 +182,16 @@ public class Credentials {
 		roles = value;
 	}
 
+	public void checkRoles(String... authorizedRoles) {
+		if (authorizedRoles != null) {
+			Set<String> thisCredentialsRoles = roles();
+			for (String authorizedRole : authorizedRoles)
+				if (thisCredentialsRoles.contains(authorizedRole))
+					return;
+		}
+		throw Exceptions.insufficientCredentials(this);
+	}
+
 	public String createdAt() {
 		return createdAt;
 	}

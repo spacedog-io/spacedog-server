@@ -11,7 +11,6 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import com.beust.jcommander.internal.Maps;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mitchellbosecke.pebble.PebbleEngine;
 import com.mitchellbosecke.pebble.error.PebbleException;
 import com.mitchellbosecke.pebble.loader.StringLoader;
@@ -21,7 +20,6 @@ import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.MailSettings;
 import io.spacedog.utils.MailTemplate;
-import io.spacedog.utils.MailTemplate.Reference;
 import io.spacedog.utils.NotFoundException;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Post;
@@ -60,7 +58,7 @@ public class MailPebbleResource extends Resource {
 
 	@Post("/1/mail/template/:name")
 	@Post("/1/mail/template/:name/")
-	public Payload postTemplatedMail(String name, String body, Context context) {
+	public Payload postTemplatedMail(String name, String body) {
 
 		MailSettings settings = SettingsResource.get().load(MailSettings.class);
 
@@ -68,10 +66,9 @@ public class MailPebbleResource extends Resource {
 			MailTemplate template = settings.templates.get(name);
 
 			if (template != null) {
-
-				Map<String, Object> model = checkParameters(template.parameters, body);
-				model = loadDataObjects(model, template.references);
-				Message message = toMessage(template, model);
+				SpaceContext.getCredentials().checkRoles(template.roles);
+				Map<String, Object> context = createContext(template.model, body);
+				Message message = toMessage(template, context);
 				return MailResource.get().email(SpaceContext.getCredentials(), message);
 			}
 		}
@@ -84,28 +81,81 @@ public class MailPebbleResource extends Resource {
 	//
 
 	@SuppressWarnings("unchecked")
-	private Map<String, Object> checkParameters(Map<String, String> parameters, String body) {
+	private Map<String, Object> createContext(Map<String, String> model, String body) {
 
-		// TODO read and check all parameters from body
+		Map<String, Object> context = Maps.newHashMap();
+
+		if (model == null || model.isEmpty())
+			return context;
+
+		String backendId = SpaceContext.backendId();
+
 		try {
-			return Json.mapper().readValue(body, Map.class);
+			Map<String, Object> parameters = Json.mapper().readValue(body, Map.class);
+
+			for (Entry<String, Object> parameter : parameters.entrySet()) {
+				String name = parameter.getKey();
+				Object value = parameter.getValue();
+				String type = model.get(name);
+
+				if (type == null)
+					throw Exceptions.illegalArgument("parameter [%s] is not authorized", name);
+
+				if (checkValueSimpleAndValid(name, value, type)) {
+					context.put(name, value);
+					continue;
+				}
+
+				if (DataStore.get().isType(backendId, type)) {
+
+					if (value != null && value instanceof String) {
+						value = DataStore.get().getObject(backendId, type, value.toString());
+						value = Json.mapper().convertValue(value, Map.class);
+						context.put(name, value);
+						continue;
+					}
+
+					throw Exceptions.illegalArgument("parameter value [%s][%s] is invalid", //
+							name, value);
+				}
+
+				throw Exceptions.illegalArgument("parameter type [%s][%s] not found", //
+						name, type);
+			}
 		} catch (IOException e) {
 			throw Exceptions.illegalArgument(e, "error deserializing request payload");
 		}
+
+		return context;
 	}
 
-	private Map<String, Object> loadDataObjects(Map<String, Object> context, //
-			Map<String, Reference> references) {
+	static boolean checkValueSimpleAndValid(String name, Object value, String type) {
+		if ("string".equals(type))
+			return checkValueType(name, value, String.class);
+		if ("integer".equals(type))
+			return checkValueType(name, value, Integer.class);
+		if ("long".equals(type))
+			return checkValueType(name, value, Long.class);
+		if ("float".equals(type))
+			return checkValueType(name, value, Float.class);
+		if ("double".equals(type))
+			return checkValueType(name, value, Double.class);
+		if ("boolean".equals(type))
+			return checkValueType(name, value, Boolean.class);
+		if ("array".equals(type))
+			return checkValueType(name, value, List.class);
+		if ("object".equals(type))
+			return checkValueType(name, value, Map.class);
 
-		String backendId = SpaceContext.backendId();
-		for (Entry<String, Reference> entry : references.entrySet()) {
-			Reference reference = entry.getValue();
-			reference.type = render("reference.type", reference.type, context);
-			reference.id = render("reference.id", reference.id, context);
-			ObjectNode object = DataStore.get().getObject(backendId, reference.type, reference.id);
-			context.put(entry.getKey(), Json.mapper().convertValue(object, Map.class));
-		}
-		return context;
+		return false;
+	}
+
+	private static <T> boolean checkValueType(String name, Object value, Class<T> type) {
+		if (!type.isAssignableFrom(value.getClass()))
+			throw Exceptions.illegalArgument("parameter value type [%s][%s] invalid", //
+					name, value.getClass().getSimpleName());
+
+		return true;
 	}
 
 	private Message toMessage(MailTemplate template, Map<String, Object> context) {
@@ -117,6 +167,7 @@ public class MailPebbleResource extends Resource {
 		message.bcc = render("bcc", template.bcc, context);
 		message.subject = render("subject", template.subject, context);
 		message.text = render("text", template.text, context);
+		message.html = render("html", template.html, context);
 		return message;
 	}
 
