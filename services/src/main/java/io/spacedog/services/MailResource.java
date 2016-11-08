@@ -81,9 +81,9 @@ public class MailResource extends Resource {
 
 		if (context.parts().isEmpty()) {
 			message.from = context.get(FROM);
-			message.to = Lists.newArrayList(context.get(TO));
-			message.cc = Lists.newArrayList(context.get(CC));
-			message.bcc = Lists.newArrayList(context.get(BCC));
+			message.to = toList(context.get(TO));
+			message.cc = toList(context.get(CC));
+			message.bcc = toList(context.get(BCC));
 			message.subject = context.get(SUBJECT);
 			message.text = context.get(TEXT);
 			message.html = context.get(HTML);
@@ -94,11 +94,11 @@ public class MailResource extends Resource {
 					if (part.name().equals(FROM))
 						message.from = part.content();
 					if (part.name().equals(TO))
-						message.to = Lists.newArrayList(part.content());
+						message.to = toList(part.content());
 					else if (part.name().equals(CC))
-						message.cc = Lists.newArrayList(part.content());
+						message.cc = toList(part.content());
 					else if (part.name().equals(BCC))
-						message.bcc = Lists.newArrayList(part.content());
+						message.bcc = toList(part.content());
 					else if (part.name().equals(SUBJECT))
 						message.subject = part.content();
 					else if (part.name().equals(TEXT))
@@ -112,6 +112,10 @@ public class MailResource extends Resource {
 			}
 
 		return message;
+	}
+
+	private List<String> toList(String value) {
+		return value == null ? null : Lists.newArrayList(value);
 	}
 
 	public Payload email(Credentials credentials, Message message) {
