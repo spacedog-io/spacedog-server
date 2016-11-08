@@ -104,6 +104,14 @@ public class SpaceRequest {
 		return new SpaceRequest(uri, HttpMethod.HEAD);
 	}
 
+	public SpaceRequest www(Backend backend) {
+		return www(backend.backendId);
+	}
+
+	private SpaceRequest www(String backendId) {
+		return backendId(backendId + ".www");
+	}
+
 	public SpaceRequest backend(Backend backend) {
 		return backendId(backend.backendId);
 	}

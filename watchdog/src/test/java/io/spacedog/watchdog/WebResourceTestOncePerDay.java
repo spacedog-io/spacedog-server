@@ -84,13 +84,24 @@ public class WebResourceTestOncePerDay {
 		SpaceRequest.head("/1/web/" + prefix + uri).backend(test).go(200)//
 				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE);
 
+		SpaceRequest.head(uri).www(test).go(200)//
+				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE);
+
 		SpaceRequest.get("/1/web/" + prefix + uri).backend(test).go(200)//
+				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE)//
+				.assertBodyEquals(expectedBody);
+
+		SpaceRequest.get(uri).www(test).go(200)//
 				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE)//
 				.assertBodyEquals(expectedBody);
 	}
 
 	private void notFound(String prefix, String uri) {
 		SpaceRequest.get("/1/web/" + prefix + uri).backend(test).go(404)//
+				.assertHeaderEquals("text/html", SpaceHeaders.CONTENT_TYPE)//
+				.assertBodyEquals(HTML_404);
+
+		SpaceRequest.get(uri).www(test).go(404)//
 				.assertHeaderEquals("text/html", SpaceHeaders.CONTENT_TYPE)//
 				.assertBodyEquals(HTML_404);
 	}

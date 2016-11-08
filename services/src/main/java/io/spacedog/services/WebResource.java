@@ -29,7 +29,7 @@ public class WebResource extends S3Resource {
 
 			@Override
 			public boolean matches(String uri, Context context) {
-				return uri.startsWith("/1/web");
+				return uri.startsWith("/1/web") || SpaceContext.isWww();
 			}
 
 			@Override
@@ -90,8 +90,12 @@ public class WebResource extends S3Resource {
 	}
 
 	private static String[] toWebPath(String uri) {
-		// remove '/1/web'
-		return Uris.split(uri.substring(6));
+
+		return SpaceContext.isWww() //
+				// add www bucket prefix
+				? ObjectArrays.concat("www", Uris.split(uri))
+				// remove '/1/web'
+				: Uris.split(uri.substring(6));
 	}
 
 	//

@@ -13,7 +13,6 @@ import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Settings;
 import io.spacedog.utils.SpaceHeaders;
-import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 
 /**
@@ -31,11 +30,14 @@ public class SpaceContext {
 	private boolean authorizationChecked;
 	private boolean isForced;
 	private Map<String, Settings> settings;
+	private boolean www;
 
 	private SpaceContext(Context context) {
 		this.context = context;
 		this.isTest = Boolean.parseBoolean(context().header(SpaceHeaders.SPACEDOG_TEST));
-		this.credentials = new Credentials(extractSubdomain(context));
+		String[] host = extractSubdomain(context);
+		this.credentials = new Credentials(host[0]);
+		www = host.length > 2 && "www".equals(host[1]);
 		this.debug = new Debug(//
 				Boolean.parseBoolean(context().header(SpaceHeaders.SPACEDOG_DEBUG)));
 	}
@@ -85,6 +87,10 @@ public class SpaceContext {
 
 	public static boolean isTest() {
 		return get().isTest;
+	}
+
+	public static boolean isWww() {
+		return get().www;
 	}
 
 	public static boolean isDebug() {
@@ -190,12 +196,12 @@ public class SpaceContext {
 	// Implementation
 	//
 
-	private String extractSubdomain(Context context) {
+	private String[] extractSubdomain(Context context) {
 		String urlBase = Start.get().configuration().apiUrlBase();
 		String host = context.request().header(HttpHeaders.HOST);
 		return host.endsWith(urlBase) //
-				? Utils.removeSuffix(host, urlBase) //
-				: Backends.ROOT_API;
+				? host.split("\\.")//
+				: new String[] { Backends.ROOT_API };
 	}
 
 	private void checkAuthorizationHeader() {
