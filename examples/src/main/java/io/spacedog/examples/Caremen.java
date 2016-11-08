@@ -122,7 +122,6 @@ public class Caremen extends SpaceClient {
 						DataPermission.update_all, DataPermission.delete_all)//
 
 				.string("status").examples("requested") //
-				.string("customerId").examples("david") //
 				.string("requestedVehiculeType").examples("classic") //
 				.timestamp("requestedPickupTimestamp").examples("2016-07-12T14:00:00.000Z") //
 				.timestamp("pickupTimestamp").examples("2016-07-12T14:00:00.000Z") //
@@ -131,6 +130,13 @@ public class Caremen extends SpaceClient {
 				.floatt("fare").examples(23.82)// in euros
 				.longg("time").examples(1234567)// in millis
 				.integer("distance").examples(12345)// in meters
+
+				.string("customerId")//
+				.object("customer")//
+				.string("firstname").examples("Robert")//
+				.string("lastname").examples("Morgan")//
+				.string("phone").examples("+ 33 6 42 01 67 56")//
+				.close()
 
 				.object("from")//
 				.text("address").french().examples("8 rue Titon 75011 Paris") //
