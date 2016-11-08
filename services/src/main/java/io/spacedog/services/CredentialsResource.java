@@ -89,12 +89,7 @@ public class CredentialsResource extends Resource {
 		Credentials credentials = SpaceContext.checkUserCredentials();
 
 		if (credentials.isPasswordChecked()) {
-			CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
-			long lifetime = context.query().getLong("lifetime", settings.sessionMaximumLifetime);
-			if (lifetime > settings.sessionMaximumLifetime)
-				throw Exceptions.forbidden("maximum access token lifetime is [%s] milliseconds", //
-						settings.sessionMaximumLifetime);
-
+			long lifetime = getCheckSessionLifetime(context);
 			credentials.newAccessToken(lifetime);
 			credentials = update(credentials);
 		}
@@ -351,6 +346,15 @@ public class CredentialsResource extends Resource {
 	//
 	// Internal services
 	//
+
+	long getCheckSessionLifetime(Context context) {
+		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
+		long lifetime = context.query().getLong("lifetime", settings.sessionMaximumLifetime);
+		if (lifetime > settings.sessionMaximumLifetime)
+			throw Exceptions.forbidden("maximum access token lifetime is [%s] milliseconds", //
+					settings.sessionMaximumLifetime);
+		return lifetime;
+	}
 
 	Credentials create(String backendId, Level level, ObjectNode data) {
 		return create(backendId, level, data, false);

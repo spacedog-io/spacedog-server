@@ -152,6 +152,7 @@ public class LinkedinResource extends Resource {
 	//
 
 	private Credentials login(Context context) {
+
 		String backendId = SpaceContext.backendId();
 		String code = Check.notNullOrEmpty(context.get("code"), "code");
 
@@ -185,7 +186,12 @@ public class LinkedinResource extends Resource {
 		checkLinkedinError(response, "linkedin error fetching access token");
 
 		String accessToken = response.objectNode().get("access_token").asText();
-		expiresAt = expiresAt.plus(response.objectNode().get("expires_in").asLong());
+
+		long expiresIn = settings.useLinkedinExpiresIn //
+				? response.objectNode().get("expires_in").asLong() //
+				: CredentialsResource.get().getCheckSessionLifetime(context);
+
+		expiresAt = expiresAt.plus(expiresIn);
 
 		response = SpaceRequest//
 				.get("https://api.linkedin.com/v1/people/~:(email-address)")//
@@ -194,7 +200,6 @@ public class LinkedinResource extends Resource {
 				.go();
 
 		checkLinkedinError(response, "linkedin error fetching email");
-
 		String email = response.objectNode().get("emailAddress").asText();
 
 		CredentialsResource credentialsResource = CredentialsResource.get();

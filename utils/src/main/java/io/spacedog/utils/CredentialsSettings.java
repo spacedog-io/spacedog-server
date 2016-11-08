@@ -11,9 +11,11 @@ public class CredentialsSettings extends Settings {
 	public String passwordRegex = Passwords.PASSWORD_DEFAULT_REGEX;
 	public String linkedinId;
 	public String linkedinSecret;
+	public boolean useLinkedinExpiresIn = true;
 	@Deprecated
 	public String linkedinRedirectUri;
 	public String linkedinFinalRedirectUri;
+	// in milliseconds
 	public long sessionMaximumLifetime = SESSION_DEFAULT_LIFETIME;
 
 	public String usernameRegex() {

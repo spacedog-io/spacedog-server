@@ -45,6 +45,24 @@ public class Linkedin extends SpaceClient {
 	}
 
 	@Test
+	public void loginWithSpecificSessionMaximumLifetime() //
+			throws URISyntaxException, IOException {
+
+		// prepare
+		SpaceClient.prepareTest();
+		Backend test = SpaceClient.resetTestBackend();
+
+		// credentials settings with guest sign up enabled
+		CredentialsSettings settings = defaultCredentialsSettings(false, test);
+		settings.useLinkedinExpiresIn = false;
+		settings.sessionMaximumLifetime = 10000;
+		SpaceClient.saveSettings(test, settings);
+
+		// expiresIn is between 9000 and 10000
+		linkedinLogin(test, false, settings);
+	}
+
+	@Test
 	public void loginFailsCauseGuestSignUpIsDisabled() //
 			throws URISyntaxException, IOException {
 
