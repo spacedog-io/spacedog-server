@@ -3,7 +3,7 @@ package io.spacedog.utils;
 public class CredentialsSettings extends Settings {
 
 	// default token lifetime is 24h
-	public static final long SESSION_DEFAULT_LIFETIME = 1000 * 60 * 60 * 24;
+	public static final long SESSION_DEFAULT_LIFETIME = 60 * 60 * 24;
 
 	// TODO all fields should be private
 	public boolean disableGuestSignUp;
@@ -15,7 +15,7 @@ public class CredentialsSettings extends Settings {
 	@Deprecated
 	public String linkedinRedirectUri;
 	public String linkedinFinalRedirectUri;
-	// in milliseconds
+	// in seconds
 	public long sessionMaximumLifetime = SESSION_DEFAULT_LIFETIME;
 
 	public String usernameRegex() {

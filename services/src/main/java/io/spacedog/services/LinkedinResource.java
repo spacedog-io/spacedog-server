@@ -191,7 +191,8 @@ public class LinkedinResource extends Resource {
 				? response.objectNode().get("expires_in").asLong() //
 				: CredentialsResource.get().getCheckSessionLifetime(context);
 
-		expiresAt = expiresAt.plus(expiresIn);
+		// expiresIn in seconds is converted to milliseconds
+		expiresAt = expiresAt.plus(expiresIn * 1000);
 
 		response = SpaceRequest//
 				.get("https://api.linkedin.com/v1/people/~:(email-address)")//

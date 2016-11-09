@@ -351,7 +351,7 @@ public class CredentialsResource extends Resource {
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
 		long lifetime = context.query().getLong("lifetime", settings.sessionMaximumLifetime);
 		if (lifetime > settings.sessionMaximumLifetime)
-			throw Exceptions.forbidden("maximum access token lifetime is [%s] milliseconds", //
+			throw Exceptions.forbidden("maximum access token lifetime is [%s] seconds", //
 					settings.sessionMaximumLifetime);
 		return lifetime;
 	}

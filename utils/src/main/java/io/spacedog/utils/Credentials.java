@@ -148,10 +148,14 @@ public class Credentials {
 	public long accessTokenExpiresIn() {
 		if (accessTokenExpiresAt == null)
 			return 0;
+
 		long expiresIn = accessTokenExpiresAt.getMillis() - DateTime.now().getMillis();
+
 		if (expiresIn < 0)
 			return 0;
-		return expiresIn;
+
+		// expiresIn must be converted and rounded up to seconds
+		return (long) Math.ceil(expiresIn / 1000.0);
 	}
 
 	public boolean isPasswordChecked() {
@@ -292,7 +296,8 @@ public class Credentials {
 	}
 
 	public void newAccessToken(long lifetime) {
-		accessTokenExpiresAt = DateTime.now().plus(lifetime);
+		// lifetime in seconds is converted to milliseconds
+		accessTokenExpiresAt = DateTime.now().plus(lifetime * 1000);
 		accessToken = new String(Base64.getEncoder().encode(//
 				UUID.randomUUID().toString().getBytes(Utils.UTF8)));
 	}

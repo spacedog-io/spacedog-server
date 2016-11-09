@@ -224,14 +224,14 @@ public class CredentialsResourceTestOften extends Assert {
 
 		// vince logs in with token expiration of 2 seconds
 		node = SpaceRequest.get("/1/login").basicAuth(vince)//
-				.queryParam("lifetime", "2000")//
+				.queryParam("lifetime", "2") // seconds
 				.go(200).objectNode();
 
 		vince.accessToken = node.get("accessToken").asText();
 		expiresIn = node.get("expiresIn").asLong();
 		vince.expiresAt = DateTime.now().plus(expiresIn);
 
-		assertTrue(expiresIn < 2000);
+		assertTrue(expiresIn <= 2);
 	}
 
 	@Test
@@ -242,22 +242,22 @@ public class CredentialsResourceTestOften extends Assert {
 		Backend test = SpaceClient.resetTestBackend();
 		User fred = SpaceClient.createCredentials(test.backendId, "fred", "hi fred");
 
-		// admin saves settings with token max lifetime set to 2000ms
+		// admin saves settings with token max lifetime set to 2s
 		CredentialsSettings settings = new CredentialsSettings();
-		settings.sessionMaximumLifetime = 2000;
+		settings.sessionMaximumLifetime = 2; // seconds
 		SpaceClient.saveSettings(test, settings);
 
-		// fred fails to login with a token lifetime of 3000ms
-		// since max token lifetime is 2000ms
-		SpaceClient.login(3000, fred, 403);
+		// fred fails to login with a token lifetime of 3s
+		// since max token lifetime is 2s
+		SpaceClient.login(3, fred, 403);
 
-		// fred logs in with a token lifetime of 1000ms
-		// since max token lifetime is 2000 ms
-		fred = SpaceClient.login(1000, fred);
+		// fred logs in with a token lifetime of 1s
+		// since max token lifetime is 2s
+		fred = SpaceClient.login(1, fred);
 		SpaceRequest.get("/1/data").bearerAuth(fred).go(200);
 
 		// after lifetime, token expires
-		Thread.sleep(1000);
+		Thread.sleep(1000); // in milliseconds
 		SpaceRequest.get("/1/data").bearerAuth(fred).go(401);
 	}
 
