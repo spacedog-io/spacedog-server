@@ -30,7 +30,7 @@ public class SchemaResourceTestOften extends Assert {
 				.assertEquals(Json.merger().get());
 
 		// bob signs up
-		User bob = SpaceClient.newCredentials(test, "bob", "hi bob", "bob@dog.com");
+		User bob = SpaceClient.signUp(test, "bob", "hi bob", "bob@dog.com");
 
 		// admin creates car, home and sale schemas
 		SpaceClient.setSchema(buildCarSchema(), test);

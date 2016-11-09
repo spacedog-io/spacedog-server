@@ -34,10 +34,10 @@ public class LogResourceTestOften extends Assert {
 				test);
 
 		// create user in test backend
-		User user = SpaceClient.newCredentials(test, "user", "hi user");
+		User user = SpaceClient.signUp(test, "user", "hi user");
 
 		// create a user in test2 backend
-		SpaceClient.newCredentials(test2, "user2", "hi user2");
+		SpaceClient.signUp(test2, "user2", "hi user2");
 
 		// create message in test backend
 		String id = SpaceRequest.post("/1/data/message")//
@@ -101,7 +101,7 @@ public class LogResourceTestOften extends Assert {
 
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
-		User fred = SpaceClient.newCredentials(test, "fred", "hi fred");
+		User fred = SpaceClient.signUp(test, "fred", "hi fred");
 
 		String passwordResetCode = SpaceRequest.delete("/1/credentials/{id}/password")//
 				.routeParam("id", fred.id).adminAuth(test).go(200)//
@@ -148,7 +148,7 @@ public class LogResourceTestOften extends Assert {
 		// prepare
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
-		SpaceClient.newCredentials(test, "fred", "hi fred");
+		SpaceClient.signUp(test, "fred", "hi fred");
 
 		for (int i = 0; i < 5; i++)
 			SpaceRequest.get("/1/data").adminAuth(test).go(200);
@@ -189,8 +189,8 @@ public class LogResourceTestOften extends Assert {
 		Backend test = SpaceClient.resetTestBackend();
 		Backend test2 = SpaceClient.resetBackend("test2", "test2", "hi test2");
 
-		SpaceClient.newCredentials(test, "vince", "hi vince");
-		SpaceClient.newCredentials(test2, "fred", "hi fred");
+		SpaceClient.signUp(test, "vince", "hi vince");
+		SpaceClient.signUp(test2, "fred", "hi fred");
 
 		// superdog gets all backends logs
 		SpaceResponse response = SpaceRequest.get("/1/log").size(20).superdogAuth().go(200);
@@ -263,7 +263,7 @@ public class LogResourceTestOften extends Assert {
 		Backend test = SpaceClient.resetTestBackend();
 		SpaceRequest.get("/1/data").backend(test).go(200);
 		SpaceRequest.get("/1/data/user").backend(test).go(403);
-		User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
+		User vince = SpaceClient.signUp(test, "vince", "hi vince");
 		SpaceRequest.get("/1/credentials/" + vince.id).userAuth(vince).go(200);
 
 		// superdog filters test backend log to only get status 400 and higher
@@ -326,7 +326,7 @@ public class LogResourceTestOften extends Assert {
 		Backend test = SpaceClient.resetTestBackend();
 		SpaceRequest.get("/1/data").backend(test).go(200);
 		SpaceRequest.get("/1/data/user").backend(test).go(403);
-		User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
+		User vince = SpaceClient.signUp(test, "vince", "hi vince");
 		SpaceRequest.get("/1/credentials/" + vince.id).userAuth(vince).go(200);
 
 		// superdog search for test backend logs with status 400 and higher

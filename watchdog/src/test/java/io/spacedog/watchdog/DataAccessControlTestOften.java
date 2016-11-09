@@ -99,7 +99,7 @@ public class DataAccessControlTestOften extends Assert {
 
 		// dave has the platine role
 		// he's got all the rights
-		User dave = SpaceClient.newCredentials(test, "dave", "hi dave");
+		User dave = SpaceClient.signUp(test, "dave", "hi dave");
 		SpaceRequest.put("/1/credentials/" + dave.id + "/roles/platine").adminAuth(test).go(200);
 		SpaceRequest.post("/1/data/message?id=dave").userAuth(dave).body("text", "Dave").go(201);
 		SpaceRequest.get("/1/data/message/dave").userAuth(dave).go(200);
@@ -111,7 +111,7 @@ public class DataAccessControlTestOften extends Assert {
 
 		// maelle is a simple user
 		// she's got no right on the message schema
-		User maelle = SpaceClient.newCredentials(test, "maelle", "hi maelle");
+		User maelle = SpaceClient.signUp(test, "maelle", "hi maelle");
 		SpaceRequest.post("/1/data/message").userAuth(maelle).body("text", "Maelle").go(403);
 		SpaceRequest.get("/1/data/message/1").userAuth(maelle).go(403);
 		SpaceRequest.put("/1/data/message/1").userAuth(maelle).body("text", "Salut Maelle").go(403);
@@ -119,7 +119,7 @@ public class DataAccessControlTestOften extends Assert {
 
 		// fred has the iron role
 		// he's only got the right to read
-		User fred = SpaceClient.newCredentials(test, "fred", "hi fred");
+		User fred = SpaceClient.signUp(test, "fred", "hi fred");
 		SpaceRequest.put("/1/credentials/" + fred.id + "/roles/iron").adminAuth(test).go(200);
 		SpaceRequest.post("/1/data/message").userAuth(fred).body("text", "Fred").go(403);
 		SpaceRequest.get("/1/data/message/1").userAuth(fred).go(200);
@@ -128,7 +128,7 @@ public class DataAccessControlTestOften extends Assert {
 
 		// nath has the silver role
 		// she's got the right to read and update
-		User nath = SpaceClient.newCredentials(test, "nath", "hi nath");
+		User nath = SpaceClient.signUp(test, "nath", "hi nath");
 		SpaceRequest.put("/1/credentials/" + nath.id + "/roles/silver").adminAuth(test).go(200);
 		SpaceRequest.post("/1/data/message").userAuth(nath).body("text", "Nath").go(403);
 		SpaceRequest.get("/1/data/message/1").userAuth(nath).go(200);
@@ -137,7 +137,7 @@ public class DataAccessControlTestOften extends Assert {
 
 		// vince has the gold role
 		// he's got the right to create, read and update
-		User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
+		User vince = SpaceClient.signUp(test, "vince", "hi vince");
 		SpaceRequest.put("/1/credentials/" + vince.id + "/roles/gold").adminAuth(test).go(200);
 		SpaceRequest.post("/1/data/message?id=vince").userAuth(vince).body("text", "Vince").go(201);
 		SpaceRequest.get("/1/data/message/vince").userAuth(vince).go(200);

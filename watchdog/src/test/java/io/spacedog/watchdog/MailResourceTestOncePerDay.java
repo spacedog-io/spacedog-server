@@ -29,7 +29,7 @@ public class MailResourceTestOncePerDay extends Assert {
 
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
-		User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
+		User vince = SpaceClient.signUp(test, "vince", "hi vince");
 
 		// by default users can not send emails
 		SpaceRequest.post("/1/mail").userAuth(vince).go(403);

@@ -24,7 +24,7 @@ public class SettingsResourceTestOften extends Assert {
 		// prepare
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
-		User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
+		User vince = SpaceClient.signUp(test, "vince", "hi vince");
 
 		ObjectNode animals = Json.object("lion", "Lion", "tiger", "Tiger");
 		ObjectNode jobs = Json.object("sailor", Json.array("Sailor", "Marin"), //

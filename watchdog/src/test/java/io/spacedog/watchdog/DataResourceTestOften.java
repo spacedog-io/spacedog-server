@@ -25,7 +25,7 @@ public class DataResourceTestOften extends Assert {
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
 		SpaceClient.setSchema(SchemaResourceTestOften.buildCarSchema(), test);
-		SpaceClient.User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
+		SpaceClient.User vince = SpaceClient.signUp(test, "vince", "hi vince");
 
 		JsonNode car = Json.objectBuilder() //
 				.put("serialNumber", "1234567890") //

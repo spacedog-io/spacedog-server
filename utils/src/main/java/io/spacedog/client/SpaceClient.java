@@ -61,24 +61,28 @@ public class SpaceClient {
 		SpaceRequest.post("/1/schema/installation").adminAuth(backend).go(201);
 	}
 
-	public static User newCredentials(Backend backend, String username, String password) {
-		return newCredentials(backend.backendId, username, password);
+	public static User signUp(Backend backend, String username, String password) {
+		return signUp(backend.backendId, username, password);
 	}
 
-	public static User newCredentials(String backendId, String username, String password) {
-		return newCredentials(backendId, username, password, "david@spacedog.io");
+	public static User signUp(String backendId, String username, String password) {
+		return signUp(backendId, username, password, "david@spacedog.io");
 	}
 
-	public static User newCredentials(Backend backend, String username, String password, String email) {
-		return newCredentials(backend.backendId, username, password, email);
+	public static User signUp(Backend backend, String username, String password, String email) {
+		return signUp(backend.backendId, username, password, email);
 	}
 
-	public static User newCredentials(User user) {
-		return newCredentials(user.backendId, user.username, user.password, user.email);
+	public static User signUp(User user) {
+		return signUp(user.backendId, user.username, user.password, user.email);
 	}
 
-	public static User newCredentials(String backendId, String username, String password, String email) {
+	public static User signUp(String backendId, String username, String password, String email) {
 		return login(createCredentials(backendId, username, password, email));
+	}
+
+	public static User createCredentials(Backend backend, String username, String password) {
+		return createCredentials(backend.backendId, username, password);
 	}
 
 	public static User createCredentials(String backendId, String username, String password) {

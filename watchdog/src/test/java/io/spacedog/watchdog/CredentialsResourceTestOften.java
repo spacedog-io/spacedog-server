@@ -144,7 +144,7 @@ public class CredentialsResourceTestOften extends Assert {
 		SpaceRequest.get("/1/credentials/" + vince.id).backend(test).go(403);
 
 		// another user fails to get vince credentials
-		User fred = SpaceClient.newCredentials(test, "fred", "hi fred");
+		User fred = SpaceClient.signUp(test, "fred", "hi fred");
 		SpaceRequest.get("/1/credentials/" + vince.id).userAuth(fred).go(403);
 
 		// vince succeeds to login
@@ -166,7 +166,7 @@ public class CredentialsResourceTestOften extends Assert {
 		SpaceRequest.get("/1/data").bearerAuth(test, "XXX").go(401);
 
 		// vince signs up and get a brand new access token
-		User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
+		User vince = SpaceClient.signUp(test, "vince", "hi vince");
 
 		// vince request fails because wrong backend
 		SpaceRequest.get("/1/data").bearerAuth(test2, vince.accessToken).go(401);
@@ -267,8 +267,8 @@ public class CredentialsResourceTestOften extends Assert {
 		// prepare
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
-		User fred = SpaceClient.newCredentials(test, "fred", "hi fred");
-		User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
+		User fred = SpaceClient.signUp(test, "fred", "hi fred");
+		User vince = SpaceClient.signUp(test, "vince", "hi vince");
 
 		// vince and fred can login
 		SpaceRequest.get("/1/login").userAuth(vince).go(200);
@@ -299,8 +299,8 @@ public class CredentialsResourceTestOften extends Assert {
 		// prepare
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
-		User fred = SpaceClient.newCredentials(test, "fred", "hi fred");
-		User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
+		User fred = SpaceClient.signUp(test, "fred", "hi fred");
+		User vince = SpaceClient.signUp(test, "vince", "hi vince");
 
 		// vince searches for all credentials
 		SpaceRequest.get("/1/credentials").userAuth(vince).go(200)//
@@ -363,7 +363,7 @@ public class CredentialsResourceTestOften extends Assert {
 
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
-		SpaceClient.newCredentials(test, "toto", "hi toto");
+		SpaceClient.signUp(test, "toto", "hi toto");
 
 		// sign up without password should succeed
 
@@ -483,7 +483,7 @@ public class CredentialsResourceTestOften extends Assert {
 		// prepare
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
-		User fred = SpaceClient.newCredentials(test, "fred", "hi fred");
+		User fred = SpaceClient.signUp(test, "fred", "hi fred");
 
 		// fred can login
 		SpaceRequest.get("/1/login").userAuth(fred).go(200);
@@ -507,7 +507,7 @@ public class CredentialsResourceTestOften extends Assert {
 		// prepare
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
-		User fred = SpaceClient.newCredentials(test, "fred", "hi fred", "fred@dog.com");
+		User fred = SpaceClient.signUp(test, "fred", "hi fred", "fred@dog.com");
 
 		// fred gets his credentials roles
 		SpaceRequest.get("/1/credentials/" + fred.id + "/roles")//
@@ -550,7 +550,7 @@ public class CredentialsResourceTestOften extends Assert {
 		// prepare
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
-		User fred = SpaceClient.newCredentials(test, "fred", "hi fred");
+		User fred = SpaceClient.signUp(test, "fred", "hi fred");
 
 		// admin disables guest sign up
 		CredentialsSettings settings = new CredentialsSettings();
@@ -637,7 +637,7 @@ public class CredentialsResourceTestOften extends Assert {
 		// prepare
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
-		User fred = SpaceClient.newCredentials(test, "fred", "hi fred");
+		User fred = SpaceClient.signUp(test, "fred", "hi fred");
 
 		// fred fails to create admin credentials
 		SpaceRequest.post("/1/credentials").userAuth(fred)
@@ -667,7 +667,7 @@ public class CredentialsResourceTestOften extends Assert {
 		// prepare
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
-		User fred = SpaceClient.newCredentials(test, "fred", "hi fred");
+		User fred = SpaceClient.signUp(test, "fred", "hi fred");
 
 		// fred fails to update his password
 		// since his password is not challenged
@@ -692,7 +692,7 @@ public class CredentialsResourceTestOften extends Assert {
 		// prepare
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
-		User fred = SpaceClient.newCredentials(test, "fred", "hi fred");
+		User fred = SpaceClient.signUp(test, "fred", "hi fred");
 
 		// fred fails to updates his username
 		// since password must be challenged
@@ -740,7 +740,7 @@ public class CredentialsResourceTestOften extends Assert {
 		// prepare
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
-		User fred = SpaceClient.newCredentials(test, "fred", "hi fred");
+		User fred = SpaceClient.signUp(test, "fred", "hi fred");
 
 		// fred logs in
 		SpaceRequest.get("/1/login").userAuth(fred).go(200);
@@ -788,5 +788,4 @@ public class CredentialsResourceTestOften extends Assert {
 		// fred logs in again normally
 		SpaceRequest.get("/1/login").userAuth(fred).go(200);
 	}
-
 }

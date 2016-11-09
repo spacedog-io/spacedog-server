@@ -39,9 +39,9 @@ public class ChauffeLeTestOften extends Assert {
 		SpaceClient.setSchema(buildBigPostSchema(), backend);
 		SpaceClient.setSchema(buildSmallPostSchema(), backend);
 
-		lui = SpaceClient.newCredentials(backend, "lui", "hi lui", "lui@chauffe.le");
-		elle = SpaceClient.newCredentials(backend, "elle", "hi elle", "elle@chauffe.le");
-		laCopine = SpaceClient.newCredentials(backend, "lacopine", "hi la copine", "lacopine@chauffe.le");
+		lui = SpaceClient.signUp(backend, "lui", "hi lui", "lui@chauffe.le");
+		elle = SpaceClient.signUp(backend, "elle", "hi elle", "elle@chauffe.le");
+		laCopine = SpaceClient.signUp(backend, "lacopine", "hi la copine", "lacopine@chauffe.le");
 	}
 
 	static Schema buildBigPostSchema() {

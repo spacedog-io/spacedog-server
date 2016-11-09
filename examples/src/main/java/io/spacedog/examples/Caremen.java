@@ -63,7 +63,7 @@ public class Caremen extends SpaceClient {
 		Optional<User> optional = SpaceClient.login(backend.backendId, username, password, 200, 401);
 
 		User credentials = optional.isPresent() ? optional.get()
-				: SpaceClient.newCredentials(backend, username, password, email);
+				: SpaceClient.signUp(backend, username, password, email);
 
 		SpaceRequest.put("/1/credentials/" + credentials.id + "/roles/customer")//
 				.adminAuth(backend).go(200);
@@ -186,7 +186,7 @@ public class Caremen extends SpaceClient {
 		Optional<User> optional = SpaceClient.login(backend.backendId, username, password, 200, 401);
 
 		User credentials = optional.isPresent() ? optional.get() //
-				: SpaceClient.newCredentials(backend, username, password, email);
+				: SpaceClient.signUp(backend, username, password, email);
 
 		SpaceRequest.put("/1/credentials/" + credentials.id + "/roles/driver").adminAuth(backend).go(200);
 

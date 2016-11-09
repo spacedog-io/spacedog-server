@@ -49,10 +49,10 @@ public class PushResourceTestOften extends Assert {
 		Backend test = SpaceClient.resetTestBackend();
 
 		// prepare users
-		User dave = SpaceClient.newCredentials(test, "dave", "hi dave");
-		User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
-		User fred = SpaceClient.newCredentials(test, "fred", "hi fred");
-		User nath = SpaceClient.newCredentials(test, "nath", "hi nath");
+		User dave = SpaceClient.signUp(test, "dave", "hi dave");
+		User vince = SpaceClient.signUp(test, "vince", "hi vince");
+		User fred = SpaceClient.signUp(test, "fred", "hi fred");
+		User nath = SpaceClient.signUp(test, "nath", "hi nath");
 
 		// prepare installation schema
 		SpaceClient.initPushDefaultSchema(test);

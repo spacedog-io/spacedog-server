@@ -76,7 +76,7 @@ public class SearchResourceTestOften extends Assert {
 
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
-		User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
+		User vince = SpaceClient.signUp(test, "vince", "hi vince");
 
 		SpaceClient.setSchema(//
 				Schema.builder("city").string("name").build(), //

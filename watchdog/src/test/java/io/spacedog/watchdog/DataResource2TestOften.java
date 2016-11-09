@@ -36,7 +36,7 @@ public class DataResource2TestOften extends Assert {
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
 		SpaceClient.setSchema(SchemaResourceTestOften.buildSaleSchema(), test);
-		User fred = SpaceClient.newCredentials(test, "fred", "hi fred");
+		User fred = SpaceClient.signUp(test, "fred", "hi fred");
 
 		// fred fails to create a sale with no body
 		SpaceRequest.post("/1/data/sale").userAuth(fred).go(400);
@@ -193,7 +193,7 @@ public class DataResource2TestOften extends Assert {
 				res3e.objectNode().deepCopy().without(Lists.newArrayList("meta", "number")));
 
 		// vince fails to update nor delete this sale since not the owner
-		User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
+		User vince = SpaceClient.signUp(test, "vince", "hi vince");
 		SpaceRequest.put("/1/data/sale/" + id).userAuth(vince)//
 				.body("number", "0123456789").go(403);
 		SpaceRequest.delete("/1/data/sale/" + id).userAuth(vince).go(403);
@@ -313,7 +313,7 @@ public class DataResource2TestOften extends Assert {
 
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
-		User vince = SpaceClient.newCredentials(test, "vince", "hi vince");
+		User vince = SpaceClient.signUp(test, "vince", "hi vince");
 
 		SpaceClient.setSchema(//
 				Schema.builder("message").string("text").build(), //
