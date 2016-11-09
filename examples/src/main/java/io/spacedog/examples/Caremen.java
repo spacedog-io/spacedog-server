@@ -133,6 +133,7 @@ public class Caremen extends SpaceClient {
 
 				.string("customerId")//
 				.object("customer")//
+				.string("id")//
 				.string("firstname").examples("Robert")//
 				.string("lastname").examples("Morgan")//
 				.string("phone").examples("+ 33 6 42 01 67 56")//
