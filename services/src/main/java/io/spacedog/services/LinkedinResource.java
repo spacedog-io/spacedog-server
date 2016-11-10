@@ -1,7 +1,5 @@
 package io.spacedog.services;
 
-import org.joda.time.DateTime;
-
 import com.google.common.base.Strings;
 import com.google.common.escape.Escaper;
 import com.google.common.net.UrlEscapers;
@@ -11,6 +9,7 @@ import io.spacedog.client.SpaceResponse;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
+import io.spacedog.utils.Credentials.Session;
 import io.spacedog.utils.CredentialsSettings;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.SpaceException;
@@ -173,7 +172,6 @@ public class LinkedinResource extends Resource {
 			// in mobile app
 			redirectUri = Utils.removeSuffix(redirectUri, ";");
 
-		DateTime expiresAt = DateTime.now();
 		SpaceResponse response = SpaceRequest//
 				.post("https://www.linkedin.com/oauth/v2/accessToken")//
 				.queryParam("grant_type", "authorization_code")//
@@ -191,8 +189,7 @@ public class LinkedinResource extends Resource {
 				? response.objectNode().get("expires_in").asLong() //
 				: CredentialsResource.get().getCheckSessionLifetime(context);
 
-		// expiresIn in seconds is converted to milliseconds
-		expiresAt = expiresAt.plus(expiresIn * 1000);
+		Session session = Session.newSession(accessToken, expiresIn);
 
 		response = SpaceRequest//
 				.get("https://api.linkedin.com/v1/people/~:(email-address)")//
@@ -207,8 +204,8 @@ public class LinkedinResource extends Resource {
 		Credentials credentials = credentialsResource.getByName(backendId, email, false)//
 				.orElse(new Credentials(backendId, email, Level.USER));
 
+		credentials.setSession(session);
 		credentials.email(email);
-		credentials.setExternalAccessToken(accessToken, expiresAt);
 
 		boolean isNew = credentials.createdAt() == null;
 

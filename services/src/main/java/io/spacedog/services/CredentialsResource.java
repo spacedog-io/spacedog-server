@@ -26,6 +26,7 @@ import io.spacedog.utils.Backends;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
+import io.spacedog.utils.Credentials.Session;
 import io.spacedog.utils.CredentialsSettings;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -64,6 +65,12 @@ public class CredentialsResource extends Resource {
 				.string(EMAIL)//
 				.string(CREATED_AT)//
 				.string(UPDATED_AT)//
+
+				.object(SESSIONS).array()//
+				.string(ACCESS_TOKEN)//
+				.string(ACCESS_TOKEN_EXPIRES_AT)//
+				.close()//
+
 				.build();
 
 		schema.validate();
@@ -90,7 +97,7 @@ public class CredentialsResource extends Resource {
 
 		if (credentials.isPasswordChecked()) {
 			long lifetime = getCheckSessionLifetime(context);
-			credentials.newAccessToken(lifetime);
+			credentials.setSession(Session.newSession(lifetime));
 			credentials = update(credentials);
 		}
 
@@ -107,7 +114,7 @@ public class CredentialsResource extends Resource {
 	@Post("/1/logout/")
 	public Payload logout(Context context) {
 		Credentials credentials = SpaceContext.checkUserCredentials();
-		credentials.deleteAccessToken();
+		credentials.deleteSession();
 		update(credentials);
 		return JsonPayload.success();
 	}
@@ -233,7 +240,8 @@ public class CredentialsResource extends Resource {
 		SpaceContext.checkAdminCredentials();
 
 		Credentials credentials = getById(id, true).get();
-		credentials.resetPassword();
+		credentials.clearPasswordAndTokens();
+		credentials.newPasswordResetCode();
 		credentials = update(credentials);
 
 		return JsonPayload.json(JsonPayload
@@ -377,7 +385,7 @@ public class CredentialsResource extends Resource {
 		JsonNode password = data.get(PASSWORD);
 
 		if (Json.isNull(password))
-			credentials.resetPassword();
+			credentials.newPasswordResetCode();
 		else
 			credentials.setPassword(password.asText(), Optional.of(settings.passwordRegex()));
 
@@ -400,12 +408,13 @@ public class CredentialsResource extends Resource {
 				.prepareSearch(SPACEDOG_BACKEND, TYPE)//
 				.setQuery(QueryBuilders.boolQuery()//
 						.must(QueryBuilders.termQuery(BACKEND_ID, backendId))//
-						.must(QueryBuilders.termQuery(ACCESS_TOKEN, accessToken)))//
+						.must(QueryBuilders.termQuery(SESSIONS_ACCESS_TOKEN, accessToken)))//
 				.get()//
 				.getHits();
 
 		if (hits.totalHits() == 1) {
 			Credentials credentials = toCredentials(hits.getAt(0));
+			credentials.setSession(accessToken);
 			if (credentials.accessTokenExpiresIn() == 0)
 				throw Exceptions.invalidAuthentication("access token has expired");
 			return Optional.of(credentials);
@@ -593,24 +602,23 @@ public class CredentialsResource extends Resource {
 	}
 
 	private Credentials toCredentials(SearchHit hit) {
-		try {
-			Credentials credentials = Json.mapper()//
-					.readValue(hit.getSourceAsString(), Credentials.class);
-			credentials.id(hit.id());
-			credentials.version(hit.version());
-			return credentials;
-		} catch (IOException e) {
-			throw Exceptions.runtime(e);
-		}
+		return toCredentials(hit.getSourceAsString(), //
+				hit.getId(), hit.getVersion());
 	}
 
 	private Credentials toCredentials(GetResponse response) {
+		return toCredentials(response.getSourceAsString(), //
+				response.getId(), response.getVersion());
+	}
+
+	private Credentials toCredentials(String sourceAsString, String id, long version) {
 		try {
 			Credentials credentials = Json.mapper()//
-					.readValue(response.getSourceAsString(), Credentials.class);
-			credentials.id(response.getId());
-			credentials.version(response.getVersion());
+					.readValue(sourceAsString, Credentials.class);
+			credentials.id(id);
+			credentials.version(version);
 			return credentials;
+
 		} catch (IOException e) {
 			throw Exceptions.runtime(e);
 		}

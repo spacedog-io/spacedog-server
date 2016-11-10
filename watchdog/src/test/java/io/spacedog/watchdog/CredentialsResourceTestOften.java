@@ -209,18 +209,29 @@ public class CredentialsResourceTestOften extends Assert {
 		SpaceRequest.get("/1/data").bearerAuth(test, vinceOldAccessToken).go(200);
 
 		// if vince logs in again with its password
-		// its access token is reset
-		node = SpaceRequest.get("/1/login").basicAuth(vince).go(200).objectNode();
-		vince.accessToken = node.get("accessToken").asText();
-		expiresIn = node.get("expiresIn").asLong();
-		vince.expiresAt = DateTime.now().plus(expiresIn);
+		// he gets a new access token
+		vince = SpaceClient.login(vince);
+		assertNotEquals(vince.accessToken, vinceOldAccessToken);
 
-		// vince fails to access backend with its old token
-		// since it has been reset
-		SpaceRequest.get("/1/data").bearerAuth(test, vinceOldAccessToken).go(401);
+		// vince can access data with its new token
+		// but can also access data with its old token
+		SpaceRequest.get("/1/data").bearerAuth(test, vince.accessToken).go(200);
+		SpaceRequest.get("/1/data").bearerAuth(test, vinceOldAccessToken).go(200);
 
-		// vince logs out and cancels its access token
+		// vince logs out of his newest session
 		SpaceRequest.get("/1/logout").bearerAuth(vince).go(200);
+
+		// vince can no longer access data with its new token
+		// but can still access data with its old token
+		SpaceRequest.get("/1/data").bearerAuth(test, vince.accessToken).go(401);
+		SpaceRequest.get("/1/data").bearerAuth(test, vinceOldAccessToken).go(200);
+
+		// vince logs out of his oldest session
+		SpaceRequest.get("/1/logout").bearerAuth(test, vinceOldAccessToken).go(200);
+
+		// vince can no longer access data with both tokens
+		SpaceRequest.get("/1/data").bearerAuth(test, vince.accessToken).go(401);
+		SpaceRequest.get("/1/data").bearerAuth(test, vinceOldAccessToken).go(401);
 
 		// vince logs in with token expiration of 2 seconds
 		node = SpaceRequest.get("/1/login").basicAuth(vince)//
@@ -788,4 +799,28 @@ public class CredentialsResourceTestOften extends Assert {
 		// fred logs in again normally
 		SpaceRequest.get("/1/login").userAuth(fred).go(200);
 	}
+
+	@Test
+	public void userCanLogInManyTimesAndOpenParallelSessions() {
+
+		// prepare
+		SpaceClient.prepareTest();
+		Backend test = SpaceClient.resetTestBackend();
+		SpaceClient.createCredentials(test.backendId, "fred", "hi fred");
+
+		// fred logs and access data
+		User fred1 = SpaceClient.login("test", "fred", "hi fred");
+
+		// fred can access data
+		SpaceRequest.get("/1/data").bearerAuth(fred1).go(200);
+
+		// fred logs in a second time and creates a second session token
+		User fred2 = SpaceClient.login("test", "fred", "hi fred");
+
+		// fred can access data from both sessions
+		// since both session access tokens are valid
+		SpaceRequest.get("/1/data").bearerAuth(fred1).go(200);
+		SpaceRequest.get("/1/data").bearerAuth(fred2).go(200);
+	}
+
 }

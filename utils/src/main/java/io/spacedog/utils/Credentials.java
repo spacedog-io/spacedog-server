@@ -31,25 +31,89 @@ public class Credentials {
 		}
 	}
 
+	@JsonAutoDetect(fieldVisibility = Visibility.ANY, //
+	getterVisibility = Visibility.NONE, //
+	isGetterVisibility = Visibility.NONE, //
+	setterVisibility = Visibility.NONE)
+	public static class Session {
+		private String accessToken;
+		private DateTime accessTokenExpiresAt;
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj == null || !(obj instanceof Session))
+				return false;
+
+			Session other = (Session) obj;
+
+			if (accessToken == other.accessToken)
+				return true;
+
+			return accessToken.equals(other.accessToken);
+		}
+
+		@Override
+		public int hashCode() {
+			return accessToken == null ? super.hashCode() : accessToken.hashCode();
+		}
+
+		public long expiresIn() {
+			if (accessTokenExpiresAt == null)
+				return 0;
+
+			long expiresIn = accessTokenExpiresAt.getMillis() - DateTime.now().getMillis();
+
+			if (expiresIn < 0)
+				return 0;
+
+			// expiresIn must be converted and rounded up to seconds
+			return (long) Math.ceil(expiresIn / 1000.0);
+		}
+
+		public static Session newSession(long lifetime) {
+			String token = new String(Base64.getEncoder().encode(//
+					UUID.randomUUID().toString().getBytes(Utils.UTF8)));
+
+			return newSession(token, lifetime);
+		}
+
+		public static Session newSession(String accessToken, long lifetime) {
+			Session session = new Session();
+			session.accessToken = accessToken;
+			// lifetime in seconds is converted to milliseconds
+			session.accessTokenExpiresAt = DateTime.now().plus(lifetime * 1000);
+			return session;
+		}
+
+	}
+
 	private String backendId;
 	private String username;
 	private String email;
 	private Level level;
 	private boolean enabled = true;
 	private Set<String> roles;
-	private String accessToken;
-	private DateTime accessTokenExpiresAt;
+	private Set<Session> sessions;
 	private String passwordResetCode;
 	private String hashedPassword;
 	private String createdAt;
 	private String updatedAt;
 
 	@JsonIgnore
+	private Session currentSession;
+	@JsonIgnore
 	private boolean passwordChecked;
 	@JsonIgnore
 	private String id;
 	@JsonIgnore
 	private long version;
+
+	@JsonIgnore
+	@Deprecated
+	private String accessToken;
+	@JsonIgnore
+	@Deprecated
+	private DateTime accessTokenExpiresAt;
 
 	public Credentials() {
 	}
@@ -142,20 +206,11 @@ public class Credentials {
 	}
 
 	public String accessToken() {
-		return accessToken;
+		return currentSession == null ? null : currentSession.accessToken;
 	}
 
 	public long accessTokenExpiresIn() {
-		if (accessTokenExpiresAt == null)
-			return 0;
-
-		long expiresIn = accessTokenExpiresAt.getMillis() - DateTime.now().getMillis();
-
-		if (expiresIn < 0)
-			return 0;
-
-		// expiresIn must be converted and rounded up to seconds
-		return (long) Math.ceil(expiresIn / 1000.0);
+		return currentSession == null ? 0 : currentSession.expiresIn();
 	}
 
 	public boolean isPasswordChecked() {
@@ -164,6 +219,10 @@ public class Credentials {
 
 	public String passwordResetCode() {
 		return passwordResetCode;
+	}
+
+	public void newPasswordResetCode() {
+		passwordResetCode = UUID.randomUUID().toString();
 	}
 
 	public boolean enabled() {
@@ -267,10 +326,12 @@ public class Credentials {
 		return false;
 	}
 
-	public void resetPassword() {
+	public void clearPasswordAndTokens() {
 		hashedPassword = null;
-		passwordResetCode = UUID.randomUUID().toString();
-		deleteAccessToken();
+		passwordResetCode = null;
+		currentSession = null;
+		if (sessions != null)
+			sessions.clear();
 	}
 
 	public void setPassword(String password, String passwordResetCode, Optional<String> regex) {
@@ -295,23 +356,35 @@ public class Credentials {
 		return true;
 	}
 
-	public void newAccessToken(long lifetime) {
-		// lifetime in seconds is converted to milliseconds
-		accessTokenExpiresAt = DateTime.now().plus(lifetime * 1000);
-		accessToken = new String(Base64.getEncoder().encode(//
-				UUID.randomUUID().toString().getBytes(Utils.UTF8)));
+	//
+	// Sessions and Access Tokens
+	//
+
+	public void setSession(String accessToken) {
+		for (Session session : sessions) {
+			if (session.expiresIn() == 0)
+				sessions.remove(session);
+			else if (accessToken.equals(session.accessToken))
+				currentSession = session;
+		}
 	}
 
-	public void deleteAccessToken() {
-		accessToken = null;
-		accessTokenExpiresAt = null;
+	public void setSession(Session session) {
+
+		currentSession = session;
+
+		if (sessions == null)
+			sessions = Sets.newHashSet();
+
+		sessions.add(currentSession);
 	}
 
-	public void setExternalAccessToken(String accessToken, DateTime accessTokenExpiresAt) {
-		this.accessToken = accessToken;
-		this.accessTokenExpiresAt = accessTokenExpiresAt;
-		this.passwordResetCode = null;
-		this.hashedPassword = null;
+	public void deleteSession() {
+		if (currentSession != null) {
+			if (sessions != null)
+				sessions.remove(currentSession);
+			currentSession = null;
+		}
 	}
 
 	public ObjectNode toJson() {
