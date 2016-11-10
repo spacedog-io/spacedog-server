@@ -122,8 +122,7 @@ public class SpaceClient {
 	}
 
 	private static Optional<User> login(Optional<Long> lifetime, User user, int... statuses) {
-		SpaceRequest request = SpaceRequest.get("/1/login")//
-				.userAuth(user);
+		SpaceRequest request = SpaceRequest.get("/1/login").basicAuth(user);
 
 		if (lifetime.isPresent())
 			request.queryParam("lifetime", lifetime.get().toString());
