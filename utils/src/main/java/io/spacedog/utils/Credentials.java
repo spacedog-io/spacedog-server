@@ -14,9 +14,13 @@ import org.joda.time.DateTime;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
+// ignore deprecated fields still in elastic data
+@JsonIgnoreProperties(ignoreUnknown = true)
+// only map to fields
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, //
 getterVisibility = Visibility.NONE, //
 isGetterVisibility = Visibility.NONE, //
@@ -107,13 +111,6 @@ public class Credentials {
 	private String id;
 	@JsonIgnore
 	private long version;
-
-	@JsonIgnore
-	@Deprecated
-	private String accessToken;
-	@JsonIgnore
-	@Deprecated
-	private DateTime accessTokenExpiresAt;
 
 	public Credentials() {
 	}
