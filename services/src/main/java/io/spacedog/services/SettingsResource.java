@@ -24,6 +24,7 @@ import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.annotations.Put;
+import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/1/settings")
@@ -104,7 +105,7 @@ public class SettingsResource {
 		} else
 			settingsAsString = load(id);
 
-		return new Payload(JsonPayload.JSON_CONTENT_UTF8, settingsAsString);
+		return JsonPayload.json(settingsAsString, HttpStatus.OK);
 	}
 
 	@Put("/:id")
@@ -215,7 +216,7 @@ public class SettingsResource {
 
 	private void makeSureIndexIsCreated() {
 
-		String backendId = SpaceContext.checkAdminCredentials().backendId();
+		String backendId = SpaceContext.backendId();
 		ElasticClient elastic = Start.get().getElasticClient();
 
 		if (!elastic.existsIndex(backendId, TYPE)) {

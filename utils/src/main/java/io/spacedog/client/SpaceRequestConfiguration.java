@@ -76,6 +76,14 @@ public class SpaceRequestConfiguration {
 		return getProperty("spacedog.test.linkedin.client.secret");
 	}
 
+	public String testSendPulseClientId() {
+		return getProperty("spacedog.test.sendpulse.client.id");
+	}
+
+	public String testSendPulseClientSecret() {
+		return getProperty("spacedog.test.sendpulse.client.secret");
+	}
+
 	public String cesioSuperAdminUsername() {
 		return getProperty("spacedog.cesio.superadmin.username");
 	}

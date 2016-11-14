@@ -135,6 +135,10 @@ public class SpaceResponse {
 		return httpResponse;
 	}
 
+	public String contentType() {
+		return headerFirst(SpaceHeaders.CONTENT_TYPE);
+	}
+
 	public String headerFirst(String name) {
 		return headers.first(name);
 	}
