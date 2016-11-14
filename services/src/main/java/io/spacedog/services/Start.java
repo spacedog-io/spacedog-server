@@ -178,10 +178,11 @@ public class Start {
 				.add(UserResource.get())//
 				.add(BatchResource.get())//
 				.add(MailResource.get())//
-				.add(MailPebbleResource.get())//
+				.add(MailTemplateResource.get())//
 				.add(SnapshotResource.get())//
 				.add(LogResource.get())//
 				.add(PushResource.get())//
+				.add(SendPulseResource.get())//
 				.add(ShareResource.get())//
 				.add(SettingsResource.get())//
 				.add(SearchResource.get());

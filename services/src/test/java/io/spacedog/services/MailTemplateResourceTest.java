@@ -1,8 +1,9 @@
-package io.spacedog.examples;
+package io.spacedog.services;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -18,7 +19,7 @@ import io.spacedog.utils.Json;
 import io.spacedog.utils.MailTemplate;
 import io.spacedog.utils.Schema;
 
-public class ColibeeMailTemplate {
+public class MailTemplateResourceTest extends Assert {
 
 	@Test
 	public void sendTemplatedEmails() throws IOException {
@@ -55,7 +56,7 @@ public class ColibeeMailTemplate {
 		template.to = Lists.newArrayList("attias666@gmail.com");
 		template.subject = "Demande d'inscription de {{demande.prenom}} {{demande.nom}} (M-0370)";
 		template.text = Resources.toString(
-				Resources.getResource("io/spacedog/examples/colibee.mail.demande.inscription.hbs"), //
+				Resources.getResource("io/spacedog/services/pebble/colibee.mail.demande.inscription.pebble"), //
 				Charset.forName("UTF-8"));
 		template.model = Maps.newHashMap();
 		template.model.put("demande", "demande");
@@ -73,7 +74,7 @@ public class ColibeeMailTemplate {
 		template.to = Lists.newArrayList("{{demande.email}}");
 		template.subject = "Votre demande d'inscription a bien été enregistrée";
 		template.html = Resources.toString(
-				Resources.getResource("io/spacedog/examples/colibee.mail.demande.confirmation.hbs"), //
+				Resources.getResource("io/spacedog/services/pebble/colibee.mail.demande.confirmation.pebble"), //
 				Charset.forName("UTF-8"));
 		template.model = Maps.newHashMap();
 		template.model.put("demande", "demande");
@@ -85,6 +86,60 @@ public class ColibeeMailTemplate {
 		// send inscription confirmation email
 		SpaceRequest.post("/1/mail/template/confirmation").backend(test)//
 				.body("demande", inscriptionId).go(200);
+
+	}
+
+	@Test
+	public void checkValueSimpleAndValid() {
+		assertTrue(MailTemplateResource.checkValueSimpleAndValid("param", "a", "string"));
+		assertTrue(MailTemplateResource.checkValueSimpleAndValid("param", 1, "integer"));
+		assertTrue(MailTemplateResource.checkValueSimpleAndValid("param", 2l, "long"));
+		assertTrue(MailTemplateResource.checkValueSimpleAndValid("param", 3f, "float"));
+		assertTrue(MailTemplateResource.checkValueSimpleAndValid("param", 4d, "double"));
+		assertTrue(MailTemplateResource.checkValueSimpleAndValid("param", true, "boolean"));
+		assertTrue(MailTemplateResource.checkValueSimpleAndValid("param", Lists.newArrayList(), "array"));
+		assertTrue(MailTemplateResource.checkValueSimpleAndValid("param", Maps.newHashMap(), "object"));
+
+		try {
+			assertFalse(MailTemplateResource.checkValueSimpleAndValid("param", 1, "string"));
+			fail();
+		} catch (Exception e) {
+		}
+		try {
+			assertFalse(MailTemplateResource.checkValueSimpleAndValid("param", 1d, "integer"));
+			fail();
+		} catch (Exception e) {
+		}
+		try {
+			assertFalse(MailTemplateResource.checkValueSimpleAndValid("param", 1, "long"));
+			fail();
+		} catch (Exception e) {
+		}
+		try {
+			assertFalse(MailTemplateResource.checkValueSimpleAndValid("param", 1, "float"));
+			fail();
+		} catch (Exception e) {
+		}
+		try {
+			assertFalse(MailTemplateResource.checkValueSimpleAndValid("param", 1, "double"));
+			fail();
+		} catch (Exception e) {
+		}
+		try {
+			assertFalse(MailTemplateResource.checkValueSimpleAndValid("param", 1, "boolean"));
+			fail();
+		} catch (Exception e) {
+		}
+		try {
+			assertFalse(MailTemplateResource.checkValueSimpleAndValid("param", Maps.newHashMap(), "array"));
+			fail();
+		} catch (Exception e) {
+		}
+		try {
+			assertFalse(MailTemplateResource.checkValueSimpleAndValid("param", Lists.newArrayList(), "object"));
+			fail();
+		} catch (Exception e) {
+		}
 
 	}
 }

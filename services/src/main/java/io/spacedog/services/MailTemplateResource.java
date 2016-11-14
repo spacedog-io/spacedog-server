@@ -26,7 +26,7 @@ import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Put;
 import net.codestory.http.payload.Payload;
 
-public class MailPebbleResource extends Resource {
+public class MailTemplateResource extends Resource {
 
 	private PebbleEngine pebble;
 
@@ -202,13 +202,13 @@ public class MailPebbleResource extends Resource {
 	// singleton
 	//
 
-	private static MailPebbleResource singleton = new MailPebbleResource();
+	private static MailTemplateResource singleton = new MailTemplateResource();
 
-	static MailPebbleResource get() {
+	static MailTemplateResource get() {
 		return singleton;
 	}
 
-	private MailPebbleResource() {
+	private MailTemplateResource() {
 		pebble = new PebbleEngine.Builder().loader(new StringLoader()).build();
 	}
 }
