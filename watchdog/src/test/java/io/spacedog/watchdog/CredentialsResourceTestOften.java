@@ -799,28 +799,4 @@ public class CredentialsResourceTestOften extends Assert {
 		// fred logs in again normally
 		SpaceRequest.get("/1/login").userAuth(fred).go(200);
 	}
-
-	@Test
-	public void userCanLogInManyTimesAndOpenParallelSessions() {
-
-		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		SpaceClient.createCredentials(test.backendId, "fred", "hi fred");
-
-		// fred logs and access data
-		User fred1 = SpaceClient.login("test", "fred", "hi fred");
-
-		// fred can access data
-		SpaceRequest.get("/1/data").bearerAuth(fred1).go(200);
-
-		// fred logs in a second time and creates a second session token
-		User fred2 = SpaceClient.login("test", "fred", "hi fred");
-
-		// fred can access data from both sessions
-		// since both session access tokens are valid
-		SpaceRequest.get("/1/data").bearerAuth(fred1).go(200);
-		SpaceRequest.get("/1/data").bearerAuth(fred2).go(200);
-	}
-
 }
