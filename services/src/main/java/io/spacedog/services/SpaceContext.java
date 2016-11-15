@@ -1,12 +1,10 @@
 package io.spacedog.services;
 
 import java.util.Map;
-import java.util.Optional;
 
 import com.google.common.collect.Maps;
 import com.google.common.net.HttpHeaders;
 
-import io.spacedog.utils.AuthenticationException;
 import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Credentials;
@@ -213,35 +211,29 @@ public class SpaceContext {
 
 			if (headerValue != null) {
 				boolean superdog = false;
-				Optional<Credentials> userCredentials = Optional.empty();
+				Credentials userCredentials = null;
 				AuthorizationHeader authHeader = new AuthorizationHeader(headerValue);
+
 				if (authHeader.isBasic()) {
 					superdog = authHeader.username().startsWith("superdog-");
-
 					userCredentials = CredentialsResource.get()//
 							.checkUsernamePassword(//
 									superdog ? Backends.ROOT_API : backendId, //
 									authHeader.username(), authHeader.password());
 
-					if (!userCredentials.isPresent())
-						throw new AuthenticationException("invalid username or password for backend [%s]", backendId);
-
 				} else if (authHeader.isBearer()) {
 					userCredentials = CredentialsResource.get()//
 							.checkToken(backendId, authHeader.token());
-
-					if (!userCredentials.isPresent())
-						throw new AuthenticationException("invalid access token for backend [%s]", backendId);
 				}
 
-				if (!userCredentials.get().enabled())
-					throw Exceptions.disabledCredentials(userCredentials.get());
+				if (!userCredentials.enabled())
+					throw Exceptions.disabledCredentials(userCredentials);
 
-				credentials = userCredentials.get();
+				credentials = userCredentials;
 
 				// sets superdog backend id to the request backend id
 				if (superdog)
-					credentials.backendId(backendId);
+					credentials.onBehalf(backendId);
 			}
 
 		}

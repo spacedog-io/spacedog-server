@@ -140,6 +140,26 @@ public class SpaceClient {
 		return Optional.of(user);
 	}
 
+	public static User logout(User user) {
+		return logout(user, 200);
+	}
+
+	public static User logout(User user, int... statuses) {
+		logout(user.backendId, user.accessToken, statuses);
+		user.accessToken = null;
+		user.expiresAt = null;
+		return user;
+	}
+
+	public static void logout(String backendId, String accessToken) {
+		logout(backendId, accessToken, 200);
+	}
+
+	public static void logout(String backendId, String accessToken, int... statuses) {
+		SpaceRequest.get("/1/logout").backendId(backendId)//
+				.bearerAuth(accessToken).go(statuses);
+	}
+
 	public static void deleteCredentials(String username, Backend backend) {
 		SpaceRequest.delete("/1/credentials/" + username).adminAuth(backend).go(200, 404);
 	}

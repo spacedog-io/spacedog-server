@@ -204,7 +204,7 @@ public class LinkedinResource extends Resource {
 		Credentials credentials = credentialsResource.getByName(backendId, email, false)//
 				.orElse(new Credentials(backendId, email, Level.USER));
 
-		credentials.setSession(session);
+		credentials.setCurrentSession(session);
 		credentials.email(email);
 
 		boolean isNew = credentials.createdAt() == null;

@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
+import io.spacedog.utils.AuthenticationException;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
@@ -97,7 +98,7 @@ public class CredentialsResource extends Resource {
 
 		if (credentials.isPasswordChecked()) {
 			long lifetime = getCheckSessionLifetime(context);
-			credentials.setSession(Session.newSession(lifetime));
+			credentials.setCurrentSession(Session.newSession(lifetime));
 			credentials = update(credentials);
 		}
 
@@ -114,8 +115,10 @@ public class CredentialsResource extends Resource {
 	@Post("/1/logout/")
 	public Payload logout(Context context) {
 		Credentials credentials = SpaceContext.checkUserCredentials();
-		credentials.deleteSession();
-		update(credentials);
+		if (credentials.hasCurrentSession()) {
+			credentials.deleteCurrentSession();
+			update(credentials);
+		}
 		return JsonPayload.success();
 	}
 
@@ -392,36 +395,45 @@ public class CredentialsResource extends Resource {
 		return create(credentials);
 	}
 
-	Optional<Credentials> checkUsernamePassword(String backendId, String username, String password) {
+	Credentials checkUsernamePassword(String backendId, String username, String password) {
 		Optional<Credentials> credentials = getByName(backendId, username, false);
 
 		if (credentials.isPresent() //
 				&& credentials.get().checkPassword(password))
-			return credentials;
+			return credentials.get();
 
-		return Optional.empty();
+		throw new AuthenticationException("invalid username or password for backend [%s]", backendId);
 	}
 
-	Optional<Credentials> checkToken(String backendId, String accessToken) {
+	Credentials checkToken(String backendId, String accessToken) {
 
 		SearchHits hits = Start.get().getElasticClient()//
 				.prepareSearch(SPACEDOG_BACKEND, TYPE)//
 				.setQuery(QueryBuilders.boolQuery()//
-						.must(QueryBuilders.termQuery(BACKEND_ID, backendId))//
+						// I'll check backendId later in this method
+						// to let superdogs access all backends
+						// .must(QueryBuilders.termQuery(BACKEND_ID,
+						// backendId))//
 						.must(QueryBuilders.termQuery(SESSIONS_ACCESS_TOKEN, accessToken)))//
 				.get()//
 				.getHits();
 
+		if (hits.totalHits() == 0)
+			throw new AuthenticationException("invalid access token for backend [%s]", backendId);
+
 		if (hits.totalHits() == 1) {
 			Credentials credentials = toCredentials(hits.getAt(0));
-			credentials.setSession(accessToken);
+			credentials.setCurrentSession(accessToken);
+
+			if (!credentials.isSuperDog() //
+					&& !backendId.equals(credentials.backendId()))
+				throw new AuthenticationException("invalid access token for backend [%s]", backendId);
+
 			if (credentials.accessTokenExpiresIn() == 0)
 				throw Exceptions.invalidAuthentication("access token has expired");
-			return Optional.of(credentials);
-		}
 
-		if (hits.totalHits() == 0)
-			return Optional.empty();
+			return credentials;
+		}
 
 		throw Exceptions.runtime(//
 				"access token [%s] associated with too many credentials [%s]", //

@@ -14,6 +14,7 @@ import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceRequestConfiguration;
 import io.spacedog.utils.CredentialsSettings;
 import io.spacedog.utils.Json;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
@@ -798,5 +799,83 @@ public class CredentialsResourceTestOften extends Assert {
 
 		// fred logs in again normally
 		SpaceRequest.get("/1/login").userAuth(fred).go(200);
+	}
+
+	@Test
+	public void superdogCanLoginAndAccessAllBackends() {
+
+		// prepare
+		SpaceClient.prepareTest();
+		SpaceClient.resetTestBackend();
+		SpaceRequestConfiguration configuration = SpaceRequest.configuration();
+		User superdog = new User("api", //
+				configuration.superdogName(), configuration.superdogPassword());
+
+		// superdog logs in with the root backend
+		SpaceClient.login(superdog);
+		String apiToken = superdog.accessToken;
+
+		// superdog can access anything in any backend
+		SpaceRequest.get("/1/backend").backendId("api").bearerAuth(apiToken).go(200);
+		SpaceRequest.get("/1/backend").backendId("test").bearerAuth(apiToken).go(200);
+		SpaceRequest.get("/1/data").backendId("api").bearerAuth(apiToken).go(200);
+		SpaceRequest.get("/1/data").backendId("test").bearerAuth(apiToken).go(200);
+
+		// superdog logs with the "test" backend
+		superdog.backendId = "test";
+		SpaceClient.login(superdog);
+		String testToken = superdog.accessToken;
+		assertNotEquals(testToken, apiToken);
+
+		// superdog credentials backendId is not changed
+		// by login into "test" backend
+		SpaceRequest.get("/1/credentials/" + superdog.id)//
+				.superdogAuth().go(200)//
+				.assertEquals("api", "backendId");
+
+		// superdog can still access anything in any backend with the old token
+		SpaceRequest.get("/1/backend").backendId("api").bearerAuth(apiToken).go(200);
+		SpaceRequest.get("/1/backend").backendId("test").bearerAuth(apiToken).go(200);
+		SpaceRequest.get("/1/data").backendId("api").bearerAuth(apiToken).go(200);
+		SpaceRequest.get("/1/data").backendId("test").bearerAuth(apiToken).go(200);
+
+		// superdog can also access anything in any backend with the new token
+		SpaceRequest.get("/1/backend").backendId("api").bearerAuth(testToken).go(200);
+		SpaceRequest.get("/1/backend").backendId("test").bearerAuth(testToken).go(200);
+		SpaceRequest.get("/1/data").backendId("api").bearerAuth(testToken).go(200);
+		SpaceRequest.get("/1/data").backendId("test").bearerAuth(testToken).go(200);
+
+		// superdog logout from his "test" session
+		SpaceClient.logout("api", testToken);
+
+		// superdog can not access anything from his "test" token
+		SpaceRequest.get("/1/data").backendId("api").bearerAuth(testToken).go(401);
+		SpaceRequest.get("/1/backend").backendId("api").bearerAuth(testToken).go(401);
+
+		// superdog can still access anything from his "api" token
+		SpaceRequest.get("/1/data").backendId("api").bearerAuth(apiToken).go(200);
+		SpaceRequest.get("/1/backend").backendId("api").bearerAuth(apiToken).go(200);
+
+		// superdog logout from his "api" session
+		// and can not access anything this token
+		SpaceClient.logout("api", apiToken);
+		SpaceRequest.get("/1/data").backendId("api").bearerAuth(apiToken).go(401);
+		SpaceRequest.get("/1/backend").backendId("api").bearerAuth(apiToken).go(401);
+	}
+
+	@Test
+	public void userCanNotAccessAnotherBackend() {
+
+		// prepare
+		SpaceClient.prepareTest();
+		Backend test = SpaceClient.resetTestBackend();
+		Backend test2 = SpaceClient.resetTest2Backend();
+
+		String testAdminUserToken = SpaceClient.login(test.adminUser).accessToken;
+		String test2AdminUserToken = SpaceClient.login(test2.adminUser).accessToken;
+
+		// user of a backend can not access another backend
+		SpaceRequest.get("/1/data").backend(test2).bearerAuth(testAdminUserToken).go(401);
+		SpaceRequest.get("/1/data").backend(test).bearerAuth(test2AdminUserToken).go(401);
 	}
 }

@@ -103,6 +103,14 @@ public class Credentials {
 	private String createdAt;
 	private String updatedAt;
 
+	/**
+	 * 'onBehalf' stores the id of the backend I'm accessing. 'backendId' stores
+	 * the if of this credentials real backend. 'onBehalf' must not reolaced
+	 * 'backendId' and be saved to database.
+	 */
+	@JsonIgnore
+	private String onBehalf;
+
 	@JsonIgnore
 	private Session currentSession;
 	@JsonIgnore
@@ -155,7 +163,7 @@ public class Credentials {
 	}
 
 	public String backendId() {
-		return this.backendId;
+		return onBehalf == null ? backendId : onBehalf;
 	}
 
 	public String id() {
@@ -174,8 +182,8 @@ public class Credentials {
 		this.version = version;
 	}
 
-	public void backendId(String backendId) {
-		this.backendId = backendId;
+	public void onBehalf(String backendId) {
+		this.onBehalf = backendId;
 	}
 
 	public String name() {
@@ -357,7 +365,7 @@ public class Credentials {
 	// Sessions and Access Tokens
 	//
 
-	public void setSession(String accessToken) {
+	public void setCurrentSession(String accessToken) {
 		for (Session session : sessions) {
 			if (session.expiresIn() == 0)
 				sessions.remove(session);
@@ -366,7 +374,7 @@ public class Credentials {
 		}
 	}
 
-	public void setSession(Session session) {
+	public void setCurrentSession(Session session) {
 
 		currentSession = session;
 
@@ -376,8 +384,12 @@ public class Credentials {
 		sessions.add(currentSession);
 	}
 
-	public void deleteSession() {
-		if (currentSession != null) {
+	public boolean hasCurrentSession() {
+		return currentSession != null;
+	}
+
+	public void deleteCurrentSession() {
+		if (hasCurrentSession()) {
 			if (sessions != null)
 				sessions.remove(currentSession);
 			currentSession = null;
@@ -424,4 +436,5 @@ public class Credentials {
 	public static String toLegacyId(String backendId, String username) {
 		return String.join("-", backendId, username);
 	}
+
 }
