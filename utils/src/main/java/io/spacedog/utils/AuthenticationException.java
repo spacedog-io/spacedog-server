@@ -7,11 +7,11 @@ public class AuthenticationException extends SpaceException {
 
 	private static final long serialVersionUID = 25496310542011899L;
 
-	public AuthenticationException(String message, Object... args) {
-		super(401, message, args);
+	public AuthenticationException(String code, String message, Object... args) {
+		super(code, 401, message, args);
 	}
 
-	public AuthenticationException(Throwable cause, String message, Object... args) {
-		super(401, cause, message, args);
+	public AuthenticationException(String code, Throwable cause, String message, Object... args) {
+		super(code, 401, cause, message, args);
 	}
 }

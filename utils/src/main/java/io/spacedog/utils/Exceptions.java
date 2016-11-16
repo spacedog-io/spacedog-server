@@ -50,10 +50,6 @@ public class Exceptions {
 		return new ForbiddenException(message, args);
 	}
 
-	public static AuthenticationException invalidAuthentication(String message, Object... args) {
-		return new AuthenticationException(message, args);
-	}
-
 	public static ForbiddenException insufficientCredentials(Credentials credentials) {
 		return forbidden("[%s][%s] has insufficient credentials", //
 				credentials.level(), credentials.name());
@@ -68,9 +64,37 @@ public class Exceptions {
 		return new SpaceException("unchallenged-password", 403, "password must be challenged");
 	}
 
-	public static SpaceException disabledCredentials(Credentials credentials) {
-		return new SpaceException("disabled-credentials", 401, "[%s][%s] credentials disabled", //
-				credentials.level(), credentials.name());
+	//
+	// 401
+	//
+
+	public static AuthenticationException invalidAuthorizationHeader(//
+			String message, Object... args) {
+		return new AuthenticationException("invalid-authorization-header", message, args);
+	}
+
+	public static AuthenticationException invalidAuthorizationHeader(//
+			Throwable t, String message, Object... args) {
+		return new AuthenticationException("invalid-authorization-header", t, message, args);
+	}
+
+	public static AuthenticationException disabledCredentials(Credentials credentials) {
+		return new AuthenticationException("disabled-credentials", //
+				"[%s][%s] credentials disabled", credentials.level(), credentials.name());
+	}
+
+	public static AuthenticationException invalidAccessToken(String backendId) {
+		return new AuthenticationException("invalid-access-token", //
+				"invalid access token for backend [%s]", backendId);
+	}
+
+	public static AuthenticationException accessTokenHasExpired() {
+		return new AuthenticationException("expired-access-token", "access token has expired");
+	}
+
+	public static AuthenticationException invalidUsernamePassword(String backendId) {
+		return new AuthenticationException("invalid-credentials", //
+				"invalid username or password for backend [%s]", backendId);
 	}
 
 }

@@ -22,7 +22,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
-import io.spacedog.utils.AuthenticationException;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
@@ -402,7 +401,7 @@ public class CredentialsResource extends Resource {
 				&& credentials.get().checkPassword(password))
 			return credentials.get();
 
-		throw new AuthenticationException("invalid username or password for backend [%s]", backendId);
+		throw Exceptions.invalidUsernamePassword(backendId);
 	}
 
 	Credentials checkToken(String backendId, String accessToken) {
@@ -419,7 +418,7 @@ public class CredentialsResource extends Resource {
 				.getHits();
 
 		if (hits.totalHits() == 0)
-			throw new AuthenticationException("invalid access token for backend [%s]", backendId);
+			throw Exceptions.invalidAccessToken(backendId);
 
 		if (hits.totalHits() == 1) {
 			Credentials credentials = toCredentials(hits.getAt(0));
@@ -427,10 +426,10 @@ public class CredentialsResource extends Resource {
 
 			if (!credentials.isSuperDog() //
 					&& !backendId.equals(credentials.backendId()))
-				throw new AuthenticationException("invalid access token for backend [%s]", backendId);
+				throw Exceptions.invalidAccessToken(backendId);
 
 			if (credentials.accessTokenExpiresIn() == 0)
-				throw Exceptions.invalidAuthentication("access token has expired");
+				throw Exceptions.accessTokenHasExpired();
 
 			return credentials;
 		}
@@ -510,6 +509,7 @@ public class CredentialsResource extends Resource {
 					"credentials update failed: credentials id is null");
 
 		try {
+			credentials.purgeExpiredSessions();
 			credentials.updatedAt(DateTime.now().toString());
 
 			// refresh index after each index change

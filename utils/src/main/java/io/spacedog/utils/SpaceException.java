@@ -18,10 +18,10 @@ public class SpaceException extends RuntimeException {
 	}
 
 	public SpaceException(int httpStatus, Throwable cause, String message, Object... args) {
-		this(httpStatus, fromStatusToCode(httpStatus), cause, message, args);
+		this(fromStatusToCode(httpStatus), httpStatus, cause, message, args);
 	}
 
-	public SpaceException(int httpStatus, String code, Throwable cause, String message, Object... args) {
+	public SpaceException(String code, int httpStatus, Throwable cause, String message, Object... args) {
 		super(String.format(message, args), cause);
 		this.httpStatus = httpStatus;
 		this.code = code;

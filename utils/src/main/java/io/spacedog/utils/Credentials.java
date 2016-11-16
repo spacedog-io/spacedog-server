@@ -5,6 +5,7 @@ package io.spacedog.utils;
 
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -361,17 +362,36 @@ public class Credentials {
 		return true;
 	}
 
+	public ObjectNode toJson() {
+		return Json.object(//
+				SpaceFieldNames.ID, id(), //
+				SpaceFieldNames.BACKEND_ID, backendId(), //
+				SpaceFieldNames.USERNAME, name(), //
+				SpaceFieldNames.EMAIL, email().get(), //
+				SpaceFieldNames.ENABLED, enabled(), //
+				SpaceFieldNames.CREDENTIALS_LEVEL, level().name(), //
+				SpaceFieldNames.ROLES, roles(), //
+				SpaceFieldNames.CREATED_AT, createdAt(), //
+				SpaceFieldNames.UPDATED_AT, updatedAt());
+	}
+
 	//
 	// Sessions and Access Tokens
 	//
 
 	public void setCurrentSession(String accessToken) {
-		for (Session session : sessions) {
-			if (session.expiresIn() == 0)
-				sessions.remove(session);
-			else if (accessToken.equals(session.accessToken))
-				currentSession = session;
-		}
+		boolean found = false;
+
+		if (sessions != null)
+			for (Session session : sessions)
+				if (accessToken.equals(session.accessToken)) {
+					currentSession = session;
+					found = true;
+				}
+
+		if (!found)
+			throw Exceptions.invalidAccessToken(backendId);
+
 	}
 
 	public void setCurrentSession(Session session) {
@@ -396,17 +416,13 @@ public class Credentials {
 		}
 	}
 
-	public ObjectNode toJson() {
-		return Json.object(//
-				SpaceFieldNames.ID, id(), //
-				SpaceFieldNames.BACKEND_ID, backendId(), //
-				SpaceFieldNames.USERNAME, name(), //
-				SpaceFieldNames.EMAIL, email().get(), //
-				SpaceFieldNames.ENABLED, enabled(), //
-				SpaceFieldNames.CREDENTIALS_LEVEL, level().name(), //
-				SpaceFieldNames.ROLES, roles(), //
-				SpaceFieldNames.CREATED_AT, createdAt(), //
-				SpaceFieldNames.UPDATED_AT, updatedAt());
+	public void purgeExpiredSessions() {
+		if (sessions != null) {
+			Iterator<Session> iterator = sessions.iterator();
+			while (iterator.hasNext())
+				if (iterator.next().expiresIn() == 0)
+					iterator.remove();
+		}
 	}
 
 	//

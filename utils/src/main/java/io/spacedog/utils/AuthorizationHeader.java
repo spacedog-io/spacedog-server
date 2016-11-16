@@ -29,15 +29,16 @@ public class AuthorizationHeader {
 		String[] schemeAndToken = value.split(" ", 2);
 
 		if (schemeAndToken.length != 2)
-			throw new AuthenticationException("invalid authorization header");
+			throw Exceptions.invalidAuthorizationHeader("invalid authorization header");
 
 		this.scheme = schemeAndToken[0];
 
 		if (Strings.isNullOrEmpty(scheme))
-			throw new AuthenticationException("no authorization scheme specified");
+			throw Exceptions.invalidAuthorizationHeader("no authorization scheme specified");
 
 		if (!(isBasic() || isBearer()))
-			throw new AuthenticationException("authorization scheme [%s] not supported", scheme);
+			throw Exceptions.invalidAuthorizationHeader(//
+					"authorization scheme [%s] not supported", scheme);
 
 		this.token = schemeAndToken[1];
 	}
@@ -85,22 +86,24 @@ public class AuthorizationHeader {
 				decodedString = new String(//
 						Base64.getDecoder().decode(token.getBytes(Utils.UTF8)));
 			} catch (IllegalArgumentException e) {
-				throw new AuthenticationException(e, "basic authorization token is not base 64 encoded");
+				throw Exceptions.invalidAuthorizationHeader(e, //
+						"basic authorization token is not base 64 encoded");
 			}
 
 			String[] decodedTokens = decodedString.split(":", 2);
 
 			if (decodedTokens.length != 2)
-				throw new AuthenticationException("invalid basic authorization token");
+				throw Exceptions.invalidAuthorizationHeader(//
+						"invalid basic authorization token");
 
 			username = decodedTokens[0];
 			password = decodedTokens[1];
 
 			if (Strings.isNullOrEmpty(username))
-				throw new AuthenticationException("no username specified");
+				throw Exceptions.invalidAuthorizationHeader("no username specified");
 
 			if (Strings.isNullOrEmpty(password))
-				throw new AuthenticationException("no password specified");
+				throw Exceptions.invalidAuthorizationHeader("no password specified");
 		}
 
 	}

@@ -878,4 +878,40 @@ public class CredentialsResourceTestOften extends Assert {
 		SpaceRequest.get("/1/data").backend(test2).bearerAuth(testAdminUserToken).go(401);
 		SpaceRequest.get("/1/data").backend(test).bearerAuth(test2AdminUserToken).go(401);
 	}
+
+	@Test
+	public void expiredSessionsArePurged() throws InterruptedException {
+
+		// prepare
+		SpaceClient.prepareTest();
+		Backend test = SpaceClient.resetTestBackend();
+
+		// superadmin logs in with session lifetime of 1 second
+		String firstToken = SpaceClient.login(1, test.adminUser).accessToken;
+
+		// wait for session to expire
+		Thread.sleep(1000);
+
+		// check session has expired
+		SpaceRequest.get("/1/data").backend(test).bearerAuth(firstToken).go(401)//
+				.assertEquals("expired-access-token", "error.code");
+
+		// check session has expired a second time
+		// this means expired session has not yet been purged
+		SpaceRequest.get("/1/data").backend(test).bearerAuth(firstToken).go(401)//
+				.assertEquals("expired-access-token", "error.code");
+
+		// superadmin logs in again and create a second session
+		// this means superadmin credentials is updated
+		// this means expired session token are purged
+		SpaceClient.login(test.adminUser);
+
+		// check expired session token is "invalid"
+		// this means expired session has been purged
+		// and its token is no longer present in spacedog
+		SpaceRequest.get("/1/data").backend(test).bearerAuth(firstToken).go(401)//
+				.assertEquals("invalid-access-token", "error.code");
+
+	}
+
 }
