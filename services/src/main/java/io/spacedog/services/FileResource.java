@@ -59,12 +59,12 @@ public class FileResource extends S3Resource {
 
 	Payload get(String[] path, Context context) {
 		Credentials credentials = SpaceContext.getCredentials();
-		Optional<Payload> payload = doGet(FILE_BUCKET_SUFFIX, credentials.backendId(), path, context);
+		Optional<Payload> payload = doGet(FILE_BUCKET_SUFFIX, credentials.target(), path, context);
 
 		if (payload.isPresent())
 			return payload.get();
 
-		return doList(FILE_BUCKET_SUFFIX, credentials.backendId(), path, context);
+		return doList(FILE_BUCKET_SUFFIX, credentials.target(), path, context);
 	}
 
 	Payload put(String[] path, byte[] bytes, Context context) {

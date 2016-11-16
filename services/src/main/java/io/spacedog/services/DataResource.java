@@ -63,7 +63,7 @@ public class DataResource extends Resource {
 			 * 'id' query parameter
 			 */
 			Schema schema = Start.get().getElasticClient()//
-					.getSchema(credentials.backendId(), type);
+					.getSchema(credentials.target(), type);
 
 			Optional<String> id = Optional.empty();
 
@@ -81,9 +81,9 @@ public class DataResource extends Resource {
 				id = Optional.of(context.get("id"));
 
 			IndexResponse response = DataStore.get().createObject(//
-					credentials.backendId(), type, id, object, credentials.name());
+					credentials.target(), type, id, object, credentials.name());
 
-			return JsonPayload.saved(true, credentials.backendId(), "/1/data", response.getType(), response.getId(),
+			return JsonPayload.saved(true, credentials.target(), "/1/data", response.getType(), response.getId(),
 					response.getVersion());
 		}
 		throw Exceptions.forbidden("forbidden to create [%s] objects", type);
@@ -101,11 +101,11 @@ public class DataResource extends Resource {
 		Credentials credentials = SpaceContext.getCredentials();
 		if (DataAccessControl.check(credentials, type, DataPermission.read_all, DataPermission.search)) {
 			return JsonPayload.json(DataStore.get()//
-					.getObject(credentials.backendId(), type, id));
+					.getObject(credentials.target(), type, id));
 		}
 		if (DataAccessControl.check(credentials, type, DataPermission.read)) {
 			ObjectNode object = DataStore.get()//
-					.getObject(credentials.backendId(), type, id);
+					.getObject(credentials.target(), type, id);
 
 			if (credentials.name().equals(Json.get(object, "meta.createdBy").asText())) {
 				return JsonPayload.json(object);
@@ -124,7 +124,7 @@ public class DataResource extends Resource {
 
 		ObjectNode object = Json.readObject(body);
 		Schema schema = Start.get().getElasticClient()//
-				.getSchema(credentials.backendId(), type);
+				.getSchema(credentials.target(), type);
 
 		// TODO add a test on this idPath feature
 		if (schema.hasIdPath()) {
@@ -142,17 +142,17 @@ public class DataResource extends Resource {
 
 		if (strict) {
 
-			IndexResponse response = DataStore.get().updateObject(credentials.backendId(), type, id, version, object,
-					credentials.name());
-			return JsonPayload.saved(false, credentials.backendId(), "/1/data", response.getType(), response.getId(),
-					response.getVersion());
+			IndexResponse response = DataStore.get().updateObject(credentials.target(), //
+					type, id, version, object, credentials.name());
+			return JsonPayload.saved(false, credentials.target(), "/1/data", //
+					response.getType(), response.getId(), response.getVersion());
 
 		} else {
 
-			UpdateResponse response = DataStore.get().patchObject(credentials.backendId(), type, id, version, object,
-					credentials.name());
-			return JsonPayload.saved(false, credentials.backendId(), "/1/data", response.getType(), response.getId(),
-					response.getVersion());
+			UpdateResponse response = DataStore.get().patchObject(credentials.target(), //
+					type, id, version, object, credentials.name());
+			return JsonPayload.saved(false, credentials.target(), "/1/data", //
+					response.getType(), response.getId(), response.getVersion());
 		}
 	}
 
@@ -163,14 +163,14 @@ public class DataResource extends Resource {
 		ElasticClient elastic = Start.get().getElasticClient();
 
 		if (DataAccessControl.check(credentials, type, DataPermission.delete_all)) {
-			elastic.delete(credentials.backendId(), type, id, false, true);
+			elastic.delete(credentials.target(), type, id, false, true);
 			return JsonPayload.success();
 
 		} else if (DataAccessControl.check(credentials, type, DataPermission.delete)) {
-			ObjectNode object = DataStore.get().getObject(credentials.backendId(), type, id);
+			ObjectNode object = DataStore.get().getObject(credentials.target(), type, id);
 
 			if (credentials.name().equals(Json.get(object, "meta.createdBy").asText())) {
-				elastic.delete(credentials.backendId(), type, id, false, true);
+				elastic.delete(credentials.target(), type, id, false, true);
 				return JsonPayload.success();
 			} else
 				throw Exceptions.forbidden(//
@@ -191,7 +191,7 @@ public class DataResource extends Resource {
 		if (DataAccessControl.check(credentials, type, DataPermission.update)) {
 
 			ObjectNode object = DataStore.get()//
-					.getObject(credentials.backendId(), type, id);
+					.getObject(credentials.target(), type, id);
 
 			if (credentials.name().equals(Json.get(object, "meta.createdBy").asText()))
 				return;

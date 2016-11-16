@@ -74,10 +74,10 @@ public class LafargeCesioResource extends Resource {
 			player.country = extractInt(COUNTRY);
 
 			Start.get().getElasticClient().refreshType(//
-					credentials.backendId(), PLAYER_TYPE);
+					credentials.target(), PLAYER_TYPE);
 
 			SearchHits hits = DataStore.get().search(//
-					credentials.backendId(), PLAYER_TYPE, EMAIL, player.email);
+					credentials.target(), PLAYER_TYPE, EMAIL, player.email);
 
 			if (hits.totalHits() > 0) {
 				player = Json.mapper().readValue(//
@@ -87,7 +87,7 @@ public class LafargeCesioResource extends Resource {
 			} else {
 
 				SearchHits hits2 = Start.get().getElasticClient()//
-						.prepareSearch(credentials.backendId(), PLAYER_TYPE)//
+						.prepareSearch(credentials.target(), PLAYER_TYPE)//
 						.addSort(SortBuilders.fieldSort(ID).order(SortOrder.DESC))//
 						.setFetchSource(false)//
 						.setSize(1)//
@@ -104,7 +104,7 @@ public class LafargeCesioResource extends Resource {
 
 				player.code = 1000 + random.nextInt(9000);
 
-				DataStore.get().createObject(credentials.backendId(), PLAYER_TYPE, //
+				DataStore.get().createObject(credentials.target(), PLAYER_TYPE, //
 						Optional.of("" + player.id), Json.mapper().valueToTree(player), //
 						credentials.name());
 
@@ -210,7 +210,7 @@ public class LafargeCesioResource extends Resource {
 
 		try {
 
-			elastic.refreshType(credentials.backendId(), PLAYER_TYPE);
+			elastic.refreshType(credentials.target(), PLAYER_TYPE);
 			long total = getPlayerCount(credentials);
 
 			while (from < total) {
@@ -236,7 +236,7 @@ public class LafargeCesioResource extends Resource {
 	private long getPlayerCount(Credentials credentials) {
 
 		return Start.get().getElasticClient()//
-				.prepareSearch(credentials.backendId(), PLAYER_TYPE)//
+				.prepareSearch(credentials.target(), PLAYER_TYPE)//
 				.setQuery(QueryBuilders.matchAllQuery())//
 				.setSize(0)//
 				.get()//
@@ -248,7 +248,7 @@ public class LafargeCesioResource extends Resource {
 			throws IOException, JsonParseException, JsonMappingException {
 
 		SearchHits hits = Start.get().getElasticClient()//
-				.prepareSearch(credentials.backendId(), PLAYER_TYPE)//
+				.prepareSearch(credentials.target(), PLAYER_TYPE)//
 				.setQuery(QueryBuilders.matchAllQuery())//
 				.setFrom(from).setSize(size)//
 				.get()//
@@ -317,14 +317,14 @@ public class LafargeCesioResource extends Resource {
 
 	private void save(Player player) {
 		Credentials credentials = SpaceContext.getCredentials();
-		DataStore.get().patchObject(credentials.backendId(), PLAYER_TYPE, //
+		DataStore.get().patchObject(credentials.target(), PLAYER_TYPE, //
 				"" + player.id, 0l, Json.mapper().valueToTree(player), //
 				credentials.name());
 	}
 
 	private Credentials forceLafargeCredentials() {
 		Credentials credentials = new Credentials(//
-				SpaceContext.backendId(), "lafargeadmin", Level.SUPER_ADMIN);
+				SpaceContext.target(), "lafargeadmin", Level.SUPER_ADMIN);
 		SpaceContext.setCredentials(credentials);
 		return credentials;
 	}
@@ -333,8 +333,8 @@ public class LafargeCesioResource extends Resource {
 			throws JsonParseException, JsonMappingException, IOException {
 
 		Start.get().getElasticClient().refreshType(//
-				credentials.backendId(), PLAYER_TYPE);
-		SearchHits hits = DataStore.get().search(credentials.backendId(), //
+				credentials.target(), PLAYER_TYPE);
+		SearchHits hits = DataStore.get().search(credentials.target(), //
 				PLAYER_TYPE, EMAIL, email, CODE, code);
 
 		if (hits.totalHits() > 0) {

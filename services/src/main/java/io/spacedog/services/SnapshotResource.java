@@ -110,7 +110,7 @@ public class SnapshotResource extends Resource {
 
 		JsonBuilder<ObjectNode> jsonResponse = JsonPayload.builder(status)//
 				.put("id", snapshotId)//
-				.put("location", spaceUrl(Backends.ROOT_API, "/1", "snapshot", snapshotId).toString());
+				.put("location", spaceUrl(Backends.rootApi(), "/1", "snapshot", snapshotId).toString());
 
 		if (response.getSnapshotInfo() != null) {
 			SpaceSnapshot info = new SpaceSnapshot(repoId, response.getSnapshotInfo());

@@ -59,7 +59,7 @@ public class SearchResource extends Resource {
 		Credentials credentials = SpaceContext.getCredentials();
 		String[] types = DataAccessControl.types(DataPermission.search, credentials);
 		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
-		DataStore.get().refreshBackend(refresh, credentials.backendId());
+		DataStore.get().refreshBackend(refresh, credentials.target());
 		ObjectNode result = searchInternal(body, credentials, context, types);
 		return JsonPayload.json(result);
 	}
@@ -72,9 +72,9 @@ public class SearchResource extends Resource {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		String[] types = DataAccessControl.types(DataPermission.delete_all, credentials);
 		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, true);
-		DataStore.get().refreshBackend(refresh, credentials.backendId());
+		DataStore.get().refreshBackend(refresh, credentials.target());
 		DeleteByQueryResponse response = Start.get().getElasticClient()//
-				.deleteByQuery(query, credentials.backendId(), types);
+				.deleteByQuery(query, credentials.target(), types);
 		return JsonPayload.json(response);
 	}
 
@@ -90,7 +90,7 @@ public class SearchResource extends Resource {
 		Credentials credentials = SpaceContext.getCredentials();
 		if (DataAccessControl.check(credentials, type, DataPermission.search)) {
 			boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
-			DataStore.get().refreshType(refresh, credentials.backendId(), type);
+			DataStore.get().refreshType(refresh, credentials.target(), type);
 			ObjectNode result = searchInternal(body, credentials, context, type);
 			return JsonPayload.json(result);
 		}
@@ -104,10 +104,10 @@ public class SearchResource extends Resource {
 		if (DataAccessControl.check(credentials, type, DataPermission.delete_all)) {
 
 			boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, true);
-			DataStore.get().refreshType(refresh, credentials.backendId(), type);
+			DataStore.get().refreshType(refresh, credentials.target(), type);
 
 			DeleteByQueryResponse response = Start.get().getElasticClient()//
-					.deleteByQuery(query, credentials.backendId(), type);
+					.deleteByQuery(query, credentials.target(), type);
 
 			return JsonPayload.json(response);
 		}
@@ -141,7 +141,7 @@ public class SearchResource extends Resource {
 
 		SearchRequestBuilder search = null;
 		ElasticClient elastic = Start.get().getElasticClient();
-		String[] aliases = elastic.toAliases(credentials.backendId(), types);
+		String[] aliases = elastic.toAliases(credentials.target(), types);
 
 		if (aliases.length == 0)
 			return Json.object("took", 0, "total", 0, "results", Json.array());
@@ -240,7 +240,7 @@ public class SearchResource extends Resource {
 		set.remove(null);
 		Map<String, ObjectNode> results = new HashMap<>();
 		set.forEach(reference -> {
-			ObjectNode object = DataStore.get().getObject(credentials.backendId(), //
+			ObjectNode object = DataStore.get().getObject(credentials.target(), //
 					getReferenceType(reference), getReferenceId(reference));
 			results.put(reference, object);
 		});

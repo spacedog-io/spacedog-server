@@ -88,7 +88,7 @@ public class MailTemplateResource extends Resource {
 		if (model == null || model.isEmpty())
 			return context;
 
-		String backendId = SpaceContext.backendId();
+		String backendId = SpaceContext.target();
 
 		try {
 			Map<String, Object> parameters = Json.mapper().readValue(body, Map.class);

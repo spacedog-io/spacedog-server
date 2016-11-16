@@ -63,7 +63,7 @@ public class WebResource extends S3Resource {
 
 	private Payload doGet(boolean withContent, String[] path, Context context) {
 
-		String backendId = SpaceContext.backendId();
+		String backendId = SpaceContext.target();
 
 		if (path.length > 0) {
 

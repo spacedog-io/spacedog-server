@@ -135,15 +135,15 @@ public class MailResource extends Resource {
 
 		// ... add a footer to the message
 		if (!Strings.isNullOrEmpty(message.text))
-			message.text = addFooterToTextMessage(message.text, credentials.backendId());
+			message.text = addFooterToTextMessage(message.text, credentials.target());
 		if (!Strings.isNullOrEmpty(message.html))
-			message.html = addFooterToHtmlMessage(message.html, credentials.backendId());
+			message.html = addFooterToHtmlMessage(message.html, credentials.target());
 
 		return emailViaGun(credentials, defaultMailGunSettings, message);
 	}
 
 	Payload emailViaGun(Credentials credentials, MailGunSettings settings, Message message) {
-		message.from = credentials.backendId().toUpperCase() + " <no-reply@" + settings.domain + ">";
+		message.from = credentials.target().toUpperCase() + " <no-reply@" + settings.domain + ">";
 		ObjectNode response = mailgun(message, settings);
 		return JsonPayload.json(response, response.get("status").asInt());
 	}

@@ -46,13 +46,13 @@ public class BackendResource extends Resource {
 		int from = context.query().getInteger("from", 0);
 		int size = context.query().getInteger("size", 10);
 
-		if (credentials.isRootBackend()) {
+		if (credentials.isTargetingRootApi()) {
 			if (credentials.isSuperDog())
 				superAdmins = CredentialsResource.get().getAllSuperAdmins(from, size);
 			else
 				throw Exceptions.insufficientCredentials(credentials);
 		} else
-			superAdmins = CredentialsResource.get().getBackendSuperAdmins(credentials.backendId(), from, size);
+			superAdmins = CredentialsResource.get().getBackendSuperAdmins(credentials.target(), from, size);
 
 		ArrayNode results = Json.array();
 		for (Credentials superAdmin : superAdmins.results)
@@ -67,11 +67,11 @@ public class BackendResource extends Resource {
 	public Payload delete(Context context) {
 		Credentials credentials = SpaceContext.checkSuperAdminCredentials();
 
-		if (credentials.isRootBackend())
+		if (credentials.isTargetingRootApi())
 			throw Exceptions.illegalArgument("backend [api] shall not be deleted");
 
-		CredentialsResource.get().deleteAll(credentials.backendId());
-		Start.get().getElasticClient().deleteAllIndices(credentials.backendId());
+		CredentialsResource.get().deleteAll(credentials.target());
+		Start.get().getElasticClient().deleteAllIndices(credentials.target());
 
 		if (!SpaceContext.isTest() && !Start.get().configuration().isOffline()) {
 			FileResource.get().deleteAll();

@@ -24,6 +24,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 
+import io.spacedog.utils.Backends;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.Json;
@@ -71,8 +72,8 @@ public class LogResource extends Resource {
 
 		Credentials credentials = SpaceContext.checkSuperAdminCredentials();
 
-		Optional<String> backendId = credentials.isRootBackend() //
-				? Optional.empty() : Optional.of(credentials.backendId());
+		Optional<String> backendId = credentials.isTargetingRootApi() //
+				? Optional.empty() : Optional.of(credentials.target());
 
 		String logType = context.query().get(SpaceParams.LOG_TYPE);
 		Optional<Level> type = Strings.isNullOrEmpty(logType) ? Optional.empty()//
@@ -99,11 +100,11 @@ public class LogResource extends Resource {
 
 		QueryBuilder query = QueryBuilders.wrapperQuery(body);
 
-		if (!credentials.isRootBackend())
+		if (!credentials.isTargetingRootApi())
 			query = QueryBuilders.boolQuery()//
 					.filter(query)//
 					.filter(QueryBuilders.termQuery("credentials.backendId", //
-							credentials.backendId()));
+							credentials.target()));
 
 		DataStore.get().refreshType(true, SPACEDOG_BACKEND, TYPE);
 
@@ -125,7 +126,7 @@ public class LogResource extends Resource {
 
 		Credentials credentials = SpaceContext.checkSuperDogCredentials();
 
-		Optional<DeleteByQueryResponse> response = doPurgeBackend(credentials.backendId(), //
+		Optional<DeleteByQueryResponse> response = doPurgeBackend(credentials.target(), //
 				context.request().query().getInteger("from", 1000));
 
 		// no delete response means no logs to delete means success
@@ -149,7 +150,7 @@ public class LogResource extends Resource {
 
 				// https://api.spacedog.io ping requests should not be logged
 				if (uri.isEmpty() || uri.equals(SLASH))
-					return !SpaceContext.getCredentials().isRootBackend();
+					return !SpaceContext.getCredentials().isTargetingRootApi();
 
 				return true;
 			}
@@ -326,7 +327,7 @@ public class LogResource extends Resource {
 	private void addCredentials(ObjectNode log) {
 		Credentials credentials = SpaceContext.getCredentials();
 		ObjectNode logCredentials = log.putObject("credentials");
-		logCredentials.put("backendId", credentials.backendId());
+		logCredentials.put("backendId", credentials.target());
 		logCredentials.put("type", credentials.level().toString());
 		if (!credentials.level().equals(Level.KEY))
 			logCredentials.put("name", credentials.name());

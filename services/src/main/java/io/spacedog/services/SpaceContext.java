@@ -99,8 +99,8 @@ public class SpaceContext {
 		return get().debug;
 	}
 
-	public static String backendId() {
-		return getCredentials().backendId();
+	public static String target() {
+		return getCredentials().target();
 	}
 
 	static void forceContext(Credentials credentials, boolean test, boolean debug) {
@@ -199,14 +199,14 @@ public class SpaceContext {
 		String host = context.request().header(HttpHeaders.HOST);
 		return host.endsWith(urlBase) //
 				? host.split("\\.")//
-				: new String[] { Backends.ROOT_API };
+				: new String[] { Backends.rootApi() };
 	}
 
 	private void checkAuthorizationHeader() {
 		if (!authorizationChecked) {
 			authorizationChecked = true;
 			SpaceContext.debug().credentialCheck();
-			String backendId = backendId();
+			String backendId = target();
 			String headerValue = context.header(SpaceHeaders.AUTHORIZATION);
 
 			if (headerValue != null) {
@@ -218,7 +218,7 @@ public class SpaceContext {
 					superdog = authHeader.username().startsWith("superdog-");
 					userCredentials = CredentialsResource.get()//
 							.checkUsernamePassword(//
-									superdog ? Backends.ROOT_API : backendId, //
+									superdog ? Backends.rootApi() : backendId, //
 									authHeader.username(), authHeader.password());
 
 				} else if (authHeader.isBearer()) {
@@ -233,7 +233,7 @@ public class SpaceContext {
 
 				// sets superdog backend id to the request backend id
 				if (superdog)
-					credentials.onBehalf(backendId);
+					credentials.target(backendId);
 			}
 
 		}

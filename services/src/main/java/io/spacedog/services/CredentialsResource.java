@@ -158,7 +158,7 @@ public class CredentialsResource extends Resource {
 		ObjectNode data = Json.readObject(body);
 		Level level = extractAndCheckLevel(data, Level.USER);
 
-		Credentials credentials = create(SpaceContext.backendId(), level, data);
+		Credentials credentials = create(SpaceContext.target(), level, data);
 
 		JsonBuilder<ObjectNode> builder = JsonPayload //
 				.builder(true, credentials.backendId(), "/1", TYPE, credentials.id());
@@ -314,7 +314,7 @@ public class CredentialsResource extends Resource {
 	@Delete("/1/credentials/:id/roles")
 	@Delete("/1/credentials/:id/roles/")
 	public Payload deleteAllRoles(String id, Context context) {
-		String backendId = SpaceContext.checkAdminCredentials().backendId();
+		String backendId = SpaceContext.checkAdminCredentials().target();
 		Credentials credentials = getById(id, true).get();
 		credentials.roles().clear();
 		credentials = update(credentials);
@@ -325,7 +325,7 @@ public class CredentialsResource extends Resource {
 	@Put("/1/credentials/:id/roles/:role")
 	@Put("/1/credentials/:id/roles/:role/")
 	public Payload putRole(String id, String role, Context context) {
-		String backendId = SpaceContext.checkAdminCredentials().backendId();
+		String backendId = SpaceContext.checkAdminCredentials().target();
 		Roles.checkIfValid(role);
 		Credentials credentials = getById(id, true).get();
 
@@ -341,7 +341,7 @@ public class CredentialsResource extends Resource {
 	@Delete("/1/credentials/:id/roles/:role")
 	@Delete("/1/credentials/:id/roles/:role/")
 	public Payload deleteRole(String id, String role, Context context) {
-		String backendId = SpaceContext.checkAdminCredentials().backendId();
+		String backendId = SpaceContext.checkAdminCredentials().target();
 		Credentials credentials = getById(id, true).get();
 
 		if (credentials.roles().contains(role)) {
@@ -451,7 +451,7 @@ public class CredentialsResource extends Resource {
 			return Optional.of(toCredentials(response));
 
 		if (throwNotFound)
-			throw Exceptions.notFound(credentials.backendId(), TYPE, id);
+			throw Exceptions.notFound(credentials.target(), TYPE, id);
 		else
 			return Optional.empty();
 	}
@@ -563,7 +563,7 @@ public class CredentialsResource extends Resource {
 
 	Credentials createSuperdog(String username, String password, String email) {
 		Usernames.checkValid(username);
-		Credentials credentials = new Credentials(Backends.ROOT_API, username, Level.SUPERDOG);
+		Credentials credentials = new Credentials(Backends.rootApi(), username, Level.SUPERDOG);
 		credentials.email(email);
 		credentials.setPassword(password, Optional.empty());
 		return create(credentials);
@@ -586,7 +586,7 @@ public class CredentialsResource extends Resource {
 
 	private BoolSearch toQuery(Context context) {
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
-				.filter(QueryBuilders.termQuery(BACKEND_ID, SpaceContext.backendId()));
+				.filter(QueryBuilders.termQuery(BACKEND_ID, SpaceContext.target()));
 
 		String username = context.get(USERNAME);
 		if (!Strings.isNullOrEmpty(username))

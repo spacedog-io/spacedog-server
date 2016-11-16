@@ -66,7 +66,7 @@ public class PushResourceOld {
 			throw new IllegalArgumentException(String.format("invalid protocol [%s]", protocol));
 
 		String appName = Json.checkStringNotNullOrEmpty(node, "appName");
-		Optional<PlatformApplication> application = getApplication(credentials.backendId(), appName);
+		Optional<PlatformApplication> application = getApplication(credentials.target(), appName);
 		if (!application.isPresent())
 			throw new IllegalArgumentException(String.format("invalid mobile application name [%s]", appName));
 
@@ -74,13 +74,13 @@ public class PushResourceOld {
 
 		// TODO handle more than one app
 		// TODO handle more than one endpoint per app
-		DataStore.get().patchObject(credentials.backendId(), //
+		DataStore.get().patchObject(credentials.target(), //
 				UserResource.TYPE, //
 				credentials.name(), //
 				Json.objectBuilder().put("endpoint", endpointArn).build(), //
 				credentials.name());
 
-		String topicArn = createTopic("all", credentials.backendId());
+		String topicArn = createTopic("all", credentials.target());
 		Optional<Subscription> subscription = getSubscription(topicArn, protocol, endpoint);
 
 		if (!subscription.isPresent()) {
@@ -89,7 +89,7 @@ public class PushResourceOld {
 		}
 
 		try {
-			return JsonPayload.saved(false, credentials.backendId(), "/1", TYPE,
+			return JsonPayload.saved(false, credentials.target(), "/1", TYPE,
 					URLEncoder.encode(endpointArn, "UTF-8"));
 		} catch (UnsupportedEncodingException e) {
 			throw new RuntimeException(e);
@@ -119,14 +119,14 @@ public class PushResourceOld {
 
 		topics.elements().forEachRemaining(element -> {
 			String topicName = Json.checkString(element);
-			String topicArn = createTopic(topicName, credentials.backendId());
+			String topicArn = createTopic(topicName, credentials.target());
 			Optional<Subscription> subscription = getSubscription(topicArn, "application", endpoint);
 
 			if (!subscription.isPresent())
 				getSnsClient().subscribe(topicArn, "application", endpoint);
 		});
 
-		return JsonPayload.saved(false, credentials.backendId(), "/1", "device", id);
+		return JsonPayload.saved(false, credentials.target(), "/1", "device", id);
 	}
 
 	@Post("/topic/:name/push")
@@ -139,7 +139,7 @@ public class PushResourceOld {
 		ObjectNode node = Json.readObject(body);
 		String message = Json.checkStringNotNullOrEmpty(node, "message");
 
-		Optional<Topic> topic = getTopicArn(name, credentials.backendId());
+		Optional<Topic> topic = getTopicArn(name, credentials.target());
 
 		if (!topic.isPresent())
 			return JsonPayload.error(404, "topic with name [%s] not found", name);
@@ -158,13 +158,13 @@ public class PushResourceOld {
 	public Payload postPushAll(Context context) {
 
 		Credentials credentials = SpaceContext.checkAdminCredentials();
-		Optional<Topic> topic = getTopicArn("all", credentials.backendId());
+		Optional<Topic> topic = getTopicArn("all", credentials.target());
 
 		if (!topic.isPresent())
 			throw new IllegalStateException(String.format(//
-					"topic [all] not found for backend [%s]", credentials.backendId()));
+					"topic [all] not found for backend [%s]", credentials.target()));
 
-		String msg = "PUSH " + credentials.backendId() + ' ' + DateTime.now();
+		String msg = "PUSH " + credentials.target() + ' ' + DateTime.now();
 		PublishResult publish = getSnsClient().publish(new PublishRequest()//
 				.withTopicArn(topic.get().getTopicArn())//
 				.withSubject(msg)//
@@ -185,7 +185,7 @@ public class PushResourceOld {
 		JsonNode properties = Json.checkArray(node, "properties", true).get();
 		String message = Json.checkStringNode(node, "message", true).get().asText();
 
-		Set<String> usernames = getUsernamesFromObjects(credentials.backendId(), type, query, properties);
+		Set<String> usernames = getUsernamesFromObjects(credentials.target(), type, query, properties);
 		Set<String> endpointArns = getEndpointArnsFromUsers(credentials, usernames);
 
 		for (String endpointArn : endpointArns) {
@@ -205,7 +205,7 @@ public class PushResourceOld {
 
 		// TODO how many users can I get in one request ?
 		MultiGetResponse multiGet = Start.get().getElasticClient().multiGet(//
-				credentials.backendId(), UserResource.TYPE, usernames);
+				credentials.target(), UserResource.TYPE, usernames);
 
 		Set<String> endpointArns = Sets.newHashSet();
 		multiGet.forEach(

@@ -402,7 +402,7 @@ public class LogResourceTestOften extends Assert {
 		while (elements.hasNext()) {
 			JsonNode element = elements.next();
 			if (element.get("path").asText().equals("/")
-					&& element.get("credentials").get("backendId").asText().equals(Backends.ROOT_API))
+					&& element.get("credentials").get("backendId").asText().equals(Backends.rootApi()))
 				Assert.fail();
 		}
 	}

@@ -110,10 +110,10 @@ public class Credentials {
 	 * 'backendId' and be saved to database.
 	 */
 	@JsonIgnore
-	private String onBehalf;
+	private String target;
 
 	@JsonIgnore
-	private Session currentSession;
+	public Session currentSession;
 	@JsonIgnore
 	private boolean passwordChecked;
 	@JsonIgnore
@@ -163,10 +163,6 @@ public class Credentials {
 		return level.ordinal() <= Level.USER.ordinal();
 	}
 
-	public String backendId() {
-		return onBehalf == null ? backendId : onBehalf;
-	}
-
 	public String id() {
 		return id;
 	}
@@ -183,8 +179,20 @@ public class Credentials {
 		this.version = version;
 	}
 
-	public void onBehalf(String backendId) {
-		this.onBehalf = backendId;
+	public String backendId() {
+		return backendId;
+	}
+
+	public String target() {
+		return target == null ? backendId : target;
+	}
+
+	public void target(String backendId) {
+		this.target = backendId;
+	}
+
+	public boolean isTargetingRootApi() {
+		return Backends.isRootApi(target());
 	}
 
 	public String name() {
@@ -281,10 +289,6 @@ public class Credentials {
 		return updatedAt == null ? true : updatedAt.equals(createdAt);
 	}
 
-	public boolean isRootBackend() {
-		return Backends.ROOT_API.equals(backendId);
-	}
-
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -365,7 +369,7 @@ public class Credentials {
 	public ObjectNode toJson() {
 		return Json.object(//
 				SpaceFieldNames.ID, id(), //
-				SpaceFieldNames.BACKEND_ID, backendId(), //
+				SpaceFieldNames.BACKEND_ID, target(), //
 				SpaceFieldNames.USERNAME, name(), //
 				SpaceFieldNames.EMAIL, email().get(), //
 				SpaceFieldNames.ENABLED, enabled(), //

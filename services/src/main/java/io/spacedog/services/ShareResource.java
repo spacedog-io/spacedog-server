@@ -33,7 +33,7 @@ public class ShareResource extends S3Resource {
 	@Get("/")
 	public Object getAll(Context context) {
 		Credentials credentials = checkPermission(DataPermission.search);
-		return doList(SHARE_BUCKET_SUFFIX, credentials.backendId(), Uris.ROOT, context);
+		return doList(SHARE_BUCKET_SUFFIX, credentials.target(), Uris.ROOT, context);
 	}
 
 	@Get("/:uuid/:fileName")
@@ -43,7 +43,7 @@ public class ShareResource extends S3Resource {
 		boolean checkOwnership = checkPermissionAndIsOwnershipRequired(//
 				DataPermission.read, DataPermission.read_all);
 
-		Optional<Payload> payload = doGet(SHARE_BUCKET_SUFFIX, SpaceContext.backendId(), //
+		Optional<Payload> payload = doGet(SHARE_BUCKET_SUFFIX, SpaceContext.target(), //
 				Uris.toPath(uuid, fileName), context, checkOwnership);
 
 		return payload.isPresent() ? payload.get() : JsonPayload.error(HttpStatus.NOT_FOUND);

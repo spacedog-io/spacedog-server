@@ -143,7 +143,7 @@ public class S3Resource extends Resource {
 			boolean checkOwnership) {
 
 		String bucketName = getBucketName(bucketSuffix);
-		String s3Key = S3Key.get(credentials.backendId()).add(path).toString();
+		String s3Key = S3Key.get(credentials.target()).add(path).toString();
 
 		JsonBuilder<ObjectNode> builder = JsonPayload.builder().array("deleted");
 
@@ -190,7 +190,7 @@ public class S3Resource extends Resource {
 				}
 
 				for (S3ObjectSummary summary : objects.getObjectSummaries())
-					builder.add(toSpaceKeyFromS3Key(credentials.backendId(), summary.getKey()));
+					builder.add(toSpaceKeyFromS3Key(credentials.target(), summary.getKey()));
 
 				next = objects.getNextMarker();
 
@@ -218,7 +218,7 @@ public class S3Resource extends Resource {
 
 		String fileName = path[path.length - 1];
 		String bucketName = getBucketName(bucketSuffix);
-		String s3Key = S3Key.get(credentials.backendId()).add(path).toString();
+		String s3Key = S3Key.get(credentials.target()).add(path).toString();
 
 		ObjectMetadata metadata = new ObjectMetadata();
 		// TODO
@@ -236,7 +236,7 @@ public class S3Resource extends Resource {
 
 		JsonBuilder<ObjectNode> builder = JsonPayload.builder()//
 				.put("path", Uris.join(path))//
-				.put("location", toSpaceLocation(credentials.backendId(), rootUri, path));
+				.put("location", toSpaceLocation(credentials.target(), rootUri, path));
 
 		if (enableS3Location)
 			builder.put("s3", toS3Location(bucketName, s3Key));

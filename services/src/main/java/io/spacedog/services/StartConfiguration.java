@@ -90,12 +90,12 @@ public class StartConfiguration {
 	}
 
 	public String apiUrl() {
-		return apiUrl(Backends.ROOT_API);
+		return apiUrl(Backends.rootApi());
 	}
 
 	public String apiUrl(String backendId) {
 		if (Strings.isNullOrEmpty(backendId))
-			backendId = Backends.ROOT_API;
+			backendId = Backends.rootApi();
 		return new StringBuilder(apiUrlScheme()).append("://")//
 				.append(backendId).append(apiUrlBase()).toString();
 	}

@@ -152,7 +152,7 @@ public class LinkedinResource extends Resource {
 
 	private Credentials login(Context context) {
 
-		String backendId = SpaceContext.backendId();
+		String backendId = SpaceContext.target();
 		String code = Check.notNullOrEmpty(context.get("code"), "code");
 
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);

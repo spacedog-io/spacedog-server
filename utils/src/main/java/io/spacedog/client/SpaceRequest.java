@@ -75,7 +75,7 @@ public class SpaceRequest {
 		SpaceTarget target = configuration().target();
 
 		if (Strings.isNullOrEmpty(backendId))
-			backendId = Backends.ROOT_API;
+			backendId = Backends.rootApi();
 
 		return target.url(backendId, uri).toString();
 	}
@@ -359,7 +359,7 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest superdogAuth() {
-		return superdogAuth(Backends.ROOT_API);
+		return superdogAuth(Backends.rootApi());
 	}
 
 	public SpaceRequest superdogAuth(Backend backend) {

@@ -9,9 +9,17 @@ import com.google.common.base.Strings;
 
 public class Backends {
 
-	public static final String ROOT_API = "api";
+	// public static final String ROOT_API = "api";
 	public static final String DEFAULT_USERNAME = "default";
 	private static final Pattern ID_PATTERN = Pattern.compile("[a-z0-9]{4,}");
+
+	public static boolean isRootApi(String backendId) {
+		return rootApi().equals(backendId);
+	}
+
+	public static String rootApi() {
+		return "api";
+	}
 
 	public static boolean isIdValid(String backendId) {
 
@@ -21,7 +29,7 @@ public class Backends {
 		if (backendId.indexOf("spacedog") > -1)
 			return false;
 
-		if (backendId.startsWith(ROOT_API))
+		if (backendId.startsWith(rootApi()))
 			return false;
 
 		return true;
