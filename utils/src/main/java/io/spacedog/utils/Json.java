@@ -87,6 +87,24 @@ public class Json {
 		return object;
 	}
 
+	public static void remove(JsonNode object, String propertyPath) {
+
+		int lastDotIndex = propertyPath.lastIndexOf('.');
+		String lastPathName = propertyPath.substring(lastDotIndex + 1);
+		if (lastDotIndex > -1) {
+			String parentPath = propertyPath.substring(0, lastDotIndex);
+			object = Json.get(object, parentPath);
+		}
+
+		if (object.isObject())
+			((ObjectNode) object).remove(lastPathName);
+		else if (object.isArray())
+			((ArrayNode) object).remove(Integer.parseInt(lastPathName));
+		else
+			throw Exceptions.illegalArgument(//
+					"json node does not contain path [%s]", propertyPath);
+	}
+
 	public static JsonMerger merger() {
 		return new JsonMerger();
 	}

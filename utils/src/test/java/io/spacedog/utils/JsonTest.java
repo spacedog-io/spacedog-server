@@ -20,7 +20,7 @@ public class JsonTest extends Assert {
 	public void shouldGet() {
 		JsonNode json = Json.objectBuilder().object("riri").array("fifi").add(12).object().put("loulou", false).build();
 		assertEquals(12, Json.get(json, "riri.fifi.0").asInt());
-		assertEquals(false, Json.get(json, "riri.fifi.1.loulou").asBoolean());
+		assertFalse(Json.get(json, "riri.fifi.1.loulou").asBoolean());
 		assertNull(Json.get(json, "riri.name"));
 		assertNull(Json.get(json, "riri.fifi.1.loulou.name"));
 	}
@@ -29,7 +29,16 @@ public class JsonTest extends Assert {
 	public void shouldSet() {
 		JsonNode json = Json.objectBuilder().object("riri").array("fifi").add(12).object().put("loulou", false).build();
 		Json.set(json, "riri.fifi.1.loulou", BooleanNode.TRUE);
-		assertEquals(true, Json.get(json, "riri.fifi.1.loulou").asBoolean());
+		assertTrue(Json.get(json, "riri.fifi.1.loulou").asBoolean());
+	}
+
+	@Test
+	public void shouldRemove() {
+		JsonNode json = Json.objectBuilder().object("riri").array("fifi").add(12).object().put("loulou", false).build();
+		Json.remove(json, "riri.fifi.0");
+		assertFalse(Json.get(json, "riri.fifi.0.loulou").asBoolean());
+		Json.remove(json, "riri.fifi.0.loulou");
+		assertEquals(0, Json.get(json, "riri.fifi.0").size());
 	}
 
 	@Test
