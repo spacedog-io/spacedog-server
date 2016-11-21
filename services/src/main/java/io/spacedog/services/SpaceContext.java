@@ -212,7 +212,7 @@ public class SpaceContext {
 			if (headerValue != null) {
 				boolean superdog = false;
 				Credentials userCredentials = null;
-				AuthorizationHeader authHeader = new AuthorizationHeader(headerValue);
+				AuthorizationHeader authHeader = new AuthorizationHeader(headerValue, true);
 
 				if (authHeader.isBasic()) {
 					superdog = authHeader.username().startsWith("superdog-");

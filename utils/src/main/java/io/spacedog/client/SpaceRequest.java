@@ -440,7 +440,7 @@ public class SpaceRequest {
 
 	private void printRequestHeader(String key, List<String> value) {
 		if (AuthorizationHeader.isKey(key)) {
-			AuthorizationHeader authHeader = new AuthorizationHeader(value);
+			AuthorizationHeader authHeader = new AuthorizationHeader(value, false);
 			if (authHeader.isBasic()) {
 				Utils.info("  Authorization: [Basic %s:*******]", authHeader.username());
 				return;

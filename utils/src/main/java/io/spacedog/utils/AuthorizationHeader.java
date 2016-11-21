@@ -14,17 +14,15 @@ public class AuthorizationHeader {
 	private String username;
 	private String password;
 	private String token;
+	private final boolean checkUsernamePassword;
 
-	public static boolean isKey(String key) {
-		return SpaceHeaders.AUTHORIZATION.equalsIgnoreCase(key);
+	public AuthorizationHeader(List<String> value, boolean checkUsernamePassword) {
+		this(value.get(0), checkUsernamePassword);
 	}
 
-	public AuthorizationHeader(List<String> value) {
-		this(value.get(0));
-	}
-
-	public AuthorizationHeader(String value) {
+	public AuthorizationHeader(String value, boolean checkUsernamePassword) {
 		Check.notNull(value, "authorization header");
+		this.checkUsernamePassword = checkUsernamePassword;
 
 		String[] schemeAndToken = value.split(" ", 2);
 
@@ -41,6 +39,10 @@ public class AuthorizationHeader {
 					"authorization scheme [%s] not supported", scheme);
 
 		this.token = schemeAndToken[1];
+	}
+
+	public static boolean isKey(String key) {
+		return SpaceHeaders.AUTHORIZATION.equalsIgnoreCase(key);
 	}
 
 	public boolean isBasic() {
@@ -99,10 +101,10 @@ public class AuthorizationHeader {
 			username = decodedTokens[0];
 			password = decodedTokens[1];
 
-			if (Strings.isNullOrEmpty(username))
+			if (checkUsernamePassword && Strings.isNullOrEmpty(username))
 				throw Exceptions.invalidAuthorizationHeader("no username specified");
 
-			if (Strings.isNullOrEmpty(password))
+			if (checkUsernamePassword && Strings.isNullOrEmpty(password))
 				throw Exceptions.invalidAuthorizationHeader("no password specified");
 		}
 
