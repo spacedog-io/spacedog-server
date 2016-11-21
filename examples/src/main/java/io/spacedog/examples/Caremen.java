@@ -42,40 +42,10 @@ public class Caremen extends SpaceClient {
 		// setSchema(buildDriverSchema(), backend);
 		// setSchema(buildCustomerSchema(), backend);
 		// setSchema(buildCourseLogSchema(), backend);
+		// setSchema(buildCustomerCompanySchema(), backend);
+		// setSchema(buildCompanySchema(), backend);
 
-		// createCustomers();
 		// createDrivers();
-	}
-
-	void createCustomers() {
-		Schema schema = buildCustomerSchema();
-
-		createCustomer("flavien", schema);
-		createCustomer("aurelien", schema);
-		createCustomer("david", schema);
-		createCustomer("philippe", schema);
-	}
-
-	User createCustomer(String username, Schema schema) {
-		String password = "hi " + username;
-		String email = "david@spacedog.io";
-
-		Optional<User> optional = SpaceClient.login(backend.backendId, username, password, 200, 401);
-
-		User credentials = optional.isPresent() ? optional.get()
-				: SpaceClient.signUp(backend, username, password, email);
-
-		SpaceRequest.put("/1/credentials/" + credentials.id + "/roles/customer")//
-				.adminAuth(backend).go(200);
-
-		ObjectNode customer = generator.gen(schema, 0);
-		customer.put("credentialsId", credentials.id);
-		customer.put("firstname", credentials.username);
-		customer.put("lastname", credentials.username.charAt(0) + ".");
-		customer.put("phone", "0033662627520");
-		SpaceRequest.post("/1/data/customer").userAuth(credentials).body(customer).go(201);
-
-		return credentials;
 	}
 
 	static Schema buildCustomerSchema() {
@@ -102,6 +72,18 @@ public class Caremen extends SpaceClient {
 				.build();
 	}
 
+	static Schema buildCustomerCompanySchema() {
+		return Schema.builder("customercompany") //
+
+				.acl("user", DataPermission.search)//
+				.acl("admin", DataPermission.create, DataPermission.update_all, //
+						DataPermission.delete_all, DataPermission.search)//
+
+				.string("companyId")//
+				.string("companyName")//
+				.build();
+	}
+
 	void initInstallations() {
 		SpaceRequest.delete("/1/schema/installation").adminAuth(backend).go(200, 404);
 		SpaceRequest.put("/1/schema/installation").adminAuth(backend).go(201);
@@ -121,7 +103,7 @@ public class Caremen extends SpaceClient {
 				.acl("admin", DataPermission.create, DataPermission.search, //
 						DataPermission.update_all, DataPermission.delete_all)//
 
-				.string("status").examples("requested") //
+				.string("status") //
 				.string("requestedVehiculeType").examples("classic") //
 				.timestamp("requestedPickupTimestamp").examples("2016-07-12T14:00:00.000Z") //
 				.timestamp("pickupTimestamp").examples("2016-07-12T14:00:00.000Z") //
@@ -138,6 +120,18 @@ public class Caremen extends SpaceClient {
 				.string("lastname").examples("Morgan")//
 				.string("phone").examples("+ 33 6 42 01 67 56")//
 				.close()
+
+				.object("payment")//
+				.string("companyId")//
+				.string("companyName")//
+
+				.object("stripe")//
+				.string("customerId")//
+				.string("cardId")//
+				.string("paymentId")//
+				.close()//
+
+				.close()//
 
 				.object("from")//
 				.text("address").french().examples("8 rue Titon 75011 Paris") //
@@ -253,6 +247,21 @@ public class Caremen extends SpaceClient {
 				.string("driverId")//
 				.string("status")//
 				.geopoint("where")//
+
+				.close()//
+				.build();
+	}
+
+	private Schema buildCompanySchema() {
+		return Schema.builder("company") //
+
+				.acl("admin", DataPermission.create, DataPermission.search, //
+						DataPermission.update_all, DataPermission.delete_all)//
+
+				.text("name")//
+				.text("address")//
+				.string("status")//
+				.string("vatId")//
 
 				.close()//
 				.build();
