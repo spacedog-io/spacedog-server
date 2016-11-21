@@ -11,6 +11,7 @@ public interface SpaceFieldNames {
 	public static final String UPDATED_AT = "updatedAt";
 	public static final String CREATED_AT = "createdAt";
 	public static final String SESSIONS = "sessions";
+	public static final String STASH = "stash";
 	public static final String ACCESS_TOKEN = "accessToken";
 	public static final String ACCESS_TOKEN_EXPIRES_AT = "accessTokenExpiresAt";
 	public static final String SESSIONS_ACCESS_TOKEN = SESSIONS + '.' + ACCESS_TOKEN;

@@ -84,6 +84,10 @@ public class SpaceRequestConfiguration {
 		return getProperty("spacedog.test.sendpulse.client.secret");
 	}
 
+	public String testStripeSecretKey() {
+		return getProperty("spacedog.test.stripe.secret.key");
+	}
+
 	public String cesioSuperAdminUsername() {
 		return getProperty("spacedog.cesio.superadmin.username");
 	}

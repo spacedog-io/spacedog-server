@@ -16,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
@@ -99,6 +100,7 @@ public class Credentials {
 	private boolean enabled = true;
 	private Set<String> roles;
 	private Set<Session> sessions;
+	private ObjectNode stash;
 	private String passwordResetCode;
 	private String hashedPassword;
 	private String createdAt;
@@ -283,6 +285,22 @@ public class Credentials {
 
 	public void updatedAt(String value) {
 		updatedAt = value;
+	}
+
+	public JsonNode getFromStash(String path) {
+		return stash == null ? null : Json.get(stash, path);
+	}
+
+	public void addToStash(String path, Object value) {
+		if (stash == null)
+			stash = Json.object();
+
+		Json.set(stash, path, value);
+	}
+
+	public void removeFromStash(String path) {
+		if (stash != null)
+			Json.remove(stash, path);
 	}
 
 	public boolean isBrandNew() {

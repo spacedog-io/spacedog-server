@@ -71,6 +71,8 @@ public class CredentialsResource extends Resource {
 				.string(ACCESS_TOKEN_EXPIRES_AT)//
 				.close()//
 
+				.stash(STASH)//
+
 				.build();
 
 		schema.validate();
