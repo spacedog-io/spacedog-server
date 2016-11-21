@@ -24,7 +24,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 
-import io.spacedog.utils.Backends;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.Json;
