@@ -170,7 +170,11 @@ public class SpaceClient {
 	}
 
 	public static void deleteSchema(Schema schema, Backend backend) {
-		SpaceRequest.delete("/1/schema/" + schema.name()).adminAuth(backend).go(200, 404);
+		deleteSchema(schema.name(), backend);
+	}
+
+	public static void deleteSchema(String schemaName, Backend backend) {
+		SpaceRequest.delete("/1/schema/" + schemaName).adminAuth(backend).go(200, 404);
 	}
 
 	public static void setSchema(Schema schema, Backend backend) {
