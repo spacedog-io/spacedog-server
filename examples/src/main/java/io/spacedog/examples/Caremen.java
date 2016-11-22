@@ -18,6 +18,7 @@ import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonGenerator;
 import io.spacedog.utils.Schema;
+import io.spacedog.utils.StripeSettings;
 
 public class Caremen extends SpaceClient {
 
@@ -37,6 +38,7 @@ public class Caremen extends SpaceClient {
 		// resetBackend(backend);
 		// initInstallations();
 		// initVehiculeTypes();
+		// initStripeSettings();
 
 		// setSchema(buildCourseSchema(), backend);
 		// setSchema(buildDriverSchema(), backend);
@@ -46,6 +48,12 @@ public class Caremen extends SpaceClient {
 		// setSchema(buildCompanySchema(), backend);
 
 		// createDrivers();
+	}
+
+	void initStripeSettings() {
+		StripeSettings settings = new StripeSettings();
+		settings.secretKey = SpaceRequest.configuration().testStripeSecretKey();
+		SpaceClient.saveSettings(backend, settings);
 	}
 
 	static Schema buildCustomerSchema() {
@@ -75,7 +83,7 @@ public class Caremen extends SpaceClient {
 	static Schema buildCustomerCompanySchema() {
 		return Schema.builder("customercompany") //
 
-				.acl("user", DataPermission.search)//
+				.acl("user", DataPermission.read_all)//
 				.acl("admin", DataPermission.create, DataPermission.update_all, //
 						DataPermission.delete_all, DataPermission.search)//
 
@@ -252,7 +260,7 @@ public class Caremen extends SpaceClient {
 				.build();
 	}
 
-	private Schema buildCompanySchema() {
+	Schema buildCompanySchema() {
 		return Schema.builder("company") //
 
 				.acl("admin", DataPermission.create, DataPermission.search, //
