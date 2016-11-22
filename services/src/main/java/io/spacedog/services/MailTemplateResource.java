@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 
 import com.beust.jcommander.internal.Maps;
 import com.mitchellbosecke.pebble.PebbleEngine;
-import com.mitchellbosecke.pebble.error.PebbleException;
 import com.mitchellbosecke.pebble.loader.StringLoader;
 
 import io.spacedog.services.MailResource.Message;
@@ -191,9 +190,9 @@ public class MailTemplateResource extends Resource {
 			pebble.getTemplate(propertyValue).evaluate(writer, context);
 			return writer.toString();
 
-		} catch (IOException | PebbleException e) {
+		} catch (Exception e) {
 			throw Exceptions.illegalArgument(e, //
-					"error rendering [%s] mail template property", propertyName);
+					"error rendering mail template property [%s]", propertyName);
 		}
 
 	}
