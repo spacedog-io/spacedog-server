@@ -112,6 +112,7 @@ public class SchemaResource extends Resource {
 		try {
 			Credentials credentials = SpaceContext.checkAdminCredentials();
 			Start.get().getElasticClient().deleteIndex(credentials.target(), type);
+			DataAccessControl.delete(type);
 		} catch (TypeMissingException ignored) {
 		}
 		return JsonPayload.success();

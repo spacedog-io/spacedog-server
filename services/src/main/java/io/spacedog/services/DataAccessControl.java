@@ -32,7 +32,14 @@ public class DataAccessControl {
 			schemaAcl = SchemaAcl.defaultAcl();
 
 		settings.acl.put(type, schemaAcl);
-
 		SettingsResource.get().save(settings);
 	}
+
+	public static void delete(String type) {
+
+		SchemaSettings settings = SettingsResource.get().load(SchemaSettings.class);
+		settings.acl.remove(type);
+		SettingsResource.get().save(settings);
+	}
+
 }

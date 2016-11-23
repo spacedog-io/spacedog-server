@@ -144,4 +144,32 @@ public class DataAccessControlTestOften extends Assert {
 		SpaceRequest.put("/1/data/message/vince").userAuth(vince).body("text", "Salut Vince").go(200);
 		SpaceRequest.delete("/1/data/message/vince").userAuth(vince).go(403);
 	}
+
+	@Test
+	public void deleteSchemaDeletesItsAccessControlList() {
+
+		// prepare
+		SpaceClient.prepareTest();
+		Backend test = SpaceClient.resetTestBackend();
+
+		// create message schema with simple acl
+		Schema messageSchema = Schema.builder("message")//
+				.acl("user", DataPermission.search)//
+				.text("text")//
+				.build();
+
+		SpaceClient.setSchema(messageSchema, test);
+
+		// check schema settings contains message schema acl
+		SchemaSettings settings = SpaceClient.loadSettings(test, SchemaSettings.class);
+		assertEquals(messageSchema.acl(), settings.acl.get(messageSchema.name()));
+
+		// delete message schema
+		SpaceClient.deleteSchema(messageSchema, test);
+
+		// check schema settings does not contain
+		// message schema acl anymore
+		settings = SpaceClient.loadSettings(test, SchemaSettings.class);
+		assertNull(settings.acl.get(messageSchema.name()));
+	}
 }
