@@ -61,6 +61,7 @@ public class Caremen extends SpaceClient {
 
 				.acl("user", DataPermission.create, DataPermission.search, //
 						DataPermission.update)//
+				.acl("operator", DataPermission.search)//
 				.acl("admin", DataPermission.search, DataPermission.update_all, //
 						DataPermission.delete_all)//
 
@@ -84,6 +85,8 @@ public class Caremen extends SpaceClient {
 		return Schema.builder("customercompany") //
 
 				.acl("user", DataPermission.read_all)//
+				.acl("operator", DataPermission.create, DataPermission.delete_all, //
+						DataPermission.search)//
 				.acl("admin", DataPermission.create, DataPermission.update_all, //
 						DataPermission.delete_all, DataPermission.search)//
 
@@ -108,6 +111,7 @@ public class Caremen extends SpaceClient {
 				.acl("user", DataPermission.create, DataPermission.read, //
 						DataPermission.search, DataPermission.update)//
 				.acl("driver", DataPermission.search, DataPermission.update_all)//
+				.acl("operator", DataPermission.search, DataPermission.update_all)//
 				.acl("admin", DataPermission.create, DataPermission.search, //
 						DataPermission.update_all, DataPermission.delete_all)//
 
@@ -209,6 +213,8 @@ public class Caremen extends SpaceClient {
 
 				.acl("user", DataPermission.search)//
 				.acl("driver", DataPermission.search, DataPermission.update_all)//
+				.acl("operator", DataPermission.create, DataPermission.search, //
+						DataPermission.update_all)//
 				.acl("admin", DataPermission.create, DataPermission.search, DataPermission.update_all,
 						DataPermission.delete_all)//
 
@@ -248,8 +254,7 @@ public class Caremen extends SpaceClient {
 		return Schema.builder("courselog") //
 
 				.acl("driver", DataPermission.create)//
-				.acl("admin", DataPermission.create, DataPermission.search, //
-						DataPermission.delete_all)//
+				.acl("admin", DataPermission.search, DataPermission.delete_all)//
 
 				.string("courseId")//
 				.string("driverId")//
@@ -263,6 +268,8 @@ public class Caremen extends SpaceClient {
 	Schema buildCompanySchema() {
 		return Schema.builder("company") //
 
+				.acl("operator", DataPermission.create, DataPermission.search, //
+						DataPermission.update_all)//
 				.acl("admin", DataPermission.create, DataPermission.search, //
 						DataPermission.update_all, DataPermission.delete_all)//
 
