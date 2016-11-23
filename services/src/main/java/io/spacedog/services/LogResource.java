@@ -307,7 +307,7 @@ public class LogResource extends Resource {
 				}
 			}
 		} catch (Exception e) {
-			log.set("jsonContent", Json.object("error", Json.toJson(e, true)));
+			log.set("jsonContent", Json.object("error", JsonPayload.toJson(e, true)));
 		}
 	}
 

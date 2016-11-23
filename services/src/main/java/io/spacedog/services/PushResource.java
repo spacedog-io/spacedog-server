@@ -294,7 +294,7 @@ public class PushResource extends Resource {
 
 			} catch (Exception e) {
 				failures = true;
-				logItem.set(ERROR, Json.toJson(e, SpaceContext.isDebug()));
+				logItem.set(ERROR, JsonPayload.toJson(e, SpaceContext.isDebug()));
 
 				if (e instanceof EndpointDisabledException)
 					removeEndpointQuietly(credentials.target(), hit.getId());

@@ -9,7 +9,9 @@ import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 
 import com.amazonaws.AmazonServiceException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Strings;
 
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -60,8 +62,39 @@ public class JsonPayload {
 	}
 
 	public static Payload error(int httpStatus, Throwable throwable) {
-		JsonNode errorNode = Json.toJson(throwable, SpaceContext.isDebug() || httpStatus >= 500);
+		JsonNode errorNode = toJson(throwable, SpaceContext.isDebug() || httpStatus >= 500);
 		return json(builder(httpStatus).node("error", errorNode), httpStatus);
+	}
+
+	public static JsonNode toJson(Throwable t, boolean debug) {
+		ObjectNode json = Json.object();
+
+		if (t instanceof SpaceException)
+			json.put("code", ((SpaceException) t).code());
+
+		if (!Strings.isNullOrEmpty(t.getMessage()))//
+			json.put("message", t.getMessage());
+
+		if (debug) {
+			json.put("type", t.getClass().getName());
+
+			if (t instanceof ElasticsearchException) {
+				ElasticsearchException elasticException = ((ElasticsearchException) t);
+				for (String key : elasticException.getHeaderKeys()) {
+					json.with("elastic").set(key, Json.toNode(elasticException.getHeader(key)));
+				}
+			}
+
+			ArrayNode array = json.putArray("trace");
+			for (StackTraceElement element : t.getStackTrace())
+				array.add(element.toString());
+
+		}
+
+		if (t.getCause() != null)
+			json.set("cause", toJson(t.getCause(), debug));
+
+		return json;
 	}
 
 	/**

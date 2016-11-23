@@ -11,6 +11,7 @@ import org.junit.Test;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceClient;
@@ -171,5 +172,31 @@ public class DataAccessControlTestOften extends Assert {
 		// message schema acl anymore
 		settings = SpaceClient.loadSettings(test, SchemaSettings.class);
 		assertNull(settings.acl.get(messageSchema.name()));
+	}
+
+	@Test
+	public void getDataIfAclOnNonExistingSchemaThrowsIndexNotFound() {
+
+		// prepare
+		SpaceClient.prepareTest();
+		Backend test = SpaceClient.resetTestBackend();
+
+		// set schema settings
+		// with acl for a non existing message schema
+		SchemaSettings settings = new SchemaSettings();
+		SchemaAcl messageAcl = new SchemaAcl();
+		messageAcl.put("admin", Sets.newHashSet(DataPermission.search));
+		settings.acl.put("message", messageAcl);
+		SpaceClient.saveSettings(test, settings);
+
+		// admin fails to get all data since he's got access permission to the
+		// message schema that does not exist
+		JsonNode node = SpaceRequest.get("/1/data")//
+				.debugServer().adminAuth(test).go(404)//
+				.assertPresent("error.elastic")//
+				.get("error.elastic");
+
+		// elastic index = {{backendId}}-{{type}}
+		assertEquals("test-message", node.get("es.index").get(0).asText());
 	}
 }
