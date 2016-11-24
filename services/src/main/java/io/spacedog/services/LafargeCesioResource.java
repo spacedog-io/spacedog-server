@@ -287,7 +287,7 @@ public class LafargeCesioResource extends Resource {
 		MailSettings settings = SettingsResource.get().load(MailSettings.class);
 
 		if (settings.smtp != null)
-			MailResource.get().emailViaSmtp(credentials, settings.smtp, message);
+			MailResource.get().emailViaSmtp(settings.smtp, message);
 	}
 
 	private JsonNode toLeaderboard(List<HighScore> highScores) {

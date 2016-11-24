@@ -123,15 +123,20 @@ public class MailResource extends Resource {
 		MailSettings settings = SettingsResource.get().load(MailSettings.class);
 
 		if (settings.smtp != null)
-			return emailViaSmtp(credentials, settings.smtp, message);
+			return emailViaSmtp(settings.smtp, message);
 
 		if (settings.mailgun != null)
-			return emailViaGun(credentials, settings.mailgun, message);
+			return emailViaGun(settings.mailgun, message);
 
-		// if default spacedog mailgun settings ...
-		MailGunSettings defaultMailGunSettings = new MailGunSettings();
-		defaultMailGunSettings.key = Start.get().configuration().mailGunKey();
-		defaultMailGunSettings.domain = Start.get().configuration().mailDomain();
+		// if no settings, use default ...
+		return emailWithDefaultSettings(credentials, message);
+	}
+
+	Payload emailWithDefaultSettings(Credentials credentials, Message message) {
+
+		MailGunSettings settings = new MailGunSettings();
+		settings.key = Start.get().configuration().mailGunKey();
+		settings.domain = Start.get().configuration().mailDomain();
 
 		// ... add a footer to the message
 		if (!Strings.isNullOrEmpty(message.text))
@@ -139,16 +144,18 @@ public class MailResource extends Resource {
 		if (!Strings.isNullOrEmpty(message.html))
 			message.html = addFooterToHtmlMessage(message.html, credentials.target());
 
-		return emailViaGun(credentials, defaultMailGunSettings, message);
+		// force the from
+		message.from = credentials.target().toUpperCase() + " <no-reply@" + settings.domain + ">";
+
+		return emailViaGun(settings, message);
 	}
 
-	Payload emailViaGun(Credentials credentials, MailGunSettings settings, Message message) {
-		message.from = credentials.target().toUpperCase() + " <no-reply@" + settings.domain + ">";
+	Payload emailViaGun(MailGunSettings settings, Message message) {
 		ObjectNode response = mailgun(message, settings);
 		return JsonPayload.json(response, response.get("status").asInt());
 	}
 
-	Payload emailViaSmtp(Credentials credentials, SmtpSettings settings, Message message) {
+	Payload emailViaSmtp(SmtpSettings settings, Message message) {
 
 		Email email = null;
 
