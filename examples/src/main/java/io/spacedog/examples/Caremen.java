@@ -128,6 +128,7 @@ public class Caremen extends SpaceClient {
 				.string("customerId")//
 				.object("customer")//
 				.string("id")//
+				.string("credentialsId")//
 				.string("firstname").examples("Robert")//
 				.string("lastname").examples("Morgan")//
 				.string("phone").examples("+ 33 6 42 01 67 56")//
@@ -157,6 +158,7 @@ public class Caremen extends SpaceClient {
 
 				.object("driver")//
 				.string("driverId").examples("robert")//
+				.string("credentialsId")//
 				.floatt("gain").examples("10.23")//
 				.string("firstname").examples("Robert")//
 				.string("lastname").examples("Morgan")//
