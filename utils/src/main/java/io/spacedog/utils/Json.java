@@ -12,13 +12,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.joda.time.DateTime;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.DefaultIndenter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.DoubleNode;
@@ -28,6 +27,7 @@ import com.fasterxml.jackson.databind.node.LongNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import com.fasterxml.jackson.databind.node.ValueNode;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -248,7 +248,8 @@ public class Json {
 				.setDefaultPrettyPrinter(new DefaultPrettyPrinter()//
 						.withArrayIndenter(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE))//
 				.registerModule(new JodaModule())//
-				.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+				.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)//
+				.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 	}
 
 	public static Object toValue(JsonNode value) {
@@ -279,10 +280,15 @@ public class Json {
 	}
 
 	public static JsonNode toNode(Object value) {
+		return mapper().valueToTree(value);
+	}
+
+	public static ValueNode toValueNode(Object value) {
+
 		if (value == null)
 			return NullNode.instance;
-		if (value instanceof JsonNode)
-			return (JsonNode) value;
+		if (value instanceof ValueNode)
+			return (ValueNode) value;
 		if (value instanceof Boolean)
 			return BooleanNode.valueOf((boolean) value);
 		else if (value instanceof Integer)
@@ -293,17 +299,8 @@ public class Json {
 			return DoubleNode.valueOf((double) value);
 		else if (value instanceof Float)
 			return FloatNode.valueOf((float) value);
-		else if (value instanceof String)
-			return TextNode.valueOf((String) value);
-		else if (value instanceof DateTime)
-			return TextNode.valueOf(value.toString());
-		else if (value.getClass().isArray())
-			return toArrayNode(value);
-		else if (value instanceof Collection<?>)
-			return toCollectionNode((Collection<?>) value);
 
-		throw Exceptions.illegalArgument("invalid value type [%s]", //
-				value.getClass().getSimpleName());
+		return TextNode.valueOf(value.toString());
 	}
 
 	public static ArrayNode toArrayNode(Object array) {
@@ -339,6 +336,28 @@ public class Json {
 		case Object:
 			return node.isObject();
 		case Array:
+			return node.isArray();
+		default:
+			return false;
+		}
+	}
+
+	public static <T> boolean isOfType(Class<T> expected, JsonNode node) {
+
+		switch (expected.getSimpleName()) {
+		case "String":
+			return node.isTextual();
+		case "Boolean":
+			return node.isBoolean();
+		case "Long":
+			return node.isLong();
+		case "Float":
+			return node.isFloat();
+		case "Double":
+			return node.isDouble();
+		case "Object":
+			return node.isObject();
+		case "List":
 			return node.isArray();
 		default:
 			return false;
@@ -414,25 +433,16 @@ public class Json {
 		return Optional.of(node);
 	}
 
-	public static void checkPresent(ObjectNode jsonBody, String propertyPath) {
-		if (Json.isNull(get(jsonBody, propertyPath)))
-			throw Exceptions.illegalArgument(//
-					"JSON object does not contain this property [%s]", propertyPath);
+	public static JsonNode checkNotNull(ObjectNode jsonBody, String propertyPath) {
+		JsonNode value = get(jsonBody, propertyPath);
+		if (Json.isNull(value))
+			throw Exceptions.illegalArgument("field [%s] is null", propertyPath);
+		return value;
 	}
 
-	public static void checkNotPresent(JsonNode input, String propertyPath, String type) {
-		JsonNode node = get(input, propertyPath);
-		if (node != null)
-			throw Exceptions.illegalArgument(//
-					"property [%s] is forbidden in type [%s]", propertyPath, type);
-	}
-
-	public static String checkString(JsonNode node) {
-		if (node == null)
-			return null;
-		if (!node.isTextual())
-			throw Exceptions.runtime("json node [%s] not a string", node);
-		return node.asText();
+	public static void checkNull(JsonNode input, String propertyPath) {
+		if (get(input, propertyPath) != null)
+			throw Exceptions.illegalArgument("field [%s] is forbidden", propertyPath);
 	}
 
 	public static String checkStringNotNullOrEmpty(JsonNode input, String propertyPath) {
@@ -502,4 +512,51 @@ public class Json {
 					"property [%s] must be of type [%s] instead of [%s]", //
 					propertyPath, expected, node.getNodeType());
 	}
+
+	//
+	// JsonNode check helpers
+	//
+
+	public static String checkString(JsonNode node) {
+		if (node == null)
+			return null;
+		if (!node.isTextual())
+			throw Exceptions.illegalArgument("json node [%s] not a string", node);
+		return node.asText();
+	}
+
+	public static String checkBoolean(JsonNode node) {
+		if (node == null)
+			return null;
+		if (!node.isBoolean())
+			throw Exceptions.illegalArgument("json node [%s] not a boolean", node);
+		return node.asText();
+	}
+
+	public static Double checkDouble(JsonNode node) {
+		if (node == null)
+			return null;
+		if (!node.isDouble())
+			throw Exceptions.illegalArgument("json node [%s] not a double", node);
+		return node.asDouble();
+	}
+
+	public static JsonNode checkNotNull(JsonNode node) {
+		if (node == null || node.isNull())
+			throw Exceptions.illegalArgument("json node is null");
+		return node;
+	}
+
+	private static <T> T checkType(JsonNode node, Class<T> type) {
+		if (node == null)
+			return null;
+		if (!isOfType(type, node))
+			throw Exceptions.illegalArgument("json node [%s] not a [%s]", node, type.getSimpleName());
+		try {
+			return mapper().treeToValue(node, type);
+		} catch (JsonProcessingException e) {
+			throw Exceptions.runtime(e);
+		}
+	}
+
 }

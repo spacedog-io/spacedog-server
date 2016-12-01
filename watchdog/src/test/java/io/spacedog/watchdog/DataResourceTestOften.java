@@ -7,7 +7,7 @@ import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceClient.Backend;
@@ -27,7 +27,7 @@ public class DataResourceTestOften extends Assert {
 		SpaceClient.setSchema(SchemaResourceTestOften.buildCarSchema(), test);
 		SpaceClient.User vince = SpaceClient.signUp(test, "vince", "hi vince");
 
-		JsonNode car = Json.objectBuilder() //
+		ObjectNode car = Json.objectBuilder() //
 				.put("serialNumber", "1234567890") //
 				.put("buyDate", "2015-01-09") //
 				.put("buyTime", "15:37:00") //

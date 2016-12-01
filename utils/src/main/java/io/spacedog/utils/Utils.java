@@ -83,8 +83,12 @@ public class Utils {
 				|| c == '6' || c == '7' || c == '8' || c == '9';
 	}
 
-	public static <E> boolean isNullOrEmpty(Collection<E> c) {
-		return c == null || c.isEmpty();
+	public static <T> boolean isNullOrEmpty(Collection<T> collection) {
+		return collection == null || collection.isEmpty();
+	}
+
+	public static <T> boolean isNullOrEmpty(T[] array) {
+		return array == null || array.length == 0;
 	}
 
 	public static void info() {

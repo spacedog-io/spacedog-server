@@ -45,16 +45,40 @@ public class SearchResourceTestOften extends Assert {
 		SpaceRequest.post("/1/data/message").adminAuth(test)//
 				.body("text", "wanna drink something?").go(201);
 		SpaceRequest.post("/1/data/message").adminAuth(test)//
-				.body("text", "pretty cool, hein?").go(201);
+				.body("text", "pretty cool something, hein?").go(201);
 		SpaceRequest.post("/1/data/message").adminAuth(test)//
 				.body("text", "so long guys").go(201);
 
 		SpaceRequest.get("/1/data").refresh().adminAuth(test).go(200)//
 				.assertEquals(5, "total");
 
+		// search for messages with full text query
+		ObjectNode query = Json.objectBuilder()//
+				.object("query").object("match").put("text", "something to drink")//
+				.build();
+
+		ObjectNode results = SpaceRequest.post("/1/search")//
+				.debugServer().adminAuth(test).body(query).go(200)//
+				.assertEquals("wanna drink something?", "results.0.text")//
+				.assertEquals("pretty cool something, hein?", "results.1.text")//
+				.objectNode();
+
+		// check search scores
+		assertTrue(Json.checkDouble(Json.get(results, "results.0.meta.score")) > 1);
+		assertTrue(Json.checkDouble(Json.get(results, "results.1.meta.score")) < 1);
+
+		// check all meta are there
+		assertNotNull(Json.get(results, "results.0.meta.id"));
+		assertNotNull(Json.get(results, "results.0.meta.type"));
+		assertNotNull(Json.get(results, "results.0.meta.version"));
+		assertNotNull(Json.get(results, "results.0.meta.createdBy"));
+		assertNotNull(Json.get(results, "results.0.meta.createdAt"));
+		assertNotNull(Json.get(results, "results.0.meta.updatedBy"));
+		assertNotNull(Json.get(results, "results.0.meta.updatedAt"));
+
 		// deletes messages containing 'up' by query
 
-		ObjectNode query = Json.objectBuilder().object("query")//
+		query = Json.objectBuilder().object("query")//
 				.object("match").put("text", "up").build();
 		SpaceRequest.delete("/1/search/message").adminAuth(test).body(query).go(200);
 		SpaceRequest.get("/1/data/message").refresh().adminAuth(test).go(200)//
@@ -110,4 +134,50 @@ public class SearchResourceTestOften extends Assert {
 
 	}
 
+	@Test
+	public void sortSearchResults() {
+
+		// prepare
+		SpaceClient.prepareTest();
+		Backend test = SpaceClient.resetTestBackend();
+
+		SpaceClient.setSchema(//
+				Schema.builder("number").integer("i").string("t").build(), //
+				test);
+
+		// creates 5 numbers
+		for (int i = 0; i < 3; i++)
+			SpaceRequest.post("/1/data/number").adminAuth(test)//
+					.body("i", i, "t", "" + i).go(201);
+
+		// search with ascendent sorting
+		ObjectNode query = Json.objectBuilder()//
+				.array("sort").add("i").end()//
+				.object("query").object("match_all")//
+				.build();
+
+		SpaceRequest.post("/1/search").refresh()//
+				.adminAuth(test).body(query).go(200)//
+				.assertEquals(0, "results.0.i")//
+				.assertEquals(0, "results.0.meta.sort.0")//
+				.assertEquals(1, "results.1.i")//
+				.assertEquals(1, "results.1.meta.sort.0")//
+				.assertEquals(2, "results.2.i")//
+				.assertEquals(2, "results.2.meta.sort.0");
+
+		// search with descendant sorting
+		query = Json.objectBuilder()//
+				.array("sort").object().put("t", "desc").end().end()//
+				.object("query").object("match_all")//
+				.build();
+
+		SpaceRequest.post("/1/search").refresh()//
+				.adminAuth(test).body(query).go(200)//
+				.assertEquals(2, "results.0.i")//
+				.assertEquals("2", "results.0.meta.sort.0")//
+				.assertEquals(1, "results.1.i")//
+				.assertEquals("1", "results.1.meta.sort.0")//
+				.assertEquals(0, "results.2.i")//
+				.assertEquals("0", "results.2.meta.sort.0");
+	}
 }

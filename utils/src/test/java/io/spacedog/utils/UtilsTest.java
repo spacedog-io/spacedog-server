@@ -6,6 +6,7 @@ package io.spacedog.utils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -30,10 +31,17 @@ public class UtilsTest extends Assert {
 
 	@Test
 	public void checkNullOrEmptyCollections() {
-		assertTrue(Utils.isNullOrEmpty(null));
+		assertTrue(Utils.isNullOrEmpty((List<String>) null));
 		assertTrue(Utils.isNullOrEmpty(new ArrayList<>()));
 		assertTrue(Utils.isNullOrEmpty(new HashSet<>()));
 		assertFalse(Utils.isNullOrEmpty(Arrays.asList("toto")));
+	}
+
+	@Test
+	public void checkNullOrEmptyArrays() {
+		assertTrue(Utils.isNullOrEmpty((Object[]) null));
+		assertTrue(Utils.isNullOrEmpty(new String[0]));
+		assertFalse(Utils.isNullOrEmpty(new String[1]));
 	}
 
 	@Test

@@ -169,7 +169,8 @@ public class SpaceResponse {
 	}
 
 	public SpaceResponse assertEquals(String expected, String jsonPath) {
-		Assert.assertEquals(expected, Json.get(jsonResponseContent, jsonPath).textValue());
+		Assert.assertEquals(expected, Json.checkString(//
+				Json.checkNotNull(Json.get(jsonResponseContent, jsonPath))));
 		return this;
 	}
 
@@ -215,8 +216,9 @@ public class SpaceResponse {
 		return this;
 	}
 
-	public SpaceResponse assertEqualsWithoutMeta(JsonNode expected) {
-		Assert.assertEquals(expected, objectNode().deepCopy().without("meta"));
+	public SpaceResponse assertEqualsWithoutMeta(ObjectNode expected) {
+		Assert.assertEquals(expected.deepCopy().without("meta"), //
+				objectNode().deepCopy().without("meta"));
 		return this;
 	}
 

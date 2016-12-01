@@ -23,6 +23,7 @@ import org.elasticsearch.search.aggregations.InternalAggregations;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
@@ -33,6 +34,7 @@ import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceParams;
+import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -182,9 +184,27 @@ public class SearchResource extends Resource {
 
 		List<JsonNode> objects = new ArrayList<>();
 		for (SearchHit hit : response.getHits().getHits()) {
-			ObjectNode object = Json.readObject(hit.sourceAsString());
 
-			object.with("meta").put("id", hit.id()).put("type", hit.type()).put("version", hit.version());
+			// check if source is null is necessary
+			// when the data is not requested
+			// fetch-source = false for GET requests
+			// or _source = false for POST requests
+			String source = hit.sourceAsString();
+			ObjectNode object = source == null ? Json.object() : Json.readObject(source);
+
+			ObjectNode meta = object.with("meta");
+			meta.put("id", hit.id()).put("type", hit.type()).put("version", hit.version());
+
+			if (Float.isFinite(hit.score()))
+				meta.put("score", hit.score());
+
+			if (!Utils.isNullOrEmpty(hit.sortValues())) {
+				ArrayNode array = Json.array();
+				for (Object value : hit.sortValues())
+					array.add(Json.toValueNode(value));
+				meta.set("sort", array);
+			}
+
 			objects.add(object);
 
 			if (fetchReferences)

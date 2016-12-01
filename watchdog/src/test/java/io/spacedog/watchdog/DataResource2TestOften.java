@@ -78,7 +78,8 @@ public class DataResource2TestOften extends Assert {
 
 		// find by id
 
-		SpaceResponse res1 = SpaceRequest.get("/1/data/sale/" + id).userAuth(fred).go(200)//
+		SpaceResponse res1 = SpaceRequest.get("/1/data/sale/" + id)//
+				.userAuth(fred).go(200)//
 				.assertEquals("fred", "meta.createdBy")//
 				.assertEquals("fred", "meta.updatedBy")//
 				.assertEquals(1, "meta.version")//
@@ -117,7 +118,7 @@ public class DataResource2TestOften extends Assert {
 		SpaceResponse res1b = SpaceRequest.get("/1/search/sale?q=museum")//
 				.refresh().userAuth(fred).go(200).assertEquals(1, "total");
 
-		res1.assertEquals(res1b.get("results.0"));
+		res1.assertEqualsWithoutMeta(Json.checkObject(res1b.get("results.0")));
 
 		// find by advanced text search
 
@@ -130,7 +131,7 @@ public class DataResource2TestOften extends Assert {
 		SpaceResponse res1c = SpaceRequest.post("/1/search/sale")//
 				.userAuth(fred).body(query).go(200).assertEquals(1, "total");
 
-		res1.assertEquals(res1c.get("results.0"));
+		res1.assertEqualsWithoutMeta(Json.checkObject(res1c.get("results.0")));
 
 		// small update no version should succeed
 
