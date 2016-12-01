@@ -4,7 +4,6 @@
 package io.spacedog.services;
 
 import org.joda.time.DateTime;
-import org.junit.Test;
 
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
@@ -13,7 +12,6 @@ import io.spacedog.utils.SendPulseSettings;
 
 public class SendPulseResourceTest extends SpaceClient {
 
-	@Test
 	public void testSendPulseResource() {
 
 		// this must come before preparing the test
