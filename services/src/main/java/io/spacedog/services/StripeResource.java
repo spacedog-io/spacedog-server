@@ -39,19 +39,15 @@ public class StripeResource extends Resource {
 
 		StripeSettings settings = SettingsResource.get().load(StripeSettings.class);
 
-		ObjectNode node = Json.readObject(body);
-		String sourceToken = Json.checkStringNotNullOrEmpty(node, "source");
-
 		SpaceResponse response = SpaceRequest
 				.post(//
 						"https://api.stripe.com/v1/customers")//
 				.basicAuth("", settings.secretKey, "")//
 				.formField("email", credentials.email().get())//
-				.formField("source", sourceToken)//
 				.go();
 
 		checkStripeError(response);
-		setStripeCustomerId(credentials, response.getString("id"));
+		updateStripeCustomerId(credentials, response.getString("id"));
 		return JsonPayload.json(response.objectNode(), 201);
 	}
 
@@ -81,6 +77,8 @@ public class StripeResource extends Resource {
 		String customerId = getStripeCustomerId(credentials);
 		StripeSettings settings = SettingsResource.get().load(StripeSettings.class);
 
+		removeStripeCustomerId(credentials);
+
 		SpaceResponse response = SpaceRequest
 				.delete(//
 						"https://api.stripe.com/v1/customers/{customerId}")//
@@ -98,17 +96,20 @@ public class StripeResource extends Resource {
 		Credentials credentials = SpaceContext.checkUserCredentials();
 		String customerId = getStripeCustomerId(credentials);
 		ObjectNode node = Json.readObject(body);
-		String sourceToken = Json.checkStringNotNullOrEmpty(node, "source");
 		StripeSettings settings = SettingsResource.get().load(StripeSettings.class);
+		String sourceToken = Json.checkStringNotNullOrEmpty(node, "source");
 
-		SpaceResponse response = SpaceRequest
+		SpaceRequest request = SpaceRequest
 				.post(//
 						"https://api.stripe.com/v1/customers/{customerId}/sources")//
 				.basicAuth("", settings.secretKey, "")//
 				.routeParam("customerId", customerId)//
-				.formField("source", sourceToken)//
-				.go();
+				.formField("source", sourceToken);
 
+		Json.checkString(node, "description").ifPresent(//
+				description -> request.formField("metadata[description]", description));
+
+		SpaceResponse response = request.go();
 		checkStripeError(response);
 		return JsonPayload.json(response.objectNode(), 201);
 	}
@@ -163,9 +164,13 @@ public class StripeResource extends Resource {
 				credentials.level(), credentials.name());
 	}
 
-	private void setStripeCustomerId(Credentials credentials, String stripeCustomerId) {
-
+	private void updateStripeCustomerId(Credentials credentials, String stripeCustomerId) {
 		credentials.addToStash(CREDENTIALS_STASH_STRIPE_CUSTOMER_ID, stripeCustomerId);
+		CredentialsResource.get().update(credentials);
+	}
+
+	private void removeStripeCustomerId(Credentials credentials) {
+		credentials.removeFromStash(CREDENTIALS_STASH_STRIPE_CUSTOMER_ID);
 		CredentialsResource.get().update(credentials);
 	}
 

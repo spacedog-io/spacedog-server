@@ -19,7 +19,6 @@ import com.stripe.model.Token;
 
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
-import io.spacedog.utils.Json;
 import io.spacedog.utils.StripeSettings;
 
 public class StripeResourceTest extends SpaceClient {
@@ -47,9 +46,10 @@ public class StripeResourceTest extends SpaceClient {
 		// david creates his stripe customer with his card token
 		ObjectNode stripeCustomer = SpaceRequest.post("/1/stripe/customers")//
 				.userAuth(david)//
-				.body("source", createCardToken().getId())//
 				.go(201)//
 				.assertEquals("customer", "object")//
+				.assertEquals("david@spacedog.io", "email")//
+				.assertSizeEquals(0, "sources.data")//
 				.objectNode();
 
 		// david fails to create another stripe customer
@@ -64,25 +64,67 @@ public class StripeResourceTest extends SpaceClient {
 				.go(200)//
 				.assertEquals(stripeCustomer);
 
+		// david registers a first card
+		String bnpCardId = SpaceRequest.post("/1/stripe/customers/me/sources")//
+				.body("source", createCardToken().getId(), //
+						"description", "bnp")//
+				.userAuth(david).go(201)//
+				.assertEquals("bnp", "metadata.description")//
+				.getString("id");
+
+		// check david has a bnp card
+		SpaceRequest.get("/1/stripe/customers/me")//
+				.userAuth(david)//
+				.go(200)//
+				.assertEquals("david@spacedog.io", "email")//
+				.assertSizeEquals(1, "sources.data")//
+				.assertEquals(bnpCardId, "sources.data.0.id")//
+				.assertEquals("bnp", "sources.data.0.metadata.description");
+
 		// TODO charge the card a first time
 
 		// david deletes his card from his stripe customer account
-		String cardId = Json.get(stripeCustomer, "sources.data.0.id").asText();
-		SpaceRequest.delete("/1/stripe/customers/me/sources/" + cardId)//
+		SpaceRequest.delete("/1/stripe/customers/me/sources/" + bnpCardId)//
 				.userAuth(david).go(200);
 
+		// check david has no card anymore
+		SpaceRequest.get("/1/stripe/customers/me")//
+				.userAuth(david)//
+				.go(200)//
+				.assertSizeEquals(0, "sources.data");
+
 		// david deletes again his card to gets 404
-		SpaceRequest.delete("/1/stripe/customers/me/sources/" + cardId)//
+		SpaceRequest.delete("/1/stripe/customers/me/sources/" + bnpCardId)//
 				.userAuth(david).go(404);
 
 		// david creates another card
 		SpaceRequest.post("/1/stripe/customers/me/sources")//
-				.body("source", createCardToken().getId())//
-				.userAuth(david).go(201);
+				.body("source", createCardToken().getId(), //
+						"description", "lcl")//
+				.userAuth(david).go(201)//
+				.assertEquals("lcl", "metadata.description");
+
+		// check david has an lcl card
+		SpaceRequest.get("/1/stripe/customers/me")//
+				.userAuth(david)//
+				.go(200)//
+				.assertEquals("david@spacedog.io", "email")//
+				.assertSizeEquals(1, "sources.data")//
+				.assertEquals("lcl", "sources.data.0.metadata.description");
 
 		// david deletes his stripe customer account
 		SpaceRequest.delete("/1/stripe/customers/me")//
 				.userAuth(david).go(200);
+
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		// check david's stripe customer account is gone
+		SpaceRequest.get("/1/stripe/customers/me")//
+				.userAuth(david).go(404);
 	}
 
 	Token createCardToken() throws AuthenticationException, InvalidRequestException, APIConnectionException,
