@@ -4,7 +4,6 @@
 package io.spacedog.services;
 
 import java.io.ByteArrayInputStream;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.activation.MimetypesFileTypeMap;
@@ -45,22 +44,21 @@ public class S3Resource extends Resource {
 		s3.setRegion(Region.getRegion(Regions.fromName(Start.get().configuration().awsRegion())));
 	}
 
-	public Optional<Payload> doGet(String bucketSuffix, String backendId, String[] path, Context context) {
+	public Payload doGet(String bucketSuffix, String backendId, String[] path, Context context) {
 		return doGet(bucketSuffix, backendId, path, context, false);
 	}
 
-	public Optional<Payload> doGet(String bucketSuffix, String backendId, String[] path, Context context,
+	public Payload doGet(String bucketSuffix, String backendId, String[] path, Context context,
 			boolean checkOwnership) {
 		return doGet(true, bucketSuffix, backendId, path, context, checkOwnership);
 	}
 
-	public Optional<Payload> doGet(boolean withContent, String bucketSuffix, String backendId, String[] path,
-			Context context) {
+	public Payload doGet(boolean withContent, String bucketSuffix, String backendId, String[] path, Context context) {
 		return doGet(withContent, bucketSuffix, backendId, path, context, false);
 	}
 
-	private Optional<Payload> doGet(boolean withContent, String bucketSuffix, String backendId, String[] path,
-			Context context, boolean checkOwnership) {
+	private Payload doGet(boolean withContent, String bucketSuffix, String backendId, String[] path, Context context,
+			boolean checkOwnership) {
 
 		String bucketName = getBucketName(bucketSuffix);
 		String s3Key = S3Key.get(backendId).add(path).toString();
@@ -84,7 +82,7 @@ public class S3Resource extends Resource {
 
 			// 404 is OK
 			if (e.getStatusCode() == 404)
-				return Optional.empty();
+				return Payload.notFound();
 
 			throw e;
 		}
@@ -97,7 +95,7 @@ public class S3Resource extends Resource {
 			payload = payload.withHeader(SpaceHeaders.CONTENT_DISPOSITION, //
 					metadata.getContentDisposition());
 
-		return Optional.of(payload);
+		return payload;
 	}
 
 	public Payload doList(String bucketSuffix, String backendId, String[] path, Context context) {

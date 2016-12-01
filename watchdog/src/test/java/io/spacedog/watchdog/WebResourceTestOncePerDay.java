@@ -6,12 +6,11 @@ import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.SpaceHeaders;
+import io.spacedog.utils.WebSettings;
 import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
 @TestOncePerDay
 public class WebResourceTestOncePerDay {
-
-	private static final String HTML_404 = "<h1>404</h1>";
 
 	private static Backend test;
 
@@ -46,14 +45,29 @@ public class WebResourceTestOncePerDay {
 		browse("www", "/a/b/", html("/a/b/index.html"));
 
 		// admin uploads custom 404.html file to 'www'
-		upload("www", "/404.html", HTML_404);
+		// '/404.html' is the default not found path
+		upload("www", "/404.html");
 
-		// if user browses invalid 'www' URIs
-		// the server returns 'www' custom 404 file
-		notFound("www", "/index");
-		notFound("www", "/c");
-		notFound("www", "/a/");
-		notFound("www", "/a/b/c/index.html");
+		// if user browses invalid URIs
+		// the server returns the default not found path
+		// i.e. the /404.html page with status code 200
+		browse("www", "/index", html("/404.html"));
+		browse("www", "/c", html("/404.html"));
+		browse("www", "/a/", html("/404.html"));
+		browse("www", "/a/b/c/index.html", html("/404.html"));
+
+		// changes the not found path to /index.html
+		WebSettings settings = new WebSettings();
+		settings.notFoundPage = "/index.html";
+		SpaceClient.saveSettings(test, settings);
+
+		// if user browses invalid URIs
+		// the server returns the not found path
+		// i.e. the /index.html page with status code 200
+		browse("www", "/index", html("/index.html"));
+		browse("www", "/c", html("/index.html"));
+		browse("www", "/a/", html("/index.html"));
+		browse("www", "/a/b/c/index.html", html("/index.html"));
 
 		// browse without prefix returns default not found html page
 		SpaceRequest.get("/1/web").backend(test).go(404)//
@@ -94,15 +108,5 @@ public class WebResourceTestOncePerDay {
 		SpaceRequest.get(uri).www(test).go(200)//
 				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE)//
 				.assertBodyEquals(expectedBody);
-	}
-
-	private void notFound(String prefix, String uri) {
-		SpaceRequest.get("/1/web/" + prefix + uri).backend(test).go(404)//
-				.assertHeaderEquals("text/html", SpaceHeaders.CONTENT_TYPE)//
-				.assertBodyEquals(HTML_404);
-
-		SpaceRequest.get(uri).www(test).go(404)//
-				.assertHeaderEquals("text/html", SpaceHeaders.CONTENT_TYPE)//
-				.assertBodyEquals(HTML_404);
 	}
 }

@@ -3,15 +3,15 @@
  */
 package io.spacedog.services;
 
-import java.util.Optional;
+import org.elasticsearch.common.Strings;
 
 import com.google.common.collect.ObjectArrays;
 import com.mashape.unirest.http.HttpMethod;
 
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Uris;
+import io.spacedog.utils.WebSettings;
 import net.codestory.http.Context;
-import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.filters.PayloadSupplier;
 import net.codestory.http.payload.Payload;
 
@@ -67,23 +67,25 @@ public class WebResource extends S3Resource {
 
 		if (path.length > 0) {
 
-			Optional<Payload> payload = doGet(withContent, FileResource.FILE_BUCKET_SUFFIX, //
+			Payload payload = doGet(withContent, FileResource.FILE_BUCKET_SUFFIX, //
 					backendId, path, context);
 
-			if (payload.isPresent())
-				return payload.get();
+			if (payload.isSuccess())
+				return payload;
 
 			payload = doGet(withContent, FileResource.FILE_BUCKET_SUFFIX, backendId,
 					ObjectArrays.concat(path, "index.html"), context);
 
-			if (payload.isPresent())
-				return payload.get();
+			if (payload.isSuccess())
+				return payload;
 
-			payload = doGet(withContent, FileResource.FILE_BUCKET_SUFFIX, backendId, //
-					new String[] { path[0], "404.html" }, context);
+			WebSettings settings = SettingsResource.get().load(WebSettings.class);
 
-			if (payload.isPresent())
-				return payload.get().withCode(HttpStatus.NOT_FOUND);
+			if (!Strings.isNullOrEmpty(settings.notFoundPage))
+				payload = doGet(withContent, FileResource.FILE_BUCKET_SUFFIX, backendId, //
+						ObjectArrays.concat(path[0], Uris.split(settings.notFoundPage)), context);
+
+			return payload;
 		}
 
 		return Payload.notFound();
@@ -109,5 +111,6 @@ public class WebResource extends S3Resource {
 	}
 
 	private WebResource() {
+		SettingsResource.get().registerSettingsClass(WebSettings.class);
 	}
 }

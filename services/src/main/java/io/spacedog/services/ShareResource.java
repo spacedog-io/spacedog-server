@@ -3,7 +3,6 @@
  */
 package io.spacedog.services;
 
-import java.util.Optional;
 import java.util.UUID;
 
 import io.spacedog.utils.Credentials;
@@ -17,7 +16,6 @@ import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.annotations.Put;
-import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/1/share")
@@ -43,10 +41,8 @@ public class ShareResource extends S3Resource {
 		boolean checkOwnership = checkPermissionAndIsOwnershipRequired(//
 				DataPermission.read, DataPermission.read_all);
 
-		Optional<Payload> payload = doGet(SHARE_BUCKET_SUFFIX, SpaceContext.target(), //
+		return doGet(SHARE_BUCKET_SUFFIX, SpaceContext.target(), //
 				Uris.toPath(uuid, fileName), context, checkOwnership);
-
-		return payload.isPresent() ? payload.get() : JsonPayload.error(HttpStatus.NOT_FOUND);
 	}
 
 	@Post("/:fileName")

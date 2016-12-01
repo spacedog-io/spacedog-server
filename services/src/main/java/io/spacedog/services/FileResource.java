@@ -3,8 +3,6 @@
  */
 package io.spacedog.services;
 
-import java.util.Optional;
-
 import com.mashape.unirest.http.HttpMethod;
 
 import io.spacedog.utils.Credentials;
@@ -59,10 +57,10 @@ public class FileResource extends S3Resource {
 
 	Payload get(String[] path, Context context) {
 		Credentials credentials = SpaceContext.getCredentials();
-		Optional<Payload> payload = doGet(FILE_BUCKET_SUFFIX, credentials.target(), path, context);
+		Payload payload = doGet(FILE_BUCKET_SUFFIX, credentials.target(), path, context);
 
-		if (payload.isPresent())
-			return payload.get();
+		if (payload.isSuccess())
+			return payload;
 
 		return doList(FILE_BUCKET_SUFFIX, credentials.target(), path, context);
 	}
