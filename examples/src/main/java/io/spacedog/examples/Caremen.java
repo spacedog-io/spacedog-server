@@ -8,8 +8,11 @@ import java.util.Random;
 
 import org.junit.Test;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
@@ -17,6 +20,7 @@ import io.spacedog.client.SpaceTarget;
 import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonGenerator;
+import io.spacedog.utils.MailTemplate;
 import io.spacedog.utils.Schema;
 import io.spacedog.utils.StripeSettings;
 
@@ -30,7 +34,7 @@ public class Caremen extends SpaceClient {
 	private Random random = new Random();
 
 	@Test
-	public void initCaremenBackend() {
+	public void initCaremenBackend() throws JsonProcessingException {
 
 		backend = DEV;
 		SpaceRequest.configuration().target(SpaceTarget.production);
@@ -39,6 +43,7 @@ public class Caremen extends SpaceClient {
 		// initInstallations();
 		// initVehiculeTypes();
 		// initStripeSettings();
+		// initMailTemplates();
 
 		// setSchema(buildCourseSchema(), backend);
 		// setSchema(buildDriverSchema(), backend);
@@ -48,6 +53,21 @@ public class Caremen extends SpaceClient {
 		// setSchema(buildCompanySchema(), backend);
 
 		// createDrivers();
+		// createOperators();
+	}
+
+	void initMailTemplates() throws JsonProcessingException {
+		MailTemplate template = new MailTemplate();
+		template.to = Lists.newArrayList("{{to}}");
+		template.subject = "Vous pouvez maintenant payer vos courses Caremen sur le compte de {{company.name}}";
+		template.text = "coucou";
+		template.model = Maps.newHashMap();
+		template.model.put("to", "string");
+		template.model.put("company", "company");
+		template.roles = new String[] { "operator" };
+
+		SpaceRequest.put("/1/mail/template/notif_customer_company").adminAuth(backend)//
+				.body(Json.mapper().writeValueAsString(template)).go(200);
 	}
 
 	void initStripeSettings() {
@@ -176,6 +196,30 @@ public class Caremen extends SpaceClient {
 
 				.close()//
 				.build();
+	}
+
+	void createOperators() {
+
+		createOperator("nico", "nicola.lonzi@gmail.com");
+		createOperator("dimitri", "dimitri.valax@in-tact.fr");
+		createOperator("david", "david@spacedog.io");
+		createOperator("philippe", "philippe.rolland@in-tact.fr");
+		createOperator("flav", "flavien.dibello@in-tact.fr");
+	}
+
+	void createOperator(String username, String email) {
+		String password = "hi " + username;
+
+		JsonNode node = SpaceRequest.get("/1/credentials")//
+				.adminAuth(backend).queryParam("username", username).go(200)//
+				.get("results.0.id");
+
+		if (node == null) {
+			User credentials = SpaceClient.createAdminCredentials(//
+					backend, username, password, email);
+			SpaceRequest.put("/1/credentials/" + credentials.id + "/roles/operator")//
+					.adminAuth(backend).go(200);
+		}
 	}
 
 	void createDrivers() {

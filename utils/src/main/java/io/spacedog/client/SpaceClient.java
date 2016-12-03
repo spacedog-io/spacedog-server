@@ -6,6 +6,7 @@ import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.utils.Json;
 import io.spacedog.utils.Schema;
 import io.spacedog.utils.Settings;
 import io.spacedog.utils.SpaceParams;
@@ -90,11 +91,22 @@ public class SpaceClient {
 	}
 
 	public static User createCredentials(String backendId, String username, String password, String email) {
-		String id = SpaceRequest.post("/1/credentials").backendId(backendId)
+
+		String id = SpaceRequest.post("/1/credentials").backendId(backendId)//
 				.body("username", username, "password", password, "email", email)//
 				.go(201).getString("id");
 
 		return new User(backendId, id, username, password, email);
+	}
+
+	public static User createAdminCredentials(Backend backend, String username, String password, String email) {
+		ObjectNode node = Json.object("username", username, //
+				"password", password, "email", email, "level", "ADMIN");
+
+		String id = SpaceRequest.post("/1/credentials")//
+				.adminAuth(backend).body(node).go(201).getString("id");
+
+		return new User(backend.backendId, id, username, password, email);
 	}
 
 	public static User login(String backendId, String username, String password) {
