@@ -3,6 +3,7 @@
  */
 package io.spacedog.examples;
 
+import java.util.Collections;
 import java.util.Optional;
 import java.util.Random;
 
@@ -44,13 +45,15 @@ public class Caremen extends SpaceClient {
 		// initVehiculeTypes();
 		// initStripeSettings();
 		// initMailTemplates();
+		// initFareSettings();
+		// initAppCustomerSettings();
 
 		// setSchema(buildCourseSchema(), backend);
 		// setSchema(buildDriverSchema(), backend);
 		// setSchema(buildCustomerSchema(), backend);
 		// setSchema(buildCourseLogSchema(), backend);
 		// setSchema(buildCustomerCompanySchema(), backend);
-		// setSchema(buildCompanySchema(), backend);
+		setSchema(buildCompanySchema(), backend);
 
 		// createDrivers();
 		// createOperators();
@@ -64,7 +67,7 @@ public class Caremen extends SpaceClient {
 		template.model = Maps.newHashMap();
 		template.model.put("to", "string");
 		template.model.put("company", "company");
-		template.roles = new String[] { "operator" };
+		template.roles = Collections.singleton("operator");
 
 		SpaceRequest.put("/1/mail/template/notif_customer_company").adminAuth(backend)//
 				.body(Json.mapper().writeValueAsString(template)).go(200);
@@ -74,6 +77,22 @@ public class Caremen extends SpaceClient {
 		StripeSettings settings = new StripeSettings();
 		settings.secretKey = SpaceRequest.configuration().testStripeSecretKey();
 		SpaceClient.saveSettings(backend, settings);
+	}
+
+	void initFareSettings() {
+		ObjectNode classic = Json.object("base", 3, "minimum", 8, "km", 2, "min", 0.45);
+		ObjectNode premium = Json.object("base", 5, "minimum", 15, "km", 2, "min", 0.45);
+		ObjectNode green = Json.object("base", 5, "minimum", 35, "km", 2, "min", 0.45);
+		ObjectNode breakk = Json.object("base", 5, "minimum", 8, "km", 2, "min", 0.45);
+		ObjectNode van = Json.object("base", 5, "minimum", 20, "km", 2, "min", 0.45);
+		ObjectNode settings = Json.object("classic", classic, "premium", premium, //
+				"green", green, "break", breakk, "van", van);
+		SpaceRequest.put("/1/settings/fare").adminAuth(backend).body(settings).go(200, 201);
+	}
+
+	void initAppCustomerSettings() {
+		ObjectNode settings = Json.object("driverAverageSpeed", 15);
+		SpaceRequest.put("/1/settings/appcustomer").adminAuth(backend).body(settings).go(200, 201);
 	}
 
 	static Schema buildCustomerSchema() {
@@ -319,10 +338,20 @@ public class Caremen extends SpaceClient {
 				.acl("admin", DataPermission.create, DataPermission.search, //
 						DataPermission.update_all, DataPermission.delete_all)//
 
-				.text("name")//
-				.text("address")//
 				.string("status")//
 				.string("vatId")//
+				.text("name")//
+				.text("address")//
+				.string("phone")//
+				.string("email")//
+				.bool("active")//
+
+				.object("contact")//
+				.text("firstname")//
+				.text("lastname")//
+				.text("role")//
+				.string("phone")//
+				.string("email")//
 
 				.close()//
 				.build();
