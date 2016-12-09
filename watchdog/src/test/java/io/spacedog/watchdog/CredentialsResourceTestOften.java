@@ -254,22 +254,22 @@ public class CredentialsResourceTestOften extends Assert {
 		Backend test = SpaceClient.resetTestBackend();
 		User fred = SpaceClient.createCredentials(test.backendId, "fred", "hi fred");
 
-		// admin saves settings with token max lifetime set to 2s
+		// admin saves settings with token max lifetime set to 3s
 		CredentialsSettings settings = new CredentialsSettings();
-		settings.sessionMaximumLifetime = 2; // seconds
+		settings.sessionMaximumLifetime = 3; // seconds
 		SpaceClient.saveSettings(test, settings);
 
-		// fred fails to login with a token lifetime of 3s
-		// since max token lifetime is 2s
-		SpaceClient.login(3, fred, 403);
+		// fred fails to login with a token lifetime of 4s
+		// since max token lifetime is 3s
+		SpaceClient.login(4, fred, 403);
 
-		// fred logs in with a token lifetime of 1s
-		// since max token lifetime is 2s
-		fred = SpaceClient.login(1, fred);
+		// fred logs in with a token lifetime of 2s
+		// since max token lifetime is 3s
+		fred = SpaceClient.login(2, fred);
 		SpaceRequest.get("/1/data").bearerAuth(fred).go(200);
 
 		// after lifetime, token expires
-		Thread.sleep(1000); // in milliseconds
+		Thread.sleep(2000); // in milliseconds
 		SpaceRequest.get("/1/data").bearerAuth(fred).go(401);
 	}
 
