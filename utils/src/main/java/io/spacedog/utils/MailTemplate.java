@@ -5,6 +5,7 @@ package io.spacedog.utils;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class MailTemplate {
 
@@ -16,5 +17,5 @@ public class MailTemplate {
 	public String text;
 	public String html;
 	public Map<String, String> model;
-	public String[] roles;
+	public Set<String> roles;
 }

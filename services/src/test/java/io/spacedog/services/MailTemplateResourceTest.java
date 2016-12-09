@@ -2,6 +2,7 @@ package io.spacedog.services;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Collections;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -60,7 +61,7 @@ public class MailTemplateResourceTest extends Assert {
 				Charset.forName("UTF-8"));
 		template.model = Maps.newHashMap();
 		template.model.put("demande", "demande");
-		template.roles = new String[] { "key" };
+		template.roles = Collections.singleton("key");
 
 		SpaceRequest.put("/1/mail/template/demande").adminAuth(test)//
 				.body(Json.mapper().writeValueAsString(template)).go(200);
@@ -78,7 +79,7 @@ public class MailTemplateResourceTest extends Assert {
 				Charset.forName("UTF-8"));
 		template.model = Maps.newHashMap();
 		template.model.put("demande", "demande");
-		template.roles = new String[] { "key" };
+		template.roles = Collections.singleton("key");
 
 		SpaceRequest.put("/1/mail/template/confirmation").adminAuth(test)//
 				.body(Json.mapper().writeValueAsString(template)).go(200);

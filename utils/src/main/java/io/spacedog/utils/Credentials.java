@@ -5,6 +5,7 @@ package io.spacedog.utils;
 
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.Set;
@@ -35,6 +36,10 @@ public class Credentials {
 		public Level[] lowerOrEqual() {
 			return Arrays.copyOf(values(), ordinal() + 1);
 		}
+	}
+
+	public static enum Role {
+		key, user, admin, super_admin, superdog;
 	}
 
 	@JsonAutoDetect(fieldVisibility = Visibility.ANY, //
@@ -253,7 +258,7 @@ public class Credentials {
 		if (roles == null)
 			roles = Sets.newHashSet();
 
-		roles.add(defaultRole());
+		roles.addAll(defaultRoles());
 		return roles;
 	}
 
@@ -261,7 +266,7 @@ public class Credentials {
 		roles = value;
 	}
 
-	public void checkRoles(String... authorizedRoles) {
+	public void checkRoles(Set<String> authorizedRoles) {
 		if (authorizedRoles != null) {
 			Set<String> thisCredentialsRoles = roles();
 			for (String authorizedRole : authorizedRoles)
@@ -451,16 +456,16 @@ public class Credentials {
 	// implementation
 	//
 
-	private String defaultRole() {
+	private Set<String> defaultRoles() {
 		if (Level.USER.equals(level))
-			return "user";
+			return Collections.singleton("user");
 		if (Level.ADMIN.equals(level))
-			return "admin";
+			return Collections.singleton("admin");
 		if (Level.SUPER_ADMIN.equals(level))
-			return "admin";
+			return Sets.newHashSet("admin", "super-admin");
 		if (Level.SUPERDOG.equals(level))
-			return "admin";
-		return "key";
+			return Sets.newHashSet("admin", "super_admin", "superdog");
+		return Collections.singleton("key");
 	}
 
 	public void setLegacyId() {

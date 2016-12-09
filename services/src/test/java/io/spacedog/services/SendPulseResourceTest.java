@@ -3,6 +3,8 @@
  */
 package io.spacedog.services;
 
+import java.util.Collections;
+
 import org.joda.time.DateTime;
 
 import io.spacedog.client.SpaceClient;
@@ -29,7 +31,7 @@ public class SendPulseResourceTest extends SpaceClient {
 		SendPulseSettings settings = new SendPulseSettings();
 		settings.clientId = SpaceRequest.configuration().testSendPulseClientId();
 		settings.clientSecret = SpaceRequest.configuration().testSendPulseClientSecret();
-		settings.authorizedRoles = new String[] { "user" };
+		settings.authorizedRoles = Collections.singleton("user");
 		SpaceClient.saveSettings(test, settings);
 
 		// fred can get all websites

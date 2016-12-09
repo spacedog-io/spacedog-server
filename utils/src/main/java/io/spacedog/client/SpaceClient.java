@@ -281,12 +281,20 @@ public class SpaceClient {
 		SpaceRequest.delete("/1/data/" + type).adminAuth(backend).go(200);
 	}
 
-	public static void saveSettings(Backend test, Settings settings) {
+	public static <K extends Settings> void saveSettings(Backend test, K settings) {
 		SpaceRequest.put("/1/settings/" + settings.id()).adminAuth(test).body(settings).go(200, 201);
 	}
 
 	public static <K extends Settings> K loadSettings(Backend backend, Class<K> settingsClass) {
 		return SpaceRequest.get("/1/settings/" + Settings.id(settingsClass))//
-				.backend(backend).go(200).toObject(settingsClass);
+				.adminAuth(backend).go(200).toObject(settingsClass);
+	}
+
+	public static <K extends Settings> void deleteSettings(Backend backend, Class<K> settingsClass) {
+		deleteSettings(backend, Settings.id(settingsClass));
+	}
+
+	public static void deleteSettings(Backend backend, String id) {
+		SpaceRequest.delete("/1/settings/" + id).adminAuth(backend).go(200);
 	}
 }

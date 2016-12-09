@@ -111,7 +111,7 @@ public class SpaceContext {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <K extends Settings> K getCachedSettings(Class<K> settingsClass) {
+	public static <K extends Settings> K getSettings(Class<K> settingsClass) {
 
 		SpaceContext context = get();
 		if (context.settings == null)
@@ -120,7 +120,7 @@ public class SpaceContext {
 		return (K) context.settings.get(Settings.id(settingsClass));
 	}
 
-	public static void setCachedSettings(Settings settings) {
+	public static void setSettings(Settings settings) {
 		SpaceContext context = get();
 		if (context.settings == null)
 			context.settings = Maps.newHashMap();

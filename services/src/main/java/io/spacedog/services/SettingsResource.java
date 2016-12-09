@@ -14,10 +14,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
 
 import io.spacedog.utils.Check;
+import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;
 import io.spacedog.utils.Settings;
+import io.spacedog.utils.SettingsSettings;
+import io.spacedog.utils.SettingsSettings.SettingsAcl;
 import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -50,7 +53,7 @@ public class SettingsResource {
 	@Get("/")
 	public Payload getAll(Context context) {
 
-		String backendId = SpaceContext.target();
+		String backendId = SpaceContext.checkSuperAdminCredentials().target();
 		ElasticClient elastic = Start.get().getElasticClient();
 
 		if (!elastic.existsIndex(backendId, TYPE))
@@ -82,7 +85,7 @@ public class SettingsResource {
 	@Delete("")
 	@Delete("/")
 	public Payload deleteIndex() {
-		String backendId = SpaceContext.checkAdminCredentials().target();
+		String backendId = SpaceContext.checkSuperAdminCredentials().target();
 		ElasticClient elastic = Start.get().getElasticClient();
 		elastic.deleteIndex(backendId, TYPE);
 		return JsonPayload.success();
@@ -91,6 +94,10 @@ public class SettingsResource {
 	@Get("/:id")
 	@Get("/:id/")
 	public Payload get(String id) {
+
+		Credentials credentials = SpaceContext.getCredentials();
+		if (!credentials.isAtLeastSuperAdmin())
+			credentials.checkRoles(getSettingsAcl(id).read());
 
 		String settingsAsString = null;
 
@@ -112,7 +119,10 @@ public class SettingsResource {
 	@Put("/:id/")
 	public Payload put(String id, String body) {
 
-		SpaceContext.checkAdminCredentials();
+		Credentials credentials = SpaceContext.getCredentials();
+		if (!credentials.isAtLeastSuperAdmin())
+			credentials.checkRoles(getSettingsAcl(id).update());
+
 		IndexResponse response = null;
 
 		if (registeredSettingsClasses.containsKey(id)) {
@@ -133,7 +143,13 @@ public class SettingsResource {
 	@Delete("/:id")
 	@Delete("/:id/")
 	public Payload delete(String id) {
-		deleteInternal(id);
+
+		Credentials credentials = SpaceContext.getCredentials();
+		if (!credentials.isAtLeastSuperAdmin())
+			credentials.checkRoles(getSettingsAcl(id).update());
+
+		ElasticClient elastic = Start.get().getElasticClient();
+		elastic.delete(credentials.backendId(), TYPE, id, false, true);
 		return JsonPayload.success();
 	}
 
@@ -142,26 +158,29 @@ public class SettingsResource {
 	//
 
 	public <K extends Settings> K load(Class<K> settingsClass) {
-		K settings = SpaceContext.getCachedSettings(settingsClass);
+		K settings = SpaceContext.getSettings(settingsClass);
 		if (settings == null) {
 			String id = Settings.id(settingsClass);
 
 			try {
 				String json = load(id);
 				settings = Json.mapper().readValue(json, settingsClass);
+				SpaceContext.setSettings(settings);
+
 			} catch (NotFoundException nfe) {
 				// settings not set yet, return a default instance
 				try {
 					settings = settingsClass.newInstance();
+
 				} catch (InstantiationException | IllegalAccessException e) {
-					throw Exceptions.runtime(e, "invalid settings class [%s]", //
+					throw Exceptions.runtime(e, "error instanciating [%s] settings class", //
 							settingsClass.getSimpleName());
 				}
 			} catch (IOException e) {
-				throw Exceptions.runtime(e, "invalid [%s] settings", id);
+				throw Exceptions.runtime(e, "error mapping [%s] settings to [%s] class", //
+						id, settingsClass.getSimpleName());
 			}
 		}
-		SpaceContext.setCachedSettings(settings);
 		return settings;
 	}
 
@@ -169,17 +188,11 @@ public class SettingsResource {
 		try {
 			String settingsAsString = Json.mapper().writeValueAsString(settings);
 			IndexResponse response = save(settings.id(), settingsAsString);
-			SpaceContext.setCachedSettings(settings);
+			SpaceContext.setSettings(settings);
 			return response;
 		} catch (JsonProcessingException e) {
 			throw Exceptions.runtime(e);
 		}
-	}
-
-	public boolean deleteInternal(String id) {
-		String backendId = SpaceContext.checkAdminCredentials().target();
-		ElasticClient elastic = Start.get().getElasticClient();
-		return elastic.delete(backendId, TYPE, id, false, true);
 	}
 
 	<K extends Settings> void registerSettingsClass(Class<K> settingsClass) {
@@ -192,6 +205,16 @@ public class SettingsResource {
 	//
 	// implementation
 	//
+
+	private SettingsAcl getSettingsAcl(String id) {
+		try {
+			return load(SettingsSettings.class).get(id);
+
+		} catch (NotFoundException ignore) {
+		}
+
+		return SettingsAcl.defaultAcl();
+	}
 
 	private String load(String id) {
 		String backendId = SpaceContext.target();

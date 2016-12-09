@@ -1,5 +1,7 @@
 package io.spacedog.utils;
 
+import java.util.Set;
+
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -11,7 +13,7 @@ public class SendPulseSettings extends Settings {
 	public String accessToken;
 	public String accessTokenType;
 	public DateTime accessTokenExpiresAt;
-	public String[] authorizedRoles;
+	public Set<String> authorizedRoles;
 
 	public void setToken(ObjectNode body) {
 		accessToken = body.get("access_token").asText();
