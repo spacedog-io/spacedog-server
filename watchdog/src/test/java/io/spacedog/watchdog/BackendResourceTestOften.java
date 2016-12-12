@@ -17,6 +17,7 @@ import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
 import io.spacedog.client.SpaceTarget;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.SpaceParams;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
@@ -196,5 +197,32 @@ public class BackendResourceTestOften extends Assert {
 		// this can and must be tested on local server only
 		if (target.equals(SpaceTarget.local))
 			SpaceRequest.get("http://127.0.0.1:8443").go(200);
+	}
+
+	@Test
+	public void iCanCreateABackendWithANonWildCardUrl() {
+
+		// prepare
+		SpaceClient.prepareTest();
+
+		// super admin deletes the test backend
+		SpaceRequest.delete("/1/backend")//
+				.basicAuth("test", "test", "hi test").go(200, 401);
+
+		// it is also possible to create a backend with the same request host as
+		// other backend requests. Example https://cel.suez.fr
+		// This is very useful for mono backend servers with a non wildcard dns
+		// record
+		SpaceRequest.post("/1/backend").backendId("test")//
+				.queryParam(SpaceParams.NOTIF, "false")//
+				.body("username", "test", "password", "hi test", "email", "test@test.fr")//
+				.go(201);
+
+		// super admin gets its backend info
+		SpaceRequest.get("/1/backend").basicAuth("test", "test", "hi test").go(200)//
+				.assertEquals(1, "total")//
+				.assertEquals("test", "results.0.backendId")//
+				.assertEquals("test", "results.0.username")//
+				.assertEquals("test@test.fr", "results.0.email");
 	}
 }

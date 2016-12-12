@@ -212,7 +212,7 @@ public class SpaceClient {
 	public static Backend createBackend(String backendId, String username, String password, //
 			String email, boolean notification) {
 
-		SpaceRequest.post("/1/backend/" + backendId)//
+		SpaceRequest.post("/1/backend").backendId(backendId)//
 				.queryParam(SpaceParams.NOTIF, Boolean.toString(notification))//
 				.body("username", username, "password", password, "email", email)//
 				.go(201);

@@ -52,14 +52,10 @@ public class BackendResource extends Resource {
 			else
 				throw Exceptions.insufficientCredentials(credentials);
 		} else
-			superAdmins = CredentialsResource.get().getBackendSuperAdmins(credentials.target(), from, size);
+			superAdmins = CredentialsResource.get()//
+					.getBackendSuperAdmins(credentials.target(), from, size);
 
-		ArrayNode results = Json.array();
-		for (Credentials superAdmin : superAdmins.results)
-			results.add(Json.object(BACKEND_ID, superAdmin.backendId(), //
-					USERNAME, superAdmin.name(), EMAIL, superAdmin.email().get()));
-
-		return JsonPayload.json(Json.object("total", superAdmins.total, "results", results));
+		return toPayload(superAdmins);
 	}
 
 	@Delete("/1/backend")
@@ -81,6 +77,13 @@ public class BackendResource extends Resource {
 		return JsonPayload.success();
 	}
 
+	@Post("/1/backend")
+	@Post("/1/backend/")
+	public Payload post(String body, Context context) {
+		return post(SpaceContext.target(), body, context);
+	}
+
+	// TODO these routes are deprecated
 	@Post("/1/backend/:id")
 	@Post("/1/backend/:id/")
 	public Payload post(String backendId, String body, Context context) {
@@ -110,7 +113,7 @@ public class BackendResource extends Resource {
 	}
 
 	//
-	// Implementation
+	// Public interface
 	//
 
 	public boolean existsBackend(String backendId) {
@@ -134,6 +137,20 @@ public class BackendResource extends Resource {
 
 	public Stream<String[]> getAllBackendIndices() {
 		return Start.get().getElasticClient().indices().map(index -> index.split("-", 2));
+	}
+
+	//
+	// Implementation
+	//
+
+	private Payload toPayload(SearchResults<Credentials> superAdmins) {
+		ArrayNode results = Json.array();
+
+		for (Credentials superAdmin : superAdmins.results)
+			results.add(Json.object(BACKEND_ID, superAdmin.backendId(), //
+					USERNAME, superAdmin.name(), EMAIL, superAdmin.email().get()));
+
+		return JsonPayload.json(Json.object("total", superAdmins.total, "results", results));
 	}
 
 	//

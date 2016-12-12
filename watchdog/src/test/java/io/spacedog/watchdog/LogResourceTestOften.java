@@ -68,7 +68,8 @@ public class LogResourceTestOften extends Assert {
 				.assertEquals("PUT", "results.5.method")//
 				.assertEquals("/1/schema/message", "results.5.path")//
 				.assertEquals("POST", "results.6.method")//
-				.assertEquals("/1/backend/test", "results.6.path")//
+				.assertEquals("/1/backend", "results.6.path")//
+				.assertEquals("test", "results.6.credentials.backendId")//
 				.assertEquals("DELETE", "results.7.method")//
 				.assertEquals("/1/backend", "results.7.path")//
 				.assertEquals("test", "results.7.credentials.backendId");
@@ -82,7 +83,8 @@ public class LogResourceTestOften extends Assert {
 				.assertEquals("/1/credentials", "results.1.path")//
 				.assertEquals("******", "results.1.jsonContent.password")//
 				.assertEquals("POST", "results.2.method")//
-				.assertEquals("/1/backend/test2", "results.2.path")//
+				.assertEquals("/1/backend", "results.2.path")//
+				.assertEquals("test2", "results.2.credentials.backendId")//
 				.assertEquals("******", "results.2.jsonContent.password")//
 				.assertEquals("DELETE", "results.3.method")//
 				.assertEquals("/1/backend", "results.3.path")//
@@ -135,7 +137,8 @@ public class LogResourceTestOften extends Assert {
 				.assertEquals("/1/credentials", "results.4.path")//
 				.assertEquals("******", "results.4.jsonContent.password")//
 				.assertEquals("POST", "results.5.method")//
-				.assertEquals("/1/backend/test", "results.5.path")//
+				.assertEquals("/1/backend", "results.5.path")//
+				.assertEquals("test", "results.5.credentials.backendId")//
 				.assertEquals("******", "results.5.jsonContent.password")//
 				.assertEquals("DELETE", "results.6.method")//
 				.assertEquals("/1/backend", "results.6.path")//
@@ -162,7 +165,7 @@ public class LogResourceTestOften extends Assert {
 				.assertEquals("/1/data", "results.4.path")//
 				.assertEquals("/1/login", "results.5.path")//
 				.assertEquals("/1/credentials", "results.6.path")//
-				.assertEquals("/1/backend/test", "results.7.path")//
+				.assertEquals("/1/backend", "results.7.path")//
 				.assertEquals("/1/backend", "results.8.path");
 
 		// delete all logs but the 2 last requests
@@ -203,10 +206,12 @@ public class LogResourceTestOften extends Assert {
 				.assertEquals("test", "results.2.credentials.backendId")//
 				.assertEquals("/1/credentials", "results.3.path")//
 				.assertEquals("test", "results.3.credentials.backendId")//
-				.assertEquals("/1/backend/test2", "results.4.path")//
+				.assertEquals("/1/backend", "results.4.path")//
+				.assertEquals("test2", "results.4.credentials.backendId")//
 				.assertEquals("/1/backend", "results.5.path")//
 				.assertEquals("test2", "results.5.credentials.backendId")//
-				.assertEquals("/1/backend/test", "results.6.path")//
+				.assertEquals("/1/backend", "results.6.path")//
+				.assertEquals("test", "results.6.credentials.backendId")//
 				.assertEquals("/1/backend", "results.7.path")//
 				.assertEquals("test", "results.7.credentials.backendId");
 
@@ -280,7 +285,7 @@ public class LogResourceTestOften extends Assert {
 				.assertEquals("/1/credentials", "results.2.path")//
 				.assertEquals("/1/data/user", "results.3.path")//
 				.assertEquals("/1/data", "results.4.path")//
-				.assertEquals("/1/backend/test", "results.5.path")//
+				.assertEquals("/1/backend", "results.5.path")//
 				.assertEquals("/1/backend", "results.6.path");
 
 		// superdog filters test backend log to only get USER and lower logs
@@ -312,7 +317,7 @@ public class LogResourceTestOften extends Assert {
 				.assertEquals("/1/credentials", "results.6.path")//
 				.assertEquals("/1/data/user", "results.7.path")//
 				.assertEquals("/1/data", "results.8.path")//
-				.assertEquals("/1/backend/test", "results.9.path")//
+				.assertEquals("/1/backend", "results.9.path")//
 				.assertEquals("/1/backend", "results.10.path");
 	}
 
@@ -346,7 +351,7 @@ public class LogResourceTestOften extends Assert {
 				.assertEquals("/1/credentials", "results.2.path")//
 				.assertEquals("/1/data/user", "results.3.path")//
 				.assertEquals("/1/data", "results.4.path")//
-				.assertEquals("/1/backend/test", "results.5.path")//
+				.assertEquals("/1/backend", "results.5.path")//
 				.assertEquals("/1/backend", "results.6.path");
 
 		// superdog search for test backend log to only get USER and lower logs
@@ -380,7 +385,7 @@ public class LogResourceTestOften extends Assert {
 				.assertEquals("/1/credentials", "results.6.path")//
 				.assertEquals("/1/data/user", "results.7.path")//
 				.assertEquals("/1/data", "results.8.path")//
-				.assertEquals("/1/backend/test", "results.9.path")//
+				.assertEquals("/1/backend", "results.9.path")//
 				.assertEquals("/1/backend", "results.10.path");
 	}
 
