@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
+import io.spacedog.services.PushResource.PushServices;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 
@@ -22,14 +23,14 @@ public class PushResourceOtherTests extends Assert {
 
 		// convert json message to sns message
 		// it converts field objects to string
-		ObjectNode convertedSnsMessage = PushResource.convertJsonMessageToSnsMessage(jsonMessage);
+		ObjectNode convertedSnsMessage = PushResource.toSnsMessage(PushServices.APNS, jsonMessage);
 		Utils.info("convertedSnsMessageString = %s", convertedSnsMessage.toString());
 		assertEquals(Json.object("aps", Json.object("alert", "coucou")), //
 				Json.readObject(convertedSnsMessage.get("APNS").asText()));
 
 		// convert sns message to sns message
 		// it should not change anything since already converted
-		convertedSnsMessage = PushResource.convertJsonMessageToSnsMessage(convertedSnsMessage);
+		convertedSnsMessage = PushResource.toSnsMessage(PushServices.APNS, convertedSnsMessage);
 		Utils.info("convertedSnsMessageString = %s", convertedSnsMessage.toString());
 		assertEquals(Json.object("aps", Json.object("alert", "coucou")), //
 				Json.readObject(convertedSnsMessage.get("APNS").asText()));
@@ -39,19 +40,22 @@ public class PushResourceOtherTests extends Assert {
 	public void convertTextMessageToSnsMessage() {
 
 		JsonNode textMessage = new TextNode("coucou");
-		ObjectNode snsMessage = PushResource.convertJsonMessageToSnsMessage(textMessage);
+		ObjectNode objectMessage = PushResource.toObjectMessage(textMessage);
 
+		ObjectNode snsMessage = PushResource.toSnsMessage(PushServices.BAIDU, objectMessage);
 		assertEquals("coucou", snsMessage.get("default").asText());
+
+		snsMessage = PushResource.toSnsMessage(PushServices.APNS, objectMessage);
 		assertEquals(Json.object("aps", Json.object("alert", "coucou")), //
 				Json.readObject(snsMessage.get("APNS").asText()));
+
+		snsMessage = PushResource.toSnsMessage(PushServices.APNS_SANDBOX, objectMessage);
 		assertEquals(Json.object("aps", Json.object("alert", "coucou")), //
 				Json.readObject(snsMessage.get("APNS_SANDBOX").asText()));
+
+		snsMessage = PushResource.toSnsMessage(PushServices.GCM, objectMessage);
 		assertEquals(Json.object("data", Json.object("message", "coucou")), //
 				Json.readObject(snsMessage.get("GCM").asText()));
-		assertEquals(Json.object("data", Json.object("message", "coucou")), //
-				Json.readObject(snsMessage.get("ADM").asText()));
-		assertEquals(Json.object("title", "coucou", "description", "coucou"), //
-				Json.readObject(snsMessage.get("BAIDU").asText()));
 	}
 
 	@Test
@@ -59,7 +63,7 @@ public class PushResourceOtherTests extends Assert {
 
 		try {
 			JsonNode invalidMessage = new IntNode(123);
-			PushResource.convertJsonMessageToSnsMessage(invalidMessage);
+			PushResource.toObjectMessage(invalidMessage);
 			fail();
 		} catch (IllegalArgumentException e) {
 		}

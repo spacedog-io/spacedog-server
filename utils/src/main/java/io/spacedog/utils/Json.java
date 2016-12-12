@@ -221,12 +221,16 @@ public class Json {
 		return new JsonBuilder<ArrayNode>().array();
 	}
 
+	public static ObjectNode object() {
+		return mapper().getNodeFactory().objectNode();
+	}
+
 	// TODO add tests
 	public static ObjectNode object(Object... elements) {
 		if (elements.length % 2 != 0)
 			throw Exceptions.illegalArgument("odd number of elements");
 
-		ObjectNode object = mapper().getNodeFactory().objectNode();
+		ObjectNode object = object();
 
 		for (int i = 0; i < elements.length; i = i + 2)
 			object.set(elements[i].toString(), toNode(elements[i + 1]));
@@ -234,8 +238,12 @@ public class Json {
 		return object;
 	}
 
+	public static ArrayNode array() {
+		return mapper().getNodeFactory().arrayNode();
+	}
+
 	public static ArrayNode array(Object... elements) {
-		ArrayNode array = mapper().getNodeFactory().arrayNode();
+		ArrayNode array = array();
 		for (int i = 0; i < elements.length; i++)
 			array.add(toNode(elements[i]));
 		return array;
@@ -327,6 +335,8 @@ public class Json {
 			return node.isTextual();
 		case Boolean:
 			return node.isBoolean();
+		case Integer:
+			return node.isInt();
 		case Long:
 			return node.isLong();
 		case Float:

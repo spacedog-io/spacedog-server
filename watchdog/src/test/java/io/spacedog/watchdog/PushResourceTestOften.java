@@ -29,6 +29,7 @@ public class PushResourceTestOften extends Assert {
 	private static final String FAILURES = "failures";
 	private static final String USERS_ONLY = "usersOnly";
 	private static final String ID = "id";
+	private static final String INSTALLATION_ID = "installationId";
 	private static final String MESSAGE = "message";
 	private static final String APNS = "APNS";
 	private static final String GCM = "GCM";
@@ -38,6 +39,7 @@ public class PushResourceTestOften extends Assert {
 	private static final String USER_ID = "userId";
 	private static final String ENDPOINT = "endpoint";
 	private static final String TOKEN = "token";
+	private static final String BADGE = "badge";
 	private static final String PUSH_SERVICE = "pushService";
 	private static final String APP_ID = "appId";
 
@@ -70,7 +72,6 @@ public class PushResourceTestOften extends Assert {
 
 		// non authenticated user installs joho
 		// and fails to set installation userId and endpoint fields
-
 		String unknownInstallId = SpaceRequest.post("/1/installation")//
 				.backend(test)//
 				.body(TOKEN, "token-unknown", APP_ID, "joho", PUSH_SERVICE, GCM, //
@@ -78,8 +79,7 @@ public class PushResourceTestOften extends Assert {
 				.go(201)//
 				.objectNode().get(ID).asText();
 
-		SpaceRequest.get("/1/installation/" + unknownInstallId)//
-				.adminAuth(test).go(200)//
+		SpaceRequest.get("/1/installation/" + unknownInstallId).adminAuth(test).go(200)//
 				.assertEquals("joho", APP_ID)//
 				.assertEquals(GCM, PUSH_SERVICE)//
 				.assertEquals("token-unknown", TOKEN)//
@@ -94,9 +94,11 @@ public class PushResourceTestOften extends Assert {
 
 		// vince pushes a simple message to fred
 		SpaceRequest.post("/1/installation/" + fredInstallId + "/push")//
-				.userAuth(vince).body(new TextNode("coucou")).go(200);
+				.userAuth(vince).body(new TextNode("coucou")).go(200)//
+				.assertEquals(fredInstallId, "pushedTo.0.installationId")//
+				.assertEquals(fred.username, "pushedTo.0.userId");
 
-		// vince pushes a complex message to dave
+		// vince pushes a complex object message to dave
 		SpaceRequest.post("/1/installation/" + daveInstallId + "/push")//
 				.userAuth(vince)//
 				.body("APNS", Json.object("aps", Json.object("alert", "coucou")))//
@@ -116,24 +118,19 @@ public class PushResourceTestOften extends Assert {
 				.go(200);
 
 		SpaceRequest.get("/1/installation/" + vinceInstallId)//
-				.backend(test).userAuth(vince)//
-				.go(200)//
+				.backend(test).userAuth(vince).go(200)//
 				.assertEquals("joho", APP_ID)//
 				.assertEquals("super-token-vince", TOKEN)//
 				.assertEquals("vince", USER_ID)//
 				.assertNotPresent(TAGS);
 
 		// vince fails to get all installations since not admin
-
 		SpaceRequest.get("/1/installation")//
 				.backend(test).userAuth(vince)//
 				.go(403);
 
 		// admin gets all installations
-
-		SpaceRequest.get("/1/installation").refresh()//
-				.adminAuth(test)//
-				.go(200)//
+		SpaceRequest.get("/1/installation").refresh().adminAuth(test).go(200)//
 				.assertSizeEquals(5, "results")//
 				.assertContainsValue(unknownInstallId, ID)//
 				.assertContainsValue(daveInstallId, ID)//
@@ -142,7 +139,6 @@ public class PushResourceTestOften extends Assert {
 				.assertContainsValue(nathInstallId, ID);
 
 		// nath adds bonjour/toi tag to her install
-
 		SpaceRequest.post("/1/installation/" + nathInstallId + "/tags")//
 				.backend(test).userAuth(nath)//
 				.body(toJsonTag("bonjour", "toi")).go(200);
@@ -154,7 +150,6 @@ public class PushResourceTestOften extends Assert {
 
 		// nath adds again the same tag and it changes nothing
 		// there is no duplicate as a result
-
 		SpaceRequest.post("/1/installation/" + nathInstallId + "/tags")//
 				.backend(test).userAuth(nath)//
 				.body(toJsonTag("bonjour", "toi")).go(200);
@@ -165,7 +160,6 @@ public class PushResourceTestOften extends Assert {
 				.assertSizeEquals(1);
 
 		// vince adds bonjour/toi tag to his install
-
 		SpaceRequest.post("/1/installation/" + vinceInstallId + "/tags")//
 				.backend(test).userAuth(vince)//
 				.body(toJsonTag("bonjour", "toi")).go(200);
@@ -176,7 +170,6 @@ public class PushResourceTestOften extends Assert {
 				.assertSizeEquals(1);
 
 		// vince adds hi/there tag to his install
-
 		SpaceRequest.post("/1/installation/" + vinceInstallId + "/tags")//
 				.backend(test).userAuth(vince)//
 				.body(toJsonTag("hi", "there")).go(200);
@@ -188,7 +181,6 @@ public class PushResourceTestOften extends Assert {
 				.assertSizeEquals(2);
 
 		// vince deletes bonjour/toi tag from his install
-
 		SpaceRequest.delete("/1/installation/" + vinceInstallId + "/tags")//
 				.backend(test).userAuth(vince)//
 				.body(toJsonTag("bonjour", "toi")).go(200);
@@ -199,7 +191,6 @@ public class PushResourceTestOften extends Assert {
 				.assertSizeEquals(1);
 
 		// vince deletes hi/there tag from his install
-
 		SpaceRequest.delete("/1/installation/" + vinceInstallId + "/tags")//
 				.backend(test).userAuth(vince)//
 				.body(toJsonTag("hi", "there")).go(200);
@@ -209,7 +200,6 @@ public class PushResourceTestOften extends Assert {
 				.assertSizeEquals(0);
 
 		// vince sets all his install tags to bonjour/toi and hi/there
-
 		SpaceRequest.put("/1/installation/" + vinceInstallId + "/tags")//
 				.backend(test).userAuth(vince)//
 				.body(toJsonTags("hi", "there", "bonjour", "toi")).go(200);
@@ -221,7 +211,6 @@ public class PushResourceTestOften extends Assert {
 				.assertSizeEquals(2);
 
 		// fred sets all his install tags to bonjour/toi
-
 		SpaceRequest.put("/1/installation/" + fredInstallId + "/tags")//
 				.backend(test).userAuth(fred)//
 				.body(toJsonTags("bonjour", "toi")).go(200);
@@ -233,30 +222,19 @@ public class PushResourceTestOften extends Assert {
 
 		// vince pushes to all joho installations
 		// this means users and anonymous installations
-
 		ObjectNode push = Json.object(APP_ID, "joho", MESSAGE, "This is a push!");
-
-		SpaceRequest.post("/1/push")//
-				.refresh()//
-				.userAuth(vince)//
-				.body(push)//
-				.go(200)//
+		SpaceRequest.post("/1/push").refresh().userAuth(vince).body(push).go(200)//
 				.assertFalse(FAILURES)//
 				.assertSizeEquals(4, PUSHED_TO)//
-				.assertContainsValue(unknownInstallId, ID)//
+				.assertContainsValue(unknownInstallId, INSTALLATION_ID)//
 				.assertContainsValue("dave", USER_ID)//
 				.assertContainsValue("vince", USER_ID)//
 				.assertContainsValue("fred", USER_ID);
 
 		// vince pushes to all joho users
 		// this means excluding anonymous installations
-
 		push.put(USERS_ONLY, true);
-
-		SpaceRequest.post("/1/push").refresh()//
-				.userAuth(vince)//
-				.body(push)//
-				.go(200)//
+		SpaceRequest.post("/1/push").refresh().userAuth(vince).body(push).go(200)//
 				.assertFalse(FAILURES)//
 				.assertSizeEquals(3, PUSHED_TO)//
 				.assertContainsValue("dave", USER_ID)//
@@ -264,73 +242,149 @@ public class PushResourceTestOften extends Assert {
 				.assertContainsValue("fred", USER_ID);
 
 		// vince pushes to APNS only joho users
-
 		push.put(PUSH_SERVICE, APNS);
-
-		SpaceRequest.post("/1/push").refresh()//
-				.userAuth(vince)//
-				.body(push)//
-				.go(200)//
+		SpaceRequest.post("/1/push").refresh().userAuth(vince).body(push).go(200)//
 				.assertFalse(FAILURES)//
 				.assertSizeEquals(2, PUSHED_TO)//
 				.assertContainsValue("dave", USER_ID)//
 				.assertContainsValue("fred", USER_ID);
 
 		// vince pushes to APNS only joho users with tag bonjour/toi
-
 		push.set(TAGS, toJsonTag("bonjour", "toi"));
-
-		SpaceRequest.post("/1/push")//
-				.userAuth(vince)//
-				.body(push)//
-				.go(200)//
+		SpaceRequest.post("/1/push").userAuth(vince).body(push).go(200)//
 				.assertFalse(FAILURES)//
 				.assertSizeEquals(1, PUSHED_TO)//
 				.assertContainsValue("fred", USER_ID);
 
 		// vince pushes to all joho users with tag bonjour/toi
-
 		push.remove(PUSH_SERVICE);
-
-		SpaceRequest.post("/1/push")//
-				.userAuth(vince)//
-				.body(push)//
-				.go(200)//
+		SpaceRequest.post("/1/push").userAuth(vince).body(push).go(200)//
 				.assertFalse(FAILURES)//
 				.assertSizeEquals(2, PUSHED_TO)//
 				.assertContainsValue("vince", USER_ID)//
 				.assertContainsValue("fred", USER_ID);
 
 		// vince pushes to all joho users with tags bonjour/toi and hi/there
-
 		push.set(TAGS, toJsonTags("bonjour", "toi", "hi", "there"));
-
-		SpaceRequest.post("/1/push")//
-				.userAuth(vince)//
-				.body(push)//
-				.go(200)//
+		SpaceRequest.post("/1/push").userAuth(vince).body(push).go(200)//
 				.assertFalse(FAILURES)//
 				.assertSizeEquals(1, PUSHED_TO)//
 				.assertContainsValue("vince", USER_ID);
 
 		// vince gets 404 when he pushes to invalid app id
-
 		push = Json.object(APP_ID, "XXX", MESSAGE, "This is a push!");
-
-		SpaceRequest.post("/1/push")//
-				.userAuth(vince)//
-				.body(push)//
-				.go(404);
+		SpaceRequest.post("/1/push").userAuth(vince).body(push).go(404);
 
 		// vince can not read, update nor delete dave's installation
+		SpaceRequest.get("/1/installation/" + daveInstallId)//
+				.userAuth(vince).go(403);
 
+		SpaceRequest.put("/1/installation/" + daveInstallId)//
+				.userAuth(vince).body(BADGE, 2).go(403);
+
+		// also true with /data/installation route
 		SpaceRequest.get("/1/data/installation/" + daveInstallId)//
 				.userAuth(vince).go(403);
 
 		SpaceRequest.put("/1/data/installation/" + daveInstallId)//
-				.userAuth(vince)//
+				.userAuth(vince).body(BADGE, 2).go(403);
+
+		// dave can not update his installation app id
+		// if he does not provide the token
+		// this is true for push service and endpoint
+		SpaceRequest.put("/1/installation/" + daveInstallId)//
+				.userAuth(dave)//
 				.body(APP_ID, "joho2")//
-				.go(403);
+				.go(400);
+	}
+
+	@Test
+	public void badgeManagement() {
+
+		// prepare
+		SpaceClient.prepareTest();
+		Backend test = SpaceClient.resetTestBackend();
+
+		// prepare users
+		User dave = SpaceClient.signUp(test, "dave", "hi dave");
+		User vince = SpaceClient.signUp(test, "vince", "hi vince");
+
+		// prepare installation schema
+		SpaceClient.initPushDefaultSchema(test);
+
+		// vince and dave install joho
+		String vinceInstallId = installApplication("joho", APNS, test, vince);
+		String daveInstallId = installApplication("joho", APNS, test, dave);
+
+		// vince pushes a message to dave with manual badge = 3
+		SpaceRequest.post("/1/installation/" + daveInstallId + "/push")//
+				.userAuth(vince)//
+				.body(APNS, Json.object("aps", Json.object("alert", "coucou", BADGE, 3)))//
+				.go(200)//
+				.assertEquals(daveInstallId, "pushedTo.0.installationId");
+
+		// badge is not set in installation
+		// since badge management is still manual
+		SpaceRequest.get("/1/installation/" + daveInstallId)//
+				.userAuth(dave).go(200)//
+				.assertNotPresent(BADGE);
+
+		// vince pushes a message to all with automatic badging
+		// this means installation.badge is incremented on the server
+		// and installation.badge is sent to each installation
+		ObjectNode push = Json.object(APP_ID, "joho", MESSAGE, "Badge is the new trend!");
+
+		SpaceRequest.post("/1/push")//
+				.refresh().adminAuth(test)//
+				.queryParam(BADGE, "auto")//
+				.body(push).go(200)//
+				.assertSizeEquals(2, PUSHED_TO)//
+				.assertContainsValue(vinceInstallId, INSTALLATION_ID)//
+				.assertContainsValue(daveInstallId, INSTALLATION_ID);
+
+		// check badge is 1 in dave's installation
+		SpaceRequest.get("/1/installation/" + daveInstallId).userAuth(dave).go(200)//
+				.assertEquals(1, BADGE);
+
+		// check badge is 1 in vince's installation
+		SpaceRequest.get("/1/installation/" + vinceInstallId).userAuth(vince).go(200)//
+				.assertEquals(1, BADGE);
+
+		// vince reads the push and resets its installation badge
+		SpaceRequest.put("/1/installation/" + vinceInstallId)//
+				.userAuth(vince).body(BADGE, 0).go(200);
+
+		SpaceRequest.get("/1/installation/" + vinceInstallId)//
+				.userAuth(vince).go(200).assertEquals(0, BADGE);
+
+		// admin pushes again to all with automatic badging
+		SpaceRequest.post("/1/push")//
+				.refresh().adminAuth(test)//
+				.queryParam(BADGE, "auto").body(push).go(200)//
+				.assertSizeEquals(2, PUSHED_TO);
+
+		// check badge is 2 in dave's installation
+		SpaceRequest.get("/1/installation/" + daveInstallId).userAuth(dave).go(200)//
+				.assertEquals(2, BADGE);
+
+		// check badge is 1 in vince's installation
+		SpaceRequest.get("/1/installation/" + vinceInstallId).userAuth(vince).go(200)//
+				.assertEquals(1, BADGE);
+
+		// admin pushes again to all but with semi automatic badging
+		SpaceRequest.post("/1/push")//
+				.refresh().adminAuth(test)//
+				.queryParam(BADGE, "semi").body(push).go(200)//
+				.assertSizeEquals(2, PUSHED_TO);
+
+		// check badge is 2 in dave's installation
+		SpaceRequest.get("/1/installation/" + daveInstallId).userAuth(dave).go(200)//
+				.assertEquals(2, BADGE);
+
+		// check badge is 1 in vince's installation
+		SpaceRequest.get("/1/installation/" + vinceInstallId).userAuth(vince).go(200)//
+				.assertEquals(1, BADGE);
+
 	}
 
 	private ObjectNode toJsonTag(String key, String value) {

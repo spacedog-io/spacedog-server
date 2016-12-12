@@ -4,11 +4,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.elasticsearch.common.Strings;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
@@ -64,6 +64,7 @@ public class PushResource extends Resource {
 	public static final String USER_ID = "userId";
 	public static final String TOKEN = "token";
 	public static final String ENDPOINT = "endpoint";
+	public static final String BADGE = "badge";
 	public static final String TAGS = "tags";
 	public static final String TAG_KEY = "key";
 	public static final String TAG_VALUE = "value";
@@ -97,6 +98,7 @@ public class PushResource extends Resource {
 				.string(TOKEN)//
 				.string(ENDPOINT)//
 				.string(USER_ID)//
+				.integer(BADGE)//
 				.object(TAGS).array()//
 				.string(TAG_KEY)//
 				.string(TAG_VALUE)//
@@ -110,37 +112,48 @@ public class PushResource extends Resource {
 
 	@Get("/installation")
 	@Get("/installation/")
+	@Get("/data/installation")
+	@Get("/data/installation/")
 	public Payload getAll(Context context) {
-		SpaceContext.checkAdminCredentials();
 		return DataResource.get().getByType(TYPE, context);
 	}
 
 	@Post("/installation")
 	@Post("/installation/")
+	@Post("/data/installation")
+	@Post("/data/installation/")
 	public Payload post(String body, Context context) {
 		return upsertInstallation(Optional.empty(), body, context);
 	}
 
 	@Delete("/installation")
 	@Delete("/installation/")
+	@Delete("/data/installation")
+	@Delete("/data/installation/")
 	public Payload deleteAll(Context context) {
 		return DataResource.get().deleteByType(TYPE, context);
 	}
 
 	@Get("/installation/:id")
 	@Get("/installation/:id/")
+	@Get("/data/installation/:id")
+	@Get("/data/installation/:id/")
 	public Payload get(String id, Context context) {
 		return DataResource.get().getById(TYPE, id, context);
 	}
 
 	@Delete("/installation/:id")
 	@Delete("/installation/:id/")
+	@Delete("/data/installation/:id")
+	@Delete("/data/installation/:id/")
 	public Payload delete(String id, Context context) {
 		return DataResource.get().deleteById(TYPE, id, context);
 	}
 
 	@Put("/installation/:id")
 	@Put("/installation/:id/")
+	@Put("/data/installation/:id")
+	@Put("/data/installation/:id/")
 	public Payload put(String id, String body, Context context) {
 		return upsertInstallation(Optional.of(id), body, context);
 	}
@@ -150,28 +163,13 @@ public class PushResource extends Resource {
 	public Payload pushById(String id, String body, Context context) {
 
 		Credentials credentials = SpaceContext.checkUserCredentials();
-		ObjectNode snsJsonMessage = convertJsonMessageToSnsMessage(Json.readNode(body));
+		BadgeStrategy badge = getBadgeStrategy(context);
+		ObjectNode objectMessage = toObjectMessage(Json.readNode(body));
 		ObjectNode installation = DataStore.get().getObject(credentials.target(), TYPE, id);
-		String endpoint = Json.checkStringNotNullOrEmpty(installation, ENDPOINT);
 
-		try {
-			PublishRequest pushRequest = new PublishRequest()//
-					.withTargetArn(endpoint)//
-					.withMessageStructure("json")//
-					.withMessage(snsJsonMessage.toString());
-
-			if (!SpaceContext.isTest())
-				getSnsClient().publish(pushRequest);
-
-			return JsonPayload.success();
-
-		} catch (Exception e) {
-
-			if (e instanceof EndpointDisabledException)
-				removeEndpointQuietly(credentials.target(), id);
-
-			return JsonPayload.error(400, e);
-		}
+		PushLog log = new PushLog();
+		pushToInstallation(log, id, installation, objectMessage, credentials, badge);
+		return log.toPayload();
 	}
 
 	@Get("/installation/:id/tags")
@@ -221,7 +219,7 @@ public class PushResource extends Resource {
 		ObjectNode push = Json.readObject(body);
 		String appId = Json.checkStringNotNullOrEmpty(push, APP_ID);
 		JsonNode message = Json.checkNode(push, MESSAGE, true).get();
-		ObjectNode snsJsonMessage = convertJsonMessageToSnsMessage(message);
+		ObjectNode objectMessage = toObjectMessage(message);
 
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
 				.filter(QueryBuilders.termQuery(APP_ID, appId));
@@ -261,7 +259,7 @@ public class PushResource extends Resource {
 				.setFrom(0)//
 				.setSize(1000)//
 				.setVersion(false)//
-				.setFetchSource(new String[] { USER_ID, ENDPOINT }, null)//
+				.setFetchSource(new String[] { USER_ID, ENDPOINT, PUSH_SERVICE, BADGE }, null)//
 				.get()//
 				.getHits();
 
@@ -269,86 +267,163 @@ public class PushResource extends Resource {
 			return JsonPayload.error(HttpStatus.NOT_IMPLEMENTED, //
 					"push to [%s] installations is a premium feature", hits.totalHits());
 
-		boolean failures = false;
-		boolean successes = false;
-		ArrayNode pushedTo = Json.array();
+		PushLog log = new PushLog();
+		BadgeStrategy badge = getBadgeStrategy(context);
 
 		for (SearchHit hit : hits.getHits()) {
-			ObjectNode logItem = pushedTo.addObject();
-			try {
-				logItem.put(ID, hit.getId());
-				ObjectNode installation = Json.readObject(hit.sourceAsString());
-				Json.checkString(installation, USER_ID)//
-						.ifPresent(userId -> logItem.put(USER_ID, userId));
-				String endpoint = Json.checkStringNotNullOrEmpty(installation, ENDPOINT);
-
-				PublishRequest pushRequest = new PublishRequest()//
-						.withTargetArn(endpoint)//
-						.withMessageStructure("json")//
-						.withMessage(snsJsonMessage.toString());
-
-				if (!SpaceContext.isTest())
-					getSnsClient().publish(pushRequest);
-
-				successes = true;
-
-			} catch (Exception e) {
-				failures = true;
-				logItem.set(ERROR, JsonPayload.toJson(e, SpaceContext.isDebug()));
-
-				if (e instanceof EndpointDisabledException)
-					removeEndpointQuietly(credentials.target(), hit.getId());
-
-				if (e instanceof PlatformApplicationDisabledException)
-					break;
-			}
+			ObjectNode installation = Json.readObject(hit.sourceAsString());
+			pushToInstallation(log, hit.getId(), installation, objectMessage, credentials, badge);
+			if (log.applicationDisabled)
+				break;
 		}
 
-		int httpStatus = pushedTo.size() == 0 ? HttpStatus.NOT_FOUND //
-				: successes ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
-
-		JsonBuilder<ObjectNode> builder = JsonPayload.builder(httpStatus)//
-				.put(FAILURES, failures)//
-				.node(PUSHED_TO, pushedTo);
-
-		return JsonPayload.json(builder, httpStatus);
+		return log.toPayload();
 	}
 
 	//
 	// Implementation
 	//
 
-	static ObjectNode convertJsonMessageToSnsMessage(JsonNode message) {
+	public static enum BadgeStrategy {
+		manual, semi, auto
+	}
 
-		if (message.isObject()) {
-			ObjectNode awsStylePushMessage = Json.object();
-			Iterator<Entry<String, JsonNode>> fields = message.fields();
-			while (fields.hasNext()) {
-				Entry<String, JsonNode> field = fields.next();
-				if (field.getValue().isObject())
-					awsStylePushMessage.put(field.getKey(), field.getValue().toString());
-				else
-					// be careful not to 'toString' simple text values
-					// because it would double quote stringified objects
-					awsStylePushMessage.set(field.getKey(), field.getValue());
-			}
-			return awsStylePushMessage;
+	private static class PushLog {
+		public boolean successes;
+		public boolean failures;
+		public ArrayNode logItems = Json.array();
+		public boolean applicationDisabled;
+
+		public Payload toPayload() {
+			int httpStatus = logItems.size() == 0 ? HttpStatus.NOT_FOUND //
+					: successes ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
+
+			JsonBuilder<ObjectNode> builder = JsonPayload.builder(httpStatus)//
+					.put(FAILURES, failures)//
+					.put("applicationDisabled", applicationDisabled)//
+					.node(PUSHED_TO, logItems);
+
+			return JsonPayload.json(builder, httpStatus);
 		}
+	}
+
+	private void pushToInstallation(PushLog log, String installationId, //
+			ObjectNode installation, ObjectNode message, Credentials credentials, BadgeStrategy badgeStrategy) {
+
+		ObjectNode logItem = Json.object("installationId", installationId);
+		log.logItems.add(logItem);
+
+		try {
+
+			Json.checkString(installation, USER_ID)//
+					.ifPresent(userId -> logItem.put("userId", userId));
+			PushServices service = PushServices.valueOf(//
+					Json.get(installation, PUSH_SERVICE).asText());
+
+			message = badgeObjectMessage(installationId, installation, service, message, //
+					credentials, logItem, badgeStrategy);
+
+			String endpoint = Json.checkStringNotNullOrEmpty(installation, ENDPOINT);
+			ObjectNode snsMessage = toSnsMessage(service, message);
+
+			if (!SpaceContext.isTest()) {
+				PublishRequest pushRequest = new PublishRequest()//
+						.withTargetArn(endpoint)//
+						.withMessageStructure("json")//
+						.withMessage(snsMessage.toString());
+
+				getSnsClient().publish(pushRequest);
+			} else
+				logItem.set("message", snsMessage);
+
+			log.successes = true;
+
+		} catch (Exception e) {
+			log.failures = true;
+			logItem.set(ERROR, JsonPayload.toJson(e, SpaceContext.isDebug()));
+
+			if (e instanceof EndpointDisabledException) {
+				logItem.put("installationDisabled", true);
+				removeEndpointQuietly(credentials.target(), installationId);
+			}
+
+			if (e instanceof PlatformApplicationDisabledException)
+				log.applicationDisabled = true;
+		}
+	}
+
+	private BadgeStrategy getBadgeStrategy(Context context) {
+		String badgeValue = context.get(BADGE);
+		if (Strings.isNullOrEmpty(badgeValue))
+			return BadgeStrategy.manual;
+		return BadgeStrategy.valueOf(badgeValue);
+	}
+
+	static ObjectNode toObjectMessage(JsonNode message) {
+
+		if (message.isObject())
+			return (ObjectNode) message;
 
 		if (message.isTextual()) {
 			String text = message.asText();
-			ObjectNode awsStylePushMessage = Json.object("default", text, //
-					"APNS", String.format("{\"aps\":{\"alert\": \"%s\"} }", text), //
-					"APNS_SANDBOX", String.format("{\"aps\":{\"alert\":\"%s\"}}", text), //
-					"GCM", String.format("{ \"data\": { \"message\": \"%s\" } }", text), //
-					"ADM", String.format("{ \"data\": { \"message\": \"%s\" } }", text), //
-					"BAIDU", String.format("{\"title\":\"%s\",\"description\":\"%s\"}", text, text));
-
-			return awsStylePushMessage;
+			return Json.object("default", text, //
+					"APNS", Json.object("aps", Json.object("alert", text)), //
+					"APNS_SANDBOX", Json.object("aps", Json.object("alert", text)), //
+					"GCM", Json.object("data", Json.object("message", text)));
 		}
 
 		throw Exceptions.illegalArgument("push message [%s][%s] is invalid", //
 				message.getNodeType(), message);
+	}
+
+	static ObjectNode toSnsMessage(PushServices service, ObjectNode message) {
+
+		JsonNode node = message.get(service.toString());
+		if (!Json.isNull(node))
+			return Json.object(service.toString(), toSnsMessageStringValue(service, node));
+
+		node = message.get("default");
+		if (!Json.isNull(node))
+			return Json.object("default", toSnsMessageStringValue(service, node));
+
+		throw Exceptions.illegalArgument(//
+				"no push message for default nor [%s] service", service);
+	}
+
+	static String toSnsMessageStringValue(PushServices service, JsonNode message) {
+		if (message.isObject())
+			return message.toString();
+
+		// be careful not to 'toString' simple text values
+		// because it would double quote stringified objects
+		if (message.isValueNode())
+			return message.asText();
+
+		throw Exceptions.illegalArgument("push message [%s][%s] invalid", service, message);
+	}
+
+	private ObjectNode badgeObjectMessage(String installationId, ObjectNode installation, //
+			PushServices pushService, ObjectNode message, Credentials credentials, //
+			ObjectNode logItem, BadgeStrategy badgeStrategy) {
+
+		if (BadgeStrategy.manual.equals(badgeStrategy))
+			return message;
+
+		if (PushServices.APNS.equals(pushService)//
+				|| PushServices.APNS_SANDBOX.equals(pushService)) {
+
+			int badge = Json.checkInteger(installation, BADGE).orElse(0);
+
+			if (BadgeStrategy.auto.equals(badgeStrategy)) {
+				badge = badge + 1;
+				// update installation badge in data store
+				DataStore.get().patchObject(credentials.target(), //
+						TYPE, installationId, Json.object(BADGE, badge), credentials.name());
+			}
+
+			message.with(pushService.toString()).with("aps").put(BADGE, badge);
+		}
+		return message;
 	}
 
 	private void removeEndpointQuietly(String backend, String id) {
@@ -356,7 +431,7 @@ public class PushResource extends Resource {
 			Start.get().getElasticClient().delete(backend, TYPE, id, false, true);
 		} catch (Exception e) {
 			System.err.println(String.format(//
-					"[Warning] failed to delete disabled installation [%s] of backend [%s]", id, backend));
+					"[Warning] failed to delete disabled installation [%s][%s]", backend, id));
 			e.printStackTrace();
 		}
 	}
@@ -364,13 +439,35 @@ public class PushResource extends Resource {
 	public Payload upsertInstallation(Optional<String> id, String body, Context context) {
 
 		Credentials credentials = SpaceContext.getCredentials();
-
 		ObjectNode installation = Json.readObject(body);
-		String token = Json.checkStringNotNullOrEmpty(installation, TOKEN);
+		Optional<String> token = Json.checkString(installation, TOKEN);
+
+		if (token.isPresent())
+			return upsertInstallationWithToken(id, credentials, installation, token.get(), context);
+
+		if (id.isPresent()) {
+			// these fields must be null since no token
+			Json.checkNull(installation, ENDPOINT);
+			Json.checkNull(installation, APP_ID);
+			Json.checkNull(installation, PUSH_SERVICE);
+			Json.checkNull(installation, USER_ID);
+
+			return DataResource.get().put(TYPE, id.get(), body, context);
+		}
+
+		throw Exceptions.illegalArgument("no [token] field specified");
+	}
+
+	Payload upsertInstallationWithToken(Optional<String> id, Credentials credentials, //
+			ObjectNode installation, String token, Context context) {
+
 		String appId = Json.checkStringNotNullOrEmpty(installation, APP_ID);
-		PushServices service = PushServices.valueOf(Json.checkStringNotNullOrEmpty(installation, PUSH_SERVICE));
+		PushServices service = PushServices.valueOf(//
+				Json.checkStringNotNullOrEmpty(installation, PUSH_SERVICE));
 
 		// remove all fields that should not be set by client code
+		// TODO replace this by Json.checkNull but might create compatibility
+		// issues
 		installation.remove(Arrays.asList(USER_ID, ENDPOINT));
 
 		if (SpaceContext.isTest()) {
@@ -388,7 +485,6 @@ public class PushResource extends Resource {
 			return JsonPayload.saved(false, credentials.target(), "/1", TYPE, id.get());
 		} else
 			return DataResource.get().post(TYPE, installation.toString(), context);
-
 	}
 
 	private Payload updateTags(String id, String body, boolean strict, boolean delete) {
