@@ -99,10 +99,13 @@ public class Caremen extends SpaceClient {
 	}
 
 	void initSettingsSettings() {
+		SettingsSettings settings = new SettingsSettings();
 		SettingsAcl acl = new SettingsAcl();
 		acl.read("key", "user");
-		SettingsSettings settings = new SettingsSettings();
 		settings.put("appcustomer", acl);
+		acl = new SettingsAcl();
+		acl.read("operator", "admin");
+		settings.put("fare", acl);
 		SpaceClient.saveSettings(backend, settings);
 	}
 
