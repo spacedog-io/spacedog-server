@@ -23,6 +23,8 @@ import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonGenerator;
 import io.spacedog.utils.MailTemplate;
 import io.spacedog.utils.Schema;
+import io.spacedog.utils.SettingsSettings;
+import io.spacedog.utils.SettingsSettings.SettingsAcl;
 import io.spacedog.utils.StripeSettings;
 
 public class Caremen extends SpaceClient {
@@ -47,13 +49,14 @@ public class Caremen extends SpaceClient {
 		// initMailTemplates();
 		// initFareSettings();
 		// initAppCustomerSettings();
+		// initSettingsSettings();
 
 		// setSchema(buildCourseSchema(), backend);
 		// setSchema(buildDriverSchema(), backend);
 		// setSchema(buildCustomerSchema(), backend);
 		// setSchema(buildCourseLogSchema(), backend);
 		// setSchema(buildCustomerCompanySchema(), backend);
-		setSchema(buildCompanySchema(), backend);
+		// setSchema(buildCompanySchema(), backend);
 
 		// createDrivers();
 		// createOperators();
@@ -93,6 +96,14 @@ public class Caremen extends SpaceClient {
 	void initAppCustomerSettings() {
 		ObjectNode settings = Json.object("driverAverageSpeed", 15);
 		SpaceRequest.put("/1/settings/appcustomer").adminAuth(backend).body(settings).go(200, 201);
+	}
+
+	void initSettingsSettings() {
+		SettingsAcl acl = new SettingsAcl();
+		acl.read("key", "user");
+		SettingsSettings settings = new SettingsSettings();
+		settings.put("appcustomer", acl);
+		SpaceClient.saveSettings(backend, settings);
 	}
 
 	static Schema buildCustomerSchema() {
