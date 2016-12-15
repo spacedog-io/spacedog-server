@@ -8,7 +8,6 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.elasticsearch.common.Strings;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
@@ -74,6 +73,7 @@ public class PushResource extends Resource {
 	public static final String FAILURES = "failures";
 
 	// push request field names
+	private static final String BADGE_STRATEGY = "badgeStrategy";
 	private static final String MESSAGE = "message";
 	private static final String USERS_ONLY = "usersOnly";
 
@@ -163,8 +163,18 @@ public class PushResource extends Resource {
 	public Payload pushById(String id, String body, Context context) {
 
 		Credentials credentials = SpaceContext.checkUserCredentials();
-		BadgeStrategy badge = getBadgeStrategy(context);
-		ObjectNode objectMessage = toObjectMessage(Json.readNode(body));
+
+		JsonNode node = Json.readNode(body);
+		BadgeStrategy badge = BadgeStrategy.manual;
+		ObjectNode objectMessage = null;
+
+		if (node.has(MESSAGE)) {
+			objectMessage = toObjectMessage(node.get(MESSAGE));
+			badge = getBadgeStrategy(node);
+		} else {
+			objectMessage = toObjectMessage(node);
+		}
+
 		ObjectNode installation = DataStore.get().getObject(credentials.target(), TYPE, id);
 
 		PushLog log = new PushLog();
@@ -219,6 +229,7 @@ public class PushResource extends Resource {
 		ObjectNode push = Json.readObject(body);
 		String appId = Json.checkStringNotNullOrEmpty(push, APP_ID);
 		JsonNode message = Json.checkNode(push, MESSAGE, true).get();
+		BadgeStrategy badge = getBadgeStrategy(push);
 		ObjectNode objectMessage = toObjectMessage(message);
 
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
@@ -268,7 +279,6 @@ public class PushResource extends Resource {
 					"push to [%s] installations is a premium feature", hits.totalHits());
 
 		PushLog log = new PushLog();
-		BadgeStrategy badge = getBadgeStrategy(context);
 
 		for (SearchHit hit : hits.getHits()) {
 			ObjectNode installation = Json.readObject(hit.sourceAsString());
@@ -352,11 +362,11 @@ public class PushResource extends Resource {
 		}
 	}
 
-	private BadgeStrategy getBadgeStrategy(Context context) {
-		String badgeValue = context.get(BADGE);
-		if (Strings.isNullOrEmpty(badgeValue))
-			return BadgeStrategy.manual;
-		return BadgeStrategy.valueOf(badgeValue);
+	private BadgeStrategy getBadgeStrategy(JsonNode node) {
+		Optional<String> optional = Json.checkString(node, BADGE_STRATEGY);
+		return optional.isPresent() //
+				? BadgeStrategy.valueOf(optional.get()) //
+				: BadgeStrategy.manual;
 	}
 
 	static ObjectNode toObjectMessage(JsonNode message) {

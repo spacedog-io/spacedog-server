@@ -8,7 +8,6 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceClient;
@@ -40,6 +39,7 @@ public class PushResourceTestOften extends Assert {
 	private static final String ENDPOINT = "endpoint";
 	private static final String TOKEN = "token";
 	private static final String BADGE = "badge";
+	private static final String BADGE_STRATEGY = "badgeStrategy";
 	private static final String PUSH_SERVICE = "pushService";
 	private static final String APP_ID = "appId";
 
@@ -94,19 +94,22 @@ public class PushResourceTestOften extends Assert {
 
 		// vince pushes a simple message to fred
 		SpaceRequest.post("/1/installation/" + fredInstallId + "/push")//
-				.userAuth(vince).body(new TextNode("coucou")).go(200)//
+				.userAuth(vince).body(MESSAGE, "coucou").go(200)//
 				.assertEquals(fredInstallId, "pushedTo.0.installationId")//
 				.assertEquals(fred.username, "pushedTo.0.userId");
 
 		// vince pushes a complex object message to dave
 		SpaceRequest.post("/1/installation/" + daveInstallId + "/push")//
 				.userAuth(vince)//
-				.body("APNS", Json.object("aps", Json.object("alert", "coucou")))//
+				.body(MESSAGE,
+						Json.object("APNS",
+								Json.object("aps", //
+										Json.object("alert", "coucou"))))//
 				.go(200);
 
 		// vince fails to push to invalid installation id
 		SpaceRequest.post("/1/installation/XXX/push")//
-				.userAuth(vince).body(new TextNode("coucou")).go(404);
+				.userAuth(vince).body(MESSAGE, "coucou").go(404);
 
 		// nath installs birdee
 		String nathInstallId = installApplication("birdee", APNS, test, nath);
@@ -293,9 +296,7 @@ public class PushResourceTestOften extends Assert {
 		// if he does not provide the token
 		// this is true for push service and endpoint
 		SpaceRequest.put("/1/installation/" + daveInstallId)//
-				.userAuth(dave)//
-				.body(APP_ID, "joho2")//
-				.go(400);
+				.userAuth(dave).body(APP_ID, "joho2").go(400);
 	}
 
 	@Test
@@ -319,7 +320,10 @@ public class PushResourceTestOften extends Assert {
 		// vince pushes a message to dave with manual badge = 3
 		SpaceRequest.post("/1/installation/" + daveInstallId + "/push")//
 				.userAuth(vince)//
-				.body(APNS, Json.object("aps", Json.object("alert", "coucou", BADGE, 3)))//
+				.body(MESSAGE,
+						Json.object(APNS, //
+								Json.object("aps", //
+										Json.object("alert", "coucou", BADGE, 3))))//
 				.go(200)//
 				.assertEquals(daveInstallId, "pushedTo.0.installationId");
 
@@ -332,11 +336,11 @@ public class PushResourceTestOften extends Assert {
 		// vince pushes a message to all with automatic badging
 		// this means installation.badge is incremented on the server
 		// and installation.badge is sent to each installation
-		ObjectNode push = Json.object(APP_ID, "joho", MESSAGE, "Badge is the new trend!");
+		ObjectNode push = Json.object(APP_ID, "joho", BADGE_STRATEGY, "auto", //
+				MESSAGE, "Badge is the new trend!");
 
 		SpaceRequest.post("/1/push")//
 				.refresh().adminAuth(test)//
-				.queryParam(BADGE, "auto")//
 				.body(push).go(200)//
 				.assertSizeEquals(2, PUSHED_TO)//
 				.assertContainsValue(vinceInstallId, INSTALLATION_ID)//
@@ -359,8 +363,7 @@ public class PushResourceTestOften extends Assert {
 
 		// admin pushes again to all with automatic badging
 		SpaceRequest.post("/1/push")//
-				.refresh().adminAuth(test)//
-				.queryParam(BADGE, "auto").body(push).go(200)//
+				.refresh().adminAuth(test).body(push).go(200)//
 				.assertSizeEquals(2, PUSHED_TO);
 
 		// check badge is 2 in dave's installation
@@ -372,9 +375,9 @@ public class PushResourceTestOften extends Assert {
 				.assertEquals(1, BADGE);
 
 		// admin pushes again to all but with semi automatic badging
+		push.put(BADGE_STRATEGY, "semi");
 		SpaceRequest.post("/1/push")//
-				.refresh().adminAuth(test)//
-				.queryParam(BADGE, "semi").body(push).go(200)//
+				.refresh().adminAuth(test).body(push).go(200)//
 				.assertSizeEquals(2, PUSHED_TO);
 
 		// check badge is 2 in dave's installation
