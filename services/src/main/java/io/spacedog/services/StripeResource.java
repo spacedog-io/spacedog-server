@@ -1,5 +1,7 @@
 package io.spacedog.services;
 
+import org.elasticsearch.common.Strings;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -25,11 +27,12 @@ public class StripeResource extends Resource {
 	// Routes
 	//
 
+	private static final String STRIPE_CUSTOMER = "customer";
 	private static final String CREDENTIALS_STASH_STRIPE_CUSTOMER_ID = "stripeCustomerId";
 
 	@Post("/customers")
 	@Post("/customers/")
-	public Payload postCustomer(String body) {
+	public Payload postCustomer() {
 		Credentials credentials = SpaceContext.checkUserCredentials();
 
 		if (hasStripeCustomerId(credentials))
@@ -133,9 +136,45 @@ public class StripeResource extends Resource {
 		return JsonPayload.json(response.objectNode());
 	}
 
+	@Post("/charges")
+	@Post("/charges/")
+	public Payload postCharges(Context context) {
+		return charge(false, context);
+	}
+
+	@Post("/charges/me")
+	@Post("/charges/me/")
+	public Payload postChargesMe(Context context) {
+		return charge(true, context);
+	}
+
 	//
 	// Implementation
 	//
+
+	private Payload charge(boolean myself, Context context) {
+		Credentials credentials = SpaceContext.getCredentials();
+		StripeSettings settings = SettingsResource.get().load(StripeSettings.class);
+		SpaceRequest request = SpaceRequest.post("https://api.stripe.com/v1/charges")//
+				.basicAuth("", settings.secretKey, "");
+
+		if (myself) {
+			credentials.checkRoles(settings.rolesAllowedToPay);
+
+			if (!Strings.isNullOrEmpty(context.get(STRIPE_CUSTOMER)))
+				throw Exceptions.illegalArgument("overriding of my stripe customer is forbidden");
+
+			request.formField(STRIPE_CUSTOMER, getStripeCustomerId(credentials));
+		} else
+			credentials.checkRoles(settings.rolesAllowedToCharge);
+
+		for (String key : context.request().query().keys())
+			request.formField(key, context.get(key));
+
+		SpaceResponse response = request.go();
+		checkStripeError(response);
+		return JsonPayload.json(response.objectNode(), 200);
+	}
 
 	private void checkStripeError(SpaceResponse response) {
 		int status = response.httpResponse().getStatus();

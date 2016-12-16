@@ -30,16 +30,19 @@ isGetterVisibility = Visibility.NONE, //
 setterVisibility = Visibility.NONE)
 public class Credentials {
 
+	// Standard roles
+	public static final String KEY = "key";
+	public static final String USER = "user";
+	public static final String ADMIN = "admin";
+	public static final String SUPER_ADMIN = "super_admin";
+	public static final String SUPERDOG = "superdog";
+
 	public static enum Level {
 		KEY, USER, ADMIN, SUPER_ADMIN, SUPERDOG;
 
 		public Level[] lowerOrEqual() {
 			return Arrays.copyOf(values(), ordinal() + 1);
 		}
-	}
-
-	public static enum Role {
-		key, user, admin, super_admin, superdog;
 	}
 
 	@JsonAutoDetect(fieldVisibility = Visibility.ANY, //
@@ -458,14 +461,14 @@ public class Credentials {
 
 	private Set<String> defaultRoles() {
 		if (Level.USER.equals(level))
-			return Collections.singleton("user");
+			return Collections.singleton(USER);
 		if (Level.ADMIN.equals(level))
-			return Collections.singleton("admin");
+			return Collections.singleton(ADMIN);
 		if (Level.SUPER_ADMIN.equals(level))
-			return Sets.newHashSet("admin", "super-admin");
+			return Sets.newHashSet(ADMIN, SUPER_ADMIN);
 		if (Level.SUPERDOG.equals(level))
-			return Sets.newHashSet("admin", "super_admin", "superdog");
-		return Collections.singleton("key");
+			return Sets.newHashSet(ADMIN, SUPER_ADMIN, SUPERDOG);
+		return Collections.singleton(KEY);
 	}
 
 	public void setLegacyId() {
