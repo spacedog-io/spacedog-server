@@ -34,7 +34,7 @@ if [ -z "$2" ]
     exit
 fi
 
-echo "Uploading $1 code version $1 to AWS ..."
+echo "Uploading $1 code version $2 to AWS ..."
 aws lambda update-function-code --function-name $1 --zip-file fileb://target/spacedog-watchdog-$2-bundle.zip --no-publish
 
 if [ "$?" != "0" ]
