@@ -24,6 +24,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 
+import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.Json;
@@ -211,6 +212,8 @@ public class LogResource extends Resource {
 
 	private SearchResponse doGetLogs(Optional<String> backendId, int from, int size, Optional<Integer> minStatus,
 			Optional<Credentials.Level> type) {
+
+		Check.isTrue(from + size <= 1000, "from + size must be less than or equal to 1000");
 
 		BoolQueryBuilder query = QueryBuilders.boolQuery();
 

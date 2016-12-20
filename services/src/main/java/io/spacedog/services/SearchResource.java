@@ -154,7 +154,7 @@ public class SearchResource extends Resource {
 
 			int from = context.query().getInteger("from", 0);
 			int size = context.query().getInteger("size", 10);
-			Check.isTrue(from + size <= 1000, "from + size is greater than 1000");
+			Check.isTrue(from + size <= 1000, "from + size must be less than or equal to 1000");
 
 			search.setFrom(from)//
 					.setSize(size)//
