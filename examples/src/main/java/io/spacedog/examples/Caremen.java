@@ -63,7 +63,7 @@ public class Caremen extends SpaceClient {
 
 		// createOperators();
 		// createCashier();
-		createRobots();
+		// createRobots();
 	}
 
 	//
@@ -104,9 +104,12 @@ public class Caremen extends SpaceClient {
 
 	void initAppConfigurationSettings() {
 		ObjectNode settings = Json.object("driverAverageSpeed", 15, //
+				"driverAverageSpeedKmPerHour", 15, //
 				"courseLogInterval", 20, //
-				"custumerWaitingForDriverMaxDuration", 2, //
-				"operatorRefreshTimeout", 30);
+				"courseLogIntervalMeters", 100, //
+				"customerWaitingForDriverMaxDurationMinutes", 2, //
+				"operatorRefreshTimeout", 30, //
+				"operatorRefreshTimeoutSeconds", 30);
 		SpaceRequest.put("/1/settings/appcustomer").adminAuth(backend).body(settings).go(200, 201);
 		SpaceRequest.put("/1/settings/appconfiguration").adminAuth(backend).body(settings).go(200, 201);
 	}
@@ -121,7 +124,7 @@ public class Caremen extends SpaceClient {
 
 		// appconfiguration settings
 		acl = new SettingsAcl();
-		acl.read("key", "user");
+		acl.read("key", "user", "admin");
 		settings.put("appconfiguration", acl);
 
 		// fare settings
