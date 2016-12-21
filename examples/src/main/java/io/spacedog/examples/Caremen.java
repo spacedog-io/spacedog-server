@@ -63,6 +63,7 @@ public class Caremen extends SpaceClient {
 
 		// createOperators();
 		// createCashier();
+		createRobots();
 	}
 
 	//
@@ -453,6 +454,38 @@ public class Caremen extends SpaceClient {
 					backend, username, password, email);
 			SpaceRequest.put("/1/credentials/" + credentials.id + "/roles/operator")//
 					.adminAuth(backend).go(200);
+		}
+	}
+
+	private void createRobots() {
+		if (backend == PRODUCTION)
+			return;
+
+		for (int i = 0; i < 3; i++) {
+
+			String username = "robot-" + i;
+			String password = "hi " + username;
+
+			JsonNode node = SpaceRequest.get("/1/credentials")//
+					.adminAuth(backend).queryParam("username", username).go(200)//
+					.get("results.0.id");
+
+			if (node == null) {
+				User robot = SpaceClient.signUp(backend.backendId, username, password);
+
+				SpaceRequest.put("/1/credentials/" + robot.id + "/roles/driver")//
+						.adminAuth(backend).go(200);
+
+				SpaceRequest.post("/1/data/driver").adminAuth(backend)//
+						.body("status", "not-working", "firstname", "Robot", //
+								"lastname", Integer.toString(i), "phone", "0606060606", //
+								"homeAddress", "9 rue Titon 75011 Paris", //
+								"credentialsId", robot.id, "vehicule", //
+								Json.object("brand", "Faucon", "model", "Millenium", //
+										"type", "classic", "color", "Métal", //
+										"licencePlate", "DA-KISS-ME"))//
+						.go(201);
+			}
 		}
 	}
 
