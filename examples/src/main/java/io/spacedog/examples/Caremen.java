@@ -388,7 +388,8 @@ public class Caremen extends SpaceClient {
 
 				.acl("driver", DataPermission.create)//
 				.acl("cashier", DataPermission.search)//
-				.acl("admin", DataPermission.search, DataPermission.delete_all)//
+				.acl("admin", DataPermission.create, DataPermission.search, //
+						DataPermission.delete_all)//
 
 				.string("courseId")//
 				.string("driverId")//
