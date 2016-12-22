@@ -113,23 +113,17 @@ public class BatchResourceTestOften extends Assert {
 		String daveId = Json.get(node, "responses.1.id").asText();
 
 		// should succeed to fetch dave and vince credentials
-
-		batch = Json.arrayBuilder()//
-				.object()//
-				.put("method", "GET").put("path", "/1/credentials/" + vinceId)//
-				.end()//
-
-				.object()//
-				.put("method", "GET").put("path", "/1/credentials/" + daveId)//
-				.end()//
-				.build();
-
-		SpaceRequest.post("/1/batch").debugServer().adminAuth(test).body(batch).go(200)//
-				.assertEquals(vinceId, "responses.0.content.id")//
-				.assertEquals("vince", "responses.0.content.username")//
-				.assertEquals(daveId, "responses.1.content.id")//
-				.assertEquals("dave", "responses.1.content.username")//
-				.assertEquals(1, "debug.batchCredentialChecks");
+		// and the message schema
+		SpaceRequest.get("/1/batch").adminAuth(test)//
+				.queryParam("vince", "/credentials/" + vinceId) //
+				.queryParam("dave", "/credentials/" + daveId) //
+				.queryParam("schema", "/schema/message") //
+				.go(200)//
+				.assertEquals(vinceId, "vince.id")//
+				.assertEquals("vince", "vince.username")//
+				.assertEquals(daveId, "dave.id")//
+				.assertEquals("dave", "dave.username")//
+				.assertEquals("string", "schema.message.code._type");
 
 		// should succeed to return errors when batch requests are invalid, not
 		// found, unauthorized, ...
@@ -264,7 +258,7 @@ public class BatchResourceTestOften extends Assert {
 		for (int i = 0; i < 11; i++)
 			bigBatch.add(Json.object("method", "GET", "path", "/1/login"));
 
-		SpaceRequest.post("/1/batch").debugServer().backend(test).body(bigBatch).go(400)//
-				.assertEquals("batch are limited to 10 sub requests", "error.message");
+		SpaceRequest.post("/1/batch").backend(test).body(bigBatch).go(400)//
+				.assertEquals("batch-limit-exceeded", "error.code");
 	}
 }

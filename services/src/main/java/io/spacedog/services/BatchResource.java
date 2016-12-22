@@ -19,12 +19,14 @@ import com.google.common.collect.Sets;
 
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.SpaceException;
 import net.codestory.http.Context;
 import net.codestory.http.Cookie;
 import net.codestory.http.Cookies;
 import net.codestory.http.Part;
 import net.codestory.http.Query;
 import net.codestory.http.Request;
+import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.constants.HttpStatus;
@@ -48,7 +50,8 @@ public class BatchResource extends Resource {
 		ArrayNode requests = Json.readArray(body);
 
 		if (requests.size() > 10)
-			return JsonPayload.error(HttpStatus.BAD_REQUEST, "batch are limited to 10 sub requests");
+			throw new SpaceException("batch-limit-exceeded", HttpStatus.BAD_REQUEST, //
+					"batch are limited to 10 sub requests");
 
 		boolean stopOnError = context.query().getBoolean(STOP_ON_ERROR_QUERY_PARAM, false);
 		JsonBuilder<ObjectNode> batchPayload = JsonPayload.builder().array("responses");
@@ -82,6 +85,40 @@ public class BatchResource extends Resource {
 				break;
 		}
 		return JsonPayload.json(batchPayload);
+	}
+
+	@Get("")
+	@Get("/")
+	public Payload get(Context context) {
+
+		ObjectNode response = Json.object();
+		boolean stopOnError = context.query().getBoolean(STOP_ON_ERROR_QUERY_PARAM, false);
+
+		for (String key : context.query().keys()) {
+
+			if (!key.equals(STOP_ON_ERROR_QUERY_PARAM)) {
+				Payload payload = null;
+				BatchJsonRequestWrapper requestWrapper = new BatchJsonRequestWrapper(//
+						Json.object("method", "GET", "path", "/1" + context.get(key)), //
+						context);
+
+				try {
+					payload = Start.get().executeRequest(requestWrapper, null);
+				} catch (Throwable t) {
+					payload = JsonPayload.error(t);
+				}
+
+				if (payload == null)
+					payload = new Payload(HttpStatus.INTERNAL_SERVER_ERROR);
+
+				response.set(key, JsonPayload.toJsonNode(payload));
+
+				if (payload.isError() && stopOnError)
+					break;
+			}
+		}
+
+		return JsonPayload.json(response);
 	}
 
 	//
