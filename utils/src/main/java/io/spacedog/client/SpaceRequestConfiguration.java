@@ -9,23 +9,20 @@ import java.util.Properties;
 
 import com.google.common.base.Strings;
 
+import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Internals;
+import io.spacedog.utils.Utils;
 
 public class SpaceRequestConfiguration {
 
 	private Properties properties;
 
 	public SpaceRequestConfiguration() {
-		properties = new Properties();
+		this.properties = new Properties();
 	}
 
 	public SpaceRequestConfiguration(Properties properties) {
-		properties = new Properties(properties);
-	}
-
-	public SpaceRequestConfiguration(InputStream stream) throws IOException {
-		properties = new Properties();
-		properties.load(stream);
+		this.properties = new Properties(properties);
 	}
 
 	public String superdogName() {
@@ -41,7 +38,7 @@ public class SpaceRequestConfiguration {
 	}
 
 	public boolean debug() {
-		return Boolean.valueOf(getProperty("spacedog.debug", "false"));
+		return Boolean.valueOf(getProperty("spacedog.debug", "true"));
 	}
 
 	public void debug(boolean debug) {
@@ -49,7 +46,7 @@ public class SpaceRequestConfiguration {
 	}
 
 	public SpaceTarget target() {
-		return SpaceTarget.valueOf(getProperty("spacedog.target", "local"));
+		return SpaceTarget.valueOf(getProperty("spacedog.target", "production"));
 	}
 
 	public void target(SpaceTarget target) {
@@ -57,7 +54,7 @@ public class SpaceRequestConfiguration {
 	}
 
 	public int httpTimeoutMillis() {
-		return Integer.valueOf(getProperty("spacedog.http.timeout", "10000"));
+		return Integer.valueOf(getProperty("spacedog.http.timeout", "30000"));
 	}
 
 	public String testSmtpLogin() {
@@ -97,22 +94,41 @@ public class SpaceRequestConfiguration {
 	}
 
 	//
-	// Implementation
+	// Generic public methods
 	//
 
-	public String getProperty(String key, String defaultValue) {
-		String value = System.getProperty(key);
-		if (Strings.isNullOrEmpty(value))
-			value = properties.getProperty(key, defaultValue);
+	public String getProperty(String propertyName, String defaultValue) {
+		String value = get(propertyName);
+		return value == null ? defaultValue : value;
+	}
+
+	public String getProperty(String propertyName) {
+		String value = get(propertyName);
+		if (value == null)
+			throw Exceptions.runtime("configuration property [%s] not set", propertyName);
 		return value;
 	}
 
-	public String getProperty(String key) {
-		String value = System.getProperty(key);
-		if (Strings.isNullOrEmpty(value))
-			value = properties.getProperty(key);
-		if (Strings.isNullOrEmpty(value))
-			throw new IllegalStateException(String.format("configuration property [%s] not set", key));
+	public boolean getBoolean(String propertyName, boolean defaultValue) {
+		String value = get(propertyName);
+		return (value == null) ? defaultValue : Boolean.parseBoolean(value);
+	}
+
+	public int getInt(String propertyName, int defaultValue) {
+		String value = get(propertyName);
+		return value == null ? defaultValue : Integer.parseInt(value);
+	}
+
+	//
+	// Implementation
+	//
+
+	private String get(String propertyName) {
+		String value = System.getenv(propertyName);
+		if (value == null)
+			value = System.getProperty(propertyName);
+		if (value == null)
+			value = properties.getProperty(propertyName);
 		return value;
 	}
 
@@ -123,30 +139,48 @@ public class SpaceRequestConfiguration {
 	private static SpaceRequestConfiguration configuration;
 
 	public static SpaceRequestConfiguration get() {
-		try {
-			if (configuration == null) {
+		if (configuration == null) {
 
+			try {
+				InputStream input = null;
 				String userHome = System.getProperty("user.home");
 
 				if (!Strings.isNullOrEmpty(userHome)) {
 					Path path = Paths.get(userHome, ".spacedog.client.properties");
+
 					if (Files.exists(path))
-						configuration = new SpaceRequestConfiguration(Files.newInputStream(path));
+						input = Files.newInputStream(path);
+
 					else {
 						path = Paths.get(userHome, "spacedog", "spacedog.client.properties");
 						if (Files.exists(path))
-							configuration = new SpaceRequestConfiguration(Files.newInputStream(path));
+							input = Files.newInputStream(path);
 					}
 				}
 
-				if (configuration == null)
-					configuration = new SpaceRequestConfiguration(//
-							Internals.get().getFile("spacedog-artefact", "spacedog.client.properties"));
-			}
-			return configuration;
+				try {
+					// TODO
+					// remove this when watchdog jobs are using env properties
+					if (input == null)
+						input = Internals.get()//
+								.getFile("spacedog-artefact", "spacedog.client.properties");
+				} catch (Exception ignore) {
+				}
 
-		} catch (IOException e) {
-			throw new RuntimeException(e);
+				Properties properties = new Properties();
+				if (input != null)
+					properties.load(input);
+
+				Utils.info("Configuration properties = %s", properties);
+
+				configuration = new SpaceRequestConfiguration(properties);
+
+			} catch (IOException e) {
+				throw Exceptions.runtime(e, "error loading configuration properties");
+			}
+
 		}
+
+		return configuration;
 	}
 }
