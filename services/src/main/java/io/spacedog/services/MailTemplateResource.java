@@ -20,9 +20,7 @@ import io.spacedog.utils.Json;
 import io.spacedog.utils.MailSettings;
 import io.spacedog.utils.MailTemplate;
 import io.spacedog.utils.NotFoundException;
-import net.codestory.http.Context;
 import net.codestory.http.annotations.Post;
-import net.codestory.http.annotations.Put;
 import net.codestory.http.payload.Payload;
 
 public class MailTemplateResource extends Resource {
@@ -32,28 +30,6 @@ public class MailTemplateResource extends Resource {
 	//
 	// Routes
 	//
-
-	@Put("/1/mail/template/:name")
-	@Put("/1/mail/template/:name/")
-	public Payload putTemplate(String name, String body, Context context) {
-
-		SpaceContext.checkAdminCredentials();
-
-		MailSettings settings = SettingsResource.get().load(MailSettings.class);
-		if (settings.templates == null)
-			settings.templates = Maps.newHashMap();
-
-		try {
-			MailTemplate template = Json.mapper().readValue(body, MailTemplate.class);
-			settings.templates.put(name, template);
-		} catch (IOException e) {
-			throw Exceptions.illegalArgument(e, "invalid [%s] mail template", name);
-		}
-
-		SettingsResource.get().save(settings);
-
-		return JsonPayload.success();
-	}
 
 	@Post("/1/mail/template/:name")
 	@Post("/1/mail/template/:name/")

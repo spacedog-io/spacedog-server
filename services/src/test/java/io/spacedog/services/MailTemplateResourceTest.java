@@ -17,6 +17,7 @@ import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.MailSettings;
 import io.spacedog.utils.MailTemplate;
 import io.spacedog.utils.Schema;
 
@@ -28,6 +29,8 @@ public class MailTemplateResourceTest extends Assert {
 		// prepare
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
+		MailSettings mailSettings = new MailSettings();
+		mailSettings.templates = Maps.newHashMap();
 
 		// create a schema
 		Schema schema = Schema.builder("demande")//
@@ -63,8 +66,8 @@ public class MailTemplateResourceTest extends Assert {
 		template.model.put("demande", "demande");
 		template.roles = Collections.singleton("key");
 
-		SpaceRequest.put("/1/mail/template/demande").adminAuth(test)//
-				.body(Json.mapper().writeValueAsString(template)).go(200);
+		mailSettings.templates.put("demande", template);
+		SpaceClient.saveSettings(test, mailSettings);
 
 		// send inscription email
 		SpaceRequest.post("/1/mail/template/demande").backend(test)//
@@ -81,8 +84,8 @@ public class MailTemplateResourceTest extends Assert {
 		template.model.put("demande", "demande");
 		template.roles = Collections.singleton("key");
 
-		SpaceRequest.put("/1/mail/template/confirmation").adminAuth(test)//
-				.body(Json.mapper().writeValueAsString(template)).go(200);
+		mailSettings.templates.put("confirmation", template);
+		SpaceClient.saveSettings(test, mailSettings);
 
 		// send inscription confirmation email
 		SpaceRequest.post("/1/mail/template/confirmation").backend(test)//
