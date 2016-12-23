@@ -94,7 +94,8 @@ public class Billing {
 		List<LatLng> points = Lists.newArrayList();
 
 		for (CourseLog log : logs.objects())
-			points.add(log.where);
+			if (log.where != null)
+				points.add(log.where);
 
 		String type = course.driver.vehicule.type;
 		VehiculeFareSettings typeFareSettings = fareSettings.getFor(type);
