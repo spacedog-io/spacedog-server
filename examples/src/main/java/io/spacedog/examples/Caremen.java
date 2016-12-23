@@ -410,6 +410,9 @@ public class Caremen extends SpaceClient {
 				.string("driverId")//
 				.string("status")//
 				.geopoint("where")//
+				.timestamp("when")//
+				.longg("index")//
+				.longg("distanceFromLastLog")//
 
 				.close()//
 				.build();
