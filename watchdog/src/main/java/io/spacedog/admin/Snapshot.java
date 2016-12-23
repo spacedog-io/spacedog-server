@@ -14,11 +14,12 @@ public class Snapshot {
 
 		try {
 			SpaceRequest.post("/1/snapshot").superdogAuth().go(202);
-			return "OK";
 
 		} catch (Exception e) {
 			return AdminJobs.error(this, e);
 		}
+
+		return "OK";
 	}
 
 	public String check() {
@@ -62,10 +63,9 @@ public class Snapshot {
 			return AdminJobs.ok(this, message);
 
 		} catch (Exception e) {
-			if (message == null)
-				return AdminJobs.error(this, e);
-			else
-				return AdminJobs.error(this, message, e);
+			return message == null //
+					? AdminJobs.error(this, e) //
+					: AdminJobs.error(this, message, e);
 		}
 	}
 

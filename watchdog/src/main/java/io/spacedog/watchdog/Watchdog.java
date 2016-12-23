@@ -35,7 +35,6 @@ public class Watchdog extends RunListener {
 				new StringBuilder()//
 						.append(failure.getMessage()).append('\n')//
 						.append(failure.getTrace()).toString());
-		System.exit(-1);
 	}
 
 	public static void main(String[] args) {
