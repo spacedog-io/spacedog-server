@@ -19,6 +19,7 @@ import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTarget;
 import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.MailSettings;
 import io.spacedog.utils.MailTemplate;
 import io.spacedog.utils.Schema;
 import io.spacedog.utils.SettingsSettings;
@@ -48,7 +49,7 @@ public class Caremen extends SpaceClient {
 		// initInstallations();
 		// initVehiculeTypes();
 		// initStripeSettings();
-		// initMailTemplates();
+		// initMailSettings();
 		// initFareSettings();
 		// initAppConfigurationSettings();
 		// initReferences();
@@ -70,18 +71,32 @@ public class Caremen extends SpaceClient {
 	// Settings
 	//
 
-	void initMailTemplates() throws JsonProcessingException {
+	void initMailSettings() throws JsonProcessingException {
 		MailTemplate template = new MailTemplate();
 		template.to = Lists.newArrayList("{{to}}");
-		template.subject = "Vous pouvez maintenant payer vos courses Caremen sur le compte de {{company.name}}";
-		template.text = "coucou";
+		template.subject = "Votre rattachement au compte entreprise {{company.name}}";
+		template.text = "Bonjour {{firstname}} {{lastname}}," //
+				+ "\n\nNous avons le plaisir de vous informer que vous pouvez maintenant"
+				+ " régler vos courses commandées avec l’application CAREMEN sur le Compte"
+				+ " Entreprise de {{company.name}}." //
+				+ "\n\nNotez bien que vous pouvez toujours changer et sélectionner votre moyen"
+				+ " de paiement avant de confirmer chaque commande de course." //
+				+ "\n\nToujours à votre attention," //
+				+ "\nLe Service Client CAREMEN\n\n" //
+				+ "---\nCeci est un Email envoyé par l’application CAREMEN."
+				+ "\nPour plus d’information, contactez le Service Client (bonjour@caremen.fr).";
 		template.model = Maps.newHashMap();
 		template.model.put("to", "string");
+		template.model.put("firstname", "string");
+		template.model.put("lastname", "string");
 		template.model.put("company", "company");
 		template.roles = Collections.singleton("operator");
 
-		SpaceRequest.put("/1/mail/template/notif_customer_company").adminAuth(backend)//
-				.body(Json.mapper().writeValueAsString(template)).go(200);
+		MailSettings settings = new MailSettings();
+		settings.templates = Maps.newHashMap();
+		settings.templates.put("notif_customer_company", template);
+
+		SpaceClient.saveSettings(backend, settings);
 	}
 
 	void initStripeSettings() {
