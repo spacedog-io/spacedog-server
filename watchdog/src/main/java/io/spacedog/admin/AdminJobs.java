@@ -23,14 +23,14 @@ public class AdminJobs {
 	}
 
 	public static String error(Object context, String message, Throwable t) {
-		error(context, message + "\n\n" + Throwables.getStackTraceAsString(t));
+		error(context, message + "\n" + Throwables.getStackTraceAsString(t));
 		return t.getMessage();
 	}
 
 	public static void error(Object context, String message) {
+		System.err.println();
 		System.err.println(message);
 		notify(context, " is DOWN DOWN DOWN", message);
-		System.exit(-1);
 	}
 
 	static void notify(Object context, String titleSuffix, String message) {
