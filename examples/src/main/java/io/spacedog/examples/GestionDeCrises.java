@@ -34,6 +34,6 @@ public class GestionDeCrises extends SpaceClient {
 				DataPermission.search, DataPermission.update_all, DataPermission.delete_all));
 
 		SpaceRequest.put("/1/settings/schema")//
-				.superdogAuth(backend).body(settings).go(201, 200);
+				.superdogAuth(backend).bodySettings(settings).go(201, 200);
 	}
 }

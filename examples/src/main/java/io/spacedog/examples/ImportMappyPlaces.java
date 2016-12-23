@@ -24,7 +24,7 @@ public class ImportMappyPlaces extends Assert {
 
 			SpaceRequest.setForTestingDefault(false);
 			SpaceClient.resetBackend(backend);
-			SpaceRequest.post("/1/schema/resto").adminAuth(backend).body(buildRestoSchema()).go(201);
+			SpaceRequest.post("/1/schema/resto").adminAuth(backend).bodySchema(buildRestoSchema()).go(201);
 
 			double step = 0.01;
 

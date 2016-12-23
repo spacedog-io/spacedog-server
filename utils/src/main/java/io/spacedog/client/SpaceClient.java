@@ -191,7 +191,7 @@ public class SpaceClient {
 
 	public static void setSchema(Schema schema, Backend backend) {
 		SpaceRequest.put("/1/schema/" + schema.name())//
-				.adminAuth(backend).body(schema).go(200, 201);
+				.adminAuth(backend).bodySchema(schema).go(200, 201);
 	}
 
 	public static Schema getSchema(String name, Backend backend) {
@@ -282,7 +282,7 @@ public class SpaceClient {
 	}
 
 	public static <K extends Settings> void saveSettings(Backend test, K settings) {
-		SpaceRequest.put("/1/settings/" + settings.id()).adminAuth(test).body(settings).go(200, 201);
+		SpaceRequest.put("/1/settings/" + settings.id()).adminAuth(test).bodySettings(settings).go(200, 201);
 	}
 
 	public static <K extends Settings> K loadSettings(Backend backend, Class<K> settingsClass) {

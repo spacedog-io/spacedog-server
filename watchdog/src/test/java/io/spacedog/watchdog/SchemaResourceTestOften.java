@@ -72,7 +72,7 @@ public class SchemaResourceTestOften extends Assert {
 		// admin fails to update car schema color property type
 		Schema carSchema = buildCarSchema();
 		carSchema.node().with("car").with("color").put("_type", "date");
-		SpaceRequest.put("/1/schema/car").adminAuth(test).body(carSchema).go(400);
+		SpaceRequest.put("/1/schema/car").adminAuth(test).bodySchema(carSchema).go(400);
 
 		// fails to remove the car schema color property
 		// json = buildCarSchema();

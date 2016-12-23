@@ -184,7 +184,7 @@ public class SpaceRequest {
 		return this;
 	}
 
-	public SpaceRequest bodyFromPath(Path path) {
+	public SpaceRequest bodyFile(Path path) {
 		try {
 			return body(Files.readAllBytes(path));
 		} catch (IOException e) {
@@ -196,11 +196,15 @@ public class SpaceRequest {
 		return body(Json.object(elements));
 	}
 
-	public SpaceRequest body(Settings settings) {
+	public SpaceRequest bodySettings(Settings settings) {
 		return body(Json.mapper().valueToTree(settings));
 	}
 
-	public SpaceRequest body(Schema schema) {
+	public SpaceRequest bodyPojo(Object pojo) {
+		return body(Json.mapper().valueToTree(pojo));
+	}
+
+	public SpaceRequest bodySchema(Schema schema) {
 		return body(schema.node());
 	}
 
@@ -214,7 +218,7 @@ public class SpaceRequest {
 		return body(jsonBody.build());
 	}
 
-	public SpaceRequest resource(String path) {
+	public SpaceRequest bodyResource(String path) {
 		try {
 			return body(Resources.toByteArray(Resources.getResource(path)));
 		} catch (IOException e) {

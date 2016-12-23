@@ -80,7 +80,7 @@ public class SendPulseResourceTest extends SpaceClient {
 
 	private void upload(Backend backend, String name) {
 		SpaceRequest.put("/1/file/www/" + name)//
-				.resource("io/spacedog/services/sendpulse/" + name)//
+				.bodyResource("io/spacedog/services/sendpulse/" + name)//
 				.adminAuth(backend)//
 				.go(200);
 	}

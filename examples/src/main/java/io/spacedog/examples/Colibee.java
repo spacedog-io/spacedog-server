@@ -83,7 +83,7 @@ public class Colibee extends SpaceClient {
 		settings.acl.put("colibee", roles);
 
 		SpaceRequest.put("/1/settings/schema")//
-				.adminAuth(backend).body(settings).go(201, 200);
+				.adminAuth(backend).bodySettings(settings).go(201, 200);
 
 	}
 
@@ -96,18 +96,18 @@ public class Colibee extends SpaceClient {
 		settings.linkedinFinalRedirectUri = "https://colidev.www.spacedog.io/login/linkedin/callback";
 
 		SpaceRequest.put("/1/settings/credentials")//
-				.adminAuth(backend).body(settings).go(201);
+				.adminAuth(backend).bodySettings(settings).go(201);
 	}
 
 	void initTmpFiles() {
 
 		// photo
 		SpaceRequest.put("/1/file/tmp/ma-tronche.png").adminAuth(backend)//
-				.resource("io/spacedog/examples/ma-tronche.png").go(200);
+				.bodyResource("io/spacedog/examples/ma-tronche.png").go(200);
 
 		// cv
 		SpaceRequest.put("/1/file/tmp/mon-cv.pdf").adminAuth(backend)//
-				.resource("io/spacedog/examples/mon-cv.pdf").go(200);
+				.bodyResource("io/spacedog/examples/mon-cv.pdf").go(200);
 	}
 
 	void initConsultant() {
