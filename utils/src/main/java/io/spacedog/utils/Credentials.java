@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 
 // ignore deprecated fields still in elastic data
@@ -171,6 +172,10 @@ public class Credentials {
 
 	public boolean isAtMostUser() {
 		return level.ordinal() <= Level.USER.ordinal();
+	}
+
+	public boolean isReal() {
+		return !Strings.isNullOrEmpty(id);
 	}
 
 	public String id() {

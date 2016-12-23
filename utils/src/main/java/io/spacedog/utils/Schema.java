@@ -46,8 +46,9 @@ public class Schema {
 		return SchemaBuilder.builder(name);
 	}
 
-	public void validate() {
+	public Schema validate() {
 		SchemaValidator.validate(name, node);
+		return this;
 	}
 
 	public ObjectNode translate() {

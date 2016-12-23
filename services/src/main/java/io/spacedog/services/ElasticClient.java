@@ -419,6 +419,34 @@ public class ElasticClient {
 		return Arrays.stream(internalClient.admin().indices().prepareGetIndex().get().indices());
 	}
 
+	public static class Index {
+		public String backendId;
+		public String schemaName;
+
+		public Index(String backendId, String schemaName) {
+			this.backendId = backendId;
+			this.schemaName = schemaName;
+		}
+
+		@Override
+		public String toString() {
+			return String.join("-", backendId, schemaName);
+		}
+
+		public static Index valueOf(String index) {
+			String[] parts = index.split("-", 3);
+			Check.isTrue(parts.length >= 3, "index [%s] is invalid", index);
+			return new Index(parts[0], parts[1]);
+		}
+	}
+
+	public Index[] toIndicesForSchema(String schemaName) {
+		return indices()//
+				.map(index -> Index.valueOf(index))//
+				.filter(index -> schemaName.equals(index.schemaName))//
+				.toArray(Index[]::new);
+	}
+
 	public Stream<String> toIndicesStream(String backendId) {
 		String prefix = backendId + "-";
 		return indices()//
@@ -431,7 +459,7 @@ public class ElasticClient {
 
 	/**
 	 * TODO use this in the future to distinguish data indices and internal
-	 * backend indices. This means all data indices must be rename with the
+	 * backend indices. This means all data indices must be renamed with the
 	 * following pattern: backendId-data-indexName
 	 */
 	public String[] toDataIndices(String backendId) {

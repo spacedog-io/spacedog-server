@@ -85,8 +85,7 @@ public class SchemaResource extends Resource {
 		if (schema == null)
 			throw Exceptions.illegalArgument("no default schema for type [%s]", type);
 
-		schema.validate();
-		String mapping = schema.translate().toString();
+		String mapping = schema.validate().translate().toString();
 
 		String backendId = credentials.target();
 		ElasticClient elastic = Start.get().getElasticClient();
