@@ -13,6 +13,7 @@ import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.SchemaSettings;
 import io.spacedog.utils.SettingsSettings;
 import io.spacedog.utils.SettingsSettings.SettingsAcl;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
@@ -118,5 +119,17 @@ public class SettingsResourceTestOften extends Assert {
 		// but super admins can
 		SpaceRequest.get("/1/settings/animals").backend(test).go(403);
 		SpaceRequest.get("/1/settings/animals").adminAuth(test).go(200).assertEquals(animals);
+	}
+
+	@Test
+	public void checkNonDirectlyUpdatableSettingsAreNotUpdatable() {
+
+		// prepare
+		SpaceClient.prepareTest();
+		Backend test = SpaceClient.resetTestBackend();
+
+		// schema settings are not directly updatable
+		SpaceRequest.put("/1/settings/schema")//
+				.adminAuth(test).bodySettings(new SchemaSettings()).go(400);
 	}
 }

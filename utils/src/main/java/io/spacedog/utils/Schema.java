@@ -3,14 +3,13 @@
  */
 package io.spacedog.utils;
 
+import java.util.HashMap;
 import java.util.Set;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
-
-import io.spacedog.utils.SchemaSettings.SchemaAcl;
 
 public class Schema {
 
@@ -91,6 +90,26 @@ public class Schema {
 	public static void checkName(String name) {
 		if (reservedNames.contains(name))
 			throw Exceptions.illegalArgument("schema name [%s] is reserved", name);
+	}
+
+	public static class SchemaAcl extends HashMap<String, Set<DataPermission>> {
+
+		private static final long serialVersionUID = 7433673020746769733L;
+
+		public static SchemaAcl defaultAcl() {
+
+			return new SchemaAcl()//
+					.set("key", DataPermission.read_all)//
+					.set("user", DataPermission.create, DataPermission.update, //
+							DataPermission.search, DataPermission.delete)//
+					.set("admin", DataPermission.create, DataPermission.update_all, //
+							DataPermission.search, DataPermission.delete_all);
+		}
+
+		public SchemaAcl set(String role, DataPermission... permissions) {
+			put(role, Sets.newHashSet(permissions));
+			return this;
+		}
 	}
 
 	private static Set<String> reservedNames = Sets.newHashSet("settings");

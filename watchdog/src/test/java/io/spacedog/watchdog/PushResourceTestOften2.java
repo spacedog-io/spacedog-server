@@ -7,7 +7,6 @@ import org.junit.Assert;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceClient.Backend;
@@ -17,7 +16,7 @@ import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Schema;
-import io.spacedog.utils.SchemaSettings.SchemaAcl;
+import io.spacedog.utils.Schema.SchemaAcl;
 
 //@TestOften
 public class PushResourceTestOften2 extends Assert {
@@ -61,14 +60,12 @@ public class PushResourceTestOften2 extends Assert {
 
 		// add create permission to guest requests
 		Schema schema = SpaceClient.getSchema("installation", test);
-		SchemaAcl acl = new SchemaAcl();
-		acl.put("key", Sets.newHashSet(DataPermission.create, DataPermission.read, //
-				DataPermission.update));
-		acl.put("user", Sets.newHashSet(DataPermission.create, DataPermission.read, //
-				DataPermission.update));
-		acl.put("admin", Sets.newHashSet(DataPermission.create, DataPermission.update_all, //
-				DataPermission.search, DataPermission.delete_all));
-		schema.acl(acl);
+		schema.acl(new SchemaAcl()//
+				.set("key", DataPermission.create, DataPermission.read, DataPermission.update)//
+				.set("user", DataPermission.create, DataPermission.read, DataPermission.update)//
+				.set("admin", DataPermission.create, DataPermission.update_all, //
+						DataPermission.search, DataPermission.delete_all));
+
 		SpaceClient.setSchema(schema, test);
 
 		// anonymous fails to installs joho

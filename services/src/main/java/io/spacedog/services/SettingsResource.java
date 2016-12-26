@@ -17,6 +17,8 @@ import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.NonDirectlyUpdatableSettings;
+import io.spacedog.utils.NonDirectlyReadableSettings;
 import io.spacedog.utils.NotFoundException;
 import io.spacedog.utils.Settings;
 import io.spacedog.utils.SettingsSettings;
@@ -103,7 +105,12 @@ public class SettingsResource {
 
 		if (registeredSettingsClasses.containsKey(id)) {
 			try {
-				Settings settings = load(registeredSettingsClasses.get(id));
+				Class<? extends Settings> settingsClass = registeredSettingsClasses.get(id);
+				if (NonDirectlyReadableSettings.class.isAssignableFrom(settingsClass))
+					throw Exceptions.illegalArgument(//
+							"[%s] settings is not directly readable", id);
+
+				Settings settings = load(settingsClass);
 				settingsAsString = Json.mapper().writeValueAsString(settings);
 
 			} catch (JsonProcessingException e) {
@@ -127,7 +134,11 @@ public class SettingsResource {
 
 		if (registeredSettingsClasses.containsKey(id)) {
 			try {
-				Settings settings = Json.mapper().readValue(body, registeredSettingsClasses.get(id));
+				Class<? extends Settings> settingsClass = registeredSettingsClasses.get(id);
+				if (NonDirectlyUpdatableSettings.class.isAssignableFrom(settingsClass))
+					throw Exceptions.illegalArgument(//
+							"[%s] settings is not directly updatable", id);
+				Settings settings = Json.mapper().readValue(body, settingsClass);
 				response = save(settings);
 
 			} catch (IOException e) {

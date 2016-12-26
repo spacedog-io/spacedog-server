@@ -8,7 +8,9 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 
-public class SchemaSettings extends Settings {
+import io.spacedog.utils.Schema.SchemaAcl;
+
+public class SchemaSettings extends Settings implements NonDirectlyUpdatableSettings {
 
 	public static final long serialVersionUID = 4064111112532790399L;
 
@@ -16,11 +18,6 @@ public class SchemaSettings extends Settings {
 
 	public SchemaSettings() {
 		acl = new SchemaAclMap();
-	}
-
-	public SchemaSettings add(Schema schema) {
-		acl.put(schema.name(), schema.acl());
-		return this;
 	}
 
 	//
@@ -60,26 +57,5 @@ public class SchemaSettings extends Settings {
 	public static class SchemaAclMap extends HashMap<String, SchemaAcl> {
 
 		private static final long serialVersionUID = 8813814959454404912L;
-	}
-
-	public static class SchemaAcl extends HashMap<String, Set<DataPermission>> {
-
-		private static final long serialVersionUID = 7433673020746769733L;
-
-		// TODO create a single default singleton instance
-		public static SchemaAcl defaultAcl() {
-
-			SchemaAcl roles = new SchemaAcl();
-
-			roles.put("key", Sets.newHashSet(DataPermission.read_all));
-
-			roles.put("user", Sets.newHashSet(DataPermission.create, //
-					DataPermission.update, DataPermission.search, DataPermission.delete));
-
-			roles.put("admin", Sets.newHashSet(DataPermission.create, //
-					DataPermission.update_all, DataPermission.search, DataPermission.delete_all));
-
-			return roles;
-		}
 	}
 }

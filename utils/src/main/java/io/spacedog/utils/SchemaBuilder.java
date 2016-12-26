@@ -6,9 +6,8 @@ package io.spacedog.utils;
 import java.util.Arrays;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Sets;
 
-import io.spacedog.utils.SchemaSettings.SchemaAcl;
+import io.spacedog.utils.Schema.SchemaAcl;
 
 public class SchemaBuilder {
 
@@ -94,7 +93,7 @@ public class SchemaBuilder {
 		if (acl == null)
 			acl = new SchemaAcl();
 
-		acl.put(role, Sets.newHashSet(permissions));
+		acl.set(role, permissions);
 		return this;
 	}
 
