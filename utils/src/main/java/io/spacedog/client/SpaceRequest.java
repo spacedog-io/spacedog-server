@@ -257,8 +257,9 @@ public class SpaceRequest {
 		SpaceResponse response = go();
 		HttpResponse<String> httpResponse = response.httpResponse();
 		if (!Ints.contains(expectedStatus, httpResponse.getStatus()))
-			throw Exceptions.runtime("[%s %s] returns status [%s] and payload [%s]", method, uri,
-					httpResponse.getStatusText(), httpResponse.getBody());
+			throw Exceptions.runtime("[%s][%s] returns status [%s] and payload [%s]", //
+					method, response.httpRequest().getUrl(), httpResponse.getStatusText(), //
+					httpResponse.getBody());
 		return response;
 	}
 
