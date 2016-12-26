@@ -33,12 +33,12 @@ public class SpaceDog {
 				.basicAuth(backendId, username, password)//
 				.go(200).objectNode();
 
-		SpaceDog session = new SpaceDog(//
+		SpaceDog dog = new SpaceDog(//
 				Json.checkStringNotNullOrEmpty(node, "credentials.backendId"));
-		session.accessToken = Json.checkStringNotNullOrEmpty(node, "accessToken");
-		session.username = Json.checkStringNotNullOrEmpty(node, "credentials.username");
-		session.email = Json.checkStringNotNullOrEmpty(node, "credentials.email");
-		return session;
+		dog.accessToken = Json.checkStringNotNullOrEmpty(node, "accessToken");
+		dog.username = Json.checkStringNotNullOrEmpty(node, "credentials.username");
+		dog.email = Json.checkStringNotNullOrEmpty(node, "credentials.email");
+		return dog;
 	}
 
 	public void logout() {

@@ -479,7 +479,7 @@ public class Caremen extends SpaceClient {
 		}
 	}
 
-	private void createRobots() {
+	void createRobots() {
 		if (backend == PRODUCTION)
 			return;
 
