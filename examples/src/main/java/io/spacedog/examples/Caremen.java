@@ -510,11 +510,18 @@ public class Caremen extends SpaceClient {
 	}
 
 	void createCashier() {
-		User cashier = SpaceClient.createCredentials(backend.backendId, //
-				"cashier", "hi cashier", "plateform@spacedog.io");
+		JsonNode node = SpaceRequest.get("/1/credentials")//
+				.adminAuth(backend).queryParam("username", "cashier").go(200)//
+				.get("results.0.id");
 
-		SpaceRequest.put("/1/credentials/" + cashier.id + "/roles/cashier")//
-				.adminAuth(backend).go(200);
+		if (node == null) {
+
+			User cashier = SpaceClient.createCredentials(backend.backendId, //
+					"cashier", "hi cashier", "plateform@spacedog.io");
+
+			SpaceRequest.put("/1/credentials/" + cashier.id + "/roles/cashier")//
+					.adminAuth(backend).go(200);
+		}
 	}
 
 }
