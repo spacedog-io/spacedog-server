@@ -7,7 +7,6 @@ import java.util.Collections;
 
 import org.junit.Test;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
@@ -40,7 +39,7 @@ public class Caremen extends SpaceClient {
 	private Backend backend;
 
 	@Test
-	public void initCaremenBackend() throws JsonProcessingException {
+	public void initCaremenBackend() {
 
 		backend = DEV;
 		SpaceRequest.configuration().target(SpaceTarget.production);
@@ -71,7 +70,7 @@ public class Caremen extends SpaceClient {
 	// Settings
 	//
 
-	void initMailSettings() throws JsonProcessingException {
+	void initMailSettings() {
 		MailTemplate template = new MailTemplate();
 		template.to = Lists.newArrayList("{{to}}");
 		template.subject = "Votre rattachement au compte entreprise {{company.name}}";
@@ -118,15 +117,14 @@ public class Caremen extends SpaceClient {
 	}
 
 	void initAppConfigurationSettings() {
-		ObjectNode settings = Json.object("driverAverageSpeed", 15, //
+		ObjectNode settings = Json.object(//
 				"driverAverageSpeedKmPerHour", 15, //
-				"courseLogInterval", 20, //
 				"courseLogIntervalMeters", 100, //
 				"customerWaitingForDriverMaxDurationMinutes", 2, //
-				"operatorRefreshTimeout", 30, //
 				"operatorRefreshTimeoutSeconds", 30);
-		SpaceRequest.put("/1/settings/appcustomer").adminAuth(backend).body(settings).go(200, 201);
-		SpaceRequest.put("/1/settings/appconfiguration").adminAuth(backend).body(settings).go(200, 201);
+
+		SpaceRequest.put("/1/settings/appconfiguration")//
+				.adminAuth(backend).body(settings).go(200, 201);
 	}
 
 	void initSettingsSettings() {
