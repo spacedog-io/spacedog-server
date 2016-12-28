@@ -83,12 +83,11 @@ public class LogResource extends Resource {
 		Optional<Integer> optMinStatus = Strings.isNullOrEmpty(minStatus) ? Optional.empty()//
 				: Optional.of(Integer.parseInt(minStatus));
 
-		SearchResponse response = doGetLogs(backendId, //
-				context.query().getInteger("from", 0), //
-				context.query().getInteger("size", 10), //
-				optMinStatus, //
-				type);
+		int from = context.query().getInteger("from", 0);
+		int size = context.query().getInteger("size", 10);
+		Check.isTrue(from + size <= 1000, "from + size must be less than or equal to 1000");
 
+		SearchResponse response = doGetLogs(backendId, from, size, optMinStatus, type);
 		return extractLogs(response);
 	}
 
@@ -212,8 +211,6 @@ public class LogResource extends Resource {
 
 	private SearchResponse doGetLogs(Optional<String> backendId, int from, int size, Optional<Integer> minStatus,
 			Optional<Credentials.Level> type) {
-
-		Check.isTrue(from + size <= 1000, "from + size must be less than or equal to 1000");
 
 		BoolQueryBuilder query = QueryBuilders.boolQuery();
 
