@@ -294,9 +294,12 @@ public class Caremen extends SpaceClient {
 
 				.string("status") //
 				.string("requestedVehiculeType").examples("classic") //
-				.timestamp("requestedPickupTimestamp").examples("2016-07-12T14:00:00.000Z") //
-				.timestamp("pickupTimestamp").examples("2016-07-12T14:00:00.000Z") //
-				.timestamp("dropoffTimestamp").examples("2016-07-12T14:00:00.000Z") //
+				.timestamp("requestedPickupTimestamp") //
+				.timestamp("driverIsComingTimestamp") //
+				.timestamp("driverIsReadyToLoadTimestamp") //
+				.timestamp("cancelledTimestamp") //
+				.timestamp("pickupTimestamp") //
+				.timestamp("dropoffTimestamp") //
 				.text("noteForDriver")//
 				.floatt("fare").examples(23.82)// in euros
 				.longg("time").examples(1234567)// in millis
