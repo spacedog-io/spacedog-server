@@ -70,12 +70,12 @@ public class Billing {
 
 	void computeFare(SpaceDog dog, Course course, FareSettings fareSettings) {
 
+		Check.notNull(course.requestedVehiculeType, "course.requestedVehiculeType");
+		Check.notNull(course.pickupTimestamp, "course.pickupTimestamp");
+		Check.notNull(course.dropoffTimestamp, "course.dropoffTimestamp");
 		Check.notNull(course.driver, "course.driver");
 		Check.notNull(course.driver.driverId, "course.driver.driverId");
 		Check.notNull(course.driver.vehicule, "course.driver.vehicule");
-		Check.notNull(course.driver.vehicule.type, "course.driver.vehicule.type");
-		Check.notNull(course.pickupTimestamp, "course.pickupTimestamp");
-		Check.notNull(course.dropoffTimestamp, "course.dropoffTimestamp");
 
 		TermQuery query = new TermQuery();
 		query.type = "courselog";
@@ -97,7 +97,7 @@ public class Billing {
 			if (log.where != null)
 				points.add(log.where);
 
-		String type = course.driver.vehicule.type;
+		String type = course.requestedVehiculeType;
 		VehiculeFareSettings typeFareSettings = fareSettings.getFor(type);
 		Check.notNull(typeFareSettings.base, type + ".base");
 		Check.notNull(typeFareSettings.km, type + ".km");
