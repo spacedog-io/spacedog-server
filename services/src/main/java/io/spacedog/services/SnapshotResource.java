@@ -96,7 +96,7 @@ public class SnapshotResource extends Resource {
 		// TODO rename correctly the snapshot repository
 		CreateSnapshotResponse response = Start.get().getElasticClient().cluster()//
 				.prepareCreateSnapshot(repoId, snapshotId)//
-				.setIndicesOptions(IndicesOptions.fromOptions(false, true, true, true))//
+				.setIndicesOptions(IndicesOptions.fromOptions(true, true, true, true))//
 				.setWaitForCompletion(context.query().getBoolean(WAIT_FOR_COMPLETION, false))//
 				.setIncludeGlobalState(true)//
 				.setPartial(false)//
