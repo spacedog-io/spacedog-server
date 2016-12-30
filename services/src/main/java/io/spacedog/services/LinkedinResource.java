@@ -1,8 +1,6 @@
 package io.spacedog.services;
 
 import com.google.common.base.Strings;
-import com.google.common.escape.Escaper;
-import com.google.common.net.UrlEscapers;
 
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
@@ -14,6 +12,7 @@ import io.spacedog.utils.CredentialsSettings;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.SpaceException;
 import io.spacedog.utils.SpaceHeaders;
+import io.spacedog.utils.Uris;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Get;
@@ -67,33 +66,34 @@ public class LinkedinResource extends Resource {
 			// in mobile apps
 			finalRedirectUri = Utils.removeSuffix(finalRedirectUri, ";");
 
-		Escaper paramEscaper = UrlEscapers.urlPathSegmentEscaper();
 		StringBuilder location = new StringBuilder(finalRedirectUri)//
 				.append("#state=");
 
+		// TODO why the hell do i escape path segment style
+		// instead of parameter escaping
 		if (state != null)
-			location.append(paramEscaper.escape(state));
+			location.append(Uris.escapeSegment(state));
 
 		try {
 			Credentials credentials = login(context);
 
 			location.append("&access_token=")//
-					.append(paramEscaper.escape(credentials.accessToken()))//
+					.append(Uris.escapeSegment(credentials.accessToken()))//
 					.append("&expires=")//
 					.append(credentials.accessTokenExpiresIn())//
 					.append("&credentialsId=")//
-					.append(paramEscaper.escape(credentials.id()));
+					.append(Uris.escapeSegment(credentials.id()));
 
 		} catch (SpaceException e) {
 			location.append("&error=")//
-					.append(paramEscaper.escape(e.code()))//
+					.append(Uris.escapeSegment(e.code()))//
 					.append("&error_description=")//
-					.append(paramEscaper.escape(e.getMessage()));
+					.append(Uris.escapeSegment(e.getMessage()));
 
 		} catch (Throwable t) {
 			location.append("&error=internal-server-error")//
 					.append("&error_description=")//
-					.append(paramEscaper.escape(t.getMessage()));
+					.append(Uris.escapeSegment(t.getMessage()));
 		}
 
 		return new Payload(302).withHeader(SpaceHeaders.LOCATION, location.toString());

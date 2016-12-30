@@ -7,7 +7,7 @@ import com.mashape.unirest.http.HttpMethod;
 
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Uris;
+import io.spacedog.utils.WebPath;
 import net.codestory.http.Context;
 import net.codestory.http.filters.PayloadSupplier;
 import net.codestory.http.payload.Payload;
@@ -55,7 +55,7 @@ public class FileResource extends S3Resource {
 	// Implementation
 	//
 
-	Payload get(String[] path, Context context) {
+	Payload get(WebPath path, Context context) {
 		Credentials credentials = SpaceContext.getCredentials();
 		Payload payload = doGet(FILE_BUCKET_SUFFIX, credentials.target(), path, context);
 
@@ -65,23 +65,23 @@ public class FileResource extends S3Resource {
 		return doList(FILE_BUCKET_SUFFIX, credentials.target(), path, context);
 	}
 
-	Payload put(String[] path, byte[] bytes, Context context) {
+	Payload put(WebPath path, byte[] bytes, Context context) {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		return doUpload(FILE_BUCKET_SUFFIX, "/1/file", credentials, path, bytes, context);
 	}
 
 	Payload deleteAll() {
-		return delete(Uris.ROOT);
+		return delete(WebPath.ROOT);
 	}
 
-	Payload delete(String[] path) {
+	Payload delete(WebPath path) {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		return doDelete(FILE_BUCKET_SUFFIX, credentials, path, false, false);
 	}
 
-	private static String[] toWebPath(String uri) {
+	private static WebPath toWebPath(String uri) {
 		// removes '/1/file'
-		return Uris.split(uri.substring(7));
+		return WebPath.parse(uri.substring(7));
 	}
 
 	//

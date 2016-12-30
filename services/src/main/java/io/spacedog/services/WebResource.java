@@ -5,11 +5,10 @@ package io.spacedog.services;
 
 import org.elasticsearch.common.Strings;
 
-import com.google.common.collect.ObjectArrays;
 import com.mashape.unirest.http.HttpMethod;
 
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Uris;
+import io.spacedog.utils.WebPath;
 import io.spacedog.utils.WebSettings;
 import net.codestory.http.Context;
 import net.codestory.http.filters.PayloadSupplier;
@@ -53,19 +52,19 @@ public class WebResource extends S3Resource {
 	// Implementation
 	//
 
-	private Payload doGet(String[] path, Context context) {
+	private Payload doGet(WebPath path, Context context) {
 		return doGet(true, path, context);
 	}
 
-	private Payload doHead(String[] path, Context context) {
+	private Payload doHead(WebPath path, Context context) {
 		return doGet(false, path, context);
 	}
 
-	private Payload doGet(boolean withContent, String[] path, Context context) {
+	private Payload doGet(boolean withContent, WebPath path, Context context) {
 
 		String backendId = SpaceContext.target();
 
-		if (path.length > 0) {
+		if (path.size() > 0) {
 
 			Payload payload = doGet(withContent, FileResource.FILE_BUCKET_SUFFIX, //
 					backendId, path, context);
@@ -73,8 +72,8 @@ public class WebResource extends S3Resource {
 			if (payload.isSuccess())
 				return payload;
 
-			payload = doGet(withContent, FileResource.FILE_BUCKET_SUFFIX, backendId,
-					ObjectArrays.concat(path, "index.html"), context);
+			payload = doGet(withContent, FileResource.FILE_BUCKET_SUFFIX, backendId, //
+					path.addLast("index.html"), context);
 
 			if (payload.isSuccess())
 				return payload;
@@ -83,7 +82,7 @@ public class WebResource extends S3Resource {
 
 			if (!Strings.isNullOrEmpty(settings.notFoundPage))
 				payload = doGet(withContent, FileResource.FILE_BUCKET_SUFFIX, backendId, //
-						ObjectArrays.concat(path[0], Uris.split(settings.notFoundPage)), context);
+						WebPath.parse(settings.notFoundPage).addFirst(path.first()), context);
 
 			return payload;
 		}
@@ -91,13 +90,13 @@ public class WebResource extends S3Resource {
 		return Payload.notFound();
 	}
 
-	private static String[] toWebPath(String uri) {
+	private static WebPath toWebPath(String uri) {
 
 		return SpaceContext.isWww() //
 				// add www bucket prefix
-				? ObjectArrays.concat("www", Uris.split(uri))
+				? WebPath.parse(uri).addFirst("www")
 				// remove '/1/web'
-				: Uris.split(uri.substring(6));
+				: WebPath.parse(uri.substring(6));
 	}
 
 	//

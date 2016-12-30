@@ -111,4 +111,17 @@ public class Utils {
 		System.err.println("[SpaceDog Warning] " + message);
 		t.printStackTrace();
 	}
+
+	//
+	// Array utils
+	//
+
+	public static String[] toArray(String... parts) {
+		return parts;
+	}
+
+	public static Object[] toArray(Object... parts) {
+		return parts;
+	}
+
 }

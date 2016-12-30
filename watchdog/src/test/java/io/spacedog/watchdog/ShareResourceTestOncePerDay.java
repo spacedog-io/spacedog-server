@@ -8,6 +8,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
@@ -26,7 +27,7 @@ import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
 @TestOncePerDay
-public class ShareResourceTestOncePerDay {
+public class ShareResourceTestOncePerDay extends Assert {
 
 	private static final String FILE_CONTENT = "This is a test file!";
 
@@ -174,7 +175,6 @@ public class ShareResourceTestOncePerDay {
 		SpaceRequest.delete(txtLocation).adminAuth(test).go(200);
 		SpaceRequest.get("/1/share").adminAuth(test).go(200)//
 				.assertSizeEquals(0, "results");
-
 	}
 
 	@Test
@@ -256,6 +256,52 @@ public class ShareResourceTestOncePerDay {
 		// backend contains no shared file
 		SpaceRequest.get("/1/share").adminAuth(test).go(200)//
 				.assertSizeEquals(0, "results");
+	}
+
+	@Test
+	public void testSharingWithContentDispositionAndEscaping() {
+
+		// prepare
+		Backend test = SpaceClient.resetTestBackend();
+
+		// share file with name that needs escaping
+		ObjectNode json = SpaceRequest.put("/1/share/{fileName}")//
+				.routeParam("fileName", "un petit text ?")//
+				.adminAuth(test)//
+				.body(FILE_CONTENT.getBytes())//
+				.go(200)//
+				.objectNode();
+
+		String location = json.get("location").asText();
+		String s3Location = json.get("s3").asText();
+
+		// get file from location URI
+		// no file extension => no specific content type
+		String stringContent = SpaceRequest.get(location).backend(test).go(200)//
+				.assertHeaderEquals("application/octet-stream", SpaceHeaders.CONTENT_TYPE)//
+				.httpResponse().getBody();
+
+		Assert.assertEquals(FILE_CONTENT, stringContent);
+
+		// get file from location URI with content disposition
+		stringContent = SpaceRequest.get(location).backend(test)//
+				.queryParam("withContentDisposition", "true").go(200)//
+				.assertHeaderEquals("attachment; filename=\"un petit text ?\"", //
+						SpaceHeaders.CONTENT_DISPOSITION)//
+				.httpResponse().getBody();
+
+		Assert.assertEquals(FILE_CONTENT, stringContent);
+
+		// get file from S3 location URI
+		// no file extension => no specific content type
+		// by default S3 returns content disposition header if set in metadata
+		stringContent = SpaceRequest.get(s3Location).go(200)//
+				.assertHeaderEquals("application/octet-stream", SpaceHeaders.CONTENT_TYPE)//
+				.assertHeaderEquals("attachment; filename=\"un petit text ?\"", //
+						SpaceHeaders.CONTENT_DISPOSITION)//
+				.httpResponse().getBody();
+
+		Assert.assertEquals(FILE_CONTENT, stringContent);
 	}
 
 	void upload(String putUrl, String content, String contentType, String fileName, String username, String userType)

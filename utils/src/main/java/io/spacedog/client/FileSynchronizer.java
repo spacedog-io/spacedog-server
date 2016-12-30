@@ -17,7 +17,7 @@ import com.google.common.hash.Hashing;
 
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Uris;
+import io.spacedog.utils.WebPath;
 
 @Parameters(commandNames = { "sync" }, //
 commandDescription = "synchronize source folder to backend")
@@ -45,8 +45,20 @@ public class FileSynchronizer {
 
 	private String password = "hi test";
 
+	/**
+	 * Set of server file path checked with matching local files. A checked
+	 * local file is uploaded if different.
+	 */
 	private Set<String> checked = Sets.newHashSet();
+
+	/**
+	 * Set of local file path uploaded to the server.
+	 */
 	private Set<String> uploaded = Sets.newHashSet();
+
+	/**
+	 * Set of server file path deleted from the server.
+	 */
 	private Set<String> deleted = Sets.newHashSet();
 
 	public static FileSynchronizer newInstance() {
@@ -139,11 +151,11 @@ public class FileSynchronizer {
 		Path filePath = Paths.get(source).resolve(relativePath);
 
 		if (Files.isRegularFile(filePath)) {
+			checked.add(webPath);
 
 			if (!check(filePath, file.get("etag").asText()))
 				upload(filePath);
 
-			checked.add(webPath);
 		} else
 			delete(webPath);
 	}
@@ -158,12 +170,14 @@ public class FileSynchronizer {
 	}
 
 	private boolean notAlreadyCheckedAndSynched(Path filePath) {
-		String webPath = toWebPath(filePath);
+		String webPath = toWebPath(filePath).toString();
 		return !checked.contains(webPath);
 	}
 
-	private String toWebPath(Path filePath) {
-		return Uris.join(prefix, Paths.get(source).relativize(filePath).toString());
+	private WebPath toWebPath(Path filePath) {
+		return WebPath//
+				.parse(Paths.get(source).relativize(filePath).toString())//
+				.addFirst(prefix);
 	}
 
 	private void delete(String webPath) {
@@ -177,13 +191,13 @@ public class FileSynchronizer {
 	private void upload(Path filePath) {
 
 		try {
-			String webPath = toWebPath(filePath);
-			SpaceRequest.put("/1/file" + webPath)//
+			WebPath webPath = toWebPath(filePath);
+			SpaceRequest.put("/1/file" + webPath.toEscapedString())//
 					.basicAuth(backendId, login, password)//
 					.bodyFile(filePath)//
 					.go(200);
 
-			uploaded.add(webPath);
+			uploaded.add(webPath.toString());
 		} catch (Exception e) {
 			Exceptions.runtime(e);
 		}

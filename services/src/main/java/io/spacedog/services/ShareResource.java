@@ -8,8 +8,8 @@ import java.util.UUID;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.WebPath;
 import io.spacedog.utils.ShareSettings;
-import io.spacedog.utils.Uris;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -31,7 +31,7 @@ public class ShareResource extends S3Resource {
 	@Get("/")
 	public Object getAll(Context context) {
 		Credentials credentials = checkPermission(DataPermission.search);
-		return doList(SHARE_BUCKET_SUFFIX, credentials.target(), Uris.ROOT, context);
+		return doList(SHARE_BUCKET_SUFFIX, credentials.target(), WebPath.ROOT, context);
 	}
 
 	@Get("/:uuid/:fileName")
@@ -42,7 +42,7 @@ public class ShareResource extends S3Resource {
 				DataPermission.read, DataPermission.read_all);
 
 		return doGet(SHARE_BUCKET_SUFFIX, SpaceContext.target(), //
-				Uris.toPath(uuid, fileName), context, checkOwnership);
+				WebPath.newPath(uuid, fileName), context, checkOwnership);
 	}
 
 	@Post("/:fileName")
@@ -55,14 +55,14 @@ public class ShareResource extends S3Resource {
 		ShareSettings settings = SettingsResource.get().load(ShareSettings.class);
 		String uuid = UUID.randomUUID().toString();
 		return doUpload(SHARE_BUCKET_SUFFIX, "/1/share", credentials, //
-				Uris.toPath(uuid, fileName), bytes, context, settings.enableS3Location);
+				WebPath.newPath(uuid, fileName), bytes, context, settings.enableS3Location);
 	}
 
 	@Delete("")
 	@Delete("/")
 	public Payload deleteAll() {
 		Credentials credentials = checkPermission(DataPermission.delete_all);
-		return doDelete(SHARE_BUCKET_SUFFIX, credentials, Uris.ROOT, false, false);
+		return doDelete(SHARE_BUCKET_SUFFIX, credentials, WebPath.ROOT, false, false);
 	}
 
 	@Delete("/:uuid/:fileName")
@@ -74,7 +74,7 @@ public class ShareResource extends S3Resource {
 				DataPermission.delete, DataPermission.delete_all);
 
 		return doDelete(SHARE_BUCKET_SUFFIX, credentials, //
-				Uris.toPath(uuid, fileName), true, checkOwnership);
+				WebPath.newPath(uuid, fileName), true, checkOwnership);
 	}
 
 	//

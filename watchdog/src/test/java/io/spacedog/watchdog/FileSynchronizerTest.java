@@ -32,6 +32,7 @@ public class FileSynchronizerTest extends Assert {
 		createHtmlFile("x/y/y.html");
 		createHtmlFile("x/y/z/z.html");
 		createHtmlFile("x/y/z/index.html");
+		createHtmlFile("x/y/z/a et b");
 
 		// prepare backend
 		SpaceClient.resetTestBackend();
@@ -44,14 +45,14 @@ public class FileSynchronizerTest extends Assert {
 
 		assertEquals(0, synch.checked().size());
 		assertEquals(0, synch.deleted().size());
-		assertEquals(8, synch.uploaded().size());
+		assertEquals(9, synch.uploaded().size());
 
 		// changes nothing and synch
 
 		synch.reset();
 		synch.synch();
 
-		assertEquals(8, synch.checked().size());
+		assertEquals(9, synch.checked().size());
 		assertEquals(0, synch.deleted().size());
 		assertEquals(0, synch.uploaded().size());
 
@@ -61,7 +62,7 @@ public class FileSynchronizerTest extends Assert {
 		synch.reset();
 		synch.synch();
 
-		assertEquals(7, synch.checked().size());
+		assertEquals(8, synch.checked().size());
 		assertEquals(1, synch.deleted().size());
 		assertEquals(0, synch.uploaded().size());
 
@@ -71,7 +72,7 @@ public class FileSynchronizerTest extends Assert {
 		synch.reset();
 		synch.synch();
 
-		assertEquals(7, synch.checked().size());
+		assertEquals(8, synch.checked().size());
 		assertEquals(0, synch.deleted().size());
 		assertEquals(1, synch.uploaded().size());
 
@@ -82,7 +83,7 @@ public class FileSynchronizerTest extends Assert {
 		synch.reset();
 		synch.synch();
 
-		assertEquals(8, synch.checked().size());
+		assertEquals(9, synch.checked().size());
 		assertEquals(0, synch.deleted().size());
 		assertEquals(0, synch.uploaded().size());
 
@@ -92,7 +93,7 @@ public class FileSynchronizerTest extends Assert {
 		synch.reset();
 		synch.synch();
 
-		assertEquals(8, synch.checked().size());
+		assertEquals(9, synch.checked().size());
 		assertEquals(0, synch.deleted().size());
 		assertEquals(1, synch.uploaded().size());
 	}
