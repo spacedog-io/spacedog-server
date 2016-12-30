@@ -24,8 +24,8 @@ public class Watchdog extends RunListener {
 
 			return "OK";
 
-		} catch (Exception e) {
-			return AdminJobs.error(this, e);
+		} catch (Throwable t) {
+			return AdminJobs.error(this, t);
 		}
 	}
 

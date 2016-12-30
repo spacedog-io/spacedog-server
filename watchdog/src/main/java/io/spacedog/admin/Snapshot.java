@@ -15,8 +15,8 @@ public class Snapshot {
 		try {
 			SpaceRequest.post("/1/snapshot").superdogAuth().go(202);
 
-		} catch (Exception e) {
-			return AdminJobs.error(this, e);
+		} catch (Throwable t) {
+			return AdminJobs.error(this, t);
 		}
 
 		return "OK";
@@ -62,10 +62,10 @@ public class Snapshot {
 
 			return AdminJobs.ok(this, message);
 
-		} catch (Exception e) {
+		} catch (Throwable t) {
 			return message == null //
-					? AdminJobs.error(this, e) //
-					: AdminJobs.error(this, message, e);
+					? AdminJobs.error(this, t) //
+					: AdminJobs.error(this, message, t);
 		}
 	}
 

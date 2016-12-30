@@ -61,8 +61,8 @@ public class Billing {
 				}
 			}
 
-		} catch (Exception e) {
-			return AdminJobs.error(this, e);
+		} catch (Throwable t) {
+			return AdminJobs.error(this, t);
 		}
 
 		return "OK";

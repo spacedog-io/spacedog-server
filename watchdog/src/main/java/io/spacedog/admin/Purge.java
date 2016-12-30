@@ -39,8 +39,8 @@ public class Purge {
 
 			return AdminJobs.ok(this);
 
-		} catch (Exception e) {
-			return AdminJobs.error(this, e);
+		} catch (Throwable t) {
+			return AdminJobs.error(this, t);
 		}
 	}
 
