@@ -179,6 +179,8 @@ public class Start {
 				.add(BatchResource.get())//
 				.add(MailResource.get())//
 				.add(MailTemplateResource.get())//
+				.add(SmsResource.get())//
+				.add(SmsTemplateResource.get())//
 				.add(SnapshotResource.get())//
 				.add(LogResource.get())//
 				.add(PushResource.get())//

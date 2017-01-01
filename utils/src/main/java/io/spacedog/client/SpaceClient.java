@@ -297,4 +297,9 @@ public class SpaceClient {
 	public static void deleteSettings(Backend backend, String id) {
 		SpaceRequest.delete("/1/settings/" + id).adminAuth(backend).go(200);
 	}
+
+	public static void setRole(User admin, User user, String role) {
+		SpaceRequest.put("/1/credentials/{id}/roles/{role}").userAuth(admin)//
+				.routeParam("id", user.id).routeParam("role", role).go(200);
+	}
 }
