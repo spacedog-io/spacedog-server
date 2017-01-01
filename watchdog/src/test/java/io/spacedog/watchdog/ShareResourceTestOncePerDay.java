@@ -35,6 +35,7 @@ public class ShareResourceTestOncePerDay extends Assert {
 	public void shareWithDefaultSettings() throws IOException {
 
 		// prepare
+		SpaceClient.prepareTest(false);
 		Backend test = SpaceClient.resetTestBackend();
 		User vince = SpaceClient.signUp(test, "vince", "hi vince", "vince@dog.com");
 		User fred = SpaceClient.signUp(test, "fred", "hi fred", "fred@dog.com");
@@ -181,6 +182,7 @@ public class ShareResourceTestOncePerDay extends Assert {
 	public void shareWithCustomSettings() throws IOException {
 
 		// prepare
+		SpaceClient.prepareTest(false);
 		Backend test = SpaceClient.resetTestBackend();
 		User vince = SpaceClient.signUp(test, "vince", "hi vince", "vince@dog.com");
 		User fred = SpaceClient.signUp(test, "fred", "hi fred", "fred@dog.com");
