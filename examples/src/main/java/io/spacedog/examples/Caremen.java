@@ -15,6 +15,7 @@ import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceRequestConfiguration;
 import io.spacedog.client.SpaceTarget;
 import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
@@ -23,6 +24,9 @@ import io.spacedog.utils.MailTemplate;
 import io.spacedog.utils.Schema;
 import io.spacedog.utils.SettingsSettings;
 import io.spacedog.utils.SettingsSettings.SettingsAcl;
+import io.spacedog.utils.SmsSettings;
+import io.spacedog.utils.SmsSettings.TwilioSettings;
+import io.spacedog.utils.SmsTemplate;
 import io.spacedog.utils.StripeSettings;
 
 public class Caremen extends SpaceClient {
@@ -49,6 +53,7 @@ public class Caremen extends SpaceClient {
 		// initVehiculeTypes();
 		// initStripeSettings();
 		// initMailSettings();
+		// initSmsSettings();
 		// initFareSettings();
 		// initAppConfigurationSettings();
 		// initReferences();
@@ -71,6 +76,9 @@ public class Caremen extends SpaceClient {
 	//
 
 	void initMailSettings() {
+		MailSettings settings = new MailSettings();
+		settings.templates = Maps.newHashMap();
+
 		MailTemplate template = new MailTemplate();
 		template.to = Lists.newArrayList("{{to}}");
 		template.subject = "Votre rattachement au compte entreprise {{company.name}}";
@@ -90,10 +98,38 @@ public class Caremen extends SpaceClient {
 		template.model.put("lastname", "string");
 		template.model.put("company", "company");
 		template.roles = Collections.singleton("operator");
-
-		MailSettings settings = new MailSettings();
-		settings.templates = Maps.newHashMap();
 		settings.templates.put("notif_customer_company", template);
+
+		template = new MailTemplate();
+		template.to = Lists.newArrayList("{{to}}");
+		template.subject = "Bienvenu chez Caremen";
+		template.text = "Bienvenu chez Caremen";
+		template.model = Maps.newHashMap();
+		template.model.put("to", "string");
+		template.roles = Collections.singleton("user");
+		settings.templates.put("notif-customer-welcome", template);
+
+		SpaceClient.saveSettings(backend, settings);
+	}
+
+	void initSmsSettings() {
+		SmsTemplate template = new SmsTemplate();
+		template.to = "{{to}}";
+		template.body = "Votre code de validation CAREMEN est le {{code}}";
+		template.model = Maps.newHashMap();
+		template.model.put("to", "string");
+		template.model.put("code", "string");
+		template.roles = Collections.singleton("user");
+
+		SmsSettings settings = new SmsSettings();
+		settings.templates = Maps.newHashMap();
+		settings.templates.put("phone-validation", template);
+
+		settings.twilio = new TwilioSettings();
+		SpaceRequestConfiguration configuration = SpaceRequest.configuration();
+		settings.twilio.accountSid = configuration.getProperty("caremen.twilio.accountSid");
+		settings.twilio.authToken = configuration.getProperty("caremen.twilio.authToken");
+		settings.twilio.defaultFrom = configuration.getProperty("caremen.twilio.defaultFrom");
 
 		SpaceClient.saveSettings(backend, settings);
 	}
