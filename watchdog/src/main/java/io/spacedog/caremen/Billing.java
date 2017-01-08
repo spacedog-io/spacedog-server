@@ -38,6 +38,7 @@ public class Billing {
 
 			TermQuery query = new TermQuery();
 			query.type = "course";
+			query.size = 50;
 			query.terms = Lists.newArrayList("status", "completed");
 			SearchResults<Course> courses = dog.data().search(query, Course.class);
 
