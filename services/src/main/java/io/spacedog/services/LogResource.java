@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 
 import io.spacedog.utils.Check;
@@ -72,22 +71,17 @@ public class LogResource extends Resource {
 
 		Credentials credentials = SpaceContext.checkSuperAdminCredentials();
 
-		Optional<String> backendId = credentials.isTargetingRootApi() //
+		Optional<String> optBackendId = credentials.isTargetingRootApi() //
 				? Optional.empty() : Optional.of(credentials.target());
-
-		String logType = context.query().get(SpaceParams.LOG_TYPE);
-		Optional<Level> type = Strings.isNullOrEmpty(logType) ? Optional.empty()//
-				: Optional.of(Level.valueOf(logType));
-
-		String minStatus = context.query().get(SpaceParams.MIN_STATUS);
-		Optional<Integer> optMinStatus = Strings.isNullOrEmpty(minStatus) ? Optional.empty()//
-				: Optional.of(Integer.parseInt(minStatus));
 
 		int from = context.query().getInteger("from", 0);
 		int size = context.query().getInteger("size", 10);
 		Check.isTrue(from + size <= 1000, "from + size must be less than or equal to 1000");
 
-		SearchResponse response = doGetLogs(backendId, from, size, optMinStatus, type);
+		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
+		DataStore.get().refreshType(refresh, SPACEDOG_BACKEND, TYPE);
+
+		SearchResponse response = doGetLogs(from, size, optBackendId);
 		return extractLogs(response);
 	}
 
@@ -105,7 +99,8 @@ public class LogResource extends Resource {
 					.filter(QueryBuilders.termQuery("credentials.backendId", //
 							credentials.target()));
 
-		DataStore.get().refreshType(true, SPACEDOG_BACKEND, TYPE);
+		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
+		DataStore.get().refreshType(refresh, SPACEDOG_BACKEND, TYPE);
 
 		SearchResponse response = Start.get().getElasticClient()//
 				.prepareSearch(SPACEDOG_BACKEND, TYPE)//
@@ -121,12 +116,14 @@ public class LogResource extends Resource {
 
 	@Delete("")
 	@Delete("/")
-	public Payload purgeBackend(Context context) {
+	public Payload purge(Context context) {
 
 		Credentials credentials = SpaceContext.checkSuperDogCredentials();
+		Optional<String> optBackendId = credentials.isTargetingRootApi() //
+				? Optional.empty() : Optional.of(credentials.target());
 
-		Optional<DeleteByQueryResponse> response = doPurgeBackend(credentials.target(), //
-				context.request().query().getInteger("from", 1000));
+		Optional<DeleteByQueryResponse> response = doPurgeBackend(//
+				context.request().query().getInteger("from", 100000), optBackendId);
 
 		// no delete response means no logs to delete means success
 
@@ -185,10 +182,10 @@ public class LogResource extends Resource {
 	// Implementation
 	//
 
-	private Optional<DeleteByQueryResponse> doPurgeBackend(String backendId, int from) {
+	private Optional<DeleteByQueryResponse> doPurgeBackend(int from, //
+			Optional<String> optBackendId) {
 
-		SearchHit[] hits = doGetLogs(Optional.of(backendId), from, 1, Optional.empty(), Optional.empty())//
-				.getHits().getHits();
+		SearchHit[] hits = doGetLogs(from, 1, optBackendId).getHits().getHits();
 
 		if (hits == null || hits.length == 0)
 			// no log to delete
@@ -197,11 +194,14 @@ public class LogResource extends Resource {
 		String receivedAt = Json.readObject(hits[0].sourceAsString())//
 				.get("receivedAt").asText();
 
-		String query = new QuerySourceBuilder().setQuery(//
-				QueryBuilders.boolQuery()//
-						.filter(QueryBuilders.termQuery("credentials.backendId", backendId))//
-						.filter(QueryBuilders.rangeQuery("receivedAt").lte(receivedAt)))
-				.toString();
+		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery()//
+				.filter(QueryBuilders.rangeQuery("receivedAt").lte(receivedAt));
+
+		if (optBackendId.isPresent())
+			boolQueryBuilder.filter(//
+					QueryBuilders.termQuery("credentials.backendId", optBackendId.get()));
+
+		String query = new QuerySourceBuilder().setQuery(boolQueryBuilder).toString();
 
 		DeleteByQueryResponse delete = Start.get().getElasticClient()//
 				.deleteByQuery(query, SPACEDOG_BACKEND, TYPE);
@@ -209,22 +209,12 @@ public class LogResource extends Resource {
 		return Optional.of(delete);
 	}
 
-	private SearchResponse doGetLogs(Optional<String> backendId, int from, int size, Optional<Integer> minStatus,
-			Optional<Credentials.Level> type) {
+	private SearchResponse doGetLogs(int from, int size, Optional<String> backendId) {
 
 		BoolQueryBuilder query = QueryBuilders.boolQuery();
 
 		if (backendId.isPresent())
 			query.filter(QueryBuilders.termQuery("credentials.backendId", backendId.get()));
-
-		if (minStatus.isPresent())
-			query.filter(QueryBuilders.rangeQuery("status").gte(minStatus.get()));
-
-		if (type.isPresent())
-			query.filter(QueryBuilders.termsQuery("credentials.type", //
-					Lists.newArrayList(type.get().lowerOrEqual())));
-
-		DataStore.get().refreshType(true, SPACEDOG_BACKEND, TYPE);
 
 		return Start.get().getElasticClient()//
 				.prepareSearch(SPACEDOG_BACKEND, TYPE)//

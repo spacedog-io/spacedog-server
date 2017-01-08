@@ -1,10 +1,5 @@
 package io.spacedog.admin;
 
-import java.util.Iterator;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import io.spacedog.client.SpaceRequest;
 
 public class Purge {
@@ -12,30 +7,13 @@ public class Purge {
 	public String run() {
 
 		try {
-			int from = 0;
-			int size = 100;
-			int total = 0;
+			// set high timeout to wait for purge response from server
+			// since delete of thousands of logs might take long
+			SpaceRequest.configuration().httpTimeoutMillis(120000);
 
-			do {
-				ObjectNode accounts = SpaceRequest.get("/1/backend")//
-						.queryParam("from", String.valueOf(from))//
-						.queryParam("size", String.valueOf(size))//
-						.superdogAuth()//
-						.go(200)//
-						.objectNode();
-
-				total = accounts.get("total").asInt();
-				from = from + size;
-
-				Iterator<JsonNode> elements = accounts.get("results").elements();
-				while (elements.hasNext()) {
-					String backendId = elements.next().get("backendId").asText();
-					SpaceRequest.delete("/1/log")//
-							.superdogAuth(backendId)//
-							.go(200);
-				}
-
-			} while (from < total);
+			SpaceRequest.delete("/1/log?from=100000")//
+					.superdogAuth()//
+					.go(200);
 
 			return AdminJobs.ok(this);
 

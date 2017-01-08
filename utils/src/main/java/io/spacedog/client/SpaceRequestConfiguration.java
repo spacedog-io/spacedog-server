@@ -57,6 +57,10 @@ public class SpaceRequestConfiguration {
 		return Integer.valueOf(getProperty("spacedog.http.timeout", "30000"));
 	}
 
+	public void httpTimeoutMillis(int timeout) {
+		properties.setProperty("spacedog.http.timeout", Integer.toString(timeout));
+	}
+
 	public String testSmtpLogin() {
 		return getProperty("spacedog.test.smtp.login");
 	}
