@@ -33,9 +33,9 @@ public class Passwords {
 	/**
 	 * ******* README ******* For now, I use hard coded salt and iteration
 	 * number (1000). If I decide to change this, I have to maintain this algo
-	 * and har coded values until all password hashed this way are hashed anoter
-	 * way. Salt and iterations could be saved in datastore close to the hashed
-	 * password.
+	 * and hard coded values until all password hashed this way are hashed
+	 * another way. Salt and iterations could be saved in datastore close to the
+	 * hashed password.
 	 */
 	public static String hash(String password) {
 		try {
