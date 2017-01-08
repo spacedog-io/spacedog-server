@@ -73,4 +73,12 @@ public class SpaceDog {
 		return stripe;
 	}
 
+	SpacePush push;
+
+	public SpacePush push() {
+		if (push == null)
+			push = new SpacePush(this);
+		return push;
+	}
+
 }
