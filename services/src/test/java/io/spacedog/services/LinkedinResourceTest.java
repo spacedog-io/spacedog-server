@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.watchdog;
+package io.spacedog.services;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -10,10 +10,8 @@ import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.CredentialsSettings;
-import io.spacedog.watchdog.SpaceSuite.TestOften;
 
-@TestOften
-public class LinkedinResourceTestOften extends Assert {
+public class LinkedinResourceTest extends Assert {
 
 	@Test
 	public void login() {
@@ -21,7 +19,7 @@ public class LinkedinResourceTestOften extends Assert {
 		// prepare
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
-		String redirectUri = SpaceRequest.configuration().target()//
+		String redirectUri = SpaceRequest.env().target()//
 				.url(test.backendId, "/1/login/linkedin");
 
 		// no linkedin settings means no linkedin credentials
@@ -32,8 +30,8 @@ public class LinkedinResourceTestOften extends Assert {
 
 		// admin sets linkedin settings without redirect uri
 		CredentialsSettings settings = new CredentialsSettings();
-		settings.linkedinId = SpaceRequest.configuration().testLinkedinClientId();
-		settings.linkedinSecret = SpaceRequest.configuration().testLinkedinClientSecret();
+		settings.linkedinId = SpaceRequest.env().get("spacedog.test.linkedin.client.id");
+		settings.linkedinSecret = SpaceRequest.env().get("spacedog.test.linkedin.client.secret");
 		SpaceClient.saveSettings(test, settings);
 
 		// fails to create linkedin credentials if no authorization code

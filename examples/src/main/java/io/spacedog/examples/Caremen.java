@@ -14,8 +14,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceClient;
+import io.spacedog.client.SpaceEnv;
 import io.spacedog.client.SpaceRequest;
-import io.spacedog.client.SpaceRequestConfiguration;
 import io.spacedog.client.SpaceTarget;
 import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
@@ -46,7 +46,7 @@ public class Caremen extends SpaceClient {
 	public void initCaremenBackend() {
 
 		backend = DEV;
-		SpaceRequest.configuration().target(SpaceTarget.production);
+		SpaceRequest.env().target(SpaceTarget.production);
 
 		// resetBackend(backend);
 		// initInstallations();
@@ -67,7 +67,8 @@ public class Caremen extends SpaceClient {
 		// setSchema(buildCompanySchema(), backend);
 
 		// createOperators();
-		// createCashier();
+		// createCashierCredentials();
+		createReminderCredentials();
 		// createRobots();
 	}
 
@@ -126,17 +127,17 @@ public class Caremen extends SpaceClient {
 		settings.templates.put("phone-validation", template);
 
 		settings.twilio = new TwilioSettings();
-		SpaceRequestConfiguration configuration = SpaceRequest.configuration();
-		settings.twilio.accountSid = configuration.getProperty("caremen.twilio.accountSid");
-		settings.twilio.authToken = configuration.getProperty("caremen.twilio.authToken");
-		settings.twilio.defaultFrom = configuration.getProperty("caremen.twilio.defaultFrom");
+		SpaceEnv env = SpaceEnv.defaultEnv();
+		settings.twilio.accountSid = env.get("caremen.twilio.accountSid");
+		settings.twilio.authToken = env.get("caremen.twilio.authToken");
+		settings.twilio.defaultFrom = env.get("caremen.twilio.defaultFrom");
 
 		SpaceClient.saveSettings(backend, settings);
 	}
 
 	void initStripeSettings() {
 		StripeSettings settings = new StripeSettings();
-		settings.secretKey = SpaceRequest.configuration().testStripeSecretKey();
+		settings.secretKey = SpaceEnv.defaultEnv().get("spacedog.test.stripe.secret.key");
 		settings.rolesAllowedToCharge = Sets.newHashSet("cashier");
 		SpaceClient.saveSettings(backend, settings);
 	}
@@ -548,17 +549,36 @@ public class Caremen extends SpaceClient {
 		}
 	}
 
-	void createCashier() {
+	void createCashierCredentials() {
 		JsonNode node = SpaceRequest.get("/1/credentials")//
 				.adminAuth(backend).queryParam("username", "cashier").go(200)//
 				.get("results.0.id");
 
 		if (node == null) {
 
+			String password = SpaceEnv.defaultEnv().get("caremen.cashier.password");
+
 			User cashier = SpaceClient.createCredentials(backend.backendId, //
-					"cashier", "hi cashier", "plateform@spacedog.io");
+					"cashier", password, "plateform@spacedog.io");
 
 			SpaceRequest.put("/1/credentials/" + cashier.id + "/roles/cashier")//
+					.adminAuth(backend).go(200);
+		}
+	}
+
+	void createReminderCredentials() {
+		JsonNode node = SpaceRequest.get("/1/credentials")//
+				.adminAuth(backend).queryParam("username", "reminder").go(200)//
+				.get("results.0.id");
+
+		if (node == null) {
+
+			String password = SpaceEnv.defaultEnv().get("caremen.reminder.password");
+
+			User cashier = SpaceClient.createCredentials(backend.backendId, //
+					"reminder", password, "plateform@spacedog.io");
+
+			SpaceRequest.put("/1/credentials/" + cashier.id + "/roles/reminder")//
 					.adminAuth(backend).go(200);
 		}
 	}

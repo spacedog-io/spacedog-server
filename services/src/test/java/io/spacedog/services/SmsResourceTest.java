@@ -11,7 +11,7 @@ import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
-import io.spacedog.client.SpaceRequestConfiguration;
+import io.spacedog.client.SpaceEnv;
 import io.spacedog.utils.SmsSettings;
 import io.spacedog.utils.SmsSettings.TwilioSettings;
 
@@ -50,10 +50,10 @@ public class SmsResourceTest extends Assert {
 
 		// superadmin sets twilio settings
 		settings.twilio = new TwilioSettings();
-		SpaceRequestConfiguration configuration = SpaceRequest.configuration();
-		settings.twilio.accountSid = configuration.getProperty("spacedog.twilio.accountSid");
-		settings.twilio.authToken = configuration.getProperty("spacedog.twilio.authToken");
-		settings.twilio.defaultFrom = configuration.getProperty("spacedog.twilio.defaultFrom");
+		SpaceEnv configuration = SpaceRequest.env();
+		settings.twilio.accountSid = configuration.get("spacedog.twilio.accountSid");
+		settings.twilio.authToken = configuration.get("spacedog.twilio.authToken");
+		settings.twilio.defaultFrom = configuration.get("spacedog.twilio.defaultFrom");
 		SpaceClient.saveSettings(test, settings);
 
 		// vince sends an sms

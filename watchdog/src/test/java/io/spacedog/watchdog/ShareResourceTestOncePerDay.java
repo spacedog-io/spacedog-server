@@ -53,7 +53,7 @@ public class ShareResourceTestOncePerDay extends Assert {
 
 		// vince shares a small png file
 		byte[] pngBytes = Resources.toByteArray(//
-				Resources.getResource("io/spacedog/watchdog/tweeter.png"));
+				Resources.getResource(this.getClass(), "tweeter.png"));
 
 		JsonNode json = SpaceRequest.put("/1/share/tweeter.png")//
 				.userAuth(vince)//

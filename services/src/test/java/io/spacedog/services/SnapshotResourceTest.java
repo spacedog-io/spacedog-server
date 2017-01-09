@@ -1,4 +1,4 @@
-package io.spacedog.watchdog;
+package io.spacedog.services;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;

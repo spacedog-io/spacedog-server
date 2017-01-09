@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.watchdog;
+package io.spacedog.services;
 
 import java.util.Arrays;
 
@@ -16,10 +16,8 @@ import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Schema;
-import io.spacedog.watchdog.SpaceSuite.TestOften;
 
-@TestOften
-public class UserResourceTestOften extends Assert {
+public class UserResourceTest extends Assert {
 
 	@Test
 	public void dataEndpointsBehaveTheSameThanUserEnpoints() {

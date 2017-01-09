@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.utils;
+package io.spacedog.utils.translate;
 
 import java.io.IOException;
 import java.net.URL;
@@ -13,14 +13,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.io.Resources;
 
+import io.spacedog.utils.Json;
+import io.spacedog.utils.SchemaTranslator;
+import io.spacedog.utils.SchemaValidator;
+
 public class SchemaTranslatorTest extends Assert {
 
 	@Test
 	public void shouldTranslateSchema() throws IOException {
-		// Charset utf8 = Charset.forName("UTF-8");
 
 		// load schema
-		URL urlSchema = Resources.getResource("io/spacedog/utils/SchemaTranslatorTest-schema.json");
+		URL urlSchema = Resources.getResource(this.getClass(), "schema.json");
 		JsonNode schema = Json.readNode(urlSchema);
 
 		// validate and translate
@@ -30,7 +33,7 @@ public class SchemaTranslatorTest extends Assert {
 		System.out.println(mapping.toString());
 
 		// load expected mapping
-		URL urlExpectedMapping = Resources.getResource("io/spacedog/utils/SchemaTranslatorTest-mapping.json");
+		URL urlExpectedMapping = Resources.getResource(this.getClass(), "mapping.json");
 		JsonNode expectedMapping = Json.readNode(urlExpectedMapping);
 
 		// assert

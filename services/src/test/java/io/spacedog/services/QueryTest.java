@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.watchdog;
+package io.spacedog.services;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -19,6 +19,7 @@ import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.GeoPoint;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.Schema;
 
 public class QueryTest extends Assert {
 
@@ -28,10 +29,29 @@ public class QueryTest extends Assert {
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
 
-		SpaceClient.setSchema(SchemaResourceTestOften.buildCarSchema(), test);
+		SpaceClient.setSchema(buildCarSchema(), test);
 
 		for (int i = 0; i < 500; i++)
 			SpaceRequest.post("/1/data/car").adminAuth(test).body(jsonCar(i)).go(201);
+	}
+
+	private Schema buildCarSchema() {
+		return Schema.builder("car") //
+				.string("serialNumber")//
+				.date("buyDate")//
+				.time("buyTime")//
+				.timestamp("buyTimestamp") //
+				.enumm("color")//
+				.bool("techChecked") //
+				.geopoint("location") //
+
+				.object("model")//
+				.text("description").french()//
+				.integer("fiscalPower")//
+				.floatt("size")//
+				.close() //
+
+				.build();
 	}
 
 	private ObjectNode jsonCar(int i) {

@@ -1,4 +1,4 @@
-package io.spacedog.watchdog;
+package io.spacedog.services.mail;
 
 import java.io.IOException;
 
@@ -14,10 +14,8 @@ import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.MailSettings;
 import io.spacedog.utils.MailSettings.SmtpSettings;
 import io.spacedog.utils.Utils;
-import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
-@TestOncePerDay
-public class MailResourceTestOncePerDay extends Assert {
+public class MailResourceTest extends Assert {
 
 	private static final String DEFAULT_FROM = "david@spacedog.io";
 	private static final String DEFAULT_TO = "platform@spacedog.io";
@@ -85,13 +83,14 @@ public class MailResourceTestOncePerDay extends Assert {
 		settings.smtp.host = "mail.gandi.net";
 		settings.smtp.startTlsRequired = false;
 		settings.smtp.sslOnConnect = true;
-		settings.smtp.login = SpaceRequest.configuration().testSmtpLogin();
-		settings.smtp.password = SpaceRequest.configuration().testSmtpPassword();
+		settings.smtp.login = SpaceRequest.env().get("spacedog.test.smtp.login");
+		settings.smtp.password = SpaceRequest.env().get("spacedog.test.smtp.password");
 		SpaceClient.saveSettings(test, settings);
 
 		// load your HTML email template
 		String emailBody = Resources.toString(//
-				Resources.getResource("io/spacedog/watchdog/email.html"), Utils.UTF8);
+				Resources.getResource(this.getClass(), "email.html"), //
+				Utils.UTF8);
 
 		// vince emails a text message via smtp
 		SpaceRequest.post("/1/mail").userAuth(vince)//

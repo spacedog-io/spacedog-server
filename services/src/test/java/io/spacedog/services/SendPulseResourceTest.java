@@ -23,14 +23,14 @@ public class SendPulseResourceTest extends SpaceClient {
 
 		// prepare
 		SpaceClient.prepareTest();
-		SpaceRequest.configuration().target(SpaceTarget.local);
+		SpaceRequest.env().target(SpaceTarget.local);
 		Backend test = SpaceClient.resetTestBackend();
 		User fred = SpaceClient.signUp(test, "fred", "hi fred");
 
 		// set sendpulse test settings
 		SendPulseSettings settings = new SendPulseSettings();
-		settings.clientId = SpaceRequest.configuration().testSendPulseClientId();
-		settings.clientSecret = SpaceRequest.configuration().testSendPulseClientSecret();
+		settings.clientId = SpaceRequest.env().get("spacedog.test.sendpulse.client.id");
+		settings.clientSecret = SpaceRequest.env().get("spacedog.test.sendpulse.client.secret");
 		settings.authorizedRoles = Collections.singleton("user");
 		SpaceClient.saveSettings(test, settings);
 
@@ -62,7 +62,7 @@ public class SendPulseResourceTest extends SpaceClient {
 	private void initSendPulseTestWebApp() {
 
 		// prepare
-		SpaceRequest.configuration().target(SpaceTarget.production);
+		SpaceRequest.env().target(SpaceTarget.production);
 		Backend sendpulse = new Backend("sendpulse", "sendpulse", "hi sendpulse", "david@spacedog.io");
 
 		// if sendpulde test web app already initialized then return

@@ -8,7 +8,7 @@ public class DogCLI {
 
 	public static void main(String... args) throws Exception {
 
-		configureSpaceRequests();
+		setEnv();
 
 		FileSynchronizer synch = FileSynchronizer.newInstance();
 		JCommander cli = new JCommander();
@@ -36,11 +36,11 @@ public class DogCLI {
 		}
 	}
 
-	private static void configureSpaceRequests() {
-		SpaceRequestConfiguration configuration = new SpaceRequestConfiguration();
-		configuration.target(SpaceTarget.production);
-		configuration.debug(true);
-		SpaceRequest.setConfigurationDefault(configuration);
+	private static void setEnv() {
+		SpaceEnv env = new SpaceEnv();
+		env.target(SpaceTarget.production);
+		env.debug(true);
+		SpaceRequest.env(env);
 	}
 
 }

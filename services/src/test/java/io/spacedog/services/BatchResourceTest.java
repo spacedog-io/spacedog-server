@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.watchdog;
+package io.spacedog.services;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -16,10 +16,8 @@ import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Schema;
-import io.spacedog.watchdog.SpaceSuite.TestOften;
 
-@TestOften
-public class BatchResourceTestOften extends Assert {
+public class BatchResourceTest extends Assert {
 
 	@Test
 	public void executeBatch() {

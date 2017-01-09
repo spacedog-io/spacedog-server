@@ -14,7 +14,7 @@ import com.google.common.collect.Maps;
 import io.spacedog.admin.AdminJobs;
 import io.spacedog.caremen.FareSettings.VehiculeFareSettings;
 import io.spacedog.client.SpaceRequest;
-import io.spacedog.client.SpaceRequestConfiguration;
+import io.spacedog.client.SpaceEnv;
 import io.spacedog.client.SpaceTarget;
 import io.spacedog.sdk.SpaceData.SearchResults;
 import io.spacedog.sdk.SpaceData.TermQuery;
@@ -29,12 +29,12 @@ public class Billing {
 	public String charge() {
 
 		try {
-			SpaceRequestConfiguration configuration = SpaceRequestConfiguration.get();
+			SpaceEnv env = SpaceEnv.defaultEnv();
 
 			SpaceDog dog = SpaceDog.login(//
-					configuration.getProperty("backendId"), //
-					configuration.getProperty("cashierUsername"), //
-					configuration.getProperty("cashierPassword"));
+					env.get("backendId"), //
+					env.get("cashierUsername"), //
+					env.get("cashierPassword"));
 
 			TermQuery query = new TermQuery();
 			query.type = "course";
@@ -56,7 +56,7 @@ public class Billing {
 					course.save();
 
 				} catch (Exception e) {
-					String url = configuration.target().url(dog.backendId(), //
+					String url = env.target().url(dog.backendId(), //
 							"/1/data/course/" + course.id());
 					AdminJobs.error(this, "Error billing course " + url, e);
 				}
@@ -146,7 +146,7 @@ public class Billing {
 	}
 
 	public static void main(String[] args) {
-		SpaceRequest.configuration().target(SpaceTarget.production);
+		SpaceRequest.env().target(SpaceTarget.production);
 		System.setProperty("backendId", "caredev");
 		System.setProperty("cashierUsername", "cashier");
 		System.setProperty("cashierPassword", "hi cashier");

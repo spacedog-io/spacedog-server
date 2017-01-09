@@ -2,7 +2,7 @@ package io.spacedog.admin;
 
 import com.google.common.base.Throwables;
 
-import io.spacedog.client.SpaceRequestConfiguration;
+import io.spacedog.client.SpaceEnv;
 import io.spacedog.utils.Internals;
 
 public class AdminJobs {
@@ -34,11 +34,11 @@ public class AdminJobs {
 
 	static void notify(Object context, String titleSuffix, String message) {
 		Internals.get().notify(//
-				SpaceRequestConfiguration.get().superdogNotificationTopic(), //
+				SpaceEnv.defaultEnv().superdogNotificationTopic(), //
 				new StringBuilder(context.getClass().getSimpleName())//
 						.append(titleSuffix)//
 						.append(" (")//
-						.append(SpaceRequestConfiguration.get().target().host())//
+						.append(SpaceEnv.defaultEnv().target().host())//
 						.append(")")//
 						.toString(), //
 				message);

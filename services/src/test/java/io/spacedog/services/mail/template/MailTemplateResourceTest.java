@@ -1,4 +1,4 @@
-package io.spacedog.services;
+package io.spacedog.services.mail.template;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -59,8 +59,8 @@ public class MailTemplateResourceTest extends Assert {
 		MailTemplate template = new MailTemplate();
 		template.to = Lists.newArrayList("attias666@gmail.com");
 		template.subject = "Demande d'inscription de {{demande.prenom}} {{demande.nom}} (M-0370)";
-		template.text = Resources.toString(
-				Resources.getResource("io/spacedog/services/pebble/colibee.mail.demande.inscription.pebble"), //
+		template.text = Resources.toString(//
+				Resources.getResource(this.getClass(), "mail.demande.inscription.pebble"), //
 				Charset.forName("UTF-8"));
 		template.model = Maps.newHashMap();
 		template.model.put("demande", "demande");
@@ -77,8 +77,8 @@ public class MailTemplateResourceTest extends Assert {
 		template = new MailTemplate();
 		template.to = Lists.newArrayList("{{demande.email}}");
 		template.subject = "Votre demande d'inscription a bien été enregistrée";
-		template.html = Resources.toString(
-				Resources.getResource("io/spacedog/services/pebble/colibee.mail.demande.confirmation.pebble"), //
+		template.html = Resources.toString(//
+				Resources.getResource(this.getClass(), "mail.demande.confirmation.pebble"), //
 				Charset.forName("UTF-8"));
 		template.model = Maps.newHashMap();
 		template.model.put("demande", "demande");

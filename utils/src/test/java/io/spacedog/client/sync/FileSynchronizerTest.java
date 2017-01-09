@@ -1,4 +1,4 @@
-package io.spacedog.watchdog;
+package io.spacedog.client.sync;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

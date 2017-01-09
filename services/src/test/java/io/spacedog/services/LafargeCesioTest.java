@@ -50,12 +50,12 @@ public class LafargeCesioTest extends Assert {
 		settings.smtp = new SmtpSettings();
 		settings.smtp.startTlsRequired = true;
 		settings.smtp.sslOnConnect = true;
-		settings.smtp.host = SpaceRequest.configuration()//
-				.getProperty("spacedog.cesio.smtp.host");
-		settings.smtp.login = SpaceRequest.configuration()//
-				.getProperty("spacedog.cesio.smtp.login");
-		settings.smtp.password = SpaceRequest.configuration()//
-				.getProperty("spacedog.cesio.smtp.password");
+		settings.smtp.host = SpaceRequest.env()//
+				.get("spacedog.cesio.smtp.host");
+		settings.smtp.login = SpaceRequest.env()//
+				.get("spacedog.cesio.smtp.login");
+		settings.smtp.password = SpaceRequest.env()//
+				.get("spacedog.cesio.smtp.password");
 
 		SpaceClient.saveSettings(test, settings);
 

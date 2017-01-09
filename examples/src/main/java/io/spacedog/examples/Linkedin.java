@@ -159,7 +159,7 @@ public class Linkedin extends SpaceClient {
 			throws URISyntaxException, IOException {
 
 		// test redirect uri
-		String redirectUri = SpaceRequest.configuration().target()//
+		String redirectUri = SpaceRequest.env().target()//
 				.url(backend.backendId, "/1/login/linkedin");
 
 		if (redirect)
@@ -180,9 +180,9 @@ public class Linkedin extends SpaceClient {
 	private CredentialsSettings defaultCredentialsSettings(boolean disableGuestSignUp, Backend backend) {
 		CredentialsSettings settings = new CredentialsSettings();
 		settings.disableGuestSignUp = disableGuestSignUp;
-		settings.linkedinId = SpaceRequest.configuration().testLinkedinClientId();
-		settings.linkedinSecret = SpaceRequest.configuration().testLinkedinClientSecret();
-		settings.linkedinFinalRedirectUri = SpaceRequest.configuration().target().url(backend.backendId);
+		settings.linkedinId = SpaceRequest.env().get("spacedog.test.linkedin.client.id");
+		settings.linkedinSecret = SpaceRequest.env().get("spacedog.test.linkedin.client.secret");
+		settings.linkedinFinalRedirectUri = SpaceRequest.env().target().url(backend.backendId);
 		return settings;
 	}
 }

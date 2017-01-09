@@ -9,7 +9,7 @@ public class Purge {
 		try {
 			// set high timeout to wait for purge response from server
 			// since delete of thousands of logs might take long
-			SpaceRequest.configuration().httpTimeoutMillis(120000);
+			SpaceRequest.env().httpTimeoutMillis(120000);
 
 			SpaceRequest.delete("/1/log?from=100000")//
 					.superdogAuth()//

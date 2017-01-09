@@ -38,8 +38,8 @@ public class SmtpEmail extends Assert {
 		msg.setSentDate(new Date());
 		SMTPTransport t = (SMTPTransport) session.getTransport("smtps");
 		t.connect("mail.gandi.net", //
-				SpaceRequest.configuration().testSmtpLogin(), //
-				SpaceRequest.configuration().testSmtpPassword());
+				SpaceRequest.env().get("spacedog.test.smtp.login"), //
+				SpaceRequest.env().get("spacedog.test.smtp.password"));
 		t.sendMessage(msg, msg.getAllRecipients());
 		System.out.println("Response: " + t.getLastServerResponse());
 		t.close();
@@ -71,8 +71,8 @@ public class SmtpEmail extends Assert {
 		email.setTextMsg("Your email client does not support HTML messages");
 
 		// send the email
-		email.setAuthentication(SpaceRequest.configuration().testSmtpLogin(), //
-				SpaceRequest.configuration().testSmtpPassword());
+		email.setAuthentication(SpaceRequest.env().get("spacedog.test.smtp.login"), //
+				SpaceRequest.env().get("spacedog.test.smtp.password"));
 		email.setStartTLSRequired(false);
 		email.setSSLOnConnect(true);
 		email.send();

@@ -6,6 +6,7 @@ package io.spacedog.examples;
 import org.junit.Test;
 
 import io.spacedog.client.SpaceClient;
+import io.spacedog.client.SpaceEnv;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTarget;
 import io.spacedog.utils.MailSettings;
@@ -16,11 +17,11 @@ public class LafargeCesio extends SpaceClient {
 	@Test
 	public void initBackend() {
 
-		SpaceRequest.configuration().target(SpaceTarget.production);
+		SpaceRequest.env().target(SpaceTarget.production);
 
 		Backend backend = new Backend(//
-				"cesio", SpaceRequest.configuration().cesioSuperAdminUsername(), //
-				SpaceRequest.configuration().cesioSuperAdminPassword(), //
+				"cesio", SpaceEnv.defaultEnv().get("spacedog.cesio.superadmin.username"), //
+				SpaceEnv.defaultEnv().get("spacedog.cesio.superadmin.password"), //
 				"david@spacedog.io");
 
 		// resetBackend(backend);
@@ -31,12 +32,12 @@ public class LafargeCesio extends SpaceClient {
 		settings.smtp = new SmtpSettings();
 		settings.smtp.startTlsRequired = true;
 		settings.smtp.sslOnConnect = true;
-		settings.smtp.host = SpaceRequest.configuration()//
-				.getProperty("spacedog.cesio.smtp.host");
-		settings.smtp.login = SpaceRequest.configuration()//
-				.getProperty("spacedog.cesio.smtp.login");
-		settings.smtp.password = SpaceRequest.configuration()//
-				.getProperty("spacedog.cesio.smtp.password");
+		settings.smtp.host = SpaceRequest.env()//
+				.get("spacedog.cesio.smtp.host");
+		settings.smtp.login = SpaceRequest.env()//
+				.get("spacedog.cesio.smtp.login");
+		settings.smtp.password = SpaceRequest.env()//
+				.get("spacedog.cesio.smtp.password");
 
 		SpaceClient.saveSettings(backend, settings);
 	}

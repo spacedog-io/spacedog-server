@@ -55,7 +55,7 @@ public class SpaceRequest {
 
 	// static defaults
 	private static boolean forTestingDefault = false;
-	private static SpaceRequestConfiguration configurationDefault;
+	private static SpaceEnv env;
 
 	// static {
 	// Unirest.setHttpClient(HttpClients.createMinimal(//
@@ -72,7 +72,7 @@ public class SpaceRequest {
 		if (uri.startsWith("http"))
 			return uri;
 
-		SpaceTarget target = configuration().target();
+		SpaceTarget target = env().target();
 
 		if (Strings.isNullOrEmpty(backendId))
 			backendId = Backends.rootApi();
@@ -360,7 +360,7 @@ public class SpaceRequest {
 	// }
 
 	public static void setLogDebug(boolean debug) {
-		configuration().debug(debug);
+		env().debug(debug);
 	}
 
 	public SpaceRequest superdogAuth() {
@@ -372,8 +372,9 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest superdogAuth(String backendId) {
-		SpaceRequestConfiguration conf = configuration();
-		return basicAuth(backendId, conf.superdogName(), conf.superdogPassword());
+		return basicAuth(backendId, //
+				env().get("spacedog.superdog.username"), //
+				env().get("spacedog.superdog.password"));
 	}
 
 	public SpaceRequest forTesting(boolean forTesting) {
@@ -385,15 +386,15 @@ public class SpaceRequest {
 		forTestingDefault = value;
 	}
 
-	public static void setConfigurationDefault(SpaceRequestConfiguration configuration) {
-		configurationDefault = configuration;
-		Unirest.setTimeouts(configuration.httpTimeoutMillis(), configuration.httpTimeoutMillis());
+	public static void env(SpaceEnv value) {
+		env = value;
+		Unirest.setTimeouts(env.httpTimeoutMillis(), env.httpTimeoutMillis());
 	}
 
-	public static SpaceRequestConfiguration configuration() {
-		if (configurationDefault == null)
-			setConfigurationDefault(SpaceRequestConfiguration.get());
-		return configurationDefault;
+	public static SpaceEnv env() {
+		if (env == null)
+			env(SpaceEnv.defaultEnv());
+		return env;
 	}
 
 	public static String getBackendKey(JsonNode account) {

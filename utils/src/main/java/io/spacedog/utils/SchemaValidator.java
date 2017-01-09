@@ -20,7 +20,7 @@ public class SchemaValidator {
 		OBJECT, ARRAY, BOOLEAN, STRING, NUMBER
 	}
 
-	static JsonNode validate(String type, JsonNode schema) throws SchemaException {
+	public static JsonNode validate(String type, JsonNode schema) throws SchemaException {
 
 		JsonNode rootObjectSchema = checkField(schema, type, true, JsonType.OBJECT).get();
 

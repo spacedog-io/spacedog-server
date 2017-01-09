@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.watchdog;
+package io.spacedog.services;
 
 import java.util.Iterator;
 
@@ -20,10 +20,8 @@ import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Schema;
-import io.spacedog.watchdog.SpaceSuite.TestOften;
 
-@TestOften
-public class ChauffeLeTestOften extends Assert {
+public class ChauffeLeTest extends Assert {
 
 	private static Backend backend;
 

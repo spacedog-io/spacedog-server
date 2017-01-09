@@ -28,7 +28,7 @@ public class SchemaTranslator {
 			.put("format", "date_time") //
 			.build(); //
 
-	static ObjectNode translate(String type, JsonNode schema) {
+	public static ObjectNode translate(String type, JsonNode schema) {
 
 		ObjectNode subMapping = toElasticMapping(schema.get(type));
 		subMapping.set("_meta", schema);

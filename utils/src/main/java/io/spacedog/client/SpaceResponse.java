@@ -38,7 +38,7 @@ public class SpaceResponse {
 	public SpaceResponse(SpaceRequest spaceRequest, HttpRequest httpRequest) {
 
 		this.httpRequest = httpRequest;
-		boolean debug = SpaceRequest.configuration().debug();
+		boolean debug = SpaceRequest.env().debug();
 
 		if (debug) {
 			Utils.info();

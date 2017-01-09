@@ -13,8 +13,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import io.spacedog.admin.AdminJobs;
+import io.spacedog.client.SpaceEnv;
 import io.spacedog.client.SpaceRequest;
-import io.spacedog.client.SpaceRequestConfiguration;
 import io.spacedog.client.SpaceTarget;
 import io.spacedog.sdk.SpaceData.SearchResults;
 import io.spacedog.sdk.SpaceData.TermQuery;
@@ -29,11 +29,10 @@ public class Reminder {
 	public String remindTomorrow() {
 
 		try {
-			SpaceRequestConfiguration configuration = SpaceRequestConfiguration.get();
+			SpaceEnv env = SpaceEnv.defaultEnv();
 
-			SpaceDog dog = SpaceDog.login(//
-					configuration.getProperty("backendId"), "reminder", //
-					configuration.getProperty("caremen.reminder.password"));
+			SpaceDog dog = SpaceDog.login(env.get("backendId"), "reminder", //
+					env.get("caremen.reminder.password"));
 
 			TermQuery query = new TermQuery();
 			query.type = "course";
@@ -57,7 +56,7 @@ public class Reminder {
 					driverCourses.add(course);
 
 				} catch (Exception e) {
-					String url = configuration.target().url(dog.backendId(), //
+					String url = env.target().url(dog.backendId(), //
 							"/1/data/course/" + course.id());
 					AdminJobs.error(this, "Error remindering course " + url, e);
 				}
@@ -84,11 +83,11 @@ public class Reminder {
 	public String remindToday() {
 
 		try {
-			SpaceRequestConfiguration configuration = SpaceRequestConfiguration.get();
+			SpaceEnv env = SpaceEnv.defaultEnv();
 
 			SpaceDog dog = SpaceDog.login(//
-					configuration.getProperty("backendId"), "reminder", //
-					configuration.getProperty("caremen.reminder.password"));
+					env.get("backendId"), "reminder", //
+					env.get("caremen.reminder.password"));
 
 			TermQuery query = new TermQuery();
 			query.type = "course";
@@ -111,7 +110,7 @@ public class Reminder {
 					dog.push().push(request);
 
 				} catch (Exception e) {
-					String url = configuration.target().url(dog.backendId(), //
+					String url = env.target().url(dog.backendId(), //
 							"/1/data/course/" + course.id());
 					AdminJobs.error(this, "Error remindering course " + url, e);
 				}
@@ -149,7 +148,7 @@ public class Reminder {
 	}
 
 	public static void main(String[] args) {
-		SpaceRequest.configuration().target(SpaceTarget.production);
+		SpaceRequest.env().target(SpaceTarget.production);
 		System.setProperty("backendId", "caredev");
 		System.setProperty("caremen.reminder.password", "hi reminder");
 		new Reminder().remindTomorrow();
