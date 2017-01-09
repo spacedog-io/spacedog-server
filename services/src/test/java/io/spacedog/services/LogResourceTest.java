@@ -187,6 +187,39 @@ public class LogResourceTest extends Assert {
 				.assertEquals("POST", "results.6.method")//
 				.assertEquals("/1/credentials", "results.6.path")//
 				.assertEquals("test", "results.6.credentials.backendId");
+
+	}
+
+	@Test
+	public void onlySuperdogsCanBrowseAllBackends() {
+
+		// prepare
+		SpaceClient.prepareTest();
+
+		// superdog creates superadmin named nath in root 'api' backend
+		User nath = new User("api", "nath", "hi nath", "platform@spacedog.io");
+		nath.id = SpaceRequest.post("/1/credentials").superdogAuth()//
+				.body("username", nath.username, "password", nath.password, //
+						"email", nath.email, "level", "SUPER_ADMIN")
+				.go(201).getString("id");
+
+		// anonymous gets data from test backend
+		SpaceRequest.get("/1/data").backendId("test").go();
+
+		// superdog gets all backend logs and is able to review
+		// previous test and root 'api' backend requests
+		SpaceRequest.get("/1/log").refresh().superdogAuth().size(2).go(200)//
+				.assertEquals("/1/data", "results.0.path")//
+				.assertEquals("/1/credentials", "results.1.path");
+
+		// but nath only gets logs from her root 'api' backend
+		// since she's only superadmin and not superdog
+		SpaceRequest.get("/1/log").refresh().userAuth(nath).size(2).go(200)//
+				.assertEquals("/1/log", "results.0.path")//
+				.assertEquals("/1/credentials", "results.1.path");
+
+		// clean nath credentials
+		SpaceRequest.delete("/1/credentials/" + nath.id).userAuth(nath).go(200);
 	}
 
 	@Test

@@ -558,7 +558,8 @@ public class CredentialsResource extends Resource {
 	SearchResults<Credentials> getBackendSuperAdmins(String backendId, int from, int size) {
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
 				.filter(QueryBuilders.termQuery(BACKEND_ID, backendId))//
-				.filter(QueryBuilders.termQuery(CREDENTIALS_LEVEL, Level.SUPER_ADMIN.toString()));
+				.filter(QueryBuilders.termsQuery(CREDENTIALS_LEVEL, //
+						Level.SUPER_ADMIN.toString(), Level.SUPERDOG.toString()));
 
 		return getCredentials(new BoolSearch(SPACEDOG_BACKEND, TYPE, query, from, size));
 	}

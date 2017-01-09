@@ -71,8 +71,9 @@ public class LogResource extends Resource {
 
 		Credentials credentials = SpaceContext.checkSuperAdminCredentials();
 
-		Optional<String> optBackendId = credentials.isTargetingRootApi() //
-				? Optional.empty() : Optional.of(credentials.target());
+		Optional<String> optBackendId = credentials.isSuperDog() //
+				&& credentials.isTargetingRootApi() ? Optional.empty() //
+						: Optional.of(credentials.target());
 
 		int from = context.query().getInteger("from", 0);
 		int size = context.query().getInteger("size", 10);

@@ -40,20 +40,15 @@ public class BackendResource extends Resource {
 	@Get("/1/backend")
 	@Get("/1/backend/")
 	public Payload getAll(Context context) {
-		Credentials credentials = SpaceContext.checkAdminCredentials();
-		SearchResults<Credentials> superAdmins = null;
+		Credentials credentials = SpaceContext.checkSuperAdminCredentials();
 
 		int from = context.query().getInteger("from", 0);
 		int size = context.query().getInteger("size", 10);
 
-		if (credentials.isTargetingRootApi()) {
-			if (credentials.isSuperDog())
-				superAdmins = CredentialsResource.get().getAllSuperAdmins(from, size);
-			else
-				throw Exceptions.insufficientCredentials(credentials);
-		} else
-			superAdmins = CredentialsResource.get()//
-					.getBackendSuperAdmins(credentials.target(), from, size);
+		SearchResults<Credentials> superAdmins = credentials.isSuperDog() //
+				&& credentials.isTargetingRootApi() //
+						? CredentialsResource.get().getAllSuperAdmins(from, size)//
+						: CredentialsResource.get().getBackendSuperAdmins(credentials.target(), from, size);
 
 		return toPayload(superAdmins);
 	}
