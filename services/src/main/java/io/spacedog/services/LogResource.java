@@ -26,6 +26,7 @@ import com.google.common.io.Resources;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
+import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceHeaders;
@@ -119,9 +120,17 @@ public class LogResource extends Resource {
 	@Delete("/")
 	public Payload purge(Context context) {
 
-		Credentials credentials = SpaceContext.checkSuperDogCredentials();
-		Optional<String> optBackendId = credentials.isTargetingRootApi() //
-				? Optional.empty() : Optional.of(credentials.target());
+		Credentials credentials = SpaceContext.getCredentials();
+		Optional<String> optBackendId = null;
+
+		if (isPurgeAll(credentials))
+			optBackendId = Optional.empty();
+
+		else if (credentials.isAtLeastSuperAdmin())
+			optBackendId = Optional.of(credentials.target());
+
+		else
+			throw Exceptions.insufficientCredentials(credentials);
 
 		Optional<DeleteByQueryResponse> response = doPurgeBackend(//
 				context.request().query().getInteger("from", 100000), optBackendId);
@@ -182,6 +191,11 @@ public class LogResource extends Resource {
 	//
 	// Implementation
 	//
+
+	private boolean isPurgeAll(Credentials credentials) {
+		return credentials.isTargetingRootApi() //
+				&& (credentials.isSuperDog() || credentials.roles().contains("purgeall"));
+	}
 
 	private Optional<DeleteByQueryResponse> doPurgeBackend(int from, //
 			Optional<String> optBackendId) {
