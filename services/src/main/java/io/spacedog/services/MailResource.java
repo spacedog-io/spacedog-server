@@ -162,6 +162,7 @@ public class MailResource extends Resource {
 		try {
 			if (!Strings.isNullOrEmpty(message.html)) {
 				ImageHtmlEmail imageHtmlEmail = new ImageHtmlEmail();
+				imageHtmlEmail.setCharset("UTF-8");
 				imageHtmlEmail.setHtmlMsg(message.html);
 				imageHtmlEmail.setDataSourceResolver(new DataSourceUrlResolver(//
 						new URL("http://www.apache.org")));

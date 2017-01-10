@@ -1,22 +1,24 @@
+<html>
 Nouvelle demande d'inscription
-
+<br>
 Civilité : {{demande.civilite}}
-
+<br>
 Prénom :  {{demande.prenom}}
-
+<br>
 Nom : {{demande.nom}}
-
+<br>
 E-mail : {{demande.email}}
-
+<br>
 Téléphone : {{demande.tel}}
-
-
+<br>
+<br>
 Statut : {{demande.statut}}
-
-
+<br>
+<br>
 {% for dispo in demande.dispos %}
 Disponibilité : le {{dispo.date}} de {{dispo.debut}} à {{dispo.fin}}
-
+<br>
 {% endfor %}
-
+<br>
 CV : {{demande.cvUrl}}
+</html>

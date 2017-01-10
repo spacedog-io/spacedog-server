@@ -18,6 +18,7 @@ import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.MailSettings;
+import io.spacedog.utils.MailSettings.SmtpSettings;
 import io.spacedog.utils.MailTemplate;
 import io.spacedog.utils.Schema;
 
@@ -29,8 +30,6 @@ public class MailTemplateResourceTest extends Assert {
 		// prepare
 		SpaceClient.prepareTest();
 		Backend test = SpaceClient.resetTestBackend();
-		MailSettings mailSettings = new MailSettings();
-		mailSettings.templates = Maps.newHashMap();
 
 		// create a schema
 		Schema schema = Schema.builder("demande")//
@@ -49,17 +48,28 @@ public class MailTemplateResourceTest extends Assert {
 				Json.object("date", "2016-12-03", "debut", "16:00:00", "fin", "17:00:00"));
 
 		String inscriptionId = SpaceRequest.post("/1/data/demande").backend(test)//
-				.body("nom", "Pons", "prenom", "Pilate", "email", "attias666@gmail.com", //
+				.body("nom", "Pons", "prenom", "Stéphane", "email", "david@spacedog.io", //
 						"civilite", "Monsieur", "tel", "0607080920", "statut", "fuzzy", //
 						"cvUrl", "https://spacedog.io", "dispos", dispos)
 				.go(201)//
 				.getString("id");
 
+		// set smtp provider in mail settings
+		MailSettings mailSettings = new MailSettings();
+		mailSettings.smtp = new SmtpSettings();
+		mailSettings.smtp.host = "mail.gandi.net";
+		mailSettings.smtp.startTlsRequired = false;
+		mailSettings.smtp.sslOnConnect = true;
+		mailSettings.smtp.login = SpaceRequest.env().get("spacedog.test.smtp.login");
+		mailSettings.smtp.password = SpaceRequest.env().get("spacedog.test.smtp.password");
+
 		// set the demande mail template
+		mailSettings.templates = Maps.newHashMap();
 		MailTemplate template = new MailTemplate();
-		template.to = Lists.newArrayList("attias666@gmail.com");
+		template.from = "attias666@gmail.com";
+		template.to = Lists.newArrayList("{{demande.email}}");
 		template.subject = "Demande d'inscription de {{demande.prenom}} {{demande.nom}} (M-0370)";
-		template.text = Resources.toString(//
+		template.html = Resources.toString(//
 				Resources.getResource(this.getClass(), "mail.demande.inscription.pebble"), //
 				Charset.forName("UTF-8"));
 		template.model = Maps.newHashMap();
@@ -67,6 +77,8 @@ public class MailTemplateResourceTest extends Assert {
 		template.roles = Collections.singleton("key");
 
 		mailSettings.templates.put("demande", template);
+
+		// save mail settings
 		SpaceClient.saveSettings(test, mailSettings);
 
 		// send inscription email
@@ -85,11 +97,15 @@ public class MailTemplateResourceTest extends Assert {
 		template.roles = Collections.singleton("key");
 
 		mailSettings.templates.put("confirmation", template);
+
+		// set default provider in mail settings
+		mailSettings.smtp = null;
+
+		// save mail settings
 		SpaceClient.saveSettings(test, mailSettings);
 
 		// send inscription confirmation email
 		SpaceRequest.post("/1/mail/template/confirmation").backend(test)//
 				.body("demande", inscriptionId).go(200);
-
 	}
 }
