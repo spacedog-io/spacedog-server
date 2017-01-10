@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
 import io.spacedog.utils.Backends;
+import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
@@ -40,6 +41,7 @@ import net.codestory.http.payload.Payload;
 @Prefix("/1/snapshot")
 public class SnapshotResource extends Resource {
 
+	private static final String SNAPSHOT_ALL_ROLE = "snapshotall";
 	private static final String PLATFORM_SNAPSHOT_PREFIX = "all";
 	private static final String WAIT_FOR_COMPLETION = "waitForCompletion";
 	private static final String BUCKET_SUFFIX = "snapshots";
@@ -88,7 +90,9 @@ public class SnapshotResource extends Resource {
 	@Post("/")
 	public Payload postSnapshot(Context context) {
 
-		SpaceContext.checkSuperDogCredentials();
+		Credentials credentials = SpaceContext.getCredentials();
+		if (!isSnapshotAll(credentials))
+			throw Exceptions.insufficientCredentials(credentials);
 
 		String snapshotId = computeSnapshotName(PLATFORM_SNAPSHOT_PREFIX);
 		String repoId = checkCurrentRepository();
@@ -147,6 +151,11 @@ public class SnapshotResource extends Resource {
 	//
 	// implementation
 	//
+
+	private boolean isSnapshotAll(Credentials credentials) {
+		return credentials.isTargetingRootApi() //
+				&& (credentials.isSuperDog() || credentials.roles().contains(SNAPSHOT_ALL_ROLE));
+	}
 
 	private String computeSnapshotName(String prefix) {
 		return prefix + "-utc-" + DateTime.now().withZone(DateTimeZone.UTC).toString("yyyy-MM-dd-HH-mm-ss-SSS");

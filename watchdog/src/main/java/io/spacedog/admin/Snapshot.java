@@ -5,6 +5,7 @@ import org.joda.time.DateTimeComparator;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.client.SpaceEnv;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Check;
 
@@ -13,7 +14,15 @@ public class Snapshot {
 	public String run() {
 
 		try {
-			SpaceRequest.post("/1/snapshot").superdogAuth().go(202);
+			// set high timeout to wait for server
+			// since snapshot service is slow
+			SpaceRequest.env().httpTimeoutMillis(120000);
+
+			String password = SpaceEnv.defaultEnv().get("spacedog_jobs_snapshotall_password");
+
+			SpaceRequest.post("/1/snapshot")//
+					.basicAuth("api", "snapshotall", password)//
+					.go(202);
 
 		} catch (Throwable t) {
 			return AdminJobs.error(this, t);
