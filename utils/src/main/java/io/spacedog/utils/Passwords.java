@@ -4,6 +4,7 @@
 package io.spacedog.utils;
 
 import java.util.Optional;
+import java.util.Random;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
@@ -12,6 +13,8 @@ import javax.xml.bind.DatatypeConverter;
 public class Passwords {
 
 	public static final String PASSWORD_DEFAULT_REGEX = ".{6,}";
+
+	private static final Random random = new Random();
 
 	public static String checkAndHash(String password) {
 		return checkAndHash(password, Optional.empty());
@@ -28,6 +31,10 @@ public class Passwords {
 
 	public static void checkValid(String password, Optional<String> regex) {
 		Check.matchRegex(regex.orElse(PASSWORD_DEFAULT_REGEX), password, "password");
+	}
+
+	public static String random() {
+		return Long.toString(random.nextLong());
 	}
 
 	/**
