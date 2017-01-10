@@ -7,6 +7,7 @@ import org.joda.time.DateTime;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.utils.Json;
+import io.spacedog.utils.Passwords;
 import io.spacedog.utils.Schema;
 import io.spacedog.utils.Settings;
 import io.spacedog.utils.SpaceParams;
@@ -80,6 +81,10 @@ public class SpaceClient {
 
 	public static User signUp(String backendId, String username, String password, String email) {
 		return login(createCredentials(backendId, username, password, email));
+	}
+
+	public static User createTempCredentials(String backendId, String username) {
+		return createCredentials(backendId, username, Passwords.random());
 	}
 
 	public static User createCredentials(Backend backend, String username, String password) {
@@ -174,6 +179,18 @@ public class SpaceClient {
 
 	public static void deleteCredentials(String username, Backend backend) {
 		SpaceRequest.delete("/1/credentials/" + username).adminAuth(backend).go(200, 404);
+	}
+
+	public static void deleteTempCredentials(String backendId, String username) {
+		ObjectNode node = SpaceRequest.get("/1/credentials")//
+				.queryParam("username", username)//
+				.superdogAuth(backendId).go(200, 404)//
+				.objectNode();
+
+		if (node.path("total").asInt() == 1)
+			SpaceRequest.delete("/1/credentials/{id}")//
+					.routeParam("id", Json.get(node, "results.0.id").asText())//
+					.superdogAuth(backendId).go(200);
 	}
 
 	public static void resetSchema(Schema schema, Backend backend) {
