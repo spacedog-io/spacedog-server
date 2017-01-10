@@ -132,8 +132,12 @@ public class LogResource extends Resource {
 		else
 			throw Exceptions.insufficientCredentials(credentials);
 
+		String param = context.request().query().get("before");
+		DateTime before = param == null ? DateTime.now().minusDays(7) //
+				: DateTime.parse(param);
+
 		Optional<DeleteByQueryResponse> response = doPurgeBackend(//
-				context.request().query().getInteger("from", 100000), optBackendId);
+				before, optBackendId);
 
 		// no delete response means no logs to delete means success
 
@@ -197,20 +201,11 @@ public class LogResource extends Resource {
 				&& (credentials.isSuperDog() || credentials.roles().contains("purgeall"));
 	}
 
-	private Optional<DeleteByQueryResponse> doPurgeBackend(int from, //
+	private Optional<DeleteByQueryResponse> doPurgeBackend(DateTime before, //
 			Optional<String> optBackendId) {
 
-		SearchHit[] hits = doGetLogs(from, 1, optBackendId).getHits().getHits();
-
-		if (hits == null || hits.length == 0)
-			// no log to delete
-			return Optional.empty();
-
-		String receivedAt = Json.readObject(hits[0].sourceAsString())//
-				.get("receivedAt").asText();
-
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery()//
-				.filter(QueryBuilders.rangeQuery("receivedAt").lte(receivedAt));
+				.filter(QueryBuilders.rangeQuery("receivedAt").lt(before.toString()));
 
 		if (optBackendId.isPresent())
 			boolQueryBuilder.filter(//

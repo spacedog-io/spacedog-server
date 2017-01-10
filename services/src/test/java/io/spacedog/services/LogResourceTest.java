@@ -34,22 +34,20 @@ public class LogResourceTest extends Assert {
 				.adminAuth(test2).go(200).get("total").asInt();
 
 		// superadmin checks everything is in place
-		SpaceRequest.get("/1/log").refresh().adminAuth(test).go(200)//
+		String before = SpaceRequest.get("/1/log").refresh().adminAuth(test).go(200)//
 				.assertEquals("/1/data", "results.0.path")//
 				.assertEquals("/1/data", "results.1.path")//
 				.assertEquals("/1/login", "results.2.path")//
 				.assertEquals("/1/credentials", "results.3.path")//
 				.assertEquals("/1/backend", "results.4.path")//
-				.assertEquals("/1/backend", "results.5.path");
+				.assertEquals("/1/backend", "results.5.path")//
+				.getString("results.1.receivedAt");
 
-		// wait for log index to be refreshed
-		Thread.sleep(1200);
-
-		// superadmin deletes all logs but the 4 last requests
-		SpaceRequest.delete("/1/log").from(3).adminAuth(test).go(200);
+		// superadmin deletes all logs before GET /data requests
+		SpaceRequest.delete("/1/log").queryParam("before", before).adminAuth(test).go(200);
 
 		// superadmin checks all test backend logs are deleted but ...
-		SpaceRequest.get("/1/log").refresh().adminAuth(test).go(200)//
+		before = SpaceRequest.get("/1/log").refresh().adminAuth(test).go(200)//
 				.assertEquals(4, "total")//
 				.assertEquals("DELETE", "results.0.method")//
 				.assertEquals("/1/log", "results.0.path")//
@@ -58,13 +56,11 @@ public class LogResourceTest extends Assert {
 				.assertEquals("GET", "results.2.method")//
 				.assertEquals("/1/data", "results.2.path")//
 				.assertEquals("GET", "results.3.method")//
-				.assertEquals("/1/data", "results.3.path");
+				.assertEquals("/1/data", "results.3.path")//
+				.getString("results.1.receivedAt");
 
-		// wait for log index to be refreshed
-		Thread.sleep(1200);
-
-		// superdog deletes all logs but the 4 last requests
-		SpaceRequest.delete("/1/log").from(3).superdogAuth(test).go(200);
+		// superdog deletes all logs before GET /log requests
+		SpaceRequest.delete("/1/log").queryParam("before", before).superdogAuth(test).go(200);
 
 		// superadmin checks all test backend logs are deleted but ...
 		SpaceRequest.get("/1/log").refresh().superdogAuth(test).go(200)//
@@ -93,9 +89,15 @@ public class LogResourceTest extends Assert {
 		// prepare
 		SpaceClient.prepareTest();
 
-		// superdog creates purge credentials in root backend
+		// superdog creates purge user in root backend
 		SpaceClient.deleteTempCredentials("api", "purgealltest");
 		User purgeUser = SpaceClient.createTempCredentials("api", "purgealltest");
+
+		// purge user fails to delete any logs
+		// since it doesn't have the 'purgeall' role
+		SpaceRequest.delete("/1/log").userAuth(purgeUser).go(403);
+
+		// superdog assigns 'purgeall' role to purge user
 		SpaceRequest.put("/1/credentials/" + purgeUser.id + "/roles/purgeall")//
 				.superdogAuth().go(200);
 
@@ -105,14 +107,14 @@ public class LogResourceTest extends Assert {
 		User fred = SpaceClient.signUp(test, "fred", "hi fred");
 		User vince = SpaceClient.signUp(test2, "vince", "hi vince");
 
-		// fake requests for logs
+		// data requests for logs
 		SpaceRequest.get("/1/data").userAuth(fred).go(200);
 		SpaceRequest.get("/1/data").userAuth(vince).go(200);
 		SpaceRequest.get("/1/data").userAuth(fred).go(200);
 		SpaceRequest.get("/1/data").userAuth(vince).go(200);
 
 		// check everything is in place
-		SpaceRequest.get("/1/log").refresh().superdogAuth().go(200)//
+		String before = SpaceRequest.get("/1/log").refresh().superdogAuth().go(200)//
 				.assertEquals("/1/data", "results.0.path")//
 				.assertEquals("test2", "results.0.credentials.backendId")//
 				.assertEquals("/1/data", "results.1.path")//
@@ -128,19 +130,17 @@ public class LogResourceTest extends Assert {
 				.assertEquals("/1/login", "results.6.path")//
 				.assertEquals("test", "results.6.credentials.backendId")//
 				.assertEquals("/1/credentials", "results.7.path")//
-				.assertEquals("test", "results.7.credentials.backendId");
+				.assertEquals("test", "results.7.credentials.backendId")//
+				.getString("results.0.receivedAt");
 
-		// purge credentials fails to get logs
+		// purge user fails to get logs
 		SpaceRequest.get("/1/log").userAuth(purgeUser).go(403);
 
-		// wait for log index to be refreshed
-		Thread.sleep(1200);
-
-		// purge credentials deletes all backend logs but the 3 last requests
-		SpaceRequest.delete("/1/log").from(3).userAuth(purgeUser).go(200);
+		// purge user deletes all backend logs before the last data request
+		SpaceRequest.delete("/1/log").queryParam("before", before).userAuth(purgeUser).go(200);
 
 		// superdog checks all backend logs are deleted but ...
-		SpaceRequest.get("/1/log").refresh().superdogAuth().go(200)//
+		before = SpaceRequest.get("/1/log").refresh().superdogAuth().go(200)//
 				.assertEquals(4, "total")//
 				.assertEquals("DELETE", "results.0.method")//
 				.assertEquals("/1/log", "results.0.path")//
@@ -149,13 +149,11 @@ public class LogResourceTest extends Assert {
 				.assertEquals("GET", "results.2.method")//
 				.assertEquals("/1/log", "results.2.path")//
 				.assertEquals("GET", "results.3.method")//
-				.assertEquals("/1/data", "results.3.path");
+				.assertEquals("/1/data", "results.3.path")//
+				.getString("results.0.receivedAt");
 
-		// wait for log index to be refreshed
-		Thread.sleep(1200);
-
-		// superdog deletes all backend logs but the 3 last requests
-		SpaceRequest.delete("/1/log").from(2).superdogAuth().go(200);
+		// superdog deletes all backend logs before the delete request
+		SpaceRequest.delete("/1/log").queryParam("before", before).superdogAuth().go(200);
 
 		// superdog checks all backend logs are deleted but ...
 		SpaceRequest.get("/1/log").refresh().superdogAuth().go(200)//
