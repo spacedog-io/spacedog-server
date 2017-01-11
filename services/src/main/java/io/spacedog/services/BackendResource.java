@@ -16,7 +16,6 @@ import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Internals;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -97,7 +96,7 @@ public class BackendResource extends Resource {
 		// and can be set in space context if none are set
 		SpaceContext.setCredentials(credentials);
 
-		if (context.query().getBoolean(SpaceParams.NOTIF, true))
+		if (context.query().getBoolean(NOTIF, true))
 			Internals.get().notify(//
 					Start.get().configuration().superdogAwsNotificationTopic(), //
 					String.format("New backend (%s)", spaceRootUrl(backendId).toString()), //

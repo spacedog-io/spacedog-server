@@ -3,7 +3,6 @@
  */
 package io.spacedog.watchdog;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -15,10 +14,11 @@ import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTarget;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceParams;
+import io.spacedog.utils.SpaceTest;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
-public class BackendResourceTestOften extends Assert {
+public class BackendResourceTestOften extends SpaceTest {
 
 	@Test
 	public void deleteSignUpGetLoginTestBackend() {

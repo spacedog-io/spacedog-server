@@ -18,7 +18,6 @@ import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Schema;
-import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -135,10 +134,10 @@ public class DataResource extends Resource {
 						type, id, schema.idPath(), idValue.asText());
 		}
 
-		boolean strict = context.query().getBoolean(SpaceParams.STRICT, false);
+		boolean strict = context.query().getBoolean(STRICT, false);
 		// TODO return better exception-message in case of invalid version
 		// format
-		long version = context.query().getLong(SpaceParams.VERSION, 0l);
+		long version = context.query().getLong(VERSION, 0l);
 
 		if (strict) {
 

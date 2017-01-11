@@ -41,9 +41,9 @@ import net.codestory.http.payload.Payload;
 @Prefix("/1/snapshot")
 public class SnapshotResource extends Resource {
 
-	private static final String SNAPSHOT_ALL_ROLE = "snapshotall";
+	public static final String SNAPSHOT_ALL = "snapshotall";
+
 	private static final String PLATFORM_SNAPSHOT_PREFIX = "all";
-	private static final String WAIT_FOR_COMPLETION = "waitForCompletion";
 	private static final String BUCKET_SUFFIX = "snapshots";
 
 	//
@@ -154,7 +154,7 @@ public class SnapshotResource extends Resource {
 
 	private boolean isSnapshotAll(Credentials credentials) {
 		return credentials.isTargetingRootApi() //
-				&& (credentials.isSuperDog() || credentials.roles().contains(SNAPSHOT_ALL_ROLE));
+				&& (credentials.isSuperDog() || credentials.roles().contains(SNAPSHOT_ALL));
 	}
 
 	private String computeSnapshotName(String prefix) {

@@ -399,15 +399,15 @@ public class Credentials {
 
 	public ObjectNode toJson() {
 		return Json.object(//
-				SpaceFieldNames.ID, id(), //
-				SpaceFieldNames.BACKEND_ID, target(), //
-				SpaceFieldNames.USERNAME, name(), //
-				SpaceFieldNames.EMAIL, email().get(), //
-				SpaceFieldNames.ENABLED, enabled(), //
-				SpaceFieldNames.CREDENTIALS_LEVEL, level().name(), //
-				SpaceFieldNames.ROLES, roles(), //
-				SpaceFieldNames.CREATED_AT, createdAt(), //
-				SpaceFieldNames.UPDATED_AT, updatedAt());
+				SpaceFields.ID, id(), //
+				SpaceFields.BACKEND_ID, target(), //
+				SpaceFields.USERNAME, name(), //
+				SpaceFields.EMAIL, email().get(), //
+				SpaceFields.ENABLED, enabled(), //
+				SpaceFields.CREDENTIALS_LEVEL, level().name(), //
+				SpaceFields.ROLES, roles(), //
+				SpaceFields.CREATED_AT, createdAt(), //
+				SpaceFields.UPDATED_AT, updatedAt());
 	}
 
 	//

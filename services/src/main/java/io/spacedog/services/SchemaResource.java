@@ -17,7 +17,6 @@ import io.spacedog.utils.Json;
 import io.spacedog.utils.Json.JsonMerger;
 import io.spacedog.utils.Schema;
 import io.spacedog.utils.SchemaSettings;
-import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -94,9 +93,9 @@ public class SchemaResource extends Resource {
 		if (indexExists)
 			elastic.putMapping(backendId, type, mapping);
 		else {
-			int shards = context.query().getInteger(SpaceParams.SHARDS, SpaceParams.SHARDS_DEFAULT);
-			int replicas = context.query().getInteger(SpaceParams.REPLICAS, SpaceParams.REPLICAS_DEFAULT);
-			boolean async = context.query().getBoolean(SpaceParams.ASYNC, SpaceParams.ASYNC_DEFAULT);
+			int shards = context.query().getInteger(SHARDS, SHARDS_DEFAULT);
+			int replicas = context.query().getInteger(REPLICAS, REPLICAS_DEFAULT);
+			boolean async = context.query().getBoolean(ASYNC, ASYNC_DEFAULT);
 			elastic.createIndex(backendId, type, mapping, async, shards, replicas);
 		}
 

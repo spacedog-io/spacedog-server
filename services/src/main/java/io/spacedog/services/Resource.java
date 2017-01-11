@@ -16,13 +16,14 @@ import com.google.common.collect.Sets;
 
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.SpaceFieldNames;
+import io.spacedog.utils.SpaceFields;
+import io.spacedog.utils.SpaceParams;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.Part;
 import net.codestory.http.Query;
 
-public abstract class Resource implements SpaceFieldNames {
+public abstract class Resource implements SpaceFields, SpaceParams {
 
 	public static final String SLASH = "/";
 	public static final String SPACEDOG_BACKEND = "spacedog";

@@ -30,7 +30,6 @@ import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceHeaders;
-import io.spacedog.utils.SpaceParams;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -44,6 +43,7 @@ import net.codestory.http.payload.Payload;
 public class LogResource extends Resource {
 
 	public static final String TYPE = "log";
+	public static final String PURGE_ALL = "purgeall";
 
 	//
 	// init
@@ -53,8 +53,9 @@ public class LogResource extends Resource {
 
 		ElasticClient client = Start.get().getElasticClient();
 
-		String mapping = Resources.toString(Resources.getResource(//
-				"io/spacedog/services/log-mapping.json"), Utils.UTF8);
+		String mapping = Resources.toString(//
+				Resources.getResource(this.getClass(), "log-mapping.json"), //
+				Utils.UTF8);
 
 		if (client.existsIndex(SPACEDOG_BACKEND, TYPE))
 			client.putMapping(SPACEDOG_BACKEND, TYPE, mapping);
@@ -80,7 +81,7 @@ public class LogResource extends Resource {
 		int size = context.query().getInteger("size", 10);
 		Check.isTrue(from + size <= 1000, "from + size must be less than or equal to 1000");
 
-		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
+		boolean refresh = context.query().getBoolean(REFRESH, false);
 		DataStore.get().refreshType(refresh, SPACEDOG_BACKEND, TYPE);
 
 		SearchResponse response = doGetLogs(from, size, optBackendId);
@@ -101,7 +102,7 @@ public class LogResource extends Resource {
 					.filter(QueryBuilders.termQuery("credentials.backendId", //
 							credentials.target()));
 
-		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
+		boolean refresh = context.query().getBoolean(REFRESH, false);
 		DataStore.get().refreshType(refresh, SPACEDOG_BACKEND, TYPE);
 
 		SearchResponse response = Start.get().getElasticClient()//
@@ -110,7 +111,7 @@ public class LogResource extends Resource {
 				.setQuery(query)//
 				.setFrom(context.query().getInteger("from", 0)) //
 				.setSize(context.query().getInteger("size", 10)) //
-				.addSort("receivedAt", SortOrder.DESC)//
+				.addSort(RECEIVED_AT, SortOrder.DESC)//
 				.get();
 
 		return extractLogs(response);
@@ -132,7 +133,7 @@ public class LogResource extends Resource {
 		else
 			throw Exceptions.insufficientCredentials(credentials);
 
-		String param = context.request().query().get("before");
+		String param = context.request().query().get(BEFORE);
 		DateTime before = param == null ? DateTime.now().minusDays(7) //
 				: DateTime.parse(param);
 
@@ -198,14 +199,14 @@ public class LogResource extends Resource {
 
 	private boolean isPurgeAll(Credentials credentials) {
 		return credentials.isTargetingRootApi() //
-				&& (credentials.isSuperDog() || credentials.roles().contains("purgeall"));
+				&& (credentials.isSuperDog() || credentials.roles().contains(PURGE_ALL));
 	}
 
 	private Optional<DeleteByQueryResponse> doPurgeBackend(DateTime before, //
 			Optional<String> optBackendId) {
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery()//
-				.filter(QueryBuilders.rangeQuery("receivedAt").lt(before.toString()));
+				.filter(QueryBuilders.rangeQuery(RECEIVED_AT).lt(before.toString()));
 
 		if (optBackendId.isPresent())
 			boolQueryBuilder.filter(//
@@ -230,7 +231,7 @@ public class LogResource extends Resource {
 				.prepareSearch(SPACEDOG_BACKEND, TYPE)//
 				.setTypes(TYPE)//
 				.setQuery(query)//
-				.addSort("receivedAt", SortOrder.DESC)//
+				.addSort(RECEIVED_AT, SortOrder.DESC)//
 				.setFrom(from)//
 				.setSize(size)//
 				.get();
@@ -253,7 +254,7 @@ public class LogResource extends Resource {
 		ObjectNode log = Json.object(//
 				"method", context.method(), //
 				"path", uri, //
-				"receivedAt", receivedAt.toString(), //
+				RECEIVED_AT, receivedAt.toString(), //
 				"processedIn", DateTime.now().getMillis() - receivedAt.getMillis(), //
 				"status", payload == null ? 500 : payload.code());
 

@@ -17,13 +17,12 @@ import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.NonDirectlyUpdatableSettings;
 import io.spacedog.utils.NonDirectlyReadableSettings;
+import io.spacedog.utils.NonDirectlyUpdatableSettings;
 import io.spacedog.utils.NotFoundException;
 import io.spacedog.utils.Settings;
 import io.spacedog.utils.SettingsSettings;
 import io.spacedog.utils.SettingsSettings.SettingsAcl;
-import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -33,7 +32,7 @@ import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/1/settings")
-public class SettingsResource {
+public class SettingsResource extends Resource {
 
 	//
 	// User constants and schema
@@ -62,7 +61,7 @@ public class SettingsResource {
 			return JsonPayload.json(JsonPayload.builder()//
 					.put("took", 0).put("total", 0).object("results"));
 
-		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
+		boolean refresh = context.query().getBoolean(REFRESH, false);
 		DataStore.get().refreshType(refresh, backendId, TYPE);
 
 		int from = context.query().getInteger("from", 0);
@@ -255,9 +254,9 @@ public class SettingsResource {
 
 		if (!elastic.existsIndex(backendId, TYPE)) {
 			Context context = SpaceContext.get().context();
-			int shards = context.query().getInteger(SpaceParams.SHARDS, SpaceParams.SHARDS_DEFAULT);
-			int replicas = context.query().getInteger(SpaceParams.REPLICAS, SpaceParams.REPLICAS_DEFAULT);
-			boolean async = context.query().getBoolean(SpaceParams.ASYNC, SpaceParams.ASYNC_DEFAULT);
+			int shards = context.query().getInteger(SHARDS, SHARDS_DEFAULT);
+			int replicas = context.query().getInteger(REPLICAS, REPLICAS_DEFAULT);
+			boolean async = context.query().getBoolean(ASYNC, ASYNC_DEFAULT);
 
 			ObjectNode mapping = Json.object(TYPE, Json.object("enabled", false));
 			elastic.createIndex(backendId, TYPE, mapping.toString(), async, shards, replicas);

@@ -90,7 +90,7 @@ public class LogResourceTest extends Assert {
 		SpaceClient.prepareTest();
 
 		// superdog creates purge user in root backend
-		SpaceClient.deleteTempCredentials("api", "purgealltest");
+		SpaceClient.deleteCredentialsBySuperdog("api", "purgealltest");
 		User purgeUser = SpaceClient.createTempCredentials("api", "purgealltest");
 
 		// purge user fails to delete any logs

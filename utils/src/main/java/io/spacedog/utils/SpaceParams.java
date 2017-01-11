@@ -1,18 +1,21 @@
 package io.spacedog.utils;
 
-public class SpaceParams {
+public interface SpaceParams {
 
-	public static final String SHARDS = "shards";
-	public static final String REPLICAS = "replicas";
-	public static final String LOG_TYPE = "logType";
-	public static final String REFRESH = "refresh";
-	public static final String STRICT = "strict";
-	public static final String VERSION = "version";
-	public static final String MIN_STATUS = "minStatus";
-	public static final String ASYNC = "async";
-	public static final String NOTIF = "notif";
-	public static final boolean ASYNC_DEFAULT = false;
-	public static final int SHARDS_DEFAULT = 1;
-	public static final int REPLICAS_DEFAULT = 0;
+	String SHARDS = "shards";
+	String REPLICAS = "replicas";
+	String LOG_TYPE = "logType";
+	String REFRESH = "refresh";
+	String STRICT = "strict";
+	String VERSION = "version";
+	String MIN_STATUS = "minStatus";
+	String ASYNC = "async";
+	String LIFETIME = "lifetime";
+	String BEFORE = "before";
+	String NOTIF = "notif";
+	boolean ASYNC_DEFAULT = false;
+	int SHARDS_DEFAULT = 1;
+	int REPLICAS_DEFAULT = 0;
+	String WAIT_FOR_COMPLETION = "waitForCompletion";
 
 }

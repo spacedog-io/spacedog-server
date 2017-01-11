@@ -10,10 +10,11 @@ import io.spacedog.utils.Json;
 import io.spacedog.utils.Passwords;
 import io.spacedog.utils.Schema;
 import io.spacedog.utils.Settings;
+import io.spacedog.utils.SpaceFields;
 import io.spacedog.utils.SpaceParams;
 import io.spacedog.utils.Utils;
 
-public class SpaceClient {
+public class SpaceClient implements SpaceFields, SpaceParams {
 
 	public static class User {
 		public String id;
@@ -24,9 +25,13 @@ public class SpaceClient {
 		public String accessToken;
 		public DateTime expiresAt;
 
-		public User(String backendId, String username, String password) {
+		public User(String backendId, String username) {
 			this.backendId = backendId;
 			this.username = username;
+		}
+
+		public User(String backendId, String username, String password) {
+			this(backendId, username);
 			this.password = password;
 		}
 
@@ -98,18 +103,18 @@ public class SpaceClient {
 	public static User createCredentials(String backendId, String username, String password, String email) {
 
 		String id = SpaceRequest.post("/1/credentials").backendId(backendId)//
-				.body("username", username, "password", password, "email", email)//
-				.go(201).getString("id");
+				.body(USERNAME, username, PASSWORD, password, EMAIL, email)//
+				.go(201).getString(ID);
 
 		return new User(backendId, id, username, password, email);
 	}
 
 	public static User createAdminCredentials(Backend backend, String username, String password, String email) {
-		ObjectNode node = Json.object("username", username, //
-				"password", password, "email", email, "level", "ADMIN");
+		ObjectNode node = Json.object(USERNAME, username, //
+				PASSWORD, password, EMAIL, email, LEVEL, "ADMIN");
 
 		String id = SpaceRequest.post("/1/credentials")//
-				.adminAuth(backend).body(node).go(201).getString("id");
+				.adminAuth(backend).body(node).go(201).getString(ID);
 
 		return new User(backend.backendId, id, username, password, email);
 	}
@@ -149,10 +154,10 @@ public class SpaceClient {
 		if (response.httpResponse().getStatus() != 200)
 			return Optional.empty();
 
-		user.id = response.get("credentials").get("id").asText();
-		user.email = response.get("credentials").get("email").asText();
-		user.accessToken = response.get("accessToken").asText();
-		user.expiresAt = DateTime.now().plus(response.get("expiresIn").asLong());
+		user.id = response.get("credentials").get(ID).asText();
+		user.email = response.get("credentials").get(EMAIL).asText();
+		user.accessToken = response.get(ACCESS_TOKEN).asText();
+		user.expiresAt = DateTime.now().plus(response.get(EXPIRES_IN).asLong());
 
 		return Optional.of(user);
 	}
@@ -181,16 +186,27 @@ public class SpaceClient {
 		SpaceRequest.delete("/1/credentials/" + username).adminAuth(backend).go(200, 404);
 	}
 
-	public static void deleteTempCredentials(String backendId, String username) {
-		ObjectNode node = SpaceRequest.get("/1/credentials")//
-				.queryParam("username", username)//
-				.superdogAuth(backendId).go(200, 404)//
-				.objectNode();
+	public static void deleteCredentialsBySuperdog(String backendId, String username) {
+		Optional<User> user = getCredentialsBySuperdog(backendId, username);
 
-		if (node.path("total").asInt() == 1)
+		if (user.isPresent())
 			SpaceRequest.delete("/1/credentials/{id}")//
-					.routeParam("id", Json.get(node, "results.0.id").asText())//
+					.routeParam("id", user.get().id)//
 					.superdogAuth(backendId).go(200);
+	}
+
+	public static Optional<User> getCredentialsBySuperdog(String backendId, String username) {
+		SpaceResponse response = SpaceRequest.get("/1/credentials")//
+				.queryParam("username", username)//
+				.superdogAuth(backendId).go(200, 404);
+
+		if (response.httpResponse().getStatus() != 200)
+			return Optional.empty();
+
+		User user = new User(backendId, username);
+		user.id = response.getString("id");
+		user.email = response.getString("email");
+		return Optional.of(user);
 	}
 
 	public static void resetSchema(Schema schema, Backend backend) {
@@ -230,8 +246,8 @@ public class SpaceClient {
 			String email, boolean notification) {
 
 		SpaceRequest.post("/1/backend").backendId(backendId)//
-				.queryParam(SpaceParams.NOTIF, Boolean.toString(notification))//
-				.body("username", username, "password", password, "email", email)//
+				.queryParam(NOTIF, Boolean.toString(notification))//
+				.body(USERNAME, username, PASSWORD, password, EMAIL, email)//
 				.go(201);
 
 		return new Backend(backendId, username, password, email);
@@ -319,4 +335,5 @@ public class SpaceClient {
 		SpaceRequest.put("/1/credentials/{id}/roles/{role}").userAuth(admin)//
 				.routeParam("id", user.id).routeParam("role", role).go(200);
 	}
+
 }

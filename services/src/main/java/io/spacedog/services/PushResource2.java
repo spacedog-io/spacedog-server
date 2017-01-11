@@ -39,7 +39,6 @@ import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Schema;
-import io.spacedog.utils.SpaceParams;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -273,7 +272,7 @@ public class PushResource2 extends Resource {
 			}
 		}
 
-		boolean refresh = context.query().getBoolean(SpaceParams.REFRESH, false);
+		boolean refresh = context.query().getBoolean(REFRESH, false);
 		DataStore.get().refreshType(refresh, credentials.target(), TYPE);
 
 		// TODO use a scroll to push to all installations found
