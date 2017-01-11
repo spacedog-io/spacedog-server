@@ -196,16 +196,16 @@ public class SpaceClient implements SpaceFields, SpaceParams {
 	}
 
 	public static Optional<User> getCredentialsBySuperdog(String backendId, String username) {
-		SpaceResponse response = SpaceRequest.get("/1/credentials")//
+		ObjectNode node = SpaceRequest.get("/1/credentials")//
 				.queryParam(PARAM_USERNAME, username)//
-				.superdogAuth(backendId).go(200, 404);
+				.superdogAuth(backendId).go(200).objectNode();
 
-		if (response.httpResponse().getStatus() != 200)
+		if (node.get("total").asInt() == 0)
 			return Optional.empty();
 
 		User user = new User(backendId, username);
-		user.id = response.getString("results.0.id");
-		user.email = response.getString("results.0.email");
+		user.id = Json.get(node, "results.0.id").asText();
+		user.email = Json.get(node, "results.0.email").asText();
 		return Optional.of(user);
 	}
 
