@@ -13,8 +13,9 @@ public class SpacePush {
 	public static class PushRequest {
 		public String appId;
 		// TODO use or reuse enums ?
-		public String badgeStrategy;
-		public String pushService;
+		// TODO uncomment this after SpaceDog 0.27 MEP
+		// public String badgeStrategy;
+		// public String pushService;
 		public List<PushTag> tags;
 		public boolean refresh;
 		public Object message;

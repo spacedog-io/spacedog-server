@@ -57,6 +57,7 @@ public class Course extends DataObject {
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	public static class Driver {
 		public String driverId;
+		public String credentialsId;
 		public Double gain;
 		public Vehicule vehicule;
 	}
