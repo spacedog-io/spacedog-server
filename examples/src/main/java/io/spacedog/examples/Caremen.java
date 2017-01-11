@@ -557,37 +557,25 @@ public class Caremen extends SpaceClient {
 	}
 
 	void createCashierCredentials() {
-		JsonNode node = SpaceRequest.get("/1/credentials")//
-				.adminAuth(backend).queryParam("username", "cashier").go(200)//
-				.get("results.0.id");
+		String password = SpaceEnv.defaultEnv().get("caremen.cashier.password");
 
-		if (node == null) {
+		SpaceClient.deleteCredentialsBySuperdog(backend.backendId, "cashier");
 
-			String password = SpaceEnv.defaultEnv().get("caremen.cashier.password");
+		User cashier = SpaceClient.createCredentials(backend.backendId, //
+				"cashier", password, "plateform@spacedog.io");
 
-			User cashier = SpaceClient.createCredentials(backend.backendId, //
-					"cashier", password, "plateform@spacedog.io");
-
-			SpaceRequest.put("/1/credentials/" + cashier.id + "/roles/cashier")//
-					.adminAuth(backend).go(200);
-		}
+		SpaceClient.setRole(backend.adminUser, cashier, "cashier");
 	}
 
 	void createReminderCredentials() {
-		JsonNode node = SpaceRequest.get("/1/credentials")//
-				.adminAuth(backend).queryParam("username", "reminder").go(200)//
-				.get("results.0.id");
+		String password = SpaceEnv.defaultEnv().get("caremen.reminder.password");
 
-		if (node == null) {
+		SpaceClient.deleteCredentialsBySuperdog(backend.backendId, "reminder");
 
-			String password = SpaceEnv.defaultEnv().get("caremen.reminder.password");
+		User reminder = SpaceClient.createCredentials(backend.backendId, //
+				"reminder", password, "plateform@spacedog.io");
 
-			User cashier = SpaceClient.createCredentials(backend.backendId, //
-					"reminder", password, "plateform@spacedog.io");
-
-			SpaceRequest.put("/1/credentials/" + cashier.id + "/roles/reminder")//
-					.adminAuth(backend).go(200);
-		}
+		SpaceClient.setRole(backend.adminUser, reminder, "reminder");
 	}
 
 }
