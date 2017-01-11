@@ -37,12 +37,12 @@ public class LinkedinResource extends Resource {
 
 		return JsonPayload.json(//
 				JsonPayload.builder()//
-						.put(ACCESS_TOKEN, credentials.accessToken()) //
-						.put(EXPIRES_IN, credentials.accessTokenExpiresIn()) //
+						.put(FIELD_ACCESS_TOKEN, credentials.accessToken()) //
+						.put(FIELD_EXPIRES_IN, credentials.accessTokenExpiresIn()) //
 						// TODO deprecated
 						// remove the id when colibee is fixed
-						.put(ID, credentials.id()) //
-						.node(CREDENTIALS, credentials.toJson()));
+						.put(FIELD_ID, credentials.id()) //
+						.node(FIELD_CREDENTIALS, credentials.toJson()));
 	}
 
 	@Get("/1/login/linkedin/redirect")

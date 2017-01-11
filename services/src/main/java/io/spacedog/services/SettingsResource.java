@@ -61,7 +61,7 @@ public class SettingsResource extends Resource {
 			return JsonPayload.json(JsonPayload.builder()//
 					.put("took", 0).put("total", 0).object("results"));
 
-		boolean refresh = context.query().getBoolean(REFRESH, false);
+		boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);
 		DataStore.get().refreshType(refresh, backendId, TYPE);
 
 		int from = context.query().getInteger("from", 0);
@@ -254,9 +254,9 @@ public class SettingsResource extends Resource {
 
 		if (!elastic.existsIndex(backendId, TYPE)) {
 			Context context = SpaceContext.get().context();
-			int shards = context.query().getInteger(SHARDS, SHARDS_DEFAULT);
-			int replicas = context.query().getInteger(REPLICAS, REPLICAS_DEFAULT);
-			boolean async = context.query().getBoolean(ASYNC, ASYNC_DEFAULT);
+			int shards = context.query().getInteger(PARAM_SHARDS, PARAM_SHARDS_DEFAULT);
+			int replicas = context.query().getInteger(PARAM_REPLICAS, PARAM_REPLICAS_DEFAULT);
+			boolean async = context.query().getBoolean(PARAM_ASYNC, PARAM_ASYNC_DEFAULT);
 
 			ObjectNode mapping = Json.object(TYPE, Json.object("enabled", false));
 			elastic.createIndex(backendId, TYPE, mapping.toString(), async, shards, replicas);

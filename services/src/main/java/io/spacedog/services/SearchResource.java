@@ -59,7 +59,7 @@ public class SearchResource extends Resource {
 	public Payload postSearchAllTypes(String body, Context context) {
 		Credentials credentials = SpaceContext.getCredentials();
 		String[] types = DataAccessControl.types(DataPermission.search, credentials);
-		boolean refresh = context.query().getBoolean(REFRESH, false);
+		boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);
 		DataStore.get().refreshBackend(refresh, credentials.target());
 		ObjectNode result = searchInternal(body, credentials, context, types);
 		return JsonPayload.json(result);
@@ -72,7 +72,7 @@ public class SearchResource extends Resource {
 		// credentials and user data at the same time
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		String[] types = DataAccessControl.types(DataPermission.delete_all, credentials);
-		boolean refresh = context.query().getBoolean(REFRESH, true);
+		boolean refresh = context.query().getBoolean(PARAM_REFRESH, true);
 		DataStore.get().refreshBackend(refresh, credentials.target());
 		DeleteByQueryResponse response = Start.get().getElasticClient()//
 				.deleteByQuery(query, credentials.target(), types);
@@ -90,7 +90,7 @@ public class SearchResource extends Resource {
 	public Payload postSearchForType(String type, String body, Context context) {
 		Credentials credentials = SpaceContext.getCredentials();
 		if (DataAccessControl.check(credentials, type, DataPermission.search)) {
-			boolean refresh = context.query().getBoolean(REFRESH, false);
+			boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);
 			DataStore.get().refreshType(refresh, credentials.target(), type);
 			ObjectNode result = searchInternal(body, credentials, context, type);
 			return JsonPayload.json(result);
@@ -104,7 +104,7 @@ public class SearchResource extends Resource {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		if (DataAccessControl.check(credentials, type, DataPermission.delete_all)) {
 
-			boolean refresh = context.query().getBoolean(REFRESH, true);
+			boolean refresh = context.query().getBoolean(PARAM_REFRESH, true);
 			DataStore.get().refreshType(refresh, credentials.target(), type);
 
 			DeleteByQueryResponse response = Start.get().getElasticClient()//

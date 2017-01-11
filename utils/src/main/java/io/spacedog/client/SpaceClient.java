@@ -103,18 +103,18 @@ public class SpaceClient implements SpaceFields, SpaceParams {
 	public static User createCredentials(String backendId, String username, String password, String email) {
 
 		String id = SpaceRequest.post("/1/credentials").backendId(backendId)//
-				.body(USERNAME, username, PASSWORD, password, EMAIL, email)//
-				.go(201).getString(ID);
+				.body(FIELD_USERNAME, username, FIELD_PASSWORD, password, FIELD_EMAIL, email)//
+				.go(201).getString(FIELD_ID);
 
 		return new User(backendId, id, username, password, email);
 	}
 
 	public static User createAdminCredentials(Backend backend, String username, String password, String email) {
-		ObjectNode node = Json.object(USERNAME, username, //
-				PASSWORD, password, EMAIL, email, LEVEL, "ADMIN");
+		ObjectNode node = Json.object(FIELD_USERNAME, username, //
+				FIELD_PASSWORD, password, FIELD_EMAIL, email, FIELD_LEVEL, "ADMIN");
 
 		String id = SpaceRequest.post("/1/credentials")//
-				.adminAuth(backend).body(node).go(201).getString(ID);
+				.adminAuth(backend).body(node).go(201).getString(FIELD_ID);
 
 		return new User(backend.backendId, id, username, password, email);
 	}
@@ -154,10 +154,10 @@ public class SpaceClient implements SpaceFields, SpaceParams {
 		if (response.httpResponse().getStatus() != 200)
 			return Optional.empty();
 
-		user.id = response.get("credentials").get(ID).asText();
-		user.email = response.get("credentials").get(EMAIL).asText();
-		user.accessToken = response.get(ACCESS_TOKEN).asText();
-		user.expiresAt = DateTime.now().plus(response.get(EXPIRES_IN).asLong());
+		user.id = response.get("credentials").get(FIELD_ID).asText();
+		user.email = response.get("credentials").get(FIELD_EMAIL).asText();
+		user.accessToken = response.get(FIELD_ACCESS_TOKEN).asText();
+		user.expiresAt = DateTime.now().plus(response.get(FIELD_EXPIRES_IN).asLong());
 
 		return Optional.of(user);
 	}
@@ -246,8 +246,8 @@ public class SpaceClient implements SpaceFields, SpaceParams {
 			String email, boolean notification) {
 
 		SpaceRequest.post("/1/backend").backendId(backendId)//
-				.queryParam(NOTIF, Boolean.toString(notification))//
-				.body(USERNAME, username, PASSWORD, password, EMAIL, email)//
+				.queryParam(PARAM_NOTIF, Boolean.toString(notification))//
+				.body(FIELD_USERNAME, username, FIELD_PASSWORD, password, FIELD_EMAIL, email)//
 				.go(201);
 
 		return new Backend(backendId, username, password, email);

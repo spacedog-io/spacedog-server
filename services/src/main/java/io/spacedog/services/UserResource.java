@@ -29,9 +29,9 @@ public class UserResource extends Resource {
 
 	public static Schema getDefaultUserSchema() {
 		return Schema.builder(TYPE)//
-				.id(USERNAME)//
-				.string(USERNAME)//
-				.string(EMAIL)//
+				.id(FIELD_USERNAME)//
+				.string(FIELD_USERNAME)//
+				.string(FIELD_EMAIL)//
 				.build();
 	}
 
@@ -55,7 +55,7 @@ public class UserResource extends Resource {
 				.create(SpaceContext.target(), Level.USER, node, true);
 		SpaceContext.setCredentials(credentials);
 
-		node.remove(PASSWORD);
+		node.remove(FIELD_PASSWORD);
 		body = node.toString();
 		DataResource.get().post(TYPE, body, context);
 
@@ -63,7 +63,7 @@ public class UserResource extends Resource {
 				credentials.backendId(), "/1", TYPE, credentials.name());
 
 		if (credentials.passwordResetCode() != null)
-			builder.put(PASSWORD_RESET_CODE, credentials.passwordResetCode());
+			builder.put(FIELD_PASSWORD_RESET_CODE, credentials.passwordResetCode());
 
 		return JsonPayload.json(builder, HttpStatus.CREATED)//
 				.withHeader(SpaceHeaders.SPACEDOG_OBJECT_ID, credentials.name());

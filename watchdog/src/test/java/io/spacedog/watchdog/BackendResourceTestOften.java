@@ -149,7 +149,7 @@ public class BackendResourceTestOften extends SpaceTest {
 		// This is very useful for mono backend servers with a non wildcard dns
 		// record
 		SpaceRequest.post("/1/backend").backendId("test")//
-				.queryParam(SpaceParams.NOTIF, "false")//
+				.queryParam(SpaceParams.PARAM_NOTIF, "false")//
 				.body("username", "test", "password", "hi test", "email", "test@test.fr")//
 				.go(201);
 

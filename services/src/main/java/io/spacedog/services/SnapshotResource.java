@@ -101,7 +101,7 @@ public class SnapshotResource extends Resource {
 		CreateSnapshotResponse response = Start.get().getElasticClient().cluster()//
 				.prepareCreateSnapshot(repoId, snapshotId)//
 				.setIndicesOptions(IndicesOptions.fromOptions(true, true, true, true))//
-				.setWaitForCompletion(context.query().getBoolean(WAIT_FOR_COMPLETION, false))//
+				.setWaitForCompletion(context.query().getBoolean(PARAM_WAIT_FOR_COMPLETION, false))//
 				.setIncludeGlobalState(true)//
 				.setPartial(false)//
 				.get();
@@ -135,7 +135,7 @@ public class SnapshotResource extends Resource {
 			throw Exceptions.illegalArgument("snapshot repository doesn't contain any snapshot");
 
 		return doRestore(snapshots.get(0), //
-				context.query().getBoolean(WAIT_FOR_COMPLETION, false));
+				context.query().getBoolean(PARAM_WAIT_FOR_COMPLETION, false));
 	}
 
 	@Post("/:id/restore")
@@ -145,7 +145,7 @@ public class SnapshotResource extends Resource {
 		SpaceContext.checkSuperDogCredentials();
 		SpaceSnapshot snapshot = doGetSnapshot(snapshotId);
 		return doRestore(snapshot, //
-				context.query().getBoolean(WAIT_FOR_COMPLETION, false));
+				context.query().getBoolean(PARAM_WAIT_FOR_COMPLETION, false));
 	}
 
 	//

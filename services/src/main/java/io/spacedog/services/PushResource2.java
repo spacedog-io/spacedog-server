@@ -272,7 +272,7 @@ public class PushResource2 extends Resource {
 			}
 		}
 
-		boolean refresh = context.query().getBoolean(REFRESH, false);
+		boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);
 		DataStore.get().refreshType(refresh, credentials.target(), TYPE);
 
 		// TODO use a scroll to push to all installations found
@@ -365,7 +365,7 @@ public class PushResource2 extends Resource {
 
 		} catch (Exception e) {
 			log.failures = true;
-			logItem.set(ERROR, JsonPayload.toJson(e, SpaceContext.isDebug()));
+			logItem.set(FIELD_ERROR, JsonPayload.toJson(e, SpaceContext.isDebug()));
 
 			if (e instanceof EndpointDisabledException) {
 				logItem.put("installationDisabled", true);

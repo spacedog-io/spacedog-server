@@ -242,7 +242,7 @@ public class ElasticClient implements SpaceParams {
 	//
 
 	public void createIndex(String backendId, String type, String mapping, boolean async) {
-		createIndex(backendId, type, mapping, async, SHARDS_DEFAULT, REPLICAS_DEFAULT);
+		createIndex(backendId, type, mapping, async, PARAM_SHARDS_DEFAULT, PARAM_REPLICAS_DEFAULT);
 	}
 
 	public void createIndex(String backendId, String type, String mapping, boolean async, int shards, int replicas) {

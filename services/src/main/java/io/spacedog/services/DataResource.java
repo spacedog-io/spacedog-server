@@ -134,10 +134,10 @@ public class DataResource extends Resource {
 						type, id, schema.idPath(), idValue.asText());
 		}
 
-		boolean strict = context.query().getBoolean(STRICT, false);
+		boolean strict = context.query().getBoolean(PARAM_STRICT, false);
 		// TODO return better exception-message in case of invalid version
 		// format
-		long version = context.query().getLong(VERSION, 0l);
+		long version = context.query().getLong(PARAM_VERSION, 0l);
 
 		if (strict) {
 

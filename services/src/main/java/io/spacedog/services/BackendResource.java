@@ -96,7 +96,7 @@ public class BackendResource extends Resource {
 		// and can be set in space context if none are set
 		SpaceContext.setCredentials(credentials);
 
-		if (context.query().getBoolean(NOTIF, true))
+		if (context.query().getBoolean(PARAM_NOTIF, true))
 			Internals.get().notify(//
 					Start.get().configuration().superdogAwsNotificationTopic(), //
 					String.format("New backend (%s)", spaceRootUrl(backendId).toString()), //
@@ -117,7 +117,7 @@ public class BackendResource extends Resource {
 		elastic.refreshType(SPACEDOG_BACKEND, CredentialsResource.TYPE);
 
 		long totalHits = elastic.prepareSearch(SPACEDOG_BACKEND, CredentialsResource.TYPE)//
-				.setQuery(QueryBuilders.termQuery(BACKEND_ID, backendId))//
+				.setQuery(QueryBuilders.termQuery(FIELD_BACKEND_ID, backendId))//
 				.setSize(0)//
 				.get()//
 				.getHits()//
@@ -141,8 +141,8 @@ public class BackendResource extends Resource {
 		ArrayNode results = Json.array();
 
 		for (Credentials superAdmin : superAdmins.results)
-			results.add(Json.object(BACKEND_ID, superAdmin.backendId(), //
-					USERNAME, superAdmin.name(), EMAIL, superAdmin.email().get()));
+			results.add(Json.object(FIELD_BACKEND_ID, superAdmin.backendId(), //
+					FIELD_USERNAME, superAdmin.name(), FIELD_EMAIL, superAdmin.email().get()));
 
 		return JsonPayload.json(Json.object("total", superAdmins.total, "results", results));
 	}

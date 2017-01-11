@@ -2,27 +2,27 @@ package io.spacedog.utils;
 
 public interface SpaceFields {
 
-	String ID = "id";
-	String BACKEND_ID = "backendId";
-	String PASSWORD = "password";
-	String EMAIL = "email";
-	String LEVEL = "level";
-	String ENABLED = "enabled";
-	String USERNAME = "username";
-	String UPDATED_AT = "updatedAt";
-	String CREATED_AT = "createdAt";
-	String SESSIONS = "sessions";
-	String STASH = "stash";
-	String ACCESS_TOKEN = "accessToken";
-	String ACCESS_TOKEN_EXPIRES_AT = "accessTokenExpiresAt";
-	String SESSIONS_ACCESS_TOKEN = SESSIONS + '.' + ACCESS_TOKEN;
-	String EXPIRES_IN = "expiresIn";
-	String HASHED_PASSWORD = "hashedPassword";
-	String PASSWORD_RESET_CODE = "passwordResetCode";
-	String CREDENTIALS_LEVEL = "level";
-	String CREDENTIALS = "credentials";
-	String ROLES = "roles";
-	String ERROR = "error";
-	String RECEIVED_AT = "receivedAt";
+	String FIELD_ID = "id";
+	String FIELD_BACKEND_ID = "backendId";
+	String FIELD_PASSWORD = "password";
+	String FIELD_EMAIL = "email";
+	String FIELD_LEVEL = "level";
+	String FIELD_ENABLED = "enabled";
+	String FIELD_USERNAME = "username";
+	String FIELD_UPDATED_AT = "updatedAt";
+	String FIELD_CREATED_AT = "createdAt";
+	String FIELD_SESSIONS = "sessions";
+	String FIELD_STASH = "stash";
+	String FIELD_ACCESS_TOKEN = "accessToken";
+	String FIELD_ACCESS_TOKEN_EXPIRES_AT = "accessTokenExpiresAt";
+	String FIELD_SESSIONS_ACCESS_TOKEN = FIELD_SESSIONS + '.' + FIELD_ACCESS_TOKEN;
+	String FIELD_EXPIRES_IN = "expiresIn";
+	String FIELD_HASHED_PASSWORD = "hashedPassword";
+	String FIELD_PASSWORD_RESET_CODE = "passwordResetCode";
+	String FIELD_CREDENTIALS_LEVEL = "level";
+	String FIELD_CREDENTIALS = "credentials";
+	String FIELD_ROLES = "roles";
+	String FIELD_ERROR = "error";
+	String FIELD_RECEIVED_AT = "receivedAt";
 
 }

@@ -20,12 +20,12 @@ public class AdminJobsCredentials extends SpaceClient {
 		SpaceClient.deleteCredentialsBySuperdog("api", LogResource.PURGE_ALL);
 
 		String id = SpaceRequest.post("/1/credentials").superdogAuth()//
-				.body(USERNAME, LogResource.PURGE_ALL, PASSWORD, password, //
-						EMAIL, "platform@spacedog.io")
-				.go(201).getString(ID);
+				.body(FIELD_USERNAME, LogResource.PURGE_ALL, FIELD_PASSWORD, password, //
+						FIELD_EMAIL, "platform@spacedog.io")
+				.go(201).getString(FIELD_ID);
 
 		SpaceRequest.put("/1/credentials/{id}/roles/" + LogResource.PURGE_ALL)//
-				.routeParam(ID, id).superdogAuth().go(200);
+				.routeParam(FIELD_ID, id).superdogAuth().go(200);
 	}
 
 	@Test
@@ -38,12 +38,12 @@ public class AdminJobsCredentials extends SpaceClient {
 		SpaceClient.deleteCredentialsBySuperdog("api", SnapshotResource.SNAPSHOT_ALL);
 
 		String id = SpaceRequest.post("/1/credentials").superdogAuth()//
-				.body(USERNAME, SnapshotResource.SNAPSHOT_ALL, //
-						PASSWORD, password, EMAIL, "platform@spacedog.io")
-				.go(201).getString(ID);
+				.body(FIELD_USERNAME, SnapshotResource.SNAPSHOT_ALL, //
+						FIELD_PASSWORD, password, FIELD_EMAIL, "platform@spacedog.io")
+				.go(201).getString(FIELD_ID);
 
 		SpaceRequest.put("/1/credentials/{id}/roles/" + SnapshotResource.SNAPSHOT_ALL)//
-				.routeParam(ID, id).superdogAuth().go(200);
+				.routeParam(FIELD_ID, id).superdogAuth().go(200);
 	}
 
 }

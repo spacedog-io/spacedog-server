@@ -81,7 +81,7 @@ public class LogResource extends Resource {
 		int size = context.query().getInteger("size", 10);
 		Check.isTrue(from + size <= 1000, "from + size must be less than or equal to 1000");
 
-		boolean refresh = context.query().getBoolean(REFRESH, false);
+		boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);
 		DataStore.get().refreshType(refresh, SPACEDOG_BACKEND, TYPE);
 
 		SearchResponse response = doGetLogs(from, size, optBackendId);
@@ -102,7 +102,7 @@ public class LogResource extends Resource {
 					.filter(QueryBuilders.termQuery("credentials.backendId", //
 							credentials.target()));
 
-		boolean refresh = context.query().getBoolean(REFRESH, false);
+		boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);
 		DataStore.get().refreshType(refresh, SPACEDOG_BACKEND, TYPE);
 
 		SearchResponse response = Start.get().getElasticClient()//
@@ -111,7 +111,7 @@ public class LogResource extends Resource {
 				.setQuery(query)//
 				.setFrom(context.query().getInteger("from", 0)) //
 				.setSize(context.query().getInteger("size", 10)) //
-				.addSort(RECEIVED_AT, SortOrder.DESC)//
+				.addSort(FIELD_RECEIVED_AT, SortOrder.DESC)//
 				.get();
 
 		return extractLogs(response);
@@ -133,7 +133,7 @@ public class LogResource extends Resource {
 		else
 			throw Exceptions.insufficientCredentials(credentials);
 
-		String param = context.request().query().get(BEFORE);
+		String param = context.request().query().get(PARAM_BEFORE);
 		DateTime before = param == null ? DateTime.now().minusDays(7) //
 				: DateTime.parse(param);
 
@@ -206,7 +206,7 @@ public class LogResource extends Resource {
 			Optional<String> optBackendId) {
 
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery()//
-				.filter(QueryBuilders.rangeQuery(RECEIVED_AT).lt(before.toString()));
+				.filter(QueryBuilders.rangeQuery(FIELD_RECEIVED_AT).lt(before.toString()));
 
 		if (optBackendId.isPresent())
 			boolQueryBuilder.filter(//
@@ -231,7 +231,7 @@ public class LogResource extends Resource {
 				.prepareSearch(SPACEDOG_BACKEND, TYPE)//
 				.setTypes(TYPE)//
 				.setQuery(query)//
-				.addSort(RECEIVED_AT, SortOrder.DESC)//
+				.addSort(FIELD_RECEIVED_AT, SortOrder.DESC)//
 				.setFrom(from)//
 				.setSize(size)//
 				.get();
@@ -254,7 +254,7 @@ public class LogResource extends Resource {
 		ObjectNode log = Json.object(//
 				"method", context.method(), //
 				"path", uri, //
-				RECEIVED_AT, receivedAt.toString(), //
+				FIELD_RECEIVED_AT, receivedAt.toString(), //
 				"processedIn", DateTime.now().getMillis() - receivedAt.getMillis(), //
 				"status", payload == null ? 500 : payload.code());
 
@@ -318,7 +318,7 @@ public class LogResource extends Resource {
 
 		ObjectNode logQuery = log.putObject("query");
 		for (String key : context.query().keys()) {
-			String value = key.equals(PASSWORD) //
+			String value = key.equals(FIELD_PASSWORD) //
 					? "******" : context.get(key);
 			logQuery.put(key, value);
 		}

@@ -53,25 +53,25 @@ public class CredentialsResource extends Resource {
 
 	void init() {
 		Schema schema = Schema.builder(TYPE)//
-				.string(USERNAME)//
-				.string(BACKEND_ID)//
-				.bool(ENABLED)//
-				.string(CREDENTIALS_LEVEL)//
-				.string(ROLES).array()//
-				.string(ACCESS_TOKEN)//
-				.string(ACCESS_TOKEN_EXPIRES_AT)//
-				.string(HASHED_PASSWORD)//
-				.string(PASSWORD_RESET_CODE)//
-				.string(EMAIL)//
-				.string(CREATED_AT)//
-				.string(UPDATED_AT)//
+				.string(FIELD_USERNAME)//
+				.string(FIELD_BACKEND_ID)//
+				.bool(FIELD_ENABLED)//
+				.string(FIELD_CREDENTIALS_LEVEL)//
+				.string(FIELD_ROLES).array()//
+				.string(FIELD_ACCESS_TOKEN)//
+				.string(FIELD_ACCESS_TOKEN_EXPIRES_AT)//
+				.string(FIELD_HASHED_PASSWORD)//
+				.string(FIELD_PASSWORD_RESET_CODE)//
+				.string(FIELD_EMAIL)//
+				.string(FIELD_CREATED_AT)//
+				.string(FIELD_UPDATED_AT)//
 
-				.object(SESSIONS).array()//
-				.string(ACCESS_TOKEN)//
-				.string(ACCESS_TOKEN_EXPIRES_AT)//
+				.object(FIELD_SESSIONS).array()//
+				.string(FIELD_ACCESS_TOKEN)//
+				.string(FIELD_ACCESS_TOKEN_EXPIRES_AT)//
 				.close()//
 
-				.stash(STASH)//
+				.stash(FIELD_STASH)//
 
 				.build();
 
@@ -105,9 +105,9 @@ public class CredentialsResource extends Resource {
 
 		return JsonPayload.json(//
 				JsonPayload.builder()//
-						.put(ACCESS_TOKEN, credentials.accessToken()) //
-						.put(EXPIRES_IN, credentials.accessTokenExpiresIn()) //
-						.node(CREDENTIALS, credentials.toJson()));
+						.put(FIELD_ACCESS_TOKEN, credentials.accessToken()) //
+						.put(FIELD_EXPIRES_IN, credentials.accessTokenExpiresIn()) //
+						.node(FIELD_CREDENTIALS, credentials.toJson()));
 	}
 
 	@Get("/1/logout")
@@ -140,7 +140,7 @@ public class CredentialsResource extends Resource {
 		BoolQueryBuilder query = toQuery(context).query;
 
 		// super admins can only be deleted when backend is deleted
-		query.mustNot(QueryBuilders.termQuery(CREDENTIALS_LEVEL, "SUPER_ADMIN"));
+		query.mustNot(QueryBuilders.termQuery(FIELD_CREDENTIALS_LEVEL, "SUPER_ADMIN"));
 		elastic.deleteByQuery(SPACEDOG_BACKEND, query, TYPE);
 
 		// allways refresh after credentials index updates
@@ -166,7 +166,7 @@ public class CredentialsResource extends Resource {
 				.builder(true, credentials.backendId(), "/1", TYPE, credentials.id());
 
 		if (credentials.passwordResetCode() != null)
-			builder.put(PASSWORD_RESET_CODE, credentials.passwordResetCode());
+			builder.put(FIELD_PASSWORD_RESET_CODE, credentials.passwordResetCode());
 
 		return JsonPayload.json(builder, HttpStatus.CREATED)//
 				.withHeader(SpaceHeaders.SPACEDOG_OBJECT_ID, credentials.id());
@@ -216,18 +216,18 @@ public class CredentialsResource extends Resource {
 		Credentials credentials = getById(id, true).get();
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
 
-		String username = data.path(USERNAME).asText();
+		String username = data.path(FIELD_USERNAME).asText();
 		if (!Strings.isNullOrEmpty(username)) {
 			Usernames.checkValid(username, Optional.of(settings.usernameRegex()));
 			credentials.name(username);
 		}
 
 		// TODO check email with minimal regex
-		String email = data.path(EMAIL).asText();
+		String email = data.path(FIELD_EMAIL).asText();
 		if (!Strings.isNullOrEmpty(email))
 			credentials.email(email);
 
-		String password = data.path(PASSWORD).asText();
+		String password = data.path(FIELD_PASSWORD).asText();
 		if (!Strings.isNullOrEmpty(password))
 			credentials.setPassword(password, Optional.of(settings.passwordRegex()));
 
@@ -251,7 +251,7 @@ public class CredentialsResource extends Resource {
 		return JsonPayload.json(JsonPayload
 				.builder(false, credentials.backendId(), "/1", TYPE, //
 						credentials.id(), credentials.version())//
-				.put(PASSWORD_RESET_CODE, credentials.passwordResetCode()));
+				.put(FIELD_PASSWORD_RESET_CODE, credentials.passwordResetCode()));
 	}
 
 	@Post("/1/credentials/:id/password")
@@ -259,8 +259,8 @@ public class CredentialsResource extends Resource {
 	public Payload postPassword(String id, Context context) {
 		// TODO do we need a password reset expire date to limit the reset
 		// time scope
-		String passwordResetCode = context.get(PASSWORD_RESET_CODE);
-		String password = context.get(PASSWORD);
+		String passwordResetCode = context.get(FIELD_PASSWORD_RESET_CODE);
+		String password = context.get(FIELD_PASSWORD);
 
 		Credentials credentials = getById(id, true).get();
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
@@ -281,7 +281,7 @@ public class CredentialsResource extends Resource {
 		Credentials credentials = getById(id, true).get();
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
 
-		String password = context.get(PASSWORD);
+		String password = context.get(FIELD_PASSWORD);
 		credentials.setPassword(password, Optional.of(settings.passwordRegex()));
 
 		credentials = update(credentials);
@@ -361,7 +361,7 @@ public class CredentialsResource extends Resource {
 
 	long getCheckSessionLifetime(Context context) {
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
-		long lifetime = context.query().getLong(LIFETIME, settings.sessionMaximumLifetime);
+		long lifetime = context.query().getLong(PARAM_LIFETIME, settings.sessionMaximumLifetime);
 		if (lifetime > settings.sessionMaximumLifetime)
 			throw Exceptions.forbidden("maximum access token lifetime is [%s] seconds", //
 					settings.sessionMaximumLifetime);
@@ -377,16 +377,16 @@ public class CredentialsResource extends Resource {
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
 		Credentials credentials = new Credentials(backendId);
 
-		credentials.name(Json.checkStringNotNullOrEmpty(data, USERNAME));
+		credentials.name(Json.checkStringNotNullOrEmpty(data, FIELD_USERNAME));
 		Usernames.checkValid(credentials.name(), Optional.of(settings.usernameRegex()));
 
 		if (legacyId)
 			credentials.setLegacyId();
 
-		credentials.email(Json.checkStringNotNullOrEmpty(data, EMAIL));
+		credentials.email(Json.checkStringNotNullOrEmpty(data, FIELD_EMAIL));
 		credentials.level(level);
 
-		JsonNode password = data.get(PASSWORD);
+		JsonNode password = data.get(FIELD_PASSWORD);
 
 		if (Json.isNull(password))
 			credentials.newPasswordResetCode();
@@ -415,7 +415,7 @@ public class CredentialsResource extends Resource {
 						// to let superdogs access all backends
 						// .must(QueryBuilders.termQuery(BACKEND_ID,
 						// backendId))//
-						.must(QueryBuilders.termQuery(SESSIONS_ACCESS_TOKEN, accessToken)))//
+						.must(QueryBuilders.termQuery(FIELD_SESSIONS_ACCESS_TOKEN, accessToken)))//
 				.get()//
 				.getHits();
 
@@ -542,7 +542,7 @@ public class CredentialsResource extends Resource {
 		elastic.refreshType(SPACEDOG_BACKEND, TYPE);
 
 		DeleteByQueryResponse response = elastic.deleteByQuery(SPACEDOG_BACKEND,
-				QueryBuilders.termQuery(BACKEND_ID, backendId), TYPE);
+				QueryBuilders.termQuery(FIELD_BACKEND_ID, backendId), TYPE);
 
 		elastic.refreshType(SPACEDOG_BACKEND, TYPE);
 		return response;
@@ -550,15 +550,15 @@ public class CredentialsResource extends Resource {
 
 	SearchResults<Credentials> getAllSuperAdmins(int from, int size) {
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
-				.filter(QueryBuilders.termQuery(CREDENTIALS_LEVEL, Level.SUPER_ADMIN.toString()));
+				.filter(QueryBuilders.termQuery(FIELD_CREDENTIALS_LEVEL, Level.SUPER_ADMIN.toString()));
 
 		return getCredentials(new BoolSearch(SPACEDOG_BACKEND, TYPE, query, from, size));
 	}
 
 	SearchResults<Credentials> getBackendSuperAdmins(String backendId, int from, int size) {
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
-				.filter(QueryBuilders.termQuery(BACKEND_ID, backendId))//
-				.filter(QueryBuilders.termsQuery(CREDENTIALS_LEVEL, //
+				.filter(QueryBuilders.termQuery(FIELD_BACKEND_ID, backendId))//
+				.filter(QueryBuilders.termsQuery(FIELD_CREDENTIALS_LEVEL, //
 						Level.SUPER_ADMIN.toString(), Level.SUPERDOG.toString()));
 
 		return getCredentials(new BoolSearch(SPACEDOG_BACKEND, TYPE, query, from, size));
@@ -577,7 +577,7 @@ public class CredentialsResource extends Resource {
 	//
 
 	private Level extractAndCheckLevel(ObjectNode fields, Level defaultLevel) {
-		String value = fields.path(CREDENTIALS_LEVEL).asText();
+		String value = fields.path(FIELD_CREDENTIALS_LEVEL).asText();
 		if (Strings.isNullOrEmpty(value))
 			return defaultLevel;
 		Level level = Level.valueOf(value);
@@ -589,19 +589,19 @@ public class CredentialsResource extends Resource {
 
 	private BoolSearch toQuery(Context context) {
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
-				.filter(QueryBuilders.termQuery(BACKEND_ID, SpaceContext.target()));
+				.filter(QueryBuilders.termQuery(FIELD_BACKEND_ID, SpaceContext.target()));
 
-		String username = context.get(USERNAME);
+		String username = context.get(FIELD_USERNAME);
 		if (!Strings.isNullOrEmpty(username))
-			query.filter(QueryBuilders.termQuery(USERNAME, username));
+			query.filter(QueryBuilders.termQuery(FIELD_USERNAME, username));
 
-		String email = context.get(EMAIL);
+		String email = context.get(FIELD_EMAIL);
 		if (!Strings.isNullOrEmpty(email))
-			query.filter(QueryBuilders.termQuery(EMAIL, email));
+			query.filter(QueryBuilders.termQuery(FIELD_EMAIL, email));
 
-		String level = context.get(CREDENTIALS_LEVEL);
+		String level = context.get(FIELD_CREDENTIALS_LEVEL);
 		if (!Strings.isNullOrEmpty(level))
-			query.filter(QueryBuilders.termQuery(CREDENTIALS_LEVEL, level));
+			query.filter(QueryBuilders.termQuery(FIELD_CREDENTIALS_LEVEL, level));
 
 		BoolSearch search = new BoolSearch(SPACEDOG_BACKEND, TYPE, query, //
 				context.query().getInteger("from", 0), //
@@ -612,8 +612,8 @@ public class CredentialsResource extends Resource {
 
 	private BoolQueryBuilder toQuery(String backendId, String username) {
 		return QueryBuilders.boolQuery()//
-				.must(QueryBuilders.termQuery(BACKEND_ID, backendId)) //
-				.must(QueryBuilders.termQuery(USERNAME, username));
+				.must(QueryBuilders.termQuery(FIELD_BACKEND_ID, backendId)) //
+				.must(QueryBuilders.termQuery(FIELD_USERNAME, username));
 	}
 
 	private Credentials toCredentials(SearchHit hit) {
