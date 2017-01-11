@@ -16,6 +16,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.plugin.cloud.aws.CloudAwsPlugin;
 import org.elasticsearch.plugin.deletebyquery.DeleteByQueryPlugin;
+import org.joda.time.DateTimeZone;
 
 import io.spacedog.utils.Utils;
 import net.codestory.http.AbstractWebServer;
@@ -51,6 +52,7 @@ public class Start {
 
 	public static void main(String[] args) {
 		try {
+			DateTimeZone.setDefault(DateTimeZone.forID("Europe/Paris"));
 			get();
 			singleton.startElasticNode();
 			singleton.initServices();
