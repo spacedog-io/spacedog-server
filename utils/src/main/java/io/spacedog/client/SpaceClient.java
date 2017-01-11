@@ -204,8 +204,8 @@ public class SpaceClient implements SpaceFields, SpaceParams {
 			return Optional.empty();
 
 		User user = new User(backendId, username);
-		user.id = response.getString("id");
-		user.email = response.getString("email");
+		user.id = response.getString("results.0.id");
+		user.email = response.getString("results.0.email");
 		return Optional.of(user);
 	}
 

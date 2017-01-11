@@ -5,6 +5,8 @@ import org.junit.Test;
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceEnv;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.services.LogResource;
+import io.spacedog.services.SnapshotResource;
 
 public class AdminJobsCredentials extends SpaceClient {
 
@@ -15,12 +17,15 @@ public class AdminJobsCredentials extends SpaceClient {
 
 		String password = SpaceEnv.defaultEnv().get("spacedog_jobs_purgeall_password");
 
-		String id = SpaceRequest.post("/1/credentials").superdogAuth()//
-				.body("username", "purgeall", "password", password, //
-						"email", "platform@spacedog.io")
-				.go(201).getString("id");
+		SpaceClient.deleteCredentialsBySuperdog("api", LogResource.PURGE_ALL);
 
-		SpaceRequest.put("/1/credentials/" + id + "/roles/purgeall").superdogAuth().go(200);
+		String id = SpaceRequest.post("/1/credentials").superdogAuth()//
+				.body(USERNAME, LogResource.PURGE_ALL, PASSWORD, password, //
+						EMAIL, "platform@spacedog.io")
+				.go(201).getString(ID);
+
+		SpaceRequest.put("/1/credentials/{id}/roles/" + LogResource.PURGE_ALL)//
+				.routeParam(ID, id).superdogAuth().go(200);
 	}
 
 	@Test
@@ -30,12 +35,15 @@ public class AdminJobsCredentials extends SpaceClient {
 
 		String password = SpaceEnv.defaultEnv().get("spacedog_jobs_snapshotall_password");
 
-		String id = SpaceRequest.post("/1/credentials").superdogAuth()//
-				.body("username", "snapshotall", "password", password, //
-						"email", "platform@spacedog.io")
-				.go(201).getString("id");
+		SpaceClient.deleteCredentialsBySuperdog("api", SnapshotResource.SNAPSHOT_ALL);
 
-		SpaceRequest.put("/1/credentials/" + id + "/roles/snapshoteall").superdogAuth().go(200);
+		String id = SpaceRequest.post("/1/credentials").superdogAuth()//
+				.body(USERNAME, SnapshotResource.SNAPSHOT_ALL, //
+						PASSWORD, password, EMAIL, "platform@spacedog.io")
+				.go(201).getString(ID);
+
+		SpaceRequest.put("/1/credentials/{id}/roles/" + SnapshotResource.SNAPSHOT_ALL)//
+				.routeParam(ID, id).superdogAuth().go(200);
 	}
 
 }
