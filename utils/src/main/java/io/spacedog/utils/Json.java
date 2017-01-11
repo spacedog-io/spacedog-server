@@ -56,7 +56,7 @@ public class Json {
 				return null;
 		}
 
-		return current;
+		return isNull(current) ? null : current;
 	}
 
 	public static Object get(JsonNode json, String propertyPath, Object defaultValue) {

@@ -18,9 +18,17 @@ public class JsonTest extends Assert {
 
 	@Test
 	public void shouldGet() {
-		JsonNode json = Json.objectBuilder().object("riri").array("fifi").add(12).object().put("loulou", false).build();
+		JsonNode json = Json.objectBuilder()//
+				.put("tutu", null)//
+				.object("riri")//
+				.array("fifi")//
+				.add(12)//
+				.object().put("loulou", false)//
+				.build();
+
 		assertEquals(12, Json.get(json, "riri.fifi.0").asInt());
 		assertFalse(Json.get(json, "riri.fifi.1.loulou").asBoolean());
+		assertNull(Json.get(json, "tutu"));
 		assertNull(Json.get(json, "riri.name"));
 		assertNull(Json.get(json, "riri.fifi.1.loulou.name"));
 	}
