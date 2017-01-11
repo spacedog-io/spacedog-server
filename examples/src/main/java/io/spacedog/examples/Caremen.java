@@ -68,7 +68,7 @@ public class Caremen extends SpaceClient {
 
 		// createOperators();
 		// createCashierCredentials();
-		createReminderCredentials();
+		// createReminderCredentials();
 		// createRobots();
 	}
 
@@ -259,6 +259,12 @@ public class Caremen extends SpaceClient {
 								"premium", "Premium Berline", "green", "Green Berline", //
 								"break", "Breack", "van", "Van"))//
 
+				.node("companyStatuses", //
+						Json.array("enabled", "disabled"))//
+
+				.node("customerStatuses", //
+						Json.array("enabled", "disabled"))//
+
 				.build();
 
 		SpaceRequest.put("/1/settings/references")//
@@ -278,16 +284,17 @@ public class Caremen extends SpaceClient {
 				.acl("admin", DataPermission.search, DataPermission.update_all, //
 						DataPermission.delete_all)//
 
-				.string("credentialsId").examples("khljgGFJHfvlkHMhjh")//
-				.string("firstname").examples("Robert")//
-				.string("lastname").examples("Morgan")//
-				.string("phone").examples("+ 33 6 42 01 67 56")//
+				.string("credentialsId")//
+				.string("status")//
+				.string("firstname")//
+				.string("lastname")//
+				.string("phone")//
 
 				.object("billing")//
-				.text("name").french().examples("In-tact SARL")//
-				.text("street").french().examples("9 rue Titon")//
-				.string("zipcode").examples("75011")//
-				.text("town").examples("Paris")//
+				.text("name").french()//
+				.text("street").french()//
+				.string("zipcode")//
+				.text("town")//
 				.close()//
 
 				.close()//
