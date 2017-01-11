@@ -41,8 +41,8 @@ public class BackendResource extends Resource {
 	public Payload getAll(Context context) {
 		Credentials credentials = SpaceContext.checkSuperAdminCredentials();
 
-		int from = context.query().getInteger("from", 0);
-		int size = context.query().getInteger("size", 10);
+		int from = context.query().getInteger(PARAM_FROM, 0);
+		int size = context.query().getInteger(PARAM_SIZE, 10);
 
 		SearchResults<Credentials> superAdmins = credentials.isSuperDog() //
 				&& credentials.isTargetingRootApi() //

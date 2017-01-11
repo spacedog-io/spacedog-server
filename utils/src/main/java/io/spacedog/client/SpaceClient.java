@@ -147,7 +147,7 @@ public class SpaceClient implements SpaceFields, SpaceParams {
 		SpaceRequest request = SpaceRequest.get("/1/login").basicAuth(user);
 
 		if (lifetime.isPresent())
-			request.queryParam("lifetime", lifetime.get().toString());
+			request.queryParam(PARAM_LIFETIME, lifetime.get().toString());
 
 		SpaceResponse response = request.go(statuses);
 
@@ -197,7 +197,7 @@ public class SpaceClient implements SpaceFields, SpaceParams {
 
 	public static Optional<User> getCredentialsBySuperdog(String backendId, String username) {
 		SpaceResponse response = SpaceRequest.get("/1/credentials")//
-				.queryParam("username", username)//
+				.queryParam(PARAM_USERNAME, username)//
 				.superdogAuth(backendId).go(200, 404);
 
 		if (response.httpResponse().getStatus() != 200)
@@ -278,7 +278,7 @@ public class SpaceClient implements SpaceFields, SpaceParams {
 	}
 
 	public static Backend resetBackend(String backendId, String username, String password) {
-		return resetBackend(backendId, username, password, "hello@spacedog.io");
+		return resetBackend(backendId, username, password, "platform@spacedog.io");
 	}
 
 	public static Backend resetBackend(Backend backend) {

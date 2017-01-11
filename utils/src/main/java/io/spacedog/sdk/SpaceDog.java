@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.SpaceFields;
+import io.spacedog.utils.SpaceParams;
 
-public class SpaceDog {
+public class SpaceDog implements SpaceFields, SpaceParams {
 
 	String backendId;
 	String accessToken;
@@ -35,7 +37,7 @@ public class SpaceDog {
 
 		SpaceDog dog = new SpaceDog(//
 				Json.checkStringNotNullOrEmpty(node, "credentials.backendId"));
-		dog.accessToken = Json.checkStringNotNullOrEmpty(node, "accessToken");
+		dog.accessToken = Json.checkStringNotNullOrEmpty(node, FIELD_ACCESS_TOKEN);
 		dog.username = Json.checkStringNotNullOrEmpty(node, "credentials.username");
 		dog.email = Json.checkStringNotNullOrEmpty(node, "credentials.email");
 		return dog;

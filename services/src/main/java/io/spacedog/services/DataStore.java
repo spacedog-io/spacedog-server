@@ -26,9 +26,11 @@ import com.google.common.base.Strings;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;
+import io.spacedog.utils.SpaceFields;
+import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 
-public class DataStore {
+public class DataStore implements SpaceParams, SpaceFields {
 
 	//
 	// help methods
@@ -215,8 +217,8 @@ public class DataStore {
 		}
 
 		public FilteredSearchBuilder applyContext(Context context) {
-			search.setFrom(context.request().query().getInteger("from", 0))
-					.setSize(context.request().query().getInteger("size", 10))
+			search.setFrom(context.request().query().getInteger(PARAM_FROM, 0))
+					.setSize(context.request().query().getInteger(PARAM_SIZE, 10))
 					.setFetchSource(context.request().query().getBoolean("fetch-contents", true));
 
 			String queryText = context.get("q");

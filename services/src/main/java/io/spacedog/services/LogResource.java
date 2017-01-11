@@ -77,8 +77,8 @@ public class LogResource extends Resource {
 				&& credentials.isTargetingRootApi() ? Optional.empty() //
 						: Optional.of(credentials.target());
 
-		int from = context.query().getInteger("from", 0);
-		int size = context.query().getInteger("size", 10);
+		int from = context.query().getInteger(PARAM_FROM, 0);
+		int size = context.query().getInteger(PARAM_SIZE, 10);
 		Check.isTrue(from + size <= 1000, "from + size must be less than or equal to 1000");
 
 		boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);

@@ -13,8 +13,10 @@ import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.SpaceFields;
+import io.spacedog.utils.SpaceParams;
 
-public class SpaceData {
+public class SpaceData implements SpaceFields, SpaceParams {
 
 	SpaceDog dog;
 
@@ -64,10 +66,10 @@ public class SpaceData {
 		ObjectNode result = SpaceRequest.get("/1/search/{type}")//
 				.bearerAuth(dog.backendId, dog.accessToken)//
 				.routeParam("type", query.type)//
-				.queryParam("refresh", Boolean.toString(query.refresh))//
-				.queryParam("from", Integer.toString(query.from))//
-				.queryParam("size", Integer.toString(query.size))//
-				.queryParam("q", query.query)//
+				.queryParam(PARAM_REFRESH, Boolean.toString(query.refresh))//
+				.queryParam(PARAM_FROM, Integer.toString(query.from))//
+				.queryParam(PARAM_SIZE, Integer.toString(query.size))//
+				.queryParam(PARAM_Q, query.query)//
 				.go(200).objectNode();
 
 		return toList((ArrayNode) result.get("results"), dataClass);
@@ -84,7 +86,7 @@ public class SpaceData {
 		ObjectNode results = SpaceRequest.post("/1/search/{type}")//
 				.bearerAuth(dog.backendId, dog.accessToken)//
 				.routeParam("type", query.type)//
-				.queryParam("refresh", Boolean.toString(query.refresh))//
+				.queryParam(PARAM_REFRESH, Boolean.toString(query.refresh))//
 				.body(query.query).go(200).objectNode();
 
 		return new SearchResults<K>(results, dataClass);

@@ -64,8 +64,8 @@ public class SettingsResource extends Resource {
 		boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);
 		DataStore.get().refreshType(refresh, backendId, TYPE);
 
-		int from = context.query().getInteger("from", 0);
-		int size = context.query().getInteger("size", 10);
+		int from = context.query().getInteger(PARAM_FROM, 0);
+		int size = context.query().getInteger(PARAM_SIZE, 10);
 		Check.isTrue(from + size <= 1000, "from + size is greater than 1000");
 
 		SearchResponse response = elastic.prepareSearch(backendId, TYPE)//

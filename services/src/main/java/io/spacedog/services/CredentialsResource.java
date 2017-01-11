@@ -604,8 +604,8 @@ public class CredentialsResource extends Resource {
 			query.filter(QueryBuilders.termQuery(FIELD_CREDENTIALS_LEVEL, level));
 
 		BoolSearch search = new BoolSearch(SPACEDOG_BACKEND, TYPE, query, //
-				context.query().getInteger("from", 0), //
-				context.query().getInteger("size", 10));
+				context.query().getInteger(PARAM_FROM, 0), //
+				context.query().getInteger(PARAM_SIZE, 10));
 
 		return search;
 	}
