@@ -14,7 +14,8 @@ public class Purge {
 			// since delete of thousands of logs might take long
 			SpaceRequest.env().httpTimeoutMillis(120000);
 			String password = SpaceEnv.defaultEnv().get("spacedog_jobs_purgeall_password");
-			String before = DateTime.now().minusDays(7).toString();
+			int keepInDays = SpaceEnv.defaultEnv().get("keep_in_days", 7);
+			String before = DateTime.now().minusDays(keepInDays).toString();
 
 			SpaceRequest.delete("/1/log")//
 					.queryParam("before", before)//
