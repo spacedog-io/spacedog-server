@@ -228,7 +228,7 @@ public class Caremen extends SpaceClient {
 
 				.object("green")//
 				.put("type", "green")//
-				.put("name", "GREEN BERLINE")//
+				.put("name", "Green Berline")//
 				.put("description", "Electric cars")//
 				.put("minimumPrice", 15)//
 				.put("passengers", 4)//
@@ -236,7 +236,7 @@ public class Caremen extends SpaceClient {
 
 				.object("break")//
 				.put("type", "break")//
-				.put("name", "BREAK")//
+				.put("name", "Breack")//
 				.put("description", "Grand coffre")//
 				.put("minimumPrice", 15)//
 				.put("passengers", 4)//
@@ -244,7 +244,7 @@ public class Caremen extends SpaceClient {
 
 				.object("van")//
 				.put("type", "van")//
-				.put("name", "VAN")//
+				.put("name", "Van")//
 				.put("description", "Mini bus")//
 				.put("minimumPrice", 15)//
 				.put("passengers", 6)//
@@ -302,15 +302,15 @@ public class Caremen extends SpaceClient {
 
 				.string("credentialsId")//
 				.string("status")//
-				.string("firstname")//
-				.string("lastname")//
+				.text("firstname").french()//
+				.text("lastname").french()//
 				.string("phone")//
 
 				.object("billing")//
 				.text("name").french()//
 				.text("street").french()//
 				.string("zipcode")//
-				.text("town")//
+				.text("town").french()//
 				.close()//
 
 				.close()//
@@ -327,7 +327,7 @@ public class Caremen extends SpaceClient {
 						DataPermission.delete_all, DataPermission.search)//
 
 				.string("companyId")//
-				.string("companyName")//
+				.text("companyName").french()//
 				.build();
 	}
 
@@ -353,30 +353,29 @@ public class Caremen extends SpaceClient {
 						DataPermission.update_all, DataPermission.delete_all)//
 
 				.string("status") //
-				.string("requestedVehiculeType").examples("classic") //
+				.string("requestedVehiculeType") //
 				.timestamp("requestedPickupTimestamp") //
 				.timestamp("driverIsComingTimestamp") //
 				.timestamp("driverIsReadyToLoadTimestamp") //
 				.timestamp("cancelledTimestamp") //
 				.timestamp("pickupTimestamp") //
 				.timestamp("dropoffTimestamp") //
-				.text("noteForDriver")//
-				.floatt("fare").examples(23.82)// in euros
-				.longg("time").examples(1234567)// in millis
-				.integer("distance").examples(12345)// in meters
+				.text("noteForDriver").french()//
+				.floatt("fare") // in euros
+				.longg("time") // in millis
+				.integer("distance") // in meters
 
-				.string("customerId")//
 				.object("customer")//
 				.string("id")//
 				.string("credentialsId")//
-				.string("firstname").examples("Robert")//
-				.string("lastname").examples("Morgan")//
-				.string("phone").examples("+ 33 6 42 01 67 56")//
+				.text("firstname").french()//
+				.text("lastname").french()//
+				.string("phone")//
 				.close()
 
 				.object("payment")//
 				.string("companyId")//
-				.string("companyName")//
+				.text("companyName").french()//
 
 				.object("stripe")//
 				.string("customerId")//
@@ -397,21 +396,20 @@ public class Caremen extends SpaceClient {
 				.close()//
 
 				.object("driver")//
-				.string("driverId").examples("robert")//
+				.string("driverId")//
 				.string("credentialsId")//
-				.floatt("gain").examples("10.23")//
-				.string("firstname").examples("Robert")//
-				.string("lastname").examples("Morgan")//
-				.string("phone").examples("+ 33 6 42 01 67 56")//
-				.string("photo")
-				.examples("http://s3-eu-west-1.amazonaws.com/spacedog-artefact/SpaceDog-Logo-Transp-130px.png")//
+				.floatt("gain")//
+				.text("firstname").french()//
+				.text("lastname").french()//
+				.string("phone")//
+				.string("photo")//
 
 				.object("vehicule")//
-				.string("type").examples("classic")//
-				.string("brand").examples("Peugeot", "Renault")//
-				.string("model").examples("508", "Laguna", "Talisman")//
-				.string("color").examples("black", "white", "pink")//
-				.string("licencePlate").examples("BM-500-FG")//
+				.string("type")//
+				.text("brand").french()//
+				.text("model").french()//
+				.text("color").french()//
+				.string("licencePlate")//
 				.close()//
 
 				.close()//
@@ -450,9 +448,9 @@ public class Caremen extends SpaceClient {
 				.close()//
 
 				.object("RIB")//
-				.text("bankName").french().examples("Société Générale")//
-				.string("bankCode").examples("SOGEFRPP")//
-				.string("accountIBAN").examples("FR568768757657657689")//
+				.text("bankName").french()//
+				.string("bankCode")//
+				.string("accountIBAN")//
 				.close()//
 
 				.close()//
@@ -512,17 +510,24 @@ public class Caremen extends SpaceClient {
 
 	void createOperators() {
 
-		createOperator("nico", "nicola.lonzi@gmail.com");
-		createOperator("dimitri", "dimitri.valax@in-tact.fr");
-		createOperator("dave", "david@spacedog.io");
-		createOperator("philou", "philippe.rolland@in-tact.fr");
-		createOperator("flav", "flavien.dibello@in-tact.fr");
+		if (backend == DEV || backend == RECETTE) {
+			createOperator("nico", "nicola.lonzi@gmail.com");
+			createOperator("dimitri", "dimitri.valax@in-tact.fr");
+			createOperator("dave", "david@spacedog.io");
+			createOperator("philou", "philippe.rolland@in-tact.fr");
+			createOperator("flav", "flavien.dibello@in-tact.fr");
+		}
 
 		if (backend == RECETTE) {
 			createOperator("manu", "emmanuel@walkthisway.fr");
 			createOperator("xav", "xdorange@gmail.com");
 			createOperator("auguste", "lcdlocation@wanadoo.fr");
 		}
+
+		if (backend == PRODUCTION) {
+			createOperator("auguste", "lcdlocation@wanadoo.fr");
+		}
+
 	}
 
 	void createOperator(String username, String email) {
