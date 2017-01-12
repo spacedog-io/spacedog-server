@@ -13,8 +13,8 @@ import com.google.common.collect.Maps;
 
 import io.spacedog.admin.AdminJobs;
 import io.spacedog.caremen.FareSettings.VehiculeFareSettings;
-import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceEnv;
+import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTarget;
 import io.spacedog.sdk.SpaceData.SearchResults;
 import io.spacedog.sdk.SpaceData.TermQuery;
@@ -30,11 +30,8 @@ public class Billing {
 
 		try {
 			SpaceEnv env = SpaceEnv.defaultEnv();
-
-			SpaceDog dog = SpaceDog.login(//
-					env.get("backendId"), //
-					env.get("cashierUsername"), //
-					env.get("cashierPassword"));
+			SpaceDog dog = SpaceDog.login(env.get("backend_id"), "cashier", //
+					env.get("caremen_cashier_password"));
 
 			TermQuery query = new TermQuery();
 			query.type = "course";
@@ -147,9 +144,7 @@ public class Billing {
 
 	public static void main(String[] args) {
 		SpaceRequest.env().target(SpaceTarget.production);
-		System.setProperty("backendId", "caredev");
-		System.setProperty("cashierUsername", "cashier");
-		System.setProperty("cashierPassword", "hi cashier");
+		System.setProperty("backend_id", "caredev");
 		new Billing().charge();
 	}
 }
