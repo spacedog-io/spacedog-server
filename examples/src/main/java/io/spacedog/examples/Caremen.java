@@ -32,14 +32,18 @@ import io.spacedog.utils.StripeSettings;
 
 public class Caremen extends SpaceClient {
 
-	static final Backend DEV = new Backend(//
-			"caredev", "caredev", "hi caredev", "david@spacedog.io");
+	static final Backend DEV;
+	static final Backend RECETTE;
+	static final Backend PRODUCTION;
 
-	static final Backend RECETTE = new Backend(//
-			"carerec", "carerec", "hi carerec", "david@spacedog.io");
+	static {
+		String testPassword = SpaceEnv.defaultEnv().get("caremen_test_superadmin_password");
+		String prodPassword = SpaceEnv.defaultEnv().get("caremen_prod_superadmin_password");
 
-	static final Backend PRODUCTION = new Backend(//
-			"caremen", "caremen", "hi caremen", "david@spacedog.io");
+		DEV = new Backend("caredev", "caredev", testPassword, "platform@spacedog.io");
+		RECETTE = new Backend("carerec", "carerec", testPassword, "platform@spacedog.io");
+		PRODUCTION = new Backend("caremen", "caremen", prodPassword, "platform@spacedog.io");
+	}
 
 	private Backend backend;
 
@@ -67,7 +71,7 @@ public class Caremen extends SpaceClient {
 		// setSchema(buildCustomerCompanySchema(), backend);
 		// setSchema(buildCompanySchema(), backend);
 
-		// createOperators();
+		// createOperatorCredentials();
 		// createCashierCredentials();
 		// createReminderCredentials();
 		// createRobots();
@@ -508,7 +512,7 @@ public class Caremen extends SpaceClient {
 	// Special users
 	//
 
-	void createOperators() {
+	void createOperatorCredentials() {
 
 		if (backend == DEV || backend == RECETTE) {
 			createOperatorCredentials("nico", "nicola.lonzi@gmail.com");
