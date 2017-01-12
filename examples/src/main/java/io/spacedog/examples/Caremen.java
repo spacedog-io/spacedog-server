@@ -511,38 +511,47 @@ public class Caremen extends SpaceClient {
 	void createOperators() {
 
 		if (backend == DEV || backend == RECETTE) {
-			createOperator("nico", "nicola.lonzi@gmail.com");
-			createOperator("dimitri", "dimitri.valax@in-tact.fr");
-			createOperator("dave", "david@spacedog.io");
-			createOperator("philou", "philippe.rolland@in-tact.fr");
-			createOperator("flav", "flavien.dibello@in-tact.fr");
+			createOperatorCredentials("nico", "nicola.lonzi@gmail.com");
+			createOperatorCredentials("dimitri", "dimitri.valax@in-tact.fr");
+			createOperatorCredentials("dave", "david@spacedog.io");
+			createOperatorCredentials("philou", "philippe.rolland@in-tact.fr");
+			createOperatorCredentials("flav", "flavien.dibello@in-tact.fr");
 		}
 
 		if (backend == RECETTE) {
-			createOperator("manu", "emmanuel@walkthisway.fr");
-			createOperator("xav", "xdorange@gmail.com");
-			createOperator("auguste", "lcdlocation@wanadoo.fr");
+			createOperatorCredentials("manu", "emmanuel@walkthisway.fr");
+			createOperatorCredentials("xav", "xdorange@gmail.com");
+			createOperatorCredentials("auguste", "lcdlocation@wanadoo.fr");
 		}
 
 		if (backend == PRODUCTION) {
-			createOperator("auguste", "lcdlocation@wanadoo.fr");
+			createOperatorCredentials("auguste", "lcdlocation@wanadoo.fr");
 		}
 
 	}
 
-	void createOperator(String username, String email) {
-		String password = "hi " + username;
+	void createOperatorCredentials(String username, String email) {
+		String password = SpaceEnv.defaultEnv().get("caremen_operator_password");
+		resetCredentials(backend, username, password, email, "operator");
+	}
 
-		JsonNode node = SpaceRequest.get("/1/credentials")//
-				.adminAuth(backend).queryParam("username", username).go(200)//
-				.get("results.0.id");
+	void createCashierCredentials() {
+		String password = SpaceEnv.defaultEnv().get("caremen_cashier_password");
+		resetCredentials(backend, "cashier", password, "plateform@spacedog.io", "cashier");
+	}
 
-		if (node == null) {
-			User credentials = SpaceClient.createAdminCredentials(//
-					backend, username, password, email);
-			SpaceRequest.put("/1/credentials/" + credentials.id + "/roles/operator")//
-					.adminAuth(backend).go(200);
-		}
+	void createReminderCredentials() {
+		String password = SpaceEnv.defaultEnv().get("caremen_reminder_password");
+		resetCredentials(backend, "reminder", password, "plateform@spacedog.io", "reminder");
+	}
+
+	private void resetCredentials(Backend backend, String username, //
+			String password, String email, String role) {
+
+		SpaceClient.deleteCredentialsBySuperdog(backend.backendId, username);
+		User user = SpaceClient.createCredentials(backend.backendId, //
+				username, password, email);
+		SpaceClient.setRole(backend.adminUser, user, role);
 	}
 
 	void createRobots() {
@@ -576,27 +585,4 @@ public class Caremen extends SpaceClient {
 			}
 		}
 	}
-
-	void createCashierCredentials() {
-		String password = SpaceEnv.defaultEnv().get("caremen.cashier.password");
-
-		SpaceClient.deleteCredentialsBySuperdog(backend.backendId, "cashier");
-
-		User cashier = SpaceClient.createCredentials(backend.backendId, //
-				"cashier", password, "plateform@spacedog.io");
-
-		SpaceClient.setRole(backend.adminUser, cashier, "cashier");
-	}
-
-	void createReminderCredentials() {
-		String password = SpaceEnv.defaultEnv().get("caremen.reminder.password");
-
-		SpaceClient.deleteCredentialsBySuperdog(backend.backendId, "reminder");
-
-		User reminder = SpaceClient.createCredentials(backend.backendId, //
-				"reminder", password, "plateform@spacedog.io");
-
-		SpaceClient.setRole(backend.adminUser, reminder, "reminder");
-	}
-
 }
