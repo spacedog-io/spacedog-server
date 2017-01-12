@@ -20,6 +20,7 @@ import io.spacedog.client.SpaceTarget;
 import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.MailSettings;
+import io.spacedog.utils.MailSettings.SmtpSettings;
 import io.spacedog.utils.MailTemplate;
 import io.spacedog.utils.Schema;
 import io.spacedog.utils.SettingsSettings;
@@ -78,6 +79,14 @@ public class Caremen extends SpaceClient {
 
 	void initMailSettings() {
 		MailSettings settings = new MailSettings();
+
+		settings.smtp = new SmtpSettings();
+		settings.smtp.host = "mail.caremen.fr";
+		settings.smtp.login = "no-reply@caremen.fr";
+		settings.smtp.password = SpaceEnv.defaultEnv().get("caremen.smtp.password");
+		settings.smtp.sslOnConnect = true;
+		settings.smtp.startTlsRequired = true;
+
 		settings.templates = Maps.newHashMap();
 
 		MailTemplate template = new MailTemplate();
@@ -93,12 +102,14 @@ public class Caremen extends SpaceClient {
 				+ "\nLe Service Client CAREMEN\n\n" //
 				+ "---\nCeci est un Email envoyé par l’application CAREMEN."
 				+ "\nPour plus d’information, contactez le Service Client (bonjour@caremen.fr).";
+
 		template.model = Maps.newHashMap();
 		template.model.put("to", "string");
 		template.model.put("firstname", "string");
 		template.model.put("lastname", "string");
 		template.model.put("company", "company");
 		template.roles = Collections.singleton("operator");
+
 		settings.templates.put("notif_customer_company", template);
 
 		template = new MailTemplate();
@@ -108,6 +119,7 @@ public class Caremen extends SpaceClient {
 		template.model = Maps.newHashMap();
 		template.model.put("to", "string");
 		template.roles = Collections.singleton("user");
+
 		settings.templates.put("notif-customer-welcome", template);
 
 		SpaceClient.saveSettings(backend, settings);
