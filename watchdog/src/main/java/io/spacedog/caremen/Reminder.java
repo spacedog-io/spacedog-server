@@ -110,8 +110,8 @@ public class Reminder {
 
 	private SpaceDog login() {
 		SpaceEnv env = SpaceEnv.defaultEnv();
-		return SpaceDog.login(env.get("backendId"), "reminder", //
-				env.get("caremen.reminder.password"));
+		return SpaceDog.login(env.get("backend_id"), "reminder", //
+				env.get("caremen_reminder_password"));
 	}
 
 	private void push(SpaceDog dog, String driverCredentialsId, String message) {
@@ -160,7 +160,7 @@ public class Reminder {
 	}
 
 	private String toMessage(Course course) {
-		return new StringBuilder("Vous avez une course prévue à ")//
+		return new StringBuilder("Vous avez une course CAREMEN prévue aujourd'hui à ")//
 				.append(shortTimeFormatter.print(//
 						course.requestedPickupTimestamp))//
 				.append(" à l'adresse : ").append(course.to.address)//
@@ -169,7 +169,7 @@ public class Reminder {
 
 	public static void main(String[] args) {
 		SpaceRequest.env().target(SpaceTarget.production);
-		System.setProperty("backendId", "carerec");
+		System.setProperty("backend_id", "carerec");
 		new Reminder().remindTomorrow();
 		new Reminder().remindToday();
 	}
