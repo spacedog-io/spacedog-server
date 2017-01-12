@@ -149,8 +149,12 @@ public class Caremen extends SpaceClient {
 
 	void initStripeSettings() {
 		StripeSettings settings = new StripeSettings();
-		settings.secretKey = SpaceEnv.defaultEnv().get("spacedog.test.stripe.secret.key");
 		settings.rolesAllowedToCharge = Sets.newHashSet("cashier");
+
+		settings.secretKey = backend == PRODUCTION //
+				? SpaceEnv.defaultEnv().get("caremen.stripe.prod.secret.key") //
+				: SpaceEnv.defaultEnv().get("caremen.stripe.test.secret.key");
+
 		SpaceClient.saveSettings(backend, settings);
 	}
 
