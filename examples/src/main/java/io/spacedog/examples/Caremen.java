@@ -94,6 +94,7 @@ public class Caremen extends SpaceClient {
 		settings.templates = Maps.newHashMap();
 
 		MailTemplate template = new MailTemplate();
+		template.from = "CAREMEN <no-reply@caremen.fr>";
 		template.to = Lists.newArrayList("{{to}}");
 		template.subject = "Votre rattachement au compte entreprise {{company.name}}";
 		template.text = "Bonjour {{firstname}} {{lastname}}," //
@@ -117,6 +118,7 @@ public class Caremen extends SpaceClient {
 		settings.templates.put("notif_customer_company", template);
 
 		template = new MailTemplate();
+		template.from = "CAREMEN <no-reply@caremen.fr>";
 		template.to = Lists.newArrayList("{{to}}");
 		template.subject = "Bienvenu chez Caremen";
 		template.text = "Bienvenu chez Caremen";
