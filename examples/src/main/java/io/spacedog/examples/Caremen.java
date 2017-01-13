@@ -538,25 +538,30 @@ public class Caremen extends SpaceClient {
 
 	void createOperatorCredentials(String username, String email) {
 		String password = SpaceEnv.defaultEnv().get("caremen_operator_password");
-		resetCredentials(backend, username, password, email, "operator");
+		resetCredentials(backend, username, password, email, "operator", true);
 	}
 
 	void createCashierCredentials() {
 		String password = SpaceEnv.defaultEnv().get("caremen_cashier_password");
-		resetCredentials(backend, "cashier", password, "plateform@spacedog.io", "cashier");
+		resetCredentials(backend, "cashier", password, //
+				"plateform@spacedog.io", "cashier", false);
 	}
 
 	void createReminderCredentials() {
 		String password = SpaceEnv.defaultEnv().get("caremen_reminder_password");
-		resetCredentials(backend, "reminder", password, "plateform@spacedog.io", "reminder");
+		resetCredentials(backend, "reminder", password, //
+				"plateform@spacedog.io", "reminder", false);
 	}
 
 	private void resetCredentials(Backend backend, String username, //
-			String password, String email, String role) {
+			String password, String email, String role, boolean admin) {
 
 		SpaceClient.deleteCredentialsBySuperdog(backend.backendId, username);
-		User user = SpaceClient.createCredentials(backend.backendId, //
-				username, password, email);
+
+		User user = admin //
+				? SpaceClient.createAdminCredentials(backend, username, password, email)//
+				: SpaceClient.createCredentials(backend.backendId, username, password, email);
+
 		SpaceClient.setRole(backend.adminUser, user, role);
 	}
 
