@@ -107,6 +107,8 @@ public class Credentials {
 	private String email;
 	private Level level;
 	private boolean enabled = true;
+	private DateTime enableAfter;
+	private DateTime disableAfter;
 	private Set<String> roles;
 	private Set<Session> sessions;
 	private ObjectNode stash;
@@ -126,7 +128,7 @@ public class Credentials {
 	@JsonIgnore
 	public Session currentSession;
 	@JsonIgnore
-	private boolean passwordChecked;
+	private boolean passwordHasBeenChallenged;
 	@JsonIgnore
 	private String id;
 	@JsonIgnore
@@ -150,28 +152,64 @@ public class Credentials {
 		return Level.SUPERDOG.equals(level);
 	}
 
+	public void checkSuperDog() {
+		if (!isSuperDog())
+			throw Exceptions.insufficientCredentials(this);
+	}
+
+	public boolean isSuperAdmin() {
+		return Level.SUPER_ADMIN.equals(level);
+	}
+
 	public boolean isAtLeastSuperAdmin() {
 		return level.ordinal() >= Level.SUPER_ADMIN.ordinal();
+	}
+
+	public void checkAtLeastSuperAdmin() {
+		if (!isAtLeastSuperAdmin())
+			throw Exceptions.insufficientCredentials(this);
 	}
 
 	public boolean isAtMostSuperAdmin() {
 		return level.ordinal() <= Level.SUPER_ADMIN.ordinal();
 	}
 
+	public boolean isAdmin() {
+		return Level.ADMIN.equals(level);
+	}
+
 	public boolean isAtLeastAdmin() {
 		return level.ordinal() >= Level.ADMIN.ordinal();
+	}
+
+	public void checkAtLeastAdmin() {
+		if (!isAtLeastAdmin())
+			throw Exceptions.insufficientCredentials(this);
 	}
 
 	public boolean isAtMostAdmin() {
 		return level.ordinal() <= Level.ADMIN.ordinal();
 	}
 
+	public boolean isUser() {
+		return Level.USER.equals(level);
+	}
+
 	public boolean isAtLeastUser() {
 		return level.ordinal() >= Level.USER.ordinal();
 	}
 
+	public void checkAtLeastUser() {
+		if (!isAtLeastUser())
+			throw Exceptions.insufficientCredentials(this);
+	}
+
 	public boolean isAtMostUser() {
 		return level.ordinal() <= Level.USER.ordinal();
+	}
+
+	public boolean isKey() {
+		return Level.KEY.equals(level);
 	}
 
 	public boolean isReal() {
@@ -242,8 +280,13 @@ public class Credentials {
 		return currentSession == null ? 0 : currentSession.expiresIn();
 	}
 
-	public boolean isPasswordChecked() {
-		return passwordChecked;
+	public boolean hasPasswordBeenChallenged() {
+		return passwordHasBeenChallenged;
+	}
+
+	public void checkPasswordHasBeenChallenged() {
+		if (!hasPasswordBeenChallenged())
+			throw Exceptions.passwordMustBeChallenged();
 	}
 
 	public String passwordResetCode() {
@@ -254,12 +297,77 @@ public class Credentials {
 		passwordResetCode = UUID.randomUUID().toString();
 	}
 
+	public void checkEnabled() {
+		if (!enabled())
+			throw Exceptions.disabledCredentials(this);
+	}
+
 	public boolean enabled() {
-		return this.enabled;
+		if (this.enabled) {
+			if (enableAfterAndDisableAfterAreNull())
+				return true;
+			DateTime now = DateTime.now();
+			if (nowBeforeDisableAfter(now))
+				return true;
+			if (enableAfterBeforeNow(now))
+				return true;
+			if (disableAfterBeforeEnableAfterBeforeNow(now))
+				return true;
+			if (enableAfterBeforeNowBeforeDisableAfter(now))
+				return true;
+		}
+
+		return false;
+	}
+
+	private boolean enableAfterAndDisableAfterAreNull() {
+		return enableAfter == null && disableAfter == null;
+	}
+
+	private boolean disableAfterBeforeEnableAfterBeforeNow(DateTime now) {
+		return enableAfter != null //
+				&& disableAfter != null//
+				&& disableAfter.isBefore(enableAfter)//
+				&& enableAfter.isBefore(now);
+	}
+
+	private boolean enableAfterBeforeNowBeforeDisableAfter(DateTime now) {
+		return enableAfter != null //
+				&& disableAfter != null//
+				&& enableAfter.isBefore(now)//
+				&& now.isBefore(disableAfter);
+	}
+
+	private boolean enableAfterBeforeNow(DateTime now) {
+		return enableAfter != null //
+				&& disableAfter == null//
+				&& enableAfter.isBefore(now);
+	}
+
+	private boolean nowBeforeDisableAfter(DateTime now) {
+		return enableAfter == null //
+				&& disableAfter != null//
+				&& now.isBefore(disableAfter);
 	}
 
 	public void enabled(boolean enabled) {
 		this.enabled = enabled;
+	}
+
+	public DateTime enableAfter() {
+		return enableAfter;
+	}
+
+	public void enableAfter(DateTime enableAt) {
+		this.enableAfter = enableAt;
+	}
+
+	public DateTime disableAfter() {
+		return disableAfter;
+	}
+
+	public void disableAfter(DateTime disableAt) {
+		this.disableAfter = disableAt;
 	}
 
 	public Set<String> roles() {
@@ -355,13 +463,13 @@ public class Credentials {
 	// Business logic
 	//
 
-	public boolean checkPassword(String passwordToCheck) {
+	public boolean isPasswordEqualTo(String passwordToCompareWith) {
 		if (hashedPassword == null)
 			return false;
 
-		String hashedPasswordToCheck = Passwords.hash(passwordToCheck);
-		if (hashedPassword.equals(hashedPasswordToCheck)) {
-			passwordChecked = true;
+		String hashedPasswordToCompareWith = Passwords.hash(passwordToCompareWith);
+		if (hashedPassword.equals(hashedPasswordToCompareWith)) {
+			passwordHasBeenChallenged = true;
 			return true;
 		}
 		return false;
@@ -392,7 +500,7 @@ public class Credentials {
 
 	public boolean setPassword(String password, Optional<String> regex) {
 		hashedPassword = Passwords.checkAndHash(password, regex);
-		passwordChecked = true;
+		passwordHasBeenChallenged = true;
 		passwordResetCode = null;
 		return true;
 	}
@@ -404,6 +512,8 @@ public class Credentials {
 				SpaceFields.FIELD_USERNAME, name(), //
 				SpaceFields.FIELD_EMAIL, email().get(), //
 				SpaceFields.FIELD_ENABLED, enabled(), //
+				SpaceFields.FIELD_ENABLE_AFTER, enableAfter(), //
+				SpaceFields.FIELD_DISABLE_AFTER, disableAfter(), //
 				SpaceFields.FIELD_CREDENTIALS_LEVEL, level().name(), //
 				SpaceFields.FIELD_ROLES, roles(), //
 				SpaceFields.FIELD_CREATED_AT, createdAt(), //

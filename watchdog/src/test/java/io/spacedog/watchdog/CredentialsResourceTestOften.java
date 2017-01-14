@@ -735,8 +735,14 @@ public class CredentialsResourceTestOften extends Assert {
 		SpaceRequest.get("/1/login").userAuth(fred).go(401)//
 				.assertEquals("disabled-credentials", "error.code");
 
+		// fred fails to access any resources from now on
+		// with basic authentication scheme
+		SpaceRequest.get("/1/data").basicAuth(fred).go(401)//
+				.assertEquals("disabled-credentials", "error.code");
+
 		// fred fails to access any other resources from now on
-		SpaceRequest.get("/1/data").userAuth(fred).go(401)//
+		// with bearer authentication scheme
+		SpaceRequest.get("/1/data").bearerAuth(fred).go(401)//
 				.assertEquals("disabled-credentials", "error.code");
 
 		// fred fails to update his credentials from now on

@@ -56,6 +56,8 @@ public class CredentialsResource extends Resource {
 				.string(FIELD_USERNAME)//
 				.string(FIELD_BACKEND_ID)//
 				.bool(FIELD_ENABLED)//
+				.timestamp(FIELD_ENABLE_AFTER)//
+				.timestamp(FIELD_DISABLE_AFTER)//
 				.string(FIELD_CREDENTIALS_LEVEL)//
 				.string(FIELD_ROLES).array()//
 				.string(FIELD_ACCESS_TOKEN)//
@@ -75,9 +77,7 @@ public class CredentialsResource extends Resource {
 
 				.build();
 
-		schema.validate();
-		String mapping = schema.translate().toString();
-
+		String mapping = schema.validate().translate().toString();
 		ElasticClient elastic = Start.get().getElasticClient();
 
 		if (elastic.existsIndex(SPACEDOG_BACKEND, TYPE))
@@ -97,7 +97,7 @@ public class CredentialsResource extends Resource {
 	public Payload login(Context context) {
 		Credentials credentials = SpaceContext.checkUserCredentials();
 
-		if (credentials.isPasswordChecked()) {
+		if (credentials.hasPasswordBeenChallenged()) {
 			long lifetime = getCheckSessionLifetime(context);
 			credentials.setCurrentSession(Session.newSession(lifetime));
 			credentials = update(credentials);
@@ -209,8 +209,9 @@ public class CredentialsResource extends Resource {
 	@Put("/1/credentials/:id")
 	@Put("/1/credentials/:id/")
 	public Payload put(String id, String body, Context context) {
-		SpaceContext.checkUserCredentials(id);
-		SpaceContext.checkPasswordHasBeenChallenged();
+		Credentials requester = SpaceContext.checkUserCredentials(id);
+		if (requester.isUser())
+			requester.checkPasswordHasBeenChallenged();
 
 		ObjectNode data = Json.readObject(body);
 		Credentials credentials = getById(id, true).get();
@@ -228,8 +229,29 @@ public class CredentialsResource extends Resource {
 			credentials.email(email);
 
 		String password = data.path(FIELD_PASSWORD).asText();
-		if (!Strings.isNullOrEmpty(password))
+		if (!Strings.isNullOrEmpty(password)) {
+			// check for all not just users
+			requester.checkPasswordHasBeenChallenged();
 			credentials.setPassword(password, Optional.of(settings.passwordRegex()));
+		}
+
+		JsonNode enabled = data.get(FIELD_ENABLED);
+		if (!Json.isNull(enabled)) {
+			requester.checkAtLeastAdmin();
+			credentials.enabled(enabled.asBoolean());
+		}
+
+		String enableAfter = data.path(FIELD_ENABLE_AFTER).asText();
+		if (!Strings.isNullOrEmpty(enableAfter)) {
+			requester.checkAtLeastAdmin();
+			credentials.enableAfter(DateTime.parse(enableAfter));
+		}
+
+		String disableAfter = data.path(FIELD_DISABLE_AFTER).asText();
+		if (!Strings.isNullOrEmpty(disableAfter)) {
+			requester.checkAtLeastAdmin();
+			credentials.disableAfter(DateTime.parse(disableAfter));
+		}
 
 		// TODO check if at least one field has been changed
 		// before credentials update
@@ -275,8 +297,8 @@ public class CredentialsResource extends Resource {
 	@Put("/1/credentials/:id/password")
 	@Put("/1/credentials/:id/password/")
 	public Payload putPassword(String id, Context context) {
-		SpaceContext.checkUserCredentials(id);
-		SpaceContext.checkPasswordHasBeenChallenged();
+		Credentials requester = SpaceContext.checkUserCredentials(id);
+		requester.checkPasswordHasBeenChallenged();
 
 		Credentials credentials = getById(id, true).get();
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
@@ -400,8 +422,9 @@ public class CredentialsResource extends Resource {
 		Optional<Credentials> credentials = getByName(backendId, username, false);
 
 		if (credentials.isPresent() //
-				&& credentials.get().checkPassword(password))
+				&& credentials.get().isPasswordEqualTo(password)) {
 			return credentials.get();
+		}
 
 		throw Exceptions.invalidUsernamePassword(backendId);
 	}

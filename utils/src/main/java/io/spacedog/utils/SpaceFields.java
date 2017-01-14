@@ -24,5 +24,7 @@ public interface SpaceFields {
 	String FIELD_ROLES = "roles";
 	String FIELD_ERROR = "error";
 	String FIELD_RECEIVED_AT = "receivedAt";
+	public String FIELD_DISABLE_AFTER = "disableAfter";
+	public String FIELD_ENABLE_AFTER = "enableAfter";
 
 }

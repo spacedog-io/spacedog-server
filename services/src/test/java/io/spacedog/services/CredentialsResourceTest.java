@@ -3,7 +3,7 @@
  */
 package io.spacedog.services;
 
-import org.junit.Assert;
+import org.joda.time.DateTime;
 import org.junit.Test;
 
 import io.spacedog.client.SpaceClient;
@@ -11,8 +11,9 @@ import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceEnv;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.utils.SpaceTest;
 
-public class CredentialsResourceTest extends Assert {
+public class CredentialsResourceTest extends SpaceTest {
 
 	@Test
 	public void deleteSuperAdminCredentials() {
@@ -116,5 +117,85 @@ public class CredentialsResourceTest extends Assert {
 		SpaceClient.logout("api", apiToken);
 		SpaceRequest.get("/1/data").backendId("api").bearerAuth(apiToken).go(401);
 		SpaceRequest.get("/1/backend").backendId("api").bearerAuth(apiToken).go(401);
+	}
+
+	@Test
+	public void testEnableAfterAndDisableAfter() {
+
+		// prepare
+		SpaceClient.prepareTest();
+		Backend test = SpaceClient.resetTestBackend();
+		User fred = SpaceClient.createTempCredentials(test.backendId, "fred");
+
+		// fred logs in
+		SpaceClient.login(fred);
+
+		// fred gets data
+		SpaceRequest.get("/1/data").userAuth(fred).go(200);
+
+		// fred is not allowed to update his credentials enable after date
+		SpaceRequest.put("/1/credentials/{id}")//
+				.routeParam("id", fred.id).basicAuth(fred)//
+				.body(FIELD_ENABLE_AFTER, DateTime.now())//
+				.go(403);
+
+		// fred is not allowed to update his credentials enable after date
+		SpaceRequest.put("/1/credentials/{id}")//
+				.routeParam("id", fred.id).basicAuth(fred)//
+				.body(FIELD_DISABLE_AFTER, DateTime.now())//
+				.go(403);
+
+		// fred is not allowed to update his credentials enabled status
+		SpaceRequest.put("/1/credentials/{id}")//
+				.routeParam("id", fred.id).basicAuth(fred)//
+				.body(FIELD_ENABLED, true)//
+				.go(403);
+
+		// superadmin can update fred's credentials disable after date
+		// before now so fred's credentials are disabled
+		SpaceRequest.put("/1/credentials/{id}")//
+				.routeParam("id", fred.id)//
+				.adminAuth(test)//
+				.body(FIELD_DISABLE_AFTER, DateTime.now().minus(100000))//
+				.go(200);
+
+		// fred's credentials are disabled so he fails to gets any data
+		SpaceRequest.get("/1/data").userAuth(fred).go(401)//
+				.assertEquals("disabled-credentials", "error.code");
+
+		// fred's credentials are disabled so he fails to log
+		SpaceClient.login(fred, 401);
+
+		// superadmin can update fred's credentials enable after date
+		// before now and after disable after date so fred's credentials
+		// are enabled again
+		SpaceRequest.put("/1/credentials/{id}")//
+				.routeParam("id", fred.id)//
+				.adminAuth(test)//
+				.body(FIELD_ENABLE_AFTER, DateTime.now().minus(100000))//
+				.go(200);
+
+		// fred's credentials are enabled again so he gets data
+		// with his old access token from first login
+		SpaceRequest.get("/1/data").bearerAuth(fred).go(200);
+
+		// fred's credentials are enabled again so he can log in
+		SpaceClient.login(fred);
+
+		// superadmin updates fred's credentials disable after date
+		// before now but after enable after date so fred's credentials
+		// are disabled again
+		SpaceRequest.put("/1/credentials/{id}")//
+				.routeParam("id", fred.id)//
+				.adminAuth(test)//
+				.body(FIELD_DISABLE_AFTER, DateTime.now().minus(100000))//
+				.go(200);
+
+		// fred's credentials are disabled so he fails to gets any data
+		SpaceRequest.get("/1/data").userAuth(fred).go(401)//
+				.assertEquals("disabled-credentials", "error.code");
+
+		// fred's credentials are disabled so he fails to log in
+		SpaceClient.login(fred, 401);
 	}
 }

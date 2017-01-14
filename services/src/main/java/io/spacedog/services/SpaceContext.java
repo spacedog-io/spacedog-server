@@ -177,11 +177,6 @@ public class SpaceContext {
 		throw Exceptions.insufficientCredentials(credentials);
 	}
 
-	public static void checkPasswordHasBeenChallenged() {
-		if (!getCredentials().isPasswordChecked())
-			throw Exceptions.passwordMustBeChallenged();
-	}
-
 	public static void setCredentials(Credentials credentials) {
 		get().credentials = credentials;
 	}
@@ -226,9 +221,7 @@ public class SpaceContext {
 							.checkToken(backendId, authHeader.token());
 				}
 
-				if (!userCredentials.enabled())
-					throw Exceptions.disabledCredentials(userCredentials);
-
+				userCredentials.checkEnabled();
 				credentials = userCredentials;
 
 				// sets superdog backend id to the request backend id
