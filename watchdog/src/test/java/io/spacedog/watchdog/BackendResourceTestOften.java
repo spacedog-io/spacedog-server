@@ -33,7 +33,7 @@ public class BackendResourceTestOften extends SpaceTest {
 				.adminAuth(test).go(200)//
 				.assertEquals("test", "results.0.backendId")//
 				.assertEquals("test", "results.0.username")//
-				.assertEquals("hello@spacedog.io", "results.0.email");
+				.assertEquals("platform@spacedog.io", "results.0.email");
 
 		// empty backend returns no data
 
