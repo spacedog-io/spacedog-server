@@ -120,7 +120,7 @@ public class Caremen extends SpaceClient {
 		template = new MailTemplate();
 		template.from = "CAREMEN <no-reply@caremen.fr>";
 		template.to = Lists.newArrayList("{{to}}");
-		template.subject = "Bienvenu chez Caremen";
+		template.subject = "Bienvenue chez Caremen";
 		template.text = "Bienvenu chez Caremen";
 		template.model = Maps.newHashMap();
 		template.model.put("to", "string");
@@ -180,7 +180,7 @@ public class Caremen extends SpaceClient {
 				"driverAverageSpeedKmPerHour", 15, //
 				"courseLogIntervalMeters", 100, //
 				"customerWaitingForDriverMaxDurationMinutes", 2, //
-				"operatorRefreshTimeoutSeconds", 30);
+				"operatorRefreshTimeoutSeconds", 75);
 
 		SpaceRequest.put("/1/settings/appconfiguration")//
 				.adminAuth(backend).body(settings).go(200, 201);
