@@ -10,9 +10,9 @@ public class PasswordsTest extends Assert {
 
 	@Test
 	public void thesePasswordsAreValid() {
-		Passwords.checkValid("123456");
-		Passwords.checkValid("abcdefg");
-		Passwords.checkValid("_-)!ç!!è§(");
+		Passwords.check("123456");
+		Passwords.check("abcdefg");
+		Passwords.check("_-)!ç!!è§(");
 	}
 
 	@Test
@@ -25,7 +25,7 @@ public class PasswordsTest extends Assert {
 
 	private void checkNotValid(String password) {
 		try {
-			Passwords.checkValid(password);
+			Passwords.check(password);
 			fail(String.format("password [%s] shouldn't be valid", password));
 		} catch (IllegalArgumentException e) {
 		}

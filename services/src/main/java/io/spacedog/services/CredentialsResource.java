@@ -58,6 +58,8 @@ public class CredentialsResource extends Resource {
 				.bool(FIELD_ENABLED)//
 				.timestamp(FIELD_ENABLE_AFTER)//
 				.timestamp(FIELD_DISABLE_AFTER)//
+				.integer(FIELD_INVALID_CHALLENGES)//
+				.timestamp(FIELD_LAST_INVALID_CHALLENGE_AT)//
 				.string(FIELD_CREDENTIALS_LEVEL)//
 				.string(FIELD_ROLES).array()//
 				.string(FIELD_ACCESS_TOKEN)//
@@ -232,13 +234,13 @@ public class CredentialsResource extends Resource {
 		if (!Strings.isNullOrEmpty(password)) {
 			// check for all not just users
 			requester.checkPasswordHasBeenChallenged();
-			credentials.setPassword(password, Optional.of(settings.passwordRegex()));
+			credentials.changePassword(password, Optional.of(settings.passwordRegex()));
 		}
 
 		JsonNode enabled = data.get(FIELD_ENABLED);
 		if (!Json.isNull(enabled)) {
 			requester.checkAtLeastAdmin();
-			credentials.enabled(enabled.asBoolean());
+			credentials.doEnableOrDisable(enabled.asBoolean());
 		}
 
 		String enableAfter = data.path(FIELD_ENABLE_AFTER).asText();
@@ -286,7 +288,7 @@ public class CredentialsResource extends Resource {
 
 		Credentials credentials = getById(id, true).get();
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
-		credentials.setPassword(password, passwordResetCode, //
+		credentials.changePassword(password, passwordResetCode, //
 				Optional.of(settings.passwordRegex()));
 		credentials = update(credentials);
 
@@ -304,7 +306,7 @@ public class CredentialsResource extends Resource {
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
 
 		String password = context.get(FIELD_PASSWORD);
-		credentials.setPassword(password, Optional.of(settings.passwordRegex()));
+		credentials.changePassword(password, Optional.of(settings.passwordRegex()));
 
 		credentials = update(credentials);
 		return JsonPayload.saved(false, credentials.backendId(), //
@@ -321,7 +323,7 @@ public class CredentialsResource extends Resource {
 			throw Exceptions.illegalArgument("body not a boolean but [%s]", body);
 
 		Credentials credentials = getById(id, true).get();
-		credentials.enabled(enabled.asBoolean());
+		credentials.doEnableOrDisable(enabled.asBoolean());
 		credentials = update(credentials);
 
 		return JsonPayload.saved(false, credentials.backendId(), //
@@ -403,7 +405,7 @@ public class CredentialsResource extends Resource {
 		Usernames.checkValid(credentials.name(), Optional.of(settings.usernameRegex()));
 
 		if (legacyId)
-			credentials.setLegacyId();
+			credentials.initIdFromLegacy();
 
 		credentials.email(Json.checkStringNotNullOrEmpty(data, FIELD_EMAIL));
 		credentials.level(level);
@@ -413,20 +415,50 @@ public class CredentialsResource extends Resource {
 		if (Json.isNull(password))
 			credentials.newPasswordResetCode();
 		else
-			credentials.setPassword(password.asText(), Optional.of(settings.passwordRegex()));
+			credentials.changePassword(password.asText(), Optional.of(settings.passwordRegex()));
 
 		return create(credentials);
 	}
 
 	Credentials checkUsernamePassword(String backendId, String username, String password) {
-		Optional<Credentials> credentials = getByName(backendId, username, false);
+		Optional<Credentials> optional = getByName(backendId, username, false);
 
-		if (credentials.isPresent() //
-				&& credentials.get().isPasswordEqualTo(password)) {
-			return credentials.get();
+		if (optional.isPresent()) {
+
+			Credentials credentials = optional.get();
+
+			if (credentials.challengePassword(password))
+				return credentials;
+			else
+				updateInvalidChallenges(credentials);
 		}
 
 		throw Exceptions.invalidUsernamePassword(backendId);
+	}
+
+	private void updateInvalidChallenges(Credentials credentials) {
+		CredentialsSettings settings = SettingsResource.get()//
+				.load(CredentialsSettings.class);
+
+		if (settings.maximumInvalidChallenges == 0)
+			return;
+
+		if (credentials.lastInvalidChallengeAt() != null //
+				&& credentials.lastInvalidChallengeAt()//
+						.plusMinutes(settings.resetInvalidChallengesAfterMinutes)//
+						.isBeforeNow()) {
+
+			credentials.invalidChallenges(0);
+			credentials.lastInvalidChallengeAt(null);
+		}
+
+		credentials.invalidChallenges(credentials.invalidChallenges() + 1);
+		credentials.lastInvalidChallengeAt(DateTime.now());
+
+		if (credentials.invalidChallenges() >= settings.maximumInvalidChallenges)
+			credentials.doEnableOrDisable(false);
+
+		update(credentials);
 	}
 
 	Credentials checkToken(String backendId, String accessToken) {
@@ -531,7 +563,7 @@ public class CredentialsResource extends Resource {
 	Credentials update(Credentials credentials) {
 		if (Strings.isNullOrEmpty(credentials.id()))
 			throw Exceptions.illegalArgument(//
-					"credentials update failed: credentials id is null");
+					"failed to update credentials since id is null");
 
 		try {
 			credentials.purgeExpiredSessions();
@@ -591,7 +623,7 @@ public class CredentialsResource extends Resource {
 		Usernames.checkValid(username);
 		Credentials credentials = new Credentials(Backends.rootApi(), username, Level.SUPERDOG);
 		credentials.email(email);
-		credentials.setPassword(password, Optional.empty());
+		credentials.changePassword(password, Optional.empty());
 		return create(credentials);
 	}
 

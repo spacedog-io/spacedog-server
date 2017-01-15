@@ -38,6 +38,552 @@ public class Credentials {
 	public static final String SUPER_ADMIN = "super_admin";
 	public static final String SUPERDOG = "superdog";
 
+	private String backendId;
+	private String username;
+	private String email;
+	private Level level;
+	private boolean enabled = true;
+	private DateTime enableAfter;
+	private DateTime disableAfter;
+	private Set<String> roles;
+	private Set<Session> sessions;
+	private ObjectNode stash;
+	private String passwordResetCode;
+	private String hashedPassword;
+	private int invalidChallenges;
+	private DateTime lastInvalidChallengeAt;
+	private String createdAt;
+	private String updatedAt;
+
+	/**
+	 * 'onBehalf' stores the id of the backend I'm accessing. 'backendId' stores
+	 * the if of this credentials real backend. 'onBehalf' must not reolaced
+	 * 'backendId' and be saved to database.
+	 */
+	@JsonIgnore
+	private String target;
+
+	@JsonIgnore
+	public Session currentSession;
+	@JsonIgnore
+	private boolean passwordHasBeenChallenged;
+	@JsonIgnore
+	private String id;
+	@JsonIgnore
+	private long version;
+
+	public Credentials() {
+	}
+
+	public Credentials(String backendId) {
+		this.backendId = backendId;
+		this.level = Level.KEY;
+	}
+
+	public Credentials(String backendId, String name, Level level) {
+		this.backendId = backendId;
+		this.username = name;
+		this.level = level;
+	}
+
+	public String id() {
+		return id;
+	}
+
+	public void id(String id) {
+		this.id = id;
+	}
+
+	public long version() {
+		return version;
+	}
+
+	public void version(long version) {
+		this.version = version;
+	}
+
+	public String backendId() {
+		return backendId;
+	}
+
+	public String target() {
+		return target == null ? backendId : target;
+	}
+
+	public void target(String backendId) {
+		this.target = backendId;
+	}
+
+	public String name() {
+		return username == null ? "default" : username;
+	}
+
+	public void name(String name) {
+		this.username = name;
+	}
+
+	public Optional<String> email() {
+		return Optional.ofNullable(email);
+	}
+
+	public void email(String value) {
+		this.email = value;
+	}
+
+	public Level level() {
+		return level;
+	}
+
+	public void level(Level value) {
+		this.level = value;
+	}
+
+	public String accessToken() {
+		return currentSession == null ? null : currentSession.accessToken;
+	}
+
+	public long accessTokenExpiresIn() {
+		return currentSession == null ? 0 : currentSession.expiresIn();
+	}
+
+	public boolean hasPasswordBeenChallenged() {
+		return passwordHasBeenChallenged;
+	}
+
+	public String passwordResetCode() {
+		return passwordResetCode;
+	}
+
+	public boolean enabled() {
+		return enabled;
+	}
+
+	public void enabled(boolean enabled) {
+		this.enabled = enabled;
+	}
+
+	public DateTime enableAfter() {
+		return enableAfter;
+	}
+
+	public void enableAfter(DateTime enableAfter) {
+		this.enableAfter = enableAfter;
+	}
+
+	public DateTime disableAfter() {
+		return disableAfter;
+	}
+
+	public void disableAfter(DateTime disableAfter) {
+		this.disableAfter = disableAfter;
+	}
+
+	public Set<String> roles() {
+		if (roles == null)
+			roles = Sets.newHashSet();
+
+		roles.addAll(defaultRoles());
+		return roles;
+	}
+
+	public void roles(Set<String> value) {
+		roles = value;
+	}
+
+	public String createdAt() {
+		return createdAt;
+	}
+
+	public void createdAt(String value) {
+		createdAt = value;
+	}
+
+	public String updatedAt() {
+		return updatedAt;
+	}
+
+	public void updatedAt(String value) {
+		updatedAt = value;
+	}
+
+	public int invalidChallenges() {
+		return invalidChallenges;
+	}
+
+	public void invalidChallenges(int invalidChallenges) {
+		this.invalidChallenges = invalidChallenges;
+	}
+
+	public DateTime lastInvalidChallengeAt() {
+		return lastInvalidChallengeAt;
+	}
+
+	public void lastInvalidChallengeAt(DateTime lastInvalidChallengeAt) {
+		this.lastInvalidChallengeAt = lastInvalidChallengeAt;
+	}
+
+	//
+	// Stash
+	//
+
+	public JsonNode getFromStash(String path) {
+		return stash == null ? null : Json.get(stash, path);
+	}
+
+	public void addToStash(String path, Object value) {
+		if (stash == null)
+			stash = Json.object();
+
+		Json.set(stash, path, value);
+	}
+
+	public void removeFromStash(String path) {
+		if (stash != null)
+			Json.remove(stash, path);
+	}
+
+	//
+	// Object overrides
+	//
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((backendId == null) ? 0 : backendId.hashCode());
+		result = prime * result + ((username == null) ? 0 : username.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Credentials other = (Credentials) obj;
+		if (backendId == null) {
+			if (other.backendId != null)
+				return false;
+		} else if (!backendId.equals(other.backendId))
+			return false;
+		if (username == null) {
+			if (other.username != null)
+				return false;
+		} else if (!username.equals(other.username))
+			return false;
+		return true;
+	}
+
+	//
+	// Level and roles
+	//
+
+	public boolean isSuperDog() {
+		return Level.SUPERDOG.equals(level);
+	}
+
+	public void checkSuperDog() {
+		if (!isSuperDog())
+			throw Exceptions.insufficientCredentials(this);
+	}
+
+	public boolean isSuperAdmin() {
+		return Level.SUPER_ADMIN.equals(level);
+	}
+
+	public boolean isAtLeastSuperAdmin() {
+		return level.ordinal() >= Level.SUPER_ADMIN.ordinal();
+	}
+
+	public void checkAtLeastSuperAdmin() {
+		if (!isAtLeastSuperAdmin())
+			throw Exceptions.insufficientCredentials(this);
+	}
+
+	public boolean isAdmin() {
+		return Level.ADMIN.equals(level);
+	}
+
+	public boolean isAtLeastAdmin() {
+		return level.ordinal() >= Level.ADMIN.ordinal();
+	}
+
+	public void checkAtLeastAdmin() {
+		if (!isAtLeastAdmin())
+			throw Exceptions.insufficientCredentials(this);
+	}
+
+	public boolean isUser() {
+		return Level.USER.equals(level);
+	}
+
+	public boolean isAtLeastUser() {
+		return level.ordinal() >= Level.USER.ordinal();
+	}
+
+	public void checkAtLeastUser() {
+		if (!isAtLeastUser())
+			throw Exceptions.insufficientCredentials(this);
+	}
+
+	public boolean isKey() {
+		return Level.KEY.equals(level);
+	}
+
+	public boolean isReal() {
+		return !Strings.isNullOrEmpty(id);
+	}
+
+	public void checkRoles(Set<String> authorizedRoles) {
+		if (authorizedRoles != null) {
+			Set<String> thisCredentialsRoles = roles();
+			for (String authorizedRole : authorizedRoles)
+				if (thisCredentialsRoles.contains(authorizedRole))
+					return;
+		}
+		throw Exceptions.insufficientCredentials(this);
+	}
+
+	//
+	// Enable disable logic
+	//
+
+	public void doEnableOrDisable(boolean enable) {
+		if (enable) {
+			enabled(true);
+			invalidChallenges(0);
+			lastInvalidChallengeAt(null);
+
+		} else
+			enabled(false);
+	}
+
+	public void checkReallyEnabled() {
+		if (!isReallyEnabled())
+			throw Exceptions.disabledCredentials(this);
+	}
+
+	public boolean isReallyEnabled() {
+
+		if (this.enabled) {
+			if (isEnableAfterAndDisableAfterAreNull())
+				return true;
+			DateTime now = DateTime.now();
+			if (isNowBeforeDisableAfter(now))
+				return true;
+			if (isEnableAfterBeforeNow(now))
+				return true;
+			if (isDisableAfterBeforeEnableAfterBeforeNow(now))
+				return true;
+			if (isEnableAfterBeforeNowBeforeDisableAfter(now))
+				return true;
+		}
+
+		return false;
+	}
+
+	private boolean isEnableAfterAndDisableAfterAreNull() {
+		return enableAfter == null && disableAfter == null;
+	}
+
+	private boolean isDisableAfterBeforeEnableAfterBeforeNow(DateTime now) {
+		return enableAfter != null //
+				&& disableAfter != null//
+				&& disableAfter.isBefore(enableAfter)//
+				&& enableAfter.isBefore(now);
+	}
+
+	private boolean isEnableAfterBeforeNowBeforeDisableAfter(DateTime now) {
+		return enableAfter != null //
+				&& disableAfter != null//
+				&& enableAfter.isBefore(now)//
+				&& now.isBefore(disableAfter);
+	}
+
+	private boolean isEnableAfterBeforeNow(DateTime now) {
+		return enableAfter != null //
+				&& disableAfter == null//
+				&& enableAfter.isBefore(now);
+	}
+
+	private boolean isNowBeforeDisableAfter(DateTime now) {
+		return enableAfter == null //
+				&& disableAfter != null//
+				&& now.isBefore(disableAfter);
+	}
+
+	//
+	// Password logic
+	//
+
+	public void checkPasswordHasBeenChallenged() {
+		if (!hasPasswordBeenChallenged())
+			throw Exceptions.passwordMustBeChallenged();
+	}
+
+	public void newPasswordResetCode() {
+		passwordResetCode = UUID.randomUUID().toString();
+	}
+
+	public boolean challengePassword(String passwordToChallenge) {
+		if (hashedPassword == null)
+			return false;
+
+		String hashedPasswordToChallenge = Passwords.hash(passwordToChallenge);
+
+		if (hashedPassword.equals(hashedPasswordToChallenge)) {
+			passwordHasBeenChallenged = true;
+			return true;
+		}
+		return false;
+	}
+
+	public void clearPasswordAndTokens() {
+		hashedPassword = null;
+		passwordResetCode = null;
+		invalidChallenges = 0;
+		lastInvalidChallengeAt = null;
+		currentSession = null;
+		if (sessions != null)
+			sessions.clear();
+	}
+
+	public void changePassword(String password, String passwordResetCode, Optional<String> regex) {
+		Check.notNullOrEmpty(password, "password");
+		Check.notNullOrEmpty(passwordResetCode, "passwordResetCode");
+
+		if (hashedPassword != null || passwordResetCode == null)
+			throw Exceptions.illegalArgument(//
+					"credentials [%s] password must be deleted before reset", username);
+
+		if (!this.passwordResetCode.equals(passwordResetCode))
+			throw Exceptions.illegalArgument(//
+					"password reset code [%s] invalid", passwordResetCode);
+
+		changePassword(password, regex);
+	}
+
+	public void changePassword(String password, Optional<String> regex) {
+		Passwords.check(password, regex);
+		clearPasswordAndTokens();
+		hashedPassword = Passwords.hash(password);
+		passwordHasBeenChallenged = true;
+	}
+
+	//
+	// Other logic
+	//
+
+	public boolean isTargetingRootApi() {
+		return Backends.isRootApi(target());
+	}
+
+	public ObjectNode toJson() {
+		return Json.object(//
+				SpaceFields.FIELD_ID, id(), //
+				SpaceFields.FIELD_BACKEND_ID, target(), //
+				SpaceFields.FIELD_USERNAME, name(), //
+				SpaceFields.FIELD_EMAIL, email().get(), //
+				SpaceFields.FIELD_ENABLED, enabled(), //
+				SpaceFields.FIELD_ENABLE_AFTER, enableAfter(), //
+				SpaceFields.FIELD_DISABLE_AFTER, disableAfter(), //
+				SpaceFields.FIELD_INVALID_CHALLENGES, invalidChallenges, //
+				SpaceFields.FIELD_LAST_INVALID_CHALLENGE_AT, lastInvalidChallengeAt, //
+				SpaceFields.FIELD_CREDENTIALS_LEVEL, level().name(), //
+				SpaceFields.FIELD_ROLES, roles(), //
+				SpaceFields.FIELD_CREATED_AT, createdAt(), //
+				SpaceFields.FIELD_UPDATED_AT, updatedAt());
+	}
+
+	//
+	// Sessions and Access Tokens
+	//
+
+	public void setCurrentSession(String accessToken) {
+		boolean found = false;
+
+		if (sessions != null)
+			for (Session session : sessions)
+				if (accessToken.equals(session.accessToken)) {
+					currentSession = session;
+					found = true;
+				}
+
+		if (!found)
+			throw Exceptions.invalidAccessToken(backendId);
+
+	}
+
+	public void setCurrentSession(Session session) {
+
+		currentSession = session;
+
+		if (sessions == null)
+			sessions = Sets.newHashSet();
+
+		sessions.add(currentSession);
+	}
+
+	public boolean hasCurrentSession() {
+		return currentSession != null;
+	}
+
+	public void deleteCurrentSession() {
+		if (hasCurrentSession()) {
+			if (sessions != null)
+				sessions.remove(currentSession);
+			currentSession = null;
+		}
+	}
+
+	public void purgeExpiredSessions() {
+		if (sessions != null) {
+			Iterator<Session> iterator = sessions.iterator();
+			while (iterator.hasNext())
+				if (iterator.next().expiresIn() == 0)
+					iterator.remove();
+		}
+	}
+
+	public boolean isBrandNew() {
+		return updatedAt == null ? true : updatedAt.equals(createdAt);
+	}
+
+	//
+	// implementation
+	//
+
+	private Set<String> defaultRoles() {
+		if (Level.USER.equals(level))
+			return Collections.singleton(USER);
+		if (Level.ADMIN.equals(level))
+			return Collections.singleton(ADMIN);
+		if (Level.SUPER_ADMIN.equals(level))
+			return Sets.newHashSet(ADMIN, SUPER_ADMIN);
+		if (Level.SUPERDOG.equals(level))
+			return Sets.newHashSet(ADMIN, SUPER_ADMIN, SUPERDOG);
+		return Collections.singleton(KEY);
+	}
+
+	public void initIdFromLegacy() {
+		this.id = toLegacyId(backendId, username);
+	}
+
+	public static String[] fromLegacyId(String id) {
+		return id.split("-", 2);
+	}
+
+	public static String toLegacyId(String backendId, String username) {
+		return String.join("-", backendId, username);
+	}
+
+	//
+	// Inner classes
+	//
+
 	public static enum Level {
 		KEY, USER, ADMIN, SUPER_ADMIN, SUPERDOG;
 
@@ -100,502 +646,6 @@ public class Credentials {
 			return session;
 		}
 
-	}
-
-	private String backendId;
-	private String username;
-	private String email;
-	private Level level;
-	private boolean enabled = true;
-	private DateTime enableAfter;
-	private DateTime disableAfter;
-	private Set<String> roles;
-	private Set<Session> sessions;
-	private ObjectNode stash;
-	private String passwordResetCode;
-	private String hashedPassword;
-	private String createdAt;
-	private String updatedAt;
-
-	/**
-	 * 'onBehalf' stores the id of the backend I'm accessing. 'backendId' stores
-	 * the if of this credentials real backend. 'onBehalf' must not reolaced
-	 * 'backendId' and be saved to database.
-	 */
-	@JsonIgnore
-	private String target;
-
-	@JsonIgnore
-	public Session currentSession;
-	@JsonIgnore
-	private boolean passwordHasBeenChallenged;
-	@JsonIgnore
-	private String id;
-	@JsonIgnore
-	private long version;
-
-	public Credentials() {
-	}
-
-	public Credentials(String backendId) {
-		this.backendId = backendId;
-		this.level = Level.KEY;
-	}
-
-	public Credentials(String backendId, String name, Level level) {
-		this.backendId = backendId;
-		this.username = name;
-		this.level = level;
-	}
-
-	public boolean isSuperDog() {
-		return Level.SUPERDOG.equals(level);
-	}
-
-	public void checkSuperDog() {
-		if (!isSuperDog())
-			throw Exceptions.insufficientCredentials(this);
-	}
-
-	public boolean isSuperAdmin() {
-		return Level.SUPER_ADMIN.equals(level);
-	}
-
-	public boolean isAtLeastSuperAdmin() {
-		return level.ordinal() >= Level.SUPER_ADMIN.ordinal();
-	}
-
-	public void checkAtLeastSuperAdmin() {
-		if (!isAtLeastSuperAdmin())
-			throw Exceptions.insufficientCredentials(this);
-	}
-
-	public boolean isAtMostSuperAdmin() {
-		return level.ordinal() <= Level.SUPER_ADMIN.ordinal();
-	}
-
-	public boolean isAdmin() {
-		return Level.ADMIN.equals(level);
-	}
-
-	public boolean isAtLeastAdmin() {
-		return level.ordinal() >= Level.ADMIN.ordinal();
-	}
-
-	public void checkAtLeastAdmin() {
-		if (!isAtLeastAdmin())
-			throw Exceptions.insufficientCredentials(this);
-	}
-
-	public boolean isAtMostAdmin() {
-		return level.ordinal() <= Level.ADMIN.ordinal();
-	}
-
-	public boolean isUser() {
-		return Level.USER.equals(level);
-	}
-
-	public boolean isAtLeastUser() {
-		return level.ordinal() >= Level.USER.ordinal();
-	}
-
-	public void checkAtLeastUser() {
-		if (!isAtLeastUser())
-			throw Exceptions.insufficientCredentials(this);
-	}
-
-	public boolean isAtMostUser() {
-		return level.ordinal() <= Level.USER.ordinal();
-	}
-
-	public boolean isKey() {
-		return Level.KEY.equals(level);
-	}
-
-	public boolean isReal() {
-		return !Strings.isNullOrEmpty(id);
-	}
-
-	public String id() {
-		return id;
-	}
-
-	public void id(String id) {
-		this.id = id;
-	}
-
-	public long version() {
-		return version;
-	}
-
-	public void version(long version) {
-		this.version = version;
-	}
-
-	public String backendId() {
-		return backendId;
-	}
-
-	public String target() {
-		return target == null ? backendId : target;
-	}
-
-	public void target(String backendId) {
-		this.target = backendId;
-	}
-
-	public boolean isTargetingRootApi() {
-		return Backends.isRootApi(target());
-	}
-
-	public String name() {
-		return username == null ? "default" : username;
-	}
-
-	public void name(String name) {
-		this.username = name;
-	}
-
-	public Optional<String> email() {
-		return Optional.ofNullable(email);
-	}
-
-	public void email(String value) {
-		this.email = value;
-	}
-
-	public Level level() {
-		return level;
-	}
-
-	public void level(Level value) {
-		this.level = value;
-	}
-
-	public String accessToken() {
-		return currentSession == null ? null : currentSession.accessToken;
-	}
-
-	public long accessTokenExpiresIn() {
-		return currentSession == null ? 0 : currentSession.expiresIn();
-	}
-
-	public boolean hasPasswordBeenChallenged() {
-		return passwordHasBeenChallenged;
-	}
-
-	public void checkPasswordHasBeenChallenged() {
-		if (!hasPasswordBeenChallenged())
-			throw Exceptions.passwordMustBeChallenged();
-	}
-
-	public String passwordResetCode() {
-		return passwordResetCode;
-	}
-
-	public void newPasswordResetCode() {
-		passwordResetCode = UUID.randomUUID().toString();
-	}
-
-	public void checkEnabled() {
-		if (!enabled())
-			throw Exceptions.disabledCredentials(this);
-	}
-
-	public boolean enabled() {
-		if (this.enabled) {
-			if (enableAfterAndDisableAfterAreNull())
-				return true;
-			DateTime now = DateTime.now();
-			if (nowBeforeDisableAfter(now))
-				return true;
-			if (enableAfterBeforeNow(now))
-				return true;
-			if (disableAfterBeforeEnableAfterBeforeNow(now))
-				return true;
-			if (enableAfterBeforeNowBeforeDisableAfter(now))
-				return true;
-		}
-
-		return false;
-	}
-
-	private boolean enableAfterAndDisableAfterAreNull() {
-		return enableAfter == null && disableAfter == null;
-	}
-
-	private boolean disableAfterBeforeEnableAfterBeforeNow(DateTime now) {
-		return enableAfter != null //
-				&& disableAfter != null//
-				&& disableAfter.isBefore(enableAfter)//
-				&& enableAfter.isBefore(now);
-	}
-
-	private boolean enableAfterBeforeNowBeforeDisableAfter(DateTime now) {
-		return enableAfter != null //
-				&& disableAfter != null//
-				&& enableAfter.isBefore(now)//
-				&& now.isBefore(disableAfter);
-	}
-
-	private boolean enableAfterBeforeNow(DateTime now) {
-		return enableAfter != null //
-				&& disableAfter == null//
-				&& enableAfter.isBefore(now);
-	}
-
-	private boolean nowBeforeDisableAfter(DateTime now) {
-		return enableAfter == null //
-				&& disableAfter != null//
-				&& now.isBefore(disableAfter);
-	}
-
-	public void enabled(boolean enabled) {
-		this.enabled = enabled;
-	}
-
-	public DateTime enableAfter() {
-		return enableAfter;
-	}
-
-	public void enableAfter(DateTime enableAt) {
-		this.enableAfter = enableAt;
-	}
-
-	public DateTime disableAfter() {
-		return disableAfter;
-	}
-
-	public void disableAfter(DateTime disableAt) {
-		this.disableAfter = disableAt;
-	}
-
-	public Set<String> roles() {
-		if (roles == null)
-			roles = Sets.newHashSet();
-
-		roles.addAll(defaultRoles());
-		return roles;
-	}
-
-	public void roles(Set<String> value) {
-		roles = value;
-	}
-
-	public void checkRoles(Set<String> authorizedRoles) {
-		if (authorizedRoles != null) {
-			Set<String> thisCredentialsRoles = roles();
-			for (String authorizedRole : authorizedRoles)
-				if (thisCredentialsRoles.contains(authorizedRole))
-					return;
-		}
-		throw Exceptions.insufficientCredentials(this);
-	}
-
-	public String createdAt() {
-		return createdAt;
-	}
-
-	public void createdAt(String value) {
-		createdAt = value;
-	}
-
-	public String updatedAt() {
-		return updatedAt;
-	}
-
-	public void updatedAt(String value) {
-		updatedAt = value;
-	}
-
-	public JsonNode getFromStash(String path) {
-		return stash == null ? null : Json.get(stash, path);
-	}
-
-	public void addToStash(String path, Object value) {
-		if (stash == null)
-			stash = Json.object();
-
-		Json.set(stash, path, value);
-	}
-
-	public void removeFromStash(String path) {
-		if (stash != null)
-			Json.remove(stash, path);
-	}
-
-	public boolean isBrandNew() {
-		return updatedAt == null ? true : updatedAt.equals(createdAt);
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((backendId == null) ? 0 : backendId.hashCode());
-		result = prime * result + ((username == null) ? 0 : username.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		Credentials other = (Credentials) obj;
-		if (backendId == null) {
-			if (other.backendId != null)
-				return false;
-		} else if (!backendId.equals(other.backendId))
-			return false;
-		if (username == null) {
-			if (other.username != null)
-				return false;
-		} else if (!username.equals(other.username))
-			return false;
-		return true;
-	}
-
-	//
-	// Business logic
-	//
-
-	public boolean isPasswordEqualTo(String passwordToCompareWith) {
-		if (hashedPassword == null)
-			return false;
-
-		String hashedPasswordToCompareWith = Passwords.hash(passwordToCompareWith);
-		if (hashedPassword.equals(hashedPasswordToCompareWith)) {
-			passwordHasBeenChallenged = true;
-			return true;
-		}
-		return false;
-	}
-
-	public void clearPasswordAndTokens() {
-		hashedPassword = null;
-		passwordResetCode = null;
-		currentSession = null;
-		if (sessions != null)
-			sessions.clear();
-	}
-
-	public void setPassword(String password, String passwordResetCode, Optional<String> regex) {
-		Check.notNullOrEmpty(password, "password");
-		Check.notNullOrEmpty(passwordResetCode, "passwordResetCode");
-
-		if (hashedPassword != null || passwordResetCode == null)
-			throw Exceptions.illegalArgument(//
-					"credentials [%s] password must be deleted before reset", username);
-
-		if (!this.passwordResetCode.equals(passwordResetCode))
-			throw Exceptions.illegalArgument(//
-					"password reset code [%s] invalid", passwordResetCode);
-
-		setPassword(password, regex);
-	}
-
-	public boolean setPassword(String password, Optional<String> regex) {
-		hashedPassword = Passwords.checkAndHash(password, regex);
-		passwordHasBeenChallenged = true;
-		passwordResetCode = null;
-		return true;
-	}
-
-	public ObjectNode toJson() {
-		return Json.object(//
-				SpaceFields.FIELD_ID, id(), //
-				SpaceFields.FIELD_BACKEND_ID, target(), //
-				SpaceFields.FIELD_USERNAME, name(), //
-				SpaceFields.FIELD_EMAIL, email().get(), //
-				SpaceFields.FIELD_ENABLED, enabled(), //
-				SpaceFields.FIELD_ENABLE_AFTER, enableAfter(), //
-				SpaceFields.FIELD_DISABLE_AFTER, disableAfter(), //
-				SpaceFields.FIELD_CREDENTIALS_LEVEL, level().name(), //
-				SpaceFields.FIELD_ROLES, roles(), //
-				SpaceFields.FIELD_CREATED_AT, createdAt(), //
-				SpaceFields.FIELD_UPDATED_AT, updatedAt());
-	}
-
-	//
-	// Sessions and Access Tokens
-	//
-
-	public void setCurrentSession(String accessToken) {
-		boolean found = false;
-
-		if (sessions != null)
-			for (Session session : sessions)
-				if (accessToken.equals(session.accessToken)) {
-					currentSession = session;
-					found = true;
-				}
-
-		if (!found)
-			throw Exceptions.invalidAccessToken(backendId);
-
-	}
-
-	public void setCurrentSession(Session session) {
-
-		currentSession = session;
-
-		if (sessions == null)
-			sessions = Sets.newHashSet();
-
-		sessions.add(currentSession);
-	}
-
-	public boolean hasCurrentSession() {
-		return currentSession != null;
-	}
-
-	public void deleteCurrentSession() {
-		if (hasCurrentSession()) {
-			if (sessions != null)
-				sessions.remove(currentSession);
-			currentSession = null;
-		}
-	}
-
-	public void purgeExpiredSessions() {
-		if (sessions != null) {
-			Iterator<Session> iterator = sessions.iterator();
-			while (iterator.hasNext())
-				if (iterator.next().expiresIn() == 0)
-					iterator.remove();
-		}
-	}
-
-	//
-	// implementation
-	//
-
-	private Set<String> defaultRoles() {
-		if (Level.USER.equals(level))
-			return Collections.singleton(USER);
-		if (Level.ADMIN.equals(level))
-			return Collections.singleton(ADMIN);
-		if (Level.SUPER_ADMIN.equals(level))
-			return Sets.newHashSet(ADMIN, SUPER_ADMIN);
-		if (Level.SUPERDOG.equals(level))
-			return Sets.newHashSet(ADMIN, SUPER_ADMIN, SUPERDOG);
-		return Collections.singleton(KEY);
-	}
-
-	public void setLegacyId() {
-		this.id = toLegacyId(backendId, username);
-	}
-
-	public static String[] fromLegacyId(String id) {
-		return id.split("-", 2);
-	}
-
-	public static String toLegacyId(String backendId, String username) {
-		return String.join("-", backendId, username);
 	}
 
 }

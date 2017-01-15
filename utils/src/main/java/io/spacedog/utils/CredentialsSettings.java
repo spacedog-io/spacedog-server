@@ -17,6 +17,8 @@ public class CredentialsSettings extends Settings {
 	public String linkedinFinalRedirectUri;
 	// in seconds
 	public long sessionMaximumLifetime = SESSION_DEFAULT_LIFETIME;
+	public int maximumInvalidChallenges = 0;
+	public int resetInvalidChallengesAfterMinutes = 60;
 
 	public String usernameRegex() {
 		return usernameRegex == null ? Usernames.USERNAME_DEFAULT_REGEX : usernameRegex;

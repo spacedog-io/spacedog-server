@@ -11,6 +11,8 @@ import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceEnv;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.utils.CredentialsSettings;
+import io.spacedog.utils.Passwords;
 import io.spacedog.utils.SpaceTest;
 
 public class CredentialsResourceTest extends SpaceTest {
@@ -197,5 +199,108 @@ public class CredentialsResourceTest extends SpaceTest {
 
 		// fred's credentials are disabled so he fails to log in
 		SpaceClient.login(fred, 401);
+	}
+
+	@Test
+	public void changePasswordInvalidatesAllTokens() {
+
+		// prepare
+		SpaceClient.prepareTest();
+		Backend test = SpaceClient.resetTestBackend();
+		User fred = SpaceClient.createTempCredentials(test.backendId, "fred");
+
+		// fred logs in
+		fred = SpaceClient.login(fred);
+
+		// fred logs in again creating a second session
+		User fred2 = SpaceClient.login(fred.backendId, fred.username, fred.password);
+
+		// fred can access data with his first token
+		SpaceRequest.get("/1/data").bearerAuth(fred).go(200);
+
+		// fred can access data with his second token
+		SpaceRequest.get("/1/data").bearerAuth(fred2).go(200);
+
+		// superadmin updates fred's password
+		String newPassword = Passwords.random();
+		SpaceRequest.put("/1/credentials/{id}")//
+				.routeParam("id", fred.id)//
+				.adminAuth(test)//
+				.body(FIELD_PASSWORD, newPassword)//
+				.go(200);
+
+		// fred can no longer access data with his first token now invalid
+		SpaceRequest.get("/1/data").bearerAuth(fred).go(401);
+
+		// fred can no longer access data with his second token now invalid
+		SpaceRequest.get("/1/data").bearerAuth(fred2).go(401);
+
+		// but fred can log in with his new password
+		SpaceClient.login(fred.backendId, fred.username, newPassword);
+	}
+
+	@Test
+	public void multipleInvalidPasswordChallengesDisableCredentials() {
+
+		// prepare
+		SpaceClient.prepareTest();
+		Backend test = SpaceClient.resetTestBackend();
+		User fred = SpaceClient.createTempCredentials(test.backendId, "fred");
+
+		SpaceRequest.get("/1/credentials/{id}").routeParam("id", fred.id)//
+				.adminAuth(test).go(200)//
+				.assertEquals(0, FIELD_INVALID_CHALLENGES)//
+				.assertNotPresent(FIELD_LAST_INVALID_CHALLENGE_AT);
+
+		// but fred can log in with his new password
+		SpaceClient.login(fred.backendId, fred.username, "XXX", 401);
+
+		SpaceRequest.get("/1/credentials/{id}").routeParam("id", fred.id)//
+				.adminAuth(test).go(200)//
+				.assertEquals(0, FIELD_INVALID_CHALLENGES)//
+				.assertNotPresent(FIELD_LAST_INVALID_CHALLENGE_AT);
+
+		CredentialsSettings settings = new CredentialsSettings();
+		settings.maximumInvalidChallenges = 2;
+		settings.resetInvalidChallengesAfterMinutes = 1;
+		SpaceClient.saveSettings(test, settings);
+
+		// fred tries to log in with an invalid password
+		SpaceClient.login(fred.backendId, fred.username, "XXX", 401);
+
+		// superadmin gets fred's credentials
+		// fred has 1 invalid password challenge
+		SpaceRequest.get("/1/credentials/{id}").routeParam("id", fred.id)//
+				.adminAuth(test).go(200)//
+				.assertEquals(1, FIELD_INVALID_CHALLENGES)//
+				.assertPresent(FIELD_LAST_INVALID_CHALLENGE_AT);
+
+		// fred tries to log in with an invalid password
+		SpaceClient.login(fred.backendId, fred.username, "XXX", 401);
+
+		// superadmin gets fred's credentials; fred has 2 invalid password
+		// challenge; his credentials has been disabled since equal to settings
+		// max
+		SpaceRequest.get("/1/credentials/{id}").routeParam("id", fred.id)//
+				.adminAuth(test).go(200)//
+				.assertEquals(false, FIELD_ENABLED)//
+				.assertEquals(2, FIELD_INVALID_CHALLENGES)//
+				.assertPresent(FIELD_LAST_INVALID_CHALLENGE_AT);
+
+		// fred's credentials are disabled since too many invalid
+		// password challenges in a period of time of 1 minutes
+		// he can no longer login
+		SpaceRequest.get("/1/login").userAuth(fred).go(401)//
+				.assertEquals("disabled-credentials", "error.code");
+
+		// superadmin enables fred's credentials
+		SpaceRequest.put("/1/credentials/{id}").routeParam("id", fred.id)//
+				.adminAuth(test).body(FIELD_ENABLED, true).go(200);
+
+		// fred can log in again
+		SpaceRequest.get("/1/login").userAuth(fred).go(200)//
+				.assertEquals(true, "credentials." + FIELD_ENABLED)//
+				.assertEquals(0, "credentials." + FIELD_INVALID_CHALLENGES)//
+				.assertNotPresent("credentials." + FIELD_LAST_INVALID_CHALLENGE_AT);
 	}
 }

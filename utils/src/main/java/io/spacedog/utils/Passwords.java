@@ -21,15 +21,15 @@ public class Passwords {
 	}
 
 	public static String checkAndHash(String password, Optional<String> regex) {
-		checkValid(password, regex);
+		check(password, regex);
 		return hash(password);
 	}
 
-	public static void checkValid(String password) {
-		checkValid(password, Optional.empty());
+	public static void check(String password) {
+		check(password, Optional.empty());
 	}
 
-	public static void checkValid(String password, Optional<String> regex) {
+	public static void check(String password, Optional<String> regex) {
 		Check.matchRegex(regex.orElse(PASSWORD_DEFAULT_REGEX), password, "password");
 	}
 

@@ -32,20 +32,20 @@ public class CredentialsTest extends Assert {
 	public void testEnabled() {
 		DateTime now = DateTime.now();
 
-		assertFalse(newCredentials(now.minusHours(2), now.minusHours(1)).enabled());
-		assertTrue(newCredentials(now.minusHours(2), now.plusHours(2)).enabled());
-		assertFalse(newCredentials(now.plusHours(1), now.plusHours(2)).enabled());
+		assertFalse(newCredentials(now.minusHours(2), now.minusHours(1)).isReallyEnabled());
+		assertTrue(newCredentials(now.minusHours(2), now.plusHours(2)).isReallyEnabled());
+		assertFalse(newCredentials(now.plusHours(1), now.plusHours(2)).isReallyEnabled());
 
-		assertTrue(newCredentials(now.minusHours(1), now.minusHours(2)).enabled());
-		assertFalse(newCredentials(now.plusHours(2), now.minusHours(2)).enabled());
-		assertFalse(newCredentials(now.plusHours(2), now.plusHours(1)).enabled());
+		assertTrue(newCredentials(now.minusHours(1), now.minusHours(2)).isReallyEnabled());
+		assertFalse(newCredentials(now.plusHours(2), now.minusHours(2)).isReallyEnabled());
+		assertFalse(newCredentials(now.plusHours(2), now.plusHours(1)).isReallyEnabled());
 
-		assertTrue(newCredentials(now.minusHours(2), null).enabled());
-		assertFalse(newCredentials(now.plusHours(2), null).enabled());
+		assertTrue(newCredentials(now.minusHours(2), null).isReallyEnabled());
+		assertFalse(newCredentials(now.plusHours(2), null).isReallyEnabled());
 
-		assertFalse(newCredentials(null, now.minusHours(2)).enabled());
-		assertTrue(newCredentials(null, now.plusHours(2)).enabled());
-		assertTrue(newCredentials(null, null).enabled());
+		assertFalse(newCredentials(null, now.minusHours(2)).isReallyEnabled());
+		assertTrue(newCredentials(null, now.plusHours(2)).isReallyEnabled());
+		assertTrue(newCredentials(null, null).isReallyEnabled());
 	}
 
 	private Credentials newCredentials(DateTime enableAfter, DateTime disableAfter) {

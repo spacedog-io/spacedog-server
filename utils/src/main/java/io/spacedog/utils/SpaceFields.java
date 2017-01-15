@@ -5,6 +5,8 @@ public interface SpaceFields {
 	String FIELD_ID = "id";
 	String FIELD_BACKEND_ID = "backendId";
 	String FIELD_PASSWORD = "password";
+	String FIELD_INVALID_CHALLENGES = "invalidChallenges";
+	String FIELD_LAST_INVALID_CHALLENGE_AT = "lastInvalidChallengeAt";
 	String FIELD_EMAIL = "email";
 	String FIELD_LEVEL = "level";
 	String FIELD_ENABLED = "enabled";

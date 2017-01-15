@@ -694,10 +694,10 @@ public class CredentialsResourceTestOften extends Assert {
 		SpaceRequest.put("/1/credentials/" + fred.id).basicAuth(fred)//
 				.body(Json.object("password", "hi fred2")).go(200);
 
-		// fred's old access token is still active
-		SpaceRequest.get("/1/credentials/" + fred.id).userAuth(fred).go(200);
+		// fred's old access token is not valid anymore
+		SpaceRequest.get("/1/credentials/" + fred.id).userAuth(fred).go(401);
 
-		// but fred's old password is not valid anymore
+		// fred's old password is not valid anymore
 		SpaceClient.login("test", "fred2", "hi fred", 401);
 
 		// fred logs in with his new username and password

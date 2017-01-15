@@ -221,7 +221,7 @@ public class SpaceContext {
 							.checkToken(backendId, authHeader.token());
 				}
 
-				userCredentials.checkEnabled();
+				userCredentials.checkReallyEnabled();
 				credentials = userCredentials;
 
 				// sets superdog backend id to the request backend id
