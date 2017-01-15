@@ -25,7 +25,7 @@ public class SpaceEnv {
 	}
 
 	public String superdogNotificationTopic() {
-		return get("spacedog.superdog.notification.topic");
+		return get("spacedog_superdog_notification_topic");
 	}
 
 	public boolean debug() {
