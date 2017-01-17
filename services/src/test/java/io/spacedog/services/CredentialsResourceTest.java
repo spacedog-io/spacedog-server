@@ -199,6 +199,29 @@ public class CredentialsResourceTest extends SpaceTest {
 
 		// fred's credentials are disabled so he fails to log in
 		SpaceClient.login(fred, 401);
+
+		// superadmin updates fred's credentials to remove enable and
+		// disable after dates so fred's credentials are enabled again
+		SpaceRequest.put("/1/credentials/{id}")//
+				.routeParam("id", fred.id)//
+				.adminAuth(test)//
+				.body(FIELD_DISABLE_AFTER, null, FIELD_ENABLE_AFTER, null)//
+				.go(200);
+
+		// fred's credentials are enabled again so he gets data
+		// with his old access token from first login
+		SpaceRequest.get("/1/data").bearerAuth(fred).go(200);
+
+		// fred's credentials are enabled again so he can log in
+		SpaceClient.login(fred);
+
+		// superadmin fails to update fred's credentials enable after date
+		// since invalid format
+		SpaceRequest.put("/1/credentials/{id}")//
+				.routeParam("id", fred.id)//
+				.adminAuth(test)//
+				.body(FIELD_ENABLE_AFTER, "XXX")//
+				.go(400);
 	}
 
 	@Test

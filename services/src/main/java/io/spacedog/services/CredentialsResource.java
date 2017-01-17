@@ -243,16 +243,18 @@ public class CredentialsResource extends Resource {
 			credentials.doEnableOrDisable(enabled.asBoolean());
 		}
 
-		String enableAfter = data.path(FIELD_ENABLE_AFTER).asText();
-		if (!Strings.isNullOrEmpty(enableAfter)) {
+		JsonNode enableAfter = data.get(FIELD_ENABLE_AFTER);
+		if (enableAfter != null) {
 			requester.checkAtLeastAdmin();
-			credentials.enableAfter(DateTime.parse(enableAfter));
+			credentials.enableAfter(enableAfter.isNull() ? null //
+					: DateTime.parse(enableAfter.asText()));
 		}
 
-		String disableAfter = data.path(FIELD_DISABLE_AFTER).asText();
-		if (!Strings.isNullOrEmpty(disableAfter)) {
+		JsonNode disableAfter = data.get(FIELD_DISABLE_AFTER);
+		if (disableAfter != null) {
 			requester.checkAtLeastAdmin();
-			credentials.disableAfter(DateTime.parse(disableAfter));
+			credentials.disableAfter(disableAfter.isNull() ? null //
+					: DateTime.parse(disableAfter.asText()));
 		}
 
 		// TODO check if at least one field has been changed
