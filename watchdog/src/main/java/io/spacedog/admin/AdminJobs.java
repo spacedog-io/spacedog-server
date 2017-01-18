@@ -1,5 +1,7 @@
 package io.spacedog.admin;
 
+import java.util.Optional;
+
 import com.google.common.base.Throwables;
 
 import io.spacedog.client.SpaceEnv;
@@ -33,15 +35,15 @@ public class AdminJobs {
 	}
 
 	static void notify(Object context, String titleSuffix, String message) {
+		SpaceEnv env = SpaceEnv.defaultEnv();
 		Internals.get().notify(//
-				SpaceEnv.defaultEnv().superdogNotificationTopic(), //
+				Optional.ofNullable(env.superdogNotificationTopic()), //
 				new StringBuilder(context.getClass().getSimpleName())//
 						.append(titleSuffix)//
 						.append(" (")//
-						.append(SpaceEnv.defaultEnv().target().host())//
+						.append(env.target().host())//
 						.append(")")//
 						.toString(), //
 				message);
 	}
-
 }

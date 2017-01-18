@@ -107,8 +107,12 @@ public class Utils {
 		Utils.info("%s = %s", nodeName, Json.toPrettyString(node));
 	}
 
+	public static void warn(String message, Object... arguments) {
+		System.err.println("[SpaceDog][Warning] " + String.format(message, arguments));
+	}
+
 	public static void warn(String message, Throwable t) {
-		System.err.println("[SpaceDog Warning] " + message);
+		System.err.println("[SpaceDog][Warning] " + message);
 		t.printStackTrace();
 	}
 

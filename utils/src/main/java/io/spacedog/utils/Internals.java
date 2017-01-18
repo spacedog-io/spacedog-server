@@ -1,6 +1,7 @@
 package io.spacedog.utils;
 
 import java.io.InputStream;
+import java.util.Optional;
 
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
@@ -13,11 +14,21 @@ public class Internals {
 	private AmazonSNSClient snsClient;
 	private AmazonS3Client s3Client;
 
-	public void notify(String topicId, String title, String message) {
-		snsClient.publish(new PublishRequest()//
-				.withTopicArn(topicId)//
-				.withSubject(title)//
-				.withMessage(message));
+	public void notify(Optional<String> topicId, String title, String message) {
+
+		try {
+			if (topicId.isPresent())
+				snsClient.publish(new PublishRequest()//
+						.withTopicArn(topicId.get())//
+						.withSubject(title)//
+						.withMessage(message));
+			else
+				Utils.warn("Unable to send internal notification [%s][%s]: no SNS topic id.", //
+						title, message);
+
+		} catch (Throwable ignore) {
+			ignore.printStackTrace();
+		}
 	}
 
 	public InputStream getFile(String repo, String key) {

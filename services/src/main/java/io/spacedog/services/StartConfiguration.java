@@ -150,8 +150,9 @@ public class StartConfiguration {
 				: Optional.of(Paths.get(path));
 	}
 
-	public String superdogAwsNotificationTopic() {
-		return configuration.getProperty(SPACEDOG_AWS_SUPERDOG_NOTIFICATION_TOPIC);
+	public Optional<String> superdogAwsNotificationTopic() {
+		return Optional.ofNullable(//
+				configuration.getProperty(SPACEDOG_AWS_SUPERDOG_NOTIFICATION_TOPIC));
 	}
 
 	public boolean isOffline() {
