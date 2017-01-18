@@ -10,12 +10,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.Suite;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
 
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.ClassPath.ClassInfo;
+
+import io.spacedog.utils.Exceptions;
 
 public class SpaceSuite extends Suite {
 
@@ -39,6 +42,11 @@ public class SpaceSuite extends Suite {
 		super(suiteClass, findTestClasses(suiteClass));
 	}
 
+	@Override
+	public void run(RunNotifier notifier) {
+		super.run(notifier);
+	}
+
 	private static Class<?>[] findTestClasses(Class<?> suiteClass) {
 
 		Class<? extends Annotation>[] annotations = checkSuiteAnnotations(suiteClass);
@@ -53,7 +61,7 @@ public class SpaceSuite extends Suite {
 
 			return classes.toArray(new Class<?>[classes.size()]);
 		} catch (IOException e) {
-			throw new RuntimeException(e);
+			throw Exceptions.runtime(e);
 		}
 	}
 
@@ -61,14 +69,14 @@ public class SpaceSuite extends Suite {
 		Annotations annotations = suiteClass.getAnnotation(Annotations.class);
 
 		if (annotations == null)
-			throw new IllegalArgumentException(//
-					String.format("Suites running with [%s] require an annotation of type [%s]",
-							SpaceSuite.class.getName(), Annotations.class.getName()));
+			throw Exceptions.illegalArgument(//
+					"Suites running with [%s] require an annotation of type [%s]", //
+					SpaceSuite.class.getName(), Annotations.class.getName());
 
 		if (annotations.value().length == 0)
-			throw new IllegalArgumentException(String.format(//
+			throw Exceptions.illegalArgument(//
 					"Annotation of type [%s] requires at least one value", //
-					Annotations.class.getName()));
+					Annotations.class.getName());
 
 		return annotations.value();
 	}
@@ -85,7 +93,7 @@ public class SpaceSuite extends Suite {
 			return Class.forName(info.getName(), false, //
 					Thread.currentThread().getContextClassLoader());
 		} catch (ClassNotFoundException e) {
-			throw new RuntimeException(e);
+			throw Exceptions.runtime(e);
 		}
 	}
 }
