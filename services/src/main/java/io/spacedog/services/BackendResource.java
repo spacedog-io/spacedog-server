@@ -63,7 +63,7 @@ public class BackendResource extends Resource {
 		CredentialsResource.get().deleteAll(credentials.target());
 		Start.get().getElasticClient().deleteAllIndices(credentials.target());
 
-		if (!SpaceContext.isTest() && !Start.get().configuration().isOffline()) {
+		if (isDeleteFilesAndShares()) {
 			FileResource.get().deleteAll();
 			ShareResource.get().deleteAll();
 		}
@@ -145,6 +145,12 @@ public class BackendResource extends Resource {
 					FIELD_USERNAME, superAdmin.name(), FIELD_EMAIL, superAdmin.email().get()));
 
 		return JsonPayload.json(Json.object("total", superAdmins.total, "results", results));
+	}
+
+	private boolean isDeleteFilesAndShares() {
+		return !SpaceContext.isTest() //
+				&& Start.get().configuration().awsRegion().isPresent() //
+				&& !Start.get().configuration().isOffline();
 	}
 
 	//

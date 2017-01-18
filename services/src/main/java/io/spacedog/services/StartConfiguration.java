@@ -75,6 +75,12 @@ public class StartConfiguration {
 
 	}
 
+	public Optional<String> get(String propertyName) {
+		String propertyValue = configuration.getProperty(SPACEDOG_AWS_REGION);
+		return Strings.isNullOrEmpty(propertyValue)//
+				? Optional.empty() : Optional.of(propertyValue);
+	}
+
 	public Path homePath() {
 		String path = configuration.getProperty(SPACEDOG_HOME_PATH);
 		return path == null //
@@ -123,12 +129,12 @@ public class StartConfiguration {
 				configuration.getProperty(SPACEDOG_PRODUCTION, "false"));
 	}
 
-	public String awsRegion() {
-		return configuration.getProperty(SPACEDOG_AWS_REGION);
+	public Optional<String> awsRegion() {
+		return get(SPACEDOG_AWS_REGION);
 	}
 
-	public String getAwsBucketPrefix() {
-		return configuration.getProperty(SPACEDOG_AWS_BUCKET_PREFIX);
+	public Optional<String> getAwsBucketPrefix() {
+		return get(SPACEDOG_AWS_BUCKET_PREFIX);
 	}
 
 	public String mailGunKey() {
@@ -151,8 +157,7 @@ public class StartConfiguration {
 	}
 
 	public Optional<String> superdogAwsNotificationTopic() {
-		return Optional.ofNullable(//
-				configuration.getProperty(SPACEDOG_AWS_SUPERDOG_NOTIFICATION_TOPIC));
+		return get(SPACEDOG_AWS_SUPERDOG_NOTIFICATION_TOPIC);
 	}
 
 	public boolean isOffline() {

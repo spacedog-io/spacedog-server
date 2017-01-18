@@ -40,7 +40,8 @@ public class S3Resource extends Resource {
 	private static MimetypesFileTypeMap typeMap = new MimetypesFileTypeMap();
 
 	static {
-		s3.setRegion(Region.getRegion(Regions.fromName(Start.get().configuration().awsRegion())));
+		String awsRegion = Start.get().configuration().awsRegion().orElse("eu-west-1");
+		s3.setRegion(Region.getRegion(Regions.fromName(awsRegion)));
 	}
 
 	public Payload doGet(String bucketSuffix, String backendId, WebPath path, Context context) {

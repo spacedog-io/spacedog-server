@@ -386,9 +386,12 @@ public class SnapshotResource extends Resource {
 			} else {
 
 				this.type = "s3";
+				String awsRegion = conf.awsRegion().orElseThrow(//
+						() -> Exceptions.runtime("no AWS region configuration"));
+
 				this.settings = Settings.builder()//
 						.put("bucket", getBucketName(BUCKET_SUFFIX))//
-						.put("region", conf.awsRegion())//
+						.put("region", awsRegion)//
 						.put("base_path", this.id)//
 						.put("compress", true)//
 						.build();
