@@ -34,6 +34,8 @@ public class StartConfiguration {
 	private static final String SPACEDOG_SERVER_PORT = "spacedog.server.port";
 	private static final String SPACEDOG_API_URL_SCHEME = "spacedog.api.url.scheme";
 	private static final String SPACEDOG_API_URL_BASE = "spacedog.api.url.base";
+	private static final String SPACEDOG_ONLY_SUPERDOG_CAN_CREATE_BACKEND //
+	= "spacedog.only.superdog.can.create.backend";
 
 	private Properties configuration = new Properties();
 
@@ -52,6 +54,7 @@ public class StartConfiguration {
 		check(SPACEDOG_PRODUCTION, isProduction());
 		check(SPACEDOG_OFFLINE, isOffline());
 		check(SPACEDOG_SERVER_PORT, serverPort());
+		check(SPACEDOG_ONLY_SUPERDOG_CAN_CREATE_BACKEND, onlySuperdogCanCreateBackend());
 
 		check("API URL", apiUrl());
 
@@ -180,6 +183,11 @@ public class StartConfiguration {
 		} catch (UnknownHostException e) {
 			throw Exceptions.illegalState(e, "no IP address for server");
 		}
+	}
+
+	public boolean onlySuperdogCanCreateBackend() {
+		return Boolean.parseBoolean(configuration.getProperty(//
+				SPACEDOG_ONLY_SUPERDOG_CAN_CREATE_BACKEND, "true"));
 	}
 
 	//

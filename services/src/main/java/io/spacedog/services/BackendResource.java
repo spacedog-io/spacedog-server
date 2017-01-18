@@ -84,6 +84,9 @@ public class BackendResource extends Resource {
 
 		Backends.checkIfIdIsValid(backendId);
 
+		if (Start.get().configuration().onlySuperdogCanCreateBackend())
+			SpaceContext.checkSuperDogCredentials();
+
 		if (existsBackend(backendId))
 			return JsonPayload.invalidParameters("backendId", backendId,
 					String.format("backend id [%s] not available", backendId));
