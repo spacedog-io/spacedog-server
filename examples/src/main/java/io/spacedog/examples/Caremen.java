@@ -17,6 +17,7 @@ import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceEnv;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTarget;
+import io.spacedog.utils.CredentialsSettings;
 import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.MailSettings;
@@ -62,6 +63,7 @@ public class Caremen extends SpaceClient {
 		// initFareSettings();
 		// initAppConfigurationSettings();
 		// initReferences();
+		// initCredentials();
 		// initSettingsSettings();
 
 		// setSchema(buildCourseSchema(), backend);
@@ -80,6 +82,12 @@ public class Caremen extends SpaceClient {
 	//
 	// Settings
 	//
+
+	private void initCredentials() {
+		CredentialsSettings settings = new CredentialsSettings();
+		settings.sessionMaximumLifetime = 60 * 60 * 24 * 7;
+		SpaceClient.saveSettings(backend, settings);
+	}
 
 	void initMailSettings() {
 		MailSettings settings = new MailSettings();
