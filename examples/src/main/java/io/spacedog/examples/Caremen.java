@@ -3,6 +3,8 @@
  */
 package io.spacedog.examples;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Collections;
 
 import org.junit.Test;
@@ -12,6 +14,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.io.Resources;
 
 import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceEnv;
@@ -49,12 +52,11 @@ public class Caremen extends SpaceClient {
 	private Backend backend;
 
 	@Test
-	public void initCaremenBackend() {
+	public void initCaremenBackend() throws IOException {
 
 		backend = DEV;
 		SpaceRequest.env().target(SpaceTarget.production);
 
-		// resetBackend(backend);
 		// initInstallations();
 		// initVehiculeTypes();
 		// initStripeSettings();
@@ -83,13 +85,13 @@ public class Caremen extends SpaceClient {
 	// Settings
 	//
 
-	private void initCredentials() {
+	void initCredentials() {
 		CredentialsSettings settings = new CredentialsSettings();
 		settings.sessionMaximumLifetime = 60 * 60 * 24 * 7;
 		SpaceClient.saveSettings(backend, settings);
 	}
 
-	void initMailSettings() {
+	void initMailSettings() throws IOException {
 		MailSettings settings = new MailSettings();
 
 		settings.smtp = new SmtpSettings();
@@ -128,10 +130,13 @@ public class Caremen extends SpaceClient {
 		template = new MailTemplate();
 		template.from = "CAREMEN <no-reply@caremen.fr>";
 		template.to = Lists.newArrayList("{{to}}");
-		template.subject = "Bienvenue chez Caremen";
-		template.text = "Bienvenu chez Caremen";
+		template.subject = "Bienvenue chez CAREMEN";
+		template.html = Resources.toString(//
+				Resources.getResource(this.getClass(), "caremen-welcome.html"), //
+				Charset.forName("UTF-8"));
 		template.model = Maps.newHashMap();
 		template.model.put("to", "string");
+		template.model.put("customer", "customer");
 		template.roles = Collections.singleton("user");
 
 		settings.templates.put("notif-customer-welcome", template);
@@ -287,7 +292,7 @@ public class Caremen extends SpaceClient {
 				.node("vehiculeTypes", //
 						Json.object("classic", "Classic Berline", //
 								"premium", "Premium Berline", "green", "Green Berline", //
-								"break", "Breack", "van", "Van"))//
+								"break", "Break", "van", "Van"))//
 
 				.node("companyStatuses", //
 						Json.array("enabled", "disabled"))//
