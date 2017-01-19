@@ -79,7 +79,7 @@ public class StartConfiguration {
 	}
 
 	public Optional<String> get(String propertyName) {
-		String propertyValue = configuration.getProperty(SPACEDOG_AWS_REGION);
+		String propertyValue = configuration.getProperty(propertyName);
 		return Strings.isNullOrEmpty(propertyValue)//
 				? Optional.empty() : Optional.of(propertyValue);
 	}
