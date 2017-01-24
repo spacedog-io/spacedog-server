@@ -21,7 +21,7 @@ public class SpaceEnv {
 	}
 
 	public SpaceEnv(Properties properties) {
-		this.properties = new Properties(properties);
+		this.properties = properties;
 	}
 
 	public String superdogNotificationTopic() {
@@ -78,6 +78,11 @@ public class SpaceEnv {
 		return value == null ? defaultValue : Integer.parseInt(value);
 	}
 
+	public void log() {
+		Utils.info("Env =");
+		properties.forEach((key, value) -> Utils.info("-- %s: %s", key, value));
+	}
+
 	//
 	// Implementation
 	//
@@ -122,9 +127,10 @@ public class SpaceEnv {
 				if (input != null)
 					properties.load(input);
 
-				Utils.info("Env = %s", properties);
-
 				defaultEnv = new SpaceEnv(properties);
+
+				if (defaultEnv.debug())
+					defaultEnv.log();
 
 			} catch (IOException e) {
 				throw Exceptions.runtime(e, "error loading env properties");
