@@ -75,6 +75,7 @@ public class Caremen extends SpaceClient {
 		// setSchema(buildCustomerCompanySchema(), backend);
 		// setSchema(buildCompanySchema(), backend);
 
+		// deleteAllCredentialsButSuperAdmins();
 		// createOperatorCredentials();
 		// createCashierCredentials();
 		// createReminderCredentials();
@@ -84,6 +85,10 @@ public class Caremen extends SpaceClient {
 	//
 	// Settings
 	//
+
+	private void deleteAllCredentialsButSuperAdmins() {
+		SpaceClient.deleteAllCredentialsButSuperAdmins(backend);
+	}
 
 	void initCredentials() {
 		CredentialsSettings settings = new CredentialsSettings();
@@ -170,9 +175,9 @@ public class Caremen extends SpaceClient {
 		StripeSettings settings = new StripeSettings();
 		settings.rolesAllowedToCharge = Sets.newHashSet("cashier");
 
-		settings.secretKey = backend == PRODUCTION //
-				? SpaceEnv.defaultEnv().get("caremen.stripe.prod.secret.key") //
-				: SpaceEnv.defaultEnv().get("caremen.stripe.test.secret.key");
+		settings.secretKey = backend == DEV //
+				? SpaceEnv.defaultEnv().get("caremen.stripe.test.secret.key")//
+				: SpaceEnv.defaultEnv().get("caremen.stripe.prod.secret.key");
 
 		SpaceClient.saveSettings(backend, settings);
 	}

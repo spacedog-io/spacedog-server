@@ -336,4 +336,8 @@ public class SpaceClient implements SpaceFields, SpaceParams {
 				.routeParam("id", user.id).routeParam("role", role).go(200);
 	}
 
+	public static void deleteAllCredentialsButSuperAdmins(Backend backend) {
+		SpaceRequest.delete("/1/credentials").adminAuth(backend).go(200);
+	}
+
 }
