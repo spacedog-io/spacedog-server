@@ -328,6 +328,7 @@ public class Caremen extends SpaceClient {
 				.string("status")//
 				.text("firstname").french()//
 				.text("lastname").french()//
+				.text("notes").french()//
 				.string("phone")//
 
 				.object("billing")//
@@ -513,6 +514,7 @@ public class Caremen extends SpaceClient {
 				.string("vatId")//
 				.text("name").french()//
 				.text("address").french()//
+				.text("notes").french()//
 				.string("phone")//
 				.string("email")//
 				.bool("active")//
