@@ -48,9 +48,12 @@ public class SmtpEmail extends Assert {
 	@Test
 	public void testApacheCommons() throws Exception {
 
+		System.setProperty("http.agent", "SpaceDog Server");
+
 		// load your HTML email template
 		String htmlEmailTemplate = Resources.toString(//
-				Resources.getResource("io/spacedog/examples/email.html"), Utils.UTF8);
+				Resources.getResource(this.getClass(), "caremen-welcome.html"), //
+				Utils.UTF8);
 
 		// define you base URL to resolve relative resource locations
 		URL url = new URL("http://www.apache.org");
@@ -60,7 +63,7 @@ public class SmtpEmail extends Assert {
 		email.setDebug(true);
 		email.setDataSourceResolver(new DataSourceUrlResolver(url));
 		email.setHostName("mail.gandi.net");
-		email.addTo("hello@spacedog.io", "Hello SpaceDog");
+		email.addTo("attias666@gmail.com", "David Attias");
 		email.setFrom("david@spacedog.io", "David Attias");
 		email.setSubject("Test email with inline image");
 
@@ -77,4 +80,5 @@ public class SmtpEmail extends Assert {
 		email.setSSLOnConnect(true);
 		email.send();
 	}
+
 }

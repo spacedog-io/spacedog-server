@@ -51,23 +51,25 @@ public class Start {
 	}
 
 	public static void main(String[] args) {
+		DateTimeZone.setDefault(DateTimeZone.forID("Europe/Paris"));
+		Start start = get();
+		System.setProperty("http.agent", start.configuration().serverUserAgent());
+
 		try {
-			DateTimeZone.setDefault(DateTimeZone.forID("Europe/Paris"));
-			get();
-			singleton.startElasticNode();
-			singleton.initServices();
-			singleton.upgradeAndCleanUp();
-			singleton.startFluent();
+			start.startElasticNode();
+			start.initServices();
+			start.upgradeAndCleanUp();
+			start.startFluent();
 
 		} catch (Throwable t) {
 			t.printStackTrace();
-			if (singleton != null) {
-				if (singleton.fluent != null)
-					singleton.fluent.stop();
-				if (singleton.elastic != null)
-					singleton.elastic.close();
-				if (singleton.elasticNode != null)
-					singleton.elastic.close();
+			if (start != null) {
+				if (start.fluent != null)
+					start.fluent.stop();
+				if (start.elastic != null)
+					start.elastic.close();
+				if (start.elasticNode != null)
+					start.elastic.close();
 			}
 			System.exit(-1);
 		}

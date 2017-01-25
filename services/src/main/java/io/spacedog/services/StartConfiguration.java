@@ -36,6 +36,7 @@ public class StartConfiguration {
 	private static final String SPACEDOG_API_URL_BASE = "spacedog.api.url.base";
 	private static final String SPACEDOG_ONLY_SUPERDOG_CAN_CREATE_BACKEND //
 	= "spacedog.only.superdog.can.create.backend";
+	private static final String SPACEDOG_SERVER_USER_AGENT = "spacedog.server.user.agent";
 
 	private Properties configuration = new Properties();
 
@@ -188,6 +189,10 @@ public class StartConfiguration {
 	public boolean onlySuperdogCanCreateBackend() {
 		return Boolean.parseBoolean(configuration.getProperty(//
 				SPACEDOG_ONLY_SUPERDOG_CAN_CREATE_BACKEND, "true"));
+	}
+
+	public String serverUserAgent() {
+		return configuration.getProperty(SPACEDOG_SERVER_USER_AGENT, "SpaceDog Server");
 	}
 
 	//
