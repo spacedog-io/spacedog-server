@@ -5,29 +5,26 @@ package io.spacedog.services;
 
 import java.util.Arrays;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.SpaceClient;
-import io.spacedog.client.SpaceClient.Backend;
-import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Schema;
 
-public class UserResourceTest extends Assert {
+public class UserResourceTest extends SpaceTest {
 
 	@Test
 	public void dataEndpointsBehaveTheSameThanUserEnpoints() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 
 		// admin sets user schema
-		SpaceClient.setSchema(//
+		setSchema(//
 				Schema.builder("user").id("username").string("username").string("email").build(), //
 				test);
 
@@ -81,11 +78,11 @@ public class UserResourceTest extends Assert {
 	@Test
 	public void userIsSigningUpAndMore() {
 
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 
 		// admin sets user schema
-		SpaceClient.setSchema(//
+		setSchema(//
 				Schema.builder("user").id("username").string("username").string("email").build(), //
 				test);
 
@@ -158,11 +155,11 @@ public class UserResourceTest extends Assert {
 	public void usersCanReadOtherUsersPersonalData() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 
 		// admin sets user schema
-		SpaceClient.setSchema(//
+		setSchema(//
 				Schema.builder("user").id("username").string("username").string("email").build(), //
 				test);
 
@@ -199,11 +196,11 @@ public class UserResourceTest extends Assert {
 
 		// prepare
 
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 
 		// admin sets user schema
-		SpaceClient.setSchema(//
+		setSchema(//
 				Schema.builder("user").id("username").string("username").string("email").build(), //
 				test);
 
@@ -311,11 +308,11 @@ public class UserResourceTest extends Assert {
 	@Test
 	public void setUserCustomSchemaAndMore() {
 
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 
 		// admin sets user schema
-		SpaceClient.setSchema(//
+		setSchema(//
 				Schema.builder("user").id("username").string("username").string("email").build(), //
 				test);
 

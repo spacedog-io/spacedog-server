@@ -16,10 +16,8 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
-import io.spacedog.client.SpaceClient;
-import io.spacedog.client.SpaceClient.Backend;
-import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.ShareSettings;
@@ -27,7 +25,7 @@ import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
 @TestOncePerDay
-public class ShareResourceTestOncePerDay extends Assert {
+public class ShareResourceTestOncePerDay extends SpaceTest {
 
 	private static final String FILE_CONTENT = "This is a test file!";
 
@@ -35,10 +33,10 @@ public class ShareResourceTestOncePerDay extends Assert {
 	public void shareWithDefaultSettings() throws IOException {
 
 		// prepare
-		SpaceClient.prepareTest(false);
-		Backend test = SpaceClient.resetTestBackend();
-		User vince = SpaceClient.signUp(test, "vince", "hi vince", "vince@dog.com");
-		User fred = SpaceClient.signUp(test, "fred", "hi fred", "fred@dog.com");
+		prepareTest(false);
+		Backend test = resetTestBackend();
+		User vince = signUp(test, "vince", "hi vince", "vince@dog.com");
+		User fred = signUp(test, "fred", "hi fred", "fred@dog.com");
 
 		// only admin can get all shared locations
 		SpaceRequest.get("/1/share").backend(test).go(403);
@@ -182,10 +180,10 @@ public class ShareResourceTestOncePerDay extends Assert {
 	public void shareWithCustomSettings() throws IOException {
 
 		// prepare
-		SpaceClient.prepareTest(false);
-		Backend test = SpaceClient.resetTestBackend();
-		User vince = SpaceClient.signUp(test, "vince", "hi vince", "vince@dog.com");
-		User fred = SpaceClient.signUp(test, "fred", "hi fred", "fred@dog.com");
+		prepareTest(false);
+		Backend test = resetTestBackend();
+		User vince = signUp(test, "vince", "hi vince", "vince@dog.com");
+		User fred = signUp(test, "fred", "hi fred", "fred@dog.com");
 		byte[] pngBytes = Resources.toByteArray(//
 				Resources.getResource("io/spacedog/watchdog/tweeter.png"));
 
@@ -196,7 +194,7 @@ public class ShareResourceTestOncePerDay extends Assert {
 		settings.acl.put("user", Sets.newHashSet(DataPermission.create, DataPermission.read, //
 				DataPermission.delete));
 		settings.acl.put("admin", Sets.newHashSet(DataPermission.delete_all, DataPermission.search));
-		SpaceClient.saveSettings(test, settings);
+		saveSettings(test, settings);
 
 		// only admin can get all shared locations
 		SpaceRequest.get("/1/share").backend(test).go(403);
@@ -264,7 +262,7 @@ public class ShareResourceTestOncePerDay extends Assert {
 	public void testSharingWithContentDispositionAndEscaping() {
 
 		// prepare
-		Backend test = SpaceClient.resetTestBackend();
+		Backend test = resetTestBackend();
 
 		// share file with name that needs escaping
 		ObjectNode json = SpaceRequest.put("/1/share/{fileName}")//

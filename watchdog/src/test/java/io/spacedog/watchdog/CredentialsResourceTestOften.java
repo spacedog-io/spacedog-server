@@ -4,29 +4,26 @@
 package io.spacedog.watchdog;
 
 import org.joda.time.DateTime;
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
-import io.spacedog.client.SpaceClient;
-import io.spacedog.client.SpaceClient.Backend;
-import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.CredentialsSettings;
 import io.spacedog.utils.Json;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
-public class CredentialsResourceTestOften extends Assert {
+public class CredentialsResourceTestOften extends SpaceTest {
 
 	@Test
 	public void userIsSigningUpAndMore() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 
 		// fails since empty user body
 		SpaceRequest.post("/1/credentials/").backend(test)//
@@ -103,7 +100,7 @@ public class CredentialsResourceTestOften extends Assert {
 		SpaceRequest.get("/1/credentials/" + vince.id).backend(test).go(403);
 
 		// another user fails to get vince credentials
-		User fred = SpaceClient.signUp(test, "fred", "hi fred");
+		User fred = signUp(test, "fred", "hi fred");
 		SpaceRequest.get("/1/credentials/" + vince.id).userAuth(fred).go(403);
 
 		// vince succeeds to login
@@ -117,15 +114,15 @@ public class CredentialsResourceTestOften extends Assert {
 	public void testAccessTokenAndExpiration() throws InterruptedException {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		Backend test2 = SpaceClient.resetTest2Backend();
+		prepareTest();
+		Backend test = resetTestBackend();
+		Backend test2 = resetTest2Backend();
 
 		// fails to access backend if unknown token
 		SpaceRequest.get("/1/data").bearerAuth(test, "XXX").go(401);
 
 		// vince signs up and get a brand new access token
-		User vince = SpaceClient.signUp(test, "vince", "hi vince");
+		User vince = signUp(test, "vince", "hi vince");
 
 		// vince request fails because wrong backend
 		SpaceRequest.get("/1/data").bearerAuth(test2, vince.accessToken).go(401);
@@ -169,7 +166,7 @@ public class CredentialsResourceTestOften extends Assert {
 
 		// if vince logs in again with its password
 		// he gets a new access token
-		vince = SpaceClient.login(vince);
+		vince = login(vince);
 		assertNotEquals(vince.accessToken, vinceOldAccessToken);
 
 		// vince can access data with its new token
@@ -208,22 +205,22 @@ public class CredentialsResourceTestOften extends Assert {
 	public void accessTokenMaximumLifetime() throws InterruptedException {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		User fred = SpaceClient.createCredentials(test.backendId, "fred", "hi fred");
+		prepareTest();
+		Backend test = resetTestBackend();
+		User fred = createCredentials(test.backendId, "fred", "hi fred");
 
 		// admin saves settings with token max lifetime set to 3s
 		CredentialsSettings settings = new CredentialsSettings();
 		settings.sessionMaximumLifetime = 3; // seconds
-		SpaceClient.saveSettings(test, settings);
+		saveSettings(test, settings);
 
 		// fred fails to login with a token lifetime of 4s
 		// since max token lifetime is 3s
-		SpaceClient.login(4, fred, 403);
+		login(4, fred, 403);
 
 		// fred logs in with a token lifetime of 2s
 		// since max token lifetime is 3s
-		fred = SpaceClient.login(2, fred);
+		fred = login(2, fred);
 		SpaceRequest.get("/1/data").bearerAuth(fred).go(200);
 
 		// after lifetime, token expires
@@ -235,10 +232,10 @@ public class CredentialsResourceTestOften extends Assert {
 	public void deleteCredentials() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		User fred = SpaceClient.signUp(test, "fred", "hi fred");
-		User vince = SpaceClient.signUp(test, "vince", "hi vince");
+		prepareTest();
+		Backend test = resetTestBackend();
+		User fred = signUp(test, "fred", "hi fred");
+		User vince = signUp(test, "vince", "hi vince");
 
 		// vince and fred can login
 		SpaceRequest.get("/1/login").userAuth(vince).go(200);
@@ -267,10 +264,10 @@ public class CredentialsResourceTestOften extends Assert {
 	public void searchAndDeleteCredentials() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		User fred = SpaceClient.signUp(test, "fred", "hi fred");
-		User vince = SpaceClient.signUp(test, "vince", "hi vince");
+		prepareTest();
+		Backend test = resetTestBackend();
+		User fred = signUp(test, "fred", "hi fred");
+		User vince = signUp(test, "vince", "hi vince");
 
 		// vince searches for all credentials
 		SpaceRequest.get("/1/credentials").userAuth(vince).go(200)//
@@ -331,9 +328,9 @@ public class CredentialsResourceTestOften extends Assert {
 
 		// prepare
 
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		SpaceClient.signUp(test, "toto", "hi toto");
+		prepareTest();
+		Backend test = resetTestBackend();
+		signUp(test, "toto", "hi toto");
 
 		// sign up without password should succeed
 
@@ -451,21 +448,21 @@ public class CredentialsResourceTestOften extends Assert {
 	public void credentialsAreDeletedWhenBackendIsDeleted() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		User fred = SpaceClient.signUp(test, "fred", "hi fred");
+		prepareTest();
+		Backend test = resetTestBackend();
+		User fred = signUp(test, "fred", "hi fred");
 
 		// fred can login
 		SpaceRequest.get("/1/login").userAuth(fred).go(200);
 
 		// admin deletes backend
-		SpaceClient.deleteBackend(test);
+		deleteBackend(test);
 
 		// fred fails to login since backend is no more
 		SpaceRequest.get("/1/login").userAuth(fred).go(401);
 
 		// admin creates backend with the same name
-		SpaceClient.createBackend(test);
+		createBackend(test);
 
 		// fred fails to login since backend is brand new
 		SpaceRequest.get("/1/login").userAuth(fred).go(401);
@@ -475,9 +472,9 @@ public class CredentialsResourceTestOften extends Assert {
 	public void getPutAndDeleteUserCredentialsRoles() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		User fred = SpaceClient.signUp(test, "fred", "hi fred", "fred@dog.com");
+		prepareTest();
+		Backend test = resetTestBackend();
+		User fred = signUp(test, "fred", "hi fred", "fred@dog.com");
 
 		// fred gets his credentials roles
 		SpaceRequest.get("/1/credentials/" + fred.id + "/roles")//
@@ -518,14 +515,14 @@ public class CredentialsResourceTestOften extends Assert {
 	public void disableGuestSignUp() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		User fred = SpaceClient.signUp(test, "fred", "hi fred");
+		prepareTest();
+		Backend test = resetTestBackend();
+		User fred = signUp(test, "fred", "hi fred");
 
 		// admin disables guest sign up
 		CredentialsSettings settings = new CredentialsSettings();
 		settings.disableGuestSignUp = true;
-		SpaceClient.saveSettings(test, settings);
+		saveSettings(test, settings);
 
 		// guest can not create credentials
 		SpaceRequest.post("/1/credentials").backend(test)//
@@ -557,11 +554,11 @@ public class CredentialsResourceTestOften extends Assert {
 	public void testUsernameAndPasswordRegexSettings() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 
 		// get default username and password settings
-		CredentialsSettings settings = SpaceClient.loadSettings(test, CredentialsSettings.class);
+		CredentialsSettings settings = loadSettings(test, CredentialsSettings.class);
 		assertNotNull(settings.usernameRegex);
 		assertNotNull(settings.passwordRegex);
 
@@ -583,7 +580,7 @@ public class CredentialsResourceTestOften extends Assert {
 		// set username and password specific regex
 		settings.usernameRegex = "[a-zA-Z]{3,}";
 		settings.passwordRegex = "[a-zA-Z]{3,}";
-		SpaceClient.saveSettings(test, settings);
+		saveSettings(test, settings);
 
 		// invalid username considering new username regex
 		SpaceRequest.post("/1/credentials").backend(test)//
@@ -605,9 +602,9 @@ public class CredentialsResourceTestOften extends Assert {
 	public void adminCreatesOthersAdminCredentials() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		User fred = SpaceClient.signUp(test, "fred", "hi fred");
+		prepareTest();
+		Backend test = resetTestBackend();
+		User fred = signUp(test, "fred", "hi fred");
 
 		// fred fails to create admin credentials
 		SpaceRequest.post("/1/credentials").userAuth(fred)
@@ -635,9 +632,9 @@ public class CredentialsResourceTestOften extends Assert {
 		// TODO move these tests to the setAndResetPasswords test
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		User fred = SpaceClient.signUp(test, "fred", "hi fred");
+		prepareTest();
+		Backend test = resetTestBackend();
+		User fred = signUp(test, "fred", "hi fred");
 
 		// fred fails to update his password
 		// since his password is not challenged
@@ -660,9 +657,9 @@ public class CredentialsResourceTestOften extends Assert {
 	public void updateUsernameEmailAndPassword() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		User fred = SpaceClient.signUp(test, "fred", "hi fred");
+		prepareTest();
+		Backend test = resetTestBackend();
+		User fred = signUp(test, "fred", "hi fred");
 
 		// fred fails to updates his username
 		// since password must be challenged
@@ -674,8 +671,8 @@ public class CredentialsResourceTestOften extends Assert {
 		SpaceRequest.put("/1/credentials/" + fred.id).basicAuth(fred)//
 				.body(Json.object("username", "fred2")).go(200);
 
-		SpaceClient.login("test", "fred", "hi fred", 401);
-		fred = SpaceClient.login("test", "fred2", "hi fred");
+		login("test", "fred", "hi fred", 401);
+		fred = login("test", "fred2", "hi fred");
 
 		// superadmin updates fred's email
 		SpaceRequest.put("/1/credentials/" + fred.id).basicAuth(test)//
@@ -698,19 +695,19 @@ public class CredentialsResourceTestOften extends Assert {
 		SpaceRequest.get("/1/credentials/" + fred.id).userAuth(fred).go(401);
 
 		// fred's old password is not valid anymore
-		SpaceClient.login("test", "fred2", "hi fred", 401);
+		login("test", "fred2", "hi fred", 401);
 
 		// fred logs in with his new username and password
-		fred = SpaceClient.login("test", "fred2", "hi fred2");
+		fred = login("test", "fred2", "hi fred2");
 	}
 
 	@Test
 	public void disableCredentials() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		User fred = SpaceClient.signUp(test, "fred", "hi fred");
+		prepareTest();
+		Backend test = resetTestBackend();
+		User fred = signUp(test, "fred", "hi fred");
 
 		// fred logs in
 		SpaceRequest.get("/1/login").userAuth(fred).go(200);
@@ -769,12 +766,12 @@ public class CredentialsResourceTestOften extends Assert {
 	public void userCanNotAccessAnotherBackend() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		Backend test2 = SpaceClient.resetTest2Backend();
+		prepareTest();
+		Backend test = resetTestBackend();
+		Backend test2 = resetTest2Backend();
 
-		String testAdminUserToken = SpaceClient.login(test.adminUser).accessToken;
-		String test2AdminUserToken = SpaceClient.login(test2.adminUser).accessToken;
+		String testAdminUserToken = login(test.adminUser).accessToken;
+		String test2AdminUserToken = login(test2.adminUser).accessToken;
 
 		// user of a backend can not access another backend
 		SpaceRequest.get("/1/data").backend(test2).bearerAuth(testAdminUserToken).go(401);
@@ -785,11 +782,11 @@ public class CredentialsResourceTestOften extends Assert {
 	public void expiredSessionsArePurged() throws InterruptedException {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 
 		// superadmin logs in with session lifetime of 1 second
-		String firstToken = SpaceClient.login(1, test.adminUser).accessToken;
+		String firstToken = login(1, test.adminUser).accessToken;
 
 		// wait for session to expire
 		Thread.sleep(1000);
@@ -806,7 +803,7 @@ public class CredentialsResourceTestOften extends Assert {
 		// superadmin logs in again and create a second session
 		// this means superadmin credentials is updated
 		// this means expired session token are purged
-		SpaceClient.login(test.adminUser);
+		login(test.adminUser);
 
 		// check expired session token is "invalid"
 		// this means expired session has been purged

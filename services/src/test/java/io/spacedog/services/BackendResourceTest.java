@@ -3,23 +3,21 @@
  */
 package io.spacedog.services;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Iterators;
 
-import io.spacedog.client.SpaceClient;
-import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
+import io.spacedog.client.SpaceTest;
 
-public class BackendResourceTest extends Assert {
+public class BackendResourceTest extends SpaceTest {
 
 	@Test
 	public void rootBackendShallNotBeDeleted() {
 		// prepare
-		SpaceClient.prepareTest();
+		prepareTest();
 
 		// root backend can not be deleted
 		SpaceRequest.delete("/1/backend").superdogAuth().go(400);
@@ -30,9 +28,9 @@ public class BackendResourceTest extends Assert {
 
 		// prepare
 
-		SpaceClient.prepareTest();
-		Backend aaaa = SpaceClient.resetBackend("aaaa", "aaaa", "hi aaaa");
-		Backend zzzz = SpaceClient.resetBackend("zzzz", "zzzz", "hi zzzz");
+		prepareTest();
+		Backend aaaa = resetBackend("aaaa", "aaaa", "hi aaaa");
+		Backend zzzz = resetBackend("zzzz", "zzzz", "hi zzzz");
 
 		// super admin gets his backend
 

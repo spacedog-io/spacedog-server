@@ -2,20 +2,17 @@ package io.spacedog.services.mail;
 
 import java.io.IOException;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.io.Resources;
 
-import io.spacedog.client.SpaceClient;
-import io.spacedog.client.SpaceClient.Backend;
-import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.MailSettings;
 import io.spacedog.utils.MailSettings.SmtpSettings;
 import io.spacedog.utils.Utils;
 
-public class MailResourceTest extends Assert {
+public class MailResourceTest extends SpaceTest {
 
 	private static final String DEFAULT_FROM = "david@spacedog.io";
 	private static final String DEFAULT_TO = "platform@spacedog.io";
@@ -25,9 +22,9 @@ public class MailResourceTest extends Assert {
 	@Test
 	public void sendEmails() throws IOException {
 
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		User vince = SpaceClient.signUp(test, "vince", "hi vince");
+		prepareTest();
+		Backend test = resetTestBackend();
+		User vince = signUp(test, "vince", "hi vince");
 
 		// by default users can not send emails
 		SpaceRequest.post("/1/mail").userAuth(vince).go(403);
@@ -42,7 +39,7 @@ public class MailResourceTest extends Assert {
 		// admin allows users to send emails
 		MailSettings settings = new MailSettings();
 		settings.enableUserFullAccess = true;
-		SpaceClient.saveSettings(test, settings);
+		saveSettings(test, settings);
 
 		// now vince can email a simple html message
 		SpaceRequest.post("/1/mail").userAuth(vince)//
@@ -68,7 +65,7 @@ public class MailResourceTest extends Assert {
 		settings.mailgun = new MailSettings.MailGunSettings();
 		settings.mailgun.domain = "api.spacedog.io";
 		settings.mailgun.key = "123456789";
-		SpaceClient.saveSettings(test, settings);
+		saveSettings(test, settings);
 
 		// admin fails to email since mailgun key is invalid
 		SpaceRequest.post("/1/mail").adminAuth(test)//
@@ -85,7 +82,7 @@ public class MailResourceTest extends Assert {
 		settings.smtp.sslOnConnect = true;
 		settings.smtp.login = SpaceRequest.env().get("spacedog.test.smtp.login");
 		settings.smtp.password = SpaceRequest.env().get("spacedog.test.smtp.password");
-		SpaceClient.saveSettings(test, settings);
+		saveSettings(test, settings);
 
 		// load your HTML email template
 		String emailBody = Resources.toString(//

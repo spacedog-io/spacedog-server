@@ -18,20 +18,20 @@ import com.stripe.exception.CardException;
 import com.stripe.exception.InvalidRequestException;
 import com.stripe.model.Token;
 
-import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.StripeSettings;
 
-public class StripeResourceTest extends SpaceClient {
+public class StripeResourceTest extends SpaceTest {
 
 	@Test
 	public void testStripeServices() throws AuthenticationException, InvalidRequestException, APIConnectionException,
 			CardException, APIException {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		User david = SpaceClient.signUp(test, "david", "hi david");
+		prepareTest();
+		Backend test = resetTestBackend();
+		User david = signUp(test, "david", "hi david");
 
 		// set stripe settings
 		StripeSettings settings = new StripeSettings();
@@ -39,7 +39,7 @@ public class StripeResourceTest extends SpaceClient {
 		settings.rolesAllowedToCharge = Sets.newHashSet("super_admin");
 		settings.rolesAllowedToPay = Sets.newHashSet("user");
 		Stripe.apiKey = settings.secretKey;
-		SpaceClient.saveSettings(test, settings);
+		saveSettings(test, settings);
 
 		// david's stripe customer is not yet created
 		SpaceRequest.get("/1/stripe/customers/me")//

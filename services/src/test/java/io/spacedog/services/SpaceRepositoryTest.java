@@ -1,11 +1,11 @@
 package io.spacedog.services;
 
-import org.junit.Assert;
 import org.junit.Test;
 
+import io.spacedog.client.SpaceTest;
 import io.spacedog.services.SnapshotResource.SpaceRepository;
 
-public class SpaceRepositoryTest extends Assert {
+public class SpaceRepositoryTest extends SpaceTest {
 
 	@Test
 	public void testToRepositoryId() {

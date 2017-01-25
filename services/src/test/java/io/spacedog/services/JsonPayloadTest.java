@@ -1,13 +1,13 @@
 package io.spacedog.services;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.Exceptions;
 
-public class JsonPayloadTest extends Assert {
+public class JsonPayloadTest extends SpaceTest {
 
 	@Test
 	public void shouldConvertRuntimeExceptionToJsonError() {

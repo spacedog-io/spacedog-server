@@ -3,6 +3,7 @@ package io.spacedog.client;
 import java.util.Optional;
 
 import org.joda.time.DateTime;
+import org.junit.Assert;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -14,7 +15,7 @@ import io.spacedog.utils.SpaceFields;
 import io.spacedog.utils.SpaceParams;
 import io.spacedog.utils.Utils;
 
-public class SpaceClient implements SpaceFields, SpaceParams {
+public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 
 	public static class User {
 		public String id;

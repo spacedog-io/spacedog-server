@@ -12,18 +12,18 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.io.Resources;
 
+import io.spacedog.client.SpaceTest;
 import io.spacedog.services.ElasticClient;
 import io.spacedog.services.Start;
 import io.spacedog.utils.Json;
 
-public class FrenchSearchTest extends Assert {
+public class FrenchSearchTest extends SpaceTest {
 
 	private static final String FIELD_NAME = "text";
 	private static final String TYPE = "page";

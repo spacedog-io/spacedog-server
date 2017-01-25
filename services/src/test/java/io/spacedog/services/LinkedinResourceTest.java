@@ -3,22 +3,20 @@
  */
 package io.spacedog.services;
 
-import org.junit.Assert;
 import org.junit.Test;
 
-import io.spacedog.client.SpaceClient;
-import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.CredentialsSettings;
 
-public class LinkedinResourceTest extends Assert {
+public class LinkedinResourceTest extends SpaceTest {
 
 	@Test
 	public void login() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 		String redirectUri = SpaceRequest.env().target()//
 				.url(test.backendId, "/1/login/linkedin");
 
@@ -32,7 +30,7 @@ public class LinkedinResourceTest extends Assert {
 		CredentialsSettings settings = new CredentialsSettings();
 		settings.linkedinId = SpaceRequest.env().get("spacedog.test.linkedin.client.id");
 		settings.linkedinSecret = SpaceRequest.env().get("spacedog.test.linkedin.client.secret");
-		SpaceClient.saveSettings(test, settings);
+		saveSettings(test, settings);
 
 		// fails to create linkedin credentials if no authorization code
 		SpaceRequest.post("/1/login/linkedin").backend(test)//

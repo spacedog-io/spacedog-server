@@ -7,23 +7,21 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import io.spacedog.client.SpaceClient;
-import io.spacedog.client.SpaceClient.Backend;
-import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Json;
 
-public class LogResourceTest extends Assert {
+public class LogResourceTest extends SpaceTest {
 
 	@Test
 	public void purgeBackendLogs() throws InterruptedException {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test2 = SpaceClient.resetTest2Backend();
-		Backend test = SpaceClient.resetTestBackend();
-		User fred = SpaceClient.signUp(test, "fred", "hi fred");
+		prepareTest();
+		Backend test2 = resetTest2Backend();
+		Backend test = resetTestBackend();
+		User fred = signUp(test, "fred", "hi fred");
 
 		SpaceRequest.get("/1/data").userAuth(fred).go(200);
 		SpaceRequest.get("/1/data").userAuth(fred).go(200);
@@ -87,11 +85,11 @@ public class LogResourceTest extends Assert {
 	public void purgeAllBackendLogs() throws InterruptedException {
 
 		// prepare
-		SpaceClient.prepareTest();
+		prepareTest();
 
 		// superdog creates purge user in root backend
-		SpaceClient.deleteCredentialsBySuperdog("api", "purgealltest");
-		User purgeUser = SpaceClient.createTempCredentials("api", "purgealltest");
+		deleteCredentialsBySuperdog("api", "purgealltest");
+		User purgeUser = createTempCredentials("api", "purgealltest");
 
 		// purge user fails to delete any logs
 		// since it doesn't have the 'purgeall' role
@@ -102,10 +100,10 @@ public class LogResourceTest extends Assert {
 				.superdogAuth().go(200);
 
 		// create test and test2 backends and users
-		Backend test = SpaceClient.resetTestBackend();
-		Backend test2 = SpaceClient.resetTest2Backend();
-		User fred = SpaceClient.signUp(test, "fred", "hi fred");
-		User vince = SpaceClient.signUp(test2, "vince", "hi vince");
+		Backend test = resetTestBackend();
+		Backend test2 = resetTest2Backend();
+		User fred = signUp(test, "fred", "hi fred");
+		User vince = signUp(test2, "vince", "hi vince");
 
 		// data requests for logs
 		SpaceRequest.get("/1/data").userAuth(fred).go(200);
@@ -169,14 +167,14 @@ public class LogResourceTest extends Assert {
 	@Test
 	public void superdogsCanBrowseAllBackendLogs() {
 
-		SpaceClient.prepareTest();
+		prepareTest();
 
 		// create test backends and users
-		Backend test = SpaceClient.resetTestBackend();
-		Backend test2 = SpaceClient.resetTest2Backend();
+		Backend test = resetTestBackend();
+		Backend test2 = resetTest2Backend();
 
-		SpaceClient.signUp(test, "vince", "hi vince");
-		SpaceClient.signUp(test2, "fred", "hi fred");
+		signUp(test, "vince", "hi vince");
+		signUp(test2, "fred", "hi fred");
 
 		// superdog gets all backends logs
 		SpaceRequest.get("/1/log").refresh().superdogAuth().go(200)//
@@ -198,8 +196,8 @@ public class LogResourceTest extends Assert {
 				.assertEquals("test", "results.7.credentials.backendId");
 
 		// after backend deletion, logs are still accessible to superdogs
-		SpaceClient.deleteBackend(test);
-		SpaceClient.deleteBackend(test2);
+		deleteBackend(test);
+		deleteBackend(test2);
 
 		SpaceRequest.get("/1/log").refresh().superdogAuth().go(200)//
 				.assertEquals("DELETE", "results.0.method")//
@@ -230,7 +228,7 @@ public class LogResourceTest extends Assert {
 	public void onlySuperdogsCanBrowseAllBackends() {
 
 		// prepare
-		SpaceClient.prepareTest();
+		prepareTest();
 
 		// superdog creates superadmin named nath in root 'api' backend
 		User nath = new User("api", "nath", "hi nath", "platform@spacedog.io");
@@ -262,13 +260,13 @@ public class LogResourceTest extends Assert {
 	public void searchInLogs() {
 
 		// prepare
-		SpaceClient.prepareTest();
+		prepareTest();
 
 		// creates test backend and user
-		Backend test = SpaceClient.resetTestBackend();
+		Backend test = resetTestBackend();
 		SpaceRequest.get("/1/data").backend(test).go(200);
 		SpaceRequest.get("/1/data/user").backend(test).go(403);
-		User vince = SpaceClient.signUp(test, "vince", "hi vince");
+		User vince = signUp(test, "vince", "hi vince");
 		SpaceRequest.get("/1/credentials/" + vince.id).userAuth(vince).go(200);
 
 		// superdog search for test backend logs with status 400 and higher
@@ -329,7 +327,7 @@ public class LogResourceTest extends Assert {
 	@Test
 	public void pingRequestAreNotLogged() {
 
-		SpaceClient.prepareTest();
+		prepareTest();
 
 		// load balancer pings a SpaceDog instance
 

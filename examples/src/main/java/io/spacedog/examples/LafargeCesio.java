@@ -5,14 +5,14 @@ package io.spacedog.examples;
 
 import org.junit.Test;
 
-import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceEnv;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTarget;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.MailSettings;
 import io.spacedog.utils.MailSettings.SmtpSettings;
 
-public class LafargeCesio extends SpaceClient {
+public class LafargeCesio extends SpaceTest {
 
 	@Test
 	public void initBackend() {
@@ -39,6 +39,6 @@ public class LafargeCesio extends SpaceClient {
 		settings.smtp.password = SpaceRequest.env()//
 				.get("spacedog.cesio.smtp.password");
 
-		SpaceClient.saveSettings(backend, settings);
+		saveSettings(backend, settings);
 	}
 }

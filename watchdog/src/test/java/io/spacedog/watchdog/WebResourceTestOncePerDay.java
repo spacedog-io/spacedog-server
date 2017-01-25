@@ -2,15 +2,14 @@ package io.spacedog.watchdog;
 
 import org.junit.Test;
 
-import io.spacedog.client.SpaceClient;
-import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.WebSettings;
 import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
 @TestOncePerDay
-public class WebResourceTestOncePerDay {
+public class WebResourceTestOncePerDay extends SpaceTest {
 
 	private static Backend test;
 
@@ -18,8 +17,8 @@ public class WebResourceTestOncePerDay {
 	public void test() {
 
 		// prepare
-		SpaceClient.prepareTest(false);
-		test = SpaceClient.resetTestBackend();
+		prepareTest(false);
+		test = resetTestBackend();
 
 		SpaceRequest.get("/1/file").adminAuth(test).go(200)//
 				.assertSizeEquals(0, "results");
@@ -59,7 +58,7 @@ public class WebResourceTestOncePerDay {
 		// changes the not found path to /index.html
 		WebSettings settings = new WebSettings();
 		settings.notFoundPage = "/index.html";
-		SpaceClient.saveSettings(test, settings);
+		saveSettings(test, settings);
 
 		// if user browses invalid URIs
 		// the server returns the not found path

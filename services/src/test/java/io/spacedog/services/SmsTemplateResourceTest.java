@@ -3,39 +3,36 @@ package io.spacedog.services;
 import java.io.IOException;
 import java.util.Collections;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.collect.Maps;
 
-import io.spacedog.client.SpaceClient;
-import io.spacedog.client.SpaceClient.Backend;
-import io.spacedog.client.SpaceClient.User;
-import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceEnv;
+import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.Schema;
 import io.spacedog.utils.SmsSettings;
 import io.spacedog.utils.SmsSettings.TwilioSettings;
 import io.spacedog.utils.SmsTemplate;
 
-public class SmsTemplateResourceTest extends Assert {
+public class SmsTemplateResourceTest extends SpaceTest {
 
 	@Test
 	public void sendTemplatedSms() throws IOException {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 
 		// superadmin creates user vince with 'sms' role
-		User vince = SpaceClient.signUp(test, "vince", "hi vince");
-		SpaceClient.setRole(test.adminUser, vince, "sms");
+		User vince = signUp(test, "vince", "hi vince");
+		setRole(test.adminUser, vince, "sms");
 
 		// superadmin creates a customer schema
 		Schema schema = Schema.builder("customer")//
 				.text("name").string("phone").close().build();
 
-		SpaceClient.setSchema(schema, test);
+		setSchema(schema, test);
 
 		// superadmin creates a customer
 		String customerId = SpaceRequest.post("/1/data/customer").adminAuth(test)//
@@ -60,7 +57,7 @@ public class SmsTemplateResourceTest extends Assert {
 		settings.templates.put("hello", template);
 
 		// superadmin saves SMS settings
-		SpaceClient.saveSettings(test, settings);
+		saveSettings(test, settings);
 
 		// nobody is allowed to send simple sms
 		SpaceRequest.post("/1/sms").backend(test).go(403);

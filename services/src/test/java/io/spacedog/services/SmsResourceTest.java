@@ -2,31 +2,28 @@ package io.spacedog.services;
 
 import java.io.IOException;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
 
-import io.spacedog.client.SpaceClient;
-import io.spacedog.client.SpaceClient.Backend;
-import io.spacedog.client.SpaceClient.User;
-import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceEnv;
+import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.SmsSettings;
 import io.spacedog.utils.SmsSettings.TwilioSettings;
 
-public class SmsResourceTest extends Assert {
+public class SmsResourceTest extends SpaceTest {
 
 	@Test
 	public void sendSms() throws IOException {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 
 		// superadmin creates user vince with 'sms' role
-		User vince = SpaceClient.signUp(test, "vince", "hi vince");
-		SpaceClient.setRole(test.adminUser, vince, "sms");
+		User vince = signUp(test, "vince", "hi vince");
+		setRole(test.adminUser, vince, "sms");
 
 		// no sms settings => nobody can send any sms
 		SpaceRequest.post("/1/sms").backend(test).go(403);
@@ -36,7 +33,7 @@ public class SmsResourceTest extends Assert {
 		// superadmin sets the list of roles allowed to send sms
 		SmsSettings settings = new SmsSettings();
 		settings.rolesAllowedToSendSms = Sets.newHashSet("sms");
-		SpaceClient.saveSettings(test, settings);
+		saveSettings(test, settings);
 
 		// vince is now allowed to send sms
 		// since he's got the 'sms' role
@@ -54,7 +51,7 @@ public class SmsResourceTest extends Assert {
 		settings.twilio.accountSid = configuration.get("spacedog.twilio.accountSid");
 		settings.twilio.authToken = configuration.get("spacedog.twilio.authToken");
 		settings.twilio.defaultFrom = configuration.get("spacedog.twilio.defaultFrom");
-		SpaceClient.saveSettings(test, settings);
+		saveSettings(test, settings);
 
 		// vince sends an sms
 		String messageId = SpaceRequest.post("/1/sms").userAuth(vince)//

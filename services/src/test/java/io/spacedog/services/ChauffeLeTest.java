@@ -5,23 +5,20 @@ package io.spacedog.services;
 
 import java.util.Iterator;
 
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.SpaceClient;
-import io.spacedog.client.SpaceClient.Backend;
-import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Schema;
 
-public class ChauffeLeTest extends Assert {
+public class ChauffeLeTest extends SpaceTest {
 
 	private static Backend backend;
 
@@ -32,14 +29,14 @@ public class ChauffeLeTest extends Assert {
 	@BeforeClass
 	public static void resetBackend() {
 
-		backend = SpaceClient.resetTestBackend();
+		backend = resetTestBackend();
 
-		SpaceClient.setSchema(buildBigPostSchema(), backend);
-		SpaceClient.setSchema(buildSmallPostSchema(), backend);
+		setSchema(buildBigPostSchema(), backend);
+		setSchema(buildSmallPostSchema(), backend);
 
-		lui = SpaceClient.signUp(backend, "lui", "hi lui", "lui@chauffe.le");
-		elle = SpaceClient.signUp(backend, "elle", "hi elle", "elle@chauffe.le");
-		laCopine = SpaceClient.signUp(backend, "lacopine", "hi la copine", "lacopine@chauffe.le");
+		lui = signUp(backend, "lui", "hi lui", "lui@chauffe.le");
+		elle = signUp(backend, "elle", "hi elle", "elle@chauffe.le");
+		laCopine = signUp(backend, "lacopine", "hi la copine", "lacopine@chauffe.le");
 	}
 
 	static Schema buildBigPostSchema() {
@@ -64,13 +61,13 @@ public class ChauffeLeTest extends Assert {
 
 	@Test
 	public void chauffeLeWithBigPost() {
-		SpaceClient.prepareTest();
+		prepareTest();
 		chauffeLe(new BigPost());
 	}
 
 	@Test
 	public void chauffeLeWithSmallPost() {
-		SpaceClient.prepareTest();
+		prepareTest();
 		chauffeLe(new SmallPost());
 	}
 
@@ -166,7 +163,7 @@ public class ChauffeLeTest extends Assert {
 		}
 
 		@Override
-		public void addComment(SpaceClient.User user, String parentId, String comment) {
+		public void addComment(User user, String parentId, String comment) {
 
 			SpaceRequest.post("/1/data/smallpost").userAuth(user)//
 					.body("title", comment, "parent", parentId).go(201);

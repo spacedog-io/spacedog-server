@@ -5,34 +5,31 @@ import java.net.UnknownHostException;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.SpaceClient;
-import io.spacedog.client.SpaceClient.Backend;
-import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
+import io.spacedog.client.SpaceTest;
 
-public class SnapshotResourceTest extends Assert {
+public class SnapshotResourceTest extends SpaceTest {
 
 	@Test
 	public void snapshotAndRestoreMultipleTimes() throws InterruptedException, UnknownHostException {
 
 		// prepare
-		SpaceClient.prepareTest();
+		prepareTest();
 		Backend aaaaBackend = new Backend("aaaa", "aaaa", "hi aaaa", "aaaa@dog.com");
 		Backend bbbbBackend = new Backend("bbbb", "bbbb", "hi bbbb", "bbbb@dog.com");
 		Backend ccccBackend = new Backend("cccc", "cccc", "hi cccc", "cccc@dog.com");
-		SpaceClient.deleteBackend(aaaaBackend);
-		SpaceClient.deleteBackend(bbbbBackend);
-		SpaceClient.deleteBackend(ccccBackend);
+		deleteBackend(aaaaBackend);
+		deleteBackend(bbbbBackend);
+		deleteBackend(ccccBackend);
 
 		// creates backend and credentials
-		SpaceClient.createBackend(aaaaBackend);
-		User vince = SpaceClient.signUp(aaaaBackend, "vince", "hi vince");
+		createBackend(aaaaBackend);
+		User vince = signUp(aaaaBackend, "vince", "hi vince");
 		SpaceRequest.get("/1/login").userAuth(vince).go(200);
 
 		// deletes the current repository to force repo creation by this test
@@ -77,8 +74,8 @@ public class SnapshotResourceTest extends Assert {
 				.assertEquals(firstSnap);
 
 		// creates another backend and credentials
-		SpaceClient.createBackend(bbbbBackend);
-		User fred = SpaceClient.signUp(bbbbBackend, "fred", "hi fred");
+		createBackend(bbbbBackend);
+		User fred = signUp(bbbbBackend, "fred", "hi fred");
 		SpaceRequest.get("/1/login").userAuth(fred).go(200);
 
 		// second snapshot (returns 201 since wait for completion true, 202
@@ -101,8 +98,8 @@ public class SnapshotResourceTest extends Assert {
 				.assertEquals(firstSnap, "results.1");
 
 		// create another account and add a credentials
-		SpaceClient.createBackend(ccccBackend);
-		User nath = SpaceClient.signUp(ccccBackend, "nath", "hi nath");
+		createBackend(ccccBackend);
+		User nath = signUp(ccccBackend, "nath", "hi nath");
 		SpaceRequest.get("/1/login").userAuth(nath).go(200);
 
 		// third snapshot (returns 200 since wait for completion true, 202

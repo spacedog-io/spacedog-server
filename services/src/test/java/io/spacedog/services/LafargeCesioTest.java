@@ -4,7 +4,6 @@
 package io.spacedog.services;
 
 import org.joda.time.DateTime;
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -12,14 +11,13 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
-import io.spacedog.client.SpaceClient;
-import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.MailSettings;
 import io.spacedog.utils.MailSettings.SmtpSettings;
 
-public class LafargeCesioTest extends Assert {
+public class LafargeCesioTest extends SpaceTest {
 
 	private static final String VINCE_EMAIL = "attias666@gmail.com";
 	private static final String DAVID_EMAIL = "david@spacedog.io";
@@ -41,9 +39,9 @@ public class LafargeCesioTest extends Assert {
 		// "david@spacedog.io");
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		SpaceClient.setSchema(LafargeCesioResource.playerSchema(), test);
+		prepareTest();
+		Backend test = resetTestBackend();
+		setSchema(LafargeCesioResource.playerSchema(), test);
 
 		MailSettings settings = new MailSettings();
 		settings.enableUserFullAccess = false;
@@ -57,7 +55,7 @@ public class LafargeCesioTest extends Assert {
 		settings.smtp.password = SpaceRequest.env()//
 				.get("spacedog.cesio.smtp.password");
 
-		SpaceClient.saveSettings(test, settings);
+		saveSettings(test, settings);
 
 		// create account fails since email parameter is missing
 		SpaceRequest.post("/api/user/create").backend(test).go(400)//

@@ -2,14 +2,14 @@ package io.spacedog.examples;
 
 import org.junit.Test;
 
-import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceEnv;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTarget;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.services.LogResource;
 import io.spacedog.services.SnapshotResource;
 
-public class AdminJobsCredentials extends SpaceClient {
+public class AdminJobsCredentials extends SpaceTest {
 
 	@Test
 	public void initPurgeAllCredentials() {
@@ -28,7 +28,7 @@ public class AdminJobsCredentials extends SpaceClient {
 
 	private void initCredentials(String username, String password, String role) {
 
-		SpaceClient.deleteCredentialsBySuperdog("api", username);
+		deleteCredentialsBySuperdog("api", username);
 
 		String id = SpaceRequest.post("/1/credentials").superdogAuth()//
 				.body(FIELD_USERNAME, username, FIELD_PASSWORD, password, //

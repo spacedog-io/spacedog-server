@@ -3,35 +3,32 @@
  */
 package io.spacedog.watchdog;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.SpaceClient;
-import io.spacedog.client.SpaceClient.Backend;
-import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Schema;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
-public class SearchResourceTestOften extends Assert {
+public class SearchResourceTestOften extends SpaceTest {
 
 	@Test
 	public void searchAndDeleteObjects() {
 
 		// prepare
 
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 
-		SpaceClient.setSchema(//
+		setSchema(//
 				Schema.builder("message").text("text").build(), //
 				test);
 
-		SpaceClient.setSchema(//
+		setSchema(//
 				Schema.builder("rubric").text("name").build(), //
 				test);
 
@@ -98,11 +95,11 @@ public class SearchResourceTestOften extends Assert {
 
 		// prepare backend
 
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		User vince = SpaceClient.signUp(test, "vince", "hi vince");
+		prepareTest();
+		Backend test = resetTestBackend();
+		User vince = signUp(test, "vince", "hi vince");
 
-		SpaceClient.setSchema(//
+		setSchema(//
 				Schema.builder("city").string("name").build(), //
 				test);
 
@@ -138,10 +135,10 @@ public class SearchResourceTestOften extends Assert {
 	public void sortSearchResults() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 
-		SpaceClient.setSchema(//
+		setSchema(//
 				Schema.builder("number").integer("i").string("t").build(), //
 				test);
 

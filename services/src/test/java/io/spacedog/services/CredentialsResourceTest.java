@@ -6,14 +6,11 @@ package io.spacedog.services;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
-import io.spacedog.client.SpaceClient;
-import io.spacedog.client.SpaceClient.Backend;
-import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceEnv;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.CredentialsSettings;
 import io.spacedog.utils.Passwords;
-import io.spacedog.utils.SpaceTest;
 
 public class CredentialsResourceTest extends SpaceTest {
 
@@ -21,13 +18,13 @@ public class CredentialsResourceTest extends SpaceTest {
 	public void deleteSuperAdminCredentials() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		Backend test2 = SpaceClient.resetTest2Backend();
+		prepareTest();
+		Backend test = resetTestBackend();
+		Backend test2 = resetTest2Backend();
 
-		test.adminUser = SpaceClient.login(test.adminUser);
-		test2.adminUser = SpaceClient.login(test2.adminUser);
-		User superdog = SpaceClient.login("api", //
+		test.adminUser = login(test.adminUser);
+		test2.adminUser = login(test2.adminUser);
+		User superdog = login("api", //
 				SpaceRequest.env().get("spacedog.superdog.username"), //
 				SpaceRequest.env().get("spacedog.superdog.password"));
 
@@ -41,13 +38,13 @@ public class CredentialsResourceTest extends SpaceTest {
 						"email", "test1@test.com", "level", "SUPER_ADMIN")//
 				.go(201);
 
-		User test1 = SpaceClient.login("test", "test1", "hi test1");
+		User test1 = login("test", "test1", "hi test1");
 
 		// superadmin test can delete superadmin test1
 		SpaceRequest.delete("/1/credentials/" + test1.id).adminAuth(test).go(200);
 
 		// test1 can no longer login
-		SpaceClient.login("test", "test1", "hi test1", 401);
+		login("test", "test1", "hi test1", 401);
 
 		// superadmin test fails to delete superdog david
 		SpaceRequest.delete("/1/credentials/" + superdog.id).adminAuth(test).go(403);
@@ -63,14 +60,14 @@ public class CredentialsResourceTest extends SpaceTest {
 	public void superdogCanLoginAndAccessAllBackends() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		SpaceClient.resetTestBackend();
+		prepareTest();
+		resetTestBackend();
 		SpaceEnv configuration = SpaceRequest.env();
 		User superdog = new User("api", //
 				configuration.get("spacedog.superdog.username"), configuration.get("spacedog.superdog.password"));
 
 		// superdog logs in with the root backend
-		SpaceClient.login(superdog);
+		login(superdog);
 		String apiToken = superdog.accessToken;
 
 		// superdog can access anything in any backend
@@ -81,7 +78,7 @@ public class CredentialsResourceTest extends SpaceTest {
 
 		// superdog logs with the "test" backend
 		superdog.backendId = "test";
-		SpaceClient.login(superdog);
+		login(superdog);
 		String testToken = superdog.accessToken;
 		assertNotEquals(testToken, apiToken);
 
@@ -104,7 +101,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		SpaceRequest.get("/1/data").backendId("test").bearerAuth(testToken).go(200);
 
 		// superdog logout from his "test" session
-		SpaceClient.logout("api", testToken);
+		logout("api", testToken);
 
 		// superdog can not access anything from his "test" token
 		SpaceRequest.get("/1/data").backendId("api").bearerAuth(testToken).go(401);
@@ -116,7 +113,7 @@ public class CredentialsResourceTest extends SpaceTest {
 
 		// superdog logout from his "api" session
 		// and can not access anything this token
-		SpaceClient.logout("api", apiToken);
+		logout("api", apiToken);
 		SpaceRequest.get("/1/data").backendId("api").bearerAuth(apiToken).go(401);
 		SpaceRequest.get("/1/backend").backendId("api").bearerAuth(apiToken).go(401);
 	}
@@ -125,12 +122,12 @@ public class CredentialsResourceTest extends SpaceTest {
 	public void testEnableAfterAndDisableAfter() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		User fred = SpaceClient.createTempCredentials(test.backendId, "fred");
+		prepareTest();
+		Backend test = resetTestBackend();
+		User fred = createTempCredentials(test.backendId, "fred");
 
 		// fred logs in
-		SpaceClient.login(fred);
+		login(fred);
 
 		// fred gets data
 		SpaceRequest.get("/1/data").userAuth(fred).go(200);
@@ -166,7 +163,7 @@ public class CredentialsResourceTest extends SpaceTest {
 				.assertEquals("disabled-credentials", "error.code");
 
 		// fred's credentials are disabled so he fails to log
-		SpaceClient.login(fred, 401);
+		login(fred, 401);
 
 		// superadmin can update fred's credentials enable after date
 		// before now and after disable after date so fred's credentials
@@ -182,7 +179,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		SpaceRequest.get("/1/data").bearerAuth(fred).go(200);
 
 		// fred's credentials are enabled again so he can log in
-		SpaceClient.login(fred);
+		login(fred);
 
 		// superadmin updates fred's credentials disable after date
 		// before now but after enable after date so fred's credentials
@@ -198,7 +195,7 @@ public class CredentialsResourceTest extends SpaceTest {
 				.assertEquals("disabled-credentials", "error.code");
 
 		// fred's credentials are disabled so he fails to log in
-		SpaceClient.login(fred, 401);
+		login(fred, 401);
 
 		// superadmin updates fred's credentials to remove enable and
 		// disable after dates so fred's credentials are enabled again
@@ -213,7 +210,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		SpaceRequest.get("/1/data").bearerAuth(fred).go(200);
 
 		// fred's credentials are enabled again so he can log in
-		SpaceClient.login(fred);
+		login(fred);
 
 		// superadmin fails to update fred's credentials enable after date
 		// since invalid format
@@ -228,15 +225,15 @@ public class CredentialsResourceTest extends SpaceTest {
 	public void changePasswordInvalidatesAllTokens() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		User fred = SpaceClient.createTempCredentials(test.backendId, "fred");
+		prepareTest();
+		Backend test = resetTestBackend();
+		User fred = createTempCredentials(test.backendId, "fred");
 
 		// fred logs in
-		fred = SpaceClient.login(fred);
+		fred = login(fred);
 
 		// fred logs in again creating a second session
-		User fred2 = SpaceClient.login(fred.backendId, fred.username, fred.password);
+		User fred2 = login(fred.backendId, fred.username, fred.password);
 
 		// fred can access data with his first token
 		SpaceRequest.get("/1/data").bearerAuth(fred).go(200);
@@ -259,16 +256,16 @@ public class CredentialsResourceTest extends SpaceTest {
 		SpaceRequest.get("/1/data").bearerAuth(fred2).go(401);
 
 		// but fred can log in with his new password
-		SpaceClient.login(fred.backendId, fred.username, newPassword);
+		login(fred.backendId, fred.username, newPassword);
 	}
 
 	@Test
 	public void multipleInvalidPasswordChallengesDisableCredentials() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		User fred = SpaceClient.createTempCredentials(test.backendId, "fred");
+		prepareTest();
+		Backend test = resetTestBackend();
+		User fred = createTempCredentials(test.backendId, "fred");
 
 		SpaceRequest.get("/1/credentials/{id}").routeParam("id", fred.id)//
 				.adminAuth(test).go(200)//
@@ -276,7 +273,7 @@ public class CredentialsResourceTest extends SpaceTest {
 				.assertNotPresent(FIELD_LAST_INVALID_CHALLENGE_AT);
 
 		// but fred can log in with his new password
-		SpaceClient.login(fred.backendId, fred.username, "XXX", 401);
+		login(fred.backendId, fred.username, "XXX", 401);
 
 		SpaceRequest.get("/1/credentials/{id}").routeParam("id", fred.id)//
 				.adminAuth(test).go(200)//
@@ -286,10 +283,10 @@ public class CredentialsResourceTest extends SpaceTest {
 		CredentialsSettings settings = new CredentialsSettings();
 		settings.maximumInvalidChallenges = 2;
 		settings.resetInvalidChallengesAfterMinutes = 1;
-		SpaceClient.saveSettings(test, settings);
+		saveSettings(test, settings);
 
 		// fred tries to log in with an invalid password
-		SpaceClient.login(fred.backendId, fred.username, "XXX", 401);
+		login(fred.backendId, fred.username, "XXX", 401);
 
 		// superadmin gets fred's credentials
 		// fred has 1 invalid password challenge
@@ -299,7 +296,7 @@ public class CredentialsResourceTest extends SpaceTest {
 				.assertPresent(FIELD_LAST_INVALID_CHALLENGE_AT);
 
 		// fred tries to log in with an invalid password
-		SpaceClient.login(fred.backendId, fred.username, "XXX", 401);
+		login(fred.backendId, fred.username, "XXX", 401);
 
 		// superadmin gets fred's credentials; fred has 2 invalid password
 		// challenge; his credentials has been disabled since equal to settings

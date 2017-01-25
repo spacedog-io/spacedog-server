@@ -3,15 +3,11 @@
  */
 package io.spacedog.watchdog;
 
-import org.junit.Assert;
-
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.SpaceClient;
-import io.spacedog.client.SpaceClient.Backend;
-import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
@@ -19,7 +15,7 @@ import io.spacedog.utils.Schema;
 import io.spacedog.utils.Schema.SchemaAcl;
 
 //@TestOften
-public class PushResourceTestOften2 extends Assert {
+public class PushResourceTestOften2 extends SpaceTest {
 
 	private static final String PUSHED_TO = "pushedTo";
 	private static final String FAILURES = "failures";
@@ -46,27 +42,27 @@ public class PushResourceTestOften2 extends Assert {
 	public void usersInstallAppAndPush() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 
 		// prepare users
-		User dave = SpaceClient.signUp(test, "dave", "hi dave");
-		User vince = SpaceClient.signUp(test, "vince", "hi vince");
-		User fred = SpaceClient.signUp(test, "fred", "hi fred");
-		User nath = SpaceClient.signUp(test, "nath", "hi nath");
+		User dave = signUp(test, "dave", "hi dave");
+		User vince = signUp(test, "vince", "hi vince");
+		User fred = signUp(test, "fred", "hi fred");
+		User nath = signUp(test, "nath", "hi nath");
 
 		// prepare installation schema
-		SpaceClient.initPushDefaultSchema(test);
+		initPushDefaultSchema(test);
 
 		// add create permission to guest requests
-		Schema schema = SpaceClient.getSchema("installation", test);
+		Schema schema = getSchema("installation", test);
 		schema.acl(new SchemaAcl()//
 				.set("key", DataPermission.create, DataPermission.read, DataPermission.update)//
 				.set("user", DataPermission.create, DataPermission.read, DataPermission.update)//
 				.set("admin", DataPermission.create, DataPermission.update_all, //
 						DataPermission.search, DataPermission.delete_all));
 
-		SpaceClient.setSchema(schema, test);
+		setSchema(schema, test);
 
 		// anonymous fails to installs joho
 		// because trying to set credentials id is forbidden
@@ -326,15 +322,15 @@ public class PushResourceTestOften2 extends Assert {
 	public void badgeManagement() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 
 		// prepare users
-		User dave = SpaceClient.signUp(test, "dave", "hi dave");
-		User vince = SpaceClient.signUp(test, "vince", "hi vince");
+		User dave = signUp(test, "dave", "hi dave");
+		User vince = signUp(test, "vince", "hi vince");
 
 		// prepare installation schema
-		SpaceClient.initPushDefaultSchema(test);
+		initPushDefaultSchema(test);
 
 		// vince and dave install joho
 		String vinceInstallId = installApplication("joho", APNS, test, vince);

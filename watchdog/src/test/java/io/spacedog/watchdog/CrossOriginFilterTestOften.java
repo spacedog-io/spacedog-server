@@ -3,23 +3,21 @@
  */
 package io.spacedog.watchdog;
 
-import org.junit.Assert;
 import org.junit.Test;
 
-import io.spacedog.client.SpaceClient;
-import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
-public class CrossOriginFilterTestOften extends Assert {
+public class CrossOriginFilterTestOften extends SpaceTest {
 
 	@Test
 	public void returnCORSHeaders() {
 
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 
 		// CORS for simple requests
 

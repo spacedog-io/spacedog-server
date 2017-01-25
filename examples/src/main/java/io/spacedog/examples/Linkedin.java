@@ -9,17 +9,17 @@ import java.net.URISyntaxException;
 import org.apache.http.client.utils.URIBuilder;
 import org.junit.Test;
 
-import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.CredentialsSettings;
 
-public class Linkedin extends SpaceClient {
+public class Linkedin extends SpaceTest {
 
 	// @Test
 	public void getMyLinkedinProfil() {
 
 		// prepare
-		SpaceClient.prepareTest();
+		prepareTest();
 
 		// get my profil
 		SpaceRequest.get("/1/linkedin/people/me/firstName,picture-url,location,summary")//
@@ -33,12 +33,12 @@ public class Linkedin extends SpaceClient {
 			throws URISyntaxException, IOException {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 
 		// credentials settings with guest sign up enabled
 		CredentialsSettings settings = defaultCredentialsSettings(false, test);
-		SpaceClient.saveSettings(test, settings);
+		saveSettings(test, settings);
 
 		// login succeeds
 		linkedinLogin(test, false, settings);
@@ -49,14 +49,14 @@ public class Linkedin extends SpaceClient {
 			throws URISyntaxException, IOException {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 
 		// credentials settings with guest sign up enabled
 		CredentialsSettings settings = defaultCredentialsSettings(false, test);
 		settings.useLinkedinExpiresIn = false;
 		settings.sessionMaximumLifetime = 10000;
-		SpaceClient.saveSettings(test, settings);
+		saveSettings(test, settings);
 
 		// expiresIn is between 9000 and 10000
 		linkedinLogin(test, false, settings);
@@ -67,12 +67,12 @@ public class Linkedin extends SpaceClient {
 			throws URISyntaxException, IOException {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 
 		// set credentials settings with guest sign up disabled
 		CredentialsSettings settings = defaultCredentialsSettings(true, test);
-		SpaceClient.saveSettings(test, settings);
+		saveSettings(test, settings);
 
 		// login fails since guest sign in is disabled
 		// and credentials has not been pre created by admin
@@ -84,12 +84,12 @@ public class Linkedin extends SpaceClient {
 			throws URISyntaxException, IOException {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 
 		// set credentials settings with guest sign up disabled
 		CredentialsSettings settings = defaultCredentialsSettings(true, test);
-		SpaceClient.saveSettings(test, settings);
+		saveSettings(test, settings);
 
 		// admin pre registers some credentials for a new user
 		// username must equals the linkedin account email
@@ -108,13 +108,13 @@ public class Linkedin extends SpaceClient {
 			throws URISyntaxException, IOException {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 
 		// set credentials settings with guest sign up disabled
 		CredentialsSettings settings = defaultCredentialsSettings(true, test);
 		settings.linkedinSecret = "XXX";
-		SpaceClient.saveSettings(test, settings);
+		saveSettings(test, settings);
 
 		// login fails since secret is invalid
 		// check error in response json payload
@@ -125,12 +125,12 @@ public class Linkedin extends SpaceClient {
 	public void redirectedLogin() throws URISyntaxException, IOException {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 
 		// credentials settings with guest sign up enabled
 		CredentialsSettings settings = defaultCredentialsSettings(false, test);
-		SpaceClient.saveSettings(test, settings);
+		saveSettings(test, settings);
 
 		// login succeeds
 		// check access token in redirect url params
@@ -142,13 +142,13 @@ public class Linkedin extends SpaceClient {
 			throws URISyntaxException, IOException {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 
 		// set credentials settings with guest sign up disabled
 		CredentialsSettings settings = defaultCredentialsSettings(true, test);
 		settings.linkedinSecret = "XXX";
-		SpaceClient.saveSettings(test, settings);
+		saveSettings(test, settings);
 
 		// login fails since secret is invalid
 		// check error in redirect url params

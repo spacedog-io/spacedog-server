@@ -16,10 +16,10 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 
-import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceEnv;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTarget;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.CredentialsSettings;
 import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
@@ -34,7 +34,7 @@ import io.spacedog.utils.SmsSettings.TwilioSettings;
 import io.spacedog.utils.SmsTemplate;
 import io.spacedog.utils.StripeSettings;
 
-public class Caremen extends SpaceClient {
+public class Caremen extends SpaceTest {
 
 	static final Backend DEV;
 	static final Backend RECETTE;
@@ -86,14 +86,14 @@ public class Caremen extends SpaceClient {
 	// Settings
 	//
 
-	private void deleteAllCredentialsButSuperAdmins() {
-		SpaceClient.deleteAllCredentialsButSuperAdmins(backend);
+	void deleteAllCredentialsButSuperAdmins() {
+		deleteAllCredentialsButSuperAdmins(backend);
 	}
 
 	void initCredentials() {
 		CredentialsSettings settings = new CredentialsSettings();
 		settings.sessionMaximumLifetime = 60 * 60 * 24 * 7;
-		SpaceClient.saveSettings(backend, settings);
+		saveSettings(backend, settings);
 	}
 
 	void initMailSettings() throws IOException {
@@ -146,7 +146,7 @@ public class Caremen extends SpaceClient {
 
 		settings.templates.put("notif-customer-welcome", template);
 
-		SpaceClient.saveSettings(backend, settings);
+		saveSettings(backend, settings);
 	}
 
 	void initSmsSettings() {
@@ -168,7 +168,7 @@ public class Caremen extends SpaceClient {
 		settings.twilio.authToken = env.get("caremen.twilio.authToken");
 		settings.twilio.defaultFrom = env.get("caremen.twilio.defaultFrom");
 
-		SpaceClient.saveSettings(backend, settings);
+		saveSettings(backend, settings);
 	}
 
 	void initStripeSettings() {
@@ -179,7 +179,7 @@ public class Caremen extends SpaceClient {
 				? SpaceEnv.defaultEnv().get("caremen.stripe.test.secret.key")//
 				: SpaceEnv.defaultEnv().get("caremen.stripe.prod.secret.key");
 
-		SpaceClient.saveSettings(backend, settings);
+		saveSettings(backend, settings);
 	}
 
 	void initFareSettings() {
@@ -228,7 +228,7 @@ public class Caremen extends SpaceClient {
 		acl.read("key", "user", "operator");
 		settings.put("references", acl);
 
-		SpaceClient.saveSettings(backend, settings);
+		saveSettings(backend, settings);
 	}
 
 	void initVehiculeTypes() {
@@ -359,11 +359,11 @@ public class Caremen extends SpaceClient {
 	void initInstallations() {
 		SpaceRequest.delete("/1/schema/installation").adminAuth(backend).go(200, 404);
 		SpaceRequest.put("/1/schema/installation").adminAuth(backend).go(201);
-		Schema schema = SpaceClient.getSchema("installation", backend);
+		Schema schema = getSchema("installation", backend);
 		schema.acl("key", DataPermission.create, DataPermission.read, DataPermission.update, DataPermission.delete);
 		schema.acl("user", DataPermission.create, DataPermission.read, DataPermission.update, DataPermission.delete);
 		schema.acl("admin", DataPermission.search, DataPermission.update_all, DataPermission.delete_all);
-		SpaceClient.setSchema(schema, backend);
+		setSchema(schema, backend);
 	}
 
 	static Schema buildCourseSchema() {
@@ -576,13 +576,13 @@ public class Caremen extends SpaceClient {
 	private void resetCredentials(Backend backend, String username, //
 			String password, String email, String role, boolean admin) {
 
-		SpaceClient.deleteCredentialsBySuperdog(backend.backendId, username);
+		deleteCredentialsBySuperdog(backend.backendId, username);
 
 		User user = admin //
-				? SpaceClient.createAdminCredentials(backend, username, password, email)//
-				: SpaceClient.createCredentials(backend.backendId, username, password, email);
+				? createAdminCredentials(backend, username, password, email)//
+				: createCredentials(backend.backendId, username, password, email);
 
-		SpaceClient.setRole(backend.adminUser, user, role);
+		setRole(backend.adminUser, user, role);
 	}
 
 	void createRobots() {
@@ -599,7 +599,7 @@ public class Caremen extends SpaceClient {
 					.get("results.0.id");
 
 			if (node == null) {
-				User robot = SpaceClient.signUp(backend.backendId, username, password);
+				User robot = signUp(backend.backendId, username, password);
 
 				SpaceRequest.put("/1/credentials/" + robot.id + "/roles/driver")//
 						.adminAuth(backend).go(200);

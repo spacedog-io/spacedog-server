@@ -1,6 +1,5 @@
 package io.spacedog.services;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -8,11 +7,12 @@ import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
+import io.spacedog.client.SpaceTest;
 import io.spacedog.services.PushResource.PushServices;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 
-public class PushResourceOtherTests extends Assert {
+public class PushResourceOtherTests extends SpaceTest {
 
 	@Test
 	public void convertJsonMessageToSnsMessageTest() {

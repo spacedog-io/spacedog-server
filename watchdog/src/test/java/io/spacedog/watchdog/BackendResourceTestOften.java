@@ -7,14 +7,11 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.SpaceClient;
-import io.spacedog.client.SpaceClient.Backend;
-import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTarget;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceParams;
-import io.spacedog.utils.SpaceTest;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
@@ -24,8 +21,8 @@ public class BackendResourceTestOften extends SpaceTest {
 	public void deleteSignUpGetLoginTestBackend() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 
 		// gets backend super admin info
 
@@ -42,7 +39,7 @@ public class BackendResourceTestOften extends SpaceTest {
 
 		// creates new backend with different id but same username
 
-		SpaceClient.resetBackend("test1", "test", "hi test");
+		resetBackend("test1", "test", "hi test");
 
 		// fails to create new backend with non available id
 
@@ -80,7 +77,7 @@ public class BackendResourceTestOften extends SpaceTest {
 
 		// let's create a common user
 
-		User john = SpaceClient.signUp(test, "john", "hi john", "john@dog.io");
+		User john = signUp(test, "john", "hi john", "john@dog.io");
 
 		// user fails to get backend data since it is restricted to admins
 
@@ -91,8 +88,8 @@ public class BackendResourceTestOften extends SpaceTest {
 	public void invalidBackendIdentifiers() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		SpaceClient.deleteTestBackend();
+		prepareTest();
+		deleteTestBackend();
 		ObjectNode body = Json.object("username", "test", //
 				"password", "hi test", "email", "hello@spacedog.io");
 
@@ -116,7 +113,7 @@ public class BackendResourceTestOften extends SpaceTest {
 	public void pingServerToCheckItIsUpAndRunning() {
 
 		// prepare
-		SpaceClient.prepareTest();
+		prepareTest();
 		SpaceTarget target = SpaceRequest.env().target();
 
 		// successfully pings server to check it is up and running
@@ -138,7 +135,7 @@ public class BackendResourceTestOften extends SpaceTest {
 	public void iCanCreateABackendWithANonWildCardUrl() {
 
 		// prepare
-		SpaceClient.prepareTest();
+		prepareTest();
 
 		// super admin deletes the test backend
 		SpaceRequest.delete("/1/backend")//

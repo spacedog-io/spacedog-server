@@ -2,22 +2,21 @@ package io.spacedog.watchdog;
 
 import org.junit.Test;
 
-import io.spacedog.client.SpaceClient;
-import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
 @TestOncePerDay
-public class FileResourceTestOncePerDay {
+public class FileResourceTestOncePerDay extends SpaceTest {
 
 	private static final byte[] BYTES = "This is a test file!".getBytes();
 
 	@Test
 	public void test() throws Exception {
 
-		SpaceClient.prepareTest(false);
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest(false);
+		Backend test = resetTestBackend();
 
 		SpaceRequest.get("/1/file").adminAuth(test).go(200)//
 				.assertSizeEquals(0, "results");

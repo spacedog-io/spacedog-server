@@ -7,12 +7,12 @@ import java.util.Collections;
 
 import org.joda.time.DateTime;
 
-import io.spacedog.client.SpaceClient;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTarget;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.SendPulseSettings;
 
-public class SendPulseResourceTest extends SpaceClient {
+public class SendPulseResourceTest extends SpaceTest {
 
 	public void testSendPulseResource() {
 
@@ -22,17 +22,17 @@ public class SendPulseResourceTest extends SpaceClient {
 		initSendPulseTestWebApp();
 
 		// prepare
-		SpaceClient.prepareTest();
+		prepareTest();
 		SpaceRequest.env().target(SpaceTarget.local);
-		Backend test = SpaceClient.resetTestBackend();
-		User fred = SpaceClient.signUp(test, "fred", "hi fred");
+		Backend test = resetTestBackend();
+		User fred = signUp(test, "fred", "hi fred");
 
 		// set sendpulse test settings
 		SendPulseSettings settings = new SendPulseSettings();
 		settings.clientId = SpaceRequest.env().get("spacedog.test.sendpulse.client.id");
 		settings.clientSecret = SpaceRequest.env().get("spacedog.test.sendpulse.client.secret");
 		settings.authorizedRoles = Collections.singleton("user");
-		SpaceClient.saveSettings(test, settings);
+		saveSettings(test, settings);
 
 		// fred can get all websites
 		SpaceRequest.get("/1/sendpulse/push/websites").userAuth(fred).go(200);
@@ -70,7 +70,7 @@ public class SendPulseResourceTest extends SpaceClient {
 				.go(200, 404).httpResponse().getStatus() == 200)
 			return;
 
-		sendpulse = SpaceClient.resetBackend(sendpulse);
+		sendpulse = resetBackend(sendpulse);
 
 		// upload web site
 		upload(sendpulse, "index.html");

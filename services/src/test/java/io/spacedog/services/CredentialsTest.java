@@ -1,13 +1,13 @@
 package io.spacedog.services;
 
 import org.joda.time.DateTime;
-import org.junit.Assert;
 import org.junit.Test;
 
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
 
-public class CredentialsTest extends Assert {
+public class CredentialsTest extends SpaceTest {
 
 	@Test
 	public void shouldGetLowerOrEqualCredentialsTypes() {

@@ -3,22 +3,20 @@
  */
 package io.spacedog.watchdog;
 
-import org.junit.Assert;
 import org.junit.Test;
 
-import io.spacedog.client.SpaceClient;
-import io.spacedog.client.SpaceClient.Backend;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
 @TestOncePerDay
-public class BackendResourceTestOncePerDay extends Assert {
+public class BackendResourceTestOncePerDay extends SpaceTest {
 
 	@Test
 	public void createBackendSendsNotificationToSuperDogs() {
 
-		SpaceClient.prepareTest();
+		prepareTest();
 		Backend test = new Backend("test", "test", "hi test", "david@spacedog.io");
-		SpaceClient.deleteBackend(test);
-		SpaceClient.createBackend(test, true);
+		deleteBackend(test);
+		createBackend(test, true);
 	}
 }

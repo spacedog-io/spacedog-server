@@ -8,28 +8,26 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
-import io.spacedog.client.SpaceClient;
-import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.GeoPoint;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Schema;
 
-public class QueryTest extends Assert {
+public class QueryTest extends SpaceTest {
 
 	@Test
 	public void importCarDataset() {
 
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 
-		SpaceClient.setSchema(buildCarSchema(), test);
+		setSchema(buildCarSchema(), test);
 
 		for (int i = 0; i < 500; i++)
 			SpaceRequest.post("/1/data/car").adminAuth(test).body(jsonCar(i)).go(201);

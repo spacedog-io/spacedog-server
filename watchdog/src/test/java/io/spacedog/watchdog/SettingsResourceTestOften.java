@@ -3,15 +3,12 @@
  */
 package io.spacedog.watchdog;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.SpaceClient;
-import io.spacedog.client.SpaceClient.Backend;
-import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SchemaSettings;
 import io.spacedog.utils.SettingsSettings;
@@ -19,15 +16,15 @@ import io.spacedog.utils.SettingsSettings.SettingsAcl;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
-public class SettingsResourceTestOften extends Assert {
+public class SettingsResourceTestOften extends SpaceTest {
 
 	@Test
 	public void createGetAndDeleteSettings() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		User vince = SpaceClient.signUp(test, "vince", "hi vince");
+		prepareTest();
+		Backend test = resetTestBackend();
+		User vince = signUp(test, "vince", "hi vince");
 
 		ObjectNode animals = Json.object("lion", "Lion", "tiger", "Tiger");
 		ObjectNode jobs = Json.object("sailor", Json.array("Sailor", "Marin"), //
@@ -91,7 +88,7 @@ public class SettingsResourceTestOften extends Assert {
 		acl.update("user");
 		SettingsSettings settings = new SettingsSettings();
 		settings.put("animals", acl);
-		SpaceClient.saveSettings(test, settings);
+		saveSettings(test, settings);
 
 		// guests can get the animals settings
 		// users are still forbidden
@@ -108,7 +105,7 @@ public class SettingsResourceTestOften extends Assert {
 
 		// super admin can delete settings settings
 		// to get back to previous configuration
-		SpaceClient.deleteSettings(test, SettingsSettings.class);
+		deleteSettings(test, SettingsSettings.class);
 
 		// users can not update animals settings anymore
 		// but super admins can
@@ -125,8 +122,8 @@ public class SettingsResourceTestOften extends Assert {
 	public void checkNonDirectlyUpdatableSettingsAreNotUpdatable() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 
 		// schema settings are not directly updatable
 		SpaceRequest.put("/1/settings/schema")//

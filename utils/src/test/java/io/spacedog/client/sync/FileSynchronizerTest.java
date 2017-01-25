@@ -13,7 +13,7 @@ import org.junit.Test;
 import com.google.common.io.Resources;
 
 import io.spacedog.client.FileSynchronizer;
-import io.spacedog.client.SpaceClient;
+import io.spacedog.client.SpaceTest;
 
 public class FileSynchronizerTest extends Assert {
 
@@ -35,7 +35,7 @@ public class FileSynchronizerTest extends Assert {
 		createHtmlFile("x/y/z/a et b");
 
 		// prepare backend
-		SpaceClient.resetTestBackend();
+		SpaceTest.resetTestBackend();
 
 		// synch temp folder
 		FileSynchronizer synch = FileSynchronizer.newInstance()//

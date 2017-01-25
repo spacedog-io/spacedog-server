@@ -4,28 +4,26 @@
 package io.spacedog.watchdog;
 
 import org.joda.time.DateTime;
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.SpaceClient;
-import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.Json;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
-public class DataResourceTestOften extends Assert {
+public class DataResourceTestOften extends SpaceTest {
 
 	@Test
 	public void createFindUpdateAndDelete() {
 
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		SpaceClient.setSchema(SchemaResourceTestOften.buildCarSchema(), test);
-		SpaceClient.User vince = SpaceClient.signUp(test, "vince", "hi vince");
+		prepareTest();
+		Backend test = resetTestBackend();
+		setSchema(SchemaResourceTestOften.buildCarSchema(), test);
+		User vince = signUp(test, "vince", "hi vince");
 
 		ObjectNode car = Json.objectBuilder() //
 				.put("serialNumber", "1234567890") //

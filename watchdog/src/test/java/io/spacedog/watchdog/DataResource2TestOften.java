@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.joda.time.DateTime;
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -17,26 +16,24 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import io.spacedog.client.SpaceClient;
-import io.spacedog.client.SpaceClient.Backend;
-import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Schema;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
-public class DataResource2TestOften extends Assert {
+public class DataResource2TestOften extends SpaceTest {
 
 	@Test
 	public void createSearchUpdateAndDeleteSales() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		SpaceClient.setSchema(SchemaResourceTestOften.buildSaleSchema(), test);
-		User fred = SpaceClient.signUp(test, "fred", "hi fred");
+		prepareTest();
+		Backend test = resetTestBackend();
+		setSchema(SchemaResourceTestOften.buildSaleSchema(), test);
+		User fred = signUp(test, "fred", "hi fred");
 
 		// fred fails to create a sale with no body
 		SpaceRequest.post("/1/data/sale").userAuth(fred).go(400);
@@ -194,7 +191,7 @@ public class DataResource2TestOften extends Assert {
 				res3e.objectNode().deepCopy().without(Lists.newArrayList("meta", "number")));
 
 		// vince fails to update nor delete this sale since not the owner
-		User vince = SpaceClient.signUp(test, "vince", "hi vince");
+		User vince = signUp(test, "vince", "hi vince");
 		SpaceRequest.put("/1/data/sale/" + id).userAuth(vince)//
 				.body("number", "0123456789").go(403);
 		SpaceRequest.delete("/1/data/sale/" + id).userAuth(vince).go(403);
@@ -209,9 +206,9 @@ public class DataResource2TestOften extends Assert {
 
 		// prepare
 
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		SpaceClient.setSchema(//
+		prepareTest();
+		Backend test = resetTestBackend();
+		setSchema(//
 				Schema.builder("message").text("text").build(), //
 				test);
 
@@ -239,12 +236,12 @@ public class DataResource2TestOften extends Assert {
 	@Test
 	public void testAllObjectIdStrategies() {
 
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 
 		// creates message schema with auto generated id strategy
 
-		SpaceClient.setSchema(//
+		setSchema(//
 				Schema.builder("message").string("text").build(), //
 				test);
 
@@ -273,7 +270,7 @@ public class DataResource2TestOften extends Assert {
 
 		// creates message2 schema with code property as id
 
-		SpaceClient.setSchema(Schema.builder("message2").id("code")//
+		setSchema(Schema.builder("message2").id("code")//
 				.string("code").string("text").build(), test);
 
 		// creates a message2 object with code = 2
@@ -312,11 +309,11 @@ public class DataResource2TestOften extends Assert {
 
 		// prepare
 
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		User vince = SpaceClient.signUp(test, "vince", "hi vince");
+		prepareTest();
+		Backend test = resetTestBackend();
+		User vince = signUp(test, "vince", "hi vince");
 
-		SpaceClient.setSchema(//
+		setSchema(//
 				Schema.builder("message").string("text").build(), //
 				test);
 

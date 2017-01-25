@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Collections;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -12,9 +11,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
 
-import io.spacedog.client.SpaceClient;
-import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.MailSettings;
@@ -22,14 +20,14 @@ import io.spacedog.utils.MailSettings.SmtpSettings;
 import io.spacedog.utils.MailTemplate;
 import io.spacedog.utils.Schema;
 
-public class MailTemplateResourceTest extends Assert {
+public class MailTemplateResourceTest extends SpaceTest {
 
 	@Test
 	public void sendTemplatedEmails() throws IOException {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		Backend test = resetTestBackend();
 
 		// create a schema
 		Schema schema = Schema.builder("demande")//
@@ -40,7 +38,7 @@ public class MailTemplateResourceTest extends Assert {
 				.date("date").time("debut").time("fin")//
 				.close().build();
 
-		SpaceClient.setSchema(schema, test);
+		setSchema(schema, test);
 
 		// create an inscription
 		ArrayNode dispos = Json.array(//
@@ -79,7 +77,7 @@ public class MailTemplateResourceTest extends Assert {
 		mailSettings.templates.put("demande", template);
 
 		// save mail settings
-		SpaceClient.saveSettings(test, mailSettings);
+		saveSettings(test, mailSettings);
 
 		// send inscription email
 		SpaceRequest.post("/1/mail/template/demande").backend(test)//
@@ -102,7 +100,7 @@ public class MailTemplateResourceTest extends Assert {
 		mailSettings.smtp = null;
 
 		// save mail settings
-		SpaceClient.saveSettings(test, mailSettings);
+		saveSettings(test, mailSettings);
 
 		// send inscription confirmation email
 		SpaceRequest.post("/1/mail/template/confirmation").backend(test)//

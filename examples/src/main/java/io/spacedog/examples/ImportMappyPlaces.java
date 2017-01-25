@@ -3,19 +3,16 @@
  */
 package io.spacedog.examples;
 
-import org.junit.Assert;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.SpaceClient;
-import io.spacedog.client.SpaceClient.Backend;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Schema;
 
-public class ImportMappyPlaces extends Assert {
+public class ImportMappyPlaces extends SpaceTest {
 
 	private static Backend backend = new Backend("examples", "examples", "hi examples", "david@spacedog.io");
 
@@ -23,7 +20,7 @@ public class ImportMappyPlaces extends Assert {
 		try {
 
 			SpaceRequest.setForTestingDefault(false);
-			SpaceClient.resetBackend(backend);
+			resetBackend(backend);
 			SpaceRequest.post("/1/schema/resto").adminAuth(backend).bodySchema(buildRestoSchema()).go(201);
 
 			double step = 0.01;
