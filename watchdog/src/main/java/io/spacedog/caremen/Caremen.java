@@ -73,6 +73,13 @@ public class Caremen extends SpaceTest {
 		// initCredentials();
 		// initSettingsSettings();
 
+		// backend.schema().delete(buildCourseSchema().name());
+		// backend.schema().delete(buildDriverSchema().name());
+		// backend.schema().delete(buildCustomerSchema().name());
+		// backend.schema().delete(buildCourseLogSchema().name());
+		// backend.schema().delete(buildCustomerCompanySchema().name());
+		// backend.schema().delete(buildCompanySchema().name());
+
 		// backend.schema().set(buildCourseSchema());
 		// backend.schema().set(buildDriverSchema());
 		// backend.schema().set(buildCustomerSchema());
