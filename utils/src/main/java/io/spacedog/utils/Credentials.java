@@ -80,9 +80,13 @@ public class Credentials {
 		this.level = Level.KEY;
 	}
 
-	public Credentials(String backendId, String name, Level level) {
+	public Credentials(String backendId, String name) {
 		this.backendId = backendId;
 		this.username = name;
+	}
+
+	public Credentials(String backendId, String name, Level level) {
+		this(backendId, name);
 		this.level = level;
 	}
 
@@ -90,16 +94,18 @@ public class Credentials {
 		return id;
 	}
 
-	public void id(String id) {
+	public Credentials id(String id) {
 		this.id = id;
+		return this;
 	}
 
 	public long version() {
 		return version;
 	}
 
-	public void version(long version) {
+	public Credentials version(long version) {
 		this.version = version;
+		return this;
 	}
 
 	public String backendId() {
@@ -110,32 +116,36 @@ public class Credentials {
 		return target == null ? backendId : target;
 	}
 
-	public void target(String backendId) {
+	public Credentials target(String backendId) {
 		this.target = backendId;
+		return this;
 	}
 
 	public String name() {
 		return username == null ? "default" : username;
 	}
 
-	public void name(String name) {
+	public Credentials name(String name) {
 		this.username = name;
+		return this;
 	}
 
 	public Optional<String> email() {
 		return Optional.ofNullable(email);
 	}
 
-	public void email(String value) {
+	public Credentials email(String value) {
 		this.email = value;
+		return this;
 	}
 
 	public Level level() {
 		return level;
 	}
 
-	public void level(Level value) {
+	public Credentials level(Level value) {
 		this.level = value;
+		return this;
 	}
 
 	public String accessToken() {
@@ -158,24 +168,27 @@ public class Credentials {
 		return enabled;
 	}
 
-	public void enabled(boolean enabled) {
+	public Credentials enabled(boolean enabled) {
 		this.enabled = enabled;
+		return this;
 	}
 
 	public DateTime enableAfter() {
 		return enableAfter;
 	}
 
-	public void enableAfter(DateTime enableAfter) {
+	public Credentials enableAfter(DateTime enableAfter) {
 		this.enableAfter = enableAfter;
+		return this;
 	}
 
 	public DateTime disableAfter() {
 		return disableAfter;
 	}
 
-	public void disableAfter(DateTime disableAfter) {
+	public Credentials disableAfter(DateTime disableAfter) {
 		this.disableAfter = disableAfter;
+		return this;
 	}
 
 	public Set<String> roles() {
@@ -186,40 +199,45 @@ public class Credentials {
 		return roles;
 	}
 
-	public void roles(Set<String> value) {
+	public Credentials roles(Set<String> value) {
 		roles = value;
+		return this;
 	}
 
 	public String createdAt() {
 		return createdAt;
 	}
 
-	public void createdAt(String value) {
+	public Credentials createdAt(String value) {
 		createdAt = value;
+		return this;
 	}
 
 	public String updatedAt() {
 		return updatedAt;
 	}
 
-	public void updatedAt(String value) {
+	public Credentials updatedAt(String value) {
 		updatedAt = value;
+		return this;
 	}
 
 	public int invalidChallenges() {
 		return invalidChallenges;
 	}
 
-	public void invalidChallenges(int invalidChallenges) {
+	public Credentials invalidChallenges(int invalidChallenges) {
 		this.invalidChallenges = invalidChallenges;
+		return this;
 	}
 
 	public DateTime lastInvalidChallengeAt() {
 		return lastInvalidChallengeAt;
 	}
 
-	public void lastInvalidChallengeAt(DateTime lastInvalidChallengeAt) {
+	public Credentials lastInvalidChallengeAt(DateTime lastInvalidChallengeAt) {
 		this.lastInvalidChallengeAt = lastInvalidChallengeAt;
+		return this;
 	}
 
 	//

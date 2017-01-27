@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.WebSettings;
 import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
@@ -11,7 +12,7 @@ import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 @TestOncePerDay
 public class WebResourceTestOncePerDay extends SpaceTest {
 
-	private static Backend test;
+	private static SpaceDog test;
 
 	@Test
 	public void test() {
@@ -58,7 +59,7 @@ public class WebResourceTestOncePerDay extends SpaceTest {
 		// changes the not found path to /index.html
 		WebSettings settings = new WebSettings();
 		settings.notFoundPage = "/index.html";
-		saveSettings(test, settings);
+		test.settings().save(settings);
 
 		// if user browses invalid URIs
 		// the server returns the not found path

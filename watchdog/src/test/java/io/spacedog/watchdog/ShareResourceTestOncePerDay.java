@@ -18,6 +18,7 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.ShareSettings;
@@ -34,9 +35,9 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 
 		// prepare
 		prepareTest(false);
-		Backend test = resetTestBackend();
-		User vince = signUp(test, "vince", "hi vince", "vince@dog.com");
-		User fred = signUp(test, "fred", "hi fred", "fred@dog.com");
+		SpaceDog test = resetTestBackend();
+		SpaceDog vince = signUp(test, "vince", "hi vince", "vince@dog.com");
+		SpaceDog fred = signUp(test, "fred", "hi fred", "fred@dog.com");
 
 		// only admin can get all shared locations
 		SpaceRequest.get("/1/share").backend(test).go(403);
@@ -181,9 +182,9 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 
 		// prepare
 		prepareTest(false);
-		Backend test = resetTestBackend();
-		User vince = signUp(test, "vince", "hi vince", "vince@dog.com");
-		User fred = signUp(test, "fred", "hi fred", "fred@dog.com");
+		SpaceDog test = resetTestBackend();
+		SpaceDog vince = signUp(test, "vince", "hi vince", "vince@dog.com");
+		SpaceDog fred = signUp(test, "fred", "hi fred", "fred@dog.com");
 		byte[] pngBytes = Resources.toByteArray(//
 				Resources.getResource("io/spacedog/watchdog/tweeter.png"));
 
@@ -194,7 +195,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		settings.acl.put("user", Sets.newHashSet(DataPermission.create, DataPermission.read, //
 				DataPermission.delete));
 		settings.acl.put("admin", Sets.newHashSet(DataPermission.delete_all, DataPermission.search));
-		saveSettings(test, settings);
+		test.settings().save(settings);
 
 		// only admin can get all shared locations
 		SpaceRequest.get("/1/share").backend(test).go(403);
@@ -262,7 +263,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 	public void testSharingWithContentDispositionAndEscaping() {
 
 		// prepare
-		Backend test = resetTestBackend();
+		SpaceDog test = resetTestBackend();
 
 		// share file with name that needs escaping
 		ObjectNode json = SpaceRequest.put("/1/share/{fileName}")//

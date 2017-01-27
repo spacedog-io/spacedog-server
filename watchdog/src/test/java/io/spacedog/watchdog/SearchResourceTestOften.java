@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Schema;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
@@ -22,15 +23,11 @@ public class SearchResourceTestOften extends SpaceTest {
 		// prepare
 
 		prepareTest();
-		Backend test = resetTestBackend();
+		SpaceDog test = resetTestBackend();
 
-		setSchema(//
-				Schema.builder("message").text("text").build(), //
-				test);
+		test.schema().set(Schema.builder("message").text("text").build());
 
-		setSchema(//
-				Schema.builder("rubric").text("name").build(), //
-				test);
+		test.schema().set(Schema.builder("rubric").text("name").build());
 
 		// creates 4 messages and 1 rubric
 
@@ -96,12 +93,10 @@ public class SearchResourceTestOften extends SpaceTest {
 		// prepare backend
 
 		prepareTest();
-		Backend test = resetTestBackend();
-		User vince = signUp(test, "vince", "hi vince");
+		SpaceDog test = resetTestBackend();
+		SpaceDog vince = signUp(test, "vince", "hi vince");
 
-		setSchema(//
-				Schema.builder("city").string("name").build(), //
-				test);
+		test.schema().set(Schema.builder("city").string("name").build());
 
 		// creates 5 cities but whith only 3 distinct names
 
@@ -136,11 +131,9 @@ public class SearchResourceTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		Backend test = resetTestBackend();
+		SpaceDog test = resetTestBackend();
 
-		setSchema(//
-				Schema.builder("number").integer("i").string("t").build(), //
-				test);
+		test.schema().set(Schema.builder("number").integer("i").string("t").build());
 
 		// creates 5 numbers
 		for (int i = 0; i < 3; i++)

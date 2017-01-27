@@ -1,60 +1,202 @@
 package io.spacedog.sdk;
 
+import java.util.Optional;
+
+import org.joda.time.DateTime;
+
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.utils.Credentials;
+import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.Passwords;
 import io.spacedog.utils.SpaceFields;
 import io.spacedog.utils.SpaceParams;
 
 public class SpaceDog implements SpaceFields, SpaceParams {
 
-	String backendId;
+	Credentials credentials;
+	String password;
 	String accessToken;
-	String username;
-	String email;
+	DateTime expiresAt;
 
-	private SpaceDog(String backendId) {
-		this.backendId = backendId;
+	private SpaceDog(Credentials credentials) {
+		this.credentials = credentials;
 	}
 
 	public String backendId() {
-		return backendId;
+		return credentials.backendId();
 	}
 
 	public String username() {
-		return username;
+		return credentials.name();
 	}
 
-	public String email() {
-		return email;
+	public SpaceDog username(String username) {
+		this.credentials.name(username);
+		return this;
 	}
 
-	public static SpaceDog login(String backendId, String username, String password) {
-		ObjectNode node = SpaceRequest.get("/1/login")//
-				.basicAuth(backendId, username, password)//
-				.go(200).objectNode();
-
-		SpaceDog dog = new SpaceDog(//
-				Json.checkStringNotNullOrEmpty(node, "credentials.backendId"));
-		dog.accessToken = Json.checkStringNotNullOrEmpty(node, FIELD_ACCESS_TOKEN);
-		dog.username = Json.checkStringNotNullOrEmpty(node, "credentials.username");
-		dog.email = Json.checkStringNotNullOrEmpty(node, "credentials.email");
-		return dog;
+	public String id() {
+		return credentials.id();
 	}
 
-	public void logout() {
-		SpaceRequest.get("/1/logout").backendId(backendId)//
-				.bearerAuth(accessToken).go(200);
+	public SpaceDog id(String id) {
+		this.credentials.id(id);
+		return this;
 	}
 
-	SpaceData data;
+	public Optional<String> email() {
+		return credentials.email();
+	}
 
-	public SpaceData data() {
-		if (data == null)
-			data = new SpaceData(this);
+	public SpaceDog email(String email) {
+		this.credentials.email(email);
+		return this;
+	}
 
-		return data;
+	public Optional<String> accessToken() {
+		return Optional.ofNullable(accessToken);
+	}
+
+	public SpaceDog accessToken(String accessToken) {
+		this.accessToken = accessToken;
+		return this;
+	}
+
+	public DateTime expiresAt() {
+		return this.expiresAt;
+	}
+
+	public SpaceDog expiresAt(DateTime plus) {
+		this.expiresAt = plus;
+		return this;
+	}
+
+	public Optional<String> password() {
+		return Optional.ofNullable(password);
+	}
+
+	public SpaceDog password(String password) {
+		this.password = password;
+		return this;
+	}
+
+	public static SpaceDog backend(String backendId) {
+		return new SpaceDog(new Credentials(backendId));
+	}
+
+	public static SpaceDog fromCredentials(Credentials credentials) {
+		return new SpaceDog(credentials);
+	}
+
+	//
+	// login/logout
+	//
+
+	public SpaceDog login() {
+		return login(password().get());
+	}
+
+	public SpaceDog login(long lifetime) {
+		return login(password().get(), lifetime);
+	}
+
+	public SpaceDog login(String password) {
+		return login(password, 0);
+	}
+
+	public SpaceDog login(String password, long lifetime) {
+
+		SpaceRequest request = SpaceRequest.get("/1/login")//
+				.basicAuth(backendId(), username(), password);
+
+		if (lifetime > 0)
+			request.queryParam(PARAM_LIFETIME, Long.toString(lifetime));
+
+		ObjectNode node = request.go(200).objectNode();
+
+		this.accessToken = Json.checkStringNotNullOrEmpty(node, FIELD_ACCESS_TOKEN);
+		this.credentials.id(Json.checkStringNotNullOrEmpty(node, "credentials.id"));
+		return this;
+	}
+
+	public SpaceDog logout() {
+		SpaceRequest.get("/1/logout").bearerAuth(backendId(), accessToken).go(200);
+		this.accessToken = null;
+		this.expiresAt = null;
+		return this;
+	}
+
+	//
+	// sign up
+	//
+
+	public SpaceDog signUp() {
+		return signUp(password()//
+				.orElseThrow(() -> Exceptions.illegalArgument("no password set")));
+	}
+
+	public SpaceDog signUp(String password) {
+		return signUp(username(), password, email().orElse("platform@spacedog.io"));
+
+	}
+
+	public SpaceDog signUp(String username, String password, String email) {
+		this.credentials = SpaceDog.backend(backendId()).username(username)//
+				.credentials().create(username, password, email);
+		return login(password);
+	}
+
+	//
+	// backend
+	//
+
+	public SpaceDog signUpBackend() {
+		return signUpBackend(password().orElse(Passwords.random()));
+	}
+
+	public SpaceDog signUpBackend(String password) {
+		return signUpBackend(password, email().orElse("platform@spacedog.io"));
+	}
+
+	public SpaceDog signUpBackend(String password, String email) {
+		SpaceDog.backend(backendId()).backend().create(username(), password, email, false);
+		return this;
+	}
+
+	//
+	// Basic REST requests
+	//
+
+	public SpaceRequest get(String uri) {
+		return SpaceRequest.get(uri).auth(this);
+	}
+
+	public SpaceRequest post(String uri) {
+		return SpaceRequest.post(uri).auth(this);
+	}
+
+	public SpaceRequest put(String uri) {
+		return SpaceRequest.put(uri).auth(this);
+	}
+
+	public SpaceRequest delete(String uri) {
+		return SpaceRequest.delete(uri).auth(this);
+	}
+
+	//
+	// resources
+	//
+
+	SpaceData dataEndpoint;
+
+	public SpaceData dataEndpoint() {
+		if (dataEndpoint == null)
+			dataEndpoint = new SpaceData(this);
+
+		return dataEndpoint;
 	}
 
 	SpaceSettings settings;
@@ -83,4 +225,27 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 		return push;
 	}
 
+	SpaceCredentials credentialsEndpoint;
+
+	public SpaceCredentials credentials() {
+		if (credentialsEndpoint == null)
+			credentialsEndpoint = new SpaceCredentials(this);
+		return credentialsEndpoint;
+	}
+
+	SpaceSchema schema;
+
+	public SpaceSchema schema() {
+		if (schema == null)
+			schema = new SpaceSchema(this);
+		return schema;
+	}
+
+	SpaceBackend backend;
+
+	public SpaceBackend backend() {
+		if (backend == null)
+			backend = new SpaceBackend(this);
+		return backend;
+	}
 }

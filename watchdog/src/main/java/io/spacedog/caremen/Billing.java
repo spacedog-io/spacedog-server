@@ -30,14 +30,14 @@ public class Billing {
 
 		try {
 			SpaceEnv env = SpaceEnv.defaultEnv();
-			SpaceDog dog = SpaceDog.login(env.get("backend_id"), "cashier", //
-					env.get("caremen_cashier_password"));
+			SpaceDog dog = SpaceDog.backend(env.get("backend_id")) //
+					.username("cashier").login(env.get("caremen_cashier_password"));
 
 			TermQuery query = new TermQuery();
 			query.type = "course";
 			query.size = 50;
 			query.terms = Lists.newArrayList("status", "completed");
-			SearchResults<Course> courses = dog.data().search(query, Course.class);
+			SearchResults<Course> courses = dog.dataEndpoint().search(query, Course.class);
 
 			FareSettings fareSettings = dog.settings().get(FareSettings.class);
 
@@ -84,7 +84,7 @@ public class Billing {
 		query.sort = "meta.createdAt";
 		query.ascendant = true;
 
-		SearchResults<CourseLog> logs = dog.data().search(query, CourseLog.class);
+		SearchResults<CourseLog> logs = dog.dataEndpoint().search(query, CourseLog.class);
 
 		Check.isTrue(logs.total() <= 1000, //
 				"too many course logs [%s] for course [%s]", logs.total(), course.id());

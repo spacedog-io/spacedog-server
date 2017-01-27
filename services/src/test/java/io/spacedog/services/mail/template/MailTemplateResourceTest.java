@@ -13,6 +13,7 @@ import com.google.common.io.Resources;
 
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.MailSettings;
@@ -27,7 +28,7 @@ public class MailTemplateResourceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		Backend test = resetTestBackend();
+		SpaceDog test = resetTestBackend();
 
 		// create a schema
 		Schema schema = Schema.builder("demande")//
@@ -38,7 +39,7 @@ public class MailTemplateResourceTest extends SpaceTest {
 				.date("date").time("debut").time("fin")//
 				.close().build();
 
-		setSchema(schema, test);
+		test.schema().set(schema);
 
 		// create an inscription
 		ArrayNode dispos = Json.array(//
@@ -77,7 +78,7 @@ public class MailTemplateResourceTest extends SpaceTest {
 		mailSettings.templates.put("demande", template);
 
 		// save mail settings
-		saveSettings(test, mailSettings);
+		test.settings().save(mailSettings);
 
 		// send inscription email
 		SpaceRequest.post("/1/mail/template/demande").backend(test)//
@@ -100,7 +101,7 @@ public class MailTemplateResourceTest extends SpaceTest {
 		mailSettings.smtp = null;
 
 		// save mail settings
-		saveSettings(test, mailSettings);
+		test.settings().save(mailSettings);
 
 		// send inscription confirmation email
 		SpaceRequest.post("/1/mail/template/confirmation").backend(test)//

@@ -11,14 +11,13 @@ public class SpaceStripe {
 
 	SpaceDog dog;
 
-	public SpaceStripe(SpaceDog dog) {
+	SpaceStripe(SpaceDog dog) {
 		this.dog = dog;
 	}
 
 	public ObjectNode charge(Map<String, Object> parameters) {
 
-		SpaceRequest request = SpaceRequest.post("/1/stripe/charges")//
-				.bearerAuth(dog.backendId, dog.accessToken);
+		SpaceRequest request = SpaceRequest.post("/1/stripe/charges").auth(dog);
 
 		for (Entry<String, Object> param : parameters.entrySet())
 			request.formField(param.getKey(), param.getValue().toString());

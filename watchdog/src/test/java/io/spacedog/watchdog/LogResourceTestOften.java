@@ -1,57 +1,51 @@
 package io.spacedog.watchdog;
 
-import org.junit.Assert;
 import org.junit.Test;
 
-import io.spacedog.client.SpaceClient;
-import io.spacedog.client.SpaceClient.Backend;
-import io.spacedog.client.SpaceClient.User;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.DataObject;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Schema;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
 @TestOften
-public class LogResourceTestOften extends Assert {
+public class LogResourceTestOften extends SpaceTest {
 
 	@Test
 	public void doAFewThingsAndGetTheLogs() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		Backend test2 = SpaceClient.resetBackend("test2", "test2", "hi test2");
+		prepareTest();
+		SpaceDog test = resetTestBackend();
+		SpaceDog test2 = resetTest2Backend();
 
 		// create message schema in test backend
-		SpaceClient.setSchema(//
-				Schema.builder("message").text("text").build(), //
-				test);
+		test.schema().set(Schema.builder("message").text("text").build());
 
 		// create user in test backend
-		User user = SpaceClient.signUp(test, "user", "hi user");
+		SpaceDog user = SpaceDog.backend("test").username("user").signUp("hi user");
 
 		// create a user in test2 backend
-		SpaceClient.signUp(test2, "user2", "hi user2");
+		SpaceDog.backend("test2").username("user2").signUp("hi user2");
 
 		// create message in test backend
-		String id = SpaceRequest.post("/1/data/message")//
-				.userAuth(user)//
-				.body("text", "What's up boys?")//
-				.go(201)//
-				.getString("id");
+		DataObject message = user.dataEndpoint().object("message")//
+				.node("text", "What's up boys?").save();
 
 		// find message by id in test backend
-		SpaceRequest.get("/1/data/message/" + id).userAuth(user).go(200);
+		message.fetch();
 
 		// find all messages in test backend
-		SpaceRequest.get("/1/data/message").userAuth(user).go(200);
+		user.dataEndpoint().getAllRequest().type("message").load(DataObject.class);
 
 		// get all test backend logs
-		SpaceRequest.get("/1/log").refresh().size(8).adminAuth(test).go(200)//
+		SpaceRequest.get("/1/log").refresh().size(8).auth(test).go(200)//
 				.assertSizeEquals(8, "results")//
 				.assertEquals("GET", "results.0.method")//
 				.assertEquals("/1/data/message", "results.0.path")//
 				.assertEquals("GET", "results.1.method")//
-				.assertEquals("/1/data/message/" + id, "results.1.path")//
+				.assertEquals("/1/data/message/" + message.id(), "results.1.path")//
 				.assertEquals("POST", "results.2.method")//
 				.assertEquals("/1/data/message", "results.2.path")//
 				.assertEquals("GET", "results.3.method")//
@@ -68,7 +62,7 @@ public class LogResourceTestOften extends Assert {
 				.assertEquals("test", "results.7.credentials.backendId");
 
 		// get all test2 backend logs
-		SpaceRequest.get("/1/log").size(4).adminAuth(test2).go(200)//
+		SpaceRequest.get("/1/log").size(4).auth(test2).go(200)//
 				.assertSizeEquals(4, "results")//
 				.assertEquals("GET", "results.0.method")//
 				.assertEquals("/1/login", "results.0.path")//
@@ -84,45 +78,45 @@ public class LogResourceTestOften extends Assert {
 				.assertEquals("test2", "results.3.credentials.backendId");
 
 		// after backend deletion, logs are not accessible to backend
-		SpaceClient.deleteBackend(test);
-		SpaceRequest.get("/1/log").adminAuth(test).go(401);
+		test.backend().delete();
+		SpaceRequest.get("/1/log").auth(test).go(401);
 
-		SpaceClient.deleteBackend(test2);
-		SpaceRequest.get("/1/log").adminAuth(test2).go(401);
+		test2.backend().delete();
+		SpaceRequest.get("/1/log").auth(test2).go(401);
 	}
 
 	@Test
 	public void checkPasswordsAreNotLogged() {
 
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
-		User fred = SpaceClient.signUp(test, "fred", "hi fred");
+		prepareTest();
+		SpaceDog test = resetTestBackend();
+		SpaceDog fred = SpaceDog.backend("test").username("fred").signUp("hi fred");
 
 		String passwordResetCode = SpaceRequest.delete("/1/credentials/{id}/password")//
-				.routeParam("id", fred.id).adminAuth(test).go(200)//
+				.routeParam("id", fred.id()).adminAuth(test).go(200)//
 				.getString("passwordResetCode");
 
 		SpaceRequest.post("/1/credentials/{id}/password")//
-				.routeParam("id", fred.id)//
+				.routeParam("id", fred.id())//
 				.queryParam("passwordResetCode", passwordResetCode)//
 				.backend(test).formField("password", "hi fred 2").go(200);
 
 		SpaceRequest.put("/1/credentials/{id}/password").backend(test)//
-				.routeParam("id", fred.id)//
-				.basicAuth(test.backendId, "fred", "hi fred 2")//
+				.routeParam("id", fred.id())//
+				.basicAuth(test.backendId(), "fred", "hi fred 2")//
 				.formField("password", "hi fred 3").go(200);
 
 		SpaceRequest.get("/1/log").refresh().size(7).adminAuth(test).go(200)//
 				.assertSizeEquals(7, "results")//
 				.assertEquals("PUT", "results.0.method")//
-				.assertEquals("/1/credentials/" + fred.id + "/password", "results.0.path")//
+				.assertEquals("/1/credentials/" + fred.id() + "/password", "results.0.path")//
 				.assertEquals("******", "results.0.query.password")//
 				.assertEquals("POST", "results.1.method")//
-				.assertEquals("/1/credentials/" + fred.id + "/password", "results.1.path")//
+				.assertEquals("/1/credentials/" + fred.id() + "/password", "results.1.path")//
 				.assertEquals("******", "results.1.query.password")//
 				.assertEquals(passwordResetCode, "results.1.query.passwordResetCode")//
 				.assertEquals("DELETE", "results.2.method")//
-				.assertEquals("/1/credentials/" + fred.id + "/password", "results.2.path")//
+				.assertEquals("/1/credentials/" + fred.id() + "/password", "results.2.path")//
 				.assertEquals(passwordResetCode, "results.2.response.passwordResetCode")//
 				.assertEquals("GET", "results.3.method")//
 				.assertEquals("/1/login", "results.3.path")//
@@ -142,8 +136,8 @@ public class LogResourceTestOften extends Assert {
 	public void testSpecialCases() {
 
 		// prepare
-		SpaceClient.prepareTest();
-		Backend test = SpaceClient.resetTestBackend();
+		prepareTest();
+		SpaceDog test = resetTestBackend();
 
 		// fails because invalid body
 		SpaceRequest.put("/1/schema/toto").adminAuth(test).body("XXX").go(400);

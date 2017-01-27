@@ -11,6 +11,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Schema;
 import io.spacedog.utils.Schema.SchemaAcl;
@@ -25,16 +26,16 @@ public class DataAccessControlTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		Backend test = resetTestBackend();
-		User vince = signUp(test, "vince", "hi vince");
+		SpaceDog test = resetTestBackend();
+		SpaceDog vince = signUp(test, "vince", "hi vince");
 
 		// set message schema
 		Schema messageSchema = Schema.builder("msge").text("t").build();
-		setSchema(messageSchema, test);
+		test.schema().set(messageSchema);
 
 		// message schema does not contain any acl
 		// it means message schema has default acl
-		SchemaSettings settings = loadSettings(test, SchemaSettings.class);
+		SchemaSettings settings = test.settings().get(SchemaSettings.class);
 		assertEquals(SchemaAcl.defaultAcl(), settings.acl.get("msge"));
 
 		// in default acl, only users and admins can create objects
@@ -80,10 +81,10 @@ public class DataAccessControlTestOften extends SpaceTest {
 
 		// set message schema acl to empty
 		messageSchema.acl(new SchemaAcl());
-		setSchema(messageSchema, test);
+		test.schema().set(messageSchema);
 
 		// check message schema acl are set
-		settings = loadSettings(test, SchemaSettings.class);
+		settings = test.settings().get(SchemaSettings.class);
 		assertEquals(1, settings.acl.size());
 		assertEquals(0, settings.acl.get("msge").size());
 
@@ -114,10 +115,10 @@ public class DataAccessControlTestOften extends SpaceTest {
 
 		// set message schema new acl settings
 		messageSchema.acl("admin", DataPermission.search);
-		setSchema(messageSchema, test);
+		test.schema().set(messageSchema);
 
 		// check message schema acl are set
-		settings = loadSettings(test, SchemaSettings.class);
+		settings = test.settings().get(SchemaSettings.class);
 		assertEquals(1, settings.acl.size());
 		assertEquals(1, settings.acl.get("msge").size());
 		assertEquals(Collections.singleton(DataPermission.search), //
@@ -154,7 +155,7 @@ public class DataAccessControlTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		Backend test = resetTestBackend();
+		SpaceDog test = resetTestBackend();
 
 		// set schema
 		Schema schema = Schema.builder("message")//
@@ -167,12 +168,12 @@ public class DataAccessControlTestOften extends SpaceTest {
 						DataPermission.create, DataPermission.delete_all)//
 				.build();
 
-		setSchema(schema, test);
+		test.schema().set(schema);
 
 		// dave has the platine role
 		// he's got all the rights
-		User dave = signUp(test, "dave", "hi dave");
-		SpaceRequest.put("/1/credentials/" + dave.id + "/roles/platine").adminAuth(test).go(200);
+		SpaceDog dave = signUp(test, "dave", "hi dave");
+		SpaceRequest.put("/1/credentials/" + dave.id() + "/roles/platine").adminAuth(test).go(200);
 		SpaceRequest.post("/1/data/message?id=dave").userAuth(dave).body("text", "Dave").go(201);
 		SpaceRequest.get("/1/data/message/dave").userAuth(dave).go(200);
 		SpaceRequest.put("/1/data/message/dave").userAuth(dave).body("text", "Salut Dave").go(200);
@@ -183,7 +184,7 @@ public class DataAccessControlTestOften extends SpaceTest {
 
 		// maelle is a simple user
 		// she's got no right on the message schema
-		User maelle = signUp(test, "maelle", "hi maelle");
+		SpaceDog maelle = signUp(test, "maelle", "hi maelle");
 		SpaceRequest.post("/1/data/message").userAuth(maelle).body("text", "Maelle").go(403);
 		SpaceRequest.get("/1/data/message/1").userAuth(maelle).go(403);
 		SpaceRequest.put("/1/data/message/1").userAuth(maelle).body("text", "Salut Maelle").go(403);
@@ -191,8 +192,8 @@ public class DataAccessControlTestOften extends SpaceTest {
 
 		// fred has the iron role
 		// he's only got the right to read
-		User fred = signUp(test, "fred", "hi fred");
-		SpaceRequest.put("/1/credentials/" + fred.id + "/roles/iron").adminAuth(test).go(200);
+		SpaceDog fred = signUp(test, "fred", "hi fred");
+		SpaceRequest.put("/1/credentials/" + fred.id() + "/roles/iron").adminAuth(test).go(200);
 		SpaceRequest.post("/1/data/message").userAuth(fred).body("text", "Fred").go(403);
 		SpaceRequest.get("/1/data/message/1").userAuth(fred).go(200);
 		SpaceRequest.put("/1/data/message/1").userAuth(fred).body("text", "Salut Fred").go(403);
@@ -200,8 +201,8 @@ public class DataAccessControlTestOften extends SpaceTest {
 
 		// nath has the silver role
 		// she's got the right to read and update
-		User nath = signUp(test, "nath", "hi nath");
-		SpaceRequest.put("/1/credentials/" + nath.id + "/roles/silver").adminAuth(test).go(200);
+		SpaceDog nath = signUp(test, "nath", "hi nath");
+		SpaceRequest.put("/1/credentials/" + nath.id() + "/roles/silver").adminAuth(test).go(200);
 		SpaceRequest.post("/1/data/message").userAuth(nath).body("text", "Nath").go(403);
 		SpaceRequest.get("/1/data/message/1").userAuth(nath).go(200);
 		SpaceRequest.put("/1/data/message/1").userAuth(nath).body("text", "Salut Nath").go(200);
@@ -209,8 +210,8 @@ public class DataAccessControlTestOften extends SpaceTest {
 
 		// vince has the gold role
 		// he's got the right to create, read and update
-		User vince = signUp(test, "vince", "hi vince");
-		SpaceRequest.put("/1/credentials/" + vince.id + "/roles/gold").adminAuth(test).go(200);
+		SpaceDog vince = signUp(test, "vince", "hi vince");
+		SpaceRequest.put("/1/credentials/" + vince.id() + "/roles/gold").adminAuth(test).go(200);
 		SpaceRequest.post("/1/data/message?id=vince").userAuth(vince).body("text", "Vince").go(201);
 		SpaceRequest.get("/1/data/message/vince").userAuth(vince).go(200);
 		SpaceRequest.put("/1/data/message/vince").userAuth(vince).body("text", "Salut Vince").go(200);
@@ -222,7 +223,7 @@ public class DataAccessControlTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		Backend test = resetTestBackend();
+		SpaceDog test = resetTestBackend();
 
 		// create message schema with simple acl
 		Schema messageSchema = Schema.builder("message")//
@@ -230,18 +231,18 @@ public class DataAccessControlTestOften extends SpaceTest {
 				.text("text")//
 				.build();
 
-		setSchema(messageSchema, test);
+		test.schema().set(messageSchema);
 
 		// check schema settings contains message schema acl
-		SchemaSettings settings = loadSettings(test, SchemaSettings.class);
+		SchemaSettings settings = test.settings().get(SchemaSettings.class);
 		assertEquals(messageSchema.acl(), settings.acl.get(messageSchema.name()));
 
 		// delete message schema
-		deleteSchema(messageSchema, test);
+		test.schema().delete(messageSchema);
 
 		// check schema settings does not contain
 		// message schema acl anymore
-		settings = loadSettings(test, SchemaSettings.class);
+		settings = test.settings().get(SchemaSettings.class);
 		assertNull(settings.acl.get(messageSchema.name()));
 	}
 }

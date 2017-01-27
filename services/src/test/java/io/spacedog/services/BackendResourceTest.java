@@ -11,6 +11,7 @@ import com.google.common.collect.Iterators;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 
 public class BackendResourceTest extends SpaceTest {
 
@@ -29,8 +30,8 @@ public class BackendResourceTest extends SpaceTest {
 		// prepare
 
 		prepareTest();
-		Backend aaaa = resetBackend("aaaa", "aaaa", "hi aaaa");
-		Backend zzzz = resetBackend("zzzz", "zzzz", "hi zzzz");
+		SpaceDog aaaa = resetBackend("aaaa", "aaaa", "hi aaaa");
+		SpaceDog zzzz = resetBackend("zzzz", "zzzz", "hi zzzz");
 
 		// super admin gets his backend
 
@@ -59,16 +60,16 @@ public class BackendResourceTest extends SpaceTest {
 		// super admin fails to access a backend he does not own
 
 		SpaceRequest.get("/1/backend")//
-				.basicAuth("aaaa", zzzz.adminUser.username, zzzz.adminUser.password).go(401);
+				.basicAuth("aaaa", zzzz.username(), zzzz.password().get()).go(401);
 		SpaceRequest.get("/1/backend")//
-				.basicAuth("zzzz", aaaa.adminUser.username, aaaa.adminUser.username).go(401);
+				.basicAuth("zzzz", aaaa.username(), aaaa.password().get()).go(401);
 
 		// super admin fails to delete a backend he does not own
 
 		SpaceRequest.delete("/1/backend")//
-				.basicAuth("aaaa", zzzz.adminUser.username, zzzz.adminUser.password).go(401);
+				.basicAuth("aaaa", zzzz.username(), zzzz.password().get()).go(401);
 		SpaceRequest.delete("/1/backend")//
-				.basicAuth("zzzz", aaaa.adminUser.username, aaaa.adminUser.username).go(401);
+				.basicAuth("zzzz", aaaa.username(), aaaa.password().get()).go(401);
 
 		// super admin can delete his backend
 

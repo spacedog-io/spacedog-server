@@ -15,6 +15,7 @@ import com.google.common.collect.Lists;
 
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.GeoPoint;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Schema;
@@ -25,9 +26,9 @@ public class QueryTest extends SpaceTest {
 	public void importCarDataset() {
 
 		prepareTest();
-		Backend test = resetTestBackend();
+		SpaceDog test = resetTestBackend();
 
-		setSchema(buildCarSchema(), test);
+		test.schema().set(buildCarSchema());
 
 		for (int i = 0; i < 500; i++)
 			SpaceRequest.post("/1/data/car").adminAuth(test).body(jsonCar(i)).go(201);

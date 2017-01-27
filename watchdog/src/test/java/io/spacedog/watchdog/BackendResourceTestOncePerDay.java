@@ -6,6 +6,7 @@ package io.spacedog.watchdog;
 import org.junit.Test;
 
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
 @TestOncePerDay
@@ -14,9 +15,13 @@ public class BackendResourceTestOncePerDay extends SpaceTest {
 	@Test
 	public void createBackendSendsNotificationToSuperDogs() {
 
+		// prepare
 		prepareTest();
-		Backend test = new Backend("test", "test", "hi test", "david@spacedog.io");
-		deleteBackend(test);
-		createBackend(test, true);
+
+		// delete test backend if necessary
+		SpaceDog.backend("test").username("test").password("hi test").backend().delete();
+
+		// re create test backend with notification
+		SpaceDog.backend("test").backend().create("test", "hi test", "test@dog.com", true);
 	}
 }

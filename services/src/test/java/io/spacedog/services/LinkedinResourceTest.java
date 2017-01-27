@@ -7,6 +7,7 @@ import org.junit.Test;
 
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.CredentialsSettings;
 
 public class LinkedinResourceTest extends SpaceTest {
@@ -16,9 +17,9 @@ public class LinkedinResourceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		Backend test = resetTestBackend();
+		SpaceDog test = resetTestBackend();
 		String redirectUri = SpaceRequest.env().target()//
-				.url(test.backendId, "/1/login/linkedin");
+				.url(test.backendId(), "/1/login/linkedin");
 
 		// no linkedin settings means no linkedin credentials
 		SpaceRequest.post("/1/login/linkedin").backend(test)//
@@ -30,7 +31,7 @@ public class LinkedinResourceTest extends SpaceTest {
 		CredentialsSettings settings = new CredentialsSettings();
 		settings.linkedinId = SpaceRequest.env().get("spacedog.test.linkedin.client.id");
 		settings.linkedinSecret = SpaceRequest.env().get("spacedog.test.linkedin.client.secret");
-		saveSettings(test, settings);
+		test.settings().save(settings);
 
 		// fails to create linkedin credentials if no authorization code
 		SpaceRequest.post("/1/login/linkedin").backend(test)//

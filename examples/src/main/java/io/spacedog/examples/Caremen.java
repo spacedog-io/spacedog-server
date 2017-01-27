@@ -20,6 +20,8 @@ import io.spacedog.client.SpaceEnv;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTarget;
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
+import io.spacedog.utils.Credentials;
 import io.spacedog.utils.CredentialsSettings;
 import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
@@ -36,20 +38,23 @@ import io.spacedog.utils.StripeSettings;
 
 public class Caremen extends SpaceTest {
 
-	static final Backend DEV;
-	static final Backend RECETTE;
-	static final Backend PRODUCTION;
+	static final SpaceDog DEV;
+	static final SpaceDog RECETTE;
+	static final SpaceDog PRODUCTION;
 
 	static {
 		String testPassword = SpaceEnv.defaultEnv().get("caremen_test_superadmin_password");
 		String prodPassword = SpaceEnv.defaultEnv().get("caremen_prod_superadmin_password");
 
-		DEV = new Backend("caredev", "caredev", testPassword, "platform@spacedog.io");
-		RECETTE = new Backend("carerec", "carerec", testPassword, "platform@spacedog.io");
-		PRODUCTION = new Backend("caremen", "caremen", prodPassword, "platform@spacedog.io");
+		DEV = SpaceDog.backend("caredev").username("caredev")//
+				.password(testPassword).email("platform@spacedog.io");
+		RECETTE = SpaceDog.backend("carerec").username("carerec")//
+				.password(testPassword).email("platform@spacedog.io");
+		PRODUCTION = SpaceDog.backend("caremen").username("caremen")//
+				.password(prodPassword).email("platform@spacedog.io");
 	}
 
-	private Backend backend;
+	private SpaceDog backend;
 
 	@Test
 	public void initCaremenBackend() throws IOException {
@@ -87,13 +92,13 @@ public class Caremen extends SpaceTest {
 	//
 
 	void deleteAllCredentialsButSuperAdmins() {
-		deleteAllCredentialsButSuperAdmins(backend);
+		backend.credentials().deleteAllButSuperAdmins();
 	}
 
 	void initCredentials() {
 		CredentialsSettings settings = new CredentialsSettings();
 		settings.sessionMaximumLifetime = 60 * 60 * 24 * 7;
-		saveSettings(backend, settings);
+		backend.settings().save(settings);
 	}
 
 	void initMailSettings() throws IOException {
@@ -146,7 +151,7 @@ public class Caremen extends SpaceTest {
 
 		settings.templates.put("notif-customer-welcome", template);
 
-		saveSettings(backend, settings);
+		backend.settings().save(settings);
 	}
 
 	void initSmsSettings() {
@@ -168,7 +173,7 @@ public class Caremen extends SpaceTest {
 		settings.twilio.authToken = env.get("caremen.twilio.authToken");
 		settings.twilio.defaultFrom = env.get("caremen.twilio.defaultFrom");
 
-		saveSettings(backend, settings);
+		backend.settings().save(settings);
 	}
 
 	void initStripeSettings() {
@@ -179,7 +184,7 @@ public class Caremen extends SpaceTest {
 				? SpaceEnv.defaultEnv().get("caremen.stripe.test.secret.key")//
 				: SpaceEnv.defaultEnv().get("caremen.stripe.prod.secret.key");
 
-		saveSettings(backend, settings);
+		backend.settings().save(settings);
 	}
 
 	void initFareSettings() {
@@ -228,7 +233,7 @@ public class Caremen extends SpaceTest {
 		acl.read("key", "user", "operator");
 		settings.put("references", acl);
 
-		saveSettings(backend, settings);
+		backend.settings().save(settings);
 	}
 
 	void initVehiculeTypes() {
@@ -359,11 +364,11 @@ public class Caremen extends SpaceTest {
 	void initInstallations() {
 		SpaceRequest.delete("/1/schema/installation").adminAuth(backend).go(200, 404);
 		SpaceRequest.put("/1/schema/installation").adminAuth(backend).go(201);
-		Schema schema = getSchema("installation", backend);
+		Schema schema = backend.schema().get("installation");
 		schema.acl("key", DataPermission.create, DataPermission.read, DataPermission.update, DataPermission.delete);
 		schema.acl("user", DataPermission.create, DataPermission.read, DataPermission.update, DataPermission.delete);
 		schema.acl("admin", DataPermission.search, DataPermission.update_all, DataPermission.delete_all);
-		setSchema(schema, backend);
+		backend.schema().set(schema);
 	}
 
 	static Schema buildCourseSchema() {
@@ -573,16 +578,17 @@ public class Caremen extends SpaceTest {
 				"plateform@spacedog.io", "reminder", false);
 	}
 
-	private void resetCredentials(Backend backend, String username, //
+	private void resetCredentials(SpaceDog superadmin, String username, //
 			String password, String email, String role, boolean admin) {
 
-		deleteCredentialsBySuperdog(backend.backendId, username);
+		superdogDeletesCredentials(superadmin.backendId(), username);
 
-		User user = admin //
-				? createAdminCredentials(backend, username, password, email)//
-				: createCredentials(backend.backendId, username, password, email);
+		Credentials user = admin //
+				? superadmin.credentials().create(username, password, email, true)//
+				: superadmin.credentials().create(username, password, email);
 
-		setRole(backend.adminUser, user, role);
+		if (role != null)
+			superadmin.credentials().setRole(user.id(), role);
 	}
 
 	void createRobots() {
@@ -599,16 +605,14 @@ public class Caremen extends SpaceTest {
 					.get("results.0.id");
 
 			if (node == null) {
-				User robot = signUp(backend.backendId, username, password);
-
-				SpaceRequest.put("/1/credentials/" + robot.id + "/roles/driver")//
-						.adminAuth(backend).go(200);
+				SpaceDog robot = signUp(backend.backendId(), username, password);
+				backend.credentials().setRole(robot.id(), "driver");
 
 				SpaceRequest.post("/1/data/driver").adminAuth(backend)//
 						.body("status", "not-working", "firstname", "Robot", //
 								"lastname", Integer.toString(i), "phone", "0606060606", //
 								"homeAddress", "9 rue Titon 75011 Paris", //
-								"credentialsId", robot.id, "vehicule", //
+								"credentialsId", robot.id(), "vehicule", //
 								Json.object("brand", "Faucon", "model", "Millenium", //
 										"type", "classic", "color", "Métal", //
 										"licencePlate", "DA-KISS-ME"))//

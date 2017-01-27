@@ -110,8 +110,8 @@ public class Reminder {
 
 	private SpaceDog login() {
 		SpaceEnv env = SpaceEnv.defaultEnv();
-		return SpaceDog.login(env.get("backend_id"), "reminder", //
-				env.get("caremen_reminder_password"));
+		return SpaceDog.backend(env.get("backend_id")) //
+				.username("reminder").login(env.get("caremen_reminder_password"));
 	}
 
 	private void push(SpaceDog dog, String driverCredentialsId, String message) {
@@ -139,7 +139,7 @@ public class Reminder {
 				.put("lt", to.toString())//
 				.build();
 
-		return dog.data().search(query, Course.class);
+		return dog.dataEndpoint().search(query, Course.class);
 	}
 
 	private String toMessage(List<Course> courses) {

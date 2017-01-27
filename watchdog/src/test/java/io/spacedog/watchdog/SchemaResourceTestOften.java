@@ -7,6 +7,7 @@ import org.junit.Test;
 
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Schema;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
@@ -19,7 +20,7 @@ public class SchemaResourceTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		Backend test = resetTestBackend();
+		SpaceDog test = resetTestBackend();
 
 		// anonymous gets all backend schema
 		// if no schema returns empty object
@@ -27,12 +28,12 @@ public class SchemaResourceTestOften extends SpaceTest {
 				.assertEquals(Json.merger().get());
 
 		// bob signs up
-		User bob = signUp(test, "bob", "hi bob", "bob@dog.com");
+		SpaceDog bob = signUp(test, "bob", "hi bob", "bob@dog.com");
 
 		// admin creates car, home and sale schemas
-		setSchema(buildCarSchema(), test);
-		setSchema(buildHomeSchema(), test);
-		setSchema(buildSaleSchema(), test);
+		test.schema().set(buildCarSchema());
+		test.schema().set(buildHomeSchema());
+		test.schema().set(buildSaleSchema());
 
 		// anonymous gets car, home and sale schemas
 		SpaceRequest.get("/1/schema/car").backend(test).go(200)//
@@ -136,7 +137,7 @@ public class SchemaResourceTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		Backend test = resetTestBackend();
+		SpaceDog test = resetTestBackend();
 
 		Schema schema = Schema.builder("home") //
 				.extra("global-scope", true)//
@@ -145,7 +146,7 @@ public class SchemaResourceTestOften extends SpaceTest {
 				.text("street").required().extra("global-scope", false) //
 				.build();
 
-		setSchema(schema, test);
+		test.schema().set(schema);
 
 		SpaceRequest.get("/1/schema/home").backend(test).go(200)//
 				.assertEquals(schema.node());
@@ -156,7 +157,7 @@ public class SchemaResourceTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		Backend test = resetTestBackend();
+		SpaceDog test = resetTestBackend();
 
 		// settings is a reserved schema name
 		SpaceRequest.get("/1/schema/settings").backend(test).go(400);

@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 
 public class SnapshotResourceTest extends SpaceTest {
 
@@ -20,16 +21,17 @@ public class SnapshotResourceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		Backend aaaaBackend = new Backend("aaaa", "aaaa", "hi aaaa", "aaaa@dog.com");
-		Backend bbbbBackend = new Backend("bbbb", "bbbb", "hi bbbb", "bbbb@dog.com");
-		Backend ccccBackend = new Backend("cccc", "cccc", "hi cccc", "cccc@dog.com");
-		deleteBackend(aaaaBackend);
-		deleteBackend(bbbbBackend);
-		deleteBackend(ccccBackend);
+		SpaceDog aaaa = SpaceDog.backend("aaaa").username("aaaa").password("hi aaaa");
+		SpaceDog bbbb = SpaceDog.backend("bbbb").username("bbbb").password("hi bbbb");
+		SpaceDog cccc = SpaceDog.backend("cccc").username("cccc").password("hi cccc");
+
+		aaaa.backend().delete();
+		bbbb.backend().delete();
+		cccc.backend().delete();
 
 		// creates backend and credentials
-		createBackend(aaaaBackend);
-		User vince = signUp(aaaaBackend, "vince", "hi vince");
+		aaaa.signUpBackend();
+		SpaceDog vince = signUp(aaaa, "vince", "hi vince");
 		SpaceRequest.get("/1/login").userAuth(vince).go(200);
 
 		// deletes the current repository to force repo creation by this test
@@ -74,8 +76,8 @@ public class SnapshotResourceTest extends SpaceTest {
 				.assertEquals(firstSnap);
 
 		// creates another backend and credentials
-		createBackend(bbbbBackend);
-		User fred = signUp(bbbbBackend, "fred", "hi fred");
+		bbbb.signUpBackend();
+		SpaceDog fred = signUp(bbbb, "fred", "hi fred");
 		SpaceRequest.get("/1/login").userAuth(fred).go(200);
 
 		// second snapshot (returns 201 since wait for completion true, 202
@@ -98,8 +100,8 @@ public class SnapshotResourceTest extends SpaceTest {
 				.assertEquals(firstSnap, "results.1");
 
 		// create another account and add a credentials
-		createBackend(ccccBackend);
-		User nath = signUp(ccccBackend, "nath", "hi nath");
+		cccc.signUpBackend();
+		SpaceDog nath = signUp(cccc, "nath", "hi nath");
 		SpaceRequest.get("/1/login").userAuth(nath).go(200);
 
 		// third snapshot (returns 200 since wait for completion true, 202
@@ -160,9 +162,9 @@ public class SnapshotResourceTest extends SpaceTest {
 		SpaceRequest.get("/1/login").userAuth(nath).go(200);
 
 		// delete all accounts and internal indices
-		SpaceRequest.delete("/1/backend").adminAuth(aaaaBackend).go(200);
-		SpaceRequest.delete("/1/backend").adminAuth(bbbbBackend).go(200);
-		SpaceRequest.delete("/1/backend").adminAuth(ccccBackend).go(200);
+		SpaceRequest.delete("/1/backend").adminAuth(aaaa).go(200);
+		SpaceRequest.delete("/1/backend").adminAuth(bbbb).go(200);
+		SpaceRequest.delete("/1/backend").adminAuth(cccc).go(200);
 
 		// check all accounts are deleted
 		SpaceRequest.get("/1/login").userAuth(vince).go(401);
@@ -188,13 +190,13 @@ public class SnapshotResourceTest extends SpaceTest {
 
 		// check account administrator can not restore the platform
 		SpaceRequest.post("/1/snapshot/latest/restore")//
-				.adminAuth(aaaaBackend)//
+				.adminAuth(aaaa)//
 				.go(403);
 
 		// clean up
-		SpaceRequest.delete("/1/backend").adminAuth(aaaaBackend).go(200);
-		SpaceRequest.delete("/1/backend").adminAuth(bbbbBackend).go(200);
-		SpaceRequest.delete("/1/backend").adminAuth(ccccBackend).go(200);
+		SpaceRequest.delete("/1/backend").adminAuth(aaaa).go(200);
+		SpaceRequest.delete("/1/backend").adminAuth(bbbb).go(200);
+		SpaceRequest.delete("/1/backend").adminAuth(cccc).go(200);
 
 		// check snapshot list did not change since last snapshot
 		SpaceRequest.get("/1/snapshot")//

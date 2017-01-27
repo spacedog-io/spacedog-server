@@ -8,19 +8,20 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Schema;
 
 public class ImportMappyPlaces extends SpaceTest {
 
-	private static Backend backend = new Backend("examples", "examples", "hi examples", "david@spacedog.io");
+	private static SpaceDog backend;
 
 	public static void main(String[] args) {
 		try {
 
 			SpaceRequest.setForTestingDefault(false);
-			resetBackend(backend);
+			backend = resetBackend("examples", "examples", "hi examples");
 			SpaceRequest.post("/1/schema/resto").adminAuth(backend).bodySchema(buildRestoSchema()).go(201);
 
 			double step = 0.01;

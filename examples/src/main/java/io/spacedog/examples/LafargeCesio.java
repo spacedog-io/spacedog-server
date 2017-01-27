@@ -9,6 +9,7 @@ import io.spacedog.client.SpaceEnv;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTarget;
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.MailSettings;
 import io.spacedog.utils.MailSettings.SmtpSettings;
 
@@ -19,10 +20,8 @@ public class LafargeCesio extends SpaceTest {
 
 		SpaceRequest.env().target(SpaceTarget.production);
 
-		Backend backend = new Backend(//
-				"cesio", SpaceEnv.defaultEnv().get("spacedog.cesio.superadmin.username"), //
-				SpaceEnv.defaultEnv().get("spacedog.cesio.superadmin.password"), //
-				"david@spacedog.io");
+		SpaceEnv env = SpaceEnv.defaultEnv();
+		SpaceDog backend = SpaceDog.backend("cesio").username(env.get("spacedog.cesio.superadmin.username")).password(env.get("spacedog.cesio.superadmin.password"));
 
 		// resetBackend(backend);
 		// resetSchema(LafargeCesioResource.playerSchema(), backend);
@@ -39,6 +38,6 @@ public class LafargeCesio extends SpaceTest {
 		settings.smtp.password = SpaceRequest.env()//
 				.get("spacedog.cesio.smtp.password");
 
-		saveSettings(backend, settings);
+		backend.settings().save(settings);
 	}
 }

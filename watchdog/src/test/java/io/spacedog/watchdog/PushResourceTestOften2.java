@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
@@ -43,26 +44,26 @@ public class PushResourceTestOften2 extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		Backend test = resetTestBackend();
+		SpaceDog test = resetTestBackend();
 
 		// prepare users
-		User dave = signUp(test, "dave", "hi dave");
-		User vince = signUp(test, "vince", "hi vince");
-		User fred = signUp(test, "fred", "hi fred");
-		User nath = signUp(test, "nath", "hi nath");
+		SpaceDog dave = SpaceDog.backend("test").username("dave").signUp("hi dave");
+		SpaceDog vince = SpaceDog.backend("test").username("vince").signUp("hi vince");
+		SpaceDog fred = SpaceDog.backend("test").username("fred").signUp("hi fred");
+		SpaceDog nath = SpaceDog.backend("test").username("nath").signUp("hi nath");
 
 		// prepare installation schema
-		initPushDefaultSchema(test);
+		test.schema().setDefault("installation");
 
 		// add create permission to guest requests
-		Schema schema = getSchema("installation", test);
+		Schema schema = test.schema().get("installation");
 		schema.acl(new SchemaAcl()//
 				.set("key", DataPermission.create, DataPermission.read, DataPermission.update)//
 				.set("user", DataPermission.create, DataPermission.read, DataPermission.update)//
 				.set("admin", DataPermission.create, DataPermission.update_all, //
 						DataPermission.search, DataPermission.delete_all));
 
-		setSchema(schema, test);
+		test.schema().set(schema);
 
 		// anonymous fails to installs joho
 		// because trying to set credentials id is forbidden
@@ -111,7 +112,7 @@ public class PushResourceTestOften2 extends SpaceTest {
 		SpaceRequest.post("/1/installation/" + fredInstallId + "/push")//
 				.userAuth(vince).body(MESSAGE, "coucou").go(200)//
 				.assertEquals(fredInstallId, "pushedTo.0.installationId")//
-				.assertEquals(fred.username, "pushedTo.0.userId");
+				.assertEquals(fred.username(), "pushedTo.0.userId");
 
 		// vince pushes a complex object message to dave
 		SpaceRequest.post("/1/installation/" + daveInstallId + "/push")//
@@ -139,8 +140,8 @@ public class PushResourceTestOften2 extends SpaceTest {
 				.backend(test).userAuth(vince).go(200)//
 				.assertEquals("joho", APP_ID)//
 				.assertEquals("super-token-vince", TOKEN)//
-				.assertEquals(vince.username, CREDENTIALS_NAME)//
-				.assertEquals(vince.id, CREDENTIALS_ID)//
+				.assertEquals(vince.username(), CREDENTIALS_NAME)//
+				.assertEquals(vince.id(), CREDENTIALS_ID)//
 				.assertNotPresent(TAGS);
 
 		// vince fails to get all installations since not admin
@@ -323,14 +324,14 @@ public class PushResourceTestOften2 extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		Backend test = resetTestBackend();
+		SpaceDog test = resetTestBackend();
 
 		// prepare users
-		User dave = signUp(test, "dave", "hi dave");
-		User vince = signUp(test, "vince", "hi vince");
+		SpaceDog dave = SpaceDog.backend("test").username("dave").signUp("hi dave");
+		SpaceDog vince = SpaceDog.backend("test").username("vince").signUp("hi vince");
 
 		// prepare installation schema
-		initPushDefaultSchema(test);
+		test.schema().setDefault("installation");
 
 		// vince and dave install joho
 		String vinceInstallId = installApplication("joho", APNS, test, vince);
@@ -419,11 +420,11 @@ public class PushResourceTestOften2 extends SpaceTest {
 		return array.build();
 	}
 
-	private String installApplication(String appId, String pushService, Backend backend, User user) {
+	private String installApplication(String appId, String pushService, SpaceDog backend, SpaceDog user) {
 
 		String installId = SpaceRequest.post("/1/installation")//
 				.userAuth(user)//
-				.body(TOKEN, "token-" + user.username, APP_ID, appId, PUSH_SERVICE, pushService)//
+				.body(TOKEN, "token-" + user.username(), APP_ID, appId, PUSH_SERVICE, pushService)//
 				.go(201)//
 				.getString(ID);
 
@@ -431,9 +432,9 @@ public class PushResourceTestOften2 extends SpaceTest {
 				.adminAuth(backend).go(200)//
 				.assertEquals(appId, APP_ID)//
 				.assertEquals(pushService, PUSH_SERVICE)//
-				.assertEquals("token-" + user.username, TOKEN)//
-				.assertEquals(user.username, CREDENTIALS_NAME)//
-				.assertEquals(user.id, CREDENTIALS_ID)//
+				.assertEquals("token-" + user.username(), TOKEN)//
+				.assertEquals(user.username(), CREDENTIALS_NAME)//
+				.assertEquals(user.id(), CREDENTIALS_ID)//
 				.assertNotPresent(TAGS);
 
 		return installId;

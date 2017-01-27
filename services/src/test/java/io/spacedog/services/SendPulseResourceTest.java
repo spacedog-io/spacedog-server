@@ -10,6 +10,7 @@ import org.joda.time.DateTime;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTarget;
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.SendPulseSettings;
 
 public class SendPulseResourceTest extends SpaceTest {
@@ -24,15 +25,15 @@ public class SendPulseResourceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceRequest.env().target(SpaceTarget.local);
-		Backend test = resetTestBackend();
-		User fred = signUp(test, "fred", "hi fred");
+		SpaceDog test = resetTestBackend();
+		SpaceDog fred = SpaceDog.backend("test").username("fred").signUp("hi fred");
 
 		// set sendpulse test settings
 		SendPulseSettings settings = new SendPulseSettings();
 		settings.clientId = SpaceRequest.env().get("spacedog.test.sendpulse.client.id");
 		settings.clientSecret = SpaceRequest.env().get("spacedog.test.sendpulse.client.secret");
 		settings.authorizedRoles = Collections.singleton("user");
-		saveSettings(test, settings);
+		test.settings().save(settings);
 
 		// fred can get all websites
 		SpaceRequest.get("/1/sendpulse/push/websites").userAuth(fred).go(200);
@@ -63,14 +64,13 @@ public class SendPulseResourceTest extends SpaceTest {
 
 		// prepare
 		SpaceRequest.env().target(SpaceTarget.production);
-		Backend sendpulse = new Backend("sendpulse", "sendpulse", "hi sendpulse", "david@spacedog.io");
 
 		// if sendpulde test web app already initialized then return
-		if (SpaceRequest.get("/1/file/www/index.html").backend(sendpulse)//
+		if (SpaceRequest.get("/1/file/www/index.html").backendId("sendpulse")//
 				.go(200, 404).httpResponse().getStatus() == 200)
 			return;
 
-		sendpulse = resetBackend(sendpulse);
+		SpaceDog sendpulse = resetBackend("sendpulse", "sendpulse", "hi sendpulse");
 
 		// upload web site
 		upload(sendpulse, "index.html");
@@ -78,7 +78,7 @@ public class SendPulseResourceTest extends SpaceTest {
 		upload(sendpulse, "sp-push-worker.js");
 	}
 
-	private void upload(Backend backend, String name) {
+	private void upload(SpaceDog backend, String name) {
 		SpaceRequest.put("/1/file/www/" + name)//
 				.bodyResource("io/spacedog/services/sendpulse/" + name)//
 				.adminAuth(backend)//

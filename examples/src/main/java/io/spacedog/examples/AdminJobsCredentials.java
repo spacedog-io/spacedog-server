@@ -28,7 +28,7 @@ public class AdminJobsCredentials extends SpaceTest {
 
 	private void initCredentials(String username, String password, String role) {
 
-		deleteCredentialsBySuperdog("api", username);
+		superdogDeletesCredentials("api", username);
 
 		String id = SpaceRequest.post("/1/credentials").superdogAuth()//
 				.body(FIELD_USERNAME, username, FIELD_PASSWORD, password, //

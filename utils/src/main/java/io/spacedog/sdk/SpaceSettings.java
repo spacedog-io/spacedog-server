@@ -8,10 +8,10 @@ import io.spacedog.utils.Settings;
 
 public class SpaceSettings {
 
-	SpaceDog session;
+	SpaceDog dog;
 
 	SpaceSettings(SpaceDog session) {
-		this.session = session;
+		this.dog = session;
 	}
 
 	public <K extends Settings> K get(Class<K> settingsClass) {
@@ -19,9 +19,8 @@ public class SpaceSettings {
 	}
 
 	public <K> K get(String id, Class<K> settingsClass) {
-		return SpaceRequest.get("/1/settings/" + id)//
-				.bearerAuth(session.backendId, session.accessToken)//
-				.go(200).toObject(settingsClass);
+		return SpaceRequest.get("/1/settings/{id}")//
+				.routeParam("id", id).auth(dog).go(200).toObject(settingsClass);
 	}
 
 	public <K extends Settings> void save(K settings) {
@@ -30,9 +29,8 @@ public class SpaceSettings {
 
 	public void save(String id, Object settings) {
 		JsonNode node = Json.mapper().valueToTree(settings);
-		SpaceRequest.put("/1/settings/" + id)//
-				.bearerAuth(session.backendId, session.accessToken)//
-				.bodyPojo(node).go(200, 201);
+		SpaceRequest.put("/1/settings/{id}")//
+				.routeParam("id", id).auth(dog).bodyPojo(node).go(200, 201);
 	}
 
 	public <K extends Settings> void delete(Class<K> settingsClass) {
@@ -40,8 +38,6 @@ public class SpaceSettings {
 	}
 
 	public void delete(String id) {
-		SpaceRequest.delete("/1/settings/" + id)//
-				.bearerAuth(session.backendId, session.accessToken)//
-				.go(200);
+		SpaceRequest.delete("/1/settings/{id}").routeParam("id", id).auth(dog).go(200);
 	}
 }

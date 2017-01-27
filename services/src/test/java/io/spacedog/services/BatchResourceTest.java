@@ -12,6 +12,7 @@ import com.google.common.collect.Sets;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Schema;
 
@@ -75,7 +76,7 @@ public class BatchResourceTest extends SpaceTest {
 				.assertEquals(200, "responses.4.status")//
 				.assertEquals(1, "debug.batchCredentialChecks");
 
-		Backend test = new Backend("test", "test", "hi test", "test@dog.com");
+		SpaceDog test = SpaceDog.backend("test").username("test").password("hi test").email("test@dog.com");
 
 		// should succeed to create dave and vince users and fetch them with
 		// simple backend key credentials
@@ -204,7 +205,7 @@ public class BatchResourceTest extends SpaceTest {
 				.build();
 
 		SpaceResponse response = SpaceRequest.post("/1/batch")//
-				.debugServer().basicAuth(test, "vince", "hi vince").body(batch).go(200)//
+				.debugServer().basicAuth("test", "vince", "hi vince").body(batch).go(200)//
 				.assertEquals(201, "responses.0.status")//
 				.assertEquals("1", "responses.0.id")//
 				.assertEquals(201, "responses.1.status")//
@@ -242,7 +243,7 @@ public class BatchResourceTest extends SpaceTest {
 				.build();
 
 		SpaceRequest.post("/1/batch?stopOnError=true")//
-				.debugServer().basicAuth(test, "vince", "hi vince").body(batch).go(200)//
+				.debugServer().basicAuth("test", "vince", "hi vince").body(batch).go(200)//
 				.assertEquals(200, "responses.0.status")//
 				.assertEquals(404, "responses.1.status")//
 				.assertSizeEquals(2, "responses")//

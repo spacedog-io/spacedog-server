@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
@@ -16,7 +17,7 @@ public class FileResourceTestOncePerDay extends SpaceTest {
 	public void test() throws Exception {
 
 		prepareTest(false);
-		Backend test = resetTestBackend();
+		SpaceDog test = resetTestBackend();
 
 		SpaceRequest.get("/1/file").adminAuth(test).go(200)//
 				.assertSizeEquals(0, "results");

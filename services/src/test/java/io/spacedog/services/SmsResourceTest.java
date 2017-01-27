@@ -9,6 +9,7 @@ import com.google.common.collect.Sets;
 import io.spacedog.client.SpaceEnv;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.SmsSettings;
 import io.spacedog.utils.SmsSettings.TwilioSettings;
 
@@ -19,11 +20,11 @@ public class SmsResourceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		Backend test = resetTestBackend();
+		SpaceDog test = resetTestBackend();
 
 		// superadmin creates user vince with 'sms' role
-		User vince = signUp(test, "vince", "hi vince");
-		setRole(test.adminUser, vince, "sms");
+		SpaceDog vince = signUp(test, "vince", "hi vince");
+		setRole(test, vince, "sms");
 
 		// no sms settings => nobody can send any sms
 		SpaceRequest.post("/1/sms").backend(test).go(403);
@@ -33,7 +34,7 @@ public class SmsResourceTest extends SpaceTest {
 		// superadmin sets the list of roles allowed to send sms
 		SmsSettings settings = new SmsSettings();
 		settings.rolesAllowedToSendSms = Sets.newHashSet("sms");
-		saveSettings(test, settings);
+		test.settings().save(settings);
 
 		// vince is now allowed to send sms
 		// since he's got the 'sms' role
@@ -51,7 +52,7 @@ public class SmsResourceTest extends SpaceTest {
 		settings.twilio.accountSid = configuration.get("spacedog.twilio.accountSid");
 		settings.twilio.authToken = configuration.get("spacedog.twilio.authToken");
 		settings.twilio.defaultFrom = configuration.get("spacedog.twilio.defaultFrom");
-		saveSettings(test, settings);
+		test.settings().save(settings);
 
 		// vince sends an sms
 		String messageId = SpaceRequest.post("/1/sms").userAuth(vince)//

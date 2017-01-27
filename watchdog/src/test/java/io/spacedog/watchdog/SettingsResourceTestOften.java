@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SchemaSettings;
 import io.spacedog.utils.SettingsSettings;
@@ -23,8 +24,8 @@ public class SettingsResourceTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		Backend test = resetTestBackend();
-		User vince = signUp(test, "vince", "hi vince");
+		SpaceDog test = resetTestBackend();
+		SpaceDog vince = signUp(test, "vince", "hi vince");
 
 		ObjectNode animals = Json.object("lion", "Lion", "tiger", "Tiger");
 		ObjectNode jobs = Json.object("sailor", Json.array("Sailor", "Marin"), //
@@ -88,7 +89,7 @@ public class SettingsResourceTestOften extends SpaceTest {
 		acl.update("user");
 		SettingsSettings settings = new SettingsSettings();
 		settings.put("animals", acl);
-		saveSettings(test, settings);
+		test.settings().save(settings);
 
 		// guests can get the animals settings
 		// users are still forbidden
@@ -105,7 +106,7 @@ public class SettingsResourceTestOften extends SpaceTest {
 
 		// super admin can delete settings settings
 		// to get back to previous configuration
-		deleteSettings(test, SettingsSettings.class);
+		test.settings().delete(SettingsSettings.class);
 
 		// users can not update animals settings anymore
 		// but super admins can
@@ -123,7 +124,7 @@ public class SettingsResourceTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		Backend test = resetTestBackend();
+		SpaceDog test = resetTestBackend();
 
 		// schema settings are not directly updatable
 		SpaceRequest.put("/1/settings/schema")//

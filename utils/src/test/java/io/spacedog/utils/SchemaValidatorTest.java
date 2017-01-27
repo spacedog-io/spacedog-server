@@ -8,9 +8,6 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.utils.Json;
-import io.spacedog.utils.JsonBuilder;
-import io.spacedog.utils.SchemaValidator;
 import io.spacedog.utils.SchemaValidator.SchemaException;
 
 public class SchemaValidatorTest extends Assert {

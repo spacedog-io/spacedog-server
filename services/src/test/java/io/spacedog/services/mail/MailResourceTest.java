@@ -8,6 +8,7 @@ import com.google.common.io.Resources;
 
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.MailSettings;
 import io.spacedog.utils.MailSettings.SmtpSettings;
 import io.spacedog.utils.Utils;
@@ -23,8 +24,8 @@ public class MailResourceTest extends SpaceTest {
 	public void sendEmails() throws IOException {
 
 		prepareTest();
-		Backend test = resetTestBackend();
-		User vince = signUp(test, "vince", "hi vince");
+		SpaceDog test = resetTestBackend();
+		SpaceDog vince = signUp(test, "vince", "hi vince");
 
 		// by default users can not send emails
 		SpaceRequest.post("/1/mail").userAuth(vince).go(403);
@@ -39,7 +40,7 @@ public class MailResourceTest extends SpaceTest {
 		// admin allows users to send emails
 		MailSettings settings = new MailSettings();
 		settings.enableUserFullAccess = true;
-		saveSettings(test, settings);
+		test.settings().save(settings);
 
 		// now vince can email a simple html message
 		SpaceRequest.post("/1/mail").userAuth(vince)//
@@ -65,7 +66,7 @@ public class MailResourceTest extends SpaceTest {
 		settings.mailgun = new MailSettings.MailGunSettings();
 		settings.mailgun.domain = "api.spacedog.io";
 		settings.mailgun.key = "123456789";
-		saveSettings(test, settings);
+		test.settings().save(settings);
 
 		// admin fails to email since mailgun key is invalid
 		SpaceRequest.post("/1/mail").adminAuth(test)//
@@ -82,7 +83,7 @@ public class MailResourceTest extends SpaceTest {
 		settings.smtp.sslOnConnect = true;
 		settings.smtp.login = SpaceRequest.env().get("spacedog.test.smtp.login");
 		settings.smtp.password = SpaceRequest.env().get("spacedog.test.smtp.password");
-		saveSettings(test, settings);
+		test.settings().save(settings);
 
 		// load your HTML email template
 		String emailBody = Resources.toString(//

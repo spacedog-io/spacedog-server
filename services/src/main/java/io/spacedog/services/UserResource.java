@@ -22,7 +22,7 @@ import net.codestory.http.payload.Payload;
 public class UserResource extends Resource {
 
 	//
-	// User constants and schema
+	// SpaceDog constants and schema
 	//
 
 	public static final String TYPE = "user";

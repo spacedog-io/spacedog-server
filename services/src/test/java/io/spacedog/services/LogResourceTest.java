@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Json;
 
@@ -19,9 +20,9 @@ public class LogResourceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		Backend test2 = resetTest2Backend();
-		Backend test = resetTestBackend();
-		User fred = signUp(test, "fred", "hi fred");
+		SpaceDog test2 = resetTest2Backend();
+		SpaceDog test = resetTestBackend();
+		SpaceDog fred = signUp(test, "fred", "hi fred");
 
 		SpaceRequest.get("/1/data").userAuth(fred).go(200);
 		SpaceRequest.get("/1/data").userAuth(fred).go(200);
@@ -88,22 +89,22 @@ public class LogResourceTest extends SpaceTest {
 		prepareTest();
 
 		// superdog creates purge user in root backend
-		deleteCredentialsBySuperdog("api", "purgealltest");
-		User purgeUser = createTempCredentials("api", "purgealltest");
+		superdogDeletesCredentials("api", "purgealltest");
+		SpaceDog purgeUser = createTempUser("api", "purgealltest");
 
 		// purge user fails to delete any logs
 		// since it doesn't have the 'purgeall' role
 		SpaceRequest.delete("/1/log").userAuth(purgeUser).go(403);
 
 		// superdog assigns 'purgeall' role to purge user
-		SpaceRequest.put("/1/credentials/" + purgeUser.id + "/roles/purgeall")//
+		SpaceRequest.put("/1/credentials/" + purgeUser.id() + "/roles/purgeall")//
 				.superdogAuth().go(200);
 
 		// create test and test2 backends and users
-		Backend test = resetTestBackend();
-		Backend test2 = resetTest2Backend();
-		User fred = signUp(test, "fred", "hi fred");
-		User vince = signUp(test2, "vince", "hi vince");
+		SpaceDog test = resetTestBackend();
+		SpaceDog test2 = resetTest2Backend();
+		SpaceDog fred = signUp(test, "fred", "hi fred");
+		SpaceDog vince = signUp(test2, "vince", "hi vince");
 
 		// data requests for logs
 		SpaceRequest.get("/1/data").userAuth(fred).go(200);
@@ -170,8 +171,8 @@ public class LogResourceTest extends SpaceTest {
 		prepareTest();
 
 		// create test backends and users
-		Backend test = resetTestBackend();
-		Backend test2 = resetTest2Backend();
+		SpaceDog test = resetTestBackend();
+		SpaceDog test2 = resetTest2Backend();
 
 		signUp(test, "vince", "hi vince");
 		signUp(test2, "fred", "hi fred");
@@ -196,8 +197,8 @@ public class LogResourceTest extends SpaceTest {
 				.assertEquals("test", "results.7.credentials.backendId");
 
 		// after backend deletion, logs are still accessible to superdogs
-		deleteBackend(test);
-		deleteBackend(test2);
+		test.backend().delete();
+		test2.backend().delete();
 
 		SpaceRequest.get("/1/log").refresh().superdogAuth().go(200)//
 				.assertEquals("DELETE", "results.0.method")//
@@ -231,11 +232,14 @@ public class LogResourceTest extends SpaceTest {
 		prepareTest();
 
 		// superdog creates superadmin named nath in root 'api' backend
-		User nath = new User("api", "nath", "hi nath", "platform@spacedog.io");
-		nath.id = SpaceRequest.post("/1/credentials").superdogAuth()//
-				.body("username", nath.username, "password", nath.password, //
-						"email", nath.email, "level", "SUPER_ADMIN")
+		SpaceDog nath = SpaceDog.backend("api").username("nath")//
+				.password("hi nath").email("nath@dog.com");
+		String id = SpaceRequest.post("/1/credentials").superdogAuth()//
+				.body("username", nath.username(), "password", nath.password().get(), //
+						"email", nath.email().get(), "level", "SUPER_ADMIN")
 				.go(201).getString("id");
+
+		nath.id(id);
 
 		// anonymous gets data from test backend
 		SpaceRequest.get("/1/data").backendId("test").go();
@@ -253,7 +257,7 @@ public class LogResourceTest extends SpaceTest {
 				.assertEquals("/1/credentials", "results.1.path");
 
 		// clean nath credentials
-		SpaceRequest.delete("/1/credentials/" + nath.id).userAuth(nath).go(200);
+		SpaceRequest.delete("/1/credentials/" + nath.id()).userAuth(nath).go(200);
 	}
 
 	@Test
@@ -263,11 +267,11 @@ public class LogResourceTest extends SpaceTest {
 		prepareTest();
 
 		// creates test backend and user
-		Backend test = resetTestBackend();
+		SpaceDog test = resetTestBackend();
 		SpaceRequest.get("/1/data").backend(test).go(200);
 		SpaceRequest.get("/1/data/user").backend(test).go(403);
-		User vince = signUp(test, "vince", "hi vince");
-		SpaceRequest.get("/1/credentials/" + vince.id).userAuth(vince).go(200);
+		SpaceDog vince = signUp(test, "vince", "hi vince");
+		SpaceRequest.get("/1/credentials/" + vince.id()).userAuth(vince).go(200);
 
 		// superdog search for test backend logs with status 400 and higher
 		SpaceRequest.post("/1/log/search").refresh().size(1).superdogAuth(test)//
@@ -281,7 +285,7 @@ public class LogResourceTest extends SpaceTest {
 		SpaceRequest.post("/1/log/search").size(7).superdogAuth(test)//
 				.body("terms", Json.object("credentials.type", Json.array("SUPER_ADMIN", "USER", "KEY")))//
 				.go(200)//
-				.assertEquals("/1/credentials/" + vince.id, "results.0.path")//
+				.assertEquals("/1/credentials/" + vince.id(), "results.0.path")//
 				.assertEquals("/1/login", "results.1.path")//
 				.assertEquals("/1/credentials", "results.2.path")//
 				.assertEquals("/1/data/user", "results.3.path")//
@@ -293,7 +297,7 @@ public class LogResourceTest extends SpaceTest {
 		SpaceRequest.post("/1/log/search").size(7).superdogAuth(test)//
 				.body("terms", Json.object("credentials.type", Json.array("USER", "KEY")))//
 				.go(200)//
-				.assertEquals("/1/credentials/" + vince.id, "results.0.path")//
+				.assertEquals("/1/credentials/" + vince.id(), "results.0.path")//
 				.assertEquals("/1/login", "results.1.path")//
 				.assertEquals("/1/credentials", "results.2.path")//
 				.assertEquals("/1/data/user", "results.3.path")//
@@ -315,7 +319,7 @@ public class LogResourceTest extends SpaceTest {
 				.assertEquals("/1/log/search", "results.1.path")//
 				.assertEquals("/1/log/search", "results.2.path")//
 				.assertEquals("/1/log/search", "results.3.path")//
-				.assertEquals("/1/credentials/" + vince.id, "results.4.path")//
+				.assertEquals("/1/credentials/" + vince.id(), "results.4.path")//
 				.assertEquals("/1/login", "results.5.path")//
 				.assertEquals("/1/credentials", "results.6.path")//
 				.assertEquals("/1/data/user", "results.7.path")//

@@ -19,6 +19,7 @@ import com.google.common.collect.Sets;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Schema;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
@@ -31,9 +32,9 @@ public class DataResource2TestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		Backend test = resetTestBackend();
-		setSchema(SchemaResourceTestOften.buildSaleSchema(), test);
-		User fred = signUp(test, "fred", "hi fred");
+		SpaceDog test = resetTestBackend();
+		test.schema().set(SchemaResourceTestOften.buildSaleSchema());
+		SpaceDog fred = signUp(test, "fred", "hi fred");
 
 		// fred fails to create a sale with no body
 		SpaceRequest.post("/1/data/sale").userAuth(fred).go(400);
@@ -191,7 +192,7 @@ public class DataResource2TestOften extends SpaceTest {
 				res3e.objectNode().deepCopy().without(Lists.newArrayList("meta", "number")));
 
 		// vince fails to update nor delete this sale since not the owner
-		User vince = signUp(test, "vince", "hi vince");
+		SpaceDog vince = signUp(test, "vince", "hi vince");
 		SpaceRequest.put("/1/data/sale/" + id).userAuth(vince)//
 				.body("number", "0123456789").go(403);
 		SpaceRequest.delete("/1/data/sale/" + id).userAuth(vince).go(403);
@@ -207,10 +208,8 @@ public class DataResource2TestOften extends SpaceTest {
 		// prepare
 
 		prepareTest();
-		Backend test = resetTestBackend();
-		setSchema(//
-				Schema.builder("message").text("text").build(), //
-				test);
+		SpaceDog test = resetTestBackend();
+		test.schema().set(Schema.builder("message").text("text").build());
 
 		// should successfully create 4 messages
 
@@ -237,13 +236,11 @@ public class DataResource2TestOften extends SpaceTest {
 	public void testAllObjectIdStrategies() {
 
 		prepareTest();
-		Backend test = resetTestBackend();
+		SpaceDog test = resetTestBackend();
 
 		// creates message schema with auto generated id strategy
 
-		setSchema(//
-				Schema.builder("message").string("text").build(), //
-				test);
+		test.schema().set(Schema.builder("message").string("text").build());
 
 		// creates a message object with auto generated id
 
@@ -270,8 +267,8 @@ public class DataResource2TestOften extends SpaceTest {
 
 		// creates message2 schema with code property as id
 
-		setSchema(Schema.builder("message2").id("code")//
-				.string("code").string("text").build(), test);
+		test.schema().set(Schema.builder("message2").id("code")//
+		.string("code").string("text").build());
 
 		// creates a message2 object with code = 2
 
@@ -310,12 +307,10 @@ public class DataResource2TestOften extends SpaceTest {
 		// prepare
 
 		prepareTest();
-		Backend test = resetTestBackend();
-		User vince = signUp(test, "vince", "hi vince");
+		SpaceDog test = resetTestBackend();
+		SpaceDog vince = signUp(test, "vince", "hi vince");
 
-		setSchema(//
-				Schema.builder("message").string("text").build(), //
-				test);
+		test.schema().set(Schema.builder("message").string("text").build());
 
 		SpaceRequest.post("/1/data/message").userAuth(vince)//
 				.body("text", "hello").go(201);
@@ -356,7 +351,7 @@ public class DataResource2TestOften extends SpaceTest {
 		SpaceRequest.get("/1/data/message").from(9999).size(10).userAuth(vince).go(400);
 	}
 
-	private Collection<String> fetchMessages(User user, int from, int size) {
+	private Collection<String> fetchMessages(SpaceDog user, int from, int size) {
 		JsonNode results = SpaceRequest.get("/1/data/message")//
 				.refresh().from(from).size(size)//
 				.userAuth(user).go(200)//

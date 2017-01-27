@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceResponse;
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
@@ -21,9 +22,9 @@ public class DataResourceTestOften extends SpaceTest {
 	public void createFindUpdateAndDelete() {
 
 		prepareTest();
-		Backend test = resetTestBackend();
-		setSchema(SchemaResourceTestOften.buildCarSchema(), test);
-		User vince = signUp(test, "vince", "hi vince");
+		SpaceDog test = resetTestBackend();
+		test.schema().set(SchemaResourceTestOften.buildCarSchema());
+		SpaceDog vince = signUp(test, "vince", "hi vince");
 
 		ObjectNode car = Json.objectBuilder() //
 				.put("serialNumber", "1234567890") //

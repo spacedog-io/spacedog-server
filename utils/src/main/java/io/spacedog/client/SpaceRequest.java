@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 
 import org.apache.http.Header;
 
@@ -25,8 +26,7 @@ import com.mashape.unirest.request.GetRequest;
 import com.mashape.unirest.request.HttpRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
 
-import io.spacedog.client.SpaceClient.Backend;
-import io.spacedog.client.SpaceClient.User;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Exceptions;
@@ -104,16 +104,16 @@ public class SpaceRequest {
 		return new SpaceRequest(uri, HttpMethod.HEAD);
 	}
 
-	public SpaceRequest www(Backend backend) {
-		return www(backend.backendId);
+	public SpaceRequest www(SpaceDog backend) {
+		return www(backend.backendId());
 	}
 
 	private SpaceRequest www(String backendId) {
 		return backendId(backendId + ".www");
 	}
 
-	public SpaceRequest backend(Backend backend) {
-		return backendId(backend.backendId);
+	public SpaceRequest backend(SpaceDog dog) {
+		return backendId(dog.backendId());
 	}
 
 	public SpaceRequest backendId(String backendId) {
@@ -123,27 +123,38 @@ public class SpaceRequest {
 		return this;
 	}
 
-	public SpaceRequest adminAuth(Backend backend) {
-		return userAuth(backend.adminUser);
+	public SpaceRequest auth(SpaceDog dog) {
+		return auth(dog.backendId(), dog);
 	}
 
-	public SpaceRequest userAuth(User user) {
-		if (user.accessToken == null)
-			return basicAuth(user.backendId, user.username, user.password);
-		else
-			return bearerAuth(user.backendId, user.accessToken);
+	public SpaceRequest auth(String backendId, SpaceDog dog) {
+
+		Optional<String> accessToken = dog.accessToken();
+		if (accessToken.isPresent())
+			return bearerAuth(backendId, accessToken.get());
+
+		Optional<String> password = dog.password();
+		if (password.isPresent())
+			return basicAuth(backendId, dog.username(), password.get());
+
+		// if no password nor access token then no auth
+		return backendId(backendId);
 	}
 
-	public SpaceRequest basicAuth(Backend backend) {
-		return basicAuth(backend.adminUser);
+	public SpaceRequest adminAuth(SpaceDog dog) {
+		return auth(dog);
 	}
 
-	public SpaceRequest basicAuth(User user) {
-		return basicAuth(user.backendId, user.username, user.password);
+	public SpaceRequest userAuth(SpaceDog user) {
+		return auth(user);
 	}
 
-	public SpaceRequest basicAuth(Backend backend, String username, String password) {
-		return basicAuth(backend.backendId, username, password);
+	public SpaceRequest basicAuth(SpaceDog user) {
+		return basicAuth(user.backendId(), user.username(), user.password().get());
+	}
+
+	public SpaceRequest basicAuth(SpaceDog backend, String username, String password) {
+		return basicAuth(backend.backendId(), username, password);
 	}
 
 	public SpaceRequest basicAuth(String backendId, String username, String password) {
@@ -152,16 +163,8 @@ public class SpaceRequest {
 		return backendId(backendId);
 	}
 
-	public SpaceRequest bearerAuth(Backend backend) {
-		return bearerAuth(backend.adminUser);
-	}
-
-	public SpaceRequest bearerAuth(User user) {
-		return bearerAuth(user.backendId, user.accessToken);
-	}
-
-	public SpaceRequest bearerAuth(Backend backend, String accessToken) {
-		return bearerAuth(backend.backendId, accessToken);
+	public SpaceRequest bearerAuth(SpaceDog user) {
+		return bearerAuth(user.backendId(), user.accessToken().get());
 	}
 
 	public SpaceRequest bearerAuth(String backendId, String accessToken) {
@@ -367,8 +370,8 @@ public class SpaceRequest {
 		return superdogAuth(Backends.rootApi());
 	}
 
-	public SpaceRequest superdogAuth(Backend backend) {
-		return superdogAuth(backend.backendId);
+	public SpaceRequest superdogAuth(SpaceDog backend) {
+		return superdogAuth(backend.backendId());
 	}
 
 	public SpaceRequest superdogAuth(String backendId) {

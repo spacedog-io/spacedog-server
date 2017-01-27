@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Schema;
 
@@ -21,12 +22,10 @@ public class UserResourceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		Backend test = resetTestBackend();
+		SpaceDog test = resetTestBackend();
 
 		// admin sets user schema
-		setSchema(//
-				Schema.builder("user").id("username").string("username").string("email").build(), //
-				test);
+		test.schema().set(Schema.builder("user").id("username").string("username").string("email").build());
 
 		// vince signs up
 		SpaceRequest.post("/1/user").backend(test)//
@@ -34,7 +33,8 @@ public class UserResourceTest extends SpaceTest {
 				.body("username", "vince", "email", "vince@dog.com", "password", "hi vince")//
 				.go(201);
 
-		User vince = new User(test.backendId, "vince", "vince", "hi vince", "vince@dog.com");
+		SpaceDog vince = SpaceDog.backend("test").username("vince")//
+				.id("vince").password("hi vince").email("vince@dog.com");
 
 		// fred signs up
 		SpaceRequest.post("/1/user").backend(test)//
@@ -79,12 +79,10 @@ public class UserResourceTest extends SpaceTest {
 	public void userIsSigningUpAndMore() {
 
 		prepareTest();
-		Backend test = resetTestBackend();
+		SpaceDog test = resetTestBackend();
 
 		// admin sets user schema
-		setSchema(//
-				Schema.builder("user").id("username").string("username").string("email").build(), //
-				test);
+		test.schema().set(Schema.builder("user").id("username").string("username").string("email").build());
 
 		// fails since invalid users
 
@@ -116,7 +114,8 @@ public class UserResourceTest extends SpaceTest {
 				.body("username", "vince", "email", "vince@dog.com", "password", "hi vince")//
 				.go(201);
 
-		User vince = new User(test.backendId, "vince", "vince", "hi vince", "vince@dog.com");
+		SpaceDog vince = SpaceDog.backend("test").username("vince")//
+				.id("vince").password("hi vince").email("vince@dog.com");
 
 		// vince gets his user data
 		ObjectNode res2 = SpaceRequest.get("/1/user/vince").userAuth(vince).go(200).objectNode();
@@ -133,7 +132,7 @@ public class UserResourceTest extends SpaceTest {
 
 		// vince fails to get his user data if wrong backend id
 		SpaceRequest.get("/1/user/vince")//
-				.basicAuth("XXX", vince.username, vince.password).go(401);
+				.basicAuth("XXX", vince.username(), vince.password().get()).go(401);
 
 		// vince succeeds to login
 		SpaceRequest.get("/1/login").userAuth(vince).go(200);
@@ -156,12 +155,10 @@ public class UserResourceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		Backend test = resetTestBackend();
+		SpaceDog test = resetTestBackend();
 
 		// admin sets user schema
-		setSchema(//
-				Schema.builder("user").id("username").string("username").string("email").build(), //
-				test);
+		test.schema().set(Schema.builder("user").id("username").string("username").string("email").build());
 
 		// vince signs up
 		SpaceRequest.post("/1/user").backend(test)//
@@ -173,7 +170,8 @@ public class UserResourceTest extends SpaceTest {
 				.body("username", "fred", "email", "fred@dog.com", "password", "hi fred")//
 				.go(201);
 
-		User fred = new User(test.backendId, "fred", "fred", "hi fred", "fred@dog.com");
+		SpaceDog fred = SpaceDog.backend("test").username("fred")//
+				.id("fred").password("hi fred").email("fred@dog.com");
 
 		// anonymous gets vince user object
 		SpaceRequest.get("/1/user/vince").backend(test).go(200);
@@ -197,12 +195,10 @@ public class UserResourceTest extends SpaceTest {
 		// prepare
 
 		prepareTest();
-		Backend test = resetTestBackend();
+		SpaceDog test = resetTestBackend();
 
 		// admin sets user schema
-		setSchema(//
-				Schema.builder("user").id("username").string("username").string("email").build(), //
-				test);
+		test.schema().set(Schema.builder("user").id("username").string("username").string("email").build());
 
 		// toto signs up
 		SpaceRequest.post("/1/user").backend(test)//
@@ -309,12 +305,10 @@ public class UserResourceTest extends SpaceTest {
 	public void setUserCustomSchemaAndMore() {
 
 		prepareTest();
-		Backend test = resetTestBackend();
+		SpaceDog test = resetTestBackend();
 
 		// admin sets user schema
-		setSchema(//
-				Schema.builder("user").id("username").string("username").string("email").build(), //
-				test);
+		test.schema().set(Schema.builder("user").id("username").string("username").string("email").build());
 
 		// vince signs up
 		SpaceRequest.post("/1/user").backend(test)//

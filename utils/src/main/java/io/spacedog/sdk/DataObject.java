@@ -50,7 +50,7 @@ public class DataObject {
 		this.meta.type = type;
 	}
 
-	public DataObject(SpaceDog session, String type, String id) {
+	DataObject(SpaceDog session, String type, String id) {
 		this(session, type);
 		this.meta.id = id;
 	}
@@ -59,56 +59,77 @@ public class DataObject {
 		return meta.id;
 	}
 
-	public void id(String id) {
+	public DataObject id(String id) {
 		this.meta.id = id;
+		return this;
 	}
 
 	public String type() {
 		return meta.type == null ? DataObject.type(this.getClass()) : meta.type;
 	}
 
-	public void type(String type) {
+	public DataObject type(String type) {
 		this.meta.type = type;
+		return this;
 	}
 
 	public long version() {
 		return meta.version;
 	}
 
-	public void version(long version) {
+	public DataObject version(long version) {
 		this.meta.version = version;
+		return this;
 	}
 
 	public String createdBy() {
 		return meta.createdBy;
 	}
 
-	public void createdBy(String createdBy) {
+	public DataObject createdBy(String createdBy) {
 		this.meta.createdBy = createdBy;
+		return this;
 	}
 
 	public DateTime createdAt() {
 		return meta.createdAt;
 	}
 
-	public void createdAt(DateTime createdAt) {
+	public DataObject createdAt(DateTime createdAt) {
 		this.meta.createdAt = createdAt;
+		return this;
 	}
 
 	public String updatedBy() {
 		return meta.updatedBy;
 	}
 
-	public void updatedBy(String updatedBy) {
+	public DataObject updatedBy(String updatedBy) {
 		this.meta.updatedBy = updatedBy;
+		return this;
 	}
 
 	public DateTime updatesdAt() {
 		return meta.updatedAt;
 	}
 
-	public void updatedAt(DateTime updatedAt) {
+	public DataObject updatedAt(DateTime updatedAt) {
 		this.meta.updatedAt = updatedAt;
+		return this;
+	}
+
+	public ObjectNode node() {
+		return node;
+	}
+
+	public DataObject node(ObjectNode node) {
+		this.node = node;
+		return this;
+	}
+
+	public DataObject node(Object... elements) {
+		this.node = Json.object(elements);
+		return this;
 	}
 
 	public static <K extends DataObject> String type(Class<K> dataClass) {
@@ -121,7 +142,7 @@ public class DataObject {
 
 	public void fetch() {
 		node = SpaceRequest.get("/1/data/{type}/{id}")//
-				.bearerAuth(dog.backendId, dog.accessToken)//
+				.auth(dog)//
 				.routeParam("type", type())//
 				.routeParam("id", id())//
 				.go(200).objectNode();
@@ -139,13 +160,12 @@ public class DataObject {
 		return !getClass().equals(DataObject.class);
 	}
 
-	public void save() {
+	public DataObject save() {
 		SpaceRequest request = id() == null //
 				? SpaceRequest.post("/1/data/{type}")//
 				: SpaceRequest.put("/1/data/{type}/" + id());
 
-		request.bearerAuth(dog.backendId, dog.accessToken)//
-				.routeParam("type", type());
+		request.auth(dog).routeParam("type", type());
 
 		if (isSubClass())
 			request.bodyPojo(this);
@@ -155,11 +175,12 @@ public class DataObject {
 		ObjectNode result = request.go(200, 201).objectNode();
 		this.id(result.get("id").asText());
 		this.version(result.get("version").asLong());
+		return this;
 	}
 
 	public void delete() {
 		SpaceRequest.delete("/1/data/{type}/{id}")//
-				.bearerAuth(dog.backendId, dog.accessToken)//
+				.auth(dog)//
 				.routeParam("type", meta.type)//
 				.routeParam("id", meta.id)//
 				.go(200);

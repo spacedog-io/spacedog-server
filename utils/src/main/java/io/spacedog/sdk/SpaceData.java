@@ -40,13 +40,69 @@ public class SpaceData implements SpaceFields, SpaceParams {
 		} catch (InstantiationException | IllegalAccessException e) {
 			throw Exceptions.runtime(e);
 		}
-
 	}
 
 	public <K extends DataObject> K object(Class<K> dataClass, String id) {
 		K object = object(dataClass);
 		object.id(id);
 		return object;
+	}
+
+	//
+	// Load
+	//
+
+	public class GetAllRequest {
+		private String type;
+		private Integer from;
+		private Integer size;
+		private Boolean refresh;
+
+		public GetAllRequest type(String type) {
+			this.type = type;
+			return this;
+		}
+
+		public GetAllRequest from(int from) {
+			this.from = from;
+			return this;
+		}
+
+		public GetAllRequest size(int size) {
+			this.size = size;
+			return this;
+		}
+
+		public GetAllRequest refresh() {
+			this.refresh = true;
+			return this;
+		}
+
+		// TODO how to return objects in the right pojo form?
+		// add registerPojoType(String type, Class<K extends DataObject> clazz)
+		// methods??
+		public <K extends DataObject> List<K> load(Class<K> dataClass) {
+
+			SpaceRequest request = type == null //
+					? SpaceRequest.get("/1/data") //
+					: SpaceRequest.get("/1/data/{type}").routeParam("type", type);
+
+			if (refresh != null)
+				request.queryParam(PARAM_REFRESH, Boolean.toString(refresh));
+			if (from != null)
+				request.queryParam(PARAM_FROM, Integer.toString(from));
+			if (size != null)
+				request.queryParam(PARAM_SIZE, Integer.toString(size));
+
+			ObjectNode result = request.auth(dog).go(200).objectNode();
+
+			return toList(result, dataClass);
+		}
+
+	}
+
+	public GetAllRequest getAllRequest() {
+		return new GetAllRequest();
 	}
 
 	//
@@ -64,7 +120,7 @@ public class SpaceData implements SpaceFields, SpaceParams {
 	public <K extends DataObject> List<K> search(SimpleQuery query, Class<K> dataClass) {
 
 		ObjectNode result = SpaceRequest.get("/1/search/{type}")//
-				.bearerAuth(dog.backendId, dog.accessToken)//
+				.auth(dog)//
 				.routeParam("type", query.type)//
 				.queryParam(PARAM_REFRESH, Boolean.toString(query.refresh))//
 				.queryParam(PARAM_FROM, Integer.toString(query.from))//
@@ -72,7 +128,7 @@ public class SpaceData implements SpaceFields, SpaceParams {
 				.queryParam(PARAM_Q, query.query)//
 				.go(200).objectNode();
 
-		return toList((ArrayNode) result.get("results"), dataClass);
+		return toList(result, dataClass);
 	}
 
 	public static class ComplexQuery {
@@ -84,7 +140,7 @@ public class SpaceData implements SpaceFields, SpaceParams {
 	public <K extends DataObject> SearchResults<K> search(ComplexQuery query, Class<K> dataClass) {
 
 		ObjectNode results = SpaceRequest.post("/1/search/{type}")//
-				.bearerAuth(dog.backendId, dog.accessToken)//
+				.auth(dog)//
 				.routeParam("type", query.type)//
 				.queryParam(PARAM_REFRESH, Boolean.toString(query.refresh))//
 				.body(query.query).go(200).objectNode();
@@ -162,6 +218,10 @@ public class SpaceData implements SpaceFields, SpaceParams {
 		complex.query = builder.build();
 
 		return search(complex, dataClass);
+	}
+
+	private <K extends DataObject> List<K> toList(ObjectNode resultNode, Class<K> dataClass) {
+		return toList((ArrayNode) resultNode.get("results"), dataClass);
 	}
 
 	private <K extends DataObject> List<K> toList(ArrayNode arrayNode, Class<K> dataClass) {

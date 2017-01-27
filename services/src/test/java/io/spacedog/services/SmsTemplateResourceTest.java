@@ -10,6 +10,7 @@ import com.google.common.collect.Maps;
 import io.spacedog.client.SpaceEnv;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Schema;
 import io.spacedog.utils.SmsSettings;
 import io.spacedog.utils.SmsSettings.TwilioSettings;
@@ -22,17 +23,17 @@ public class SmsTemplateResourceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		Backend test = resetTestBackend();
+		SpaceDog test = resetTestBackend();
 
 		// superadmin creates user vince with 'sms' role
-		User vince = signUp(test, "vince", "hi vince");
-		setRole(test.adminUser, vince, "sms");
+		SpaceDog vince = signUp(test, "vince", "hi vince");
+		setRole(test, vince, "sms");
 
 		// superadmin creates a customer schema
 		Schema schema = Schema.builder("customer")//
 				.text("name").string("phone").close().build();
 
-		setSchema(schema, test);
+		test.schema().set(schema);
 
 		// superadmin creates a customer
 		String customerId = SpaceRequest.post("/1/data/customer").adminAuth(test)//
@@ -57,7 +58,7 @@ public class SmsTemplateResourceTest extends SpaceTest {
 		settings.templates.put("hello", template);
 
 		// superadmin saves SMS settings
-		saveSettings(test, settings);
+		test.settings().save(settings);
 
 		// nobody is allowed to send simple sms
 		SpaceRequest.post("/1/sms").backend(test).go(403);

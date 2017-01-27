@@ -33,27 +33,26 @@ public class SpacePush {
 
 	SpaceDog dog;
 
-	SpacePush(SpaceDog session) {
-		this.dog = session;
+	SpacePush(SpaceDog dog) {
+		this.dog = dog;
 	}
 
 	public ObjectNode push(String installationId, String message) {
-		return SpaceRequest.post("/1/installation/" + installationId + "/push")//
-				.backendId(dog.backendId()).bearerAuth(dog.accessToken)//
+		return SpaceRequest.post("/1/installation/{id}/push")//
+				.routeParam("id", installationId).auth(dog)//
 				.body(TextNode.valueOf(message)).go(200, 404).objectNode();
 	}
 
 	public ObjectNode push(String installationId, ObjectNode message) {
-		return SpaceRequest.post("/1/installation/" + installationId + "/push")//
-				.backendId(dog.backendId()).bearerAuth(dog.accessToken)//
+		return SpaceRequest.post("/1/installation/{id}/push")//
+				.routeParam("id", installationId).auth(dog)//
 				.body(message).go(200, 404).objectNode();
 	}
 
 	public ObjectNode push(PushRequest request) {
 		Check.notNull(request.appId, "appId");
 		ObjectNode response = SpaceRequest.post("/1/push")//
-				.backendId(dog.backendId()).bearerAuth(dog.accessToken)//
-				.bodyPojo(request).go(200, 404).objectNode();
+				.auth(dog).bodyPojo(request).go(200, 404).objectNode();
 		return response;
 	}
 

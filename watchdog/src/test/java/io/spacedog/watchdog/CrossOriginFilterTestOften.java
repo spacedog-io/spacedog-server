@@ -7,6 +7,7 @@ import org.junit.Test;
 
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.watchdog.SpaceSuite.TestOften;
 
@@ -17,7 +18,7 @@ public class CrossOriginFilterTestOften extends SpaceTest {
 	public void returnCORSHeaders() {
 
 		prepareTest();
-		Backend test = resetTestBackend();
+		SpaceDog test = resetTestBackend();
 
 		// CORS for simple requests
 

@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.MailSettings;
 import io.spacedog.utils.MailSettings.SmtpSettings;
@@ -33,15 +34,15 @@ public class LafargeCesioTest extends SpaceTest {
 		 */
 
 		// SpaceRequest.configuration().target(SpaceTarget.production);
-		// Backend test = new Backend(//
+		// SpaceDog test = new SpaceDog(//
 		// "cesio", SpaceRequest.configuration().cesioSuperAdminUsername(), //
 		// SpaceRequest.configuration().cesioSuperAdminPassword(), //
 		// "david@spacedog.io");
 
 		// prepare
 		prepareTest();
-		Backend test = resetTestBackend();
-		setSchema(LafargeCesioResource.playerSchema(), test);
+		SpaceDog test = resetTestBackend();
+		test.schema().set(LafargeCesioResource.playerSchema());
 
 		MailSettings settings = new MailSettings();
 		settings.enableUserFullAccess = false;
@@ -55,7 +56,7 @@ public class LafargeCesioTest extends SpaceTest {
 		settings.smtp.password = SpaceRequest.env()//
 				.get("spacedog.cesio.smtp.password");
 
-		saveSettings(test, settings);
+		test.settings().save(settings);
 
 		// create account fails since email parameter is missing
 		SpaceRequest.post("/api/user/create").backend(test).go(400)//
