@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.examples;
+package io.spacedog.caremen;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -73,17 +73,18 @@ public class Caremen extends SpaceTest {
 		// initCredentials();
 		// initSettingsSettings();
 
-		// setSchema(buildCourseSchema(), backend);
-		// setSchema(buildDriverSchema(), backend);
-		// setSchema(buildCustomerSchema(), backend);
-		// setSchema(buildCourseLogSchema(), backend);
-		// setSchema(buildCustomerCompanySchema(), backend);
-		// setSchema(buildCompanySchema(), backend);
+		// backend.schema().set(buildCourseSchema());
+		// backend.schema().set(buildDriverSchema());
+		// backend.schema().set(buildCustomerSchema());
+		// backend.schema().set(buildCourseLogSchema());
+		// backend.schema().set(buildCustomerCompanySchema());
+		// backend.schema().set(buildCompanySchema());
 
 		// deleteAllCredentialsButSuperAdmins();
 		// createOperatorCredentials();
 		// createCashierCredentials();
 		// createReminderCredentials();
+		// createAppleTestCredentials();
 		// createRobots();
 	}
 
@@ -326,8 +327,8 @@ public class Caremen extends SpaceTest {
 				.acl("user", DataPermission.create, DataPermission.search, //
 						DataPermission.update)//
 				.acl("operator", DataPermission.search)//
-				.acl("admin", DataPermission.search, DataPermission.update_all, //
-						DataPermission.delete_all)//
+				.acl("admin", DataPermission.create, DataPermission.search, //
+						DataPermission.update_all, DataPermission.delete_all)//
 
 				.string("credentialsId")//
 				.string("status")//
@@ -566,6 +567,33 @@ public class Caremen extends SpaceTest {
 		resetCredentials(backend, username, password, email, "operator", true);
 	}
 
+	void createAppleTestCredentials() {
+		// if (backend == PRODUCTION) {
+		String password = SpaceEnv.defaultEnv().get("caremen_apple_password");
+
+		Credentials customerCredentials = resetCredentials(backend, "apple@apple.com", //
+				password, "apple@apple.com", "customer", false);
+
+		ObjectNode customer = Json.object("firstname", "Apple", "lastname", "Test", //
+				"credentialsId", customerCredentials.id(), "phone", "0652802569");
+
+		backend.dataEndpoint().object("customer").node(customer).save();
+
+		Credentials driverCredentials = resetCredentials(backend, "apple@driver.com", password, //
+				"apple@driver.com", "driver", true);
+
+		ObjectNode vehicule = Json.object("brand", "Peugeot", "type", "classic", //
+				"color", "Noir", "model", "609", "licencePlate", "DF-FF-7SD");
+
+		ObjectNode driver = Json.object("status", "not-working", "firstname", "Apple", //
+				"lastname", "Driver", "phone", "0652802569", "vehicule", vehicule, //
+				"credentialsId", driverCredentials.id());
+
+		backend.dataEndpoint().object("driver").node(driver).save();
+		// }
+
+	}
+
 	void createCashierCredentials() {
 		String password = SpaceEnv.defaultEnv().get("caremen_cashier_password");
 		resetCredentials(backend, "cashier", password, //
@@ -578,17 +606,19 @@ public class Caremen extends SpaceTest {
 				"plateform@spacedog.io", "reminder", false);
 	}
 
-	private void resetCredentials(SpaceDog superadmin, String username, //
+	private Credentials resetCredentials(SpaceDog superadmin, String username, //
 			String password, String email, String role, boolean admin) {
 
 		superdogDeletesCredentials(superadmin.backendId(), username);
 
-		Credentials user = admin //
+		Credentials credentials = admin //
 				? superadmin.credentials().create(username, password, email, true)//
 				: superadmin.credentials().create(username, password, email);
 
 		if (role != null)
-			superadmin.credentials().setRole(user.id(), role);
+			superadmin.credentials().setRole(credentials.id(), role);
+
+		return credentials;
 	}
 
 	void createRobots() {
