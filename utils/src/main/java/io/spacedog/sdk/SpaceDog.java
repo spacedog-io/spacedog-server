@@ -248,4 +248,13 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 			backend = new SpaceBackend(this);
 		return backend;
 	}
+
+	SpaceMail mailEndpoint;
+
+	public SpaceMail mailEndpoint() {
+		if (mailEndpoint == null)
+			mailEndpoint = new SpaceMail(this);
+		return mailEndpoint;
+	}
+
 }
