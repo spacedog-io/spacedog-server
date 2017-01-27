@@ -575,29 +575,29 @@ public class Caremen extends SpaceTest {
 	}
 
 	void createAppleTestCredentials() {
-		// if (backend == PRODUCTION) {
-		String password = SpaceEnv.defaultEnv().get("caremen_apple_password");
+		if (backend == PRODUCTION) {
+			String password = SpaceEnv.defaultEnv().get("caremen_apple_password");
 
-		Credentials customerCredentials = resetCredentials(backend, "apple@apple.com", //
-				password, "apple@apple.com", "customer", false);
+			Credentials customerCredentials = resetCredentials(backend, "apple@apple.com", //
+					password, "apple@apple.com", "customer", false);
 
-		ObjectNode customer = Json.object("firstname", "Apple", "lastname", "Test", //
-				"credentialsId", customerCredentials.id(), "phone", "0652802569");
+			ObjectNode customer = Json.object("firstname", "Apple", "lastname", "Test", //
+					"credentialsId", customerCredentials.id(), "phone", "0652802569");
 
-		backend.dataEndpoint().object("customer").node(customer).save();
+			backend.dataEndpoint().object("customer").node(customer).save();
 
-		Credentials driverCredentials = resetCredentials(backend, "apple@driver.com", password, //
-				"apple@driver.com", "driver", true);
+			Credentials driverCredentials = resetCredentials(backend, "apple@driver.com", password, //
+					"apple@driver.com", "driver", false);
 
-		ObjectNode vehicule = Json.object("brand", "Peugeot", "type", "classic", //
-				"color", "Noir", "model", "609", "licencePlate", "DF-FF-7SD");
+			ObjectNode vehicule = Json.object("brand", "Peugeot", "type", "classic", //
+					"color", "Noir", "model", "609", "licencePlate", "DF-FF-7SD");
 
-		ObjectNode driver = Json.object("status", "not-working", "firstname", "Apple", //
-				"lastname", "Driver", "phone", "0652802569", "vehicule", vehicule, //
-				"credentialsId", driverCredentials.id());
+			ObjectNode driver = Json.object("status", "not-working", "firstname", "Apple", //
+					"lastname", "Driver", "phone", "0652802569", "vehicule", vehicule, //
+					"credentialsId", driverCredentials.id());
 
-		backend.dataEndpoint().object("driver").node(driver).save();
-		// }
+			backend.dataEndpoint().object("driver").node(driver).save();
+		}
 
 	}
 
