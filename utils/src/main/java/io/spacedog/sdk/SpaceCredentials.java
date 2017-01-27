@@ -57,11 +57,7 @@ public class SpaceCredentials implements SpaceParams, SpaceFields {
 			return Optional.empty();
 
 		// TODO throw exception if total > 1
-		// TODO use json mapper
-		Credentials credentials = new Credentials(dog.backendId(), username);
-		credentials.id(Json.get(node, "results.0.id").asText());
-		credentials.email(Json.get(node, "results.0.email").asText());
-		return Optional.of(credentials);
+		return Optional.of(toCredentials((ObjectNode) Json.get(node, "results.0")));
 	}
 
 	public SpaceCredentials deleteAllButSuperAdmins() {
@@ -73,4 +69,19 @@ public class SpaceCredentials implements SpaceParams, SpaceFields {
 		dog.put("/1/credentials/{id}/roles/{role}")//
 				.routeParam("id", id).routeParam("role", role).go(200);
 	}
+
+	public Credentials get(String id) {
+		return toCredentials(dog.get("/1/credentials/{id}")//
+				.routeParam("id", id).go(200).objectNode());
+	}
+
+	private Credentials toCredentials(ObjectNode node) {
+		// TODO use json mapper
+		Credentials credentials = new Credentials(dog.backendId());
+		credentials.id(Json.get(node, "id").asText());
+		credentials.email(Json.get(node, "email").asText());
+		credentials.name(Json.get(node, "username").asText());
+		return credentials;
+	}
+
 }
