@@ -91,6 +91,7 @@ public class Caremen extends SpaceTest {
 		// createOperatorCredentials();
 		// createCashierCredentials();
 		// createReminderCredentials();
+		// createRecaperCredentials();
 		// createAppleTestCredentials();
 		// createRobots();
 	}
@@ -611,6 +612,12 @@ public class Caremen extends SpaceTest {
 		String password = SpaceEnv.defaultEnv().get("caremen_reminder_password");
 		resetCredentials(backend, "reminder", password, //
 				"plateform@spacedog.io", "reminder", false);
+	}
+
+	void createRecaperCredentials() {
+		String password = SpaceEnv.defaultEnv().get("caremen_recaper_password");
+		resetCredentials(backend, "recaper", password, //
+				"plateform@spacedog.io", "recaper", true);
 	}
 
 	private Credentials resetCredentials(SpaceDog superadmin, String username, //
