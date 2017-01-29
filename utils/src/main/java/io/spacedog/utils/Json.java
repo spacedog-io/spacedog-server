@@ -535,12 +535,12 @@ public class Json {
 		return node.asText();
 	}
 
-	public static String checkBoolean(JsonNode node) {
+	public static Boolean checkBoolean(JsonNode node) {
 		if (node == null)
 			return null;
 		if (!node.isBoolean())
 			throw Exceptions.illegalArgument("json node [%s] not a boolean", node);
-		return node.asText();
+		return node.asBoolean();
 	}
 
 	public static Double checkDouble(JsonNode node) {

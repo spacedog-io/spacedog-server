@@ -84,4 +84,21 @@ public class SpaceCredentials implements SpaceParams, SpaceFields {
 		return credentials;
 	}
 
+	public void passwordMustChange(String id) {
+		dog.put("/1/credentials/{id}/passwordMustChange")//
+				.routeParam("id", id).body("true").go(200);
+	}
+
+	public void updateMyPassword(String oldPassword, String newPassword) {
+		updatePassword("me", oldPassword, newPassword);
+	}
+
+	public void updatePassword(String id, String requesterPassword, String newPassword) {
+		SpaceRequest.put("/1/credentials/{id}/password")//
+				.routeParam("id", id)//
+				.basicAuth(dog.backendId(), dog.username(), requesterPassword)//
+				.queryParam("password", newPassword)//
+				.go(200);
+	}
+
 }

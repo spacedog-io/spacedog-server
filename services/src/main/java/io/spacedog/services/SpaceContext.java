@@ -4,6 +4,7 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 import com.google.common.net.HttpHeaders;
+import com.mashape.unirest.http.HttpMethod;
 
 import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Backends;
@@ -21,6 +22,7 @@ public class SpaceContext {
 
 	private static ThreadLocal<SpaceContext> threadLocal = new ThreadLocal<SpaceContext>();
 
+	private String uri;
 	private Context context;
 	private boolean isTest;
 	private Debug debug;
@@ -30,7 +32,8 @@ public class SpaceContext {
 	private Map<String, Settings> settings;
 	private boolean www;
 
-	private SpaceContext(Context context) {
+	private SpaceContext(String uri, Context context) {
+		this.uri = uri;
 		this.context = context;
 		this.isTest = Boolean.parseBoolean(context().header(SpaceHeaders.SPACEDOG_TEST));
 		String[] host = extractSubdomain(context);
@@ -63,7 +66,7 @@ public class SpaceContext {
 		return (uri, context, nextFilter) -> {
 			if (isSetAuthorized()) {
 				try {
-					threadLocal.set(new SpaceContext(context));
+					threadLocal.set(new SpaceContext(uri, context));
 					return nextFilter.get();
 
 				} finally {
@@ -222,6 +225,7 @@ public class SpaceContext {
 				}
 
 				userCredentials.checkReallyEnabled();
+				checkPasswordMustChange(userCredentials, context);
 				credentials = userCredentials;
 
 				// sets superdog backend id to the request backend id
@@ -229,6 +233,16 @@ public class SpaceContext {
 					credentials.target(backendId);
 			}
 
+		}
+	}
+
+	private void checkPasswordMustChange(Credentials credentials, Context context) {
+		if (credentials.passwordMustChange()) {
+
+			if (!(HttpMethod.PUT.name().equals(context.method()) //
+					&& "/1/credentials/me/password".equals(uri)))
+
+				throw Exceptions.passwordMustChange(credentials);
 		}
 	}
 }

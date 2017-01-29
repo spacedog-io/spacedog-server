@@ -66,6 +66,7 @@ public class CredentialsResource extends Resource {
 				.string(FIELD_ACCESS_TOKEN_EXPIRES_AT)//
 				.string(FIELD_HASHED_PASSWORD)//
 				.string(FIELD_PASSWORD_RESET_CODE)//
+				.bool(FIELD_PASSWORD_MUST_CHANGE)//
 				.string(FIELD_EMAIL)//
 				.string(FIELD_CREATED_AT)//
 				.string(FIELD_UPDATED_AT)//
@@ -174,6 +175,13 @@ public class CredentialsResource extends Resource {
 				.withHeader(SpaceHeaders.SPACEDOG_OBJECT_ID, credentials.id());
 	}
 
+	@Get("/1/credentials/me")
+	@Get("/1/credentials/me/")
+	public Payload getMe(Context context) {
+		String id = SpaceContext.checkUserCredentials().id();
+		return getById(id, context);
+	}
+
 	@Get("/1/credentials/:id")
 	@Get("/1/credentials/:id/")
 	public Payload getById(String id, Context context) {
@@ -206,6 +214,13 @@ public class CredentialsResource extends Resource {
 		}
 
 		throw Exceptions.insufficientCredentials(requester);
+	}
+
+	@Put("/1/credentials/me")
+	@Put("/1/credentials/me/")
+	public Payload put(String body, Context context) {
+		String id = SpaceContext.checkUserCredentials().id();
+		return put(id, body, context);
 	}
 
 	@Put("/1/credentials/:id")
@@ -298,6 +313,13 @@ public class CredentialsResource extends Resource {
 				"/1", TYPE, credentials.id(), credentials.version());
 	}
 
+	@Put("/1/credentials/me/password")
+	@Put("/1/credentials/me/password/")
+	public Payload putMyPassword(Context context) {
+		String id = SpaceContext.checkUserCredentials().id();
+		return putPassword(id, context);
+	}
+
 	@Put("/1/credentials/:id/password")
 	@Put("/1/credentials/:id/password/")
 	public Payload putPassword(String id, Context context) {
@@ -309,6 +331,21 @@ public class CredentialsResource extends Resource {
 
 		String password = context.get(FIELD_PASSWORD);
 		credentials.changePassword(password, Optional.of(settings.passwordRegex()));
+
+		credentials = update(credentials);
+		return JsonPayload.saved(false, credentials.backendId(), //
+				"/1", TYPE, credentials.id(), credentials.version());
+	}
+
+	@Put("/1/credentials/:id/passwordMustChange")
+	@Put("/1/credentials/:id/passwordMustChange/")
+	public Payload putPasswordMustChange(String id, String body, Context context) {
+		SpaceContext.checkAdminCredentials();
+		Credentials credentials = getById(id, true).get();
+
+		Boolean passwordMustChange = Json.checkBoolean(//
+				Json.checkNotNull(Json.readNode(body)));
+		credentials.passwordMustChange(passwordMustChange);
 
 		credentials = update(credentials);
 		return JsonPayload.saved(false, credentials.backendId(), //

@@ -64,6 +64,12 @@ public class Exceptions {
 		return new SpaceException("unchallenged-password", 403, "password must be challenged");
 	}
 
+	public static SpaceException passwordMustChange(Credentials credentials) {
+		return new SpaceException("password-must-change", 403, //
+				"[%s][%s] credentials password must change", //
+				credentials.level(), credentials.name());
+	}
+
 	//
 	// 401
 	//
@@ -96,5 +102,4 @@ public class Exceptions {
 		return new AuthenticationException("invalid-credentials", //
 				"invalid username or password for backend [%s]", backendId);
 	}
-
 }

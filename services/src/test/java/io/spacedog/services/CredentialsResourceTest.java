@@ -328,4 +328,43 @@ public class CredentialsResourceTest extends SpaceTest {
 				.assertEquals(0, "credentials." + FIELD_INVALID_CHALLENGES)//
 				.assertNotPresent("credentials." + FIELD_LAST_INVALID_CHALLENGE_AT);
 	}
+
+	@Test
+	public void forcePasswordChange() {
+
+		// prepare
+		prepareTest();
+		SpaceDog test = resetTestBackend();
+		SpaceDog fred = SpaceDog.backend("test")//
+				.username("fred").password("hi fred").signUp();
+
+		// fred can get data objects
+		SpaceRequest.get("/1/data").basicAuth(fred).go(200);
+
+		// superadmin forces fred to change his password
+		test.credentials().passwordMustChange(fred.id());
+
+		// fred can no longer get data objects with his token
+		// because he must first change his password
+		SpaceRequest.get("/1/data").bearerAuth(fred).go(403)//
+				.assertEquals("password-must-change", "error.code");
+
+		// fred can no longer get data objects with his password
+		// because he must first change his password
+		SpaceRequest.get("/1/data").basicAuth(fred).go(403)//
+				.assertEquals("password-must-change", "error.code");
+
+		// fred can change his password
+		fred.credentials().updateMyPassword("hi fred", "hi fred 2");
+		fred.password("hi fred 2");
+
+		// fred can get data objects again with basic auth
+		SpaceRequest.get("/1/data").basicAuth(fred).go(200);
+
+		// fred can log in
+		fred.login();
+
+		// fred can get data objects again with bearer auth
+		SpaceRequest.get("/1/data").bearerAuth(fred).go(200);
+	}
 }

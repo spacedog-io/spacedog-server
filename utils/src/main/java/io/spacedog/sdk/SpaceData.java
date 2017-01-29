@@ -78,9 +78,14 @@ public class SpaceData implements SpaceFields, SpaceParams {
 			return this;
 		}
 
+		public List<DataObject> get() {
+			return load(DataObject.class);
+		}
+
 		// TODO how to return objects in the right pojo form?
 		// add registerPojoType(String type, Class<K extends DataObject> clazz)
 		// methods??
+		// TODO rename this method with get
 		public <K extends DataObject> List<K> load(Class<K> dataClass) {
 
 			SpaceRequest request = type == null //

@@ -50,6 +50,7 @@ public class Credentials {
 	private ObjectNode stash;
 	private String passwordResetCode;
 	private String hashedPassword;
+	private boolean passwordMustChange;
 	private int invalidChallenges;
 	private DateTime lastInvalidChallengeAt;
 	private String createdAt;
@@ -162,6 +163,14 @@ public class Credentials {
 
 	public String passwordResetCode() {
 		return passwordResetCode;
+	}
+
+	public boolean passwordMustChange() {
+		return passwordMustChange;
+	}
+
+	public void passwordMustChange(Boolean passwordMustChange) {
+		this.passwordMustChange = passwordMustChange;
 	}
 
 	public boolean enabled() {
@@ -489,6 +498,7 @@ public class Credentials {
 		clearPasswordAndTokens();
 		hashedPassword = Passwords.hash(password);
 		passwordHasBeenChallenged = true;
+		passwordMustChange = false;
 	}
 
 	//
