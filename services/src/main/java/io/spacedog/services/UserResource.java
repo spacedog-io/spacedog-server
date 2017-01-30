@@ -112,7 +112,7 @@ public class UserResource extends Resource {
 	public Payload putPassword(String username, Context context) {
 		return CredentialsResource.get().putPassword(//
 				Credentials.toLegacyId(SpaceContext.target(), username), //
-				context);
+				null, context);
 	}
 
 	//

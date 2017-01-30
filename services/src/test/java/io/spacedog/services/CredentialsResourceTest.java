@@ -330,7 +330,7 @@ public class CredentialsResourceTest extends SpaceTest {
 	}
 
 	@Test
-	public void forcePasswordChange() {
+	public void passwordMustChange() {
 
 		// prepare
 		prepareTest();

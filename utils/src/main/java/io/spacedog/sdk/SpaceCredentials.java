@@ -3,6 +3,7 @@ package io.spacedog.sdk;
 import java.util.Optional;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Credentials;
@@ -97,7 +98,7 @@ public class SpaceCredentials implements SpaceParams, SpaceFields {
 		SpaceRequest.put("/1/credentials/{id}/password")//
 				.routeParam("id", id)//
 				.basicAuth(dog.backendId(), dog.username(), requesterPassword)//
-				.queryParam("password", newPassword)//
+				.body(TextNode.valueOf(newPassword))//
 				.go(200);
 	}
 
