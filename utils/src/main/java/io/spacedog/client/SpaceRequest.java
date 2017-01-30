@@ -295,7 +295,7 @@ public class SpaceRequest {
 			else if (body instanceof String) {
 				requestWithBody.body((String) body);
 				if (bodyJson != null)
-					requestWithBody.header(SpaceHeaders.CONTENT_TYPE, "application/json");
+					requestWithBody.header(SpaceHeaders.CONTENT_TYPE, "application/json;charset=utf-8;");
 			}
 		}
 
