@@ -106,6 +106,11 @@ public class SpaceContext {
 		return getCredentials().target();
 	}
 
+	public boolean isJsonContent() {
+		String contentType = context.header(SpaceHeaders.CONTENT_TYPE);
+		return contentType.toLowerCase().startsWith("application/json");
+	}
+
 	static void forceContext(Credentials credentials, boolean test, boolean debug) {
 		if (isSetAuthorized())
 			threadLocal.set(new SpaceContext(credentials, test, debug));

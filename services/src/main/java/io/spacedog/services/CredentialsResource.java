@@ -329,8 +329,10 @@ public class CredentialsResource extends Resource {
 		Credentials credentials = getById(id, true).get();
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
 
-		String password = Strings.isNullOrEmpty(body) ? context.get(FIELD_PASSWORD)//
-				: Json.checkString(Json.checkNotNull(Json.readNode(body)));
+		String password = SpaceContext.get().isJsonContent() && !Strings.isNullOrEmpty(body)//
+				? Json.checkString(Json.checkNotNull(Json.readNode(body)))//
+				: context.get(FIELD_PASSWORD);
+
 		credentials.changePassword(password, Optional.of(settings.passwordRegex()));
 
 		credentials = update(credentials);
