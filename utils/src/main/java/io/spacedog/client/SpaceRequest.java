@@ -39,10 +39,10 @@ import io.spacedog.utils.Utils;
 
 public class SpaceRequest {
 
-	private JsonNode bodyJson;
 	private HttpMethod method;
 	private String backendId;
 	private String uri;
+	private JsonNode bodyJson;
 	private Object body;
 	private Map<String, String> routeParams = Maps.newHashMap();
 	private Map<String, String> queryParams = Maps.newHashMap();
@@ -292,8 +292,11 @@ public class SpaceRequest {
 				requestWithBody.fields(formFields);
 			else if (body instanceof byte[])
 				requestWithBody.body((byte[]) body);
-			else if (body instanceof String)
+			else if (body instanceof String) {
 				requestWithBody.body((String) body);
+				if (bodyJson != null)
+					requestWithBody.header(SpaceHeaders.CONTENT_TYPE, "application/json");
+			}
 		}
 
 		return new SpaceResponse(this, request);
