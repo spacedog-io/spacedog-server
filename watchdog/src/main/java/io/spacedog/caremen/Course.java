@@ -22,16 +22,17 @@ public class Course extends DataObject {
 	public DateTime requestedPickupTimestamp;
 	public DateTime pickupTimestamp;
 	public DateTime dropoffTimestamp;
-	public To to;
+	public Location to;
 	public Double fare;
 	public Long time; // in millis
 	public Long distance; // in meters
 	public Customer customer;
 	public Payment payment;
 	public Driver driver;
+	public Location from;
 
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	public static class To {
+	public static class Location {
 		public String address;
 	}
 

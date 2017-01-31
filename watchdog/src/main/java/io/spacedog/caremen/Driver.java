@@ -20,5 +20,7 @@ public class Driver extends DataObject {
 	public String firstname;
 	public String lastname;
 	public String homeAddress;
+	public String companyName;
+	public String siret;
 	public RIB rib;
 }
