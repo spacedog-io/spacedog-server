@@ -21,7 +21,6 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.HttpRequestWithBody;
 import com.mashape.unirest.request.body.MultipartBody;
 
-import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.MailSettings;
@@ -55,11 +54,13 @@ public class MailResource extends Resource {
 	public Payload post(Context context) {
 
 		MailSettings settings = SettingsResource.get().load(MailSettings.class);
-		Credentials credentials = settings.enableUserFullAccess //
-				? SpaceContext.checkUserCredentials()//
-				: SpaceContext.checkAdminCredentials();
 
-		return email(credentials, toMessage(credentials, context));
+		if (settings.enableUserFullAccess) //
+			SpaceContext.checkUserCredentials();
+		else
+			SpaceContext.checkAdminCredentials();
+
+		return email(toMessage(context));
 	}
 
 	//
@@ -76,7 +77,7 @@ public class MailResource extends Resource {
 		public String html;
 	}
 
-	private Message toMessage(Credentials credentials, Context context) {
+	private Message toMessage(Context context) {
 		Message message = new Message();
 
 		if (context.parts().isEmpty()) {
@@ -118,7 +119,7 @@ public class MailResource extends Resource {
 		return value == null ? null : Lists.newArrayList(value);
 	}
 
-	public Payload email(Credentials credentials, Message message) {
+	public Payload email(Message message) {
 
 		MailSettings settings = SettingsResource.get().load(MailSettings.class);
 
@@ -129,23 +130,25 @@ public class MailResource extends Resource {
 			return emailViaGun(settings.mailgun, message);
 
 		// if no settings, use default ...
-		return emailWithDefaultSettings(credentials, message);
+		return emailWithDefaultSettings(message);
 	}
 
-	Payload emailWithDefaultSettings(Credentials credentials, Message message) {
+	Payload emailWithDefaultSettings(Message message) {
 
 		MailGunSettings settings = new MailGunSettings();
 		settings.key = Start.get().configuration().mailGunKey();
 		settings.domain = Start.get().configuration().mailDomain();
 
+		String target = SpaceContext.target();
+
 		// ... add a footer to the message
 		if (!Strings.isNullOrEmpty(message.text))
-			message.text = addFooterToTextMessage(message.text, credentials.target());
+			message.text = addFooterToTextMessage(message.text, target);
 		if (!Strings.isNullOrEmpty(message.html))
-			message.html = addFooterToHtmlMessage(message.html, credentials.target());
+			message.html = addFooterToHtmlMessage(message.html, target);
 
 		// force the from
-		message.from = credentials.target().toUpperCase() + " <no-reply@" + settings.domain + ">";
+		message.from = target.toUpperCase() + " <no-reply@" + settings.domain + ">";
 
 		return emailViaGun(settings, message);
 	}

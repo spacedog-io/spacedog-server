@@ -102,4 +102,9 @@ public class SpaceCredentials implements SpaceParams, SpaceFields {
 				.go(200);
 	}
 
+	public void forgotPassword() {
+		dog.post("/1/credentials/forgotPassword")//
+				.formField(PARAM_USERNAME, dog.username()).go(200);
+	}
+
 }

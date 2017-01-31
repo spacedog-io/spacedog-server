@@ -4,6 +4,7 @@
 package io.spacedog.services;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Optional;
 
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
@@ -21,6 +22,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Check;
@@ -31,6 +33,7 @@ import io.spacedog.utils.CredentialsSettings;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.MailTemplate;
 import io.spacedog.utils.Roles;
 import io.spacedog.utils.Schema;
 import io.spacedog.utils.SpaceHeaders;
@@ -45,6 +48,7 @@ import net.codestory.http.payload.Payload;
 
 public class CredentialsResource extends Resource {
 
+	private static final String FORGOT_PASSWORD_MAIL_TEMPLATE_NAME = "forgotPassword";
 	public static final String TYPE = "credentials";
 
 	//
@@ -277,6 +281,33 @@ public class CredentialsResource extends Resource {
 		credentials = update(credentials);
 		return JsonPayload.saved(false, credentials.backendId(), //
 				"/1", TYPE, credentials.id(), credentials.version());
+	}
+
+	@Post("/1/credentials/forgotPassword")
+	@Post("/1/credentials/forgotPassword/")
+	public Payload postForgotPassword(Context context) {
+		String username = Check.notNullOrEmpty(context.get(PARAM_USERNAME), "username");
+
+		Credentials credentials = getByName(SpaceContext.target(), username, true).get();
+		credentials.email().orElseThrow(//
+				() -> Exceptions.illegalArgument("no email found in credentials [%s][%s]", //
+						credentials.level(), credentials.name()));
+
+		MailTemplate template = MailTemplateResource.get()//
+				.getTemplate(FORGOT_PASSWORD_MAIL_TEMPLATE_NAME)//
+				.orElseThrow(() -> Exceptions.illegalArgument(//
+						"no [forgotPassword] mail template in mail settings"));
+
+		credentials.newPasswordResetCode();
+		update(credentials);
+
+		Map<String, Object> mailContext = Maps.newHashMap();
+		mailContext.put("to", credentials.email().get());
+		mailContext.put("passwordResetCode", credentials.passwordResetCode());
+
+		MailTemplateResource.get().sendTemplatedMail(template, mailContext);
+
+		return JsonPayload.success();
 	}
 
 	@Delete("/1/credentials/:id/password")

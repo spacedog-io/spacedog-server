@@ -4,6 +4,7 @@
 package io.spacedog.services;
 
 import java.util.Map;
+import java.util.Optional;
 
 import io.spacedog.services.MailResource.Message;
 import io.spacedog.utils.MailSettings;
@@ -22,29 +23,44 @@ public class MailTemplateResource extends Resource {
 	@Post("/1/mail/template/:name/")
 	public Payload postTemplatedMail(String name, String body) {
 
+		MailTemplate template = getTemplate(name).orElseThrow(//
+				() -> new NotFoundException("mail template [%s] not found", name));
+
+		SpaceContext.getCredentials().checkRoles(template.roles);
+
+		Map<String, Object> context = PebbleTemplating.get()//
+				.createContext(template.model, body);
+
+		Message message = toMessage(template, context);
+		return MailResource.get().email(message);
+	}
+
+	//
+	// internal public interface
+	//
+
+	Payload sendTemplatedMail(MailTemplate template, Map<String, Object> context) {
+		Message message = toMessage(template, context);
+		return MailResource.get().email(message);
+	}
+
+	Optional<MailTemplate> getTemplate(String name) {
+
 		MailSettings settings = SettingsResource.get().load(MailSettings.class);
 
-		if (settings.templates != null) {
-			MailTemplate template = settings.templates.get(name);
+		if (settings.templates == null)
+			return Optional.empty();
 
-			if (template != null) {
-				SpaceContext.getCredentials().checkRoles(template.roles);
-				Message message = toMessage(template, body);
-				return MailResource.get().email(SpaceContext.getCredentials(), message);
-			}
-		}
-
-		throw new NotFoundException("mail template [%s] not found", name);
+		return Optional.ofNullable(settings.templates.get(name));
 	}
 
 	//
 	// Implementation
 	//
 
-	private Message toMessage(MailTemplate template, String body) {
+	private Message toMessage(MailTemplate template, Map<String, Object> context) {
 
 		PebbleTemplating pebble = PebbleTemplating.get();
-		Map<String, Object> context = pebble.createContext(template.model, body);
 
 		Message message = new Message();
 		message.from = pebble.render("from", template.from, context);

@@ -6,11 +6,16 @@ package io.spacedog.services;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+
 import io.spacedog.client.SpaceEnv;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.CredentialsSettings;
+import io.spacedog.utils.MailSettings;
+import io.spacedog.utils.MailTemplate;
 import io.spacedog.utils.Passwords;
 
 public class CredentialsResourceTest extends SpaceTest {
@@ -367,4 +372,53 @@ public class CredentialsResourceTest extends SpaceTest {
 		// fred can get data objects again with bearer auth
 		SpaceRequest.get("/1/data").bearerAuth(fred).go(200);
 	}
+
+	@Test
+	public void forgotPassword() {
+
+		// prepare
+		prepareTest();
+		SpaceDog test = resetTestBackend();
+		SpaceDog fred = SpaceDog.backend("test")//
+				.username("fred").password(Passwords.random()).signUp();
+
+		// fred can get data objects
+		fred.get("/1/data").go(200);
+
+		// to declare that you forgot your password
+		// you need to pass your username
+		test.post("/1/credentials/forgotPassword").go(400);
+
+		// if invalid username, you get a 404
+		test.post("/1/credentials/forgotPassword")//
+				.formField(PARAM_USERNAME, "XXX").go(404);
+
+		// fred fails to declare "forgot password" if no
+		// forgotPassword template set in mail settings
+		fred.post("/1/credentials/forgotPassword")//
+				.formField(PARAM_USERNAME, fred.username()).go(400);
+
+		// set the forgotPassword mail template
+		MailSettings settings = new MailSettings();
+		settings.templates = Maps.newHashMap();
+		MailTemplate template = new MailTemplate();
+		template.from = "no-reply@api.spacedog.io";
+		template.to = Lists.newArrayList("{{to}}");
+		template.subject = "Password forgotten request";
+		template.text = "{{passwordResetCode}}";
+		settings.templates.put("forgotPassword", template);
+		test.settings().save(settings);
+
+		// nobody can use this template but the system
+		fred.post("/1/mail/template/forgotPassword")//
+				.body("to", "platform@spacedog.io", "passwordResetCode", "XXX").go(403);
+
+		// fred declares he's forgot his password
+		fred.credentials().forgotPassword();
+
+		// fred can still access services if he remembers his password
+		// or if he's got a valid token
+		fred.get("/1/data").go(200);
+	}
+
 }

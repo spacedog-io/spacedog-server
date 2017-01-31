@@ -43,4 +43,9 @@ public class SpaceMail {
 		public String html;
 	}
 
+	public void sendTemplate(String templateName, ObjectNode context) {
+		dog.post("/1/mail/template/{name}")//
+				.routeParam("name", templateName).body(context).go(200);
+	}
+
 }
