@@ -469,6 +469,8 @@ public class Caremen extends SpaceTest {
 				.string("status")//
 				.text("firstname").french()//
 				.text("lastname").french()//
+				.string("siret")//
+				.text("companyName").french()//
 				.text("homeAddress").french()//
 				.string("phone")//
 				.string("photo")//
