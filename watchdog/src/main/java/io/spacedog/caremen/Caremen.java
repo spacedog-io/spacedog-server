@@ -211,6 +211,7 @@ public class Caremen extends SpaceTest {
 
 	void initAppConfigurationSettings() {
 		ObjectNode settings = Json.object(//
+				"scheduledCourseMinimumNoticeTimeInMinutes", 30, //
 				"driverAverageSpeedKmPerHour", 15, //
 				"courseLogIntervalMeters", 100, //
 				"customerWaitingForDriverMaxDurationMinutes", 2, //
