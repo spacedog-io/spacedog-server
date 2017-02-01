@@ -607,7 +607,7 @@ public class Caremen extends SpaceTest {
 	void createCashierCredentials() {
 		String password = SpaceEnv.defaultEnv().get("caremen_cashier_password");
 		resetCredentials(backend, "cashier", password, //
-				"plateform@spacedog.io", "cashier", false);
+				"plateform@spacedog.io", "cashier", true);
 	}
 
 	void createReminderCredentials() {
