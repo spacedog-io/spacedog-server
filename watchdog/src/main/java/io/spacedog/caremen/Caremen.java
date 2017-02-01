@@ -153,6 +153,8 @@ public class Caremen extends SpaceTest {
 		template.html = Resources.toString(//
 				Resources.getResource(this.getClass(), "caremen-welcome.html"), //
 				Charset.forName("UTF-8"));
+		template.text = "Bienvenue à vous. Nous sommes heureux de pouvoir vous "
+				+ "compter parmi les nouveaux utilisateurs de l’application CAREMEN.";
 		template.model = Maps.newHashMap();
 		template.model.put("to", "string");
 		template.model.put("customer", "customer");
