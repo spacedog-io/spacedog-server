@@ -42,11 +42,12 @@ public class DataObject {
 	ObjectNode node;
 
 	protected DataObject() {
+		this.meta = new Meta();
 	}
 
 	DataObject(SpaceDog session, String type) {
+		this();
 		this.dog = session;
-		this.meta = new Meta();
 		this.meta.type = type;
 	}
 
