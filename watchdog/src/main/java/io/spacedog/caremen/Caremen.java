@@ -68,7 +68,7 @@ public class Caremen extends SpaceTest {
 		// initMailSettings();
 		// initSmsSettings();
 		// initFareSettings();
-		// initAppConfigurationSettings();
+		initAppConfigurationSettings();
 		// initReferences();
 		// initCredentialsSettings();
 		// initSettingsSettings();
@@ -210,15 +210,14 @@ public class Caremen extends SpaceTest {
 	}
 
 	void initAppConfigurationSettings() {
-		ObjectNode settings = Json.object(//
-				"scheduledCourseMinimumNoticeTimeInMinutes", 30, //
-				"driverAverageSpeedKmPerHour", 15, //
-				"courseLogIntervalMeters", 100, //
-				"customerWaitingForDriverMaxDurationMinutes", 2, //
-				"operatorRefreshTimeoutSeconds", 75);
-
-		SpaceRequest.put("/1/settings/appconfiguration")//
-				.adminAuth(backend).body(settings).go(200, 201);
+		AppConfigurationSettings settings = new AppConfigurationSettings();
+		settings.rateVAT = 10;
+		settings.scheduledCourseMinimumNoticeTimeInMinutes = 30;
+		settings.driverAverageSpeedKmPerHour = 15;
+		settings.courseLogIntervalMeters = 100;
+		settings.customerWaitingForDriverMaxDurationMinutes = 2;
+		settings.operatorRefreshTimeoutSeconds = 75;
+		backend.settings().save(settings);
 	}
 
 	void initSettingsSettings() {
