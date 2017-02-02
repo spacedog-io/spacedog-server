@@ -40,6 +40,8 @@ public class Course extends DataObject {
 	public static class Customer {
 		public String id;
 		public String credentialsId;
+		public String firstname;
+		public String lastname;
 	}
 
 	@JsonIgnoreProperties(ignoreUnknown = true)
