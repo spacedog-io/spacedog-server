@@ -70,7 +70,7 @@ public class Caremen extends SpaceTest {
 		// initFareSettings();
 		// initAppConfigurationSettings();
 		// initReferences();
-		// initCredentials();
+		// initCredentialsSettings();
 		// initSettingsSettings();
 
 		// backend.schema().delete(buildCourseSchema().name());
@@ -104,9 +104,9 @@ public class Caremen extends SpaceTest {
 		backend.credentials().deleteAllButSuperAdmins();
 	}
 
-	void initCredentials() {
+	void initCredentialsSettings() {
 		CredentialsSettings settings = new CredentialsSettings();
-		settings.sessionMaximumLifetime = 60 * 60 * 24 * 7;
+		settings.sessionMaximumLifetime = 60 * 60 * 24 * 365; // 365 jours
 		backend.settings().save(settings);
 	}
 
