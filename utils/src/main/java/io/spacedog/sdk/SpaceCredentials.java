@@ -103,8 +103,12 @@ public class SpaceCredentials implements SpaceParams, SpaceFields {
 	}
 
 	public void forgotPassword() {
-		dog.post("/1/credentials/forgotPassword")//
-				.formField(PARAM_USERNAME, dog.username()).go(200);
+		forgotPassword(Json.object());
+	}
+
+	public void forgotPassword(ObjectNode parameters) {
+		parameters.put(PARAM_USERNAME, dog.username());
+		dog.post("/1/credentials/forgotPassword").body(parameters).go(200);
 	}
 
 }

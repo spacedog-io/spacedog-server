@@ -6,6 +6,7 @@ package io.spacedog.services;
 import java.util.Map;
 
 import io.spacedog.services.SmsResource.SmsMessage;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;
 import io.spacedog.utils.SmsSettings;
 import io.spacedog.utils.SmsTemplate;
@@ -43,7 +44,8 @@ public class SmsTemplateResource extends Resource {
 
 	private SmsMessage toMessage(SmsTemplate template, String body) {
 		PebbleTemplating pebble = PebbleTemplating.get();
-		Map<String, Object> context = pebble.createContext(template.model, body);
+		Map<String, Object> context = pebble.createContext(template.model, //
+				Json.readMap(body));
 
 		SmsMessage message = new SmsMessage();
 		message.from = pebble.render("from", template.from, context);

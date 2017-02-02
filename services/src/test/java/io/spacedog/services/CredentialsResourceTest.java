@@ -14,6 +14,7 @@ import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.CredentialsSettings;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.MailSettings;
 import io.spacedog.utils.MailTemplate;
 import io.spacedog.utils.Passwords;
@@ -391,12 +392,12 @@ public class CredentialsResourceTest extends SpaceTest {
 
 		// if invalid username, you get a 404
 		test.post("/1/credentials/forgotPassword")//
-				.formField(PARAM_USERNAME, "XXX").go(404);
+				.body(PARAM_USERNAME, "XXX").go(404);
 
 		// fred fails to declare "forgot password" if no
 		// forgotPassword template set in mail settings
 		fred.post("/1/credentials/forgotPassword")//
-				.formField(PARAM_USERNAME, fred.username()).go(400);
+				.body(PARAM_USERNAME, fred.username()).go(400);
 
 		// set the forgotPassword mail template
 		MailSettings settings = new MailSettings();
@@ -409,12 +410,26 @@ public class CredentialsResourceTest extends SpaceTest {
 		settings.templates.put("forgotPassword", template);
 		test.settings().save(settings);
 
-		// nobody can use this template but the system
-		fred.post("/1/mail/template/forgotPassword")//
-				.body("to", "platform@spacedog.io", "passwordResetCode", "XXX").go(403);
-
 		// fred declares he's forgot his password
 		fred.credentials().forgotPassword();
+
+		// fred can not pass any parameter unless they
+		// are registered in the template model
+		fred.post("/1/credentials/forgotPassword")//
+				.body(PARAM_USERNAME, fred.username(), //
+						"url", "http://localhost:8080")
+				.go(400);
+
+		// add an url parameter to the template model
+		template.model = Maps.newHashMap();
+		template.model.put("url", "string");
+		template.text = "{{url}}?code={{passwordResetCode}}";
+		test.settings().save(settings);
+
+		// fred declares he's forgot his password
+		// passing an url parameter
+		fred.credentials().forgotPassword(//
+				Json.object("url", "http://localhost:8080"));
 
 		// fred can still access services if he remembers his password
 		// or if he's got a valid token

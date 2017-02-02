@@ -9,6 +9,7 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -181,12 +182,24 @@ public class Json {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
+	public static Map<String, Object> readMap(String jsonString) {
+		Check.notNullOrEmpty(jsonString, "JSON");
+		try {
+			return Json.mapper().readValue(jsonString, Map.class);
+		} catch (IOException e) {
+			throw Exceptions.illegalArgument(e, //
+					"error deserializing JSON string [%s]", jsonString);
+		}
+	}
+
 	public static JsonNode readNode(String jsonString) {
 		Check.notNullOrEmpty(jsonString, "JSON");
 		try {
 			return jsonMapper.readTree(jsonString);
 		} catch (IOException e) {
-			throw Exceptions.illegalArgument(e);
+			throw Exceptions.illegalArgument(e, //
+					"error deserializing JSON string [%s]", jsonString);
 		}
 	}
 

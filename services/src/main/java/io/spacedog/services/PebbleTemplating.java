@@ -3,7 +3,6 @@
  */
 package io.spacedog.services;
 
-import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
@@ -21,50 +20,46 @@ public class PebbleTemplating {
 
 	private PebbleEngine pebble;
 
-	@SuppressWarnings("unchecked")
-	Map<String, Object> createContext(Map<String, String> model, String body) {
+	Map<String, Object> createContext(Map<String, String> model, Map<String, Object> parameters) {
 
 		Map<String, Object> context = Maps.newHashMap();
 
-		if (model == null || model.isEmpty())
+		if (parameters == null || parameters.isEmpty())
 			return context;
+
+		if (model == null || model.isEmpty())
+			throw Exceptions.illegalArgument("no parameter authorized for this template");
 
 		String backendId = SpaceContext.target();
 
-		try {
-			Map<String, Object> parameters = Json.mapper().readValue(body, Map.class);
+		for (Entry<String, Object> parameter : parameters.entrySet()) {
+			String name = parameter.getKey();
+			Object value = parameter.getValue();
+			String type = model.get(name);
 
-			for (Entry<String, Object> parameter : parameters.entrySet()) {
-				String name = parameter.getKey();
-				Object value = parameter.getValue();
-				String type = model.get(name);
+			if (type == null)
+				throw Exceptions.illegalArgument("parameter [%s] is not authorized", name);
 
-				if (type == null)
-					throw Exceptions.illegalArgument("parameter [%s] is not authorized", name);
+			if (checkValueSimpleAndValid(name, value, type)) {
+				context.put(name, value);
+				continue;
+			}
 
-				if (checkValueSimpleAndValid(name, value, type)) {
+			if (DataStore.get().isType(backendId, type)) {
+
+				if (value != null && value instanceof String) {
+					value = DataStore.get().getObject(backendId, type, value.toString());
+					value = Json.mapper().convertValue(value, Map.class);
 					context.put(name, value);
 					continue;
 				}
 
-				if (DataStore.get().isType(backendId, type)) {
-
-					if (value != null && value instanceof String) {
-						value = DataStore.get().getObject(backendId, type, value.toString());
-						value = Json.mapper().convertValue(value, Map.class);
-						context.put(name, value);
-						continue;
-					}
-
-					throw Exceptions.illegalArgument("parameter value [%s][%s] is invalid", //
-							name, value);
-				}
-
-				throw Exceptions.illegalArgument("parameter type [%s][%s] not found", //
-						name, type);
+				throw Exceptions.illegalArgument("parameter value [%s][%s] is invalid", //
+						name, value);
 			}
-		} catch (IOException e) {
-			throw Exceptions.illegalArgument(e, "error deserializing request payload");
+
+			throw Exceptions.illegalArgument("parameter type [%s][%s] not found", //
+					name, type);
 		}
 
 		return context;

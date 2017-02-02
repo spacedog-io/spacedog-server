@@ -285,8 +285,9 @@ public class CredentialsResource extends Resource {
 
 	@Post("/1/credentials/forgotPassword")
 	@Post("/1/credentials/forgotPassword/")
-	public Payload postForgotPassword(Context context) {
-		String username = Check.notNullOrEmpty(context.get(PARAM_USERNAME), "username");
+	public Payload postForgotPassword(String body, Context context) {
+		Map<String, Object> parameters = Json.readMap(body);
+		String username = Check.notNull(parameters.get(PARAM_USERNAME), "username").toString();
 
 		Credentials credentials = getByName(SpaceContext.target(), username, true).get();
 		credentials.email().orElseThrow(//
@@ -298,10 +299,17 @@ public class CredentialsResource extends Resource {
 				.orElseThrow(() -> Exceptions.illegalArgument(//
 						"no [forgotPassword] mail template in mail settings"));
 
+		// make sure the model has at least the username parameter
+		if (template.model == null)
+			template.model = Maps.newHashMap();
+		template.model.put(PARAM_USERNAME, "string");
+
+		Map<String, Object> mailContext = PebbleTemplating.get()//
+				.createContext(template.model, parameters);
+
 		credentials.newPasswordResetCode();
 		update(credentials);
 
-		Map<String, Object> mailContext = Maps.newHashMap();
 		mailContext.put("to", credentials.email().get());
 		mailContext.put("passwordResetCode", credentials.passwordResetCode());
 
