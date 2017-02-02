@@ -48,6 +48,12 @@ public class SpaceData implements SpaceFields, SpaceParams {
 		return object;
 	}
 
+	public <K extends DataObject> K get(Class<K> dataClass, String id) {
+		K object = object(dataClass, id);
+		object.fetch();
+		return object;
+	}
+
 	//
 	// Load
 	//
@@ -243,4 +249,5 @@ public class SpaceData implements SpaceFields, SpaceParams {
 		}
 		return results;
 	}
+
 }
