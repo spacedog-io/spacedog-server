@@ -192,7 +192,7 @@ public class StartConfiguration {
 	}
 
 	public String serverUserAgent() {
-		return configuration.getProperty(SPACEDOG_SERVER_USER_AGENT, "SpaceDog Server");
+		return configuration.getProperty(SPACEDOG_SERVER_USER_AGENT, "spacedog-server");
 	}
 
 	//
