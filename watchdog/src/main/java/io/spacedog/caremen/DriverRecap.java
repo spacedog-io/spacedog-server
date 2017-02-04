@@ -1,5 +1,6 @@
 package io.spacedog.caremen;
 
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Locale;
 
@@ -28,9 +29,12 @@ public class DriverRecap {
 			forPattern("dd/MM").withLocale(Locale.FRANCE);
 
 	@JsonIgnore
-	private static DateTimeFormatter longDateFormatter = DateTimeFormat.//
-			forPattern("dd/MM/yy' à 'HH'h'mm").withLocale(Locale.FRANCE)//
+	private static DateTimeFormatter dropoffFormatter = DateTimeFormat.//
+			forPattern("dd/MM' à 'HH'h'mm").withLocale(Locale.FRANCE)//
 			.withZone(DateTimeZone.forID("Europe/Paris"));
+
+	@JsonIgnore
+	private static DecimalFormat decimalFormatter = new DecimalFormat("#.##");
 
 	public String driverId;
 	public String credentialsId;
@@ -44,9 +48,11 @@ public class DriverRecap {
 	public List<CourseRecap> courses;
 	public double totalRevenu;
 	public double totalGain;
-	public double caremenShare;
-	public double serviceFees;
-	public double otherFees;
+	public String totalRevenuLocalized;
+	public String totalGainLocalized;
+	public String caremenShare;
+	public String serviceFees;
+	public String otherFees = "0";
 	public String gainLocalized;
 
 	@JsonIgnoreProperties(ignoreUnknown = true)
@@ -54,8 +60,8 @@ public class DriverRecap {
 		public String dropoffTimestamp;
 		public String to;
 		public String from;
-		public double fare;
-		public double gain;
+		public String fare;
+		public String gain;
 	}
 
 	public DriverRecap() {
@@ -74,11 +80,11 @@ public class DriverRecap {
 	public void addCourse(Course course) {
 
 		CourseRecap courseRecap = new CourseRecap();
-		courseRecap.dropoffTimestamp = longDateFormatter.print(course.dropoffTimestamp);
 		courseRecap.to = course.to.address;
 		courseRecap.from = course.from.address;
-		courseRecap.fare = course.fare;
-		courseRecap.gain = course.driver.gain;
+		courseRecap.dropoffTimestamp = dropoffFormatter.print(course.dropoffTimestamp);
+		courseRecap.fare = decimalFormatter.format(course.fare);
+		courseRecap.gain = decimalFormatter.format(course.driver.gain);
 
 		if (courses == null)
 			courses = Lists.newArrayList();
@@ -90,10 +96,16 @@ public class DriverRecap {
 	}
 
 	public void shakeIt() {
-		serviceFees = totalRevenu - totalGain;
+		serviceFees = decimalFormatter.format(totalRevenu - totalGain);
+		totalRevenuLocalized = decimalFormatter.format(totalRevenu);
+		totalGainLocalized = decimalFormatter.format(totalGain);
 		DateTime lastWeek = DateTime.now().minusWeeks(1);
 		monday = shortDateFormatter.print(lastWeek.withDayOfWeek(1));
 		sunday = shortDateFormatter.print(lastWeek.withDayOfWeek(7));
+	}
+
+	public void setCaremenShare(double driverShare) {
+		this.caremenShare = Integer.toString(100 - (int) (driverShare * 100));
 	}
 
 }

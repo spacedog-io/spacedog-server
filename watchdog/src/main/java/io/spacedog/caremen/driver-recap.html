@@ -1,0 +1,219 @@
+<!doctype html>
+<html>
+   <head>
+      <!-- utf-8 works for most cases -->
+      <meta charset="UTF-8" />
+      <!-- Forcing initial-scale shouldn't be necessary -->
+      <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+      <!-- Use the latest (edge) version of IE rendering engine -->
+      <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+      <!-- The title tag shows in email notifications, like Android 4.4. -->
+      <title>Vos revenus CAREMEN hebdomadaire</title>
+      <!-- Please use an inliner tool to convert all CSS to inline as inpage or external CSS is removed by email clients --><!-- important in CSS is used to prevent the styles of currently inline CSS from overriding the ones mentioned in media queries when corresponding screen sizes are encountered --><!-- CSS Reset -->
+      <style type="text/css">/* What it does: Remove spaces around the email design added by some email clients. */
+         /* Beware: It can remove the padding / margin and add a background color to the compose a reply window. */
+         html, body {
+         margin: 0 !important;
+         padding: 0 !important;
+         height: 100% !important;
+         width: 100% !important;
+         }
+         /* What it does: Stops email clients resizing small text. */
+         * {
+         -ms-text-size-adjust: 100%;
+         -webkit-text-size-adjust: 100%;
+         }
+         /* What it does: Forces Outlook.com to display emails full width. */
+         .ExternalClass {
+         width: 100%;
+         }
+         /* What is does: Centers email on Android 4.4 */
+         div[style*="margin: 16px 0"] {
+         margin: 0 !important;
+         }
+         /* What it does: Stops Outlook from adding extra spacing to tables. */
+         table, td {
+         mso-table-lspace: 0pt !important;
+         mso-table-rspace: 0pt !important;
+         }
+         /* What it does: Fixes webkit padding issue. Fix for Yahoo mail table alignment bug. Applies table-layout to the first 2 tables then removes for anything nested deeper. */
+         table {
+         border-spacing: 0 !important;
+         border-collapse: collapse !important;
+         table-layout: fixed !important;
+         margin: 0 auto !important;
+         }
+         table table table {
+         table-layout: auto;
+         }
+         /* What it does: Uses a better rendering method when resizing images in IE. */
+         img {
+         -ms-interpolation-mode: bicubic;
+         }
+         /* What it does: Overrides styles added when Yahoo's auto-senses a link. */
+         .yshortcuts a {
+         border-bottom: none !important;
+         }
+         /* What it does: Another work-around for iOS meddling in triggered links. */
+         a[x-apple-data-detectors] {
+         color: inherit !important;
+         }
+      </style>
+      <!-- Progressive Enhancements -->
+      <style type="text/css">/* What it does: Hover styles for buttons */
+         .button-td, .button-a {
+         transition: all 100ms ease-in;
+         }
+         .button-td:hover, .button-a:hover {
+         background: #555555 !important;
+         border-color: #555555 !important;
+         }
+         #decompte tbody tr {
+         border-bottom: 1px solid;
+         }
+         #decompte tbody > tr:last-child > td {
+         border-bottom: 1px solid #FFF;
+         }
+         a {
+         color: #cc9d6c;
+         }
+      </style>
+   </head>
+   <body bgcolor="#e0e0e0" height="100%" style="margin: 0;" width="100%" yahoo="yahoo">
+      <table bgcolor="#e0e0e0" align="center" border="0" cellpadding="0" height="100%" cellspacing="0" style="border-collapse:collapse; max-width: 600px;" width="600">
+      <tr>
+         <td align="center" class="full-width-image">
+            <img alt="alt_text" border="0" src="https://caremen.fr/j6FPNusCc/uploads/2017/01/header-a.jpg" style="width: 100%; max-width: 600px; height: auto;" width="600" />
+         </td>
+      </tr>
+      <tr>
+         <td bgcolor="#ffffff" style="padding: 40px">
+            <table border="0" cellpadding="0" cellspacing="0">
+               <tr>
+                  <td style="font-family: sans-serif; font-size: 13px; mso-height-rule: exactly; line-height: 17px; color: #333333;">
+                     T&eacute;l. op&eacute;rateur :&nbsp;<a href="tel:0972394888">09 72 39 48 88</a>
+                  </td>
+               </tr>
+               <tr>
+                  <td style="font-family: sans-serif; font-size: 13px; mso-height-rule: exactly; line-height: 17px; color: #333333;">
+                     E-mail :&nbsp;<a data-mce-href="mailto:bonjour@caremen.fr" href="mailto:bonjour@caremen.fr">bonjour@caremen.fr</a>
+                  </td>
+               </tr>
+               <tr>
+                  <td style="padding-top: 40px; font-family: sans-serif; font-size: 13px; mso-height-rule: exactly; line-height: 17px; color: #333333; text-align: right">
+                     {{companyName}}
+                  </td>
+               </tr>
+               <tr>
+                  <td style="font-family: sans-serif; font-size: 13px; mso-height-rule: exactly; line-height: 17px; color: #333333; text-align: right">
+                     {{firstname}} {{lastname}}
+                  </td>
+               </tr>
+               <tr>
+                  <td style="font-family: sans-serif; font-size: 13px; mso-height-rule: exactly; line-height: 17px; color: #333333; text-align: right">
+                     {{address}}
+                  </td>
+               </tr>
+               <tr>
+                  <td style="font-family: sans-serif; font-size: 13px; mso-height-rule: exactly; line-height: 17px; color: #333333; text-align: right">
+                     SIRET n&deg;{{siret}}
+                  </td>
+               </tr>
+               <tr>
+               <tr>
+                  <td style="padding-top: 40px; text-align: center; color: rgb(204, 157, 108); font-family: sans-serif; font-size: 20px;">
+                     Vos revenus hebdomadaires
+                  </td>
+               </tr>
+               <tr>
+                  <td style="padding-top: 40px;">
+                     <table border="0" cellpadding="5" cellspacing="1" width="100%">
+                        <tr>
+                           <td style="color: #333333; font-family: sans-serif; font-size: 13px;">
+                              Montant total des courses effectu&eacute;es
+                           </td>
+                           <td style="color: #333333; font-family: sans-serif; font-size: 13px; text-align: right;">
+                              {{totalRevenuLocalized}} &euro;
+                           </td>
+                        </tr>
+                        <tr>
+                           <td style="color: #333333; font-family: sans-serif; font-size: 13px;">
+                              Frais de service CAREMEN ({{caremenShare}}%)
+                           </td>
+                           <td style="color: #333333; font-family: sans-serif; font-size: 13px; text-align: right;">
+                              {{serviceFees}} &euro;
+                           </td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid black">
+                           <td style="padding-bottom: 10px; color: #333333; font-family: sans-serif; font-size: 13px;">
+                              Autre frais
+                           </td>
+                           <td style="padding-bottom: 10px; color: #333333; font-family: sans-serif; font-size: 13px; text-align: right;">
+                              {{otherFees}} &euro;
+                           </td>
+                        </tr>
+                        <tr>
+                           <td style="padding-top: 5px; color: #333333; font-family: sans-serif; font-size: 13px; font-weight: bold;">
+                              Montant total HT
+                           </td>
+                           <td style="padding-top: 5px; color: #333333; font-family: sans-serif; font-size: 13px; text-align: right; font-weight: bold">
+                              {{totalGainLocalized}} &euro;
+                           </td>
+                        </tr>
+                     </table>
+                  </td>
+               </tr>
+               <tr>
+                  <td style="padding: 40px; font-family: sans-serif; line-height: 20px; text-align: center; color: #cc9d6c; font-size: 20px;">
+                     D&eacute;compte de vos courses du lundi {{monday}} au dimanche {{sunday}}
+                  </td>
+               </tr>
+               <tr>
+                  <td>
+                     <table align="center" border="0" cellpadding="0" cellspacing="2">
+                        <thead>
+                           <tr style="border-bottom: 1px solid black;">
+                              <th style="color: #333333; font-family: sans-serif; font-size: 13px; font-weight: bold; text-align: left;">
+                                 Date, heure et destination
+                              </th>
+                              <th style="color: #333333; font-family: sans-serif; font-size: 13px; font-weight: bold; text-align: right;">
+                                 Montant
+                              </th>
+                           </tr>
+                        </thead>
+                        <tbody >
+                           {% for course in courses %}
+                           <tr style="border-bottom: 1px solid black;">
+                              <td style="padding: 10px; color: #333333; font-family: sans-serif; font-size: 13px; text-align: left;">
+                                 {{course.dropoffTimestamp}}, {{course.to}}
+                              </td>
+                              <td style="padding: 10px; color: #333333; font-family: sans-serif; font-size: 13px; text-align: right;">
+                                 {{course.fare}} &euro;
+                              </td>
+                           </tr>
+                           {% endfor %}
+                        </tbody>
+                     </table>
+                  </td>
+               </tr>
+            </table>
+         </td>
+      </tr>
+      <tr>
+         <td>
+            <table align="center" bgcolor="#e0e0e0" border="0" cellpadding="30" cellspacing="0">
+               <tr>
+                  <td style="font-size: 12px; font-family: sans-serif; mso-height-rule: exactly; line-height:18px; text-align: center; color: #888888;">
+                     <a href="https://www.caremen.fr" target="_blank">www.caremen.fr</a><br/>
+                     <br/>
+                     Auda - SAS au capital de 500 000 &euro; - 19, rue du rocher 75008 Paris
+                     <br/>
+                     SIRET N&deg;82256257500016 - NAF 7010Z - TVA 74822562575
+                  </td>
+               </tr>
+            </table>
+         </td>
+      </tr>
+      </table>
+   </body>
+</html>

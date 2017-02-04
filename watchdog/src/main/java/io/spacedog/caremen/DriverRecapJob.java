@@ -2,7 +2,6 @@ package io.spacedog.caremen;
 
 import java.io.StringWriter;
 import java.nio.charset.Charset;
-import java.text.DecimalFormat;
 import java.util.Map;
 import java.util.Optional;
 
@@ -28,8 +27,7 @@ public class DriverRecapJob {
 	private SpaceEnv env = null;
 	private SpaceDog dog = null;
 	private boolean testing = false;
-
-	private static DecimalFormat decimalFormatter = new DecimalFormat("#.##");
+	private FareSettings fareSettings;
 
 	public String recap() {
 
@@ -40,8 +38,18 @@ public class DriverRecapJob {
 
 			SearchResults<Driver> drivers = getDriversWhoWorkedLastWeek();
 
-			for (Driver driver : drivers.objects())
-				computeRecap(driver).ifPresent(recap -> sendRecap(recap));
+			for (Driver driver : drivers.objects()) {
+
+				try {
+					computeRecap(driver).ifPresent(recap -> sendRecap(recap));
+
+				} catch (Throwable t) {
+					String message = String.format(//
+							"Error sending recap to driver [%s]", //
+							driverUrl(driver.id()));
+					AdminJobs.error(this, message, t);
+				}
+			}
 
 		} catch (Throwable t) {
 			return AdminJobs.error(this, t);
@@ -51,32 +59,36 @@ public class DriverRecapJob {
 	}
 
 	private Optional<DriverRecap> computeRecap(Driver driver) {
-		try {
-			DriverRecap recap = new DriverRecap();
-			recap.setDriver(driver);
 
-			SearchResults<Course> courses = getDriverLastWeekCourses(driver);
+		DriverRecap recap = new DriverRecap();
+		recap.setDriver(driver);
+		recap.setCaremenShare(getFareSettings().driverShare);
 
-			if (courses.total() == 0)
-				return Optional.empty();
+		SearchResults<Course> courses = getDriverLastWeekCourses(driver);
 
-			if (courses.total() > 1000)
-				throw Exceptions.runtime("too many courses for driver [%s][%s %s]", //
-						driver.id(), driver.firstname, driver.lastname);
-
-			for (Course course : courses.objects())
-				recap.addCourse(course);
-
-			recap.shakeIt();
-			return Optional.of(recap);
-
-		} catch (Exception e) {
-			String url = SpaceEnv.defaultEnv().target().url(dog.backendId(), //
-					"/1/data/driver/" + driver.id());
-
-			AdminJobs.error(this, "Error sending recap to driver " + url, e);
+		if (courses.total() == 0)
 			return Optional.empty();
-		}
+
+		if (courses.total() > 1000)
+			throw Exceptions.runtime("too many courses for driver [%s][%s %s]", //
+					driver.id(), driver.firstname, driver.lastname);
+
+		for (Course course : courses.objects())
+			recap.addCourse(course);
+
+		recap.shakeIt();
+		return Optional.of(recap);
+	}
+
+	private String driverUrl(String driverId) {
+		return SpaceEnv.defaultEnv().target().url(dog.backendId(), //
+				"/1/data/driver/" + driverId);
+	}
+
+	private FareSettings getFareSettings() {
+		if (fareSettings == null)
+			fareSettings = dog.settings().get(FareSettings.class);
+		return fareSettings;
 	}
 
 	private void sendRecap(DriverRecap recap) {
@@ -87,12 +99,12 @@ public class DriverRecapJob {
 		Message message = new Message();
 		message.from = "CAREMEN <no-reply@caremen.fr>";
 		message.to = dog.credentials().get(recap.credentialsId).email().get();
-		// message.bcc = "compta@caremen.fr";
+		message.bcc = "compta@caremen.fr";
 		message.subject = "Vos revenus CAREMEN de la semaine dernière";
 
 		try {
 			String template = Resources.toString(//
-					Resources.getResource(this.getClass(), "driver-recap.pebble"), //
+					Resources.getResource(this.getClass(), "driver-recap.html"), //
 					Charset.forName("UTF-8"));
 
 			PebbleEngine pebble = new PebbleEngine.Builder().loader(new StringLoader()).build();
@@ -100,23 +112,12 @@ public class DriverRecapJob {
 			pebble.getTemplate(template).evaluate(writer, context);
 			message.html = writer.toString();
 
+			dog.mailEndpoint().send(message);
+
 		} catch (Exception e) {
-			throw Exceptions.runtime(e, "error rendering driver recap template");
+			AdminJobs.error(this, "Error sending recap of driver [" //
+					+ driverUrl(recap.driverId) + "]", e);
 		}
-
-		dog.mailEndpoint().send(message);
-	}
-
-	private String toEuro(double gain) {
-		return decimalFormatter.format(gain);
-	}
-
-	private String toMin(long time) {
-		return decimalFormatter.format(time / 60000);
-	}
-
-	private String toKm(long distance) {
-		return decimalFormatter.format(distance / 1000);
 	}
 
 	private SearchResults<Course> getDriverLastWeekCourses(Driver driver) {

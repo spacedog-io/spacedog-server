@@ -72,10 +72,10 @@ public class Billing {
 					course.status = "billed";
 					course.save();
 
-				} catch (Exception e) {
+				} catch (Throwable t) {
 					String url = env.target().url(dog.backendId(), //
 							"/1/data/course/" + course.id());
-					AdminJobs.error(this, "Error billing course " + url, e);
+					AdminJobs.error(this, "Error billing course " + url, t);
 				}
 			}
 
@@ -131,7 +131,7 @@ public class Billing {
 
 		try {
 			String template = Resources.toString(//
-					Resources.getResource(this.getClass(), "customer-receipt.pebble"), //
+					Resources.getResource(this.getClass(), "customer-receipt.html"), //
 					Charset.forName("UTF-8"));
 
 			PebbleEngine pebble = new PebbleEngine.Builder().loader(new StringLoader()).build();
