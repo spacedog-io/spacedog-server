@@ -63,12 +63,13 @@ public class Caremen extends SpaceTest {
 		SpaceRequest.env().target(SpaceTarget.production);
 
 		// initInstallations();
+		// initFareSettings();
+
 		// initVehiculeTypes();
 		// initStripeSettings();
 		// initMailSettings();
 		// initSmsSettings();
-		// initFareSettings();
-		initAppConfigurationSettings();
+		// initAppConfigurationSettings();
 		// initReferences();
 		// initCredentialsSettings();
 		// initSettingsSettings();
@@ -235,7 +236,7 @@ public class Caremen extends SpaceTest {
 
 		// fare settings
 		acl = new SettingsAcl();
-		acl.read("operator", "cashier", "user");
+		acl.read("operator", "cashier", "admin", "user");
 		acl.update("operator");
 		settings.put("fare", acl);
 
