@@ -26,9 +26,9 @@ import com.google.common.collect.Sets;
 @JsonIgnoreProperties(ignoreUnknown = true)
 // only map to fields
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, //
-getterVisibility = Visibility.NONE, //
-isGetterVisibility = Visibility.NONE, //
-setterVisibility = Visibility.NONE)
+		getterVisibility = Visibility.NONE, //
+		isGetterVisibility = Visibility.NONE, //
+		setterVisibility = Visibility.NONE)
 public class Credentials {
 
 	// Standard roles
@@ -482,11 +482,7 @@ public class Credentials {
 		Check.notNullOrEmpty(password, "password");
 		Check.notNullOrEmpty(passwordResetCode, "passwordResetCode");
 
-		if (hashedPassword != null || passwordResetCode == null)
-			throw Exceptions.illegalArgument(//
-					"credentials [%s] password must be deleted before reset", username);
-
-		if (!this.passwordResetCode.equals(passwordResetCode))
+		if (!passwordResetCode.equals(this.passwordResetCode))
 			throw Exceptions.illegalArgument(//
 					"password reset code [%s] invalid", passwordResetCode);
 
@@ -622,9 +618,9 @@ public class Credentials {
 	}
 
 	@JsonAutoDetect(fieldVisibility = Visibility.ANY, //
-	getterVisibility = Visibility.NONE, //
-	isGetterVisibility = Visibility.NONE, //
-	setterVisibility = Visibility.NONE)
+			getterVisibility = Visibility.NONE, //
+			isGetterVisibility = Visibility.NONE, //
+			setterVisibility = Visibility.NONE)
 	public static class Session {
 		private String accessToken;
 		private DateTime accessTokenExpiresAt;

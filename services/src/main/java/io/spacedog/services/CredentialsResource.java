@@ -311,6 +311,7 @@ public class CredentialsResource extends Resource {
 		update(credentials);
 
 		mailContext.put("to", credentials.email().get());
+		mailContext.put("credentialsId", credentials.id());
 		mailContext.put("passwordResetCode", credentials.passwordResetCode());
 
 		MailTemplateResource.get().sendTemplatedMail(template, mailContext);
@@ -799,7 +800,7 @@ public class CredentialsResource extends Resource {
 				.get()//
 				.getHits();
 
-		SearchResults<Credentials> response = new SearchResults<Credentials>();
+		SearchResults<Credentials> response = new SearchResults<>();
 		response.backendId = query.backendId;
 		response.type = query.type;
 		response.from = query.from;
