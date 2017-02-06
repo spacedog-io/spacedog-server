@@ -12,9 +12,9 @@ import io.spacedog.sdk.DataObject;
 @JsonIgnoreProperties(ignoreUnknown = true)
 // only map to private fields
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, //
-getterVisibility = Visibility.NONE, //
-isGetterVisibility = Visibility.NONE, //
-setterVisibility = Visibility.NONE)
+		getterVisibility = Visibility.NONE, //
+		isGetterVisibility = Visibility.NONE, //
+		setterVisibility = Visibility.NONE)
 public class Course extends DataObject {
 
 	public String status;
@@ -47,6 +47,7 @@ public class Course extends DataObject {
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	public static class Payment {
 		public String companyId;
+		public String companyName;
 		public Stripe stripe;
 	}
 

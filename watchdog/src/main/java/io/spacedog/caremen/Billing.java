@@ -94,7 +94,7 @@ public class Billing {
 		public double rateVAT;
 		public String dateReceipt;
 		public String dateCourse;
-		public String number;
+		public String paymentType;
 		public String taxes;
 		public String fareHT;
 		public String fareTTC;
@@ -109,6 +109,9 @@ public class Billing {
 			dateReceipt = dateFormatter.print(now);
 			dateCourse = dateFormatter.print(course.pickupTimestamp) + " à "
 					+ timeFormatter.print(course.pickupTimestamp);
+			paymentType = course.payment.companyName == null //
+					? "par carte bancaire" //
+					: "sur le compte de la société " + course.payment.companyName;
 		}
 	}
 
