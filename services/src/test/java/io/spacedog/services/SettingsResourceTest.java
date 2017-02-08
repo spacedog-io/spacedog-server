@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.watchdog;
+package io.spacedog.services;
 
 import org.junit.Test;
 
@@ -14,10 +14,8 @@ import io.spacedog.utils.Json;
 import io.spacedog.utils.SchemaSettings;
 import io.spacedog.utils.SettingsSettings;
 import io.spacedog.utils.SettingsSettings.SettingsAcl;
-import io.spacedog.watchdog.SpaceSuite.TestOften;
 
-@TestOften
-public class SettingsResourceTestOften extends SpaceTest {
+public class SettingsResourceTest extends SpaceTest {
 
 	@Test
 	public void createGetAndDeleteSettings() {
@@ -129,5 +127,34 @@ public class SettingsResourceTestOften extends SpaceTest {
 		// schema settings are not directly updatable
 		SpaceRequest.put("/1/settings/schema")//
 				.adminAuth(test).bodySettings(new SchemaSettings()).go(400);
+	}
+
+	@Test
+	public void superdogCanCreateUpdateAndDeleteSettings() {
+
+		// prepare
+		prepareTest();
+		SpaceDog test = resetTestBackend();
+		SpaceDog superdog = superdog(test);
+		ObjectNode settings = Json.object("toto", 23);
+
+		// superdog creates test settings
+		superdog.settings().save("test", settings);
+
+		// superadmin checks test settings
+		assertEquals(settings, test.settings().get("test"));
+
+		// superdog saves test settings
+		settings.put("titi", false);
+		superdog.settings().save("test", settings);
+
+		// superadmin checks test settings
+		assertEquals(settings, test.settings().get("test"));
+
+		// superdog deletes test settings
+		superdog.settings().delete("test");
+
+		// superadmin checks test settings are gone
+		test.get("/1/settings/test").go(404);
 	}
 }

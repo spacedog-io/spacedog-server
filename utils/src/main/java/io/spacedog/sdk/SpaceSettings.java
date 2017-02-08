@@ -16,6 +16,10 @@ public class SpaceSettings {
 		return get(Settings.id(settingsClass), settingsClass);
 	}
 
+	public ObjectNode get(String id) {
+		return this.get(id, ObjectNode.class);
+	}
+
 	public <K> K get(String id, Class<K> settingsClass) {
 		return dog.get("/1/settings/{id}")//
 				.routeParam("id", id).go(200).toObject(settingsClass);

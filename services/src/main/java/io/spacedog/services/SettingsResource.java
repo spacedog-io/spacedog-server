@@ -159,7 +159,7 @@ public class SettingsResource extends Resource {
 			credentials.checkRoles(getSettingsAcl(id).update());
 
 		ElasticClient elastic = Start.get().getElasticClient();
-		elastic.delete(credentials.backendId(), TYPE, id, false, true);
+		elastic.delete(credentials.target(), TYPE, id, false, true);
 		return JsonPayload.success();
 	}
 

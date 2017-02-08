@@ -99,6 +99,10 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 		admin.credentials().setRole(user.id(), role);
 	}
 
+	public static SpaceDog superdog(SpaceDog dog) {
+		return superdog(dog.backendId());
+	}
+
 	public static SpaceDog superdog(String backendId) {
 		SpaceEnv env = SpaceEnv.defaultEnv();
 		return SpaceDog.backend(backendId)//
