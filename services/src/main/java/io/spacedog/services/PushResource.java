@@ -174,7 +174,7 @@ public class PushResource extends Resource {
 			objectMessage = toObjectMessage(node);
 		}
 
-		ObjectNode installation = DataStore.get().getObject(credentials.target(), TYPE, id);
+		ObjectNode installation = DataStore.get().getObject(credentials.backendId(), TYPE, id);
 
 		PushLog log = new PushLog();
 		pushToInstallation(log, id, installation, objectMessage, credentials, badge);
@@ -185,7 +185,7 @@ public class PushResource extends Resource {
 	@Get("/installation/:id/tags/")
 	public Payload getTags(String id, Context context) {
 		Credentials credentials = SpaceContext.getCredentials();
-		ObjectNode object = DataStore.get().getObject(credentials.target(), TYPE, id);
+		ObjectNode object = DataStore.get().getObject(credentials.backendId(), TYPE, id);
 
 		return JsonPayload.json(//
 				object.has(TAGS) //
@@ -260,11 +260,11 @@ public class PushResource extends Resource {
 		}
 
 		boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);
-		DataStore.get().refreshType(refresh, credentials.target(), TYPE);
+		DataStore.get().refreshType(refresh, credentials.backendId(), TYPE);
 
 		// TODO use a scroll to push to all installations found
 		SearchHits hits = Start.get().getElasticClient()//
-				.prepareSearch(credentials.target(), TYPE)//
+				.prepareSearch(credentials.backendId(), TYPE)//
 				.setQuery(query)//
 				.setFrom(0)//
 				.setSize(1000)//
@@ -353,7 +353,7 @@ public class PushResource extends Resource {
 
 			if (e instanceof EndpointDisabledException) {
 				logItem.put("installationDisabled", true);
-				removeEndpointQuietly(credentials.target(), installationId);
+				removeEndpointQuietly(credentials.backendId(), installationId);
 			}
 
 			if (e instanceof PlatformApplicationDisabledException)
@@ -426,7 +426,7 @@ public class PushResource extends Resource {
 			if (BadgeStrategy.auto.equals(badgeStrategy)) {
 				badge = badge + 1;
 				// update installation badge in data store
-				DataStore.get().patchObject(credentials.target(), //
+				DataStore.get().patchObject(credentials.backendId(), //
 						TYPE, installationId, Json.object(BADGE, badge), credentials.name());
 			}
 
@@ -482,7 +482,7 @@ public class PushResource extends Resource {
 		if (SpaceContext.isTest()) {
 			installation.set(ENDPOINT, TextNode.valueOf("FAKE_ENDPOINT_FOR_TESTING"));
 		} else {
-			String endpoint = createApplicationEndpoint(credentials.target(), appId, service, token);
+			String endpoint = createApplicationEndpoint(credentials.backendId(), appId, service, token);
 			installation.set(ENDPOINT, TextNode.valueOf(endpoint));
 		}
 
@@ -490,8 +490,8 @@ public class PushResource extends Resource {
 			installation.set(USER_ID, TextNode.valueOf(credentials.name()));
 
 		if (id.isPresent()) {
-			DataStore.get().patchObject(credentials.target(), TYPE, id.get(), installation, credentials.name());
-			return JsonPayload.saved(false, credentials.target(), "/1", TYPE, id.get());
+			DataStore.get().patchObject(credentials.backendId(), TYPE, id.get(), installation, credentials.name());
+			return JsonPayload.saved(false, credentials.backendId(), "/1", TYPE, id.get());
 		} else
 			return DataResource.get().post(TYPE, installation.toString(), context);
 	}
@@ -499,7 +499,7 @@ public class PushResource extends Resource {
 	private Payload updateTags(String id, String body, boolean strict, boolean delete) {
 
 		Credentials credentials = SpaceContext.getCredentials();
-		ObjectNode installation = DataStore.get().getObject(credentials.target(), TYPE, id);
+		ObjectNode installation = DataStore.get().getObject(credentials.backendId(), TYPE, id);
 
 		if (strict) {
 			ArrayNode tags = Json.readArray(body);
@@ -521,7 +521,7 @@ public class PushResource extends Resource {
 							break;
 						}
 						// tag already exists => nothing to save
-						return JsonPayload.saved(false, credentials.target(), "/1", TYPE, id);
+						return JsonPayload.saved(false, credentials.backendId(), "/1", TYPE, id);
 					}
 				}
 			}
@@ -530,8 +530,8 @@ public class PushResource extends Resource {
 				installation.withArray(TAGS).add(newTag);
 		}
 
-		DataStore.get().updateObject(credentials.target(), installation, credentials.name());
-		return JsonPayload.saved(false, credentials.target(), "/1", TYPE, id);
+		DataStore.get().updateObject(credentials.backendId(), installation, credentials.name());
+		return JsonPayload.saved(false, credentials.backendId(), "/1", TYPE, id);
 	}
 
 	private String toFieldPath(String... strings) {

@@ -54,7 +54,7 @@ public class SettingsResource extends Resource {
 	@Get("/")
 	public Payload getAll(Context context) {
 
-		String backendId = SpaceContext.checkSuperAdminCredentials().target();
+		String backendId = SpaceContext.checkSuperAdminCredentials().backendId();
 		ElasticClient elastic = Start.get().getElasticClient();
 
 		if (!elastic.existsIndex(backendId, TYPE))
@@ -86,7 +86,7 @@ public class SettingsResource extends Resource {
 	@Delete("")
 	@Delete("/")
 	public Payload deleteIndex() {
-		String backendId = SpaceContext.checkSuperAdminCredentials().target();
+		String backendId = SpaceContext.checkSuperAdminCredentials().backendId();
 		ElasticClient elastic = Start.get().getElasticClient();
 		elastic.deleteIndex(backendId, TYPE);
 		return JsonPayload.success();
@@ -146,7 +146,7 @@ public class SettingsResource extends Resource {
 		} else
 			response = save(id, body);
 
-		return JsonPayload.saved(response.isCreated(), SpaceContext.target(), "/1", //
+		return JsonPayload.saved(response.isCreated(), SpaceContext.backendId(), "/1", //
 				response.getType(), response.getId(), response.getVersion());
 	}
 
@@ -159,7 +159,7 @@ public class SettingsResource extends Resource {
 			credentials.checkRoles(getSettingsAcl(id).update());
 
 		ElasticClient elastic = Start.get().getElasticClient();
-		elastic.delete(credentials.target(), TYPE, id, false, true);
+		elastic.delete(credentials.backendId(), TYPE, id, false, true);
 		return JsonPayload.success();
 	}
 
@@ -227,7 +227,7 @@ public class SettingsResource extends Resource {
 	}
 
 	private String load(String id) {
-		String backendId = SpaceContext.target();
+		String backendId = SpaceContext.backendId();
 		ElasticClient elastic = Start.get().getElasticClient();
 
 		if (elastic.existsIndex(backendId, TYPE)) {
@@ -243,13 +243,13 @@ public class SettingsResource extends Resource {
 		makeSureIndexIsCreated();
 
 		return Start.get().getElasticClient()//
-				.prepareIndex(SpaceContext.target(), TYPE, id)//
+				.prepareIndex(SpaceContext.backendId(), TYPE, id)//
 				.setSource(body).get();
 	}
 
 	private void makeSureIndexIsCreated() {
 
-		String backendId = SpaceContext.target();
+		String backendId = SpaceContext.backendId();
 		ElasticClient elastic = Start.get().getElasticClient();
 
 		if (!elastic.existsIndex(backendId, TYPE)) {

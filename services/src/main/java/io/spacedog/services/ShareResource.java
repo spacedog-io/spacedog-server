@@ -31,7 +31,7 @@ public class ShareResource extends S3Resource {
 	@Get("/")
 	public Object getAll(Context context) {
 		Credentials credentials = checkPermission(DataPermission.search);
-		return doList(SHARE_BUCKET_SUFFIX, credentials.target(), WebPath.ROOT, context);
+		return doList(SHARE_BUCKET_SUFFIX, credentials.backendId(), WebPath.ROOT, context);
 	}
 
 	@Get("/:uuid/:fileName")
@@ -41,7 +41,7 @@ public class ShareResource extends S3Resource {
 		boolean checkOwnership = checkPermissionAndIsOwnershipRequired(//
 				DataPermission.read, DataPermission.read_all);
 
-		return doGet(SHARE_BUCKET_SUFFIX, SpaceContext.target(), //
+		return doGet(SHARE_BUCKET_SUFFIX, SpaceContext.backendId(), //
 				WebPath.newPath(uuid, fileName), context, checkOwnership);
 	}
 

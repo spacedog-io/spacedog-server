@@ -52,7 +52,7 @@ public class UserResource extends Resource {
 	public Payload signUp(String body, Context context) {
 		ObjectNode node = Json.readObject(body);
 		Credentials credentials = CredentialsResource.get()//
-				.create(SpaceContext.target(), Level.USER, node, true);
+				.create(SpaceContext.backendId(), Level.USER, node, true);
 		SpaceContext.setCredentials(credentials);
 
 		node.remove(FIELD_PASSWORD);
@@ -87,7 +87,7 @@ public class UserResource extends Resource {
 	@Delete("/1/data/user/:username/")
 	public Payload delete(String username, Context context) {
 		CredentialsResource.get().deleteById(//
-				Credentials.toLegacyId(SpaceContext.target(), username));
+				Credentials.toLegacyId(SpaceContext.backendId(), username));
 		return DataResource.get().deleteById(TYPE, username, context);
 	}
 
@@ -95,7 +95,7 @@ public class UserResource extends Resource {
 	@Delete("/1/user/:username/password")
 	public Payload deletePassword(String username, Context context) {
 		return CredentialsResource.get().deletePassword(//
-				Credentials.toLegacyId(SpaceContext.target(), username), //
+				Credentials.toLegacyId(SpaceContext.backendId(), username), //
 				context);
 	}
 
@@ -103,7 +103,7 @@ public class UserResource extends Resource {
 	@Post("/1/user/:username/password")
 	public Payload postPassword(String username, Context context) {
 		return CredentialsResource.get().postPassword(//
-				Credentials.toLegacyId(SpaceContext.target(), username), //
+				Credentials.toLegacyId(SpaceContext.backendId(), username), //
 				context);
 	}
 
@@ -111,7 +111,7 @@ public class UserResource extends Resource {
 	@Put("/1/user/:username/password")
 	public Payload putPassword(String username, Context context) {
 		return CredentialsResource.get().putPassword(//
-				Credentials.toLegacyId(SpaceContext.target(), username), //
+				Credentials.toLegacyId(SpaceContext.backendId(), username), //
 				null, context);
 	}
 

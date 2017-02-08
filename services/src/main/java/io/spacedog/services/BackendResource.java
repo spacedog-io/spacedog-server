@@ -47,7 +47,7 @@ public class BackendResource extends Resource {
 		SearchResults<Credentials> superAdmins = credentials.isSuperDog() //
 				&& credentials.isTargetingRootApi() //
 						? CredentialsResource.get().getAllSuperAdmins(from, size)//
-						: CredentialsResource.get().getBackendSuperAdmins(credentials.target(), from, size);
+						: CredentialsResource.get().getBackendSuperAdmins(credentials.backendId(), from, size);
 
 		return toPayload(superAdmins);
 	}
@@ -60,8 +60,8 @@ public class BackendResource extends Resource {
 		if (credentials.isTargetingRootApi())
 			throw Exceptions.illegalArgument("backend [api] shall not be deleted");
 
-		CredentialsResource.get().deleteAll(credentials.target());
-		Start.get().getElasticClient().deleteAllIndices(credentials.target());
+		CredentialsResource.get().deleteAll(credentials.backendId());
+		Start.get().getElasticClient().deleteAllIndices(credentials.backendId());
 
 		if (isDeleteFilesAndShares()) {
 			FileResource.get().deleteAll();
@@ -74,7 +74,7 @@ public class BackendResource extends Resource {
 	@Post("/1/backend")
 	@Post("/1/backend/")
 	public Payload post(String body, Context context) {
-		return post(SpaceContext.target(), body, context);
+		return post(SpaceContext.backendId(), body, context);
 	}
 
 	// TODO these routes are deprecated

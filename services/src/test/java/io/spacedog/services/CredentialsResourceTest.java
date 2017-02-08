@@ -6,6 +6,7 @@ package io.spacedog.services;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -436,4 +437,23 @@ public class CredentialsResourceTest extends SpaceTest {
 		fred.get("/1/data").go(200);
 	}
 
+	@Test
+	public void checkSuperdogIsNotMessedUpWhenLoggedInSpecificBackend() {
+
+		// prepare
+		SpaceDog test = resetTestBackend();
+
+		// superdog logs in to the test backend
+		SpaceDog superdogTest = superdog(test).login();
+
+		// and gets all superadmins
+		ObjectNode results = superdogTest.get("/1/backend").go(200).objectNode();
+
+		// superdog logs in to the root backend
+		SpaceDog superdog = superdog().login();
+
+		// and check he gets the same superadmin list
+		superdog.get("/1/backend").go(200)//
+				.assertEquals(results);
+	}
 }

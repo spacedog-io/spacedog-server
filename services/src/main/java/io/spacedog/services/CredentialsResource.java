@@ -167,7 +167,7 @@ public class CredentialsResource extends Resource {
 		ObjectNode data = Json.readObject(body);
 		Level level = extractAndCheckLevel(data, Level.USER);
 
-		Credentials credentials = create(SpaceContext.target(), level, data);
+		Credentials credentials = create(SpaceContext.backendId(), level, data);
 
 		JsonBuilder<ObjectNode> builder = JsonPayload //
 				.builder(true, credentials.backendId(), "/1", TYPE, credentials.id());
@@ -279,8 +279,7 @@ public class CredentialsResource extends Resource {
 		// TODO check if at least one field has been changed
 		// before credentials update
 		credentials = update(credentials);
-		return JsonPayload.saved(false, credentials.backendId(), //
-				"/1", TYPE, credentials.id(), credentials.version());
+		return saved(credentials, false);
 	}
 
 	@Post("/1/credentials/forgotPassword")
@@ -289,7 +288,7 @@ public class CredentialsResource extends Resource {
 		Map<String, Object> parameters = Json.readMap(body);
 		String username = Check.notNull(parameters.get(PARAM_USERNAME), "username").toString();
 
-		Credentials credentials = getByName(SpaceContext.target(), username, true).get();
+		Credentials credentials = getByName(SpaceContext.backendId(), username, true).get();
 		credentials.email().orElseThrow(//
 				() -> Exceptions.illegalArgument("no email found in credentials [%s][%s]", //
 						credentials.level(), credentials.name()));
@@ -349,8 +348,7 @@ public class CredentialsResource extends Resource {
 				Optional.of(settings.passwordRegex()));
 		credentials = update(credentials);
 
-		return JsonPayload.saved(false, credentials.backendId(), //
-				"/1", TYPE, credentials.id(), credentials.version());
+		return saved(credentials, false);
 	}
 
 	@Put("/1/credentials/me/password")
@@ -376,8 +374,7 @@ public class CredentialsResource extends Resource {
 		credentials.changePassword(password, Optional.of(settings.passwordRegex()));
 
 		credentials = update(credentials);
-		return JsonPayload.saved(false, credentials.backendId(), //
-				"/1", TYPE, credentials.id(), credentials.version());
+		return saved(credentials, false);
 	}
 
 	@Put("/1/credentials/:id/passwordMustChange")
@@ -391,8 +388,7 @@ public class CredentialsResource extends Resource {
 		credentials.passwordMustChange(passwordMustChange);
 
 		credentials = update(credentials);
-		return JsonPayload.saved(false, credentials.backendId(), //
-				"/1", TYPE, credentials.id(), credentials.version());
+		return saved(credentials, false);
 	}
 
 	@Put("/1/credentials/:id/enabled")
@@ -408,8 +404,7 @@ public class CredentialsResource extends Resource {
 		credentials.doEnableOrDisable(enabled.asBoolean());
 		credentials = update(credentials);
 
-		return JsonPayload.saved(false, credentials.backendId(), //
-				"/1", TYPE, credentials.id(), credentials.version());
+		return saved(credentials, false);
 	}
 
 	@Get("/1/credentials/:id/roles")
@@ -422,18 +417,17 @@ public class CredentialsResource extends Resource {
 	@Delete("/1/credentials/:id/roles")
 	@Delete("/1/credentials/:id/roles/")
 	public Payload deleteAllRoles(String id, Context context) {
-		String backendId = SpaceContext.checkAdminCredentials().target();
+		SpaceContext.checkAdminCredentials();
 		Credentials credentials = getById(id, true).get();
 		credentials.roles().clear();
 		credentials = update(credentials);
-		return JsonPayload.saved(false, backendId, "/1", TYPE, //
-				credentials.id(), credentials.version());
+		return saved(credentials, false);
 	}
 
 	@Put("/1/credentials/:id/roles/:role")
 	@Put("/1/credentials/:id/roles/:role/")
 	public Payload putRole(String id, String role, Context context) {
-		String backendId = SpaceContext.checkAdminCredentials().target();
+		SpaceContext.checkAdminCredentials();
 		Roles.checkIfValid(role);
 		Credentials credentials = getById(id, true).get();
 
@@ -442,21 +436,19 @@ public class CredentialsResource extends Resource {
 			credentials = update(credentials);
 		}
 
-		return JsonPayload.saved(false, backendId, "/1", TYPE, //
-				credentials.id(), credentials.version());
+		return saved(credentials, false);
 	}
 
 	@Delete("/1/credentials/:id/roles/:role")
 	@Delete("/1/credentials/:id/roles/:role/")
 	public Payload deleteRole(String id, String role, Context context) {
-		String backendId = SpaceContext.checkAdminCredentials().target();
+		SpaceContext.checkAdminCredentials();
 		Credentials credentials = getById(id, true).get();
 
 		if (credentials.roles().contains(role)) {
 			credentials.roles().remove(role);
 			credentials = update(credentials);
-			return JsonPayload.saved(false, backendId, "/1", TYPE, //
-					credentials.id(), credentials.version());
+			return saved(credentials, false);
 		}
 		return JsonPayload.error(HttpStatus.NOT_FOUND);
 	}
@@ -550,8 +542,6 @@ public class CredentialsResource extends Resource {
 				.setQuery(QueryBuilders.boolQuery()//
 						// I'll check backendId later in this method
 						// to let superdogs access all backends
-						// .must(QueryBuilders.termQuery(BACKEND_ID,
-						// backendId))//
 						.must(QueryBuilders.termQuery(FIELD_SESSIONS_ACCESS_TOKEN, accessToken)))//
 				.get()//
 				.getHits();
@@ -590,17 +580,12 @@ public class CredentialsResource extends Resource {
 			return Optional.of(toCredentials(response));
 
 		if (throwNotFound)
-			throw Exceptions.notFound(credentials.target(), TYPE, id);
+			throw Exceptions.notFound(credentials.backendId(), TYPE, id);
 		else
 			return Optional.empty();
 	}
 
 	Optional<Credentials> getByName(String backendId, String username, boolean throwNotFound) {
-		Credentials credentials = SpaceContext.getCredentials();
-
-		if (username.equals(credentials.name()) //
-				&& backendId.equals(credentials.backendId()))
-			return Optional.of(credentials);
 
 		Optional<SearchHit> searchHit = Start.get().getElasticClient().get(//
 				SPACEDOG_BACKEND, TYPE, toQuery(backendId, username));
@@ -713,6 +698,11 @@ public class CredentialsResource extends Resource {
 	// Implementation
 	//
 
+	private Payload saved(Credentials credentials, boolean created) {
+		return JsonPayload.saved(false, credentials.backendId(), "/1", TYPE, //
+				credentials.id(), credentials.version());
+	}
+
 	private Level extractAndCheckLevel(ObjectNode fields, Level defaultLevel) {
 		String value = fields.path(FIELD_CREDENTIALS_LEVEL).asText();
 		if (Strings.isNullOrEmpty(value))
@@ -726,7 +716,7 @@ public class CredentialsResource extends Resource {
 
 	private BoolSearch toQuery(Context context) {
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
-				.filter(QueryBuilders.termQuery(FIELD_BACKEND_ID, SpaceContext.target()));
+				.filter(QueryBuilders.termQuery(FIELD_BACKEND_ID, SpaceContext.backendId()));
 
 		String username = context.get(FIELD_USERNAME);
 		if (!Strings.isNullOrEmpty(username))

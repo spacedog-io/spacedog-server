@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.junit.Assert;
 
 import io.spacedog.sdk.SpaceDog;
+import io.spacedog.utils.Backends;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Passwords;
 import io.spacedog.utils.SpaceFields;
@@ -97,6 +98,10 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 
 	public static void setRole(SpaceDog admin, SpaceDog user, String role) {
 		admin.credentials().setRole(user.id(), role);
+	}
+
+	public static SpaceDog superdog() {
+		return superdog(Backends.rootApi());
 	}
 
 	public static SpaceDog superdog(SpaceDog dog) {

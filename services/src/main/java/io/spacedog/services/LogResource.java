@@ -75,7 +75,7 @@ public class LogResource extends Resource {
 
 		Optional<String> optBackendId = credentials.isSuperDog() //
 				&& credentials.isTargetingRootApi() ? Optional.empty() //
-						: Optional.of(credentials.target());
+						: Optional.of(credentials.backendId());
 
 		int from = context.query().getInteger(PARAM_FROM, 0);
 		int size = context.query().getInteger(PARAM_SIZE, 10);
@@ -100,7 +100,7 @@ public class LogResource extends Resource {
 			query = QueryBuilders.boolQuery()//
 					.filter(query)//
 					.filter(QueryBuilders.termQuery("credentials.backendId", //
-							credentials.target()));
+							credentials.backendId()));
 
 		boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);
 		DataStore.get().refreshType(refresh, SPACEDOG_BACKEND, TYPE);
@@ -128,7 +128,7 @@ public class LogResource extends Resource {
 			optBackendId = Optional.empty();
 
 		else if (credentials.isAtLeastSuperAdmin())
-			optBackendId = Optional.of(credentials.target());
+			optBackendId = Optional.of(credentials.backendId());
 
 		else
 			throw Exceptions.insufficientCredentials(credentials);
@@ -327,7 +327,7 @@ public class LogResource extends Resource {
 	private void addCredentials(ObjectNode log) {
 		Credentials credentials = SpaceContext.getCredentials();
 		ObjectNode logCredentials = log.putObject("credentials");
-		logCredentials.put("backendId", credentials.target());
+		logCredentials.put("backendId", credentials.backendId());
 		logCredentials.put("type", credentials.level().toString());
 		if (!credentials.level().equals(Level.KEY))
 			logCredentials.put("name", credentials.name());

@@ -37,7 +37,7 @@ public class SchemaResource extends Resource {
 	public Payload getAll(Context context) {
 		ElasticClient elastic = Start.get().getElasticClient();
 		ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetaData>> mappings;
-		mappings = elastic.getMappings(SpaceContext.target());
+		mappings = elastic.getMappings(SpaceContext.backendId());
 		JsonMerger jsonMerger = Json.merger();
 
 		for (ObjectCursor<ImmutableOpenMap<String, MappingMetaData>> indexMappings : mappings.values()) {
@@ -64,7 +64,7 @@ public class SchemaResource extends Resource {
 		return JsonPayload.json(//
 				Start.get()//
 						.getElasticClient()//
-						.getSchema(SpaceContext.target(), type)//
+						.getSchema(SpaceContext.backendId(), type)//
 						.node());
 	}
 
@@ -86,7 +86,7 @@ public class SchemaResource extends Resource {
 
 		String mapping = schema.validate().translate().toString();
 
-		String backendId = credentials.target();
+		String backendId = credentials.backendId();
 		ElasticClient elastic = Start.get().getElasticClient();
 		boolean indexExists = elastic.existsIndex(backendId, type);
 
@@ -101,7 +101,7 @@ public class SchemaResource extends Resource {
 
 		DataAccessControl.save(type, schema.acl());
 
-		return JsonPayload.saved(!indexExists, credentials.target(), "/1", "schema", type);
+		return JsonPayload.saved(!indexExists, credentials.backendId(), "/1", "schema", type);
 	}
 
 	@Delete("/:type")
@@ -109,7 +109,7 @@ public class SchemaResource extends Resource {
 	public Payload delete(String type) {
 		try {
 			Credentials credentials = SpaceContext.checkAdminCredentials();
-			Start.get().getElasticClient().deleteIndex(credentials.target(), type);
+			Start.get().getElasticClient().deleteIndex(credentials.backendId(), type);
 			DataAccessControl.delete(type);
 		} catch (TypeMissingException ignored) {
 		}

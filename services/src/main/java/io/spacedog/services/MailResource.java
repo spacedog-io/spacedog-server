@@ -139,7 +139,7 @@ public class MailResource extends Resource {
 		settings.key = Start.get().configuration().mailGunKey();
 		settings.domain = Start.get().configuration().mailDomain();
 
-		String target = SpaceContext.target();
+		String target = SpaceContext.backendId();
 
 		// ... add a footer to the message
 		if (!Strings.isNullOrEmpty(message.text))

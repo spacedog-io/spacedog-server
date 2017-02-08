@@ -57,12 +57,12 @@ public class FileResource extends S3Resource {
 
 	Payload get(WebPath path, Context context) {
 		Credentials credentials = SpaceContext.getCredentials();
-		Payload payload = doGet(FILE_BUCKET_SUFFIX, credentials.target(), path, context);
+		Payload payload = doGet(FILE_BUCKET_SUFFIX, credentials.backendId(), path, context);
 
 		if (payload.isSuccess())
 			return payload;
 
-		return doList(FILE_BUCKET_SUFFIX, credentials.target(), path, context);
+		return doList(FILE_BUCKET_SUFFIX, credentials.backendId(), path, context);
 	}
 
 	Payload put(WebPath path, byte[] bytes, Context context) {

@@ -141,7 +141,7 @@ public class S3Resource extends Resource {
 			boolean checkOwnership) {
 
 		String bucketName = getBucketName(bucketSuffix);
-		WebPath s3Path = path.addFirst(credentials.target());
+		WebPath s3Path = path.addFirst(credentials.backendId());
 
 		JsonBuilder<ObjectNode> builder = JsonPayload.builder().array("deleted");
 
@@ -216,7 +216,7 @@ public class S3Resource extends Resource {
 
 		String fileName = path.last();
 		String bucketName = getBucketName(bucketSuffix);
-		WebPath s3Path = path.addFirst(credentials.target());
+		WebPath s3Path = path.addFirst(credentials.backendId());
 
 		ObjectMetadata metadata = new ObjectMetadata();
 		// TODO
@@ -235,7 +235,7 @@ public class S3Resource extends Resource {
 
 		JsonBuilder<ObjectNode> builder = JsonPayload.builder()//
 				.put("path", path.toString())//
-				.put("location", toSpaceLocation(credentials.target(), rootUri, path));
+				.put("location", toSpaceLocation(credentials.backendId(), rootUri, path));
 
 		if (enableS3Location)
 			builder.put("s3", toS3Location(bucketName, s3Path));

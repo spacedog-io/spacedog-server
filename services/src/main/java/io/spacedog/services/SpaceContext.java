@@ -20,7 +20,7 @@ import net.codestory.http.Context;
  */
 public class SpaceContext {
 
-	private static ThreadLocal<SpaceContext> threadLocal = new ThreadLocal<SpaceContext>();
+	private static ThreadLocal<SpaceContext> threadLocal = new ThreadLocal<>();
 
 	private String uri;
 	private Context context;
@@ -102,8 +102,8 @@ public class SpaceContext {
 		return get().debug;
 	}
 
-	public static String target() {
-		return getCredentials().target();
+	public static String backendId() {
+		return getCredentials().backendId();
 	}
 
 	public boolean isJsonContent() {
@@ -209,7 +209,7 @@ public class SpaceContext {
 		if (!authorizationChecked) {
 			authorizationChecked = true;
 			SpaceContext.debug().credentialCheck();
-			String backendId = target();
+			String backendId = backendId();
 			String headerValue = context.header(SpaceHeaders.AUTHORIZATION);
 
 			if (headerValue != null) {
@@ -233,7 +233,7 @@ public class SpaceContext {
 				checkPasswordMustChange(userCredentials, context);
 				credentials = userCredentials;
 
-				// sets superdog backend id to the request backend id
+				// sets superdog target to the requested backend id
 				if (superdog)
 					credentials.target(backendId);
 			}

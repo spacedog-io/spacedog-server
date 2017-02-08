@@ -30,7 +30,7 @@ public class PebbleTemplating {
 		if (model == null || model.isEmpty())
 			throw Exceptions.illegalArgument("no parameter authorized for this template");
 
-		String backendId = SpaceContext.target();
+		String backendId = SpaceContext.backendId();
 
 		for (Entry<String, Object> parameter : parameters.entrySet()) {
 			String name = parameter.getKey();

@@ -57,8 +57,8 @@ public class Credentials {
 	private String updatedAt;
 
 	/**
-	 * 'onBehalf' stores the id of the backend I'm accessing. 'backendId' stores
-	 * the if of this credentials real backend. 'onBehalf' must not reolaced
+	 * 'target' stores the id of the target backend I'm accessing. 'backendId'
+	 * stores the id of this credentials real backend. 'target' must not replace
 	 * 'backendId' and be saved to database.
 	 */
 	@JsonIgnore
@@ -110,10 +110,6 @@ public class Credentials {
 	}
 
 	public String backendId() {
-		return backendId;
-	}
-
-	public String target() {
 		return target == null ? backendId : target;
 	}
 
@@ -502,13 +498,13 @@ public class Credentials {
 	//
 
 	public boolean isTargetingRootApi() {
-		return Backends.isRootApi(target());
+		return Backends.isRootApi(backendId());
 	}
 
 	public ObjectNode toJson() {
 		return Json.object(//
 				SpaceFields.FIELD_ID, id(), //
-				SpaceFields.FIELD_BACKEND_ID, target(), //
+				SpaceFields.FIELD_BACKEND_ID, backendId(), //
 				SpaceFields.FIELD_USERNAME, name(), //
 				SpaceFields.FIELD_EMAIL, email().get(), //
 				"reallyEnabled", isReallyEnabled(), //
