@@ -71,6 +71,7 @@ public class Caremen extends SpaceTest {
 		// initSmsSettings();
 		// initAppConfigurationSettings();
 		// initReferences();
+		// initFlatRates();
 		// initCredentialsSettings();
 		// initSettingsSettings();
 
@@ -207,7 +208,7 @@ public class Caremen extends SpaceTest {
 		ObjectNode van = Json.object("base", 5, "minimum", 20, "km", 2, "min", 0.45);
 		ObjectNode settings = Json.object("classic", classic, "premium", premium, //
 				"green", green, "break", breakk, "van", van, "driverShare", 0.82f);
-		SpaceRequest.put("/1/settings/fare").adminAuth(backend).body(settings).go(200, 201);
+		backend.settings().save("fare", settings);
 	}
 
 	void initAppConfigurationSettings() {
@@ -239,6 +240,11 @@ public class Caremen extends SpaceTest {
 		acl.read("operator", "cashier", "admin", "user");
 		acl.update("operator");
 		settings.put("fare", acl);
+
+		// fare settings
+		acl = new SettingsAcl();
+		acl.read("operator", "key", "admin", "user");
+		settings.put("flatrates", acl);
 
 		// references settings
 		acl = new SettingsAcl();
@@ -293,8 +299,7 @@ public class Caremen extends SpaceTest {
 
 				.build();
 
-		SpaceRequest.put("/1/settings/vehiculetypes")//
-				.adminAuth(backend).body(node).go(201, 200);
+		backend.settings().save("vehiculetypes", node);
 	}
 
 	void initReferences() {
@@ -324,8 +329,16 @@ public class Caremen extends SpaceTest {
 
 				.build();
 
-		SpaceRequest.put("/1/settings/references")//
-				.adminAuth(backend).body(node).go(201, 200);
+		backend.settings().save("references", node);
+	}
+
+	void initFlatRates() throws IOException {
+
+		String resource = Resources.toString(//
+				Resources.getResource(this.getClass(), "flatrates.json"), //
+				Charset.forName("UTF-8"));
+
+		backend.settings().save("flatrates", resource);
 	}
 
 	//
@@ -428,11 +441,13 @@ public class Caremen extends SpaceTest {
 				.close()//
 
 				.object("from")//
+				.string("flatRateCode")//
 				.text("address").french()//
 				.geopoint("geopoint")//
 				.close()//
 
 				.object("to")//
+				.string("flatRateCode")//
 				.text("address").french()//
 				.geopoint("geopoint")//
 				.close()//
