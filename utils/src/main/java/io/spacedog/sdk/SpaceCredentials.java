@@ -2,11 +2,13 @@ package io.spacedog.sdk;
 
 import java.util.Optional;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Credentials;
+import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceFields;
 import io.spacedog.utils.SpaceParams;
@@ -45,8 +47,8 @@ public class SpaceCredentials implements SpaceParams, SpaceFields {
 	}
 
 	public void delete(String id) {
-		SpaceRequest.delete("/1/credentials/{id}")//
-				.routeParam("id", id).auth(dog).go(200, 404);
+		dog.delete("/1/credentials/{id}")//
+				.routeParam("id", id).go(200, 404);
 	}
 
 	public Optional<Credentials> getByUsername(String username) {
@@ -54,11 +56,22 @@ public class SpaceCredentials implements SpaceParams, SpaceFields {
 				.queryParam(PARAM_USERNAME, username)//
 				.go(200).objectNode();
 
-		if (node.get("total").asInt() == 0)
+		int total = node.get("total").asInt();
+
+		if (total == 0)
 			return Optional.empty();
 
-		// TODO throw exception if total > 1
-		return Optional.of(toCredentials((ObjectNode) Json.get(node, "results.0")));
+		if (total > 1)
+			throw Exceptions.runtime("[%s] credentials with username [%s]", //
+					total, username);
+
+		try {
+			return Optional.of(Json.mapper()//
+					.treeToValue(Json.get(node, "results.0"), Credentials.class));
+
+		} catch (JsonProcessingException e) {
+			throw Exceptions.runtime(e);
+		}
 	}
 
 	public SpaceCredentials deleteAllButSuperAdmins() {
@@ -72,17 +85,8 @@ public class SpaceCredentials implements SpaceParams, SpaceFields {
 	}
 
 	public Credentials get(String id) {
-		return toCredentials(dog.get("/1/credentials/{id}")//
-				.routeParam("id", id).go(200).objectNode());
-	}
-
-	private Credentials toCredentials(ObjectNode node) {
-		// TODO use json mapper
-		Credentials credentials = new Credentials(dog.backendId());
-		credentials.id(Json.get(node, "id").asText());
-		credentials.email(Json.get(node, "email").asText());
-		credentials.name(Json.get(node, "username").asText());
-		return credentials;
+		return dog.get("/1/credentials/{id}")//
+				.routeParam("id", id).go(200).toObject(Credentials.class);
 	}
 
 	public void passwordMustChange(String id) {

@@ -18,9 +18,9 @@ import io.spacedog.utils.Json;
 @JsonIgnoreProperties(ignoreUnknown = true)
 // only map to fields
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, //
-getterVisibility = Visibility.NONE, //
-isGetterVisibility = Visibility.NONE, //
-setterVisibility = Visibility.NONE)
+		getterVisibility = Visibility.NONE, //
+		isGetterVisibility = Visibility.NONE, //
+		setterVisibility = Visibility.NONE)
 public class DataObject {
 
 	@JsonIgnoreProperties(ignoreUnknown = true)
@@ -142,8 +142,7 @@ public class DataObject {
 	//
 
 	public void fetch() {
-		node = SpaceRequest.get("/1/data/{type}/{id}")//
-				.auth(dog)//
+		node = dog.get("/1/data/{type}/{id}")//
 				.routeParam("type", type())//
 				.routeParam("id", id())//
 				.go(200).objectNode();
@@ -163,10 +162,10 @@ public class DataObject {
 
 	public DataObject save() {
 		SpaceRequest request = id() == null //
-				? SpaceRequest.post("/1/data/{type}")//
-				: SpaceRequest.put("/1/data/{type}/" + id());
+				? dog.post("/1/data/{type}")//
+				: dog.put("/1/data/{type}/" + id());
 
-		request.auth(dog).routeParam("type", type());
+		request.routeParam("type", type());
 
 		if (isSubClass())
 			request.bodyPojo(this);
@@ -180,8 +179,7 @@ public class DataObject {
 	}
 
 	public void delete() {
-		SpaceRequest.delete("/1/data/{type}/{id}")//
-				.auth(dog)//
+		dog.delete("/1/data/{type}/{id}")//
 				.routeParam("type", meta.type)//
 				.routeParam("id", meta.id)//
 				.go(200);

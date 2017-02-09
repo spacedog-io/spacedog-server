@@ -88,6 +88,10 @@ public class SpaceData implements SpaceFields, SpaceParams {
 			return load(DataObject.class);
 		}
 
+		public List<DataObject> load() {
+			return load(DataObject.class);
+		}
+
 		// TODO how to return objects in the right pojo form?
 		// add registerPojoType(String type, Class<K extends DataObject> clazz)
 		// methods??
@@ -156,7 +160,7 @@ public class SpaceData implements SpaceFields, SpaceParams {
 				.queryParam(PARAM_REFRESH, Boolean.toString(query.refresh))//
 				.body(query.query).go(200).objectNode();
 
-		return new SearchResults<K>(results, dataClass);
+		return new SearchResults<>(results, dataClass);
 	}
 
 	public static class TermQuery {
@@ -240,8 +244,10 @@ public class SpaceData implements SpaceFields, SpaceParams {
 		Iterator<JsonNode> elements = arrayNode.elements();
 		while (elements.hasNext()) {
 			try {
-				K object = Json.mapper().treeToValue(elements.next(), dataClass);
+				JsonNode node = elements.next();
+				K object = Json.mapper().treeToValue(node, dataClass);
 				object.dog = dog;
+				object.node = (ObjectNode) node;
 				results.add(object);
 			} catch (JsonProcessingException e) {
 				throw Exceptions.runtime(e);
