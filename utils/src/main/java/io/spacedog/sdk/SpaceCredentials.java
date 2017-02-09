@@ -3,6 +3,7 @@ package io.spacedog.sdk;
 import java.util.Optional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
@@ -65,9 +66,15 @@ public class SpaceCredentials implements SpaceParams, SpaceFields {
 			throw Exceptions.runtime("[%s] credentials with username [%s]", //
 					total, username);
 
+		return Optional.of(toCredentials(Json.get(node, "results.0")));
+	}
+
+	private Credentials toCredentials(JsonNode node) {
 		try {
-			return Optional.of(Json.mapper()//
-					.treeToValue(Json.get(node, "results.0"), Credentials.class));
+			Credentials credentials = Json.mapper()//
+					.treeToValue(node, Credentials.class);
+			credentials.id(node.get(FIELD_ID).asText());
+			return credentials;
 
 		} catch (JsonProcessingException e) {
 			throw Exceptions.runtime(e);
@@ -85,8 +92,9 @@ public class SpaceCredentials implements SpaceParams, SpaceFields {
 	}
 
 	public Credentials get(String id) {
-		return dog.get("/1/credentials/{id}")//
-				.routeParam("id", id).go(200).toObject(Credentials.class);
+		return toCredentials(//
+				dog.get("/1/credentials/{id}")//
+						.routeParam("id", id).go(200).objectNode());
 	}
 
 	public void passwordMustChange(String id) {
