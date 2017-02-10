@@ -1,110 +1,110 @@
 {  
    "airports": [
       {
-         "name": "Roissy Charles de Gaulle",
+         "name": "Paris Charles de Gaulle",
          "terminals": [
             {
                "name": "Terminal 1",
                "rateCode": "CDG1",
-               "address": "Aéroport Roissy Charles de Gaulle, Terminal 1, Roissy, France",
+               "address": "Aéroport Paris CDG, Terminal 1",
                "location": {  
-                  "lat": 3.8,
-                  "lon": 4.0
+                  "lat": 49.013830,
+                  "lon": 2.542897
                }
             },
             {
                "name": "Terminal 2A",
                "rateCode": "CDG2A",
-               "address": "Aéroport Roissy Charles de Gaulle, Terminal 2A, Roissy, France",
+               "address": "Aéroport Paris CDG, Terminal 2A",
                "location": {  
-                  "lat": 3.8,
-                  "lon": 4.0
+                  "lat": 49.003028,
+                  "lon": 2.562314
                }
             },
             {
                "name": "Terminal 2B",
                "rateCode": "CDG2B",
-               "address": "Aéroport Roissy Charles de Gaulle, Terminal 2B, Roissy, France",
+               "address": "Aéroport Paris CDG, Terminal 2B",
                "location": {  
-                  "lat": 3.8,
-                  "lon": 4.0
+                  "lat": 49.004076,
+                  "lon": 2.562325
                }
             },
             {
                "name": "Terminal 2C",
                "rateCode": "CDG2C",
-               "address": "Aéroport Roissy Charles de Gaulle, Terminal 2C, Roissy, France",
+               "address": "Aéroport Paris CDG, Terminal 2C",
                "location": {  
-                  "lat": 3.8,
-                  "lon": 4.0
+                  "lat": 49.003281,
+                  "lon": 2.567110
                }
             },
             {
                "name": "Terminal 2D",
                "rateCode": "CDG2D",
-               "address": "Aéroport Roissy Charles de Gaulle, Terminal 2D, Roissy, France",
+               "address": "Aéroport Paris CDG, Terminal 2D",
                "location": {  
-                  "lat": 3.8,
-                  "lon": 4.0
+                  "lat": 49.004309,
+                  "lon": 2.567078
                }
             },
             {
                "name": "Terminal 2E",
                "rateCode": "CDG2E",
-               "address": "Aéroport Roissy Charles de Gaulle, Terminal 2E, Roissy, France",
+               "address": "Aéroport Paris CDG, Terminal 2E",
                "location": {  
-                  "lat": 3.8,
-                  "lon": 4.0
+                  "lat": 49.003753,
+                  "lon": 2.575425
                }
             },
             {
                "name": "Terminal 2F",
                "rateCode": "CDG2F",
-               "address": "Aéroport Roissy Charles de Gaulle, Terminal 2F, Roissy, France",
+               "address": "Aéroport Paris CDG, Terminal 2F",
                "location": {  
-                  "lat": 3.8,
-                  "lon": 4.0
+                  "lat": 49.004949,
+                  "lon": 2.577903
                }
             },
             {
                "name": "Terminal 2G",
                "rateCode": "CDG2G",
-               "address": "Aéroport Roissy Charles de Gaulle, Terminal 2G, Roissy, France",
+               "address": "Aéroport Paris CDG, Terminal 2G",
                "location": {  
-                  "lat": 3.8,
-                  "lon": 4.0
+                  "lat": 49.005792,
+                  "lon": 2.602507
                }
             },
             {
                "name": "Terminal 3",
                "rateCode": "CDG3",
-               "address": "Aéroport Roissy Charles de Gaulle, Terminal 3, Roissy, France",
+               "address": "Aéroport Paris CDG, Terminal 3",
                "location": {  
-                  "lat": 3.8,
-                  "lon": 4.0
+                  "lat": 49.012564,
+                  "lon": 2.559785
                }
             }
          ]
       },
       {
-         "name": "Orly",
+         "name": "Paris Orly",
          "terminals": [
             {
                "name": "Terminal West",
-               "rateCode": "ORLW",
-               "address": "Aéroport d'Orly, Terminal West, Orly, France",
+               "rateCode": "ORLO",
+               "address": "Aéroport Paris Orly, Terminal Ouest",
                "location": {  
-                  "lat": 3.8,
-                  "lon": 4.0
+                  "lat": 48.728381,
+                  "lon": 2.359700
                }
             },
             {
                "name": "Terminal Sud",
                "rateCode": "ORLS",
-               "address": "Aéroport d'Orly, Terminal Sud, Orly, France",
+               "address": "Aéroport Paris Orly, Terminal Sud",
                "location": {  
-                  "lat": 3.8,
-                  "lon": 4.0
+                  "lat": 48.728993,
+                  "lon": 2.369356
                }
             }
         ]
@@ -115,10 +115,10 @@
             {
                "name": "Paris Le Bourget",
                "rateCode": "LBG",
-               "address": "Aéroport du Bourget, Le Bourget, France",
+               "address": "Aéroport Paris Le Bourget",
                "location": {  
-                  "lat": 3.8,
-                  "lon": 4.0
+                  "lat": 48.956252,
+                  "lon": 2.443725
                }
             }
         ]
