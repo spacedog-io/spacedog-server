@@ -146,19 +146,24 @@ public class ElasticClient implements SpaceParams {
 	}
 
 	public Optional<SearchHit> get(String backend, String type, QueryBuilder query) {
-		SearchHits hits = internalClient.prepareSearch(toAlias(backend, type))//
-				.setTypes(type)//
-				.setQuery(query)//
-				.get()//
-				.getHits();
+		try {
+			SearchHits hits = internalClient.prepareSearch(toAlias(backend, type))//
+					.setTypes(type)//
+					.setQuery(query)//
+					.get()//
+					.getHits();
 
-		if (hits.getTotalHits() == 0)
+			if (hits.getTotalHits() == 0)
+				return Optional.empty();
+			else if (hits.getTotalHits() == 1)
+				return Optional.of(hits.getAt(0));
+
+			throw Exceptions.runtime(//
+					"unicity violation in [%s] data collection", type);
+
+		} catch (IndexNotFoundException e) {
 			return Optional.empty();
-		else if (hits.getTotalHits() == 1)
-			return Optional.of(hits.getAt(0));
-
-		throw Exceptions.runtime(//
-				"unicity violation in [%s] data collection", type);
+		}
 	}
 
 	public boolean exists(String backend, String type, String id) {
