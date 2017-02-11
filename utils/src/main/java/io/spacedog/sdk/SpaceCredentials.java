@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Credentials;
+import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceFields;
@@ -27,16 +28,16 @@ public class SpaceCredentials implements SpaceParams, SpaceFields {
 	}
 
 	public Credentials create(String username, String password, String email) {
-		return create(username, password, email, false);
+		return create(username, password, email, Level.USER);
 	}
 
-	public Credentials create(String username, String password, String email, boolean admin) {
+	public Credentials create(String username, String password, String email, Level level) {
 
 		ObjectNode body = Json.object(FIELD_USERNAME, username, //
 				FIELD_PASSWORD, password, FIELD_EMAIL, email);
 
-		if (admin)
-			body.put(FIELD_LEVEL, "ADMIN");
+		if (level.ordinal() > Level.USER.ordinal())
+			body.put(FIELD_LEVEL, level.toString());
 
 		String id = dog.post("/1/credentials")//
 				.body(body).go(201).getString(FIELD_ID);
@@ -44,6 +45,7 @@ public class SpaceCredentials implements SpaceParams, SpaceFields {
 		Credentials credentials = new Credentials(dog.backendId(), username);
 		credentials.id(id);
 		credentials.email(email);
+		credentials.level(level);
 		return credentials;
 	}
 

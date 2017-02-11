@@ -22,6 +22,7 @@ import io.spacedog.client.SpaceTarget;
 import io.spacedog.client.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Credentials;
+import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.CredentialsSettings;
 import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
@@ -646,7 +647,7 @@ public class Caremen extends SpaceTest {
 		superdogDeletesCredentials(superadmin.backendId(), username);
 
 		Credentials credentials = admin //
-				? superadmin.credentials().create(username, password, email, true)//
+				? superadmin.credentials().create(username, password, email, Level.ADMIN)//
 				: superadmin.credentials().create(username, password, email);
 
 		if (role != null)
