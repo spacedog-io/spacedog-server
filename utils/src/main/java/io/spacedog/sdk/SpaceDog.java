@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Credentials;
+import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Passwords;
@@ -56,6 +57,15 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 		return this;
 	}
 
+	public Level level() {
+		return this.credentials.level();
+	}
+
+	public SpaceDog level(Level level) {
+		this.credentials.level(level);
+		return this;
+	}
+
 	public Optional<String> accessToken() {
 		return Optional.ofNullable(accessToken);
 	}
@@ -85,6 +95,10 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 
 	public static SpaceDog backend(String backendId) {
 		return new SpaceDog(new Credentials(backendId));
+	}
+
+	public static SpaceDog backend(SpaceDog dog) {
+		return backend(dog.backendId());
 	}
 
 	public static SpaceDog fromCredentials(Credentials credentials) {
@@ -144,8 +158,8 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 	}
 
 	public SpaceDog signUp(String username, String password, String email) {
-		this.credentials = SpaceDog.backend(backendId()).username(username)//
-				.credentials().create(username, password, email);
+		this.credentials = SpaceDog.backend(backendId())//
+				.credentials().create(username, password, email, Level.USER);
 		return login(password);
 	}
 
