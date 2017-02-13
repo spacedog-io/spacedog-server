@@ -20,16 +20,17 @@ public class SmsResourceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
+		SpaceDog guest = SpaceDog.backend("test");
 		SpaceDog test = resetTestBackend();
 
 		// superadmin creates user vince with 'sms' role
 		SpaceDog vince = signUp(test, "vince", "hi vince");
-		setRole(test, vince, "sms");
+		test.credentials().setRole(vince.id(), "sms");
 
 		// no sms settings => nobody can send any sms
-		SpaceRequest.post("/1/sms").backend(test).go(403);
-		SpaceRequest.post("/1/sms").userAuth(vince).go(403);
-		SpaceRequest.post("/1/sms").adminAuth(test).go(403);
+		guest.post("/1/sms").go(403);
+		vince.post("/1/sms").go(403);
+		test.post("/1/sms").go(403);
 
 		// superadmin sets the list of roles allowed to send sms
 		SmsSettings settings = new SmsSettings();
@@ -39,12 +40,12 @@ public class SmsResourceTest extends SpaceTest {
 		// vince is now allowed to send sms
 		// since he's got the 'sms' role
 		// but he fails since no sms provider settings are set
-		SpaceRequest.post("/1/sms").userAuth(vince).go(400);
+		vince.post("/1/sms").go(400);
 
 		// only user with sms role are allowed to send sms
 		// anonymous and admin fail to send sms
-		SpaceRequest.post("/1/sms").backend(test).go(403);
-		SpaceRequest.post("/1/sms").adminAuth(test).go(403);
+		guest.post("/1/sms").go(403);
+		test.post("/1/sms").go(403);
 
 		// superadmin sets twilio settings
 		settings.twilio = new TwilioSettings();
@@ -55,17 +56,22 @@ public class SmsResourceTest extends SpaceTest {
 		test.settings().save(settings);
 
 		// vince sends an sms
-		String messageId = SpaceRequest.post("/1/sms").userAuth(vince)//
-				.formField("To", "33662627520").formField("Body", "Hi from SpaceDog")//
-				.go(200).getString("sid");
+		String messageId = vince.post("/1/sms").formField("To", "33662627520")//
+				.formField("Body", "Hi from SpaceDog").go(200).getString("sid");
 
 		// vince gets info on the previously sent sms
 		// since he's got the 'sms' role
-		SpaceRequest.get("/1/sms/" + messageId).userAuth(vince).go(200);
+		vince.get("/1/sms/" + messageId).go(200);
 
 		// anonymous and superadmin don't have 'sms' role
 		// they fail to get sms info
-		SpaceRequest.get("/1/sms/" + messageId).backend(test).go(403);//
-		SpaceRequest.get("/1/sms/" + messageId).adminAuth(test).go(403);//
+		guest.get("/1/sms/" + messageId).go(403);//
+		test.get("/1/sms/" + messageId).go(403);//
+
+		// vince sends an sms to invalid mobile number
+		vince.post("/1/sms").formField("To", "33162627520")//
+				.formField("Body", "Hi from SpaceDog").go(200)//
+				.assertEquals(400, "status")//
+				.assertEquals("twilio:21614", "error.code");
 	}
 }
