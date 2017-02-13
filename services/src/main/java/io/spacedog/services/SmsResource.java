@@ -6,6 +6,7 @@ package io.spacedog.services;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceResponse;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.SmsSettings;
@@ -82,16 +83,16 @@ public class SmsResource extends Resource {
 		if (message.from == null)
 			message.from = twilio.defaultFrom;
 
-		ObjectNode response = SpaceRequest//
+		SpaceResponse response = SpaceRequest//
 				.post("https://api.twilio.com/2010-04-01/Accounts/{id}/Messages.json")//
 				.routeParam("id", twilio.accountSid)//
 				.basicAuth("", twilio.accountSid, twilio.authToken)//
 				.formField(TO, message.to)//
 				.formField(FROM, message.from)//
 				.formField(BODY, message.body)//
-				.go(201).objectNode();
+				.go();
 
-		return JsonPayload.json(response);
+		return toPayload(response);
 	}
 
 	public Payload fetch(String messageId) {
@@ -106,14 +107,32 @@ public class SmsResource extends Resource {
 
 	private Payload fetchFromTwilio(String messageId, TwilioSettings twilio) {
 
-		ObjectNode response = SpaceRequest//
+		SpaceResponse response = SpaceRequest//
 				.get("https://api.twilio.com/2010-04-01/Accounts/{accountId}/Messages/{messageId}.json")//
 				.routeParam("accountId", twilio.accountSid)//
 				.routeParam("messageId", messageId)//
 				.basicAuth("", twilio.accountSid, twilio.authToken)//
-				.go(200).objectNode();
+				.go();
 
-		return JsonPayload.json(response);
+		return toPayload(response);
+	}
+
+	//
+	// implementation
+	//
+
+	private Payload toPayload(SpaceResponse response) {
+		ObjectNode node = response.objectNode();
+		if (response.httpResponse().getStatus() >= 400) {
+			ObjectNode twilio = response.objectNode();
+			node = JsonPayload.builder(response.httpResponse().getStatus())//
+					.object("error")//
+					.put("code", "twilio:" + twilio.get("code").asText())//
+					.put("message", twilio.get("message").asText())//
+					.node("twilio", twilio)//
+					.build();
+		}
+		return JsonPayload.json(node);
 	}
 
 	//
