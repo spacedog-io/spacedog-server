@@ -229,6 +229,14 @@ public class SpaceRequest {
 		}
 	}
 
+	public SpaceRequest bodyResource(Class<?> contextClass, String resourceName) {
+		try {
+			return body(Resources.toByteArray(Resources.getResource(contextClass, resourceName)));
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
+		}
+	}
+
 	public SpaceRequest routeParam(String name, String value) {
 		this.routeParams.put(name, value);
 		return this;
