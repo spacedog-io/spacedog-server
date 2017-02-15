@@ -1,0 +1,19 @@
+{
+    "actions" : [
+        { "add" : { "index" : "connectapi-cooptation-0", "alias" : "connectapipreproduction-cooptation" } },
+        { "add" : { "index" : "connectapi-client-0", "alias" : "connectapipreproduction-client" } },
+        { "add" : { "index" : "connectapi-inscriptionconsultant-0", "alias" : "connectapipreproduction-inscriptionconsultant" } },
+        { "add" : { "index" : "connectapi-groupe-0", "alias" : "connectapipreproduction-groupe" } },
+        { "add" : { "index" : "connectapi-affaire-0", "alias" : "connectapipreproduction-affaire" } },
+        { "add" : { "index" : "connectapi-discussion-0", "alias" : "connectapipreproduction-discussion" } },
+        { "add" : { "index" : "connectapi-consultant-0", "alias" : "connectapipreproduction-consultant" } },
+        { "add" : { "index" : "connectapi-installation-0", "alias" : "connectapipreproduction-installation" } },
+        { "add" : { "index" : "connectapi-rdv-0", "alias" : "connectapipreproduction-rdv" } },
+        { "add" : { "index" : "connectapi-settings-0", "alias" : "connectapipreproduction-settings" } },
+        { "add" : { "index" : "connectapi-opportunite-0", "alias" : "connectapipreproduction-opportunite" } },
+        { "add" : { "index" : "connectapi-colibee-0", "alias" : "connectapipreproduction-colibee" } },
+        { "add" : { "index" : "connectapi-message-0", "alias" : "connectapipreproduction-message" } },
+        { "add" : { "index" : "spacedog-credentials-0", "alias" : "spacedog-credentials" } },
+        { "add" : { "index" : "spacedog-log-0", "alias" : "spacedog-log" } }
+    ]
+}
