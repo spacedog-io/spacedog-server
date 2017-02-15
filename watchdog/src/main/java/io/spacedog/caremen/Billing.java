@@ -1,7 +1,6 @@
 package io.spacedog.caremen;
 
 import java.io.StringWriter;
-import java.nio.charset.Charset;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Locale;
@@ -31,6 +30,7 @@ import io.spacedog.sdk.SpaceMail.Message;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.Utils;
 
 public class Billing {
 
@@ -148,7 +148,7 @@ public class Billing {
 		try {
 			String template = Resources.toString(//
 					Resources.getResource(this.getClass(), "customer-receipt.html"), //
-					Charset.forName("UTF-8"));
+					Utils.UTF8);
 
 			PebbleEngine pebble = new PebbleEngine.Builder().loader(new StringLoader()).build();
 			StringWriter writer = new StringWriter();
