@@ -5,7 +5,7 @@
          "terminals": [
             {
                "name": "Terminal 1",
-               "rateCode": "CDG1",
+               "rateCode": "CDG",
                "address": "Aéroport Paris CDG, Terminal 1",
                "location": {  
                   "lat": 49.013830,
@@ -14,7 +14,7 @@
             },
             {
                "name": "Terminal 2A",
-               "rateCode": "CDG2A",
+               "rateCode": "CDG",
                "address": "Aéroport Paris CDG, Terminal 2A",
                "location": {  
                   "lat": 49.003028,
@@ -23,7 +23,7 @@
             },
             {
                "name": "Terminal 2B",
-               "rateCode": "CDG2B",
+               "rateCode": "CDG",
                "address": "Aéroport Paris CDG, Terminal 2B",
                "location": {  
                   "lat": 49.004076,
@@ -32,7 +32,7 @@
             },
             {
                "name": "Terminal 2C",
-               "rateCode": "CDG2C",
+               "rateCode": "CDG",
                "address": "Aéroport Paris CDG, Terminal 2C",
                "location": {  
                   "lat": 49.003281,
@@ -41,7 +41,7 @@
             },
             {
                "name": "Terminal 2D",
-               "rateCode": "CDG2D",
+               "rateCode": "CDG",
                "address": "Aéroport Paris CDG, Terminal 2D",
                "location": {  
                   "lat": 49.004309,
@@ -50,7 +50,7 @@
             },
             {
                "name": "Terminal 2E",
-               "rateCode": "CDG2E",
+               "rateCode": "CDG",
                "address": "Aéroport Paris CDG, Terminal 2E",
                "location": {  
                   "lat": 49.003753,
@@ -59,7 +59,7 @@
             },
             {
                "name": "Terminal 2F",
-               "rateCode": "CDG2F",
+               "rateCode": "CDG",
                "address": "Aéroport Paris CDG, Terminal 2F",
                "location": {  
                   "lat": 49.004949,
@@ -68,7 +68,7 @@
             },
             {
                "name": "Terminal 2G",
-               "rateCode": "CDG2G",
+               "rateCode": "CDG",
                "address": "Aéroport Paris CDG, Terminal 2G",
                "location": {  
                   "lat": 49.005792,
@@ -77,7 +77,7 @@
             },
             {
                "name": "Terminal 3",
-               "rateCode": "CDG3",
+               "rateCode": "CDG",
                "address": "Aéroport Paris CDG, Terminal 3",
                "location": {  
                   "lat": 49.012564,
@@ -91,7 +91,7 @@
          "terminals": [
             {
                "name": "Terminal West",
-               "rateCode": "ORLO",
+               "rateCode": "ORY",
                "address": "Aéroport Paris Orly, Terminal Ouest",
                "location": {  
                   "lat": 48.728381,
@@ -100,7 +100,7 @@
             },
             {
                "name": "Terminal Sud",
-               "rateCode": "ORLS",
+               "rateCode": "ORY",
                "address": "Aéroport Paris Orly, Terminal Sud",
                "location": {  
                   "lat": 48.728993,
