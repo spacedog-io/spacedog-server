@@ -33,7 +33,9 @@ public class BackendResource extends Resource {
 	@Get("")
 	@Get("/")
 	public Payload ping() {
-		return JsonPayload.success();
+		ObjectNode payload = (ObjectNode) Json.toNode(Start.get().info());
+		payload.put("success", true).put("status", 200);
+		return JsonPayload.json(payload);
 	}
 
 	@Get("/1/backend")

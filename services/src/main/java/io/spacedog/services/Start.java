@@ -18,6 +18,10 @@ import org.elasticsearch.plugin.cloud.aws.CloudAwsPlugin;
 import org.elasticsearch.plugin.deletebyquery.DeleteByQueryPlugin;
 import org.joda.time.DateTimeZone;
 
+import com.google.common.io.Resources;
+
+import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 import net.codestory.http.AbstractWebServer;
 import net.codestory.http.Request;
@@ -37,6 +41,7 @@ public class Start {
 	private ElasticClient elastic;
 	private MyFluentServer fluent;
 	private StartConfiguration config;
+	private Info info;
 
 	public Node getElasticNode() {
 		return elasticNode;
@@ -56,6 +61,7 @@ public class Start {
 		System.setProperty("http.agent", start.configuration().serverUserAgent());
 
 		try {
+			start.info();
 			start.startElasticNode();
 			start.initServices();
 			start.upgradeAndCleanUp();
@@ -73,6 +79,25 @@ public class Start {
 			}
 			System.exit(-1);
 		}
+	}
+
+	public static class Info {
+		public String version;
+		public String baseline;
+	}
+
+	public Info info() {
+		if (info == null)
+			try {
+				info = Json.mapper().readValue(//
+						Resources.toString(//
+								Resources.getResource(this.getClass(), "info.json"), //
+								Utils.UTF8), //
+						Info.class);
+			} catch (IOException e) {
+				throw Exceptions.runtime(e, "error loading server info file");
+			}
+		return info;
 	}
 
 	private void upgradeAndCleanUp() throws IOException {

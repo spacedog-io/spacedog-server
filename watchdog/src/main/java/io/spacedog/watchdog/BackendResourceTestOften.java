@@ -105,18 +105,20 @@ public class BackendResourceTestOften extends SpaceTest {
 		SpaceTarget target = SpaceRequest.env().target();
 
 		// successfully pings server to check it is up and running
-		SpaceRequest.get("").go(200);
-		SpaceRequest.get("/").go(200);
+		SpaceRequest.get("").go(200).assertNotNull("version");
+		SpaceRequest.get("/").go(200).assertNotNull("version");
 
 		// successfully pings localhost without any backend subdomain
 		// this can and must be tested on local server only
 		if (target.equals(SpaceTarget.local))
-			SpaceRequest.get("http://localhost:8443").go(200);
+			SpaceRequest.get("http://localhost:8443").go(200)//
+					.assertNotNull("version");
 
 		// successfully pings server with an ip address
 		// this can and must be tested on local server only
 		if (target.equals(SpaceTarget.local))
-			SpaceRequest.get("http://127.0.0.1:8443").go(200);
+			SpaceRequest.get("http://127.0.0.1:8443").go(200)//
+					.assertNotNull("version");
 	}
 
 	@Test
