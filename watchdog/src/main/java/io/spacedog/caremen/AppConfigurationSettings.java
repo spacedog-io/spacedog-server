@@ -9,4 +9,5 @@ public class AppConfigurationSettings extends Settings {
 	public int courseLogIntervalMeters;
 	public int customerWaitingForDriverMaxDurationMinutes;
 	public int operatorRefreshTimeoutSeconds;
+	public String backendVersion;
 }

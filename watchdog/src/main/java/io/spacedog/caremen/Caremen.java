@@ -242,7 +242,7 @@ public class Caremen extends SpaceTest {
 		acl.update("operator");
 		settings.put("fare", acl);
 
-		// fare settings
+		// flatrates settings
 		acl = new SettingsAcl();
 		acl.read("operator", "key", "admin", "user");
 		settings.put("flatrates", acl);
