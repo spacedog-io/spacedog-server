@@ -1,7 +1,6 @@
 package io.spacedog.caremen;
 
 import java.io.StringWriter;
-import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Optional;
 
@@ -21,6 +20,7 @@ import io.spacedog.utils.AdminJobs;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.Utils;
 
 public class DriverRecapJob {
 
@@ -112,7 +112,7 @@ public class DriverRecapJob {
 		try {
 			String template = Resources.toString(//
 					Resources.getResource(this.getClass(), "driver-recap.html"), //
-					Charset.forName("UTF-8"));
+					Utils.UTF8);
 
 			PebbleEngine pebble = new PebbleEngine.Builder().loader(new StringLoader()).build();
 			StringWriter writer = new StringWriter();

@@ -4,7 +4,6 @@
 package io.spacedog.caremen;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.Collections;
 
 import org.junit.Test;
@@ -36,6 +35,7 @@ import io.spacedog.utils.SmsSettings;
 import io.spacedog.utils.SmsSettings.TwilioSettings;
 import io.spacedog.utils.SmsTemplate;
 import io.spacedog.utils.StripeSettings;
+import io.spacedog.utils.Utils;
 
 public class Caremen extends SpaceTest {
 
@@ -155,7 +155,7 @@ public class Caremen extends SpaceTest {
 		template.subject = "Bienvenue chez CAREMEN";
 		template.html = Resources.toString(//
 				Resources.getResource(this.getClass(), "caremen-welcome.html"), //
-				Charset.forName("UTF-8"));
+				Utils.UTF8);
 		template.text = "Bienvenue à vous. Nous sommes heureux de pouvoir vous "
 				+ "compter parmi les nouveaux utilisateurs de l’application CAREMEN.";
 		template.model = Maps.newHashMap();
@@ -337,7 +337,7 @@ public class Caremen extends SpaceTest {
 
 		String resource = Resources.toString(//
 				Resources.getResource(this.getClass(), "flatrates.json"), //
-				Charset.forName("UTF-8"));
+				Utils.UTF8);
 
 		backend.settings().save("flatrates", resource);
 	}
