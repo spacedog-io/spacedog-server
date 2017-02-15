@@ -8,6 +8,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -35,10 +36,15 @@ public class Billing {
 
 	// DateTimeFormatter idFormatter =
 	// DateTimeFormat.forPattern("yyMMddhhmmss");
-	DateTimeFormatter fullFormatter = DateTimeFormat.fullDateTime().withLocale(Locale.FRANCE);
-	DateTimeFormatter shortFormatter = DateTimeFormat.shortDateTime().withLocale(Locale.FRANCE);
-	DateTimeFormatter dateFormatter = DateTimeFormat.fullDate().withLocale(Locale.FRANCE);
-	DateTimeFormatter timeFormatter = DateTimeFormat.forPattern("HH:mm").withLocale(Locale.FRANCE);
+	DateTimeZone parisZone = DateTimeZone.forID("Europe/Paris");
+	DateTimeFormatter fullFormatter = DateTimeFormat.fullDateTime()//
+			.withZone(parisZone).withLocale(Locale.FRANCE);
+	DateTimeFormatter shortFormatter = DateTimeFormat.shortDateTime()//
+			.withZone(parisZone).withLocale(Locale.FRANCE);
+	DateTimeFormatter dateFormatter = DateTimeFormat.fullDate()//
+			.withZone(parisZone).withLocale(Locale.FRANCE);
+	DateTimeFormatter timeFormatter = DateTimeFormat.forPattern("HH:mm")//
+			.withZone(parisZone).withLocale(Locale.FRANCE);
 	DecimalFormat decimalFormatter = new DecimalFormat("#.##");
 
 	SpaceEnv env = null;

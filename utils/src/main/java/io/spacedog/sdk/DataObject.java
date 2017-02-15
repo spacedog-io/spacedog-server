@@ -141,7 +141,7 @@ public class DataObject {
 	// CRUD methods
 	//
 
-	public void fetch() {
+	public DataObject fetch() {
 		node = dog.get("/1/data/{type}/{id}")//
 				.routeParam("type", type())//
 				.routeParam("id", id())//
@@ -154,6 +154,8 @@ public class DataObject {
 				throw Exceptions.runtime(e);
 			}
 		}
+
+		return this;
 	}
 
 	boolean isSubClass() {
