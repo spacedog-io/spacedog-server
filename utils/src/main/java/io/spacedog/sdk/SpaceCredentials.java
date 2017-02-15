@@ -1,11 +1,13 @@
 package io.spacedog.sdk;
 
 import java.util.Optional;
+import java.util.Set;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Credentials;
@@ -91,6 +93,27 @@ public class SpaceCredentials implements SpaceParams, SpaceFields {
 	public void setRole(String id, String role) {
 		dog.put("/1/credentials/{id}/roles/{role}")//
 				.routeParam("id", id).routeParam("role", role).go(200);
+	}
+
+	public void unsetRole(String id, String role) {
+		dog.delete("/1/credentials/{id}/roles/{role}")//
+				.routeParam("id", id).routeParam("role", role).go(200);
+	}
+
+	public Set<String> getRoles(String id) {
+		return Sets.newHashSet(//
+				dog.get("/1/credentials/{id}/roles")//
+						.routeParam("id", id).go(200).toObject(String[].class));
+	}
+
+	public void setAllRoles(String id, String... roles) {
+		dog.put("/1/credentials/{id}/roles")//
+				.routeParam("id", id).body(Json.toNode(roles)).go(200);
+	}
+
+	public void unsetAllRoles(String id) {
+		dog.delete("/1/credentials/{id}/roles")//
+				.routeParam("id", id).go(200);
 	}
 
 	public Credentials get(String id) {
