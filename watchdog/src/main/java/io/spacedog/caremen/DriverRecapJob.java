@@ -36,7 +36,7 @@ public class DriverRecapJob {
 			testing = env.get("caremen_recap_test", false);
 			dog = login();
 
-			SearchResults<Driver> drivers = getDriversWhoWorkedLastWeek();
+			SearchResults<Driver> drivers = getDriversNotDisabled();
 
 			for (Driver driver : drivers.objects()) {
 
@@ -131,6 +131,7 @@ public class DriverRecapJob {
 
 		JsonBuilder<ObjectNode> builder = Json.objectBuilder()//
 				.put("size", 1000)//
+				.array("sort").add("dropoffTimestamp").end()//
 				.object("query").object("bool")//
 
 				.array("must_not")//
@@ -160,7 +161,7 @@ public class DriverRecapJob {
 				.login(env.get("caremen_recaper_password"));
 	}
 
-	private SearchResults<Driver> getDriversWhoWorkedLastWeek() {
+	private SearchResults<Driver> getDriversNotDisabled() {
 
 		JsonBuilder<ObjectNode> builder = Json.objectBuilder()//
 				.put("size", 1000)//
@@ -168,28 +169,24 @@ public class DriverRecapJob {
 
 				.array("must_not")//
 				.object().object("term").put("status", "disabled").end().end()//
-				.end()//
-
-				.array("must")//
-				.object().object("range").object("meta.updatedAt");
-
-		if (testing)
-			builder.put("gte", "now/w");
-		else
-			builder.put("gte", "now-1w/w")//
-					.put("lt", "now/w");
+				.end();
 
 		ComplexQuery query = new ComplexQuery();
 		query.type = "driver";
 		query.query = builder.build();
 
-		return dog.dataEndpoint().search(query, Driver.class);
+		SearchResults<Driver> drivers = dog.dataEndpoint().search(query, Driver.class);
+
+		if (drivers.total() > 1000)
+			throw Exceptions.runtime("error in driver recap job: more than 1000 drivers");
+
+		return drivers;
 	}
 
 	public static void main(String[] args) {
 		SpaceRequest.env().target(SpaceTarget.production);
 		System.setProperty("backend_id", "caredev");
-		System.setProperty("caremen_recap_test", "true");
+		// System.setProperty("caremen_recap_test", "true");
 		new DriverRecapJob().recap();
 	}
 }
