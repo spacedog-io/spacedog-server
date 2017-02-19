@@ -51,7 +51,7 @@ public class SpaceHeaders {
 	public static final String LOCATION = "Location";
 	public static final String LINK = "Link";
 	public static final String RETRY_AFTER = "Retry-After";
-	public static final String USER_AGENT = "SpaceDog-Agent";
+	public static final String USER_AGENT = "User-Agent";
 	public static final String VARY = "Vary";
 	public static final String WWW_AUTHENTICATE = "WWW-Authenticate";
 	public static final String COOKIE = "Cookie";
