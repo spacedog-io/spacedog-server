@@ -152,7 +152,7 @@ public class Start {
 
 		// wait for cluster to fully initialize and turn asynchronously from
 		// RED status to GREEN before to initialize anything else
-		// wait for 30 seconds maximum
+		// wait for 60 seconds maximum
 		elastic.ensureAllIndicesGreen();
 	}
 

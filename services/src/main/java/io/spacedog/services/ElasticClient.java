@@ -287,7 +287,7 @@ public class ElasticClient implements SpaceParams {
 
 		ClusterHealthResponse response = this.internalClient.admin().cluster()
 				.health(Requests.clusterHealthRequest(indices)//
-						.timeout(TimeValue.timeValueSeconds(30))//
+						.timeout(TimeValue.timeValueSeconds(60))//
 						.waitForGreenStatus()//
 						.waitForEvents(Priority.LOW)//
 						.waitForRelocatingShards(0))//
