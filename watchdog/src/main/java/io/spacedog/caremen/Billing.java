@@ -135,7 +135,14 @@ public class Billing {
 		Message message = new Message();
 		message.from = "CAREMEN <no-reply@caremen.fr>";
 		message.to = dog.credentials().get(course.customer.credentialsId).email().get();
-		message.bcc = "compta@caremen.fr";
+
+		// send only prod recap to compta and superdogs
+		if (dog.backendId().equals("caremen")) {
+			message.cc = "compta@caremen.fr";
+			// TODO remove this bcc after a few weeks
+			message.bcc = "platform@spacedog.io";
+		}
+
 		message.subject = "Votre reçu de course CAREMEN";
 
 		try {

@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>io.spacedog</groupId>
 		<artifactId>spacedog-parent</artifactId>
-		<version>0.30</version>
+		<version>0.30.1-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>spacedog-utils</artifactId>
