@@ -20,11 +20,20 @@ public class CredentialsSettings extends Settings {
 	public int maximumInvalidChallenges = 0;
 	public int resetInvalidChallengesAfterMinutes = 60;
 
+	public OAuthSettings oauth;
+
 	public String usernameRegex() {
 		return usernameRegex == null ? Usernames.USERNAME_DEFAULT_REGEX : usernameRegex;
 	}
 
 	public String passwordRegex() {
 		return passwordRegex == null ? Passwords.PASSWORD_DEFAULT_REGEX : passwordRegex;
+	}
+
+	public static class OAuthSettings {
+		public String clientId;
+		public String clientSecret;
+		public boolean useExpiresIn = true;
+		public String finalRedirectUri;
 	}
 }

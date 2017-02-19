@@ -506,7 +506,7 @@ public class Credentials {
 				SpaceFields.FIELD_ID, id(), //
 				SpaceFields.FIELD_BACKEND_ID, backendId(), //
 				SpaceFields.FIELD_USERNAME, name(), //
-				SpaceFields.FIELD_EMAIL, email().get(), //
+				SpaceFields.FIELD_EMAIL, email().orElse(null), //
 				"reallyEnabled", isReallyEnabled(), //
 				SpaceFields.FIELD_ENABLED, enabled(), //
 				SpaceFields.FIELD_ENABLE_AFTER, enableAfter(), //
