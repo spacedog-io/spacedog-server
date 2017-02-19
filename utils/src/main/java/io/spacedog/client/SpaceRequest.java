@@ -158,9 +158,13 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest basicAuth(String backendId, String username, String password) {
+		return backendId(backendId).basicAuth(username, password);
+	}
+
+	public SpaceRequest basicAuth(String username, String password) {
 		this.username = username;
 		this.password = password;
-		return backendId(backendId);
+		return this;
 	}
 
 	public SpaceRequest bearerAuth(SpaceDog user) {
