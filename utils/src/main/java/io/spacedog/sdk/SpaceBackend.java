@@ -1,6 +1,7 @@
 package io.spacedog.sdk;
 
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceResponse;
 import io.spacedog.utils.SpaceFields;
 import io.spacedog.utils.SpaceParams;
 
@@ -27,6 +28,11 @@ public class SpaceBackend implements SpaceParams, SpaceFields {
 
 		request.go(201);
 		return this;
+	}
+
+	public boolean exists() {
+		SpaceResponse response = dog.get("/1/backend").go();
+		return response.httpResponse().getStatus() == 200;
 	}
 
 	public SpaceBackend delete() {
