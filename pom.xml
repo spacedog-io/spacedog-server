@@ -6,17 +6,17 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.spacedog</groupId>
 	<artifactId>spacedog-parent</artifactId>
-	<version>${my-version}</version>
+	<version>0.29.4</version>
     <packaging>pom</packaging>
 	<name>SpaceDog Parent Project</name>
 
 	<properties>
-		<my-version>0.29.4-SNAPSHOT</my-version>
-		<aws-version>1.10.52</aws-version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.test.redirectTestOutputToFile>true</maven.test.redirectTestOutputToFile>
+		
+		<aws-version>1.10.52</aws-version>
 		<es-version>2.2.0</es-version>
 		<jackson-version>2.6.2</jackson-version>
 	</properties>

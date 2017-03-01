@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>io.spacedog</groupId>
 		<artifactId>spacedog-parent</artifactId>
-		<version>${my-version}</version>
+		<version>0.29.4</version>
 	</parent>
 
 	<artifactId>spacedog-watchdog</artifactId>
@@ -79,7 +79,7 @@
 		<dependency>
 			<groupId>io.spacedog</groupId>
 			<artifactId>spacedog-utils</artifactId>
-			<version>${my-version}</version>
+			<version>${project.parent.version}</version>
 		</dependency>
 	</dependencies>
 
