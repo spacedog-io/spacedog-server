@@ -14,6 +14,15 @@ import io.spacedog.utils.Utils;
 
 public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 
+	public static SpaceDog getOrSignUp(SpaceDog dog, //
+			String username, String password, String email) {
+
+		Optional<Credentials> credentials = dog.credentials().getByUsername(username);
+		return credentials.isPresent() //
+				? SpaceDog.fromCredentials(credentials.get())//
+				: dog.signUp(username, password, email);
+	}
+
 	public static SpaceDog signUp(SpaceDog backend, String username, String password) {
 		return SpaceDog.backend(backend.backendId()).signUp(username, password, "platform@spacedog.io");
 	}
