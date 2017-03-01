@@ -47,6 +47,10 @@ public class SpaceCredentials implements SpaceParams, SpaceFields {
 		return credentials;
 	}
 
+	public void delete() {
+		delete(dog.id());
+	}
+
 	public void delete(String id) {
 		dog.delete("/1/credentials/{id}")//
 				.routeParam("id", id).go(200, 404);
