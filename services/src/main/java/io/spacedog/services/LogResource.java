@@ -217,6 +217,8 @@ public class LogResource extends Resource {
 		DeleteByQueryResponse delete = Start.get().getElasticClient()//
 				.deleteByQuery(query, SPACEDOG_BACKEND, TYPE);
 
+		// TODO why return an optional?
+		// return directly the response
 		return Optional.of(delete);
 	}
 
