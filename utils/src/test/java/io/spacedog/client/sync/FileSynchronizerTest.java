@@ -33,7 +33,10 @@ public class FileSynchronizerTest extends SpaceTest {
 		createHtmlFile("x/y/z/index.html");
 		createHtmlFile("x/y/z/a et b");
 
-		// prepare backend
+		// reset test backend twice
+		// since test backend delete don't usually delete files
+		// because of the use of x-spacedog-test header
+		resetTestBackend();
 		resetTestBackend();
 
 		// synch temp folder
