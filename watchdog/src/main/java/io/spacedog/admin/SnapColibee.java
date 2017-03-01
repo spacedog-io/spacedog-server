@@ -3,6 +3,7 @@ package io.spacedog.admin;
 import io.spacedog.client.SpaceEnv;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTarget;
+import io.spacedog.utils.AdminJobs;
 
 public class SnapColibee {
 

@@ -14,7 +14,6 @@ import org.joda.time.format.DateTimeFormatter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import io.spacedog.admin.AdminJobs;
 import io.spacedog.client.SpaceEnv;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTarget;
@@ -22,6 +21,7 @@ import io.spacedog.sdk.SpaceData.ComplexQuery;
 import io.spacedog.sdk.SpaceData.SearchResults;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.sdk.SpacePush.PushRequest;
+import io.spacedog.utils.AdminJobs;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Json;
 

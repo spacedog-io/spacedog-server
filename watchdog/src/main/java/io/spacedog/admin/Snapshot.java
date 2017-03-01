@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceEnv;
 import io.spacedog.client.SpaceRequest;
+import io.spacedog.utils.AdminJobs;
 import io.spacedog.utils.Check;
 
 public class Snapshot {

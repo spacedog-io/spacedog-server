@@ -10,7 +10,6 @@ import com.google.common.io.Resources;
 import com.mitchellbosecke.pebble.PebbleEngine;
 import com.mitchellbosecke.pebble.loader.StringLoader;
 
-import io.spacedog.admin.AdminJobs;
 import io.spacedog.client.SpaceEnv;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTarget;
@@ -18,6 +17,7 @@ import io.spacedog.sdk.SpaceData.ComplexQuery;
 import io.spacedog.sdk.SpaceData.SearchResults;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.sdk.SpaceMail.Message;
+import io.spacedog.utils.AdminJobs;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;

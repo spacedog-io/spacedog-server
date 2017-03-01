@@ -5,7 +5,7 @@ import org.junit.runner.JUnitCore;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 
-import io.spacedog.admin.AdminJobs;
+import io.spacedog.utils.AdminJobs;
 
 public class Watchdog extends RunListener {
 

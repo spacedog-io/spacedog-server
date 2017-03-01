@@ -1,13 +1,20 @@
-package io.spacedog.admin;
+package io.spacedog.utils;
 
 import java.util.Optional;
+
+import org.joda.time.DateTime;
 
 import com.google.common.base.Throwables;
 
 import io.spacedog.client.SpaceEnv;
-import io.spacedog.utils.Internals;
 
 public class AdminJobs {
+
+	public static void okOncePerDay(Object context) {
+		int hourOfDay = DateTime.now().hourOfDay().get();
+		if (3 <= hourOfDay && hourOfDay < 4)
+			ok(context);
+	}
 
 	public static String ok(Object context) {
 		notify(context, " is OK OK OK", "Everything is working properly.");
