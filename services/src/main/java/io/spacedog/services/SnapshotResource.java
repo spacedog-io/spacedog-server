@@ -91,7 +91,7 @@ public class SnapshotResource extends Resource {
 	public Payload postSnapshot(Context context) {
 
 		Credentials credentials = SpaceContext.getCredentials();
-		if (!isSnapshotAll(credentials))
+		if (!isAuthorized(credentials))
 			throw Exceptions.insufficientCredentials(credentials);
 
 		String snapshotId = computeSnapshotName(PLATFORM_SNAPSHOT_PREFIX);
@@ -152,9 +152,10 @@ public class SnapshotResource extends Resource {
 	// implementation
 	//
 
-	private boolean isSnapshotAll(Credentials credentials) {
-		return credentials.isTargetingRootApi() //
-				&& (credentials.isSuperDog() || credentials.roles().contains(SNAPSHOT_ALL));
+	private boolean isAuthorized(Credentials credentials) {
+		return credentials.isSuperDog() //
+				|| (credentials.isTargetingRootApi() //
+						&& credentials.roles().contains(SNAPSHOT_ALL));
 	}
 
 	private String computeSnapshotName(String prefix) {
