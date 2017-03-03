@@ -2,6 +2,8 @@ package io.spacedog.services;
 
 import java.util.Map;
 
+import org.elasticsearch.common.Strings;
+
 import com.google.common.collect.Maps;
 import com.google.common.net.HttpHeaders;
 import com.mashape.unirest.http.HttpMethod;
@@ -108,6 +110,8 @@ public class SpaceContext {
 
 	public boolean isJsonContent() {
 		String contentType = context.header(SpaceHeaders.CONTENT_TYPE);
+		if (Strings.isNullOrEmpty(contentType))
+			return false;
 		return contentType.toLowerCase().startsWith("application/json");
 	}
 

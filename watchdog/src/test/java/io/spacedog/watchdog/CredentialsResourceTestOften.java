@@ -393,10 +393,11 @@ public class CredentialsResourceTestOften extends SpaceTest {
 				.go(400);
 
 		// titi changes its password should succeed
+		// deprecated query param style
 
 		SpaceRequest.put("/1/credentials/" + titiId + "/password")//
 				.basicAuth("test", "titi", "hi titi")//
-				.formField("password", "hi titi 2")//
+				.queryParam("password", "hi titi 2")//
 				.go(200);
 
 		SpaceRequest.get("/1/login").basicAuth("test", "titi", "hi titi 2").go(200);
@@ -406,10 +407,11 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		SpaceRequest.get("/1/login").basicAuth("test", "titi", "hi titi").go(401);
 
 		// admin user changes titi user password should succeed
+		// official json body style
 
 		SpaceRequest.put("/1/credentials/" + titiId + "/password")//
 				.basicAuth("test", "test", "hi test")//
-				.formField("password", "hi titi 3")//
+				.body(TextNode.valueOf("hi titi 3"))//
 				.go(200);
 
 		SpaceRequest.get("/1/login").basicAuth("test", "titi", "hi titi 3").go(200);
@@ -667,12 +669,12 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// fred fails to updates his username
 		// since password must be challenged
 		SpaceRequest.put("/1/credentials/" + fred.id()).bearerAuth(fred)//
-				.body(Json.object("username", "fred2")).go(403)//
+				.body("username", "fred2").go(403)//
 				.assertEquals("unchallenged-password", "error.code");
 
 		// fred updates his username with a challenged password
 		SpaceRequest.put("/1/credentials/" + fred.id()).basicAuth(fred)//
-				.body(Json.object("username", "fred2")).go(200);
+				.body("username", "fred2").go(200);
 
 		// fred can no longer login with old username
 		SpaceRequest.get("/1/login")//
@@ -683,7 +685,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// superadmin updates fred's email
 		SpaceRequest.put("/1/credentials/" + fred.id()).basicAuth(test)//
-				.body(Json.object("email", "fred2@dog.com")).go(200);
+				.body("email", "fred2@dog.com").go(200);
 
 		SpaceRequest.get("/1/credentials/" + fred.id()).userAuth(fred)//
 				.go(200).assertEquals("fred2@dog.com", "email");
@@ -691,18 +693,18 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// fred fails to updates his password
 		// since principal password must be challenged
 		SpaceRequest.put("/1/credentials/" + fred.id()).bearerAuth(fred)//
-				.body(Json.object("password", "hi fred2")).go(403)//
+				.body("password", "hi fred2").go(403)//
 				.assertEquals("unchallenged-password", "error.code");
 
 		// fred updates his password
 		SpaceRequest.put("/1/credentials/" + fred.id()).basicAuth(fred)//
-				.body(Json.object("password", "hi fred2")).go(200);
+				.body("password", "hi fred2").go(200);
 
 		// fred's old access token is not valid anymore
-		SpaceRequest.get("/1/credentials/" + fred.id()).userAuth(fred).go(401);
+		SpaceRequest.get("/1/credentials/" + fred.id()).bearerAuth(fred).go(401);
 
 		// fred's old password is not valid anymore
-		fred.get("/1/login").go(401);
+		SpaceRequest.get("/1/login").basicAuth(fred).go(401);
 
 		// fred can login with his new password
 		fred.password("hi fred2").login();
