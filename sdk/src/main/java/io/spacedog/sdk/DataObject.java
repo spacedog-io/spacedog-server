@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.SpaceRequest;
+import io.spacedog.rest.SpaceRequest;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 

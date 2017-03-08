@@ -5,11 +5,11 @@ package io.spacedog.services;
 
 import java.util.Map;
 
+import io.spacedog.model.SmsSettings;
+import io.spacedog.model.SmsTemplate;
 import io.spacedog.services.SmsResource.SmsMessage;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;
-import io.spacedog.utils.SmsSettings;
-import io.spacedog.utils.SmsTemplate;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.payload.Payload;
 

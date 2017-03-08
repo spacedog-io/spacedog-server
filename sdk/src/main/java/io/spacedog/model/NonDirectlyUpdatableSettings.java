@@ -1,4 +1,4 @@
-package io.spacedog.utils;
+package io.spacedog.model;
 
 public interface NonDirectlyUpdatableSettings {
 

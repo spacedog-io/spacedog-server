@@ -8,6 +8,9 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 
+import io.spacedog.model.DataPermission;
+import io.spacedog.model.NonDirectlyUpdatableSettings;
+import io.spacedog.model.Settings;
 import io.spacedog.utils.Schema.SchemaAcl;
 
 public class SchemaSettings extends Settings implements NonDirectlyUpdatableSettings {

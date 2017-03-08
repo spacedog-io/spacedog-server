@@ -3,10 +3,10 @@ package io.spacedog.services;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
-import io.spacedog.client.SpaceRequest;
-import io.spacedog.client.SpaceResponse;
+import io.spacedog.model.SendPulseSettings;
+import io.spacedog.rest.SpaceRequest;
+import io.spacedog.rest.SpaceResponse;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.SendPulseSettings;
 import io.spacedog.utils.SpaceException;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Get;

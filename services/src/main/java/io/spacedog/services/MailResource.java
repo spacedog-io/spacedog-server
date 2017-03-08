@@ -21,11 +21,11 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.HttpRequestWithBody;
 import com.mashape.unirest.request.body.MultipartBody;
 
+import io.spacedog.model.MailSettings;
+import io.spacedog.model.MailSettings.MailGunSettings;
+import io.spacedog.model.MailSettings.SmtpSettings;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.MailSettings;
-import io.spacedog.utils.MailSettings.MailGunSettings;
-import io.spacedog.utils.MailSettings.SmtpSettings;
 import net.codestory.http.Context;
 import net.codestory.http.Part;
 import net.codestory.http.annotations.Post;

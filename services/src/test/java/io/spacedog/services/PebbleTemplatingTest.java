@@ -5,7 +5,7 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import io.spacedog.client.SpaceTest;
+import io.spacedog.rest.SpaceTest;
 
 public class PebbleTemplatingTest extends SpaceTest {
 

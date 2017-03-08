@@ -6,8 +6,8 @@ package io.spacedog.examples;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.SpaceRequest;
-import io.spacedog.client.SpaceTest;
+import io.spacedog.rest.SpaceRequest;
+import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;

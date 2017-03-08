@@ -2,7 +2,7 @@ package io.spacedog.sdk;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.utils.Settings;
+import io.spacedog.model.Settings;
 
 public class SpaceSettings {
 

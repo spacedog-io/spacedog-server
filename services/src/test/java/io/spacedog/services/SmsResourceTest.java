@@ -6,12 +6,12 @@ import org.junit.Test;
 
 import com.google.common.collect.Sets;
 
-import io.spacedog.client.SpaceEnv;
-import io.spacedog.client.SpaceRequest;
-import io.spacedog.client.SpaceTest;
+import io.spacedog.model.SmsSettings;
+import io.spacedog.model.SmsSettings.TwilioSettings;
+import io.spacedog.rest.SpaceEnv;
+import io.spacedog.rest.SpaceRequest;
+import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.SmsSettings;
-import io.spacedog.utils.SmsSettings.TwilioSettings;
 
 public class SmsResourceTest extends SpaceTest {
 

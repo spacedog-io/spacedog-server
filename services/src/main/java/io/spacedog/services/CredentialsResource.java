@@ -24,16 +24,16 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import io.spacedog.model.CredentialsSettings;
+import io.spacedog.model.MailTemplate;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.Credentials.Session;
-import io.spacedog.utils.CredentialsSettings;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
-import io.spacedog.utils.MailTemplate;
 import io.spacedog.utils.Roles;
 import io.spacedog.utils.Schema;
 import io.spacedog.utils.SpaceHeaders;

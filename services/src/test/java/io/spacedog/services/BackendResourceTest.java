@@ -8,9 +8,9 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Iterators;
 
-import io.spacedog.client.SpaceRequest;
-import io.spacedog.client.SpaceResponse;
-import io.spacedog.client.SpaceTest;
+import io.spacedog.rest.SpaceRequest;
+import io.spacedog.rest.SpaceResponse;
+import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 
 public class BackendResourceTest extends SpaceTest {

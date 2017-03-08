@@ -2,7 +2,7 @@ package io.spacedog.services;
 
 import org.junit.Test;
 
-import io.spacedog.client.SpaceTest;
+import io.spacedog.rest.SpaceTest;
 import io.spacedog.services.SnapshotResource.SpaceRepository;
 
 public class SpaceRepositoryTest extends SpaceTest {

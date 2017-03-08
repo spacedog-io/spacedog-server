@@ -7,9 +7,9 @@ import org.elasticsearch.common.Strings;
 
 import com.mashape.unirest.http.HttpMethod;
 
+import io.spacedog.model.WebSettings;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.WebPath;
-import io.spacedog.utils.WebSettings;
 import net.codestory.http.Context;
 import net.codestory.http.filters.PayloadSupplier;
 import net.codestory.http.payload.Payload;

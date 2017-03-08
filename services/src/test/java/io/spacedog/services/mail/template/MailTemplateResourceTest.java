@@ -11,14 +11,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.Resources;
 
-import io.spacedog.client.SpaceRequest;
-import io.spacedog.client.SpaceTest;
+import io.spacedog.model.DataPermission;
+import io.spacedog.model.MailSettings;
+import io.spacedog.model.MailTemplate;
+import io.spacedog.model.MailSettings.SmtpSettings;
+import io.spacedog.rest.SpaceRequest;
+import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.MailSettings;
-import io.spacedog.utils.MailSettings.SmtpSettings;
-import io.spacedog.utils.MailTemplate;
 import io.spacedog.utils.Schema;
 
 public class MailTemplateResourceTest extends SpaceTest {

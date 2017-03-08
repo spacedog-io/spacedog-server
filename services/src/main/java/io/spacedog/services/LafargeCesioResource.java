@@ -27,12 +27,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import io.spacedog.model.DataPermission;
+import io.spacedog.model.MailSettings;
 import io.spacedog.services.MailResource.Message;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
-import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.MailSettings;
 import io.spacedog.utils.Schema;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Get;

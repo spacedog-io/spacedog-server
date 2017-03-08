@@ -11,12 +11,12 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
-import io.spacedog.client.SpaceRequest;
-import io.spacedog.client.SpaceTest;
+import io.spacedog.model.MailSettings;
+import io.spacedog.model.MailSettings.SmtpSettings;
+import io.spacedog.rest.SpaceRequest;
+import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.MailSettings;
-import io.spacedog.utils.MailSettings.SmtpSettings;
 
 public class LafargeCesioTest extends SpaceTest {
 

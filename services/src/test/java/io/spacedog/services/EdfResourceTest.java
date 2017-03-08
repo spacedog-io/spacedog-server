@@ -7,12 +7,12 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.SpaceRequest;
-import io.spacedog.client.SpaceTest;
+import io.spacedog.model.CredentialsSettings;
+import io.spacedog.model.CredentialsSettings.OAuthSettings;
+import io.spacedog.rest.SpaceRequest;
+import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Credentials;
-import io.spacedog.utils.CredentialsSettings;
-import io.spacedog.utils.CredentialsSettings.OAuthSettings;
 import io.spacedog.utils.SpaceHeaders;
 
 public class EdfResourceTest extends SpaceTest {

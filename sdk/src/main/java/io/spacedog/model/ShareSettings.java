@@ -1,13 +1,15 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.utils;
+package io.spacedog.model;
 
 import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
+import io.spacedog.utils.Credentials;
 
 public class ShareSettings extends Settings {
 

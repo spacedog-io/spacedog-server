@@ -7,6 +7,7 @@ import java.util.Arrays;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.model.DataPermission;
 import io.spacedog.utils.Schema.SchemaAcl;
 
 public class SchemaBuilder {

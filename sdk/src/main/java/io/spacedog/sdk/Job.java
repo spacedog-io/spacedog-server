@@ -9,7 +9,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 
-import io.spacedog.client.SpaceEnv;
+import io.spacedog.rest.SpaceEnv;
 import io.spacedog.utils.Internals;
 
 public class Job {

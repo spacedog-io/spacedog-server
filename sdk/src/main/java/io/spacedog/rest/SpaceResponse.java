@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.client;
+package io.spacedog.rest;
 
 import java.io.IOException;
 import java.util.Arrays;

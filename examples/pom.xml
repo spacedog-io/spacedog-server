@@ -39,7 +39,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>io.spacedog</groupId>
-			<artifactId>spacedog-sdk-java</artifactId>
+			<artifactId>spacedog-java-sdk</artifactId>
 			<version>${project.parent.version}</version>
 		</dependency>
 		<dependency>

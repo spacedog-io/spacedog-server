@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.client;
+package io.spacedog.rest;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -26,6 +26,7 @@ import com.mashape.unirest.request.GetRequest;
 import com.mashape.unirest.request.HttpRequest;
 import com.mashape.unirest.request.HttpRequestWithBody;
 
+import io.spacedog.model.Settings;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Backends;
@@ -33,7 +34,6 @@ import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Schema;
-import io.spacedog.utils.Settings;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Utils;
 

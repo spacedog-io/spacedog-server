@@ -11,13 +11,13 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
-import io.spacedog.client.SpaceRequest;
-import io.spacedog.client.SpaceTest;
+import io.spacedog.model.SettingsSettings;
+import io.spacedog.model.SettingsSettings.SettingsAcl;
+import io.spacedog.rest.SpaceRequest;
+import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SchemaSettings;
-import io.spacedog.utils.SettingsSettings;
-import io.spacedog.utils.SettingsSettings.SettingsAcl;
 
 public class SettingsResourceTest extends SpaceTest {
 

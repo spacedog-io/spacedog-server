@@ -2,11 +2,11 @@ package io.spacedog.watchdog;
 
 import org.junit.Test;
 
-import io.spacedog.client.SpaceRequest;
-import io.spacedog.client.SpaceTest;
+import io.spacedog.model.WebSettings;
+import io.spacedog.rest.SpaceRequest;
+import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.SpaceHeaders;
-import io.spacedog.utils.WebSettings;
 
 public class WebResourceTestOncePerDay extends SpaceTest {
 

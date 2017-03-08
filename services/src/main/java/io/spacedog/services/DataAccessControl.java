@@ -3,8 +3,8 @@
  */
 package io.spacedog.services;
 
+import io.spacedog.model.DataPermission;
 import io.spacedog.utils.Credentials;
-import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Schema.SchemaAcl;
 import io.spacedog.utils.SchemaSettings;
 

@@ -1,12 +1,12 @@
 package io.spacedog.services;
 
-import io.spacedog.client.SpaceRequest;
-import io.spacedog.client.SpaceResponse;
+import io.spacedog.model.CredentialsSettings;
+import io.spacedog.rest.SpaceRequest;
+import io.spacedog.rest.SpaceResponse;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.Credentials.Session;
-import io.spacedog.utils.CredentialsSettings;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.SpaceHeaders;
 import net.codestory.http.Context;

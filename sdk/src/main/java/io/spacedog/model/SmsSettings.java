@@ -1,4 +1,4 @@
-package io.spacedog.utils;
+package io.spacedog.model;
 
 import java.util.Map;
 import java.util.Set;

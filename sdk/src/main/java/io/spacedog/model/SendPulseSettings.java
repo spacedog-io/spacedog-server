@@ -1,10 +1,12 @@
-package io.spacedog.utils;
+package io.spacedog.model;
 
 import java.util.Set;
 
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import io.spacedog.utils.Exceptions;
 
 public class SendPulseSettings extends Settings {
 

@@ -5,7 +5,7 @@ package io.spacedog.services;
 
 import org.junit.Test;
 
-import io.spacedog.client.SpaceTest;
+import io.spacedog.rest.SpaceTest;
 
 public class ResourceTest extends SpaceTest {
 

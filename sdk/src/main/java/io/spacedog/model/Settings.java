@@ -1,4 +1,6 @@
-package io.spacedog.utils;
+package io.spacedog.model;
+
+import io.spacedog.utils.Utils;
 
 public class Settings {
 

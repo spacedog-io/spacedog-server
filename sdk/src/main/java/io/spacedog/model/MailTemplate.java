@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.utils;
+package io.spacedog.model;
 
 import java.util.List;
 import java.util.Map;

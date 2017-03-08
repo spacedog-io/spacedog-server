@@ -6,10 +6,10 @@ package io.spacedog.services;
 import java.util.Map;
 import java.util.Optional;
 
+import io.spacedog.model.MailSettings;
+import io.spacedog.model.MailTemplate;
 import io.spacedog.services.MailResource.Message;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.MailSettings;
-import io.spacedog.utils.MailTemplate;
 import io.spacedog.utils.NotFoundException;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.payload.Payload;

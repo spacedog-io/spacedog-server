@@ -16,12 +16,12 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
 
-import io.spacedog.client.SpaceRequest;
-import io.spacedog.client.SpaceTest;
+import io.spacedog.model.DataPermission;
+import io.spacedog.model.ShareSettings;
+import io.spacedog.rest.SpaceRequest;
+import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.ShareSettings;
 import io.spacedog.utils.SpaceHeaders;
 
 public class ShareResourceTestOncePerDay extends SpaceTest {

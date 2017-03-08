@@ -10,14 +10,14 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import io.spacedog.client.SpaceEnv;
-import io.spacedog.client.SpaceRequest;
-import io.spacedog.client.SpaceTest;
+import io.spacedog.model.CredentialsSettings;
+import io.spacedog.model.MailSettings;
+import io.spacedog.model.MailTemplate;
+import io.spacedog.rest.SpaceEnv;
+import io.spacedog.rest.SpaceRequest;
+import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.CredentialsSettings;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.MailSettings;
-import io.spacedog.utils.MailTemplate;
 import io.spacedog.utils.Passwords;
 
 public class CredentialsResourceTest extends SpaceTest {

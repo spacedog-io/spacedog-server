@@ -1,4 +1,4 @@
-package io.spacedog.client;
+package io.spacedog.rest;
 
 import java.util.Optional;
 

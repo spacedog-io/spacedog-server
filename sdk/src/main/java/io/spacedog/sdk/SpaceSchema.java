@@ -2,7 +2,7 @@ package io.spacedog.sdk;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.SpaceRequest;
+import io.spacedog.rest.SpaceRequest;
 import io.spacedog.utils.Schema;
 
 public class SpaceSchema {

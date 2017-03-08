@@ -5,7 +5,7 @@ package io.spacedog.watchdog;
 
 import org.junit.Test;
 
-import io.spacedog.client.SpaceTest;
+import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 
 public class BackendResourceTestOncePerDay extends SpaceTest {

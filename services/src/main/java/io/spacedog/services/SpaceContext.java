@@ -8,6 +8,7 @@ import com.google.common.collect.Maps;
 import com.google.common.net.HttpHeaders;
 import com.mashape.unirest.http.HttpMethod;
 
+import io.spacedog.model.Settings;
 import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Credentials;

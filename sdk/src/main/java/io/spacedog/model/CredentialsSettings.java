@@ -1,4 +1,7 @@
-package io.spacedog.utils;
+package io.spacedog.model;
+
+import io.spacedog.utils.Passwords;
+import io.spacedog.utils.Usernames;
 
 public class CredentialsSettings extends Settings {
 

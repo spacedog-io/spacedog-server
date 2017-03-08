@@ -12,7 +12,7 @@ import org.junit.Test;
 import com.google.common.io.Resources;
 
 import io.spacedog.cli.FileSynchronizer;
-import io.spacedog.client.SpaceTest;
+import io.spacedog.rest.SpaceTest;
 
 public class FileSynchronizerTest extends SpaceTest {
 

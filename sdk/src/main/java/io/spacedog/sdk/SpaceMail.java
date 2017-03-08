@@ -3,7 +3,7 @@ package io.spacedog.sdk;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
-import io.spacedog.client.SpaceRequest;
+import io.spacedog.rest.SpaceRequest;
 
 public class SpaceMail {
 

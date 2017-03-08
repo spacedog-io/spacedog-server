@@ -1,7 +1,7 @@
 package io.spacedog.sdk;
 
-import io.spacedog.client.SpaceRequest;
-import io.spacedog.client.SpaceResponse;
+import io.spacedog.rest.SpaceRequest;
+import io.spacedog.rest.SpaceResponse;
 import io.spacedog.utils.SpaceFields;
 import io.spacedog.utils.SpaceParams;
 

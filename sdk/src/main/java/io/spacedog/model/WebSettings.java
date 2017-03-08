@@ -1,4 +1,4 @@
-package io.spacedog.utils;
+package io.spacedog.model;
 
 public class WebSettings extends Settings {
 

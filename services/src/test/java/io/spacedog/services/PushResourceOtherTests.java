@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
-import io.spacedog.client.SpaceTest;
+import io.spacedog.rest.SpaceTest;
 import io.spacedog.services.PushResource.PushServices;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;

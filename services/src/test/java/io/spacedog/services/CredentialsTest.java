@@ -3,7 +3,7 @@ package io.spacedog.services;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
-import io.spacedog.client.SpaceTest;
+import io.spacedog.rest.SpaceTest;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
 

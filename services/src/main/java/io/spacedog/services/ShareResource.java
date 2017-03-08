@@ -5,11 +5,11 @@ package io.spacedog.services;
 
 import java.util.UUID;
 
+import io.spacedog.model.DataPermission;
+import io.spacedog.model.ShareSettings;
 import io.spacedog.utils.Credentials;
-import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.WebPath;
-import io.spacedog.utils.ShareSettings;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
