@@ -4,9 +4,9 @@ import org.joda.time.DateTime;
 
 import io.spacedog.client.SpaceEnv;
 import io.spacedog.client.SpaceRequest;
-import io.spacedog.utils.AdminJobs;
+import io.spacedog.utils.Job;
 
-public class Purge {
+public class Purge extends Job {
 
 	public String run() {
 
@@ -23,10 +23,10 @@ public class Purge {
 					.basicAuth("api", "purgeall", password)//
 					.go(200);
 
-			return AdminJobs.ok(this);
+			return ok();
 
 		} catch (Throwable t) {
-			return AdminJobs.error(this, t);
+			return error(t);
 		}
 	}
 

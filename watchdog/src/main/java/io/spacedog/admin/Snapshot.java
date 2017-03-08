@@ -3,30 +3,39 @@ package io.spacedog.admin;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeComparator;
 
+import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceEnv;
 import io.spacedog.client.SpaceRequest;
-import io.spacedog.utils.AdminJobs;
+import io.spacedog.utils.Job;
 import io.spacedog.utils.Check;
 
-public class Snapshot {
+public class Snapshot extends Job {
+
+	public String run(String input, Context context) {
+		addToDescription(context);
+		return run();
+	}
 
 	public String run() {
 
 		try {
+			SpaceEnv env = SpaceEnv.defaultEnv();
+			addToDescription(env.target().host());
+
 			// set high timeout to wait for server
 			// since snapshot service is slow
-			SpaceRequest.env().httpTimeoutMillis(120000);
+			env.httpTimeoutMillis(120000);
 
-			String password = SpaceEnv.defaultEnv().get("spacedog_jobs_snapshotall_password");
+			String password = env.get("spacedog_jobs_snapshotall_password");
 
 			SpaceRequest.post("/1/snapshot")//
 					.basicAuth("api", "snapshotall", password)//
 					.go(202);
 
 		} catch (Throwable t) {
-			return AdminJobs.error(this, t);
+			return error(t);
 		}
 
 		return "OK";
@@ -70,12 +79,12 @@ public class Snapshot {
 			Check.isTrue(difference < 1000 * 60 * 60, //
 					"snapshot took [%s], it should take less than one hour", difference);
 
-			return AdminJobs.ok(this, message);
+			return ok(message);
 
 		} catch (Throwable t) {
 			return message == null //
-					? AdminJobs.error(this, t) //
-					: AdminJobs.error(this, message, t);
+					? error(t) //
+					: error(message, t);
 		}
 	}
 

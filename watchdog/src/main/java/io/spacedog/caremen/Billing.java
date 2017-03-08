@@ -11,6 +11,7 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -20,19 +21,18 @@ import com.mitchellbosecke.pebble.loader.StringLoader;
 
 import io.spacedog.caremen.FareSettings.VehiculeFareSettings;
 import io.spacedog.client.SpaceEnv;
-import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTarget;
 import io.spacedog.sdk.SpaceData.SearchResults;
 import io.spacedog.sdk.SpaceData.TermQuery;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.sdk.SpaceMail.Message;
-import io.spacedog.utils.AdminJobs;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Job;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 
-public class Billing {
+public class Billing extends Job {
 
 	// DateTimeFormatter idFormatter =
 	// DateTimeFormat.forPattern("yyMMddhhmmss");
@@ -50,12 +50,18 @@ public class Billing {
 	SpaceEnv env = null;
 	SpaceDog dog = null;
 
+	public String charge(String input, Context context) {
+		addToDescription(context);
+		return charge();
+	}
+
 	public String charge() {
 
 		try {
 			env = SpaceEnv.defaultEnv();
-			dog = SpaceDog.backend(env.get("backend_id")) //
-					.username("cashier").login(env.get("caremen_cashier_password"));
+			addToDescription(env.target().host());
+			dog = SpaceDog.backend(env.get("backend_id")).username("cashier")//
+					.login(env.get("caremen_cashier_password"));
 
 			TermQuery query = new TermQuery();
 			query.type = "course";
@@ -81,15 +87,15 @@ public class Billing {
 				} catch (Throwable t) {
 					String url = env.target().url(dog.backendId(), //
 							"/1/data/course/" + course.id());
-					AdminJobs.error(this, "Error billing course " + url, t);
+					error("Error billing course " + url, t);
 				}
 			}
 
 		} catch (Throwable t) {
-			return AdminJobs.error(this, t);
+			return error(t);
 		}
 
-		return "OK";
+		return ok();
 	}
 
 	@SuppressWarnings("unused")
@@ -249,8 +255,14 @@ public class Billing {
 	}
 
 	public static void main(String[] args) {
-		SpaceRequest.env().target(SpaceTarget.production);
-		System.setProperty("backend_id", "caredev");
-		new Billing().charge();
+		SpaceEnv env = SpaceEnv.defaultEnv();
+		env.target(SpaceTarget.production);
+		env.set("backend_id", "caredev");
+
+		Billing billing = new Billing();
+		billing.addToDescription(env.get("backend_id"));
+		billing.addToDescription("billing");
+
+		billing.charge();
 	}
 }

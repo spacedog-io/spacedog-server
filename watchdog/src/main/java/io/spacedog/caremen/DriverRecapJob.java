@@ -4,37 +4,39 @@ import java.io.StringWriter;
 import java.util.Map;
 import java.util.Optional;
 
+import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.io.Resources;
 import com.mitchellbosecke.pebble.PebbleEngine;
 import com.mitchellbosecke.pebble.loader.StringLoader;
 
 import io.spacedog.client.SpaceEnv;
-import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTarget;
 import io.spacedog.sdk.SpaceData.ComplexQuery;
 import io.spacedog.sdk.SpaceData.SearchResults;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.sdk.SpaceMail.Message;
-import io.spacedog.utils.AdminJobs;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Job;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Utils;
 
-public class DriverRecapJob {
+public class DriverRecapJob extends Job {
 
-	private SpaceEnv env = null;
 	private SpaceDog dog = null;
 	private boolean testing = false;
 	private FareSettings fareSettings;
 
+	public String recap(String input, Context context) {
+		addToDescription(context);
+		return recap();
+	}
+
 	public String recap() {
 
 		try {
-			env = SpaceEnv.defaultEnv();
-			testing = env.get("caremen_recap_test", false);
-			dog = login();
+			dog = init();
 
 			SearchResults<Driver> drivers = getDriversNotDisabled();
 
@@ -47,15 +49,15 @@ public class DriverRecapJob {
 					String message = String.format(//
 							"Error sending recap to driver [%s]", //
 							driverUrl(driver.id()));
-					AdminJobs.error(this, message, t);
+					error(message, t);
 				}
 			}
 
 		} catch (Throwable t) {
-			return AdminJobs.error(this, t);
+			return error(t);
 		}
 
-		return "OK";
+		return ok();
 	}
 
 	private Optional<DriverRecap> computeRecap(Driver driver) {
@@ -122,7 +124,7 @@ public class DriverRecapJob {
 			dog.mailEndpoint().send(message);
 
 		} catch (Exception e) {
-			AdminJobs.error(this, "Error sending recap of driver [" //
+			error("Error sending recap of driver [" //
 					+ driverUrl(recap.driverId) + "]", e);
 		}
 	}
@@ -156,9 +158,14 @@ public class DriverRecapJob {
 		return dog.dataEndpoint().search(query, Course.class);
 	}
 
-	private SpaceDog login() {
-		return SpaceDog.backend(env.get("backend_id")).username("recaper") //
-				.login(env.get("caremen_recaper_password"));
+	private SpaceDog init() {
+		SpaceEnv env = SpaceEnv.defaultEnv();
+		addToDescription(env.target().host());
+		testing = env.get("caremen_recap_test", false);
+
+		String backendId = env.get("backend_id");
+		String password = env.get("caremen_recaper_password");
+		return SpaceDog.backend(backendId).username("recaper").login(password);
 	}
 
 	private SearchResults<Driver> getDriversNotDisabled() {
@@ -184,9 +191,15 @@ public class DriverRecapJob {
 	}
 
 	public static void main(String[] args) {
-		SpaceRequest.env().target(SpaceTarget.production);
-		System.setProperty("backend_id", "caredev");
-		// System.setProperty("caremen_recap_test", "true");
-		new DriverRecapJob().recap();
+		SpaceEnv env = SpaceEnv.defaultEnv();
+		env.target(SpaceTarget.production);
+		env.set("backend_id", "carerec");
+		// env.set("caremen_recap_test", "true");
+
+		DriverRecapJob driverRecap = new DriverRecapJob();
+		driverRecap.addToDescription(env.get("backend_id"));
+		driverRecap.addToDescription("driverrecap");
+
+		driverRecap.recap();
 	}
 }

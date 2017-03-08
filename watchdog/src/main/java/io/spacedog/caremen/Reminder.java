@@ -11,29 +11,36 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import com.amazonaws.services.lambda.runtime.Context;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import io.spacedog.client.SpaceEnv;
-import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTarget;
 import io.spacedog.sdk.SpaceData.ComplexQuery;
 import io.spacedog.sdk.SpaceData.SearchResults;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.sdk.SpacePush.PushRequest;
-import io.spacedog.utils.AdminJobs;
 import io.spacedog.utils.Check;
+import io.spacedog.utils.Job;
 import io.spacedog.utils.Json;
 
-public class Reminder {
+public class Reminder extends Job {
 
-	DateTimeFormatter shortTimeFormatter = DateTimeFormat.shortTime()//
+	private DateTimeFormatter shortTimeFormatter = DateTimeFormat.shortTime()//
 			.withLocale(Locale.FRANCE).withZone(DateTimeZone.forID("Europe/Paris"));
+
+	private SpaceDog dog = null;
+
+	public String remindTomorrow(String input, Context context) {
+		addToDescription(context);
+		return remindTomorrow();
+	}
 
 	public String remindTomorrow() {
 
 		try {
-			SpaceDog dog = login();
+			dog = init();
 
 			DateTime tomorrow = DateTime.now().plusDays(1).withTimeAtStartOfDay();
 			DateTime dayAfterTomorrow = tomorrow.plusDays(1).withTimeAtStartOfDay();
@@ -62,16 +69,21 @@ public class Reminder {
 				push(dog, entry.getKey(), toMessage(entry.getValue()));
 
 		} catch (Throwable t) {
-			return AdminJobs.error(this, t);
+			return error(t);
 		}
 
-		return "OK";
+		return ok();
+	}
+
+	public String remindToday(String input, Context context) {
+		addToDescription(context);
+		return remindToday();
 	}
 
 	public String remindToday() {
 
 		try {
-			SpaceDog dog = login();
+			dog = init();
 
 			DateTime oneHourAfterNow = DateTime.now().plusHours(2);
 			DateTime twoHoursAfterNow = oneHourAfterNow.plusHours(2);
@@ -89,11 +101,18 @@ public class Reminder {
 			}
 
 		} catch (Throwable t) {
-			return AdminJobs.error(this, t);
+			return error(t);
 		}
 
-		return "OK";
+		return ok();
+	}
 
+	private SpaceDog init() {
+		SpaceEnv env = SpaceEnv.defaultEnv();
+		addToDescription(env.target().host());
+		String backendId = env.get("backend_id");
+		String password = env.get("caremen_reminder_password");
+		return SpaceDog.backend(backendId).username("reminder").login(password);
 	}
 
 	private void checkCourse(Course course) {
@@ -105,13 +124,7 @@ public class Reminder {
 	private void handleException(SpaceDog dog, Course course, Exception e) {
 		String url = SpaceEnv.defaultEnv().target().url(dog.backendId(), //
 				"/1/data/course/" + course.id());
-		AdminJobs.error(this, "Error remindering course " + url, e);
-	}
-
-	private SpaceDog login() {
-		SpaceEnv env = SpaceEnv.defaultEnv();
-		return SpaceDog.backend(env.get("backend_id")) //
-				.username("reminder").login(env.get("caremen_reminder_password"));
+		error("Error remindering course " + url, e);
 	}
 
 	private void push(SpaceDog dog, String driverCredentialsId, String message) {
@@ -168,9 +181,20 @@ public class Reminder {
 	}
 
 	public static void main(String[] args) {
-		SpaceRequest.env().target(SpaceTarget.production);
-		System.setProperty("backend_id", "carerec");
-		new Reminder().remindTomorrow();
-		new Reminder().remindToday();
+		SpaceEnv env = SpaceEnv.defaultEnv();
+		env.target(SpaceTarget.production);
+		env.set("backend_id", "carerec");
+
+		Reminder reminderTomorrow = new Reminder();
+		reminderTomorrow.addToDescription(env.get("backend_id"));
+		reminderTomorrow.addToDescription("reminder");
+		reminderTomorrow.addToDescription("tomorrow");
+		reminderTomorrow.remindTomorrow();
+
+		Reminder reminderToday = new Reminder();
+		reminderToday.addToDescription(env.get("backend_id"));
+		reminderToday.addToDescription("reminder");
+		reminderToday.addToDescription("today");
+		reminderToday.remindToday();
 	}
 }
