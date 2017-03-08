@@ -1,4 +1,4 @@
-package io.spacedog.client;
+package io.spacedog.cli;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -15,32 +15,34 @@ import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
+import io.spacedog.client.SpaceRequest;
+import io.spacedog.client.SpaceResponse;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.WebPath;
 
 @Parameters(commandNames = { "sync" }, //
-commandDescription = "synchronize source folder to backend")
+		commandDescription = "synchronize source folder to backend")
 public class FileSynchronizer {
 
 	@Parameter(names = { "-s", "--source" }, //
-	required = true, //
-	description = "the source directory to synchronize")
+			required = true, //
+			description = "the source directory to synchronize")
 	private String source;
 
 	@Parameter(names = { "-b", "--backend" }, //
-	required = true, //
-	description = "the backend identifier to synchronize to")
+			required = true, //
+			description = "the backend identifier to synchronize to")
 	private String backendId;
 
 	@Parameter(names = { "-p", "--prefix" }, //
-	required = true, //
-	description = "the file bucket prefix to use")
+			required = true, //
+			description = "the file bucket prefix to use")
 	private String prefix;
 
 	@Parameter(names = { "-l", "--login" }, //
-	required = true, //
-	description = "the administrator login to use")
+			required = true, //
+			description = "the administrator login to use")
 	private String login;
 
 	private String password = "hi test";

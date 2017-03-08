@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 
-import com.beust.jcommander.internal.Lists;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.DoubleNode;
@@ -21,6 +20,7 @@ import com.fasterxml.jackson.databind.node.LongNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class JsonGenerator {
@@ -63,7 +63,7 @@ public class JsonGenerator {
 	}
 
 	public ObjectNode gen(Schema schema, int index) {
-		LinkedList<String> stack = new LinkedList<String>();
+		LinkedList<String> stack = new LinkedList<>();
 		return generateObject(stack, (ObjectNode) schema.node().elements().next(), index);
 	}
 
