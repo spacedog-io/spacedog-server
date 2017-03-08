@@ -6,7 +6,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 
 import io.spacedog.client.SpaceEnv;
 import io.spacedog.client.SpaceRequest;
-import io.spacedog.utils.Job;
+import io.spacedog.sdk.Job;
 
 public class Purge extends Job {
 

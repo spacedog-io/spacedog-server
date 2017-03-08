@@ -77,7 +77,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>io.spacedog</groupId>
-			<artifactId>spacedog-utils</artifactId>
+			<artifactId>spacedog-sdk-java</artifactId>
 			<version>${project.parent.version}</version>
 		</dependency>
 		<dependency>
@@ -120,6 +120,11 @@
 			<artifactId>stripe-java</artifactId>
 			<version>3.2.0</version>
 			<scope>test</scope>
+		</dependency>
+ 		<dependency>
+			<groupId>com.mitchellbosecke</groupId>
+			<artifactId>pebble</artifactId>
+			<version> 2.2.3 </version>
 		</dependency>
 	</dependencies>
 

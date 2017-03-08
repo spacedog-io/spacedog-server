@@ -26,11 +26,11 @@
 	</prerequisites>
 
     <modules>
-        <module>utils</module>
         <module>services</module>
         <module>watchdog</module>
         <module>examples</module>
         <module>cli</module>
+        <module>sdk</module>
     </modules>
 
 	<build>

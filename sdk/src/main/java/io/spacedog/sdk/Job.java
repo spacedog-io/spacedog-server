@@ -1,4 +1,4 @@
-package io.spacedog.utils;
+package io.spacedog.sdk;
 
 import java.util.List;
 import java.util.Optional;
@@ -10,6 +10,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 
 import io.spacedog.client.SpaceEnv;
+import io.spacedog.utils.Internals;
 
 public class Job {
 
