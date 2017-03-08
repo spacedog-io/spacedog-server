@@ -38,10 +38,11 @@ public class Job {
 		return builder.toString();
 	}
 
-	public void okOncePerDay() {
+	public String okOncePerDay() {
 		int hourOfDay = DateTime.now().hourOfDay().get();
 		if (3 <= hourOfDay && hourOfDay < 4)
 			ok();
+		return "OK";
 	}
 
 	public String ok() {

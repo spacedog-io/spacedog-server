@@ -1,15 +1,10 @@
 package io.spacedog.admin;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeComparator;
-
 import com.amazonaws.services.lambda.runtime.Context;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceEnv;
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.utils.Job;
-import io.spacedog.utils.Check;
 
 public class Snapshot extends Job {
 
@@ -34,64 +29,22 @@ public class Snapshot extends Job {
 					.basicAuth("api", "snapshotall", password)//
 					.go(202);
 
+			SpaceRequest.get("/1/snapshot")//
+					.basicAuth("api", "snapshotall", password)//
+					.go(200)//
+					.assertEquals("IN_PROGRESS", "results.0.state")//
+					.assertEquals("SUCCESS", "results.1.state");
+
 		} catch (Throwable t) {
 			return error(t);
 		}
 
-		return "OK";
+		return okOncePerDay();
 	}
 
-	public String check() {
-
-		String message = null;
-
-		try {
-			ObjectNode node = SpaceRequest.get("/1/snapshot/latest")//
-					.superdogAuth()//
-					.go(200)//
-					.assertEquals("SUCCESS", "state")//
-					.objectNode();
-
-			DateTime now = DateTime.now();
-			DateTime start = new DateTime(node.get("startTime").asLong());
-			DateTime end = new DateTime(node.get("endTime").asLong());
-			long difference = end.getMillis() - start.getMillis();
-
-			message = new StringBuilder("snapshot id = ")//
-					.append(node.get("id").asText())//
-					.append("\nrepository = ")//
-					.append(node.get("repository").asText())//
-					.append("\nstate = ")//
-					.append(node.get("state").asText())//
-					.append("\ntype = ")//
-					.append(node.get("type").asText())//
-					.append("\nstartTime = ")//
-					.append(start.toString())//
-					.append("\nendTime = ")//
-					.append(end.toString())//
-					.append("\nduration = ")//
-					.append(difference)//
-					.toString();
-
-			Check.isTrue(DateTimeComparator.getDateOnlyInstance().compare(now, start) == 0, //
-					"last snapshot started [%s], it should have happen today", start);
-
-			Check.isTrue(difference < 1000 * 60 * 60, //
-					"snapshot took [%s], it should take less than one hour", difference);
-
-			return ok(message);
-
-		} catch (Throwable t) {
-			return message == null //
-					? error(t) //
-					: error(message, t);
-		}
-	}
-
-	public static void main(String[] args) throws InterruptedException {
+	public static void main(String[] args) {
 		Snapshot snapshot = new Snapshot();
+		snapshot.addToDescription("snapshot");
 		snapshot.run();
-		Thread.sleep(1000 * 10);
-		snapshot.check();
 	}
 }

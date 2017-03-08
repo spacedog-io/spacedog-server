@@ -54,7 +54,7 @@ public class SnapshotResource extends Resource {
 	@Get("/")
 	public Payload getSnapshotAll() {
 
-		SpaceContext.checkAdminCredentials();
+		checkSnapshotAllOrAdmin();
 		List<SpaceSnapshot> snapshots = getAllPlatformSnapshotsFromLatestToOldest();
 
 		JsonBuilder<ObjectNode> payload = JsonPayload.builder()//
@@ -71,7 +71,7 @@ public class SnapshotResource extends Resource {
 	@Get("/latest/")
 	public Payload getSnapshotLatest() {
 
-		SpaceContext.checkAdminCredentials();
+		checkSnapshotAllOrAdmin();
 		List<SpaceSnapshot> snapshots = getAllPlatformSnapshotsFromLatestToOldest();
 		return snapshots.isEmpty() ? JsonPayload.error(404)//
 				: JsonPayload.json(snapshots.get(0).toJson());
@@ -81,7 +81,7 @@ public class SnapshotResource extends Resource {
 	@Get("/:id/")
 	public Payload getSnapshotById(String snapshotId) {
 
-		SpaceContext.checkAdminCredentials();
+		checkSnapshotAllOrAdmin();
 		SpaceSnapshot snapshot = doGetSnapshot(snapshotId);
 		return JsonPayload.json(snapshot.toJson());
 	}
@@ -90,9 +90,7 @@ public class SnapshotResource extends Resource {
 	@Post("/")
 	public Payload postSnapshot(Context context) {
 
-		Credentials credentials = SpaceContext.getCredentials();
-		if (!isAuthorized(credentials))
-			throw Exceptions.insufficientCredentials(credentials);
+		checkSnapshotAllOrSuperdog();
 
 		String snapshotId = computeSnapshotName(PLATFORM_SNAPSHOT_PREFIX);
 		String repoId = checkCurrentRepository();
@@ -152,10 +150,27 @@ public class SnapshotResource extends Resource {
 	// implementation
 	//
 
-	private boolean isAuthorized(Credentials credentials) {
-		return credentials.isSuperDog() //
-				|| (credentials.isTargetingRootApi() //
-						&& credentials.roles().contains(SNAPSHOT_ALL));
+	private void checkSnapshotAllOrAdmin() {
+		Credentials credentials = SpaceContext.getCredentials();
+
+		if (credentials.isAtLeastAdmin() || isSnapshotAll(credentials))
+			return;
+
+		throw Exceptions.insufficientCredentials(credentials);
+	}
+
+	private void checkSnapshotAllOrSuperdog() {
+		Credentials credentials = SpaceContext.getCredentials();
+
+		if (credentials.isSuperDog() || isSnapshotAll(credentials))
+			return;
+
+		throw Exceptions.insufficientCredentials(credentials);
+	}
+
+	private boolean isSnapshotAll(Credentials credentials) {
+		return credentials.isTargetingRootApi() //
+				&& credentials.roles().contains(SNAPSHOT_ALL);
 	}
 
 	private String computeSnapshotName(String prefix) {

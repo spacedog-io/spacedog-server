@@ -31,10 +31,10 @@ public class SnapshotResourceTest extends SpaceTest {
 
 		// superdog creates snapshotall user in root backend
 		SpaceDog superdog = superdog();
-		SpaceDog snapshotUser = getOrSignUp(superdog, //
-				"snapshot-user", "hi snapshot-user", "platform@spacedog.io");
-		superdog.credentials().setRole(snapshotUser.id(), SnapshotResource.SNAPSHOT_ALL);
-		snapshotUser.login("hi snapshot-user");
+		SpaceDog snapshotAll = getOrSignUp(superdog, //
+				"snapshotAll", "hi snapshotAll", "platform@spacedog.io");
+		superdog.credentials().setRole(snapshotAll.id(), SnapshotResource.SNAPSHOT_ALL);
+		snapshotAll.login("hi snapshotAll");
 
 		// creates backend and credentials
 		aaaa.signUpBackend();
@@ -109,7 +109,7 @@ public class SnapshotResourceTest extends SpaceTest {
 		// returns 201 since wait for completion true (202 otherwise)
 		// Authorized since snapshotUser is a root backend user
 		// and has the snapshotall role
-		response = snapshotUser.post("/1/snapshot")//
+		response = snapshotAll.post("/1/snapshot")//
 				.queryParam("waitForCompletion", "true")//
 				.go(201)//
 				.assertEquals(repository, "snapshot.repository")//
@@ -119,7 +119,8 @@ public class SnapshotResourceTest extends SpaceTest {
 		ObjectNode thirdSnap = (ObjectNode) response.get("snapshot");
 		String thirdSnapId = response.getString("id");
 
-		superdog.get("/1/snapshot").go(200)//
+		// snapshotAll can get snapshot info
+		snapshotAll.get("/1/snapshot").go(200)//
 				.assertEquals(thirdSnap, "results.0")//
 				.assertEquals(secondSnap, "results.1")//
 				.assertEquals(firstSnap, "results.2");
