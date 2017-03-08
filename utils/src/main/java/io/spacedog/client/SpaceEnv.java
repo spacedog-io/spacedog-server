@@ -56,6 +56,10 @@ public class SpaceEnv {
 	// Generic public methods
 	//
 
+	public void set(String propertyName, String propertyValue) {
+		properties.setProperty(propertyName, propertyValue);
+	}
+
 	public String get(String propertyName, String defaultValue) {
 		String value = doGet(propertyName);
 		return value == null ? defaultValue : value;
