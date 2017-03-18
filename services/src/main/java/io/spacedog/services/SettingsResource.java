@@ -10,6 +10,8 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
 
@@ -96,27 +98,20 @@ public class SettingsResource extends Resource {
 	@Get("/:id/")
 	public Payload get(String id) {
 
-		Credentials credentials = SpaceContext.getCredentials();
-		if (!credentials.isAtLeastSuperAdmin())
-			credentials.checkRoles(getSettingsAcl(id).read());
-
+		checkIfAuthorizedToRead(id);
 		String settingsAsString = null;
 
-		if (registeredSettingsClasses.containsKey(id)) {
+		Class<? extends Settings> settingsClass = registeredSettingsClasses.get(id);
+		if (settingsClass == null)
+			settingsAsString = load(id);
+		else
 			try {
-				Class<? extends Settings> settingsClass = registeredSettingsClasses.get(id);
-				if (NonDirectlyReadableSettings.class.isAssignableFrom(settingsClass))
-					throw Exceptions.illegalArgument(//
-							"[%s] settings is not directly readable", id);
-
 				Settings settings = load(settingsClass);
 				settingsAsString = Json.mapper().writeValueAsString(settings);
 
 			} catch (JsonProcessingException e) {
 				throw Exceptions.runtime(e, "invalid [%s] settings");
 			}
-		} else
-			settingsAsString = load(id);
 
 		return JsonPayload.json(settingsAsString, HttpStatus.OK);
 	}
@@ -125,26 +120,20 @@ public class SettingsResource extends Resource {
 	@Put("/:id/")
 	public Payload put(String id, String body) {
 
-		Credentials credentials = SpaceContext.getCredentials();
-		if (!credentials.isAtLeastSuperAdmin())
-			credentials.checkRoles(getSettingsAcl(id).update());
-
+		checkIfAuthorizedToUpdate(id);
 		IndexResponse response = null;
 
-		if (registeredSettingsClasses.containsKey(id)) {
+		Class<? extends Settings> settingsClass = registeredSettingsClasses.get(id);
+		if (settingsClass == null)
+			response = save(id, body);
+		else
 			try {
-				Class<? extends Settings> settingsClass = registeredSettingsClasses.get(id);
-				if (NonDirectlyUpdatableSettings.class.isAssignableFrom(settingsClass))
-					throw Exceptions.illegalArgument(//
-							"[%s] settings is not directly updatable", id);
 				Settings settings = Json.mapper().readValue(body, settingsClass);
 				response = save(settings);
 
 			} catch (IOException e) {
 				throw Exceptions.illegalArgument(e, "invalid [%s] settings", id);
 			}
-		} else
-			response = save(id, body);
 
 		return JsonPayload.saved(response.isCreated(), SpaceContext.backendId(), "/1", //
 				response.getType(), response.getId(), response.getVersion());
@@ -154,13 +143,71 @@ public class SettingsResource extends Resource {
 	@Delete("/:id/")
 	public Payload delete(String id) {
 
-		Credentials credentials = SpaceContext.getCredentials();
-		if (!credentials.isAtLeastSuperAdmin())
-			credentials.checkRoles(getSettingsAcl(id).update());
-
+		Credentials credentials = checkIfAuthorizedToUpdate(id);
 		ElasticClient elastic = Start.get().getElasticClient();
 		elastic.delete(credentials.backendId(), TYPE, id, false, true);
 		return JsonPayload.success();
+	}
+
+	@Get("/:id/:field")
+	@Get("/:id/:field/")
+	public Payload get(String id, String field) {
+
+		checkIfAuthorizedToRead(id);
+
+		Class<? extends Settings> settingsClass = registeredSettingsClasses.get(id);
+
+		ObjectNode settings = settingsClass == null ? Json.readObject(load(id)) //
+				: Json.mapper().valueToTree(load(settingsClass));
+
+		JsonNode value = settings.get(field);
+		if (value == null)
+			value = NullNode.getInstance();
+
+		return JsonPayload.json(value, HttpStatus.OK);
+	}
+
+	@Put("/:id/:field")
+	@Put("/:id/:field/")
+	public Payload put(String id, String field, String body) {
+
+		checkIfAuthorizedToUpdate(id);
+		boolean created = false;
+		ObjectNode settings = null;
+
+		try {
+			Class<? extends Settings> settingsClass = registeredSettingsClasses.get(id);
+			settings = settingsClass == null ? Json.readObject(load(id)) //
+					: Json.mapper().valueToTree(load(settingsClass));
+
+		} catch (NotFoundException e) {
+			settings = Json.object();
+			created = true;
+		}
+
+		settings.set(field, Json.readNode(body));
+		IndexResponse response = save(id, settings.toString());
+
+		return JsonPayload.saved(created, SpaceContext.backendId(), "/1", //
+				response.getType(), response.getId(), response.getVersion());
+	}
+
+	@Delete("/:id/:field")
+	@Delete("/:id/:field/")
+	public Payload delete(String id, String field) {
+
+		checkIfAuthorizedToUpdate(id);
+
+		Class<? extends Settings> settingsClass = registeredSettingsClasses.get(id);
+
+		ObjectNode settings = settingsClass == null ? Json.readObject(load(id)) //
+				: Json.mapper().valueToTree(load(settingsClass));
+
+		settings.remove(field);
+		IndexResponse response = save(id, settings.toString());
+
+		return JsonPayload.saved(false, SpaceContext.backendId(), "/1", //
+				response.getType(), response.getId(), response.getVersion());
 	}
 
 	//
@@ -215,6 +262,34 @@ public class SettingsResource extends Resource {
 	//
 	// implementation
 	//
+
+	private Credentials checkIfAuthorizedToRead(String id) {
+		Credentials credentials = SpaceContext.getCredentials();
+		if (!credentials.isAtLeastSuperAdmin())
+			credentials.checkRoles(getSettingsAcl(id).read());
+
+		Class<? extends Settings> settingsClass = registeredSettingsClasses.get(id);
+		if (settingsClass != null)
+			if (NonDirectlyReadableSettings.class.isAssignableFrom(settingsClass))
+				throw Exceptions.illegalArgument(//
+						"[%s] settings is not directly readable", id);
+
+		return credentials;
+	}
+
+	private Credentials checkIfAuthorizedToUpdate(String id) {
+		Credentials credentials = SpaceContext.getCredentials();
+		if (!credentials.isAtLeastSuperAdmin())
+			credentials.checkRoles(getSettingsAcl(id).update());
+
+		Class<? extends Settings> settingsClass = registeredSettingsClasses.get(id);
+		if (settingsClass != null)
+			if (NonDirectlyUpdatableSettings.class.isAssignableFrom(settingsClass))
+				throw Exceptions.illegalArgument(//
+						"[%s] settings is not directly updatable", id);
+
+		return credentials;
+	}
 
 	private SettingsAcl getSettingsAcl(String id) {
 		try {
