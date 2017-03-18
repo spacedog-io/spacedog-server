@@ -12,7 +12,6 @@ import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Settings;
 import io.spacedog.utils.SpaceHeaders;
 import net.codestory.http.Context;
 
@@ -31,7 +30,7 @@ public class SpaceContext {
 	private Credentials credentials;
 	private boolean authorizationChecked;
 	private boolean isForced;
-	private Map<String, Settings> settings;
+	private Map<String, String> settings;
 	private boolean www;
 
 	private SpaceContext(String uri, Context context) {
@@ -122,22 +121,21 @@ public class SpaceContext {
 			throw Exceptions.runtime("overriding non null context is illegal");
 	}
 
-	@SuppressWarnings("unchecked")
-	public static <K extends Settings> K getSettings(Class<K> settingsClass) {
+	public static String getSettings(String id) {
 
 		SpaceContext context = get();
 		if (context.settings == null)
 			return null;
 
-		return (K) context.settings.get(Settings.id(settingsClass));
+		return context.settings.get(id);
 	}
 
-	public static void setSettings(Settings settings) {
+	public static void setSettings(String id, String settings) {
 		SpaceContext context = get();
 		if (context.settings == null)
 			context.settings = Maps.newHashMap();
 
-		context.settings.put(settings.id(), settings);
+		context.settings.put(id, settings);
 	}
 
 	//

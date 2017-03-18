@@ -215,38 +215,32 @@ public class SettingsResource extends Resource {
 	//
 
 	public <K extends Settings> K load(Class<K> settingsClass) {
-		K settings = SpaceContext.getSettings(settingsClass);
-		if (settings == null) {
-			String id = Settings.id(settingsClass);
+		String id = Settings.id(settingsClass);
 
+		try {
+			String json = load(id);
+			return Json.mapper().readValue(json, settingsClass);
+
+		} catch (NotFoundException nfe) {
+			// settings not set yet, return a default instance
 			try {
-				String json = load(id);
-				settings = Json.mapper().readValue(json, settingsClass);
-				SpaceContext.setSettings(settings);
+				return settingsClass.newInstance();
 
-			} catch (NotFoundException nfe) {
-				// settings not set yet, return a default instance
-				try {
-					settings = settingsClass.newInstance();
-
-				} catch (InstantiationException | IllegalAccessException e) {
-					throw Exceptions.runtime(e, "error instanciating [%s] settings class", //
-							settingsClass.getSimpleName());
-				}
-			} catch (IOException e) {
-				throw Exceptions.runtime(e, "error mapping [%s] settings to [%s] class", //
-						id, settingsClass.getSimpleName());
+			} catch (InstantiationException | IllegalAccessException e) {
+				throw Exceptions.runtime(e, "error instanciating [%s] settings class", //
+						settingsClass.getSimpleName());
 			}
+		} catch (IOException e) {
+			throw Exceptions.runtime(e, "error mapping [%s] settings to [%s] class", //
+					id, settingsClass.getSimpleName());
 		}
-		return settings;
 	}
 
 	public IndexResponse save(Settings settings) {
 		try {
 			String settingsAsString = Json.mapper().writeValueAsString(settings);
-			IndexResponse response = save(settings.id(), settingsAsString);
-			SpaceContext.setSettings(settings);
-			return response;
+			return save(settings.id(), settingsAsString);
+
 		} catch (JsonProcessingException e) {
 			throw Exceptions.runtime(e);
 		}
@@ -302,24 +296,38 @@ public class SettingsResource extends Resource {
 	}
 
 	private String load(String id) {
-		String backendId = SpaceContext.backendId();
-		ElasticClient elastic = Start.get().getElasticClient();
+		String settings = SpaceContext.getSettings(id);
 
-		if (elastic.existsIndex(backendId, TYPE)) {
-			GetResponse response = elastic.get(backendId, TYPE, id);
-			if (response.isExists())
-				return response.getSourceAsString();
+		if (settings == null) {
+			String backendId = SpaceContext.backendId();
+			ElasticClient elastic = Start.get().getElasticClient();
+
+			if (elastic.existsIndex(backendId, TYPE)) {
+				GetResponse response = elastic.get(backendId, TYPE, id);
+
+				if (response.isExists()) {
+					settings = response.getSourceAsString();
+					SpaceContext.setSettings(id, settings);
+				}
+			}
+
+			if (settings == null)
+				throw Exceptions.notFound(backendId, TYPE, id);
 		}
-		throw Exceptions.notFound(backendId, TYPE, id);
+
+		return settings;
 	}
 
 	private IndexResponse save(String id, String body) {
 		// Make sure index is created before to save anything
 		makeSureIndexIsCreated();
 
-		return Start.get().getElasticClient()//
+		IndexResponse response = Start.get().getElasticClient()//
 				.prepareIndex(SpaceContext.backendId(), TYPE, id)//
 				.setSource(body).get();
+
+		SpaceContext.setSettings(id, body);
+		return response;
 	}
 
 	private void makeSureIndexIsCreated() {
