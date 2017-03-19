@@ -59,7 +59,7 @@ public class BackendResourceTestOften extends SpaceTest {
 		// invalid admin password login fails
 		SpaceRequest.get("/1/login").basicAuth("test", "test", "hi XXX").go(401);
 
-		// data access with without credentials succeeds
+		// data access without credentials succeeds
 		SpaceRequest.get("/1/data").refresh().backend(test).go(200)//
 				.assertSizeEquals(0, "results");
 
