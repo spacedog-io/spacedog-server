@@ -8,8 +8,8 @@ import io.spacedog.utils.Job;
 
 public class Snapshot extends Job {
 
-	public String run(String input, Context context) {
-		addToDescription(context);
+	public String run(Context context) {
+		addToDescription(context.getFunctionName());
 		return run();
 	}
 

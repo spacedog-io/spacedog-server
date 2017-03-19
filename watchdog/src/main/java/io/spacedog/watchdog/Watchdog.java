@@ -14,8 +14,8 @@ public class Watchdog extends RunListener {
 
 	private Job job = new Job();
 
-	public String run(String input, Context context) {
-		job.addToDescription(context);
+	public String run(Context context) {
+		job.addToDescription(context.getFunctionName());
 		return run();
 	}
 
