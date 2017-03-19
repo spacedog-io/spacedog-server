@@ -16,9 +16,7 @@ import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Schema;
 import io.spacedog.utils.Schema.SchemaAcl;
 import io.spacedog.utils.SchemaSettings;
-import io.spacedog.watchdog.SpaceSuite.TestOften;
 
-@TestOften
 public class DataAccessControlTestOften extends SpaceTest {
 
 	@Test

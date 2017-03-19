@@ -22,9 +22,7 @@ import io.spacedog.client.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Schema;
-import io.spacedog.watchdog.SpaceSuite.TestOften;
 
-@TestOften
 public class DataResource2TestOften extends SpaceTest {
 
 	@Test
@@ -268,7 +266,7 @@ public class DataResource2TestOften extends SpaceTest {
 		// creates message2 schema with code property as id
 
 		test.schema().set(Schema.builder("message2").id("code")//
-		.string("code").string("text").build());
+				.string("code").string("text").build());
 
 		// creates a message2 object with code = 2
 

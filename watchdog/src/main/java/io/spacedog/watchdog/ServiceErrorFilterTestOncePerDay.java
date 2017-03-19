@@ -4,9 +4,7 @@ import org.junit.Test;
 
 import io.spacedog.client.SpaceRequest;
 import io.spacedog.client.SpaceTest;
-import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
-@TestOncePerDay
 public class ServiceErrorFilterTestOncePerDay extends SpaceTest {
 
 	@Test

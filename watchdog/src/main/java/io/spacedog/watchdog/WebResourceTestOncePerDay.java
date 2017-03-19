@@ -7,9 +7,7 @@ import io.spacedog.client.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.WebSettings;
-import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
-@TestOncePerDay
 public class WebResourceTestOncePerDay extends SpaceTest {
 
 	private static SpaceDog test;

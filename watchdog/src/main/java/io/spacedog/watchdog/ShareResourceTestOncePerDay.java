@@ -23,9 +23,7 @@ import io.spacedog.utils.DataPermission;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.ShareSettings;
 import io.spacedog.utils.SpaceHeaders;
-import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
-@TestOncePerDay
 public class ShareResourceTestOncePerDay extends SpaceTest {
 
 	private static final String FILE_CONTENT = "This is a test file!";

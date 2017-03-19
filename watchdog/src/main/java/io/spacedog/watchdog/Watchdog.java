@@ -26,12 +26,28 @@ public class Watchdog extends RunListener {
 
 			JUnitCore junit = new JUnitCore();
 			junit.addListener(this);
-			junit.run(TestOftenSuite.class);
+
+			junit.run(BackendResourceTestOften.class);
+			junit.run(CredentialsResourceTestOften.class);
+			junit.run(CrossOriginFilterTestOften.class);
+			junit.run(DataAccessControlTestOften.class);
+			junit.run(DataResourceTestOften.class);
+			junit.run(DataResource2TestOften.class);
+			junit.run(LogResourceTestOften.class);
+			junit.run(PushResourceTestOften.class);
+			junit.run(SchemaResourceTestOften.class);
+			junit.run(SearchResourceTestOften.class);
+			junit.run(ServiceErrorFilterTestOften.class);
 
 			int hourOfDay = DateTime.now().hourOfDay().get();
 			if (4 <= hourOfDay && hourOfDay < 5) {
 
-				junit.run(TestOncePerDaySuite.class);
+				junit.run(BackendResourceTestOncePerDay.class);
+				junit.run(ServiceErrorFilterTestOncePerDay.class);
+				junit.run(FileResourceTestOncePerDay.class);
+				junit.run(ShareResourceTestOncePerDay.class);
+				junit.run(WebResourceTestOncePerDay.class);
+
 				job.ok();
 			}
 

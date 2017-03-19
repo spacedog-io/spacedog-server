@@ -12,9 +12,7 @@ import io.spacedog.client.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Schema;
-import io.spacedog.watchdog.SpaceSuite.TestOften;
 
-@TestOften
 public class SearchResourceTestOften extends SpaceTest {
 
 	@Test

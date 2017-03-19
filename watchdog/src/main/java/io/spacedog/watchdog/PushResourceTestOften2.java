@@ -15,7 +15,6 @@ import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Schema;
 import io.spacedog.utils.Schema.SchemaAcl;
 
-//@TestOften
 public class PushResourceTestOften2 extends SpaceTest {
 
 	private static final String PUSHED_TO = "pushedTo";

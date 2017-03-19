@@ -7,9 +7,7 @@ import org.junit.Test;
 
 import io.spacedog.client.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.watchdog.SpaceSuite.TestOncePerDay;
 
-@TestOncePerDay
 public class BackendResourceTestOncePerDay extends SpaceTest {
 
 	@Test

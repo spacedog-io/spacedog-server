@@ -13,9 +13,7 @@ import io.spacedog.client.SpaceResponse;
 import io.spacedog.client.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json;
-import io.spacedog.watchdog.SpaceSuite.TestOften;
 
-@TestOften
 public class DataResourceTestOften extends SpaceTest {
 
 	@Test
