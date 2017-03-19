@@ -47,8 +47,6 @@ public class EdfResourceTest extends SpaceTest {
 						"https://noefy5jt.noe.edf.fr:5641/ws/iOAuthApprove/do")//
 				.basicAuth(user01.username(), user01.username())//
 				.header(SpaceHeaders.ACCEPT, "application/json")//
-				.header(SpaceHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")//
-				.header(SpaceHeaders.CONNECTION, "Keep-Alive")//
 				.header(SpaceHeaders.ACCEPT_ENCODING, "gzip")//
 				.header(SpaceHeaders.USER_AGENT, "spacedog-server")//
 				.formField("approved", "true")//
