@@ -1,24 +1,22 @@
 #!/bin/bash
 #
-# Use lambda-update-code <function-name> <function-version>
+# Use deploy-job <function-name> <function-version>
 # to upload a new code package and update the function latest.
-#
-# Used for caremen billing lambda functions.
 #
 
 if [ -z "$1" ]
   then
     echo "Error: no function name supplied"
-    echo "Usage: lambda-update-code <function-name> <code-version>"
-    echo "Example: lambda-update-code watchdog 0.18"
+    echo "Usage: deploy-job <function-name> <code-version>"
+    echo "Example: deploy-job watchdog 1.0.3"
     exit
 fi
 
 if [ -z "$2" ]
   then
     echo "Error: no code version supplied"
-    echo "Usage: lambda-update-code <function-name> <code-version>"
-    echo "Example: lambda-update-code watchdog 0.18"
+    echo "Usage: deploy-job <function-name> <code-version>"
+    echo "Example: deploy-job watchdog 1.0.3"
     exit
 fi
 
