@@ -44,7 +44,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// fails since password too small
 		SpaceRequest.post("/1/credentials/").backend(test)//
-				.body("username", "titi", "password", "hi").go(400);
+				.body("username", "titi", "password", "hi", "email", "titi@dog.com").go(400);
 
 		// vince signs up
 		String vinceId = SpaceRequest.post("/1/credentials").backend(test)
