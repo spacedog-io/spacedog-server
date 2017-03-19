@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>io.spacedog</groupId>
 		<artifactId>spacedog-parent</artifactId>
-		<version>0.30.4-SNAPSHOT</version>
+		<version>0.30.4</version>
 	</parent>
 
 	<artifactId>spacedog-watchdog</artifactId>
@@ -23,30 +23,8 @@
 				</excludes>
 			</resource>
 		</resources>
-
-		<testResources>
-			<testResource>
-				<directory>${project.basedir}/src/test/java</directory>
-				<excludes>
-					<exclude>**/*.java</exclude>
-				</excludes>
-			</testResource>
-		</testResources>
-
+		
 		<plugins>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.19.1</version>
-				<configuration>
-					<includes>
-						<include>**/*Test.java</include>
-						<include>**/*TestOften.java</include>
-						<include>**/*TestOncePerDay.java</include>
-					</includes>
-				</configuration>
-			</plugin>
 
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
