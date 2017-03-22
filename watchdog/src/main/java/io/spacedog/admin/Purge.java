@@ -18,11 +18,14 @@ public class Purge extends Job {
 	public String run() {
 
 		try {
+			SpaceEnv env = SpaceEnv.defaultEnv();
+			addToDescription(env.target().host());
+
 			// set high timeout to wait for purge response from server
 			// since delete of thousands of logs might take long
-			SpaceRequest.env().httpTimeoutMillis(120000);
-			String password = SpaceEnv.defaultEnv().get("spacedog_jobs_purgeall_password");
-			int keepInDays = SpaceEnv.defaultEnv().get("keep_in_days", 7);
+			env.httpTimeoutMillis(120000);
+			String password = env.get("spacedog_jobs_purgeall_password");
+			int keepInDays = env.get("keep_in_days", 7);
 			String before = DateTime.now().minusDays(keepInDays).toString();
 
 			SpaceRequest.delete("/1/log")//
@@ -38,6 +41,8 @@ public class Purge extends Job {
 	}
 
 	public static void main(String[] args) {
-		new Purge().run();
+		Purge purge = new Purge();
+		purge.addToDescription("purgelogs");
+		purge.run();
 	}
 }

@@ -14,6 +14,10 @@ public class Watchdog extends RunListener {
 
 	private Job job = new Job();
 
+	public void addToDescription(String string) {
+		job.addToDescription(string);
+	}
+
 	public String run(Context context) {
 		job.addToDescription(context.getFunctionName());
 		return run();
@@ -51,7 +55,7 @@ public class Watchdog extends RunListener {
 				job.ok();
 			}
 
-			return "OK";
+			return Job.OK;
 
 		} catch (Throwable t) {
 			return job.error(t);
@@ -66,6 +70,8 @@ public class Watchdog extends RunListener {
 	}
 
 	public static void main(String[] args) {
-		new Watchdog().run();
+		Watchdog watchdog = new Watchdog();
+		watchdog.addToDescription("watchdog");
+		watchdog.run();
 	}
 }
