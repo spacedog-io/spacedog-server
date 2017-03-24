@@ -10,6 +10,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.model.BackendSettings;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
@@ -169,5 +170,6 @@ public class BackendResource extends Resource {
 	}
 
 	private BackendResource() {
+		SettingsResource.get().registerSettingsClass(BackendSettings.class);
 	}
 }
