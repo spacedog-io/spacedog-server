@@ -5,7 +5,6 @@ package io.spacedog.services;
 
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.LongNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -176,14 +175,14 @@ public class SettingsResourceTest extends SpaceTest {
 		vince.put("/1/settings/db/type").go(403);
 
 		// test creates db settings with version field
-		test.put("/1/settings/db/type").body(TextNode.valueOf("mysql")).go(201);
+		test.settings().save("db", "type", TextNode.valueOf("mysql"));
 
 		// test sets db settings version
-		test.put("/1/settings/db/version").body(LongNode.valueOf(12)).go(200);
+		test.settings().save("db", "version", LongNode.valueOf(12));
 
 		// test sets db settings credentials
-		test.put("/1/settings/db/credentials")//
-				.body("username", "tiger", "password", "miaou").go(200);
+		test.settings().save("db", "credentials", //
+				Json.object("username", "tiger", "password", "miaou"));
 
 		// test checks settings are correct
 		ObjectNode settings = test.settings().get("db");
@@ -195,22 +194,22 @@ public class SettingsResourceTest extends SpaceTest {
 		vince.get("/1/settings/db/type").go(403);
 
 		// test gets each field
-		test.get("/1/settings/db/type").go(200).assertEquals(TextNode.valueOf("mysql"));
-		test.get("/1/settings/db/version").go(200).assertEquals(IntNode.valueOf(12));
-		test.get("/1/settings/db/credentials").go(200).assertEquals(//
-				Json.object("username", "tiger", "password", "miaou"));
+		assertEquals("mysql", test.settings().get("db", "type").asText());
+		assertEquals(12, test.settings().get("db", "version").asInt());
+		assertEquals(Json.object("username", "tiger", "password", "miaou"), //
+				test.settings().get("db", "credentials"));
 
 		// test gets an unknown field of db settings
-		test.get("/1/settings/db/XXX").go(200).assertEquals(NullNode.getInstance());
+		assertEquals(NullNode.getInstance(), test.settings().get("db", "XXX"));
 
 		// test gets an unknown field of an unknown settings
 		test.get("/1/settings/XXX/YYY").go(404);
 
 		// test updates each field
-		test.put("/1/settings/db/type").body(TextNode.valueOf("postgres")).go(200);
-		test.put("/1/settings/db/version").body(IntNode.valueOf(13)).go(200);
-		test.put("/1/settings/db/credentials")//
-				.body("username", "lion", "password", "arf").go(200);
+		test.settings().save("db", "type", TextNode.valueOf("postgres"));
+		test.settings().save("db", "version", LongNode.valueOf(13));
+		test.settings().save("db", "credentials", //
+				Json.object("username", "lion", "password", "arf"));
 
 		// test checks settings are correct
 		settings = test.settings().get("db");
@@ -222,10 +221,10 @@ public class SettingsResourceTest extends SpaceTest {
 		vince.delete("/1/settings/db/type").go(403);
 
 		// test deletes version
-		test.delete("/1/settings/db/version").go(200);
+		test.settings().delete("db", "version");
 
 		// test nulls credentials
-		test.put("/1/settings/db/credentials").body(NullNode.getInstance()).go(200);
+		test.settings().save("db", "credentials", NullNode.getInstance());
 
 		// test checks settings are correct
 		settings = test.settings().get("db");
