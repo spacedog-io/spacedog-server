@@ -3,11 +3,10 @@
  */
 package io.spacedog.services;
 
+import org.junit.Assert;
 import org.junit.Test;
 
-import io.spacedog.rest.SpaceTest;
-
-public class ResourceTest extends SpaceTest {
+public class ResourceTest extends Assert {
 
 	@Test
 	public void shouldSucceedToSplitReferences() {

@@ -1,13 +1,12 @@
 package io.spacedog.services;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import io.spacedog.rest.SpaceTest;
-
-public class PebbleTemplatingTest extends SpaceTest {
+public class PebbleTemplatingTest extends Assert {
 
 	@Test
 	public void checkValueSimpleAndValid() {
