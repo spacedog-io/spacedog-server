@@ -27,6 +27,7 @@ import com.google.common.collect.Maps;
 import io.spacedog.core.Json8;
 import io.spacedog.model.CredentialsSettings;
 import io.spacedog.model.MailTemplate;
+import io.spacedog.model.Schema;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
@@ -34,8 +35,8 @@ import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.Credentials.Session;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.Passwords;
 import io.spacedog.utils.Roles;
-import io.spacedog.utils.Schema;
 import io.spacedog.utils.SchemaTranslator;
 import io.spacedog.utils.SchemaValidator;
 import io.spacedog.utils.SpaceHeaders;
@@ -257,7 +258,8 @@ public class CredentialsResource extends Resource {
 		if (!Strings.isNullOrEmpty(password)) {
 			// check for all not just users
 			requester.checkPasswordHasBeenChallenged();
-			credentials.changePassword(password, settings.passwordRegex());
+			Passwords.check(password, settings.passwordRegex());
+			credentials.changePassword(password);
 		}
 
 		JsonNode enabled = data.get(FIELD_ENABLED);
@@ -349,7 +351,8 @@ public class CredentialsResource extends Resource {
 
 		Credentials credentials = getById(id, true).get();
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
-		credentials.changePassword(password, passwordResetCode, settings.passwordRegex());
+		Passwords.check(password, settings.passwordRegex());
+		credentials.changePassword(password, passwordResetCode);
 		credentials = update(credentials);
 
 		return saved(credentials, false);
@@ -375,7 +378,8 @@ public class CredentialsResource extends Resource {
 				? Json8.checkString(Json8.checkNotNull(Json8.readNode(body)))//
 				: context.get(FIELD_PASSWORD);
 
-		credentials.changePassword(password, settings.passwordRegex());
+		Passwords.check(password, settings.passwordRegex());
+		credentials.changePassword(password);
 
 		credentials = update(credentials);
 		return saved(credentials, false);
@@ -492,8 +496,10 @@ public class CredentialsResource extends Resource {
 
 		if (Json8.isNull(password))
 			credentials.newPasswordResetCode();
-		else
-			credentials.changePassword(password.asText(), settings.passwordRegex());
+		else {
+			Passwords.check(password.asText(), settings.passwordRegex());
+			credentials.changePassword(password.asText());
+		}
 
 		return create(credentials);
 	}
@@ -691,10 +697,11 @@ public class CredentialsResource extends Resource {
 	}
 
 	Credentials createSuperdog(String username, String password, String email) {
-		Usernames.checkValid(username, CredentialsSettings.USERNAME_DEFAULT_REGEX);
+		Usernames.checkValid(username);
 		Credentials credentials = new Credentials(Backends.rootApi(), username, Level.SUPERDOG);
 		credentials.email(email);
-		credentials.changePassword(password, CredentialsSettings.PASSWORD_DEFAULT_REGEX);
+		Passwords.check(password);
+		credentials.changePassword(password);
 		return create(credentials);
 	}
 
