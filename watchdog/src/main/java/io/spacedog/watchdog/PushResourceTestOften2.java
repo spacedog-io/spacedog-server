@@ -7,13 +7,13 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.model.DataPermission;
+import io.spacedog.model.Schema;
+import io.spacedog.model.Schema.SchemaAcl;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json7;
 import io.spacedog.utils.JsonBuilder;
-import io.spacedog.utils.Schema;
-import io.spacedog.utils.Schema.SchemaAcl;
 
 public class PushResourceTestOften2 extends SpaceTest {
 

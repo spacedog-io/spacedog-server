@@ -6,12 +6,12 @@ package io.spacedog.examples;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.model.Schema;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json7;
 import io.spacedog.utils.JsonBuilder;
-import io.spacedog.utils.Schema;
 
 public class ImportMappyPlaces extends SpaceTest {
 

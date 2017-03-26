@@ -14,11 +14,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
 import io.spacedog.model.GeoPoint;
+import io.spacedog.model.Schema;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json7;
-import io.spacedog.utils.Schema;
 
 public class QueryTest extends SpaceTest {
 

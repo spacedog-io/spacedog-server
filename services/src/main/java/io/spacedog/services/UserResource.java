@@ -6,10 +6,10 @@ package io.spacedog.services;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.core.Json8;
+import io.spacedog.model.Schema;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.JsonBuilder;
-import io.spacedog.utils.Schema;
 import io.spacedog.utils.SpaceHeaders;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;

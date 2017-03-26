@@ -34,11 +34,11 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.collect.Iterators;
 
 import io.spacedog.core.Json8;
+import io.spacedog.model.Schema;
 import io.spacedog.services.ElasticClient.Index;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.JsonBuilder;
-import io.spacedog.utils.Schema;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;

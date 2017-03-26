@@ -13,10 +13,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.core.Json8;
 import io.spacedog.core.Json8.JsonMerger;
+import io.spacedog.model.Schema;
+import io.spacedog.model.SchemaSettings;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Schema;
-import io.spacedog.utils.SchemaSettings;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;

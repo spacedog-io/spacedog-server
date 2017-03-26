@@ -50,9 +50,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
 import io.spacedog.core.Json8;
+import io.spacedog.model.Schema;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Schema;
 import io.spacedog.utils.SpaceParams;
 import io.spacedog.utils.Utils;
 

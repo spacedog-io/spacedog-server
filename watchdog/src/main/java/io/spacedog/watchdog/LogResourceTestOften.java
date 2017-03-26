@@ -2,11 +2,11 @@ package io.spacedog.watchdog;
 
 import org.junit.Test;
 
+import io.spacedog.model.Schema;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.DataObject;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Schema;
 
 public class LogResourceTestOften extends SpaceTest {
 

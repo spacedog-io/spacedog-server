@@ -9,12 +9,12 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
+import io.spacedog.model.Schema;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceResponse;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json7;
-import io.spacedog.utils.Schema;
 
 public class BatchResourceTest extends SpaceTest {
 

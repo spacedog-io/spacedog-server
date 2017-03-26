@@ -4,9 +4,9 @@
 package io.spacedog.services;
 
 import io.spacedog.model.DataPermission;
+import io.spacedog.model.SchemaSettings;
+import io.spacedog.model.Schema.SchemaAcl;
 import io.spacedog.utils.Credentials;
-import io.spacedog.utils.Schema.SchemaAcl;
-import io.spacedog.utils.SchemaSettings;
 
 public class DataAccessControl {
 

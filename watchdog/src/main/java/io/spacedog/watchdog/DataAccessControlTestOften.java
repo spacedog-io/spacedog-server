@@ -10,12 +10,12 @@ import org.junit.Test;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import io.spacedog.model.DataPermission;
+import io.spacedog.model.Schema;
+import io.spacedog.model.SchemaSettings;
+import io.spacedog.model.Schema.SchemaAcl;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Schema;
-import io.spacedog.utils.Schema.SchemaAcl;
-import io.spacedog.utils.SchemaSettings;
 
 public class DataAccessControlTestOften extends SpaceTest {
 
