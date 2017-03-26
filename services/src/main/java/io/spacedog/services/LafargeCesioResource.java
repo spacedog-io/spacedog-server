@@ -27,12 +27,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import io.spacedog.core.Json8;
 import io.spacedog.model.DataPermission;
 import io.spacedog.model.MailSettings;
 import io.spacedog.services.MailResource.Message;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
-import io.spacedog.utils.Json;
 import io.spacedog.utils.Schema;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Get;
@@ -80,7 +80,7 @@ public class LafargeCesioResource extends Resource {
 					credentials.backendId(), PLAYER_TYPE, EMAIL, player.email);
 
 			if (hits.totalHits() > 0) {
-				player = Json.mapper().readValue(//
+				player = Json8.mapper().readValue(//
 						hits.getAt(0).getSourceAsString(), Player.class);
 				return wrapResponse(400, "user exists", player.toNodeWithStringCode());
 
@@ -105,7 +105,7 @@ public class LafargeCesioResource extends Resource {
 				player.code = 1000 + random.nextInt(9000);
 
 				DataStore.get().createObject(credentials.backendId(), PLAYER_TYPE, //
-						Optional.of("" + player.id), Json.mapper().valueToTree(player), //
+						Optional.of("" + player.id), Json8.mapper().valueToTree(player), //
 						credentials.name());
 
 				sendActivationCode(credentials, player);
@@ -255,7 +255,7 @@ public class LafargeCesioResource extends Resource {
 				.getHits();
 
 		for (SearchHit searchHit : hits) {
-			Player player = Json.mapper().readValue(//
+			Player player = Json8.mapper().readValue(//
 					searchHit.sourceAsString(), Player.class);
 
 			HighScore highScore = player.highScore();
@@ -292,7 +292,7 @@ public class LafargeCesioResource extends Resource {
 
 	private JsonNode toLeaderboard(List<HighScore> highScores) {
 		highScores.sort(null);
-		ObjectNode results = Json.object();
+		ObjectNode results = Json8.object();
 
 		ArrayNode today = results.putArray("today");
 		ArrayNode week = results.putArray("week");
@@ -318,7 +318,7 @@ public class LafargeCesioResource extends Resource {
 	private void save(Player player) {
 		Credentials credentials = SpaceContext.getCredentials();
 		DataStore.get().patchObject(credentials.backendId(), PLAYER_TYPE, //
-				"" + player.id, 0l, Json.mapper().valueToTree(player), //
+				"" + player.id, 0l, Json8.mapper().valueToTree(player), //
 				credentials.name());
 	}
 
@@ -338,7 +338,7 @@ public class LafargeCesioResource extends Resource {
 				PLAYER_TYPE, EMAIL, email, CODE, code);
 
 		if (hits.totalHits() > 0) {
-			Player player = Json.mapper().readValue(//
+			Player player = Json8.mapper().readValue(//
 					hits.getAt(0).getSourceAsString(), Player.class);
 			player.spaceId = hits.getAt(0).id();
 			return player;
@@ -348,7 +348,7 @@ public class LafargeCesioResource extends Resource {
 	}
 
 	private Payload wrapResponse(int status) {
-		return wrapResponse(status, "", Json.array());
+		return wrapResponse(status, "", Json8.array());
 	}
 
 	private Payload wrapResponse(int status, JsonNode data) {
@@ -356,18 +356,18 @@ public class LafargeCesioResource extends Resource {
 	}
 
 	private Payload wrapResponse(int status, String message) {
-		return wrapResponse(status, message, Json.array());
+		return wrapResponse(status, message, Json8.array());
 	}
 
 	private Payload wrapResponse(int status, String message, JsonNode data) {
 		int success = status < 400 ? 1 : 0;
-		ObjectNode response = Json.object("response", success, "message", message, "data", data);
+		ObjectNode response = Json8.object("response", success, "message", message, "data", data);
 		return JsonPayload.json(response, status);
 	}
 
 	private Payload wrapResponse(Throwable t) {
 		return JsonPayload.json(//
-				Json.object("response", 0, "message", t.getMessage(), "data", Json.array()), //
+				Json8.object("response", 0, "message", t.getMessage(), "data", Json8.array()), //
 				t instanceof CesioException ? 400 : 500);
 	}
 
@@ -415,7 +415,7 @@ public class LafargeCesioResource extends Resource {
 		public DateTime date;
 
 		public ObjectNode toNode() {
-			return Json.object(SCORE, "" + score, LEVEL, "" + level, //
+			return Json8.object(SCORE, "" + score, LEVEL, "" + level, //
 					DATE, date.toString("yyyy-MM-dd HH:mm:ss"));
 		}
 	}
@@ -427,7 +427,7 @@ public class LafargeCesioResource extends Resource {
 		public DateTime date;
 
 		public ObjectNode toNode() {
-			return Json.object("email", email, "country_id", "" + country, "somme", "" + score);
+			return Json8.object("email", email, "country_id", "" + country, "somme", "" + score);
 		}
 
 		@Override
@@ -470,7 +470,7 @@ public class LafargeCesioResource extends Resource {
 		}
 
 		public ObjectNode toScoresNode() {
-			ObjectNode hash = Json.object();
+			ObjectNode hash = Json8.object();
 			for (Score score : scores)
 				hash.set("" + score.level, score.toNode());
 			return hash;
@@ -483,7 +483,7 @@ public class LafargeCesioResource extends Resource {
 		}
 
 		public ObjectNode toNode() {
-			return Json.object(ID, "" + id, EMAIL, email, //
+			return Json8.object(ID, "" + id, EMAIL, email, //
 					COUNTRY, "" + country, CODE, code);
 		}
 	}

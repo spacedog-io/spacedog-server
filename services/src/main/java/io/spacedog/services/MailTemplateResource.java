@@ -6,10 +6,10 @@ package io.spacedog.services;
 import java.util.Map;
 import java.util.Optional;
 
+import io.spacedog.core.Json8;
 import io.spacedog.model.MailSettings;
 import io.spacedog.model.MailTemplate;
 import io.spacedog.services.MailResource.Message;
-import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.payload.Payload;
@@ -30,7 +30,7 @@ public class MailTemplateResource extends Resource {
 		SpaceContext.getCredentials().checkRoles(template.roles);
 
 		Map<String, Object> context = PebbleTemplating.get()//
-				.createContext(template.model, Json.readMap(body));
+				.createContext(template.model, Json8.readMap(body));
 
 		Message message = toMessage(template, context);
 		return MailResource.get().email(message);

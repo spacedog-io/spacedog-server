@@ -27,11 +27,11 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
+import io.spacedog.core.Json8;
 import io.spacedog.model.DataPermission;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
@@ -145,7 +145,7 @@ public class SearchResource extends Resource {
 		String[] aliases = elastic.toAliases(credentials.backendId(), types);
 
 		if (aliases.length == 0)
-			return Json.object("took", 0, "total", 0, "results", Json.array());
+			return Json8.object("took", 0, "total", 0, "results", Json8.array());
 
 		search = elastic.prepareSearch().setIndices(aliases).setTypes(types);
 
@@ -189,7 +189,7 @@ public class SearchResource extends Resource {
 			// fetch-source = false for GET requests
 			// or _source = false for POST requests
 			String source = hit.sourceAsString();
-			ObjectNode object = source == null ? Json.object() : Json.readObject(source);
+			ObjectNode object = source == null ? Json8.object() : Json8.readObject(source);
 
 			ObjectNode meta = object.with("meta");
 			meta.put("id", hit.id()).put("type", hit.type()).put("version", hit.version());
@@ -198,16 +198,16 @@ public class SearchResource extends Resource {
 				meta.put("score", hit.score());
 
 			if (!Utils.isNullOrEmpty(hit.sortValues())) {
-				ArrayNode array = Json.array();
+				ArrayNode array = Json8.array();
 				for (Object value : hit.sortValues())
-					array.add(Json.toValueNode(value));
+					array.add(Json8.toValueNode(value));
 				meta.set("sort", array);
 			}
 
 			objects.add(object);
 
 			if (fetchReferences)
-				references.add(Json.get(object, propertyPath).asText());
+				references.add(Json8.get(object, propertyPath).asText());
 		}
 
 		if (fetchReferences) {
@@ -216,11 +216,11 @@ public class SearchResource extends Resource {
 			for (int i = 0; i < objects.size(); i++) {
 				String reference = references.get(i);
 				if (!Strings.isNullOrEmpty(reference))
-					Json.set(objects.get(i), propertyPath, referencedObjects.get(reference));
+					Json8.set(objects.get(i), propertyPath, referencedObjects.get(reference));
 			}
 		}
 
-		JsonBuilder<ObjectNode> builder = Json.objectBuilder()//
+		JsonBuilder<ObjectNode> builder = Json8.objectBuilder()//
 				.put("took", response.getTookInMillis())//
 				.put("total", response.getHits().getTotalHits())//
 				.array("results");

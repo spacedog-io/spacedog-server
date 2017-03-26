@@ -2,7 +2,7 @@ package io.spacedog.services;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.utils.Json;
+import io.spacedog.core.Json8;
 
 public class Debug {
 
@@ -22,6 +22,6 @@ public class Debug {
 	}
 
 	public ObjectNode toNode() {
-		return Json.object("batchCredentialChecks", batchCredentialChecks);
+		return Json8.object("batchCredentialChecks", batchCredentialChecks);
 	}
 }

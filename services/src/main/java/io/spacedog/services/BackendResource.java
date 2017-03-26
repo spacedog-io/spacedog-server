@@ -10,13 +10,13 @@ import org.elasticsearch.index.query.QueryBuilders;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.core.Json8;
 import io.spacedog.model.BackendSettings;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Internals;
-import io.spacedog.utils.Json;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -34,7 +34,7 @@ public class BackendResource extends Resource {
 	@Get("")
 	@Get("/")
 	public Payload ping() {
-		ObjectNode payload = (ObjectNode) Json.toNode(Start.get().info());
+		ObjectNode payload = (ObjectNode) Json8.toNode(Start.get().info());
 		payload.put("success", true).put("status", 200);
 		return JsonPayload.json(payload);
 	}
@@ -94,7 +94,7 @@ public class BackendResource extends Resource {
 			return JsonPayload.invalidParameters("backendId", backendId,
 					String.format("backend id [%s] not available", backendId));
 
-		ObjectNode data = Json.readObject(body);
+		ObjectNode data = Json8.readObject(body);
 		Credentials credentials = CredentialsResource.get()//
 				.create(backendId, Level.SUPER_ADMIN, data);
 
@@ -104,7 +104,7 @@ public class BackendResource extends Resource {
 
 		if (context.query().getBoolean(PARAM_NOTIF, true))
 			Internals.get().notify(//
-					Start.get().configuration().superdogAwsNotificationTopic(), //
+					Start.get().configuration().superdogAwsNotificationTopic().orElse(null), //
 					String.format("New backend (%s)", spaceRootUrl(backendId).toString()), //
 					String.format("backend id = %s\nadmin email = %s", //
 							backendId, credentials.email().get()));
@@ -144,13 +144,13 @@ public class BackendResource extends Resource {
 	//
 
 	private Payload toPayload(SearchResults<Credentials> superAdmins) {
-		ArrayNode results = Json.array();
+		ArrayNode results = Json8.array();
 
 		for (Credentials superAdmin : superAdmins.results)
-			results.add(Json.object(FIELD_BACKEND_ID, superAdmin.backendId(), //
+			results.add(Json8.object(FIELD_BACKEND_ID, superAdmin.backendId(), //
 					FIELD_USERNAME, superAdmin.name(), FIELD_EMAIL, superAdmin.email().get()));
 
-		return JsonPayload.json(Json.object("total", superAdmins.total, "results", results));
+		return JsonPayload.json(Json8.object("total", superAdmins.total, "results", results));
 	}
 
 	private boolean isDeleteFilesAndShares() {

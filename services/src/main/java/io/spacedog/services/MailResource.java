@@ -21,11 +21,11 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import com.mashape.unirest.request.HttpRequestWithBody;
 import com.mashape.unirest.request.body.MultipartBody;
 
+import io.spacedog.core.Json8;
 import io.spacedog.model.MailSettings;
 import io.spacedog.model.MailSettings.MailGunSettings;
 import io.spacedog.model.MailSettings.SmtpSettings;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Json;
 import net.codestory.http.Context;
 import net.codestory.http.Part;
 import net.codestory.http.annotations.Post;
@@ -206,7 +206,7 @@ public class MailResource extends Resource {
 
 			String msgId = email.send();
 
-			return JsonPayload.json(Json.object("messageId", msgId));
+			return JsonPayload.json(Json8.object("messageId", msgId));
 
 		} catch (IllegalArgumentException e) {
 			throw e;
@@ -248,7 +248,7 @@ public class MailResource extends Resource {
 
 		try {
 			HttpResponse<String> response = requestWithBody.asString();
-			if (Json.isJson(response.getBody()))
+			if (Json8.isJson(response.getBody()))
 				return JsonPayload.builder(response.getStatus())//
 						.node("mailgun", response.getBody())//
 						.build();

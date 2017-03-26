@@ -23,8 +23,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
+import io.spacedog.core.Json8;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;
 import io.spacedog.utils.SpaceFields;
 import io.spacedog.utils.SpaceParams;
@@ -46,7 +46,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 		if (!response.isExists())
 			throw NotFoundException.object(type, id);
 
-		ObjectNode object = Json.readObject(response.getSourceAsString());
+		ObjectNode object = Json8.readObject(response.getSourceAsString());
 
 		object.with("meta")//
 				.put("id", response.getId())//
@@ -81,7 +81,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 		// replace meta to avoid developers to
 		// set any meta fields directly
 		object.set("meta",
-				Json.objectBuilder()//
+				Json8.objectBuilder()//
 						.put("createdBy", createdBy)//
 						.put("updatedBy", createdBy)//
 						.put("createdAt", now)//
@@ -101,8 +101,8 @@ public class DataStore implements SpaceParams, SpaceFields {
 		object.with("meta").remove("version");
 		object.with("meta").remove("type");
 
-		Json.checkStringNotNullOrEmpty(object, "meta.createdBy");
-		Json.checkStringNotNullOrEmpty(object, "meta.createdAt");
+		Json8.checkStringNotNullOrEmpty(object, "meta.createdBy");
+		Json8.checkStringNotNullOrEmpty(object, "meta.createdAt");
 
 		object.with("meta").put("updatedBy", updatedBy);
 		object.with("meta").put("updatedAt", DateTime.now().toString());
@@ -116,12 +116,12 @@ public class DataStore implements SpaceParams, SpaceFields {
 
 	public IndexResponse updateObject(String backendId, ObjectNode object, String updatedBy) {
 
-		String id = Json.checkStringNotNullOrEmpty(object, "meta.id");
-		String type = Json.checkStringNotNullOrEmpty(object, "meta.type");
-		long version = Json.checkLongNode(object, "meta.version", true).get().asLong();
+		String id = Json8.checkStringNotNullOrEmpty(object, "meta.id");
+		String type = Json8.checkStringNotNullOrEmpty(object, "meta.type");
+		long version = Json8.checkLongNode(object, "meta.version", true).get().asLong();
 
-		Json.checkStringNotNullOrEmpty(object, "meta.createdBy");
-		Json.checkStringNotNullOrEmpty(object, "meta.createdAt");
+		Json8.checkStringNotNullOrEmpty(object, "meta.createdBy");
+		Json8.checkStringNotNullOrEmpty(object, "meta.createdAt");
 
 		object.with("meta").remove("id");
 		object.with("meta").remove("version");
@@ -234,7 +234,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 			filters.fields()
 					.forEachRemaining(field -> boolBuilder.filter(//
 							QueryBuilders.termQuery(field.getKey(), //
-									Json.toValue(field.getValue()))));
+									Json8.toValue(field.getValue()))));
 			return this;
 		}
 

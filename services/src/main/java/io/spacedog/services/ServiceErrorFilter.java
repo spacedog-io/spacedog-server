@@ -9,8 +9,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
+import io.spacedog.core.Json8;
 import io.spacedog.utils.Internals;
-import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
@@ -48,7 +48,7 @@ public class ServiceErrorFilter implements SpaceFilter {
 
 		if (payload.isError() && payload.rawContent() == null) {
 
-			JsonBuilder<ObjectNode> nodeBuilder = Json.objectBuilder()//
+			JsonBuilder<ObjectNode> nodeBuilder = Json8.objectBuilder()//
 					.put("success", false)//
 					.put("status", payload.code())//
 					.object("error");
@@ -83,7 +83,7 @@ public class ServiceErrorFilter implements SpaceFilter {
 			appendContent(builder, "Response body", payload.rawContent().toString());
 
 			Internals.get().notify(//
-					Start.get().configuration().superdogAwsNotificationTopic(), //
+					Start.get().configuration().superdogAwsNotificationTopic().orElse(null), //
 					String.format("%s is 500 500 500", uri), //
 					builder.toString());
 
@@ -125,8 +125,8 @@ public class ServiceErrorFilter implements SpaceFilter {
 	private void appendContent(StringBuilder builder, String name, String body) throws JsonProcessingException {
 		builder.append(name).append(" : ");
 
-		if (Json.isJson(body))
-			body = Json.toPrettyString(Json.readNode(body));
+		if (Json8.isJson(body))
+			body = Json8.toPrettyString(Json8.readNode(body));
 
 		builder.append(body).append('\n');
 	}

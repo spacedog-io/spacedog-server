@@ -11,10 +11,10 @@ import org.elasticsearch.indices.TypeMissingException;
 import com.carrotsearch.hppc.cursors.ObjectCursor;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.core.Json8;
+import io.spacedog.core.Json8.JsonMerger;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Json;
-import io.spacedog.utils.Json.JsonMerger;
 import io.spacedog.utils.Schema;
 import io.spacedog.utils.SchemaSettings;
 import net.codestory.http.Context;
@@ -38,12 +38,12 @@ public class SchemaResource extends Resource {
 		ElasticClient elastic = Start.get().getElasticClient();
 		ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetaData>> mappings;
 		mappings = elastic.getMappings(SpaceContext.backendId());
-		JsonMerger jsonMerger = Json.merger();
+		JsonMerger jsonMerger = Json8.merger();
 
 		for (ObjectCursor<ImmutableOpenMap<String, MappingMetaData>> indexMappings : mappings.values()) {
 			for (ObjectCursor<MappingMetaData> mapping : indexMappings.value.values()) {
 				try {
-					ObjectNode source = (ObjectNode) Json.readObject(mapping.value.source().string())//
+					ObjectNode source = (ObjectNode) Json8.readObject(mapping.value.source().string())//
 							.get(mapping.value.type());
 					if (source.hasNonNull("_meta"))
 						jsonMerger.merge((ObjectNode) source.get("_meta"));
@@ -79,7 +79,7 @@ public class SchemaResource extends Resource {
 		Schema.checkName(type);
 
 		Schema schema = Strings.isNullOrEmpty(newSchemaAsString) ? getDefaultSchema(type) //
-				: new Schema(type, Json.readObject(newSchemaAsString));
+				: new Schema(type, Json8.readObject(newSchemaAsString));
 
 		if (schema == null)
 			throw Exceptions.illegalArgument("no default schema for type [%s]", type);

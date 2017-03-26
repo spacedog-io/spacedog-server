@@ -20,8 +20,8 @@ import org.joda.time.DateTimeZone;
 
 import com.google.common.io.Resources;
 
+import io.spacedog.core.Json8;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 import net.codestory.http.AbstractWebServer;
 import net.codestory.http.Request;
@@ -89,7 +89,7 @@ public class Start {
 	public Info info() {
 		if (info == null)
 			try {
-				info = Json.mapper().readValue(//
+				info = Json8.mapper().readValue(//
 						Resources.toString(//
 								Resources.getResource(this.getClass(), "info.json"), //
 								Utils.UTF8), //

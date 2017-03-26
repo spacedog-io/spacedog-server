@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>io.spacedog</groupId>
 		<artifactId>spacedog-parent</artifactId>
-		<version>0.30.6</version>
+		<version>0.31-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>spacedog-services</artifactId>
@@ -116,12 +116,6 @@
 			<version>1.5.6</version>
 		</dependency>
 		<dependency>
-			<groupId>com.stripe</groupId>
-			<artifactId>stripe-java</artifactId>
-			<version>3.2.0</version>
-			<scope>test</scope>
-		</dependency>
- 		<dependency>
 			<groupId>com.mitchellbosecke</groupId>
 			<artifactId>pebble</artifactId>
 			<version> 2.2.3 </version>

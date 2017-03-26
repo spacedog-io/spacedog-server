@@ -23,11 +23,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.io.Resources;
 
+import io.spacedog.core.Json8;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Utils;
@@ -240,7 +240,7 @@ public class LogResource extends Resource {
 	}
 
 	private Payload extractLogs(SearchResponse response) {
-		JsonBuilder<ObjectNode> builder = Json.objectBuilder()//
+		JsonBuilder<ObjectNode> builder = Json8.objectBuilder()//
 				.put("took", response.getTookInMillis())//
 				.put("total", response.getHits().getTotalHits())//
 				.array("results");
@@ -253,7 +253,7 @@ public class LogResource extends Resource {
 
 	private String log(String uri, Context context, DateTime receivedAt, Payload payload) {
 
-		ObjectNode log = Json.object(//
+		ObjectNode log = Json8.object(//
 				"method", context.method(), //
 				"path", uri, //
 				FIELD_RECEIVED_AT, receivedAt.toString(), //
@@ -302,15 +302,15 @@ public class LogResource extends Resource {
 				// else
 				// log.put("content", content);
 
-				if (Json.isObject(content)) {
-					JsonNode securedContent = Json.fullReplaceTextualFields(//
-							Json.readNode(content), "password", "******");
+				if (Json8.isObject(content)) {
+					JsonNode securedContent = Json8.fullReplaceTextualFields(//
+							Json8.readNode(content), "password", "******");
 
 					log.set("jsonContent", securedContent);
 				}
 			}
 		} catch (Exception e) {
-			log.set("jsonContent", Json.object("error", JsonPayload.toJson(e, true)));
+			log.set("jsonContent", Json8.object("error", JsonPayload.toJson(e, true)));
 		}
 	}
 

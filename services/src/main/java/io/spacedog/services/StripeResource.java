@@ -5,12 +5,12 @@ import org.elasticsearch.common.Strings;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.core.Json8;
 import io.spacedog.model.StripeSettings;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceResponse;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;
 import io.spacedog.utils.SpaceException;
 import net.codestory.http.Context;
@@ -98,9 +98,9 @@ public class StripeResource extends Resource {
 	public Payload postCard(String body, Context context) {
 		Credentials credentials = SpaceContext.checkUserCredentials();
 		String customerId = getStripeCustomerId(credentials);
-		ObjectNode node = Json.readObject(body);
+		ObjectNode node = Json8.readObject(body);
 		StripeSettings settings = SettingsResource.get().load(StripeSettings.class);
-		String sourceToken = Json.checkStringNotNullOrEmpty(node, "source");
+		String sourceToken = Json8.checkStringNotNullOrEmpty(node, "source");
 
 		SpaceRequest request = SpaceRequest
 				.post(//
@@ -109,7 +109,7 @@ public class StripeResource extends Resource {
 				.routeParam("customerId", customerId)//
 				.formField("source", sourceToken);
 
-		Json.checkString(node, "description").ifPresent(//
+		Json8.checkString(node, "description").ifPresent(//
 				description -> request.formField("metadata[description]", description));
 
 		SpaceResponse response = request.go();

@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
 
+import io.spacedog.core.Json8;
 import io.spacedog.model.NonDirectlyReadableSettings;
 import io.spacedog.model.NonDirectlyUpdatableSettings;
 import io.spacedog.model.Settings;
@@ -23,7 +24,6 @@ import io.spacedog.model.SettingsSettings.SettingsAcl;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -77,10 +77,10 @@ public class SettingsResource extends Resource {
 				.setQuery(QueryBuilders.matchAllQuery())//
 				.get();
 
-		ObjectNode results = Json.object();
+		ObjectNode results = Json8.object();
 
 		for (SearchHit hit : response.getHits().getHits())
-			results.set(hit.getId(), Json.readNode(hit.sourceAsString()));
+			results.set(hit.getId(), Json8.readNode(hit.sourceAsString()));
 
 		return JsonPayload.json(results);
 	}
@@ -107,7 +107,7 @@ public class SettingsResource extends Resource {
 		else
 			try {
 				Settings settings = load(settingsClass);
-				settingsAsString = Json.mapper().writeValueAsString(settings);
+				settingsAsString = Json8.mapper().writeValueAsString(settings);
 
 			} catch (JsonProcessingException e) {
 				throw Exceptions.runtime(e, "invalid [%s] settings");
@@ -128,7 +128,7 @@ public class SettingsResource extends Resource {
 			response = save(id, body);
 		else
 			try {
-				Settings settings = Json.mapper().readValue(body, settingsClass);
+				Settings settings = Json8.mapper().readValue(body, settingsClass);
 				response = save(settings);
 
 			} catch (IOException e) {
@@ -157,8 +157,8 @@ public class SettingsResource extends Resource {
 
 		Class<? extends Settings> settingsClass = registeredSettingsClasses.get(id);
 
-		ObjectNode settings = settingsClass == null ? Json.readObject(load(id)) //
-				: Json.mapper().valueToTree(load(settingsClass));
+		ObjectNode settings = settingsClass == null ? Json8.readObject(load(id)) //
+				: Json8.mapper().valueToTree(load(settingsClass));
 
 		JsonNode value = settings.get(field);
 		if (value == null)
@@ -177,15 +177,15 @@ public class SettingsResource extends Resource {
 
 		try {
 			Class<? extends Settings> settingsClass = registeredSettingsClasses.get(id);
-			settings = settingsClass == null ? Json.readObject(load(id)) //
-					: Json.mapper().valueToTree(load(settingsClass));
+			settings = settingsClass == null ? Json8.readObject(load(id)) //
+					: Json8.mapper().valueToTree(load(settingsClass));
 
 		} catch (NotFoundException e) {
-			settings = Json.object();
+			settings = Json8.object();
 			created = true;
 		}
 
-		settings.set(field, Json.readNode(body));
+		settings.set(field, Json8.readNode(body));
 		IndexResponse response = save(id, settings.toString());
 
 		return JsonPayload.saved(created, SpaceContext.backendId(), "/1", //
@@ -200,8 +200,8 @@ public class SettingsResource extends Resource {
 
 		Class<? extends Settings> settingsClass = registeredSettingsClasses.get(id);
 
-		ObjectNode settings = settingsClass == null ? Json.readObject(load(id)) //
-				: Json.mapper().valueToTree(load(settingsClass));
+		ObjectNode settings = settingsClass == null ? Json8.readObject(load(id)) //
+				: Json8.mapper().valueToTree(load(settingsClass));
 
 		settings.remove(field);
 		IndexResponse response = save(id, settings.toString());
@@ -219,7 +219,7 @@ public class SettingsResource extends Resource {
 
 		try {
 			String json = load(id);
-			return Json.mapper().readValue(json, settingsClass);
+			return Json8.mapper().readValue(json, settingsClass);
 
 		} catch (NotFoundException nfe) {
 			// settings not set yet, return a default instance
@@ -238,7 +238,7 @@ public class SettingsResource extends Resource {
 
 	public IndexResponse save(Settings settings) {
 		try {
-			String settingsAsString = Json.mapper().writeValueAsString(settings);
+			String settingsAsString = Json8.mapper().writeValueAsString(settings);
 			return save(settings.id(), settingsAsString);
 
 		} catch (JsonProcessingException e) {
@@ -341,7 +341,7 @@ public class SettingsResource extends Resource {
 			int replicas = context.query().getInteger(PARAM_REPLICAS, PARAM_REPLICAS_DEFAULT);
 			boolean async = context.query().getBoolean(PARAM_ASYNC, PARAM_ASYNC_DEFAULT);
 
-			ObjectNode mapping = Json.object(TYPE, Json.object("enabled", false));
+			ObjectNode mapping = Json8.object(TYPE, Json8.object("enabled", false));
 			elastic.createIndex(backendId, TYPE, mapping.toString(), async, shards, replicas);
 		}
 	}

@@ -25,10 +25,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
+import io.spacedog.core.Json8;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.NotFoundException;
 import io.spacedog.utils.Utils;
@@ -278,7 +278,7 @@ public class SnapshotResource extends Resource {
 		}
 
 		public ObjectNode toJson() {
-			JsonBuilder<ObjectNode> builder = Json.objectBuilder();
+			JsonBuilder<ObjectNode> builder = Json8.objectBuilder();
 			putTo(builder);
 			return builder.build();
 		}

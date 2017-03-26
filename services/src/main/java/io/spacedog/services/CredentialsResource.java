@@ -24,6 +24,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import io.spacedog.core.Json8;
 import io.spacedog.model.CredentialsSettings;
 import io.spacedog.model.MailTemplate;
 import io.spacedog.utils.Backends;
@@ -32,10 +33,11 @@ import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.Credentials.Session;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Roles;
 import io.spacedog.utils.Schema;
+import io.spacedog.utils.SchemaTranslator;
+import io.spacedog.utils.SchemaValidator;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Usernames;
 import net.codestory.http.Context;
@@ -84,7 +86,9 @@ public class CredentialsResource extends Resource {
 
 				.build();
 
-		String mapping = schema.validate().translate().toString();
+		SchemaValidator.validate(schema.name(), schema.node());
+		String mapping = SchemaTranslator.translate(schema.name(), schema.node())//
+				.toString();
 		ElasticClient elastic = Start.get().getElasticClient();
 
 		if (elastic.existsIndex(SPACEDOG_BACKEND, TYPE))
@@ -164,7 +168,7 @@ public class CredentialsResource extends Resource {
 		if (settings.disableGuestSignUp)
 			SpaceContext.checkUserCredentials();
 
-		ObjectNode data = Json.readObject(body);
+		ObjectNode data = Json8.readObject(body);
 		Level level = extractAndCheckLevel(data, Level.USER);
 
 		Credentials credentials = create(SpaceContext.backendId(), level, data);
@@ -234,13 +238,13 @@ public class CredentialsResource extends Resource {
 		if (requester.isUser())
 			requester.checkPasswordHasBeenChallenged();
 
-		ObjectNode data = Json.readObject(body);
+		ObjectNode data = Json8.readObject(body);
 		Credentials credentials = getById(id, true).get();
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
 
 		String username = data.path(FIELD_USERNAME).asText();
 		if (!Strings.isNullOrEmpty(username)) {
-			Usernames.checkValid(username, Optional.of(settings.usernameRegex()));
+			Usernames.checkValid(username, settings.usernameRegex());
 			credentials.name(username);
 		}
 
@@ -253,11 +257,11 @@ public class CredentialsResource extends Resource {
 		if (!Strings.isNullOrEmpty(password)) {
 			// check for all not just users
 			requester.checkPasswordHasBeenChallenged();
-			credentials.changePassword(password, Optional.of(settings.passwordRegex()));
+			credentials.changePassword(password, settings.passwordRegex());
 		}
 
 		JsonNode enabled = data.get(FIELD_ENABLED);
-		if (!Json.isNull(enabled)) {
+		if (!Json8.isNull(enabled)) {
 			requester.checkAtLeastAdmin();
 			credentials.doEnableOrDisable(enabled.asBoolean());
 		}
@@ -285,13 +289,14 @@ public class CredentialsResource extends Resource {
 	@Post("/1/credentials/forgotPassword")
 	@Post("/1/credentials/forgotPassword/")
 	public Payload postForgotPassword(String body, Context context) {
-		Map<String, Object> parameters = Json.readMap(body);
+		Map<String, Object> parameters = Json8.readMap(body);
 		String username = Check.notNull(parameters.get(PARAM_USERNAME), "username").toString();
 
 		Credentials credentials = getByName(SpaceContext.backendId(), username, true).get();
-		credentials.email().orElseThrow(//
-				() -> Exceptions.illegalArgument("no email found in credentials [%s][%s]", //
-						credentials.level(), credentials.name()));
+
+		if (!credentials.email().isPresent())
+			throw Exceptions.illegalArgument("no email found in credentials [%s][%s]", //
+					credentials.level(), credentials.name());
 
 		MailTemplate template = MailTemplateResource.get()//
 				.getTemplate(FORGOT_PASSWORD_MAIL_TEMPLATE_NAME)//
@@ -344,8 +349,7 @@ public class CredentialsResource extends Resource {
 
 		Credentials credentials = getById(id, true).get();
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
-		credentials.changePassword(password, passwordResetCode, //
-				Optional.of(settings.passwordRegex()));
+		credentials.changePassword(password, passwordResetCode, settings.passwordRegex());
 		credentials = update(credentials);
 
 		return saved(credentials, false);
@@ -368,10 +372,10 @@ public class CredentialsResource extends Resource {
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
 
 		String password = SpaceContext.get().isJsonContent() && !Strings.isNullOrEmpty(body)//
-				? Json.checkString(Json.checkNotNull(Json.readNode(body)))//
+				? Json8.checkString(Json8.checkNotNull(Json8.readNode(body)))//
 				: context.get(FIELD_PASSWORD);
 
-		credentials.changePassword(password, Optional.of(settings.passwordRegex()));
+		credentials.changePassword(password, settings.passwordRegex());
 
 		credentials = update(credentials);
 		return saved(credentials, false);
@@ -383,8 +387,8 @@ public class CredentialsResource extends Resource {
 		SpaceContext.checkAdminCredentials();
 		Credentials credentials = getById(id, true).get();
 
-		Boolean passwordMustChange = Json.checkBoolean(//
-				Json.checkNotNull(Json.readNode(body)));
+		Boolean passwordMustChange = Json8.checkBoolean(//
+				Json8.checkNotNull(Json8.readNode(body)));
 		credentials.passwordMustChange(passwordMustChange);
 
 		credentials = update(credentials);
@@ -396,7 +400,7 @@ public class CredentialsResource extends Resource {
 	public Payload putEnabled(String id, String body, Context context) {
 		SpaceContext.checkAdminCredentials();
 
-		JsonNode enabled = Json.readNode(body);
+		JsonNode enabled = Json8.readNode(body);
 		if (!enabled.isBoolean())
 			throw Exceptions.illegalArgument("body not a boolean but [%s]", body);
 
@@ -475,21 +479,21 @@ public class CredentialsResource extends Resource {
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
 		Credentials credentials = new Credentials(backendId);
 
-		credentials.name(Json.checkStringNotNullOrEmpty(data, FIELD_USERNAME));
-		Usernames.checkValid(credentials.name(), Optional.of(settings.usernameRegex()));
+		credentials.name(Json8.checkStringNotNullOrEmpty(data, FIELD_USERNAME));
+		Usernames.checkValid(credentials.name(), settings.usernameRegex());
 
 		if (legacyId)
 			credentials.initIdFromLegacy();
 
-		credentials.email(Json.checkStringNotNullOrEmpty(data, FIELD_EMAIL));
+		credentials.email(Json8.checkStringNotNullOrEmpty(data, FIELD_EMAIL));
 		credentials.level(level);
 
 		JsonNode password = data.get(FIELD_PASSWORD);
 
-		if (Json.isNull(password))
+		if (Json8.isNull(password))
 			credentials.newPasswordResetCode();
 		else
-			credentials.changePassword(password.asText(), Optional.of(settings.passwordRegex()));
+			credentials.changePassword(password.asText(), settings.passwordRegex());
 
 		return create(credentials);
 	}
@@ -611,7 +615,7 @@ public class CredentialsResource extends Resource {
 			credentials.createdAt(now);
 
 			ElasticClient elastic = Start.get().getElasticClient();
-			String json = Json.mapper().writeValueAsString(credentials);
+			String json = Json8.mapper().writeValueAsString(credentials);
 
 			// refresh index after each index change
 			IndexResponse response = Strings.isNullOrEmpty(credentials.id()) //
@@ -639,7 +643,7 @@ public class CredentialsResource extends Resource {
 			// refresh index after each index change
 			IndexResponse response = Start.get().getElasticClient().index(//
 					SPACEDOG_BACKEND, TYPE, credentials.id(), //
-					Json.mapper().writeValueAsString(credentials), //
+					Json8.mapper().writeValueAsString(credentials), //
 					true);
 
 			credentials.version(response.getVersion());
@@ -687,10 +691,10 @@ public class CredentialsResource extends Resource {
 	}
 
 	Credentials createSuperdog(String username, String password, String email) {
-		Usernames.checkValid(username);
+		Usernames.checkValid(username, CredentialsSettings.USERNAME_DEFAULT_REGEX);
 		Credentials credentials = new Credentials(Backends.rootApi(), username, Level.SUPERDOG);
 		credentials.email(email);
-		credentials.changePassword(password, Optional.empty());
+		credentials.changePassword(password, CredentialsSettings.PASSWORD_DEFAULT_REGEX);
 		return create(credentials);
 	}
 
@@ -755,7 +759,7 @@ public class CredentialsResource extends Resource {
 
 	private Credentials toCredentials(String sourceAsString, String id, long version) {
 		try {
-			Credentials credentials = Json.mapper()//
+			Credentials credentials = Json8.mapper()//
 					.readValue(sourceAsString, Credentials.class);
 			credentials.id(id);
 			credentials.version(version);
@@ -767,10 +771,10 @@ public class CredentialsResource extends Resource {
 	}
 
 	private ObjectNode fromCredentialsSearch(SearchResults<Credentials> response) {
-		ArrayNode results = Json.array();
+		ArrayNode results = Json8.array();
 		for (Credentials credentials : response.results)
 			results.add(credentials.toJson());
-		return Json.object("total", response.total, "results", results);
+		return Json8.object("total", response.total, "results", results);
 	}
 
 	private boolean exists(String backendId, String username) {

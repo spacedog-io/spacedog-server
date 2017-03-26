@@ -49,9 +49,9 @@ import org.elasticsearch.search.SearchHits;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
+import io.spacedog.core.Json8;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Json;
 import io.spacedog.utils.Schema;
 import io.spacedog.utils.SpaceParams;
 import io.spacedog.utils.Utils;
@@ -217,7 +217,7 @@ public class ElasticClient implements SpaceParams {
 		Check.notNullOrEmpty(backendId, "backendId");
 
 		if (Strings.isNullOrEmpty(query))
-			query = Json.objectBuilder().object("query").object("match_all").toString();
+			query = Json8.objectBuilder().object("query").object("match_all").toString();
 
 		String[] indices = types == null ? toIndices(backendId) : toAliases(backendId, types);
 
@@ -360,7 +360,7 @@ public class ElasticClient implements SpaceParams {
 		String source = getMappings(backendId, type).getMappings()//
 				.iterator().next().value.get(type).source().toString();
 		return new Schema(type, //
-				(ObjectNode) Json.readObject(source).get(type).get("_meta"));
+				(ObjectNode) Json8.readObject(source).get(type).get("_meta"));
 	}
 
 	public boolean existsIndex(String backendId, String type) {
