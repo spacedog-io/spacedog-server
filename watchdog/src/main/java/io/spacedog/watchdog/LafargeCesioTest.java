@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.services;
+package io.spacedog.watchdog;
 
 import org.joda.time.DateTime;
 import org.junit.Test;
@@ -11,12 +11,15 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
+import io.spacedog.model.DataPermission;
 import io.spacedog.model.MailSettings;
 import io.spacedog.model.MailSettings.SmtpSettings;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Json;
+//import io.spacedog.services.LafargeCesioResource;
+import io.spacedog.utils.Json7;
+import io.spacedog.utils.Schema;
 
 public class LafargeCesioTest extends SpaceTest {
 
@@ -42,7 +45,7 @@ public class LafargeCesioTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog test = resetTestBackend();
-		test.schema().set(LafargeCesioResource.playerSchema());
+		test.schema().set(playerSchema());
 
 		MailSettings settings = new MailSettings();
 		settings.enableUserFullAccess = false;
@@ -192,9 +195,9 @@ public class LafargeCesioTest extends SpaceTest {
 		SpaceRequest.get("/api/leaderboard").backend(test).go(201)//
 				.assertEquals(1, "response")//
 				.assertEquals("", "message")//
-				.assertEquals(Json.array(), "data.today")//
-				.assertEquals(Json.array(), "data.week")//
-				.assertEquals(Json.array(), "data.forever");
+				.assertEquals(Json7.array(), "data.today")//
+				.assertEquals(Json7.array(), "data.week")//
+				.assertEquals(Json7.array(), "data.forever");
 
 		// david sets level 1 score
 		SpaceRequest.post("/api/score/set").backend(test)//
@@ -280,13 +283,13 @@ public class LafargeCesioTest extends SpaceTest {
 
 		// gets leaderboard
 
-		ObjectNode david = Json.object("email", DAVID_EMAIL, //
+		ObjectNode david = Json7.object("email", DAVID_EMAIL, //
 				"country_id", "24", "somme", "176");
 
-		ObjectNode vince = Json.object("email", VINCE_EMAIL, //
+		ObjectNode vince = Json7.object("email", VINCE_EMAIL, //
 				"country_id", "32", "somme", "143");
 
-		ArrayNode today = Json.array(david, vince);
+		ArrayNode today = Json7.array(david, vince);
 		ArrayNode week = today;
 		ArrayNode forever = today;
 
@@ -301,16 +304,16 @@ public class LafargeCesioTest extends SpaceTest {
 		// to show his highscore only in the forever section
 		ArrayNode scores = (ArrayNode) SpaceRequest.get("/1/data/player/" + idVince).adminAuth(test).go(200)//
 				.get("scores");
-		Json.set(scores, "0.date", TextNode.valueOf(//
+		Json7.set(scores, "0.date", TextNode.valueOf(//
 				DateTime.now().minusDays(8).toString()));
 		SpaceRequest.put("/1/data/player/" + idVince).adminAuth(test)//
 				.body("scores", scores).go(200);
 
 		// gets leaderboard after vince score update
 
-		today = Json.array(david);
-		week = Json.array(david);
-		forever = Json.array(david, vince);
+		today = Json7.array(david);
+		week = Json7.array(david);
+		forever = Json7.array(david, vince);
 
 		SpaceRequest.get("/api/leaderboard").backend(test).go(201)//
 				.assertEquals(1, "response")//
@@ -322,18 +325,52 @@ public class LafargeCesioTest extends SpaceTest {
 	}
 
 	private JsonNode error(String message) {
-		return error(message, Json.array());
+		return error(message, Json7.array());
 	}
 
 	private JsonNode error(String message, JsonNode data) {
-		return Json.object("response", 0, "message", message, "data", data);
+		return Json7.object("response", 0, "message", message, "data", data);
 	}
 
 	private JsonNode success() {
-		return success(Json.array());
+		return success(Json7.array());
 	}
 
 	private JsonNode success(JsonNode data) {
-		return Json.object("response", 1, "message", "", "data", data);
+		return Json7.object("response", 1, "message", "", "data", data);
 	}
+
+	// fields
+	private static final String ID = "id";
+	private static final String DATE = "date";
+	private static final String LEVEL = "level";
+	private static final String SCORE = "score";
+	private static final String SCORES = "scores";
+	private static final String COUNTRY = "country";
+	private static final String CODE = "code";
+	private static final String EMAIL = "email";
+
+	// types
+	public static final String PLAYER_TYPE = "player";
+
+	private static Schema playerSchema() {
+		return Schema.builder(PLAYER_TYPE) //
+
+				.acl("admin", DataPermission.create, DataPermission.search, //
+						DataPermission.update_all, DataPermission.delete_all)//
+
+				.integer(ID)//
+				.string(EMAIL)//
+				.integer(CODE)//
+				.integer(COUNTRY)//
+
+				.object(SCORES).array()//
+				.integer(SCORE)//
+				.integer(LEVEL)//
+				.timestamp(DATE)//
+				.close()//
+
+				.build();
+	}
+
 }

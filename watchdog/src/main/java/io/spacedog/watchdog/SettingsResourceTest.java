@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.services;
+package io.spacedog.watchdog;
 
 import org.junit.Test;
 
@@ -15,7 +15,7 @@ import io.spacedog.model.SettingsSettings.SettingsAcl;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Json;
+import io.spacedog.utils.Json7;
 import io.spacedog.utils.SchemaSettings;
 
 public class SettingsResourceTest extends SpaceTest {
@@ -28,9 +28,9 @@ public class SettingsResourceTest extends SpaceTest {
 		SpaceDog test = resetTestBackend();
 		SpaceDog vince = signUp(test, "vince", "hi vince");
 
-		ObjectNode animals = Json.object("lion", "Lion", "tiger", "Tiger");
-		ObjectNode jobs = Json.object("sailor", Json.array("Sailor", "Marin"), //
-				"soldier", Json.object("en", "Soldier", "fr", "Soldat"));
+		ObjectNode animals = Json7.object("lion", "Lion", "tiger", "Tiger");
+		ObjectNode jobs = Json7.object("sailor", Json7.array("Sailor", "Marin"), //
+				"soldier", Json7.object("en", "Soldier", "fr", "Soldat"));
 
 		// only super admins can get all settings
 		SpaceRequest.get("/1/settings").backend(test).go(403);
@@ -139,7 +139,7 @@ public class SettingsResourceTest extends SpaceTest {
 		prepareTest();
 		SpaceDog test = resetTestBackend();
 		SpaceDog superdog = superdog(test);
-		ObjectNode settings = Json.object("toto", 23);
+		ObjectNode settings = Json7.object("toto", 23);
 
 		// superdog creates test settings
 		superdog.settings().save("test", settings);
@@ -182,12 +182,12 @@ public class SettingsResourceTest extends SpaceTest {
 
 		// test sets db settings credentials
 		test.settings().save("db", "credentials", //
-				Json.object("username", "tiger", "password", "miaou"));
+				Json7.object("username", "tiger", "password", "miaou"));
 
 		// test checks settings are correct
 		ObjectNode settings = test.settings().get("db");
-		assertEquals(Json.object("type", "mysql", "version", 12, "credentials",
-				Json.object("username", "tiger", "password", "miaou")), settings);
+		assertEquals(Json7.object("type", "mysql", "version", 12, "credentials",
+				Json7.object("username", "tiger", "password", "miaou")), settings);
 
 		// only superadmins can get settings
 		guest.get("/1/settings/db/type").go(403);
@@ -196,7 +196,7 @@ public class SettingsResourceTest extends SpaceTest {
 		// test gets each field
 		assertEquals("mysql", test.settings().get("db", "type").asText());
 		assertEquals(12, test.settings().get("db", "version").asInt());
-		assertEquals(Json.object("username", "tiger", "password", "miaou"), //
+		assertEquals(Json7.object("username", "tiger", "password", "miaou"), //
 				test.settings().get("db", "credentials"));
 
 		// test gets an unknown field of db settings
@@ -209,12 +209,12 @@ public class SettingsResourceTest extends SpaceTest {
 		test.settings().save("db", "type", TextNode.valueOf("postgres"));
 		test.settings().save("db", "version", LongNode.valueOf(13));
 		test.settings().save("db", "credentials", //
-				Json.object("username", "lion", "password", "arf"));
+				Json7.object("username", "lion", "password", "arf"));
 
 		// test checks settings are correct
 		settings = test.settings().get("db");
-		assertEquals(Json.object("type", "postgres", "version", 13, "credentials",
-				Json.object("username", "lion", "password", "arf")), settings);
+		assertEquals(Json7.object("type", "postgres", "version", 13, "credentials",
+				Json7.object("username", "lion", "password", "arf")), settings);
 
 		// only superadmins can delete settings fields
 		guest.delete("/1/settings/db/type").go(403);
@@ -228,6 +228,6 @@ public class SettingsResourceTest extends SpaceTest {
 
 		// test checks settings are correct
 		settings = test.settings().get("db");
-		assertEquals(Json.object("type", "postgres", "credentials", null), settings);
+		assertEquals(Json7.object("type", "postgres", "credentials", null), settings);
 	}
 }

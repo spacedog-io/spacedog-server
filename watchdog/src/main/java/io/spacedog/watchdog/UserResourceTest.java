@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.services;
+package io.spacedog.watchdog;
 
 import java.util.Arrays;
 
@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Json;
+import io.spacedog.utils.Json7;
 import io.spacedog.utils.Schema;
 
 public class UserResourceTest extends SpaceTest {
@@ -88,7 +88,7 @@ public class UserResourceTest extends SpaceTest {
 
 		// empty user body
 		SpaceRequest.post("/1/user/").backend(test)//
-				.body(Json.object()).go(400);
+				.body(Json7.object()).go(400);
 		// no username
 		SpaceRequest.post("/1/user/").backend(test)//
 				.body("password", "hi titi", "email", "titi@dog.com").go(400);
@@ -121,7 +121,7 @@ public class UserResourceTest extends SpaceTest {
 		ObjectNode res2 = SpaceRequest.get("/1/user/vince").userAuth(vince).go(200).objectNode();
 
 		assertEquals(//
-				Json.object("username", "vince", "email", "vince@dog.com"), //
+				Json7.object("username", "vince", "email", "vince@dog.com"), //
 				res2.deepCopy().without("meta"));
 
 		// vince fails to get his user data if wrong username
@@ -337,7 +337,7 @@ public class UserResourceTest extends SpaceTest {
 
 		// create new custom user
 
-		ObjectNode fred = Json.object("username", "fred", "password", "hi fred", //
+		ObjectNode fred = Json7.object("username", "fred", "password", "hi fred", //
 				"email", "fred@dog.com", "firstname", "Frédérique", "lastname", "Fallière");
 
 		SpaceRequest.post("/1/user/").backend(test).body(fred).go(201);

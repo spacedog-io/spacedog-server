@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.services;
+package io.spacedog.watchdog.sendpulse;
 
 import java.util.Collections;
 
@@ -80,7 +80,7 @@ public class SendPulseResourceTest extends SpaceTest {
 
 	private void upload(SpaceDog backend, String name) {
 		SpaceRequest.put("/1/file/www/" + name)//
-				.bodyResource("io/spacedog/services/sendpulse/" + name)//
+				.bodyResource(this.getClass(), name)//
 				.adminAuth(backend)//
 				.go(200);
 	}

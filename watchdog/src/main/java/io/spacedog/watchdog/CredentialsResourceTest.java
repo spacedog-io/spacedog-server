@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.services;
+package io.spacedog.watchdog;
 
 import org.joda.time.DateTime;
 import org.junit.Test;
@@ -17,7 +17,7 @@ import io.spacedog.rest.SpaceEnv;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Json;
+import io.spacedog.utils.Json7;
 import io.spacedog.utils.Passwords;
 
 public class CredentialsResourceTest extends SpaceTest {
@@ -430,7 +430,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		// fred declares he's forgot his password
 		// passing an url parameter
 		fred.credentials().forgotPassword(//
-				Json.object("url", "http://localhost:8080"));
+				Json7.object("url", "http://localhost:8080"));
 
 		// fred can still access services if he remembers his password
 		// or if he's got a valid token

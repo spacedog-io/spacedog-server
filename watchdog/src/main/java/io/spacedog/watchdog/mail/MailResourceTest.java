@@ -1,4 +1,4 @@
-package io.spacedog.services.mail;
+package io.spacedog.watchdog.mail;
 
 import java.io.IOException;
 

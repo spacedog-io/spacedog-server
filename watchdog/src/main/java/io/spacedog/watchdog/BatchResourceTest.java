@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.services;
+package io.spacedog.watchdog;
 
 import org.junit.Test;
 
@@ -13,7 +13,7 @@ import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceResponse;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Json;
+import io.spacedog.utils.Json7;
 import io.spacedog.utils.Schema;
 
 public class BatchResourceTest extends SpaceTest {
@@ -30,7 +30,7 @@ public class BatchResourceTest extends SpaceTest {
 		// should succeed to reset test account and create message schema with
 		// admin credentials
 
-		ArrayNode batch = Json.arrayBuilder()//
+		ArrayNode batch = Json7.arrayBuilder()//
 				.object()//
 				.put("method", "DELETE").put("path", "/1/backend")//
 				.end()//
@@ -81,7 +81,7 @@ public class BatchResourceTest extends SpaceTest {
 		// should succeed to create dave and vince users and fetch them with
 		// simple backend key credentials
 
-		batch = Json.arrayBuilder()//
+		batch = Json7.arrayBuilder()//
 				.object()//
 				.put("method", "POST").put("path", "/1/credentials")//
 				.object("content")//
@@ -106,8 +106,8 @@ public class BatchResourceTest extends SpaceTest {
 				.debugServer().adminAuth(test).body(batch).go(200)//
 				.objectNode();
 
-		String vinceId = Json.get(node, "responses.0.id").asText();
-		String daveId = Json.get(node, "responses.1.id").asText();
+		String vinceId = Json7.get(node, "responses.0.id").asText();
+		String daveId = Json7.get(node, "responses.1.id").asText();
 
 		// should succeed to fetch dave and vince credentials
 		// and the message schema
@@ -125,7 +125,7 @@ public class BatchResourceTest extends SpaceTest {
 		// should succeed to return errors when batch requests are invalid, not
 		// found, unauthorized, ...
 
-		batch = Json.arrayBuilder()//
+		batch = Json7.arrayBuilder()//
 				.object()//
 				.put("method", "POST").put("path", "/1/credentials")//
 				.object("content")//
@@ -157,7 +157,7 @@ public class BatchResourceTest extends SpaceTest {
 
 		// should succeed to create and update messages by batch
 
-		batch = Json.arrayBuilder()//
+		batch = Json7.arrayBuilder()//
 				.object()//
 				.put("method", "POST").put("path", "/1/data/message")//
 				.object("content")//
@@ -228,7 +228,7 @@ public class BatchResourceTest extends SpaceTest {
 
 		// should succeed to stop on first batch request error
 
-		batch = Json.arrayBuilder()//
+		batch = Json7.arrayBuilder()//
 				.object()//
 				.put("method", "GET").put("path", "/1/data/message")//
 				.end()//
@@ -251,9 +251,9 @@ public class BatchResourceTest extends SpaceTest {
 
 		// should fail since batch are limited to 10 sub requests
 
-		ArrayNode bigBatch = Json.array();
+		ArrayNode bigBatch = Json7.array();
 		for (int i = 0; i < 11; i++)
-			bigBatch.add(Json.object("method", "GET", "path", "/1/login"));
+			bigBatch.add(Json7.object("method", "GET", "path", "/1/login"));
 
 		SpaceRequest.post("/1/batch").backend(test).body(bigBatch).go(400)//
 				.assertEquals("batch-limit-exceeded", "error.code");

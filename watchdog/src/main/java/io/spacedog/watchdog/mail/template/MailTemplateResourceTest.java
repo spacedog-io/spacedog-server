@@ -1,4 +1,4 @@
-package io.spacedog.services.mail.template;
+package io.spacedog.watchdog.mail.template;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -18,7 +18,7 @@ import io.spacedog.model.MailSettings.SmtpSettings;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Json;
+import io.spacedog.utils.Json7;
 import io.spacedog.utils.Schema;
 
 public class MailTemplateResourceTest extends SpaceTest {
@@ -42,9 +42,9 @@ public class MailTemplateResourceTest extends SpaceTest {
 		test.schema().set(schema);
 
 		// create an inscription
-		ArrayNode dispos = Json.array(//
-				Json.object("date", "2016-12-01", "debut", "12:00:00", "fin", "13:00:00"), //
-				Json.object("date", "2016-12-03", "debut", "16:00:00", "fin", "17:00:00"));
+		ArrayNode dispos = Json7.array(//
+				Json7.object("date", "2016-12-01", "debut", "12:00:00", "fin", "13:00:00"), //
+				Json7.object("date", "2016-12-03", "debut", "16:00:00", "fin", "17:00:00"));
 
 		String inscriptionId = SpaceRequest.post("/1/data/demande").backend(test)//
 				.body("nom", "Pons", "prenom", "Stéphane", "email", "david@spacedog.io", //

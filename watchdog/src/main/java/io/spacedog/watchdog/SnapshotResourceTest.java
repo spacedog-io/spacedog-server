@@ -1,4 +1,4 @@
-package io.spacedog.services;
+package io.spacedog.watchdog;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -33,7 +33,7 @@ public class SnapshotResourceTest extends SpaceTest {
 		SpaceDog superdog = superdog();
 		SpaceDog snapshotAll = getOrSignUp(superdog, //
 				"snapshotAll", "hi snapshotAll", "platform@spacedog.io");
-		superdog.credentials().setRole(snapshotAll.id(), SnapshotResource.SNAPSHOT_ALL);
+		superdog.credentials().setRole(snapshotAll.id(), "snapshotall");
 		snapshotAll.login("hi snapshotAll");
 
 		// creates backend and credentials
