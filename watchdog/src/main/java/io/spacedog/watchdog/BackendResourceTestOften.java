@@ -11,7 +11,7 @@ import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTarget;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Json;
+import io.spacedog.utils.Json7;
 import io.spacedog.utils.SpaceParams;
 
 public class BackendResourceTestOften extends SpaceTest {
@@ -78,7 +78,7 @@ public class BackendResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog.backend("test").username("test").password("hi test").backend().delete();
-		ObjectNode body = Json.object("username", "test", //
+		ObjectNode body = Json7.object("username", "test", //
 				"password", "hi test", "email", "hello@spacedog.io");
 
 		// fails to create a backend whom id contains invalid characters

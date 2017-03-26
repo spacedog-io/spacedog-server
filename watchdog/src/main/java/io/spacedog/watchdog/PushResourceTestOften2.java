@@ -10,7 +10,7 @@ import io.spacedog.model.DataPermission;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Json;
+import io.spacedog.utils.Json7;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Schema;
 import io.spacedog.utils.Schema.SchemaAcl;
@@ -117,9 +117,9 @@ public class PushResourceTestOften2 extends SpaceTest {
 		SpaceRequest.post("/1/installation/" + daveInstallId + "/push")//
 				.userAuth(vince)//
 				.body(MESSAGE,
-						Json.object("APNS",
-								Json.object("aps", //
-										Json.object("alert", "coucou"))))//
+						Json7.object("APNS",
+								Json7.object("aps", //
+										Json7.object("alert", "coucou"))))//
 				.go(200);
 
 		// vince fails to push to invalid installation id
@@ -241,7 +241,7 @@ public class PushResourceTestOften2 extends SpaceTest {
 
 		// vince pushes to all joho installations
 		// this means users and anonymous installations
-		ObjectNode push = Json.object(APP_ID, "joho", MESSAGE, "This is a push!");
+		ObjectNode push = Json7.object(APP_ID, "joho", MESSAGE, "This is a push!");
 		SpaceRequest.post("/1/push").refresh().userAuth(vince).body(push).go(200)//
 				.assertFalse(FAILURES)//
 				.assertSizeEquals(4, PUSHED_TO)//
@@ -294,7 +294,7 @@ public class PushResourceTestOften2 extends SpaceTest {
 				.assertContainsValue("vince", CREDENTIALS_NAME);
 
 		// vince gets 404 when he pushes to invalid app id
-		push = Json.object(APP_ID, "XXX", MESSAGE, "This is a push!");
+		push = Json7.object(APP_ID, "XXX", MESSAGE, "This is a push!");
 		SpaceRequest.post("/1/push").userAuth(vince).body(push).go(404);
 
 		// vince can not read, update nor delete dave's installation
@@ -340,9 +340,9 @@ public class PushResourceTestOften2 extends SpaceTest {
 		SpaceRequest.post("/1/installation/" + daveInstallId + "/push")//
 				.userAuth(vince)//
 				.body(MESSAGE,
-						Json.object(APNS, //
-								Json.object("aps", //
-										Json.object("alert", "coucou", BADGE, 3))))//
+						Json7.object(APNS, //
+								Json7.object("aps", //
+										Json7.object("alert", "coucou", BADGE, 3))))//
 				.go(200)//
 				.assertEquals(daveInstallId, "pushedTo.0.installationId");
 
@@ -355,7 +355,7 @@ public class PushResourceTestOften2 extends SpaceTest {
 		// vince pushes a message to all with automatic badging
 		// this means installation.badge is incremented on the server
 		// and installation.badge is sent to each installation
-		ObjectNode push = Json.object(APP_ID, "joho", BADGE_STRATEGY, "auto", //
+		ObjectNode push = Json7.object(APP_ID, "joho", BADGE_STRATEGY, "auto", //
 				MESSAGE, "Badge is the new trend!");
 
 		SpaceRequest.post("/1/push")//
@@ -409,11 +409,11 @@ public class PushResourceTestOften2 extends SpaceTest {
 	}
 
 	private ObjectNode toJsonTag(String key, String value) {
-		return Json.object(KEY, key, VALUE, value);
+		return Json7.object(KEY, key, VALUE, value);
 	}
 
 	private ArrayNode toJsonTags(String... strings) {
-		JsonBuilder<ArrayNode> array = Json.arrayBuilder();
+		JsonBuilder<ArrayNode> array = Json7.arrayBuilder();
 		for (int i = 0; i < strings.length; i = i + 2)
 			array.object().put(KEY, strings[i]).put(VALUE, strings[i + 1]).end();
 		return array.build();

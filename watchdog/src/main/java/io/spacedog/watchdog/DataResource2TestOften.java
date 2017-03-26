@@ -20,7 +20,7 @@ import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceResponse;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Json;
+import io.spacedog.utils.Json7;
 import io.spacedog.utils.Schema;
 
 public class DataResource2TestOften extends SpaceTest {
@@ -38,7 +38,7 @@ public class DataResource2TestOften extends SpaceTest {
 		SpaceRequest.post("/1/data/sale").userAuth(fred).go(400);
 
 		// fred creates a new sale object
-		ObjectNode sale = Json.objectBuilder()//
+		ObjectNode sale = Json7.objectBuilder()//
 				.put("number", "1234567890")//
 				.object("where")//
 				.put("lat", -55.6765).put("lon", -54.6765)//
@@ -114,11 +114,11 @@ public class DataResource2TestOften extends SpaceTest {
 		SpaceResponse res1b = SpaceRequest.get("/1/search/sale?q=museum")//
 				.refresh().userAuth(fred).go(200).assertEquals(1, "total");
 
-		res1.assertEqualsWithoutMeta(Json.checkObject(res1b.get("results.0")));
+		res1.assertEqualsWithoutMeta(Json7.checkObject(res1b.get("results.0")));
 
 		// find by advanced text search
 
-		String query = Json.objectBuilder()//
+		String query = Json7.objectBuilder()//
 				.object("query")//
 				.object("query_string")//
 				.put("query", "museum")//
@@ -127,11 +127,11 @@ public class DataResource2TestOften extends SpaceTest {
 		SpaceResponse res1c = SpaceRequest.post("/1/search/sale")//
 				.userAuth(fred).body(query).go(200).assertEquals(1, "total");
 
-		res1.assertEqualsWithoutMeta(Json.checkObject(res1c.get("results.0")));
+		res1.assertEqualsWithoutMeta(Json7.checkObject(res1c.get("results.0")));
 
 		// small update no version should succeed
 
-		JsonNode updateJson2 = Json.objectBuilder().array("items").object().put("quantity", 7).build();
+		JsonNode updateJson2 = Json7.objectBuilder().array("items").object().put("quantity", 7).build();
 
 		SpaceRequest.put("/1/data/sale/" + id).userAuth(fred).body(updateJson2).go(200)//
 				.assertTrue("success")//

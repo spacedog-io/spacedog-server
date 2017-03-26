@@ -13,7 +13,7 @@ import io.spacedog.model.CredentialsSettings;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Json;
+import io.spacedog.utils.Json7;
 
 public class CredentialsResourceTestOften extends SpaceTest {
 
@@ -26,7 +26,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// fails since empty user body
 		SpaceRequest.post("/1/credentials/").backend(test)//
-				.body(Json.object()).go(400);
+				.body(Json7.object()).go(400);
 
 		// fails since no username
 		SpaceRequest.post("/1/credentials/").backend(test)//
@@ -721,19 +721,19 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// anonymous fails to disable fred's credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.body(Json.toNode(false)).backend(test).go(403);
+				.body(Json7.toNode(false)).backend(test).go(403);
 
 		// fred fails to disable his credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.body(Json.toNode(false)).userAuth(fred).go(403);
+				.body(Json7.toNode(false)).userAuth(fred).go(403);
 
 		// admin fails to disable fred's credentials because body not a boolean
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.body(Json.toNode("false")).adminAuth(test).go(400);
+				.body(Json7.toNode("false")).adminAuth(test).go(400);
 
 		// only admin can disable fred's credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.body(Json.toNode(false)).adminAuth(test).go(200);
+				.body(Json7.toNode(false)).adminAuth(test).go(200);
 
 		// fred fails to login from now on
 		SpaceRequest.get("/1/login").userAuth(fred).go(401)//
@@ -755,15 +755,15 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// anonymous fails to enable fred's credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.body(Json.toNode(true)).backend(test).go(403);
+				.body(Json7.toNode(true)).backend(test).go(403);
 
 		// fred fails to enable his credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.body(Json.toNode(true)).userAuth(fred).go(401);
+				.body(Json7.toNode(true)).userAuth(fred).go(401);
 
 		// only admin can enable fred's credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.body(Json.toNode(true)).adminAuth(test).go(200);
+				.body(Json7.toNode(true)).adminAuth(test).go(200);
 
 		// fred logs in again normally
 		SpaceRequest.get("/1/login").userAuth(fred).go(200);

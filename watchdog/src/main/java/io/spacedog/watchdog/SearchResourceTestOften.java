@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Json;
+import io.spacedog.utils.Json7;
 import io.spacedog.utils.Schema;
 
 public class SearchResourceTestOften extends SpaceTest {
@@ -45,7 +45,7 @@ public class SearchResourceTestOften extends SpaceTest {
 				.assertEquals(5, "total");
 
 		// search for messages with full text query
-		ObjectNode query = Json.objectBuilder()//
+		ObjectNode query = Json7.objectBuilder()//
 				.object("query").object("match").put("text", "something to drink")//
 				.build();
 
@@ -56,21 +56,21 @@ public class SearchResourceTestOften extends SpaceTest {
 				.objectNode();
 
 		// check search scores
-		assertTrue(Json.checkDouble(Json.get(results, "results.0.meta.score")) > 1);
-		assertTrue(Json.checkDouble(Json.get(results, "results.1.meta.score")) < 1);
+		assertTrue(Json7.checkDouble(Json7.get(results, "results.0.meta.score")) > 1);
+		assertTrue(Json7.checkDouble(Json7.get(results, "results.1.meta.score")) < 1);
 
 		// check all meta are there
-		assertNotNull(Json.get(results, "results.0.meta.id"));
-		assertNotNull(Json.get(results, "results.0.meta.type"));
-		assertNotNull(Json.get(results, "results.0.meta.version"));
-		assertNotNull(Json.get(results, "results.0.meta.createdBy"));
-		assertNotNull(Json.get(results, "results.0.meta.createdAt"));
-		assertNotNull(Json.get(results, "results.0.meta.updatedBy"));
-		assertNotNull(Json.get(results, "results.0.meta.updatedAt"));
+		assertNotNull(Json7.get(results, "results.0.meta.id"));
+		assertNotNull(Json7.get(results, "results.0.meta.type"));
+		assertNotNull(Json7.get(results, "results.0.meta.version"));
+		assertNotNull(Json7.get(results, "results.0.meta.createdBy"));
+		assertNotNull(Json7.get(results, "results.0.meta.createdAt"));
+		assertNotNull(Json7.get(results, "results.0.meta.updatedBy"));
+		assertNotNull(Json7.get(results, "results.0.meta.updatedAt"));
 
 		// deletes messages containing 'up' by query
 
-		query = Json.objectBuilder().object("query")//
+		query = Json7.objectBuilder().object("query")//
 				.object("match").put("text", "up").build();
 		SpaceRequest.delete("/1/search/message").adminAuth(test).body(query).go(200);
 		SpaceRequest.get("/1/data/message").refresh().adminAuth(test).go(200)//
@@ -78,7 +78,7 @@ public class SearchResourceTestOften extends SpaceTest {
 
 		// deletes data objects containing 'wanna' or 'riri' but not users
 
-		query = Json.objectBuilder().object("query")//
+		query = Json7.objectBuilder().object("query")//
 				.object("match").put("_all", "wanna riri").build();
 		SpaceRequest.delete("/1/search").adminAuth(test).body(query).go(200);
 		SpaceRequest.get("/1/data").refresh().adminAuth(test).go(200)//
@@ -107,7 +107,7 @@ public class SearchResourceTestOften extends SpaceTest {
 		// search with 'terms' aggregation to get
 		// all 3 distinct city names Paris, Bordeaux and Nice
 
-		ObjectNode query = Json.objectBuilder()//
+		ObjectNode query = Json7.objectBuilder()//
 				.put("size", 0)//
 				.object("aggs")//
 				.object("distinctCities")//
@@ -139,7 +139,7 @@ public class SearchResourceTestOften extends SpaceTest {
 					.body("i", i, "t", "" + i).go(201);
 
 		// search with ascendent sorting
-		ObjectNode query = Json.objectBuilder()//
+		ObjectNode query = Json7.objectBuilder()//
 				.array("sort").add("i").end()//
 				.object("query").object("match_all")//
 				.build();
@@ -154,7 +154,7 @@ public class SearchResourceTestOften extends SpaceTest {
 				.assertEquals(2, "results.2.meta.sort.0");
 
 		// search with descendant sorting
-		query = Json.objectBuilder()//
+		query = Json7.objectBuilder()//
 				.array("sort").object().put("t", "desc").end().end()//
 				.object("query").object("match_all")//
 				.build();

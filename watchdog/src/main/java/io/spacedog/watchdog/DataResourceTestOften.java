@@ -12,7 +12,7 @@ import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceResponse;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Json;
+import io.spacedog.utils.Json7;
 
 public class DataResourceTestOften extends SpaceTest {
 
@@ -24,7 +24,7 @@ public class DataResourceTestOften extends SpaceTest {
 		test.schema().set(SchemaResourceTestOften.buildCarSchema());
 		SpaceDog vince = signUp(test, "vince", "hi vince");
 
-		ObjectNode car = Json.objectBuilder() //
+		ObjectNode car = Json7.objectBuilder() //
 				.put("serialNumber", "1234567890") //
 				.put("buyDate", "2015-01-09") //
 				.put("buyTime", "15:37:00") //

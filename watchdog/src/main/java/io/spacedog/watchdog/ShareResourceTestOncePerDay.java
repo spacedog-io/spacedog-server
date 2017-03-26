@@ -21,7 +21,7 @@ import io.spacedog.model.ShareSettings;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Json;
+import io.spacedog.utils.Json7;
 import io.spacedog.utils.SpaceHeaders;
 
 public class ShareResourceTestOncePerDay extends SpaceTest {
@@ -102,7 +102,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 				.assertSizeEquals(1, "results")//
 				.jsonNode();
 
-		Set<String> all = Sets.newHashSet(Json.get(json, "results.0.path").asText());
+		Set<String> all = Sets.newHashSet(Json7.get(json, "results.0.path").asText());
 
 		// get the index of the next page in the first request response
 		String next = json.get("next").asText();
@@ -117,7 +117,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 				.jsonNode();
 
 		// the set should contain both file paths
-		all.add(Json.get(json, "results.0.path").asText());
+		all.add(Json7.get(json, "results.0.path").asText());
 		Assert.assertTrue(all.contains(pngPath));
 		Assert.assertTrue(all.contains(txtPath));
 
