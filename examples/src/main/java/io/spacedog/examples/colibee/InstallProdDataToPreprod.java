@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
-import io.spacedog.utils.Json;
+import io.spacedog.utils.Json7;
 import io.spacedog.utils.Utils;
 
 public class InstallProdDataToPreprod extends SpaceTest {
@@ -34,7 +34,7 @@ public class InstallProdDataToPreprod extends SpaceTest {
 
 	void upgradeCredentials() {
 
-		ObjectNode query = Json.objectBuilder()//
+		ObjectNode query = Json7.objectBuilder()//
 				.put("size", 400)//
 				.object("query")//
 				.object("term")//
@@ -54,7 +54,7 @@ public class InstallProdDataToPreprod extends SpaceTest {
 					.post("http://connectapipreproduction.colibee.com:9200"//
 							+ "/spacedog-credentials/credentials/" //
 							+ id + "/_update")//
-					.body("doc", Json.object("backendId", "connectapipreproduction"))//
+					.body("doc", Json7.object("backendId", "connectapipreproduction"))//
 					.go(200);
 		}
 	}

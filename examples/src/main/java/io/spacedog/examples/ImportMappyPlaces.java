@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Json;
+import io.spacedog.utils.Json7;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Schema;
 
@@ -51,7 +51,7 @@ public class ImportMappyPlaces extends SpaceTest {
 	}
 
 	private static void copyPoi(JsonNode src) {
-		JsonBuilder<ObjectNode> target = Json.objectBuilder().put("name", src.get("name").asText()) //
+		JsonBuilder<ObjectNode> target = Json7.objectBuilder().put("name", src.get("name").asText()) //
 				.put("town", src.get("town").asText()) //
 				.put("zipcode", src.get("pCode").asText()) //
 				.put("way", src.get("way").asText()) //
