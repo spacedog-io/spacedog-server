@@ -5,12 +5,11 @@ package io.spacedog.services;
 
 import org.elasticsearch.common.Strings;
 
-import com.mashape.unirest.http.HttpMethod;
-
 import io.spacedog.model.WebSettings;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.WebPath;
 import net.codestory.http.Context;
+import net.codestory.http.constants.Methods;
 import net.codestory.http.filters.PayloadSupplier;
 import net.codestory.http.payload.Payload;
 
@@ -36,10 +35,10 @@ public class WebResource extends S3Resource {
 
 				String method = context.method();
 
-				if (HttpMethod.GET.name().equals(method))
+				if (Methods.GET.equals(method))
 					return doGet(toWebPath(uri), context);
 
-				if (HttpMethod.HEAD.name().equals(method))
+				if (Methods.HEAD.equals(method))
 					return doHead(toWebPath(uri), context);
 
 				throw Exceptions.runtime("path [%s] invalid for method [%s]", uri, method);

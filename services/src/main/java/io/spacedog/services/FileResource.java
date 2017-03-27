@@ -3,12 +3,11 @@
  */
 package io.spacedog.services;
 
-import com.mashape.unirest.http.HttpMethod;
-
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.WebPath;
 import net.codestory.http.Context;
+import net.codestory.http.constants.Methods;
 import net.codestory.http.filters.PayloadSupplier;
 import net.codestory.http.payload.Payload;
 
@@ -36,13 +35,13 @@ public class FileResource extends S3Resource {
 
 				String method = context.method();
 
-				if (HttpMethod.GET.name().equals(method))
+				if (Methods.GET.equals(method))
 					return get(toWebPath(uri), context);
 
-				if (HttpMethod.PUT.name().equals(method))
+				if (Methods.PUT.equals(method))
 					return put(toWebPath(uri), context.request().contentAsBytes(), context);
 
-				if (HttpMethod.DELETE.name().equals(method))
+				if (Methods.DELETE.equals(method))
 					return delete(toWebPath(uri));
 
 				throw Exceptions.runtime("path [%s] invalid for method [%s]", uri, method);

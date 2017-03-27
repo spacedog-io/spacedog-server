@@ -6,7 +6,6 @@ import org.elasticsearch.common.Strings;
 
 import com.google.common.collect.Maps;
 import com.google.common.net.HttpHeaders;
-import com.mashape.unirest.http.HttpMethod;
 
 import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Backends;
@@ -14,6 +13,7 @@ import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.SpaceHeaders;
 import net.codestory.http.Context;
+import net.codestory.http.constants.Methods;
 
 /**
  * Context credentials should only be accessed from public static check methods
@@ -246,7 +246,7 @@ public class SpaceContext {
 	private void checkPasswordMustChange(Credentials credentials, Context context) {
 		if (credentials.passwordMustChange()) {
 
-			if (!(HttpMethod.PUT.name().equals(context.method()) //
+			if (!(Methods.PUT.equals(context.method()) //
 					&& "/1/credentials/me/password".equals(uri)))
 
 				throw Exceptions.passwordMustChange(credentials);
