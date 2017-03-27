@@ -32,7 +32,9 @@ public class Snapshot extends Job {
 			SpaceRequest.get("/1/snapshot")//
 					.basicAuth("api", "snapshotall", password)//
 					.go(200)//
-					.assertEquals("IN_PROGRESS", "results.0.state")//
+					// current snapshot is sometimes so fast
+					// I don't get the IN_PROGESS status for results.0
+					// results.1 should always be a SUCCESS
 					.assertEquals("SUCCESS", "results.1.state");
 
 		} catch (Throwable t) {
