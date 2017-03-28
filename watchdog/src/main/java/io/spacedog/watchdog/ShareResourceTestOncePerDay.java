@@ -303,10 +303,10 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 
 	void upload(String putUrl, String content, String contentType, String fileName, String username, String userType) {
 		SpaceRequest.put(putUrl)//
-				.header("x-amz-meta-username", username)//
-				.header("x-amz-meta-user-type", userType)//
-				.header("Content-Type", contentType)//
-				.header("Content-Disposition", String.format("attachment; filename=\"%s\"", fileName))//
+				.setHeader("x-amz-meta-username", username)//
+				.setHeader("x-amz-meta-user-type", userType)//
+				.setHeader("Content-Type", contentType)//
+				.setHeader("Content-Disposition", String.format("attachment; filename=\"%s\"", fileName))//
 				.body(content.getBytes())//
 				.go(200);
 	}

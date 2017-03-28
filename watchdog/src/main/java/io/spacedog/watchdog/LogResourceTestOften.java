@@ -159,9 +159,9 @@ public class LogResourceTestOften extends SpaceTest {
 		// Headers are logged if not empty
 		// and 'Authorization' header is not logged
 		SpaceRequest.get("/1/log").adminAuth(test)//
-				.header("x-empty", "")//
-				.header("x-blank", " ")//
-				.header("x-color", "YELLOW")//
+				.setHeader("x-empty", "")//
+				.setHeader("x-blank", " ")//
+				.setHeader("x-color", "YELLOW")//
 				.addHeader("x-color-list", "RED")//
 				.addHeader("x-color-list", "BLUE")//
 				.addHeader("x-color-list", "GREEN")//

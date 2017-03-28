@@ -45,7 +45,7 @@ public class EdfResourceTest extends SpaceTest {
 		String code = SpaceRequest.post("/ws/iOAuthApprove/do")//
 				.baseUrl("https://noefy5jt.noe.edf.fr:5641")//
 				.basicAuth(user01.username(), user01.username())//
-				.header(SpaceHeaders.ACCEPT, "application/json")//
+				.setHeader(SpaceHeaders.ACCEPT, "application/json")//
 				.formField("approved", "true")//
 				.formField("scope", "1001Espaces")//
 				.formField("client_id", oauth.clientId)//
@@ -86,7 +86,7 @@ public class EdfResourceTest extends SpaceTest {
 		String code = SpaceRequest.post("/ws/iOAuthApprove/do")//
 				.baseUrl("https://noefy5jt.noe.edf.fr:5641")//
 				.basicAuth("USER01", "USER01")//
-				.header(SpaceHeaders.ACCEPT, "application/json")//
+				.setHeader(SpaceHeaders.ACCEPT, "application/json")//
 				.formField("approved", "true")//
 				.formField("scope", "1001Espaces")//
 				.formField("client_id", oauth.clientId)//
@@ -98,7 +98,7 @@ public class EdfResourceTest extends SpaceTest {
 		SpaceRequest.post("/ws/iOAuthGetToken/do")//
 				.baseUrl("https://noefy5jt.noe.edf.fr:5641")//
 				.basicAuth(oauth.clientId, oauth.clientSecret)//
-				.header(SpaceHeaders.ACCEPT, "application/json")//
+				.setHeader(SpaceHeaders.ACCEPT, "application/json")//
 				.body("grant_type", "authorization_code", "code", code, //
 						"client_id", oauth.clientId, //
 						"redirect_uri", redirectUri)//
