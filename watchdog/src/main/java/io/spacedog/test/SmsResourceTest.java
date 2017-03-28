@@ -50,14 +50,14 @@ public class SmsResourceTest extends SpaceTest {
 		// superadmin sets twilio settings
 		settings.twilio = new TwilioSettings();
 		SpaceEnv configuration = SpaceRequest.env();
-		settings.twilio.accountSid = configuration.get("spacedog.twilio.accountSid");
-		settings.twilio.authToken = configuration.get("spacedog.twilio.authToken");
-		settings.twilio.defaultFrom = configuration.get("spacedog.twilio.defaultFrom");
+		settings.twilio.accountSid = configuration.get("caremen.twilio.accountSid");
+		settings.twilio.authToken = configuration.get("caremen.twilio.authToken");
+		settings.twilio.defaultFrom = configuration.get("caremen.twilio.defaultFrom");
 		test.settings().save(settings);
 
 		// vince sends an sms
 		String messageId = vince.post("/1/sms").formField("To", "33662627520")//
-				.formField("Body", "Hi from SpaceDog").go(200).getString("sid");
+				.formField("Body", "Hi from SpaceDog").go(201).getString("sid");
 
 		// vince gets info on the previously sent sms
 		// since he's got the 'sms' role
@@ -70,8 +70,8 @@ public class SmsResourceTest extends SpaceTest {
 
 		// vince sends an sms to invalid mobile number
 		vince.post("/1/sms").formField("To", "33162627520")//
-				.formField("Body", "Hi from SpaceDog").go(200)//
-				.assertEquals(400, "status")//
+				.formField("Body", "Hi from SpaceDog")//
+				.go(400)//
 				.assertEquals("twilio:21614", "error.code");
 	}
 }

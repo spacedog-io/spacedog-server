@@ -9,8 +9,8 @@ import com.google.common.collect.Maps;
 
 import io.spacedog.model.Schema;
 import io.spacedog.model.SmsSettings;
-import io.spacedog.model.SmsTemplate;
 import io.spacedog.model.SmsSettings.TwilioSettings;
+import io.spacedog.model.SmsTemplate;
 import io.spacedog.rest.SpaceEnv;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
@@ -43,9 +43,9 @@ public class SmsTemplateResourceTest extends SpaceTest {
 		SmsSettings settings = new SmsSettings();
 		settings.twilio = new TwilioSettings();
 		SpaceEnv configuration = SpaceRequest.env();
-		settings.twilio.accountSid = configuration.get("spacedog.twilio.accountSid");
-		settings.twilio.authToken = configuration.get("spacedog.twilio.authToken");
-		settings.twilio.defaultFrom = configuration.get("spacedog.twilio.defaultFrom");
+		settings.twilio.accountSid = configuration.get("caremen.twilio.accountSid");
+		settings.twilio.authToken = configuration.get("caremen.twilio.authToken");
+		settings.twilio.defaultFrom = configuration.get("caremen.twilio.defaultFrom");
 
 		// prepare 'hello' SMS template
 		SmsTemplate template = new SmsTemplate();
@@ -67,7 +67,7 @@ public class SmsTemplateResourceTest extends SpaceTest {
 
 		// vince sends 'hello' templated SMS
 		SpaceRequest.post("/1/sms/template/hello").userAuth(vince)//
-				.body("customer", customerId).go(200);
+				.body("customer", customerId).go(201);
 
 		// anonymous and superadmin don't have the 'sms' role
 		// they are not allowed to use the hello SMS template
