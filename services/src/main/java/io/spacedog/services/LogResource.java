@@ -348,14 +348,9 @@ public class LogResource extends Resource {
 			if (Utils.isNullOrEmpty(values))
 				continue;
 
-			if (key.equalsIgnoreCase(SpaceHeaders.USER_AGENT)) {
-				log.with("headers").put(key, values.toString()//
-						.substring(1, values.toString().length() - 1));
-				return;
-			}
-
 			if (values.size() == 1)
 				log.with("headers").put(key, values.get(0));
+
 			else if (values.size() > 1) {
 				ArrayNode array = log.with("headers").putArray(key);
 				for (String string : values)
