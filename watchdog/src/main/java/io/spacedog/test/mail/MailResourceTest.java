@@ -70,6 +70,7 @@ public class MailResourceTest extends SpaceTest {
 
 		// admin fails to email since mailgun key is invalid
 		SpaceRequest.post("/1/mail").adminAuth(test)//
+				.formField("from", DEFAULT_FROM)//
 				.formField("to", DEFAULT_TO)//
 				.formField("subject", DEFAULT_SUBJECT)//
 				.formField("text", DEFAULT_TEXT)//
@@ -92,8 +93,8 @@ public class MailResourceTest extends SpaceTest {
 
 		// vince emails a text message via smtp
 		SpaceRequest.post("/1/mail").userAuth(vince)//
-				.formField("to", DEFAULT_TO)//
 				.formField("from", DEFAULT_FROM)//
+				.formField("to", DEFAULT_TO)//
 				.formField("subject", DEFAULT_SUBJECT)//
 				.formField("text", DEFAULT_TEXT)//
 				.go(200)//
@@ -101,8 +102,8 @@ public class MailResourceTest extends SpaceTest {
 
 		// vince emails an html message via smtp
 		SpaceRequest.post("/1/mail").userAuth(vince)//
-				.formField("to", DEFAULT_TO)//
 				.formField("from", DEFAULT_FROM)//
+				.formField("to", DEFAULT_TO)//
 				.formField("subject", DEFAULT_SUBJECT)//
 				.formField("html", emailBody)//
 				.formField("text", DEFAULT_TEXT)//
