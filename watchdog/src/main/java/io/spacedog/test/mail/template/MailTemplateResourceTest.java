@@ -1,4 +1,4 @@
-package io.spacedog.watchdog.mail.template;
+package io.spacedog.test.mail.template;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -13,9 +13,9 @@ import com.google.common.io.Resources;
 
 import io.spacedog.model.DataPermission;
 import io.spacedog.model.MailSettings;
+import io.spacedog.model.MailSettings.SmtpSettings;
 import io.spacedog.model.MailTemplate;
 import io.spacedog.model.Schema;
-import io.spacedog.model.MailSettings.SmtpSettings;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;

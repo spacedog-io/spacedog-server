@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.watchdog.sendpulse;
+package io.spacedog.test.sendpulse;
 
 import java.util.Collections;
 

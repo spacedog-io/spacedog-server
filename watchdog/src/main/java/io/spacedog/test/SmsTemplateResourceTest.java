@@ -1,4 +1,4 @@
-package io.spacedog.watchdog;
+package io.spacedog.test;
 
 import java.io.IOException;
 import java.util.Collections;
