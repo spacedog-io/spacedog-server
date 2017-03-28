@@ -55,7 +55,7 @@ public class LinkedinResource extends Resource {
 		if (Strings.isNullOrEmpty(finalRedirectUri)) {
 			finalRedirectUri = SettingsResource.get()//
 					.load(CredentialsSettings.class)//
-					.linkedinFinalRedirectUri;
+							.linkedinFinalRedirectUri;
 
 			if (Strings.isNullOrEmpty(finalRedirectUri))
 				throw Exceptions.illegalArgument(//
@@ -106,7 +106,8 @@ public class LinkedinResource extends Resource {
 		Credentials credentials = SpaceContext.checkUserCredentials();
 
 		SpaceResponse response = SpaceRequest//
-				.get("https://api.linkedin.com/v1/people/~:({fields})")//
+				.get("/v1/people/~:({fields})")//
+				.baseUrl("https://api.linkedin.com")//
 				.bearerAuth(credentials.accessToken())//
 				.routeParam("fields", fields)//
 				.queryParam("format", "json")//
@@ -122,7 +123,7 @@ public class LinkedinResource extends Resource {
 
 	private void checkLinkedinError(SpaceResponse response, String messageIntro) {
 
-		int httpStatus = response.httpResponse().getStatus();
+		int httpStatus = response.status();
 
 		if (httpStatus >= 400) {
 
@@ -172,8 +173,8 @@ public class LinkedinResource extends Resource {
 			// in mobile app
 			redirectUri = Utils.removeSuffix(redirectUri, ";");
 
-		SpaceResponse response = SpaceRequest//
-				.post("https://www.linkedin.com/oauth/v2/accessToken")//
+		SpaceResponse response = SpaceRequest.post("/oauth/v2/accessToken")//
+				.baseUrl("https://www.linkedin.com")//
 				.queryParam("grant_type", "authorization_code")//
 				.queryParam("client_id", settings.linkedinId)//
 				.queryParam("client_secret", settings.linkedinSecret)//
@@ -191,8 +192,8 @@ public class LinkedinResource extends Resource {
 
 		Session session = Session.newSession(accessToken, expiresIn);
 
-		response = SpaceRequest//
-				.get("https://api.linkedin.com/v1/people/~:(email-address)")//
+		response = SpaceRequest.get("/v1/people/~:(email-address)")//
+				.baseUrl("https://api.linkedin.com")//
 				.bearerAuth(backendId, accessToken)//
 				.queryParam("format", "json")//
 				.go();

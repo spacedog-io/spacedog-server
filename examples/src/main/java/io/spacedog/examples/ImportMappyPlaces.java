@@ -31,7 +31,8 @@ public class ImportMappyPlaces extends SpaceTest {
 
 					// "48.671228,1.854415,49.034931,2.843185");
 
-					JsonNode pois = SpaceRequest.get("http://search.mappy.net/search/1.0/find")//
+					JsonNode pois = SpaceRequest.get("/search/1.0/find")//
+							.baseUrl("http://search.mappy.net")//
 							.queryParam("max_results", "100")//
 							.queryParam("extend_bbox", "0")//
 							.queryParam("q", "restaurant")//

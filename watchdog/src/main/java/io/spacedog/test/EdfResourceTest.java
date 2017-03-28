@@ -42,13 +42,10 @@ public class EdfResourceTest extends SpaceTest {
 		// USER01 gets an authorization code from EDF
 		SpaceDog user01 = SpaceDog.backend(test).username("USER01");
 
-		String code = SpaceRequest
-				.post(//
-						"https://noefy5jt.noe.edf.fr:5641/ws/iOAuthApprove/do")//
+		String code = SpaceRequest.post("/ws/iOAuthApprove/do")//
+				.baseUrl("https://noefy5jt.noe.edf.fr:5641")//
 				.basicAuth(user01.username(), user01.username())//
 				.header(SpaceHeaders.ACCEPT, "application/json")//
-				.header(SpaceHeaders.ACCEPT_ENCODING, "gzip")//
-				.header(SpaceHeaders.USER_AGENT, "spacedog-server")//
 				.formField("approved", "true")//
 				.formField("scope", "1001Espaces")//
 				.formField("client_id", oauth.clientId)//
@@ -69,7 +66,8 @@ public class EdfResourceTest extends SpaceTest {
 
 		// USER01 checks his access token is working fine
 		// by getting his credentials
-		Credentials credentials = user01.credentials().getByUsername(user01.username()).get();
+		Credentials credentials = user01.credentials()//
+				.getByUsername(user01.username()).get();
 		assertEquals(user01.id(), credentials.id());
 		assertEquals(user01.username(), credentials.name());
 	}
@@ -85,15 +83,10 @@ public class EdfResourceTest extends SpaceTest {
 				+ "/invoke/PAAS_OAUTH.services:defaultRedirectURI";
 
 		// USER01 gets authorization code from EDF
-		String code = SpaceRequest
-				.post(//
-						"https://noefy5jt.noe.edf.fr:5641/ws/iOAuthApprove/do")//
+		String code = SpaceRequest.post("/ws/iOAuthApprove/do")//
+				.baseUrl("https://noefy5jt.noe.edf.fr:5641")//
 				.basicAuth("USER01", "USER01")//
 				.header(SpaceHeaders.ACCEPT, "application/json")//
-				.header(SpaceHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")//
-				.header(SpaceHeaders.CONNECTION, "Keep-Alive")//
-				.header(SpaceHeaders.ACCEPT_ENCODING, "gzip")//
-				.header(SpaceHeaders.USER_AGENT, "spacedog-server")//
 				.formField("approved", "true")//
 				.formField("scope", "1001Espaces")//
 				.formField("client_id", oauth.clientId)//
@@ -102,14 +95,10 @@ public class EdfResourceTest extends SpaceTest {
 				.go(200).getString("code");
 
 		// USER01 gets an access token from EDF
-		SpaceRequest
-				.post(//
-						"https://noefy5jt.noe.edf.fr:5641/ws/iOAuthGetToken/do")//
+		SpaceRequest.post("/ws/iOAuthGetToken/do")//
+				.baseUrl("https://noefy5jt.noe.edf.fr:5641")//
 				.basicAuth(oauth.clientId, oauth.clientSecret)//
 				.header(SpaceHeaders.ACCEPT, "application/json")//
-				.header(SpaceHeaders.CONNECTION, "Keep-Alive")//
-				.header(SpaceHeaders.ACCEPT_ENCODING, "gzip")//
-				.header(SpaceHeaders.USER_AGENT, "spacedog-server")//
 				.body("grant_type", "authorization_code", "code", code, //
 						"client_id", oauth.clientId, //
 						"redirect_uri", redirectUri)//

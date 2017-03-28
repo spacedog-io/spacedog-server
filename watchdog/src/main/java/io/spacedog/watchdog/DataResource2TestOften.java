@@ -111,8 +111,9 @@ public class DataResource2TestOften extends SpaceTest {
 
 		// find by simple text search
 
-		SpaceResponse res1b = SpaceRequest.get("/1/search/sale?q=museum")//
-				.refresh().userAuth(fred).go(200).assertEquals(1, "total");
+		SpaceResponse res1b = SpaceRequest.get("/1/search/sale")//
+				.queryParam("q", "museum").refresh().userAuth(fred)//
+				.go(200).assertEquals(1, "total");
 
 		res1.assertEqualsWithoutMeta(Json7.checkObject(res1b.get("results.0")));
 
@@ -162,8 +163,10 @@ public class DataResource2TestOften extends SpaceTest {
 
 		// update with invalid version should fail
 
-		SpaceRequest.put("/1/data/sale/" + id + "?version=XXX").userAuth(fred)//
-				.body("number", "0987654321").go(400).assertFalse("success");
+		SpaceRequest.put("/1/data/sale/" + id)//
+				.queryParam("version", "XXX").userAuth(fred)//
+				.body("number", "0987654321").go(400)//
+				.assertFalse("success");
 
 		// update with correct version should succeed
 
@@ -251,8 +254,8 @@ public class DataResource2TestOften extends SpaceTest {
 
 		// creates a message object with self provided id
 
-		SpaceRequest.post("/1/data/message?id=1").adminAuth(test)//
-				.body("text", "id=1").go(201);
+		SpaceRequest.post("/1/data/message").id("1")//
+				.adminAuth(test).body("text", "id=1").go(201);
 
 		SpaceRequest.get("/1/data/message/1").adminAuth(test).go(200)//
 				.assertEquals("id=1", "text");
@@ -280,7 +283,7 @@ public class DataResource2TestOften extends SpaceTest {
 		// creates a message2 object with code = 3
 		// and the id param is transparent
 
-		SpaceRequest.post("/1/data/message2?id=XXX").adminAuth(test)//
+		SpaceRequest.post("/1/data/message2").id("XXX").adminAuth(test)//
 				.body("text", "id=code=3", "code", "3").go(201);
 
 		SpaceRequest.get("/1/data/message2/3").adminAuth(test).go(200)//
@@ -295,7 +298,7 @@ public class DataResource2TestOften extends SpaceTest {
 		// fails to create a message2 object without any code
 		// and the id param is still transparent
 
-		SpaceRequest.post("/1/data/message2?id=XXX").adminAuth(test)//
+		SpaceRequest.post("/1/data/message2").id("XXX").adminAuth(test)//
 				.body("text", "no code").go(400);
 	}
 

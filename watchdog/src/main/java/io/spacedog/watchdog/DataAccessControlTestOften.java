@@ -11,8 +11,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import io.spacedog.model.DataPermission;
 import io.spacedog.model.Schema;
-import io.spacedog.model.SchemaSettings;
 import io.spacedog.model.Schema.SchemaAcl;
+import io.spacedog.model.SchemaSettings;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
@@ -38,9 +38,9 @@ public class DataAccessControlTestOften extends SpaceTest {
 
 		// in default acl, only users and admins can create objects
 		SpaceRequest.post("/1/data/msge").backend(test).body("t", "hello").go(403);
-		SpaceRequest.post("/1/data/msge?id=vince").userAuth(vince).body("t", "v1").go(201);
-		SpaceRequest.post("/1/data/msge?id=vince2").userAuth(vince).body("t", "v2").go(201);
-		SpaceRequest.post("/1/data/msge?id=admin").adminAuth(test).body("t", "a1").go(201);
+		SpaceRequest.post("/1/data/msge").id("vince").userAuth(vince).body("t", "v1").go(201);
+		SpaceRequest.post("/1/data/msge").id("vince2").userAuth(vince).body("t", "v2").go(201);
+		SpaceRequest.post("/1/data/msge").id("admin").adminAuth(test).body("t", "a1").go(201);
 
 		// in default acl, everyone can read any objects
 		SpaceRequest.get("/1/data/msge/vince").backend(test).go(200);
@@ -75,7 +75,7 @@ public class DataAccessControlTestOften extends SpaceTest {
 		SpaceRequest.delete("/1/data/msge/admin").adminAuth(test).go(200);
 
 		// vince creates a message before security tightens
-		SpaceRequest.post("/1/data/msge?id=vince").userAuth(vince).body("t", "hello").go(201);
+		SpaceRequest.post("/1/data/msge").id("vince").userAuth(vince).body("t", "hello").go(201);
 
 		// set message schema acl to empty
 		messageSchema.acl(new SchemaAcl());
@@ -172,13 +172,13 @@ public class DataAccessControlTestOften extends SpaceTest {
 		// he's got all the rights
 		SpaceDog dave = signUp(test, "dave", "hi dave");
 		SpaceRequest.put("/1/credentials/" + dave.id() + "/roles/platine").adminAuth(test).go(200);
-		SpaceRequest.post("/1/data/message?id=dave").userAuth(dave).body("text", "Dave").go(201);
+		SpaceRequest.post("/1/data/message").id("dave").userAuth(dave).body("text", "Dave").go(201);
 		SpaceRequest.get("/1/data/message/dave").userAuth(dave).go(200);
 		SpaceRequest.put("/1/data/message/dave").userAuth(dave).body("text", "Salut Dave").go(200);
 		SpaceRequest.delete("/1/data/message/dave").userAuth(dave).go(200);
 
 		// message for users without create permission
-		SpaceRequest.post("/1/data/message?id=1").userAuth(dave).body("text", "Hello").go(201);
+		SpaceRequest.post("/1/data/message").id("1").userAuth(dave).body("text", "Hello").go(201);
 
 		// maelle is a simple user
 		// she's got no right on the message schema
@@ -210,7 +210,7 @@ public class DataAccessControlTestOften extends SpaceTest {
 		// he's got the right to create, read and update
 		SpaceDog vince = signUp(test, "vince", "hi vince");
 		SpaceRequest.put("/1/credentials/" + vince.id() + "/roles/gold").adminAuth(test).go(200);
-		SpaceRequest.post("/1/data/message?id=vince").userAuth(vince).body("text", "Vince").go(201);
+		SpaceRequest.post("/1/data/message").id("vince").userAuth(vince).body("text", "Vince").go(201);
 		SpaceRequest.get("/1/data/message/vince").userAuth(vince).go(200);
 		SpaceRequest.put("/1/data/message/vince").userAuth(vince).body("text", "Salut Vince").go(200);
 		SpaceRequest.delete("/1/data/message/vince").userAuth(vince).go(403);

@@ -7,6 +7,7 @@ import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.DataObject;
 import io.spacedog.sdk.SpaceDog;
+import io.spacedog.utils.SpaceHeaders;
 
 public class LogResourceTestOften extends SpaceTest {
 
@@ -156,14 +157,18 @@ public class LogResourceTestOften extends SpaceTest {
 				.assertNotPresent("results.0.response.results");
 
 		// Headers are logged if not empty
+		// and 'Authorization' header is not logged
 		SpaceRequest.get("/1/log").adminAuth(test)//
 				.header("x-empty", "")//
 				.header("x-blank", " ")//
 				.header("x-color", "YELLOW")//
-				.header("x-color-list", "RED,BLUE,GREEN")//
+				.addHeader("x-color-list", "RED")//
+				.addHeader("x-color-list", "BLUE")//
+				.addHeader("x-color-list", "GREEN")//
 				.go(200);
 
 		SpaceRequest.get("/1/log").refresh().size(1).adminAuth(test).go(200)//
+				.assertNotPresent("results.0.headers." + SpaceHeaders.AUTHORIZATION)//
 				.assertNotPresent("results.0.headers.x-empty")//
 				.assertNotPresent("results.0.headers.x-blank")//
 				.assertEquals("YELLOW", "results.0.headers.x-color")//

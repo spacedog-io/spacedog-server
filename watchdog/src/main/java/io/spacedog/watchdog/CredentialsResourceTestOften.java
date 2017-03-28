@@ -278,7 +278,8 @@ public class CredentialsResourceTestOften extends SpaceTest {
 				.assertContainsValue("fred", "username");
 
 		// super admin searches for user credentials
-		SpaceRequest.get("/1/credentials?level=USER").adminAuth(test).go(200)//
+		SpaceRequest.get("/1/credentials")//
+				.queryParam("level", "USER").adminAuth(test).go(200)//
 				.assertEquals(2, "total")//
 				.assertSizeEquals(2, "results")//
 				.assertContainsValue("vince", "username")//
@@ -295,14 +296,16 @@ public class CredentialsResourceTestOften extends SpaceTest {
 				.assertContainsValue("fred", "username");
 
 		// vince searches for credentials with specified username
-		SpaceRequest.get("/1/credentials?username=fred").userAuth(vince).go(200)//
+		SpaceRequest.get("/1/credentials")//
+				.queryParam("username", "fred").userAuth(vince).go(200)//
 				.assertSizeEquals(1, "results")//
 				.assertContainsValue("fred", "username")//
 				.assertContainsValue("platform@spacedog.io", "email")//
 				.assertContainsValue("USER", "level");
 
 		// super admin deletes credentials with specified username
-		SpaceRequest.delete("/1/credentials?username=fred").adminAuth(test).go(200);
+		SpaceRequest.delete("/1/credentials")//
+				.queryParam("username", "fred").adminAuth(test).go(200);
 
 		SpaceRequest.get("/1/credentials").adminAuth(test).go(200)//
 				.assertSizeEquals(2, "results")//
@@ -310,7 +313,8 @@ public class CredentialsResourceTestOften extends SpaceTest {
 				.assertContainsValue("vince", "username");
 
 		// super admin deletes credentials with specified level
-		SpaceRequest.delete("/1/credentials?level=USER").adminAuth(test).go(200);
+		SpaceRequest.delete("/1/credentials")//
+				.queryParam("level", "USER").adminAuth(test).go(200);
 
 		SpaceRequest.get("/1/credentials").adminAuth(test).go(200)//
 				.assertSizeEquals(1, "results")//

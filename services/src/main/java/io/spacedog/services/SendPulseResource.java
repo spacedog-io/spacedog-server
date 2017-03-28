@@ -27,8 +27,8 @@ public class SendPulseResource extends Resource {
 		SendPulseSettings settings = SettingsResource.get().load(SendPulseSettings.class);
 		SpaceContext.getCredentials().checkRoles(settings.authorizedRoles);
 
-		String body = SpaceRequest//
-				.get("https://api.sendpulse.com/push/websites")//
+		String body = SpaceRequest.get("/push/websites")//
+				.baseUrl("https://api.sendpulse.com")//
 				.bearerAuth(accessToken(settings))//
 				.go()//
 				.string();
@@ -43,8 +43,8 @@ public class SendPulseResource extends Resource {
 		SendPulseSettings settings = SettingsResource.get().load(SendPulseSettings.class);
 		SpaceContext.getCredentials().checkRoles(settings.authorizedRoles);
 
-		SpaceRequest request = SpaceRequest//
-				.post("https://api.sendpulse.com/push/tasks")//
+		SpaceRequest request = SpaceRequest.post("/push/tasks")//
+				.baseUrl("https://api.sendpulse.com")//
 				.bearerAuth(accessToken(settings));
 
 		FormQuery formQuery = Resource.formQuery(context);
@@ -64,8 +64,8 @@ public class SendPulseResource extends Resource {
 			if (Strings.isNullOrEmpty(settings.clientId))
 				throw Exceptions.illegalArgument("invalid SendPulse settings");
 
-			SpaceResponse response = SpaceRequest//
-					.post("https://api.sendpulse.com/oauth/access_token")//
+			SpaceResponse response = SpaceRequest.post("/oauth/access_token")//
+					.baseUrl("https://api.sendpulse.com")//
 					.formField("grant_type", "client_credentials")//
 					.formField("client_id", settings.clientId)//
 					.formField("client_secret", settings.clientSecret)//
@@ -81,7 +81,7 @@ public class SendPulseResource extends Resource {
 
 	private void checkSendPulseError(SpaceResponse response, String messageIntro) {
 
-		int httpStatus = response.httpResponse().getStatus();
+		int httpStatus = response.status();
 
 		if (httpStatus != 200) {
 

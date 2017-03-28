@@ -84,9 +84,10 @@ public class SmsResource extends Resource {
 			message.from = twilio.defaultFrom;
 
 		SpaceResponse response = SpaceRequest//
-				.post("https://api.twilio.com/2010-04-01/Accounts/{id}/Messages.json")//
+				.post("/2010-04-01/Accounts/{id}/Messages.json")//
+				.baseUrl("https://api.twilio.com")//
 				.routeParam("id", twilio.accountSid)//
-				.basicAuth("", twilio.accountSid, twilio.authToken)//
+				.basicAuth(twilio.accountSid, twilio.authToken)//
 				.formField(TO, message.to)//
 				.formField(FROM, message.from)//
 				.formField(BODY, message.body)//
@@ -108,10 +109,11 @@ public class SmsResource extends Resource {
 	private Payload fetchFromTwilio(String messageId, TwilioSettings twilio) {
 
 		SpaceResponse response = SpaceRequest//
-				.get("https://api.twilio.com/2010-04-01/Accounts/{accountId}/Messages/{messageId}.json")//
+				.get("/2010-04-01/Accounts/{accountId}/Messages/{messageId}.json")//
+				.baseUrl("https://api.twilio.com")//
 				.routeParam("accountId", twilio.accountSid)//
 				.routeParam("messageId", messageId)//
-				.basicAuth("", twilio.accountSid, twilio.authToken)//
+				.basicAuth(twilio.accountSid, twilio.authToken)//
 				.go();
 
 		return toPayload(response);
@@ -123,16 +125,16 @@ public class SmsResource extends Resource {
 
 	private Payload toPayload(SpaceResponse response) {
 		ObjectNode node = response.objectNode();
-		if (response.httpResponse().getStatus() >= 400) {
+		if (response.status() >= 400) {
 			ObjectNode twilio = response.objectNode();
-			node = JsonPayload.builder(response.httpResponse().getStatus())//
+			node = JsonPayload.builder(response.status())//
 					.object("error")//
 					.put("code", "twilio:" + twilio.get("code").asText())//
 					.put("message", twilio.get("message").asText())//
 					.node("twilio", twilio)//
 					.build();
 		}
-		return JsonPayload.json(node);
+		return JsonPayload.json(node, response.status());
 	}
 
 	//

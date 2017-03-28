@@ -242,8 +242,9 @@ public class BatchResourceTest extends SpaceTest {
 				.end()//
 				.build();
 
-		SpaceRequest.post("/1/batch?stopOnError=true")//
-				.debugServer().basicAuth("test", "vince", "hi vince").body(batch).go(200)//
+		SpaceRequest.post("/1/batch").debugServer()//
+				.queryParam("stopOnError", "true")//
+				.basicAuth("test", "vince", "hi vince").body(batch).go(200)//
 				.assertEquals(200, "responses.0.status")//
 				.assertEquals(404, "responses.1.status")//
 				.assertSizeEquals(2, "responses")//

@@ -12,9 +12,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
 
 import io.spacedog.model.DataPermission;
 import io.spacedog.model.ShareSettings;
@@ -108,7 +105,8 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		String next = json.get("next").asText();
 
 		// get second (and last) page with only one path
-		json = SpaceRequest.get("/1/share?next=" + next)//
+		json = SpaceRequest.get("/1/share")//
+				.queryParam("next", next)//
 				.size(1)//
 				.adminAuth(test)//
 				.go(200)//
@@ -126,14 +124,14 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 				// .assertHeaderEquals("gzip", SpaceHeaders.CONTENT_ENCODING)//
 				.assertHeaderEquals("text/plain", SpaceHeaders.CONTENT_TYPE)//
 				.assertHeaderEquals("fred", SpaceHeaders.SPACEDOG_OWNER)//
-				.httpResponse().getBody();
+				.string();
 
 		Assert.assertEquals(FILE_CONTENT, stringContent);
 
 		// download shared text file through direct S3 access
 		stringContent = SpaceRequest.get(txtS3Location).go(200)//
 				.assertHeaderEquals("text/plain", SpaceHeaders.CONTENT_TYPE)//
-				.httpResponse().getBody();
+				.string();
 
 		Assert.assertEquals(FILE_CONTENT, stringContent);
 
@@ -278,7 +276,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		// no file extension => no specific content type
 		String stringContent = SpaceRequest.get(location).backend(test).go(200)//
 				.assertHeaderEquals("application/octet-stream", SpaceHeaders.CONTENT_TYPE)//
-				.httpResponse().getBody();
+				.string();
 
 		Assert.assertEquals(FILE_CONTENT, stringContent);
 
@@ -287,7 +285,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 				.queryParam("withContentDisposition", "true").go(200)//
 				.assertHeaderEquals("attachment; filename=\"un petit text ?\"", //
 						SpaceHeaders.CONTENT_DISPOSITION)//
-				.httpResponse().getBody();
+				.string();
 
 		Assert.assertEquals(FILE_CONTENT, stringContent);
 
@@ -298,27 +296,19 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 				.assertHeaderEquals("application/octet-stream", SpaceHeaders.CONTENT_TYPE)//
 				.assertHeaderEquals("attachment; filename=\"un petit text ?\"", //
 						SpaceHeaders.CONTENT_DISPOSITION)//
-				.httpResponse().getBody();
+				.string();
 
 		Assert.assertEquals(FILE_CONTENT, stringContent);
 	}
 
-	void upload(String putUrl, String content, String contentType, String fileName, String username, String userType)
-			throws UnirestException {
-		HttpResponse<String> response = Unirest.put(putUrl)//
+	void upload(String putUrl, String content, String contentType, String fileName, String username, String userType) {
+		SpaceRequest.put(putUrl)//
 				.header("x-amz-meta-username", username)//
 				.header("x-amz-meta-user-type", userType)//
 				.header("Content-Type", contentType)//
 				.header("Content-Disposition", String.format("attachment; filename=\"%s\"", fileName))//
 				.body(content.getBytes())//
-				.asString();
-
-		System.out.println();
-		System.out.println(String.format("PUT %s => %s %s", //
-				putUrl, response.getStatus(), response.getStatusText()));
-		System.out.println("Response body = " + response.getBody());
-
-		Assert.assertEquals(200, response.getStatus());
+				.go(200);
 	}
 
 }

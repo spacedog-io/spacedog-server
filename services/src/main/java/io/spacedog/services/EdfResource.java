@@ -46,14 +46,10 @@ public class EdfResource extends Resource {
 		if (settings.oauth == null)
 			throw Exceptions.illegalArgument("credentials OAuth settings are required");
 
-		SpaceResponse response = SpaceRequest//
-				.post("https://noefy5jt.noe.edf.fr:5641/ws/iOAuthGetToken/do")//
+		SpaceResponse response = SpaceRequest.post("/ws/iOAuthGetToken/do")//
+				.baseUrl("https://noefy5jt.noe.edf.fr:5641")//
 				.basicAuth(settings.oauth.clientId, settings.oauth.clientSecret)//
 				.header(SpaceHeaders.ACCEPT, "application/json")//
-				.header(SpaceHeaders.CONNECTION, "Keep-Alive")//
-				.header(SpaceHeaders.ACCEPT_ENCODING, "gzip")//
-				.header(SpaceHeaders.USER_AGENT, //
-						Start.get().configuration().serverUserAgent())//
 				.body("grant_type", "authorization_code", //
 						"client_id", settings.oauth.clientId, //
 						"redirect_uri", redirectUri, "code", code)//
@@ -86,11 +82,11 @@ public class EdfResource extends Resource {
 
 	private void checkEdfOAuthError(SpaceResponse response, String messageIntro) {
 
-		int httpStatus = response.httpResponse().getStatus();
+		int httpStatus = response.status();
 
 		if (httpStatus >= 400) {
 			throw Exceptions.space(httpStatus, messageIntro + ": " //
-					+ response.httpResponse().getBody());
+					+ response.string());
 		}
 	}
 

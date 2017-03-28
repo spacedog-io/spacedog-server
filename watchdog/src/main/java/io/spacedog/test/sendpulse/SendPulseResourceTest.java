@@ -67,7 +67,7 @@ public class SendPulseResourceTest extends SpaceTest {
 
 		// if sendpulde test web app already initialized then return
 		if (SpaceRequest.get("/1/file/www/index.html").backendId("sendpulse")//
-				.go(200, 404).httpResponse().getStatus() == 200)
+				.go(200, 404).status() == 200)
 			return;
 
 		SpaceDog sendpulse = resetBackend("sendpulse", "sendpulse", "hi sendpulse");

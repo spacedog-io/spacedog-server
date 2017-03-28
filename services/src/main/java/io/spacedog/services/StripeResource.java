@@ -42,10 +42,9 @@ public class StripeResource extends Resource {
 
 		StripeSettings settings = SettingsResource.get().load(StripeSettings.class);
 
-		SpaceResponse response = SpaceRequest
-				.post(//
-						"https://api.stripe.com/v1/customers")//
-				.basicAuth("", settings.secretKey, "")//
+		SpaceResponse response = SpaceRequest.post("/v1/customers")//
+				.baseUrl("https://api.stripe.com")//
+				.basicAuth(settings.secretKey, "")//
 				.formField("email", credentials.email().get())//
 				.go();
 
@@ -61,10 +60,9 @@ public class StripeResource extends Resource {
 		String customerId = getStripeCustomerId(credentials);
 		StripeSettings settings = SettingsResource.get().load(StripeSettings.class);
 
-		SpaceResponse response = SpaceRequest
-				.get(//
-						"https://api.stripe.com/v1/customers/{customerId}")//
-				.basicAuth("", settings.secretKey, "")//
+		SpaceResponse response = SpaceRequest.get("/v1/customers/{customerId}")//
+				.baseUrl("https://api.stripe.com")//
+				.basicAuth(settings.secretKey, "")//
 				.routeParam("customerId", customerId)//
 				.go();
 
@@ -82,10 +80,9 @@ public class StripeResource extends Resource {
 
 		removeStripeCustomerId(credentials);
 
-		SpaceResponse response = SpaceRequest
-				.delete(//
-						"https://api.stripe.com/v1/customers/{customerId}")//
-				.basicAuth("", settings.secretKey, "")//
+		SpaceResponse response = SpaceRequest.delete("/v1/customers/{customerId}")//
+				.baseUrl("https://api.stripe.com")//
+				.basicAuth(settings.secretKey, "")//
 				.routeParam("customerId", customerId)//
 				.go();
 
@@ -102,10 +99,9 @@ public class StripeResource extends Resource {
 		StripeSettings settings = SettingsResource.get().load(StripeSettings.class);
 		String sourceToken = Json8.checkStringNotNullOrEmpty(node, "source");
 
-		SpaceRequest request = SpaceRequest
-				.post(//
-						"https://api.stripe.com/v1/customers/{customerId}/sources")//
-				.basicAuth("", settings.secretKey, "")//
+		SpaceRequest request = SpaceRequest.post("/v1/customers/{customerId}/sources")//
+				.baseUrl("https://api.stripe.com")//
+				.basicAuth(settings.secretKey, "")//
 				.routeParam("customerId", customerId)//
 				.formField("source", sourceToken);
 
@@ -126,8 +122,9 @@ public class StripeResource extends Resource {
 
 		SpaceResponse response = SpaceRequest
 				.delete(//
-						"https://api.stripe.com/v1/customers/{customerId}/sources/{cardId}")//
-				.basicAuth("", settings.secretKey, "")//
+						"/v1/customers/{customerId}/sources/{cardId}")//
+				.baseUrl("https://api.stripe.com")//
+				.basicAuth(settings.secretKey, "")//
 				.routeParam("customerId", customerId)//
 				.routeParam("cardId", cardId)//
 				.go();
@@ -155,16 +152,19 @@ public class StripeResource extends Resource {
 	private Payload charge(boolean myself, Context context) {
 		Credentials credentials = SpaceContext.getCredentials();
 		StripeSettings settings = SettingsResource.get().load(StripeSettings.class);
-		SpaceRequest request = SpaceRequest.post("https://api.stripe.com/v1/charges")//
-				.basicAuth("", settings.secretKey, "");
+		SpaceRequest request = SpaceRequest.post("/v1/charges")//
+				.baseUrl("https://api.stripe.com")//
+				.basicAuth(settings.secretKey, "");
 
 		if (myself) {
 			credentials.checkRoles(settings.rolesAllowedToPay);
 
 			if (!Strings.isNullOrEmpty(context.get(STRIPE_CUSTOMER)))
-				throw Exceptions.illegalArgument("overriding of my stripe customer is forbidden");
+				throw Exceptions.illegalArgument(//
+						"overriding of my stripe customer is forbidden");
 
 			request.formField(STRIPE_CUSTOMER, getStripeCustomerId(credentials));
+
 		} else
 			credentials.checkRoles(settings.rolesAllowedToCharge);
 
@@ -177,7 +177,7 @@ public class StripeResource extends Resource {
 	}
 
 	private void checkStripeError(SpaceResponse response) {
-		int status = response.httpResponse().getStatus();
+		int status = response.status();
 		if (status != 200) {
 			throw new SpaceException("stripe-error", status, //
 					"Stripe error, type=[%s], message=[%s]", //

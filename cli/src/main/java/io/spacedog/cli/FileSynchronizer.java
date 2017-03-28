@@ -138,7 +138,7 @@ public class FileSynchronizer {
 				.basicAuth(backendId, login, password)//
 				.go(200, 404);
 
-		if (response.httpResponse().getStatus() == 200) {
+		if (response.status() == 200) {
 			Iterator<JsonNode> elements = response.get("results").elements();
 			while (elements.hasNext()) {
 				check(elements.next());

@@ -15,21 +15,25 @@ import org.apache.commons.mail.resolver.DataSourceUrlResolver;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
-import com.mashape.unirest.request.HttpRequestWithBody;
-import com.mashape.unirest.request.body.MultipartBody;
 
 import io.spacedog.core.Json8;
 import io.spacedog.model.MailSettings;
 import io.spacedog.model.MailSettings.MailGunSettings;
 import io.spacedog.model.MailSettings.SmtpSettings;
+import io.spacedog.rest.OkHttp;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.SpaceHeaders;
+import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.Part;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.payload.Payload;
+import okhttp3.Credentials;
+import okhttp3.HttpUrl;
+import okhttp3.MultipartBody;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class MailResource extends Resource {
 
@@ -219,45 +223,58 @@ public class MailResource extends Resource {
 
 	private ObjectNode mailgun(Message message, MailGunSettings settings) {
 
-		HttpRequestWithBody requestWithBody = Unirest.post("https://api.mailgun.net/v3/{domain}/messages")//
-				.routeParam("domain", settings.domain)//
-				// TODO Fix this since it does not work.
-				// .queryString("o:testmode", SpaceContext.isTest()//
-				.basicAuth("api", settings.key);
-
-		MultipartBody multipartBody = requestWithBody.field("from", message.from)//
-				.field(SUBJECT, message.subject);
+		MultipartBody.Builder bodyBuilder = new MultipartBody.Builder();
+		bodyBuilder.setType(MultipartBody.FORM)//
+				.addFormDataPart("from", message.from)//
+				.addFormDataPart(SUBJECT, message.subject);
 
 		if (message.to != null)
 			for (String to : message.to)
-				multipartBody.field(TO, to);
+				bodyBuilder.addFormDataPart(TO, to);
 
 		if (message.cc != null)
 			for (String cc : message.cc)
-				multipartBody.field(CC, cc);
+				bodyBuilder.addFormDataPart(CC, cc);
 
 		if (message.bcc != null)
 			for (String bcc : message.bcc)
-				multipartBody.field(BCC, bcc);
+				bodyBuilder.addFormDataPart(BCC, bcc);
 
 		if (!Strings.isNullOrEmpty(message.text))
-			multipartBody.field(TEXT, message.text);
+			bodyBuilder.addFormDataPart(TEXT, message.text);
 
 		if (!Strings.isNullOrEmpty(message.html))
-			multipartBody.field(HTML, message.html);
+			bodyBuilder.addFormDataPart(HTML, message.html);
+
+		HttpUrl url = new HttpUrl.Builder()//
+				.scheme("https").host("api.mailgun.net")//
+				.addPathSegment("v3")//
+				.addPathSegment(settings.domain)//
+				.addPathSegment("messages")//
+				// TODO Fix this since it does not work.
+				// .addQueryParameter("o:testmode", SpaceContext.isTest())//
+				.build();
+
+		Request request = new Request.Builder()//
+				.url(url)//
+				.post(bodyBuilder.build())//
+				.header(SpaceHeaders.AUTHORIZATION, //
+						Credentials.basic("api", settings.key, Utils.UTF8))//
+				.build();
 
 		try {
-			HttpResponse<String> response = requestWithBody.asString();
-			if (Json8.isJson(response.getBody()))
-				return JsonPayload.builder(response.getStatus())//
-						.node("mailgun", response.getBody())//
-						.build();
-			else
-				return JsonPayload.builder(response.getStatus())//
-						.put("mailgun", response.getBody())//
-						.build();
+			Response response = OkHttp.get().newCall(request).execute();
+			String body = response.body().string();
+			JsonBuilder<ObjectNode> payload = JsonPayload.builder(response.code());
 
-		} catch (UnirestException e) {
+			if (Json8.isJson(body))
+				payload.node("mailgun", body);
+			else
+				payload.put("mailgun", body);
+
+			return payload.build();
+
+		} catch (IOException e) {
 			throw Exceptions.runtime(e);
 		}
 	}
