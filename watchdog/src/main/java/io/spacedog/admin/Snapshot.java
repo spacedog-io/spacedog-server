@@ -2,9 +2,9 @@ package io.spacedog.admin;
 
 import com.amazonaws.services.lambda.runtime.Context;
 
+import io.spacedog.jobs.Job;
 import io.spacedog.rest.SpaceEnv;
 import io.spacedog.rest.SpaceRequest;
-import io.spacedog.sdk.Job;
 
 public class Snapshot extends Job {
 

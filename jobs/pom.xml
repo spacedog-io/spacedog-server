@@ -10,10 +10,11 @@
 		<version>0.31-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>spacedog-watchdog</artifactId>
+	<artifactId>spacedog-jobs</artifactId>
 	<packaging>jar</packaging>
-
+	
 	<build>
+
 		<resources>
 			<resource>
 				<directory>${project.basedir}/src/main/java</directory>
@@ -22,7 +23,7 @@
 				</excludes>
 			</resource>
 		</resources>
-		
+
 		<testResources>
 			<testResource>
 				<directory>${project.basedir}/src/test/java</directory>
@@ -31,33 +32,7 @@
 				</excludes>
 			</testResource>
 		</testResources>
-		
-		<plugins>
 
-			<plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<version>2.5.3</version>
-				<executions>
-
-					<execution>
-						<id>bundle</id>
-						<configuration>
-							<descriptors>
-								<descriptor>assembly-watchdog.xml</descriptor>
-							</descriptors>
-							<attach>false</attach>
-							<outputDirectory>${project.build.directory}</outputDirectory>
-						</configuration>
-						<phase>package</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-					</execution>
-
-				</executions>
-			</plugin>
-
-		</plugins>
 	</build>
 
 	<dependencies>
@@ -66,15 +41,15 @@
 			<artifactId>spacedog-java-sdk</artifactId>
 			<version>${project.parent.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>io.spacedog</groupId>
-			<artifactId>spacedog-jobs</artifactId>
-			<version>${project.parent.version}</version>
+ 		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-sns</artifactId>
+			<version>${aws-version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.stripe</groupId>
-			<artifactId>stripe-java</artifactId>
-			<version>3.2.0</version>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-lambda-java-core</artifactId>
+			<version>1.1.0</version>
 		</dependency>
 	</dependencies>
 

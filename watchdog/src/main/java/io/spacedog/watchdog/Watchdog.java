@@ -7,8 +7,8 @@ import org.junit.runner.notification.RunListener;
 
 import com.amazonaws.services.lambda.runtime.Context;
 
+import io.spacedog.jobs.Job;
 import io.spacedog.rest.SpaceEnv;
-import io.spacedog.sdk.Job;
 
 public class Watchdog extends RunListener {
 
