@@ -14,8 +14,8 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.sdk.SpaceFile.File;
-import io.spacedog.sdk.SpaceFile.FileList;
+import io.spacedog.sdk.FileEndpoint.File;
+import io.spacedog.sdk.FileEndpoint.FileList;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.WebPath;
