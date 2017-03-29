@@ -16,7 +16,7 @@ public class DogCLI {
 
 		FileSynchronizer synch = FileSynchronizer.newInstance();
 		JCommander cli = new JCommander();
-		cli.setProgramName("dog");
+		cli.setProgramName("spacedog");
 		cli.addCommand(synch);
 
 		try {
@@ -29,7 +29,7 @@ public class DogCLI {
 
 			else if (command.equalsIgnoreCase("sync")) {
 				String password = String.valueOf(//
-						System.console().readPassword("Enter your SpaceDog admin password: "));
+						System.console().readPassword("Enter your admin password: "));
 				synch.password(password).synch();
 			}
 

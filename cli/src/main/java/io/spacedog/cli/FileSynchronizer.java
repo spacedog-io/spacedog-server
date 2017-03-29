@@ -5,18 +5,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.Set;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
-import io.spacedog.rest.SpaceRequest;
-import io.spacedog.rest.SpaceResponse;
+import io.spacedog.sdk.SpaceDog;
+import io.spacedog.sdk.SpaceFile.File;
+import io.spacedog.sdk.SpaceFile.FileList;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.WebPath;
@@ -63,6 +62,8 @@ public class FileSynchronizer {
 	 */
 	private Set<String> deleted = Sets.newHashSet();
 
+	private SpaceDog backend;
+
 	public static FileSynchronizer newInstance() {
 		return new FileSynchronizer();
 	}
@@ -107,6 +108,9 @@ public class FileSynchronizer {
 		Check.notNullOrEmpty(login, "login");
 		Check.notNullOrEmpty(password, "password");
 
+		backend = SpaceDog.backend(backendId)//
+				.username(login).password(password);
+
 		synchFromServer();
 		synchFromLocal();
 	}
@@ -134,32 +138,33 @@ public class FileSynchronizer {
 	//
 
 	private void synchFromServer() throws IOException {
-		SpaceResponse response = SpaceRequest.get("/1/file/" + prefix)//
-				.basicAuth(backendId, login, password)//
-				.go(200, 404);
+		String next = null;
+		String webPath = WebPath.newPath(prefix).toString();
 
-		if (response.status() == 200) {
-			Iterator<JsonNode> elements = response.get("results").elements();
-			while (elements.hasNext()) {
-				check(elements.next());
-			}
-		}
+		do {
+			FileList list = backend.file().list(webPath, next);
+
+			for (File file : list.files)
+				check(file);
+
+			next = list.next;
+
+		} while (next != null);
 	}
 
-	private void check(JsonNode file) throws IOException {
-		String webPath = file.get("path").asText();
+	private void check(File file) throws IOException {
 		// removes slash, prefix and slash
-		String relativePath = webPath.substring(prefix.length() + 2);
+		String relativePath = file.path.substring(prefix.length() + 2);
 		Path filePath = Paths.get(source).resolve(relativePath);
 
 		if (Files.isRegularFile(filePath)) {
-			checked.add(webPath);
+			checked.add(file.path);
 
-			if (!check(filePath, file.get("etag").asText()))
+			if (!check(filePath, file.etag))
 				upload(filePath);
 
 		} else
-			delete(webPath);
+			delete(file.path);
 	}
 
 	private void synchFromLocal() throws IOException {
@@ -183,23 +188,18 @@ public class FileSynchronizer {
 	}
 
 	private void delete(String webPath) {
-		SpaceRequest.delete("/1/file" + webPath)//
-				.basicAuth(backendId, login, password)//
-				.go(200);
-
+		backend.file().delete(webPath);
 		deleted.add(webPath);
 	}
 
 	private void upload(Path filePath) {
 
 		try {
-			WebPath webPath = toWebPath(filePath);
-			SpaceRequest.put("/1/file" + webPath.toEscapedString())//
-					.basicAuth(backendId, login, password)//
-					.bodyFile(filePath)//
-					.go(200);
+			String webPath = toWebPath(filePath).toString();
+			// no need to escape since sdk is already escaping
+			backend.file().save(webPath, filePath);
+			uploaded.add(webPath);
 
-			uploaded.add(webPath.toString());
 		} catch (Exception e) {
 			Exceptions.runtime(e);
 		}
