@@ -1,4 +1,4 @@
-package io.spacedog.cli;
+package io.spacedog.test.cli;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -21,6 +21,10 @@ public class FileSynchronizerTest extends SpaceTest {
 	@Test
 	public void test() throws IOException {
 
+		// prepare
+		prepareTest(false);
+		resetTestBackend();
+
 		// prepare temp folder to synch
 		source = Files.createTempDirectory(this.getClass().getSimpleName());
 		createHtmlFile("index.html");
@@ -32,12 +36,6 @@ public class FileSynchronizerTest extends SpaceTest {
 		createHtmlFile("x/y/z/z.html");
 		createHtmlFile("x/y/z/index.html");
 		createHtmlFile("x/y/z/a et b");
-
-		// reset test backend twice
-		// since test backend delete don't usually delete files
-		// because of the use of x-spacedog-test header
-		resetTestBackend();
-		resetTestBackend();
 
 		// synch temp folder
 		FileSynchronizer synch = FileSynchronizer.newInstance()//

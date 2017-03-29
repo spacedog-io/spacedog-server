@@ -1,13 +1,12 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
                              http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.spacedog</groupId>
 	<artifactId>spacedog-parent</artifactId>
 	<version>0.31-SNAPSHOT</version>
-    <packaging>pom</packaging>
+	<packaging>pom</packaging>
 	<name>SpaceDog Parent Project</name>
 
 	<properties>
@@ -15,7 +14,7 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.test.redirectTestOutputToFile>true</maven.test.redirectTestOutputToFile>
-		
+
 		<aws-version>1.10.52</aws-version>
 		<es-version>2.2.0</es-version>
 		<jackson-version>2.6.2</jackson-version>
@@ -25,22 +24,25 @@
 		<maven>3.3</maven>
 	</prerequisites>
 
-    <modules>
-        <module>services</module>
-        <module>watchdog</module>
-        <module>examples</module>
-        <module>cli</module>
-        <module>jobs</module>
-    </modules>
+	<modules>
+		<module>services</module>
+		<module>watchdog</module>
+		<module>examples</module>
+		<module>cli</module>
+		<module>jobs</module>
+		<module>test</module>
+	</modules>
 
 	<build>
-	
+
 		<resources>
 			<resource>
 				<directory>${project.basedir}/src/main/java</directory>
 				<excludes>
 					<exclude>**/*.java</exclude>
 				</excludes>
+				<!-- services module info.json needs filtering -->
+				<filtering>true</filtering>
 			</resource>
 		</resources>
 		<testResources>
@@ -51,7 +53,7 @@
 				</excludes>
 			</testResource>
 		</testResources>
-	
+
 		<pluginManagement>
 			<plugins>
 
@@ -88,17 +90,17 @@
 					</configuration>
 				</plugin>
 
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <configuration>
-                        <source>1.8</source>
-                        <target>1.8</target>
-                    </configuration>
-                </plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<configuration>
+						<source>1.8</source>
+						<target>1.8</target>
+					</configuration>
+				</plugin>
 
-            </plugins>
-        </pluginManagement>
-    </build>
+			</plugins>
+		</pluginManagement>
+	</build>
 
 </project>
