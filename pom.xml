@@ -7,7 +7,6 @@
 	<artifactId>spacedog-parent</artifactId>
 	<version>0.31-SNAPSHOT</version>
 	<packaging>pom</packaging>
-	<name>SpaceDog Parent Project</name>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

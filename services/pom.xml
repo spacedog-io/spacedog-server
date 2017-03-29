@@ -13,9 +13,6 @@
 	<artifactId>spacedog-services</artifactId>
 	<packaging>jar</packaging>
 
-	<name>SpaceDog Web Services</name>
-	<description>The Web Services of the SpaceDog platform</description>
-
 	<build>
 		<plugins>
 
