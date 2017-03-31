@@ -11,4 +11,4 @@ then
 	exit -1
 fi
 
-java -d64 -cp "$DOG_HOME/lib/*" io.spacedog.client.DogCLI "$@"
+java -d64 -cp "$DOG_HOME/lib/*" io.spacedog.cli.DogCLI "$@"
