@@ -15,7 +15,7 @@ import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.SpaceHeaders;
 
-public class EdfResourceTest extends SpaceTest {
+public class EdfOAuthV1ResourceTest extends SpaceTest {
 
 	private static final String redirectUri = //
 			"https://noefy5jt.noe.edf.fr:5641" //
@@ -31,8 +31,8 @@ public class EdfResourceTest extends SpaceTest {
 
 		// super admin sets credentials oauth settings
 		OAuthSettings oauth = new OAuthSettings();
-		oauth.clientId = SpaceRequest.env().get("edf.oauth.client.id");
-		oauth.clientSecret = SpaceRequest.env().get("edf.oauth.client.secret");
+		oauth.clientId = SpaceRequest.env().get("edf.oauth.v1.client.id");
+		oauth.clientSecret = SpaceRequest.env().get("edf.oauth.v1.client.secret");
 		oauth.useExpiresIn = true;
 
 		CredentialsSettings settings = new CredentialsSettings();
@@ -77,10 +77,8 @@ public class EdfResourceTest extends SpaceTest {
 
 		// prepare
 		OAuthSettings oauth = new OAuthSettings();
-		oauth.clientId = SpaceRequest.env().get("edf.oauth.client.id");
-		oauth.clientSecret = SpaceRequest.env().get("edf.oauth.client.secret");
-		String redirectUri = "https://noefy5jt.noe.edf.fr:5641" //
-				+ "/invoke/PAAS_OAUTH.services:defaultRedirectURI";
+		oauth.clientId = SpaceRequest.env().get("edf.oauth.v1.client.id");
+		oauth.clientSecret = SpaceRequest.env().get("edf.oauth.v1.client.secret");
 
 		// USER01 gets authorization code from EDF
 		String code = SpaceRequest.post("/ws/iOAuthApprove/do")//

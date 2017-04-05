@@ -205,6 +205,7 @@ public class Start {
 				.add(CredentialsResource.get())//
 				.add(LinkedinResource.get())//
 				.add(EdfResource.get())//
+				.add(EdfResourceV2.get())//
 				.add(UserResource.get())//
 				.add(BatchResource.get())//
 				.add(MailResource.get())//
