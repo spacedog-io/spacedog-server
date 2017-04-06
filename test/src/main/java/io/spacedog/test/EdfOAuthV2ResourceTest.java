@@ -13,6 +13,7 @@ import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Credentials;
+import io.spacedog.utils.Json7;
 
 public class EdfOAuthV2ResourceTest extends SpaceTest {
 
@@ -31,8 +32,8 @@ public class EdfOAuthV2ResourceTest extends SpaceTest {
 
 		// super admin sets credentials oauth settings
 		OAuthSettings oauth = new OAuthSettings();
-		oauth.clientId = SpaceRequest.env().get("edf.oauth.client.id");
-		oauth.clientSecret = SpaceRequest.env().get("edf.oauth.client.secret");
+		oauth.clientId = SpaceRequest.env().get("edf.oauth.v2.client.id");
+		oauth.clientSecret = SpaceRequest.env().get("edf.oauth.v2.client.secret");
 		oauth.useExpiresIn = true;
 
 		CredentialsSettings settings = new CredentialsSettings();
@@ -55,13 +56,20 @@ public class EdfOAuthV2ResourceTest extends SpaceTest {
 				.backend(test)//
 				.formField("code", code)//
 				.formField("redirect_uri", redirectUri)//
-				.go(200).objectNode();
+				.go(200)//
+				.assertNotNull("accessToken")//
+				.assertNotNull("expiresIn")//
+				.assertEquals("test", "credentials.backendId")//
+				.assertEquals("DIGITAL01", "credentials.username")//
+				.assertEquals(Json7.array("user"), "credentials.roles")//
+				.assertNotPresent("credentials.email")//
+				.objectNode();
 
 		digital01.id(node.get("credentials").get("id").asText());
 		digital01.accessToken(node.get("accessToken").asText());
 
 		// digital01 checks his access token is working fine
-		// by getting his credentials
+		// by getting his own credentials
 		Credentials credentials = digital01.credentials()//
 				.getByUsername(digital01.username()).get();
 		assertEquals(digital01.id(), credentials.id());

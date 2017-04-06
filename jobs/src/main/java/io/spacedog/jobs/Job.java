@@ -8,7 +8,6 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 
 import io.spacedog.rest.SpaceEnv;
-import io.spacedog.jobs.Internals;
 import io.spacedog.utils.Utils;
 
 public class Job {
@@ -33,7 +32,7 @@ public class Job {
 	}
 
 	public String okOncePerDay() {
-		int hourOfDay = DateTime.now().hourOfDay().get();
+		int hourOfDay = DateTime.now().getHourOfDay();
 		if (3 <= hourOfDay && hourOfDay < 4)
 			ok();
 		return OK;
