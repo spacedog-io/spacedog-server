@@ -2,6 +2,7 @@ package io.spacedog.test;
 
 import java.util.Iterator;
 
+import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -9,6 +10,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
+import io.spacedog.sdk.LogEndpoint.LogSearchResults;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Json7;
@@ -24,62 +26,65 @@ public class LogResourceTest extends SpaceTest {
 		SpaceDog test = resetTestBackend();
 		SpaceDog fred = signUp(test, "fred", "hi fred");
 
-		SpaceRequest.get("/1/data").userAuth(fred).go(200);
-		SpaceRequest.get("/1/data").userAuth(fred).go(200);
+		fred.data().getAllRequest().load();
+		fred.data().getAllRequest().load();
 
 		// superadmin gets test2 backend total log count to check
 		// later that they aren't affected by test backend log purge
-		int test2TotalLogs = SpaceRequest.get("/1/log").refresh().size(0)//
-				.adminAuth(test2).go(200).get("total").asInt();
+		long test2TotalLogs = test2.log().get(0, true).total;
 
 		// superadmin checks everything is in place
-		String before = SpaceRequest.get("/1/log").refresh().adminAuth(test).go(200)//
-				.assertEquals("/1/data", "results.0.path")//
-				.assertEquals("/1/data", "results.1.path")//
-				.assertEquals("/1/login", "results.2.path")//
-				.assertEquals("/1/credentials", "results.3.path")//
-				.assertEquals("/1/backend", "results.4.path")//
-				.assertEquals("/1/backend", "results.5.path")//
-				.getString("results.1.receivedAt");
+		LogSearchResults log = test.log().get(6, true);
+
+		assertEquals("/1/data", log.results.get(0).path);
+		assertEquals("/1/data", log.results.get(1).path);
+		assertEquals("/1/login", log.results.get(2).path);
+		assertEquals("/1/credentials", log.results.get(3).path);
+		assertEquals("/1/backend", log.results.get(4).path);
+		assertEquals("/1/backend", log.results.get(5).path);
+
+		DateTime before = log.results.get(1).receivedAt;
 
 		// superadmin deletes all logs before GET /data requests
-		SpaceRequest.delete("/1/log").queryParam("before", before).adminAuth(test).go(200);
+		test.log().delete(before);
 
 		// superadmin checks all test backend logs are deleted but ...
-		before = SpaceRequest.get("/1/log").refresh().adminAuth(test).go(200)//
-				.assertEquals(4, "total")//
-				.assertEquals("DELETE", "results.0.method")//
-				.assertEquals("/1/log", "results.0.path")//
-				.assertEquals("GET", "results.1.method")//
-				.assertEquals("/1/log", "results.1.path")//
-				.assertEquals("GET", "results.2.method")//
-				.assertEquals("/1/data", "results.2.path")//
-				.assertEquals("GET", "results.3.method")//
-				.assertEquals("/1/data", "results.3.path")//
-				.getString("results.1.receivedAt");
+		log = test.log().get(10, true);
+
+		assertEquals(4, log.total);
+		assertEquals("DELETE", log.results.get(0).method);
+		assertEquals("/1/log", log.results.get(0).path);
+		assertEquals("GET", log.results.get(1).method);
+		assertEquals("/1/log", log.results.get(1).path);
+		assertEquals("GET", log.results.get(2).method);
+		assertEquals("/1/data", log.results.get(2).path);
+		assertEquals("GET", log.results.get(3).method);
+		assertEquals("/1/data", log.results.get(3).path);
+
+		before = log.results.get(1).receivedAt;
 
 		// superdog deletes all logs before GET /log requests
-		SpaceRequest.delete("/1/log").queryParam("before", before).superdogAuth(test).go(200);
+		superdog(test).log().delete(before);
 
 		// superadmin checks all test backend logs are deleted but ...
-		SpaceRequest.get("/1/log").refresh().superdogAuth(test).go(200)//
-				.assertEquals(4, "total")//
-				.assertEquals("DELETE", "results.0.method")//
-				.assertEquals("/1/log", "results.0.path")//
-				.assertEquals("GET", "results.1.method")//
-				.assertEquals("/1/log", "results.1.path")//
-				.assertEquals("DELETE", "results.2.method")//
-				.assertEquals("/1/log", "results.2.path")//
-				.assertEquals("GET", "results.3.method")//
-				.assertEquals("/1/log", "results.3.path");
+		log = superdog(test).log().get(10, true);
 
-		// superadmin checks test2 backend total log count is stable.
+		assertEquals(4, log.total);
+		assertEquals("DELETE", log.results.get(0).method);
+		assertEquals("/1/log", log.results.get(0).path);
+		assertEquals("GET", log.results.get(1).method);
+		assertEquals("/1/log", log.results.get(1).path);
+		assertEquals("DELETE", log.results.get(2).method);
+		assertEquals("/1/log", log.results.get(2).path);
+		assertEquals("GET", log.results.get(3).method);
+		assertEquals("/1/log", log.results.get(3).path);
+
 		// count = last time checked + 1, because of the first check.
 		// It demonstrates purge of specific backend doesn't affect other
 		// backends
-		SpaceRequest.get("/1/log").refresh().size(0).adminAuth(test2).go(200)//
-				.assertEquals(test2TotalLogs + 1, "total");
+		log = test2.log().get(0, true);
 
+		assertEquals(test2TotalLogs + 1, log.total);
 	}
 
 	@Test
