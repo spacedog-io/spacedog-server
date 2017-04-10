@@ -13,11 +13,12 @@ public class DogCLI {
 	public static void main(String... args) throws Exception {
 
 		setEnv();
-
-		FileSynchronizer synch = FileSynchronizer.newInstance();
 		JCommander cli = new JCommander();
 		cli.setProgramName("spacedog");
-		cli.addCommand(synch);
+
+		cli.addCommand(LoginCommand.get());
+		cli.addCommand(LogCommand.get());
+		cli.addCommand(FileSynchCommand.get());
 
 		try {
 
@@ -27,14 +28,21 @@ public class DogCLI {
 			if (Strings.isNullOrEmpty(command))
 				cli.usage();
 
-			else if (command.equalsIgnoreCase("sync")) {
-				String password = String.valueOf(//
-						System.console().readPassword("Enter your admin password: "));
-				synch.password(password).synch();
-			}
+			else if (command.equalsIgnoreCase("sync"))
+				FileSynchCommand.get().synch();
+
+			else if (command.equalsIgnoreCase("exportlog"))
+				LogCommand.get().export();
+
+			else if (command.equalsIgnoreCase("login"))
+				LoginCommand.get().login();
 
 		} catch (ParameterException e) {
 			System.err.println(e.getMessage());
+
+		} catch (IllegalArgumentException e) {
+			System.err.println(e.getMessage());
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

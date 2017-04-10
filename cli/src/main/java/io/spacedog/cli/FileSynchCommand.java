@@ -13,26 +13,21 @@ import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
-import io.spacedog.sdk.SpaceDog;
 import io.spacedog.sdk.FileEndpoint.File;
 import io.spacedog.sdk.FileEndpoint.FileList;
+import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.WebPath;
 
 @Parameters(commandNames = { "sync" }, //
 		commandDescription = "synchronize source folder to backend")
-public class FileSynchronizer {
+public class FileSynchCommand {
 
 	@Parameter(names = { "-s", "--source" }, //
 			required = true, //
 			description = "the source directory to synchronize")
 	private String source;
-
-	@Parameter(names = { "-b", "--backend" }, //
-			required = true, //
-			description = "the backend identifier to synchronize to")
-	private String backendId;
 
 	@Parameter(names = { "-p", "--prefix" }, //
 			required = true, //
@@ -43,8 +38,6 @@ public class FileSynchronizer {
 			required = true, //
 			description = "the administrator login to use")
 	private String login;
-
-	private String password = "hi test";
 
 	/**
 	 * Set of server file path checked with matching local files. A checked
@@ -64,52 +57,29 @@ public class FileSynchronizer {
 
 	private SpaceDog backend;
 
-	public static FileSynchronizer newInstance() {
-		return new FileSynchronizer();
-	}
-
-	public FileSynchronizer source(String source) {
+	public FileSynchCommand source(String source) {
 		this.source = source;
 		return this;
 	}
 
-	public FileSynchronizer source(Path source) {
+	public FileSynchCommand source(Path source) {
 		this.source = source.toString();
 		return this;
 	}
 
-	public FileSynchronizer backendId(String backendId) {
-		this.backendId = backendId;
-		return this;
-	}
-
-	public FileSynchronizer prefix(String prefix) {
+	public FileSynchCommand prefix(String prefix) {
 		this.prefix = prefix;
 		return this;
 	}
 
-	public FileSynchronizer login(String login) {
-		this.login = login;
-		return this;
-	}
-
-	public FileSynchronizer password(String password) {
-		this.password = password;
-		return this;
-	}
-
-	private FileSynchronizer() {
+	private FileSynchCommand() {
 	}
 
 	public void synch() throws IOException {
 		Check.notNull(source, "source");
-		Check.notNullOrEmpty(backendId, "backend id");
 		Check.notNullOrEmpty(prefix, "prefix");
-		Check.notNullOrEmpty(login, "login");
-		Check.notNullOrEmpty(password, "password");
 
-		backend = SpaceDog.backend(backendId)//
-				.username(login).password(password);
+		backend = LoginCommand.get().session();
 
 		synchFromServer();
 		synchFromLocal();
@@ -209,4 +179,17 @@ public class FileSynchronizer {
 		HashCode local = com.google.common.io.Files.hash(path.toFile(), Hashing.md5());
 		return local.equals(HashCode.fromString(etag));
 	}
+
+	//
+	// Singleton
+	//
+
+	private static FileSynchCommand instance = null;
+
+	public static FileSynchCommand get() {
+		if (instance == null)
+			instance = new FileSynchCommand();
+		return instance;
+	}
+
 }

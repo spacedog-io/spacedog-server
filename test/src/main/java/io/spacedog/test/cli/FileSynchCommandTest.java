@@ -11,10 +11,12 @@ import org.junit.Test;
 
 import com.google.common.io.Resources;
 
-import io.spacedog.cli.FileSynchronizer;
+import io.spacedog.cli.FileSynchCommand;
+import io.spacedog.cli.LoginCommand;
 import io.spacedog.rest.SpaceTest;
+import io.spacedog.sdk.SpaceDog;
 
-public class FileSynchronizerTest extends SpaceTest {
+public class FileSynchCommandTest extends SpaceTest {
 
 	private Path source;
 
@@ -23,7 +25,7 @@ public class FileSynchronizerTest extends SpaceTest {
 
 		// prepare
 		prepareTest(false);
-		resetTestBackend();
+		SpaceDog superadmin = resetTestBackend();
 
 		// prepare temp folder to synch
 		source = Files.createTempDirectory(this.getClass().getSimpleName());
@@ -37,9 +39,13 @@ public class FileSynchronizerTest extends SpaceTest {
 		createHtmlFile("x/y/z/index.html");
 		createHtmlFile("x/y/z/a et b");
 
+		// superadmin logs in with spacedog cli
+		LoginCommand.get().backend(superadmin.backendId())//
+				.username(superadmin.username()).login();
+
 		// synch temp folder
-		FileSynchronizer synch = FileSynchronizer.newInstance()//
-				.source(source).backendId("test").prefix("0").login("test").password("hi test");
+		FileSynchCommand synch = FileSynchCommand.get()//
+				.source(source).prefix("0");
 
 		synch.synch();
 
