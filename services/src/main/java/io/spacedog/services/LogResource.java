@@ -124,7 +124,7 @@ public class LogResource extends Resource {
 		Credentials credentials = SpaceContext.getCredentials();
 		Optional<String> optBackendId = null;
 
-		if (isPurgeAll(credentials))
+		if (hasPurgeAllRole(credentials))
 			optBackendId = Optional.empty();
 
 		else if (credentials.isAtLeastSuperAdmin())
@@ -197,7 +197,7 @@ public class LogResource extends Resource {
 	// Implementation
 	//
 
-	private boolean isPurgeAll(Credentials credentials) {
+	private boolean hasPurgeAllRole(Credentials credentials) {
 		return credentials.isTargetingRootApi() //
 				&& (credentials.isSuperDog() || credentials.roles().contains(PURGE_ALL));
 	}
