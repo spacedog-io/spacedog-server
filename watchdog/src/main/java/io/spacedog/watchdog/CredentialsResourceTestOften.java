@@ -122,7 +122,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		SpaceRequest.get("/1/data").bearerAuth("test", "XXX").go(401);
 
 		// vince signs up and get a brand new access token
-		SpaceDog vince = SpaceDog.backend("test").username("vince").password("hi vince").signUp();
+		SpaceDog vince = signUp("test", "vince", "hi vince");
 
 		// vince request fails because wrong backend
 		SpaceRequest.get("/1/data").bearerAuth("test2", vince.accessToken().get()).go(401);
@@ -207,7 +207,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog test = resetTestBackend();
-		SpaceDog fred = SpaceDog.backend("test").username("fred").password("hi fred").signUp();
+		SpaceDog fred = signUp("test", "fred", "hi fred");
 
 		// admin saves settings with token max lifetime set to 3s
 		CredentialsSettings settings = new CredentialsSettings();
@@ -234,8 +234,8 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog test = resetTestBackend();
-		SpaceDog fred = SpaceDog.backend("test").username("fred").signUp("hi fred");
-		SpaceDog vince = SpaceDog.backend("test").username("vince").signUp("hi vince");
+		SpaceDog fred = signUp("test", "fred", "hi fred");
+		SpaceDog vince = signUp("test", "vince", "hi vince");
 
 		// vince and fred can login
 		vince.login("hi vince");
@@ -469,7 +469,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		SpaceRequest.get("/1/login").userAuth(fred).go(401);
 
 		// admin creates backend with the same name
-		test.signUpBackend();
+		test.backend().create(false);
 
 		// fred fails to login since backend is brand new
 		SpaceRequest.get("/1/login").userAuth(fred).go(401);
@@ -641,7 +641,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		resetTestBackend();
-		SpaceDog fred = SpaceDog.backend("test").username("fred").password("hi fred").signUp();
+		SpaceDog fred = signUp("test", "fred", "hi fred");
 
 		// fred fails to update his password
 		// since his password is not challenged
@@ -666,7 +666,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog test = resetTestBackend();
-		SpaceDog fred = SpaceDog.backend("test").username("fred").password("hi fred").signUp();
+		SpaceDog fred = signUp("test", "fred", "hi fred");
 
 		// fred fails to updates his username
 		// since password must be challenged
@@ -718,7 +718,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog test = resetTestBackend();
-		SpaceDog fred = SpaceDog.backend("test").username("fred").password("hi fred").signUp();
+		SpaceDog fred = signUp("test", "fred", "hi fred");
 
 		// fred logs in
 		SpaceRequest.get("/1/login").userAuth(fred).go(200);

@@ -26,7 +26,7 @@ public class SendPulseResourceTest extends SpaceTest {
 		prepareTest();
 		SpaceRequest.env().target(SpaceTarget.local);
 		SpaceDog test = resetTestBackend();
-		SpaceDog fred = SpaceDog.backend("test").username("fred").signUp("hi fred");
+		SpaceDog fred = signUp("test", "fred", "hi fred");
 
 		// set sendpulse test settings
 		SendPulseSettings settings = new SendPulseSettings();

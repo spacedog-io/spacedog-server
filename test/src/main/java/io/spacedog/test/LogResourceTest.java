@@ -13,6 +13,8 @@ import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.LogEndpoint.LogSearchResults;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Backends;
+import io.spacedog.utils.Credentials;
+import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.Json7;
 
 public class LogResourceTest extends SpaceTest {
@@ -237,14 +239,9 @@ public class LogResourceTest extends SpaceTest {
 		prepareTest();
 
 		// superdog creates superadmin named nath in root 'api' backend
-		SpaceDog nath = SpaceDog.backend("api").username("nath")//
-				.password("hi nath").email("nath@dog.com");
-		String id = SpaceRequest.post("/1/credentials").superdogAuth()//
-				.body("username", nath.username(), "password", nath.password().get(), //
-						"email", nath.email().get(), "level", "SUPER_ADMIN")
-				.go(201).getString("id");
-
-		nath.id(id);
+		Credentials nathCredentials = superdog().credentials()//
+				.create("nath", "hi nath", "nath@dog.com", Level.SUPER_ADMIN);
+		SpaceDog nath = SpaceDog.fromCredentials(nathCredentials);
 
 		// anonymous gets data from test backend
 		SpaceRequest.get("/1/data").backendId("test").go();

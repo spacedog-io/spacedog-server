@@ -46,10 +46,10 @@ public class PushResourceTestOften2 extends SpaceTest {
 		SpaceDog test = resetTestBackend();
 
 		// prepare users
-		SpaceDog dave = SpaceDog.backend("test").username("dave").signUp("hi dave");
-		SpaceDog vince = SpaceDog.backend("test").username("vince").signUp("hi vince");
-		SpaceDog fred = SpaceDog.backend("test").username("fred").signUp("hi fred");
-		SpaceDog nath = SpaceDog.backend("test").username("nath").signUp("hi nath");
+		SpaceDog dave = signUp("test", "dave", "hi dave");
+		SpaceDog vince = signUp("test", "vince", "hi vince");
+		SpaceDog fred = signUp("test", "fred", "hi fred");
+		SpaceDog nath = signUp("test", "nath", "hi nath");
 
 		// prepare installation schema
 		test.schema().setDefault("installation");
@@ -326,8 +326,8 @@ public class PushResourceTestOften2 extends SpaceTest {
 		SpaceDog test = resetTestBackend();
 
 		// prepare users
-		SpaceDog dave = SpaceDog.backend("test").username("dave").signUp("hi dave");
-		SpaceDog vince = SpaceDog.backend("test").username("vince").signUp("hi vince");
+		SpaceDog dave = signUp("test", "dave", "hi dave");
+		SpaceDog vince = signUp("test", "vince", "hi vince");
 
 		// prepare installation schema
 		test.schema().setDefault("installation");

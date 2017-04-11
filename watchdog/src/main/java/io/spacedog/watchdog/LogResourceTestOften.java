@@ -23,10 +23,10 @@ public class LogResourceTestOften extends SpaceTest {
 		test.schema().set(Schema.builder("message").text("text").build());
 
 		// create user in test backend
-		SpaceDog user = SpaceDog.backend("test").username("user").signUp("hi user");
+		SpaceDog user = signUp("test", "user", "hi user");
 
 		// create a user in test2 backend
-		SpaceDog.backend("test2").username("user2").signUp("hi user2");
+		signUp("test2", "user2", "hi user2");
 
 		// create message in test backend
 		DataObject message = user.data().object("message")//
@@ -89,7 +89,7 @@ public class LogResourceTestOften extends SpaceTest {
 
 		prepareTest();
 		SpaceDog test = resetTestBackend();
-		SpaceDog fred = SpaceDog.backend("test").username("fred").signUp("hi fred");
+		SpaceDog fred = signUp("test", "fred", "hi fred");
 
 		String passwordResetCode = SpaceRequest.delete("/1/credentials/{id}/password")//
 				.routeParam("id", fred.id()).adminAuth(test).go(200)//

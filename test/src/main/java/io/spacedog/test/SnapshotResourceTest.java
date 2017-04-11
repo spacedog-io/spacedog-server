@@ -37,7 +37,7 @@ public class SnapshotResourceTest extends SpaceTest {
 		snapshotAll.login("hi snapshotAll");
 
 		// creates backend and credentials
-		aaaa.signUpBackend();
+		aaaa.email("platform@spacedog.io").backend().create(false);
 		SpaceDog vince = signUp(aaaa, "vince", "hi vince");
 		vince.get("/1/login").go(200);
 
@@ -78,7 +78,7 @@ public class SnapshotResourceTest extends SpaceTest {
 				.assertEquals(firstSnap);
 
 		// creates another backend and credentials
-		bbbb.signUpBackend();
+		bbbb.email("platform@spacedog.io").backend().create(false);
 		SpaceDog fred = signUp(bbbb, "fred", "hi fred");
 		fred.get("/1/login").go(200);
 
@@ -101,7 +101,7 @@ public class SnapshotResourceTest extends SpaceTest {
 				.assertEquals(firstSnap, "results.1");
 
 		// create another account and add a credentials
-		cccc.signUpBackend();
+		cccc.email("platform@spacedog.io").backend().create(false);
 		SpaceDog nath = signUp(cccc, "nath", "hi nath");
 		nath.get("/1/login").go(200);
 

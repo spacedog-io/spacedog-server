@@ -66,7 +66,7 @@ public class BackendResourceTestOften extends SpaceTest {
 				.assertSizeEquals(0, "results");
 
 		// let's create a common user
-		SpaceDog john = SpaceDog.backend("test").username("john").signUp("hi john");
+		SpaceDog john = signUp("test", "john", "hi john");
 
 		// user fails to get backend data since it is restricted to admins
 		SpaceRequest.get("/1/backend").userAuth(john).go(403);
