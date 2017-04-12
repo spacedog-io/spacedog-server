@@ -34,7 +34,7 @@ public class LogCommandTest extends SpaceTest {
 
 		// superadmin logs in with spacedog cli
 		LoginCommand.get().backend(superadmin.backendId())//
-				.username(superadmin.username()).login();
+				.verbose(true).username(superadmin.username()).login();
 
 		String today = dateFormatter.print(DateTime.now());
 
@@ -45,7 +45,7 @@ public class LogCommandTest extends SpaceTest {
 		Utils.info("Exporting today's log to [%s]", target);
 
 		// exporting to file
-		LogCommand.get().day(today).file(target.toString()).export();
+		LogCommand.get().verbose(true).day(today).file(target.toString()).export();
 
 		// checking export file
 		JsonNode node = Json7.mapper().readTree(Files.readAllBytes(target));

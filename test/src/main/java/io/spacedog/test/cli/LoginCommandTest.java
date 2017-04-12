@@ -16,28 +16,29 @@ public class LoginCommandTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
+		LoginCommand command = LoginCommand.get().verbose(true);
 
 		try {
-			LoginCommand.get().login();
+			command.login();
 			fail();
 
 		} catch (IllegalArgumentException ignore) {
 		}
 
 		try {
-			LoginCommand.get().backend(superadmin.backendId()).login();
+			command.backend(superadmin.backendId()).login();
 			fail();
 
 		} catch (IllegalArgumentException ignore) {
 		}
 
-		SpaceDog session = LoginCommand.get().backend(superadmin.backendId())//
+		SpaceDog session = command.backend(superadmin.backendId())//
 				.username(superadmin.username()).login();
 
 		assertEquals("test", session.backendId());
 		assertEquals("test", session.username());
 
-		SpaceDog session2 = LoginCommand.get().clearCache().session();
+		SpaceDog session2 = command.clearCache().session();
 
 		assertEquals(session.backendId(), session2.backendId());
 		assertEquals(session.accessToken(), session2.accessToken());

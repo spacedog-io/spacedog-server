@@ -13,6 +13,7 @@ import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
+import io.spacedog.rest.SpaceEnv;
 import io.spacedog.sdk.FileEndpoint.File;
 import io.spacedog.sdk.FileEndpoint.FileList;
 import io.spacedog.sdk.SpaceDog;
@@ -22,7 +23,7 @@ import io.spacedog.utils.WebPath;
 
 @Parameters(commandNames = { "sync" }, //
 		commandDescription = "synchronize source folder to backend")
-public class FileSynchCommand {
+public class FileSynchCommand extends AbstractCommand<FileSynchCommand> {
 
 	@Parameter(names = { "-s", "--source" }, //
 			required = true, //
@@ -79,6 +80,7 @@ public class FileSynchCommand {
 		Check.notNull(source, "source");
 		Check.notNullOrEmpty(prefix, "prefix");
 
+		SpaceEnv.defaultEnv().debug(verbose());
 		backend = LoginCommand.get().session();
 
 		synchFromServer();

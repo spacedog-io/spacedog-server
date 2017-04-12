@@ -12,13 +12,14 @@ import com.beust.jcommander.Parameters;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
+import io.spacedog.rest.SpaceEnv;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json7;
 import io.spacedog.utils.Utils;
 
 @Parameters(commandNames = { "log" }, //
 		commandDescription = "export logs to file")
-public class LogCommand {
+public class LogCommand extends AbstractCommand<LogCommand> {
 
 	@Parameter(names = { "-d", "--day" }, //
 			required = false, //
@@ -45,6 +46,7 @@ public class LogCommand {
 
 	public void export() throws IOException {
 
+		SpaceEnv.defaultEnv().debug(verbose());
 		SpaceDog dog = LoginCommand.get().session();
 
 		DateTime date = Strings.isNullOrEmpty(day) ? DateTime.now() //

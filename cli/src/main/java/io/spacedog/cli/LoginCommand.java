@@ -13,13 +13,14 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Strings;
 
+import io.spacedog.rest.SpaceEnv;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 
 @Parameters(commandNames = { "login" }, //
 		commandDescription = "login to specific backend")
-public class LoginCommand {
+public class LoginCommand extends AbstractCommand<LoginCommand> {
 
 	@Parameter(names = { "-b", "--backend" }, //
 			required = true, //
@@ -55,6 +56,7 @@ public class LoginCommand {
 		Check.notNullOrEmpty(backend, "backend");
 		Check.notNullOrEmpty(username, "username");
 
+		SpaceEnv.defaultEnv().debug(verbose());
 		String userHome = System.getProperty("user.home");
 
 		if (Strings.isNullOrEmpty(userHome))
