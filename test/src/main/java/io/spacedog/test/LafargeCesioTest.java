@@ -302,11 +302,11 @@ public class LafargeCesioTest extends SpaceTest {
 
 		// admin sets vince only score 8 days in the past
 		// to show his highscore only in the forever section
-		ArrayNode scores = (ArrayNode) SpaceRequest.get("/1/data/player/" + idVince).adminAuth(test).go(200)//
+		ArrayNode scores = (ArrayNode) SpaceRequest.get("/1/data/player/" + idVince).auth(test).go(200)//
 				.get("scores");
 		Json7.set(scores, "0.date", TextNode.valueOf(//
 				DateTime.now().minusDays(8).toString()));
-		SpaceRequest.put("/1/data/player/" + idVince).adminAuth(test)//
+		SpaceRequest.put("/1/data/player/" + idVince).auth(test)//
 				.body("scores", scores).go(200);
 
 		// gets leaderboard after vince score update

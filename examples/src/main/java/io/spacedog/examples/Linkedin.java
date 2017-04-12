@@ -94,7 +94,7 @@ public class Linkedin extends SpaceTest {
 
 		// admin pre registers some credentials for a new user
 		// username must equals the linkedin account email
-		SpaceRequest.post("/1/credentials").adminAuth(test)//
+		SpaceRequest.post("/1/credentials").auth(test)//
 				.body("username", "attias666@gmail.com", "email", "attias666@gmail.com")//
 				.go(201).assertPresent("passwordResetCode");
 

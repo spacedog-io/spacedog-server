@@ -77,10 +77,10 @@ public class LogResourceTestOften extends SpaceTest {
 				.assertEquals("test2", "results.3.credentials.backendId");
 
 		// after backend deletion, logs are not accessible to backend
-		test.backend().delete();
+		test.admin().deleteBackend(test.backendId());
 		SpaceRequest.get("/1/log").auth(test).go(401);
 
-		test2.backend().delete();
+		test2.admin().deleteBackend(test2.backendId());
 		SpaceRequest.get("/1/log").auth(test2).go(401);
 	}
 
@@ -92,7 +92,7 @@ public class LogResourceTestOften extends SpaceTest {
 		SpaceDog fred = signUp("test", "fred", "hi fred");
 
 		String passwordResetCode = SpaceRequest.delete("/1/credentials/{id}/password")//
-				.routeParam("id", fred.id()).adminAuth(test).go(200)//
+		.routeParam("id", fred.id()).auth(test).go(200)//
 				.getString("passwordResetCode");
 
 		SpaceRequest.post("/1/credentials/{id}/password")//
@@ -101,11 +101,10 @@ public class LogResourceTestOften extends SpaceTest {
 				.backend(test).formField("password", "hi fred 2").go(200);
 
 		SpaceRequest.put("/1/credentials/{id}/password").backend(test)//
-				.routeParam("id", fred.id())//
-				.basicAuth(test.backendId(), "fred", "hi fred 2")//
+		.routeParam("id", fred.id()).backendId((String) test.backendId()).basicAuth((String) "fred", (String) "hi fred 2")//
 				.formField("password", "hi fred 3").go(200);
 
-		SpaceRequest.get("/1/log").refresh().size(7).adminAuth(test).go(200)//
+		SpaceRequest.get("/1/log").refresh().size(7).auth(test).go(200)//
 				.assertSizeEquals(7, "results")//
 				.assertEquals("PUT", "results.0.method")//
 				.assertEquals("/1/credentials/" + fred.id() + "/password", "results.0.path")//
@@ -139,10 +138,10 @@ public class LogResourceTestOften extends SpaceTest {
 		SpaceDog test = resetTestBackend();
 
 		// fails because invalid body
-		SpaceRequest.put("/1/schema/toto").adminAuth(test).body("XXX").go(400);
+		SpaceRequest.put("/1/schema/toto").auth(test).body("XXX").go(400);
 
 		// but logs the failed request without the json content
-		SpaceRequest.get("/1/log").refresh().size(1).adminAuth(test).go(200)//
+		SpaceRequest.get("/1/log").refresh().size(1).auth(test).go(200)//
 				.assertEquals("PUT", "results.0.method")//
 				.assertEquals("/1/schema/toto", "results.0.path")//
 				.assertEquals("test", "results.0.credentials.backendId")//
@@ -150,15 +149,15 @@ public class LogResourceTestOften extends SpaceTest {
 				.assertNotPresent("results.0.jsonContent");
 
 		// check that log response results are not logged
-		SpaceRequest.get("/1/log").adminAuth(test).go(200);
-		SpaceRequest.get("/1/log").refresh().size(1).adminAuth(test).go(200)//
+		SpaceRequest.get("/1/log").auth(test).go(200);
+		SpaceRequest.get("/1/log").refresh().size(1).auth(test).go(200)//
 				.assertEquals("GET", "results.0.method")//
 				.assertEquals("/1/log", "results.0.path")//
 				.assertNotPresent("results.0.response.results");
 
 		// Headers are logged if not empty
 		// and 'Authorization' header is not logged
-		SpaceRequest.get("/1/log").adminAuth(test)//
+		SpaceRequest.get("/1/log").auth(test)//
 				.setHeader("x-empty", "")//
 				.setHeader("x-blank", " ")//
 				.setHeader("x-color", "YELLOW")//
@@ -167,7 +166,7 @@ public class LogResourceTestOften extends SpaceTest {
 				.addHeader("x-color-list", "GREEN")//
 				.go(200);
 
-		SpaceRequest.get("/1/log").refresh().size(1).adminAuth(test).go(200)//
+		SpaceRequest.get("/1/log").refresh().size(1).auth(test).go(200)//
 				.assertNotPresent("results.0.headers." + SpaceHeaders.AUTHORIZATION)//
 				.assertNotPresent("results.0.headers.x-empty")//
 				.assertNotPresent("results.0.headers.x-blank")//

@@ -25,9 +25,9 @@ public class SnapshotResourceTest extends SpaceTest {
 		SpaceDog bbbb = SpaceDog.backend("bbbb").username("bbbb").password("hi bbbb");
 		SpaceDog cccc = SpaceDog.backend("cccc").username("cccc").password("hi cccc");
 
-		aaaa.backend().delete();
-		bbbb.backend().delete();
-		cccc.backend().delete();
+		aaaa.admin().deleteBackend(aaaa.backendId());
+		bbbb.admin().deleteBackend(bbbb.backendId());
+		cccc.admin().deleteBackend(cccc.backendId());
 
 		// superdog creates snapshotall user in root backend
 		SpaceDog superdog = superdog();
@@ -37,9 +37,9 @@ public class SnapshotResourceTest extends SpaceTest {
 		snapshotAll.login("hi snapshotAll");
 
 		// creates backend and credentials
-		aaaa.email("platform@spacedog.io").backend().create(false);
-		SpaceDog vince = signUp(aaaa, "vince", "hi vince");
-		vince.get("/1/login").go(200);
+		SpaceDog.backend(aaaa.backendId()).admin().createBackend(//
+				aaaa.username(), aaaa.password().get(), "platform@spacedog.io", false);
+		SpaceDog vince = signUp(aaaa, "vince", "hi vince").login();
 
 		// deletes the current repository to force repo creation by this test
 		// use full url to avoid delete by mistake any prod repo
@@ -78,9 +78,9 @@ public class SnapshotResourceTest extends SpaceTest {
 				.assertEquals(firstSnap);
 
 		// creates another backend and credentials
-		bbbb.email("platform@spacedog.io").backend().create(false);
-		SpaceDog fred = signUp(bbbb, "fred", "hi fred");
-		fred.get("/1/login").go(200);
+		SpaceDog.backend(bbbb.backendId()).admin().createBackend(//
+				bbbb.username(), bbbb.password().get(), "platform@spacedog.io", false);
+		SpaceDog fred = signUp(bbbb, "fred", "hi fred").login();
 
 		// second snapshot
 		// returns 201 since wait for completion true (202 otherwise)
@@ -101,9 +101,9 @@ public class SnapshotResourceTest extends SpaceTest {
 				.assertEquals(firstSnap, "results.1");
 
 		// create another account and add a credentials
-		cccc.email("platform@spacedog.io").backend().create(false);
-		SpaceDog nath = signUp(cccc, "nath", "hi nath");
-		nath.get("/1/login").go(200);
+		SpaceDog.backend(cccc.backendId()).admin().createBackend(//
+				cccc.username(), cccc.password().get(), "platform@spacedog.io", false);
+		SpaceDog nath = signUp(cccc, "nath", "hi nath").login();
 
 		// third snapshot
 		// returns 201 since wait for completion true (202 otherwise)

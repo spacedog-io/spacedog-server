@@ -43,13 +43,11 @@ public class StripeResourceTest extends SpaceTest {
 		test.settings().save(settings);
 
 		// david's stripe customer is not yet created
-		SpaceRequest.get("/1/stripe/customers/me")//
-				.userAuth(david)//
+		SpaceRequest.get("/1/stripe/customers/me").auth(david)//
 				.go(404);
 
 		// david creates his stripe customer with his card token
-		ObjectNode stripeCustomer = SpaceRequest.post("/1/stripe/customers")//
-				.userAuth(david)//
+		ObjectNode stripeCustomer = SpaceRequest.post("/1/stripe/customers").auth(david)//
 				.go(201)//
 				.assertEquals("customer", "object")//
 				.assertEquals("platform@spacedog.io", "email")//
@@ -58,26 +56,22 @@ public class StripeResourceTest extends SpaceTest {
 
 		// david fails to create another stripe customer
 		// since he's got one already
-		SpaceRequest.post("/1/stripe/customers")//
-				.userAuth(david)//
+		SpaceRequest.post("/1/stripe/customers").auth(david)//
 				.go(400);
 
 		// david gets his stripe customer
-		SpaceRequest.get("/1/stripe/customers/me")//
-				.userAuth(david)//
+		SpaceRequest.get("/1/stripe/customers/me").auth(david)//
 				.go(200)//
 				.assertEquals(stripeCustomer);
 
 		// david registers a first card
 		String bnpCardId = SpaceRequest.post("/1/stripe/customers/me/sources")//
-				.body("source", createCardToken().getId(), "description", "bnp")//
-				.userAuth(david).go(201)//
+		.body("source", createCardToken().getId(), "description", "bnp").auth(david).go(201)//
 				.assertEquals("bnp", "metadata.description")//
 				.getString("id");
 
 		// check david has a bnp card
-		SpaceRequest.get("/1/stripe/customers/me")//
-				.userAuth(david).go(200)//
+		SpaceRequest.get("/1/stripe/customers/me").auth(david).go(200)//
 				.assertEquals("platform@spacedog.io", "email")//
 				.assertSizeEquals(1, "sources.data")//
 				.assertEquals(bnpCardId, "sources.data.0.id")//
@@ -85,49 +79,40 @@ public class StripeResourceTest extends SpaceTest {
 
 		// superadmin is not allowed to pay
 		// because of settings.rolesAllowedToPay
-		SpaceRequest.post("/1/stripe/charges/me")//
-				.adminAuth(test).go(403);
+		SpaceRequest.post("/1/stripe/charges/me").auth(test).go(403);
 
 		// david fails to pays because 'customer' field is forbidden
 		// because the stripe customer must be the one stored in credentials
 		SpaceRequest.post("/1/stripe/charges/me")//
-				.formField("customer", "XXX")//
-				.userAuth(david).go(400);
+		.formField("customer", "XXX").auth(david).go(400);
 
 		// david fails to pays because no fields
-		SpaceRequest.post("/1/stripe/charges/me")//
-				.userAuth(david).go(400);
+		SpaceRequest.post("/1/stripe/charges/me").auth(david).go(400);
 
 		// david pays with his bnp card
 		SpaceRequest.post("/1/stripe/charges/me")//
-				.formField("amount", "800")//
-				.formField("currency", "eur")//
-				.formField("source", bnpCardId)//
-				.userAuth(david).go(200);
+		.formField("amount", "800")//
+		.formField("currency", "eur")//
+		.formField("source", bnpCardId).auth(david).go(200);
 
 		// david deletes his card from his stripe customer account
-		SpaceRequest.delete("/1/stripe/customers/me/sources/" + bnpCardId)//
-				.userAuth(david).go(200);
+		SpaceRequest.delete("/1/stripe/customers/me/sources/" + bnpCardId).auth(david).go(200);
 
 		// check david has no card anymore
-		SpaceRequest.get("/1/stripe/customers/me")//
-				.userAuth(david).go(200)//
+		SpaceRequest.get("/1/stripe/customers/me").auth(david).go(200)//
 				.assertSizeEquals(0, "sources.data");
 
 		// david deletes again his card to gets 404
-		SpaceRequest.delete("/1/stripe/customers/me/sources/" + bnpCardId)//
-				.userAuth(david).go(404);
+		SpaceRequest.delete("/1/stripe/customers/me/sources/" + bnpCardId).auth(david).go(404);
 
 		// david creates another card
 		String lclCardId = SpaceRequest.post("/1/stripe/customers/me/sources")//
-				.body("source", createCardToken().getId(), "description", "lcl")//
-				.userAuth(david).go(201)//
+		.body("source", createCardToken().getId(), "description", "lcl").auth(david).go(201)//
 				.assertEquals("lcl", "metadata.description")//
 				.getString("id");
 
 		// check david has an lcl card
-		SpaceRequest.get("/1/stripe/customers/me")//
-				.userAuth(david).go(200)//
+		SpaceRequest.get("/1/stripe/customers/me").auth(david).go(200)//
 				.assertEquals("platform@spacedog.io", "email")//
 				.assertSizeEquals(1, "sources.data")//
 				.assertEquals(lclCardId, "sources.data.0.id")//
@@ -135,22 +120,20 @@ public class StripeResourceTest extends SpaceTest {
 
 		// david is not allowed to charge a customer
 		// because of settings.rolesAllowedToCharge
-		SpaceRequest.post("/1/stripe/charges").userAuth(david).go(403);
+		SpaceRequest.post("/1/stripe/charges").auth(david).go(403);
 
 		// superadmin fails to make charge a customer if no parameter
-		SpaceRequest.post("/1/stripe/charges").adminAuth(test).go(400);
+		SpaceRequest.post("/1/stripe/charges").auth(test).go(400);
 
 		// superadmin charges david's lcl card
 		SpaceRequest.post("/1/stripe/charges")//
-				.formField("amount", "1200")//
-				.formField("currency", "eur")//
-				.formField("customer", stripeCustomer.get("id").asText())//
-				.formField("source", lclCardId)//
-				.adminAuth(test).go(200);
+		.formField("amount", "1200")//
+		.formField("currency", "eur")//
+		.formField("customer", stripeCustomer.get("id").asText())//
+		.formField("source", lclCardId).auth(test).go(200);
 
 		// david deletes his stripe customer account
-		SpaceRequest.delete("/1/stripe/customers/me")//
-				.userAuth(david).go(200);
+		SpaceRequest.delete("/1/stripe/customers/me").auth(david).go(200);
 
 		try {
 			Thread.sleep(2000);
@@ -159,8 +142,7 @@ public class StripeResourceTest extends SpaceTest {
 			e.printStackTrace();
 		}
 		// check david's stripe customer account is gone
-		SpaceRequest.get("/1/stripe/customers/me")//
-				.userAuth(david).go(404);
+		SpaceRequest.get("/1/stripe/customers/me").auth(david).go(404);
 	}
 
 	Token createCardToken() throws AuthenticationException, InvalidRequestException, APIConnectionException,

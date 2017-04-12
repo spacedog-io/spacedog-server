@@ -29,8 +29,7 @@ public class Purge extends Job {
 			String before = DateTime.now().minusDays(keepInDays).toString();
 
 			SpaceRequest.delete("/1/log")//
-					.queryParam("before", before)//
-					.basicAuth("api", "purgeall", password)//
+			.queryParam("before", before).backendId((String) "api").basicAuth((String) "purgeall", (String) password)//
 					.go(200);
 
 			return ok();

@@ -35,7 +35,7 @@ public class DataResource2TestOften extends SpaceTest {
 		SpaceDog fred = signUp(test, "fred", "hi fred");
 
 		// fred fails to create a sale with no body
-		SpaceRequest.post("/1/data/sale").userAuth(fred).go(400);
+		SpaceRequest.post("/1/data/sale").auth(fred).go(400);
 
 		// fred creates a new sale object
 		ObjectNode sale = Json7.objectBuilder()//
@@ -64,8 +64,7 @@ public class DataResource2TestOften extends SpaceTest {
 				.end() //
 				.build();
 
-		String id = SpaceRequest.post("/1/data/sale")//
-				.userAuth(fred).body(sale).go(201)//
+		String id = SpaceRequest.post("/1/data/sale").auth(fred).body(sale).go(201)//
 				.assertTrue("success")//
 				.assertEquals("sale", "type")//
 				.assertEquals(1, "version")//
@@ -74,8 +73,7 @@ public class DataResource2TestOften extends SpaceTest {
 
 		// find by id
 
-		SpaceResponse res1 = SpaceRequest.get("/1/data/sale/" + id)//
-				.userAuth(fred).go(200)//
+		SpaceResponse res1 = SpaceRequest.get("/1/data/sale/" + id).auth(fred).go(200)//
 				.assertEquals("fred", "meta.createdBy")//
 				.assertEquals("fred", "meta.updatedBy")//
 				.assertEquals(1, "meta.version")//
@@ -112,7 +110,7 @@ public class DataResource2TestOften extends SpaceTest {
 		// find by simple text search
 
 		SpaceResponse res1b = SpaceRequest.get("/1/search/sale")//
-				.queryParam("q", "museum").refresh().userAuth(fred)//
+		.queryParam("q", "museum").refresh().auth(fred)//
 				.go(200).assertEquals(1, "total");
 
 		res1.assertEqualsWithoutMeta(Json7.checkObject(res1b.get("results.0")));
@@ -125,8 +123,7 @@ public class DataResource2TestOften extends SpaceTest {
 				.put("query", "museum")//
 				.build().toString();
 
-		SpaceResponse res1c = SpaceRequest.post("/1/search/sale")//
-				.userAuth(fred).body(query).go(200).assertEquals(1, "total");
+		SpaceResponse res1c = SpaceRequest.post("/1/search/sale").auth(fred).body(query).go(200).assertEquals(1, "total");
 
 		res1.assertEqualsWithoutMeta(Json7.checkObject(res1c.get("results.0")));
 
@@ -134,7 +131,7 @@ public class DataResource2TestOften extends SpaceTest {
 
 		JsonNode updateJson2 = Json7.objectBuilder().array("items").object().put("quantity", 7).build();
 
-		SpaceRequest.put("/1/data/sale/" + id).userAuth(fred).body(updateJson2).go(200)//
+		SpaceRequest.put("/1/data/sale/" + id).auth(fred).body(updateJson2).go(200)//
 				.assertTrue("success")//
 				.assertEquals("sale", "type")//
 				.assertEquals(2, "version")//
@@ -142,7 +139,7 @@ public class DataResource2TestOften extends SpaceTest {
 
 		// check update is correct
 
-		SpaceResponse res3 = SpaceRequest.get("/1/data/sale/" + id).userAuth(fred).go(200)//
+		SpaceResponse res3 = SpaceRequest.get("/1/data/sale/" + id).auth(fred).go(200)//
 				.assertEquals("fred", "meta.createdBy")//
 				.assertEquals("fred", "meta.updatedBy")//
 				.assertEquals(createdAt, "meta.createdAt")//
@@ -158,19 +155,19 @@ public class DataResource2TestOften extends SpaceTest {
 
 		// update with invalid version should fail
 
-		SpaceRequest.put("/1/data/sale/" + id).userAuth(fred).queryParam("version", "1")//
+		SpaceRequest.put("/1/data/sale/" + id).auth(fred).queryParam("version", "1")//
 				.body("number", "0987654321").go(409).assertFalse("success");
 
 		// update with invalid version should fail
 
 		SpaceRequest.put("/1/data/sale/" + id)//
-				.queryParam("version", "XXX").userAuth(fred)//
+		.queryParam("version", "XXX").auth(fred)//
 				.body("number", "0987654321").go(400)//
 				.assertFalse("success");
 
 		// update with correct version should succeed
 
-		SpaceResponse req3d = SpaceRequest.put("/1/data/sale/" + id).userAuth(fred)//
+		SpaceResponse req3d = SpaceRequest.put("/1/data/sale/" + id).auth(fred)//
 				.queryParam("version", "2").body("number", "0987654321").go(200);
 
 		req3d.assertTrue("success").assertEquals("sale", "type").assertEquals(3, "version").assertEquals(id, "id");
@@ -194,13 +191,13 @@ public class DataResource2TestOften extends SpaceTest {
 
 		// vince fails to update nor delete this sale since not the owner
 		SpaceDog vince = signUp(test, "vince", "hi vince");
-		SpaceRequest.put("/1/data/sale/" + id).userAuth(vince)//
+		SpaceRequest.put("/1/data/sale/" + id).auth(vince)//
 				.body("number", "0123456789").go(403);
-		SpaceRequest.delete("/1/data/sale/" + id).userAuth(vince).go(403);
+		SpaceRequest.delete("/1/data/sale/" + id).auth(vince).go(403);
 
 		// fred deletes this sale since he is the owner
-		SpaceRequest.delete("/1/data/sale/" + id).userAuth(fred).go(200);
-		SpaceRequest.get("/1/data/sale/" + id).userAuth(fred).go(404);
+		SpaceRequest.delete("/1/data/sale/" + id).auth(fred).go(200);
+		SpaceRequest.get("/1/data/sale/" + id).auth(fred).go(404);
 	}
 
 	@Test
@@ -214,22 +211,22 @@ public class DataResource2TestOften extends SpaceTest {
 
 		// should successfully create 4 messages
 
-		SpaceRequest.post("/1/data/message").adminAuth(test)//
+		SpaceRequest.post("/1/data/message").auth(test)//
 				.body("text", "what's up?").go(201);
-		SpaceRequest.post("/1/data/message").adminAuth(test)//
+		SpaceRequest.post("/1/data/message").auth(test)//
 				.body("text", "wanna drink something?").go(201);
-		SpaceRequest.post("/1/data/message").adminAuth(test)//
+		SpaceRequest.post("/1/data/message").auth(test)//
 				.body("text", "pretty cool, hein?").go(201);
-		SpaceRequest.post("/1/data/message").adminAuth(test)//
+		SpaceRequest.post("/1/data/message").auth(test)//
 				.body("text", "so long guys").go(201);
 
-		SpaceRequest.get("/1/data").refresh().adminAuth(test).go(200)//
+		SpaceRequest.get("/1/data").refresh().auth(test).go(200)//
 				.assertEquals(4, "total");
 
 		// should succeed to delete all messages
-		SpaceRequest.delete("/1/data/message").adminAuth(test).go(200)//
+		SpaceRequest.delete("/1/data/message").auth(test).go(200)//
 				.assertEquals(4, "totalDeleted");
-		SpaceRequest.get("/1/data").refresh().adminAuth(test).go(200)//
+		SpaceRequest.get("/1/data").refresh().auth(test).go(200)//
 				.assertEquals(0, "total");
 	}
 
@@ -245,25 +242,24 @@ public class DataResource2TestOften extends SpaceTest {
 
 		// creates a message object with auto generated id
 
-		String id = SpaceRequest.post("/1/data/message").adminAuth(test)//
+		String id = SpaceRequest.post("/1/data/message").auth(test)//
 				.body("text", "id=?").go(201)//
 				.getString("id");
 
-		SpaceRequest.get("/1/data/message/" + id).adminAuth(test).go(200)//
+		SpaceRequest.get("/1/data/message/" + id).auth(test).go(200)//
 				.assertEquals("id=?", "text");
 
 		// creates a message object with self provided id
 
-		SpaceRequest.post("/1/data/message").id("1")//
-				.adminAuth(test).body("text", "id=1").go(201);
+		SpaceRequest.post("/1/data/message").id("1").auth(test).body("text", "id=1").go(201);
 
-		SpaceRequest.get("/1/data/message/1").adminAuth(test).go(200)//
+		SpaceRequest.get("/1/data/message/1").auth(test).go(200)//
 				.assertEquals("id=1", "text");
 
 		// fails to create a message object with id subkey
 		// since not compliant with schema
 
-		SpaceRequest.post("/1/data/message").adminAuth(test)//
+		SpaceRequest.post("/1/data/message").auth(test)//
 				.body("text", "id=2", "id", 2).go(400);
 
 		// creates message2 schema with code property as id
@@ -273,32 +269,32 @@ public class DataResource2TestOften extends SpaceTest {
 
 		// creates a message2 object with code = 2
 
-		SpaceRequest.post("/1/data/message2").adminAuth(test)//
+		SpaceRequest.post("/1/data/message2").auth(test)//
 				.body("text", "id=code=2", "code", "2").go(201);
 
-		SpaceRequest.get("/1/data/message2/2").adminAuth(test).go(200)//
+		SpaceRequest.get("/1/data/message2/2").auth(test).go(200)//
 				.assertEquals("id=code=2", "text")//
 				.assertEquals("2", "code");
 
 		// creates a message2 object with code = 3
 		// and the id param is transparent
 
-		SpaceRequest.post("/1/data/message2").id("XXX").adminAuth(test)//
+		SpaceRequest.post("/1/data/message2").id("XXX").auth(test)//
 				.body("text", "id=code=3", "code", "3").go(201);
 
-		SpaceRequest.get("/1/data/message2/3").adminAuth(test).go(200)//
+		SpaceRequest.get("/1/data/message2/3").auth(test).go(200)//
 				.assertEquals("id=code=3", "text")//
 				.assertEquals("3", "code");
 
 		// fails to create a message2 object without any code
 
-		SpaceRequest.post("/1/data/message2").adminAuth(test)//
+		SpaceRequest.post("/1/data/message2").auth(test)//
 				.body("text", "no code").go(400);
 
 		// fails to create a message2 object without any code
 		// and the id param is still transparent
 
-		SpaceRequest.post("/1/data/message2").id("XXX").adminAuth(test)//
+		SpaceRequest.post("/1/data/message2").id("XXX").auth(test)//
 				.body("text", "no code").go(400);
 	}
 
@@ -313,13 +309,13 @@ public class DataResource2TestOften extends SpaceTest {
 
 		test.schema().set(Schema.builder("message").string("text").build());
 
-		SpaceRequest.post("/1/data/message").userAuth(vince)//
+		SpaceRequest.post("/1/data/message").auth(vince)//
 				.body("text", "hello").go(201);
-		SpaceRequest.post("/1/data/message").userAuth(vince)//
+		SpaceRequest.post("/1/data/message").auth(vince)//
 				.body("text", "bonjour").go(201);
-		SpaceRequest.post("/1/data/message").userAuth(vince)//
+		SpaceRequest.post("/1/data/message").auth(vince)//
 				.body("text", "guttentag").go(201);
-		SpaceRequest.post("/1/data/message").userAuth(vince)//
+		SpaceRequest.post("/1/data/message").auth(vince)//
 				.body("text", "hola").go(201);
 
 		// fetches messages by 4 pages of 1 object
@@ -349,13 +345,12 @@ public class DataResource2TestOften extends SpaceTest {
 
 		// fails to fetch messages if from + size > 10000
 
-		SpaceRequest.get("/1/data/message").from(9999).size(10).userAuth(vince).go(400);
+		SpaceRequest.get("/1/data/message").from(9999).size(10).auth(vince).go(400);
 	}
 
 	private Collection<String> fetchMessages(SpaceDog user, int from, int size) {
 		JsonNode results = SpaceRequest.get("/1/data/message")//
-				.refresh().from(from).size(size)//
-				.userAuth(user).go(200)//
+		.refresh().from(from).size(size).auth(user).go(200)//
 				.assertEquals(4, "total")//
 				.assertSizeEquals(size, "results")//
 				.get("results");

@@ -103,7 +103,7 @@ public class BatchResourceTest extends SpaceTest {
 				.build();
 
 		ObjectNode node = SpaceRequest.post("/1/batch")//
-				.debugServer().adminAuth(test).body(batch).go(200)//
+		.debugServer().auth(test).body(batch).go(200)//
 				.objectNode();
 
 		String vinceId = Json7.get(node, "responses.0.id").asText();
@@ -111,7 +111,7 @@ public class BatchResourceTest extends SpaceTest {
 
 		// should succeed to fetch dave and vince credentials
 		// and the message schema
-		SpaceRequest.get("/1/batch").adminAuth(test)//
+		SpaceRequest.get("/1/batch").auth(test)//
 				.queryParam("vince", "/credentials/" + vinceId) //
 				.queryParam("dave", "/credentials/" + daveId) //
 				.queryParam("schema", "/schema/message") //
@@ -205,7 +205,7 @@ public class BatchResourceTest extends SpaceTest {
 				.build();
 
 		SpaceResponse response = SpaceRequest.post("/1/batch")//
-				.debugServer().basicAuth("test", "vince", "hi vince").body(batch).go(200)//
+		.debugServer().backendId((String) "test").basicAuth((String) "vince", (String) "hi vince").body(batch).go(200)//
 				.assertEquals(201, "responses.0.status")//
 				.assertEquals("1", "responses.0.id")//
 				.assertEquals(201, "responses.1.status")//
@@ -243,8 +243,7 @@ public class BatchResourceTest extends SpaceTest {
 				.build();
 
 		SpaceRequest.post("/1/batch").debugServer()//
-				.queryParam("stopOnError", "true")//
-				.basicAuth("test", "vince", "hi vince").body(batch).go(200)//
+		.queryParam("stopOnError", "true").backendId((String) "test").basicAuth((String) "vince", (String) "hi vince").body(batch).go(200)//
 				.assertEquals(200, "responses.0.status")//
 				.assertEquals(404, "responses.1.status")//
 				.assertSizeEquals(2, "responses")//

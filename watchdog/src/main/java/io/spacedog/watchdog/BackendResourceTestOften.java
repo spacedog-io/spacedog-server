@@ -24,8 +24,7 @@ public class BackendResourceTestOften extends SpaceTest {
 		SpaceDog test = resetTestBackend();
 
 		// gets backend super admin info
-		SpaceRequest.get("/1/backend")//
-				.adminAuth(test).go(200)//
+		SpaceRequest.get("/1/backend").auth(test).go(200)//
 				.assertEquals("test", "results.0.backendId")//
 				.assertEquals("test", "results.0.username")//
 				.assertEquals("platform@spacedog.io", "results.0.email");
@@ -52,24 +51,24 @@ public class BackendResourceTestOften extends SpaceTest {
 		SpaceRequest.get("/1/login").backend(test).go(403);
 
 		// invalid admin username login fails
-		SpaceRequest.get("/1/login").basicAuth("test", "XXX", "hi test").go(401);
+		SpaceRequest.get("/1/login").backendId((String) "test").basicAuth((String) "XXX", (String) "hi test").go(401);
 
 		// invalid admin password login fails
-		SpaceRequest.get("/1/login").basicAuth("test", "test", "hi XXX").go(401);
+		SpaceRequest.get("/1/login").backendId((String) "test").basicAuth((String) "test", (String) "hi XXX").go(401);
 
 		// data access without credentials succeeds
 		SpaceRequest.get("/1/data").refresh().backend(test).go(200)//
 				.assertSizeEquals(0, "results");
 
 		// data access with admin user succeeds
-		SpaceRequest.get("/1/data").adminAuth(test).go(200)//
+		SpaceRequest.get("/1/data").auth(test).go(200)//
 				.assertSizeEquals(0, "results");
 
 		// let's create a common user
 		SpaceDog john = signUp("test", "john", "hi john");
 
 		// user fails to get backend data since it is restricted to admins
-		SpaceRequest.get("/1/backend").userAuth(john).go(403);
+		SpaceRequest.get("/1/backend").auth(john).go(403);
 	}
 
 	@Test
@@ -77,7 +76,8 @@ public class BackendResourceTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog.backend("test").username("test").password("hi test").backend().delete();
+		SpaceDog test = SpaceDog.backend("test").username("test").password("hi test");
+		test.admin().deleteBackend(test.backendId());
 		ObjectNode body = Json7.object("username", "test", //
 				"password", "hi test", "email", "hello@spacedog.io");
 
@@ -134,7 +134,8 @@ public class BackendResourceTestOften extends SpaceTest {
 		prepareTest();
 
 		// super admin deletes the test backend
-		SpaceDog.backend("test").username("test").password("hi test").backend().delete();
+		SpaceDog test = SpaceDog.backend("test").username("test").password("hi test");
+		test.admin().deleteBackend(test.backendId());
 
 		// it is also possible to create a backend with the same request host as
 		// other backend requests. Example https://cel.suez.fr
@@ -146,7 +147,7 @@ public class BackendResourceTestOften extends SpaceTest {
 				.go(201);
 
 		// super admin gets its backend info
-		SpaceRequest.get("/1/backend").basicAuth("test", "test", "hi test").go(200)//
+		SpaceRequest.get("/1/backend").backendId((String) "test").basicAuth((String) "test", (String) "hi test").go(200)//
 				.assertEquals(1, "total")//
 				.assertEquals("test", "results.0.backendId")//
 				.assertEquals("test", "results.0.username")//

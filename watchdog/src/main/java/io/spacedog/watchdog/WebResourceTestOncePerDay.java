@@ -19,11 +19,11 @@ public class WebResourceTestOncePerDay extends SpaceTest {
 		prepareTest(false);
 		test = resetTestBackend();
 
-		SpaceRequest.get("/1/file").adminAuth(test).go(200)//
+		SpaceRequest.get("/1/file").auth(test).go(200)//
 				.assertSizeEquals(0, "results");
 
 		// upload without prefix is illegal
-		SpaceRequest.put("/1/file/XXX.html").adminAuth(test)//
+		SpaceRequest.put("/1/file/XXX.html").auth(test)//
 				.body("<h1>Hello</h1>").go(400);
 
 		// admin uploads web site at prefix 'www'
@@ -77,7 +77,7 @@ public class WebResourceTestOncePerDay extends SpaceTest {
 	}
 
 	private void upload(String prefix, String uri, String html) {
-		SpaceRequest.put("/1/file/" + prefix + uri).adminAuth(test).body(html).go(200);
+		SpaceRequest.put("/1/file/" + prefix + uri).auth(test).body(html).go(200);
 	}
 
 	private String html(String uri) {

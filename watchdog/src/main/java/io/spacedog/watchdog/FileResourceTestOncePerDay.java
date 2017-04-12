@@ -17,21 +17,21 @@ public class FileResourceTestOncePerDay extends SpaceTest {
 		prepareTest(false);
 		SpaceDog test = resetTestBackend();
 
-		SpaceRequest.get("/1/file").adminAuth(test).go(200)//
+		SpaceRequest.get("/1/file").auth(test).go(200)//
 				.assertSizeEquals(0, "results");
 
 		// upload file without prefix is illegal
-		SpaceRequest.put("/1/file/index.html").adminAuth(test).body(BYTES).go(400);
+		SpaceRequest.put("/1/file/index.html").auth(test).body(BYTES).go(400);
 
 		// admin can upload a web site
-		SpaceRequest.put("/1/file/www/app.html").adminAuth(test).body(BYTES).go(200);
-		SpaceRequest.put("/1/file/www/app.js").adminAuth(test).body(BYTES).go(200);
-		SpaceRequest.put("/1/file/www/images/riri.png").adminAuth(test).body(BYTES).go(200);
-		SpaceRequest.put("/1/file/www/images/fifi.jpg").adminAuth(test).body(BYTES).go(200);
-		SpaceRequest.put("/1/file/www/css/black.css").adminAuth(test).body(BYTES).go(200);
-		SpaceRequest.put("/1/file/www/css/white.css").adminAuth(test).body(BYTES).go(200);
+		SpaceRequest.put("/1/file/www/app.html").auth(test).body(BYTES).go(200);
+		SpaceRequest.put("/1/file/www/app.js").auth(test).body(BYTES).go(200);
+		SpaceRequest.put("/1/file/www/images/riri.png").auth(test).body(BYTES).go(200);
+		SpaceRequest.put("/1/file/www/images/fifi.jpg").auth(test).body(BYTES).go(200);
+		SpaceRequest.put("/1/file/www/css/black.css").auth(test).body(BYTES).go(200);
+		SpaceRequest.put("/1/file/www/css/white.css").auth(test).body(BYTES).go(200);
 
-		SpaceRequest.get("/1/file").adminAuth(test).go(200)//
+		SpaceRequest.get("/1/file").auth(test).go(200)//
 				.assertSizeEquals(6, "results");
 
 		SpaceRequest.get("/1/file/www/app.html").backend(test).go(200)//
@@ -43,18 +43,18 @@ public class FileResourceTestOncePerDay extends SpaceTest {
 		SpaceRequest.get("/1/file/www/css/black.css").backend(test).go(200)//
 				.assertHeaderEquals("text/css", SpaceHeaders.CONTENT_TYPE);
 
-		SpaceRequest.get("/1/file/www/images").adminAuth(test).go(200)//
+		SpaceRequest.get("/1/file/www/images").auth(test).go(200)//
 				.assertSizeEquals(2, "results");
 
-		SpaceRequest.delete("/1/file/www/css").adminAuth(test).go(200)//
+		SpaceRequest.delete("/1/file/www/css").auth(test).go(200)//
 				.assertSizeEquals(2, "deleted");
 
-		SpaceRequest.get("/1/file/www").adminAuth(test).go(200)//
+		SpaceRequest.get("/1/file/www").auth(test).go(200)//
 				.assertSizeEquals(4, "results");
 
 		SpaceRequest.get("/1/file/www/css/black.css").backend(test).go(404);
 
-		SpaceRequest.delete("/1/file").adminAuth(test).go(200)//
+		SpaceRequest.delete("/1/file").auth(test).go(200)//
 				.assertSizeEquals(4, "deleted");
 	}
 }

@@ -36,19 +36,17 @@ public class SendPulseResourceTest extends SpaceTest {
 		test.settings().save(settings);
 
 		// fred can get all websites
-		SpaceRequest.get("/1/sendpulse/push/websites").userAuth(fred).go(200);
+		SpaceRequest.get("/1/sendpulse/push/websites").auth(fred).go(200);
 
 		// fred can create a web push to sendpulse.www.spacedog.io
-		SpaceRequest.post("/1/sendpulse/push/tasks")//
-				.userAuth(fred)//
+		SpaceRequest.post("/1/sendpulse/push/tasks").auth(fred)//
 				.formField("title", "Hello")//
 				.formField("body", DateTime.now().toString())//
 				.go(400)//
 				.assertEquals("sendpulse-1255", "error.code");
 
 		// fred can create a web push to sendpulse.www.spacedog.io
-		SpaceRequest.post("/1/sendpulse/push/tasks")//
-				.userAuth(fred)//
+		SpaceRequest.post("/1/sendpulse/push/tasks").auth(fred)//
 				.formField("title", "Hello")//
 				.formField("body", DateTime.now().toString())//
 				.formField("website_id", "22573")//
@@ -56,8 +54,8 @@ public class SendPulseResourceTest extends SpaceTest {
 				.go(200);
 
 		// settings forbid admins to get all websites nor create push tasks
-		SpaceRequest.get("/1/sendpulse/push/websites").adminAuth(test).go(403);
-		SpaceRequest.post("/1/sendpulse/push/tasks").adminAuth(test).go(403);
+		SpaceRequest.get("/1/sendpulse/push/websites").auth(test).go(403);
+		SpaceRequest.post("/1/sendpulse/push/tasks").auth(test).go(403);
 	}
 
 	private void initSendPulseTestWebApp() {
@@ -80,8 +78,7 @@ public class SendPulseResourceTest extends SpaceTest {
 
 	private void upload(SpaceDog backend, String name) {
 		SpaceRequest.put("/1/file/www/" + name)//
-				.bodyResource(this.getClass(), name)//
-				.adminAuth(backend)//
+		.bodyResource(this.getClass(), name).auth(backend)//
 				.go(200);
 	}
 }

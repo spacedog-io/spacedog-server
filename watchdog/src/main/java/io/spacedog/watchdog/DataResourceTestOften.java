@@ -42,13 +42,13 @@ public class DataResourceTestOften extends SpaceTest {
 
 		// create
 
-		String id = SpaceRequest.post("/1/data/car").userAuth(vince).body(car).go(201)//
+		String id = SpaceRequest.post("/1/data/car").auth(vince).body(car).go(201)//
 				.assertTrue("success").assertEquals("car", "type").assertNotNull("id")//
 				.getString("id");
 
 		// find by id
 
-		SpaceResponse res1 = SpaceRequest.get("/1/data/car/" + id).userAuth(vince).go(200)//
+		SpaceResponse res1 = SpaceRequest.get("/1/data/car/" + id).auth(vince).go(200)//
 				.assertEquals("vince", "meta.createdBy")//
 				.assertEquals("vince", "meta.updatedBy")//
 				.assertDateIsRecent("meta.createdAt")//
@@ -59,13 +59,12 @@ public class DataResourceTestOften extends SpaceTest {
 
 		// find by full text search
 
-		SpaceRequest.get("/1/search/car").refresh()//
-				.userAuth(vince).queryParam("q", "inVENT*").go(200)//
+		SpaceRequest.get("/1/search/car").refresh().auth(vince).queryParam("q", "inVENT*").go(200)//
 				.assertEquals(id, "results.0.meta.id");
 
 		// update
 
-		SpaceRequest.put("/1/data/car/" + id).userAuth(vince).body("color", "blue").go(200);
+		SpaceRequest.put("/1/data/car/" + id).auth(vince).body("color", "blue").go(200);
 
 		SpaceResponse res3 = SpaceRequest.get("/1/data/car/" + id).backend(test).go(200)//
 				.assertEquals("vince", "meta.createdBy")//
@@ -80,7 +79,7 @@ public class DataResourceTestOften extends SpaceTest {
 
 		// delete
 
-		SpaceRequest.delete("/1/data/car/" + id).userAuth(vince).go(200);
-		SpaceRequest.get("/1/data/car/" + id).userAuth(vince).go(404);
+		SpaceRequest.delete("/1/data/car/" + id).auth(vince).go(200);
+		SpaceRequest.get("/1/data/car/" + id).auth(vince).go(404);
 	}
 }

@@ -10,6 +10,7 @@ import io.spacedog.model.SmsSettings;
 import io.spacedog.model.SmsSettings.TwilioSettings;
 import io.spacedog.rest.SpaceEnv;
 import io.spacedog.rest.SpaceRequest;
+import io.spacedog.rest.SpaceRequestException;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 
@@ -20,8 +21,8 @@ public class SmsResourceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog guest = SpaceDog.backend("test");
 		SpaceDog test = resetTestBackend();
+		SpaceDog guest = SpaceDog.backend(test);
 
 		// superadmin creates user vince with 'sms' role
 		SpaceDog vince = signUp(test, "vince", "hi vince");
@@ -56,12 +57,11 @@ public class SmsResourceTest extends SpaceTest {
 		test.settings().save(settings);
 
 		// vince sends an sms
-		String messageId = vince.post("/1/sms").formField("To", "33662627520")//
-				.formField("Body", "Hi from SpaceDog").go(201).getString("sid");
+		String messageId = vince.sms().send("33662627520", "Hi from SpaceDog");
 
 		// vince gets info on the previously sent sms
 		// since he's got the 'sms' role
-		vince.get("/1/sms/" + messageId).go(200);
+		vince.sms().get(messageId);
 
 		// anonymous and superadmin don't have 'sms' role
 		// they fail to get sms info
@@ -69,9 +69,12 @@ public class SmsResourceTest extends SpaceTest {
 		test.get("/1/sms/" + messageId).go(403);//
 
 		// vince sends an sms to invalid mobile number
-		vince.post("/1/sms").formField("To", "33162627520")//
-				.formField("Body", "Hi from SpaceDog")//
-				.go(400)//
-				.assertEquals("twilio:21614", "error.code");
+		try {
+			vince.sms().send("33162627520", "Hi from SpaceDog");
+			fail();
+		} catch (SpaceRequestException e) {
+			assertEquals(400, e.httpStatus());
+			assertEquals("twilio:21614", e.errorCode());
+		}
 	}
 }

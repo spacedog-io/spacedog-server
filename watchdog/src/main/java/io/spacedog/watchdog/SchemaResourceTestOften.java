@@ -53,22 +53,22 @@ public class SchemaResourceTestOften extends SpaceTest {
 		SpaceRequest.delete("/1/schema/sale").backend(test).go(403);
 
 		// user is not allowed to delete schema
-		SpaceRequest.delete("/1/schema/sale").userAuth(bob).go(403);
+		SpaceRequest.delete("/1/schema/sale").auth(bob).go(403);
 
 		// admin fails to delete a non existing schema
-		SpaceRequest.delete("/1/schema/XXX").adminAuth(test).go(404);
+		SpaceRequest.delete("/1/schema/XXX").auth(test).go(404);
 
 		// admin deletes a schema and all its objects
-		SpaceRequest.delete("/1/schema/sale").adminAuth(test).go(200);
+		SpaceRequest.delete("/1/schema/sale").auth(test).go(200);
 
 		// admin fails to create an invalid schema
-		SpaceRequest.put("/1/schema/toto").adminAuth(test)//
+		SpaceRequest.put("/1/schema/toto").auth(test)//
 				.body("{\"toto\":{\"_type\":\"XXX\"}}").go(400);
 
 		// admin fails to update car schema color property type
 		Schema carSchema = buildCarSchema();
 		carSchema.node().with("car").with("color").put("_type", "date");
-		SpaceRequest.put("/1/schema/car").adminAuth(test).bodySchema(carSchema).go(400);
+		SpaceRequest.put("/1/schema/car").auth(test).bodySchema(carSchema).go(400);
 
 		// fails to remove the car schema color property
 		// json = buildCarSchema();
@@ -159,7 +159,7 @@ public class SchemaResourceTestOften extends SpaceTest {
 
 		// settings is a reserved schema name
 		SpaceRequest.get("/1/schema/settings").backend(test).go(400);
-		SpaceRequest.put("/1/schema/settings").adminAuth(test).go(400);
+		SpaceRequest.put("/1/schema/settings").auth(test).go(400);
 	}
 
 }

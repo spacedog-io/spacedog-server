@@ -101,7 +101,7 @@ public class LogResourceTest extends SpaceTest {
 
 		// purge user fails to delete any logs
 		// since it doesn't have the 'purgeall' role
-		SpaceRequest.delete("/1/log").userAuth(purgeUser).go(403);
+		SpaceRequest.delete("/1/log").auth(purgeUser).go(403);
 
 		// superdog assigns 'purgeall' role to purge user
 		SpaceRequest.put("/1/credentials/" + purgeUser.id() + "/roles/purgeall")//
@@ -114,10 +114,10 @@ public class LogResourceTest extends SpaceTest {
 		SpaceDog vince = signUp(test2, "vince", "hi vince");
 
 		// data requests for logs
-		SpaceRequest.get("/1/data").userAuth(fred).go(200);
-		SpaceRequest.get("/1/data").userAuth(vince).go(200);
-		SpaceRequest.get("/1/data").userAuth(fred).go(200);
-		SpaceRequest.get("/1/data").userAuth(vince).go(200);
+		SpaceRequest.get("/1/data").auth(fred).go(200);
+		SpaceRequest.get("/1/data").auth(vince).go(200);
+		SpaceRequest.get("/1/data").auth(fred).go(200);
+		SpaceRequest.get("/1/data").auth(vince).go(200);
 
 		// check everything is in place
 		String before = SpaceRequest.get("/1/log").refresh().superdogAuth().go(200)//
@@ -140,10 +140,10 @@ public class LogResourceTest extends SpaceTest {
 				.getString("results.0.receivedAt");
 
 		// purge user fails to get logs
-		SpaceRequest.get("/1/log").userAuth(purgeUser).go(403);
+		SpaceRequest.get("/1/log").auth(purgeUser).go(403);
 
 		// purge user deletes all backend logs before the last data request
-		SpaceRequest.delete("/1/log").queryParam("before", before).userAuth(purgeUser).go(200);
+		SpaceRequest.delete("/1/log").queryParam("before", before).auth(purgeUser).go(200);
 
 		// superdog checks all backend logs are deleted but ...
 		before = SpaceRequest.get("/1/log").refresh().superdogAuth().go(200)//
@@ -204,8 +204,8 @@ public class LogResourceTest extends SpaceTest {
 				.assertEquals("test", "results.7.credentials.backendId");
 
 		// after backend deletion, logs are still accessible to superdogs
-		test.backend().delete();
-		test2.backend().delete();
+		test.admin().deleteBackend(test.backendId());
+		test2.admin().deleteBackend(test2.backendId());
 
 		SpaceRequest.get("/1/log").refresh().superdogAuth().go(200)//
 				.assertEquals("DELETE", "results.0.method")//
@@ -254,12 +254,12 @@ public class LogResourceTest extends SpaceTest {
 
 		// but nath only gets logs from her root 'api' backend
 		// since she's only superadmin and not superdog
-		SpaceRequest.get("/1/log").refresh().userAuth(nath).size(2).go(200)//
+		SpaceRequest.get("/1/log").refresh().auth(nath).size(2).go(200)//
 				.assertEquals("/1/log", "results.0.path")//
 				.assertEquals("/1/credentials", "results.1.path");
 
 		// clean nath credentials
-		SpaceRequest.delete("/1/credentials/" + nath.id()).userAuth(nath).go(200);
+		SpaceRequest.delete("/1/credentials/" + nath.id()).auth(nath).go(200);
 	}
 
 	@Test
@@ -273,7 +273,7 @@ public class LogResourceTest extends SpaceTest {
 		SpaceRequest.get("/1/data").backend(test).go(200);
 		SpaceRequest.get("/1/data/user").backend(test).go(403);
 		SpaceDog vince = signUp(test, "vince", "hi vince");
-		SpaceRequest.get("/1/credentials/" + vince.id()).userAuth(vince).go(200);
+		SpaceRequest.get("/1/credentials/" + vince.id()).auth(vince).go(200);
 
 		// superdog search for test backend logs with status 400 and higher
 		SpaceRequest.post("/1/log/search").refresh().size(1).superdogAuth(test)//

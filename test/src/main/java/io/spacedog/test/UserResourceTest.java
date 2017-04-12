@@ -43,33 +43,33 @@ public class UserResourceTest extends SpaceTest {
 		SpaceDog vince = SpaceDog.backend("test").username("vince").login("hi vince");
 
 		// vince puts his data object
-		SpaceRequest.put("/1/data/user/vince").userAuth(vince)//
+		SpaceRequest.put("/1/data/user/vince").auth(vince)//
 				.body("email", "vince@dog.com").go(200);
-		SpaceRequest.get("/1/login").userAuth(vince).go(200);
+		SpaceRequest.get("/1/login").auth(vince).go(200);
 
 		// vince gets his data object
-		SpaceRequest.get("/1/data/user/vince").userAuth(vince).go(200)//
+		SpaceRequest.get("/1/data/user/vince").auth(vince).go(200)//
 				.assertEquals("vince", "username")//
 				.assertEquals("vince@dog.com", "email");
 
 		// admin gets all data and it returns vince
-		SpaceRequest.get("/1/data").refresh().adminAuth(test).go(200)//
+		SpaceRequest.get("/1/data").refresh().auth(test).go(200)//
 				.assertContainsValue("vince", "username")//
 				.assertContainsValue("fred", "username");
 
 		// admin gets all data of type user and it returns vince
-		SpaceRequest.get("/1/data/user").adminAuth(test).go(200)//
+		SpaceRequest.get("/1/data/user").auth(test).go(200)//
 				.assertContainsValue("vince", "username")//
 				.assertContainsValue("fred", "username");
 
 		// vince deletes his user object
-		SpaceRequest.delete("/1/data/user/vince").userAuth(vince).go(200);
-		SpaceRequest.get("/1/login").userAuth(vince).go(401);
+		SpaceRequest.delete("/1/data/user/vince").auth(vince).go(200);
+		SpaceRequest.get("/1/login").auth(vince).go(401);
 
 		// admin deletes all objects of type user
-		SpaceRequest.delete("/1/data/user").adminAuth(test).go(200)//
+		SpaceRequest.delete("/1/data/user").auth(test).go(200)//
 				.assertEquals(1, "totalDeleted");
-		SpaceRequest.get("/1/data").refresh().adminAuth(test).go(200)//
+		SpaceRequest.get("/1/data").refresh().auth(test).go(200)//
 				.assertSizeEquals(0, "total");
 	}
 
@@ -115,33 +115,32 @@ public class UserResourceTest extends SpaceTest {
 		SpaceDog vince = SpaceDog.backend("test").username("vince").password("hi vince");
 
 		// vince gets his user data
-		ObjectNode res2 = SpaceRequest.get("/1/user/vince").userAuth(vince).go(200).objectNode();
+		ObjectNode res2 = SpaceRequest.get("/1/user/vince").auth(vince).go(200).objectNode();
 
 		assertEquals(//
 				Json7.object("username", "vince", "email", "vince@dog.com"), //
 				res2.deepCopy().without("meta"));
 
 		// vince fails to get his user data if wrong username
-		SpaceRequest.get("/1/user/vince").basicAuth(test, "XXX", "hi vince").go(401);
+		SpaceRequest.get("/1/user/vince").backend(test).basicAuth("XXX", "hi vince").go(401);
 
 		// vince fails to get his user data if wrong password
-		SpaceRequest.get("/1/user/vince").basicAuth(test, "vince", "XXX").go(401);
+		SpaceRequest.get("/1/user/vince").backend(test).basicAuth("vince", "XXX").go(401);
 
 		// vince fails to get his user data if wrong backend id
-		SpaceRequest.get("/1/user/vince")//
-				.basicAuth("XXX", vince.username(), vince.password().get()).go(401);
+		SpaceRequest.get("/1/user/vince").backendId("XXX").basicAuth(vince.username(), vince.password().get()).go(401);
 
 		// vince succeeds to login
-		SpaceRequest.get("/1/login").userAuth(vince).go(200);
+		SpaceRequest.get("/1/login").auth(vince).go(200);
 
 		// vince fails to login if wrong password
-		SpaceRequest.get("/1/login").basicAuth(test, "vince", "XXX").go(401);
+		SpaceRequest.get("/1/login").backend(test).basicAuth("vince", "XXX").go(401);
 
 		// vince updates his email
-		SpaceRequest.put("/1/user/vince").userAuth(vince)//
+		SpaceRequest.put("/1/user/vince").auth(vince)//
 				.body("email", "bignose@magic.com").go(200);
 
-		SpaceRequest.get("/1/user/vince").userAuth(vince).go(200)//
+		SpaceRequest.get("/1/user/vince").auth(vince).go(200)//
 				.assertEquals("vince", "username")//
 				.assertEquals("bignose@magic.com", "email")//
 				.assertEquals(2, "meta.version");
@@ -176,10 +175,10 @@ public class UserResourceTest extends SpaceTest {
 		SpaceRequest.get("/1/user").backend(test).go(403);
 
 		// fred gets vince user object
-		SpaceRequest.get("/1/user/vince").userAuth(fred).go(200);
+		SpaceRequest.get("/1/user/vince").auth(fred).go(200);
 
 		// fred gets all its fellow user objects
-		SpaceRequest.get("/1/user").refresh().userAuth(fred).go(200)//
+		SpaceRequest.get("/1/user").refresh().auth(fred).go(200)//
 				.assertSizeEquals(2, "results")//
 				.assertContainsValue("vince", "id")//
 				.assertContainsValue("fred", "id");
@@ -213,7 +212,7 @@ public class UserResourceTest extends SpaceTest {
 		// no password user login should fail
 		// I can not pass a null password anyway to the basicAuth method
 
-		SpaceRequest.get("/1/login").basicAuth(test, "titi", "XXX").go(401);
+		SpaceRequest.get("/1/login").backend(test).basicAuth("titi", "XXX").go(401);
 
 		// no password user trying to create password with empty reset code
 		// should fail
@@ -222,7 +221,7 @@ public class UserResourceTest extends SpaceTest {
 				.queryParam("passwordResetCode", "")//
 				.formField("password", "hi titi").go(400);
 
-		SpaceRequest.get("/1/login").basicAuth(test, "titi", "hi titi").go(401);
+		SpaceRequest.get("/1/login").backend(test).basicAuth("titi", "hi titi").go(401);
 
 		// no password user setting password with wrong reset code should fail
 
@@ -230,7 +229,7 @@ public class UserResourceTest extends SpaceTest {
 				.queryParam("passwordResetCode", "XXX")//
 				.formField("password", "hi titi").go(400);
 
-		SpaceRequest.get("/1/login").basicAuth(test, "titi", "hi titi").go(401);
+		SpaceRequest.get("/1/login").backend(test).basicAuth("titi", "hi titi").go(401);
 
 		// titi inits its own password with right reset code should succeed
 
@@ -238,49 +237,49 @@ public class UserResourceTest extends SpaceTest {
 				.queryParam("passwordResetCode", passwordResetCode)//
 				.formField("password", "hi titi").go(200);
 
-		SpaceRequest.get("/1/login").basicAuth(test, "titi", "hi titi").go(200);
+		SpaceRequest.get("/1/login").backend(test).basicAuth("titi", "hi titi").go(200);
 
 		// toto user changes titi password should fail
 
-		SpaceRequest.put("/1/user/titi/password").basicAuth(test, "toto", "hi toto")//
+		SpaceRequest.put("/1/user/titi/password").backend(test).basicAuth("toto", "hi toto")//
 				.formField("password", "XXX").go(403);
 
-		SpaceRequest.get("/1/login").basicAuth(test, "titi", "XXX").go(401);
+		SpaceRequest.get("/1/login").backend(test).basicAuth("titi", "XXX").go(401);
 
 		// titi changes its password should fail since password size < 6
 
-		SpaceRequest.put("/1/user/titi/password").basicAuth(test, "titi", "hi titi")//
+		SpaceRequest.put("/1/user/titi/password").backend(test).basicAuth("titi", "hi titi")//
 				.formField("password", "XXX").go(400);
 
 		// titi changes its password should succeed
 
-		SpaceRequest.put("/1/user/titi/password").basicAuth(test, "titi", "hi titi")//
+		SpaceRequest.put("/1/user/titi/password").backend(test).basicAuth("titi", "hi titi")//
 				.formField("password", "hi titi 2").go(200);
 
-		SpaceRequest.get("/1/login").basicAuth(test, "titi", "hi titi 2").go(200);
+		SpaceRequest.get("/1/login").backend(test).basicAuth("titi", "hi titi 2").go(200);
 
 		// login with old password should fail
 
-		SpaceRequest.get("/1/login").basicAuth(test, "titi", "hi titi").go(401);
+		SpaceRequest.get("/1/login").backend(test).basicAuth("titi", "hi titi").go(401);
 
 		// admin user changes titi user password should succeed
 
-		SpaceRequest.put("/1/user/titi/password").basicAuth(test, "test", "hi test")//
+		SpaceRequest.put("/1/user/titi/password").backend(test).basicAuth("test", "hi test")//
 				.formField("password", "hi titi 3").go(200);
-		SpaceRequest.get("/1/login").basicAuth(test, "titi", "hi titi 3").go(200);
+		SpaceRequest.get("/1/login").backend(test).basicAuth("titi", "hi titi 3").go(200);
 
 		// login with old password should fail
 
-		SpaceRequest.get("/1/login").basicAuth(test, "titi", "hi titi 2").go(401);
+		SpaceRequest.get("/1/login").backend(test).basicAuth("titi", "hi titi 2").go(401);
 
 		// admin deletes titi password should succeed
 
-		String newPasswordResetCode = SpaceRequest.delete("/1/user/titi/password")//
-				.basicAuth(test, "test", "hi test").go(200).getString("passwordResetCode");
+		String newPasswordResetCode = SpaceRequest.delete("/1/user/titi/password").backend(test)
+				.basicAuth("test", "hi test").go(200).getString("passwordResetCode");
 
 		// titi login should fail
 
-		SpaceRequest.get("/1/login").basicAuth(test, "titi", "hi titi 3").go(401);
+		SpaceRequest.get("/1/login").backend(test).basicAuth("titi", "hi titi 3").go(401);
 
 		// titi inits its password with old reset code should fail
 
@@ -294,7 +293,7 @@ public class UserResourceTest extends SpaceTest {
 				.queryParam("passwordResetCode", newPasswordResetCode)//
 				.formField("password", "hi titi").go(200);
 
-		SpaceRequest.get("/1/login").basicAuth(test, "titi", "hi titi").go(200);
+		SpaceRequest.get("/1/login").backend(test).basicAuth("titi", "hi titi").go(200);
 	}
 
 	@Test
@@ -311,13 +310,12 @@ public class UserResourceTest extends SpaceTest {
 				.body("username", "vince", "email", "vince@dog.com", "password", "hi vince")//
 				.go(201);
 
-		SpaceRequest.get("/1/data").refresh().adminAuth(test).go(200)//
+		SpaceRequest.get("/1/data").refresh().auth(test).go(200)//
 				.assertEquals(1, "total");
 
 		// gets the user schema from server
 
-		ObjectNode userSchema = SpaceRequest.get("/1/schema/user")//
-				.adminAuth(test).go(200).objectNode();
+		ObjectNode userSchema = SpaceRequest.get("/1/schema/user").auth(test).go(200).objectNode();
 
 		// update user schema with custom schema
 
@@ -329,7 +327,7 @@ public class UserResourceTest extends SpaceTest {
 				.put("_type", "string")//
 				.put("_required", true);
 
-		SpaceRequest.put("/1/schema/user").adminAuth(test).body(userSchema).go(200);
+		SpaceRequest.put("/1/schema/user").auth(test).body(userSchema).go(200);
 
 		// create new custom user
 
@@ -340,8 +338,7 @@ public class UserResourceTest extends SpaceTest {
 
 		// get the brand new user and check properties are correct
 
-		ObjectNode fredFromServer = SpaceRequest.get("/1/user/fred")//
-				.adminAuth(test).go(200).objectNode();
+		ObjectNode fredFromServer = SpaceRequest.get("/1/user/fred").auth(test).go(200).objectNode();
 		assertEquals(fred.without("password"), //
 				fredFromServer.without(Arrays.asList("hashedPassword", "groups", "meta")));
 	}

@@ -193,8 +193,7 @@ public class LinkedinResource extends Resource {
 		Session session = Session.newSession(accessToken, expiresIn);
 
 		response = SpaceRequest.get("/v1/people/~:(email-address)")//
-				.baseUrl("https://api.linkedin.com")//
-				.bearerAuth(backendId, accessToken)//
+		.baseUrl("https://api.linkedin.com").backendId((String) backendId).bearerAuth((String) accessToken)//
 				.queryParam("format", "json")//
 				.go();
 

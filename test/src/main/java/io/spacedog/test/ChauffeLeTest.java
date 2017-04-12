@@ -114,7 +114,7 @@ public class ChauffeLeTest extends SpaceTest {
 		@Override
 		public String createSubject(SpaceDog user, String subject) {
 
-			return SpaceRequest.post("/1/data/bigpost").userAuth(user)//
+			return SpaceRequest.post("/1/data/bigpost").auth(user)//
 					.body("title", subject, "responses", Json7.array())//
 					.go(201)//
 					.objectNode().get("id").asText();
@@ -123,13 +123,12 @@ public class ChauffeLeTest extends SpaceTest {
 		@Override
 		public void addComment(SpaceDog user, String postId, String comment) {
 
-			ObjectNode bigPost = SpaceRequest.get("/1/data/bigpost/" + postId)//
-					.userAuth(user).go(200).objectNode();
+			ObjectNode bigPost = SpaceRequest.get("/1/data/bigpost/" + postId).auth(user).go(200).objectNode();
 
 			bigPost.withArray("responses")//
 					.add(Json7.object("title", comment, "author", user.username()));
 
-			SpaceRequest.put("/1/data/bigpost/" + postId).userAuth(user).body(bigPost).go(200);
+			SpaceRequest.put("/1/data/bigpost/" + postId).auth(user).body(bigPost).go(200);
 		}
 
 		@Override
@@ -149,7 +148,7 @@ public class ChauffeLeTest extends SpaceTest {
 					.object("match_all")//
 					.build().toString();
 
-			return SpaceRequest.post("/1/search/bigpost").refresh().userAuth(user)//
+			return SpaceRequest.post("/1/search/bigpost").refresh().auth(user)//
 					.body(wallQuery).go(200).jsonNode().get("results").elements();
 		}
 	}
@@ -159,14 +158,14 @@ public class ChauffeLeTest extends SpaceTest {
 		@Override
 		public String createSubject(SpaceDog user, String subject) {
 
-			return SpaceRequest.post("/1/data/smallpost").userAuth(user)//
+			return SpaceRequest.post("/1/data/smallpost").auth(user)//
 					.body("title", subject).go(201).objectNode().get("id").asText();
 		}
 
 		@Override
 		public void addComment(SpaceDog user, String parentId, String comment) {
 
-			SpaceRequest.post("/1/data/smallpost").userAuth(user)//
+			SpaceRequest.post("/1/data/smallpost").auth(user)//
 					.body("title", comment, "parent", parentId).go(201);
 		}
 
@@ -196,7 +195,7 @@ public class ChauffeLeTest extends SpaceTest {
 					.build();
 
 			JsonNode subjectResults = SpaceRequest.post("/1/search/smallpost")//
-					.refresh().userAuth(user).body(subjectQuery).go(200).jsonNode();
+			.refresh().auth(user).body(subjectQuery).go(200).jsonNode();
 
 			JsonBuilder<ObjectNode> responsesQuery = Json7.objectBuilder()//
 					.put("from", 0)//
@@ -224,8 +223,7 @@ public class ChauffeLeTest extends SpaceTest {
 			while (subjects.hasNext())
 				responsesQuery.add(subjects.next().get("meta").get("id").asText());
 
-			SpaceRequest.post("/1/search/smallpost")//
-					.userAuth(user).body(responsesQuery.build()).go(200);
+			SpaceRequest.post("/1/search/smallpost").auth(user).body(responsesQuery.build()).go(200);
 
 			return subjectResults.get("results").elements();
 		}

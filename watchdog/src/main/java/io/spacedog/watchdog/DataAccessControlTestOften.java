@@ -38,44 +38,44 @@ public class DataAccessControlTestOften extends SpaceTest {
 
 		// in default acl, only users and admins can create objects
 		SpaceRequest.post("/1/data/msge").backend(test).body("t", "hello").go(403);
-		SpaceRequest.post("/1/data/msge").id("vince").userAuth(vince).body("t", "v1").go(201);
-		SpaceRequest.post("/1/data/msge").id("vince2").userAuth(vince).body("t", "v2").go(201);
-		SpaceRequest.post("/1/data/msge").id("admin").adminAuth(test).body("t", "a1").go(201);
+		SpaceRequest.post("/1/data/msge").id("vince").auth(vince).body("t", "v1").go(201);
+		SpaceRequest.post("/1/data/msge").id("vince2").auth(vince).body("t", "v2").go(201);
+		SpaceRequest.post("/1/data/msge").id("admin").auth(test).body("t", "a1").go(201);
 
 		// in default acl, everyone can read any objects
 		SpaceRequest.get("/1/data/msge/vince").backend(test).go(200);
 		SpaceRequest.get("/1/data/msge/admin").backend(test).go(200);
-		SpaceRequest.get("/1/data/msge/vince").userAuth(vince).go(200);
-		SpaceRequest.get("/1/data/msge/admin").userAuth(vince).go(200);
-		SpaceRequest.get("/1/data/msge/vince").adminAuth(test).go(200);
-		SpaceRequest.get("/1/data/msge/admin").adminAuth(test).go(200);
+		SpaceRequest.get("/1/data/msge/vince").auth(vince).go(200);
+		SpaceRequest.get("/1/data/msge/admin").auth(vince).go(200);
+		SpaceRequest.get("/1/data/msge/vince").auth(test).go(200);
+		SpaceRequest.get("/1/data/msge/admin").auth(test).go(200);
 
 		// in default acl, only users and admins can search for objects
 		SpaceRequest.get("/1/data/msge/").backend(test).go(403);
-		SpaceRequest.get("/1/data/msge/").userAuth(vince).go(200);
-		SpaceRequest.get("/1/data/msge/").adminAuth(test).go(200);
+		SpaceRequest.get("/1/data/msge/").auth(vince).go(200);
+		SpaceRequest.get("/1/data/msge/").auth(test).go(200);
 
 		// in default acl, users can update their own objects
 		// admin can update any objects
 		SpaceRequest.put("/1/data/msge/vince").backend(test).go(403);
 		SpaceRequest.put("/1/data/msge/admin").backend(test).go(403);
-		SpaceRequest.put("/1/data/msge/vince").userAuth(vince).body("t", "v3").go(200);
-		SpaceRequest.put("/1/data/msge/admin").userAuth(vince).go(403);
-		SpaceRequest.put("/1/data/msge/vince").adminAuth(test).body("t", "v4").go(200);
-		SpaceRequest.put("/1/data/msge/admin").adminAuth(test).body("t", "a2").go(200);
+		SpaceRequest.put("/1/data/msge/vince").auth(vince).body("t", "v3").go(200);
+		SpaceRequest.put("/1/data/msge/admin").auth(vince).go(403);
+		SpaceRequest.put("/1/data/msge/vince").auth(test).body("t", "v4").go(200);
+		SpaceRequest.put("/1/data/msge/admin").auth(test).body("t", "a2").go(200);
 
 		// in default acl, users can delete their own objects
 		// admin can delete any objects
 		SpaceRequest.delete("/1/data/msge/vince").backend(test).go(403);
 		SpaceRequest.delete("/1/data/msge/admin").backend(test).go(403);
-		SpaceRequest.delete("/1/data/msge/vince").userAuth(vince).go(200);
-		SpaceRequest.delete("/1/data/msge/admin").userAuth(vince).go(403);
-		SpaceRequest.delete("/1/data/msge/vince").adminAuth(test).go(404);
-		SpaceRequest.delete("/1/data/msge/vince2").adminAuth(test).go(200);
-		SpaceRequest.delete("/1/data/msge/admin").adminAuth(test).go(200);
+		SpaceRequest.delete("/1/data/msge/vince").auth(vince).go(200);
+		SpaceRequest.delete("/1/data/msge/admin").auth(vince).go(403);
+		SpaceRequest.delete("/1/data/msge/vince").auth(test).go(404);
+		SpaceRequest.delete("/1/data/msge/vince2").auth(test).go(200);
+		SpaceRequest.delete("/1/data/msge/admin").auth(test).go(200);
 
 		// vince creates a message before security tightens
-		SpaceRequest.post("/1/data/msge").id("vince").userAuth(vince).body("t", "hello").go(201);
+		SpaceRequest.post("/1/data/msge").id("vince").auth(vince).body("t", "hello").go(201);
 
 		// set message schema acl to empty
 		messageSchema.acl(new SchemaAcl());
@@ -88,28 +88,28 @@ public class DataAccessControlTestOften extends SpaceTest {
 
 		// in empty acl, nobody can create an object
 		SpaceRequest.post("/1/data/msge").backend(test).go(403);
-		SpaceRequest.post("/1/data/msge").userAuth(vince).go(403);
-		SpaceRequest.post("/1/data/msge").adminAuth(test).go(403);
+		SpaceRequest.post("/1/data/msge").auth(vince).go(403);
+		SpaceRequest.post("/1/data/msge").auth(test).go(403);
 
 		// in empty acl, nobody can read an object
 		SpaceRequest.get("/1/data/msge/vince").backend(test).go(403);
-		SpaceRequest.get("/1/data/msge/vince").userAuth(vince).go(403);
-		SpaceRequest.get("/1/data/msge/vince").adminAuth(test).go(403);
+		SpaceRequest.get("/1/data/msge/vince").auth(vince).go(403);
+		SpaceRequest.get("/1/data/msge/vince").auth(test).go(403);
 
 		// in empty acl, nobody can search for objects
 		SpaceRequest.get("/1/data/msge/").backend(test).go(403);
-		SpaceRequest.get("/1/data/msge/").userAuth(vince).go(403);
-		SpaceRequest.get("/1/data/msge/").adminAuth(test).go(403);
+		SpaceRequest.get("/1/data/msge/").auth(vince).go(403);
+		SpaceRequest.get("/1/data/msge/").auth(test).go(403);
 
 		// in empty acl, nobody can update any object
 		SpaceRequest.put("/1/data/msge/vince").backend(test).go(403);
-		SpaceRequest.put("/1/data/msge/vince").userAuth(vince).go(403);
-		SpaceRequest.put("/1/data/msge/vince").adminAuth(test).go(403);
+		SpaceRequest.put("/1/data/msge/vince").auth(vince).go(403);
+		SpaceRequest.put("/1/data/msge/vince").auth(test).go(403);
 
 		// in empty acl, nobody can delete any object
 		SpaceRequest.delete("/1/data/msge/vince").backend(test).go(403);
-		SpaceRequest.delete("/1/data/msge/vince").userAuth(vince).go(403);
-		SpaceRequest.delete("/1/data/msge/vince").adminAuth(test).go(403);
+		SpaceRequest.delete("/1/data/msge/vince").auth(vince).go(403);
+		SpaceRequest.delete("/1/data/msge/vince").auth(test).go(403);
 
 		// set message schema new acl settings
 		messageSchema.acl("admin", DataPermission.search);
@@ -124,28 +124,28 @@ public class DataAccessControlTestOften extends SpaceTest {
 
 		// with this schema acl, nobody can create an object
 		SpaceRequest.post("/1/data/msge").backend(test).go(403);
-		SpaceRequest.post("/1/data/msge").userAuth(vince).go(403);
-		SpaceRequest.post("/1/data/msge").adminAuth(test).go(403);
+		SpaceRequest.post("/1/data/msge").auth(vince).go(403);
+		SpaceRequest.post("/1/data/msge").auth(test).go(403);
 
 		// with this schema acl, nobody can read an object
 		SpaceRequest.get("/1/data/msge/vince").backend(test).go(403);
-		SpaceRequest.get("/1/data/msge/vince").userAuth(vince).go(403);
-		SpaceRequest.get("/1/data/msge/vince").adminAuth(test).go(200);
+		SpaceRequest.get("/1/data/msge/vince").auth(vince).go(403);
+		SpaceRequest.get("/1/data/msge/vince").auth(test).go(200);
 
 		// with this schema acl, only admins can search for objects
 		SpaceRequest.get("/1/data/msge/").backend(test).go(403);
-		SpaceRequest.get("/1/data/msge/").userAuth(vince).go(403);
-		SpaceRequest.get("/1/data/msge/").adminAuth(test).go(200);
+		SpaceRequest.get("/1/data/msge/").auth(vince).go(403);
+		SpaceRequest.get("/1/data/msge/").auth(test).go(200);
 
 		// with this schema acl, nobody can update any object
 		SpaceRequest.put("/1/data/msge/vince").backend(test).go(403);
-		SpaceRequest.put("/1/data/msge/vince").userAuth(vince).go(403);
-		SpaceRequest.put("/1/data/msge/vince").adminAuth(test).go(403);
+		SpaceRequest.put("/1/data/msge/vince").auth(vince).go(403);
+		SpaceRequest.put("/1/data/msge/vince").auth(test).go(403);
 
 		// with this schema acl, nobody can delete any object
 		SpaceRequest.delete("/1/data/msge/vince").backend(test).go(403);
-		SpaceRequest.delete("/1/data/msge/vince").userAuth(vince).go(403);
-		SpaceRequest.delete("/1/data/msge/vince").adminAuth(test).go(403);
+		SpaceRequest.delete("/1/data/msge/vince").auth(vince).go(403);
+		SpaceRequest.delete("/1/data/msge/vince").auth(test).go(403);
 	}
 
 	@Test
@@ -171,49 +171,49 @@ public class DataAccessControlTestOften extends SpaceTest {
 		// dave has the platine role
 		// he's got all the rights
 		SpaceDog dave = signUp(test, "dave", "hi dave");
-		SpaceRequest.put("/1/credentials/" + dave.id() + "/roles/platine").adminAuth(test).go(200);
-		SpaceRequest.post("/1/data/message").id("dave").userAuth(dave).body("text", "Dave").go(201);
-		SpaceRequest.get("/1/data/message/dave").userAuth(dave).go(200);
-		SpaceRequest.put("/1/data/message/dave").userAuth(dave).body("text", "Salut Dave").go(200);
-		SpaceRequest.delete("/1/data/message/dave").userAuth(dave).go(200);
+		SpaceRequest.put("/1/credentials/" + dave.id() + "/roles/platine").auth(test).go(200);
+		SpaceRequest.post("/1/data/message").id("dave").auth(dave).body("text", "Dave").go(201);
+		SpaceRequest.get("/1/data/message/dave").auth(dave).go(200);
+		SpaceRequest.put("/1/data/message/dave").auth(dave).body("text", "Salut Dave").go(200);
+		SpaceRequest.delete("/1/data/message/dave").auth(dave).go(200);
 
 		// message for users without create permission
-		SpaceRequest.post("/1/data/message").id("1").userAuth(dave).body("text", "Hello").go(201);
+		SpaceRequest.post("/1/data/message").id("1").auth(dave).body("text", "Hello").go(201);
 
 		// maelle is a simple user
 		// she's got no right on the message schema
 		SpaceDog maelle = signUp(test, "maelle", "hi maelle");
-		SpaceRequest.post("/1/data/message").userAuth(maelle).body("text", "Maelle").go(403);
-		SpaceRequest.get("/1/data/message/1").userAuth(maelle).go(403);
-		SpaceRequest.put("/1/data/message/1").userAuth(maelle).body("text", "Salut Maelle").go(403);
-		SpaceRequest.delete("/1/data/message/1").userAuth(maelle).go(403);
+		SpaceRequest.post("/1/data/message").auth(maelle).body("text", "Maelle").go(403);
+		SpaceRequest.get("/1/data/message/1").auth(maelle).go(403);
+		SpaceRequest.put("/1/data/message/1").auth(maelle).body("text", "Salut Maelle").go(403);
+		SpaceRequest.delete("/1/data/message/1").auth(maelle).go(403);
 
 		// fred has the iron role
 		// he's only got the right to read
 		SpaceDog fred = signUp(test, "fred", "hi fred");
-		SpaceRequest.put("/1/credentials/" + fred.id() + "/roles/iron").adminAuth(test).go(200);
-		SpaceRequest.post("/1/data/message").userAuth(fred).body("text", "Fred").go(403);
-		SpaceRequest.get("/1/data/message/1").userAuth(fred).go(200);
-		SpaceRequest.put("/1/data/message/1").userAuth(fred).body("text", "Salut Fred").go(403);
-		SpaceRequest.delete("/1/data/message/1").userAuth(fred).go(403);
+		SpaceRequest.put("/1/credentials/" + fred.id() + "/roles/iron").auth(test).go(200);
+		SpaceRequest.post("/1/data/message").auth(fred).body("text", "Fred").go(403);
+		SpaceRequest.get("/1/data/message/1").auth(fred).go(200);
+		SpaceRequest.put("/1/data/message/1").auth(fred).body("text", "Salut Fred").go(403);
+		SpaceRequest.delete("/1/data/message/1").auth(fred).go(403);
 
 		// nath has the silver role
 		// she's got the right to read and update
 		SpaceDog nath = signUp(test, "nath", "hi nath");
-		SpaceRequest.put("/1/credentials/" + nath.id() + "/roles/silver").adminAuth(test).go(200);
-		SpaceRequest.post("/1/data/message").userAuth(nath).body("text", "Nath").go(403);
-		SpaceRequest.get("/1/data/message/1").userAuth(nath).go(200);
-		SpaceRequest.put("/1/data/message/1").userAuth(nath).body("text", "Salut Nath").go(200);
-		SpaceRequest.delete("/1/data/message/1").userAuth(nath).go(403);
+		SpaceRequest.put("/1/credentials/" + nath.id() + "/roles/silver").auth(test).go(200);
+		SpaceRequest.post("/1/data/message").auth(nath).body("text", "Nath").go(403);
+		SpaceRequest.get("/1/data/message/1").auth(nath).go(200);
+		SpaceRequest.put("/1/data/message/1").auth(nath).body("text", "Salut Nath").go(200);
+		SpaceRequest.delete("/1/data/message/1").auth(nath).go(403);
 
 		// vince has the gold role
 		// he's got the right to create, read and update
 		SpaceDog vince = signUp(test, "vince", "hi vince");
-		SpaceRequest.put("/1/credentials/" + vince.id() + "/roles/gold").adminAuth(test).go(200);
-		SpaceRequest.post("/1/data/message").id("vince").userAuth(vince).body("text", "Vince").go(201);
-		SpaceRequest.get("/1/data/message/vince").userAuth(vince).go(200);
-		SpaceRequest.put("/1/data/message/vince").userAuth(vince).body("text", "Salut Vince").go(200);
-		SpaceRequest.delete("/1/data/message/vince").userAuth(vince).go(403);
+		SpaceRequest.put("/1/credentials/" + vince.id() + "/roles/gold").auth(test).go(200);
+		SpaceRequest.post("/1/data/message").id("vince").auth(vince).body("text", "Vince").go(201);
+		SpaceRequest.get("/1/data/message/vince").auth(vince).go(200);
+		SpaceRequest.put("/1/data/message/vince").auth(vince).body("text", "Salut Vince").go(200);
+		SpaceRequest.delete("/1/data/message/vince").auth(vince).go(403);
 	}
 
 	@Test
