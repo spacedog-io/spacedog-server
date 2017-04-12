@@ -95,8 +95,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 				.backend(test).basicAuth("vince", "XXX").go(401);
 
 		// vince fails to get his credentials if wrong backend id
-		SpaceRequest.get("/1/credentials/" + vince.id()).backendId("XXX")
-				.basicAuth(vince.username(), vince.password().get()).go(401);
+		vince.get("/1/credentials/" + vince.id()).backendId("XXX").go(401);
 
 		// anonymous fails to get vince credentials
 		SpaceRequest.get("/1/credentials/" + vince.id()).backend(test).go(403);
@@ -465,8 +464,8 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		SpaceRequest.get("/1/login").auth(fred).go(401);
 
 		// admin creates backend with the same name
-		SpaceDog.backend(test.backendId()).admin().createBackend(//
-				test.username(), test.password().get(), "platform@spacedog.io", false);
+		SpaceDog.backend(test).admin().createBackend(//
+				"test", "hi test", "platform@spacedog.io", false);
 
 		// fred fails to login since backend is brand new
 		SpaceRequest.get("/1/login").auth(fred).go(401);

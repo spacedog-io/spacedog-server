@@ -35,10 +35,8 @@ public class BackendResourceTest extends SpaceTest {
 
 		// super admin gets his backend
 
-		JsonNode aaaaSuperAdmin = SpaceRequest.get("/1/backend").auth(aaaa).go(200)//
-				.objectNode().get("results").get(0);
-		JsonNode zzzzSuperAdmin = SpaceRequest.get("/1/backend").auth(zzzz).go(200)//
-				.objectNode().get("results").get(0);
+		JsonNode aaaaSuperAdmin = aaaa.get("/1/backend").go(200).get("results.0");
+		JsonNode zzzzSuperAdmin = zzzz.get("/1/backend").go(200).get("results.0");
 
 		// superdog browse all backends and finds aaaa and zzzz
 
@@ -46,8 +44,8 @@ public class BackendResourceTest extends SpaceTest {
 		int from = 0, size = 100, total = 0;
 
 		do {
-			SpaceResponse response = SpaceRequest.get("/1/backend").from(from).size(size)//
-					.superdogAuth().go(200);
+			SpaceResponse response = superdog().get("/1/backend")//
+					.from(from).size(size).go(200);
 
 			aaaaFound = Iterators.contains(response.get("results").elements(), aaaaSuperAdmin);
 			zzzzFound = Iterators.contains(response.get("results").elements(), zzzzSuperAdmin);
@@ -59,17 +57,17 @@ public class BackendResourceTest extends SpaceTest {
 
 		// super admin fails to access a backend he does not own
 
-		SpaceRequest.get("/1/backend").backendId((String) "aaaa").basicAuth((String) zzzz.username(), (String) zzzz.password().get()).go(401);
-		SpaceRequest.get("/1/backend").backendId((String) "zzzz").basicAuth((String) aaaa.username(), (String) aaaa.password().get()).go(401);
+		zzzz.get("/1/backend").backend(aaaa).go(401);
+		aaaa.get("/1/backend").backend(zzzz).go(401);
 
 		// super admin fails to delete a backend he does not own
 
-		SpaceRequest.delete("/1/backend").backendId((String) "aaaa").basicAuth((String) zzzz.username(), (String) zzzz.password().get()).go(401);
-		SpaceRequest.delete("/1/backend").backendId((String) "zzzz").basicAuth((String) aaaa.username(), (String) aaaa.password().get()).go(401);
+		zzzz.delete("/1/backend").backend(aaaa).go(401);
+		aaaa.delete("/1/backend").backend(zzzz).go(401);
 
 		// super admin can delete his backend
 
-		SpaceRequest.delete("/1/backend").auth(aaaa).go(200);
-		SpaceRequest.delete("/1/backend").auth(zzzz).go(200);
+		aaaa.admin().deleteBackend(aaaa.backendId());
+		zzzz.admin().deleteBackend(zzzz.backendId());
 	}
 }

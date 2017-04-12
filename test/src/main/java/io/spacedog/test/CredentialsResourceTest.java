@@ -162,7 +162,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		// superadmin can update fred's credentials disable after date
 		// before now so fred's credentials are disabled
 		SpaceRequest.put("/1/credentials/{id}")//
-		.routeParam("id", fred.id()).auth(test)//
+				.routeParam("id", fred.id()).auth(test)//
 				.body(FIELD_DISABLE_AFTER, DateTime.now().minus(100000))//
 				.go(200);
 
@@ -177,7 +177,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		// before now and after disable after date so fred's credentials
 		// are enabled again
 		SpaceRequest.put("/1/credentials/{id}")//
-		.routeParam("id", fred.id()).auth(test)//
+				.routeParam("id", fred.id()).auth(test)//
 				.body(FIELD_ENABLE_AFTER, DateTime.now().minus(100000))//
 				.go(200);
 
@@ -192,7 +192,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		// before now but after enable after date so fred's credentials
 		// are disabled again
 		SpaceRequest.put("/1/credentials/{id}")//
-		.routeParam("id", fred.id()).auth(test)//
+				.routeParam("id", fred.id()).auth(test)//
 				.body(FIELD_DISABLE_AFTER, DateTime.now().minus(100000))//
 				.go(200);
 
@@ -206,7 +206,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		// superadmin updates fred's credentials to remove enable and
 		// disable after dates so fred's credentials are enabled again
 		SpaceRequest.put("/1/credentials/{id}")//
-		.routeParam("id", fred.id()).auth(test)//
+				.routeParam("id", fred.id()).auth(test)//
 				.body(FIELD_DISABLE_AFTER, null, FIELD_ENABLE_AFTER, null)//
 				.go(200);
 
@@ -220,7 +220,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		// superadmin fails to update fred's credentials enable after date
 		// since invalid format
 		SpaceRequest.put("/1/credentials/{id}")//
-		.routeParam("id", fred.id()).auth(test)//
+				.routeParam("id", fred.id()).auth(test)//
 				.body(FIELD_ENABLE_AFTER, "XXX")//
 				.go(400);
 	}
@@ -249,7 +249,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		// superadmin updates fred's password
 		String newPassword = Passwords.random();
 		SpaceRequest.put("/1/credentials/{id}")//
-		.routeParam("id", fred.id()).auth(test)//
+				.routeParam("id", fred.id()).auth(test)//
 				.body(FIELD_PASSWORD, newPassword)//
 				.go(200);
 
@@ -276,7 +276,7 @@ public class CredentialsResourceTest extends SpaceTest {
 				.assertNotPresent(FIELD_LAST_INVALID_CHALLENGE_AT);
 
 		// fred tries to log in with an invalid password
-		SpaceRequest.get("/1/login").backendId((String) fred.backendId()).basicAuth((String) fred.username(), (String) "XXX").go(401);
+		SpaceRequest.get("/1/login").backendId(fred.backendId()).basicAuth(fred.username(), "XXX").go(401);
 
 		// fred's invalid challenges count is still zero
 		// since no maximum invalid challenges set in credentials settings
@@ -291,7 +291,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		test.settings().save(settings);
 
 		// fred tries to log in with an invalid password
-		SpaceRequest.get("/1/login").backendId((String) fred.backendId()).basicAuth((String) fred.username(), (String) "XXX").go(401);
+		SpaceRequest.get("/1/login").backendId(fred.backendId()).basicAuth(fred.username(), "XXX").go(401);
 
 		// superadmin gets fred's credentials
 		// fred has 1 invalid password challenge
@@ -300,7 +300,7 @@ public class CredentialsResourceTest extends SpaceTest {
 				.assertPresent(FIELD_LAST_INVALID_CHALLENGE_AT);
 
 		// fred tries to log in with an invalid password
-		SpaceRequest.get("/1/login").backendId((String) fred.backendId()).basicAuth((String) fred.username(), (String) "XXX").go(401);
+		SpaceRequest.get("/1/login").backendId(fred.backendId()).basicAuth(fred.username(), "XXX").go(401);
 
 		// superadmin gets fred's credentials; fred has 2 invalid password
 		// challenge; his credentials has been disabled since equal to settings
@@ -334,6 +334,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		prepareTest();
 		SpaceDog test = resetTestBackend();
 		SpaceDog fred = signUp("test", "fred", "hi fred");
+		fred.password("hi fred");
 
 		// fred can get data objects
 		SpaceRequest.get("/1/data").basicAuth(fred).go(200);
