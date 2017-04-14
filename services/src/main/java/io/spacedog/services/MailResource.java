@@ -20,20 +20,15 @@ import io.spacedog.core.Json8;
 import io.spacedog.model.MailSettings;
 import io.spacedog.model.MailSettings.MailGunSettings;
 import io.spacedog.model.MailSettings.SmtpSettings;
-import io.spacedog.rest.OkHttp;
+import io.spacedog.rest.SpaceRequest;
+import io.spacedog.rest.SpaceResponse;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.JsonBuilder;
-import io.spacedog.utils.SpaceHeaders;
-import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.Part;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.payload.Payload;
-import okhttp3.Credentials;
-import okhttp3.HttpUrl;
 import okhttp3.MultipartBody;
-import okhttp3.Request;
-import okhttp3.Response;
 
 public class MailResource extends Resource {
 
@@ -158,8 +153,7 @@ public class MailResource extends Resource {
 	}
 
 	Payload emailViaGun(MailGunSettings settings, Message message) {
-		ObjectNode response = mailgun(message, settings);
-		return JsonPayload.json(response, response.get("status").asInt());
+		return mailgun(message, settings);
 	}
 
 	Payload emailViaSmtp(SmtpSettings settings, Message message) {
@@ -221,7 +215,7 @@ public class MailResource extends Resource {
 
 	}
 
-	private ObjectNode mailgun(Message message, MailGunSettings settings) {
+	private Payload mailgun(Message message, MailGunSettings settings) {
 
 		MultipartBody.Builder bodyBuilder = new MultipartBody.Builder();
 		bodyBuilder.setType(MultipartBody.FORM)//
@@ -246,37 +240,24 @@ public class MailResource extends Resource {
 		if (!Strings.isNullOrEmpty(message.html))
 			bodyBuilder.addFormDataPart(HTML, message.html);
 
-		HttpUrl url = new HttpUrl.Builder()//
-				.scheme("https").host("api.mailgun.net")//
-				.addPathSegment("v3")//
-				.addPathSegment(settings.domain)//
-				.addPathSegment("messages")//
+		SpaceResponse response = SpaceRequest.post("/v3/{domain}/messages")//
+				.backend("https://api.mailgun.net")//
+				.routeParam("domain", settings.domain)//
+				.basicAuth("api", settings.key)//
+				.body(bodyBuilder.build())//
 				// TODO Fix this since it does not work.
-				// .addQueryParameter("o:testmode", SpaceContext.isTest())//
-				.build();
+				// .queryParam("o:testmode",
+				// String.valueOf(SpaceContext.isTest()))//
+				.go();
 
-		Request request = new Request.Builder()//
-				.url(url)//
-				.post(bodyBuilder.build())//
-				.header(SpaceHeaders.AUTHORIZATION, //
-						Credentials.basic("api", settings.key, Utils.UTF8))//
-				.build();
+		JsonBuilder<ObjectNode> payload = JsonPayload.builder(response.status());
 
-		try {
-			Response response = OkHttp.get().newCall(request).execute();
-			String body = response.body().string();
-			JsonBuilder<ObjectNode> payload = JsonPayload.builder(response.code());
+		if (response.isJson())
+			payload.node("mailgun", response.jsonNode());
+		else
+			payload.put("mailgun", response.string());
 
-			if (Json8.isJson(body))
-				payload.node("mailgun", body);
-			else
-				payload.put("mailgun", body);
-
-			return payload.build();
-
-		} catch (IOException e) {
-			throw Exceptions.runtime(e);
-		}
+		return JsonPayload.json(payload, response.status());
 	}
 
 	private String addFooterToTextMessage(String text, String backendId) {
