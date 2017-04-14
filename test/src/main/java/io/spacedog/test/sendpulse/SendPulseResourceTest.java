@@ -64,7 +64,7 @@ public class SendPulseResourceTest extends SpaceTest {
 		SpaceRequest.env().target(SpaceTarget.production);
 
 		// if sendpulde test web app already initialized then return
-		if (SpaceRequest.get("/1/file/www/index.html").backendId("sendpulse")//
+		if (SpaceRequest.get("/1/file/www/index.html").backend("sendpulse")//
 				.go(200, 404).status() == 200)
 			return;
 

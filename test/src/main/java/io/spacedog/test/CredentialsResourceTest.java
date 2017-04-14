@@ -79,10 +79,10 @@ public class CredentialsResourceTest extends SpaceTest {
 		String apiToken = apiSuperdog.accessToken().get();
 
 		// superdog can access anything in any backend
-		SpaceRequest.get("/1/backend").backendId("api").bearerAuth(apiToken).go(200);
-		SpaceRequest.get("/1/backend").backendId("test").bearerAuth(apiToken).go(200);
-		SpaceRequest.get("/1/data").backendId("api").bearerAuth(apiToken).go(200);
-		SpaceRequest.get("/1/data").backendId("test").bearerAuth(apiToken).go(200);
+		SpaceRequest.get("/1/backend").backend("api").bearerAuth(apiToken).go(200);
+		SpaceRequest.get("/1/backend").backend("test").bearerAuth(apiToken).go(200);
+		SpaceRequest.get("/1/data").backend("api").bearerAuth(apiToken).go(200);
+		SpaceRequest.get("/1/data").backend("test").bearerAuth(apiToken).go(200);
 
 		// superdog logs with the "test" backend
 		SpaceDog testSuperdog = SpaceDog.backend("test")//
@@ -98,33 +98,33 @@ public class CredentialsResourceTest extends SpaceTest {
 				.assertEquals("api", "backendId");
 
 		// superdog can still access anything in any backend with the old token
-		SpaceRequest.get("/1/backend").backendId("api").bearerAuth(apiToken).go(200);
-		SpaceRequest.get("/1/backend").backendId("test").bearerAuth(apiToken).go(200);
-		SpaceRequest.get("/1/data").backendId("api").bearerAuth(apiToken).go(200);
-		SpaceRequest.get("/1/data").backendId("test").bearerAuth(apiToken).go(200);
+		SpaceRequest.get("/1/backend").backend("api").bearerAuth(apiToken).go(200);
+		SpaceRequest.get("/1/backend").backend("test").bearerAuth(apiToken).go(200);
+		SpaceRequest.get("/1/data").backend("api").bearerAuth(apiToken).go(200);
+		SpaceRequest.get("/1/data").backend("test").bearerAuth(apiToken).go(200);
 
 		// superdog can also access anything in any backend with the new token
-		SpaceRequest.get("/1/backend").backendId("api").bearerAuth(testToken).go(200);
-		SpaceRequest.get("/1/backend").backendId("test").bearerAuth(testToken).go(200);
-		SpaceRequest.get("/1/data").backendId("api").bearerAuth(testToken).go(200);
-		SpaceRequest.get("/1/data").backendId("test").bearerAuth(testToken).go(200);
+		SpaceRequest.get("/1/backend").backend("api").bearerAuth(testToken).go(200);
+		SpaceRequest.get("/1/backend").backend("test").bearerAuth(testToken).go(200);
+		SpaceRequest.get("/1/data").backend("api").bearerAuth(testToken).go(200);
+		SpaceRequest.get("/1/data").backend("test").bearerAuth(testToken).go(200);
 
 		// superdog logout from his "test" session
 		testSuperdog.logout();
 
 		// superdog can not access anything from his "test" token
-		SpaceRequest.get("/1/data").backendId("api").bearerAuth(testToken).go(401);
-		SpaceRequest.get("/1/backend").backendId("api").bearerAuth(testToken).go(401);
+		SpaceRequest.get("/1/data").backend("api").bearerAuth(testToken).go(401);
+		SpaceRequest.get("/1/backend").backend("api").bearerAuth(testToken).go(401);
 
 		// superdog can still access anything from his "api" token
-		SpaceRequest.get("/1/data").backendId("api").bearerAuth(apiToken).go(200);
-		SpaceRequest.get("/1/backend").backendId("api").bearerAuth(apiToken).go(200);
+		SpaceRequest.get("/1/data").backend("api").bearerAuth(apiToken).go(200);
+		SpaceRequest.get("/1/backend").backend("api").bearerAuth(apiToken).go(200);
 
 		// superdog logout from his "api" session
 		// and can not access anything this token
 		apiSuperdog.logout();
-		SpaceRequest.get("/1/data").backendId("api").bearerAuth(apiToken).go(401);
-		SpaceRequest.get("/1/backend").backendId("api").bearerAuth(apiToken).go(401);
+		SpaceRequest.get("/1/data").backend("api").bearerAuth(apiToken).go(401);
+		SpaceRequest.get("/1/backend").backend("api").bearerAuth(apiToken).go(401);
 	}
 
 	@Test
@@ -276,7 +276,7 @@ public class CredentialsResourceTest extends SpaceTest {
 				.assertNotPresent(FIELD_LAST_INVALID_CHALLENGE_AT);
 
 		// fred tries to log in with an invalid password
-		SpaceRequest.get("/1/login").backendId(fred.backendId()).basicAuth(fred.username(), "XXX").go(401);
+		SpaceRequest.get("/1/login").backend(fred.backendId()).basicAuth(fred.username(), "XXX").go(401);
 
 		// fred's invalid challenges count is still zero
 		// since no maximum invalid challenges set in credentials settings
@@ -291,7 +291,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		test.settings().save(settings);
 
 		// fred tries to log in with an invalid password
-		SpaceRequest.get("/1/login").backendId(fred.backendId()).basicAuth(fred.username(), "XXX").go(401);
+		SpaceRequest.get("/1/login").backend(fred.backendId()).basicAuth(fred.username(), "XXX").go(401);
 
 		// superadmin gets fred's credentials
 		// fred has 1 invalid password challenge
@@ -300,7 +300,7 @@ public class CredentialsResourceTest extends SpaceTest {
 				.assertPresent(FIELD_LAST_INVALID_CHALLENGE_AT);
 
 		// fred tries to log in with an invalid password
-		SpaceRequest.get("/1/login").backendId(fred.backendId()).basicAuth(fred.username(), "XXX").go(401);
+		SpaceRequest.get("/1/login").backend(fred.backendId()).basicAuth(fred.username(), "XXX").go(401);
 
 		// superadmin gets fred's credentials; fred has 2 invalid password
 		// challenge; his credentials has been disabled since equal to settings

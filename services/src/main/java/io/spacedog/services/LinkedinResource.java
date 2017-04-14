@@ -105,9 +105,8 @@ public class LinkedinResource extends Resource {
 
 		Credentials credentials = SpaceContext.checkUserCredentials();
 
-		SpaceResponse response = SpaceRequest//
-				.get("/v1/people/~:({fields})")//
-				.baseUrl("https://api.linkedin.com")//
+		SpaceResponse response = SpaceRequest.get("/v1/people/~:({fields})")//
+				.backend("https://api.linkedin.com")//
 				.bearerAuth(credentials.accessToken())//
 				.routeParam("fields", fields)//
 				.queryParam("format", "json")//
@@ -174,7 +173,7 @@ public class LinkedinResource extends Resource {
 			redirectUri = Utils.removeSuffix(redirectUri, ";");
 
 		SpaceResponse response = SpaceRequest.post("/oauth/v2/accessToken")//
-				.baseUrl("https://www.linkedin.com")//
+				.backend("https://www.linkedin.com")//
 				.queryParam("grant_type", "authorization_code")//
 				.queryParam("client_id", settings.linkedinId)//
 				.queryParam("client_secret", settings.linkedinSecret)//
@@ -193,7 +192,8 @@ public class LinkedinResource extends Resource {
 		Session session = Session.newSession(accessToken, expiresIn);
 
 		response = SpaceRequest.get("/v1/people/~:(email-address)")//
-		.baseUrl("https://api.linkedin.com").backendId((String) backendId).bearerAuth((String) accessToken)//
+				.backend("https://api.linkedin.com")//
+				.bearerAuth(accessToken)//
 				.queryParam("format", "json")//
 				.go();
 

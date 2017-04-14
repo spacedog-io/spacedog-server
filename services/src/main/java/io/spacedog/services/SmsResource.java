@@ -85,7 +85,7 @@ public class SmsResource extends Resource {
 
 		SpaceResponse response = SpaceRequest//
 				.post("/2010-04-01/Accounts/{id}/Messages.json")//
-				.baseUrl("https://api.twilio.com")//
+				.backend("https://api.twilio.com")//
 				.routeParam("id", twilio.accountSid)//
 				.basicAuth(twilio.accountSid, twilio.authToken)//
 				.formField(TO, message.to)//
@@ -110,7 +110,7 @@ public class SmsResource extends Resource {
 
 		SpaceResponse response = SpaceRequest//
 				.get("/2010-04-01/Accounts/{accountId}/Messages/{messageId}.json")//
-				.baseUrl("https://api.twilio.com")//
+				.backend("https://api.twilio.com")//
 				.routeParam("accountId", twilio.accountSid)//
 				.routeParam("messageId", messageId)//
 				.basicAuth(twilio.accountSid, twilio.authToken)//

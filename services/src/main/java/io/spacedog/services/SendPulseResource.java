@@ -28,7 +28,7 @@ public class SendPulseResource extends Resource {
 		SpaceContext.getCredentials().checkRoles(settings.authorizedRoles);
 
 		String body = SpaceRequest.get("/push/websites")//
-				.baseUrl("https://api.sendpulse.com")//
+				.backend("https://api.sendpulse.com")//
 				.bearerAuth(accessToken(settings))//
 				.go()//
 				.string();
@@ -44,7 +44,7 @@ public class SendPulseResource extends Resource {
 		SpaceContext.getCredentials().checkRoles(settings.authorizedRoles);
 
 		SpaceRequest request = SpaceRequest.post("/push/tasks")//
-				.baseUrl("https://api.sendpulse.com")//
+				.backend("https://api.sendpulse.com")//
 				.bearerAuth(accessToken(settings));
 
 		FormQuery formQuery = Resource.formQuery(context);
@@ -65,7 +65,7 @@ public class SendPulseResource extends Resource {
 				throw Exceptions.illegalArgument("invalid SendPulse settings");
 
 			SpaceResponse response = SpaceRequest.post("/oauth/access_token")//
-					.baseUrl("https://api.sendpulse.com")//
+					.backend("https://api.sendpulse.com")//
 					.formField("grant_type", "client_credentials")//
 					.formField("client_id", settings.clientId)//
 					.formField("client_secret", settings.clientSecret)//

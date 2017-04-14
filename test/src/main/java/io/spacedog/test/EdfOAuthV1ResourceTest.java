@@ -43,7 +43,7 @@ public class EdfOAuthV1ResourceTest extends SpaceTest {
 		SpaceDog user01 = SpaceDog.backend(test).username("USER01");
 
 		String code = SpaceRequest.post("/ws/iOAuthApprove/do")//
-				.baseUrl("https://noefy5jt.noe.edf.fr:5641")//
+				.backend("https://noefy5jt.noe.edf.fr:5641")//
 				.basicAuth(user01.username(), user01.username())//
 				.setHeader(SpaceHeaders.ACCEPT, "application/json")//
 				.formField("approved", "true")//
@@ -82,7 +82,7 @@ public class EdfOAuthV1ResourceTest extends SpaceTest {
 
 		// USER01 gets authorization code from EDF
 		String code = SpaceRequest.post("/ws/iOAuthApprove/do")//
-				.baseUrl("https://noefy5jt.noe.edf.fr:5641")//
+				.backend("https://noefy5jt.noe.edf.fr:5641")//
 				.basicAuth("USER01", "USER01")//
 				.setHeader(SpaceHeaders.ACCEPT, "application/json")//
 				.formField("approved", "true")//
@@ -94,7 +94,7 @@ public class EdfOAuthV1ResourceTest extends SpaceTest {
 
 		// USER01 gets an access token from EDF
 		SpaceRequest.post("/ws/iOAuthGetToken/do")//
-				.baseUrl("https://noefy5jt.noe.edf.fr:5641")//
+				.backend("https://noefy5jt.noe.edf.fr:5641")//
 				.basicAuth(oauth.clientId, oauth.clientSecret)//
 				.setHeader(SpaceHeaders.ACCEPT, "application/json")//
 				.body("grant_type", "authorization_code", "code", code, //

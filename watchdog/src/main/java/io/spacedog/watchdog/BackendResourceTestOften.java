@@ -51,10 +51,10 @@ public class BackendResourceTestOften extends SpaceTest {
 		SpaceRequest.get("/1/login").backend(test).go(403);
 
 		// invalid admin username login fails
-		SpaceRequest.get("/1/login").backendId((String) "test").basicAuth((String) "XXX", (String) "hi test").go(401);
+		SpaceRequest.get("/1/login").backend("test").basicAuth("XXX", "hi test").go(401);
 
 		// invalid admin password login fails
-		SpaceRequest.get("/1/login").backendId((String) "test").basicAuth((String) "test", (String) "hi XXX").go(401);
+		SpaceRequest.get("/1/login").backend("test").basicAuth("test", "hi XXX").go(401);
 
 		// data access without credentials succeeds
 		SpaceRequest.get("/1/data").refresh().backend(test).go(200)//
@@ -118,13 +118,13 @@ public class BackendResourceTestOften extends SpaceTest {
 		// this can and must be tested on local server only
 		// this proves that ping doesn't depend on any backend suddomain
 		if (target.equals(SpaceTarget.local))
-			SpaceRequest.get("http://localhost:8443").go(200);
+			SpaceRequest.get("/").backend("http://localhost:8443").go(200);
 
 		// successfully pings server with an ip address
 		// this can and must be tested on local server only
 		// this proves that ping doesn't depend on any backend suddomain
 		if (target.equals(SpaceTarget.local))
-			SpaceRequest.get("http://127.0.0.1:8443").go(200);
+			SpaceRequest.get("").backend("http://127.0.0.1:8443").go(200);
 	}
 
 	@Test
@@ -141,13 +141,13 @@ public class BackendResourceTestOften extends SpaceTest {
 		// other backend requests. Example https://cel.suez.fr
 		// This is very useful for mono backend servers with a non wildcard dns
 		// record
-		SpaceRequest.post("/1/backend").backendId("test")//
+		SpaceRequest.post("/1/backend").backend("test")//
 				.queryParam(SpaceParams.PARAM_NOTIF, "false")//
 				.body("username", "test", "password", "hi test", "email", "test@test.fr")//
 				.go(201);
 
 		// super admin gets its backend info
-		SpaceRequest.get("/1/backend").backendId((String) "test").basicAuth((String) "test", (String) "hi test").go(200)//
+		SpaceRequest.get("/1/backend").backend("test").basicAuth("test", "hi test").go(200)//
 				.assertEquals(1, "total")//
 				.assertEquals("test", "results.0.backendId")//
 				.assertEquals("test", "results.0.username")//

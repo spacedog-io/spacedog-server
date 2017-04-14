@@ -128,7 +128,7 @@ public class UserResourceTest extends SpaceTest {
 		SpaceRequest.get("/1/user/vince").backend(test).basicAuth("vince", "XXX").go(401);
 
 		// vince fails to get his user data if wrong backend id
-		SpaceRequest.get("/1/user/vince").backendId("XXX").basicAuth(vince.username(), vince.password().get()).go(401);
+		SpaceRequest.get("/1/user/vince").backend("XXX").basicAuth(vince.username(), vince.password().get()).go(401);
 
 		// vince succeeds to login
 		SpaceRequest.get("/1/login").auth(vince).go(200);

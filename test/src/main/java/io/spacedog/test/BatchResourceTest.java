@@ -103,7 +103,7 @@ public class BatchResourceTest extends SpaceTest {
 				.build();
 
 		ObjectNode node = SpaceRequest.post("/1/batch")//
-		.debugServer().auth(test).body(batch).go(200)//
+				.debugServer().auth(test).body(batch).go(200)//
 				.objectNode();
 
 		String vinceId = Json7.get(node, "responses.0.id").asText();
@@ -205,7 +205,9 @@ public class BatchResourceTest extends SpaceTest {
 				.build();
 
 		SpaceResponse response = SpaceRequest.post("/1/batch")//
-		.debugServer().backendId((String) "test").basicAuth((String) "vince", (String) "hi vince").body(batch).go(200)//
+				.debugServer().backend("test")//
+				.basicAuth("vince", "hi vince")//
+				.body(batch).go(200)//
 				.assertEquals(201, "responses.0.status")//
 				.assertEquals("1", "responses.0.id")//
 				.assertEquals(201, "responses.1.status")//
@@ -243,7 +245,8 @@ public class BatchResourceTest extends SpaceTest {
 				.build();
 
 		SpaceRequest.post("/1/batch").debugServer()//
-		.queryParam("stopOnError", "true").backendId((String) "test").basicAuth((String) "vince", (String) "hi vince").body(batch).go(200)//
+				.queryParam("stopOnError", "true").backend("test")//
+				.basicAuth("vince", "hi vince").body(batch).go(200)//
 				.assertEquals(200, "responses.0.status")//
 				.assertEquals(404, "responses.1.status")//
 				.assertSizeEquals(2, "responses")//

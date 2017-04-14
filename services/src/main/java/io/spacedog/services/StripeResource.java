@@ -43,7 +43,7 @@ public class StripeResource extends Resource {
 		StripeSettings settings = SettingsResource.get().load(StripeSettings.class);
 
 		SpaceResponse response = SpaceRequest.post("/v1/customers")//
-				.baseUrl("https://api.stripe.com")//
+				.backend("https://api.stripe.com")//
 				.basicAuth(settings.secretKey, "")//
 				.formField("email", credentials.email().get())//
 				.go();
@@ -61,7 +61,7 @@ public class StripeResource extends Resource {
 		StripeSettings settings = SettingsResource.get().load(StripeSettings.class);
 
 		SpaceResponse response = SpaceRequest.get("/v1/customers/{customerId}")//
-				.baseUrl("https://api.stripe.com")//
+				.backend("https://api.stripe.com")//
 				.basicAuth(settings.secretKey, "")//
 				.routeParam("customerId", customerId)//
 				.go();
@@ -81,7 +81,7 @@ public class StripeResource extends Resource {
 		removeStripeCustomerId(credentials);
 
 		SpaceResponse response = SpaceRequest.delete("/v1/customers/{customerId}")//
-				.baseUrl("https://api.stripe.com")//
+				.backend("https://api.stripe.com")//
 				.basicAuth(settings.secretKey, "")//
 				.routeParam("customerId", customerId)//
 				.go();
@@ -100,7 +100,7 @@ public class StripeResource extends Resource {
 		String sourceToken = Json8.checkStringNotNullOrEmpty(node, "source");
 
 		SpaceRequest request = SpaceRequest.post("/v1/customers/{customerId}/sources")//
-				.baseUrl("https://api.stripe.com")//
+				.backend("https://api.stripe.com")//
 				.basicAuth(settings.secretKey, "")//
 				.routeParam("customerId", customerId)//
 				.formField("source", sourceToken);
@@ -123,7 +123,7 @@ public class StripeResource extends Resource {
 		SpaceResponse response = SpaceRequest
 				.delete(//
 						"/v1/customers/{customerId}/sources/{cardId}")//
-				.baseUrl("https://api.stripe.com")//
+				.backend("https://api.stripe.com")//
 				.basicAuth(settings.secretKey, "")//
 				.routeParam("customerId", customerId)//
 				.routeParam("cardId", cardId)//
@@ -153,7 +153,7 @@ public class StripeResource extends Resource {
 		Credentials credentials = SpaceContext.getCredentials();
 		StripeSettings settings = SettingsResource.get().load(StripeSettings.class);
 		SpaceRequest request = SpaceRequest.post("/v1/charges")//
-				.baseUrl("https://api.stripe.com")//
+				.backend("https://api.stripe.com")//
 				.basicAuth(settings.secretKey, "");
 
 		if (myself) {

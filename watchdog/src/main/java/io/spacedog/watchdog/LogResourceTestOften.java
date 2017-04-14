@@ -91,8 +91,8 @@ public class LogResourceTestOften extends SpaceTest {
 		SpaceDog test = resetTestBackend();
 		SpaceDog fred = signUp("test", "fred", "hi fred");
 
-		String passwordResetCode = SpaceRequest.delete("/1/credentials/{id}/password")//
-		.routeParam("id", fred.id()).auth(test).go(200)//
+		String passwordResetCode = test.delete("/1/credentials/{id}/password")//
+				.routeParam("id", fred.id()).go(200)//
 				.getString("passwordResetCode");
 
 		SpaceRequest.post("/1/credentials/{id}/password")//
@@ -101,10 +101,10 @@ public class LogResourceTestOften extends SpaceTest {
 				.backend(test).formField("password", "hi fred 2").go(200);
 
 		SpaceRequest.put("/1/credentials/{id}/password").backend(test)//
-		.routeParam("id", fred.id()).backendId((String) test.backendId()).basicAuth((String) "fred", (String) "hi fred 2")//
+				.routeParam("id", fred.id()).basicAuth("fred", "hi fred 2")//
 				.formField("password", "hi fred 3").go(200);
 
-		SpaceRequest.get("/1/log").refresh().size(7).auth(test).go(200)//
+		test.get("/1/log").refresh().size(7).go(200)//
 				.assertSizeEquals(7, "results")//
 				.assertEquals("PUT", "results.0.method")//
 				.assertEquals("/1/credentials/" + fred.id() + "/password", "results.0.path")//

@@ -25,7 +25,7 @@ public class Linkedin extends SpaceTest {
 		// get my profil
 		SpaceRequest.get("/1/linkedin/people/me/firstName,picture-url,location,summary")//
 				.bearerAuth("XXXXXXXXXXXX")//
-				.backendId("test")//
+				.backend("test")//
 				.go(200);
 	}
 

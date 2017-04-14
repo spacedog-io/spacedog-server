@@ -18,7 +18,7 @@ public class EdfResourceV2 extends Resource {
 	//
 	//
 
-	private static final String EDF_BASE_URL = "https://paas-pp.edf.fr";
+	private static final String PAAS_PP_BACKEND_URL = "https://paas-pp.edf.fr";
 
 	//
 	// Routes
@@ -62,7 +62,7 @@ public class EdfResourceV2 extends Resource {
 
 	String getEdfUsername(Session session) {
 		SpaceResponse response = SpaceRequest.get("/gardian/oauth2/v2/tokeninfo")//
-				.baseUrl(EDF_BASE_URL)//
+				.backend(PAAS_PP_BACKEND_URL)//
 				.bearerAuth(session.accessToken())//
 				.go(200);
 
@@ -79,7 +79,7 @@ public class EdfResourceV2 extends Resource {
 			throw Exceptions.illegalArgument("credentials OAuth settings are required");
 
 		SpaceResponse response = SpaceRequest.post("/gardian/oauth2/v2/token")//
-				.baseUrl(EDF_BASE_URL)//
+				.backend(PAAS_PP_BACKEND_URL)//
 				.basicAuth(settings.oauth.clientId, settings.oauth.clientSecret)//
 				.body("grant_type", "authorization_code", "code", code, //
 						"client_id", settings.oauth.clientId, "redirect_uri", redirectUri)//

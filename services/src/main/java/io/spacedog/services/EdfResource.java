@@ -47,7 +47,7 @@ public class EdfResource extends Resource {
 			throw Exceptions.illegalArgument("credentials OAuth settings are required");
 
 		SpaceResponse response = SpaceRequest.post("/ws/iOAuthGetToken/do")//
-				.baseUrl("https://noefy5jt.noe.edf.fr:5641")//
+				.backend("https://noefy5jt.noe.edf.fr:5641")//
 				.basicAuth(settings.oauth.clientId, settings.oauth.clientSecret)//
 				.setHeader(SpaceHeaders.ACCEPT, "application/json")//
 				.body("grant_type", "authorization_code", //

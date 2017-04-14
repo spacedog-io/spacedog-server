@@ -16,6 +16,8 @@ import io.spacedog.utils.Backends;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.Json7;
+import io.spacedog.utils.Optional7;
+import io.spacedog.utils.Passwords;
 
 public class LogResourceTest extends SpaceTest {
 
@@ -237,29 +239,38 @@ public class LogResourceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
+		SpaceDog superdog = superdog();
+		String nathPassword = Passwords.random();
+		SpaceDog nath = SpaceDog.backend("api").username("nath")//
+				.email("nath@dog.com").password(nathPassword);
+
+		// superdog deletes nath if she exists for fresh start
+		Optional7<Credentials> credentials = superdog.credentials()//
+				.getByUsername("nath");
+		if (credentials.isPresent())
+			superdog.credentials().delete(credentials.get().id());
 
 		// superdog creates superadmin named nath in root 'api' backend
-		Credentials nathCredentials = superdog().credentials()//
-				.create("nath", "hi nath", "nath@dog.com", Level.SUPER_ADMIN);
-		SpaceDog nath = SpaceDog.fromCredentials(nathCredentials);
+		superdog.credentials().create(nath.username(), //
+				nathPassword, nath.email().get(), Level.SUPER_ADMIN);
 
 		// anonymous gets data from test backend
-		SpaceRequest.get("/1/data").backendId("test").go();
+		SpaceDog.backend("test").data().getAllRequest().load();
 
 		// superdog gets all backend logs and is able to review
 		// previous test and root 'api' backend requests
-		SpaceRequest.get("/1/log").refresh().superdogAuth().size(2).go(200)//
+		superdog.get("/1/log").refresh().size(3).go(200)//
 				.assertEquals("/1/data", "results.0.path")//
 				.assertEquals("/1/credentials", "results.1.path");
 
 		// but nath only gets logs from her root 'api' backend
 		// since she's only superadmin and not superdog
-		SpaceRequest.get("/1/log").refresh().auth(nath).size(2).go(200)//
+		nath.get("/1/log").refresh().size(2).go(200)//
 				.assertEquals("/1/log", "results.0.path")//
 				.assertEquals("/1/credentials", "results.1.path");
 
-		// clean nath credentials
-		SpaceRequest.delete("/1/credentials/" + nath.id()).auth(nath).go(200);
+		// nath deletes herself to leave root backend clean
+		nath.credentials().delete();
 	}
 
 	@Test

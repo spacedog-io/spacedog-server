@@ -95,7 +95,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 				.backend(test).basicAuth("vince", "XXX").go(401);
 
 		// vince fails to get his credentials if wrong backend id
-		vince.get("/1/credentials/" + vince.id()).backendId("XXX").go(401);
+		vince.get("/1/credentials/" + vince.id()).backend("XXX").go(401);
 
 		// anonymous fails to get vince credentials
 		SpaceRequest.get("/1/credentials/" + vince.id()).backend(test).go(403);
@@ -163,7 +163,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// vince can access backend with its old token
 		// since it has not changed
-		SpaceRequest.get("/1/data").backendId("test").bearerAuth(vinceOldAccessToken).go(200);
+		SpaceRequest.get("/1/data").backend("test").bearerAuth(vinceOldAccessToken).go(200);
 
 		// if vince logs in again with its password
 		// he gets a new access token
@@ -172,23 +172,23 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// vince can access data with its new token
 		// but can also access data with its old token
-		SpaceRequest.get("/1/data").backendId("test").bearerAuth(vince.accessToken().get()).go(200);
-		SpaceRequest.get("/1/data").backendId("test").bearerAuth(vinceOldAccessToken).go(200);
+		SpaceRequest.get("/1/data").backend("test").bearerAuth(vince.accessToken().get()).go(200);
+		SpaceRequest.get("/1/data").backend("test").bearerAuth(vinceOldAccessToken).go(200);
 
 		// vince logs out of his newest session
 		SpaceRequest.get("/1/logout").bearerAuth(vince).go(200);
 
 		// vince can no longer access data with its new token
 		// but can still access data with its old token
-		SpaceRequest.get("/1/data").backendId("test").bearerAuth(vince.accessToken().get()).go(401);
-		SpaceRequest.get("/1/data").backendId("test").bearerAuth(vinceOldAccessToken).go(200);
+		SpaceRequest.get("/1/data").backend("test").bearerAuth(vince.accessToken().get()).go(401);
+		SpaceRequest.get("/1/data").backend("test").bearerAuth(vinceOldAccessToken).go(200);
 
 		// vince logs out of his oldest session
-		SpaceRequest.get("/1/logout").backendId("test").bearerAuth(vinceOldAccessToken).go(200);
+		SpaceRequest.get("/1/logout").backend("test").bearerAuth(vinceOldAccessToken).go(200);
 
 		// vince can no longer access data with both tokens
-		SpaceRequest.get("/1/data").backendId("test").bearerAuth(vince.accessToken().get()).go(401);
-		SpaceRequest.get("/1/data").backendId("test").bearerAuth(vinceOldAccessToken).go(401);
+		SpaceRequest.get("/1/data").backend("test").bearerAuth(vince.accessToken().get()).go(401);
+		SpaceRequest.get("/1/data").backend("test").bearerAuth(vinceOldAccessToken).go(401);
 
 		// vince logs in with token expiration of 2 seconds
 		node = SpaceRequest.get("/1/login").basicAuth(vince)//
@@ -350,7 +350,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// no password user login should fail
 		// I can not pass a null password anyway to the basicAuth method
 
-		SpaceRequest.get("/1/login").backendId("test").basicAuth("titi", "XXX").go(401);
+		SpaceRequest.get("/1/login").backend("test").basicAuth("titi", "XXX").go(401);
 
 		// no password user trying to create password with empty reset code
 		// should fail
@@ -359,7 +359,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 				.queryParam("passwordResetCode", "")//
 				.formField("password", "hi titi").go(400);
 
-		SpaceRequest.get("/1/login").backendId("test").basicAuth("titi", "hi titi").go(401);
+		SpaceRequest.get("/1/login").backend("test").basicAuth("titi", "hi titi").go(401);
 
 		// no password user setting password with wrong reset code should fail
 
@@ -367,7 +367,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 				.queryParam("passwordResetCode", "XXX")//
 				.formField("password", "hi titi").go(400);
 
-		SpaceRequest.get("/1/login").backendId("test").basicAuth("titi", "hi titi").go(401);
+		SpaceRequest.get("/1/login").backend("test").basicAuth("titi", "hi titi").go(401);
 
 		// titi inits its own password with right reset code should succeed
 
@@ -376,58 +376,58 @@ public class CredentialsResourceTestOften extends SpaceTest {
 				.formField("password", "hi titi")//
 				.go(200);
 
-		SpaceRequest.get("/1/login").backendId("test").basicAuth("titi", "hi titi").go(200);
+		SpaceRequest.get("/1/login").backend("test").basicAuth("titi", "hi titi").go(200);
 
 		// toto user changes titi password should fail
 
-		SpaceRequest.put("/1/credentials/" + titiId + "/password").backendId("test").basicAuth("toto", "hi toto")//
+		SpaceRequest.put("/1/credentials/" + titiId + "/password").backend("test").basicAuth("toto", "hi toto")//
 				.formField("password", "XXX")//
 				.go(403);
 
-		SpaceRequest.get("/1/login").backendId("test").basicAuth("titi", "XXX").go(401);
+		SpaceRequest.get("/1/login").backend("test").basicAuth("titi", "XXX").go(401);
 
 		// titi changes its password should fail since password size < 6
 
-		SpaceRequest.put("/1/credentials/" + titiId + "/password").backendId("test").basicAuth("titi", "hi titi")//
+		SpaceRequest.put("/1/credentials/" + titiId + "/password").backend("test").basicAuth("titi", "hi titi")//
 				.formField("password", "XXX")//
 				.go(400);
 
 		// titi changes its password should succeed
 		// deprecated query param style
 
-		SpaceRequest.put("/1/credentials/" + titiId + "/password").backendId("test").basicAuth("titi", "hi titi")//
+		SpaceRequest.put("/1/credentials/" + titiId + "/password").backend("test").basicAuth("titi", "hi titi")//
 				.queryParam("password", "hi titi 2")//
 				.go(200);
 
-		SpaceRequest.get("/1/login").backendId("test").basicAuth("titi", "hi titi 2").go(200);
+		SpaceRequest.get("/1/login").backend("test").basicAuth("titi", "hi titi 2").go(200);
 
 		// login with old password should fail
 
-		SpaceRequest.get("/1/login").backendId("test").basicAuth("titi", "hi titi").go(401);
+		SpaceRequest.get("/1/login").backend("test").basicAuth("titi", "hi titi").go(401);
 
 		// admin user changes titi user password should succeed
 		// official json body style
 
-		SpaceRequest.put("/1/credentials/" + titiId + "/password").backendId("test").basicAuth("test", "hi test")//
+		SpaceRequest.put("/1/credentials/" + titiId + "/password").backend("test").basicAuth("test", "hi test")//
 				.body(TextNode.valueOf("hi titi 3"))//
 				.go(200);
 
-		SpaceRequest.get("/1/login").backendId("test").basicAuth("titi", "hi titi 3").go(200);
+		SpaceRequest.get("/1/login").backend("test").basicAuth("titi", "hi titi 3").go(200);
 
 		// login with old password should fail
 
-		SpaceRequest.get("/1/login").backendId("test").basicAuth("titi", "hi titi 2").go(401);
+		SpaceRequest.get("/1/login").backend("test").basicAuth("titi", "hi titi 2").go(401);
 
 		// admin deletes titi password should succeed
 
 		String newPasswordResetCode = SpaceRequest//
-				.delete("/1/credentials/" + titiId + "/password").backendId("test").basicAuth("test", "hi test")//
+				.delete("/1/credentials/" + titiId + "/password").backend("test").basicAuth("test", "hi test")//
 				.go(200)//
 				.getString("passwordResetCode");
 
 		// titi login should fail
 
-		SpaceRequest.get("/1/login").backendId("test").basicAuth("titi", "hi titi 3").go(401);
+		SpaceRequest.get("/1/login").backend("test").basicAuth("titi", "hi titi 3").go(401);
 
 		// titi inits its password with old reset code should fail
 
@@ -443,7 +443,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 				.formField("password", "hi titi")//
 				.go(200);
 
-		SpaceRequest.get("/1/login").backendId("test").basicAuth("titi", "hi titi").go(200);
+		SpaceRequest.get("/1/login").backend("test").basicAuth("titi", "hi titi").go(200);
 	}
 
 	@Test
@@ -621,7 +621,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 				.go(201);
 
 		// superadmin creates credentials for new admin
-		SpaceRequest.post("/1/credentials").backendId("test").basicAuth("superadmin", "hi superadmin")//
+		SpaceRequest.post("/1/credentials").backend("test").basicAuth("superadmin", "hi superadmin")//
 				.body("username", "admin1", "password", "hi admin1", //
 						"email", "admin1@dog.com", "level", "ADMIN")//
 				.go(201);
@@ -672,7 +672,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 				.body("username", "fred2").go(200);
 
 		// fred can no longer login with old username
-		SpaceRequest.get("/1/login").backendId("test").basicAuth("fred", "hi fred").go(401);
+		SpaceRequest.get("/1/login").backend("test").basicAuth("fred", "hi fred").go(401);
 
 		// fred can login with his new username
 		fred.username("fred2").login();

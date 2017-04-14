@@ -25,11 +25,11 @@ public class Snapshot extends Job {
 
 			String password = env.get("spacedog_jobs_snapshotall_password");
 
-			SpaceRequest.post("/1/snapshot").backendId((String) "api").basicAuth((String) "snapshotall", (String) password)//
-					.go(202);
+			SpaceRequest.post("/1/snapshot").backend("api")//
+					.basicAuth("snapshotall", password).go(202);
 
-			SpaceRequest.get("/1/snapshot").backendId((String) "api").basicAuth((String) "snapshotall", (String) password)//
-					.go(200)//
+			SpaceRequest.get("/1/snapshot").backend("api")//
+					.basicAuth("snapshotall", password).go(200)//
 					// current snapshot is sometimes so fast
 					// I don't get the IN_PROGESS status for results.0
 					// results.1 should always be a SUCCESS
