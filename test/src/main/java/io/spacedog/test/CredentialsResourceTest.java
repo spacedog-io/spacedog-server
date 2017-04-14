@@ -38,7 +38,7 @@ public class CredentialsResourceTest extends SpaceTest {
 
 		// forbidden to delete superadmin if last superadmin of backend
 		SpaceRequest.delete("/1/credentials/" + test.id()).auth(test).go(403);
-		SpaceRequest.delete("/1/credentials/" + test.id()).superdogAuth().go(403);
+		superdog().delete("/1/credentials/" + test.id()).go(403);
 
 		// superadmin test can create another superadmin (test1)
 		SpaceRequest.post("/1/credentials").auth(test)//
@@ -93,8 +93,7 @@ public class CredentialsResourceTest extends SpaceTest {
 
 		// superdog credentials backendId is not changed
 		// by login into "test" backend
-		SpaceRequest.get("/1/credentials/" + testSuperdog.id())//
-				.superdogAuth().go(200)//
+		superdog().get("/1/credentials/" + testSuperdog.id()).go(200)//
 				.assertEquals("api", "backendId");
 
 		// superdog can still access anything in any backend with the old token

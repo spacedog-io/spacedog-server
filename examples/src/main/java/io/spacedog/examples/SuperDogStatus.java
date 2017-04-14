@@ -5,22 +5,21 @@ package io.spacedog.examples;
 
 import java.util.Iterator;
 
-import org.junit.Assert;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.rest.SpaceRequest;
+import io.spacedog.rest.SpaceTest;
 import io.spacedog.utils.Utils;
 
-public class SuperDogStatus extends Assert {
+public class SuperDogStatus extends SpaceTest {
 
 	public static void main(String[] args) throws Exception {
 
 		SpaceRequest.setLogDebug(false);
 
-		ObjectNode backends = SpaceRequest.get("/1/backend").size(100)//
-				.superdogAuth().go(200).asJsonObject();
+		ObjectNode backends = superdog().get("/1/backend").size(100)//
+				.go(200).asJsonObject();
 
 		Utils.info("[%s] backends:", backends.get("total").asLong());
 
@@ -49,11 +48,8 @@ public class SuperDogStatus extends Assert {
 			//
 			// log("Total number of objects = %s", total);
 
-			ObjectNode log = SpaceRequest.get("/1/log?logType=ADMIN")//
-					.size(1)//
-					.superdogAuth(backendId)//
-					.go(200)//
-					.asJsonObject();
+			ObjectNode log = superdog(backendId).get("/1/log")//
+					.queryParam("logType", "ADMIN").size(1).go(200).asJsonObject();
 
 			Utils.info("Last user request:");
 			Utils.info("results", log.get("results").get(0));

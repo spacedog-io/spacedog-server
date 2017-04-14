@@ -86,8 +86,7 @@ public class SnapshotResourceTest extends SpaceTest {
 		// second snapshot
 		// returns 201 since wait for completion true (202 otherwise)
 		// Authorized since superdog even with non root backend
-		response = SpaceRequest.post("/1/snapshot")//
-				.superdogAuth("test")//
+		response = superdog("test").post("/1/snapshot")//
 				.queryParam("waitForCompletion", "true")//
 				.go(201)//
 				.assertEquals(repository, "snapshot.repository")//

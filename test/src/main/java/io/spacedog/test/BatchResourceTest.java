@@ -63,7 +63,7 @@ public class BatchResourceTest extends SpaceTest {
 				.end()//
 				.build();
 
-		SpaceRequest.post("/1/batch").debugServer().superdogAuth("test").bodyJson(batch).go(200)//
+		superdog("test").post("/1/batch").debugServer().bodyJson(batch).go(200)//
 				.assertEquals(201, "responses.1.status")//
 				.assertEquals("test", "responses.1.id")//
 				.assertEquals(200, "responses.2.status")//
@@ -102,16 +102,15 @@ public class BatchResourceTest extends SpaceTest {
 
 				.build();
 
-		ObjectNode node = SpaceRequest.post("/1/batch")//
-				.debugServer().auth(test).bodyJson(batch).go(200)//
-				.asJsonObject();
+		ObjectNode node = test.post("/1/batch")//
+				.debugServer().bodyJson(batch).go(200).asJsonObject();
 
 		String vinceId = Json7.get(node, "responses.0.id").asText();
 		String daveId = Json7.get(node, "responses.1.id").asText();
 
 		// should succeed to fetch dave and vince credentials
 		// and the message schema
-		SpaceRequest.get("/1/batch").auth(test)//
+		test.get("/1/batch")//
 				.queryParam("vince", "/credentials/" + vinceId) //
 				.queryParam("dave", "/credentials/" + daveId) //
 				.queryParam("schema", "/schema/message") //
@@ -148,7 +147,8 @@ public class BatchResourceTest extends SpaceTest {
 				.end()//
 				.build();
 
-		SpaceRequest.post("/1/batch").debugServer().backend(test).bodyJson(batch).go(200)//
+		SpaceRequest.post("/1/batch").debugServer()//
+				.backend(test).bodyJson(batch).go(200)//
 				.assertEquals(400, "responses.0.status")//
 				.assertEquals(404, "responses.1.status")//
 				.assertEquals(403, "responses.2.status")//

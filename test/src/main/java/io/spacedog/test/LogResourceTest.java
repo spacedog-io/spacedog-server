@@ -106,8 +106,8 @@ public class LogResourceTest extends SpaceTest {
 		SpaceRequest.delete("/1/log").auth(purgeUser).go(403);
 
 		// superdog assigns 'purgeall' role to purge user
-		SpaceRequest.put("/1/credentials/" + purgeUser.id() + "/roles/purgeall")//
-				.superdogAuth().go(200);
+		superdog().put("/1/credentials/" + purgeUser.id() + "/roles/purgeall")//
+				.go(200);
 
 		// create test and test2 backends and users
 		SpaceDog test = resetTestBackend();
@@ -122,7 +122,7 @@ public class LogResourceTest extends SpaceTest {
 		SpaceRequest.get("/1/data").auth(vince).go(200);
 
 		// check everything is in place
-		String before = SpaceRequest.get("/1/log").refresh().superdogAuth().go(200)//
+		String before = superdog().get("/1/log").refresh().go(200)//
 				.assertEquals("/1/data", "results.0.path")//
 				.assertEquals("test2", "results.0.credentials.backendId")//
 				.assertEquals("/1/data", "results.1.path")//
@@ -148,7 +148,7 @@ public class LogResourceTest extends SpaceTest {
 		SpaceRequest.delete("/1/log").queryParam("before", before).auth(purgeUser).go(200);
 
 		// superdog checks all backend logs are deleted but ...
-		before = SpaceRequest.get("/1/log").refresh().superdogAuth().go(200)//
+		before = superdog().get("/1/log").refresh().go(200)//
 				.assertEquals(4, "total")//
 				.assertEquals("DELETE", "results.0.method")//
 				.assertEquals("/1/log", "results.0.path")//
@@ -161,10 +161,10 @@ public class LogResourceTest extends SpaceTest {
 				.getString("results.0.receivedAt");
 
 		// superdog deletes all backend logs before the delete request
-		SpaceRequest.delete("/1/log").queryParam("before", before).superdogAuth().go(200);
+		superdog().delete("/1/log").queryParam("before", before).go(200);
 
 		// superdog checks all backend logs are deleted but ...
-		SpaceRequest.get("/1/log").refresh().superdogAuth().go(200)//
+		superdog().get("/1/log").refresh().go(200)//
 				.assertEquals(3, "total")//
 				.assertEquals("DELETE", "results.0.method")//
 				.assertEquals("/1/log", "results.0.path")//
@@ -187,7 +187,7 @@ public class LogResourceTest extends SpaceTest {
 		signUp(test2, "fred", "hi fred");
 
 		// superdog gets all backends logs
-		SpaceRequest.get("/1/log").refresh().superdogAuth().go(200)//
+		superdog().get("/1/log").refresh().go(200)//
 				.assertEquals("/1/login", "results.0.path")//
 				.assertEquals("test2", "results.0.credentials.backendId")//
 				.assertEquals("/1/credentials", "results.1.path")//
@@ -209,7 +209,7 @@ public class LogResourceTest extends SpaceTest {
 		test.admin().deleteBackend(test.backendId());
 		test2.admin().deleteBackend(test2.backendId());
 
-		SpaceRequest.get("/1/log").refresh().superdogAuth().go(200)//
+		superdog().get("/1/log").refresh().go(200)//
 				.assertEquals("DELETE", "results.0.method")//
 				.assertEquals("/1/backend", "results.0.path")//
 				.assertEquals("test2", "results.0.credentials.backendId")//
@@ -287,7 +287,7 @@ public class LogResourceTest extends SpaceTest {
 		SpaceRequest.get("/1/credentials/" + vince.id()).auth(vince).go(200);
 
 		// superdog search for test backend logs with status 400 and higher
-		SpaceRequest.post("/1/log/search").refresh().size(1).superdogAuth(test)//
+		superdog(test).post("/1/log/search").refresh().size(1)//
 				.bodyJson("range", Json7.object("status", Json7.object("gte", "400")))//
 				.go(200)//
 				.assertEquals("/1/data/user", "results.0.path")//
@@ -295,7 +295,7 @@ public class LogResourceTest extends SpaceTest {
 
 		// superdog search for test backend logs
 		// with credentials level equal to SUPER_ADMIN and lower
-		SpaceRequest.post("/1/log/search").size(7).superdogAuth(test)//
+		superdog(test).post("/1/log/search").size(7)//
 				.bodyJson("terms", Json7.object("credentials.type", Json7.array("SUPER_ADMIN", "USER", "KEY")))//
 				.go(200)//
 				.assertEquals("/1/credentials/" + vince.id(), "results.0.path")//
@@ -307,7 +307,7 @@ public class LogResourceTest extends SpaceTest {
 				.assertEquals("/1/backend", "results.6.path");
 
 		// superdog search for test backend log to only get USER and lower logs
-		SpaceRequest.post("/1/log/search").size(7).superdogAuth(test)//
+		superdog(test).post("/1/log/search").size(7)//
 				.bodyJson("terms", Json7.object("credentials.type", Json7.array("USER", "KEY")))//
 				.go(200)//
 				.assertEquals("/1/credentials/" + vince.id(), "results.0.path")//
@@ -317,7 +317,7 @@ public class LogResourceTest extends SpaceTest {
 				.assertEquals("/1/data", "results.4.path");
 
 		// superdog search for test backend log to only get KEY logs
-		SpaceRequest.post("/1/log/search").size(3).superdogAuth(test)//
+		superdog(test).post("/1/log/search").size(3)//
 				.bodyJson("term", Json7.object("credentials.type", "KEY"))//
 				.go(200)//
 				.assertEquals("/1/credentials", "results.0.path")//
@@ -325,7 +325,7 @@ public class LogResourceTest extends SpaceTest {
 				.assertEquals("/1/data", "results.2.path");
 
 		// superdog gets all test backend logs
-		SpaceRequest.post("/1/log/search").refresh().size(15).superdogAuth(test)//
+		superdog(test).post("/1/log/search").refresh().size(15)//
 				.bodyJson("match_all", Json7.object())//
 				.go(200)//
 				.assertEquals("/1/log/search", "results.0.path")//
@@ -352,8 +352,8 @@ public class LogResourceTest extends SpaceTest {
 
 		// this ping should not be present in logs
 
-		JsonNode results = SpaceRequest.get("/1/log")//
-				.size(5).superdogAuth().go(200).get("results");
+		JsonNode results = superdog().get("/1/log")//
+				.size(5).go(200).get("results");
 
 		Iterator<JsonNode> elements = results.elements();
 		while (elements.hasNext()) {
