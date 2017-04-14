@@ -199,6 +199,13 @@ public class CredentialsResource extends Resource {
 		return JsonPayload.json(credentials.toJson());
 	}
 
+	@Delete("/1/credentials/me")
+	@Delete("/1/credentials/me/")
+	public Payload deleteMe() {
+		String id = SpaceContext.checkUserCredentials().id();
+		return deleteById(id);
+	}
+
 	@Delete("/1/credentials/:id")
 	@Delete("/1/credentials/:id/")
 	public Payload deleteById(String id) {
