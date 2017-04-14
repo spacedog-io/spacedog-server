@@ -15,11 +15,6 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.mashape.unirest</groupId>
-			<artifactId>unirest-java</artifactId>
-			<version>1.4.9</version>
-		</dependency>
-		<dependency>
 			<groupId>io.spacedog</groupId>
 			<artifactId>spacedog-java-sdk</artifactId>
 			<version>${project.parent.version}</version>
