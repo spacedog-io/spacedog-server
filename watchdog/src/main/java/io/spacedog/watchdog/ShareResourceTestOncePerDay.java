@@ -50,7 +50,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 				Resources.getResource(this.getClass(), "tweeter.png"));
 
 		JsonNode json = SpaceRequest.put("/1/share/tweeter.png").auth(vince)//
-				.body(pngBytes)//
+				.bodyBytes(pngBytes)//
 				.go(200).jsonNode();
 
 		String pngPath = json.get("path").asText();
@@ -80,7 +80,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 
 		// share small text file
 		json = SpaceRequest.put("/1/share/test.txt").auth(fred)//
-				.body(FILE_CONTENT.getBytes())//
+				.bodyBytes(FILE_CONTENT.getBytes())//
 				.go(200)//
 				.jsonNode();
 
@@ -157,7 +157,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 
 		// share small text file
 		txtLocation = SpaceRequest.put("/1/share/test.txt").auth(fred)//
-				.body(FILE_CONTENT.getBytes())//
+				.bodyBytes(FILE_CONTENT.getBytes())//
 				.go(200)//
 				.getString("location");
 
@@ -198,7 +198,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 
 		// anonymous is allowed to share a file
 		String location = SpaceRequest.post("/1/share/guest.png")//
-				.backend(test).body(pngBytes).go(200)//
+				.backend(test).bodyBytes(pngBytes).go(200)//
 				.assertNotPresent("s3")//
 				.getString("location");
 
@@ -224,7 +224,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 				.assertSizeEquals(0, "results");
 
 		// vince is allowed to share a file
-		location = SpaceRequest.post("/1/share/vince.png").auth(vince).body(pngBytes).go(200)//
+		location = SpaceRequest.post("/1/share/vince.png").auth(vince).bodyBytes(pngBytes).go(200)//
 				.assertNotPresent("s3")//
 				.getString("location");
 
@@ -258,7 +258,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		// share file with name that needs escaping
 		ObjectNode json = SpaceRequest.put("/1/share/{fileName}")//
 		.routeParam("fileName", "un petit text ?").auth(test)//
-				.body(FILE_CONTENT.getBytes())//
+				.bodyBytes(FILE_CONTENT.getBytes())//
 				.go(200)//
 				.objectNode();
 
@@ -300,7 +300,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 				.setHeader("x-amz-meta-user-type", userType)//
 				.setHeader("Content-Type", contentType)//
 				.setHeader("Content-Disposition", String.format("attachment; filename=\"%s\"", fileName))//
-				.body(content.getBytes())//
+				.bodyBytes(content.getBytes())//
 				.go(200);
 	}
 

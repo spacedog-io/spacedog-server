@@ -288,7 +288,7 @@ public class LogResourceTest extends SpaceTest {
 
 		// superdog search for test backend logs with status 400 and higher
 		SpaceRequest.post("/1/log/search").refresh().size(1).superdogAuth(test)//
-				.body("range", Json7.object("status", Json7.object("gte", "400")))//
+				.bodyJson("range", Json7.object("status", Json7.object("gte", "400")))//
 				.go(200)//
 				.assertEquals("/1/data/user", "results.0.path")//
 				.assertEquals(403, "results.0.status");
@@ -296,7 +296,7 @@ public class LogResourceTest extends SpaceTest {
 		// superdog search for test backend logs
 		// with credentials level equal to SUPER_ADMIN and lower
 		SpaceRequest.post("/1/log/search").size(7).superdogAuth(test)//
-				.body("terms", Json7.object("credentials.type", Json7.array("SUPER_ADMIN", "USER", "KEY")))//
+				.bodyJson("terms", Json7.object("credentials.type", Json7.array("SUPER_ADMIN", "USER", "KEY")))//
 				.go(200)//
 				.assertEquals("/1/credentials/" + vince.id(), "results.0.path")//
 				.assertEquals("/1/login", "results.1.path")//
@@ -308,7 +308,7 @@ public class LogResourceTest extends SpaceTest {
 
 		// superdog search for test backend log to only get USER and lower logs
 		SpaceRequest.post("/1/log/search").size(7).superdogAuth(test)//
-				.body("terms", Json7.object("credentials.type", Json7.array("USER", "KEY")))//
+				.bodyJson("terms", Json7.object("credentials.type", Json7.array("USER", "KEY")))//
 				.go(200)//
 				.assertEquals("/1/credentials/" + vince.id(), "results.0.path")//
 				.assertEquals("/1/login", "results.1.path")//
@@ -318,7 +318,7 @@ public class LogResourceTest extends SpaceTest {
 
 		// superdog search for test backend log to only get KEY logs
 		SpaceRequest.post("/1/log/search").size(3).superdogAuth(test)//
-				.body("term", Json7.object("credentials.type", "KEY"))//
+				.bodyJson("term", Json7.object("credentials.type", "KEY"))//
 				.go(200)//
 				.assertEquals("/1/credentials", "results.0.path")//
 				.assertEquals("/1/data/user", "results.1.path")//
@@ -326,7 +326,7 @@ public class LogResourceTest extends SpaceTest {
 
 		// superdog gets all test backend logs
 		SpaceRequest.post("/1/log/search").refresh().size(15).superdogAuth(test)//
-				.body("match_all", Json7.object())//
+				.bodyJson("match_all", Json7.object())//
 				.go(200)//
 				.assertEquals("/1/log/search", "results.0.path")//
 				.assertEquals("/1/log/search", "results.1.path")//

@@ -31,12 +31,12 @@ public class UserResourceTest extends SpaceTest {
 		// vince signs up
 		SpaceRequest.post("/1/user").backend(test)//
 				.debugServer()//
-				.body("username", "vince", "email", "vince@dog.com", "password", "hi vince")//
+				.bodyJson("username", "vince", "email", "vince@dog.com", "password", "hi vince")//
 				.go(201);
 
 		// fred signs up
 		SpaceRequest.post("/1/user").backend(test)//
-				.body("username", "fred", "email", "fred@dog.com", "password", "hi fred")//
+				.bodyJson("username", "fred", "email", "fred@dog.com", "password", "hi fred")//
 				.go(201);
 
 		// vince can login
@@ -44,7 +44,7 @@ public class UserResourceTest extends SpaceTest {
 
 		// vince puts his data object
 		SpaceRequest.put("/1/data/user/vince").auth(vince)//
-				.body("email", "vince@dog.com").go(200);
+				.bodyJson("email", "vince@dog.com").go(200);
 		SpaceRequest.get("/1/login").auth(vince).go(200);
 
 		// vince gets his data object
@@ -86,30 +86,30 @@ public class UserResourceTest extends SpaceTest {
 
 		// empty user body
 		SpaceRequest.post("/1/user/").backend(test)//
-				.body(Json7.object()).go(400);
+				.bodyJson(Json7.object()).go(400);
 		// no username
 		SpaceRequest.post("/1/user/").backend(test)//
-				.body("password", "hi titi", "email", "titi@dog.com").go(400);
+				.bodyJson("password", "hi titi", "email", "titi@dog.com").go(400);
 		// no email
 		SpaceRequest.post("/1/user/").backend(test)//
-				.body("username", "titi", "password", "hi titi").go(400);
+				.bodyJson("username", "titi", "password", "hi titi").go(400);
 		// username too small
 		SpaceRequest.post("/1/user/").backend(test)//
-				.body("username", "ti", "password", "hi titi").go(400);
+				.bodyJson("username", "ti", "password", "hi titi").go(400);
 		// password too small
 		SpaceRequest.post("/1/user/").backend(test)//
-				.body("username", "titi", "password", "hi").go(400);
+				.bodyJson("username", "titi", "password", "hi").go(400);
 
 		// fails to inject forged hashedPassword
 
 		SpaceRequest.post("/1/user/").backend(test)//
-				.body("username", "titi", "password", "hi titi", //
+				.bodyJson("username", "titi", "password", "hi titi", //
 						"email", "titi@dog.com", "hashedPassword", "hi titi")
 				.go(400);
 
 		// vince signs up
 		SpaceRequest.post("/1/user").backend(test)//
-				.body("username", "vince", "email", "vince@dog.com", "password", "hi vince")//
+				.bodyJson("username", "vince", "email", "vince@dog.com", "password", "hi vince")//
 				.go(201);
 
 		SpaceDog vince = SpaceDog.backend("test").username("vince").password("hi vince");
@@ -138,7 +138,7 @@ public class UserResourceTest extends SpaceTest {
 
 		// vince updates his email
 		SpaceRequest.put("/1/user/vince").auth(vince)//
-				.body("email", "bignose@magic.com").go(200);
+				.bodyJson("email", "bignose@magic.com").go(200);
 
 		SpaceRequest.get("/1/user/vince").auth(vince).go(200)//
 				.assertEquals("vince", "username")//
@@ -158,12 +158,12 @@ public class UserResourceTest extends SpaceTest {
 
 		// vince signs up
 		SpaceRequest.post("/1/user").backend(test)//
-				.body("username", "vince", "email", "vince@dog.com", "password", "hi vince")//
+				.bodyJson("username", "vince", "email", "vince@dog.com", "password", "hi vince")//
 				.go(201);
 
 		// fred signs up
 		SpaceRequest.post("/1/user").backend(test)//
-				.body("username", "fred", "email", "fred@dog.com", "password", "hi fred")//
+				.bodyJson("username", "fred", "email", "fred@dog.com", "password", "hi fred")//
 				.go(201);
 
 		SpaceDog fred = SpaceDog.backend("test").username("fred").password("hi fred");
@@ -197,14 +197,14 @@ public class UserResourceTest extends SpaceTest {
 
 		// toto signs up
 		SpaceRequest.post("/1/user").backend(test)//
-				.body("username", "toto", "email", "toto@dog.com", "password", "hi toto")//
+				.bodyJson("username", "toto", "email", "toto@dog.com", "password", "hi toto")//
 				.go(201);
 
 		// sign up without password should succeed
 
 		String passwordResetCode = SpaceRequest.post("/1/user/")//
 				.backend(test)//
-				.body("username", "titi", "email", "titi@dog.com")//
+				.bodyJson("username", "titi", "email", "titi@dog.com")//
 				.go(201)//
 				.assertNotNull("passwordResetCode")//
 				.getString("passwordResetCode");
@@ -307,7 +307,7 @@ public class UserResourceTest extends SpaceTest {
 
 		// vince signs up
 		SpaceRequest.post("/1/user").backend(test)//
-				.body("username", "vince", "email", "vince@dog.com", "password", "hi vince")//
+				.bodyJson("username", "vince", "email", "vince@dog.com", "password", "hi vince")//
 				.go(201);
 
 		SpaceRequest.get("/1/data").refresh().auth(test).go(200)//
@@ -327,14 +327,14 @@ public class UserResourceTest extends SpaceTest {
 				.put("_type", "string")//
 				.put("_required", true);
 
-		SpaceRequest.put("/1/schema/user").auth(test).body(userSchema).go(200);
+		SpaceRequest.put("/1/schema/user").auth(test).bodyJson(userSchema).go(200);
 
 		// create new custom user
 
 		ObjectNode fred = Json7.object("username", "fred", "password", "hi fred", //
 				"email", "fred@dog.com", "firstname", "Frédérique", "lastname", "Fallière");
 
-		SpaceRequest.post("/1/user/").backend(test).body(fred).go(201);
+		SpaceRequest.post("/1/user/").backend(test).bodyJson(fred).go(201);
 
 		// get the brand new user and check properties are correct
 

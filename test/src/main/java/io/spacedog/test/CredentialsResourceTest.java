@@ -42,7 +42,7 @@ public class CredentialsResourceTest extends SpaceTest {
 
 		// superadmin test can create another superadmin (test1)
 		SpaceRequest.post("/1/credentials").auth(test)//
-				.body("username", "test1", "password", "hi test1", //
+				.bodyJson("username", "test1", "password", "hi test1", //
 						"email", "test1@test.com", "level", "SUPER_ADMIN")//
 				.go(201);
 
@@ -144,26 +144,26 @@ public class CredentialsResourceTest extends SpaceTest {
 		// fred is not allowed to update his credentials enable after date
 		SpaceRequest.put("/1/credentials/{id}")//
 				.routeParam("id", fred.id()).basicAuth(fred)//
-				.body(FIELD_ENABLE_AFTER, DateTime.now())//
+				.bodyJson(FIELD_ENABLE_AFTER, DateTime.now())//
 				.go(403);
 
 		// fred is not allowed to update his credentials enable after date
 		SpaceRequest.put("/1/credentials/{id}")//
 				.routeParam("id", fred.id()).basicAuth(fred)//
-				.body(FIELD_DISABLE_AFTER, DateTime.now())//
+				.bodyJson(FIELD_DISABLE_AFTER, DateTime.now())//
 				.go(403);
 
 		// fred is not allowed to update his credentials enabled status
 		SpaceRequest.put("/1/credentials/{id}")//
 				.routeParam("id", fred.id()).basicAuth(fred)//
-				.body(FIELD_ENABLED, true)//
+				.bodyJson(FIELD_ENABLED, true)//
 				.go(403);
 
 		// superadmin can update fred's credentials disable after date
 		// before now so fred's credentials are disabled
 		SpaceRequest.put("/1/credentials/{id}")//
 				.routeParam("id", fred.id()).auth(test)//
-				.body(FIELD_DISABLE_AFTER, DateTime.now().minus(100000))//
+				.bodyJson(FIELD_DISABLE_AFTER, DateTime.now().minus(100000))//
 				.go(200);
 
 		// fred's credentials are disabled so he fails to gets any data
@@ -178,7 +178,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		// are enabled again
 		SpaceRequest.put("/1/credentials/{id}")//
 				.routeParam("id", fred.id()).auth(test)//
-				.body(FIELD_ENABLE_AFTER, DateTime.now().minus(100000))//
+				.bodyJson(FIELD_ENABLE_AFTER, DateTime.now().minus(100000))//
 				.go(200);
 
 		// fred's credentials are enabled again so he gets data
@@ -193,7 +193,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		// are disabled again
 		SpaceRequest.put("/1/credentials/{id}")//
 				.routeParam("id", fred.id()).auth(test)//
-				.body(FIELD_DISABLE_AFTER, DateTime.now().minus(100000))//
+				.bodyJson(FIELD_DISABLE_AFTER, DateTime.now().minus(100000))//
 				.go(200);
 
 		// fred's credentials are disabled so he fails to gets any data
@@ -207,7 +207,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		// disable after dates so fred's credentials are enabled again
 		SpaceRequest.put("/1/credentials/{id}")//
 				.routeParam("id", fred.id()).auth(test)//
-				.body(FIELD_DISABLE_AFTER, null, FIELD_ENABLE_AFTER, null)//
+				.bodyJson(FIELD_DISABLE_AFTER, null, FIELD_ENABLE_AFTER, null)//
 				.go(200);
 
 		// fred's credentials are enabled again so he gets data
@@ -221,7 +221,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		// since invalid format
 		SpaceRequest.put("/1/credentials/{id}")//
 				.routeParam("id", fred.id()).auth(test)//
-				.body(FIELD_ENABLE_AFTER, "XXX")//
+				.bodyJson(FIELD_ENABLE_AFTER, "XXX")//
 				.go(400);
 	}
 
@@ -250,7 +250,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		String newPassword = Passwords.random();
 		SpaceRequest.put("/1/credentials/{id}")//
 				.routeParam("id", fred.id()).auth(test)//
-				.body(FIELD_PASSWORD, newPassword)//
+				.bodyJson(FIELD_PASSWORD, newPassword)//
 				.go(200);
 
 		// fred can no longer access data with his first token now invalid
@@ -318,7 +318,7 @@ public class CredentialsResourceTest extends SpaceTest {
 
 		// superadmin enables fred's credentials
 		test.put("/1/credentials/{id}").routeParam("id", fred.id())//
-				.body(FIELD_ENABLED, true).go(200);
+				.bodyJson(FIELD_ENABLED, true).go(200);
 
 		// fred can log in again
 		fred.get("/1/login").go(200)//
@@ -383,12 +383,12 @@ public class CredentialsResourceTest extends SpaceTest {
 
 		// if invalid username, you get a 404
 		test.post("/1/credentials/forgotPassword")//
-				.body(PARAM_USERNAME, "XXX").go(404);
+				.bodyJson(PARAM_USERNAME, "XXX").go(404);
 
 		// fred fails to declare "forgot password" if no
 		// forgotPassword template set in mail settings
 		fred.post("/1/credentials/forgotPassword")//
-				.body(PARAM_USERNAME, fred.username()).go(400);
+				.bodyJson(PARAM_USERNAME, fred.username()).go(400);
 
 		// set the forgotPassword mail template
 		MailSettings settings = new MailSettings();
@@ -407,7 +407,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		// fred can not pass any parameter unless they
 		// are registered in the template model
 		fred.post("/1/credentials/forgotPassword")//
-				.body(PARAM_USERNAME, fred.username(), //
+				.bodyJson(PARAM_USERNAME, fred.username(), //
 						"url", "http://localhost:8080")
 				.go(400);
 

@@ -63,7 +63,7 @@ public class BatchResourceTest extends SpaceTest {
 				.end()//
 				.build();
 
-		SpaceRequest.post("/1/batch").debugServer().superdogAuth("test").body(batch).go(200)//
+		SpaceRequest.post("/1/batch").debugServer().superdogAuth("test").bodyJson(batch).go(200)//
 				.assertEquals(201, "responses.1.status")//
 				.assertEquals("test", "responses.1.id")//
 				.assertEquals(200, "responses.2.status")//
@@ -103,7 +103,7 @@ public class BatchResourceTest extends SpaceTest {
 				.build();
 
 		ObjectNode node = SpaceRequest.post("/1/batch")//
-				.debugServer().auth(test).body(batch).go(200)//
+				.debugServer().auth(test).bodyJson(batch).go(200)//
 				.objectNode();
 
 		String vinceId = Json7.get(node, "responses.0.id").asText();
@@ -148,7 +148,7 @@ public class BatchResourceTest extends SpaceTest {
 				.end()//
 				.build();
 
-		SpaceRequest.post("/1/batch").debugServer().backend(test).body(batch).go(200)//
+		SpaceRequest.post("/1/batch").debugServer().backend(test).bodyJson(batch).go(200)//
 				.assertEquals(400, "responses.0.status")//
 				.assertEquals(404, "responses.1.status")//
 				.assertEquals(403, "responses.2.status")//
@@ -207,7 +207,7 @@ public class BatchResourceTest extends SpaceTest {
 		SpaceResponse response = SpaceRequest.post("/1/batch")//
 				.debugServer().backend("test")//
 				.basicAuth("vince", "hi vince")//
-				.body(batch).go(200)//
+				.bodyJson(batch).go(200)//
 				.assertEquals(201, "responses.0.status")//
 				.assertEquals("1", "responses.0.id")//
 				.assertEquals(201, "responses.1.status")//
@@ -246,7 +246,7 @@ public class BatchResourceTest extends SpaceTest {
 
 		SpaceRequest.post("/1/batch").debugServer()//
 				.queryParam("stopOnError", "true").backend("test")//
-				.basicAuth("vince", "hi vince").body(batch).go(200)//
+				.basicAuth("vince", "hi vince").bodyJson(batch).go(200)//
 				.assertEquals(200, "responses.0.status")//
 				.assertEquals(404, "responses.1.status")//
 				.assertSizeEquals(2, "responses")//
@@ -258,7 +258,7 @@ public class BatchResourceTest extends SpaceTest {
 		for (int i = 0; i < 11; i++)
 			bigBatch.add(Json7.object("method", "GET", "path", "/1/login"));
 
-		SpaceRequest.post("/1/batch").backend(test).body(bigBatch).go(400)//
+		SpaceRequest.post("/1/batch").backend(test).bodyJson(bigBatch).go(400)//
 				.assertEquals("batch-limit-exceeded", "error.code");
 	}
 }

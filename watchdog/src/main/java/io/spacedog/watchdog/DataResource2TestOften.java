@@ -64,7 +64,7 @@ public class DataResource2TestOften extends SpaceTest {
 				.end() //
 				.build();
 
-		String id = SpaceRequest.post("/1/data/sale").auth(fred).body(sale).go(201)//
+		String id = SpaceRequest.post("/1/data/sale").auth(fred).bodyJson(sale).go(201)//
 				.assertTrue("success")//
 				.assertEquals("sale", "type")//
 				.assertEquals(1, "version")//
@@ -123,7 +123,7 @@ public class DataResource2TestOften extends SpaceTest {
 				.put("query", "museum")//
 				.build().toString();
 
-		SpaceResponse res1c = SpaceRequest.post("/1/search/sale").auth(fred).body(query).go(200).assertEquals(1, "total");
+		SpaceResponse res1c = SpaceRequest.post("/1/search/sale").auth(fred).bodyString(query).go(200).assertEquals(1, "total");
 
 		res1.assertEqualsWithoutMeta(Json7.checkObject(res1c.get("results.0")));
 
@@ -131,7 +131,7 @@ public class DataResource2TestOften extends SpaceTest {
 
 		JsonNode updateJson2 = Json7.objectBuilder().array("items").object().put("quantity", 7).build();
 
-		SpaceRequest.put("/1/data/sale/" + id).auth(fred).body(updateJson2).go(200)//
+		SpaceRequest.put("/1/data/sale/" + id).auth(fred).bodyJson(updateJson2).go(200)//
 				.assertTrue("success")//
 				.assertEquals("sale", "type")//
 				.assertEquals(2, "version")//
@@ -156,19 +156,19 @@ public class DataResource2TestOften extends SpaceTest {
 		// update with invalid version should fail
 
 		SpaceRequest.put("/1/data/sale/" + id).auth(fred).queryParam("version", "1")//
-				.body("number", "0987654321").go(409).assertFalse("success");
+				.bodyJson("number", "0987654321").go(409).assertFalse("success");
 
 		// update with invalid version should fail
 
 		SpaceRequest.put("/1/data/sale/" + id)//
 		.queryParam("version", "XXX").auth(fred)//
-				.body("number", "0987654321").go(400)//
+				.bodyJson("number", "0987654321").go(400)//
 				.assertFalse("success");
 
 		// update with correct version should succeed
 
 		SpaceResponse req3d = SpaceRequest.put("/1/data/sale/" + id).auth(fred)//
-				.queryParam("version", "2").body("number", "0987654321").go(200);
+				.queryParam("version", "2").bodyJson("number", "0987654321").go(200);
 
 		req3d.assertTrue("success").assertEquals("sale", "type").assertEquals(3, "version").assertEquals(id, "id");
 
@@ -192,7 +192,7 @@ public class DataResource2TestOften extends SpaceTest {
 		// vince fails to update nor delete this sale since not the owner
 		SpaceDog vince = signUp(test, "vince", "hi vince");
 		SpaceRequest.put("/1/data/sale/" + id).auth(vince)//
-				.body("number", "0123456789").go(403);
+				.bodyJson("number", "0123456789").go(403);
 		SpaceRequest.delete("/1/data/sale/" + id).auth(vince).go(403);
 
 		// fred deletes this sale since he is the owner
@@ -212,13 +212,13 @@ public class DataResource2TestOften extends SpaceTest {
 		// should successfully create 4 messages
 
 		SpaceRequest.post("/1/data/message").auth(test)//
-				.body("text", "what's up?").go(201);
+				.bodyJson("text", "what's up?").go(201);
 		SpaceRequest.post("/1/data/message").auth(test)//
-				.body("text", "wanna drink something?").go(201);
+				.bodyJson("text", "wanna drink something?").go(201);
 		SpaceRequest.post("/1/data/message").auth(test)//
-				.body("text", "pretty cool, hein?").go(201);
+				.bodyJson("text", "pretty cool, hein?").go(201);
 		SpaceRequest.post("/1/data/message").auth(test)//
-				.body("text", "so long guys").go(201);
+				.bodyJson("text", "so long guys").go(201);
 
 		SpaceRequest.get("/1/data").refresh().auth(test).go(200)//
 				.assertEquals(4, "total");
@@ -243,7 +243,7 @@ public class DataResource2TestOften extends SpaceTest {
 		// creates a message object with auto generated id
 
 		String id = SpaceRequest.post("/1/data/message").auth(test)//
-				.body("text", "id=?").go(201)//
+				.bodyJson("text", "id=?").go(201)//
 				.getString("id");
 
 		SpaceRequest.get("/1/data/message/" + id).auth(test).go(200)//
@@ -251,7 +251,7 @@ public class DataResource2TestOften extends SpaceTest {
 
 		// creates a message object with self provided id
 
-		SpaceRequest.post("/1/data/message").id("1").auth(test).body("text", "id=1").go(201);
+		SpaceRequest.post("/1/data/message").id("1").auth(test).bodyJson("text", "id=1").go(201);
 
 		SpaceRequest.get("/1/data/message/1").auth(test).go(200)//
 				.assertEquals("id=1", "text");
@@ -260,7 +260,7 @@ public class DataResource2TestOften extends SpaceTest {
 		// since not compliant with schema
 
 		SpaceRequest.post("/1/data/message").auth(test)//
-				.body("text", "id=2", "id", 2).go(400);
+				.bodyJson("text", "id=2", "id", 2).go(400);
 
 		// creates message2 schema with code property as id
 
@@ -270,7 +270,7 @@ public class DataResource2TestOften extends SpaceTest {
 		// creates a message2 object with code = 2
 
 		SpaceRequest.post("/1/data/message2").auth(test)//
-				.body("text", "id=code=2", "code", "2").go(201);
+				.bodyJson("text", "id=code=2", "code", "2").go(201);
 
 		SpaceRequest.get("/1/data/message2/2").auth(test).go(200)//
 				.assertEquals("id=code=2", "text")//
@@ -280,7 +280,7 @@ public class DataResource2TestOften extends SpaceTest {
 		// and the id param is transparent
 
 		SpaceRequest.post("/1/data/message2").id("XXX").auth(test)//
-				.body("text", "id=code=3", "code", "3").go(201);
+				.bodyJson("text", "id=code=3", "code", "3").go(201);
 
 		SpaceRequest.get("/1/data/message2/3").auth(test).go(200)//
 				.assertEquals("id=code=3", "text")//
@@ -289,13 +289,13 @@ public class DataResource2TestOften extends SpaceTest {
 		// fails to create a message2 object without any code
 
 		SpaceRequest.post("/1/data/message2").auth(test)//
-				.body("text", "no code").go(400);
+				.bodyJson("text", "no code").go(400);
 
 		// fails to create a message2 object without any code
 		// and the id param is still transparent
 
 		SpaceRequest.post("/1/data/message2").id("XXX").auth(test)//
-				.body("text", "no code").go(400);
+				.bodyJson("text", "no code").go(400);
 	}
 
 	@Test
@@ -310,13 +310,13 @@ public class DataResource2TestOften extends SpaceTest {
 		test.schema().set(Schema.builder("message").string("text").build());
 
 		SpaceRequest.post("/1/data/message").auth(vince)//
-				.body("text", "hello").go(201);
+				.bodyJson("text", "hello").go(201);
 		SpaceRequest.post("/1/data/message").auth(vince)//
-				.body("text", "bonjour").go(201);
+				.bodyJson("text", "bonjour").go(201);
 		SpaceRequest.post("/1/data/message").auth(vince)//
-				.body("text", "guttentag").go(201);
+				.bodyJson("text", "guttentag").go(201);
 		SpaceRequest.post("/1/data/message").auth(vince)//
-				.body("text", "hola").go(201);
+				.bodyJson("text", "hola").go(201);
 
 		// fetches messages by 4 pages of 1 object
 

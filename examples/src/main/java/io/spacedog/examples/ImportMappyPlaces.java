@@ -52,7 +52,8 @@ public class ImportMappyPlaces extends SpaceTest {
 	}
 
 	private static void copyPoi(JsonNode src) {
-		JsonBuilder<ObjectNode> target = Json7.objectBuilder().put("name", src.get("name").asText()) //
+		JsonBuilder<ObjectNode> target = Json7.objectBuilder()//
+				.put("name", src.get("name").asText()) //
 				.put("town", src.get("town").asText()) //
 				.put("zipcode", src.get("pCode").asText()) //
 				.put("way", src.get("way").asText()) //
@@ -84,7 +85,7 @@ public class ImportMappyPlaces extends SpaceTest {
 		}
 
 		try {
-			SpaceRequest.post("/1/data/resto").auth(backend).body(target).go(201);
+			backend.post("/1/data/resto").bodyJson(target.build()).go(201);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

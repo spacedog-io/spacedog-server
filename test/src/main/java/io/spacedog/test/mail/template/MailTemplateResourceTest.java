@@ -47,7 +47,7 @@ public class MailTemplateResourceTest extends SpaceTest {
 				Json7.object("date", "2016-12-03", "debut", "16:00:00", "fin", "17:00:00"));
 
 		String inscriptionId = SpaceRequest.post("/1/data/demande").backend(test)//
-				.body("nom", "Pons", "prenom", "Stéphane", "email", "david@spacedog.io", //
+				.bodyJson("nom", "Pons", "prenom", "Stéphane", "email", "david@spacedog.io", //
 						"civilite", "Monsieur", "tel", "0607080920", "statut", "fuzzy", //
 						"cvUrl", "https://spacedog.io", "dispos", dispos)
 				.go(201)//
@@ -82,7 +82,7 @@ public class MailTemplateResourceTest extends SpaceTest {
 
 		// send inscription email
 		SpaceRequest.post("/1/mail/template/demande").backend(test)//
-				.body("demande", inscriptionId).go(200);
+				.bodyJson("demande", inscriptionId).go(200);
 
 		// set the confirmation mail template
 		template = new MailTemplate();
@@ -105,6 +105,6 @@ public class MailTemplateResourceTest extends SpaceTest {
 
 		// send inscription confirmation email
 		SpaceRequest.post("/1/mail/template/confirmation").backend(test)//
-				.body("demande", inscriptionId).go(200);
+				.bodyJson("demande", inscriptionId).go(200);
 	}
 }

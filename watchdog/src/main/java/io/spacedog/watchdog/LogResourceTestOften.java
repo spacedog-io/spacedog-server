@@ -138,7 +138,7 @@ public class LogResourceTestOften extends SpaceTest {
 		SpaceDog test = resetTestBackend();
 
 		// fails because invalid body
-		SpaceRequest.put("/1/schema/toto").auth(test).body("XXX").go(400);
+		SpaceRequest.put("/1/schema/toto").auth(test).bodyString("XXX").go(400);
 
 		// but logs the failed request without the json content
 		SpaceRequest.get("/1/log").refresh().size(1).auth(test).go(200)//

@@ -81,7 +81,7 @@ public class EdfResourceV2 extends Resource {
 		SpaceResponse response = SpaceRequest.post("/gardian/oauth2/v2/token")//
 				.backend(PAAS_PP_BACKEND_URL)//
 				.basicAuth(settings.oauth.clientId, settings.oauth.clientSecret)//
-				.body("grant_type", "authorization_code", "code", code, //
+				.bodyJson("grant_type", "authorization_code", "code", code, //
 						"client_id", settings.oauth.clientId, "redirect_uri", redirectUri)//
 				.go(200);
 

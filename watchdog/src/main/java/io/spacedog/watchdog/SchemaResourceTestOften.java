@@ -63,7 +63,7 @@ public class SchemaResourceTestOften extends SpaceTest {
 
 		// admin fails to create an invalid schema
 		SpaceRequest.put("/1/schema/toto").auth(test)//
-				.body("{\"toto\":{\"_type\":\"XXX\"}}").go(400);
+				.bodyString("{\"toto\":{\"_type\":\"XXX\"}}").go(400);
 
 		// admin fails to update car schema color property type
 		Schema carSchema = buildCarSchema();

@@ -50,7 +50,7 @@ public class EdfResource extends Resource {
 				.backend("https://noefy5jt.noe.edf.fr:5641")//
 				.basicAuth(settings.oauth.clientId, settings.oauth.clientSecret)//
 				.setHeader(SpaceHeaders.ACCEPT, "application/json")//
-				.body("grant_type", "authorization_code", //
+				.bodyJson("grant_type", "authorization_code", //
 						"client_id", settings.oauth.clientId, //
 						"redirect_uri", redirectUri, "code", code)//
 				.go();

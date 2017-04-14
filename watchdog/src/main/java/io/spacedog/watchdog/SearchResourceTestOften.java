@@ -30,16 +30,16 @@ public class SearchResourceTestOften extends SpaceTest {
 		// creates 4 messages and 1 rubric
 
 		SpaceRequest.post("/1/data/rubric").auth(test)//
-				.body("name", "riri, fifi and loulou").go(201);
+				.bodyJson("name", "riri, fifi and loulou").go(201);
 
 		SpaceRequest.post("/1/data/message").auth(test)//
-				.body("text", "what's up?").go(201);
+				.bodyJson("text", "what's up?").go(201);
 		SpaceRequest.post("/1/data/message").auth(test)//
-				.body("text", "wanna drink something?").go(201);
+				.bodyJson("text", "wanna drink something?").go(201);
 		SpaceRequest.post("/1/data/message").auth(test)//
-				.body("text", "pretty cool something, hein?").go(201);
+				.bodyJson("text", "pretty cool something, hein?").go(201);
 		SpaceRequest.post("/1/data/message").auth(test)//
-				.body("text", "so long guys").go(201);
+				.bodyJson("text", "so long guys").go(201);
 
 		SpaceRequest.get("/1/data").refresh().auth(test).go(200)//
 				.assertEquals(5, "total");
@@ -50,7 +50,7 @@ public class SearchResourceTestOften extends SpaceTest {
 				.build();
 
 		ObjectNode results = SpaceRequest.post("/1/search")//
-		.debugServer().auth(test).body(query).go(200)//
+		.debugServer().auth(test).bodyJson(query).go(200)//
 				.assertEquals("wanna drink something?", "results.0.text")//
 				.assertEquals("pretty cool something, hein?", "results.1.text")//
 				.objectNode();
@@ -72,7 +72,7 @@ public class SearchResourceTestOften extends SpaceTest {
 
 		query = Json7.objectBuilder().object("query")//
 				.object("match").put("text", "up").build();
-		SpaceRequest.delete("/1/search/message").auth(test).body(query).go(200);
+		SpaceRequest.delete("/1/search/message").auth(test).bodyJson(query).go(200);
 		SpaceRequest.get("/1/data/message").refresh().auth(test).go(200)//
 				.assertEquals(3, "total");
 
@@ -80,7 +80,7 @@ public class SearchResourceTestOften extends SpaceTest {
 
 		query = Json7.objectBuilder().object("query")//
 				.object("match").put("_all", "wanna riri").build();
-		SpaceRequest.delete("/1/search").auth(test).body(query).go(200);
+		SpaceRequest.delete("/1/search").auth(test).bodyJson(query).go(200);
 		SpaceRequest.get("/1/data").refresh().auth(test).go(200)//
 				.assertEquals(2, "total");
 	}
@@ -98,11 +98,11 @@ public class SearchResourceTestOften extends SpaceTest {
 
 		// creates 5 cities but whith only 3 distinct names
 
-		SpaceRequest.post("/1/data/city").auth(vince).body("name", "Paris").go(201);
-		SpaceRequest.post("/1/data/city").auth(vince).body("name", "Bordeaux").go(201);
-		SpaceRequest.post("/1/data/city").auth(vince).body("name", "Nice").go(201);
-		SpaceRequest.post("/1/data/city").auth(vince).body("name", "Paris").go(201);
-		SpaceRequest.post("/1/data/city").auth(vince).body("name", "Nice").go(201);
+		SpaceRequest.post("/1/data/city").auth(vince).bodyJson("name", "Paris").go(201);
+		SpaceRequest.post("/1/data/city").auth(vince).bodyJson("name", "Bordeaux").go(201);
+		SpaceRequest.post("/1/data/city").auth(vince).bodyJson("name", "Nice").go(201);
+		SpaceRequest.post("/1/data/city").auth(vince).bodyJson("name", "Paris").go(201);
+		SpaceRequest.post("/1/data/city").auth(vince).bodyJson("name", "Nice").go(201);
 
 		// search with 'terms' aggregation to get
 		// all 3 distinct city names Paris, Bordeaux and Nice
@@ -115,7 +115,7 @@ public class SearchResourceTestOften extends SpaceTest {
 				.put("field", "name")//
 				.build();
 
-		SpaceRequest.post("/1/search").refresh().auth(vince).body(query).go(200)//
+		SpaceRequest.post("/1/search").refresh().auth(vince).bodyJson(query).go(200)//
 				.assertEquals(0, "results")//
 				.assertEquals(3, "aggregations.distinctCities.buckets")//
 				.assertContainsValue("Paris", "key")//
@@ -136,7 +136,7 @@ public class SearchResourceTestOften extends SpaceTest {
 		// creates 5 numbers
 		for (int i = 0; i < 3; i++)
 			SpaceRequest.post("/1/data/number").auth(test)//
-					.body("i", i, "t", "" + i).go(201);
+					.bodyJson("i", i, "t", "" + i).go(201);
 
 		// search with ascendent sorting
 		ObjectNode query = Json7.objectBuilder()//
@@ -144,7 +144,7 @@ public class SearchResourceTestOften extends SpaceTest {
 				.object("query").object("match_all")//
 				.build();
 
-		SpaceRequest.post("/1/search").refresh().auth(test).body(query).go(200)//
+		SpaceRequest.post("/1/search").refresh().auth(test).bodyJson(query).go(200)//
 				.assertEquals(0, "results.0.i")//
 				.assertEquals(0, "results.0.meta.sort.0")//
 				.assertEquals(1, "results.1.i")//
@@ -158,7 +158,7 @@ public class SearchResourceTestOften extends SpaceTest {
 				.object("query").object("match_all")//
 				.build();
 
-		SpaceRequest.post("/1/search").refresh().auth(test).body(query).go(200)//
+		SpaceRequest.post("/1/search").refresh().auth(test).bodyJson(query).go(200)//
 				.assertEquals(2, "results.0.i")//
 				.assertEquals("2", "results.0.meta.sort.0")//
 				.assertEquals(1, "results.1.i")//

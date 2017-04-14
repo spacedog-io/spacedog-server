@@ -38,7 +38,7 @@ public class BackendResourceTestOften extends SpaceTest {
 
 		// fails to create new backend with non available id
 		SpaceRequest.post("/1/backend/test")
-				.body("backendId", "test", "username", "anotheruser", //
+				.bodyJson("backendId", "test", "username", "anotheruser", //
 						"password", "hi anotheruser", "email", "hello@spacedog.io")//
 				.go(400)//
 				.assertEquals("test", "invalidParameters.backendId.value");
@@ -82,19 +82,19 @@ public class BackendResourceTestOften extends SpaceTest {
 				"password", "hi test", "email", "hello@spacedog.io");
 
 		// fails to create a backend whom id contains invalid characters
-		SpaceRequest.post("/1/backend/xxx-xxx").body(body).go(400);
+		SpaceRequest.post("/1/backend/xxx-xxx").bodyJson(body).go(400);
 
 		// fails to create a backend whom id is not lowercase
-		SpaceRequest.post("/1/backend/XXXX").body(body).go(400);
+		SpaceRequest.post("/1/backend/XXXX").bodyJson(body).go(400);
 
 		// fails to create backend whom id is not at least 4 characters long
-		SpaceRequest.post("/1/backend/xxx").body(body).go(400);
+		SpaceRequest.post("/1/backend/xxx").bodyJson(body).go(400);
 
 		// user fails to create a backend whom id contains spacedog
-		SpaceRequest.post("/1/backend/xxxspacedogxxx").body(body).go(400);
+		SpaceRequest.post("/1/backend/xxxspacedogxxx").bodyJson(body).go(400);
 
 		// user fails to create a backend whom id starts with api
-		SpaceRequest.post("/1/backend/apixxx").body(body).go(400);
+		SpaceRequest.post("/1/backend/apixxx").bodyJson(body).go(400);
 	}
 
 	@Test
@@ -143,7 +143,7 @@ public class BackendResourceTestOften extends SpaceTest {
 		// record
 		SpaceRequest.post("/1/backend").backend("test")//
 				.queryParam(SpaceParams.PARAM_NOTIF, "false")//
-				.body("username", "test", "password", "hi test", "email", "test@test.fr")//
+				.bodyJson("username", "test", "password", "hi test", "email", "test@test.fr")//
 				.go(201);
 
 		// super admin gets its backend info

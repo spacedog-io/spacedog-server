@@ -64,7 +64,7 @@ public class LogCommand extends AbstractCommand<LogCommand> {
 				.object("receivedAt").put("gte", gte.toString())//
 				.put("lt", lt.toString()).build();
 
-		String payload = dog.post("/1/log/search").body(query)//
+		String payload = dog.post("/1/log/search").bodyJson(query)//
 				.size(10000).go(200).string();
 
 		Files.write(target, payload.getBytes(Utils.UTF8));

@@ -42,7 +42,7 @@ public class DataResourceTestOften extends SpaceTest {
 
 		// create
 
-		String id = SpaceRequest.post("/1/data/car").auth(vince).body(car).go(201)//
+		String id = SpaceRequest.post("/1/data/car").auth(vince).bodyJson(car).go(201)//
 				.assertTrue("success").assertEquals("car", "type").assertNotNull("id")//
 				.getString("id");
 
@@ -64,7 +64,7 @@ public class DataResourceTestOften extends SpaceTest {
 
 		// update
 
-		SpaceRequest.put("/1/data/car/" + id).auth(vince).body("color", "blue").go(200);
+		SpaceRequest.put("/1/data/car/" + id).auth(vince).bodyJson("color", "blue").go(200);
 
 		SpaceResponse res3 = SpaceRequest.get("/1/data/car/" + id).backend(test).go(200)//
 				.assertEquals("vince", "meta.createdBy")//

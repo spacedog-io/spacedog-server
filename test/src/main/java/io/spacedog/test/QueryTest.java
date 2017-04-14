@@ -31,7 +31,7 @@ public class QueryTest extends SpaceTest {
 		test.schema().set(buildCarSchema());
 
 		for (int i = 0; i < 500; i++)
-			SpaceRequest.post("/1/data/car").auth(test).body(jsonCar(i)).go(201);
+			SpaceRequest.post("/1/data/car").auth(test).bodyJson(jsonCar(i)).go(201);
 	}
 
 	private Schema buildCarSchema() {

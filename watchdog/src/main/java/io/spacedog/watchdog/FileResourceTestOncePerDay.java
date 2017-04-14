@@ -21,15 +21,15 @@ public class FileResourceTestOncePerDay extends SpaceTest {
 				.assertSizeEquals(0, "results");
 
 		// upload file without prefix is illegal
-		SpaceRequest.put("/1/file/index.html").auth(test).body(BYTES).go(400);
+		SpaceRequest.put("/1/file/index.html").auth(test).bodyBytes(BYTES).go(400);
 
 		// admin can upload a web site
-		SpaceRequest.put("/1/file/www/app.html").auth(test).body(BYTES).go(200);
-		SpaceRequest.put("/1/file/www/app.js").auth(test).body(BYTES).go(200);
-		SpaceRequest.put("/1/file/www/images/riri.png").auth(test).body(BYTES).go(200);
-		SpaceRequest.put("/1/file/www/images/fifi.jpg").auth(test).body(BYTES).go(200);
-		SpaceRequest.put("/1/file/www/css/black.css").auth(test).body(BYTES).go(200);
-		SpaceRequest.put("/1/file/www/css/white.css").auth(test).body(BYTES).go(200);
+		SpaceRequest.put("/1/file/www/app.html").auth(test).bodyBytes(BYTES).go(200);
+		SpaceRequest.put("/1/file/www/app.js").auth(test).bodyBytes(BYTES).go(200);
+		SpaceRequest.put("/1/file/www/images/riri.png").auth(test).bodyBytes(BYTES).go(200);
+		SpaceRequest.put("/1/file/www/images/fifi.jpg").auth(test).bodyBytes(BYTES).go(200);
+		SpaceRequest.put("/1/file/www/css/black.css").auth(test).bodyBytes(BYTES).go(200);
+		SpaceRequest.put("/1/file/www/css/white.css").auth(test).bodyBytes(BYTES).go(200);
 
 		SpaceRequest.get("/1/file").auth(test).go(200)//
 				.assertSizeEquals(6, "results");

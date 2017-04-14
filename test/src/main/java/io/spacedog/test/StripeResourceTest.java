@@ -66,7 +66,7 @@ public class StripeResourceTest extends SpaceTest {
 
 		// david registers a first card
 		String bnpCardId = SpaceRequest.post("/1/stripe/customers/me/sources")//
-		.body("source", createCardToken().getId(), "description", "bnp").auth(david).go(201)//
+		.bodyJson("source", createCardToken().getId(), "description", "bnp").auth(david).go(201)//
 				.assertEquals("bnp", "metadata.description")//
 				.getString("id");
 
@@ -107,7 +107,7 @@ public class StripeResourceTest extends SpaceTest {
 
 		// david creates another card
 		String lclCardId = SpaceRequest.post("/1/stripe/customers/me/sources")//
-		.body("source", createCardToken().getId(), "description", "lcl").auth(david).go(201)//
+		.bodyJson("source", createCardToken().getId(), "description", "lcl").auth(david).go(201)//
 				.assertEquals("lcl", "metadata.description")//
 				.getString("id");
 

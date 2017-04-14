@@ -307,7 +307,7 @@ public class LafargeCesioTest extends SpaceTest {
 		Json7.set(scores, "0.date", TextNode.valueOf(//
 				DateTime.now().minusDays(8).toString()));
 		SpaceRequest.put("/1/data/player/" + idVince).auth(test)//
-				.body("scores", scores).go(200);
+				.bodyJson("scores", scores).go(200);
 
 		// gets leaderboard after vince score update
 

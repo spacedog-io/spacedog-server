@@ -26,32 +26,32 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// fails since empty user body
 		SpaceRequest.post("/1/credentials/").backend(test)//
-				.body(Json7.object()).go(400);
+				.bodyJson(Json7.object()).go(400);
 
 		// fails since no username
 		SpaceRequest.post("/1/credentials/").backend(test)//
-				.body("password", "hi titi", "email", "titi@dog.com").go(400);
+				.bodyJson("password", "hi titi", "email", "titi@dog.com").go(400);
 
 		// fails since no email
 		SpaceRequest.post("/1/credentials/").backend(test)//
-				.body("username", "titi", "password", "hi titi").go(400);
+				.bodyJson("username", "titi", "password", "hi titi").go(400);
 
 		// fails since username too small
 		SpaceRequest.post("/1/credentials/").backend(test)//
-				.body("username", "ti", "password", "hi titi").go(400);
+				.bodyJson("username", "ti", "password", "hi titi").go(400);
 
 		// fails since password too small
 		SpaceRequest.post("/1/credentials/").backend(test)//
-				.body("username", "titi", "password", "hi", "email", "titi@dog.com").go(400);
+				.bodyJson("username", "titi", "password", "hi", "email", "titi@dog.com").go(400);
 
 		// vince signs up
 		String vinceId = SpaceRequest.post("/1/credentials").backend(test)
-				.body("username", "vince", "password", "hi vince", "email", "vince@dog.com")//
+				.bodyJson("username", "vince", "password", "hi vince", "email", "vince@dog.com")//
 				.go(201).getString("id");
 
 		// vince fails to sign up again since his credentials already exixts
 		SpaceRequest.post("/1/credentials").backend(test)
-				.body("username", "vince", "password", "hello boby", "email", "vince@dog.com")//
+				.bodyJson("username", "vince", "password", "hello boby", "email", "vince@dog.com")//
 				.go(400)//
 				.assertEquals("already-exists", "error.code");
 
@@ -340,7 +340,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// sign up without password should succeed
 
 		ObjectNode node = SpaceRequest.post("/1/credentials/").backend(test)//
-				.body("username", "titi", "email", "titi@dog.com").go(201)//
+				.bodyJson("username", "titi", "email", "titi@dog.com").go(201)//
 				.assertNotNull("passwordResetCode")//
 				.objectNode();
 
@@ -409,7 +409,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// official json body style
 
 		SpaceRequest.put("/1/credentials/" + titiId + "/password").backend("test").basicAuth("test", "hi test")//
-				.body(TextNode.valueOf("hi titi 3"))//
+				.bodyJson(TextNode.valueOf("hi titi 3"))//
 				.go(200);
 
 		SpaceRequest.get("/1/login").backend("test").basicAuth("titi", "hi titi 3").go(200);
@@ -528,17 +528,17 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// guest can not create credentials
 		SpaceRequest.post("/1/credentials").backend(test)//
-				.body("username", "vince", "password", "hi vince", "email", "vince@dog.com")//
+				.bodyJson("username", "vince", "password", "hi vince", "email", "vince@dog.com")//
 				.go(403);
 
 		// fred fails to create credentials if no email
 		SpaceRequest.post("/1/credentials").auth(fred)//
-				.body("username", "vince")//
+				.bodyJson("username", "vince")//
 				.go(400);
 
 		// fred can create credentials for someone
 		ObjectNode node = SpaceRequest.post("/1/credentials").auth(fred)//
-				.body("username", "vince", "email", "vince@dog.com")//
+				.bodyJson("username", "vince", "email", "vince@dog.com")//
 				.go(201).objectNode();
 
 		String vinceId = node.get("id").asText();
@@ -566,17 +566,17 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// invalid username considering default username regex
 		SpaceRequest.post("/1/credentials").backend(test)//
-				.body("username", "vi", "password", "hi", "email", "vince@dog.com")//
+				.bodyJson("username", "vi", "password", "hi", "email", "vince@dog.com")//
 				.go(400);
 
 		// invalid password considering default password regex
 		SpaceRequest.post("/1/credentials").backend(test)//
-				.body("username", "vince", "password", "hi", "email", "vince@dog.com")//
+				.bodyJson("username", "vince", "password", "hi", "email", "vince@dog.com")//
 				.go(400);
 
 		// valid username and password considering default credentials settings
 		SpaceRequest.post("/1/credentials").backend(test)//
-				.body("username", "vince", "password", "hi vince", "email", "vince@dog.com")//
+				.bodyJson("username", "vince", "password", "hi vince", "email", "vince@dog.com")//
 				.go(201);
 
 		// set username and password specific regex
@@ -586,17 +586,17 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// invalid username considering new username regex
 		SpaceRequest.post("/1/credentials").backend(test)//
-				.body("username", "nath.lopez", "password", "hi nath", "email", "nath@dog.com")//
+				.bodyJson("username", "nath.lopez", "password", "hi nath", "email", "nath@dog.com")//
 				.go(400);
 
 		// invalid password considering new password regex
 		SpaceRequest.post("/1/credentials").backend(test)//
-				.body("username", "nathlopez", "password", "hi nath", "email", "nath@dog.com")//
+				.bodyJson("username", "nathlopez", "password", "hi nath", "email", "nath@dog.com")//
 				.go(400);
 
 		// valid username and password considering credentials settings
 		SpaceRequest.post("/1/credentials").backend(test)//
-				.body("username", "nathlopez", "password", "hinath", "email", "nath@dog.com")//
+				.bodyJson("username", "nathlopez", "password", "hinath", "email", "nath@dog.com")//
 				.go(201);
 	}
 
@@ -610,19 +610,19 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// fred fails to create admin credentials
 		SpaceRequest.post("/1/credentials").auth(fred)
-				.body("username", "vince", "password", "hi vince", "email", "vince@dog.com", "level", "ADMIN")//
+				.bodyJson("username", "vince", "password", "hi vince", "email", "vince@dog.com", "level", "ADMIN")//
 				.go(403);
 
 		// test (backend default superadmin) creates credentials for new
 		// superadmin
 		SpaceRequest.post("/1/credentials").auth(test)
-				.body("username", "superadmin", "password", "hi superadmin", //
+				.bodyJson("username", "superadmin", "password", "hi superadmin", //
 						"email", "superadmin@dog.com", "level", "SUPER_ADMIN")//
 				.go(201);
 
 		// superadmin creates credentials for new admin
 		SpaceRequest.post("/1/credentials").backend("test").basicAuth("superadmin", "hi superadmin")//
-				.body("username", "admin1", "password", "hi admin1", //
+				.bodyJson("username", "admin1", "password", "hi admin1", //
 						"email", "admin1@dog.com", "level", "ADMIN")//
 				.go(201);
 	}
@@ -664,12 +664,12 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// fred fails to updates his username
 		// since password must be challenged
 		SpaceRequest.put("/1/credentials/" + fred.id()).bearerAuth(fred)//
-				.body("username", "fred2").go(403)//
+				.bodyJson("username", "fred2").go(403)//
 				.assertEquals("unchallenged-password", "error.code");
 
 		// fred updates his username with a challenged password
 		SpaceRequest.put("/1/credentials/" + fred.id()).basicAuth(fred)//
-				.body("username", "fred2").go(200);
+				.bodyJson("username", "fred2").go(200);
 
 		// fred can no longer login with old username
 		SpaceRequest.get("/1/login").backend("test").basicAuth("fred", "hi fred").go(401);
@@ -679,7 +679,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// superadmin updates fred's email
 		SpaceRequest.put("/1/credentials/" + fred.id()).basicAuth(test)//
-				.body("email", "fred2@dog.com").go(200);
+				.bodyJson("email", "fred2@dog.com").go(200);
 
 		SpaceRequest.get("/1/credentials/" + fred.id()).auth(fred)//
 				.go(200).assertEquals("fred2@dog.com", "email");
@@ -687,12 +687,12 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// fred fails to updates his password
 		// since principal password must be challenged
 		SpaceRequest.put("/1/credentials/" + fred.id()).bearerAuth(fred)//
-				.body("password", "hi fred2").go(403)//
+				.bodyJson("password", "hi fred2").go(403)//
 				.assertEquals("unchallenged-password", "error.code");
 
 		// fred updates his password
 		SpaceRequest.put("/1/credentials/" + fred.id()).basicAuth(fred)//
-				.body("password", "hi fred2").go(200);
+				.bodyJson("password", "hi fred2").go(200);
 
 		// fred's old access token is not valid anymore
 		SpaceRequest.get("/1/credentials/" + fred.id()).bearerAuth(fred).go(401);
@@ -717,19 +717,19 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// anonymous fails to disable fred's credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.body(Json7.toNode(false)).backend(test).go(403);
+				.bodyJson(Json7.toNode(false)).backend(test).go(403);
 
 		// fred fails to disable his credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.body(Json7.toNode(false)).auth(fred).go(403);
+				.bodyJson(Json7.toNode(false)).auth(fred).go(403);
 
 		// admin fails to disable fred's credentials because body not a boolean
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.body(Json7.toNode("false")).auth(test).go(400);
+				.bodyJson(Json7.toNode("false")).auth(test).go(400);
 
 		// only admin can disable fred's credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.body(Json7.toNode(false)).auth(test).go(200);
+				.bodyJson(Json7.toNode(false)).auth(test).go(200);
 
 		// fred fails to login from now on
 		SpaceRequest.get("/1/login").auth(fred).go(401)//
@@ -747,19 +747,19 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// fred fails to update his credentials from now on
 		SpaceRequest.put("/1/credentials/" + fred.id()).auth(fred)//
-				.body("username", "fredy").go(401);
+				.bodyJson("username", "fredy").go(401);
 
 		// anonymous fails to enable fred's credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.body(Json7.toNode(true)).backend(test).go(403);
+				.bodyJson(Json7.toNode(true)).backend(test).go(403);
 
 		// fred fails to enable his credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.body(Json7.toNode(true)).auth(fred).go(401);
+				.bodyJson(Json7.toNode(true)).auth(fred).go(401);
 
 		// only admin can enable fred's credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.body(Json7.toNode(true)).auth(test).go(200);
+				.bodyJson(Json7.toNode(true)).auth(test).go(200);
 
 		// fred logs in again normally
 		SpaceRequest.get("/1/login").auth(fred).go(200);

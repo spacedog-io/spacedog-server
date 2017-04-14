@@ -97,7 +97,7 @@ public class EdfOAuthV1ResourceTest extends SpaceTest {
 				.backend("https://noefy5jt.noe.edf.fr:5641")//
 				.basicAuth(oauth.clientId, oauth.clientSecret)//
 				.setHeader(SpaceHeaders.ACCEPT, "application/json")//
-				.body("grant_type", "authorization_code", "code", code, //
+				.bodyJson("grant_type", "authorization_code", "code", code, //
 						"client_id", oauth.clientId, //
 						"redirect_uri", redirectUri)//
 				.go(200);
