@@ -104,7 +104,7 @@ public class BatchResourceTest extends SpaceTest {
 
 		ObjectNode node = SpaceRequest.post("/1/batch")//
 				.debugServer().auth(test).bodyJson(batch).go(200)//
-				.objectNode();
+				.asJsonObject();
 
 		String vinceId = Json7.get(node, "responses.0.id").asText();
 		String daveId = Json7.get(node, "responses.1.id").asText();

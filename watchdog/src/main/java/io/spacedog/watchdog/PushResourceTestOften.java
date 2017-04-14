@@ -70,7 +70,7 @@ public class PushResourceTestOften extends SpaceTest {
 				.bodyJson(TOKEN, "token-unknown", APP_ID, "joho", PUSH_SERVICE, GCM, //
 						USER_ID, "XXX", ENDPOINT, "XXX")//
 				.go(201)//
-				.objectNode().get(ID).asText();
+				.asJsonObject().get(ID).asText();
 
 		SpaceRequest.get("/1/installation/" + unknownInstallId).auth(test).go(200)//
 				.assertEquals("joho", APP_ID)//
@@ -387,7 +387,7 @@ public class PushResourceTestOften extends SpaceTest {
 		String installId = SpaceRequest.post("/1/installation").auth(user)//
 				.bodyJson(TOKEN, "token-" + user.username(), APP_ID, appId, PUSH_SERVICE, pushService)//
 				.go(201)//
-				.objectNode().get(ID).asText();
+				.asJsonObject().get(ID).asText();
 
 		SpaceRequest.get("/1/installation/" + installId).auth(backend).go(200)//
 				.assertEquals(appId, APP_ID)//

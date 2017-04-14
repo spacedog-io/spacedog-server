@@ -124,9 +124,9 @@ public class SmsResource extends Resource {
 	//
 
 	private Payload toPayload(SpaceResponse response) {
-		ObjectNode node = response.objectNode();
+		ObjectNode node = response.asJsonObject();
 		if (response.status() >= 400) {
-			ObjectNode twilio = response.objectNode();
+			ObjectNode twilio = response.asJsonObject();
 			node = JsonPayload.builder(response.status())//
 					.object("error")//
 					.put("code", "twilio:" + twilio.get("code").asText())//

@@ -52,7 +52,7 @@ public class StripeResourceTest extends SpaceTest {
 				.assertEquals("customer", "object")//
 				.assertEquals("platform@spacedog.io", "email")//
 				.assertSizeEquals(0, "sources.data")//
-				.objectNode();
+				.asJsonObject();
 
 		// david fails to create another stripe customer
 		// since he's got one already

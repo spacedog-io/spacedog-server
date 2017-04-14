@@ -117,13 +117,13 @@ public class ChauffeLeTest extends SpaceTest {
 			return SpaceRequest.post("/1/data/bigpost").auth(user)//
 					.bodyJson("title", subject, "responses", Json7.array())//
 					.go(201)//
-					.objectNode().get("id").asText();
+					.asJsonObject().get("id").asText();
 		}
 
 		@Override
 		public void addComment(SpaceDog user, String postId, String comment) {
 
-			ObjectNode bigPost = SpaceRequest.get("/1/data/bigpost/" + postId).auth(user).go(200).objectNode();
+			ObjectNode bigPost = SpaceRequest.get("/1/data/bigpost/" + postId).auth(user).go(200).asJsonObject();
 
 			bigPost.withArray("responses")//
 					.add(Json7.object("title", comment, "author", user.username()));
@@ -149,7 +149,7 @@ public class ChauffeLeTest extends SpaceTest {
 					.build().toString();
 
 			return SpaceRequest.post("/1/search/bigpost").refresh().auth(user)//
-					.bodyString(wallQuery).go(200).jsonNode().get("results").elements();
+					.bodyString(wallQuery).go(200).asJson().get("results").elements();
 		}
 	}
 
@@ -159,7 +159,7 @@ public class ChauffeLeTest extends SpaceTest {
 		public String createSubject(SpaceDog user, String subject) {
 
 			return SpaceRequest.post("/1/data/smallpost").auth(user)//
-					.bodyJson("title", subject).go(201).objectNode().get("id").asText();
+					.bodyJson("title", subject).go(201).asJsonObject().get("id").asText();
 		}
 
 		@Override
@@ -195,7 +195,7 @@ public class ChauffeLeTest extends SpaceTest {
 					.build();
 
 			JsonNode subjectResults = SpaceRequest.post("/1/search/smallpost")//
-			.refresh().auth(user).bodyJson(subjectQuery).go(200).jsonNode();
+			.refresh().auth(user).bodyJson(subjectQuery).go(200).asJson();
 
 			JsonBuilder<ObjectNode> responsesQuery = Json7.objectBuilder()//
 					.put("from", 0)//

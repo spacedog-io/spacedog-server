@@ -113,7 +113,7 @@ public class LinkedinResource extends Resource {
 				.go();
 
 		checkLinkedinError(response, "linkedin error fetching your profil");
-		return JsonPayload.json(response.objectNode());
+		return JsonPayload.json(response.asJsonObject());
 	}
 
 	//
@@ -183,10 +183,10 @@ public class LinkedinResource extends Resource {
 
 		checkLinkedinError(response, "linkedin error fetching access token");
 
-		String accessToken = response.objectNode().get("access_token").asText();
+		String accessToken = response.asJsonObject().get("access_token").asText();
 
 		long expiresIn = settings.useLinkedinExpiresIn //
-				? response.objectNode().get("expires_in").asLong() //
+				? response.asJsonObject().get("expires_in").asLong() //
 				: CredentialsResource.get().getCheckSessionLifetime(context);
 
 		Session session = Session.newSession(accessToken, expiresIn);
@@ -198,7 +198,7 @@ public class LinkedinResource extends Resource {
 				.go();
 
 		checkLinkedinError(response, "linkedin error fetching email");
-		String email = response.objectNode().get("emailAddress").asText();
+		String email = response.asJsonObject().get("emailAddress").asText();
 
 		CredentialsResource credentialsResource = CredentialsResource.get();
 		Credentials credentials = credentialsResource.getByName(backendId, email, false)//

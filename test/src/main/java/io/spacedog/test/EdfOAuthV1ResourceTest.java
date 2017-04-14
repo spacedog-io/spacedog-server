@@ -59,7 +59,7 @@ public class EdfOAuthV1ResourceTest extends SpaceTest {
 				.formField("code", code)//
 				.formField("username", "USER01")//
 				.formField("redirect_uri", redirectUri)//
-				.go(200).objectNode();
+				.go(200).asJsonObject();
 
 		user01.id(node.get("credentials").get("id").asText());
 		user01.accessToken(node.get("accessToken").asText());

@@ -115,7 +115,7 @@ public class UserResourceTest extends SpaceTest {
 		SpaceDog vince = SpaceDog.backend("test").username("vince").password("hi vince");
 
 		// vince gets his user data
-		ObjectNode res2 = SpaceRequest.get("/1/user/vince").auth(vince).go(200).objectNode();
+		ObjectNode res2 = SpaceRequest.get("/1/user/vince").auth(vince).go(200).asJsonObject();
 
 		assertEquals(//
 				Json7.object("username", "vince", "email", "vince@dog.com"), //
@@ -315,7 +315,7 @@ public class UserResourceTest extends SpaceTest {
 
 		// gets the user schema from server
 
-		ObjectNode userSchema = SpaceRequest.get("/1/schema/user").auth(test).go(200).objectNode();
+		ObjectNode userSchema = SpaceRequest.get("/1/schema/user").auth(test).go(200).asJsonObject();
 
 		// update user schema with custom schema
 
@@ -338,7 +338,7 @@ public class UserResourceTest extends SpaceTest {
 
 		// get the brand new user and check properties are correct
 
-		ObjectNode fredFromServer = SpaceRequest.get("/1/user/fred").auth(test).go(200).objectNode();
+		ObjectNode fredFromServer = SpaceRequest.get("/1/user/fred").auth(test).go(200).asJsonObject();
 		assertEquals(fred.without("password"), //
 				fredFromServer.without(Arrays.asList("hashedPassword", "groups", "meta")));
 	}

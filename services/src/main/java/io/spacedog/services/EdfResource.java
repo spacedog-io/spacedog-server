@@ -57,10 +57,10 @@ public class EdfResource extends Resource {
 
 		checkEdfOAuthError(response, "EDF OAuth error fetching access token");
 
-		String accessToken = response.objectNode().get("access_token").asText();
+		String accessToken = response.asJsonObject().get("access_token").asText();
 
 		long expiresIn = settings.oauth.useExpiresIn //
-				? response.objectNode().get("expires_in").asLong() //
+				? response.asJsonObject().get("expires_in").asLong() //
 				: CredentialsResource.get().getCheckSessionLifetime(context);
 
 		Session session = Session.newSession(accessToken, expiresIn);
@@ -86,7 +86,7 @@ public class EdfResource extends Resource {
 
 		if (httpStatus >= 400) {
 			throw Exceptions.space(httpStatus, messageIntro + ": " //
-					+ response.string());
+					+ response.asString());
 		}
 	}
 

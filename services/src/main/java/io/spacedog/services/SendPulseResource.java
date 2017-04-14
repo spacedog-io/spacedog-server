@@ -31,7 +31,7 @@ public class SendPulseResource extends Resource {
 				.backend("https://api.sendpulse.com")//
 				.bearerAuth(accessToken(settings))//
 				.go()//
-				.string();
+				.asString();
 
 		return JsonPayload.json(body, 200);
 	}
@@ -54,7 +54,7 @@ public class SendPulseResource extends Resource {
 
 		SpaceResponse response = request.go();
 		checkSendPulseError(response, "error creating SendPulse push task");
-		return JsonPayload.json(response.objectNode(), 200);
+		return JsonPayload.json(response.asJsonObject(), 200);
 	}
 
 	private String accessToken(SendPulseSettings settings) {
@@ -72,7 +72,7 @@ public class SendPulseResource extends Resource {
 					.go();
 
 			checkSendPulseError(response, "error authenticating with SendPulse");
-			settings.setToken(response.objectNode());
+			settings.setToken(response.asJsonObject());
 			SettingsResource.get().save(settings);
 		}
 
@@ -88,7 +88,7 @@ public class SendPulseResource extends Resource {
 			if (!response.isJson())
 				throw new SpaceException(httpStatus, messageIntro);
 
-			ObjectNode body = response.objectNode();
+			ObjectNode body = response.asJsonObject();
 			String code = "sendpulse-" + body.path("error_code").asInt(0);
 			String message = messageIntro + ": " + body.path("message").asText();
 			throw new SpaceException(code, httpStatus, message);

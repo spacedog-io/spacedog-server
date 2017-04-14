@@ -253,9 +253,9 @@ public class MailResource extends Resource {
 		JsonBuilder<ObjectNode> payload = JsonPayload.builder(response.status());
 
 		if (response.isJson())
-			payload.node("mailgun", response.jsonNode());
+			payload.node("mailgun", response.asJson());
 		else
-			payload.put("mailgun", response.string());
+			payload.put("mailgun", response.asString());
 
 		return JsonPayload.json(payload, response.status());
 	}

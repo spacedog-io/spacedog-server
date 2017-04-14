@@ -70,7 +70,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 				.assertEquals("user", "credentials.roles.0")//
 				.assertPresent("credentials.createdAt")//
 				.assertPresent("credentials.updatedAt")//
-				.objectNode();
+				.asJsonObject();
 
 		SpaceDog vince = SpaceDog.backend("test").username("vince")//
 				.id(vinceId).password("hi vince").email("vince@dog.com")//
@@ -146,7 +146,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		SpaceRequest.get("/1/login").bearerAuth(vince).go(401);
 
 		// vince logs in again
-		ObjectNode node = SpaceRequest.get("/1/login").basicAuth(vince).go(200).objectNode();
+		ObjectNode node = SpaceRequest.get("/1/login").basicAuth(vince).go(200).asJsonObject();
 		vince.accessToken(node.get("accessToken").asText());
 		long expiresIn = node.get("expiresIn").asLong();
 		vince.expiresAt(DateTime.now().plus(expiresIn));
@@ -193,7 +193,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// vince logs in with token expiration of 2 seconds
 		node = SpaceRequest.get("/1/login").basicAuth(vince)//
 				.queryParam("lifetime", "2") // seconds
-				.go(200).objectNode();
+				.go(200).asJsonObject();
 
 		vince.accessToken(node.get("accessToken").asText());
 		expiresIn = node.get("expiresIn").asLong();
@@ -342,7 +342,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		ObjectNode node = SpaceRequest.post("/1/credentials/").backend(test)//
 				.bodyJson("username", "titi", "email", "titi@dog.com").go(201)//
 				.assertNotNull("passwordResetCode")//
-				.objectNode();
+				.asJsonObject();
 
 		String titiId = node.get("id").asText();
 		String passwordResetCode = node.get("passwordResetCode").asText();
@@ -539,7 +539,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// fred can create credentials for someone
 		ObjectNode node = SpaceRequest.post("/1/credentials").auth(fred)//
 				.bodyJson("username", "vince", "email", "vince@dog.com")//
-				.go(201).objectNode();
+				.go(201).asJsonObject();
 
 		String vinceId = node.get("id").asText();
 		String resetCode = node.get("passwordResetCode").asText();

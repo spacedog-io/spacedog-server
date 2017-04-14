@@ -53,7 +53,7 @@ public class SearchResourceTestOften extends SpaceTest {
 		.debugServer().auth(test).bodyJson(query).go(200)//
 				.assertEquals("wanna drink something?", "results.0.text")//
 				.assertEquals("pretty cool something, hein?", "results.1.text")//
-				.objectNode();
+				.asJsonObject();
 
 		// check search scores
 		assertTrue(Json7.checkDouble(Json7.get(results, "results.0.meta.score")) > 1);

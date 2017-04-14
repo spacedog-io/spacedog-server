@@ -51,7 +51,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 
 		JsonNode json = SpaceRequest.put("/1/share/tweeter.png").auth(vince)//
 				.bodyBytes(pngBytes)//
-				.go(200).jsonNode();
+				.go(200).asJson();
 
 		String pngPath = json.get("path").asText();
 		String pngLocation = json.get("location").asText();
@@ -67,14 +67,14 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 				// .assertHeaderEquals("gzip", SpaceHeaders.CONTENT_ENCODING)//
 				.assertHeaderEquals("image/png", SpaceHeaders.CONTENT_TYPE)//
 				.assertHeaderEquals("vince", SpaceHeaders.SPACEDOG_OWNER)//
-				.bytes();
+				.asBytes();
 
 		Assert.assertTrue(Arrays.equals(pngBytes, downloadedBytes));
 
 		// download shared png file through S3 direct access
 		downloadedBytes = SpaceRequest.get(pngS3Location).go(200)//
 				.assertHeaderEquals("image/png", SpaceHeaders.CONTENT_TYPE)//
-				.bytes();
+				.asBytes();
 
 		Assert.assertTrue(Arrays.equals(pngBytes, downloadedBytes));
 
@@ -82,7 +82,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		json = SpaceRequest.put("/1/share/test.txt").auth(fred)//
 				.bodyBytes(FILE_CONTENT.getBytes())//
 				.go(200)//
-				.jsonNode();
+				.asJson();
 
 		String txtPath = json.get("path").asText();
 		String txtLocation = json.get("location").asText();
@@ -94,7 +94,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		.size(1).auth(test)//
 				.go(200)//
 				.assertSizeEquals(1, "results")//
-				.jsonNode();
+				.asJson();
 
 		Set<String> all = Sets.newHashSet(Json7.get(json, "results.0.path").asText());
 
@@ -108,7 +108,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 				.go(200)//
 				.assertSizeEquals(1, "results")//
 				.assertNotPresent("next")//
-				.jsonNode();
+				.asJson();
 
 		// the set should contain both file paths
 		all.add(Json7.get(json, "results.0.path").asText());
@@ -120,14 +120,14 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 				// .assertHeaderEquals("gzip", SpaceHeaders.CONTENT_ENCODING)//
 				.assertHeaderEquals("text/plain", SpaceHeaders.CONTENT_TYPE)//
 				.assertHeaderEquals("fred", SpaceHeaders.SPACEDOG_OWNER)//
-				.string();
+				.asString();
 
 		Assert.assertEquals(FILE_CONTENT, stringContent);
 
 		// download shared text file through direct S3 access
 		stringContent = SpaceRequest.get(txtS3Location).go(200)//
 				.assertHeaderEquals("text/plain", SpaceHeaders.CONTENT_TYPE)//
-				.string();
+				.asString();
 
 		Assert.assertEquals(FILE_CONTENT, stringContent);
 
@@ -260,7 +260,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		.routeParam("fileName", "un petit text ?").auth(test)//
 				.bodyBytes(FILE_CONTENT.getBytes())//
 				.go(200)//
-				.objectNode();
+				.asJsonObject();
 
 		String location = json.get("location").asText();
 		String s3Location = json.get("s3").asText();
@@ -269,7 +269,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		// no file extension => no specific content type
 		String stringContent = SpaceRequest.get(location).backend(test).go(200)//
 				.assertHeaderEquals("application/octet-stream", SpaceHeaders.CONTENT_TYPE)//
-				.string();
+				.asString();
 
 		Assert.assertEquals(FILE_CONTENT, stringContent);
 
@@ -278,7 +278,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 				.queryParam("withContentDisposition", "true").go(200)//
 				.assertHeaderEquals("attachment; filename=\"un petit text ?\"", //
 						SpaceHeaders.CONTENT_DISPOSITION)//
-				.string();
+				.asString();
 
 		Assert.assertEquals(FILE_CONTENT, stringContent);
 
@@ -289,7 +289,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 				.assertHeaderEquals("application/octet-stream", SpaceHeaders.CONTENT_TYPE)//
 				.assertHeaderEquals("attachment; filename=\"un petit text ?\"", //
 						SpaceHeaders.CONTENT_DISPOSITION)//
-				.string();
+				.asString();
 
 		Assert.assertEquals(FILE_CONTENT, stringContent);
 	}

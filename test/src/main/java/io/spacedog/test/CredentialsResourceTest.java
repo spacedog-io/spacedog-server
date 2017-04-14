@@ -437,7 +437,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		SpaceDog superdogTest = superdog(test).login();
 
 		// and gets all superadmins
-		ObjectNode results = superdogTest.get("/1/backend").go(200).objectNode();
+		ObjectNode results = superdogTest.get("/1/backend").go(200).asJsonObject();
 
 		// superdog logs in to the root backend
 		SpaceDog superdog = superdog().login();

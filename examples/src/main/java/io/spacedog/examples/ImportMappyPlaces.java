@@ -38,7 +38,7 @@ public class ImportMappyPlaces extends SpaceTest {
 							.queryParam("q", "restaurant")//
 							.queryParam("bbox", "" + lat + ',' + lon + ',' + (lat + step) + ',' + (lon + step))//
 							.go(200)//
-							.objectNode()//
+							.asJsonObject()//
 							.get("pois");
 
 					if (pois != null)

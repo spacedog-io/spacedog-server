@@ -63,7 +63,7 @@ public class EdfOAuthV2ResourceTest extends SpaceTest {
 				.assertEquals("DIGITAL01", "credentials.username")//
 				.assertEquals(Json7.array("user"), "credentials.roles")//
 				.assertNotPresent("credentials.email")//
-				.objectNode();
+				.asJsonObject();
 
 		digital01.id(node.get("credentials").get("id").asText());
 		digital01.accessToken(node.get("accessToken").asText());

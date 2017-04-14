@@ -99,7 +99,7 @@ public class EdfResourceV2 extends Resource {
 		int httpStatus = response.status();
 		if (httpStatus >= 400)
 			throw Exceptions.space(httpStatus, messageIntro + ": " //
-					+ response.string());
+					+ response.asString());
 	}
 
 	//

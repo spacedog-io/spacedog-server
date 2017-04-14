@@ -70,9 +70,9 @@ public class SnapshotResourceTest extends SpaceTest {
 			// let server work a bit
 			Thread.sleep(100);
 
-		} while (!response.jsonNode().get("state").asText().equalsIgnoreCase("SUCCESS"));
+		} while (!response.asJson().get("state").asText().equalsIgnoreCase("SUCCESS"));
 
-		ObjectNode firstSnap = response.objectNode();
+		ObjectNode firstSnap = response.asJsonObject();
 
 		// gets snapshot by id
 		superdog.get("/1/snapshot/" + firstSnapId).go(200)//

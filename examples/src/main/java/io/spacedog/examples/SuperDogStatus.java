@@ -20,7 +20,7 @@ public class SuperDogStatus extends Assert {
 		SpaceRequest.setLogDebug(false);
 
 		ObjectNode backends = SpaceRequest.get("/1/backend").size(100)//
-				.superdogAuth().go(200).objectNode();
+				.superdogAuth().go(200).asJsonObject();
 
 		Utils.info("[%s] backends:", backends.get("total").asLong());
 
@@ -53,7 +53,7 @@ public class SuperDogStatus extends Assert {
 					.size(1)//
 					.superdogAuth(backendId)//
 					.go(200)//
-					.objectNode();
+					.asJsonObject();
 
 			Utils.info("Last user request:");
 			Utils.info("results", log.get("results").get(0));

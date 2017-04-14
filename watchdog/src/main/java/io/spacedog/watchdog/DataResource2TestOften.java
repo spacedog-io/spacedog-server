@@ -151,7 +151,7 @@ public class DataResource2TestOften extends SpaceTest {
 
 		// check equality on what has not been updated
 		assertEquals(sale.deepCopy().without("items"),
-				res3.objectNode().deepCopy().without(Lists.newArrayList("meta", "items")));
+				res3.asJsonObject().deepCopy().without(Lists.newArrayList("meta", "items")));
 
 		// update with invalid version should fail
 
@@ -186,8 +186,8 @@ public class DataResource2TestOften extends SpaceTest {
 				.assertDateIsRecent("meta.updatedAt");
 
 		// check equality on what has not been updated
-		assertEquals(res3.objectNode().deepCopy().without(Lists.newArrayList("meta", "number")),
-				res3e.objectNode().deepCopy().without(Lists.newArrayList("meta", "number")));
+		assertEquals(res3.asJsonObject().deepCopy().without(Lists.newArrayList("meta", "number")),
+				res3e.asJsonObject().deepCopy().without(Lists.newArrayList("meta", "number")));
 
 		// vince fails to update nor delete this sale since not the owner
 		SpaceDog vince = signUp(test, "vince", "hi vince");
