@@ -41,13 +41,10 @@ public class ExportLogCommand extends AbstractCommand<ExportLogCommand> {
 		return this;
 	}
 
-	private ExportLogCommand() {
-	}
-
 	public void export() throws IOException {
 
 		SpaceRequest.env().debug(verbose());
-		SpaceDog dog = LoginCommand.get().session();
+		SpaceDog dog = LoginCommand.session();
 
 		DateTime date = Strings.isNullOrEmpty(day) ? DateTime.now() //
 				: DateTime.parse(day);
@@ -69,17 +66,4 @@ public class ExportLogCommand extends AbstractCommand<ExportLogCommand> {
 
 		Files.write(target, payload.getBytes(Utils.UTF8));
 	}
-
-	//
-	// Singleton
-	//
-
-	private static ExportLogCommand instance = null;
-
-	public static ExportLogCommand get() {
-		if (instance == null)
-			instance = new ExportLogCommand();
-		return instance;
-	}
-
 }

@@ -17,9 +17,14 @@ public class DogCLI {
 		JCommander cli = new JCommander();
 		cli.setProgramName("spacedog");
 
-		cli.addCommand(LoginCommand.get());
-		cli.addCommand(ExportLogCommand.get());
-		cli.addCommand(FileSynchCommand.get());
+		LoginCommand loginCommand = new LoginCommand();
+		cli.addCommand(loginCommand);
+
+		FileSynchCommand fileSynchCommand = new FileSynchCommand();
+		cli.addCommand(fileSynchCommand);
+
+		ExportLogCommand exportLogCommand = new ExportLogCommand();
+		cli.addCommand(exportLogCommand);
 
 		try {
 
@@ -30,13 +35,13 @@ public class DogCLI {
 				cli.usage();
 
 			else if (command.equalsIgnoreCase("sync"))
-				FileSynchCommand.get().synch();
+				fileSynchCommand.synch();
 
 			else if (command.equalsIgnoreCase("exportlog"))
-				ExportLogCommand.get().export();
+				exportLogCommand.export();
 
 			else if (command.equalsIgnoreCase("login"))
-				LoginCommand.get().login();
+				loginCommand.login();
 
 		} catch (ParameterException e) {
 			System.err.println(e.getMessage());

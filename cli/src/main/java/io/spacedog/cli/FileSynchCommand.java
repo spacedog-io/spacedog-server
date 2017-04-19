@@ -56,7 +56,7 @@ public class FileSynchCommand extends AbstractCommand<FileSynchCommand> {
 	 */
 	private Set<String> deleted = Sets.newHashSet();
 
-	private SpaceDog backend;
+	private SpaceDog dog;
 
 	public FileSynchCommand source(String source) {
 		this.source = source;
@@ -73,15 +73,12 @@ public class FileSynchCommand extends AbstractCommand<FileSynchCommand> {
 		return this;
 	}
 
-	private FileSynchCommand() {
-	}
-
 	public void synch() throws IOException {
 		Check.notNull(source, "source");
 		Check.notNullOrEmpty(prefix, "prefix");
 
 		SpaceRequest.env().debug(verbose());
-		backend = LoginCommand.get().session();
+		dog = LoginCommand.session();
 
 		synchFromServer();
 		synchFromLocal();
@@ -114,7 +111,7 @@ public class FileSynchCommand extends AbstractCommand<FileSynchCommand> {
 		String webPath = WebPath.newPath(prefix).toString();
 
 		do {
-			FileList list = backend.file().list(webPath, next);
+			FileList list = dog.file().list(webPath, next);
 
 			for (File file : list.files)
 				check(file);
@@ -160,7 +157,7 @@ public class FileSynchCommand extends AbstractCommand<FileSynchCommand> {
 	}
 
 	private void delete(String webPath) {
-		backend.file().delete(webPath);
+		dog.file().delete(webPath);
 		deleted.add(webPath);
 	}
 
@@ -169,7 +166,7 @@ public class FileSynchCommand extends AbstractCommand<FileSynchCommand> {
 		try {
 			String webPath = toWebPath(filePath).toString();
 			// no need to escape since sdk is already escaping
-			backend.file().save(webPath, filePath);
+			dog.file().save(webPath, filePath);
 			uploaded.add(webPath);
 
 		} catch (Exception e) {
@@ -181,17 +178,4 @@ public class FileSynchCommand extends AbstractCommand<FileSynchCommand> {
 		HashCode local = com.google.common.io.Files.hash(path.toFile(), Hashing.md5());
 		return local.equals(HashCode.fromString(etag));
 	}
-
-	//
-	// Singleton
-	//
-
-	private static FileSynchCommand instance = null;
-
-	public static FileSynchCommand get() {
-		if (instance == null)
-			instance = new FileSynchCommand();
-		return instance;
-	}
-
 }

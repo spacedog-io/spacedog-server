@@ -33,10 +33,6 @@ public class LoginCommand extends AbstractCommand<LoginCommand> {
 	private String username;
 
 	private String password;
-	private SpaceDog session;
-
-	private LoginCommand() {
-	}
 
 	public LoginCommand backend(String backend) {
 		this.backend = backend;
@@ -50,11 +46,6 @@ public class LoginCommand extends AbstractCommand<LoginCommand> {
 
 	public LoginCommand password(String password) {
 		this.password = password;
-		return this;
-	}
-
-	public LoginCommand clearCache() {
-		this.session = null;
 		return this;
 	}
 
@@ -96,7 +87,13 @@ public class LoginCommand extends AbstractCommand<LoginCommand> {
 		return session;
 	}
 
-	public SpaceDog session() throws IOException {
+	//
+	// Static part
+	//
+
+	private static SpaceDog session;
+
+	public static SpaceDog session() throws IOException {
 
 		if (session == null) {
 
@@ -132,16 +129,8 @@ public class LoginCommand extends AbstractCommand<LoginCommand> {
 		return session;
 	}
 
-	//
-	// Singleton
-	//
-
-	private static LoginCommand instance = null;
-
-	public static LoginCommand get() {
-		if (instance == null)
-			instance = new LoginCommand();
-		return instance;
+	public static void clearCache() {
+		session = null;
 	}
 
 }
