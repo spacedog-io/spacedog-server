@@ -12,14 +12,14 @@ import com.beust.jcommander.Parameters;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
-import io.spacedog.rest.SpaceEnv;
+import io.spacedog.rest.SpaceRequest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json7;
 import io.spacedog.utils.Utils;
 
-@Parameters(commandNames = { "log" }, //
-		commandDescription = "export logs to file")
-public class LogCommand extends AbstractCommand<LogCommand> {
+@Parameters(commandNames = { "exportlog" }, //
+		commandDescription = "export log to file")
+public class ExportLogCommand extends AbstractCommand<ExportLogCommand> {
 
 	@Parameter(names = { "-d", "--day" }, //
 			required = false, //
@@ -31,22 +31,22 @@ public class LogCommand extends AbstractCommand<LogCommand> {
 			description = "the file to export to")
 	private String file;
 
-	public LogCommand file(String file) {
+	public ExportLogCommand file(String file) {
 		this.file = file;
 		return this;
 	}
 
-	public LogCommand day(String day) {
+	public ExportLogCommand day(String day) {
 		this.day = day;
 		return this;
 	}
 
-	private LogCommand() {
+	private ExportLogCommand() {
 	}
 
 	public void export() throws IOException {
 
-		SpaceEnv.defaultEnv().debug(verbose());
+		SpaceRequest.env().debug(verbose());
 		SpaceDog dog = LoginCommand.get().session();
 
 		DateTime date = Strings.isNullOrEmpty(day) ? DateTime.now() //
@@ -74,11 +74,11 @@ public class LogCommand extends AbstractCommand<LogCommand> {
 	// Singleton
 	//
 
-	private static LogCommand instance = null;
+	private static ExportLogCommand instance = null;
 
-	public static LogCommand get() {
+	public static ExportLogCommand get() {
 		if (instance == null)
-			instance = new LogCommand();
+			instance = new ExportLogCommand();
 		return instance;
 	}
 

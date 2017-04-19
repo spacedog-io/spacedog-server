@@ -6,6 +6,7 @@ import com.google.common.base.Strings;
 
 import io.spacedog.rest.SpaceEnv;
 import io.spacedog.rest.SpaceRequest;
+import io.spacedog.rest.SpaceRequestException;
 import io.spacedog.rest.SpaceTarget;
 
 public class DogCLI {
@@ -17,7 +18,7 @@ public class DogCLI {
 		cli.setProgramName("spacedog");
 
 		cli.addCommand(LoginCommand.get());
-		cli.addCommand(LogCommand.get());
+		cli.addCommand(ExportLogCommand.get());
 		cli.addCommand(FileSynchCommand.get());
 
 		try {
@@ -32,7 +33,7 @@ public class DogCLI {
 				FileSynchCommand.get().synch();
 
 			else if (command.equalsIgnoreCase("exportlog"))
-				LogCommand.get().export();
+				ExportLogCommand.get().export();
 
 			else if (command.equalsIgnoreCase("login"))
 				LoginCommand.get().login();
@@ -43,6 +44,9 @@ public class DogCLI {
 		} catch (IllegalArgumentException e) {
 			System.err.println(e.getMessage());
 
+		} catch (SpaceRequestException e) {
+			System.err.println(e.serverErrorMessage());
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -51,7 +55,7 @@ public class DogCLI {
 	private static void setEnv() {
 		SpaceEnv env = new SpaceEnv();
 		env.target(SpaceTarget.production);
-		env.debug(true);
+		env.debug(false);
 		SpaceRequest.env(env);
 	}
 

@@ -13,7 +13,7 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Strings;
 
-import io.spacedog.rest.SpaceEnv;
+import io.spacedog.rest.SpaceRequest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
@@ -32,7 +32,8 @@ public class LoginCommand extends AbstractCommand<LoginCommand> {
 			description = "the username to login with")
 	private String username;
 
-	private SpaceDog session = null;
+	private String password;
+	private SpaceDog session;
 
 	private LoginCommand() {
 	}
@@ -47,6 +48,11 @@ public class LoginCommand extends AbstractCommand<LoginCommand> {
 		return this;
 	}
 
+	public LoginCommand password(String password) {
+		this.password = password;
+		return this;
+	}
+
 	public LoginCommand clearCache() {
 		this.session = null;
 		return this;
@@ -56,16 +62,17 @@ public class LoginCommand extends AbstractCommand<LoginCommand> {
 		Check.notNullOrEmpty(backend, "backend");
 		Check.notNullOrEmpty(username, "username");
 
-		SpaceEnv.defaultEnv().debug(verbose());
+		SpaceRequest.env().debug(verbose());
 		String userHome = System.getProperty("user.home");
 
 		if (Strings.isNullOrEmpty(userHome))
 			throw Exceptions.runtime("no user home directory available");
 
 		Console console = System.console();
-		String password = console == null ? "hi test" //
-				: String.valueOf(//
-						console.readPassword("Enter ‰s password: ", username));
+		if (password == null)
+			password = console == null ? "hi " + username //
+					: String.valueOf(//
+							console.readPassword("Enter %s password: ", username));
 
 		session = SpaceDog.backend(backend)//
 				.username(username).login(password);

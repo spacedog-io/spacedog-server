@@ -13,7 +13,7 @@ import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
-import io.spacedog.rest.SpaceEnv;
+import io.spacedog.rest.SpaceRequest;
 import io.spacedog.sdk.FileEndpoint.File;
 import io.spacedog.sdk.FileEndpoint.FileList;
 import io.spacedog.sdk.SpaceDog;
@@ -80,7 +80,7 @@ public class FileSynchCommand extends AbstractCommand<FileSynchCommand> {
 		Check.notNull(source, "source");
 		Check.notNullOrEmpty(prefix, "prefix");
 
-		SpaceEnv.defaultEnv().debug(verbose());
+		SpaceRequest.env().debug(verbose());
 		backend = LoginCommand.get().session();
 
 		synchFromServer();

@@ -13,14 +13,14 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import io.spacedog.cli.LogCommand;
+import io.spacedog.cli.ExportLogCommand;
 import io.spacedog.cli.LoginCommand;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json7;
 import io.spacedog.utils.Utils;
 
-public class LogCommandTest extends SpaceTest {
+public class ExportLogCommandTest extends SpaceTest {
 
 	private static DateTimeFormatter dateFormatter = DateTimeFormat.//
 			forPattern("yyyy-MM-dd").withZone(DateTimeZone.forID("Europe/Paris"));
@@ -45,7 +45,7 @@ public class LogCommandTest extends SpaceTest {
 		Utils.info("Exporting today's log to [%s]", target);
 
 		// exporting to file
-		LogCommand.get().verbose(true).day(today).file(target.toString()).export();
+		ExportLogCommand.get().verbose(true).day(today).file(target.toString()).export();
 
 		// checking export file
 		JsonNode node = Json7.mapper().readTree(Files.readAllBytes(target));
