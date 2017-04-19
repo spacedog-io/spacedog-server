@@ -244,7 +244,7 @@ public class MailResource extends Resource {
 				.backend("https://api.mailgun.net")//
 				.routeParam("domain", settings.domain)//
 				.basicAuth("api", settings.key)//
-				.bodyJson(bodyBuilder.build())//
+				.bodyMultipart(bodyBuilder.build())//
 				// TODO Fix this since it does not work.
 				// .queryParam("o:testmode",
 				// String.valueOf(SpaceContext.isTest()))//
