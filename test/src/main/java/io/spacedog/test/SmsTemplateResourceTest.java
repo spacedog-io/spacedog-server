@@ -12,7 +12,6 @@ import io.spacedog.model.SmsSettings;
 import io.spacedog.model.SmsSettings.TwilioSettings;
 import io.spacedog.model.SmsTemplate;
 import io.spacedog.rest.SpaceEnv;
-import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 
@@ -43,10 +42,10 @@ public class SmsTemplateResourceTest extends SpaceTest {
 		// prepare Twilio SMS settings
 		SmsSettings settings = new SmsSettings();
 		settings.twilio = new TwilioSettings();
-		SpaceEnv configuration = SpaceRequest.env();
-		settings.twilio.accountSid = configuration.get("caremen.twilio.accountSid");
-		settings.twilio.authToken = configuration.get("caremen.twilio.authToken");
-		settings.twilio.defaultFrom = configuration.get("caremen.twilio.defaultFrom");
+		SpaceEnv env = SpaceEnv.defaultEnv();
+		settings.twilio.accountSid = env.get("caremen.twilio.accountSid");
+		settings.twilio.authToken = env.get("caremen.twilio.authToken");
+		settings.twilio.defaultFrom = env.get("caremen.twilio.defaultFrom");
 
 		// prepare 'hello' SMS template
 		SmsTemplate template = new SmsTemplate();

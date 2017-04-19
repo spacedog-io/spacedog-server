@@ -33,8 +33,8 @@ public class CredentialsResourceTest extends SpaceTest {
 		test.login();
 		test2.login();
 		SpaceDog superdog = SpaceDog.backend("api")//
-				.username(SpaceRequest.env().get("spacedog.superdog.username")) //
-				.login(SpaceRequest.env().get("spacedog.superdog.password"));
+				.username(SpaceEnv.defaultEnv().get("spacedog.superdog.username")) //
+				.login(SpaceEnv.defaultEnv().get("spacedog.superdog.password"));
 
 		// forbidden to delete superadmin if last superadmin of backend
 		SpaceRequest.delete("/1/credentials/" + test.id()).auth(test).go(403);
@@ -70,7 +70,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		resetTestBackend();
-		SpaceEnv env = SpaceRequest.env();
+		SpaceEnv env = SpaceEnv.defaultEnv();
 
 		// superdog logs in with the root backend
 		SpaceDog apiSuperdog = SpaceDog.backend("api")//

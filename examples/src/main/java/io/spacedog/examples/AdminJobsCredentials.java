@@ -3,7 +3,6 @@ package io.spacedog.examples;
 import org.junit.Test;
 
 import io.spacedog.rest.SpaceEnv;
-import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTarget;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.services.LogResource;
@@ -13,7 +12,7 @@ public class AdminJobsCredentials extends SpaceTest {
 
 	@Test
 	public void initPurgeAllCredentials() {
-		SpaceRequest.env().target(SpaceTarget.production);
+		SpaceEnv.defaultEnv().target(SpaceTarget.production);
 		String password = SpaceEnv.defaultEnv().get("spacedog_jobs_purgeall_password");
 		initCredentials(LogResource.PURGE_ALL, password, LogResource.PURGE_ALL);
 	}
@@ -21,7 +20,7 @@ public class AdminJobsCredentials extends SpaceTest {
 	@Test
 	public void initSnapshotAllCredentials() {
 
-		SpaceRequest.env().target(SpaceTarget.production);
+		SpaceEnv.defaultEnv().target(SpaceTarget.production);
 		String password = SpaceEnv.defaultEnv().get("spacedog_jobs_snapshotall_password");
 		initCredentials(SnapshotResource.SNAPSHOT_ALL, password, SnapshotResource.SNAPSHOT_ALL);
 	}

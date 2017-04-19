@@ -9,7 +9,6 @@ import com.google.common.collect.Sets;
 import io.spacedog.model.SmsSettings;
 import io.spacedog.model.SmsSettings.TwilioSettings;
 import io.spacedog.rest.SpaceEnv;
-import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceRequestException;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
@@ -49,11 +48,11 @@ public class SmsResourceTest extends SpaceTest {
 		test.post("/1/sms").go(403);
 
 		// superadmin sets twilio settings
+		SpaceEnv env = SpaceEnv.defaultEnv();
 		settings.twilio = new TwilioSettings();
-		SpaceEnv configuration = SpaceRequest.env();
-		settings.twilio.accountSid = configuration.get("caremen.twilio.accountSid");
-		settings.twilio.authToken = configuration.get("caremen.twilio.authToken");
-		settings.twilio.defaultFrom = configuration.get("caremen.twilio.defaultFrom");
+		settings.twilio.accountSid = env.get("caremen.twilio.accountSid");
+		settings.twilio.authToken = env.get("caremen.twilio.authToken");
+		settings.twilio.defaultFrom = env.get("caremen.twilio.defaultFrom");
 		test.settings().save(settings);
 
 		// vince sends an sms
@@ -74,7 +73,7 @@ public class SmsResourceTest extends SpaceTest {
 			fail();
 		} catch (SpaceRequestException e) {
 			assertEquals(400, e.httpStatus());
-			assertEquals("twilio:21614", e.errorCode());
+			assertEquals("twilio:21614", e.serverErrorCode());
 		}
 	}
 }

@@ -8,7 +8,7 @@ import java.util.Iterator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.rest.SpaceRequest;
+import io.spacedog.rest.SpaceEnv;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.utils.Utils;
 
@@ -16,7 +16,7 @@ public class SuperDogStatus extends SpaceTest {
 
 	public static void main(String[] args) throws Exception {
 
-		SpaceRequest.setLogDebug(false);
+		SpaceEnv.defaultEnv().debug(false);
 
 		ObjectNode backends = superdog().get("/1/backend").size(100)//
 				.go(200).asJsonObject();

@@ -10,6 +10,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.junit.Test;
 
 import io.spacedog.model.CredentialsSettings;
+import io.spacedog.rest.SpaceEnv;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
@@ -160,7 +161,7 @@ public class Linkedin extends SpaceTest {
 			throws URISyntaxException, IOException {
 
 		// test redirect uri
-		String redirectUri = SpaceRequest.env().target()//
+		String redirectUri = SpaceEnv.defaultEnv().target()//
 				.url(backend.backendId(), "/1/login/linkedin");
 
 		if (redirect)
@@ -179,11 +180,12 @@ public class Linkedin extends SpaceTest {
 	}
 
 	private CredentialsSettings defaultCredentialsSettings(boolean disableGuestSignUp, SpaceDog backend) {
+		SpaceEnv env = SpaceEnv.defaultEnv();
 		CredentialsSettings settings = new CredentialsSettings();
 		settings.disableGuestSignUp = disableGuestSignUp;
-		settings.linkedinId = SpaceRequest.env().get("spacedog.test.linkedin.client.id");
-		settings.linkedinSecret = SpaceRequest.env().get("spacedog.test.linkedin.client.secret");
-		settings.linkedinFinalRedirectUri = SpaceRequest.env().target().url(backend.backendId());
+		settings.linkedinId = env.get("spacedog.test.linkedin.client.id");
+		settings.linkedinSecret = env.get("spacedog.test.linkedin.client.secret");
+		settings.linkedinFinalRedirectUri = env.target().url(backend.backendId());
 		return settings;
 	}
 }

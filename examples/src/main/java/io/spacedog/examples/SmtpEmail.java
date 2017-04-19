@@ -17,7 +17,7 @@ import org.junit.Test;
 import com.google.common.io.Resources;
 import com.sun.mail.smtp.SMTPTransport;
 
-import io.spacedog.rest.SpaceRequest;
+import io.spacedog.rest.SpaceEnv;
 import io.spacedog.utils.Utils;
 
 public class SmtpEmail extends Assert {
@@ -37,9 +37,10 @@ public class SmtpEmail extends Assert {
 		msg.setHeader("X-Mailer", "Space Example");
 		msg.setSentDate(new Date());
 		SMTPTransport t = (SMTPTransport) session.getTransport("smtps");
+		SpaceEnv env = SpaceEnv.defaultEnv();
 		t.connect("mail.gandi.net", //
-				SpaceRequest.env().get("spacedog.test.smtp.login"), //
-				SpaceRequest.env().get("spacedog.test.smtp.password"));
+				env.get("spacedog.test.smtp.login"), //
+				env.get("spacedog.test.smtp.password"));
 		t.sendMessage(msg, msg.getAllRecipients());
 		System.out.println("Response: " + t.getLastServerResponse());
 		t.close();
@@ -74,8 +75,9 @@ public class SmtpEmail extends Assert {
 		email.setTextMsg("Your email client does not support HTML messages");
 
 		// send the email
-		email.setAuthentication(SpaceRequest.env().get("spacedog.test.smtp.login"), //
-				SpaceRequest.env().get("spacedog.test.smtp.password"));
+		SpaceEnv env = SpaceEnv.defaultEnv();
+		email.setAuthentication(env.get("spacedog.test.smtp.login"), //
+				env.get("spacedog.test.smtp.password"));
 		email.setStartTLSRequired(false);
 		email.setSSLOnConnect(true);
 		email.send();

@@ -7,6 +7,7 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.rest.SpaceEnv;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTarget;
 import io.spacedog.rest.SpaceTest;
@@ -102,7 +103,7 @@ public class BackendResourceTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceTarget target = SpaceRequest.env().target();
+		SpaceTarget target = SpaceEnv.defaultEnv().target();
 
 		// successfully pings server to check it is up and running
 		SpaceRequest.get("").go(200).assertNotNull("version");

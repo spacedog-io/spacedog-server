@@ -16,6 +16,7 @@ import io.spacedog.model.MailSettings;
 import io.spacedog.model.MailSettings.SmtpSettings;
 import io.spacedog.model.MailTemplate;
 import io.spacedog.model.Schema;
+import io.spacedog.rest.SpaceEnv;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
@@ -59,8 +60,8 @@ public class MailTemplateResourceTest extends SpaceTest {
 		mailSettings.smtp.host = "mail.gandi.net";
 		mailSettings.smtp.startTlsRequired = false;
 		mailSettings.smtp.sslOnConnect = true;
-		mailSettings.smtp.login = SpaceRequest.env().get("spacedog.test.smtp.login");
-		mailSettings.smtp.password = SpaceRequest.env().get("spacedog.test.smtp.password");
+		mailSettings.smtp.login = SpaceEnv.defaultEnv().get("spacedog.test.smtp.login");
+		mailSettings.smtp.password = SpaceEnv.defaultEnv().get("spacedog.test.smtp.password");
 
 		// set the demande mail template
 		mailSettings.templates = Maps.newHashMap();

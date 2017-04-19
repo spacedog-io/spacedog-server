@@ -8,6 +8,7 @@ import com.google.common.io.Resources;
 
 import io.spacedog.model.MailSettings;
 import io.spacedog.model.MailSettings.SmtpSettings;
+import io.spacedog.rest.SpaceEnv;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
@@ -82,8 +83,8 @@ public class MailResourceTest extends SpaceTest {
 		settings.smtp.host = "mail.gandi.net";
 		settings.smtp.startTlsRequired = false;
 		settings.smtp.sslOnConnect = true;
-		settings.smtp.login = SpaceRequest.env().get("spacedog.test.smtp.login");
-		settings.smtp.password = SpaceRequest.env().get("spacedog.test.smtp.password");
+		settings.smtp.login = SpaceEnv.defaultEnv().get("spacedog.test.smtp.login");
+		settings.smtp.password = SpaceEnv.defaultEnv().get("spacedog.test.smtp.password");
 		test.settings().save(settings);
 
 		// load your HTML email template

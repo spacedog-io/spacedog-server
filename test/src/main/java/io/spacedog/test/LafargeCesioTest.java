@@ -13,8 +13,9 @@ import com.fasterxml.jackson.databind.node.TextNode;
 
 import io.spacedog.model.DataPermission;
 import io.spacedog.model.MailSettings;
-import io.spacedog.model.Schema;
 import io.spacedog.model.MailSettings.SmtpSettings;
+import io.spacedog.model.Schema;
+import io.spacedog.rest.SpaceEnv;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
@@ -46,18 +47,16 @@ public class LafargeCesioTest extends SpaceTest {
 		prepareTest();
 		SpaceDog test = resetTestBackend();
 		test.schema().set(playerSchema());
+		SpaceEnv env = SpaceEnv.defaultEnv();
 
 		MailSettings settings = new MailSettings();
 		settings.enableUserFullAccess = false;
 		settings.smtp = new SmtpSettings();
 		settings.smtp.startTlsRequired = true;
 		settings.smtp.sslOnConnect = true;
-		settings.smtp.host = SpaceRequest.env()//
-				.get("spacedog.cesio.smtp.host");
-		settings.smtp.login = SpaceRequest.env()//
-				.get("spacedog.cesio.smtp.login");
-		settings.smtp.password = SpaceRequest.env()//
-				.get("spacedog.cesio.smtp.password");
+		settings.smtp.host = env.get("spacedog.cesio.smtp.host");
+		settings.smtp.login = env.get("spacedog.cesio.smtp.login");
+		settings.smtp.password = env.get("spacedog.cesio.smtp.password");
 
 		test.settings().save(settings);
 

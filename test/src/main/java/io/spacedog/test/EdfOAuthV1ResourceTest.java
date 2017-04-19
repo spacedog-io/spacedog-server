@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.model.CredentialsSettings;
 import io.spacedog.model.CredentialsSettings.OAuthSettings;
+import io.spacedog.rest.SpaceEnv;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
@@ -31,8 +32,8 @@ public class EdfOAuthV1ResourceTest extends SpaceTest {
 
 		// super admin sets credentials oauth settings
 		OAuthSettings oauth = new OAuthSettings();
-		oauth.clientId = SpaceRequest.env().get("edf.oauth.v1.client.id");
-		oauth.clientSecret = SpaceRequest.env().get("edf.oauth.v1.client.secret");
+		oauth.clientId = SpaceEnv.defaultEnv().get("edf.oauth.v1.client.id");
+		oauth.clientSecret = SpaceEnv.defaultEnv().get("edf.oauth.v1.client.secret");
 		oauth.useExpiresIn = true;
 
 		CredentialsSettings settings = new CredentialsSettings();
@@ -77,8 +78,8 @@ public class EdfOAuthV1ResourceTest extends SpaceTest {
 
 		// prepare
 		OAuthSettings oauth = new OAuthSettings();
-		oauth.clientId = SpaceRequest.env().get("edf.oauth.v1.client.id");
-		oauth.clientSecret = SpaceRequest.env().get("edf.oauth.v1.client.secret");
+		oauth.clientId = SpaceEnv.defaultEnv().get("edf.oauth.v1.client.id");
+		oauth.clientSecret = SpaceEnv.defaultEnv().get("edf.oauth.v1.client.secret");
 
 		// USER01 gets authorization code from EDF
 		String code = SpaceRequest.post("/ws/iOAuthApprove/do")//
