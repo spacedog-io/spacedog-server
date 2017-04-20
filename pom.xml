@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.spacedog</groupId>
 	<artifactId>spacedog-parent</artifactId>
-	<version>0.32.1-SNAPSHOT</version>
+	<version>0.32.1</version>
 	<packaging>pom</packaging>
 
 	<properties>
@@ -17,6 +17,7 @@
 		<aws-version>1.10.52</aws-version>
 		<es-version>2.2.0</es-version>
 		<jackson-version>2.6.2</jackson-version>
+		<java-sdk-version>0.32</java-sdk-version>
 	</properties>
 
 	<prerequisites>
