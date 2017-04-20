@@ -64,26 +64,26 @@ public class EdfResourceV2 extends Resource {
 		SpaceResponse response = SpaceRequest.get("/gardian/oauth2/v2/tokeninfo")//
 				.backend(PAAS_PP_BACKEND_URL)//
 				.bearerAuth(session.accessToken())//
-				.go(200);
+				.go();
 
 		checkEdfOAuthError(response, "EDF OAuth v2 error fetching username");
 		return response.getString("uid");
 	}
 
 	private Session newEdfSession(Context context) {
-		String code = Check.notNullOrEmpty(context.get("code"), "code");
-		String redirectUri = Check.notNullOrEmpty(context.get("redirect_uri"), "redirect_uri");
-
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
 		if (settings.oauth == null)
 			throw Exceptions.illegalArgument("credentials OAuth settings are required");
+
+		String code = Check.notNullOrEmpty(context.get("code"), "code");
+		String redirectUri = Check.notNullOrEmpty(context.get("redirect_uri"), "redirect_uri");
 
 		SpaceResponse response = SpaceRequest.post("/gardian/oauth2/v2/token")//
 				.backend(PAAS_PP_BACKEND_URL)//
 				.basicAuth(settings.oauth.clientId, settings.oauth.clientSecret)//
 				.bodyJson("grant_type", "authorization_code", "code", code, //
 						"client_id", settings.oauth.clientId, "redirect_uri", redirectUri)//
-				.go(200);
+				.go();
 
 		checkEdfOAuthError(response, "EDF OAuth v2 error fetching access token");
 		String accessToken = response.getString("access_token");

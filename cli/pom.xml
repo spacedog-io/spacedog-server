@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>io.spacedog</groupId>
 		<artifactId>spacedog-parent</artifactId>
-		<version>0.32</version>
+		<version>0.32.1-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>spacedog-cli</artifactId>
@@ -44,7 +44,7 @@
 		<dependency>
 			<groupId>io.spacedog</groupId>
 			<artifactId>spacedog-java-sdk</artifactId>
-			<version>${project.parent.version}</version>
+			<version>0.32</version>
 		</dependency>
 		<dependency>
 			<groupId>com.beust</groupId>

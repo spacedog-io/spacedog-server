@@ -29,7 +29,12 @@ public class EdfOAuthV2ResourceTest extends SpaceTest {
 		// prepare without any test header because EDF OAuth
 		// endpoint doesn't like any unspecified header
 		prepareTest(false);
-		SpaceDog test = resetTestBackend();
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog guest = SpaceDog.backend("test");
+		SpaceDog digital01 = SpaceDog.backend("test").username("DIGITAL01");
+
+		// digital01 gets an access token from SpaceDog
+		guest.post("/1/service/oauth/v2/accessToken").go(400);
 
 		// super admin sets credentials oauth settings
 		OAuthSettings oauth = new OAuthSettings();
@@ -39,11 +44,9 @@ public class EdfOAuthV2ResourceTest extends SpaceTest {
 
 		CredentialsSettings settings = new CredentialsSettings();
 		settings.oauth = oauth;
-		test.settings().save(settings);
+		superadmin.settings().save(settings);
 
 		// digital01 gets an authorization code from EDF
-		SpaceDog digital01 = SpaceDog.backend(test).username("DIGITAL01");
-
 		String code = SpaceRequest.post("/gardian/oauth2/v2/approval")//
 				.backend(PAAS_PP_BACKEND_URL)//
 				.basicAuth("DIGITAL01", "DIGITAL01")//
@@ -52,9 +55,19 @@ public class EdfOAuthV2ResourceTest extends SpaceTest {
 						"scope", "1001Espaces")//
 				.go(200).getString("code");
 
+		// digital01 fails to get an access token from SpaceDog
+		// if code or redirect_uri are null or invalid
+		guest.post("/1/service/oauth/v2/accessToken")//
+				.formField("code", code).go(400);
+		guest.post("/1/service/oauth/v2/accessToken")//
+				.formField("redirect_uri", redirectUri).go(400);
+		guest.post("/1/service/oauth/v2/accessToken")//
+				.formField("code", "XXX").formField("redirect_uri", redirectUri).go(400);
+		guest.post("/1/service/oauth/v2/accessToken")//
+				.formField("code", code).formField("redirect_uri", "XXX").go(400);
+
 		// digital01 gets an access token from SpaceDog
-		ObjectNode node = SpaceRequest.post("/1/service/oauth/v2/accessToken")//
-				.backend(test)//
+		ObjectNode node = guest.post("/1/service/oauth/v2/accessToken")//
 				.formField("code", code)//
 				.formField("redirect_uri", redirectUri)//
 				.go(200)//
