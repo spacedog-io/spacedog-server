@@ -69,11 +69,16 @@ public class JsonPayload {
 	public static JsonNode toJson(Throwable t, boolean debug) {
 		ObjectNode json = Json8.object();
 
-		if (t instanceof SpaceException)
-			json.put("code", ((SpaceException) t).code());
-
 		if (!Strings.isNullOrEmpty(t.getMessage()))//
 			json.put("message", t.getMessage());
+
+		if (t instanceof SpaceException) {
+			SpaceException se = (SpaceException) t;
+			if (se.code() != null)
+				json.put("code", se.code());
+			if (se.details() != null)
+				json.set("details", se.details());
+		}
 
 		if (debug) {
 			json.put("type", t.getClass().getName());

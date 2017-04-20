@@ -62,9 +62,11 @@ public class EdfOAuthV2ResourceTest extends SpaceTest {
 		guest.post("/1/service/oauth/v2/accessToken")//
 				.formField("redirect_uri", redirectUri).go(400);
 		guest.post("/1/service/oauth/v2/accessToken")//
-				.formField("code", "XXX").formField("redirect_uri", redirectUri).go(400);
+				.formField("code", "XXX").formField("redirect_uri", redirectUri).go(400)//
+				.assertEquals("edf-oauth-error", "error.code");
 		guest.post("/1/service/oauth/v2/accessToken")//
-				.formField("code", code).formField("redirect_uri", "XXX").go(400);
+				.formField("code", code).formField("redirect_uri", "XXX").go(400)//
+				.assertEquals("edf-oauth-error", "error.code");
 
 		// digital01 gets an access token from SpaceDog
 		ObjectNode node = guest.post("/1/service/oauth/v2/accessToken")//

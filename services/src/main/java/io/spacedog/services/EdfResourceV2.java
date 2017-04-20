@@ -94,12 +94,11 @@ public class EdfResourceV2 extends Resource {
 		return Session.newSession(accessToken, expiresIn);
 	}
 
-	private void checkEdfOAuthError(SpaceResponse response, String messageIntro) {
+	private void checkEdfOAuthError(SpaceResponse response, String message) {
 
-		int httpStatus = response.status();
-		if (httpStatus >= 400)
-			throw Exceptions.space(httpStatus, messageIntro + ": " //
-					+ response.asString());
+		if (response.status() >= 400)
+			throw Exceptions.space(response.status(), message)//
+					.code("edf-oauth-error").details(response.asJsonObject());
 	}
 
 	//
