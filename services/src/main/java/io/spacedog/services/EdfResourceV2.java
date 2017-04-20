@@ -1,5 +1,8 @@
 package io.spacedog.services;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import io.spacedog.core.Json8;
 import io.spacedog.model.CredentialsSettings;
 import io.spacedog.model.CredentialsSettings.OAuthSettings;
 import io.spacedog.rest.SpaceRequest;
@@ -104,9 +107,14 @@ public class EdfResourceV2 extends Resource {
 
 	private void checkEdfOAuthError(SpaceResponse response, String message) {
 
-		if (response.status() >= 400)
+		if (response.status() >= 400) {
+
+			ObjectNode details = response.isJson() ? response.asJsonObject() //
+					: Json8.object("description", response.asString());
+
 			throw Exceptions.space(response.status(), message)//
-					.code("edf-oauth-error").details(response.asJsonObject());
+					.code("edf-oauth-error").details(details);
+		}
 	}
 
 	//
