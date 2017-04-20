@@ -28,7 +28,6 @@ import net.codestory.http.Context;
 import net.codestory.http.Part;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.payload.Payload;
-import okhttp3.MultipartBody;
 
 public class MailResource extends Resource {
 
@@ -217,39 +216,32 @@ public class MailResource extends Resource {
 
 	private Payload mailgun(Message message, MailGunSettings settings) {
 
-		MultipartBody.Builder bodyBuilder = new MultipartBody.Builder();
-		bodyBuilder.setType(MultipartBody.FORM)//
-				.addFormDataPart("from", message.from)//
-				.addFormDataPart(SUBJECT, message.subject);
-
-		if (message.to != null)
-			for (String to : message.to)
-				bodyBuilder.addFormDataPart(TO, to);
-
-		if (message.cc != null)
-			for (String cc : message.cc)
-				bodyBuilder.addFormDataPart(CC, cc);
-
-		if (message.bcc != null)
-			for (String bcc : message.bcc)
-				bodyBuilder.addFormDataPart(BCC, bcc);
-
-		if (!Strings.isNullOrEmpty(message.text))
-			bodyBuilder.addFormDataPart(TEXT, message.text);
-
-		if (!Strings.isNullOrEmpty(message.html))
-			bodyBuilder.addFormDataPart(HTML, message.html);
-
-		SpaceResponse response = SpaceRequest.post("/v3/{domain}/messages")//
+		SpaceRequest request = SpaceRequest.post("/v3/{domain}/messages")//
 				.backend("https://api.mailgun.net")//
 				.routeParam("domain", settings.domain)//
 				.basicAuth("api", settings.key)//
-				.bodyMultipart(bodyBuilder.build())//
-				// TODO Fix this since it does not work.
-				// .queryParam("o:testmode",
-				// String.valueOf(SpaceContext.isTest()))//
-				.go();
+				.formField(FROM, message.from)//
+				.formField(SUBJECT, message.subject);
 
+		if (message.to != null)
+			for (String to : message.to)
+				request.formField(TO, to);
+
+		if (message.cc != null)
+			for (String cc : message.cc)
+				request.formField(CC, cc);
+
+		if (message.bcc != null)
+			for (String bcc : message.bcc)
+				request.formField(BCC, bcc);
+
+		if (!Strings.isNullOrEmpty(message.text))
+			request.formField(TEXT, message.text);
+
+		if (!Strings.isNullOrEmpty(message.html))
+			request.formField(HTML, message.html);
+
+		SpaceResponse response = request.go();
 		JsonBuilder<ObjectNode> payload = JsonPayload.builder(response.status());
 
 		if (response.isJson())
