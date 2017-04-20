@@ -18,9 +18,7 @@ import io.spacedog.utils.Json7;
 
 public class EdfOAuthV2ResourceTest extends SpaceTest {
 
-	private static final String PAAS_PP_BACKEND_URL = "https://paas-pp.edf.fr";
-
-	private static final String redirectUri = PAAS_PP_BACKEND_URL //
+	private static final String redirectUri = "https://paas-pp.edf.fr" //
 			+ "/gardian/oauth2/v2/redirect";
 
 	@Test
@@ -40,6 +38,7 @@ public class EdfOAuthV2ResourceTest extends SpaceTest {
 		OAuthSettings oauth = new OAuthSettings();
 		oauth.clientId = SpaceEnv.defaultEnv().get("edf.oauth.v2.client.id");
 		oauth.clientSecret = SpaceEnv.defaultEnv().get("edf.oauth.v2.client.secret");
+		oauth.backendUrl = "https://paas-pp.edf.fr";
 		oauth.useExpiresIn = true;
 
 		CredentialsSettings settings = new CredentialsSettings();
@@ -48,7 +47,7 @@ public class EdfOAuthV2ResourceTest extends SpaceTest {
 
 		// digital01 gets an authorization code from EDF
 		String code = SpaceRequest.post("/gardian/oauth2/v2/approval")//
-				.backend(PAAS_PP_BACKEND_URL)//
+				.backend(oauth.backendUrl)//
 				.basicAuth("DIGITAL01", "DIGITAL01")//
 				.bodyJson("client_id", oauth.clientId, "response_type", "code", //
 						"redirect_uri", redirectUri, "approved", true, //
@@ -99,17 +98,18 @@ public class EdfOAuthV2ResourceTest extends SpaceTest {
 		OAuthSettings oauth = new OAuthSettings();
 		oauth.clientId = SpaceEnv.defaultEnv().get("edf.oauth.v2.client.id");
 		oauth.clientSecret = SpaceEnv.defaultEnv().get("edf.oauth.v2.client.secret");
+		oauth.backendUrl = "https://paas-pp.edf.fr";
 
 		// edf user gets authorization scopes from EDF
 		SpaceRequest.post("/gardian/oauth2/v2/authorization")//
-				.backend(PAAS_PP_BACKEND_URL)//
+				.backend(oauth.backendUrl)//
 				.bodyJson("client_id", oauth.clientId, "response_type", "code", //
 						"redirect_uri", redirectUri)//
 				.go(200);
 
 		// edf user gets authorization code from EDF
 		String code = SpaceRequest.post("/gardian/oauth2/v2/approval")//
-				.backend(PAAS_PP_BACKEND_URL)//
+				.backend(oauth.backendUrl)//
 				.basicAuth("DIGITAL01", "DIGITAL01")//
 				.bodyJson("client_id", oauth.clientId, "response_type", "code", //
 						"redirect_uri", redirectUri, "approved", true, //
@@ -120,7 +120,7 @@ public class EdfOAuthV2ResourceTest extends SpaceTest {
 
 		// edf user gets an access token from EDF
 		String accessToken = SpaceRequest.post("/gardian/oauth2/v2/token")//
-				.backend(PAAS_PP_BACKEND_URL)//
+				.backend(oauth.backendUrl)//
 				.basicAuth(oauth.clientId, oauth.clientSecret)//
 				.bodyJson("grant_type", "authorization_code", "code", code, //
 						"client_id", oauth.clientId, "redirect_uri", redirectUri)//
@@ -131,7 +131,7 @@ public class EdfOAuthV2ResourceTest extends SpaceTest {
 
 		// edf user gets an token info from EDF
 		SpaceRequest.get("/gardian/oauth2/v2/tokeninfo")//
-				.backend(PAAS_PP_BACKEND_URL)//
+				.backend(oauth.backendUrl)//
 				.bearerAuth(accessToken)//
 				.go(200)//
 				.assertNotNullOrEmpty("uid");

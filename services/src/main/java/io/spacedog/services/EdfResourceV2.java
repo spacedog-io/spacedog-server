@@ -1,6 +1,7 @@
 package io.spacedog.services;
 
 import io.spacedog.model.CredentialsSettings;
+import io.spacedog.model.CredentialsSettings.OAuthSettings;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceResponse;
 import io.spacedog.utils.Check;
@@ -13,12 +14,6 @@ import net.codestory.http.annotations.Post;
 import net.codestory.http.payload.Payload;
 
 public class EdfResourceV2 extends Resource {
-
-	//
-	//
-	//
-
-	private static final String PAAS_PP_BACKEND_URL = "https://paas-pp.edf.fr";
 
 	//
 	// Routes
@@ -42,8 +37,9 @@ public class EdfResourceV2 extends Resource {
 
 	private Credentials login(Context context) {
 
-		Session session = newEdfSession(context);
-		String username = getEdfUsername(session);
+		OAuthSettings oauthSetting = checkOAuthSetting();
+		Session session = newEdfSession(context, oauthSetting);
+		String username = getEdfUsername(session, oauthSetting);
 		String backendId = SpaceContext.backendId();
 
 		CredentialsResource credentialsResource = CredentialsResource.get();
@@ -60,9 +56,25 @@ public class EdfResourceV2 extends Resource {
 		return credentials;
 	}
 
-	String getEdfUsername(Session session) {
+	private OAuthSettings checkOAuthSetting() {
+		OAuthSettings oauthSettings = SettingsResource.get()//
+				.load(CredentialsSettings.class).oauth;
+
+		if (oauthSettings == null)
+			throw Exceptions.illegalArgument("credentials OAuth settings are required");
+		if (oauthSettings.clientId == null)
+			throw Exceptions.illegalArgument("credentials OAuth [clientId] is required");
+		if (oauthSettings.clientSecret == null)
+			throw Exceptions.illegalArgument("credentials OAuth [clientSecret] is required");
+		if (oauthSettings.backendUrl == null)
+			throw Exceptions.illegalArgument("credentials OAuth [backend] is required");
+
+		return oauthSettings;
+	}
+
+	String getEdfUsername(Session session, OAuthSettings oauthSetting) {
 		SpaceResponse response = SpaceRequest.get("/gardian/oauth2/v2/tokeninfo")//
-				.backend(PAAS_PP_BACKEND_URL)//
+				.backend(oauthSetting.backendUrl)//
 				.bearerAuth(session.accessToken())//
 				.go();
 
@@ -70,24 +82,20 @@ public class EdfResourceV2 extends Resource {
 		return response.getString("uid");
 	}
 
-	private Session newEdfSession(Context context) {
-		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
-		if (settings.oauth == null)
-			throw Exceptions.illegalArgument("credentials OAuth settings are required");
-
+	private Session newEdfSession(Context context, OAuthSettings oauthSetting) {
 		String code = Check.notNullOrEmpty(context.get("code"), "code");
 		String redirectUri = Check.notNullOrEmpty(context.get("redirect_uri"), "redirect_uri");
 
 		SpaceResponse response = SpaceRequest.post("/gardian/oauth2/v2/token")//
-				.backend(PAAS_PP_BACKEND_URL)//
-				.basicAuth(settings.oauth.clientId, settings.oauth.clientSecret)//
+				.backend(oauthSetting.backendUrl)//
+				.basicAuth(oauthSetting.clientId, oauthSetting.clientSecret)//
 				.bodyJson("grant_type", "authorization_code", "code", code, //
-						"client_id", settings.oauth.clientId, "redirect_uri", redirectUri)//
+						"client_id", oauthSetting.clientId, "redirect_uri", redirectUri)//
 				.go();
 
 		checkEdfOAuthError(response, "EDF OAuth v2 error fetching access token");
 		String accessToken = response.getString("access_token");
-		long expiresIn = settings.oauth.useExpiresIn //
+		long expiresIn = oauthSetting.useExpiresIn //
 				? response.get("expires_in").asLong() //
 				: CredentialsResource.get().getCheckSessionLifetime(context);
 
