@@ -123,7 +123,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		SpaceRequest.get("/1/data").backend(test).bearerAuth("XXX").go(401);
 
 		// vince signs up and get a brand new access token
-		SpaceDog vince = signUp("test", "vince", "hi vince");
+		SpaceDog vince = signUp("test", "vince", "hi vince").password("hi vince");
 
 		// vince request fails because wrong backend
 		SpaceRequest.get("/1/data").backend(test2).bearerAuth(vince.accessToken().get()).go(401);
@@ -208,7 +208,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog test = resetTestBackend();
-		SpaceDog fred = signUp("test", "fred", "hi fred");
+		SpaceDog fred = signUp("test", "fred", "hi fred").password("hi fred");
 
 		// admin saves settings with token max lifetime set to 3s
 		CredentialsSettings settings = new CredentialsSettings();
@@ -635,12 +635,16 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		resetTestBackend();
-		SpaceDog fred = signUp("test", "fred", "hi fred");
+		SpaceDog.backend("test").credentials()//
+				.create("fred", "hi fred", "plateform@spacedog.io");
+		SpaceDog fred = SpaceDog.backend("test")//
+				.username("fred").password("hi fred").login();
 
 		// fred fails to update his password
 		// since his password is not challenged
 		// because authentication is done with access token
-		SpaceRequest.put("/1/credentials/" + fred.id() + "/password").auth(fred)//
+		SpaceRequest.put("/1/credentials/" + fred.id() + "/password")//
+				.bearerAuth(fred)//
 				.formField("password", "hello fred")//
 				.go(403)//
 				.assertEquals("unchallenged-password", "error.code");
@@ -659,7 +663,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog test = resetTestBackend();
-		SpaceDog fred = signUp("test", "fred", "hi fred");
+		SpaceDog fred = signUp("test", "fred", "hi fred").password("hi fred");
 
 		// fred fails to updates his username
 		// since password must be challenged
@@ -710,7 +714,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog test = resetTestBackend();
-		SpaceDog fred = signUp("test", "fred", "hi fred");
+		SpaceDog fred = signUp("test", "fred", "hi fred").password("hi fred");
 
 		// fred logs in
 		SpaceRequest.get("/1/login").auth(fred).go(200);
