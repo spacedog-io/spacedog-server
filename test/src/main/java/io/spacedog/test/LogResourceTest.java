@@ -30,8 +30,8 @@ public class LogResourceTest extends SpaceTest {
 		SpaceDog test = resetTestBackend();
 		SpaceDog fred = signUp(test, "fred", "hi fred");
 
-		fred.data().getAllRequest().load();
-		fred.data().getAllRequest().load();
+		fred.data().getAll().get();
+		fred.data().getAll().get();
 
 		// superadmin gets test2 backend total log count to check
 		// later that they aren't affected by test backend log purge
@@ -255,7 +255,7 @@ public class LogResourceTest extends SpaceTest {
 				nathPassword, nath.email().get(), Level.SUPER_ADMIN);
 
 		// anonymous gets data from test backend
-		SpaceDog.backend("test").data().getAllRequest().load();
+		SpaceDog.backend("test").data().getAll().get();
 
 		// superdog gets all backend logs and is able to review
 		// previous test and root 'api' backend requests

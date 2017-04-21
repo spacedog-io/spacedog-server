@@ -108,10 +108,10 @@ public class DataResourceTestOften extends SpaceTest {
 				.build();
 
 		// create
-		String id = vince.data2().create("car", car);
+		String id = vince.data().create("car", car);
 
 		// find by id
-		ObjectNode carbis = vince.data2().get("car", id);
+		ObjectNode carbis = vince.data().get("car", id);
 		assertEquals("vince", Json7.checkString(carbis, "meta.createdBy").get());
 		assertEquals("vince", Json7.checkString(carbis, "meta.updatedBy").get());
 		assertNotNull(Json7.checkString(carbis, "meta.createdAt"));
@@ -125,15 +125,15 @@ public class DataResourceTestOften extends SpaceTest {
 
 		// update
 
-		vince.data2().save("car", id, Json7.object("color", "blue"), false);
-		carbis = vince.data2().get("car", id);
+		vince.data().save("car", id, Json7.object("color", "blue"), false);
+		carbis = vince.data().get("car", id);
 		assertEquals("blue", carbis.get("color").asText());
 
 		// delete
 
-		vince.data2().delete("car", id);
+		vince.data().delete("car", id);
 		try {
-			vince.data2().delete("car", id);
+			vince.data().delete("car", id);
 		} catch (SpaceRequestException e) {
 			assertEquals(404, e.httpStatus());
 		}

@@ -29,14 +29,14 @@ public class LogResourceTestOften extends SpaceTest {
 		signUp("test2", "user2", "hi user2");
 
 		// create message in test backend
-		DataObject message = user.data().object("message")//
+		DataObject<?> message = user.data().object("message")//
 				.node("text", "What's up boys?").save();
 
 		// find message by id in test backend
 		message.fetch();
 
 		// find all messages in test backend
-		user.data().getAllRequest().type("message").load(DataObject.class);
+		user.data().getAll().type("message").get(DataObject.class);
 
 		// get all test backend logs
 		SpaceRequest.get("/1/log").refresh().size(8).auth(test).go(200)//
