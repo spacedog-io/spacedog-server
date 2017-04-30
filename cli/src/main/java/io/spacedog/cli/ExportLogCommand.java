@@ -9,6 +9,7 @@ import org.joda.time.DateTime;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
@@ -27,7 +28,7 @@ public class ExportLogCommand extends AbstractCommand<ExportLogCommand> {
 	private String day;
 
 	@Parameter(names = { "-f", "--file" }, //
-			required = true, //
+			required = false, //
 			description = "the file to export to")
 	private String file;
 
@@ -61,9 +62,9 @@ public class ExportLogCommand extends AbstractCommand<ExportLogCommand> {
 				.object("receivedAt").put("gte", gte.toString())//
 				.put("lt", lt.toString()).build();
 
-		String payload = dog.post("/1/log/search").bodyJson(query)//
-				.size(10000).go(200).asString();
+		JsonNode payload = dog.post("/1/log/search").bodyJson(query)//
+				.size(10000).go(200).asJson();
 
-		Files.write(target, payload.getBytes(Utils.UTF8));
+		Files.write(target, Json7.toPrettyString(payload).getBytes(Utils.UTF8));
 	}
 }

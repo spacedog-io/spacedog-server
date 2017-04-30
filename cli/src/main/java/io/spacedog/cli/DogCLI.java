@@ -8,6 +8,7 @@ import io.spacedog.rest.SpaceEnv;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceRequestException;
 import io.spacedog.rest.SpaceTarget;
+import io.spacedog.utils.Utils;
 
 public class DogCLI {
 
@@ -42,6 +43,9 @@ public class DogCLI {
 
 			else if (command.equalsIgnoreCase("login"))
 				loginCommand.login();
+
+			Utils.info();
+			Utils.info("Done.");
 
 		} catch (ParameterException e) {
 			System.err.println(e.getMessage());
