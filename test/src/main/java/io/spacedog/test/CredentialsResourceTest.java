@@ -15,9 +15,12 @@ import io.spacedog.model.MailSettings;
 import io.spacedog.model.MailTemplate;
 import io.spacedog.rest.SpaceEnv;
 import io.spacedog.rest.SpaceRequest;
+import io.spacedog.rest.SpaceRequestException;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
+import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Json7;
+import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Passwords;
 
 public class CredentialsResourceTest extends SpaceTest {
@@ -131,54 +134,58 @@ public class CredentialsResourceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
-		SpaceDog fred = createTempUser(test, "fred");
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog fred = createTempUser(superadmin, "fred");
 
 		// fred logs in
 		fred.login();
 
 		// fred gets data
-		SpaceRequest.get("/1/data").auth(fred).go(200);
+		fred.data().getAll().get();
 
-		// fred is not allowed to update his credentials enable after date
-		SpaceRequest.put("/1/credentials/{id}")//
-				.routeParam("id", fred.id()).basicAuth(fred)//
-				.bodyJson(FIELD_ENABLE_AFTER, DateTime.now())//
-				.go(403);
+		// only admins are allowed to update credentials enable after date
+		try {
+			fred.credentials().prepareUpdate()//
+					.enableAfter(Optional7.of(DateTime.now())).go();
+			fail();
+		} catch (SpaceRequestException e) {
+			assertEquals(403, e.httpStatus());
+		}
 
-		// fred is not allowed to update his credentials enable after date
-		SpaceRequest.put("/1/credentials/{id}")//
-				.routeParam("id", fred.id()).basicAuth(fred)//
-				.bodyJson(FIELD_DISABLE_AFTER, DateTime.now())//
-				.go(403);
+		// only admins are allowed to update credentials disable after date
+		try {
+			fred.credentials().prepareUpdate()//
+					.disableAfter(Optional7.of(DateTime.now())).go();
+			fail();
+		} catch (SpaceRequestException e) {
+			assertEquals(403, e.httpStatus());
+		}
 
-		// fred is not allowed to update his credentials enabled status
-		SpaceRequest.put("/1/credentials/{id}")//
-				.routeParam("id", fred.id()).basicAuth(fred)//
-				.bodyJson(FIELD_ENABLED, true)//
-				.go(403);
+		// only admins are allowed to update credentials enabled status
+		try {
+			fred.credentials().prepareUpdate().enabled(true).go();
+			fail();
+		} catch (SpaceRequestException e) {
+			assertEquals(403, e.httpStatus());
+		}
 
 		// superadmin can update fred's credentials disable after date
 		// before now so fred's credentials are disabled
-		SpaceRequest.put("/1/credentials/{id}")//
-				.routeParam("id", fred.id()).auth(test)//
-				.bodyJson(FIELD_DISABLE_AFTER, DateTime.now().minus(100000))//
-				.go(200);
+		superadmin.credentials().prepareUpdate(fred.id())//
+				.disableAfter(Optional7.of(DateTime.now().minus(100000))).go();
 
 		// fred's credentials are disabled so he fails to gets any data
-		SpaceRequest.get("/1/data").auth(fred).go(401)//
+		fred.get("/1/data").go(401)//
 				.assertEquals("disabled-credentials", "error.code");
 
-		// fred's credentials are disabled so he fails to log
+		// fred's credentials are disabled so he fails to log in
 		fred.get("/1/login").go(401);
 
 		// superadmin can update fred's credentials enable after date
 		// before now and after disable after date so fred's credentials
 		// are enabled again
-		SpaceRequest.put("/1/credentials/{id}")//
-				.routeParam("id", fred.id()).auth(test)//
-				.bodyJson(FIELD_ENABLE_AFTER, DateTime.now().minus(100000))//
-				.go(200);
+		superadmin.credentials().prepareUpdate(fred.id())//
+				.enableAfter(Optional7.of(DateTime.now().minus(100000))).go();
 
 		// fred's credentials are enabled again so he gets data
 		// with his old access token from first login
@@ -190,13 +197,11 @@ public class CredentialsResourceTest extends SpaceTest {
 		// superadmin updates fred's credentials disable after date
 		// before now but after enable after date so fred's credentials
 		// are disabled again
-		SpaceRequest.put("/1/credentials/{id}")//
-				.routeParam("id", fred.id()).auth(test)//
-				.bodyJson(FIELD_DISABLE_AFTER, DateTime.now().minus(100000))//
-				.go(200);
+		superadmin.credentials().prepareUpdate(fred.id())//
+				.disableAfter(Optional7.of(DateTime.now().minus(100000))).go();
 
 		// fred's credentials are disabled so he fails to gets any data
-		SpaceRequest.get("/1/data").auth(fred).go(401)//
+		fred.get("/1/data").go(401)//
 				.assertEquals("disabled-credentials", "error.code");
 
 		// fred's credentials are disabled so he fails to log in
@@ -204,10 +209,8 @@ public class CredentialsResourceTest extends SpaceTest {
 
 		// superadmin updates fred's credentials to remove enable and
 		// disable after dates so fred's credentials are enabled again
-		SpaceRequest.put("/1/credentials/{id}")//
-				.routeParam("id", fred.id()).auth(test)//
-				.bodyJson(FIELD_DISABLE_AFTER, null, FIELD_ENABLE_AFTER, null)//
-				.go(200);
+		superadmin.credentials().prepareUpdate(fred.id())//
+				.enableAfter(Optional7.empty()).disableAfter(Optional7.empty()).go();
 
 		// fred's credentials are enabled again so he gets data
 		// with his old access token from first login
@@ -218,10 +221,8 @@ public class CredentialsResourceTest extends SpaceTest {
 
 		// superadmin fails to update fred's credentials enable after date
 		// since invalid format
-		SpaceRequest.put("/1/credentials/{id}")//
-				.routeParam("id", fred.id()).auth(test)//
-				.bodyJson(FIELD_ENABLE_AFTER, "XXX")//
-				.go(400);
+		superadmin.put("/1/credentials/{id}").routeParam("id", fred.id())//
+				.bodyJson(FIELD_ENABLE_AFTER, "XXX").go(400);
 	}
 
 	@Test
@@ -229,34 +230,43 @@ public class CredentialsResourceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
-		SpaceDog fred = createTempUser(test, "fred");
+		SpaceDog test = SpaceDog.backend("test");
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog fred = createTempUser(superadmin, "fred");
 
 		// fred logs in
 		fred.login();
 
 		// fred logs in again creating a second session
-		SpaceDog fred2 = SpaceDog.backend(fred.backendId())//
+		SpaceDog fred2 = SpaceDog.backend(test)//
 				.username(fred.username()).login(fred.password().get());
 
 		// fred can access data with his first token
-		SpaceRequest.get("/1/data").bearerAuth(fred).go(200);
+		fred.data().getAll().get();
 
 		// fred can access data with his second token
-		SpaceRequest.get("/1/data").bearerAuth(fred2).go(200);
+		fred2.data().getAll().get();
 
 		// superadmin updates fred's password
 		String newPassword = Passwords.random();
-		SpaceRequest.put("/1/credentials/{id}")//
-				.routeParam("id", fred.id()).auth(test)//
-				.bodyJson(FIELD_PASSWORD, newPassword)//
-				.go(200);
+		superadmin.credentials().prepareUpdate(fred.id())//
+				.newPassword(newPassword).go();
 
 		// fred can no longer access data with his first token now invalid
-		SpaceRequest.get("/1/data").bearerAuth(fred).go(401);
+		try {
+			fred.data().getAll().get();
+			fail();
+		} catch (SpaceRequestException e) {
+			assertEquals(401, e.httpStatus());
+		}
 
 		// fred can no longer access data with his second token now invalid
-		SpaceRequest.get("/1/data").bearerAuth(fred2).go(401);
+		try {
+			fred2.data().getAll().get();
+			fail();
+		} catch (SpaceRequestException e) {
+			assertEquals(401, e.httpStatus());
+		}
 
 		// but fred can log in with his new password
 		fred.login(newPassword);
@@ -267,47 +277,51 @@ public class CredentialsResourceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
-		SpaceDog fred = createTempUser(test, "fred");
+		SpaceDog test = SpaceDog.backend("test");
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog fred = createTempUser(superadmin, "fred");
 
-		test.get("/1/credentials/{id}").routeParam("id", fred.id()).go(200)//
-				.assertEquals(0, FIELD_INVALID_CHALLENGES)//
-				.assertNotPresent(FIELD_LAST_INVALID_CHALLENGE_AT);
+		Credentials credentials = superadmin.credentials().get(fred.id());//
+		assertEquals(0, credentials.invalidChallenges());
+		assertNull(credentials.lastInvalidChallengeAt());
 
 		// fred tries to log in with an invalid password
-		SpaceRequest.get("/1/login").backend(fred.backendId()).basicAuth(fred.username(), "XXX").go(401);
+		SpaceRequest.get("/1/login").backend(test)//
+				.basicAuth(fred.username(), "XXX").go(401);
 
 		// fred's invalid challenges count is still zero
 		// since no maximum invalid challenges set in credentials settings
-		test.get("/1/credentials/{id}").routeParam("id", fred.id()).go(200)//
-				.assertEquals(0, FIELD_INVALID_CHALLENGES)//
-				.assertNotPresent(FIELD_LAST_INVALID_CHALLENGE_AT);
+		credentials = superadmin.credentials().get(fred.id());//
+		assertEquals(0, credentials.invalidChallenges());
+		assertNull(credentials.lastInvalidChallengeAt());
 
 		// superadmin sets maximum invalid challenges to 2
 		CredentialsSettings settings = new CredentialsSettings();
 		settings.maximumInvalidChallenges = 2;
 		settings.resetInvalidChallengesAfterMinutes = 1;
-		test.settings().save(settings);
+		superadmin.settings().save(settings);
 
 		// fred tries to log in with an invalid password
-		SpaceRequest.get("/1/login").backend(fred.backendId()).basicAuth(fred.username(), "XXX").go(401);
+		SpaceRequest.get("/1/login").backend(test)//
+				.basicAuth(fred.username(), "XXX").go(401);
 
 		// superadmin gets fred's credentials
 		// fred has 1 invalid password challenge
-		test.get("/1/credentials/{id}").routeParam("id", fred.id()).go(200)//
-				.assertEquals(1, FIELD_INVALID_CHALLENGES)//
-				.assertPresent(FIELD_LAST_INVALID_CHALLENGE_AT);
+		credentials = superadmin.credentials().get(fred.id());//
+		assertEquals(1, credentials.invalidChallenges());
+		assertNotNull(credentials.lastInvalidChallengeAt());
 
 		// fred tries to log in with an invalid password
-		SpaceRequest.get("/1/login").backend(fred.backendId()).basicAuth(fred.username(), "XXX").go(401);
+		SpaceRequest.get("/1/login").backend(test)//
+				.basicAuth(fred.username(), "XXX").go(401);
 
 		// superadmin gets fred's credentials; fred has 2 invalid password
 		// challenge; his credentials has been disabled since equal to settings
 		// max
-		test.get("/1/credentials/{id}").routeParam("id", fred.id()).go(200)//
-				.assertEquals(false, FIELD_ENABLED)//
-				.assertEquals(2, FIELD_INVALID_CHALLENGES)//
-				.assertPresent(FIELD_LAST_INVALID_CHALLENGE_AT);
+		credentials = superadmin.credentials().get(fred.id());//
+		assertFalse(credentials.enabled());
+		assertEquals(2, credentials.invalidChallenges());
+		assertNotNull(credentials.lastInvalidChallengeAt());
 
 		// fred's credentials are disabled since too many invalid
 		// password challenges in a period of time of 1 minutes
@@ -316,14 +330,13 @@ public class CredentialsResourceTest extends SpaceTest {
 				.assertEquals("disabled-credentials", "error.code");
 
 		// superadmin enables fred's credentials
-		test.put("/1/credentials/{id}").routeParam("id", fred.id())//
-				.bodyJson(FIELD_ENABLED, true).go(200);
+		superadmin.credentials().prepareUpdate(fred.id()).enabled(true).go();
 
 		// fred can log in again
-		fred.get("/1/login").go(200)//
-				.assertEquals(true, "credentials." + FIELD_ENABLED)//
-				.assertEquals(0, "credentials." + FIELD_INVALID_CHALLENGES)//
-				.assertNotPresent("credentials." + FIELD_LAST_INVALID_CHALLENGE_AT);
+		credentials = fred.login().credentials().me();
+		assertTrue(credentials.enabled());
+		assertEquals(0, credentials.invalidChallenges());
+		assertNull(credentials.lastInvalidChallengeAt());
 	}
 
 	@Test
@@ -401,7 +414,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		test.settings().save(settings);
 
 		// fred declares he's forgot his password
-		fred.credentials().forgotPassword();
+		fred.credentials().forgotMyPassword();
 
 		// fred can not pass any parameter unless they
 		// are registered in the template model
@@ -418,7 +431,7 @@ public class CredentialsResourceTest extends SpaceTest {
 
 		// fred declares he's forgot his password
 		// passing an url parameter
-		fred.credentials().forgotPassword(//
+		fred.credentials().forgotMyPassword(//
 				Json7.object("url", "http://localhost:8080"));
 
 		// fred can still access services if he remembers his password

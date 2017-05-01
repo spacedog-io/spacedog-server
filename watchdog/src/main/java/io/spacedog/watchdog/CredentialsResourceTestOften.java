@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 
 import io.spacedog.model.CredentialsSettings;
 import io.spacedog.rest.SpaceRequest;
+import io.spacedog.rest.SpaceRequestException;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json7;
@@ -234,7 +235,8 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
+		SpaceDog guest = SpaceDog.backend("test");
+		SpaceDog superadmin = resetTestBackend();
 		SpaceDog fred = signUp("test", "fred", "hi fred");
 		SpaceDog vince = signUp("test", "vince", "hi vince");
 
@@ -243,22 +245,30 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		fred.login("hi fred");
 
 		// anonymous fails to deletes vince credentials
-		SpaceRequest.delete("/1/credentials/" + vince.id()).backend(test).go(403);
+		try {
+			guest.credentials().delete(vince.id());
+		} catch (SpaceRequestException e) {
+			assertEquals(403, e.httpStatus());
+		}
 
 		// fred fails to delete vince credentials
-		SpaceRequest.delete("/1/credentials/" + vince.id()).auth(fred).go(403);
+		try {
+			fred.credentials().delete(vince.id());
+		} catch (SpaceRequestException e) {
+			assertEquals(403, e.httpStatus());
+		}
 
 		// fred deletes his own credentials
-		SpaceRequest.delete("/1/credentials/" + fred.id()).auth(fred).go(200);
+		fred.credentials().delete();
 
 		// fred fails to login from now on
-		SpaceRequest.get("/1/login").auth(fred).go(401);
+		fred.get("/1/login").go(401);
 
 		// admin deletes vince credentials
-		SpaceRequest.delete("/1/credentials/" + vince.id()).auth(test).go(200);
+		superadmin.credentials().delete(vince.id());
 
 		// vince fails to login from now on
-		SpaceRequest.get("/1/login").auth(vince).go(401);
+		vince.get("/1/login").go(401);
 	}
 
 	@Test
