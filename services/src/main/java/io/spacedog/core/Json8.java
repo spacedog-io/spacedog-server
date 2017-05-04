@@ -306,6 +306,8 @@ public class Json8 {
 	}
 
 	public static JsonNode toNode(Object value) {
+		if (value instanceof JsonNode)
+			return (JsonNode) value;
 		return mapper().valueToTree(value);
 	}
 
