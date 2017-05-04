@@ -36,6 +36,8 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.collect.Iterators;
 
 import io.spacedog.core.Json8;
+import io.spacedog.model.BadgeStrategy;
+import io.spacedog.model.PushService;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
@@ -76,16 +78,6 @@ public class PushResource extends Resource {
 	private static final String BADGE_STRATEGY = "badgeStrategy";
 	private static final String MESSAGE = "message";
 	private static final String USERS_ONLY = "usersOnly";
-
-	public static enum PushServices {
-		APNS, // Apple Push Notification Service
-		APNS_SANDBOX, // Sandbox version of APNS
-		ADM, // Amazon Device Messaging
-		GCM, // Google Cloud Messaging
-		BAIDU, // Baidu CloudMessaging Service
-		WNS, // Windows Notification Service
-		MPNS; // Microsoft Push Notification Service
-	}
 
 	//
 	// Schema
@@ -294,10 +286,6 @@ public class PushResource extends Resource {
 	// Implementation
 	//
 
-	public static enum BadgeStrategy {
-		manual, semi, auto
-	}
-
 	private static class PushLog {
 		public boolean successes;
 		public boolean failures;
@@ -327,7 +315,7 @@ public class PushResource extends Resource {
 
 			Json8.checkString(installation, USER_ID)//
 					.ifPresent(userId -> logItem.put("userId", userId));
-			PushServices service = PushServices.valueOf(//
+			PushService service = PushService.valueOf(//
 					Json8.get(installation, PUSH_SERVICE).asText());
 
 			message = badgeObjectMessage(installationId, installation, service, message, //
@@ -386,7 +374,7 @@ public class PushResource extends Resource {
 				message.getNodeType(), message);
 	}
 
-	static ObjectNode toSnsMessage(PushServices service, ObjectNode message) {
+	static ObjectNode toSnsMessage(PushService service, ObjectNode message) {
 
 		JsonNode node = message.get(service.toString());
 		if (!Json8.isNull(node))
@@ -400,7 +388,7 @@ public class PushResource extends Resource {
 				"no push message for default nor [%s] service", service);
 	}
 
-	static String toSnsMessageStringValue(PushServices service, JsonNode message) {
+	static String toSnsMessageStringValue(PushService service, JsonNode message) {
 		if (message.isObject())
 			return message.toString();
 
@@ -413,14 +401,14 @@ public class PushResource extends Resource {
 	}
 
 	private ObjectNode badgeObjectMessage(String installationId, ObjectNode installation, //
-			PushServices pushService, ObjectNode message, Credentials credentials, //
+			PushService pushService, ObjectNode message, Credentials credentials, //
 			ObjectNode logItem, BadgeStrategy badgeStrategy) {
 
 		if (BadgeStrategy.manual.equals(badgeStrategy))
 			return message;
 
-		if (PushServices.APNS.equals(pushService)//
-				|| PushServices.APNS_SANDBOX.equals(pushService)) {
+		if (PushService.APNS.equals(pushService)//
+				|| PushService.APNS_SANDBOX.equals(pushService)) {
 
 			int badge = Json8.checkInteger(installation, BADGE).orElse(0);
 
@@ -472,7 +460,7 @@ public class PushResource extends Resource {
 			ObjectNode installation, String token, Context context) {
 
 		String appId = Json8.checkStringNotNullOrEmpty(installation, APP_ID);
-		PushServices service = PushServices.valueOf(//
+		PushService service = PushService.valueOf(//
 				Json8.checkStringNotNullOrEmpty(installation, PUSH_SERVICE));
 
 		// remove all fields that should not be set by client code
@@ -548,7 +536,7 @@ public class PushResource extends Resource {
 		return snsClient;
 	}
 
-	Optional<PlatformApplication> getApplication(String backendId, String appId, PushServices service) {
+	Optional<PlatformApplication> getApplication(String backendId, String appId, PushService service) {
 
 		final String internalName = String.join("/", "app", service.toString(), appId);
 		Optional<String> nextToken = Optional.empty();
@@ -572,7 +560,7 @@ public class PushResource extends Resource {
 		return Optional.empty();
 	}
 
-	String createApplicationEndpoint(String backendId, String appId, PushServices service, String token) {
+	String createApplicationEndpoint(String backendId, String appId, PushService service, String token) {
 
 		Optional<PlatformApplication> application = getApplication(backendId, appId, service);
 
