@@ -529,7 +529,7 @@ public class PushResource extends Resource {
 			}
 
 			if (!delete)
-				installation.withArray(TAGS).add(newTag);
+				Json8.withArray(installation, TAGS).add(newTag);
 		}
 
 		DataStore.get().updateObject(credentials.backendId(), installation, credentials.name());

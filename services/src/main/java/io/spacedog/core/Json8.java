@@ -3,7 +3,6 @@ package io.spacedog.core;
  * © David Attias 2015
  */
 
-
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.net.URL;
@@ -586,6 +585,26 @@ public class Json8 {
 		} catch (JsonProcessingException e) {
 			throw Exceptions.runtime(e);
 		}
+	}
+
+	public static ArrayNode withArray(ObjectNode node, String path) {
+		JsonNode field = get(node, path);
+		if (isNull(field)) {
+			ArrayNode array = array();
+			set(node, path, array);
+			return array;
+		}
+		return checkArray(field);
+	}
+
+	public static ObjectNode withObject(ObjectNode node, String path) {
+		JsonNode field = get(node, path);
+		if (isNull(field)) {
+			ObjectNode object = object();
+			set(node, path, object);
+			return object;
+		}
+		return checkObject(field);
 	}
 
 }
