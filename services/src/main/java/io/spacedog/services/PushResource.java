@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
@@ -490,8 +491,9 @@ public class PushResource extends Resource {
 			installation.set(USER_ID, TextNode.valueOf(credentials.name()));
 
 		if (id.isPresent()) {
-			DataStore.get().patchObject(credentials.backendId(), TYPE, id.get(), installation, credentials.name());
-			return JsonPayload.saved(false, credentials.backendId(), "/1", TYPE, id.get());
+			UpdateResponse response = DataStore.get()//
+					.patchObject(credentials.backendId(), TYPE, id.get(), installation, credentials.name());
+			return JsonPayload.saved(false, credentials.backendId(), "/1", TYPE, id.get(), response.getVersion());
 		} else
 			return DataResource.get().post(TYPE, installation.toString(), context);
 	}
@@ -630,7 +632,7 @@ public class PushResource extends Resource {
 		if (updateNeeded) {
 			// The platform endpoint is out of sync with the current data;
 			// update the token and enable it.
-			Map<String, String> attribs = new HashMap<String, String>();
+			Map<String, String> attribs = new HashMap<>();
 			attribs.put("Token", token);
 			attribs.put("Enabled", "true");
 			getSnsClient().setEndpointAttributes(//
