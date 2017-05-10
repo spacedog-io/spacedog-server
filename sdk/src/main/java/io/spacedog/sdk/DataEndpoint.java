@@ -198,10 +198,11 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 	}
 
 	public <K> SearchResults<K> search(String type, ESSearchSourceBuilder builder, Class<K> dataClass) {
-		return search(type, builder, dataClass);
+		return search(type, builder, dataClass, false);
 	}
 
-	public <K> SearchResults<K> search(String type, ESSearchSourceBuilder builder, Class<K> dataClass, boolean refresh) {
+	public <K> SearchResults<K> search(String type, ESSearchSourceBuilder builder, Class<K> dataClass,
+			boolean refresh) {
 
 		String path = "/1/search";
 		if (Strings.isNullOrEmpty(type))
