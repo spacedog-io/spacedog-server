@@ -38,7 +38,7 @@ import com.google.common.base.Charsets;
 /**
  *
  */
-public final class ESJsonContentBuilder {// implements , Releasable {
+public final class ESJsonContentBuilder {
 
 	public final static DateTimeFormatter defaultDatePrinter = ISODateTimeFormat.dateTime().withZone(DateTimeZone.UTC);
 
@@ -82,13 +82,6 @@ public final class ESJsonContentBuilder {// implements , Releasable {
 		return this;
 	}
 
-	// public XContentBuilder startObject(String name, FieldCaseConversion
-	// conversion) throws IOException {
-	// field(name, conversion);
-	// startObject();
-	// return this;
-	// }
-
 	public ESJsonContentBuilder startObject() throws IOException {
 		generator.writeStartObject();
 		return this;
@@ -117,13 +110,6 @@ public final class ESJsonContentBuilder {// implements , Releasable {
 		return this;
 	}
 
-	// public XContentBuilder startArray(String name, FieldCaseConversion
-	// conversion) throws IOException {
-	// field(name, conversion);
-	// startArray();
-	// return this;
-	// }
-
 	public ESJsonContentBuilder startArray(String name) throws IOException {
 		field(name);
 		startArray();
@@ -148,19 +134,13 @@ public final class ESJsonContentBuilder {// implements , Releasable {
 		return this;
 	}
 
-	// public XContentBuilder field(String name, char[] value, int offset, int
-	// length) throws IOException {
-	// field(name);
-	// if (value == null) {
-	// generator.writeNull();
-	// } else {
-	// generator.writeString(value, offset, length);
-	// }
-	// return this;
-	// }
-
-	public ESJsonContentBuilder value(Object value) throws IOException {
-		writeValue(value);
+	public ESJsonContentBuilder field(String name, char[] value, int offset, int length) throws IOException {
+		field(name);
+		if (value == null) {
+			generator.writeNull();
+		} else {
+			generator.writeString(value, offset, length);
+		}
 		return this;
 	}
 
@@ -173,17 +153,6 @@ public final class ESJsonContentBuilder {// implements , Releasable {
 		}
 		return this;
 	}
-	//
-	// public XContentBuilder field(String name, String value,
-	// FieldCaseConversion conversion) throws IOException {
-	// field(name, conversion);
-	// if (value == null) {
-	// generator.writeNull();
-	// } else {
-	// generator.writeString(value);
-	// }
-	// return this;
-	// }
 
 	public ESJsonContentBuilder field(String name, Integer value) throws IOException {
 		field(name);
@@ -271,13 +240,6 @@ public final class ESJsonContentBuilder {// implements , Releasable {
 		}
 		return this;
 	}
-	//
-	// public XContentBuilder field(String name, byte[] value, int offset, int
-	// length) throws IOException {
-	// field(name);
-	// generator.writeBinary(value, offset, length);
-	// return this;
-	// }
 
 	public ESJsonContentBuilder field(String name, Map<String, Object> value) throws IOException {
 		field(name);
@@ -363,41 +325,30 @@ public final class ESJsonContentBuilder {// implements , Releasable {
 		return this;
 	}
 
-	// public XContentBuilder field(String name, Object value) throws
-	// IOException {
-	// field(name);
-	// writeValue(value);
-	// return this;
-	// }
+	public ESJsonContentBuilder field(String name, Object value) throws IOException {
+		field(name);
+		writeValue(value);
+		return this;
+	}
 
-	// public XContentBuilder value(Object value) throws IOException {
-	// writeValue(value);
-	// return this;
-	// }
+	public ESJsonContentBuilder value(Object value) throws IOException {
+		writeValue(value);
+		return this;
+	}
 
 	public ESJsonContentBuilder field(String name, boolean value) throws IOException {
 		field(name);
 		generator.writeBoolean(value);
 		return this;
 	}
-	//
-	// public XContentBuilder field(String name, byte[] value) throws
-	// IOException {
-	// field(name);
-	// if (value == null) {
-	// generator.writeNull();
-	// } else {
-	// generator.writeBinary(value);
-	// }
-	// return this;
-	// }
 
 	public ESJsonContentBuilder field(String name, ReadableInstant date) throws IOException {
 		field(name);
 		return value(date);
 	}
 
-	public ESJsonContentBuilder field(String name, ReadableInstant date, DateTimeFormatter formatter) throws IOException {
+	public ESJsonContentBuilder field(String name, ReadableInstant date, DateTimeFormatter formatter)
+			throws IOException {
 		field(name);
 		return value(date, formatter);
 	}
@@ -421,12 +372,6 @@ public final class ESJsonContentBuilder {// implements , Releasable {
 		generator.writeNull();
 		return this;
 	}
-	//
-	// public XContentBuilder rawField(String fieldName, InputStream content)
-	// throws IOException {
-	// generator.writeRawField(fieldName, content);
-	// return this;
-	// }
 
 	public ESJsonContentBuilder value(Boolean value) throws IOException {
 		if (value == null) {
@@ -517,23 +462,6 @@ public final class ESJsonContentBuilder {// implements , Releasable {
 		generator.writeString(value);
 		return this;
 	}
-	//
-	// public XContentBuilder value(byte[] value) throws IOException {
-	// if (value == null) {
-	// return nullValue();
-	// }
-	// generator.writeBinary(value);
-	// return this;
-	// }
-	//
-	// public XContentBuilder value(byte[] value, int offset, int length) throws
-	// IOException {
-	// if (value == null) {
-	// return nullValue();
-	// }
-	// generator.writeBinary(value, offset, length);
-	// return this;
-	// }
 
 	public ESJsonContentBuilder map(Map<String, ?> map) throws IOException {
 		if (map == null) {
@@ -665,9 +593,11 @@ public final class ESJsonContentBuilder {// implements , Releasable {
 		} else if (value instanceof Date) {
 			generator.writeString(ESJsonContentBuilder.defaultDatePrinter.print(((Date) value).getTime()));
 		} else if (value instanceof Calendar) {
-			generator.writeString(ESJsonContentBuilder.defaultDatePrinter.print((((Calendar) value)).getTimeInMillis()));
+			generator
+					.writeString(ESJsonContentBuilder.defaultDatePrinter.print((((Calendar) value)).getTimeInMillis()));
 		} else if (value instanceof ReadableInstant) {
-			generator.writeString(ESJsonContentBuilder.defaultDatePrinter.print((((ReadableInstant) value)).getMillis()));
+			generator.writeString(
+					ESJsonContentBuilder.defaultDatePrinter.print((((ReadableInstant) value)).getMillis()));
 		} else if (value instanceof ESJsonContent) {
 			((ESJsonContent) value).toJsonContent(this);
 		} else if (value instanceof double[]) {

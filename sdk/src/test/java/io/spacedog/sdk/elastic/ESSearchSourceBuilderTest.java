@@ -1,14 +1,12 @@
-package io.spacedog.sdk.elasticsearch;
+package io.spacedog.sdk.elastic;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.spacedog.sdk.elastic.ESQueryBuilders;
-import io.spacedog.sdk.elastic.ESSearchSourceBuilder;
 import io.spacedog.utils.Json7;
 import io.spacedog.utils.Utils;
 
-public class SearchSourceBuilderTest extends Assert {
+public class ESSearchSourceBuilderTest extends Assert {
 
 	@Test
 	public void builderToString() {
@@ -24,7 +22,7 @@ public class SearchSourceBuilderTest extends Assert {
 		Json7.assertNode(Json7.readObject(source))//
 				.assertEquals(0, "from")//
 				.assertEquals(20, "size")//
-				.assertEquals("Fred", "query.bool.must.term.firstname.0")//
+				.assertEquals("Fred", "query.bool.must.term.firstname")//
 				.assertEquals("firstname", "fields.0")//
 				.assertEquals("lastname", "fields.1")//
 				.assertNotNull("sort.0.firstname");
