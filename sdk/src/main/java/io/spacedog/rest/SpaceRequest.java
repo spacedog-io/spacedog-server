@@ -247,11 +247,11 @@ public class SpaceRequest {
 		return bodyJson(schema.node());
 	}
 
-	public SpaceRequest bodyJson(String json) {
+	public SpaceRequest bodyJson(String body) {
 		this.contentType = OkHttp.JSON;
 		if (env.debug())
-			this.bodyJson = Json7.readNode(json);
-		this.body = body.toString();
+			this.bodyJson = Json7.readNode(body);
+		this.body = body;
 		return this;
 	}
 
