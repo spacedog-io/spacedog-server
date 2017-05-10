@@ -17,12 +17,12 @@
  * under the License.
  */
 
-package io.spacedog.sdk.elasticsearch;
+package io.spacedog.sdk.elastic;
 
 import java.io.IOException;
 import java.util.Locale;
 
-public class GeoDistanceQueryBuilder extends QueryBuilder {
+public class ESGeoDistanceQueryBuilder extends ESQueryBuilder {
 
 	private final String name;
 
@@ -34,7 +34,7 @@ public class GeoDistanceQueryBuilder extends QueryBuilder {
 
 	private String geohash;
 
-	private GeoDistance geoDistance;
+	private ESGeoDistance geoDistance;
 
 	private String optimizeBbox;
 
@@ -44,47 +44,47 @@ public class GeoDistanceQueryBuilder extends QueryBuilder {
 
 	private Boolean ignoreMalformed;
 
-	public GeoDistanceQueryBuilder(String name) {
+	public ESGeoDistanceQueryBuilder(String name) {
 		this.name = name;
 	}
 
-	public GeoDistanceQueryBuilder point(double lat, double lon) {
+	public ESGeoDistanceQueryBuilder point(double lat, double lon) {
 		this.lat = lat;
 		this.lon = lon;
 		return this;
 	}
 
-	public GeoDistanceQueryBuilder lat(double lat) {
+	public ESGeoDistanceQueryBuilder lat(double lat) {
 		this.lat = lat;
 		return this;
 	}
 
-	public GeoDistanceQueryBuilder lon(double lon) {
+	public ESGeoDistanceQueryBuilder lon(double lon) {
 		this.lon = lon;
 		return this;
 	}
 
-	public GeoDistanceQueryBuilder distance(String distance) {
+	public ESGeoDistanceQueryBuilder distance(String distance) {
 		this.distance = distance;
 		return this;
 	}
 
-	public GeoDistanceQueryBuilder distance(double distance, DistanceUnit unit) {
+	public ESGeoDistanceQueryBuilder distance(double distance, ESDistanceUnit unit) {
 		this.distance = unit.toString(distance);
 		return this;
 	}
 
-	public GeoDistanceQueryBuilder geohash(String geohash) {
+	public ESGeoDistanceQueryBuilder geohash(String geohash) {
 		this.geohash = geohash;
 		return this;
 	}
 
-	public GeoDistanceQueryBuilder geoDistance(GeoDistance geoDistance) {
+	public ESGeoDistanceQueryBuilder geoDistance(ESGeoDistance geoDistance) {
 		this.geoDistance = geoDistance;
 		return this;
 	}
 
-	public GeoDistanceQueryBuilder optimizeBbox(String optimizeBbox) {
+	public ESGeoDistanceQueryBuilder optimizeBbox(String optimizeBbox) {
 		this.optimizeBbox = optimizeBbox;
 		return this;
 	}
@@ -93,23 +93,23 @@ public class GeoDistanceQueryBuilder extends QueryBuilder {
 	 * Sets the filter name for the filter that can be used when searching for
 	 * matched_filters per hit.
 	 */
-	public GeoDistanceQueryBuilder queryName(String queryName) {
+	public ESGeoDistanceQueryBuilder queryName(String queryName) {
 		this.queryName = queryName;
 		return this;
 	}
 
-	public GeoDistanceQueryBuilder coerce(boolean coerce) {
+	public ESGeoDistanceQueryBuilder coerce(boolean coerce) {
 		this.coerce = coerce;
 		return this;
 	}
 
-	public GeoDistanceQueryBuilder ignoreMalformed(boolean ignoreMalformed) {
+	public ESGeoDistanceQueryBuilder ignoreMalformed(boolean ignoreMalformed) {
 		this.ignoreMalformed = ignoreMalformed;
 		return this;
 	}
 
 	@Override
-	protected void doXContent(JsonContentBuilder builder) throws IOException {
+	protected void doXContent(ESJsonContentBuilder builder) throws IOException {
 		builder.startObject("geo_distance");
 		if (geohash != null) {
 			builder.field(name, geohash);

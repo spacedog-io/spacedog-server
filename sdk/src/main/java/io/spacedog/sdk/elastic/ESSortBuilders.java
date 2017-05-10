@@ -17,20 +17,20 @@
  * under the License.
  */
 
-package io.spacedog.sdk.elasticsearch;
+package io.spacedog.sdk.elastic;
 
 /**
- * A set of static factory methods for {@link SortBuilder}s.
+ * A set of static factory methods for {@link ESSortBuilder}s.
  *
  *
  */
-public class SortBuilders {
+public class ESSortBuilders {
 
 	/**
 	 * Constructs a new score sort.
 	 */
-	public static ScoreSortBuilder scoreSort() {
-		return new ScoreSortBuilder();
+	public static ESScoreSortBuilder scoreSort() {
+		return new ESScoreSortBuilder();
 	}
 
 	/**
@@ -39,8 +39,8 @@ public class SortBuilders {
 	 * @param field
 	 *            The field name.
 	 */
-	public static FieldSortBuilder fieldSort(String field) {
-		return new FieldSortBuilder(field);
+	public static ESFieldSortBuilder fieldSort(String field) {
+		return new ESFieldSortBuilder(field);
 	}
 
 	/**
@@ -49,7 +49,7 @@ public class SortBuilders {
 	 * @param fieldName
 	 *            The geo point like field name.
 	 */
-	public static GeoDistanceSortBuilder geoDistanceSort(String fieldName) {
-		return new GeoDistanceSortBuilder(fieldName);
+	public static ESGeoDistanceSortBuilder geoDistanceSort(String fieldName) {
+		return new ESGeoDistanceSortBuilder(fieldName);
 	}
 }

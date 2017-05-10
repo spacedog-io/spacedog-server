@@ -17,14 +17,14 @@
  * under the License.
  */
 
-package io.spacedog.sdk.elasticsearch;
+package io.spacedog.sdk.elastic;
 
 import java.io.IOException;
 
 /**
  * A Query that matches documents containing a term.
  */
-public class TermQueryBuilder extends QueryBuilder implements BoostableQueryBuilder<TermQueryBuilder> {
+public class ESTermQueryBuilder extends ESQueryBuilder implements ESBoostableQueryBuilder<ESTermQueryBuilder> {
 
 	private final String name;
 
@@ -42,7 +42,7 @@ public class TermQueryBuilder extends QueryBuilder implements BoostableQueryBuil
 	 * @param value
 	 *            The value of the term
 	 */
-	public TermQueryBuilder(String name, String value) {
+	public ESTermQueryBuilder(String name, String value) {
 		this(name, (Object) value);
 	}
 
@@ -54,7 +54,7 @@ public class TermQueryBuilder extends QueryBuilder implements BoostableQueryBuil
 	 * @param value
 	 *            The value of the term
 	 */
-	public TermQueryBuilder(String name, int value) {
+	public ESTermQueryBuilder(String name, int value) {
 		this(name, (Object) value);
 	}
 
@@ -66,7 +66,7 @@ public class TermQueryBuilder extends QueryBuilder implements BoostableQueryBuil
 	 * @param value
 	 *            The value of the term
 	 */
-	public TermQueryBuilder(String name, long value) {
+	public ESTermQueryBuilder(String name, long value) {
 		this(name, (Object) value);
 	}
 
@@ -78,7 +78,7 @@ public class TermQueryBuilder extends QueryBuilder implements BoostableQueryBuil
 	 * @param value
 	 *            The value of the term
 	 */
-	public TermQueryBuilder(String name, float value) {
+	public ESTermQueryBuilder(String name, float value) {
 		this(name, (Object) value);
 	}
 
@@ -90,7 +90,7 @@ public class TermQueryBuilder extends QueryBuilder implements BoostableQueryBuil
 	 * @param value
 	 *            The value of the term
 	 */
-	public TermQueryBuilder(String name, double value) {
+	public ESTermQueryBuilder(String name, double value) {
 		this(name, (Object) value);
 	}
 
@@ -102,7 +102,7 @@ public class TermQueryBuilder extends QueryBuilder implements BoostableQueryBuil
 	 * @param value
 	 *            The value of the term
 	 */
-	public TermQueryBuilder(String name, boolean value) {
+	public ESTermQueryBuilder(String name, boolean value) {
 		this(name, (Object) value);
 	}
 
@@ -114,7 +114,7 @@ public class TermQueryBuilder extends QueryBuilder implements BoostableQueryBuil
 	 * @param value
 	 *            The value of the term
 	 */
-	public TermQueryBuilder(String name, Object value) {
+	public ESTermQueryBuilder(String name, Object value) {
 		this.name = name;
 		this.value = value;
 	}
@@ -125,7 +125,7 @@ public class TermQueryBuilder extends QueryBuilder implements BoostableQueryBuil
 	 * boost provided.
 	 */
 	@Override
-	public TermQueryBuilder boost(float boost) {
+	public ESTermQueryBuilder boost(float boost) {
 		this.boost = boost;
 		return this;
 	}
@@ -134,13 +134,13 @@ public class TermQueryBuilder extends QueryBuilder implements BoostableQueryBuil
 	 * Sets the query name for the filter that can be used when searching for
 	 * matched_filters per hit.
 	 */
-	public TermQueryBuilder queryName(String queryName) {
+	public ESTermQueryBuilder queryName(String queryName) {
 		this.queryName = queryName;
 		return this;
 	}
 
 	@Override
-	public void doXContent(JsonContentBuilder builder) throws IOException {
+	public void doXContent(ESJsonContentBuilder builder) throws IOException {
 		builder.startObject("term");
 		if (boost == -1 && queryName == null) {
 			builder.field(name, value);

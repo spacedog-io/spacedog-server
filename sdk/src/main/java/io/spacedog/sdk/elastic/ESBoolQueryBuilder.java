@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.spacedog.sdk.elasticsearch;
+package io.spacedog.sdk.elastic;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -27,15 +27,15 @@ import java.util.List;
  * A Query that matches documents matching boolean combinations of other
  * queries.
  */
-public class BoolQueryBuilder extends QueryBuilder implements BoostableQueryBuilder<BoolQueryBuilder> {
+public class ESBoolQueryBuilder extends ESQueryBuilder implements ESBoostableQueryBuilder<ESBoolQueryBuilder> {
 
-	private final List<QueryBuilder> mustClauses = new ArrayList<>();
+	private final List<ESQueryBuilder> mustClauses = new ArrayList<>();
 
-	private final List<QueryBuilder> mustNotClauses = new ArrayList<>();
+	private final List<ESQueryBuilder> mustNotClauses = new ArrayList<>();
 
-	private final List<QueryBuilder> filterClauses = new ArrayList<>();
+	private final List<ESQueryBuilder> filterClauses = new ArrayList<>();
 
-	private final List<QueryBuilder> shouldClauses = new ArrayList<>();
+	private final List<ESQueryBuilder> shouldClauses = new ArrayList<>();
 
 	private float boost = -1;
 
@@ -51,7 +51,7 @@ public class BoolQueryBuilder extends QueryBuilder implements BoostableQueryBuil
 	 * Adds a query that <b>must</b> appear in the matching documents and will
 	 * contribute to scoring.
 	 */
-	public BoolQueryBuilder must(QueryBuilder queryBuilder) {
+	public ESBoolQueryBuilder must(ESQueryBuilder queryBuilder) {
 		mustClauses.add(queryBuilder);
 		return this;
 	}
@@ -60,7 +60,7 @@ public class BoolQueryBuilder extends QueryBuilder implements BoostableQueryBuil
 	 * Adds a query that <b>must</b> appear in the matching documents but will
 	 * not contribute to scoring.
 	 */
-	public BoolQueryBuilder filter(QueryBuilder queryBuilder) {
+	public ESBoolQueryBuilder filter(ESQueryBuilder queryBuilder) {
 		filterClauses.add(queryBuilder);
 		return this;
 	}
@@ -69,7 +69,7 @@ public class BoolQueryBuilder extends QueryBuilder implements BoostableQueryBuil
 	 * Adds a query that <b>must not</b> appear in the matching documents and
 	 * will not contribute to scoring.
 	 */
-	public BoolQueryBuilder mustNot(QueryBuilder queryBuilder) {
+	public ESBoolQueryBuilder mustNot(ESQueryBuilder queryBuilder) {
 		mustNotClauses.add(queryBuilder);
 		return this;
 	}
@@ -82,7 +82,7 @@ public class BoolQueryBuilder extends QueryBuilder implements BoostableQueryBuil
 	 *
 	 * @see #minimumNumberShouldMatch(int)
 	 */
-	public BoolQueryBuilder should(QueryBuilder queryBuilder) {
+	public ESBoolQueryBuilder should(ESQueryBuilder queryBuilder) {
 		shouldClauses.add(queryBuilder);
 		return this;
 	}
@@ -93,7 +93,7 @@ public class BoolQueryBuilder extends QueryBuilder implements BoostableQueryBuil
 	 * boost provided.
 	 */
 	@Override
-	public BoolQueryBuilder boost(float boost) {
+	public ESBoolQueryBuilder boost(float boost) {
 		this.boost = boost;
 		return this;
 	}
@@ -102,7 +102,7 @@ public class BoolQueryBuilder extends QueryBuilder implements BoostableQueryBuil
 	 * Disables <tt>Similarity#coord(int,int)</tt> in scoring. Defaults to
 	 * <tt>false</tt>.
 	 */
-	public BoolQueryBuilder disableCoord(boolean disableCoord) {
+	public ESBoolQueryBuilder disableCoord(boolean disableCoord) {
 		this.disableCoord = disableCoord;
 		return this;
 	}
@@ -124,7 +124,7 @@ public class BoolQueryBuilder extends QueryBuilder implements BoostableQueryBuil
 	 * @param minimumNumberShouldMatch
 	 *            the number of optional clauses that must match
 	 */
-	public BoolQueryBuilder minimumNumberShouldMatch(int minimumNumberShouldMatch) {
+	public ESBoolQueryBuilder minimumNumberShouldMatch(int minimumNumberShouldMatch) {
 		this.minimumShouldMatch = Integer.toString(minimumNumberShouldMatch);
 		return this;
 	}
@@ -133,7 +133,7 @@ public class BoolQueryBuilder extends QueryBuilder implements BoostableQueryBuil
 	 * Sets the minimum should match using the special syntax (for example,
 	 * supporting percentage).
 	 */
-	public BoolQueryBuilder minimumShouldMatch(String minimumShouldMatch) {
+	public ESBoolQueryBuilder minimumShouldMatch(String minimumShouldMatch) {
 		this.minimumShouldMatch = minimumShouldMatch;
 		return this;
 	}
@@ -152,7 +152,7 @@ public class BoolQueryBuilder extends QueryBuilder implements BoostableQueryBuil
 	 * BooleanQuery be enhanced with a {@link MatchAllDocsQuery} in order to act
 	 * as a pure exclude. The default is <code>true</code>.
 	 */
-	public BoolQueryBuilder adjustPureNegative(boolean adjustPureNegative) {
+	public ESBoolQueryBuilder adjustPureNegative(boolean adjustPureNegative) {
 		this.adjustPureNegative = adjustPureNegative;
 		return this;
 	}
@@ -161,13 +161,13 @@ public class BoolQueryBuilder extends QueryBuilder implements BoostableQueryBuil
 	 * Sets the query name for the filter that can be used when searching for
 	 * matched_filters per hit.
 	 */
-	public BoolQueryBuilder queryName(String queryName) {
+	public ESBoolQueryBuilder queryName(String queryName) {
 		this.queryName = queryName;
 		return this;
 	}
 
 	@Override
-	protected void doXContent(JsonContentBuilder builder) throws IOException {
+	protected void doXContent(ESJsonContentBuilder builder) throws IOException {
 		builder.startObject("bool");
 		doXArrayContent("must", mustClauses, builder);
 		doXArrayContent("filter", filterClauses, builder);
@@ -191,7 +191,7 @@ public class BoolQueryBuilder extends QueryBuilder implements BoostableQueryBuil
 		builder.endObject();
 	}
 
-	private void doXArrayContent(String field, List<QueryBuilder> clauses, JsonContentBuilder builder) throws IOException {
+	private void doXArrayContent(String field, List<ESQueryBuilder> clauses, ESJsonContentBuilder builder) throws IOException {
 		if (clauses.isEmpty()) {
 			return;
 		}
@@ -200,7 +200,7 @@ public class BoolQueryBuilder extends QueryBuilder implements BoostableQueryBuil
 			clauses.get(0).toJsonContent(builder);
 		} else {
 			builder.startArray(field);
-			for (QueryBuilder clause : clauses) {
+			for (ESQueryBuilder clause : clauses) {
 				clause.toJsonContent(builder);
 			}
 			builder.endArray();

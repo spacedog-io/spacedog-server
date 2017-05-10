@@ -17,14 +17,14 @@
  * under the License.
  */
 
-package io.spacedog.sdk.elasticsearch;
+package io.spacedog.sdk.elastic;
 
 import java.io.IOException;
 
 /**
  * A Query that matches documents within an range of terms.
  */
-public class RangeQueryBuilder extends MultiTermQueryBuilder implements BoostableQueryBuilder<RangeQueryBuilder> {
+public class ESRangeQueryBuilder extends ESMultiTermQueryBuilder implements ESBoostableQueryBuilder<ESRangeQueryBuilder> {
 
 	private final String name;
 	private Object from;
@@ -42,14 +42,14 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	 * @param name
 	 *            The field name
 	 */
-	public RangeQueryBuilder(String name) {
+	public ESRangeQueryBuilder(String name) {
 		this.name = name;
 	}
 
 	/**
 	 * The from part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder from(Object from) {
+	public ESRangeQueryBuilder from(Object from) {
 		this.from = from;
 		return this;
 	}
@@ -57,7 +57,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The from part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder from(String from) {
+	public ESRangeQueryBuilder from(String from) {
 		this.from = from;
 		return this;
 	}
@@ -65,7 +65,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The from part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder from(int from) {
+	public ESRangeQueryBuilder from(int from) {
 		this.from = from;
 		return this;
 	}
@@ -73,7 +73,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The from part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder from(long from) {
+	public ESRangeQueryBuilder from(long from) {
 		this.from = from;
 		return this;
 	}
@@ -81,7 +81,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The from part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder from(float from) {
+	public ESRangeQueryBuilder from(float from) {
 		this.from = from;
 		return this;
 	}
@@ -89,7 +89,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The from part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder from(double from) {
+	public ESRangeQueryBuilder from(double from) {
 		this.from = from;
 		return this;
 	}
@@ -97,7 +97,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The from part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder gt(String from) {
+	public ESRangeQueryBuilder gt(String from) {
 		this.from = from;
 		this.includeLower = false;
 		return this;
@@ -106,7 +106,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The from part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder gt(Object from) {
+	public ESRangeQueryBuilder gt(Object from) {
 		this.from = from;
 		this.includeLower = false;
 		return this;
@@ -115,7 +115,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The from part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder gt(int from) {
+	public ESRangeQueryBuilder gt(int from) {
 		this.from = from;
 		this.includeLower = false;
 		return this;
@@ -124,7 +124,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The from part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder gt(long from) {
+	public ESRangeQueryBuilder gt(long from) {
 		this.from = from;
 		this.includeLower = false;
 		return this;
@@ -133,7 +133,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The from part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder gt(float from) {
+	public ESRangeQueryBuilder gt(float from) {
 		this.from = from;
 		this.includeLower = false;
 		return this;
@@ -142,7 +142,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The from part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder gt(double from) {
+	public ESRangeQueryBuilder gt(double from) {
 		this.from = from;
 		this.includeLower = false;
 		return this;
@@ -151,7 +151,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The from part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder gte(String from) {
+	public ESRangeQueryBuilder gte(String from) {
 		this.from = from;
 		this.includeLower = true;
 		return this;
@@ -160,7 +160,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The from part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder gte(Object from) {
+	public ESRangeQueryBuilder gte(Object from) {
 		this.from = from;
 		this.includeLower = true;
 		return this;
@@ -169,7 +169,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The from part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder gte(int from) {
+	public ESRangeQueryBuilder gte(int from) {
 		this.from = from;
 		this.includeLower = true;
 		return this;
@@ -178,7 +178,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The from part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder gte(long from) {
+	public ESRangeQueryBuilder gte(long from) {
 		this.from = from;
 		this.includeLower = true;
 		return this;
@@ -187,7 +187,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The from part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder gte(float from) {
+	public ESRangeQueryBuilder gte(float from) {
 		this.from = from;
 		this.includeLower = true;
 		return this;
@@ -196,7 +196,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The from part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder gte(double from) {
+	public ESRangeQueryBuilder gte(double from) {
 		this.from = from;
 		this.includeLower = true;
 		return this;
@@ -205,7 +205,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The to part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder to(Object to) {
+	public ESRangeQueryBuilder to(Object to) {
 		this.to = to;
 		return this;
 	}
@@ -213,7 +213,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The to part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder to(String to) {
+	public ESRangeQueryBuilder to(String to) {
 		this.to = to;
 		return this;
 	}
@@ -221,7 +221,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The to part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder to(int to) {
+	public ESRangeQueryBuilder to(int to) {
 		this.to = to;
 		return this;
 	}
@@ -229,7 +229,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The to part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder to(long to) {
+	public ESRangeQueryBuilder to(long to) {
 		this.to = to;
 		return this;
 	}
@@ -237,7 +237,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The to part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder to(float to) {
+	public ESRangeQueryBuilder to(float to) {
 		this.to = to;
 		return this;
 	}
@@ -245,7 +245,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The to part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder to(double to) {
+	public ESRangeQueryBuilder to(double to) {
 		this.to = to;
 		return this;
 	}
@@ -253,16 +253,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The to part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder lt(String to) {
-		this.to = to;
-		this.includeUpper = false;
-		return this;
-	}
-
-	/**
-	 * The to part of the range query. Null indicates unbounded.
-	 */
-	public RangeQueryBuilder lt(Object to) {
+	public ESRangeQueryBuilder lt(String to) {
 		this.to = to;
 		this.includeUpper = false;
 		return this;
@@ -271,7 +262,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The to part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder lt(int to) {
+	public ESRangeQueryBuilder lt(Object to) {
 		this.to = to;
 		this.includeUpper = false;
 		return this;
@@ -280,7 +271,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The to part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder lt(long to) {
+	public ESRangeQueryBuilder lt(int to) {
 		this.to = to;
 		this.includeUpper = false;
 		return this;
@@ -289,7 +280,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The to part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder lt(float to) {
+	public ESRangeQueryBuilder lt(long to) {
 		this.to = to;
 		this.includeUpper = false;
 		return this;
@@ -298,7 +289,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The to part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder lt(double to) {
+	public ESRangeQueryBuilder lt(float to) {
 		this.to = to;
 		this.includeUpper = false;
 		return this;
@@ -307,7 +298,16 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The to part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder lte(String to) {
+	public ESRangeQueryBuilder lt(double to) {
+		this.to = to;
+		this.includeUpper = false;
+		return this;
+	}
+
+	/**
+	 * The to part of the range query. Null indicates unbounded.
+	 */
+	public ESRangeQueryBuilder lte(String to) {
 		this.to = to;
 		this.includeUpper = true;
 		return this;
@@ -316,7 +316,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The to part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder lte(Object to) {
+	public ESRangeQueryBuilder lte(Object to) {
 		this.to = to;
 		this.includeUpper = true;
 		return this;
@@ -325,7 +325,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The to part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder lte(int to) {
+	public ESRangeQueryBuilder lte(int to) {
 		this.to = to;
 		this.includeUpper = true;
 		return this;
@@ -334,7 +334,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The to part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder lte(long to) {
+	public ESRangeQueryBuilder lte(long to) {
 		this.to = to;
 		this.includeUpper = true;
 		return this;
@@ -343,7 +343,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The to part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder lte(float to) {
+	public ESRangeQueryBuilder lte(float to) {
 		this.to = to;
 		this.includeUpper = true;
 		return this;
@@ -352,7 +352,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * The to part of the range query. Null indicates unbounded.
 	 */
-	public RangeQueryBuilder lte(double to) {
+	public ESRangeQueryBuilder lte(double to) {
 		this.to = to;
 		this.includeUpper = true;
 		return this;
@@ -361,7 +361,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * Should the lower bound be included or not. Defaults to <tt>true</tt>.
 	 */
-	public RangeQueryBuilder includeLower(boolean includeLower) {
+	public ESRangeQueryBuilder includeLower(boolean includeLower) {
 		this.includeLower = includeLower;
 		return this;
 	}
@@ -369,7 +369,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * Should the upper bound be included or not. Defaults to <tt>true</tt>.
 	 */
-	public RangeQueryBuilder includeUpper(boolean includeUpper) {
+	public ESRangeQueryBuilder includeUpper(boolean includeUpper) {
 		this.includeUpper = includeUpper;
 		return this;
 	}
@@ -380,7 +380,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	 * boost provided.
 	 */
 	@Override
-	public RangeQueryBuilder boost(float boost) {
+	public ESRangeQueryBuilder boost(float boost) {
 		this.boost = boost;
 		return this;
 	}
@@ -389,7 +389,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	 * Sets the query name for the filter that can be used when searching for
 	 * matched_filters per hit.
 	 */
-	public RangeQueryBuilder queryName(String queryName) {
+	public ESRangeQueryBuilder queryName(String queryName) {
 		this.queryName = queryName;
 		return this;
 	}
@@ -397,7 +397,7 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	/**
 	 * In case of date field, we can adjust the from/to fields using a timezone
 	 */
-	public RangeQueryBuilder timeZone(String timezone) {
+	public ESRangeQueryBuilder timeZone(String timezone) {
 		this.timeZone = timezone;
 		return this;
 	}
@@ -406,13 +406,13 @@ public class RangeQueryBuilder extends MultiTermQueryBuilder implements Boostabl
 	 * In case of date field, we can set the format to be used instead of the
 	 * mapper format
 	 */
-	public RangeQueryBuilder format(String format) {
+	public ESRangeQueryBuilder format(String format) {
 		this.format = format;
 		return this;
 	}
 
 	@Override
-	protected void doXContent(JsonContentBuilder builder) throws IOException {
+	protected void doXContent(ESJsonContentBuilder builder) throws IOException {
 		builder.startObject("range");
 		builder.startObject(name);
 		builder.field("from", from);

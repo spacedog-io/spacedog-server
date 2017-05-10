@@ -17,34 +17,11 @@
  * under the License.
  */
 
-package io.spacedog.sdk.elasticsearch;
+package io.spacedog.sdk.elastic;
 
 import java.io.IOException;
 
-/**
- * A query that matches on all documents.
- */
-public class MatchAllQueryBuilder extends QueryBuilder implements BoostableQueryBuilder<MatchAllQueryBuilder> {
+public interface ESJsonContent {
 
-	private float boost = -1;
-
-	/**
-	 * Sets the boost for this query. Documents matching this query will (in
-	 * addition to the normal weightings) have their score multiplied by the
-	 * boost provided.
-	 */
-	@Override
-	public MatchAllQueryBuilder boost(float boost) {
-		this.boost = boost;
-		return this;
-	}
-
-	@Override
-	public void doXContent(JsonContentBuilder builder) throws IOException {
-		builder.startObject("match_all");
-		if (boost != -1) {
-			builder.field("boost", boost);
-		}
-		builder.endObject();
-	}
+	ESJsonContentBuilder toJsonContent(ESJsonContentBuilder builder) throws IOException;
 }

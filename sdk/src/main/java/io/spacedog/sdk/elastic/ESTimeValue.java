@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.spacedog.sdk.elasticsearch;
+package io.spacedog.sdk.elastic;
 
 import java.util.concurrent.TimeUnit;
 
@@ -26,44 +26,44 @@ import org.joda.time.PeriodType;
 import org.joda.time.format.PeriodFormat;
 import org.joda.time.format.PeriodFormatter;
 
-public class TimeValue {// implements Streamable {
+public class ESTimeValue {// implements Streamable {
 
 	/** How many nano-seconds in one milli-second */
 	public static final long NSEC_PER_MSEC = 1000000;
 
-	public static TimeValue timeValueNanos(long nanos) {
-		return new TimeValue(nanos, TimeUnit.NANOSECONDS);
+	public static ESTimeValue timeValueNanos(long nanos) {
+		return new ESTimeValue(nanos, TimeUnit.NANOSECONDS);
 	}
 
-	public static TimeValue timeValueMillis(long millis) {
-		return new TimeValue(millis, TimeUnit.MILLISECONDS);
+	public static ESTimeValue timeValueMillis(long millis) {
+		return new ESTimeValue(millis, TimeUnit.MILLISECONDS);
 	}
 
-	public static TimeValue timeValueSeconds(long seconds) {
-		return new TimeValue(seconds, TimeUnit.SECONDS);
+	public static ESTimeValue timeValueSeconds(long seconds) {
+		return new ESTimeValue(seconds, TimeUnit.SECONDS);
 	}
 
-	public static TimeValue timeValueMinutes(long minutes) {
-		return new TimeValue(minutes, TimeUnit.MINUTES);
+	public static ESTimeValue timeValueMinutes(long minutes) {
+		return new ESTimeValue(minutes, TimeUnit.MINUTES);
 	}
 
-	public static TimeValue timeValueHours(long hours) {
-		return new TimeValue(hours, TimeUnit.HOURS);
+	public static ESTimeValue timeValueHours(long hours) {
+		return new ESTimeValue(hours, TimeUnit.HOURS);
 	}
 
 	private long duration;
 
 	private TimeUnit timeUnit;
 
-	private TimeValue() {
+	private ESTimeValue() {
 
 	}
 
-	public TimeValue(long millis) {
+	public ESTimeValue(long millis) {
 		this(millis, TimeUnit.MILLISECONDS);
 	}
 
-	public TimeValue(long duration, TimeUnit timeUnit) {
+	public ESTimeValue(long duration, TimeUnit timeUnit) {
 		this.duration = duration;
 		this.timeUnit = timeUnit;
 	}
@@ -214,7 +214,7 @@ public class TimeValue {// implements Streamable {
 			value = microsFrac();
 			suffix = "micros";
 		}
-		return Strings.format1Decimals(value, suffix);
+		return ESStrings.format1Decimals(value, suffix);
 	}
 
 	static final long C0 = 1L;
@@ -232,7 +232,7 @@ public class TimeValue {// implements Streamable {
 		if (o == null || getClass() != o.getClass())
 			return false;
 
-		TimeValue timeValue = (TimeValue) o;
+		ESTimeValue timeValue = (ESTimeValue) o;
 		return timeUnit.toNanos(duration) == timeValue.timeUnit.toNanos(timeValue.duration);
 	}
 

@@ -11,7 +11,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
 import io.spacedog.rest.SpaceRequest;
-import io.spacedog.sdk.elasticsearch.SearchSourceBuilder;
+import io.spacedog.sdk.elastic.ESSearchSourceBuilder;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json7;
 import io.spacedog.utils.JsonBuilder;
@@ -193,15 +193,15 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 	// Search
 	//
 
-	public <K> SearchResults<K> search(SearchSourceBuilder builder, Class<K> dataClass) {
+	public <K> SearchResults<K> search(ESSearchSourceBuilder builder, Class<K> dataClass) {
 		return search(null, builder, dataClass, false);
 	}
 
-	public <K> SearchResults<K> search(String type, SearchSourceBuilder builder, Class<K> dataClass) {
+	public <K> SearchResults<K> search(String type, ESSearchSourceBuilder builder, Class<K> dataClass) {
 		return search(type, builder, dataClass);
 	}
 
-	public <K> SearchResults<K> search(String type, SearchSourceBuilder builder, Class<K> dataClass, boolean refresh) {
+	public <K> SearchResults<K> search(String type, ESSearchSourceBuilder builder, Class<K> dataClass, boolean refresh) {
 
 		String path = "/1/search";
 		if (Strings.isNullOrEmpty(type))

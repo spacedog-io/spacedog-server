@@ -17,18 +17,40 @@
  * under the License.
  */
 
-package io.spacedog.sdk.elasticsearch;
+package io.spacedog.sdk.elastic;
+
+import java.io.IOException;
 
 /**
- * Query builder which allow setting some boost
+ * Constructs a query that only match on documents that the field has a value in
+ * them.
  */
-public interface BoostableQueryBuilder<B extends BoostableQueryBuilder<B>> {
+public class ESExistsQueryBuilder extends ESQueryBuilder {
+
+	private String name;
+
+	private String queryName;
+
+	public ESExistsQueryBuilder(String name) {
+		this.name = name;
+	}
 
 	/**
-	 * Sets the boost for this query. Documents matching this query will (in
-	 * addition to the normal weightings) have their score multiplied by the
-	 * boost provided.
+	 * Sets the query name for the query that can be used when searching for
+	 * matched_queries per hit.
 	 */
-	B boost(float boost);
+	public ESExistsQueryBuilder queryName(String queryName) {
+		this.queryName = queryName;
+		return this;
+	}
 
+	@Override
+	protected void doXContent(ESJsonContentBuilder builder) throws IOException {
+		builder.startObject("exists");
+		builder.field("field", name);
+		if (queryName != null) {
+			builder.field("_name", queryName);
+		}
+		builder.endObject();
+	}
 }

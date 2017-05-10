@@ -17,11 +17,31 @@
  * under the License.
  */
 
-package io.spacedog.sdk.elasticsearch;
+package io.spacedog.sdk.elastic;
 
 import java.io.IOException;
 
-public interface JsonContent {
+public class ESQuerySourceBuilder { // extends ToXContentToBytes {
 
-	JsonContentBuilder toJsonContent(JsonContentBuilder builder) throws IOException;
+	private ESQueryBuilder queryBuilder;
+
+	public ESQuerySourceBuilder setQuery(ESQueryBuilder query) {
+		this.queryBuilder = query;
+		return this;
+	}
+
+	// @Override
+	public ESJsonContentBuilder toXContent(ESJsonContentBuilder builder) throws IOException {
+		builder.startObject();
+		innerToXContent(builder);
+		builder.endObject();
+		return builder;
+	}
+
+	public void innerToXContent(ESJsonContentBuilder builder) throws IOException {
+		if (queryBuilder != null) {
+			builder.field("query");
+			queryBuilder.toJsonContent(builder);
+		}
+	}
 }

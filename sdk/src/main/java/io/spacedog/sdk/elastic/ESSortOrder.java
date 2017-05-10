@@ -17,31 +17,30 @@
  * under the License.
  */
 
-package io.spacedog.sdk.elasticsearch;
+package io.spacedog.sdk.elastic;
 
-import java.io.IOException;
-
-public class QuerySourceBuilder { // extends ToXContentToBytes {
-
-	private QueryBuilder queryBuilder;
-
-	public QuerySourceBuilder setQuery(QueryBuilder query) {
-		this.queryBuilder = query;
-		return this;
-	}
-
-	// @Override
-	public JsonContentBuilder toXContent(JsonContentBuilder builder) throws IOException {
-		builder.startObject();
-		innerToXContent(builder);
-		builder.endObject();
-		return builder;
-	}
-
-	public void innerToXContent(JsonContentBuilder builder) throws IOException {
-		if (queryBuilder != null) {
-			builder.field("query");
-			queryBuilder.toJsonContent(builder);
-		}
-	}
+/**
+ * A sorting order.
+ *
+ *
+ */
+public enum ESSortOrder {
+    /**
+     * Ascending order.
+     */
+    ASC {
+        @Override
+        public String toString() {
+            return "asc";
+        }
+    },
+    /**
+     * Descending order.
+     */
+    DESC {
+        @Override
+        public String toString() {
+            return "desc";
+        }
+    }
 }

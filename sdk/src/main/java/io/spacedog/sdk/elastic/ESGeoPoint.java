@@ -17,17 +17,17 @@
  * under the License.
  */
 
-package io.spacedog.sdk.elasticsearch;
+package io.spacedog.sdk.elastic;
 
 /**
  *
  */
-public final class GeoPoint {
+public final class ESGeoPoint {
 
 	private double lat;
 	private double lon;
 
-	public GeoPoint() {
+	public ESGeoPoint() {
 	}
 
 	/**
@@ -37,32 +37,32 @@ public final class GeoPoint {
 	 * @param value
 	 *            String to create the point from
 	 */
-	public GeoPoint(String value) {
+	public ESGeoPoint(String value) {
 		this.resetFromString(value);
 	}
 
-	public GeoPoint(double lat, double lon) {
+	public ESGeoPoint(double lat, double lon) {
 		this.lat = lat;
 		this.lon = lon;
 	}
 
-	public GeoPoint reset(double lat, double lon) {
+	public ESGeoPoint reset(double lat, double lon) {
 		this.lat = lat;
 		this.lon = lon;
 		return this;
 	}
 
-	public GeoPoint resetLat(double lat) {
+	public ESGeoPoint resetLat(double lat) {
 		this.lat = lat;
 		return this;
 	}
 
-	public GeoPoint resetLon(double lon) {
+	public ESGeoPoint resetLon(double lon) {
 		this.lon = lon;
 		return this;
 	}
 
-	public GeoPoint resetFromString(String value) {
+	public ESGeoPoint resetFromString(String value) {
 		int comma = value.indexOf(',');
 		// if (comma != -1) {
 		lat = Double.parseDouble(value.substring(0, comma).trim());
@@ -122,7 +122,7 @@ public final class GeoPoint {
 		if (o == null || getClass() != o.getClass())
 			return false;
 
-		GeoPoint geoPoint = (GeoPoint) o;
+		ESGeoPoint geoPoint = (ESGeoPoint) o;
 
 		if (Double.compare(geoPoint.lat, lat) != 0)
 			return false;
@@ -148,8 +148,8 @@ public final class GeoPoint {
 		return lat + "," + lon;
 	}
 
-	public static GeoPoint parseFromLatLon(String latLon) {
-		GeoPoint point = new GeoPoint();
+	public static ESGeoPoint parseFromLatLon(String latLon) {
+		ESGeoPoint point = new ESGeoPoint();
 		point.resetFromString(latLon);
 		return point;
 	}

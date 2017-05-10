@@ -17,20 +17,20 @@
  * under the License.
  */
 
-package io.spacedog.sdk.elasticsearch;
+package io.spacedog.sdk.elastic;
 
 import java.util.Collection;
 
 /**
  * A static factory for simple "import static" usage.
  */
-public abstract class QueryBuilders {
+public abstract class ESQueryBuilders {
 
 	/**
 	 * A query that match on all documents.
 	 */
-	public static MatchAllQueryBuilder matchAllQuery() {
-		return new MatchAllQueryBuilder();
+	public static ESMatchAllQueryBuilder matchAllQuery() {
+		return new ESMatchAllQueryBuilder();
 	}
 
 	/**
@@ -39,8 +39,8 @@ public abstract class QueryBuilders {
 	 * @param types
 	 *            The mapping/doc type
 	 */
-	public static IdsQueryBuilder idsQuery(String... types) {
-		return new IdsQueryBuilder(types);
+	public static ESIdsQueryBuilder idsQuery(String... types) {
+		return new ESIdsQueryBuilder(types);
 	}
 
 	/**
@@ -51,8 +51,8 @@ public abstract class QueryBuilders {
 	 * @param value
 	 *            The value of the term
 	 */
-	public static TermQueryBuilder termQuery(String name, String value) {
-		return new TermQueryBuilder(name, value);
+	public static ESTermQueryBuilder termQuery(String name, String value) {
+		return new ESTermQueryBuilder(name, value);
 	}
 
 	/**
@@ -63,8 +63,8 @@ public abstract class QueryBuilders {
 	 * @param value
 	 *            The value of the term
 	 */
-	public static TermQueryBuilder termQuery(String name, int value) {
-		return new TermQueryBuilder(name, value);
+	public static ESTermQueryBuilder termQuery(String name, int value) {
+		return new ESTermQueryBuilder(name, value);
 	}
 
 	/**
@@ -75,8 +75,8 @@ public abstract class QueryBuilders {
 	 * @param value
 	 *            The value of the term
 	 */
-	public static TermQueryBuilder termQuery(String name, long value) {
-		return new TermQueryBuilder(name, value);
+	public static ESTermQueryBuilder termQuery(String name, long value) {
+		return new ESTermQueryBuilder(name, value);
 	}
 
 	/**
@@ -87,8 +87,8 @@ public abstract class QueryBuilders {
 	 * @param value
 	 *            The value of the term
 	 */
-	public static TermQueryBuilder termQuery(String name, float value) {
-		return new TermQueryBuilder(name, value);
+	public static ESTermQueryBuilder termQuery(String name, float value) {
+		return new ESTermQueryBuilder(name, value);
 	}
 
 	/**
@@ -99,8 +99,8 @@ public abstract class QueryBuilders {
 	 * @param value
 	 *            The value of the term
 	 */
-	public static TermQueryBuilder termQuery(String name, double value) {
-		return new TermQueryBuilder(name, value);
+	public static ESTermQueryBuilder termQuery(String name, double value) {
+		return new ESTermQueryBuilder(name, value);
 	}
 
 	/**
@@ -111,8 +111,8 @@ public abstract class QueryBuilders {
 	 * @param value
 	 *            The value of the term
 	 */
-	public static TermQueryBuilder termQuery(String name, boolean value) {
-		return new TermQueryBuilder(name, value);
+	public static ESTermQueryBuilder termQuery(String name, boolean value) {
+		return new ESTermQueryBuilder(name, value);
 	}
 
 	/**
@@ -123,8 +123,8 @@ public abstract class QueryBuilders {
 	 * @param value
 	 *            The value of the term
 	 */
-	public static TermQueryBuilder termQuery(String name, Object value) {
-		return new TermQueryBuilder(name, value);
+	public static ESTermQueryBuilder termQuery(String name, Object value) {
+		return new ESTermQueryBuilder(name, value);
 	}
 
 	/**
@@ -133,16 +133,16 @@ public abstract class QueryBuilders {
 	 * @param name
 	 *            The field name
 	 */
-	public static RangeQueryBuilder rangeQuery(String name) {
-		return new RangeQueryBuilder(name);
+	public static ESRangeQueryBuilder rangeQuery(String name) {
+		return new ESRangeQueryBuilder(name);
 	}
 
 	/**
 	 * A Query that matches documents matching boolean combinations of other
 	 * queries.
 	 */
-	public static BoolQueryBuilder boolQuery() {
-		return new BoolQueryBuilder();
+	public static ESBoolQueryBuilder boolQuery() {
+		return new ESBoolQueryBuilder();
 	}
 
 	/**
@@ -153,8 +153,8 @@ public abstract class QueryBuilders {
 	 * @param values
 	 *            The terms
 	 */
-	public static TermsQueryBuilder termsQuery(String name, String... values) {
-		return new TermsQueryBuilder(name, values);
+	public static ESTermsQueryBuilder termsQuery(String name, String... values) {
+		return new ESTermsQueryBuilder(name, values);
 	}
 
 	/**
@@ -165,8 +165,8 @@ public abstract class QueryBuilders {
 	 * @param values
 	 *            The terms
 	 */
-	public static TermsQueryBuilder termsQuery(String name, int... values) {
-		return new TermsQueryBuilder(name, values);
+	public static ESTermsQueryBuilder termsQuery(String name, int... values) {
+		return new ESTermsQueryBuilder(name, values);
 	}
 
 	/**
@@ -177,8 +177,8 @@ public abstract class QueryBuilders {
 	 * @param values
 	 *            The terms
 	 */
-	public static TermsQueryBuilder termsQuery(String name, long... values) {
-		return new TermsQueryBuilder(name, values);
+	public static ESTermsQueryBuilder termsQuery(String name, long... values) {
+		return new ESTermsQueryBuilder(name, values);
 	}
 
 	/**
@@ -189,8 +189,8 @@ public abstract class QueryBuilders {
 	 * @param values
 	 *            The terms
 	 */
-	public static TermsQueryBuilder termsQuery(String name, float... values) {
-		return new TermsQueryBuilder(name, values);
+	public static ESTermsQueryBuilder termsQuery(String name, float... values) {
+		return new ESTermsQueryBuilder(name, values);
 	}
 
 	/**
@@ -201,8 +201,8 @@ public abstract class QueryBuilders {
 	 * @param values
 	 *            The terms
 	 */
-	public static TermsQueryBuilder termsQuery(String name, double... values) {
-		return new TermsQueryBuilder(name, values);
+	public static ESTermsQueryBuilder termsQuery(String name, double... values) {
+		return new ESTermsQueryBuilder(name, values);
 	}
 
 	/**
@@ -213,8 +213,8 @@ public abstract class QueryBuilders {
 	 * @param values
 	 *            The terms
 	 */
-	public static TermsQueryBuilder termsQuery(String name, Object... values) {
-		return new TermsQueryBuilder(name, values);
+	public static ESTermsQueryBuilder termsQuery(String name, Object... values) {
+		return new ESTermsQueryBuilder(name, values);
 	}
 
 	/**
@@ -225,8 +225,8 @@ public abstract class QueryBuilders {
 	 * @param values
 	 *            The terms
 	 */
-	public static TermsQueryBuilder termsQuery(String name, Collection<?> values) {
-		return new TermsQueryBuilder(name, values);
+	public static ESTermsQueryBuilder termsQuery(String name, Collection<?> values) {
+		return new ESTermsQueryBuilder(name, values);
 	}
 
 	/**
@@ -236,8 +236,8 @@ public abstract class QueryBuilders {
 	 * @param name
 	 *            The location field name.
 	 */
-	public static GeoDistanceQueryBuilder geoDistanceQuery(String name) {
-		return new GeoDistanceQueryBuilder(name);
+	public static ESGeoDistanceQueryBuilder geoDistanceQuery(String name) {
+		return new ESGeoDistanceQueryBuilder(name);
 	}
 
 	/**
@@ -246,11 +246,11 @@ public abstract class QueryBuilders {
 	 * @param name
 	 *            The name of the field
 	 */
-	public static ExistsQueryBuilder existsQuery(String name) {
-		return new ExistsQueryBuilder(name);
+	public static ESExistsQueryBuilder existsQuery(String name) {
+		return new ESExistsQueryBuilder(name);
 	}
 
-	private QueryBuilders() {
+	private ESQueryBuilders() {
 
 	}
 }

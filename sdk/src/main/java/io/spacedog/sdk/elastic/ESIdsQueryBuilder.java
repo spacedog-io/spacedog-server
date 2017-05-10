@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.spacedog.sdk.elasticsearch;
+package io.spacedog.sdk.elastic;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,7 +28,7 @@ import java.util.List;
 /**
  * A query that will return only documents matching specific ids (and a type).
  */
-public class IdsQueryBuilder extends QueryBuilder implements BoostableQueryBuilder<IdsQueryBuilder> {
+public class ESIdsQueryBuilder extends ESQueryBuilder implements ESBoostableQueryBuilder<ESIdsQueryBuilder> {
 
 	private final List<String> types;
 
@@ -38,14 +38,14 @@ public class IdsQueryBuilder extends QueryBuilder implements BoostableQueryBuild
 
 	private String queryName;
 
-	public IdsQueryBuilder(String... types) {
+	public ESIdsQueryBuilder(String... types) {
 		this.types = types == null ? null : Arrays.asList(types);
 	}
 
 	/**
 	 * Adds ids to the filter.
 	 */
-	public IdsQueryBuilder addIds(String... ids) {
+	public ESIdsQueryBuilder addIds(String... ids) {
 		values.addAll(Arrays.asList(ids));
 		return this;
 	}
@@ -53,7 +53,7 @@ public class IdsQueryBuilder extends QueryBuilder implements BoostableQueryBuild
 	/**
 	 * Adds ids to the filter.
 	 */
-	public IdsQueryBuilder addIds(Collection<String> ids) {
+	public ESIdsQueryBuilder addIds(Collection<String> ids) {
 		values.addAll(ids);
 		return this;
 	}
@@ -61,14 +61,14 @@ public class IdsQueryBuilder extends QueryBuilder implements BoostableQueryBuild
 	/**
 	 * Adds ids to the filter.
 	 */
-	public IdsQueryBuilder ids(String... ids) {
+	public ESIdsQueryBuilder ids(String... ids) {
 		return addIds(ids);
 	}
 
 	/**
 	 * Adds ids to the filter.
 	 */
-	public IdsQueryBuilder ids(Collection<String> ids) {
+	public ESIdsQueryBuilder ids(Collection<String> ids) {
 		return addIds(ids);
 	}
 
@@ -78,7 +78,7 @@ public class IdsQueryBuilder extends QueryBuilder implements BoostableQueryBuild
 	 * boost provided.
 	 */
 	@Override
-	public IdsQueryBuilder boost(float boost) {
+	public ESIdsQueryBuilder boost(float boost) {
 		this.boost = boost;
 		return this;
 	}
@@ -87,13 +87,13 @@ public class IdsQueryBuilder extends QueryBuilder implements BoostableQueryBuild
 	 * Sets the query name for the filter that can be used when searching for
 	 * matched_filters per hit.
 	 */
-	public IdsQueryBuilder queryName(String queryName) {
+	public ESIdsQueryBuilder queryName(String queryName) {
 		this.queryName = queryName;
 		return this;
 	}
 
 	@Override
-	protected void doXContent(JsonContentBuilder builder) throws IOException {
+	protected void doXContent(ESJsonContentBuilder builder) throws IOException {
 		builder.startObject("ids");
 		if (types != null) {
 			if (types.size() == 1) {

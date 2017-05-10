@@ -17,17 +17,17 @@
  * under the License.
  */
 
-package io.spacedog.sdk.elasticsearch;
+package io.spacedog.sdk.elastic;
 
 /**
  * The DistanceUnit enumerates several units for measuring distances. These
  * units provide methods for converting strings and methods to convert units
  * among each others. Some methods like
- * {@link DistanceUnit#getEarthCircumference} refer to the earth ellipsoid
+ * {@link ESDistanceUnit#getEarthCircumference} refer to the earth ellipsoid
  * defined in {@link GeoUtils}. The default unit used within this project is
  * <code>METERS</code> which is defined by <code>DEFAULT</code>
  */
-public enum DistanceUnit {
+public enum ESDistanceUnit {
 	INCH(0.0254, "in", "inch"), YARD(0.9144, "yd", "yards"), FEET(0.3048, "ft", "feet"), KILOMETERS(1000.0, "km",
 			"kilometers"), NAUTICALMILES(1852.0, "NM", "nmi",
 					"nauticalmiles"), MILLIMETERS(0.001, "mm", "millimeters"), CENTIMETERS(0.01, "cm", "centimeters"),
@@ -41,12 +41,12 @@ public enum DistanceUnit {
 	// parsing would fail
 	METERS(1, "m", "meters");
 
-	public static final DistanceUnit DEFAULT = METERS;
+	public static final ESDistanceUnit DEFAULT = METERS;
 
 	private double meters;
 	private final String[] names;
 
-	DistanceUnit(double meters, String... names) {
+	ESDistanceUnit(double meters, String... names) {
 		this.meters = meters;
 		this.names = names;
 	}
@@ -68,7 +68,7 @@ public enum DistanceUnit {
 	}
 
 	/**
-	 * Convert a String to a {@link DistanceUnit}
+	 * Convert a String to a {@link ESDistanceUnit}
 	 * 
 	 * @param unit
 	 *            name of the unit
@@ -76,8 +76,8 @@ public enum DistanceUnit {
 	 * @throws IllegalArgumentException
 	 *             if no unit matches the given name
 	 */
-	public static DistanceUnit fromString(String unit) {
-		for (DistanceUnit dunit : values()) {
+	public static ESDistanceUnit fromString(String unit) {
+		for (ESDistanceUnit dunit : values()) {
 			for (String name : dunit.names) {
 				if (name.equals(unit)) {
 					return dunit;

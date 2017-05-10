@@ -17,14 +17,14 @@
  * under the License.
  */
 
-package io.spacedog.sdk.elasticsearch;
+package io.spacedog.sdk.elastic;
 
 import java.io.IOException;
 
 /**
  * A filer for a field based on several terms matching on any of them.
  */
-public class TermsQueryBuilder extends QueryBuilder implements BoostableQueryBuilder<TermsQueryBuilder> {
+public class ESTermsQueryBuilder extends ESQueryBuilder implements ESBoostableQueryBuilder<ESTermsQueryBuilder> {
 
 	private final String name;
 
@@ -46,7 +46,7 @@ public class TermsQueryBuilder extends QueryBuilder implements BoostableQueryBui
 	 * @param values
 	 *            The terms
 	 */
-	public TermsQueryBuilder(String name, String... values) {
+	public ESTermsQueryBuilder(String name, String... values) {
 		this(name, (Object[]) values);
 	}
 
@@ -58,7 +58,7 @@ public class TermsQueryBuilder extends QueryBuilder implements BoostableQueryBui
 	 * @param values
 	 *            The terms
 	 */
-	public TermsQueryBuilder(String name, int... values) {
+	public ESTermsQueryBuilder(String name, int... values) {
 		this.name = name;
 		this.values = values;
 	}
@@ -71,7 +71,7 @@ public class TermsQueryBuilder extends QueryBuilder implements BoostableQueryBui
 	 * @param values
 	 *            The terms
 	 */
-	public TermsQueryBuilder(String name, long... values) {
+	public ESTermsQueryBuilder(String name, long... values) {
 		this.name = name;
 		this.values = values;
 	}
@@ -84,7 +84,7 @@ public class TermsQueryBuilder extends QueryBuilder implements BoostableQueryBui
 	 * @param values
 	 *            The terms
 	 */
-	public TermsQueryBuilder(String name, float... values) {
+	public ESTermsQueryBuilder(String name, float... values) {
 		this.name = name;
 		this.values = values;
 	}
@@ -97,7 +97,7 @@ public class TermsQueryBuilder extends QueryBuilder implements BoostableQueryBui
 	 * @param values
 	 *            The terms
 	 */
-	public TermsQueryBuilder(String name, double... values) {
+	public ESTermsQueryBuilder(String name, double... values) {
 		this.name = name;
 		this.values = values;
 	}
@@ -110,7 +110,7 @@ public class TermsQueryBuilder extends QueryBuilder implements BoostableQueryBui
 	 * @param values
 	 *            The terms
 	 */
-	public TermsQueryBuilder(String name, Object... values) {
+	public ESTermsQueryBuilder(String name, Object... values) {
 		this.name = name;
 		this.values = values;
 	}
@@ -123,7 +123,7 @@ public class TermsQueryBuilder extends QueryBuilder implements BoostableQueryBui
 	 * @param values
 	 *            The terms
 	 */
-	public TermsQueryBuilder(String name, Iterable values) {
+	public ESTermsQueryBuilder(String name, Iterable values) {
 		this.name = name;
 		this.values = values;
 	}
@@ -135,7 +135,7 @@ public class TermsQueryBuilder extends QueryBuilder implements BoostableQueryBui
 	 * @deprecated use [bool] query instead
 	 */
 	@Deprecated
-	public TermsQueryBuilder minimumShouldMatch(String minimumShouldMatch) {
+	public ESTermsQueryBuilder minimumShouldMatch(String minimumShouldMatch) {
 		this.minimumShouldMatch = minimumShouldMatch;
 		return this;
 	}
@@ -147,7 +147,7 @@ public class TermsQueryBuilder extends QueryBuilder implements BoostableQueryBui
 	 * @deprecated use [bool] query instead
 	 */
 	@Deprecated
-	public TermsQueryBuilder disableCoord(boolean disableCoord) {
+	public ESTermsQueryBuilder disableCoord(boolean disableCoord) {
 		this.disableCoord = disableCoord;
 		return this;
 	}
@@ -156,19 +156,19 @@ public class TermsQueryBuilder extends QueryBuilder implements BoostableQueryBui
 	 * Sets the filter name for the filter that can be used when searching for
 	 * matched_filters per hit.
 	 */
-	public TermsQueryBuilder queryName(String queryName) {
+	public ESTermsQueryBuilder queryName(String queryName) {
 		this.queryName = queryName;
 		return this;
 	}
 
 	@Override
-	public TermsQueryBuilder boost(float boost) {
+	public ESTermsQueryBuilder boost(float boost) {
 		this.boost = boost;
 		return this;
 	}
 
 	@Override
-	public void doXContent(JsonContentBuilder builder) throws IOException {
+	public void doXContent(ESJsonContentBuilder builder) throws IOException {
 		builder.startObject("terms");
 		builder.field(name, values);
 

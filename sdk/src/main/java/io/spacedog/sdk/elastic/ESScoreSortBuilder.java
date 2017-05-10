@@ -17,37 +17,40 @@
  * under the License.
  */
 
-package io.spacedog.sdk.elasticsearch;
+package io.spacedog.sdk.elastic;
 
 import java.io.IOException;
 
-import io.spacedog.utils.Exceptions;
+/**
+ * A sort builder allowing to sort by score.
+ *
+ *
+ */
+public class ESScoreSortBuilder extends ESSortBuilder {
 
-public abstract class QueryBuilder implements JsonContent {
+	private ESSortOrder order;
 
-	protected QueryBuilder() {
+	/**
+	 * The order of sort scoring. By default, its {@link ESSortOrder#DESC}.
+	 */
+	@Override
+	public ESScoreSortBuilder order(ESSortOrder order) {
+		this.order = order;
+		return this;
 	}
 
 	@Override
-	public final String toString() {
-		try {
-			JsonContentBuilder builder = new JsonContentBuilder();
-			builder.prettyPrint();
-			toJsonContent(builder);
-			return builder.string();
-		} catch (Exception e) {
-			throw Exceptions.runtime(e);
+	public ESSortBuilder missing(Object missing) {
+		return this;
+	}
+
+	@Override
+	public ESJsonContentBuilder toJsonContent(ESJsonContentBuilder builder) throws IOException {
+		builder.startObject("_score");
+		if (order == ESSortOrder.ASC) {
+			builder.field("reverse", true);
 		}
-	}
-
-	@Override
-	public JsonContentBuilder toJsonContent(JsonContentBuilder builder) throws IOException {
-		builder.startObject();
-		doXContent(builder);
 		builder.endObject();
 		return builder;
 	}
-
-	protected abstract void doXContent(JsonContentBuilder builder) throws IOException;
-
 }

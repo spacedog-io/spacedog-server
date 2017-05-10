@@ -16,31 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package io.spacedog.sdk.elastic;
 
-package io.spacedog.sdk.elasticsearch;
+public abstract class ESMultiTermQueryBuilder extends ESQueryBuilder {
 
-/**
- * A sorting order.
- *
- *
- */
-public enum SortOrder {
-    /**
-     * Ascending order.
-     */
-    ASC {
-        @Override
-        public String toString() {
-            return "asc";
-        }
-    },
-    /**
-     * Descending order.
-     */
-    DESC {
-        @Override
-        public String toString() {
-            return "desc";
-        }
-    }
 }

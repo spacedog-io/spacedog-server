@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.spacedog.sdk.elasticsearch;
+package io.spacedog.sdk.elastic;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -35,7 +35,7 @@ import io.spacedog.utils.Exceptions;
 /**
  *
  */
-public class JsonContentGenerator {// implements XContentGenerator {
+public class ESJsonContentGenerator {// implements XContentGenerator {
 
 	/** Generator used to write content **/
 	protected final JsonGenerator generator;
@@ -69,7 +69,7 @@ public class JsonContentGenerator {// implements XContentGenerator {
 		jsonFactory.configure(JsonFactory.Feature.FAIL_ON_SYMBOL_HASH_OVERFLOW, false); // this
 	}
 
-	public JsonContentGenerator(ByteArrayOutputStream bos) {
+	public ESJsonContentGenerator(ByteArrayOutputStream bos) {
 		this.os = bos;
 		try {
 			this.generator = jsonFactory.createGenerator(os, JsonEncoding.UTF8);

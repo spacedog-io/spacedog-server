@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.spacedog.sdk.elasticsearch;
+package io.spacedog.sdk.elastic;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -38,11 +38,11 @@ import com.google.common.base.Charsets;
 /**
  *
  */
-public final class JsonContentBuilder {// implements , Releasable {
+public final class ESJsonContentBuilder {// implements , Releasable {
 
 	public final static DateTimeFormatter defaultDatePrinter = ISODateTimeFormat.dateTime().withZone(DateTimeZone.UTC);
 
-	private JsonContentGenerator generator;
+	private ESJsonContentGenerator generator;
 
 	private final ByteArrayOutputStream bos;
 
@@ -52,22 +52,22 @@ public final class JsonContentBuilder {// implements , Releasable {
 	 * Constructs a new builder using the provided xcontent and an OutputStream.
 	 * Make sure to call {@link #close()} when the builder is done with.
 	 */
-	public JsonContentBuilder() throws IOException {
+	public ESJsonContentBuilder() throws IOException {
 		this.bos = new ByteArrayOutputStream();
-		this.generator = new JsonContentGenerator(bos);
+		this.generator = new ESJsonContentGenerator(bos);
 	}
 
-	public JsonContentBuilder prettyPrint() {
+	public ESJsonContentBuilder prettyPrint() {
 		generator.usePrettyPrint();
 		return this;
 	}
 
-	public JsonContentBuilder lfAtEnd() {
+	public ESJsonContentBuilder lfAtEnd() {
 		generator.usePrintLineFeedAtEnd();
 		return this;
 	}
 
-	public JsonContentBuilder humanReadable(boolean humanReadable) {
+	public ESJsonContentBuilder humanReadable(boolean humanReadable) {
 		this.humanReadable = humanReadable;
 		return this;
 	}
@@ -76,7 +76,7 @@ public final class JsonContentBuilder {// implements , Releasable {
 		return this.humanReadable;
 	}
 
-	public JsonContentBuilder startObject(String name) throws IOException {
+	public ESJsonContentBuilder startObject(String name) throws IOException {
 		field(name);
 		startObject();
 		return this;
@@ -89,17 +89,17 @@ public final class JsonContentBuilder {// implements , Releasable {
 	// return this;
 	// }
 
-	public JsonContentBuilder startObject() throws IOException {
+	public ESJsonContentBuilder startObject() throws IOException {
 		generator.writeStartObject();
 		return this;
 	}
 
-	public JsonContentBuilder endObject() throws IOException {
+	public ESJsonContentBuilder endObject() throws IOException {
 		generator.writeEndObject();
 		return this;
 	}
 
-	public JsonContentBuilder array(String name, String... values) throws IOException {
+	public ESJsonContentBuilder array(String name, String... values) throws IOException {
 		startArray(name);
 		for (String value : values) {
 			value(value);
@@ -108,7 +108,7 @@ public final class JsonContentBuilder {// implements , Releasable {
 		return this;
 	}
 
-	public JsonContentBuilder array(String name, Object... values) throws IOException {
+	public ESJsonContentBuilder array(String name, Object... values) throws IOException {
 		startArray(name);
 		for (Object value : values) {
 			value(value);
@@ -124,23 +124,23 @@ public final class JsonContentBuilder {// implements , Releasable {
 	// return this;
 	// }
 
-	public JsonContentBuilder startArray(String name) throws IOException {
+	public ESJsonContentBuilder startArray(String name) throws IOException {
 		field(name);
 		startArray();
 		return this;
 	}
 
-	public JsonContentBuilder startArray() throws IOException {
+	public ESJsonContentBuilder startArray() throws IOException {
 		generator.writeStartArray();
 		return this;
 	}
 
-	public JsonContentBuilder endArray() throws IOException {
+	public ESJsonContentBuilder endArray() throws IOException {
 		generator.writeEndArray();
 		return this;
 	}
 
-	public JsonContentBuilder field(String name) throws IOException {
+	public ESJsonContentBuilder field(String name) throws IOException {
 		if (name == null) {
 			throw new IllegalArgumentException("field name cannot be null");
 		}
@@ -159,12 +159,12 @@ public final class JsonContentBuilder {// implements , Releasable {
 	// return this;
 	// }
 
-	public JsonContentBuilder value(Object value) throws IOException {
+	public ESJsonContentBuilder value(Object value) throws IOException {
 		writeValue(value);
 		return this;
 	}
 
-	public JsonContentBuilder field(String name, String value) throws IOException {
+	public ESJsonContentBuilder field(String name, String value) throws IOException {
 		field(name);
 		if (value == null) {
 			generator.writeNull();
@@ -185,7 +185,7 @@ public final class JsonContentBuilder {// implements , Releasable {
 	// return this;
 	// }
 
-	public JsonContentBuilder field(String name, Integer value) throws IOException {
+	public ESJsonContentBuilder field(String name, Integer value) throws IOException {
 		field(name);
 		if (value == null) {
 			generator.writeNull();
@@ -195,13 +195,13 @@ public final class JsonContentBuilder {// implements , Releasable {
 		return this;
 	}
 
-	public JsonContentBuilder field(String name, int value) throws IOException {
+	public ESJsonContentBuilder field(String name, int value) throws IOException {
 		field(name);
 		generator.writeNumber(value);
 		return this;
 	}
 
-	public JsonContentBuilder field(String name, Long value) throws IOException {
+	public ESJsonContentBuilder field(String name, Long value) throws IOException {
 		field(name);
 		if (value == null) {
 			generator.writeNull();
@@ -211,13 +211,13 @@ public final class JsonContentBuilder {// implements , Releasable {
 		return this;
 	}
 
-	public JsonContentBuilder field(String name, long value) throws IOException {
+	public ESJsonContentBuilder field(String name, long value) throws IOException {
 		field(name);
 		generator.writeNumber(value);
 		return this;
 	}
 
-	public JsonContentBuilder field(String name, Float value) throws IOException {
+	public ESJsonContentBuilder field(String name, Float value) throws IOException {
 		field(name);
 		if (value == null) {
 			generator.writeNull();
@@ -227,13 +227,13 @@ public final class JsonContentBuilder {// implements , Releasable {
 		return this;
 	}
 
-	public JsonContentBuilder field(String name, float value) throws IOException {
+	public ESJsonContentBuilder field(String name, float value) throws IOException {
 		field(name);
 		generator.writeNumber(value);
 		return this;
 	}
 
-	public JsonContentBuilder field(String name, Double value) throws IOException {
+	public ESJsonContentBuilder field(String name, Double value) throws IOException {
 		field(name);
 		if (value == null) {
 			generator.writeNull();
@@ -243,17 +243,17 @@ public final class JsonContentBuilder {// implements , Releasable {
 		return this;
 	}
 
-	public JsonContentBuilder field(String name, double value) throws IOException {
+	public ESJsonContentBuilder field(String name, double value) throws IOException {
 		field(name);
 		generator.writeNumber(value);
 		return this;
 	}
 
-	public JsonContentBuilder field(String name, BigDecimal value) throws IOException {
+	public ESJsonContentBuilder field(String name, BigDecimal value) throws IOException {
 		return field(name, value, value.scale(), RoundingMode.HALF_UP, true);
 	}
 
-	public JsonContentBuilder field(String name, BigDecimal value, int scale, RoundingMode rounding, boolean toDouble)
+	public ESJsonContentBuilder field(String name, BigDecimal value, int scale, RoundingMode rounding, boolean toDouble)
 			throws IOException {
 		field(name);
 		if (value == null) {
@@ -279,13 +279,13 @@ public final class JsonContentBuilder {// implements , Releasable {
 	// return this;
 	// }
 
-	public JsonContentBuilder field(String name, Map<String, Object> value) throws IOException {
+	public ESJsonContentBuilder field(String name, Map<String, Object> value) throws IOException {
 		field(name);
 		value(value);
 		return this;
 	}
 
-	public JsonContentBuilder field(String name, Iterable<?> value) throws IOException {
+	public ESJsonContentBuilder field(String name, Iterable<?> value) throws IOException {
 		if (value instanceof Path) {
 			// treat Paths as single value
 			field(name);
@@ -300,7 +300,7 @@ public final class JsonContentBuilder {// implements , Releasable {
 		return this;
 	}
 
-	public JsonContentBuilder field(String name, boolean... value) throws IOException {
+	public ESJsonContentBuilder field(String name, boolean... value) throws IOException {
 		startArray(name);
 		for (boolean o : value) {
 			value(o);
@@ -309,7 +309,7 @@ public final class JsonContentBuilder {// implements , Releasable {
 		return this;
 	}
 
-	public JsonContentBuilder field(String name, String... value) throws IOException {
+	public ESJsonContentBuilder field(String name, String... value) throws IOException {
 		startArray(name);
 		for (String o : value) {
 			value(o);
@@ -318,7 +318,7 @@ public final class JsonContentBuilder {// implements , Releasable {
 		return this;
 	}
 
-	public JsonContentBuilder field(String name, Object... value) throws IOException {
+	public ESJsonContentBuilder field(String name, Object... value) throws IOException {
 		startArray(name);
 		for (Object o : value) {
 			value(o);
@@ -327,7 +327,7 @@ public final class JsonContentBuilder {// implements , Releasable {
 		return this;
 	}
 
-	public JsonContentBuilder field(String name, int... value) throws IOException {
+	public ESJsonContentBuilder field(String name, int... value) throws IOException {
 		startArray(name);
 		for (Object o : value) {
 			value(o);
@@ -336,7 +336,7 @@ public final class JsonContentBuilder {// implements , Releasable {
 		return this;
 	}
 
-	public JsonContentBuilder field(String name, long... value) throws IOException {
+	public ESJsonContentBuilder field(String name, long... value) throws IOException {
 		startArray(name);
 		for (Object o : value) {
 			value(o);
@@ -345,7 +345,7 @@ public final class JsonContentBuilder {// implements , Releasable {
 		return this;
 	}
 
-	public JsonContentBuilder field(String name, float... value) throws IOException {
+	public ESJsonContentBuilder field(String name, float... value) throws IOException {
 		startArray(name);
 		for (Object o : value) {
 			value(o);
@@ -354,7 +354,7 @@ public final class JsonContentBuilder {// implements , Releasable {
 		return this;
 	}
 
-	public JsonContentBuilder field(String name, double... value) throws IOException {
+	public ESJsonContentBuilder field(String name, double... value) throws IOException {
 		startArray(name);
 		for (Object o : value) {
 			value(o);
@@ -375,7 +375,7 @@ public final class JsonContentBuilder {// implements , Releasable {
 	// return this;
 	// }
 
-	public JsonContentBuilder field(String name, boolean value) throws IOException {
+	public ESJsonContentBuilder field(String name, boolean value) throws IOException {
 		field(name);
 		generator.writeBoolean(value);
 		return this;
@@ -392,32 +392,32 @@ public final class JsonContentBuilder {// implements , Releasable {
 	// return this;
 	// }
 
-	public JsonContentBuilder field(String name, ReadableInstant date) throws IOException {
+	public ESJsonContentBuilder field(String name, ReadableInstant date) throws IOException {
 		field(name);
 		return value(date);
 	}
 
-	public JsonContentBuilder field(String name, ReadableInstant date, DateTimeFormatter formatter) throws IOException {
+	public ESJsonContentBuilder field(String name, ReadableInstant date, DateTimeFormatter formatter) throws IOException {
 		field(name);
 		return value(date, formatter);
 	}
 
-	public JsonContentBuilder field(String name, Date date) throws IOException {
+	public ESJsonContentBuilder field(String name, Date date) throws IOException {
 		field(name);
 		return value(date);
 	}
 
-	public JsonContentBuilder field(String name, Date date, DateTimeFormatter formatter) throws IOException {
+	public ESJsonContentBuilder field(String name, Date date, DateTimeFormatter formatter) throws IOException {
 		field(name);
 		return value(date, formatter);
 	}
 
-	public JsonContentBuilder nullField(String name) throws IOException {
+	public ESJsonContentBuilder nullField(String name) throws IOException {
 		generator.writeNullField(name);
 		return this;
 	}
 
-	public JsonContentBuilder nullValue() throws IOException {
+	public ESJsonContentBuilder nullValue() throws IOException {
 		generator.writeNull();
 		return this;
 	}
@@ -428,89 +428,89 @@ public final class JsonContentBuilder {// implements , Releasable {
 	// return this;
 	// }
 
-	public JsonContentBuilder value(Boolean value) throws IOException {
+	public ESJsonContentBuilder value(Boolean value) throws IOException {
 		if (value == null) {
 			return nullValue();
 		}
 		return value(value.booleanValue());
 	}
 
-	public JsonContentBuilder value(boolean value) throws IOException {
+	public ESJsonContentBuilder value(boolean value) throws IOException {
 		generator.writeBoolean(value);
 		return this;
 	}
 
-	public JsonContentBuilder value(ReadableInstant date) throws IOException {
+	public ESJsonContentBuilder value(ReadableInstant date) throws IOException {
 		return value(date, defaultDatePrinter);
 	}
 
-	public JsonContentBuilder value(ReadableInstant date, DateTimeFormatter dateTimeFormatter) throws IOException {
+	public ESJsonContentBuilder value(ReadableInstant date, DateTimeFormatter dateTimeFormatter) throws IOException {
 		if (date == null) {
 			return nullValue();
 		}
 		return value(dateTimeFormatter.print(date));
 	}
 
-	public JsonContentBuilder value(Date date) throws IOException {
+	public ESJsonContentBuilder value(Date date) throws IOException {
 		return value(date, defaultDatePrinter);
 	}
 
-	public JsonContentBuilder value(Date date, DateTimeFormatter dateTimeFormatter) throws IOException {
+	public ESJsonContentBuilder value(Date date, DateTimeFormatter dateTimeFormatter) throws IOException {
 		if (date == null) {
 			return nullValue();
 		}
 		return value(dateTimeFormatter.print(date.getTime()));
 	}
 
-	public JsonContentBuilder value(Integer value) throws IOException {
+	public ESJsonContentBuilder value(Integer value) throws IOException {
 		if (value == null) {
 			return nullValue();
 		}
 		return value(value.intValue());
 	}
 
-	public JsonContentBuilder value(int value) throws IOException {
+	public ESJsonContentBuilder value(int value) throws IOException {
 		generator.writeNumber(value);
 		return this;
 	}
 
-	public JsonContentBuilder value(Long value) throws IOException {
+	public ESJsonContentBuilder value(Long value) throws IOException {
 		if (value == null) {
 			return nullValue();
 		}
 		return value(value.longValue());
 	}
 
-	public JsonContentBuilder value(long value) throws IOException {
+	public ESJsonContentBuilder value(long value) throws IOException {
 		generator.writeNumber(value);
 		return this;
 	}
 
-	public JsonContentBuilder value(Float value) throws IOException {
+	public ESJsonContentBuilder value(Float value) throws IOException {
 		if (value == null) {
 			return nullValue();
 		}
 		return value(value.floatValue());
 	}
 
-	public JsonContentBuilder value(float value) throws IOException {
+	public ESJsonContentBuilder value(float value) throws IOException {
 		generator.writeNumber(value);
 		return this;
 	}
 
-	public JsonContentBuilder value(Double value) throws IOException {
+	public ESJsonContentBuilder value(Double value) throws IOException {
 		if (value == null) {
 			return nullValue();
 		}
 		return value(value.doubleValue());
 	}
 
-	public JsonContentBuilder value(double value) throws IOException {
+	public ESJsonContentBuilder value(double value) throws IOException {
 		generator.writeNumber(value);
 		return this;
 	}
 
-	public JsonContentBuilder value(String value) throws IOException {
+	public ESJsonContentBuilder value(String value) throws IOException {
 		if (value == null) {
 			return nullValue();
 		}
@@ -535,7 +535,7 @@ public final class JsonContentBuilder {// implements , Releasable {
 	// return this;
 	// }
 
-	public JsonContentBuilder map(Map<String, ?> map) throws IOException {
+	public ESJsonContentBuilder map(Map<String, ?> map) throws IOException {
 		if (map == null) {
 			return nullValue();
 		}
@@ -543,7 +543,7 @@ public final class JsonContentBuilder {// implements , Releasable {
 		return this;
 	}
 
-	public JsonContentBuilder value(Map<String, Object> map) throws IOException {
+	public ESJsonContentBuilder value(Map<String, Object> map) throws IOException {
 		if (map == null) {
 			return nullValue();
 		}
@@ -551,7 +551,7 @@ public final class JsonContentBuilder {// implements , Releasable {
 		return this;
 	}
 
-	public JsonContentBuilder value(Iterable<?> value) throws IOException {
+	public ESJsonContentBuilder value(Iterable<?> value) throws IOException {
 		if (value == null) {
 			return nullValue();
 		}
@@ -568,15 +568,15 @@ public final class JsonContentBuilder {// implements , Releasable {
 		return this;
 	}
 
-	public JsonContentBuilder latlon(String name, double lat, double lon) throws IOException {
+	public ESJsonContentBuilder latlon(String name, double lat, double lon) throws IOException {
 		return startObject(name).field("lat", lat).field("lon", lon).endObject();
 	}
 
-	public JsonContentBuilder latlon(double lat, double lon) throws IOException {
+	public ESJsonContentBuilder latlon(double lat, double lon) throws IOException {
 		return startObject().field("lat", lat).field("lon", lon).endObject();
 	}
 
-	public JsonContentBuilder flush() throws IOException {
+	public ESJsonContentBuilder flush() throws IOException {
 		generator.flush();
 		return this;
 	}
@@ -637,10 +637,10 @@ public final class JsonContentBuilder {// implements , Releasable {
 			generator.writeNumber(((Short) value).shortValue());
 		} else if (type == Boolean.class) {
 			generator.writeBoolean(((Boolean) value).booleanValue());
-		} else if (type == GeoPoint.class) {
+		} else if (type == ESGeoPoint.class) {
 			generator.writeStartObject();
-			generator.writeNumberField("lat", ((GeoPoint) value).lat());
-			generator.writeNumberField("lon", ((GeoPoint) value).lon());
+			generator.writeNumberField("lat", ((ESGeoPoint) value).lat());
+			generator.writeNumberField("lon", ((ESGeoPoint) value).lon());
 			generator.writeEndObject();
 		} else if (value instanceof Map) {
 			writeMap((Map) value);
@@ -663,13 +663,13 @@ public final class JsonContentBuilder {// implements , Releasable {
 			// } else if (type == byte[].class) {
 			// generator.writeBinary((byte[]) value);
 		} else if (value instanceof Date) {
-			generator.writeString(JsonContentBuilder.defaultDatePrinter.print(((Date) value).getTime()));
+			generator.writeString(ESJsonContentBuilder.defaultDatePrinter.print(((Date) value).getTime()));
 		} else if (value instanceof Calendar) {
-			generator.writeString(JsonContentBuilder.defaultDatePrinter.print((((Calendar) value)).getTimeInMillis()));
+			generator.writeString(ESJsonContentBuilder.defaultDatePrinter.print((((Calendar) value)).getTimeInMillis()));
 		} else if (value instanceof ReadableInstant) {
-			generator.writeString(JsonContentBuilder.defaultDatePrinter.print((((ReadableInstant) value)).getMillis()));
-		} else if (value instanceof JsonContent) {
-			((JsonContent) value).toJsonContent(this);
+			generator.writeString(ESJsonContentBuilder.defaultDatePrinter.print((((ReadableInstant) value)).getMillis()));
+		} else if (value instanceof ESJsonContent) {
+			((ESJsonContent) value).toJsonContent(this);
 		} else if (value instanceof double[]) {
 			generator.writeStartArray();
 			for (double v : (double[]) value) {

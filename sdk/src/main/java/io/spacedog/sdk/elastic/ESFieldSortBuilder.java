@@ -17,18 +17,18 @@
  * under the License.
  */
 
-package io.spacedog.sdk.elasticsearch;
+package io.spacedog.sdk.elastic;
 
 import java.io.IOException;
 
 /**
  * A sort builder to sort based on a document field.
  */
-public class FieldSortBuilder extends SortBuilder {
+public class ESFieldSortBuilder extends ESSortBuilder {
 
 	private final String fieldName;
 
-	private SortOrder order;
+	private ESSortOrder order;
 
 	private Object missing;
 
@@ -38,7 +38,7 @@ public class FieldSortBuilder extends SortBuilder {
 
 	private String sortMode;
 
-	private QueryBuilder nestedFilter;
+	private ESQueryBuilder nestedFilter;
 
 	private String nestedPath;
 
@@ -48,7 +48,7 @@ public class FieldSortBuilder extends SortBuilder {
 	 * @param fieldName
 	 *            The field name.
 	 */
-	public FieldSortBuilder(String fieldName) {
+	public ESFieldSortBuilder(String fieldName) {
 		if (fieldName == null) {
 			throw new IllegalArgumentException("fieldName must not be null");
 		}
@@ -56,10 +56,10 @@ public class FieldSortBuilder extends SortBuilder {
 	}
 
 	/**
-	 * The order of sorting. Defaults to {@link SortOrder#ASC}.
+	 * The order of sorting. Defaults to {@link ESSortOrder#ASC}.
 	 */
 	@Override
-	public FieldSortBuilder order(SortOrder order) {
+	public ESFieldSortBuilder order(ESSortOrder order) {
 		this.order = order;
 		return this;
 	}
@@ -70,7 +70,7 @@ public class FieldSortBuilder extends SortBuilder {
 	 * respectively.
 	 */
 	@Override
-	public FieldSortBuilder missing(Object missing) {
+	public ESFieldSortBuilder missing(Object missing) {
 		this.missing = missing;
 		return this;
 	}
@@ -83,7 +83,7 @@ public class FieldSortBuilder extends SortBuilder {
 	 * then query execution will fail if one or more indices don't have a
 	 * mapping for the current field.
 	 */
-	public FieldSortBuilder unmappedType(String type) {
+	public ESFieldSortBuilder unmappedType(String type) {
 		this.unmappedType = type;
 		return this;
 	}
@@ -95,7 +95,7 @@ public class FieldSortBuilder extends SortBuilder {
 	 * <p/>
 	 * The last two values are only applicable for number based fields.
 	 */
-	public FieldSortBuilder sortMode(String sortMode) {
+	public ESFieldSortBuilder sortMode(String sortMode) {
 		this.sortMode = sortMode;
 		return this;
 	}
@@ -104,7 +104,7 @@ public class FieldSortBuilder extends SortBuilder {
 	 * Sets the nested filter that the nested objects should match with in order
 	 * to be taken into account for sorting.
 	 */
-	public FieldSortBuilder setNestedFilter(QueryBuilder nestedFilter) {
+	public ESFieldSortBuilder setNestedFilter(ESQueryBuilder nestedFilter) {
 		this.nestedFilter = nestedFilter;
 		return this;
 	}
@@ -114,13 +114,13 @@ public class FieldSortBuilder extends SortBuilder {
 	 * object. By default when sorting on a field inside a nested object, the
 	 * nearest upper nested object is selected as nested path.
 	 */
-	public FieldSortBuilder setNestedPath(String nestedPath) {
+	public ESFieldSortBuilder setNestedPath(String nestedPath) {
 		this.nestedPath = nestedPath;
 		return this;
 	}
 
 	@Override
-	public JsonContentBuilder toJsonContent(JsonContentBuilder builder) throws IOException {
+	public ESJsonContentBuilder toJsonContent(ESJsonContentBuilder builder) throws IOException {
 		builder.startObject(fieldName);
 		if (order != null) {
 			builder.field("order", order.toString());

@@ -16,8 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.spacedog.sdk.elasticsearch;
 
-public abstract class MultiTermQueryBuilder extends QueryBuilder {
+package io.spacedog.sdk.elastic;
+
+/**
+ * Query builder which allow setting some boost
+ */
+public interface ESBoostableQueryBuilder<B extends ESBoostableQueryBuilder<B>> {
+
+	/**
+	 * Sets the boost for this query. Documents matching this query will (in
+	 * addition to the normal weightings) have their score multiplied by the
+	 * boost provided.
+	 */
+	B boost(float boost);
 
 }

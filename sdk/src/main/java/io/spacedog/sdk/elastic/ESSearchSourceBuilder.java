@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.spacedog.sdk.elasticsearch;
+package io.spacedog.sdk.elastic;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -29,22 +29,22 @@ import io.spacedog.utils.Exceptions;
 /**
  * A search source builder allowing to easily build search source. Simple
  * construction using
- * {@link io.spacedog.sdk.elasticsearch.SearchSourceBuilder#searchSource()}.
+ * {@link io.spacedog.sdk.elastic.ESSearchSourceBuilder#searchSource()}.
  *
- * @see org.elasticsearch.action.search.SearchRequest#source(SearchSourceBuilder)
+ * @see org.elasticsearch.action.search.SearchRequest#source(ESSearchSourceBuilder)
  */
-public class SearchSourceBuilder { // extends ToXContentToBytes {
+public class ESSearchSourceBuilder { // extends ToXContentToBytes {
 
 	/**
 	 * A static factory method to construct a new search source.
 	 */
-	public static SearchSourceBuilder searchSource() {
-		return new SearchSourceBuilder();
+	public static ESSearchSourceBuilder searchSource() {
+		return new ESSearchSourceBuilder();
 	}
 
-	private QuerySourceBuilder querySourceBuilder;
+	private ESQuerySourceBuilder querySourceBuilder;
 
-	private QueryBuilder postQueryBuilder;
+	private ESQueryBuilder postQueryBuilder;
 
 	private int from = -1;
 
@@ -54,7 +54,7 @@ public class SearchSourceBuilder { // extends ToXContentToBytes {
 
 	private Boolean version;
 
-	private List<SortBuilder> sorts;
+	private List<ESSortBuilder> sorts;
 
 	private boolean trackScores = false;
 
@@ -87,13 +87,13 @@ public class SearchSourceBuilder { // extends ToXContentToBytes {
 	/**
 	 * Constructs a new search source builder.
 	 */
-	public SearchSourceBuilder() {
+	public ESSearchSourceBuilder() {
 	}
 
 	/**
-	 * Sets the query provided as a {@link QuerySourceBuilder}
+	 * Sets the query provided as a {@link ESQuerySourceBuilder}
 	 */
-	public SearchSourceBuilder query(QuerySourceBuilder querySourceBuilder) {
+	public ESSearchSourceBuilder query(ESQuerySourceBuilder querySourceBuilder) {
 		this.querySourceBuilder = querySourceBuilder;
 		return this;
 	}
@@ -101,11 +101,11 @@ public class SearchSourceBuilder { // extends ToXContentToBytes {
 	/**
 	 * Constructs a new search source builder with a search query.
 	 *
-	 * @see io.spacedog.sdk.elasticsearch.QueryBuilders
+	 * @see io.spacedog.sdk.elastic.ESQueryBuilders
 	 */
-	public SearchSourceBuilder query(QueryBuilder query) {
+	public ESSearchSourceBuilder query(ESQueryBuilder query) {
 		if (this.querySourceBuilder == null) {
-			this.querySourceBuilder = new QuerySourceBuilder();
+			this.querySourceBuilder = new ESQuerySourceBuilder();
 		}
 		this.querySourceBuilder.setQuery(query);
 		return this;
@@ -116,7 +116,7 @@ public class SearchSourceBuilder { // extends ToXContentToBytes {
 	 * only has affect on the search hits (not aggregations). This filter is
 	 * always executed as last filtering mechanism.
 	 */
-	public SearchSourceBuilder postFilter(QueryBuilder postFilter) {
+	public ESSearchSourceBuilder postFilter(ESQueryBuilder postFilter) {
 		this.postQueryBuilder = postFilter;
 		return this;
 	}
@@ -124,7 +124,7 @@ public class SearchSourceBuilder { // extends ToXContentToBytes {
 	/**
 	 * From index to start the search from. Defaults to <tt>0</tt>.
 	 */
-	public SearchSourceBuilder from(int from) {
+	public ESSearchSourceBuilder from(int from) {
 		this.from = from;
 		return this;
 	}
@@ -132,7 +132,7 @@ public class SearchSourceBuilder { // extends ToXContentToBytes {
 	/**
 	 * The number of search hits to return. Defaults to <tt>10</tt>.
 	 */
-	public SearchSourceBuilder size(int size) {
+	public ESSearchSourceBuilder size(int size) {
 		this.size = size;
 		return this;
 	}
@@ -140,7 +140,7 @@ public class SearchSourceBuilder { // extends ToXContentToBytes {
 	/**
 	 * Sets the minimum score below which docs will be filtered out.
 	 */
-	public SearchSourceBuilder minScore(float minScore) {
+	public ESSearchSourceBuilder minScore(float minScore) {
 		this.minScore = minScore;
 		return this;
 	}
@@ -149,7 +149,7 @@ public class SearchSourceBuilder { // extends ToXContentToBytes {
 	 * Should each {@link org.elasticsearch.search.SearchHit} be returned with
 	 * an explanation of the hit (ranking).
 	 */
-	public SearchSourceBuilder explain(Boolean explain) {
+	public ESSearchSourceBuilder explain(Boolean explain) {
 		this.explain = explain;
 		return this;
 	}
@@ -158,7 +158,7 @@ public class SearchSourceBuilder { // extends ToXContentToBytes {
 	 * Should each {@link org.elasticsearch.search.SearchHit} be returned with a
 	 * version associated with it.
 	 */
-	public SearchSourceBuilder version(Boolean version) {
+	public ESSearchSourceBuilder version(Boolean version) {
 		this.version = version;
 		return this;
 	}
@@ -166,7 +166,7 @@ public class SearchSourceBuilder { // extends ToXContentToBytes {
 	/**
 	 * An optional timeout to control how long search is allowed to take.
 	 */
-	public SearchSourceBuilder timeout(TimeValue timeout) {
+	public ESSearchSourceBuilder timeout(ESTimeValue timeout) {
 		this.timeoutInMillis = timeout.millis();
 		return this;
 	}
@@ -185,7 +185,7 @@ public class SearchSourceBuilder { // extends ToXContentToBytes {
 	 * An optional terminate_after to terminate the search after collecting
 	 * <code>terminateAfter</code> documents
 	 */
-	public SearchSourceBuilder terminateAfter(int terminateAfter) {
+	public ESSearchSourceBuilder terminateAfter(int terminateAfter) {
 		if (terminateAfter <= 0) {
 			throw new IllegalArgumentException("terminateAfter must be > 0");
 		}
@@ -201,8 +201,8 @@ public class SearchSourceBuilder { // extends ToXContentToBytes {
 	 * @param order
 	 *            The sort ordering
 	 */
-	public SearchSourceBuilder sort(String name, SortOrder order) {
-		return sort(SortBuilders.fieldSort(name).order(order));
+	public ESSearchSourceBuilder sort(String name, ESSortOrder order) {
+		return sort(ESSortBuilders.fieldSort(name).order(order));
 	}
 
 	/**
@@ -211,14 +211,14 @@ public class SearchSourceBuilder { // extends ToXContentToBytes {
 	 * @param name
 	 *            The name of the field to sort by
 	 */
-	public SearchSourceBuilder sort(String name) {
-		return sort(SortBuilders.fieldSort(name));
+	public ESSearchSourceBuilder sort(String name) {
+		return sort(ESSortBuilders.fieldSort(name));
 	}
 
 	/**
 	 * Adds a sort builder.
 	 */
-	public SearchSourceBuilder sort(SortBuilder sort) {
+	public ESSearchSourceBuilder sort(ESSortBuilder sort) {
 		if (sorts == null) {
 			sorts = new ArrayList<>();
 		}
@@ -230,7 +230,7 @@ public class SearchSourceBuilder { // extends ToXContentToBytes {
 	 * Applies when sorting, and controls if scores will be tracked as well.
 	 * Defaults to <tt>false</tt>.
 	 */
-	public SearchSourceBuilder trackScores(boolean trackScores) {
+	public ESSearchSourceBuilder trackScores(boolean trackScores) {
 		this.trackScores = trackScores;
 		return this;
 	}
@@ -292,7 +292,7 @@ public class SearchSourceBuilder { // extends ToXContentToBytes {
 	/**
 	 * Should the query be profiled. Defaults to <tt>false</tt>
 	 */
-	public SearchSourceBuilder profile(boolean profile) {
+	public ESSearchSourceBuilder profile(boolean profile) {
 		this.profile = profile;
 		return this;
 	}
@@ -368,7 +368,7 @@ public class SearchSourceBuilder { // extends ToXContentToBytes {
 	 * Sets no fields to be loaded, resulting in only id and type to be returned
 	 * per field.
 	 */
-	public SearchSourceBuilder noFields() {
+	public ESSearchSourceBuilder noFields() {
 		this.fieldNames = Collections.emptyList();
 		return this;
 	}
@@ -377,7 +377,7 @@ public class SearchSourceBuilder { // extends ToXContentToBytes {
 	 * Sets the fields to load and return as part of the search request. If none
 	 * are specified, the source of the document will be returned.
 	 */
-	public SearchSourceBuilder fields(List<String> fields) {
+	public ESSearchSourceBuilder fields(List<String> fields) {
 		this.fieldNames = fields;
 		return this;
 	}
@@ -386,7 +386,7 @@ public class SearchSourceBuilder { // extends ToXContentToBytes {
 	 * Adds the fields to load and return as part of the search request. If none
 	 * are specified, the source of the document will be returned.
 	 */
-	public SearchSourceBuilder fields(String... fields) {
+	public ESSearchSourceBuilder fields(String... fields) {
 		if (fieldNames == null) {
 			fieldNames = new ArrayList<>();
 		}
@@ -399,7 +399,7 @@ public class SearchSourceBuilder { // extends ToXContentToBytes {
 	 * search request. If none are specified, the source of the document will be
 	 * return.
 	 */
-	public SearchSourceBuilder field(String name) {
+	public ESSearchSourceBuilder field(String name) {
 		if (fieldNames == null) {
 			fieldNames = new ArrayList<>();
 		}
@@ -411,7 +411,7 @@ public class SearchSourceBuilder { // extends ToXContentToBytes {
 	 * Adds a field to load from the field data cache and return as part of the
 	 * search request.
 	 */
-	public SearchSourceBuilder fieldDataField(String name) {
+	public ESSearchSourceBuilder fieldDataField(String name) {
 		if (fieldDataFields == null) {
 			fieldDataFields = new ArrayList<>();
 		}
@@ -455,7 +455,7 @@ public class SearchSourceBuilder { // extends ToXContentToBytes {
 	/**
 	 * The stats groups this request will be aggregated under.
 	 */
-	public SearchSourceBuilder stats(String... statsGroups) {
+	public ESSearchSourceBuilder stats(String... statsGroups) {
 		this.stats = statsGroups;
 		return this;
 	}
@@ -463,7 +463,7 @@ public class SearchSourceBuilder { // extends ToXContentToBytes {
 	@Override
 	public final String toString() {
 		try {
-			JsonContentBuilder builder = new JsonContentBuilder();
+			ESJsonContentBuilder builder = new ESJsonContentBuilder();
 			builder.prettyPrint();
 			toXContent(builder);
 			return builder.string();
@@ -472,14 +472,14 @@ public class SearchSourceBuilder { // extends ToXContentToBytes {
 		}
 	}
 
-	public JsonContentBuilder toXContent(JsonContentBuilder builder) throws IOException {
+	public ESJsonContentBuilder toXContent(ESJsonContentBuilder builder) throws IOException {
 		builder.startObject();
 		innerToXContent(builder);
 		builder.endObject();
 		return builder;
 	}
 
-	public void innerToXContent(JsonContentBuilder builder) throws IOException {
+	public void innerToXContent(ESJsonContentBuilder builder) throws IOException {
 		if (from != -1) {
 			builder.field("from", from);
 		}
@@ -553,7 +553,7 @@ public class SearchSourceBuilder { // extends ToXContentToBytes {
 
 		if (sorts != null) {
 			builder.startArray("sort");
-			for (SortBuilder sort : sorts) {
+			for (ESSortBuilder sort : sorts) {
 				builder.startObject();
 				sort.toJsonContent(builder);
 				builder.endObject();

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.spacedog.sdk.elasticsearch;
+package io.spacedog.sdk.elastic;
 
 import java.io.IOException;
 
@@ -26,27 +26,27 @@ import io.spacedog.utils.Exceptions;
 /**
  *
  */
-public abstract class SortBuilder implements JsonContent {
+public abstract class ESSortBuilder implements ESJsonContent {
 
 	/**
-	 * The order of sorting. Defaults to {@link SortOrder#ASC}.
+	 * The order of sorting. Defaults to {@link ESSortOrder#ASC}.
 	 */
-	public abstract SortBuilder order(SortOrder order);
+	public abstract ESSortBuilder order(ESSortOrder order);
 
 	/**
 	 * Sets the value when a field is missing in a doc. Can also be set to
 	 * <tt>_last</tt> or <tt>_first</tt> to sort missing last or first
 	 * respectively.
 	 */
-	public abstract SortBuilder missing(Object missing);
+	public abstract ESSortBuilder missing(Object missing);
 
 	@Override
-	public abstract JsonContentBuilder toJsonContent(JsonContentBuilder builder) throws IOException;
+	public abstract ESJsonContentBuilder toJsonContent(ESJsonContentBuilder builder) throws IOException;
 
 	@Override
 	public String toString() {
 		try {
-			JsonContentBuilder builder = new JsonContentBuilder();
+			ESJsonContentBuilder builder = new ESJsonContentBuilder();
 			builder.prettyPrint();
 			toJsonContent(builder);
 			return builder.string();

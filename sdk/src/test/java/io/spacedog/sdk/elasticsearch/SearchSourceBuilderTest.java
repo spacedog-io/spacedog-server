@@ -3,6 +3,8 @@ package io.spacedog.sdk.elasticsearch;
 import org.junit.Assert;
 import org.junit.Test;
 
+import io.spacedog.sdk.elastic.ESQueryBuilders;
+import io.spacedog.sdk.elastic.ESSearchSourceBuilder;
 import io.spacedog.utils.Json7;
 import io.spacedog.utils.Utils;
 
@@ -11,10 +13,10 @@ public class SearchSourceBuilderTest extends Assert {
 	@Test
 	public void builderToString() {
 
-		String source = SearchSourceBuilder.searchSource()//
+		String source = ESSearchSourceBuilder.searchSource()//
 				.from(0).size(20).fields("firstname", "lastname").sort("firstname")//
-				.query(QueryBuilders.boolQuery()//
-						.must(QueryBuilders.termQuery("firstname", "Fred")))
+				.query(ESQueryBuilders.boolQuery()//
+						.must(ESQueryBuilders.termQuery("firstname", "Fred")))
 				.toString();
 
 		Utils.info(source);

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.spacedog.sdk.elasticsearch;
+package io.spacedog.sdk.elastic;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,17 +30,17 @@ import io.spacedog.utils.Exceptions;
 /**
  * A geo distance based sorting on a geo point like field.
  */
-public class GeoDistanceSortBuilder extends SortBuilder {
+public class ESGeoDistanceSortBuilder extends ESSortBuilder {
 
 	final String fieldName;
-	private final List<GeoPoint> points = new ArrayList<>();
+	private final List<ESGeoPoint> points = new ArrayList<>();
 	private final List<String> geohashes = new ArrayList<>();
 
-	private GeoDistance geoDistance;
-	private DistanceUnit unit;
-	private SortOrder order;
+	private ESGeoDistance geoDistance;
+	private ESDistanceUnit unit;
+	private ESSortOrder order;
 	private String sortMode;
-	private QueryBuilder nestedFilter;
+	private ESQueryBuilder nestedFilter;
 	private String nestedPath;
 	private Boolean coerce;
 	private Boolean ignoreMalformed;
@@ -51,7 +51,7 @@ public class GeoDistanceSortBuilder extends SortBuilder {
 	 * @param fieldName
 	 *            The geo point like field name.
 	 */
-	public GeoDistanceSortBuilder(String fieldName) {
+	public ESGeoDistanceSortBuilder(String fieldName) {
 		this.fieldName = fieldName;
 	}
 
@@ -63,8 +63,8 @@ public class GeoDistanceSortBuilder extends SortBuilder {
 	 * @param lon
 	 *            longitude.
 	 */
-	public GeoDistanceSortBuilder point(double lat, double lon) {
-		points.add(new GeoPoint(lat, lon));
+	public ESGeoDistanceSortBuilder point(double lat, double lon) {
+		points.add(new ESGeoPoint(lat, lon));
 		return this;
 	}
 
@@ -74,7 +74,7 @@ public class GeoDistanceSortBuilder extends SortBuilder {
 	 * @param points
 	 *            reference points.
 	 */
-	public GeoDistanceSortBuilder points(GeoPoint... points) {
+	public ESGeoDistanceSortBuilder points(ESGeoPoint... points) {
 		this.points.addAll(Arrays.asList(points));
 		return this;
 	}
@@ -82,7 +82,7 @@ public class GeoDistanceSortBuilder extends SortBuilder {
 	/**
 	 * The geohash of the geo point to create the range distance facets from.
 	 */
-	public GeoDistanceSortBuilder geohashes(String... geohashes) {
+	public ESGeoDistanceSortBuilder geohashes(String... geohashes) {
 		this.geohashes.addAll(Arrays.asList(geohashes));
 		return this;
 	}
@@ -90,25 +90,25 @@ public class GeoDistanceSortBuilder extends SortBuilder {
 	/**
 	 * The geo distance type used to compute the distance.
 	 */
-	public GeoDistanceSortBuilder geoDistance(GeoDistance geoDistance) {
+	public ESGeoDistanceSortBuilder geoDistance(ESGeoDistance geoDistance) {
 		this.geoDistance = geoDistance;
 		return this;
 	}
 
 	/**
 	 * The distance unit to use. Defaults to
-	 * {@link io.spacedog.sdk.elasticsearch.unit.DistanceUnit#KILOMETERS}
+	 * {@link io.spacedog.sdk.elasticsearch.ESDistanceUnit.DistanceUnit#KILOMETERS}
 	 */
-	public GeoDistanceSortBuilder unit(DistanceUnit unit) {
+	public ESGeoDistanceSortBuilder unit(ESDistanceUnit unit) {
 		this.unit = unit;
 		return this;
 	}
 
 	/**
-	 * The order of sorting. Defaults to {@link SortOrder#ASC}.
+	 * The order of sorting. Defaults to {@link ESSortOrder#ASC}.
 	 */
 	@Override
-	public GeoDistanceSortBuilder order(SortOrder order) {
+	public ESGeoDistanceSortBuilder order(ESSortOrder order) {
 		this.order = order;
 		return this;
 	}
@@ -117,7 +117,7 @@ public class GeoDistanceSortBuilder extends SortBuilder {
 	 * Not relevant.
 	 */
 	@Override
-	public SortBuilder missing(Object missing) {
+	public ESSortBuilder missing(Object missing) {
 		return this;
 	}
 
@@ -125,7 +125,7 @@ public class GeoDistanceSortBuilder extends SortBuilder {
 	 * Defines which distance to use for sorting in the case a document contains
 	 * multiple geo points. Possible values: min and max
 	 */
-	public GeoDistanceSortBuilder sortMode(String sortMode) {
+	public ESGeoDistanceSortBuilder sortMode(String sortMode) {
 		this.sortMode = sortMode;
 		return this;
 	}
@@ -134,7 +134,7 @@ public class GeoDistanceSortBuilder extends SortBuilder {
 	 * Sets the nested filter that the nested objects should match with in order
 	 * to be taken into account for sorting.
 	 */
-	public GeoDistanceSortBuilder setNestedFilter(QueryBuilder nestedFilter) {
+	public ESGeoDistanceSortBuilder setNestedFilter(ESQueryBuilder nestedFilter) {
 		this.nestedFilter = nestedFilter;
 		return this;
 	}
@@ -144,30 +144,30 @@ public class GeoDistanceSortBuilder extends SortBuilder {
 	 * object. By default when sorting on a field inside a nested object, the
 	 * nearest upper nested object is selected as nested path.
 	 */
-	public GeoDistanceSortBuilder setNestedPath(String nestedPath) {
+	public ESGeoDistanceSortBuilder setNestedPath(String nestedPath) {
 		this.nestedPath = nestedPath;
 		return this;
 	}
 
-	public GeoDistanceSortBuilder coerce(boolean coerce) {
+	public ESGeoDistanceSortBuilder coerce(boolean coerce) {
 		this.coerce = coerce;
 		return this;
 	}
 
-	public GeoDistanceSortBuilder ignoreMalformed(boolean ignoreMalformed) {
+	public ESGeoDistanceSortBuilder ignoreMalformed(boolean ignoreMalformed) {
 		this.ignoreMalformed = ignoreMalformed;
 		return this;
 	}
 
 	@Override
-	public JsonContentBuilder toJsonContent(JsonContentBuilder builder) throws IOException {
+	public ESJsonContentBuilder toJsonContent(ESJsonContentBuilder builder) throws IOException {
 		builder.startObject("_geo_distance");
 		if (geohashes.size() == 0 && points.size() == 0) {
 			throw Exceptions.runtime("No points provided for _geo_distance sort.");
 		}
 
 		builder.startArray(fieldName);
-		for (GeoPoint point : points) {
+		for (ESGeoPoint point : points) {
 			builder.value(point);
 		}
 		for (String geohash : geohashes) {
@@ -181,7 +181,7 @@ public class GeoDistanceSortBuilder extends SortBuilder {
 		if (geoDistance != null) {
 			builder.field("distance_type", geoDistance.name().toLowerCase(Locale.ROOT));
 		}
-		if (order == SortOrder.DESC) {
+		if (order == ESSortOrder.DESC) {
 			builder.field("reverse", true);
 		}
 		if (sortMode != null) {

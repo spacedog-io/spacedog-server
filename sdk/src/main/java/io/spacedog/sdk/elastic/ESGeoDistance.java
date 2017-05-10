@@ -17,14 +17,14 @@
  * under the License.
  */
 
-package io.spacedog.sdk.elasticsearch;
+package io.spacedog.sdk.elastic;
 
 import java.util.Locale;
 
 /**
  * Geo distance calculation.
  */
-public enum GeoDistance {
+public enum ESGeoDistance {
 	/**
 	 * Calculates distance as points on a plane. Faster, but less accurate than
 	 * {@link #ARC}.
@@ -48,11 +48,11 @@ public enum GeoDistance {
 	SLOPPY_ARC;
 
 	/**
-	 * Default {@link GeoDistance} function. This method should be used, If no
+	 * Default {@link ESGeoDistance} function. This method should be used, If no
 	 * specific function has been selected. This is an alias for
 	 * <code>SLOPPY_ARC</code>
 	 */
-	public static final GeoDistance DEFAULT = SLOPPY_ARC;
+	public static final ESGeoDistance DEFAULT = SLOPPY_ARC;
 
 	// public abstract double normalize(double distance, DistanceUnit unit);
 	//
@@ -108,7 +108,7 @@ public enum GeoDistance {
 	// }
 
 	/**
-	 * Get a {@link GeoDistance} according to a given name. Valid values are
+	 * Get a {@link ESGeoDistance} according to a given name. Valid values are
 	 * 
 	 * <ul>
 	 * <li><b>plane</b> for <code>GeoDistance.PLANE</code></li>
@@ -118,10 +118,10 @@ public enum GeoDistance {
 	 * </ul>
 	 * 
 	 * @param name
-	 *            name of the {@link GeoDistance}
-	 * @return a {@link GeoDistance}
+	 *            name of the {@link ESGeoDistance}
+	 * @return a {@link ESGeoDistance}
 	 */
-	public static GeoDistance fromString(String name) {
+	public static ESGeoDistance fromString(String name) {
 		name = name.toLowerCase(Locale.ROOT);
 		if ("plane".equals(name)) {
 			return PLANE;
@@ -144,9 +144,9 @@ public enum GeoDistance {
 
 		boolean isWithin(double targetLatitude, double targetLongitude);
 
-		GeoPoint topLeft();
+		ESGeoPoint topLeft();
 
-		GeoPoint bottomRight();
+		ESGeoPoint bottomRight();
 	}
 
 	public static final AlwaysDistanceBoundingCheck ALWAYS_INSTANCE = new AlwaysDistanceBoundingCheck();
@@ -158,22 +158,22 @@ public enum GeoDistance {
 		}
 
 		@Override
-		public GeoPoint topLeft() {
+		public ESGeoPoint topLeft() {
 			return null;
 		}
 
 		@Override
-		public GeoPoint bottomRight() {
+		public ESGeoPoint bottomRight() {
 			return null;
 		}
 	}
 
 	public static class Meridian180DistanceBoundingCheck implements DistanceBoundingCheck {
 
-		private final GeoPoint topLeft;
-		private final GeoPoint bottomRight;
+		private final ESGeoPoint topLeft;
+		private final ESGeoPoint bottomRight;
 
-		public Meridian180DistanceBoundingCheck(GeoPoint topLeft, GeoPoint bottomRight) {
+		public Meridian180DistanceBoundingCheck(ESGeoPoint topLeft, ESGeoPoint bottomRight) {
 			this.topLeft = topLeft;
 			this.bottomRight = bottomRight;
 		}
@@ -185,21 +185,21 @@ public enum GeoDistance {
 		}
 
 		@Override
-		public GeoPoint topLeft() {
+		public ESGeoPoint topLeft() {
 			return topLeft;
 		}
 
 		@Override
-		public GeoPoint bottomRight() {
+		public ESGeoPoint bottomRight() {
 			return bottomRight;
 		}
 	}
 
 	public static class SimpleDistanceBoundingCheck implements DistanceBoundingCheck {
-		private final GeoPoint topLeft;
-		private final GeoPoint bottomRight;
+		private final ESGeoPoint topLeft;
+		private final ESGeoPoint bottomRight;
 
-		public SimpleDistanceBoundingCheck(GeoPoint topLeft, GeoPoint bottomRight) {
+		public SimpleDistanceBoundingCheck(ESGeoPoint topLeft, ESGeoPoint bottomRight) {
 			this.topLeft = topLeft;
 			this.bottomRight = bottomRight;
 		}
@@ -211,12 +211,12 @@ public enum GeoDistance {
 		}
 
 		@Override
-		public GeoPoint topLeft() {
+		public ESGeoPoint topLeft() {
 			return topLeft;
 		}
 
 		@Override
-		public GeoPoint bottomRight() {
+		public ESGeoPoint bottomRight() {
 			return bottomRight;
 		}
 	}

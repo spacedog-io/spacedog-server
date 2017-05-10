@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package io.spacedog.sdk.elasticsearch;
+package io.spacedog.sdk.elastic;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,7 +37,7 @@ import com.google.common.collect.Iterables;
 /**
  *
  */
-public class Strings {
+public class ESStrings {
 
 	public static final String[] EMPTY_ARRAY = new String[0];
 
@@ -629,7 +629,7 @@ public class Strings {
 
 	public static String[] splitStringToArray(final CharSequence s, final char c) {
 		if (s == null || s.length() == 0) {
-			return Strings.EMPTY_ARRAY;
+			return ESStrings.EMPTY_ARRAY;
 		}
 		int count = 1;
 		for (int i = 0; i < s.length(); i++) {
@@ -1102,7 +1102,7 @@ public class Strings {
 		return (array == null || array.length == 0);
 	}
 
-	private Strings() {
+	private ESStrings() {
 	}
 
 	// public static byte[] toUTF8Bytes(CharSequence charSequence) {
