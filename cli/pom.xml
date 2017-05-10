@@ -44,7 +44,7 @@
 		<dependency>
 			<groupId>io.spacedog</groupId>
 			<artifactId>spacedog-java-sdk</artifactId>
-			<version>${java-sdk-version}</version>
+			<version>${project.parent.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.beust</groupId>
