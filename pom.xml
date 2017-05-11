@@ -9,9 +9,10 @@
 	<packaging>pom</packaging>
 
 	<properties>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.test.redirectTestOutputToFile>true</maven.test.redirectTestOutputToFile>
-
 		<aws-version>1.10.52</aws-version>
 		<es-version>2.2.0</es-version>
 		<jackson-version>2.6.2</jackson-version>
@@ -79,15 +80,6 @@
 								</pluginExecution>
 							</pluginExecutions>
 						</lifecycleMappingMetadata>
-					</configuration>
-				</plugin>
-
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-compiler-plugin</artifactId>
-					<configuration>
-						<source>1.8</source>
-						<target>1.8</target>
 					</configuration>
 				</plugin>
 
