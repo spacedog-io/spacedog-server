@@ -205,7 +205,7 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 			boolean refresh) {
 
 		String path = "/1/search";
-		if (Strings.isNullOrEmpty(type))
+		if (!Strings.isNullOrEmpty(type))
 			path = path + "/" + type;
 
 		ObjectNode results = dog.post(path)//
