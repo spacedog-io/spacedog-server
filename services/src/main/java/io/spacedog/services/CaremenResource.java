@@ -11,6 +11,7 @@ import org.elasticsearch.common.unit.DistanceUnit;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
+import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -34,9 +35,90 @@ public class CaremenResource extends Resource {
 	// Routes
 	//
 
+	@Post("/1/service/course")
+	@Post("/1/service/course/")
+	public Payload postCourse(String body, Context context) {
+		Credentials credentials = SpaceContext.checkUserCredentials();
+
+		// only real users are allowed to post courses
+		Set<String> roles = credentials.roles();
+		if (!roles.contains(Credentials.USER) || roles.size() > 1)
+			throw Exceptions.insufficientCredentials(credentials);
+
+		try {
+			// check course
+			Course course = Json8.mapper().readValue(body, Course.class);
+
+			// save course
+			Payload payload = DataResource.get().post("course", body, context);
+
+			// get course id and version
+			ObjectNode courseResponse = (ObjectNode) payload.rawContent();
+			String courseId = courseResponse.get("id").asText();
+			long courseVersion = courseResponse.get("version").asLong();
+
+			// push to drivers if immediate
+			if (course.requestedPickupTimestamp == null) {
+				PushLog pushLog = pushToClosestDrivers(courseId, course, credentials);
+				payload = enhancePushPayload(pushLog, courseId, courseVersion);
+			}
+
+			// text the operator
+			textOperatorNewCourseRequest(course, courseId);
+
+			return payload;
+
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
+		}
+	}
+
+	@Delete("/1/service/course/:id/driver")
+	@Delete("/1/service/course/:id/driver")
+	public Payload deleteCourseDriver(String courseId, String body, Context context) {
+		Credentials credentials = SpaceContext.checkUserCredentials();
+		credentials.checkRoles("driver", "admin");
+
+		GetResponse response = Start.get().getElasticClient()//
+				.get(credentials.backendId(), "course", courseId);
+
+		Course course = null;
+
+		try {
+			course = Json7.mapper()//
+					.readValue(response.getSourceAsBytes(), Course.class);
+
+		} catch (Exception e) {
+			throw Exceptions.runtime(e, "error loading course [%s]", courseId);
+		}
+
+		checkDriverIsAuthorized(credentials, courseId, course);
+
+		// update course
+		ObjectNode patch = Json8.object("driver", null, "status", "new-immediate");
+		long courseVersion = DataStore.get()
+				.patchObject(//
+						credentials.backendId(), "course", courseId, //
+						patch, credentials.name())//
+				.getVersion();
+
+		// push to drivers
+		PushLog pushLog = pushToClosestDrivers(courseId, course, credentials);
+		Payload payload = enhancePushPayload(pushLog, courseId, courseVersion);
+
+		// text the operator
+		textOperatorDriverHasGivenUp(courseId, course, credentials);
+		return payload;
+	}
+
+	//
+	// Implementation
+	//
+
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	private static class Course {
 		public String requestedVehiculeType;
+		public DateTime requestedPickupTimestamp;
 		public Location from;
 		public Driver driver;
 		public Customer customer;
@@ -59,42 +141,22 @@ public class CaremenResource extends Resource {
 
 	}
 
-	@Post("/1/services/courses")
-	@Post("/1/services/courses/")
-	public Payload postCourse(String body, Context context) {
-		Credentials credentials = SpaceContext.checkUserCredentials();
+	private void textOperatorNewCourseRequest(Course course, String courseId) {
+		String smsTemplateName = course.requestedPickupTimestamp == null //
+				? "new-immediate" : "new-scheduled";
 
-		// only real users are allowed to post courses
-		Set<String> roles = credentials.roles();
-		if (!roles.contains(Credentials.USER) || roles.size() > 1)
-			throw Exceptions.insufficientCredentials(credentials);
+		SmsTemplateResource.get().postTemplatedSms(smsTemplateName, //
+				Json8.object("course", courseId).toString());
+	}
 
-		try {
-			// check course
-			Course course = Json8.mapper().readValue(body, Course.class);
+	private Payload enhancePushPayload(//
+			PushLog pushLog, String courseId, long courseVersion) {
 
-			// save course
-			Payload coursePayload = DataResource.get().post("course", body, context);
-
-			// get course id
-			ObjectNode courseResponse = (ObjectNode) coursePayload.rawContent();
-			String courseId = courseResponse.get("id").asText();
-
-			// push to drivers
-			PushLog pushLog = pushToClosestDrivers(courseId, course, credentials);
-			Payload pushPayload = pushLog.toPayload();
-			ObjectNode pushResponse = (ObjectNode) pushPayload.rawContent();
-			pushResponse.put("courseid", courseId);
-
-			// send sms to operator
-			SmsTemplateResource.get().postTemplatedSms("new-immediate", //
-					Json8.object("course", courseId).toString());
-
-			return pushPayload;
-
-		} catch (IOException e) {
-			throw Exceptions.runtime(e);
-		}
+		Payload payload = pushLog.toPayload();
+		ObjectNode node = (ObjectNode) payload.rawContent();
+		node.put("id", courseId);
+		node.put("version", courseVersion);
+		return payload;
 	}
 
 	private PushLog pushToClosestDrivers(String courseId, //
@@ -144,10 +206,10 @@ public class CaremenResource extends Resource {
 
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
 				.must(QueryBuilders.termQuery("status", "working"))//
-				.must(QueryBuilders.termQuery("vehicule.type", //
-						course.requestedVehiculeType))//
+				.must(QueryBuilders.termsQuery("vehicule.type", //
+						compatibleVehiculeTypes(course.requestedVehiculeType)))//
 				.must(QueryBuilders.geoDistanceQuery("lastLocation.where")//
-						.distance(5000, DistanceUnit.METERS)//
+						.distance(5000, DistanceUnit.KILOMETERS)//
 						.point(course.from.geopoint.lat, course.from.geopoint.lon));
 
 		SearchResponse response = Start.get().getElasticClient()//
@@ -161,6 +223,25 @@ public class CaremenResource extends Resource {
 		return credentialsIds;
 	}
 
+	private String[] compatibleVehiculeTypes(String requestedVehiculeType) {
+		if ("classic".equals(requestedVehiculeType))
+			return new String[] { "classic", "premium", "green", "break", "van" };
+
+		if ("premium".equals(requestedVehiculeType))
+			return new String[] { "premium", "green", "van" };
+
+		if ("green".equals(requestedVehiculeType))
+			return new String[] { "green" };
+
+		if ("break".equals(requestedVehiculeType))
+			return new String[] { "break", "van" };
+
+		if ("van".equals(requestedVehiculeType))
+			return new String[] { "van" };
+
+		throw Exceptions.runtime("invalid vehicule type [%s]", requestedVehiculeType);
+	}
+
 	private SearchResponse searchInstallations(String backendId, List<String> driverIds) {
 
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
@@ -172,43 +253,6 @@ public class CaremenResource extends Resource {
 				.setQuery(query).setSize(5).get();
 
 		return response;
-	}
-
-	@Delete("/1/services/course/:id/driver")
-	@Delete("/1/services/course/:id/driver")
-	public Payload deleteCourseDriver(String courseId, String body, Context context) {
-		Credentials credentials = SpaceContext.checkUserCredentials();
-		credentials.checkRoles("driver", "admin");
-
-		GetResponse response = Start.get().getElasticClient()//
-				.get(credentials.backendId(), "course", courseId);
-
-		Course course = null;
-
-		try {
-			course = Json7.mapper()//
-					.readValue(response.getSourceAsBytes(), Course.class);
-
-		} catch (Exception e) {
-			throw Exceptions.runtime(e, "error loading course [%s]", courseId);
-		}
-
-		checkDriverIsAuthorized(credentials, courseId, course);
-
-		// update course
-		ObjectNode patch = Json8.object("driver", null, "status", "new-immediate");
-		DataStore.get().patchObject(credentials.backendId(), "course", courseId, //
-				patch, credentials.name());
-
-		// push to drivers
-		PushLog pushLog = pushToClosestDrivers(courseId, course, credentials);
-		Payload pushPayload = pushLog.toPayload();
-		ObjectNode pushResponse = (ObjectNode) pushPayload.rawContent();
-		pushResponse.put("courseId", courseId);
-
-		// send sms to operator
-		textOperatorDriverHasGivenUp(courseId, course, credentials);
-		return pushPayload;
 	}
 
 	private void textOperatorDriverHasGivenUp(String courseId, Course course, Credentials credentials) {
