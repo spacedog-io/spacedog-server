@@ -359,7 +359,11 @@ public class Credentials {
 		return !Strings.isNullOrEmpty(id);
 	}
 
-	public void checkRoles(Set<String> authorizedRoles) {
+	public void checkRoles(String... authorizedRoles) {
+		checkRoles(Sets.newHashSet(authorizedRoles));
+	}
+
+	public void checkRoles(Iterable<String> authorizedRoles) {
 		if (authorizedRoles != null) {
 			Set<String> thisCredentialsRoles = roles();
 			for (String authorizedRole : authorizedRoles)

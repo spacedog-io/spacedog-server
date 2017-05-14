@@ -58,6 +58,21 @@ public class SmsResource extends Resource {
 		public String from;
 		public String to;
 		public String body;
+
+		public SmsMessage from(String from) {
+			this.from = from;
+			return this;
+		}
+
+		public SmsMessage to(String to) {
+			this.to = to;
+			return this;
+		}
+
+		public SmsMessage body(String body) {
+			this.body = body;
+			return this;
+		}
 	}
 
 	private SmsMessage toMessage(Credentials credentials, Context context) {

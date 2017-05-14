@@ -286,7 +286,7 @@ public class PushResource extends Resource {
 	// Implementation
 	//
 
-	private static class PushLog {
+	public static class PushLog {
 		public boolean successes;
 		public boolean failures;
 		public ArrayNode logItems = Json8.array();
@@ -305,7 +305,7 @@ public class PushResource extends Resource {
 		}
 	}
 
-	private void pushToInstallation(PushLog log, String installationId, //
+	public void pushToInstallation(PushLog log, String installationId, //
 			ObjectNode installation, ObjectNode message, Credentials credentials, BadgeStrategy badgeStrategy) {
 
 		ObjectNode logItem = Json8.object("installationId", installationId);
@@ -357,7 +357,7 @@ public class PushResource extends Resource {
 				: BadgeStrategy.manual;
 	}
 
-	static ObjectNode toObjectMessage(JsonNode message) {
+	public static ObjectNode toObjectMessage(JsonNode message) {
 
 		if (message.isObject())
 			return (ObjectNode) message;
@@ -565,7 +565,8 @@ public class PushResource extends Resource {
 		Optional<PlatformApplication> application = getApplication(backendId, appId, service);
 
 		if (!application.isPresent())
-			throw Exceptions.illegalArgument("mobile	application [%s] push service [%s] not registered in AWS",
+			throw Exceptions.illegalArgument(//
+					"push service [%s] of mobile application [%s] not registered in AWS", //
 					appId, service);
 
 		String applicationArn = application.get().getPlatformApplicationArn();

@@ -236,6 +236,29 @@ public class SettingsResource extends Resource {
 		}
 	}
 
+	public String load(String id) {
+		String settings = SpaceContext.getSettings(id);
+
+		if (settings == null) {
+			String backendId = SpaceContext.backendId();
+			ElasticClient elastic = Start.get().getElasticClient();
+
+			if (elastic.existsIndex(backendId, TYPE)) {
+				GetResponse response = elastic.get(backendId, TYPE, id);
+
+				if (response.isExists()) {
+					settings = response.getSourceAsString();
+					SpaceContext.setSettings(id, settings);
+				}
+			}
+
+			if (settings == null)
+				throw Exceptions.notFound(backendId, TYPE, id);
+		}
+
+		return settings;
+	}
+
 	public IndexResponse save(Settings settings) {
 		try {
 			String settingsAsString = Json8.mapper().writeValueAsString(settings);
@@ -293,29 +316,6 @@ public class SettingsResource extends Resource {
 		}
 
 		return SettingsAcl.defaultAcl();
-	}
-
-	private String load(String id) {
-		String settings = SpaceContext.getSettings(id);
-
-		if (settings == null) {
-			String backendId = SpaceContext.backendId();
-			ElasticClient elastic = Start.get().getElasticClient();
-
-			if (elastic.existsIndex(backendId, TYPE)) {
-				GetResponse response = elastic.get(backendId, TYPE, id);
-
-				if (response.isExists()) {
-					settings = response.getSourceAsString();
-					SpaceContext.setSettings(id, settings);
-				}
-			}
-
-			if (settings == null)
-				throw Exceptions.notFound(backendId, TYPE, id);
-		}
-
-		return settings;
 	}
 
 	private IndexResponse save(String id, String body) {
