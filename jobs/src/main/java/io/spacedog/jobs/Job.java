@@ -1,11 +1,8 @@
 package io.spacedog.jobs;
 
-import java.util.List;
-
 import org.joda.time.DateTime;
 
 import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
 
 import io.spacedog.rest.SpaceEnv;
 import io.spacedog.utils.Utils;
@@ -14,21 +11,24 @@ public class Job {
 
 	public static final String OK = "OK";
 
-	private List<String> description;
+	private String firstname;
+	private String lastname;
 
-	public void addToDescription(String string) {
-		if (description == null)
-			description = Lists.newArrayList();
+	public Job firstname(String firstname) {
+		this.firstname = firstname;
+		return this;
+	}
 
-		description.add(string);
+	public Job lastname(String lastname) {
+		this.lastname = lastname;
+		return this;
 	}
 
 	public String description() {
-		if (description == null)
+		if (firstname == null)
 			return "Unknown";
 
-		// return String.join("/", description);
-		return Utils.join("/", description);
+		return Utils.join("/", firstname, lastname);
 	}
 
 	public String okOncePerDay() {

@@ -9,7 +9,7 @@ import io.spacedog.rest.SpaceRequest;
 public class Snapshot extends Job {
 
 	public String run(Context context) {
-		addToDescription(context.getFunctionName());
+		firstname(context.getFunctionName());
 		return run();
 	}
 
@@ -17,7 +17,7 @@ public class Snapshot extends Job {
 
 		try {
 			SpaceEnv env = SpaceEnv.defaultEnv();
-			addToDescription(env.target().host());
+			lastname(env.target().host("api"));
 
 			// set high timeout to wait for server
 			// since snapshot service is slow
@@ -44,7 +44,7 @@ public class Snapshot extends Job {
 
 	public static void main(String[] args) {
 		Snapshot snapshot = new Snapshot();
-		snapshot.addToDescription("snapshot");
+		snapshot.firstname("snapshot");
 		snapshot.run();
 	}
 }

@@ -11,7 +11,7 @@ import io.spacedog.rest.SpaceRequest;
 public class Purge extends Job {
 
 	public String run(Context context) {
-		addToDescription(context.getFunctionName());
+		firstname(context.getFunctionName());
 		return run();
 	}
 
@@ -19,7 +19,7 @@ public class Purge extends Job {
 
 		try {
 			SpaceEnv env = SpaceEnv.defaultEnv();
-			addToDescription(env.target().host());
+			lastname(env.target().host("api"));
 
 			// set high timeout to wait for purge response from server
 			// since delete of thousands of logs might take long
@@ -41,7 +41,7 @@ public class Purge extends Job {
 
 	public static void main(String[] args) {
 		Purge purge = new Purge();
-		purge.addToDescription("purgelogs");
+		purge.firstname("purgelogs");
 		purge.run();
 	}
 }

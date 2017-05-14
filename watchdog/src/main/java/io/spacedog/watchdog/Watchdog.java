@@ -14,19 +14,20 @@ public class Watchdog extends RunListener {
 
 	private Job job = new Job();
 
-	public void addToDescription(String string) {
-		job.addToDescription(string);
+	public void name(String name) {
+		job.firstname(name);
 	}
 
 	public String run(Context context) {
-		job.addToDescription(context.getFunctionName());
+		job.firstname(context.getFunctionName());
 		return run();
 	}
 
 	public String run() {
 
 		try {
-			job.addToDescription(SpaceEnv.defaultEnv().target().host());
+			job.lastname(//
+					SpaceEnv.defaultEnv().target().host("test"));
 
 			JUnitCore junit = new JUnitCore();
 			junit.addListener(this);
@@ -71,7 +72,7 @@ public class Watchdog extends RunListener {
 
 	public static void main(String[] args) {
 		Watchdog watchdog = new Watchdog();
-		watchdog.addToDescription("watchdog");
+		watchdog.name("watchdog");
 		watchdog.run();
 	}
 }
