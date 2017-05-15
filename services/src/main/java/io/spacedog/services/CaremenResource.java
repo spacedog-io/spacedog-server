@@ -11,6 +11,9 @@ import org.elasticsearch.common.unit.DistanceUnit;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.sort.GeoDistanceSortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -244,20 +247,29 @@ public class CaremenResource extends Resource {
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
 				.must(QueryBuilders.termQuery("status", "working"))//
 				.must(QueryBuilders.termsQuery("vehicule.type", //
-						compatibleVehiculeTypes(course.requestedVehiculeType)))//
-				.must(QueryBuilders.geoDistanceQuery("lastLocation.where")//
-						.distance(radius, DistanceUnit.METERS)//
-						.point(course.from.geopoint.lat, course.from.geopoint.lon));
+						compatibleVehiculeTypes(course.requestedVehiculeType)));
+
+		GeoDistanceSortBuilder sort = SortBuilders.geoDistanceSort("lastLocation.where")//
+				.point(course.from.geopoint.lat, course.from.geopoint.lon)//
+				.order(SortOrder.ASC).unit(DistanceUnit.METERS).sortMode("min");
 
 		SearchResponse response = Start.get().getElasticClient()//
 				.prepareSearch(backendId, "driver").setQuery(query).setSize(5)//
-				.setFetchSource(false).addField("credentialsId").get();
+				.setFetchSource(false).addField("credentialsId")//
+				.addSort(sort).get();
 
 		List<String> credentialsIds = new ArrayList<>(5);
-		for (SearchHit hit : response.getHits().hits())
+		for (SearchHit hit : response.getHits().hits()) {
+			if (distance(hit) > radius)
+				break;
 			credentialsIds.add(hit.field("credentialsId").getValue());
+		}
 
 		return credentialsIds;
+	}
+
+	private double distance(SearchHit hit) {
+		return (double) hit.sortValues()[0];
 	}
 
 	private PushLog pushToCustomer(String courseId, //
