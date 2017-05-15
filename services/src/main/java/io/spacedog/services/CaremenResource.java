@@ -15,6 +15,7 @@ import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Lists;
 
 import io.spacedog.core.Json8;
 import io.spacedog.model.BadgeStrategy;
@@ -104,6 +105,9 @@ public class CaremenResource extends Resource {
 
 		// push to drivers
 		PushLog pushLog = pushToClosestDrivers(courseId, course, credentials);
+
+		// push to customer
+		pushLog = pushToCustomer(courseId, course, credentials, pushLog);
 		Payload payload = enhancePushPayload(pushLog, courseId, courseVersion);
 
 		// text the operator
@@ -137,6 +141,7 @@ public class CaremenResource extends Resource {
 		public static class Customer {
 			public String firstname;
 			public String lastname;
+			public String credentialsId;
 		}
 
 	}
@@ -163,12 +168,12 @@ public class CaremenResource extends Resource {
 			Course course, Credentials credentials) {
 
 		// search for drivers
-		List<String> driverCredentialsIds = searchDrivers(//
+		List<String> credentialsIds = searchDrivers(//
 				credentials.backendId(), course);
 
 		// search for installations
 		SearchResponse response = searchInstallations(//
-				credentials.backendId(), driverCredentialsIds);
+				credentials.backendId(), credentialsIds);
 
 		// push message to drivers
 		PushLog pushLog = new PushLog();
@@ -202,6 +207,27 @@ public class CaremenResource extends Resource {
 				.build();
 	}
 
+	private ObjectNode messageToCustomer(String courseId) {
+
+		ObjectNode apsMessage = Json8.objectBuilder()//
+				.put("id", courseId)//
+				.put("type", "new-immediate")//
+				.object("aps")//
+				.put("content-available", 1)//
+				.put("sound", "default")//
+				.object("alert")//
+				.put("title", "Chauffeur indisponible")//
+				.put("body",
+						"Votre chauffeur a rencontré un problème et ne peut pas vous rejoindre."
+								+ " Nous recherchons un autre chauffeur.")//
+				.build();
+
+		return Json8.objectBuilder()//
+				.node("APNS_SANDBOX", apsMessage)//
+				.node("APNS", apsMessage)//
+				.build();
+	}
+
 	private List<String> searchDrivers(String backendId, Course course) {
 
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
@@ -223,6 +249,25 @@ public class CaremenResource extends Resource {
 		return credentialsIds;
 	}
 
+	private PushLog pushToCustomer(String courseId, //
+			Course course, Credentials credentials, PushLog pushLog) {
+
+		// search for installations
+		SearchResponse response = searchInstallations(credentials.backendId(), //
+				Lists.newArrayList(course.customer.credentialsId));
+
+		// push message to drivers
+		ObjectNode message = messageToCustomer(courseId);
+
+		for (SearchHit hit : response.getHits().hits()) {
+			ObjectNode installation = Json8.readObject(hit.sourceAsString());
+			PushResource.get().pushToInstallation(pushLog, hit.id(), //
+					installation, message, credentials, BadgeStrategy.manual);
+		}
+
+		return pushLog;
+	}
+
 	private String[] compatibleVehiculeTypes(String requestedVehiculeType) {
 		if ("classic".equals(requestedVehiculeType))
 			return new String[] { "classic", "premium", "green", "break", "van" };
@@ -242,15 +287,15 @@ public class CaremenResource extends Resource {
 		throw Exceptions.runtime("invalid vehicule type [%s]", requestedVehiculeType);
 	}
 
-	private SearchResponse searchInstallations(String backendId, List<String> driverIds) {
+	private SearchResponse searchInstallations(String backendId, List<String> credentialsIds) {
 
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
-				.must(QueryBuilders.termQuery("appId", "caremendriver"))//
-				.must(QueryBuilders.termsQuery("tags.value", driverIds));
+				.must(QueryBuilders.termsQuery("tags.value", credentialsIds));
 
 		SearchResponse response = Start.get().getElasticClient()//
 				.prepareSearch(backendId, "installation")//
-				.setQuery(query).setSize(5).get();
+				.setQuery(query).setSize(credentialsIds.size())//
+				.get();
 
 		return response;
 	}
