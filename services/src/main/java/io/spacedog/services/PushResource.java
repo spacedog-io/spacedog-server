@@ -287,14 +287,14 @@ public class PushResource extends Resource {
 	//
 
 	public static class PushLog {
-		public boolean successes;
+		public int successes = 0;
 		public boolean failures;
 		public ArrayNode logItems = Json8.array();
 		public boolean applicationDisabled;
 
 		public Payload toPayload() {
 			int httpStatus = logItems.size() == 0 ? HttpStatus.NOT_FOUND //
-					: successes ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
+					: successes > 0 ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
 
 			JsonBuilder<ObjectNode> builder = JsonPayload.builder(httpStatus)//
 					.put(FAILURES, failures)//
@@ -334,7 +334,7 @@ public class PushResource extends Resource {
 			} else
 				logItem.set("message", snsMessage);
 
-			log.successes = true;
+			log.successes = log.successes + 1;
 
 		} catch (Exception e) {
 			log.failures = true;
