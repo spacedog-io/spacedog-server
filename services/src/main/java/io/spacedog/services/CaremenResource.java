@@ -20,6 +20,7 @@ import com.google.common.collect.Lists;
 import io.spacedog.core.Json8;
 import io.spacedog.model.BadgeStrategy;
 import io.spacedog.model.GeoPoint;
+import io.spacedog.model.Settings;
 import io.spacedog.services.PushResource.PushLog;
 import io.spacedog.services.SmsResource.SmsMessage;
 import io.spacedog.utils.Credentials;
@@ -146,6 +147,12 @@ public class CaremenResource extends Resource {
 
 	}
 
+	@JsonIgnoreProperties(ignoreUnknown = true)
+	private static class AppConfigurationSettings extends Settings {
+		public String operatorPhoneNumber;
+		public int newCourseRequestDriverPushRadiusInMeters;
+	}
+
 	private void textOperatorNewCourseRequest(Course course, String courseId) {
 		String smsTemplateName = course.requestedPickupTimestamp == null //
 				? "new-immediate" : "new-scheduled";
@@ -230,12 +237,16 @@ public class CaremenResource extends Resource {
 
 	private List<String> searchDrivers(String backendId, Course course) {
 
+		int radius = SettingsResource.get()//
+				.load(AppConfigurationSettings.class)//
+						.newCourseRequestDriverPushRadiusInMeters;
+
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
 				.must(QueryBuilders.termQuery("status", "working"))//
 				.must(QueryBuilders.termsQuery("vehicule.type", //
 						compatibleVehiculeTypes(course.requestedVehiculeType)))//
 				.must(QueryBuilders.geoDistanceQuery("lastLocation.where")//
-						.distance(5000, DistanceUnit.KILOMETERS)//
+						.distance(radius, DistanceUnit.METERS)//
 						.point(course.from.geopoint.lat, course.from.geopoint.lon));
 
 		SearchResponse response = Start.get().getElasticClient()//
@@ -307,8 +318,9 @@ public class CaremenResource extends Resource {
 				.append(" ").append(course.customer.lastname)//
 				.append(". La course a été proposé à d'autres chauffeurs.");
 
-		String settings = SettingsResource.get().load("appconfiguration");
-		String phone = Json8.readObject(settings).get("operatorPhoneNumber").asText();
+		String phone = SettingsResource.get().load(AppConfigurationSettings.class)//
+				.operatorPhoneNumber;
+
 		SmsMessage message = new SmsMessage().to(phone).body(builder.toString());
 		SmsResource.get().send(message);
 	}
