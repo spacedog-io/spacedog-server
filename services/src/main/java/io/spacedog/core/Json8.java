@@ -233,7 +233,7 @@ public class Json8 {
 			return Json7.mapper().readValue(json, objectClass);
 
 		} catch (Exception e) {
-			throw Exceptions.runtime(e, "failed to map json [%s] to object of class [%s]", //
+			throw Exceptions.illegalArgument(e, "failed to map json [%s] to object of class [%s]", //
 					json, objectClass.getSimpleName());
 		}
 	}
