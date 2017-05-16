@@ -224,6 +224,19 @@ public class Json7 {
 		return (ObjectNode) object;
 	}
 
+	public static <K> K readObject(String json, Class<K> objectClass) {
+		Check.notNull(json, "json");
+		Check.notNull(objectClass, "object class");
+
+		try {
+			return Json7.mapper().readValue(json, objectClass);
+
+		} catch (Exception e) {
+			throw Exceptions.runtime(e, "failed to map json [%s] to object of class [%s]", //
+					json, objectClass.getSimpleName());
+		}
+	}
+
 	public static ArrayNode readArray(String jsonArray) {
 		JsonNode object = readNode(jsonArray);
 		if (!object.isArray())

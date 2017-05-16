@@ -35,6 +35,7 @@ import com.google.common.collect.Lists;
 
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json7;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Utils;
 
@@ -222,6 +223,19 @@ public class Json8 {
 		if (!object.isObject())
 			throw Exceptions.illegalArgument("not a json object but [%s]", object.getNodeType());
 		return (ObjectNode) object;
+	}
+
+	public static <K> K readObject(String json, Class<K> objectClass) {
+		Check.notNull(json, "json");
+		Check.notNull(objectClass, "object class");
+
+		try {
+			return Json7.mapper().readValue(json, objectClass);
+
+		} catch (Exception e) {
+			throw Exceptions.runtime(e, "failed to map json [%s] to object of class [%s]", //
+					json, objectClass.getSimpleName());
+		}
 	}
 
 	public static ArrayNode readArray(String jsonArray) {
