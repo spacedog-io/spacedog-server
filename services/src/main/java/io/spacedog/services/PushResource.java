@@ -536,7 +536,7 @@ public class PushResource extends Resource {
 		return snsClient;
 	}
 
-	Optional<PlatformApplication> getApplication(String backendId, String appId, PushService service) {
+	Optional<PlatformApplication> getApplication(String appId, PushService service) {
 
 		final String internalName = String.join("/", "app", service.toString(), appId);
 		Optional<String> nextToken = Optional.empty();
@@ -562,7 +562,7 @@ public class PushResource extends Resource {
 
 	String createApplicationEndpoint(String backendId, String appId, PushService service, String token) {
 
-		Optional<PlatformApplication> application = getApplication(backendId, appId, service);
+		Optional<PlatformApplication> application = getApplication(appId, service);
 
 		if (!application.isPresent())
 			throw Exceptions.illegalArgument(//
