@@ -216,6 +216,7 @@ public class Start {
 				.add(SnapshotResource.get())//
 				.add(LogResource.get())//
 				.add(PushResource.get())//
+				.add(ApplicationResource.get())//
 				.add(SendPulseResource.get())//
 				.add(StripeResource.get())//
 				.add(ShareResource.get())//
