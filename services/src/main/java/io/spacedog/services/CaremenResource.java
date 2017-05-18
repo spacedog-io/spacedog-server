@@ -57,7 +57,8 @@ public class CaremenResource extends Resource {
 		Credentials credentials = SpaceContext.checkUserCredentials();
 		checkAuthorizedToCreateCourse(credentials);
 
-		PushLog pushLog = null;
+		PushLog driverPushLog = null;
+		int httpStatus = HttpStatus.CREATED;
 
 		// check course
 		Course course = readAndCheckCourse(body);
@@ -71,32 +72,16 @@ public class CaremenResource extends Resource {
 		long courseVersion = courseResponse.get(VERSION).asLong();
 
 		if (course.requestedPickupTimestamp == null) {
-			pushLog = pushToClosestDrivers(courseId, course, credentials);
-			if (pushLog.successes == 0)
+			driverPushLog = pushToClosestDrivers(courseId, course, credentials);
+			if (driverPushLog.successes == 0) {
 				courseVersion = setStatusToNoDriverAvailable(courseId, credentials);
-			textOperatorNewImmediate(course, courseId, pushLog.successes);
+				httpStatus = HttpStatus.NOT_FOUND;
+			}
+			textOperatorNewImmediate(course, courseId, driverPushLog.successes);
 		} else
 			textOperatorNewScheduled(course, courseId);
 
-		return mixCreateCoursePayload(pushLog, courseId, courseVersion);
-	}
-
-	private Course readAndCheckCourse(String body) {
-		Course course = null;
-
-		try {
-			course = Json8.mapper().readValue(body, Course.class);
-		} catch (Exception e) {
-			throw Exceptions.illegalArgument(e, "error deserializing course");
-		}
-
-		if (course.status.equals(NEW_SCHEDULED))
-			Check.notNull(course.requestedPickupTimestamp, "requestedPickupTimestamp");
-		else
-			Check.isTrue(course.status.equals(NEW_IMMEDIATE), //
-					"invalid course request status [%s]", course.status);
-
-		return course;
+		return createPayload(httpStatus, courseId, courseVersion, driverPushLog, null);
 	}
 
 	@Delete("/1/service/course/:id/driver")
@@ -107,11 +92,12 @@ public class CaremenResource extends Resource {
 		checkAuthorizedToRemoveDriver(credentials, courseId, course);
 
 		long courseVersion = removeDriverFromCourse(courseId, credentials);
-		PushLog pushLog = pushToClosestDrivers(courseId, course, credentials);
-		pushLog = pushToCustomer(courseId, course, credentials, pushLog);
+		PushLog driverPushLog = pushToClosestDrivers(courseId, course, credentials);
+		PushLog customerPushLog = pushToCustomer(courseId, course, credentials);
 
 		textOperatorDriverHasGivenUp(courseId, course, credentials);
-		return mixRemoveDriverPayload(pushLog, courseId, courseVersion);
+		return createPayload(HttpStatus.OK, //
+				courseId, courseVersion, driverPushLog, customerPushLog);
 	}
 
 	//
@@ -149,6 +135,24 @@ public class CaremenResource extends Resource {
 	private static class AppConfigurationSettings extends Settings {
 		public String operatorPhoneNumber;
 		public int newCourseRequestDriverPushRadiusInMeters;
+	}
+
+	private Course readAndCheckCourse(String body) {
+		Course course = null;
+
+		try {
+			course = Json8.mapper().readValue(body, Course.class);
+		} catch (Exception e) {
+			throw Exceptions.illegalArgument(e, "error deserializing course");
+		}
+
+		if (course.status.equals(NEW_SCHEDULED))
+			Check.notNull(course.requestedPickupTimestamp, "requestedPickupTimestamp");
+		else
+			Check.isTrue(course.status.equals(NEW_IMMEDIATE), //
+					"invalid course request status [%s]", course.status);
+
+		return course;
 	}
 
 	private Course loadCourse(String courseId, Credentials credentials) {
@@ -195,30 +199,18 @@ public class CaremenResource extends Resource {
 						"notifications", notifications).toString());
 	}
 
-	private Payload mixRemoveDriverPayload(//
-			PushLog pushLog, String courseId, long courseVersion) {
-
-		return createPayload(HttpStatus.OK, courseId, courseVersion, pushLog);
-	}
-
-	private Payload mixCreateCoursePayload(//
-			PushLog pushLog, String courseId, long courseVersion) {
-
-		int httpStatus = pushLog.successes > 0 //
-				? HttpStatus.CREATED : HttpStatus.NOT_FOUND;
-
-		return createPayload(httpStatus, courseId, courseVersion, pushLog);
-	}
-
-	private Payload createPayload(int httpStatus, //
-			String courseId, long courseVersion, PushLog pushLog) {
+	private Payload createPayload(int httpStatus, String courseId, //
+			long courseVersion, PushLog driverPushLog, PushLog customerPushLog) {
 
 		JsonBuilder<ObjectNode> builder = JsonPayload.builder(httpStatus)//
 				.put(ID, courseId)//
 				.put(VERSION, courseVersion);
 
-		if (pushLog != null)
-			builder.node("pushedTo", pushLog.logItems);
+		if (driverPushLog != null)
+			builder.node("driverPushLog", driverPushLog.logItems);
+
+		if (customerPushLog != null)
+			builder.node("customerPushLog", customerPushLog.logItems);
 
 		return JsonPayload.json(builder, httpStatus);
 	}
@@ -235,9 +227,9 @@ public class CaremenResource extends Resource {
 				credentials.backendId(), credentialsIds);
 
 		// push message to drivers
-		PushLog pushLog = new PushLog();
 		ObjectNode message = messageToDrivers(courseId);
 
+		PushLog pushLog = new PushLog();
 		for (SearchHit hit : response.getHits().hits()) {
 			ObjectNode installation = Json8.readObject(hit.sourceAsString());
 			PushResource.get().pushToInstallation(pushLog, hit.id(), //
@@ -322,7 +314,7 @@ public class CaremenResource extends Resource {
 	}
 
 	private PushLog pushToCustomer(String courseId, //
-			Course course, Credentials credentials, PushLog pushLog) {
+			Course course, Credentials credentials) {
 
 		// search for installations
 		SearchResponse response = searchInstallations(credentials.backendId(), //
@@ -331,6 +323,7 @@ public class CaremenResource extends Resource {
 		// push message to drivers
 		ObjectNode message = messageToCustomer(courseId);
 
+		PushLog pushLog = new PushLog();
 		for (SearchHit hit : response.getHits().hits()) {
 			ObjectNode installation = Json8.readObject(hit.sourceAsString());
 			PushResource.get().pushToInstallation(pushLog, hit.id(), //
@@ -373,11 +366,12 @@ public class CaremenResource extends Resource {
 	}
 
 	private void textOperatorDriverHasGivenUp(String courseId, Course course, Credentials credentials) {
-		StringBuilder builder = new StringBuilder("Le chauffeur ")//
-				.append(credentials.name()).append(" a renoncé à la course n° [")//
-				.append(courseId).append(" de ").append(course.customer.firstname)//
-				.append(" ").append(course.customer.lastname)//
-				.append(". La course a été proposé à d'autres chauffeurs.");
+		StringBuilder builder = new StringBuilder("Le chauffeur [")//
+				.append(credentials.name())//
+				.append("] a renoncé à la course du client [")//
+				.append(course.customer.firstname).append(" ")//
+				.append(course.customer.lastname)//
+				.append("]. La course a été proposée à d'autres chauffeurs.");
 
 		String phone = SettingsResource.get().load(AppConfigurationSettings.class)//
 				.operatorPhoneNumber;
