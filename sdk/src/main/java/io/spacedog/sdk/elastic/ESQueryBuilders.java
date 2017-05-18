@@ -250,6 +250,17 @@ public abstract class ESQueryBuilders {
 		return new ESExistsQueryBuilder(name);
 	}
 
+	//
+	// New helpers
+	//
+
+	public static ESBoolQueryBuilder tagsQuery(String name, String... tags) {
+		ESBoolQueryBuilder query = ESQueryBuilders.boolQuery();
+		for (String tag : tags)
+			query.must(ESQueryBuilders.termQuery(name, tag));
+		return query;
+	}
+
 	private ESQueryBuilders() {
 
 	}
