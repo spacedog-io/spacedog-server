@@ -222,6 +222,10 @@ public class CaremenResource extends Resource {
 		List<String> credentialsIds = searchDrivers(//
 				credentials.backendId(), course);
 
+		// if requester is a driver, he does not need the push
+		if (credentials.roles().contains("driver"))
+			credentialsIds.remove(credentials.id());
+
 		// search for installations
 		SearchResponse response = searchInstallations(//
 				credentials.backendId(), credentialsIds);
