@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.node.TextNode;
 
 import io.spacedog.model.Installation;
 import io.spacedog.model.PushTag;
+import io.spacedog.sdk.DataEndpoint.SearchResults;
+import io.spacedog.sdk.elastic.ESSearchSourceBuilder;
 import io.spacedog.utils.Check;
 
 public class PushEndpoint {
@@ -45,6 +47,10 @@ public class PushEndpoint {
 
 	public Installation getInstallation(String id) {
 		return dog.data().get(Installation.class, id);
+	}
+
+	public SearchResults<Installation> searchInstallations(ESSearchSourceBuilder source) {
+		return dog.data().search("installation", source, Installation.class);
 	}
 
 	public PushEndpoint deleteInstallation(String id) {
