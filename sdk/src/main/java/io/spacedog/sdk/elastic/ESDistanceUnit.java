@@ -28,13 +28,15 @@ package io.spacedog.sdk.elastic;
  * <code>METERS</code> which is defined by <code>DEFAULT</code>
  */
 public enum ESDistanceUnit {
-	INCH(0.0254, "in", "inch"), YARD(0.9144, "yd", "yards"), FEET(0.3048, "ft", "feet"), KILOMETERS(1000.0, "km",
-			"kilometers"), NAUTICALMILES(1852.0, "NM", "nmi",
-					"nauticalmiles"), MILLIMETERS(0.001, "mm", "millimeters"), CENTIMETERS(0.01, "cm", "centimeters"),
-
+	INCH(0.0254, "in", "inch"), //
+	YARD(0.9144, "yd", "yards"), //
+	FEET(0.3048, "ft", "feet"), //
+	KILOMETERS(1000.0, "km", "kilometers"), //
+	NAUTICALMILES(1852.0, "NM", "nmi", "nauticalmiles"), //
+	MILLIMETERS(0.001, "mm", "millimeters"), //
+	CENTIMETERS(0.01, "cm", "centimeters"), //
 	// 'm' is a suffix of 'nmi' so it must follow 'nmi'
-	MILES(1609.344, "mi", "miles"),
-
+	MILES(1609.344, "mi", "miles"), //
 	// since 'm' is suffix of other unit
 	// it must be the last entry of unit
 	// names ending with 'm'. otherwise
@@ -85,5 +87,9 @@ public enum ESDistanceUnit {
 			}
 		}
 		throw new IllegalArgumentException("No distance unit match [" + unit + "]");
+	}
+
+	public double meters() {
+		return meters;
 	}
 }

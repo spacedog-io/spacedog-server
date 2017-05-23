@@ -57,7 +57,7 @@ public class ESJsonContentGenerator {// implements XContentGenerator {
 	private boolean writeLineFeedAtEnd;
 	private static final SerializedString LF = new SerializedString("\n");
 	private static final DefaultPrettyPrinter.Indenter INDENTER = new DefaultIndenter("  ", LF.getValue());
-	private boolean prettyPrint = false;
+	// private boolean prettyPrint = false;
 
 	private final static JsonFactory jsonFactory;
 
@@ -80,7 +80,7 @@ public class ESJsonContentGenerator {// implements XContentGenerator {
 
 	public final void usePrettyPrint() {
 		generator.setPrettyPrinter(new DefaultPrettyPrinter().withObjectIndenter(INDENTER));
-		prettyPrint = true;
+		// prettyPrint = true;
 	}
 
 	public void usePrintLineFeedAtEnd() {

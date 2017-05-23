@@ -123,7 +123,7 @@ public class ESTermsQueryBuilder extends ESQueryBuilder implements ESBoostableQu
 	 * @param values
 	 *            The terms
 	 */
-	public ESTermsQueryBuilder(String name, Iterable values) {
+	public ESTermsQueryBuilder(String name, Iterable<?> values) {
 		this.name = name;
 		this.values = values;
 	}

@@ -55,10 +55,6 @@ public class ESTimeValue {// implements Streamable {
 
 	private TimeUnit timeUnit;
 
-	private ESTimeValue() {
-
-	}
-
 	public ESTimeValue(long millis) {
 		this(millis, TimeUnit.MILLISECONDS);
 	}
