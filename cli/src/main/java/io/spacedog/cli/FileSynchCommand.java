@@ -14,8 +14,8 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
 import io.spacedog.rest.SpaceRequest;
-import io.spacedog.sdk.FileEndpoint.File;
 import io.spacedog.sdk.FileEndpoint.FileList;
+import io.spacedog.sdk.FileEndpoint.SpaceFile;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
@@ -113,7 +113,7 @@ public class FileSynchCommand extends AbstractCommand<FileSynchCommand> {
 		do {
 			FileList list = dog.file().list(webPath, next);
 
-			for (File file : list.files)
+			for (SpaceFile file : list.files)
 				check(file);
 
 			next = list.next;
@@ -121,7 +121,7 @@ public class FileSynchCommand extends AbstractCommand<FileSynchCommand> {
 		} while (next != null);
 	}
 
-	private void check(File file) throws IOException {
+	private void check(SpaceFile file) throws IOException {
 		// removes slash, prefix and slash
 		String relativePath = file.path.substring(prefix.length() + 2);
 		Path filePath = Paths.get(source).resolve(relativePath);
@@ -166,7 +166,7 @@ public class FileSynchCommand extends AbstractCommand<FileSynchCommand> {
 		try {
 			String webPath = toWebPath(filePath).toString();
 			// no need to escape since sdk is already escaping
-			dog.file().save(webPath, filePath);
+			dog.file().save(webPath, filePath.toFile());
 			uploaded.add(webPath);
 
 		} catch (Exception e) {

@@ -1,6 +1,6 @@
 package io.spacedog.sdk;
 
-import java.nio.file.Path;
+import java.io.File;
 
 import org.joda.time.DateTime;
 
@@ -46,9 +46,7 @@ public class FileEndpoint {
 		return FileList.EMPTY;
 	}
 
-	// ignore unknown fields
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	// only map to private fields
 	@JsonAutoDetect(fieldVisibility = Visibility.PUBLIC_ONLY, //
 			getterVisibility = Visibility.NONE, //
 			isGetterVisibility = Visibility.NONE, //
@@ -56,25 +54,23 @@ public class FileEndpoint {
 	public static class FileList {
 
 		@JsonProperty("results")
-		public File[] files;
+		public SpaceFile[] files;
 		public String next;
 
 		private static FileList EMPTY;
 
 		static {
 			EMPTY = new FileList();
-			EMPTY.files = new File[0];
+			EMPTY.files = new SpaceFile[0];
 		}
 	}
 
-	// ignore unknown fields
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	// only map to private fields
 	@JsonAutoDetect(fieldVisibility = Visibility.PUBLIC_ONLY, //
 			getterVisibility = Visibility.NONE, //
 			isGetterVisibility = Visibility.NONE, //
 			setterVisibility = Visibility.NONE)
-	public static class File {
+	public static class SpaceFile {
 		public String path;
 		public long size;
 		public DateTime lastModified;
@@ -85,8 +81,8 @@ public class FileEndpoint {
 		return dog.get("/1/file" + webPath).go(200).asBytes();
 	}
 
-	public void save(String webPath, Path filePath) {
-		dog.put("/1/file" + webPath).bodyFile(filePath).go(200);
+	public void save(String webPath, File file) {
+		dog.put("/1/file" + webPath).bodyFile(file).go(200);
 	}
 
 	public void save(String webPath, byte[] bytes) {

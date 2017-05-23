@@ -3,9 +3,8 @@
  */
 package io.spacedog.rest;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -13,6 +12,7 @@ import java.util.Map.Entry;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
+import com.google.common.io.Files;
 import com.google.common.primitives.Ints;
 
 import io.spacedog.model.Schema;
@@ -225,9 +225,9 @@ public class SpaceRequest {
 		return this;
 	}
 
-	public SpaceRequest bodyFile(Path path) {
+	public SpaceRequest bodyFile(File file) {
 		try {
-			return bodyBytes(Files.readAllBytes(path));
+			return bodyBytes(Files.toByteArray(file));
 		} catch (IOException e) {
 			throw Exceptions.runtime(e);
 		}

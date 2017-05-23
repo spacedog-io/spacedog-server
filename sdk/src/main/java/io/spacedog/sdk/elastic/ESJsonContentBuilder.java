@@ -23,7 +23,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.nio.file.Path;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
@@ -248,17 +247,11 @@ public final class ESJsonContentBuilder {
 	}
 
 	public ESJsonContentBuilder field(String name, Iterable<?> value) throws IOException {
-		if (value instanceof Path) {
-			// treat Paths as single value
-			field(name);
-			value(value);
-		} else {
-			startArray(name);
-			for (Object o : value) {
-				value(o);
-			}
-			endArray();
+		startArray(name);
+		for (Object o : value) {
+			value(o);
 		}
+		endArray();
 		return this;
 	}
 
@@ -480,19 +473,14 @@ public final class ESJsonContentBuilder {
 	}
 
 	public ESJsonContentBuilder value(Iterable<?> value) throws IOException {
-		if (value == null) {
+		if (value == null)
 			return nullValue();
-		}
-		if (value instanceof Path) {
-			// treat as single value
-			writeValue(value);
-		} else {
-			startArray();
-			for (Object o : value) {
-				value(o);
-			}
-			endArray();
-		}
+
+		startArray();
+		for (Object o : value)
+			value(o);
+
+		endArray();
 		return this;
 	}
 
@@ -543,6 +531,7 @@ public final class ESJsonContentBuilder {
 		generator.writeEndObject();
 	}
 
+	@SuppressWarnings("unchecked")
 	private void writeValue(Object value) throws IOException {
 		if (value == null) {
 			generator.writeNull();
@@ -571,11 +560,13 @@ public final class ESJsonContentBuilder {
 			generator.writeNumberField("lon", ((ESGeoPoint) value).lon());
 			generator.writeEndObject();
 		} else if (value instanceof Map) {
-			writeMap((Map) value);
-		} else if (value instanceof Path) {
-			// Path implements Iterable<Path> and causes endless recursion and a
-			// StackOverFlow if treated as an Iterable here
-			generator.writeString(value.toString());
+			writeMap((Map<String, ?>) value);
+
+			// Path implements Iterable<Path> and causes endless recursion
+			// and a StackOverFlow if treated as an Iterable here
+			// } else if (value instanceof Path) {
+			// generator.writeString(value.toString());
+
 		} else if (value instanceof Iterable) {
 			generator.writeStartArray();
 			for (Object v : (Iterable<?>) value) {
