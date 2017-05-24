@@ -27,7 +27,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
 
-import org.joda.time.DateTimeZone;
 import org.joda.time.ReadableInstant;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
@@ -39,7 +38,7 @@ import com.google.common.base.Charsets;
  */
 public final class ESJsonContentBuilder {
 
-	public final static DateTimeFormatter defaultDatePrinter = ISODateTimeFormat.dateTime().withZone(DateTimeZone.UTC);
+	public final static DateTimeFormatter defaultDatePrinter = ISODateTimeFormat.dateTime();
 
 	private ESJsonContentGenerator generator;
 
