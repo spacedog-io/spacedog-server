@@ -23,4 +23,9 @@ public class GeoPoint {
 		this.lat = lat;
 		this.lon = lon;
 	}
+
+	@Override
+	public String toString() {
+		return "{" + lat + ", " + lon + "}";
+	}
 }
