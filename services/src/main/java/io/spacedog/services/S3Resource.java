@@ -4,6 +4,7 @@
 package io.spacedog.services;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.stream.Collectors;
 
 import javax.activation.MimetypesFileTypeMap;
@@ -62,16 +63,17 @@ public class S3Resource extends Resource {
 		String bucketName = getBucketName(bucketSuffix);
 		WebPath s3Path = path.addFirst(backendId);
 
+		S3Object s3Object = null;
 		Object fileContent = "";
 		ObjectMetadata metadata = null;
 		String owner = null;
 
 		try {
 			if (withContent) {
-				S3Object object = s3.getObject(bucketName, s3Path.toS3Key());
-				metadata = object.getObjectMetadata();
+				s3Object = s3.getObject(bucketName, s3Path.toS3Key());
+				metadata = s3Object.getObjectMetadata();
 				owner = getOrCheckOwnership(metadata, checkOwnership);
-				fileContent = object.getObjectContent();
+				fileContent = s3Object.getObjectContent();
 			} else {
 				metadata = s3.getObjectMetadata(bucketName, s3Path.toS3Key());
 				owner = getOrCheckOwnership(metadata, checkOwnership);
@@ -84,6 +86,17 @@ public class S3Resource extends Resource {
 				return Payload.notFound();
 
 			throw e;
+
+		} finally {
+			// S3Object need to be manually closed to release
+			// the underlying http connection
+			try {
+				if (s3Object != null)
+					s3Object.close();
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 
 		Payload payload = new Payload(metadata.getContentType(), fileContent)//
