@@ -2,6 +2,7 @@ package io.spacedog.test;
 
 import java.io.IOException;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
@@ -40,12 +41,15 @@ public class SmsResourceTest extends SpaceTest {
 		// vince is now allowed to send sms
 		// since he's got the 'sms' role
 		// but he fails since no sms provider settings are set
+		AssertFails.assertHttpStatus(400, () -> vince.sms().send("?", "?"));
 		vince.post("/1/sms").go(400);
 
 		// only user with sms role are allowed to send sms
 		// anonymous and admin fail to send sms
-		guest.post("/1/sms").go(403);
-		test.post("/1/sms").go(403);
+		AssertFails.assertHttpStatus(403, () -> guest.sms().send("?", "?"));
+		AssertFails.assertHttpStatus(403, () -> test.sms().send("?", "?"));
+		// guest.post("/1/sms").go(403);
+		// test.post("/1/sms").go(403);
 
 		// superadmin sets twilio settings
 		SpaceEnv env = SpaceEnv.defaultEnv();
@@ -64,16 +68,14 @@ public class SmsResourceTest extends SpaceTest {
 
 		// anonymous and superadmin don't have 'sms' role
 		// they fail to get sms info
-		guest.get("/1/sms/" + messageId).go(403);//
-		test.get("/1/sms/" + messageId).go(403);//
+		AssertFails.assertHttpStatus(403, () -> guest.sms().get(messageId));
+		AssertFails.assertHttpStatus(403, () -> test.sms().get(messageId));
+		// guest.get("/1/sms/" + messageId).go(403);//
+		// test.get("/1/sms/" + messageId).go(403);//
 
 		// vince sends an sms to invalid mobile number
-		try {
-			vince.sms().send("33162627520", "Hi from SpaceDog");
-			fail();
-		} catch (SpaceRequestException e) {
-			assertEquals(400, e.httpStatus());
-			assertEquals("twilio:21614", e.serverErrorCode());
-		}
+		SpaceRequestException exception = AssertFails.assertHttpStatus(400, //
+				() -> vince.sms().send("33162627520", "Hi from SpaceDog"));
+		Assert.assertEquals("twilio:21614", exception.serverErrorCode());
 	}
 }
