@@ -363,7 +363,10 @@ public class CaremenResource extends Resource {
 
 		SearchResponse response = Start.get().getElasticClient()//
 				.prepareSearch(backendId, "installation")//
-				.setQuery(query).setSize(credentialsIds.size())//
+				.setQuery(query)//
+				// each driver might have more than one installation
+				// when driver app is reinstalled
+				.setSize(100)//
 				.get();
 
 		return response;
