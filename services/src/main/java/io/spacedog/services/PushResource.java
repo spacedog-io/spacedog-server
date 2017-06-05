@@ -340,7 +340,10 @@ public class PushResource extends Resource {
 			log.failures = true;
 			logItem.set(FIELD_ERROR, JsonPayload.toJson(e, SpaceContext.isDebug()));
 
-			if (e instanceof EndpointDisabledException) {
+			if (e instanceof EndpointDisabledException //
+					|| e.getMessage().contains(//
+							"No endpoint found for the target arn specified")) {
+
 				logItem.put("installationDisabled", true);
 				removeEndpointQuietly(credentials.backendId(), installationId);
 			}
