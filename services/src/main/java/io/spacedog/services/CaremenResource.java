@@ -394,6 +394,10 @@ public class CaremenResource extends Resource {
 	private void checkAuthorizedToRemoveDriver(//
 			Credentials credentials, String courseId, Course course) {
 
+		if (course.driver == null || course.driver.credentialsId == null)
+			throw Exceptions.illegalArgument(//
+					"no driver to delete in course [%s]", courseId);
+
 		if (credentials.roles().contains(Credentials.ADMIN))
 			return;
 
