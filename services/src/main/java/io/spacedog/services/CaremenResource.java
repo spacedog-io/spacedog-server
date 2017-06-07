@@ -2,6 +2,7 @@ package io.spacedog.services;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import org.elasticsearch.action.get.GetResponse;
@@ -14,6 +15,9 @@ import org.elasticsearch.search.sort.GeoDistanceSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -106,15 +110,17 @@ public class CaremenResource extends Resource {
 
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	private static class Course {
-		public String status;
+		public Customer customer;
+		public Location from;
+		public Location to;
 		public String requestedVehiculeType;
 		public DateTime requestedPickupTimestamp;
-		public Location from;
+		public String status;
 		public Driver driver;
-		public Customer customer;
 
 		@JsonIgnoreProperties(ignoreUnknown = true)
 		public static class Location {
+			public String address;
 			public GeoPoint geopoint;
 		}
 
@@ -186,17 +192,36 @@ public class CaremenResource extends Resource {
 				.getVersion();
 	}
 
+	private static DateTimeZone parisZone = DateTimeZone.forID("Europe/Paris");
+
+	private static DateTimeFormatter pickupFormatter = DateTimeFormat//
+			.forPattern("dd/MM' à 'HH'h'mm").withZone(parisZone).withLocale(Locale.FRENCH);
+
 	private void textOperatorNewScheduled(Course course, String courseId) {
-		SmsTemplateResource.get().postTemplatedSms(NEW_SCHEDULED, //
-				Json8.object(COURSE, courseId).toString());
+		StringBuilder builder = new StringBuilder()//
+				.append("Nouvelle demande de course programmée.\nDépart le ")//
+				.append(pickupFormatter.print(course.requestedPickupTimestamp)) //
+				.append(" de ").append(course.from.address)//
+				.append(".\nDestination : ").append(course.to.address)//
+				.append(".\nCatégorie : ").append(course.requestedVehiculeType)//
+				.append(".");
+
+		SmsMessage message = new SmsMessage()//
+				.to(operatorPhoneNumber()).body(builder.toString());
+		SmsResource.get().send(message);
 	}
 
 	private void textOperatorNewImmediate(//
 			Course course, String courseId, int notifications) {
+		StringBuilder builder = new StringBuilder()//
+				.append("Nouvelle demande de course immédiate.\nDestination : ")//
+				.append(course.to.address).append(".\nCatégorie : ")//
+				.append(course.requestedVehiculeType).append(".\nChauffeurs notifiés : ")//
+				.append(notifications);
 
-		SmsTemplateResource.get().postTemplatedSms(NEW_IMMEDIATE, //
-				Json8.object(COURSE, courseId, //
-						"notifications", notifications).toString());
+		SmsMessage message = new SmsMessage()//
+				.to(operatorPhoneNumber()).body(builder.toString());
+		SmsResource.get().send(message);
 	}
 
 	private Payload createPayload(int httpStatus, String courseId, //
@@ -373,6 +398,7 @@ public class CaremenResource extends Resource {
 	}
 
 	private void textOperatorDriverHasGivenUp(String courseId, Course course, Credentials credentials) {
+
 		StringBuilder builder = new StringBuilder("Le chauffeur [")//
 				.append(credentials.name())//
 				.append("] a renoncé à la course du client [")//
@@ -380,11 +406,14 @@ public class CaremenResource extends Resource {
 				.append(course.customer.lastname)//
 				.append("]. La course a été proposée à d'autres chauffeurs.");
 
-		String phone = SettingsResource.get().load(AppConfigurationSettings.class)//
-				.operatorPhoneNumber;
-
-		SmsMessage message = new SmsMessage().to(phone).body(builder.toString());
+		SmsMessage message = new SmsMessage()//
+				.to(operatorPhoneNumber()).body(builder.toString());
 		SmsResource.get().send(message);
+	}
+
+	private String operatorPhoneNumber() {
+		return SettingsResource.get().load(AppConfigurationSettings.class)//
+				.operatorPhoneNumber;
 	}
 
 	private void checkAuthorizedToCreateCourse(Credentials credentials) {
