@@ -325,6 +325,8 @@ public class Json8 {
 		return mapper().valueToTree(value);
 	}
 
+	// TODO use method toNode instead
+	@Deprecated
 	public static ValueNode toValueNode(Object value) {
 
 		if (value == null)
@@ -621,6 +623,14 @@ public class Json8 {
 			return object;
 		}
 		return checkObject(field);
+	}
+
+	public static String toString(Object pojo) {
+		try {
+			return mapper().writeValueAsString(pojo);
+		} catch (JsonProcessingException e) {
+			throw Exceptions.illegalArgument(e, "error processing pojo object to json");
+		}
 	}
 
 }

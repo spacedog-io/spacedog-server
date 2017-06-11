@@ -644,6 +644,19 @@ public class Json7 {
 		}
 	}
 
+	public static <K> K toPojo(String jsonString, Class<K> pojoClass) {
+		Check.notNull(jsonString, "jsonString");
+		Check.notNull(pojoClass, "pojoClass");
+
+		try {
+			return Json7.mapper().readValue(jsonString, pojoClass);
+
+		} catch (IOException e) {
+			throw Exceptions.runtime(e, "failed to map json [%s] to pojo class [%s]", //
+					jsonString, pojoClass.getSimpleName());
+		}
+	}
+
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static <K extends JsonNode> JsonAssert<K> assertNode(K node) {
 		return new JsonAssert(node);
@@ -668,4 +681,13 @@ public class Json7 {
 		}
 		return checkObject(field);
 	}
+
+	public static String toString(Object pojo) {
+		try {
+			return mapper().writeValueAsString(pojo);
+		} catch (JsonProcessingException e) {
+			throw Exceptions.illegalArgument(e, "error processing pojo object to json");
+		}
+	}
+
 }
