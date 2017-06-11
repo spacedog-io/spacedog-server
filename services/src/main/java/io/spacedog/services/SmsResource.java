@@ -54,7 +54,7 @@ public class SmsResource extends Resource {
 	// Implementation
 	//
 
-	static class SmsMessage {
+	public static class SmsMessage {
 		public String from;
 		public String to;
 		public String body;
@@ -158,7 +158,7 @@ public class SmsResource extends Resource {
 
 	private static SmsResource singleton = new SmsResource();
 
-	static SmsResource get() {
+	public static SmsResource get() {
 		return singleton;
 	}
 

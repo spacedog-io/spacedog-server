@@ -268,7 +268,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 
 	private static DataStore singleton = new DataStore();
 
-	static DataStore get() {
+	public static DataStore get() {
 		return singleton;
 	}
 

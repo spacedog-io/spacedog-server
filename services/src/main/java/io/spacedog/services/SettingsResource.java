@@ -352,7 +352,7 @@ public class SettingsResource extends Resource {
 
 	private static SettingsResource singleton = new SettingsResource();
 
-	static SettingsResource get() {
+	public static SettingsResource get() {
 		return singleton;
 	}
 

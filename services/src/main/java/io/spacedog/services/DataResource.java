@@ -206,7 +206,7 @@ public class DataResource extends Resource {
 
 	private static DataResource singleton = new DataResource();
 
-	static DataResource get() {
+	public static DataResource get() {
 		return singleton;
 	}
 

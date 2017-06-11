@@ -21,6 +21,7 @@ import org.joda.time.DateTimeZone;
 import com.google.common.io.Resources;
 
 import io.spacedog.core.Json8;
+import io.spacedog.services.caremen.CaremenResource;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Utils;
 import net.codestory.http.AbstractWebServer;
@@ -256,7 +257,7 @@ public class Start {
 
 	private static Start singleton;
 
-	static Start get() {
+	public static Start get() {
 		if (singleton == null)
 			singleton = new Start();
 		return singleton;

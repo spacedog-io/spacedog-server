@@ -303,6 +303,12 @@ public class PushResource extends Resource {
 
 			return JsonPayload.json(builder, httpStatus);
 		}
+
+		public ObjectNode toNode() {
+			return Json8.object(FAILURES, failures, //
+					"applicationDisabled", applicationDisabled, //
+					PUSHED_TO, logItems);
+		}
 	}
 
 	public void pushToInstallation(PushLog log, String installationId, //
@@ -642,7 +648,7 @@ public class PushResource extends Resource {
 
 	private static PushResource singleton = new PushResource();
 
-	static PushResource get() {
+	public static PushResource get() {
 		return singleton;
 	}
 
