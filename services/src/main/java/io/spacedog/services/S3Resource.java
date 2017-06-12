@@ -4,7 +4,6 @@
 package io.spacedog.services;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.util.stream.Collectors;
 
 import javax.activation.MimetypesFileTypeMap;
@@ -71,6 +70,13 @@ public class S3Resource extends Resource {
 		try {
 			if (withContent) {
 				s3Object = s3.getObject(bucketName, s3Path.toS3Key());
+
+				// S3Object instances need to be manually closed to release
+				// the underlying http connection. This will be done after
+				// the request payload is written to the requester. This
+				// should solve the aws connection famine.
+				closeThisS3ObjectAtTheEnd.set(s3Object);
+
 				metadata = s3Object.getObjectMetadata();
 				owner = getOrCheckOwnership(metadata, checkOwnership);
 				fileContent = s3Object.getObjectContent();
@@ -86,17 +92,6 @@ public class S3Resource extends Resource {
 				return Payload.notFound();
 
 			throw e;
-
-		} finally {
-			// S3Object need to be manually closed to release
-			// the underlying http connection
-			try {
-				if (s3Object != null)
-					s3Object.close();
-
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
 		}
 
 		Payload payload = new Payload(metadata.getContentType(), fileContent)//
@@ -108,6 +103,19 @@ public class S3Resource extends Resource {
 					metadata.getContentDisposition());
 
 		return payload;
+	}
+
+	private static ThreadLocal<S3Object> closeThisS3ObjectAtTheEnd = new ThreadLocal<>();
+
+	public static void closeThisThreadS3Object() {
+		try {
+			S3Object s3Object = closeThisS3ObjectAtTheEnd.get();
+			if (s3Object != null)
+				s3Object.close();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	public Payload doList(String bucketSuffix, String backendId, WebPath path, Context context) {
