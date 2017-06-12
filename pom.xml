@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.spacedog</groupId>
 	<artifactId>spacedog-parent</artifactId>
-	<version>0.33.4-SNAPSHOT</version>
+	<version>0.33.4</version>
 	<packaging>pom</packaging>
 
 	<properties>
