@@ -371,7 +371,11 @@ public class CaremenResource extends Resource {
 				credentials.backendId(), CAREMENDRIVER_APP_ID, credentialsIds);
 
 		// push message to drivers
-		ObjectNode message = messageToDrivers(courseId);
+		Optional<Alert> alert = Alert.of("Demande de course immédiate", //
+				"Un client vient de commander une course immédiate", //
+				"newImmediate.wav");
+
+		ObjectNode message = toPushMessage(courseId, NEW_IMMEDIATE, alert);
 
 		PushLog pushLog = new PushLog();
 		for (SearchHit hit : response.getHits().hits()) {
@@ -381,25 +385,6 @@ public class CaremenResource extends Resource {
 		}
 
 		return pushLog;
-	}
-
-	private ObjectNode messageToDrivers(String courseId) {
-
-		ObjectNode apsMessage = Json8.objectBuilder()//
-				.put(ID, courseId)//
-				.put("type", NEW_IMMEDIATE)//
-				.object("aps")//
-				.put("content-available", 1)//
-				.put("sound", "newImmediate.wav")//
-				.object("alert")//
-				.put("title", "Demande de course immédiate")//
-				.put("body", "Un client vient de commander une course immédiate")//
-				.build();
-
-		return Json8.objectBuilder()//
-				.node(PushService.APNS_SANDBOX.name(), apsMessage)//
-				.node(PushService.APNS.name(), apsMessage)//
-				.build();
 	}
 
 	private List<String> searchDrivers(String backendId, Course course) {
@@ -552,6 +537,10 @@ public class CaremenResource extends Resource {
 		}
 
 	}
+
+	//
+	// Push message
+	//
 
 	private ObjectNode toPushMessage(String courseId, //
 			String type, Optional<Alert> alert) {
