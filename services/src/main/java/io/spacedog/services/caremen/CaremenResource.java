@@ -53,8 +53,8 @@ import net.codestory.http.payload.Payload;
 public class CaremenResource extends Resource {
 
 	private static final String CANCELLED = "cancelled";
-	private static final String CAREMENPASSENGER_APP_ID = "caremenpassenger";
-	private static final String CAREMENDRIVER_APP_ID = "caremendriver";
+	private static final String PASSENGER_APP_ID_SUFFIX = "passenger";
+	private static final String DRIVER_APP_ID_SUFFIX = "driver";
 	// status values
 
 	private static final String NEW_IMMEDIATE = "new-immediate";
@@ -368,7 +368,7 @@ public class CaremenResource extends Resource {
 
 		// search for installations
 		SearchResponse response = searchInstallations(//
-				credentials.backendId(), CAREMENDRIVER_APP_ID, credentialsIds);
+				credentials.backendId(), DRIVER_APP_ID_SUFFIX, credentialsIds);
 
 		// push message to drivers
 		Optional<Alert> alert = Alert.of("Demande de course immédiate", //
@@ -440,7 +440,12 @@ public class CaremenResource extends Resource {
 		throw Exceptions.illegalArgument("invalid vehicule type [%s]", requestedVehiculeType);
 	}
 
-	private SearchResponse searchInstallations(String backendId, String appId, List<String> credentialsIds) {
+	private SearchResponse searchInstallations(String backendId, String appIdSuffix, List<String> credentialsIds) {
+
+		// appId is caremendriver or caremenpassenger for prod and dev env
+		// appId is carerec-driver or carerec-passenger for recette env
+		String appId = (backendId.equals("carerec") ? "carerec-" : "caremen") //
+				+ appIdSuffix;
 
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
 				.must(QueryBuilders.termsQuery("tags.value", credentialsIds))//
@@ -590,7 +595,7 @@ public class CaremenResource extends Resource {
 			throw Exceptions.illegalArgument("course has invalid customer data");
 
 		SearchResponse response = searchInstallations(credentials.backendId(), //
-				CAREMENPASSENGER_APP_ID, Lists.newArrayList(course.customer.credentialsId));
+				PASSENGER_APP_ID_SUFFIX, Lists.newArrayList(course.customer.credentialsId));
 
 		return pushTo(course.customer.credentialsId, "customer", //
 				response, message, credentials);
@@ -602,7 +607,7 @@ public class CaremenResource extends Resource {
 			return new PushLog();
 
 		SearchResponse response = searchInstallations(credentials.backendId(), //
-				CAREMENDRIVER_APP_ID, Lists.newArrayList(course.driver.credentialsId));
+				DRIVER_APP_ID_SUFFIX, Lists.newArrayList(course.driver.credentialsId));
 
 		return pushTo(course.driver.credentialsId, "driver", //
 				response, message, credentials);
