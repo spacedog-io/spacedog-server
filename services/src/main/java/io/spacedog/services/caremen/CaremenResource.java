@@ -673,21 +673,48 @@ public class CaremenResource extends Resource {
 	private PushLog pushTo(String credentialsId, String type, //
 			SearchResponse response, ObjectNode message, Credentials credentials) {
 
-		if (response.getHits().getTotalHits() == 0)
-			throw Exceptions.illegalArgument(//
-					"no installation found for %s with credentials id [%s]", //
-					type, credentialsId);
-
 		PushLog pushLog = new PushLog();
-		for (SearchHit hit : response.getHits().hits()) {
-			ObjectNode installation = Json8.readObject(hit.sourceAsString());
-			PushResource.get().pushToInstallation(pushLog, hit.id(), //
-					installation, message, credentials, BadgeStrategy.manual);
-		}
 
-		if (pushLog.successes == 0)
-			throw Exceptions.space(400, "failed to push to %s", type)//
-					.details(pushLog.toNode());
+		try {
+
+			if (response.getHits().getTotalHits() == 0) {
+
+				String title = String.format(//
+						"no installation found for %s with credentials id [%s] in backend [%s]", //
+						type, credentialsId, credentials.backendId());
+
+				Internals.get().notify(//
+						Start.get().configuration()//
+								.superdogAwsNotificationTopic().orElse(null), //
+						title, title);
+			}
+
+			for (SearchHit hit : response.getHits().hits()) {
+				ObjectNode installation = Json8.readObject(hit.sourceAsString());
+				PushResource.get().pushToInstallation(pushLog, hit.id(), //
+						installation, message, credentials, BadgeStrategy.manual);
+			}
+
+			if (pushLog.successes == 0) {
+				String title = String.format(//
+						"failed to push to %s in backend [%s]", //
+						type, credentials.backendId());
+
+				Internals.get().notify(//
+						Start.get().configuration()//
+								.superdogAwsNotificationTopic().orElse(null), //
+						title, pushLog.toNode().toString());
+
+			}
+
+		} catch (Throwable t) {
+
+			Internals.get().notify(//
+					Start.get().configuration()//
+							.superdogAwsNotificationTopic().orElse(null), //
+					String.format("Error pushing to [%s]", type), //
+					Throwables.getStackTraceAsString(t));
+		}
 
 		return pushLog;
 	}
