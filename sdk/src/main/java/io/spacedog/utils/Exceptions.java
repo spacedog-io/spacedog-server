@@ -30,6 +30,10 @@ public class Exceptions {
 		return new NotFoundException("[%s][%s] not found in backend [%s]", type, id, backendId);
 	}
 
+	public static SpaceException invalidState(String message, Object... args) {
+		return new SpaceException(409, message, args);
+	}
+
 	public static SpaceException space(int httpStatus, String message, Object... args) {
 		return new SpaceException(httpStatus, message, args);
 	}
