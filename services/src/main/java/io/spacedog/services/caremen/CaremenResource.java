@@ -8,6 +8,7 @@ import java.util.Set;
 
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.unit.DistanceUnit;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -22,9 +23,11 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 
 import io.spacedog.core.Json8;
+import io.spacedog.jobs.Internals;
 import io.spacedog.model.BadgeStrategy;
 import io.spacedog.model.PushService;
 import io.spacedog.services.DataResource;
@@ -134,13 +137,14 @@ public class CaremenResource extends Resource {
 		course.driver = new CourseDriver(getDriver(credentials));
 		saveCourse(course, credentials);
 
+		saveCourseLogs(courseId, body, context);
 		pushDriverIsComingToCustumer(course, credentials);
 		return createPayload(course);
 	}
 
 	@Post("/1/service/course/:id/_ready_to_load")
 	@Post("/1/service/course/:id/_ready_to_load")
-	public Payload postReadyToLoad(String courseId) {
+	public Payload postReadyToLoad(String courseId, String body, Context context) {
 
 		Credentials credentials = checkDriverCredentials();
 
@@ -151,13 +155,14 @@ public class CaremenResource extends Resource {
 		course.driverIsReadyToLoadTimestamp = DateTime.now();
 		saveCourse(course, credentials);
 
+		saveCourseLogs(courseId, body, context);
 		pushReadyToLoadToCustomer(course, credentials);
 		return createPayload(course);
 	}
 
 	@Post("/1/service/course/:id/_in_progress")
 	@Post("/1/service/course/:id/_in_progress")
-	public Payload postInProgress(String courseId) {
+	public Payload postInProgress(String courseId, String body, Context context) {
 
 		Credentials credentials = checkDriverCredentials();
 
@@ -168,21 +173,25 @@ public class CaremenResource extends Resource {
 		course.pickupTimestamp = DateTime.now();
 		saveCourse(course, credentials);
 
+		saveCourseLogs(courseId, body, context);
 		pushInProgressToCustomer(course, credentials);
 		return createPayload(course);
 	}
 
 	@Post("/1/service/course/:id/_completed")
 	@Post("/1/service/course/:id/_completed")
-	public Payload postCompleted(String courseId, String body) {
+	public Payload postCompleted(String courseId, String body, Context context) {
 
 		Credentials credentials = checkDriverCredentials();
 
 		Course course = getCourse(courseId, credentials);
 		course.check(IN_PROGRESS);
 		course.checkDriver(credentials.id());
+
+		CourseLog[] courseLogs = saveCourseLogs(courseId, body, context);
+
 		course.status = COMPLETED;
-		course.dropoffTimestamp = DateTime.now();
+		course.dropoffTimestamp = extractDropoffTimestamp(courseLogs);
 		saveCourse(course, credentials);
 
 		pushCompletedToCustomer(course, credentials);
@@ -232,6 +241,40 @@ public class CaremenResource extends Resource {
 					"invalid course request status [%s]", course.status);
 
 		return course;
+	}
+
+	private static final CourseLog[] NO_COURSE_LOGS = new CourseLog[0];
+
+	private CourseLog[] saveCourseLogs(String courseId, String body, Context context) {
+		if (!Strings.isNullOrEmpty(body)) {
+
+			try {
+				CourseLog[] courseLogs = Json8.toPojo(body, CourseLog[].class);
+				for (CourseLog courseLog : courseLogs)
+					DataResource.get().post("courselog", //
+							Json8.toString(courseLog), context);
+
+				return courseLogs;
+
+			} catch (Throwable t) {
+
+				Internals.get().notify(//
+						Start.get().configuration()//
+								.superdogAwsNotificationTopic().orElse(null), //
+						String.format("Error saving logs of course [%s]", //
+								courseId), //
+						Throwables.getStackTraceAsString(t));
+			}
+		}
+
+		return NO_COURSE_LOGS;
+	}
+
+	private DateTime extractDropoffTimestamp(CourseLog[] courseLogs) {
+		for (CourseLog courseLog : courseLogs)
+			if (COMPLETED.equals(courseLog.status))
+				return courseLog.when;
+		return DateTime.now();
 	}
 
 	private Driver getDriver(Credentials credentials) {
