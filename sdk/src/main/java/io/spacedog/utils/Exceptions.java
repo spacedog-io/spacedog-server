@@ -30,10 +30,6 @@ public class Exceptions {
 		return new NotFoundException("[%s][%s] not found in backend [%s]", type, id, backendId);
 	}
 
-	public static SpaceException invalidState(String message, Object... args) {
-		return new SpaceException(409, message, args);
-	}
-
 	public static SpaceException space(int httpStatus, String message, Object... args) {
 		return new SpaceException(httpStatus, message, args);
 	}
@@ -42,12 +38,12 @@ public class Exceptions {
 		return new SpaceException(httpStatus, cause, message, args);
 	}
 
-	public static IllegalStateException illegalState(String message, Object... args) {
-		return new IllegalStateException(String.format(message, args));
+	public static SpaceException illegalState(String message, Object... args) {
+		return new SpaceException(409, message, args);
 	}
 
-	public static IllegalStateException illegalState(Throwable t, String message, Object... args) {
-		return new IllegalStateException(String.format(message, args), t);
+	public static SpaceException illegalState(Throwable t, String message, Object... args) {
+		return new SpaceException(409, message, args);
 	}
 
 	public static ForbiddenException forbidden(String message, Object... args) {
