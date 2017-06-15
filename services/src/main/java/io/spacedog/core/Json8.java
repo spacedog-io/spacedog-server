@@ -605,6 +605,44 @@ public class Json8 {
 		}
 	}
 
+	public static <K> K toPojo(JsonNode jsonNode, String fieldPath, Class<K> pojoClass) {
+		Check.notNull(jsonNode, "jsonNode");
+		Check.notNull(fieldPath, "fieldPath");
+
+		jsonNode = get(jsonNode, fieldPath);
+		if (isNull(jsonNode))
+			throw Exceptions.illegalArgument("no field [%s] in json [%s]", //
+					fieldPath, jsonNode);
+
+		return toPojo(jsonNode, pojoClass);
+	}
+
+	public static <K> K toPojo(JsonNode jsonNode, Class<K> pojoClass) {
+		Check.notNull(jsonNode, "jsonNode");
+		Check.notNull(pojoClass, "pojoClass");
+
+		try {
+			return Json7.mapper().treeToValue(jsonNode, pojoClass);
+
+		} catch (JsonProcessingException e) {
+			throw Exceptions.runtime(e, "failed to map json [%s] to pojo class [%s]", //
+					jsonNode, pojoClass.getSimpleName());
+		}
+	}
+
+	public static <K> K toPojo(String jsonString, Class<K> pojoClass) {
+		Check.notNull(jsonString, "jsonString");
+		Check.notNull(pojoClass, "pojoClass");
+
+		try {
+			return Json7.mapper().readValue(jsonString, pojoClass);
+
+		} catch (IOException e) {
+			throw Exceptions.runtime(e, "failed to map json [%s] to pojo class [%s]", //
+					jsonString, pojoClass.getSimpleName());
+		}
+	}
+
 	public static ArrayNode withArray(ObjectNode node, String path) {
 		JsonNode field = get(node, path);
 		if (isNull(field)) {
