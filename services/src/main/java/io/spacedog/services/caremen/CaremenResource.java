@@ -86,28 +86,22 @@ public class CaremenResource extends Resource {
 		PushLog driverPushLog = null;
 		int httpStatus = HttpStatus.CREATED;
 
-		// check course
-		Course course = readAndCheckCourse(body);
-
-		// save course
-		Payload payload = DataResource.get().post(COURSE, body, context);
-
-		// get course id and version
-		ObjectNode courseResponse = (ObjectNode) payload.rawContent();
-		String courseId = courseResponse.get(ID).asText();
-		long courseVersion = courseResponse.get(VERSION).asLong();
+		Course course = createNewCourse(body, context);
 
 		if (course.requestedPickupTimestamp == null) {
-			driverPushLog = pushToClosestDrivers(courseId, course, credentials);
+			driverPushLog = pushToClosestDrivers(course, credentials);
+
 			if (driverPushLog.successes == 0) {
-				courseVersion = setStatusToNoDriverAvailable(courseId, credentials);
+				course.meta.version = setStatusToNoDriverAvailable(course.meta.id, credentials);
 				httpStatus = HttpStatus.NOT_FOUND;
 			}
-			textOperatorNewImmediate(course, courseId, driverPushLog.successes);
-		} else
-			textOperatorNewScheduled(course, courseId);
 
-		return createPayload(httpStatus, courseId, courseVersion, driverPushLog, null);
+			textOperatorNewImmediate(course, driverPushLog.successes);
+
+		} else
+			textOperatorNewScheduled(course);
+
+		return createPayload(httpStatus, course, driverPushLog, null);
 	}
 
 	@Delete("/1/service/course/:id/driver")
@@ -115,15 +109,15 @@ public class CaremenResource extends Resource {
 	public Payload deleteCourseDriver(String courseId, String body, Context context) {
 		Credentials credentials = SpaceContext.checkUserCredentials();
 		Course course = getCourse(courseId, credentials);
-		checkAuthorizedToRemoveDriver(credentials, courseId, course);
+		checkIfAuthorizedToRemoveDriver(course, credentials);
+		course.checkStatus(DRIVER_IS_COMING, READY_TO_LOAD);
 
-		long courseVersion = removeDriverFromCourse(courseId, credentials);
-		PushLog driverPushLog = pushToClosestDrivers(courseId, course, credentials);
+		course = removeDriverFromCourse(course, credentials);
+		PushLog driverPushLog = pushToClosestDrivers(course, credentials);
 		PushLog customerPushLog = pushDriverHasGivenUpToCustomer(course, credentials);
-		textOperatorDriverHasGivenUp(courseId, course, credentials);
+		textOperatorDriverHasGivenUp(course, credentials);
 
-		return createPayload(HttpStatus.OK, //
-				courseId, courseVersion, driverPushLog, customerPushLog);
+		return createPayload(HttpStatus.OK, course, driverPushLog, customerPushLog);
 	}
 
 	@Post("/1/service/course/:id/_driver_is_coming")
@@ -140,7 +134,7 @@ public class CaremenResource extends Resource {
 		saveCourse(course, credentials);
 
 		pushDriverIsComingToCustumer(course, credentials);
-		return JsonPayload.success();
+		return createPayload(course);
 	}
 
 	@Post("/1/service/course/:id/_ready_to_load")
@@ -157,7 +151,7 @@ public class CaremenResource extends Resource {
 		saveCourse(course, credentials);
 
 		pushReadyToLoadToCustomer(course, credentials);
-		return JsonPayload.success();
+		return createPayload(course);
 	}
 
 	@Post("/1/service/course/:id/_in_progress")
@@ -174,7 +168,7 @@ public class CaremenResource extends Resource {
 		saveCourse(course, credentials);
 
 		pushInProgressToCustomer(course, credentials);
-		return JsonPayload.success();
+		return createPayload(course);
 	}
 
 	@Post("/1/service/course/:id/_completed")
@@ -191,7 +185,7 @@ public class CaremenResource extends Resource {
 		saveCourse(course, credentials);
 
 		pushCompletedToCustomer(course, credentials);
-		return JsonPayload.success();
+		return createPayload(course);
 	}
 
 	@Post("/1/service/course/:id/_cancelled")
@@ -208,21 +202,27 @@ public class CaremenResource extends Resource {
 		saveCourse(course, credentials);
 
 		pushCancelledToDriver(course, credentials);
-		return JsonPayload.success();
+		return createPayload(course);
 	}
 
 	//
 	// Implementation
 	//
 
-	private Course readAndCheckCourse(String body) {
-		Course course = null;
+	private Course createNewCourse(String body, Context context) {
 
-		try {
-			course = Json8.mapper().readValue(body, Course.class);
-		} catch (Exception e) {
-			throw Exceptions.illegalArgument(e, "error deserializing course");
-		}
+		Course course = readAndCheckCourse(body);
+		Payload payload = DataResource.get().post(COURSE, body, context);
+		course.meta = new Course.Meta();
+		ObjectNode courseResponse = (ObjectNode) payload.rawContent();
+		course.meta.id = courseResponse.get(ID).asText();
+		course.meta.version = courseResponse.get(VERSION).asLong();
+		return course;
+	}
+
+	private Course readAndCheckCourse(String body) {
+
+		Course course = Json7.toPojo(body, Course.class);
 
 		if (course.status.equals(NEW_SCHEDULED))
 			Check.notNull(course.requestedPickupTimestamp, "requestedPickupTimestamp");
@@ -288,13 +288,16 @@ public class CaremenResource extends Resource {
 				.getVersion();
 	}
 
-	private long removeDriverFromCourse(String courseId, Credentials credentials) {
+	private Course removeDriverFromCourse(Course course, Credentials credentials) {
 		ObjectNode patch = Json8.object("driver", null, STATUS, NEW_IMMEDIATE);
-		return DataStore.get()
+		course.meta.version = DataStore.get()
 				.patchObject(//
-						credentials.backendId(), COURSE, courseId, //
+						credentials.backendId(), COURSE, course.meta.id, //
 						patch, credentials.name())//
 				.getVersion();
+		course.status = NEW_IMMEDIATE;
+		course.driver = null;
+		return course;
 	}
 
 	//
@@ -306,7 +309,8 @@ public class CaremenResource extends Resource {
 	private static DateTimeFormatter pickupFormatter = DateTimeFormat//
 			.forPattern("dd/MM' à 'HH'h'mm").withZone(parisZone).withLocale(Locale.FRENCH);
 
-	private void textOperatorNewScheduled(Course course, String courseId) {
+	private void textOperatorNewScheduled(Course course) {
+
 		StringBuilder builder = new StringBuilder()//
 				.append("Nouvelle demande de course programmée pour le ")//
 				.append(pickupFormatter.print(course.requestedPickupTimestamp)) //
@@ -319,8 +323,8 @@ public class CaremenResource extends Resource {
 		SmsResource.get().send(message);
 	}
 
-	private void textOperatorNewImmediate(//
-			Course course, String courseId, int notifications) {
+	private void textOperatorNewImmediate(Course course, int notifications) {
+
 		StringBuilder builder = new StringBuilder()//
 				.append("Nouvelle demande de course immédiate. Départ : ")//
 				.append(course.from.address).append(". Catégorie : ")//
@@ -332,7 +336,7 @@ public class CaremenResource extends Resource {
 		SmsResource.get().send(message);
 	}
 
-	private void textOperatorDriverHasGivenUp(String courseId, Course course, Credentials credentials) {
+	private void textOperatorDriverHasGivenUp(Course course, Credentials credentials) {
 
 		StringBuilder builder = new StringBuilder("Le chauffeur [")//
 				.append(credentials.name())//
@@ -355,8 +359,7 @@ public class CaremenResource extends Resource {
 	// push to drivers
 	//
 
-	private PushLog pushToClosestDrivers(String courseId, //
-			Course course, Credentials credentials) {
+	private PushLog pushToClosestDrivers(Course course, Credentials credentials) {
 
 		// search for drivers
 		List<String> credentialsIds = searchDrivers(//
@@ -375,7 +378,7 @@ public class CaremenResource extends Resource {
 				"Un client vient de commander une course immédiate", //
 				"newImmediate.wav");
 
-		ObjectNode message = toPushMessage(courseId, NEW_IMMEDIATE, alert);
+		ObjectNode message = toPushMessage(course.meta.id, NEW_IMMEDIATE, alert);
 
 		PushLog pushLog = new PushLog();
 		for (SearchHit hit : response.getHits().hits()) {
@@ -463,12 +466,25 @@ public class CaremenResource extends Resource {
 		return response;
 	}
 
-	private Payload createPayload(int httpStatus, String courseId, //
-			long courseVersion, PushLog driverPushLog, PushLog customerPushLog) {
+	private JsonBuilder<ObjectNode> toJsonPayloadBuilder(int httpStatus, Course course) {
 
-		JsonBuilder<ObjectNode> builder = JsonPayload.builder(httpStatus)//
-				.put(ID, courseId)//
-				.put(VERSION, courseVersion);
+		return JsonPayload.builder(httpStatus)//
+				.put(ID, course.meta.id)//
+				.put(VERSION, course.meta.version)//
+				.node("course", Json8.toNode(course));
+	}
+
+	private Payload createPayload(Course course) {
+
+		return JsonPayload.json(//
+				toJsonPayloadBuilder(HttpStatus.OK, course), //
+				HttpStatus.OK);
+	}
+
+	private Payload createPayload(int httpStatus, Course course, //
+			PushLog driverPushLog, PushLog customerPushLog) {
+
+		JsonBuilder<ObjectNode> builder = toJsonPayloadBuilder(httpStatus, course);
 
 		if (driverPushLog != null)
 			builder.node("driverPushLog", driverPushLog.logItems);
@@ -486,7 +502,7 @@ public class CaremenResource extends Resource {
 	private PushLog pushDriverHasGivenUpToCustomer(Course course, Credentials credentials) {
 		ObjectNode message = toPushMessage(course.meta.id, NEW_IMMEDIATE,
 				Alert.of("Chauffeur indisponible", //
-						"Votre chauffeur a rencontré un problème	et ne peut pas vous rejoindre."
+						"Votre chauffeur a rencontré un problème et ne peut pas vous rejoindre."
 								+ " Nous recherchons un autre chauffeur.",
 						"default"));
 		return pushToCustomer(course, message, credentials);
@@ -643,90 +659,20 @@ public class CaremenResource extends Resource {
 		return credentials;
 	}
 
-	private void checkAuthorizedToRemoveDriver(//
-			Credentials credentials, String courseId, Course course) {
+	private void checkIfAuthorizedToRemoveDriver(Course course, Credentials credentials) {
 
 		if (course.driver == null || course.driver.credentialsId == null)
 			throw Exceptions.illegalArgument(//
-					"no driver to delete in course [%s]", courseId);
+					"no driver to delete in course [%s]", course.meta.id);
 
 		if (credentials.roles().contains(Credentials.ADMIN))
 			return;
 
 		if (credentials.roles().contains("driver") //
 				&& !credentials.id().equals(course.driver.credentialsId))
-			throw Exceptions.forbidden("you are not the driver of course [%s]", courseId);
+			throw Exceptions.forbidden(//
+					"you are not the driver of course [%s]", course.meta.id);
 	}
-
-	// private String checkCustomerCredentialsId(ObjectNode course) {
-	// JsonNode node = Json8.get(course, "customer.credentialsId");
-	// if (Json8.isNull(node))
-	// throw Exceptions.illegalArgument("course has invalid customer data");
-	// return node.asText();
-	// }
-
-	// private String checkCustomerCredentialsId(Course course) {
-	// if (course == null || course.customer == null //
-	// || course.customer.credentialsId == null)
-	// throw Exceptions.illegalArgument("course has invalid customer data");
-	// return course.customer.credentialsId;
-	// }
-
-	// private ObjectNode messageToCustomer(String courseId) {
-	//
-	// ObjectNode apsMessage = Json8.objectBuilder()//
-	// .put(ID, courseId)//
-	// .put("type", NEW_IMMEDIATE)//
-	// .object("aps")//
-	// .put("content-available", 1)//
-	// .put("sound", "default")//
-	// .object("alert")//
-	// .put("title", "Chauffeur indisponible")//
-	// .put("body",
-	// "Votre chauffeur a rencontré un problème et ne peut pas vous rejoindre."
-	// + " Nous recherchons un autre chauffeur.")//
-	// .build();
-	//
-	// return Json8.objectBuilder()//
-	// .node(PushService.APNS_SANDBOX.name(), apsMessage)//
-	// .node(PushService.APNS.name(), apsMessage)//
-	// .build();
-	// }
-
-	// private JsonNode toCourseDriver(Driver driver) {
-	// Course.Driver courseDriver = new Course.Driver();
-	// courseDriver.driverId = driver.id;
-	// courseDriver.credentialsId = driver.credentialsId;
-	// courseDriver.firstname = driver.firstname;
-	// courseDriver.lastname = driver.lastname;
-	// courseDriver.phone = driver.phone;
-	// courseDriver.photo = driver.photo;
-	// courseDriver.vehicule = driver.vehicule;
-	// return Json8.toNode(courseDriver);
-	// }
-
-	// private void checkStatus(ObjectNode course, String... statuses) {
-	// if (course == null || !course.hasNonNull(STATUS))
-	// throw Exceptions.illegalArgument("course has no status");
-	//
-	// String status = course.get(STATUS).asText();
-	// for (String checkedStatus : statuses)
-	// if (checkedStatus.equals(status))
-	// return;
-	//
-	// throw Exceptions.illegalArgument("incompatible course status [%s]",
-	// status);
-	// }
-
-	// private ObjectNode getCourse(String courseId, Credentials credentials) {
-	// return DataStore.get().getObject(credentials.backendId(), "course",
-	// courseId);
-	// }
-
-	// private void saveCourse(ObjectNode course, Credentials credentials) {
-	// DataStore.get().updateObject(credentials.backendId(), course,
-	// credentials.name());
-	// }
 
 	//
 	// singleton
