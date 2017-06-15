@@ -96,15 +96,19 @@ public class Course {
 		public long version;
 	}
 
-	public void checkStatus(String... validStatuses) {
+	public void check(String... validStatuses) {
+
+		if (customer == null || customer.credentialsId == null)
+			throw Exceptions.illegalState("course has invalid customer data");
+
 		if (Strings.isNullOrEmpty(status))
-			throw Exceptions.illegalArgument("course has no status");
+			throw Exceptions.illegalState("course has no status");
 
 		for (String validStatus : validStatuses)
 			if (validStatus.equals(status))
 				return;
 
-		throw Exceptions.illegalArgument("incompatible course status [%s]", status);
+		throw Exceptions.illegalState("incompatible course status [%s]", status);
 	}
 
 	public void checkDriver(String driverCredentialsId) {

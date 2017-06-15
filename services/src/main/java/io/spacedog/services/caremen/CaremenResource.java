@@ -87,6 +87,7 @@ public class CaremenResource extends Resource {
 		int httpStatus = HttpStatus.CREATED;
 
 		Course course = createNewCourse(body, context);
+		course.check(NEW_IMMEDIATE, NEW_SCHEDULED);
 
 		if (course.requestedPickupTimestamp == null) {
 			driverPushLog = pushToClosestDrivers(course, credentials);
@@ -109,8 +110,8 @@ public class CaremenResource extends Resource {
 	public Payload deleteCourseDriver(String courseId, String body, Context context) {
 		Credentials credentials = SpaceContext.checkUserCredentials();
 		Course course = getCourse(courseId, credentials);
+		course.check(DRIVER_IS_COMING, READY_TO_LOAD);
 		checkIfAuthorizedToRemoveDriver(course, credentials);
-		course.checkStatus(DRIVER_IS_COMING, READY_TO_LOAD);
 
 		course = removeDriverFromCourse(course, credentials);
 		PushLog driverPushLog = pushToClosestDrivers(course, credentials);
@@ -127,7 +128,7 @@ public class CaremenResource extends Resource {
 		Credentials credentials = checkDriverCredentials();
 
 		Course course = getCourse(courseId, credentials);
-		course.checkStatus(NEW_IMMEDIATE, SCHEDULED_ASSIGNED);
+		course.check(NEW_IMMEDIATE, SCHEDULED_ASSIGNED);
 		course.status = DRIVER_IS_COMING;
 		course.driverIsComingTimestamp = DateTime.now();
 		course.driver = new CourseDriver(getDriver(credentials));
@@ -144,7 +145,7 @@ public class CaremenResource extends Resource {
 		Credentials credentials = checkDriverCredentials();
 
 		Course course = getCourse(courseId, credentials);
-		course.checkStatus(DRIVER_IS_COMING);
+		course.check(DRIVER_IS_COMING);
 		course.checkDriver(credentials.id());
 		course.status = READY_TO_LOAD;
 		course.driverIsReadyToLoadTimestamp = DateTime.now();
@@ -161,7 +162,7 @@ public class CaremenResource extends Resource {
 		Credentials credentials = checkDriverCredentials();
 
 		Course course = getCourse(courseId, credentials);
-		course.checkStatus(READY_TO_LOAD);
+		course.check(READY_TO_LOAD);
 		course.checkDriver(credentials.id());
 		course.status = IN_PROGRESS;
 		course.pickupTimestamp = DateTime.now();
@@ -178,7 +179,7 @@ public class CaremenResource extends Resource {
 		Credentials credentials = checkDriverCredentials();
 
 		Course course = getCourse(courseId, credentials);
-		course.checkStatus(IN_PROGRESS);
+		course.check(IN_PROGRESS);
 		course.checkDriver(credentials.id());
 		course.status = COMPLETED;
 		course.dropoffTimestamp = DateTime.now();
@@ -195,7 +196,7 @@ public class CaremenResource extends Resource {
 		Credentials credentials = checkCustomerCredentials();
 
 		Course course = getCourse(courseId, credentials);
-		course.checkStatus(NEW_IMMEDIATE, NEW_SCHEDULED, //
+		course.check(NEW_IMMEDIATE, NEW_SCHEDULED, //
 				SCHEDULED_ASSIGNED, DRIVER_IS_COMING, READY_TO_LOAD);
 		course.status = CANCELLED;
 		course.cancelledTimestamp = DateTime.now();
@@ -607,9 +608,6 @@ public class CaremenResource extends Resource {
 
 	private PushLog pushToCustomer(Course course, ObjectNode message, Credentials credentials) {
 
-		if (course.customer == null || course.customer.credentialsId == null)
-			throw Exceptions.illegalArgument("course has invalid customer data");
-
 		SearchResponse response = searchInstallations(credentials.backendId(), //
 				PASSENGER_APP_ID_SUFFIX, Lists.newArrayList(course.customer.credentialsId));
 
@@ -662,7 +660,7 @@ public class CaremenResource extends Resource {
 	private void checkIfAuthorizedToRemoveDriver(Course course, Credentials credentials) {
 
 		if (course.driver == null || course.driver.credentialsId == null)
-			throw Exceptions.illegalArgument(//
+			throw Exceptions.illegalState(//
 					"no driver to delete in course [%s]", course.meta.id);
 
 		if (credentials.roles().contains(Credentials.ADMIN))
