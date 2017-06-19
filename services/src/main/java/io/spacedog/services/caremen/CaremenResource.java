@@ -121,6 +121,7 @@ public class CaremenResource extends Resource {
 		PushLog customerPushLog = pushDriverHasGivenUpToCustomer(course, credentials);
 		textOperatorDriverHasGivenUp(course, credentials);
 
+		saveCourseLogs(courseId, body, context);
 		return createPayload(HttpStatus.OK, course, driverPushLog, customerPushLog);
 	}
 
