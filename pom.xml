@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.spacedog</groupId>
 	<artifactId>spacedog-parent</artifactId>
-	<version>0.33.7-SNAPSHOT</version>
+	<version>0.33.7</version>
 	<packaging>pom</packaging>
 
 	<scm>
@@ -55,12 +55,12 @@
 
 		<plugins>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-release-plugin</artifactId>
-				<version>2.5.3</version>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>versions-maven-plugin</artifactId>
+				<version>2.4</version>
 				<configuration>
-					<autoVersionSubmodules>true</autoVersionSubmodules>
-					<tagNameFormat>v@{project.version}</tagNameFormat>
+					<allowSnapshots>true</allowSnapshots>
+					<generateBackupPoms>false</generateBackupPoms>
 				</configuration>
 			</plugin>
 		</plugins>
