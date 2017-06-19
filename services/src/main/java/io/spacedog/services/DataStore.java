@@ -19,11 +19,14 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHits;
 import org.joda.time.DateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
 import io.spacedog.core.Json8;
+import io.spacedog.utils.Check;
+import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.NotFoundException;
 import io.spacedog.utils.SpaceFields;
@@ -31,6 +34,27 @@ import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 
 public class DataStore implements SpaceParams, SpaceFields {
+
+	//
+	// help classes and interfaces
+	//
+
+	public interface Metable {
+		Meta meta();
+
+		void meta(Meta meta);
+	}
+
+	@JsonIgnoreProperties(ignoreUnknown = true)
+	public static class Meta {
+		public String id;
+		public String type;
+		public long version;
+		public String createdBy;
+		public DateTime createdAt;
+		public String updatedBy;
+		public DateTime updatedAt;
+	}
 
 	//
 	// help methods
@@ -91,6 +115,34 @@ public class DataStore implements SpaceParams, SpaceFields {
 		return object;
 	}
 
+	public void createObject(String type, Metable object, Credentials requester) {
+
+		Meta meta = object.meta();
+		Check.isTrue(meta == null || meta.id == null, "[meta.id] is not null");
+
+		meta = new Meta();
+		meta.createdBy = requester.name();
+		meta.updatedBy = requester.name();
+
+		DateTime now = DateTime.now();
+		meta.createdAt = now;
+		meta.updatedAt = now;
+
+		object.meta(meta);
+		ObjectNode node = (ObjectNode) Json8.toNode(object);
+
+		node.with("meta").remove("id");
+		node.with("meta").remove("version");
+		node.with("meta").remove("type");
+
+		IndexResponse response = Start.get().getElasticClient()//
+				.index(requester.backendId(), type, node.toString());
+
+		meta.type = type;
+		meta.id = response.getId();
+		meta.version = response.getVersion();
+	}
+
 	/**
 	 * TODO do we need these two update methods or just one?
 	 */
@@ -132,6 +184,32 @@ public class DataStore implements SpaceParams, SpaceFields {
 
 		return Start.get().getElasticClient().prepareIndex(backendId, type, id).setSource(object.toString())
 				.setVersion(version).get();
+	}
+
+	public void updateObject(Metable object, Credentials requester) {
+
+		Meta meta = object.meta();
+
+		Check.notNull(meta, "meta");
+		Check.notNullOrEmpty(meta.id, "meta.id");
+		Check.notNullOrEmpty(meta.type, "meta.type");
+		Check.notNull(meta.createdBy, "meta.createdBy");
+		Check.notNull(meta.createdAt, "meta.createdAt");
+
+		meta.updatedBy = requester.name();
+		meta.updatedAt = DateTime.now();
+
+		ObjectNode node = (ObjectNode) Json8.toNode(object);
+		node.with("meta").remove("id");
+		node.with("meta").remove("version");
+		node.with("meta").remove("type");
+
+		meta.version = Start.get().getElasticClient()//
+				.prepareIndex(requester.backendId(), meta.type, meta.id)//
+				.setSource(node.toString())//
+				.setVersion(meta.version)//
+				.get()//
+				.getVersion();
 	}
 
 	public UpdateResponse patchObject(String backendId, String type, String id, ObjectNode object, String updatedBy) {

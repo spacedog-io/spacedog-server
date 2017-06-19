@@ -15,6 +15,11 @@ public class Check {
 		return value;
 	}
 
+	public static void isNull(Object value, String valueName) {
+		if (value != null)
+			throw Exceptions.illegalArgument("[%s] is not null", valueName);
+	}
+
 	public static String notNullOrEmpty(String value, String valueName) {
 		if (Strings.isNullOrEmpty(value))
 			throw Exceptions.illegalArgument("[%s] is null or empty", valueName);

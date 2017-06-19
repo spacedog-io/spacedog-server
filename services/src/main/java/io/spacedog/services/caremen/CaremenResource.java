@@ -89,7 +89,7 @@ public class CaremenResource extends Resource {
 		PushLog driverPushLog = null;
 		int httpStatus = HttpStatus.CREATED;
 
-		Course course = createNewCourse(body, context);
+		Course course = createNewCourse(body, credentials);
 		course.check(NEW_IMMEDIATE, NEW_SCHEDULED);
 
 		if (course.requestedPickupTimestamp == null) {
@@ -219,14 +219,10 @@ public class CaremenResource extends Resource {
 	// Implementation
 	//
 
-	private Course createNewCourse(String body, Context context) {
+	private Course createNewCourse(String body, Credentials requester) {
 
 		Course course = readAndCheckCourse(body);
-		Payload payload = DataResource.get().post(COURSE, body, context);
-		course.meta = new Course.Meta();
-		ObjectNode courseResponse = (ObjectNode) payload.rawContent();
-		course.meta.id = courseResponse.get(ID).asText();
-		course.meta.version = courseResponse.get(VERSION).asLong();
+		DataStore.get().createObject("course", course, requester);
 		return course;
 	}
 
@@ -309,18 +305,14 @@ public class CaremenResource extends Resource {
 
 		Course course = Json7.toPojo(response.getSourceAsString(), Course.class);
 		course.meta.id = response.getId();
+		course.meta.type = "course";
 		course.meta.version = response.getVersion();
 
 		return course;
 	}
 
-	private long saveCourse(Course course, Credentials credentials) {
-		return Start.get().getElasticClient()//
-				.prepareUpdate(credentials.backendId(), COURSE, course.meta.id)//
-				.setDoc(Json8.toString(course))//
-				.setVersion(course.meta.version)//
-				.get()//
-				.getVersion();
+	private void saveCourse(Course course, Credentials credentials) {
+		DataStore.get().updateObject(course, credentials);
 	}
 
 	private long setStatusToNoDriverAvailable(String courseId, Credentials credentials) {

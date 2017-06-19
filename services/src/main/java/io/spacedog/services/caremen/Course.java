@@ -3,15 +3,17 @@ package io.spacedog.services.caremen;
 import org.elasticsearch.common.Strings;
 import org.joda.time.DateTime;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import io.spacedog.model.GeoPoint;
+import io.spacedog.services.DataStore.Meta;
+import io.spacedog.services.DataStore.Metable;
 import io.spacedog.utils.Exceptions;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Course {
+public class Course implements Metable {
 
+	public Meta meta;
 	public String status;
 	public String requestedVehiculeType;
 	public DateTime requestedPickupTimestamp;
@@ -24,9 +26,9 @@ public class Course {
 	public Float fare;
 	public Long time;
 	public Integer distance;
-	public Meta meta;
 
 	public Course.CourseCustomer customer;
+	public Payment payment;
 	public Course.Location from;
 	public Course.Location to;
 	public Course.CourseDriver driver;
@@ -39,6 +41,12 @@ public class Course {
 	}
 
 	@JsonIgnoreProperties(ignoreUnknown = true)
+	public static class DriverCompany {
+		public String name;
+		public String address;
+	}
+
+	@JsonIgnoreProperties(ignoreUnknown = true)
 	public static class CourseDriver {
 		public String driverId;
 		public String credentialsId;
@@ -48,6 +56,7 @@ public class Course {
 		public String phone;
 		public String photo;
 		public Vehicule vehicule;
+		public DriverCompany company;
 
 		public CourseDriver() {
 		}
@@ -86,16 +95,6 @@ public class Course {
 		public Stripe paymentId;
 	}
 
-	@JsonIgnoreProperties(ignoreUnknown = true)
-	public static class Meta {
-		public String createdBy;
-		public String createdAt;
-		@JsonIgnore
-		public String id;
-		@JsonIgnore
-		public long version;
-	}
-
 	public void check(String... validStatuses) {
 
 		if (customer == null || customer.credentialsId == null)
@@ -118,4 +117,13 @@ public class Course {
 					"your are not the driver of course [%s]", meta.id);
 	}
 
+	@Override
+	public Meta meta() {
+		return meta;
+	}
+
+	@Override
+	public void meta(Meta meta) {
+		this.meta = meta;
+	}
 }
