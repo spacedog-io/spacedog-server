@@ -35,11 +35,6 @@ public class FileSynchCommand extends AbstractCommand<FileSynchCommand> {
 			description = "the file bucket prefix to use")
 	private String prefix;
 
-	@Parameter(names = { "-l", "--login" }, //
-			required = true, //
-			description = "the administrator login to use")
-	private String login;
-
 	/**
 	 * Set of server file path checked with matching local files. A checked
 	 * local file is uploaded if different.
