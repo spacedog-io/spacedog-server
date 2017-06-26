@@ -139,8 +139,8 @@ public class CaremenResource extends Resource {
 		saveCourse(course, credentials);
 
 		saveCourseLogs(courseId, body, context);
-		pushDriverIsComingToCustumer(course, credentials);
-		return createPayload(course);
+		PushLog customerPushLog = pushDriverIsComingToCustumer(course, credentials);
+		return createPayload(HttpStatus.OK, course, null, customerPushLog);
 	}
 
 	@Post("/1/service/course/:id/_ready_to_load")
@@ -157,8 +157,8 @@ public class CaremenResource extends Resource {
 		saveCourse(course, credentials);
 
 		saveCourseLogs(courseId, body, context);
-		pushReadyToLoadToCustomer(course, credentials);
-		return createPayload(course);
+		PushLog customerPushLog = pushReadyToLoadToCustomer(course, credentials);
+		return createPayload(HttpStatus.OK, course, null, customerPushLog);
 	}
 
 	@Post("/1/service/course/:id/_in_progress")
@@ -175,8 +175,8 @@ public class CaremenResource extends Resource {
 		saveCourse(course, credentials);
 
 		saveCourseLogs(courseId, body, context);
-		pushInProgressToCustomer(course, credentials);
-		return createPayload(course);
+		PushLog customerPushLog = pushInProgressToCustomer(course, credentials);
+		return createPayload(HttpStatus.OK, course, null, customerPushLog);
 	}
 
 	@Post("/1/service/course/:id/_completed")
@@ -195,8 +195,8 @@ public class CaremenResource extends Resource {
 		course.dropoffTimestamp = extractDropoffTimestamp(courseLogs);
 		saveCourse(course, credentials);
 
-		pushCompletedToCustomer(course, credentials);
-		return createPayload(course);
+		PushLog customerPushLog = pushCompletedToCustomer(course, credentials);
+		return createPayload(HttpStatus.OK, course, null, customerPushLog);
 	}
 
 	@Post("/1/service/course/:id/_cancelled")
@@ -212,8 +212,8 @@ public class CaremenResource extends Resource {
 		course.cancelledTimestamp = DateTime.now();
 		saveCourse(course, credentials);
 
-		pushCancelledToDriver(course, credentials);
-		return createPayload(course);
+		PushLog driverPushLog = pushCancelledToDriver(course, credentials);
+		return createPayload(HttpStatus.OK, course, driverPushLog, null);
 	}
 
 	//
@@ -503,25 +503,13 @@ public class CaremenResource extends Resource {
 		return response;
 	}
 
-	private JsonBuilder<ObjectNode> toJsonPayloadBuilder(int httpStatus, Course course) {
-
-		return JsonPayload.builder(httpStatus)//
-				.put(ID, course.meta.id)//
-				.put(VERSION, course.meta.version)//
-				.node("course", Json8.toNode(course));
-	}
-
-	private Payload createPayload(Course course) {
-
-		return JsonPayload.json(//
-				toJsonPayloadBuilder(HttpStatus.OK, course), //
-				HttpStatus.OK);
-	}
-
 	private Payload createPayload(int httpStatus, Course course, //
 			PushLog driverPushLog, PushLog customerPushLog) {
 
-		JsonBuilder<ObjectNode> builder = toJsonPayloadBuilder(httpStatus, course);
+		JsonBuilder<ObjectNode> builder = JsonPayload.builder(httpStatus)//
+				.put(ID, course.meta.id)//
+				.put(VERSION, course.meta.version)//
+				.node("course", Json8.toNode(course));
 
 		if (driverPushLog != null)
 			builder.node("driverPushLog", driverPushLog.logItems);
@@ -545,36 +533,36 @@ public class CaremenResource extends Resource {
 		return pushToCustomer(course, message, credentials);
 	}
 
-	private void pushDriverIsComingToCustumer(Course course, Credentials credentials) {
+	private PushLog pushDriverIsComingToCustumer(Course course, Credentials credentials) {
 		StringBuilder body = new StringBuilder("Votre chauffeur arrivera à ")//
 				.append(course.from.address).append(" dans quelques instants");
 		ObjectNode message = toPushMessage(course.meta.id, DRIVER_IS_COMING, //
 				Alert.of("Votre chauffeur est en route", body.toString(), "default"));
-		pushToCustomer(course, message, credentials);
+		return pushToCustomer(course, message, credentials);
 	}
 
-	private void pushReadyToLoadToCustomer(Course course, Credentials credentials) {
+	private PushLog pushReadyToLoadToCustomer(Course course, Credentials credentials) {
 		StringBuilder body = new StringBuilder("Votre chauffeur est arrivé à ")//
 				.append(course.from.address);
 		ObjectNode message = toPushMessage(course.meta.id, READY_TO_LOAD, //
 				Alert.of("Votre chauffeur vous attend", body.toString(), "readyToLoad.wav"));
-		pushToCustomer(course, message, credentials);
+		return pushToCustomer(course, message, credentials);
 	}
 
-	private void pushInProgressToCustomer(Course course, Credentials credentials) {
+	private PushLog pushInProgressToCustomer(Course course, Credentials credentials) {
 		ObjectNode message = toPushMessage(course.meta.id, IN_PROGRESS, Alert.empty());
-		pushToCustomer(course, message, credentials);
+		return pushToCustomer(course, message, credentials);
 	}
 
-	private void pushCompletedToCustomer(Course course, Credentials credentials) {
+	private PushLog pushCompletedToCustomer(Course course, Credentials credentials) {
 		ObjectNode message = toPushMessage(course.meta.id, COMPLETED, Alert.empty());
-		pushToCustomer(course, message, credentials);
+		return pushToCustomer(course, message, credentials);
 	}
 
-	private void pushCancelledToDriver(Course course, Credentials credentials) {
+	private PushLog pushCancelledToDriver(Course course, Credentials credentials) {
 		ObjectNode message = toPushMessage(course.meta.id, CANCELLED, //
 				Alert.of("Course annulée", "Le client a annulé la course", "cancelled.wav"));
-		pushToDriver(course, message, credentials);
+		return pushToDriver(course, message, credentials);
 	}
 
 	private static class Alert {
