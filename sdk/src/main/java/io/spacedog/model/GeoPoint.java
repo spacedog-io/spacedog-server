@@ -28,4 +28,8 @@ public class GeoPoint {
 	public String toString() {
 		return "{" + lat + ", " + lon + "}";
 	}
+
+	public GeoPoint plus(double latDrift, double lonDrift) {
+		return new GeoPoint(lat + latDrift, lon + lonDrift);
+	}
 }
