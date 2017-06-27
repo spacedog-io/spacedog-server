@@ -15,13 +15,14 @@ public class AdminEndpoint implements SpaceParams, SpaceFields {
 		return dog;
 	}
 
-	public boolean existBackend() {
+	public boolean doesMyBackendExist() {
 		return dog.get("/1/backend").go().status() == 200;
 	}
 
-	public AdminEndpoint createBackend(boolean notification) {
-		return createBackend(dog.username(), dog.password().get(), //
-				dog.email().get(), notification);
+	public AdminEndpoint createMyBackend(boolean notification) {
+		return SpaceDog.backend(dog).admin()//
+				.createBackend(dog.username(), dog.password().get(), //
+						dog.email().get(), notification);
 
 	}
 
