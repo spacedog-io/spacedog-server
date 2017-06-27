@@ -429,14 +429,18 @@ public class CaremenResource extends Resource {
 
 	private List<String> searchDrivers(String backendId, Course course) {
 
-		int radius = SettingsResource.get()//
-				.load(AppConfigurationSettings.class)//
-						.newCourseRequestDriverPushRadiusInMeters;
+		AppConfigurationSettings settings = SettingsResource.get()//
+				.load(AppConfigurationSettings.class);
+
+		int radius = settings.newCourseRequestDriverPushRadiusInMeters;
+		int obsolescence = settings.driverLastLocationObsolescenceInMinutes;
 
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
 				.must(QueryBuilders.termQuery(STATUS, "working"))//
 				.must(QueryBuilders.termsQuery("vehicule.type", //
-						compatibleVehiculeTypes(course.requestedVehiculeType)));
+						compatibleVehiculeTypes(course.requestedVehiculeType)))//
+				.must(QueryBuilders.rangeQuery("lastLocation.when")//
+						.gt("now-" + obsolescence + "m"));
 
 		GeoDistanceSortBuilder sort = SortBuilders.geoDistanceSort("lastLocation.where")//
 				.point(course.from.geopoint.lat, course.from.geopoint.lon)//

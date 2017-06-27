@@ -238,9 +238,7 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest bodyPojo(Object pojo) {
-		if (pojo instanceof JsonNode)
-			return bodyJson((JsonNode) pojo);
-		return bodyJson(Json7.mapper().valueToTree(pojo));
+		return bodyJson(Json7.toNode(pojo));
 	}
 
 	public SpaceRequest bodySchema(Schema schema) {

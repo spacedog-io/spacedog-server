@@ -8,4 +8,5 @@ import io.spacedog.model.Settings;
 class AppConfigurationSettings extends Settings {
 	public String operatorPhoneNumber;
 	public int newCourseRequestDriverPushRadiusInMeters;
+	public int driverLastLocationObsolescenceInMinutes;
 }
