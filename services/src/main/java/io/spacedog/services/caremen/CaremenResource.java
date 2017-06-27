@@ -432,7 +432,8 @@ public class CaremenResource extends Resource {
 		AppConfigurationSettings settings = SettingsResource.get()//
 				.load(AppConfigurationSettings.class);
 
-		int radius = settings.newCourseRequestDriverPushRadiusInMeters;
+		int maxDistanceToCustomer = settings.maxDistanceToCustomerFromEligibleDriversInMeters;
+		int maxDistanceBetweenDrivers = settings.maxDistanceBetweenEligibleDriversInMeters;
 		int obsolescence = settings.driverLastLocationObsolescenceInMinutes;
 
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
@@ -451,14 +452,33 @@ public class CaremenResource extends Resource {
 				.setFetchSource(false).addField(CREDENTIALS_ID)//
 				.addSort(sort).get();
 
+		double closestDriverDistance = -1;
 		List<String> credentialsIds = new ArrayList<>(5);
+
 		for (SearchHit hit : response.getHits().hits()) {
-			if (distance(hit) > radius)
+			double driverDistance = distance(hit);
+			if (closestDriverDistance < 0)
+				closestDriverDistance = driverDistance;
+			if (!isDriverEligible(driverDistance, closestDriverDistance, //
+					maxDistanceToCustomer, maxDistanceBetweenDrivers))
 				break;
 			credentialsIds.add(hit.field(CREDENTIALS_ID).getValue());
 		}
 
 		return credentialsIds;
+	}
+
+	private boolean isDriverEligible(double driverDistance, //
+			double closestDriverDistance, int maxDistanceToCustomer, //
+			int maxDistanceBetweenDrivers) {
+
+		if (driverDistance > maxDistanceToCustomer)
+			return false;
+
+		if (driverDistance - closestDriverDistance > maxDistanceBetweenDrivers)
+			return false;
+
+		return true;
 	}
 
 	private double distance(SearchHit hit) {

@@ -437,7 +437,7 @@ public class SpaceRequest {
 		if (AuthorizationHeader.isKey(key)) {
 			AuthorizationHeader authHeader = new AuthorizationHeader(value, false);
 			if (authHeader.isBasic()) {
-				Utils.info("  Authorization: [Basic %s:*******]", authHeader.username());
+				Utils.info("  Authorization: Basic %s:*******", authHeader.username());
 				return;
 			}
 		}

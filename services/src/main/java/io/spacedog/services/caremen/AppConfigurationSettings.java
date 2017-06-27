@@ -7,6 +7,7 @@ import io.spacedog.model.Settings;
 @JsonIgnoreProperties(ignoreUnknown = true)
 class AppConfigurationSettings extends Settings {
 	public String operatorPhoneNumber;
-	public int newCourseRequestDriverPushRadiusInMeters;
+	public int maxDistanceToCustomerFromEligibleDriversInMeters;
+	public int maxDistanceBetweenEligibleDriversInMeters;
 	public int driverLastLocationObsolescenceInMinutes;
 }
