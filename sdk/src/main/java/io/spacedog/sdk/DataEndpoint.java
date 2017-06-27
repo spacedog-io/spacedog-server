@@ -112,10 +112,18 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 	}
 
 	public void delete(String type, String id) {
-		dog.delete("/1/data/{type}/{id}")//
+		delete(type, id, true);
+	}
+
+	public void delete(String type, String id, boolean throwNotFound) {
+		SpaceRequest request = dog.delete("/1/data/{type}/{id}")//
 				.routeParam("type", type)//
-				.routeParam("id", id)//
-				.go(200);
+				.routeParam("id", id);
+
+		if (throwNotFound)
+			request.go(200);
+		else
+			request.go(200, 404);
 	}
 
 	public void delete(Datable<?> object) {
