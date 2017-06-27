@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Strings;
 
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.utils.Exceptions;
@@ -195,6 +196,25 @@ public class DataObject<K extends DataObject<K>> implements Datable<K> {
 
 	boolean isSubClass() {
 		return !getClass().equals(DataObject.class);
+	}
+
+	@SuppressWarnings("unchecked")
+	public K create() {
+		SpaceRequest request = dog.post("/1/data/{type}")//
+				.routeParam("type", type());
+
+		if (!Strings.isNullOrEmpty(id()))
+			request.queryParam("id", id());
+
+		if (isSubClass())
+			request.bodyPojo(this);
+		else
+			request.bodyJson(node);
+
+		ObjectNode result = request.go(201).asJsonObject();
+		this.id(result.get("id").asText());
+		this.version(result.get("version").asLong());
+		return (K) this;
 	}
 
 	@SuppressWarnings("unchecked")
