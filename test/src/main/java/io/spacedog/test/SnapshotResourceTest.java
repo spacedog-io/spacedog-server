@@ -10,9 +10,11 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.rest.SpaceRequest;
+import io.spacedog.rest.SpaceRequestException;
 import io.spacedog.rest.SpaceResponse;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
+import io.spacedog.utils.Exceptions;
 
 public class SnapshotResourceTest extends SpaceTest {
 
@@ -31,8 +33,16 @@ public class SnapshotResourceTest extends SpaceTest {
 
 		// superdog creates snapshotall user in root backend
 		SpaceDog superdog = superdog();
-		SpaceDog snapshotAll = getOrSignUp(superdog, //
-				"snapshotAll", "hi snapshotAll", "platform@spacedog.io");
+		SpaceDog snapshotAll = SpaceDog.backend(superdog)//
+				.username("snapshotAll").email("platform@spacedog.io");
+
+		try {
+			snapshotAll.signUp("hi snapshotAll");
+		} catch (SpaceRequestException e) {
+			if (!Exceptions.ALREADY_EXISTS.equals(e.serverErrorCode()))
+				throw e;
+		}
+
 		superdog.credentials().setRole(snapshotAll.id(), "snapshotall");
 		snapshotAll.login("hi snapshotAll");
 

@@ -146,9 +146,13 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 	// sign up
 	//
 
-	public SpaceDog signUp(String username, String password, String email) {
+	public SpaceDog signUp() {
+		return signUp(password().get());
+	}
+
+	public SpaceDog signUp(String password) {
 		this.credentials = SpaceDog.backend(backendId())//
-				.credentials().create(username, password, email, Level.USER);
+				.credentials().create(username(), password, email().get(), Level.USER);
 		return login(password);
 	}
 
