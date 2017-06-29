@@ -2,6 +2,15 @@ package io.spacedog.utils;
 
 public class Exceptions {
 
+	public static final String ALREADY_EXISTS = "already-exists";
+	public static final String UNCHALLENGED_PASSWORD = "unchallenged-password";
+	public static final String PASSWORD_MUST_CHANGE = "password-must-change";
+	public static final String INVALID_AUTHORIZATION_HEADER = "invalid-authorization-header";
+	public static final String DISABLED_CREDENTIALS = "disabled-credentials";
+	public static final String INVALID_ACCESS_TOKEN = "invalid-access-token";
+	public static final String EXPIRED_ACCESS_TOKEN = "expired-access-token";
+	public static final String INVALID_CREDENTIALS = "invalid-credentials";
+
 	public static RuntimeException runtime(String message, Object... args) {
 		return new RuntimeException(String.format(message, args));
 	}
@@ -56,16 +65,16 @@ public class Exceptions {
 	}
 
 	public static SpaceException alreadyExists(String type, String value) {
-		return new SpaceException("already-exists", 400, "[%s][%s] already exists", //
+		return new SpaceException(ALREADY_EXISTS, 400, "[%s][%s] already exists", //
 				type, value);
 	}
 
 	public static SpaceException passwordMustBeChallenged() {
-		return new SpaceException("unchallenged-password", 403, "password must be challenged");
+		return new SpaceException(UNCHALLENGED_PASSWORD, 403, "password must be challenged");
 	}
 
 	public static SpaceException passwordMustChange(Credentials credentials) {
-		return new SpaceException("password-must-change", 403, //
+		return new SpaceException(PASSWORD_MUST_CHANGE, 403, //
 				"[%s][%s] credentials password must change", //
 				credentials.level(), credentials.name());
 	}
@@ -76,30 +85,30 @@ public class Exceptions {
 
 	public static AuthenticationException invalidAuthorizationHeader(//
 			String message, Object... args) {
-		return new AuthenticationException("invalid-authorization-header", message, args);
+		return new AuthenticationException(INVALID_AUTHORIZATION_HEADER, message, args);
 	}
 
 	public static AuthenticationException invalidAuthorizationHeader(//
 			Throwable t, String message, Object... args) {
-		return new AuthenticationException("invalid-authorization-header", t, message, args);
+		return new AuthenticationException(INVALID_AUTHORIZATION_HEADER, t, message, args);
 	}
 
 	public static AuthenticationException disabledCredentials(Credentials credentials) {
-		return new AuthenticationException("disabled-credentials", //
+		return new AuthenticationException(DISABLED_CREDENTIALS, //
 				"[%s][%s] credentials disabled", credentials.level(), credentials.name());
 	}
 
 	public static AuthenticationException invalidAccessToken(String backendId) {
-		return new AuthenticationException("invalid-access-token", //
+		return new AuthenticationException(INVALID_ACCESS_TOKEN, //
 				"invalid access token for backend [%s]", backendId);
 	}
 
 	public static AuthenticationException accessTokenHasExpired() {
-		return new AuthenticationException("expired-access-token", "access token has expired");
+		return new AuthenticationException(EXPIRED_ACCESS_TOKEN, "access token has expired");
 	}
 
 	public static AuthenticationException invalidUsernamePassword(String backendId) {
-		return new AuthenticationException("invalid-credentials", //
+		return new AuthenticationException(INVALID_CREDENTIALS, //
 				"invalid username or password for backend [%s]", backendId);
 	}
 }
