@@ -52,9 +52,9 @@ You will find 2 bundles :
   $ mv bin binXYZ
   ```
 
-- copier `spacedog.server.properties dans `/home/adminsuez/spacedog`
+- Configure (see below) and copy your `spacedog.server.properties` into `~/spacedog`
 
-- configurer la propriété `spacedog.elastic.networl.host` de spacedog.server.properties avec l’adresse IP du serveur
+- Make sure property `spacedog.elastic.networl.host` is set with the IP address of the server
 
 - In `~/spacedog` create a `data` directory to contain the server data :
 
