@@ -24,10 +24,6 @@
 		<jackson-version>2.6.2</jackson-version>
 	</properties>
 
-	<prerequisites>
-		<maven>3.3</maven>
-	</prerequisites>
-
 	<modules>
 		<module>services</module>
 		<module>sdk</module>
