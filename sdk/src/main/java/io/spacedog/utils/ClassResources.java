@@ -6,8 +6,12 @@ public class ClassResources {
 
 	public static String loadToString(Object context, String resourceName) {
 		try {
+			Class<?> contextClass = context instanceof Class<?> //
+					? (Class<?>) context
+					: context.getClass();
+
 			return Resources.toString(//
-					Resources.getResource(context.getClass(), resourceName), //
+					Resources.getResource(contextClass, resourceName), //
 					Utils.UTF8);
 
 		} catch (Exception e) {
