@@ -5,7 +5,7 @@ package io.spacedog.utils;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -18,6 +18,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.BaseEncoding;
 
@@ -45,7 +46,7 @@ public class Credentials {
 	private DateTime enableAfter;
 	private DateTime disableAfter;
 	private Set<String> roles;
-	private Set<Session> sessions;
+	private List<Session> sessions;
 	private ObjectNode stash;
 	private String passwordResetCode;
 	private String hashedPassword;
@@ -525,6 +526,10 @@ public class Credentials {
 	// Sessions and Access Tokens
 	//
 
+	public List<Session> sessions() {
+		return Collections.unmodifiableList(sessions);
+	}
+
 	public void setCurrentSession(String accessToken) {
 		boolean found = false;
 
@@ -545,7 +550,7 @@ public class Credentials {
 		currentSession = session;
 
 		if (sessions == null)
-			sessions = Sets.newHashSet();
+			sessions = Lists.newArrayList();
 
 		sessions.add(currentSession);
 	}
@@ -562,12 +567,12 @@ public class Credentials {
 		}
 	}
 
-	public void purgeExpiredSessions() {
-		if (sessions != null) {
-			Iterator<Session> iterator = sessions.iterator();
-			while (iterator.hasNext())
-				if (iterator.next().expiresIn() == 0)
-					iterator.remove();
+	public void purgeOldSessions(int sessionsSizeMax) {
+		Check.isTrue(sessionsSizeMax > 0, "sessions size max should be greater than 0");
+		if (sessions != null && sessions.size() > sessionsSizeMax) {
+			Collections.sort(sessions);
+			for (int i = sessions.size() - 1; i >= sessionsSizeMax; i--)
+				sessions.remove(i);
 		}
 	}
 
@@ -615,16 +620,31 @@ public class Credentials {
 		}
 	}
 
+	@JsonIgnoreProperties(ignoreUnknown = true)
 	@JsonAutoDetect(fieldVisibility = Visibility.ANY, //
 			getterVisibility = Visibility.NONE, //
 			isGetterVisibility = Visibility.NONE, //
 			setterVisibility = Visibility.NONE)
-	public static class Session {
+	public static class Session implements Comparable<Session> {
+		// not private for testing purpose
+		DateTime createdAt;
 		private String accessToken;
 		private DateTime accessTokenExpiresAt;
 
+		private Session() {
+			// use static helpers to instantiate sessions
+		}
+
 		public String accessToken() {
 			return accessToken;
+		}
+
+		public DateTime createAt() {
+			return createdAt;
+		}
+
+		public DateTime expiresAt() {
+			return accessTokenExpiresAt;
 		}
 
 		@Override
@@ -667,10 +687,22 @@ public class Credentials {
 
 		public static Session newSession(String accessToken, long lifetime) {
 			Session session = new Session();
+			session.createdAt = DateTime.now();
 			session.accessToken = accessToken;
 			// lifetime in seconds is converted to milliseconds
-			session.accessTokenExpiresAt = DateTime.now().plus(lifetime * 1000);
+			session.accessTokenExpiresAt = session.createdAt.plus(lifetime * 1000);
 			return session;
+		}
+
+		@Override
+		// reversed from natural DateTime order to have
+		// most recent sessions first and oldest session at the end
+		public int compareTo(Session s) {
+			if (this.createdAt == null)
+				return +1;
+			if (s.createdAt == null)
+				return -1;
+			return s.createdAt.compareTo(this.createdAt);
 		}
 
 	}

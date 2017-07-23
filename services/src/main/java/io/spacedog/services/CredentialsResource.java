@@ -79,6 +79,7 @@ public class CredentialsResource extends Resource {
 				.string(FIELD_UPDATED_AT)//
 
 				.object(FIELD_SESSIONS).array()//
+				.string(FIELD_CREATED_AT)//
 				.string(FIELD_ACCESS_TOKEN)//
 				.string(FIELD_ACCESS_TOKEN_EXPIRES_AT)//
 				.close()//
@@ -342,9 +343,8 @@ public class CredentialsResource extends Resource {
 		credentials.newPasswordResetCode();
 		credentials = update(credentials);
 
-		return JsonPayload.json(JsonPayload
-				.builder(false, credentials.backendId(), "/1", TYPE, //
-						credentials.id(), credentials.version())//
+		return JsonPayload.json(JsonPayload.builder(false, credentials.backendId(), "/1", TYPE, //
+				credentials.id(), credentials.version())//
 				.put(FIELD_PASSWORD_RESET_CODE, credentials.passwordResetCode()));
 	}
 
@@ -650,7 +650,8 @@ public class CredentialsResource extends Resource {
 					"failed to update credentials since id is null");
 
 		try {
-			credentials.purgeExpiredSessions();
+			// TODO replace 10 by sessionsSizeMax from CredentialsSettings
+			credentials.purgeOldSessions(10);
 			credentials.updatedAt(DateTime.now().toString());
 
 			// refresh index after each index change
