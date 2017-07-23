@@ -247,7 +247,7 @@ public class SpaceRequest {
 
 	public SpaceRequest bodyJson(String body) {
 		this.contentType = OkHttp.JSON;
-		if (env.debug())
+		if (env().debug())
 			this.bodyJson = Json7.readNode(body);
 		this.body = body;
 		return this;
