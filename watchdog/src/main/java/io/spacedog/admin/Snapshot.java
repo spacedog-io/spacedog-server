@@ -4,7 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 
 import io.spacedog.jobs.Job;
 import io.spacedog.rest.SpaceEnv;
-import io.spacedog.rest.SpaceRequest;
+import io.spacedog.sdk.SpaceDog;
 
 public class Snapshot extends Job {
 
@@ -23,13 +23,12 @@ public class Snapshot extends Job {
 			// since snapshot service is slow
 			env.httpTimeoutMillis(120000);
 
-			String password = env.get("spacedog_jobs_snapshotall_password");
+			SpaceDog snapshotDog = SpaceDog.backend("api").username("snapshotall")//
+					.password(env.get("spacedog_jobs_snapshotall_password"));
 
-			SpaceRequest.post("/1/snapshot").backend("api")//
-					.basicAuth("snapshotall", password).go(202);
+			snapshotDog.post("/1/snapshot").go(202);
 
-			SpaceRequest.get("/1/snapshot").backend("api")//
-					.basicAuth("snapshotall", password).go(200)//
+			snapshotDog.get("/1/snapshot").go(200)//
 					// current snapshot is sometimes so fast
 					// I don't get the IN_PROGESS status for results.0
 					// results.1 should always be a SUCCESS
