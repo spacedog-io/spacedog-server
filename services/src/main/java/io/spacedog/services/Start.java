@@ -21,7 +21,6 @@ import org.joda.time.DateTimeZone;
 import com.google.common.io.Resources;
 
 import io.spacedog.core.Json8;
-import io.spacedog.services.caremen.CaremenResource;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Utils;
 import net.codestory.http.AbstractWebServer;
@@ -201,14 +200,9 @@ public class Start {
 		routes.add(BackendResource.get())//
 				.add(AdminResource.get())//
 				.add(DataResource.get())//
-				.add(LafargeCesioResource.get())//
 				.add(SchemaResource.get())//
 				.add(CredentialsResource.get())//
 				.add(LinkedinResource.get())//
-				.add(EdfResource.get())//
-				.add(EdfResourceV2.get())//
-				.add(CaremenResource.get())//
-				.add(UserResource.get())//
 				.add(BatchResource.get())//
 				.add(MailResource.get())//
 				.add(MailTemplateResource.get())//
@@ -218,7 +212,6 @@ public class Start {
 				.add(LogResource.get())//
 				.add(PushResource.get())//
 				.add(ApplicationResource.get())//
-				.add(SendPulseResource.get())//
 				.add(StripeResource.get())//
 				.add(ShareResource.get())//
 				.add(SettingsResource.get())//
