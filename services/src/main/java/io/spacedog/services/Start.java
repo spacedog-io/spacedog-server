@@ -197,9 +197,7 @@ public class Start {
 	}
 
 	private static void configure(Routes routes) {
-		routes.add(BackendResource.get())//
-				.add(AdminResource.get())//
-				.add(DataResource.get())//
+		routes.add(DataResource.get())//
 				.add(SchemaResource.get())//
 				.add(CredentialsResource.get())//
 				.add(LinkedinResource.get())//

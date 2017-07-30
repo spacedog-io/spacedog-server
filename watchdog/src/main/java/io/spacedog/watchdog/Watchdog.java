@@ -37,7 +37,6 @@ public class Watchdog extends RunListener {
 			int hourOfDay = DateTime.now().getHourOfDay();
 			if (4 <= hourOfDay && hourOfDay < 5) {
 
-				junit.run(BackendResourceTestOften.class);
 				junit.run(CredentialsResourceTestOften.class);
 				junit.run(CrossOriginFilterTestOften.class);
 				junit.run(DataAccessControlTestOften.class);
@@ -47,7 +46,6 @@ public class Watchdog extends RunListener {
 				junit.run(SchemaResourceTestOften.class);
 				junit.run(SearchResourceTestOften.class);
 				junit.run(ServiceErrorFilterTestOften.class);
-				junit.run(BackendResourceTestOncePerDay.class);
 				junit.run(ServiceErrorFilterTestOncePerDay.class);
 				junit.run(FileResourceTestOncePerDay.class);
 				junit.run(ShareResourceTestOncePerDay.class);
