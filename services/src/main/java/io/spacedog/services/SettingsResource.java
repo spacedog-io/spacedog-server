@@ -56,7 +56,7 @@ public class SettingsResource extends Resource {
 	@Get("/")
 	public Payload getAll(Context context) {
 
-		String backendId = SpaceContext.checkSuperAdminCredentials().backendId();
+		String backendId = SpaceContext.credentials().checkAtLeastSuperAdmin().backendId();
 		ElasticClient elastic = Start.get().getElasticClient();
 
 		if (!elastic.existsIndex(backendId, TYPE))
@@ -88,7 +88,7 @@ public class SettingsResource extends Resource {
 	@Delete("")
 	@Delete("/")
 	public Payload deleteIndex() {
-		String backendId = SpaceContext.checkSuperAdminCredentials().backendId();
+		String backendId = SpaceContext.credentials().checkAtLeastSuperAdmin().backendId();
 		ElasticClient elastic = Start.get().getElasticClient();
 		elastic.deleteIndex(backendId, TYPE);
 		return JsonPayload.success();
@@ -281,7 +281,7 @@ public class SettingsResource extends Resource {
 	//
 
 	private Credentials checkIfAuthorizedToRead(String id) {
-		Credentials credentials = SpaceContext.getCredentials();
+		Credentials credentials = SpaceContext.credentials();
 		if (!credentials.isAtLeastSuperAdmin())
 			credentials.checkRoles(getSettingsAcl(id).read());
 
@@ -295,7 +295,7 @@ public class SettingsResource extends Resource {
 	}
 
 	private Credentials checkIfAuthorizedToUpdate(String id) {
-		Credentials credentials = SpaceContext.getCredentials();
+		Credentials credentials = SpaceContext.credentials();
 		if (!credentials.isAtLeastSuperAdmin())
 			credentials.checkRoles(getSettingsAcl(id).update());
 

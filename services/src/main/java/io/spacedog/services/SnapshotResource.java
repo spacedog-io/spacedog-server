@@ -116,7 +116,7 @@ public class SnapshotResource extends Resource {
 	@Post("/latest/restore/")
 	public Payload postSnapshotLatestRestore(Context context) {
 
-		SpaceContext.checkSuperDogCredentials();
+		SpaceContext.credentials().checkSuperDog();
 
 		List<ElasticSnapshot> snapshots = ElasticSnapshot.latests(0, 1);
 		if (Utils.isNullOrEmpty(snapshots))
@@ -131,7 +131,7 @@ public class SnapshotResource extends Resource {
 	@Post("/:id/restore/")
 	public Payload postSnapshotRestoreById(String snapshotId, Context context) {
 
-		SpaceContext.checkSuperDogCredentials();
+		SpaceContext.credentials().checkSuperDog();
 		ElasticSnapshot snapshot = ElasticSnapshot.find(snapshotId)//
 				.orElseThrow(() -> NotFoundException.snapshot(snapshotId));
 		return doRestore(snapshot, //
@@ -143,7 +143,7 @@ public class SnapshotResource extends Resource {
 	//
 
 	private void checkSnapshotAllOrAdmin() {
-		Credentials credentials = SpaceContext.getCredentials();
+		Credentials credentials = SpaceContext.credentials();
 
 		if (credentials.isAtLeastAdmin() || isSnapshotAll(credentials))
 			return;
@@ -152,7 +152,7 @@ public class SnapshotResource extends Resource {
 	}
 
 	private void checkSnapshotAllOrSuperdog() {
-		Credentials credentials = SpaceContext.getCredentials();
+		Credentials credentials = SpaceContext.credentials();
 
 		if (credentials.isSuperDog() || isSnapshotAll(credentials))
 			return;

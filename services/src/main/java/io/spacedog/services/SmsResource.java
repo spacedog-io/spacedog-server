@@ -35,7 +35,7 @@ public class SmsResource extends Resource {
 	public Payload post(Context context) {
 
 		SmsSettings settings = SettingsResource.get().load(SmsSettings.class);
-		Credentials credentials = SpaceContext.getCredentials();
+		Credentials credentials = SpaceContext.credentials();
 		credentials.checkRoles(settings.rolesAllowedToSendSms);
 		return send(toMessage(credentials, context));
 	}
@@ -45,7 +45,7 @@ public class SmsResource extends Resource {
 	public Payload get(String messageId, Context context) {
 
 		SmsSettings settings = SettingsResource.get().load(SmsSettings.class);
-		Credentials credentials = SpaceContext.getCredentials();
+		Credentials credentials = SpaceContext.credentials();
 		credentials.checkRoles(settings.rolesAllowedToSendSms);
 		return fetch(messageId);
 	}

@@ -27,7 +27,7 @@ public class MailTemplateResource extends Resource {
 		MailTemplate template = getTemplate(name).orElseThrow(//
 				() -> new NotFoundException("mail template [%s] not found", name));
 
-		SpaceContext.getCredentials().checkRoles(template.roles);
+		SpaceContext.credentials().checkRoles(template.roles);
 
 		Map<String, Object> context = PebbleTemplating.get()//
 				.createContext(template.model, Json8.readMap(body));

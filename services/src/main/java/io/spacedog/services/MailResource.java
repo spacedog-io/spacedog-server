@@ -53,10 +53,10 @@ public class MailResource extends Resource {
 
 		MailSettings settings = SettingsResource.get().load(MailSettings.class);
 
-		if (settings.enableUserFullAccess) //
-			SpaceContext.checkUserCredentials();
+		if (settings.enableUserFullAccess)
+			SpaceContext.credentials().checkAtLeastUser();
 		else
-			SpaceContext.checkAdminCredentials();
+			SpaceContext.credentials().checkAtLeastAdmin();
 
 		return email(toMessage(context));
 	}

@@ -154,7 +154,7 @@ public class PushResource extends Resource {
 	@Post("/installation/:id/push/")
 	public Payload pushById(String id, String body, Context context) {
 
-		Credentials credentials = SpaceContext.checkUserCredentials();
+		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
 
 		JsonNode node = Json8.readNode(body);
 		BadgeStrategy badge = BadgeStrategy.manual;
@@ -177,7 +177,7 @@ public class PushResource extends Resource {
 	@Get("/installation/:id/tags")
 	@Get("/installation/:id/tags/")
 	public Payload getTags(String id, Context context) {
-		Credentials credentials = SpaceContext.getCredentials();
+		Credentials credentials = SpaceContext.credentials();
 		ObjectNode object = DataStore.get().getObject(credentials.backendId(), TYPE, id);
 
 		return JsonPayload.json(//
@@ -216,7 +216,7 @@ public class PushResource extends Resource {
 	@Post("/installation/push/")
 	public Payload pushByTags(String body, Context context) {
 
-		Credentials credentials = SpaceContext.checkUserCredentials();
+		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
 
 		ObjectNode push = Json8.readObject(body);
 		String appId = Json8.checkStringNotNullOrEmpty(push, APP_ID);
@@ -445,7 +445,7 @@ public class PushResource extends Resource {
 
 	public Payload upsertInstallation(Optional<String> id, String body, Context context) {
 
-		Credentials credentials = SpaceContext.getCredentials();
+		Credentials credentials = SpaceContext.credentials();
 		ObjectNode installation = Json8.readObject(body);
 		Optional<String> token = Json8.checkString(installation, TOKEN);
 
@@ -497,7 +497,7 @@ public class PushResource extends Resource {
 
 	private Payload updateTags(String id, String body, boolean strict, boolean delete) {
 
-		Credentials credentials = SpaceContext.getCredentials();
+		Credentials credentials = SpaceContext.credentials();
 		ObjectNode installation = DataStore.get().getObject(credentials.backendId(), TYPE, id);
 
 		if (strict) {

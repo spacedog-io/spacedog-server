@@ -103,7 +103,7 @@ public class LinkedinResource extends Resource {
 	@Get("/1/linkedin/people/me/:fields/")
 	public Payload get(String fields, Context context) {
 
-		Credentials credentials = SpaceContext.checkUserCredentials();
+		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
 
 		SpaceResponse response = SpaceRequest.get("/v1/people/~:({fields})")//
 				.backend("https://api.linkedin.com")//

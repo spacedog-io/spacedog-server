@@ -271,7 +271,7 @@ public class S3Resource extends Resource {
 	private String getOrCheckOwnership(ObjectMetadata metadata, boolean checkOwnership) {
 
 		String owner = metadata.getUserMetaDataOf("owner");
-		Credentials credentials = SpaceContext.getCredentials();
+		Credentials credentials = SpaceContext.credentials();
 
 		if (!checkOwnership)
 			return owner;

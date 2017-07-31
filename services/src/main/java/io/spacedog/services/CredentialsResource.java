@@ -110,7 +110,7 @@ public class CredentialsResource extends Resource {
 	@Post("/1/login")
 	@Post("/1/login/")
 	public Payload login(Context context) {
-		Credentials credentials = SpaceContext.checkUserCredentials();
+		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
 
 		if (credentials.hasPasswordBeenChallenged()) {
 			long lifetime = getCheckSessionLifetime(context);
@@ -130,7 +130,7 @@ public class CredentialsResource extends Resource {
 	@Post("/1/logout")
 	@Post("/1/logout/")
 	public Payload logout(Context context) {
-		Credentials credentials = SpaceContext.checkUserCredentials();
+		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
 		if (credentials.hasCurrentSession()) {
 			credentials.deleteCurrentSession();
 			update(credentials);
@@ -143,14 +143,14 @@ public class CredentialsResource extends Resource {
 	public Payload getAll(Context context) {
 		// TODO add more settings and permissions to control this
 		// credentials check
-		SpaceContext.checkUserCredentials();
+		SpaceContext.credentials().checkAtLeastUser();
 		return JsonPayload.json(fromCredentialsSearch(getCredentials(toQuery(context))));
 	}
 
 	@Delete("/1/credentials")
 	@Delete("/1/credentials/")
 	public Payload deleteAll(Context context) {
-		SpaceContext.getCredentials().checkAtLeastSuperAdmin();
+		SpaceContext.credentials().checkAtLeastSuperAdmin();
 		ElasticClient elastic = Start.get().getElasticClient();
 		BoolQueryBuilder query = toQuery(context).query;
 
@@ -169,7 +169,7 @@ public class CredentialsResource extends Resource {
 
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
 		if (settings.disableGuestSignUp)
-			SpaceContext.checkUserCredentials();
+			SpaceContext.credentials().checkAtLeastUser();
 
 		Credentials credentials = credentialsRequestToCredentials(body);
 		create(credentials);
@@ -187,28 +187,28 @@ public class CredentialsResource extends Resource {
 	@Get("/1/credentials/me")
 	@Get("/1/credentials/me/")
 	public Payload getMe(Context context) {
-		Credentials credentials = SpaceContext.checkUserCredentials();
+		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
 		return JsonPayload.json(credentials.toJson());
 	}
 
 	@Get("/1/credentials/:id")
 	@Get("/1/credentials/:id/")
 	public Payload getById(String id, Context context) {
-		Credentials credentials = checkMyselfOrAdminAndGet(id, false);
+		Credentials credentials = checkMyselfOrHigherAdminAndGet(id, false);
 		return JsonPayload.json(credentials.toJson());
 	}
 
 	@Delete("/1/credentials/me")
 	@Delete("/1/credentials/me/")
 	public Payload deleteMe() {
-		String id = SpaceContext.checkUserCredentials().id();
+		String id = SpaceContext.credentials().checkAtLeastUser().id();
 		return deleteById(id);
 	}
 
 	@Delete("/1/credentials/:id")
 	@Delete("/1/credentials/:id/")
 	public Payload deleteById(String id) {
-		Credentials credentials = checkMyselfOrAdminAndGet(id, false);
+		Credentials credentials = checkMyselfOrHigherAdminAndGet(id, false);
 
 		// forbidden to delete last backend superadmin
 		if (credentials.isSuperAdmin()) {
@@ -223,19 +223,19 @@ public class CredentialsResource extends Resource {
 	@Put("/1/credentials/me")
 	@Put("/1/credentials/me/")
 	public Payload put(String body, Context context) {
-		String id = SpaceContext.checkUserCredentials().id();
-		return put(id, body, context);
+		return put(SpaceContext.credentials().id(), body, context);
 	}
 
 	@Put("/1/credentials/:id")
 	@Put("/1/credentials/:id/")
 	public Payload put(String id, String body, Context context) {
-		Credentials requester = SpaceContext.checkUserCredentials(id);
+		Credentials requester = SpaceContext.credentials();
+		Credentials credentials = checkMyselfOrHigherAdminAndGet(id, false);
+
 		if (requester.isUser())
 			requester.checkPasswordHasBeenChallenged();
 
 		ObjectNode data = Json8.readObject(body);
-		Credentials credentials = getById(id, true).get();
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
 
 		String username = data.path(FIELD_USERNAME).asText();
@@ -354,23 +354,20 @@ public class CredentialsResource extends Resource {
 	@Put("/1/credentials/me/password")
 	@Put("/1/credentials/me/password/")
 	public Payload putMyPassword(String body, Context context) {
-		String id = SpaceContext.checkUserCredentials().id();
-		return putPassword(id, body, context);
+		return putPassword(SpaceContext.credentials().id(), body, context);
 	}
 
 	@Put("/1/credentials/:id/password")
 	@Put("/1/credentials/:id/password/")
 	public Payload putPassword(String id, String body, Context context) {
-		Credentials requester = SpaceContext.checkUserCredentials(id);
-		requester.checkPasswordHasBeenChallenged();
 
-		Credentials credentials = getById(id, true).get();
-		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
+		Credentials credentials = checkMyselfOrHigherAdminAndGet(id, true);
 
 		String password = SpaceContext.get().isJsonContent() && !Strings.isNullOrEmpty(body)//
 				? Json8.checkString(Json8.checkNotNull(Json8.readNode(body)))//
 				: context.get(FIELD_PASSWORD);
 
+		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
 		credentials.changePassword(password, Optional7.of(settings.passwordRegex()));
 
 		credentials = update(credentials);
@@ -408,7 +405,7 @@ public class CredentialsResource extends Resource {
 	@Get("/1/credentials/:id/roles")
 	@Get("/1/credentials/:id/roles/")
 	public Object getRoles(String id, Context context) {
-		return checkMyselfOrAdminAndGet(id, false).roles();
+		return checkMyselfOrHigherAdminAndGet(id, false).roles();
 	}
 
 	@Delete("/1/credentials/:id/roles")
@@ -532,7 +529,7 @@ public class CredentialsResource extends Resource {
 	}
 
 	Optional<Credentials> getById(String id, boolean throwNotFound) {
-		Credentials credentials = SpaceContext.getCredentials();
+		Credentials credentials = SpaceContext.credentials();
 
 		if (id.equals(credentials.id()))
 			return Optional.of(credentials);
@@ -659,24 +656,26 @@ public class CredentialsResource extends Resource {
 	}
 
 	Credentials checkAdminAndGet(String id) {
-		Credentials requester = SpaceContext.checkAdminCredentials();
+		Credentials requester = SpaceContext.credentials().checkAtLeastAdmin();
 		Credentials credentials = getById(id, true).get();
 		if (credentials.isGreaterThan(requester))
 			throw Exceptions.insufficientCredentials(requester);
 		return credentials;
 	}
 
-	Credentials checkMyselfOrAdminAndGet(String id, boolean checkPasswordHasBeenChallenged) {
-		Credentials requester = SpaceContext.checkUserCredentials();
+	Credentials checkMyselfOrHigherAdminAndGet(String credentialsId, //
+			boolean checkPasswordHasBeenChallenged) {
+
+		Credentials requester = SpaceContext.credentials().checkAtLeastUser();
 
 		if (checkPasswordHasBeenChallenged)
 			requester.checkPasswordHasBeenChallenged();
 
-		if (requester.id().equals(id))
+		if (requester.id().equals(credentialsId))
 			return requester;
 
 		if (requester.isAtLeastAdmin()) {
-			Credentials credentials = getById(id, true).get();
+			Credentials credentials = getById(credentialsId, true).get();
 			if (credentials.isGreaterThan(requester))
 				throw Exceptions.insufficientCredentials(requester);
 			return credentials;
@@ -704,7 +703,7 @@ public class CredentialsResource extends Resource {
 		else
 			credentials.roles(request.roles());
 
-		Credentials requester = SpaceContext.getCredentials();
+		Credentials requester = SpaceContext.credentials();
 		if (credentials.isGreaterThan(requester))
 			throw Exceptions.insufficientCredentials(requester);
 

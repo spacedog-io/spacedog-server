@@ -102,7 +102,7 @@ public class SpaceContext {
 	}
 
 	public static String backendId() {
-		return getCredentials().backendId();
+		return credentials().backendId();
 	}
 
 	public boolean isJsonContent() {
@@ -146,48 +146,7 @@ public class SpaceContext {
 		};
 	}
 
-	public static Credentials checkSuperDogCredentials() {
-		Credentials credentials = getCredentials();
-		if (credentials.isSuperDog())
-			return credentials;
-		throw Exceptions.insufficientCredentials(credentials);
-	}
-
-	public static Credentials checkSuperAdminCredentials() {
-		Credentials credentials = getCredentials();
-		if (credentials.isAtLeastSuperAdmin())
-			return credentials;
-		throw Exceptions.insufficientCredentials(credentials);
-	}
-
-	public static Credentials checkAdminCredentials() {
-		Credentials credentials = getCredentials();
-		if (credentials.isAtLeastAdmin())
-			return credentials;
-		throw Exceptions.insufficientCredentials(credentials);
-	}
-
-	public static Credentials checkUserCredentials(String credentialsId) {
-		Credentials credentials = checkUserCredentials();
-
-		if (credentials.isAtLeastAdmin() || credentials.id().equals(credentialsId))
-			return credentials;
-
-		throw Exceptions.insufficientCredentials(credentials);
-	}
-
-	public static Credentials checkUserCredentials() {
-		Credentials credentials = getCredentials();
-		if (credentials.isAtLeastUser())
-			return credentials;
-		throw Exceptions.insufficientCredentials(credentials);
-	}
-
-	public static void setCredentials(Credentials credentials) {
-		get().credentials = credentials;
-	}
-
-	public static Credentials getCredentials() {
+	public static Credentials credentials() {
 		return get().credentials;
 	}
 

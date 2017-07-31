@@ -27,7 +27,7 @@ public class ApplicationResource extends Resource {
 	@Get("/1/applications")
 	@Get("/1/applications/")
 	public Payload getApplications() {
-		SpaceContext.checkAdminCredentials();
+		SpaceContext.credentials().checkAtLeastAdmin();
 		return JsonPayload.success();
 	}
 
@@ -40,7 +40,7 @@ public class ApplicationResource extends Resource {
 	@Put("/1/applications/:name/:pushService/")
 	public Payload putApplication(String name, String pushService, String body) {
 
-		String backendId = SpaceContext.checkAdminCredentials().backendId();
+		String backendId = SpaceContext.credentials().checkAtLeastAdmin().backendId();
 
 		ApplicationPushCredentials credentials = Json8.readObject(//
 				body, ApplicationPushCredentials.class);
@@ -63,7 +63,7 @@ public class ApplicationResource extends Resource {
 	@Delete("/1/applications/:name/:pushService/")
 	public Payload deleteApplication(String name, String pushService) {
 
-		String backendId = SpaceContext.checkAdminCredentials().backendId();
+		String backendId = SpaceContext.credentials().checkAtLeastAdmin().backendId();
 
 		Optional<PlatformApplication> application = PushResource.get()//
 				.getApplication(toApplicationId(backendId, name), //

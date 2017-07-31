@@ -57,7 +57,7 @@ public class SearchResource extends Resource {
 	@Post("")
 	@Post("/")
 	public Payload postSearchAllTypes(String body, Context context) {
-		Credentials credentials = SpaceContext.getCredentials();
+		Credentials credentials = SpaceContext.credentials();
 		String[] types = DataAccessControl.types(DataPermission.search, credentials);
 		boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);
 		DataStore.get().refreshBackend(refresh, credentials.backendId());
@@ -70,7 +70,7 @@ public class SearchResource extends Resource {
 	public Payload deleteAllTypes(String query, Context context) {
 		// TODO delete special types like user the right way
 		// credentials and user data at the same time
-		Credentials credentials = SpaceContext.checkAdminCredentials();
+		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
 		String[] types = DataAccessControl.types(DataPermission.delete_all, credentials);
 		boolean refresh = context.query().getBoolean(PARAM_REFRESH, true);
 		DataStore.get().refreshBackend(refresh, credentials.backendId());
@@ -88,7 +88,7 @@ public class SearchResource extends Resource {
 	@Post("/:type")
 	@Post("/:type/")
 	public Payload postSearchForType(String type, String body, Context context) {
-		Credentials credentials = SpaceContext.getCredentials();
+		Credentials credentials = SpaceContext.credentials();
 		if (DataAccessControl.check(credentials, type, DataPermission.search)) {
 			boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);
 			DataStore.get().refreshType(refresh, credentials.backendId(), type);
@@ -101,7 +101,7 @@ public class SearchResource extends Resource {
 	@Delete("/:type")
 	@Delete("/:type/")
 	public Payload deleteSearchForType(String type, String query, Context context) {
-		Credentials credentials = SpaceContext.checkAdminCredentials();
+		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
 		if (DataAccessControl.check(credentials, type, DataPermission.delete_all)) {
 
 			boolean refresh = context.query().getBoolean(PARAM_REFRESH, true);

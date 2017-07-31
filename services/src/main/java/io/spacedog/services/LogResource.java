@@ -70,7 +70,7 @@ public class LogResource extends Resource {
 	@Get("/")
 	public Payload getAll(Context context) {
 
-		Credentials credentials = SpaceContext.checkSuperAdminCredentials();
+		Credentials credentials = SpaceContext.credentials().checkAtLeastSuperAdmin();
 
 		Optional<String> optBackendId = credentials.isSuperDog() //
 				&& credentials.isTargetingRootApi() ? Optional.empty() //
@@ -91,7 +91,7 @@ public class LogResource extends Resource {
 	@Post("/search/")
 	public Payload search(String body, Context context) {
 
-		Credentials credentials = SpaceContext.checkAdminCredentials();
+		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
 
 		QueryBuilder query = QueryBuilders.wrapperQuery(body);
 
@@ -120,7 +120,7 @@ public class LogResource extends Resource {
 	@Delete("/")
 	public Payload purge(Context context) {
 
-		Credentials credentials = SpaceContext.getCredentials();
+		Credentials credentials = SpaceContext.credentials();
 		Optional<String> optBackendId = null;
 
 		if (hasPurgeAllRole(credentials))
@@ -161,7 +161,7 @@ public class LogResource extends Resource {
 
 				// https://api.spacedog.io ping requests should not be logged
 				if (uri.isEmpty() || uri.equals(SLASH))
-					return !SpaceContext.getCredentials().isTargetingRootApi();
+					return !SpaceContext.credentials().isTargetingRootApi();
 
 				return true;
 			}
@@ -328,7 +328,7 @@ public class LogResource extends Resource {
 	}
 
 	private void addCredentials(ObjectNode log) {
-		Credentials credentials = SpaceContext.getCredentials();
+		Credentials credentials = SpaceContext.credentials();
 		ObjectNode logCredentials = log.putObject("credentials");
 		logCredentials.put("backendId", credentials.backendId());
 		logCredentials.put("type", credentials.type().name());

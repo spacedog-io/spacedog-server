@@ -11,7 +11,7 @@ import io.spacedog.utils.Credentials;
 public class DataAccessControl {
 
 	public static boolean check(String type, DataPermission... permissions) {
-		return check(SpaceContext.getCredentials(), type, permissions);
+		return check(SpaceContext.credentials(), type, permissions);
 	}
 
 	public static boolean check(Credentials credentials, String type, DataPermission... permissions) {

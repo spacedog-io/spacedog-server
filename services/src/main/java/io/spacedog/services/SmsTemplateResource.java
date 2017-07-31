@@ -29,7 +29,7 @@ public class SmsTemplateResource extends Resource {
 			SmsTemplate template = settings.templates.get(name);
 
 			if (template != null) {
-				SpaceContext.getCredentials().checkRoles(template.roles);
+				SpaceContext.credentials().checkRoles(template.roles);
 				SmsMessage message = toMessage(template, body);
 				return SmsResource.get().send(message);
 			}

@@ -75,7 +75,7 @@ public class SchemaResource extends Resource {
 	@Post("/:type/")
 	public Payload put(String type, String newSchemaAsString, Context context) {
 
-		Credentials credentials = SpaceContext.checkAdminCredentials();
+		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
 		Schema.checkName(type);
 
 		Schema schema = Strings.isNullOrEmpty(newSchemaAsString) ? getDefaultSchema(type) //
@@ -108,7 +108,7 @@ public class SchemaResource extends Resource {
 	@Delete("/:type/")
 	public Payload delete(String type) {
 		try {
-			Credentials credentials = SpaceContext.checkAdminCredentials();
+			Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
 			Start.get().getElasticClient().deleteIndex(credentials.backendId(), type);
 			DataAccessControl.delete(type);
 		} catch (TypeMissingException ignored) {

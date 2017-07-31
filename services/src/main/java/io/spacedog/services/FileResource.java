@@ -55,7 +55,7 @@ public class FileResource extends S3Resource {
 	//
 
 	Payload get(WebPath path, Context context) {
-		Credentials credentials = SpaceContext.getCredentials();
+		Credentials credentials = SpaceContext.credentials();
 		Payload payload = doGet(FILE_BUCKET_SUFFIX, credentials.backendId(), path, context);
 
 		if (payload.isSuccess())
@@ -65,7 +65,7 @@ public class FileResource extends S3Resource {
 	}
 
 	Payload put(WebPath path, byte[] bytes, Context context) {
-		Credentials credentials = SpaceContext.checkAdminCredentials();
+		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
 		return doUpload(FILE_BUCKET_SUFFIX, "/1/file", credentials, path, bytes, context);
 	}
 
@@ -74,7 +74,7 @@ public class FileResource extends S3Resource {
 	}
 
 	Payload delete(WebPath path) {
-		Credentials credentials = SpaceContext.checkAdminCredentials();
+		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
 		return doDelete(FILE_BUCKET_SUFFIX, credentials, path, false, false);
 	}
 

@@ -68,7 +68,7 @@ public class ShareResource extends S3Resource {
 	@Delete("/:uuid/:fileName")
 	@Delete("/:uuid/:fileName/")
 	public Payload delete(String uuid, String fileName, Context context) {
-		Credentials credentials = SpaceContext.getCredentials();
+		Credentials credentials = SpaceContext.credentials();
 
 		boolean checkOwnership = checkPermissionAndIsOwnershipRequired(//
 				DataPermission.delete, DataPermission.delete_all);
@@ -82,7 +82,7 @@ public class ShareResource extends S3Resource {
 	//
 
 	private Credentials checkPermission(DataPermission... permissions) {
-		Credentials credentials = SpaceContext.getCredentials();
+		Credentials credentials = SpaceContext.credentials();
 		ShareSettings settings = SettingsResource.get().load(ShareSettings.class);
 
 		if (settings.check(credentials, permissions))
@@ -95,7 +95,7 @@ public class ShareResource extends S3Resource {
 			DataPermission ownerchipRequiredPermission, //
 			DataPermission ownerchipNotRequiredPermission) {
 
-		Credentials credentials = SpaceContext.getCredentials();
+		Credentials credentials = SpaceContext.credentials();
 		ShareSettings settings = SettingsResource.get().load(ShareSettings.class);
 
 		if (settings.check(credentials, ownerchipNotRequiredPermission))

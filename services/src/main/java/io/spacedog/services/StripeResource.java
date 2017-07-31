@@ -33,7 +33,7 @@ public class StripeResource extends Resource {
 	@Post("/customers")
 	@Post("/customers/")
 	public Payload postCustomer() {
-		Credentials credentials = SpaceContext.checkUserCredentials();
+		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
 
 		if (hasStripeCustomerId(credentials))
 			throw Exceptions.illegalArgument(//
@@ -56,7 +56,7 @@ public class StripeResource extends Resource {
 	@Get("/customers/me")
 	@Get("/customers/me/")
 	public Payload getCustomer(Context context) {
-		Credentials credentials = SpaceContext.checkUserCredentials();
+		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
 		String customerId = getStripeCustomerId(credentials);
 		StripeSettings settings = SettingsResource.get().load(StripeSettings.class);
 
@@ -74,7 +74,7 @@ public class StripeResource extends Resource {
 	@Delete("/customers/me/")
 	public Payload deleteStripeCustomer() {
 
-		Credentials credentials = SpaceContext.checkUserCredentials();
+		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
 		String customerId = getStripeCustomerId(credentials);
 		StripeSettings settings = SettingsResource.get().load(StripeSettings.class);
 
@@ -93,7 +93,7 @@ public class StripeResource extends Resource {
 	@Post("/customers/me/sources")
 	@Post("/customers/me/sources/")
 	public Payload postCard(String body, Context context) {
-		Credentials credentials = SpaceContext.checkUserCredentials();
+		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
 		String customerId = getStripeCustomerId(credentials);
 		ObjectNode node = Json8.readObject(body);
 		StripeSettings settings = SettingsResource.get().load(StripeSettings.class);
@@ -116,7 +116,7 @@ public class StripeResource extends Resource {
 	@Delete("/customers/me/sources/:cardId")
 	@Delete("/customers/me/sources/:cardId/")
 	public Payload deleteStripeCard(String cardId, Context context) {
-		Credentials credentials = SpaceContext.checkUserCredentials();
+		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
 		String customerId = getStripeCustomerId(credentials);
 		StripeSettings settings = SettingsResource.get().load(StripeSettings.class);
 
@@ -150,7 +150,7 @@ public class StripeResource extends Resource {
 	//
 
 	private Payload charge(boolean myself, Context context) {
-		Credentials credentials = SpaceContext.getCredentials();
+		Credentials credentials = SpaceContext.credentials();
 		StripeSettings settings = SettingsResource.get().load(StripeSettings.class);
 		SpaceRequest request = SpaceRequest.post("/v1/charges")//
 				.backend("https://api.stripe.com")//
