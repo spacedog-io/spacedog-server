@@ -7,7 +7,7 @@ import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceResponse;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
-import io.spacedog.utils.Credentials.Level;
+import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Credentials.Session;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.SpaceException;
@@ -201,8 +201,8 @@ public class LinkedinResource extends Resource {
 		String email = response.asJsonObject().get("emailAddress").asText();
 
 		CredentialsResource credentialsResource = CredentialsResource.get();
-		Credentials credentials = credentialsResource.getByName(backendId, email, false)//
-				.orElse(new Credentials(backendId, email, Level.USER));
+		Credentials credentials = credentialsResource.getByName(email, false)//
+				.orElse(new Credentials(backendId, email).roles(Type.user.name()));
 
 		credentials.setCurrentSession(session);
 		credentials.email(email);

@@ -35,8 +35,8 @@ public class Exceptions {
 		return new IllegalArgumentException(String.format(message, args), t);
 	}
 
-	public static NotFoundException notFound(String backendId, String type, String id) {
-		return new NotFoundException("[%s][%s] not found in backend [%s]", type, id, backendId);
+	public static NotFoundException notFound(String type, String id) {
+		return new NotFoundException("[%s][%s] not found", type, id);
 	}
 
 	public static SpaceException space(int httpStatus, String message, Object... args) {
@@ -61,7 +61,7 @@ public class Exceptions {
 
 	public static ForbiddenException insufficientCredentials(Credentials credentials) {
 		return forbidden("[%s][%s] has insufficient credentials", //
-				credentials.level(), credentials.name());
+				credentials.type(), credentials.name());
 	}
 
 	public static SpaceException alreadyExists(String type, String value) {
@@ -76,7 +76,7 @@ public class Exceptions {
 	public static SpaceException passwordMustChange(Credentials credentials) {
 		return new SpaceException(PASSWORD_MUST_CHANGE, 403, //
 				"[%s][%s] credentials password must change", //
-				credentials.level(), credentials.name());
+				credentials.type(), credentials.name());
 	}
 
 	//
@@ -95,20 +95,20 @@ public class Exceptions {
 
 	public static AuthenticationException disabledCredentials(Credentials credentials) {
 		return new AuthenticationException(DISABLED_CREDENTIALS, //
-				"[%s][%s] credentials disabled", credentials.level(), credentials.name());
+				"[%s][%s] credentials disabled", credentials.type(), credentials.name());
 	}
 
-	public static AuthenticationException invalidAccessToken(String backendId) {
+	public static AuthenticationException invalidAccessToken() {
 		return new AuthenticationException(INVALID_ACCESS_TOKEN, //
-				"invalid access token for backend [%s]", backendId);
+				"invalid access token");
 	}
 
 	public static AuthenticationException accessTokenHasExpired() {
 		return new AuthenticationException(EXPIRED_ACCESS_TOKEN, "access token has expired");
 	}
 
-	public static AuthenticationException invalidUsernamePassword(String backendId) {
+	public static AuthenticationException invalidUsernamePassword() {
 		return new AuthenticationException(INVALID_CREDENTIALS, //
-				"invalid username or password for backend [%s]", backendId);
+				"invalid username or password");
 	}
 }

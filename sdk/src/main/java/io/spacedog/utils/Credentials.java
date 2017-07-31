@@ -3,7 +3,6 @@
  */
 package io.spacedog.utils;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -31,17 +30,41 @@ import com.google.common.io.BaseEncoding;
 		setterVisibility = Visibility.NONE)
 public class Credentials {
 
-	// Standard roles
-	public static final String KEY = "key";
-	public static final String USER = "user";
-	public static final String ADMIN = "admin";
-	public static final String SUPER_ADMIN = "super_admin";
-	public static final String SUPERDOG = "superdog";
+	public static enum Type {
+		guest, user, admin, superadmin, superdog;
+
+		public static Type fromRoles(Set<String> roles) {
+			if (roles.contains(superdog.toString()))
+				return superdog;
+			if (roles.contains(superadmin.toString()))
+				return superadmin;
+			if (roles.contains(admin.toString()))
+				return admin;
+			if (roles.contains(user.toString()))
+				return user;
+			return guest;
+		}
+
+		public boolean isGreaterThanOrEqualTo(Type type) {
+			return ordinal() >= type.ordinal();
+		}
+
+		public boolean isGreaterThan(Type type) {
+			return ordinal() > type.ordinal();
+		}
+
+		public static Type authorizedToManage(String role) {
+			try {
+				return Type.valueOf(role);
+			} catch (IllegalArgumentException e) {
+				return Type.admin;
+			}
+		}
+	}
 
 	private String backendId;
 	private String username;
 	private String email;
-	private Level level;
 	private boolean enabled = true;
 	private DateTime enableAfter;
 	private DateTime disableAfter;
@@ -56,14 +79,6 @@ public class Credentials {
 	private String createdAt;
 	private String updatedAt;
 
-	/**
-	 * 'target' stores the id of the target backend I'm accessing. 'backendId'
-	 * stores the id of this credentials real backend. 'target' must not replace
-	 * 'backendId' and be saved to database.
-	 */
-	@JsonIgnore
-	private String target;
-
 	@JsonIgnore
 	public Session currentSession;
 	@JsonIgnore
@@ -72,23 +87,19 @@ public class Credentials {
 	private String id;
 	@JsonIgnore
 	private long version;
+	@JsonIgnore
+	private Type type = Type.guest;
 
 	public Credentials() {
 	}
 
 	public Credentials(String backendId) {
 		this.backendId = backendId;
-		this.level = Level.KEY;
 	}
 
 	public Credentials(String backendId, String name) {
 		this.backendId = backendId;
 		this.username = name;
-	}
-
-	public Credentials(String backendId, String name, Level level) {
-		this(backendId, name);
-		this.level = level;
 	}
 
 	public String id() {
@@ -110,16 +121,11 @@ public class Credentials {
 	}
 
 	public String backendId() {
-		return target == null ? backendId : target;
-	}
-
-	public Credentials target(String backendId) {
-		this.target = backendId;
-		return this;
+		return backendId;
 	}
 
 	public String name() {
-		return username == null ? "default" : username;
+		return username == null ? Type.guest.name() : username;
 	}
 
 	public Credentials name(String name) {
@@ -133,15 +139,6 @@ public class Credentials {
 
 	public Credentials email(String value) {
 		this.email = value;
-		return this;
-	}
-
-	public Level level() {
-		return level;
-	}
-
-	public Credentials level(Level value) {
-		this.level = value;
 		return this;
 	}
 
@@ -198,14 +195,13 @@ public class Credentials {
 
 	public Set<String> roles() {
 		if (roles == null)
-			roles = Sets.newHashSet();
-
-		roles.addAll(defaultRoles());
-		return roles;
+			return Collections.emptySet();
+		return Collections.unmodifiableSet(roles);
 	}
 
-	public Credentials roles(Set<String> value) {
-		roles = value;
+	public Credentials roles(String... values) {
+		roles = Sets.newHashSet(values);
+		type = Type.fromRoles(roles);
 		return this;
 	}
 
@@ -304,56 +300,77 @@ public class Credentials {
 	// Level and roles
 	//
 
-	public boolean isSuperDog() {
-		return Level.SUPERDOG.equals(level);
+	public Type type() {
+		return type;
 	}
 
-	public void checkSuperDog() {
+	public boolean isSuperDog() {
+		return Type.superdog.equals(type);
+	}
+
+	public Credentials checkSuperDog() {
 		if (!isSuperDog())
 			throw Exceptions.insufficientCredentials(this);
+		return this;
 	}
 
 	public boolean isSuperAdmin() {
-		return Level.SUPER_ADMIN.equals(level);
+		return Type.superadmin.equals(type);
 	}
 
 	public boolean isAtLeastSuperAdmin() {
-		return level.ordinal() >= Level.SUPER_ADMIN.ordinal();
+		return type.ordinal() >= Type.superadmin.ordinal();
 	}
 
-	public void checkAtLeastSuperAdmin() {
+	public Credentials checkAtLeastSuperAdmin() {
 		if (!isAtLeastSuperAdmin())
 			throw Exceptions.insufficientCredentials(this);
+		return this;
 	}
 
 	public boolean isAdmin() {
-		return Level.ADMIN.equals(level);
+		return Type.admin.equals(type);
 	}
 
 	public boolean isAtLeastAdmin() {
-		return level.ordinal() >= Level.ADMIN.ordinal();
+		return type.ordinal() >= Type.admin.ordinal();
 	}
 
-	public void checkAtLeastAdmin() {
+	public Credentials checkAtLeastAdmin() {
 		if (!isAtLeastAdmin())
 			throw Exceptions.insufficientCredentials(this);
+		return this;
 	}
 
 	public boolean isUser() {
-		return Level.USER.equals(level);
+		return Type.user.equals(type);
 	}
 
 	public boolean isAtLeastUser() {
-		return level.ordinal() >= Level.USER.ordinal();
+		return type.ordinal() >= Type.user.ordinal();
 	}
 
-	public void checkAtLeastUser() {
+	public Credentials checkAtLeastUser() {
 		if (!isAtLeastUser())
 			throw Exceptions.insufficientCredentials(this);
+		return this;
 	}
 
-	public boolean isKey() {
-		return Level.KEY.equals(level);
+	public boolean isGuest() {
+		return Type.guest.equals(type);
+	}
+
+	public boolean isGreaterThan(Credentials other) {
+		return type.isGreaterThan(other.type);
+	}
+
+	public boolean isGreaterThanOrEqualTo(Credentials other) {
+		return type.isGreaterThanOrEqualTo(other.type);
+	}
+
+	public void checkAuthorizedToManage(String role) {
+		if (Type.authorizedToManage(role).isGreaterThan(type))
+			throw Exceptions.insufficientCredentials(this);
 	}
 
 	public boolean isReal() {
@@ -516,7 +533,6 @@ public class Credentials {
 				SpaceFields.FIELD_DISABLE_AFTER, disableAfter(), //
 				SpaceFields.FIELD_INVALID_CHALLENGES, invalidChallenges, //
 				SpaceFields.FIELD_LAST_INVALID_CHALLENGE_AT, lastInvalidChallengeAt, //
-				SpaceFields.FIELD_CREDENTIALS_LEVEL, level().name(), //
 				SpaceFields.FIELD_ROLES, roles(), //
 				SpaceFields.FIELD_CREATED_AT, createdAt(), //
 				SpaceFields.FIELD_UPDATED_AT, updatedAt());
@@ -541,7 +557,7 @@ public class Credentials {
 				}
 
 		if (!found)
-			throw Exceptions.invalidAccessToken(backendId);
+			throw Exceptions.invalidAccessToken();
 
 	}
 
@@ -581,44 +597,8 @@ public class Credentials {
 	}
 
 	//
-	// implementation
-	//
-
-	private Set<String> defaultRoles() {
-		if (Level.USER.equals(level))
-			return Collections.singleton(USER);
-		if (Level.ADMIN.equals(level))
-			return Collections.singleton(ADMIN);
-		if (Level.SUPER_ADMIN.equals(level))
-			return Sets.newHashSet(ADMIN, SUPER_ADMIN);
-		if (Level.SUPERDOG.equals(level))
-			return Sets.newHashSet(ADMIN, SUPER_ADMIN, SUPERDOG);
-		return Collections.singleton(KEY);
-	}
-
-	public void initIdFromLegacy() {
-		this.id = toLegacyId(backendId, username);
-	}
-
-	public static String[] fromLegacyId(String id) {
-		return id.split("-", 2);
-	}
-
-	public static String toLegacyId(String backendId, String username) {
-		return Utils.join("-", backendId, username);
-	}
-
-	//
 	// Inner classes
 	//
-
-	public static enum Level {
-		KEY, USER, ADMIN, SUPER_ADMIN, SUPERDOG;
-
-		public Level[] lowerOrEqual() {
-			return Arrays.copyOf(values(), ordinal() + 1);
-		}
-	}
 
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	@JsonAutoDetect(fieldVisibility = Visibility.ANY, //
@@ -706,5 +686,4 @@ public class Credentials {
 		}
 
 	}
-
 }

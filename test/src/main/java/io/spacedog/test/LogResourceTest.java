@@ -14,7 +14,7 @@ import io.spacedog.sdk.LogEndpoint.LogSearchResults;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Credentials;
-import io.spacedog.utils.Credentials.Level;
+import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Json7;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Passwords;
@@ -252,7 +252,7 @@ public class LogResourceTest extends SpaceTest {
 
 		// superdog creates superadmin named nath in root 'api' backend
 		superdog.credentials().create(nath.username(), //
-				nathPassword, nath.email().get(), Level.SUPER_ADMIN);
+				nathPassword, nath.email().get(), Type.superadmin.name());
 
 		// anonymous gets data from test backend
 		SpaceDog.backend("test").data().getAll().get();

@@ -25,14 +25,15 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import io.spacedog.core.Json8;
+import io.spacedog.model.CreateCredentialsRequest;
 import io.spacedog.model.CredentialsSettings;
 import io.spacedog.model.MailTemplate;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
-import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.Credentials.Session;
+import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Passwords;
@@ -41,6 +42,7 @@ import io.spacedog.utils.SchemaTranslator;
 import io.spacedog.utils.SchemaValidator;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Usernames;
+import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -67,7 +69,6 @@ public class CredentialsResource extends Resource {
 				.timestamp(FIELD_DISABLE_AFTER)//
 				.integer(FIELD_INVALID_CHALLENGES)//
 				.timestamp(FIELD_LAST_INVALID_CHALLENGE_AT)//
-				.string(FIELD_CREDENTIALS_LEVEL)//
 				.string(FIELD_ROLES).array()//
 				.string(FIELD_ACCESS_TOKEN)//
 				.string(FIELD_ACCESS_TOKEN_EXPIRES_AT)//
@@ -148,17 +149,16 @@ public class CredentialsResource extends Resource {
 	@Delete("/1/credentials")
 	@Delete("/1/credentials/")
 	public Payload deleteAll(Context context) {
-		SpaceContext.checkSuperAdminCredentials();
+		SpaceContext.getCredentials().checkAtLeastSuperAdmin();
 		ElasticClient elastic = Start.get().getElasticClient();
 		BoolQueryBuilder query = toQuery(context).query;
 
-		// super admins can only be deleted when backend is deleted
-		query.mustNot(QueryBuilders.termQuery(FIELD_CREDENTIALS_LEVEL, "SUPER_ADMIN"));
+		// superadmins can only be deleted when backend is deleted
+		query.mustNot(QueryBuilders.termQuery(FIELD_ROLES, Type.superadmin));
 		elastic.deleteByQuery(SPACEDOG_BACKEND, query, TYPE);
 
-		// allways refresh after credentials index updates
+		// always refresh after credentials index updates
 		elastic.refreshType(SPACEDOG_BACKEND, TYPE);
-
 		return JsonPayload.success();
 	}
 
@@ -170,10 +170,8 @@ public class CredentialsResource extends Resource {
 		if (settings.disableGuestSignUp)
 			SpaceContext.checkUserCredentials();
 
-		ObjectNode data = Json8.readObject(body);
-		Level level = extractAndCheckLevel(data, Level.USER);
-
-		Credentials credentials = create(SpaceContext.backendId(), level, data);
+		Credentials credentials = credentialsRequestToCredentials(body);
+		create(credentials);
 
 		JsonBuilder<ObjectNode> builder = JsonPayload //
 				.builder(true, credentials.backendId(), "/1", TYPE, credentials.id());
@@ -195,8 +193,7 @@ public class CredentialsResource extends Resource {
 	@Get("/1/credentials/:id")
 	@Get("/1/credentials/:id/")
 	public Payload getById(String id, Context context) {
-		SpaceContext.checkUserCredentials(id);
-		Credentials credentials = getById(id, true).get();
+		Credentials credentials = checkMyselfOrAdminAndGet(id, false);
 		return JsonPayload.json(credentials.toJson());
 	}
 
@@ -210,27 +207,16 @@ public class CredentialsResource extends Resource {
 	@Delete("/1/credentials/:id")
 	@Delete("/1/credentials/:id/")
 	public Payload deleteById(String id) {
-		Credentials requester = SpaceContext.checkUserCredentials(id);
-		Credentials recipient = getById(id, true).get();
+		Credentials credentials = checkMyselfOrAdminAndGet(id, false);
 
-		if (requester.isSuperDog() //
-				|| requester.id().equals(recipient.id()) //
-				|| (requester.isAtLeastAdmin() //
-						&& requester.backendId().equals(recipient.backendId())
-						&& requester.level().ordinal() >= recipient.level().ordinal())) {
-
-			// forbidden to delete last backend superadmin
-			if (recipient.level().equals(Level.SUPER_ADMIN)) {
-				if (getBackendSuperAdmins(recipient.backendId(), 0, 0).total == 1)
-					throw Exceptions.forbidden("backend [%s] must at least have one superadmin", //
-							recipient.backendId());
-			}
-
-			delete(id);
-			return JsonPayload.success();
+		// forbidden to delete last backend superadmin
+		if (credentials.isSuperAdmin()) {
+			if (getBackendSuperAdmins(0, 0).total == 1)
+				throw Exceptions.forbidden("backend must at least have one superadmin");
 		}
 
-		throw Exceptions.insufficientCredentials(requester);
+		delete(id);
+		return JsonPayload.success();
 	}
 
 	@Put("/1/credentials/me")
@@ -302,11 +288,11 @@ public class CredentialsResource extends Resource {
 		Map<String, Object> parameters = Json8.readMap(body);
 		String username = Check.notNull(parameters.get(PARAM_USERNAME), "username").toString();
 
-		Credentials credentials = getByName(SpaceContext.backendId(), username, true).get();
+		Credentials credentials = getByName(username, true).get();
 
 		if (!credentials.email().isPresent())
 			throw Exceptions.illegalArgument("no email found in credentials [%s][%s]", //
-					credentials.level(), credentials.name());
+					credentials.type(), credentials.name());
 
 		MailTemplate template = MailTemplateResource.get()//
 				.getTemplate(FORGOT_PASSWORD_MAIL_TEMPLATE_NAME)//
@@ -336,9 +322,8 @@ public class CredentialsResource extends Resource {
 	@Delete("/1/credentials/:id/password")
 	@Delete("/1/credentials/:id/password/")
 	public Payload deletePassword(String id, Context context) {
-		SpaceContext.checkAdminCredentials();
+		Credentials credentials = checkAdminAndGet(id);
 
-		Credentials credentials = getById(id, true).get();
 		credentials.clearPasswordAndTokens();
 		credentials.newPasswordResetCode();
 		credentials = update(credentials);
@@ -395,8 +380,7 @@ public class CredentialsResource extends Resource {
 	@Put("/1/credentials/:id/passwordMustChange")
 	@Put("/1/credentials/:id/passwordMustChange/")
 	public Payload putPasswordMustChange(String id, String body, Context context) {
-		SpaceContext.checkAdminCredentials();
-		Credentials credentials = getById(id, true).get();
+		Credentials credentials = checkAdminAndGet(id);
 
 		Boolean passwordMustChange = Json8.checkBoolean(//
 				Json8.checkNotNull(Json8.readNode(body)));
@@ -409,13 +393,12 @@ public class CredentialsResource extends Resource {
 	@Put("/1/credentials/:id/enabled")
 	@Put("/1/credentials/:id/enabled/")
 	public Payload putEnabled(String id, String body, Context context) {
-		SpaceContext.checkAdminCredentials();
+		Credentials credentials = checkAdminAndGet(id);
 
 		JsonNode enabled = Json8.readNode(body);
 		if (!enabled.isBoolean())
 			throw Exceptions.illegalArgument("body not a boolean but [%s]", body);
 
-		Credentials credentials = getById(id, true).get();
 		credentials.doEnableOrDisable(enabled.asBoolean());
 		credentials = update(credentials);
 
@@ -425,15 +408,13 @@ public class CredentialsResource extends Resource {
 	@Get("/1/credentials/:id/roles")
 	@Get("/1/credentials/:id/roles/")
 	public Object getRoles(String id, Context context) {
-		SpaceContext.checkUserCredentials(id);
-		return getById(id, true).get().roles();
+		return checkMyselfOrAdminAndGet(id, false).roles();
 	}
 
 	@Delete("/1/credentials/:id/roles")
 	@Delete("/1/credentials/:id/roles/")
 	public Payload deleteAllRoles(String id, Context context) {
-		SpaceContext.checkAdminCredentials();
-		Credentials credentials = getById(id, true).get();
+		Credentials credentials = checkAdminAndGet(id);
 		credentials.roles().clear();
 		credentials = update(credentials);
 		return saved(credentials, false);
@@ -442,9 +423,9 @@ public class CredentialsResource extends Resource {
 	@Put("/1/credentials/:id/roles/:role")
 	@Put("/1/credentials/:id/roles/:role/")
 	public Payload putRole(String id, String role, Context context) {
-		SpaceContext.checkAdminCredentials();
 		Roles.checkIfValid(role);
-		Credentials credentials = getById(id, true).get();
+		Credentials credentials = checkAdminAndGet(id);
+		credentials.checkAuthorizedToManage(role);
 
 		if (!credentials.roles().contains(role)) {
 			credentials.roles().add(role);
@@ -457,8 +438,7 @@ public class CredentialsResource extends Resource {
 	@Delete("/1/credentials/:id/roles/:role")
 	@Delete("/1/credentials/:id/roles/:role/")
 	public Payload deleteRole(String id, String role, Context context) {
-		SpaceContext.checkAdminCredentials();
-		Credentials credentials = getById(id, true).get();
+		Credentials credentials = checkAdminAndGet(id);
 
 		if (credentials.roles().contains(role)) {
 			credentials.roles().remove(role);
@@ -481,38 +461,8 @@ public class CredentialsResource extends Resource {
 		return lifetime;
 	}
 
-	Credentials create(String backendId, Level level, ObjectNode data) {
-		return create(backendId, level, data, false);
-	}
-
-	Credentials create(String backendId, Level level, ObjectNode data, boolean legacyId) {
-
-		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
-		Credentials credentials = new Credentials(backendId);
-
-		credentials.name(Json8.checkStringNotNullOrEmpty(data, FIELD_USERNAME));
-		Usernames.checkValid(credentials.name(), settings.usernameRegex());
-
-		if (legacyId)
-			credentials.initIdFromLegacy();
-
-		credentials.email(Json8.checkStringNotNullOrEmpty(data, FIELD_EMAIL));
-		credentials.level(level);
-
-		JsonNode password = data.get(FIELD_PASSWORD);
-
-		if (Json8.isNull(password))
-			credentials.newPasswordResetCode();
-		else {
-			Passwords.check(password.asText(), settings.passwordRegex());
-			credentials.changePassword(password.asText());
-		}
-
-		return create(credentials);
-	}
-
-	Credentials checkUsernamePassword(String backendId, String username, String password) {
-		Optional<Credentials> optional = getByName(backendId, username, false);
+	Credentials checkUsernamePassword(String username, String password) {
+		Optional<Credentials> optional = getByName(username, false);
 
 		if (optional.isPresent()) {
 
@@ -524,7 +474,7 @@ public class CredentialsResource extends Resource {
 				updateInvalidChallenges(credentials);
 		}
 
-		throw Exceptions.invalidUsernamePassword(backendId);
+		throw Exceptions.invalidUsernamePassword();
 	}
 
 	private void updateInvalidChallenges(Credentials credentials) {
@@ -552,7 +502,7 @@ public class CredentialsResource extends Resource {
 		update(credentials);
 	}
 
-	Credentials checkToken(String backendId, String accessToken) {
+	Credentials checkToken(String accessToken) {
 
 		SearchHits hits = Start.get().getElasticClient()//
 				.prepareSearch(SPACEDOG_BACKEND, TYPE)//
@@ -564,15 +514,11 @@ public class CredentialsResource extends Resource {
 				.getHits();
 
 		if (hits.totalHits() == 0)
-			throw Exceptions.invalidAccessToken(backendId);
+			throw Exceptions.invalidAccessToken();
 
 		if (hits.totalHits() == 1) {
 			Credentials credentials = toCredentials(hits.getAt(0));
 			credentials.setCurrentSession(accessToken);
-
-			if (!credentials.isSuperDog() //
-					&& !backendId.equals(credentials.backendId()))
-				throw Exceptions.invalidAccessToken(backendId);
 
 			if (credentials.accessTokenExpiresIn() == 0)
 				throw Exceptions.accessTokenHasExpired();
@@ -597,19 +543,19 @@ public class CredentialsResource extends Resource {
 			return Optional.of(toCredentials(response));
 
 		if (throwNotFound)
-			throw Exceptions.notFound(credentials.backendId(), TYPE, id);
+			throw Exceptions.notFound(TYPE, id);
 		else
 			return Optional.empty();
 	}
 
-	Optional<Credentials> getByName(String backendId, String username, boolean throwNotFound) {
+	Optional<Credentials> getByName(String username, boolean throwNotFound) {
 
 		Optional<SearchHit> searchHit = Start.get().getElasticClient().get(//
-				SPACEDOG_BACKEND, TYPE, toQuery(backendId, username));
+				SPACEDOG_BACKEND, TYPE, toQuery(username));
 
 		if (!searchHit.isPresent()) {
 			if (throwNotFound)
-				throw Exceptions.notFound(backendId, TYPE, username);
+				throw Exceptions.notFound(TYPE, username);
 			else
 				return Optional.empty();
 		}
@@ -690,27 +636,53 @@ public class CredentialsResource extends Resource {
 
 	SearchResults<Credentials> getAllSuperAdmins(int from, int size) {
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
-				.filter(QueryBuilders.termQuery(FIELD_CREDENTIALS_LEVEL, Level.SUPER_ADMIN.toString()));
+				.filter(QueryBuilders.termQuery(FIELD_ROLES, Type.superadmin));
 
 		return getCredentials(new BoolSearch(SPACEDOG_BACKEND, TYPE, query, from, size));
 	}
 
-	SearchResults<Credentials> getBackendSuperAdmins(String backendId, int from, int size) {
+	SearchResults<Credentials> getBackendSuperAdmins(int from, int size) {
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
-				.filter(QueryBuilders.termQuery(FIELD_BACKEND_ID, backendId))//
-				.filter(QueryBuilders.termsQuery(FIELD_CREDENTIALS_LEVEL, //
-						Level.SUPER_ADMIN.toString(), Level.SUPERDOG.toString()));
+				.filter(QueryBuilders.termQuery(FIELD_ROLES, Type.superadmin));
 
 		return getCredentials(new BoolSearch(SPACEDOG_BACKEND, TYPE, query, from, size));
 	}
 
 	Credentials createSuperdog(String username, String password, String email) {
 		Usernames.checkValid(username);
-		Credentials credentials = new Credentials(Backends.rootApi(), username, Level.SUPERDOG);
+		Credentials credentials = new Credentials(Backends.rootApi(), username);
+		credentials.roles(Type.superdog.name());
 		credentials.email(email);
 		Passwords.check(password);
 		credentials.changePassword(password);
 		return create(credentials);
+	}
+
+	Credentials checkAdminAndGet(String id) {
+		Credentials requester = SpaceContext.checkAdminCredentials();
+		Credentials credentials = getById(id, true).get();
+		if (credentials.isGreaterThan(requester))
+			throw Exceptions.insufficientCredentials(requester);
+		return credentials;
+	}
+
+	Credentials checkMyselfOrAdminAndGet(String id, boolean checkPasswordHasBeenChallenged) {
+		Credentials requester = SpaceContext.checkUserCredentials();
+
+		if (checkPasswordHasBeenChallenged)
+			requester.checkPasswordHasBeenChallenged();
+
+		if (requester.id().equals(id))
+			return requester;
+
+		if (requester.isAtLeastAdmin()) {
+			Credentials credentials = getById(id, true).get();
+			if (credentials.isGreaterThan(requester))
+				throw Exceptions.insufficientCredentials(requester);
+			return credentials;
+		}
+
+		throw Exceptions.insufficientCredentials(requester);
 	}
 
 	//
@@ -722,15 +694,36 @@ public class CredentialsResource extends Resource {
 				credentials.id(), credentials.version());
 	}
 
-	private Level extractAndCheckLevel(ObjectNode fields, Level defaultLevel) {
-		String value = fields.path(FIELD_CREDENTIALS_LEVEL).asText();
-		if (Strings.isNullOrEmpty(value))
-			return defaultLevel;
-		Level level = Level.valueOf(value);
-		Credentials credentials = SpaceContext.getCredentials();
-		if (level.ordinal() > credentials.level().ordinal())
-			throw Exceptions.insufficientCredentials(credentials);
-		return level;
+	private Credentials credentialsRequestToCredentials(String body) {
+
+		Credentials credentials = new Credentials(SpaceContext.backendId());
+		CreateCredentialsRequest request = Json8.toPojo(body, CreateCredentialsRequest.class);
+
+		if (Utils.isNullOrEmpty(request.roles()))
+			credentials.roles(Type.user.name());
+		else
+			credentials.roles(request.roles());
+
+		Credentials requester = SpaceContext.getCredentials();
+		if (credentials.isGreaterThan(requester))
+			throw Exceptions.insufficientCredentials(requester);
+
+		CredentialsSettings settings = SettingsResource.get()//
+				.load(CredentialsSettings.class);
+
+		credentials.name(Check.notNullOrEmpty(request.username(), FIELD_USERNAME));
+		Usernames.checkValid(credentials.name(), settings.usernameRegex());
+
+		credentials.email(Check.notNullOrEmpty(request.email(), FIELD_EMAIL));
+
+		if (Strings.isNullOrEmpty(request.password()))
+			credentials.newPasswordResetCode();
+		else {
+			Passwords.check(request.password(), settings.passwordRegex());
+			credentials.changePassword(request.password());
+		}
+
+		return credentials;
 	}
 
 	private BoolSearch toQuery(Context context) {
@@ -745,9 +738,9 @@ public class CredentialsResource extends Resource {
 		if (!Strings.isNullOrEmpty(email))
 			query.filter(QueryBuilders.termQuery(FIELD_EMAIL, email));
 
-		String level = context.get(FIELD_CREDENTIALS_LEVEL);
-		if (!Strings.isNullOrEmpty(level))
-			query.filter(QueryBuilders.termQuery(FIELD_CREDENTIALS_LEVEL, level));
+		String role = context.get("role");
+		if (!Strings.isNullOrEmpty(role))
+			query.filter(QueryBuilders.termQuery(FIELD_ROLES, role));
 
 		BoolSearch search = new BoolSearch(SPACEDOG_BACKEND, TYPE, query, //
 				context.query().getInteger(PARAM_FROM, 0), //
@@ -756,9 +749,8 @@ public class CredentialsResource extends Resource {
 		return search;
 	}
 
-	private BoolQueryBuilder toQuery(String backendId, String username) {
+	private BoolQueryBuilder toQuery(String username) {
 		return QueryBuilders.boolQuery()//
-				.must(QueryBuilders.termQuery(FIELD_BACKEND_ID, backendId)) //
 				.must(QueryBuilders.termQuery(FIELD_USERNAME, username));
 	}
 
@@ -794,7 +786,7 @@ public class CredentialsResource extends Resource {
 
 	private boolean exists(String backendId, String username) {
 		return Start.get().getElasticClient().exists(SPACEDOG_BACKEND, TYPE, //
-				toQuery(backendId, username));
+				toQuery(username));
 	}
 
 	private SearchResults<Credentials> getCredentials(BoolSearch query) {

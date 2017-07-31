@@ -207,33 +207,25 @@ public class SpaceContext {
 		if (!authorizationChecked) {
 			authorizationChecked = true;
 			SpaceContext.debug().credentialCheck();
-			String backendId = backendId();
 			String headerValue = context.header(SpaceHeaders.AUTHORIZATION);
 
 			if (headerValue != null) {
-				boolean superdog = false;
 				Credentials userCredentials = null;
 				AuthorizationHeader authHeader = new AuthorizationHeader(headerValue, true);
 
 				if (authHeader.isBasic()) {
-					superdog = authHeader.username().startsWith("superdog-");
 					userCredentials = CredentialsResource.get()//
-							.checkUsernamePassword(//
-									superdog ? Backends.rootApi() : backendId, //
-									authHeader.username(), authHeader.password());
+							.checkUsernamePassword(authHeader.username(), //
+									authHeader.password());
 
 				} else if (authHeader.isBearer()) {
 					userCredentials = CredentialsResource.get()//
-							.checkToken(backendId, authHeader.token());
+							.checkToken(authHeader.token());
 				}
 
 				userCredentials.checkReallyEnabled();
 				checkPasswordMustChange(userCredentials, context);
 				credentials = userCredentials;
-
-				// sets superdog target to the requested backend id
-				if (superdog)
-					credentials.target(backendId);
 			}
 
 		}

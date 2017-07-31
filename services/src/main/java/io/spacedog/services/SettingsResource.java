@@ -253,7 +253,7 @@ public class SettingsResource extends Resource {
 			}
 
 			if (settings == null)
-				throw Exceptions.notFound(backendId, TYPE, id);
+				throw Exceptions.notFound(TYPE, id);
 		}
 
 		return settings;

@@ -140,7 +140,7 @@ public class ElasticClient implements SpaceParams {
 		GetResponse response = internalClient.prepareGet(toAlias(backend, type), type, id).get();
 
 		if (!response.isExists() && throwNotFound)
-			throw Exceptions.notFound(backend, type, id);
+			throw Exceptions.notFound(type, id);
 
 		return response;
 	}
@@ -188,7 +188,7 @@ public class ElasticClient implements SpaceParams {
 		if (response.isFound())
 			return true;
 		if (throwNotFound)
-			throw Exceptions.notFound(backendId, type, id);
+			throw Exceptions.notFound(type, id);
 
 		return false;
 	}
@@ -463,9 +463,9 @@ public class ElasticClient implements SpaceParams {
 	}
 
 	/**
-	 * TODO use this in the future to distinguish data indices and internal
-	 * backend indices. This means all data indices must be renamed with the
-	 * following pattern: backendId-data-indexName
+	 * TODO use this in the future to distinguish data indices and internal backend
+	 * indices. This means all data indices must be renamed with the following
+	 * pattern: backendId-data-indexName
 	 */
 	public String[] toDataIndices(String backendId) {
 		return toIndicesStream(backendId)//

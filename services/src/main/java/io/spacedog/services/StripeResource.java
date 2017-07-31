@@ -38,7 +38,7 @@ public class StripeResource extends Resource {
 		if (hasStripeCustomerId(credentials))
 			throw Exceptions.illegalArgument(//
 					"credentials [%s][%s] already have a stripe customer", //
-					credentials.level(), credentials.name());
+					credentials.type(), credentials.name());
 
 		StripeSettings settings = SettingsResource.get().load(StripeSettings.class);
 
@@ -200,7 +200,7 @@ public class StripeResource extends Resource {
 			return value.asText();
 
 		throw new NotFoundException("no stripe customer for credentials [%s][%s]", //
-				credentials.level(), credentials.name());
+				credentials.type(), credentials.name());
 	}
 
 	private void updateStripeCustomerId(Credentials credentials, String stripeCustomerId) {

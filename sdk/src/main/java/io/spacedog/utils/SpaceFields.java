@@ -22,7 +22,6 @@ public interface SpaceFields {
 	String FIELD_HASHED_PASSWORD = "hashedPassword";
 	String FIELD_PASSWORD_RESET_CODE = "passwordResetCode";
 	String FIELD_PASSWORD_MUST_CHANGE = "passwordMustChange";
-	String FIELD_CREDENTIALS_LEVEL = "level";
 	String FIELD_CREDENTIALS = "credentials";
 	String FIELD_ROLES = "roles";
 	String FIELD_ERROR = "error";

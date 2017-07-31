@@ -5,7 +5,7 @@ import org.junit.Assert;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Credentials;
-import io.spacedog.utils.Credentials.Level;
+import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Passwords;
 import io.spacedog.utils.SpaceFields;
@@ -44,7 +44,7 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 	public static SpaceDog createAdminCredentials(SpaceDog backend, String username, String password, String email) {
 
 		Credentials credentials = SpaceDog.backend(backend.backendId())//
-				.credentials().create(username, password, email, Level.ADMIN);
+				.credentials().create(username, password, email, Type.admin.name());
 		return SpaceDog.fromCredentials(credentials).password(password);
 	}
 

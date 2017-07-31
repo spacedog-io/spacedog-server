@@ -26,7 +26,6 @@ import com.google.common.io.Resources;
 import io.spacedog.core.Json8;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
-import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceHeaders;
@@ -143,7 +142,8 @@ public class LogResource extends Resource {
 		// no delete response means no logs to delete means success
 
 		return response.isPresent()//
-				? JsonPayload.json(response.get()) : JsonPayload.success();
+				? JsonPayload.json(response.get())
+				: JsonPayload.success();
 	}
 
 	//
@@ -321,7 +321,8 @@ public class LogResource extends Resource {
 		ObjectNode logQuery = log.putObject("query");
 		for (String key : context.query().keys()) {
 			String value = key.equals(FIELD_PASSWORD) //
-					? "******" : context.get(key);
+					? "******"
+					: context.get(key);
 			logQuery.put(key, value);
 		}
 	}
@@ -330,9 +331,8 @@ public class LogResource extends Resource {
 		Credentials credentials = SpaceContext.getCredentials();
 		ObjectNode logCredentials = log.putObject("credentials");
 		logCredentials.put("backendId", credentials.backendId());
-		logCredentials.put("type", credentials.level().toString());
-		if (!credentials.level().equals(Level.KEY))
-			logCredentials.put("name", credentials.name());
+		logCredentials.put("type", credentials.type().name());
+		logCredentials.put("name", credentials.name());
 	}
 
 	private void addHeaders(ObjectNode log, Set<Entry<String, List<String>>> headers) {

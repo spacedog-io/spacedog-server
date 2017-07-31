@@ -10,10 +10,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.collect.Sets;
 
+import io.spacedog.model.CreateCredentialsRequest;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceResponse;
 import io.spacedog.utils.Credentials;
-import io.spacedog.utils.Credentials.Level;
+import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json7;
 import io.spacedog.utils.Optional7;
@@ -76,24 +77,22 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 	//
 
 	public Credentials create(String username, String password, String email) {
-		return create(username, password, email, Level.USER);
+		return create(username, password, email, Type.user.name());
 	}
 
-	public Credentials create(String username, String password, String email, Level level) {
+	public Credentials create(String username, String password, String email, String... roles) {
+		return create(new CreateCredentialsRequest().username(username).password(password)//
+				.email(email).roles(roles));
+	}
 
-		ObjectNode body = Json7.object(FIELD_USERNAME, username, //
-				FIELD_PASSWORD, password, FIELD_EMAIL, email);
-
-		if (level.ordinal() > Level.USER.ordinal())
-			body.put(FIELD_LEVEL, level.toString());
-
+	public Credentials create(CreateCredentialsRequest request) {
 		String id = dog.post("/1/credentials")//
-				.bodyJson(body).go(201).getString(FIELD_ID);
+				.bodyPojo(request).go(201).getString(FIELD_ID);
 
-		Credentials credentials = new Credentials(dog.backendId(), username);
+		Credentials credentials = new Credentials(dog.backendId(), request.username());
 		credentials.id(id);
-		credentials.email(email);
-		credentials.level(level);
+		credentials.email(request.email());
+		credentials.roles(request.roles());
 		return credentials;
 	}
 
@@ -188,10 +187,12 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 				body.put(FIELD_ENABLED, enabled);
 			if (enableAfter != null)
 				body.put(FIELD_ENABLE_AFTER, enableAfter.isPresent() //
-						? enableAfter.get().toString() : null);
+						? enableAfter.get().toString()
+						: null);
 			if (disableAfter != null)
 				body.put(FIELD_DISABLE_AFTER, disableAfter.isPresent() //
-						? disableAfter.get().toString() : null);
+						? disableAfter.get().toString()
+						: null);
 
 			SpaceRequest request = dog.put("/1/credentials/{id}")//
 					.routeParam("id", credentialsId).bodyJson(body);

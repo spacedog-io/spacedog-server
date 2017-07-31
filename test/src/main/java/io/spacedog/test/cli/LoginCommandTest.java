@@ -8,7 +8,7 @@ import io.spacedog.cli.LoginCommand;
 import io.spacedog.rest.SpaceRequestException;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Credentials.Level;
+import io.spacedog.utils.Credentials.Type;
 
 public class LoginCommandTest extends SpaceTest {
 
@@ -19,7 +19,7 @@ public class LoginCommandTest extends SpaceTest {
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
 		superadmin.credentials().create("fred", //
-				"hi fred", "platform@spacedog.io", Level.SUPER_ADMIN);
+				"hi fred", "platform@spacedog.io", Type.superadmin.name());
 
 		// login without fails
 		try {

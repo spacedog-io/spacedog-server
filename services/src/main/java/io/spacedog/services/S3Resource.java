@@ -248,7 +248,7 @@ public class S3Resource extends Resource {
 		metadata.setContentDisposition(//
 				String.format("attachment; filename=\"%s\"", fileName));
 		metadata.addUserMetadata("owner", credentials.name());
-		metadata.addUserMetadata("owner-type", credentials.level().toString());
+		metadata.addUserMetadata("owner-type", credentials.type().name());
 
 		s3.putObject(new PutObjectRequest(bucketName, //
 				s3Path.toS3Key(), new ByteArrayInputStream(bytes), //
@@ -276,10 +276,10 @@ public class S3Resource extends Resource {
 		if (!checkOwnership)
 			return owner;
 
-		String ownerLevel = metadata.getUserMetaDataOf("owner-type");
+		String ownerType = metadata.getUserMetaDataOf("owner-type");
 
 		if (credentials.name().equals(owner) //
-				&& credentials.level().toString().equals(ownerLevel))
+				&& credentials.type().name().equals(ownerType))
 			return owner;
 
 		throw Exceptions.insufficientCredentials(credentials);

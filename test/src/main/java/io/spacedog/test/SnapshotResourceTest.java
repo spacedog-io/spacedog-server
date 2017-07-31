@@ -14,7 +14,7 @@ import io.spacedog.rest.SpaceRequestException;
 import io.spacedog.rest.SpaceResponse;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Credentials.Level;
+import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Exceptions;
 
 public class SnapshotResourceTest extends SpaceTest {
@@ -40,7 +40,7 @@ public class SnapshotResourceTest extends SpaceTest {
 		try {
 			SpaceDog.backend(snapshotAll).credentials()//
 					.create(snapshotAll.username(), "hi snapshotAll", //
-							snapshotAll.email().get(), Level.USER);
+							snapshotAll.email().get(), Type.user.name());
 
 		} catch (SpaceRequestException e) {
 			if (!Exceptions.ALREADY_EXISTS.equals(e.serverErrorCode()))
