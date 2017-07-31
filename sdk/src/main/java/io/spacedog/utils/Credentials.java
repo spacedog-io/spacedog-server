@@ -3,6 +3,7 @@
  */
 package io.spacedog.utils;
 
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -19,7 +20,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.common.io.BaseEncoding;
 
 // ignore deprecated fields still in elastic data
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -199,9 +199,12 @@ public class Credentials {
 		return Collections.unmodifiableSet(roles);
 	}
 
-	public Credentials roles(String... values) {
-		roles = Sets.newHashSet(values);
-		type = Type.fromRoles(roles);
+	public Credentials roles(String... newRoles) {
+		for (String role : newRoles)
+			Roles.checkIfValid(role);
+
+		this.roles = Sets.newHashSet(newRoles);
+		type = Type.fromRoles(this.roles);
 		return this;
 	}
 
@@ -495,7 +498,7 @@ public class Credentials {
 			sessions.clear();
 	}
 
-	public void changePassword(String password, String passwordResetCode) {
+	public void changePassword(String password, String passwordResetCode, Optional7<String> regex) {
 		Check.notNullOrEmpty(password, "password");
 		Check.notNullOrEmpty(passwordResetCode, "passwordResetCode");
 
@@ -503,10 +506,11 @@ public class Credentials {
 			throw Exceptions.illegalArgument(//
 					"password reset code [%s] invalid", passwordResetCode);
 
-		changePassword(password);
+		changePassword(password, regex);
 	}
 
-	public void changePassword(String password) {
+	public void changePassword(String password, Optional7<String> regex) {
+		Passwords.check(password, regex);
 		clearPasswordAndTokens();
 		hashedPassword = Passwords.hash(password);
 		passwordHasBeenChallenged = true;
@@ -659,7 +663,7 @@ public class Credentials {
 		}
 
 		public static Session newSession(long lifetime) {
-			String token = new String(BaseEncoding.base64().encode(//
+			String token = new String(Base64.getEncoder().encode(//
 					UUID.randomUUID().toString().getBytes(Utils.UTF8)));
 
 			return newSession(token, lifetime);

@@ -20,16 +20,17 @@ public class Passwords {
 	}
 
 	public static String checkAndHash(String password, String regex) {
-		check(password, regex);
+		check(password, Optional7.of(regex));
 		return hash(password);
 	}
 
 	public static void check(String password) {
-		check(password, PASSWORD_DEFAULT_REGEX);
+		Optional7<String> none = Optional7.empty();
+		check(password, none);
 	}
 
-	public static void check(String password, String regex) {
-		Check.matchRegex(regex, password, "password");
+	public static void check(String password, Optional7<String> regex) {
+		Check.matchRegex(regex.orElse(PASSWORD_DEFAULT_REGEX), password, "password");
 	}
 
 	public static String random() {
@@ -37,11 +38,10 @@ public class Passwords {
 	}
 
 	/**
-	 * ******* README ******* For now, I use hard coded salt and iteration
-	 * number (1000). If I decide to change this, I have to maintain this algo
-	 * and hard coded values until all password hashed this way are hashed
-	 * another way. Salt and iterations could be saved in datastore close to the
-	 * hashed password.
+	 * ******* README ******* For now, I use hard coded salt and iteration number
+	 * (1000). If I decide to change this, I have to maintain this algo and hard
+	 * coded values until all password hashed this way are hashed another way. Salt
+	 * and iterations could be saved in datastore close to the hashed password.
 	 */
 	public static String hash(String password) {
 		try {

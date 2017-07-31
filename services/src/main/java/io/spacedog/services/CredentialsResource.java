@@ -36,6 +36,7 @@ import io.spacedog.utils.Credentials.Session;
 import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Passwords;
 import io.spacedog.utils.Roles;
 import io.spacedog.utils.SchemaTranslator;
@@ -186,8 +187,8 @@ public class CredentialsResource extends Resource {
 	@Get("/1/credentials/me")
 	@Get("/1/credentials/me/")
 	public Payload getMe(Context context) {
-		String id = SpaceContext.checkUserCredentials().id();
-		return getById(id, context);
+		Credentials credentials = SpaceContext.checkUserCredentials();
+		return JsonPayload.json(credentials.toJson());
 	}
 
 	@Get("/1/credentials/:id")
@@ -252,8 +253,8 @@ public class CredentialsResource extends Resource {
 		if (!Strings.isNullOrEmpty(password)) {
 			// check for all not just users
 			requester.checkPasswordHasBeenChallenged();
-			Passwords.check(password, settings.passwordRegex());
-			credentials.changePassword(password);
+			credentials.changePassword(password, //
+					Optional7.of(settings.passwordRegex()));
 		}
 
 		JsonNode enabled = data.get(FIELD_ENABLED);
@@ -343,8 +344,8 @@ public class CredentialsResource extends Resource {
 
 		Credentials credentials = getById(id, true).get();
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
-		Passwords.check(password, settings.passwordRegex());
-		credentials.changePassword(password, passwordResetCode);
+		credentials.changePassword(password, passwordResetCode, //
+				Optional7.of(settings.passwordRegex()));
 		credentials = update(credentials);
 
 		return saved(credentials, false);
@@ -370,8 +371,7 @@ public class CredentialsResource extends Resource {
 				? Json8.checkString(Json8.checkNotNull(Json8.readNode(body)))//
 				: context.get(FIELD_PASSWORD);
 
-		Passwords.check(password, settings.passwordRegex());
-		credentials.changePassword(password);
+		credentials.changePassword(password, Optional7.of(settings.passwordRegex()));
 
 		credentials = update(credentials);
 		return saved(credentials, false);
@@ -654,7 +654,7 @@ public class CredentialsResource extends Resource {
 		credentials.roles(Type.superdog.name());
 		credentials.email(email);
 		Passwords.check(password);
-		credentials.changePassword(password);
+		credentials.changePassword(password, Optional7.empty());
 		return create(credentials);
 	}
 
@@ -718,10 +718,9 @@ public class CredentialsResource extends Resource {
 
 		if (Strings.isNullOrEmpty(request.password()))
 			credentials.newPasswordResetCode();
-		else {
-			Passwords.check(request.password(), settings.passwordRegex());
-			credentials.changePassword(request.password());
-		}
+		else
+			credentials.changePassword(request.password(), //
+					Optional7.of(settings.passwordRegex()));
 
 		return credentials;
 	}
