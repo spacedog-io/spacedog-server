@@ -3,11 +3,14 @@
  */
 package io.spacedog.watchdog;
 
+import java.util.Set;
+
 import org.joda.time.DateTime;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import com.google.common.collect.Sets;
 
 import io.spacedog.model.CredentialsSettings;
 import io.spacedog.rest.SpaceRequest;
@@ -486,41 +489,64 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
+		SpaceDog test = resetTestBackend().login();
 		SpaceDog fred = signUp(test, "fred", "hi fred");
 
+		// test gets his credentials roles
+		Set<String> roles = test.credentials().getAllRoles(test.id());
+		assertEquals(Sets.newHashSet("admin", "superadmin"), roles);
+
 		// fred gets his credentials roles
-		SpaceRequest.get("/1/credentials/" + fred.id() + "/roles").auth(fred).go(200)//
-				.assertSizeEquals(1)//
-				.assertEquals("user", "0");
+		roles = fred.credentials().getAllRoles(fred.id());
+		assertEquals(Sets.newHashSet("user"), roles);
 
 		// fred fails to set a role since he is no admin
-		SpaceRequest.put("/1/credentials/" + fred.id() + "/roles/silver").auth(fred).go(403);
+		fred.put("/1/credentials/{id}/roles/silver")//
+				.routeParam("id", fred.id()).go(403);
 
 		// admin sets fred's roles
-		SpaceRequest.put("/1/credentials/" + fred.id() + "/roles/silver").auth(test).go(200);
-		SpaceRequest.put("/1/credentials/" + fred.id() + "/roles/gold").auth(test).go(200);
-		SpaceRequest.get("/1/credentials/" + fred.id() + "/roles").auth(test).go(200)//
-				.assertSizeEquals(3)//
-				.assertContains(TextNode.valueOf("user"))//
-				.assertContains(TextNode.valueOf("silver"))//
-				.assertContains(TextNode.valueOf("gold"));
+		test.credentials().setRole(fred.id(), "silver");
+		test.credentials().setRole(fred.id(), "gold");
+		roles = fred.credentials().getAllRoles(fred.id());
+		assertEquals(Sets.newHashSet("user", "silver", "gold"), roles);
 
 		// fred fails to delete one of his roles since he is no admin
-		SpaceRequest.delete("/1/credentials/" + fred.id() + "/roles/silver").auth(fred).go(403);
+		fred.delete("/1/credentials/{id}/roles/silver")//
+				.routeParam("id", fred.id()).go(403);
 
 		// admin deletes one of fred's roles
-		SpaceRequest.delete("/1/credentials/" + fred.id() + "/roles/gold").auth(test).go(200);
-		SpaceRequest.get("/1/credentials/" + fred.id() + "/roles").auth(test).go(200)//
-				.assertSizeEquals(2)//
-				.assertContains(TextNode.valueOf("user"))//
-				.assertContains(TextNode.valueOf("silver"));
+		test.credentials().unsetRole(fred.id(), "gold");
+		roles = fred.credentials().getAllRoles(fred.id());
+		assertEquals(Sets.newHashSet("user", "silver"), roles);
 
 		// admin deletes all fred's roles
-		SpaceRequest.delete("/1/credentials/" + fred.id() + "/roles").auth(test).go(200);
-		SpaceRequest.get("/1/credentials/" + fred.id() + "/roles").auth(fred).go(200)//
-				.assertSizeEquals(1)//
-				.assertEquals("user", "0");
+		test.credentials().unsetAllRoles(fred.id());
+		roles = test.credentials().getAllRoles(fred.id());
+		assertTrue(roles.isEmpty());
+
+		// fred can not access user authorized services
+		// anymore since he's got no roles
+		fred.get("/1/credentials/me").go(403);
+
+		// test super admin gives fred 'admin' role
+		test.credentials().setRole(fred.id(), "admin");
+		roles = fred.credentials().getAllRoles(fred.id());
+		assertEquals(Sets.newHashSet("admin"), roles);
+
+		// fred fails to give himself 'super_admin' role
+		// since he is only admin
+		fred.put("/1/credentials/{id}/roles/superadmin")//
+				.routeParam("id", fred.id()).go(403);
+
+		// fred can now give himself 'user' role
+		fred.credentials().setRole(fred.id(), "user");
+		roles = fred.credentials().getAllRoles(fred.id());
+		assertEquals(Sets.newHashSet("user", "admin"), roles);
+
+		// test super admin fails to give himself 'superdog' role
+		// since he is only super admin
+		test.put("/1/credentials/{id}/roles/superdog")//
+				.routeParam("id", test.id()).go(403);
 	}
 
 	@Test
