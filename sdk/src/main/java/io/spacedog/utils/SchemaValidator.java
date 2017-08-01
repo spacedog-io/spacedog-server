@@ -90,17 +90,19 @@ public class SchemaValidator {
 	}
 
 	private static void checkCommonDirectives(JsonNode propertySchema) {
-		checkField(propertySchema, "_required", false, JsonType.BOOLEAN);
-		checkField(propertySchema, "_array", false, JsonType.BOOLEAN);
-		checkField(propertySchema, "_extra", false, JsonType.OBJECT);
-		checkField(propertySchema, "_values", false, JsonType.ARRAY);
-		checkField(propertySchema, "_examples", false, JsonType.ARRAY);
-		checkField(propertySchema, "_language", false, JsonType.STRING);
+		checkField(propertySchema, SchemaBuilder._REQUIRED, false, JsonType.BOOLEAN);
+		checkField(propertySchema, SchemaBuilder._ARRAY, false, JsonType.BOOLEAN);
+		checkField(propertySchema, SchemaBuilder._EXTRA, false, JsonType.OBJECT);
+		checkField(propertySchema, SchemaBuilder._VALUES, false, JsonType.ARRAY);
+		checkField(propertySchema, SchemaBuilder._EXAMPLES, false, JsonType.ARRAY);
+		checkField(propertySchema, SchemaBuilder._LANGUAGE, false, JsonType.STRING);
 		checkField(propertySchema, "_gt", false, JsonType.NUMBER);
 		checkField(propertySchema, "_gte", false, JsonType.NUMBER);
 		checkField(propertySchema, "_lt", false, JsonType.NUMBER);
 		checkField(propertySchema, "_lte", false, JsonType.NUMBER);
 		checkField(propertySchema, "_pattern", false, JsonType.STRING);
+		checkField(propertySchema, SchemaBuilder._LABELS, false, JsonType.OBJECT);
+		checkField(propertySchema, SchemaBuilder._REF_TYPE, false, JsonType.STRING);
 	}
 
 	private static void checkNoFields(String propertyName, JsonNode propertySchema) throws SchemaException {

@@ -131,23 +131,26 @@ public class SchemaResourceTestOften extends SpaceTest {
 	}
 
 	@Test
-	public void saveCustomerExtraDataInSchema() {
+	public void saveMetaDataInSchema() {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
+		SpaceDog superadmin = resetTestBackend();
 
-		Schema schema = Schema.builder("home") //
+		Schema schemaClient = Schema.builder("home") //
 				.extra("global-scope", true)//
 				.enumm("type").required().extra("global-scope", false)//
 				.object("address").required().extra("global-scope", false)//
 				.text("street").required().extra("global-scope", false) //
+				.string("owner").required().refType("user")//
 				.build();
 
-		test.schema().set(schema);
+		superadmin.schema().set(schemaClient);
 
-		SpaceRequest.get("/1/schema/home").backend(test).go(200)//
-				.assertEquals(schema.node());
+		// superadmin gets the schema from backend
+		// and check it is unchanged
+		Schema schemaServer = superadmin.schema().get(schemaClient.name());
+		assertEquals(schemaClient, schemaServer);
 	}
 
 	@Test

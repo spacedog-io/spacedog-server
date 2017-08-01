@@ -118,5 +118,18 @@ public class Schema {
 		}
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null || name == null || node == null)
+			return false;
+		if (this == obj)
+			return true;
+		if (obj instanceof Schema) {
+			Schema other = (Schema) obj;
+			return name.equals(other.name) && node.equals(other.node);
+		}
+		return false;
+	}
+
 	private static Set<String> reservedNames = Sets.newHashSet("settings");
 }

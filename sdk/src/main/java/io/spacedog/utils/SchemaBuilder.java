@@ -13,6 +13,17 @@ import io.spacedog.model.Schema.SchemaAcl;
 
 public class SchemaBuilder {
 
+	public static final String _LABELS = "_labels";
+	public static final String _ENUM_TYPE = "_enumType";
+	public static final String _EXTRA = "_extra";
+	public static final String _EXAMPLES = "_examples";
+	public static final String _VALUES = "_values";
+	public static final String _REQUIRED = "_required";
+	public static final String _ARRAY = "_array";
+	public static final String _ACL = "_acl";
+	public static final String _LANGUAGE = "_language";
+	public static final String _REF_TYPE = "_ref_type";
+
 	public static SchemaBuilder builder(String type) {
 		return new SchemaBuilder(type);
 	}
@@ -82,7 +93,7 @@ public class SchemaBuilder {
 	public Schema build() {
 		ObjectNode node = builder.build();
 		if (acl != null)
-			node.with(name).set("_acl", Json7.mapper().valueToTree(acl));
+			node.with(name).set(_ACL, Json7.mapper().valueToTree(acl));
 		return new Schema(name, node);
 	}
 
@@ -106,26 +117,26 @@ public class SchemaBuilder {
 
 	public SchemaBuilder array() {
 		checkCurrentPropertyExists();
-		checkCurrentPropertyByInvalidTypes("_array", SchemaType.STASH);
-		builder.put("_array", true);
+		checkCurrentPropertyByInvalidTypes(_ARRAY, SchemaType.STASH);
+		builder.put(_ARRAY, true);
 		return this;
 	}
 
 	public SchemaBuilder required() {
 		checkCurrentPropertyExists();
-		builder.put("_required", true);
+		builder.put(_REQUIRED, true);
 		return this;
 	}
 
 	public SchemaBuilder values(Object... values) {
 		checkCurrentPropertyExists();
-		builder.array("_values").addAll(Arrays.asList(values)).end();
+		builder.array(_VALUES).addAll(Arrays.asList(values)).end();
 		return this;
 	}
 
 	public SchemaBuilder examples(Object... examples) {
 		checkCurrentPropertyExists();
-		builder.array("_examples").addAll(Arrays.asList(examples)).end();
+		builder.array(_EXAMPLES).addAll(Arrays.asList(examples)).end();
 		return this;
 	}
 
@@ -139,8 +150,15 @@ public class SchemaBuilder {
 
 	public SchemaBuilder language(String language) {
 		checkCurrentPropertyExists();
-		checkCurrentPropertyByValidType("_language", SchemaType.TEXT);
-		builder.put("_language", language);
+		checkCurrentPropertyByValidType(_LANGUAGE, SchemaType.TEXT);
+		builder.put(_LANGUAGE, language);
+		return this;
+	}
+
+	public SchemaBuilder refType(String type) {
+		checkCurrentPropertyExists();
+		checkCurrentPropertyByValidType(_REF_TYPE, SchemaType.STRING);
+		builder.put(_REF_TYPE, type);
 		return this;
 	}
 
@@ -149,17 +167,17 @@ public class SchemaBuilder {
 	}
 
 	public SchemaBuilder extra(ObjectNode extra) {
-		builder.node("_extra", extra);
+		builder.node(_EXTRA, extra);
 		return this;
 	}
 
 	public SchemaBuilder enumType(String type) {
-		builder.put("_enumType", type);
+		builder.put(_ENUM_TYPE, type);
 		return this;
 	}
 
 	public SchemaBuilder labels(String... labels) {
-		builder.node("_label", Json7.object(//
+		builder.node(_LABELS, Json7.object(//
 				Arrays.copyOf(labels, labels.length, Object[].class)));
 		return this;
 	}
