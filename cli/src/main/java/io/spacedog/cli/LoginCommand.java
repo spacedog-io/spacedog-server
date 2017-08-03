@@ -68,7 +68,9 @@ public class LoginCommand extends AbstractCommand<LoginCommand> {
 		session = SpaceDog.backend(backend)//
 				.username(username).login(password);
 
-		Path path = Paths.get(userHome, ".spacedog.properties");
+		Path path = Paths.get(userHome, ".spacedog");
+		Files.createDirectory(path);
+		path = path.resolve("cli.properties");
 
 		Properties properties = new Properties();
 		properties.put("backend", backend);
