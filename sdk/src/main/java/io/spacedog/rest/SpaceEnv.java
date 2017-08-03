@@ -153,12 +153,15 @@ public class SpaceEnv {
 
 	private static InputStream tryCustomConfigurationPath() throws FileNotFoundException {
 		String path = System.getProperty(SPACEDOG_CONFIGURATION_PATH);
-		if (!Strings.isNullOrEmpty(path)) {
-			File file = new File(path);
-			if (file.isFile())
-				return new FileInputStream(file);
-		}
-		return null;
+		if (Strings.isNullOrEmpty(path))
+			return null;
+
+		File file = new File(path);
+		if (file.isFile())
+			return new FileInputStream(file);
+
+		throw Exceptions.illegalArgument(//
+				"SpaceDog configuration file [%s] not found", path);
 	}
 
 	private static InputStream tryDefaultConfigurationPaths() throws FileNotFoundException {
@@ -173,9 +176,12 @@ public class SpaceEnv {
 				return new FileInputStream(file);
 		}
 
-		file = new File(userHome, ".spacedog.properties");
-		if (file.isFile())
-			return new FileInputStream(file);
+		file = new File(userHome, ".spacedog");
+		if (file.isDirectory()) {
+			file = new File(file, "spacedog.properties");
+			if (file.isFile())
+				return new FileInputStream(file);
+		}
 
 		return null;
 	}
