@@ -47,8 +47,6 @@ public class ServerConfiguration {
 		this.env = env;
 		this.log();
 
-		// checkPath(SPACEDOG_CONFIGURATION_FILE, configFilePath(), false);
-
 		if (isProduction()) {
 			// Force Fluent HTTP to production mode
 			System.setProperty("PROD_MODE", "true");
@@ -73,12 +71,20 @@ public class ServerConfiguration {
 				.append(backendId).append(apiUrlBase()).toString();
 	}
 
+	private String apiUrlBase;
+
 	public String apiUrlBase() {
-		return env.getOrElseThrow(SPACEDOG_API_URL_BASE);
+		if (apiUrlBase == null)
+			apiUrlBase = env.getOrElseThrow(SPACEDOG_API_URL_BASE);
+		return apiUrlBase;
 	}
 
+	private String apiUrlScheme;
+
 	public String apiUrlScheme() {
-		return env.get(SPACEDOG_API_URL_SCHEME, "http");
+		if (apiUrlScheme == null)
+			apiUrlScheme = env.get(SPACEDOG_API_URL_SCHEME, "http");
+		return apiUrlScheme;
 	}
 
 	public int serverPort() {
@@ -153,8 +159,7 @@ public class ServerConfiguration {
 	}
 
 	public void log() {
-		Utils.info();
-		Utils.info("Server configuration =");
+		Utils.info("[SpaceDog] Server configuration =");
 
 		log("API URL", apiUrl());
 		log(SPACEDOG_SERVER_PORT, serverPort());

@@ -2,7 +2,6 @@ package io.spacedog.rest;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map.Entry;
@@ -101,8 +100,7 @@ public class SpaceEnv {
 	}
 
 	public void log() {
-		Utils.info();
-		Utils.info("Env =");
+		Utils.info("[SpaceDog] Env =");
 		for (Entry<Object, Object> property : properties.entrySet())
 			Utils.info("-- %s: %s", property.getKey(), property.getValue());
 	}
@@ -118,53 +116,33 @@ public class SpaceEnv {
 	public static SpaceEnv defaultEnv() {
 		if (defaultEnv == null) {
 
-			InputStream input = null;
+			Properties properties = tryCustomConfigurationPath();
 
-			try {
-				input = tryCustomConfigurationPath();
+			if (properties == null)
+				properties = tryDefaultConfigurationPaths();
 
-				if (input == null)
-					input = tryDefaultConfigurationPaths();
+			defaultEnv = new SpaceEnv(properties);
 
-				Properties properties = new Properties();
-				if (input != null)
-					properties.load(input);
-
-				defaultEnv = new SpaceEnv(properties);
-
-				if (defaultEnv.debug())
-					defaultEnv.log();
-
-			} catch (IOException e) {
-				throw Exceptions.runtime(e, "error loading env properties");
-			} finally {
-				if (input != null)
-					try {
-						input.close();
-					} catch (IOException ignore) {
-						ignore.printStackTrace();
-					}
-			}
-
+			if (defaultEnv.debug())
+				defaultEnv.log();
 		}
-
 		return defaultEnv;
 	}
 
-	private static InputStream tryCustomConfigurationPath() throws FileNotFoundException {
+	private static Properties tryCustomConfigurationPath() {
 		String path = System.getProperty(SPACEDOG_CONFIGURATION_PATH);
 		if (Strings.isNullOrEmpty(path))
 			return null;
 
 		File file = new File(path);
 		if (file.isFile())
-			return new FileInputStream(file);
+			return loadProperties(file);
 
 		throw Exceptions.illegalArgument(//
 				"SpaceDog configuration file [%s] not found", path);
 	}
 
-	private static InputStream tryDefaultConfigurationPaths() throws FileNotFoundException {
+	private static Properties tryDefaultConfigurationPaths() {
 		String userHome = System.getProperty("user.home");
 		if (Strings.isNullOrEmpty(userHome))
 			return null;
@@ -173,17 +151,37 @@ public class SpaceEnv {
 		if (file.isDirectory()) {
 			file = new File(file, "spacedog.properties");
 			if (file.isFile())
-				return new FileInputStream(file);
+				return loadProperties(file);
 		}
 
 		file = new File(userHome, ".spacedog");
 		if (file.isDirectory()) {
 			file = new File(file, "spacedog.properties");
 			if (file.isFile())
-				return new FileInputStream(file);
+				return loadProperties(file);
 		}
 
 		return null;
 	}
 
+	private static Properties loadProperties(File file) {
+		InputStream input = null;
+		try {
+			Utils.info("[SpaceDog] Loading configuration from [%s]", file);
+			input = new FileInputStream(file);
+			Properties properties = new Properties();
+			properties.load(input);
+			return properties;
+
+		} catch (IOException e) {
+			throw Exceptions.runtime(e, "error loading env properties");
+		} finally {
+			if (input != null)
+				try {
+					input.close();
+				} catch (IOException ignore) {
+					ignore.printStackTrace();
+				}
+		}
+	}
 }
