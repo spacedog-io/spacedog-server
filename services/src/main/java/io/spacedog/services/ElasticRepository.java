@@ -35,9 +35,9 @@ class ElasticRepository implements Comparable<ElasticRepository> {
 	private ElasticRepository(String id) {
 		ServerConfiguration conf = Start.get().configuration();
 
-		if (conf.snapshotsPath().isPresent()) {
+		if (conf.elasticSnapshotsPath().isPresent()) {
 
-			Path location = conf.snapshotsPath().get().resolve(id);
+			Path location = conf.elasticSnapshotsPath().get().resolve(id);
 
 			try {
 				Files.createDirectories(location);

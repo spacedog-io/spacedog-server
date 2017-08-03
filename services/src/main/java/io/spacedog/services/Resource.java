@@ -56,7 +56,7 @@ public abstract class Resource implements SpaceFields, SpaceParams {
 	}
 
 	public static String getBucketName(String bucketSuffix) {
-		return Start.get().configuration().getAwsBucketPrefix() + bucketSuffix;
+		return Start.get().configuration().awsBucketPrefix() + bucketSuffix;
 	}
 
 	public static FormQuery formQuery(Context context) {

@@ -156,7 +156,7 @@ public class Start {
 				// when a temporary second node appears
 				.put("cluster.routing.rebalance.enable", "none")//
 				.put("http.enabled", //
-						config.isElasticHttpEnabled())//
+						config.elasticIsHttpEnabled())//
 				.put("network.host", //
 						config.elasticNetworkHost())//
 				.put("path.home", //
@@ -164,9 +164,9 @@ public class Start {
 				.put("path.data", //
 						config.elasticDataPath().toAbsolutePath().toString());
 
-		if (config.snapshotsPath().isPresent())
+		if (config.elasticSnapshotsPath().isPresent())
 			builder.put("path.repo", //
-					config.snapshotsPath().get().toAbsolutePath().toString());
+					config.elasticSnapshotsPath().get().toAbsolutePath().toString());
 
 		elasticNode = new ElasticNode(builder.build(), //
 				DeleteByQueryPlugin.class, //
