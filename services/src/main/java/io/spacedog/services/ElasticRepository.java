@@ -19,6 +19,8 @@ import io.spacedog.utils.Exceptions;
 
 class ElasticRepository implements Comparable<ElasticRepository> {
 
+	private static final String BUCKET_SUFFIX = "snapshots";
+
 	// using xxxx for week year and ww for week number
 	// yyyy doesn't work well between weeks 52 and 01
 	private static final DateTimeFormatter repositoryIdFormatter = DateTimeFormat//
@@ -31,7 +33,7 @@ class ElasticRepository implements Comparable<ElasticRepository> {
 	}
 
 	private ElasticRepository(String id) {
-		StartConfiguration conf = Start.get().configuration();
+		ServerConfiguration conf = Start.get().configuration();
 
 		if (conf.snapshotsPath().isPresent()) {
 
@@ -54,12 +56,9 @@ class ElasticRepository implements Comparable<ElasticRepository> {
 
 		} else {
 
-			String awsRegion = conf.awsRegion().orElseThrow(//
-					() -> Exceptions.runtime("no AWS region configuration"));
-
 			Settings settings = Settings.builder()//
-					.put("bucket", SnapshotResource.getBucketName(SnapshotResource.BUCKET_SUFFIX))//
-					.put("region", awsRegion)//
+					.put("bucket", Resource.getBucketName(BUCKET_SUFFIX))//
+					.put("region", conf.awsRegion())//
 					.put("base_path", id)//
 					.put("compress", true)//
 					.build();

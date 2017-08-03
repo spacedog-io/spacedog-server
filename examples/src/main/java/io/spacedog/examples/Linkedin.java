@@ -183,8 +183,8 @@ public class Linkedin extends SpaceTest {
 		SpaceEnv env = SpaceEnv.defaultEnv();
 		CredentialsSettings settings = new CredentialsSettings();
 		settings.disableGuestSignUp = disableGuestSignUp;
-		settings.linkedinId = env.get("spacedog.test.linkedin.client.id");
-		settings.linkedinSecret = env.get("spacedog.test.linkedin.client.secret");
+		settings.linkedinId = env.getOrElseThrow("spacedog.test.linkedin.client.id");
+		settings.linkedinSecret = env.getOrElseThrow("spacedog.test.linkedin.client.secret");
 		settings.linkedinFinalRedirectUri = env.target().url(backend.backendId());
 		return settings;
 	}

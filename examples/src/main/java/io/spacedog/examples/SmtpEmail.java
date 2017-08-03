@@ -39,8 +39,8 @@ public class SmtpEmail extends Assert {
 		SMTPTransport t = (SMTPTransport) session.getTransport("smtps");
 		SpaceEnv env = SpaceEnv.defaultEnv();
 		t.connect("mail.gandi.net", //
-				env.get("spacedog.test.smtp.login"), //
-				env.get("spacedog.test.smtp.password"));
+				env.getOrElseThrow("spacedog.test.smtp.login"), //
+				env.getOrElseThrow("spacedog.test.smtp.password"));
 		t.sendMessage(msg, msg.getAllRecipients());
 		System.out.println("Response: " + t.getLastServerResponse());
 		t.close();
@@ -76,8 +76,8 @@ public class SmtpEmail extends Assert {
 
 		// send the email
 		SpaceEnv env = SpaceEnv.defaultEnv();
-		email.setAuthentication(env.get("spacedog.test.smtp.login"), //
-				env.get("spacedog.test.smtp.password"));
+		email.setAuthentication(env.getOrElseThrow("spacedog.test.smtp.login"), //
+				env.getOrElseThrow("spacedog.test.smtp.password"));
 		email.setStartTLSRequired(false);
 		email.setSSLOnConnect(true);
 		email.send();

@@ -40,7 +40,7 @@ public class Start {
 	private Node elasticNode;
 	private ElasticClient elastic;
 	private MyFluentServer fluent;
-	private StartConfiguration config;
+	private ServerConfiguration config;
 	private Info info;
 
 	public Node getElasticNode() {
@@ -51,7 +51,7 @@ public class Start {
 		return elastic;
 	}
 
-	public StartConfiguration configuration() {
+	public ServerConfiguration configuration() {
 		return config;
 	}
 
@@ -264,6 +264,6 @@ public class Start {
 	}
 
 	private Start() {
-		this.config = new StartConfiguration();
+		this.config = new ServerConfiguration();
 	}
 }

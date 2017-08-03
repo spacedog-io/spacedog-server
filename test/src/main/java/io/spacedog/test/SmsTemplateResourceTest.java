@@ -43,9 +43,9 @@ public class SmsTemplateResourceTest extends SpaceTest {
 		SmsSettings settings = new SmsSettings();
 		settings.twilio = new TwilioSettings();
 		SpaceEnv env = SpaceEnv.defaultEnv();
-		settings.twilio.accountSid = env.get("caremen.twilio.accountSid");
-		settings.twilio.authToken = env.get("caremen.twilio.authToken");
-		settings.twilio.defaultFrom = env.get("caremen.twilio.defaultFrom");
+		settings.twilio.accountSid = env.getOrElseThrow("caremen.twilio.accountSid");
+		settings.twilio.authToken = env.getOrElseThrow("caremen.twilio.authToken");
+		settings.twilio.defaultFrom = env.getOrElseThrow("caremen.twilio.defaultFrom");
 
 		// prepare 'hello' SMS template
 		SmsTemplate template = new SmsTemplate();

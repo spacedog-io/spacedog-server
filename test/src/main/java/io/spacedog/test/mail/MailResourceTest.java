@@ -83,8 +83,8 @@ public class MailResourceTest extends SpaceTest {
 		settings.smtp.host = "mail.gandi.net";
 		settings.smtp.startTlsRequired = false;
 		settings.smtp.sslOnConnect = true;
-		settings.smtp.login = SpaceEnv.defaultEnv().get("spacedog.test.smtp.login");
-		settings.smtp.password = SpaceEnv.defaultEnv().get("spacedog.test.smtp.password");
+		settings.smtp.login = SpaceEnv.defaultEnv().getOrElseThrow("spacedog.test.smtp.login");
+		settings.smtp.password = SpaceEnv.defaultEnv().getOrElseThrow("spacedog.test.smtp.password");
 		test.settings().save(settings);
 
 		// load your HTML email template

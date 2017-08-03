@@ -54,9 +54,9 @@ public class SmsResourceTest extends SpaceTest {
 		// superadmin sets twilio settings
 		SpaceEnv env = SpaceEnv.defaultEnv();
 		settings.twilio = new TwilioSettings();
-		settings.twilio.accountSid = env.get("caremen.twilio.accountSid");
-		settings.twilio.authToken = env.get("caremen.twilio.authToken");
-		settings.twilio.defaultFrom = env.get("caremen.twilio.defaultFrom");
+		settings.twilio.accountSid = env.getOrElseThrow("caremen.twilio.accountSid");
+		settings.twilio.authToken = env.getOrElseThrow("caremen.twilio.authToken");
+		settings.twilio.defaultFrom = env.getOrElseThrow("caremen.twilio.defaultFrom");
 		test.settings().save(settings);
 
 		// vince sends an sms

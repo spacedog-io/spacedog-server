@@ -21,8 +21,8 @@ public class LafargeCesio extends SpaceTest {
 		env.target(SpaceTarget.production);
 
 		SpaceDog backend = SpaceDog.backend("cesio")//
-				.username(env.get("spacedog.cesio.superadmin.username"))//
-				.password(env.get("spacedog.cesio.superadmin.password"));
+				.username(env.getOrElseThrow("spacedog.cesio.superadmin.username"))//
+				.password(env.getOrElseThrow("spacedog.cesio.superadmin.password"));
 
 		// resetBackend(backend);
 		// resetSchema(LafargeCesioResource.playerSchema(), backend);
@@ -32,9 +32,9 @@ public class LafargeCesio extends SpaceTest {
 		settings.smtp = new SmtpSettings();
 		settings.smtp.startTlsRequired = true;
 		settings.smtp.sslOnConnect = true;
-		settings.smtp.host = env.get("spacedog.cesio.smtp.host");
-		settings.smtp.login = env.get("spacedog.cesio.smtp.login");
-		settings.smtp.password = env.get("spacedog.cesio.smtp.password");
+		settings.smtp.host = env.getOrElseThrow("spacedog.cesio.smtp.host");
+		settings.smtp.login = env.getOrElseThrow("spacedog.cesio.smtp.login");
+		settings.smtp.password = env.getOrElseThrow("spacedog.cesio.smtp.password");
 
 		backend.settings().save(settings);
 	}

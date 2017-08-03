@@ -13,7 +13,7 @@ public class AdminJobsCredentials extends SpaceTest {
 	@Test
 	public void initPurgeAllCredentials() {
 		SpaceEnv.defaultEnv().target(SpaceTarget.production);
-		String password = SpaceEnv.defaultEnv().get("spacedog_jobs_purgeall_password");
+		String password = SpaceEnv.defaultEnv().getOrElseThrow("spacedog_jobs_purgeall_password");
 		initCredentials(LogResource.PURGE_ALL, password, LogResource.PURGE_ALL);
 	}
 
@@ -21,7 +21,7 @@ public class AdminJobsCredentials extends SpaceTest {
 	public void initSnapshotAllCredentials() {
 
 		SpaceEnv.defaultEnv().target(SpaceTarget.production);
-		String password = SpaceEnv.defaultEnv().get("spacedog_jobs_snapshotall_password");
+		String password = SpaceEnv.defaultEnv().getOrElseThrow("spacedog_jobs_snapshotall_password");
 		initCredentials(SnapshotResource.SNAPSHOT_ALL, password, SnapshotResource.SNAPSHOT_ALL);
 	}
 

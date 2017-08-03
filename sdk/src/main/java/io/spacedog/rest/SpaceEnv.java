@@ -2,6 +2,7 @@ package io.spacedog.rest;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map.Entry;
@@ -10,6 +11,7 @@ import java.util.Properties;
 import com.google.common.base.Strings;
 
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Utils;
 
 public class SpaceEnv {
@@ -25,7 +27,7 @@ public class SpaceEnv {
 	}
 
 	public String superdogNotificationTopic() {
-		return get("spacedog_superdog_notification_topic");
+		return getOrElseThrow("spacedog_superdog_notification_topic");
 	}
 
 	public boolean debug() {
@@ -56,80 +58,73 @@ public class SpaceEnv {
 	// Generic public methods
 	//
 
+	public Optional7<String> getFromSystem(String propertyName) {
+		String value = System.getenv(propertyName);
+		if (value == null)
+			value = System.getProperty(propertyName);
+		return Optional7.ofNullable(value);
+	}
+
+	public Optional7<String> get(String propertyName) {
+		Optional7<String> value = getFromSystem(propertyName);
+		return value.isPresent() ? value //
+				: Optional7.ofNullable(properties.getProperty(propertyName));
+	}
+
+	public String getOrElseThrow(String propertyName) {
+		Optional7<String> optional = get(propertyName);
+		if (optional.isPresent())
+			return optional.get();
+		throw Exceptions.illegalState("env property [%s] not found", propertyName);
+	}
+
 	public void set(String propertyName, String propertyValue) {
 		properties.setProperty(propertyName, propertyValue);
 	}
 
 	public String get(String propertyName, String defaultValue) {
-		String value = doGet(propertyName);
-		return value == null ? defaultValue : value;
-	}
-
-	public String get(String propertyName) {
-		String value = doGet(propertyName);
-		if (value == null)
-			throw Exceptions.runtime("env property [%s] not set", propertyName);
-		return value;
+		return get(propertyName).orElse(defaultValue);
 	}
 
 	public boolean get(String propertyName, boolean defaultValue) {
-		String value = doGet(propertyName);
-		return (value == null) ? defaultValue : Boolean.parseBoolean(value);
+		Optional7<String> value = get(propertyName);
+		return value.isPresent() //
+				? Boolean.parseBoolean(value.get())
+				: defaultValue;
 	}
 
 	public int get(String propertyName, int defaultValue) {
-		String value = doGet(propertyName);
-		return value == null ? defaultValue : Integer.parseInt(value);
+		Optional7<String> value = get(propertyName);
+		return value.isPresent() //
+				? Integer.parseInt(value.get())
+				: defaultValue;
 	}
 
 	public void log() {
+		Utils.info();
 		Utils.info("Env =");
-		// properties.forEach((key, value) -> Utils.info("-- %s: %s", key,
-		// value));
 		for (Entry<Object, Object> property : properties.entrySet())
 			Utils.info("-- %s: %s", property.getKey(), property.getValue());
 	}
 
 	//
-	// Implementation
+	// Default env singleton
 	//
 
-	private String doGet(String propertyName) {
-		String value = System.getenv(propertyName);
-		if (value == null)
-			value = System.getProperty(propertyName);
-		if (value == null)
-			value = properties.getProperty(propertyName);
-		return value;
-	}
-
-	//
-	// Singleton
-	//
+	private static final String SPACEDOG_CONFIGURATION_PATH = "spacedog.configuration.path";
 
 	private static SpaceEnv defaultEnv;
 
 	public static SpaceEnv defaultEnv() {
 		if (defaultEnv == null) {
 
+			InputStream input = null;
+
 			try {
-				InputStream input = null;
-				String userHome = System.getProperty("user.home");
+				input = tryCustomConfigurationPath();
 
-				if (!Strings.isNullOrEmpty(userHome)) {
-					File file = new File(userHome, "spacedog");
-					if (file.isDirectory()) {
-						file = new File(file, "spacedog.client.properties");
-						if (file.exists())
-							input = new FileInputStream(file);
-					}
-
-					if (input == null) {
-						file = new File(userHome, ".spacedog.client.properties");
-						if (file.exists())
-							input = new FileInputStream(file);
-					}
-				}
+				if (input == null)
+					input = tryDefaultConfigurationPaths();
 
 				Properties properties = new Properties();
 				if (input != null)
@@ -142,10 +137,47 @@ public class SpaceEnv {
 
 			} catch (IOException e) {
 				throw Exceptions.runtime(e, "error loading env properties");
+			} finally {
+				if (input != null)
+					try {
+						input.close();
+					} catch (IOException ignore) {
+						ignore.printStackTrace();
+					}
 			}
 
 		}
 
 		return defaultEnv;
 	}
+
+	private static InputStream tryCustomConfigurationPath() throws FileNotFoundException {
+		String path = System.getProperty(SPACEDOG_CONFIGURATION_PATH);
+		if (!Strings.isNullOrEmpty(path)) {
+			File file = new File(path);
+			if (file.isFile())
+				return new FileInputStream(file);
+		}
+		return null;
+	}
+
+	private static InputStream tryDefaultConfigurationPaths() throws FileNotFoundException {
+		String userHome = System.getProperty("user.home");
+		if (Strings.isNullOrEmpty(userHome))
+			return null;
+
+		File file = new File(userHome, "spacedog");
+		if (file.isDirectory()) {
+			file = new File(file, "spacedog.properties");
+			if (file.isFile())
+				return new FileInputStream(file);
+		}
+
+		file = new File(userHome, ".spacedog.properties");
+		if (file.isFile())
+			return new FileInputStream(file);
+
+		return null;
+	}
+
 }

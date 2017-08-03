@@ -30,8 +30,8 @@ public class LinkedinResourceTest extends SpaceTest {
 
 		// admin sets linkedin settings without redirect uri
 		CredentialsSettings settings = new CredentialsSettings();
-		settings.linkedinId = env.get("spacedog.test.linkedin.client.id");
-		settings.linkedinSecret = env.get("spacedog.test.linkedin.client.secret");
+		settings.linkedinId = env.getOrElseThrow("spacedog.test.linkedin.client.id");
+		settings.linkedinSecret = env.getOrElseThrow("spacedog.test.linkedin.client.secret");
 		test.settings().save(settings);
 
 		// fails to create linkedin credentials if no authorization code

@@ -24,7 +24,7 @@ public class Snapshot extends Job {
 			env.httpTimeoutMillis(120000);
 
 			SpaceDog snapshotDog = SpaceDog.backend("api").username("snapshotall")//
-					.password(env.get("spacedog_jobs_snapshotall_password"));
+					.password(env.getOrElseThrow("spacedog_jobs_snapshotall_password"));
 
 			snapshotDog.post("/1/snapshot").go(202);
 

@@ -60,8 +60,8 @@ public class MailTemplateResourceTest extends SpaceTest {
 		mailSettings.smtp.host = "mail.gandi.net";
 		mailSettings.smtp.startTlsRequired = false;
 		mailSettings.smtp.sslOnConnect = true;
-		mailSettings.smtp.login = SpaceEnv.defaultEnv().get("spacedog.test.smtp.login");
-		mailSettings.smtp.password = SpaceEnv.defaultEnv().get("spacedog.test.smtp.password");
+		mailSettings.smtp.login = SpaceEnv.defaultEnv().getOrElseThrow("spacedog.test.smtp.login");
+		mailSettings.smtp.password = SpaceEnv.defaultEnv().getOrElseThrow("spacedog.test.smtp.password");
 
 		// set the demande mail template
 		mailSettings.templates = Maps.newHashMap();

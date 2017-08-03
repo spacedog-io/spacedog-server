@@ -36,8 +36,8 @@ public class CredentialsResourceTest extends SpaceTest {
 		test.login();
 		test2.login();
 		SpaceDog superdog = SpaceDog.backend("api")//
-				.username(SpaceEnv.defaultEnv().get("spacedog.superdog.username")) //
-				.login(SpaceEnv.defaultEnv().get("spacedog.superdog.password"));
+				.username(SpaceEnv.defaultEnv().getOrElseThrow("spacedog.superdog.username")) //
+				.login(SpaceEnv.defaultEnv().getOrElseThrow("spacedog.superdog.password"));
 
 		// forbidden to delete superadmin if last superadmin of backend
 		SpaceRequest.delete("/1/credentials/" + test.id()).auth(test).go(403);
@@ -77,8 +77,8 @@ public class CredentialsResourceTest extends SpaceTest {
 
 		// superdog logs in with the root backend
 		SpaceDog apiSuperdog = SpaceDog.backend("api")//
-				.username(env.get("spacedog.superdog.username")) //
-				.login(env.get("spacedog.superdog.password"));
+				.username(env.getOrElseThrow("spacedog.superdog.username")) //
+				.login(env.getOrElseThrow("spacedog.superdog.password"));
 		String apiToken = apiSuperdog.accessToken().get();
 
 		// superdog can access anything in any backend
@@ -89,8 +89,8 @@ public class CredentialsResourceTest extends SpaceTest {
 
 		// superdog logs with the "test" backend
 		SpaceDog testSuperdog = SpaceDog.backend("test")//
-				.username(env.get("spacedog.superdog.username")) //
-				.login(env.get("spacedog.superdog.password"));
+				.username(env.getOrElseThrow("spacedog.superdog.username")) //
+				.login(env.getOrElseThrow("spacedog.superdog.password"));
 		String testToken = testSuperdog.accessToken().get();
 		assertNotEquals(testToken, apiToken);
 

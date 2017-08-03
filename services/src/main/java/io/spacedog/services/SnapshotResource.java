@@ -30,7 +30,6 @@ import net.codestory.http.payload.Payload;
 public class SnapshotResource extends Resource {
 
 	public static final String SNAPSHOT_ALL = "snapshotall";
-	static final String BUCKET_SUFFIX = "snapshots";
 
 	//
 	// routes
