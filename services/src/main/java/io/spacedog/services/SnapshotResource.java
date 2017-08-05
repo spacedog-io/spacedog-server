@@ -14,7 +14,6 @@ import org.elasticsearch.snapshots.RestoreInfo;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.rest.SpaceBackend;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.JsonBuilder;
@@ -100,8 +99,7 @@ public class SnapshotResource extends Resource {
 
 		JsonBuilder<ObjectNode> payload = JsonPayload.builder(status)//
 				.put("id", snapshot.id())//
-				.put("location", spaceUrl(SpaceBackend.defaultBackendId(), //
-						"/1", "snapshot", snapshot.id()).toString());
+				.put("location", spaceUrl("/1", "snapshot", snapshot.id()).toString());
 
 		if (response.getSnapshotInfo() != null) {
 			snapshot.info(response.getSnapshotInfo());
@@ -160,8 +158,7 @@ public class SnapshotResource extends Resource {
 	}
 
 	private boolean isSnapshotAll(Credentials credentials) {
-		return credentials.isTargetingRootApi() //
-				&& credentials.roles().contains(SNAPSHOT_ALL);
+		return credentials.roles().contains(SNAPSHOT_ALL);
 	}
 
 	private Payload doRestore(ElasticSnapshot snapshot, boolean waitForCompletion) {
@@ -178,7 +175,7 @@ public class SnapshotResource extends Resource {
 		// delete all indices of all backends before restore
 		// this is prefered to a close operation
 		// because it remove indices not present in restored snapshot
-		elastic().deleteAllIndices();
+		elastic().deleteBackendAllIndices();
 
 		RestoreInfo restore = elastic().cluster()//
 				.prepareRestoreSnapshot(snapshot.repositoryId(), snapshot.id())//

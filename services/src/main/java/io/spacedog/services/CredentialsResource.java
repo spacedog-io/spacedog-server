@@ -10,6 +10,7 @@ import java.util.Optional;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
@@ -29,7 +30,6 @@ import io.spacedog.model.CreateCredentialsRequest;
 import io.spacedog.model.CredentialsSettings;
 import io.spacedog.model.MailTemplate;
 import io.spacedog.model.Schema;
-import io.spacedog.rest.SpaceBackend;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Session;
@@ -39,8 +39,6 @@ import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Passwords;
 import io.spacedog.utils.Roles;
-import io.spacedog.utils.SchemaTranslator;
-import io.spacedog.utils.SchemaValidator;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Usernames;
 import io.spacedog.utils.Utils;
@@ -54,29 +52,42 @@ import net.codestory.http.payload.Payload;
 
 public class CredentialsResource extends Resource {
 
-	private static final String FORGOT_PASSWORD_MAIL_TEMPLATE_NAME = "forgotPassword";
 	public static final String TYPE = "credentials";
+	public static final String SUPERDOG = "superdog";
+	private static final String FORGOT_PASSWORD_MAIL_TEMPLATE_NAME = "forgotPassword";
 
 	//
-	// init
+	// Type and schema
 	//
 
 	void init() {
-		Schema schema = Schema.builder(TYPE)//
+		initIndex(Start.get().configuration().apiBackend().backendId());
+	}
+
+	public void initIndex(String backendId) {
+		ElasticClient elastic = Start.get().getElasticClient();
+		if (!elastic.existsIndex(TYPE)) {
+			String mapping = schema().validate().translate().toString();
+			elastic.createIndex(backendId, TYPE, mapping, false);
+		}
+	}
+
+	public static Schema schema() {
+		return Schema.builder(TYPE)//
 				.string(FIELD_USERNAME)//
-				.string(FIELD_BACKEND_ID)//
+				.string(FIELD_EMAIL)//
+				.string(FIELD_ROLES).array()//
+
+				.string(FIELD_HASHED_PASSWORD)//
+				.string(FIELD_PASSWORD_RESET_CODE)//
+				.bool(FIELD_PASSWORD_MUST_CHANGE)//
+
 				.bool(FIELD_ENABLED)//
 				.timestamp(FIELD_ENABLE_AFTER)//
 				.timestamp(FIELD_DISABLE_AFTER)//
 				.integer(FIELD_INVALID_CHALLENGES)//
 				.timestamp(FIELD_LAST_INVALID_CHALLENGE_AT)//
-				.string(FIELD_ROLES).array()//
-				.string(FIELD_ACCESS_TOKEN)//
-				.string(FIELD_ACCESS_TOKEN_EXPIRES_AT)//
-				.string(FIELD_HASHED_PASSWORD)//
-				.string(FIELD_PASSWORD_RESET_CODE)//
-				.bool(FIELD_PASSWORD_MUST_CHANGE)//
-				.string(FIELD_EMAIL)//
+
 				.string(FIELD_CREATED_AT)//
 				.string(FIELD_UPDATED_AT)//
 
@@ -87,18 +98,7 @@ public class CredentialsResource extends Resource {
 				.close()//
 
 				.stash(FIELD_STASH)//
-
 				.build();
-
-		SchemaValidator.validate(schema.name(), schema.node());
-		String mapping = SchemaTranslator.translate(schema.name(), schema.node())//
-				.toString();
-		ElasticClient elastic = Start.get().getElasticClient();
-
-		if (elastic.existsIndex(SPACEDOG_BACKEND, TYPE))
-			elastic.putMapping(SPACEDOG_BACKEND, TYPE, mapping);
-		else
-			elastic.createIndex(SPACEDOG_BACKEND, TYPE, mapping, false);
 	}
 
 	//
@@ -156,10 +156,10 @@ public class CredentialsResource extends Resource {
 
 		// superadmins can only be deleted when backend is deleted
 		query.mustNot(QueryBuilders.termQuery(FIELD_ROLES, Type.superadmin));
-		elastic.deleteByQuery(SPACEDOG_BACKEND, query, TYPE);
+		elastic.deleteByQuery(query, TYPE);
 
 		// always refresh after credentials index updates
-		elastic.refreshType(SPACEDOG_BACKEND, TYPE);
+		elastic.refreshType(TYPE);
 		return JsonPayload.success();
 	}
 
@@ -171,11 +171,12 @@ public class CredentialsResource extends Resource {
 		if (settings.disableGuestSignUp)
 			SpaceContext.credentials().checkAtLeastUser();
 
-		Credentials credentials = credentialsRequestToCredentials(body);
+		Credentials credentials = createCredentialsRequestToCredentials(body, //
+				Credentials.Type.user);
 		create(credentials);
 
 		JsonBuilder<ObjectNode> builder = JsonPayload //
-				.builder(true, credentials.backendId(), "/1", TYPE, credentials.id());
+				.builder(true, "/1", TYPE, credentials.id());
 
 		if (credentials.passwordResetCode() != null)
 			builder.put(FIELD_PASSWORD_RESET_CODE, credentials.passwordResetCode());
@@ -329,8 +330,8 @@ public class CredentialsResource extends Resource {
 		credentials.newPasswordResetCode();
 		credentials = update(credentials);
 
-		return JsonPayload.json(JsonPayload.builder(false, credentials.backendId(), "/1", TYPE, //
-				credentials.id(), credentials.version())//
+		return JsonPayload.json(JsonPayload.builder(false, "/1", TYPE, credentials.id(), //
+				credentials.version())//
 				.put(FIELD_PASSWORD_RESET_CODE, credentials.passwordResetCode()));
 	}
 
@@ -421,15 +422,16 @@ public class CredentialsResource extends Resource {
 	@Put("/1/credentials/:id/roles/:role/")
 	public Payload putRole(String id, String role, Context context) {
 		Roles.checkIfValid(role);
-		Credentials credentials = checkAdminAndGet(id);
-		credentials.checkAuthorizedToManage(role);
+		Credentials requester = SpaceContext.credentials();
+		Credentials updated = checkAdminAndGet(id);
+		requester.checkAuthorizedToManage(role);
 
-		if (!credentials.roles().contains(role)) {
-			credentials.roles().add(role);
-			credentials = update(credentials);
+		if (!updated.roles().contains(role)) {
+			updated.roles().add(role);
+			updated = update(updated);
 		}
 
-		return saved(credentials, false);
+		return saved(updated, false);
 	}
 
 	@Delete("/1/credentials/:id/roles/:role")
@@ -459,18 +461,37 @@ public class CredentialsResource extends Resource {
 	}
 
 	Credentials checkUsernamePassword(String username, String password) {
-		Optional<Credentials> optional = getByName(username, false);
 
-		if (optional.isPresent()) {
+		if (username.equals(SUPERDOG))
+			return checkSuperdog(password);
 
-			Credentials credentials = optional.get();
+		return checkRegularUser(username, password);
+	}
 
-			if (credentials.challengePassword(password))
-				return credentials;
-			else
-				updateInvalidChallenges(credentials);
+	Credentials checkRegularUser(String username, String password) {
+		try {
+			Optional<Credentials> credentials = getByName(username, false);
+
+			if (credentials.isPresent()) {
+				if (credentials.get().challengePassword(password))
+					return credentials.get();
+				else
+					updateInvalidChallenges(credentials.get());
+			}
+
+		} catch (IndexNotFoundException ignore) {
 		}
 
+		throw Exceptions.invalidUsernamePassword();
+	}
+
+	private Credentials checkSuperdog(String password) {
+		ServerConfiguration configuration = Start.get().configuration();
+		if (password != null && password.equals(configuration.superdogPassword())) {
+			Credentials credentials = new Credentials(SUPERDOG);
+			credentials.roles(Credentials.Type.superdog.toString());
+			return credentials;
+		}
 		throw Exceptions.invalidUsernamePassword();
 	}
 
@@ -501,31 +522,34 @@ public class CredentialsResource extends Resource {
 
 	Credentials checkToken(String accessToken) {
 
-		SearchHits hits = Start.get().getElasticClient()//
-				.prepareSearch(SPACEDOG_BACKEND, TYPE)//
-				.setQuery(QueryBuilders.boolQuery()//
-						// I'll check backendId later in this method
-						// to let superdogs access all backends
-						.must(QueryBuilders.termQuery(FIELD_SESSIONS_ACCESS_TOKEN, accessToken)))//
-				.get()//
-				.getHits();
+		try {
+			SearchHits hits = Start.get().getElasticClient()//
+					.prepareSearch(TYPE)//
+					.setQuery(QueryBuilders.termQuery(//
+							FIELD_SESSIONS_ACCESS_TOKEN, accessToken))//
+					.get()//
+					.getHits();
 
-		if (hits.totalHits() == 0)
+			if (hits.totalHits() == 0)
+				throw Exceptions.invalidAccessToken();
+
+			if (hits.totalHits() == 1) {
+				Credentials credentials = toCredentials(hits.getAt(0));
+				credentials.setCurrentSession(accessToken);
+
+				if (credentials.accessTokenExpiresIn() == 0)
+					throw Exceptions.accessTokenHasExpired();
+
+				return credentials;
+			}
+
+			throw Exceptions.runtime(//
+					"access token [%s] associated with [%s] credentials", //
+					accessToken, hits.totalHits());
+
+		} catch (IndexNotFoundException e) {
 			throw Exceptions.invalidAccessToken();
-
-		if (hits.totalHits() == 1) {
-			Credentials credentials = toCredentials(hits.getAt(0));
-			credentials.setCurrentSession(accessToken);
-
-			if (credentials.accessTokenExpiresIn() == 0)
-				throw Exceptions.accessTokenHasExpired();
-
-			return credentials;
 		}
-
-		throw Exceptions.runtime(//
-				"access token [%s] associated with too many credentials [%s]", //
-				accessToken, hits.totalHits());
 	}
 
 	Optional<Credentials> getById(String id, boolean throwNotFound) {
@@ -534,7 +558,7 @@ public class CredentialsResource extends Resource {
 		if (id.equals(credentials.id()))
 			return Optional.of(credentials);
 
-		GetResponse response = Start.get().getElasticClient().get(SPACEDOG_BACKEND, TYPE, id);
+		GetResponse response = Start.get().getElasticClient().get(TYPE, id);
 
 		if (response.isExists())
 			return Optional.of(toCredentials(response));
@@ -548,7 +572,7 @@ public class CredentialsResource extends Resource {
 	Optional<Credentials> getByName(String username, boolean throwNotFound) {
 
 		Optional<SearchHit> searchHit = Start.get().getElasticClient().get(//
-				SPACEDOG_BACKEND, TYPE, toQuery(username));
+				TYPE, toQuery(username));
 
 		if (!searchHit.isPresent()) {
 			if (throwNotFound)
@@ -562,7 +586,7 @@ public class CredentialsResource extends Resource {
 	Credentials create(Credentials credentials) {
 
 		// This is the only place where name uniqueness is checked
-		if (exists(credentials.backendId(), credentials.name()))
+		if (exists(credentials.name()))
 			throw Exceptions.alreadyExists(TYPE, credentials.name());
 
 		try {
@@ -575,8 +599,8 @@ public class CredentialsResource extends Resource {
 
 			// refresh index after each index change
 			IndexResponse response = Strings.isNullOrEmpty(credentials.id()) //
-					? elastic.index(SPACEDOG_BACKEND, TYPE, json, true) //
-					: elastic.index(SPACEDOG_BACKEND, TYPE, credentials.id(), json, true);
+					? elastic.index(TYPE, json, true) //
+					: elastic.index(TYPE, credentials.id(), json, true);
 
 			credentials.id(response.getId());
 			credentials.version(response.getVersion());
@@ -598,9 +622,8 @@ public class CredentialsResource extends Resource {
 			credentials.updatedAt(DateTime.now().toString());
 
 			// refresh index after each index change
-			IndexResponse response = Start.get().getElasticClient().index(//
-					SPACEDOG_BACKEND, TYPE, credentials.id(), //
-					Json8.mapper().writeValueAsString(credentials), //
+			IndexResponse response = Start.get().getElasticClient().index(TYPE, //
+					credentials.id(), Json8.mapper().writeValueAsString(credentials), //
 					true);
 
 			credentials.version(response.getVersion());
@@ -615,19 +638,19 @@ public class CredentialsResource extends Resource {
 		ElasticClient elastic = Start.get().getElasticClient();
 		// index refresh before not necessary since delete by id
 		// index refresh after delete is necessary
-		elastic.delete(SPACEDOG_BACKEND, TYPE, id, true, true);
+		elastic.delete(TYPE, id, true, true);
 	}
 
-	DeleteByQueryResponse deleteAll(String backendId) {
+	DeleteByQueryResponse deleteAll() {
 		ElasticClient elastic = Start.get().getElasticClient();
 
 		// need to refresh index before and after delete
-		elastic.refreshType(SPACEDOG_BACKEND, TYPE);
+		elastic.refreshType(TYPE);
 
-		DeleteByQueryResponse response = elastic.deleteByQuery(SPACEDOG_BACKEND,
-				QueryBuilders.termQuery(FIELD_BACKEND_ID, backendId), TYPE);
+		DeleteByQueryResponse response = elastic.deleteByQuery(//
+				QueryBuilders.matchAllQuery(), TYPE);
 
-		elastic.refreshType(SPACEDOG_BACKEND, TYPE);
+		elastic.refreshType(TYPE);
 		return response;
 	}
 
@@ -635,19 +658,19 @@ public class CredentialsResource extends Resource {
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
 				.filter(QueryBuilders.termQuery(FIELD_ROLES, Type.superadmin));
 
-		return getCredentials(new BoolSearch(SPACEDOG_BACKEND, TYPE, query, from, size));
+		return getCredentials(new BoolSearch(TYPE, query, from, size));
 	}
 
 	SearchResults<Credentials> getBackendSuperAdmins(int from, int size) {
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
 				.filter(QueryBuilders.termQuery(FIELD_ROLES, Type.superadmin));
 
-		return getCredentials(new BoolSearch(SPACEDOG_BACKEND, TYPE, query, from, size));
+		return getCredentials(new BoolSearch(TYPE, query, from, size));
 	}
 
 	Credentials createSuperdog(String username, String password, String email) {
 		Usernames.checkValid(username);
-		Credentials credentials = new Credentials(SpaceBackend.defaultBackendId(), username);
+		Credentials credentials = new Credentials(username);
 		credentials.roles(Type.superdog.name());
 		credentials.email(email);
 		Passwords.check(password);
@@ -689,23 +712,23 @@ public class CredentialsResource extends Resource {
 	//
 
 	private Payload saved(Credentials credentials, boolean created) {
-		return JsonPayload.saved(false, credentials.backendId(), "/1", TYPE, //
-				credentials.id(), credentials.version());
+		return JsonPayload.saved(false, "/1", TYPE, credentials.id(), credentials.version());
 	}
 
-	private Credentials credentialsRequestToCredentials(String body) {
+	public Credentials createCredentialsRequestToCredentials(String body, //
+			Credentials.Type type) {
 
 		Credentials credentials = new Credentials(SpaceContext.backendId());
 		CreateCredentialsRequest request = Json8.toPojo(body, CreateCredentialsRequest.class);
 
 		if (Utils.isNullOrEmpty(request.roles()))
-			credentials.roles(Type.user.name());
+			credentials.roles(type.name());
 		else
 			credentials.roles(request.roles());
 
-		Credentials requester = SpaceContext.credentials();
-		if (credentials.isGreaterThan(requester))
-			throw Exceptions.insufficientCredentials(requester);
+		if (credentials.type().isGreaterThan(type))
+			throw Exceptions.insufficientCredentials(//
+					SpaceContext.credentials());
 
 		CredentialsSettings settings = SettingsResource.get()//
 				.load(CredentialsSettings.class);
@@ -725,8 +748,7 @@ public class CredentialsResource extends Resource {
 	}
 
 	private BoolSearch toQuery(Context context) {
-		BoolQueryBuilder query = QueryBuilders.boolQuery()//
-				.filter(QueryBuilders.termQuery(FIELD_BACKEND_ID, SpaceContext.backendId()));
+		BoolQueryBuilder query = QueryBuilders.boolQuery();
 
 		String username = context.get(FIELD_USERNAME);
 		if (!Strings.isNullOrEmpty(username))
@@ -740,7 +762,7 @@ public class CredentialsResource extends Resource {
 		if (!Strings.isNullOrEmpty(role))
 			query.filter(QueryBuilders.termQuery(FIELD_ROLES, role));
 
-		BoolSearch search = new BoolSearch(SPACEDOG_BACKEND, TYPE, query, //
+		BoolSearch search = new BoolSearch(TYPE, query, //
 				context.query().getInteger(PARAM_FROM, 0), //
 				context.query().getInteger(PARAM_SIZE, 10));
 
@@ -782,9 +804,8 @@ public class CredentialsResource extends Resource {
 		return Json8.object("total", response.total, "results", results);
 	}
 
-	private boolean exists(String backendId, String username) {
-		return Start.get().getElasticClient().exists(SPACEDOG_BACKEND, TYPE, //
-				toQuery(username));
+	private boolean exists(String username) {
+		return Start.get().getElasticClient().exists(TYPE, toQuery(username));
 	}
 
 	private SearchResults<Credentials> getCredentials(BoolSearch query) {
@@ -792,7 +813,7 @@ public class CredentialsResource extends Resource {
 		Check.isTrue(query.from + query.size <= 1000, "from + size is greater than 1000");
 
 		SearchHits hits = elastic//
-				.prepareSearch(query.backendId, query.type)//
+				.prepareSearch(query.type)//
 				.setQuery(query.query)//
 				.setFrom(query.from)//
 				.setSize(query.size)//
@@ -800,7 +821,6 @@ public class CredentialsResource extends Resource {
 				.getHits();
 
 		SearchResults<Credentials> response = new SearchResults<>();
-		response.backendId = query.backendId;
 		response.type = query.type;
 		response.from = query.from;
 		response.size = query.size;

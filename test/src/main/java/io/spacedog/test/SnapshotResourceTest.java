@@ -24,9 +24,9 @@ public class SnapshotResourceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog aaaa = SpaceDog.backend("aaaa").username("aaaa").password("hi aaaa");
-		SpaceDog bbbb = SpaceDog.backend("bbbb").username("bbbb").password("hi bbbb");
-		SpaceDog cccc = SpaceDog.backend("cccc").username("cccc").password("hi cccc");
+		SpaceDog aaaa = SpaceDog.backendId("aaaa").username("aaaa").password("hi aaaa");
+		SpaceDog bbbb = SpaceDog.backendId("bbbb").username("bbbb").password("hi bbbb");
+		SpaceDog cccc = SpaceDog.backendId("cccc").username("cccc").password("hi cccc");
 
 		aaaa.admin().deleteBackend(aaaa.backendId());
 		bbbb.admin().deleteBackend(bbbb.backendId());
@@ -51,7 +51,7 @@ public class SnapshotResourceTest extends SpaceTest {
 		superdog.credentials().setRole(snapshotAll.id(), "snapshotall");
 
 		// creates backend and credentials
-		SpaceDog.backend(aaaa.backendId()).admin().createBackend(//
+		SpaceDog.backendId(aaaa.backendId()).admin().createBackend(//
 				aaaa.username(), aaaa.password().get(), "platform@spacedog.io", false);
 		SpaceDog vince = signUp(aaaa, "vince", "hi vince").login("hi vince");
 
@@ -93,7 +93,7 @@ public class SnapshotResourceTest extends SpaceTest {
 				.assertEquals(firstSnap);
 
 		// creates another backend and credentials
-		SpaceDog.backend(bbbb.backendId()).admin().createBackend(//
+		SpaceDog.backendId(bbbb.backendId()).admin().createBackend(//
 				bbbb.username(), bbbb.password().get(), "platform@spacedog.io", false);
 		SpaceDog fred = signUp(bbbb, "fred", "hi fred").login("hi fred");
 
@@ -115,7 +115,7 @@ public class SnapshotResourceTest extends SpaceTest {
 				.assertEquals(firstSnap, "results.1");
 
 		// create another account and add a credentials
-		SpaceDog.backend(cccc.backendId()).admin().createBackend(//
+		SpaceDog.backendId(cccc.backendId()).admin().createBackend(//
 				cccc.username(), cccc.password().get(), "platform@spacedog.io", false);
 		SpaceDog nath = signUp(cccc, "nath", "hi nath").login("hi nath");
 

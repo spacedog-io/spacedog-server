@@ -20,7 +20,7 @@ public class LafargeCesio extends SpaceTest {
 		SpaceEnv env = SpaceEnv.defaultEnv();
 		env.target(SpaceBackend.production);
 
-		SpaceDog backend = SpaceDog.backend("cesio")//
+		SpaceDog backend = SpaceDog.backendId("cesio")//
 				.username(env.getOrElseThrow("spacedog.cesio.superadmin.username"))//
 				.password(env.getOrElseThrow("spacedog.cesio.superadmin.password"));
 

@@ -4,6 +4,7 @@ import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.rest.SpaceBackend;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceResponse;
 import io.spacedog.utils.Check;
@@ -16,17 +17,19 @@ import io.spacedog.utils.SpaceParams;
 
 public class SpaceDog implements SpaceFields, SpaceParams {
 
+	SpaceBackend backend;
 	Credentials credentials;
 	String password;
 	String accessToken;
 	DateTime expiresAt;
 
-	private SpaceDog(Credentials credentials) {
-		this.credentials = credentials;
+	private SpaceDog(SpaceBackend backend) {
+		this.backend = backend;
+		this.credentials = new Credentials();
 	}
 
 	public String backendId() {
-		return credentials.backendId();
+		return backend.backendId();
 	}
 
 	public String username() {
@@ -83,16 +86,25 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 		return this;
 	}
 
-	public static SpaceDog backend(String backend) {
-		return new SpaceDog(new Credentials(backend));
+	@Override
+	public String toString() {
+		return credentials.toString();
+	}
+
+	//
+	// Factory methods
+	//
+
+	public static SpaceDog defaultBackend() {
+		return new SpaceDog(SpaceRequest.env().target());
+	}
+
+	public static SpaceDog backendId(String backendId) {
+		return new SpaceDog(SpaceRequest.env().target().fromBackendId(backendId));
 	}
 
 	public static SpaceDog backend(SpaceDog dog) {
-		return backend(dog.backendId());
-	}
-
-	public static SpaceDog fromCredentials(Credentials credentials) {
-		return new SpaceDog(credentials);
+		return new SpaceDog(dog.backend);
 	}
 
 	//
@@ -151,7 +163,7 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 	}
 
 	public SpaceDog signUp(String password) {
-		this.credentials = SpaceDog.backend(backendId())//
+		this.credentials = SpaceDog.backendId(backendId())//
 				.credentials().create(username(), password, email().get(), //
 						Type.user.name());
 		return login(password);

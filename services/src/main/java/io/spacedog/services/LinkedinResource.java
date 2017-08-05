@@ -7,8 +7,8 @@ import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceResponse;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
-import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Credentials.Session;
+import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.SpaceException;
 import io.spacedog.utils.SpaceHeaders;
@@ -151,8 +151,6 @@ public class LinkedinResource extends Resource {
 	//
 
 	private Credentials login(Context context) {
-
-		String backendId = SpaceContext.backendId();
 		String code = Check.notNullOrEmpty(context.get("code"), "code");
 
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
@@ -165,7 +163,7 @@ public class LinkedinResource extends Resource {
 		// redirect_uri = this current resource uri
 		// useful when spacedog is directly used as redirect_uri
 		if (Strings.isNullOrEmpty(redirectUri))
-			redirectUri = spaceUrl(backendId, context.uri()).toString();
+			redirectUri = spaceUrl(context.uri()).toString();
 		else
 			// TODO remove this when mikael finds out why
 			// the redirect_uri is passed with a ';' suffix
@@ -202,7 +200,7 @@ public class LinkedinResource extends Resource {
 
 		CredentialsResource credentialsResource = CredentialsResource.get();
 		Credentials credentials = credentialsResource.getByName(email, false)//
-				.orElse(new Credentials(backendId, email).roles(Type.user.name()));
+				.orElse(new Credentials(email).roles(Type.user.name()));
 
 		credentials.setCurrentSession(session);
 		credentials.email(email);

@@ -23,7 +23,7 @@ public class Snapshot extends Job {
 			// since snapshot service is slow
 			env.httpTimeoutMillis(120000);
 
-			SpaceDog snapshotDog = SpaceDog.backend("api").username("snapshotall")//
+			SpaceDog snapshotDog = SpaceDog.backendId("api").username("snapshotall")//
 					.password(env.getOrElseThrow("spacedog_jobs_snapshotall_password"));
 
 			snapshotDog.post("/1/snapshot").go(202);

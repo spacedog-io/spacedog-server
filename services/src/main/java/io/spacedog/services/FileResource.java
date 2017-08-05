@@ -55,13 +55,12 @@ public class FileResource extends S3Resource {
 	//
 
 	Payload get(WebPath path, Context context) {
-		Credentials credentials = SpaceContext.credentials();
-		Payload payload = doGet(FILE_BUCKET_SUFFIX, credentials.backendId(), path, context);
+		Payload payload = doGet(FILE_BUCKET_SUFFIX, path, context);
 
 		if (payload.isSuccess())
 			return payload;
 
-		return doList(FILE_BUCKET_SUFFIX, credentials.backendId(), path, context);
+		return doList(FILE_BUCKET_SUFFIX, path, context);
 	}
 
 	Payload put(WebPath path, byte[] bytes, Context context) {
@@ -74,8 +73,8 @@ public class FileResource extends S3Resource {
 	}
 
 	Payload delete(WebPath path) {
-		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
-		return doDelete(FILE_BUCKET_SUFFIX, credentials, path, false, false);
+		SpaceContext.credentials().checkAtLeastAdmin();
+		return doDelete(FILE_BUCKET_SUFFIX, path, false, false);
 	}
 
 	private static WebPath toWebPath(String uri) {

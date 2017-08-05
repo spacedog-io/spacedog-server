@@ -121,8 +121,14 @@ public class SpaceContext {
 		return get().debug;
 	}
 
+	public static SpaceBackend backend() {
+		return threadLocal.get() == null //
+				? Start.get().configuration().apiBackend()
+				: get().backend;
+	}
+
 	public static String backendId() {
-		return credentials().backendId();
+		return backend().backendId();
 	}
 
 	public boolean isJsonContent() {

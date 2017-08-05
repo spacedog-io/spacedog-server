@@ -119,47 +119,43 @@ public class JsonPayload {
 		return json(builder, HttpStatus.BAD_REQUEST);
 	}
 
-	public static JsonBuilder<ObjectNode> builder(boolean created, String backendId, String uri, String type,
-			String id) {
-		return builder(created, backendId, uri, type, id, 0);
+	public static JsonBuilder<ObjectNode> builder(boolean created, String uri, String type, String id) {
+		return builder(created, uri, type, id, 0);
 	}
 
-	public static Payload saved(boolean created, String backendId, String uri, String type, String id,
-			boolean isUriFinal) {
-		return saved(created, backendId, uri, type, id, 0, isUriFinal);
+	public static Payload saved(boolean created, String uri, String type, String id, boolean isUriFinal) {
+		return saved(created, uri, type, id, 0, isUriFinal);
 	}
 
-	public static Payload saved(boolean created, String backendId, String uri, String type, String id) {
-		return saved(created, backendId, uri, type, id, 0, false);
+	public static Payload saved(boolean created, String uri, String type, String id) {
+		return saved(created, uri, type, id, 0, false);
 	}
 
-	public static Payload saved(boolean created, String backendId, String uri, String type, String id, long version) {
-		return saved(created, backendId, uri, type, id, version, false);
+	public static Payload saved(boolean created, String uri, String type, String id, long version) {
+		return saved(created, uri, type, id, version, false);
 	}
 
-	public static Payload saved(boolean created, String backendId, String uri, String type, String id, long version,
-			boolean isUriFinal) {
-		JsonBuilder<ObjectNode> builder = JsonPayload.builder(created, backendId, uri, type, id, version, isUriFinal);
+	public static Payload saved(boolean created, String uri, String type, String id, long version, boolean isUriFinal) {
+		JsonBuilder<ObjectNode> builder = JsonPayload.builder(created, uri, type, id, version, isUriFinal);
 		return json(builder, created ? HttpStatus.CREATED : HttpStatus.OK)//
 				.withHeader(SpaceHeaders.SPACEDOG_OBJECT_ID, id);
 	}
 
-	public static JsonBuilder<ObjectNode> builder(boolean created, String backendId, String uri, String type, String id,
-			long version) {
-		return builder(created, backendId, uri, type, id, version, false);
+	public static JsonBuilder<ObjectNode> builder(boolean created, String uri, String type, String id, long version) {
+		return builder(created, uri, type, id, version, false);
 	}
 
-	public static JsonBuilder<ObjectNode> builder(boolean created, String backendId, String uri, String type, String id,
-			long version, boolean isUriFinal) {
+	public static JsonBuilder<ObjectNode> builder(boolean created, String uri, String type, String id, long version,
+			boolean isUriFinal) {
 
 		JsonBuilder<ObjectNode> builder = builder(created ? HttpStatus.CREATED : HttpStatus.OK) //
 				.put("id", id) //
 				.put("type", type);
 
 		if (isUriFinal)
-			builder.put("location", Resource.spaceUrl(backendId, uri).toString());
+			builder.put("location", Resource.spaceUrl(uri).toString());
 		else
-			builder.put("location", Resource.spaceUrl(backendId, uri, type, id).toString());
+			builder.put("location", Resource.spaceUrl(uri, type, id).toString());
 
 		if (version > 0) //
 			builder.put("version", version);
@@ -215,11 +211,10 @@ public class JsonPayload {
 					"the delete by query operation timed out, some objects might have been deleted");
 
 		if (response.getTotalFound() != response.getTotalDeleted())
-			return error(500,
-					String.format(//
-							"the delete by query operation failed to delete all objects found, "
-									+ "objects found [%s], objects deleted [%s]",
-							response.getTotalFound(), response.getTotalDeleted()));
+			return error(500, String.format(//
+					"the delete by query operation failed to delete all objects found, "
+							+ "objects found [%s], objects deleted [%s]",
+					response.getTotalFound(), response.getTotalDeleted()));
 
 		if (response.getShardFailures().length > 0)
 			return json(500, response.getShardFailures());

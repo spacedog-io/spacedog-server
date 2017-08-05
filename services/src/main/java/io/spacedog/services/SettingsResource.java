@@ -56,21 +56,21 @@ public class SettingsResource extends Resource {
 	@Get("/")
 	public Payload getAll(Context context) {
 
-		String backendId = SpaceContext.credentials().checkAtLeastSuperAdmin().backendId();
+		SpaceContext.credentials().checkAtLeastSuperAdmin();
 		ElasticClient elastic = Start.get().getElasticClient();
 
-		if (!elastic.existsIndex(backendId, TYPE))
+		if (!elastic.existsIndex(TYPE))
 			return JsonPayload.json(JsonPayload.builder()//
 					.put("took", 0).put("total", 0).object("results"));
 
 		boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);
-		DataStore.get().refreshType(refresh, backendId, TYPE);
+		DataStore.get().refreshType(refresh, TYPE);
 
 		int from = context.query().getInteger(PARAM_FROM, 0);
 		int size = context.query().getInteger(PARAM_SIZE, 10);
 		Check.isTrue(from + size <= 1000, "from + size is greater than 1000");
 
-		SearchResponse response = elastic.prepareSearch(backendId, TYPE)//
+		SearchResponse response = elastic.prepareSearch(TYPE)//
 				.setTypes(TYPE)//
 				.setFrom(from)//
 				.setSize(size)//
@@ -88,9 +88,8 @@ public class SettingsResource extends Resource {
 	@Delete("")
 	@Delete("/")
 	public Payload deleteIndex() {
-		String backendId = SpaceContext.credentials().checkAtLeastSuperAdmin().backendId();
-		ElasticClient elastic = Start.get().getElasticClient();
-		elastic.deleteIndex(backendId, TYPE);
+		SpaceContext.credentials().checkAtLeastSuperAdmin();
+		Start.get().getElasticClient().deleteIndex(TYPE);
 		return JsonPayload.success();
 	}
 
@@ -135,17 +134,15 @@ public class SettingsResource extends Resource {
 				throw Exceptions.illegalArgument(e, "invalid [%s] settings", id);
 			}
 
-		return JsonPayload.saved(response.isCreated(), SpaceContext.backendId(), "/1", //
-				response.getType(), response.getId(), response.getVersion());
+		return JsonPayload.saved(response.isCreated(), "/1", response.getType(), //
+				response.getId(), response.getVersion());
 	}
 
 	@Delete("/:id")
 	@Delete("/:id/")
 	public Payload delete(String id) {
-
-		Credentials credentials = checkIfAuthorizedToUpdate(id);
-		ElasticClient elastic = Start.get().getElasticClient();
-		elastic.delete(credentials.backendId(), TYPE, id, false, true);
+		checkIfAuthorizedToUpdate(id);
+		Start.get().getElasticClient().delete(TYPE, id, false, true);
 		return JsonPayload.success();
 	}
 
@@ -188,8 +185,8 @@ public class SettingsResource extends Resource {
 		settings.set(field, Json8.readNode(body));
 		IndexResponse response = save(id, settings.toString());
 
-		return JsonPayload.saved(created, SpaceContext.backendId(), "/1", //
-				response.getType(), response.getId(), response.getVersion());
+		return JsonPayload.saved(created, "/1", response.getType(), //
+				response.getId(), response.getVersion());
 	}
 
 	@Delete("/:id/:field")
@@ -206,8 +203,8 @@ public class SettingsResource extends Resource {
 		settings.remove(field);
 		IndexResponse response = save(id, settings.toString());
 
-		return JsonPayload.saved(false, SpaceContext.backendId(), "/1", //
-				response.getType(), response.getId(), response.getVersion());
+		return JsonPayload.saved(false, "/1", response.getType(), //
+				response.getId(), response.getVersion());
 	}
 
 	//
@@ -240,11 +237,10 @@ public class SettingsResource extends Resource {
 		String settings = SpaceContext.getSettings(id);
 
 		if (settings == null) {
-			String backendId = SpaceContext.backendId();
 			ElasticClient elastic = Start.get().getElasticClient();
 
-			if (elastic.existsIndex(backendId, TYPE)) {
-				GetResponse response = elastic.get(backendId, TYPE, id);
+			if (elastic.existsIndex(TYPE)) {
+				GetResponse response = elastic.get(TYPE, id);
 
 				if (response.isExists()) {
 					settings = response.getSourceAsString();
@@ -323,8 +319,7 @@ public class SettingsResource extends Resource {
 		makeSureIndexIsCreated();
 
 		IndexResponse response = Start.get().getElasticClient()//
-				.prepareIndex(SpaceContext.backendId(), TYPE, id)//
-				.setSource(body).get();
+				.prepareIndex(TYPE, id).setSource(body).get();
 
 		SpaceContext.setSettings(id, body);
 		return response;
@@ -332,17 +327,16 @@ public class SettingsResource extends Resource {
 
 	private void makeSureIndexIsCreated() {
 
-		String backendId = SpaceContext.backendId();
 		ElasticClient elastic = Start.get().getElasticClient();
 
-		if (!elastic.existsIndex(backendId, TYPE)) {
+		if (!elastic.existsIndex(TYPE)) {
 			Context context = SpaceContext.get().context();
 			int shards = context.query().getInteger(PARAM_SHARDS, PARAM_SHARDS_DEFAULT);
 			int replicas = context.query().getInteger(PARAM_REPLICAS, PARAM_REPLICAS_DEFAULT);
 			boolean async = context.query().getBoolean(PARAM_ASYNC, PARAM_ASYNC_DEFAULT);
 
 			ObjectNode mapping = Json8.object(TYPE, Json8.object("enabled", false));
-			elastic.createIndex(backendId, TYPE, mapping.toString(), async, shards, replicas);
+			elastic.createIndex(TYPE, mapping.toString(), async, shards, replicas);
 		}
 	}
 

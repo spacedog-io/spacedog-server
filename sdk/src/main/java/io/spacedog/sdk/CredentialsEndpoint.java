@@ -89,7 +89,7 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 		String id = dog.post("/1/credentials")//
 				.bodyPojo(request).go(201).getString(FIELD_ID);
 
-		Credentials credentials = new Credentials(dog.backendId(), request.username());
+		Credentials credentials = new Credentials(request.username());
 		credentials.id(id);
 		credentials.email(request.email());
 		credentials.roles(request.roles());

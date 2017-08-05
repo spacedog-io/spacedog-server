@@ -101,7 +101,7 @@ public class FrenchSearchTest extends SpaceTest {
 		if (indices.prepareExists(INDEX).get().isExists())
 			indices.prepareDelete(INDEX).get();
 
-		new ElasticClient(client).ensureAllIndicesGreen();
+		new ElasticClient(client).ensureAllIndicesAreGreen();
 
 		URL url = Resources.getResource("io/spacedog/examples/french.analyzer.settings.json");
 		JsonNode customfrenchAnalyser = Json7.readNode(url);

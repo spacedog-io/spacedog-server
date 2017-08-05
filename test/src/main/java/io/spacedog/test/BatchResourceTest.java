@@ -76,7 +76,7 @@ public class BatchResourceTest extends SpaceTest {
 				.assertEquals(200, "responses.4.status")//
 				.assertEquals(1, "debug.batchCredentialChecks");
 
-		SpaceDog test = SpaceDog.backend("test").username("test").password("hi test");
+		SpaceDog test = SpaceDog.backendId("test").username("test").password("hi test");
 
 		// should succeed to create dave and vince users and fetch them with
 		// simple backend key credentials

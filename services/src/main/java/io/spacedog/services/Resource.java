@@ -26,20 +26,19 @@ import net.codestory.http.Query;
 public abstract class Resource implements SpaceFields, SpaceParams {
 
 	public static final String SLASH = "/";
-	public static final String SPACEDOG_BACKEND = "spacedog";
 
-	public static StringBuilder spaceUrl(String backendId, String uri, String type, String id) {
-		return spaceUrl(backendId, uri).append(SLASH).append(type).append(SLASH).append(id);
+	public static StringBuilder spaceUrl(String uri, String type, String id) {
+		return spaceUrl(uri).append(SLASH).append(type).append(SLASH).append(id);
 	}
 
-	public static StringBuilder spaceUrl(String backendId, String uri) {
+	public static StringBuilder spaceUrl(String uri) {
 		Check.notNullOrEmpty(uri, "URI");
 		Check.isTrue(uri.startsWith(SLASH), "URI must start with a /");
-		return spaceRootUrl(backendId).append(uri);
+		return spaceRootUrl().append(uri);
 	}
 
-	public static StringBuilder spaceRootUrl(String backendId) {
-		return Start.get().configuration().apiBackend().urlBuilder(backendId);
+	public static StringBuilder spaceRootUrl() {
+		return SpaceContext.backend().urlBuilder();
 	}
 
 	protected static String getReferenceType(String reference) {

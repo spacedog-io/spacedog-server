@@ -22,7 +22,7 @@ public class SmsTemplateResourceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = SpaceDog.backend("test");
+		SpaceDog test = SpaceDog.backendId("test");
 		SpaceDog superadmin = resetTestBackend();
 
 		// superadmin creates user vince with 'sms' role

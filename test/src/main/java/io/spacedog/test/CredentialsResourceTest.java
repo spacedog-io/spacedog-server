@@ -35,7 +35,7 @@ public class CredentialsResourceTest extends SpaceTest {
 
 		test.login();
 		test2.login();
-		SpaceDog superdog = SpaceDog.backend("api")//
+		SpaceDog superdog = SpaceDog.backendId("api")//
 				.username(SpaceEnv.defaultEnv().getOrElseThrow("spacedog.superdog.username")) //
 				.login(SpaceEnv.defaultEnv().getOrElseThrow("spacedog.superdog.password"));
 
@@ -49,7 +49,7 @@ public class CredentialsResourceTest extends SpaceTest {
 						"email", "test1@test.com", "level", "SUPER_ADMIN")//
 				.go(201);
 
-		SpaceDog test1 = SpaceDog.backend("test").username("test1").login("hi test1");
+		SpaceDog test1 = SpaceDog.backendId("test").username("test1").login("hi test1");
 
 		// superadmin test can delete superadmin test1
 		test.credentials().delete(test1.id());
@@ -76,7 +76,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		SpaceEnv env = SpaceEnv.defaultEnv();
 
 		// superdog logs in with the root backend
-		SpaceDog apiSuperdog = SpaceDog.backend("api")//
+		SpaceDog apiSuperdog = SpaceDog.backendId("api")//
 				.username(env.getOrElseThrow("spacedog.superdog.username")) //
 				.login(env.getOrElseThrow("spacedog.superdog.password"));
 		String apiToken = apiSuperdog.accessToken().get();
@@ -88,7 +88,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		SpaceRequest.get("/1/data").backend("test").bearerAuth(apiToken).go(200);
 
 		// superdog logs with the "test" backend
-		SpaceDog testSuperdog = SpaceDog.backend("test")//
+		SpaceDog testSuperdog = SpaceDog.backendId("test")//
 				.username(env.getOrElseThrow("spacedog.superdog.username")) //
 				.login(env.getOrElseThrow("spacedog.superdog.password"));
 		String testToken = testSuperdog.accessToken().get();
@@ -230,7 +230,7 @@ public class CredentialsResourceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = SpaceDog.backend("test");
+		SpaceDog test = SpaceDog.backendId("test");
 		SpaceDog superadmin = resetTestBackend();
 		SpaceDog fred = createTempUser(superadmin, "fred");
 
@@ -277,7 +277,7 @@ public class CredentialsResourceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = SpaceDog.backend("test");
+		SpaceDog test = SpaceDog.backendId("test");
 		SpaceDog superadmin = resetTestBackend();
 		SpaceDog fred = createTempUser(superadmin, "fred");
 

@@ -40,27 +40,27 @@ public class S3Resource extends Resource {
 	private static MimetypesFileTypeMap typeMap = new MimetypesFileTypeMap();
 
 	static {
-		String awsRegion = Start.get().configuration().awsRegion();
+		String awsRegion = Start.get().configuration().awsRegion().orElse("eu-west-1");
 		s3.setRegion(Region.getRegion(Regions.fromName(awsRegion)));
 	}
 
-	public Payload doGet(String bucketSuffix, String backendId, WebPath path, Context context) {
-		return doGet(bucketSuffix, backendId, path, context, false);
+	public Payload doGet(String bucketSuffix, WebPath path, Context context) {
+		return doGet(bucketSuffix, path, context, false);
 	}
 
-	public Payload doGet(String bucketSuffix, String backendId, WebPath path, Context context, boolean checkOwnership) {
-		return doGet(true, bucketSuffix, backendId, path, context, checkOwnership);
+	public Payload doGet(String bucketSuffix, WebPath path, Context context, boolean checkOwnership) {
+		return doGet(true, bucketSuffix, path, context, checkOwnership);
 	}
 
-	public Payload doGet(boolean withContent, String bucketSuffix, String backendId, WebPath path, Context context) {
-		return doGet(withContent, bucketSuffix, backendId, path, context, false);
+	public Payload doGet(boolean withContent, String bucketSuffix, WebPath path, Context context) {
+		return doGet(withContent, bucketSuffix, path, context, false);
 	}
 
-	private Payload doGet(boolean withContent, String bucketSuffix, String backendId, WebPath path, Context context,
+	private Payload doGet(boolean withContent, String bucketSuffix, WebPath path, Context context,
 			boolean checkOwnership) {
 
 		String bucketName = getBucketName(bucketSuffix);
-		WebPath s3Path = path.addFirst(backendId);
+		WebPath s3Path = path.addFirst(SpaceContext.backendId());
 
 		S3Object s3Object = null;
 		Object fileContent = "";
@@ -118,8 +118,9 @@ public class S3Resource extends Resource {
 		}
 	}
 
-	public Payload doList(String bucketSuffix, String backendId, WebPath path, Context context) {
+	public Payload doList(String bucketSuffix, WebPath path, Context context) {
 
+		String backendId = SpaceContext.backendId();
 		WebPath s3Path = path.addFirst(backendId);
 		String bucketName = getBucketName(bucketSuffix);
 
@@ -158,11 +159,10 @@ public class S3Resource extends Resource {
 		return JsonPayload.json(response);
 	}
 
-	public Payload doDelete(String bucketSuffix, Credentials credentials, WebPath path, boolean fileOnly,
-			boolean checkOwnership) {
+	public Payload doDelete(String bucketSuffix, WebPath path, boolean fileOnly, boolean checkOwnership) {
 
 		String bucketName = getBucketName(bucketSuffix);
-		WebPath s3Path = path.addFirst(credentials.backendId());
+		WebPath s3Path = path.addFirst(SpaceContext.backendId());
 
 		JsonBuilder<ObjectNode> builder = JsonPayload.builder().array("deleted");
 
@@ -237,7 +237,8 @@ public class S3Resource extends Resource {
 
 		String fileName = path.last();
 		String bucketName = getBucketName(bucketSuffix);
-		WebPath s3Path = path.addFirst(credentials.backendId());
+		String backendId = SpaceContext.backendId();
+		WebPath s3Path = path.addFirst(backendId);
 
 		ObjectMetadata metadata = new ObjectMetadata();
 		// TODO
@@ -256,7 +257,7 @@ public class S3Resource extends Resource {
 
 		JsonBuilder<ObjectNode> builder = JsonPayload.builder()//
 				.put("path", path.toString())//
-				.put("location", toSpaceLocation(credentials.backendId(), rootUri, path));
+				.put("location", toSpaceLocation(backendId, rootUri, path));
 
 		if (enableS3Location)
 			builder.put("s3", toS3Location(bucketName, s3Path));
@@ -290,7 +291,7 @@ public class S3Resource extends Resource {
 	}
 
 	private String toSpaceLocation(String backendId, String root, WebPath path) {
-		return spaceUrl(backendId, root).append(path.toEscapedString()).toString();
+		return spaceUrl(root).append(path.toEscapedString()).toString();
 	}
 
 	private String toS3Location(String bucketName, WebPath path) {

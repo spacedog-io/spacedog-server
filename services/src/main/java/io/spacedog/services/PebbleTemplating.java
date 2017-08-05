@@ -30,8 +30,6 @@ public class PebbleTemplating {
 		if (model == null || model.isEmpty())
 			throw Exceptions.illegalArgument("no parameter authorized for this template");
 
-		String backendId = SpaceContext.backendId();
-
 		for (Entry<String, Object> parameter : parameters.entrySet()) {
 			String name = parameter.getKey();
 			Object value = parameter.getValue();
@@ -45,10 +43,10 @@ public class PebbleTemplating {
 				continue;
 			}
 
-			if (DataStore.get().isType(backendId, type)) {
+			if (DataStore.get().isType(type)) {
 
 				if (value != null && value instanceof String) {
-					value = DataStore.get().getObject(backendId, type, value.toString());
+					value = DataStore.get().getObject(type, value.toString());
 					value = Json8.mapper().convertValue(value, Map.class);
 					context.put(name, value);
 					continue;

@@ -18,10 +18,9 @@ import org.elasticsearch.plugin.cloud.aws.CloudAwsPlugin;
 import org.elasticsearch.plugin.deletebyquery.DeleteByQueryPlugin;
 import org.joda.time.DateTimeZone;
 
-import com.google.common.io.Resources;
-
-import io.spacedog.core.Json8;
-import io.spacedog.utils.Exceptions;
+import io.spacedog.rest.SpaceBackend;
+import io.spacedog.utils.ClassResources;
+import io.spacedog.utils.Json7;
 import io.spacedog.utils.Utils;
 import net.codestory.http.AbstractWebServer;
 import net.codestory.http.Request;
@@ -87,25 +86,19 @@ public class Start {
 	}
 
 	public Info info() {
-		if (info == null)
-			try {
-				info = Json8.mapper().readValue(//
-						Resources.toString(//
-								Resources.getResource(this.getClass(), "info.json"), //
-								Utils.UTF8), //
-						Info.class);
-			} catch (IOException e) {
-				throw Exceptions.runtime(e, "error loading server info file");
-			}
+		if (info == null) {
+			String string = ClassResources.loadToString(this, "info.json");
+			info = Json7.toPojo(string, Info.class);
+		}
 		return info;
 	}
 
 	private void upgradeAndCleanUp() throws IOException {
-		// Utils.info("[SpaceDog] Nothing to upgrade");
-		deletePingRequestsFromLogs();
-		deleteGetLogRequestsFromLogs();
-		SnapshotResource.get().deleteMissingRepositories();
-		SnapshotResource.get().deleteObsoleteRepositories();
+		Utils.info("[SpaceDog] Nothing to upgrade");
+		// deletePingRequestsFromLogs();
+		// deleteGetLogRequestsFromLogs();
+		// SnapshotResource.get().deleteMissingRepositories();
+		// SnapshotResource.get().deleteObsoleteRepositories();
 	}
 
 	private void deleteGetLogRequestsFromLogs() {
@@ -120,7 +113,8 @@ public class Start {
 				.toString();
 
 		DeleteByQueryResponse response = get().getElasticClient()//
-				.deleteByQuery(querySource, Resource.SPACEDOG_BACKEND, LogResource.TYPE);
+				.deleteByQuery(querySource, SpaceBackend.defaultBackendId(), //
+						LogResource.TYPE);
 
 		Utils.info("[SpaceDog] [%s] logs deleted", response.getTotalDeleted());
 	}
@@ -137,7 +131,8 @@ public class Start {
 				.toString();
 
 		DeleteByQueryResponse response = get().getElasticClient()//
-				.deleteByQuery(querySource, Resource.SPACEDOG_BACKEND, LogResource.TYPE);
+				.deleteByQuery(querySource, SpaceBackend.defaultBackendId(), //
+						LogResource.TYPE);
 
 		Utils.info("[SpaceDog] [%s] logs deleted", response.getTotalDeleted());
 	}
@@ -178,7 +173,7 @@ public class Start {
 		// wait for cluster to fully initialize and turn asynchronously from
 		// RED status to GREEN before to initialize anything else
 		// wait for 60 seconds maximum
-		elastic.ensureAllIndicesGreen();
+		elastic.ensureAllIndicesAreGreen();
 	}
 
 	void setElasticClient(Client client) {
@@ -197,7 +192,8 @@ public class Start {
 	}
 
 	private static void configure(Routes routes) {
-		routes.add(DataResource.get())//
+		routes.add(BackendResource.get())//
+				.add(DataResource.get())//
 				.add(SchemaResource.get())//
 				.add(CredentialsResource.get())//
 				.add(LinkedinResource.get())//

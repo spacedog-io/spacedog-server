@@ -4,7 +4,6 @@ import org.junit.Assert;
 
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Credentials;
-import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Passwords;
 import io.spacedog.utils.SpaceFields;
@@ -26,7 +25,7 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 	}
 
 	public static SpaceDog signUp(String backendId, String username, String password, String email) {
-		return SpaceDog.backend(backendId).username(username).email(email).signUp(password);
+		return SpaceDog.backendId(backendId).username(username).email(email).signUp(password);
 	}
 
 	public static SpaceDog createTempUser(SpaceDog superadmin, String username) {
@@ -35,16 +34,10 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 
 	public static SpaceDog createTempUser(String backendId, String username) {
 		String password = Passwords.random();
-		Credentials credentials = SpaceDog.backend(backendId)//
+		SpaceDog.backendId(backendId)//
 				.credentials().create(username, password, "platform@spacedog.io");
-		return SpaceDog.fromCredentials(credentials).password(password);
-	}
-
-	public static SpaceDog createAdminCredentials(SpaceDog backend, String username, String password, String email) {
-
-		Credentials credentials = SpaceDog.backend(backend.backendId())//
-				.credentials().create(username, password, email, Type.admin.name());
-		return SpaceDog.fromCredentials(credentials).password(password);
+		return SpaceDog.backendId(backendId).username(username)//
+				.email("platform@spacedog.io").password(password);
 	}
 
 	public static void superdogDeletesCredentials(String backendId, String username) {
@@ -70,10 +63,10 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 
 	public static SpaceDog resetBackend(String backendId, String username, String password, //
 			String email) {
-		SpaceDog superadmin = SpaceDog.backend(backendId)//
+		SpaceDog superadmin = SpaceDog.backendId(backendId)//
 				.username(username).password(password).email(email);
 		superadmin.admin().deleteBackend(backendId);
-		SpaceDog.backend(backendId).admin().createBackend(username, password, email, false);
+		SpaceDog.backendId(backendId).admin().createBackend(username, password, email, false);
 		return superadmin;
 	}
 
@@ -109,9 +102,8 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 	}
 
 	public static SpaceDog superdog(String backendId) {
-		SpaceEnv env = SpaceEnv.defaultEnv();
-		return SpaceDog.backend(backendId)//
-				.username(env.getOrElseThrow("spacedog.superdog.username"))//
+		SpaceEnv env = SpaceRequest.env();
+		return SpaceDog.backendId(backendId).username("superdog")//
 				.password(env.getOrElseThrow("spacedog.superdog.password"));
 	}
 }

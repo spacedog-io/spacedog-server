@@ -4,7 +4,6 @@ import java.util.List;
 
 public class SearchResults<T> {
 
-	public String backendId;
 	public String type;
 
 	public long total = 0;

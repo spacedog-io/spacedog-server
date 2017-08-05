@@ -241,7 +241,7 @@ public class LogResourceTest extends SpaceTest {
 		prepareTest();
 		SpaceDog superdog = superdog();
 		String nathPassword = Passwords.random();
-		SpaceDog nath = SpaceDog.backend("api").username("nath")//
+		SpaceDog nath = SpaceDog.backendId("api").username("nath")//
 				.email("nath@dog.com").password(nathPassword);
 
 		// superdog deletes nath if she exists for fresh start
@@ -255,7 +255,7 @@ public class LogResourceTest extends SpaceTest {
 				nathPassword, nath.email().get(), Type.superadmin.name());
 
 		// anonymous gets data from test backend
-		SpaceDog.backend("test").data().getAll().get();
+		SpaceDog.backendId("test").data().getAll().get();
 
 		// superdog gets all backend logs and is able to review
 		// previous test and root 'api' backend requests

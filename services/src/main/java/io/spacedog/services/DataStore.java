@@ -60,12 +60,12 @@ public class DataStore implements SpaceParams, SpaceFields {
 	// help methods
 	//
 
-	public boolean isType(String backendId, String type) {
-		return Start.get().getElasticClient().existsIndex(backendId, type);
+	public boolean isType(String type) {
+		return Start.get().getElasticClient().existsIndex(type);
 	}
 
-	public ObjectNode getObject(String backendId, String type, String id) {
-		GetResponse response = Start.get().getElasticClient().get(backendId, type, id);
+	public ObjectNode getObject(String type, String id) {
+		GetResponse response = Start.get().getElasticClient().get(type, id);
 
 		if (!response.isExists())
 			throw NotFoundException.object(type, id);
@@ -80,23 +80,22 @@ public class DataStore implements SpaceParams, SpaceFields {
 		return object;
 	}
 
-	IndexResponse createObject(String backendId, String type, ObjectNode object, String createdBy) {
-		return createObject(backendId, type, Optional.empty(), object, createdBy);
+	IndexResponse createObject(String type, ObjectNode object, String createdBy) {
+		return createObject(type, Optional.empty(), object, createdBy);
 	}
 
-	IndexResponse createObject(String backendId, String type, String id, ObjectNode object, String createdBy) {
-		return createObject(backendId, type, Optional.of(id), object, createdBy);
+	IndexResponse createObject(String type, String id, ObjectNode object, String createdBy) {
+		return createObject(type, Optional.of(id), object, createdBy);
 	}
 
-	IndexResponse createObject(String backendId, String type, Optional<String> id, ObjectNode object,
-			String createdBy) {
+	IndexResponse createObject(String type, Optional<String> id, ObjectNode object, String createdBy) {
 
 		object = setMetaBeforeCreate(object, createdBy);
 		ElasticClient elasticClient = Start.get().getElasticClient();
 
 		return id.isPresent() //
-				? elasticClient.index(backendId, type, id.get(), object.toString())//
-				: elasticClient.index(backendId, type, object.toString());
+				? elasticClient.index(type, id.get(), object.toString())//
+				: elasticClient.index(type, object.toString());
 	}
 
 	private ObjectNode setMetaBeforeCreate(ObjectNode object, String createdBy) {
@@ -104,13 +103,12 @@ public class DataStore implements SpaceParams, SpaceFields {
 
 		// replace meta to avoid developers to
 		// set any meta fields directly
-		object.set("meta",
-				Json8.objectBuilder()//
-						.put("createdBy", createdBy)//
-						.put("updatedBy", createdBy)//
-						.put("createdAt", now)//
-						.put("updatedAt", now)//
-						.build());
+		object.set("meta", Json8.objectBuilder()//
+				.put("createdBy", createdBy)//
+				.put("updatedBy", createdBy)//
+				.put("createdAt", now)//
+				.put("updatedAt", now)//
+				.build());
 
 		return object;
 	}
@@ -136,7 +134,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 		node.with("meta").remove("type");
 
 		IndexResponse response = Start.get().getElasticClient()//
-				.index(requester.backendId(), type, node.toString());
+				.index(type, node.toString());
 
 		meta.type = type;
 		meta.id = response.getId();
@@ -146,8 +144,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 	/**
 	 * TODO do we need these two update methods or just one?
 	 */
-	public IndexResponse updateObject(String backendId, String type, String id, long version, ObjectNode object,
-			String updatedBy) {
+	public IndexResponse updateObject(String type, String id, long version, ObjectNode object, String updatedBy) {
 
 		object.with("meta").remove("id");
 		object.with("meta").remove("version");
@@ -159,14 +156,15 @@ public class DataStore implements SpaceParams, SpaceFields {
 		object.with("meta").put("updatedBy", updatedBy);
 		object.with("meta").put("updatedAt", DateTime.now().toString());
 
-		IndexRequestBuilder builder = Start.get().getElasticClient().prepareIndex(backendId, type, id)
-				.setSource(object.toString());
+		IndexRequestBuilder builder = Start.get().getElasticClient()//
+				.prepareIndex(type, id).setSource(object.toString());
+
 		if (version > 0)
 			builder.setVersion(version);
 		return builder.get();
 	}
 
-	public IndexResponse updateObject(String backendId, ObjectNode object, String updatedBy) {
+	public IndexResponse updateObject(ObjectNode object, String updatedBy) {
 
 		String id = Json8.checkStringNotNullOrEmpty(object, "meta.id");
 		String type = Json8.checkStringNotNullOrEmpty(object, "meta.type");
@@ -182,8 +180,8 @@ public class DataStore implements SpaceParams, SpaceFields {
 		object.with("meta").put("updatedBy", updatedBy);
 		object.with("meta").put("updatedAt", DateTime.now().toString());
 
-		return Start.get().getElasticClient().prepareIndex(backendId, type, id).setSource(object.toString())
-				.setVersion(version).get();
+		return Start.get().getElasticClient().prepareIndex(type, id)//
+				.setSource(object.toString()).setVersion(version).get();
 	}
 
 	public void updateObject(Metable object, Credentials requester) {
@@ -205,26 +203,25 @@ public class DataStore implements SpaceParams, SpaceFields {
 		node.with("meta").remove("type");
 
 		meta.version = Start.get().getElasticClient()//
-				.prepareIndex(requester.backendId(), meta.type, meta.id)//
+				.prepareIndex(meta.type, meta.id)//
 				.setSource(node.toString())//
 				.setVersion(meta.version)//
 				.get()//
 				.getVersion();
 	}
 
-	public UpdateResponse patchObject(String backendId, String type, String id, ObjectNode object, String updatedBy) {
-		return patchObject(backendId, type, id, 0, object, updatedBy);
+	public UpdateResponse patchObject(String type, String id, ObjectNode object, String updatedBy) {
+		return patchObject(type, id, 0, object, updatedBy);
 	}
 
-	public UpdateResponse patchObject(String backendId, String type, String id, long version, ObjectNode object,
-			String updatedBy) {
+	public UpdateResponse patchObject(String type, String id, long version, ObjectNode object, String updatedBy) {
 
 		object.with("meta").removeAll()//
 				.put("updatedBy", updatedBy)//
 				.put("updatedAt", DateTime.now().toString());
 
-		UpdateRequestBuilder update = Start.get().getElasticClient().prepareUpdate(backendId, type, id)
-				.setDoc(object.toString());
+		UpdateRequestBuilder update = Start.get().getElasticClient()//
+				.prepareUpdate(type, id).setDoc(object.toString());
 
 		if (version > 0)
 			update.setVersion(version);
@@ -255,7 +252,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 	// }
 	// }
 
-	public SearchHits search(String backendId, String type, Object... terms) {
+	public SearchHits search(String type, Object... terms) {
 
 		if (terms.length % 2 == 1)
 			throw Exceptions.illegalArgument(//
@@ -266,13 +263,13 @@ public class DataStore implements SpaceParams, SpaceFields {
 			builder.filter(QueryBuilders.termQuery(terms[i].toString(), terms[i + 1]));
 
 		SearchResponse response = Start.get().getElasticClient()//
-				.prepareSearch(backendId, type).setTypes(type).setQuery(builder).get();
+				.prepareSearch(type).setTypes(type).setQuery(builder).get();
 
 		return response.getHits();
 	}
 
-	public FilteredSearchBuilder searchBuilder(String backendId, String type) {
-		return new FilteredSearchBuilder(backendId, type);
+	public FilteredSearchBuilder searchBuilder(String type) {
+		return new FilteredSearchBuilder(type);
 	}
 
 	public static class FilteredSearchBuilder {
@@ -280,15 +277,15 @@ public class DataStore implements SpaceParams, SpaceFields {
 		private SearchRequestBuilder search;
 		private BoolQueryBuilder boolBuilder;
 
-		public FilteredSearchBuilder(String backendId, String type) {
+		public FilteredSearchBuilder(String type) {
 
 			// check if type is well defined
 			// throws a NotFoundException if not
 			if (!Strings.isNullOrEmpty(type))
-				Start.get().getElasticClient().getSchema(backendId, type);
+				Start.get().getElasticClient().getSchema(type);
 
 			this.search = Start.get().getElasticClient()//
-					.prepareSearch(backendId, type)//
+					.prepareSearch(type)//
 					.setTypes(type);
 
 			this.boolBuilder = QueryBuilders.boolQuery();
@@ -309,10 +306,9 @@ public class DataStore implements SpaceParams, SpaceFields {
 		}
 
 		public FilteredSearchBuilder applyFilters(JsonNode filters) {
-			filters.fields()
-					.forEachRemaining(field -> boolBuilder.filter(//
-							QueryBuilders.termQuery(field.getKey(), //
-									Json8.toValue(field.getValue()))));
+			filters.fields().forEachRemaining(field -> boolBuilder.filter(//
+					QueryBuilders.termQuery(field.getKey(), //
+							Json8.toValue(field.getValue()))));
 			return this;
 		}
 
@@ -321,22 +317,22 @@ public class DataStore implements SpaceParams, SpaceFields {
 		}
 	}
 
-	public void refreshType(String backendId, String type) {
-		refreshType(true, backendId, type);
+	public void refreshType(String type) {
+		refreshType(true, type);
 	}
 
-	public void refreshType(boolean refresh, String backendId, String type) {
+	public void refreshType(boolean refresh, String type) {
 		if (refresh)
-			Start.get().getElasticClient().refreshType(backendId, type);
+			Start.get().getElasticClient().refreshType(type);
 	}
 
-	public void refreshBackend(String backendId) {
-		refreshBackend(true, backendId);
+	public void refreshBackend() {
+		refreshBackend(true);
 	}
 
-	public void refreshBackend(boolean refresh, String backendId) {
+	public void refreshBackend(boolean refresh) {
 		if (refresh) {
-			Start.get().getElasticClient().refreshBackend(backendId);
+			Start.get().getElasticClient().refreshBackend();
 		}
 	}
 

@@ -65,18 +65,16 @@ public class CredentialsResourceTestOften extends SpaceTest {
 				.assertPresent("accessToken")//
 				.assertPresent("expiresIn")//
 				.assertEquals(vinceId, "credentials.id")//
-				.assertEquals("test", "credentials.backendId")//
 				.assertEquals("vince", "credentials.username")//
 				.assertEquals("vince@dog.com", "credentials.email")//
 				.assertEquals(true, "credentials.enabled")//
-				.assertEquals("USER", "credentials.level")//
 				.assertSizeEquals(1, "credentials.roles")//
 				.assertEquals("user", "credentials.roles.0")//
 				.assertPresent("credentials.createdAt")//
 				.assertPresent("credentials.updatedAt")//
 				.asJsonObject();
 
-		SpaceDog vince = SpaceDog.backend("test").username("vince")//
+		SpaceDog vince = SpaceDog.backendId("test").username("vince")//
 				.id(vinceId).password("hi vince").email("vince@dog.com")//
 				.accessToken(node.get("accessToken").asText()) //
 				.expiresAt(DateTime.now().plus(node.get("expiresIn").asLong()));
@@ -85,7 +83,6 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		vince.get("/1/credentials/" + vince.id()).go(200)//
 				.assertEquals("vince", "username")//
 				.assertEquals("vince@dog.com", "email")//
-				.assertEquals("USER", "level")//
 				.assertSizeEquals(1, "roles")//
 				.assertDateIsRecent("createdAt")//
 				.assertDateIsRecent("updatedAt");
@@ -238,7 +235,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog guest = SpaceDog.backend("test");
+		SpaceDog guest = SpaceDog.backendId("test");
 		SpaceDog superadmin = resetTestBackend();
 		SpaceDog fred = signUp("test", "fred", "hi fred");
 		SpaceDog vince = signUp("test", "vince", "hi vince");
@@ -293,7 +290,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// super admin searches for user credentials
 		SpaceRequest.get("/1/credentials")//
-				.queryParam("level", "USER").auth(test).go(200)//
+				.queryParam("role", "user").auth(test).go(200)//
 				.assertEquals(2, "total")//
 				.assertSizeEquals(2, "results")//
 				.assertContainsValue("vince", "username")//
@@ -313,8 +310,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 				.queryParam("username", "fred").auth(vince).go(200)//
 				.assertSizeEquals(1, "results")//
 				.assertContainsValue("fred", "username")//
-				.assertContainsValue("platform@spacedog.io", "email")//
-				.assertContainsValue("USER", "level");
+				.assertContainsValue("platform@spacedog.io", "email");
 
 		// super admin deletes credentials with specified username
 		SpaceRequest.delete("/1/credentials")//
@@ -489,12 +485,12 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend().login();
-		SpaceDog fred = signUp(test, "fred", "hi fred");
+		SpaceDog superadmin = resetTestBackend().login();
+		SpaceDog fred = signUp(superadmin, "fred", "hi fred");
 
 		// test gets his credentials roles
-		Set<String> roles = test.credentials().getAllRoles(test.id());
-		assertEquals(Sets.newHashSet("admin", "superadmin"), roles);
+		Set<String> roles = superadmin.credentials().getAllRoles(superadmin.id());
+		assertEquals(Sets.newHashSet("superadmin"), roles);
 
 		// fred gets his credentials roles
 		roles = fred.credentials().getAllRoles(fred.id());
@@ -505,8 +501,8 @@ public class CredentialsResourceTestOften extends SpaceTest {
 				.routeParam("id", fred.id()).go(403);
 
 		// admin sets fred's roles
-		test.credentials().setRole(fred.id(), "silver");
-		test.credentials().setRole(fred.id(), "gold");
+		superadmin.credentials().setRole(fred.id(), "silver");
+		superadmin.credentials().setRole(fred.id(), "gold");
 		roles = fred.credentials().getAllRoles(fred.id());
 		assertEquals(Sets.newHashSet("user", "silver", "gold"), roles);
 
@@ -515,13 +511,13 @@ public class CredentialsResourceTestOften extends SpaceTest {
 				.routeParam("id", fred.id()).go(403);
 
 		// admin deletes one of fred's roles
-		test.credentials().unsetRole(fred.id(), "gold");
+		superadmin.credentials().unsetRole(fred.id(), "gold");
 		roles = fred.credentials().getAllRoles(fred.id());
 		assertEquals(Sets.newHashSet("user", "silver"), roles);
 
 		// admin deletes all fred's roles
-		test.credentials().unsetAllRoles(fred.id());
-		roles = test.credentials().getAllRoles(fred.id());
+		superadmin.credentials().unsetAllRoles(fred.id());
+		roles = superadmin.credentials().getAllRoles(fred.id());
 		assertTrue(roles.isEmpty());
 
 		// fred can not access user authorized services
@@ -529,7 +525,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		fred.get("/1/credentials/me").go(403);
 
 		// test super admin gives fred 'admin' role
-		test.credentials().setRole(fred.id(), "admin");
+		superadmin.credentials().setRole(fred.id(), "admin");
 		roles = fred.credentials().getAllRoles(fred.id());
 		assertEquals(Sets.newHashSet("admin"), roles);
 
@@ -545,8 +541,8 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// test super admin fails to give himself 'superdog' role
 		// since he is only super admin
-		test.put("/1/credentials/{id}/roles/superdog")//
-				.routeParam("id", test.id()).go(403);
+		superadmin.put("/1/credentials/{id}/roles/superdog")//
+				.routeParam("id", superadmin.id()).go(403);
 	}
 
 	@Test
@@ -647,7 +643,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// fred fails to create admin credentials
 		SpaceRequest.post("/1/credentials").auth(fred)//
 				.bodyJson("username", "vince", "password", "hi vince", //
-						"email", "vince@dog.com", "level", "ADMIN")//
+						"email", "vince@dog.com", "roles", Json7.array("admin"))//
 				.go(403);
 
 		// test (backend default superadmin) creates credentials for new
@@ -673,9 +669,9 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		resetTestBackend();
-		SpaceDog.backend("test").credentials()//
+		SpaceDog.backendId("test").credentials()//
 				.create("fred", "hi fred", "plateform@spacedog.io");
-		SpaceDog fred = SpaceDog.backend("test")//
+		SpaceDog fred = SpaceDog.backendId("test")//
 				.username("fred").password("hi fred").login();
 
 		// fred fails to update his password

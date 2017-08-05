@@ -65,7 +65,7 @@ public class LoginCommand extends AbstractCommand<LoginCommand> {
 					: String.valueOf(//
 							console.readPassword("Enter %s password: ", username));
 
-		session = SpaceDog.backend(backend)//
+		session = SpaceDog.backendId(backend)//
 				.username(username).login(password);
 
 		Path path = Paths.get(userHome, ".spacedog");
@@ -121,7 +121,7 @@ public class LoginCommand extends AbstractCommand<LoginCommand> {
 					in.close();
 			}
 
-			session = SpaceDog.backend(properties.get("backend").toString())//
+			session = SpaceDog.backendId(properties.get("backend").toString())//
 					.accessToken(properties.get("accessToken").toString());
 		}
 

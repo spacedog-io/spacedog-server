@@ -1,6 +1,5 @@
 package io.spacedog.services;
 
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
@@ -11,9 +10,9 @@ import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.QuerySourceBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.joda.time.DateTime;
 
@@ -21,10 +20,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
-import com.google.common.io.Resources;
 
 import io.spacedog.core.Json8;
 import io.spacedog.utils.Check;
+import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.JsonBuilder;
@@ -48,18 +47,17 @@ public class LogResource extends Resource {
 	// init
 	//
 
-	void init() throws IOException {
+	void init() {
+		initIndex(SpaceContext.backendId());
+	}
+
+	public void initIndex(String backendId) {
 
 		ElasticClient client = Start.get().getElasticClient();
+		String mapping = ClassResources.loadToString(this, "log-mapping.json");
 
-		String mapping = Resources.toString(//
-				Resources.getResource(this.getClass(), "log-mapping.json"), //
-				Utils.UTF8);
-
-		if (client.existsIndex(SPACEDOG_BACKEND, TYPE))
-			client.putMapping(SPACEDOG_BACKEND, TYPE, mapping);
-		else
-			client.createIndex(SPACEDOG_BACKEND, TYPE, mapping, false);
+		if (!client.existsIndex(backendId, TYPE))
+			client.createIndex(backendId, TYPE, mapping, false);
 	}
 
 	//
@@ -69,21 +67,16 @@ public class LogResource extends Resource {
 	@Get("")
 	@Get("/")
 	public Payload getAll(Context context) {
-
-		Credentials credentials = SpaceContext.credentials().checkAtLeastSuperAdmin();
-
-		Optional<String> optBackendId = credentials.isSuperDog() //
-				&& credentials.isTargetingRootApi() ? Optional.empty() //
-						: Optional.of(credentials.backendId());
+		SpaceContext.credentials().checkAtLeastSuperAdmin();
 
 		int from = context.query().getInteger(PARAM_FROM, 0);
 		int size = context.query().getInteger(PARAM_SIZE, 10);
 		Check.isTrue(from + size <= 1000, "from + size must be less than or equal to 1000");
 
 		boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);
-		DataStore.get().refreshType(refresh, SPACEDOG_BACKEND, TYPE);
+		DataStore.get().refreshType(refresh, TYPE);
 
-		SearchResponse response = doGetLogs(from, size, optBackendId);
+		SearchResponse response = doGetLogs(from, size);
 		return extractLogs(response);
 	}
 
@@ -91,27 +84,16 @@ public class LogResource extends Resource {
 	@Post("/search/")
 	public Payload search(String body, Context context) {
 
-		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
-
-		QueryBuilder query = QueryBuilders.wrapperQuery(body);
-
-		if (!credentials.isTargetingRootApi())
-			query = QueryBuilders.boolQuery()//
-					.filter(query)//
-					.filter(QueryBuilders.termQuery("credentials.backendId", //
-							credentials.backendId()));
+		SpaceContext.credentials().checkAtLeastAdmin();
+		SearchSourceBuilder.searchSource().query(body);
 
 		boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);
-		DataStore.get().refreshType(refresh, SPACEDOG_BACKEND, TYPE);
+		DataStore.get().refreshType(refresh, TYPE);
 
 		SearchResponse response = Start.get().getElasticClient()//
-				.prepareSearch(SPACEDOG_BACKEND, TYPE)//
+				.prepareSearch(TYPE)//
 				.setTypes(TYPE)//
-				.setQuery(query)//
-				.setFrom(context.query().getInteger("from", 0)) //
-				.setSize(context.query().getInteger("size", 10)) //
-				.addSort(FIELD_RECEIVED_AT, SortOrder.DESC)//
-				.get();
+				.setSource(body).get();
 
 		return extractLogs(response);
 	}
@@ -127,7 +109,7 @@ public class LogResource extends Resource {
 			optBackendId = Optional.empty();
 
 		else if (credentials.isAtLeastSuperAdmin())
-			optBackendId = Optional.of(credentials.backendId());
+			optBackendId = Optional.of(SpaceContext.backendId());
 
 		else
 			throw Exceptions.insufficientCredentials(credentials);
@@ -161,7 +143,7 @@ public class LogResource extends Resource {
 
 				// https://api.spacedog.io ping requests should not be logged
 				if (uri.isEmpty() || uri.equals(SLASH))
-					return !SpaceContext.credentials().isTargetingRootApi();
+					return !SpaceContext.backend().isDefault();
 
 				return true;
 			}
@@ -198,8 +180,7 @@ public class LogResource extends Resource {
 	//
 
 	private boolean hasPurgeAllRole(Credentials credentials) {
-		return credentials.isTargetingRootApi() //
-				&& (credentials.isSuperDog() || credentials.roles().contains(PURGE_ALL));
+		return credentials.isSuperDog() || credentials.roles().contains(PURGE_ALL);
 	}
 
 	private Optional<DeleteByQueryResponse> doPurgeBackend(DateTime before, //
@@ -215,24 +196,19 @@ public class LogResource extends Resource {
 		String query = new QuerySourceBuilder().setQuery(boolQueryBuilder).toString();
 
 		DeleteByQueryResponse delete = Start.get().getElasticClient()//
-				.deleteByQuery(query, SPACEDOG_BACKEND, TYPE);
+				.deleteByQuery(query, TYPE);
 
 		// TODO why return an optional?
 		// return directly the response
 		return Optional.of(delete);
 	}
 
-	private SearchResponse doGetLogs(int from, int size, Optional<String> backendId) {
-
-		BoolQueryBuilder query = QueryBuilders.boolQuery();
-
-		if (backendId.isPresent())
-			query.filter(QueryBuilders.termQuery("credentials.backendId", backendId.get()));
+	private SearchResponse doGetLogs(int from, int size) {
 
 		return Start.get().getElasticClient()//
-				.prepareSearch(SPACEDOG_BACKEND, TYPE)//
+				.prepareSearch(TYPE)//
 				.setTypes(TYPE)//
-				.setQuery(query)//
+				.setQuery(QueryBuilders.matchAllQuery())//
 				.addSort(FIELD_RECEIVED_AT, SortOrder.DESC)//
 				.setFrom(from)//
 				.setSize(size)//
@@ -266,9 +242,7 @@ public class LogResource extends Resource {
 		addRequestPayload(log, context);
 		addResponsePayload(log, payload, context);
 
-		return Start.get().getElasticClient()//
-				.index(SPACEDOG_BACKEND, TYPE, log.toString())//
-				.getId();
+		return Start.get().getElasticClient().index(TYPE, log.toString()).getId();
 	}
 
 	private void addResponsePayload(ObjectNode log, Payload payload, Context context) {
@@ -330,7 +304,6 @@ public class LogResource extends Resource {
 	private void addCredentials(ObjectNode log) {
 		Credentials credentials = SpaceContext.credentials();
 		ObjectNode logCredentials = log.putObject("credentials");
-		logCredentials.put("backendId", credentials.backendId());
 		logCredentials.put("type", credentials.type().name());
 		logCredentials.put("name", credentials.name());
 	}

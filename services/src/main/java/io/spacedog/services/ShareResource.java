@@ -30,8 +30,8 @@ public class ShareResource extends S3Resource {
 	@Get("")
 	@Get("/")
 	public Object getAll(Context context) {
-		Credentials credentials = checkPermission(DataPermission.search);
-		return doList(SHARE_BUCKET_SUFFIX, credentials.backendId(), WebPath.ROOT, context);
+		checkPermission(DataPermission.search);
+		return doList(SHARE_BUCKET_SUFFIX, WebPath.ROOT, context);
 	}
 
 	@Get("/:uuid/:fileName")
@@ -41,8 +41,8 @@ public class ShareResource extends S3Resource {
 		boolean checkOwnership = checkPermissionAndIsOwnershipRequired(//
 				DataPermission.read, DataPermission.read_all);
 
-		return doGet(SHARE_BUCKET_SUFFIX, SpaceContext.backendId(), //
-				WebPath.newPath(uuid, fileName), context, checkOwnership);
+		return doGet(SHARE_BUCKET_SUFFIX, WebPath.newPath(uuid, fileName), //
+				context, checkOwnership);
 	}
 
 	@Post("/:fileName")
@@ -61,20 +61,18 @@ public class ShareResource extends S3Resource {
 	@Delete("")
 	@Delete("/")
 	public Payload deleteAll() {
-		Credentials credentials = checkPermission(DataPermission.delete_all);
-		return doDelete(SHARE_BUCKET_SUFFIX, credentials, WebPath.ROOT, false, false);
+		checkPermission(DataPermission.delete_all);
+		return doDelete(SHARE_BUCKET_SUFFIX, WebPath.ROOT, false, false);
 	}
 
 	@Delete("/:uuid/:fileName")
 	@Delete("/:uuid/:fileName/")
 	public Payload delete(String uuid, String fileName, Context context) {
-		Credentials credentials = SpaceContext.credentials();
-
 		boolean checkOwnership = checkPermissionAndIsOwnershipRequired(//
 				DataPermission.delete, DataPermission.delete_all);
 
-		return doDelete(SHARE_BUCKET_SUFFIX, credentials, //
-				WebPath.newPath(uuid, fileName), true, checkOwnership);
+		return doDelete(SHARE_BUCKET_SUFFIX, WebPath.newPath(uuid, fileName), //
+				true, checkOwnership);
 	}
 
 	//

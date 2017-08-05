@@ -21,11 +21,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import io.spacedog.rest.SpaceBackend;
-
-// ignore deprecated fields still in elastic data
 @JsonIgnoreProperties(ignoreUnknown = true)
-// only map to fields
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, //
 		getterVisibility = Visibility.NONE, //
 		isGetterVisibility = Visibility.NONE, //
@@ -64,7 +60,6 @@ public class Credentials {
 		}
 	}
 
-	private String backendId;
 	private String username;
 	private String email;
 	private boolean enabled = true;
@@ -82,7 +77,7 @@ public class Credentials {
 	private String updatedAt;
 
 	@JsonIgnore
-	public Session currentSession;
+	private Session currentSession;
 	@JsonIgnore
 	private boolean passwordHasBeenChallenged;
 	@JsonIgnore
@@ -90,17 +85,12 @@ public class Credentials {
 	@JsonIgnore
 	private long version;
 	@JsonIgnore
-	private Type type = Type.guest;
+	private Type type;
 
 	public Credentials() {
 	}
 
-	public Credentials(String backendId) {
-		this.backendId = backendId;
-	}
-
-	public Credentials(String backendId, String name) {
-		this.backendId = backendId;
+	public Credentials(String name) {
 		this.username = name;
 	}
 
@@ -120,10 +110,6 @@ public class Credentials {
 	public Credentials version(long version) {
 		this.version = version;
 		return this;
-	}
-
-	public String backendId() {
-		return backendId;
 	}
 
 	public String name() {
@@ -197,15 +183,19 @@ public class Credentials {
 
 	public Set<String> roles() {
 		if (roles == null)
-			return Collections.emptySet();
-		return Collections.unmodifiableSet(roles);
+			roles = Sets.newHashSet();
+		return roles;
 	}
 
 	public Credentials roles(String... newRoles) {
-		for (String role : newRoles)
-			Roles.checkIfValid(role);
+		if (roles == null)
+			roles = Sets.newHashSet();
 
-		this.roles = Sets.newHashSet(newRoles);
+		for (String role : newRoles) {
+			Roles.checkIfValid(role);
+			roles.add(role);
+		}
+
 		type = Type.fromRoles(this.roles);
 		return this;
 	}
@@ -274,7 +264,6 @@ public class Credentials {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((backendId == null) ? 0 : backendId.hashCode());
 		result = prime * result + ((username == null) ? 0 : username.hashCode());
 		return result;
 	}
@@ -288,11 +277,6 @@ public class Credentials {
 		if (getClass() != obj.getClass())
 			return false;
 		Credentials other = (Credentials) obj;
-		if (backendId == null) {
-			if (other.backendId != null)
-				return false;
-		} else if (!backendId.equals(other.backendId))
-			return false;
 		if (username == null) {
 			if (other.username != null)
 				return false;
@@ -306,11 +290,13 @@ public class Credentials {
 	//
 
 	public Type type() {
+		if (type == null)
+			type = Type.fromRoles(roles());
 		return type;
 	}
 
 	public boolean isSuperDog() {
-		return Type.superdog.equals(type);
+		return Type.superdog.equals(type());
 	}
 
 	public Credentials checkSuperDog() {
@@ -320,11 +306,11 @@ public class Credentials {
 	}
 
 	public boolean isSuperAdmin() {
-		return Type.superadmin.equals(type);
+		return Type.superadmin.equals(type());
 	}
 
 	public boolean isAtLeastSuperAdmin() {
-		return type.ordinal() >= Type.superadmin.ordinal();
+		return type().ordinal() >= Type.superadmin.ordinal();
 	}
 
 	public Credentials checkAtLeastSuperAdmin() {
@@ -334,11 +320,11 @@ public class Credentials {
 	}
 
 	public boolean isAdmin() {
-		return Type.admin.equals(type);
+		return Type.admin.equals(type());
 	}
 
 	public boolean isAtLeastAdmin() {
-		return type.ordinal() >= Type.admin.ordinal();
+		return type().ordinal() >= Type.admin.ordinal();
 	}
 
 	public Credentials checkAtLeastAdmin() {
@@ -348,11 +334,11 @@ public class Credentials {
 	}
 
 	public boolean isUser() {
-		return Type.user.equals(type);
+		return Type.user.equals(type());
 	}
 
 	public boolean isAtLeastUser() {
-		return type.ordinal() >= Type.user.ordinal();
+		return type().ordinal() >= Type.user.ordinal();
 	}
 
 	public Credentials checkAtLeastUser() {
@@ -362,19 +348,19 @@ public class Credentials {
 	}
 
 	public boolean isGuest() {
-		return Type.guest.equals(type);
+		return Type.guest.equals(type());
 	}
 
 	public boolean isGreaterThan(Credentials other) {
-		return type.isGreaterThan(other.type);
+		return type().isGreaterThan(other.type());
 	}
 
 	public boolean isGreaterThanOrEqualTo(Credentials other) {
-		return type.isGreaterThanOrEqualTo(other.type);
+		return type().isGreaterThanOrEqualTo(other.type());
 	}
 
 	public void checkAuthorizedToManage(String role) {
-		if (Type.authorizedToManage(role).isGreaterThan(type))
+		if (Type.authorizedToManage(role).isGreaterThan(type()))
 			throw Exceptions.insufficientCredentials(this);
 	}
 
@@ -523,14 +509,9 @@ public class Credentials {
 	// Other logic
 	//
 
-	public boolean isTargetingRootApi() {
-		return SpaceBackend.isDefaultBackendId(backendId());
-	}
-
 	public ObjectNode toJson() {
 		return Json7.object(//
 				SpaceFields.FIELD_ID, id(), //
-				SpaceFields.FIELD_BACKEND_ID, backendId(), //
 				SpaceFields.FIELD_USERNAME, name(), //
 				SpaceFields.FIELD_EMAIL, email().orElse(null), //
 				"reallyEnabled", isReallyEnabled(), //
@@ -542,6 +523,11 @@ public class Credentials {
 				SpaceFields.FIELD_ROLES, roles(), //
 				SpaceFields.FIELD_CREATED_AT, createdAt(), //
 				SpaceFields.FIELD_UPDATED_AT, updatedAt());
+	}
+
+	@Override
+	public String toString() {
+		return String.format("[%s][%s]", type(), name());
 	}
 
 	//

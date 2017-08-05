@@ -40,13 +40,13 @@ public class ApplicationResource extends Resource {
 	@Put("/1/applications/:name/:pushService/")
 	public Payload putApplication(String name, String pushService, String body) {
 
-		String backendId = SpaceContext.credentials().checkAtLeastAdmin().backendId();
+		SpaceContext.credentials().checkAtLeastAdmin();
 
 		ApplicationPushCredentials credentials = Json8.readObject(//
 				body, ApplicationPushCredentials.class);
 
 		CreatePlatformApplicationRequest request = new CreatePlatformApplicationRequest()//
-				.withName(toApplicationId(backendId, name))//
+				.withName(toApplicationId(name))//
 				.withPlatform(pushService);
 
 		request.addAttributesEntry("PlatformCredential", credentials.credentials);
@@ -63,10 +63,10 @@ public class ApplicationResource extends Resource {
 	@Delete("/1/applications/:name/:pushService/")
 	public Payload deleteApplication(String name, String pushService) {
 
-		String backendId = SpaceContext.credentials().checkAtLeastAdmin().backendId();
+		SpaceContext.credentials().checkAtLeastAdmin();
 
 		Optional<PlatformApplication> application = PushResource.get()//
-				.getApplication(toApplicationId(backendId, name), //
+				.getApplication(toApplicationId(name), //
 						PushService.valueOf(pushService));
 
 		if (application.isPresent()) {
@@ -84,8 +84,8 @@ public class ApplicationResource extends Resource {
 	// Implementation
 	//
 
-	private String toApplicationId(String backendId, String name) {
-		return backendId + '-' + name;
+	private String toApplicationId(String name) {
+		return SpaceContext.backendId() + '-' + name;
 	}
 
 	//

@@ -167,7 +167,7 @@ public class PushResource extends Resource {
 			objectMessage = toObjectMessage(node);
 		}
 
-		ObjectNode installation = DataStore.get().getObject(credentials.backendId(), TYPE, id);
+		ObjectNode installation = DataStore.get().getObject(TYPE, id);
 
 		PushLog log = new PushLog();
 		pushToInstallation(log, id, installation, objectMessage, credentials, badge);
@@ -177,8 +177,7 @@ public class PushResource extends Resource {
 	@Get("/installation/:id/tags")
 	@Get("/installation/:id/tags/")
 	public Payload getTags(String id, Context context) {
-		Credentials credentials = SpaceContext.credentials();
-		ObjectNode object = DataStore.get().getObject(credentials.backendId(), TYPE, id);
+		ObjectNode object = DataStore.get().getObject(TYPE, id);
 
 		return JsonPayload.json(//
 				object.has(TAGS) //
@@ -207,8 +206,7 @@ public class PushResource extends Resource {
 
 	/**
 	 * Check this page for specific json messages:
-	 * http://docs.aws.amazon.com/sns/latest/dg/mobile-push-send-custommessage.
-	 * html
+	 * http://docs.aws.amazon.com/sns/latest/dg/mobile-push-send-custommessage. html
 	 */
 	@Post("/push")
 	@Post("/push/")
@@ -238,7 +236,8 @@ public class PushResource extends Resource {
 		JsonNode tags = push.get(TAGS);
 		if (tags != null) {
 			Iterator<JsonNode> tagsIterator = tags.isObject()//
-					? Iterators.singletonIterator(tags) : tags.elements();
+					? Iterators.singletonIterator(tags)
+					: tags.elements();
 
 			while (tagsIterator.hasNext()) {
 				JsonNode tag = tagsIterator.next();
@@ -253,11 +252,11 @@ public class PushResource extends Resource {
 		}
 
 		boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);
-		DataStore.get().refreshType(refresh, credentials.backendId(), TYPE);
+		DataStore.get().refreshType(refresh, TYPE);
 
 		// TODO use a scroll to push to all installations found
 		SearchHits hits = Start.get().getElasticClient()//
-				.prepareSearch(credentials.backendId(), TYPE)//
+				.prepareSearch(TYPE)//
 				.setQuery(query)//
 				.setFrom(0)//
 				.setSize(1000)//
@@ -351,7 +350,7 @@ public class PushResource extends Resource {
 							"No endpoint found for the target arn specified")) {
 
 				logItem.put("installationDisabled", true);
-				removeEndpointQuietly(credentials.backendId(), installationId);
+				removeEndpointQuietly(installationId);
 			}
 
 			if (e instanceof PlatformApplicationDisabledException)
@@ -424,8 +423,8 @@ public class PushResource extends Resource {
 			if (BadgeStrategy.auto.equals(badgeStrategy)) {
 				badge = badge + 1;
 				// update installation badge in data store
-				DataStore.get().patchObject(credentials.backendId(), //
-						TYPE, installationId, Json8.object(BADGE, badge), credentials.name());
+				DataStore.get().patchObject(TYPE, //
+						installationId, Json8.object(BADGE, badge), credentials.name());
 			}
 
 			message.with(pushService.toString()).with("aps").put(BADGE, badge);
@@ -433,12 +432,12 @@ public class PushResource extends Resource {
 		return message;
 	}
 
-	private void removeEndpointQuietly(String backend, String id) {
+	private void removeEndpointQuietly(String id) {
 		try {
-			Start.get().getElasticClient().delete(backend, TYPE, id, false, true);
+			Start.get().getElasticClient().delete(TYPE, id, false, true);
 		} catch (Exception e) {
 			System.err.println(String.format(//
-					"[Warning] failed to delete disabled installation [%s][%s]", backend, id));
+					"[Warning] failed to delete disabled installation [%s]", id));
 			e.printStackTrace();
 		}
 	}
@@ -480,7 +479,7 @@ public class PushResource extends Resource {
 		if (SpaceContext.isTest()) {
 			installation.set(ENDPOINT, TextNode.valueOf("FAKE_ENDPOINT_FOR_TESTING"));
 		} else {
-			String endpoint = createApplicationEndpoint(credentials.backendId(), appId, service, token);
+			String endpoint = createApplicationEndpoint(appId, service, token);
 			installation.set(ENDPOINT, TextNode.valueOf(endpoint));
 		}
 
@@ -489,8 +488,8 @@ public class PushResource extends Resource {
 
 		if (id.isPresent()) {
 			UpdateResponse response = DataStore.get()//
-					.patchObject(credentials.backendId(), TYPE, id.get(), installation, credentials.name());
-			return JsonPayload.saved(false, credentials.backendId(), "/1", TYPE, id.get(), response.getVersion());
+					.patchObject(TYPE, id.get(), installation, credentials.name());
+			return JsonPayload.saved(false, "/1", TYPE, id.get(), response.getVersion());
 		} else
 			return DataResource.get().post(TYPE, installation.toString(), context);
 	}
@@ -498,7 +497,7 @@ public class PushResource extends Resource {
 	private Payload updateTags(String id, String body, boolean strict, boolean delete) {
 
 		Credentials credentials = SpaceContext.credentials();
-		ObjectNode installation = DataStore.get().getObject(credentials.backendId(), TYPE, id);
+		ObjectNode installation = DataStore.get().getObject(TYPE, id);
 
 		if (strict) {
 			ArrayNode tags = Json8.readArray(body);
@@ -520,7 +519,7 @@ public class PushResource extends Resource {
 							break;
 						}
 						// tag already exists => nothing to save
-						return JsonPayload.saved(false, credentials.backendId(), "/1", TYPE, id);
+						return JsonPayload.saved(false, "/1", TYPE, id);
 					}
 				}
 			}
@@ -529,8 +528,8 @@ public class PushResource extends Resource {
 				Json8.withArray(installation, TAGS).add(newTag);
 		}
 
-		DataStore.get().updateObject(credentials.backendId(), installation, credentials.name());
-		return JsonPayload.saved(false, credentials.backendId(), "/1", TYPE, id);
+		DataStore.get().updateObject(installation, credentials.name());
+		return JsonPayload.saved(false, "/1", TYPE, id);
 	}
 
 	private String toFieldPath(String... strings) {
@@ -569,7 +568,7 @@ public class PushResource extends Resource {
 		return Optional.empty();
 	}
 
-	String createApplicationEndpoint(String backendId, String appId, PushService service, String token) {
+	String createApplicationEndpoint(String appId, PushService service, String token) {
 
 		Optional<PlatformApplication> application = getApplication(appId, service);
 
@@ -583,11 +582,10 @@ public class PushResource extends Resource {
 		String endpointArn = null;
 
 		try {
-			endpointArn = getSnsClient()
-					.createPlatformEndpoint(//
-							new CreatePlatformEndpointRequest()//
-									.withPlatformApplicationArn(applicationArn)//
-									.withToken(token))//
+			endpointArn = getSnsClient().createPlatformEndpoint(//
+					new CreatePlatformEndpointRequest()//
+							.withPlatformApplicationArn(applicationArn)//
+							.withToken(token))//
 					.getEndpointArn();
 
 		} catch (InvalidParameterException e) {
@@ -607,7 +605,7 @@ public class PushResource extends Resource {
 		}
 
 		if (endpointArn == null)
-			throw new RuntimeException("failed to create device notification endpoint: try again later");
+			throw Exceptions.runtime("failed to create device notification endpoint: try again later");
 
 		boolean updateNeeded = false;
 
@@ -625,7 +623,7 @@ public class PushResource extends Resource {
 		}
 
 		if (endpointArn == null)
-			throw new RuntimeException("failed to create device notification endpoint: try again later");
+			throw Exceptions.runtime("failed to create device notification endpoint: try again later");
 
 		if (updateNeeded) {
 			// The platform endpoint is out of sync with the current data;

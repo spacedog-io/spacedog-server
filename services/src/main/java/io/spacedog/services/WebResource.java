@@ -61,18 +61,16 @@ public class WebResource extends S3Resource {
 
 	private Payload doGet(boolean withContent, WebPath path, Context context) {
 
-		String backendId = SpaceContext.backendId();
-
 		if (path.size() > 0) {
 
 			Payload payload = doGet(withContent, FileResource.FILE_BUCKET_SUFFIX, //
-					backendId, path, context);
+					path, context);
 
 			if (payload.isSuccess())
 				return payload;
 
-			payload = doGet(withContent, FileResource.FILE_BUCKET_SUFFIX, backendId, //
-					path.addLast("index.html"), context);
+			payload = doGet(withContent, FileResource.FILE_BUCKET_SUFFIX, path.addLast("index.html"), //
+					context);
 
 			if (payload.isSuccess())
 				return payload;
@@ -80,8 +78,9 @@ public class WebResource extends S3Resource {
 			WebSettings settings = SettingsResource.get().load(WebSettings.class);
 
 			if (!Strings.isNullOrEmpty(settings.notFoundPage))
-				payload = doGet(withContent, FileResource.FILE_BUCKET_SUFFIX, backendId, //
-						WebPath.parse(settings.notFoundPage).addFirst(path.first()), context);
+				payload = doGet(withContent, FileResource.FILE_BUCKET_SUFFIX,
+						WebPath.parse(settings.notFoundPage).addFirst(path.first()), //
+						context);
 
 			return payload;
 		}

@@ -104,6 +104,10 @@ public class SpaceBackend {
 		return ssl;
 	}
 
+	public boolean multi() {
+		return multi;
+	}
+
 	//
 	// Other public methods
 	//
@@ -239,16 +243,20 @@ public class SpaceBackend {
 			throw new IllegalArgumentException("backend id is null or empty");
 
 		if (!isValid(backendId))
-			throw new IllegalArgumentException("backend id doesn't comply to: "//
+			throw Exceptions.illegalArgument("backend id does not comply to: "//
 					+ "is at least 4 characters long, "//
 					+ "is only composed of a-z and 0-9 characters, "//
-					+ "is lowercase, "//
-					+ "does not start with 'api', "//
-					+ "does not contain 'spacedog'");
+					+ "is lowercase, does not start with '%s', "//
+					+ "does not contain 'spacedog'.", //
+					defaultBackendId());
 	}
 
 	public static String defaultBackendId() {
 		return "api";
+	}
+
+	public boolean isDefault() {
+		return backendId.equals(defaultBackendId());
 	}
 
 	public static boolean isDefaultBackendId(String backendId) {

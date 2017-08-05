@@ -15,7 +15,6 @@ import io.spacedog.core.Json8;
 import io.spacedog.core.Json8.JsonMerger;
 import io.spacedog.model.Schema;
 import io.spacedog.model.SchemaSettings;
-import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -37,7 +36,7 @@ public class SchemaResource extends Resource {
 	public Payload getAll(Context context) {
 		ElasticClient elastic = Start.get().getElasticClient();
 		ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetaData>> mappings;
-		mappings = elastic.getMappings(SpaceContext.backendId());
+		mappings = elastic.getMappings();
 		JsonMerger jsonMerger = Json8.merger();
 
 		for (ObjectCursor<ImmutableOpenMap<String, MappingMetaData>> indexMappings : mappings.values()) {
@@ -64,7 +63,7 @@ public class SchemaResource extends Resource {
 		return JsonPayload.json(//
 				Start.get()//
 						.getElasticClient()//
-						.getSchema(SpaceContext.backendId(), type)//
+						.getSchema(type)//
 						.node());
 	}
 
@@ -75,7 +74,7 @@ public class SchemaResource extends Resource {
 	@Post("/:type/")
 	public Payload put(String type, String newSchemaAsString, Context context) {
 
-		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
+		SpaceContext.credentials().checkAtLeastAdmin();
 		Schema.checkName(type);
 
 		Schema schema = Strings.isNullOrEmpty(newSchemaAsString) ? getDefaultSchema(type) //
@@ -86,30 +85,29 @@ public class SchemaResource extends Resource {
 
 		String mapping = schema.validate().translate().toString();
 
-		String backendId = credentials.backendId();
 		ElasticClient elastic = Start.get().getElasticClient();
-		boolean indexExists = elastic.existsIndex(backendId, type);
+		boolean indexExists = elastic.existsIndex(type);
 
 		if (indexExists)
-			elastic.putMapping(backendId, type, mapping);
+			elastic.putMapping(type, mapping);
 		else {
 			int shards = context.query().getInteger(PARAM_SHARDS, PARAM_SHARDS_DEFAULT);
 			int replicas = context.query().getInteger(PARAM_REPLICAS, PARAM_REPLICAS_DEFAULT);
 			boolean async = context.query().getBoolean(PARAM_ASYNC, PARAM_ASYNC_DEFAULT);
-			elastic.createIndex(backendId, type, mapping, async, shards, replicas);
+			elastic.createIndex(type, mapping, async, shards, replicas);
 		}
 
 		DataAccessControl.save(type, schema.acl());
 
-		return JsonPayload.saved(!indexExists, credentials.backendId(), "/1", "schema", type);
+		return JsonPayload.saved(!indexExists, "/1", "schema", type);
 	}
 
 	@Delete("/:type")
 	@Delete("/:type/")
 	public Payload delete(String type) {
 		try {
-			Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
-			Start.get().getElasticClient().deleteIndex(credentials.backendId(), type);
+			SpaceContext.credentials().checkAtLeastAdmin();
+			Start.get().getElasticClient().deleteIndex(type);
 			DataAccessControl.delete(type);
 		} catch (TypeMissingException ignored) {
 		}
