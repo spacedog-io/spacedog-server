@@ -14,7 +14,7 @@ import org.elasticsearch.snapshots.RestoreInfo;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.utils.Backends;
+import io.spacedog.rest.SpaceBackend;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.JsonBuilder;
@@ -100,8 +100,8 @@ public class SnapshotResource extends Resource {
 
 		JsonBuilder<ObjectNode> payload = JsonPayload.builder(status)//
 				.put("id", snapshot.id())//
-				.put("location", spaceUrl(Backends.rootApi(), "/1", //
-						"snapshot", snapshot.id()).toString());
+				.put("location", spaceUrl(SpaceBackend.defaultBackendId(), //
+						"/1", "snapshot", snapshot.id()).toString());
 
 		if (response.getSnapshotInfo() != null) {
 			snapshot.info(response.getSnapshotInfo());

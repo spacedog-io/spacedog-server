@@ -1,10 +1,11 @@
 package io.spacedog.rest;
 
 import java.util.Map;
+import java.util.regex.Pattern;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
-import io.spacedog.utils.Backends;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Utils;
@@ -19,7 +20,7 @@ public class SpaceBackend {
 	// specific multi backend fields
 	private boolean multi = false;
 	private String prefix = "";
-	private String backendId = Backends.rootApi();
+	private String backendId = defaultBackendId();
 	private boolean webApp = false;
 
 	private SpaceBackend() {
@@ -79,7 +80,7 @@ public class SpaceBackend {
 	//
 
 	public String host() {
-		return multi ? host(Backends.rootApi()) : host;
+		return multi ? host(defaultBackendId()) : host;
 	}
 
 	public String host(String backendId) {
@@ -113,7 +114,7 @@ public class SpaceBackend {
 
 	public StringBuilder urlBuilder() {
 		if (multi)
-			return urlBuilder(Backends.rootApi());
+			return urlBuilder(defaultBackendId());
 		StringBuilder builder = new StringBuilder(scheme())//
 				.append("://").append(host);//
 		return appendPort(builder);
@@ -210,5 +211,47 @@ public class SpaceBackend {
 			throw Exceptions.illegalArgument(//
 					"target [%s] does not contain backend [%s]", //
 					this, backendId);
+	}
+
+	//
+	// Backend id utils
+	//
+
+	private static final Pattern BACKEND_ID_PATTERN = Pattern.compile("[a-z0-9]{4,}");
+
+	public static boolean isValid(String backendId) {
+
+		if (!BACKEND_ID_PATTERN.matcher(backendId).matches())
+			return false;
+
+		if (backendId.indexOf("spacedog") > -1)
+			return false;
+
+		if (backendId.startsWith(defaultBackendId()))
+			return false;
+
+		return true;
+	}
+
+	public static void checkIsValid(String backendId) {
+
+		if (Strings.isNullOrEmpty(backendId))
+			throw new IllegalArgumentException("backend id is null or empty");
+
+		if (!isValid(backendId))
+			throw new IllegalArgumentException("backend id doesn't comply to: "//
+					+ "is at least 4 characters long, "//
+					+ "is only composed of a-z and 0-9 characters, "//
+					+ "is lowercase, "//
+					+ "does not start with 'api', "//
+					+ "does not contain 'spacedog'");
+	}
+
+	public static String defaultBackendId() {
+		return "api";
+	}
+
+	public static boolean isDefaultBackendId(String backendId) {
+		return defaultBackendId().equals(backendId);
 	}
 }

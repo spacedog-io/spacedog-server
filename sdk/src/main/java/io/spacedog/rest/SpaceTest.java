@@ -3,7 +3,6 @@ package io.spacedog.rest;
 import org.junit.Assert;
 
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Backends;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Optional7;
@@ -101,7 +100,7 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 
 	public static SpaceDog superdog() {
 		if (superdog == null)
-			superdog = superdog(Backends.rootApi());
+			superdog = superdog(SpaceBackend.defaultBackendId());
 		return superdog;
 	}
 

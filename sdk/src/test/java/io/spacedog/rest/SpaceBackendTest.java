@@ -6,6 +6,28 @@ import org.junit.Test;
 public class SpaceBackendTest extends Assert {
 
 	@Test
+	public void testIsBackendIdValid() {
+
+		// valid backend ids
+		assertTrue(SpaceBackend.isValid("a1234"));
+		assertTrue(SpaceBackend.isValid("abcd"));
+		assertTrue(SpaceBackend.isValid("1a2b34d"));
+
+		// invalid backend ids
+		assertFalse(SpaceBackend.isValid("a"));
+		assertFalse(SpaceBackend.isValid("bb"));
+		assertFalse(SpaceBackend.isValid("ccc"));
+		assertFalse(SpaceBackend.isValid("dd-dd"));
+		assertFalse(SpaceBackend.isValid("/eeee"));
+		assertFalse(SpaceBackend.isValid("eeee:"));
+		assertFalse(SpaceBackend.isValid("abcdE"));
+		assertFalse(SpaceBackend.isValid("spacedog"));
+		assertFalse(SpaceBackend.isValid("spacedog123"));
+		assertFalse(SpaceBackend.isValid("123spacedog"));
+		assertFalse(SpaceBackend.isValid("123spacedog123"));
+	}
+
+	@Test
 	public void testFromDefaults() {
 		SpaceBackend backend = SpaceBackend.fromDefaults("production");
 		assertEquals("api.spacedog.io", backend.host());

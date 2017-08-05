@@ -29,7 +29,7 @@ import io.spacedog.model.CreateCredentialsRequest;
 import io.spacedog.model.CredentialsSettings;
 import io.spacedog.model.MailTemplate;
 import io.spacedog.model.Schema;
-import io.spacedog.utils.Backends;
+import io.spacedog.rest.SpaceBackend;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Session;
@@ -647,7 +647,7 @@ public class CredentialsResource extends Resource {
 
 	Credentials createSuperdog(String username, String password, String email) {
 		Usernames.checkValid(username);
-		Credentials credentials = new Credentials(Backends.rootApi(), username);
+		Credentials credentials = new Credentials(SpaceBackend.defaultBackendId(), username);
 		credentials.roles(Type.superdog.name());
 		credentials.email(email);
 		Passwords.check(password);

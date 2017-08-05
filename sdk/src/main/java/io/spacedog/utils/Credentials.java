@@ -21,6 +21,8 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import io.spacedog.rest.SpaceBackend;
+
 // ignore deprecated fields still in elastic data
 @JsonIgnoreProperties(ignoreUnknown = true)
 // only map to fields
@@ -522,7 +524,7 @@ public class Credentials {
 	//
 
 	public boolean isTargetingRootApi() {
-		return Backends.isRootApi(backendId());
+		return SpaceBackend.isDefaultBackendId(backendId());
 	}
 
 	public ObjectNode toJson() {

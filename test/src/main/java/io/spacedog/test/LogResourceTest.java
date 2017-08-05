@@ -8,11 +8,11 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import io.spacedog.rest.SpaceBackend;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.LogEndpoint.LogSearchResults;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Backends;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Json7;
@@ -359,7 +359,7 @@ public class LogResourceTest extends SpaceTest {
 		while (elements.hasNext()) {
 			JsonNode element = elements.next();
 			if (element.get("path").asText().equals("/")
-					&& element.get("credentials").get("backendId").asText().equals(Backends.rootApi()))
+					&& element.get("credentials").get("backendId").asText().equals(SpaceBackend.defaultBackendId()))
 				Assert.fail();
 		}
 	}
