@@ -41,7 +41,7 @@ public class SpaceRequest {
 	}
 
 	private HttpVerb method;
-	private SpaceTarget backend;
+	private SpaceBackend backend;
 	private String path;
 	private JsonNode bodyJson;
 	private Object body;
@@ -141,7 +141,7 @@ public class SpaceRequest {
 
 	public SpaceRequest backend(String backend) {
 		this.backend = backend.startsWith("http") //
-				? SpaceTarget.fromUrl(backend)
+				? SpaceBackend.fromUrl(backend)
 				: env().target().fromBackendId(backend);
 		return this;
 	}

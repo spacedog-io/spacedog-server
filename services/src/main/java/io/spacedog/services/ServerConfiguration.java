@@ -8,7 +8,7 @@ import java.nio.file.Paths;
 import java.util.Optional;
 
 import io.spacedog.rest.SpaceEnv;
-import io.spacedog.rest.SpaceTarget;
+import io.spacedog.rest.SpaceBackend;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Utils;
@@ -67,22 +67,22 @@ public class ServerConfiguration {
 		return env.get(SPACEDOG_OFFLINE, false);
 	}
 
-	private SpaceTarget apiBackend;
+	private SpaceBackend apiBackend;
 
-	public SpaceTarget apiBackend() {
+	public SpaceBackend apiBackend() {
 		if (apiBackend == null)
-			apiBackend = SpaceTarget.fromUrl(//
+			apiBackend = SpaceBackend.fromUrl(//
 					env.getOrElseThrow(SPACEDOG_BACKEND_API_PUBLIC_URL));
 		return apiBackend;
 	}
 
-	private Optional<SpaceTarget> wwwBackend;
+	private Optional<SpaceBackend> wwwBackend;
 
-	public Optional<SpaceTarget> wwwBackend() {
+	public Optional<SpaceBackend> wwwBackend() {
 		if (wwwBackend == null) {
 			Optional7<String> url = env.get(SPACEDOG_BACKEND_WWW_PUBLIC_URL);
 			wwwBackend = url.isPresent() //
-					? Optional.of(SpaceTarget.fromUrl(url.get(), true)) //
+					? Optional.of(SpaceBackend.fromUrl(url.get(), true)) //
 					: Optional.empty();
 		}
 		return wwwBackend;

@@ -37,12 +37,12 @@ public class SpaceEnv {
 		properties.setProperty("spacedog.debug", Boolean.toString(debug));
 	}
 
-	public SpaceTarget target() {
-		return SpaceTarget.valueOf(get("spacedog.target", "production"));
+	public SpaceBackend target() {
+		return SpaceBackend.valueOf(get("spacedog.target", "production"));
 	}
 
-	public void target(SpaceTarget target) {
-		properties.setProperty("spacedog.target", target.toString());
+	public void target(SpaceBackend backend) {
+		properties.setProperty("spacedog.target", backend.toString());
 	}
 
 	public int httpTimeoutMillis() {

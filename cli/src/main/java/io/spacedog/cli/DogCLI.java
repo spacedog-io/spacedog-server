@@ -7,7 +7,7 @@ import com.google.common.base.Strings;
 import io.spacedog.rest.SpaceEnv;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceRequestException;
-import io.spacedog.rest.SpaceTarget;
+import io.spacedog.rest.SpaceBackend;
 import io.spacedog.utils.Utils;
 
 public class DogCLI {
@@ -63,7 +63,7 @@ public class DogCLI {
 
 	private static void setEnv() {
 		SpaceEnv env = new SpaceEnv();
-		env.target(SpaceTarget.production);
+		env.target(SpaceBackend.production);
 		env.debug(false);
 		SpaceRequest.env(env);
 	}

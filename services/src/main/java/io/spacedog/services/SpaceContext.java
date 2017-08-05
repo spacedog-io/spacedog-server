@@ -6,7 +6,7 @@ import java.util.Optional;
 import com.google.common.collect.Maps;
 import com.google.common.net.HttpHeaders;
 
-import io.spacedog.rest.SpaceTarget;
+import io.spacedog.rest.SpaceBackend;
 import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
@@ -25,7 +25,7 @@ public class SpaceContext {
 
 	private String uri;
 	private Context context;
-	private SpaceTarget backend;
+	private SpaceBackend backend;
 	private boolean isTest;
 	private Debug debug;
 	private Credentials credentials;
@@ -45,14 +45,14 @@ public class SpaceContext {
 		ServerConfiguration conf = Start.get().configuration();
 
 		// first try to match api backend
-		SpaceTarget apiBackend = conf.apiBackend();
-		Optional7<SpaceTarget> optBackend = apiBackend.fromHostAndPort(hostAndPort);
+		SpaceBackend apiBackend = conf.apiBackend();
+		Optional7<SpaceBackend> optBackend = apiBackend.fromHostAndPort(hostAndPort);
 		if (optBackend.isPresent())
 			this.backend = optBackend.get();
 
 		// second try to match webapp backend
 		else {
-			Optional<SpaceTarget> wwwBackend = conf.wwwBackend();
+			Optional<SpaceBackend> wwwBackend = conf.wwwBackend();
 			if (wwwBackend.isPresent()) {
 				optBackend = wwwBackend.get().fromHostAndPort(hostAndPort);
 				if (optBackend.isPresent())

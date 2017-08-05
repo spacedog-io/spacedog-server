@@ -9,7 +9,7 @@ import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Utils;
 
-public class SpaceTarget {
+public class SpaceBackend {
 
 	// main fields
 	private String host;
@@ -22,15 +22,15 @@ public class SpaceTarget {
 	private String backendId = Backends.rootApi();
 	private boolean webApp = false;
 
-	private SpaceTarget() {
+	private SpaceBackend() {
 	}
 
-	public static SpaceTarget fromUrl(String url) {
+	public static SpaceBackend fromUrl(String url) {
 		return fromUrl(url, false);
 	}
 
-	public static SpaceTarget fromUrl(String url, boolean webApp) {
-		SpaceTarget target = new SpaceTarget();
+	public static SpaceBackend fromUrl(String url, boolean webApp) {
+		SpaceBackend target = new SpaceBackend();
 		target.webApp = webApp;
 
 		// handle scheme
@@ -66,11 +66,11 @@ public class SpaceTarget {
 		return target;
 	}
 
-	public static SpaceTarget fromDefaults(String name) {
+	public static SpaceBackend fromDefaults(String name) {
 		return defaultTargets.get(name);
 	}
 
-	public static SpaceTarget valueOf(String string) {
+	public static SpaceBackend valueOf(String string) {
 		return string.startsWith("http") ? fromUrl(string) : fromDefaults(string);
 	}
 
@@ -138,7 +138,7 @@ public class SpaceTarget {
 		return urlBuilder(backendId).append(uri).toString();
 	}
 
-	public Optional7<SpaceTarget> fromHostAndPort(String hostAndPort) {
+	public Optional7<SpaceBackend> fromHostAndPort(String hostAndPort) {
 		String thisBackendhostAndPort = hostAndPort();
 
 		if (multi && hostAndPort.startsWith(prefix) //
@@ -162,10 +162,10 @@ public class SpaceTarget {
 		return Optional7.empty();
 	}
 
-	public SpaceTarget fromBackendId(String backendId) {
+	public SpaceBackend fromBackendId(String backendId) {
 		checkThisTargetIsMultiBackend(backendId);
 
-		SpaceTarget backend = new SpaceTarget();
+		SpaceBackend backend = new SpaceBackend();
 		backend.host = host(backendId);
 		backend.backendId = backendId;
 		backend.port = port;
@@ -183,12 +183,12 @@ public class SpaceTarget {
 	// Default targets
 	//
 
-	public static SpaceTarget local = fromUrl("http://*.lvh.me:8443");
-	public static SpaceTarget staging = fromUrl("https://*.spacerepublic.net");
-	public static SpaceTarget colibee = fromUrl("https://connect.colibee.com");
-	public static SpaceTarget production = fromUrl("https://*.spacedog.io");
+	public static SpaceBackend local = fromUrl("http://*.lvh.me:8443");
+	public static SpaceBackend staging = fromUrl("https://*.spacerepublic.net");
+	public static SpaceBackend colibee = fromUrl("https://connect.colibee.com");
+	public static SpaceBackend production = fromUrl("https://*.spacedog.io");
 
-	private static Map<String, SpaceTarget> defaultTargets = Maps.newHashMap();
+	private static Map<String, SpaceBackend> defaultTargets = Maps.newHashMap();
 
 	static {
 		defaultTargets.put("local", local);

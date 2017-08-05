@@ -3,11 +3,11 @@ package io.spacedog.rest;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class SpaceTargetTest extends Assert {
+public class SpaceBackendTest extends Assert {
 
 	@Test
 	public void testFromDefaults() {
-		SpaceTarget backend = SpaceTarget.fromDefaults("production");
+		SpaceBackend backend = SpaceBackend.fromDefaults("production");
 		assertEquals("api.spacedog.io", backend.host());
 		assertEquals(443, backend.port());
 		assertEquals("https", backend.scheme());
@@ -20,7 +20,7 @@ public class SpaceTargetTest extends Assert {
 
 	@Test
 	public void testFromBackendId() {
-		SpaceTarget backend = SpaceTarget.production.fromBackendId("test");
+		SpaceBackend backend = SpaceBackend.production.fromBackendId("test");
 		assertEquals("test.spacedog.io", backend.host());
 		assertEquals(443, backend.port());
 		assertEquals("https", backend.scheme());
@@ -33,7 +33,7 @@ public class SpaceTargetTest extends Assert {
 
 	@Test
 	public void testFromUrlMonoApiBackend() {
-		SpaceTarget backend = SpaceTarget.fromUrl("http://connect.acme.net");
+		SpaceBackend backend = SpaceBackend.fromUrl("http://connect.acme.net");
 		assertEquals("connect.acme.net", backend.host());
 		assertEquals(80, backend.port());
 		assertEquals("http", backend.scheme());
@@ -46,7 +46,7 @@ public class SpaceTargetTest extends Assert {
 
 	@Test
 	public void testFromUrlMultiWebAppBackend() {
-		SpaceTarget backend = SpaceTarget.fromUrl("http://www.*.acme.net:8080", true);
+		SpaceBackend backend = SpaceBackend.fromUrl("http://www.*.acme.net:8080", true);
 		assertEquals("www.api.acme.net", backend.host());
 		assertEquals("www.connect.acme.net", backend.host("connect"));
 		assertEquals(8080, backend.port());

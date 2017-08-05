@@ -8,7 +8,7 @@ import org.junit.Test;
 import io.spacedog.model.MailSettings;
 import io.spacedog.model.MailSettings.SmtpSettings;
 import io.spacedog.rest.SpaceEnv;
-import io.spacedog.rest.SpaceTarget;
+import io.spacedog.rest.SpaceBackend;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 
@@ -18,7 +18,7 @@ public class LafargeCesio extends SpaceTest {
 	public void initBackend() {
 
 		SpaceEnv env = SpaceEnv.defaultEnv();
-		env.target(SpaceTarget.production);
+		env.target(SpaceBackend.production);
 
 		SpaceDog backend = SpaceDog.backend("cesio")//
 				.username(env.getOrElseThrow("spacedog.cesio.superadmin.username"))//
