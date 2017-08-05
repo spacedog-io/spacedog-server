@@ -9,8 +9,6 @@ import com.google.common.base.Strings;
 
 public class Backends {
 
-	// public static final String ROOT_API = "api";
-	public static final String DEFAULT_USERNAME = "default";
 	private static final Pattern ID_PATTERN = Pattern.compile("[a-z0-9]{4,}");
 
 	public static boolean isRootApi(String backendId) {

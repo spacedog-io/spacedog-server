@@ -39,7 +39,7 @@ public abstract class Resource implements SpaceFields, SpaceParams {
 	}
 
 	public static StringBuilder spaceRootUrl(String backendId) {
-		return new StringBuilder(Start.get().configuration().apiUrl(backendId));
+		return Start.get().configuration().apiBackend().urlBuilder(backendId);
 	}
 
 	protected static String getReferenceType(String reference) {

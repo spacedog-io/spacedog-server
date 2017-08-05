@@ -15,6 +15,7 @@ import com.google.common.base.Strings;
 
 import io.spacedog.core.Json8;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json7;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceException;
 import io.spacedog.utils.SpaceHeaders;
@@ -25,9 +26,6 @@ import net.codestory.http.payload.Payload;
 public class JsonPayload {
 
 	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
-
-	public static final String JSON_CONTENT = "application/json";
-	public static final String JSON_CONTENT_UTF8 = JSON_CONTENT + ";charset=UTF-8";
 
 	public static Payload success() {
 		return json(HttpStatus.OK);
@@ -189,11 +187,11 @@ public class JsonPayload {
 		if (content.isObject() && SpaceContext.isDebug())
 			((ObjectNode) content).set("debug", SpaceContext.debug().toNode());
 
-		return new Payload(JSON_CONTENT_UTF8, content, httpStatus);
+		return new Payload(Json7.JSON_CONTENT_UTF8, content, httpStatus);
 	}
 
 	public static Payload json(String content, int httpStatus) {
-		return new Payload(JSON_CONTENT_UTF8, content, httpStatus);
+		return new Payload(Json7.JSON_CONTENT_UTF8, content, httpStatus);
 	}
 
 	public static Payload json(int status, ShardOperationFailedException[] failures) {
@@ -245,7 +243,7 @@ public class JsonPayload {
 
 	public static boolean isJson(Payload payload) {
 		return payload.rawContentType() == null ? false//
-				: payload.rawContentType().startsWith(JSON_CONTENT);
+				: payload.rawContentType().startsWith(Json7.JSON_CONTENT);
 	}
 
 	public static JsonBuilder<ObjectNode> builder() {

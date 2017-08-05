@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.google.common.primitives.Ints;
@@ -19,7 +18,6 @@ import io.spacedog.model.Schema;
 import io.spacedog.model.Settings;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.AuthorizationHeader;
-import io.spacedog.utils.Backends;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json7;
@@ -43,7 +41,7 @@ public class SpaceRequest {
 	}
 
 	private HttpVerb method;
-	private String backend;
+	private SpaceTarget backend;
 	private String path;
 	private JsonNode bodyJson;
 	private Object body;
@@ -77,20 +75,13 @@ public class SpaceRequest {
 	}
 
 	private HttpUrl.Builder computeHttpUrlFromBackendAndPath() {
-		HttpUrl.Builder builder = null;
+		if (backend == null)
+			backend = env.target();
 
-		if (Strings.isNullOrEmpty(backend))
-			backend = Backends.rootApi();
-
-		if (backend.startsWith("http"))
-			builder = HttpUrl.parse(backend).newBuilder();
-		else {
-			SpaceTarget target = env().target();
-			builder = new HttpUrl.Builder()//
-					.scheme(target.scheme())//
-					.host(target.host(backend))//
-					.port(target.port());
-		}
+		HttpUrl.Builder builder = new HttpUrl.Builder()//
+				.scheme(backend.scheme())//
+				.host(backend.host())//
+				.port(backend.port());
 
 		path = applyPathParams(path);
 
@@ -149,9 +140,9 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest backend(String backend) {
-		if (!Strings.isNullOrEmpty(this.backend))
-			Exceptions.runtime("backend already set");
-		this.backend = backend;
+		this.backend = backend.startsWith("http") //
+				? SpaceTarget.fromUrl(backend)
+				: env().target().fromBackendId(backend);
 		return this;
 	}
 

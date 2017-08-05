@@ -19,7 +19,7 @@ public class Purge extends Job {
 
 		try {
 			SpaceEnv env = SpaceEnv.defaultEnv();
-			lastname(env.target().host("api"));
+			lastname(env.target().host());
 
 			// set high timeout to wait for purge response from server
 			// since delete of thousands of logs might take long

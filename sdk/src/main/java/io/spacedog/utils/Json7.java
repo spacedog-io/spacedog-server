@@ -33,9 +33,12 @@ import com.google.common.base.Strings;
 
 public class Json7 {
 
+	public static final String JSON_CONTENT = "application/json";
+	public static final String JSON_CONTENT_UTF8 = JSON_CONTENT + ";charset=UTF-8";
+
 	/**
-	 * TODO returns null if does not find the property in this object. Should
-	 * return an optional.
+	 * TODO returns null if does not find the property in this object. Should return
+	 * an optional.
 	 */
 	public static JsonNode get(JsonNode json, String propertyPath) {
 

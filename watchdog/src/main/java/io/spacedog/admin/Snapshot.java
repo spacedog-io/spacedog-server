@@ -17,7 +17,7 @@ public class Snapshot extends Job {
 
 		try {
 			SpaceEnv env = SpaceEnv.defaultEnv();
-			lastname(env.target().host("api"));
+			lastname(env.target().host());
 
 			// set high timeout to wait for server
 			// since snapshot service is slow

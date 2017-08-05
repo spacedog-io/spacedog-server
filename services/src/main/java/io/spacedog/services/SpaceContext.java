@@ -1,14 +1,16 @@
 package io.spacedog.services;
 
 import java.util.Map;
+import java.util.Optional;
 
 import com.google.common.collect.Maps;
 import com.google.common.net.HttpHeaders;
 
+import io.spacedog.rest.SpaceTarget;
 import io.spacedog.utils.AuthorizationHeader;
-import io.spacedog.utils.Backends;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Optional7;
 import io.spacedog.utils.SpaceHeaders;
 import net.codestory.http.Context;
 import net.codestory.http.constants.Methods;
@@ -23,39 +25,50 @@ public class SpaceContext {
 
 	private String uri;
 	private Context context;
+	private SpaceTarget backend;
 	private boolean isTest;
 	private Debug debug;
 	private Credentials credentials;
 	private boolean authorizationChecked;
-	private boolean isForced;
 	private Map<String, String> settings;
-	private boolean www;
 
 	private SpaceContext(String uri, Context context) {
 		this.uri = uri;
 		this.context = context;
-		this.isTest = Boolean.parseBoolean(context().header(SpaceHeaders.SPACEDOG_TEST));
-		String[] host = extractSubdomain(context);
-		this.credentials = new Credentials(host[0]);
-		www = host.length > 2 && "www".equals(host[1]);
-		this.debug = new Debug(//
-				Boolean.parseBoolean(context().header(SpaceHeaders.SPACEDOG_DEBUG)));
-	}
 
-	private SpaceContext(Credentials credentials, boolean test, boolean debug) {
-		this.isForced = true;
-		this.isTest = test;
-		this.credentials = credentials;
-		this.debug = new Debug(debug);
+		this.isTest = Boolean.parseBoolean(//
+				context().header(SpaceHeaders.SPACEDOG_TEST));
+		this.debug = new Debug(Boolean.parseBoolean(//
+				context().header(SpaceHeaders.SPACEDOG_DEBUG)));
+
+		String hostAndPort = context.request().header(HttpHeaders.HOST);
+		ServerConfiguration conf = Start.get().configuration();
+
+		// first try to match api backend
+		SpaceTarget apiBackend = conf.apiBackend();
+		Optional7<SpaceTarget> optBackend = apiBackend.fromHostAndPort(hostAndPort);
+		if (optBackend.isPresent())
+			this.backend = optBackend.get();
+
+		// second try to match webapp backend
+		else {
+			Optional<SpaceTarget> wwwBackend = conf.wwwBackend();
+			if (wwwBackend.isPresent()) {
+				optBackend = wwwBackend.get().fromHostAndPort(hostAndPort);
+				if (optBackend.isPresent())
+					this.backend = optBackend.get();
+			}
+		}
+
+		// if none matched, use api backend
+		if (this.backend == null)
+			this.backend = apiBackend;
+
+		this.credentials = new Credentials(this.backend.backendId());
 	}
 
 	public Context context() {
 		return context;
-	}
-
-	public static boolean isSetAuthorized() {
-		SpaceContext spaceContext = threadLocal.get();
-		return spaceContext == null || spaceContext.isForced;
 	}
 
 	public static SpaceFilter filter() {
@@ -63,11 +76,12 @@ public class SpaceContext {
 		// uri is already checked by SpaceFilter default matches method
 
 		return (uri, context, nextFilter) -> {
-			if (isSetAuthorized()) {
+			if (threadLocal.get() == null) {
 				try {
 					threadLocal.set(new SpaceContext(uri, context));
 					return nextFilter.get();
-
+					// } catch (Throwable t) {
+					// return toPayload(t);
 				} finally {
 					threadLocal.set(null);
 				}
@@ -77,6 +91,12 @@ public class SpaceContext {
 				return nextFilter.get();
 		};
 	}
+
+	// private static Payload toPayload(Throwable t) {
+	// ObjectNode node = Json8.object("success", false, "status", 400, "error", //
+	// Json8.object("message", t.getMessage()));
+	// return new Payload(Json7.JSON_CONTENT_UTF8, node, 400);
+	// }
 
 	public static SpaceContext get() {
 		SpaceContext context = threadLocal.get();
@@ -90,7 +110,7 @@ public class SpaceContext {
 	}
 
 	public static boolean isWww() {
-		return get().www;
+		return get().backend.webApp();
 	}
 
 	public static boolean isDebug() {
@@ -108,13 +128,6 @@ public class SpaceContext {
 	public boolean isJsonContent() {
 		String contentType = context.header(SpaceHeaders.CONTENT_TYPE);
 		return SpaceHeaders.isJsonContent(contentType);
-	}
-
-	static void forceContext(Credentials credentials, boolean test, boolean debug) {
-		if (isSetAuthorized())
-			threadLocal.set(new SpaceContext(credentials, test, debug));
-		else
-			throw Exceptions.runtime("overriding non null context is illegal");
 	}
 
 	public static String getSettings(String id) {
@@ -153,14 +166,6 @@ public class SpaceContext {
 	//
 	// Implementation
 	//
-
-	private String[] extractSubdomain(Context context) {
-		String urlBase = Start.get().configuration().apiUrlBase();
-		String host = context.request().header(HttpHeaders.HOST);
-		return host.endsWith(urlBase) //
-				? host.split("\\.")//
-				: new String[] { Backends.rootApi() };
-	}
 
 	private void checkAuthorizationHeader() {
 		if (!authorizationChecked) {

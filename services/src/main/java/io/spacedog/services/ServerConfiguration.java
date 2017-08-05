@@ -7,10 +7,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
-import com.google.common.base.Strings;
-
 import io.spacedog.rest.SpaceEnv;
-import io.spacedog.utils.Backends;
+import io.spacedog.rest.SpaceTarget;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Utils;
@@ -20,12 +18,11 @@ public class ServerConfiguration {
 	private static final String SPACEDOG_HOME_PATH = "spacedog.home.path";
 	private static final String SPACEDOG_PRODUCTION = "spacedog.production";
 	private static final String SPACEDOG_OFFLINE = "spacedog.offline";
-	private static final String SPACEDOG_API_URL_SCHEME = "spacedog.api.url.scheme";
-	private static final String SPACEDOG_API_URL_BASE = "spacedog.api.url.base";
+	private static final String SPACEDOG_BACKEND_API_PUBLIC_URL = "spacedog.backend.api.public.url";
+	private static final String SPACEDOG_BACKEND_WWW_PUBLIC_URL = "spacedog.backend.www.public.url";
 	private static final String SPACEDOG_ONLY_SUPERDOG_CAN_CREATE_BACKEND //
 			= "spacedog.only.superdog.can.create.backend";
 	private static final String SPACEDOG_SERVER_PORT = "spacedog.server.port";
-	private static final String SPACEDOG_SERVER_BACKEND_MULTI = "spacedog.server.backend.multi";
 	private static final String SPACEDOG_SERVER_USER_AGENT = "spacedog.server.user.agent";
 	private static final String SPACEDOG_ELASTIC_DATA_PATH = "spacedog.elastic.data.path";
 	private static final String SPACEDOG_ELASTIC_HTTP_ENABLED = "spacedog.elastic.http.enabled";
@@ -70,43 +67,29 @@ public class ServerConfiguration {
 		return env.get(SPACEDOG_OFFLINE, false);
 	}
 
-	public String apiUrl() {
-		return apiUrl(Backends.rootApi());
+	private SpaceTarget apiBackend;
+
+	public SpaceTarget apiBackend() {
+		if (apiBackend == null)
+			apiBackend = SpaceTarget.fromUrl(//
+					env.getOrElseThrow(SPACEDOG_BACKEND_API_PUBLIC_URL));
+		return apiBackend;
 	}
 
-	public String apiUrl(String backendId) {
-		if (Strings.isNullOrEmpty(backendId))
-			backendId = Backends.rootApi();
-		return new StringBuilder(apiUrlScheme()).append("://")//
-				.append(backendId).append(apiUrlBase()).toString();
-	}
+	private Optional<SpaceTarget> wwwBackend;
 
-	private String apiUrlBase;
-
-	public String apiUrlBase() {
-		if (apiUrlBase == null)
-			apiUrlBase = env.getOrElseThrow(SPACEDOG_API_URL_BASE);
-		return apiUrlBase;
-	}
-
-	private String apiUrlScheme;
-
-	public String apiUrlScheme() {
-		if (apiUrlScheme == null)
-			apiUrlScheme = env.get(SPACEDOG_API_URL_SCHEME, "http");
-		return apiUrlScheme;
+	public Optional<SpaceTarget> wwwBackend() {
+		if (wwwBackend == null) {
+			Optional7<String> url = env.get(SPACEDOG_BACKEND_WWW_PUBLIC_URL);
+			wwwBackend = url.isPresent() //
+					? Optional.of(SpaceTarget.fromUrl(url.get(), true)) //
+					: Optional.empty();
+		}
+		return wwwBackend;
 	}
 
 	public int serverPort() {
 		return env.get(SPACEDOG_SERVER_PORT, 8443);
-	}
-
-	private Boolean serverIsMultiBackend;
-
-	public boolean serverIsMultiBackend() {
-		if (serverIsMultiBackend == null)
-			serverIsMultiBackend = env.get(SPACEDOG_SERVER_BACKEND_MULTI, false);
-		return serverIsMultiBackend;
 	}
 
 	public Path elasticDataPath() {
@@ -179,9 +162,8 @@ public class ServerConfiguration {
 	public void log() {
 		Utils.info("[SpaceDog] Server configuration =");
 
-		log("API URL", apiUrl());
+		log("API URL", apiBackend());
 		log(SPACEDOG_SERVER_PORT, serverPort());
-		log(SPACEDOG_SERVER_BACKEND_MULTI, serverIsMultiBackend());
 		checkPath(SPACEDOG_HOME_PATH, homePath(), true);
 		log(SPACEDOG_OFFLINE, isOffline());
 		log(SPACEDOG_PRODUCTION, isProduction());
