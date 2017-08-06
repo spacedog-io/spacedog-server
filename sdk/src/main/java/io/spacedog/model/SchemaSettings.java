@@ -58,10 +58,17 @@ public class SchemaSettings extends Settings implements NonDirectlyUpdatableSett
 	public String[] types(DataPermission permission, Credentials credentials) {
 		Set<String> types = Sets.newHashSet();
 
-		for (String type : acl.keySet())
-			for (String role : credentials.roles())
-				if (check(type, role, permission))
+		if (credentials.isAtLeastSuperAdmin())
+			types.addAll(acl.keySet());
+		else
+			for (String type : acl.keySet()) {
+				if (check(type, "all", permission))
 					types.add(type);
+				else
+					for (String role : credentials.roles())
+						if (check(type, role, permission))
+							types.add(type);
+			}
 
 		return types.toArray(new String[types.size()]);
 	}

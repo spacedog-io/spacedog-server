@@ -19,29 +19,24 @@ public class SearchResourceTestOften extends SpaceTest {
 	public void searchAndDeleteObjects() {
 
 		// prepare
-
 		prepareTest();
-		SpaceDog test = resetTestBackend();
-
-		test.schema().set(Schema.builder("message").text("text").build());
-
-		test.schema().set(Schema.builder("rubric").text("name").build());
+		SpaceDog superadmin = resetTestBackend();
+		superadmin.schema().set(Schema.builder("message").text("text").build());
+		superadmin.schema().set(Schema.builder("rubric").text("name").build());
 
 		// creates 4 messages and 1 rubric
-
-		SpaceRequest.post("/1/data/rubric").auth(test)//
+		superadmin.post("/1/data/rubric")//
 				.bodyJson("name", "riri, fifi and loulou").go(201);
-
-		SpaceRequest.post("/1/data/message").auth(test)//
+		superadmin.post("/1/data/message")//
 				.bodyJson("text", "what's up?").go(201);
-		SpaceRequest.post("/1/data/message").auth(test)//
+		superadmin.post("/1/data/message")//
 				.bodyJson("text", "wanna drink something?").go(201);
-		SpaceRequest.post("/1/data/message").auth(test)//
+		superadmin.post("/1/data/message")//
 				.bodyJson("text", "pretty cool something, hein?").go(201);
-		SpaceRequest.post("/1/data/message").auth(test)//
+		superadmin.post("/1/data/message")//
 				.bodyJson("text", "so long guys").go(201);
 
-		SpaceRequest.get("/1/data").refresh().auth(test).go(200)//
+		superadmin.get("/1/data").refresh().go(200)//
 				.assertEquals(5, "total");
 
 		// search for messages with full text query
@@ -50,7 +45,7 @@ public class SearchResourceTestOften extends SpaceTest {
 				.build();
 
 		ObjectNode results = SpaceRequest.post("/1/search")//
-		.debugServer().auth(test).bodyJson(query).go(200)//
+				.debugServer().auth(superadmin).bodyJson(query).go(200)//
 				.assertEquals("wanna drink something?", "results.0.text")//
 				.assertEquals("pretty cool something, hein?", "results.1.text")//
 				.asJsonObject();
@@ -72,16 +67,16 @@ public class SearchResourceTestOften extends SpaceTest {
 
 		query = Json7.objectBuilder().object("query")//
 				.object("match").put("text", "up").build();
-		SpaceRequest.delete("/1/search/message").auth(test).bodyJson(query).go(200);
-		SpaceRequest.get("/1/data/message").refresh().auth(test).go(200)//
+		SpaceRequest.delete("/1/search/message").auth(superadmin).bodyJson(query).go(200);
+		SpaceRequest.get("/1/data/message").refresh().auth(superadmin).go(200)//
 				.assertEquals(3, "total");
 
 		// deletes data objects containing 'wanna' or 'riri' but not users
 
 		query = Json7.objectBuilder().object("query")//
 				.object("match").put("_all", "wanna riri").build();
-		SpaceRequest.delete("/1/search").auth(test).bodyJson(query).go(200);
-		SpaceRequest.get("/1/data").refresh().auth(test).go(200)//
+		SpaceRequest.delete("/1/search").auth(superadmin).bodyJson(query).go(200);
+		SpaceRequest.get("/1/data").refresh().auth(superadmin).go(200)//
 				.assertEquals(2, "total");
 	}
 
