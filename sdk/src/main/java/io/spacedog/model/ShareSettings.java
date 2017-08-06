@@ -16,7 +16,7 @@ public class ShareSettings extends Settings {
 	public static final Map<String, Set<DataPermission>> defaultAcl = Maps.newHashMap();
 
 	static {
-		defaultAcl.put("key", Sets.newHashSet(DataPermission.read_all));
+		defaultAcl.put("all", Sets.newHashSet(DataPermission.read_all));
 		defaultAcl.put("user", Sets.newHashSet(DataPermission.create, DataPermission.read_all, //
 				DataPermission.delete));
 		defaultAcl.put("admin", Sets.newHashSet(DataPermission.create, DataPermission.search, //
@@ -42,6 +42,9 @@ public class ShareSettings extends Settings {
 
 	public boolean check(Credentials credentials, DataPermission... permissions) {
 		if (credentials.isAtLeastSuperAdmin())
+			return true;
+
+		if (check("all", permissions))
 			return true;
 
 		for (String role : credentials.roles())

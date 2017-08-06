@@ -91,7 +91,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		// list all shared files should return 2 paths
 		// get first page with only one path
 		json = SpaceRequest.get("/1/share")//
-		.size(1).auth(test)//
+				.size(1).auth(test)//
 				.go(200)//
 				.assertSizeEquals(1, "results")//
 				.asJson();
@@ -103,8 +103,8 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 
 		// get second (and last) page with only one path
 		json = SpaceRequest.get("/1/share")//
-		.queryParam("next", next)//
-		.size(1).auth(test)//
+				.queryParam("next", next)//
+				.size(1).auth(test)//
 				.go(200)//
 				.assertSizeEquals(1, "results")//
 				.assertNotPresent("next")//
@@ -182,7 +182,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		// super admin sets custom share permissions
 		ShareSettings settings = new ShareSettings();
 		settings.enableS3Location = false;
-		settings.acl.put("key", Sets.newHashSet(DataPermission.create));
+		settings.acl.put("all", Sets.newHashSet(DataPermission.create));
 		settings.acl.put("user", Sets.newHashSet(DataPermission.create, DataPermission.read, //
 				DataPermission.delete));
 		settings.acl.put("admin", Sets.newHashSet(DataPermission.delete_all, DataPermission.search));
@@ -207,10 +207,11 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 				.assertSizeEquals(1, "results");
 
 		// nobody is allowed to read this file
+		// but superadmins and superdogs
 		SpaceRequest.get(location).go(403);
 		SpaceRequest.get(location).auth(fred).go(403);
 		SpaceRequest.get(location).auth(vince).go(403);
-		SpaceRequest.get(location).auth(test).go(403);
+		SpaceRequest.get(location).auth(test).go(200);
 
 		// nobody is allowed to read this file but super admins
 		// since they got delete_all permission
@@ -232,14 +233,15 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		SpaceRequest.get("/1/share").auth(test).go(200)//
 				.assertSizeEquals(1, "results");
 
-		// nobody is allowed to read this file but vince the owner
+		// nobody is allowed to read this file
+		// but vince the owner (and superadmin/dogs)
 		SpaceRequest.get(location).go(403);
 		SpaceRequest.get(location).auth(fred).go(403);
-		SpaceRequest.get(location).auth(test).go(403);
+		SpaceRequest.get(location).auth(test).go(200);
 		SpaceRequest.get(location).auth(vince).go(200);
 
 		// nobody is allowed to delete this file
-		// but vince the owner (and super admins)
+		// but vince the owner (and superadmin/dogs)
 		SpaceRequest.delete(location).go(403);
 		SpaceRequest.delete(location).auth(fred).go(403);
 		SpaceRequest.delete(location).auth(vince).go(200);
@@ -257,7 +259,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 
 		// share file with name that needs escaping
 		ObjectNode json = SpaceRequest.put("/1/share/{fileName}")//
-		.routeParam("fileName", "un petit text ?").auth(test)//
+				.routeParam("fileName", "un petit text ?").auth(test)//
 				.bodyBytes(FILE_CONTENT.getBytes())//
 				.go(200)//
 				.asJsonObject();
