@@ -26,6 +26,110 @@ public class SpaceBackend {
 	private SpaceBackend() {
 	}
 
+	//
+	// Getters, setters and common methods
+	//
+
+	public String host() {
+		return multi ? new UrlBuilder().appendHost().toString() : host;
+	}
+
+	public String backendId() {
+		return backendId;
+	}
+
+	public int port() {
+		return port;
+	}
+
+	public boolean webApp() {
+		return webApp;
+	}
+
+	public boolean ssl() {
+		return ssl;
+	}
+
+	public boolean multi() {
+		return multi;
+	}
+
+	public String scheme() {
+		return ssl ? "https" : "http";
+	}
+
+	@Override
+	public String toString() {
+		if (multi)
+			return new UrlBuilder().appendScheme().appendHost("*").appendPort().toString();
+		else
+			return url();
+	}
+
+	//
+	// URL methods
+	//
+
+	public StringBuilder urlBuilder() {
+		return new UrlBuilder().appendScheme().appendHost().appendPort().build();
+	}
+
+	private class UrlBuilder {
+
+		private UrlBuilder appendScheme() {
+			builder.append(scheme()).append("://");
+			return this;
+		}
+
+		private UrlBuilder appendHost() {
+			if (multi)
+				appendHost(defaultBackendId());
+			else
+				builder.append(host);
+			return this;
+		}
+
+		private UrlBuilder appendHost(String backendId) {
+			builder.append(prefix).append(backendId).append(host);
+			return this;
+		}
+
+		private UrlBuilder appendPort() {
+			if (port != 80 && port != 443)
+				builder.append(":").append(port);
+			return this;
+		}
+
+		public UrlBuilder append(String string) {
+			builder.append(string);
+			return this;
+		}
+
+		private StringBuilder build() {
+			return builder;
+		}
+
+		@Override
+		public String toString() {
+			return build().toString();
+		}
+
+		private StringBuilder builder = new StringBuilder();
+
+	}
+
+	public String url() {
+		return urlBuilder().toString();
+	}
+
+	public String url(String uri) {
+		return urlBuilder().append(uri).toString();
+	}
+
+	//
+	// Factory methods
+	//
+
 	public static SpaceBackend fromUrl(String url) {
 		return fromUrl(url, false);
 	}
@@ -53,6 +157,7 @@ public class SpaceBackend {
 			target.multi = true;
 			target.host = parts[1];
 			target.prefix = parts[0];
+			target.backendId = defaultBackendId();
 		}
 
 		// handle url port
@@ -75,113 +180,42 @@ public class SpaceBackend {
 		return string.startsWith("http") ? fromUrl(string) : fromDefaults(string);
 	}
 
-	//
-	// Getters
-	//
+	public Optional7<SpaceBackend> checkAndInstantiate(String requestHostAndPort) {
+		String backendhostAndPort = hostAndPort();
 
-	public String host() {
-		return multi ? host(defaultBackendId()) : host;
-	}
-
-	public String host(String backendId) {
-		checkThisTargetIsMultiBackend(backendId);
-		return prefix + backendId + host;
-	}
-
-	public String backendId() {
-		return backendId;
-	}
-
-	public int port() {
-		return port;
-	}
-
-	public boolean webApp() {
-		return webApp;
-	}
-
-	public boolean ssl() {
-		return ssl;
-	}
-
-	public boolean multi() {
-		return multi;
-	}
-
-	//
-	// Other public methods
-	//
-
-	public String scheme() {
-		return ssl ? "https" : "http";
-	}
-
-	public StringBuilder urlBuilder() {
-		if (multi)
-			return urlBuilder(defaultBackendId());
-		StringBuilder builder = new StringBuilder(scheme())//
-				.append("://").append(host);//
-		return appendPort(builder);
-	}
-
-	public StringBuilder urlBuilder(String backendId) {
-		checkThisTargetIsMultiBackend(backendId);
-		StringBuilder builder = new StringBuilder(scheme()).append("://")//
-				.append(prefix).append(backendId).append(host);//
-		return appendPort(builder);
-	}
-
-	private StringBuilder appendPort(StringBuilder builder) {
-		return port == 80 || port == 443 ? builder : builder.append(":").append(port);
-	}
-
-	public String url(String uri) {
-		return urlBuilder().append(uri).toString();
-	}
-
-	public String url(String backendId, String uri) {
-		return urlBuilder(backendId).append(uri).toString();
-	}
-
-	public Optional7<SpaceBackend> fromHostAndPort(String hostAndPort) {
-		String thisBackendhostAndPort = hostAndPort();
-
-		if (multi && hostAndPort.startsWith(prefix) //
-				&& hostAndPort.endsWith(thisBackendhostAndPort)) {
+		if (multi && requestHostAndPort.startsWith(prefix) //
+				&& requestHostAndPort.endsWith(backendhostAndPort)) {
 
 			String backendId = Utils.removeSuffix(//
-					Utils.removePreffix(hostAndPort, prefix), //
-					thisBackendhostAndPort);
+					Utils.removePreffix(requestHostAndPort, prefix), //
+					backendhostAndPort);
 
-			// TODO if the backend id is used to create a new backend
-			// in a multi backend server, id must be valid
-			// nbut right now, SpaceContext does not handle errors
-			// since SpaceContext filter is the first filter
-			// Backends.checkIfIdIsValid(backendId);
-			return Optional7.of(fromBackendId(backendId));
-		}
+			// check if resulting backing id is well formed
+			if (backendId.length() > 0 && !backendId.contains("."))
+				return Optional7.of(instanciate(backendId));
 
-		if (host.equalsIgnoreCase(hostAndPort))
+		} else if (backendhostAndPort.equalsIgnoreCase(requestHostAndPort))
 			return Optional7.of(this);
 
 		return Optional7.empty();
 	}
 
-	public SpaceBackend fromBackendId(String backendId) {
-		checkThisTargetIsMultiBackend(backendId);
+	public SpaceBackend instanciate() {
+		return instanciate(defaultBackendId());
+	}
+
+	public SpaceBackend instanciate(String backendId) {
+		checkIsMultiple();
 
 		SpaceBackend backend = new SpaceBackend();
-		backend.host = host(backendId);
+		backend.multi = false;
+		backend.host = new UrlBuilder().appendHost(backendId).toString();
 		backend.backendId = backendId;
 		backend.port = port;
 		backend.ssl = ssl;
 		backend.webApp = webApp;
-		return backend;
-	}
 
-	@Override
-	public String toString() {
-		return (multi ? urlBuilder("*") : urlBuilder()).toString();
+		return backend;
 	}
 
 	//
@@ -207,14 +241,12 @@ public class SpaceBackend {
 	//
 
 	private String hostAndPort() {
-		return appendPort(new StringBuilder(host)).toString();
+		return new UrlBuilder().append(host).appendPort().toString();
 	}
 
-	private void checkThisTargetIsMultiBackend(String backendId) {
+	private void checkIsMultiple() {
 		if (!multi)
-			throw Exceptions.illegalArgument(//
-					"target [%s] does not contain backend [%s]", //
-					this, backendId);
+			throw Exceptions.illegalArgument("backend [%s] is not multiple", this);
 	}
 
 	//

@@ -35,34 +35,32 @@ public class SpaceContext {
 	private SpaceContext(String uri, Context context) {
 		this.uri = uri;
 		this.context = context;
-
 		this.isTest = Boolean.parseBoolean(//
 				context().header(SpaceHeaders.SPACEDOG_TEST));
 		this.debug = new Debug(Boolean.parseBoolean(//
 				context().header(SpaceHeaders.SPACEDOG_DEBUG)));
+		this.backend = backend(//
+				context.request().header(HttpHeaders.HOST));
+	}
 
-		String hostAndPort = context.request().header(HttpHeaders.HOST);
+	private static SpaceBackend backend(String hostAndPort) {
 		ServerConfiguration conf = Start.get().configuration();
 
 		// first try to match api backend
-		SpaceBackend apiBackend = conf.apiBackend();
-		Optional7<SpaceBackend> optBackend = apiBackend.fromHostAndPort(hostAndPort);
-		if (optBackend.isPresent())
-			this.backend = optBackend.get();
+		SpaceBackend api = conf.apiBackend();
+		Optional7<SpaceBackend> backend = api.checkAndInstantiate(hostAndPort);
+		if (backend.isPresent())
+			return backend.get();
 
 		// second try to match webapp backend
-		else {
-			Optional<SpaceBackend> wwwBackend = conf.wwwBackend();
-			if (wwwBackend.isPresent()) {
-				optBackend = wwwBackend.get().fromHostAndPort(hostAndPort);
-				if (optBackend.isPresent())
-					this.backend = optBackend.get();
-			}
+		Optional<SpaceBackend> webApp = conf.wwwBackend();
+		if (webApp.isPresent()) {
+			backend = webApp.get().checkAndInstantiate(hostAndPort);
+			if (backend.isPresent())
+				return backend.get();
 		}
 
-		// if none matched, use api backend
-		if (this.backend == null)
-			this.backend = apiBackend;
+		return api.instanciate();
 	}
 
 	public Context context() {

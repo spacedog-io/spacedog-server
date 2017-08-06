@@ -136,13 +136,18 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest backend(SpaceDog dog) {
-		return backend(dog.backendId());
+		return backend(dog.backend());
+	}
+
+	public SpaceRequest backend(SpaceBackend backend) {
+		this.backend = backend;
+		return this;
 	}
 
 	public SpaceRequest backend(String backend) {
 		this.backend = backend.startsWith("http") //
 				? SpaceBackend.fromUrl(backend)
-				: env().target().fromBackendId(backend);
+				: env().target().instanciate(backend);
 		return this;
 	}
 

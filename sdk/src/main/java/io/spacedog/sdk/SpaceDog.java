@@ -28,6 +28,10 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 		this.credentials = new Credentials();
 	}
 
+	public SpaceBackend backend() {
+		return backend;
+	}
+
 	public String backendId() {
 		return backend.backendId();
 	}
@@ -100,7 +104,7 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 	}
 
 	public static SpaceDog backendId(String backendId) {
-		return new SpaceDog(SpaceRequest.env().target().fromBackendId(backendId));
+		return new SpaceDog(SpaceRequest.env().target().instanciate(backendId));
 	}
 
 	public static SpaceDog backend(SpaceDog dog) {

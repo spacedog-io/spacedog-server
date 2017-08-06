@@ -26,8 +26,8 @@ public class Watchdog extends RunListener {
 	public String run() {
 
 		try {
-			job.lastname(//
-					SpaceEnv.defaultEnv().target().host("test"));
+			job.lastname(SpaceEnv.defaultEnv().target()//
+					.instanciate("test").host());
 
 			JUnitCore junit = new JUnitCore();
 			junit.addListener(this);

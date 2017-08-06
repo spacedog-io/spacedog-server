@@ -39,7 +39,7 @@ public class Linkedin extends SpaceTest {
 		SpaceDog test = resetTestBackend();
 
 		// credentials settings with guest sign up enabled
-		CredentialsSettings settings = defaultCredentialsSettings(false, test);
+		CredentialsSettings settings = defaultCredentialsSettings(test, false);
 		test.settings().save(settings);
 
 		// login succeeds
@@ -55,7 +55,7 @@ public class Linkedin extends SpaceTest {
 		SpaceDog test = resetTestBackend();
 
 		// credentials settings with guest sign up enabled
-		CredentialsSettings settings = defaultCredentialsSettings(false, test);
+		CredentialsSettings settings = defaultCredentialsSettings(test, false);
 		settings.useLinkedinExpiresIn = false;
 		settings.sessionMaximumLifetime = 10000;
 		test.settings().save(settings);
@@ -73,7 +73,7 @@ public class Linkedin extends SpaceTest {
 		SpaceDog test = resetTestBackend();
 
 		// set credentials settings with guest sign up disabled
-		CredentialsSettings settings = defaultCredentialsSettings(true, test);
+		CredentialsSettings settings = defaultCredentialsSettings(test, true);
 		test.settings().save(settings);
 
 		// login fails since guest sign in is disabled
@@ -90,7 +90,7 @@ public class Linkedin extends SpaceTest {
 		SpaceDog test = resetTestBackend();
 
 		// set credentials settings with guest sign up disabled
-		CredentialsSettings settings = defaultCredentialsSettings(true, test);
+		CredentialsSettings settings = defaultCredentialsSettings(test, true);
 		test.settings().save(settings);
 
 		// admin pre registers some credentials for a new user
@@ -114,7 +114,7 @@ public class Linkedin extends SpaceTest {
 		SpaceDog test = resetTestBackend();
 
 		// set credentials settings with guest sign up disabled
-		CredentialsSettings settings = defaultCredentialsSettings(true, test);
+		CredentialsSettings settings = defaultCredentialsSettings(test, true);
 		settings.linkedinSecret = "XXX";
 		test.settings().save(settings);
 
@@ -131,7 +131,7 @@ public class Linkedin extends SpaceTest {
 		SpaceDog test = resetTestBackend();
 
 		// credentials settings with guest sign up enabled
-		CredentialsSettings settings = defaultCredentialsSettings(false, test);
+		CredentialsSettings settings = defaultCredentialsSettings(test, false);
 		test.settings().save(settings);
 
 		// login succeeds
@@ -148,7 +148,7 @@ public class Linkedin extends SpaceTest {
 		SpaceDog test = resetTestBackend();
 
 		// set credentials settings with guest sign up disabled
-		CredentialsSettings settings = defaultCredentialsSettings(true, test);
+		CredentialsSettings settings = defaultCredentialsSettings(test, true);
 		settings.linkedinSecret = "XXX";
 		test.settings().save(settings);
 
@@ -157,12 +157,11 @@ public class Linkedin extends SpaceTest {
 		linkedinLogin(test, true, settings);
 	}
 
-	private void linkedinLogin(SpaceDog backend, boolean redirect, CredentialsSettings settings)
+	private void linkedinLogin(SpaceDog dog, boolean redirect, CredentialsSettings settings)
 			throws URISyntaxException, IOException {
 
 		// test redirect uri
-		String redirectUri = SpaceEnv.defaultEnv().target()//
-				.url(backend.backendId(), "/1/login/linkedin");
+		String redirectUri = dog.backend().url("/1/login/linkedin");
 
 		if (redirect)
 			redirectUri = redirectUri + "/redirect";
@@ -179,13 +178,15 @@ public class Linkedin extends SpaceTest {
 		Runtime.getRuntime().exec("open " + url.toString());
 	}
 
-	private CredentialsSettings defaultCredentialsSettings(boolean disableGuestSignUp, SpaceDog backend) {
+	private CredentialsSettings defaultCredentialsSettings(//
+			SpaceDog dog, boolean disableGuestSignUp) {
+
 		SpaceEnv env = SpaceEnv.defaultEnv();
 		CredentialsSettings settings = new CredentialsSettings();
 		settings.disableGuestSignUp = disableGuestSignUp;
 		settings.linkedinId = env.getOrElseThrow("spacedog.test.linkedin.client.id");
 		settings.linkedinSecret = env.getOrElseThrow("spacedog.test.linkedin.client.secret");
-		settings.linkedinFinalRedirectUri = env.target().url(backend.backendId());
+		settings.linkedinFinalRedirectUri = dog.backend().url();
 		return settings;
 	}
 }

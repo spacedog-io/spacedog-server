@@ -20,7 +20,7 @@ public class LinkedinResourceTest extends SpaceTest {
 		prepareTest();
 		SpaceEnv env = SpaceEnv.defaultEnv();
 		SpaceDog test = resetTestBackend();
-		String redirectUri = env.target().url(test.backendId(), "/1/login/linkedin");
+		String redirectUri = test.backend().url("/1/login/linkedin");
 
 		// no linkedin settings means no linkedin credentials
 		SpaceRequest.post("/1/login/linkedin").backend(test)//

@@ -41,8 +41,8 @@ public class SpaceBackendTest extends Assert {
 	}
 
 	@Test
-	public void testFromBackendId() {
-		SpaceBackend backend = SpaceBackend.production.fromBackendId("test");
+	public void testInstanciate() {
+		SpaceBackend backend = SpaceBackend.production.instanciate("test");
 		assertEquals("test.spacedog.io", backend.host());
 		assertEquals(443, backend.port());
 		assertEquals("https", backend.scheme());
@@ -70,7 +70,6 @@ public class SpaceBackendTest extends Assert {
 	public void testFromUrlMultiWebAppBackend() {
 		SpaceBackend backend = SpaceBackend.fromUrl("http://www.*.acme.net:8080", true);
 		assertEquals("www.api.acme.net", backend.host());
-		assertEquals("www.connect.acme.net", backend.host("connect"));
 		assertEquals(8080, backend.port());
 		assertEquals("http", backend.scheme());
 		assertEquals("api", backend.backendId());
@@ -78,6 +77,48 @@ public class SpaceBackendTest extends Assert {
 		assertFalse(backend.ssl());
 		assertEquals("http://www.*.acme.net:8080", backend.toString());
 		assertEquals("http://www.api.acme.net:8080/1/data", backend.url("/1/data"));
+	}
+
+	@Test
+	public void apiMultiBackendCanHandleApiRequest() {
+		SpaceBackend backend = SpaceBackend.fromDefaults("production")//
+				.checkAndInstantiate("test.spacedog.io").get();
+
+		assertEquals("test.spacedog.io", backend.host());
+		assertEquals("https://test.spacedog.io", backend.toString());
+		assertEquals(443, backend.port());
+		assertEquals("https", backend.scheme());
+		assertEquals("test", backend.backendId());
+		assertFalse(backend.webApp());
+		assertTrue(backend.ssl());
+
+		try {
+			backend.instanciate("test2");
+			fail();
+
+		} catch (IllegalArgumentException ignored) {
+		}
+	}
+
+	@Test
+	public void apiMultiBackendCanNotHandleWebAppRequest() {
+		assertFalse(SpaceBackend.fromDefaults("production")//
+				.checkAndInstantiate("test.www.spacedog.io").isPresent());
+	}
+
+	@Test
+	public void webAppMultiBackendCanHandleWebAppRequest() {
+		SpaceBackend backend = SpaceBackend.fromUrl("https://*.www.spacedog.io", true)//
+				.checkAndInstantiate("test.www.spacedog.io").get();
+
+		assertEquals("test.www.spacedog.io", backend.host());
+		assertEquals(443, backend.port());
+		assertEquals("https", backend.scheme());
+		assertEquals("test", backend.backendId());
+		assertTrue(backend.webApp());
+		assertTrue(backend.ssl());
+		assertFalse(backend.multi());
+		assertEquals("https://test.www.spacedog.io", backend.toString());
 	}
 
 }
