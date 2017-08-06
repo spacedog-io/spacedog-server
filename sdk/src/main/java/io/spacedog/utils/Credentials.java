@@ -185,11 +185,20 @@ public class Credentials {
 
 	public Set<String> roles() {
 		if (roles == null)
-			roles = Sets.newHashSet();
+			return Collections.emptySet();
 		return roles;
 	}
 
-	public Credentials roles(String... newRoles) {
+	public Credentials clearRoles() {
+		if (roles != null)
+			roles.clear();
+		return this;
+	}
+
+	public Credentials addRoles(String... newRoles) {
+		if (newRoles == null)
+			return this;
+
 		if (roles == null)
 			roles = Sets.newHashSet();
 
@@ -199,6 +208,16 @@ public class Credentials {
 		}
 
 		type = Type.fromRoles(this.roles);
+		return this;
+	}
+
+	public Credentials removeRoles(String... values) {
+		if (roles != null && values != null) {
+			for (String role : values)
+				roles.remove(role);
+
+			type = Type.fromRoles(this.roles);
+		}
 		return this;
 	}
 
@@ -361,9 +380,11 @@ public class Credentials {
 		return type().isGreaterThanOrEqualTo(other.type());
 	}
 
-	public void checkAuthorizedToManage(String role) {
-		if (Type.authorizedToManage(role).isGreaterThan(type()))
-			throw Exceptions.insufficientCredentials(this);
+	public void checkAuthorizedToSet(String... roles) {
+		if (roles != null)
+			for (String role : roles)
+				if (Type.authorizedToManage(role).isGreaterThan(type()))
+					throw Exceptions.insufficientCredentials(this);
 	}
 
 	public boolean isReal() {

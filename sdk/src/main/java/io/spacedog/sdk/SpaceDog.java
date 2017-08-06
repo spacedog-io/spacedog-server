@@ -9,7 +9,6 @@ import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceResponse;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
-import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Json7;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.SpaceFields;
@@ -167,9 +166,9 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 	}
 
 	public SpaceDog signUp(String password) {
-		this.credentials = SpaceDog.backendId(backendId())//
-				.credentials().create(username(), password, email().get(), //
-						Type.user.name());
+		String id = SpaceDog.backendId(backendId())//
+				.credentials().create(username(), password, email().get());
+		this.credentials.id(id);
 		return login(password);
 	}
 

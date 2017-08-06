@@ -25,21 +25,32 @@ public class SchemaSettings extends Settings implements NonDirectlyUpdatableSett
 	// acl business logic
 	//
 
-	public boolean check(String type, String role, DataPermission permission) {
+	public boolean check(String type, String role, DataPermission... permissions) {
 		SchemaAcl roles = acl.get(type);
 		if (roles == null)
 			roles = SchemaAcl.defaultAcl();
-		Set<DataPermission> permissions = roles.get(role);
-		if (permissions == null)
+
+		Set<DataPermission> rolePermissions = roles.get(role);
+		if (rolePermissions == null)
 			return false;
-		return permissions.contains(permission);
+
+		for (DataPermission permission : permissions)
+			if (rolePermissions.contains(permission))
+				return true;
+
+		return false;
 	}
 
 	public boolean check(Credentials credentials, String type, DataPermission... permissions) {
+		if (credentials.isAtLeastSuperAdmin())
+			return true;
+
+		if (check(type, "all", permissions))
+			return true;
+
 		for (String role : credentials.roles())
-			for (DataPermission permission : permissions)
-				if (check(type, role, permission))
-					return true;
+			if (check(type, role, permissions))
+				return true;
 
 		return false;
 	}

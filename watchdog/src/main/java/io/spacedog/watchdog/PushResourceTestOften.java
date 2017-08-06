@@ -59,7 +59,7 @@ public class PushResourceTestOften extends SpaceTest {
 		// add create permission to guest requests
 		Schema schema = superadmin.schema().get("installation");
 		schema.acl(new SchemaAcl()//
-				.set("key", DataPermission.create, DataPermission.update)//
+				.set("all", DataPermission.create, DataPermission.update)//
 				.set("user", DataPermission.create, DataPermission.read, DataPermission.update)//
 				.set("admin", DataPermission.create, DataPermission.update_all, //
 						DataPermission.search, DataPermission.delete_all));

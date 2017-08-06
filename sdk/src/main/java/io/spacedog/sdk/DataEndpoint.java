@@ -88,6 +88,11 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 				.bodyPojo(object).go(201).getString("id");
 	}
 
+	public String create(String type, String id, Object object) {
+		return dog.post("/1/data/{type}").id(id).routeParam("type", type)//
+				.bodyPojo(object).go(201).getString("id");
+	}
+
 	public long save(String type, String id, Object object) {
 		return save(type, id, object, true);
 	}

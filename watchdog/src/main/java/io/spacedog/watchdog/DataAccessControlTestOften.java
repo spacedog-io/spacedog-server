@@ -8,144 +8,192 @@ import java.util.Collections;
 import org.junit.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.model.DataPermission;
 import io.spacedog.model.Schema;
 import io.spacedog.model.Schema.SchemaAcl;
 import io.spacedog.model.SchemaSettings;
-import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
+import io.spacedog.utils.Json7;
 
 public class DataAccessControlTestOften extends SpaceTest {
 
 	@Test
-	public void testSchemaAclManagement() {
+	public void testDefaulSchemaAcl() {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
-		SpaceDog vince = signUp(test, "vince", "hi vince");
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog guest = SpaceDog.backend(superadmin);
+		SpaceDog vince = vinceSignsUp(guest);
+		SpaceDog admin = adminSignsUp(superadmin);
 
 		// set message schema
 		Schema messageSchema = Schema.builder("msge").text("t").build();
-		test.schema().set(messageSchema);
+		superadmin.schema().set(messageSchema);
 
 		// message schema does not contain any acl
 		// it means message schema has default acl
-		SchemaSettings settings = test.settings().get(SchemaSettings.class);
+		SchemaSettings settings = superadmin.settings().get(SchemaSettings.class);
 		assertEquals(SchemaAcl.defaultAcl(), settings.acl.get("msge"));
 
 		// in default acl, only users and admins can create objects
-		SpaceRequest.post("/1/data/msge").backend(test).bodyJson("t", "hello").go(403);
-		SpaceRequest.post("/1/data/msge").id("vince").auth(vince).bodyJson("t", "v1").go(201);
-		SpaceRequest.post("/1/data/msge").id("vince2").auth(vince).bodyJson("t", "v2").go(201);
-		SpaceRequest.post("/1/data/msge").id("admin").auth(test).bodyJson("t", "a1").go(201);
+		guest.post("/1/data/msge").bodyJson("t", "hello").go(403);
+		vince.post("/1/data/msge").id("vince").bodyJson("t", "v1").go(201);
+		vince.post("/1/data/msge").id("vince2").bodyJson("t", "v2").go(201);
+		admin.post("/1/data/msge").id("admin").bodyJson("t", "a1").go(201);
 
 		// in default acl, everyone can read any objects
-		SpaceRequest.get("/1/data/msge/vince").backend(test).go(200);
-		SpaceRequest.get("/1/data/msge/admin").backend(test).go(200);
-		SpaceRequest.get("/1/data/msge/vince").auth(vince).go(200);
-		SpaceRequest.get("/1/data/msge/admin").auth(vince).go(200);
-		SpaceRequest.get("/1/data/msge/vince").auth(test).go(200);
-		SpaceRequest.get("/1/data/msge/admin").auth(test).go(200);
+		guest.get("/1/data/msge/vince").go(200);
+		guest.get("/1/data/msge/admin").go(200);
+		vince.get("/1/data/msge/vince").go(200);
+		vince.get("/1/data/msge/admin").go(200);
+		admin.get("/1/data/msge/vince").go(200);
+		admin.get("/1/data/msge/admin").go(200);
 
 		// in default acl, only users and admins can search for objects
-		SpaceRequest.get("/1/data/msge/").backend(test).go(403);
-		SpaceRequest.get("/1/data/msge/").auth(vince).go(200);
-		SpaceRequest.get("/1/data/msge/").auth(test).go(200);
+		guest.get("/1/data/msge/").go(403);
+		vince.get("/1/data/msge/").go(200);
+		admin.get("/1/data/msge/").go(200);
 
 		// in default acl, users can update their own objects
 		// admin can update any objects
-		SpaceRequest.put("/1/data/msge/vince").backend(test).go(403);
-		SpaceRequest.put("/1/data/msge/admin").backend(test).go(403);
-		SpaceRequest.put("/1/data/msge/vince").auth(vince).bodyJson("t", "v3").go(200);
-		SpaceRequest.put("/1/data/msge/admin").auth(vince).go(403);
-		SpaceRequest.put("/1/data/msge/vince").auth(test).bodyJson("t", "v4").go(200);
-		SpaceRequest.put("/1/data/msge/admin").auth(test).bodyJson("t", "a2").go(200);
+		guest.put("/1/data/msge/vince").go(403);
+		guest.put("/1/data/msge/admin").go(403);
+		vince.put("/1/data/msge/vince").bodyJson("t", "v3").go(200);
+		vince.put("/1/data/msge/admin").go(403);
+		admin.put("/1/data/msge/vince").bodyJson("t", "v4").go(200);
+		admin.put("/1/data/msge/admin").bodyJson("t", "a2").go(200);
 
 		// in default acl, users can delete their own objects
 		// admin can delete any objects
-		SpaceRequest.delete("/1/data/msge/vince").backend(test).go(403);
-		SpaceRequest.delete("/1/data/msge/admin").backend(test).go(403);
-		SpaceRequest.delete("/1/data/msge/vince").auth(vince).go(200);
-		SpaceRequest.delete("/1/data/msge/admin").auth(vince).go(403);
-		SpaceRequest.delete("/1/data/msge/vince").auth(test).go(404);
-		SpaceRequest.delete("/1/data/msge/vince2").auth(test).go(200);
-		SpaceRequest.delete("/1/data/msge/admin").auth(test).go(200);
+		guest.delete("/1/data/msge/vince").go(403);
+		guest.delete("/1/data/msge/admin").go(403);
+		vince.delete("/1/data/msge/vince").go(200);
+		vince.delete("/1/data/msge/admin").go(403);
+		admin.delete("/1/data/msge/vince").go(404);
+		admin.delete("/1/data/msge/vince2").go(200);
+		admin.delete("/1/data/msge/admin").go(200);
+	}
 
-		// vince creates a message before security tightens
-		SpaceRequest.post("/1/data/msge").id("vince").auth(vince).bodyJson("t", "hello").go(201);
+	@Test
+	public void testEmptySchemaAcl() {
 
-		// set message schema acl to empty
+		// prepare
+		prepareTest();
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog guest = SpaceDog.backend(superadmin);
+		SpaceDog vince = vinceSignsUp(guest);
+		SpaceDog admin = adminSignsUp(superadmin);
+
+		// superadmin sets message schema with empty acl
+		Schema messageSchema = Schema.builder("msge").text("t").build();
 		messageSchema.acl(new SchemaAcl());
-		test.schema().set(messageSchema);
+		superadmin.schema().set(messageSchema);
 
 		// check message schema acl are set
-		settings = test.settings().get(SchemaSettings.class);
+		SchemaSettings settings = superadmin.settings().get(SchemaSettings.class);
 		assertEquals(1, settings.acl.size());
 		assertEquals(0, settings.acl.get("msge").size());
 
-		// in empty acl, nobody can create an object
-		SpaceRequest.post("/1/data/msge").backend(test).go(403);
-		SpaceRequest.post("/1/data/msge").auth(vince).go(403);
-		SpaceRequest.post("/1/data/msge").auth(test).go(403);
+		// in empty acl, nobody can create an object but superadmins
+		guest.post("/1/data/msge").go(403);
+		vince.post("/1/data/msge").go(403);
+		admin.post("/1/data/msge").go(403);
+		superadmin.post("/1/data/msge").id("1").bodyJson("t", "hi").go(201);
 
-		// in empty acl, nobody can read an object
-		SpaceRequest.get("/1/data/msge/vince").backend(test).go(403);
-		SpaceRequest.get("/1/data/msge/vince").auth(vince).go(403);
-		SpaceRequest.get("/1/data/msge/vince").auth(test).go(403);
+		// in empty acl, nobody can read an object but superadmins
+		guest.get("/1/data/msge/vince").go(403);
+		vince.get("/1/data/msge/vince").go(403);
+		admin.get("/1/data/msge/vince").go(403);
+		superadmin.get("/1/data/msge/1").go(200);
 
-		// in empty acl, nobody can search for objects
-		SpaceRequest.get("/1/data/msge/").backend(test).go(403);
-		SpaceRequest.get("/1/data/msge/").auth(vince).go(403);
-		SpaceRequest.get("/1/data/msge/").auth(test).go(403);
+		// in empty acl, nobody can search for objects but superadmins
+		guest.get("/1/data/msge/").go(403);
+		vince.get("/1/data/msge/").go(403);
+		admin.get("/1/data/msge/").go(403);
+		superadmin.get("/1/data/msge/").refresh().go(200)//
+				.assertEquals("1", "results.0.meta.id");
 
-		// in empty acl, nobody can update any object
-		SpaceRequest.put("/1/data/msge/vince").backend(test).go(403);
-		SpaceRequest.put("/1/data/msge/vince").auth(vince).go(403);
-		SpaceRequest.put("/1/data/msge/vince").auth(test).go(403);
+		// in empty acl, nobody can update any object but superadmins
+		guest.put("/1/data/msge/vince").go(403);
+		vince.put("/1/data/msge/vince").go(403);
+		admin.put("/1/data/msge/vince").go(403);
+		superadmin.put("/1/data/msge/1").bodyJson("t", "ola").go(200);
 
-		// in empty acl, nobody can delete any object
-		SpaceRequest.delete("/1/data/msge/vince").backend(test).go(403);
-		SpaceRequest.delete("/1/data/msge/vince").auth(vince).go(403);
-		SpaceRequest.delete("/1/data/msge/vince").auth(test).go(403);
+		// in empty acl, nobody can delete any object but superadmins
+		guest.delete("/1/data/msge/vince").go(403);
+		vince.delete("/1/data/msge/vince").go(403);
+		admin.delete("/1/data/msge/vince").go(403);
+		superadmin.delete("/1/data/msge/1").go(200);
 
-		// set message schema new acl settings
+	}
+
+	@Test
+	public void testCustomSchemaAcl() {
+
+		// prepare
+		prepareTest();
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog guest = SpaceDog.backend(superadmin);
+		SpaceDog vince = vinceSignsUp(guest);
+		SpaceDog admin = adminSignsUp(superadmin);
+
+		// set message schema with custom acl settings
+		Schema messageSchema = Schema.builder("msge").text("t").build();
+		messageSchema.acl("user", DataPermission.create);
 		messageSchema.acl("admin", DataPermission.search);
-		test.schema().set(messageSchema);
+		superadmin.schema().set(messageSchema);
 
 		// check message schema acl are set
-		settings = test.settings().get(SchemaSettings.class);
+		SchemaSettings settings = superadmin.settings().get(SchemaSettings.class);
 		assertEquals(1, settings.acl.size());
-		assertEquals(1, settings.acl.get("msge").size());
+		assertEquals(2, settings.acl.get("msge").size());
 		assertEquals(Collections.singleton(DataPermission.search), //
 				settings.acl.get("msge").get("admin"));
+		assertEquals(Collections.singleton(DataPermission.create), //
+				settings.acl.get("msge").get("user"));
 
-		// with this schema acl, nobody can create an object
-		SpaceRequest.post("/1/data/msge").backend(test).go(403);
-		SpaceRequest.post("/1/data/msge").auth(vince).go(403);
-		SpaceRequest.post("/1/data/msge").auth(test).go(403);
+		// nobody can create an object but superadmins
+		guest.post("/1/data/msge").go(403);
+		vince.post("/1/data/msge").id("1").bodyJson("t", "hi").go(201);
+		admin.post("/1/data/msge").go(403);
 
-		// with this schema acl, nobody can read an object
-		SpaceRequest.get("/1/data/msge/vince").backend(test).go(403);
-		SpaceRequest.get("/1/data/msge/vince").auth(vince).go(403);
-		SpaceRequest.get("/1/data/msge/vince").auth(test).go(200);
+		// only admins (and superadmins) can search for objects
+		guest.get("/1/data/msge/1").go(403);
+		vince.get("/1/data/msge/1").go(403);
+		admin.get("/1/data/msge/1").go(200);
 
-		// with this schema acl, only admins can search for objects
-		SpaceRequest.get("/1/data/msge/").backend(test).go(403);
-		SpaceRequest.get("/1/data/msge/").auth(vince).go(403);
-		SpaceRequest.get("/1/data/msge/").auth(test).go(200);
+		// only admins (and superadmins) can search for objects
+		guest.get("/1/data/msge/").go(403);
+		vince.get("/1/data/msge/").go(403);
+		admin.get("/1/data/msge/").refresh().go(200)//
+				.assertEquals("1", "results.0.meta.id");
 
-		// with this schema acl, nobody can update any object
-		SpaceRequest.put("/1/data/msge/vince").backend(test).go(403);
-		SpaceRequest.put("/1/data/msge/vince").auth(vince).go(403);
-		SpaceRequest.put("/1/data/msge/vince").auth(test).go(403);
+		// nobody can update any object (but superadmins)
+		guest.put("/1/data/msge/1").go(403);
+		vince.put("/1/data/msge/1").go(403);
+		admin.put("/1/data/msge/1").go(403);
 
-		// with this schema acl, nobody can delete any object
-		SpaceRequest.delete("/1/data/msge/vince").backend(test).go(403);
-		SpaceRequest.delete("/1/data/msge/vince").auth(vince).go(403);
-		SpaceRequest.delete("/1/data/msge/vince").auth(test).go(403);
+		// nobody can delete any object but superadmins
+		guest.delete("/1/data/msge/1").go(403);
+		vince.delete("/1/data/msge/1").go(403);
+		admin.delete("/1/data/msge/1").go(403);
+		superadmin.delete("/1/data/msge/1").go(200);
+	}
+
+	private SpaceDog adminSignsUp(SpaceDog superadmin) {
+		superadmin.credentials().create(//
+				"admin", "hi admin", "platform@spacedog.io", "admin");
+		return SpaceDog.backend(superadmin)//
+				.username("admin").login("hi admin");
+	}
+
+	private SpaceDog vinceSignsUp(SpaceDog guest) {
+		return SpaceDog.backend(guest).username("vince")//
+				.email("platform@spacedog.io").signUp("hi vince");
 	}
 
 	@Test
@@ -153,7 +201,7 @@ public class DataAccessControlTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
+		SpaceDog superadmin = resetTestBackend();
 
 		// set schema
 		Schema schema = Schema.builder("message")//
@@ -166,54 +214,57 @@ public class DataAccessControlTestOften extends SpaceTest {
 						DataPermission.create, DataPermission.delete_all)//
 				.build();
 
-		test.schema().set(schema);
+		superadmin.schema().set(schema);
 
 		// dave has the platine role
 		// he's got all the rights
-		SpaceDog dave = signUp(test, "dave", "hi dave");
-		SpaceRequest.put("/1/credentials/" + dave.id() + "/roles/platine").auth(test).go(200);
-		SpaceRequest.post("/1/data/message").id("dave").auth(dave).bodyJson("text", "Dave").go(201);
-		SpaceRequest.get("/1/data/message/dave").auth(dave).go(200);
-		SpaceRequest.put("/1/data/message/dave").auth(dave).bodyJson("text", "Salut Dave").go(200);
-		SpaceRequest.delete("/1/data/message/dave").auth(dave).go(200);
+		SpaceDog dave = signUp(superadmin, "dave", "hi dave");
+		superadmin.credentials().setRole(dave.id(), "platine");
+		ObjectNode message = Json7.object("text", "hi");
+		dave.data().create("message", "1", message);
+		message = dave.data().get("message", "1");
+		message.put("text", "ola");
+		dave.data().save("message", "1", message);
+		dave.data().delete("message", "1");
 
 		// message for users without create permission
-		SpaceRequest.post("/1/data/message").id("1").auth(dave).bodyJson("text", "Hello").go(201);
+		message.put("text", "salut");
+		dave.data().create("message", "2", message);
 
 		// maelle is a simple user
 		// she's got no right on the message schema
-		SpaceDog maelle = signUp(test, "maelle", "hi maelle");
-		SpaceRequest.post("/1/data/message").auth(maelle).bodyJson("text", "Maelle").go(403);
-		SpaceRequest.get("/1/data/message/1").auth(maelle).go(403);
-		SpaceRequest.put("/1/data/message/1").auth(maelle).bodyJson("text", "Salut Maelle").go(403);
-		SpaceRequest.delete("/1/data/message/1").auth(maelle).go(403);
+		SpaceDog maelle = signUp(superadmin, "maelle", "hi maelle");
+		maelle.post("/1/data/message").go(403);
+		maelle.get("/1/data/message/2").go(403);
+		maelle.put("/1/data/message/2").go(403);
+		maelle.delete("/1/data/message/2").go(403);
 
 		// fred has the iron role
 		// he's only got the right to read
-		SpaceDog fred = signUp(test, "fred", "hi fred");
-		SpaceRequest.put("/1/credentials/" + fred.id() + "/roles/iron").auth(test).go(200);
-		SpaceRequest.post("/1/data/message").auth(fred).bodyJson("text", "Fred").go(403);
-		SpaceRequest.get("/1/data/message/1").auth(fred).go(200);
-		SpaceRequest.put("/1/data/message/1").auth(fred).bodyJson("text", "Salut Fred").go(403);
-		SpaceRequest.delete("/1/data/message/1").auth(fred).go(403);
+		SpaceDog fred = signUp(superadmin, "fred", "hi fred");
+		superadmin.credentials().setRole(fred.id(), "iron");
+		fred.post("/1/data/message").go(403);
+		fred.get("/1/data/message/2").go(200);
+		fred.put("/1/data/message/2").go(403);
+		fred.delete("/1/data/message/2").go(403);
 
 		// nath has the silver role
 		// she's got the right to read and update
-		SpaceDog nath = signUp(test, "nath", "hi nath");
-		SpaceRequest.put("/1/credentials/" + nath.id() + "/roles/silver").auth(test).go(200);
-		SpaceRequest.post("/1/data/message").auth(nath).bodyJson("text", "Nath").go(403);
-		SpaceRequest.get("/1/data/message/1").auth(nath).go(200);
-		SpaceRequest.put("/1/data/message/1").auth(nath).bodyJson("text", "Salut Nath").go(200);
-		SpaceRequest.delete("/1/data/message/1").auth(nath).go(403);
+		SpaceDog nath = signUp(superadmin, "nath", "hi nath");
+		superadmin.credentials().setRole(nath.id(), "silver");
+		nath.post("/1/data/message").go(403);
+		nath.get("/1/data/message/2").go(200);
+		nath.put("/1/data/message/2").bodyJson("text", "hi").go(200);
+		nath.delete("/1/data/message/2").go(403);
 
 		// vince has the gold role
 		// he's got the right to create, read and update
-		SpaceDog vince = signUp(test, "vince", "hi vince");
-		SpaceRequest.put("/1/credentials/" + vince.id() + "/roles/gold").auth(test).go(200);
-		SpaceRequest.post("/1/data/message").id("vince").auth(vince).bodyJson("text", "Vince").go(201);
-		SpaceRequest.get("/1/data/message/vince").auth(vince).go(200);
-		SpaceRequest.put("/1/data/message/vince").auth(vince).bodyJson("text", "Salut Vince").go(200);
-		SpaceRequest.delete("/1/data/message/vince").auth(vince).go(403);
+		SpaceDog vince = signUp(superadmin, "vince", "hi vince");
+		superadmin.credentials().setRole(vince.id(), "gold");
+		vince.post("/1/data/message").id("3").bodyJson("text", "grunt").go(201);
+		vince.get("/1/data/message/3").go(200);
+		vince.put("/1/data/message/3").bodyJson("text", "flux").go(200);
+		vince.delete("/1/data/message/3").go(403);
 	}
 
 	@Test
@@ -221,7 +272,7 @@ public class DataAccessControlTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
+		SpaceDog superadmin = resetTestBackend();
 
 		// create message schema with simple acl
 		Schema messageSchema = Schema.builder("message")//
@@ -229,18 +280,18 @@ public class DataAccessControlTestOften extends SpaceTest {
 				.text("text")//
 				.build();
 
-		test.schema().set(messageSchema);
+		superadmin.schema().set(messageSchema);
 
 		// check schema settings contains message schema acl
-		SchemaSettings settings = test.settings().get(SchemaSettings.class);
+		SchemaSettings settings = superadmin.settings().get(SchemaSettings.class);
 		assertEquals(messageSchema.acl(), settings.acl.get(messageSchema.name()));
 
 		// delete message schema
-		test.schema().delete(messageSchema);
+		superadmin.schema().delete(messageSchema);
 
 		// check schema settings does not contain
 		// message schema acl anymore
-		settings = test.settings().get(SchemaSettings.class);
+		settings = superadmin.settings().get(SchemaSettings.class);
 		assertNull(settings.acl.get(messageSchema.name()));
 	}
 }

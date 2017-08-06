@@ -14,7 +14,6 @@ import io.spacedog.model.CreateCredentialsRequest;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceResponse;
 import io.spacedog.utils.Credentials;
-import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json7;
 import io.spacedog.utils.Optional7;
@@ -76,24 +75,14 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 	// Create credentials method
 	//
 
-	public Credentials create(String username, String password, String email) {
-		return create(username, password, email, Type.user.name());
-	}
-
-	public Credentials create(String username, String password, String email, String... roles) {
+	public String create(String username, String password, String email, String... roles) {
 		return create(new CreateCredentialsRequest().username(username).password(password)//
 				.email(email).roles(roles));
 	}
 
-	public Credentials create(CreateCredentialsRequest request) {
-		String id = dog.post("/1/credentials")//
+	public String create(CreateCredentialsRequest request) {
+		return dog.post("/1/credentials")//
 				.bodyPojo(request).go(201).getString(FIELD_ID);
-
-		Credentials credentials = new Credentials(request.username());
-		credentials.id(id);
-		credentials.email(request.email());
-		credentials.roles(request.roles());
-		return credentials;
 	}
 
 	//

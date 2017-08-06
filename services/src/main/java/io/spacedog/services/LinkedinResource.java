@@ -200,7 +200,7 @@ public class LinkedinResource extends Resource {
 
 		CredentialsResource credentialsResource = CredentialsResource.get();
 		Credentials credentials = credentialsResource.getByName(email, false)//
-				.orElse(new Credentials(email).roles(Type.user.name()));
+				.orElse(new Credentials(email).addRoles(Type.user.name()));
 
 		credentials.setCurrentSession(session);
 		credentials.email(email);

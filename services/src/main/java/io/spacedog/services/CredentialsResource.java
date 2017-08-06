@@ -167,7 +167,9 @@ public class CredentialsResource extends Resource {
 	@Post("/1/credentials/")
 	public Payload post(String body, Context context) {
 
-		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
+		CredentialsSettings settings = SettingsResource.get()//
+				.load(CredentialsSettings.class);
+
 		if (settings.disableGuestSignUp)
 			SpaceContext.credentials().checkAtLeastUser();
 
@@ -413,7 +415,7 @@ public class CredentialsResource extends Resource {
 	@Delete("/1/credentials/:id/roles/")
 	public Payload deleteAllRoles(String id, Context context) {
 		Credentials credentials = checkAdminAndGet(id);
-		credentials.roles().clear();
+		credentials.clearRoles();
 		credentials = update(credentials);
 		return saved(credentials, false);
 	}
@@ -424,10 +426,10 @@ public class CredentialsResource extends Resource {
 		Roles.checkIfValid(role);
 		Credentials requester = SpaceContext.credentials();
 		Credentials updated = checkAdminAndGet(id);
-		requester.checkAuthorizedToManage(role);
+		requester.checkAuthorizedToSet(role);
 
 		if (!updated.roles().contains(role)) {
-			updated.roles().add(role);
+			updated.addRoles(role);
 			updated = update(updated);
 		}
 
@@ -440,7 +442,7 @@ public class CredentialsResource extends Resource {
 		Credentials credentials = checkAdminAndGet(id);
 
 		if (credentials.roles().contains(role)) {
-			credentials.roles().remove(role);
+			credentials.removeRoles(role);
 			credentials = update(credentials);
 			return saved(credentials, false);
 		}
@@ -486,13 +488,12 @@ public class CredentialsResource extends Resource {
 	}
 
 	private Credentials checkSuperdog(String password) {
-		ServerConfiguration configuration = Start.get().configuration();
-		if (password != null && password.equals(configuration.superdogPassword())) {
-			Credentials credentials = new Credentials(SUPERDOG);
-			credentials.roles(Credentials.Type.superdog.toString());
-			return credentials;
-		}
-		throw Exceptions.invalidUsernamePassword();
+		ServerConfiguration conf = Start.get().configuration();
+		if (password == null || !password.equals(conf.superdogPassword()))
+			throw Exceptions.invalidUsernamePassword();
+
+		return new Credentials(SUPERDOG)//
+				.addRoles(Credentials.Type.superdog.toString());
 	}
 
 	private void updateInvalidChallenges(Credentials credentials) {
@@ -670,9 +671,8 @@ public class CredentialsResource extends Resource {
 
 	Credentials createSuperdog(String username, String password, String email) {
 		Usernames.checkValid(username);
-		Credentials credentials = new Credentials(username);
-		credentials.roles(Type.superdog.name());
-		credentials.email(email);
+		Credentials credentials = new Credentials(username).email(email)//
+				.addRoles(Type.superdog.name());
 		Passwords.check(password);
 		credentials.changePassword(password, Optional7.empty());
 		return create(credentials);
@@ -718,17 +718,17 @@ public class CredentialsResource extends Resource {
 	public Credentials createCredentialsRequestToCredentials(String body, //
 			Credentials.Type type) {
 
+		Credentials requester = SpaceContext.credentials();
 		Credentials credentials = new Credentials();
-		CreateCredentialsRequest request = Json8.toPojo(body, CreateCredentialsRequest.class);
+		CreateCredentialsRequest request = Json8.toPojo(body, //
+				CreateCredentialsRequest.class);
 
 		if (Utils.isNullOrEmpty(request.roles()))
-			credentials.roles(type.name());
-		else
-			credentials.roles(request.roles());
-
-		if (credentials.type().isGreaterThan(type))
-			throw Exceptions.insufficientCredentials(//
-					SpaceContext.credentials());
+			credentials.addRoles(type.name());
+		else {
+			requester.checkAuthorizedToSet(request.roles());
+			credentials.addRoles(request.roles());
+		}
 
 		CredentialsSettings settings = SettingsResource.get()//
 				.load(CredentialsSettings.class);

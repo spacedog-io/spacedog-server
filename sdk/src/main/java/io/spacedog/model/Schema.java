@@ -105,7 +105,7 @@ public class Schema {
 		public static SchemaAcl defaultAcl() {
 
 			return new SchemaAcl()//
-					.set("key", DataPermission.read_all)//
+					.set("all", DataPermission.read_all)//
 					.set("user", DataPermission.create, DataPermission.update, //
 							DataPermission.search, DataPermission.delete)//
 					.set("admin", DataPermission.create, DataPermission.update_all, //
