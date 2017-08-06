@@ -41,6 +41,9 @@ public class ShareSettings extends Settings {
 	}
 
 	public boolean check(Credentials credentials, DataPermission... permissions) {
+		if (credentials.isAtLeastSuperAdmin())
+			return true;
+
 		for (String role : credentials.roles())
 			if (check(role, permissions))
 				return true;
