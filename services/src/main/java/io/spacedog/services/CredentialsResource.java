@@ -718,7 +718,7 @@ public class CredentialsResource extends Resource {
 	public Credentials createCredentialsRequestToCredentials(String body, //
 			Credentials.Type type) {
 
-		Credentials credentials = new Credentials(SpaceContext.backendId());
+		Credentials credentials = new Credentials();
 		CreateCredentialsRequest request = Json8.toPojo(body, CreateCredentialsRequest.class);
 
 		if (Utils.isNullOrEmpty(request.roles()))

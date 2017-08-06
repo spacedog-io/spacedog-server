@@ -63,8 +63,6 @@ public class SpaceContext {
 		// if none matched, use api backend
 		if (this.backend == null)
 			this.backend = apiBackend;
-
-		this.credentials = new Credentials(this.backend.backendId());
 	}
 
 	public Context context() {
@@ -110,7 +108,7 @@ public class SpaceContext {
 	}
 
 	public static boolean isWww() {
-		return get().backend.webApp();
+		return backend().webApp();
 	}
 
 	public static boolean isDebug() {
@@ -196,8 +194,9 @@ public class SpaceContext {
 				userCredentials.checkReallyEnabled();
 				checkPasswordMustChange(userCredentials, context);
 				credentials = userCredentials;
-			}
 
+			} else
+				credentials = Credentials.GUEST;
 		}
 	}
 

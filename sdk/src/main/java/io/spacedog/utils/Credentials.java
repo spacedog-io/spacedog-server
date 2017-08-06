@@ -60,6 +60,8 @@ public class Credentials {
 		}
 	}
 
+	public static final Credentials GUEST = new Credentials("guest");
+
 	private String username;
 	private String email;
 	private boolean enabled = true;
