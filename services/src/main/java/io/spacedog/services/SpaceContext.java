@@ -39,6 +39,7 @@ public class SpaceContext {
 				context().header(SpaceHeaders.SPACEDOG_TEST));
 		this.debug = new Debug(Boolean.parseBoolean(//
 				context().header(SpaceHeaders.SPACEDOG_DEBUG)));
+		this.credentials = Credentials.GUEST;
 		this.backend = backend(//
 				context.request().header(HttpHeaders.HOST));
 	}
@@ -192,9 +193,7 @@ public class SpaceContext {
 				userCredentials.checkReallyEnabled();
 				checkPasswordMustChange(userCredentials, context);
 				credentials = userCredentials;
-
-			} else
-				credentials = Credentials.GUEST;
+			}
 		}
 	}
 
