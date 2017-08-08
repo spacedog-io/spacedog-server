@@ -60,8 +60,7 @@ public class DataResource extends Resource {
 			 * (2) id is a property of the object and the _id schema field contains the
 			 * property path, (3) id is provided with the 'id' query parameter
 			 */
-			Schema schema = Start.get().getElasticClient()//
-					.getSchema(type);
+			Schema schema = DataStore.get().getSchema(type);
 
 			Optional<String> id = Optional.empty();
 
@@ -120,8 +119,7 @@ public class DataResource extends Resource {
 		checkPutPermissions(type, id, credentials);
 
 		ObjectNode object = Json8.readObject(body);
-		Schema schema = Start.get().getElasticClient()//
-				.getSchema(type);
+		Schema schema = DataStore.get().getSchema(type);
 
 		// TODO add a test on this idPath feature
 		if (schema.hasIdPath()) {
@@ -157,17 +155,16 @@ public class DataResource extends Resource {
 	@Delete("/:type/:id/")
 	public Payload deleteById(String type, String id, Context context) {
 		Credentials credentials = SpaceContext.credentials();
-		ElasticClient elastic = Start.get().getElasticClient();
 
 		if (DataAccessControl.check(credentials, type, DataPermission.delete_all)) {
-			elastic.delete(type, id, false, true);
+			elastic().delete(DataStore.toDataIndex(type), id, false, true);
 			return JsonPayload.success();
 
 		} else if (DataAccessControl.check(credentials, type, DataPermission.delete)) {
 			ObjectNode object = DataStore.get().getObject(type, id);
 
 			if (credentials.name().equals(Json8.get(object, "meta.createdBy").asText())) {
-				elastic.delete(type, id, false, true);
+				elastic().delete(DataStore.toDataIndex(type), id, false, true);
 				return JsonPayload.success();
 			} else
 				throw Exceptions.forbidden(//

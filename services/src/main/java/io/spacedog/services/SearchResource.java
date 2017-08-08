@@ -59,8 +59,10 @@ public class SearchResource extends Resource {
 	public Payload postSearchAllTypes(String body, Context context) {
 		Credentials credentials = SpaceContext.credentials();
 		String[] types = DataAccessControl.types(DataPermission.search, credentials);
+
 		boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);
-		DataStore.get().refreshBackend(refresh);
+		DataStore.get().refreshDataTypes(refresh, types);
+
 		ObjectNode result = searchInternal(body, credentials, context, types);
 		return JsonPayload.json(result);
 	}
@@ -68,14 +70,17 @@ public class SearchResource extends Resource {
 	@Delete("")
 	@Delete("/")
 	public Payload deleteAllTypes(String query, Context context) {
-		// TODO delete special types like user the right way
-		// credentials and user data at the same time
 		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
 		String[] types = DataAccessControl.types(DataPermission.delete_all, credentials);
+
+		if (Utils.isNullOrEmpty(types))
+			return JsonPayload.success();
+
 		boolean refresh = context.query().getBoolean(PARAM_REFRESH, true);
-		DataStore.get().refreshBackend(refresh);
-		DeleteByQueryResponse response = Start.get().getElasticClient()//
-				.deleteByQuery(query, types);
+		DataStore.get().refreshDataTypes(refresh, types);
+
+		DeleteByQueryResponse response = elastic().deleteByQuery(//
+				query, DataStore.toDataIndex(types));
 		return JsonPayload.json(response);
 	}
 
@@ -89,9 +94,10 @@ public class SearchResource extends Resource {
 	@Post("/:type/")
 	public Payload postSearchForType(String type, String body, Context context) {
 		Credentials credentials = SpaceContext.credentials();
+
 		if (DataAccessControl.check(credentials, type, DataPermission.search)) {
 			boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);
-			DataStore.get().refreshType(refresh, type);
+			DataStore.get().refreshDataTypes(refresh, type);
 			ObjectNode result = searchInternal(body, credentials, context, type);
 			return JsonPayload.json(result);
 		}
@@ -102,13 +108,14 @@ public class SearchResource extends Resource {
 	@Delete("/:type/")
 	public Payload deleteSearchForType(String type, String query, Context context) {
 		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
+
 		if (DataAccessControl.check(credentials, type, DataPermission.delete_all)) {
 
 			boolean refresh = context.query().getBoolean(PARAM_REFRESH, true);
-			DataStore.get().refreshType(refresh, type);
+			DataStore.get().refreshDataTypes(refresh, type);
 
-			DeleteByQueryResponse response = Start.get().getElasticClient()//
-					.deleteByQuery(query, type);
+			DeleteByQueryResponse response = elastic()//
+					.deleteByQuery(query, DataStore.toDataIndex(type));
 
 			return JsonPayload.json(response);
 		}
@@ -140,14 +147,11 @@ public class SearchResource extends Resource {
 
 	ObjectNode searchInternal(String jsonQuery, Credentials credentials, Context context, String... types) {
 
-		SearchRequestBuilder search = null;
-		ElasticClient elastic = Start.get().getElasticClient();
-		String[] aliases = elastic.toAliases(types);
-
-		if (aliases.length == 0)
+		if (types.length == 0)
 			return Json8.object("took", 0, "total", 0, "results", Json8.array());
 
-		search = elastic.prepareSearch().setIndices(aliases).setTypes(types);
+		SearchRequestBuilder search = elastic().prepareSearch(//
+				DataStore.toDataIndex(types)).setTypes(types);
 
 		if (Strings.isNullOrEmpty(jsonQuery)) {
 
@@ -166,7 +170,8 @@ public class SearchResource extends Resource {
 				search.setQuery(QueryBuilders.simpleQueryStringQuery(queryText));
 
 		} else {
-			search.setExtraSource(SearchSourceBuilder.searchSource().version(true).buildAsBytes());
+			search.setExtraSource(//
+					SearchSourceBuilder.searchSource().version(true).buildAsBytes());
 			search.setSource(jsonQuery);
 		}
 

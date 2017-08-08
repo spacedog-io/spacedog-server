@@ -36,9 +36,7 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.client.ClusterAdminClient;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
-import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.Priority;
-import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.IndexNotFoundException;
@@ -46,11 +44,9 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
 import io.spacedog.core.Json8;
-import io.spacedog.model.Schema;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.SpaceParams;
@@ -58,7 +54,7 @@ import io.spacedog.utils.Utils;
 
 public class ElasticClient implements SpaceParams {
 
-	private Client internalClient;
+	Client internalClient;
 
 	public ElasticClient(Client client) {
 		this.internalClient = client;
@@ -72,30 +68,21 @@ public class ElasticClient implements SpaceParams {
 	// prepare methods
 	//
 
-	public IndexRequestBuilder prepareIndex(String type) {
-		return internalClient.prepareIndex(toAlias(type), type);
+	public IndexRequestBuilder prepareIndex(Index index) {
+		return internalClient.prepareIndex(index.alias(), index.type());
 	}
 
-	public IndexRequestBuilder prepareIndex(String type, String id) {
-		return internalClient.prepareIndex(toAlias(type), type, id);
+	public IndexRequestBuilder prepareIndex(Index index, String id) {
+		return internalClient.prepareIndex(index.alias(), index.type(), id);
 	}
 
-	public UpdateRequestBuilder prepareUpdate(String type, String id) {
-		return internalClient.prepareUpdate(toAlias(type), type, id);
+	public UpdateRequestBuilder prepareUpdate(Index index, String id) {
+		return internalClient.prepareUpdate(index.alias(), index.type(), id);
 	}
 
-	public SearchRequestBuilder prepareSearch() {
-		// forbid any non very specific index list
-		// to avoid the risk of mixing indices from different backend
-		// to avoid for example empty index list resulting to
-		// indices of all backend
-		return internalClient.prepareSearch()//
-				.setIndicesOptions(IndicesOptions.fromOptions(false, false, false, false));
-	}
-
-	public SearchRequestBuilder prepareSearch(String type) {
-		Check.notNullOrEmpty(type, "type");
-		return internalClient.prepareSearch(toAlias(type))//
+	public SearchRequestBuilder prepareSearch(Index... indices) {
+		Check.notNullOrEmpty(indices, "indices");
+		return internalClient.prepareSearch(Index.aliases(indices))//
 				.setIndicesOptions(IndicesOptions.fromOptions(false, false, false, false));
 	}
 
@@ -107,47 +94,47 @@ public class ElasticClient implements SpaceParams {
 	// shortcut methods
 	//
 
-	public IndexResponse index(String type, String source) {
-		return index(type, source, false);
+	public IndexResponse index(Index index, String source) {
+		return index(index, source, false);
 	}
 
-	public IndexResponse index(String type, String source, boolean refresh) {
-		return prepareIndex(type).setSource(source).setRefresh(refresh).get();
+	public IndexResponse index(Index index, String source, boolean refresh) {
+		return prepareIndex(index).setSource(source).setRefresh(refresh).get();
 	}
 
-	public IndexResponse index(String type, String id, String source) {
-		return index(type, id, source, false);
+	public IndexResponse index(Index index, String id, String source) {
+		return index(index, id, source, false);
 	}
 
-	public IndexResponse index(String type, String id, String source, boolean refresh) {
-		return prepareIndex(type, id).setSource(source).setRefresh(refresh).get();
+	public IndexResponse index(Index index, String id, String source, boolean refresh) {
+		return prepareIndex(index, id).setSource(source).setRefresh(refresh).get();
 	}
 
-	public IndexResponse index(String type, String id, byte[] source) {
-		return index(type, id, source, false);
+	public IndexResponse index(Index index, String id, byte[] source) {
+		return index(index, id, source, false);
 	}
 
-	public IndexResponse index(String type, String id, byte[] source, boolean refresh) {
-		return prepareIndex(type, id).setSource(source).setRefresh(refresh).get();
+	public IndexResponse index(Index index, String id, byte[] source, boolean refresh) {
+		return prepareIndex(index, id).setSource(source).setRefresh(refresh).get();
 	}
 
-	public GetResponse get(String type, String id) {
-		return get(type, id, false);
+	public GetResponse get(Index index, String id) {
+		return get(index, id, false);
 	}
 
-	public GetResponse get(String type, String id, boolean throwNotFound) {
-		GetResponse response = internalClient.prepareGet(toAlias(type), type, id).get();
+	public GetResponse get(Index index, String id, boolean throwNotFound) {
+		GetResponse response = internalClient.prepareGet(index.alias(), index.type(), id).get();
 
 		if (!response.isExists() && throwNotFound)
-			throw Exceptions.notFound(type, id);
+			throw Exceptions.notFound(index.type(), id);
 
 		return response;
 	}
 
-	public Optional<SearchHit> get(String type, QueryBuilder query) {
+	public Optional<SearchHit> get(QueryBuilder query, Index index) {
 		try {
-			SearchHits hits = internalClient.prepareSearch(toAlias(type))//
-					.setTypes(type)//
+			SearchHits hits = internalClient.prepareSearch(index.toString())//
+					.setTypes(index.type())//
 					.setQuery(query)//
 					.get()//
 					.getHits();
@@ -158,21 +145,21 @@ public class ElasticClient implements SpaceParams {
 				return Optional.of(hits.getAt(0));
 
 			throw Exceptions.runtime(//
-					"unicity violation in [%s] data collection", type);
+					"unicity violation in [%s] data collection", index.type());
 
 		} catch (IndexNotFoundException e) {
 			return Optional.empty();
 		}
 	}
 
-	public boolean exists(String type, String id) {
-		return internalClient.prepareGet(toAlias(type), type, id)//
+	public boolean exists(Index index, String id) {
+		return internalClient.prepareGet(index.alias(), index.type(), id)//
 				.setFetchSource(false).get().isExists();
 	}
 
-	public boolean exists(String type, QueryBuilder query) {
-		return internalClient.prepareSearch(toAlias(type))//
-				.setTypes(type)//
+	public boolean exists(QueryBuilder query, Index... indices) {
+		return internalClient.prepareSearch(Index.aliases(indices))//
+				.setTypes(Index.types(indices))//
 				.setQuery(query)//
 				.setFetchSource(false)//
 				.get()//
@@ -180,14 +167,14 @@ public class ElasticClient implements SpaceParams {
 				.getTotalHits() > 0;
 	}
 
-	public boolean delete(String type, String id, boolean refresh, boolean throwNotFound) {
+	public boolean delete(Index index, String id, boolean refresh, boolean throwNotFound) {
 		DeleteResponse response = internalClient.prepareDelete(//
-				toAlias(type), type, id).setRefresh(refresh).get();
+				index.alias(), index.type(), id).setRefresh(refresh).get();
 
 		if (response.isFound())
 			return true;
 		if (throwNotFound)
-			throw Exceptions.notFound(type, id);
+			throw Exceptions.notFound(index.type(), id);
 
 		return false;
 	}
@@ -196,40 +183,40 @@ public class ElasticClient implements SpaceParams {
 		return internalClient.prepareBulk();
 	}
 
-	public DeleteByQueryResponse deleteByQuery(QueryBuilder query, String... types) {
+	public DeleteByQueryResponse deleteByQuery(QueryBuilder query, Index... indices) {
 
-		DeleteByQueryRequest request = new DeleteByQueryRequest(toAliases(types))//
+		DeleteByQueryRequest request = new DeleteByQueryRequest(Index.aliases(indices))//
 				.timeout(new TimeValue(60000))//
 				.source(new QuerySourceBuilder().setQuery(query));
 
 		try {
-			return Start.get().getElasticClient().execute(//
-					DeleteByQueryAction.INSTANCE, request).get();
+			return execute(DeleteByQueryAction.INSTANCE, request).get();
+
 		} catch (ExecutionException | InterruptedException e) {
 			throw Exceptions.runtime(e);
 		}
 	}
 
-	public DeleteByQueryResponse deleteByQuery(String query, String... types) {
+	public DeleteByQueryResponse deleteByQuery(String query, Index... indices) {
 
 		if (Strings.isNullOrEmpty(query))
 			query = Json8.objectBuilder().object("query").object("match_all").toString();
 
-		String[] indices = types == null ? backendIndices() : toAliases(types);
-
-		DeleteByQueryRequest delete = new DeleteByQueryRequest(indices)//
+		DeleteByQueryRequest delete = new DeleteByQueryRequest(Index.aliases(indices))//
 				.timeout(new TimeValue(60000))//
 				.source(query);
 
 		try {
-			return Start.get().getElasticClient().execute(DeleteByQueryAction.INSTANCE, delete).get();
+			return Start.get().getElasticClient()//
+					.execute(DeleteByQueryAction.INSTANCE, delete).get();
+
 		} catch (ExecutionException | InterruptedException e) {
 			throw Exceptions.runtime(e);
 		}
 	}
 
-	public MultiGetResponse multiGet(String type, Set<String> ids) {
-		return internalClient.prepareMultiGet().add(toAlias(type), type, ids).get();
+	public MultiGetResponse multiGet(Index index, Set<String> ids) {
+		return internalClient.prepareMultiGet().add(index.alias(), index.type(), ids).get();
 	}
 
 	public <Request extends ActionRequest<?>, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>> ActionFuture<Response> execute(
@@ -242,21 +229,24 @@ public class ElasticClient implements SpaceParams {
 	// admin methods
 	//
 
-	public void createIndex(String type, String mapping, boolean async) {
-		createIndex(SpaceContext.backendId(), type, mapping, async, //
-				PARAM_SHARDS_DEFAULT, PARAM_REPLICAS_DEFAULT);
+	public boolean exists(Index index) {
+		try {
+			return internalClient.admin().indices()//
+					.prepareTypesExists(index.alias())//
+					.setTypes(index.type())//
+					.get()//
+					.isExists();
+
+		} catch (IndexNotFoundException e) {
+			return false;
+		}
 	}
 
-	public void createIndex(String backendId, String type, String mapping, boolean async) {
-		createIndex(backendId, type, mapping, async, PARAM_SHARDS_DEFAULT, PARAM_REPLICAS_DEFAULT);
+	public void createIndex(Index index, String mapping, boolean async) {
+		createIndex(index, mapping, async, PARAM_SHARDS_DEFAULT, PARAM_REPLICAS_DEFAULT);
 	}
 
-	public void createIndex(String type, String mapping, boolean async, //
-			int shards, int replicas) {
-		createIndex(SpaceContext.backendId(), type, mapping, async, shards, replicas);
-	}
-
-	public void createIndex(String backendId, String type, String mapping, //
+	public void createIndex(Index index, String mapping, //
 			boolean async, int shards, int replicas) {
 
 		Settings settings = Settings.builder()//
@@ -265,23 +255,23 @@ public class ElasticClient implements SpaceParams {
 				.build();
 
 		CreateIndexResponse createIndexResponse = internalClient.admin().indices()//
-				.prepareCreate(toIndex0(type))//
-				.addMapping(type, mapping)//
-				.addAlias(new Alias(toAlias(type, backendId)))//
+				.prepareCreate(index.toString())//
+				.addMapping(index.type(), mapping)//
+				.addAlias(new Alias(index.alias()))//
 				.setSettings(settings)//
 				.get();
 
 		if (!createIndexResponse.isAcknowledged())
 			throw Exceptions.runtime(//
 					"creation of index [%s] not acknowledged by the whole cluster", //
-					toIndex0(type));
+					index);
 
 		if (!async)
-			ensureTypeIsGreen(type);
+			ensureIndexIsGreen(index);
 	}
 
-	public void ensureTypeIsGreen(String type) {
-		ensureIndicesAreGreen(toAlias(type));
+	public void ensureIndexIsGreen(Index... indices) {
+		ensureIndicesAreGreen(Index.aliases(indices));
 	}
 
 	public void ensureAllIndicesAreGreen() {
@@ -311,15 +301,20 @@ public class ElasticClient implements SpaceParams {
 		Utils.info("[SpaceDog] indices %s are green!", indicesString);
 	}
 
-	public void refreshType(String type) {
-		refreshIndex(toAlias(type));
+	public void refreshType(Index... indices) {
+		refreshIndex(Index.toString(indices));
+	}
+
+	public void refreshType(Index index, boolean refresh) {
+		if (refresh)
+			refreshIndex(index.toString());
 	}
 
 	public void refreshBackend() {
-		backendIndicesStream().forEach(indexName -> refreshIndex(indexName));
+		backendIndexStream().forEach(index -> refreshIndex(index));
 	}
 
-	public void deleteBackendAllIndices() {
+	public void deleteBackendIndices() {
 
 		String[] indices = backendIndices();
 
@@ -334,70 +329,35 @@ public class ElasticClient implements SpaceParams {
 		}
 	}
 
-	public void deleteIndex(String type) {
-		internalClient.admin().indices().prepareDelete(toAlias(type)).get();
+	public void deleteIndex(Index... indices) {
+		internalClient.admin().indices().prepareDelete(Index.aliases(indices)).get();
 	}
 
-	public ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetaData>> getMappings() {
-
-		String[] indices = backendIndices();
-		if (indices.length == 0)
-			return ImmutableOpenMap.of();
-
+	public GetMappingsResponse getBackendMappings() {
 		return internalClient.admin().indices()//
-				.prepareGetMappings(indices)//
-				.get()//
-				.getMappings();
-	}
-
-	public GetMappingsResponse getMappings(String type) {
-		Check.notNullOrEmpty(type, "type");
-
-		return internalClient.admin().indices()//
-				.prepareGetMappings(toAlias(type))//
-				.setTypes(type)//
+				.prepareGetMappings(backendIndices())//
 				.get();
 	}
 
-	public Schema getSchema(String type) {
-
-		// TODO what if this type is unknown?
-
-		String source = getMappings(type).mappings()//
-				.iterator().next().value.get(type).source().toString();
-		return new Schema(type, //
-				(ObjectNode) Json8.readObject(source).get(type).get("_meta"));
+	public GetMappingsResponse getMappings(Index... indices) {
+		return internalClient.admin().indices()//
+				.prepareGetMappings(Index.aliases(indices))//
+				.setTypes(Index.types(indices))//
+				.get();
 	}
 
-	public boolean existsIndex(String type) {
-		return existsIndex(SpaceContext.backendId(), type);
-	}
-
-	public boolean existsIndex(String backendId, String type) {
-		try {
-			return internalClient.admin().indices()//
-					.prepareTypesExists(toAlias(type, backendId))//
-					.setTypes(type)//
-					.get()//
-					.isExists();
-
-		} catch (IndexNotFoundException e) {
-			return false;
-		}
-	}
-
-	public void putMapping(String type, String mapping) {
+	public void putMapping(Index index, String mapping) {
 		PutMappingResponse putMappingResponse = internalClient.admin().indices()//
-				.preparePutMapping(toAlias(type))//
-				.setType(type)//
+				.preparePutMapping(index.alias())//
+				.setType(index.type())//
 				.setSource(mapping)//
 				.setUpdateAllTypes(true)//
 				.get();
 
 		if (!putMappingResponse.isAcknowledged())
 			throw Exceptions.runtime(//
-					"mapping [%s] update not acknowledged by the whole cluster", //
-					type);
+					"mapping [%s] update not acknowledged by cluster", //
+					index.type());
 	}
 
 	public void deleteAbsolutelyAllIndices() {
@@ -412,13 +372,14 @@ public class ElasticClient implements SpaceParams {
 	}
 
 	public void closeAbsolutelyAllIndices() {
-		CloseIndexResponse closeIndexResponse = internalClient.admin().indices().prepareClose("_all")//
+		CloseIndexResponse closeIndexResponse = internalClient.admin().indices()//
+				.prepareClose("_all")//
 				.setIndicesOptions(IndicesOptions.fromOptions(false, true, true, true))//
 				.get();
 
 		if (!closeIndexResponse.isAcknowledged())
 			throw Exceptions.runtime(//
-					"close all indices not acknowledged by the cluster");
+					"close all indices not acknowledged by cluster");
 	}
 
 	public ClusterAdminClient cluster() {
@@ -429,50 +390,29 @@ public class ElasticClient implements SpaceParams {
 	// to index help methods
 	//
 
-	public static class Index {
-		public String backendId;
-		public String schemaName;
-
-		public Index(String backendId, String schemaName) {
-			this.backendId = backendId;
-			this.schemaName = schemaName;
-		}
-
-		@Override
-		public String toString() {
-			return String.join("-", backendId, schemaName);
-		}
-
-		public static Index valueOf(String index) {
-			String[] parts = index.split("-", 3);
-			Check.isTrue(parts.length >= 3, "index [%s] is invalid", index);
-			return new Index(parts[0], parts[1]);
-		}
-	}
-
-	public Stream<String> allIndicesStream() {
+	public Stream<String> clusterIndexStream() {
 		// TODO if too many customers, my cluster might have too many indices
 		// for this to work correctly
 		return Arrays.stream(internalClient.admin().indices()//
 				.prepareGetIndex().get().indices());
 	}
 
-	public Index[] allIndicesForSchema(String schemaName) {
-		return allIndicesStream()//
-				.map(index -> Index.valueOf(index))//
-				.filter(index -> schemaName.equals(index.schemaName))//
-				.toArray(Index[]::new);
-	}
+	// public Index[] allIndicesForSchema(String schemaName) {
+	// return allIndicesStream()//
+	// .map(index -> Index.valueOf(index))//
+	// .filter(index -> schemaName.equals(index.schemaName))//
+	// .toArray(Index[]::new);
+	// }
 
-	public Stream<String> backendIndicesStream() {
-		String prefix = SpaceContext.backendId() + "-";
-		return allIndicesStream()//
-				.filter(indexName -> indexName.startsWith(prefix));
-	}
+	// public Stream<String> backendIndicesStream() {
+	// String prefix = SpaceContext.backendId() + "-";
+	// return clusterIndexStream()//
+	// .filter(indexName -> indexName.startsWith(prefix));
+	// }
 
-	public String[] backendIndices() {
-		return backendIndicesStream().toArray(String[]::new);
-	}
+	// public String[] backendIndices() {
+	// return backendIndicesStream().toArray(String[]::new);
+	// }
 
 	/**
 	 * TODO use this in the future to distinguish data indices and internal backend
@@ -480,38 +420,43 @@ public class ElasticClient implements SpaceParams {
 	 * pattern: backendId-data-indexName
 	 */
 	public String[] backendDataIndices() {
-		return backendIndicesStream()//
-				.filter(index -> "data".equals(index.split("-", 3)[1]))//
-				.toArray(String[]::new);
+		return filteredBackendIndices(Optional.of("data"));
 	}
 
-	public String toIndex0(String type) {
-		return toIndex(type, 0);
+	// public Index[] clusterSchemaIndices(String schemaName) {
+	// ElasticClient elastic = Start.get().getElasticClient();
+	// return clusterIndexStream()//
+	// .map(index -> elastic.valueOf(index))//
+	// .filter(index -> schemaName.equals(index.type()))//
+	// .toArray(Index[]::new);
+	// }
+
+	public Stream<String> backendIndexStream() {
+		return filteredBackendIndexStream(Optional.empty());
 	}
 
-	public String toIndex(String type, int version) {
-		return String.join("-", toAlias(type), Integer.toString(version));
+	public Stream<String> filteredBackendIndexStream(Optional<String> service) {
+		String backendId = SpaceContext.backendId();
+		String fullPrefix = service.isPresent() //
+				? backendId + '-' + service.get() + '-' //
+				: backendId + '-';
+		return clusterIndexStream()//
+				.filter(indexName -> indexName.startsWith(fullPrefix));
 	}
 
-	public String toAlias(String type) {
-		return toAlias(type, SpaceContext.backendId());
+	public String[] backendIndices() {
+		return filteredBackendIndices(Optional.empty());
 	}
 
-	public String toAlias(String type, String backendId) {
-		return String.join("-", backendId, type);
-	}
-
-	public String[] toAliases(String... types) {
-		return Arrays.stream(types)//
-				.map(type -> toAlias(type))//
-				.toArray(String[]::new);
+	public String[] filteredBackendIndices(Optional<String> service) {
+		return filteredBackendIndexStream(service).toArray(String[]::new);
 	}
 
 	//
 	// implementation
 	//
 
-	private void refreshIndex(String indexName) {
-		internalClient.admin().indices().prepareRefresh(indexName).get();
+	private void refreshIndex(String... indices) {
+		internalClient.admin().indices().prepareRefresh(indices).get();
 	}
 }

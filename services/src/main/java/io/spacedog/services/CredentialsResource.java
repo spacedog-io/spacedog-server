@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 
-import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.index.IndexNotFoundException;
@@ -65,10 +64,10 @@ public class CredentialsResource extends Resource {
 	}
 
 	public void initIndex(String backendId) {
-		ElasticClient elastic = Start.get().getElasticClient();
-		if (!elastic.existsIndex(TYPE)) {
+		Index index = credentialsIndex().backendId(backendId);
+		if (!elastic().exists(index)) {
 			String mapping = schema().validate().translate().toString();
-			elastic.createIndex(backendId, TYPE, mapping, false);
+			elastic().createIndex(index, mapping, false);
 		}
 	}
 
@@ -151,15 +150,17 @@ public class CredentialsResource extends Resource {
 	@Delete("/1/credentials/")
 	public Payload deleteAll(Context context) {
 		SpaceContext.credentials().checkAtLeastSuperAdmin();
-		ElasticClient elastic = Start.get().getElasticClient();
-		BoolQueryBuilder query = toQuery(context).query;
+		ElasticClient elastic = elastic();
 
+		BoolQueryBuilder query = toQuery(context).query;
 		// superadmins can only be deleted when backend is deleted
 		query.mustNot(QueryBuilders.termQuery(FIELD_ROLES, Type.superadmin));
-		elastic.deleteByQuery(query, TYPE);
 
-		// always refresh after credentials index updates
-		elastic.refreshType(TYPE);
+		// always refresh before and after credentials index updates
+		elastic.refreshType(credentialsIndex());
+		elastic.deleteByQuery(query, credentialsIndex());
+		elastic.refreshType(credentialsIndex());
+
 		return JsonPayload.success();
 	}
 
@@ -524,8 +525,7 @@ public class CredentialsResource extends Resource {
 	Credentials checkToken(String accessToken) {
 
 		try {
-			SearchHits hits = Start.get().getElasticClient()//
-					.prepareSearch(TYPE)//
+			SearchHits hits = elastic().prepareSearch(credentialsIndex())//
 					.setQuery(QueryBuilders.termQuery(//
 							FIELD_SESSIONS_ACCESS_TOKEN, accessToken))//
 					.get()//
@@ -559,7 +559,7 @@ public class CredentialsResource extends Resource {
 		if (id.equals(credentials.id()))
 			return Optional.of(credentials);
 
-		GetResponse response = Start.get().getElasticClient().get(TYPE, id);
+		GetResponse response = elastic().get(credentialsIndex(), id);
 
 		if (response.isExists())
 			return Optional.of(toCredentials(response));
@@ -572,8 +572,8 @@ public class CredentialsResource extends Resource {
 
 	Optional<Credentials> getByName(String username, boolean throwNotFound) {
 
-		Optional<SearchHit> searchHit = Start.get().getElasticClient().get(//
-				TYPE, toQuery(username));
+		Optional<SearchHit> searchHit = elastic().get(//
+				toQuery(username), credentialsIndex());
 
 		if (!searchHit.isPresent()) {
 			if (throwNotFound)
@@ -595,13 +595,12 @@ public class CredentialsResource extends Resource {
 			credentials.updatedAt(now);
 			credentials.createdAt(now);
 
-			ElasticClient elastic = Start.get().getElasticClient();
 			String json = Json8.mapper().writeValueAsString(credentials);
 
 			// refresh index after each index change
 			IndexResponse response = Strings.isNullOrEmpty(credentials.id()) //
-					? elastic.index(TYPE, json, true) //
-					: elastic.index(TYPE, credentials.id(), json, true);
+					? elastic().index(credentialsIndex(), json, true) //
+					: elastic().index(credentialsIndex(), credentials.id(), json, true);
 
 			credentials.id(response.getId());
 			credentials.version(response.getVersion());
@@ -623,7 +622,7 @@ public class CredentialsResource extends Resource {
 			credentials.updatedAt(DateTime.now().toString());
 
 			// refresh index after each index change
-			IndexResponse response = Start.get().getElasticClient().index(TYPE, //
+			IndexResponse response = elastic().index(credentialsIndex(), //
 					credentials.id(), Json8.mapper().writeValueAsString(credentials), //
 					true);
 
@@ -636,37 +635,23 @@ public class CredentialsResource extends Resource {
 	}
 
 	void delete(String id) {
-		ElasticClient elastic = Start.get().getElasticClient();
 		// index refresh before not necessary since delete by id
 		// index refresh after delete is necessary
-		elastic.delete(TYPE, id, true, true);
-	}
-
-	DeleteByQueryResponse deleteAll() {
-		ElasticClient elastic = Start.get().getElasticClient();
-
-		// need to refresh index before and after delete
-		elastic.refreshType(TYPE);
-
-		DeleteByQueryResponse response = elastic.deleteByQuery(//
-				QueryBuilders.matchAllQuery(), TYPE);
-
-		elastic.refreshType(TYPE);
-		return response;
+		elastic().delete(credentialsIndex(), id, true, true);
 	}
 
 	SearchResults<Credentials> getAllSuperAdmins(int from, int size) {
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
 				.filter(QueryBuilders.termQuery(FIELD_ROLES, Type.superadmin));
 
-		return getCredentials(new BoolSearch(TYPE, query, from, size));
+		return getCredentials(new BoolSearch(credentialsIndex(), query, from, size));
 	}
 
 	SearchResults<Credentials> getBackendSuperAdmins(int from, int size) {
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
 				.filter(QueryBuilders.termQuery(FIELD_ROLES, Type.superadmin));
 
-		return getCredentials(new BoolSearch(TYPE, query, from, size));
+		return getCredentials(new BoolSearch(credentialsIndex(), query, from, size));
 	}
 
 	Credentials createSuperdog(String username, String password, String email) {
@@ -762,7 +747,7 @@ public class CredentialsResource extends Resource {
 		if (!Strings.isNullOrEmpty(role))
 			query.filter(QueryBuilders.termQuery(FIELD_ROLES, role));
 
-		BoolSearch search = new BoolSearch(TYPE, query, //
+		BoolSearch search = new BoolSearch(credentialsIndex(), query, //
 				context.query().getInteger(PARAM_FROM, 0), //
 				context.query().getInteger(PARAM_SIZE, 10));
 
@@ -805,15 +790,13 @@ public class CredentialsResource extends Resource {
 	}
 
 	private boolean exists(String username) {
-		return Start.get().getElasticClient().exists(TYPE, toQuery(username));
+		return elastic().exists(toQuery(username), credentialsIndex());
 	}
 
 	private SearchResults<Credentials> getCredentials(BoolSearch query) {
-		ElasticClient elastic = Start.get().getElasticClient();
 		Check.isTrue(query.from + query.size <= 1000, "from + size is greater than 1000");
 
-		SearchHits hits = elastic//
-				.prepareSearch(query.type)//
+		SearchHits hits = elastic().prepareSearch(query.index)//
 				.setQuery(query.query)//
 				.setFrom(query.from)//
 				.setSize(query.size)//
@@ -821,7 +804,7 @@ public class CredentialsResource extends Resource {
 				.getHits();
 
 		SearchResults<Credentials> response = new SearchResults<>();
-		response.type = query.type;
+		response.type = query.index.type();
 		response.from = query.from;
 		response.size = query.size;
 		response.total = hits.totalHits();
@@ -831,6 +814,10 @@ public class CredentialsResource extends Resource {
 			response.results.add(toCredentials(hit));
 
 		return response;
+	}
+
+	public static Index credentialsIndex() {
+		return Index.toIndex(TYPE);
 	}
 
 	//

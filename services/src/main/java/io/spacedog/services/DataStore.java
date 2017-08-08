@@ -4,9 +4,11 @@
 package io.spacedog.services;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
+import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
@@ -14,23 +16,29 @@ import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
+import org.elasticsearch.cluster.metadata.MappingMetaData;
+import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHits;
 import org.joda.time.DateTime;
 
+import com.carrotsearch.hppc.cursors.ObjectCursor;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
 
 import io.spacedog.core.Json8;
+import io.spacedog.model.Schema;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.NotFoundException;
 import io.spacedog.utils.SpaceFields;
 import io.spacedog.utils.SpaceParams;
+import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 
 public class DataStore implements SpaceParams, SpaceFields {
@@ -61,11 +69,38 @@ public class DataStore implements SpaceParams, SpaceFields {
 	//
 
 	public boolean isType(String type) {
-		return Start.get().getElasticClient().existsIndex(type);
+		return elastic().exists(toDataIndex(type));
+	}
+
+	public Schema getSchema(String type) {
+		return getSchemas(toDataIndex(type)).get(type);
+	}
+
+	public Map<String, Schema> getSchemas(Index... indices) {
+		Map<String, Schema> schemas = Maps.newHashMap();
+		if (Utils.isNullOrEmpty(indices))
+			return schemas;
+
+		GetMappingsResponse response = elastic().getMappings(indices);
+
+		for (ObjectCursor<ImmutableOpenMap<String, MappingMetaData>> indexMappings //
+		: response.mappings().values()) {
+
+			MappingMetaData mapping = indexMappings.value.iterator().next().value;
+			JsonNode node = Json8.readObject(mapping.source().toString())//
+					.get(mapping.type()).get("_meta");
+			schemas.put(mapping.type(), new Schema(mapping.type(), Json8.checkObject(node)));
+		}
+
+		return schemas;
+	}
+
+	public Map<String, Schema> getAllSchemas() {
+		return getSchemas(allDataIndices());
 	}
 
 	public ObjectNode getObject(String type, String id) {
-		GetResponse response = Start.get().getElasticClient().get(type, id);
+		GetResponse response = elastic().get(toDataIndex(type), id);
 
 		if (!response.isExists())
 			throw NotFoundException.object(type, id);
@@ -91,11 +126,11 @@ public class DataStore implements SpaceParams, SpaceFields {
 	IndexResponse createObject(String type, Optional<String> id, ObjectNode object, String createdBy) {
 
 		object = setMetaBeforeCreate(object, createdBy);
-		ElasticClient elasticClient = Start.get().getElasticClient();
+		ElasticClient elasticClient = elastic();
 
 		return id.isPresent() //
-				? elasticClient.index(type, id.get(), object.toString())//
-				: elasticClient.index(type, object.toString());
+				? elasticClient.index(toDataIndex(type), id.get(), object.toString())//
+				: elasticClient.index(toDataIndex(type), object.toString());
 	}
 
 	private ObjectNode setMetaBeforeCreate(ObjectNode object, String createdBy) {
@@ -133,8 +168,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 		node.with("meta").remove("version");
 		node.with("meta").remove("type");
 
-		IndexResponse response = Start.get().getElasticClient()//
-				.index(type, node.toString());
+		IndexResponse response = elastic().index(toDataIndex(type), node.toString());
 
 		meta.type = type;
 		meta.id = response.getId();
@@ -156,8 +190,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 		object.with("meta").put("updatedBy", updatedBy);
 		object.with("meta").put("updatedAt", DateTime.now().toString());
 
-		IndexRequestBuilder builder = Start.get().getElasticClient()//
-				.prepareIndex(type, id).setSource(object.toString());
+		IndexRequestBuilder builder = elastic().prepareIndex(toDataIndex(type), id).setSource(object.toString());
 
 		if (version > 0)
 			builder.setVersion(version);
@@ -180,7 +213,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 		object.with("meta").put("updatedBy", updatedBy);
 		object.with("meta").put("updatedAt", DateTime.now().toString());
 
-		return Start.get().getElasticClient().prepareIndex(type, id)//
+		return elastic().prepareIndex(toDataIndex(type), id)//
 				.setSource(object.toString()).setVersion(version).get();
 	}
 
@@ -202,8 +235,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 		node.with("meta").remove("version");
 		node.with("meta").remove("type");
 
-		meta.version = Start.get().getElasticClient()//
-				.prepareIndex(meta.type, meta.id)//
+		meta.version = elastic().prepareIndex(toDataIndex(meta.type), meta.id)//
 				.setSource(node.toString())//
 				.setVersion(meta.version)//
 				.get()//
@@ -220,8 +252,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 				.put("updatedBy", updatedBy)//
 				.put("updatedAt", DateTime.now().toString());
 
-		UpdateRequestBuilder update = Start.get().getElasticClient()//
-				.prepareUpdate(type, id).setDoc(object.toString());
+		UpdateRequestBuilder update = elastic().prepareUpdate(toDataIndex(type), id).setDoc(object.toString());
 
 		if (version > 0)
 			update.setVersion(version);
@@ -245,12 +276,29 @@ public class DataStore implements SpaceParams, SpaceFields {
 	//
 	// try {
 	// return
-	// Start.get().getElasticClient().execute(DeleteByQueryAction.INSTANCE,
+	// elastic().execute(DeleteByQueryAction.INSTANCE,
 	// delete).get();
 	// } catch (ExecutionException | InterruptedException e) {
 	// throw Exceptions.wrap(e);
 	// }
 	// }
+
+	public static Index[] allDataIndices() {
+		String[] indices = elastic().filteredBackendIndices(Optional.of("data"));
+		return Arrays.stream(indices)//
+				.map(index -> Index.valueOf(index))//
+				.toArray(Index[]::new);
+	}
+
+	public static Index toDataIndex(String type) {
+		return Index.toIndex(type).service("data");
+	}
+
+	public static Index[] toDataIndex(String... types) {
+		return Arrays.stream(types)//
+				.map(type -> toDataIndex(type))//
+				.toArray(Index[]::new);
+	}
 
 	public SearchHits search(String type, Object... terms) {
 
@@ -262,8 +310,8 @@ public class DataStore implements SpaceParams, SpaceFields {
 		for (int i = 0; i < terms.length; i = i + 2)
 			builder.filter(QueryBuilders.termQuery(terms[i].toString(), terms[i + 1]));
 
-		SearchResponse response = Start.get().getElasticClient()//
-				.prepareSearch(type).setTypes(type).setQuery(builder).get();
+		SearchResponse response = elastic().prepareSearch(toDataIndex(type))//
+				.setTypes(type).setQuery(builder).get();
 
 		return response.getHits();
 	}
@@ -272,7 +320,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 		return new FilteredSearchBuilder(type);
 	}
 
-	public static class FilteredSearchBuilder {
+	public class FilteredSearchBuilder {
 
 		private SearchRequestBuilder search;
 		private BoolQueryBuilder boolBuilder;
@@ -282,12 +330,9 @@ public class DataStore implements SpaceParams, SpaceFields {
 			// check if type is well defined
 			// throws a NotFoundException if not
 			if (!Strings.isNullOrEmpty(type))
-				Start.get().getElasticClient().getSchema(type);
+				getSchemas(toDataIndex(type));
 
-			this.search = Start.get().getElasticClient()//
-					.prepareSearch(type)//
-					.setTypes(type);
-
+			this.search = elastic().prepareSearch(toDataIndex(type)).setTypes(type);
 			this.boolBuilder = QueryBuilders.boolQuery();
 		}
 
@@ -317,23 +362,31 @@ public class DataStore implements SpaceParams, SpaceFields {
 		}
 	}
 
-	public void refreshType(String type) {
-		refreshType(true, type);
+	public void refreshDataTypes(String... types) {
+		refreshDataTypes(true, types);
 	}
 
-	public void refreshType(boolean refresh, String type) {
-		if (refresh)
-			Start.get().getElasticClient().refreshType(type);
+	public void refreshDataTypes(boolean refresh, String... types) {
+		if (refresh && !Utils.isNullOrEmpty(types))
+			elastic().refreshType(toDataIndex(types));
 	}
 
-	public void refreshBackend() {
-		refreshBackend(true);
+	public void refreshAllDataTypes() {
+		refreshAllDataTypes(true);
 	}
 
-	public void refreshBackend(boolean refresh) {
+	public void refreshAllDataTypes(boolean refresh) {
 		if (refresh) {
-			Start.get().getElasticClient().refreshBackend();
+			elastic().refreshBackend();
 		}
+	}
+
+	//
+	// Implementation
+	//
+
+	private static ElasticClient elastic() {
+		return Start.get().getElasticClient();
 	}
 
 	//

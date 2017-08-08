@@ -175,7 +175,7 @@ public class SnapshotResource extends Resource {
 		// delete all indices of all backends before restore
 		// this is prefered to a close operation
 		// because it remove indices not present in restored snapshot
-		elastic().deleteBackendAllIndices();
+		elastic().deleteAbsolutelyAllIndices();
 
 		RestoreInfo restore = elastic().cluster()//
 				.prepareRestoreSnapshot(snapshot.repositoryId(), snapshot.id())//

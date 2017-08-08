@@ -112,10 +112,10 @@ public class Start {
 				.setQuery(queryBuilder)//
 				.toString();
 
-		DeleteByQueryResponse response = get().getElasticClient()//
-				.deleteByQuery(querySource, SpaceBackend.defaultBackendId(), //
-						LogResource.TYPE);
+		ElasticClient elastic = get().getElasticClient();
+		Index index = LogResource.logIndex().backendId(SpaceBackend.defaultBackendId());
 
+		DeleteByQueryResponse response = elastic.deleteByQuery(querySource, index);
 		Utils.info("[SpaceDog] [%s] logs deleted", response.getTotalDeleted());
 	}
 
@@ -130,10 +130,10 @@ public class Start {
 				.setQuery(queryBuilder)//
 				.toString();
 
-		DeleteByQueryResponse response = get().getElasticClient()//
-				.deleteByQuery(querySource, SpaceBackend.defaultBackendId(), //
-						LogResource.TYPE);
+		ElasticClient elastic = get().getElasticClient();
+		Index index = LogResource.logIndex().backendId(SpaceBackend.defaultBackendId());
 
+		DeleteByQueryResponse response = elastic.deleteByQuery(querySource, index);
 		Utils.info("[SpaceDog] [%s] logs deleted", response.getTotalDeleted());
 	}
 

@@ -35,7 +35,6 @@ import com.google.common.collect.Iterators;
 
 import io.spacedog.core.Json8;
 import io.spacedog.model.Schema;
-import io.spacedog.services.ElasticClient.Index;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.JsonBuilder;
@@ -271,11 +270,11 @@ public class PushResource2 extends Resource {
 		}
 
 		boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);
-		DataStore.get().refreshType(refresh, TYPE);
+		DataStore.get().refreshDataTypes(refresh, TYPE);
 
 		// TODO use a scroll to push to all installations found
 		SearchHits hits = Start.get().getElasticClient()//
-				.prepareSearch(TYPE)//
+				.prepareSearch(pushIndex())//
 				.setQuery(query)//
 				.setFrom(0)//
 				.setSize(1000)//
@@ -375,16 +374,17 @@ public class PushResource2 extends Resource {
 		}
 	}
 
-	void updateSchema() {
-		ElasticClient elastic = Start.get().getElasticClient();
-		Index[] indices = elastic.allIndicesForSchema(TYPE);
-		for (Index index : indices) {
-			String mapping = getDefaultInstallationSchema().validate().translate().toString();
-			elastic.putMapping(index.schemaName, mapping);
-			Utils.info("Mapping updated for index [%s][%s].", //
-					index.backendId, index.schemaName);
-		}
-	}
+	// void updateSchema() {
+	// ElasticClient elastic = Start.get().getElasticClient();
+	// Index[] indices = elastic.toIndicesForSchema(TYPE);
+	// for (Index index : indices) {
+	// String mapping =
+	// getDefaultInstallationSchema().validate().translate().toString();
+	// elastic.putMapping(index.schemaName, mapping);
+	// Utils.info("Mapping updated for index [%s][%s].", //
+	// index.backendId, index.schemaName);
+	// }
+	// }
 
 	private BadgeStrategy getBadgeStrategy(JsonNode node) {
 		Optional<String> optional = Json8.checkString(node, BADGE_STRATEGY);
@@ -462,7 +462,7 @@ public class PushResource2 extends Resource {
 
 	private void removeEndpointQuietly(String id) {
 		try {
-			Start.get().getElasticClient().delete(TYPE, id, false, true);
+			Start.get().getElasticClient().delete(pushIndex(), id, false, true);
 		} catch (Exception e) {
 			System.err.println(String.format(//
 					"[Warning] failed to delete disabled installation [%s]", id));
@@ -667,6 +667,10 @@ public class PushResource2 extends Resource {
 		}
 
 		return endpointArn;
+	}
+
+	public static Index pushIndex() {
+		return Index.toIndex(TYPE);
 	}
 
 	//

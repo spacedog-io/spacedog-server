@@ -3,8 +3,6 @@
  */
 package io.spacedog.services;
 
-import java.util.stream.Stream;
-
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -57,7 +55,7 @@ public class BackendResource extends Resource {
 		if (SpaceContext.backend().isDefault())
 			throw Exceptions.illegalArgument("default backend can not be deleted");
 
-		Start.get().getElasticClient().deleteBackendAllIndices();
+		elastic().deleteBackendIndices();
 
 		if (isDeleteFilesAndShares()) {
 			FileResource.get().deleteAll();
@@ -89,8 +87,8 @@ public class BackendResource extends Resource {
 		if (configuration.backendCreateRestricted())
 			SpaceContext.credentials().checkSuperDog();
 
-		if (Start.get().getElasticClient()//
-				.existsIndex(backendId, CredentialsResource.TYPE))
+		Index index = CredentialsResource.credentialsIndex().backendId(backendId);
+		if (elastic().exists(index))
 			return JsonPayload.invalidParameters("backendId", backendId,
 					String.format("backend [%s] not available", backendId));
 
@@ -118,9 +116,10 @@ public class BackendResource extends Resource {
 	// Public interface
 	//
 
-	public Stream<String[]> getAllBackendIndices() {
-		return Start.get().getElasticClient().allIndicesStream().map(index -> index.split("-", 2));
-	}
+	// public Stream<String[]> getAllBackendIndices() {
+	// return elastic().indices().map(index -> index.split("-",
+	// 2));
+	// }
 
 	//
 	// Implementation

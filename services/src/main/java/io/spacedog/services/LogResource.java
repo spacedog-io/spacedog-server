@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
 import io.spacedog.core.Json8;
+import io.spacedog.rest.SpaceBackend;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Credentials;
@@ -52,12 +53,12 @@ public class LogResource extends Resource {
 	}
 
 	public void initIndex(String backendId) {
-
-		ElasticClient client = Start.get().getElasticClient();
+		ElasticClient elastic = Start.get().getElasticClient();
 		String mapping = ClassResources.loadToString(this, "log-mapping.json");
+		Index index = logIndex().backendId(backendId);
 
-		if (!client.existsIndex(backendId, TYPE))
-			client.createIndex(backendId, TYPE, mapping, false);
+		if (!elastic.exists(index))
+			elastic.createIndex(index, mapping, false);
 	}
 
 	//
@@ -74,7 +75,7 @@ public class LogResource extends Resource {
 		Check.isTrue(from + size <= 1000, "from + size must be less than or equal to 1000");
 
 		boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);
-		DataStore.get().refreshType(refresh, TYPE);
+		DataStore.get().refreshDataTypes(refresh, TYPE);
 
 		SearchResponse response = doGetLogs(from, size);
 		return extractLogs(response);
@@ -88,10 +89,10 @@ public class LogResource extends Resource {
 		SearchSourceBuilder.searchSource().query(body);
 
 		boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);
-		DataStore.get().refreshType(refresh, TYPE);
+		DataStore.get().refreshDataTypes(refresh, TYPE);
 
 		SearchResponse response = Start.get().getElasticClient()//
-				.prepareSearch(TYPE)//
+				.prepareSearch(logIndex())//
 				.setTypes(TYPE)//
 				.setSource(body).get();
 
@@ -195,8 +196,8 @@ public class LogResource extends Resource {
 
 		String query = new QuerySourceBuilder().setQuery(boolQueryBuilder).toString();
 
-		DeleteByQueryResponse delete = Start.get().getElasticClient()//
-				.deleteByQuery(query, TYPE);
+		ElasticClient elastic = Start.get().getElasticClient();
+		DeleteByQueryResponse delete = elastic.deleteByQuery(query, logIndex());
 
 		// TODO why return an optional?
 		// return directly the response
@@ -206,7 +207,7 @@ public class LogResource extends Resource {
 	private SearchResponse doGetLogs(int from, int size) {
 
 		return Start.get().getElasticClient()//
-				.prepareSearch(TYPE)//
+				.prepareSearch(logIndex())//
 				.setTypes(TYPE)//
 				.setQuery(QueryBuilders.matchAllQuery())//
 				.addSort(FIELD_RECEIVED_AT, SortOrder.DESC)//
@@ -242,7 +243,16 @@ public class LogResource extends Resource {
 		addRequestPayload(log, context);
 		addResponsePayload(log, payload, context);
 
-		return Start.get().getElasticClient().index(TYPE, log.toString()).getId();
+		// in case incoming request is targeting non existent backend
+		// or backend without any log index, they should be logged to
+		// default backend
+		Index indexToLogTo = logIndex();
+		ElasticClient elastic = Start.get().getElasticClient();
+
+		if (!elastic.exists(indexToLogTo))
+			indexToLogTo.backendId(SpaceBackend.defaultBackendId());
+
+		return elastic.index(indexToLogTo, log.toString()).getId();
 	}
 
 	private void addResponsePayload(ObjectNode log, Payload payload, Context context) {
@@ -330,6 +340,10 @@ public class LogResource extends Resource {
 					array.add(string);
 			}
 		}
+	}
+
+	public static Index logIndex() {
+		return Index.toIndex(TYPE);
 	}
 
 	//

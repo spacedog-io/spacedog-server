@@ -3,13 +3,10 @@
  */
 package io.spacedog.services;
 
-import org.elasticsearch.cluster.metadata.MappingMetaData;
-import org.elasticsearch.common.Strings;
-import org.elasticsearch.common.collect.ImmutableOpenMap;
-import org.elasticsearch.indices.TypeMissingException;
+import java.util.Map;
 
-import com.carrotsearch.hppc.cursors.ObjectCursor;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.elasticsearch.common.Strings;
+import org.elasticsearch.indices.TypeMissingException;
 
 import io.spacedog.core.Json8;
 import io.spacedog.core.Json8.JsonMerger;
@@ -34,37 +31,18 @@ public class SchemaResource extends Resource {
 	@Get("")
 	@Get("/")
 	public Payload getAll(Context context) {
-		ElasticClient elastic = Start.get().getElasticClient();
-		ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetaData>> mappings;
-		mappings = elastic.getMappings();
-		JsonMerger jsonMerger = Json8.merger();
-
-		for (ObjectCursor<ImmutableOpenMap<String, MappingMetaData>> indexMappings : mappings.values()) {
-			for (ObjectCursor<MappingMetaData> mapping : indexMappings.value.values()) {
-				try {
-					ObjectNode source = (ObjectNode) Json8.readObject(mapping.value.source().string())//
-							.get(mapping.value.type());
-					if (source.hasNonNull("_meta"))
-						jsonMerger.merge((ObjectNode) source.get("_meta"));
-				} catch (Exception e) {
-					throw new RuntimeException(e);
-				}
-			}
-		}
-
-		return JsonPayload.json(jsonMerger.get());
+		JsonMerger merger = Json8.merger();
+		Map<String, Schema> schemas = DataStore.get().getAllSchemas();
+		schemas.values().forEach(schema -> merger.merge(schema.node()));
+		return JsonPayload.json(merger.get());
 	}
 
 	@Get("/:type")
 	@Get("/:type/")
 	public Payload get(String type) {
-
 		Schema.checkName(type);
 		return JsonPayload.json(//
-				Start.get()//
-						.getElasticClient()//
-						.getSchema(type)//
-						.node());
+				DataStore.get().getSchema(type).node());
 	}
 
 	@Put("/:type")
@@ -85,16 +63,16 @@ public class SchemaResource extends Resource {
 
 		String mapping = schema.validate().translate().toString();
 
-		ElasticClient elastic = Start.get().getElasticClient();
-		boolean indexExists = elastic.existsIndex(type);
+		Index index = DataStore.toDataIndex(type);
+		boolean indexExists = elastic().exists(index);
 
 		if (indexExists)
-			elastic.putMapping(type, mapping);
+			elastic().putMapping(index, mapping);
 		else {
 			int shards = context.query().getInteger(PARAM_SHARDS, PARAM_SHARDS_DEFAULT);
 			int replicas = context.query().getInteger(PARAM_REPLICAS, PARAM_REPLICAS_DEFAULT);
 			boolean async = context.query().getBoolean(PARAM_ASYNC, PARAM_ASYNC_DEFAULT);
-			elastic.createIndex(type, mapping, async, shards, replicas);
+			elastic().createIndex(index, mapping, async, shards, replicas);
 		}
 
 		DataAccessControl.save(type, schema.acl());
@@ -107,7 +85,7 @@ public class SchemaResource extends Resource {
 	public Payload delete(String type) {
 		try {
 			SpaceContext.credentials().checkAtLeastAdmin();
-			Start.get().getElasticClient().deleteIndex(type);
+			elastic().deleteIndex(DataStore.toDataIndex(type));
 			DataAccessControl.delete(type);
 		} catch (TypeMissingException ignored) {
 		}

@@ -252,11 +252,11 @@ public class PushResource extends Resource {
 		}
 
 		boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);
-		DataStore.get().refreshType(refresh, TYPE);
+		DataStore.get().refreshDataTypes(refresh, TYPE);
 
 		// TODO use a scroll to push to all installations found
 		SearchHits hits = Start.get().getElasticClient()//
-				.prepareSearch(TYPE)//
+				.prepareSearch(pushIndex())//
 				.setQuery(query)//
 				.setFrom(0)//
 				.setSize(1000)//
@@ -284,6 +284,10 @@ public class PushResource extends Resource {
 	//
 	// Implementation
 	//
+
+	public static Index pushIndex() {
+		return Index.toIndex(TYPE);
+	}
 
 	public static class PushLog {
 		public int successes = 0;
@@ -434,7 +438,7 @@ public class PushResource extends Resource {
 
 	private void removeEndpointQuietly(String id) {
 		try {
-			Start.get().getElasticClient().delete(TYPE, id, false, true);
+			Start.get().getElasticClient().delete(pushIndex(), id, false, true);
 		} catch (Exception e) {
 			System.err.println(String.format(//
 					"[Warning] failed to delete disabled installation [%s]", id));

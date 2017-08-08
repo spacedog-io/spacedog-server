@@ -4,14 +4,14 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 
 public class BoolSearch {
 
-	public String type;
+	public Index index;
 	public int from = 0;
 	public int size = 10;
 
 	public BoolQueryBuilder query;
 
-	public BoolSearch(String type, BoolQueryBuilder query, int from, int size) {
-		this.type = type;
+	public BoolSearch(Index index, BoolQueryBuilder query, int from, int size) {
+		this.index = index;
 		this.query = query;
 		this.from = from;
 		this.size = size;

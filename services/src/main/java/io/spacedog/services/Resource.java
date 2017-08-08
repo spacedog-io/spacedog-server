@@ -27,6 +27,10 @@ public abstract class Resource implements SpaceFields, SpaceParams {
 
 	public static final String SLASH = "/";
 
+	protected static ElasticClient elastic() {
+		return Start.get().getElasticClient();
+	}
+
 	public static StringBuilder spaceUrl(String uri, String type, String id) {
 		return spaceUrl(uri).append(SLASH).append(type).append(SLASH).append(id);
 	}
@@ -103,10 +107,6 @@ public abstract class Resource implements SpaceFields, SpaceParams {
 			return keys;
 		}
 
-	}
-
-	protected static ElasticClient elastic() {
-		return Start.get().getElasticClient();
 	}
 
 }
