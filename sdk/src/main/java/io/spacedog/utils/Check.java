@@ -9,7 +9,7 @@ import io.spacedog.rest.SpaceStatus;
 
 public class Check {
 
-	public static Object notNull(Object value, String valueName) {
+	public static <T> T notNull(T value, String valueName) {
 		if (value == null)
 			throw Exceptions.illegalArgument("[%s] is null", valueName);
 		return value;
@@ -26,9 +26,16 @@ public class Check {
 		return value;
 	}
 
-	public static void notNullOrEmpty(Collection<?> value, String valueName) {
+	public static Collection<?> notNullOrEmpty(Collection<?> value, String valueName) {
 		if (Utils.isNullOrEmpty(value))
 			throw Exceptions.illegalArgument("[%s] is null or empty", valueName);
+		return value;
+	}
+
+	public static <T> T[] notNullOrEmpty(T[] value, String valueName) {
+		if (Utils.isNullOrEmpty(value))
+			throw Exceptions.illegalArgument("[%s] is null or empty", valueName);
+		return value;
 	}
 
 	public static void isTrue(boolean condition, String message, Object... arguments) {
