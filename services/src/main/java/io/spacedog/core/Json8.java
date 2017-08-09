@@ -20,15 +20,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.BooleanNode;
-import com.fasterxml.jackson.databind.node.DoubleNode;
-import com.fasterxml.jackson.databind.node.FloatNode;
-import com.fasterxml.jackson.databind.node.IntNode;
-import com.fasterxml.jackson.databind.node.LongNode;
-import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
-import com.fasterxml.jackson.databind.node.ValueNode;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -323,28 +316,6 @@ public class Json8 {
 		if (value instanceof JsonNode)
 			return (JsonNode) value;
 		return mapper().valueToTree(value);
-	}
-
-	// TODO use method toNode instead
-	@Deprecated
-	public static ValueNode toValueNode(Object value) {
-
-		if (value == null)
-			return NullNode.instance;
-		if (value instanceof ValueNode)
-			return (ValueNode) value;
-		if (value instanceof Boolean)
-			return BooleanNode.valueOf((boolean) value);
-		else if (value instanceof Integer)
-			return IntNode.valueOf((int) value);
-		else if (value instanceof Long)
-			return LongNode.valueOf((long) value);
-		else if (value instanceof Double)
-			return DoubleNode.valueOf((double) value);
-		else if (value instanceof Float)
-			return FloatNode.valueOf((float) value);
-
-		return TextNode.valueOf(value.toString());
 	}
 
 	public static ArrayNode toArrayNode(Object array) {

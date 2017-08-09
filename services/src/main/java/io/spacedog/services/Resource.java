@@ -18,7 +18,6 @@ import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.SpaceFields;
 import io.spacedog.utils.SpaceParams;
-import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.Part;
 import net.codestory.http.Query;
@@ -51,14 +50,6 @@ public abstract class Resource implements SpaceFields, SpaceParams {
 
 	public static StringBuilder spaceRootUrl() {
 		return SpaceContext.backend().urlBuilder();
-	}
-
-	protected static String getReferenceType(String reference) {
-		return Utils.splitBySlash(reference)[0];
-	}
-
-	protected static String getReferenceId(String reference) {
-		return Utils.splitBySlash(reference)[1];
 	}
 
 	protected static String get(Context context, String name, String defaultValue) {
