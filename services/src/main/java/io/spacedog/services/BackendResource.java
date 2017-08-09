@@ -87,18 +87,12 @@ public class BackendResource extends Resource {
 		if (configuration.backendCreateRestricted())
 			SpaceContext.credentials().checkSuperDog();
 
-		Index index = CredentialsResource.credentialsIndex().backendId(backendId);
-		if (elastic().exists(index))
-			return JsonPayload.invalidParameters("backendId", backendId,
-					String.format("backend [%s] not available", backendId));
+		initBackendIndices(backendId, true);
 
 		CredentialsResource credentialsResource = CredentialsResource.get();
-		credentialsResource.initIndex(backendId);
 		Credentials credentials = credentialsResource//
 				.createCredentialsRequestToCredentials(body, Credentials.Type.superadmin);
 		credentialsResource.create(credentials);
-
-		LogResource.get().initIndex(backendId);
 
 		if (context.query().getBoolean(PARAM_NOTIF, true)) {
 			Optional7<String> topic = configuration.awsSuperdogNotificationTopic();
@@ -124,6 +118,17 @@ public class BackendResource extends Resource {
 	//
 	// Implementation
 	//
+
+	public void initBackendIndices(String backendId, boolean throwIfAlreadyExists) {
+		Index index = CredentialsResource.credentialsIndex().backendId(backendId);
+
+		if (!elastic().exists(index)) {
+			CredentialsResource.get().initIndex(backendId);
+			LogResource.get().initIndex(backendId);
+
+		} else if (throwIfAlreadyExists)
+			throw Exceptions.alreadyExists(TYPE, backendId);
+	}
 
 	private Payload toPayload(SearchResults<Credentials> superAdmins) {
 		ArrayNode results = Json8.array();

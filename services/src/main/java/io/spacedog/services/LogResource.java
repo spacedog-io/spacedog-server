@@ -48,10 +48,6 @@ public class LogResource extends Resource {
 	// init
 	//
 
-	void init() {
-		initIndex(SpaceContext.backendId());
-	}
-
 	public void initIndex(String backendId) {
 		ElasticClient elastic = Start.get().getElasticClient();
 		String mapping = ClassResources.loadToString(this, "log-mapping.json");

@@ -59,10 +59,6 @@ public class CredentialsResource extends Resource {
 	// Type and schema
 	//
 
-	void init() {
-		initIndex(Start.get().configuration().apiBackend().backendId());
-	}
-
 	public void initIndex(String backendId) {
 		Index index = credentialsIndex().backendId(backendId);
 		if (!elastic().exists(index)) {

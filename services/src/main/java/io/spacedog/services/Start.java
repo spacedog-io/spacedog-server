@@ -181,8 +181,8 @@ public class Start {
 	}
 
 	private void initServices() throws IOException {
-		LogResource.get().init();
-		CredentialsResource.get().init();
+		BackendResource.get()//
+				.initBackendIndices(SpaceBackend.defaultBackendId(), false);
 	}
 
 	private void startFluent() throws IOException {
