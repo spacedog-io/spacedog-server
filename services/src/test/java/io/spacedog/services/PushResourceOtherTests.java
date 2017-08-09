@@ -3,13 +3,11 @@ package io.spacedog.services;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
 
 import io.spacedog.core.Json8;
 import io.spacedog.model.PushService;
+import io.spacedog.sdk.PushRequest;
 import io.spacedog.utils.Utils;
 
 public class PushResourceOtherTests extends Assert {
@@ -39,8 +37,8 @@ public class PushResourceOtherTests extends Assert {
 	@Test
 	public void convertTextMessageToSnsMessage() {
 
-		JsonNode textMessage = new TextNode("coucou");
-		ObjectNode objectMessage = PushResource.toObjectMessage(textMessage);
+		PushRequest request = new PushRequest().text("coucou");
+		ObjectNode objectMessage = PushResource.toJsonMessage(request);
 
 		ObjectNode snsMessage = PushResource.toSnsMessage(PushService.BAIDU, objectMessage);
 		assertEquals("coucou", snsMessage.get("default").asText());
@@ -56,16 +54,5 @@ public class PushResourceOtherTests extends Assert {
 		snsMessage = PushResource.toSnsMessage(PushService.GCM, objectMessage);
 		assertEquals(Json8.object("data", Json8.object("message", "coucou")), //
 				Json8.readObject(snsMessage.get("GCM").asText()));
-	}
-
-	@Test
-	public void convertInvalidMessageToSnsMessage() {
-
-		try {
-			JsonNode invalidMessage = new IntNode(123);
-			PushResource.toObjectMessage(invalidMessage);
-			fail();
-		} catch (IllegalArgumentException e) {
-		}
 	}
 }

@@ -177,7 +177,7 @@ public class DataResource extends Resource {
 	// Implementation
 	//
 
-	private void checkPutPermissions(String type, String id, Credentials credentials) {
+	public void checkPutPermissions(String type, String id, Credentials credentials) {
 
 		if (DataAccessControl.check(credentials, type, DataPermission.update_all))
 			return;

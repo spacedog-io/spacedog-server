@@ -17,7 +17,6 @@ import io.spacedog.model.BadgeStrategy;
 import io.spacedog.model.DataPermission;
 import io.spacedog.model.Installation;
 import io.spacedog.model.PushService;
-import io.spacedog.model.PushTag;
 import io.spacedog.model.Schema;
 import io.spacedog.model.Schema.SchemaAcl;
 import io.spacedog.rest.SpaceTest;
@@ -31,8 +30,8 @@ public class PushResourceTestOften extends SpaceTest {
 	private static final String FAILURES = "failures";
 	private static final String ID = "id";
 	private static final String INSTALLATION_ID = "installationId";
-	private static final String MESSAGE = "message";
-	private static final String USER_ID = "userId";
+	private static final String TEXT = "text";
+	private static final String CREDENTIALS_ID = "credentialsId";
 	private static final String ENDPOINT = "endpoint";
 	private static final String TOKEN = "token";
 	private static final String BADGE = "badge";
@@ -44,14 +43,14 @@ public class PushResourceTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = SpaceDog.backendId("test");
 		SpaceDog superadmin = resetTestBackend();
+		SpaceDog guest = SpaceDog.backend(superadmin);
 
 		// prepare users
-		SpaceDog dave = signUp(test, "dave", "hi dave");
-		SpaceDog vince = signUp(test, "vince", "hi vince");
-		SpaceDog fred = signUp(test, "fred", "hi fred");
-		SpaceDog nath = signUp(test, "nath", "hi nath");
+		SpaceDog dave = signUp(guest, "dave", "hi dave");
+		SpaceDog vince = signUp(guest, "vince", "hi vince");
+		SpaceDog fred = signUp(guest, "fred", "hi fred");
+		SpaceDog nath = signUp(guest, "nath", "hi nath");
 
 		// prepare installation schema
 		superadmin.schema().setDefault("installation");
@@ -67,10 +66,10 @@ public class PushResourceTestOften extends SpaceTest {
 
 		// non authenticated user installs joho
 		// and fails to set installation userId and endpoint fields
-		String unknownInstallId = test.post("/1/installation")//
+		String unknownInstallId = guest.post("/1/installation")//
 				.bodyJson(TOKEN, "token-unknown", APP_ID, "joho", //
 						PUSH_SERVICE, PushService.GCM, //
-						USER_ID, "XXX", ENDPOINT, "XXX")//
+						CREDENTIALS_ID, "XXX", ENDPOINT, "XXX")//
 				.go(201).getString(ID);
 
 		Installation install = superadmin.push().getInstallation(unknownInstallId);
@@ -79,8 +78,8 @@ public class PushResourceTestOften extends SpaceTest {
 		assertEquals(PushService.GCM, install.pushService());
 		assertEquals("token-unknown", install.token());
 		assertEquals("FAKE_ENDPOINT_FOR_TESTING", install.endpoint());
-		assertNull(install.username());
-		assertNull(install.tags());
+		assertNull(install.credentialsId());
+		assertTrue(install.tags().isEmpty());
 
 		// vince and fred install joho
 		String vinceInstallId = installApplication("joho", PushService.GCM, vince);
@@ -88,33 +87,35 @@ public class PushResourceTestOften extends SpaceTest {
 		String daveInstallId = installApplication("joho", PushService.APNS, dave);
 
 		// vince pushes a simple message to fred
-		ObjectNode response = vince.push().push(fredInstallId, "coucou");
+		ObjectNode response = vince.push().push(fredInstallId, //
+				new PushRequest().text("coucou"));
 
 		Json7.assertNode(response)//
 				.assertEquals(fredInstallId, "pushedTo.0.installationId")//
-				.assertEquals(fred.username(), "pushedTo.0.userId");
+				.assertEquals(fred.id(), "pushedTo.0.credentialsId");
 
 		// vince pushes a complex object message to dave
 		ObjectNode message = Json7.object("APNS", //
 				Json7.object("aps", Json7.object("alert", "coucou")));
 
-		response = vince.push().push(daveInstallId, message);
+		response = vince.push().push(daveInstallId, //
+				new PushRequest().data(message));
 
 		// vince fails to push to invalid installation id
-		vince.post("/1/installation/XXX/push").bodyJson(MESSAGE, "coucou").go(404);
+		vince.post("/1/installation/XXX/push").bodyJson(TEXT, "coucou").go(404);
 
 		// nath installs birdee
 		String nathInstallId = installApplication("birdee", PushService.APNS, nath);
 
 		// vince updates its installation
-		vince.push().newInstallation().token("super-token-vince").appId("joho")//
-				.pushService(PushService.GCM).id(vinceInstallId).save();
+		vince.push().getInstallation(vinceInstallId).token("super-token-vince")//
+				.appId("joho").pushService(PushService.GCM).save();
 
 		install = vince.push().getInstallation(vinceInstallId);
 		assertEquals("joho", install.appId());
 		assertEquals("super-token-vince", install.token());
-		assertEquals("vince", install.username());
-		assertNull(install.tags());
+		assertEquals(vince.id(), install.credentialsId());
+		assertTrue(install.tags().isEmpty());
 
 		// vince fails to get all installations since not admin
 		vince.get("/1/installation").go(403);
@@ -129,74 +130,73 @@ public class PushResourceTestOften extends SpaceTest {
 		for (Installation installation : installations)
 			ids.contains(installation.id());
 
-		// nath adds bonjour/toi tag to her install
-		nath.push().addTag(nathInstallId, new PushTag("bonjour", "toi"));
+		// nath adds bonjour tag to her install
+		nath.push().addTag(nathInstallId, "bonjour");
 
-		PushTag[] tags = nath.push().getTags(nathInstallId);
+		String[] tags = nath.push().getTags(nathInstallId);
 		assertEquals(1, tags.length);
-		assertThat(tags, hasItemInArray(new PushTag("bonjour", "toi")));
+		assertThat(tags, hasItemInArray("bonjour"));
 
 		// nath adds again the same tag and it changes nothing
 		// there is no duplicate as a result
-		nath.push().addTag(nathInstallId, new PushTag("bonjour", "toi"));
+		nath.push().addTag(nathInstallId, "bonjour");
 
 		tags = nath.push().getTags(nathInstallId);
 		assertEquals(1, tags.length);
-		assertThat(tags, hasItemInArray(new PushTag("bonjour", "toi")));
+		assertThat(tags, hasItemInArray("bonjour"));
 
-		// vince adds bonjour/toi tag to his install
-		vince.push().addTag(vinceInstallId, new PushTag("bonjour", "toi"));
+		// vince adds bonjour tag to his install
+		vince.push().addTag(vinceInstallId, "bonjour");
 
-		// vince adds hi/there tag to his install
-		vince.push().addTag(vinceInstallId, new PushTag("hi", "there"));
+		// vince adds hi tag to his install
+		vince.push().addTag(vinceInstallId, "hi");
 
 		tags = vince.push().getTags(vinceInstallId);
 		assertEquals(2, tags.length);
-		assertThat(tags, hasItemInArray(new PushTag("hi", "there")));
-		assertThat(tags, hasItemInArray(new PushTag("bonjour", "toi")));
+		assertThat(tags, hasItemInArray("hi"));
+		assertThat(tags, hasItemInArray("bonjour"));
 
-		// vince deletes bonjour/toi tag from his install
-		vince.push().deleteTag(vinceInstallId, new PushTag("bonjour", "toi"));
+		// vince deletes bonjour tag from his install
+		vince.push().deleteTag(vinceInstallId, "bonjour");
 
 		tags = vince.push().getTags(vinceInstallId);
 		assertEquals(1, tags.length);
-		assertThat(tags, hasItemInArray(new PushTag("hi", "there")));
+		assertThat(tags, hasItemInArray("hi"));
 
-		// vince deletes hi/there tag from his install
-		vince.push().deleteTag(vinceInstallId, new PushTag("hi", "there"));
+		// vince deletes hi tag from his install
+		vince.push().deleteTag(vinceInstallId, "hi");
 
 		tags = vince.push().getTags(vinceInstallId);
 		assertEquals(0, tags.length);
 
-		// vince sets all his install tags to bonjour/toi and hi/there
-		vince.push().setTags(vinceInstallId,
-				new PushTag[] { new PushTag("hi", "there"), new PushTag("bonjour", "toi") });
+		// vince sets all his install tags to bonjour and hi
+		vince.push().setTags(vinceInstallId, "hi", "bonjour");
 
 		tags = vince.push().getTags(vinceInstallId);
 		assertEquals(2, tags.length);
-		assertThat(tags, hasItemInArray(new PushTag("hi", "there")));
-		assertThat(tags, hasItemInArray(new PushTag("bonjour", "toi")));
+		assertThat(tags, hasItemInArray("hi"));
+		assertThat(tags, hasItemInArray("bonjour"));
 
-		// fred sets all his install tags to bonjour/toi
-		fred.push().setTags(fredInstallId, new PushTag[] { new PushTag("bonjour", "toi") });
+		// fred sets all his install tags to bonjour
+		fred.push().setTags(fredInstallId, "bonjour");
 
 		tags = fred.push().getTags(fredInstallId);
 		assertEquals(1, tags.length);
-		assertThat(tags, hasItemInArray(new PushTag("bonjour", "toi")));
+		assertThat(tags, hasItemInArray("bonjour"));
 
 		// vince pushes to all joho installations
 		// this means users and anonymous installations
 		PushRequest pushRequest = new PushRequest().appId("joho")//
-				.refresh(true).message("This is a push!");
+				.refresh(true).text("This is a push!");
 		response = vince.push().push(pushRequest);
 
 		Json7.assertNode(response)//
 				.assertFalse(FAILURES)//
 				.assertEquals(4, PUSHED_TO)//
 				.assertContainsValue(unknownInstallId, INSTALLATION_ID)//
-				.assertContainsValue("dave", USER_ID)//
-				.assertContainsValue("vince", USER_ID)//
-				.assertContainsValue("fred", USER_ID);
+				.assertContainsValue(dave.id(), CREDENTIALS_ID)//
+				.assertContainsValue(vince.id(), CREDENTIALS_ID)//
+				.assertContainsValue(fred.id(), CREDENTIALS_ID);
 
 		// vince pushes to all joho users
 		// this means excluding anonymous installations
@@ -208,9 +208,9 @@ public class PushResourceTestOften extends SpaceTest {
 		Json7.assertNode(response)//
 				.assertFalse(FAILURES)//
 				.assertEquals(3, PUSHED_TO)//
-				.assertContainsValue("dave", USER_ID)//
-				.assertContainsValue("vince", USER_ID)//
-				.assertContainsValue("fred", USER_ID);
+				.assertContainsValue(dave.id(), CREDENTIALS_ID)//
+				.assertContainsValue(vince.id(), CREDENTIALS_ID)//
+				.assertContainsValue(fred.id(), CREDENTIALS_ID);
 
 		// vince pushes to APNS only joho users
 		pushRequest.pushService(PushService.APNS);
@@ -219,39 +219,39 @@ public class PushResourceTestOften extends SpaceTest {
 		Json7.assertNode(response)//
 				.assertFalse(FAILURES)//
 				.assertEquals(2, PUSHED_TO)//
-				.assertContainsValue("dave", USER_ID)//
-				.assertContainsValue("fred", USER_ID);
+				.assertContainsValue(dave.id(), CREDENTIALS_ID)//
+				.assertContainsValue(fred.id(), CREDENTIALS_ID);
 
-		// vince pushes to APNS only joho users with tag bonjour/toi
-		pushRequest.tags(new PushTag("bonjour", "toi"));
+		// vince pushes to APNS only joho users with tag bonjour
+		pushRequest.tags("bonjour");
 		response = vince.push().push(pushRequest);
 
 		Json7.assertNode(response)//
 				.assertFalse(FAILURES)//
 				.assertEquals(1, PUSHED_TO)//
-				.assertContainsValue("fred", USER_ID);
+				.assertContainsValue(fred.id(), CREDENTIALS_ID);
 
-		// vince pushes to all joho users with tag bonjour/toi
+		// vince pushes to all joho users with tag bonjour
 		pushRequest.pushService(null);
 		response = vince.push().push(pushRequest);
 
 		Json7.assertNode(response)//
 				.assertFalse(FAILURES)//
 				.assertEquals(2, PUSHED_TO)//
-				.assertContainsValue("vince", USER_ID)//
-				.assertContainsValue("fred", USER_ID);
+				.assertContainsValue(vince.id(), CREDENTIALS_ID)//
+				.assertContainsValue(fred.id(), CREDENTIALS_ID);
 
-		// vince pushes to all joho users with tags bonjour/toi and hi/there
-		pushRequest.tags(new PushTag("bonjour", "toi"), new PushTag("hi", "there"));
+		// vince pushes to all joho users with tags bonjour and hi
+		pushRequest.tags("bonjour", "hi");
 		response = vince.push().push(pushRequest);
 
 		Json7.assertNode(response)//
 				.assertFalse(FAILURES)//
 				.assertEquals(1, PUSHED_TO)//
-				.assertContainsValue("vince", USER_ID);
+				.assertContainsValue(vince.id(), CREDENTIALS_ID);
 
 		// vince gets 404 when he pushes to invalid app id
-		pushRequest = new PushRequest().appId("XXX").message("This is a push!");
+		pushRequest = new PushRequest().appId("XXX").text("This is a push!");
 		vince.post("/1/push").bodyPojo(pushRequest).go(404);
 
 		// vince can not read, update nor delete dave's installation
@@ -293,7 +293,8 @@ public class PushResourceTestOften extends SpaceTest {
 		// vince pushes a message to dave with manual badge = 3
 		ObjectNode message = Json7.object(PushService.APNS, //
 				Json7.object("aps", Json7.object("alert", "coucou", BADGE, 3)));
-		ObjectNode response = vince.push().push(daveInstallId, message);
+		ObjectNode response = vince.push().push(daveInstallId, //
+				new PushRequest().data(message));
 
 		Json7.assertNode(response)//
 				.assertEquals(daveInstallId, "pushedTo.0.installationId");
@@ -307,7 +308,7 @@ public class PushResourceTestOften extends SpaceTest {
 		// this means installation.badge is incremented on the server
 		// and installation.badge is sent to each installation
 		PushRequest pushRequest = new PushRequest().appId("joho").refresh(true)//
-				.badgeStrategy(BadgeStrategy.auto).message("Badge is the new trend!");
+				.badgeStrategy(BadgeStrategy.auto).text("Badge is the new trend!");
 
 		response = superadmin.push().push(pushRequest);
 
@@ -372,8 +373,8 @@ public class PushResourceTestOften extends SpaceTest {
 		assertEquals(appId, installation.appId());
 		assertEquals(pushService, installation.pushService());
 		assertEquals("token-" + user.username(), installation.token());
-		assertEquals(user.username(), installation.username());
-		assertNull(installation.tags());
+		assertEquals(user.id(), installation.credentialsId());
+		assertTrue(installation.tags().isEmpty());
 
 		return installId;
 	}

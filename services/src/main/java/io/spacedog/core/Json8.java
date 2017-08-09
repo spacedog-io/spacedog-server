@@ -42,8 +42,8 @@ import io.spacedog.utils.Utils;
 public class Json8 {
 
 	/**
-	 * TODO returns null if does not find the property in this object. Should
-	 * return an optional.
+	 * TODO returns null if does not find the property in this object. Should return
+	 * an optional.
 	 */
 	public static JsonNode get(JsonNode json, String propertyPath) {
 
@@ -625,7 +625,8 @@ public class Json8 {
 			return Json7.mapper().treeToValue(jsonNode, pojoClass);
 
 		} catch (JsonProcessingException e) {
-			throw Exceptions.runtime(e, "failed to map json [%s] to pojo class [%s]", //
+			throw Exceptions.runtime(e, //
+					"failed to map object json node [%s] to pojo class [%s]", //
 					jsonNode, pojoClass.getSimpleName());
 		}
 	}
@@ -638,8 +639,23 @@ public class Json8 {
 			return Json7.mapper().readValue(jsonString, pojoClass);
 
 		} catch (IOException e) {
-			throw Exceptions.runtime(e, "failed to map json [%s] to pojo class [%s]", //
+			throw Exceptions.runtime(e, //
+					"failed to map object data string [%s] to pojo class [%s]", //
 					jsonString, pojoClass.getSimpleName());
+		}
+	}
+
+	public static <K> K toPojo(byte[] jsonBytes, Class<K> pojoClass) {
+		Check.notNull(jsonBytes, "jsonBytes");
+		Check.notNull(pojoClass, "pojoClass");
+
+		try {
+			return Json7.mapper().readValue(jsonBytes, pojoClass);
+
+		} catch (IOException e) {
+			throw Exceptions.runtime(e, //
+					"failed to map object data bytes to pojo class [%s]", //
+					pojoClass.getSimpleName());
 		}
 	}
 

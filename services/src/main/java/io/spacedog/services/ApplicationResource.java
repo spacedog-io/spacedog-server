@@ -54,7 +54,7 @@ public class ApplicationResource extends Resource {
 		if (!Strings.isNullOrEmpty(credentials.principal))
 			request.addAttributesEntry("PlatformPrincipal", credentials.principal);
 
-		PushResource.get().getSnsClient().createPlatformApplication(request);
+		AwsSnsPusher.getSnsClient().createPlatformApplication(request);
 
 		return JsonPayload.success();
 	}
@@ -65,14 +65,13 @@ public class ApplicationResource extends Resource {
 
 		SpaceContext.credentials().checkAtLeastAdmin();
 
-		Optional<PlatformApplication> application = PushResource.get()//
-				.getApplication(toApplicationId(name), //
-						PushService.valueOf(pushService));
+		Optional<PlatformApplication> application = AwsSnsPusher.getApplication(//
+				toApplicationId(name), PushService.valueOf(pushService));
 
 		if (application.isPresent()) {
 			String applicationArn = application.get().getPlatformApplicationArn();
 
-			PushResource.get().getSnsClient().deletePlatformApplication(//
+			AwsSnsPusher.getSnsClient().deletePlatformApplication(//
 					new DeletePlatformApplicationRequest()//
 							.withPlatformApplicationArn(applicationArn));
 		}

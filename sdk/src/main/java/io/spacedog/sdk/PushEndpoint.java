@@ -1,10 +1,8 @@
 package io.spacedog.sdk;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
 
 import io.spacedog.model.Installation;
-import io.spacedog.model.PushTag;
 import io.spacedog.sdk.DataEndpoint.SearchResults;
 import io.spacedog.sdk.elastic.ESSearchSourceBuilder;
 import io.spacedog.utils.Check;
@@ -17,18 +15,10 @@ public class PushEndpoint {
 		this.dog = dog;
 	}
 
-	public ObjectNode push(String installationId, String message) {
+	public ObjectNode push(String installationId, PushRequest request) {
 		return dog.post("/1/installation/{id}/push")//
 				.routeParam("id", installationId)//
-				.bodyJson(TextNode.valueOf(message))//
-				.go(200, 404).asJsonObject();
-	}
-
-	public ObjectNode push(String installationId, ObjectNode message) {
-		return dog.post("/1/installation/{id}/push")//
-				.routeParam("id", installationId)//
-				.bodyJson(message)//
-				.go(200, 404).asJsonObject();
+				.bodyPojo(request).go(200, 404).asJsonObject();
 	}
 
 	public ObjectNode push(PushRequest request) {
@@ -62,26 +52,26 @@ public class PushEndpoint {
 	// Installation tags
 	//
 
-	public PushTag[] getTags(String installationId) {
+	public String[] getTags(String installationId) {
 		return dog.get("/1/installation/{id}/tags")//
-				.routeParam("id", installationId).go(200).toPojo(PushTag[].class);
+				.routeParam("id", installationId).go(200).toPojo(String[].class);
 	}
 
-	public PushEndpoint setTags(String installationId, PushTag[] tags) {
+	public PushEndpoint setTags(String installationId, String... tags) {
 		dog.put("/1/installation/{id}/tags")//
 				.routeParam("id", installationId).bodyPojo(tags).go(200);
 		return this;
 	}
 
-	public PushEndpoint addTag(String installationId, PushTag tag) {
+	public PushEndpoint addTag(String installationId, String... tags) {
 		dog.post("/1/installation/{id}/tags")//
-				.routeParam("id", installationId).bodyPojo(tag).go(200);
+				.routeParam("id", installationId).bodyPojo(tags).go(200);
 		return this;
 	}
 
-	public PushEndpoint deleteTag(String installationId, PushTag tag) {
+	public PushEndpoint deleteTag(String installationId, String... tags) {
 		dog.delete("/1/installation/{id}/tags")//
-				.routeParam("id", installationId).bodyPojo(tag).go(200);
+				.routeParam("id", installationId).bodyPojo(tags).go(200);
 		return this;
 	}
 }

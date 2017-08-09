@@ -5,7 +5,6 @@ import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Sets;
 
 import io.spacedog.sdk.DataObject;
@@ -21,10 +20,9 @@ public class Installation extends DataObject<Installation> {
 	private PushService pushService;
 	private String token;
 	private String endpoint;
-	@JsonProperty("userId")
-	private String username;
+	private String credentialsId;
 	private int badge;
-	private Set<PushTag> tags;
+	private Set<String> tags;
 
 	public String appId() {
 		return appId;
@@ -57,8 +55,18 @@ public class Installation extends DataObject<Installation> {
 		return endpoint;
 	}
 
-	public String username() {
-		return username;
+	public Installation endpoint(String endpoint) {
+		this.endpoint = endpoint;
+		return this;
+	}
+
+	public String credentialsId() {
+		return credentialsId;
+	}
+
+	public Installation credentialsId(String credentialsId) {
+		this.credentialsId = credentialsId;
+		return this;
 	}
 
 	public int badge() {
@@ -70,15 +78,17 @@ public class Installation extends DataObject<Installation> {
 		return this;
 	}
 
-	public Set<PushTag> tags() {
+	public Set<String> tags() {
+		if (tags == null)
+			tags = Sets.newHashSet();
 		return tags;
 	}
 
-	public Installation tags(PushTag... tags) {
+	public Installation tags(String... tags) {
 		return tags(Sets.newHashSet(tags));
 	}
 
-	public Installation tags(Set<PushTag> tags) {
+	public Installation tags(Set<String> tags) {
 		this.tags = tags;
 		return this;
 	}

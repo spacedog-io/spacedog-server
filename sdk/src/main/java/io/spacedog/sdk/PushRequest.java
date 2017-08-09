@@ -5,11 +5,11 @@ import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
 import io.spacedog.model.BadgeStrategy;
 import io.spacedog.model.PushService;
-import io.spacedog.model.PushTag;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, //
@@ -19,11 +19,13 @@ import io.spacedog.model.PushTag;
 public class PushRequest {
 	public String appId;
 	public PushService pushService;
-	public BadgeStrategy badgeStrategy;
+	public BadgeStrategy badgeStrategy = BadgeStrategy.manual;
+	public String credentialsId;
 	public boolean usersOnly;
-	public Set<PushTag> tags;
+	public Set<String> tags;
 	public boolean refresh;
-	public Object message;
+	public String text;
+	public ObjectNode data;
 
 	public PushRequest appId(String appId) {
 		this.appId = appId;
@@ -40,12 +42,17 @@ public class PushRequest {
 		return this;
 	}
 
-	public PushRequest tags(Set<PushTag> tags) {
+	public PushRequest credentialsId(String credentialsId) {
+		this.credentialsId = credentialsId;
+		return this;
+	}
+
+	public PushRequest tags(Set<String> tags) {
 		this.tags = tags;
 		return this;
 	}
 
-	public PushRequest tags(PushTag... tags) {
+	public PushRequest tags(String... tags) {
 		return tags(Sets.newHashSet(tags));
 	}
 
@@ -54,8 +61,13 @@ public class PushRequest {
 		return this;
 	}
 
-	public PushRequest message(Object message) {
-		this.message = message;
+	public PushRequest text(String text) {
+		this.text = text;
+		return this;
+	}
+
+	public PushRequest data(ObjectNode data) {
+		this.data = data;
 		return this;
 	}
 
