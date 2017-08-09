@@ -21,7 +21,6 @@ import io.spacedog.model.NonDirectlyUpdatableSettings;
 import io.spacedog.model.Settings;
 import io.spacedog.model.SettingsSettings;
 import io.spacedog.model.SettingsSettings.SettingsAcl;
-import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.NotFoundException;
@@ -61,12 +60,10 @@ public class SettingsResource extends Resource {
 			return JsonPayload.json(JsonPayload.builder()//
 					.put("took", 0).put("total", 0).object("results"));
 
-		elastic().refreshType(settingsIndex(), //
-				context.query().getBoolean(PARAM_REFRESH, false));
+		elastic().refreshType(settingsIndex(), isRefreshRequested(context));
 
 		int from = context.query().getInteger(PARAM_FROM, 0);
 		int size = context.query().getInteger(PARAM_SIZE, 10);
-		Check.isTrue(from + size <= 1000, "from + size is greater than 1000");
 
 		SearchResponse response = elastic().prepareSearch(settingsIndex())//
 				.setTypes(TYPE)//

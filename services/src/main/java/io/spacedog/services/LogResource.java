@@ -23,7 +23,6 @@ import com.google.common.base.Strings;
 
 import io.spacedog.core.Json8;
 import io.spacedog.rest.SpaceBackend;
-import io.spacedog.utils.Check;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
@@ -68,11 +67,8 @@ public class LogResource extends Resource {
 
 		int from = context.query().getInteger(PARAM_FROM, 0);
 		int size = context.query().getInteger(PARAM_SIZE, 10);
-		Check.isTrue(from + size <= 1000, "from + size must be less than or equal to 1000");
 
-		boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);
-		DataStore.get().refreshDataTypes(refresh, TYPE);
-
+		DataStore.get().refreshDataTypes(isRefreshRequested(context), TYPE);
 		SearchResponse response = doGetLogs(from, size);
 		return extractLogs(response);
 	}
@@ -84,8 +80,7 @@ public class LogResource extends Resource {
 		SpaceContext.credentials().checkAtLeastAdmin();
 		SearchSourceBuilder.searchSource().query(body);
 
-		boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);
-		DataStore.get().refreshDataTypes(refresh, TYPE);
+		DataStore.get().refreshDataTypes(isRefreshRequested(context), TYPE);
 
 		SearchResponse response = Start.get().getElasticClient()//
 				.prepareSearch(logIndex())//

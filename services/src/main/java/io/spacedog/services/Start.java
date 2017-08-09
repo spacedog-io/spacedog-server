@@ -147,6 +147,7 @@ public class Start {
 				.put("action.auto_create_index", false)//
 				// disable dynamic indexing
 				.put("index.mapper.dynamic", false)//
+				.put("index.max_result_window", 5000)//
 				// disable rebalance to avoid automatic rebalance
 				// when a temporary second node appears
 				.put("cluster.routing.rebalance.enable", "none")//

@@ -31,6 +31,14 @@ public abstract class Resource implements SpaceFields, SpaceParams {
 		return Start.get().getElasticClient();
 	}
 
+	protected static boolean isRefreshRequested(Context context) {
+		return isRefreshRequested(context, false);
+	}
+
+	protected static boolean isRefreshRequested(Context context, boolean defaultValue) {
+		return context.query().getBoolean(PARAM_REFRESH, defaultValue);
+	}
+
 	public static StringBuilder spaceUrl(String uri, String type, String id) {
 		return spaceUrl(uri).append(SLASH).append(type).append(SLASH).append(id);
 	}

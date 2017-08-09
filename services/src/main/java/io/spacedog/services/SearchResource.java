@@ -29,7 +29,6 @@ import com.google.common.base.Strings;
 
 import io.spacedog.core.Json8;
 import io.spacedog.model.DataPermission;
-import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.JsonBuilder;
@@ -60,9 +59,7 @@ public class SearchResource extends Resource {
 		Credentials credentials = SpaceContext.credentials();
 		String[] types = DataAccessControl.types(DataPermission.search, credentials);
 
-		boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);
-		DataStore.get().refreshDataTypes(refresh, types);
-
+		DataStore.get().refreshDataTypes(isRefreshRequested(context), types);
 		ObjectNode result = searchInternal(body, credentials, context, types);
 		return JsonPayload.json(result);
 	}
@@ -76,9 +73,7 @@ public class SearchResource extends Resource {
 		if (Utils.isNullOrEmpty(types))
 			return JsonPayload.success();
 
-		boolean refresh = context.query().getBoolean(PARAM_REFRESH, true);
-		DataStore.get().refreshDataTypes(refresh, types);
-
+		DataStore.get().refreshDataTypes(isRefreshRequested(context, true), types);
 		DeleteByQueryResponse response = elastic().deleteByQuery(//
 				query, DataStore.toDataIndex(types));
 		return JsonPayload.json(response);
@@ -93,11 +88,11 @@ public class SearchResource extends Resource {
 	@Post("/:type")
 	@Post("/:type/")
 	public Payload postSearchForType(String type, String body, Context context) {
-		Credentials credentials = SpaceContext.credentials();
 
+		Credentials credentials = SpaceContext.credentials();
 		if (DataAccessControl.check(credentials, type, DataPermission.search)) {
-			boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);
-			DataStore.get().refreshDataTypes(refresh, type);
+
+			DataStore.get().refreshDataTypes(isRefreshRequested(context), type);
 			ObjectNode result = searchInternal(body, credentials, context, type);
 			return JsonPayload.json(result);
 		}
@@ -107,39 +102,17 @@ public class SearchResource extends Resource {
 	@Delete("/:type")
 	@Delete("/:type/")
 	public Payload deleteSearchForType(String type, String query, Context context) {
-		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
 
+		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
 		if (DataAccessControl.check(credentials, type, DataPermission.delete_all)) {
 
-			boolean refresh = context.query().getBoolean(PARAM_REFRESH, true);
-			DataStore.get().refreshDataTypes(refresh, type);
-
+			DataStore.get().refreshDataTypes(isRefreshRequested(context, true), type);
 			DeleteByQueryResponse response = elastic()//
 					.deleteByQuery(query, DataStore.toDataIndex(type));
-
 			return JsonPayload.json(response);
 		}
 		throw Exceptions.forbidden("forbidden to delete [%s] objects", type);
 	}
-
-	// @Post("/1/filter/:type")
-	// @Post("/1/filter/:type")
-	// public Payload postFilterForType(String type, String body, Context
-	// context) {
-	// try {
-	// Credentials credentials = SpaceContext.checkCredentials();
-	// boolean refresh = context.query().getBoolean(REFRESH, false);
-	// DataStore.get().refreshType(refresh, credentials.backendId(), type);
-	// FilteredSearchBuilder builder =
-	// DataStore.get().searchBuilder(credentials.backendId(), type)
-	// .applyContext(context).applyFilters(Json.readObject(body));
-	// return JsonPayload.json(extractResults(builder.get(), context,
-	// credentials));
-	//
-	// } catch (InterruptedException | ExecutionException e) {
-	// throw new RuntimeException(e);
-	// }
-	// }
 
 	//
 	// implementation
@@ -157,7 +130,6 @@ public class SearchResource extends Resource {
 
 			int from = context.query().getInteger(PARAM_FROM, 0);
 			int size = context.query().getInteger(PARAM_SIZE, 10);
-			Check.isTrue(from + size <= 1000, "from + size must be less than or equal to 1000");
 
 			search.setFrom(from)//
 					.setSize(size)//
