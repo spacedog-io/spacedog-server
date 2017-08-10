@@ -6,6 +6,7 @@ package io.spacedog.services;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.ShardOperationFailedException;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
+import org.elasticsearch.action.search.SearchPhaseExecutionException;
 
 import com.amazonaws.AmazonServiceException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -43,6 +44,11 @@ public class JsonPayload {
 			return ((AmazonServiceException) t).getStatusCode();
 		if (t instanceof SpaceException)
 			return ((SpaceException) t).httpStatus();
+		// elastic returns 500 when result window is too large
+		// let's return 400 instead
+		if (t instanceof SearchPhaseExecutionException)
+			if (t.toString().contains("from + size must be less"))
+				return HttpStatus.BAD_REQUEST;
 		if (t instanceof ElasticsearchException)
 			return ((ElasticsearchException) t).status().getStatus();
 		if (t.getCause() != null)
