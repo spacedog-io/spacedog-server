@@ -18,6 +18,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import io.spacedog.core.Json8;
+import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceException;
 import net.codestory.http.Context;
@@ -63,6 +64,7 @@ public class BatchResource extends Resource {
 					Json8.checkObject(requests.get(i)), context);
 
 			try {
+				checkRequestAuthorizedInBatch(requestWrapper);
 				requestPayload = Start.get().executeRequest(requestWrapper, null);
 			} catch (Throwable t) {
 				requestPayload = JsonPayload.error(t);
@@ -85,6 +87,15 @@ public class BatchResource extends Resource {
 				break;
 		}
 		return JsonPayload.json(batchPayload);
+	}
+
+	private void checkRequestAuthorizedInBatch(BatchJsonRequestWrapper request) {
+		// backend service is forbidden in batch request to avoid create/delete backend
+		// in batches. Without this restriction, it is possible in certain conditions to
+		// create multiple credentials with the same username.
+		if (request.uri().startsWith("/1/backend"))
+			throw Exceptions.illegalArgument(//
+					"/1/backend requests forbidden in batch");
 	}
 
 	@Get("")
@@ -139,7 +150,8 @@ public class BatchResource extends Resource {
 		@SuppressWarnings("unchecked")
 		public <T> T unwrap(Class<T> type) {
 			return type.isInstance(request) //
-					? (T) request : type.isInstance(context) ? (T) context : null;
+					? (T) request
+					: type.isInstance(context) ? (T) context : null;
 		}
 
 		@Override

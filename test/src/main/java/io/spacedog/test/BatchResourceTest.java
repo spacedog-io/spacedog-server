@@ -23,39 +23,15 @@ public class BatchResourceTest extends SpaceTest {
 
 		// we need to make sure the test account is reset and exists before to
 		// be able to reset it again by batch requests
-
 		prepareTest();
-		resetTestBackend();
+		SpaceDog superadmin = resetTestBackend();
 
 		// should succeed to reset test account and create message schema with
 		// admin credentials
-
 		ArrayNode batch = Json7.arrayBuilder()//
 				.object()//
-				.put("method", "DELETE").put("path", "/1/backend")//
-				.end()//
-
-				.object()//
-				.put("method", "POST").put("path", "/1/backend/test")//
-				.object("parameters")//
-				.put("notif", false)//
-				.end()//
-				.object("content")//
-				.put("username", "test")//
-				.put("password", "hi test")//
-				.put("email", "test@dog.com")//
-				.end()//
-				.end()//
-
-				.object()//
-				.put("method", "GET").put("path", "/1/backend")//
-				.end()//
-
-				.object()//
-				.put("method", "POST").put("path", "/1/schema/message")//
-				.node("content",
-						Schema.builder("message").id("code")//
-								.string("code").text("text").toString())//
+				.put("method", "PUT").put("path", "/1/schema/message")//
+				.node("content", Schema.builder("message").text("text").toString())//
 				.end()//
 
 				.object()//
@@ -63,20 +39,12 @@ public class BatchResourceTest extends SpaceTest {
 				.end()//
 				.build();
 
-		superdog("test").post("/1/batch").debugServer().bodyJson(batch).go(200)//
-				.assertEquals(201, "responses.1.status")//
-				.assertEquals("test", "responses.1.id")//
-				.assertEquals(200, "responses.2.status")//
-				.assertEquals("test", "responses.2.content.results.0.backendId")//
-				.assertEquals("test", "responses.2.content.results.0.username")//
-				.assertEquals("test@dog.com", "responses.2.content.results.0.email")//
-				.assertEquals(201, "responses.3.status")//
-				.assertEquals("message", "responses.3.id")//
-				.assertEquals("schema", "responses.3.type")//
-				.assertEquals(200, "responses.4.status")//
+		superadmin.post("/1/batch").debugServer().bodyJson(batch).go(200)//
+				.assertEquals(201, "responses.0.status")//
+				.assertEquals("message", "responses.0.id")//
+				.assertEquals("schema", "responses.0.type")//
+				.assertEquals(200, "responses.1.status")//
 				.assertEquals(1, "debug.batchCredentialChecks");
-
-		SpaceDog test = SpaceDog.backendId("test").username("test").password("hi test");
 
 		// should succeed to create dave and vince users and fetch them with
 		// simple backend key credentials
@@ -102,7 +70,7 @@ public class BatchResourceTest extends SpaceTest {
 
 				.build();
 
-		ObjectNode node = test.post("/1/batch")//
+		ObjectNode node = superadmin.post("/1/batch")//
 				.debugServer().bodyJson(batch).go(200).asJsonObject();
 
 		String vinceId = Json7.get(node, "responses.0.id").asText();
@@ -110,7 +78,7 @@ public class BatchResourceTest extends SpaceTest {
 
 		// should succeed to fetch dave and vince credentials
 		// and the message schema
-		test.get("/1/batch")//
+		superadmin.get("/1/batch")//
 				.queryParam("vince", "/credentials/" + vinceId) //
 				.queryParam("dave", "/credentials/" + daveId) //
 				.queryParam("schema", "/schema/message") //
@@ -119,7 +87,7 @@ public class BatchResourceTest extends SpaceTest {
 				.assertEquals("vince", "vince.username")//
 				.assertEquals(daveId, "dave.id")//
 				.assertEquals("dave", "dave.username")//
-				.assertEquals("string", "schema.message.code._type");
+				.assertEquals("text", "schema.message.text._type");
 
 		// should succeed to return errors when batch requests are invalid, not
 		// found, unauthorized, ...
@@ -148,7 +116,7 @@ public class BatchResourceTest extends SpaceTest {
 				.build();
 
 		SpaceRequest.post("/1/batch").debugServer()//
-				.backend(test).bodyJson(batch).go(200)//
+				.backend(superadmin).bodyJson(batch).go(200)//
 				.assertEquals(400, "responses.0.status")//
 				.assertEquals(404, "responses.1.status")//
 				.assertEquals(403, "responses.2.status")//
@@ -159,18 +127,22 @@ public class BatchResourceTest extends SpaceTest {
 
 		batch = Json7.arrayBuilder()//
 				.object()//
-				.put("method", "POST").put("path", "/1/data/message")//
+				.put("method", "PUT").put("path", "/1/data/message/1")//
 				.object("content")//
-				.put("code", "1")//
 				.put("text", "Hi guys!")//
+				.end()//
+				.object("parameters")//
+				.put("strict", true)//
 				.end()//
 				.end()//
 
 				.object()//
-				.put("method", "POST").put("path", "/1/data/message")//
+				.put("method", "PUT").put("path", "/1/data/message/2")//
 				.object("content")//
-				.put("code", "2")//
 				.put("text", "Pretty cool, huhh?")//
+				.end()//
+				.object("parameters")//
+				.put("strict", true)//
 				.end()//
 				.end()//
 
@@ -184,7 +156,6 @@ public class BatchResourceTest extends SpaceTest {
 				.object()//
 				.put("method", "PUT").put("path", "/1/data/message/1")//
 				.object("content")//
-				.put("code", "0")//
 				.put("text", "Hi guys, what's up?")//
 				.end()//
 				.end()//
@@ -258,7 +229,7 @@ public class BatchResourceTest extends SpaceTest {
 		for (int i = 0; i < 11; i++)
 			bigBatch.add(Json7.object("method", "GET", "path", "/1/login"));
 
-		SpaceRequest.post("/1/batch").backend(test).bodyJson(bigBatch).go(400)//
+		SpaceRequest.post("/1/batch").backend(superadmin).bodyJson(bigBatch).go(400)//
 				.assertEquals("batch-limit-exceeded", "error.code");
 	}
 }
