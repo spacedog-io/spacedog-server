@@ -568,8 +568,8 @@ public class CredentialsResource extends Resource {
 
 	Optional<Credentials> getByName(String username, boolean throwNotFound) {
 
-		Optional<SearchHit> searchHit = elastic().get(//
-				toQuery(username), credentialsIndex());
+		Optional<SearchHit> searchHit = elastic().getUnique(//
+				credentialsIndex(), toQuery(username));
 
 		if (!searchHit.isPresent()) {
 			if (throwNotFound)

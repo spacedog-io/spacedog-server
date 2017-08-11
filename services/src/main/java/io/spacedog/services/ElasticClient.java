@@ -23,6 +23,7 @@ import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryAction;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryRequest;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
+import org.elasticsearch.action.get.GetRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
@@ -91,7 +92,7 @@ public class ElasticClient implements SpaceParams {
 	}
 
 	//
-	// shortcut methods
+	// Index
 	//
 
 	public IndexResponse index(Index index, String source) {
@@ -118,12 +119,16 @@ public class ElasticClient implements SpaceParams {
 		return prepareIndex(index, id).setSource(source).setRefresh(refresh).get();
 	}
 
+	//
+	// Get
+	//
+
 	public GetResponse get(Index index, String id) {
 		return get(index, id, false);
 	}
 
 	public GetResponse get(Index index, String id, boolean throwNotFound) {
-		GetResponse response = internalClient.prepareGet(index.alias(), index.type(), id).get();
+		GetResponse response = prepareGet(index, id).get();
 
 		if (!response.isExists() && throwNotFound)
 			throw Exceptions.notFound(index.type(), id);
@@ -131,9 +136,13 @@ public class ElasticClient implements SpaceParams {
 		return response;
 	}
 
-	public Optional<SearchHit> get(QueryBuilder query, Index index) {
+	public GetRequestBuilder prepareGet(Index index, String id) {
+		return internalClient.prepareGet(index.alias(), index.type(), id);
+	}
+
+	public Optional<SearchHit> getUnique(Index index, QueryBuilder query) {
 		try {
-			SearchHits hits = internalClient.prepareSearch(index.toString())//
+			SearchHits hits = prepareSearch(index)//
 					.setTypes(index.type())//
 					.setQuery(query)//
 					.get()//
@@ -152,6 +161,14 @@ public class ElasticClient implements SpaceParams {
 		}
 	}
 
+	public MultiGetResponse getMulti(Index index, Set<String> ids) {
+		return internalClient.prepareMultiGet().add(index.alias(), index.type(), ids).get();
+	}
+
+	//
+	// Exists
+	//
+
 	public boolean exists(Index index, String id) {
 		return internalClient.prepareGet(index.alias(), index.type(), id)//
 				.setFetchSource(false).get().isExists();
@@ -167,6 +184,10 @@ public class ElasticClient implements SpaceParams {
 				.getTotalHits() > 0;
 	}
 
+	//
+	// Delete
+	//
+
 	public boolean delete(Index index, String id, boolean refresh, boolean throwNotFound) {
 		DeleteResponse response = internalClient.prepareDelete(//
 				index.alias(), index.type(), id).setRefresh(refresh).get();
@@ -177,10 +198,6 @@ public class ElasticClient implements SpaceParams {
 			throw Exceptions.notFound(index.type(), id);
 
 		return false;
-	}
-
-	public BulkRequestBuilder prepareBulk() {
-		return internalClient.prepareBulk();
 	}
 
 	public DeleteByQueryResponse deleteByQuery(QueryBuilder query, Index... indices) {
@@ -215,8 +232,12 @@ public class ElasticClient implements SpaceParams {
 		}
 	}
 
-	public MultiGetResponse multiGet(Index index, Set<String> ids) {
-		return internalClient.prepareMultiGet().add(index.alias(), index.type(), ids).get();
+	//
+	// Others
+	//
+
+	public BulkRequestBuilder prepareBulk() {
+		return internalClient.prepareBulk();
 	}
 
 	public <Request extends ActionRequest<?>, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>> ActionFuture<Response> execute(
