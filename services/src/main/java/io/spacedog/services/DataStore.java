@@ -13,7 +13,6 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
@@ -33,8 +32,6 @@ import com.google.common.collect.Maps;
 import io.spacedog.core.Json8;
 import io.spacedog.model.Schema;
 import io.spacedog.sdk.DataObject;
-import io.spacedog.utils.Check;
-import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.NotFoundException;
 import io.spacedog.utils.SpaceFields;
@@ -52,6 +49,11 @@ public class DataStore implements SpaceParams, SpaceFields {
 		Meta meta();
 
 		void meta(Meta meta);
+	}
+
+	@JsonIgnoreProperties(ignoreUnknown = true)
+	private static class MetaWrapper {
+		public Meta meta;
 	}
 
 	@JsonIgnoreProperties(ignoreUnknown = true)
@@ -111,10 +113,17 @@ public class DataStore implements SpaceParams, SpaceFields {
 	}
 
 	public ObjectNode getObject(String type, String id) {
+		return getObject(type, id, true);
+	}
+
+	public ObjectNode getObject(String type, String id, boolean throwNotFound) {
 		GetResponse response = elastic().get(toDataIndex(type), id);
 
 		if (!response.isExists())
-			throw NotFoundException.object(type, id);
+			if (throwNotFound)
+				throw NotFoundException.object(type, id);
+			else
+				return null;
 
 		ObjectNode object = Json8.readObject(response.getSourceAsString());
 
@@ -136,138 +145,69 @@ public class DataStore implements SpaceParams, SpaceFields {
 
 	IndexResponse createObject(String type, Optional<String> id, ObjectNode object, String createdBy) {
 
-		object = setMetaBeforeCreate(object, createdBy);
-		ElasticClient elasticClient = elastic();
-
-		return id.isPresent() //
-				? elasticClient.index(toDataIndex(type), id.get(), object.toString())//
-				: elasticClient.index(toDataIndex(type), object.toString());
-	}
-
-	private ObjectNode setMetaBeforeCreate(ObjectNode object, String createdBy) {
 		String now = DateTime.now().toString();
 
 		// replace meta to avoid developers to
 		// set any meta fields directly
 		object.set("meta", Json8.objectBuilder()//
-				.put("createdBy", createdBy)//
-				.put("updatedBy", createdBy)//
-				.put("createdAt", now)//
-				.put("updatedAt", now)//
+				.put(FIELD_CREATED_BY, createdBy)//
+				.put(FIELD_UPDATED_BY, createdBy)//
+				.put(FIELD_CREATED_AT, now)//
+				.put(FIELD_UPDATED_AT, now)//
 				.build());
 
-		return object;
+		return id.isPresent() //
+				? elastic().index(toDataIndex(type), id.get(), object.toString())//
+				: elastic().index(toDataIndex(type), object.toString());
 	}
 
-	// public void createObject(String type, Metable object, Credentials requester)
-	// {
-	//
-	// Meta meta = object.meta();
-	// Check.isTrue(meta == null || meta.id == null, "[meta.id] is not null");
-	//
-	// meta = new Meta();
-	// meta.createdBy = requester.name();
-	// meta.updatedBy = requester.name();
-	//
-	// DateTime now = DateTime.now();
-	// meta.createdAt = now;
-	// meta.updatedAt = now;
-	//
-	// object.meta(meta);
-	// ObjectNode node = (ObjectNode) Json8.toNode(object);
-	//
-	// removeNotIndexedMeta(node);
-	//
-	// IndexResponse response = elastic().index(toDataIndex(type), node.toString());
-	//
-	// meta.type = type;
-	// meta.id = response.getId();
-	// meta.version = response.getVersion();
-	// }
+	public Optional<Meta> getMeta(String type, String id) {
 
-	/**
-	 * TODO do we need these two update methods or just one?
-	 */
-	public IndexResponse updateObject(String type, String id, long version, ObjectNode object, String updatedBy) {
-		ObjectNode meta = object.with("meta");
+		GetResponse response = elastic().prepareGet(toDataIndex(type), id)//
+				.setFetchSource(new String[] { FIELD_META }, null)//
+				.get();
 
-		Json8.checkStringNotNullOrEmpty(meta, "createdBy");
-		Json8.checkStringNotNullOrEmpty(meta, "createdAt");
+		if (response.isExists()) {
+			Meta meta = Json8.toPojo(//
+					response.getSourceAsBytes(), MetaWrapper.class).meta;
+			meta.id = id;
+			meta.type = type;
+			meta.version = response.getVersion();
+			return Optional.of(meta);
+		}
 
-		meta.remove(Arrays.asList("id", "version", "type", "sort", "score"));
+		return Optional.empty();
+	}
 
-		meta.put("updatedBy", updatedBy);
-		meta.put("updatedAt", DateTime.now().toString());
+	public IndexResponse updateObject(String type, String id, //
+			ObjectNode object, Meta meta) {
+
+		object.remove(FIELD_META);
+		object.with(FIELD_META)//
+				.put(FIELD_UPDATED_BY, meta.updatedBy)//
+				.put(FIELD_UPDATED_AT, meta.updatedAt.toString())//
+				.put(FIELD_CREATED_BY, meta.createdBy)//
+				.put(FIELD_CREATED_AT, meta.createdAt.toString());
 
 		return elastic().prepareIndex(toDataIndex(type), id)//
 				.setSource(object.toString())//
-				.setVersion(version > 0 ? version : Versions.MATCH_ANY)//
+				.setVersion(meta.version)//
 				.get();
 	}
 
-	public IndexResponse updateObject(ObjectNode object, String updatedBy) {
-
-		String id = Json8.checkStringNotNullOrEmpty(object, "meta.id");
-		String type = Json8.checkStringNotNullOrEmpty(object, "meta.type");
-		long version = Json8.checkLongNode(object, "meta.version", true).get().asLong();
-
-		return updateObject(type, id, version, object, updatedBy);
-	}
-
-	public void updateObject(Metable object, Credentials requester) {
-
-		Meta meta = object.meta();
-
-		Check.notNull(meta, "meta");
-		Check.notNullOrEmpty(meta.id, "meta.id");
-		Check.notNullOrEmpty(meta.type, "meta.type");
-
-		ObjectNode node = (ObjectNode) Json8.toNode(object);
-
-		meta.version = updateObject(meta.type, meta.id, meta.version, node, requester.name())//
-				.getVersion();
-	}
-
 	public UpdateResponse patchObject(String type, String id, ObjectNode object, String updatedBy) {
-		return patchObject(type, id, 0, object, updatedBy);
+		return patchObject(type, id, Versions.MATCH_ANY, object, updatedBy);
 	}
 
 	public UpdateResponse patchObject(String type, String id, long version, ObjectNode object, String updatedBy) {
 
-		object.with("meta").removeAll()//
-				.put("updatedBy", updatedBy)//
-				.put("updatedAt", DateTime.now().toString());
+		object.with(FIELD_META).removeAll()//
+				.put(FIELD_UPDATED_BY, updatedBy)//
+				.put(FIELD_UPDATED_AT, DateTime.now().toString());
 
-		UpdateRequestBuilder update = elastic().prepareUpdate(toDataIndex(type), id).setDoc(object.toString());
-
-		if (version > 0)
-			update.setVersion(version);
-
-		return update.get();
+		return elastic().prepareUpdate(toDataIndex(type), id)//
+				.setVersion(version).setDoc(object.toString()).get();
 	}
-
-	// public DeleteByQueryResponse delete(String index, String query, String...
-	// types) {
-	//
-	// if (Strings.isNullOrEmpty(query))
-	// query =
-	// Json.objectBuilder().object("query").object("match_all").toString();
-	//
-	// DeleteByQueryRequest delete = new DeleteByQueryRequest(index)//
-	// .timeout(new TimeValue(60000))//
-	// .source(query);
-	//
-	// if (types != null)
-	// delete.types(types);
-	//
-	// try {
-	// return
-	// elastic().execute(DeleteByQueryAction.INSTANCE,
-	// delete).get();
-	// } catch (ExecutionException | InterruptedException e) {
-	// throw Exceptions.wrap(e);
-	// }
-	// }
 
 	public static Index[] allDataIndices() {
 		String[] indices = elastic().filteredBackendIndices(Optional.of("data"));

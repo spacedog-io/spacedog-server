@@ -110,11 +110,6 @@ public class SchemaBuilder {
 		return this;
 	}
 
-	public SchemaBuilder id(String key) {
-		builder.put("_id", key);
-		return this;
-	}
-
 	public SchemaBuilder array() {
 		checkCurrentPropertyExists();
 		checkCurrentPropertyByInvalidTypes(_ARRAY, SchemaType.STASH);

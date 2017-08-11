@@ -88,9 +88,10 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 				.bodyPojo(object).go(201).getString("id");
 	}
 
-	public String create(String type, String id, Object object) {
-		return dog.post("/1/data/{type}").id(id).routeParam("type", type)//
-				.bodyPojo(object).go(201).getString("id");
+	public void create(String type, String id, Object object) {
+		dog.put("/1/data/{type}/{id}").routeParam("type", type)//
+				.routeParam("id", id).queryParam(PARAM_STRICT, "true")//
+				.bodyPojo(object).go(201);
 	}
 
 	public long save(String type, String id, Object object) {
@@ -101,6 +102,12 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 		return dog.put("/1/data/{type}/{id}").routeParam("id", id)//
 				.routeParam("type", type).queryParam("strict", String.valueOf(strict))//
 				.bodyPojo(object).go(200, 201).get("version").asLong();
+	}
+
+	public long save(String type, String id, String field, Object object) {
+		return dog.put("/1/data/{t}/{i}/{f}").routeParam("i", id)//
+				.routeParam("t", type).routeParam("f", field)//
+				.bodyPojo(object).go(200).get("version").asLong();
 	}
 
 	public <K extends Datable<K>> K save(K object) {
@@ -208,6 +215,10 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 
 	public <K> SearchResults<K> search(ESSearchSourceBuilder builder, Class<K> dataClass) {
 		return search(null, builder, dataClass, false);
+	}
+
+	public <K> SearchResults<K> search(ESSearchSourceBuilder builder, Class<K> dataClass, boolean refresh) {
+		return search(null, builder, dataClass, refresh);
 	}
 
 	public <K> SearchResults<K> search(String type, ESSearchSourceBuilder builder, Class<K> dataClass) {

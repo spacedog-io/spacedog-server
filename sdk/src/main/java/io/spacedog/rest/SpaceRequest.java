@@ -439,8 +439,4 @@ public class SpaceRequest {
 		}
 		Utils.info("  %s: %s", key, value);
 	}
-
-	public SpaceRequest id(String value) {
-		return this.queryParam("id", value);
-	}
 }

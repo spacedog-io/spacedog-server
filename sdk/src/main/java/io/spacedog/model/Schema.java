@@ -39,14 +39,6 @@ public class Schema {
 		return (ObjectNode) node.get(name);
 	}
 
-	public boolean hasIdPath() {
-		return content().has("_id");
-	}
-
-	public String idPath() {
-		return content().get("_id").asText();
-	}
-
 	public static SchemaBuilder builder(String name) {
 		return SchemaBuilder.builder(name);
 	}

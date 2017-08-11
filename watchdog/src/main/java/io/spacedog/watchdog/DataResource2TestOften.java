@@ -4,9 +4,9 @@
 package io.spacedog.watchdog;
 
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.joda.time.DateTime;
 import org.junit.Test;
@@ -20,7 +20,9 @@ import io.spacedog.model.Schema;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceResponse;
 import io.spacedog.rest.SpaceTest;
+import io.spacedog.sdk.DataEndpoint.SearchResults;
 import io.spacedog.sdk.SpaceDog;
+import io.spacedog.sdk.elastic.ESSearchSourceBuilder;
 import io.spacedog.utils.Json7;
 
 public class DataResource2TestOften extends SpaceTest {
@@ -110,7 +112,7 @@ public class DataResource2TestOften extends SpaceTest {
 		// find by simple text search
 
 		SpaceResponse res1b = SpaceRequest.get("/1/search/sale")//
-		.queryParam("q", "museum").refresh().auth(fred)//
+				.queryParam("q", "museum").refresh().auth(fred)//
 				.go(200).assertEquals(1, "total");
 
 		res1.assertEqualsWithoutMeta(Json7.checkObject(res1b.get("results.0")));
@@ -123,7 +125,8 @@ public class DataResource2TestOften extends SpaceTest {
 				.put("query", "museum")//
 				.build().toString();
 
-		SpaceResponse res1c = SpaceRequest.post("/1/search/sale").auth(fred).bodyString(query).go(200).assertEquals(1, "total");
+		SpaceResponse res1c = SpaceRequest.post("/1/search/sale").auth(fred).bodyString(query).go(200).assertEquals(1,
+				"total");
 
 		res1.assertEqualsWithoutMeta(Json7.checkObject(res1c.get("results.0")));
 
@@ -161,7 +164,7 @@ public class DataResource2TestOften extends SpaceTest {
 		// update with invalid version should fail
 
 		SpaceRequest.put("/1/data/sale/" + id)//
-		.queryParam("version", "XXX").auth(fred)//
+				.queryParam("version", "XXX").auth(fred)//
 				.bodyJson("number", "0987654321").go(400)//
 				.assertFalse("success");
 
@@ -234,132 +237,81 @@ public class DataResource2TestOften extends SpaceTest {
 	public void testAllObjectIdStrategies() {
 
 		prepareTest();
-		SpaceDog test = resetTestBackend();
+		SpaceDog superadmin = resetTestBackend();
 
 		// creates message schema with auto generated id strategy
-
-		test.schema().set(Schema.builder("message").string("text").build());
+		superadmin.schema().set(Schema.builder("message").string("text").build());
 
 		// creates a message object with auto generated id
-
-		String id = SpaceRequest.post("/1/data/message").auth(test)//
-				.bodyJson("text", "id=?").go(201)//
-				.getString("id");
-
-		SpaceRequest.get("/1/data/message/" + id).auth(test).go(200)//
-				.assertEquals("id=?", "text");
+		ObjectNode message = Json7.object("text", "id=?");
+		String id = superadmin.data().create("message", message);
+		ObjectNode node = superadmin.data().get("message", id);
+		assertEquals(message, node.without("meta"));
 
 		// creates a message object with self provided id
+		message = Json7.object("text", "id=1");
+		superadmin.data().create("message", "1", message);
+		node = superadmin.data().get("message", "1");
+		assertEquals(message, node.without("meta"));
 
-		SpaceRequest.post("/1/data/message").id("1").auth(test).bodyJson("text", "id=1").go(201);
+		// an id field does not force the id field
+		superadmin.post("/1/data/message").bodyJson("text", "id=2", "id", 2).go(400);
 
-		SpaceRequest.get("/1/data/message/1").auth(test).go(200)//
-				.assertEquals("id=1", "text");
-
-		// fails to create a message object with id subkey
-		// since not compliant with schema
-
-		SpaceRequest.post("/1/data/message").auth(test)//
-				.bodyJson("text", "id=2", "id", 2).go(400);
-
-		// creates message2 schema with code property as id
-
-		test.schema().set(Schema.builder("message2").id("code")//
-				.string("code").string("text").build());
-
-		// creates a message2 object with code = 2
-
-		SpaceRequest.post("/1/data/message2").auth(test)//
-				.bodyJson("text", "id=code=2", "code", "2").go(201);
-
-		SpaceRequest.get("/1/data/message2/2").auth(test).go(200)//
-				.assertEquals("id=code=2", "text")//
-				.assertEquals("2", "code");
-
-		// creates a message2 object with code = 3
-		// and the id param is transparent
-
-		SpaceRequest.post("/1/data/message2").id("XXX").auth(test)//
-				.bodyJson("text", "id=code=3", "code", "3").go(201);
-
-		SpaceRequest.get("/1/data/message2/3").auth(test).go(200)//
-				.assertEquals("id=code=3", "text")//
-				.assertEquals("3", "code");
-
-		// fails to create a message2 object without any code
-
-		SpaceRequest.post("/1/data/message2").auth(test)//
-				.bodyJson("text", "no code").go(400);
-
-		// fails to create a message2 object without any code
-		// and the id param is still transparent
-
-		SpaceRequest.post("/1/data/message2").id("XXX").auth(test)//
-				.bodyJson("text", "no code").go(400);
+		// an id param does not force the object id
+		id = superadmin.post("/1/data/message").queryParam("id", "23")//
+				.bodyJson("text", "hello").go(201).getString("id");
+		assertNotEquals("23", id);
 	}
 
 	@Test
 	public void testFromAndSizeParameters() {
 
 		// prepare
-
 		prepareTest();
-		SpaceDog test = resetTestBackend();
-		SpaceDog vince = signUp(test, "vince", "hi vince");
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog vince = signUp(superadmin, "vince", "hi vince");
+		superadmin.schema().set(Schema.builder("message").string("text").build());
 
-		test.schema().set(Schema.builder("message").string("text").build());
-
-		SpaceRequest.post("/1/data/message").auth(vince)//
-				.bodyJson("text", "hello").go(201);
-		SpaceRequest.post("/1/data/message").auth(vince)//
-				.bodyJson("text", "bonjour").go(201);
-		SpaceRequest.post("/1/data/message").auth(vince)//
-				.bodyJson("text", "guttentag").go(201);
-		SpaceRequest.post("/1/data/message").auth(vince)//
-				.bodyJson("text", "hola").go(201);
+		// superadmins creates 4 messages
+		HashSet<String> originalMessages = Sets.newHashSet(//
+				"hello", "bonjour", "guttentag", "hola");
+		for (String message : originalMessages)
+			vince.data().create("message", Json7.object("text", message));
 
 		// fetches messages by 4 pages of 1 object
-
 		Set<String> messages = Sets.newHashSet();
 		messages.addAll(fetchMessages(vince, 0, 1));
 		messages.addAll(fetchMessages(vince, 1, 1));
 		messages.addAll(fetchMessages(vince, 2, 1));
 		messages.addAll(fetchMessages(vince, 3, 1));
-
-		assertEquals(Sets.newHashSet("hello", "bonjour", "guttentag", "hola"), messages);
+		assertEquals(originalMessages, messages);
 
 		// fetches messages by 2 pages of 2 objects
-
 		messages.clear();
 		messages.addAll(fetchMessages(vince, 0, 2));
 		messages.addAll(fetchMessages(vince, 2, 2));
-
-		assertEquals(Sets.newHashSet("hello", "bonjour", "guttentag", "hola"), messages);
+		assertEquals(originalMessages, messages);
 
 		// fetches messages by a single page of 4 objects
-
 		messages.clear();
 		messages.addAll(fetchMessages(vince, 0, 4));
-
-		assertEquals(Sets.newHashSet("hello", "bonjour", "guttentag", "hola"), messages);
+		assertEquals(originalMessages, messages);
 
 		// fails to fetch messages if from + size > 10000
-
-		SpaceRequest.get("/1/data/message").from(9999).size(10).auth(vince).go(400);
+		vince.get("/1/data/message").from(9999).size(10).go(400);
 	}
 
 	private Collection<String> fetchMessages(SpaceDog user, int from, int size) {
-		JsonNode results = SpaceRequest.get("/1/data/message")//
-		.refresh().from(from).size(size).auth(user).go(200)//
-				.assertEquals(4, "total")//
-				.assertSizeEquals(size, "results")//
-				.get("results");
+		ESSearchSourceBuilder builder = ESSearchSourceBuilder.searchSource()//
+				.from(from).size(size);
+		SearchResults<ObjectNode> results = user.data()//
+				.search("message", builder, ObjectNode.class, true);
 
-		List<String> messages = Lists.newArrayList();
-		Iterator<JsonNode> elements = results.elements();
-		while (elements.hasNext())
-			messages.add(elements.next().get("text").asText());
+		assertEquals(4, results.total());
+		assertEquals(size, results.objects().size());
 
-		return messages;
+		return results.objects().stream()//
+				.map(node -> node.get("text").asText())//
+				.collect(Collectors.toList());
 	}
 }

@@ -41,9 +41,9 @@ public class DataAccessControlTestOften extends SpaceTest {
 
 		// in default acl, only users and admins can create objects
 		guest.post("/1/data/msge").bodyJson("t", "hello").go(403);
-		vince.post("/1/data/msge").id("vince").bodyJson("t", "v1").go(201);
-		vince.post("/1/data/msge").id("vince2").bodyJson("t", "v2").go(201);
-		admin.post("/1/data/msge").id("admin").bodyJson("t", "a1").go(201);
+		vince.put("/1/data/msge/vince").bodyJson("t", "v1").go(201);
+		vince.put("/1/data/msge/vince2").bodyJson("t", "v2").go(201);
+		admin.put("/1/data/msge/admin").bodyJson("t", "a1").go(201);
 
 		// in default acl, everyone can read any objects
 		guest.get("/1/data/msge/vince").go(200);
@@ -60,10 +60,10 @@ public class DataAccessControlTestOften extends SpaceTest {
 
 		// in default acl, users can update their own objects
 		// admin can update any objects
-		guest.put("/1/data/msge/vince").go(403);
-		guest.put("/1/data/msge/admin").go(403);
+		guest.put("/1/data/msge/vince").bodyJson("t", "XXX").go(403);
+		guest.put("/1/data/msge/admin").bodyJson("t", "XXX").go(403);
 		vince.put("/1/data/msge/vince").bodyJson("t", "v3").go(200);
-		vince.put("/1/data/msge/admin").go(403);
+		vince.put("/1/data/msge/admin").bodyJson("t", "XXX").go(403);
 		admin.put("/1/data/msge/vince").bodyJson("t", "v4").go(200);
 		admin.put("/1/data/msge/admin").bodyJson("t", "a2").go(200);
 
@@ -98,13 +98,13 @@ public class DataAccessControlTestOften extends SpaceTest {
 		assertEquals(1, settings.acl.size());
 		assertEquals(0, settings.acl.get("msge").size());
 
-		// in empty acl, nobody can create an object but superadmins
-		guest.post("/1/data/msge").go(403);
-		vince.post("/1/data/msge").go(403);
-		admin.post("/1/data/msge").go(403);
-		superadmin.post("/1/data/msge").id("1").bodyJson("t", "hi").go(201);
+		// in empty acl, nobody can create a message but superadmins
+		guest.post("/1/data/msge").bodyJson("t", "hi").go(403);
+		vince.post("/1/data/msge").bodyJson("t", "hi").go(403);
+		admin.post("/1/data/msge").bodyJson("t", "hi").go(403);
+		superadmin.put("/1/data/msge/1").bodyJson("t", "hi").go(201);
 
-		// in empty acl, nobody can read an object but superadmins
+		// in empty acl, nobody can read a message but superadmins
 		guest.get("/1/data/msge/vince").go(403);
 		vince.get("/1/data/msge/vince").go(403);
 		admin.get("/1/data/msge/vince").go(403);
@@ -118,9 +118,9 @@ public class DataAccessControlTestOften extends SpaceTest {
 				.assertEquals("1", "results.0.meta.id");
 
 		// in empty acl, nobody can update any object but superadmins
-		guest.put("/1/data/msge/vince").go(403);
-		vince.put("/1/data/msge/vince").go(403);
-		admin.put("/1/data/msge/vince").go(403);
+		guest.put("/1/data/msge/vince").bodyJson("t", "ola").go(403);
+		vince.put("/1/data/msge/vince").bodyJson("t", "ola").go(403);
+		admin.put("/1/data/msge/vince").bodyJson("t", "ola").go(403);
 		superadmin.put("/1/data/msge/1").bodyJson("t", "ola").go(200);
 
 		// in empty acl, nobody can delete any object but superadmins
@@ -156,32 +156,45 @@ public class DataAccessControlTestOften extends SpaceTest {
 		assertEquals(Collections.singleton(DataPermission.create), //
 				settings.acl.get("msge").get("user"));
 
-		// nobody can create an object but superadmins
-		guest.post("/1/data/msge").go(403);
-		vince.post("/1/data/msge").id("1").bodyJson("t", "hi").go(201);
-		admin.post("/1/data/msge").go(403);
+		// only users (and superadmins) can create messages
+		guest.post("/1/data/msge").bodyJson("t", "hi").go(403);
+		vince.post("/1/data/msge").bodyJson("t", "hi").go(201);
+		admin.post("/1/data/msge").bodyJson("t", "hi").go(403);
 
-		// only admins (and superadmins) can search for objects
-		guest.get("/1/data/msge/1").go(403);
-		vince.get("/1/data/msge/1").go(403);
-		admin.get("/1/data/msge/1").go(200);
+		// only users (and superadmins) can create messages with specified id
+		guest.put("/1/data/msge/1").bodyJson("t", "hi").go(403);
+		vince.put("/1/data/msge/2").bodyJson("t", "hi").go(201);
+		admin.put("/1/data/msge/3").bodyJson("t", "hi").go(403);
 
-		// only admins (and superadmins) can search for objects
+		// only admins (and superadmins) can search for messages
+		guest.get("/1/data/msge/2").go(403);
+		vince.get("/1/data/msge/2").go(403);
+		admin.get("/1/data/msge/2").go(200);
+
+		// only admins (and superadmins) can search for messages
 		guest.get("/1/data/msge/").go(403);
 		vince.get("/1/data/msge/").go(403);
 		admin.get("/1/data/msge/").refresh().go(200)//
-				.assertEquals("1", "results.0.meta.id");
+				.assertSizeEquals(2, "results")//
+				.assertEquals("2", "results.1.meta.id");
 
 		// nobody can update any object (but superadmins)
-		guest.put("/1/data/msge/1").go(403);
-		vince.put("/1/data/msge/1").go(403);
-		admin.put("/1/data/msge/1").go(403);
+		guest.put("/1/data/msge/2").bodyJson("t", "ola").go(403);
+		vince.put("/1/data/msge/2").bodyJson("t", "ola").go(403);
+		admin.put("/1/data/msge/2").bodyJson("t", "ola").go(403);
 
-		// nobody can delete any object but superadmins
-		guest.delete("/1/data/msge/1").go(403);
-		vince.delete("/1/data/msge/1").go(403);
-		admin.delete("/1/data/msge/1").go(403);
-		superadmin.delete("/1/data/msge/1").go(200);
+		// nobody can delete message but superadmins
+		guest.delete("/1/data/msge/2").go(403);
+		vince.delete("/1/data/msge/2").go(403);
+		admin.delete("/1/data/msge/2").go(403);
+		superadmin.delete("/1/data/msge/2").go(200);
+
+		// nobody can delete all message but superadmins
+		guest.delete("/1/data/msge").go(403);
+		vince.delete("/1/data/msge").go(403);
+		admin.delete("/1/data/msge").go(403);
+		superadmin.delete("/1/data/msge").go(200)//
+				.assertEquals(1, "totalDeleted");
 	}
 
 	private SpaceDog adminSignsUp(SpaceDog superadmin) {
@@ -234,25 +247,25 @@ public class DataAccessControlTestOften extends SpaceTest {
 		// maelle is a simple user
 		// she's got no right on the message schema
 		SpaceDog maelle = signUp(superadmin, "maelle", "hi maelle");
-		maelle.post("/1/data/message").go(403);
+		maelle.post("/1/data/message").bodyJson("text", "hi").go(403);
 		maelle.get("/1/data/message/2").go(403);
-		maelle.put("/1/data/message/2").go(403);
+		maelle.put("/1/data/message/2").bodyJson("text", "hi").go(403);
 		maelle.delete("/1/data/message/2").go(403);
 
 		// fred has the iron role
 		// he's only got the right to read
 		SpaceDog fred = signUp(superadmin, "fred", "hi fred");
 		superadmin.credentials().setRole(fred.id(), "iron");
-		fred.post("/1/data/message").go(403);
+		fred.post("/1/data/message").bodyJson("text", "hi").go(403);
 		fred.get("/1/data/message/2").go(200);
-		fred.put("/1/data/message/2").go(403);
+		fred.put("/1/data/message/2").bodyJson("text", "hi").go(403);
 		fred.delete("/1/data/message/2").go(403);
 
 		// nath has the silver role
 		// she's got the right to read and update
 		SpaceDog nath = signUp(superadmin, "nath", "hi nath");
 		superadmin.credentials().setRole(nath.id(), "silver");
-		nath.post("/1/data/message").go(403);
+		nath.post("/1/data/message").bodyJson("text", "hi").go(403);
 		nath.get("/1/data/message/2").go(200);
 		nath.put("/1/data/message/2").bodyJson("text", "hi").go(200);
 		nath.delete("/1/data/message/2").go(403);
@@ -261,7 +274,7 @@ public class DataAccessControlTestOften extends SpaceTest {
 		// he's got the right to create, read and update
 		SpaceDog vince = signUp(superadmin, "vince", "hi vince");
 		superadmin.credentials().setRole(vince.id(), "gold");
-		vince.post("/1/data/message").id("3").bodyJson("text", "grunt").go(201);
+		vince.put("/1/data/message/3").bodyJson("text", "grunt").go(201);
 		vince.get("/1/data/message/3").go(200);
 		vince.put("/1/data/message/3").bodyJson("text", "flux").go(200);
 		vince.delete("/1/data/message/3").go(403);
