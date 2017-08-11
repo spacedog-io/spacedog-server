@@ -9,6 +9,7 @@ import java.util.List;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.common.text.Text;
 import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.json.JsonXContent;
@@ -166,8 +167,11 @@ public class SearchResource extends Resource {
 
 			if (!Utils.isNullOrEmpty(hit.sortValues())) {
 				ArrayNode array = Json8.array();
-				for (Object value : hit.sortValues())
+				for (Object value : hit.sortValues()) {
+					if (value instanceof Text)
+						value = value.toString();
 					array.add(Json8.toNode(value));
+				}
 				meta.set("sort", array);
 			}
 

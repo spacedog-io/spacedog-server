@@ -3,6 +3,8 @@
  */
 package io.spacedog.watchdog;
 
+import java.util.List;
+
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -10,7 +12,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.model.Schema;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
+import io.spacedog.sdk.DataEndpoint.SearchResults;
 import io.spacedog.sdk.SpaceDog;
+import io.spacedog.sdk.elastic.ESSearchSourceBuilder;
+import io.spacedog.sdk.elastic.ESSortOrder;
 import io.spacedog.utils.Json7;
 
 public class SearchResourceTestOften extends SpaceTest {
@@ -129,36 +134,31 @@ public class SearchResourceTestOften extends SpaceTest {
 		test.schema().set(Schema.builder("number").integer("i").string("t").build());
 
 		// creates 5 numbers
-		for (int i = 0; i < 3; i++)
-			SpaceRequest.post("/1/data/number").auth(test)//
-					.bodyJson("i", i, "t", "" + i).go(201);
+		for (int i = 0; i < 5; i++)
+			test.data().create("number", Json7.object("i", i, "t", "" + i));
 
 		// search with ascendent sorting
-		ObjectNode query = Json7.objectBuilder()//
-				.array("sort").add("i").end()//
-				.object("query").object("match_all")//
-				.build();
+		ESSearchSourceBuilder builder = ESSearchSourceBuilder.searchSource().sort("i");
+		SearchResults<ObjectNode> results = test.data().search(//
+				builder, ObjectNode.class, true);
+		assertEquals(5, results.total());
 
-		SpaceRequest.post("/1/search").refresh().auth(test).bodyJson(query).go(200)//
-				.assertEquals(0, "results.0.i")//
-				.assertEquals(0, "results.0.meta.sort.0")//
-				.assertEquals(1, "results.1.i")//
-				.assertEquals(1, "results.1.meta.sort.0")//
-				.assertEquals(2, "results.2.i")//
-				.assertEquals(2, "results.2.meta.sort.0");
+		List<ObjectNode> objects = results.objects();
+		for (int i = 0; i < objects.size(); i++) {
+			assertEquals(i, objects.get(i).get("i").asInt());
+			assertEquals(i, Json7.get(objects.get(i), "meta.sort.0").asInt());
+		}
 
 		// search with descendant sorting
-		query = Json7.objectBuilder()//
-				.array("sort").object().put("t", "desc").end().end()//
-				.object("query").object("match_all")//
-				.build();
+		builder = ESSearchSourceBuilder.searchSource().sort("t", ESSortOrder.DESC);
+		results = test.data().search(builder, ObjectNode.class, true);
+		assertEquals(5, results.total());
 
-		SpaceRequest.post("/1/search").refresh().auth(test).bodyJson(query).go(200)//
-				.assertEquals(2, "results.0.i")//
-				.assertEquals("2", "results.0.meta.sort.0")//
-				.assertEquals(1, "results.1.i")//
-				.assertEquals("1", "results.1.meta.sort.0")//
-				.assertEquals(0, "results.2.i")//
-				.assertEquals("0", "results.2.meta.sort.0");
+		objects = results.objects();
+		for (int i = 0; i < objects.size(); i++) {
+			assertEquals(4 - i, objects.get(i).get("i").asInt());
+			assertEquals(String.valueOf(4 - i), //
+					Json7.get(objects.get(i), "meta.sort.0").asText());
+		}
 	}
 }
