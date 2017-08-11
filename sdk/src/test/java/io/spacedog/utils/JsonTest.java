@@ -10,7 +10,9 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
+import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 
 public class JsonTest extends Assert {
 
@@ -118,5 +120,26 @@ public class JsonTest extends Assert {
 	public void testToArray() {
 		assertTrue(Arrays.deepEquals(new Object[] { 1, "vince", new Object[] { 1, 2 } }, //
 				Json7.toArray(Json7.arrayBuilder().add(1).add("vince").array().add(1).add(2).build())));
+	}
+
+	private static class Speed {
+		public int s;
+
+		public Speed(int s) {
+			this.s = s;
+		}
+	}
+
+	@Test
+	public void testToNode() {
+		assertEquals(TextNode.valueOf("toto"), Json7.toNode("toto"));
+		assertEquals(IntNode.valueOf(1), Json7.toNode(1));
+
+		assertEquals(Json7.object("s", 2), Json7.toNode(new Speed(2)));
+		assertEquals(Json7.object(), Json7.toNode(Json7.object()));
+
+		assertEquals(Json7.array(), Json7.toNode(Json7.array()));
+		assertEquals(Json7.array(1, 2), Json7.toNode(Arrays.asList(1, 2)));
+		assertEquals(Json7.array(1, 2), Json7.toNode(Arrays.asList(1, 2)));
 	}
 }
