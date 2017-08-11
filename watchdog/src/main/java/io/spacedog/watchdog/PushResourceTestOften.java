@@ -10,6 +10,7 @@ import java.util.Set;
 
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
@@ -256,12 +257,14 @@ public class PushResourceTestOften extends SpaceTest {
 
 		// vince can not read, update nor delete dave's installation
 		vince.get("/1/installation/" + daveInstallId).go(403);
-		vince.put("/1/installation/" + daveInstallId).bodyJson(BADGE, 2).go(403);
+		vince.put("/1/installation/" + daveInstallId)//
+				.bodyJson(APP_ID, "XXX", TOKEN, "XXX", PUSH_SERVICE, "GCM").go(403);
 		vince.delete("/1/installation/" + daveInstallId).go(403);
 
 		// also true with /data/installation route
 		vince.get("/1/data/installation/" + daveInstallId).go(403);
-		vince.put("/1/data/installation/" + daveInstallId).bodyJson(BADGE, 2).go(403);
+		vince.put("/1/data/installation/" + daveInstallId + "/badge")//
+				.bodyJson(IntNode.valueOf(0)).go(403);
 		vince.delete("/1/data/installation/" + daveInstallId).go(403);
 
 		// dave can not update his installation app id
@@ -326,8 +329,7 @@ public class PushResourceTestOften extends SpaceTest {
 		assertEquals(1, installation.badge());
 
 		// vince reads the push and resets its installation badge
-		vince.data().save("installation", vinceInstallId, //
-				Json7.object(BADGE, 0), false);
+		vince.data().save("installation", vinceInstallId, "badge", 0);
 
 		installation = vince.push().getInstallation(vinceInstallId);
 		assertEquals(0, installation.badge());

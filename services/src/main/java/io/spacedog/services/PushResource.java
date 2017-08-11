@@ -7,6 +7,7 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.joda.time.DateTime;
 
 import com.amazonaws.services.sns.model.EndpointDisabledException;
 import com.amazonaws.services.sns.model.PlatformApplicationDisabledException;
@@ -19,11 +20,11 @@ import com.google.common.collect.Sets;
 
 import io.spacedog.core.Json8;
 import io.spacedog.model.BadgeStrategy;
-import io.spacedog.model.DataPermission;
 import io.spacedog.model.Installation;
 import io.spacedog.model.PushService;
 import io.spacedog.model.Schema;
 import io.spacedog.sdk.PushRequest;
+import io.spacedog.services.DataStore.Meta;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
@@ -142,31 +143,51 @@ public class PushResource extends Resource {
 	@Get("/installation/:id/tags")
 	@Get("/installation/:id/tags/")
 	public Payload getTags(String id, Context context) {
-		ObjectNode object = DataStore.get().getObject(TYPE, id);
-
-		return JsonPayload.json(//
-				object.has(TAGS) //
-						? object.get(TAGS) //
-						: Json8.array());
+		return getField(id, TAGS, context);
 	}
 
 	@Post("/installation/:id/tags")
 	@Post("/installation/:id/tags/")
 	public Payload postTags(String id, String body, Context context) {
-		return updateTags(id, body, Op.add);
+		Installation installation = load(id);
+		String[] tags = Json8.toPojo(body, String[].class);
+		installation.tags().addAll(Sets.newHashSet(tags));
+		update(installation, SpaceContext.credentials());
+		return JsonPayload.saved(false, "/1", TYPE, id);
 	}
 
 	@Put("/installation/:id/tags")
 	@Put("/installation/:id/tags/")
 	public Payload putTags(String id, String body, Context context) {
-		return updateTags(id, body, Op.set);
-
+		return putField(id, TAGS, body, context);
 	}
 
 	@Delete("/installation/:id/tags")
 	@Delete("/installation/:id/tags/")
 	public Payload deleteTags(String id, String body, Context context) {
-		return updateTags(id, body, Op.remove);
+		Installation installation = load(id);
+		String[] tags = Json8.toPojo(body, String[].class);
+		installation.tags().removeAll(Sets.newHashSet(tags));
+		update(installation, SpaceContext.credentials());
+		return JsonPayload.saved(false, "/1", TYPE, id);
+	}
+
+	@Get("/installation/:id/:field")
+	@Get("/installation/:id/:field/")
+	public Payload getField(String id, String field, Context context) {
+		return DataResource.get().getField(TYPE, id, field, context);
+	}
+
+	@Put("/installation/:id/:field")
+	@Put("/installation/:id/:field/")
+	public Payload putField(String id, String field, String body, Context context) {
+		return DataResource.get().putField(TYPE, id, field, body, context);
+	}
+
+	@Delete("/installation/:id/:field")
+	@Delete("/installation/:id/:field/")
+	public Payload deleteField(String id, String field, Context context) {
+		return DataResource.get().deleteField(TYPE, id, field, context);
 	}
 
 	/**
@@ -376,7 +397,7 @@ public class PushResource extends Resource {
 
 	public Payload upsertInstallation(Optional<String> id, String body, Context context) {
 
-		Credentials credentials = checkInsertOrUpdateInstallation(id);
+		Credentials credentials = SpaceContext.credentials();
 		Installation installation = Json8.toPojo(body, Installation.class);
 
 		Check.notNullOrEmpty(installation.token(), TOKEN);
@@ -390,48 +411,10 @@ public class PushResource extends Resource {
 
 		installation.credentialsId(credentials.isAtLeastUser() ? credentials.id() : null);
 
-		installation = id.isPresent() ? update(installation, credentials) //
-				: create(installation, credentials);
-
-		return JsonPayload.saved(!id.isPresent(), "/1", TYPE, //
-				installation.id(), installation.version());
-	}
-
-	private Credentials checkInsertOrUpdateInstallation(Optional<String> id) {
-		Credentials credentials = SpaceContext.credentials();
-
-		if (id.isPresent())
-			DataResource.get().checkPutPermissions(TYPE, id.get(), credentials);
-
-		else if (!DataAccessControl.check(credentials, TYPE, DataPermission.create))
-			throw Exceptions.insufficientCredentials(credentials);
-
-		return credentials;
-	}
-
-	private static enum Op {
-		set, add, remove
-	}
-
-	private Payload updateTags(String id, String body, Op op) {
-
-		Installation installation = load(id);
-		String[] tags = Json8.toPojo(body, String[].class);
-
-		switch (op) {
-		case set:
-			installation.tags(tags);
-			break;
-		case add:
-			installation.tags().addAll(Sets.newHashSet(tags));
-			break;
-		case remove:
-			installation.tags().removeAll(Sets.newHashSet(tags));
-			break;
-		}
-
-		update(installation, SpaceContext.credentials());
-		return JsonPayload.saved(false, "/1", TYPE, id);
+		ObjectNode object = Json8.checkObject(Json8.toNode(installation));
+		return id.isPresent() //
+				? DataResource.get().put(TYPE, id.get(), object, context) //
+				: DataResource.get().post(TYPE, id, object);
 	}
 
 	private Installation load(String id) {
@@ -439,22 +422,21 @@ public class PushResource extends Resource {
 	}
 
 	private Installation update(Installation installation, Credentials credentials) {
-		IndexResponse response = DataStore.get().updateObject(//
-				Json8.checkObject(Json8.toNode(installation)), credentials.name());
+		Meta meta = new Meta();
+		meta.createdAt = installation.createdAt();
+		meta.createdBy = installation.createdBy();
+		meta.updatedAt = DateTime.now();
+		meta.updatedBy = credentials.name();
+		meta.version = installation.version();
 
-		installation.updatedBy(credentials.name());
+		IndexResponse response = DataStore.get()//
+				.updateObject(TYPE, installation.id(), //
+						Json8.checkObject(Json8.toNode(installation)), //
+						meta);
+
+		installation.updatedBy(meta.updatedBy);
+		installation.updatedAt(meta.updatedAt);
 		installation.version(response.getVersion());
-		return installation;
-	}
-
-	private Installation create(Installation installation, Credentials credentials) {
-		IndexResponse response = DataStore.get().createObject(TYPE, //
-				Json8.checkObject(Json8.toNode(installation)), credentials.name());
-
-		installation.type(TYPE);
-		installation.updatedBy(credentials.name());
-		installation.version(response.getVersion());
-		installation.id(response.getId());
 		return installation;
 	}
 
