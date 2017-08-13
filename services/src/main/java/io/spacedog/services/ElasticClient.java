@@ -388,7 +388,7 @@ public class ElasticClient implements SpaceParams {
 
 		if (!response.isAcknowledged())
 			throw Exceptions.runtime(//
-					"delete all indices not acknowledged by the cluster");
+					"delete all indices not acknowledged by cluster");
 	}
 
 	public void closeAbsolutelyAllIndices() {
