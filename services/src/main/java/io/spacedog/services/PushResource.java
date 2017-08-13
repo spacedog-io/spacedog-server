@@ -223,8 +223,7 @@ public class PushResource extends Resource {
 		DataStore.get().refreshDataTypes(request.refresh, TYPE);
 
 		// TODO use a scroll to push to all installations found
-		SearchHits hits = Start.get().getElasticClient()//
-				.prepareSearch(DataStore.toDataIndex(TYPE))//
+		SearchHits hits = elastic().prepareSearch(DataStore.toDataIndex(TYPE))//
 				.setQuery(query)//
 				.setFrom(0)//
 				.setSize(1000)//
@@ -387,7 +386,7 @@ public class PushResource extends Resource {
 
 	private void removeEndpointQuietly(String id) {
 		try {
-			Start.get().getElasticClient().delete(DataStore.toDataIndex(TYPE), id, false, true);
+			elastic().delete(DataStore.toDataIndex(TYPE), id, false, true);
 		} catch (Exception e) {
 			System.err.println(String.format(//
 					"[Warning] failed to delete disabled installation [%s]", id));

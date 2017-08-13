@@ -50,12 +50,11 @@ public class LogResource extends Resource {
 	//
 
 	public void initIndex(String backendId) {
-		ElasticClient elastic = Start.get().getElasticClient();
 		String mapping = ClassResources.loadToString(this, "log-mapping.json");
 		Index index = logIndex().backendId(backendId);
 
-		if (!elastic.exists(index))
-			elastic.createIndex(index, mapping, false);
+		if (!elastic().exists(index))
+			elastic().createIndex(index, mapping, false);
 	}
 
 	//
@@ -203,12 +202,11 @@ public class LogResource extends Resource {
 		// or backend without any log index, they should be logged to
 		// default backend
 		Index indexToLogTo = logIndex();
-		ElasticClient elastic = Start.get().getElasticClient();
 
-		if (!elastic.exists(indexToLogTo))
+		if (!elastic().exists(indexToLogTo))
 			indexToLogTo.backendId(SpaceBackend.defaultBackendId());
 
-		return elastic.index(indexToLogTo, log.toString()).getId();
+		return elastic().index(indexToLogTo, log.toString()).getId();
 	}
 
 	private void addResponsePayload(ObjectNode log, Payload payload, Context context) {
