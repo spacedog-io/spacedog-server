@@ -222,7 +222,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		// superadmin fails to update fred's credentials enable after date
 		// since invalid format
 		superadmin.put("/1/credentials/{id}").routeParam("id", fred.id())//
-				.bodyJson(FIELD_ENABLE_AFTER, "XXX").go(400);
+				.bodyJson(ENABLE_AFTER_FIELD, "XXX").go(400);
 	}
 
 	@Test
@@ -395,12 +395,12 @@ public class CredentialsResourceTest extends SpaceTest {
 
 		// if invalid username, you get a 404
 		test.post("/1/credentials/forgotPassword")//
-				.bodyJson(PARAM_USERNAME, "XXX").go(404);
+				.bodyJson(USERNAME_PARAM, "XXX").go(404);
 
 		// fred fails to declare "forgot password" if no
 		// forgotPassword template set in mail settings
 		fred.post("/1/credentials/forgotPassword")//
-				.bodyJson(PARAM_USERNAME, fred.username()).go(400);
+				.bodyJson(USERNAME_PARAM, fred.username()).go(400);
 
 		// set the forgotPassword mail template
 		MailSettings settings = new MailSettings();
@@ -419,7 +419,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		// fred can not pass any parameter unless they
 		// are registered in the template model
 		fred.post("/1/credentials/forgotPassword")//
-				.bodyJson(PARAM_USERNAME, fred.username(), //
+				.bodyJson(USERNAME_PARAM, fred.username(), //
 						"url", "http://localhost:8080")
 				.go(400);
 

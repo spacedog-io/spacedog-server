@@ -310,7 +310,7 @@ public class PushResource extends Resource {
 
 		} catch (Exception e) {
 			log.failures = true;
-			logItem.set(FIELD_ERROR, JsonPayload.toJson(e, SpaceContext.isDebug()));
+			logItem.set(ERROR_FIELD, JsonPayload.toJson(e, SpaceContext.isDebug()));
 
 			if (e instanceof EndpointDisabledException //
 					|| e.getMessage().contains(//

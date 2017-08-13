@@ -90,7 +90,7 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 
 	public void create(String type, String id, Object object) {
 		dog.put("/1/data/{type}/{id}").routeParam("type", type)//
-				.routeParam("id", id).queryParam(PARAM_STRICT, "true")//
+				.routeParam("id", id).queryParam(STRICT_PARAM, "true")//
 				.bodyPojo(object).go(201);
 	}
 
@@ -192,11 +192,11 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 					: dog.get("/1/data/{type}").routeParam("type", type);
 
 			if (refresh != null)
-				request.queryParam(PARAM_REFRESH, Boolean.toString(refresh));
+				request.queryParam(REFRESH_PARAM, Boolean.toString(refresh));
 			if (from != null)
-				request.queryParam(PARAM_FROM, Integer.toString(from));
+				request.queryParam(FROM_PARAM, Integer.toString(from));
 			if (size != null)
-				request.queryParam(PARAM_SIZE, Integer.toString(size));
+				request.queryParam(SIZE_PARAM, Integer.toString(size));
 
 			ObjectNode result = request.go(200).asJsonObject();
 			return toList(result, dataClass);
@@ -233,7 +233,7 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 			path = path + "/" + type;
 
 		ObjectNode results = dog.post(path)//
-				.queryParam(PARAM_REFRESH, Boolean.toString(refresh))//
+				.queryParam(REFRESH_PARAM, Boolean.toString(refresh))//
 				.bodyJson(builder.toString()).go(200).asJsonObject();
 
 		return new SearchResults<>(results, dataClass);
@@ -277,10 +277,10 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 		ObjectNode result = SpaceRequest.get("/1/search/{type}")//
 				.auth(dog)//
 				.routeParam("type", query.type)//
-				.queryParam(PARAM_REFRESH, Boolean.toString(query.refresh))//
-				.queryParam(PARAM_FROM, Integer.toString(query.from))//
-				.queryParam(PARAM_SIZE, Integer.toString(query.size))//
-				.queryParam(PARAM_Q, query.query)//
+				.queryParam(REFRESH_PARAM, Boolean.toString(query.refresh))//
+				.queryParam(FROM_PARAM, Integer.toString(query.from))//
+				.queryParam(SIZE_PARAM, Integer.toString(query.size))//
+				.queryParam(Q_PARAM, query.query)//
 				.go(200).asJsonObject();
 
 		return toList(result, dataClass);
@@ -298,7 +298,7 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 
 		ObjectNode results = dog.post("/1/search/{type}")//
 				.routeParam("type", query.type)//
-				.queryParam(PARAM_REFRESH, Boolean.toString(query.refresh))//
+				.queryParam(REFRESH_PARAM, Boolean.toString(query.refresh))//
 				.bodyJson(query.query).go(200).asJsonObject();
 
 		return new SearchResults<>(results, dataClass);

@@ -534,18 +534,18 @@ public class Credentials {
 
 	public ObjectNode toJson() {
 		return Json7.object(//
-				SpaceFields.FIELD_ID, id(), //
-				SpaceFields.FIELD_USERNAME, name(), //
-				SpaceFields.FIELD_EMAIL, email().orElse(null), //
+				SpaceFields.ID_FIELD, id(), //
+				SpaceFields.USERNAME_FIELD, name(), //
+				SpaceFields.EMAIL_FIELD, email().orElse(null), //
 				"reallyEnabled", isReallyEnabled(), //
-				SpaceFields.FIELD_ENABLED, enabled(), //
-				SpaceFields.FIELD_ENABLE_AFTER, enableAfter(), //
-				SpaceFields.FIELD_DISABLE_AFTER, disableAfter(), //
-				SpaceFields.FIELD_INVALID_CHALLENGES, invalidChallenges, //
-				SpaceFields.FIELD_LAST_INVALID_CHALLENGE_AT, lastInvalidChallengeAt, //
-				SpaceFields.FIELD_ROLES, roles(), //
-				SpaceFields.FIELD_CREATED_AT, createdAt(), //
-				SpaceFields.FIELD_UPDATED_AT, updatedAt());
+				SpaceFields.ENABLED_FIELD, enabled(), //
+				SpaceFields.ENABLE_AFTER_FIELD, enableAfter(), //
+				SpaceFields.DISABLE_AFTER_FIELD, disableAfter(), //
+				SpaceFields.INVALID_CHALLENGES_FIELD, invalidChallenges, //
+				SpaceFields.LAST_INVALID_CHALLENGE_AT_FIELD, lastInvalidChallengeAt, //
+				SpaceFields.ROLES_FIELD, roles(), //
+				SpaceFields.CREATED_AT_FIELD, createdAt(), //
+				SpaceFields.UPDATED_AT_FIELD, updatedAt());
 	}
 
 	@Override

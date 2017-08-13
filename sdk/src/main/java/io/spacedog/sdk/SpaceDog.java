@@ -131,11 +131,11 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 		SpaceRequest request = SpaceRequest.get("/1/login").backend(backendId()).basicAuth(username(), password);
 
 		if (lifetime > 0)
-			request.queryParam(PARAM_LIFETIME, Long.toString(lifetime));
+			request.queryParam(LIFETIME_PARAM, Long.toString(lifetime));
 
 		ObjectNode node = request.go(200).asJsonObject();
 
-		this.accessToken = Json7.checkStringNotNullOrEmpty(node, FIELD_ACCESS_TOKEN);
+		this.accessToken = Json7.checkStringNotNullOrEmpty(node, ACCESS_TOKEN_FIELD);
 		this.credentials.id(Json7.checkStringNotNullOrEmpty(node, "credentials.id"));
 		return this;
 	}

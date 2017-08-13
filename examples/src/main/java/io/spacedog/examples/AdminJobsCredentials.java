@@ -30,12 +30,12 @@ public class AdminJobsCredentials extends SpaceTest {
 		superdogDeletesCredentials("api", username);
 
 		String id = superdog().post("/1/credentials")//
-				.bodyJson(FIELD_USERNAME, username, FIELD_PASSWORD, password, //
-						FIELD_EMAIL, "platform@spacedog.io")
-				.go(201).getString(FIELD_ID);
+				.bodyJson(USERNAME_FIELD, username, PASSWORD_FIELD, password, //
+						EMAIL_FIELD, "platform@spacedog.io")
+				.go(201).getString(ID_FIELD);
 
 		superdog().put("/1/credentials/{id}/roles/{role}")//
-				.routeParam(FIELD_ID, id).routeParam("role", role).go(200);
+				.routeParam(ID_FIELD, id).routeParam("role", role).go(200);
 	}
 
 }

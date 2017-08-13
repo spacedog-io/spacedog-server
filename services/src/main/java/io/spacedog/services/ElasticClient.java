@@ -263,7 +263,7 @@ public class ElasticClient implements SpaceParams {
 	}
 
 	public void createIndex(Index index, String mapping, boolean async) {
-		createIndex(index, mapping, async, PARAM_SHARDS_DEFAULT, PARAM_REPLICAS_DEFAULT);
+		createIndex(index, mapping, async, SHARDS_DEFAULT_PARAM, REPLICAS_DEFAULT_PARAM);
 	}
 
 	public void createIndex(Index index, String mapping, //

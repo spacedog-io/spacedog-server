@@ -50,7 +50,7 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 
 	public Optional7<Credentials> getByUsername(String username) {
 		SpaceResponse response = dog.get("/1/credentials")//
-				.queryParam(PARAM_USERNAME, username)//
+				.queryParam(USERNAME_PARAM, username)//
 				.go(200);
 
 		int total = response.get("total").asInt();
@@ -82,7 +82,7 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 
 	public String create(CreateCredentialsRequest request) {
 		return dog.post("/1/credentials")//
-				.bodyPojo(request).go(201).getString(FIELD_ID);
+				.bodyPojo(request).go(201).getString(ID_FIELD);
 	}
 
 	//
@@ -167,19 +167,19 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 			ObjectNode body = Json7.object();
 
 			if (username != null)
-				body.put(FIELD_USERNAME, username);
+				body.put(USERNAME_FIELD, username);
 			if (newPassword != null)
-				body.put(FIELD_PASSWORD, newPassword);
+				body.put(PASSWORD_FIELD, newPassword);
 			if (email != null)
-				body.put(FIELD_EMAIL, email);
+				body.put(EMAIL_FIELD, email);
 			if (enabled != null)
-				body.put(FIELD_ENABLED, enabled);
+				body.put(ENABLED_FIELD, enabled);
 			if (enableAfter != null)
-				body.put(FIELD_ENABLE_AFTER, enableAfter.isPresent() //
+				body.put(ENABLE_AFTER_FIELD, enableAfter.isPresent() //
 						? enableAfter.get().toString()
 						: null);
 			if (disableAfter != null)
-				body.put(FIELD_DISABLE_AFTER, disableAfter.isPresent() //
+				body.put(DISABLE_AFTER_FIELD, disableAfter.isPresent() //
 						? disableAfter.get().toString()
 						: null);
 
@@ -233,14 +233,14 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 	public String deletePassword(String id) {
 		return dog.delete("/1/credentials/{id}/password")//
 				.routeParam("id", id).go(200)//
-				.getString(FIELD_PASSWORD_RESET_CODE);
+				.getString(PASSWORD_RESET_CODE_FIELD);
 	}
 
 	public void resetPassword(String id, String resetCode, String newPassword) {
 		dog.post("/1/credentials/{id}/password")//
 				.routeParam("id", id)//
-				.formField(FIELD_PASSWORD_RESET_CODE, resetCode)//
-				.formField(FIELD_PASSWORD, newPassword)//
+				.formField(PASSWORD_RESET_CODE_FIELD, resetCode)//
+				.formField(PASSWORD_FIELD, newPassword)//
 				.go(200);
 	}
 
@@ -266,7 +266,7 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 	}
 
 	public void forgotMyPassword(ObjectNode parameters) {
-		parameters.put(PARAM_USERNAME, dog.username());
+		parameters.put(USERNAME_PARAM, dog.username());
 		dog.post("/1/credentials/forgotPassword").bodyJson(parameters).go(200);
 	}
 
@@ -285,7 +285,7 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 
 	private Credentials toCredentials(JsonNode node) {
 		Credentials credentials = Json7.toPojo(node, Credentials.class);
-		credentials.id(node.get(FIELD_ID).asText());
+		credentials.id(node.get(ID_FIELD).asText());
 		return credentials;
 	}
 }

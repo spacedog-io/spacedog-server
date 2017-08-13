@@ -35,7 +35,7 @@ public abstract class Resource implements SpaceFields, SpaceParams {
 	}
 
 	protected static boolean isRefreshRequested(Context context, boolean defaultValue) {
-		return context.query().getBoolean(PARAM_REFRESH, defaultValue);
+		return context.query().getBoolean(REFRESH_PARAM, defaultValue);
 	}
 
 	public static StringBuilder spaceUrl(String uri, String type, String id) {

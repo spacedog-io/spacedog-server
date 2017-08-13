@@ -62,8 +62,8 @@ public class SettingsResource extends Resource {
 
 		elastic().refreshType(settingsIndex(), isRefreshRequested(context));
 
-		int from = context.query().getInteger(PARAM_FROM, 0);
-		int size = context.query().getInteger(PARAM_SIZE, 10);
+		int from = context.query().getInteger(FROM_PARAM, 0);
+		int size = context.query().getInteger(SIZE_PARAM, 10);
 
 		SearchResponse response = elastic().prepareSearch(settingsIndex())//
 				.setTypes(TYPE)//
@@ -329,9 +329,9 @@ public class SettingsResource extends Resource {
 
 		if (!elastic.exists(index)) {
 			Context context = SpaceContext.get().context();
-			int shards = context.query().getInteger(PARAM_SHARDS, PARAM_SHARDS_DEFAULT);
-			int replicas = context.query().getInteger(PARAM_REPLICAS, PARAM_REPLICAS_DEFAULT);
-			boolean async = context.query().getBoolean(PARAM_ASYNC, PARAM_ASYNC_DEFAULT);
+			int shards = context.query().getInteger(SHARDS_PARAM, SHARDS_DEFAULT_PARAM);
+			int replicas = context.query().getInteger(REPLICAS_PARAM, REPLICAS_DEFAULT_PARAM);
+			boolean async = context.query().getBoolean(ASYNC_PARAM, ASYNC_DEFAULT_PARAM);
 
 			ObjectNode mapping = Json8.object(TYPE, Json8.object("enabled", false));
 			elastic.createIndex(index, mapping.toString(), async, shards, replicas);

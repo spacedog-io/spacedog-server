@@ -69,30 +69,30 @@ public class CredentialsResource extends Resource {
 
 	public static Schema schema() {
 		return Schema.builder(TYPE)//
-				.string(FIELD_USERNAME)//
-				.string(FIELD_EMAIL)//
-				.string(FIELD_ROLES).array()//
+				.string(USERNAME_FIELD)//
+				.string(EMAIL_FIELD)//
+				.string(ROLES_FIELD).array()//
 
-				.string(FIELD_HASHED_PASSWORD)//
-				.string(FIELD_PASSWORD_RESET_CODE)//
-				.bool(FIELD_PASSWORD_MUST_CHANGE)//
+				.string(HASHED_PASSWORD_FIELD)//
+				.string(PASSWORD_RESET_CODE_FIELD)//
+				.bool(PASSWORD_MUST_CHANGE_FIELD)//
 
-				.bool(FIELD_ENABLED)//
-				.timestamp(FIELD_ENABLE_AFTER)//
-				.timestamp(FIELD_DISABLE_AFTER)//
-				.integer(FIELD_INVALID_CHALLENGES)//
-				.timestamp(FIELD_LAST_INVALID_CHALLENGE_AT)//
+				.bool(ENABLED_FIELD)//
+				.timestamp(ENABLE_AFTER_FIELD)//
+				.timestamp(DISABLE_AFTER_FIELD)//
+				.integer(INVALID_CHALLENGES_FIELD)//
+				.timestamp(LAST_INVALID_CHALLENGE_AT_FIELD)//
 
-				.string(FIELD_CREATED_AT)//
-				.string(FIELD_UPDATED_AT)//
+				.string(CREATED_AT_FIELD)//
+				.string(UPDATED_AT_FIELD)//
 
-				.object(FIELD_SESSIONS).array()//
-				.string(FIELD_CREATED_AT)//
-				.string(FIELD_ACCESS_TOKEN)//
-				.string(FIELD_ACCESS_TOKEN_EXPIRES_AT)//
+				.object(SESSIONS_FIELD).array()//
+				.string(CREATED_AT_FIELD)//
+				.string(ACCESS_TOKEN_FIELD)//
+				.string(ACCESS_TOKEN_EXPIRES_AT_FIELD)//
 				.close()//
 
-				.stash(FIELD_STASH)//
+				.stash(STASH_FIELD)//
 				.build();
 	}
 
@@ -115,9 +115,9 @@ public class CredentialsResource extends Resource {
 
 		return JsonPayload.json(//
 				JsonPayload.builder()//
-						.put(FIELD_ACCESS_TOKEN, credentials.accessToken()) //
-						.put(FIELD_EXPIRES_IN, credentials.accessTokenExpiresIn()) //
-						.node(FIELD_CREDENTIALS, credentials.toJson()));
+						.put(ACCESS_TOKEN_FIELD, credentials.accessToken()) //
+						.put(EXPIRES_IN_FIELD, credentials.accessTokenExpiresIn()) //
+						.node(CREDENTIALS_FIELD, credentials.toJson()));
 	}
 
 	@Get("/1/logout")
@@ -150,7 +150,7 @@ public class CredentialsResource extends Resource {
 
 		BoolQueryBuilder query = toQuery(context).query;
 		// superadmins can only be deleted when backend is deleted
-		query.mustNot(QueryBuilders.termQuery(FIELD_ROLES, Type.superadmin));
+		query.mustNot(QueryBuilders.termQuery(ROLES_FIELD, Type.superadmin));
 
 		// always refresh before and after credentials index updates
 		elastic.refreshType(credentialsIndex());
@@ -178,7 +178,7 @@ public class CredentialsResource extends Resource {
 				.builder(true, "/1", TYPE, credentials.id());
 
 		if (credentials.passwordResetCode() != null)
-			builder.put(FIELD_PASSWORD_RESET_CODE, credentials.passwordResetCode());
+			builder.put(PASSWORD_RESET_CODE_FIELD, credentials.passwordResetCode());
 
 		return JsonPayload.json(builder, HttpStatus.CREATED)//
 				.withHeader(SpaceHeaders.SPACEDOG_OBJECT_ID, credentials.id());
@@ -238,18 +238,18 @@ public class CredentialsResource extends Resource {
 		ObjectNode data = Json8.readObject(body);
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
 
-		String username = data.path(FIELD_USERNAME).asText();
+		String username = data.path(USERNAME_FIELD).asText();
 		if (!Strings.isNullOrEmpty(username)) {
 			Usernames.checkValid(username, settings.usernameRegex());
 			credentials.name(username);
 		}
 
 		// TODO check email with minimal regex
-		String email = data.path(FIELD_EMAIL).asText();
+		String email = data.path(EMAIL_FIELD).asText();
 		if (!Strings.isNullOrEmpty(email))
 			credentials.email(email);
 
-		String password = data.path(FIELD_PASSWORD).asText();
+		String password = data.path(PASSWORD_FIELD).asText();
 		if (!Strings.isNullOrEmpty(password)) {
 			// check for all not just users
 			requester.checkPasswordHasBeenChallenged();
@@ -257,20 +257,20 @@ public class CredentialsResource extends Resource {
 					Optional7.of(settings.passwordRegex()));
 		}
 
-		JsonNode enabled = data.get(FIELD_ENABLED);
+		JsonNode enabled = data.get(ENABLED_FIELD);
 		if (!Json8.isNull(enabled)) {
 			requester.checkAtLeastAdmin();
 			credentials.doEnableOrDisable(enabled.asBoolean());
 		}
 
-		JsonNode enableAfter = data.get(FIELD_ENABLE_AFTER);
+		JsonNode enableAfter = data.get(ENABLE_AFTER_FIELD);
 		if (enableAfter != null) {
 			requester.checkAtLeastAdmin();
 			credentials.enableAfter(enableAfter.isNull() ? null //
 					: DateTime.parse(enableAfter.asText()));
 		}
 
-		JsonNode disableAfter = data.get(FIELD_DISABLE_AFTER);
+		JsonNode disableAfter = data.get(DISABLE_AFTER_FIELD);
 		if (disableAfter != null) {
 			requester.checkAtLeastAdmin();
 			credentials.disableAfter(disableAfter.isNull() ? null //
@@ -287,7 +287,7 @@ public class CredentialsResource extends Resource {
 	@Post("/1/credentials/forgotPassword/")
 	public Payload postForgotPassword(String body, Context context) {
 		Map<String, Object> parameters = Json8.readMap(body);
-		String username = Check.notNull(parameters.get(PARAM_USERNAME), "username").toString();
+		String username = Check.notNull(parameters.get(USERNAME_PARAM), "username").toString();
 
 		Credentials credentials = getByName(username, true).get();
 
@@ -303,7 +303,7 @@ public class CredentialsResource extends Resource {
 		// make sure the model has at least the username parameter
 		if (template.model == null)
 			template.model = Maps.newHashMap();
-		template.model.put(PARAM_USERNAME, "string");
+		template.model.put(USERNAME_PARAM, "string");
 
 		Map<String, Object> mailContext = PebbleTemplating.get()//
 				.createContext(template.model, parameters);
@@ -331,7 +331,7 @@ public class CredentialsResource extends Resource {
 
 		return JsonPayload.json(JsonPayload.builder(false, "/1", TYPE, credentials.id(), //
 				credentials.version())//
-				.put(FIELD_PASSWORD_RESET_CODE, credentials.passwordResetCode()));
+				.put(PASSWORD_RESET_CODE_FIELD, credentials.passwordResetCode()));
 	}
 
 	@Post("/1/credentials/:id/password")
@@ -339,8 +339,8 @@ public class CredentialsResource extends Resource {
 	public Payload postPassword(String id, Context context) {
 		// TODO do we need a password reset expire date to limit the reset
 		// time scope
-		String passwordResetCode = context.get(FIELD_PASSWORD_RESET_CODE);
-		String password = context.get(FIELD_PASSWORD);
+		String passwordResetCode = context.get(PASSWORD_RESET_CODE_FIELD);
+		String password = context.get(PASSWORD_FIELD);
 
 		Credentials credentials = getById(id, true).get();
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
@@ -365,7 +365,7 @@ public class CredentialsResource extends Resource {
 
 		String password = SpaceContext.get().isJsonContent() && !Strings.isNullOrEmpty(body)//
 				? Json8.checkString(Json8.checkNotNull(Json8.readNode(body)))//
-				: context.get(FIELD_PASSWORD);
+				: context.get(PASSWORD_FIELD);
 
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
 		credentials.changePassword(password, Optional7.of(settings.passwordRegex()));
@@ -452,7 +452,7 @@ public class CredentialsResource extends Resource {
 
 	long getCheckSessionLifetime(Context context) {
 		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
-		long lifetime = context.query().getLong(PARAM_LIFETIME, settings.sessionMaximumLifetime);
+		long lifetime = context.query().getLong(LIFETIME_PARAM, settings.sessionMaximumLifetime);
 		if (lifetime > settings.sessionMaximumLifetime)
 			throw Exceptions.forbidden("maximum access token lifetime is [%s] seconds", //
 					settings.sessionMaximumLifetime);
@@ -523,7 +523,7 @@ public class CredentialsResource extends Resource {
 		try {
 			SearchHits hits = elastic().prepareSearch(credentialsIndex())//
 					.setQuery(QueryBuilders.termQuery(//
-							FIELD_SESSIONS_ACCESS_TOKEN, accessToken))//
+							SESSIONS_ACCESS_TOKEN_FIELD, accessToken))//
 					.get()//
 					.getHits();
 
@@ -638,14 +638,14 @@ public class CredentialsResource extends Resource {
 
 	SearchResults<Credentials> getAllSuperAdmins(int from, int size) {
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
-				.filter(QueryBuilders.termQuery(FIELD_ROLES, Type.superadmin));
+				.filter(QueryBuilders.termQuery(ROLES_FIELD, Type.superadmin));
 
 		return getCredentials(new BoolSearch(credentialsIndex(), query, from, size));
 	}
 
 	SearchResults<Credentials> getBackendSuperAdmins(int from, int size) {
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
-				.filter(QueryBuilders.termQuery(FIELD_ROLES, Type.superadmin));
+				.filter(QueryBuilders.termQuery(ROLES_FIELD, Type.superadmin));
 
 		return getCredentials(new BoolSearch(credentialsIndex(), query, from, size));
 	}
@@ -714,10 +714,10 @@ public class CredentialsResource extends Resource {
 		CredentialsSettings settings = SettingsResource.get()//
 				.load(CredentialsSettings.class);
 
-		credentials.name(Check.notNullOrEmpty(request.username(), FIELD_USERNAME));
+		credentials.name(Check.notNullOrEmpty(request.username(), USERNAME_FIELD));
 		Usernames.checkValid(credentials.name(), settings.usernameRegex());
 
-		credentials.email(Check.notNullOrEmpty(request.email(), FIELD_EMAIL));
+		credentials.email(Check.notNullOrEmpty(request.email(), EMAIL_FIELD));
 
 		if (Strings.isNullOrEmpty(request.password()))
 			credentials.newPasswordResetCode();
@@ -731,28 +731,28 @@ public class CredentialsResource extends Resource {
 	private BoolSearch toQuery(Context context) {
 		BoolQueryBuilder query = QueryBuilders.boolQuery();
 
-		String username = context.get(FIELD_USERNAME);
+		String username = context.get(USERNAME_FIELD);
 		if (!Strings.isNullOrEmpty(username))
-			query.filter(QueryBuilders.termQuery(FIELD_USERNAME, username));
+			query.filter(QueryBuilders.termQuery(USERNAME_FIELD, username));
 
-		String email = context.get(FIELD_EMAIL);
+		String email = context.get(EMAIL_FIELD);
 		if (!Strings.isNullOrEmpty(email))
-			query.filter(QueryBuilders.termQuery(FIELD_EMAIL, email));
+			query.filter(QueryBuilders.termQuery(EMAIL_FIELD, email));
 
 		String role = context.get("role");
 		if (!Strings.isNullOrEmpty(role))
-			query.filter(QueryBuilders.termQuery(FIELD_ROLES, role));
+			query.filter(QueryBuilders.termQuery(ROLES_FIELD, role));
 
 		BoolSearch search = new BoolSearch(credentialsIndex(), query, //
-				context.query().getInteger(PARAM_FROM, 0), //
-				context.query().getInteger(PARAM_SIZE, 10));
+				context.query().getInteger(FROM_PARAM, 0), //
+				context.query().getInteger(SIZE_PARAM, 10));
 
 		return search;
 	}
 
 	private BoolQueryBuilder toQuery(String username) {
 		return QueryBuilders.boolQuery()//
-				.must(QueryBuilders.termQuery(FIELD_USERNAME, username));
+				.must(QueryBuilders.termQuery(USERNAME_FIELD, username));
 	}
 
 	private Credentials toCredentials(SearchHit hit) {

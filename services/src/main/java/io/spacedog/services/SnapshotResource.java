@@ -86,7 +86,7 @@ public class SnapshotResource extends Resource {
 		CreateSnapshotResponse response = elastic().cluster()//
 				.prepareCreateSnapshot(snapshot.repositoryId(), snapshot.id())//
 				.setIndicesOptions(IndicesOptions.fromOptions(true, true, true, true))//
-				.setWaitForCompletion(context.query().getBoolean(PARAM_WAIT_FOR_COMPLETION, false))//
+				.setWaitForCompletion(context.query().getBoolean(WAIT_FOR_COMPLETION_PARAM, false))//
 				.setIncludeGlobalState(true)//
 				.setPartial(false)//
 				.get();
@@ -121,7 +121,7 @@ public class SnapshotResource extends Resource {
 					"snapshot repository doesn't contain any snapshot");
 
 		return doRestore(snapshots.get(0), //
-				context.query().getBoolean(PARAM_WAIT_FOR_COMPLETION, false));
+				context.query().getBoolean(WAIT_FOR_COMPLETION_PARAM, false));
 	}
 
 	@Post("/:id/restore")
@@ -132,7 +132,7 @@ public class SnapshotResource extends Resource {
 		ElasticSnapshot snapshot = ElasticSnapshot.find(snapshotId)//
 				.orElseThrow(() -> NotFoundException.snapshot(snapshotId));
 		return doRestore(snapshot, //
-				context.query().getBoolean(PARAM_WAIT_FOR_COMPLETION, false));
+				context.query().getBoolean(WAIT_FOR_COMPLETION_PARAM, false));
 	}
 
 	//

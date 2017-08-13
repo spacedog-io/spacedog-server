@@ -69,9 +69,9 @@ public class SchemaResource extends Resource {
 		if (indexExists)
 			elastic().putMapping(index, mapping);
 		else {
-			int shards = context.query().getInteger(PARAM_SHARDS, PARAM_SHARDS_DEFAULT);
-			int replicas = context.query().getInteger(PARAM_REPLICAS, PARAM_REPLICAS_DEFAULT);
-			boolean async = context.query().getBoolean(PARAM_ASYNC, PARAM_ASYNC_DEFAULT);
+			int shards = context.query().getInteger(SHARDS_PARAM, SHARDS_DEFAULT_PARAM);
+			int replicas = context.query().getInteger(REPLICAS_PARAM, REPLICAS_DEFAULT_PARAM);
+			boolean async = context.query().getBoolean(ASYNC_PARAM, ASYNC_DEFAULT_PARAM);
 			elastic().createIndex(index, mapping, async, shards, replicas);
 		}
 

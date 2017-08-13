@@ -67,14 +67,14 @@ public class LogResource extends Resource {
 	public Payload getAll(Context context) {
 		SpaceContext.credentials().checkAtLeastSuperAdmin();
 
-		int from = context.query().getInteger(PARAM_FROM, 0);
-		int size = context.query().getInteger(PARAM_SIZE, 10);
+		int from = context.query().getInteger(FROM_PARAM, 0);
+		int size = context.query().getInteger(SIZE_PARAM, 10);
 		elastic().refreshType(logIndex(), isRefreshRequested(context));
 
 		SearchResponse response = elastic().prepareSearch(logIndex())//
 				.setTypes(TYPE)//
 				.setQuery(QueryBuilders.matchAllQuery())//
-				.addSort(FIELD_RECEIVED_AT, SortOrder.DESC)//
+				.addSort(RECEIVED_AT_FIELD, SortOrder.DESC)//
 				.setFrom(from)//
 				.setSize(size)//
 				.get();
@@ -99,7 +99,7 @@ public class LogResource extends Resource {
 
 		SpaceContext.credentials().checkAtLeastSuperAdmin();
 
-		String param = context.request().query().get(PARAM_BEFORE);
+		String param = context.request().query().get(BEFORE_PARAM);
 		DateTime before = param == null ? DateTime.now().minusDays(7) //
 				: DateTime.parse(param);
 
@@ -164,7 +164,7 @@ public class LogResource extends Resource {
 
 	private DeleteByQueryResponse doPurge(DateTime before) {
 
-		RangeQueryBuilder builder = QueryBuilders.rangeQuery(FIELD_RECEIVED_AT)//
+		RangeQueryBuilder builder = QueryBuilders.rangeQuery(RECEIVED_AT_FIELD)//
 				.lt(before.toString());
 
 		String query = new QuerySourceBuilder().setQuery(builder).toString();
@@ -189,7 +189,7 @@ public class LogResource extends Resource {
 		ObjectNode log = Json8.object(//
 				"method", context.method(), //
 				"path", uri, //
-				FIELD_RECEIVED_AT, receivedAt.toString(), //
+				RECEIVED_AT_FIELD, receivedAt.toString(), //
 				"processedIn", DateTime.now().getMillis() - receivedAt.getMillis(), //
 				"status", payload == null ? 500 : payload.code());
 
@@ -244,13 +244,13 @@ public class LogResource extends Resource {
 
 				if (Json8.isObject(content)) {
 					JsonNode securedContent = Json8.fullReplaceTextualFields(//
-							Json8.readNode(content), FIELD_PASSWORD, "********");
+							Json8.readNode(content), PASSWORD_FIELD, "********");
 
 					log.set(PAYLOAD_FIELD, securedContent);
 				}
 			}
 		} catch (Exception e) {
-			log.set(PAYLOAD_FIELD, Json8.object(FIELD_ERROR, JsonPayload.toJson(e, true)));
+			log.set(PAYLOAD_FIELD, Json8.object(ERROR_FIELD, JsonPayload.toJson(e, true)));
 		}
 	}
 
@@ -258,7 +258,7 @@ public class LogResource extends Resource {
 		ArrayNode parametersNode = Json7.array();
 
 		for (String key : context.query().keys()) {
-			String value = key.equals(FIELD_PASSWORD) //
+			String value = key.equals(PASSWORD_FIELD) //
 					? "********"
 					: context.get(key);
 			parametersNode.add(key + ": " + value);
@@ -271,9 +271,9 @@ public class LogResource extends Resource {
 	private void addCredentials(ObjectNode log) {
 		Credentials credentials = SpaceContext.credentials();
 		ObjectNode logCredentials = log.putObject(CREDENTIALS_FIELD);
-		logCredentials.put(FIELD_ID, credentials.id());
-		logCredentials.put(FIELD_USERNAME, credentials.name());
-		logCredentials.put(FIELD_TYPE, credentials.type().name());
+		logCredentials.put(ID_FIELD, credentials.id());
+		logCredentials.put(USERNAME_FIELD, credentials.name());
+		logCredentials.put(TYPE_FIELD, credentials.type().name());
 	}
 
 	private void addHeaders(ObjectNode log, Set<Entry<String, List<String>>> headers) {

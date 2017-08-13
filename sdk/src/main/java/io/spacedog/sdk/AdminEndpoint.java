@@ -30,8 +30,8 @@ public class AdminEndpoint implements SpaceParams, SpaceFields {
 			boolean notification) {
 
 		dog.post("/1/backend")//
-				.queryParam(PARAM_NOTIF, Boolean.toString(notification))//
-				.bodyJson(FIELD_USERNAME, username, FIELD_PASSWORD, password, FIELD_EMAIL, email)//
+				.queryParam(NOTIF_PARAM, Boolean.toString(notification))//
+				.bodyJson(USERNAME_FIELD, username, PASSWORD_FIELD, password, EMAIL_FIELD, email)//
 				.go(201);
 
 		return this;

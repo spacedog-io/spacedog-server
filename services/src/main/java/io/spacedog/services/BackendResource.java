@@ -39,8 +39,8 @@ public class BackendResource extends Resource {
 	@Get("/1/backend/")
 	public Payload getAll(Context context) {
 		SpaceContext.credentials().checkAtLeastSuperAdmin();
-		int from = context.query().getInteger(PARAM_FROM, 0);
-		int size = context.query().getInteger(PARAM_SIZE, 10);
+		int from = context.query().getInteger(FROM_PARAM, 0);
+		int size = context.query().getInteger(SIZE_PARAM, 10);
 
 		SearchResults<Credentials> superAdmins = CredentialsResource.get()//
 				.getAllSuperAdmins(from, size);
@@ -94,7 +94,7 @@ public class BackendResource extends Resource {
 				.createCredentialsRequestToCredentials(body, Credentials.Type.superadmin);
 		credentialsResource.create(credentials);
 
-		if (context.query().getBoolean(PARAM_NOTIF, true)) {
+		if (context.query().getBoolean(NOTIF_PARAM, true)) {
 			Optional7<String> topic = configuration.awsSuperdogNotificationTopic();
 			if (topic.isPresent())
 				Internals.get().notify(topic.get(), //
@@ -134,8 +134,8 @@ public class BackendResource extends Resource {
 		ArrayNode results = Json8.array();
 
 		for (Credentials superAdmin : superAdmins.results)
-			results.add(Json8.object(FIELD_USERNAME, superAdmin.name(), //
-					FIELD_EMAIL, superAdmin.email().get()));
+			results.add(Json8.object(USERNAME_FIELD, superAdmin.name(), //
+					EMAIL_FIELD, superAdmin.email().get()));
 
 		return JsonPayload.json(Json8.object("total", superAdmins.total, //
 				"results", results));

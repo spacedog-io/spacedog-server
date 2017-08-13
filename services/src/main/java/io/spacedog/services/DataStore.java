@@ -150,10 +150,10 @@ public class DataStore implements SpaceParams, SpaceFields {
 		// replace meta to avoid developers to
 		// set any meta fields directly
 		object.set("meta", Json8.objectBuilder()//
-				.put(FIELD_CREATED_BY, createdBy)//
-				.put(FIELD_UPDATED_BY, createdBy)//
-				.put(FIELD_CREATED_AT, now)//
-				.put(FIELD_UPDATED_AT, now)//
+				.put(CREATED_BY_FIELD, createdBy)//
+				.put(UPDATED_BY_FIELD, createdBy)//
+				.put(CREATED_AT_FIELD, now)//
+				.put(UPDATED_AT_FIELD, now)//
 				.build());
 
 		return id.isPresent() //
@@ -164,7 +164,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 	public Optional<Meta> getMeta(String type, String id) {
 
 		GetResponse response = elastic().prepareGet(toDataIndex(type), id)//
-				.setFetchSource(new String[] { FIELD_META }, null)//
+				.setFetchSource(new String[] { META_FIELD }, null)//
 				.get();
 
 		if (response.isExists()) {
@@ -182,12 +182,12 @@ public class DataStore implements SpaceParams, SpaceFields {
 	public IndexResponse updateObject(String type, String id, //
 			ObjectNode object, Meta meta) {
 
-		object.remove(FIELD_META);
-		object.with(FIELD_META)//
-				.put(FIELD_UPDATED_BY, meta.updatedBy)//
-				.put(FIELD_UPDATED_AT, meta.updatedAt.toString())//
-				.put(FIELD_CREATED_BY, meta.createdBy)//
-				.put(FIELD_CREATED_AT, meta.createdAt.toString());
+		object.remove(META_FIELD);
+		object.with(META_FIELD)//
+				.put(UPDATED_BY_FIELD, meta.updatedBy)//
+				.put(UPDATED_AT_FIELD, meta.updatedAt.toString())//
+				.put(CREATED_BY_FIELD, meta.createdBy)//
+				.put(CREATED_AT_FIELD, meta.createdAt.toString());
 
 		return elastic().prepareIndex(toDataIndex(type), id)//
 				.setSource(object.toString())//
@@ -201,9 +201,9 @@ public class DataStore implements SpaceParams, SpaceFields {
 
 	public UpdateResponse patchObject(String type, String id, long version, ObjectNode object, String updatedBy) {
 
-		object.with(FIELD_META).removeAll()//
-				.put(FIELD_UPDATED_BY, updatedBy)//
-				.put(FIELD_UPDATED_AT, DateTime.now().toString());
+		object.with(META_FIELD).removeAll()//
+				.put(UPDATED_BY_FIELD, updatedBy)//
+				.put(UPDATED_AT_FIELD, DateTime.now().toString());
 
 		return elastic().prepareUpdate(toDataIndex(type), id)//
 				.setVersion(version).setDoc(object.toString()).get();
@@ -263,8 +263,8 @@ public class DataStore implements SpaceParams, SpaceFields {
 		}
 
 		public FilteredSearchBuilder applyContext(Context context) {
-			search.setFrom(context.request().query().getInteger(PARAM_FROM, 0))
-					.setSize(context.request().query().getInteger(PARAM_SIZE, 10))
+			search.setFrom(context.request().query().getInteger(FROM_PARAM, 0))
+					.setSize(context.request().query().getInteger(SIZE_PARAM, 10))
 					.setFetchSource(context.request().query().getBoolean("fetch-contents", true));
 
 			String queryText = context.get("q");

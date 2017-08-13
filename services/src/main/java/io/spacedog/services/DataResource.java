@@ -97,11 +97,11 @@ public class DataResource extends Resource {
 
 			// TODO return better exception-message in case of invalid version
 			// format
-			meta.version = context.query().getLong(PARAM_VERSION, Versions.MATCH_ANY);
+			meta.version = context.query().getLong(VERSION_PARAM, Versions.MATCH_ANY);
 			meta.updatedBy = credentials.name();
 			meta.updatedAt = DateTime.now();
 
-			if (context.query().getBoolean(PARAM_STRICT, false)) {
+			if (context.query().getBoolean(STRICT_PARAM, false)) {
 
 				IndexResponse response = DataStore.get()//
 						.updateObject(type, id, object, meta);

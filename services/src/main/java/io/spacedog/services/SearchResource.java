@@ -125,8 +125,8 @@ public class SearchResource extends Resource {
 
 		if (Strings.isNullOrEmpty(jsonQuery)) {
 
-			int from = context.query().getInteger(PARAM_FROM, 0);
-			int size = context.query().getInteger(PARAM_SIZE, 10);
+			int from = context.query().getInteger(FROM_PARAM, 0);
+			int size = context.query().getInteger(SIZE_PARAM, 10);
 
 			search.setFrom(from)//
 					.setSize(size)//

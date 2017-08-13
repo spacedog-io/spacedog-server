@@ -68,10 +68,10 @@ public class LogResourceTestOften extends SpaceTest {
 		assertEquals("/1/login", results.get(0).path);
 		assertEquals("POST", results.get(1).method);
 		assertEquals("/1/credentials", results.get(1).path);
-		assertEquals("********", results.get(1).payload.get(FIELD_PASSWORD).asText());
+		assertEquals("********", results.get(1).payload.get(PASSWORD_FIELD).asText());
 		assertEquals("POST", results.get(2).method);
 		assertEquals("/1/backend", results.get(2).path);
-		assertEquals("********", results.get(2).payload.get(FIELD_PASSWORD).asText());
+		assertEquals("********", results.get(2).payload.get(PASSWORD_FIELD).asText());
 
 		// after backend deletion, logs are not accessible to backend
 		superadmin.admin().deleteBackend(superadmin.backendId());
@@ -105,26 +105,26 @@ public class LogResourceTestOften extends SpaceTest {
 		assertEquals(6, results.size());
 		assertEquals("PUT", results.get(0).method);
 		assertEquals("/1/credentials/" + fred.id() + "/password", results.get(0).path);
-		assertEquals("********", results.get(0).getParameter(FIELD_PASSWORD));
+		assertEquals("********", results.get(0).getParameter(PASSWORD_FIELD));
 		assertEquals("POST", results.get(1).method);
 		assertEquals("/1/credentials/" + fred.id() + "/password", results.get(1).path);
-		assertEquals("********", results.get(1).getParameter(FIELD_PASSWORD));
+		assertEquals("********", results.get(1).getParameter(PASSWORD_FIELD));
 		assertEquals(passwordResetCode, //
-				results.get(1).getParameter(FIELD_PASSWORD_RESET_CODE));
+				results.get(1).getParameter(PASSWORD_RESET_CODE_FIELD));
 		assertEquals("DELETE", results.get(2).method);
 		assertEquals("/1/credentials/" + fred.id() + "/password", results.get(2).path);
 		assertEquals(passwordResetCode, //
-				results.get(2).response.get(FIELD_PASSWORD_RESET_CODE).asText());
+				results.get(2).response.get(PASSWORD_RESET_CODE_FIELD).asText());
 		assertEquals("GET", results.get(3).method);
 		assertEquals("/1/login", results.get(3).path);
 		assertEquals("POST", results.get(4).method);
 		assertEquals("/1/credentials", results.get(4).path);
-		assertEquals("fred", results.get(4).payload.get(FIELD_USERNAME).asText());
-		assertEquals("********", results.get(4).payload.get(FIELD_PASSWORD).asText());
+		assertEquals("fred", results.get(4).payload.get(USERNAME_FIELD).asText());
+		assertEquals("********", results.get(4).payload.get(PASSWORD_FIELD).asText());
 		assertEquals("POST", results.get(5).method);
 		assertEquals("/1/backend", results.get(5).path);
-		assertEquals("test", results.get(5).payload.get(FIELD_USERNAME).asText());
-		assertEquals("********", results.get(5).payload.get(FIELD_PASSWORD).asText());
+		assertEquals("test", results.get(5).payload.get(USERNAME_FIELD).asText());
+		assertEquals("********", results.get(5).payload.get(PASSWORD_FIELD).asText());
 	}
 
 	@Test

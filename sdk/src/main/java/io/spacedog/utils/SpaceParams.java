@@ -2,25 +2,22 @@ package io.spacedog.utils;
 
 public interface SpaceParams {
 
-	String PARAM_FROM = "from";
-	String PARAM_SIZE = "size";
-	String PARAM_Q = "q";
-	String PARAM_SHARDS = "shards";
-	String PARAM_REPLICAS = "replicas";
-	String PARAM_LOG_TYPE = "logType";
-	String PARAM_REFRESH = "refresh";
-	String PARAM_STRICT = "strict";
-	String PARAM_VERSION = "version";
-	String PARAM_MIN_STATUS = "minStatus";
-	String PARAM_ASYNC = "async";
-	String PARAM_LIFETIME = "lifetime";
-	String PARAM_USERNAME = "username";
-	String PARAM_EMAIL = "email";
-	String PARAM_BEFORE = "before";
-	String PARAM_NOTIF = "notif";
-	boolean PARAM_ASYNC_DEFAULT = false;
-	int PARAM_SHARDS_DEFAULT = 1;
-	int PARAM_REPLICAS_DEFAULT = 0;
-	String PARAM_WAIT_FOR_COMPLETION = "waitForCompletion";
-
+	String FROM_PARAM = "from";
+	String SIZE_PARAM = "size";
+	String Q_PARAM = "q";
+	String SHARDS_PARAM = "shards";
+	String REPLICAS_PARAM = "replicas";
+	String REFRESH_PARAM = "refresh";
+	String STRICT_PARAM = "strict";
+	String VERSION_PARAM = "version";
+	String ASYNC_PARAM = "async";
+	String LIFETIME_PARAM = "lifetime";
+	String USERNAME_PARAM = "username";
+	String EMAIL_PARAM = "email";
+	String BEFORE_PARAM = "before";
+	String NOTIF_PARAM = "notif";
+	boolean ASYNC_DEFAULT_PARAM = false;
+	int SHARDS_DEFAULT_PARAM = 1;
+	int REPLICAS_DEFAULT_PARAM = 0;
+	String WAIT_FOR_COMPLETION_PARAM = "waitForCompletion";
 }
