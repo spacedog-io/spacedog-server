@@ -3,16 +3,14 @@ package io.spacedog.services;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.Set;
 
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.support.QuerySourceBuilder;
-import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.joda.time.DateTime;
 
@@ -25,7 +23,7 @@ import io.spacedog.core.Json8;
 import io.spacedog.rest.SpaceBackend;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Credentials;
-import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json7;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Utils;
@@ -40,6 +38,10 @@ import net.codestory.http.payload.Payload;
 @Prefix("/1/log")
 public class LogResource extends Resource {
 
+	private static final String PAYLOAD_FIELD = "payload";
+	private static final String CREDENTIALS_FIELD = "credentials";
+	private static final String PARAMETERS_FIELD = "parameters";
+	private static final String HEADERS_FIELD = "headers";
 	public static final String TYPE = "log";
 	public static final String PURGE_ALL = "purgeall";
 
@@ -67,9 +69,16 @@ public class LogResource extends Resource {
 
 		int from = context.query().getInteger(PARAM_FROM, 0);
 		int size = context.query().getInteger(PARAM_SIZE, 10);
+		elastic().refreshType(logIndex(), isRefreshRequested(context));
 
-		DataStore.get().refreshDataTypes(isRefreshRequested(context), TYPE);
-		SearchResponse response = doGetLogs(from, size);
+		SearchResponse response = elastic().prepareSearch(logIndex())//
+				.setTypes(TYPE)//
+				.setQuery(QueryBuilders.matchAllQuery())//
+				.addSort(FIELD_RECEIVED_AT, SortOrder.DESC)//
+				.setFrom(from)//
+				.setSize(size)//
+				.get();
+
 		return extractLogs(response);
 	}
 
@@ -78,15 +87,9 @@ public class LogResource extends Resource {
 	public Payload search(String body, Context context) {
 
 		SpaceContext.credentials().checkAtLeastAdmin();
-		SearchSourceBuilder.searchSource().query(body);
-
-		DataStore.get().refreshDataTypes(isRefreshRequested(context), TYPE);
-
-		SearchResponse response = Start.get().getElasticClient()//
-				.prepareSearch(logIndex())//
-				.setTypes(TYPE)//
-				.setSource(body).get();
-
+		elastic().refreshType(logIndex(), isRefreshRequested(context));
+		SearchResponse response = elastic().prepareSearch(logIndex())//
+				.setTypes(TYPE).setSource(body).get();
 		return extractLogs(response);
 	}
 
@@ -94,30 +97,14 @@ public class LogResource extends Resource {
 	@Delete("/")
 	public Payload purge(Context context) {
 
-		Credentials credentials = SpaceContext.credentials();
-		Optional<String> optBackendId = null;
-
-		if (hasPurgeAllRole(credentials))
-			optBackendId = Optional.empty();
-
-		else if (credentials.isAtLeastSuperAdmin())
-			optBackendId = Optional.of(SpaceContext.backendId());
-
-		else
-			throw Exceptions.insufficientCredentials(credentials);
+		SpaceContext.credentials().checkAtLeastSuperAdmin();
 
 		String param = context.request().query().get(PARAM_BEFORE);
 		DateTime before = param == null ? DateTime.now().minusDays(7) //
 				: DateTime.parse(param);
 
-		Optional<DeleteByQueryResponse> response = doPurgeBackend(//
-				before, optBackendId);
-
-		// no delete response means no logs to delete means success
-
-		return response.isPresent()//
-				? JsonPayload.json(response.get())
-				: JsonPayload.success();
+		DeleteByQueryResponse response = doPurge(before);
+		return JsonPayload.json(response);
 	}
 
 	//
@@ -175,36 +162,14 @@ public class LogResource extends Resource {
 		return credentials.isSuperDog() || credentials.roles().contains(PURGE_ALL);
 	}
 
-	private Optional<DeleteByQueryResponse> doPurgeBackend(DateTime before, //
-			Optional<String> optBackendId) {
+	private DeleteByQueryResponse doPurge(DateTime before) {
 
-		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery()//
-				.filter(QueryBuilders.rangeQuery(FIELD_RECEIVED_AT).lt(before.toString()));
+		RangeQueryBuilder builder = QueryBuilders.rangeQuery(FIELD_RECEIVED_AT)//
+				.lt(before.toString());
 
-		if (optBackendId.isPresent())
-			boolQueryBuilder.filter(//
-					QueryBuilders.termQuery("credentials.backendId", optBackendId.get()));
-
-		String query = new QuerySourceBuilder().setQuery(boolQueryBuilder).toString();
-
-		ElasticClient elastic = Start.get().getElasticClient();
-		DeleteByQueryResponse delete = elastic.deleteByQuery(query, logIndex());
-
-		// TODO why return an optional?
-		// return directly the response
-		return Optional.of(delete);
-	}
-
-	private SearchResponse doGetLogs(int from, int size) {
-
-		return Start.get().getElasticClient()//
-				.prepareSearch(logIndex())//
-				.setTypes(TYPE)//
-				.setQuery(QueryBuilders.matchAllQuery())//
-				.addSort(FIELD_RECEIVED_AT, SortOrder.DESC)//
-				.setFrom(from)//
-				.setSize(size)//
-				.get();
+		String query = new QuerySourceBuilder().setQuery(builder).toString();
+		DeleteByQueryResponse response = elastic().deleteByQuery(query, logIndex());
+		return response;
 	}
 
 	private Payload extractLogs(SearchResponse response) {
@@ -279,38 +244,41 @@ public class LogResource extends Resource {
 
 				if (Json8.isObject(content)) {
 					JsonNode securedContent = Json8.fullReplaceTextualFields(//
-							Json8.readNode(content), "password", "******");
+							Json8.readNode(content), FIELD_PASSWORD, "********");
 
-					log.set("jsonContent", securedContent);
+					log.set(PAYLOAD_FIELD, securedContent);
 				}
 			}
 		} catch (Exception e) {
-			log.set("jsonContent", Json8.object("error", JsonPayload.toJson(e, true)));
+			log.set(PAYLOAD_FIELD, Json8.object(FIELD_ERROR, JsonPayload.toJson(e, true)));
 		}
 	}
 
 	private void addQuery(ObjectNode log, Context context) {
-		if (context.query().keys().isEmpty())
-			return;
+		ArrayNode parametersNode = Json7.array();
 
-		ObjectNode logQuery = log.putObject("query");
 		for (String key : context.query().keys()) {
 			String value = key.equals(FIELD_PASSWORD) //
-					? "******"
+					? "********"
 					: context.get(key);
-			logQuery.put(key, value);
+			parametersNode.add(key + ": " + value);
 		}
+
+		if (parametersNode.size() > 0)
+			log.set(PARAMETERS_FIELD, parametersNode);
 	}
 
 	private void addCredentials(ObjectNode log) {
 		Credentials credentials = SpaceContext.credentials();
-		ObjectNode logCredentials = log.putObject("credentials");
-		logCredentials.put("type", credentials.type().name());
-		logCredentials.put("name", credentials.name());
+		ObjectNode logCredentials = log.putObject(CREDENTIALS_FIELD);
+		logCredentials.put(FIELD_ID, credentials.id());
+		logCredentials.put(FIELD_USERNAME, credentials.name());
+		logCredentials.put(FIELD_TYPE, credentials.type().name());
 	}
 
 	private void addHeaders(ObjectNode log, Set<Entry<String, List<String>>> headers) {
 
+		ArrayNode headersNode = Json7.array();
 		for (Entry<String, List<String>> header : headers) {
 
 			String key = header.getKey();
@@ -322,15 +290,11 @@ public class LogResource extends Resource {
 			if (Utils.isNullOrEmpty(values))
 				continue;
 
-			if (values.size() == 1)
-				log.with("headers").put(key, values.get(0));
-
-			else if (values.size() > 1) {
-				ArrayNode array = log.with("headers").putArray(key);
-				for (String string : values)
-					array.add(string);
-			}
+			for (String value : values)
+				headersNode.add(key + ": " + value);
 		}
+		if (headersNode.size() > 0)
+			log.set(HEADERS_FIELD, headersNode);
 	}
 
 	public static Index logIndex() {

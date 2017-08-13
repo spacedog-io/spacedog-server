@@ -1,11 +1,14 @@
 package io.spacedog.watchdog;
 
+import java.util.List;
+
 import org.junit.Test;
 
 import io.spacedog.model.Schema;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.DataObject;
+import io.spacedog.sdk.LogEndpoint.LogItem;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.SpaceHeaders;
 
@@ -16,11 +19,11 @@ public class LogResourceTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
-		SpaceDog test2 = resetTest2Backend();
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin2 = resetTest2Backend();
 
 		// create message schema in test backend
-		test.schema().set(Schema.builder("message").text("text").build());
+		superadmin.schema().set(Schema.builder("message").text("text").build());
 
 		// create user in test backend
 		SpaceDog user = signUp("test", "user", "hi user");
@@ -39,95 +42,89 @@ public class LogResourceTestOften extends SpaceTest {
 		user.data().getAll().type("message").get(DataObject.class);
 
 		// get all test backend logs
-		SpaceRequest.get("/1/log").refresh().size(8).auth(test).go(200)//
-				.assertSizeEquals(8, "results")//
-				.assertEquals("GET", "results.0.method")//
-				.assertEquals("/1/data/message", "results.0.path")//
-				.assertEquals("GET", "results.1.method")//
-				.assertEquals("/1/data/message/" + message.id(), "results.1.path")//
-				.assertEquals("POST", "results.2.method")//
-				.assertEquals("/1/data/message", "results.2.path")//
-				.assertEquals("GET", "results.3.method")//
-				.assertEquals("/1/login", "results.3.path")//
-				.assertEquals("POST", "results.4.method")//
-				.assertEquals("/1/credentials", "results.4.path")//
-				.assertEquals("PUT", "results.5.method")//
-				.assertEquals("/1/schema/message", "results.5.path")//
-				.assertEquals("POST", "results.6.method")//
-				.assertEquals("/1/backend", "results.6.path")//
-				.assertEquals("test", "results.6.credentials.backendId")//
-				.assertEquals("DELETE", "results.7.method")//
-				.assertEquals("/1/backend", "results.7.path")//
-				.assertEquals("test", "results.7.credentials.backendId");
+		// the delete request is not part of the logs
+		// since log starts with the backend creation
+		List<LogItem> results = superadmin.log().get(10, true).results;
+		assertEquals(7, results.size());
+		assertEquals("GET", results.get(0).method);
+		assertEquals("/1/data/message", results.get(0).path);
+		assertEquals("GET", results.get(1).method);
+		assertEquals("/1/data/message/" + message.id(), results.get(1).path);
+		assertEquals("POST", results.get(2).method);
+		assertEquals("/1/data/message", results.get(2).path);
+		assertEquals("GET", results.get(3).method);
+		assertEquals("/1/login", results.get(3).path);
+		assertEquals("POST", results.get(4).method);
+		assertEquals("/1/credentials", results.get(4).path);
+		assertEquals("PUT", results.get(5).method);
+		assertEquals("/1/schema/message", results.get(5).path);
+		assertEquals("POST", results.get(6).method);
+		assertEquals("/1/backend", results.get(6).path);
 
 		// get all test2 backend logs
-		SpaceRequest.get("/1/log").size(4).auth(test2).go(200)//
-				.assertSizeEquals(4, "results")//
-				.assertEquals("GET", "results.0.method")//
-				.assertEquals("/1/login", "results.0.path")//
-				.assertEquals("POST", "results.1.method")//
-				.assertEquals("/1/credentials", "results.1.path")//
-				.assertEquals("******", "results.1.jsonContent.password")//
-				.assertEquals("POST", "results.2.method")//
-				.assertEquals("/1/backend", "results.2.path")//
-				.assertEquals("test2", "results.2.credentials.backendId")//
-				.assertEquals("******", "results.2.jsonContent.password")//
-				.assertEquals("DELETE", "results.3.method")//
-				.assertEquals("/1/backend", "results.3.path")//
-				.assertEquals("test2", "results.3.credentials.backendId");
+		results = superadmin2.log().get(4, true).results;
+		assertEquals(3, results.size());
+		assertEquals("GET", results.get(0).method);
+		assertEquals("/1/login", results.get(0).path);
+		assertEquals("POST", results.get(1).method);
+		assertEquals("/1/credentials", results.get(1).path);
+		assertEquals("********", results.get(1).payload.get(FIELD_PASSWORD).asText());
+		assertEquals("POST", results.get(2).method);
+		assertEquals("/1/backend", results.get(2).path);
+		assertEquals("********", results.get(2).payload.get(FIELD_PASSWORD).asText());
 
 		// after backend deletion, logs are not accessible to backend
-		test.admin().deleteBackend(test.backendId());
-		SpaceRequest.get("/1/log").auth(test).go(401);
+		superadmin.admin().deleteBackend(superadmin.backendId());
+		superadmin.get("/1/log").go(401);
 
-		test2.admin().deleteBackend(test2.backendId());
-		SpaceRequest.get("/1/log").auth(test2).go(401);
+		superadmin2.admin().deleteBackend(superadmin2.backendId());
+		superadmin2.get("/1/log").go(401);
 	}
 
 	@Test
 	public void checkPasswordsAreNotLogged() {
 
 		prepareTest();
-		SpaceDog test = resetTestBackend();
+		SpaceDog superadmin = resetTestBackend();
 		SpaceDog fred = signUp("test", "fred", "hi fred");
 
-		String passwordResetCode = test.delete("/1/credentials/{id}/password")//
+		String passwordResetCode = superadmin.delete("/1/credentials/{id}/password")//
 				.routeParam("id", fred.id()).go(200)//
 				.getString("passwordResetCode");
 
 		SpaceRequest.post("/1/credentials/{id}/password")//
 				.routeParam("id", fred.id())//
 				.queryParam("passwordResetCode", passwordResetCode)//
-				.backend(test).formField("password", "hi fred 2").go(200);
+				.backend(superadmin).formField("password", "hi fred 2").go(200);
 
-		SpaceRequest.put("/1/credentials/{id}/password").backend(test)//
+		SpaceRequest.put("/1/credentials/{id}/password").backend(superadmin)//
 				.routeParam("id", fred.id()).basicAuth("fred", "hi fred 2")//
 				.formField("password", "hi fred 3").go(200);
 
-		test.get("/1/log").refresh().size(7).go(200)//
-				.assertSizeEquals(7, "results")//
-				.assertEquals("PUT", "results.0.method")//
-				.assertEquals("/1/credentials/" + fred.id() + "/password", "results.0.path")//
-				.assertEquals("******", "results.0.query.password")//
-				.assertEquals("POST", "results.1.method")//
-				.assertEquals("/1/credentials/" + fred.id() + "/password", "results.1.path")//
-				.assertEquals("******", "results.1.query.password")//
-				.assertEquals(passwordResetCode, "results.1.query.passwordResetCode")//
-				.assertEquals("DELETE", "results.2.method")//
-				.assertEquals("/1/credentials/" + fred.id() + "/password", "results.2.path")//
-				.assertEquals(passwordResetCode, "results.2.response.passwordResetCode")//
-				.assertEquals("GET", "results.3.method")//
-				.assertEquals("/1/login", "results.3.path")//
-				.assertEquals("POST", "results.4.method")//
-				.assertEquals("/1/credentials", "results.4.path")//
-				.assertEquals("******", "results.4.jsonContent.password")//
-				.assertEquals("POST", "results.5.method")//
-				.assertEquals("/1/backend", "results.5.path")//
-				.assertEquals("test", "results.5.credentials.backendId")//
-				.assertEquals("******", "results.5.jsonContent.password")//
-				.assertEquals("DELETE", "results.6.method")//
-				.assertEquals("/1/backend", "results.6.path")//
-				.assertEquals("test", "results.6.credentials.backendId");
+		List<LogItem> results = superadmin.log().get(7, true).results;
+		assertEquals(6, results.size());
+		assertEquals("PUT", results.get(0).method);
+		assertEquals("/1/credentials/" + fred.id() + "/password", results.get(0).path);
+		assertEquals("********", results.get(0).getParameter(FIELD_PASSWORD));
+		assertEquals("POST", results.get(1).method);
+		assertEquals("/1/credentials/" + fred.id() + "/password", results.get(1).path);
+		assertEquals("********", results.get(1).getParameter(FIELD_PASSWORD));
+		assertEquals(passwordResetCode, //
+				results.get(1).getParameter(FIELD_PASSWORD_RESET_CODE));
+		assertEquals("DELETE", results.get(2).method);
+		assertEquals("/1/credentials/" + fred.id() + "/password", results.get(2).path);
+		assertEquals(passwordResetCode, //
+				results.get(2).response.get(FIELD_PASSWORD_RESET_CODE).asText());
+		assertEquals("GET", results.get(3).method);
+		assertEquals("/1/login", results.get(3).path);
+		assertEquals("POST", results.get(4).method);
+		assertEquals("/1/credentials", results.get(4).path);
+		assertEquals("fred", results.get(4).payload.get(FIELD_USERNAME).asText());
+		assertEquals("********", results.get(4).payload.get(FIELD_PASSWORD).asText());
+		assertEquals("POST", results.get(5).method);
+		assertEquals("/1/backend", results.get(5).path);
+		assertEquals("test", results.get(5).payload.get(FIELD_USERNAME).asText());
+		assertEquals("********", results.get(5).payload.get(FIELD_PASSWORD).asText());
 	}
 
 	@Test
@@ -135,29 +132,29 @@ public class LogResourceTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
+		SpaceDog superadmin = resetTestBackend();
 
 		// fails because invalid body
-		SpaceRequest.put("/1/schema/toto").auth(test).bodyString("XXX").go(400);
+		superadmin.put("/1/schema/toto").bodyString("XXX").go(400);
 
 		// but logs the failed request without the json content
-		SpaceRequest.get("/1/log").refresh().size(1).auth(test).go(200)//
-				.assertEquals("PUT", "results.0.method")//
-				.assertEquals("/1/schema/toto", "results.0.path")//
-				.assertEquals("test", "results.0.credentials.backendId")//
-				.assertEquals(400, "results.0.status")//
-				.assertNotPresent("results.0.jsonContent");
+		LogItem logItem = superadmin.log().get(1, true).results.get(0);
+		assertEquals("PUT", logItem.method);
+		assertEquals("/1/schema/toto", logItem.path);
+		assertEquals(400, logItem.status);
+		assertNull(logItem.payload);
+		assertNull(logItem.parameters);
 
 		// check that log response results are not logged
-		SpaceRequest.get("/1/log").auth(test).go(200);
-		SpaceRequest.get("/1/log").refresh().size(1).auth(test).go(200)//
-				.assertEquals("GET", "results.0.method")//
-				.assertEquals("/1/log", "results.0.path")//
-				.assertNotPresent("results.0.response.results");
+		superadmin.log().get(10);
+		logItem = superadmin.log().get(1, true).results.get(0);
+		assertEquals("GET", logItem.method);
+		assertEquals("/1/log", logItem.path);
+		assertNull(logItem.response.get("results"));
 
 		// Headers are logged if not empty
 		// and 'Authorization' header is not logged
-		SpaceRequest.get("/1/log").auth(test)//
+		superadmin.get("/1/log")//
 				.setHeader("x-empty", "")//
 				.setHeader("x-blank", " ")//
 				.setHeader("x-color", "YELLOW")//
@@ -166,14 +163,14 @@ public class LogResourceTestOften extends SpaceTest {
 				.addHeader("x-color-list", "GREEN")//
 				.go(200);
 
-		SpaceRequest.get("/1/log").refresh().size(1).auth(test).go(200)//
-				.assertNotPresent("results.0.headers." + SpaceHeaders.AUTHORIZATION)//
-				.assertNotPresent("results.0.headers.x-empty")//
-				.assertNotPresent("results.0.headers.x-blank")//
-				.assertEquals("YELLOW", "results.0.headers.x-color")//
-				.assertEquals("RED", "results.0.headers.x-color-list.0")//
-				.assertEquals("BLUE", "results.0.headers.x-color-list.1")//
-				.assertEquals("GREEN", "results.0.headers.x-color-list.2");
+		logItem = superadmin.log().get(1, true).results.get(0);
+		assertTrue(logItem.getHeader(SpaceHeaders.AUTHORIZATION).isEmpty());
+		assertTrue(logItem.getHeader("x-empty").isEmpty());
+		assertTrue(logItem.getHeader("x-blank").isEmpty());
+		assertTrue(logItem.getHeader("x-color").contains("YELLOW"));
+		assertTrue(logItem.getHeader("x-color-list").contains("RED"));
+		assertTrue(logItem.getHeader("x-color-list").contains("BLUE"));
+		assertTrue(logItem.getHeader("x-color-list").contains("GREEN"));
 	}
 
 }

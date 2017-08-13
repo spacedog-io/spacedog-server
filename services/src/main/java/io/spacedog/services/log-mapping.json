@@ -9,13 +9,14 @@
             "credentials" : {
                 "type" : "object",
                 "properties" : {
-                    "name" : {"type" : "string", "index" : "not_analyzed"},
+                    "id" : {"type" : "string", "index" : "not_analyzed"},
+                    "username" : {"type" : "string", "index" : "not_analyzed"},
                     "type" : {"type" : "string", "index" : "not_analyzed"}
                 }
             },
-            "query" : {"type" : "object", "enabled" : false},
-            "headers" : {"type" : "object", "enabled" : false},
-            "jsonContent" : {"type" : "object", "enabled" : false},
+            "parameters" : {"type" : "string", "index" : "not_analyzed"},
+            "headers" : {"type" : "string"},
+            "payload" : {"type" : "object", "enabled" : false},
             "status" : {"type" : "integer", "coerce" : false},
             "response" : {"type" : "object", "enabled" : false}
         }

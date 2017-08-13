@@ -44,10 +44,10 @@ import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 import com.google.common.base.Strings;
 
-import io.spacedog.core.Json8;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.SpaceParams;
@@ -217,15 +217,14 @@ public class ElasticClient implements SpaceParams {
 	public DeleteByQueryResponse deleteByQuery(String query, Index... indices) {
 
 		if (Strings.isNullOrEmpty(query))
-			query = Json8.objectBuilder().object("query").object("match_all").toString();
+			query = SearchSourceBuilder.searchSource().toString();
 
 		DeleteByQueryRequest delete = new DeleteByQueryRequest(Index.aliases(indices))//
 				.timeout(new TimeValue(60000))//
 				.source(query);
 
 		try {
-			return Start.get().getElasticClient()//
-					.execute(DeleteByQueryAction.INSTANCE, delete).get();
+			return execute(DeleteByQueryAction.INSTANCE, delete).get();
 
 		} catch (ExecutionException | InterruptedException e) {
 			throw Exceptions.runtime(e);
