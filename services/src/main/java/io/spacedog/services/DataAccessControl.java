@@ -3,6 +3,8 @@
  */
 package io.spacedog.services;
 
+import org.elasticsearch.action.index.IndexResponse;
+
 import io.spacedog.model.DataPermission;
 import io.spacedog.model.Schema.SchemaAcl;
 import io.spacedog.model.SchemaSettings;
@@ -15,31 +17,37 @@ public class DataAccessControl {
 	}
 
 	public static boolean check(Credentials credentials, String type, DataPermission... permissions) {
-		return SettingsResource.get().getAsObject(SchemaSettings.class)//
+		return schemaSettings()//
 				.check(credentials, type, permissions);
 	}
 
 	public static String[] types(DataPermission permission, Credentials credentials) {
-		return SettingsResource.get().getAsObject(SchemaSettings.class)//
-				.types(permission, credentials);
+		return schemaSettings().types(permission, credentials);
 	}
 
 	public static void save(String type, SchemaAcl schemaAcl) {
 
-		SchemaSettings settings = SettingsResource.get().getAsObject(SchemaSettings.class);
-
+		SchemaSettings settings = schemaSettings();
 		if (schemaAcl == null)
 			schemaAcl = SchemaAcl.defaultAcl();
 
 		settings.acl.put(type, schemaAcl);
-		SettingsResource.get().setAsObject(settings);
+		schemaSettings(settings);
 	}
 
 	public static void delete(String type) {
 
-		SchemaSettings settings = SettingsResource.get().getAsObject(SchemaSettings.class);
+		SchemaSettings settings = schemaSettings();
 		settings.acl.remove(type);
-		SettingsResource.get().setAsObject(settings);
+		schemaSettings(settings);
+	}
+
+	private static SchemaSettings schemaSettings() {
+		return SettingsResource.get().getAsObject(SchemaSettings.class);
+	}
+
+	private static IndexResponse schemaSettings(SchemaSettings settings) {
+		return SettingsResource.get().setAsObject(settings);
 	}
 
 }

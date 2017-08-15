@@ -40,7 +40,7 @@ public class StripeResource extends Resource {
 					"credentials [%s][%s] already have a stripe customer", //
 					credentials.type(), credentials.name());
 
-		StripeSettings settings = SettingsResource.get().getAsObject(StripeSettings.class);
+		StripeSettings settings = stripeSettings();
 
 		SpaceResponse response = SpaceRequest.post("/v1/customers")//
 				.backend("https://api.stripe.com")//
@@ -58,7 +58,7 @@ public class StripeResource extends Resource {
 	public Payload getCustomer(Context context) {
 		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
 		String customerId = getStripeCustomerId(credentials);
-		StripeSettings settings = SettingsResource.get().getAsObject(StripeSettings.class);
+		StripeSettings settings = stripeSettings();
 
 		SpaceResponse response = SpaceRequest.get("/v1/customers/{customerId}")//
 				.backend("https://api.stripe.com")//
@@ -76,7 +76,7 @@ public class StripeResource extends Resource {
 
 		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
 		String customerId = getStripeCustomerId(credentials);
-		StripeSettings settings = SettingsResource.get().getAsObject(StripeSettings.class);
+		StripeSettings settings = stripeSettings();
 
 		removeStripeCustomerId(credentials);
 
@@ -96,7 +96,7 @@ public class StripeResource extends Resource {
 		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
 		String customerId = getStripeCustomerId(credentials);
 		ObjectNode node = Json8.readObject(body);
-		StripeSettings settings = SettingsResource.get().getAsObject(StripeSettings.class);
+		StripeSettings settings = stripeSettings();
 		String sourceToken = Json8.checkStringNotNullOrEmpty(node, "source");
 
 		SpaceRequest request = SpaceRequest.post("/v1/customers/{customerId}/sources")//
@@ -118,11 +118,10 @@ public class StripeResource extends Resource {
 	public Payload deleteStripeCard(String cardId, Context context) {
 		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
 		String customerId = getStripeCustomerId(credentials);
-		StripeSettings settings = SettingsResource.get().getAsObject(StripeSettings.class);
+		StripeSettings settings = stripeSettings();
 
-		SpaceResponse response = SpaceRequest
-				.delete(//
-						"/v1/customers/{customerId}/sources/{cardId}")//
+		SpaceResponse response = SpaceRequest.delete(//
+				"/v1/customers/{customerId}/sources/{cardId}")//
 				.backend("https://api.stripe.com")//
 				.basicAuth(settings.secretKey, "")//
 				.routeParam("customerId", customerId)//
@@ -151,7 +150,7 @@ public class StripeResource extends Resource {
 
 	private Payload charge(boolean myself, Context context) {
 		Credentials credentials = SpaceContext.credentials();
-		StripeSettings settings = SettingsResource.get().getAsObject(StripeSettings.class);
+		StripeSettings settings = stripeSettings();
 		SpaceRequest request = SpaceRequest.post("/v1/charges")//
 				.backend("https://api.stripe.com")//
 				.basicAuth(settings.secretKey, "");
@@ -211,6 +210,10 @@ public class StripeResource extends Resource {
 	private void removeStripeCustomerId(Credentials credentials) {
 		credentials.removeFromStash(CREDENTIALS_STASH_STRIPE_CUSTOMER_ID);
 		CredentialsResource.get().update(credentials);
+	}
+
+	private StripeSettings stripeSettings() {
+		return SettingsResource.get().getAsObject(StripeSettings.class);
 	}
 
 	//
