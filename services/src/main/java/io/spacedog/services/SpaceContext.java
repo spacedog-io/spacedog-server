@@ -6,6 +6,7 @@ import java.util.Optional;
 import com.google.common.collect.Maps;
 import com.google.common.net.HttpHeaders;
 
+import io.spacedog.model.Settings;
 import io.spacedog.rest.SpaceBackend;
 import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Credentials;
@@ -30,7 +31,8 @@ public class SpaceContext {
 	private Debug debug;
 	private Credentials credentials;
 	private boolean authorizationChecked;
-	private Map<String, String> settings;
+
+	private Map<String, Settings> settings;
 
 	private SpaceContext(String uri, Context context) {
 		this.uri = uri;
@@ -133,21 +135,17 @@ public class SpaceContext {
 		return SpaceHeaders.isJsonContent(contentType);
 	}
 
-	public static String getSettings(String id) {
-
+	public static Settings getSettings(String settingsId) {
 		SpaceContext context = get();
-		if (context.settings == null)
-			return null;
-
-		return context.settings.get(id);
+		return context.settings == null ? null //
+				: context.settings.get(settingsId);
 	}
 
-	public static void setSettings(String id, String settings) {
+	public static void setSettings(String settingsId, Settings settings) {
 		SpaceContext context = get();
 		if (context.settings == null)
 			context.settings = Maps.newHashMap();
-
-		context.settings.put(id, settings);
+		context.settings.put(settingsId, settings);
 	}
 
 	//

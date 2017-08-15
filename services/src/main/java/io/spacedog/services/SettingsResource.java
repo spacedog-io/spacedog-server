@@ -159,13 +159,23 @@ public class SettingsResource extends Resource {
 
 	public <K extends Settings> K getAsObject(Class<K> settingsClass) {
 		String id = Settings.id(settingsClass);
+		@SuppressWarnings("unchecked")
+		K settings = (K) SpaceContext.getSettings(id);
+		if (settings != null)
+			return settings;
+
 		try {
 			String source = loadFromElastic(id);
-			return Json8.toPojo(source, settingsClass);
+			settings = Json8.toPojo(source, settingsClass);
 
 		} catch (NotFoundException nfe) {
-			return instantiateDefaultAsObject(settingsClass);
+			settings = instantiateDefaultAsObject(settingsClass);
 		}
+
+		if (settings != null)
+			SpaceContext.setSettings(id, settings);
+
+		return settings;
 	}
 
 	public ObjectNode getAsNode(String id) {
