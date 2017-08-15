@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
+import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json7;
 import io.spacedog.utils.SchemaBuilder;
@@ -57,19 +58,19 @@ public class Schema {
 		return node.toString();
 	}
 
-	public SchemaAcl acl() {
+	public DataAcl acl() {
 		JsonNode acl = content().get("_acl");
 		if (acl == null)
 			return null;
 
 		try {
-			return Json7.mapper().treeToValue(acl, SchemaAcl.class);
+			return Json7.mapper().treeToValue(acl, DataAcl.class);
 		} catch (JsonProcessingException e) {
 			throw Exceptions.illegalArgument(e, "invalid schema [_acl] json field");
 		}
 	}
 
-	public void acl(SchemaAcl acl) {
+	public void acl(DataAcl acl) {
 		content().set("_acl", Json7.mapper().valueToTree(acl));
 	}
 
@@ -78,9 +79,9 @@ public class Schema {
 	}
 
 	public void acl(String role, Set<DataPermission> permissions) {
-		SchemaAcl acl = acl();
+		DataAcl acl = acl();
 		if (acl == null)
-			acl = new SchemaAcl();
+			acl = new DataAcl();
 		acl.put(role, permissions);
 		acl(acl);
 	}
@@ -90,21 +91,24 @@ public class Schema {
 			throw Exceptions.illegalArgument("schema name [%s] is reserved", name);
 	}
 
-	public static class SchemaAcl extends HashMap<String, Set<DataPermission>> {
+	public static class DataAcl extends HashMap<String, Set<DataPermission>> {
 
 		private static final long serialVersionUID = 7433673020746769733L;
 
-		public static SchemaAcl defaultAcl() {
+		public static DataAcl defaultAcl() {
 
-			return new SchemaAcl()//
-					.set("all", DataPermission.read_all)//
-					.set("user", DataPermission.create, DataPermission.update, //
+			return new DataAcl()//
+					.set(Credentials.ALL_ROLE, //
+							DataPermission.read_all)//
+					.set(Credentials.Type.user.name(), //
+							DataPermission.create, DataPermission.update, //
 							DataPermission.search, DataPermission.delete)//
-					.set("admin", DataPermission.create, DataPermission.update_all, //
+					.set(Credentials.Type.admin.name(), //
+							DataPermission.create, DataPermission.update_all, //
 							DataPermission.search, DataPermission.delete_all);
 		}
 
-		public SchemaAcl set(String role, DataPermission... permissions) {
+		public DataAcl set(String role, DataPermission... permissions) {
 			put(role, Sets.newHashSet(permissions));
 			return this;
 		}

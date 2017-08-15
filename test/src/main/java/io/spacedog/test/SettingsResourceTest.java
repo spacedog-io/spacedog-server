@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
-import io.spacedog.model.SchemaSettings;
 import io.spacedog.model.SettingsSettings;
 import io.spacedog.model.SettingsSettings.SettingsAcl;
 import io.spacedog.rest.SpaceTest;
@@ -121,14 +120,14 @@ public class SettingsResourceTest extends SpaceTest {
 	}
 
 	@Test
-	public void checkNonDirectlyUpdatableSettingsAreNotUpdatable() {
+	public void checkInteralSettingsNotUpdatable() {
 
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
 
 		// schema settings are not directly updatable
-		superadmin.put("/1/settings/schema").bodySettings(new SchemaSettings()).go(400);
+		superadmin.put("/1/settings/inTErnalsettings").bodyJson("XXX", "XXX").go(403);
 	}
 
 	@Test

@@ -14,8 +14,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
 
 import io.spacedog.core.Json8;
-import io.spacedog.model.NonDirectlyReadableSettings;
-import io.spacedog.model.NonDirectlyUpdatableSettings;
 import io.spacedog.model.Settings;
 import io.spacedog.model.SettingsSettings;
 import io.spacedog.model.SettingsSettings.SettingsAcl;
@@ -102,6 +100,7 @@ public class SettingsResource extends Resource {
 	@Put("/:id")
 	@Put("/:id/")
 	public Payload put(String id, String body) {
+		checkIfNotInternalSettings(id);
 		checkIfAuthorizedToUpdate(id);
 		IndexResponse response = saveToElastic(id, body);
 		return JsonPayload.toJson("/1", response);
@@ -130,6 +129,7 @@ public class SettingsResource extends Resource {
 	@Put("/:id/:field")
 	@Put("/:id/:field/")
 	public Payload put(String id, String field, String body) {
+		checkIfNotInternalSettings(id);
 		checkIfAuthorizedToUpdate(id);
 		ObjectNode object = getAsNode(id);
 		object = object == null ? Json8.object() : object;
@@ -143,6 +143,7 @@ public class SettingsResource extends Resource {
 	@Delete("/:id/:field")
 	@Delete("/:id/:field/")
 	public Payload delete(String id, String field) {
+		checkIfNotInternalSettings(id);
 		checkIfAuthorizedToUpdate(id);
 		ObjectNode object = getAsNode(id);
 		if (object == null)
@@ -236,12 +237,6 @@ public class SettingsResource extends Resource {
 		if (!credentials.isAtLeastSuperAdmin())
 			credentials.checkRoles(getSettingsAcl(settingsId).read());
 
-		Class<? extends Settings> settingsClass = registeredSettingsClasses.get(settingsId);
-		if (settingsClass != null)
-			if (NonDirectlyReadableSettings.class.isAssignableFrom(settingsClass))
-				throw Exceptions.illegalArgument(//
-						"[%s] settings is not directly readable", settingsId);
-
 		return credentials;
 	}
 
@@ -249,12 +244,6 @@ public class SettingsResource extends Resource {
 		Credentials credentials = SpaceContext.credentials();
 		if (!credentials.isAtLeastSuperAdmin())
 			credentials.checkRoles(getSettingsAcl(id).update());
-
-		Class<? extends Settings> settingsClass = registeredSettingsClasses.get(id);
-		if (settingsClass != null)
-			if (NonDirectlyUpdatableSettings.class.isAssignableFrom(settingsClass))
-				throw Exceptions.illegalArgument(//
-						"[%s] settings is not directly updatable", id);
 
 		return credentials;
 	}
@@ -302,6 +291,11 @@ public class SettingsResource extends Resource {
 			ObjectNode mapping = Json8.object(TYPE, Json8.object("enabled", false));
 			elastic.createIndex(index, mapping.toString(), async, shards, replicas);
 		}
+	}
+
+	private void checkIfNotInternalSettings(String settingsId) {
+		if (settingsId.toLowerCase().startsWith("internal"))
+			throw Exceptions.forbidden("internal settings [%s] not updatable", settingsId);
 	}
 
 	//

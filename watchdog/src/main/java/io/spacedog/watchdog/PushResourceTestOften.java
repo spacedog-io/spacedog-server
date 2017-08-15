@@ -19,7 +19,7 @@ import io.spacedog.model.DataPermission;
 import io.spacedog.model.Installation;
 import io.spacedog.model.PushService;
 import io.spacedog.model.Schema;
-import io.spacedog.model.Schema.SchemaAcl;
+import io.spacedog.model.Schema.DataAcl;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.PushRequest;
 import io.spacedog.sdk.SpaceDog;
@@ -58,7 +58,7 @@ public class PushResourceTestOften extends SpaceTest {
 
 		// add create permission to guest requests
 		Schema schema = superadmin.schema().get("installation");
-		schema.acl(new SchemaAcl()//
+		schema.acl(new DataAcl()//
 				.set("all", DataPermission.create, DataPermission.update)//
 				.set("user", DataPermission.create, DataPermission.read, DataPermission.update)//
 				.set("admin", DataPermission.create, DataPermission.update_all, //

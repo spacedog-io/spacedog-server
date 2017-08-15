@@ -8,17 +8,17 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 
-import io.spacedog.model.Schema.SchemaAcl;
+import io.spacedog.model.Schema.DataAcl;
 import io.spacedog.utils.Credentials;
 
-public class SchemaSettings extends Settings implements NonDirectlyUpdatableSettings {
+public class InternalDataSettings extends Settings {
 
 	public static final long serialVersionUID = 4064111112532790399L;
 
-	public SchemaAclMap acl;
+	public DataAclMap acl;
 
-	public SchemaSettings() {
-		acl = new SchemaAclMap();
+	public InternalDataSettings() {
+		acl = new DataAclMap();
 	}
 
 	//
@@ -26,9 +26,9 @@ public class SchemaSettings extends Settings implements NonDirectlyUpdatableSett
 	//
 
 	public boolean check(String type, String role, DataPermission... permissions) {
-		SchemaAcl roles = acl.get(type);
+		DataAcl roles = acl.get(type);
 		if (roles == null)
-			roles = SchemaAcl.defaultAcl();
+			roles = DataAcl.defaultAcl();
 
 		Set<DataPermission> rolePermissions = roles.get(role);
 		if (rolePermissions == null)
@@ -45,7 +45,7 @@ public class SchemaSettings extends Settings implements NonDirectlyUpdatableSett
 		if (credentials.isAtLeastSuperAdmin())
 			return true;
 
-		if (check(type, "all", permissions))
+		if (check(type, Credentials.ALL_ROLE, permissions))
 			return true;
 
 		for (String role : credentials.roles())
@@ -62,7 +62,7 @@ public class SchemaSettings extends Settings implements NonDirectlyUpdatableSett
 			types.addAll(acl.keySet());
 		else
 			for (String type : acl.keySet()) {
-				if (check(type, "all", permission))
+				if (check(type, Credentials.ALL_ROLE, permission))
 					types.add(type);
 				else
 					for (String role : credentials.roles())
@@ -73,7 +73,7 @@ public class SchemaSettings extends Settings implements NonDirectlyUpdatableSett
 		return types.toArray(new String[types.size()]);
 	}
 
-	public static class SchemaAclMap extends HashMap<String, SchemaAcl> {
+	public static class DataAclMap extends HashMap<String, DataAcl> {
 
 		private static final long serialVersionUID = 8813814959454404912L;
 	}

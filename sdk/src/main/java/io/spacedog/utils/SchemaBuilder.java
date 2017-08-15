@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.model.DataPermission;
 import io.spacedog.model.Schema;
-import io.spacedog.model.Schema.SchemaAcl;
+import io.spacedog.model.Schema.DataAcl;
 
 public class SchemaBuilder {
 
@@ -104,7 +104,7 @@ public class SchemaBuilder {
 
 	public SchemaBuilder acl(String role, DataPermission... permissions) {
 		if (acl == null)
-			acl = new SchemaAcl();
+			acl = new DataAcl();
 
 		acl.set(role, permissions);
 		return this;
@@ -211,7 +211,7 @@ public class SchemaBuilder {
 
 	private String name;
 	private JsonBuilder<ObjectNode> builder;
-	private SchemaAcl acl;
+	private DataAcl acl;
 	private SchemaType currentPropertyType = SchemaType.OBJECT;
 
 	private SchemaBuilder(String name) {

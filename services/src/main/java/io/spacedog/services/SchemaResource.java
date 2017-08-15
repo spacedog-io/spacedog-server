@@ -10,8 +10,8 @@ import org.elasticsearch.indices.TypeMissingException;
 
 import io.spacedog.core.Json8;
 import io.spacedog.core.Json8.JsonMerger;
+import io.spacedog.model.InternalDataSettings;
 import io.spacedog.model.Schema;
-import io.spacedog.model.SchemaSettings;
 import io.spacedog.utils.Exceptions;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -113,6 +113,6 @@ public class SchemaResource extends Resource {
 	}
 
 	private SchemaResource() {
-		SettingsResource.get().registerSettings(SchemaSettings.class);
+		SettingsResource.get().registerSettings(InternalDataSettings.class);
 	}
 }

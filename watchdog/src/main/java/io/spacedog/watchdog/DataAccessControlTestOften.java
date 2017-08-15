@@ -12,8 +12,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.model.DataPermission;
 import io.spacedog.model.Schema;
-import io.spacedog.model.Schema.SchemaAcl;
-import io.spacedog.model.SchemaSettings;
+import io.spacedog.model.Schema.DataAcl;
+import io.spacedog.model.InternalDataSettings;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json7;
@@ -36,8 +36,8 @@ public class DataAccessControlTestOften extends SpaceTest {
 
 		// message schema does not contain any acl
 		// it means message schema has default acl
-		SchemaSettings settings = superadmin.settings().get(SchemaSettings.class);
-		assertEquals(SchemaAcl.defaultAcl(), settings.acl.get("msge"));
+		InternalDataSettings settings = superadmin.settings().get(InternalDataSettings.class);
+		assertEquals(DataAcl.defaultAcl(), settings.acl.get("msge"));
 
 		// in default acl, only users and admins can create objects
 		guest.post("/1/data/msge").bodyJson("t", "hello").go(403);
@@ -90,11 +90,11 @@ public class DataAccessControlTestOften extends SpaceTest {
 
 		// superadmin sets message schema with empty acl
 		Schema messageSchema = Schema.builder("msge").text("t").build();
-		messageSchema.acl(new SchemaAcl());
+		messageSchema.acl(new DataAcl());
 		superadmin.schema().set(messageSchema);
 
 		// check message schema acl are set
-		SchemaSettings settings = superadmin.settings().get(SchemaSettings.class);
+		InternalDataSettings settings = superadmin.settings().get(InternalDataSettings.class);
 		assertEquals(1, settings.acl.size());
 		assertEquals(0, settings.acl.get("msge").size());
 
@@ -148,7 +148,7 @@ public class DataAccessControlTestOften extends SpaceTest {
 		superadmin.schema().set(messageSchema);
 
 		// check message schema acl are set
-		SchemaSettings settings = superadmin.settings().get(SchemaSettings.class);
+		InternalDataSettings settings = superadmin.settings().get(InternalDataSettings.class);
 		assertEquals(1, settings.acl.size());
 		assertEquals(2, settings.acl.get("msge").size());
 		assertEquals(Collections.singleton(DataPermission.search), //
@@ -296,7 +296,7 @@ public class DataAccessControlTestOften extends SpaceTest {
 		superadmin.schema().set(messageSchema);
 
 		// check schema settings contains message schema acl
-		SchemaSettings settings = superadmin.settings().get(SchemaSettings.class);
+		InternalDataSettings settings = superadmin.settings().get(InternalDataSettings.class);
 		assertEquals(messageSchema.acl(), settings.acl.get(messageSchema.name()));
 
 		// delete message schema
@@ -304,7 +304,7 @@ public class DataAccessControlTestOften extends SpaceTest {
 
 		// check schema settings does not contain
 		// message schema acl anymore
-		settings = superadmin.settings().get(SchemaSettings.class);
+		settings = superadmin.settings().get(InternalDataSettings.class);
 		assertNull(settings.acl.get(messageSchema.name()));
 	}
 }

@@ -6,8 +6,8 @@ package io.spacedog.services;
 import org.elasticsearch.action.index.IndexResponse;
 
 import io.spacedog.model.DataPermission;
-import io.spacedog.model.Schema.SchemaAcl;
-import io.spacedog.model.SchemaSettings;
+import io.spacedog.model.Schema.DataAcl;
+import io.spacedog.model.InternalDataSettings;
 import io.spacedog.utils.Credentials;
 
 public class DataAccessControl {
@@ -25,11 +25,11 @@ public class DataAccessControl {
 		return schemaSettings().types(permission, credentials);
 	}
 
-	public static void save(String type, SchemaAcl schemaAcl) {
+	public static void save(String type, DataAcl schemaAcl) {
 
-		SchemaSettings settings = schemaSettings();
+		InternalDataSettings settings = schemaSettings();
 		if (schemaAcl == null)
-			schemaAcl = SchemaAcl.defaultAcl();
+			schemaAcl = DataAcl.defaultAcl();
 
 		settings.acl.put(type, schemaAcl);
 		schemaSettings(settings);
@@ -37,16 +37,16 @@ public class DataAccessControl {
 
 	public static void delete(String type) {
 
-		SchemaSettings settings = schemaSettings();
+		InternalDataSettings settings = schemaSettings();
 		settings.acl.remove(type);
 		schemaSettings(settings);
 	}
 
-	private static SchemaSettings schemaSettings() {
-		return SettingsResource.get().getAsObject(SchemaSettings.class);
+	private static InternalDataSettings schemaSettings() {
+		return SettingsResource.get().getAsObject(InternalDataSettings.class);
 	}
 
-	private static IndexResponse schemaSettings(SchemaSettings settings) {
+	private static IndexResponse schemaSettings(InternalDataSettings settings) {
 		return SettingsResource.get().setAsObject(settings);
 	}
 
