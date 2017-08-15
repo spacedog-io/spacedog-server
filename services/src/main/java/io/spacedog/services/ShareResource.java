@@ -52,7 +52,7 @@ public class ShareResource extends S3Resource {
 	@Put("/:fileName/")
 	public Payload post(String fileName, byte[] bytes, Context context) {
 		Credentials credentials = checkPermission(DataPermission.create);
-		ShareSettings settings = SettingsResource.get().load(ShareSettings.class);
+		ShareSettings settings = SettingsResource.get().getAsObject(ShareSettings.class);
 		String uuid = UUID.randomUUID().toString();
 		return doUpload(SHARE_BUCKET_SUFFIX, "/1/share", credentials, //
 				WebPath.newPath(uuid, fileName), bytes, context, settings.enableS3Location);
@@ -81,7 +81,7 @@ public class ShareResource extends S3Resource {
 
 	private Credentials checkPermission(DataPermission... permissions) {
 		Credentials credentials = SpaceContext.credentials();
-		ShareSettings settings = SettingsResource.get().load(ShareSettings.class);
+		ShareSettings settings = SettingsResource.get().getAsObject(ShareSettings.class);
 
 		if (settings.check(credentials, permissions))
 			return credentials;
@@ -94,7 +94,7 @@ public class ShareResource extends S3Resource {
 			DataPermission ownerchipNotRequiredPermission) {
 
 		Credentials credentials = SpaceContext.credentials();
-		ShareSettings settings = SettingsResource.get().load(ShareSettings.class);
+		ShareSettings settings = SettingsResource.get().getAsObject(ShareSettings.class);
 
 		if (settings.check(credentials, ownerchipNotRequiredPermission))
 			return false;
@@ -116,6 +116,6 @@ public class ShareResource extends S3Resource {
 	}
 
 	private ShareResource() {
-		SettingsResource.get().registerSettingsClass(ShareSettings.class);
+		SettingsResource.get().registerSettings(ShareSettings.class);
 	}
 }

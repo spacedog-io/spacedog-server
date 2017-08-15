@@ -23,7 +23,7 @@ public class SmsTemplateResource extends Resource {
 	@Post("/1/sms/template/:name/")
 	public Payload postTemplatedSms(String name, String body) {
 
-		SmsSettings settings = SettingsResource.get().load(SmsSettings.class);
+		SmsSettings settings = SettingsResource.get().getAsObject(SmsSettings.class);
 
 		if (settings.templates != null) {
 			SmsTemplate template = settings.templates.get(name);

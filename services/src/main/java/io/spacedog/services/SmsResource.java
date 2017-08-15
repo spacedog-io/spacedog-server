@@ -34,7 +34,7 @@ public class SmsResource extends Resource {
 	@Post("/1/sms/")
 	public Payload post(Context context) {
 
-		SmsSettings settings = SettingsResource.get().load(SmsSettings.class);
+		SmsSettings settings = SettingsResource.get().getAsObject(SmsSettings.class);
 		Credentials credentials = SpaceContext.credentials();
 		credentials.checkRoles(settings.rolesAllowedToSendSms);
 		return send(toMessage(credentials, context));
@@ -44,7 +44,7 @@ public class SmsResource extends Resource {
 	@Get("/1/sms/:messageId")
 	public Payload get(String messageId, Context context) {
 
-		SmsSettings settings = SettingsResource.get().load(SmsSettings.class);
+		SmsSettings settings = SettingsResource.get().getAsObject(SmsSettings.class);
 		Credentials credentials = SpaceContext.credentials();
 		credentials.checkRoles(settings.rolesAllowedToSendSms);
 		return fetch(messageId);
@@ -85,7 +85,7 @@ public class SmsResource extends Resource {
 
 	public Payload send(SmsMessage message) {
 
-		SmsSettings settings = SettingsResource.get().load(SmsSettings.class);
+		SmsSettings settings = SettingsResource.get().getAsObject(SmsSettings.class);
 
 		if (settings.twilio != null)
 			return smsViaTwilio(message, settings.twilio);
@@ -113,7 +113,7 @@ public class SmsResource extends Resource {
 
 	public Payload fetch(String messageId) {
 
-		SmsSettings settings = SettingsResource.get().load(SmsSettings.class);
+		SmsSettings settings = SettingsResource.get().getAsObject(SmsSettings.class);
 
 		if (settings.twilio != null)
 			return fetchFromTwilio(messageId, settings.twilio);
@@ -163,6 +163,6 @@ public class SmsResource extends Resource {
 	}
 
 	private SmsResource() {
-		SettingsResource.get().registerSettingsClass(SmsSettings.class);
+		SettingsResource.get().registerSettings(SmsSettings.class);
 	}
 }

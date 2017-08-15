@@ -159,6 +159,6 @@ public class BackendResource extends Resource {
 	}
 
 	private BackendResource() {
-		SettingsResource.get().registerSettingsClass(BackendSettings.class);
+		SettingsResource.get().registerSettings(BackendSettings.class);
 	}
 }

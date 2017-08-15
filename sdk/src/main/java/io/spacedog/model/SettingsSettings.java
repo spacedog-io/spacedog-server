@@ -1,5 +1,6 @@
 package io.spacedog.model;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -13,42 +14,34 @@ import com.google.common.collect.Sets;
 @JsonIgnoreProperties(ignoreUnknown = true)
 // only map to private fields
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, //
-getterVisibility = Visibility.NONE, //
-isGetterVisibility = Visibility.NONE, //
-setterVisibility = Visibility.NONE)
+		getterVisibility = Visibility.NONE, //
+		isGetterVisibility = Visibility.NONE, //
+		setterVisibility = Visibility.NONE)
 public class SettingsSettings extends Settings {
 
 	// only map to private fields
 	@JsonAutoDetect(fieldVisibility = Visibility.ANY, //
-	getterVisibility = Visibility.NONE, //
-	isGetterVisibility = Visibility.NONE, //
-	setterVisibility = Visibility.NONE)
+			getterVisibility = Visibility.NONE, //
+			isGetterVisibility = Visibility.NONE, //
+			setterVisibility = Visibility.NONE)
 	public static class SettingsAcl {
-		private Set<String> read;
-		private Set<String> update;
+		private Set<String> read = Collections.emptySet();
+		private Set<String> update = Collections.emptySet();
 
 		public Set<String> read() {
-			Set<String> set = Sets.newHashSet("super_admin");
-			if (this.read != null)
-				set.addAll(this.read);
-			return set;
+			return Sets.newHashSet(read);
 		}
 
 		public void read(String... roles) {
 			this.read = Sets.newHashSet(roles);
-			this.read.remove("super_admin");
 		}
 
 		public Set<String> update() {
-			Set<String> set = Sets.newHashSet("super_admin");
-			if (this.update != null)
-				set.addAll(this.update);
-			return set;
+			return Sets.newHashSet(update);
 		}
 
 		public void update(String... roles) {
 			this.update = Sets.newHashSet(roles);
-			this.update.remove("super_admin");
 		}
 
 		public static SettingsAcl defaultAcl() {
@@ -59,10 +52,10 @@ public class SettingsSettings extends Settings {
 	private Map<String, SettingsAcl> acl;
 
 	public SettingsAcl get(String settingsId) {
-		if (acl != null) {
+		if (acl != null)
 			if (acl.containsKey(settingsId))
 				return acl.get(settingsId);
-		}
+
 		return SettingsAcl.defaultAcl();
 	}
 

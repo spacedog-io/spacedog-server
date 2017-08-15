@@ -113,6 +113,6 @@ public class SchemaResource extends Resource {
 	}
 
 	private SchemaResource() {
-		SettingsResource.get().registerSettingsClass(SchemaSettings.class);
+		SettingsResource.get().registerSettings(SchemaSettings.class);
 	}
 }

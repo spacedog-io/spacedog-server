@@ -54,7 +54,7 @@ public class LinkedinResource extends Resource {
 
 		if (Strings.isNullOrEmpty(finalRedirectUri)) {
 			finalRedirectUri = SettingsResource.get()//
-					.load(CredentialsSettings.class)//
+					.getAsObject(CredentialsSettings.class)//
 							.linkedinFinalRedirectUri;
 
 			if (Strings.isNullOrEmpty(finalRedirectUri))
@@ -153,7 +153,7 @@ public class LinkedinResource extends Resource {
 	private Credentials login(Context context) {
 		String code = Check.notNullOrEmpty(context.get("code"), "code");
 
-		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
+		CredentialsSettings settings = SettingsResource.get().getAsObject(CredentialsSettings.class);
 		if (Strings.isNullOrEmpty(settings.linkedinId))
 			throw Exceptions.illegalArgument("credentials settings [linkedinId] is required");
 

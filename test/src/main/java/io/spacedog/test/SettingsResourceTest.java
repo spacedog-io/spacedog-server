@@ -13,7 +13,6 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import io.spacedog.model.SchemaSettings;
 import io.spacedog.model.SettingsSettings;
 import io.spacedog.model.SettingsSettings.SettingsAcl;
-import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json7;
@@ -25,99 +24,100 @@ public class SettingsResourceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
-		SpaceDog vince = signUp(test, "vince", "hi vince");
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog guest = SpaceDog.backend(superadmin);
+		SpaceDog vince = signUp(superadmin, "vince", "hi vince");
 
 		ObjectNode animals = Json7.object("lion", "Lion", "tiger", "Tiger");
 		ObjectNode jobs = Json7.object("sailor", Json7.array("Sailor", "Marin"), //
 				"soldier", Json7.object("en", "Soldier", "fr", "Soldat"));
 
 		// only super admins can get all settings
-		SpaceRequest.get("/1/settings").backend(test).go(403);
-		SpaceRequest.get("/1/settings").auth(vince).go(403);
-		SpaceRequest.get("/1/settings").auth(test).go(200)//
+		guest.get("/1/settings").go(403);
+		vince.get("/1/settings").go(403);
+		superadmin.get("/1/settings").go(200)//
 				.assertSizeEquals(0, "results");
 
 		// get non existent settings returns NOT FOUND
-		SpaceRequest.get("/1/settings/xxx").auth(test).go(404);
+		superadmin.get("/1/settings/xxx").go(404);
 
 		// by default only super admins can create settings
-		SpaceRequest.put("/1/settings/animals").backend(test).bodyJson(animals).go(403);
-		SpaceRequest.put("/1/settings/animals").auth(vince).bodyJson(animals).go(403);
-		SpaceRequest.put("/1/settings/animals").auth(test).bodyJson(animals).go(201);
+		guest.put("/1/settings/animals").bodyJson(animals).go(403);
+		vince.put("/1/settings/animals").bodyJson(animals).go(403);
+		superadmin.put("/1/settings/animals").bodyJson(animals).go(201);
 
 		// by default only super admins can get settings
-		SpaceRequest.get("/1/settings/animals").backend(test).go(403);
-		SpaceRequest.get("/1/settings/animals").auth(vince).go(403);
-		SpaceRequest.get("/1/settings/animals").auth(test).go(200).assertEquals(animals);
+		guest.get("/1/settings/animals").go(403);
+		vince.get("/1/settings/animals").go(403);
+		superadmin.get("/1/settings/animals").go(200).assertEquals(animals);
 
 		// by default only super admins can update settings
 		animals.put("puma", "Puma");
-		SpaceRequest.put("/1/settings/animals").backend(test).bodyJson(animals).go(403);
-		SpaceRequest.put("/1/settings/animals").auth(vince).bodyJson(animals).go(403);
-		SpaceRequest.put("/1/settings/animals").auth(test).bodyJson(animals).go(200);
-		SpaceRequest.get("/1/settings/animals").auth(test).go(200).assertEquals(animals);
+		guest.put("/1/settings/animals").bodyJson(animals).go(403);
+		vince.put("/1/settings/animals").bodyJson(animals).go(403);
+		superadmin.put("/1/settings/animals").bodyJson(animals).go(200);
+		superadmin.get("/1/settings/animals").go(200).assertEquals(animals);
 
 		// by default only super admins can delete settings
-		SpaceRequest.delete("/1/settings/animals").backend(test).go(403);
-		SpaceRequest.delete("/1/settings/animals").auth(vince).go(403);
-		SpaceRequest.delete("/1/settings/animals").auth(test).go(200);
+		guest.delete("/1/settings/animals").go(403);
+		vince.delete("/1/settings/animals").go(403);
+		superadmin.delete("/1/settings/animals").go(200);
 
 		// check animals settings is deleted
-		SpaceRequest.get("/1/settings/animals").auth(test).go(404);
+		superadmin.get("/1/settings/animals").go(404);
 
 		// super admin can create complex settings
-		SpaceRequest.put("/1/settings/jobs").auth(test).bodyJson(jobs).go(201);
-		SpaceRequest.get("/1/settings/jobs").auth(test).go(200).assertEquals(jobs);
+		superadmin.put("/1/settings/jobs").bodyJson(jobs).go(201);
+		superadmin.get("/1/settings/jobs").go(200).assertEquals(jobs);
 
 		// put back animals settings
-		SpaceRequest.put("/1/settings/animals").auth(test).bodyJson(animals).go(201);
+		superadmin.put("/1/settings/animals").bodyJson(animals).go(201);
 
 		// only super admins can get all settings
-		SpaceRequest.get("/1/settings").refresh().auth(test).go(200)//
+		superadmin.get("/1/settings").refresh().go(200)//
 				.assertSizeEquals(2)//
 				.assertEquals(animals, "animals")//
 				.assertEquals(jobs, "jobs");
 
 		// settings are not data objects
-		SpaceRequest.get("/1/data").refresh().auth(test).go(200)//
+		superadmin.get("/1/data").refresh().go(200)//
 				.assertSizeEquals(0, "results");
 
 		// super admin authorizes role 'key' to get/read animals settings
 		// and authorizes role 'user' to the put/update/delete animals settings
 		SettingsAcl acl = new SettingsAcl();
-		acl.read("key");
+		acl.read("all");
 		acl.update("user");
 		SettingsSettings settings = new SettingsSettings();
 		settings.put("animals", acl);
-		test.settings().save(settings);
+		superadmin.settings().save(settings);
 
 		// guests can get the animals settings
 		// users are still forbidden
-		// super admins are always authorized
-		SpaceRequest.get("/1/settings/animals").auth(vince).go(403);
-		SpaceRequest.get("/1/settings/animals").backend(test).go(200).assertEquals(animals);
-		SpaceRequest.get("/1/settings/animals").auth(test).go(200).assertEquals(animals);
+		// superadmins are always authorized
+		guest.get("/1/settings/animals").go(200).assertEquals(animals);
+		vince.get("/1/settings/animals").go(200).assertEquals(animals);
+		superadmin.get("/1/settings/animals").go(200).assertEquals(animals);
 
 		// users can delete the animals settings
 		// guests are still forbidden
 		// super admins are always authorized
-		SpaceRequest.delete("/1/settings/animals").backend(test).bodyJson(animals).go(403);
-		SpaceRequest.delete("/1/settings/animals").auth(vince).bodyJson(animals).go(200);
+		guest.delete("/1/settings/animals").bodyJson(animals).go(403);
+		vince.delete("/1/settings/animals").bodyJson(animals).go(200);
 
 		// super admin can delete settings settings
 		// to get back to previous configuration
-		test.settings().delete(SettingsSettings.class);
+		superadmin.settings().delete(SettingsSettings.class);
 
 		// users can not update animals settings anymore
 		// but super admins can
-		SpaceRequest.put("/1/settings/animals").auth(vince).bodyJson(animals).go(403);
-		SpaceRequest.put("/1/settings/animals").auth(test).bodyJson(animals).go(201);
+		vince.put("/1/settings/animals").bodyJson(animals).go(403);
+		superadmin.put("/1/settings/animals").bodyJson(animals).go(201);
 
 		// guests can not read animals settings anymore
 		// but super admins can
-		SpaceRequest.get("/1/settings/animals").backend(test).go(403);
-		SpaceRequest.get("/1/settings/animals").auth(test).go(200).assertEquals(animals);
+		guest.get("/1/settings/animals").backend(superadmin).go(403);
+		superadmin.get("/1/settings/animals").go(200).assertEquals(animals);
 	}
 
 	@Test
@@ -125,10 +125,10 @@ public class SettingsResourceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
+		SpaceDog superadmin = resetTestBackend();
 
 		// schema settings are not directly updatable
-		SpaceRequest.put("/1/settings/schema").auth(test).bodySettings(new SchemaSettings()).go(400);
+		superadmin.put("/1/settings/schema").bodySettings(new SchemaSettings()).go(400);
 	}
 
 	@Test
@@ -136,28 +136,28 @@ public class SettingsResourceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
-		SpaceDog superdog = superdog(test);
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superdog = superdog(superadmin);
 		ObjectNode settings = Json7.object("toto", 23);
 
 		// superdog creates test settings
 		superdog.settings().save("test", settings);
 
 		// superadmin checks test settings
-		assertEquals(settings, test.settings().get("test"));
+		assertEquals(settings, superadmin.settings().get("test"));
 
 		// superdog saves test settings
 		settings.put("titi", false);
 		superdog.settings().save("test", settings);
 
 		// superadmin checks test settings
-		assertEquals(settings, test.settings().get("test"));
+		assertEquals(settings, superadmin.settings().get("test"));
 
 		// superdog deletes test settings
 		superdog.settings().delete("test");
 
 		// superadmin checks test settings are gone
-		test.get("/1/settings/test").go(404);
+		superadmin.get("/1/settings/test").go(404);
 	}
 
 	@Test
@@ -165,26 +165,26 @@ public class SettingsResourceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(test);
-		SpaceDog vince = signUp(test, "vince", "hi vince");
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog guest = SpaceDog.backend(superadmin);
+		SpaceDog vince = signUp(superadmin, "vince", "hi vince");
 
 		// only superadmins can update settings
 		guest.put("/1/settings/db/type").go(403);
 		vince.put("/1/settings/db/type").go(403);
 
 		// test creates db settings with version field
-		test.settings().save("db", "type", TextNode.valueOf("mysql"));
+		superadmin.settings().save("db", "type", TextNode.valueOf("mysql"));
 
 		// test sets db settings version
-		test.settings().save("db", "version", LongNode.valueOf(12));
+		superadmin.settings().save("db", "version", LongNode.valueOf(12));
 
 		// test sets db settings credentials
-		test.settings().save("db", "credentials", //
+		superadmin.settings().save("db", "credentials", //
 				Json7.object("username", "tiger", "password", "miaou"));
 
 		// test checks settings are correct
-		ObjectNode settings = test.settings().get("db");
+		ObjectNode settings = superadmin.settings().get("db");
 		assertEquals(Json7.object("type", "mysql", "version", 12, "credentials",
 				Json7.object("username", "tiger", "password", "miaou")), settings);
 
@@ -193,25 +193,25 @@ public class SettingsResourceTest extends SpaceTest {
 		vince.get("/1/settings/db/type").go(403);
 
 		// test gets each field
-		assertEquals("mysql", test.settings().get("db", "type").asText());
-		assertEquals(12, test.settings().get("db", "version").asInt());
+		assertEquals("mysql", superadmin.settings().get("db", "type").asText());
+		assertEquals(12, superadmin.settings().get("db", "version").asInt());
 		assertEquals(Json7.object("username", "tiger", "password", "miaou"), //
-				test.settings().get("db", "credentials"));
+				superadmin.settings().get("db", "credentials"));
 
 		// test gets an unknown field of db settings
-		assertEquals(NullNode.getInstance(), test.settings().get("db", "XXX"));
+		assertEquals(NullNode.getInstance(), superadmin.settings().get("db", "XXX"));
 
 		// test gets an unknown field of an unknown settings
-		test.get("/1/settings/XXX/YYY").go(404);
+		superadmin.get("/1/settings/XXX/YYY").go(404);
 
 		// test updates each field
-		test.settings().save("db", "type", TextNode.valueOf("postgres"));
-		test.settings().save("db", "version", LongNode.valueOf(13));
-		test.settings().save("db", "credentials", //
+		superadmin.settings().save("db", "type", TextNode.valueOf("postgres"));
+		superadmin.settings().save("db", "version", LongNode.valueOf(13));
+		superadmin.settings().save("db", "credentials", //
 				Json7.object("username", "lion", "password", "arf"));
 
 		// test checks settings are correct
-		settings = test.settings().get("db");
+		settings = superadmin.settings().get("db");
 		assertEquals(Json7.object("type", "postgres", "version", 13, "credentials",
 				Json7.object("username", "lion", "password", "arf")), settings);
 
@@ -220,13 +220,13 @@ public class SettingsResourceTest extends SpaceTest {
 		vince.delete("/1/settings/db/type").go(403);
 
 		// test deletes version
-		test.settings().delete("db", "version");
+		superadmin.settings().delete("db", "version");
 
 		// test nulls credentials
-		test.settings().save("db", "credentials", NullNode.getInstance());
+		superadmin.settings().save("db", "credentials", NullNode.getInstance());
 
 		// test checks settings are correct
-		settings = test.settings().get("db");
+		settings = superadmin.settings().get("db");
 		assertEquals(Json7.object("type", "postgres", "credentials", null), settings);
 	}
 }

@@ -47,7 +47,7 @@ public class MailTemplateResource extends Resource {
 
 	Optional<MailTemplate> getTemplate(String name) {
 
-		MailSettings settings = SettingsResource.get().load(MailSettings.class);
+		MailSettings settings = SettingsResource.get().getAsObject(MailSettings.class);
 
 		if (settings.templates == null)
 			return Optional.empty();

@@ -6,6 +6,7 @@ package io.spacedog.services;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.ShardOperationFailedException;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
+import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchPhaseExecutionException;
 
 import com.amazonaws.AmazonServiceException;
@@ -106,6 +107,11 @@ public class JsonPayload {
 		return json;
 	}
 
+	public static Payload toJson(String uriBase, IndexResponse response) {
+		return JsonPayload.saved(response.isCreated(), uriBase, response.getType(), //
+				response.getId(), response.getVersion());
+	}
+
 	/**
 	 * @param parameters
 	 *            triples with parameter name, value and message
@@ -192,8 +198,20 @@ public class JsonPayload {
 		return new Payload(Json7.JSON_CONTENT_UTF8, content, httpStatus);
 	}
 
+	public static Payload json(String content) {
+		return json(content, HttpStatus.OK);
+	}
+
 	public static Payload json(String content, int httpStatus) {
 		return new Payload(Json7.JSON_CONTENT_UTF8, content, httpStatus);
+	}
+
+	public static Payload pojo(Object pojo) {
+		return pojo(pojo, HttpStatus.OK);
+	}
+
+	public static Payload pojo(Object pojo, int httpStatus) {
+		return new Payload(Json7.JSON_CONTENT_UTF8, Json8.toString(pojo), httpStatus);
 	}
 
 	public static Payload json(int status, ShardOperationFailedException[] failures) {

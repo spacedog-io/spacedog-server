@@ -4,8 +4,8 @@
 package io.spacedog.services;
 
 import io.spacedog.model.DataPermission;
-import io.spacedog.model.SchemaSettings;
 import io.spacedog.model.Schema.SchemaAcl;
+import io.spacedog.model.SchemaSettings;
 import io.spacedog.utils.Credentials;
 
 public class DataAccessControl {
@@ -15,31 +15,31 @@ public class DataAccessControl {
 	}
 
 	public static boolean check(Credentials credentials, String type, DataPermission... permissions) {
-		return SettingsResource.get().load(SchemaSettings.class)//
+		return SettingsResource.get().getAsObject(SchemaSettings.class)//
 				.check(credentials, type, permissions);
 	}
 
 	public static String[] types(DataPermission permission, Credentials credentials) {
-		return SettingsResource.get().load(SchemaSettings.class)//
+		return SettingsResource.get().getAsObject(SchemaSettings.class)//
 				.types(permission, credentials);
 	}
 
 	public static void save(String type, SchemaAcl schemaAcl) {
 
-		SchemaSettings settings = SettingsResource.get().load(SchemaSettings.class);
+		SchemaSettings settings = SettingsResource.get().getAsObject(SchemaSettings.class);
 
 		if (schemaAcl == null)
 			schemaAcl = SchemaAcl.defaultAcl();
 
 		settings.acl.put(type, schemaAcl);
-		SettingsResource.get().save(settings);
+		SettingsResource.get().setAsObject(settings);
 	}
 
 	public static void delete(String type) {
 
-		SchemaSettings settings = SettingsResource.get().load(SchemaSettings.class);
+		SchemaSettings settings = SettingsResource.get().getAsObject(SchemaSettings.class);
 		settings.acl.remove(type);
-		SettingsResource.get().save(settings);
+		SettingsResource.get().setAsObject(settings);
 	}
 
 }

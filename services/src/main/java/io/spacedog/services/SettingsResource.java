@@ -1,6 +1,5 @@
 package io.spacedog.services;
 
-import java.io.IOException;
 import java.util.Map;
 
 import org.elasticsearch.action.get.GetResponse;
@@ -9,7 +8,6 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -91,46 +89,22 @@ public class SettingsResource extends Resource {
 	@Get("/:id")
 	@Get("/:id/")
 	public Payload get(String id) {
-
 		checkIfAuthorizedToRead(id);
-		String settingsAsString = null;
-
-		Class<? extends Settings> settingsClass = registeredSettingsClasses.get(id);
-		if (settingsClass == null)
-			settingsAsString = load(id);
-		else
-			try {
-				Settings settings = load(settingsClass);
-				settingsAsString = Json8.mapper().writeValueAsString(settings);
-
-			} catch (JsonProcessingException e) {
-				throw Exceptions.runtime(e, "invalid [%s] settings");
-			}
-
-		return JsonPayload.json(settingsAsString, HttpStatus.OK);
+		try {
+			return JsonPayload.json(loadFromElastic(id));
+		} catch (NotFoundException e) {
+			if (registeredSettingsClasses.containsKey(id))
+				return JsonPayload.pojo(instantiateDefaultAsNode(id));
+			throw e;
+		}
 	}
 
 	@Put("/:id")
 	@Put("/:id/")
 	public Payload put(String id, String body) {
-
 		checkIfAuthorizedToUpdate(id);
-		IndexResponse response = null;
-
-		Class<? extends Settings> settingsClass = registeredSettingsClasses.get(id);
-		if (settingsClass == null)
-			response = save(id, body);
-		else
-			try {
-				Settings settings = Json8.mapper().readValue(body, settingsClass);
-				response = save(settings);
-
-			} catch (IOException e) {
-				throw Exceptions.illegalArgument(e, "invalid [%s] settings", id);
-			}
-
-		return JsonPayload.saved(response.isCreated(), "/1", response.getType(), //
-				response.getId(), response.getVersion());
+		IndexResponse response = saveToElastic(id, body);
+		return JsonPayload.toJson("/1", response);
 	}
 
 	@Delete("/:id")
@@ -144,145 +118,119 @@ public class SettingsResource extends Resource {
 	@Get("/:id/:field")
 	@Get("/:id/:field/")
 	public Payload get(String id, String field) {
-
 		checkIfAuthorizedToRead(id);
-
-		Class<? extends Settings> settingsClass = registeredSettingsClasses.get(id);
-
-		ObjectNode settings = settingsClass == null ? Json8.readObject(load(id)) //
-				: Json8.mapper().valueToTree(load(settingsClass));
-
-		JsonNode value = settings.get(field);
-		if (value == null)
-			value = NullNode.getInstance();
-
+		ObjectNode object = getAsNode(id);
+		if (object == null)
+			throw Exceptions.notFound(TYPE, id);
+		JsonNode value = Json8.get(object, field);
+		value = value == null ? NullNode.getInstance() : value;
 		return JsonPayload.json(value, HttpStatus.OK);
 	}
 
 	@Put("/:id/:field")
 	@Put("/:id/:field/")
 	public Payload put(String id, String field, String body) {
-
 		checkIfAuthorizedToUpdate(id);
-		boolean created = false;
-		ObjectNode settings = null;
-
-		try {
-			Class<? extends Settings> settingsClass = registeredSettingsClasses.get(id);
-			settings = settingsClass == null ? Json8.readObject(load(id)) //
-					: Json8.mapper().valueToTree(load(settingsClass));
-
-		} catch (NotFoundException e) {
-			settings = Json8.object();
-			created = true;
-		}
-
-		settings.set(field, Json8.readNode(body));
-		IndexResponse response = save(id, settings.toString());
-
-		return JsonPayload.saved(created, "/1", response.getType(), //
-				response.getId(), response.getVersion());
+		ObjectNode object = getAsNode(id);
+		object = object == null ? Json8.object() : object;
+		JsonNode value = Json8.readNode(body);
+		Json8.set(object, field, value);
+		String source = object.toString();
+		IndexResponse response = saveToElastic(id, source);
+		return JsonPayload.toJson("/1", response);
 	}
 
 	@Delete("/:id/:field")
 	@Delete("/:id/:field/")
 	public Payload delete(String id, String field) {
-
 		checkIfAuthorizedToUpdate(id);
+		ObjectNode object = getAsNode(id);
+		if (object == null)
+			throw Exceptions.notFound(TYPE, id);
 
-		Class<? extends Settings> settingsClass = registeredSettingsClasses.get(id);
-
-		ObjectNode settings = settingsClass == null ? Json8.readObject(load(id)) //
-				: Json8.mapper().valueToTree(load(settingsClass));
-
-		settings.remove(field);
-		IndexResponse response = save(id, settings.toString());
-
-		return JsonPayload.saved(false, "/1", response.getType(), //
-				response.getId(), response.getVersion());
+		Json8.remove(object, field);
+		IndexResponse response = setAsNode(id, object);
+		return JsonPayload.toJson("/1", response);
 	}
 
 	//
 	// Internal services
 	//
 
-	public <K extends Settings> K load(Class<K> settingsClass) {
+	public <K extends Settings> K getAsObject(Class<K> settingsClass) {
 		String id = Settings.id(settingsClass);
-
 		try {
-			String json = load(id);
-			return Json8.mapper().readValue(json, settingsClass);
+			String source = loadFromElastic(id);
+			return Json8.toPojo(source, settingsClass);
 
 		} catch (NotFoundException nfe) {
-			// settings not set yet, return a default instance
-			try {
-				return settingsClass.newInstance();
-
-			} catch (InstantiationException | IllegalAccessException e) {
-				throw Exceptions.runtime(e, "error instanciating [%s] settings class", //
-						settingsClass.getSimpleName());
-			}
-		} catch (IOException e) {
-			throw Exceptions.runtime(e, "error mapping [%s] settings to [%s] class", //
-					id, settingsClass.getSimpleName());
+			return instantiateDefaultAsObject(settingsClass);
 		}
 	}
 
-	public String load(String id) {
-		String settings = SpaceContext.getSettings(id);
-
-		if (settings == null) {
-			if (elastic().exists(settingsIndex())) {
-				GetResponse response = elastic().get(settingsIndex(), id);
-
-				if (response.isExists()) {
-					settings = response.getSourceAsString();
-					SpaceContext.setSettings(id, settings);
-				}
-			}
-
-			if (settings == null)
-				throw Exceptions.notFound(TYPE, id);
-		}
-
-		return settings;
-	}
-
-	public IndexResponse save(Settings settings) {
+	public ObjectNode getAsNode(String id) {
 		try {
-			String settingsAsString = Json8.mapper().writeValueAsString(settings);
-			return save(settings.id(), settingsAsString);
+			String source = loadFromElastic(id);
+			return Json8.readObject(source);
 
-		} catch (JsonProcessingException e) {
-			throw Exceptions.runtime(e);
+		} catch (NotFoundException nfe) {
+			return instantiateDefaultAsNode(id);
 		}
 	}
 
-	<K extends Settings> void registerSettingsClass(Class<K> settingsClass) {
+	public <K extends Settings> void registerSettings(Class<K> settingsClass) {
 		if (registeredSettingsClasses == null)
 			registeredSettingsClasses = Maps.newHashMap();
 
 		registeredSettingsClasses.put(Settings.id(settingsClass), settingsClass);
 	}
 
+	public <T extends Settings> IndexResponse setAsObject(T settings) {
+		return saveToElastic(settings.id(), Json8.toString(settings));
+	}
+
+	public IndexResponse setAsNode(String id, ObjectNode settings) {
+		return saveToElastic(id, settings.toString());
+	}
+
 	//
 	// implementation
 	//
 
-	public static Index settingsIndex() {
+	private static Index settingsIndex() {
 		return Index.toIndex(TYPE);
 	}
 
-	private Credentials checkIfAuthorizedToRead(String id) {
+	private ObjectNode instantiateDefaultAsNode(String id) {
+		Class<? extends Settings> settingsClass = registeredSettingsClasses.get(id);
+		return settingsClass == null ? null //
+				: Json8.mapper().valueToTree(instantiateDefaultAsObject(settingsClass));
+	}
+
+	private <K extends Settings> K instantiateDefaultAsObject(Class<K> settingsClass) {
+		if (registeredSettingsClasses.containsKey(Settings.id(settingsClass))) {
+			try {
+				return settingsClass.newInstance();
+
+			} catch (InstantiationException | IllegalAccessException e) {
+				throw Exceptions.runtime(e, "error instantiating [%s] settings class", //
+						settingsClass.getSimpleName());
+			}
+		}
+		throw Exceptions.runtime("settings class [%s] not registered", //
+				settingsClass.getSimpleName());
+	}
+
+	private Credentials checkIfAuthorizedToRead(String settingsId) {
 		Credentials credentials = SpaceContext.credentials();
 		if (!credentials.isAtLeastSuperAdmin())
-			credentials.checkRoles(getSettingsAcl(id).read());
+			credentials.checkRoles(getSettingsAcl(settingsId).read());
 
-		Class<? extends Settings> settingsClass = registeredSettingsClasses.get(id);
+		Class<? extends Settings> settingsClass = registeredSettingsClasses.get(settingsId);
 		if (settingsClass != null)
 			if (NonDirectlyReadableSettings.class.isAssignableFrom(settingsClass))
 				throw Exceptions.illegalArgument(//
-						"[%s] settings is not directly readable", id);
+						"[%s] settings is not directly readable", settingsId);
 
 		return credentials;
 	}
@@ -301,25 +249,33 @@ public class SettingsResource extends Resource {
 		return credentials;
 	}
 
-	private SettingsAcl getSettingsAcl(String id) {
+	private SettingsAcl getSettingsAcl(String settingsId) {
 		try {
-			return load(SettingsSettings.class).get(id);
-
+			return getAsObject(SettingsSettings.class).get(settingsId);
 		} catch (NotFoundException ignore) {
 		}
-
 		return SettingsAcl.defaultAcl();
 	}
 
-	private IndexResponse save(String id, String body) {
-		// Make sure index is created before to save anything
+	private String loadFromElastic(String id) {
+		if (elastic().exists(settingsIndex())) {
+			GetResponse response = elastic().get(settingsIndex(), id);
+			if (response.isExists())
+				return response.getSourceAsString();
+		}
+		throw Exceptions.notFound(TYPE, id);
+	}
+
+	private IndexResponse saveToElastic(String id, String source) {
+		checkSettingsAreValid(id, source);
 		makeSureIndexIsCreated();
+		return elastic().prepareIndex(settingsIndex(), id)//
+				.setSource(source).get();
+	}
 
-		IndexResponse response = elastic()//
-				.prepareIndex(settingsIndex(), id).setSource(body).get();
-
-		SpaceContext.setSettings(id, body);
-		return response;
+	private void checkSettingsAreValid(String id, String body) {
+		if (registeredSettingsClasses.containsKey(id))
+			Json8.toPojo(body, registeredSettingsClasses.get(id));
 	}
 
 	private void makeSureIndexIsCreated() {
@@ -349,5 +305,6 @@ public class SettingsResource extends Resource {
 	}
 
 	private SettingsResource() {
+		registerSettings(SettingsSettings.class);
 	}
 }

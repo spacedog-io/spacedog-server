@@ -165,7 +165,7 @@ public class CredentialsResource extends Resource {
 	public Payload post(String body, Context context) {
 
 		CredentialsSettings settings = SettingsResource.get()//
-				.load(CredentialsSettings.class);
+				.getAsObject(CredentialsSettings.class);
 
 		if (settings.disableGuestSignUp)
 			SpaceContext.credentials().checkAtLeastUser();
@@ -236,7 +236,7 @@ public class CredentialsResource extends Resource {
 			requester.checkPasswordHasBeenChallenged();
 
 		ObjectNode data = Json8.readObject(body);
-		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
+		CredentialsSettings settings = SettingsResource.get().getAsObject(CredentialsSettings.class);
 
 		String username = data.path(USERNAME_FIELD).asText();
 		if (!Strings.isNullOrEmpty(username)) {
@@ -343,7 +343,7 @@ public class CredentialsResource extends Resource {
 		String password = context.get(PASSWORD_FIELD);
 
 		Credentials credentials = getById(id, true).get();
-		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
+		CredentialsSettings settings = SettingsResource.get().getAsObject(CredentialsSettings.class);
 		credentials.changePassword(password, passwordResetCode, //
 				Optional7.of(settings.passwordRegex()));
 		credentials = update(credentials);
@@ -367,7 +367,7 @@ public class CredentialsResource extends Resource {
 				? Json8.checkString(Json8.checkNotNull(Json8.readNode(body)))//
 				: context.get(PASSWORD_FIELD);
 
-		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
+		CredentialsSettings settings = SettingsResource.get().getAsObject(CredentialsSettings.class);
 		credentials.changePassword(password, Optional7.of(settings.passwordRegex()));
 
 		credentials = update(credentials);
@@ -451,7 +451,7 @@ public class CredentialsResource extends Resource {
 	//
 
 	long getCheckSessionLifetime(Context context) {
-		CredentialsSettings settings = SettingsResource.get().load(CredentialsSettings.class);
+		CredentialsSettings settings = SettingsResource.get().getAsObject(CredentialsSettings.class);
 		long lifetime = context.query().getLong(LIFETIME_PARAM, settings.sessionMaximumLifetime);
 		if (lifetime > settings.sessionMaximumLifetime)
 			throw Exceptions.forbidden("maximum access token lifetime is [%s] seconds", //
@@ -495,7 +495,7 @@ public class CredentialsResource extends Resource {
 
 	private void updateInvalidChallenges(Credentials credentials) {
 		CredentialsSettings settings = SettingsResource.get()//
-				.load(CredentialsSettings.class);
+				.getAsObject(CredentialsSettings.class);
 
 		if (settings.maximumInvalidChallenges == 0)
 			return;
@@ -712,7 +712,7 @@ public class CredentialsResource extends Resource {
 		}
 
 		CredentialsSettings settings = SettingsResource.get()//
-				.load(CredentialsSettings.class);
+				.getAsObject(CredentialsSettings.class);
 
 		credentials.name(Check.notNullOrEmpty(request.username(), USERNAME_FIELD));
 		Usernames.checkValid(credentials.name(), settings.usernameRegex());
@@ -827,6 +827,6 @@ public class CredentialsResource extends Resource {
 	}
 
 	private CredentialsResource() {
-		SettingsResource.get().registerSettingsClass(CredentialsSettings.class);
+		SettingsResource.get().registerSettings(CredentialsSettings.class);
 	}
 }

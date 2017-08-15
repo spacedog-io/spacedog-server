@@ -75,7 +75,7 @@ public class WebResource extends S3Resource {
 			if (payload.isSuccess())
 				return payload;
 
-			WebSettings settings = SettingsResource.get().load(WebSettings.class);
+			WebSettings settings = SettingsResource.get().getAsObject(WebSettings.class);
 
 			if (!Strings.isNullOrEmpty(settings.notFoundPage))
 				payload = doGet(withContent, FileResource.FILE_BUCKET_SUFFIX,
@@ -108,6 +108,6 @@ public class WebResource extends S3Resource {
 	}
 
 	private WebResource() {
-		SettingsResource.get().registerSettingsClass(WebSettings.class);
+		SettingsResource.get().registerSettings(WebSettings.class);
 	}
 }

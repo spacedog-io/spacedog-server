@@ -28,6 +28,8 @@ import com.google.common.collect.Sets;
 		setterVisibility = Visibility.NONE)
 public class Credentials {
 
+	public static final String ALL_ROLE = "all";
+
 	public static enum Type {
 		guest, user, admin, superadmin, superdog;
 
@@ -399,7 +401,8 @@ public class Credentials {
 		if (authorizedRoles != null) {
 			Set<String> thisCredentialsRoles = roles();
 			for (String authorizedRole : authorizedRoles)
-				if (thisCredentialsRoles.contains(authorizedRole))
+				if (authorizedRole.equals(ALL_ROLE) //
+						|| thisCredentialsRoles.contains(authorizedRole))
 					return;
 		}
 		throw Exceptions.insufficientCredentials(this);

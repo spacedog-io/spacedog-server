@@ -51,7 +51,7 @@ public class MailResource extends Resource {
 	@Post("/1/mail/")
 	public Payload post(Context context) {
 
-		MailSettings settings = SettingsResource.get().load(MailSettings.class);
+		MailSettings settings = SettingsResource.get().getAsObject(MailSettings.class);
 
 		if (settings.enableUserFullAccess)
 			SpaceContext.credentials().checkAtLeastUser();
@@ -119,7 +119,7 @@ public class MailResource extends Resource {
 
 	public Payload email(Message message) {
 
-		MailSettings settings = SettingsResource.get().load(MailSettings.class);
+		MailSettings settings = SettingsResource.get().getAsObject(MailSettings.class);
 
 		if (settings.smtp != null)
 			return emailViaSmtp(settings.smtp, message);
@@ -285,6 +285,6 @@ public class MailResource extends Resource {
 	}
 
 	private MailResource() {
-		SettingsResource.get().registerSettingsClass(MailSettings.class);
+		SettingsResource.get().registerSettings(MailSettings.class);
 	}
 }
