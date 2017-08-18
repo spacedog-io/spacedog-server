@@ -16,40 +16,40 @@ public class JsonAssert<K extends JsonNode> {
 	}
 
 	public JsonAssert<K> assertEquals(String expected, String jsonPath) {
-		Assert.assertEquals(expected, Json7.checkString(//
-				Json7.checkNotNull(Json7.get(node, jsonPath))));
+		Assert.assertEquals(expected, Json.checkString(//
+				Json.checkNotNull(Json.get(node, jsonPath))));
 		return this;
 	}
 
 	public JsonAssert<K> assertEquals(int expected, String jsonPath) {
-		JsonNode field = Json7.get(node, jsonPath);
+		JsonNode field = Json.get(node, jsonPath);
 		Assert.assertEquals(expected, //
 				field.isArray() || field.isObject() ? field.size() : field.intValue());
 		return this;
 	}
 
 	public JsonAssert<K> assertEquals(long expected, String jsonPath) {
-		Assert.assertEquals(expected, Json7.get(node, jsonPath).longValue());
+		Assert.assertEquals(expected, Json.get(node, jsonPath).longValue());
 		return this;
 	}
 
 	public JsonAssert<K> assertEquals(float expected, String jsonPath, float delta) {
-		Assert.assertEquals(expected, Json7.get(node, jsonPath).floatValue(), delta);
+		Assert.assertEquals(expected, Json.get(node, jsonPath).floatValue(), delta);
 		return this;
 	}
 
 	public JsonAssert<K> assertEquals(double expected, String jsonPath, double delta) {
-		Assert.assertEquals(expected, Json7.get(node, jsonPath).doubleValue(), delta);
+		Assert.assertEquals(expected, Json.get(node, jsonPath).doubleValue(), delta);
 		return this;
 	}
 
 	public JsonAssert<K> assertEquals(DateTime expected, String jsonPath) {
-		Assert.assertEquals(expected, DateTime.parse(Json7.get(node, jsonPath).asText()));
+		Assert.assertEquals(expected, DateTime.parse(Json.get(node, jsonPath).asText()));
 		return this;
 	}
 
 	public JsonAssert<K> assertEquals(boolean expected, String jsonPath) {
-		Assert.assertEquals(expected, Json7.get(node, jsonPath).asBoolean());
+		Assert.assertEquals(expected, Json.get(node, jsonPath).asBoolean());
 		return this;
 	}
 
@@ -59,37 +59,37 @@ public class JsonAssert<K extends JsonNode> {
 	}
 
 	public JsonAssert<K> assertEquals(JsonNode expected, String jsonPath) {
-		Assert.assertEquals(expected, Json7.get(node, jsonPath));
+		Assert.assertEquals(expected, Json.get(node, jsonPath));
 		return this;
 	}
 
 	public JsonAssert<K> assertNotNull(String jsonPath) {
-		JsonNode field = Json7.get(node, jsonPath);
+		JsonNode field = Json.get(node, jsonPath);
 		if (field == null || field.isNull())
 			Assert.fail(String.format("json property [%s] is null", jsonPath));
 		return this;
 	}
 
 	public JsonAssert<K> assertNotNullOrEmpty(String jsonPath) {
-		JsonNode field = Json7.get(node, jsonPath);
+		JsonNode field = Json.get(node, jsonPath);
 		if (Strings.isNullOrEmpty(field.asText()))
 			Assert.fail(String.format("json string property [%s] is null or empty", jsonPath));
 		return this;
 	}
 
 	public JsonAssert<K> assertTrue(String jsonPath) {
-		Assert.assertTrue(Json7.get(node, jsonPath).asBoolean());
+		Assert.assertTrue(Json.get(node, jsonPath).asBoolean());
 		return this;
 	}
 
 	public JsonAssert<K> assertFalse(String jsonPath) {
-		Assert.assertFalse(Json7.get(node, jsonPath).asBoolean());
+		Assert.assertFalse(Json.get(node, jsonPath).asBoolean());
 		return this;
 	}
 
 	public JsonAssert<K> assertDateIsValid(String jsonPath) {
 		assertNotNull(jsonPath);
-		JsonNode field = Json7.get(node, jsonPath);
+		JsonNode field = Json.get(node, jsonPath);
 		if (field.isTextual()) {
 			try {
 				DateTime.parse(field.asText());
@@ -105,7 +105,7 @@ public class JsonAssert<K extends JsonNode> {
 	public JsonAssert<K> assertDateIsRecent(String jsonPath) {
 		long now = DateTime.now().getMillis();
 		assertDateIsValid(jsonPath);
-		DateTime date = DateTime.parse(Json7.get(node, jsonPath).asText());
+		DateTime date = DateTime.parse(Json.get(node, jsonPath).asText());
 		if (date.isBefore(now - 3000) || date.isAfter(now + 3000))
 			Assert.fail(String.format(//
 					"json property [%s] with value [%s] is not a recent SpaceDog date (now +/- 3s)", jsonPath, date));
@@ -113,8 +113,8 @@ public class JsonAssert<K extends JsonNode> {
 	}
 
 	public JsonAssert<K> assertSizeEquals(int size, String jsonPath) {
-		JsonNode field = Json7.get(node, jsonPath);
-		if (Json7.isNull(field))
+		JsonNode field = Json.get(node, jsonPath);
+		if (Json.isNull(field))
 			Assert.fail(String.format("property [%s] is null", jsonPath));
 		if (size != field.size())
 			Assert.fail(String.format("expected size [%s], json property [%s] node size [%s]", //
@@ -143,14 +143,14 @@ public class JsonAssert<K extends JsonNode> {
 	}
 
 	public JsonAssert<K> assertContains(JsonNode expected, String jsonPath) {
-		if (!Iterators.contains(Json7.get(node, jsonPath).elements(), expected))
+		if (!Iterators.contains(Json.get(node, jsonPath).elements(), expected))
 			Assert.fail(String.format(//
 					"field [%s] does not contain [%s]", jsonPath, expected));
 		return this;
 	}
 
 	public JsonAssert<K> assertNotPresent(String jsonPath) {
-		JsonNode field = Json7.get(node, jsonPath);
+		JsonNode field = Json.get(node, jsonPath);
 		if (field != null)
 			Assert.fail(String.format(//
 					"json path [%s] contains [%s]", jsonPath, field));
@@ -158,7 +158,7 @@ public class JsonAssert<K extends JsonNode> {
 	}
 
 	public JsonAssert<K> assertPresent(String jsonPath) {
-		JsonNode field = Json7.get(node, jsonPath);
+		JsonNode field = Json.get(node, jsonPath);
 		if (field == null)
 			Assert.fail(String.format(//
 					"json path [%s] not found", jsonPath));
@@ -167,7 +167,7 @@ public class JsonAssert<K extends JsonNode> {
 
 	public JsonAssert<K> assertString(String jsonPath) {
 		assertPresent(jsonPath);
-		JsonNode field = Json7.get(node, jsonPath);
+		JsonNode field = Json.get(node, jsonPath);
 		if (!field.isTextual())
 			Assert.fail(String.format(//
 					"json path [%s] not string", jsonPath));
@@ -176,7 +176,7 @@ public class JsonAssert<K extends JsonNode> {
 
 	public JsonAssert<K> assertInteger(String jsonPath) {
 		assertPresent(jsonPath);
-		JsonNode field = Json7.get(node, jsonPath);
+		JsonNode field = Json.get(node, jsonPath);
 		if (!field.isInt())
 			Assert.fail(String.format(//
 					"json path [%s] not integer", jsonPath));

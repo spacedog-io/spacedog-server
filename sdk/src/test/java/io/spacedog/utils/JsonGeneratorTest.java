@@ -25,6 +25,6 @@ public class JsonGeneratorTest extends Assert {
 		generator.regPath("name", "vince", "william");
 		generator.regPath("address.name", "vince", "william");
 		ObjectNode person = generator.gen(schema);
-		Utils.info(Json7.toPrettyString(person));
+		Utils.info(Json.toPrettyString(person));
 	}
 }

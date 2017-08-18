@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class SchemaTranslator {
 
-	private static JsonNode META_MAPPING = Json7.objectBuilder()//
+	private static JsonNode META_MAPPING = Json.objectBuilder()//
 			.put("type", "object") //
 			.object("properties") //
 			.object("createdBy") //
@@ -35,7 +35,7 @@ public class SchemaTranslator {
 		ObjectNode subMapping = toElasticMapping(schema.get(type));
 		subMapping.set("_meta", schema);
 
-		return Json7.objectBuilder().node(type, subMapping).build();
+		return Json.objectBuilder().node(type, subMapping).build();
 	}
 
 	private static ObjectNode toElasticMapping(JsonNode schema) {
@@ -46,7 +46,7 @@ public class SchemaTranslator {
 		propertiesNode.set("meta", META_MAPPING);
 
 		if ("object".equals(type)) {
-			JsonBuilder<ObjectNode> builder = Json7.objectBuilder()//
+			JsonBuilder<ObjectNode> builder = Json.objectBuilder()//
 					.put("dynamic", "strict")//
 					.put("date_detection", false)//
 					.node("properties", propertiesNode);
@@ -58,7 +58,7 @@ public class SchemaTranslator {
 
 	private static ObjectNode toElasticProperties(JsonNode schema) {
 
-		JsonBuilder<ObjectNode> builder = Json7.objectBuilder();
+		JsonBuilder<ObjectNode> builder = Json.objectBuilder();
 		Iterator<String> fieldNames = schema.fieldNames();
 		while (fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
@@ -70,7 +70,7 @@ public class SchemaTranslator {
 	}
 
 	private static ObjectNode toElasticProperty(String key, JsonNode schema) {
-		JsonBuilder<ObjectNode> mapping = Json7.objectBuilder();
+		JsonBuilder<ObjectNode> mapping = Json.objectBuilder();
 		String type = schema.path("_type").asText("object");
 
 		if ("text".equals(type)) {

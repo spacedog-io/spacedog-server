@@ -20,7 +20,7 @@ import org.joda.time.DateTimeZone;
 
 import io.spacedog.rest.SpaceBackend;
 import io.spacedog.utils.ClassResources;
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 import net.codestory.http.AbstractWebServer;
 import net.codestory.http.Request;
@@ -88,7 +88,7 @@ public class Start {
 	public Info info() {
 		if (info == null) {
 			String string = ClassResources.loadToString(this, "info.json");
-			info = Json7.toPojo(string, Info.class);
+			info = Json.toPojo(string, Info.class);
 		}
 		return info;
 	}

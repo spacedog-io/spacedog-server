@@ -13,7 +13,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.io.Resources;
 
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.SchemaTranslator;
 import io.spacedog.utils.SchemaValidator;
 
@@ -24,7 +24,7 @@ public class SchemaTranslatorTest extends Assert {
 
 		// load schema
 		URL urlSchema = Resources.getResource(this.getClass(), "schema.json");
-		JsonNode schema = Json7.readNode(urlSchema);
+		JsonNode schema = Json.readNode(urlSchema);
 
 		// validate and translate
 		SchemaValidator.validate("myschema", schema);
@@ -34,7 +34,7 @@ public class SchemaTranslatorTest extends Assert {
 
 		// load expected mapping
 		URL urlExpectedMapping = Resources.getResource(this.getClass(), "mapping.json");
-		JsonNode expectedMapping = Json7.readNode(urlExpectedMapping);
+		JsonNode expectedMapping = Json.readNode(urlExpectedMapping);
 
 		// assert
 		assertEquals(mapping, expectedMapping);

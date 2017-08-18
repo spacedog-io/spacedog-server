@@ -93,7 +93,7 @@ public class SchemaBuilder {
 	public Schema build() {
 		ObjectNode node = builder.build();
 		if (acl != null)
-			node.with(name).set(_ACL, Json7.mapper().valueToTree(acl));
+			node.with(name).set(_ACL, Json.mapper().valueToTree(acl));
 		return new Schema(name, node);
 	}
 
@@ -158,7 +158,7 @@ public class SchemaBuilder {
 	}
 
 	public SchemaBuilder extra(Object... extra) {
-		return extra(Json7.object(extra));
+		return extra(Json.object(extra));
 	}
 
 	public SchemaBuilder extra(ObjectNode extra) {
@@ -172,7 +172,7 @@ public class SchemaBuilder {
 	}
 
 	public SchemaBuilder labels(String... labels) {
-		builder.node(_LABELS, Json7.object(//
+		builder.node(_LABELS, Json.object(//
 				Arrays.copyOf(labels, labels.length, Object[].class)));
 		return this;
 	}
@@ -216,7 +216,7 @@ public class SchemaBuilder {
 
 	private SchemaBuilder(String name) {
 		this.name = name;
-		this.builder = Json7.objectBuilder().object(name);
+		this.builder = Json.objectBuilder().object(name);
 	}
 
 	private SchemaBuilder property(String key, SchemaType type) {

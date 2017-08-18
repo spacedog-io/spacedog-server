@@ -17,7 +17,7 @@ import io.spacedog.cli.ExportLogCommand;
 import io.spacedog.cli.LoginCommand;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 
 public class ExportLogCommandTest extends SpaceTest {
@@ -48,12 +48,12 @@ public class ExportLogCommandTest extends SpaceTest {
 		new ExportLogCommand().verbose(true).day(today).file(target.toString()).export();
 
 		// checking export file
-		JsonNode node = Json7.mapper().readTree(Files.readAllBytes(target));
+		JsonNode node = Json.mapper().readTree(Files.readAllBytes(target));
 
 		Iterator<JsonNode> elements = node.get("results").elements();
 		while (elements.hasNext()) {
 			JsonNode element = elements.next();
-			assertEquals("test", Json7.get(element, "credentials.backendId").asText());
+			assertEquals("test", Json.get(element, "credentials.backendId").asText());
 			assertEquals(today, element.get("receivedAt").asText().substring(0, 10));
 		}
 	}

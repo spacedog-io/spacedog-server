@@ -16,7 +16,7 @@ import io.spacedog.model.Schema.DataAcl;
 import io.spacedog.model.InternalDataSettings;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 
 public class DataAccessControlTestOften extends SpaceTest {
 
@@ -233,7 +233,7 @@ public class DataAccessControlTestOften extends SpaceTest {
 		// he's got all the rights
 		SpaceDog dave = signUp(superadmin, "dave", "hi dave");
 		superadmin.credentials().setRole(dave.id(), "platine");
-		ObjectNode message = Json7.object("text", "hi");
+		ObjectNode message = Json.object("text", "hi");
 		dave.data().create("message", "1", message);
 		message = dave.data().get("message", "1");
 		message.put("text", "ola");

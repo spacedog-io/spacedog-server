@@ -23,7 +23,7 @@ import io.spacedog.model.Schema.DataAcl;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.PushRequest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 
 public class PushResourceTestOften extends SpaceTest {
 
@@ -91,13 +91,13 @@ public class PushResourceTestOften extends SpaceTest {
 		ObjectNode response = vince.push().push(fredInstallId, //
 				new PushRequest().text("coucou"));
 
-		Json7.assertNode(response)//
+		Json.assertNode(response)//
 				.assertEquals(fredInstallId, "pushedTo.0.installationId")//
 				.assertEquals(fred.id(), "pushedTo.0.credentialsId");
 
 		// vince pushes a complex object message to dave
-		ObjectNode message = Json7.object("APNS", //
-				Json7.object("aps", Json7.object("alert", "coucou")));
+		ObjectNode message = Json.object("APNS", //
+				Json.object("aps", Json.object("alert", "coucou")));
 
 		response = vince.push().push(daveInstallId, //
 				new PushRequest().data(message));
@@ -191,7 +191,7 @@ public class PushResourceTestOften extends SpaceTest {
 				.refresh(true).text("This is a push!");
 		response = vince.push().push(pushRequest);
 
-		Json7.assertNode(response)//
+		Json.assertNode(response)//
 				.assertFalse(FAILURES)//
 				.assertEquals(4, PUSHED_TO)//
 				.assertContainsValue(unknownInstallId, INSTALLATION_ID)//
@@ -206,7 +206,7 @@ public class PushResourceTestOften extends SpaceTest {
 		pushRequest.refresh(false).usersOnly(true);
 		response = vince.push().push(pushRequest);
 
-		Json7.assertNode(response)//
+		Json.assertNode(response)//
 				.assertFalse(FAILURES)//
 				.assertEquals(3, PUSHED_TO)//
 				.assertContainsValue(dave.id(), CREDENTIALS_ID)//
@@ -217,7 +217,7 @@ public class PushResourceTestOften extends SpaceTest {
 		pushRequest.pushService(PushService.APNS);
 		response = vince.push().push(pushRequest);
 
-		Json7.assertNode(response)//
+		Json.assertNode(response)//
 				.assertFalse(FAILURES)//
 				.assertEquals(2, PUSHED_TO)//
 				.assertContainsValue(dave.id(), CREDENTIALS_ID)//
@@ -227,7 +227,7 @@ public class PushResourceTestOften extends SpaceTest {
 		pushRequest.tags("bonjour");
 		response = vince.push().push(pushRequest);
 
-		Json7.assertNode(response)//
+		Json.assertNode(response)//
 				.assertFalse(FAILURES)//
 				.assertEquals(1, PUSHED_TO)//
 				.assertContainsValue(fred.id(), CREDENTIALS_ID);
@@ -236,7 +236,7 @@ public class PushResourceTestOften extends SpaceTest {
 		pushRequest.pushService(null);
 		response = vince.push().push(pushRequest);
 
-		Json7.assertNode(response)//
+		Json.assertNode(response)//
 				.assertFalse(FAILURES)//
 				.assertEquals(2, PUSHED_TO)//
 				.assertContainsValue(vince.id(), CREDENTIALS_ID)//
@@ -246,7 +246,7 @@ public class PushResourceTestOften extends SpaceTest {
 		pushRequest.tags("bonjour", "hi");
 		response = vince.push().push(pushRequest);
 
-		Json7.assertNode(response)//
+		Json.assertNode(response)//
 				.assertFalse(FAILURES)//
 				.assertEquals(1, PUSHED_TO)//
 				.assertContainsValue(vince.id(), CREDENTIALS_ID);
@@ -294,12 +294,12 @@ public class PushResourceTestOften extends SpaceTest {
 		String daveInstallId = installApplication("joho", PushService.APNS, dave);
 
 		// vince pushes a message to dave with manual badge = 3
-		ObjectNode message = Json7.object(PushService.APNS, //
-				Json7.object("aps", Json7.object("alert", "coucou", BADGE, 3)));
+		ObjectNode message = Json.object(PushService.APNS, //
+				Json.object("aps", Json.object("alert", "coucou", BADGE, 3)));
 		ObjectNode response = vince.push().push(daveInstallId, //
 				new PushRequest().data(message));
 
-		Json7.assertNode(response)//
+		Json.assertNode(response)//
 				.assertEquals(daveInstallId, "pushedTo.0.installationId");
 
 		// badge is not set in installation
@@ -315,7 +315,7 @@ public class PushResourceTestOften extends SpaceTest {
 
 		response = superadmin.push().push(pushRequest);
 
-		Json7.assertNode(response)//
+		Json.assertNode(response)//
 				.assertSizeEquals(2, PUSHED_TO)//
 				.assertContainsValue(vinceInstallId, INSTALLATION_ID)//
 				.assertContainsValue(daveInstallId, INSTALLATION_ID);
@@ -337,7 +337,7 @@ public class PushResourceTestOften extends SpaceTest {
 		// admin pushes again to all with automatic badging
 		response = superadmin.push().push(pushRequest);
 
-		Json7.assertNode(response)//
+		Json.assertNode(response)//
 				.assertSizeEquals(2, PUSHED_TO);
 
 		// check badge is 2 in dave's installation
@@ -352,7 +352,7 @@ public class PushResourceTestOften extends SpaceTest {
 		pushRequest.badgeStrategy(BadgeStrategy.semi);
 		response = superadmin.push().push(pushRequest);
 
-		Json7.assertNode(response)//
+		Json.assertNode(response)//
 				.assertSizeEquals(2, PUSHED_TO);
 
 		// check badge is 2 in dave's installation

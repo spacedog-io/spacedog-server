@@ -3,7 +3,6 @@
  */
 package io.spacedog.services;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 
@@ -16,7 +15,6 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.joda.time.DateTime;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -24,7 +22,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import io.spacedog.core.Json8;
 import io.spacedog.model.CreateCredentialsRequest;
 import io.spacedog.model.CredentialsSettings;
 import io.spacedog.model.MailTemplate;
@@ -34,6 +31,7 @@ import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Session;
 import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Passwords;
@@ -234,7 +232,7 @@ public class CredentialsResource extends Resource {
 		if (requester.isUser())
 			requester.checkPasswordHasBeenChallenged();
 
-		ObjectNode data = Json8.readObject(body);
+		ObjectNode data = Json.readObject(body);
 		CredentialsSettings settings = credentialsSettings();
 
 		String username = data.path(USERNAME_FIELD).asText();
@@ -257,7 +255,7 @@ public class CredentialsResource extends Resource {
 		}
 
 		JsonNode enabled = data.get(ENABLED_FIELD);
-		if (!Json8.isNull(enabled)) {
+		if (!Json.isNull(enabled)) {
 			requester.checkAtLeastAdmin();
 			credentials.doEnableOrDisable(enabled.asBoolean());
 		}
@@ -285,7 +283,7 @@ public class CredentialsResource extends Resource {
 	@Post("/1/credentials/forgotPassword")
 	@Post("/1/credentials/forgotPassword/")
 	public Payload postForgotPassword(String body, Context context) {
-		Map<String, Object> parameters = Json8.readMap(body);
+		Map<String, Object> parameters = Json.readMap(body);
 		String username = Check.notNull(parameters.get(USERNAME_PARAM), "username").toString();
 
 		Credentials credentials = getByName(username, true).get();
@@ -363,7 +361,7 @@ public class CredentialsResource extends Resource {
 		Credentials credentials = checkMyselfOrHigherAdminAndGet(id, true);
 
 		String password = SpaceContext.get().isJsonContent() && !Strings.isNullOrEmpty(body)//
-				? Json8.checkString(Json8.checkNotNull(Json8.readNode(body)))//
+				? Json.checkString(Json.checkNotNull(Json.readNode(body)))//
 				: context.get(PASSWORD_FIELD);
 
 		CredentialsSettings settings = credentialsSettings();
@@ -378,8 +376,8 @@ public class CredentialsResource extends Resource {
 	public Payload putPasswordMustChange(String id, String body, Context context) {
 		Credentials credentials = checkAdminAndGet(id);
 
-		Boolean passwordMustChange = Json8.checkBoolean(//
-				Json8.checkNotNull(Json8.readNode(body)));
+		Boolean passwordMustChange = Json.checkBoolean(//
+				Json.checkNotNull(Json.readNode(body)));
 		credentials.passwordMustChange(passwordMustChange);
 
 		credentials = update(credentials);
@@ -391,7 +389,7 @@ public class CredentialsResource extends Resource {
 	public Payload putEnabled(String id, String body, Context context) {
 		Credentials credentials = checkAdminAndGet(id);
 
-		JsonNode enabled = Json8.readNode(body);
+		JsonNode enabled = Json.readNode(body);
 		if (!enabled.isBoolean())
 			throw Exceptions.illegalArgument("body not a boolean but [%s]", body);
 
@@ -584,25 +582,20 @@ public class CredentialsResource extends Resource {
 		if (exists(credentials.name()))
 			throw Exceptions.alreadyExists(TYPE, credentials.name());
 
-		try {
-			String now = DateTime.now().toString();
-			credentials.updatedAt(now);
-			credentials.createdAt(now);
+		String now = DateTime.now().toString();
+		credentials.updatedAt(now);
+		credentials.createdAt(now);
 
-			String json = Json8.mapper().writeValueAsString(credentials);
+		String json = Json.toString(credentials);
 
-			// refresh index after each index change
-			IndexResponse response = Strings.isNullOrEmpty(credentials.id()) //
-					? elastic().index(credentialsIndex(), json, true) //
-					: elastic().index(credentialsIndex(), credentials.id(), json, true);
+		// refresh index after each index change
+		IndexResponse response = Strings.isNullOrEmpty(credentials.id()) //
+				? elastic().index(credentialsIndex(), json, true) //
+				: elastic().index(credentialsIndex(), credentials.id(), json, true);
 
-			credentials.id(response.getId());
-			credentials.version(response.getVersion());
-			return credentials;
-
-		} catch (JsonProcessingException e) {
-			throw Exceptions.runtime(e);
-		}
+		credentials.id(response.getId());
+		credentials.version(response.getVersion());
+		return credentials;
 	}
 
 	Credentials update(Credentials credentials) {
@@ -610,22 +603,17 @@ public class CredentialsResource extends Resource {
 			throw Exceptions.illegalArgument(//
 					"failed to update credentials since id is null");
 
-		try {
-			// TODO replace 10 by sessionsSizeMax from CredentialsSettings
-			credentials.purgeOldSessions(10);
-			credentials.updatedAt(DateTime.now().toString());
+		// TODO replace 10 by sessionsSizeMax from CredentialsSettings
+		credentials.purgeOldSessions(10);
+		credentials.updatedAt(DateTime.now().toString());
 
-			// refresh index after each index change
-			IndexResponse response = elastic().index(credentialsIndex(), //
-					credentials.id(), Json8.mapper().writeValueAsString(credentials), //
-					true);
+		// refresh index after each index change
+		IndexResponse response = elastic().index(credentialsIndex(), //
+				credentials.id(), Json.toString(credentials), //
+				true);
 
-			credentials.version(response.getVersion());
-			return credentials;
-
-		} catch (JsonProcessingException e) {
-			throw Exceptions.runtime(e);
-		}
+		credentials.version(response.getVersion());
+		return credentials;
 	}
 
 	void delete(String id) {
@@ -699,7 +687,7 @@ public class CredentialsResource extends Resource {
 
 		Credentials requester = SpaceContext.credentials();
 		Credentials credentials = new Credentials();
-		CreateCredentialsRequest request = Json8.toPojo(body, //
+		CreateCredentialsRequest request = Json.toPojo(body, //
 				CreateCredentialsRequest.class);
 
 		if (Utils.isNullOrEmpty(request.roles()))
@@ -763,23 +751,17 @@ public class CredentialsResource extends Resource {
 	}
 
 	private Credentials toCredentials(String sourceAsString, String id, long version) {
-		try {
-			Credentials credentials = Json8.mapper()//
-					.readValue(sourceAsString, Credentials.class);
-			credentials.id(id);
-			credentials.version(version);
-			return credentials;
-
-		} catch (IOException e) {
-			throw Exceptions.runtime(e);
-		}
+		Credentials credentials = Json.toPojo(sourceAsString, Credentials.class);
+		credentials.id(id);
+		credentials.version(version);
+		return credentials;
 	}
 
 	private ObjectNode fromCredentialsSearch(SearchResults<Credentials> response) {
-		ArrayNode results = Json8.array();
+		ArrayNode results = Json.array();
 		for (Credentials credentials : response.results)
 			results.add(credentials.toJson());
-		return Json8.object("total", response.total, "results", results);
+		return Json.object("total", response.total, "results", results);
 	}
 
 	private boolean exists(String username) {

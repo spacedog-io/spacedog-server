@@ -19,7 +19,7 @@ import io.spacedog.rest.SpaceRequestException;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Credentials;
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Passwords;
 
@@ -432,7 +432,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		// fred declares he's forgot his password
 		// passing an url parameter
 		fred.credentials().forgotMyPassword(//
-				Json7.object("url", "http://localhost:8080"));
+				Json.object("url", "http://localhost:8080"));
 
 		// fred can still access services if he remembers his password
 		// or if he's got a valid token

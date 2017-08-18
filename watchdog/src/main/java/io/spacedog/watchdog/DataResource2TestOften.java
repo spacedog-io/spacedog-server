@@ -23,7 +23,7 @@ import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.DataEndpoint.SearchResults;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.sdk.elastic.ESSearchSourceBuilder;
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 
 public class DataResource2TestOften extends SpaceTest {
 
@@ -40,7 +40,7 @@ public class DataResource2TestOften extends SpaceTest {
 		SpaceRequest.post("/1/data/sale").auth(fred).go(400);
 
 		// fred creates a new sale object
-		ObjectNode sale = Json7.objectBuilder()//
+		ObjectNode sale = Json.objectBuilder()//
 				.put("number", "1234567890")//
 				.object("where")//
 				.put("lat", -55.6765).put("lon", -54.6765)//
@@ -115,11 +115,11 @@ public class DataResource2TestOften extends SpaceTest {
 				.queryParam("q", "museum").refresh().auth(fred)//
 				.go(200).assertEquals(1, "total");
 
-		res1.assertEqualsWithoutMeta(Json7.checkObject(res1b.get("results.0")));
+		res1.assertEqualsWithoutMeta(Json.checkObject(res1b.get("results.0")));
 
 		// find by advanced text search
 
-		String query = Json7.objectBuilder()//
+		String query = Json.objectBuilder()//
 				.object("query")//
 				.object("query_string")//
 				.put("query", "museum")//
@@ -128,11 +128,11 @@ public class DataResource2TestOften extends SpaceTest {
 		SpaceResponse res1c = SpaceRequest.post("/1/search/sale").auth(fred).bodyString(query).go(200).assertEquals(1,
 				"total");
 
-		res1.assertEqualsWithoutMeta(Json7.checkObject(res1c.get("results.0")));
+		res1.assertEqualsWithoutMeta(Json.checkObject(res1c.get("results.0")));
 
 		// small update no version should succeed
 
-		JsonNode updateJson2 = Json7.objectBuilder().array("items").object().put("quantity", 7).build();
+		JsonNode updateJson2 = Json.objectBuilder().array("items").object().put("quantity", 7).build();
 
 		SpaceRequest.put("/1/data/sale/" + id).auth(fred).bodyJson(updateJson2).go(200)//
 				.assertTrue("success")//
@@ -243,13 +243,13 @@ public class DataResource2TestOften extends SpaceTest {
 		superadmin.schema().set(Schema.builder("message").string("text").build());
 
 		// creates a message object with auto generated id
-		ObjectNode message = Json7.object("text", "id=?");
+		ObjectNode message = Json.object("text", "id=?");
 		String id = superadmin.data().create("message", message);
 		ObjectNode node = superadmin.data().get("message", id);
 		assertEquals(message, node.without("meta"));
 
 		// creates a message object with self provided id
-		message = Json7.object("text", "id=1");
+		message = Json.object("text", "id=1");
 		superadmin.data().create("message", "1", message);
 		node = superadmin.data().get("message", "1");
 		assertEquals(message, node.without("meta"));
@@ -276,7 +276,7 @@ public class DataResource2TestOften extends SpaceTest {
 		HashSet<String> originalMessages = Sets.newHashSet(//
 				"hello", "bonjour", "guttentag", "hola");
 		for (String message : originalMessages)
-			vince.data().create("message", Json7.object("text", message));
+			vince.data().create("message", Json.object("text", message));
 
 		// fetches messages by 4 pages of 1 object
 		Set<String> messages = Sets.newHashSet();

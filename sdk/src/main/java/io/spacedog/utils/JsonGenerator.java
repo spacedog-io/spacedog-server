@@ -70,7 +70,7 @@ public class JsonGenerator {
 	}
 
 	private ObjectNode generateObject(LinkedList<String> stack, ObjectNode schema, int index) {
-		JsonBuilder<ObjectNode> builder = Json7.objectBuilder();
+		JsonBuilder<ObjectNode> builder = Json.objectBuilder();
 		generateFields(stack, builder, schema, index);
 		return builder.build();
 	}
@@ -108,9 +108,9 @@ public class JsonGenerator {
 		String stringPath = Utils.join(".", path.toArray(new String[path.size()]));
 		List<Object> list = paths.get(stringPath);
 		if (list != null)
-			return Json7.toNode(list.get(random.nextInt(list.size())));
+			return Json.toNode(list.get(random.nextInt(list.size())));
 
-		JsonNode values = Json7.get(schema, "_values");
+		JsonNode values = Json.get(schema, "_values");
 		if (values != null) {
 			if (values.isArray()) {
 				if (index < values.size())
@@ -120,16 +120,16 @@ public class JsonGenerator {
 				return values;
 		}
 
-		JsonNode enumType = Json7.get(schema, "_enumType");
+		JsonNode enumType = Json.get(schema, "_enumType");
 		if (enumType != null) {
 			if (types.containsKey(enumType.asText())) {
 				List<String> typeValues = types.get(enumType.asText());
 				String value = typeValues.get(random.nextInt(typeValues.size()));
-				return Json7.toNode(value);
+				return Json.toNode(value);
 			}
 		}
 
-		JsonNode examples = Json7.get(schema, "_examples");
+		JsonNode examples = Json.get(schema, "_examples");
 		if (examples != null) {
 			if (examples.isArray()) {
 				if (index < examples.size())
@@ -165,7 +165,7 @@ public class JsonGenerator {
 		else if ("enum".equals(type))
 			return TextNode.valueOf("blue");
 		else if ("geopoint".equals(type))
-			return Json7.object("lat", 48 + random.nextDouble(), "lon", 2 + random.nextDouble());
+			return Json.object("lat", 48 + random.nextDouble(), "lon", 2 + random.nextDouble());
 		else if ("object".equals(type))
 			return generateObject(path, schema, index);
 

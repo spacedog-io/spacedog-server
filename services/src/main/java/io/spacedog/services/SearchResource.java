@@ -24,10 +24,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
-import io.spacedog.core.Json8;
 import io.spacedog.model.DataPermission;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
@@ -118,7 +118,7 @@ public class SearchResource extends Resource {
 	ObjectNode searchInternal(String jsonQuery, Credentials credentials, Context context, String... types) {
 
 		if (types.length == 0)
-			return Json8.object("took", 0, "total", 0, "results", Json8.array());
+			return Json.object("took", 0, "total", 0, "results", Json.array());
 
 		SearchRequestBuilder search = elastic().prepareSearch(//
 				DataStore.toDataIndex(types)).setTypes(types);
@@ -157,7 +157,7 @@ public class SearchResource extends Resource {
 			// fetch-source = false for GET requests
 			// or _source = false for POST requests
 			String source = hit.sourceAsString();
-			ObjectNode object = source == null ? Json8.object() : Json8.readObject(source);
+			ObjectNode object = source == null ? Json.object() : Json.readObject(source);
 
 			ObjectNode meta = object.with("meta");
 			meta.put("id", hit.id()).put("type", hit.type()).put("version", hit.version());
@@ -166,11 +166,11 @@ public class SearchResource extends Resource {
 				meta.put("score", hit.score());
 
 			if (!Utils.isNullOrEmpty(hit.sortValues())) {
-				ArrayNode array = Json8.array();
+				ArrayNode array = Json.array();
 				for (Object value : hit.sortValues()) {
 					if (value instanceof Text)
 						value = value.toString();
-					array.add(Json8.toNode(value));
+					array.add(Json.toNode(value));
 				}
 				meta.set("sort", array);
 			}
@@ -178,7 +178,7 @@ public class SearchResource extends Resource {
 			objects.add(object);
 		}
 
-		JsonBuilder<ObjectNode> builder = Json8.objectBuilder()//
+		JsonBuilder<ObjectNode> builder = Json.objectBuilder()//
 				.put("took", response.getTookInMillis())//
 				.put("total", response.getHits().getTotalHits())//
 				.array("results");

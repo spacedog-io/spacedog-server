@@ -21,7 +21,7 @@ import com.google.common.io.Resources;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.services.ElasticClient;
 import io.spacedog.services.Start;
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 
 public class FrenchSearchTest extends SpaceTest {
 
@@ -104,7 +104,7 @@ public class FrenchSearchTest extends SpaceTest {
 		new ElasticClient(client).ensureAllIndicesAreGreen();
 
 		URL url = Resources.getResource("io/spacedog/examples/french.analyzer.settings.json");
-		JsonNode customfrenchAnalyser = Json7.readNode(url);
+		JsonNode customfrenchAnalyser = Json.readNode(url);
 
 		indices.prepareCreate(INDEX)//
 				.setSettings(customfrenchAnalyser.toString())//

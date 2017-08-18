@@ -15,12 +15,12 @@ public class SchemaValidatorTest extends Assert {
 	@Test
 	public void shouldSucceedToValidateSchema() {
 
-		testValidSchema(Json7.objectBuilder().object("car").object("color").put("_type", "enum").put("_required", true)
+		testValidSchema(Json.objectBuilder().object("car").object("color").put("_type", "enum").put("_required", true)
 				.end().object("model").put("_type", "string").put("_required", true));
-		testValidSchema(Json7.objectBuilder().object("car").object("color").put("_type", "enum").put("_required", true)
+		testValidSchema(Json.objectBuilder().object("car").object("color").put("_type", "enum").put("_required", true)
 				.end().object("model").put("_type", "string").put("_required", true).end().object("descr")
 				.object("short").put("_type", "text").end().object("detailed").put("_type", "stash"));
-		testValidSchema(Json7.objectBuilder().object("car").object("color").put("_type", "enum").put("_required", true)
+		testValidSchema(Json.objectBuilder().object("car").object("color").put("_type", "enum").put("_required", true)
 				.put("_array", true).end().object("model").put("_type", "object").put("_required", true)
 				.put("_array", true).object("name").put("_type", "string").put("_required", true).end()
 				.object("description").put("_type", "text"));
@@ -34,19 +34,19 @@ public class SchemaValidatorTest extends Assert {
 
 	@Test
 	public void shouldFailToValidateSchema() {
-		testInvalidSchema(Json7.objectBuilder().put("XXX", "XXX"));
-		testInvalidSchema(Json7.objectBuilder().put("car", "XXX"));
-		testInvalidSchema(Json7.objectBuilder().object("car"));
-		testInvalidSchema(Json7.objectBuilder().object("car").end().object("XXX"));
-		testInvalidSchema(Json7.objectBuilder().object("car").put("_type", "XXX"));
-		testInvalidSchema(Json7.objectBuilder().object("car").put("type", "XXX"));
-		testInvalidSchema(Json7.objectBuilder().object("car").put("_type", "object").object("name").put("_type", "text")
+		testInvalidSchema(Json.objectBuilder().put("XXX", "XXX"));
+		testInvalidSchema(Json.objectBuilder().put("car", "XXX"));
+		testInvalidSchema(Json.objectBuilder().object("car"));
+		testInvalidSchema(Json.objectBuilder().object("car").end().object("XXX"));
+		testInvalidSchema(Json.objectBuilder().object("car").put("_type", "XXX"));
+		testInvalidSchema(Json.objectBuilder().object("car").put("type", "XXX"));
+		testInvalidSchema(Json.objectBuilder().object("car").put("_type", "object").object("name").put("_type", "text")
 				.end().end().put("XXX", "hello"));
-		testInvalidSchema(Json7.objectBuilder().object("car").put("_type", "object").object("name").put("_type", "text")
+		testInvalidSchema(Json.objectBuilder().object("car").put("_type", "object").object("name").put("_type", "text")
 				.object("XXX"));
-		testInvalidSchema(Json7.objectBuilder().object("car").put("_type", "object").object("name").put("_type", "text")
+		testInvalidSchema(Json.objectBuilder().object("car").put("_type", "object").object("name").put("_type", "text")
 				.put("XXX", true));
-		testInvalidSchema(Json7.objectBuilder().object("car").object("color").put("_type", "enum")
+		testInvalidSchema(Json.objectBuilder().object("car").object("color").put("_type", "enum")
 				.put("_required", true).end().object("").put("_type", "string").put("_required", true));
 	}
 

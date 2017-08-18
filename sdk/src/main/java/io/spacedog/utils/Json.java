@@ -31,7 +31,7 @@ import com.fasterxml.jackson.databind.node.ValueNode;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.base.Strings;
 
-public class Json7 {
+public class Json {
 
 	public static final String JSON_CONTENT = "application/json";
 	public static final String JSON_CONTENT_UTF8 = JSON_CONTENT + ";charset=UTF-8";
@@ -63,9 +63,9 @@ public class Json7 {
 
 	public static Object get(JsonNode json, String propertyPath, Object defaultValue) {
 		JsonNode node = get(json, propertyPath);
-		if (Json7.isNull(node))
+		if (Json.isNull(node))
 			return defaultValue;
-		return Json7.toValue(node);
+		return Json.toValue(node);
 	}
 
 	public static JsonNode set(JsonNode object, String propertyPath, Object value) {
@@ -75,7 +75,7 @@ public class Json7 {
 		String lastPathName = propertyPath.substring(lastDotIndex + 1);
 		if (lastDotIndex > -1) {
 			String parentPath = propertyPath.substring(0, lastDotIndex);
-			object = Json7.get(object, parentPath);
+			object = Json.get(object, parentPath);
 		}
 
 		if (object.isObject())
@@ -95,7 +95,7 @@ public class Json7 {
 		String lastPathName = propertyPath.substring(lastDotIndex + 1);
 		if (lastDotIndex > -1) {
 			String parentPath = propertyPath.substring(0, lastDotIndex);
-			object = Json7.get(object, parentPath);
+			object = Json.get(object, parentPath);
 		}
 
 		if (object.isObject())
@@ -178,7 +178,7 @@ public class Json7 {
 	}
 
 	public static ObjectMapper mapper() {
-		return Json7.jsonMapper;
+		return Json.jsonMapper;
 	}
 
 	public static String toPrettyString(JsonNode node) {
@@ -194,7 +194,7 @@ public class Json7 {
 	public static Map<String, Object> readMap(String jsonString) {
 		Check.notNullOrEmpty(jsonString, "JSON");
 		try {
-			return Json7.mapper().readValue(jsonString, Map.class);
+			return Json.mapper().readValue(jsonString, Map.class);
 		} catch (IOException e) {
 			throw Exceptions.illegalArgument(e, //
 					"error deserializing JSON string [%s]", jsonString);
@@ -232,7 +232,7 @@ public class Json7 {
 		Check.notNull(objectClass, "object class");
 
 		try {
-			return Json7.mapper().readValue(json, objectClass);
+			return Json.mapper().readValue(json, objectClass);
 
 		} catch (Exception e) {
 			throw Exceptions.illegalArgument(e, "failed to map json [%s] to object of class [%s]", //
@@ -354,14 +354,14 @@ public class Json7 {
 	}
 
 	public static ArrayNode toArrayNode(Object array) {
-		ArrayNode arrayNode = Json7.array();
+		ArrayNode arrayNode = Json.array();
 		for (int i = 0; i < Array.getLength(array); i++)
 			arrayNode.add(toNode(Array.get(array, i)));
 		return arrayNode;
 	}
 
 	public static ArrayNode toCollectionNode(Collection<?> collection) {
-		ArrayNode arrayNode = Json7.array();
+		ArrayNode arrayNode = Json.array();
 		for (Object element : collection)
 			arrayNode.add(toNode(element));
 		return arrayNode;
@@ -416,24 +416,6 @@ public class Json7 {
 		}
 	}
 
-	// public static List<String> toStrings(JsonNode node) {
-	// if (node.isArray())
-	// return Lists.newArrayList(node.elements())//
-	// .stream().map(element -> element.asText())//
-	// .collect(Collectors.toList());
-	//
-	// if (node.isObject())
-	// return Lists.newArrayList(node.elements())//
-	// .stream().map(element -> element.asText())//
-	// .collect(Collectors.toList());
-	//
-	// if (node.isValueNode())
-	// return Collections.singletonList(node.asText());
-	//
-	// throw Exceptions.illegalArgument(//
-	// "can not convert this json node [%s] to a list of strings", node);
-	// }
-
 	public static JsonNode fullReplaceTextualFields(JsonNode node, String fieldName, String value) {
 		List<JsonNode> parents = node.findParents(fieldName);
 		for (JsonNode parent : parents) {
@@ -449,6 +431,7 @@ public class Json7 {
 			((ObjectNode) parent).remove(fieldName);
 		return node;
 	}
+
 	//
 	// check methods
 	//
@@ -487,7 +470,7 @@ public class Json7 {
 
 	public static JsonNode checkNotNull(ObjectNode jsonBody, String propertyPath) {
 		JsonNode value = get(jsonBody, propertyPath);
-		if (Json7.isNull(value))
+		if (Json.isNull(value))
 			throw Exceptions.illegalArgument("field [%s] is null", propertyPath);
 		return value;
 	}
@@ -639,7 +622,7 @@ public class Json7 {
 		Check.notNull(pojoClass, "pojoClass");
 
 		try {
-			return Json7.mapper().treeToValue(jsonNode, pojoClass);
+			return Json.mapper().treeToValue(jsonNode, pojoClass);
 
 		} catch (JsonProcessingException e) {
 			throw Exceptions.runtime(e, "failed to map json [%s] to pojo class [%s]", //
@@ -652,11 +635,24 @@ public class Json7 {
 		Check.notNull(pojoClass, "pojoClass");
 
 		try {
-			return Json7.mapper().readValue(jsonString, pojoClass);
+			return Json.mapper().readValue(jsonString, pojoClass);
 
 		} catch (IOException e) {
-			throw Exceptions.runtime(e, "failed to map json [%s] to pojo class [%s]", //
+			throw Exceptions.runtime(e, "error mapping string [%s] to pojo class [%s]", //
 					jsonString, pojoClass.getSimpleName());
+		}
+	}
+
+	public static <K> K toPojo(byte[] jsonBytes, Class<K> pojoClass) {
+		Check.notNull(jsonBytes, "jsonBytes");
+		Check.notNull(pojoClass, "pojoClass");
+
+		try {
+			return Json.mapper().readValue(jsonBytes, pojoClass);
+
+		} catch (IOException e) {
+			throw Exceptions.runtime(e, "error mapping bytes to pojo class [%s]", //
+					pojoClass.getSimpleName());
 		}
 	}
 

@@ -15,9 +15,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
-import io.spacedog.core.Json8;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceException;
 import io.spacedog.utils.SpaceHeaders;
@@ -72,7 +71,7 @@ public class JsonPayload {
 	}
 
 	public static JsonNode toJson(Throwable t, boolean debug) {
-		ObjectNode json = Json8.object();
+		ObjectNode json = Json.object();
 
 		if (!Strings.isNullOrEmpty(t.getMessage()))//
 			json.put("message", t.getMessage());
@@ -91,7 +90,7 @@ public class JsonPayload {
 			if (t instanceof ElasticsearchException) {
 				ElasticsearchException elasticException = ((ElasticsearchException) t);
 				for (String key : elasticException.getHeaderKeys()) {
-					json.with("elastic").set(key, Json8.toNode(elasticException.getHeader(key)));
+					json.with("elastic").set(key, Json.toNode(elasticException.getHeader(key)));
 				}
 			}
 
@@ -195,7 +194,7 @@ public class JsonPayload {
 		if (content.isObject() && SpaceContext.isDebug())
 			((ObjectNode) content).set("debug", SpaceContext.debug().toNode());
 
-		return new Payload(Json7.JSON_CONTENT_UTF8, content, httpStatus);
+		return new Payload(Json.JSON_CONTENT_UTF8, content, httpStatus);
 	}
 
 	public static Payload json(String content) {
@@ -203,7 +202,7 @@ public class JsonPayload {
 	}
 
 	public static Payload json(String content, int httpStatus) {
-		return new Payload(Json7.JSON_CONTENT_UTF8, content, httpStatus);
+		return new Payload(Json.JSON_CONTENT_UTF8, content, httpStatus);
 	}
 
 	public static Payload pojo(Object pojo) {
@@ -211,7 +210,7 @@ public class JsonPayload {
 	}
 
 	public static Payload pojo(Object pojo, int httpStatus) {
-		return new Payload(Json7.JSON_CONTENT_UTF8, Json8.toString(pojo), httpStatus);
+		return new Payload(Json.JSON_CONTENT_UTF8, Json.toString(pojo), httpStatus);
 	}
 
 	public static Payload json(int status, ShardOperationFailedException[] failures) {
@@ -262,7 +261,7 @@ public class JsonPayload {
 
 	public static boolean isJson(Payload payload) {
 		return payload.rawContentType() == null ? false//
-				: payload.rawContentType().startsWith(Json7.JSON_CONTENT);
+				: payload.rawContentType().startsWith(Json.JSON_CONTENT);
 	}
 
 	public static JsonBuilder<ObjectNode> builder() {
@@ -270,7 +269,7 @@ public class JsonPayload {
 	}
 
 	public static JsonBuilder<ObjectNode> builder(int status) {
-		return Json8.objectBuilder().put("success", status < 400).put("status", status);
+		return Json.objectBuilder().put("success", status < 400).put("status", status);
 	}
 
 	public static JsonNode toJsonNode(Payload payload) {
@@ -279,7 +278,7 @@ public class JsonPayload {
 		if (rawContent instanceof JsonNode)
 			return (JsonNode) rawContent;
 		if (rawContent instanceof String)
-			return Json8.readNode((String) rawContent);
+			return Json.readNode((String) rawContent);
 
 		return JsonPayload.builder(payload.code()).build();
 		// throw Exceptions.illegalArgument("non json payload: [%s]",

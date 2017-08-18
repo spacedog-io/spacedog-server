@@ -20,7 +20,7 @@ import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Utils;
@@ -230,11 +230,11 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest bodySettings(Settings settings) {
-		return bodyJson(Json7.mapper().valueToTree(settings));
+		return bodyJson(Json.mapper().valueToTree(settings));
 	}
 
 	public SpaceRequest bodyPojo(Object pojo) {
-		return bodyJson(Json7.toNode(pojo));
+		return bodyJson(Json.toNode(pojo));
 	}
 
 	public SpaceRequest bodySchema(Schema schema) {
@@ -244,13 +244,13 @@ public class SpaceRequest {
 	public SpaceRequest bodyJson(String body) {
 		this.contentType = OkHttp.JSON;
 		if (env().debug())
-			this.bodyJson = Json7.readNode(body);
+			this.bodyJson = Json.readNode(body);
 		this.body = body;
 		return this;
 	}
 
 	public SpaceRequest bodyJson(Object... elements) {
-		return bodyJson(Json7.object(elements));
+		return bodyJson(Json.object(elements));
 	}
 
 	public SpaceRequest bodyJson(JsonNode body) {
@@ -426,7 +426,7 @@ public class SpaceRequest {
 		}
 
 		if (bodyJson != null)
-			Utils.info("Request Json body: %s", Json7.toPrettyString(bodyJson));
+			Utils.info("Request Json body: %s", Json.toPrettyString(bodyJson));
 	}
 
 	private void printRequestHeader(String key, String value) {

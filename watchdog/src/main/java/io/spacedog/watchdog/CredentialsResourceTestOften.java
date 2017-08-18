@@ -17,7 +17,7 @@ import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceRequestException;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 
 public class CredentialsResourceTestOften extends SpaceTest {
 
@@ -30,7 +30,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// fails since empty user body
 		SpaceRequest.post("/1/credentials/").backend(test)//
-				.bodyJson(Json7.object()).go(400);
+				.bodyJson(Json.object()).go(400);
 
 		// fails since no username
 		SpaceRequest.post("/1/credentials/").backend(test)//
@@ -643,7 +643,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// fred fails to create admin credentials
 		SpaceRequest.post("/1/credentials").auth(fred)//
 				.bodyJson("username", "vince", "password", "hi vince", //
-						"email", "vince@dog.com", "roles", Json7.array("admin"))//
+						"email", "vince@dog.com", "roles", Json.array("admin"))//
 				.go(403);
 
 		// test (backend default superadmin) creates credentials for new
@@ -755,19 +755,19 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// anonymous fails to disable fred's credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json7.toNode(false)).backend(test).go(403);
+				.bodyJson(Json.toNode(false)).backend(test).go(403);
 
 		// fred fails to disable his credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json7.toNode(false)).auth(fred).go(403);
+				.bodyJson(Json.toNode(false)).auth(fred).go(403);
 
 		// admin fails to disable fred's credentials because body not a boolean
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json7.toNode("false")).auth(test).go(400);
+				.bodyJson(Json.toNode("false")).auth(test).go(400);
 
 		// only admin can disable fred's credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json7.toNode(false)).auth(test).go(200);
+				.bodyJson(Json.toNode(false)).auth(test).go(200);
 
 		// fred fails to login from now on
 		SpaceRequest.get("/1/login").auth(fred).go(401)//
@@ -789,15 +789,15 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// anonymous fails to enable fred's credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json7.toNode(true)).backend(test).go(403);
+				.bodyJson(Json.toNode(true)).backend(test).go(403);
 
 		// fred fails to enable his credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json7.toNode(true)).auth(fred).go(401);
+				.bodyJson(Json.toNode(true)).auth(fred).go(401);
 
 		// only admin can enable fred's credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json7.toNode(true)).auth(test).go(200);
+				.bodyJson(Json.toNode(true)).auth(test).go(200);
 
 		// fred logs in again normally
 		SpaceRequest.get("/1/login").auth(fred).go(200);

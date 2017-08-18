@@ -74,7 +74,7 @@ public class JsonBuilder<N extends JsonNode> {
 
 	public JsonBuilder<N> node(String key, String jsonText) {
 		try {
-			checkCurrentIsObjectNode().set(key, Json7.readNode(jsonText));
+			checkCurrentIsObjectNode().set(key, Json.readNode(jsonText));
 			return this;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -132,7 +132,7 @@ public class JsonBuilder<N extends JsonNode> {
 
 	public JsonBuilder<N> node(String jsonText) {
 		try {
-			checkCurrentIsArrayNode().add(Json7.readNode(jsonText));
+			checkCurrentIsArrayNode().add(Json.readNode(jsonText));
 			return this;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -140,13 +140,13 @@ public class JsonBuilder<N extends JsonNode> {
 	}
 
 	public JsonBuilder<N> object() {
-		stack.add(stack.isEmpty() ? Json7.object() //
+		stack.add(stack.isEmpty() ? Json.object() //
 				: checkCurrentIsArrayNode().addObject());
 		return this;
 	}
 
 	public JsonBuilder<N> array() {
-		stack.add(stack.isEmpty() ? Json7.array() //
+		stack.add(stack.isEmpty() ? Json.array() //
 				: checkCurrentIsArrayNode().addArray());
 		return this;
 	}

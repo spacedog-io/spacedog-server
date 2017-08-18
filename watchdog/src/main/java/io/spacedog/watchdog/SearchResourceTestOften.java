@@ -16,7 +16,7 @@ import io.spacedog.sdk.DataEndpoint.SearchResults;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.sdk.elastic.ESSearchSourceBuilder;
 import io.spacedog.sdk.elastic.ESSortOrder;
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 
 public class SearchResourceTestOften extends SpaceTest {
 
@@ -45,7 +45,7 @@ public class SearchResourceTestOften extends SpaceTest {
 				.assertEquals(5, "total");
 
 		// search for messages with full text query
-		ObjectNode query = Json7.objectBuilder()//
+		ObjectNode query = Json.objectBuilder()//
 				.object("query").object("match").put("text", "something to drink")//
 				.build();
 
@@ -56,21 +56,21 @@ public class SearchResourceTestOften extends SpaceTest {
 				.asJsonObject();
 
 		// check search scores
-		assertTrue(Json7.checkDouble(Json7.get(results, "results.0.meta.score")) > 1);
-		assertTrue(Json7.checkDouble(Json7.get(results, "results.1.meta.score")) < 1);
+		assertTrue(Json.checkDouble(Json.get(results, "results.0.meta.score")) > 1);
+		assertTrue(Json.checkDouble(Json.get(results, "results.1.meta.score")) < 1);
 
 		// check all meta are there
-		assertNotNull(Json7.get(results, "results.0.meta.id"));
-		assertNotNull(Json7.get(results, "results.0.meta.type"));
-		assertNotNull(Json7.get(results, "results.0.meta.version"));
-		assertNotNull(Json7.get(results, "results.0.meta.createdBy"));
-		assertNotNull(Json7.get(results, "results.0.meta.createdAt"));
-		assertNotNull(Json7.get(results, "results.0.meta.updatedBy"));
-		assertNotNull(Json7.get(results, "results.0.meta.updatedAt"));
+		assertNotNull(Json.get(results, "results.0.meta.id"));
+		assertNotNull(Json.get(results, "results.0.meta.type"));
+		assertNotNull(Json.get(results, "results.0.meta.version"));
+		assertNotNull(Json.get(results, "results.0.meta.createdBy"));
+		assertNotNull(Json.get(results, "results.0.meta.createdAt"));
+		assertNotNull(Json.get(results, "results.0.meta.updatedBy"));
+		assertNotNull(Json.get(results, "results.0.meta.updatedAt"));
 
 		// deletes messages containing 'up' by query
 
-		query = Json7.objectBuilder().object("query")//
+		query = Json.objectBuilder().object("query")//
 				.object("match").put("text", "up").build();
 		SpaceRequest.delete("/1/search/message").auth(superadmin).bodyJson(query).go(200);
 		SpaceRequest.get("/1/data/message").refresh().auth(superadmin).go(200)//
@@ -78,7 +78,7 @@ public class SearchResourceTestOften extends SpaceTest {
 
 		// deletes data objects containing 'wanna' or 'riri' but not users
 
-		query = Json7.objectBuilder().object("query")//
+		query = Json.objectBuilder().object("query")//
 				.object("match").put("_all", "wanna riri").build();
 		SpaceRequest.delete("/1/search").auth(superadmin).bodyJson(query).go(200);
 		SpaceRequest.get("/1/data").refresh().auth(superadmin).go(200)//
@@ -107,7 +107,7 @@ public class SearchResourceTestOften extends SpaceTest {
 		// search with 'terms' aggregation to get
 		// all 3 distinct city names Paris, Bordeaux and Nice
 
-		ObjectNode query = Json7.objectBuilder()//
+		ObjectNode query = Json.objectBuilder()//
 				.put("size", 0)//
 				.object("aggs")//
 				.object("distinctCities")//
@@ -135,7 +135,7 @@ public class SearchResourceTestOften extends SpaceTest {
 
 		// creates 5 numbers
 		for (int i = 0; i < 5; i++)
-			test.data().create("number", Json7.object("i", i, "t", "" + i));
+			test.data().create("number", Json.object("i", i, "t", "" + i));
 
 		// search with ascendent sorting
 		ESSearchSourceBuilder builder = ESSearchSourceBuilder.searchSource().sort("i");
@@ -146,7 +146,7 @@ public class SearchResourceTestOften extends SpaceTest {
 		List<ObjectNode> objects = results.objects();
 		for (int i = 0; i < objects.size(); i++) {
 			assertEquals(i, objects.get(i).get("i").asInt());
-			assertEquals(i, Json7.get(objects.get(i), "meta.sort.0").asInt());
+			assertEquals(i, Json.get(objects.get(i), "meta.sort.0").asInt());
 		}
 
 		// search with descendant sorting
@@ -158,7 +158,7 @@ public class SearchResourceTestOften extends SpaceTest {
 		for (int i = 0; i < objects.size(); i++) {
 			assertEquals(4 - i, objects.get(i).get("i").asInt());
 			assertEquals(String.valueOf(4 - i), //
-					Json7.get(objects.get(i), "meta.sort.0").asText());
+					Json.get(objects.get(i), "meta.sort.0").asText());
 		}
 	}
 }

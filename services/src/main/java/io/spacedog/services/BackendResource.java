@@ -6,12 +6,12 @@ package io.spacedog.services;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.core.Json8;
 import io.spacedog.jobs.Internals;
 import io.spacedog.model.BackendSettings;
 import io.spacedog.rest.SpaceBackend;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -30,7 +30,7 @@ public class BackendResource extends Resource {
 	@Get("")
 	@Get("/")
 	public Payload ping() {
-		ObjectNode payload = (ObjectNode) Json8.toNode(Start.get().info());
+		ObjectNode payload = (ObjectNode) Json.toNode(Start.get().info());
 		payload.put("success", true).put("status", 200);
 		return JsonPayload.json(payload);
 	}
@@ -131,13 +131,13 @@ public class BackendResource extends Resource {
 	}
 
 	private Payload toPayload(SearchResults<Credentials> superAdmins) {
-		ArrayNode results = Json8.array();
+		ArrayNode results = Json.array();
 
 		for (Credentials superAdmin : superAdmins.results)
-			results.add(Json8.object(USERNAME_FIELD, superAdmin.name(), //
+			results.add(Json.object(USERNAME_FIELD, superAdmin.name(), //
 					EMAIL_FIELD, superAdmin.email().get()));
 
-		return JsonPayload.json(Json8.object("total", superAdmins.total, //
+		return JsonPayload.json(Json.object("total", superAdmins.total, //
 				"results", results));
 	}
 

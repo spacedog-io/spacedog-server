@@ -15,7 +15,7 @@ import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceResponse;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.SpaceFields;
 import io.spacedog.utils.SpaceParams;
@@ -164,7 +164,7 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 		}
 
 		public void go(String password) {
-			ObjectNode body = Json7.object();
+			ObjectNode body = Json.object();
 
 			if (username != null)
 				body.put(USERNAME_FIELD, username);
@@ -218,7 +218,7 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 
 	public void setAllRoles(String id, String... roles) {
 		dog.put("/1/credentials/{id}/roles")//
-				.routeParam("id", id).bodyJson(Json7.toNode(roles)).go(200);
+				.routeParam("id", id).bodyJson(Json.toNode(roles)).go(200);
 	}
 
 	public void unsetAllRoles(String id) {
@@ -262,7 +262,7 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 	}
 
 	public void forgotMyPassword() {
-		forgotMyPassword(Json7.object());
+		forgotMyPassword(Json.object());
 	}
 
 	public void forgotMyPassword(ObjectNode parameters) {
@@ -284,7 +284,7 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 	//
 
 	private Credentials toCredentials(JsonNode node) {
-		Credentials credentials = Json7.toPojo(node, Credentials.class);
+		Credentials credentials = Json.toPojo(node, Credentials.class);
 		credentials.id(node.get(ID_FIELD).asText());
 		return credentials;
 	}

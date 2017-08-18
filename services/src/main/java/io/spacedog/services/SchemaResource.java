@@ -8,11 +8,11 @@ import java.util.Map;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.indices.TypeMissingException;
 
-import io.spacedog.core.Json8;
-import io.spacedog.core.Json8.JsonMerger;
 import io.spacedog.model.InternalDataSettings;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
+import io.spacedog.utils.Json.JsonMerger;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -31,7 +31,7 @@ public class SchemaResource extends Resource {
 	@Get("")
 	@Get("/")
 	public Payload getAll(Context context) {
-		JsonMerger merger = Json8.merger();
+		JsonMerger merger = Json.merger();
 		Map<String, Schema> schemas = DataStore.get().getAllSchemas();
 		schemas.values().forEach(schema -> merger.merge(schema.node()));
 		return JsonPayload.json(merger.get());
@@ -56,7 +56,7 @@ public class SchemaResource extends Resource {
 		Schema.checkName(type);
 
 		Schema schema = Strings.isNullOrEmpty(newSchemaAsString) ? getDefaultSchema(type) //
-				: new Schema(type, Json8.readObject(newSchemaAsString));
+				: new Schema(type, Json.readObject(newSchemaAsString));
 
 		if (schema == null)
 			throw Exceptions.illegalArgument("no default schema for type [%s]", type);

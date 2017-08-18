@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -19,7 +18,9 @@ import com.google.common.collect.Sets;
 
 import io.spacedog.core.Json8;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.Optional7;
 import io.spacedog.utils.SpaceException;
 import net.codestory.http.Context;
 import net.codestory.http.Cookie;
@@ -48,7 +49,7 @@ public class BatchResource extends Resource {
 	@Post("/")
 	public Payload post(String body, Context context) {
 
-		ArrayNode requests = Json8.readArray(body);
+		ArrayNode requests = Json.readArray(body);
 
 		if (requests.size() > 10)
 			throw new SpaceException("batch-limit-exceeded", HttpStatus.BAD_REQUEST, //
@@ -61,7 +62,7 @@ public class BatchResource extends Resource {
 
 			Payload requestPayload = null;
 			BatchJsonRequestWrapper requestWrapper = new BatchJsonRequestWrapper(//
-					Json8.checkObject(requests.get(i)), context);
+					Json.checkObject(requests.get(i)), context);
 
 			try {
 				checkRequestAuthorizedInBatch(requestWrapper);
@@ -102,7 +103,7 @@ public class BatchResource extends Resource {
 	@Get("/")
 	public Payload get(Context context) {
 
-		ObjectNode response = Json8.object();
+		ObjectNode response = Json.object();
 		boolean stopOnError = context.query().getBoolean(STOP_ON_ERROR_QUERY_PARAM, false);
 
 		for (String key : context.query().keys()) {
@@ -110,7 +111,7 @@ public class BatchResource extends Resource {
 			if (!key.equals(STOP_ON_ERROR_QUERY_PARAM)) {
 				Payload payload = null;
 				BatchJsonRequestWrapper requestWrapper = new BatchJsonRequestWrapper(//
-						Json8.object("method", "GET", "path", "/1" + context.get(key)), //
+						Json.object("method", "GET", "path", "/1" + context.get(key)), //
 						context);
 
 				try {
@@ -156,12 +157,12 @@ public class BatchResource extends Resource {
 
 		@Override
 		public String uri() {
-			return Json8.checkStringNotNullOrEmpty(request, "path");
+			return Json.checkStringNotNullOrEmpty(request, "path");
 		}
 
 		@Override
 		public String method() {
-			return Json8.checkStringNotNullOrEmpty(request, "method");
+			return Json.checkStringNotNullOrEmpty(request, "method");
 		}
 
 		@Override
@@ -179,14 +180,15 @@ public class BatchResource extends Resource {
 		public List<String> headerNames() {
 			Set<String> headerNames = Sets.newHashSet();
 			headerNames.addAll(context.request().headerNames());
-			Json8.checkObject(request, "headers", false)//
-					.ifPresent(node -> Iterators.addAll(headerNames, node.fieldNames()));
+			Optional7<JsonNode> nodeOpt = Json.checkObject(request, "headers", false);
+			if (nodeOpt.isPresent())
+				Iterators.addAll(headerNames, nodeOpt.get().fieldNames());
 			return Lists.newArrayList(headerNames.iterator());
 		}
 
 		@Override
 		public List<String> headers(String name) {
-			Optional<JsonNode> headers = Json8.checkObject(request, "headers." + name, false);
+			Optional7<JsonNode> headers = Json.checkObject(request, "headers." + name, false);
 			if (headers.isPresent())
 				return Json8.toStrings(headers.get());
 			return context.request().headers(name);
@@ -194,7 +196,7 @@ public class BatchResource extends Resource {
 
 		@Override
 		public String header(String name) {
-			Optional<JsonNode> header = Json8.checkObject(request, "headers." + name, false);
+			Optional7<JsonNode> header = Json.checkObject(request, "headers." + name, false);
 			if (header.isPresent())
 				return header.get().asText();
 			return context.request().header(name);
@@ -248,15 +250,15 @@ public class BatchResource extends Resource {
 
 				@Override
 				public Collection<String> keys() {
-					Optional<JsonNode> opt = Json8.checkObject(request, "parameters", false);
+					Optional7<JsonNode> opt = Json.checkObject(request, "parameters", false);
 					return opt.isPresent() ? Lists.newArrayList(opt.get().fieldNames()) : Collections.emptyList();
 				}
 
 				@Override
 				public Iterable<String> all(String name) {
-					JsonNode paramNode = Json8.get(request, "parameters." + name);
+					JsonNode paramNode = Json.get(request, "parameters." + name);
 
-					if (Json8.isNull(paramNode))
+					if (Json.isNull(paramNode))
 						return Collections.emptyList();
 
 					return Json8.toStrings(paramNode);

@@ -135,7 +135,7 @@ public class Utils {
 	}
 
 	public static void info(String nodeName, JsonNode node) {
-		Utils.info("%s = %s", nodeName, Json7.toPrettyString(node));
+		Utils.info("%s = %s", nodeName, Json.toPrettyString(node));
 	}
 
 	public static void warn(String message, Object... arguments) {

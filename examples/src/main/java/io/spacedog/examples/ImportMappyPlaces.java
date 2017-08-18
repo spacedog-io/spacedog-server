@@ -11,7 +11,7 @@ import io.spacedog.model.Schema;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 
 public class ImportMappyPlaces extends SpaceTest {
@@ -53,7 +53,7 @@ public class ImportMappyPlaces extends SpaceTest {
 	}
 
 	private static void copyPoi(JsonNode src) {
-		JsonBuilder<ObjectNode> target = Json7.objectBuilder()//
+		JsonBuilder<ObjectNode> target = Json.objectBuilder()//
 				.put("name", src.get("name").asText()) //
 				.put("town", src.get("town").asText()) //
 				.put("zipcode", src.get("pCode").asText()) //

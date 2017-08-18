@@ -13,7 +13,7 @@ import io.spacedog.rest.SpaceRequestException;
 import io.spacedog.rest.SpaceResponse;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 
 public class DataResourceTestOften extends SpaceTest {
 
@@ -25,7 +25,7 @@ public class DataResourceTestOften extends SpaceTest {
 		superadmin.schema().set(SchemaResourceTestOften.buildCarSchema());
 		SpaceDog vince = signUp(superadmin, "vince", "hi vince");
 
-		ObjectNode car = Json7.objectBuilder() //
+		ObjectNode car = Json.objectBuilder() //
 				.put("serialNumber", "1234567890") //
 				.put("buyDate", "2015-01-09") //
 				.put("buyTime", "15:37:00") //
@@ -91,7 +91,7 @@ public class DataResourceTestOften extends SpaceTest {
 		superadmin.schema().set(SchemaResourceTestOften.buildCarSchema());
 		SpaceDog vince = signUp(superadmin, "vince", "hi vince");
 
-		ObjectNode car = Json7.objectBuilder() //
+		ObjectNode car = Json.objectBuilder() //
 				.put("serialNumber", "1234567890") //
 				.put("buyDate", "2015-01-09") //
 				.put("buyTime", "15:37:00") //
@@ -112,9 +112,9 @@ public class DataResourceTestOften extends SpaceTest {
 
 		// find by id
 		ObjectNode carbis = vince.data().get("car", id);
-		assertEquals("vince", Json7.checkString(carbis, "meta.createdBy").get());
-		assertEquals("vince", Json7.checkString(carbis, "meta.updatedBy").get());
-		assertNotNull(Json7.checkString(carbis, "meta.createdAt"));
+		assertEquals("vince", Json.checkString(carbis, "meta.createdBy").get());
+		assertEquals("vince", Json.checkString(carbis, "meta.updatedBy").get());
+		assertNotNull(Json.checkString(carbis, "meta.createdAt"));
 		carbis.remove("meta");
 		assertEquals(car, carbis);
 
@@ -125,7 +125,7 @@ public class DataResourceTestOften extends SpaceTest {
 
 		// update
 
-		vince.data().save("car", id, Json7.object("color", "blue"), false);
+		vince.data().save("car", id, Json.object("color", "blue"), false);
 		carbis = vince.data().get("car", id);
 		assertEquals("blue", carbis.get("color").asText());
 

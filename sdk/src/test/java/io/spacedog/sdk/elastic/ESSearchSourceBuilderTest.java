@@ -3,7 +3,7 @@ package io.spacedog.sdk.elastic;
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 
 public class ESSearchSourceBuilderTest extends Assert {
@@ -19,7 +19,7 @@ public class ESSearchSourceBuilderTest extends Assert {
 
 		Utils.info(source);
 
-		Json7.assertNode(Json7.readObject(source))//
+		Json.assertNode(Json.readObject(source))//
 				.assertEquals(0, "from")//
 				.assertEquals(20, "size")//
 				.assertEquals("Fred", "query.bool.must.term.firstname")//

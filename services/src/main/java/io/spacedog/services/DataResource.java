@@ -12,11 +12,11 @@ import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.core.Json8;
 import io.spacedog.model.DataPermission;
 import io.spacedog.services.DataStore.Meta;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -47,7 +47,7 @@ public class DataResource extends Resource {
 	@Post("/:type")
 	@Post("/:type/")
 	public Payload post(String type, String body, Context context) {
-		ObjectNode object = Json8.readObject(body);
+		ObjectNode object = Json.readObject(body);
 		return post(type, Optional.empty(), object);
 	}
 
@@ -72,7 +72,7 @@ public class DataResource extends Resource {
 		if (DataAccessControl.check(credentials, type, DataPermission.read)) {
 			ObjectNode object = DataStore.get().getObject(type, id);
 
-			if (credentials.name().equals(Json8.get(object, "meta.createdBy").asText())) {
+			if (credentials.name().equals(Json.get(object, "meta.createdBy").asText())) {
 				return object;
 			} else
 				throw Exceptions.forbidden("not the owner of [%s][%s] object", type, id);
@@ -83,7 +83,7 @@ public class DataResource extends Resource {
 	@Put("/:type/:id")
 	@Put("/:type/:id/")
 	public Payload put(String type, String id, String body, Context context) {
-		ObjectNode object = Json8.readObject(body);
+		ObjectNode object = Json.readObject(body);
 		return put(type, id, object, context);
 	}
 
@@ -131,7 +131,7 @@ public class DataResource extends Resource {
 		} else if (DataAccessControl.check(credentials, type, DataPermission.delete)) {
 			ObjectNode object = DataStore.get().getObject(type, id);
 
-			if (credentials.name().equals(Json8.get(object, "meta.createdBy").asText())) {
+			if (credentials.name().equals(Json.get(object, "meta.createdBy").asText())) {
 				elastic().delete(DataStore.toDataIndex(type), id, false, true);
 				return JsonPayload.success();
 			} else
@@ -150,13 +150,13 @@ public class DataResource extends Resource {
 	@Put("/:type/:id/:field")
 	@Put("/:type/:id/:field/")
 	public Payload putField(String type, String id, String field, String body, Context context) {
-		return put(type, id, Json8.object(field, Json8.readNode(body)), context);
+		return put(type, id, Json.object(field, Json.readNode(body)), context);
 	}
 
 	@Delete("/:type/:id/:field")
 	@Delete("/:type/:id/:field/")
 	public Payload deleteField(String type, String id, String field, Context context) {
-		return put(type, id, Json8.object(field, null), context);
+		return put(type, id, Json.object(field, null), context);
 	}
 
 	//

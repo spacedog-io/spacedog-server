@@ -15,7 +15,7 @@ import com.google.common.base.Strings;
 
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 
 @Parameters(commandNames = { "exportlog" }, //
@@ -58,13 +58,13 @@ public class ExportLogCommand extends AbstractCommand<ExportLogCommand> {
 
 		Path target = Paths.get(file);
 
-		ObjectNode query = Json7.objectBuilder().object("range")//
+		ObjectNode query = Json.objectBuilder().object("range")//
 				.object("receivedAt").put("gte", gte.toString())//
 				.put("lt", lt.toString()).build();
 
 		JsonNode payload = dog.post("/1/log/search").bodyJson(query)//
 				.size(10000).go(200).asJson();
 
-		Files.write(target, Json7.toPrettyString(payload).getBytes(Utils.UTF8));
+		Files.write(target, Json.toPrettyString(payload).getBytes(Utils.UTF8));
 	}
 }

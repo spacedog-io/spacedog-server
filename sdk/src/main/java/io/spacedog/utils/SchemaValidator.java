@@ -158,7 +158,7 @@ public class SchemaValidator {
 
 		JsonNode fieldValue = jsonObject.get(fieldName);
 
-		if (Json7.isNull(fieldValue))
+		if (Json.isNull(fieldValue))
 			if (required)
 				throw new SchemaException("field [%s] required", fieldName);
 			else

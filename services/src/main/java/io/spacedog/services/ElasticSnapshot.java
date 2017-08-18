@@ -14,7 +14,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 
 class ElasticSnapshot implements Comparable<ElasticSnapshot> {
@@ -58,7 +58,7 @@ class ElasticSnapshot implements Comparable<ElasticSnapshot> {
 	}
 
 	ObjectNode toJson() {
-		return Json7.object("id", id(), "repository", repositoryId, //
+		return Json.object("id", id(), "repository", repositoryId, //
 				"state", info.state().toString(), "type", backend(), //
 				"startTime", info.startTime(), "endTime", info.endTime());
 	}

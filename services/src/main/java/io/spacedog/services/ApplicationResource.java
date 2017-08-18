@@ -11,8 +11,8 @@ import com.amazonaws.services.sns.model.CreatePlatformApplicationRequest;
 import com.amazonaws.services.sns.model.DeletePlatformApplicationRequest;
 import com.amazonaws.services.sns.model.PlatformApplication;
 
-import io.spacedog.core.Json8;
 import io.spacedog.model.PushService;
+import io.spacedog.utils.Json;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Put;
@@ -42,7 +42,7 @@ public class ApplicationResource extends Resource {
 
 		SpaceContext.credentials().checkAtLeastAdmin();
 
-		ApplicationPushCredentials credentials = Json8.readObject(//
+		ApplicationPushCredentials credentials = Json.readObject(//
 				body, ApplicationPushCredentials.class);
 
 		CreatePlatformApplicationRequest request = new CreatePlatformApplicationRequest()//

@@ -5,13 +5,14 @@ import org.elasticsearch.common.Strings;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.core.Json8;
 import io.spacedog.model.StripeSettings;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceResponse;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;
+import io.spacedog.utils.Optional7;
 import io.spacedog.utils.SpaceException;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -95,9 +96,9 @@ public class StripeResource extends Resource {
 	public Payload postCard(String body, Context context) {
 		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
 		String customerId = getStripeCustomerId(credentials);
-		ObjectNode node = Json8.readObject(body);
+		ObjectNode node = Json.readObject(body);
 		StripeSettings settings = stripeSettings();
-		String sourceToken = Json8.checkStringNotNullOrEmpty(node, "source");
+		String sourceToken = Json.checkStringNotNullOrEmpty(node, "source");
 
 		SpaceRequest request = SpaceRequest.post("/v1/customers/{customerId}/sources")//
 				.backend("https://api.stripe.com")//
@@ -105,8 +106,9 @@ public class StripeResource extends Resource {
 				.routeParam("customerId", customerId)//
 				.formField("source", sourceToken);
 
-		Json8.checkString(node, "description").ifPresent(//
-				description -> request.formField("metadata[description]", description));
+		Optional7<String> description = Json.checkString(node, "description");
+		if (description.isPresent())
+			request.formField("metadata[description]", description.get());
 
 		SpaceResponse response = request.go();
 		checkStripeError(response);

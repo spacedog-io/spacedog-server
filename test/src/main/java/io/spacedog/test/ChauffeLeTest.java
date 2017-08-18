@@ -16,7 +16,7 @@ import io.spacedog.model.Schema;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 
 public class ChauffeLeTest extends SpaceTest {
@@ -115,7 +115,7 @@ public class ChauffeLeTest extends SpaceTest {
 		public String createSubject(SpaceDog user, String subject) {
 
 			return SpaceRequest.post("/1/data/bigpost").auth(user)//
-					.bodyJson("title", subject, "responses", Json7.array())//
+					.bodyJson("title", subject, "responses", Json.array())//
 					.go(201)//
 					.asJsonObject().get("id").asText();
 		}
@@ -126,7 +126,7 @@ public class ChauffeLeTest extends SpaceTest {
 			ObjectNode bigPost = SpaceRequest.get("/1/data/bigpost/" + postId).auth(user).go(200).asJsonObject();
 
 			bigPost.withArray("responses")//
-					.add(Json7.object("title", comment, "author", user.username()));
+					.add(Json.object("title", comment, "author", user.username()));
 
 			SpaceRequest.put("/1/data/bigpost/" + postId).auth(user).bodyJson(bigPost).go(200);
 		}
@@ -134,7 +134,7 @@ public class ChauffeLeTest extends SpaceTest {
 		@Override
 		public Iterator<JsonNode> showWall(SpaceDog user) {
 
-			String wallQuery = Json7.objectBuilder()//
+			String wallQuery = Json.objectBuilder()//
 					.put("from", 0)//
 					.put("size", 10)//
 					.array("sort")//
@@ -172,7 +172,7 @@ public class ChauffeLeTest extends SpaceTest {
 		@Override
 		public Iterator<JsonNode> showWall(SpaceDog user) {
 
-			ObjectNode subjectQuery = Json7.objectBuilder()//
+			ObjectNode subjectQuery = Json.objectBuilder()//
 					.put("from", 0)//
 					.put("size", 10)//
 					.array("sort")//
@@ -197,7 +197,7 @@ public class ChauffeLeTest extends SpaceTest {
 			JsonNode subjectResults = SpaceRequest.post("/1/search/smallpost")//
 			.refresh().auth(user).bodyJson(subjectQuery).go(200).asJson();
 
-			JsonBuilder<ObjectNode> responsesQuery = Json7.objectBuilder()//
+			JsonBuilder<ObjectNode> responsesQuery = Json.objectBuilder()//
 					.put("from", 0)//
 					.put("size", 10)//
 					.array("sort")//

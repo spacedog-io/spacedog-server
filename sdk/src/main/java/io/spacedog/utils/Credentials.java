@@ -264,19 +264,19 @@ public class Credentials {
 	//
 
 	public JsonNode getFromStash(String path) {
-		return stash == null ? null : Json7.get(stash, path);
+		return stash == null ? null : Json.get(stash, path);
 	}
 
 	public void addToStash(String path, Object value) {
 		if (stash == null)
-			stash = Json7.object();
+			stash = Json.object();
 
-		Json7.set(stash, path, value);
+		Json.set(stash, path, value);
 	}
 
 	public void removeFromStash(String path) {
 		if (stash != null)
-			Json7.remove(stash, path);
+			Json.remove(stash, path);
 	}
 
 	//
@@ -536,7 +536,7 @@ public class Credentials {
 	//
 
 	public ObjectNode toJson() {
-		return Json7.object(//
+		return Json.object(//
 				SpaceFields.ID_FIELD, id(), //
 				SpaceFields.USERNAME_FIELD, name(), //
 				SpaceFields.EMAIL_FIELD, email().orElse(null), //

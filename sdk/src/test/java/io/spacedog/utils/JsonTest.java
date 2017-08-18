@@ -18,7 +18,7 @@ public class JsonTest extends Assert {
 
 	@Test
 	public void shouldGet() {
-		JsonNode json = Json7.objectBuilder()//
+		JsonNode json = Json.objectBuilder()//
 				.put("tutu", null)//
 				.object("riri")//
 				.array("fifi")//
@@ -26,47 +26,47 @@ public class JsonTest extends Assert {
 				.object().put("loulou", false)//
 				.build();
 
-		assertEquals(12, Json7.get(json, "riri.fifi.0").asInt());
-		assertFalse(Json7.get(json, "riri.fifi.1.loulou").asBoolean());
-		assertNull(Json7.get(json, "tutu"));
-		assertNull(Json7.get(json, "riri.name"));
-		assertNull(Json7.get(json, "riri.fifi.1.loulou.name"));
+		assertEquals(12, Json.get(json, "riri.fifi.0").asInt());
+		assertFalse(Json.get(json, "riri.fifi.1.loulou").asBoolean());
+		assertNull(Json.get(json, "tutu"));
+		assertNull(Json.get(json, "riri.name"));
+		assertNull(Json.get(json, "riri.fifi.1.loulou.name"));
 	}
 
 	@Test
 	public void shouldSet() {
-		JsonNode json = Json7.objectBuilder().object("riri").array("fifi")//
+		JsonNode json = Json.objectBuilder().object("riri").array("fifi")//
 				.add(12).object().put("loulou", false).build();
-		Json7.set(json, "riri.fifi.1.loulou", BooleanNode.TRUE);
-		assertTrue(Json7.get(json, "riri.fifi.1.loulou").asBoolean());
+		Json.set(json, "riri.fifi.1.loulou", BooleanNode.TRUE);
+		assertTrue(Json.get(json, "riri.fifi.1.loulou").asBoolean());
 	}
 
 	@Test
 	public void shouldRemove() {
-		JsonNode json = Json7.objectBuilder().object("riri").array("fifi")//
+		JsonNode json = Json.objectBuilder().object("riri").array("fifi")//
 				.add(12).object().put("loulou", false).build();
-		Json7.remove(json, "riri.fifi.0");
-		assertFalse(Json7.get(json, "riri.fifi.0.loulou").asBoolean());
-		Json7.remove(json, "riri.fifi.0.loulou");
-		assertEquals(0, Json7.get(json, "riri.fifi.0").size());
+		Json.remove(json, "riri.fifi.0");
+		assertFalse(Json.get(json, "riri.fifi.0.loulou").asBoolean());
+		Json.remove(json, "riri.fifi.0.loulou");
+		assertEquals(0, Json.get(json, "riri.fifi.0").size());
 	}
 
 	@Test
 	public void shouldWithArray() {
-		ObjectNode node = Json7.object("ints", null, "bools", //
-				Json7.array(), "object", Json7.object());
+		ObjectNode node = Json.object("ints", null, "bools", //
+				Json.array(), "object", Json.object());
 
-		Json7.withArray(node, "floats").add(1.7f);
-		Json7.withArray(node, "ints").add(7);
-		Json7.withArray(node, "bools").add(true);
+		Json.withArray(node, "floats").add(1.7f);
+		Json.withArray(node, "ints").add(7);
+		Json.withArray(node, "bools").add(true);
 
-		Json7.assertNode(node)//
+		Json.assertNode(node)//
 				.assertEquals(1.7f, "floats.0", 0.01f)//
-				.assertEquals(Json7.array(7), "ints")//
-				.assertEquals(Json7.array(true), "bools");
+				.assertEquals(Json.array(7), "ints")//
+				.assertEquals(Json.array(true), "bools");
 
 		try {
-			Json7.withArray(node, "object");
+			Json.withArray(node, "object");
 			fail();
 		} catch (Exception ignore) {
 		}
@@ -90,21 +90,21 @@ public class JsonTest extends Assert {
 	@Test
 	public void checkTheseStringsAreJsonObjectsOrNot() {
 		// true
-		assertTrue(Json7.isObject("{}"));
-		assertTrue(Json7.isObject(" {} "));
+		assertTrue(Json.isObject("{}"));
+		assertTrue(Json.isObject(" {} "));
 
 		// false
-		assertFalse(Json7.isObject("{]"));
-		assertFalse(Json7.isObject("[}"));
+		assertFalse(Json.isObject("{]"));
+		assertFalse(Json.isObject("[}"));
 	}
 
 	@Test
 	public void shouldCheckStringFields() {
-		JsonNode node = Json7.object("name", "david", "age", 3);
-		assertEquals("david", Json7.checkString(node, "name").get());
-		assertFalse(Json7.checkString(node, "city").isPresent());
+		JsonNode node = Json.object("name", "david", "age", 3);
+		assertEquals("david", Json.checkString(node, "name").get());
+		assertFalse(Json.checkString(node, "city").isPresent());
 		try {
-			Json7.checkString(node, "age");
+			Json.checkString(node, "age");
 			fail();
 		} catch (IllegalArgumentException e) {
 		}
@@ -112,14 +112,14 @@ public class JsonTest extends Assert {
 
 	@Test
 	public void testToArrayNode() {
-		assertEquals(Json7.arrayBuilder().add(1).add("vince").array().add(1).add(2).build(), //
-				Json7.toArrayNode(new Object[] { 1, "vince", new int[] { 1, 2 } }));
+		assertEquals(Json.arrayBuilder().add(1).add("vince").array().add(1).add(2).build(), //
+				Json.toArrayNode(new Object[] { 1, "vince", new int[] { 1, 2 } }));
 	}
 
 	@Test
 	public void testToArray() {
 		assertTrue(Arrays.deepEquals(new Object[] { 1, "vince", new Object[] { 1, 2 } }, //
-				Json7.toArray(Json7.arrayBuilder().add(1).add("vince").array().add(1).add(2).build())));
+				Json.toArray(Json.arrayBuilder().add(1).add("vince").array().add(1).add(2).build())));
 	}
 
 	private static class Speed {
@@ -132,14 +132,14 @@ public class JsonTest extends Assert {
 
 	@Test
 	public void testToNode() {
-		assertEquals(TextNode.valueOf("toto"), Json7.toNode("toto"));
-		assertEquals(IntNode.valueOf(1), Json7.toNode(1));
+		assertEquals(TextNode.valueOf("toto"), Json.toNode("toto"));
+		assertEquals(IntNode.valueOf(1), Json.toNode(1));
 
-		assertEquals(Json7.object("s", 2), Json7.toNode(new Speed(2)));
-		assertEquals(Json7.object(), Json7.toNode(Json7.object()));
+		assertEquals(Json.object("s", 2), Json.toNode(new Speed(2)));
+		assertEquals(Json.object(), Json.toNode(Json.object()));
 
-		assertEquals(Json7.array(), Json7.toNode(Json7.array()));
-		assertEquals(Json7.array(1, 2), Json7.toNode(Arrays.asList(1, 2)));
-		assertEquals(Json7.array(1, 2), Json7.toNode(Arrays.asList(1, 2)));
+		assertEquals(Json.array(), Json.toNode(Json.array()));
+		assertEquals(Json.array(1, 2), Json.toNode(Arrays.asList(1, 2)));
+		assertEquals(Json.array(1, 2), Json.toNode(Arrays.asList(1, 2)));
 	}
 }

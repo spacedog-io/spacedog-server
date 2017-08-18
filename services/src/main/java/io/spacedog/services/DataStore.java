@@ -29,10 +29,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
-import io.spacedog.core.Json8;
 import io.spacedog.model.Schema;
 import io.spacedog.sdk.DataObject;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;
 import io.spacedog.utils.SpaceFields;
 import io.spacedog.utils.SpaceParams;
@@ -90,9 +90,9 @@ public class DataStore implements SpaceParams, SpaceFields {
 		: response.mappings().values()) {
 
 			MappingMetaData mapping = indexMappings.value.iterator().next().value;
-			JsonNode node = Json8.readObject(mapping.source().toString())//
+			JsonNode node = Json.readObject(mapping.source().toString())//
 					.get(mapping.type()).get("_meta");
-			schemas.put(mapping.type(), new Schema(mapping.type(), Json8.checkObject(node)));
+			schemas.put(mapping.type(), new Schema(mapping.type(), Json.checkObject(node)));
 		}
 
 		return schemas;
@@ -106,7 +106,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 			String type, String id, Class<T> dataObjectClass) {
 
 		GetResponse response = elastic().get(toDataIndex(type), id, true);
-		return Json8.toPojo(response.getSourceAsBytes(), dataObjectClass)//
+		return Json.toPojo(response.getSourceAsBytes(), dataObjectClass)//
 				.id(response.getId())//
 				.type(response.getType())//
 				.version(response.getVersion());
@@ -125,7 +125,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 			else
 				return null;
 
-		ObjectNode object = Json8.readObject(response.getSourceAsString());
+		ObjectNode object = Json.readObject(response.getSourceAsString());
 
 		object.with("meta")//
 				.put("id", response.getId())//
@@ -149,7 +149,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 
 		// replace meta to avoid developers to
 		// set any meta fields directly
-		object.set("meta", Json8.objectBuilder()//
+		object.set("meta", Json.objectBuilder()//
 				.put(CREATED_BY_FIELD, createdBy)//
 				.put(UPDATED_BY_FIELD, createdBy)//
 				.put(CREATED_AT_FIELD, now)//
@@ -168,7 +168,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 				.get();
 
 		if (response.isExists()) {
-			Meta meta = Json8.toPojo(//
+			Meta meta = Json.toPojo(//
 					response.getSourceAsBytes(), MetaWrapper.class).meta;
 			meta.id = id;
 			meta.type = type;
@@ -279,7 +279,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 		public FilteredSearchBuilder applyFilters(JsonNode filters) {
 			filters.fields().forEachRemaining(field -> boolBuilder.filter(//
 					QueryBuilders.termQuery(field.getKey(), //
-							Json8.toValue(field.getValue()))));
+							Json.toValue(field.getValue()))));
 			return this;
 		}
 

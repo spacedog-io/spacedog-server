@@ -9,7 +9,7 @@ import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceResponse;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.SpaceFields;
 import io.spacedog.utils.SpaceParams;
@@ -135,8 +135,8 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 
 		ObjectNode node = request.go(200).asJsonObject();
 
-		this.accessToken = Json7.checkStringNotNullOrEmpty(node, ACCESS_TOKEN_FIELD);
-		this.credentials.id(Json7.checkStringNotNullOrEmpty(node, "credentials.id"));
+		this.accessToken = Json.checkStringNotNullOrEmpty(node, ACCESS_TOKEN_FIELD);
+		this.credentials.id(Json.checkStringNotNullOrEmpty(node, "credentials.id"));
 		return this;
 	}
 

@@ -13,7 +13,7 @@ import com.google.common.collect.Sets;
 
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.SchemaBuilder;
 import io.spacedog.utils.SchemaTranslator;
 import io.spacedog.utils.SchemaValidator;
@@ -64,14 +64,14 @@ public class Schema {
 			return null;
 
 		try {
-			return Json7.mapper().treeToValue(acl, DataAcl.class);
+			return Json.mapper().treeToValue(acl, DataAcl.class);
 		} catch (JsonProcessingException e) {
 			throw Exceptions.illegalArgument(e, "invalid schema [_acl] json field");
 		}
 	}
 
 	public void acl(DataAcl acl) {
-		content().set("_acl", Json7.mapper().valueToTree(acl));
+		content().set("_acl", Json.mapper().valueToTree(acl));
 	}
 
 	public void acl(String role, DataPermission... permissions) {

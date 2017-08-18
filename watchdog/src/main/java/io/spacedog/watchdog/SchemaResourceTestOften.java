@@ -9,7 +9,7 @@ import io.spacedog.model.Schema;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 
 public class SchemaResourceTestOften extends SpaceTest {
 
@@ -23,7 +23,7 @@ public class SchemaResourceTestOften extends SpaceTest {
 		// anonymous gets all backend schema
 		// if no schema returns empty object
 		SpaceRequest.get("/1/schema").backend(test).go(200)//
-				.assertEquals(Json7.merger().get());
+				.assertEquals(Json.merger().get());
 
 		// bob signs up
 		SpaceDog bob = signUp(test, "bob", "hi bob", "bob@dog.com");
@@ -43,7 +43,7 @@ public class SchemaResourceTestOften extends SpaceTest {
 
 		// anonymous gets all schemas
 		SpaceRequest.get("/1/schema").backend(test).go(200)//
-				.assertEquals(Json7.merger() //
+				.assertEquals(Json.merger() //
 						.merge(buildHomeSchema().node()) //
 						.merge(buildCarSchema().node()) //
 						.merge(buildSaleSchema().node()) //

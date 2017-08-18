@@ -13,7 +13,7 @@ import com.google.common.base.Strings;
 
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 
 //ignore unknown fields
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -164,7 +164,7 @@ public class DataObject<K extends DataObject<K>> implements Datable<K> {
 
 	@SuppressWarnings("unchecked")
 	public K node(Object... elements) {
-		this.node = Json7.object(elements);
+		this.node = Json.object(elements);
 		return (K) this;
 	}
 
@@ -185,7 +185,7 @@ public class DataObject<K extends DataObject<K>> implements Datable<K> {
 
 		if (isSubClass()) {
 			try {
-				Json7.mapper().readerForUpdating(this).readValue(node);
+				Json.mapper().readerForUpdating(this).readValue(node);
 			} catch (IOException e) {
 				throw Exceptions.runtime(e);
 			}

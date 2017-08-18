@@ -18,7 +18,7 @@ import io.spacedog.model.Schema;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 
 public class QueryTest extends SpaceTest {
 
@@ -57,7 +57,7 @@ public class QueryTest extends SpaceTest {
 		calendar.roll(Calendar.DAY_OF_MONTH, false);
 		calendar.roll(Calendar.HOUR_OF_DAY, false);
 
-		return Json7.objectBuilder().put("serialNumber", String.valueOf(i))
+		return Json.objectBuilder().put("serialNumber", String.valueOf(i))
 				.put("buyDate", dateFormat.format(calendar.getTime()))
 				.put("buyTime", timeFormat.format(calendar.getTime()))
 				.put("buyTimestamp", timestampFormat.format(calendar.getTime())) //

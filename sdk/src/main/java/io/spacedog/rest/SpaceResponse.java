@@ -20,7 +20,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Iterators;
 
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Utils;
 import okhttp3.Headers;
@@ -75,7 +75,7 @@ public class SpaceResponse {
 				Utils.info(" %s: %s", headers.name(i), headers.value(i));
 
 			if (isJson())
-				Utils.info("Response body: %s", Json7.toPrettyString(asJson()));
+				Utils.info("Response body: %s", Json.toPrettyString(asJson()));
 		}
 	}
 
@@ -139,8 +139,8 @@ public class SpaceResponse {
 		}
 
 		try {
-			if (Json7.isJson(stringBody))
-				jsonNode = Json7.readNode(stringBody);
+			if (Json.isJson(stringBody))
+				jsonNode = Json.readNode(stringBody);
 		} catch (Exception ignore) {
 			// not really a json body
 		}
@@ -210,15 +210,15 @@ public class SpaceResponse {
 
 	public boolean has(String jsonPath) {
 		return isJson() //
-				&& Json7.get(asJson(), jsonPath) != null;
+				&& Json.get(asJson(), jsonPath) != null;
 	}
 
 	public JsonNode get(String jsonPath) {
-		return Json7.get(asJson(), jsonPath);
+		return Json.get(asJson(), jsonPath);
 	}
 
 	public String getString(String jsonPath) {
-		return Json7.checkString(Json7.get(asJson(), jsonPath));
+		return Json.checkString(Json.get(asJson(), jsonPath));
 	}
 
 	public JsonNode findValue(String fieldName) {
@@ -226,40 +226,40 @@ public class SpaceResponse {
 	}
 
 	public SpaceResponse assertEquals(String expected, String jsonPath) {
-		Assert.assertEquals(expected, Json7.checkString(//
-				Json7.checkNotNull(Json7.get(asJson(), jsonPath))));
+		Assert.assertEquals(expected, Json.checkString(//
+				Json.checkNotNull(Json.get(asJson(), jsonPath))));
 		return this;
 	}
 
 	public SpaceResponse assertEquals(int expected, String jsonPath) {
-		JsonNode node = Json7.get(asJson(), jsonPath);
+		JsonNode node = Json.get(asJson(), jsonPath);
 		Assert.assertEquals(expected, //
 				node.isArray() || node.isObject() ? node.size() : node.intValue());
 		return this;
 	}
 
 	public SpaceResponse assertEquals(long expected, String jsonPath) {
-		Assert.assertEquals(expected, Json7.get(asJson(), jsonPath).longValue());
+		Assert.assertEquals(expected, Json.get(asJson(), jsonPath).longValue());
 		return this;
 	}
 
 	public SpaceResponse assertEquals(float expected, String jsonPath, float delta) {
-		Assert.assertEquals(expected, Json7.get(asJson(), jsonPath).floatValue(), delta);
+		Assert.assertEquals(expected, Json.get(asJson(), jsonPath).floatValue(), delta);
 		return this;
 	}
 
 	public SpaceResponse assertEquals(double expected, String jsonPath, double delta) {
-		Assert.assertEquals(expected, Json7.get(asJson(), jsonPath).doubleValue(), delta);
+		Assert.assertEquals(expected, Json.get(asJson(), jsonPath).doubleValue(), delta);
 		return this;
 	}
 
 	public SpaceResponse assertEquals(DateTime expected, String jsonPath) {
-		Assert.assertEquals(expected, DateTime.parse(Json7.get(asJson(), jsonPath).asText()));
+		Assert.assertEquals(expected, DateTime.parse(Json.get(asJson(), jsonPath).asText()));
 		return this;
 	}
 
 	public SpaceResponse assertEquals(boolean expected, String jsonPath) {
-		Assert.assertEquals(expected, Json7.get(asJson(), jsonPath).asBoolean());
+		Assert.assertEquals(expected, Json.get(asJson(), jsonPath).asBoolean());
 		return this;
 	}
 
@@ -269,7 +269,7 @@ public class SpaceResponse {
 	}
 
 	public SpaceResponse assertEquals(JsonNode expected, String jsonPath) {
-		Assert.assertEquals(expected, Json7.get(asJson(), jsonPath));
+		Assert.assertEquals(expected, Json.get(asJson(), jsonPath));
 		return this;
 	}
 
@@ -280,32 +280,32 @@ public class SpaceResponse {
 	}
 
 	public SpaceResponse assertNotNull(String jsonPath) {
-		JsonNode node = Json7.get(asJson(), jsonPath);
+		JsonNode node = Json.get(asJson(), jsonPath);
 		if (node == null || node.isNull())
 			Assert.fail(String.format("json property [%s] is null", jsonPath));
 		return this;
 	}
 
 	public SpaceResponse assertNotNullOrEmpty(String jsonPath) {
-		JsonNode node = Json7.get(asJson(), jsonPath);
+		JsonNode node = Json.get(asJson(), jsonPath);
 		if (Strings.isNullOrEmpty(node.asText()))
 			Assert.fail(String.format("json string property [%s] is null or empty", jsonPath));
 		return this;
 	}
 
 	public SpaceResponse assertTrue(String jsonPath) {
-		Assert.assertTrue(Json7.get(asJson(), jsonPath).asBoolean());
+		Assert.assertTrue(Json.get(asJson(), jsonPath).asBoolean());
 		return this;
 	}
 
 	public SpaceResponse assertFalse(String jsonPath) {
-		Assert.assertFalse(Json7.get(asJson(), jsonPath).asBoolean());
+		Assert.assertFalse(Json.get(asJson(), jsonPath).asBoolean());
 		return this;
 	}
 
 	public SpaceResponse assertDateIsValid(String jsonPath) {
 		assertNotNull(jsonPath);
-		JsonNode node = Json7.get(asJson(), jsonPath);
+		JsonNode node = Json.get(asJson(), jsonPath);
 		if (node.isTextual()) {
 			try {
 				DateTime.parse(node.asText());
@@ -321,7 +321,7 @@ public class SpaceResponse {
 	public SpaceResponse assertDateIsRecent(String jsonPath) {
 		long now = DateTime.now().getMillis();
 		assertDateIsValid(jsonPath);
-		DateTime date = DateTime.parse(Json7.get(asJson(), jsonPath).asText());
+		DateTime date = DateTime.parse(Json.get(asJson(), jsonPath).asText());
 		if (date.isBefore(now - 3000) || date.isAfter(now + 3000))
 			Assert.fail(String.format(//
 					"json property [%s] with value [%s] is not a recent SpaceDog date (now +/- 3s)", jsonPath, date));
@@ -330,8 +330,8 @@ public class SpaceResponse {
 
 	public SpaceResponse assertSizeEquals(int size, String jsonPath) {
 		assertJsonContent();
-		JsonNode node = Json7.get(asJson(), jsonPath);
-		if (Json7.isNull(node))
+		JsonNode node = Json.get(asJson(), jsonPath);
+		if (Json.isNull(node))
 			Assert.fail(String.format("property [%s] is null", jsonPath));
 		if (size != node.size())
 			Assert.fail(String.format("expected size [%s], json property [%s] node size [%s]", //
@@ -370,7 +370,7 @@ public class SpaceResponse {
 
 	public SpaceResponse assertContains(JsonNode expected, String jsonPath) {
 		assertJsonContent();
-		if (!Iterators.contains(Json7.get(asJson(), jsonPath).elements(), expected))
+		if (!Iterators.contains(Json.get(asJson(), jsonPath).elements(), expected))
 			Assert.fail(String.format(//
 					"field [%s] does not contain [%s]", jsonPath, expected));
 		return this;
@@ -378,7 +378,7 @@ public class SpaceResponse {
 
 	public SpaceResponse assertNotPresent(String jsonPath) {
 		assertJsonContent();
-		JsonNode node = Json7.get(asJson(), jsonPath);
+		JsonNode node = Json.get(asJson(), jsonPath);
 		if (node != null)
 			Assert.fail(String.format(//
 					"json path [%s] contains [%s]", jsonPath, node));
@@ -387,7 +387,7 @@ public class SpaceResponse {
 
 	public SpaceResponse assertPresent(String jsonPath) {
 		assertJsonContent();
-		JsonNode node = Json7.get(asJson(), jsonPath);
+		JsonNode node = Json.get(asJson(), jsonPath);
 		if (node == null)
 			Assert.fail(String.format(//
 					"json path [%s] not found", jsonPath));
@@ -396,7 +396,7 @@ public class SpaceResponse {
 
 	public SpaceResponse assertString(String jsonPath) {
 		assertPresent(jsonPath);
-		JsonNode node = Json7.get(asJson(), jsonPath);
+		JsonNode node = Json.get(asJson(), jsonPath);
 		if (!node.isTextual())
 			Assert.fail(String.format(//
 					"json path [%s] not string", jsonPath));
@@ -405,7 +405,7 @@ public class SpaceResponse {
 
 	public SpaceResponse assertInteger(String jsonPath) {
 		assertPresent(jsonPath);
-		JsonNode node = Json7.get(asJson(), jsonPath);
+		JsonNode node = Json.get(asJson(), jsonPath);
 		if (!node.isInt())
 			Assert.fail(String.format(//
 					"json path [%s] not integer", jsonPath));
@@ -439,11 +439,11 @@ public class SpaceResponse {
 	}
 
 	public <K> K toPojo(Class<K> pojoClass) {
-		return Json7.toPojo(asJson(), pojoClass);
+		return Json.toPojo(asJson(), pojoClass);
 	}
 
 	public <K> K toPojo(String fieldPath, Class<K> pojoClass) {
-		return Json7.toPojo(asJson(), fieldPath, pojoClass);
+		return Json.toPojo(asJson(), fieldPath, pojoClass);
 	}
 
 	public int status() {

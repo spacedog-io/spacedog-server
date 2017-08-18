@@ -13,8 +13,8 @@ import com.google.common.collect.Maps;
 import com.mitchellbosecke.pebble.PebbleEngine;
 import com.mitchellbosecke.pebble.loader.StringLoader;
 
-import io.spacedog.core.Json8;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
 
 public class PebbleTemplating {
 
@@ -47,7 +47,7 @@ public class PebbleTemplating {
 
 				if (value != null && value instanceof String) {
 					value = DataStore.get().getObject(type, value.toString());
-					value = Json8.mapper().convertValue(value, Map.class);
+					value = Json.mapper().convertValue(value, Map.class);
 					context.put(name, value);
 					continue;
 				}

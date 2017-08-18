@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
 import io.spacedog.rest.SpaceRequest;
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 
 public class SmsEndpoint {
 
@@ -34,7 +34,7 @@ public class SmsEndpoint {
 	}
 
 	public void sendTemplated(String templateName, Object... parameters) {
-		sendTemplated(templateName, Json7.object(parameters));
+		sendTemplated(templateName, Json.object(parameters));
 	}
 
 	public void sendTemplated(String templateName, ObjectNode parameters) {

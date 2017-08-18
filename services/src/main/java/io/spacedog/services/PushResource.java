@@ -18,7 +18,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 
-import io.spacedog.core.Json8;
 import io.spacedog.model.BadgeStrategy;
 import io.spacedog.model.Installation;
 import io.spacedog.model.PushService;
@@ -28,6 +27,7 @@ import io.spacedog.services.DataStore.Meta;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
@@ -131,7 +131,7 @@ public class PushResource extends Resource {
 	public Payload pushById(String id, String body, Context context) {
 
 		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
-		PushRequest request = Json8.toPojo(body, PushRequest.class);
+		PushRequest request = Json.toPojo(body, PushRequest.class);
 		Installation installation = load(id);
 
 		PushLog log = new PushLog();
@@ -150,7 +150,7 @@ public class PushResource extends Resource {
 	@Post("/installation/:id/tags/")
 	public Payload postTags(String id, String body, Context context) {
 		Installation installation = load(id);
-		String[] tags = Json8.toPojo(body, String[].class);
+		String[] tags = Json.toPojo(body, String[].class);
 		installation.tags().addAll(Sets.newHashSet(tags));
 		update(installation, SpaceContext.credentials());
 		return JsonPayload.saved(false, "/1", TYPE, id);
@@ -166,7 +166,7 @@ public class PushResource extends Resource {
 	@Delete("/installation/:id/tags/")
 	public Payload deleteTags(String id, String body, Context context) {
 		Installation installation = load(id);
-		String[] tags = Json8.toPojo(body, String[].class);
+		String[] tags = Json.toPojo(body, String[].class);
 		installation.tags().removeAll(Sets.newHashSet(tags));
 		update(installation, SpaceContext.credentials());
 		return JsonPayload.saved(false, "/1", TYPE, id);
@@ -201,7 +201,7 @@ public class PushResource extends Resource {
 	public Payload pushByTags(String body, Context context) {
 
 		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
-		PushRequest request = Json8.toPojo(body, PushRequest.class);
+		PushRequest request = Json.toPojo(body, PushRequest.class);
 		BoolQueryBuilder query = QueryBuilders.boolQuery();
 
 		if (!Strings.isNullOrEmpty(request.appId))
@@ -239,7 +239,7 @@ public class PushResource extends Resource {
 		PushLog log = new PushLog();
 
 		for (SearchHit hit : hits.getHits()) {
-			Installation installation = Json8.toPojo(hit.source(), Installation.class)//
+			Installation installation = Json.toPojo(hit.source(), Installation.class)//
 					.id(hit.id());
 			pushToInstallation(log, installation, toJsonMessage(request), //
 					credentials, request.badgeStrategy);
@@ -257,7 +257,7 @@ public class PushResource extends Resource {
 	public static class PushLog {
 		public int successes = 0;
 		public boolean failures;
-		public ArrayNode logItems = Json8.array();
+		public ArrayNode logItems = Json.array();
 		public boolean applicationDisabled;
 
 		public Payload toPayload() {
@@ -273,7 +273,7 @@ public class PushResource extends Resource {
 		}
 
 		public ObjectNode toNode() {
-			return Json8.object(FAILURES, failures, //
+			return Json.object(FAILURES, failures, //
 					"applicationDisabled", applicationDisabled, //
 					PUSHED_TO, logItems);
 		}
@@ -282,7 +282,7 @@ public class PushResource extends Resource {
 	public void pushToInstallation(PushLog log, Installation installation, //
 			ObjectNode jsonMessage, Credentials credentials, BadgeStrategy badgeStrategy) {
 
-		ObjectNode logItem = Json8.object("installationId", installation.id());
+		ObjectNode logItem = Json.object("installationId", installation.id());
 		log.logItems.add(logItem);
 
 		try {
@@ -327,22 +327,22 @@ public class PushResource extends Resource {
 	public static ObjectNode toJsonMessage(PushRequest request) {
 
 		return request.data == null //
-				? Json8.object("default", request.text, //
-						"APNS", Json8.object("aps", Json8.object("alert", request.text)), //
-						"APNS_SANDBOX", Json8.object("aps", Json8.object("alert", request.text)), //
-						"GCM", Json8.object("data", Json8.object("message", request.text)))//
+				? Json.object("default", request.text, //
+						"APNS", Json.object("aps", Json.object("alert", request.text)), //
+						"APNS_SANDBOX", Json.object("aps", Json.object("alert", request.text)), //
+						"GCM", Json.object("data", Json.object("message", request.text)))//
 				: request.data;
 	}
 
 	static ObjectNode toSnsMessage(PushService service, ObjectNode message) {
 
 		JsonNode node = message.get(service.toString());
-		if (!Json8.isNull(node))
-			return Json8.object(service.toString(), toSnsMessageStringValue(service, node));
+		if (!Json.isNull(node))
+			return Json.object(service.toString(), toSnsMessageStringValue(service, node));
 
 		node = message.get("default");
-		if (!Json8.isNull(node))
-			return Json8.object("default", toSnsMessageStringValue(service, node));
+		if (!Json.isNull(node))
+			return Json.object("default", toSnsMessageStringValue(service, node));
 
 		throw Exceptions.illegalArgument(//
 				"no push message for default nor [%s] service", service);
@@ -375,7 +375,7 @@ public class PushResource extends Resource {
 				installation.badge(installation.badge() + 1);
 				// update installation badge in data store
 				DataStore.get().patchObject(TYPE, installation.id(), //
-						Json8.object(BADGE, installation.badge()), credentials.name());
+						Json.object(BADGE, installation.badge()), credentials.name());
 			}
 
 			message.with(installation.pushService().toString())//
@@ -397,7 +397,7 @@ public class PushResource extends Resource {
 	public Payload upsertInstallation(Optional<String> id, String body, Context context) {
 
 		Credentials credentials = SpaceContext.credentials();
-		Installation installation = Json8.toPojo(body, Installation.class);
+		Installation installation = Json.toPojo(body, Installation.class);
 
 		Check.notNullOrEmpty(installation.token(), TOKEN);
 		Check.notNullOrEmpty(installation.appId(), APP_ID);
@@ -410,7 +410,7 @@ public class PushResource extends Resource {
 
 		installation.credentialsId(credentials.isAtLeastUser() ? credentials.id() : null);
 
-		ObjectNode object = Json8.checkObject(Json8.toNode(installation));
+		ObjectNode object = Json.checkObject(Json.toNode(installation));
 		return id.isPresent() //
 				? DataResource.get().put(TYPE, id.get(), object, context) //
 				: DataResource.get().post(TYPE, id, object);
@@ -430,7 +430,7 @@ public class PushResource extends Resource {
 
 		IndexResponse response = DataStore.get()//
 				.updateObject(TYPE, installation.id(), //
-						Json8.checkObject(Json8.toNode(installation)), //
+						Json.checkObject(Json.toNode(installation)), //
 						meta);
 
 		installation.updatedBy(meta.updatedBy);

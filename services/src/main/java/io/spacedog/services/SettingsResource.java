@@ -13,12 +13,12 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
 
-import io.spacedog.core.Json8;
 import io.spacedog.model.Settings;
 import io.spacedog.model.SettingsSettings;
 import io.spacedog.model.SettingsSettings.SettingsAcl;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -68,10 +68,10 @@ public class SettingsResource extends Resource {
 				.setQuery(QueryBuilders.matchAllQuery())//
 				.get();
 
-		ObjectNode results = Json8.object();
+		ObjectNode results = Json.object();
 
 		for (SearchHit hit : response.getHits().getHits())
-			results.set(hit.getId(), Json8.readNode(hit.sourceAsString()));
+			results.set(hit.getId(), Json.readNode(hit.sourceAsString()));
 
 		return JsonPayload.json(results);
 	}
@@ -121,7 +121,7 @@ public class SettingsResource extends Resource {
 		ObjectNode object = getAsNode(id);
 		if (object == null)
 			throw Exceptions.notFound(TYPE, id);
-		JsonNode value = Json8.get(object, field);
+		JsonNode value = Json.get(object, field);
 		value = value == null ? NullNode.getInstance() : value;
 		return JsonPayload.json(value, HttpStatus.OK);
 	}
@@ -132,9 +132,9 @@ public class SettingsResource extends Resource {
 		checkIfNotInternalSettings(id);
 		checkIfAuthorizedToUpdate(id);
 		ObjectNode object = getAsNode(id);
-		object = object == null ? Json8.object() : object;
-		JsonNode value = Json8.readNode(body);
-		Json8.set(object, field, value);
+		object = object == null ? Json.object() : object;
+		JsonNode value = Json.readNode(body);
+		Json.set(object, field, value);
 		String source = object.toString();
 		IndexResponse response = saveToElastic(id, source);
 		return JsonPayload.toJson("/1", response);
@@ -149,7 +149,7 @@ public class SettingsResource extends Resource {
 		if (object == null)
 			throw Exceptions.notFound(TYPE, id);
 
-		Json8.remove(object, field);
+		Json.remove(object, field);
 		IndexResponse response = setAsNode(id, object);
 		return JsonPayload.toJson("/1", response);
 	}
@@ -167,7 +167,7 @@ public class SettingsResource extends Resource {
 
 		try {
 			String source = loadFromElastic(id);
-			settings = Json8.toPojo(source, settingsClass);
+			settings = Json.toPojo(source, settingsClass);
 
 		} catch (NotFoundException nfe) {
 			settings = instantiateDefaultAsObject(settingsClass);
@@ -182,7 +182,7 @@ public class SettingsResource extends Resource {
 	public ObjectNode getAsNode(String id) {
 		try {
 			String source = loadFromElastic(id);
-			return Json8.readObject(source);
+			return Json.readObject(source);
 
 		} catch (NotFoundException nfe) {
 			return instantiateDefaultAsNode(id);
@@ -197,7 +197,7 @@ public class SettingsResource extends Resource {
 	}
 
 	public <T extends Settings> IndexResponse setAsObject(T settings) {
-		return saveToElastic(settings.id(), Json8.toString(settings));
+		return saveToElastic(settings.id(), Json.toString(settings));
 	}
 
 	public IndexResponse setAsNode(String id, ObjectNode settings) {
@@ -215,7 +215,7 @@ public class SettingsResource extends Resource {
 	private ObjectNode instantiateDefaultAsNode(String id) {
 		Class<? extends Settings> settingsClass = registeredSettingsClasses.get(id);
 		return settingsClass == null ? null //
-				: Json8.mapper().valueToTree(instantiateDefaultAsObject(settingsClass));
+				: Json.mapper().valueToTree(instantiateDefaultAsObject(settingsClass));
 	}
 
 	private <K extends Settings> K instantiateDefaultAsObject(Class<K> settingsClass) {
@@ -274,7 +274,7 @@ public class SettingsResource extends Resource {
 
 	private void checkSettingsAreValid(String id, String body) {
 		if (registeredSettingsClasses.containsKey(id))
-			Json8.toPojo(body, registeredSettingsClasses.get(id));
+			Json.toPojo(body, registeredSettingsClasses.get(id));
 	}
 
 	private void makeSureIndexIsCreated() {
@@ -288,7 +288,7 @@ public class SettingsResource extends Resource {
 			int replicas = context.query().getInteger(REPLICAS_PARAM, REPLICAS_DEFAULT_PARAM);
 			boolean async = context.query().getBoolean(ASYNC_PARAM, ASYNC_DEFAULT_PARAM);
 
-			ObjectNode mapping = Json8.object(TYPE, Json8.object("enabled", false));
+			ObjectNode mapping = Json.object(TYPE, Json.object("enabled", false));
 			elastic.createIndex(index, mapping.toString(), async, shards, replicas);
 		}
 	}

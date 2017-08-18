@@ -19,11 +19,10 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
-import io.spacedog.core.Json8;
 import io.spacedog.rest.SpaceBackend;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Credentials;
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Utils;
@@ -172,7 +171,7 @@ public class LogResource extends Resource {
 	}
 
 	private Payload extractLogs(SearchResponse response) {
-		JsonBuilder<ObjectNode> builder = Json8.objectBuilder()//
+		JsonBuilder<ObjectNode> builder = Json.objectBuilder()//
 				.put("took", response.getTookInMillis())//
 				.put("total", response.getHits().getTotalHits())//
 				.array("results");
@@ -185,7 +184,7 @@ public class LogResource extends Resource {
 
 	private String log(String uri, Context context, DateTime receivedAt, Payload payload) {
 
-		ObjectNode log = Json8.object(//
+		ObjectNode log = Json.object(//
 				"method", context.method(), //
 				"path", uri, //
 				RECEIVED_AT_FIELD, receivedAt.toString(), //
@@ -240,20 +239,20 @@ public class LogResource extends Resource {
 				// else
 				// log.put("content", content);
 
-				if (Json8.isObject(content)) {
-					JsonNode securedContent = Json8.fullReplaceTextualFields(//
-							Json8.readNode(content), PASSWORD_FIELD, "********");
+				if (Json.isObject(content)) {
+					JsonNode securedContent = Json.fullReplaceTextualFields(//
+							Json.readNode(content), PASSWORD_FIELD, "********");
 
 					log.set(PAYLOAD_FIELD, securedContent);
 				}
 			}
 		} catch (Exception e) {
-			log.set(PAYLOAD_FIELD, Json8.object(ERROR_FIELD, JsonPayload.toJson(e, true)));
+			log.set(PAYLOAD_FIELD, Json.object(ERROR_FIELD, JsonPayload.toJson(e, true)));
 		}
 	}
 
 	private void addQuery(ObjectNode log, Context context) {
-		ArrayNode parametersNode = Json7.array();
+		ArrayNode parametersNode = Json.array();
 
 		for (String key : context.query().keys()) {
 			String value = key.equals(PASSWORD_FIELD) //
@@ -276,7 +275,7 @@ public class LogResource extends Resource {
 
 	private void addHeaders(ObjectNode log, Set<Entry<String, List<String>>> headers) {
 
-		ArrayNode headersNode = Json7.array();
+		ArrayNode headersNode = Json.array();
 		for (Entry<String, List<String>> header : headers) {
 
 			String key = header.getKey();

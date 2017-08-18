@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.ClassResources;
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 
 public class ApplicationResourceTest extends SpaceTest {
 
@@ -20,7 +20,7 @@ public class ApplicationResourceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		ObjectNode apnsCredentials = Json7.object("principal", //
+		ObjectNode apnsCredentials = Json.object("principal", //
 				ClassResources.loadToString(this, "apns-principal.pem"), //
 				"credentials", //
 				ClassResources.loadToString(this, "apns-credentials.pem"));

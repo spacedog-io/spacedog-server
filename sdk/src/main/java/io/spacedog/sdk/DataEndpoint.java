@@ -13,7 +13,7 @@ import com.google.common.collect.Lists;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.sdk.elastic.ESSearchSourceBuilder;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Json7;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceFields;
 import io.spacedog.utils.SpaceParams;
@@ -318,7 +318,7 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 	@Deprecated
 	public <K> SearchResults<K> search(TermQuery query, Class<K> dataClass) {
 
-		JsonBuilder<ObjectNode> builder = Json7.objectBuilder()//
+		JsonBuilder<ObjectNode> builder = Json.objectBuilder()//
 				.put("size", query.size)//
 				.put("from", query.from)//
 				.object("query")//
@@ -336,7 +336,7 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 			else
 				throw Exceptions.illegalArgument("term value [%s] is invalid", value);
 
-			builder.node(field.toString(), Json7.toNode(value))//
+			builder.node(field.toString(), Json.toNode(value))//
 					.end().end();
 		}
 
@@ -373,7 +373,7 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 		while (elements.hasNext()) {
 			try {
 				JsonNode node = elements.next();
-				K object = Json7.mapper().treeToValue(node, dataClass);
+				K object = Json.mapper().treeToValue(node, dataClass);
 				results.add(object);
 				if (object instanceof DataObject<?>)
 					enhance((DataObject<?>) object, (ObjectNode) node);
