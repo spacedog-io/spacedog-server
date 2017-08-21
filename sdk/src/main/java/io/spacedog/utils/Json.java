@@ -36,15 +36,19 @@ public class Json {
 	public static final String JSON_CONTENT = "application/json";
 	public static final String JSON_CONTENT_UTF8 = JSON_CONTENT + ";charset=UTF-8";
 
+	//
+	// Get, set, with, remove
+	//
+
 	/**
 	 * TODO returns null if does not find the property in this object. Should return
 	 * an optional.
 	 */
-	public static JsonNode get(JsonNode json, String propertyPath) {
+	public static JsonNode get(JsonNode json, String fieldPath) {
 
 		JsonNode current = json;
 
-		for (String s : Utils.splitByDot(propertyPath)) {
+		for (String s : Utils.splitByDot(fieldPath)) {
 			if (current == null)
 				return null;
 
@@ -61,51 +65,119 @@ public class Json {
 		return isNull(current) ? null : current;
 	}
 
-	public static Object get(JsonNode json, String propertyPath, Object defaultValue) {
-		JsonNode node = get(json, propertyPath);
+	public static Object get(JsonNode json, String fieldPath, Object defaultValue) {
+		JsonNode node = get(json, fieldPath);
 		if (Json.isNull(node))
 			return defaultValue;
 		return Json.toValue(node);
 	}
 
-	public static JsonNode set(JsonNode object, String propertyPath, Object value) {
+	public static JsonNode set(JsonNode json, String fieldPath, Object value) {
 		JsonNode node = toNode(value);
+		int lastDotIndex = fieldPath.lastIndexOf('.');
+		String lastPathName = fieldPath.substring(lastDotIndex + 1);
+		JsonNode parent = json;
 
-		int lastDotIndex = propertyPath.lastIndexOf('.');
-		String lastPathName = propertyPath.substring(lastDotIndex + 1);
 		if (lastDotIndex > -1) {
-			String parentPath = propertyPath.substring(0, lastDotIndex);
-			object = Json.get(object, parentPath);
+			String parentPath = fieldPath.substring(0, lastDotIndex);
+			parent = Json.get(json, parentPath);
 		}
 
-		if (object.isObject())
-			((ObjectNode) object).set(lastPathName, node);
-		else if (object.isArray())
-			((ArrayNode) object).set(Integer.parseInt(lastPathName), node);
+		if (json.isObject())
+			((ObjectNode) parent).set(lastPathName, node);
+		else if (json.isArray())
+			((ArrayNode) parent).set(Integer.parseInt(lastPathName), node);
 		else
-			throw Exceptions.illegalArgument(//
-					"json node does not contain path [%s]", propertyPath);
+			throw Exceptions.invalidFieldPath(json, fieldPath);
 
-		return object;
+		return json;
 	}
 
-	public static void remove(JsonNode object, String propertyPath) {
+	public static JsonNode with(JsonNode json, String fieldPath, Object value) {
+		JsonNode current = json;
+		Object[] segments = toStringAndIntegers(fieldPath);
 
-		int lastDotIndex = propertyPath.lastIndexOf('.');
-		String lastPathName = propertyPath.substring(lastDotIndex + 1);
-		if (lastDotIndex > -1) {
-			String parentPath = propertyPath.substring(0, lastDotIndex);
-			object = Json.get(object, parentPath);
+		for (int i = 0; i < segments.length - 1; i++) {
+			if (current.isArray()) {
+				ArrayNode array = (ArrayNode) current;
+				int index = (Integer) segments[i];
+				if (array.has(index)) {
+					current = array.get(index);
+				} else {
+					current = newContainerNode(segments[i + 1]);
+					array.add(current);
+				}
+			} else if (current.isObject()) {
+				ObjectNode object = (ObjectNode) current;
+				String fieldName = (String) segments[i];
+				if (object.has(fieldName))
+					current = object.get(fieldName);
+				else {
+					current = newContainerNode(segments[i + 1]);
+					object.set(fieldName, current);
+				}
+			} else
+				throw Exceptions.invalidFieldPath(json, fieldPath);
+
 		}
 
-		if (object.isObject())
-			((ObjectNode) object).remove(lastPathName);
-		else if (object.isArray())
-			((ArrayNode) object).remove(Integer.parseInt(lastPathName));
-		else
-			throw Exceptions.illegalArgument(//
-					"json node does not contain path [%s]", propertyPath);
+		JsonNode valueNode = toNode(value);
+		Object lastSegment = segments[segments.length - 1];
+		if (current.isArray()) {
+			ArrayNode array = (ArrayNode) current;
+			Integer index = (Integer) lastSegment;
+			if (array.has(index)) {
+				array.set(index, valueNode);
+			} else
+				array.add(valueNode);
+		} else if (current.isObject()) {
+			ObjectNode object = (ObjectNode) current;
+			object.set((String) lastSegment, valueNode);
+		} else
+			throw Exceptions.invalidFieldPath(json, fieldPath);
+
+		return json;
 	}
+
+	private static Object[] toStringAndIntegers(String fieldPath) {
+		String[] strings = Utils.splitByDot(fieldPath);
+		Object[] segments = new Object[strings.length];
+		for (int i = 0; i < strings.length; i++) {
+			try {
+				segments[i] = Integer.valueOf(strings[i]);
+			} catch (NumberFormatException e) {
+				segments[i] = strings[i];
+			}
+		}
+		return segments;
+	}
+
+	private static JsonNode newContainerNode(Object type) {
+		return type instanceof Integer ? array() : object();
+	}
+
+	public static void remove(JsonNode json, String fieldPath) {
+
+		int lastDotIndex = fieldPath.lastIndexOf('.');
+		String lastPathName = fieldPath.substring(lastDotIndex + 1);
+		JsonNode parent = json;
+
+		if (lastDotIndex > -1) {
+			String parentPath = fieldPath.substring(0, lastDotIndex);
+			parent = Json.get(json, parentPath);
+		}
+
+		if (parent.isObject())
+			((ObjectNode) parent).remove(lastPathName);
+		else if (parent.isArray())
+			((ArrayNode) parent).remove(Integer.parseInt(lastPathName));
+		else
+			throw Exceptions.invalidFieldPath(json, fieldPath);
+	}
+
+	//
+	// Merge
+	//
 
 	public static JsonMerger merger() {
 		return new JsonMerger();

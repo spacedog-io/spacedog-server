@@ -9,8 +9,10 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.IntNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
@@ -39,6 +41,29 @@ public class JsonTest extends Assert {
 				.add(12).object().put("loulou", false).build();
 		Json.set(json, "riri.fifi.1.loulou", BooleanNode.TRUE);
 		assertTrue(Json.get(json, "riri.fifi.1.loulou").asBoolean());
+	}
+
+	@Test
+	public void shouldWith() {
+		JsonNode expected = Json.objectBuilder().object("riri").array("fifi")//
+				.object().put("loulou", true).build();
+		ObjectNode object = Json.object();
+		Json.with(object, "riri.fifi.0.loulou", BooleanNode.TRUE);
+		assertEquals(expected, object);
+
+		Json.checkArray(expected.get("riri").get("fifi")).add(12);
+		Json.with(object, "riri.fifi.1", 12);
+		assertEquals(expected, object);
+
+		Json.checkObject(expected.get("riri")).set("toto", NullNode.getInstance());
+		Json.with(object, "riri.toto", null);
+		assertEquals(expected, object);
+
+		expected = Json.arrayBuilder().add(true).object().put("name", "bill").build();
+		ArrayNode array = Json.array();
+		Json.with(array, "0", true);
+		Json.with(array, "1.name", "bill");
+		assertEquals(expected, array);
 	}
 
 	@Test

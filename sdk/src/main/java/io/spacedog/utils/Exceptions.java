@@ -1,5 +1,7 @@
 package io.spacedog.utils;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 public class Exceptions {
 
 	public static final String ALREADY_EXISTS = "already-exists";
@@ -33,6 +35,10 @@ public class Exceptions {
 
 	public static IllegalArgumentException illegalArgument(Throwable t, String message, Object... args) {
 		return new IllegalArgumentException(String.format(message, args), t);
+	}
+
+	public static IllegalArgumentException invalidFieldPath(JsonNode json, String fieldPath) {
+		return illegalArgument("field path [%s] invalid for [%s]", fieldPath, json);
 	}
 
 	public static NotFoundException notFound(String type, String id) {
