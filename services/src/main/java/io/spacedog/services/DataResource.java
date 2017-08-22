@@ -60,63 +60,15 @@ public class DataResource extends Resource {
 	@Get("/:type/:id")
 	@Get("/:type/:id/")
 	public Payload getById(String type, String id, Context context) {
-		return JsonPayload.json(load(type, id));
-	}
-
-	protected ObjectNode load(String type, String id) {
-
-		Credentials credentials = SpaceContext.credentials();
-		if (DataAccessControl.check(credentials, type, DataPermission.read_all, DataPermission.search))
-			return DataStore.get().getObject(type, id);
-
-		if (DataAccessControl.check(credentials, type, DataPermission.read)) {
-			ObjectNode object = DataStore.get().getObject(type, id);
-
-			if (credentials.name().equals(Json.get(object, "meta.createdBy").asText())) {
-				return object;
-			} else
-				throw Exceptions.forbidden("not the owner of [%s][%s] object", type, id);
-		}
-		throw Exceptions.forbidden("forbidden to read [%s] objects", type);
+		return JsonPayload.json(get(type, id));
 	}
 
 	@Put("/:type/:id")
 	@Put("/:type/:id/")
 	public Payload put(String type, String id, String body, Context context) {
 		ObjectNode object = Json.readObject(body);
-		return put(type, id, object, context);
-	}
-
-	public Payload put(String type, String id, ObjectNode object, Context context) {
-		Optional<Meta> metaOpt = DataStore.get().getMeta(type, id);
-
-		if (metaOpt.isPresent()) {
-			Meta meta = metaOpt.get();
-			Credentials credentials = SpaceContext.credentials();
-			checkPutPermissions(meta, credentials);
-
-			// TODO return better exception-message in case of invalid version
-			// format
-			meta.version = context.query().getLong(VERSION_PARAM, Versions.MATCH_ANY);
-			meta.updatedBy = credentials.name();
-			meta.updatedAt = DateTime.now();
-
-			if (context.query().getBoolean(STRICT_PARAM, false)) {
-
-				IndexResponse response = DataStore.get()//
-						.updateObject(type, id, object, meta);
-				return JsonPayload.saved(false, //
-						"/1/data", type, id, response.getVersion());
-
-			} else {
-
-				UpdateResponse response = DataStore.get()//
-						.patchObject(type, id, meta.version, object, meta.updatedBy);
-				return JsonPayload.saved(false, //
-						"/1/data", type, id, response.getVersion());
-			}
-		} else
-			return post(type, Optional.of(id), object);
+		boolean patch = !context.query().getBoolean(STRICT_PARAM, false);
+		return put(type, id, object, patch, context);
 	}
 
 	@Delete("/:type/:id")
@@ -143,25 +95,76 @@ public class DataResource extends Resource {
 
 	@Get("/:type/:id/:field")
 	@Get("/:type/:id/:field/")
-	public Payload getField(String type, String id, String field, Context context) {
-		return JsonPayload.json(load(type, id).get(field));
+	public Payload getField(String type, String id, String fieldPath, Context context) {
+		return JsonPayload.json(Json.get(get(type, id), fieldPath));
 	}
 
 	@Put("/:type/:id/:field")
 	@Put("/:type/:id/:field/")
-	public Payload putField(String type, String id, String field, String body, Context context) {
-		return put(type, id, Json.object(field, Json.readNode(body)), context);
+	public Payload putField(String type, String id, String fieldPath, String body, Context context) {
+		ObjectNode object = Json.object();
+		Json.with(object, fieldPath, Json.readNode(body));
+		return put(type, id, object, true, context);
 	}
 
 	@Delete("/:type/:id/:field")
 	@Delete("/:type/:id/:field/")
-	public Payload deleteField(String type, String id, String field, Context context) {
-		return put(type, id, Json.object(field, null), context);
+	public Payload deleteField(String type, String id, String fieldPath, Context context) {
+		ObjectNode node = get(type, id);
+		Json.remove(node, fieldPath);
+		return put(type, id, node, false, context);
 	}
 
 	//
 	// Implementation
 	//
+
+	protected ObjectNode get(String type, String id) {
+
+		Credentials credentials = SpaceContext.credentials();
+		if (DataAccessControl.check(credentials, type, DataPermission.read_all, DataPermission.search))
+			return DataStore.get().getObject(type, id);
+
+		if (DataAccessControl.check(credentials, type, DataPermission.read)) {
+			ObjectNode object = DataStore.get().getObject(type, id);
+
+			if (credentials.name().equals(Json.get(object, "meta.createdBy").asText())) {
+				return object;
+			} else
+				throw Exceptions.forbidden("not the owner of [%s][%s] object", type, id);
+		}
+		throw Exceptions.forbidden("forbidden to read [%s] objects", type);
+	}
+
+	public Payload put(String type, String id, ObjectNode object, boolean patch, Context context) {
+		Optional<Meta> metaOpt = DataStore.get().getMeta(type, id);
+
+		if (metaOpt.isPresent()) {
+			Meta meta = metaOpt.get();
+			Credentials credentials = SpaceContext.credentials();
+			checkPutPermissions(meta, credentials);
+
+			// TODO return better exception-message in case of invalid version
+			// format
+			meta.version = context.query().getLong(VERSION_PARAM, Versions.MATCH_ANY);
+			meta.updatedBy = credentials.name();
+			meta.updatedAt = DateTime.now();
+
+			if (patch) {
+				UpdateResponse response = DataStore.get()//
+						.patchObject(type, id, meta.version, object, meta.updatedBy);
+				return JsonPayload.saved(false, //
+						"/1/data", type, id, response.getVersion());
+
+			} else {
+				IndexResponse response = DataStore.get()//
+						.updateObject(type, id, object, meta);
+				return JsonPayload.saved(false, //
+						"/1/data", type, id, response.getVersion());
+			}
+		} else
+			return post(type, Optional.of(id), object);
+	}
 
 	protected Payload post(String type, Optional<String> id, ObjectNode object) {
 

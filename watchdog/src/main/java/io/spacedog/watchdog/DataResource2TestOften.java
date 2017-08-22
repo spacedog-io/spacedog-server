@@ -12,7 +12,9 @@ import org.joda.time.DateTime;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -313,5 +315,48 @@ public class DataResource2TestOften extends SpaceTest {
 		return results.objects().stream()//
 				.map(node -> node.get("text").asText())//
 				.collect(Collectors.toList());
+	}
+
+	@Test
+	public void testFieldManagement() {
+
+		// prepare
+		prepareTest();
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog guest = SpaceDog.backend(superadmin);
+		Schema schema = Schema.builder("home").text("name")//
+				.object("garage").integer("places").build();
+		superadmin.schema().set(schema);
+
+		// home XXX does not exist
+		superadmin.get("/1/data/home/XXX/name").go(404);
+
+		// superadmin creates home 1 with name dupont
+		superadmin.put("/1/data/home/1/name")//
+				.bodyJson(TextNode.valueOf("dupont")).go(201);
+		ObjectNode node = superadmin.data().get("home", "1");
+		ObjectNode home1 = Json.object("name", "dupont");
+		assertEquals(home1, node.without(META_FIELD));
+
+		// guest is forbidden to update home 1 name
+		guest.put("/1/data/home/1/name")//
+				.bodyJson(TextNode.valueOf("meudon")).go(403);
+
+		// superadmin sets home 1 garage places to 6
+		superadmin.put("/1/data/home/1/garage.places")//
+				.bodyJson(IntNode.valueOf(6)).go(200);
+		node = superadmin.data().get("home", "1");
+		home1.set("garage", Json.object("places", 6));
+		assertEquals(home1, node.without(META_FIELD));
+
+		// superadmin removes home 1 garage
+		superadmin.delete("/1/data/home/1/garage").go(200);
+		node = superadmin.data().get("home", "1");
+		home1.remove("garage");
+		assertEquals(home1, node.without(META_FIELD));
+
+		// guest is forbidden to remove home 1 name
+		guest.delete("/1/data/home/1/name").go(403);
+
 	}
 }

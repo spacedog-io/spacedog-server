@@ -412,7 +412,7 @@ public class PushResource extends Resource {
 
 		ObjectNode object = Json.checkObject(Json.toNode(installation));
 		return id.isPresent() //
-				? DataResource.get().put(TYPE, id.get(), object, context) //
+				? DataResource.get().put(TYPE, id.get(), object, false, context) //
 				: DataResource.get().post(TYPE, id, object);
 	}
 

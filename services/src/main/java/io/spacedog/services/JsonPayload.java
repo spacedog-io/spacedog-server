@@ -12,6 +12,7 @@ import org.elasticsearch.action.search.SearchPhaseExecutionException;
 import com.amazonaws.AmazonServiceException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
@@ -191,6 +192,8 @@ public class JsonPayload {
 	}
 
 	public static Payload json(JsonNode content, int httpStatus) {
+		if (content == null)
+			content = NullNode.getInstance();
 		if (content.isObject() && SpaceContext.isDebug())
 			((ObjectNode) content).set("debug", SpaceContext.debug().toNode());
 
