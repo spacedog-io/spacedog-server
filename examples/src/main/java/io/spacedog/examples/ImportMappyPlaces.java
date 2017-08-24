@@ -6,6 +6,7 @@ package io.spacedog.examples;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.model.DataPermission;
 import io.spacedog.model.Schema;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
@@ -15,14 +16,14 @@ import io.spacedog.utils.JsonBuilder;
 
 public class ImportMappyPlaces extends SpaceTest {
 
-	private static SpaceDog backend;
+	private static SpaceDog superadmin;
 
 	public static void main(String[] args) {
 		try {
 
 			SpaceRequest.setForTestingDefault(false);
-			backend = resetBackend("examples", "examples", "hi examples");
-			SpaceRequest.post("/1/schema/resto").auth(backend).bodySchema(buildRestoSchema()).go(201);
+			superadmin = resetBackend("examples", "examples", "hi examples");
+			superadmin.post("/1/schema/resto").bodySchema(buildRestoSchema()).go(201);
 
 			double step = 0.01;
 
@@ -85,7 +86,7 @@ public class ImportMappyPlaces extends SpaceTest {
 		}
 
 		try {
-			backend.post("/1/data/resto").bodyJson(target.build()).go(201);
+			superadmin.post("/1/data/resto").bodyJson(target.build()).go(201);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -108,6 +109,8 @@ public class ImportMappyPlaces extends SpaceTest {
 				.text("rubricLabel").french()//
 				.close() //
 
+				.acl("key", DataPermission.search)//
+				.acl("admin", DataPermission.create)//
 				.build();
 	}
 }
