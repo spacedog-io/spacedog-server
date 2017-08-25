@@ -108,4 +108,9 @@ public abstract class Resource implements SpaceFields, SpaceParams {
 		}
 
 	}
+
+	protected static ElasticClient elastic() {
+		return Start.get().getElasticClient();
+	}
+
 }

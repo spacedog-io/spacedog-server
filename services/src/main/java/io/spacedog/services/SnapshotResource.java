@@ -3,29 +3,17 @@
  */
 package io.spacedog.services;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
-import org.elasticsearch.action.admin.cluster.repositories.put.PutRepositoryResponse;
 import org.elasticsearch.action.admin.cluster.snapshots.create.CreateSnapshotResponse;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.cluster.metadata.RepositoryMetaData;
-import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.repositories.RepositoryMissingException;
 import org.elasticsearch.snapshots.RestoreInfo;
-import org.elasticsearch.snapshots.SnapshotInfo;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Lists;
 
-import io.spacedog.core.Json8;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
@@ -42,9 +30,7 @@ import net.codestory.http.payload.Payload;
 public class SnapshotResource extends Resource {
 
 	public static final String SNAPSHOT_ALL = "snapshotall";
-
-	private static final String PLATFORM_SNAPSHOT_PREFIX = "all";
-	private static final String BUCKET_SUFFIX = "snapshots";
+	static final String BUCKET_SUFFIX = "snapshots";
 
 	//
 	// routes
@@ -52,17 +38,19 @@ public class SnapshotResource extends Resource {
 
 	@Get("")
 	@Get("/")
-	public Payload getSnapshotAll() {
+	public Payload getSnapshotAll(Context context) {
 
 		checkSnapshotAllOrAdmin();
-		List<SpaceSnapshot> snapshots = getAllPlatformSnapshotsFromLatestToOldest();
+		int from = context.query().getInteger(PARAM_FROM, 0);
+		int size = context.query().getInteger(PARAM_SIZE, 10);
+		List<ElasticSnapshot> snapshots = ElasticSnapshot.latests(from, size);
 
 		JsonBuilder<ObjectNode> payload = JsonPayload.builder()//
 				.put("total", snapshots.size())//
 				.array("results");
 
-		for (SpaceSnapshot snapshot : snapshots)
-			snapshot.addTo(payload);
+		for (ElasticSnapshot snapshot : snapshots)
+			payload.node(snapshot.toJson());
 
 		return JsonPayload.json(payload);
 	}
@@ -72,8 +60,9 @@ public class SnapshotResource extends Resource {
 	public Payload getSnapshotLatest() {
 
 		checkSnapshotAllOrAdmin();
-		List<SpaceSnapshot> snapshots = getAllPlatformSnapshotsFromLatestToOldest();
-		return snapshots.isEmpty() ? JsonPayload.error(404)//
+		List<ElasticSnapshot> snapshots = ElasticSnapshot.latests(0, 1);
+		return snapshots.isEmpty() //
+				? JsonPayload.error(404)//
 				: JsonPayload.json(snapshots.get(0).toJson());
 	}
 
@@ -82,8 +71,10 @@ public class SnapshotResource extends Resource {
 	public Payload getSnapshotById(String snapshotId) {
 
 		checkSnapshotAllOrAdmin();
-		SpaceSnapshot snapshot = doGetSnapshot(snapshotId);
-		return JsonPayload.json(snapshot.toJson());
+		Optional<ElasticSnapshot> snapshot = ElasticSnapshot.find(snapshotId);
+		return snapshot.isPresent() //
+				? JsonPayload.json(snapshot.get().toJson()) //
+				: JsonPayload.error(404);
 	}
 
 	@Post("")
@@ -91,13 +82,11 @@ public class SnapshotResource extends Resource {
 	public Payload postSnapshot(Context context) {
 
 		checkSnapshotAllOrSuperdog();
-
-		String snapshotId = computeSnapshotName(PLATFORM_SNAPSHOT_PREFIX);
-		String repoId = checkCurrentRepository();
+		ElasticSnapshot snapshot = ElasticSnapshot.prepareSnapshot();
 
 		// TODO rename correctly the snapshot repository
-		CreateSnapshotResponse response = Start.get().getElasticClient().cluster()//
-				.prepareCreateSnapshot(repoId, snapshotId)//
+		CreateSnapshotResponse response = elastic().cluster()//
+				.prepareCreateSnapshot(snapshot.repositoryId(), snapshot.id())//
 				.setIndicesOptions(IndicesOptions.fromOptions(true, true, true, true))//
 				.setWaitForCompletion(context.query().getBoolean(PARAM_WAIT_FOR_COMPLETION, false))//
 				.setIncludeGlobalState(true)//
@@ -110,16 +99,17 @@ public class SnapshotResource extends Resource {
 		if (status == 200)
 			status = 201;
 
-		JsonBuilder<ObjectNode> jsonResponse = JsonPayload.builder(status)//
-				.put("id", snapshotId)//
-				.put("location", spaceUrl(Backends.rootApi(), "/1", "snapshot", snapshotId).toString());
+		JsonBuilder<ObjectNode> payload = JsonPayload.builder(status)//
+				.put("id", snapshot.id())//
+				.put("location", spaceUrl(Backends.rootApi(), "/1", //
+						"snapshot", snapshot.id()).toString());
 
 		if (response.getSnapshotInfo() != null) {
-			SpaceSnapshot info = new SpaceSnapshot(repoId, response.getSnapshotInfo());
-			info.addTo(jsonResponse, "snapshot");
+			snapshot.info(response.getSnapshotInfo());
+			payload.node("snapshot", snapshot.toJson());
 		}
 
-		return JsonPayload.json(jsonResponse, status);
+		return JsonPayload.json(payload, status);
 	}
 
 	@Post("/latest/restore")
@@ -128,9 +118,10 @@ public class SnapshotResource extends Resource {
 
 		SpaceContext.checkSuperDogCredentials();
 
-		List<SpaceSnapshot> snapshots = getAllPlatformSnapshotsFromLatestToOldest();
+		List<ElasticSnapshot> snapshots = ElasticSnapshot.latests(0, 1);
 		if (Utils.isNullOrEmpty(snapshots))
-			throw Exceptions.illegalArgument("snapshot repository doesn't contain any snapshot");
+			throw Exceptions.illegalArgument(//
+					"snapshot repository doesn't contain any snapshot");
 
 		return doRestore(snapshots.get(0), //
 				context.query().getBoolean(PARAM_WAIT_FOR_COMPLETION, false));
@@ -141,7 +132,8 @@ public class SnapshotResource extends Resource {
 	public Payload postSnapshotRestoreById(String snapshotId, Context context) {
 
 		SpaceContext.checkSuperDogCredentials();
-		SpaceSnapshot snapshot = doGetSnapshot(snapshotId);
+		ElasticSnapshot snapshot = ElasticSnapshot.find(snapshotId)//
+				.orElseThrow(() -> NotFoundException.snapshot(snapshotId));
 		return doRestore(snapshot, //
 				context.query().getBoolean(PARAM_WAIT_FOR_COMPLETION, false));
 	}
@@ -173,36 +165,23 @@ public class SnapshotResource extends Resource {
 				&& credentials.roles().contains(SNAPSHOT_ALL);
 	}
 
-	private String computeSnapshotName(String prefix) {
-		return prefix + "-utc-" + DateTime.now().withZone(DateTimeZone.UTC).toString("yyyy-MM-dd-HH-mm-ss-SSS");
-	}
+	private Payload doRestore(ElasticSnapshot snapshot, boolean waitForCompletion) {
 
-	private SpaceSnapshot doGetSnapshot(String snapshotId) {
-		Optional<SpaceSnapshot> optional = getAllPlatformSnapshotsFromLatestToOldest().stream()//
-				.filter(snapshot -> snapshot.id().equals(snapshotId))//
-				.findAny();
-
-		if (!optional.isPresent())
-			throw NotFoundException.snapshot(snapshotId);
-
-		return optional.get();
-	}
-
-	private Payload doRestore(SpaceSnapshot snapshot, boolean waitForCompletion) {
-
-		if (!snapshot.info.state().completed())
+		if (!snapshot.info().state().completed())
 			throw Exceptions.illegalArgument(//
 					"snapshot [%s] is not yet completed", snapshot.id());
 
-		if (!snapshot.info.state().restorable())
+		if (!snapshot.info().state().restorable())
 			throw Exceptions.illegalArgument(//
 					"snapshot [%s] is not restorable, state is [%s]", //
-					snapshot.id(), snapshot.info.state().toString());
+					snapshot.id(), snapshot.info().state().toString());
 
-		// close all backend indices before restore
-		Start.get().getElasticClient().deleteAllBackendIndices();
+		// delete all indices of all backends before restore
+		// this is prefered to a close operation
+		// because it remove indices not present in restored snapshot
+		elastic().deleteAllIndices();
 
-		RestoreInfo restore = Start.get().getElasticClient().cluster()//
+		RestoreInfo restore = elastic().cluster()//
 				.prepareRestoreSnapshot(snapshot.repositoryId(), snapshot.id())//
 				.setWaitForCompletion(waitForCompletion)//
 				.setIndicesOptions(IndicesOptions.fromOptions(false, true, true, true))//
@@ -219,124 +198,23 @@ public class SnapshotResource extends Resource {
 		return JsonPayload.json(restore.status().getStatus());
 	}
 
-	private List<SpaceSnapshot> getAllPlatformSnapshotsFromLatestToOldest() {
-
-		return Lists.reverse(//
-				Start.get().getElasticClient().cluster()//
-						.prepareGetRepositories()//
-						.get()//
-						.repositories()//
-						.stream()//
-						.flatMap(repo -> Start.get().getElasticClient().cluster()//
-								.prepareGetSnapshots(repo.name())//
-								.get()//
-								.getSnapshots()//
-								.stream()//
-								.filter(info -> info.name().startsWith(PLATFORM_SNAPSHOT_PREFIX))//
-								.map(info -> new SpaceSnapshot(repo.name(), info)))//
-						.sorted()//
-						.collect(Collectors.toList()));
-	}
-
-	private static class SpaceSnapshot implements Comparable<SpaceSnapshot> {
-
-		private SnapshotInfo info;
-		private String repoId;
-
-		public SpaceSnapshot(String repositoryId, SnapshotInfo info) {
-			this.repoId = repositoryId;
-			this.info = info;
-		}
-
-		public String backend() {
-			return id().substring(0, id().indexOf('-'));
-		}
-
-		public String id() {
-			return info.name();
-		}
-
-		public String repositoryId() {
-			return this.repoId;
-		}
-
-		@Override
-		public int compareTo(SpaceSnapshot o) {
-			return Long.valueOf(this.info.startTime()).compareTo(o.info.startTime());
-		}
-
-		public void addTo(JsonBuilder<ObjectNode> builder, String fieldname) {
-			builder.object(fieldname);
-			putTo(builder);
-			builder.end();
-		}
-
-		public void addTo(JsonBuilder<ObjectNode> builder) {
-			builder.object();
-			putTo(builder);
-			builder.end();
-		}
-
-		public ObjectNode toJson() {
-			JsonBuilder<ObjectNode> builder = Json8.objectBuilder();
-			putTo(builder);
-			return builder.build();
-		}
-
-		public void putTo(JsonBuilder<? extends JsonNode> builder) {
-			builder.put("id", id())//
-					.put("repository", repoId)//
-					.put("state", info.state().toString())//
-					.put("type", backend())//
-					.put("startTime", info.startTime())//
-					.put("endTime", info.endTime());
-		}
-	}
-
-	private String checkCurrentRepository() {
-
-		String currentRepositoryId = SpaceRepository.getCurrentRepositoryId();
-
-		try {
-			Start.get().getElasticClient().cluster()//
-					.prepareGetRepositories(currentRepositoryId)//
-					.get();
-
-		} catch (RepositoryMissingException e) {
-
-			SpaceRepository repo = new SpaceRepository(currentRepositoryId);
-
-			PutRepositoryResponse putRepositoryResponse = Start.get().getElasticClient().cluster()//
-					.preparePutRepository(repo.getId())//
-					.setType(repo.getType())//
-					.setSettings(repo.getSettings())//
-					.get();
-
-			if (!putRepositoryResponse.isAcknowledged())
-				throw Exceptions.runtime(//
-						"failed to create current snapshot repository: no details available");
-		}
-
-		return currentRepositoryId;
-	}
-
 	public void deleteMissingRepositories() {
 
 		Utils.info("[SpaceDog] deleting missing repositories ...");
 
-		List<RepositoryMetaData> repositories = Start.get().getElasticClient().cluster()//
+		List<RepositoryMetaData> repositories = elastic().cluster()//
 				.prepareGetRepositories().get().repositories();
 
 		for (RepositoryMetaData repository : repositories) {
 			try {
-				Start.get().getElasticClient().cluster()//
+				elastic().cluster()//
 						.prepareVerifyRepository(repository.name()).get();
 
 				Utils.info("[SpaceDog] repository [%s] OK", repository.name());
 
 			} catch (RepositoryMissingException e) {
 
-				Start.get().getElasticClient().cluster()//
+				elastic().cluster()//
 						.prepareDeleteRepository(repository.name()).get();
 
 				Utils.info("[SpaceDog] repository [%s] deleted because missing", repository.name());
@@ -351,101 +229,24 @@ public class SnapshotResource extends Resource {
 
 		Utils.info("[SpaceDog] deleting obsolete repositories ...");
 
-		String currentRepositoryId = SpaceRepository.getCurrentRepositoryId();
-		String obsoleteRepositoryId = SpaceRepository.getPreviousRepositoryId(currentRepositoryId, 4);
+		String currentRepositoryId = ElasticRepository.getCurrentRepositoryId();
+		String obsoleteRepositoryId = ElasticRepository.getPreviousRepositoryId(currentRepositoryId, 4);
 
 		while (true) {
 			try {
 
-				Start.get().getElasticClient().cluster()//
+				elastic().cluster()//
 						.prepareDeleteRepository(obsoleteRepositoryId)//
 						.get();
 
 				Utils.info("[SpaceDog] repository [%s] deleted because obsolete", obsoleteRepositoryId);
 
-				obsoleteRepositoryId = SpaceRepository.getPreviousRepositoryId(//
+				obsoleteRepositoryId = ElasticRepository.getPreviousRepositoryId(//
 						obsoleteRepositoryId, 1);
 
 			} catch (RepositoryMissingException e) {
 				break;
 			}
-		}
-	}
-
-	static class SpaceRepository {
-
-		private String type;
-		private Settings settings;
-		private String id;
-
-		private SpaceRepository(String id) {
-			this.id = id;
-			StartConfiguration conf = Start.get().configuration();
-
-			if (conf.snapshotsPath().isPresent()) {
-
-				Path location = conf.snapshotsPath().get().resolve(id);
-
-				try {
-					Files.createDirectories(location);
-				} catch (IOException e) {
-					throw Exceptions.runtime(//
-							"failed to create snapshot repository [%s] type [fs] at location [%s]", //
-							id, location);
-				}
-
-				this.type = "fs";
-				this.settings = Settings.builder()//
-						.put("location", location.toAbsolutePath().toString())//
-						.put("compress", true)//
-						.build();
-			} else {
-
-				this.type = "s3";
-				String awsRegion = conf.awsRegion().orElseThrow(//
-						() -> Exceptions.runtime("no AWS region configuration"));
-
-				this.settings = Settings.builder()//
-						.put("bucket", getBucketName(BUCKET_SUFFIX))//
-						.put("region", awsRegion)//
-						.put("base_path", this.id)//
-						.put("compress", true)//
-						.build();
-			}
-		}
-
-		public String getId() {
-			return this.id;
-		}
-
-		public Settings getSettings() {
-			return this.settings;
-		}
-
-		public String getType() {
-			return this.type;
-		}
-
-		public static String getCurrentRepositoryId() {
-			return DateTime.now().withZone(DateTimeZone.UTC).toString("yyyy-ww");
-		}
-
-		public static String getPreviousRepositoryId(String repositoryId, int i) {
-			int yyyy = Integer.parseInt(repositoryId.substring(0, 4));
-			int ww = Integer.parseInt(repositoryId.substring(5));
-			while (i > 0) {
-				i = i - 1;
-				ww = ww - 1;
-				if (ww == 0) {
-					ww = 52;
-					yyyy = yyyy - 1;
-				}
-			}
-			return toRepositoryId(yyyy, ww);
-		}
-
-		public static String toRepositoryId(int yyyy, int ww) {
-			return String.valueOf(yyyy) + '-' + (ww < 10 ? "0" : "") + String.valueOf(ww);
 		}
 	}
 

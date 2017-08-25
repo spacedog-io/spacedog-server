@@ -133,11 +133,16 @@ public class SnapshotResourceTest extends SpaceTest {
 		ObjectNode thirdSnap = (ObjectNode) response.get("snapshot");
 		String thirdSnapId = response.getString("id");
 
-		// snapshotAll can get snapshot info
-		snapshotAll.get("/1/snapshot").go(200)//
+		// snapshotAll gets first and second latest snapshots info
+		snapshotAll.get("/1/snapshot").from(0).size(2).go(200)//
+				.assertSizeEquals(2, "results")//
 				.assertEquals(thirdSnap, "results.0")//
-				.assertEquals(secondSnap, "results.1")//
-				.assertEquals(firstSnap, "results.2");
+				.assertEquals(secondSnap, "results.1");
+
+		// snapshotAll gets third latest snapshot info
+		snapshotAll.get("/1/snapshot").from(2).size(1).go(200)//
+				.assertSizeEquals(1, "results")//
+				.assertEquals(firstSnap, "results.0");
 
 		// restore to oldest snapshot
 		superdog.post("/1/snapshot/{id}/restore")//
@@ -193,10 +198,13 @@ public class SnapshotResourceTest extends SpaceTest {
 		fred.get("/1/login").go(200);
 		nath.get("/1/login").go(200);
 
-		// check that restore to an invalid snapshot id fails
+		// fails to restore snapshot if invalid id format
 		superdog.post("/1/snapshot/xxxx/restore")//
 				.queryParam("waitForCompletion", "true")//
-				.go(404);
+				.go(400);
+
+		// fails to get snapshot if id not found
+		superdog.get("/1/snapshot/all-utc-2011-01-01-00-00-00-000").go(404);
 
 		// check account administrator can not restore the platform
 		aaaa.post("/1/snapshot/latest/restore").go(403);

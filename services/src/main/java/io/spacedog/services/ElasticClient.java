@@ -390,7 +390,7 @@ public class ElasticClient implements SpaceParams {
 					type);
 	}
 
-	public void deleteAllBackendIndices() {
+	public void deleteAllIndices() {
 		DeleteIndexResponse response = internalClient.admin().indices().prepareDelete("_all")//
 				.setIndicesOptions(IndicesOptions.fromOptions(false, true, true, true))//
 				.get();
@@ -400,7 +400,7 @@ public class ElasticClient implements SpaceParams {
 					"delete all indices not acknowledged by the cluster");
 	}
 
-	public void closeAllBackendIndices() {
+	public void closeAllIndices() {
 		CloseIndexResponse closeIndexResponse = internalClient.admin().indices().prepareClose("_all")//
 				.setIndicesOptions(IndicesOptions.fromOptions(false, true, true, true))//
 				.get();
