@@ -81,8 +81,8 @@ public class CredentialsResource extends Resource {
 				.integer(INVALID_CHALLENGES_FIELD)//
 				.timestamp(LAST_INVALID_CHALLENGE_AT_FIELD)//
 
-				.string(CREATED_AT_FIELD)//
-				.string(UPDATED_AT_FIELD)//
+				.timestamp(CREATED_AT_FIELD)//
+				.timestamp(UPDATED_AT_FIELD)//
 
 				.object(SESSIONS_FIELD).array()//
 				.string(CREATED_AT_FIELD)//
