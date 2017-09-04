@@ -332,14 +332,16 @@ public class Json {
 	}
 
 	// TODO add tests
-	public static ObjectNode object(Object... elements) {
-		if (elements.length % 2 != 0)
+	public static ObjectNode object(Object... fields) {
+		return addAll(object(), fields);
+	}
+
+	public static ObjectNode addAll(ObjectNode object, Object... fields) {
+		if (fields.length % 2 != 0)
 			throw Exceptions.illegalArgument("odd number of elements");
 
-		ObjectNode object = object();
-
-		for (int i = 0; i < elements.length; i = i + 2)
-			object.set(elements[i].toString(), toNode(elements[i + 1]));
+		for (int i = 0; i < fields.length; i = i + 2)
+			object.set(fields[i].toString(), toNode(fields[i + 1]));
 
 		return object;
 	}
