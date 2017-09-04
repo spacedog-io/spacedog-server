@@ -98,6 +98,12 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 				.routeParam("id", id).go(200, 404);
 	}
 
+	public void deleteByUsername(String username) {
+		Optional7<Credentials> optional = dog.credentials().getByUsername(username);
+		if (optional.isPresent())
+			dog.credentials().delete(optional.get().id());
+	}
+
 	public CredentialsEndpoint deleteAllButSuperAdmins() {
 		dog.delete("/1/credentials").go(200);
 		return this;

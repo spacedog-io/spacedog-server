@@ -3,8 +3,6 @@ package io.spacedog.rest;
 import org.junit.Assert;
 
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Credentials;
-import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Passwords;
 import io.spacedog.utils.SpaceFields;
 import io.spacedog.utils.SpaceParams;
@@ -28,8 +26,8 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 		return SpaceDog.backendId(backendId).username(username).email(email).signUp(password);
 	}
 
-	public static SpaceDog createTempUser(SpaceDog superadmin, String username) {
-		return createTempUser(superadmin.backendId(), username);
+	public static SpaceDog createTempUser(SpaceDog dog, String username) {
+		return createTempUser(dog.backendId(), username);
 	}
 
 	public static SpaceDog createTempUser(String backendId, String username) {
@@ -38,15 +36,6 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 				.credentials().create(username, password, "platform@spacedog.io");
 		return SpaceDog.backendId(backendId).id(credentialsId).username(username)//
 				.email("platform@spacedog.io").password(password);
-	}
-
-	public static void superdogDeletesCredentials(String backendId, String username) {
-
-		SpaceDog superdog = superdog(backendId);
-		Optional7<Credentials> optional = superdog.credentials().getByUsername(username);
-
-		if (optional.isPresent())
-			superdog.credentials().delete(optional.get().id());
 	}
 
 	public static SpaceDog resetTestBackend() {
