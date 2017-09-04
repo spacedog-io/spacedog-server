@@ -9,10 +9,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Sets;
 
-import io.spacedog.rest.SpaceRequest;
+import io.spacedog.sdk.elastic.ESSearchSourceBuilder;
 import io.spacedog.utils.Credentials;
+import io.spacedog.utils.SpaceParams;
 
-public class LogEndpoint {
+public class LogEndpoint implements SpaceParams {
 
 	SpaceDog dog;
 
@@ -29,10 +30,18 @@ public class LogEndpoint {
 	}
 
 	public LogSearchResults get(int size, boolean refresh) {
-		SpaceRequest request = dog.get("/1/log").size(size);
-		if (refresh)
-			request.refresh();
-		return request.go(200).toPojo(LogSearchResults.class);
+		return dog.get("/1/log").size(size).refresh(refresh).go(200)//
+				.toPojo(LogSearchResults.class);
+	}
+
+	public LogSearchResults search(ESSearchSourceBuilder builder) {
+		return search(builder, false);
+	}
+
+	public LogSearchResults search(ESSearchSourceBuilder builder, boolean refresh) {
+		return dog.post("/1/log/search").refresh(refresh)//
+				.bodyJson(builder.toString()).go(200)//
+				.toPojo(LogSearchResults.class);
 	}
 
 	// ignore unknown fields
