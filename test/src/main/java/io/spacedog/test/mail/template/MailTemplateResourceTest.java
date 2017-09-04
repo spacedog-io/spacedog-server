@@ -33,7 +33,7 @@ public class MailTemplateResourceTest extends SpaceTest {
 
 		// create a schema
 		Schema schema = Schema.builder("demande")//
-				.acl("key", DataPermission.create)//
+				.acl("all", DataPermission.create)//
 				.string("email").text("nom").text("prenom").text("civilite")//
 				.string("cvUrl").string("tel").string("statut")//
 				.object("dispos").array()//
@@ -74,7 +74,7 @@ public class MailTemplateResourceTest extends SpaceTest {
 				Charset.forName("UTF-8"));
 		template.model = Maps.newHashMap();
 		template.model.put("demande", "demande");
-		template.roles = Collections.singleton("key");
+		template.roles = Collections.singleton("all");
 
 		mailSettings.templates.put("demande", template);
 
@@ -94,7 +94,7 @@ public class MailTemplateResourceTest extends SpaceTest {
 				Charset.forName("UTF-8"));
 		template.model = Maps.newHashMap();
 		template.model.put("demande", "demande");
-		template.roles = Collections.singleton("key");
+		template.roles = Collections.singleton("all");
 
 		mailSettings.templates.put("confirmation", template);
 
