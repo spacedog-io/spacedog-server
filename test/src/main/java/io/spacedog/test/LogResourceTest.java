@@ -13,11 +13,10 @@ import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.LogEndpoint.LogSearchResults;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Credentials;
-import io.spacedog.utils.Credentials.Type;
-import io.spacedog.utils.Json;
-import io.spacedog.utils.Optional7;
-import io.spacedog.utils.Passwords;
+import io.spacedog.sdk.elastic.ESQueryBuilders;
+import io.spacedog.sdk.elastic.ESSearchSourceBuilder;
+import io.spacedog.sdk.elastic.ESSortBuilders;
+import io.spacedog.sdk.elastic.ESSortOrder;
 
 public class LogResourceTest extends SpaceTest {
 
@@ -40,12 +39,12 @@ public class LogResourceTest extends SpaceTest {
 		// superadmin checks everything is in place
 		LogSearchResults log = test.log().get(6, true);
 
+		assertEquals(5, log.results.size());
 		assertEquals("/1/data", log.results.get(0).path);
 		assertEquals("/1/data", log.results.get(1).path);
 		assertEquals("/1/login", log.results.get(2).path);
 		assertEquals("/1/credentials", log.results.get(3).path);
 		assertEquals("/1/backend", log.results.get(4).path);
-		assertEquals("/1/backend", log.results.get(5).path);
 
 		DateTime before = log.results.get(1).receivedAt;
 
@@ -92,253 +91,83 @@ public class LogResourceTest extends SpaceTest {
 	}
 
 	@Test
-	public void purgeAllBackendLogs() throws InterruptedException {
-
-		// prepare
-		prepareTest();
-
-		// superdog creates purge user in root backend
-		superdogDeletesCredentials("api", "purgealltest");
-		SpaceDog purgeUser = createTempUser("api", "purgealltest");
-
-		// purge user fails to delete any logs
-		// since it doesn't have the 'purgeall' role
-		SpaceRequest.delete("/1/log").auth(purgeUser).go(403);
-
-		// superdog assigns 'purgeall' role to purge user
-		superdog().put("/1/credentials/" + purgeUser.id() + "/roles/purgeall")//
-				.go(200);
-
-		// create test and test2 backends and users
-		SpaceDog test = resetTestBackend();
-		SpaceDog test2 = resetTest2Backend();
-		SpaceDog fred = signUp(test, "fred", "hi fred");
-		SpaceDog vince = signUp(test2, "vince", "hi vince");
-
-		// data requests for logs
-		SpaceRequest.get("/1/data").auth(fred).go(200);
-		SpaceRequest.get("/1/data").auth(vince).go(200);
-		SpaceRequest.get("/1/data").auth(fred).go(200);
-		SpaceRequest.get("/1/data").auth(vince).go(200);
-
-		// check everything is in place
-		String before = superdog().get("/1/log").refresh().go(200)//
-				.assertEquals("/1/data", "results.0.path")//
-				.assertEquals("test2", "results.0.credentials.backendId")//
-				.assertEquals("/1/data", "results.1.path")//
-				.assertEquals("test", "results.1.credentials.backendId")//
-				.assertEquals("/1/data", "results.2.path")//
-				.assertEquals("test2", "results.2.credentials.backendId")//
-				.assertEquals("/1/data", "results.3.path")//
-				.assertEquals("test", "results.3.credentials.backendId")//
-				.assertEquals("/1/login", "results.4.path")//
-				.assertEquals("test2", "results.4.credentials.backendId")//
-				.assertEquals("/1/credentials", "results.5.path")//
-				.assertEquals("test2", "results.5.credentials.backendId")//
-				.assertEquals("/1/login", "results.6.path")//
-				.assertEquals("test", "results.6.credentials.backendId")//
-				.assertEquals("/1/credentials", "results.7.path")//
-				.assertEquals("test", "results.7.credentials.backendId")//
-				.getString("results.0.receivedAt");
-
-		// purge user fails to get logs
-		SpaceRequest.get("/1/log").auth(purgeUser).go(403);
-
-		// purge user deletes all backend logs before the last data request
-		SpaceRequest.delete("/1/log").queryParam("before", before).auth(purgeUser).go(200);
-
-		// superdog checks all backend logs are deleted but ...
-		before = superdog().get("/1/log").refresh().go(200)//
-				.assertEquals(4, "total")//
-				.assertEquals("DELETE", "results.0.method")//
-				.assertEquals("/1/log", "results.0.path")//
-				.assertEquals("GET", "results.1.method")//
-				.assertEquals("/1/log", "results.1.path")//
-				.assertEquals("GET", "results.2.method")//
-				.assertEquals("/1/log", "results.2.path")//
-				.assertEquals("GET", "results.3.method")//
-				.assertEquals("/1/data", "results.3.path")//
-				.getString("results.0.receivedAt");
-
-		// superdog deletes all backend logs before the delete request
-		superdog().delete("/1/log").queryParam("before", before).go(200);
-
-		// superdog checks all backend logs are deleted but ...
-		superdog().get("/1/log").refresh().go(200)//
-				.assertEquals(3, "total")//
-				.assertEquals("DELETE", "results.0.method")//
-				.assertEquals("/1/log", "results.0.path")//
-				.assertEquals("GET", "results.1.method")//
-				.assertEquals("/1/log", "results.1.path")//
-				.assertEquals("DELETE", "results.2.method")//
-				.assertEquals("/1/log", "results.2.path");
-	}
-
-	@Test
-	public void superdogsCanBrowseAllBackendLogs() {
-
-		prepareTest();
-
-		// create test backends and users
-		SpaceDog test = resetTestBackend();
-		SpaceDog test2 = resetTest2Backend();
-
-		signUp(test, "vince", "hi vince");
-		signUp(test2, "fred", "hi fred");
-
-		// superdog gets all backends logs
-		superdog().get("/1/log").refresh().go(200)//
-				.assertEquals("/1/login", "results.0.path")//
-				.assertEquals("test2", "results.0.credentials.backendId")//
-				.assertEquals("/1/credentials", "results.1.path")//
-				.assertEquals("test2", "results.1.credentials.backendId")//
-				.assertEquals("/1/login", "results.2.path")//
-				.assertEquals("test", "results.2.credentials.backendId")//
-				.assertEquals("/1/credentials", "results.3.path")//
-				.assertEquals("test", "results.3.credentials.backendId")//
-				.assertEquals("/1/backend", "results.4.path")//
-				.assertEquals("test2", "results.4.credentials.backendId")//
-				.assertEquals("/1/backend", "results.5.path")//
-				.assertEquals("test2", "results.5.credentials.backendId")//
-				.assertEquals("/1/backend", "results.6.path")//
-				.assertEquals("test", "results.6.credentials.backendId")//
-				.assertEquals("/1/backend", "results.7.path")//
-				.assertEquals("test", "results.7.credentials.backendId");
-
-		// after backend deletion, logs are still accessible to superdogs
-		test.admin().deleteBackend(test.backendId());
-		test2.admin().deleteBackend(test2.backendId());
-
-		superdog().get("/1/log").refresh().go(200)//
-				.assertEquals("DELETE", "results.0.method")//
-				.assertEquals("/1/backend", "results.0.path")//
-				.assertEquals("test2", "results.0.credentials.backendId")//
-				.assertEquals("DELETE", "results.1.method")//
-				.assertEquals("/1/backend", "results.1.path")//
-				.assertEquals("test", "results.1.credentials.backendId")//
-				.assertEquals("GET", "results.2.method")//
-				.assertEquals("/1/log", "results.2.path")//
-				.assertEquals("api", "results.2.credentials.backendId")//
-				.assertEquals("GET", "results.3.method")//
-				.assertEquals("/1/login", "results.3.path")//
-				.assertEquals("test2", "results.3.credentials.backendId")//
-				.assertEquals("POST", "results.4.method")//
-				.assertEquals("/1/credentials", "results.4.path")//
-				.assertEquals("test2", "results.4.credentials.backendId")//
-				.assertEquals("GET", "results.5.method")//
-				.assertEquals("/1/login", "results.5.path")//
-				.assertEquals("test", "results.5.credentials.backendId")//
-				.assertEquals("POST", "results.6.method")//
-				.assertEquals("/1/credentials", "results.6.path")//
-				.assertEquals("test", "results.6.credentials.backendId");
-
-	}
-
-	@Test
-	public void onlySuperdogsCanBrowseAllBackends() {
-
-		// prepare
-		prepareTest();
-		SpaceDog superdog = superdog();
-		String nathPassword = Passwords.random();
-		SpaceDog nath = SpaceDog.backendId("api").username("nath")//
-				.email("nath@dog.com").password(nathPassword);
-
-		// superdog deletes nath if she exists for fresh start
-		Optional7<Credentials> credentials = superdog.credentials()//
-				.getByUsername("nath");
-		if (credentials.isPresent())
-			superdog.credentials().delete(credentials.get().id());
-
-		// superdog creates superadmin named nath in root 'api' backend
-		superdog.credentials().create(nath.username(), //
-				nathPassword, nath.email().get(), Type.superadmin.name());
-
-		// anonymous gets data from test backend
-		SpaceDog.backendId("test").data().getAll().get();
-
-		// superdog gets all backend logs and is able to review
-		// previous test and root 'api' backend requests
-		superdog.get("/1/log").refresh().size(3).go(200)//
-				.assertEquals("/1/data", "results.0.path")//
-				.assertEquals("/1/credentials", "results.1.path");
-
-		// but nath only gets logs from her root 'api' backend
-		// since she's only superadmin and not superdog
-		nath.get("/1/log").refresh().size(2).go(200)//
-				.assertEquals("/1/log", "results.0.path")//
-				.assertEquals("/1/credentials", "results.1.path");
-
-		// nath deletes herself to leave root backend clean
-		nath.credentials().delete();
-	}
-
-	@Test
 	public void searchInLogs() {
 
 		// prepare
 		prepareTest();
 
 		// creates test backend and user
-		SpaceDog test = resetTestBackend();
-		SpaceRequest.get("/1/data").backend(test).go(200);
-		SpaceRequest.get("/1/data/user").backend(test).go(403);
-		SpaceDog vince = signUp(test, "vince", "hi vince");
-		SpaceRequest.get("/1/credentials/" + vince.id()).auth(vince).go(200);
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog guest = SpaceDog.backend(superadmin);
+		guest.get("/1/data").go(200);
+		guest.get("/1/data/user").go(403);
+		SpaceDog vince = signUp(superadmin, "vince", "hi vince");
+		vince.get("/1/credentials/" + vince.id()).go(200);
 
-		// superdog search for test backend logs with status 400 and higher
-		superdog(test).post("/1/log/search").refresh().size(1)//
-				.bodyJson("range", Json.object("status", Json.object("gte", "400")))//
-				.go(200)//
-				.assertEquals("/1/data/user", "results.0.path")//
-				.assertEquals(403, "results.0.status");
+		// superadmin search for test backend logs with status 400 and higher
+		ESSearchSourceBuilder query = ESSearchSourceBuilder.searchSource()//
+				.query(ESQueryBuilders.rangeQuery("status").gte(400))//
+				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
+		LogSearchResults results = superadmin.log().search(query, true);
+		assertEquals(1, results.results.size());
+		assertEquals("/1/data/user", results.results.get(0).path);
+		assertEquals(403, results.results.get(0).status);
 
-		// superdog search for test backend logs
-		// with credentials level equal to SUPER_ADMIN and lower
-		superdog(test).post("/1/log/search").size(7)//
-				.bodyJson("terms", Json.object("credentials.type", Json.array("SUPER_ADMIN", "USER", "KEY")))//
-				.go(200)//
-				.assertEquals("/1/credentials/" + vince.id(), "results.0.path")//
-				.assertEquals("/1/login", "results.1.path")//
-				.assertEquals("/1/credentials", "results.2.path")//
-				.assertEquals("/1/data/user", "results.3.path")//
-				.assertEquals("/1/data", "results.4.path")//
-				.assertEquals("/1/backend", "results.5.path")//
-				.assertEquals("/1/backend", "results.6.path");
+		// superadmin search for test backend logs
+		// with credentials type equal to superadmin and lower
+		query = ESSearchSourceBuilder.searchSource()//
+				.query(ESQueryBuilders.termsQuery("credentials.type", "superadmin", "user", "guest"))//
+				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
+		results = superadmin.log().search(query, true);
+		assertEquals(7, results.results.size());
+		assertEquals("/1/log/search", results.results.get(0).path);
+		assertEquals("/1/credentials/" + vince.id(), results.results.get(1).path);
+		assertEquals("/1/login", results.results.get(2).path);
+		assertEquals("/1/credentials", results.results.get(3).path);
+		assertEquals("/1/data/user", results.results.get(4).path);
+		assertEquals("/1/data", results.results.get(5).path);
+		assertEquals("/1/backend", results.results.get(6).path);
 
-		// superdog search for test backend log to only get USER and lower logs
-		superdog(test).post("/1/log/search").size(7)//
-				.bodyJson("terms", Json.object("credentials.type", Json.array("USER", "KEY")))//
-				.go(200)//
-				.assertEquals("/1/credentials/" + vince.id(), "results.0.path")//
-				.assertEquals("/1/login", "results.1.path")//
-				.assertEquals("/1/credentials", "results.2.path")//
-				.assertEquals("/1/data/user", "results.3.path")//
-				.assertEquals("/1/data", "results.4.path");
+		// superadmin search for test backend log to only get user and lower logs
+		query = ESSearchSourceBuilder.searchSource()//
+				.query(ESQueryBuilders.termsQuery("credentials.type", "user", "guest"))//
+				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
+		results = superadmin.log().search(query, true);
+		assertEquals(6, results.results.size());
+		assertEquals("/1/credentials/" + vince.id(), results.results.get(0).path);
+		assertEquals("/1/login", results.results.get(1).path);
+		assertEquals("/1/credentials", results.results.get(2).path);
+		assertEquals("/1/data/user", results.results.get(3).path);
+		assertEquals("/1/data", results.results.get(4).path);
+		assertEquals("/1/backend", results.results.get(5).path);
 
-		// superdog search for test backend log to only get KEY logs
-		superdog(test).post("/1/log/search").size(3)//
-				.bodyJson("term", Json.object("credentials.type", "KEY"))//
-				.go(200)//
-				.assertEquals("/1/credentials", "results.0.path")//
-				.assertEquals("/1/data/user", "results.1.path")//
-				.assertEquals("/1/data", "results.2.path");
+		// superadmin search for test backend log to only get guest logs
+		query = ESSearchSourceBuilder.searchSource()//
+				.query(ESQueryBuilders.termQuery("credentials.type", "guest"))//
+				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
+		results = superadmin.log().search(query, true);
+		assertEquals(4, results.results.size());
+		assertEquals("/1/credentials", results.results.get(0).path);
+		assertEquals("/1/data/user", results.results.get(1).path);
+		assertEquals("/1/data", results.results.get(2).path);
+		assertEquals("/1/backend", results.results.get(3).path);
 
 		// superdog gets all test backend logs
-		superdog(test).post("/1/log/search").refresh().size(15)//
-				.bodyJson("match_all", Json.object())//
-				.go(200)//
-				.assertEquals("/1/log/search", "results.0.path")//
-				.assertEquals("/1/log/search", "results.1.path")//
-				.assertEquals("/1/log/search", "results.2.path")//
-				.assertEquals("/1/log/search", "results.3.path")//
-				.assertEquals("/1/credentials/" + vince.id(), "results.4.path")//
-				.assertEquals("/1/login", "results.5.path")//
-				.assertEquals("/1/credentials", "results.6.path")//
-				.assertEquals("/1/data/user", "results.7.path")//
-				.assertEquals("/1/data", "results.8.path")//
-				.assertEquals("/1/backend", "results.9.path")//
-				.assertEquals("/1/backend", "results.10.path");
+		query = ESSearchSourceBuilder.searchSource()//
+				.query(ESQueryBuilders.matchAllQuery())//
+				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
+		results = superadmin.log().search(query, true);
+		assertEquals(10, results.results.size());
+		assertEquals("/1/log/search", results.results.get(0).path);
+		assertEquals("/1/log/search", results.results.get(1).path);
+		assertEquals("/1/log/search", results.results.get(2).path);
+		assertEquals("/1/log/search", results.results.get(3).path);
+		assertEquals("/1/credentials/" + vince.id(), results.results.get(4).path);
+		assertEquals("/1/login", results.results.get(5).path);
+		assertEquals("/1/credentials", results.results.get(6).path);
+		assertEquals("/1/data/user", results.results.get(7).path);
+		assertEquals("/1/data", results.results.get(8).path);
+		assertEquals("/1/backend", results.results.get(9).path);
 	}
 
 	@Test
