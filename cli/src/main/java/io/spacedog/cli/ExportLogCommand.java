@@ -9,7 +9,6 @@ import org.joda.time.DateTime;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
@@ -58,12 +57,20 @@ public class ExportLogCommand extends AbstractCommand<ExportLogCommand> {
 
 		Path target = Paths.get(file);
 
-		ObjectNode query = Json.objectBuilder().object("range")//
-				.object("receivedAt").put("gte", gte.toString())//
+		ObjectNode query = Json.objectBuilder()//
+				.put("size", 5000)//
+				.put("sort", "receivedAt")//
+				.object("query")//
+				.object("range")//
+				.object("receivedAt")//
+				.put("gte", gte.toString())//
 				.put("lt", lt.toString()).build();
 
-		JsonNode payload = dog.post("/1/log/search").bodyJson(query)//
-				.size(10000).go(200).asJson();
+		ObjectNode payload = dog.post("/1/log/search").refresh()//
+				.bodyJson(query).go(200).asJsonObject();
+
+		if (payload.get("total").asLong() > 5000)
+			System.err.println("WARNING: log export limited to the first 5000 logs");
 
 		Files.write(target, Json.toPrettyString(payload).getBytes(Utils.UTF8));
 	}
