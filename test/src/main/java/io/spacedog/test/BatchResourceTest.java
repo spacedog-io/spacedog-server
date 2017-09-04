@@ -185,19 +185,19 @@ public class BatchResourceTest extends SpaceTest {
 				.assertEquals("2", "responses.1.id")//
 				.assertEquals(200, "responses.2.status")//
 				.assertEquals(2, "responses.2.content.total")//
-				.assertEquals(400, "responses.3.status")//
+				.assertEquals(200, "responses.3.status")//
 				.assertEquals(200, "responses.4.status")//
 				.assertEquals(200, "responses.5.status")//
 				.assertEquals(2, "responses.5.content.total")//
 				.assertEquals(1, "debug.batchCredentialChecks");
 
-		assertEquals(Sets.newHashSet("Hi guys!", "Pretty cool, huhhhhh?"),
+		assertEquals(Sets.newHashSet("Hi guys, what's up?", "Pretty cool, huhhhhh?"),
 				Sets.newHashSet(response.getString("responses.5.content.results.0.text"),
 						response.getString("responses.5.content.results.1.text")));
 
 		assertEquals(Sets.newHashSet("1", "2"),
-				Sets.newHashSet(response.getString("responses.5.content.results.0.code"),
-						response.getString("responses.5.content.results.1.code")));
+				Sets.newHashSet(response.getString("responses.5.content.results.0.meta.id"),
+						response.getString("responses.5.content.results.1.meta.id")));
 
 		// should succeed to stop on first batch request error
 
