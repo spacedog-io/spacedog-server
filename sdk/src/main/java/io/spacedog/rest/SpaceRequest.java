@@ -23,6 +23,7 @@ import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.SpaceHeaders;
+import io.spacedog.utils.SpaceParams;
 import io.spacedog.utils.Utils;
 import io.spacedog.utils.WebPath;
 import okhttp3.Credentials;
@@ -76,7 +77,7 @@ public class SpaceRequest {
 
 	private HttpUrl.Builder computeHttpUrlFromBackendAndPath() {
 		if (backend == null)
-			backend = env.target();
+			backend = env().target();
 
 		HttpUrl.Builder builder = new HttpUrl.Builder()//
 				.scheme(backend.scheme())//
@@ -290,8 +291,10 @@ public class SpaceRequest {
 		return refresh(true);
 	}
 
-	public SpaceRequest refresh(boolean value) {
-		return this.queryParam("refresh", String.valueOf(value));
+	public SpaceRequest refresh(boolean refresh) {
+		if (refresh)
+			this.queryParam(SpaceParams.REFRESH_PARAM, String.valueOf(refresh));
+		return this;
 	}
 
 	public SpaceRequest setHeader(String name, String value) {
