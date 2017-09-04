@@ -487,7 +487,8 @@ public class CredentialsResource extends Resource {
 			throw Exceptions.invalidUsernamePassword();
 
 		return new Credentials(SUPERDOG)//
-				.addRoles(Credentials.Type.superdog.toString());
+				.addRoles(Credentials.Type.superdog.toString())//
+				.id(SUPERDOG);
 	}
 
 	private void updateInvalidChallenges(Credentials credentials) {

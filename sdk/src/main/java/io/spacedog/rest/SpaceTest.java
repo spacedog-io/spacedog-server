@@ -34,9 +34,9 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 
 	public static SpaceDog createTempUser(String backendId, String username) {
 		String password = Passwords.random();
-		SpaceDog.backendId(backendId)//
+		String credentialsId = SpaceDog.backendId(backendId)//
 				.credentials().create(username, password, "platform@spacedog.io");
-		return SpaceDog.backendId(backendId).username(username)//
+		return SpaceDog.backendId(backendId).id(credentialsId).username(username)//
 				.email("platform@spacedog.io").password(password);
 	}
 
@@ -104,6 +104,7 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 	public static SpaceDog superdog(String backendId) {
 		SpaceEnv env = SpaceRequest.env();
 		return SpaceDog.backendId(backendId).username("superdog")//
-				.password(env.getOrElseThrow("spacedog.superdog.password"));
+				.password(env.getOrElseThrow("spacedog.superdog.password"))//
+				.id("superdog");
 	}
 }

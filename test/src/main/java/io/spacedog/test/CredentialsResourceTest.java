@@ -6,7 +6,6 @@ package io.spacedog.test;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -32,39 +31,35 @@ public class CredentialsResourceTest extends SpaceTest {
 		prepareTest();
 		SpaceDog test = resetTestBackend();
 		SpaceDog test2 = resetTest2Backend();
+		SpaceDog superdog = superdog(test);
 
 		test.login();
 		test2.login();
-		SpaceDog superdog = SpaceDog.backendId("api")//
-				.username(SpaceEnv.defaultEnv().getOrElseThrow("spacedog.superdog.username")) //
-				.login(SpaceEnv.defaultEnv().getOrElseThrow("spacedog.superdog.password"));
 
 		// forbidden to delete superadmin if last superadmin of backend
-		SpaceRequest.delete("/1/credentials/" + test.id()).auth(test).go(403);
-		superdog().delete("/1/credentials/" + test.id()).go(403);
+		test.delete("/1/credentials/" + test.id()).go(403);
+		superdog.delete("/1/credentials/" + test.id()).go(403);
 
 		// superadmin test can create another superadmin (test1)
-		SpaceRequest.post("/1/credentials").auth(test)//
-				.bodyJson("username", "test1", "password", "hi test1", //
-						"email", "test1@test.com", "level", "SUPER_ADMIN")//
-				.go(201);
+		test.credentials().create(//
+				"superfred", "hi superfred", "superfred@test.com", "superadmin");
+		SpaceDog superfred = SpaceDog.backendId("test")//
+				.username("superfred").login("hi superfred");
 
-		SpaceDog test1 = SpaceDog.backendId("test").username("test1").login("hi test1");
+		// superadmin test can delete superadmin superfred
+		test.credentials().delete(superfred.id());
 
-		// superadmin test can delete superadmin test1
-		test.credentials().delete(test1.id());
+		// superfred can no longer login
+		superfred.get("/1/login").go(401);
 
-		// test1 can no longer login
-		test1.get("/1/login").go(401);
-
-		// superadmin test fails to delete superdog
-		SpaceRequest.delete("/1/credentials/" + superdog.id()).auth(test).go(403);
+		// superdog can not be deleted
+		superdog.delete("/1/credentials/me").go(404);
 
 		// superadmin test fails to delete superadmin of another backend
-		SpaceRequest.delete("/1/credentials/" + test2.id()).auth(test).go(403);
+		test.delete("/1/credentials/" + test2.id()).go(404);
 
 		// superadmin test2 fails to delete superadmin of another backend
-		SpaceRequest.delete("/1/credentials/" + test.id()).auth(test2).go(403);
+		test2.delete("/1/credentials/" + test.id()).go(404);
 	}
 
 	@Test
@@ -75,58 +70,27 @@ public class CredentialsResourceTest extends SpaceTest {
 		resetTestBackend();
 		SpaceEnv env = SpaceEnv.defaultEnv();
 
-		// superdog logs in with the root backend
-		SpaceDog apiSuperdog = SpaceDog.backendId("api")//
-				.username(env.getOrElseThrow("spacedog.superdog.username")) //
-				.login(env.getOrElseThrow("spacedog.superdog.password"));
-		String apiToken = apiSuperdog.accessToken().get();
+		// superdog with root backend id
+		SpaceDog apiSuperdog = superdog();
 
-		// superdog can access anything in any backend
-		SpaceRequest.get("/1/backend").backend("api").bearerAuth(apiToken).go(200);
-		SpaceRequest.get("/1/backend").backend("test").bearerAuth(apiToken).go(200);
-		SpaceRequest.get("/1/data").backend("api").bearerAuth(apiToken).go(200);
-		SpaceRequest.get("/1/data").backend("test").bearerAuth(apiToken).go(200);
+		// superdog can access anything in root backend
+		apiSuperdog.credentials().getByUsername("fred");
+		apiSuperdog.settings().get(CredentialsSettings.class);
 
-		// superdog logs with the "test" backend
-		SpaceDog testSuperdog = SpaceDog.backendId("test")//
-				.username(env.getOrElseThrow("spacedog.superdog.username")) //
-				.login(env.getOrElseThrow("spacedog.superdog.password"));
-		String testToken = testSuperdog.accessToken().get();
-		assertNotEquals(testToken, apiToken);
+		// superdog can access any backend
+		apiSuperdog.get("/1/credentials").backend("test").go(200);
+		apiSuperdog.get("/1/settings/credentials").backend("test").go(200);
 
-		// superdog credentials backendId is not changed
-		// by login into "test" backend
-		superdog().get("/1/credentials/" + testSuperdog.id()).go(200)//
-				.assertEquals("api", "backendId");
+		// superdog with "test" backend id
+		SpaceDog testSuperdog = superdog("test");
 
-		// superdog can still access anything in any backend with the old token
-		SpaceRequest.get("/1/backend").backend("api").bearerAuth(apiToken).go(200);
-		SpaceRequest.get("/1/backend").backend("test").bearerAuth(apiToken).go(200);
-		SpaceRequest.get("/1/data").backend("api").bearerAuth(apiToken).go(200);
-		SpaceRequest.get("/1/data").backend("test").bearerAuth(apiToken).go(200);
+		// "test" superdog can access anything in test backend
+		testSuperdog.credentials().getByUsername("fred");
+		testSuperdog.settings().get(CredentialsSettings.class);
 
-		// superdog can also access anything in any backend with the new token
-		SpaceRequest.get("/1/backend").backend("api").bearerAuth(testToken).go(200);
-		SpaceRequest.get("/1/backend").backend("test").bearerAuth(testToken).go(200);
-		SpaceRequest.get("/1/data").backend("api").bearerAuth(testToken).go(200);
-		SpaceRequest.get("/1/data").backend("test").bearerAuth(testToken).go(200);
-
-		// superdog logout from his "test" session
-		testSuperdog.logout();
-
-		// superdog can not access anything from his "test" token
-		SpaceRequest.get("/1/data").backend("api").bearerAuth(testToken).go(401);
-		SpaceRequest.get("/1/backend").backend("api").bearerAuth(testToken).go(401);
-
-		// superdog can still access anything from his "api" token
-		SpaceRequest.get("/1/data").backend("api").bearerAuth(apiToken).go(200);
-		SpaceRequest.get("/1/backend").backend("api").bearerAuth(apiToken).go(200);
-
-		// superdog logout from his "api" session
-		// and can not access anything this token
-		apiSuperdog.logout();
-		SpaceRequest.get("/1/data").backend("api").bearerAuth(apiToken).go(401);
-		SpaceRequest.get("/1/backend").backend("api").bearerAuth(apiToken).go(401);
+		// "test" superdog can also access any backend
+		testSuperdog.get("/1/credentials").backend("api").go(200);
+		testSuperdog.get("/1/settings/credentials").backend("api").go(200);
 	}
 
 	@Test
@@ -437,25 +401,5 @@ public class CredentialsResourceTest extends SpaceTest {
 		// fred can still access services if he remembers his password
 		// or if he's got a valid token
 		fred.get("/1/data").go(200);
-	}
-
-	@Test
-	public void checkSuperdogIsNotMessedUpWhenLoggedInSpecificBackend() {
-
-		// prepare
-		SpaceDog test = resetTestBackend();
-
-		// superdog logs in to the test backend
-		SpaceDog superdogTest = superdog(test).login();
-
-		// and gets all superadmins
-		ObjectNode results = superdogTest.get("/1/backend").go(200).asJsonObject();
-
-		// superdog logs in to the root backend
-		SpaceDog superdog = superdog().login();
-
-		// and check he gets the same superadmin list
-		superdog.get("/1/backend").go(200)//
-				.assertEquals(results);
 	}
 }
