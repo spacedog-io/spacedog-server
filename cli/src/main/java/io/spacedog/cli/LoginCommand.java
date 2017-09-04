@@ -69,7 +69,7 @@ public class LoginCommand extends AbstractCommand<LoginCommand> {
 				.username(username).login(password);
 
 		Path path = Paths.get(userHome, ".spacedog");
-		Files.createDirectory(path);
+		Files.createDirectories(path);
 		path = path.resolve("cli.properties");
 
 		Properties properties = new Properties();
@@ -104,7 +104,7 @@ public class LoginCommand extends AbstractCommand<LoginCommand> {
 			if (Strings.isNullOrEmpty(userHome))
 				throw Exceptions.runtime("no user home directory available");
 
-			Path path = Paths.get(userHome, ".spacedog.properties");
+			Path path = Paths.get(userHome, ".spacedog", "cli.properties");
 
 			if (!Files.exists(path))
 				throw Exceptions.runtime("you must first login");
