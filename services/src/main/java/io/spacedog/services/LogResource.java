@@ -23,7 +23,6 @@ import io.spacedog.rest.SpaceBackend;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
@@ -102,7 +101,7 @@ public class LogResource extends Resource {
 				: DateTime.parse(param);
 
 		DeleteByQueryResponse response = doPurge(before);
-		return JsonPayload.json(response);
+		return ElasticPayload.deleted(response).build();
 	}
 
 	//
@@ -133,12 +132,13 @@ public class LogResource extends Resource {
 				try {
 					payload = nextFilter.get();
 				} catch (Throwable t) {
-					payload = JsonPayload.error(t);
+					payload = JsonPayload.error(t).build();
 				}
 
 				if (payload == null)
 					payload = JsonPayload.error(500, //
-							"unexpected null payload for [%s] request to [%s]", context.method(), uri);
+							"unexpected null payload for [%s] request to [%s]", context.method(), uri)//
+							.build();
 
 				try {
 					get().log(uri, context, receivedAt, payload);
@@ -171,15 +171,16 @@ public class LogResource extends Resource {
 	}
 
 	private Payload extractLogs(SearchResponse response) {
-		JsonBuilder<ObjectNode> builder = Json.objectBuilder()//
-				.put("took", response.getTookInMillis())//
-				.put("total", response.getHits().getTotalHits())//
-				.array("results");
 
+		ArrayNode array = Json.array();
 		for (SearchHit hit : response.getHits().getHits())
-			builder.node(hit.sourceAsString());
+			array.add(Json.readNode(hit.sourceAsString()));
 
-		return JsonPayload.json(builder);
+		return JsonPayload.ok()//
+				.with("took", response.getTookInMillis())//
+				.with("total", response.getHits().getTotalHits())//
+				.withResults(array)//
+				.build();
 	}
 
 	private String log(String uri, Context context, DateTime receivedAt, Payload payload) {

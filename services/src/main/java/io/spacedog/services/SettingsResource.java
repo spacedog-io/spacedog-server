@@ -1,6 +1,7 @@
 package io.spacedog.services;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
@@ -25,7 +26,6 @@ import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.annotations.Put;
-import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/1/settings")
@@ -53,8 +53,10 @@ public class SettingsResource extends Resource {
 		SpaceContext.credentials().checkAtLeastSuperAdmin();
 
 		if (!elastic().exists(settingsIndex()))
-			return JsonPayload.json(JsonPayload.builder()//
-					.put("took", 0).put("total", 0).object("results"));
+			return JsonPayload.ok()//
+					.with("took", 0, "total", 0)//
+					.withResults(Json.array())//
+					.build();
 
 		elastic().refreshType(settingsIndex(), isRefreshRequested(context));
 
@@ -73,7 +75,7 @@ public class SettingsResource extends Resource {
 		for (SearchHit hit : response.getHits().getHits())
 			results.set(hit.getId(), Json.readNode(hit.sourceAsString()));
 
-		return JsonPayload.json(results);
+		return JsonPayload.ok().with(results).build();
 	}
 
 	@Delete("")
@@ -81,20 +83,24 @@ public class SettingsResource extends Resource {
 	public Payload deleteIndex() {
 		SpaceContext.credentials().checkAtLeastSuperAdmin();
 		elastic().deleteIndex(settingsIndex());
-		return JsonPayload.success();
+		return JsonPayload.ok().build();
 	}
 
 	@Get("/:id")
 	@Get("/:id/")
 	public Payload get(String id) {
 		checkIfAuthorizedToRead(id);
-		try {
-			return JsonPayload.json(loadFromElastic(id));
-		} catch (NotFoundException e) {
-			if (registeredSettingsClasses.containsKey(id))
-				return JsonPayload.pojo(instantiateDefaultAsNode(id));
-			throw e;
-		}
+		Optional<ObjectNode> object = getAsNode(id);
+
+		if (object.isPresent())
+			return JsonPayload.ok()//
+					.with(object.get()).build();
+
+		if (registeredSettingsClasses.containsKey(id))
+			return JsonPayload.ok()//
+					.with(instantiateDefaultAsNode(id)).build();
+
+		throw Exceptions.notFound(TYPE, id);
 	}
 
 	@Put("/:id")
@@ -103,7 +109,7 @@ public class SettingsResource extends Resource {
 		checkIfNotInternalSettings(id);
 		checkIfAuthorizedToUpdate(id);
 		IndexResponse response = saveToElastic(id, body);
-		return JsonPayload.toJson("/1", response);
+		return ElasticPayload.saved("/1", response).build();
 	}
 
 	@Delete("/:id")
@@ -111,19 +117,18 @@ public class SettingsResource extends Resource {
 	public Payload delete(String id) {
 		checkIfAuthorizedToUpdate(id);
 		elastic().delete(settingsIndex(), id, false, true);
-		return JsonPayload.success();
+		return JsonPayload.ok().build();
 	}
 
 	@Get("/:id/:field")
 	@Get("/:id/:field/")
 	public Payload get(String id, String field) {
 		checkIfAuthorizedToRead(id);
-		ObjectNode object = getAsNode(id);
-		if (object == null)
-			throw Exceptions.notFound(TYPE, id);
+		ObjectNode object = getAsNode(id)//
+				.orElseThrow(() -> Exceptions.notFound(TYPE, id));
 		JsonNode value = Json.get(object, field);
 		value = value == null ? NullNode.getInstance() : value;
-		return JsonPayload.json(value, HttpStatus.OK);
+		return JsonPayload.ok().with(value).build();
 	}
 
 	@Put("/:id/:field")
@@ -131,13 +136,12 @@ public class SettingsResource extends Resource {
 	public Payload put(String id, String field, String body) {
 		checkIfNotInternalSettings(id);
 		checkIfAuthorizedToUpdate(id);
-		ObjectNode object = getAsNode(id);
-		object = object == null ? Json.object() : object;
+		ObjectNode object = getAsNode(id).orElse(Json.object());
 		JsonNode value = Json.readNode(body);
 		Json.set(object, field, value);
 		String source = object.toString();
 		IndexResponse response = saveToElastic(id, source);
-		return JsonPayload.toJson("/1", response);
+		return ElasticPayload.saved("/1", response).build();
 	}
 
 	@Delete("/:id/:field")
@@ -145,13 +149,11 @@ public class SettingsResource extends Resource {
 	public Payload delete(String id, String field) {
 		checkIfNotInternalSettings(id);
 		checkIfAuthorizedToUpdate(id);
-		ObjectNode object = getAsNode(id);
-		if (object == null)
-			throw Exceptions.notFound(TYPE, id);
-
+		ObjectNode object = getAsNode(id)//
+				.orElseThrow(() -> Exceptions.notFound(TYPE, id));
 		Json.remove(object, field);
 		IndexResponse response = setAsNode(id, object);
-		return JsonPayload.toJson("/1", response);
+		return ElasticPayload.saved("/1", response).build();
 	}
 
 	//
@@ -179,13 +181,13 @@ public class SettingsResource extends Resource {
 		return settings;
 	}
 
-	public ObjectNode getAsNode(String id) {
+	public Optional<ObjectNode> getAsNode(String id) {
 		try {
 			String source = loadFromElastic(id);
-			return Json.readObject(source);
+			return Optional.of(Json.readObject(source));
 
 		} catch (NotFoundException nfe) {
-			return instantiateDefaultAsNode(id);
+			return Optional.empty();
 		}
 	}
 

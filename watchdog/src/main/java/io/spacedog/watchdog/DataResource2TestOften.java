@@ -68,8 +68,7 @@ public class DataResource2TestOften extends SpaceTest {
 				.end() //
 				.build();
 
-		String id = SpaceRequest.post("/1/data/sale").auth(fred).bodyJson(sale).go(201)//
-				.assertTrue("success")//
+		String id = fred.post("/1/data/sale").bodyJson(sale).go(201)//
 				.assertEquals("sale", "type")//
 				.assertEquals(1, "version")//
 				.assertNotNull("id")//
@@ -136,8 +135,7 @@ public class DataResource2TestOften extends SpaceTest {
 
 		JsonNode updateJson2 = Json.objectBuilder().array("items").object().put("quantity", 7).build();
 
-		SpaceRequest.put("/1/data/sale/" + id).auth(fred).bodyJson(updateJson2).go(200)//
-				.assertTrue("success")//
+		fred.put("/1/data/sale/" + id).bodyJson(updateJson2).go(200)//
 				.assertEquals("sale", "type")//
 				.assertEquals(2, "version")//
 				.assertEquals(id, "id");
@@ -175,7 +173,7 @@ public class DataResource2TestOften extends SpaceTest {
 		SpaceResponse req3d = SpaceRequest.put("/1/data/sale/" + id).auth(fred)//
 				.queryParam("version", "2").bodyJson("number", "0987654321").go(200);
 
-		req3d.assertTrue("success").assertEquals("sale", "type").assertEquals(3, "version").assertEquals(id, "id");
+		req3d.assertEquals("sale", "type").assertEquals(3, "version").assertEquals(id, "id");
 
 		// check update is correct
 

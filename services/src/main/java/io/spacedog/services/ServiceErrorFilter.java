@@ -6,12 +6,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
 import io.spacedog.jobs.Internals;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.constants.HttpStatus;
@@ -31,15 +29,17 @@ public class ServiceErrorFilter implements SpaceFilter {
 		} catch (IllegalStateException e) {
 			// Fluent wraps non runtime exceptions into IllegalStateException
 			// let's unwrap them
-			payload = e.getCause() != null ? JsonPayload.error(e.getCause())//
-					: JsonPayload.error(e);
+			payload = e.getCause() != null ? JsonPayload.error(e.getCause()).build()//
+					: JsonPayload.error(e).build();
 		} catch (Throwable t) {
-			payload = JsonPayload.error(t);
+			payload = JsonPayload.error(t).build();
 		}
 
 		if (payload == null)
-			payload = JsonPayload.error(HttpStatus.INTERNAL_SERVER_ERROR, //
-					"[%s][%s] response payload is null", context.method(), uri);
+			payload = JsonPayload.error(HttpStatus.INTERNAL_SERVER_ERROR) //
+					.withError("[%s][%s] response payload is null", //
+							context.method(), uri)//
+					.build();
 
 		if (payload.code() >= HttpStatus.INTERNAL_SERVER_ERROR)
 			notifyInternalErrorToSuperdogs(uri, context, payload);
@@ -48,23 +48,20 @@ public class ServiceErrorFilter implements SpaceFilter {
 
 		if (payload.isError() && payload.rawContent() == null) {
 
-			JsonBuilder<ObjectNode> nodeBuilder = Json.objectBuilder()//
-					.put("success", false)//
-					.put("status", payload.code())//
-					.object("error");
+			if (payload.code() == HttpStatus.NOT_FOUND)
+				return JsonPayload.error(payload.code()) //
+						.withError("path [%s] invalid", uri).build();
 
-			if (payload.code() == HttpStatus.NOT_FOUND) {
-				nodeBuilder.put("message", //
-						String.format("[%s] not a valid path", uri));
-				return JsonPayload.json(nodeBuilder, payload.code());
-			} else if (payload.code() == HttpStatus.METHOD_NOT_ALLOWED) {
-				nodeBuilder.put("message", //
-						String.format("method [%s] not valid for path [%s]", context.method(), uri));
-				return JsonPayload.json(nodeBuilder, payload.code());
-			} else {
-				nodeBuilder.put("message", "no details available for this error");
-				return JsonPayload.json(nodeBuilder, payload.code());
-			}
+			else if (payload.code() == HttpStatus.METHOD_NOT_ALLOWED)
+				return JsonPayload.error(payload.code()) //
+						.withError("method [%s] invalid for path [%s]", context.method(), uri)//
+						.build();
+
+			else
+				return JsonPayload.error(payload.code()) //
+						.withError("no details available for this error")//
+						.build();
+
 		}
 		return payload;
 	}

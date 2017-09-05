@@ -19,7 +19,6 @@ import com.google.common.collect.Sets;
 import io.spacedog.core.Json8;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.SpaceException;
 import net.codestory.http.Context;
@@ -56,38 +55,32 @@ public class BatchResource extends Resource {
 					"batch are limited to 10 sub requests");
 
 		boolean stopOnError = context.query().getBoolean(STOP_ON_ERROR_QUERY_PARAM, false);
-		JsonBuilder<ObjectNode> batchPayload = JsonPayload.builder().array("responses");
+		ArrayNode responses = Json.array();
 
 		for (int i = 0; i < requests.size(); i++) {
 
 			Payload requestPayload = null;
-			BatchJsonRequestWrapper requestWrapper = new BatchJsonRequestWrapper(//
+			BatchJsonRequestWrapper request = new BatchJsonRequestWrapper(//
 					Json.checkObject(requests.get(i)), context);
 
 			try {
-				checkRequestAuthorizedInBatch(requestWrapper);
-				requestPayload = Start.get().executeRequest(requestWrapper, null);
+				checkRequestAuthorizedInBatch(request);
+				requestPayload = Start.get().executeRequest(request, null);
 			} catch (Throwable t) {
-				requestPayload = JsonPayload.error(t);
+				requestPayload = JsonPayload.error(t).build();
 			}
 
 			if (requestPayload == null)
 				requestPayload = new Payload(HttpStatus.INTERNAL_SERVER_ERROR);
 
-			if (requestPayload.isSuccess() && "GET".equalsIgnoreCase(requestWrapper.method())) {
-
-				batchPayload.object()//
-						.put("success", true)//
-						.put("status", requestPayload.code())//
-						.node("content", JsonPayload.toJsonNode(requestPayload))//
-						.end();
-			} else
-				batchPayload.node(JsonPayload.toJsonNode(requestPayload));
+			responses.add(toJson(requestPayload, request));
 
 			if (stopOnError && requestPayload.isError())
 				break;
 		}
-		return JsonPayload.json(batchPayload);
+		return JsonPayload.ok()//
+				.with("responses", responses)//
+				.build();
 	}
 
 	private void checkRequestAuthorizedInBatch(BatchJsonRequestWrapper request) {
@@ -110,27 +103,43 @@ public class BatchResource extends Resource {
 
 			if (!key.equals(STOP_ON_ERROR_QUERY_PARAM)) {
 				Payload payload = null;
-				BatchJsonRequestWrapper requestWrapper = new BatchJsonRequestWrapper(//
+				BatchJsonRequestWrapper request = new BatchJsonRequestWrapper(//
 						Json.object("method", "GET", "path", "/1" + context.get(key)), //
 						context);
 
 				try {
-					payload = Start.get().executeRequest(requestWrapper, null);
+					payload = Start.get().executeRequest(request, null);
 				} catch (Throwable t) {
-					payload = JsonPayload.error(t);
+					payload = JsonPayload.error(t).build();
 				}
 
 				if (payload == null)
 					payload = new Payload(HttpStatus.INTERNAL_SERVER_ERROR);
 
-				response.set(key, JsonPayload.toJsonNode(payload));
+				response.set(key, toJson(payload, request));
 
 				if (payload.isError() && stopOnError)
 					break;
 			}
 		}
 
-		return JsonPayload.json(response);
+		return JsonPayload.ok().with(response).build();
+	}
+
+	private static JsonNode toJson(Payload payload, BatchJsonRequestWrapper request) {
+
+		Object rawContent = payload.rawContent();
+
+		if (rawContent == null)
+			rawContent = JsonPayload.status(payload.code())//
+					.build().rawContent();
+
+		if (rawContent instanceof JsonNode)
+			return (JsonNode) rawContent;
+
+		throw Exceptions.illegalArgument(//
+				"batch sub requests [%s] returned a non JSON response", //
+				request);
 	}
 
 	//
@@ -163,6 +172,11 @@ public class BatchResource extends Resource {
 		@Override
 		public String method() {
 			return Json.checkStringNotNullOrEmpty(request, "method");
+		}
+
+		@Override
+		public String toString() {
+			return method() + uri();
 		}
 
 		@Override

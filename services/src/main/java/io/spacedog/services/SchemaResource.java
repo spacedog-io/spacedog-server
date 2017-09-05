@@ -34,15 +34,16 @@ public class SchemaResource extends Resource {
 		JsonMerger merger = Json.merger();
 		Map<String, Schema> schemas = DataStore.get().getAllSchemas();
 		schemas.values().forEach(schema -> merger.merge(schema.node()));
-		return JsonPayload.json(merger.get());
+		return JsonPayload.ok().with(merger.get()).build();
 	}
 
 	@Get("/:type")
 	@Get("/:type/")
 	public Payload get(String type) {
 		Schema.checkName(type);
-		return JsonPayload.json(//
-				DataStore.get().getSchema(type).node());
+		return JsonPayload.ok()//
+				.with(DataStore.get().getSchema(type).node())//
+				.build();
 	}
 
 	@Put("/:type")
@@ -77,7 +78,7 @@ public class SchemaResource extends Resource {
 
 		DataAccessControl.save(type, schema.acl());
 
-		return JsonPayload.saved(!indexExists, "/1", "schema", type);
+		return JsonPayload.saved(!indexExists, "/1", "schema", type).build();
 	}
 
 	@Delete("/:type")
@@ -89,7 +90,7 @@ public class SchemaResource extends Resource {
 			DataAccessControl.delete(type);
 		} catch (TypeMissingException ignored) {
 		}
-		return JsonPayload.success();
+		return JsonPayload.ok().build();
 	}
 
 	//

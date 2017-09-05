@@ -31,8 +31,7 @@ public class BackendResource extends Resource {
 	@Get("/")
 	public Payload ping() {
 		ObjectNode payload = (ObjectNode) Json.toNode(Start.get().info());
-		payload.put("success", true).put("status", 200);
-		return JsonPayload.json(payload);
+		return JsonPayload.ok().with(payload).build();
 	}
 
 	@Get("/1/backend")
@@ -62,7 +61,7 @@ public class BackendResource extends Resource {
 			ShareResource.get().deleteAll();
 		}
 
-		return JsonPayload.success();
+		return JsonPayload.ok().build();
 	}
 
 	@Post("/1/backend")
@@ -103,7 +102,7 @@ public class BackendResource extends Resource {
 								backendId, credentials.email().get()));
 		}
 
-		return JsonPayload.saved(true, "/1/backend", TYPE, backendId, true);
+		return JsonPayload.saved(true, "/1", TYPE, backendId).build();
 	}
 
 	//
@@ -137,8 +136,10 @@ public class BackendResource extends Resource {
 			results.add(Json.object(USERNAME_FIELD, superAdmin.name(), //
 					EMAIL_FIELD, superAdmin.email().get()));
 
-		return JsonPayload.json(Json.object("total", superAdmins.total, //
-				"results", results));
+		return JsonPayload.ok()//
+				.with("total", superAdmins.total)//
+				.withResults(results)//
+				.build();
 	}
 
 	private boolean isDeleteFilesAndShares() {

@@ -35,14 +35,11 @@ public class LinkedinResource extends Resource {
 	public Payload getLogin(Context context) {
 		Credentials credentials = login(context);
 
-		return JsonPayload.json(//
-				JsonPayload.builder()//
-						.put(ACCESS_TOKEN_FIELD, credentials.accessToken()) //
-						.put(EXPIRES_IN_FIELD, credentials.accessTokenExpiresIn()) //
-						// TODO deprecated
-						// remove the id when colibee is fixed
-						.put(ID_FIELD, credentials.id()) //
-						.node(CREDENTIALS_FIELD, credentials.toJson()));
+		return JsonPayload.ok()//
+				.with(ACCESS_TOKEN_FIELD, credentials.accessToken()) //
+				.with(EXPIRES_IN_FIELD, credentials.accessTokenExpiresIn()) //
+				.with(CREDENTIALS_FIELD, credentials.toJson())//
+				.build();
 	}
 
 	@Get("/1/login/linkedin/redirect")
@@ -113,7 +110,7 @@ public class LinkedinResource extends Resource {
 				.go();
 
 		checkLinkedinError(response, "linkedin error fetching your profil");
-		return JsonPayload.json(response.asJsonObject());
+		return JsonPayload.ok().with(response.asJsonObject()).build();
 	}
 
 	//

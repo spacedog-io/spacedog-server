@@ -32,11 +32,9 @@ import io.spacedog.utils.Credentials.Session;
 import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Passwords;
 import io.spacedog.utils.Roles;
-import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Usernames;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
@@ -111,11 +109,11 @@ public class CredentialsResource extends Resource {
 			credentials = update(credentials);
 		}
 
-		return JsonPayload.json(//
-				JsonPayload.builder()//
-						.put(ACCESS_TOKEN_FIELD, credentials.accessToken()) //
-						.put(EXPIRES_IN_FIELD, credentials.accessTokenExpiresIn()) //
-						.node(CREDENTIALS_FIELD, credentials.toJson()));
+		return JsonPayload.ok()//
+				.with(ACCESS_TOKEN_FIELD, credentials.accessToken(), //
+						EXPIRES_IN_FIELD, credentials.accessTokenExpiresIn(), //
+						CREDENTIALS_FIELD, credentials.toJson())//
+				.build();
 	}
 
 	@Get("/1/logout")
@@ -128,7 +126,7 @@ public class CredentialsResource extends Resource {
 			credentials.deleteCurrentSession();
 			update(credentials);
 		}
-		return JsonPayload.success();
+		return JsonPayload.ok().build();
 	}
 
 	@Get("/1/credentials")
@@ -137,7 +135,9 @@ public class CredentialsResource extends Resource {
 		// TODO add more settings and permissions to control this
 		// credentials check
 		SpaceContext.credentials().checkAtLeastUser();
-		return JsonPayload.json(fromCredentialsSearch(getCredentials(toQuery(context))));
+		return JsonPayload.ok()//
+				.with(fromCredentialsSearch(getCredentials(toQuery(context))))//
+				.build();
 	}
 
 	@Delete("/1/credentials")
@@ -155,7 +155,7 @@ public class CredentialsResource extends Resource {
 		elastic.deleteByQuery(query, credentialsIndex());
 		elastic.refreshType(credentialsIndex());
 
-		return JsonPayload.success();
+		return JsonPayload.ok().build();
 	}
 
 	@Post("/1/credentials")
@@ -171,28 +171,25 @@ public class CredentialsResource extends Resource {
 				Credentials.Type.user);
 		create(credentials);
 
-		JsonBuilder<ObjectNode> builder = JsonPayload //
-				.builder(true, "/1", TYPE, credentials.id());
-
+		JsonPayload payload = JsonPayload.saved(true, "/1", TYPE, credentials.id());
 		if (credentials.passwordResetCode() != null)
-			builder.put(PASSWORD_RESET_CODE_FIELD, credentials.passwordResetCode());
+			payload.with(PASSWORD_RESET_CODE_FIELD, credentials.passwordResetCode());
 
-		return JsonPayload.json(builder, HttpStatus.CREATED)//
-				.withHeader(SpaceHeaders.SPACEDOG_OBJECT_ID, credentials.id());
+		return payload.build();
 	}
 
 	@Get("/1/credentials/me")
 	@Get("/1/credentials/me/")
 	public Payload getMe(Context context) {
 		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
-		return JsonPayload.json(credentials.toJson());
+		return JsonPayload.ok().with(credentials.toJson()).build();
 	}
 
 	@Get("/1/credentials/:id")
 	@Get("/1/credentials/:id/")
 	public Payload getById(String id, Context context) {
 		Credentials credentials = checkMyselfOrHigherAdminAndGet(id, false);
-		return JsonPayload.json(credentials.toJson());
+		return JsonPayload.ok().with(credentials.toJson()).build();
 	}
 
 	@Delete("/1/credentials/me")
@@ -214,7 +211,7 @@ public class CredentialsResource extends Resource {
 		}
 
 		delete(id);
-		return JsonPayload.success();
+		return JsonPayload.ok().build();
 	}
 
 	@Put("/1/credentials/me")
@@ -277,7 +274,7 @@ public class CredentialsResource extends Resource {
 		// TODO check if at least one field has been changed
 		// before credentials update
 		credentials = update(credentials);
-		return saved(credentials, false);
+		return saved(false, credentials);
 	}
 
 	@Post("/1/credentials/forgotPassword")
@@ -314,7 +311,7 @@ public class CredentialsResource extends Resource {
 
 		MailTemplateResource.get().sendTemplatedMail(template, mailContext);
 
-		return JsonPayload.success();
+		return JsonPayload.ok().build();
 	}
 
 	@Delete("/1/credentials/:id/password")
@@ -326,9 +323,10 @@ public class CredentialsResource extends Resource {
 		credentials.newPasswordResetCode();
 		credentials = update(credentials);
 
-		return JsonPayload.json(JsonPayload.builder(false, "/1", TYPE, credentials.id(), //
-				credentials.version())//
-				.put(PASSWORD_RESET_CODE_FIELD, credentials.passwordResetCode()));
+		return JsonPayload.saved(false, "/1", TYPE, credentials.id())//
+				.withVersion(credentials.version())//
+				.with(PASSWORD_RESET_CODE_FIELD, credentials.passwordResetCode())//
+				.build();
 	}
 
 	@Post("/1/credentials/:id/password")
@@ -345,7 +343,7 @@ public class CredentialsResource extends Resource {
 				Optional7.of(settings.passwordRegex()));
 		credentials = update(credentials);
 
-		return saved(credentials, false);
+		return saved(false, credentials);
 	}
 
 	@Put("/1/credentials/me/password")
@@ -368,7 +366,7 @@ public class CredentialsResource extends Resource {
 		credentials.changePassword(password, Optional7.of(settings.passwordRegex()));
 
 		credentials = update(credentials);
-		return saved(credentials, false);
+		return saved(false, credentials);
 	}
 
 	@Put("/1/credentials/:id/passwordMustChange")
@@ -381,7 +379,7 @@ public class CredentialsResource extends Resource {
 		credentials.passwordMustChange(passwordMustChange);
 
 		credentials = update(credentials);
-		return saved(credentials, false);
+		return saved(false, credentials);
 	}
 
 	@Put("/1/credentials/:id/enabled")
@@ -396,7 +394,7 @@ public class CredentialsResource extends Resource {
 		credentials.doEnableOrDisable(enabled.asBoolean());
 		credentials = update(credentials);
 
-		return saved(credentials, false);
+		return saved(false, credentials);
 	}
 
 	@Get("/1/credentials/:id/roles")
@@ -411,7 +409,7 @@ public class CredentialsResource extends Resource {
 		Credentials credentials = checkAdminAndGet(id);
 		credentials.clearRoles();
 		credentials = update(credentials);
-		return saved(credentials, false);
+		return saved(false, credentials);
 	}
 
 	@Put("/1/credentials/:id/roles/:role")
@@ -427,7 +425,7 @@ public class CredentialsResource extends Resource {
 			updated = update(updated);
 		}
 
-		return saved(updated, false);
+		return saved(false, updated);
 	}
 
 	@Delete("/1/credentials/:id/roles/:role")
@@ -438,9 +436,9 @@ public class CredentialsResource extends Resource {
 		if (credentials.roles().contains(role)) {
 			credentials.removeRoles(role);
 			credentials = update(credentials);
-			return saved(credentials, false);
+			return saved(false, credentials);
 		}
-		return JsonPayload.error(HttpStatus.NOT_FOUND);
+		return JsonPayload.error(HttpStatus.NOT_FOUND).build();
 	}
 
 	//
@@ -679,8 +677,10 @@ public class CredentialsResource extends Resource {
 	// Implementation
 	//
 
-	private Payload saved(Credentials credentials, boolean created) {
-		return JsonPayload.saved(false, "/1", TYPE, credentials.id(), credentials.version());
+	private Payload saved(boolean created, Credentials credentials) {
+		return JsonPayload.saved(false, "/1", TYPE, credentials.id())//
+		.withVersion(credentials.version()).with(credentials.toJson())//
+				.build();
 	}
 
 	public Credentials createCredentialsRequestToCredentials(String body, //

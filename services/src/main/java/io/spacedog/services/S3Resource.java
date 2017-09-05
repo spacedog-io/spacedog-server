@@ -22,12 +22,12 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.base.Strings;
 
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.WebPath;
 import net.codestory.http.Context;
@@ -137,34 +137,31 @@ public class S3Resource extends Resource {
 
 		// only root path allows empty list
 		if (objects.getObjectSummaries().isEmpty() && s3Path.size() > 1)
-			return JsonPayload.error(404);
+			return JsonPayload.error(404).build();
 
-		JsonBuilder<ObjectNode> response = JsonPayload.builder();
+		JsonPayload payload = JsonPayload.ok();
 
 		if (objects.isTruncated())
-			response.put("next", fromS3Key(objects.getNextMarker()).toEscapedString());
+			payload.with("next", fromS3Key(objects.getNextMarker()).toEscapedString());
 
-		response.array("results");
+		ArrayNode results = Json.array();
 
 		for (S3ObjectSummary summary : objects.getObjectSummaries()) {
 			WebPath objectPath = fromS3Key(summary.getKey());
-			response.object()//
-					.put("path", objectPath.toString())//
-					.put("size", summary.getSize())//
-					.put("lastModified", new DateTime(summary.getLastModified().getTime()).toString())//
-					.put("etag", summary.getETag())//
-					.end();
+			results.add(Json.object("path", objectPath.toString(), //
+					"size", summary.getSize(), //
+					"lastModified", new DateTime(summary.getLastModified().getTime()).toString(), //
+					"etag", summary.getETag()));
 		}
 
-		return JsonPayload.json(response);
+		return payload.withResults(results).build();
 	}
 
 	public Payload doDelete(String bucketSuffix, WebPath path, boolean fileOnly, boolean checkOwnership) {
 
 		String bucketName = getBucketName(bucketSuffix);
 		WebPath s3Path = path.addFirst(SpaceContext.backendId());
-
-		JsonBuilder<ObjectNode> builder = JsonPayload.builder().array("deleted");
+		ArrayNode deleted = Json.array();
 
 		// first try to delete this path as key
 
@@ -174,7 +171,7 @@ public class S3Resource extends Resource {
 			getOrCheckOwnership(metadata, checkOwnership);
 
 			s3.deleteObject(bucketName, s3Path.toS3Key());
-			builder.add(path.toString());
+			deleted.add(path.toString());
 
 		} catch (AmazonS3Exception e) {
 
@@ -209,14 +206,14 @@ public class S3Resource extends Resource {
 				}
 
 				for (S3ObjectSummary summary : objects.getObjectSummaries())
-					builder.add(fromS3Key(summary.getKey()).toString());
+					deleted.add(fromS3Key(summary.getKey()).toString());
 
 				next = objects.getNextMarker();
 
 			} while (next != null);
 
 		}
-		return JsonPayload.json(builder);
+		return JsonPayload.ok().with("deleted", deleted).build();
 	}
 
 	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, WebPath path, byte[] bytes,
@@ -255,14 +252,14 @@ public class S3Resource extends Resource {
 				s3Path.toS3Key(), new ByteArrayInputStream(bytes), //
 				metadata));
 
-		JsonBuilder<ObjectNode> builder = JsonPayload.builder()//
-				.put("path", path.toString())//
-				.put("location", toSpaceLocation(backendId, rootUri, path));
+		JsonPayload payload = JsonPayload.ok()//
+				.with("path", path.toString())//
+				.with("location", toSpaceLocation(backendId, rootUri, path));
 
 		if (enableS3Location)
-			builder.put("s3", toS3Location(bucketName, s3Path));
+			payload.with("s3", toS3Location(bucketName, s3Path));
 
-		return JsonPayload.json(builder);
+		return payload.build();
 	}
 
 	//

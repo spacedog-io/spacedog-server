@@ -28,7 +28,6 @@ import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -153,7 +152,7 @@ public class PushResource extends Resource {
 		String[] tags = Json.toPojo(body, String[].class);
 		installation.tags().addAll(Sets.newHashSet(tags));
 		update(installation, SpaceContext.credentials());
-		return JsonPayload.saved(false, "/1", TYPE, id);
+		return JsonPayload.saved(false, "/1", TYPE, id).build();
 	}
 
 	@Put("/installation/:id/tags")
@@ -169,7 +168,7 @@ public class PushResource extends Resource {
 		String[] tags = Json.toPojo(body, String[].class);
 		installation.tags().removeAll(Sets.newHashSet(tags));
 		update(installation, SpaceContext.credentials());
-		return JsonPayload.saved(false, "/1", TYPE, id);
+		return JsonPayload.saved(false, "/1", TYPE, id).build();
 	}
 
 	@Get("/installation/:id/:field")
@@ -233,8 +232,10 @@ public class PushResource extends Resource {
 				.getHits();
 
 		if (hits.totalHits() > 1000)
-			return JsonPayload.error(HttpStatus.NOT_IMPLEMENTED, //
-					"push to [%s] installations is a premium feature", hits.totalHits());
+			return JsonPayload.error(HttpStatus.NOT_IMPLEMENTED) //
+					.withError("push to [%s] installations is a premium feature", //
+							hits.totalHits())//
+					.build();
 
 		PushLog log = new PushLog();
 
@@ -264,12 +265,11 @@ public class PushResource extends Resource {
 			int httpStatus = logItems.size() == 0 ? HttpStatus.NOT_FOUND //
 					: successes > 0 ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
 
-			JsonBuilder<ObjectNode> builder = JsonPayload.builder(httpStatus)//
-					.put(FAILURES, failures)//
-					.put("applicationDisabled", applicationDisabled)//
-					.node(PUSHED_TO, logItems);
-
-			return JsonPayload.json(builder, httpStatus);
+			return JsonPayload.status(httpStatus)//
+					.with(FAILURES, failures, //
+							"applicationDisabled", applicationDisabled, //
+							PUSHED_TO, logItems)//
+					.build();
 		}
 
 		public ObjectNode toNode() {

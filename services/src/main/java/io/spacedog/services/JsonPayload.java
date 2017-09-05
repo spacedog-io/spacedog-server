@@ -4,40 +4,148 @@
 package io.spacedog.services;
 
 import org.elasticsearch.ElasticsearchException;
-import org.elasticsearch.action.ShardOperationFailedException;
-import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
-import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchPhaseExecutionException;
 
 import com.amazonaws.AmazonServiceException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
-import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceException;
+import io.spacedog.utils.SpaceFields;
 import io.spacedog.utils.SpaceHeaders;
-import io.spacedog.utils.Utils;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
-public class JsonPayload {
+public class JsonPayload implements SpaceFields {
 
-	private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
+	private JsonNode node;
+	private Payload payload;
 
-	public static Payload success() {
-		return json(HttpStatus.OK);
+	private JsonPayload(int status) {
+		this.payload = new Payload(status);
 	}
 
-	public static Payload error(Throwable t) {
-		return error(status(t), t);
+	private ObjectNode object() {
+		if (node == null)
+			node = Json.object();
+		return Json.checkObject(node);
 	}
 
-	public static int status(Throwable t) {
+	public JsonPayload withLocation(String uri) {
+		object().put("location", Resource.spaceUrl(uri).toString());
+		return this;
+	}
+
+	public JsonPayload withLocation(String uri, String type, String id) {
+		object().put("location", Resource.spaceUrl(uri, type, id).toString());
+		return this;
+	}
+
+	public JsonPayload withVersion(long version) {
+		if (version > 0)
+			object().put(VERSION_FIELD, version);
+		return this;
+	}
+
+	public JsonPayload withCode(int code) {
+		payload.withCode(code);
+		return this;
+	}
+
+	public JsonPayload withHeader(String key, String value) {
+		payload.withHeader(key, value);
+		return this;
+	}
+
+	public JsonPayload with(JsonNode node) {
+		this.node = node;
+		return this;
+	}
+
+	public JsonPayload with(Object... fields) {
+		Json.addAll(object(), fields);
+		return this;
+	}
+
+	public JsonPayload withResults(ArrayNode array) {
+		this.object().set("results", array);
+		return this;
+	}
+
+	public Payload build() {
+
+		int status = payload.code();
+		if (status >= 400)
+			object().put("success", status < 400)//
+					.put("status", status);
+
+		return new Payload(Json.JSON_CONTENT_UTF8, node)//
+				.withCode(status)//
+				.withHeaders(payload.headers())//
+				.withCookies(payload.cookies());
+	}
+
+	//
+	// Factory methods
+	//
+
+	public static JsonPayload ok() {
+		return status(HttpStatus.OK);
+	}
+
+	public static JsonPayload created() {
+		return status(HttpStatus.CREATED);
+	}
+
+	public static JsonPayload status(int status) {
+		return new JsonPayload(status);
+	}
+
+	public static JsonPayload saved(boolean created, String uri, String type, String id) {
+
+		JsonPayload payload2 = status(created ? HttpStatus.CREATED : HttpStatus.OK);
+		payload2.object().put("id", id) //
+				.put("type", type);
+
+		return payload2.withLocation(uri, type, id)//
+				.withLocation(uri, type, id)//
+				.withHeader(SpaceHeaders.SPACEDOG_OBJECT_ID, id);
+	}
+
+	//
+	// Error payloads
+	//
+
+	public static JsonPayload error(int httpStatus) {
+		return status(httpStatus);
+	}
+
+	public static JsonPayload error(Throwable t) {
+		return error(toStatus(t)).withError(t);
+	}
+
+	public static JsonPayload error(int httpStatus, String message, Object... args) {
+		return error(httpStatus).withError(message, args);
+	}
+
+	public JsonPayload withError(String message, Object... args) {
+		return withError(Json.object("message", String.format(message, args)));
+	}
+
+	public JsonPayload withError(Throwable throwable) {
+		boolean debug = SpaceContext.isDebug() || payload.code() >= 500;
+		return withError(toJson(throwable, debug));
+	}
+
+	public JsonPayload withError(JsonNode error) {
+		this.object().set("error", error);
+		return this;
+	}
+
+	public static int toStatus(Throwable t) {
 
 		if (t instanceof IllegalArgumentException)
 			return HttpStatus.BAD_REQUEST;
@@ -53,22 +161,9 @@ public class JsonPayload {
 		if (t instanceof ElasticsearchException)
 			return ((ElasticsearchException) t).status().getStatus();
 		if (t.getCause() != null)
-			return status(t.getCause());
+			return toStatus(t.getCause());
 
 		return HttpStatus.INTERNAL_SERVER_ERROR;
-	}
-
-	public static Payload error(int httpStatus, String message, Object... args) {
-		return error(httpStatus, Exceptions.runtime(message, args));
-	}
-
-	public static Payload error(int httpStatus) {
-		return json(httpStatus);
-	}
-
-	public static Payload error(int httpStatus, Throwable throwable) {
-		JsonNode errorNode = toJson(throwable, SpaceContext.isDebug() || httpStatus >= 500);
-		return json(builder(httpStatus).node("error", errorNode), httpStatus);
 	}
 
 	public static JsonNode toJson(Throwable t, boolean debug) {
@@ -105,187 +200,6 @@ public class JsonPayload {
 			json.set("cause", toJson(t.getCause(), debug));
 
 		return json;
-	}
-
-	public static Payload toJson(String uriBase, IndexResponse response) {
-		return JsonPayload.saved(response.isCreated(), uriBase, response.getType(), //
-				response.getId(), response.getVersion());
-	}
-
-	/**
-	 * @param parameters
-	 *            triples with parameter name, value and message
-	 * @return a bad request http payload with a json listing invalid parameters
-	 */
-	protected static Payload invalidParameters(String... parameters) {
-		JsonBuilder<ObjectNode> builder = builder(HttpStatus.BAD_REQUEST);
-
-		if (parameters.length > 0 && parameters.length % 3 == 0) {
-			builder.object("invalidParameters");
-			for (int i = 0; i < parameters.length; i += 3)
-				builder.object(parameters[0])//
-						.put("value", parameters[1])//
-						.put("message", parameters[2]);
-		}
-
-		return json(builder, HttpStatus.BAD_REQUEST);
-	}
-
-	public static JsonBuilder<ObjectNode> builder(boolean created, String uri, String type, String id) {
-		return builder(created, uri, type, id, 0);
-	}
-
-	public static Payload saved(boolean created, String uri, String type, String id, boolean isUriFinal) {
-		return saved(created, uri, type, id, 0, isUriFinal);
-	}
-
-	public static Payload saved(boolean created, String uri, String type, String id) {
-		return saved(created, uri, type, id, 0, false);
-	}
-
-	public static Payload saved(boolean created, String uri, String type, String id, long version) {
-		return saved(created, uri, type, id, version, false);
-	}
-
-	public static Payload saved(boolean created, String uri, String type, String id, long version, boolean isUriFinal) {
-		JsonBuilder<ObjectNode> builder = JsonPayload.builder(created, uri, type, id, version, isUriFinal);
-		return json(builder, created ? HttpStatus.CREATED : HttpStatus.OK)//
-				.withHeader(SpaceHeaders.SPACEDOG_OBJECT_ID, id);
-	}
-
-	public static JsonBuilder<ObjectNode> builder(boolean created, String uri, String type, String id, long version) {
-		return builder(created, uri, type, id, version, false);
-	}
-
-	public static JsonBuilder<ObjectNode> builder(boolean created, String uri, String type, String id, long version,
-			boolean isUriFinal) {
-
-		JsonBuilder<ObjectNode> builder = builder(created ? HttpStatus.CREATED : HttpStatus.OK) //
-				.put("id", id) //
-				.put("type", type);
-
-		if (isUriFinal)
-			builder.put("location", Resource.spaceUrl(uri).toString());
-		else
-			builder.put("location", Resource.spaceUrl(uri, type, id).toString());
-
-		if (version > 0) //
-			builder.put("version", version);
-
-		return builder;
-	}
-
-	public static Payload json(int httpStatus) {
-		return json(builder(httpStatus), httpStatus);
-	}
-
-	public static <N extends JsonNode> Payload json(JsonBuilder<N> content) {
-		return json(content.build());
-	}
-
-	public static <N extends JsonNode> Payload json(JsonBuilder<N> content, int httpStatus) {
-		return json(content.build(), httpStatus);
-	}
-
-	public static Payload json(JsonNode content) {
-		return json(content, HttpStatus.OK);
-	}
-
-	public static Payload json(JsonNode content, int httpStatus) {
-		if (content == null)
-			content = NullNode.getInstance();
-		if (content.isObject() && SpaceContext.isDebug())
-			((ObjectNode) content).set("debug", SpaceContext.debug().toNode());
-
-		return new Payload(Json.JSON_CONTENT_UTF8, content, httpStatus);
-	}
-
-	public static Payload json(String content) {
-		return json(content, HttpStatus.OK);
-	}
-
-	public static Payload json(String content, int httpStatus) {
-		return new Payload(Json.JSON_CONTENT_UTF8, content, httpStatus);
-	}
-
-	public static Payload pojo(Object pojo) {
-		return pojo(pojo, HttpStatus.OK);
-	}
-
-	public static Payload pojo(Object pojo, int httpStatus) {
-		return new Payload(Json.JSON_CONTENT_UTF8, Json.toString(pojo), httpStatus);
-	}
-
-	public static Payload json(int status, ShardOperationFailedException[] failures) {
-
-		if (status < 400)
-			return json(status);
-
-		JsonBuilder<ObjectNode> builder = builder(status).array("error");
-
-		for (ShardOperationFailedException failure : failures)
-			builder.object().put("type", failure.getClass().getName()).put("message", failure.reason())
-					.put("shardId", failure.shardId()).end();
-
-		return json(builder, status);
-	}
-
-	public static Payload json(DeleteByQueryResponse response) {
-
-		if (response.isTimedOut())
-			return error(504, //
-					"the delete by query operation timed out, some objects might have been deleted");
-
-		if (response.getTotalFound() != response.getTotalDeleted())
-			return error(500, String.format(//
-					"the delete by query operation failed to delete all objects found, "
-							+ "objects found [%s], objects deleted [%s]",
-					response.getTotalFound(), response.getTotalDeleted()));
-
-		if (response.getShardFailures().length > 0)
-			return json(500, response.getShardFailures());
-
-		return json(builder()//
-				.put("totalDeleted", response.getTotalDeleted()));
-	}
-
-	public static byte[] toBytes(Object content) {
-		if (content == null)
-			return EMPTY_BYTE_ARRAY;
-
-		if (content instanceof byte[])
-			return (byte[]) content;
-
-		if (content instanceof Payload)
-			return toBytes(((Payload) content).rawContent());
-
-		return content.toString().getBytes(Utils.UTF8);
-	}
-
-	public static boolean isJson(Payload payload) {
-		return payload.rawContentType() == null ? false//
-				: payload.rawContentType().startsWith(Json.JSON_CONTENT);
-	}
-
-	public static JsonBuilder<ObjectNode> builder() {
-		return builder(200);
-	}
-
-	public static JsonBuilder<ObjectNode> builder(int status) {
-		return Json.objectBuilder().put("success", status < 400).put("status", status);
-	}
-
-	public static JsonNode toJsonNode(Payload payload) {
-
-		Object rawContent = payload.rawContent();
-		if (rawContent instanceof JsonNode)
-			return (JsonNode) rawContent;
-		if (rawContent instanceof String)
-			return Json.readNode((String) rawContent);
-
-		return JsonPayload.builder(payload.code()).build();
-		// throw Exceptions.illegalArgument("non json payload: [%s]",
-		// rawContent);
 	}
 
 }

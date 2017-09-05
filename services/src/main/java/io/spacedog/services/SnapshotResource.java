@@ -12,11 +12,11 @@ import org.elasticsearch.cluster.metadata.RepositoryMetaData;
 import org.elasticsearch.repositories.RepositoryMissingException;
 import org.elasticsearch.snapshots.RestoreInfo;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
@@ -43,14 +43,14 @@ public class SnapshotResource extends Resource {
 		int size = context.query().getInteger(SIZE_PARAM, 10);
 		List<ElasticSnapshot> snapshots = ElasticSnapshot.latests(from, size);
 
-		JsonBuilder<ObjectNode> payload = JsonPayload.builder()//
-				.put("total", snapshots.size())//
-				.array("results");
-
+		ArrayNode results = Json.array();
 		for (ElasticSnapshot snapshot : snapshots)
-			payload.node(snapshot.toJson());
+			results.add(snapshot.toJson());
 
-		return JsonPayload.json(payload);
+		return JsonPayload.ok()//
+				.with("total", snapshots.size())//
+				.withResults(results)//
+				.build();
 	}
 
 	@Get("/latest")
@@ -60,8 +60,8 @@ public class SnapshotResource extends Resource {
 		checkSnapshotAllOrAdmin();
 		List<ElasticSnapshot> snapshots = ElasticSnapshot.latests(0, 1);
 		return snapshots.isEmpty() //
-				? JsonPayload.error(404)//
-				: JsonPayload.json(snapshots.get(0).toJson());
+				? JsonPayload.error(404).build()//
+				: JsonPayload.ok().with(snapshots.get(0).toJson()).build();
 	}
 
 	@Get("/:id")
@@ -70,9 +70,10 @@ public class SnapshotResource extends Resource {
 
 		checkSnapshotAllOrAdmin();
 		Optional<ElasticSnapshot> snapshot = ElasticSnapshot.find(snapshotId);
+
 		return snapshot.isPresent() //
-				? JsonPayload.json(snapshot.get().toJson()) //
-				: JsonPayload.error(404);
+				? JsonPayload.ok().with(snapshot.get().toJson()).build() //
+				: JsonPayload.error(404).build();
 	}
 
 	@Post("")
@@ -97,16 +98,16 @@ public class SnapshotResource extends Resource {
 		if (status == 200)
 			status = 201;
 
-		JsonBuilder<ObjectNode> payload = JsonPayload.builder(status)//
-				.put("id", snapshot.id())//
-				.put("location", spaceUrl("/1", "snapshot", snapshot.id()).toString());
+		JsonPayload payload = JsonPayload.status(status)//
+				.with("id", snapshot.id())//
+				.withLocation("/1", "snapshot", snapshot.id());
 
 		if (response.getSnapshotInfo() != null) {
 			snapshot.info(response.getSnapshotInfo());
-			payload.node("snapshot", snapshot.toJson());
+			payload.with("snapshot", snapshot.toJson());
 		}
 
-		return JsonPayload.json(payload, status);
+		return payload.build();
 	}
 
 	@Post("/latest/restore")
@@ -189,9 +190,10 @@ public class SnapshotResource extends Resource {
 
 		if (restore == null)
 			return JsonPayload.error(400, //
-					"restore of snapshot [%s] failed: retry later", snapshot.id());
+					"restore of snapshot [%s] failed: retry later", snapshot.id())//
+					.build();
 
-		return JsonPayload.json(restore.status().getStatus());
+		return JsonPayload.status(restore.status().getStatus()).build();
 	}
 
 	public void deleteMissingRepositories() {

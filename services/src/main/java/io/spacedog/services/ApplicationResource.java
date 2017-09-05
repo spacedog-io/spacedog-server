@@ -28,7 +28,7 @@ public class ApplicationResource extends Resource {
 	@Get("/1/applications/")
 	public Payload getApplications() {
 		SpaceContext.credentials().checkAtLeastAdmin();
-		return JsonPayload.success();
+		return JsonPayload.ok().build();
 	}
 
 	private static class ApplicationPushCredentials {
@@ -56,7 +56,7 @@ public class ApplicationResource extends Resource {
 
 		AwsSnsPusher.getSnsClient().createPlatformApplication(request);
 
-		return JsonPayload.success();
+		return JsonPayload.ok().build();
 	}
 
 	@Delete("/1/applications/:name/:pushService")
@@ -76,7 +76,7 @@ public class ApplicationResource extends Resource {
 							.withPlatformApplicationArn(applicationArn));
 		}
 
-		return JsonPayload.success();
+		return JsonPayload.ok().build();
 	}
 
 	//

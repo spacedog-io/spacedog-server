@@ -58,7 +58,7 @@ public class SearchResource extends Resource {
 
 		DataStore.get().refreshDataTypes(isRefreshRequested(context), types);
 		ObjectNode result = searchInternal(body, credentials, context, types);
-		return JsonPayload.json(result);
+		return JsonPayload.ok().with(result).build();
 	}
 
 	@Delete("")
@@ -68,12 +68,12 @@ public class SearchResource extends Resource {
 		String[] types = DataAccessControl.types(DataPermission.delete_all, credentials);
 
 		if (Utils.isNullOrEmpty(types))
-			return JsonPayload.success();
+			return JsonPayload.ok().build();
 
 		DataStore.get().refreshDataTypes(isRefreshRequested(context, true), types);
 		DeleteByQueryResponse response = elastic().deleteByQuery(//
 				query, DataStore.toDataIndex(types));
-		return JsonPayload.json(response);
+		return ElasticPayload.deleted(response).build();
 	}
 
 	@Get("/:type")
@@ -91,7 +91,7 @@ public class SearchResource extends Resource {
 
 			DataStore.get().refreshDataTypes(isRefreshRequested(context), type);
 			ObjectNode result = searchInternal(body, credentials, context, type);
-			return JsonPayload.json(result);
+			return JsonPayload.ok().with(result).build();
 		}
 		throw Exceptions.forbidden("forbidden to search [%s] objects", type);
 	}
@@ -106,7 +106,7 @@ public class SearchResource extends Resource {
 			DataStore.get().refreshDataTypes(isRefreshRequested(context, true), type);
 			DeleteByQueryResponse response = elastic()//
 					.deleteByQuery(query, DataStore.toDataIndex(type));
-			return JsonPayload.json(response);
+			return ElasticPayload.deleted(response).build();
 		}
 		throw Exceptions.forbidden("forbidden to delete [%s] objects", type);
 	}

@@ -43,7 +43,7 @@ public class DataResourceTestOften extends SpaceTest {
 
 		// create
 		String id = vince.post("/1/data/car").bodyJson(car).go(201)//
-				.assertTrue("success").assertEquals("car", "type").assertNotNull("id")//
+				.assertEquals("car", "type").assertNotNull("id")//
 				.getString("id");
 
 		// find by id

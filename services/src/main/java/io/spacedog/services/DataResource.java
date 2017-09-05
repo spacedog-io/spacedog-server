@@ -60,7 +60,7 @@ public class DataResource extends Resource {
 	@Get("/:type/:id")
 	@Get("/:type/:id/")
 	public Payload getById(String type, String id, Context context) {
-		return JsonPayload.json(get(type, id));
+		return JsonPayload.ok().with(get(type, id)).build();
 	}
 
 	@Put("/:type/:id")
@@ -78,14 +78,14 @@ public class DataResource extends Resource {
 
 		if (DataAccessControl.check(credentials, type, DataPermission.delete_all)) {
 			elastic().delete(DataStore.toDataIndex(type), id, false, true);
-			return JsonPayload.success();
+			return JsonPayload.ok().build();
 
 		} else if (DataAccessControl.check(credentials, type, DataPermission.delete)) {
 			ObjectNode object = DataStore.get().getObject(type, id);
 
 			if (credentials.name().equals(Json.get(object, "meta.createdBy").asText())) {
 				elastic().delete(DataStore.toDataIndex(type), id, false, true);
-				return JsonPayload.success();
+				return JsonPayload.ok().build();
 			} else
 				throw Exceptions.forbidden(//
 						"not the owner of object of type [%s] and id [%s]", type, id);
@@ -96,7 +96,7 @@ public class DataResource extends Resource {
 	@Get("/:type/:id/:field")
 	@Get("/:type/:id/:field/")
 	public Payload getField(String type, String id, String fieldPath, Context context) {
-		return JsonPayload.json(Json.get(get(type, id), fieldPath));
+		return JsonPayload.ok().with(Json.get(get(type, id), fieldPath)).build();
 	}
 
 	@Put("/:type/:id/:field")
@@ -153,14 +153,12 @@ public class DataResource extends Resource {
 			if (patch) {
 				UpdateResponse response = DataStore.get()//
 						.patchObject(type, id, meta.version, object, meta.updatedBy);
-				return JsonPayload.saved(false, //
-						"/1/data", type, id, response.getVersion());
+				return ElasticPayload.saved("/1/data", response).build();
 
 			} else {
 				IndexResponse response = DataStore.get()//
 						.updateObject(type, id, object, meta);
-				return JsonPayload.saved(false, //
-						"/1/data", type, id, response.getVersion());
+				return ElasticPayload.saved("/1/data", response).build();
 			}
 		} else
 			return post(type, Optional.of(id), object);
@@ -174,8 +172,7 @@ public class DataResource extends Resource {
 			IndexResponse response = DataStore.get().createObject(//
 					type, id, object, credentials.name());
 
-			return JsonPayload.saved(true, "/1/data", response.getType(), //
-					response.getId(), response.getVersion());
+			return ElasticPayload.saved("/1/data", response).build();
 		}
 		throw Exceptions.forbidden("forbidden to create [%s] objects", type);
 	}

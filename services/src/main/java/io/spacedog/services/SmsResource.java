@@ -11,6 +11,7 @@ import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceResponse;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
@@ -139,17 +140,18 @@ public class SmsResource extends Resource {
 	//
 
 	private Payload toPayload(SpaceResponse response) {
-		ObjectNode node = response.asJsonObject();
+		JsonPayload payload = JsonPayload.status(response.status());
+		ObjectNode twilio = response.asJsonObject();
+
 		if (response.status() >= 400) {
-			ObjectNode twilio = response.asJsonObject();
-			node = JsonPayload.builder(response.status())//
-					.object("error")//
-					.put("code", "twilio:" + twilio.get("code").asText())//
-					.put("message", twilio.get("message").asText())//
-					.node("twilio", twilio)//
-					.build();
+			ObjectNode error = Json.object(//
+					"code", "twilio:" + twilio.get("code").asText(), //
+					"message", twilio.get("message").asText(), //
+					"twilio", twilio);
+			return payload.withError(error).build();
 		}
-		return JsonPayload.json(node, response.status());
+
+		return payload.with(twilio).build();
 	}
 
 	private SmsSettings smsSettings() {

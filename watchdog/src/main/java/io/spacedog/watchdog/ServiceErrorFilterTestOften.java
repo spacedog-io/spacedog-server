@@ -21,12 +21,12 @@ public class ServiceErrorFilterTestOften extends SpaceTest {
 
 		SpaceRequest.get("/1/toto").backend(test).go(404)//
 				.assertFalse("success")//
-				.assertEquals("[/1/toto] not a valid path", "error.message");
+				.assertEquals("path [/1/toto] invalid", "error.message");
 
 		// should fail to use this method for this valid route
 
 		SpaceRequest.put("/1/login").auth(test).go(405)//
 				.assertFalse("success")//
-				.assertEquals("method [PUT] not valid for path [/1/login]", "error.message");
+				.assertEquals("method [PUT] invalid for path [/1/login]", "error.message");
 	}
 }

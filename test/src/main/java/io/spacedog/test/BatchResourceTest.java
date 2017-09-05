@@ -40,10 +40,9 @@ public class BatchResourceTest extends SpaceTest {
 				.build();
 
 		superadmin.post("/1/batch").debugServer().bodyJson(batch).go(200)//
-				.assertEquals(201, "responses.0.status")//
 				.assertEquals("message", "responses.0.id")//
 				.assertEquals("schema", "responses.0.type")//
-				.assertEquals(200, "responses.1.status")//
+				.assertEquals("test", "responses.1.credentials.username")//
 				.assertEquals(1, "debug.batchCredentialChecks");
 
 		// should succeed to create dave and vince users and fetch them with

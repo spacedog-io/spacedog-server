@@ -12,7 +12,6 @@ import org.apache.commons.mail.ImageHtmlEmail;
 import org.apache.commons.mail.SimpleEmail;
 import org.apache.commons.mail.resolver.DataSourceUrlResolver;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
@@ -22,8 +21,6 @@ import io.spacedog.model.MailSettings.SmtpSettings;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceResponse;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Json;
-import io.spacedog.utils.JsonBuilder;
 import net.codestory.http.Context;
 import net.codestory.http.Part;
 import net.codestory.http.annotations.Post;
@@ -203,7 +200,7 @@ public class MailResource extends Resource {
 
 			String msgId = email.send();
 
-			return JsonPayload.json(Json.object("messageId", msgId));
+			return JsonPayload.ok().with("messageId", msgId).build();
 
 		} catch (IllegalArgumentException e) {
 			throw e;
@@ -242,14 +239,12 @@ public class MailResource extends Resource {
 			request.formField(HTML, message.html);
 
 		SpaceResponse response = request.go();
-		JsonBuilder<ObjectNode> payload = JsonPayload.builder(response.status());
 
-		if (response.isJson())
-			payload.node("mailgun", response.asJson());
-		else
-			payload.put("mailgun", response.asString());
-
-		return JsonPayload.json(payload, response.status());
+		return JsonPayload.status(response.status())//
+				.with("mailgun", response.isJson() //
+						? response.asJson()
+						: response.asString())//
+				.build();
 	}
 
 	private String addFooterToTextMessage(String text, String backendId) {
