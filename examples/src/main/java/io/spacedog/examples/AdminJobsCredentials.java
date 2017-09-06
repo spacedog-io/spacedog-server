@@ -5,8 +5,8 @@ import org.junit.Test;
 import io.spacedog.rest.SpaceBackend;
 import io.spacedog.rest.SpaceEnv;
 import io.spacedog.rest.SpaceTest;
-import io.spacedog.services.LogResource;
-import io.spacedog.services.SnapshotResource;
+import io.spacedog.server.LogResource;
+import io.spacedog.server.SnapshotResource;
 
 public class AdminJobsCredentials extends SpaceTest {
 
