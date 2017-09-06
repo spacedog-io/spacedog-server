@@ -10,7 +10,7 @@
 		<version>1.0-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>spacedog-java-sdk</artifactId>
+	<artifactId>spacedog-client-sdk</artifactId>
 	<packaging>jar</packaging>
 
 	<properties>

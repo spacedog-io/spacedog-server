@@ -26,7 +26,7 @@
 
 	<modules>
 		<module>server</module>
-		<module>sdk</module>
+		<module>client</module>
 		<module>watchdog</module>
 		<module>examples</module>
 		<module>cli</module>
