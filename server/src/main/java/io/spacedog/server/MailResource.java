@@ -15,11 +15,11 @@ import org.apache.commons.mail.resolver.DataSourceUrlResolver;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
+import io.spacedog.http.SpaceRequest;
+import io.spacedog.http.SpaceResponse;
 import io.spacedog.model.MailSettings;
 import io.spacedog.model.MailSettings.MailGunSettings;
 import io.spacedog.model.MailSettings.SmtpSettings;
-import io.spacedog.rest.SpaceRequest;
-import io.spacedog.rest.SpaceResponse;
 import io.spacedog.utils.Exceptions;
 import net.codestory.http.Context;
 import net.codestory.http.Part;

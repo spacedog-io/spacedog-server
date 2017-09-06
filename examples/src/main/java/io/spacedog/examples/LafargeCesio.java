@@ -5,12 +5,12 @@ package io.spacedog.examples;
 
 import org.junit.Test;
 
+import io.spacedog.client.SpaceDog;
+import io.spacedog.http.SpaceBackend;
+import io.spacedog.http.SpaceEnv;
+import io.spacedog.http.SpaceTest;
 import io.spacedog.model.MailSettings;
 import io.spacedog.model.MailSettings.SmtpSettings;
-import io.spacedog.rest.SpaceEnv;
-import io.spacedog.rest.SpaceBackend;
-import io.spacedog.rest.SpaceTest;
-import io.spacedog.sdk.SpaceDog;
 
 public class LafargeCesio extends SpaceTest {
 

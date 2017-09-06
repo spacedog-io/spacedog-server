@@ -13,8 +13,8 @@ import com.google.common.io.Resources;
 
 import io.spacedog.cli.FileSynchCommand;
 import io.spacedog.cli.LoginCommand;
-import io.spacedog.rest.SpaceTest;
-import io.spacedog.sdk.SpaceDog;
+import io.spacedog.client.SpaceDog;
+import io.spacedog.http.SpaceTest;
 
 public class FileSynchCommandTest extends SpaceTest {
 

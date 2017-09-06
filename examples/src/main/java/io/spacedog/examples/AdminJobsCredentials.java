@@ -2,9 +2,9 @@ package io.spacedog.examples;
 
 import org.junit.Test;
 
-import io.spacedog.rest.SpaceBackend;
-import io.spacedog.rest.SpaceEnv;
-import io.spacedog.rest.SpaceTest;
+import io.spacedog.http.SpaceBackend;
+import io.spacedog.http.SpaceEnv;
+import io.spacedog.http.SpaceTest;
 import io.spacedog.server.LogResource;
 import io.spacedog.server.SnapshotResource;
 

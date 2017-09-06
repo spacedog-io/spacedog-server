@@ -2,10 +2,10 @@ package io.spacedog.examples;
 
 import org.junit.Test;
 
+import io.spacedog.client.SpaceDog;
+import io.spacedog.http.SpaceBackend;
+import io.spacedog.http.SpaceRequest;
 import io.spacedog.model.Schema;
-import io.spacedog.rest.SpaceBackend;
-import io.spacedog.rest.SpaceRequest;
-import io.spacedog.sdk.SpaceDog;
 
 public class CockTest {
 

@@ -2,8 +2,8 @@ package io.spacedog.watchdog;
 
 import org.junit.Test;
 
-import io.spacedog.rest.SpaceRequest;
-import io.spacedog.rest.SpaceTest;
+import io.spacedog.http.SpaceRequest;
+import io.spacedog.http.SpaceTest;
 
 public class ServiceErrorFilterTestOncePerDay extends SpaceTest {
 

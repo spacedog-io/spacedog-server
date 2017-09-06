@@ -17,7 +17,7 @@ import org.junit.Test;
 import com.google.common.io.Resources;
 import com.sun.mail.smtp.SMTPTransport;
 
-import io.spacedog.rest.SpaceEnv;
+import io.spacedog.http.SpaceEnv;
 import io.spacedog.utils.Utils;
 
 public class SmtpEmail extends Assert {

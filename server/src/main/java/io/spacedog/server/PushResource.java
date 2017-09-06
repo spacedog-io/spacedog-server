@@ -18,11 +18,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 
+import io.spacedog.client.PushRequest;
 import io.spacedog.model.BadgeStrategy;
 import io.spacedog.model.Installation;
 import io.spacedog.model.PushService;
 import io.spacedog.model.Schema;
-import io.spacedog.sdk.PushRequest;
 import io.spacedog.server.DataStore.Meta;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;

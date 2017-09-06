@@ -8,8 +8,8 @@ import java.util.Iterator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.rest.SpaceEnv;
-import io.spacedog.rest.SpaceTest;
+import io.spacedog.http.SpaceEnv;
+import io.spacedog.http.SpaceTest;
 import io.spacedog.utils.Utils;
 
 public class SuperDogStatus extends SpaceTest {

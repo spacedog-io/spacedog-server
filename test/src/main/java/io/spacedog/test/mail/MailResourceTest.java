@@ -6,12 +6,12 @@ import org.junit.Test;
 
 import com.google.common.io.Resources;
 
+import io.spacedog.client.SpaceDog;
+import io.spacedog.http.SpaceEnv;
+import io.spacedog.http.SpaceRequest;
+import io.spacedog.http.SpaceTest;
 import io.spacedog.model.MailSettings;
 import io.spacedog.model.MailSettings.SmtpSettings;
-import io.spacedog.rest.SpaceEnv;
-import io.spacedog.rest.SpaceRequest;
-import io.spacedog.rest.SpaceTest;
-import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Utils;
 
 public class MailResourceTest extends SpaceTest {

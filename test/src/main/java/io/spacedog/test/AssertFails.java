@@ -2,7 +2,7 @@ package io.spacedog.test;
 
 import java.util.function.Supplier;
 
-import io.spacedog.rest.SpaceRequestException;
+import io.spacedog.http.SpaceRequestException;
 
 public class AssertFails {
 

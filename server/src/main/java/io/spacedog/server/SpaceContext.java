@@ -6,8 +6,8 @@ import java.util.Optional;
 import com.google.common.collect.Maps;
 import com.google.common.net.HttpHeaders;
 
+import io.spacedog.http.SpaceBackend;
 import io.spacedog.model.Settings;
-import io.spacedog.rest.SpaceBackend;
 import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;

@@ -19,7 +19,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
-import io.spacedog.rest.SpaceBackend;
+import io.spacedog.http.SpaceBackend;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Json;

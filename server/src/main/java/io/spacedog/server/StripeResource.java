@@ -5,9 +5,9 @@ import org.elasticsearch.common.Strings;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.http.SpaceRequest;
+import io.spacedog.http.SpaceResponse;
 import io.spacedog.model.StripeSettings;
-import io.spacedog.rest.SpaceRequest;
-import io.spacedog.rest.SpaceResponse;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;

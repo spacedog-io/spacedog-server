@@ -12,10 +12,10 @@ import org.junit.Test;
 
 import io.spacedog.cli.ExportLogCommand;
 import io.spacedog.cli.LoginCommand;
+import io.spacedog.client.SpaceDog;
+import io.spacedog.client.LogEndpoint.LogSearchResults;
+import io.spacedog.http.SpaceTest;
 import io.spacedog.model.CredentialsSettings;
-import io.spacedog.rest.SpaceTest;
-import io.spacedog.sdk.LogEndpoint.LogSearchResults;
-import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 

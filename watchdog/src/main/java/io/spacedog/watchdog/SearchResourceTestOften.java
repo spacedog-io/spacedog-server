@@ -9,13 +9,13 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.client.SpaceDog;
+import io.spacedog.client.DataEndpoint.SearchResults;
+import io.spacedog.client.elastic.ESSearchSourceBuilder;
+import io.spacedog.client.elastic.ESSortOrder;
+import io.spacedog.http.SpaceRequest;
+import io.spacedog.http.SpaceTest;
 import io.spacedog.model.Schema;
-import io.spacedog.rest.SpaceRequest;
-import io.spacedog.rest.SpaceTest;
-import io.spacedog.sdk.DataEndpoint.SearchResults;
-import io.spacedog.sdk.SpaceDog;
-import io.spacedog.sdk.elastic.ESSearchSourceBuilder;
-import io.spacedog.sdk.elastic.ESSortOrder;
 import io.spacedog.utils.Json;
 
 public class SearchResourceTestOften extends SpaceTest {

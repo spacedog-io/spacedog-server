@@ -2,9 +2,9 @@ package io.spacedog.server;
 
 import com.google.common.base.Strings;
 
+import io.spacedog.http.SpaceRequest;
+import io.spacedog.http.SpaceResponse;
 import io.spacedog.model.CredentialsSettings;
-import io.spacedog.rest.SpaceRequest;
-import io.spacedog.rest.SpaceResponse;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Session;

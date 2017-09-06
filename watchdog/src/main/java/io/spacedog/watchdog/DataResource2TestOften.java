@@ -18,13 +18,13 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import io.spacedog.client.SpaceDog;
+import io.spacedog.client.DataEndpoint.SearchResults;
+import io.spacedog.client.elastic.ESSearchSourceBuilder;
+import io.spacedog.http.SpaceRequest;
+import io.spacedog.http.SpaceResponse;
+import io.spacedog.http.SpaceTest;
 import io.spacedog.model.Schema;
-import io.spacedog.rest.SpaceRequest;
-import io.spacedog.rest.SpaceResponse;
-import io.spacedog.rest.SpaceTest;
-import io.spacedog.sdk.DataEndpoint.SearchResults;
-import io.spacedog.sdk.SpaceDog;
-import io.spacedog.sdk.elastic.ESSearchSourceBuilder;
 import io.spacedog.utils.Json;
 
 public class DataResource2TestOften extends SpaceTest {

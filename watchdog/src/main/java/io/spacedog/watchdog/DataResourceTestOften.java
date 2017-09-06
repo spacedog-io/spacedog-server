@@ -8,11 +8,11 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.rest.SpaceRequest;
-import io.spacedog.rest.SpaceRequestException;
-import io.spacedog.rest.SpaceResponse;
-import io.spacedog.rest.SpaceTest;
-import io.spacedog.sdk.SpaceDog;
+import io.spacedog.client.SpaceDog;
+import io.spacedog.http.SpaceRequest;
+import io.spacedog.http.SpaceRequestException;
+import io.spacedog.http.SpaceResponse;
+import io.spacedog.http.SpaceTest;
 import io.spacedog.utils.Json;
 
 public class DataResourceTestOften extends SpaceTest {

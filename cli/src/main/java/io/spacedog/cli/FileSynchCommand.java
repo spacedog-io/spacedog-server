@@ -13,10 +13,10 @@ import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
-import io.spacedog.rest.SpaceRequest;
-import io.spacedog.sdk.FileEndpoint.FileList;
-import io.spacedog.sdk.FileEndpoint.SpaceFile;
-import io.spacedog.sdk.SpaceDog;
+import io.spacedog.client.SpaceDog;
+import io.spacedog.client.FileEndpoint.FileList;
+import io.spacedog.client.FileEndpoint.SpaceFile;
+import io.spacedog.http.SpaceRequest;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.WebPath;

@@ -2,8 +2,8 @@ package io.spacedog.examples;
 
 import java.io.IOException;
 
-import io.spacedog.rest.SpaceRequest;
-import io.spacedog.rest.SpaceResponse;
+import io.spacedog.http.SpaceRequest;
+import io.spacedog.http.SpaceResponse;
 
 public class MailGun {
 

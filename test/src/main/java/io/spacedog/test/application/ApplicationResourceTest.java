@@ -7,8 +7,8 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.rest.SpaceTest;
-import io.spacedog.sdk.SpaceDog;
+import io.spacedog.client.SpaceDog;
+import io.spacedog.http.SpaceTest;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Json;
 

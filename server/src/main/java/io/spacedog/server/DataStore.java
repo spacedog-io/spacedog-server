@@ -29,8 +29,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
+import io.spacedog.client.DataObject;
 import io.spacedog.model.Schema;
-import io.spacedog.sdk.DataObject;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;

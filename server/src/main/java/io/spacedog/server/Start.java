@@ -18,7 +18,7 @@ import org.elasticsearch.plugin.cloud.aws.CloudAwsPlugin;
 import org.elasticsearch.plugin.deletebyquery.DeleteByQueryPlugin;
 import org.joda.time.DateTimeZone;
 
-import io.spacedog.rest.SpaceBackend;
+import io.spacedog.http.SpaceBackend;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;

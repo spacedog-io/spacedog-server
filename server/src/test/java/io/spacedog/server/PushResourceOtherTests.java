@@ -5,8 +5,8 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.client.PushRequest;
 import io.spacedog.model.PushService;
-import io.spacedog.sdk.PushRequest;
 import io.spacedog.server.PushResource;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;

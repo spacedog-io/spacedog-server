@@ -7,8 +7,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
-import io.spacedog.rest.SpaceBackend;
-import io.spacedog.rest.SpaceEnv;
+import io.spacedog.http.SpaceBackend;
+import io.spacedog.http.SpaceEnv;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Utils;

@@ -6,9 +6,9 @@ package io.spacedog.server;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.http.SpaceBackend;
 import io.spacedog.jobs.Internals;
 import io.spacedog.model.BackendSettings;
-import io.spacedog.rest.SpaceBackend;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;

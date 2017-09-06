@@ -12,8 +12,8 @@ import com.beust.jcommander.Parameters;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
-import io.spacedog.rest.SpaceRequest;
-import io.spacedog.sdk.SpaceDog;
+import io.spacedog.client.SpaceDog;
+import io.spacedog.http.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 

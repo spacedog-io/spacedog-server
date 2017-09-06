@@ -5,10 +5,10 @@ package io.spacedog.server;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.http.SpaceRequest;
+import io.spacedog.http.SpaceResponse;
 import io.spacedog.model.SmsSettings;
 import io.spacedog.model.SmsSettings.TwilioSettings;
-import io.spacedog.rest.SpaceRequest;
-import io.spacedog.rest.SpaceResponse;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;

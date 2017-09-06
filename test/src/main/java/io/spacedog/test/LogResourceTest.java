@@ -8,15 +8,15 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import io.spacedog.rest.SpaceBackend;
-import io.spacedog.rest.SpaceRequest;
-import io.spacedog.rest.SpaceTest;
-import io.spacedog.sdk.LogEndpoint.LogSearchResults;
-import io.spacedog.sdk.SpaceDog;
-import io.spacedog.sdk.elastic.ESQueryBuilders;
-import io.spacedog.sdk.elastic.ESSearchSourceBuilder;
-import io.spacedog.sdk.elastic.ESSortBuilders;
-import io.spacedog.sdk.elastic.ESSortOrder;
+import io.spacedog.client.SpaceDog;
+import io.spacedog.client.LogEndpoint.LogSearchResults;
+import io.spacedog.client.elastic.ESQueryBuilders;
+import io.spacedog.client.elastic.ESSearchSourceBuilder;
+import io.spacedog.client.elastic.ESSortBuilders;
+import io.spacedog.client.elastic.ESSortOrder;
+import io.spacedog.http.SpaceBackend;
+import io.spacedog.http.SpaceRequest;
+import io.spacedog.http.SpaceTest;
 
 public class LogResourceTest extends SpaceTest {
 

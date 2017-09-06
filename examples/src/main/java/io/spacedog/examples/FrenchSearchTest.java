@@ -18,7 +18,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.io.Resources;
 
-import io.spacedog.rest.SpaceTest;
+import io.spacedog.http.SpaceTest;
 import io.spacedog.server.ElasticClient;
 import io.spacedog.server.Start;
 import io.spacedog.utils.Json;

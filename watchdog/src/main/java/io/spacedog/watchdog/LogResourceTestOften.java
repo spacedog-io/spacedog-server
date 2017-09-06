@@ -4,12 +4,12 @@ import java.util.List;
 
 import org.junit.Test;
 
+import io.spacedog.client.DataObject;
+import io.spacedog.client.SpaceDog;
+import io.spacedog.client.LogEndpoint.LogItem;
+import io.spacedog.http.SpaceRequest;
+import io.spacedog.http.SpaceTest;
 import io.spacedog.model.Schema;
-import io.spacedog.rest.SpaceRequest;
-import io.spacedog.rest.SpaceTest;
-import io.spacedog.sdk.DataObject;
-import io.spacedog.sdk.LogEndpoint.LogItem;
-import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.SpaceHeaders;
 
 public class LogResourceTestOften extends SpaceTest {

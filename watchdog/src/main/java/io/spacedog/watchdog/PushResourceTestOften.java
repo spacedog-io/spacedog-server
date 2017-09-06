@@ -14,15 +14,15 @@ import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
+import io.spacedog.client.PushRequest;
+import io.spacedog.client.SpaceDog;
+import io.spacedog.http.SpaceTest;
 import io.spacedog.model.BadgeStrategy;
 import io.spacedog.model.DataPermission;
 import io.spacedog.model.Installation;
 import io.spacedog.model.PushService;
 import io.spacedog.model.Schema;
 import io.spacedog.model.Schema.DataAcl;
-import io.spacedog.rest.SpaceTest;
-import io.spacedog.sdk.PushRequest;
-import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json;
 
 public class PushResourceTestOften extends SpaceTest {

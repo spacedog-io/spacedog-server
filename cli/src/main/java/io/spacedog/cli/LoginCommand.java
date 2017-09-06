@@ -13,8 +13,8 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import com.google.common.base.Strings;
 
-import io.spacedog.rest.SpaceRequest;
-import io.spacedog.sdk.SpaceDog;
+import io.spacedog.client.SpaceDog;
+import io.spacedog.http.SpaceRequest;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 

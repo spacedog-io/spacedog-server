@@ -7,13 +7,13 @@ import org.junit.Test;
 
 import com.google.common.collect.Maps;
 
+import io.spacedog.client.SpaceDog;
+import io.spacedog.http.SpaceEnv;
+import io.spacedog.http.SpaceTest;
 import io.spacedog.model.Schema;
 import io.spacedog.model.SmsSettings;
 import io.spacedog.model.SmsSettings.TwilioSettings;
 import io.spacedog.model.SmsTemplate;
-import io.spacedog.rest.SpaceEnv;
-import io.spacedog.rest.SpaceTest;
-import io.spacedog.sdk.SpaceDog;
 
 public class SmsTemplateResourceTest extends SpaceTest {
 
