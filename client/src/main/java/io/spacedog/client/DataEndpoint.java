@@ -14,7 +14,6 @@ import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceFields;
 import io.spacedog.utils.SpaceParams;
 
@@ -232,11 +231,11 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 		if (!Strings.isNullOrEmpty(type))
 			path = path + "/" + type;
 
-		ObjectNode results = dog.post(path)//
+		ObjectNode response = dog.post(path)//
 				.queryParam(REFRESH_PARAM, Boolean.toString(refresh))//
 				.bodyJson(builder.toString()).go(200).asJsonObject();
 
-		return new SearchResults<>(results, dataClass);
+		return new SearchResults<>(response, dataClass);
 	}
 
 	public class SearchResults<K> {
@@ -256,107 +255,6 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 		public List<K> objects() {
 			return objects;
 		}
-	}
-
-	//
-	// Old search methods
-	//
-
-	@Deprecated
-	public static class SimpleQuery {
-		public int from = 0;
-		public int size = 10;
-		public boolean refresh = false;
-		public String query;
-		public String type;
-	}
-
-	@Deprecated
-	public <K> List<K> search(SimpleQuery query, Class<K> dataClass) {
-
-		ObjectNode result = SpaceRequest.get("/1/search/{type}")//
-				.auth(dog)//
-				.routeParam("type", query.type)//
-				.queryParam(REFRESH_PARAM, Boolean.toString(query.refresh))//
-				.queryParam(FROM_PARAM, Integer.toString(query.from))//
-				.queryParam(SIZE_PARAM, Integer.toString(query.size))//
-				.queryParam(Q_PARAM, query.query)//
-				.go(200).asJsonObject();
-
-		return toList(result, dataClass);
-	}
-
-	@Deprecated
-	public static class ComplexQuery {
-		public boolean refresh = false;
-		public ObjectNode query;
-		public String type;
-	}
-
-	@Deprecated
-	public <K> SearchResults<K> search(ComplexQuery query, Class<K> dataClass) {
-
-		ObjectNode results = dog.post("/1/search/{type}")//
-				.routeParam("type", query.type)//
-				.queryParam(REFRESH_PARAM, Boolean.toString(query.refresh))//
-				.bodyJson(query.query).go(200).asJsonObject();
-
-		return new SearchResults<>(results, dataClass);
-	}
-
-	@Deprecated
-	public static class TermQuery {
-		public int from = 0;
-		public int size = 10;
-		public boolean refresh = false;
-		public List<Object> terms;
-		public String type;
-		public String sort;
-		public boolean ascendant = true;
-	}
-
-	@Deprecated
-	public <K> SearchResults<K> search(TermQuery query, Class<K> dataClass) {
-
-		JsonBuilder<ObjectNode> builder = Json.objectBuilder()//
-				.put("size", query.size)//
-				.put("from", query.from)//
-				.object("query")//
-				.object("bool")//
-				.array("filter");
-
-		for (int i = 0; i < query.terms.size(); i = i + 2) {
-			Object field = query.terms.get(i);
-			Object value = query.terms.get(i + 1);
-
-			if (value instanceof String)
-				builder.object().object("term");
-			else if (value instanceof List)
-				builder.object().object("terms");
-			else
-				throw Exceptions.illegalArgument("term value [%s] is invalid", value);
-
-			builder.node(field.toString(), Json.toNode(value))//
-					.end().end();
-		}
-
-		builder.end().end().end();
-
-		if (query.sort != null)
-			builder.array("sort")//
-					.object()//
-					.object(query.sort)//
-					.put("order", query.ascendant ? "asc" : "desc")//
-					.end()//
-					.end()//
-					.end();
-
-		ComplexQuery complex = new ComplexQuery();
-		complex.refresh = query.refresh;
-		complex.type = query.type;
-		complex.query = builder.build();
-
-		return search(complex, dataClass);
 	}
 
 	//
