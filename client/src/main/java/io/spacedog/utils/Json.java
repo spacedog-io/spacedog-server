@@ -755,11 +755,11 @@ public class Json {
 		return checkObject(field);
 	}
 
-	public static String toString(Object pojo) {
+	public static String toString(Object object) {
 		try {
-			return mapper().writeValueAsString(pojo);
+			return mapper().writeValueAsString(object);
 		} catch (JsonProcessingException e) {
-			throw Exceptions.illegalArgument(e, "error processing pojo object to json");
+			throw Exceptions.illegalArgument(e, "error processing object to json string");
 		}
 	}
 
