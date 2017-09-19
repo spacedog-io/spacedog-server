@@ -122,7 +122,7 @@ public class SettingsEndpoint {
 	}
 
 	public void delete(String id) {
-		dog.delete("/1/settings/{id}").routeParam("id", id).go(200);
+		dog.delete("/1/settings/{id}").routeParam("id", id).go(200, 404);
 	}
 
 	// delete field
