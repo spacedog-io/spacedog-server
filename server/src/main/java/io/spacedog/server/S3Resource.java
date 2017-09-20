@@ -20,6 +20,7 @@ import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.PutObjectResult;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -248,13 +249,17 @@ public class S3Resource extends Resource {
 		metadata.addUserMetadata("owner", credentials.name());
 		metadata.addUserMetadata("owner-type", credentials.type().name());
 
-		s3.putObject(new PutObjectRequest(bucketName, //
+		PutObjectResult putResult = s3.putObject(new PutObjectRequest(bucketName, //
 				s3Path.toS3Key(), new ByteArrayInputStream(bytes), //
 				metadata));
 
 		JsonPayload payload = JsonPayload.ok()//
 				.with("path", path.toString())//
-				.with("location", toSpaceLocation(backendId, rootUri, path));
+				.with("location", toSpaceLocation(backendId, rootUri, path))//
+				.with("contentType", metadata.getContentType())//
+				.with("expirationTime", putResult.getExpirationTime().getTime())//
+				.with("etag", putResult.getETag())//
+				.with("contentMd5", putResult.getContentMd5());
 
 		if (enableS3Location)
 			payload.with("s3", toS3Location(bucketName, s3Path));
