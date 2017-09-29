@@ -257,7 +257,7 @@ public class S3Resource extends Resource {
 				.with("path", path.toString())//
 				.with("location", toSpaceLocation(backendId, rootUri, path))//
 				.with("contentType", metadata.getContentType())//
-				.with("expirationTime", putResult.getExpirationTime().getTime())//
+				.with("expirationTime", putResult.getExpirationTime())//
 				.with("etag", putResult.getETag())//
 				.with("contentMd5", putResult.getContentMd5());
 
