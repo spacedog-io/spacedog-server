@@ -47,6 +47,7 @@ public class JsonTest extends Assert {
 	public void shouldWith() {
 		JsonNode expected = Json.objectBuilder().object("riri").array("fifi")//
 				.object().put("loulou", true).build();
+
 		ObjectNode object = Json.object();
 		Json.with(object, "riri.fifi.0.loulou", BooleanNode.TRUE);
 		assertEquals(expected, object);
@@ -64,6 +65,15 @@ public class JsonTest extends Assert {
 		Json.with(array, "0", true);
 		Json.with(array, "1.name", "bill");
 		assertEquals(expected, array);
+	}
+
+	@Test
+	public void shouldWithWhenPartOfFieldPathExistsAnsIsNull() {
+		ObjectNode object = Json.object();
+		Json.with(object, "meta", null);
+		assertEquals(Json.object("meta", null), object);
+		Json.with(object, "meta.createdBy", "fred");
+		assertEquals(Json.object("meta", Json.object("createdBy", "fred")), object);
 	}
 
 	@Test

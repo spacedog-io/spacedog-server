@@ -110,9 +110,8 @@ public class Json {
 			} else if (current.isObject()) {
 				ObjectNode object = (ObjectNode) current;
 				String fieldName = (String) segments[i];
-				if (object.has(fieldName))
-					current = object.get(fieldName);
-				else {
+				current = object.get(fieldName);
+				if (Json.isNull(current)) {
 					current = newContainerNode(segments[i + 1]);
 					object.set(fieldName, current);
 				}
