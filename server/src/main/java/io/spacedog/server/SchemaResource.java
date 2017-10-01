@@ -34,7 +34,7 @@ public class SchemaResource extends Resource {
 		JsonMerger merger = Json.merger();
 		Map<String, Schema> schemas = DataStore.get().getAllSchemas();
 		schemas.values().forEach(schema -> merger.merge(schema.node()));
-		return JsonPayload.ok().with(merger.get()).build();
+		return JsonPayload.ok().withObject(merger.get()).build();
 	}
 
 	@Get("/:type")
@@ -42,7 +42,7 @@ public class SchemaResource extends Resource {
 	public Payload get(String type) {
 		Schema.checkName(type);
 		return JsonPayload.ok()//
-				.with(DataStore.get().getSchema(type).node())//
+				.withObject(DataStore.get().getSchema(type).node())//
 				.build();
 	}
 

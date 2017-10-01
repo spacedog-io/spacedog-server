@@ -21,6 +21,7 @@ import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;
+import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -54,7 +55,7 @@ public class SettingsResource extends Resource {
 
 		if (!elastic().exists(settingsIndex()))
 			return JsonPayload.ok()//
-					.with("took", 0, "total", 0)//
+					.withFields("took", 0, "total", 0)//
 					.withResults(Json.array())//
 					.build();
 
@@ -75,7 +76,7 @@ public class SettingsResource extends Resource {
 		for (SearchHit hit : response.getHits().getHits())
 			results.set(hit.getId(), Json.readNode(hit.sourceAsString()));
 
-		return JsonPayload.ok().with(results).build();
+		return JsonPayload.ok().withObject(results).build();
 	}
 
 	@Delete("")
@@ -94,11 +95,11 @@ public class SettingsResource extends Resource {
 
 		if (object.isPresent())
 			return JsonPayload.ok()//
-					.with(object.get()).build();
+					.withObject(object.get()).build();
 
 		if (registeredSettingsClasses.containsKey(id))
 			return JsonPayload.ok()//
-					.with(instantiateDefaultAsNode(id)).build();
+					.withObject(instantiateDefaultAsNode(id)).build();
 
 		throw Exceptions.notFound(TYPE, id);
 	}
@@ -128,7 +129,7 @@ public class SettingsResource extends Resource {
 				.orElseThrow(() -> Exceptions.notFound(TYPE, id));
 		JsonNode value = Json.get(object, field);
 		value = value == null ? NullNode.getInstance() : value;
-		return JsonPayload.ok().with(value).build();
+		return JsonPayload.ok().withObject(value).build();
 	}
 
 	@Put("/:id/:field")
@@ -221,15 +222,9 @@ public class SettingsResource extends Resource {
 	}
 
 	private <K extends Settings> K instantiateDefaultAsObject(Class<K> settingsClass) {
-		if (registeredSettingsClasses.containsKey(Settings.id(settingsClass))) {
-			try {
-				return settingsClass.newInstance();
+		if (registeredSettingsClasses.containsKey(Settings.id(settingsClass)))
+			return Utils.instantiate(settingsClass);
 
-			} catch (InstantiationException | IllegalAccessException e) {
-				throw Exceptions.runtime(e, "error instantiating [%s] settings class", //
-						settingsClass.getSimpleName());
-			}
-		}
 		throw Exceptions.runtime("settings class [%s] not registered", //
 				settingsClass.getSimpleName());
 	}

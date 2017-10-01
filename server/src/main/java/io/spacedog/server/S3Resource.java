@@ -143,7 +143,7 @@ public class S3Resource extends Resource {
 		JsonPayload payload = JsonPayload.ok();
 
 		if (objects.isTruncated())
-			payload.with("next", fromS3Key(objects.getNextMarker()).toEscapedString());
+			payload.withFields("next", fromS3Key(objects.getNextMarker()).toEscapedString());
 
 		ArrayNode results = Json.array();
 
@@ -214,7 +214,7 @@ public class S3Resource extends Resource {
 			} while (next != null);
 
 		}
-		return JsonPayload.ok().with("deleted", deleted).build();
+		return JsonPayload.ok().withFields("deleted", deleted).build();
 	}
 
 	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, WebPath path, byte[] bytes,
@@ -254,15 +254,15 @@ public class S3Resource extends Resource {
 				metadata));
 
 		JsonPayload payload = JsonPayload.ok()//
-				.with("path", path.toString())//
-				.with("location", toSpaceLocation(backendId, rootUri, path))//
-				.with("contentType", metadata.getContentType())//
-				.with("expirationTime", putResult.getExpirationTime())//
-				.with("etag", putResult.getETag())//
-				.with("contentMd5", putResult.getContentMd5());
+				.withFields("path", path.toString())//
+				.withFields("location", toSpaceLocation(backendId, rootUri, path))//
+				.withFields("contentType", metadata.getContentType())//
+				.withFields("expirationTime", putResult.getExpirationTime())//
+				.withFields("etag", putResult.getETag())//
+				.withFields("contentMd5", putResult.getContentMd5());
 
 		if (enableS3Location)
-			payload.with("s3", toS3Location(bucketName, s3Path));
+			payload.withFields("s3", toS3Location(bucketName, s3Path));
 
 		return payload.build();
 	}

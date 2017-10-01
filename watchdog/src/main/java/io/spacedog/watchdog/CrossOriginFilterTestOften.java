@@ -16,11 +16,11 @@ public class CrossOriginFilterTestOften extends SpaceTest {
 	public void returnCORSHeaders() {
 
 		prepareTest();
-		SpaceDog test = resetTestBackend();
+		SpaceDog superadmin = resetTestBackend();
 
 		// CORS for simple requests
 
-		SpaceRequest.get("/1/data").refresh().backend(test).go(200)//
+		SpaceRequest.get("/1/data").refresh().backend(superadmin).go(200)//
 				.assertHeaderEquals("*", SpaceHeaders.ACCESS_CONTROL_ALLOW_ORIGIN)//
 				.assertHeaderEquals(SpaceHeaders.ALLOW_METHODS, SpaceHeaders.ACCESS_CONTROL_ALLOW_METHODS);
 
@@ -36,7 +36,7 @@ public class CrossOriginFilterTestOften extends SpaceTest {
 
 		// CORS pre-flight request
 
-		SpaceRequest.options("/v1/user/mynameisperson").backend(test)
+		SpaceRequest.options("/v1/user/mynameisperson").backend(superadmin)
 				.setHeader(SpaceHeaders.ORIGIN, "http://www.apple.com")
 				.setHeader(SpaceHeaders.ACCESS_CONTROL_REQUEST_METHOD, "PUT")//
 				.go(200)//

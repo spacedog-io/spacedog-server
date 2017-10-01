@@ -53,7 +53,7 @@ public class StripeResource extends Resource {
 		updateStripeCustomerId(credentials, response.getString("id"));
 
 		return JsonPayload.created()//
-				.with(response.asJsonObject()).build();
+				.withObject(response.asJsonObject()).build();
 	}
 
 	@Get("/customers/me")
@@ -70,7 +70,7 @@ public class StripeResource extends Resource {
 				.go();
 
 		checkStripeError(response);
-		return JsonPayload.ok().with(response.asJsonObject()).build();
+		return JsonPayload.ok().withObject(response.asJsonObject()).build();
 	}
 
 	@Delete("/customers/me")
@@ -90,7 +90,7 @@ public class StripeResource extends Resource {
 				.go();
 
 		checkStripeError(response);
-		return JsonPayload.ok().with(response.asJsonObject()).build();
+		return JsonPayload.ok().withObject(response.asJsonObject()).build();
 	}
 
 	@Post("/customers/me/sources")
@@ -114,7 +114,7 @@ public class StripeResource extends Resource {
 
 		SpaceResponse response = request.go();
 		checkStripeError(response);
-		return JsonPayload.created().with(response.asJsonObject()).build();
+		return JsonPayload.created().withObject(response.asJsonObject()).build();
 	}
 
 	@Delete("/customers/me/sources/:cardId")
@@ -133,7 +133,7 @@ public class StripeResource extends Resource {
 				.go();
 
 		checkStripeError(response);
-		return JsonPayload.ok().with(response.asJsonObject()).build();
+		return JsonPayload.ok().withObject(response.asJsonObject()).build();
 	}
 
 	@Post("/charges")
@@ -178,7 +178,7 @@ public class StripeResource extends Resource {
 		checkStripeError(response);
 
 		return JsonPayload.ok()//
-				.with(response.asJsonObject()).build();
+				.withObject(response.asJsonObject()).build();
 	}
 
 	private void checkStripeError(SpaceResponse response) {

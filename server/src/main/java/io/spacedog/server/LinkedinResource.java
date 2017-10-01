@@ -36,9 +36,9 @@ public class LinkedinResource extends Resource {
 		Credentials credentials = login(context);
 
 		return JsonPayload.ok()//
-				.with(ACCESS_TOKEN_FIELD, credentials.accessToken()) //
-				.with(EXPIRES_IN_FIELD, credentials.accessTokenExpiresIn()) //
-				.with(CREDENTIALS_FIELD, credentials.toJson())//
+				.withFields(ACCESS_TOKEN_FIELD, credentials.accessToken()) //
+				.withFields(EXPIRES_IN_FIELD, credentials.accessTokenExpiresIn()) //
+				.withFields(CREDENTIALS_FIELD, credentials.toJson())//
 				.build();
 	}
 
@@ -110,7 +110,7 @@ public class LinkedinResource extends Resource {
 				.go();
 
 		checkLinkedinError(response, "linkedin error fetching your profil");
-		return JsonPayload.ok().with(response.asJsonObject()).build();
+		return JsonPayload.ok().withObject(response.asJsonObject()).build();
 	}
 
 	//

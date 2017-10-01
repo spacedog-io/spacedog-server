@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
+import io.spacedog.model.DataObject;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceException;
 import io.spacedog.utils.SpaceFields;
@@ -60,12 +61,17 @@ public class JsonPayload implements SpaceFields {
 		return this;
 	}
 
-	public JsonPayload with(JsonNode node) {
+	public <K extends ObjectNode> JsonPayload withObject(DataObject<K> object) {
+		this.node = Json.toNode(object);
+		return this;
+	}
+
+	public JsonPayload withObject(JsonNode node) {
 		this.node = node;
 		return this;
 	}
 
-	public JsonPayload with(Object... fields) {
+	public JsonPayload withFields(Object... fields) {
 		Json.addAll(object(), fields);
 		return this;
 	}
@@ -81,6 +87,9 @@ public class JsonPayload implements SpaceFields {
 		if (status >= 400)
 			object().put("success", status < 400)//
 					.put("status", status);
+
+		if (Json.isObject(node) && SpaceContext.isDebug())
+			((ObjectNode) node).set("debug", SpaceContext.debug().toNode());
 
 		return new Payload(Json.JSON_CONTENT_UTF8, node)//
 				.withCode(status)//

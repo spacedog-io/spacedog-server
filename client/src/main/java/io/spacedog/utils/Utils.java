@@ -14,6 +14,20 @@ public class Utils {
 	public static final Charset UTF8 = Charset.forName("UTF-8");
 
 	//
+	// Object utils
+	//
+
+	public static <K> K instantiate(Class<K> objectClass) {
+		try {
+			return objectClass.newInstance();
+
+		} catch (InstantiationException | IllegalAccessException e) {
+			throw Exceptions.runtime(e, "error instantiating [%s] object class", //
+					objectClass.getSimpleName());
+		}
+	}
+
+	//
 	// Exceptions utils
 	//
 

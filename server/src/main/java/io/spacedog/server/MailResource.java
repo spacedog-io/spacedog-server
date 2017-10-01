@@ -200,7 +200,7 @@ public class MailResource extends Resource {
 
 			String msgId = email.send();
 
-			return JsonPayload.ok().with("messageId", msgId).build();
+			return JsonPayload.ok().withFields("messageId", msgId).build();
 
 		} catch (IllegalArgumentException e) {
 			throw e;
@@ -241,7 +241,7 @@ public class MailResource extends Resource {
 		SpaceResponse response = request.go();
 
 		return JsonPayload.status(response.status())//
-				.with("mailgun", response.isJson() //
+				.withFields("mailgun", response.isJson() //
 						? response.asJson()
 						: response.asString())//
 				.build();

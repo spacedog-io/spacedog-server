@@ -10,7 +10,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import io.spacedog.client.SpaceDog;
-import io.spacedog.http.SpaceEnv;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceRequestException;
 import io.spacedog.http.SpaceTest;
@@ -68,7 +67,6 @@ public class CredentialsResourceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		resetTestBackend();
-		SpaceEnv env = SpaceEnv.defaultEnv();
 
 		// superdog with root backend id
 		SpaceDog apiSuperdog = superdog();

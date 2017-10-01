@@ -177,8 +177,8 @@ public class LogResource extends Resource {
 			array.add(Json.readNode(hit.sourceAsString()));
 
 		return JsonPayload.ok()//
-				.with("took", response.getTookInMillis())//
-				.with("total", response.getHits().getTotalHits())//
+				.withFields("took", response.getTookInMillis())//
+				.withFields("total", response.getHits().getTotalHits())//
 				.withResults(array)//
 				.build();
 	}

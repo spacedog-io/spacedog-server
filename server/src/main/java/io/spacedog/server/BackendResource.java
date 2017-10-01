@@ -31,7 +31,7 @@ public class BackendResource extends Resource {
 	@Get("/")
 	public Payload ping() {
 		ObjectNode payload = (ObjectNode) Json.toNode(Start.get().info());
-		return JsonPayload.ok().with(payload).build();
+		return JsonPayload.ok().withObject(payload).build();
 	}
 
 	@Get("/1/backend")
@@ -137,7 +137,7 @@ public class BackendResource extends Resource {
 					EMAIL_FIELD, superAdmin.email().get()));
 
 		return JsonPayload.ok()//
-				.with("total", superAdmins.total)//
+				.withFields("total", superAdmins.total)//
 				.withResults(results)//
 				.build();
 	}

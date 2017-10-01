@@ -79,7 +79,7 @@ public class BatchResource extends Resource {
 				break;
 		}
 		return JsonPayload.ok()//
-				.with("responses", responses)//
+				.withFields("responses", responses)//
 				.build();
 	}
 
@@ -123,7 +123,7 @@ public class BatchResource extends Resource {
 			}
 		}
 
-		return JsonPayload.ok().with(response).build();
+		return JsonPayload.ok().withObject(response).build();
 	}
 
 	private static JsonNode toJson(Payload payload, BatchJsonRequestWrapper request) {

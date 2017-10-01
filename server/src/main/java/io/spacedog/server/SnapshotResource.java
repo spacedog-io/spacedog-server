@@ -48,7 +48,7 @@ public class SnapshotResource extends Resource {
 			results.add(snapshot.toJson());
 
 		return JsonPayload.ok()//
-				.with("total", snapshots.size())//
+				.withFields("total", snapshots.size())//
 				.withResults(results)//
 				.build();
 	}
@@ -61,7 +61,7 @@ public class SnapshotResource extends Resource {
 		List<ElasticSnapshot> snapshots = ElasticSnapshot.latests(0, 1);
 		return snapshots.isEmpty() //
 				? JsonPayload.error(404).build()//
-				: JsonPayload.ok().with(snapshots.get(0).toJson()).build();
+				: JsonPayload.ok().withObject(snapshots.get(0).toJson()).build();
 	}
 
 	@Get("/:id")
@@ -72,7 +72,7 @@ public class SnapshotResource extends Resource {
 		Optional<ElasticSnapshot> snapshot = ElasticSnapshot.find(snapshotId);
 
 		return snapshot.isPresent() //
-				? JsonPayload.ok().with(snapshot.get().toJson()).build() //
+				? JsonPayload.ok().withObject(snapshot.get().toJson()).build() //
 				: JsonPayload.error(404).build();
 	}
 
@@ -99,12 +99,12 @@ public class SnapshotResource extends Resource {
 			status = 201;
 
 		JsonPayload payload = JsonPayload.status(status)//
-				.with("id", snapshot.id())//
+				.withFields("id", snapshot.id())//
 				.withLocation("/1", "snapshot", snapshot.id());
 
 		if (response.getSnapshotInfo() != null) {
 			snapshot.info(response.getSnapshotInfo());
-			payload.with("snapshot", snapshot.toJson());
+			payload.withFields("snapshot", snapshot.toJson());
 		}
 
 		return payload.build();

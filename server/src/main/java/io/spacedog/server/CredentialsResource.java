@@ -110,7 +110,7 @@ public class CredentialsResource extends Resource {
 		}
 
 		return JsonPayload.ok()//
-				.with(ACCESS_TOKEN_FIELD, credentials.accessToken(), //
+				.withFields(ACCESS_TOKEN_FIELD, credentials.accessToken(), //
 						EXPIRES_IN_FIELD, credentials.accessTokenExpiresIn(), //
 						CREDENTIALS_FIELD, credentials.toJson())//
 				.build();
@@ -136,7 +136,7 @@ public class CredentialsResource extends Resource {
 		// credentials check
 		SpaceContext.credentials().checkAtLeastUser();
 		return JsonPayload.ok()//
-				.with(fromCredentialsSearch(getCredentials(toQuery(context))))//
+				.withObject(fromCredentialsSearch(getCredentials(toQuery(context))))//
 				.build();
 	}
 
@@ -173,7 +173,7 @@ public class CredentialsResource extends Resource {
 
 		JsonPayload payload = JsonPayload.saved(true, "/1", TYPE, credentials.id());
 		if (credentials.passwordResetCode() != null)
-			payload.with(PASSWORD_RESET_CODE_FIELD, credentials.passwordResetCode());
+			payload.withFields(PASSWORD_RESET_CODE_FIELD, credentials.passwordResetCode());
 
 		return payload.build();
 	}
@@ -182,14 +182,14 @@ public class CredentialsResource extends Resource {
 	@Get("/1/credentials/me/")
 	public Payload getMe(Context context) {
 		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
-		return JsonPayload.ok().with(credentials.toJson()).build();
+		return JsonPayload.ok().withObject(credentials.toJson()).build();
 	}
 
 	@Get("/1/credentials/:id")
 	@Get("/1/credentials/:id/")
 	public Payload getById(String id, Context context) {
 		Credentials credentials = checkMyselfOrHigherAdminAndGet(id, false);
-		return JsonPayload.ok().with(credentials.toJson()).build();
+		return JsonPayload.ok().withObject(credentials.toJson()).build();
 	}
 
 	@Delete("/1/credentials/me")
@@ -325,7 +325,7 @@ public class CredentialsResource extends Resource {
 
 		return JsonPayload.saved(false, "/1", TYPE, credentials.id())//
 				.withVersion(credentials.version())//
-				.with(PASSWORD_RESET_CODE_FIELD, credentials.passwordResetCode())//
+				.withFields(PASSWORD_RESET_CODE_FIELD, credentials.passwordResetCode())//
 				.build();
 	}
 
@@ -679,7 +679,7 @@ public class CredentialsResource extends Resource {
 
 	private Payload saved(boolean created, Credentials credentials) {
 		return JsonPayload.saved(false, "/1", TYPE, credentials.id())//
-		.withVersion(credentials.version()).with(credentials.toJson())//
+		.withVersion(credentials.version()).withObject(credentials.toJson())//
 				.build();
 	}
 

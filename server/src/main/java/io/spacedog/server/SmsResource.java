@@ -151,7 +151,7 @@ public class SmsResource extends Resource {
 			return payload.withError(error).build();
 		}
 
-		return payload.with(twilio).build();
+		return payload.withObject(twilio).build();
 	}
 
 	private SmsSettings smsSettings() {
