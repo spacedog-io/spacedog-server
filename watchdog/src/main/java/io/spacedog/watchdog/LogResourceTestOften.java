@@ -7,7 +7,6 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.LogEndpoint.LogItem;
-import io.spacedog.client.ObjectNodeSearchResults;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceTest;
@@ -43,7 +42,7 @@ public class LogResourceTestOften extends SpaceTest {
 		user.data().fetch(message);
 
 		// find all messages in test backend
-		user.data().getAll().type("message").get(ObjectNodeSearchResults.class);
+		user.data().getAll().type("message").get();
 
 		// get all test backend logs
 		// the delete request is not part of the logs

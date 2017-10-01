@@ -9,7 +9,6 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.SearchResults;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.client.elastic.ESSortOrder;
@@ -136,11 +135,11 @@ public class SearchResourceTestOften extends SpaceTest {
 
 		// search with ascendent sorting
 		ESSearchSourceBuilder builder = ESSearchSourceBuilder.searchSource().sort("i");
-		SearchResults<ObjectNodeDataObject> results = test.data().search(//
+		ObjectNodeDataObject.Results results = test.data().search(//
 				builder, ObjectNodeDataObject.Results.class, true);
-		assertEquals(5, results.total());
+		assertEquals(5, results.total);
 
-		List<ObjectNodeDataObject> objects = results.results();
+		List<ObjectNodeDataObject> objects = results.results;
 		for (int i = 0; i < objects.size(); i++) {
 			assertEquals(i, objects.get(i).source().get("i").asInt());
 			assertEquals(i, objects.get(i).sort()[0]);
@@ -149,9 +148,9 @@ public class SearchResourceTestOften extends SpaceTest {
 		// search with descendant sorting
 		builder = ESSearchSourceBuilder.searchSource().sort("t", ESSortOrder.DESC);
 		results = test.data().search(builder, ObjectNodeDataObject.Results.class, true);
-		assertEquals(5, results.total());
+		assertEquals(5, results.total);
 
-		objects = results.results();
+		objects = results.results;
 		for (int i = 0; i < objects.size(); i++) {
 			assertEquals(4 - i, objects.get(i).source().get("i").asInt());
 			assertEquals(String.valueOf(4 - i), objects.get(i).sort()[0]);

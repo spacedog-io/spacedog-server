@@ -14,7 +14,6 @@ import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
-import io.spacedog.client.InstallationSearchResults;
 import io.spacedog.client.PushRequest;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceTest;
@@ -128,7 +127,7 @@ public class PushResourceTestOften extends SpaceTest {
 		// admin gets all installations
 		List<InstallationDataObject> installations = superadmin.data().getAll()//
 				.type("installation").refresh()//
-				.get(InstallationSearchResults.class).results();
+				.get(InstallationDataObject.Results.class).results;
 
 		assertEquals(5, installations.size());
 		Set<String> ids = Sets.newHashSet(unknownInstallId, daveInstall.id(), //

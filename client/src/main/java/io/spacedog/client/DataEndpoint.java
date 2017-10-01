@@ -155,11 +155,11 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 			return this;
 		}
 
-		public SearchResults<ObjectNodeDataObject> get() {
-			return get(ObjectNodeSearchResults.class);
+		public ObjectNodeDataObject.Results get() {
+			return get(ObjectNodeDataObject.Results.class);
 		}
 
-		public <K extends SearchResults<?>> K get(Class<K> resultsClass) {
+		public <K> K get(Class<K> resultsClass) {
 
 			// if (type == null)
 			SpaceRequest request = type == null //

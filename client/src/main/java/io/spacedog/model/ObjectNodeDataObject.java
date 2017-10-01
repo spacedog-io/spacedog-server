@@ -7,9 +7,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.SearchResults;
-import io.spacedog.client.SearchResultsAbstract;
-
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, //
 		getterVisibility = Visibility.NONE, //
@@ -33,21 +30,10 @@ public class ObjectNodeDataObject extends DataObjectAbstract<ObjectNode> {
 	}
 
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	@JsonAutoDetect(fieldVisibility = Visibility.ANY, //
-			getterVisibility = Visibility.NONE, //
-			isGetterVisibility = Visibility.NONE, //
-			setterVisibility = Visibility.NONE)
-	public static class Results extends SearchResultsAbstract<ObjectNodeDataObject> {
+	public static class Results {
 
-		private List<ObjectNodeDataObject> results;
-
-		public List<ObjectNodeDataObject> results() {
-			return results;
-		}
-
-		public SearchResults<ObjectNodeDataObject> results(List<ObjectNodeDataObject> results) {
-			this.results = results;
-			return this;
-		}
+		public long total;
+		public ObjectNode aggregations;
+		public List<ObjectNodeDataObject> results;
 	}
 }

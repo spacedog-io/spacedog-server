@@ -61,8 +61,8 @@ public class PushEndpoint {
 		return dog.data().save("installation", id, field, object);
 	}
 
-	public SearchResults<InstallationDataObject> searchInstallations(ESSearchSourceBuilder source) {
-		return dog.data().search("installation", source, InstallationSearchResults.class);
+	public InstallationDataObject.Results searchInstallations(ESSearchSourceBuilder source) {
+		return dog.data().search("installation", source, InstallationDataObject.Results.class);
 	}
 
 	public PushEndpoint deleteInstallation(String id) {

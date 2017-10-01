@@ -24,8 +24,6 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import io.spacedog.client.ObjectNodeSearchResults;
-import io.spacedog.client.SearchResults;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.http.SpaceRequest;
@@ -373,13 +371,13 @@ public class DataResource2TestOften extends SpaceTest {
 	private Collection<String> fetchMessages(SpaceDog user, int from, int size) {
 		ESSearchSourceBuilder builder = ESSearchSourceBuilder.searchSource()//
 				.from(from).size(size);
-		SearchResults<ObjectNodeDataObject> results = user.data()//
-				.search("message", builder, ObjectNodeSearchResults.class, true);
+		ObjectNodeDataObject.Results results = user.data()//
+				.search("message", builder, ObjectNodeDataObject.Results.class, true);
 
-		assertEquals(4, results.total());
-		assertEquals(size, results.results().size());
+		assertEquals(4, results.total);
+		assertEquals(size, results.results.size());
 
-		return results.results().stream()//
+		return results.results.stream()//
 				.map(object -> object.source().get("text").asText())//
 				.collect(Collectors.toList());
 	}
