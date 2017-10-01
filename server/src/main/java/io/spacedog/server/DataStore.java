@@ -32,7 +32,6 @@ import io.spacedog.model.DataObject;
 import io.spacedog.model.Meta;
 import io.spacedog.model.MetaWrapper;
 import io.spacedog.model.MetaWrapperDataObject;
-import io.spacedog.model.Metadata;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -99,11 +98,11 @@ public class DataStore implements SpaceParams, SpaceFields {
 				: null;
 	}
 
-	public <K extends Metadata> DataObject<K> getObject(DataObject<K> object) {
+	public <K> DataObject<K> getObject(DataObject<K> object) {
 		return getObject(object, true);
 	}
 
-	public <K extends Metadata> DataObject<K> getObject(//
+	public <K> DataObject<K> getObject(//
 			DataObject<K> object, boolean throwNotFound) {
 
 		GetResponse response = getObject(object.type(), object.id(), throwNotFound);
@@ -132,11 +131,11 @@ public class DataStore implements SpaceParams, SpaceFields {
 		return Optional.ofNullable(metadata);
 	}
 
-	<K extends Metadata> DataObject<K> createObject(DataObject<K> object, String createdBy) {
+	<K> DataObject<K> createObject(DataObject<K> object, String createdBy) {
 
 		DateTime now = DateTime.now();
 
-		Meta meta = object.source().meta();
+		Meta meta = object.meta();
 		meta.createdBy(createdBy);
 		meta.updatedBy(createdBy);
 		meta.createdAt(now);
@@ -153,11 +152,10 @@ public class DataStore implements SpaceParams, SpaceFields {
 				.justCreated(response.isCreated());
 	}
 
-	public <K extends Metadata> DataObject<K> updateObject(//
-			DataObject<K> object, String updatedBy) {
+	public <K> DataObject<K> updateObject(DataObject<K> object, String updatedBy) {
 
-		object.source().meta().updatedBy(updatedBy);
-		object.source().meta().updatedAt(DateTime.now());
+		object.meta().updatedBy(updatedBy);
+		object.meta().updatedAt(DateTime.now());
 
 		IndexResponse response = elastic().prepareIndex(//
 				toDataIndex(object.type()), object.id())//

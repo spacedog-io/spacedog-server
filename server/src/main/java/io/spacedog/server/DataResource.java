@@ -7,15 +7,12 @@ import java.util.Optional;
 
 import org.elasticsearch.common.lucene.uid.Versions;
 
-import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.model.DataObject;
 import io.spacedog.model.DataPermission;
+import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.MetaWrapper;
-import io.spacedog.model.Metadata;
-import io.spacedog.model.ObjectNodeWithMetadata;
-import io.spacedog.model.ObjectNodeWithMetadata.ObjectNodeWithMetadataDeserializer;
-import io.spacedog.model.ObjectNodeWithMetadataDataObject;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -49,8 +46,8 @@ public class DataResource extends Resource {
 	@Post("/:type")
 	@Post("/:type/")
 	public Payload post(String type, String body, Context context) {
-		DataObject<ObjectNodeWithMetadata> object = new ObjectNodeWithMetadataDataObject()//
-				.type(type).source(Json.toPojo(body, ObjectNodeWithMetadata.class));
+		DataObject<ObjectNode> object = new JsonDataObject()//
+				.type(type).source(Json.readObject(body));
 		return post(object);
 	}
 
@@ -69,8 +66,8 @@ public class DataResource extends Resource {
 	@Put("/:type/:id")
 	@Put("/:type/:id/")
 	public Payload put(String type, String id, String body, Context context) {
-		DataObject<ObjectNodeWithMetadata> object = new ObjectNodeWithMetadataDataObject()//
-				.type(type).id(id).source(Json.toPojo(body, ObjectNodeWithMetadata.class));
+		DataObject<ObjectNode> object = new JsonDataObject()//
+				.type(type).id(id).source(Json.readObject(body));
 		boolean patch = !context.query().getBoolean(STRICT_PARAM, false);
 		return put(object, patch, context);
 	}
@@ -85,8 +82,8 @@ public class DataResource extends Resource {
 			return JsonPayload.ok().build();
 
 		} else if (DataAccessControl.check(credentials, type, DataPermission.delete)) {
-			DataObject<ObjectNodeWithMetadata> object = DataStore.get().getObject(//
-					new ObjectNodeWithMetadataDataObject().type(type).id(id));
+			DataObject<ObjectNode> object = DataStore.get().getObject(//
+					new JsonDataObject().type(type).id(id));
 
 			if (credentials.name().equals(Json.get(object.source(), "meta.createdBy").asText())) {
 				elastic().delete(DataStore.toDataIndex(type), id, false, true);
@@ -107,9 +104,9 @@ public class DataResource extends Resource {
 	@Put("/:type/:id/:field")
 	@Put("/:type/:id/:field/")
 	public Payload putField(String type, String id, String fieldPath, String body, Context context) {
-		ObjectNodeWithMetadata source = new ObjectNodeWithMetadata();
+		ObjectNode source = Json.object();
 		Json.with(source, fieldPath, Json.readNode(body));
-		DataObject<ObjectNodeWithMetadata> object = new ObjectNodeWithMetadataDataObject()//
+		DataObject<ObjectNode> object = new JsonDataObject()//
 				.type(type).id(id).source(source);
 		return put(object, true, context);
 	}
@@ -117,7 +114,7 @@ public class DataResource extends Resource {
 	@Delete("/:type/:id/:field")
 	@Delete("/:type/:id/:field/")
 	public Payload deleteField(String type, String id, String fieldPath, Context context) {
-		DataObject<ObjectNodeWithMetadata> object = get(type, id);
+		DataObject<ObjectNode> object = get(type, id);
 		Json.remove(object.source(), fieldPath);
 		return put(object, false, context);
 	}
@@ -126,16 +123,15 @@ public class DataResource extends Resource {
 	// Implementation
 	//
 
-	protected DataObject<ObjectNodeWithMetadata> get(String type, String id) {
+	protected DataObject<ObjectNode> get(String type, String id) {
 
 		Credentials credentials = SpaceContext.credentials();
 		if (DataAccessControl.check(credentials, type, DataPermission.read_all, DataPermission.search))
-			return DataStore.get().getObject(//
-					new ObjectNodeWithMetadataDataObject().type(type).id(id));
+			return DataStore.get().getObject(new JsonDataObject().type(type).id(id));
 
 		if (DataAccessControl.check(credentials, type, DataPermission.read)) {
-			DataObject<ObjectNodeWithMetadata> object = DataStore.get().getObject(//
-					new ObjectNodeWithMetadataDataObject().type(type).id(id));
+			DataObject<ObjectNode> object = DataStore.get().getObject(//
+					new JsonDataObject().type(type).id(id));
 
 			if (credentials.name().equals(Json.get(object.source(), "meta.createdBy").asText())) {
 				return object;
@@ -145,7 +141,7 @@ public class DataResource extends Resource {
 		throw Exceptions.forbidden("forbidden to read [%s] objects", type);
 	}
 
-	public <K extends Metadata> Payload put(DataObject<K> object, boolean patch, Context context) {
+	public <K> Payload put(DataObject<K> object, boolean patch, Context context) {
 		Optional<DataObject<MetaWrapper>> metaOpt = DataStore.get()//
 				.getMeta(object.type(), object.id());
 
@@ -155,7 +151,7 @@ public class DataResource extends Resource {
 			checkPutPermissions(metadata, credentials);
 
 			// reset object meta with meta from database
-			object.source().meta(metadata.source().meta());
+			object.meta(metadata.meta());
 
 			// TODO return better exception-message in case of invalid version
 			// format
@@ -171,7 +167,7 @@ public class DataResource extends Resource {
 			return post(object);
 	}
 
-	protected <K extends Metadata> Payload post(DataObject<K> object) {
+	protected <K> Payload post(DataObject<K> object) {
 
 		Credentials credentials = SpaceContext.credentials();
 
@@ -211,10 +207,6 @@ public class DataResource extends Resource {
 	}
 
 	private DataResource() {
-		SimpleModule module = new SimpleModule()//
-				.addDeserializer(ObjectNodeWithMetadata.class, //
-						new ObjectNodeWithMetadataDeserializer());
-		Json.mapper().registerModule(module);
 	}
 
 }

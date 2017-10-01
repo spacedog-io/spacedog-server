@@ -1,6 +1,6 @@
 package io.spacedog.model;
 
-public interface DataObject<K> {
+public interface DataObject<K> extends Metadata {
 
 	String id();
 

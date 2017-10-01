@@ -411,10 +411,15 @@ public class Json {
 		return array;
 	}
 
-	public static JsonNode toNode(Object value) {
-		if (value instanceof JsonNode)
-			return (JsonNode) value;
-		return mapper().valueToTree(value);
+	public static ObjectNode toObjectNode(Object object) {
+		return checkObject(toNode(object));
+	}
+
+	// TODO rename toJsonNode
+	public static JsonNode toNode(Object object) {
+		if (object instanceof JsonNode)
+			return (JsonNode) object;
+		return mapper().valueToTree(object);
 	}
 
 	public static ValueNode toValueNode(Object value) {

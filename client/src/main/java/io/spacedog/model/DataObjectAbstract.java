@@ -3,6 +3,7 @@ package io.spacedog.model;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, //
@@ -69,10 +70,26 @@ public abstract class DataObjectAbstract<K> implements DataObject<K> {
 		return dataClass.getSimpleName().toLowerCase();
 	}
 
-	public <T> DataObject<T> copyIdentity(DataObject<T> copy) {
-		copy.type(type);
-		copy.id(id);
-		copy.version(version);
-		return copy;
+	public Meta meta() {
+		K source = source();
+		if (source instanceof Metadata)
+			return ((Metadata) source).meta();
+		if (source instanceof ObjectNode)
+			return new ObjectNodeMeta((ObjectNode) source);
+		return new Meta();
 	}
+
+	public void meta(Meta meta) {
+		K source = source();
+		if (source instanceof Metadata)
+			((Metadata) source).meta(meta);
+		if (source instanceof ObjectNode) {
+			ObjectNodeMeta objectNodeMeta = new ObjectNodeMeta((ObjectNode) source);
+			objectNodeMeta.createdAt(meta.createdAt());
+			objectNodeMeta.createdBy(meta.createdBy());
+			objectNodeMeta.updatedAt(meta.updatedAt());
+			objectNodeMeta.createdBy(meta.createdBy());
+		}
+	}
+
 }
