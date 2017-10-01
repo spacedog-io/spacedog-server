@@ -6,21 +6,21 @@ package io.spacedog.server;
 import org.elasticsearch.action.ShardOperationFailedException;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.update.UpdateResponse;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
+import io.spacedog.model.DataObject;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceFields;
 
 public class ElasticPayload implements SpaceFields {
 
-	public static JsonPayload saved(String uriBase, IndexResponse response) {
-		return JsonPayload.saved(response.isCreated(), uriBase, response.getType(), //
-				response.getId()).withVersion(response.getVersion());
+	public static JsonPayload saved(String uriBase, DataObject<?> object) {
+		return JsonPayload.saved(object.justCreated(), uriBase, object.type(), //
+				object.id()).withVersion(object.version());
 	}
 
-	public static JsonPayload saved(String uriBase, UpdateResponse response) {
+	public static JsonPayload saved(String uriBase, IndexResponse response) {
 		return JsonPayload.saved(response.isCreated(), uriBase, response.getType(), //
 				response.getId()).withVersion(response.getVersion());
 	}
@@ -41,7 +41,7 @@ public class ElasticPayload implements SpaceFields {
 			return toPayload(500, response.getShardFailures());
 
 		return JsonPayload.ok()//
-				.with("totalDeleted", response.getTotalDeleted());
+				.withFields("totalDeleted", response.getTotalDeleted());
 	}
 
 	public static JsonPayload toPayload(int status, ShardOperationFailedException[] failures) {

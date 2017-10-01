@@ -1,8 +1,13 @@
 package io.spacedog.http;
 
+import org.joda.time.DateTime;
 import org.junit.Assert;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import io.spacedog.client.SpaceDog;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.Passwords;
 import io.spacedog.utils.SpaceFields;
 import io.spacedog.utils.SpaceParams;
@@ -96,4 +101,64 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 				.password(env.getOrElseThrow("spacedog.superdog.password"))//
 				.id("superdog");
 	}
+
+	public static void fail(String message, Object... args) {
+		Assert.fail(String.format(message, args));
+	}
+
+	public static void fail(Throwable t) {
+		t.printStackTrace();
+		fail(t.getMessage());
+	}
+
+	public static DateTime assertDateIsValid(JsonNode date) {
+		assertNotNull(date);
+		if (!date.isTextual())
+			fail("json date [%s] is not valid", date);
+		return assertDateIsValid(date.asText());
+	}
+
+	public static DateTime assertDateIsValid(String date) {
+		assertNotNull(date);
+		try {
+			return DateTime.parse(date);
+		} catch (IllegalArgumentException e) {
+			fail("string date [%s] is not valid", date);
+			return null;
+		}
+	}
+
+	public static DateTime assertDateIsRecent(JsonNode node) {
+		DateTime date = assertDateIsValid(node);
+		assertDateIsRecent(date);
+		return date;
+	}
+
+	public static DateTime assertDateIsRecent(String string) {
+		DateTime date = assertDateIsValid(string);
+		assertDateIsRecent(date);
+		return date;
+	}
+
+	public static DateTime assertDateIsRecent(DateTime date) {
+		long now = DateTime.now().getMillis();
+		if (date.isBefore(now - 3000) || date.isAfter(now + 3000))
+			Assert.fail(String.format("date time [%s] is " //
+					+ "not a recent enough (now +/- 3s)", date));
+		return date;
+	}
+
+	public static void assertSourceAlmostEquals(ObjectNode expected, ObjectNode value) {
+		assertEquals(expected.deepCopy().without("meta"), //
+				value.deepCopy().without("meta"));
+	}
+
+	public static void assertFieldEquals(String expected, JsonNode node, String fieldPath) {
+		JsonNode fieldNode = Json.get(node, fieldPath);
+		if (fieldNode != null && fieldNode.isTextual())
+			assertEquals(expected, fieldNode.asText());
+		else
+			fail("field [%s] null or not a string", fieldPath);
+	}
+
 }

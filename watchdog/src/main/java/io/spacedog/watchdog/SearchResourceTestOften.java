@@ -9,12 +9,13 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.client.SearchResults;
 import io.spacedog.client.SpaceDog;
-import io.spacedog.client.DataEndpoint.SearchResults;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.client.elastic.ESSortOrder;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceTest;
+import io.spacedog.model.ObjectNodeDataObject;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
 
@@ -51,22 +52,22 @@ public class SearchResourceTestOften extends SpaceTest {
 
 		ObjectNode results = SpaceRequest.post("/1/search")//
 				.debugServer().auth(superadmin).bodyJson(query).go(200)//
-				.assertEquals("wanna drink something?", "results.0.text")//
-				.assertEquals("pretty cool something, hein?", "results.1.text")//
+				.assertEquals("wanna drink something?", "results.0.source.text")//
+				.assertEquals("pretty cool something, hein?", "results.1.source.text")//
 				.asJsonObject();
 
 		// check search scores
-		assertTrue(Json.checkDouble(Json.get(results, "results.0.meta.score")) > 1);
-		assertTrue(Json.checkDouble(Json.get(results, "results.1.meta.score")) < 1);
+		assertTrue(Json.checkDouble(Json.get(results, "results.0.score")) > 1);
+		assertTrue(Json.checkDouble(Json.get(results, "results.1.score")) < 1);
 
 		// check all meta are there
-		assertNotNull(Json.get(results, "results.0.meta.id"));
-		assertNotNull(Json.get(results, "results.0.meta.type"));
-		assertNotNull(Json.get(results, "results.0.meta.version"));
-		assertNotNull(Json.get(results, "results.0.meta.createdBy"));
-		assertNotNull(Json.get(results, "results.0.meta.createdAt"));
-		assertNotNull(Json.get(results, "results.0.meta.updatedBy"));
-		assertNotNull(Json.get(results, "results.0.meta.updatedAt"));
+		assertNotNull(Json.get(results, "results.0.id"));
+		assertNotNull(Json.get(results, "results.0.type"));
+		assertNotNull(Json.get(results, "results.0.version"));
+		assertNotNull(Json.get(results, "results.0.source.meta.createdBy"));
+		assertNotNull(Json.get(results, "results.0.source.meta.createdAt"));
+		assertNotNull(Json.get(results, "results.0.source.meta.updatedBy"));
+		assertNotNull(Json.get(results, "results.0.source.meta.updatedAt"));
 
 		// deletes messages containing 'up' by query
 
@@ -88,25 +89,22 @@ public class SearchResourceTestOften extends SpaceTest {
 	@Test
 	public void aggregateToGetDistinctCityNames() {
 
-		// prepare backend
-
+		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
-		SpaceDog vince = signUp(test, "vince", "hi vince");
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog vince = signUp(superadmin, "vince", "hi vince");
 
-		test.schema().set(Schema.builder("city").string("name").build());
+		superadmin.schema().set(Schema.builder("city").string("name").build());
 
 		// creates 5 cities but whith only 3 distinct names
-
-		SpaceRequest.post("/1/data/city").auth(vince).bodyJson("name", "Paris").go(201);
-		SpaceRequest.post("/1/data/city").auth(vince).bodyJson("name", "Bordeaux").go(201);
-		SpaceRequest.post("/1/data/city").auth(vince).bodyJson("name", "Nice").go(201);
-		SpaceRequest.post("/1/data/city").auth(vince).bodyJson("name", "Paris").go(201);
-		SpaceRequest.post("/1/data/city").auth(vince).bodyJson("name", "Nice").go(201);
+		vince.data().save("city", Json.object("name", "Paris"));
+		vince.data().save("city", Json.object("name", "Bordeaux"));
+		vince.data().save("city", Json.object("name", "Nice"));
+		vince.data().save("city", Json.object("name", "Paris"));
+		vince.data().save("city", Json.object("name", "Nice"));
 
 		// search with 'terms' aggregation to get
 		// all 3 distinct city names Paris, Bordeaux and Nice
-
 		ObjectNode query = Json.objectBuilder()//
 				.put("size", 0)//
 				.object("aggs")//
@@ -115,13 +113,12 @@ public class SearchResourceTestOften extends SpaceTest {
 				.put("field", "name")//
 				.build();
 
-		SpaceRequest.post("/1/search").refresh().auth(vince).bodyJson(query).go(200)//
+		vince.post("/1/search").refresh().bodyJson(query).go(200)//
 				.assertEquals(0, "results")//
 				.assertEquals(3, "aggregations.distinctCities.buckets")//
 				.assertContainsValue("Paris", "key")//
 				.assertContainsValue("Bordeaux", "key")//
 				.assertContainsValue("Nice", "key");
-
 	}
 
 	@Test
@@ -135,30 +132,29 @@ public class SearchResourceTestOften extends SpaceTest {
 
 		// creates 5 numbers
 		for (int i = 0; i < 5; i++)
-			test.data().create("number", Json.object("i", i, "t", "" + i));
+			test.data().save("number", Json.object("i", i, "t", "" + i));
 
 		// search with ascendent sorting
 		ESSearchSourceBuilder builder = ESSearchSourceBuilder.searchSource().sort("i");
-		SearchResults<ObjectNode> results = test.data().search(//
-				builder, ObjectNode.class, true);
+		SearchResults<ObjectNodeDataObject> results = test.data().search(//
+				builder, ObjectNodeDataObject.Results.class, true);
 		assertEquals(5, results.total());
 
-		List<ObjectNode> objects = results.objects();
+		List<ObjectNodeDataObject> objects = results.results();
 		for (int i = 0; i < objects.size(); i++) {
-			assertEquals(i, objects.get(i).get("i").asInt());
-			assertEquals(i, Json.get(objects.get(i), "meta.sort.0").asInt());
+			assertEquals(i, objects.get(i).source().get("i").asInt());
+			assertEquals(i, objects.get(i).sort()[0]);
 		}
 
 		// search with descendant sorting
 		builder = ESSearchSourceBuilder.searchSource().sort("t", ESSortOrder.DESC);
-		results = test.data().search(builder, ObjectNode.class, true);
+		results = test.data().search(builder, ObjectNodeDataObject.Results.class, true);
 		assertEquals(5, results.total());
 
-		objects = results.objects();
+		objects = results.results();
 		for (int i = 0; i < objects.size(); i++) {
-			assertEquals(4 - i, objects.get(i).get("i").asInt());
-			assertEquals(String.valueOf(4 - i), //
-					Json.get(objects.get(i), "meta.sort.0").asText());
+			assertEquals(4 - i, objects.get(i).source().get("i").asInt());
+			assertEquals(String.valueOf(4 - i), objects.get(i).sort()[0]);
 		}
 	}
 }

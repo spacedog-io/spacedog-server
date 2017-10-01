@@ -2,9 +2,11 @@ package io.spacedog.client;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.DataEndpoint.SearchResults;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
+import io.spacedog.model.DataObject;
+import io.spacedog.model.DataObjectAbstract;
 import io.spacedog.model.Installation;
+import io.spacedog.model.InstallationDataObject;
 import io.spacedog.utils.Check;
 
 public class PushEndpoint {
@@ -31,20 +33,40 @@ public class PushEndpoint {
 	// Installations
 	//
 
-	public Installation newInstallation() {
-		return dog.data().object(Installation.class);
+	public DataObject<Installation> getInstallation(String id) {
+		return dog.data().fetch(new InstallationDataObject().id(id));
 	}
 
-	public Installation getInstallation(String id) {
-		return dog.data().get(Installation.class, id);
+	public DataObject<Installation> fetchInstallation(DataObject<Installation> installation) {
+		return dog.data().fetch(installation);
 	}
 
-	public SearchResults<Installation> searchInstallations(ESSearchSourceBuilder source) {
-		return dog.data().search("installation", source, Installation.class);
+	public DataObject<Installation> saveInstallation(Installation source) {
+		return dog.data().save(new InstallationDataObject().source(source));
+	}
+
+	public DataObject<Installation> saveInstallation(String id, Installation source) {
+		return dog.data().save(new InstallationDataObject().id(id).source(source));
+	}
+
+	public DataObject<Installation> saveInstallation(DataObject<Installation> object) {
+		return dog.data().save(object);
+	}
+
+	public long patchInstallation(String id, Object source) {
+		return dog.data().patch("installation", id, source);
+	}
+
+	public long saveInstallationField(String id, String field, Object object) {
+		return dog.data().save("installation", id, field, object);
+	}
+
+	public SearchResults<InstallationDataObject> searchInstallations(ESSearchSourceBuilder source) {
+		return dog.data().search("installation", source, InstallationSearchResults.class);
 	}
 
 	public PushEndpoint deleteInstallation(String id) {
-		dog.data().delete(DataObject.type(Installation.class), id);
+		dog.data().delete(DataObjectAbstract.type(Installation.class), id);
 		return this;
 	}
 

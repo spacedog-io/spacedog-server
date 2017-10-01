@@ -16,6 +16,8 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
+import io.spacedog.model.ObjectNodeDataObject;
+
 public class JsonTest extends Assert {
 
 	@Test
@@ -177,4 +179,13 @@ public class JsonTest extends Assert {
 		assertEquals(Json.array(1, 2), Json.toNode(Arrays.asList(1, 2)));
 		assertEquals(Json.array(1, 2), Json.toNode(Arrays.asList(1, 2)));
 	}
+
+	@Test
+	public void shouldPartiallyUpdatePojo() {
+		ObjectNodeDataObject object = new ObjectNodeDataObject();
+		String json = Json.object("version", 1).toString();
+		Json.updatePojo(json, object);
+		assertEquals(1, object.version());
+	}
+
 }

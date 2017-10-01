@@ -12,12 +12,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.DefaultIndenter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.DoubleNode;
@@ -67,9 +71,9 @@ public class Json {
 
 	public static Object get(JsonNode json, String fieldPath, Object defaultValue) {
 		JsonNode node = get(json, fieldPath);
-		if (Json.isNull(node))
+		if (isNull(node))
 			return defaultValue;
-		return Json.toValue(node);
+		return toValue(node);
 	}
 
 	public static JsonNode set(JsonNode json, String fieldPath, Object value) {
@@ -80,7 +84,7 @@ public class Json {
 
 		if (lastDotIndex > -1) {
 			String parentPath = fieldPath.substring(0, lastDotIndex);
-			parent = Json.get(json, parentPath);
+			parent = get(json, parentPath);
 		}
 
 		if (json.isObject())
@@ -163,7 +167,7 @@ public class Json {
 
 		if (lastDotIndex > -1) {
 			String parentPath = fieldPath.substring(0, lastDotIndex);
-			parent = Json.get(json, parentPath);
+			parent = get(json, parentPath);
 		}
 
 		if (parent.isObject())
@@ -249,7 +253,7 @@ public class Json {
 	}
 
 	public static ObjectMapper mapper() {
-		return Json.jsonMapper;
+		return jsonMapper;
 	}
 
 	public static String toPrettyString(JsonNode node) {
@@ -265,7 +269,7 @@ public class Json {
 	public static Map<String, Object> readMap(String jsonString) {
 		Check.notNullOrEmpty(jsonString, "JSON");
 		try {
-			return Json.mapper().readValue(jsonString, Map.class);
+			return mapper().readValue(jsonString, Map.class);
 		} catch (IOException e) {
 			throw Exceptions.illegalArgument(e, //
 					"error deserializing JSON string [%s]", jsonString);
@@ -303,7 +307,7 @@ public class Json {
 		Check.notNull(objectClass, "object class");
 
 		try {
-			return Json.mapper().readValue(json, objectClass);
+			return mapper().readValue(json, objectClass);
 
 		} catch (Exception e) {
 			throw Exceptions.illegalArgument(e, "failed to map json [%s] to object of class [%s]", //
@@ -359,14 +363,21 @@ public class Json {
 	private static ObjectMapper jsonMapper;
 
 	static {
+		SimpleModule jodaModule = new JodaModule()//
+				.addSerializer(LocalTime.class, new MyLocalTimeSerializer())//
+				.addDeserializer(LocalTime.class, new MyLocalTimeDeserializer())//
+				.addSerializer(LocalDate.class, new MyLocalDateSerializer())//
+				.addDeserializer(LocalDate.class, new MyLocalDateDeserializer());
+
 		jsonMapper = new ObjectMapper()//
 				.setDefaultPrettyPrinter(new DefaultPrettyPrinter()//
 						.withArrayIndenter(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE))//
-				.registerModule(new JodaModule())//
+				.registerModule(jodaModule)//
 				.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)//
 				.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 	}
 
+	@Deprecated
 	public static Object toValue(JsonNode value) {
 
 		if (value.isBoolean())
@@ -427,14 +438,14 @@ public class Json {
 	}
 
 	public static ArrayNode toArrayNode(Object array) {
-		ArrayNode arrayNode = Json.array();
+		ArrayNode arrayNode = array();
 		for (int i = 0; i < Array.getLength(array); i++)
 			arrayNode.add(toNode(Array.get(array, i)));
 		return arrayNode;
 	}
 
 	public static ArrayNode toCollectionNode(Collection<?> collection) {
-		ArrayNode arrayNode = Json.array();
+		ArrayNode arrayNode = array();
 		for (Object element : collection)
 			arrayNode.add(toNode(element));
 		return arrayNode;
@@ -509,8 +520,12 @@ public class Json {
 	// check methods
 	//
 
+	public static boolean isObject(JsonNode node) {
+		return node != null && node.isObject();
+	}
+
 	public static ObjectNode checkObject(JsonNode node) {
-		if (!node.isObject())
+		if (!isObject(node))
 			throw Exceptions.illegalArgument(//
 					"not a json object but [%s]", node.getNodeType());
 		return (ObjectNode) node;
@@ -543,7 +558,7 @@ public class Json {
 
 	public static JsonNode checkNotNull(ObjectNode jsonBody, String propertyPath) {
 		JsonNode value = get(jsonBody, propertyPath);
-		if (Json.isNull(value))
+		if (isNull(value))
 			throw Exceptions.illegalArgument("field [%s] is null", propertyPath);
 		return value;
 	}
@@ -666,18 +681,6 @@ public class Json {
 		return node;
 	}
 
-	private static <T> T checkType(JsonNode node, Class<T> type) {
-		if (node == null)
-			return null;
-		if (!isOfType(type, node))
-			throw Exceptions.illegalArgument("json node [%s] not a [%s]", node, type.getSimpleName());
-		try {
-			return mapper().treeToValue(node, type);
-		} catch (JsonProcessingException e) {
-			throw Exceptions.runtime(e);
-		}
-	}
-
 	public static <K> K toPojo(JsonNode jsonNode, String fieldPath, Class<K> pojoClass) {
 		Check.notNull(jsonNode, "jsonNode");
 		Check.notNull(fieldPath, "fieldPath");
@@ -690,12 +693,25 @@ public class Json {
 		return toPojo(jsonNode, pojoClass);
 	}
 
+	public static <K> K updatePojo(String json, K pojo) {
+		Check.notNull(json, "json");
+		Check.notNull(pojo, "pojo");
+
+		try {
+			return mapper().readerForUpdating(pojo).readValue(json);
+
+		} catch (IOException e) {
+			throw Exceptions.runtime(e, "failed to map json [%s] to pojo class [%s]", //
+					json, pojo.getClass().getSimpleName());
+		}
+	}
+
 	public static <K> K toPojo(JsonNode jsonNode, Class<K> pojoClass) {
 		Check.notNull(jsonNode, "jsonNode");
 		Check.notNull(pojoClass, "pojoClass");
 
 		try {
-			return Json.mapper().treeToValue(jsonNode, pojoClass);
+			return mapper().treeToValue(jsonNode, pojoClass);
 
 		} catch (JsonProcessingException e) {
 			throw Exceptions.runtime(e, "failed to map json [%s] to pojo class [%s]", //
@@ -703,16 +719,16 @@ public class Json {
 		}
 	}
 
-	public static <K> K toPojo(String jsonString, Class<K> pojoClass) {
-		Check.notNull(jsonString, "jsonString");
+	public static <K> K toPojo(String json, Class<K> pojoClass) {
+		Check.notNullOrEmpty(json, "json");
 		Check.notNull(pojoClass, "pojoClass");
 
 		try {
-			return Json.mapper().readValue(jsonString, pojoClass);
+			return mapper().readValue(json, pojoClass);
 
 		} catch (IOException e) {
 			throw Exceptions.runtime(e, "error mapping string [%s] to pojo class [%s]", //
-					jsonString, pojoClass.getSimpleName());
+					json, pojoClass.getSimpleName());
 		}
 	}
 
@@ -721,7 +737,7 @@ public class Json {
 		Check.notNull(pojoClass, "pojoClass");
 
 		try {
-			return Json.mapper().readValue(jsonBytes, pojoClass);
+			return mapper().readValue(jsonBytes, pojoClass);
 
 		} catch (IOException e) {
 			throw Exceptions.runtime(e, "error mapping bytes to pojo class [%s]", //

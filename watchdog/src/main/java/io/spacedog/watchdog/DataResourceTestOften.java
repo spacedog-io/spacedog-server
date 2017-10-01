@@ -11,8 +11,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceRequestException;
-import io.spacedog.http.SpaceResponse;
 import io.spacedog.http.SpaceTest;
+import io.spacedog.model.DataObject;
 import io.spacedog.utils.Json;
 
 public class DataResourceTestOften extends SpaceTest {
@@ -20,6 +20,7 @@ public class DataResourceTestOften extends SpaceTest {
 	@Test
 	public void createFindUpdateAndDelete() {
 
+		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
 		superadmin.schema().set(SchemaResourceTestOften.buildCarSchema());
@@ -42,45 +43,42 @@ public class DataResourceTestOften extends SpaceTest {
 				.build();
 
 		// create
-		String id = vince.post("/1/data/car").bodyJson(car).go(201)//
-				.assertEquals("car", "type").assertNotNull("id")//
-				.getString("id");
+		DataObject<ObjectNode> carDO = vince.data().save("car", car);
+		assertEquals("car", carDO.type());
+		assertNotNull(carDO.id());
 
 		// find by id
-		SpaceResponse res1 = vince.get("/1/data/car/" + id).go(200)//
-				.assertEquals("vince", "meta.createdBy")//
-				.assertEquals("vince", "meta.updatedBy")//
-				.assertDateIsRecent("meta.createdAt")//
-				.assertEqualsWithoutMeta(car);
+		ObjectNode car1 = vince.data().get("car", carDO.id()).source();
 
-		DateTime createdAt = DateTime.parse(res1.getString("meta.createdAt"));
-		res1.assertEquals(createdAt, "meta.updatedAt");
+		assertFieldEquals("vince", car1, "meta.createdBy");
+		assertFieldEquals("vince", car1, "meta.updatedBy");
+		DateTime createdAt = assertDateIsRecent(car1.get("meta").get("createdAt").asText());
+		DateTime updatedAt = assertDateIsRecent(car1.get("meta").get("updatedAt").asText());
+		assertEquals(createdAt, updatedAt);
+		assertSourceAlmostEquals(car, car1);
 
 		// find by full text search
-
 		vince.get("/1/search/car").refresh().queryParam("q", "inVENT*").go(200)//
-				.assertEquals(id, "results.0.meta.id");
+				.assertEquals(carDO.id(), "results.0.id");
 
 		// update
+		vince.data().patch("car", carDO.id(), Json.object("color", "blue"));
 
-		vince.put("/1/data/car/" + id).bodyJson("color", "blue").go(200);
+		ObjectNode car3 = vince.data().get("car", carDO.id()).source();
+		assertFieldEquals("vince", car3, "meta.createdBy");
+		assertFieldEquals("vince", car3, "meta.updatedBy");
+		assertEquals(createdAt, //
+				assertDateIsValid(car3.get("meta").get("createdAt").asText()));
 
-		SpaceResponse res3 = SpaceRequest.get("/1/data/car/" + id)//
-				.backend(superadmin).go(200)//
-				.assertEquals("vince", "meta.createdBy")//
-				.assertEquals("vince", "meta.updatedBy")//
-				.assertEquals(createdAt, "meta.createdAt")//
-				.assertDateIsRecent("meta.updatedAt")//
-				.assertEquals("1234567890", "serialNumber")//
-				.assertEquals("blue", "color");
-
-		DateTime updatedAt = DateTime.parse(res3.findValue("updatedAt").asText());
+		updatedAt = assertDateIsRecent(car3.get("meta").get("updatedAt").asText());
 		assertTrue(updatedAt.isAfter(createdAt));
 
-		// delete
+		assertFieldEquals("1234567890", car3, "serialNumber");
+		assertFieldEquals("blue", car3, "color");
 
-		vince.delete("/1/data/car/" + id).go(200);
-		vince.get("/1/data/car/" + id).go(404);
+		// delete
+		vince.data().delete(carDO);
+		vince.get("/1/data/car/" + carDO.id()).go(404);
 	}
 
 	@Test
@@ -108,10 +106,10 @@ public class DataResourceTestOften extends SpaceTest {
 				.build();
 
 		// create
-		String id = vince.data().create("car", car);
+		String id = vince.data().save("car", car).id();
 
 		// find by id
-		ObjectNode carbis = vince.data().get("car", id);
+		ObjectNode carbis = vince.data().get("car", id).source();
 		assertEquals("vince", Json.checkString(carbis, "meta.createdBy").get());
 		assertEquals("vince", Json.checkString(carbis, "meta.updatedBy").get());
 		assertNotNull(Json.checkString(carbis, "meta.createdAt"));
@@ -121,12 +119,12 @@ public class DataResourceTestOften extends SpaceTest {
 		// find by full text search
 
 		SpaceRequest.get("/1/search/car").refresh().auth(vince).queryParam("q", "inVENT*").go(200)//
-				.assertEquals(id, "results.0.meta.id");
+				.assertEquals(id, "results.0.id");
 
 		// update
 
-		vince.data().save("car", id, Json.object("color", "blue"), false);
-		carbis = vince.data().get("car", id);
+		vince.data().patch("car", id, Json.object("color", "blue"));
+		carbis = vince.data().get("car", id).source();
 		assertEquals("blue", carbis.get("color").asText());
 
 		// delete

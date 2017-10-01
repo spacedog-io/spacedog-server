@@ -4,12 +4,16 @@ import java.util.List;
 
 import org.junit.Test;
 
-import io.spacedog.client.DataObject;
-import io.spacedog.client.SpaceDog;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import io.spacedog.client.LogEndpoint.LogItem;
+import io.spacedog.client.ObjectNodeSearchResults;
+import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceTest;
+import io.spacedog.model.DataObject;
 import io.spacedog.model.Schema;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceHeaders;
 
 public class LogResourceTestOften extends SpaceTest {
@@ -32,14 +36,14 @@ public class LogResourceTestOften extends SpaceTest {
 		signUp("test2", "user2", "hi user2");
 
 		// create message in test backend
-		DataObject<?> message = user.data().object("message")//
-				.node("text", "What's up boys?").save();
+		DataObject<ObjectNode> message = user.data()//
+				.save("message", Json.object("text", "What's up boys?"));
 
 		// find message by id in test backend
-		message.fetch();
+		user.data().fetch(message);
 
 		// find all messages in test backend
-		user.data().getAll().type("message").get(DataObject.class);
+		user.data().getAll().type("message").get(ObjectNodeSearchResults.class);
 
 		// get all test backend logs
 		// the delete request is not part of the logs

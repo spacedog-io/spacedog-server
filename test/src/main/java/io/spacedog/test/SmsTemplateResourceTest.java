@@ -14,6 +14,7 @@ import io.spacedog.model.Schema;
 import io.spacedog.model.SmsSettings;
 import io.spacedog.model.SmsSettings.TwilioSettings;
 import io.spacedog.model.SmsTemplate;
+import io.spacedog.utils.Json;
 
 public class SmsTemplateResourceTest extends SpaceTest {
 
@@ -36,8 +37,8 @@ public class SmsTemplateResourceTest extends SpaceTest {
 		superadmin.schema().set(schema);
 
 		// superadmin creates a customer
-		String customerId = superadmin.data().object("customer")//
-				.node("name", "David A.", "phone", "+33662627520").save().id();
+		String customerId = superadmin.data().save("customer", //
+				Json.object("name", "David A.", "phone", "+33662627520")).id();
 
 		// prepare Twilio SMS settings
 		SmsSettings settings = new SmsSettings();

@@ -12,10 +12,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceTest;
+import io.spacedog.model.DataObject;
 import io.spacedog.model.DataPermission;
+import io.spacedog.model.InternalDataSettings;
+import io.spacedog.model.ObjectNodeDataObject;
 import io.spacedog.model.Schema;
 import io.spacedog.model.Schema.DataAcl;
-import io.spacedog.model.InternalDataSettings;
 import io.spacedog.utils.Json;
 
 public class DataAccessControlTestOften extends SpaceTest {
@@ -115,7 +117,7 @@ public class DataAccessControlTestOften extends SpaceTest {
 		vince.get("/1/data/msge/").go(403);
 		admin.get("/1/data/msge/").go(403);
 		superadmin.get("/1/data/msge/").refresh().go(200)//
-				.assertEquals("1", "results.0.meta.id");
+				.assertEquals("1", "results.0.id");
 
 		// in empty acl, nobody can update any object but superadmins
 		guest.put("/1/data/msge/vince").bodyJson("t", "ola").go(403);
@@ -176,7 +178,7 @@ public class DataAccessControlTestOften extends SpaceTest {
 		vince.get("/1/data/msge/").go(403);
 		admin.get("/1/data/msge/").refresh().go(200)//
 				.assertSizeEquals(2, "results")//
-				.assertEquals("2", "results.1.meta.id");
+				.assertEquals("2", "results.1.id");
 
 		// nobody can update any object (but superadmins)
 		guest.put("/1/data/msge/2").bodyJson("t", "ola").go(403);
@@ -233,16 +235,20 @@ public class DataAccessControlTestOften extends SpaceTest {
 		// he's got all the rights
 		SpaceDog dave = signUp(superadmin, "dave", "hi dave");
 		superadmin.credentials().setRole(dave.id(), "platine");
-		ObjectNode message = Json.object("text", "hi");
-		dave.data().create("message", "1", message);
+		DataObject<ObjectNode> message = new ObjectNodeDataObject()//
+				.source(Json.object("text", "hi"))//
+				.type("message")//
+				.id("1");
+		message = dave.data().save(message);
 		message = dave.data().get("message", "1");
-		message.put("text", "ola");
-		dave.data().save("message", "1", message);
-		dave.data().delete("message", "1");
+		message.source().put("text", "ola");
+		dave.data().save(message);
+		dave.data().delete(message);
 
 		// message for users without create permission
-		message.put("text", "salut");
-		dave.data().create("message", "2", message);
+		message.id("2");
+		message.source().put("text", "salut");
+		dave.data().save(message);
 
 		// maelle is a simple user
 		// she's got no right on the message schema

@@ -178,25 +178,31 @@ public class BatchResourceTest extends SpaceTest {
 				.debugServer().backend("test")//
 				.basicAuth("vince", "hi vince")//
 				.bodyJson(batch).go(200)//
-				.assertEquals(201, "responses.0.status")//
+				// .assertEquals(201, "responses.0.status")//
 				.assertEquals("1", "responses.0.id")//
-				.assertEquals(201, "responses.1.status")//
+				.assertEquals(1, "responses.0.version")//
+				// .assertEquals(201, "responses.1.status")//
 				.assertEquals("2", "responses.1.id")//
-				.assertEquals(200, "responses.2.status")//
-				.assertEquals(2, "responses.2.content.total")//
-				.assertEquals(200, "responses.3.status")//
-				.assertEquals(200, "responses.4.status")//
-				.assertEquals(200, "responses.5.status")//
-				.assertEquals(2, "responses.5.content.total")//
+				.assertEquals(1, "responses.1.version")//
+				// .assertEquals(200, "responses.2.status")//
+				.assertEquals(2, "responses.2.total")//
+				// .assertEquals(200, "responses.3.status")//
+				.assertEquals("1", "responses.3.id")//
+				.assertEquals(2, "responses.3.version")//
+				// .assertEquals(200, "responses.4.status")//
+				.assertEquals("2", "responses.4.id")//
+				.assertEquals(2, "responses.4.version")//
+				// .assertEquals(200, "responses.5.status")//
+				.assertEquals(2, "responses.5.total")//
 				.assertEquals(1, "debug.batchCredentialChecks");
 
-		assertEquals(Sets.newHashSet("Hi guys, what's up?", "Pretty cool, huhhhhh?"),
-				Sets.newHashSet(response.getString("responses.5.content.results.0.text"),
-						response.getString("responses.5.content.results.1.text")));
+		assertEquals(Sets.newHashSet("Hi guys, what's up?", "Pretty cool, huhhhhh?"), //
+				Sets.newHashSet(response.getString("responses.5.results.0.source.text"),
+						response.getString("responses.5.results.1.source.text")));
 
-		assertEquals(Sets.newHashSet("1", "2"),
-				Sets.newHashSet(response.getString("responses.5.content.results.0.meta.id"),
-						response.getString("responses.5.content.results.1.meta.id")));
+		assertEquals(Sets.newHashSet("1", "2"), //
+				Sets.newHashSet(response.getString("responses.5.results.0.id"),
+						response.getString("responses.5.results.1.id")));
 
 		// should succeed to stop on first batch request error
 
@@ -217,7 +223,7 @@ public class BatchResourceTest extends SpaceTest {
 		SpaceRequest.post("/1/batch").debugServer()//
 				.queryParam("stopOnError", "true").backend("test")//
 				.basicAuth("vince", "hi vince").bodyJson(batch).go(200)//
-				.assertEquals(200, "responses.0.status")//
+				.assertEquals(2, "responses.0.total")//
 				.assertEquals(404, "responses.1.status")//
 				.assertSizeEquals(2, "responses")//
 				.assertEquals(1, "debug.batchCredentialChecks");

@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
 import com.mitchellbosecke.pebble.PebbleEngine;
 import com.mitchellbosecke.pebble.loader.StringLoader;
@@ -46,7 +47,8 @@ public class PebbleTemplating {
 			if (DataStore.get().isType(type)) {
 
 				if (value != null && value instanceof String) {
-					value = DataStore.get().getObject(type, value.toString());
+					value = DataStore.get().getObject(//
+							type, value.toString(), ObjectNode.class, true);
 					value = Json.mapper().convertValue(value, Map.class);
 					context.put(name, value);
 					continue;

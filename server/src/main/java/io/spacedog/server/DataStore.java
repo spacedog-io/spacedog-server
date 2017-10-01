@@ -23,13 +23,16 @@ import org.elasticsearch.search.SearchHits;
 import org.joda.time.DateTime;
 
 import com.carrotsearch.hppc.cursors.ObjectCursor;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
-import io.spacedog.client.DataObject;
+import io.spacedog.model.DataObject;
+import io.spacedog.model.Meta;
+import io.spacedog.model.MetaWrapper;
+import io.spacedog.model.MetaWrapperDataObject;
+import io.spacedog.model.Metadata;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -42,33 +45,7 @@ import net.codestory.http.Context;
 public class DataStore implements SpaceParams, SpaceFields {
 
 	//
-	// help classes and interfaces
-	//
-
-	public interface Metable {
-		Meta meta();
-
-		void meta(Meta meta);
-	}
-
-	@JsonIgnoreProperties(ignoreUnknown = true)
-	private static class MetaWrapper {
-		public Meta meta;
-	}
-
-	@JsonIgnoreProperties(ignoreUnknown = true)
-	public static class Meta {
-		public String id;
-		public String type;
-		public long version;
-		public String createdBy;
-		public DateTime createdAt;
-		public String updatedBy;
-		public DateTime updatedAt;
-	}
-
-	//
-	// help methods
+	// Schema help methods
 	//
 
 	public boolean isType(String type) {
@@ -102,112 +79,119 @@ public class DataStore implements SpaceParams, SpaceFields {
 		return getSchemas(allDataIndices());
 	}
 
-	public <T extends DataObject<T>> T getObject(//
-			String type, String id, Class<T> dataObjectClass) {
+	//
+	// DataObject help methods
+	//
 
-		GetResponse response = elastic().get(toDataIndex(type), id, true);
-		return Json.toPojo(response.getSourceAsBytes(), dataObjectClass)//
-				.id(response.getId())//
-				.type(response.getType())//
-				.version(response.getVersion());
-	}
-
-	public ObjectNode getObject(String type, String id) {
-		return getObject(type, id, true);
-	}
-
-	public ObjectNode getObject(String type, String id, boolean throwNotFound) {
+	public GetResponse getObject(String type, String id, boolean throwNotFound) {
 		GetResponse response = elastic().get(toDataIndex(type), id);
 
+		if (throwNotFound && !response.isExists())
+			throw NotFoundException.object(type, id);
+
+		return response;
+	}
+
+	public <K> K getObject(String type, String id, Class<K> dataSourceClass, boolean throwNotFound) {
+		GetResponse response = getObject(type, id, throwNotFound);
+		return response.isExists() //
+				? Json.toPojo(response.getSourceAsBytes(), dataSourceClass) //
+				: null;
+	}
+
+	public <K extends Metadata> DataObject<K> getObject(DataObject<K> object) {
+		return getObject(object, true);
+	}
+
+	public <K extends Metadata> DataObject<K> getObject(//
+			DataObject<K> object, boolean throwNotFound) {
+
+		GetResponse response = getObject(object.type(), object.id(), throwNotFound);
+
 		if (!response.isExists())
-			if (throwNotFound)
-				throw NotFoundException.object(type, id);
-			else
-				return null;
+			return null;
 
-		ObjectNode object = Json.readObject(response.getSourceAsString());
-
-		object.with("meta")//
-				.put("id", response.getId())//
-				.put("type", response.getType())//
-				.put("version", response.getVersion());
-
-		return object;
+		K source = Json.toPojo(response.getSourceAsBytes(), object.sourceClass());
+		return object.version(response.getVersion()).source(source);
 	}
 
-	IndexResponse createObject(String type, ObjectNode object, String createdBy) {
-		return createObject(type, Optional.empty(), object, createdBy);
-	}
-
-	IndexResponse createObject(String type, String id, ObjectNode object, String createdBy) {
-		return createObject(type, Optional.of(id), object, createdBy);
-	}
-
-	IndexResponse createObject(String type, Optional<String> id, ObjectNode object, String createdBy) {
-
-		String now = DateTime.now().toString();
-
-		// replace meta to avoid developers to
-		// set any meta fields directly
-		object.set("meta", Json.objectBuilder()//
-				.put(CREATED_BY_FIELD, createdBy)//
-				.put(UPDATED_BY_FIELD, createdBy)//
-				.put(CREATED_AT_FIELD, now)//
-				.put(UPDATED_AT_FIELD, now)//
-				.build());
-
-		return id.isPresent() //
-				? elastic().index(toDataIndex(type), id.get(), object.toString())//
-				: elastic().index(toDataIndex(type), object.toString());
-	}
-
-	public Optional<Meta> getMeta(String type, String id) {
+	public Optional<DataObject<MetaWrapper>> getMeta(String type, String id) {
 
 		GetResponse response = elastic().prepareGet(toDataIndex(type), id)//
 				.setFetchSource(new String[] { META_FIELD }, null)//
 				.get();
 
+		DataObject<MetaWrapper> metadata = null;
+
 		if (response.isExists()) {
-			Meta meta = Json.toPojo(//
-					response.getSourceAsBytes(), MetaWrapper.class).meta;
-			meta.id = id;
-			meta.type = type;
-			meta.version = response.getVersion();
-			return Optional.of(meta);
+			metadata = new MetaWrapperDataObject()//
+					.type(type).id(id).version(response.getVersion())//
+					.source(Json.toPojo(response.getSourceAsBytes(), MetaWrapper.class));
 		}
 
-		return Optional.empty();
+		return Optional.ofNullable(metadata);
 	}
 
-	public IndexResponse updateObject(String type, String id, //
-			ObjectNode object, Meta meta) {
+	<K extends Metadata> DataObject<K> createObject(DataObject<K> object, String createdBy) {
 
-		object.remove(META_FIELD);
-		object.with(META_FIELD)//
-				.put(UPDATED_BY_FIELD, meta.updatedBy)//
-				.put(UPDATED_AT_FIELD, meta.updatedAt.toString())//
-				.put(CREATED_BY_FIELD, meta.createdBy)//
-				.put(CREATED_AT_FIELD, meta.createdAt.toString());
+		DateTime now = DateTime.now();
 
-		return elastic().prepareIndex(toDataIndex(type), id)//
-				.setSource(object.toString())//
-				.setVersion(meta.version)//
+		Meta meta = object.source().meta();
+		meta.createdBy(createdBy);
+		meta.updatedBy(createdBy);
+		meta.createdAt(now);
+		meta.updatedAt(now);
+
+		String source = Json.toString(object.source());
+
+		IndexResponse response = object.id() == null //
+				? elastic().index(toDataIndex(object.type()), source)//
+				: elastic().index(toDataIndex(object.type()), object.id(), source);
+
+		return object.id(response.getId())//
+				.version(response.getVersion())//
+				.justCreated(response.isCreated());
+	}
+
+	public <K extends Metadata> DataObject<K> updateObject(//
+			DataObject<K> object, String updatedBy) {
+
+		object.source().meta().updatedBy(updatedBy);
+		object.source().meta().updatedAt(DateTime.now());
+
+		IndexResponse response = elastic().prepareIndex(//
+				toDataIndex(object.type()), object.id())//
+				.setSource(Json.toString(object.source()))//
+				.setVersion(version(object))//
 				.get();
+
+		return object.version(response.getVersion())//
+				.justCreated(response.isCreated());
 	}
 
-	public UpdateResponse patchObject(String type, String id, ObjectNode object, String updatedBy) {
-		return patchObject(type, id, Versions.MATCH_ANY, object, updatedBy);
-	}
+	public <K> DataObject<K> patchObject(//
+			DataObject<K> object, String updatedBy) {
 
-	public UpdateResponse patchObject(String type, String id, long version, ObjectNode object, String updatedBy) {
-
-		object.with(META_FIELD).removeAll()//
+		ObjectNode source = Json.checkObject(Json.toNode(object.source()));
+		source.with(META_FIELD)//
+				.removeAll()//
 				.put(UPDATED_BY_FIELD, updatedBy)//
 				.put(UPDATED_AT_FIELD, DateTime.now().toString());
 
-		return elastic().prepareUpdate(toDataIndex(type), id)//
-				.setVersion(version).setDoc(object.toString()).get();
+		UpdateResponse response = elastic().prepareUpdate(toDataIndex(object.type()), object.id())//
+				.setVersion(version(object)).setDoc(source.toString()).get();
+
+		return object.version(response.getVersion())//
+				.justCreated(response.isCreated());
 	}
+
+	public static long version(DataObject<?> object) {
+		return object.version() == 0 ? Versions.MATCH_ANY : object.version();
+	}
+
+	//
+	// Index help methods
+	//
 
 	public static Index[] allDataIndices() {
 		String[] indices = elastic().filteredBackendIndices(Optional.of("data"));
@@ -226,6 +210,10 @@ public class DataStore implements SpaceParams, SpaceFields {
 				.toArray(Index[]::new);
 	}
 
+	//
+	// Search help methods
+	//
+
 	public SearchHits search(String type, Object... terms) {
 
 		if (terms.length % 2 == 1)
@@ -240,10 +228,6 @@ public class DataStore implements SpaceParams, SpaceFields {
 				.setTypes(type).setQuery(builder).get();
 
 		return response.getHits();
-	}
-
-	public FilteredSearchBuilder searchBuilder(String type) {
-		return new FilteredSearchBuilder(type);
 	}
 
 	public class FilteredSearchBuilder {
@@ -287,6 +271,10 @@ public class DataStore implements SpaceParams, SpaceFields {
 			return search.setQuery(boolBuilder).get();
 		}
 	}
+
+	//
+	// Refresh help methods
+	//
 
 	public void refreshDataTypes(String... types) {
 		refreshDataTypes(true, types);

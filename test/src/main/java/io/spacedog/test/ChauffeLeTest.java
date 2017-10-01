@@ -21,7 +21,7 @@ import io.spacedog.utils.JsonBuilder;
 
 public class ChauffeLeTest extends SpaceTest {
 
-	private static SpaceDog backend;
+	private static SpaceDog superadmin;
 
 	private static SpaceDog lui;
 	private static SpaceDog elle;
@@ -30,14 +30,14 @@ public class ChauffeLeTest extends SpaceTest {
 	@BeforeClass
 	public static void resetBackend() {
 
-		backend = resetTestBackend();
+		superadmin = resetTestBackend();
 
-		backend.schema().set(buildBigPostSchema());
-		backend.schema().set(buildSmallPostSchema());
+		superadmin.schema().set(buildBigPostSchema());
+		superadmin.schema().set(buildSmallPostSchema());
 
-		lui = signUp(backend, "lui", "hi lui", "lui@chauffe.le");
-		elle = signUp(backend, "elle", "hi elle", "elle@chauffe.le");
-		laCopine = signUp(backend, "lacopine", "hi la copine", "lacopine@chauffe.le");
+		lui = signUp(superadmin, "lui", "hi lui", "lui@chauffe.le");
+		elle = signUp(superadmin, "elle", "hi elle", "elle@chauffe.le");
+		laCopine = signUp(superadmin, "lacopine", "hi la copine", "lacopine@chauffe.le");
 	}
 
 	static Schema buildBigPostSchema() {
@@ -123,12 +123,13 @@ public class ChauffeLeTest extends SpaceTest {
 		@Override
 		public void addComment(SpaceDog user, String postId, String comment) {
 
-			ObjectNode bigPost = SpaceRequest.get("/1/data/bigpost/" + postId).auth(user).go(200).asJsonObject();
+			ObjectNode bigPost = (ObjectNode) user.get("/1/data/bigpost/" + postId)//
+					.go(200).get("source");
 
 			bigPost.withArray("responses")//
 					.add(Json.object("title", comment, "author", user.username()));
 
-			SpaceRequest.put("/1/data/bigpost/" + postId).auth(user).bodyJson(bigPost).go(200);
+			user.put("/1/data/bigpost/" + postId).bodyJson(bigPost).go(200);
 		}
 
 		@Override
@@ -194,8 +195,8 @@ public class ChauffeLeTest extends SpaceTest {
 					.put("field", "parent")//
 					.build();
 
-			JsonNode subjectResults = SpaceRequest.post("/1/search/smallpost")//
-			.refresh().auth(user).bodyJson(subjectQuery).go(200).asJson();
+			JsonNode subjectResults = user.post("/1/search/smallpost")//
+					.refresh().bodyJson(subjectQuery).go(200).asJson();
 
 			JsonBuilder<ObjectNode> responsesQuery = Json.objectBuilder()//
 					.put("from", 0)//
@@ -221,9 +222,9 @@ public class ChauffeLeTest extends SpaceTest {
 			Iterator<JsonNode> subjects = subjectResults.get("results").elements();
 
 			while (subjects.hasNext())
-				responsesQuery.add(subjects.next().get("meta").get("id").asText());
+				responsesQuery.add(subjects.next().get("id").asText());
 
-			SpaceRequest.post("/1/search/smallpost").auth(user).bodyJson(responsesQuery.build()).go(200);
+			user.post("/1/search/smallpost").bodyJson(responsesQuery.build()).go(200);
 
 			return subjectResults.get("results").elements();
 		}

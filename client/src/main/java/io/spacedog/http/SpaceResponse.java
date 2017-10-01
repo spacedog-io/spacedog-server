@@ -439,7 +439,11 @@ public class SpaceResponse {
 	}
 
 	public <K> K toPojo(Class<K> pojoClass) {
-		return Json.toPojo(asJson(), pojoClass);
+		return Json.toPojo(asString(), pojoClass);
+	}
+
+	public <K> K toPojo(K result) {
+		return Json.updatePojo(asString(), result);
 	}
 
 	public <K> K toPojo(String fieldPath, Class<K> pojoClass) {
