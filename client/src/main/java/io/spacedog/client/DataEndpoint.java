@@ -7,7 +7,7 @@ import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceResponse;
 import io.spacedog.model.DataObject;
-import io.spacedog.model.ObjectNodeDataObject;
+import io.spacedog.model.JsonDataObject;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.SpaceFields;
 import io.spacedog.utils.SpaceParams;
@@ -25,7 +25,7 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 	//
 
 	public DataObject<ObjectNode> get(String type, String id) {
-		return fetch(new ObjectNodeDataObject().type(type).id(id));
+		return fetch(new JsonDataObject().type(type).id(id));
 	}
 
 	public <K> DataObject<K> fetch(DataObject<K> object) {
@@ -37,11 +37,11 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 	}
 
 	public DataObject<ObjectNode> save(String type, ObjectNode source) {
-		return save(new ObjectNodeDataObject().type(type).source(source));
+		return save(new JsonDataObject().type(type).source(source));
 	}
 
 	public DataObject<ObjectNode> save(String type, String id, ObjectNode source) {
-		return save(new ObjectNodeDataObject().type(type).id(id).source(source));
+		return save(new JsonDataObject().type(type).id(id).source(source));
 	}
 
 	public <K> DataObject<K> save(DataObject<K> object) {
@@ -155,8 +155,8 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 			return this;
 		}
 
-		public ObjectNodeDataObject.Results get() {
-			return get(ObjectNodeDataObject.Results.class);
+		public JsonDataObject.Results get() {
+			return get(JsonDataObject.Results.class);
 		}
 
 		public <K> K get(Class<K> resultsClass) {

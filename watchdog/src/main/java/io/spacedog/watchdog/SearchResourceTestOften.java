@@ -14,7 +14,7 @@ import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.client.elastic.ESSortOrder;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceTest;
-import io.spacedog.model.ObjectNodeDataObject;
+import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
 
@@ -135,11 +135,11 @@ public class SearchResourceTestOften extends SpaceTest {
 
 		// search with ascendent sorting
 		ESSearchSourceBuilder builder = ESSearchSourceBuilder.searchSource().sort("i");
-		ObjectNodeDataObject.Results results = test.data().search(//
-				builder, ObjectNodeDataObject.Results.class, true);
+		JsonDataObject.Results results = test.data().search(//
+				builder, JsonDataObject.Results.class, true);
 		assertEquals(5, results.total);
 
-		List<ObjectNodeDataObject> objects = results.results;
+		List<JsonDataObject> objects = results.results;
 		for (int i = 0; i < objects.size(); i++) {
 			assertEquals(i, objects.get(i).source().get("i").asInt());
 			assertEquals(i, objects.get(i).sort()[0]);
@@ -147,7 +147,7 @@ public class SearchResourceTestOften extends SpaceTest {
 
 		// search with descendant sorting
 		builder = ESSearchSourceBuilder.searchSource().sort("t", ESSortOrder.DESC);
-		results = test.data().search(builder, ObjectNodeDataObject.Results.class, true);
+		results = test.data().search(builder, JsonDataObject.Results.class, true);
 		assertEquals(5, results.total);
 
 		objects = results.results;

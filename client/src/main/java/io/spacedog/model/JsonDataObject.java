@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 		getterVisibility = Visibility.NONE, //
 		isGetterVisibility = Visibility.NONE, //
 		setterVisibility = Visibility.NONE)
-public class ObjectNodeDataObject extends DataObjectAbstract<ObjectNode> {
+public class JsonDataObject extends DataObjectAbstract<ObjectNode> {
 
 	private ObjectNode source;
 
@@ -34,6 +34,6 @@ public class ObjectNodeDataObject extends DataObjectAbstract<ObjectNode> {
 
 		public long total;
 		public ObjectNode aggregations;
-		public List<ObjectNodeDataObject> results;
+		public List<JsonDataObject> results;
 	}
 }

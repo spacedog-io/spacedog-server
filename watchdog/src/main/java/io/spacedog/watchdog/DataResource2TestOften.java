@@ -33,7 +33,7 @@ import io.spacedog.model.DataObjectAbstract;
 import io.spacedog.model.GeoPoint;
 import io.spacedog.model.Meta;
 import io.spacedog.model.Metadata;
-import io.spacedog.model.ObjectNodeDataObject;
+import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
 import io.spacedog.watchdog.DataResource2TestOften.Sale.Item;
@@ -371,8 +371,8 @@ public class DataResource2TestOften extends SpaceTest {
 	private Collection<String> fetchMessages(SpaceDog user, int from, int size) {
 		ESSearchSourceBuilder builder = ESSearchSourceBuilder.searchSource()//
 				.from(from).size(size);
-		ObjectNodeDataObject.Results results = user.data()//
-				.search("message", builder, ObjectNodeDataObject.Results.class, true);
+		JsonDataObject.Results results = user.data()//
+				.search("message", builder, JsonDataObject.Results.class, true);
 
 		assertEquals(4, results.total);
 		assertEquals(size, results.results.size());

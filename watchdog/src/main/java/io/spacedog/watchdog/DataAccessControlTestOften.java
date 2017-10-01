@@ -15,7 +15,7 @@ import io.spacedog.http.SpaceTest;
 import io.spacedog.model.DataObject;
 import io.spacedog.model.DataPermission;
 import io.spacedog.model.InternalDataSettings;
-import io.spacedog.model.ObjectNodeDataObject;
+import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.Schema;
 import io.spacedog.model.Schema.DataAcl;
 import io.spacedog.utils.Json;
@@ -235,7 +235,7 @@ public class DataAccessControlTestOften extends SpaceTest {
 		// he's got all the rights
 		SpaceDog dave = signUp(superadmin, "dave", "hi dave");
 		superadmin.credentials().setRole(dave.id(), "platine");
-		DataObject<ObjectNode> message = new ObjectNodeDataObject()//
+		DataObject<ObjectNode> message = new JsonDataObject()//
 				.source(Json.object("text", "hi"))//
 				.type("message")//
 				.id("1");

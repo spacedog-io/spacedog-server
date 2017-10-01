@@ -22,7 +22,7 @@ import io.spacedog.model.DataObject;
 import io.spacedog.model.DataObjects;
 import io.spacedog.model.Installation;
 import io.spacedog.model.InstallationDataObject;
-import io.spacedog.model.ObjectNodeDataObject;
+import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.PushService;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Check;
@@ -378,7 +378,7 @@ public class PushResource extends Resource {
 
 				// update installation badge in data store
 				DataObject<ObjectNode> patch = DataObjects.copyIdentity(//
-						installation, new ObjectNodeDataObject())//
+						installation, new JsonDataObject())//
 						.source(Json.object(BADGE, installation.source().badge()));
 
 				DataStore.get().patchObject(patch, credentials.name());
