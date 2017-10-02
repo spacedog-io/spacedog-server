@@ -14,11 +14,10 @@ public interface SpaceFields {
 	String EMAIL_FIELD = "email";
 	String ENABLED_FIELD = "enabled";
 	String USERNAME_FIELD = "username";
-	String META_FIELD = "meta";
+	String OWNER_FIELD = "owner";
+	String GROUP_FIELD = "group";
 	String UPDATED_AT_FIELD = "updatedAt";
 	String CREATED_AT_FIELD = "createdAt";
-	String UPDATED_BY_FIELD = "updatedBy";
-	String CREATED_BY_FIELD = "createdBy";
 	String SESSIONS_FIELD = "sessions";
 	String STASH_FIELD = "stash";
 	String ACCESS_TOKEN_FIELD = "accessToken";

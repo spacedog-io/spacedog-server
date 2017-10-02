@@ -152,7 +152,7 @@ public class PushResource extends Resource {
 		DataObject<Installation> installation = load(id);
 		String[] tags = Json.toPojo(body, String[].class);
 		installation.source().tags().addAll(Sets.newHashSet(tags));
-		update(installation, SpaceContext.credentials());
+		DataStore.get().updateObject(installation);
 		return JsonPayload.saved(false, "/1", TYPE, id).build();
 	}
 
@@ -168,7 +168,7 @@ public class PushResource extends Resource {
 		DataObject<Installation> installation = load(id);
 		String[] tags = Json.toPojo(body, String[].class);
 		installation.source().tags().removeAll(Sets.newHashSet(tags));
-		update(installation, SpaceContext.credentials());
+		DataStore.get().updateObject(installation);
 		return JsonPayload.saved(false, "/1", TYPE, id).build();
 	}
 
@@ -381,7 +381,7 @@ public class PushResource extends Resource {
 						installation, new JsonDataObject())//
 						.source(Json.object(BADGE, installation.source().badge()));
 
-				DataStore.get().patchObject(patch, credentials.name());
+				DataStore.get().patchObject(patch);
 			}
 
 			message.with(installation.source().pushService().toString())//
@@ -423,17 +423,12 @@ public class PushResource extends Resource {
 		source.credentialsId(credentials.isAtLeastUser() ? credentials.id() : null);
 
 		return id.isPresent() //
-				? DataResource.get().put(installation, false, context) //
-				: DataResource.get().post(installation);
+				? DataResource.get().doPut(installation, false, context) //
+				: DataResource.get().doPost(installation);
 	}
 
 	private DataObject<Installation> load(String id) {
 		return DataStore.get().getObject(new InstallationDataObject().id(id));
-	}
-
-	private DataObject<Installation> update(//
-			DataObject<Installation> installation, Credentials credentials) {
-		return DataStore.get().updateObject(installation, credentials.name());
 	}
 
 	//

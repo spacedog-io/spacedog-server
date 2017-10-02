@@ -8,27 +8,33 @@ import java.util.Iterator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class SchemaTranslator {
+public class SchemaTranslator implements SpaceFields {
 
-	private static JsonNode META_MAPPING = Json.builder().object()//
-			.add("type", "object") //
-			.object("properties") //
-			.object("createdBy") //
-			.add("type", "string") //
-			.add("index", "not_analyzed") //
-			.end() //
-			.object("updatedBy") //
-			.add("type", "string") //
-			.add("index", "not_analyzed") //
-			.end() //
-			.object("createdAt") //
-			.add("type", "date") //
-			.add("format", "date_time") //
-			.end() //
-			.object("updatedAt") //
-			.add("type", "date") //
-			.add("format", "date_time") //
-			.build(); //
+	private static final ObjectNode STASH = //
+			Json.object("type", "object", "enabled", false);
+	private static final ObjectNode STRING = //
+			Json.object("type", "string", "index", "not_analyzed");
+
+	private static final ObjectNode TIMESTAMP = //
+			Json.object("type", "date", "format", "date_time");
+	private static final ObjectNode DATE = //
+			Json.object("type", "date", "format", "date");
+	private static final ObjectNode TIME = //
+			Json.object("type", "date", "format", "hour_minute_second");
+
+	private static final ObjectNode BOOLEAN = //
+			Json.object("type", "boolean");
+	private static final ObjectNode INTEGER = //
+			Json.object("type", "integer", "coerce", "false");
+	private static final ObjectNode LONG = //
+			Json.object("type", "long", "coerce", "false");
+	private static final ObjectNode FLOAT = //
+			Json.object("type", "float", "coerce", "false");
+	private static final ObjectNode DOUBLE = //
+			Json.object("type", "double", "coerce", "false");
+	private static final ObjectNode GEOPOINT = //
+			Json.object("type", "geo_point", "lat_lon", true, "geohash", true, //
+					"geohash_precision", "1m", "geohash_prefix", "true");
 
 	public static ObjectNode translate(String type, JsonNode schema) {
 
@@ -43,7 +49,7 @@ public class SchemaTranslator {
 		String type = schema.path("_type").asText("object");
 
 		ObjectNode propertiesNode = toElasticProperties(schema);
-		propertiesNode.set("meta", META_MAPPING);
+		addMetadataFields(propertiesNode);
 
 		if ("object".equals(type)) {
 			JsonBuilder<ObjectNode> builder = Json.builder().object()//
@@ -54,6 +60,13 @@ public class SchemaTranslator {
 			return builder.build();
 		} else
 			throw Exceptions.illegalArgument("invalid schema root type [%s]", type);
+	}
+
+	private static void addMetadataFields(ObjectNode propertiesNode) {
+		propertiesNode.set(OWNER_FIELD, STRING);
+		propertiesNode.set(GROUP_FIELD, STRING);
+		propertiesNode.set(CREATED_AT_FIELD, TIMESTAMP);
+		propertiesNode.set(UPDATED_AT_FIELD, TIMESTAMP);
 	}
 
 	private static ObjectNode toElasticProperties(JsonNode schema) {
@@ -70,57 +83,38 @@ public class SchemaTranslator {
 	}
 
 	private static ObjectNode toElasticProperty(String key, JsonNode schema) {
-		JsonBuilder<ObjectNode> mapping = Json.builder().object();
 		String type = schema.path("_type").asText("object");
+		if ("text".equals(type))
+			return Json.object("type", "string", "index", "analyzed", //
+					"analyzer", schema.path("_language").asText("english"));
+		else if ("string".equals(type))
+			return STRING;
+		else if ("boolean".equals(type))
+			return BOOLEAN;
+		else if ("integer".equals(type))
+			return INTEGER;
+		else if ("long".equals(type))
+			return LONG;
+		else if ("float".equals(type))
+			return FLOAT;
+		else if ("double".equals(type))
+			return DOUBLE;
+		else if ("date".equals(type))
+			return DATE;
+		else if ("time".equals(type))
+			return TIME;
+		else if ("timestamp".equals(type))
+			return TIMESTAMP;
+		else if ("enum".equals(type))
+			return STRING;
+		else if ("geopoint".equals(type))
+			return GEOPOINT;
+		else if ("object".equals(type))
+			return Json.object("type", "object", //
+					"properties", toElasticProperties(schema));
+		else if ("stash".equals(type))
+			return STASH;
 
-		if ("text".equals(type)) {
-			mapping.add("type", "string");
-			mapping.add("index", "analyzed");
-			mapping.add("analyzer", schema.path("_language").asText("english"));
-		} else if ("string".equals(type)) {
-			mapping.add("type", "string");
-			mapping.add("index", "not_analyzed");
-		} else if ("boolean".equals(type)) {
-			mapping.add("type", "boolean");
-		} else if ("integer".equals(type)) {
-			mapping.add("type", "integer");
-			mapping.add("coerce", "false");
-		} else if ("long".equals(type)) {
-			mapping.add("type", "long");
-			mapping.add("coerce", "false");
-		} else if ("float".equals(type)) {
-			mapping.add("type", "float");
-			mapping.add("coerce", "false");
-		} else if ("double".equals(type)) {
-			mapping.add("type", "double");
-			mapping.add("coerce", "false");
-		} else if ("date".equals(type)) {
-			mapping.add("type", "date");
-			mapping.add("format", "date");
-		} else if ("time".equals(type)) {
-			mapping.add("type", "date");
-			mapping.add("format", "hour_minute_second");
-		} else if ("timestamp".equals(type)) {
-			mapping.add("type", "date");
-			mapping.add("format", "date_time");
-		} else if ("enum".equals(type)) {
-			mapping.add("type", "string");
-			mapping.add("index", "not_analyzed");
-		} else if ("geopoint".equals(type)) {
-			mapping.add("type", "geo_point");
-			mapping.add("lat_lon", true);
-			mapping.add("geohash", true);
-			mapping.add("geohash_precision", "1m");
-			mapping.add("geohash_prefix", "true");
-		} else if ("object".equals(type)) {
-			mapping.add("type", "object");
-			mapping.add("properties", toElasticProperties(schema));
-		} else if ("stash".equals(type)) {
-			mapping.add("type", "object");
-			mapping.add("enabled", false);
-		} else {
-			throw Exceptions.illegalArgument("invalid type [%s] for property [%s]", type, key);
-		}
-		return mapping.build();
+		throw Exceptions.illegalArgument("invalid type [%s] for property [%s]", type, key);
 	}
 }

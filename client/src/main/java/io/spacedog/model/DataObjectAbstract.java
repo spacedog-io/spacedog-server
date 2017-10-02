@@ -1,16 +1,22 @@
 package io.spacedog.model;
 
+import org.joda.time.DateTime;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import io.spacedog.utils.Json;
+import io.spacedog.utils.SpaceFields;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, //
 		getterVisibility = Visibility.NONE, //
 		isGetterVisibility = Visibility.NONE, //
 		setterVisibility = Visibility.NONE)
-public abstract class DataObjectAbstract<K> implements DataObject<K> {
+public abstract class DataObjectAbstract<K> implements DataObject<K>, SpaceFields {
 
 	private String id;
 	private String type;
@@ -70,26 +76,84 @@ public abstract class DataObjectAbstract<K> implements DataObject<K> {
 		return dataClass.getSimpleName().toLowerCase();
 	}
 
-	public Meta meta() {
+	@Override
+	public String owner() {
 		K source = source();
 		if (source instanceof Metadata)
-			return ((Metadata) source).meta();
-		if (source instanceof ObjectNode)
-			return new ObjectNodeMeta((ObjectNode) source);
-		return new Meta();
+			return ((Metadata) source).owner();
+		if (source instanceof ObjectNode) {
+			JsonNode node = ((ObjectNode) source).get(OWNER_FIELD);
+			return Json.isNull(node) ? null : node.asText();
+		}
+		return null;
 	}
 
-	public void meta(Meta meta) {
+	@Override
+	public void owner(String owner) {
 		K source = source();
 		if (source instanceof Metadata)
-			((Metadata) source).meta(meta);
-		else if (source instanceof ObjectNode) {
-			ObjectNodeMeta objectNodeMeta = new ObjectNodeMeta((ObjectNode) source);
-			objectNodeMeta.createdAt(meta.createdAt());
-			objectNodeMeta.createdBy(meta.createdBy());
-			objectNodeMeta.updatedAt(meta.updatedAt());
-			objectNodeMeta.updatedBy(meta.updatedBy());
+			((Metadata) source).owner(owner);
+		else if (source instanceof ObjectNode)
+			((ObjectNode) source).put(OWNER_FIELD, owner);
+	}
+
+	@Override
+	public String group() {
+		K source = source();
+		if (source instanceof Metadata)
+			return ((Metadata) source).group();
+		if (source instanceof ObjectNode) {
+			JsonNode node = ((ObjectNode) source).get(GROUP_FIELD);
+			return Json.isNull(node) ? null : node.asText();
 		}
+		return null;
+	}
+
+	@Override
+	public void group(String group) {
+		K source = source();
+		if (source instanceof Metadata)
+			((Metadata) source).group(group);
+		else if (source instanceof ObjectNode)
+			((ObjectNode) source).put(GROUP_FIELD, group);
+	}
+
+	@Override
+	public DateTime createdAt() {
+		K source = source();
+		if (source instanceof Metadata)
+			return ((Metadata) source).createdAt();
+		if (source instanceof ObjectNode)
+			return Json.toPojo(((ObjectNode) source).get(CREATED_AT_FIELD), DateTime.class);
+		return null;
+	}
+
+	@Override
+	public void createdAt(DateTime createdAt) {
+		K source = source();
+		if (source instanceof Metadata)
+			((Metadata) source).createdAt(createdAt);
+		else if (source instanceof ObjectNode)
+			((ObjectNode) source).put(CREATED_AT_FIELD, createdAt.toString());
+	}
+
+	@Override
+	public DateTime updatedAt() {
+		K source = source();
+		if (source instanceof Metadata)
+			return ((Metadata) source).updatedAt();
+		if (source instanceof ObjectNode)
+			return Json.toPojo(((ObjectNode) source).get(UPDATED_AT_FIELD), DateTime.class);
+		return null;
+	}
+
+	@Override
+	public void updatedAt(DateTime updatedAt) {
+		K source = source();
+		if (source instanceof Metadata)
+			((Metadata) source).updatedAt(updatedAt);
+		else if (source instanceof ObjectNode)
+			((ObjectNode) source).put(UPDATED_AT_FIELD, updatedAt.toString());
 	}
 
 }

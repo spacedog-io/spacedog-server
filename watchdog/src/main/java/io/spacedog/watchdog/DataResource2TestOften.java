@@ -31,9 +31,8 @@ import io.spacedog.http.SpaceTest;
 import io.spacedog.model.DataObject;
 import io.spacedog.model.DataObjectAbstract;
 import io.spacedog.model.GeoPoint;
-import io.spacedog.model.Meta;
-import io.spacedog.model.Metadata;
 import io.spacedog.model.JsonDataObject;
+import io.spacedog.model.MetadataBase;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
 import io.spacedog.watchdog.DataResource2TestOften.Sale.Item;
@@ -71,7 +70,7 @@ public class DataResource2TestOften extends SpaceTest {
 		}
 	}
 
-	public static class Sale implements Metadata {
+	public static class Sale extends MetadataBase {
 
 		public String number;
 		public DateTime when;
@@ -80,23 +79,12 @@ public class DataResource2TestOften extends SpaceTest {
 		public LocalDate deliveryDate;
 		public LocalTime deliveryTime;
 		public List<Item> items;
-		public Meta meta;
 
 		public static class Item {
 			public String ref;
 			public String description;
 			public int quantity;
 			public String type;
-		}
-
-		@Override
-		public Meta meta() {
-			return meta;
-		}
-
-		@Override
-		public void meta(Meta meta) {
-			this.meta = meta;
 		}
 
 	}
@@ -162,8 +150,8 @@ public class DataResource2TestOften extends SpaceTest {
 		// find by id
 		DataObject<Sale> saleDO3 = fred.data().fetch(new SaleDataObject().id(saleDO2.id()));
 
-		assertEquals("fred", saleDO3.source().meta().createdBy());
-		assertEquals("fred", saleDO3.source().meta().updatedBy());
+		assertEquals(fred.id(), saleDO3.owner());
+		assertNull(saleDO3.group());
 		assertEquals(1, saleDO3.version());
 		assertEquals("sale", saleDO3.type());
 		assertEquals(saleDO2.id(), saleDO3.id());
@@ -186,8 +174,8 @@ public class DataResource2TestOften extends SpaceTest {
 		assertEquals(2, saleDO3.source().items.get(1).quantity);
 		assertEquals("visit", saleDO3.source().items.get(1).type);
 
-		assertEquals(saleDO3.source().meta().createdAt(), saleDO3.source().meta().updatedAt());
-		assertDateIsRecent(saleDO3.source().meta().createdAt());
+		assertEquals(saleDO3.createdAt(), saleDO3.updatedAt());
+		assertDateIsRecent(saleDO3.createdAt());
 
 		ObjectNode saleNode3 = Json.checkObject(Json.toJsonNode(saleDO3.source()));
 		assertSourceAlmostEquals(saleNode, saleNode3);
@@ -221,8 +209,8 @@ public class DataResource2TestOften extends SpaceTest {
 
 		// check update is correct
 		DataObject<Sale> saleDO6 = fred.data().fetch(new SaleDataObject().id(saleDO2.id()));
-		assertEquals("fred", saleDO6.source().meta().createdBy());
-		assertEquals("fred", saleDO6.source().meta().updatedBy());
+		assertEquals(fred.id(), saleDO6.owner());
+		assertNull(saleDO6.group());
 		// assertEquals(sale2.source().meta().createdAt,
 		// sale6.source().meta().createdAt);
 		// assertDateIsRecent(sale6.source().meta().updatedAt);
@@ -233,8 +221,7 @@ public class DataResource2TestOften extends SpaceTest {
 
 		// check equality on what has not been updated
 		ObjectNode saleNode6 = Json.checkObject(Json.toJsonNode(saleDO6.source()));
-		assertEquals(saleNode.deepCopy().without(Lists.newArrayList("meta", "items")), //
-				saleNode6.deepCopy().without(Lists.newArrayList("meta", "items")));
+		assertSourceAlmostEquals(saleNode, saleNode6, "items");
 
 		// update with invalid version should fail
 		fred.put("/1/data/sale/" + saleDO2.id()).queryParam("version", "1")//
@@ -256,8 +243,7 @@ public class DataResource2TestOften extends SpaceTest {
 
 		saleNode6 = Json.checkObject(Json.toJsonNode(saleDO6.source()));
 		ObjectNode saleNode7 = Json.checkObject(Json.toJsonNode(saleDO7.source()));
-		assertEquals(saleNode6.deepCopy().without(Lists.newArrayList("meta", "items")), //
-				saleNode7.deepCopy().without(Lists.newArrayList("meta", "items")));
+		assertSourceAlmostEquals(saleNode6, saleNode7, "items");
 
 		// vince fails to update nor delete this sale since not the owner
 		SpaceDog vince = signUp(test, "vince", "hi vince");
@@ -313,13 +299,13 @@ public class DataResource2TestOften extends SpaceTest {
 		ObjectNode message = Json.object("text", "id=?");
 		DataObject<ObjectNode> createObject = superadmin.data().save("message", message);
 		DataObject<ObjectNode> getObject = superadmin.data().get("message", createObject.id());
-		assertEquals(message, getObject.source().without("meta"));
+		assertSourceAlmostEquals(message, getObject.source());
 
 		// creates a message object with self provided id
 		message = Json.object("text", "id=1");
 		superadmin.data().save("message", "1", message);
 		getObject = superadmin.data().get("message", "1");
-		assertEquals(message, getObject.source().without("meta"));
+		assertSourceAlmostEquals(message, getObject.source());
 
 		// an id field does not force the id field
 		superadmin.post("/1/data/message").bodyJson("text", "id=2", "id", 2).go(400);
@@ -401,7 +387,7 @@ public class DataResource2TestOften extends SpaceTest {
 				.bodyJson(TextNode.valueOf("dupont")).go(201);
 		DataObject<ObjectNode> home = superadmin.data().get("home", "1");
 		ObjectNode homeNode = Json.object("name", "dupont");
-		assertEquals(homeNode, home.source().without(META_FIELD));
+		assertSourceAlmostEquals(homeNode, home.source());
 
 		// guest is forbidden to update home 1 name
 		guest.put("/1/data/home/1/name")//
@@ -412,13 +398,13 @@ public class DataResource2TestOften extends SpaceTest {
 				.bodyJson(IntNode.valueOf(6)).go(200);
 		home = superadmin.data().get("home", "1");
 		homeNode.set("garage", Json.object("places", 6));
-		assertEquals(homeNode, home.source().without(META_FIELD));
+		assertSourceAlmostEquals(homeNode, home.source());
 
 		// superadmin removes home 1 garage
 		superadmin.delete("/1/data/home/1/garage").go(200);
 		home = superadmin.data().get("home", "1");
 		homeNode.remove("garage");
-		assertEquals(homeNode, home.source().without(META_FIELD));
+		assertSourceAlmostEquals(homeNode, home.source());
 
 		// guest is forbidden to remove home 1 name
 		guest.delete("/1/data/home/1/name").go(403);

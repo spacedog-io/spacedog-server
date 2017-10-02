@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.model.DataObject;
 import io.spacedog.model.DataPermission;
 import io.spacedog.model.JsonDataObject;
-import io.spacedog.model.MetaWrapper;
+import io.spacedog.model.MetadataBase;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -48,7 +48,7 @@ public class DataResource extends Resource {
 	public Payload post(String type, String body, Context context) {
 		DataObject<ObjectNode> object = new JsonDataObject()//
 				.type(type).source(Json.readObject(body));
-		return post(object);
+		return doPost(object);
 	}
 
 	@Delete("/:type")
@@ -60,7 +60,7 @@ public class DataResource extends Resource {
 	@Get("/:type/:id")
 	@Get("/:type/:id/")
 	public Payload getById(String type, String id, Context context) {
-		return JsonPayload.ok().withObject(get(type, id)).build();
+		return JsonPayload.ok().withObject(doGet(type, id)).build();
 	}
 
 	@Put("/:type/:id")
@@ -69,7 +69,7 @@ public class DataResource extends Resource {
 		DataObject<ObjectNode> object = new JsonDataObject()//
 				.type(type).id(id).source(Json.readObject(body));
 		boolean patch = !context.query().getBoolean(STRICT_PARAM, false);
-		return put(object, patch, context);
+		return doPut(object, patch, context);
 	}
 
 	@Delete("/:type/:id")
@@ -77,20 +77,19 @@ public class DataResource extends Resource {
 	public Payload deleteById(String type, String id, Context context) {
 		Credentials credentials = SpaceContext.credentials();
 
-		if (DataAccessControl.check(credentials, type, DataPermission.delete_all)) {
-			elastic().delete(DataStore.toDataIndex(type), id, false, true);
-			return JsonPayload.ok().build();
+		if (DataAccessControl.check(credentials, type, DataPermission.delete_all))
+			return doDeleteById(type, id);
 
-		} else if (DataAccessControl.check(credentials, type, DataPermission.delete)) {
-			DataObject<ObjectNode> object = DataStore.get().getObject(//
-					new JsonDataObject().type(type).id(id));
+		if (DataAccessControl.check(credentials, type, DataPermission.delete)) {
+			Optional<DataObject<MetadataBase>> metadata = DataStore.get().getMetadata(type, id);
 
-			if (credentials.name().equals(Json.get(object.source(), "meta.createdBy").asText())) {
-				elastic().delete(DataStore.toDataIndex(type), id, false, true);
-				return JsonPayload.ok().build();
-			} else
-				throw Exceptions.forbidden(//
-						"not the owner of object of type [%s] and id [%s]", type, id);
+			if (!metadata.isPresent())
+				throw Exceptions.notFound(type, id);
+
+			if (credentials.id().equals(metadata.get().owner()))
+				return doDeleteById(type, id);
+
+			throw Exceptions.forbidden("not the owner of object [%s][%s]", type, id);
 		}
 		throw Exceptions.forbidden("forbidden to delete [%s] objects", type);
 	}
@@ -98,7 +97,7 @@ public class DataResource extends Resource {
 	@Get("/:type/:id/:field")
 	@Get("/:type/:id/:field/")
 	public Payload getField(String type, String id, String fieldPath, Context context) {
-		return JsonPayload.ok().withObject(Json.get(get(type, id).source(), fieldPath)).build();
+		return JsonPayload.ok().withObject(Json.get(doGet(type, id).source(), fieldPath)).build();
 	}
 
 	@Put("/:type/:id/:field")
@@ -108,22 +107,22 @@ public class DataResource extends Resource {
 		Json.with(source, fieldPath, Json.readNode(body));
 		DataObject<ObjectNode> object = new JsonDataObject()//
 				.type(type).id(id).source(source);
-		return put(object, true, context);
+		return doPut(object, true, context);
 	}
 
 	@Delete("/:type/:id/:field")
 	@Delete("/:type/:id/:field/")
 	public Payload deleteField(String type, String id, String fieldPath, Context context) {
-		DataObject<ObjectNode> object = get(type, id);
+		DataObject<ObjectNode> object = doGet(type, id);
 		Json.remove(object.source(), fieldPath);
-		return put(object, false, context);
+		return doPut(object, false, context);
 	}
 
 	//
 	// Implementation
 	//
 
-	protected DataObject<ObjectNode> get(String type, String id) {
+	protected DataObject<ObjectNode> doGet(String type, String id) {
 
 		Credentials credentials = SpaceContext.credentials();
 		if (DataAccessControl.check(credentials, type, DataPermission.read_all, DataPermission.search))
@@ -133,7 +132,7 @@ public class DataResource extends Resource {
 			DataObject<ObjectNode> object = DataStore.get().getObject(//
 					new JsonDataObject().type(type).id(id));
 
-			if (!credentials.name().equals(object.meta().createdBy()))
+			if (!credentials.id().equals(object.owner()))
 				throw Exceptions.forbidden("not the owner of object [%s][%s]", type, id);
 
 			return object;
@@ -141,53 +140,56 @@ public class DataResource extends Resource {
 		throw Exceptions.forbidden("forbidden to read [%s] objects", type);
 	}
 
-	public <K> Payload put(DataObject<K> object, boolean patch, Context context) {
-		Optional<DataObject<MetaWrapper>> metaOpt = DataStore.get()//
-				.getMeta(object.type(), object.id());
+	public <K> Payload doPut(DataObject<K> object, boolean patch, Context context) {
+		Optional<DataObject<MetadataBase>> metaOpt = DataStore.get()//
+				.getMetadata(object.type(), object.id());
 
 		if (metaOpt.isPresent()) {
-			DataObject<MetaWrapper> metadata = metaOpt.get();
+			DataObject<MetadataBase> metadata = metaOpt.get();
 			Credentials credentials = SpaceContext.credentials();
 			checkPutPermissions(metadata, credentials);
 
-			// reset object meta with meta from database
-			object.meta(metadata.meta());
+			// avoid any update on createdAt field
+			object.createdAt(metadata.createdAt());
 
-			// TODO return better exception-message in case of invalid version
-			// format
+			// TODO return better exception-message in case of invalid format
 			object.version(context.query().getLong(VERSION_PARAM, Versions.MATCH_ANY));
 
-			object = patch //
-					? DataStore.get().patchObject(object, credentials.name())//
-					: DataStore.get().updateObject(object, credentials.name());
+			object = patch ? DataStore.get().patchObject(object)//
+					: DataStore.get().updateObject(object);
 
 			return ElasticPayload.saved("/1/data", object).build();
 
 		} else
-			return post(object);
+			return doPost(object);
 	}
 
-	protected <K> Payload post(DataObject<K> object) {
-
+	protected <K> Payload doPost(DataObject<K> object) {
 		Credentials credentials = SpaceContext.credentials();
 
 		if (DataAccessControl.check(credentials, object.type(), DataPermission.create)) {
-
-			object = DataStore.get().createObject(object, credentials.name());
+			if (object.owner() == null)
+				object.owner(credentials.id());
+			object = DataStore.get().createObject(object);
 			return ElasticPayload.saved("/1/data", object).build();
 		}
 
 		throw Exceptions.forbidden("forbidden to create [%s] objects", object.type());
 	}
 
-	public void checkPutPermissions(DataObject<MetaWrapper> metadata, Credentials credentials) {
+	private Payload doDeleteById(String type, String id) {
+		elastic().delete(DataStore.toDataIndex(type), id, false, true);
+		return JsonPayload.ok().build();
+	}
+
+	public void checkPutPermissions(DataObject<MetadataBase> metadata, Credentials credentials) {
 
 		if (DataAccessControl.check(credentials, metadata.type(), DataPermission.update_all))
 			return;
 
 		if (DataAccessControl.check(credentials, metadata.type(), DataPermission.update)) {
 
-			if (credentials.name().equals(metadata.source().meta().createdBy()))
+			if (credentials.id().equals(metadata.owner()))
 				return;
 
 			throw Exceptions.forbidden("not the owner of [%s][%s] object", //

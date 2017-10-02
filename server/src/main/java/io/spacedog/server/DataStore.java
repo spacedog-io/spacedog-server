@@ -29,9 +29,8 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
 import io.spacedog.model.DataObject;
-import io.spacedog.model.Meta;
-import io.spacedog.model.MetaWrapper;
-import io.spacedog.model.MetaWrapperDataObject;
+import io.spacedog.model.MetadataBase;
+import io.spacedog.model.MetadataDataObject;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -114,32 +113,30 @@ public class DataStore implements SpaceParams, SpaceFields {
 		return object.version(response.getVersion()).source(source);
 	}
 
-	public Optional<DataObject<MetaWrapper>> getMeta(String type, String id) {
+	private static final String[] METADATA_FIELDS = //
+			new String[] { OWNER_FIELD, GROUP_FIELD, CREATED_AT_FIELD, UPDATED_AT_FIELD };
+
+	public Optional<DataObject<MetadataBase>> getMetadata(String type, String id) {
 
 		GetResponse response = elastic().prepareGet(toDataIndex(type), id)//
-				.setFetchSource(new String[] { META_FIELD }, null)//
+				.setFetchSource(METADATA_FIELDS, null)//
 				.get();
 
-		DataObject<MetaWrapper> metadata = null;
+		DataObject<MetadataBase> metadata = null;
 
-		if (response.isExists()) {
-			metadata = new MetaWrapperDataObject()//
+		if (response.isExists())
+			metadata = new MetadataDataObject()//
 					.type(type).id(id).version(response.getVersion())//
-					.source(Json.toPojo(response.getSourceAsBytes(), MetaWrapper.class));
-		}
+					.source(Json.toPojo(response.getSourceAsBytes(), MetadataBase.class));
 
 		return Optional.ofNullable(metadata);
 	}
 
-	<K> DataObject<K> createObject(DataObject<K> object, String createdBy) {
+	<K> DataObject<K> createObject(DataObject<K> object) {
 
 		DateTime now = DateTime.now();
-
-		Meta meta = object.meta();
-		meta.createdBy(createdBy);
-		meta.updatedBy(createdBy);
-		meta.createdAt(now);
-		meta.updatedAt(now);
+		object.createdAt(now);
+		object.updatedAt(now);
 
 		String source = Json.toString(object.source());
 
@@ -152,10 +149,9 @@ public class DataStore implements SpaceParams, SpaceFields {
 				.justCreated(response.isCreated());
 	}
 
-	public <K> DataObject<K> updateObject(DataObject<K> object, String updatedBy) {
+	public <K> DataObject<K> updateObject(DataObject<K> object) {
 
-		object.meta().updatedBy(updatedBy);
-		object.meta().updatedAt(DateTime.now());
+		object.updatedAt(DateTime.now());
 
 		IndexResponse response = elastic().prepareIndex(//
 				toDataIndex(object.type()), object.id())//
@@ -167,14 +163,10 @@ public class DataStore implements SpaceParams, SpaceFields {
 				.justCreated(response.isCreated());
 	}
 
-	public <K> DataObject<K> patchObject(//
-			DataObject<K> object, String updatedBy) {
+	public <K> DataObject<K> patchObject(DataObject<K> object) {
 
-		ObjectNode source = Json.checkObject(Json.toJsonNode(object.source()));
-		source.with(META_FIELD)//
-				.removeAll()//
-				.put(UPDATED_BY_FIELD, updatedBy)//
-				.put(UPDATED_AT_FIELD, DateTime.now().toString());
+		ObjectNode source = Json.toObjectNode(object.source());
+		source.put(UPDATED_AT_FIELD, DateTime.now().toString());
 
 		UpdateResponse response = elastic().prepareUpdate(toDataIndex(object.type()), object.id())//
 				.setVersion(version(object)).setDoc(source.toString()).get();

@@ -12,9 +12,8 @@ import com.google.common.collect.Sets;
 		getterVisibility = Visibility.NONE, //
 		isGetterVisibility = Visibility.NONE, //
 		setterVisibility = Visibility.NONE)
-public class Installation implements Metadata {
+public class Installation extends MetadataBase {
 
-	private Meta meta = new Meta();
 	private String appId;
 	private PushService pushService;
 	private String token;
@@ -22,16 +21,6 @@ public class Installation implements Metadata {
 	private String credentialsId;
 	private int badge;
 	private Set<String> tags;
-
-	@Override
-	public Meta meta() {
-		return meta;
-	}
-
-	@Override
-	public void meta(Meta meta) {
-		this.meta = meta;
-	}
 
 	public String appId() {
 		return appId;

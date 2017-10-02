@@ -63,10 +63,9 @@ public class SearchResourceTestOften extends SpaceTest {
 		assertNotNull(Json.get(results, "results.0.id"));
 		assertNotNull(Json.get(results, "results.0.type"));
 		assertNotNull(Json.get(results, "results.0.version"));
-		assertNotNull(Json.get(results, "results.0.source.meta.createdBy"));
-		assertNotNull(Json.get(results, "results.0.source.meta.createdAt"));
-		assertNotNull(Json.get(results, "results.0.source.meta.updatedBy"));
-		assertNotNull(Json.get(results, "results.0.source.meta.updatedAt"));
+		assertNotNull(Json.get(results, "results.0.source.owner"));
+		assertNotNull(Json.get(results, "results.0.source.createdAt"));
+		assertNotNull(Json.get(results, "results.0.source.updatedAt"));
 
 		// deletes messages containing 'up' by query
 

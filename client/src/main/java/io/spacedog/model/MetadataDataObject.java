@@ -9,15 +9,20 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 		getterVisibility = Visibility.NONE, //
 		isGetterVisibility = Visibility.NONE, //
 		setterVisibility = Visibility.NONE)
-public class MetaWrapper implements Metadata {
+public class MetadataDataObject extends DataObjectAbstract<MetadataBase> {
 
-	private Meta meta;
+	private MetadataBase source;
 
-	public Meta meta() {
-		return this.meta;
+	public Class<MetadataBase> sourceClass() {
+		return MetadataBase.class;
 	}
 
-	public void meta(Meta meta) {
-		this.meta = meta;
+	public MetadataBase source() {
+		return this.source;
+	}
+
+	public DataObject<MetadataBase> source(MetadataBase source) {
+		this.source = source;
+		return this;
 	}
 }

@@ -1,10 +1,14 @@
 package io.spacedog.http;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.joda.time.DateTime;
 import org.junit.Assert;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Lists;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.utils.Json;
@@ -148,9 +152,12 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 		return date;
 	}
 
-	public static void assertSourceAlmostEquals(ObjectNode expected, ObjectNode value) {
-		assertEquals(expected.deepCopy().without("meta"), //
-				value.deepCopy().without("meta"));
+	private static final List<String> metadataFieldNames = Lists.newArrayList(//
+			OWNER_FIELD, GROUP_FIELD, CREATED_AT_FIELD, UPDATED_AT_FIELD);
+
+	public static void assertSourceAlmostEquals(ObjectNode expected, ObjectNode value, String... without) {
+		assertEquals(expected.deepCopy().without(metadataFieldNames).without(Arrays.asList(without)), //
+				value.deepCopy().without(metadataFieldNames).without(Arrays.asList(without)));
 	}
 
 	public static void assertFieldEquals(String expected, JsonNode node, String fieldPath) {
