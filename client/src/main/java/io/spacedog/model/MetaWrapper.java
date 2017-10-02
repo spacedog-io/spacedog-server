@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 		getterVisibility = Visibility.NONE, //
 		isGetterVisibility = Visibility.NONE, //
 		setterVisibility = Visibility.NONE)
-public class MetaWrapper {
+public class MetaWrapper implements Metadata {
 
 	private Meta meta;
 
@@ -17,8 +17,7 @@ public class MetaWrapper {
 		return this.meta;
 	}
 
-	public MetaWrapper meta(Meta meta) {
+	public void meta(Meta meta) {
 		this.meta = meta;
-		return this;
 	}
 }

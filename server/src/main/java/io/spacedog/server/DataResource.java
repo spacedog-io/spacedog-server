@@ -133,10 +133,10 @@ public class DataResource extends Resource {
 			DataObject<ObjectNode> object = DataStore.get().getObject(//
 					new JsonDataObject().type(type).id(id));
 
-			if (credentials.name().equals(Json.get(object.source(), "meta.createdBy").asText())) {
-				return object;
-			} else
-				throw Exceptions.forbidden("not the owner of [%s][%s] object", type, id);
+			if (!credentials.name().equals(object.meta().createdBy()))
+				throw Exceptions.forbidden("not the owner of object [%s][%s]", type, id);
+
+			return object;
 		}
 		throw Exceptions.forbidden("forbidden to read [%s] objects", type);
 	}

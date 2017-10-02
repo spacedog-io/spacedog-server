@@ -83,12 +83,12 @@ public abstract class DataObjectAbstract<K> implements DataObject<K> {
 		K source = source();
 		if (source instanceof Metadata)
 			((Metadata) source).meta(meta);
-		if (source instanceof ObjectNode) {
+		else if (source instanceof ObjectNode) {
 			ObjectNodeMeta objectNodeMeta = new ObjectNodeMeta((ObjectNode) source);
 			objectNodeMeta.createdAt(meta.createdAt());
 			objectNodeMeta.createdBy(meta.createdBy());
 			objectNodeMeta.updatedAt(meta.updatedAt());
-			objectNodeMeta.createdBy(meta.createdBy());
+			objectNodeMeta.updatedBy(meta.updatedBy());
 		}
 	}
 
