@@ -113,25 +113,25 @@ public class SchemaBuilder {
 	public SchemaBuilder array() {
 		checkCurrentPropertyExists();
 		checkCurrentPropertyByInvalidTypes(_ARRAY, SchemaType.STASH);
-		builder.put(_ARRAY, true);
+		builder.add(_ARRAY, true);
 		return this;
 	}
 
 	public SchemaBuilder required() {
 		checkCurrentPropertyExists();
-		builder.put(_REQUIRED, true);
+		builder.add(_REQUIRED, true);
 		return this;
 	}
 
 	public SchemaBuilder values(Object... values) {
 		checkCurrentPropertyExists();
-		builder.array(_VALUES).addAll(Arrays.asList(values)).end();
+		builder.array(_VALUES).add(values).end();
 		return this;
 	}
 
 	public SchemaBuilder examples(Object... examples) {
 		checkCurrentPropertyExists();
-		builder.array(_EXAMPLES).addAll(Arrays.asList(examples)).end();
+		builder.array(_EXAMPLES).add(examples).end();
 		return this;
 	}
 
@@ -146,14 +146,14 @@ public class SchemaBuilder {
 	public SchemaBuilder language(String language) {
 		checkCurrentPropertyExists();
 		checkCurrentPropertyByValidType(_LANGUAGE, SchemaType.TEXT);
-		builder.put(_LANGUAGE, language);
+		builder.add(_LANGUAGE, language);
 		return this;
 	}
 
 	public SchemaBuilder refType(String type) {
 		checkCurrentPropertyExists();
 		checkCurrentPropertyByValidType(_REF_TYPE, SchemaType.STRING);
-		builder.put(_REF_TYPE, type);
+		builder.add(_REF_TYPE, type);
 		return this;
 	}
 
@@ -162,17 +162,17 @@ public class SchemaBuilder {
 	}
 
 	public SchemaBuilder extra(ObjectNode extra) {
-		builder.node(_EXTRA, extra);
+		builder.add(_EXTRA, extra);
 		return this;
 	}
 
 	public SchemaBuilder enumType(String type) {
-		builder.put(_ENUM_TYPE, type);
+		builder.add(_ENUM_TYPE, type);
 		return this;
 	}
 
 	public SchemaBuilder labels(String... labels) {
-		builder.node(_LABELS, Json.object(//
+		builder.add(_LABELS, Json.object(//
 				Arrays.copyOf(labels, labels.length, Object[].class)));
 		return this;
 	}
@@ -216,7 +216,7 @@ public class SchemaBuilder {
 
 	private SchemaBuilder(String name) {
 		this.name = name;
-		this.builder = Json.objectBuilder().object(name);
+		this.builder = Json.builder().object().object(name);
 	}
 
 	private SchemaBuilder property(String key, SchemaType type) {
@@ -224,7 +224,7 @@ public class SchemaBuilder {
 			builder.end();
 
 		currentPropertyType = type;
-		builder.object(key).put("_type", type.toString());
+		builder.object(key).add("_type", type.toString());
 		return this;
 	}
 

@@ -10,24 +10,24 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class SchemaTranslator {
 
-	private static JsonNode META_MAPPING = Json.objectBuilder()//
-			.put("type", "object") //
+	private static JsonNode META_MAPPING = Json.builder().object()//
+			.add("type", "object") //
 			.object("properties") //
 			.object("createdBy") //
-			.put("type", "string") //
-			.put("index", "not_analyzed") //
+			.add("type", "string") //
+			.add("index", "not_analyzed") //
 			.end() //
 			.object("updatedBy") //
-			.put("type", "string") //
-			.put("index", "not_analyzed") //
+			.add("type", "string") //
+			.add("index", "not_analyzed") //
 			.end() //
 			.object("createdAt") //
-			.put("type", "date") //
-			.put("format", "date_time") //
+			.add("type", "date") //
+			.add("format", "date_time") //
 			.end() //
 			.object("updatedAt") //
-			.put("type", "date") //
-			.put("format", "date_time") //
+			.add("type", "date") //
+			.add("format", "date_time") //
 			.build(); //
 
 	public static ObjectNode translate(String type, JsonNode schema) {
@@ -35,7 +35,7 @@ public class SchemaTranslator {
 		ObjectNode subMapping = toElasticMapping(schema.get(type));
 		subMapping.set("_meta", schema);
 
-		return Json.objectBuilder().node(type, subMapping).build();
+		return Json.builder().object().add(type, subMapping).build();
 	}
 
 	private static ObjectNode toElasticMapping(JsonNode schema) {
@@ -46,10 +46,10 @@ public class SchemaTranslator {
 		propertiesNode.set("meta", META_MAPPING);
 
 		if ("object".equals(type)) {
-			JsonBuilder<ObjectNode> builder = Json.objectBuilder()//
-					.put("dynamic", "strict")//
-					.put("date_detection", false)//
-					.node("properties", propertiesNode);
+			JsonBuilder<ObjectNode> builder = Json.builder().object()//
+					.add("dynamic", "strict")//
+					.add("date_detection", false)//
+					.add("properties", propertiesNode);
 
 			return builder.build();
 		} else
@@ -58,66 +58,66 @@ public class SchemaTranslator {
 
 	private static ObjectNode toElasticProperties(JsonNode schema) {
 
-		JsonBuilder<ObjectNode> builder = Json.objectBuilder();
+		JsonBuilder<ObjectNode> builder = Json.builder().object();
 		Iterator<String> fieldNames = schema.fieldNames();
 		while (fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
 			if (fieldName.charAt(0) != '_') {
-				builder.node(fieldName, toElasticProperty(fieldName, schema.get(fieldName)));
+				builder.add(fieldName, toElasticProperty(fieldName, schema.get(fieldName)));
 			}
 		}
 		return builder.build();
 	}
 
 	private static ObjectNode toElasticProperty(String key, JsonNode schema) {
-		JsonBuilder<ObjectNode> mapping = Json.objectBuilder();
+		JsonBuilder<ObjectNode> mapping = Json.builder().object();
 		String type = schema.path("_type").asText("object");
 
 		if ("text".equals(type)) {
-			mapping.put("type", "string");
-			mapping.put("index", "analyzed");
-			mapping.put("analyzer", schema.path("_language").asText("english"));
+			mapping.add("type", "string");
+			mapping.add("index", "analyzed");
+			mapping.add("analyzer", schema.path("_language").asText("english"));
 		} else if ("string".equals(type)) {
-			mapping.put("type", "string");
-			mapping.put("index", "not_analyzed");
+			mapping.add("type", "string");
+			mapping.add("index", "not_analyzed");
 		} else if ("boolean".equals(type)) {
-			mapping.put("type", "boolean");
+			mapping.add("type", "boolean");
 		} else if ("integer".equals(type)) {
-			mapping.put("type", "integer");
-			mapping.put("coerce", "false");
+			mapping.add("type", "integer");
+			mapping.add("coerce", "false");
 		} else if ("long".equals(type)) {
-			mapping.put("type", "long");
-			mapping.put("coerce", "false");
+			mapping.add("type", "long");
+			mapping.add("coerce", "false");
 		} else if ("float".equals(type)) {
-			mapping.put("type", "float");
-			mapping.put("coerce", "false");
+			mapping.add("type", "float");
+			mapping.add("coerce", "false");
 		} else if ("double".equals(type)) {
-			mapping.put("type", "double");
-			mapping.put("coerce", "false");
+			mapping.add("type", "double");
+			mapping.add("coerce", "false");
 		} else if ("date".equals(type)) {
-			mapping.put("type", "date");
-			mapping.put("format", "date");
+			mapping.add("type", "date");
+			mapping.add("format", "date");
 		} else if ("time".equals(type)) {
-			mapping.put("type", "date");
-			mapping.put("format", "hour_minute_second");
+			mapping.add("type", "date");
+			mapping.add("format", "hour_minute_second");
 		} else if ("timestamp".equals(type)) {
-			mapping.put("type", "date");
-			mapping.put("format", "date_time");
+			mapping.add("type", "date");
+			mapping.add("format", "date_time");
 		} else if ("enum".equals(type)) {
-			mapping.put("type", "string");
-			mapping.put("index", "not_analyzed");
+			mapping.add("type", "string");
+			mapping.add("index", "not_analyzed");
 		} else if ("geopoint".equals(type)) {
-			mapping.put("type", "geo_point");
-			mapping.put("lat_lon", true);
-			mapping.put("geohash", true);
-			mapping.put("geohash_precision", "1m");
-			mapping.put("geohash_prefix", "true");
+			mapping.add("type", "geo_point");
+			mapping.add("lat_lon", true);
+			mapping.add("geohash", true);
+			mapping.add("geohash_precision", "1m");
+			mapping.add("geohash_prefix", "true");
 		} else if ("object".equals(type)) {
-			mapping.put("type", "object");
-			mapping.node("properties", toElasticProperties(schema));
+			mapping.add("type", "object");
+			mapping.add("properties", toElasticProperties(schema));
 		} else if ("stash".equals(type)) {
-			mapping.put("type", "object");
-			mapping.put("enabled", false);
+			mapping.add("type", "object");
+			mapping.add("enabled", false);
 		} else {
 			throw Exceptions.illegalArgument("invalid type [%s] for property [%s]", type, key);
 		}

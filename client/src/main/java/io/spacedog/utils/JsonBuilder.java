@@ -13,81 +13,26 @@ public class JsonBuilder<N extends JsonNode> {
 
 	private LinkedList<JsonNode> stack = new LinkedList<JsonNode>();
 
+	public JsonBuilder<N> add(Object... values) {
+		JsonNode current = stack.getLast();
+		if (current.isArray())
+			Json.addAll((ArrayNode) current, values);
+		if (current.isObject())
+			Json.addAll((ObjectNode) current, values);
+		return this;
+	}
+
 	//
 	// object methods
 	//
 
-	public JsonBuilder<N> put(String key, Object value) {
-		if (value instanceof Boolean)
-			put(key, (boolean) value);
-		else if (value instanceof Integer)
-			put(key, (int) value);
-		else if (value instanceof Long)
-			put(key, (long) value);
-		else if (value instanceof Double)
-			put(key, (double) value);
-		else if (value instanceof Float)
-			put(key, (float) value);
-		else if (value instanceof String)
-			put(key, (String) value);
-		else
-			throw Exceptions.illegalArgument("invalid value type [%s]", //
-					value.getClass().getSimpleName());
-
-		return this;
-	}
-
-	public JsonBuilder<N> put(String key, String value) {
-		checkCurrentIsObjectNode().put(key, value);
-		return this;
-	}
-
-	public JsonBuilder<N> put(String key, boolean value) {
-		checkCurrentIsObjectNode().put(key, value);
-		return this;
-	}
-
-	public JsonBuilder<N> put(String key, int value) {
-		checkCurrentIsObjectNode().put(key, value);
-		return this;
-	}
-
-	public JsonBuilder<N> put(String key, long value) {
-		checkCurrentIsObjectNode().put(key, value);
-		return this;
-	}
-
-	public JsonBuilder<N> put(String key, double value) {
-		checkCurrentIsObjectNode().put(key, value);
-		return this;
-	}
-
-	public JsonBuilder<N> put(String key, float value) {
-		checkCurrentIsObjectNode().put(key, value);
-		return this;
-	}
-
-	public JsonBuilder<N> node(String key, JsonNode value) {
-		checkCurrentIsObjectNode().set(key, value);
-		return this;
-	}
-
-	public JsonBuilder<N> node(String key, String jsonText) {
-		try {
-			checkCurrentIsObjectNode().set(key, Json.readNode(jsonText));
-			return this;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
 	public JsonBuilder<N> object(String key) {
-		stack.add(checkCurrentIsObjectNode().putObject(key));
+		stack.add(checkCurrentIsObject().putObject(key));
 		return this;
 	}
 
 	public JsonBuilder<N> array(String key) {
-		stack.add(checkCurrentIsObjectNode().putArray(key));
+		stack.add(checkCurrentIsObject().putArray(key));
 		return this;
 	}
 
@@ -95,65 +40,15 @@ public class JsonBuilder<N extends JsonNode> {
 	// array methods
 	//
 
-	public JsonBuilder<N> add(String value) {
-		checkCurrentIsArrayNode().add(value);
-		return this;
-	}
-
-	public JsonBuilder<N> add(boolean value) {
-		checkCurrentIsArrayNode().add(value);
-		return this;
-	}
-
-	public JsonBuilder<N> add(int value) {
-		checkCurrentIsArrayNode().add(value);
-		return this;
-	}
-
-	public JsonBuilder<N> add(long value) {
-		checkCurrentIsArrayNode().add(value);
-		return this;
-	}
-
-	public JsonBuilder<N> add(double value) {
-		checkCurrentIsArrayNode().add(value);
-		return this;
-	}
-
-	public JsonBuilder<N> add(float value) {
-		checkCurrentIsArrayNode().add(value);
-		return this;
-	}
-
-	public JsonBuilder<N> node(JsonNode value) {
-		checkCurrentIsArrayNode().add(value);
-		return this;
-	}
-
-	public JsonBuilder<N> node(String jsonText) {
-		try {
-			checkCurrentIsArrayNode().add(Json.readNode(jsonText));
-			return this;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
 	public JsonBuilder<N> object() {
 		stack.add(stack.isEmpty() ? Json.object() //
-				: checkCurrentIsArrayNode().addObject());
+				: checkCurrentIsArray().addObject());
 		return this;
 	}
 
 	public JsonBuilder<N> array() {
 		stack.add(stack.isEmpty() ? Json.array() //
-				: checkCurrentIsArrayNode().addArray());
-		return this;
-	}
-
-	public <T extends Object> JsonBuilder<N> addAll(Iterable<T> values) {
-		for (Object value : values)
-			addGenericToArray(value);
+				: checkCurrentIsArray().addArray());
 		return this;
 	}
 
@@ -181,39 +76,17 @@ public class JsonBuilder<N extends JsonNode> {
 	// implem methods
 	//
 
-	private ObjectNode checkCurrentIsObjectNode() {
+	private ObjectNode checkCurrentIsObject() {
 		JsonNode current = stack.getLast();
 		if (!current.isObject())
-			throw Exceptions.illegalState("current node not an object but [%s]", //
-					current.getNodeType());
+			throw Exceptions.illegalState("[%s] not an object", current);
 		return (ObjectNode) current;
 	}
 
-	private ArrayNode checkCurrentIsArrayNode() {
+	private ArrayNode checkCurrentIsArray() {
 		JsonNode current = stack.getLast();
 		if (!current.isArray())
-			throw Exceptions.illegalState("current node not an array but [%s]", //
-					current.getNodeType());
+			throw Exceptions.illegalState("[%s] not an array", current);
 		return (ArrayNode) current;
-	}
-
-	private void addGenericToArray(Object value) {
-		if (value instanceof Integer)
-			add((Integer) value);
-		else if (value instanceof Long)
-			add((Long) value);
-		else if (value instanceof Float)
-			add((Float) value);
-		else if (value instanceof Double)
-			add((Double) value);
-		else if (value instanceof String)
-			add((String) value);
-		else if (value instanceof Boolean)
-			add((Boolean) value);
-		else if (value instanceof JsonNode)
-			node((JsonNode) value);
-		else
-			throw Exceptions.illegalArgument("invalif array value type [%s]", //
-					value.getClass().getSimpleName());
 	}
 }

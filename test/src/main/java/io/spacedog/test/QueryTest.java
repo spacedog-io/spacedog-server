@@ -57,19 +57,19 @@ public class QueryTest extends SpaceTest {
 		calendar.roll(Calendar.DAY_OF_MONTH, false);
 		calendar.roll(Calendar.HOUR_OF_DAY, false);
 
-		return Json.objectBuilder().put("serialNumber", String.valueOf(i))
-				.put("buyDate", dateFormat.format(calendar.getTime()))
-				.put("buyTime", timeFormat.format(calendar.getTime()))
-				.put("buyTimestamp", timestampFormat.format(calendar.getTime())) //
-				.put("color", CarColor.values()[i % 4].toString()) //
-				.put("techChecked", i % 2 == 0) //
+		return Json.builder().object().add("serialNumber", String.valueOf(i))
+				.add("buyDate", dateFormat.format(calendar.getTime()))
+				.add("buyTime", timeFormat.format(calendar.getTime()))
+				.add("buyTimestamp", timestampFormat.format(calendar.getTime())) //
+				.add("color", CarColor.values()[i % 4].toString()) //
+				.add("techChecked", i % 2 == 0) //
 				.object("location") //
-				.put("lat", 48.85341 + i / 100) //
-				.put("lon", 2.3488 + i / 100) //
+				.add("lat", 48.85341 + i / 100) //
+				.add("lon", 2.3488 + i / 100) //
 				.end() //
-				.object("model").put("description", randomText()) //
-				.put("fiscalPower", i % 11 + 2) //
-				.put("size", Math.PI * i).build();
+				.object("model").add("description", randomText()) //
+				.add("fiscalPower", i % 11 + 2) //
+				.add("size", Math.PI * i).build();
 	}
 
 	public static class Car {

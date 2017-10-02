@@ -170,7 +170,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 	public <K> DataObject<K> patchObject(//
 			DataObject<K> object, String updatedBy) {
 
-		ObjectNode source = Json.checkObject(Json.toNode(object.source()));
+		ObjectNode source = Json.checkObject(Json.toJsonNode(object.source()));
 		source.with(META_FIELD)//
 				.removeAll()//
 				.put(UPDATED_BY_FIELD, updatedBy)//
@@ -261,7 +261,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 		public FilteredSearchBuilder applyFilters(JsonNode filters) {
 			filters.fields().forEachRemaining(field -> boolBuilder.filter(//
 					QueryBuilders.termQuery(field.getKey(), //
-							Json.toValue(field.getValue()))));
+							Json.toObject(field.getValue()))));
 			return this;
 		}
 

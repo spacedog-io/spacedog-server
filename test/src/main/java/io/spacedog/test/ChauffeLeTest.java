@@ -135,13 +135,13 @@ public class ChauffeLeTest extends SpaceTest {
 		@Override
 		public Iterator<JsonNode> showWall(SpaceDog user) {
 
-			String wallQuery = Json.objectBuilder()//
-					.put("from", 0)//
-					.put("size", 10)//
+			String wallQuery = Json.builder().object()//
+					.add("from", 0)//
+					.add("size", 10)//
 					.array("sort")//
 					.object()//
 					.object("meta.updatedAt")//
-					.put("order", "asc")//
+					.add("order", "asc")//
 					.end()//
 					.end()//
 					.end()//
@@ -173,13 +173,13 @@ public class ChauffeLeTest extends SpaceTest {
 		@Override
 		public Iterator<JsonNode> showWall(SpaceDog user) {
 
-			ObjectNode subjectQuery = Json.objectBuilder()//
-					.put("from", 0)//
-					.put("size", 10)//
+			ObjectNode subjectQuery = Json.builder().object()//
+					.add("from", 0)//
+					.add("size", 10)//
 					.array("sort")//
 					.object()//
 					.object("meta.updatedAt")//
-					.put("order", "asc")//
+					.add("order", "asc")//
 					.end()//
 					.end()//
 					.end()//
@@ -192,20 +192,20 @@ public class ChauffeLeTest extends SpaceTest {
 					.object("filter")//
 					.object("not")//
 					.object("exists")//
-					.put("field", "parent")//
+					.add("field", "parent")//
 					.build();
 
 			JsonNode subjectResults = user.post("/1/search/smallpost")//
 					.refresh().bodyJson(subjectQuery).go(200).asJson();
 
-			JsonBuilder<ObjectNode> responsesQuery = Json.objectBuilder()//
-					.put("from", 0)//
-					.put("size", 10)//
+			JsonBuilder<ObjectNode> responsesQuery = Json.builder().object()//
+					.add("from", 0)//
+					.add("size", 10)//
 					.array("sort")//
 					.add("parent")//
 					.object()//
 					.object("meta.updatedAt")//
-					.put("order", "asc")//
+					.add("order", "asc")//
 					.end()//
 					.end()//
 					.end()//

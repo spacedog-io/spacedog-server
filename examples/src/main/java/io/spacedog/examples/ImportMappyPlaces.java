@@ -53,34 +53,34 @@ public class ImportMappyPlaces extends SpaceTest {
 	}
 
 	private static void copyPoi(JsonNode src) {
-		JsonBuilder<ObjectNode> target = Json.objectBuilder()//
-				.put("name", src.get("name").asText()) //
-				.put("town", src.get("town").asText()) //
-				.put("zipcode", src.get("pCode").asText()) //
-				.put("way", src.get("way").asText()) //
+		JsonBuilder<ObjectNode> target = Json.builder().object()//
+				.add("name", src.get("name").asText()) //
+				.add("town", src.get("town").asText()) //
+				.add("zipcode", src.get("pCode").asText()) //
+				.add("way", src.get("way").asText()) //
 				.object("where") //
-				.put("lat", src.get("lat").asDouble()) //
-				.put("lon", src.get("lng").asDouble()) //
+				.add("lat", src.get("lat").asDouble()) //
+				.add("lon", src.get("lng").asDouble()) //
 				.end();
 
 		if (src.get("rubricId") != null)
-			target.put("mainRubricId", src.get("rubricId").asText());
+			target.add("mainRubricId", src.get("rubricId").asText());
 
 		if (src.get("phone") != null)
-			target.put("phone", src.get("phone").asText());
+			target.add("phone", src.get("phone").asText());
 
 		if (src.get("url") != null)
-			target.put("url", src.get("url").asText());
+			target.add("url", src.get("url").asText());
 
 		if (src.get("illustration") != null)
-			target.put("illustration", src.get("illustration").get("url").asText());
+			target.add("illustration", src.get("illustration").get("url").asText());
 
 		JsonNode allRubrics = src.get("allRubrics");
 		if (allRubrics != null && allRubrics.size() > 0) {
 			target.array("rubrics");
 			allRubrics.forEach(rubric -> {
-				target.object().put("rubricId", rubric.get("id").asText()) //
-						.put("rubricLabel", rubric.get("label").asText()).end();
+				target.object().add("rubricId", rubric.get("id").asText()) //
+						.add("rubricLabel", rubric.get("label").asText()).end();
 			});
 			target.end();
 		}

@@ -45,8 +45,8 @@ public class SearchResourceTestOften extends SpaceTest {
 				.assertEquals(5, "total");
 
 		// search for messages with full text query
-		ObjectNode query = Json.objectBuilder()//
-				.object("query").object("match").put("text", "something to drink")//
+		ObjectNode query = Json.builder().object()//
+				.object("query").object("match").add("text", "something to drink")//
 				.build();
 
 		ObjectNode results = SpaceRequest.post("/1/search")//
@@ -70,16 +70,16 @@ public class SearchResourceTestOften extends SpaceTest {
 
 		// deletes messages containing 'up' by query
 
-		query = Json.objectBuilder().object("query")//
-				.object("match").put("text", "up").build();
+		query = Json.builder().object().object("query")//
+				.object("match").add("text", "up").build();
 		SpaceRequest.delete("/1/search/message").auth(superadmin).bodyJson(query).go(200);
 		SpaceRequest.get("/1/data/message").refresh().auth(superadmin).go(200)//
 				.assertEquals(3, "total");
 
 		// deletes data objects containing 'wanna' or 'riri' but not users
 
-		query = Json.objectBuilder().object("query")//
-				.object("match").put("_all", "wanna riri").build();
+		query = Json.builder().object().object("query")//
+				.object("match").add("_all", "wanna riri").build();
 		SpaceRequest.delete("/1/search").auth(superadmin).bodyJson(query).go(200);
 		SpaceRequest.get("/1/data").refresh().auth(superadmin).go(200)//
 				.assertEquals(2, "total");
@@ -104,12 +104,12 @@ public class SearchResourceTestOften extends SpaceTest {
 
 		// search with 'terms' aggregation to get
 		// all 3 distinct city names Paris, Bordeaux and Nice
-		ObjectNode query = Json.objectBuilder()//
-				.put("size", 0)//
+		ObjectNode query = Json.builder().object()//
+				.add("size", 0)//
 				.object("aggs")//
 				.object("distinctCities")//
 				.object("terms")//
-				.put("field", "name")//
+				.add("field", "name")//
 				.build();
 
 		vince.post("/1/search").refresh().bodyJson(query).go(200)//

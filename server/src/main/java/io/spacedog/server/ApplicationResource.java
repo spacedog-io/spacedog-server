@@ -42,7 +42,7 @@ public class ApplicationResource extends Resource {
 
 		SpaceContext.credentials().checkAtLeastAdmin();
 
-		ApplicationPushCredentials credentials = Json.readObject(//
+		ApplicationPushCredentials credentials = Json.toPojo(//
 				body, ApplicationPushCredentials.class);
 
 		CreatePlatformApplicationRequest request = new CreatePlatformApplicationRequest()//

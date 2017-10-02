@@ -755,19 +755,19 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// anonymous fails to disable fred's credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json.toNode(false)).backend(test).go(403);
+				.bodyJson(Json.toJsonNode(false)).backend(test).go(403);
 
 		// fred fails to disable his credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json.toNode(false)).auth(fred).go(403);
+				.bodyJson(Json.toJsonNode(false)).auth(fred).go(403);
 
 		// admin fails to disable fred's credentials because body not a boolean
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json.toNode("false")).auth(test).go(400);
+				.bodyJson(Json.toJsonNode("false")).auth(test).go(400);
 
 		// only admin can disable fred's credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json.toNode(false)).auth(test).go(200);
+				.bodyJson(Json.toJsonNode(false)).auth(test).go(200);
 
 		// fred fails to login from now on
 		SpaceRequest.get("/1/login").auth(fred).go(401)//
@@ -789,15 +789,15 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// anonymous fails to enable fred's credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json.toNode(true)).backend(test).go(403);
+				.bodyJson(Json.toJsonNode(true)).backend(test).go(403);
 
 		// fred fails to enable his credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json.toNode(true)).auth(fred).go(401);
+				.bodyJson(Json.toJsonNode(true)).auth(fred).go(401);
 
 		// only admin can enable fred's credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json.toNode(true)).auth(test).go(200);
+				.bodyJson(Json.toJsonNode(true)).auth(test).go(200);
 
 		// fred logs in again normally
 		SpaceRequest.get("/1/login").auth(fred).go(200);

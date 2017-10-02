@@ -148,14 +148,14 @@ public class DataResource2TestOften extends SpaceTest {
 
 		sale.items = Lists.newArrayList(item1, item2);
 		DataObject<Sale> saleDO1 = new SaleDataObject().source(sale);
-		ObjectNode saleNode = Json.checkObject(Json.toNode(sale));
+		ObjectNode saleNode = Json.checkObject(Json.toJsonNode(sale));
 
 		DataObject<Sale> saleDO2 = fred.data().save(saleDO1);
 		assertEquals("sale", saleDO2.type());
 		assertEquals(1, saleDO2.version());
 		assertNotNull(saleDO2.id());
 
-		ObjectNode saleNode2 = Json.checkObject(Json.toNode(saleDO2.source()));
+		ObjectNode saleNode2 = Json.checkObject(Json.toJsonNode(saleDO2.source()));
 		assertEquals(saleNode.deepCopy().without("meta"), //
 				saleNode2.deepCopy().without("meta"));
 
@@ -189,7 +189,7 @@ public class DataResource2TestOften extends SpaceTest {
 		assertEquals(saleDO3.source().meta().createdAt(), saleDO3.source().meta().updatedAt());
 		assertDateIsRecent(saleDO3.source().meta().createdAt());
 
-		ObjectNode saleNode3 = Json.checkObject(Json.toNode(saleDO3.source()));
+		ObjectNode saleNode3 = Json.checkObject(Json.toJsonNode(saleDO3.source()));
 		assertSourceAlmostEquals(saleNode, saleNode3);
 
 		// find by simple text search
@@ -199,24 +199,24 @@ public class DataResource2TestOften extends SpaceTest {
 
 		assertEquals(1, sale4.total);
 
-		ObjectNode saleNode4 = Json.checkObject(Json.toNode(sale4.results.get(0).source()));
+		ObjectNode saleNode4 = Json.checkObject(Json.toJsonNode(sale4.results.get(0).source()));
 		assertSourceAlmostEquals(saleNode, saleNode4);
 
 		// find by advanced text search
-		String query = Json.objectBuilder()//
+		String query = Json.builder().object()//
 				.object("query")//
 				.object("query_string")//
-				.put("query", "museum")//
+				.add("query", "museum")//
 				.build().toString();
 
 		SaleSearchResults sale5 = fred.post("/1/search/sale").bodyString(query).go(200)//
 				.assertEquals(1, "total").toPojo(SaleSearchResults.class);
 
-		ObjectNode saleNode5 = Json.checkObject(Json.toNode(sale5.results.get(0).source()));
+		ObjectNode saleNode5 = Json.checkObject(Json.toJsonNode(sale5.results.get(0).source()));
 		assertSourceAlmostEquals(saleNode, saleNode5);
 
 		// small update no version should succeed
-		JsonNode updateJson2 = Json.objectBuilder().array("items").object().put("quantity", 7).build();
+		JsonNode updateJson2 = Json.builder().object().array("items").object().add("quantity", 7).build();
 		fred.data().patch("sale", saleDO2.id(), updateJson2);
 
 		// check update is correct
@@ -232,7 +232,7 @@ public class DataResource2TestOften extends SpaceTest {
 		assertEquals(7, saleDO6.source().items.get(0).quantity);
 
 		// check equality on what has not been updated
-		ObjectNode saleNode6 = Json.checkObject(Json.toNode(saleDO6.source()));
+		ObjectNode saleNode6 = Json.checkObject(Json.toJsonNode(saleDO6.source()));
 		assertEquals(saleNode.deepCopy().without(Lists.newArrayList("meta", "items")), //
 				saleNode6.deepCopy().without(Lists.newArrayList("meta", "items")));
 
@@ -254,8 +254,8 @@ public class DataResource2TestOften extends SpaceTest {
 		assertEquals("0987654321", saleDO7.source().number);
 		assertEquals(3, saleDO7.version());
 
-		saleNode6 = Json.checkObject(Json.toNode(saleDO6.source()));
-		ObjectNode saleNode7 = Json.checkObject(Json.toNode(saleDO7.source()));
+		saleNode6 = Json.checkObject(Json.toJsonNode(saleDO6.source()));
+		ObjectNode saleNode7 = Json.checkObject(Json.toJsonNode(saleDO7.source()));
 		assertEquals(saleNode6.deepCopy().without(Lists.newArrayList("meta", "items")), //
 				saleNode7.deepCopy().without(Lists.newArrayList("meta", "items")));
 

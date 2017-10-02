@@ -171,7 +171,7 @@ public class SearchResource extends Resource {
 				for (Object value : hit.sortValues()) {
 					if (value instanceof Text)
 						value = value.toString();
-					array.add(Json.toNode(value));
+					array.add(Json.toJsonNode(value));
 				}
 				object.set("sort", array);
 			}

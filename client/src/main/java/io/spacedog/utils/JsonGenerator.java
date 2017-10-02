@@ -70,7 +70,7 @@ public class JsonGenerator {
 	}
 
 	private ObjectNode generateObject(LinkedList<String> stack, ObjectNode schema, int index) {
-		JsonBuilder<ObjectNode> builder = Json.objectBuilder();
+		JsonBuilder<ObjectNode> builder = Json.builder().object();
 		generateFields(stack, builder, schema, index);
 		return builder.build();
 	}
@@ -92,11 +92,11 @@ public class JsonGenerator {
 
 			if (fieldIsArray)
 				builder.array(fieldKey)//
-						.node(generateValue(path, fieldSchema, index))//
-						.node(generateValue(path, fieldSchema, index + 1))//
+						.add(generateValue(path, fieldSchema, index))//
+						.add(generateValue(path, fieldSchema, index + 1))//
 						.end();
 			else
-				builder.node(fieldKey, generateValue(path, fieldSchema, index));
+				builder.add(fieldKey, generateValue(path, fieldSchema, index));
 
 			path.removeLast();
 
@@ -108,7 +108,7 @@ public class JsonGenerator {
 		String stringPath = Utils.join(".", path.toArray(new String[path.size()]));
 		List<Object> list = paths.get(stringPath);
 		if (list != null)
-			return Json.toNode(list.get(random.nextInt(list.size())));
+			return Json.toJsonNode(list.get(random.nextInt(list.size())));
 
 		JsonNode values = Json.get(schema, "_values");
 		if (values != null) {
@@ -125,7 +125,7 @@ public class JsonGenerator {
 			if (types.containsKey(enumType.asText())) {
 				List<String> typeValues = types.get(enumType.asText());
 				String value = typeValues.get(random.nextInt(typeValues.size()));
-				return Json.toNode(value);
+				return Json.toJsonNode(value);
 			}
 		}
 

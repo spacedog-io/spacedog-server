@@ -28,14 +28,14 @@ public class BatchResourceTest extends SpaceTest {
 
 		// should succeed to reset test account and create message schema with
 		// admin credentials
-		ArrayNode batch = Json.arrayBuilder()//
+		ArrayNode batch = Json.builder().array()//
 				.object()//
-				.put("method", "PUT").put("path", "/1/schema/message")//
-				.node("content", Schema.builder("message").text("text").toString())//
+				.add("method", "PUT").add("path", "/1/schema/message")//
+				.add("content", Schema.builder("message").text("text").build().node())//
 				.end()//
 
 				.object()//
-				.put("method", "GET").put("path", "/1/login")//
+				.add("method", "GET").add("path", "/1/login")//
 				.end()//
 				.build();
 
@@ -48,22 +48,22 @@ public class BatchResourceTest extends SpaceTest {
 		// should succeed to create dave and vince users and fetch them with
 		// simple backend key credentials
 
-		batch = Json.arrayBuilder()//
+		batch = Json.builder().array()//
 				.object()//
-				.put("method", "POST").put("path", "/1/credentials")//
+				.add("method", "POST").add("path", "/1/credentials")//
 				.object("content")//
-				.put("username", "vince")//
-				.put("password", "hi vince")//
-				.put("email", "vince@dog.com")//
+				.add("username", "vince")//
+				.add("password", "hi vince")//
+				.add("email", "vince@dog.com")//
 				.end()//
 				.end()//
 
 				.object()//
-				.put("method", "POST").put("path", "/1/credentials")//
+				.add("method", "POST").add("path", "/1/credentials")//
 				.object("content")//
-				.put("username", "dave")//
-				.put("password", "hi dave")//
-				.put("email", "dave@dog.com")//
+				.add("username", "dave")//
+				.add("password", "hi dave")//
+				.add("email", "dave@dog.com")//
 				.end()//
 				.end()//
 
@@ -91,26 +91,26 @@ public class BatchResourceTest extends SpaceTest {
 		// should succeed to return errors when batch requests are invalid, not
 		// found, unauthorized, ...
 
-		batch = Json.arrayBuilder()//
+		batch = Json.builder().array()//
 				.object()//
-				.put("method", "POST").put("path", "/1/credentials")//
+				.add("method", "POST").add("path", "/1/credentials")//
 				.object("content")//
-				.put("username", "fred")//
-				.put("password", "hi fred")//
+				.add("username", "fred")//
+				.add("password", "hi fred")//
 				.end()//
 				.end()//
 
 				.object()//
-				.put("method", "GET").put("path", "/1/toto")//
+				.add("method", "GET").add("path", "/1/toto")//
 				.end()//
 
 				.object()//
-				.put("method", "DELETE").put("path", "/1/credentials/vince")//
+				.add("method", "DELETE").add("path", "/1/credentials/vince")//
 				.end()//
 
 				.object()//
-				.put("method", "PUT").put("path", "/1/credentials/vince/password")//
-				.put("content", "hi vince 2")//
+				.add("method", "PUT").add("path", "/1/credentials/vince/password")//
+				.add("content", "hi vince 2")//
 				.end()//
 				.build();
 
@@ -124,52 +124,52 @@ public class BatchResourceTest extends SpaceTest {
 
 		// should succeed to create and update messages by batch
 
-		batch = Json.arrayBuilder()//
+		batch = Json.builder().array()//
 				.object()//
-				.put("method", "PUT").put("path", "/1/data/message/1")//
+				.add("method", "PUT").add("path", "/1/data/message/1")//
 				.object("content")//
-				.put("text", "Hi guys!")//
+				.add("text", "Hi guys!")//
 				.end()//
 				.object("parameters")//
-				.put("strict", true)//
+				.add("strict", true)//
 				.end()//
 				.end()//
 
 				.object()//
-				.put("method", "PUT").put("path", "/1/data/message/2")//
+				.add("method", "PUT").add("path", "/1/data/message/2")//
 				.object("content")//
-				.put("text", "Pretty cool, huhh?")//
+				.add("text", "Pretty cool, huhh?")//
 				.end()//
 				.object("parameters")//
-				.put("strict", true)//
+				.add("strict", true)//
 				.end()//
 				.end()//
 
 				.object()//
-				.put("method", "GET").put("path", "/1/data/message")//
+				.add("method", "GET").add("path", "/1/data/message")//
 				.object("parameters")//
-				.put("refresh", true)//
+				.add("refresh", true)//
 				.end()//
 				.end()//
 
 				.object()//
-				.put("method", "PUT").put("path", "/1/data/message/1")//
+				.add("method", "PUT").add("path", "/1/data/message/1")//
 				.object("content")//
-				.put("text", "Hi guys, what's up?")//
+				.add("text", "Hi guys, what's up?")//
 				.end()//
 				.end()//
 
 				.object()//
-				.put("method", "PUT").put("path", "/1/data/message/2")//
+				.add("method", "PUT").add("path", "/1/data/message/2")//
 				.object("content")//
-				.put("text", "Pretty cool, huhhhhh?")//
+				.add("text", "Pretty cool, huhhhhh?")//
 				.end()//
 				.end()//
 
 				.object()//
-				.put("method", "GET").put("path", "/1/data/message")//
+				.add("method", "GET").add("path", "/1/data/message")//
 				.object("parameters")//
-				.put("refresh", true)//
+				.add("refresh", true)//
 				.end()//
 				.end()//
 				.build();
@@ -206,17 +206,17 @@ public class BatchResourceTest extends SpaceTest {
 
 		// should succeed to stop on first batch request error
 
-		batch = Json.arrayBuilder()//
+		batch = Json.builder().array()//
 				.object()//
-				.put("method", "GET").put("path", "/1/data/message")//
+				.add("method", "GET").add("path", "/1/data/message")//
 				.end()//
 
 				.object()//
-				.put("method", "GET").put("path", "/1/data/XXX")//
+				.add("method", "GET").add("path", "/1/data/XXX")//
 				.end()//
 
 				.object()//
-				.put("method", "GET").put("path", "/1/data/message")//
+				.add("method", "GET").add("path", "/1/data/message")//
 				.end()//
 				.build();
 

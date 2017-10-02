@@ -224,7 +224,7 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 
 	public void setAllRoles(String id, String... roles) {
 		dog.put("/1/credentials/{id}/roles")//
-				.routeParam("id", id).bodyJson(Json.toNode(roles)).go(200);
+				.routeParam("id", id).bodyJson(Json.toJsonNode(roles)).go(200);
 	}
 
 	public void unsetAllRoles(String id) {

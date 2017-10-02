@@ -62,7 +62,7 @@ public class JsonPayload implements SpaceFields {
 	}
 
 	public <K extends ObjectNode> JsonPayload withObject(DataObject<K> object) {
-		this.node = Json.toNode(object);
+		this.node = Json.toJsonNode(object);
 		return this;
 	}
 
@@ -195,7 +195,7 @@ public class JsonPayload implements SpaceFields {
 			if (t instanceof ElasticsearchException) {
 				ElasticsearchException elasticException = ((ElasticsearchException) t);
 				for (String key : elasticException.getHeaderKeys()) {
-					json.with("elastic").set(key, Json.toNode(elasticException.getHeader(key)));
+					json.with("elastic").set(key, Json.toJsonNode(elasticException.getHeader(key)));
 				}
 			}
 

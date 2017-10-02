@@ -57,14 +57,15 @@ public class ExportLogCommand extends AbstractCommand<ExportLogCommand> {
 
 		Path target = Paths.get(file);
 
-		ObjectNode query = Json.objectBuilder()//
-				.put("size", 5000)//
-				.put("sort", "receivedAt")//
+		ObjectNode query = Json.builder().object()//
+				.add("size", 5000)//
+				.add("sort", "receivedAt")//
 				.object("query")//
 				.object("range")//
 				.object("receivedAt")//
-				.put("gte", gte.toString())//
-				.put("lt", lt.toString()).build();
+				.add("gte", gte.toString())//
+				.add("lt", lt.toString())//
+				.build();
 
 		ObjectNode payload = dog.post("/1/log/search").refresh()//
 				.bodyJson(query).go(200).asJsonObject();

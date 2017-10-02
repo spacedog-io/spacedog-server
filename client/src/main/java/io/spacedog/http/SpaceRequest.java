@@ -235,7 +235,7 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest bodyPojo(Object pojo) {
-		return bodyJson(Json.toNode(pojo));
+		return bodyJson(Json.toJsonNode(pojo));
 	}
 
 	public SpaceRequest bodySchema(Schema schema) {

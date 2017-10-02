@@ -26,20 +26,20 @@ public class DataResourceTestOften extends SpaceTest {
 		superadmin.schema().set(SchemaResourceTestOften.buildCarSchema());
 		SpaceDog vince = signUp(superadmin, "vince", "hi vince");
 
-		ObjectNode car = Json.objectBuilder() //
-				.put("serialNumber", "1234567890") //
-				.put("buyDate", "2015-01-09") //
-				.put("buyTime", "15:37:00") //
-				.put("buyTimestamp", "2015-01-09T15:37:00.123Z") //
-				.put("color", "red") //
-				.put("techChecked", false) //
+		ObjectNode car = Json.builder().object() //
+				.add("serialNumber", "1234567890") //
+				.add("buyDate", "2015-01-09") //
+				.add("buyTime", "15:37:00") //
+				.add("buyTimestamp", "2015-01-09T15:37:00.123Z") //
+				.add("color", "red") //
+				.add("techChecked", false) //
 				.object("model") //
-				.put("description", "Cette voiture sent bon la France. Elle est inventive et raffinée.") //
-				.put("fiscalPower", 8) //
-				.put("size", 4.67) //
+				.add("description", "Cette voiture sent bon la France. Elle est inventive et raffinée.") //
+				.add("fiscalPower", 8) //
+				.add("size", 4.67) //
 				.end().object("location") //
-				.put("lat", -55.6765) //
-				.put("lon", -54.6765) //
+				.add("lat", -55.6765) //
+				.add("lon", -54.6765) //
 				.build();
 
 		// create
@@ -89,20 +89,20 @@ public class DataResourceTestOften extends SpaceTest {
 		superadmin.schema().set(SchemaResourceTestOften.buildCarSchema());
 		SpaceDog vince = signUp(superadmin, "vince", "hi vince");
 
-		ObjectNode car = Json.objectBuilder() //
-				.put("serialNumber", "1234567890") //
-				.put("buyDate", "2015-01-09") //
-				.put("buyTime", "15:37:00") //
-				.put("buyTimestamp", "2015-01-09T15:37:00.123Z") //
-				.put("color", "red") //
-				.put("techChecked", false) //
+		ObjectNode car = Json.builder().object() //
+				.add("serialNumber", "1234567890") //
+				.add("buyDate", "2015-01-09") //
+				.add("buyTime", "15:37:00") //
+				.add("buyTimestamp", "2015-01-09T15:37:00.123Z") //
+				.add("color", "red") //
+				.add("techChecked", false) //
 				.object("model") //
-				.put("description", "Cette voiture sent bon la France. Elle est inventive et raffinée.") //
-				.put("fiscalPower", 8) //
-				.put("size", 4.67) //
+				.add("description", "Cette voiture sent bon la France. Elle est inventive et raffinée.") //
+				.add("fiscalPower", 8) //
+				.add("size", 4.67) //
 				.end().object("location") //
-				.put("lat", -55.6765) //
-				.put("lon", -54.6765) //
+				.add("lat", -55.6765) //
+				.add("lon", -54.6765) //
 				.build();
 
 		// create
