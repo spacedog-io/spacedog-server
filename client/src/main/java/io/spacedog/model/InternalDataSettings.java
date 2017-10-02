@@ -11,7 +11,7 @@ import com.google.common.collect.Sets;
 import io.spacedog.model.Schema.DataAcl;
 import io.spacedog.utils.Credentials;
 
-public class InternalDataSettings extends Settings {
+public class InternalDataSettings extends SettingsBase {
 
 	public static final long serialVersionUID = 4064111112532790399L;
 

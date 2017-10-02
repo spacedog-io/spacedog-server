@@ -2,7 +2,7 @@ package io.spacedog.model;
 
 import java.util.Map;
 
-public class MailSettings extends Settings {
+public class MailSettings extends SettingsBase {
 	public boolean enableUserFullAccess;
 	public MailGunSettings mailgun;
 	public SmtpSettings smtp;

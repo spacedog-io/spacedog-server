@@ -6,7 +6,7 @@ import io.spacedog.utils.Passwords;
 import io.spacedog.utils.Usernames;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CredentialsSettings extends Settings {
+public class CredentialsSettings extends SettingsBase {
 
 	// default token lifetime is 24h
 	public static final long SESSION_DEFAULT_LIFETIME = 60 * 60 * 24;

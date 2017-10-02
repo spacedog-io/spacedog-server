@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.http.SpaceResponse;
 import io.spacedog.model.Settings;
+import io.spacedog.model.SettingsBase;
 import io.spacedog.utils.Optional7;
 
 public class SettingsEndpoint {
@@ -16,7 +17,7 @@ public class SettingsEndpoint {
 	}
 
 	public <K extends Settings> Optional7<K> exists(Class<K> settingsClass) {
-		return exists(Settings.id(settingsClass), settingsClass);
+		return exists(SettingsBase.id(settingsClass), settingsClass);
 	}
 
 	public <K> Optional7<K> exists(String id, Class<K> settingsClass) {
@@ -36,7 +37,7 @@ public class SettingsEndpoint {
 	}
 
 	public <K extends Settings> K get(Class<K> settingsClass) {
-		return get(Settings.id(settingsClass), settingsClass);
+		return get(SettingsBase.id(settingsClass), settingsClass);
 	}
 
 	public <K> K get(String id, Class<K> settingsClass) {
@@ -51,7 +52,7 @@ public class SettingsEndpoint {
 	// get field
 
 	public JsonNode get(Class<? extends Settings> settingsClass, String field) {
-		return get(Settings.id(settingsClass), field);
+		return get(SettingsBase.id(settingsClass), field);
 	}
 
 	public JsonNode get(String id, String field) {
@@ -59,7 +60,7 @@ public class SettingsEndpoint {
 	}
 
 	public <K> K get(Class<? extends Settings> settingsClass, String field, Class<K> fieldClass) {
-		return get(Settings.id(settingsClass), field, fieldClass);
+		return get(SettingsBase.id(settingsClass), field, fieldClass);
 	}
 
 	public <K> K get(String id, String field, Class<K> fieldClass) {
@@ -96,7 +97,7 @@ public class SettingsEndpoint {
 	// save field
 
 	public void save(Class<? extends Settings> settingsClass, String field, JsonNode value) {
-		save(Settings.id(settingsClass), field, value);
+		save(SettingsBase.id(settingsClass), field, value);
 	}
 
 	public void save(String id, String field, JsonNode value) {
@@ -106,7 +107,7 @@ public class SettingsEndpoint {
 	}
 
 	public void save(Class<? extends Settings> settingsClass, String field, Object value) {
-		save(Settings.id(settingsClass), field, value);
+		save(SettingsBase.id(settingsClass), field, value);
 	}
 
 	public void save(String id, String field, Object value) {
@@ -118,7 +119,7 @@ public class SettingsEndpoint {
 	// delete settings
 
 	public <K extends Settings> void delete(Class<K> settingsClass) {
-		delete(Settings.id(settingsClass));
+		delete(SettingsBase.id(settingsClass));
 	}
 
 	public void delete(String id) {
@@ -128,7 +129,7 @@ public class SettingsEndpoint {
 	// delete field
 
 	public <K extends Settings> void delete(Class<K> settingsClass, String field) {
-		delete(Settings.id(settingsClass), field);
+		delete(SettingsBase.id(settingsClass), field);
 	}
 
 	public void delete(String id, String field) {

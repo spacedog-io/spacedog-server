@@ -17,7 +17,7 @@ import com.google.common.collect.Sets;
 		getterVisibility = Visibility.NONE, //
 		isGetterVisibility = Visibility.NONE, //
 		setterVisibility = Visibility.NONE)
-public class SettingsSettings extends Settings {
+public class SettingsSettings extends SettingsBase {
 
 	// only map to private fields
 	@JsonAutoDetect(fieldVisibility = Visibility.ANY, //

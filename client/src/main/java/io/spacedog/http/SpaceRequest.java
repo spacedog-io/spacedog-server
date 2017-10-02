@@ -231,7 +231,7 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest bodySettings(Settings settings) {
-		return bodyJson(Json.mapper().valueToTree(settings));
+		return bodyJson(Json.toJsonNode(settings));
 	}
 
 	public SpaceRequest bodyPojo(Object pojo) {

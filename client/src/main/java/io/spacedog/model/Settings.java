@@ -1,15 +1,6 @@
 package io.spacedog.model;
 
-import io.spacedog.utils.Utils;
+public interface Settings {
 
-public class Settings {
-
-	public String id() {
-		return id(getClass());
-	}
-
-	public static String id(Class<? extends Settings> settingsClass) {
-		return Utils.removeSuffix(settingsClass.getSimpleName(), "Settings")//
-				.toLowerCase();
-	}
+	public String id();
 }

@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
 
 import io.spacedog.model.Settings;
+import io.spacedog.model.SettingsBase;
 import io.spacedog.model.SettingsSettings;
 import io.spacedog.model.SettingsSettings.SettingsAcl;
 import io.spacedog.utils.Credentials;
@@ -162,7 +163,7 @@ public class SettingsResource extends Resource {
 	//
 
 	public <K extends Settings> K getAsObject(Class<K> settingsClass) {
-		String id = Settings.id(settingsClass);
+		String id = SettingsBase.id(settingsClass);
 		@SuppressWarnings("unchecked")
 		K settings = (K) SpaceContext.getSettings(id);
 		if (settings != null)
@@ -196,7 +197,7 @@ public class SettingsResource extends Resource {
 		if (registeredSettingsClasses == null)
 			registeredSettingsClasses = Maps.newHashMap();
 
-		registeredSettingsClasses.put(Settings.id(settingsClass), settingsClass);
+		registeredSettingsClasses.put(SettingsBase.id(settingsClass), settingsClass);
 	}
 
 	public <T extends Settings> IndexResponse setAsObject(T settings) {
@@ -222,7 +223,7 @@ public class SettingsResource extends Resource {
 	}
 
 	private <K extends Settings> K instantiateDefaultAsObject(Class<K> settingsClass) {
-		if (registeredSettingsClasses.containsKey(Settings.id(settingsClass)))
+		if (registeredSettingsClasses.containsKey(SettingsBase.id(settingsClass)))
 			return Utils.instantiate(settingsClass);
 
 		throw Exceptions.runtime("settings class [%s] not registered", //

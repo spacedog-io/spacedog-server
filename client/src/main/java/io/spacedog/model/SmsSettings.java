@@ -3,7 +3,7 @@ package io.spacedog.model;
 import java.util.Map;
 import java.util.Set;
 
-public class SmsSettings extends Settings {
+public class SmsSettings extends SettingsBase {
 	public Set<String> rolesAllowedToSendSms;
 	public TwilioSettings twilio;
 	public Map<String, SmsTemplate> templates;

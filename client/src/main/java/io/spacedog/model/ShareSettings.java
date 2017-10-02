@@ -11,7 +11,7 @@ import com.google.common.collect.Sets;
 
 import io.spacedog.utils.Credentials;
 
-public class ShareSettings extends Settings {
+public class ShareSettings extends SettingsBase {
 
 	public static final Map<String, Set<DataPermission>> defaultAcl = Maps.newHashMap();
 
