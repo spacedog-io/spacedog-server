@@ -47,8 +47,6 @@ public class Watchdog extends RunListener {
 				junit.run(SchemaResourceTestOften.class);
 				junit.run(SearchResourceTestOften.class);
 				junit.run(ServiceErrorFilterTestOften.class);
-				junit.run(BackendResourceTestOncePerDay.class);
-				junit.run(ServiceErrorFilterTestOncePerDay.class);
 				junit.run(FileResourceTestOncePerDay.class);
 				junit.run(ShareResourceTestOncePerDay.class);
 				junit.run(WebResourceTestOncePerDay.class);
