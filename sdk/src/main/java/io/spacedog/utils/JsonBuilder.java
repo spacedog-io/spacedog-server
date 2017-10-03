@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class JsonBuilder<N extends JsonNode> {
 
-	private LinkedList<JsonNode> stack = new LinkedList<JsonNode>();
+	private LinkedList<JsonNode> stack = new LinkedList<>();
 
 	//
 	// object methods
@@ -31,9 +31,7 @@ public class JsonBuilder<N extends JsonNode> {
 		else if (value instanceof String)
 			put(key, (String) value);
 		else
-			throw Exceptions.illegalArgument("invalid value type [%s]", //
-					value.getClass().getSimpleName());
-
+			node(key, Json7.toNode(value));
 		return this;
 	}
 
