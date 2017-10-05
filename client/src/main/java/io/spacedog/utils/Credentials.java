@@ -62,7 +62,7 @@ public class Credentials {
 		}
 	}
 
-	public static final Credentials GUEST = new Credentials("guest");
+	public static final Credentials GUEST = new Credentials("guest").id("guest");
 
 	private String username;
 	private String email;
