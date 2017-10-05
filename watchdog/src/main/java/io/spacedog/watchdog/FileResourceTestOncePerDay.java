@@ -2,6 +2,7 @@ package io.spacedog.watchdog;
 
 import org.junit.Test;
 
+import io.spacedog.client.FileEndpoint.FileList;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceTest;
@@ -9,52 +10,62 @@ import io.spacedog.utils.SpaceHeaders;
 
 public class FileResourceTestOncePerDay extends SpaceTest {
 
-	private static final byte[] BYTES = "This is a test file!".getBytes();
+	private static final byte[] XXX = "XXX".getBytes();
 
 	@Test
 	public void test() throws Exception {
 
+		// prepare
 		prepareTest(false);
-		SpaceDog test = resetTestBackend();
+		SpaceDog superadmin = resetTestBackend();
 
-		SpaceRequest.get("/1/file").auth(test).go(200)//
-				.assertSizeEquals(0, "results");
+		// superadmin checks backend is truly empty
+		FileList list = superadmin.file().list("/");
+		assertEquals(0, list.files.length);
 
 		// upload file without prefix is illegal
-		SpaceRequest.put("/1/file/index.html").auth(test).bodyBytes(BYTES).go(400);
+		superadmin.put("/1/file").bodyBytes(XXX).go(400);
 
 		// admin can upload a web site
-		SpaceRequest.put("/1/file/www/app.html").auth(test).bodyBytes(BYTES).go(200);
-		SpaceRequest.put("/1/file/www/app.js").auth(test).bodyBytes(BYTES).go(200);
-		SpaceRequest.put("/1/file/www/images/riri.png").auth(test).bodyBytes(BYTES).go(200);
-		SpaceRequest.put("/1/file/www/images/fifi.jpg").auth(test).bodyBytes(BYTES).go(200);
-		SpaceRequest.put("/1/file/www/css/black.css").auth(test).bodyBytes(BYTES).go(200);
-		SpaceRequest.put("/1/file/www/css/white.css").auth(test).bodyBytes(BYTES).go(200);
+		superadmin.file().save("/www/app.html", "/www/app.html".getBytes());
+		superadmin.file().save("/www/app.js", "/www/app.js".getBytes());
+		superadmin.file().save("/www/images/riri.png", "/www/images/riri.png".getBytes());
+		superadmin.file().save("/www/images/fifi.jpg", "/www/images/fifi.jpg".getBytes());
+		superadmin.file().save("/www/css/black.css", "/www/css/black.css".getBytes());
+		superadmin.file().save("/www/css/white.css", "/www/css/white.css".getBytes());
 
-		SpaceRequest.get("/1/file").auth(test).go(200)//
-				.assertSizeEquals(6, "results");
+		list = superadmin.file().list("/");
+		assertEquals(6, list.files.length);
 
-		SpaceRequest.get("/1/file/www/app.html").backend(test).go(200)//
+		// superadmin gets app.html
+		byte[] bytes = superadmin.file().get("/www/app.html");
+		assertArrayEquals("/www/app.html".getBytes(), bytes);
+
+		// superadmin gets file and to check content types
+		SpaceRequest.get("/1/file/www/app.html").backend(superadmin).go(200)//
 				.assertHeaderEquals("text/html", SpaceHeaders.CONTENT_TYPE);
 
-		SpaceRequest.get("/1/file/www/app.js").backend(test).go(200)//
+		SpaceRequest.get("/1/file/www/app.js").backend(superadmin).go(200)//
 				.assertHeaderEquals("application/javascript", SpaceHeaders.CONTENT_TYPE);
 
-		SpaceRequest.get("/1/file/www/css/black.css").backend(test).go(200)//
+		SpaceRequest.get("/1/file/www/css/black.css").backend(superadmin).go(200)//
 				.assertHeaderEquals("text/css", SpaceHeaders.CONTENT_TYPE);
 
-		SpaceRequest.get("/1/file/www/images").auth(test).go(200)//
-				.assertSizeEquals(2, "results");
+		// superadmin lists all images
+		list = superadmin.file().list("/www/images");
+		assertEquals(2, list.files.length);
 
-		SpaceRequest.delete("/1/file/www/css").auth(test).go(200)//
-				.assertSizeEquals(2, "deleted");
+		// superadmin deletes all css files
+		superadmin.file().delete("/www/css");
+		list = superadmin.file().list("/www/css");
+		assertEquals(0, list.files.length);
 
-		SpaceRequest.get("/1/file/www").auth(test).go(200)//
-				.assertSizeEquals(4, "results");
+		// superadmin fails to get just deleted css file
+		superadmin.get("/1/file/www/css/black.css").go(404);
 
-		SpaceRequest.get("/1/file/www/css/black.css").backend(test).go(404);
-
-		SpaceRequest.delete("/1/file").auth(test).go(200)//
-				.assertSizeEquals(4, "deleted");
+		// superadmin deletes all files
+		superadmin.file().delete("/");
+		list = superadmin.file().list("/");
+		assertEquals(0, list.files.length);
 	}
 }
