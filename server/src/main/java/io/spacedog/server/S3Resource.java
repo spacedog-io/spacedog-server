@@ -246,8 +246,7 @@ public class S3Resource extends Resource {
 		metadata.setContentLength(Long.valueOf(context.header("Content-Length")));
 		metadata.setContentDisposition(//
 				String.format("attachment; filename=\"%s\"", fileName));
-		metadata.addUserMetadata("owner", credentials.name());
-		metadata.addUserMetadata("owner-type", credentials.type().name());
+		metadata.addUserMetadata(OWNER_FIELD, credentials.id());
 
 		PutObjectResult putResult = s3.putObject(new PutObjectRequest(bucketName, //
 				s3Path.toS3Key(), new ByteArrayInputStream(bytes), //
@@ -273,19 +272,13 @@ public class S3Resource extends Resource {
 
 	private String getOrCheckOwnership(ObjectMetadata metadata, boolean checkOwnership) {
 
-		String owner = metadata.getUserMetaDataOf("owner");
+		String owner = metadata.getUserMetaDataOf(OWNER_FIELD);
 		Credentials credentials = SpaceContext.credentials();
 
-		if (!checkOwnership)
-			return owner;
+		if (checkOwnership && !credentials.id().equals(owner))
+			throw Exceptions.insufficientCredentials(credentials);
 
-		String ownerType = metadata.getUserMetaDataOf("owner-type");
-
-		if (credentials.name().equals(owner) //
-				&& credentials.type().name().equals(ownerType))
-			return owner;
-
-		throw Exceptions.insufficientCredentials(credentials);
+		return owner;
 	}
 
 	private WebPath fromS3Key(String s3Key) {

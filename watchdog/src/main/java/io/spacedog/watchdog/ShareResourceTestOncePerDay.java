@@ -66,7 +66,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		byte[] downloadedBytes = SpaceRequest.get(pngLocation).go(200)//
 				// .assertHeaderEquals("gzip", SpaceHeaders.CONTENT_ENCODING)//
 				.assertHeaderEquals("image/png", SpaceHeaders.CONTENT_TYPE)//
-				.assertHeaderEquals("vince", SpaceHeaders.SPACEDOG_OWNER)//
+				.assertHeaderEquals(vince.id(), SpaceHeaders.SPACEDOG_OWNER)//
 				.asBytes();
 
 		Assert.assertTrue(Arrays.equals(pngBytes, downloadedBytes));
@@ -119,7 +119,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		String stringContent = SpaceRequest.get(txtLocation).backend(test).go(200)//
 				// .assertHeaderEquals("gzip", SpaceHeaders.CONTENT_ENCODING)//
 				.assertHeaderEquals("text/plain", SpaceHeaders.CONTENT_TYPE)//
-				.assertHeaderEquals("fred", SpaceHeaders.SPACEDOG_OWNER)//
+				.assertHeaderEquals(fred.id(), SpaceHeaders.SPACEDOG_OWNER)//
 				.asString();
 
 		Assert.assertEquals(FILE_CONTENT, stringContent);
