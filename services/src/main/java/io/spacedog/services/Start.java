@@ -22,6 +22,7 @@ import com.google.common.io.Resources;
 
 import io.spacedog.core.Json8;
 import io.spacedog.services.caremen.CaremenResource;
+import io.spacedog.services.toolee.TooleeResource;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Utils;
 import net.codestory.http.AbstractWebServer;
@@ -222,7 +223,8 @@ public class Start {
 				.add(StripeResource.get())//
 				.add(ShareResource.get())//
 				.add(SettingsResource.get())//
-				.add(SearchResource.get());
+				.add(SearchResource.get())//
+				.add(TooleeResource.get());
 
 		routes.filter(new CrossOriginFilter())//
 				.filter(SpaceContext.filter())//
