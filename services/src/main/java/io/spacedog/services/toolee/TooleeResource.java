@@ -69,6 +69,8 @@ public class TooleeResource extends Resource {
 		ElasticClient elastic = Start.get().getElasticClient();
 		String alias = elastic.toAlias(credentials.backendId(), DOCUMENT_TYPE);
 
+		int size = context.query().getInteger(PARAM_SIZE, 10);
+
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
 				.must(QueryBuilders.termQuery(COMPANY_ID, id))//
 				.must(QueryBuilders.existsQuery(TAGS));
@@ -81,7 +83,7 @@ public class TooleeResource extends Resource {
 				.setIndices(alias).setTypes(DOCUMENT_TYPE)//
 				.setQuery(query)//
 				.setFrom(0)//
-				.setSize(10)//
+				.setSize(size)//
 				.setVersion(false)//
 				.addFields(TAGS)//
 				.setFetchSource(false)//
