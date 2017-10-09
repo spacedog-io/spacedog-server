@@ -7,6 +7,6 @@ public class Company {
 	public String id;
 	public String name;
 	public int notifications;
-	public long docsToClassify;
+	public long docsToAnalyze;
 	public long docsToProcess;
 }

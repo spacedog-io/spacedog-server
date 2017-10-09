@@ -36,7 +36,7 @@ public class TooleeResource extends Resource {
 	private static final String COMPANY_TYPE = "company";
 	private static final String DOCUMENT_TYPE = "document";
 	private static final String ANALYZED_STATUS = "analyzed";
-	private static final String RECEIVED_STATUS = "received";
+	private static final String CLASSIFIED_STATUS = "classified";
 	private static final String ACCOUNTANT_ROLE = "accountant";
 	private static final String ACCOUNTANT_CREDENTIALS_IDS = "accountantCredentialsIds";
 	private static final String CONTROLLER_CREDENTIALS_IDS = "controllerCredentialsIds";
@@ -107,7 +107,7 @@ public class TooleeResource extends Resource {
 	// Implementation
 	//
 
-	private static String[] statuses = { ANALYZED_STATUS, RECEIVED_STATUS };
+	private static String[] statuses = { ANALYZED_STATUS, CLASSIFIED_STATUS };
 
 	private void computeCustomerIndicators(Credentials credentials, Company[] companies) {
 		ElasticClient elastic = Start.get().getElasticClient();
@@ -137,8 +137,8 @@ public class TooleeResource extends Resource {
 			Bucket bucket = agg.getBucketByKey(company.id);
 			if (bucket != null) {
 				Terms agg2 = (Terms) bucket.getAggregations().get("waiting");
-				bucket = agg2.getBucketByKey(RECEIVED_STATUS);
-				company.docsToClassify = bucket == null ? 0 : bucket.getDocCount();
+				bucket = agg2.getBucketByKey(CLASSIFIED_STATUS);
+				company.docsToAnalyze = bucket == null ? 0 : bucket.getDocCount();
 				bucket = agg2.getBucketByKey(ANALYZED_STATUS);
 				company.docsToProcess = bucket == null ? 0 : bucket.getDocCount();
 			}
