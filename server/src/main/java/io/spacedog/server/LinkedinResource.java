@@ -25,13 +25,8 @@ public class LinkedinResource extends Resource {
 	// Routes
 	//
 
-	@Get("/1/login/linkedin")
-	@Get("/1/login/linkedin/")
 	@Post("/1/login/linkedin")
 	@Post("/1/login/linkedin/")
-	// TODO deprecated
-	@Post("/1/credentials/linkedin")
-	@Post("/1/credentials/linkedin/")
 	public Payload getLogin(Context context) {
 		Credentials credentials = login(context);
 
@@ -50,13 +45,12 @@ public class LinkedinResource extends Resource {
 		String state = context.get("state");
 
 		if (Strings.isNullOrEmpty(finalRedirectUri)) {
-			finalRedirectUri = SettingsResource.get()//
-					.getAsObject(CredentialsSettings.class)//
-							.linkedinFinalRedirectUri;
+			finalRedirectUri = getCredentialsSettings()//
+					.linkedin.finalRedirectUri;
 
 			if (Strings.isNullOrEmpty(finalRedirectUri))
 				throw Exceptions.illegalArgument(//
-						"credentials settings [linkedinFinalRedirectUri] is required");
+						"credentials settings [linkedin.finalRedirectUri] is required");
 		} else
 			// TODO remove this when mikael finds out why
 			// the redirect_uri is passed with a ';' suffix
@@ -150,10 +144,7 @@ public class LinkedinResource extends Resource {
 	private Credentials login(Context context) {
 		String code = Check.notNullOrEmpty(context.get("code"), "code");
 
-		CredentialsSettings settings = SettingsResource.get().getAsObject(CredentialsSettings.class);
-		if (Strings.isNullOrEmpty(settings.linkedinId))
-			throw Exceptions.illegalArgument("credentials settings [linkedinId] is required");
-
+		CredentialsSettings settings = getCredentialsSettings();
 		String redirectUri = context.get("redirect_uri");
 
 		// no redirect_uri in context means
@@ -168,10 +159,10 @@ public class LinkedinResource extends Resource {
 			redirectUri = Utils.removeSuffix(redirectUri, ";");
 
 		SpaceResponse response = SpaceRequest.post("/oauth/v2/accessToken")//
-				.backend("https://www.linkedin.com")//
+				.backend(settings.linkedin.backendUrl)//
 				.queryParam("grant_type", "authorization_code")//
-				.queryParam("client_id", settings.linkedinId)//
-				.queryParam("client_secret", settings.linkedinSecret)//
+				.queryParam("client_id", settings.linkedin.clientId)//
+				.queryParam("client_secret", settings.linkedin.clientSecret)//
 				.queryParam("redirect_uri", redirectUri)//
 				.queryParam("code", code)//
 				.go();
@@ -180,7 +171,7 @@ public class LinkedinResource extends Resource {
 
 		String accessToken = response.asJsonObject().get("access_token").asText();
 
-		long expiresIn = settings.useLinkedinExpiresIn //
+		long expiresIn = settings.linkedin.useExpiresIn //
 				? response.asJsonObject().get("expires_in").asLong() //
 				: CredentialsResource.get().getCheckSessionLifetime(context);
 
@@ -213,6 +204,15 @@ public class LinkedinResource extends Resource {
 			credentials = credentialsResource.update(credentials);
 
 		return credentials;
+	}
+
+	private CredentialsSettings getCredentialsSettings() {
+		CredentialsSettings settings = SettingsResource.get().getAsObject(CredentialsSettings.class);
+		Check.notNull(settings.linkedin, "linkedin");
+		Check.notNull(settings.linkedin.clientId, "linkedin.clientId");
+		Check.notNull(settings.linkedin.clientSecret, "linkedin.clientSecret");
+		Check.notNull(settings.linkedin.backendUrl, "linkedin.backendUrl");
+		return settings;
 	}
 
 	//

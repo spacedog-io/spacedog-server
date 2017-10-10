@@ -14,6 +14,7 @@ import io.spacedog.http.SpaceEnv;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceTest;
 import io.spacedog.model.CredentialsSettings;
+import io.spacedog.model.CredentialsSettings.OAuthSettings;
 
 public class Linkedin extends SpaceTest {
 
@@ -36,14 +37,14 @@ public class Linkedin extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
+		SpaceDog superadmin = resetTestBackend();
 
 		// credentials settings with guest sign up enabled
-		CredentialsSettings settings = defaultCredentialsSettings(test, false);
-		test.settings().save(settings);
+		CredentialsSettings settings = defaultCredentialsSettings(superadmin, false);
+		superadmin.settings().save(settings);
 
 		// login succeeds
-		linkedinLogin(test, false, settings);
+		linkedinLogin(superadmin, false, settings);
 	}
 
 	@Test
@@ -52,16 +53,16 @@ public class Linkedin extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
+		SpaceDog superadmin = resetTestBackend();
 
 		// credentials settings with guest sign up enabled
-		CredentialsSettings settings = defaultCredentialsSettings(test, false);
-		settings.useLinkedinExpiresIn = false;
+		CredentialsSettings settings = defaultCredentialsSettings(superadmin, false);
+		settings.linkedin.useExpiresIn = false;
 		settings.sessionMaximumLifetime = 10000;
-		test.settings().save(settings);
+		superadmin.settings().save(settings);
 
 		// expiresIn is between 9000 and 10000
-		linkedinLogin(test, false, settings);
+		linkedinLogin(superadmin, false, settings);
 	}
 
 	@Test
@@ -70,15 +71,15 @@ public class Linkedin extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
+		SpaceDog superadmin = resetTestBackend();
 
 		// set credentials settings with guest sign up disabled
-		CredentialsSettings settings = defaultCredentialsSettings(test, true);
-		test.settings().save(settings);
+		CredentialsSettings settings = defaultCredentialsSettings(superadmin, true);
+		superadmin.settings().save(settings);
 
 		// login fails since guest sign in is disabled
 		// and credentials has not been pre created by admin
-		linkedinLogin(test, false, settings);
+		linkedinLogin(superadmin, false, settings);
 	}
 
 	@Test
@@ -87,22 +88,22 @@ public class Linkedin extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
+		SpaceDog superadmin = resetTestBackend();
 
 		// set credentials settings with guest sign up disabled
-		CredentialsSettings settings = defaultCredentialsSettings(test, true);
-		test.settings().save(settings);
+		CredentialsSettings settings = defaultCredentialsSettings(superadmin, true);
+		superadmin.settings().save(settings);
 
 		// admin pre registers some credentials for a new user
 		// username must equals the linkedin account email
-		SpaceRequest.post("/1/credentials").auth(test)//
+		superadmin.post("/1/credentials")//
 				.bodyJson("username", "attias666@gmail.com", "email", "attias666@gmail.com")//
 				.go(201).assertPresent("passwordResetCode");
 
 		// login succeeds
 		// check credentialsId in json payload is identical
 		// to credentialsId in previous request before login
-		linkedinLogin(test, false, settings);
+		linkedinLogin(superadmin, false, settings);
 	}
 
 	@Test
@@ -111,16 +112,16 @@ public class Linkedin extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
+		SpaceDog superadmin = resetTestBackend();
 
 		// set credentials settings with guest sign up disabled
-		CredentialsSettings settings = defaultCredentialsSettings(test, true);
-		settings.linkedinSecret = "XXX";
-		test.settings().save(settings);
+		CredentialsSettings settings = defaultCredentialsSettings(superadmin, true);
+		settings.linkedin.clientSecret = "XXX";
+		superadmin.settings().save(settings);
 
 		// login fails since secret is invalid
 		// check error in response json payload
-		linkedinLogin(test, false, settings);
+		linkedinLogin(superadmin, false, settings);
 	}
 
 	@Test
@@ -128,15 +129,15 @@ public class Linkedin extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
+		SpaceDog superadmin = resetTestBackend();
 
 		// credentials settings with guest sign up enabled
-		CredentialsSettings settings = defaultCredentialsSettings(test, false);
-		test.settings().save(settings);
+		CredentialsSettings settings = defaultCredentialsSettings(superadmin, false);
+		superadmin.settings().save(settings);
 
 		// login succeeds
 		// check access token in redirect url params
-		linkedinLogin(test, true, settings);
+		linkedinLogin(superadmin, true, settings);
 	}
 
 	@Test
@@ -145,16 +146,16 @@ public class Linkedin extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
+		SpaceDog superadmin = resetTestBackend();
 
 		// set credentials settings with guest sign up disabled
-		CredentialsSettings settings = defaultCredentialsSettings(test, true);
-		settings.linkedinSecret = "XXX";
-		test.settings().save(settings);
+		CredentialsSettings settings = defaultCredentialsSettings(superadmin, true);
+		settings.linkedin.clientSecret = "XXX";
+		superadmin.settings().save(settings);
 
 		// login fails since secret is invalid
 		// check error in redirect url params
-		linkedinLogin(test, true, settings);
+		linkedinLogin(superadmin, true, settings);
 	}
 
 	private void linkedinLogin(SpaceDog dog, boolean redirect, CredentialsSettings settings)
@@ -171,7 +172,7 @@ public class Linkedin extends SpaceTest {
 		url.addParameter("response_type", "code");
 		url.addParameter("state", "thisIsSpaceDog");
 		url.addParameter("redirect_uri", redirectUri);
-		url.addParameter("client_id", settings.linkedinId);
+		url.addParameter("client_id", settings.linkedin.clientId);
 
 		// open a browser with the linkedin signin url
 		// to start the linkedin oauth2 authentication process
@@ -184,9 +185,11 @@ public class Linkedin extends SpaceTest {
 		SpaceEnv env = SpaceEnv.defaultEnv();
 		CredentialsSettings settings = new CredentialsSettings();
 		settings.disableGuestSignUp = disableGuestSignUp;
-		settings.linkedinId = env.getOrElseThrow("spacedog.test.linkedin.client.id");
-		settings.linkedinSecret = env.getOrElseThrow("spacedog.test.linkedin.client.secret");
-		settings.linkedinFinalRedirectUri = dog.backend().url();
+		settings.linkedin = new OAuthSettings();
+		settings.linkedin.backendUrl = "https://www.linkedin.com";
+		settings.linkedin.clientId = env.getOrElseThrow("spacedog.test.linkedin.client.id");
+		settings.linkedin.clientSecret = env.getOrElseThrow("spacedog.test.linkedin.client.secret");
+		settings.linkedin.finalRedirectUri = dog.backend().url();
 		return settings;
 	}
 }
