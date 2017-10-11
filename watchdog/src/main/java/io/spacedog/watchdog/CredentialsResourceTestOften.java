@@ -340,6 +340,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
+		SpaceDog guest = SpaceDog.backend(superadmin);
 		SpaceDog fred = createTempUser(superadmin, "fred");
 
 		// sign up without password should succeed
@@ -401,9 +402,9 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// login with old password should fail
 		SpaceRequest.get("/1/login").backend("test").basicAuth("titi", "hi titi").go(401);
 
-		// admin user changes titi user password should succeed
+		// superadmin changes titi user password should succeed
 		// official json body style
-		SpaceRequest.put("/1/credentials/" + titiId + "/password").backend("test").basicAuth("test", "hi test")//
+		superadmin.put("/1/credentials/" + titiId + "/password")//
 				.bodyJson(TextNode.valueOf("hi titi 3"))//
 				.go(200);
 
@@ -420,13 +421,13 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		SpaceRequest.get("/1/login").backend("test").basicAuth("titi", "hi titi 3").go(401);
 
 		// titi inits its password with old reset code should fail
-		SpaceRequest.post("/1/credentials/" + titiId + "/password").backend(superadmin)//
+		guest.post("/1/credentials/" + titiId + "/password")//
 				.queryParam("passwordResetCode", passwordResetCode)//
 				.formField("password", "hi titi")//
 				.go(400);
 
 		// titi inits its password with new reset code should fail
-		SpaceRequest.post("/1/credentials/" + titiId + "/password").backend(superadmin)//
+		guest.post("/1/credentials/" + titiId + "/password")//
 				.queryParam("passwordResetCode", newPasswordResetCode)//
 				.formField("password", "hi titi")//
 				.go(200);
@@ -443,17 +444,16 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		SpaceDog fred = createTempUser(superadmin, "fred");
 
 		// fred can login
-		fred.get("/1/login").go(200);
+		fred.login();
 
-		// admin deletes backend
+		// superadmin deletes the test backend
 		superadmin.admin().deleteBackend(superadmin.backendId());
 
 		// fred fails to login since backend is no more
 		fred.get("/1/login").go(401);
 
-		// admin creates backend with the same name
-		SpaceDog.backend(superadmin).admin().createBackend(//
-				"test", "hi test", "platform@spacedog.io", false);
+		// superadmin recreates a brand new test backend
+		superadmin = createBackend(superadmin.backendId());
 
 		// fred fails to login since backend is brand new
 		fred.get("/1/login").go(401);

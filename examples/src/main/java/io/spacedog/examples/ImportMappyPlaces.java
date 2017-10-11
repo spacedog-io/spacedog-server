@@ -22,7 +22,8 @@ public class ImportMappyPlaces extends SpaceTest {
 		try {
 
 			SpaceRequest.setForTestingDefault(false);
-			superadmin = resetBackend("examples", "examples", "hi examples");
+			superdog().admin().deleteBackend("examples");
+			superadmin = createBackend("examples");
 			superadmin.post("/1/schema/resto").bodySchema(buildRestoSchema()).go(201);
 
 			double step = 0.01;

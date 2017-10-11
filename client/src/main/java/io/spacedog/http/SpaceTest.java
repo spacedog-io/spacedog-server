@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.utils.Check;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Passwords;
 import io.spacedog.utils.SpaceFields;
@@ -31,24 +32,30 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 	}
 
 	public static SpaceDog resetTestBackend() {
-		return resetBackend("test", "test", "hi test");
+		return resetBackend("test");
 	}
 
 	public static SpaceDog resetTest2Backend() {
-		return resetBackend("test2", "test2", "hi test2");
+		return resetBackend("test2");
 	}
 
-	public static SpaceDog resetBackend(String backendId, String username, String password) {
-		return resetBackend(backendId, username, password, DEFAULT_EMAIL);
+	public static SpaceDog resetBackend(String backendId) {
+		deleteBackend(backendId);
+		return createBackend(backendId);
 	}
 
-	public static SpaceDog resetBackend(String backendId, String username, String password, //
-			String email) {
-		SpaceDog superadmin = SpaceDog.backendId(backendId)//
-				.username(username).password(password).email(email);
-		superadmin.admin().deleteBackend(backendId);
-		SpaceDog.backendId(backendId).admin().createBackend(username, password, email, false);
-		return superadmin;
+	public static void deleteBackend(String backendId) {
+		Check.isTrue(backendId.startsWith("test"), //
+				"only test backends can be deleted this way");
+		superdog().admin().deleteBackend(backendId);
+	}
+
+	public static SpaceDog createBackend(String backendId) {
+		String password = Passwords.random();
+		SpaceDog.backendId(backendId).admin()//
+				.createBackend(backendId, password, DEFAULT_EMAIL, false);
+		return SpaceDog.backendId(backendId).username(backendId)//
+				.password(password).email(DEFAULT_EMAIL);
 	}
 
 	public static void prepareTest() {

@@ -11,10 +11,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceRequest;
-import io.spacedog.http.SpaceRequestException;
 import io.spacedog.http.SpaceResponse;
 import io.spacedog.http.SpaceTest;
-import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Credentials;
+import io.spacedog.utils.Optional7;
 
 public class SnapshotResourceTest extends SpaceTest {
 
@@ -23,34 +23,22 @@ public class SnapshotResourceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog aaaa = SpaceDog.backendId("aaaa").username("aaaa").password("hi aaaa");
-		SpaceDog bbbb = SpaceDog.backendId("bbbb").username("bbbb").password("hi bbbb");
-		SpaceDog cccc = SpaceDog.backendId("cccc").username("cccc").password("hi cccc");
-
-		aaaa.admin().deleteBackend(aaaa.backendId());
-		bbbb.admin().deleteBackend(bbbb.backendId());
-		cccc.admin().deleteBackend(cccc.backendId());
+		deleteBackend("test1");
+		deleteBackend("test2");
+		deleteBackend("test3");
 
 		// superdog creates snapshotall user in root backend
 		SpaceDog superdog = superdog();
-		SpaceDog snapshotAll = SpaceDog.backend(superdog)//
-				.username("snapshotAll").email("platform@spacedog.io");
+		Optional7<Credentials> optional = superdog.credentials().getByUsername("snaptest");
+		if (optional.isPresent())
+			superdog.credentials().delete(optional.get().id());
 
-		try {
-			snapshotAll.credentials().signUp("hi snapshotAll");
-
-		} catch (SpaceRequestException e) {
-			if (!Exceptions.ALREADY_EXISTS.equals(e.serverErrorCode()))
-				throw e;
-		}
-
-		snapshotAll.login("hi snapshotAll");
-		superdog.credentials().setRole(snapshotAll.id(), "snapshotall");
+		SpaceDog snapDog = createTempUser(superdog, "snaptest");
+		superdog.credentials().setRole(snapDog.id(), "snapshotall");
 
 		// creates backend and credentials
-		SpaceDog.backendId(aaaa.backendId()).admin().createBackend(//
-				aaaa.username(), aaaa.password().get(), "platform@spacedog.io", false);
-		SpaceDog vince = createTempUser(aaaa, "vince");
+		SpaceDog test1 = createBackend("test1");
+		SpaceDog vince = createTempUser(test1, "vince");
 
 		// deletes the current repository to force repo creation by this test
 		// use full url to avoid delete by mistake any prod repo
@@ -90,9 +78,8 @@ public class SnapshotResourceTest extends SpaceTest {
 				.assertEquals(firstSnap);
 
 		// creates another backend and credentials
-		SpaceDog.backendId(bbbb.backendId()).admin().createBackend(//
-				bbbb.username(), bbbb.password().get(), "platform@spacedog.io", false);
-		SpaceDog fred = createTempUser(bbbb, "fred");
+		SpaceDog test2 = createBackend("test2");
+		SpaceDog fred = createTempUser(test2, "fred");
 
 		// second snapshot
 		// returns 201 since wait for completion true (202 otherwise)
@@ -112,15 +99,14 @@ public class SnapshotResourceTest extends SpaceTest {
 				.assertEquals(firstSnap, "results.1");
 
 		// create another account and add a credentials
-		SpaceDog.backendId(cccc.backendId()).admin().createBackend(//
-				cccc.username(), cccc.password().get(), "platform@spacedog.io", false);
-		SpaceDog nath = createTempUser(cccc, "nath");
+		SpaceDog test3 = createBackend("test3");
+		SpaceDog nath = createTempUser(test3, "nath");
 
 		// third snapshot
 		// returns 201 since wait for completion true (202 otherwise)
 		// Authorized since snapshotUser is a root backend user
 		// and has the snapshotall role
-		response = snapshotAll.post("/1/snapshot")//
+		response = snapDog.post("/1/snapshot")//
 				.queryParam("waitForCompletion", "true")//
 				.go(201)//
 				.assertEquals(repository, "snapshot.repository")//
@@ -131,13 +117,13 @@ public class SnapshotResourceTest extends SpaceTest {
 		String thirdSnapId = response.getString("id");
 
 		// snapshotAll gets first and second latest snapshots info
-		snapshotAll.get("/1/snapshot").from(0).size(2).go(200)//
+		snapDog.get("/1/snapshot").from(0).size(2).go(200)//
 				.assertSizeEquals(2, "results")//
 				.assertEquals(thirdSnap, "results.0")//
 				.assertEquals(secondSnap, "results.1");
 
 		// snapshotAll gets third latest snapshot info
-		snapshotAll.get("/1/snapshot").from(2).size(1).go(200)//
+		snapDog.get("/1/snapshot").from(2).size(1).go(200)//
 				.assertSizeEquals(1, "results")//
 				.assertEquals(firstSnap, "results.0");
 
@@ -148,7 +134,7 @@ public class SnapshotResourceTest extends SpaceTest {
 				.go(200);
 
 		// check only account aaaa and credentials vince are present
-		vince.get("/1/login").go(200);
+		vince.login();
 		fred.get("/1/login").go(401);
 		nath.get("/1/login").go(401);
 
@@ -160,8 +146,8 @@ public class SnapshotResourceTest extends SpaceTest {
 
 		// check only aaaa and bbbb accounts are present
 		// check only vince and fred credentials are present
-		vince.get("/1/login").go(200);
-		fred.get("/1/login").go(200);
+		vince.login();
+		fred.login();
 		nath.get("/1/login").go(401);
 
 		// restore to latest (third) snapshot
@@ -171,14 +157,14 @@ public class SnapshotResourceTest extends SpaceTest {
 				.go(200);
 
 		// check all accounts and credentials are present
-		vince.get("/1/login").go(200);
-		fred.get("/1/login").go(200);
-		nath.get("/1/login").go(200);
+		vince.login();
+		fred.login();
+		nath.login();
 
 		// delete all accounts and internal indices
-		aaaa.delete("/1/backend").go(200);
-		bbbb.delete("/1/backend").go(200);
-		cccc.delete("/1/backend").go(200);
+		deleteBackend("test1");
+		deleteBackend("test2");
+		deleteBackend("test3");
 
 		// check all accounts are deleted
 		vince.get("/1/login").go(401);
@@ -191,9 +177,9 @@ public class SnapshotResourceTest extends SpaceTest {
 				.go(200);
 
 		// check all accounts and credentials are back
-		vince.get("/1/login").go(200);
-		fred.get("/1/login").go(200);
-		nath.get("/1/login").go(200);
+		vince.login();
+		fred.login();
+		nath.login();
 
 		// fails to restore snapshot if invalid id format
 		superdog.post("/1/snapshot/xxxx/restore")//
@@ -204,12 +190,12 @@ public class SnapshotResourceTest extends SpaceTest {
 		superdog.get("/1/snapshot/all-utc-2011-01-01-00-00-00-000").go(404);
 
 		// check account administrator can not restore the platform
-		aaaa.post("/1/snapshot/latest/restore").go(403);
+		test1.post("/1/snapshot/latest/restore").go(403);
 
 		// clean up
-		aaaa.delete("/1/backend").go(200);
-		bbbb.delete("/1/backend").go(200);
-		cccc.delete("/1/backend").go(200);
+		deleteBackend("test1");
+		deleteBackend("test2");
+		deleteBackend("test3");
 
 		// check snapshot list did not change since last snapshot
 		superdog.get("/1/snapshot").go(200)//
