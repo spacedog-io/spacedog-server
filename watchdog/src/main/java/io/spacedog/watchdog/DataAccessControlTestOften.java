@@ -31,7 +31,7 @@ public class DataAccessControlTestOften extends SpaceTest {
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
 		SpaceDog guest = SpaceDog.backend(superadmin);
-		SpaceDog vince = vinceSignsUp(guest);
+		SpaceDog vince = createTempUser(guest, "vince");
 		SpaceDog admin = adminSignsUp(superadmin);
 
 		// set message schema
@@ -89,7 +89,7 @@ public class DataAccessControlTestOften extends SpaceTest {
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
 		SpaceDog guest = SpaceDog.backend(superadmin);
-		SpaceDog vince = vinceSignsUp(guest);
+		SpaceDog vince = createTempUser(guest, "vince");
 		SpaceDog admin = adminSignsUp(superadmin);
 
 		// superadmin sets message schema with empty acl
@@ -142,7 +142,7 @@ public class DataAccessControlTestOften extends SpaceTest {
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
 		SpaceDog guest = SpaceDog.backend(superadmin);
-		SpaceDog vince = vinceSignsUp(guest);
+		SpaceDog vince = createTempUser(guest, "vince");
 		SpaceDog admin = adminSignsUp(superadmin);
 
 		// set message schema with custom acl settings
@@ -202,15 +202,8 @@ public class DataAccessControlTestOften extends SpaceTest {
 	}
 
 	private SpaceDog adminSignsUp(SpaceDog superadmin) {
-		String password = Passwords.random();
 		return superadmin.credentials()//
-				.create("admin", password, "platform@spacedog.io", Type.admin.name())//
-				.login(password);
-	}
-
-	private SpaceDog vinceSignsUp(SpaceDog guest) {
-		return SpaceDog.backend(guest).username("vince")//
-				.email("platform@spacedog.io").credentials().signUp("hi vince");
+				.create("admin", Passwords.random(), "platform@spacedog.io", Type.admin.name());
 	}
 
 	@Test
@@ -235,7 +228,7 @@ public class DataAccessControlTestOften extends SpaceTest {
 
 		// dave has the platine role
 		// he's got all the rights
-		SpaceDog dave = signUp(superadmin, "dave", "hi dave");
+		SpaceDog dave = createTempUser(superadmin, "dave");
 		superadmin.credentials().setRole(dave.id(), "platine");
 		DataObject<ObjectNode> message = new JsonDataObject()//
 				.source(Json.object("text", "hi"))//
@@ -254,7 +247,7 @@ public class DataAccessControlTestOften extends SpaceTest {
 
 		// maelle is a simple user
 		// she's got no right on the message schema
-		SpaceDog maelle = signUp(superadmin, "maelle", "hi maelle");
+		SpaceDog maelle = createTempUser(superadmin, "maelle");
 		maelle.post("/1/data/message").bodyJson("text", "hi").go(403);
 		maelle.get("/1/data/message/2").go(403);
 		maelle.put("/1/data/message/2").bodyJson("text", "hi").go(403);
@@ -262,7 +255,7 @@ public class DataAccessControlTestOften extends SpaceTest {
 
 		// fred has the iron role
 		// he's only got the right to read
-		SpaceDog fred = signUp(superadmin, "fred", "hi fred");
+		SpaceDog fred = createTempUser(superadmin, "fred");
 		superadmin.credentials().setRole(fred.id(), "iron");
 		fred.post("/1/data/message").bodyJson("text", "hi").go(403);
 		fred.get("/1/data/message/2").go(200);
@@ -271,7 +264,7 @@ public class DataAccessControlTestOften extends SpaceTest {
 
 		// nath has the silver role
 		// she's got the right to read and update
-		SpaceDog nath = signUp(superadmin, "nath", "hi nath");
+		SpaceDog nath = createTempUser(superadmin, "nath");
 		superadmin.credentials().setRole(nath.id(), "silver");
 		nath.post("/1/data/message").bodyJson("text", "hi").go(403);
 		nath.get("/1/data/message/2").go(200);
@@ -280,7 +273,7 @@ public class DataAccessControlTestOften extends SpaceTest {
 
 		// vince has the gold role
 		// he's got the right to create, read and update
-		SpaceDog vince = signUp(superadmin, "vince", "hi vince");
+		SpaceDog vince = createTempUser(superadmin, "vince");
 		superadmin.credentials().setRole(vince.id(), "gold");
 		vince.put("/1/data/message/3").bodyJson("text", "grunt").go(201);
 		vince.get("/1/data/message/3").go(200);

@@ -25,7 +25,7 @@ public class SettingsResourceTest extends SpaceTest {
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
 		SpaceDog guest = SpaceDog.backend(superadmin);
-		SpaceDog vince = signUp(superadmin, "vince", "hi vince");
+		SpaceDog vince = createTempUser(superadmin, "vince");
 
 		ObjectNode animals = Json.object("lion", "Lion", "tiger", "Tiger");
 		ObjectNode jobs = Json.object("sailor", Json.array("Sailor", "Marin"), //
@@ -166,7 +166,7 @@ public class SettingsResourceTest extends SpaceTest {
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
 		SpaceDog guest = SpaceDog.backend(superadmin);
-		SpaceDog vince = signUp(superadmin, "vince", "hi vince");
+		SpaceDog vince = createTempUser(superadmin, "vince");
 
 		// only superadmins can update settings
 		guest.put("/1/settings/db/type").go(403);

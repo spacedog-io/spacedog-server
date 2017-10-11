@@ -306,8 +306,9 @@ public class CredentialsResourceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog test = resetTestBackend();
-		SpaceDog fred = signUp("test", "fred", "hi fred");
-		fred.password("hi fred");
+		SpaceDog fred = SpaceDog.backend(test).username("fred")//
+				.password("hi fred").email("platform@spacedog.io")//
+				.credentials().signUp();
 
 		// fred can get data objects
 		SpaceRequest.get("/1/data").basicAuth(fred).go(200);
@@ -345,7 +346,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog test = resetTestBackend();
-		SpaceDog fred = signUp("test", "fred", Passwords.random());
+		SpaceDog fred = createTempUser("test", "fred");
 
 		// fred can get data objects
 		fred.get("/1/data").go(200);

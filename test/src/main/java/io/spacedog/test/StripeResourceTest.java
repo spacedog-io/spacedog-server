@@ -33,7 +33,7 @@ public class StripeResourceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog test = resetTestBackend();
-		SpaceDog david = signUp(test, "david", "hi david");
+		SpaceDog david = createTempUser(test, "david");
 
 		// set stripe settings
 		StripeSettings settings = new StripeSettings();

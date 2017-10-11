@@ -50,7 +50,7 @@ public class SnapshotResourceTest extends SpaceTest {
 		// creates backend and credentials
 		SpaceDog.backendId(aaaa.backendId()).admin().createBackend(//
 				aaaa.username(), aaaa.password().get(), "platform@spacedog.io", false);
-		SpaceDog vince = signUp(aaaa, "vince", "hi vince").login("hi vince");
+		SpaceDog vince = createTempUser(aaaa, "vince");
 
 		// deletes the current repository to force repo creation by this test
 		// use full url to avoid delete by mistake any prod repo
@@ -92,7 +92,7 @@ public class SnapshotResourceTest extends SpaceTest {
 		// creates another backend and credentials
 		SpaceDog.backendId(bbbb.backendId()).admin().createBackend(//
 				bbbb.username(), bbbb.password().get(), "platform@spacedog.io", false);
-		SpaceDog fred = signUp(bbbb, "fred", "hi fred").login("hi fred");
+		SpaceDog fred = createTempUser(bbbb, "fred");
 
 		// second snapshot
 		// returns 201 since wait for completion true (202 otherwise)
@@ -114,7 +114,7 @@ public class SnapshotResourceTest extends SpaceTest {
 		// create another account and add a credentials
 		SpaceDog.backendId(cccc.backendId()).admin().createBackend(//
 				cccc.username(), cccc.password().get(), "platform@spacedog.io", false);
-		SpaceDog nath = signUp(cccc, "nath", "hi nath").login("hi nath");
+		SpaceDog nath = createTempUser(cccc, "nath");
 
 		// third snapshot
 		// returns 201 since wait for completion true (202 otherwise)

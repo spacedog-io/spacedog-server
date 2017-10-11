@@ -124,7 +124,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		SpaceRequest.get("/1/data").backend(test).bearerAuth("XXX").go(401);
 
 		// vince signs up and get a brand new access token
-		SpaceDog vince = signUp("test", "vince", "hi vince").password("hi vince");
+		SpaceDog vince = signUp("test", "vince", "hi vince").login();
 
 		// vince request fails because wrong backend
 		SpaceRequest.get("/1/data").backend(test2).bearerAuth(vince.accessToken().get()).go(401);
@@ -209,7 +209,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog test = resetTestBackend();
-		SpaceDog fred = signUp("test", "fred", "hi fred").password("hi fred");
+		SpaceDog fred = signUp(test, "fred", "hi fred");
 
 		// admin saves settings with token max lifetime set to 3s
 		CredentialsSettings settings = new CredentialsSettings();
@@ -669,10 +669,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		resetTestBackend();
-		SpaceDog fred = SpaceDog.backendId("test")//
-				.username("fred").password("hi fred")//
-				.email("platform@spacedog.io")//
-				.credentials().signUp().login();
+		SpaceDog fred = signUp("test", "fred", "hi fred").login();
 
 		// fred fails to update his password
 		// since his password is not challenged
@@ -697,7 +694,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog test = resetTestBackend();
-		SpaceDog fred = signUp("test", "fred", "hi fred").password("hi fred");
+		SpaceDog fred = signUp("test", "fred", "hi fred").login();
 
 		// fred fails to updates his username
 		// since password must be challenged
@@ -748,7 +745,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog test = resetTestBackend();
-		SpaceDog fred = signUp("test", "fred", "hi fred").password("hi fred");
+		SpaceDog fred = signUp("test", "fred", "hi fred").login();
 
 		// fred logs in
 		SpaceRequest.get("/1/login").auth(fred).go(200);

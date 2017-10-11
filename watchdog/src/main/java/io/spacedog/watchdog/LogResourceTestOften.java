@@ -29,10 +29,10 @@ public class LogResourceTestOften extends SpaceTest {
 		superadmin.schema().set(Schema.builder("message").text("text").build());
 
 		// create user in test backend
-		SpaceDog user = signUp("test", "user", "hi user");
+		SpaceDog user = createTempUser("test", "user").login();
 
 		// create a user in test2 backend
-		signUp("test2", "user2", "hi user2");
+		createTempUser("test2", "user2").login();
 
 		// create message in test backend
 		DataObject<ObjectNode> message = user.data()//
@@ -89,7 +89,7 @@ public class LogResourceTestOften extends SpaceTest {
 
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		SpaceDog fred = signUp("test", "fred", "hi fred");
+		SpaceDog fred = createTempUser("test", "fred").login();
 
 		String passwordResetCode = superadmin.delete("/1/credentials/{id}/password")//
 				.routeParam("id", fred.id()).go(200)//

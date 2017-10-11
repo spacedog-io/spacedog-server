@@ -8,8 +8,8 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import io.spacedog.client.SpaceDog;
 import io.spacedog.client.LogEndpoint.LogSearchResults;
+import io.spacedog.client.SpaceDog;
 import io.spacedog.client.elastic.ESQueryBuilders;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.client.elastic.ESSortBuilders;
@@ -27,7 +27,7 @@ public class LogResourceTest extends SpaceTest {
 		prepareTest();
 		SpaceDog test2 = resetTest2Backend();
 		SpaceDog test = resetTestBackend();
-		SpaceDog fred = signUp(test, "fred", "hi fred");
+		SpaceDog fred = createTempUser(test, "fred").login();
 
 		fred.data().getAll().get();
 		fred.data().getAll().get();
@@ -101,8 +101,8 @@ public class LogResourceTest extends SpaceTest {
 		SpaceDog guest = SpaceDog.backend(superadmin);
 		guest.get("/1/data").go(200);
 		guest.get("/1/data/user").go(403);
-		SpaceDog vince = signUp(superadmin, "vince", "hi vince");
-		vince.get("/1/credentials/" + vince.id()).go(200);
+		SpaceDog vince = createTempUser(superadmin, "vince").login();
+		vince.credentials().get(vince.id());
 
 		// superadmin search for test backend logs with status 400 and higher
 		ESSearchSourceBuilder query = ESSearchSourceBuilder.searchSource()//

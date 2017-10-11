@@ -19,20 +19,15 @@ import io.spacedog.utils.Utils;
 
 public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 
+	public static final String DEFAULT_EMAIL = "platform@spacedog.io";
+
 	public static SpaceDog signUp(SpaceDog backend, String username, String password) {
 		return signUp(backend.backendId(), username, password);
 	}
 
 	public static SpaceDog signUp(String backendId, String username, String password) {
-		return signUp(backendId, username, password, "platform@spacedog.io");
-	}
-
-	public static SpaceDog signUp(SpaceDog backend, String username, String password, String email) {
-		return signUp(backend.backendId(), username, password, email);
-	}
-
-	public static SpaceDog signUp(String backendId, String username, String password, String email) {
-		return SpaceDog.backendId(backendId).username(username).email(email).credentials().signUp(password);
+		return SpaceDog.backendId(backendId).username(username).password(password)//
+				.email(DEFAULT_EMAIL).credentials().signUp();
 	}
 
 	public static SpaceDog createTempUser(SpaceDog dog, String username) {
@@ -41,7 +36,7 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 
 	public static SpaceDog createTempUser(String backendId, String username) {
 		return SpaceDog.backendId(backendId).credentials()//
-				.create(username, Passwords.random(), "platform@spacedog.io");
+				.create(username, Passwords.random(), DEFAULT_EMAIL);
 	}
 
 	public static SpaceDog resetTestBackend() {
@@ -53,7 +48,7 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 	}
 
 	public static SpaceDog resetBackend(String backendId, String username, String password) {
-		return resetBackend(backendId, username, password, "platform@spacedog.io");
+		return resetBackend(backendId, username, password, DEFAULT_EMAIL);
 	}
 
 	public static SpaceDog resetBackend(String backendId, String username, String password, //

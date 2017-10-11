@@ -35,9 +35,9 @@ public class ChauffeLeTest extends SpaceTest {
 		superadmin.schema().set(buildBigPostSchema());
 		superadmin.schema().set(buildSmallPostSchema());
 
-		lui = signUp(superadmin, "lui", "hi lui", "lui@chauffe.le");
-		elle = signUp(superadmin, "elle", "hi elle", "elle@chauffe.le");
-		laCopine = signUp(superadmin, "lacopine", "hi la copine", "lacopine@chauffe.le");
+		lui = createTempUser(superadmin, "lui");
+		elle = createTempUser(superadmin, "elle");
+		laCopine = createTempUser(superadmin, "lacopine");
 	}
 
 	static Schema buildBigPostSchema() {

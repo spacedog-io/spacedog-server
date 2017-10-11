@@ -97,8 +97,7 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 		String id = SpaceDog.backendId(dog.backendId())//
 				.credentials().create(dog.username(), password, dog.email().get())//
 				.id();
-		dog.id(id);
-		return dog.login(password);
+		return dog.id(id);
 	}
 
 	//
