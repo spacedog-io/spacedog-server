@@ -37,8 +37,7 @@ public class SnapshotResourceTest extends SpaceTest {
 				.username("snapshotAll").email("platform@spacedog.io");
 
 		try {
-			SpaceDog.backend(snapshotAll).credentials().create(//
-					snapshotAll.username(), "hi snapshotAll", snapshotAll.email().get());
+			snapshotAll.credentials().signUp("hi snapshotAll");
 
 		} catch (SpaceRequestException e) {
 			if (!Exceptions.ALREADY_EXISTS.equals(e.serverErrorCode()))

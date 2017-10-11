@@ -669,10 +669,10 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		resetTestBackend();
-		SpaceDog.backendId("test").credentials()//
-				.create("fred", "hi fred", "plateform@spacedog.io");
 		SpaceDog fred = SpaceDog.backendId("test")//
-				.username("fred").password("hi fred").login();
+				.username("fred").password("hi fred")//
+				.email("platform@spacedog.io")//
+				.credentials().signUp().login();
 
 		// fred fails to update his password
 		// since his password is not challenged

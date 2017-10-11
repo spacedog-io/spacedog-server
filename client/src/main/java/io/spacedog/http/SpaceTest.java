@@ -32,7 +32,7 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 	}
 
 	public static SpaceDog signUp(String backendId, String username, String password, String email) {
-		return SpaceDog.backendId(backendId).username(username).email(email).signUp(password);
+		return SpaceDog.backendId(backendId).username(username).email(email).credentials().signUp(password);
 	}
 
 	public static SpaceDog createTempUser(SpaceDog dog, String username) {
@@ -40,11 +40,8 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 	}
 
 	public static SpaceDog createTempUser(String backendId, String username) {
-		String password = Passwords.random();
-		String credentialsId = SpaceDog.backendId(backendId)//
-				.credentials().create(username, password, "platform@spacedog.io");
-		return SpaceDog.backendId(backendId).id(credentialsId).username(username)//
-				.email("platform@spacedog.io").password(password);
+		return SpaceDog.backendId(backendId).credentials()//
+				.create(username, Passwords.random(), "platform@spacedog.io");
 	}
 
 	public static SpaceDog resetTestBackend() {

@@ -40,10 +40,9 @@ public class CredentialsResourceTest extends SpaceTest {
 		superdog.delete("/1/credentials/" + test.id()).go(403);
 
 		// superadmin test can create another superadmin (test1)
-		test.credentials().create(//
-				"superfred", "hi superfred", "superfred@test.com", "superadmin");
-		SpaceDog superfred = SpaceDog.backendId("test")//
-				.username("superfred").login("hi superfred");
+		SpaceDog superfred = test.credentials()//
+				.create("superfred", "hi superfred", "superfred@test.com", "superadmin")//
+				.login("hi superfred");
 
 		// superadmin test can delete superadmin superfred
 		test.credentials().delete(superfred.id());

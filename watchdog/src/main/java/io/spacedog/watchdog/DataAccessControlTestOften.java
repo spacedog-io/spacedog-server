@@ -18,7 +18,9 @@ import io.spacedog.model.InternalDataSettings;
 import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.Schema;
 import io.spacedog.model.Schema.DataAcl;
+import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.Passwords;
 
 public class DataAccessControlTestOften extends SpaceTest {
 
@@ -200,15 +202,15 @@ public class DataAccessControlTestOften extends SpaceTest {
 	}
 
 	private SpaceDog adminSignsUp(SpaceDog superadmin) {
-		superadmin.credentials().create(//
-				"admin", "hi admin", "platform@spacedog.io", "admin");
-		return SpaceDog.backend(superadmin)//
-				.username("admin").login("hi admin");
+		String password = Passwords.random();
+		return superadmin.credentials()//
+				.create("admin", password, "platform@spacedog.io", Type.admin.name())//
+				.login(password);
 	}
 
 	private SpaceDog vinceSignsUp(SpaceDog guest) {
 		return SpaceDog.backend(guest).username("vince")//
-				.email("platform@spacedog.io").signUp("hi vince");
+				.email("platform@spacedog.io").credentials().signUp("hi vince");
 	}
 
 	@Test

@@ -158,21 +158,6 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 	}
 
 	//
-	// sign up
-	//
-
-	public SpaceDog signUp() {
-		return signUp(password().get());
-	}
-
-	public SpaceDog signUp(String password) {
-		String id = SpaceDog.backendId(backendId())//
-				.credentials().create(username(), password, email().get());
-		this.credentials.id(id);
-		return login(password);
-	}
-
-	//
 	// Basic REST requests
 	//
 

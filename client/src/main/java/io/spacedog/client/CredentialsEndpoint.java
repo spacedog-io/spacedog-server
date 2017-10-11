@@ -75,14 +75,30 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 	// Create credentials method
 	//
 
-	public String create(String username, String password, String email, String... roles) {
+	public SpaceDog create(String username, String password, String email, String... roles) {
 		return create(new CreateCredentialsRequest().username(username).password(password)//
 				.email(email).roles(roles));
 	}
 
-	public String create(CreateCredentialsRequest request) {
-		return dog.post("/1/credentials")//
+	public SpaceDog create(CreateCredentialsRequest request) {
+		String id = dog.post("/1/credentials")//
 				.bodyPojo(request).go(201).getString(ID_FIELD);
+
+		return SpaceDog.backend(dog).username(request.username())//
+				.password(request.password()).email(request.email())//
+				.id(id);
+	}
+
+	public SpaceDog signUp() {
+		return signUp(dog.password().get());
+	}
+
+	public SpaceDog signUp(String password) {
+		String id = SpaceDog.backendId(dog.backendId())//
+				.credentials().create(dog.username(), password, dog.email().get())//
+				.id();
+		dog.id(id);
+		return dog.login(password);
 	}
 
 	//
