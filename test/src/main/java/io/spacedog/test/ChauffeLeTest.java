@@ -140,7 +140,7 @@ public class ChauffeLeTest extends SpaceTest {
 					.add("size", 10)//
 					.array("sort")//
 					.object()//
-					.object("meta.updatedAt")//
+					.object("updatedAt")//
 					.add("order", "asc")//
 					.end()//
 					.end()//
@@ -178,7 +178,7 @@ public class ChauffeLeTest extends SpaceTest {
 					.add("size", 10)//
 					.array("sort")//
 					.object()//
-					.object("meta.updatedAt")//
+					.object("updatedAt")//
 					.add("order", "asc")//
 					.end()//
 					.end()//
@@ -204,7 +204,7 @@ public class ChauffeLeTest extends SpaceTest {
 					.array("sort")//
 					.add("parent")//
 					.object()//
-					.object("meta.updatedAt")//
+					.object("updatedAt")//
 					.add("order", "asc")//
 					.end()//
 					.end()//
