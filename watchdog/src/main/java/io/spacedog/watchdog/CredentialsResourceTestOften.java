@@ -26,42 +26,42 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
+		SpaceDog superadmin = resetTestBackend();
 
 		// fails since empty user body
-		SpaceRequest.post("/1/credentials/").backend(test)//
+		SpaceRequest.post("/1/credentials/").backend(superadmin)//
 				.bodyJson(Json.object()).go(400);
 
 		// fails since no username
-		SpaceRequest.post("/1/credentials/").backend(test)//
+		SpaceRequest.post("/1/credentials/").backend(superadmin)//
 				.bodyJson("password", "hi titi", "email", "titi@dog.com").go(400);
 
 		// fails since no email
-		SpaceRequest.post("/1/credentials/").backend(test)//
+		SpaceRequest.post("/1/credentials/").backend(superadmin)//
 				.bodyJson("username", "titi", "password", "hi titi").go(400);
 
 		// fails since username too small
-		SpaceRequest.post("/1/credentials/").backend(test)//
+		SpaceRequest.post("/1/credentials/").backend(superadmin)//
 				.bodyJson("username", "ti", "password", "hi titi").go(400);
 
 		// fails since password too small
-		SpaceRequest.post("/1/credentials/").backend(test)//
+		SpaceRequest.post("/1/credentials/").backend(superadmin)//
 				.bodyJson("username", "titi", "password", "hi", "email", "titi@dog.com").go(400);
 
 		// vince signs up
-		String vinceId = SpaceRequest.post("/1/credentials").backend(test)
+		String vinceId = SpaceRequest.post("/1/credentials").backend(superadmin)
 				.bodyJson("username", "vince", "password", "hi vince", "email", "vince@dog.com")//
 				.go(201).getString("id");
 
 		// vince fails to sign up again since his credentials already exixts
-		SpaceRequest.post("/1/credentials").backend(test)
+		SpaceRequest.post("/1/credentials").backend(superadmin)
 				.bodyJson("username", "vince", "password", "hello boby", "email", "vince@dog.com")//
 				.go(400)//
 				.assertEquals("already-exists", "error.code");
 
 		// vince logs in
 		ObjectNode node = SpaceRequest.get("/1/login")//
-				.backend(test).basicAuth("vince", "hi vince").go(200)//
+				.backend(superadmin).basicAuth("vince", "hi vince").go(200)//
 				.assertPresent("accessToken")//
 				.assertPresent("expiresIn")//
 				.assertEquals(vinceId, "credentials.id")//
@@ -89,27 +89,27 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// vince fails to get his credentials if wrong username
 		SpaceRequest.get("/1/credentials/" + vince.id())//
-				.backend(test).basicAuth("XXX", "hi vince").go(401);
+				.backend(superadmin).basicAuth("XXX", "hi vince").go(401);
 
 		// vince fails to get his credentials if wrong password
 		SpaceRequest.get("/1/credentials/" + vince.id())//
-				.backend(test).basicAuth("vince", "XXX").go(401);
+				.backend(superadmin).basicAuth("vince", "XXX").go(401);
 
 		// vince fails to get his credentials if wrong backend id
 		vince.get("/1/credentials/" + vince.id()).backend("XXX").go(401);
 
 		// anonymous fails to get vince credentials
-		SpaceRequest.get("/1/credentials/" + vince.id()).backend(test).go(403);
+		SpaceRequest.get("/1/credentials/" + vince.id()).backend(superadmin).go(403);
 
 		// another user fails to get vince credentials
-		SpaceDog fred = signUp("test", "fred", "hi fred");
+		SpaceDog fred = createTempUser("test", "fred");
 		fred.get("/1/credentials/" + vince.id()).go(403);
 
 		// vince succeeds to login
 		vince.login();
 
 		// vince fails to login if wrong password
-		SpaceRequest.get("/1/login").backend(test).basicAuth("vince", "XXX").go(401);
+		SpaceRequest.get("/1/login").backend(superadmin).basicAuth("vince", "XXX").go(401);
 	}
 
 	@Test
@@ -124,7 +124,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		SpaceRequest.get("/1/data").backend(test).bearerAuth("XXX").go(401);
 
 		// vince signs up and get a brand new access token
-		SpaceDog vince = signUp("test", "vince", "hi vince").login();
+		SpaceDog vince = createTempUser("test", "vince").login();
 
 		// vince request fails because wrong backend
 		SpaceRequest.get("/1/data").backend(test2).bearerAuth(vince.accessToken().get()).go(401);
@@ -168,7 +168,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// if vince logs in again with its password
 		// he gets a new access token
-		vince.login("hi vince");
+		vince.login();
 		assertNotEquals(vince.accessToken().get(), vinceOldAccessToken);
 
 		// vince can access data with its new token
@@ -208,13 +208,13 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
-		SpaceDog fred = signUp(test, "fred", "hi fred");
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog fred = createTempUser(superadmin, "fred");
 
 		// admin saves settings with token max lifetime set to 3s
 		CredentialsSettings settings = new CredentialsSettings();
 		settings.sessionMaximumLifetime = 3; // seconds
-		test.settings().save(settings);
+		superadmin.settings().save(settings);
 
 		// fred fails to login with a token lifetime of 4s
 		// since max token lifetime is 3s
@@ -237,12 +237,12 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		prepareTest();
 		SpaceDog guest = SpaceDog.backendId("test");
 		SpaceDog superadmin = resetTestBackend();
-		SpaceDog fred = signUp("test", "fred", "hi fred");
-		SpaceDog vince = signUp("test", "vince", "hi vince");
+		SpaceDog fred = createTempUser("test", "fred");
+		SpaceDog vince = createTempUser("test", "vince");
 
 		// vince and fred can login
-		vince.login("hi vince");
-		fred.login("hi fred");
+		vince.login();
+		fred.login();
 
 		// anonymous fails to deletes vince credentials
 		try {
@@ -276,29 +276,28 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
-		SpaceDog fred = signUp(test, "fred", "hi fred");
-		SpaceDog vince = signUp(test, "vince", "hi vince");
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog fred = createTempUser(superadmin, "fred");
+		SpaceDog vince = createTempUser(superadmin, "vince");
 
 		// vince searches for all credentials
-		SpaceRequest.get("/1/credentials").auth(vince).go(200)//
+		vince.get("/1/credentials").go(200)//
 				.assertEquals(3, "total")//
 				.assertSizeEquals(3, "results")//
 				.assertContainsValue("test", "username")//
 				.assertContainsValue("vince", "username")//
 				.assertContainsValue("fred", "username");
 
-		// super admin searches for user credentials
-		SpaceRequest.get("/1/credentials")//
-				.queryParam("role", "user").auth(test).go(200)//
+		// superadmin searches for user credentials
+		superadmin.get("/1/credentials").queryParam("role", "user").go(200)//
 				.assertEquals(2, "total")//
 				.assertSizeEquals(2, "results")//
 				.assertContainsValue("vince", "username")//
 				.assertContainsValue("fred", "username");
 
 		// fred searches for credentials with a specified email
-		SpaceRequest.get("/1/credentials")//
-				.queryParam("email", "platform@spacedog.io").auth(fred).go(200)//
+		fred.get("/1/credentials")//
+				.queryParam("email", "platform@spacedog.io").go(200)//
 				.assertEquals(3, "total")//
 				.assertSizeEquals(3, "results")//
 				.assertContainsValue("test", "username")//
@@ -306,33 +305,31 @@ public class CredentialsResourceTestOften extends SpaceTest {
 				.assertContainsValue("fred", "username");
 
 		// vince searches for credentials with specified username
-		SpaceRequest.get("/1/credentials")//
-				.queryParam("username", "fred").auth(vince).go(200)//
+		vince.get("/1/credentials")//
+				.queryParam("username", "fred").go(200)//
 				.assertSizeEquals(1, "results")//
 				.assertContainsValue("fred", "username")//
 				.assertContainsValue("platform@spacedog.io", "email");
 
 		// super admin deletes credentials with specified username
-		SpaceRequest.delete("/1/credentials")//
-				.queryParam("username", "fred").auth(test).go(200);
+		superadmin.delete("/1/credentials").queryParam("username", "fred").go(200);
 
-		SpaceRequest.get("/1/credentials").auth(test).go(200)//
+		superadmin.get("/1/credentials").go(200)//
 				.assertSizeEquals(2, "results")//
 				.assertContainsValue("test", "username")//
 				.assertContainsValue("vince", "username");
 
 		// super admin deletes credentials with specified level
-		SpaceRequest.delete("/1/credentials")//
-				.queryParam("level", "USER").auth(test).go(200);
+		superadmin.delete("/1/credentials").queryParam("level", "USER").go(200);
 
-		SpaceRequest.get("/1/credentials").auth(test).go(200)//
+		superadmin.get("/1/credentials").go(200)//
 				.assertSizeEquals(1, "results")//
 				.assertContainsValue("test", "username");
 
 		// super admin deletes all credentials but himself
-		SpaceRequest.delete("/1/credentials").auth(test).go(200);
+		superadmin.delete("/1/credentials").go(200);
 
-		SpaceRequest.get("/1/credentials").auth(test).go(200)//
+		superadmin.get("/1/credentials").go(200)//
 				.assertSizeEquals(1, "results")//
 				.assertContainsValue("test", "username");
 	}
@@ -341,14 +338,12 @@ public class CredentialsResourceTestOften extends SpaceTest {
 	public void setAndResetPassword() {
 
 		// prepare
-
 		prepareTest();
-		SpaceDog test = resetTestBackend();
-		signUp(test, "toto", "hi toto");
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog fred = createTempUser(superadmin, "fred");
 
 		// sign up without password should succeed
-
-		ObjectNode node = SpaceRequest.post("/1/credentials/").backend(test)//
+		ObjectNode node = SpaceRequest.post("/1/credentials/").backend(superadmin)//
 				.bodyJson("username", "titi", "email", "titi@dog.com").go(201)//
 				.assertNotNull("passwordResetCode")//
 				.asJsonObject();
@@ -358,52 +353,45 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// no password user login should fail
 		// I can not pass a null password anyway to the basicAuth method
-
 		SpaceRequest.get("/1/login").backend("test").basicAuth("titi", "XXX").go(401);
 
 		// no password user trying to create password with empty reset code
 		// should fail
-
-		SpaceRequest.post("/1/credentials/" + titiId + "/password").backend(test)//
+		SpaceRequest.post("/1/credentials/" + titiId + "/password").backend(superadmin)//
 				.queryParam("passwordResetCode", "")//
 				.formField("password", "hi titi").go(400);
 
 		SpaceRequest.get("/1/login").backend("test").basicAuth("titi", "hi titi").go(401);
 
 		// no password user setting password with wrong reset code should fail
-
-		SpaceRequest.post("/1/credentials/" + titiId + "/password").backend(test)//
+		SpaceRequest.post("/1/credentials/" + titiId + "/password").backend(superadmin)//
 				.queryParam("passwordResetCode", "XXX")//
 				.formField("password", "hi titi").go(400);
 
 		SpaceRequest.get("/1/login").backend("test").basicAuth("titi", "hi titi").go(401);
 
 		// titi inits its own password with right reset code should succeed
-
-		SpaceRequest.post("/1/credentials/" + titiId + "/password").backend(test)//
+		SpaceRequest.post("/1/credentials/" + titiId + "/password").backend(superadmin)//
 				.formField("passwordResetCode", passwordResetCode)//
 				.formField("password", "hi titi")//
 				.go(200);
 
 		SpaceRequest.get("/1/login").backend("test").basicAuth("titi", "hi titi").go(200);
 
-		// toto user changes titi password should fail
-
-		SpaceRequest.put("/1/credentials/" + titiId + "/password").backend("test").basicAuth("toto", "hi toto")//
+		// fred changes titi password should fail
+		fred.put("/1/credentials/" + titiId + "/password")//
 				.formField("password", "XXX")//
 				.go(403);
 
 		SpaceRequest.get("/1/login").backend("test").basicAuth("titi", "XXX").go(401);
 
 		// titi changes its password should fail since password size < 6
-
 		SpaceRequest.put("/1/credentials/" + titiId + "/password").backend("test").basicAuth("titi", "hi titi")//
 				.formField("password", "XXX")//
 				.go(400);
 
 		// titi changes its password should succeed
 		// deprecated query param style
-
 		SpaceRequest.put("/1/credentials/" + titiId + "/password").backend("test").basicAuth("titi", "hi titi")//
 				.queryParam("password", "hi titi 2")//
 				.go(200);
@@ -411,12 +399,10 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		SpaceRequest.get("/1/login").backend("test").basicAuth("titi", "hi titi 2").go(200);
 
 		// login with old password should fail
-
 		SpaceRequest.get("/1/login").backend("test").basicAuth("titi", "hi titi").go(401);
 
 		// admin user changes titi user password should succeed
 		// official json body style
-
 		SpaceRequest.put("/1/credentials/" + titiId + "/password").backend("test").basicAuth("test", "hi test")//
 				.bodyJson(TextNode.valueOf("hi titi 3"))//
 				.go(200);
@@ -424,30 +410,23 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		SpaceRequest.get("/1/login").backend("test").basicAuth("titi", "hi titi 3").go(200);
 
 		// login with old password should fail
-
 		SpaceRequest.get("/1/login").backend("test").basicAuth("titi", "hi titi 2").go(401);
 
-		// admin deletes titi password should succeed
-
-		String newPasswordResetCode = SpaceRequest//
-				.delete("/1/credentials/" + titiId + "/password").backend("test").basicAuth("test", "hi test")//
-				.go(200)//
-				.getString("passwordResetCode");
+		// superadmin deletes titi password should succeed
+		String newPasswordResetCode = superadmin.delete("/1/credentials/" + titiId + "/password")//
+				.go(200).getString("passwordResetCode");
 
 		// titi login should fail
-
 		SpaceRequest.get("/1/login").backend("test").basicAuth("titi", "hi titi 3").go(401);
 
 		// titi inits its password with old reset code should fail
-
-		SpaceRequest.post("/1/credentials/" + titiId + "/password").backend(test)//
+		SpaceRequest.post("/1/credentials/" + titiId + "/password").backend(superadmin)//
 				.queryParam("passwordResetCode", passwordResetCode)//
 				.formField("password", "hi titi")//
 				.go(400);
 
 		// titi inits its password with new reset code should fail
-
-		SpaceRequest.post("/1/credentials/" + titiId + "/password").backend(test)//
+		SpaceRequest.post("/1/credentials/" + titiId + "/password").backend(superadmin)//
 				.queryParam("passwordResetCode", newPasswordResetCode)//
 				.formField("password", "hi titi")//
 				.go(200);
@@ -460,24 +439,24 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
-		SpaceDog fred = signUp(test, "fred", "hi fred");
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog fred = createTempUser(superadmin, "fred");
 
 		// fred can login
-		SpaceRequest.get("/1/login").auth(fred).go(200);
+		fred.get("/1/login").go(200);
 
 		// admin deletes backend
-		test.admin().deleteBackend(test.backendId());
+		superadmin.admin().deleteBackend(superadmin.backendId());
 
 		// fred fails to login since backend is no more
-		SpaceRequest.get("/1/login").auth(fred).go(401);
+		fred.get("/1/login").go(401);
 
 		// admin creates backend with the same name
-		SpaceDog.backend(test).admin().createBackend(//
+		SpaceDog.backend(superadmin).admin().createBackend(//
 				"test", "hi test", "platform@spacedog.io", false);
 
 		// fred fails to login since backend is brand new
-		SpaceRequest.get("/1/login").auth(fred).go(401);
+		fred.get("/1/login").go(401);
 	}
 
 	@Test
@@ -486,7 +465,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend().login();
-		SpaceDog fred = signUp(superadmin, "fred", "hi fred");
+		SpaceDog fred = createTempUser(superadmin, "fred");
 
 		// test gets his credentials roles
 		Set<String> roles = superadmin.credentials().getAllRoles(superadmin.id());
@@ -550,26 +529,25 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
-		SpaceDog fred = signUp(test, "fred", "hi fred");
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog fred = createTempUser(superadmin, "fred");
 
 		// admin disables guest sign up
+
 		CredentialsSettings settings = new CredentialsSettings();
 		settings.disableGuestSignUp = true;
-		test.settings().save(settings);
+		superadmin.settings().save(settings);
 
 		// guest can not create credentials
-		SpaceRequest.post("/1/credentials").backend(test)//
+		SpaceRequest.post("/1/credentials").backend(superadmin)//
 				.bodyJson("username", "vince", "password", "hi vince", "email", "vince@dog.com")//
 				.go(403);
 
 		// fred fails to create credentials if no email
-		SpaceRequest.post("/1/credentials").auth(fred)//
-				.bodyJson("username", "vince")//
-				.go(400);
+		fred.post("/1/credentials").bodyJson("username", "vince").go(400);
 
 		// fred can create credentials for someone
-		ObjectNode node = SpaceRequest.post("/1/credentials").auth(fred)//
+		ObjectNode node = fred.post("/1/credentials")//
 				.bodyJson("username", "vince", "email", "vince@dog.com")//
 				.go(201).asJsonObject();
 
@@ -578,7 +556,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// someone can set password if he receives a password reset code
 		SpaceRequest.post("/1/credentials/" + vinceId + "/password")//
-				.backend(test)//
+				.backend(superadmin)//
 				.queryParam("passwordResetCode", resetCode)//
 				.formField("password", "hi vince")//
 				.go(200);
@@ -589,45 +567,45 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
+		SpaceDog superadmin = resetTestBackend();
 
 		// get default username and password settings
-		CredentialsSettings settings = test.settings().get(CredentialsSettings.class);
+		CredentialsSettings settings = superadmin.settings().get(CredentialsSettings.class);
 		assertNotNull(settings.usernameRegex);
 		assertNotNull(settings.passwordRegex);
 
 		// invalid username considering default username regex
-		SpaceRequest.post("/1/credentials").backend(test)//
+		SpaceRequest.post("/1/credentials").backend(superadmin)//
 				.bodyJson("username", "vi", "password", "hi", "email", "vince@dog.com")//
 				.go(400);
 
 		// invalid password considering default password regex
-		SpaceRequest.post("/1/credentials").backend(test)//
+		SpaceRequest.post("/1/credentials").backend(superadmin)//
 				.bodyJson("username", "vince", "password", "hi", "email", "vince@dog.com")//
 				.go(400);
 
 		// valid username and password considering default credentials settings
-		SpaceRequest.post("/1/credentials").backend(test)//
+		SpaceRequest.post("/1/credentials").backend(superadmin)//
 				.bodyJson("username", "vince", "password", "hi vince", "email", "vince@dog.com")//
 				.go(201);
 
 		// set username and password specific regex
 		settings.usernameRegex = "[a-zA-Z]{3,}";
 		settings.passwordRegex = "[a-zA-Z]{3,}";
-		test.settings().save(settings);
+		superadmin.settings().save(settings);
 
 		// invalid username considering new username regex
-		SpaceRequest.post("/1/credentials").backend(test)//
+		SpaceRequest.post("/1/credentials").backend(superadmin)//
 				.bodyJson("username", "nath.lopez", "password", "hi nath", "email", "nath@dog.com")//
 				.go(400);
 
 		// invalid password considering new password regex
-		SpaceRequest.post("/1/credentials").backend(test)//
+		SpaceRequest.post("/1/credentials").backend(superadmin)//
 				.bodyJson("username", "nathlopez", "password", "hi nath", "email", "nath@dog.com")//
 				.go(400);
 
 		// valid username and password considering credentials settings
-		SpaceRequest.post("/1/credentials").backend(test)//
+		SpaceRequest.post("/1/credentials").backend(superadmin)//
 				.bodyJson("username", "nathlopez", "password", "hinath", "email", "nath@dog.com")//
 				.go(201);
 	}
@@ -637,18 +615,18 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
-		SpaceDog fred = signUp(test, "fred", "hi fred");
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog fred = createTempUser(superadmin, "fred");
 
 		// fred fails to create admin credentials
-		SpaceRequest.post("/1/credentials").auth(fred)//
+		fred.post("/1/credentials")//
 				.bodyJson("username", "vince", "password", "hi vince", //
 						"email", "vince@dog.com", "roles", Json.array("admin"))//
 				.go(403);
 
 		// test (backend default superadmin) creates credentials for new
 		// superadmin
-		SpaceRequest.post("/1/credentials").auth(test)//
+		superadmin.post("/1/credentials")//
 				.bodyJson("username", "superadmin", "password", "hi superadmin", //
 						"email", "superadmin@dog.com", "level", "SUPER_ADMIN")//
 				.go(201);
@@ -669,7 +647,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		resetTestBackend();
-		SpaceDog fred = signUp("test", "fred", "hi fred").login();
+		SpaceDog fred = createTempUser("test", "fred").login();
 
 		// fred fails to update his password
 		// since his password is not challenged
@@ -693,8 +671,8 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
-		SpaceDog fred = signUp("test", "fred", "hi fred").login();
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog fred = createTempUser("test", "fred").login();
 
 		// fred fails to updates his username
 		// since password must be challenged
@@ -713,10 +691,10 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		fred.username("fred2").login();
 
 		// superadmin updates fred's email
-		SpaceRequest.put("/1/credentials/" + fred.id()).basicAuth(test)//
+		superadmin.put("/1/credentials/" + fred.id())//
 				.bodyJson("email", "fred2@dog.com").go(200);
 
-		SpaceRequest.get("/1/credentials/" + fred.id()).auth(fred)//
+		fred.get("/1/credentials/" + fred.id())//
 				.go(200).assertEquals("fred2@dog.com", "email");
 
 		// fred fails to updates his password
@@ -744,30 +722,30 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
-		SpaceDog fred = signUp("test", "fred", "hi fred").login();
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog fred = createTempUser("test", "fred").login();
 
 		// fred logs in
-		SpaceRequest.get("/1/login").auth(fred).go(200);
+		fred.get("/1/login").go(200);
 
 		// anonymous fails to disable fred's credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json.toJsonNode(false)).backend(test).go(403);
+				.bodyJson(Json.toJsonNode(false)).backend(superadmin).go(403);
 
 		// fred fails to disable his credentials
-		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json.toJsonNode(false)).auth(fred).go(403);
+		fred.put("/1/credentials/" + fred.id() + "/enabled")//
+				.bodyJson(Json.toJsonNode(false)).go(403);
 
 		// admin fails to disable fred's credentials because body not a boolean
-		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json.toJsonNode("false")).auth(test).go(400);
+		superadmin.put("/1/credentials/" + fred.id() + "/enabled")//
+				.bodyJson(Json.toJsonNode("false")).go(400);
 
 		// only admin can disable fred's credentials
-		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json.toJsonNode(false)).auth(test).go(200);
+		superadmin.put("/1/credentials/" + fred.id() + "/enabled")//
+				.bodyJson(Json.toJsonNode(false)).go(200);
 
 		// fred fails to login from now on
-		SpaceRequest.get("/1/login").auth(fred).go(401)//
+		fred.get("/1/login").go(401)//
 				.assertEquals("disabled-credentials", "error.code");
 
 		// fred fails to access any resources from now on
@@ -781,23 +759,23 @@ public class CredentialsResourceTestOften extends SpaceTest {
 				.assertEquals("disabled-credentials", "error.code");
 
 		// fred fails to update his credentials from now on
-		SpaceRequest.put("/1/credentials/" + fred.id()).auth(fred)//
+		fred.put("/1/credentials/" + fred.id())//
 				.bodyJson("username", "fredy").go(401);
 
 		// anonymous fails to enable fred's credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json.toJsonNode(true)).backend(test).go(403);
+				.bodyJson(Json.toJsonNode(true)).backend(superadmin).go(403);
 
 		// fred fails to enable his credentials
-		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json.toJsonNode(true)).auth(fred).go(401);
+		fred.put("/1/credentials/" + fred.id() + "/enabled")//
+				.bodyJson(Json.toJsonNode(true)).go(401);
 
 		// only admin can enable fred's credentials
-		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json.toJsonNode(true)).auth(test).go(200);
+		superadmin.put("/1/credentials/" + fred.id() + "/enabled")//
+				.bodyJson(Json.toJsonNode(true)).go(200);
 
 		// fred logs in again normally
-		SpaceRequest.get("/1/login").auth(fred).go(200);
+		fred.login();
 	}
 
 	@Test
