@@ -26,7 +26,7 @@ public class SchemaResourceTestOften extends SpaceTest {
 				.assertEquals(Json.merger().get());
 
 		// bob signs up
-		SpaceDog bob = createTempUser(test, "bob");
+		SpaceDog bob = createTempDog(test, "bob");
 
 		// admin creates car, home and sale schemas
 		test.schema().set(buildCarSchema());

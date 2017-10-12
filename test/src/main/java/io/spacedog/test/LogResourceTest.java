@@ -27,7 +27,7 @@ public class LogResourceTest extends SpaceTest {
 		prepareTest();
 		SpaceDog test2 = resetTest2Backend();
 		SpaceDog test = resetTestBackend();
-		SpaceDog fred = createTempUser(test, "fred").login();
+		SpaceDog fred = createTempDog(test, "fred").login();
 
 		fred.data().getAll().get();
 		fred.data().getAll().get();
@@ -101,7 +101,7 @@ public class LogResourceTest extends SpaceTest {
 		SpaceDog guest = SpaceDog.backend(superadmin);
 		guest.get("/1/data").go(200);
 		guest.get("/1/data/user").go(403);
-		SpaceDog vince = createTempUser(superadmin, "vince").login();
+		SpaceDog vince = createTempDog(superadmin, "vince").login();
 		vince.credentials().get(vince.id());
 
 		// superadmin search for test backend logs with status 400 and higher

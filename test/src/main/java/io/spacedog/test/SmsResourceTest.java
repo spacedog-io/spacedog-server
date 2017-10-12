@@ -25,7 +25,7 @@ public class SmsResourceTest extends SpaceTest {
 		SpaceDog guest = SpaceDog.backend(test);
 
 		// superadmin creates user vince with 'sms' role
-		SpaceDog vince = createTempUser(test, "vince");
+		SpaceDog vince = createTempDog(test, "vince");
 		test.credentials().setRole(vince.id(), "sms");
 
 		// no sms settings => nobody can send any sms

@@ -31,8 +31,8 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		// prepare
 		prepareTest(false);
 		SpaceDog test = resetTestBackend();
-		SpaceDog vince = createTempUser(test, "vince");
-		SpaceDog fred = createTempUser(test, "fred");
+		SpaceDog vince = createTempDog(test, "vince");
+		SpaceDog fred = createTempDog(test, "fred");
 
 		// only admin can get all shared locations
 		SpaceRequest.get("/1/share").backend(test).go(403);
@@ -174,8 +174,8 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		// prepare
 		prepareTest(false);
 		SpaceDog test = resetTestBackend();
-		SpaceDog vince = createTempUser(test, "vince");
-		SpaceDog fred = createTempUser(test, "fred");
+		SpaceDog vince = createTempDog(test, "vince");
+		SpaceDog fred = createTempDog(test, "fred");
 		byte[] pngBytes = Resources.toByteArray(//
 				Resources.getResource("io/spacedog/watchdog/tweeter.png"));
 

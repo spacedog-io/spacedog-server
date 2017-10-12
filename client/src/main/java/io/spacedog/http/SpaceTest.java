@@ -22,11 +22,12 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 
 	public static final String DEFAULT_EMAIL = "platform@spacedog.io";
 
-	public static SpaceDog createTempUser(SpaceDog dog, String username) {
-		return createTempUser(dog.backendId(), username);
+	public static SpaceDog createTempDog(SpaceDog dog, String username) {
+		return dog.credentials()//
+				.create(username, Passwords.random(), DEFAULT_EMAIL);
 	}
 
-	public static SpaceDog createTempUser(String backendId, String username) {
+	public static SpaceDog signUpTempDog(String backendId, String username) {
 		return SpaceDog.backendId(backendId).credentials()//
 				.create(username, Passwords.random(), DEFAULT_EMAIL);
 	}

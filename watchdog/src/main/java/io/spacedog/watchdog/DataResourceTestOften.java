@@ -23,7 +23,7 @@ public class DataResourceTestOften extends SpaceTest {
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
 		superadmin.schema().set(SchemaResourceTestOften.buildCarSchema());
-		SpaceDog vince = createTempUser(superadmin, "vince");
+		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		ObjectNode car = Json.builder().object() //
 				.add("serialNumber", "1234567890") //
@@ -85,7 +85,7 @@ public class DataResourceTestOften extends SpaceTest {
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
 		superadmin.schema().set(SchemaResourceTestOften.buildCarSchema());
-		SpaceDog vince = createTempUser(superadmin, "vince");
+		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		ObjectNode car = Json.builder().object() //
 				.add("serialNumber", "1234567890") //

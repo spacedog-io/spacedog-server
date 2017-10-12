@@ -108,7 +108,7 @@ public class DataResource2TestOften extends SpaceTest {
 		prepareTest();
 		SpaceDog test = resetTestBackend();
 		test.schema().set(SchemaResourceTestOften.buildSaleSchema());
-		SpaceDog fred = createTempUser(test, "fred");
+		SpaceDog fred = createTempDog(test, "fred");
 
 		// fred fails to create a sale with no body
 		fred.post("/1/data/sale").go(400);
@@ -246,7 +246,7 @@ public class DataResource2TestOften extends SpaceTest {
 		assertSourceAlmostEquals(saleNode6, saleNode7, "items");
 
 		// vince fails to update nor delete this sale since not the owner
-		SpaceDog vince = createTempUser(test, "vince");
+		SpaceDog vince = createTempDog(test, "vince");
 		vince.put("/1/data/sale/" + saleDO7.id())//
 				.bodyJson("number", "0123456789").go(403);
 		vince.delete("/1/data/sale/" + saleDO7.id()).go(403);
@@ -322,7 +322,7 @@ public class DataResource2TestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		SpaceDog vince = createTempUser(superadmin, "vince");
+		SpaceDog vince = createTempDog(superadmin, "vince");
 		superadmin.schema().set(Schema.builder("message").string("text").build());
 
 		// superadmins creates 4 messages

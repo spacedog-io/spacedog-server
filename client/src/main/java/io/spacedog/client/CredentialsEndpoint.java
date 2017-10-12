@@ -13,6 +13,7 @@ import com.google.common.collect.Sets;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceResponse;
 import io.spacedog.model.CreateCredentialsRequest;
+import io.spacedog.model.CredentialsSettings;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -298,6 +299,20 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 	public void enable(String id, boolean enable) {
 		dog.put("/1/credentials/{id}/enabled").routeParam("id", id)//
 				.bodyJson(BooleanNode.valueOf(enable)).go(200);
+	}
+
+	//
+	// Credentials settings methods
+	//
+
+	public CredentialsSettings settings() {
+		return dog.settings().get(CredentialsSettings.class);
+	}
+
+	public void enableGuestSignUp(boolean enable) {
+		CredentialsSettings settings = settings();
+		settings.guestSignUpEnabled = enable;
+		dog.settings().save(settings);
 	}
 
 	//

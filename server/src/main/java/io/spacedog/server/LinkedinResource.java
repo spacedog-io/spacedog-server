@@ -196,7 +196,7 @@ public class LinkedinResource extends Resource {
 		boolean isNew = credentials.createdAt() == null;
 
 		if (isNew) {
-			if (settings.disableGuestSignUp)
+			if (!settings.guestSignUpEnabled)
 				throw Exceptions.forbidden("guest sign up is disabled");
 
 			credentials = credentialsResource.create(credentials);

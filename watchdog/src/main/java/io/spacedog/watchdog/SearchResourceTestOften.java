@@ -90,7 +90,7 @@ public class SearchResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		SpaceDog vince = createTempUser(superadmin, "vince");
+		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		superadmin.schema().set(Schema.builder("city").string("name").build());
 

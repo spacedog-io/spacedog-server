@@ -11,7 +11,7 @@ public class CredentialsSettings extends SettingsBase {
 	// default token lifetime is 24h
 	public static final long SESSION_DEFAULT_LIFETIME = 60 * 60 * 24;
 
-	public boolean disableGuestSignUp;
+	public boolean guestSignUpEnabled = false;
 	public String usernameRegex = Usernames.USERNAME_DEFAULT_REGEX;
 	public String passwordRegex = Passwords.PASSWORD_DEFAULT_REGEX;
 	// in seconds

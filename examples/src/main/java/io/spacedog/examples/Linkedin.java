@@ -184,7 +184,7 @@ public class Linkedin extends SpaceTest {
 
 		SpaceEnv env = SpaceEnv.defaultEnv();
 		CredentialsSettings settings = new CredentialsSettings();
-		settings.disableGuestSignUp = disableGuestSignUp;
+		settings.guestSignUpEnabled = !disableGuestSignUp;
 		settings.linkedin = new OAuthSettings();
 		settings.linkedin.backendUrl = "https://www.linkedin.com";
 		settings.linkedin.clientId = env.getOrElseThrow("spacedog.test.linkedin.client.id");

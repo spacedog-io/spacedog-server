@@ -96,7 +96,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		SpaceDog fred = createTempUser(superadmin, "fred");
+		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		// fred logs in
 		fred.login();
@@ -193,7 +193,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		prepareTest();
 		SpaceDog test = SpaceDog.backendId("test");
 		SpaceDog superadmin = resetTestBackend();
-		SpaceDog fred = createTempUser(superadmin, "fred");
+		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		// fred logs in
 		fred.login();
@@ -240,7 +240,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		prepareTest();
 		SpaceDog test = SpaceDog.backendId("test");
 		SpaceDog superadmin = resetTestBackend();
-		SpaceDog fred = createTempUser(superadmin, "fred");
+		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		Credentials credentials = superadmin.credentials().get(fred.id());//
 		assertEquals(0, credentials.invalidChallenges());
@@ -305,20 +305,18 @@ public class CredentialsResourceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
-		SpaceDog fred = SpaceDog.backend(test).username("fred")//
-				.password("hi fred").email("platform@spacedog.io")//
-				.credentials().signUp();
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog fred = createTempDog(superadmin, "fred").login();
 
 		// fred can get data objects
 		SpaceRequest.get("/1/data").basicAuth(fred).go(200);
 
 		// superadmin forces fred to change his password
-		test.credentials().passwordMustChange(fred.id());
+		superadmin.credentials().passwordMustChange(fred.id());
 
 		// fred can no longer get data objects with his token
 		// because he must first change his password
-		SpaceRequest.get("/1/data").bearerAuth(fred).go(403)//
+		fred.get("/1/data").bearerAuth(fred).go(403)//
 				.assertEquals("password-must-change", "error.code");
 
 		// fred can no longer get data objects with his password
@@ -327,8 +325,9 @@ public class CredentialsResourceTest extends SpaceTest {
 				.assertEquals("password-must-change", "error.code");
 
 		// fred can change his password
-		fred.credentials().updateMyPassword("hi fred", "hi fred 2");
-		fred.password("hi fred 2");
+		String newPassword = Passwords.random();
+		fred.credentials().updateMyPassword(fred.password().get(), newPassword);
+		fred.password(newPassword);
 
 		// fred can get data objects again with basic auth
 		SpaceRequest.get("/1/data").basicAuth(fred).go(200);
@@ -345,18 +344,18 @@ public class CredentialsResourceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
-		SpaceDog fred = createTempUser("test", "fred");
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		// fred can get data objects
 		fred.get("/1/data").go(200);
 
 		// to declare that you forgot your password
 		// you need to pass your username
-		test.post("/1/credentials/forgotPassword").go(400);
+		superadmin.post("/1/credentials/forgotPassword").go(400);
 
 		// if invalid username, you get a 404
-		test.post("/1/credentials/forgotPassword")//
+		superadmin.post("/1/credentials/forgotPassword")//
 				.bodyJson(USERNAME_PARAM, "XXX").go(404);
 
 		// fred fails to declare "forgot password" if no
@@ -373,7 +372,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		template.subject = "Password forgotten request";
 		template.text = "{{passwordResetCode}}";
 		settings.templates.put("forgotPassword", template);
-		test.settings().save(settings);
+		superadmin.settings().save(settings);
 
 		// fred declares he's forgot his password
 		fred.credentials().forgotMyPassword();
@@ -389,7 +388,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		template.model = Maps.newHashMap();
 		template.model.put("url", "string");
 		template.text = "{{url}}?code={{passwordResetCode}}";
-		test.settings().save(settings);
+		superadmin.settings().save(settings);
 
 		// fred declares he's forgot his password
 		// passing an url parameter

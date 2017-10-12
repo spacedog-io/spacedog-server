@@ -164,7 +164,7 @@ public class CredentialsResource extends Resource {
 
 		CredentialsSettings settings = credentialsSettings();
 
-		if (settings.disableGuestSignUp)
+		if (!settings.guestSignUpEnabled)
 			SpaceContext.credentials().checkAtLeastUser();
 
 		Credentials credentials = createCredentialsRequestToCredentials(body, //
@@ -679,7 +679,7 @@ public class CredentialsResource extends Resource {
 
 	private Payload saved(boolean created, Credentials credentials) {
 		return JsonPayload.saved(false, "/1", TYPE, credentials.id())//
-		.withVersion(credentials.version()).withObject(credentials.toJson())//
+				.withVersion(credentials.version()).withObject(credentials.toJson())//
 				.build();
 	}
 

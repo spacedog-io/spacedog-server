@@ -33,12 +33,12 @@ public class SnapshotResourceTest extends SpaceTest {
 		if (optional.isPresent())
 			superdog.credentials().delete(optional.get().id());
 
-		SpaceDog snapDog = createTempUser(superdog, "snaptest");
+		SpaceDog snapDog = createTempDog(superdog, "snaptest");
 		superdog.credentials().setRole(snapDog.id(), "snapshotall");
 
 		// creates backend and credentials
 		SpaceDog test1 = createBackend("test1");
-		SpaceDog vince = createTempUser(test1, "vince");
+		SpaceDog vince = createTempDog(test1, "vince");
 
 		// deletes the current repository to force repo creation by this test
 		// use full url to avoid delete by mistake any prod repo
@@ -79,7 +79,7 @@ public class SnapshotResourceTest extends SpaceTest {
 
 		// creates another backend and credentials
 		SpaceDog test2 = createBackend("test2");
-		SpaceDog fred = createTempUser(test2, "fred");
+		SpaceDog fred = createTempDog(test2, "fred");
 
 		// second snapshot
 		// returns 201 since wait for completion true (202 otherwise)
@@ -100,7 +100,7 @@ public class SnapshotResourceTest extends SpaceTest {
 
 		// create another account and add a credentials
 		SpaceDog test3 = createBackend("test3");
-		SpaceDog nath = createTempUser(test3, "nath");
+		SpaceDog nath = createTempDog(test3, "nath");
 
 		// third snapshot
 		// returns 201 since wait for completion true (202 otherwise)

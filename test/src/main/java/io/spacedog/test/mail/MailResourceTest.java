@@ -26,7 +26,7 @@ public class MailResourceTest extends SpaceTest {
 
 		prepareTest();
 		SpaceDog test = resetTestBackend();
-		SpaceDog vince = createTempUser(test, "vince");
+		SpaceDog vince = createTempDog(test, "vince");
 
 		// by default users can not send emails
 		SpaceRequest.post("/1/mail").auth(vince).go(403);

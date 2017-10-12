@@ -27,7 +27,7 @@ public class SmsTemplateResourceTest extends SpaceTest {
 		SpaceDog superadmin = resetTestBackend();
 
 		// superadmin creates user vince with 'sms' role
-		SpaceDog vince = createTempUser(test, "vince");
+		SpaceDog vince = createTempDog(test, "vince");
 		superadmin.credentials().setRole(vince.id(), "sms");
 
 		// superadmin creates a customer schema

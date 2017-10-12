@@ -35,9 +35,9 @@ public class ChauffeLeTest extends SpaceTest {
 		superadmin.schema().set(buildBigPostSchema());
 		superadmin.schema().set(buildSmallPostSchema());
 
-		lui = createTempUser(superadmin, "lui");
-		elle = createTempUser(superadmin, "elle");
-		laCopine = createTempUser(superadmin, "lacopine");
+		lui = createTempDog(superadmin, "lui");
+		elle = createTempDog(superadmin, "elle");
+		laCopine = createTempDog(superadmin, "lacopine");
 	}
 
 	static Schema buildBigPostSchema() {

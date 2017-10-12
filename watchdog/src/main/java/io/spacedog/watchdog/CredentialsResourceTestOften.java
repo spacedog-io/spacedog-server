@@ -27,6 +27,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
+		superadmin.credentials().enableGuestSignUp(true);
 
 		// fails since empty user body
 		SpaceRequest.post("/1/credentials/").backend(superadmin)//
@@ -102,7 +103,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		SpaceRequest.get("/1/credentials/" + vince.id()).backend(superadmin).go(403);
 
 		// another user fails to get vince credentials
-		SpaceDog fred = createTempUser("test", "fred");
+		SpaceDog fred = signUpTempDog("test", "fred");
 		fred.get("/1/credentials/" + vince.id()).go(403);
 
 		// vince succeeds to login
@@ -117,17 +118,19 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
-		SpaceDog test2 = resetTest2Backend();
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin2 = resetTest2Backend();
 
 		// fails to access backend if unknown token
-		SpaceRequest.get("/1/data").backend(test).bearerAuth("XXX").go(401);
+		SpaceRequest.get("/1/data").backend(superadmin).bearerAuth("XXX").go(401);
 
-		// vince signs up and get a brand new access token
-		SpaceDog vince = createTempUser("test", "vince").login();
+		// superadmin creates vince
+		// vince gets a brand new access token
+		SpaceDog vince = createTempDog(superadmin, "vince").login();
 
 		// vince request fails because wrong backend
-		SpaceRequest.get("/1/data").backend(test2).bearerAuth(vince.accessToken().get()).go(401);
+		SpaceRequest.get("/1/data").backend(superadmin2)//
+				.bearerAuth(vince.accessToken().get()).go(401);
 
 		// vince request succeeds since valid [backend / access token] pair
 		SpaceRequest.get("/1/data").bearerAuth(vince).go(200);
@@ -147,7 +150,8 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		SpaceRequest.get("/1/login").bearerAuth(vince).go(401);
 
 		// vince logs in again
-		ObjectNode node = SpaceRequest.get("/1/login").basicAuth(vince).go(200).asJsonObject();
+		ObjectNode node = SpaceRequest.get("/1/login")//
+				.basicAuth(vince).go(200).asJsonObject();
 		vince.accessToken(node.get("accessToken").asText());
 		long expiresIn = node.get("expiresIn").asLong();
 		vince.expiresAt(DateTime.now().plus(expiresIn));
@@ -209,7 +213,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		SpaceDog fred = createTempUser(superadmin, "fred");
+		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		// admin saves settings with token max lifetime set to 3s
 		CredentialsSettings settings = new CredentialsSettings();
@@ -237,8 +241,8 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		prepareTest();
 		SpaceDog guest = SpaceDog.backendId("test");
 		SpaceDog superadmin = resetTestBackend();
-		SpaceDog fred = createTempUser("test", "fred");
-		SpaceDog vince = createTempUser("test", "vince");
+		SpaceDog fred = createTempDog(superadmin, "fred");
+		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		// vince and fred can login
 		vince.login();
@@ -277,8 +281,8 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		SpaceDog fred = createTempUser(superadmin, "fred");
-		SpaceDog vince = createTempUser(superadmin, "vince");
+		SpaceDog fred = createTempDog(superadmin, "fred");
+		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		// vince searches for all credentials
 		vince.get("/1/credentials").go(200)//
@@ -341,7 +345,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
 		SpaceDog guest = SpaceDog.backend(superadmin);
-		SpaceDog fred = createTempUser(superadmin, "fred");
+		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		// sign up without password should succeed
 		ObjectNode node = SpaceRequest.post("/1/credentials/").backend(superadmin)//
@@ -441,7 +445,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		SpaceDog fred = createTempUser(superadmin, "fred");
+		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		// fred can login
 		fred.login();
@@ -465,7 +469,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend().login();
-		SpaceDog fred = createTempUser(superadmin, "fred");
+		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		// test gets his credentials roles
 		Set<String> roles = superadmin.credentials().getAllRoles(superadmin.id());
@@ -530,13 +534,10 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		SpaceDog fred = createTempUser(superadmin, "fred");
+		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		// admin disables guest sign up
-
-		CredentialsSettings settings = new CredentialsSettings();
-		settings.disableGuestSignUp = true;
-		superadmin.settings().save(settings);
+		superadmin.credentials().enableGuestSignUp(false);
 
 		// guest can not create credentials
 		SpaceRequest.post("/1/credentials").backend(superadmin)//
@@ -616,7 +617,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		SpaceDog fred = createTempUser(superadmin, "fred");
+		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		// fred fails to create admin credentials
 		fred.post("/1/credentials")//
@@ -646,8 +647,8 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		resetTestBackend();
-		SpaceDog fred = createTempUser("test", "fred").login();
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog fred = createTempDog(superadmin, "fred").login();
 
 		// fred fails to update his password
 		// since his password is not challenged
@@ -672,7 +673,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		SpaceDog fred = createTempUser("test", "fred").login();
+		SpaceDog fred = createTempDog(superadmin, "fred").login();
 
 		// fred fails to updates his username
 		// since password must be challenged
@@ -723,7 +724,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		SpaceDog fred = createTempUser("test", "fred").login();
+		SpaceDog fred = createTempDog(superadmin, "fred").login();
 
 		// fred logs in
 		fred.get("/1/login").go(200);
