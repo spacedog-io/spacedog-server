@@ -24,6 +24,7 @@ import io.spacedog.utils.SpaceParams;
 public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 
 	SpaceDog dog;
+	Credentials credentials;
 
 	CredentialsEndpoint(SpaceDog session) {
 		this.dog = session;
@@ -38,15 +39,11 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 	}
 
 	public Credentials me(boolean reload) {
-		if (dog.credentials == null)
-			throw Exceptions.illegalState("you must login first");
-
-		if (reload) {
+		if (credentials == null || reload) {
 			SpaceResponse response = dog.get("/1/credentials/me").go(200);
-			dog.credentials = toCredentials(response.asJsonObject());
+			this.credentials = toCredentials(response.asJsonObject());
 		}
-
-		return dog.credentials;
+		return this.credentials;
 	}
 
 	public Optional7<Credentials> getByUsername(String username) {

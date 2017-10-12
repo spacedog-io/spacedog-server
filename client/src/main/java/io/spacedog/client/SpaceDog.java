@@ -8,7 +8,6 @@ import io.spacedog.http.SpaceBackend;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceResponse;
 import io.spacedog.utils.Check;
-import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.SpaceFields;
@@ -17,14 +16,15 @@ import io.spacedog.utils.SpaceParams;
 public class SpaceDog implements SpaceFields, SpaceParams {
 
 	SpaceBackend backend;
-	Credentials credentials;
+	String id;
+	String username;
+	String email;
 	String password;
 	String accessToken;
 	DateTime expiresAt;
 
 	private SpaceDog(SpaceBackend backend) {
 		this.backend = backend;
-		this.credentials = new Credentials();
 	}
 
 	public SpaceBackend backend() {
@@ -36,29 +36,29 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 	}
 
 	public String username() {
-		return credentials.name();
+		return username;
 	}
 
 	public SpaceDog username(String username) {
-		this.credentials.name(username);
+		this.username = username;
 		return this;
 	}
 
 	public String id() {
-		return credentials.id();
+		return id;
 	}
 
 	public SpaceDog id(String id) {
-		this.credentials.id(id);
+		this.id = id;
 		return this;
 	}
 
 	public Optional7<String> email() {
-		return credentials.email();
+		return Optional7.ofNullable(email);
 	}
 
 	public SpaceDog email(String email) {
-		this.credentials.email(email);
+		this.email = email;
 		return this;
 	}
 
@@ -91,7 +91,7 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 
 	@Override
 	public String toString() {
-		return credentials.toString();
+		return String.format("SpaceDog[%s]", username());
 	}
 
 	//
@@ -136,7 +136,7 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 		ObjectNode node = request.go(200).asJsonObject();
 
 		this.accessToken = Json.checkStringNotNullOrEmpty(node, ACCESS_TOKEN_FIELD);
-		this.credentials.id(Json.checkStringNotNullOrEmpty(node, "credentials.id"));
+		this.id(Json.checkStringNotNullOrEmpty(node, "credentials.id"));
 		return this;
 	}
 

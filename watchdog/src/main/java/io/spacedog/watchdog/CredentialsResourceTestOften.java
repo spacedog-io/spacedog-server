@@ -345,6 +345,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
 		SpaceDog guest = SpaceDog.backend(superadmin);
+		superadmin.credentials().enableGuestSignUp(true);
 		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		// sign up without password should succeed
@@ -569,6 +570,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
+		superadmin.credentials().enableGuestSignUp(true);
 
 		// get default username and password settings
 		CredentialsSettings settings = superadmin.settings().get(CredentialsSettings.class);
