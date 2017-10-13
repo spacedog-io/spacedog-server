@@ -9,9 +9,11 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
+import org.elasticsearch.search.aggregations.bucket.filter.Filter;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms.Bucket;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsBuilder;
+import org.elasticsearch.search.sort.SortOrder;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
@@ -34,9 +36,12 @@ import net.codestory.http.payload.Payload;
 public class TooleeResource extends Resource {
 
 	private static final String COMPANY_TYPE = "company";
+	private static final String NOTIFICATION_TYPE = "notification";
 	private static final String DOCUMENT_TYPE = "document";
 	private static final String ANALYZED_STATUS = "analyzed";
 	private static final String CLASSIFIED_STATUS = "classified";
+	private static final String CONTROLLER_ROLE = "controller";
+	private static final String OPERATOR_ROLE = "operator";
 	private static final String ACCOUNTANT_ROLE = "accountant";
 	private static final String ACCOUNTANT_CREDENTIALS_IDS = "accountantCredentialsIds";
 	private static final String CONTROLLER_CREDENTIALS_IDS = "controllerCredentialsIds";
@@ -52,9 +57,15 @@ public class TooleeResource extends Resource {
 	@Get("/1/service/companies/_my_toolee_customers/")
 	public Payload getMyTooleeCustomers(Context context) {
 		Credentials credentials = SpaceContext.checkUserCredentials();
+		String mainRole = checkOperatorOrAccountant(credentials);
 
 		Company[] companies = findMyTooleeCutomers(credentials);
-		computeCustomerIndicators(credentials, companies);
+
+		String[] companyIds = Arrays.stream(companies)//
+				.map(company -> company.id).toArray(String[]::new);
+
+		computeDocuments(credentials, companies, companyIds);
+		computeNotifications(credentials, companies, companyIds);
 
 		ObjectNode object = Json7.object("total", companies.length, //
 				"results", Json8.toNode(companies));
@@ -109,12 +120,10 @@ public class TooleeResource extends Resource {
 
 	private static String[] statuses = { ANALYZED_STATUS, CLASSIFIED_STATUS };
 
-	private void computeCustomerIndicators(Credentials credentials, Company[] companies) {
+	private void computeDocuments(Credentials credentials, //
+			Company[] companies, String[] companyIds) {
 		ElasticClient elastic = Start.get().getElasticClient();
 		String alias = elastic.toAlias(credentials.backendId(), DOCUMENT_TYPE);
-
-		String[] companyIds = Arrays.stream(companies)//
-				.map(company -> company.id).toArray(String[]::new);
 
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
 				.must(QueryBuilders.termsQuery(COMPANY_ID, companyIds));
@@ -146,6 +155,43 @@ public class TooleeResource extends Resource {
 
 	}
 
+	private void computeNotifications(Credentials credentials, //
+			Company[] companies, String[] companyIds) {
+
+		ElasticClient elastic = Start.get().getElasticClient();
+		String alias = elastic.toAlias(credentials.backendId(), NOTIFICATION_TYPE);
+		String mainRole = checkOperatorOrAccountant(credentials);
+
+		BoolQueryBuilder query = QueryBuilders.boolQuery()//
+				.must(QueryBuilders.termsQuery(COMPANY_ID, companyIds));
+
+		BoolQueryBuilder subAggQuery = QueryBuilders.boolQuery()//
+				.must(QueryBuilders.termQuery(mainRole + ".show", true))//
+				.mustNot(QueryBuilders.existsQuery(mainRole + ".readAt"));
+
+		TermsBuilder aggBuilder = AggregationBuilders.terms("notifications")//
+				.field(COMPANY_ID).include(companyIds)//
+				.subAggregation(AggregationBuilders.filter("notread")//
+						.filter(subAggQuery));
+
+		Terms agg = (Terms) elastic.prepareSearch()//
+				.setIndices(alias).setTypes(NOTIFICATION_TYPE)//
+				.setQuery(query)//
+				.addAggregation(aggBuilder)//
+				.setSize(0)//
+				.get()//
+				.getAggregations()//
+				.get("notifications");
+
+		for (Company company : companies) {
+			Bucket bucket = agg.getBucketByKey(company.id);
+			if (bucket != null) {
+				Filter agg2 = (Filter) bucket.getAggregations().get("notread");
+				company.notifications = agg2 == null ? 0 : agg2.getDocCount();
+			}
+		}
+	}
+
 	private Company[] findMyTooleeCutomers(Credentials credentials) {
 		ElasticClient elastic = Start.get().getElasticClient();
 		String alias = elastic.toAlias(credentials.backendId(), COMPANY_TYPE);
@@ -159,6 +205,7 @@ public class TooleeResource extends Resource {
 		SearchHits searchHits = elastic.prepareSearch()//
 				.setIndices(alias).setTypes(COMPANY_TYPE)//
 				.setQuery(query)//
+				.addSort("name", SortOrder.ASC)//
 				.setFrom(0)//
 				.setSize(5000)//
 				.setVersion(false)//
@@ -178,6 +225,15 @@ public class TooleeResource extends Resource {
 		}
 
 		return companies;
+	}
+
+	private String checkOperatorOrAccountant(Credentials credentials) {
+		Set<String> roles = credentials.roles();
+		if (roles.contains(OPERATOR_ROLE))
+			return OPERATOR_ROLE;
+		if (roles.contains(ACCOUNTANT_ROLE))
+			return ACCOUNTANT_ROLE;
+		throw Exceptions.insufficientCredentials(credentials);
 	}
 
 	//

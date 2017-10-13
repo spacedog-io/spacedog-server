@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class Company {
 	public String id;
 	public String name;
-	public int notifications;
+	public long notifications;
 	public long docsToAnalyze;
 	public long docsToProcess;
 }
