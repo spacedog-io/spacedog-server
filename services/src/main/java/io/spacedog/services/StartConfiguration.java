@@ -32,10 +32,12 @@ public class StartConfiguration {
 	private static final String SPACEDOG_PRODUCTION = "spacedog.production";
 	private static final String SPACEDOG_ELASTIC_DATA_PATH = "spacedog.elastic.data.path";
 	private static final String SPACEDOG_SERVER_PORT = "spacedog.server.port";
+	private static final String SPACEDOG_SERVER_GREEN_CHECK = "spacedog.server.green.check";
+	private static final String SPACEDOG_SERVER_GREEN_TIMEOUT = "spacedog.server.green.timeout";
 	private static final String SPACEDOG_API_URL_SCHEME = "spacedog.api.url.scheme";
 	private static final String SPACEDOG_API_URL_BASE = "spacedog.api.url.base";
 	private static final String SPACEDOG_ONLY_SUPERDOG_CAN_CREATE_BACKEND //
-	= "spacedog.only.superdog.can.create.backend";
+			= "spacedog.only.superdog.can.create.backend";
 	private static final String SPACEDOG_SERVER_USER_AGENT = "spacedog.server.user.agent";
 
 	private Properties configuration = new Properties();
@@ -82,7 +84,8 @@ public class StartConfiguration {
 	public Optional<String> get(String propertyName) {
 		String propertyValue = configuration.getProperty(propertyName);
 		return Strings.isNullOrEmpty(propertyValue)//
-				? Optional.empty() : Optional.of(propertyValue);
+				? Optional.empty()
+				: Optional.of(propertyValue);
 	}
 
 	public Path homePath() {
@@ -120,6 +123,14 @@ public class StartConfiguration {
 
 	public int serverPort() {
 		return Integer.valueOf(configuration.getProperty(SPACEDOG_SERVER_PORT));
+	}
+
+	public boolean serverGreenCheck() {
+		return Boolean.parseBoolean(configuration.getProperty(SPACEDOG_SERVER_GREEN_CHECK, "true"));
+	}
+
+	public int serverGreenTimeout() {
+		return Integer.valueOf(configuration.getProperty(SPACEDOG_SERVER_GREEN_TIMEOUT, "60"));
 	}
 
 	public Path elasticDataPath() {
