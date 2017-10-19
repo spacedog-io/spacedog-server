@@ -283,25 +283,30 @@ public class ElasticClient implements SpaceParams {
 
 	public void ensureGreen(String... indices) {
 		String indicesString = Arrays.toString(indices);
+		boolean check = Start.get().configuration().serverGreenCheck();
+		int timeout = Start.get().configuration().serverGreenTimeout();
 		Utils.info("[SpaceDog] Ensure indices %s are green ...", indicesString);
 
 		ClusterHealthResponse response = this.internalClient.admin().cluster()
 				.health(Requests.clusterHealthRequest(indices)//
-						.timeout(TimeValue.timeValueSeconds(60))//
+						.timeout(TimeValue.timeValueSeconds(timeout))//
 						.waitForGreenStatus()//
 						.waitForEvents(Priority.LOW)//
 						.waitForRelocatingShards(0))//
 				.actionGet();
 
-		if (response.isTimedOut())
-			throw Exceptions.runtime("ensure indices %s status are green timed out", //
-					indicesString);
+		if (check) {
+			if (response.isTimedOut())
+				throw Exceptions.runtime("ensure indices %s status are green timed out", //
+						indicesString);
 
-		if (!response.getStatus().equals(ClusterHealthStatus.GREEN))
-			throw Exceptions.runtime("indices %s failed to turn green", //
-					indicesString);
+			if (!response.getStatus().equals(ClusterHealthStatus.GREEN))
+				throw Exceptions.runtime("indices %s failed to turn green", //
+						indicesString);
+		}
 
-		Utils.info("[SpaceDog] indices %s are green!", indicesString);
+		Utils.info("[SpaceDog] indices %s are [%s]", //
+				indicesString, response.getStatus().toString());
 	}
 
 	public void refreshType(String backendId, String type) {
@@ -463,9 +468,9 @@ public class ElasticClient implements SpaceParams {
 	}
 
 	/**
-	 * TODO use this in the future to distinguish data indices and internal
-	 * backend indices. This means all data indices must be renamed with the
-	 * following pattern: backendId-data-indexName
+	 * TODO use this in the future to distinguish data indices and internal backend
+	 * indices. This means all data indices must be renamed with the following
+	 * pattern: backendId-data-indexName
 	 */
 	public String[] toDataIndices(String backendId) {
 		return toIndicesStream(backendId)//
