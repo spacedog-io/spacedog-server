@@ -57,7 +57,7 @@ public class TooleeResource extends Resource {
 	@Get("/1/service/companies/_my_toolee_customers/")
 	public Payload getMyTooleeCustomers(Context context) {
 		Credentials credentials = SpaceContext.checkUserCredentials();
-		String mainRole = checkOperatorOrAccountant(credentials);
+		credentials.checkRoles(OPERATOR_ROLE, ACCOUNTANT_ROLE);
 
 		Company[] companies = findMyTooleeCutomers(credentials);
 
@@ -122,6 +122,7 @@ public class TooleeResource extends Resource {
 
 	private void computeDocuments(Credentials credentials, //
 			Company[] companies, String[] companyIds) {
+
 		ElasticClient elastic = Start.get().getElasticClient();
 		String alias = elastic.toAlias(credentials.backendId(), DOCUMENT_TYPE);
 
@@ -160,7 +161,7 @@ public class TooleeResource extends Resource {
 
 		ElasticClient elastic = Start.get().getElasticClient();
 		String alias = elastic.toAlias(credentials.backendId(), NOTIFICATION_TYPE);
-		String mainRole = checkOperatorOrAccountant(credentials);
+		String mainRole = getMainRole(credentials);
 
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
 				.must(QueryBuilders.termsQuery(COMPANY_ID, companyIds));
@@ -227,13 +228,16 @@ public class TooleeResource extends Resource {
 		return companies;
 	}
 
-	private String checkOperatorOrAccountant(Credentials credentials) {
+	private String getMainRole(Credentials credentials) {
 		Set<String> roles = credentials.roles();
+		if (roles.contains(CONTROLLER_ROLE))
+			return CONTROLLER_ROLE;
 		if (roles.contains(OPERATOR_ROLE))
 			return OPERATOR_ROLE;
 		if (roles.contains(ACCOUNTANT_ROLE))
 			return ACCOUNTANT_ROLE;
-		throw Exceptions.insufficientCredentials(credentials);
+		throw Exceptions.illegalState("user [%s][%s] not a controller, operator or accountant", //
+				credentials.level(), credentials.name());
 	}
 
 	//
