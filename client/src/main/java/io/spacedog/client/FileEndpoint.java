@@ -6,12 +6,10 @@ import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-
-import io.spacedog.http.SpaceRequest;
-import io.spacedog.http.SpaceResponse;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import io.spacedog.http.SpaceResponse;
 
 public class FileEndpoint {
 
@@ -32,13 +30,10 @@ public class FileEndpoint {
 	}
 
 	public FileList list(String webPath, String next) {
-		SpaceRequest request = dog.get("/1/file" + webPath)//
-				.size(listSize);
-
-		if (next != null)
-			request.queryParam("next", next);
-
-		SpaceResponse response = request.go(200, 404);
+		SpaceResponse response = dog.get("/1/file" + webPath)//
+				.size(listSize)//
+				.queryParam("next", next)//
+				.go(200, 404);
 
 		if (response.status() == 200)
 			return response.toPojo(FileList.class);

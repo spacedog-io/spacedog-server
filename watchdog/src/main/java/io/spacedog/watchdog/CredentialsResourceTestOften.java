@@ -197,7 +197,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// vince logs in with token expiration of 2 seconds
 		node = SpaceRequest.get("/1/login").basicAuth(vince)//
-				.queryParam("lifetime", "2") // seconds
+				.queryParam("lifetime", 2) // seconds
 				.go(200).asJsonObject();
 
 		vince.accessToken(node.get("accessToken").asText());
@@ -222,7 +222,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// fred fails to login with a token lifetime of 4s
 		// since max token lifetime is 3s
-		SpaceRequest.get("/1/login").basicAuth(fred).queryParam(LIFETIME_PARAM, "4").go(403);
+		SpaceRequest.get("/1/login").basicAuth(fred).queryParam(LIFETIME_PARAM, 4).go(403);
 
 		// fred logs in with a token lifetime of 2s
 		// since max token lifetime is 3s

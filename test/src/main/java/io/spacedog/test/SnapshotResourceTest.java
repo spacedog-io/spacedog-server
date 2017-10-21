@@ -85,7 +85,7 @@ public class SnapshotResourceTest extends SpaceTest {
 		// returns 201 since wait for completion true (202 otherwise)
 		// Authorized since superdog even with non root backend
 		response = superdog("test").post("/1/snapshot")//
-				.queryParam("waitForCompletion", "true")//
+				.queryParam("waitForCompletion", true)//
 				.go(201)//
 				.assertEquals(repository, "snapshot.repository")//
 				.assertEquals("SUCCESS", "snapshot.state")//
@@ -107,7 +107,7 @@ public class SnapshotResourceTest extends SpaceTest {
 		// Authorized since snapshotUser is a root backend user
 		// and has the snapshotall role
 		response = snapDog.post("/1/snapshot")//
-				.queryParam("waitForCompletion", "true")//
+				.queryParam("waitForCompletion", true)//
 				.go(201)//
 				.assertEquals(repository, "snapshot.repository")//
 				.assertEquals("SUCCESS", "snapshot.state")//
@@ -130,7 +130,7 @@ public class SnapshotResourceTest extends SpaceTest {
 		// restore to oldest snapshot
 		superdog.post("/1/snapshot/{id}/restore")//
 				.routeParam("id", firstSnapId)//
-				.queryParam("waitForCompletion", "true")//
+				.queryParam("waitForCompletion", true)//
 				.go(200);
 
 		// check only account aaaa and credentials vince are present
@@ -141,7 +141,7 @@ public class SnapshotResourceTest extends SpaceTest {
 		// restore to second (middle) snapshot
 		superdog.post("/1/snapshot/{id}/restore")//
 				.routeParam("id", secondSnapId)//
-				.queryParam("waitForCompletion", "true")//
+				.queryParam("waitForCompletion", true)//
 				.go(200);
 
 		// check only aaaa and bbbb accounts are present
@@ -153,7 +153,7 @@ public class SnapshotResourceTest extends SpaceTest {
 		// restore to latest (third) snapshot
 		superdog.post("/1/snapshot/{id}/restore")//
 				.routeParam("id", thirdSnapId)//
-				.queryParam("waitForCompletion", "true")//
+				.queryParam("waitForCompletion", true)//
 				.go(200);
 
 		// check all accounts and credentials are present
@@ -173,7 +173,7 @@ public class SnapshotResourceTest extends SpaceTest {
 
 		// restore to latest (third) snapshot
 		superdog.post("/1/snapshot/latest/restore")//
-				.queryParam("waitForCompletion", "true")//
+				.queryParam("waitForCompletion", true)//
 				.go(200);
 
 		// check all accounts and credentials are back
@@ -183,7 +183,7 @@ public class SnapshotResourceTest extends SpaceTest {
 
 		// fails to restore snapshot if invalid id format
 		superdog.post("/1/snapshot/xxxx/restore")//
-				.queryParam("waitForCompletion", "true")//
+				.queryParam("waitForCompletion", true)//
 				.go(400);
 
 		// fails to get snapshot if id not found

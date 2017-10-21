@@ -277,7 +277,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 
 		// get file from location URI with content disposition
 		stringContent = SpaceRequest.get(location).backend(test)//
-				.queryParam("withContentDisposition", "true").go(200)//
+				.queryParam("withContentDisposition", true).go(200)//
 				.assertHeaderEquals("attachment; filename=\"un petit text ?\"", //
 						SpaceHeaders.CONTENT_DISPOSITION)//
 				.asString();

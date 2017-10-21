@@ -59,7 +59,7 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 				.bodyPojo(object.source());
 
 		if (object.version() > 0)
-			request.queryParam(VERSION_PARAM, String.valueOf(object.version()));
+			request.queryParam(VERSION_PARAM, object.version());
 
 		return request.go(200, 201).toPojo(object);
 	}
@@ -68,7 +68,7 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 		return dog.put("/1/data/{type}/{id}")//
 				.routeParam(ID_FIELD, id)//
 				.routeParam(TYPE_FIELD, type)//
-				.queryParam(STRICT_PARAM, "false")//
+				.queryParam(STRICT_PARAM, false)//
 				.bodyPojo(source).go(200)//
 				.get(VERSION_FIELD).asLong();
 	}
@@ -166,14 +166,10 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 					? dog.get("/1/data") //
 					: dog.get("/1/data/{type}").routeParam("type", type);
 
-			if (refresh != null)
-				request.queryParam(REFRESH_PARAM, Boolean.toString(refresh));
-			if (from != null)
-				request.queryParam(FROM_PARAM, Integer.toString(from));
-			if (size != null)
-				request.queryParam(SIZE_PARAM, Integer.toString(size));
-
-			return request.go(200).toPojo(resultsClass);
+			return request.queryParam(REFRESH_PARAM, refresh)//
+					.queryParam(FROM_PARAM, from)//
+					.queryParam(SIZE_PARAM, size)//
+					.go(200).toPojo(resultsClass);
 		}
 
 	}
@@ -219,7 +215,7 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 			path = path + "/" + type;
 
 		return dog.post(path)//
-				.queryParam(REFRESH_PARAM, Boolean.toString(refresh))//
+				.queryParam(REFRESH_PARAM, refresh)//
 				.bodyJson(builder.toString()).go(200).toPojo(resultsClass);
 	}
 }

@@ -274,17 +274,18 @@ public class SpaceRequest {
 		return this;
 	}
 
-	public SpaceRequest queryParam(String name, String value) {
-		this.queryParams.put(name, value);
+	public SpaceRequest queryParam(String name, Object value) {
+		if (value != null)
+			this.queryParams.put(name, value.toString());
 		return this;
 	}
 
 	public SpaceRequest size(int size) {
-		return this.queryParam("size", String.valueOf(size));
+		return this.queryParam("size", size);
 	}
 
 	public SpaceRequest from(int from) {
-		return this.queryParam("from", String.valueOf(from));
+		return this.queryParam("from", from);
 	}
 
 	public SpaceRequest refresh() {
@@ -293,7 +294,7 @@ public class SpaceRequest {
 
 	public SpaceRequest refresh(boolean refresh) {
 		if (refresh)
-			this.queryParam(SpaceParams.REFRESH_PARAM, String.valueOf(refresh));
+			this.queryParam(SpaceParams.REFRESH_PARAM, refresh);
 		return this;
 	}
 

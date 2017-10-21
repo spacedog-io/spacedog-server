@@ -86,7 +86,7 @@ public class LogEndpoint implements SpaceParams {
 	}
 
 	public void delete(DateTime before) {
-		dog.delete("/1/log").queryParam("before", before.toString()).go(200);
+		dog.delete("/1/log").queryParam("before", before).go(200);
 	}
 
 }

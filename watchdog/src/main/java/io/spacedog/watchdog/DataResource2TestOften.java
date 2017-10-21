@@ -224,7 +224,7 @@ public class DataResource2TestOften extends SpaceTest {
 		assertSourceAlmostEquals(saleNode, saleNode6, "items");
 
 		// update with invalid version should fail
-		fred.put("/1/data/sale/" + saleDO2.id()).queryParam("version", "1")//
+		fred.put("/1/data/sale/" + saleDO2.id()).queryParam("version", 1)//
 				.bodyJson("number", "0987654321").go(409);
 
 		// update with invalid version should fail
@@ -311,7 +311,7 @@ public class DataResource2TestOften extends SpaceTest {
 		superadmin.post("/1/data/message").bodyJson("text", "id=2", "id", 2).go(400);
 
 		// an id param does not force the object id
-		String id = superadmin.post("/1/data/message").queryParam("id", "23")//
+		String id = superadmin.post("/1/data/message").queryParam("id", 23)//
 				.bodyJson("text", "hello").go(201).getString("id");
 		assertNotEquals("23", id);
 	}
