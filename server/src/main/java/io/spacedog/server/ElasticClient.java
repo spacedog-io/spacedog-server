@@ -300,25 +300,27 @@ public class ElasticClient implements SpaceParams {
 
 	public void ensureIndicesAreGreen(String... indices) {
 		String indicesString = Arrays.toString(indices);
+		ServerConfiguration conf = Start.get().configuration();
 		Utils.info("[SpaceDog] Ensure indices %s are green ...", indicesString);
 
 		ClusterHealthResponse response = this.internalClient.admin().cluster()
 				.health(Requests.clusterHealthRequest(indices)//
-						.timeout(TimeValue.timeValueSeconds(60))//
+						.timeout(TimeValue.timeValueSeconds(conf.serverGreenTimeout()))//
 						.waitForGreenStatus()//
 						.waitForEvents(Priority.LOW)//
 						.waitForRelocatingShards(0))//
 				.actionGet();
 
-		if (response.isTimedOut())
-			throw Exceptions.runtime("ensure indices %s status are green timed out", //
-					indicesString);
+		if (conf.serverGreenCheck()) {
+			if (response.isTimedOut())
+				throw Exceptions.runtime("ensure indices %s status are green timed out", //
+						indicesString);
 
-		if (!response.getStatus().equals(ClusterHealthStatus.GREEN))
-			throw Exceptions.runtime("indices %s failed to turn green", //
-					indicesString);
-
-		Utils.info("[SpaceDog] indices %s are green!", indicesString);
+			if (!response.getStatus().equals(ClusterHealthStatus.GREEN))
+				throw Exceptions.runtime("indices %s failed to turn green", //
+						indicesString);
+		}
+		Utils.info("[SpaceDog] indices %s are [%s]", indicesString, response.getStatus());
 	}
 
 	public void refreshType(Index... indices) {

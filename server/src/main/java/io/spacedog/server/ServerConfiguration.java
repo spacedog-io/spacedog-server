@@ -22,6 +22,8 @@ public class ServerConfiguration {
 	private static final String BACKEND_WWW_PUBLIC_URL = "spacedog.backend.www.public.url";
 	private static final String BACKEND_CREATE_RESTRICTED = "spacedog.backend.create.restricted";
 	private static final String SERVER_PORT = "spacedog.server.port";
+	private static final String SERVER_GREEN_CHECK = "spacedog.server.green.check";
+	private static final String SERVER_GREEN_TIMEOUT = "spacedog.server.green.timeout";
 	private static final String SERVER_USER_AGENT = "spacedog.server.user.agent";
 	private static final String ELASTIC_DATA_PATH = "spacedog.elastic.data.path";
 	private static final String ELASTIC_HTTP_ENABLED = "spacedog.elastic.http.enabled";
@@ -89,6 +91,14 @@ public class ServerConfiguration {
 
 	public int serverPort() {
 		return env.get(SERVER_PORT, 8443);
+	}
+
+	public boolean serverGreenCheck() {
+		return env.get(SERVER_GREEN_CHECK, true);
+	}
+
+	public int serverGreenTimeout() {
+		return env.get(SERVER_GREEN_TIMEOUT, 60);
 	}
 
 	public Path elasticDataPath() {
@@ -162,10 +172,14 @@ public class ServerConfiguration {
 		Utils.info("[SpaceDog] Server configuration =");
 
 		log("API URL", apiBackend());
-		log(SERVER_PORT, serverPort());
 		checkPath(HOME_PATH, homePath(), true);
 		log(OFFLINE, isOffline());
 		log(PRODUCTION, isProduction());
+
+		Utils.info();
+		log(SERVER_PORT, serverPort());
+		log(SERVER_GREEN_CHECK, serverGreenCheck());
+		log(SERVER_GREEN_TIMEOUT, serverGreenTimeout());
 
 		Utils.info();
 		checkPath(ELASTIC_DATA_PATH, elasticDataPath(), true);
