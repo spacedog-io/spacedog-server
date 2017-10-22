@@ -15,7 +15,7 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceEnv;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceTest;
-import io.spacedog.model.DataPermission;
+import io.spacedog.model.Permission;
 import io.spacedog.model.MailSettings;
 import io.spacedog.model.MailSettings.SmtpSettings;
 import io.spacedog.model.MailTemplate;
@@ -33,7 +33,7 @@ public class MailTemplateResourceTest extends SpaceTest {
 
 		// create a schema
 		Schema schema = Schema.builder("demande")//
-				.acl("all", DataPermission.create)//
+				.acl("all", Permission.create)//
 				.string("email").text("nom").text("prenom").text("civilite")//
 				.string("cvUrl").string("tel").string("statut")//
 				.object("dispos").array()//

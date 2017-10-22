@@ -5,23 +5,23 @@ package io.spacedog.server;
 
 import org.elasticsearch.action.index.IndexResponse;
 
-import io.spacedog.model.DataPermission;
+import io.spacedog.model.Permission;
 import io.spacedog.model.Schema.DataAcl;
 import io.spacedog.model.InternalDataSettings;
 import io.spacedog.utils.Credentials;
 
 public class DataAccessControl {
 
-	public static boolean check(String type, DataPermission... permissions) {
+	public static boolean check(String type, Permission... permissions) {
 		return check(SpaceContext.credentials(), type, permissions);
 	}
 
-	public static boolean check(Credentials credentials, String type, DataPermission... permissions) {
+	public static boolean check(Credentials credentials, String type, Permission... permissions) {
 		return schemaSettings()//
 				.check(credentials, type, permissions);
 	}
 
-	public static String[] types(DataPermission permission, Credentials credentials) {
+	public static String[] types(Permission permission, Credentials credentials) {
 		return schemaSettings().types(permission, credentials);
 	}
 

@@ -19,7 +19,7 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceTest;
 import io.spacedog.model.BadgeStrategy;
 import io.spacedog.model.DataObject;
-import io.spacedog.model.DataPermission;
+import io.spacedog.model.Permission;
 import io.spacedog.model.Installation;
 import io.spacedog.model.InstallationDataObject;
 import io.spacedog.model.PushService;
@@ -61,10 +61,10 @@ public class PushResourceTest extends SpaceTest {
 		// add create permission to guest requests
 		Schema schema = superadmin.schema().get("installation");
 		schema.acl(new DataAcl()//
-				.set("all", DataPermission.create, DataPermission.update)//
-				.set("user", DataPermission.create, DataPermission.read, DataPermission.update)//
-				.set("admin", DataPermission.create, DataPermission.update_all, //
-						DataPermission.search, DataPermission.delete_all));
+				.set("all", Permission.create, Permission.update)//
+				.set("user", Permission.create, Permission.read, Permission.update)//
+				.set("admin", Permission.create, Permission.update_all, //
+						Permission.search, Permission.delete_all));
 		superadmin.schema().set(schema);
 
 		// non authenticated user installs joho

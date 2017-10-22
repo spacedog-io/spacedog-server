@@ -25,23 +25,23 @@ public class InternalDataSettings extends SettingsBase {
 	// acl business logic
 	//
 
-	public boolean check(String type, String role, DataPermission... permissions) {
+	public boolean check(String type, String role, Permission... permissions) {
 		DataAcl roles = acl.get(type);
 		if (roles == null)
 			roles = DataAcl.defaultAcl();
 
-		Set<DataPermission> rolePermissions = roles.get(role);
+		Set<Permission> rolePermissions = roles.get(role);
 		if (rolePermissions == null)
 			return false;
 
-		for (DataPermission permission : permissions)
+		for (Permission permission : permissions)
 			if (rolePermissions.contains(permission))
 				return true;
 
 		return false;
 	}
 
-	public boolean check(Credentials credentials, String type, DataPermission... permissions) {
+	public boolean check(Credentials credentials, String type, Permission... permissions) {
 		if (credentials.isAtLeastSuperAdmin())
 			return true;
 
@@ -55,7 +55,7 @@ public class InternalDataSettings extends SettingsBase {
 		return false;
 	}
 
-	public String[] types(DataPermission permission, Credentials credentials) {
+	public String[] types(Permission permission, Credentials credentials) {
 		Set<String> types = Sets.newHashSet();
 
 		if (credentials.isAtLeastSuperAdmin())

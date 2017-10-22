@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceTest;
-import io.spacedog.model.DataPermission;
+import io.spacedog.model.Permission;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
@@ -110,8 +110,8 @@ public class ImportMappyPlaces extends SpaceTest {
 				.text("rubricLabel").french()//
 				.close() //
 
-				.acl("key", DataPermission.search)//
-				.acl("admin", DataPermission.create)//
+				.acl("key", Permission.search)//
+				.acl("admin", Permission.create)//
 				.build();
 	}
 }

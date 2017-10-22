@@ -24,7 +24,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.util.RawValue;
 import com.google.common.base.Strings;
 
-import io.spacedog.model.DataPermission;
+import io.spacedog.model.Permission;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -53,7 +53,7 @@ public class SearchResource extends Resource {
 	@Post("/")
 	public Payload postSearchAllTypes(String body, Context context) {
 		Credentials credentials = SpaceContext.credentials();
-		String[] types = DataAccessControl.types(DataPermission.search, credentials);
+		String[] types = DataAccessControl.types(Permission.search, credentials);
 
 		DataStore.get().refreshDataTypes(isRefreshRequested(context), types);
 		ObjectNode result = searchInternal(body, credentials, context, types);
@@ -64,7 +64,7 @@ public class SearchResource extends Resource {
 	@Delete("/")
 	public Payload deleteAllTypes(String query, Context context) {
 		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
-		String[] types = DataAccessControl.types(DataPermission.delete_all, credentials);
+		String[] types = DataAccessControl.types(Permission.delete_all, credentials);
 
 		if (Utils.isNullOrEmpty(types))
 			return JsonPayload.ok().build();
@@ -86,7 +86,7 @@ public class SearchResource extends Resource {
 	public Payload postSearchForType(String type, String body, Context context) {
 
 		Credentials credentials = SpaceContext.credentials();
-		if (DataAccessControl.check(credentials, type, DataPermission.search)) {
+		if (DataAccessControl.check(credentials, type, Permission.search)) {
 
 			DataStore.get().refreshDataTypes(isRefreshRequested(context), type);
 			ObjectNode result = searchInternal(body, credentials, context, type);
@@ -100,7 +100,7 @@ public class SearchResource extends Resource {
 	public Payload deleteSearchForType(String type, String query, Context context) {
 
 		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
-		if (DataAccessControl.check(credentials, type, DataPermission.delete_all)) {
+		if (DataAccessControl.check(credentials, type, Permission.delete_all)) {
 
 			DataStore.get().refreshDataTypes(isRefreshRequested(context, true), type);
 			DeleteByQueryResponse response = elastic()//

@@ -74,11 +74,11 @@ public class Schema {
 		content().set("_acl", Json.mapper().valueToTree(acl));
 	}
 
-	public void acl(String role, DataPermission... permissions) {
+	public void acl(String role, Permission... permissions) {
 		acl(role, Sets.newHashSet(permissions));
 	}
 
-	public void acl(String role, Set<DataPermission> permissions) {
+	public void acl(String role, Set<Permission> permissions) {
 		DataAcl acl = acl();
 		if (acl == null)
 			acl = new DataAcl();
@@ -91,7 +91,7 @@ public class Schema {
 			throw Exceptions.illegalArgument("schema name [%s] is reserved", name);
 	}
 
-	public static class DataAcl extends HashMap<String, Set<DataPermission>> {
+	public static class DataAcl extends HashMap<String, Set<Permission>> {
 
 		private static final long serialVersionUID = 7433673020746769733L;
 
@@ -99,16 +99,16 @@ public class Schema {
 
 			return new DataAcl()//
 					.set(Credentials.ALL_ROLE, //
-							DataPermission.read_all)//
+							Permission.read_all)//
 					.set(Credentials.Type.user.name(), //
-							DataPermission.create, DataPermission.update, //
-							DataPermission.search, DataPermission.delete)//
+							Permission.create, Permission.update, //
+							Permission.search, Permission.delete)//
 					.set(Credentials.Type.admin.name(), //
-							DataPermission.create, DataPermission.update_all, //
-							DataPermission.search, DataPermission.delete_all);
+							Permission.create, Permission.update_all, //
+							Permission.search, Permission.delete_all);
 		}
 
-		public DataAcl set(String role, DataPermission... permissions) {
+		public DataAcl set(String role, Permission... permissions) {
 			put(role, Sets.newHashSet(permissions));
 			return this;
 		}

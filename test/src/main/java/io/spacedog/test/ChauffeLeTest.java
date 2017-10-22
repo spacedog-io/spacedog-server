@@ -14,7 +14,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceTest;
-import io.spacedog.model.DataPermission;
+import io.spacedog.model.Permission;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
@@ -49,7 +49,7 @@ public class ChauffeLeTest extends SpaceTest {
 				.string("author") //
 				.close() //
 
-				.acl("user", DataPermission.create, DataPermission.search, DataPermission.update_all)//
+				.acl("user", Permission.create, Permission.search, Permission.update_all)//
 				.build();
 	}
 

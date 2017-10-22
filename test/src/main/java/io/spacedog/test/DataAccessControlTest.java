@@ -13,7 +13,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceTest;
 import io.spacedog.model.DataObject;
-import io.spacedog.model.DataPermission;
+import io.spacedog.model.Permission;
 import io.spacedog.model.InternalDataSettings;
 import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.Schema;
@@ -148,17 +148,17 @@ public class DataAccessControlTest extends SpaceTest {
 
 		// set message schema with custom acl settings
 		Schema messageSchema = Schema.builder("msge").text("t").build();
-		messageSchema.acl("user", DataPermission.create);
-		messageSchema.acl("admin", DataPermission.search);
+		messageSchema.acl("user", Permission.create);
+		messageSchema.acl("admin", Permission.search);
 		superadmin.schema().set(messageSchema);
 
 		// check message schema acl are set
 		InternalDataSettings settings = superadmin.settings().get(InternalDataSettings.class);
 		assertEquals(1, settings.acl.size());
 		assertEquals(2, settings.acl.get("msge").size());
-		assertEquals(Collections.singleton(DataPermission.search), //
+		assertEquals(Collections.singleton(Permission.search), //
 				settings.acl.get("msge").get("admin"));
-		assertEquals(Collections.singleton(DataPermission.create), //
+		assertEquals(Collections.singleton(Permission.create), //
 				settings.acl.get("msge").get("user"));
 
 		// only users (and superadmins) can create messages
@@ -217,12 +217,12 @@ public class DataAccessControlTest extends SpaceTest {
 		// set schema
 		Schema schema = Schema.builder("message")//
 				.text("text")//
-				.acl("iron", DataPermission.read_all)//
-				.acl("silver", DataPermission.read_all, DataPermission.update_all)//
-				.acl("gold", DataPermission.read_all, DataPermission.update_all, //
-						DataPermission.create)//
-				.acl("platine", DataPermission.read_all, DataPermission.update_all, //
-						DataPermission.create, DataPermission.delete_all)//
+				.acl("iron", Permission.read_all)//
+				.acl("silver", Permission.read_all, Permission.update_all)//
+				.acl("gold", Permission.read_all, Permission.update_all, //
+						Permission.create)//
+				.acl("platine", Permission.read_all, Permission.update_all, //
+						Permission.create, Permission.delete_all)//
 				.build();
 
 		superadmin.schema().set(schema);
@@ -291,7 +291,7 @@ public class DataAccessControlTest extends SpaceTest {
 
 		// create message schema with simple acl
 		Schema messageSchema = Schema.builder("message")//
-				.acl("user", DataPermission.search)//
+				.acl("user", Permission.search)//
 				.text("text")//
 				.build();
 

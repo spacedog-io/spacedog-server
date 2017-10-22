@@ -13,34 +13,34 @@ import io.spacedog.utils.Credentials;
 
 public class ShareSettings extends SettingsBase {
 
-	public static final Map<String, Set<DataPermission>> defaultAcl = Maps.newHashMap();
+	public static final Map<String, Set<Permission>> defaultAcl = Maps.newHashMap();
 
 	static {
-		defaultAcl.put("all", Sets.newHashSet(DataPermission.read_all));
-		defaultAcl.put("user", Sets.newHashSet(DataPermission.create, DataPermission.read_all, //
-				DataPermission.delete));
-		defaultAcl.put("admin", Sets.newHashSet(DataPermission.create, DataPermission.search, //
-				DataPermission.delete_all));
+		defaultAcl.put("all", Sets.newHashSet(Permission.read_all));
+		defaultAcl.put("user", Sets.newHashSet(Permission.create, Permission.read_all, //
+				Permission.delete));
+		defaultAcl.put("admin", Sets.newHashSet(Permission.create, Permission.search, //
+				Permission.delete_all));
 	}
 
-	public Map<String, Set<DataPermission>> acl;
+	public Map<String, Set<Permission>> acl;
 	public boolean enableS3Location = true;
 
 	public ShareSettings() {
 		this.acl = defaultAcl;
 	}
 
-	public boolean check(String role, DataPermission... permissions) {
-		Set<DataPermission> rolePermissions = acl.get(role);
+	public boolean check(String role, Permission... permissions) {
+		Set<Permission> rolePermissions = acl.get(role);
 		if (rolePermissions == null)
 			return false;
-		for (DataPermission permission : permissions)
+		for (Permission permission : permissions)
 			if (rolePermissions.contains(permission))
 				return true;
 		return false;
 	}
 
-	public boolean check(Credentials credentials, DataPermission... permissions) {
+	public boolean check(Credentials credentials, Permission... permissions) {
 		if (credentials.isAtLeastSuperAdmin())
 			return true;
 

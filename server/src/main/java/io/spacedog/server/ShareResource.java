@@ -7,7 +7,7 @@ import java.util.UUID;
 
 import com.google.common.base.Strings;
 
-import io.spacedog.model.DataPermission;
+import io.spacedog.model.Permission;
 import io.spacedog.model.ShareSettings;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
@@ -31,14 +31,14 @@ public class ShareResource extends S3Resource {
 	@Get("")
 	@Get("/")
 	public Object getAll(Context context) {
-		checkPermission(DataPermission.search);
+		checkPermission(Permission.search);
 		return doList(SHARE_BUCKET_SUFFIX, "/1/shares", WebPath.ROOT, context);
 	}
 
 	@Post("")
 	@Post("/")
 	public Payload post(byte[] bytes, Context context) {
-		Credentials credentials = checkPermission(DataPermission.create);
+		Credentials credentials = checkPermission(Permission.create);
 		String fileName = context.get("fileName");
 		ShareSettings settings = shareSettings();
 		String id = UUID.randomUUID().toString();
@@ -51,7 +51,7 @@ public class ShareResource extends S3Resource {
 	@Delete("")
 	@Delete("/")
 	public Payload deleteAll() {
-		checkPermission(DataPermission.delete_all);
+		checkPermission(Permission.delete_all);
 		return doDelete(SHARE_BUCKET_SUFFIX, WebPath.ROOT, false, false);
 	}
 
@@ -60,7 +60,7 @@ public class ShareResource extends S3Resource {
 	public Payload get(String id, Context context) {
 
 		boolean checkOwnership = checkPermissionAndIsOwnershipRequired(//
-				DataPermission.read, DataPermission.read_all);
+				Permission.read, Permission.read_all);
 
 		return doGet(SHARE_BUCKET_SUFFIX, WebPath.newPath(id), //
 				context, checkOwnership);
@@ -70,7 +70,7 @@ public class ShareResource extends S3Resource {
 	@Delete("/:id/")
 	public Payload delete(String id, Context context) {
 		boolean checkOwnership = checkPermissionAndIsOwnershipRequired(//
-				DataPermission.delete, DataPermission.delete_all);
+				Permission.delete, Permission.delete_all);
 
 		return doDelete(SHARE_BUCKET_SUFFIX, WebPath.newPath(id), //
 				true, checkOwnership);
@@ -80,7 +80,7 @@ public class ShareResource extends S3Resource {
 	// Implementation
 	//
 
-	private Credentials checkPermission(DataPermission... permissions) {
+	private Credentials checkPermission(Permission... permissions) {
 		Credentials credentials = SpaceContext.credentials();
 		ShareSettings settings = shareSettings();
 
@@ -91,8 +91,8 @@ public class ShareResource extends S3Resource {
 	}
 
 	private boolean checkPermissionAndIsOwnershipRequired(//
-			DataPermission ownerchipRequiredPermission, //
-			DataPermission ownerchipNotRequiredPermission) {
+			Permission ownerchipRequiredPermission, //
+			Permission ownerchipNotRequiredPermission) {
 
 		Credentials credentials = SpaceContext.credentials();
 		ShareSettings settings = shareSettings();

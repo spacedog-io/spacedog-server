@@ -7,7 +7,7 @@ import java.util.Arrays;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.model.DataPermission;
+import io.spacedog.model.Permission;
 import io.spacedog.model.Schema;
 import io.spacedog.model.Schema.DataAcl;
 
@@ -102,7 +102,7 @@ public class SchemaBuilder {
 		return build().toString();
 	}
 
-	public SchemaBuilder acl(String role, DataPermission... permissions) {
+	public SchemaBuilder acl(String role, Permission... permissions) {
 		if (acl == null)
 			acl = new DataAcl();
 

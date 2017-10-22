@@ -10,7 +10,7 @@ import org.elasticsearch.common.lucene.uid.Versions;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.model.DataObject;
-import io.spacedog.model.DataPermission;
+import io.spacedog.model.Permission;
 import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.MetadataBase;
 import io.spacedog.utils.Credentials;
@@ -77,10 +77,10 @@ public class DataResource extends Resource {
 	public Payload deleteById(String type, String id, Context context) {
 		Credentials credentials = SpaceContext.credentials();
 
-		if (DataAccessControl.check(credentials, type, DataPermission.delete_all))
+		if (DataAccessControl.check(credentials, type, Permission.delete_all))
 			return doDeleteById(type, id);
 
-		if (DataAccessControl.check(credentials, type, DataPermission.delete)) {
+		if (DataAccessControl.check(credentials, type, Permission.delete)) {
 			Optional<DataObject<MetadataBase>> metadata = DataStore.get().getMetadata(type, id);
 
 			if (!metadata.isPresent())
@@ -125,10 +125,10 @@ public class DataResource extends Resource {
 	protected DataObject<ObjectNode> doGet(String type, String id) {
 
 		Credentials credentials = SpaceContext.credentials();
-		if (DataAccessControl.check(credentials, type, DataPermission.read_all, DataPermission.search))
+		if (DataAccessControl.check(credentials, type, Permission.read_all, Permission.search))
 			return DataStore.get().getObject(new JsonDataObject().type(type).id(id));
 
-		if (DataAccessControl.check(credentials, type, DataPermission.read)) {
+		if (DataAccessControl.check(credentials, type, Permission.read)) {
 			DataObject<ObjectNode> object = DataStore.get().getObject(//
 					new JsonDataObject().type(type).id(id));
 
@@ -167,7 +167,7 @@ public class DataResource extends Resource {
 	protected <K> Payload doPost(DataObject<K> object) {
 		Credentials credentials = SpaceContext.credentials();
 
-		if (DataAccessControl.check(credentials, object.type(), DataPermission.create)) {
+		if (DataAccessControl.check(credentials, object.type(), Permission.create)) {
 			if (object.owner() == null)
 				object.owner(credentials.id());
 			object = DataStore.get().createObject(object);
@@ -184,10 +184,10 @@ public class DataResource extends Resource {
 
 	public void checkPutPermissions(DataObject<MetadataBase> metadata, Credentials credentials) {
 
-		if (DataAccessControl.check(credentials, metadata.type(), DataPermission.update_all))
+		if (DataAccessControl.check(credentials, metadata.type(), Permission.update_all))
 			return;
 
-		if (DataAccessControl.check(credentials, metadata.type(), DataPermission.update)) {
+		if (DataAccessControl.check(credentials, metadata.type(), Permission.update)) {
 
 			if (credentials.id().equals(metadata.owner()))
 				return;

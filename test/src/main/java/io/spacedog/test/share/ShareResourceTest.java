@@ -16,7 +16,7 @@ import io.spacedog.client.ShareEndpoint.ShareMeta;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceTest;
-import io.spacedog.model.DataPermission;
+import io.spacedog.model.Permission;
 import io.spacedog.model.ShareSettings;
 import io.spacedog.utils.SpaceHeaders;
 
@@ -179,10 +179,10 @@ public class ShareResourceTest extends SpaceTest {
 		// super admin sets custom share permissions
 		ShareSettings settings = new ShareSettings();
 		settings.enableS3Location = false;
-		settings.acl.put("all", Sets.newHashSet(DataPermission.create));
-		settings.acl.put("user", Sets.newHashSet(DataPermission.create, DataPermission.read, //
-				DataPermission.delete));
-		settings.acl.put("admin", Sets.newHashSet(DataPermission.delete_all, DataPermission.search));
+		settings.acl.put("all", Sets.newHashSet(Permission.create));
+		settings.acl.put("user", Sets.newHashSet(Permission.create, Permission.read, //
+				Permission.delete));
+		settings.acl.put("admin", Sets.newHashSet(Permission.delete_all, Permission.search));
 		superadmin.settings().save(settings);
 
 		// only admin can get all shared locations
