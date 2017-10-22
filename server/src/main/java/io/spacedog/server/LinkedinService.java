@@ -19,7 +19,7 @@ import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.payload.Payload;
 
-public class LinkedinResource extends Resource {
+public class LinkedinService extends SpaceService {
 
 	//
 	// Routes
@@ -173,7 +173,7 @@ public class LinkedinResource extends Resource {
 
 		long expiresIn = settings.linkedin.useExpiresIn //
 				? response.asJsonObject().get("expires_in").asLong() //
-				: CredentialsResource.get().getCheckSessionLifetime(context);
+				: CredentialsService.get().getCheckSessionLifetime(context);
 
 		Session session = Session.newSession(accessToken, expiresIn);
 
@@ -186,7 +186,7 @@ public class LinkedinResource extends Resource {
 		checkLinkedinError(response, "linkedin error fetching email");
 		String email = response.asJsonObject().get("emailAddress").asText();
 
-		CredentialsResource credentialsResource = CredentialsResource.get();
+		CredentialsService credentialsResource = CredentialsService.get();
 		Credentials credentials = credentialsResource.getByName(email, false)//
 				.orElse(new Credentials(email).addRoles(Type.user.name()));
 
@@ -207,7 +207,7 @@ public class LinkedinResource extends Resource {
 	}
 
 	private CredentialsSettings getCredentialsSettings() {
-		CredentialsSettings settings = SettingsResource.get().getAsObject(CredentialsSettings.class);
+		CredentialsSettings settings = SettingsService.get().getAsObject(CredentialsSettings.class);
 		Check.notNull(settings.linkedin, "linkedin");
 		Check.notNull(settings.linkedin.clientId, "linkedin.clientId");
 		Check.notNull(settings.linkedin.clientSecret, "linkedin.clientSecret");
@@ -219,12 +219,12 @@ public class LinkedinResource extends Resource {
 	// singleton
 	//
 
-	private static LinkedinResource singleton = new LinkedinResource();
+	private static LinkedinService singleton = new LinkedinService();
 
-	static LinkedinResource get() {
+	static LinkedinService get() {
 		return singleton;
 	}
 
-	private LinkedinResource() {
+	private LinkedinService() {
 	}
 }

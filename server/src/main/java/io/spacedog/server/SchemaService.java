@@ -22,7 +22,7 @@ import net.codestory.http.annotations.Put;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/1/schema")
-public class SchemaResource extends Resource {
+public class SchemaService extends SpaceService {
 
 	//
 	// Routes
@@ -98,8 +98,8 @@ public class SchemaResource extends Resource {
 	//
 
 	private Schema getDefaultSchema(String type) {
-		if (PushResource.TYPE.equals(type))
-			return PushResource.getDefaultInstallationSchema();
+		if (PushSpaceService.TYPE.equals(type))
+			return PushSpaceService.getDefaultInstallationSchema();
 		return null;
 	}
 
@@ -107,13 +107,13 @@ public class SchemaResource extends Resource {
 	// Singleton
 	//
 
-	private static SchemaResource singleton = new SchemaResource();
+	private static SchemaService singleton = new SchemaService();
 
-	static SchemaResource get() {
+	static SchemaService get() {
 		return singleton;
 	}
 
-	private SchemaResource() {
-		SettingsResource.get().registerSettings(InternalDataSettings.class);
+	private SchemaService() {
+		SettingsService.get().registerSettings(InternalDataSettings.class);
 	}
 }

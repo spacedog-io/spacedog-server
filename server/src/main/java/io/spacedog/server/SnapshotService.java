@@ -26,7 +26,7 @@ import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/1/snapshot")
-public class SnapshotResource extends Resource {
+public class SnapshotService extends SpaceService {
 
 	public static final String SNAPSHOT_ALL = "snapshotall";
 
@@ -252,12 +252,12 @@ public class SnapshotResource extends Resource {
 	// Singleton
 	//
 
-	private static SnapshotResource singleton = new SnapshotResource();
+	private static SnapshotService singleton = new SnapshotService();
 
-	static SnapshotResource get() {
+	static SnapshotService get() {
 		return singleton;
 	}
 
-	private SnapshotResource() {
+	private SnapshotService() {
 	}
 }

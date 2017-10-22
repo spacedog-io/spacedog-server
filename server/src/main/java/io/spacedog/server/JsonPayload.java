@@ -36,12 +36,12 @@ public class JsonPayload implements SpaceFields {
 	}
 
 	public JsonPayload withLocation(String uri) {
-		object().put("location", Resource.spaceUrl(uri).toString());
+		object().put("location", SpaceService.spaceUrl(uri).toString());
 		return this;
 	}
 
 	public JsonPayload withLocation(String uri, String type, String id) {
-		object().put("location", Resource.spaceUrl(uri, type, id).toString());
+		object().put("location", SpaceService.spaceUrl(uri, type, id).toString());
 		return this;
 	}
 

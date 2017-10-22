@@ -7,7 +7,7 @@ import io.spacedog.utils.Exceptions;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.payload.Payload;
 
-public class AdminResource extends Resource {
+public class AdminService extends SpaceService {
 
 	//
 	// Routes
@@ -23,12 +23,12 @@ public class AdminResource extends Resource {
 	// Singleton
 	//
 
-	private static AdminResource singleton = new AdminResource();
+	private static AdminService singleton = new AdminService();
 
-	static AdminResource get() {
+	static AdminService get() {
 		return singleton;
 	}
 
-	private AdminResource() {
+	private AdminService() {
 	}
 }

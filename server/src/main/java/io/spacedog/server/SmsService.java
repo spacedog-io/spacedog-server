@@ -17,7 +17,7 @@ import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.payload.Payload;
 
-public class SmsResource extends Resource {
+public class SmsService extends SpaceService {
 
 	//
 	// Twilio form names
@@ -155,20 +155,20 @@ public class SmsResource extends Resource {
 	}
 
 	private SmsSettings smsSettings() {
-		return SettingsResource.get().getAsObject(SmsSettings.class);
+		return SettingsService.get().getAsObject(SmsSettings.class);
 	}
 
 	//
 	// singleton
 	//
 
-	private static SmsResource singleton = new SmsResource();
+	private static SmsService singleton = new SmsService();
 
-	public static SmsResource get() {
+	public static SmsService get() {
 		return singleton;
 	}
 
-	private SmsResource() {
-		SettingsResource.get().registerSettings(SmsSettings.class);
+	private SmsService() {
+		SettingsService.get().registerSettings(SmsSettings.class);
 	}
 }

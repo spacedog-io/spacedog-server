@@ -35,7 +35,7 @@ import net.codestory.http.Context;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
-public class S3Resource extends Resource {
+public class S3Resource extends SpaceService {
 
 	private static AmazonS3Client s3 = new AmazonS3Client();
 	private static MimetypesFileTypeMap typeMap = new MimetypesFileTypeMap();

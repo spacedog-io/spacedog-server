@@ -57,7 +57,7 @@ class ElasticRepository implements Comparable<ElasticRepository> {
 		} else {
 
 			Settings settings = Settings.builder()//
-					.put("bucket", Resource.getBucketName(BUCKET_SUFFIX))//
+					.put("bucket", SpaceService.getBucketName(BUCKET_SUFFIX))//
 					.put("region", conf.awsRegion())//
 					.put("base_path", id)//
 					.put("compress", true)//
@@ -97,7 +97,7 @@ class ElasticRepository implements Comparable<ElasticRepository> {
 
 	static List<ElasticRepository> getAll() {
 
-		return SnapshotResource.elastic().cluster()//
+		return SnapshotService.elastic().cluster()//
 				.prepareGetRepositories()//
 				.get()//
 				.repositories()//
@@ -123,7 +123,7 @@ class ElasticRepository implements Comparable<ElasticRepository> {
 		String repoId = ElasticRepository.toRepositoryId(date);
 
 		try {
-			SnapshotResource.elastic().cluster()//
+			SnapshotService.elastic().cluster()//
 					.prepareGetRepositories(repoId)//
 					.get();
 
@@ -131,7 +131,7 @@ class ElasticRepository implements Comparable<ElasticRepository> {
 
 			ElasticRepository repo = new ElasticRepository(repoId);
 
-			PutRepositoryResponse putRepositoryResponse = SnapshotResource.elastic().cluster()//
+			PutRepositoryResponse putRepositoryResponse = SnapshotService.elastic().cluster()//
 					.preparePutRepository(repo.id())//
 					.setType(repo.type())//
 					.setSettings(repo.settings())//

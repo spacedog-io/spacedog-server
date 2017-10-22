@@ -37,7 +37,7 @@ import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/1/search")
-public class SearchResource extends Resource {
+public class SearchService extends SpaceService {
 
 	//
 	// Routes
@@ -203,13 +203,13 @@ public class SearchResource extends Resource {
 	// singleton
 	//
 
-	private static SearchResource singleton = new SearchResource();
+	private static SearchService singleton = new SearchService();
 
-	static SearchResource get() {
+	static SearchService get() {
 		return singleton;
 	}
 
-	private SearchResource() {
+	private SearchService() {
 	}
 
 }

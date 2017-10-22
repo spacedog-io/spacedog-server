@@ -22,7 +22,7 @@ import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/1/stripe")
-public class StripeResource extends Resource {
+public class StripeService extends SpaceService {
 
 	//
 	// Routes
@@ -210,29 +210,29 @@ public class StripeResource extends Resource {
 
 	private void updateStripeCustomerId(Credentials credentials, String stripeCustomerId) {
 		credentials.addToStash(CREDENTIALS_STASH_STRIPE_CUSTOMER_ID, stripeCustomerId);
-		CredentialsResource.get().update(credentials);
+		CredentialsService.get().update(credentials);
 	}
 
 	private void removeStripeCustomerId(Credentials credentials) {
 		credentials.removeFromStash(CREDENTIALS_STASH_STRIPE_CUSTOMER_ID);
-		CredentialsResource.get().update(credentials);
+		CredentialsService.get().update(credentials);
 	}
 
 	private StripeSettings stripeSettings() {
-		return SettingsResource.get().getAsObject(StripeSettings.class);
+		return SettingsService.get().getAsObject(StripeSettings.class);
 	}
 
 	//
 	// singleton
 	//
 
-	private static StripeResource singleton = new StripeResource();
+	private static StripeService singleton = new StripeService();
 
-	static StripeResource get() {
+	static StripeService get() {
 		return singleton;
 	}
 
-	private StripeResource() {
-		SettingsResource.get().registerSettings(StripeSettings.class);
+	private StripeService() {
+		SettingsService.get().registerSettings(StripeSettings.class);
 	}
 }

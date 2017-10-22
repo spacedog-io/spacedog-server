@@ -7,13 +7,13 @@ import java.util.Map;
 
 import io.spacedog.model.SmsSettings;
 import io.spacedog.model.SmsTemplate;
-import io.spacedog.server.SmsResource.SmsMessage;
+import io.spacedog.server.SmsService.SmsMessage;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.payload.Payload;
 
-public class SmsTemplateResource extends Resource {
+public class SmsTemplateService extends SpaceService {
 
 	//
 	// Routes
@@ -23,7 +23,7 @@ public class SmsTemplateResource extends Resource {
 	@Post("/1/sms/template/:name/")
 	public Payload postTemplatedSms(String name, String body) {
 
-		SmsSettings settings = SettingsResource.get().getAsObject(SmsSettings.class);
+		SmsSettings settings = SettingsService.get().getAsObject(SmsSettings.class);
 
 		if (settings.templates != null) {
 			SmsTemplate template = settings.templates.get(name);
@@ -31,7 +31,7 @@ public class SmsTemplateResource extends Resource {
 			if (template != null) {
 				SpaceContext.credentials().checkRoles(template.roles);
 				SmsMessage message = toMessage(template, body);
-				return SmsResource.get().send(message);
+				return SmsService.get().send(message);
 			}
 		}
 
@@ -58,12 +58,12 @@ public class SmsTemplateResource extends Resource {
 	// singleton
 	//
 
-	private static SmsTemplateResource singleton = new SmsTemplateResource();
+	private static SmsTemplateService singleton = new SmsTemplateService();
 
-	static SmsTemplateResource get() {
+	static SmsTemplateService get() {
 		return singleton;
 	}
 
-	private SmsTemplateResource() {
+	private SmsTemplateService() {
 	}
 }

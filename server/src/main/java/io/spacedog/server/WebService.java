@@ -13,7 +13,7 @@ import net.codestory.http.constants.Methods;
 import net.codestory.http.filters.PayloadSupplier;
 import net.codestory.http.payload.Payload;
 
-public class WebResource extends S3Resource {
+public class WebService extends S3Resource {
 
 	//
 	// Routes
@@ -63,22 +63,22 @@ public class WebResource extends S3Resource {
 
 		if (path.size() > 0) {
 
-			Payload payload = doGet(withContent, FileResource.FILE_BUCKET_SUFFIX, //
+			Payload payload = doGet(withContent, FileService.FILE_BUCKET_SUFFIX, //
 					path, context);
 
 			if (payload.isSuccess())
 				return payload;
 
-			payload = doGet(withContent, FileResource.FILE_BUCKET_SUFFIX, path.addLast("index.html"), //
+			payload = doGet(withContent, FileService.FILE_BUCKET_SUFFIX, path.addLast("index.html"), //
 					context);
 
 			if (payload.isSuccess())
 				return payload;
 
-			WebSettings settings = SettingsResource.get().getAsObject(WebSettings.class);
+			WebSettings settings = SettingsService.get().getAsObject(WebSettings.class);
 
 			if (!Strings.isNullOrEmpty(settings.notFoundPage))
-				payload = doGet(withContent, FileResource.FILE_BUCKET_SUFFIX,
+				payload = doGet(withContent, FileService.FILE_BUCKET_SUFFIX,
 						WebPath.parse(settings.notFoundPage).addFirst(path.first()), //
 						context);
 
@@ -101,13 +101,13 @@ public class WebResource extends S3Resource {
 	// singleton
 	//
 
-	private static WebResource singleton = new WebResource();
+	private static WebService singleton = new WebService();
 
-	static WebResource get() {
+	static WebService get() {
 		return singleton;
 	}
 
-	private WebResource() {
-		SettingsResource.get().registerSettings(WebSettings.class);
+	private WebService() {
+		SettingsService.get().registerSettings(WebSettings.class);
 	}
 }

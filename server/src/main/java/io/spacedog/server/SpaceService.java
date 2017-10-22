@@ -22,7 +22,7 @@ import net.codestory.http.Context;
 import net.codestory.http.Part;
 import net.codestory.http.Query;
 
-public abstract class Resource implements SpaceFields, SpaceParams {
+public abstract class SpaceService implements SpaceFields, SpaceParams {
 
 	public static final String SLASH = "/";
 

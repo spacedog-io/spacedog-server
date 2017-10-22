@@ -20,7 +20,7 @@ import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/1/shares")
-public class ShareResource extends S3Resource {
+public class ShareService extends S3Resource {
 
 	private static final String SHARE_BUCKET_SUFFIX = "shared";
 
@@ -107,20 +107,20 @@ public class ShareResource extends S3Resource {
 	}
 
 	private ShareSettings shareSettings() {
-		return SettingsResource.get().getAsObject(ShareSettings.class);
+		return SettingsService.get().getAsObject(ShareSettings.class);
 	}
 
 	//
 	// singleton
 	//
 
-	private static ShareResource singleton = new ShareResource();
+	private static ShareService singleton = new ShareService();
 
-	static ShareResource get() {
+	static ShareService get() {
 		return singleton;
 	}
 
-	private ShareResource() {
-		SettingsResource.get().registerSettings(ShareSettings.class);
+	private ShareService() {
+		SettingsService.get().registerSettings(ShareSettings.class);
 	}
 }

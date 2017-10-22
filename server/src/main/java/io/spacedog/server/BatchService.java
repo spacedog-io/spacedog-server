@@ -34,7 +34,7 @@ import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/1/batch")
-public class BatchResource extends Resource {
+public class BatchService extends SpaceService {
 
 	// query parameter names
 
@@ -291,12 +291,12 @@ public class BatchResource extends Resource {
 	// singleton
 	//
 
-	private static BatchResource singleton = new BatchResource();
+	private static BatchService singleton = new BatchService();
 
-	static BatchResource get() {
+	static BatchService get() {
 		return singleton;
 	}
 
-	private BatchResource() {
+	private BatchService() {
 	}
 }

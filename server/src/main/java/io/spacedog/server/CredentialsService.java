@@ -45,7 +45,7 @@ import net.codestory.http.annotations.Put;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
-public class CredentialsResource extends Resource {
+public class CredentialsService extends SpaceService {
 
 	public static final String TYPE = "credentials";
 	public static final String SUPERDOG = "superdog";
@@ -289,7 +289,7 @@ public class CredentialsResource extends Resource {
 			throw Exceptions.illegalArgument("no email found in credentials [%s][%s]", //
 					credentials.type(), credentials.name());
 
-		MailTemplate template = MailTemplateResource.get()//
+		MailTemplate template = MailTemplateService.get()//
 				.getTemplate(FORGOT_PASSWORD_MAIL_TEMPLATE_NAME)//
 				.orElseThrow(() -> Exceptions.illegalArgument(//
 						"no [forgotPassword] mail template in mail settings"));
@@ -309,7 +309,7 @@ public class CredentialsResource extends Resource {
 		mailContext.put("credentialsId", credentials.id());
 		mailContext.put("passwordResetCode", credentials.passwordResetCode());
 
-		MailTemplateResource.get().sendTemplatedMail(template, mailContext);
+		MailTemplateService.get().sendTemplatedMail(template, mailContext);
 
 		return JsonPayload.ok().build();
 	}
@@ -797,7 +797,7 @@ public class CredentialsResource extends Resource {
 	}
 
 	protected CredentialsSettings credentialsSettings() {
-		return SettingsResource.get()//
+		return SettingsService.get()//
 				.getAsObject(CredentialsSettings.class);
 	}
 
@@ -805,13 +805,13 @@ public class CredentialsResource extends Resource {
 	// singleton
 	//
 
-	private static CredentialsResource singleton = new CredentialsResource();
+	private static CredentialsService singleton = new CredentialsService();
 
-	static CredentialsResource get() {
+	static CredentialsService get() {
 		return singleton;
 	}
 
-	private CredentialsResource() {
-		SettingsResource.get().registerSettings(CredentialsSettings.class);
+	private CredentialsService() {
+		SettingsService.get().registerSettings(CredentialsSettings.class);
 	}
 }

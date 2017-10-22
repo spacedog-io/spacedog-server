@@ -18,7 +18,7 @@ import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Put;
 import net.codestory.http.payload.Payload;
 
-public class ApplicationResource extends Resource {
+public class ApplicationService extends SpaceService {
 
 	//
 	// Routes
@@ -91,12 +91,12 @@ public class ApplicationResource extends Resource {
 	// Singleton
 	//
 
-	private static ApplicationResource singleton = new ApplicationResource();
+	private static ApplicationService singleton = new ApplicationService();
 
-	static ApplicationResource get() {
+	static ApplicationService get() {
 		return singleton;
 	}
 
-	private ApplicationResource() {
+	private ApplicationService() {
 	}
 }

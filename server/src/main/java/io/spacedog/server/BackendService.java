@@ -19,7 +19,7 @@ import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.payload.Payload;
 
-public class BackendResource extends Resource {
+public class BackendService extends SpaceService {
 
 	private static final String TYPE = "backend";
 
@@ -41,7 +41,7 @@ public class BackendResource extends Resource {
 		int from = context.query().getInteger(FROM_PARAM, 0);
 		int size = context.query().getInteger(SIZE_PARAM, 10);
 
-		SearchResults<Credentials> superAdmins = CredentialsResource.get()//
+		SearchResults<Credentials> superAdmins = CredentialsService.get()//
 				.getAllSuperAdmins(from, size);
 		return toPayload(superAdmins);
 	}
@@ -57,8 +57,8 @@ public class BackendResource extends Resource {
 		elastic().deleteBackendIndices();
 
 		if (isDeleteFilesAndShares()) {
-			FileResource.get().deleteAll();
-			ShareResource.get().deleteAll();
+			FileService.get().deleteAll();
+			ShareService.get().deleteAll();
 		}
 
 		return JsonPayload.ok().build();
@@ -88,7 +88,7 @@ public class BackendResource extends Resource {
 
 		initBackendIndices(backendId, true);
 
-		CredentialsResource credentialsResource = CredentialsResource.get();
+		CredentialsService credentialsResource = CredentialsService.get();
 		Credentials credentials = credentialsResource//
 				.createCredentialsRequestToCredentials(body, Credentials.Type.superadmin);
 		credentialsResource.create(credentials);
@@ -119,11 +119,11 @@ public class BackendResource extends Resource {
 	//
 
 	public void initBackendIndices(String backendId, boolean throwIfAlreadyExists) {
-		Index index = CredentialsResource.credentialsIndex().backendId(backendId);
+		Index index = CredentialsService.credentialsIndex().backendId(backendId);
 
 		if (!elastic().exists(index)) {
-			CredentialsResource.get().initIndex(backendId);
-			LogResource.get().initIndex(backendId);
+			CredentialsService.get().initIndex(backendId);
+			LogService.get().initIndex(backendId);
 
 		} else if (throwIfAlreadyExists)
 			throw Exceptions.alreadyExists(TYPE, backendId);
@@ -153,13 +153,13 @@ public class BackendResource extends Resource {
 	// Singleton
 	//
 
-	private static BackendResource singleton = new BackendResource();
+	private static BackendService singleton = new BackendService();
 
-	static BackendResource get() {
+	static BackendService get() {
 		return singleton;
 	}
 
-	private BackendResource() {
-		SettingsResource.get().registerSettings(BackendSettings.class);
+	private BackendService() {
+		SettingsService.get().registerSettings(BackendSettings.class);
 	}
 }

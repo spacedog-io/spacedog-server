@@ -43,11 +43,11 @@ public class DataAccessControl {
 	}
 
 	private static InternalDataSettings schemaSettings() {
-		return SettingsResource.get().getAsObject(InternalDataSettings.class);
+		return SettingsService.get().getAsObject(InternalDataSettings.class);
 	}
 
 	private static IndexResponse schemaSettings(InternalDataSettings settings) {
-		return SettingsResource.get().setAsObject(settings);
+		return SettingsService.get().setAsObject(settings);
 	}
 
 }

@@ -26,7 +26,7 @@ import net.codestory.http.Part;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.payload.Payload;
 
-public class MailResource extends Resource {
+public class MailService extends SpaceService {
 
 	//
 	// MailGun parameter names
@@ -48,7 +48,7 @@ public class MailResource extends Resource {
 	@Post("/1/mail/")
 	public Payload post(Context context) {
 
-		MailSettings settings = SettingsResource.get().getAsObject(MailSettings.class);
+		MailSettings settings = SettingsService.get().getAsObject(MailSettings.class);
 
 		if (settings.enableUserFullAccess)
 			SpaceContext.credentials().checkAtLeastUser();
@@ -116,7 +116,7 @@ public class MailResource extends Resource {
 
 	public Payload email(Message message) {
 
-		MailSettings settings = SettingsResource.get().getAsObject(MailSettings.class);
+		MailSettings settings = SettingsService.get().getAsObject(MailSettings.class);
 
 		if (settings.smtp != null)
 			return emailViaSmtp(settings.smtp, message);
@@ -273,13 +273,13 @@ public class MailResource extends Resource {
 	// singleton
 	//
 
-	private static MailResource singleton = new MailResource();
+	private static MailService singleton = new MailService();
 
-	static MailResource get() {
+	static MailService get() {
 		return singleton;
 	}
 
-	private MailResource() {
-		SettingsResource.get().registerSettings(MailSettings.class);
+	private MailService() {
+		SettingsService.get().registerSettings(MailSettings.class);
 	}
 }

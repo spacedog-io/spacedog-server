@@ -113,7 +113,7 @@ public class Start {
 				.toString();
 
 		ElasticClient elastic = get().getElasticClient();
-		Index index = LogResource.logIndex().backendId(SpaceBackend.defaultBackendId());
+		Index index = LogService.logIndex().backendId(SpaceBackend.defaultBackendId());
 
 		DeleteByQueryResponse response = elastic.deleteByQuery(querySource, index);
 		Utils.info("[SpaceDog] [%s] logs deleted", response.getTotalDeleted());
@@ -131,7 +131,7 @@ public class Start {
 				.toString();
 
 		ElasticClient elastic = get().getElasticClient();
-		Index index = LogResource.logIndex().backendId(SpaceBackend.defaultBackendId());
+		Index index = LogService.logIndex().backendId(SpaceBackend.defaultBackendId());
 
 		DeleteByQueryResponse response = elastic.deleteByQuery(querySource, index);
 		Utils.info("[SpaceDog] [%s] logs deleted", response.getTotalDeleted());
@@ -182,7 +182,7 @@ public class Start {
 	}
 
 	private void initServices() throws IOException {
-		BackendResource.get()//
+		BackendService.get()//
 				.initBackendIndices(SpaceBackend.defaultBackendId(), false);
 	}
 
@@ -193,35 +193,35 @@ public class Start {
 	}
 
 	private static void configure(Routes routes) {
-		routes.add(BackendResource.get())//
-				.add(AdminResource.get())//
-				.add(DataResource.get())//
-				.add(SchemaResource.get())//
-				.add(CredentialsResource.get())//
-				.add(LinkedinResource.get())//
-				.add(BatchResource.get())//
-				.add(MailResource.get())//
-				.add(MailTemplateResource.get())//
-				.add(SmsResource.get())//
-				.add(SmsTemplateResource.get())//
-				.add(SnapshotResource.get())//
-				.add(LogResource.get())//
-				.add(PushResource.get())//
-				.add(ApplicationResource.get())//
-				.add(StripeResource.get())//
-				.add(ShareResource.get())//
-				.add(SettingsResource.get())//
-				.add(SearchResource.get());
+		routes.add(BackendService.get())//
+				.add(AdminService.get())//
+				.add(DataService.get())//
+				.add(SchemaService.get())//
+				.add(CredentialsService.get())//
+				.add(LinkedinService.get())//
+				.add(BatchService.get())//
+				.add(MailService.get())//
+				.add(MailTemplateService.get())//
+				.add(SmsService.get())//
+				.add(SmsTemplateService.get())//
+				.add(SnapshotService.get())//
+				.add(LogService.get())//
+				.add(PushSpaceService.get())//
+				.add(ApplicationService.get())//
+				.add(StripeService.get())//
+				.add(ShareService.get())//
+				.add(SettingsService.get())//
+				.add(SearchService.get());
 
 		routes.filter(new CrossOriginFilter())//
 				.filter(SpaceContext.filter())//
-				.filter(LogResource.filter())//
+				.filter(LogService.filter())//
 				.filter(SpaceContext.checkAuthorizationFilter())//
 				// web filter before error filter
 				// so web errors are html pages
-				.filter(WebResource.get().filter())//
+				.filter(WebService.get().filter())//
 				.filter(new ServiceErrorFilter())//
-				.filter(FileResource.get().filter());
+				.filter(FileService.get().filter());
 	}
 
 	private static class MyFluentServer extends AbstractWebServer<MyFluentServer> {

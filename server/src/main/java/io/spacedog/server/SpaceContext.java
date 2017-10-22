@@ -179,12 +179,12 @@ public class SpaceContext {
 				AuthorizationHeader authHeader = new AuthorizationHeader(headerValue, true);
 
 				if (authHeader.isBasic()) {
-					userCredentials = CredentialsResource.get()//
+					userCredentials = CredentialsService.get()//
 							.checkUsernamePassword(authHeader.username(), //
 									authHeader.password());
 
 				} else if (authHeader.isBearer()) {
-					userCredentials = CredentialsResource.get()//
+					userCredentials = CredentialsService.get()//
 							.checkToken(authHeader.token());
 				}
 

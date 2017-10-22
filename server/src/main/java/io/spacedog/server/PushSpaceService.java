@@ -40,7 +40,7 @@ import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/1")
-public class PushResource extends Resource {
+public class PushSpaceService extends SpaceService {
 
 	public static final String TYPE = "installation";
 
@@ -83,7 +83,7 @@ public class PushResource extends Resource {
 	@Get("/data/installation")
 	@Get("/data/installation/")
 	public Payload getAll(Context context) {
-		return DataResource.get().getByType(TYPE, context);
+		return DataService.get().getByType(TYPE, context);
 	}
 
 	@Post("/installation")
@@ -99,7 +99,7 @@ public class PushResource extends Resource {
 	@Delete("/data/installation")
 	@Delete("/data/installation/")
 	public Payload deleteAll(Context context) {
-		return DataResource.get().deleteByType(TYPE, context);
+		return DataService.get().deleteByType(TYPE, context);
 	}
 
 	@Get("/installation/:id")
@@ -107,7 +107,7 @@ public class PushResource extends Resource {
 	@Get("/data/installation/:id")
 	@Get("/data/installation/:id/")
 	public Payload get(String id, Context context) {
-		return DataResource.get().getById(TYPE, id, context);
+		return DataService.get().getById(TYPE, id, context);
 	}
 
 	@Delete("/installation/:id")
@@ -115,7 +115,7 @@ public class PushResource extends Resource {
 	@Delete("/data/installation/:id")
 	@Delete("/data/installation/:id/")
 	public Payload delete(String id, Context context) {
-		return DataResource.get().deleteById(TYPE, id, context);
+		return DataService.get().deleteById(TYPE, id, context);
 	}
 
 	@Put("/installation/:id")
@@ -175,19 +175,19 @@ public class PushResource extends Resource {
 	@Get("/installation/:id/:field")
 	@Get("/installation/:id/:field/")
 	public Payload getField(String id, String field, Context context) {
-		return DataResource.get().getField(TYPE, id, field, context);
+		return DataService.get().getField(TYPE, id, field, context);
 	}
 
 	@Put("/installation/:id/:field")
 	@Put("/installation/:id/:field/")
 	public Payload putField(String id, String field, String body, Context context) {
-		return DataResource.get().putField(TYPE, id, field, body, context);
+		return DataService.get().putField(TYPE, id, field, body, context);
 	}
 
 	@Delete("/installation/:id/:field")
 	@Delete("/installation/:id/:field/")
 	public Payload deleteField(String id, String field, Context context) {
-		return DataResource.get().deleteField(TYPE, id, field, context);
+		return DataService.get().deleteField(TYPE, id, field, context);
 	}
 
 	/**
@@ -423,8 +423,8 @@ public class PushResource extends Resource {
 		source.credentialsId(credentials.isAtLeastUser() ? credentials.id() : null);
 
 		return id.isPresent() //
-				? DataResource.get().doPut(installation, false, context) //
-				: DataResource.get().doPost(installation);
+				? DataService.get().doPut(installation, false, context) //
+				: DataService.get().doPost(installation);
 	}
 
 	private DataObject<Installation> load(String id) {
@@ -435,12 +435,12 @@ public class PushResource extends Resource {
 	// Singleton
 	//
 
-	private static PushResource singleton = new PushResource();
+	private static PushSpaceService singleton = new PushSpaceService();
 
-	public static PushResource get() {
+	public static PushSpaceService get() {
 		return singleton;
 	}
 
-	private PushResource() {
+	private PushSpaceService() {
 	}
 }

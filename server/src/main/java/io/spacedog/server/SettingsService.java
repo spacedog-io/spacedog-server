@@ -31,7 +31,7 @@ import net.codestory.http.annotations.Put;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/1/settings")
-public class SettingsResource extends Resource {
+public class SettingsService extends SpaceService {
 
 	//
 	// SpaceDog constants and schema
@@ -300,13 +300,13 @@ public class SettingsResource extends Resource {
 	// singleton
 	//
 
-	private static SettingsResource singleton = new SettingsResource();
+	private static SettingsService singleton = new SettingsService();
 
-	public static SettingsResource get() {
+	public static SettingsService get() {
 		return singleton;
 	}
 
-	private SettingsResource() {
+	private SettingsService() {
 		registerSettings(SettingsSettings.class);
 	}
 }

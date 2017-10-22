@@ -25,7 +25,7 @@ import net.codestory.http.annotations.Put;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/1/data")
-public class DataResource extends Resource {
+public class DataService extends SpaceService {
 
 	//
 	// Routes
@@ -34,13 +34,13 @@ public class DataResource extends Resource {
 	@Get("")
 	@Get("/")
 	public Payload getAll(Context context) {
-		return SearchResource.get().getSearchAllTypes(context);
+		return SearchService.get().getSearchAllTypes(context);
 	}
 
 	@Get("/:type")
 	@Get("/:type/")
 	public Payload getByType(String type, Context context) {
-		return SearchResource.get().getSearchForType(type, context);
+		return SearchService.get().getSearchForType(type, context);
 	}
 
 	@Post("/:type")
@@ -54,7 +54,7 @@ public class DataResource extends Resource {
 	@Delete("/:type")
 	@Delete("/:type/")
 	public Payload deleteByType(String type, Context context) {
-		return SearchResource.get().deleteSearchForType(type, null, context);
+		return SearchService.get().deleteSearchForType(type, null, context);
 	}
 
 	@Get("/:type/:id")
@@ -202,13 +202,13 @@ public class DataResource extends Resource {
 	// singleton
 	//
 
-	private static DataResource singleton = new DataResource();
+	private static DataService singleton = new DataService();
 
-	public static DataResource get() {
+	public static DataService get() {
 		return singleton;
 	}
 
-	private DataResource() {
+	private DataService() {
 	}
 
 }

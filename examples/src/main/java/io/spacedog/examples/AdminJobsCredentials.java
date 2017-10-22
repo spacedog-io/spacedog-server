@@ -6,8 +6,8 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceBackend;
 import io.spacedog.http.SpaceEnv;
 import io.spacedog.http.SpaceTest;
-import io.spacedog.server.LogResource;
-import io.spacedog.server.SnapshotResource;
+import io.spacedog.server.LogService;
+import io.spacedog.server.SnapshotService;
 
 public class AdminJobsCredentials extends SpaceTest {
 
@@ -16,7 +16,7 @@ public class AdminJobsCredentials extends SpaceTest {
 
 		SpaceEnv.defaultEnv().target(SpaceBackend.production);
 		String password = SpaceEnv.defaultEnv().getOrElseThrow("spacedog_jobs_purgeall_password");
-		initCredentials(LogResource.PURGE_ALL, password, LogResource.PURGE_ALL);
+		initCredentials(LogService.PURGE_ALL, password, LogService.PURGE_ALL);
 	}
 
 	@Test
@@ -24,7 +24,7 @@ public class AdminJobsCredentials extends SpaceTest {
 
 		SpaceEnv.defaultEnv().target(SpaceBackend.production);
 		String password = SpaceEnv.defaultEnv().getOrElseThrow("spacedog_jobs_snapshotall_password");
-		initCredentials(SnapshotResource.SNAPSHOT_ALL, password, SnapshotResource.SNAPSHOT_ALL);
+		initCredentials(SnapshotService.SNAPSHOT_ALL, password, SnapshotService.SNAPSHOT_ALL);
 	}
 
 	private void initCredentials(String username, String password, String role) {

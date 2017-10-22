@@ -34,7 +34,7 @@ import net.codestory.http.filters.PayloadSupplier;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/1/log")
-public class LogResource extends Resource {
+public class LogService extends SpaceService {
 
 	private static final String PAYLOAD_FIELD = "payload";
 	private static final String CREDENTIALS_FIELD = "credentials";
@@ -303,12 +303,12 @@ public class LogResource extends Resource {
 	// Singleton
 	//
 
-	private static LogResource singleton = new LogResource();
+	private static LogService singleton = new LogService();
 
-	static LogResource get() {
+	static LogService get() {
 		return singleton;
 	}
 
-	private LogResource() {
+	private LogService() {
 	}
 }

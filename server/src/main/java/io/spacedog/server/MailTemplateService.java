@@ -8,13 +8,13 @@ import java.util.Optional;
 
 import io.spacedog.model.MailSettings;
 import io.spacedog.model.MailTemplate;
-import io.spacedog.server.MailResource.Message;
+import io.spacedog.server.MailService.Message;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.payload.Payload;
 
-public class MailTemplateResource extends Resource {
+public class MailTemplateService extends SpaceService {
 
 	//
 	// Routes
@@ -33,7 +33,7 @@ public class MailTemplateResource extends Resource {
 				.createContext(template.model, Json.readMap(body));
 
 		Message message = toMessage(template, context);
-		return MailResource.get().email(message);
+		return MailService.get().email(message);
 	}
 
 	//
@@ -42,12 +42,12 @@ public class MailTemplateResource extends Resource {
 
 	Payload sendTemplatedMail(MailTemplate template, Map<String, Object> context) {
 		Message message = toMessage(template, context);
-		return MailResource.get().email(message);
+		return MailService.get().email(message);
 	}
 
 	Optional<MailTemplate> getTemplate(String name) {
 
-		MailSettings settings = SettingsResource.get().getAsObject(MailSettings.class);
+		MailSettings settings = SettingsService.get().getAsObject(MailSettings.class);
 
 		if (settings.templates == null)
 			return Optional.empty();
@@ -78,12 +78,12 @@ public class MailTemplateResource extends Resource {
 	// singleton
 	//
 
-	private static MailTemplateResource singleton = new MailTemplateResource();
+	private static MailTemplateService singleton = new MailTemplateService();
 
-	static MailTemplateResource get() {
+	static MailTemplateService get() {
 		return singleton;
 	}
 
-	private MailTemplateResource() {
+	private MailTemplateService() {
 	}
 }

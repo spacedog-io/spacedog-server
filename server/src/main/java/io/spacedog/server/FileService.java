@@ -11,7 +11,7 @@ import net.codestory.http.constants.Methods;
 import net.codestory.http.filters.PayloadSupplier;
 import net.codestory.http.payload.Payload;
 
-public class FileResource extends S3Resource {
+public class FileService extends S3Resource {
 
 	static final String FILE_BUCKET_SUFFIX = "files";
 
@@ -90,12 +90,12 @@ public class FileResource extends S3Resource {
 	// singleton
 	//
 
-	private static FileResource singleton = new FileResource();
+	private static FileService singleton = new FileService();
 
-	static FileResource get() {
+	static FileService get() {
 		return singleton;
 	}
 
-	private FileResource() {
+	private FileService() {
 	}
 }
