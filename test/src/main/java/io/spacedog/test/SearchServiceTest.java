@@ -18,7 +18,7 @@ import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
 
-public class SearchResourceTest extends SpaceTest {
+public class SearchServiceTest extends SpaceTest {
 
 	@Test
 	public void searchAndDeleteObjects() {

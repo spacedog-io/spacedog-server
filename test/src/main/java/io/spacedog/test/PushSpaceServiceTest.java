@@ -27,7 +27,7 @@ import io.spacedog.model.Schema;
 import io.spacedog.model.Schema.DataAcl;
 import io.spacedog.utils.Json;
 
-public class PushResourceTest extends SpaceTest {
+public class PushSpaceServiceTest extends SpaceTest {
 
 	private static final String PUSHED_TO = "pushedTo";
 	private static final String FAILURES = "failures";

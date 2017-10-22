@@ -11,7 +11,7 @@ import io.spacedog.http.SpaceTest;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
 
-public class SchemaResourceTest extends SpaceTest {
+public class SchemaServiceTest extends SpaceTest {
 
 	@Test
 	public void deletePutAndGetSchemas() {

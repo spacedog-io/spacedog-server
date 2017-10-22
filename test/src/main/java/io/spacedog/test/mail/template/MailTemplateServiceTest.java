@@ -22,7 +22,7 @@ import io.spacedog.model.MailTemplate;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
 
-public class MailTemplateResourceTest extends SpaceTest {
+public class MailTemplateServiceTest extends SpaceTest {
 
 	@Test
 	public void sendTemplatedEmails() throws IOException {

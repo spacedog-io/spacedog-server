@@ -14,7 +14,7 @@ import io.spacedog.model.MailSettings;
 import io.spacedog.model.MailSettings.SmtpSettings;
 import io.spacedog.utils.Utils;
 
-public class MailResourceTest extends SpaceTest {
+public class MailServiceTest extends SpaceTest {
 
 	private static final String DEFAULT_FROM = "david@spacedog.io";
 	private static final String DEFAULT_TO = "platform@spacedog.io";

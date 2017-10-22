@@ -16,7 +16,7 @@ import io.spacedog.model.SmsSettings.TwilioSettings;
 import io.spacedog.model.SmsTemplate;
 import io.spacedog.utils.Json;
 
-public class SmsTemplateResourceTest extends SpaceTest {
+public class SmsTemplateServiceTest extends SpaceTest {
 
 	@Test
 	public void sendTemplatedSms() throws IOException {

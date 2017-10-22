@@ -14,7 +14,7 @@ import io.spacedog.http.SpaceTest;
 import io.spacedog.model.DataObject;
 import io.spacedog.utils.Json;
 
-public class DataResourceTest extends SpaceTest {
+public class DataServiceTest extends SpaceTest {
 
 	@Test
 	public void createFindUpdateAndDelete() {
@@ -22,7 +22,7 @@ public class DataResourceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		superadmin.schema().set(SchemaResourceTest.buildCarSchema());
+		superadmin.schema().set(SchemaServiceTest.buildCarSchema());
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		ObjectNode car = Json.builder().object() //
@@ -84,7 +84,7 @@ public class DataResourceTest extends SpaceTest {
 
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		superadmin.schema().set(SchemaResourceTest.buildCarSchema());
+		superadmin.schema().set(SchemaServiceTest.buildCarSchema());
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		ObjectNode car = Json.builder().object() //

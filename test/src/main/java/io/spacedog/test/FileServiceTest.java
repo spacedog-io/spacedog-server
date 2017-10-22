@@ -9,7 +9,7 @@ import io.spacedog.client.FileEndpoint.SpaceFile;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceTest;
 
-public class FileResourceTest extends SpaceTest {
+public class FileServiceTest extends SpaceTest {
 
 	@Test
 	public void test() throws Exception {

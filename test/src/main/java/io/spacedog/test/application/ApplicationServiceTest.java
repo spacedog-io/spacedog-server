@@ -12,7 +12,7 @@ import io.spacedog.http.SpaceTest;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Json;
 
-public class ApplicationResourceTest extends SpaceTest {
+public class ApplicationServiceTest extends SpaceTest {
 
 	@Test
 	public void shouldSetAndDeleteApplicationPushCredentials() {

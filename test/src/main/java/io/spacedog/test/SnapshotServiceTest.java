@@ -16,7 +16,7 @@ import io.spacedog.http.SpaceTest;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Optional7;
 
-public class SnapshotResourceTest extends SpaceTest {
+public class SnapshotServiceTest extends SpaceTest {
 
 	@Test
 	public void snapshotAndRestoreMultipleTimes() throws InterruptedException, UnknownHostException {

@@ -18,7 +18,7 @@ import io.spacedog.http.SpaceBackend;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceTest;
 
-public class LogResourceTest extends SpaceTest {
+public class LogServiceTest extends SpaceTest {
 
 	@Test
 	public void purgeBackendLogs() throws InterruptedException {

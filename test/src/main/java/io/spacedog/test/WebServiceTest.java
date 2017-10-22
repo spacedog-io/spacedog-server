@@ -8,7 +8,7 @@ import io.spacedog.http.SpaceTest;
 import io.spacedog.model.WebSettings;
 import io.spacedog.utils.SpaceHeaders;
 
-public class WebResourceTest extends SpaceTest {
+public class WebServiceTest extends SpaceTest {
 
 	private static SpaceDog superadmin;
 

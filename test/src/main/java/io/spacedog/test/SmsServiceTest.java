@@ -14,7 +14,7 @@ import io.spacedog.http.SpaceTest;
 import io.spacedog.model.SmsSettings;
 import io.spacedog.model.SmsSettings.TwilioSettings;
 
-public class SmsResourceTest extends SpaceTest {
+public class SmsServiceTest extends SpaceTest {
 
 	@Test
 	public void sendSms() throws IOException {

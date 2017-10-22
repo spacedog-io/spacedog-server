@@ -21,7 +21,7 @@ import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Passwords;
 
-public class CredentialsResourceTest extends SpaceTest {
+public class CredentialsServiceTest extends SpaceTest {
 
 	@Test
 	public void deleteSuperAdminCredentials() {

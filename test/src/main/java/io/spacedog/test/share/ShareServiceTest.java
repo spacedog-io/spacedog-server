@@ -20,7 +20,7 @@ import io.spacedog.model.Permission;
 import io.spacedog.model.ShareSettings;
 import io.spacedog.utils.SpaceHeaders;
 
-public class ShareResourceTest extends SpaceTest {
+public class ShareServiceTest extends SpaceTest {
 
 	private static final String FILE_CONTENT = "This is a test file!";
 

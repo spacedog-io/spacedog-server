@@ -16,7 +16,7 @@ import io.spacedog.model.SettingsSettings;
 import io.spacedog.model.SettingsSettings.SettingsAcl;
 import io.spacedog.utils.Json;
 
-public class SettingsResourceTest extends SpaceTest {
+public class SettingsServiceTest extends SpaceTest {
 
 	@Test
 	public void createGetAndDeleteSettings() {

@@ -12,7 +12,7 @@ import io.spacedog.http.SpaceTest;
 import io.spacedog.model.CredentialsSettings;
 import io.spacedog.model.CredentialsSettings.OAuthSettings;
 
-public class LinkedinResourceTest extends SpaceTest {
+public class LinkedinServiceTest extends SpaceTest {
 
 	@Test
 	public void login() {

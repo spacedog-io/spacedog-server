@@ -107,7 +107,7 @@ public class DataResourceTest2 extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog test = resetTestBackend();
-		test.schema().set(SchemaResourceTest.buildSaleSchema());
+		test.schema().set(SchemaServiceTest.buildSaleSchema());
 		SpaceDog fred = createTempDog(test, "fred");
 
 		// fred fails to create a sale with no body

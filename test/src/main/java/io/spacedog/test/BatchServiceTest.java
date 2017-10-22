@@ -16,7 +16,7 @@ import io.spacedog.http.SpaceTest;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
 
-public class BatchResourceTest extends SpaceTest {
+public class BatchServiceTest extends SpaceTest {
 
 	@Test
 	public void executeBatch() {

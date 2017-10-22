@@ -24,7 +24,7 @@ import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceTest;
 import io.spacedog.model.StripeSettings;
 
-public class StripeResourceTest extends SpaceTest {
+public class StripeServiceTest extends SpaceTest {
 
 	@Test
 	public void testStripeServices() throws AuthenticationException, InvalidRequestException, APIConnectionException,
