@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.watchdog;
+package io.spacedog.test;
 
 import static org.hamcrest.collection.IsArrayContaining.hasItemInArray;
 
@@ -27,7 +27,7 @@ import io.spacedog.model.Schema;
 import io.spacedog.model.Schema.DataAcl;
 import io.spacedog.utils.Json;
 
-public class PushResourceTestOften extends SpaceTest {
+public class PushResourceTest extends SpaceTest {
 
 	private static final String PUSHED_TO = "pushedTo";
 	private static final String FAILURES = "failures";
@@ -50,10 +50,10 @@ public class PushResourceTestOften extends SpaceTest {
 		SpaceDog guest = SpaceDog.backend(superadmin);
 
 		// prepare users
-		SpaceDog dave = createTempDog(guest, "dave");
-		SpaceDog vince = createTempDog(guest, "vince");
-		SpaceDog fred = createTempDog(guest, "fred");
-		SpaceDog nath = createTempDog(guest, "nath");
+		SpaceDog dave = createTempDog(superadmin, "dave");
+		SpaceDog vince = createTempDog(superadmin, "vince");
+		SpaceDog fred = createTempDog(superadmin, "fred");
+		SpaceDog nath = createTempDog(superadmin, "nath");
 
 		// prepare installation schema
 		superadmin.schema().setDefault("installation");

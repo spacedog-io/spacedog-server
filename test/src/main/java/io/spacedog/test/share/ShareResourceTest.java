@@ -1,4 +1,4 @@
-package io.spacedog.watchdog;
+package io.spacedog.test.share;
 
 import java.io.IOException;
 import java.util.Set;
@@ -20,7 +20,7 @@ import io.spacedog.model.DataPermission;
 import io.spacedog.model.ShareSettings;
 import io.spacedog.utils.SpaceHeaders;
 
-public class ShareResourceTestOncePerDay extends SpaceTest {
+public class ShareResourceTest extends SpaceTest {
 
 	private static final String FILE_CONTENT = "This is a test file!";
 

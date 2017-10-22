@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.watchdog;
+package io.spacedog.test;
 
 import java.util.Collections;
 
@@ -22,7 +22,7 @@ import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Passwords;
 
-public class DataAccessControlTestOften extends SpaceTest {
+public class DataAccessControlTest extends SpaceTest {
 
 	@Test
 	public void testDefaulSchemaAcl() {
@@ -31,7 +31,7 @@ public class DataAccessControlTestOften extends SpaceTest {
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
 		SpaceDog guest = SpaceDog.backend(superadmin);
-		SpaceDog vince = createTempDog(guest, "vince");
+		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog admin = createTempAdmin(superadmin);
 
 		// set message schema
@@ -90,7 +90,7 @@ public class DataAccessControlTestOften extends SpaceTest {
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
 		SpaceDog guest = SpaceDog.backend(superadmin);
-		SpaceDog vince = createTempDog(guest, "vince");
+		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog admin = createTempAdmin(superadmin);
 
 		// superadmin sets message schema with empty acl
@@ -143,7 +143,7 @@ public class DataAccessControlTestOften extends SpaceTest {
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
 		SpaceDog guest = SpaceDog.backend(superadmin);
-		SpaceDog vince = createTempDog(guest, "vince");
+		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog admin = createTempAdmin(superadmin);
 
 		// set message schema with custom acl settings

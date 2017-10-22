@@ -1,4 +1,4 @@
-package io.spacedog.watchdog;
+package io.spacedog.test;
 
 import org.junit.Test;
 
@@ -9,7 +9,7 @@ import io.spacedog.client.FileEndpoint.SpaceFile;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceTest;
 
-public class FileResourceTestOncePerDay extends SpaceTest {
+public class FileResourceTest extends SpaceTest {
 
 	@Test
 	public void test() throws Exception {

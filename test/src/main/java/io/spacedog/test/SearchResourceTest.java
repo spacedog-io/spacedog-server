@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.watchdog;
+package io.spacedog.test;
 
 import java.util.List;
 
@@ -18,7 +18,7 @@ import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
 
-public class SearchResourceTestOften extends SpaceTest {
+public class SearchResourceTest extends SpaceTest {
 
 	@Test
 	public void searchAndDeleteObjects() {

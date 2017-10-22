@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.watchdog;
+package io.spacedog.test;
 
 import org.junit.Test;
 
@@ -11,7 +11,7 @@ import io.spacedog.http.SpaceTest;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
 
-public class SchemaResourceTestOften extends SpaceTest {
+public class SchemaResourceTest extends SpaceTest {
 
 	@Test
 	public void deletePutAndGetSchemas() {

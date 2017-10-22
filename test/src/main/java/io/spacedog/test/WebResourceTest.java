@@ -1,4 +1,4 @@
-package io.spacedog.watchdog;
+package io.spacedog.test;
 
 import org.junit.Test;
 
@@ -8,7 +8,7 @@ import io.spacedog.http.SpaceTest;
 import io.spacedog.model.WebSettings;
 import io.spacedog.utils.SpaceHeaders;
 
-public class WebResourceTestOncePerDay extends SpaceTest {
+public class WebResourceTest extends SpaceTest {
 
 	private static SpaceDog test;
 

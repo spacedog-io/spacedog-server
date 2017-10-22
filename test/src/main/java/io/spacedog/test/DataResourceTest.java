@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.watchdog;
+package io.spacedog.test;
 
 import org.joda.time.DateTime;
 import org.junit.Test;
@@ -14,7 +14,7 @@ import io.spacedog.http.SpaceTest;
 import io.spacedog.model.DataObject;
 import io.spacedog.utils.Json;
 
-public class DataResourceTestOften extends SpaceTest {
+public class DataResourceTest extends SpaceTest {
 
 	@Test
 	public void createFindUpdateAndDelete() {
@@ -22,7 +22,7 @@ public class DataResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		superadmin.schema().set(SchemaResourceTestOften.buildCarSchema());
+		superadmin.schema().set(SchemaResourceTest.buildCarSchema());
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		ObjectNode car = Json.builder().object() //
@@ -84,7 +84,7 @@ public class DataResourceTestOften extends SpaceTest {
 
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		superadmin.schema().set(SchemaResourceTestOften.buildCarSchema());
+		superadmin.schema().set(SchemaResourceTest.buildCarSchema());
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		ObjectNode car = Json.builder().object() //

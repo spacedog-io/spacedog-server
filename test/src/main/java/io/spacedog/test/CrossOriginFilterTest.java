@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.watchdog;
+package io.spacedog.test;
 
 import org.junit.Test;
 
@@ -10,7 +10,7 @@ import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceTest;
 import io.spacedog.utils.SpaceHeaders;
 
-public class CrossOriginFilterTestOften extends SpaceTest {
+public class CrossOriginFilterTest extends SpaceTest {
 
 	@Test
 	public void returnCORSHeaders() {

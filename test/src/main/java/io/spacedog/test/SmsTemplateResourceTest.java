@@ -23,11 +23,11 @@ public class SmsTemplateResourceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = SpaceDog.backendId("test");
+		SpaceDog guest = SpaceDog.backendId("test");
 		SpaceDog superadmin = resetTestBackend();
 
 		// superadmin creates user vince with 'sms' role
-		SpaceDog vince = createTempDog(test, "vince");
+		SpaceDog vince = createTempDog(superadmin, "vince");
 		superadmin.credentials().setRole(vince.id(), "sms");
 
 		// superadmin creates a customer schema
@@ -62,7 +62,7 @@ public class SmsTemplateResourceTest extends SpaceTest {
 		superadmin.settings().save(settings);
 
 		// nobody is allowed to send simple sms
-		test.post("/1/sms").go(403);
+		guest.post("/1/sms").go(403);
 		vince.post("/1/sms").go(403);
 		superadmin.post("/1/sms").go(403);
 
@@ -71,7 +71,7 @@ public class SmsTemplateResourceTest extends SpaceTest {
 
 		// anonymous and superadmin don't have the 'sms' role
 		// they are not allowed to use the hello SMS template
-		test.post("/1/sms/template/hello").go(403);
+		guest.post("/1/sms/template/hello").go(403);
 		superadmin.post("/1/sms/template/hello").go(403);
 	}
 

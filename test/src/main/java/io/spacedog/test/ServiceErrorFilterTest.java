@@ -1,11 +1,11 @@
-package io.spacedog.watchdog;
+package io.spacedog.test;
 
 import org.junit.Test;
 
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceTest;
 
-public class ServiceErrorFilterTestOncePerDay extends SpaceTest {
+public class ServiceErrorFilterTest extends SpaceTest {
 
 	@Test
 	public void notifySuperdogsForInternalServerErrors() {

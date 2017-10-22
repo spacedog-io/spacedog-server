@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.watchdog;
+package io.spacedog.test;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -34,10 +34,10 @@ import io.spacedog.model.GeoPoint;
 import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.MetadataBase;
 import io.spacedog.model.Schema;
+import io.spacedog.test.DataResourceTest2.Sale.Item;
 import io.spacedog.utils.Json;
-import io.spacedog.watchdog.DataResource2TestOften.Sale.Item;
 
-public class DataResource2TestOften extends SpaceTest {
+public class DataResourceTest2 extends SpaceTest {
 
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	@JsonAutoDetect(fieldVisibility = Visibility.ANY, //
@@ -107,7 +107,7 @@ public class DataResource2TestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog test = resetTestBackend();
-		test.schema().set(SchemaResourceTestOften.buildSaleSchema());
+		test.schema().set(SchemaResourceTest.buildSaleSchema());
 		SpaceDog fred = createTempDog(test, "fred");
 
 		// fred fails to create a sale with no body
