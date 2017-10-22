@@ -27,6 +27,11 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 				.create(username, Passwords.random(), DEFAULT_EMAIL);
 	}
 
+	public SpaceDog createTempDog(SpaceDog superadmin, String username, String role) {
+		return superadmin.credentials()//
+				.create(username, Passwords.random(), DEFAULT_EMAIL, role);
+	}
+
 	public static SpaceDog signUpTempDog(String backendId, String username) {
 		return SpaceDog.backendId(backendId).credentials()//
 				.create(username, Passwords.random(), DEFAULT_EMAIL);
