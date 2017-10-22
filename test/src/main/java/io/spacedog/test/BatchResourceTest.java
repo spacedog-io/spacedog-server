@@ -25,6 +25,7 @@ public class BatchResourceTest extends SpaceTest {
 		// be able to reset it again by batch requests
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
+		superadmin.credentials().enableGuestSignUp(true);
 
 		// should succeed to reset test account and create message schema with
 		// admin credentials
