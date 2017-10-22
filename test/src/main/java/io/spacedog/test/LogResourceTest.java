@@ -133,24 +133,22 @@ public class LogResourceTest extends SpaceTest {
 				.query(ESQueryBuilders.termsQuery("credentials.type", "user", "guest"))//
 				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
 		results = superadmin.log().search(query, true);
-		assertEquals(6, results.results.size());
+		assertEquals(5, results.results.size());
 		assertEquals("/1/credentials/" + vince.id(), results.results.get(0).path);
 		assertEquals("/1/login", results.results.get(1).path);
-		assertEquals("/1/credentials", results.results.get(2).path);
-		assertEquals("/1/data/user", results.results.get(3).path);
-		assertEquals("/1/data", results.results.get(4).path);
-		assertEquals("/1/backend", results.results.get(5).path);
+		assertEquals("/1/data/user", results.results.get(2).path);
+		assertEquals("/1/data", results.results.get(3).path);
+		assertEquals("/1/backend", results.results.get(4).path);
 
 		// superadmin search for test backend log to only get guest logs
 		query = ESSearchSourceBuilder.searchSource()//
 				.query(ESQueryBuilders.termQuery("credentials.type", "guest"))//
 				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
 		results = superadmin.log().search(query, true);
-		assertEquals(4, results.results.size());
-		assertEquals("/1/credentials", results.results.get(0).path);
-		assertEquals("/1/data/user", results.results.get(1).path);
-		assertEquals("/1/data", results.results.get(2).path);
-		assertEquals("/1/backend", results.results.get(3).path);
+		assertEquals(3, results.results.size());
+		assertEquals("/1/data/user", results.results.get(0).path);
+		assertEquals("/1/data", results.results.get(1).path);
+		assertEquals("/1/backend", results.results.get(2).path);
 
 		// superdog gets all test backend logs
 		query = ESSearchSourceBuilder.searchSource()//
