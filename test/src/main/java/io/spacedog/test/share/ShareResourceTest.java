@@ -174,7 +174,7 @@ public class ShareResourceTest extends SpaceTest {
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog fred = createTempDog(superadmin, "fred");
 		byte[] pngBytes = Resources.toByteArray(//
-				Resources.getResource("io/spacedog/watchdog/tweeter.png"));
+				Resources.getResource(getClass(), "tweeter.png"));
 
 		// super admin sets custom share permissions
 		ShareSettings settings = new ShareSettings();
