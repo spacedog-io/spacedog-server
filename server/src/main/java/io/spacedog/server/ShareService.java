@@ -84,7 +84,7 @@ public class ShareService extends S3Resource {
 		Credentials credentials = SpaceContext.credentials();
 		ShareSettings settings = shareSettings();
 
-		if (settings.check(credentials, permissions))
+		if (settings.sharePermissions.check(credentials, permissions))
 			return credentials;
 
 		throw Exceptions.insufficientCredentials(credentials);
@@ -97,10 +97,10 @@ public class ShareService extends S3Resource {
 		Credentials credentials = SpaceContext.credentials();
 		ShareSettings settings = shareSettings();
 
-		if (settings.check(credentials, ownerchipNotRequiredPermission))
+		if (settings.sharePermissions.check(credentials, ownerchipNotRequiredPermission))
 			return false;
 
-		if (settings.check(credentials, ownerchipRequiredPermission))
+		if (settings.sharePermissions.check(credentials, ownerchipRequiredPermission))
 			return true;
 
 		throw Exceptions.insufficientCredentials(credentials);

@@ -3,7 +3,6 @@
  */
 package io.spacedog.model;
 
-import java.util.HashMap;
 import java.util.Set;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -11,7 +10,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
-import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SchemaBuilder;
@@ -58,19 +56,24 @@ public class Schema {
 		return node.toString();
 	}
 
-	public DataAcl acl() {
+	@Override
+	public int hashCode() {
+		return name.hashCode();
+	}
+
+	public RolePermissions acl() {
 		JsonNode acl = content().get("_acl");
 		if (acl == null)
 			return null;
 
 		try {
-			return Json.mapper().treeToValue(acl, DataAcl.class);
+			return Json.mapper().treeToValue(acl, RolePermissions.class);
 		} catch (JsonProcessingException e) {
 			throw Exceptions.illegalArgument(e, "invalid schema [_acl] json field");
 		}
 	}
 
-	public void acl(DataAcl acl) {
+	public void acl(RolePermissions acl) {
 		content().set("_acl", Json.mapper().valueToTree(acl));
 	}
 
@@ -79,9 +82,9 @@ public class Schema {
 	}
 
 	public void acl(String role, Set<Permission> permissions) {
-		DataAcl acl = acl();
+		RolePermissions acl = acl();
 		if (acl == null)
-			acl = new DataAcl();
+			acl = new RolePermissions();
 		acl.put(role, permissions);
 		acl(acl);
 	}
@@ -89,29 +92,6 @@ public class Schema {
 	public static void checkName(String name) {
 		if (reservedNames.contains(name))
 			throw Exceptions.illegalArgument("schema name [%s] is reserved", name);
-	}
-
-	public static class DataAcl extends HashMap<String, Set<Permission>> {
-
-		private static final long serialVersionUID = 7433673020746769733L;
-
-		public static DataAcl defaultAcl() {
-
-			return new DataAcl()//
-					.set(Credentials.ALL_ROLE, //
-							Permission.read_all)//
-					.set(Credentials.Type.user.name(), //
-							Permission.create, Permission.update, //
-							Permission.search, Permission.delete)//
-					.set(Credentials.Type.admin.name(), //
-							Permission.create, Permission.update_all, //
-							Permission.search, Permission.delete_all);
-		}
-
-		public DataAcl set(String role, Permission... permissions) {
-			put(role, Sets.newHashSet(permissions));
-			return this;
-		}
 	}
 
 	@Override

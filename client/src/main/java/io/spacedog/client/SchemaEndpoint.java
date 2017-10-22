@@ -1,12 +1,13 @@
 package io.spacedog.client;
 
 import java.util.Iterator;
-import java.util.List;
+import java.util.Set;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import io.spacedog.model.Schema;
+import io.spacedog.utils.Json;
 
 public class SchemaEndpoint {
 
@@ -48,13 +49,14 @@ public class SchemaEndpoint {
 		return this;
 	}
 
-	public List<Schema> getAll() {
+	public Set<Schema> getAll() {
 		ObjectNode payload = dog.get("/1/schema").go(200).asJsonObject();
-		List<Schema> schemas = Lists.newArrayList();
+		Set<Schema> schemas = Sets.newHashSet();
 		Iterator<String> fieldNames = payload.fieldNames();
 		while (fieldNames.hasNext()) {
 			String name = fieldNames.next();
-			schemas.add(new Schema(name, (ObjectNode) payload.get(name)));
+			ObjectNode node = Json.object(name, payload.get(name));
+			schemas.add(new Schema(name, node));
 		}
 		return schemas;
 	}

@@ -12,6 +12,8 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceRequestException;
 import io.spacedog.http.SpaceTest;
 import io.spacedog.model.DataObject;
+import io.spacedog.model.Permission;
+import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
 
 public class DataServiceTest extends SpaceTest {
@@ -22,8 +24,13 @@ public class DataServiceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		superadmin.schema().set(SchemaServiceTest.buildCarSchema());
 		SpaceDog vince = createTempDog(superadmin, "vince");
+
+		Schema carSchema = SchemaServiceTest.buildCarSchema()//
+				.acl("user", Permission.create, Permission.update, //
+						Permission.read, Permission.delete, Permission.search)//
+				.build();
+		superadmin.schema().set(carSchema);
 
 		ObjectNode car = Json.builder().object() //
 				.add("serialNumber", "1234567890") //
@@ -84,8 +91,13 @@ public class DataServiceTest extends SpaceTest {
 
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		superadmin.schema().set(SchemaServiceTest.buildCarSchema());
 		SpaceDog vince = createTempDog(superadmin, "vince");
+
+		Schema carSchema = SchemaServiceTest.buildCarSchema()//
+				.acl("user", Permission.create, Permission.update, //
+						Permission.read, Permission.delete, Permission.search)//
+				.build();
+		superadmin.schema().set(carSchema);
 
 		ObjectNode car = Json.builder().object() //
 				.add("serialNumber", "1234567890") //

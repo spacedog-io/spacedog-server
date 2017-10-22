@@ -42,6 +42,7 @@ public class ChauffeLeTest extends SpaceTest {
 
 	static Schema buildBigPostSchema() {
 		return Schema.builder("bigpost") //
+				.acl("user", Permission.create, Permission.search, Permission.update_all)//
 				.text("title").french()//
 
 				.object("responses").array() //
@@ -49,12 +50,12 @@ public class ChauffeLeTest extends SpaceTest {
 				.string("author") //
 				.close() //
 
-				.acl("user", Permission.create, Permission.search, Permission.update_all)//
 				.build();
 	}
 
 	static Schema buildSmallPostSchema() {
 		return Schema.builder("smallpost") //
+				.acl("user", Permission.create, Permission.search)//
 				.text("title").french()//
 				.string("parent")//
 				.build();

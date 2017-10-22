@@ -5,9 +5,9 @@ package io.spacedog.server;
 
 import org.elasticsearch.action.index.IndexResponse;
 
-import io.spacedog.model.Permission;
-import io.spacedog.model.Schema.DataAcl;
 import io.spacedog.model.InternalDataSettings;
+import io.spacedog.model.Permission;
+import io.spacedog.model.RolePermissions;
 import io.spacedog.utils.Credentials;
 
 public class DataAccessControl {
@@ -25,12 +25,11 @@ public class DataAccessControl {
 		return schemaSettings().types(permission, credentials);
 	}
 
-	public static void save(String type, DataAcl schemaAcl) {
+	public static void save(String type, RolePermissions schemaAcl) {
+		if (schemaAcl == null)
+			schemaAcl = new RolePermissions();
 
 		InternalDataSettings settings = schemaSettings();
-		if (schemaAcl == null)
-			schemaAcl = DataAcl.defaultAcl();
-
 		settings.acl.put(type, schemaAcl);
 		schemaSettings(settings);
 	}

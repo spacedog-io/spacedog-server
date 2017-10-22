@@ -18,6 +18,7 @@ import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceTest;
 import io.spacedog.model.Permission;
 import io.spacedog.model.ShareSettings;
+import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.SpaceHeaders;
 
 public class ShareServiceTest extends SpaceTest {
@@ -32,11 +33,49 @@ public class ShareServiceTest extends SpaceTest {
 		SpaceDog superadmin = resetTestBackend();
 		SpaceDog guest = SpaceDog.backend(superadmin);
 		SpaceDog vince = createTempDog(superadmin, "vince");
-		SpaceDog fred = createTempDog(superadmin, "fred");
+		SpaceDog admin = createTempDog(superadmin, "admin", Type.admin.name());
 
-		// only admin can get all shared locations
+		// only superadmins can list shares
 		guest.get("/1/shares").go(403);
 		vince.get("/1/shares").go(403);
+		admin.get("/1/shares").go(403);
+
+		// only superadmins can create shares
+		guest.post("/1/shares").go(403);
+		vince.post("/1/shares").go(403);
+		admin.post("/1/shares").go(403);
+		ShareMeta shareMeta = superadmin.shares().upload(FILE_CONTENT.getBytes());
+		assertNull(shareMeta.s3);
+
+		// only superadmins can read shares
+		guest.get("/1/shares/" + shareMeta.id).go(403);
+		vince.get("/1/shares/" + shareMeta.id).go(403);
+		admin.get("/1/shares/" + shareMeta.id).go(403);
+		superadmin.shares().get(shareMeta.id);
+
+		// only superadmins can delete shares
+		guest.delete("/1/shares/" + shareMeta.id).go(403);
+		vince.delete("/1/shares/" + shareMeta.id).go(403);
+		admin.delete("/1/shares/" + shareMeta.id).go(403);
+		superadmin.shares().delete(shareMeta.id);
+	}
+
+	@Test
+	public void shareWithCustomSettings() throws IOException {
+
+		// prepare
+		prepareTest(false);
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog guest = SpaceDog.backend(superadmin);
+		SpaceDog vince = createTempDog(superadmin, "vince");
+		SpaceDog fred = createTempDog(superadmin, "fred");
+
+		// superadmin sets custom share permissions
+		ShareSettings settings = new ShareSettings();
+		settings.enableS3Location = true;
+		settings.sharePermissions.put("all", Permission.read_all)//
+				.put("user", Permission.create, Permission.delete);
+		superadmin.settings().save(settings);
 
 		// this account is brand new, no shared files
 		assertEquals(0, superadmin.shares().list().shares.length);
@@ -165,7 +204,7 @@ public class ShareServiceTest extends SpaceTest {
 	}
 
 	@Test
-	public void shareWithCustomSettings() throws IOException {
+	public void shareWithAnotherCustomSettings() throws IOException {
 
 		// prepare
 		prepareTest(false);
@@ -176,13 +215,11 @@ public class ShareServiceTest extends SpaceTest {
 		byte[] pngBytes = Resources.toByteArray(//
 				Resources.getResource(getClass(), "tweeter.png"));
 
-		// super admin sets custom share permissions
+		// superadmin sets custom share permissions
 		ShareSettings settings = new ShareSettings();
 		settings.enableS3Location = false;
-		settings.acl.put("all", Sets.newHashSet(Permission.create));
-		settings.acl.put("user", Sets.newHashSet(Permission.create, Permission.read, //
-				Permission.delete));
-		settings.acl.put("admin", Sets.newHashSet(Permission.delete_all, Permission.search));
+		settings.sharePermissions.put("all", Permission.create)//
+				.put("user", Permission.create, Permission.read, Permission.delete);
 		superadmin.settings().save(settings);
 
 		// only admin can get all shared locations
@@ -202,14 +239,14 @@ public class ShareServiceTest extends SpaceTest {
 		assertEquals(guestPngMeta.id, list.shares[0].id);
 
 		// nobody is allowed to read this file
-		// but superadmins and superdogs
+		// but superadmins
 		SpaceRequest.get(guestPngMeta.location).go(403);
 		fred.get(guestPngMeta.location).go(403);
 		vince.get(guestPngMeta.location).go(403);
 		superadmin.get(guestPngMeta.location).go(200);
 
-		// nobody is allowed to read this file but super admins
-		// since they got delete_all permission
+		// nobody is allowed to delete this file
+		// but superadmins
 		SpaceRequest.delete(guestPngMeta.location).go(403);
 		fred.delete(guestPngMeta.location).go(403);
 		vince.delete(guestPngMeta.location).go(403);
@@ -228,14 +265,14 @@ public class ShareServiceTest extends SpaceTest {
 		assertEquals(vincePngMeta.id, list.shares[0].id);
 
 		// nobody is allowed to read this file
-		// but vince the owner (and superadmin)
+		// but vince the owner and superadmins
 		SpaceRequest.get(vincePngMeta.location).go(403);
 		fred.get(vincePngMeta.location).go(403);
 		vince.get(vincePngMeta.location).go(200);
 		superadmin.get(vincePngMeta.location).go(200);
 
 		// nobody is allowed to delete this file
-		// but vince the owner (and superadmin)
+		// but vince the owner and superadmins
 		SpaceRequest.delete(vincePngMeta.location).go(403);
 		fred.delete(vincePngMeta.location).go(403);
 		vince.delete(vincePngMeta.location).go(200);
@@ -245,24 +282,29 @@ public class ShareServiceTest extends SpaceTest {
 	}
 
 	@Test
-	public void testSharingWithContentDispositionAndEscaping() {
+	public void shareWithContentDispositionAndEscaping() {
 
 		// prepare
 		SpaceDog superadmin = resetTestBackend();
+
+		// superadmin enables s3 locations
+		ShareSettings settings = new ShareSettings();
+		settings.enableS3Location = true;
+		superadmin.settings().save(settings);
 
 		// share file with name that needs escaping
 		ShareMeta meta = superadmin.shares().upload(FILE_CONTENT.getBytes(), "un petit text ?");
 
 		// get file from location URI
 		// no file extension => no specific content type
-		String stringContent = SpaceRequest.get(meta.location).go(200)//
+		String stringContent = superadmin.get(meta.location).go(200)//
 				.assertHeaderEquals("application/octet-stream", SpaceHeaders.CONTENT_TYPE)//
 				.asString();
 
 		Assert.assertEquals(FILE_CONTENT, stringContent);
 
 		// get file from location URI with content disposition
-		stringContent = SpaceRequest.get(meta.location)//
+		stringContent = superadmin.get(meta.location)//
 				.queryParam(WITH_CONTENT_DISPOSITION, true).go(200)//
 				.assertHeaderEquals("attachment; filename=\"un petit text ?\"", //
 						SpaceHeaders.CONTENT_DISPOSITION)//

@@ -15,6 +15,7 @@ import io.spacedog.client.elastic.ESSortOrder;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceTest;
 import io.spacedog.model.JsonDataObject;
+import io.spacedog.model.Permission;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
 
@@ -92,7 +93,9 @@ public class SearchServiceTest extends SpaceTest {
 		SpaceDog superadmin = resetTestBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
-		superadmin.schema().set(Schema.builder("city").string("name").build());
+		Schema schema = Schema.builder("city").string("name")//
+				.acl("user", Permission.create, Permission.search).build();
+		superadmin.schema().set(schema);
 
 		// creates 5 cities but whith only 3 distinct names
 		vince.data().save("city", Json.object("name", "Paris"));

@@ -23,6 +23,7 @@ import io.spacedog.model.DataObjects;
 import io.spacedog.model.Installation;
 import io.spacedog.model.InstallationDataObject;
 import io.spacedog.model.JsonDataObject;
+import io.spacedog.model.Permission;
 import io.spacedog.model.PushService;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Check;
@@ -62,7 +63,10 @@ public class PushSpaceService extends SpaceService {
 	//
 
 	public static Schema getDefaultInstallationSchema() {
-		return Schema.builder("installation")//
+		return Schema.builder(TYPE)//
+				.acl(Credentials.Type.user.name(), Permission.create, Permission.read, //
+						Permission.update, Permission.delete) //
+
 				.string(APP_ID)//
 				.string(PUSH_SERVICE)//
 				.string(TOKEN)//

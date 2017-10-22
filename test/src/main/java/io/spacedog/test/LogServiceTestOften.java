@@ -11,11 +11,12 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceTest;
 import io.spacedog.model.DataObject;
+import io.spacedog.model.Permission;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceHeaders;
 
-public class LogResourceTestOften extends SpaceTest {
+public class LogServiceTestOften extends SpaceTest {
 
 	@Test
 	public void doAFewThingsAndGetTheLogs() {
@@ -26,7 +27,9 @@ public class LogResourceTestOften extends SpaceTest {
 		SpaceDog superadmin2 = resetTest2Backend();
 
 		// create message schema in test backend
-		superadmin.schema().set(Schema.builder("message").text("text").build());
+		Schema schema = Schema.builder("message").text("text")//
+				.acl("user", Permission.create, Permission.search).build();
+		superadmin.schema().set(schema);
 
 		// create a user in test backend
 		SpaceDog user = createTempDog(superadmin, "user").login();

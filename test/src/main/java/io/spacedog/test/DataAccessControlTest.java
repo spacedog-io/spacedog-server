@@ -3,8 +3,6 @@
  */
 package io.spacedog.test;
 
-import java.util.Collections;
-
 import org.junit.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -13,35 +11,42 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceTest;
 import io.spacedog.model.DataObject;
-import io.spacedog.model.Permission;
 import io.spacedog.model.InternalDataSettings;
 import io.spacedog.model.JsonDataObject;
+import io.spacedog.model.Permission;
+import io.spacedog.model.RolePermissions;
 import io.spacedog.model.Schema;
-import io.spacedog.model.Schema.DataAcl;
+import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.Passwords;
 
 public class DataAccessControlTest extends SpaceTest {
 
 	@Test
-	public void testDefaulSchemaAcl() {
+	public void testCustomSchemaAcl() {
 
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
 		SpaceDog guest = SpaceDog.backend(superadmin);
 		SpaceDog vince = createTempDog(superadmin, "vince");
-		SpaceDog admin = createTempAdmin(superadmin);
+		SpaceDog admin = createTempDog(superadmin, "admin", Type.admin.name());
 
 		// set message schema
-		Schema messageSchema = Schema.builder("msge").text("t").build();
-		superadmin.schema().set(messageSchema);
+		Schema schema = Schema.builder("msge").text("t").build();
+		RolePermissions acl = new RolePermissions()//
+				.put(Credentials.ALL_ROLE, Permission.read_all)//
+				.put(Credentials.Type.user.name(), Permission.create, //
+						Permission.update, Permission.delete, Permission.search) //
+				.put(Credentials.Type.admin.name(), Permission.create, //
+						Permission.update_all, Permission.delete_all, Permission.search);
+		schema.acl(acl);
+		superadmin.schema().set(schema);
 
 		// message schema does not contain any acl
 		// it means message schema has default acl
 		InternalDataSettings settings = superadmin.settings().get(InternalDataSettings.class);
-		assertEquals(DataAcl.defaultAcl(), settings.acl.get("msge"));
+		assertEquals(acl, settings.acl.get(schema.name()));
 
 		// in default acl, only users and admins can create objects
 		guest.post("/1/data/msge").bodyJson("t", "hello").go(403);
@@ -84,24 +89,23 @@ public class DataAccessControlTest extends SpaceTest {
 	}
 
 	@Test
-	public void testEmptySchemaAcl() {
+	public void testDefaultSchemaAcl() {
 
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
 		SpaceDog guest = SpaceDog.backend(superadmin);
 		SpaceDog vince = createTempDog(superadmin, "vince");
-		SpaceDog admin = createTempAdmin(superadmin);
+		SpaceDog admin = createTempDog(superadmin, "admin", Type.admin.name());
 
-		// superadmin sets message schema with empty acl
-		Schema messageSchema = Schema.builder("msge").text("t").build();
-		messageSchema.acl(new DataAcl());
-		superadmin.schema().set(messageSchema);
+		// superadmin sets message schema with default empty acl
+		Schema schema = Schema.builder("msge").text("t").build();
+		superadmin.schema().set(schema);
 
-		// check message schema acl are set
+		// superadmin check schema acl are empty
 		InternalDataSettings settings = superadmin.settings().get(InternalDataSettings.class);
 		assertEquals(1, settings.acl.size());
-		assertEquals(0, settings.acl.get("msge").size());
+		assertTrue(settings.acl.get(schema.name()).isEmpty());
 
 		// in empty acl, nobody can create a message but superadmins
 		guest.post("/1/data/msge").bodyJson("t", "hi").go(403);
@@ -137,29 +141,25 @@ public class DataAccessControlTest extends SpaceTest {
 	}
 
 	@Test
-	public void testCustomSchemaAcl() {
+	public void testAnotherCustomSchemaAcl() {
 
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
 		SpaceDog guest = SpaceDog.backend(superadmin);
 		SpaceDog vince = createTempDog(superadmin, "vince");
-		SpaceDog admin = createTempAdmin(superadmin);
+		SpaceDog admin = createTempDog(superadmin, "admin", Type.admin.name());
 
 		// set message schema with custom acl settings
-		Schema messageSchema = Schema.builder("msge").text("t").build();
-		messageSchema.acl("user", Permission.create);
-		messageSchema.acl("admin", Permission.search);
-		superadmin.schema().set(messageSchema);
+		Schema schema = Schema.builder("msge").text("t").build();
+		schema.acl("user", Permission.create);
+		schema.acl("admin", Permission.search);
+		superadmin.schema().set(schema);
 
 		// check message schema acl are set
 		InternalDataSettings settings = superadmin.settings().get(InternalDataSettings.class);
 		assertEquals(1, settings.acl.size());
-		assertEquals(2, settings.acl.get("msge").size());
-		assertEquals(Collections.singleton(Permission.search), //
-				settings.acl.get("msge").get("admin"));
-		assertEquals(Collections.singleton(Permission.create), //
-				settings.acl.get("msge").get("user"));
+		assertEquals(schema.acl(), settings.acl.get(schema.name()));
 
 		// only users (and superadmins) can create messages
 		guest.post("/1/data/msge").bodyJson("t", "hi").go(403);
@@ -200,11 +200,6 @@ public class DataAccessControlTest extends SpaceTest {
 		admin.delete("/1/data/msge").go(403);
 		superadmin.delete("/1/data/msge").go(200)//
 				.assertEquals(1, "totalDeleted");
-	}
-
-	private SpaceDog createTempAdmin(SpaceDog superadmin) {
-		return superadmin.credentials()//
-				.create("admin", Passwords.random(), DEFAULT_EMAIL, Type.admin.name());
 	}
 
 	@Test
@@ -290,23 +285,23 @@ public class DataAccessControlTest extends SpaceTest {
 		SpaceDog superadmin = resetTestBackend();
 
 		// create message schema with simple acl
-		Schema messageSchema = Schema.builder("message")//
+		Schema schema = Schema.builder("message")//
 				.acl("user", Permission.search)//
 				.text("text")//
 				.build();
 
-		superadmin.schema().set(messageSchema);
+		superadmin.schema().set(schema);
 
 		// check schema settings contains message schema acl
 		InternalDataSettings settings = superadmin.settings().get(InternalDataSettings.class);
-		assertEquals(messageSchema.acl(), settings.acl.get(messageSchema.name()));
+		assertEquals(schema.acl(), settings.acl.get(schema.name()));
 
 		// delete message schema
-		superadmin.schema().delete(messageSchema);
+		superadmin.schema().delete(schema);
 
 		// check schema settings does not contain
 		// message schema acl anymore
 		settings = superadmin.settings().get(InternalDataSettings.class);
-		assertNull(settings.acl.get(messageSchema.name()));
+		assertNull(settings.acl.get(schema.name()));
 	}
 }

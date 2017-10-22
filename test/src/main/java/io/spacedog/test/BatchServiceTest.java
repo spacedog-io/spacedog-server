@@ -13,6 +13,7 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceResponse;
 import io.spacedog.http.SpaceTest;
+import io.spacedog.model.Permission;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
 
@@ -26,13 +27,15 @@ public class BatchServiceTest extends SpaceTest {
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
 		superadmin.credentials().enableGuestSignUp(true);
+		Schema schema = Schema.builder("message").text("text")//
+				.acl("user", Permission.create, Permission.update, Permission.search).build();
 
 		// should succeed to reset test account and create message schema with
 		// admin credentials
 		ArrayNode batch = Json.builder().array()//
 				.object()//
 				.add("method", "PUT").add("path", "/1/schema/message")//
-				.add("content", Schema.builder("message").text("text").build().node())//
+				.add("content", schema.node())//
 				.end()//
 
 				.object()//
@@ -225,7 +228,7 @@ public class BatchServiceTest extends SpaceTest {
 				.queryParam("stopOnError", true).backend("test")//
 				.basicAuth("vince", "hi vince").bodyJson(batch).go(200)//
 				.assertEquals(2, "responses.0.total")//
-				.assertEquals(404, "responses.1.status")//
+				.assertEquals(403, "responses.1.status")//
 				.assertSizeEquals(2, "responses")//
 				.assertEquals(1, "debug.batchCredentialChecks");
 

@@ -5,11 +5,12 @@ package io.spacedog.test;
 
 import org.junit.Test;
 
+import com.google.common.collect.Sets;
+
 import io.spacedog.client.SpaceDog;
-import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceTest;
 import io.spacedog.model.Schema;
-import io.spacedog.utils.Json;
+import io.spacedog.utils.SchemaBuilder;
 
 public class SchemaServiceTest extends SpaceTest {
 
@@ -18,57 +19,50 @@ public class SchemaServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog guest = SpaceDog.backend(superadmin);
+		SpaceDog bob = createTempDog(superadmin, "bob");
 
 		// anonymous gets all backend schema
 		// if no schema returns empty object
-		SpaceRequest.get("/1/schema").backend(test).go(200)//
-				.assertEquals(Json.merger().get());
-
-		// bob signs up
-		SpaceDog bob = createTempDog(test, "bob");
+		guest.schema().getAll().isEmpty();
 
 		// admin creates car, home and sale schemas
-		test.schema().set(buildCarSchema());
-		test.schema().set(buildHomeSchema());
-		test.schema().set(buildSaleSchema());
+		Schema carSchema = buildCarSchema().build();
+		superadmin.schema().set(carSchema);
+		Schema homeSchema = buildHomeSchema().build();
+		superadmin.schema().set(homeSchema);
+		Schema saleSchema = buildSaleSchema().build();
+		superadmin.schema().set(saleSchema);
 
 		// anonymous gets car, home and sale schemas
-		SpaceRequest.get("/1/schema/car").backend(test).go(200)//
-				.assertEquals(buildCarSchema().node());
-		SpaceRequest.get("/1/schema/home").backend(test).go(200)//
-				.assertEquals(buildHomeSchema().node());
-		SpaceRequest.get("/1/schema/sale").backend(test).go(200)//
-				.assertEquals(buildSaleSchema().node());
+		assertEquals(carSchema, guest.schema().get(carSchema.name()));
+		assertEquals(homeSchema, guest.schema().get(homeSchema.name()));
+		assertEquals(saleSchema, guest.schema().get(saleSchema.name()));
 
 		// anonymous gets all schemas
-		SpaceRequest.get("/1/schema").backend(test).go(200)//
-				.assertEquals(Json.merger() //
-						.merge(buildHomeSchema().node()) //
-						.merge(buildCarSchema().node()) //
-						.merge(buildSaleSchema().node()) //
-						.get());
+		assertEquals(Sets.newHashSet(carSchema, homeSchema, saleSchema), //
+				guest.schema().getAll());
 
 		// anonymous is not allowed to delete schema
-		SpaceRequest.delete("/1/schema/sale").backend(test).go(403);
+		guest.delete("/1/schema/sale").go(403);
 
 		// user is not allowed to delete schema
-		SpaceRequest.delete("/1/schema/sale").auth(bob).go(403);
+		bob.delete("/1/schema/sale").go(403);
 
 		// admin fails to delete a non existing schema
-		SpaceRequest.delete("/1/schema/XXX").auth(test).go(404);
+		superadmin.delete("/1/schema/XXX").go(404);
 
 		// admin deletes a schema and all its objects
-		SpaceRequest.delete("/1/schema/sale").auth(test).go(200);
+		superadmin.delete(saleSchema.name());
 
 		// admin fails to create an invalid schema
-		SpaceRequest.put("/1/schema/toto").auth(test)//
+		superadmin.put("/1/schema/toto")//
 				.bodyString("{\"toto\":{\"_type\":\"XXX\"}}").go(400);
 
 		// admin fails to update car schema color property type
-		Schema carSchema = buildCarSchema();
 		carSchema.node().with("car").with("color").put("_type", "date");
-		SpaceRequest.put("/1/schema/car").auth(test).bodySchema(carSchema).go(400);
+		superadmin.put("/1/schema/car").bodySchema(carSchema).go(400);
 
 		// fails to remove the car schema color property
 		// json = buildCarSchema();
@@ -76,7 +70,7 @@ public class SchemaServiceTest extends SpaceTest {
 		// SpaceRequest.put("/1/schema/car").adminAuth(testBackend).body(json).go(400);
 	}
 
-	private static Schema buildHomeSchema() {
+	private static SchemaBuilder buildHomeSchema() {
 		return Schema.builder("home") //
 				.enumm("type")//
 				.string("phone")//
@@ -87,12 +81,11 @@ public class SchemaServiceTest extends SpaceTest {
 				.text("street")//
 				.string("city")//
 				.string("country")//
-				.close() //
+				.close();
 
-				.build();
 	}
 
-	public static Schema buildSaleSchema() {
+	public static SchemaBuilder buildSaleSchema() {
 		return Schema.builder("sale") //
 				.string("number") //
 				.timestamp("when") //
@@ -106,12 +99,10 @@ public class SchemaServiceTest extends SpaceTest {
 				.text("description").english()//
 				.integer("quantity")//
 				.enumm("type")//
-				.close() //
-
-				.build();
+				.close();
 	}
 
-	public static Schema buildCarSchema() {
+	public static SchemaBuilder buildCarSchema() {
 		return Schema.builder("car") //
 				.string("serialNumber")//
 				.date("buyDate")//
@@ -125,9 +116,7 @@ public class SchemaServiceTest extends SpaceTest {
 				.text("description").french()//
 				.integer("fiscalPower")//
 				.floatt("size")//
-				.close() //
-
-				.build();
+				.close();
 	}
 
 	@Test
@@ -158,11 +147,12 @@ public class SchemaServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog guest = SpaceDog.backend(superadmin);
 
 		// settings is a reserved schema name
-		SpaceRequest.get("/1/schema/settings").backend(test).go(400);
-		SpaceRequest.put("/1/schema/settings").auth(test).go(400);
+		guest.get("/1/schema/settings").go(400);
+		superadmin.put("/1/schema/settings").go(400);
 	}
 
 }

@@ -8,7 +8,6 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 
-import io.spacedog.model.Schema.DataAcl;
 import io.spacedog.utils.Credentials;
 
 public class InternalDataSettings extends SettingsBase {
@@ -26,33 +25,16 @@ public class InternalDataSettings extends SettingsBase {
 	//
 
 	public boolean check(String type, String role, Permission... permissions) {
-		DataAcl roles = acl.get(type);
-		if (roles == null)
-			roles = DataAcl.defaultAcl();
-
-		Set<Permission> rolePermissions = roles.get(role);
-		if (rolePermissions == null)
-			return false;
-
-		for (Permission permission : permissions)
-			if (rolePermissions.contains(permission))
-				return true;
-
-		return false;
+		RolePermissions roles = acl.get(type);
+		return roles == null ? false : roles.check(role, permissions);
 	}
 
 	public boolean check(Credentials credentials, String type, Permission... permissions) {
 		if (credentials.isAtLeastSuperAdmin())
 			return true;
 
-		if (check(type, Credentials.ALL_ROLE, permissions))
-			return true;
-
-		for (String role : credentials.roles())
-			if (check(type, role, permissions))
-				return true;
-
-		return false;
+		RolePermissions roles = acl.get(type);
+		return roles == null ? false : roles.check(credentials, permissions);
 	}
 
 	public String[] types(Permission permission, Credentials credentials) {
@@ -73,7 +55,7 @@ public class InternalDataSettings extends SettingsBase {
 		return types.toArray(new String[types.size()]);
 	}
 
-	public static class DataAclMap extends HashMap<String, DataAcl> {
+	public static class DataAclMap extends HashMap<String, RolePermissions> {
 
 		private static final long serialVersionUID = 8813814959454404912L;
 	}

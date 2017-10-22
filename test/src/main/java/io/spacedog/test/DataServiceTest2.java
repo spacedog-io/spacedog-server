@@ -33,11 +33,12 @@ import io.spacedog.model.DataObjectAbstract;
 import io.spacedog.model.GeoPoint;
 import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.MetadataBase;
+import io.spacedog.model.Permission;
 import io.spacedog.model.Schema;
-import io.spacedog.test.DataResourceTest2.Sale.Item;
+import io.spacedog.test.DataServiceTest2.Sale.Item;
 import io.spacedog.utils.Json;
 
-public class DataResourceTest2 extends SpaceTest {
+public class DataServiceTest2 extends SpaceTest {
 
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	@JsonAutoDetect(fieldVisibility = Visibility.ANY, //
@@ -107,8 +108,13 @@ public class DataResourceTest2 extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog test = resetTestBackend();
-		test.schema().set(SchemaServiceTest.buildSaleSchema());
 		SpaceDog fred = createTempDog(test, "fred");
+
+		Schema saleSchema = SchemaServiceTest.buildSaleSchema()//
+				.acl("user", Permission.create, Permission.update, //
+						Permission.read, Permission.delete, Permission.search)//
+				.build();
+		test.schema().set(saleSchema);
 
 		// fred fails to create a sale with no body
 		fred.post("/1/data/sale").go(400);
@@ -323,7 +329,9 @@ public class DataResourceTest2 extends SpaceTest {
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
-		superadmin.schema().set(Schema.builder("message").string("text").build());
+		Schema schema = Schema.builder("message").string("text")//
+				.acl("user", Permission.create, Permission.search).build();
+		superadmin.schema().set(schema);
 
 		// superadmins creates 4 messages
 		HashSet<String> originalMessages = Sets.newHashSet(//
