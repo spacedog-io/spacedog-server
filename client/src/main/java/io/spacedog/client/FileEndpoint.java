@@ -116,7 +116,7 @@ public class FileEndpoint {
 	}
 
 	public FileMeta upload(String webPath, byte[] bytes) {
-		return dog.put("/1/files" + webPath).bodyBytes(bytes)//
+		return dog.put("/1/files/" + webPath).bodyBytes(bytes)//
 				.go(200).toPojo(FileMeta.class);
 	}
 
@@ -125,7 +125,7 @@ public class FileEndpoint {
 	}
 
 	public String[] delete(String webPath) {
-		return dog.delete("/1/files" + webPath)//
+		return dog.delete("/1/files/" + webPath)//
 				.go(200, 404).toPojo("deleted", String[].class);
 	}
 

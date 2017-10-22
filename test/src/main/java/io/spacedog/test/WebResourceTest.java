@@ -10,21 +10,20 @@ import io.spacedog.utils.SpaceHeaders;
 
 public class WebResourceTest extends SpaceTest {
 
-	private static SpaceDog test;
+	private static SpaceDog superadmin;
 
 	@Test
 	public void test() {
 
 		// prepare
 		prepareTest(false);
-		test = resetTestBackend();
+		superadmin = resetTestBackend();
 
-		SpaceRequest.get("/1/file").auth(test).go(200)//
-				.assertSizeEquals(0, "results");
+		// check no file in backend
+		assertEquals(0, superadmin.files().listAll().files.length);
 
 		// upload without prefix is illegal
-		SpaceRequest.put("/1/file/XXX.html").auth(test)//
-				.bodyString("<h1>Hello</h1>").go(400);
+		superadmin.put("/1/files/XXX.html").go(400);
 
 		// admin uploads web site at prefix 'www'
 		upload("www", "/index.html");
@@ -57,7 +56,7 @@ public class WebResourceTest extends SpaceTest {
 		// changes the not found path to /index.html
 		WebSettings settings = new WebSettings();
 		settings.notFoundPage = "/index.html";
-		test.settings().save(settings);
+		superadmin.settings().save(settings);
 
 		// if user browses invalid URIs
 		// the server returns the not found path
@@ -68,7 +67,7 @@ public class WebResourceTest extends SpaceTest {
 		browse("www", "/a/b/c/index.html", html("/index.html"));
 
 		// browse without prefix returns default not found html page
-		SpaceRequest.get("/1/web").backend(test).go(404)//
+		SpaceRequest.get("/1/web").backend(superadmin).go(404)//
 				.assertHeaderEquals("text/html", SpaceHeaders.CONTENT_TYPE);
 	}
 
@@ -77,7 +76,7 @@ public class WebResourceTest extends SpaceTest {
 	}
 
 	private void upload(String prefix, String uri, String html) {
-		SpaceRequest.put("/1/file/" + prefix + uri).auth(test).bodyString(html).go(200);
+		superadmin.files().upload(prefix + uri, html.getBytes());
 	}
 
 	private String html(String uri) {
@@ -93,17 +92,17 @@ public class WebResourceTest extends SpaceTest {
 	}
 
 	private void browse(String prefix, String uri, String expectedBody, String expectedContentType) {
-		SpaceRequest.head("/1/web/" + prefix + uri).backend(test).go(200)//
+		SpaceRequest.head("/1/web/" + prefix + uri).backend(superadmin).go(200)//
 				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE);
 
-		SpaceRequest.head(uri).www(test).go(200)//
+		SpaceRequest.head(uri).www(superadmin).go(200)//
 				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE);
 
-		SpaceRequest.get("/1/web/" + prefix + uri).backend(test).go(200)//
+		SpaceRequest.get("/1/web/" + prefix + uri).backend(superadmin).go(200)//
 				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE)//
 				.assertBodyEquals(expectedBody);
 
-		SpaceRequest.get(uri).www(test).go(200)//
+		SpaceRequest.get(uri).www(superadmin).go(200)//
 				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE)//
 				.assertBodyEquals(expectedBody);
 	}
