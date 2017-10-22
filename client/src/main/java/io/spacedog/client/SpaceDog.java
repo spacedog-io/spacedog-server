@@ -250,7 +250,7 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 
 	FileEndpoint fileEndpoint;
 
-	public FileEndpoint file() {
+	public FileEndpoint files() {
 		if (fileEndpoint == null)
 			fileEndpoint = new FileEndpoint(this);
 		return fileEndpoint;

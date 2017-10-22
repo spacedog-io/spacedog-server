@@ -1,6 +1,7 @@
 package io.spacedog.client;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.joda.time.DateTime;
 
@@ -8,8 +9,11 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.io.Files;
 
 import io.spacedog.http.SpaceResponse;
+import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.SpaceHeaders;
 
 public class FileEndpoint {
 
@@ -25,12 +29,16 @@ public class FileEndpoint {
 		return this;
 	}
 
+	public FileList listAll() {
+		return list("/");
+	}
+
 	public FileList list(String webPath) {
 		return list(webPath, null);
 	}
 
 	public FileList list(String webPath, String next) {
-		SpaceResponse response = dog.get("/1/file" + webPath)//
+		SpaceResponse response = dog.get("/1/files" + webPath)//
 				.size(listSize)//
 				.queryParam("next", next)//
 				.go(200, 404);
@@ -50,14 +58,14 @@ public class FileEndpoint {
 	public static class FileList {
 
 		@JsonProperty("results")
-		public SpaceFile[] files;
+		public FileMeta[] files;
 		public String next;
 
 		private static FileList EMPTY;
 
 		static {
 			EMPTY = new FileList();
-			EMPTY.files = new SpaceFile[0];
+			EMPTY.files = new FileMeta[0];
 		}
 	}
 
@@ -66,27 +74,59 @@ public class FileEndpoint {
 			getterVisibility = Visibility.NONE, //
 			isGetterVisibility = Visibility.NONE, //
 			setterVisibility = Visibility.NONE)
-	public static class SpaceFile {
+	public static class FileMeta {
 		public String path;
+		public String location;
 		public long size;
 		public DateTime lastModified;
 		public String etag;
+		public String contentMd5;
 	}
 
-	public byte[] get(String webPath) {
-		return dog.get("/1/file" + webPath).go(200).asBytes();
+	@JsonIgnoreProperties(ignoreUnknown = true)
+	@JsonAutoDetect(fieldVisibility = Visibility.PUBLIC_ONLY, //
+			getterVisibility = Visibility.NONE, //
+			isGetterVisibility = Visibility.NONE, //
+			setterVisibility = Visibility.NONE)
+	public static class SpaceFile {
+		public String id;
+		public String contentType;
+		public String owner;
+		public String etag;
+		public byte[] content;
 	}
 
-	public void save(String webPath, File file) {
-		dog.put("/1/file" + webPath).bodyFile(file).go(200);
+	public SpaceFile get(String webPath) {
+		SpaceResponse response = dog.get("/1/files" + webPath).go(200);
+		SpaceFile file = new SpaceFile();
+		file.id = webPath;
+		file.content = response.asBytes();
+		file.contentType = response.header(SpaceHeaders.CONTENT_TYPE);
+		file.owner = response.header(SpaceHeaders.SPACEDOG_OWNER);
+		file.etag = response.header(SpaceHeaders.ETAG);
+		return file;
 	}
 
-	public void save(String webPath, byte[] bytes) {
-		dog.put("/1/file" + webPath).bodyBytes(bytes).go(200);
+	public FileMeta upload(String webPath, File file) {
+		try {
+			return upload(webPath, Files.toByteArray(file));
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
+		}
 	}
 
-	public void delete(String webPath) {
-		dog.delete("/1/file" + webPath).go(200, 404);
+	public FileMeta upload(String webPath, byte[] bytes) {
+		return dog.put("/1/files" + webPath).bodyBytes(bytes)//
+				.go(200).toPojo(FileMeta.class);
+	}
+
+	public String[] deleteAll() {
+		return delete("/");
+	}
+
+	public String[] delete(String webPath) {
+		return dog.delete("/1/files" + webPath)//
+				.go(200, 404).toPojo("deleted", String[].class);
 	}
 
 }

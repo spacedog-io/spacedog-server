@@ -27,7 +27,7 @@ public class FileResource extends S3Resource {
 
 			@Override
 			public boolean matches(String uri, Context context) {
-				return uri.startsWith("/1/file");
+				return uri.startsWith("/1/files");
 			}
 
 			@Override
@@ -60,7 +60,7 @@ public class FileResource extends S3Resource {
 		if (payload.isSuccess())
 			return payload;
 
-		return doList(FILE_BUCKET_SUFFIX, path, context);
+		return doList(FILE_BUCKET_SUFFIX, "/1/files", path, context);
 	}
 
 	Payload put(WebPath path, byte[] bytes, Context context) {
@@ -69,7 +69,7 @@ public class FileResource extends S3Resource {
 		if (path.size() < 2)
 			throw Exceptions.illegalArgument("no prefix in file path [%s]", path.toString());
 
-		return doUpload(FILE_BUCKET_SUFFIX, "/1/file", credentials, path, bytes, path.last(), context);
+		return doUpload(FILE_BUCKET_SUFFIX, "/1/files", credentials, path, bytes, path.last(), context);
 	}
 
 	Payload deleteAll() {
@@ -82,8 +82,8 @@ public class FileResource extends S3Resource {
 	}
 
 	private static WebPath toWebPath(String uri) {
-		// removes '/1/file'
-		return WebPath.parse(uri.substring(7));
+		// removes '/1/files'
+		return WebPath.parse(uri.substring(8));
 	}
 
 	//

@@ -32,7 +32,7 @@ public class ShareResource extends S3Resource {
 	@Get("/")
 	public Object getAll(Context context) {
 		checkPermission(DataPermission.search);
-		return doList(SHARE_BUCKET_SUFFIX, WebPath.ROOT, context);
+		return doList(SHARE_BUCKET_SUFFIX, "/1/shares", WebPath.ROOT, context);
 	}
 
 	@Post("")

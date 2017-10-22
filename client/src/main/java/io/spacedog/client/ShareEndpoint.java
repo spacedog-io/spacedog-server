@@ -127,8 +127,9 @@ public class ShareEndpoint {
 				.toPojo(ShareMeta.class);
 	}
 
-	public void delete(String id) {
-		dog.delete("/1/shares/" + id).go(200);
+	public String[] delete(String id) {
+		return dog.delete("/1/shares/" + id).go(200)//
+				.toPojo("deleted", String[].class);
 	}
 
 }

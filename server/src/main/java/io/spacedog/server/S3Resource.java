@@ -119,7 +119,7 @@ public class S3Resource extends Resource {
 		}
 	}
 
-	public Payload doList(String bucketSuffix, WebPath path, Context context) {
+	public Payload doList(String bucketSuffix, String rootUri, WebPath path, Context context) {
 
 		String backendId = SpaceContext.backendId();
 		WebPath s3Path = path.addFirst(backendId);
@@ -149,7 +149,9 @@ public class S3Resource extends Resource {
 
 		for (S3ObjectSummary summary : objects.getObjectSummaries()) {
 			WebPath objectPath = fromS3Key(summary.getKey());
-			results.add(Json.object("path", objectPath.toString(), //
+			results.add(Json.object(//
+					"path", objectPath.toString(), //
+					"location", toSpaceLocation(backendId, rootUri, objectPath), //
 					"size", summary.getSize(), //
 					"lastModified", new DateTime(summary.getLastModified().getTime()).toString(), //
 					"etag", summary.getETag()));
