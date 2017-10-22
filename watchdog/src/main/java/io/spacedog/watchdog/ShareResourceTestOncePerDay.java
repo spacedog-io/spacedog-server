@@ -1,7 +1,6 @@
 package io.spacedog.watchdog;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Set;
 
 import org.junit.Assert;
@@ -62,7 +61,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		assertEquals(vince.id(), png.owner);
 		assertEquals(pngMeta.etag, png.etag);
 
-		assertTrue(Arrays.equals(pngBytes, png.content));
+		assertArrayEquals(pngBytes, png.content);
 
 		// anonymous gets png share with its location
 		byte[] downloadedBytes = guest.get(pngMeta.location).go(200)//
@@ -72,7 +71,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 				.assertHeaderEquals(pngMeta.etag, SpaceHeaders.ETAG)//
 				.asBytes();
 
-		assertTrue(Arrays.equals(pngBytes, downloadedBytes));
+		assertArrayEquals(pngBytes, downloadedBytes);
 
 		// anonymous gets png share through S3 direct access
 		// with wrong etag
@@ -83,7 +82,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 				.assertHeaderEquals('"' + pngMeta.etag + '"', SpaceHeaders.ETAG)//
 				.asBytes();
 
-		assertTrue(Arrays.equals(pngBytes, downloadedBytes));
+		assertArrayEquals(pngBytes, downloadedBytes);
 
 		// anonymous gets png share through S3 direct access
 		// with correct etag to get 304 Not Modified
@@ -110,8 +109,8 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		all.add(list.shares[0].id);
 
 		// the set should contain both file paths
-		Assert.assertTrue(all.contains(pngMeta.id));
-		Assert.assertTrue(all.contains(txtMeta.id));
+		assertTrue(all.contains(pngMeta.id));
+		assertTrue(all.contains(txtMeta.id));
 
 		// download shared text file
 		String stringContent = SpaceRequest.get(txtMeta.location).go(200)//
@@ -127,7 +126,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 				.assertHeaderEquals("text/plain", SpaceHeaders.CONTENT_TYPE)//
 				.asString();
 
-		Assert.assertEquals(FILE_CONTENT, stringContent);
+		assertEquals(FILE_CONTENT, stringContent);
 
 		// only admin or owner can delete a shared file
 		SpaceRequest.delete(txtMeta.location).go(403);
