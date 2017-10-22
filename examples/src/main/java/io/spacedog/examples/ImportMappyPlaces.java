@@ -22,9 +22,8 @@ public class ImportMappyPlaces extends SpaceTest {
 		try {
 
 			SpaceRequest.setForTestingDefault(false);
-			superdog().admin().deleteBackend("examples");
-			superadmin = createBackend("examples");
-			superadmin.post("/1/schema/resto").bodySchema(buildRestoSchema()).go(201);
+			superadmin = resetBackend("examples");
+			superadmin.schema().set(buildRestoSchema());
 
 			double step = 0.01;
 
@@ -86,11 +85,7 @@ public class ImportMappyPlaces extends SpaceTest {
 			target.end();
 		}
 
-		try {
-			superadmin.post("/1/data/resto").bodyJson(target.build()).go(201);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+		superadmin.data().save("resto", target.build());
 	}
 
 	public static Schema buildRestoSchema() {
@@ -110,8 +105,7 @@ public class ImportMappyPlaces extends SpaceTest {
 				.text("rubricLabel").french()//
 				.close() //
 
-				.acl("key", Permission.search)//
-				.acl("admin", Permission.create)//
+				.acl("all", Permission.search)//
 				.build();
 	}
 }
