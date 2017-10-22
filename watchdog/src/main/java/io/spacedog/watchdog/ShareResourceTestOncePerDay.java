@@ -54,10 +54,10 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		// admin lists all shared files should return tweeter.png path only
 		ShareList list = superadmin.shares().list();
 		assertEquals(1, list.shares.length);
-		assertEquals(pngMeta.path, list.shares[0].path);
+		assertEquals(pngMeta.id, list.shares[0].id);
 
 		// anonymous gets png share with its id
-		Share png = guest.shares().get(pngMeta.path);
+		Share png = guest.shares().get(pngMeta.id);
 		assertEquals("image/png", png.contentType);
 		assertEquals(vince.id(), png.owner);
 		assertEquals(pngMeta.etag, png.etag);
@@ -101,17 +101,17 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		// superadmin gets first share page with only one path
 		list = superadmin.shares().list();
 		assertEquals(1, list.shares.length);
-		Set<String> all = Sets.newHashSet(list.shares[0].path);
+		Set<String> all = Sets.newHashSet(list.shares[0].id);
 
 		// superadmin gets second (and last) share page with only one path
 		list = superadmin.shares().list(list.next);
 		assertEquals(1, list.shares.length);
 		assertNull(list.next);
-		all.add(list.shares[0].path);
+		all.add(list.shares[0].id);
 
 		// the set should contain both file paths
-		Assert.assertTrue(all.contains(pngMeta.path));
-		Assert.assertTrue(all.contains(txtMeta.path));
+		Assert.assertTrue(all.contains(pngMeta.id));
+		Assert.assertTrue(all.contains(txtMeta.id));
 
 		// download shared text file
 		String stringContent = SpaceRequest.get(txtMeta.location).go(200)//
@@ -134,7 +134,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		vince.delete(txtMeta.location).go(403);
 
 		// owner (fred) can delete its own shared file (test.txt)
-		fred.shares().delete(txtMeta.path);
+		fred.shares().delete(txtMeta.id);
 
 		// superadmin sets share list size to 100
 		superadmin.shares().listSize(100);
@@ -143,7 +143,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		// it should only return the png file path
 		list = superadmin.shares().list();
 		assertEquals(1, list.shares.length);
-		assertEquals(pngMeta.path, list.shares[0].path);
+		assertEquals(pngMeta.id, list.shares[0].id);
 
 		// only admin can delete all shared files
 		guest.delete("/1/shares").go(403);
@@ -151,7 +151,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		vince.delete("/1/shares").go(403);
 		superadmin.delete("/1/shares").go(200)//
 				.assertSizeEquals(1, "deleted")//
-				.assertContains(TextNode.valueOf(pngMeta.path), "deleted");
+				.assertContains(TextNode.valueOf(pngMeta.id), "deleted");
 
 		// superadmin lists all shares but there is no more
 		assertEquals(0, superadmin.shares().list().shares.length);
@@ -200,7 +200,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		// backend contains 1 shared file
 		ShareList list = superadmin.shares().list();
 		assertEquals(1, list.shares.length);
-		assertEquals(guestPngMeta.path, list.shares[0].path);
+		assertEquals(guestPngMeta.id, list.shares[0].id);
 
 		// nobody is allowed to read this file
 		// but superadmins and superdogs
@@ -226,7 +226,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		// backend contains 1 shared file
 		list = superadmin.shares().list();
 		assertEquals(1, list.shares.length);
-		assertEquals(vincePngMeta.path, list.shares[0].path);
+		assertEquals(vincePngMeta.id, list.shares[0].id);
 
 		// nobody is allowed to read this file
 		// but vince the owner (and superadmin)

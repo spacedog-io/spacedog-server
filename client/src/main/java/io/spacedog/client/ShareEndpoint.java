@@ -75,7 +75,8 @@ public class ShareEndpoint {
 			isGetterVisibility = Visibility.NONE, //
 			setterVisibility = Visibility.NONE)
 	public static class ShareMeta {
-		public String path;
+		@JsonProperty("path")
+		public String id;
 		public String location;
 		public String s3;
 		public String etag;
