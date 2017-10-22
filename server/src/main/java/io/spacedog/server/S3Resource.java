@@ -99,7 +99,7 @@ public class S3Resource extends Resource {
 				.withHeader(SpaceHeaders.ETAG, metadata.getETag())//
 				.withHeader(SpaceHeaders.SPACEDOG_OWNER, owner);
 
-		if (context.query().getBoolean("withContentDisposition", false))
+		if (context.query().getBoolean(WITH_CONTENT_DISPOSITION, false))
 			payload = payload.withHeader(SpaceHeaders.CONTENT_DISPOSITION, //
 					metadata.getContentDisposition());
 
@@ -218,31 +218,24 @@ public class S3Resource extends Resource {
 	}
 
 	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, WebPath path, byte[] bytes,
-			Context context) {
-		return doUpload(bucketSuffix, rootUri, credentials, path, bytes, context, true);
+			String fileName, Context context) {
+		return doUpload(bucketSuffix, rootUri, credentials, path, bytes, fileName, true, context);
 	}
 
 	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, WebPath path, byte[] bytes,
-			Context context, boolean enableS3Location) {
+			String fileName, boolean enableS3Location, Context context) {
 
 		// TODO check if this upload does not replace an older upload
 		// in this case, check crdentials and owner rights
 		// should return FORBIDDEN if user not the owner of previous file
 		// admin can replace whatever they need to replace?
 
-		if (path.size() < 2)
-			throw Exceptions.illegalArgument("no prefix in file path [%s]", path.toString());
-
-		String fileName = path.last();
 		String bucketName = getBucketName(bucketSuffix);
 		String backendId = SpaceContext.backendId();
 		WebPath s3Path = path.addFirst(backendId);
 
 		ObjectMetadata metadata = new ObjectMetadata();
-		// TODO
-		// use the provided content-type if specific first
-		// if none derive from file extension
-		metadata.setContentType(typeMap.getContentType(fileName));
+		metadata.setContentType(contentType(fileName, context));
 		metadata.setContentLength(Long.valueOf(context.header("Content-Length")));
 		metadata.setContentDisposition(//
 				String.format("attachment; filename=\"%s\"", fileName));
@@ -264,6 +257,15 @@ public class S3Resource extends Resource {
 			payload.withFields("s3", toS3Location(bucketName, s3Path));
 
 		return payload.build();
+	}
+
+	private String contentType(String fileName, Context context) {
+		// TODO
+		// use the provided content-type if specific first
+		// if none derive from file extension
+		return Strings.isNullOrEmpty(fileName) //
+				? "application/octet-stream"
+				: typeMap.getContentType(fileName);
 	}
 
 	//

@@ -65,7 +65,11 @@ public class FileResource extends S3Resource {
 
 	Payload put(WebPath path, byte[] bytes, Context context) {
 		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
-		return doUpload(FILE_BUCKET_SUFFIX, "/1/file", credentials, path, bytes, context);
+
+		if (path.size() < 2)
+			throw Exceptions.illegalArgument("no prefix in file path [%s]", path.toString());
+
+		return doUpload(FILE_BUCKET_SUFFIX, "/1/file", credentials, path, bytes, path.last(), context);
 	}
 
 	Payload deleteAll() {

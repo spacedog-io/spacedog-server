@@ -221,7 +221,7 @@ public class BatchResourceTest extends SpaceTest {
 				.build();
 
 		SpaceRequest.post("/1/batch").debugServer()//
-				.queryParam("stopOnError", "true").backend("test")//
+				.queryParam("stopOnError", true).backend("test")//
 				.basicAuth("vince", "hi vince").bodyJson(batch).go(200)//
 				.assertEquals(2, "responses.0.total")//
 				.assertEquals(404, "responses.1.status")//
