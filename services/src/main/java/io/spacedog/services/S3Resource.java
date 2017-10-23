@@ -78,16 +78,9 @@ public class S3Resource extends Resource {
 		try {
 			if (withContent) {
 				s3Object = s3.getObject(bucketName, s3Path.toS3Key());
-
-				// S3Object instances need to be manually closed to release
-				// the underlying http connection. This will be done after
-				// the request payload is written to the requester. This
-				// should solve the aws connection famine.
-				closeThisS3ObjectAtTheEnd.set(s3Object);
-
 				metadata = s3Object.getObjectMetadata();
 				owner = getOrCheckOwnership(metadata, checkOwnership);
-				fileContent = s3Object.getObjectContent();
+				fileContent = new S3ObjectStreamingOutput(s3Object);
 			} else {
 				metadata = s3.getObjectMetadata(bucketName, s3Path.toS3Key());
 				owner = getOrCheckOwnership(metadata, checkOwnership);
@@ -113,17 +106,20 @@ public class S3Resource extends Resource {
 		return payload;
 	}
 
-	private static ThreadLocal<S3Object> closeThisS3ObjectAtTheEnd = new ThreadLocal<>();
+	private class S3ObjectStreamingOutput implements StreamingOutput {
 
-	public static void closeThisThreadS3Object() {
-		try {
-			S3Object s3Object = closeThisS3ObjectAtTheEnd.get();
-			if (s3Object != null)
-				s3Object.close();
+		private S3Object s3Object;
 
-		} catch (Exception e) {
-			e.printStackTrace();
+		public S3ObjectStreamingOutput(S3Object s3Object) {
+			this.s3Object = s3Object;
 		}
+
+		@Override
+		public void write(OutputStream output) throws IOException {
+			ByteStreams.copy(s3Object.getObjectContent(), output);
+			s3Object.close();
+		}
+
 	}
 
 	public Payload doDownload(String bucketSuffix, String backendId, ZipRequest request, Context context) {

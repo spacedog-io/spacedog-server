@@ -247,15 +247,6 @@ public class Start {
 		public Payload executeRequest(Request request, Response response) throws Exception {
 			return routesProvider.get().apply(request, response);
 		}
-
-		@Override
-		protected void handleHttp(Request request, Response response) {
-			try {
-				super.handleHttp(request, response);
-			} finally {
-				S3Resource.closeThisThreadS3Object();
-			}
-		}
 	}
 
 	public Payload executeRequest(Request request, Response response) throws Exception {
