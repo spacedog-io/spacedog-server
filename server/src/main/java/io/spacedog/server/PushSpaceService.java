@@ -336,7 +336,7 @@ public class PushSpaceService extends SpaceService {
 				? Json.object("default", request.text, //
 						"APNS", Json.object("aps", Json.object("alert", request.text)), //
 						"APNS_SANDBOX", Json.object("aps", Json.object("alert", request.text)), //
-						"GCM", Json.object("data", Json.object("message", request.text)))//
+						"GCM", Json.object("notification", Json.object("body", request.text)))//
 				: request.data;
 	}
 
