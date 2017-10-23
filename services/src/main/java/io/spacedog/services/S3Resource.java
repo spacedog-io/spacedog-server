@@ -4,7 +4,11 @@
 package io.spacedog.services;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.activation.MimetypesFileTypeMap;
 
@@ -25,7 +29,9 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
+import com.google.common.io.ByteStreams;
 
+import io.spacedog.model.ZipRequest;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.JsonBuilder;
@@ -34,6 +40,7 @@ import io.spacedog.utils.WebPath;
 import net.codestory.http.Context;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
+import net.codestory.http.payload.StreamingOutput;
 
 public class S3Resource extends Resource {
 
@@ -117,6 +124,48 @@ public class S3Resource extends Resource {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	public Payload doDownload(String bucketSuffix, String backendId, ZipRequest request, Context context) {
+		request.checkValid();
+		return new Payload("application/octet-stream", //
+				new ZipStreamingOutput(bucketSuffix, backendId, request))//
+						.withHeader(SpaceHeaders.CONTENT_DISPOSITION, //
+								contentDisposition(request.fileName));
+	}
+
+	private class ZipStreamingOutput implements StreamingOutput {
+
+		private String bucketSuffix;
+		private String backendId;
+		private ZipRequest request;
+
+		public ZipStreamingOutput(String bucketSuffix, String backendId, ZipRequest request) {
+			this.bucketSuffix = bucketSuffix;
+			this.backendId = backendId;
+			this.request = request;
+		}
+
+		@Override
+		public void write(OutputStream output) throws IOException {
+			ZipOutputStream zip = new ZipOutputStream(output);
+			for (String path : request.paths) {
+				WebPath webPath = WebPath.parse(path);
+				S3Object object = getS3Object(bucketSuffix, backendId, webPath);
+				zip.putNextEntry(new ZipEntry(webPath.last()));
+				ByteStreams.copy(object.getObjectContent(), zip);
+				object.close();
+				zip.flush();
+			}
+			zip.close();
+		}
+
+	}
+
+	private S3Object getS3Object(String bucketSuffix, String backendId, WebPath path) {
+		String bucketName = getBucketName(bucketSuffix);
+		WebPath s3Path = path.addFirst(backendId);
+		return s3.getObject(bucketName, s3Path.toS3Key());
 	}
 
 	public Payload doList(String bucketSuffix, String backendId, WebPath path, Context context) {
@@ -246,8 +295,7 @@ public class S3Resource extends Resource {
 		// if none derive from file extension
 		metadata.setContentType(typeMap.getContentType(fileName));
 		metadata.setContentLength(Long.valueOf(context.header("Content-Length")));
-		metadata.setContentDisposition(//
-				String.format("attachment; filename=\"%s\"", fileName));
+		metadata.setContentDisposition(contentDisposition(fileName));
 		metadata.addUserMetadata("owner", credentials.name());
 		metadata.addUserMetadata("owner-type", credentials.level().toString());
 
@@ -267,6 +315,10 @@ public class S3Resource extends Resource {
 			builder.put("s3", toS3Location(bucketName, s3Path));
 
 		return JsonPayload.json(builder);
+	}
+
+	protected String contentDisposition(String fileName) {
+		return String.format("attachment; filename=\"%s\"", fileName);
 	}
 
 	//

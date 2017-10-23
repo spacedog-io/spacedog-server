@@ -1,5 +1,6 @@
 package io.spacedog.watchdog;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Set;
@@ -11,6 +12,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.collect.Sets;
+import com.google.common.io.Files;
 import com.google.common.io.Resources;
 
 import io.spacedog.model.DataPermission;
@@ -91,7 +93,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		// list all shared files should return 2 paths
 		// get first page with only one path
 		json = SpaceRequest.get("/1/share")//
-		.size(1).auth(test)//
+				.size(1).auth(test)//
 				.go(200)//
 				.assertSizeEquals(1, "results")//
 				.asJson();
@@ -103,8 +105,8 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 
 		// get second (and last) page with only one path
 		json = SpaceRequest.get("/1/share")//
-		.queryParam("next", next)//
-		.size(1).auth(test)//
+				.queryParam("next", next)//
+				.size(1).auth(test)//
 				.go(200)//
 				.assertSizeEquals(1, "results")//
 				.assertNotPresent("next")//
@@ -257,7 +259,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 
 		// share file with name that needs escaping
 		ObjectNode json = SpaceRequest.put("/1/share/{fileName}")//
-		.routeParam("fileName", "un petit text ?").auth(test)//
+				.routeParam("fileName", "un petit text ?").auth(test)//
 				.bodyBytes(FILE_CONTENT.getBytes())//
 				.go(200)//
 				.asJsonObject();
@@ -294,14 +296,62 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		Assert.assertEquals(FILE_CONTENT, stringContent);
 	}
 
-	void upload(String putUrl, String content, String contentType, String fileName, String username, String userType) {
-		SpaceRequest.put(putUrl)//
-				.setHeader("x-amz-meta-username", username)//
-				.setHeader("x-amz-meta-user-type", userType)//
-				.setHeader("Content-Type", contentType)//
-				.setHeader("Content-Disposition", String.format("attachment; filename=\"%s\"", fileName))//
-				.bodyBytes(content.getBytes())//
-				.go(200);
+	@Test
+	public void testDownloadManyShares() throws IOException {
+
+		// prepare
+		SpaceDog superadmin = resetTestBackend();
+
+		// prepare share settings
+		ShareSettings settings = new ShareSettings();
+		settings.enableS3Location = false;
+		settings.acl.put("admin", Sets.newHashSet(DataPermission.read, DataPermission.create));
+		superadmin.settings().save(settings);
+
+		// share file with name that needs escaping
+		String path1 = superadmin.put("/1/share/toto.txt")//
+				.bodyBytes("toto".getBytes())//
+				.go(200)//
+				.getString("path");
+
+		superadmin.get("/1/share/" + path1).go(200);
+
+		String path2 = superadmin.put("/1/share/titi.txt")//
+				.bodyBytes("titi".getBytes())//
+				.go(200)//
+				.getString("path");
+
+		superadmin.get("/1/share/" + path2).go(200);
+
+		String path3 = superadmin.put("/1/share/tweeter.png")//
+				.bodyResource(getClass(), "tweeter.png")//
+				.go(200)//
+				.getString("path");
+
+		superadmin.get("/1/share/" + path3).go(200);
+
+		// superadmin needs read_all permission to downloads many shares
+		superadmin.post("/1/share/_zip")//
+				.bodyJson("fileName", "download.zip", //
+						"paths", Json7.array(path1, path2, path3))//
+				.go(403);
+
+		// superadmin updates share settings to allow admin
+		// to download multiple shares
+		settings = superadmin.settings().get(ShareSettings.class);
+		settings.acl.put("admin", Sets.newHashSet(DataPermission.read_all, DataPermission.create));
+		superadmin.settings().save(settings);
+
+		// superadmin downloads zip containing specified shares
+		byte[] bytes = superadmin.post("/1/share/_zip")//
+				.bodyJson("fileName", "download.zip", //
+						"paths", Json7.array(path1, path2, path3))//
+				.go(200)//
+				.assertHeaderContains("attachment; filename=\"download.zip\"", //
+						SpaceHeaders.CONTENT_DISPOSITION)//
+				.asBytes();
+
+		Files.write(bytes, new File(System.getProperty("user.home"), "download.zip"));
 	}
 
 }

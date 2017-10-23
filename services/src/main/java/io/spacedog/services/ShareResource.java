@@ -6,9 +6,11 @@ package io.spacedog.services;
 import java.util.UUID;
 
 import io.spacedog.model.DataPermission;
+import io.spacedog.model.ZipRequest;
 import io.spacedog.model.ShareSettings;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json7;
 import io.spacedog.utils.WebPath;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -32,6 +34,14 @@ public class ShareResource extends S3Resource {
 	public Object getAll(Context context) {
 		Credentials credentials = checkPermission(DataPermission.search);
 		return doList(SHARE_BUCKET_SUFFIX, credentials.backendId(), WebPath.ROOT, context);
+	}
+
+	@Post("/_zip")
+	@Post("/_zip/")
+	public Payload postDownload(String body, Context context) {
+		Credentials credentials = checkPermission(DataPermission.read_all);
+		ZipRequest request = Json7.toPojo(body, ZipRequest.class);
+		return doDownload(SHARE_BUCKET_SUFFIX, credentials.backendId(), request, context);
 	}
 
 	@Get("/:uuid/:fileName")
