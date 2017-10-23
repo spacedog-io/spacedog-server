@@ -11,7 +11,7 @@ import net.codestory.http.constants.Methods;
 import net.codestory.http.filters.PayloadSupplier;
 import net.codestory.http.payload.Payload;
 
-public class FileService extends S3Resource {
+public class FileService extends S3Service {
 
 	static final String FILE_BUCKET_SUFFIX = "files";
 

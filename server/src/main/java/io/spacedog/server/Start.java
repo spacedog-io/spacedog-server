@@ -241,7 +241,7 @@ public class Start {
 			try {
 				super.handleHttp(request, response);
 			} finally {
-				S3Resource.closeThisThreadS3Object();
+				S3Service.closeThisThreadS3Object();
 			}
 		}
 	}

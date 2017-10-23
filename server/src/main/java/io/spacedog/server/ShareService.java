@@ -20,7 +20,7 @@ import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/1/shares")
-public class ShareService extends S3Resource {
+public class ShareService extends S3Service {
 
 	private static final String SHARE_BUCKET_SUFFIX = "shared";
 

@@ -13,7 +13,7 @@ import net.codestory.http.constants.Methods;
 import net.codestory.http.filters.PayloadSupplier;
 import net.codestory.http.payload.Payload;
 
-public class WebService extends S3Resource {
+public class WebService extends S3Service {
 
 	//
 	// Routes
