@@ -10,6 +10,7 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 
+import io.spacedog.rest.SpaceRequest;
 import io.spacedog.utils.Utils;
 
 public class CreateSuperdog {
@@ -18,7 +19,7 @@ public class CreateSuperdog {
 
 		String username = "superdog-david";
 		String email = "david@spacedog.io";
-		String password = System.getProperty("password");
+		String password = SpaceRequest.env().get("spacedog.superdog.password");
 
 		Console console = System.console();
 
