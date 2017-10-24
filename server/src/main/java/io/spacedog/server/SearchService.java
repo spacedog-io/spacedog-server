@@ -53,7 +53,7 @@ public class SearchService extends SpaceService {
 	@Post("/")
 	public Payload postSearchAllTypes(String body, Context context) {
 		Credentials credentials = SpaceContext.credentials();
-		String[] types = DataAccessControl.types(Permission.search, credentials);
+		String[] types = DataAccessControl.types(credentials, Permission.search);
 
 		DataStore.get().refreshDataTypes(isRefreshRequested(context), types);
 		ObjectNode result = searchInternal(body, credentials, context, types);
@@ -64,7 +64,7 @@ public class SearchService extends SpaceService {
 	@Delete("/")
 	public Payload deleteAllTypes(String query, Context context) {
 		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
-		String[] types = DataAccessControl.types(Permission.delete_all, credentials);
+		String[] types = DataAccessControl.types(credentials, Permission.delete_all);
 
 		if (Utils.isNullOrEmpty(types))
 			return JsonPayload.ok().build();

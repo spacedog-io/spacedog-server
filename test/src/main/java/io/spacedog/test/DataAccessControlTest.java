@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceTest;
 import io.spacedog.model.DataObject;
-import io.spacedog.model.InternalDataSettings;
+import io.spacedog.model.InternalDataAclSettings;
 import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.Permission;
 import io.spacedog.model.RolePermissions;
@@ -45,8 +45,8 @@ public class DataAccessControlTest extends SpaceTest {
 
 		// message schema does not contain any acl
 		// it means message schema has default acl
-		InternalDataSettings settings = superadmin.settings().get(InternalDataSettings.class);
-		assertEquals(acl, settings.acl.get(schema.name()));
+		assertEquals(acl, //
+				superadmin.settings().get(InternalDataAclSettings.class).get(schema.name()));
 
 		// in default acl, only users and admins can create objects
 		guest.post("/1/data/msge").bodyJson("t", "hello").go(403);
@@ -103,9 +103,9 @@ public class DataAccessControlTest extends SpaceTest {
 		superadmin.schema().set(schema);
 
 		// superadmin check schema acl are empty
-		InternalDataSettings settings = superadmin.settings().get(InternalDataSettings.class);
-		assertEquals(1, settings.acl.size());
-		assertTrue(settings.acl.get(schema.name()).isEmpty());
+		InternalDataAclSettings settings = superadmin.settings().get(InternalDataAclSettings.class);
+		assertEquals(1, settings.size());
+		assertTrue(settings.get(schema.name()).isEmpty());
 
 		// in empty acl, nobody can create a message but superadmins
 		guest.post("/1/data/msge").bodyJson("t", "hi").go(403);
@@ -157,9 +157,9 @@ public class DataAccessControlTest extends SpaceTest {
 		superadmin.schema().set(schema);
 
 		// check message schema acl are set
-		InternalDataSettings settings = superadmin.settings().get(InternalDataSettings.class);
-		assertEquals(1, settings.acl.size());
-		assertEquals(schema.acl(), settings.acl.get(schema.name()));
+		InternalDataAclSettings settings = superadmin.settings().get(InternalDataAclSettings.class);
+		assertEquals(1, settings.size());
+		assertEquals(schema.acl(), settings.get(schema.name()));
 
 		// only users (and superadmins) can create messages
 		guest.post("/1/data/msge").bodyJson("t", "hi").go(403);
@@ -293,15 +293,15 @@ public class DataAccessControlTest extends SpaceTest {
 		superadmin.schema().set(schema);
 
 		// check schema settings contains message schema acl
-		InternalDataSettings settings = superadmin.settings().get(InternalDataSettings.class);
-		assertEquals(schema.acl(), settings.acl.get(schema.name()));
+		InternalDataAclSettings settings = superadmin.settings().get(InternalDataAclSettings.class);
+		assertEquals(schema.acl(), settings.get(schema.name()));
 
 		// delete message schema
 		superadmin.schema().delete(schema);
 
 		// check schema settings does not contain
 		// message schema acl anymore
-		settings = superadmin.settings().get(InternalDataSettings.class);
-		assertNull(settings.acl.get(schema.name()));
+		settings = superadmin.settings().get(InternalDataAclSettings.class);
+		assertNull(settings.get(schema.name()));
 	}
 }

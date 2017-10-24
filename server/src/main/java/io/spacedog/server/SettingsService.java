@@ -56,7 +56,7 @@ public class SettingsService extends SpaceService {
 
 		if (!elastic().exists(settingsIndex()))
 			return JsonPayload.ok()//
-					.withFields("took", 0, "total", 0)//
+					.withFields("total", 0)//
 					.withResults(Json.array())//
 					.build();
 
@@ -91,7 +91,7 @@ public class SettingsService extends SpaceService {
 	@Get("/:id")
 	@Get("/:id/")
 	public Payload get(String id) {
-		checkIfAuthorizedToRead(id);
+		checkAuthorizedToRead(id);
 		Optional<ObjectNode> object = getAsNode(id);
 
 		if (object.isPresent())
@@ -108,8 +108,8 @@ public class SettingsService extends SpaceService {
 	@Put("/:id")
 	@Put("/:id/")
 	public Payload put(String id, String body) {
-		checkIfNotInternalSettings(id);
-		checkIfAuthorizedToUpdate(id);
+		checkNotInternalSettings(id);
+		checkAuthorizedToUpdate(id);
 		IndexResponse response = saveToElastic(id, body);
 		return ElasticPayload.saved("/1", response).build();
 	}
@@ -117,7 +117,8 @@ public class SettingsService extends SpaceService {
 	@Delete("/:id")
 	@Delete("/:id/")
 	public Payload delete(String id) {
-		checkIfAuthorizedToUpdate(id);
+		checkNotInternalSettings(id);
+		checkAuthorizedToUpdate(id);
 		elastic().delete(settingsIndex(), id, false, true);
 		return JsonPayload.ok().build();
 	}
@@ -125,7 +126,7 @@ public class SettingsService extends SpaceService {
 	@Get("/:id/:field")
 	@Get("/:id/:field/")
 	public Payload get(String id, String field) {
-		checkIfAuthorizedToRead(id);
+		checkAuthorizedToRead(id);
 		ObjectNode object = getAsNode(id)//
 				.orElseThrow(() -> Exceptions.notFound(TYPE, id));
 		JsonNode value = Json.get(object, field);
@@ -136,8 +137,8 @@ public class SettingsService extends SpaceService {
 	@Put("/:id/:field")
 	@Put("/:id/:field/")
 	public Payload put(String id, String field, String body) {
-		checkIfNotInternalSettings(id);
-		checkIfAuthorizedToUpdate(id);
+		checkNotInternalSettings(id);
+		checkAuthorizedToUpdate(id);
 		ObjectNode object = getAsNode(id).orElse(Json.object());
 		JsonNode value = Json.readNode(body);
 		Json.set(object, field, value);
@@ -149,8 +150,8 @@ public class SettingsService extends SpaceService {
 	@Delete("/:id/:field")
 	@Delete("/:id/:field/")
 	public Payload delete(String id, String field) {
-		checkIfNotInternalSettings(id);
-		checkIfAuthorizedToUpdate(id);
+		checkNotInternalSettings(id);
+		checkAuthorizedToUpdate(id);
 		ObjectNode object = getAsNode(id)//
 				.orElseThrow(() -> Exceptions.notFound(TYPE, id));
 		Json.remove(object, field);
@@ -230,7 +231,7 @@ public class SettingsService extends SpaceService {
 				settingsClass.getSimpleName());
 	}
 
-	private Credentials checkIfAuthorizedToRead(String settingsId) {
+	private Credentials checkAuthorizedToRead(String settingsId) {
 		Credentials credentials = SpaceContext.credentials();
 		if (!credentials.isAtLeastSuperAdmin())
 			credentials.checkRoles(getSettingsAcl(settingsId).read());
@@ -238,7 +239,7 @@ public class SettingsService extends SpaceService {
 		return credentials;
 	}
 
-	private Credentials checkIfAuthorizedToUpdate(String id) {
+	private Credentials checkAuthorizedToUpdate(String id) {
 		Credentials credentials = SpaceContext.credentials();
 		if (!credentials.isAtLeastSuperAdmin())
 			credentials.checkRoles(getSettingsAcl(id).update());
@@ -291,9 +292,9 @@ public class SettingsService extends SpaceService {
 		}
 	}
 
-	private void checkIfNotInternalSettings(String settingsId) {
+	private void checkNotInternalSettings(String settingsId) {
 		if (settingsId.toLowerCase().startsWith("internal"))
-			throw Exceptions.forbidden("internal settings [%s] not updatable", settingsId);
+			throw Exceptions.forbidden("direct update of internal settings forbidden");
 	}
 
 	//
