@@ -229,7 +229,7 @@ public class Start {
 
 		@Override
 		protected HttpServerWrapper createHttpServer(Handler httpHandler, WebSocketHandler webSocketHandler) {
-			return new SimpleServerWrapper(httpHandler, webSocketHandler);
+			return new SimpleServerWrapper(httpHandler, webSocketHandler, 12, 1, 1);
 		}
 
 		public Payload executeRequest(Request request, Response response) throws Exception {
