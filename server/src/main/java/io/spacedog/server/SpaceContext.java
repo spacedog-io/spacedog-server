@@ -79,8 +79,6 @@ public class SpaceContext {
 				try {
 					threadLocal.set(new SpaceContext(uri, context));
 					return nextFilter.get();
-					// } catch (Throwable t) {
-					// return toPayload(t);
 				} finally {
 					threadLocal.set(null);
 				}
@@ -90,12 +88,6 @@ public class SpaceContext {
 				return nextFilter.get();
 		};
 	}
-
-	// private static Payload toPayload(Throwable t) {
-	// ObjectNode node = Json8.object("success", false, "status", 400, "error", //
-	// Json8.object("message", t.getMessage()));
-	// return new Payload(Json7.JSON_CONTENT_UTF8, node, 400);
-	// }
 
 	public static SpaceContext get() {
 		SpaceContext context = threadLocal.get();
@@ -121,9 +113,10 @@ public class SpaceContext {
 	}
 
 	public static SpaceBackend backend() {
-		return threadLocal.get() == null //
+		SpaceContext context = threadLocal.get();
+		return context == null //
 				? Start.get().configuration().apiBackend()
-				: get().backend;
+				: context.backend;
 	}
 
 	public static String backendId() {
