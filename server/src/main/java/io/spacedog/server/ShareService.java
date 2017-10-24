@@ -9,8 +9,10 @@ import com.google.common.base.Strings;
 
 import io.spacedog.model.Permission;
 import io.spacedog.model.ShareSettings;
+import io.spacedog.model.ZipRequest;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.WebPath;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -53,6 +55,14 @@ public class ShareService extends S3Service {
 	public Payload deleteAll() {
 		checkPermission(Permission.delete_all);
 		return doDelete(SHARE_BUCKET_SUFFIX, WebPath.ROOT, false, false);
+	}
+
+	@Post("/_zip")
+	@Post("/_zip/")
+	public Payload postDownload(String body, Context context) {
+		checkPermission(Permission.read_all);
+		ZipRequest request = Json.toPojo(body, ZipRequest.class);
+		return doDownload(SHARE_BUCKET_SUFFIX, request, context);
 	}
 
 	@Get("/:id")

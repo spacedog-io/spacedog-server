@@ -4,7 +4,11 @@
 package io.spacedog.server;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.activation.MimetypesFileTypeMap;
 
@@ -25,7 +29,9 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.base.Strings;
+import com.google.common.io.ByteStreams;
 
+import io.spacedog.model.ZipRequest;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -34,6 +40,7 @@ import io.spacedog.utils.WebPath;
 import net.codestory.http.Context;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
+import net.codestory.http.payload.StreamingOutput;
 
 public class S3Service extends SpaceService {
 
@@ -71,16 +78,9 @@ public class S3Service extends SpaceService {
 		try {
 			if (withContent) {
 				s3Object = s3.getObject(bucketName, s3Path.toS3Key());
-
-				// S3Object instances need to be manually closed to release
-				// the underlying http connection. This will be done after
-				// the request payload is written to the requester. This
-				// should solve the aws connection famine.
-				closeThisS3ObjectAtTheEnd.set(s3Object);
-
 				metadata = s3Object.getObjectMetadata();
 				owner = getOrCheckOwnership(metadata, checkOwnership);
-				fileContent = s3Object.getObjectContent();
+				fileContent = new S3ObjectStreamingOutput(s3Object);
 			} else {
 				metadata = s3.getObjectMetadata(bucketName, s3Path.toS3Key());
 				owner = getOrCheckOwnership(metadata, checkOwnership);
@@ -104,19 +104,6 @@ public class S3Service extends SpaceService {
 					metadata.getContentDisposition());
 
 		return payload;
-	}
-
-	private static ThreadLocal<S3Object> closeThisS3ObjectAtTheEnd = new ThreadLocal<>();
-
-	public static void closeThisThreadS3Object() {
-		try {
-			S3Object s3Object = closeThisS3ObjectAtTheEnd.get();
-			if (s3Object != null)
-				s3Object.close();
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 
 	public Payload doList(String bucketSuffix, String rootUri, WebPath path, Context context) {
@@ -239,8 +226,7 @@ public class S3Service extends SpaceService {
 		ObjectMetadata metadata = new ObjectMetadata();
 		metadata.setContentType(contentType(fileName, context));
 		metadata.setContentLength(Long.valueOf(context.header("Content-Length")));
-		metadata.setContentDisposition(//
-				String.format("attachment; filename=\"%s\"", fileName));
+		metadata.setContentDisposition(contentDisposition(fileName));
 		metadata.addUserMetadata(OWNER_FIELD, credentials.id());
 
 		PutObjectResult putResult = s3.putObject(new PutObjectRequest(bucketName, //
@@ -261,6 +247,71 @@ public class S3Service extends SpaceService {
 		return payload.build();
 	}
 
+	public Payload doDownload(String bucketSuffix, ZipRequest request, Context context) {
+		request.checkValid();
+		return new Payload("application/octet-stream", //
+				new ZipStreamingOutput(bucketSuffix, request))//
+						.withHeader(SpaceHeaders.CONTENT_DISPOSITION, //
+								contentDisposition(request.fileName));
+	}
+
+	//
+	// Implementation
+	//
+
+	private class S3ObjectStreamingOutput implements StreamingOutput {
+
+		private S3Object s3Object;
+
+		public S3ObjectStreamingOutput(S3Object s3Object) {
+			this.s3Object = s3Object;
+		}
+
+		@Override
+		public void write(OutputStream output) throws IOException {
+			ByteStreams.copy(s3Object.getObjectContent(), output);
+			s3Object.close();
+		}
+
+	}
+
+	protected String contentDisposition(String fileName) {
+		return String.format("attachment; filename=\"%s\"", fileName);
+	}
+
+	private class ZipStreamingOutput implements StreamingOutput {
+
+		private String bucketSuffix;
+		private ZipRequest request;
+
+		public ZipStreamingOutput(String bucketSuffix, ZipRequest request) {
+			this.bucketSuffix = bucketSuffix;
+			this.request = request;
+		}
+
+		@Override
+		public void write(OutputStream output) throws IOException {
+			ZipOutputStream zip = new ZipOutputStream(output);
+			String backendId = SpaceContext.backendId();
+			for (String path : request.paths) {
+				WebPath webPath = WebPath.parse(path);
+				S3Object object = getS3Object(bucketSuffix, backendId, webPath);
+				zip.putNextEntry(new ZipEntry(webPath.last()));
+				ByteStreams.copy(object.getObjectContent(), zip);
+				object.close();
+				zip.flush();
+			}
+			zip.close();
+		}
+
+	}
+
+	private S3Object getS3Object(String bucketSuffix, String backendId, WebPath path) {
+		String bucketName = getBucketName(bucketSuffix);
+		WebPath s3Path = path.addFirst(backendId);
+		return s3.getObject(bucketName, s3Path.toS3Key());
+	}
+
 	private String contentType(String fileName, Context context) {
 		// TODO
 		// use the provided content-type if specific first
@@ -269,10 +320,6 @@ public class S3Service extends SpaceService {
 				? "application/octet-stream"
 				: typeMap.getContentType(fileName);
 	}
-
-	//
-	// Implementation
-	//
 
 	private String getOrCheckOwnership(ObjectMetadata metadata, boolean checkOwnership) {
 

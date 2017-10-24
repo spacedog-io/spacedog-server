@@ -1,5 +1,6 @@
 package io.spacedog.test.share;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Set;
 
@@ -8,6 +9,7 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.collect.Sets;
+import com.google.common.io.Files;
 import com.google.common.io.Resources;
 
 import io.spacedog.client.ShareEndpoint.Share;
@@ -19,6 +21,7 @@ import io.spacedog.http.SpaceTest;
 import io.spacedog.model.Permission;
 import io.spacedog.model.ShareSettings;
 import io.spacedog.utils.Credentials.Type;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceHeaders;
 
 public class ShareServiceTest extends SpaceTest {
@@ -322,6 +325,62 @@ public class ShareServiceTest extends SpaceTest {
 				.asString();
 
 		Assert.assertEquals(FILE_CONTENT, stringContent);
+	}
+
+	@Test
+	public void testDownloadManyShares() throws IOException {
+
+		// prepare
+		SpaceDog superadmin = resetTestBackend();
+
+		// prepare share settings
+		ShareSettings settings = new ShareSettings();
+		settings.sharePermissions.put("admin", Permission.read, Permission.create);
+		superadmin.settings().save(settings);
+
+		// share file with name that needs escaping
+		String path1 = superadmin.put("/1/share/toto.txt")//
+				.bodyBytes("toto".getBytes())//
+				.go(200)//
+				.getString("path");
+
+		superadmin.get("/1/share/" + path1).go(200);
+
+		String path2 = superadmin.put("/1/share/titi.txt")//
+				.bodyBytes("titi".getBytes())//
+				.go(200)//
+				.getString("path");
+
+		superadmin.get("/1/share/" + path2).go(200);
+
+		String path3 = superadmin.put("/1/share/tweeter.png")//
+				.bodyResource(getClass(), "tweeter.png")//
+				.go(200)//
+				.getString("path");
+
+		superadmin.get("/1/share/" + path3).go(200);
+
+		// superadmin needs read_all permission to downloads many shares
+		superadmin.post("/1/share/_zip")//
+				.bodyJson("fileName", "download.zip", //
+						"paths", Json.array(path1, path2, path3))//
+				.go(403);
+
+		// superadmin updates share settings to allow admin
+		// to download multiple shares
+		settings.sharePermissions.put("admin", Permission.read_all, Permission.create);
+		superadmin.settings().save(settings);
+
+		// superadmin downloads zip containing specified shares
+		byte[] bytes = superadmin.post("/1/share/_zip")//
+				.bodyJson("fileName", "download.zip", //
+						"paths", Json.array(path1, path2, path3))//
+				.go(200)//
+				.assertHeaderContains("attachment; filename=\"download.zip\"", //
+						SpaceHeaders.CONTENT_DISPOSITION)//
+				.asBytes();
+
+		Files.write(bytes, new File(System.getProperty("user.home"), "download.zip"));
 	}
 
 }
