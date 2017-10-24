@@ -9,7 +9,9 @@ import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceTest;
+import io.spacedog.model.Permission;
 import io.spacedog.model.Schema;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.SchemaBuilder;
 
 public class SchemaServiceTest extends SpaceTest {
@@ -155,4 +157,31 @@ public class SchemaServiceTest extends SpaceTest {
 		superadmin.put("/1/schema/settings").go(400);
 	}
 
+	@Test
+	public void testStashField() {
+
+		// prepare
+		prepareTest();
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog guest = SpaceDog.backend(superadmin);
+
+		// superadmin creates document schema
+		Schema schema = Schema.builder("document").stash("data")//
+				.acl("all", Permission.create).build();
+		superadmin.schema().set(schema);
+
+		// guest saves a first document with data as an object
+		guest.data().save("document", Json.object("data", //
+				Json.object("a", "aaa", "b", Json.object("b", "bbb"))));
+
+		// guest saves a second document with data as an array
+		guest.data().save("document", Json.object("data", //
+				Json.array("a", Json.array(1, 2, 3))));
+
+		// guest saves a thirst document with data as a boolean
+		guest.data().save("document", Json.object("data", true));
+
+		// document schema contains no fields but "data" stash field
+		guest.post("/1/data/document").bodyJson("a", "aaa").go(400);
+	}
 }
