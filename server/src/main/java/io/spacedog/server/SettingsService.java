@@ -110,7 +110,7 @@ public class SettingsService extends SpaceService {
 	public Payload put(String id, String body) {
 		checkNotInternalSettings(id);
 		checkAuthorizedToUpdate(id);
-		IndexResponse response = saveToElastic(id, body);
+		IndexResponse response = saveAsString(id, body);
 		return ElasticPayload.saved("/1", response).build();
 	}
 
@@ -143,7 +143,7 @@ public class SettingsService extends SpaceService {
 		JsonNode value = Json.readNode(body);
 		Json.set(object, field, value);
 		String source = object.toString();
-		IndexResponse response = saveToElastic(id, source);
+		IndexResponse response = saveAsString(id, source);
 		return ElasticPayload.saved("/1", response).build();
 	}
 
@@ -155,7 +155,7 @@ public class SettingsService extends SpaceService {
 		ObjectNode object = getAsNode(id)//
 				.orElseThrow(() -> Exceptions.notFound(TYPE, id));
 		Json.remove(object, field);
-		IndexResponse response = setAsNode(id, object);
+		IndexResponse response = saveAsString(id, object.toString());
 		return ElasticPayload.saved("/1", response).build();
 	}
 
@@ -164,34 +164,34 @@ public class SettingsService extends SpaceService {
 	//
 
 	public <K extends Settings> K getAsObject(Class<K> settingsClass) {
-		String id = SettingsBase.id(settingsClass);
-		@SuppressWarnings("unchecked")
-		K settings = (K) SpaceContext.getSettings(id);
+		K settings = SpaceContext.getSettings(settingsClass);
 		if (settings != null)
 			return settings;
 
-		try {
-			String source = loadFromElastic(id);
-			settings = Json.toPojo(source, settingsClass);
+		String id = SettingsBase.id(settingsClass);
 
-		} catch (NotFoundException nfe) {
-			settings = instantiateDefaultAsObject(settingsClass);
+		if (elastic().exists(settingsIndex())) {
+			GetResponse response = elastic().get(settingsIndex(), id);
+			if (response.isExists()) {
+				String source = response.getSourceAsString();
+				settings = Json.toPojo(source, settingsClass);
+				settings.version(response.getVersion());
+			}
 		}
 
-		if (settings != null)
-			SpaceContext.setSettings(id, settings);
+		if (settings == null)
+			settings = instantiateDefaultAsObject(settingsClass);
 
+		SpaceContext.setSettings(settings);
 		return settings;
 	}
 
-	public Optional<ObjectNode> getAsNode(String id) {
-		try {
-			String source = loadFromElastic(id);
-			return Optional.of(Json.readObject(source));
-
-		} catch (NotFoundException nfe) {
-			return Optional.empty();
-		}
+	public <K extends Settings> IndexResponse saveAsObject(K settings) {
+		makeSureIndexIsCreated();
+		return elastic().prepareIndex(settingsIndex(), settings.id())//
+				.setSource(Json.toString(settings))//
+				.setVersion(settings.version())//
+				.get();
 	}
 
 	public <K extends Settings> void registerSettings(Class<K> settingsClass) {
@@ -201,20 +201,31 @@ public class SettingsService extends SpaceService {
 		registeredSettingsClasses.put(SettingsBase.id(settingsClass), settingsClass);
 	}
 
-	public <T extends Settings> IndexResponse setAsObject(T settings) {
-		return saveToElastic(settings.id(), Json.toString(settings));
-	}
-
-	public IndexResponse setAsNode(String id, ObjectNode settings) {
-		return saveToElastic(id, settings.toString());
-	}
-
 	//
 	// implementation
 	//
 
 	private static Index settingsIndex() {
 		return Index.toIndex(TYPE);
+	}
+
+	private Optional<ObjectNode> getAsNode(String id) {
+		if (elastic().exists(settingsIndex())) {
+			GetResponse response = elastic().get(settingsIndex(), id);
+
+			if (response.isExists()) {
+				String source = response.getSourceAsString();
+				return Optional.of(Json.readObject(source));
+			}
+		}
+		return Optional.empty();
+	}
+
+	private IndexResponse saveAsString(String id, String source) {
+		checkSettingsAreValid(id, source);
+		makeSureIndexIsCreated();
+		return elastic().prepareIndex(settingsIndex(), id)//
+				.setSource(source).get();
 	}
 
 	private ObjectNode instantiateDefaultAsNode(String id) {
@@ -253,22 +264,6 @@ public class SettingsService extends SpaceService {
 		} catch (NotFoundException ignore) {
 		}
 		return SettingsAcl.defaultAcl();
-	}
-
-	private String loadFromElastic(String id) {
-		if (elastic().exists(settingsIndex())) {
-			GetResponse response = elastic().get(settingsIndex(), id);
-			if (response.isExists())
-				return response.getSourceAsString();
-		}
-		throw Exceptions.notFound(TYPE, id);
-	}
-
-	private IndexResponse saveToElastic(String id, String source) {
-		checkSettingsAreValid(id, source);
-		makeSureIndexIsCreated();
-		return elastic().prepareIndex(settingsIndex(), id)//
-				.setSource(source).get();
 	}
 
 	private void checkSettingsAreValid(String id, String body) {

@@ -10,9 +10,8 @@ import com.google.common.collect.Sets;
 
 import io.spacedog.utils.Credentials;
 
+@SuppressWarnings("serial")
 public class ObjectRolePermissions extends HashMap<String, RolePermissions> {
-
-	private static final long serialVersionUID = 4064111112532790399L;
 
 	public boolean check(String objectId, String role, Permission... permissions) {
 		RolePermissions roles = get(objectId);

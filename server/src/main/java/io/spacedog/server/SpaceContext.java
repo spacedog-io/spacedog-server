@@ -32,7 +32,7 @@ public class SpaceContext {
 	private Credentials credentials;
 	private boolean authorizationChecked;
 
-	private Map<String, Settings> settings;
+	private Map<Class<?>, Settings> settings;
 
 	private SpaceContext(String uri, Context context) {
 		this.uri = uri;
@@ -128,17 +128,18 @@ public class SpaceContext {
 		return SpaceHeaders.isJsonContent(contentType);
 	}
 
-	public static Settings getSettings(String settingsId) {
+	@SuppressWarnings("unchecked")
+	public static <T extends Settings> T getSettings(Class<T> settingsId) {
 		SpaceContext context = get();
 		return context.settings == null ? null //
-				: context.settings.get(settingsId);
+				: (T) context.settings.get(settingsId);
 	}
 
-	public static void setSettings(String settingsId, Settings settings) {
+	public static <T extends Settings> void setSettings(Settings settings) {
 		SpaceContext context = get();
 		if (context.settings == null)
 			context.settings = Maps.newHashMap();
-		context.settings.put(settingsId, settings);
+		context.settings.put(settings.getClass(), settings);
 	}
 
 	//

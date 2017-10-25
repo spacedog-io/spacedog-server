@@ -17,36 +17,35 @@ public class DataAccessControl {
 	}
 
 	public static boolean check(Credentials credentials, String type, Permission... permissions) {
-		return dataAclSetting()//
+		return getDataAclSettings()//
 				.check(type, credentials, permissions);
 	}
 
 	public static String[] types(Credentials credentials, Permission permission) {
-		return dataAclSetting().accessList(credentials, permission);
+		return getDataAclSettings().accessList(credentials, permission);
 	}
 
 	public static void save(String type, RolePermissions schemaAcl) {
+		InternalDataAclSettings settings = getDataAclSettings();
 		if (schemaAcl == null)
-			schemaAcl = new RolePermissions();
-
-		InternalDataAclSettings settings = dataAclSetting();
-		settings.put(type, schemaAcl);
-		dataAclSetting(settings);
+			settings.remove(type);
+		else
+			settings.put(type, schemaAcl);
+		saveDataAclSetting(settings);
 	}
 
 	public static void delete(String type) {
-
-		InternalDataAclSettings settings = dataAclSetting();
+		InternalDataAclSettings settings = getDataAclSettings();
 		settings.remove(type);
-		dataAclSetting(settings);
+		saveDataAclSetting(settings);
 	}
 
-	private static InternalDataAclSettings dataAclSetting() {
+	private static InternalDataAclSettings getDataAclSettings() {
 		return SettingsService.get().getAsObject(InternalDataAclSettings.class);
 	}
 
-	private static IndexResponse dataAclSetting(InternalDataAclSettings settings) {
-		return SettingsService.get().setAsObject(settings);
+	private static IndexResponse saveDataAclSetting(InternalDataAclSettings settings) {
+		return SettingsService.get().saveAsObject(settings);
 	}
 
 }

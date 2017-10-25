@@ -3,14 +3,27 @@
  */
 package io.spacedog.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+@SuppressWarnings("serial")
 public class InternalDataAclSettings extends ObjectRolePermissions implements Settings {
 
-	private static final long serialVersionUID = -4957218125669892886L;
-
-	public static final String ID = "internaldataacl";
+	private long version = MATCH_ANY_VERSIONS;
 
 	@Override
+	@JsonIgnore
+	public long version() {
+		return version;
+	}
+
+	@Override
+	public void version(long version) {
+		this.version = version;
+	}
+
+	@Override
+	@JsonIgnore
 	public String id() {
-		return ID;
+		return SettingsBase.id(getClass());
 	}
 }
