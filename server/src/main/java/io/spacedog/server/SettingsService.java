@@ -14,14 +14,14 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
 
+import io.spacedog.model.Permission;
+import io.spacedog.model.RolePermissions;
 import io.spacedog.model.Settings;
+import io.spacedog.model.SettingsAclSettings;
 import io.spacedog.model.SettingsBase;
-import io.spacedog.model.SettingsSettings;
-import io.spacedog.model.SettingsSettings.SettingsAcl;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.NotFoundException;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -38,6 +38,7 @@ public class SettingsService extends SpaceService {
 	//
 
 	public static final String TYPE = "settings";
+	private static final RolePermissions emptyPermissions = new RolePermissions();
 
 	//
 	// Fields
@@ -91,7 +92,7 @@ public class SettingsService extends SpaceService {
 	@Get("/:id")
 	@Get("/:id/")
 	public Payload get(String id) {
-		checkAuthorizedToRead(id);
+		checkAuthorizedTo(id, Permission.read);
 		Optional<ObjectNode> object = getAsNode(id);
 
 		if (object.isPresent())
@@ -109,7 +110,7 @@ public class SettingsService extends SpaceService {
 	@Put("/:id/")
 	public Payload put(String id, String body) {
 		checkNotInternalSettings(id);
-		checkAuthorizedToUpdate(id);
+		checkAuthorizedTo(id, Permission.update);
 		IndexResponse response = saveAsString(id, body);
 		return ElasticPayload.saved("/1", response).build();
 	}
@@ -118,7 +119,7 @@ public class SettingsService extends SpaceService {
 	@Delete("/:id/")
 	public Payload delete(String id) {
 		checkNotInternalSettings(id);
-		checkAuthorizedToUpdate(id);
+		checkAuthorizedTo(id, Permission.update);
 		elastic().delete(settingsIndex(), id, false, true);
 		return JsonPayload.ok().build();
 	}
@@ -126,7 +127,7 @@ public class SettingsService extends SpaceService {
 	@Get("/:id/:field")
 	@Get("/:id/:field/")
 	public Payload get(String id, String field) {
-		checkAuthorizedToRead(id);
+		checkAuthorizedTo(id, Permission.read);
 		ObjectNode object = getAsNode(id)//
 				.orElseThrow(() -> Exceptions.notFound(TYPE, id));
 		JsonNode value = Json.get(object, field);
@@ -138,7 +139,7 @@ public class SettingsService extends SpaceService {
 	@Put("/:id/:field/")
 	public Payload put(String id, String field, String body) {
 		checkNotInternalSettings(id);
-		checkAuthorizedToUpdate(id);
+		checkAuthorizedTo(id, Permission.update);
 		ObjectNode object = getAsNode(id).orElse(Json.object());
 		JsonNode value = Json.readNode(body);
 		Json.set(object, field, value);
@@ -151,7 +152,7 @@ public class SettingsService extends SpaceService {
 	@Delete("/:id/:field/")
 	public Payload delete(String id, String field) {
 		checkNotInternalSettings(id);
-		checkAuthorizedToUpdate(id);
+		checkAuthorizedTo(id, Permission.update);
 		ObjectNode object = getAsNode(id)//
 				.orElseThrow(() -> Exceptions.notFound(TYPE, id));
 		Json.remove(object, field);
@@ -242,28 +243,20 @@ public class SettingsService extends SpaceService {
 				settingsClass.getSimpleName());
 	}
 
-	private Credentials checkAuthorizedToRead(String settingsId) {
+	private Credentials checkAuthorizedTo(String settingsId, Permission permission) {
 		Credentials credentials = SpaceContext.credentials();
-		if (!credentials.isAtLeastSuperAdmin())
-			credentials.checkRoles(getSettingsAcl(settingsId).read());
-
-		return credentials;
-	}
-
-	private Credentials checkAuthorizedToUpdate(String id) {
-		Credentials credentials = SpaceContext.credentials();
-		if (!credentials.isAtLeastSuperAdmin())
-			credentials.checkRoles(getSettingsAcl(id).update());
-
-		return credentials;
-	}
-
-	private SettingsAcl getSettingsAcl(String settingsId) {
-		try {
-			return getAsObject(SettingsSettings.class).get(settingsId);
-		} catch (NotFoundException ignore) {
+		if (!credentials.isAtLeastSuperAdmin()) {
+			RolePermissions permissions = getSettingsAcl(settingsId);
+			if (!permissions.check(credentials, permission))
+				throw Exceptions.insufficientCredentials(credentials);
 		}
-		return SettingsAcl.defaultAcl();
+		return credentials;
+	}
+
+	private RolePermissions getSettingsAcl(String settingsId) {
+		RolePermissions permissions = getAsObject(SettingsAclSettings.class)//
+				.get(settingsId);
+		return permissions == null ? emptyPermissions : permissions;
 	}
 
 	private void checkSettingsAreValid(String id, String body) {
@@ -303,6 +296,6 @@ public class SettingsService extends SpaceService {
 	}
 
 	private SettingsService() {
-		registerSettings(SettingsSettings.class);
+		registerSettings(SettingsAclSettings.class);
 	}
 }

@@ -13,6 +13,16 @@ import io.spacedog.utils.Credentials;
 @SuppressWarnings("serial")
 public class ObjectRolePermissions extends HashMap<String, RolePermissions> {
 
+	public ObjectRolePermissions put(String objectId, String role, Permission... permissions) {
+		RolePermissions rolePermissions = get(objectId);
+		if (rolePermissions == null) {
+			rolePermissions = new RolePermissions();
+			super.put(objectId, rolePermissions);
+		}
+		rolePermissions.put(role, permissions);
+		return this;
+	}
+
 	public boolean check(String objectId, String role, Permission... permissions) {
 		RolePermissions roles = get(objectId);
 		return roles == null ? false : roles.check(role, permissions);

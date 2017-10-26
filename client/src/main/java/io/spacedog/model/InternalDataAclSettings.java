@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @SuppressWarnings("serial")
 public class InternalDataAclSettings extends ObjectRolePermissions implements Settings {
 
+	@JsonIgnore
 	private long version = MATCH_ANY_VERSIONS;
 
 	@Override

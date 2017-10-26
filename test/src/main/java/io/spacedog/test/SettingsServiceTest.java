@@ -12,8 +12,8 @@ import com.fasterxml.jackson.databind.node.TextNode;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceTest;
-import io.spacedog.model.SettingsSettings;
-import io.spacedog.model.SettingsSettings.SettingsAcl;
+import io.spacedog.model.Permission;
+import io.spacedog.model.SettingsAclSettings;
 import io.spacedog.utils.Json;
 
 public class SettingsServiceTest extends SpaceTest {
@@ -82,39 +82,35 @@ public class SettingsServiceTest extends SpaceTest {
 		superadmin.get("/1/data").refresh().go(200)//
 				.assertSizeEquals(0, "results");
 
-		// super admin authorizes role 'key' to get/read animals settings
-		// and authorizes role 'user' to the put/update/delete animals settings
-		SettingsAcl acl = new SettingsAcl();
-		acl.read("all");
-		acl.update("user");
-		SettingsSettings settings = new SettingsSettings();
-		settings.put("animals", acl);
+		// superadmin authorizes all to get/read animals settings
+		// and authorizes role 'user' to put/update/delete animals settings
+		SettingsAclSettings settings = new SettingsAclSettings();
+		settings.put("animals", "all", Permission.read);
+		settings.put("animals", "user", Permission.update);
 		superadmin.settings().save(settings);
 
-		// guests can get the animals settings
-		// users are still forbidden
-		// superadmins are always authorized
+		// all can get the animals settings
 		guest.get("/1/settings/animals").go(200).assertEquals(animals);
 		vince.get("/1/settings/animals").go(200).assertEquals(animals);
 		superadmin.get("/1/settings/animals").go(200).assertEquals(animals);
 
-		// users can delete the animals settings
+		// users can delete animals settings
 		// guests are still forbidden
-		// super admins are always authorized
+		// superadmins are always authorized
 		guest.delete("/1/settings/animals").bodyJson(animals).go(403);
 		vince.delete("/1/settings/animals").bodyJson(animals).go(200);
 
-		// super admin can delete settings settings
+		// superadmin can delete settings acl settings
 		// to get back to previous configuration
-		superadmin.settings().delete(SettingsSettings.class);
+		superadmin.settings().delete(SettingsAclSettings.class);
 
 		// users can not update animals settings anymore
-		// but super admins can
+		// but superadmins can
 		vince.put("/1/settings/animals").bodyJson(animals).go(403);
 		superadmin.put("/1/settings/animals").bodyJson(animals).go(201);
 
 		// guests can not read animals settings anymore
-		// but super admins can
+		// but superadmins can
 		guest.get("/1/settings/animals").backend(superadmin).go(403);
 		superadmin.get("/1/settings/animals").go(200).assertEquals(animals);
 	}
@@ -172,17 +168,17 @@ public class SettingsServiceTest extends SpaceTest {
 		guest.put("/1/settings/db/type").go(403);
 		vince.put("/1/settings/db/type").go(403);
 
-		// test creates db settings with version field
+		// superadmin creates db settings with version field
 		superadmin.settings().save("db", "type", TextNode.valueOf("mysql"));
 
-		// test sets db settings version
+		// superadmin sets db settings version
 		superadmin.settings().save("db", "version", LongNode.valueOf(12));
 
-		// test sets db settings credentials
+		// superadmin sets db settings credentials
 		superadmin.settings().save("db", "credentials", //
 				Json.object("username", "tiger", "password", "miaou"));
 
-		// test checks settings are correct
+		// superadmin checks settings are correct
 		ObjectNode settings = superadmin.settings().get("db");
 		assertEquals(Json.object("type", "mysql", "version", 12, "credentials",
 				Json.object("username", "tiger", "password", "miaou")), settings);
@@ -191,25 +187,25 @@ public class SettingsServiceTest extends SpaceTest {
 		guest.get("/1/settings/db/type").go(403);
 		vince.get("/1/settings/db/type").go(403);
 
-		// test gets each field
+		// superadmin gets each field
 		assertEquals("mysql", superadmin.settings().get("db", "type").asText());
 		assertEquals(12, superadmin.settings().get("db", "version").asInt());
 		assertEquals(Json.object("username", "tiger", "password", "miaou"), //
 				superadmin.settings().get("db", "credentials"));
 
-		// test gets an unknown field of db settings
+		// superadmin gets an unknown field of db settings
 		assertEquals(NullNode.getInstance(), superadmin.settings().get("db", "XXX"));
 
-		// test gets an unknown field of an unknown settings
+		// superadmin gets an unknown field of an unknown settings
 		superadmin.get("/1/settings/XXX/YYY").go(404);
 
-		// test updates each field
+		// superadmin updates each field
 		superadmin.settings().save("db", "type", TextNode.valueOf("postgres"));
 		superadmin.settings().save("db", "version", LongNode.valueOf(13));
 		superadmin.settings().save("db", "credentials", //
 				Json.object("username", "lion", "password", "arf"));
 
-		// test checks settings are correct
+		// superadmin checks settings are correct
 		settings = superadmin.settings().get("db");
 		assertEquals(Json.object("type", "postgres", "version", 13, "credentials",
 				Json.object("username", "lion", "password", "arf")), settings);
@@ -218,13 +214,13 @@ public class SettingsServiceTest extends SpaceTest {
 		guest.delete("/1/settings/db/type").go(403);
 		vince.delete("/1/settings/db/type").go(403);
 
-		// test deletes version
+		// superadmin deletes version
 		superadmin.settings().delete("db", "version");
 
-		// test nulls credentials
+		// superadmin nulls credentials
 		superadmin.settings().save("db", "credentials", NullNode.getInstance());
 
-		// test checks settings are correct
+		// superadmin checks settings are correct
 		settings = superadmin.settings().get("db");
 		assertEquals(Json.object("type", "postgres", "credentials", null), settings);
 	}
