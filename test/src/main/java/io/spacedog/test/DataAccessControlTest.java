@@ -104,7 +104,8 @@ public class DataAccessControlTest extends SpaceTest {
 
 		// superadmin check schema acl are empty
 		InternalDataAclSettings settings = superadmin.settings().get(InternalDataAclSettings.class);
-		assertEquals(0, settings.size());
+		assertEquals(1, settings.size());
+		assertTrue(settings.get(schema.name()).isEmpty());
 
 		// in empty acl, nobody can create a message but superadmins
 		guest.post("/1/data/msge").bodyJson("t", "hi").go(403);
