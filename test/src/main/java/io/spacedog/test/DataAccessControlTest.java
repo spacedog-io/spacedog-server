@@ -105,7 +105,6 @@ public class DataAccessControlTest extends SpaceTest {
 		// superadmin check schema acl are empty
 		InternalDataAclSettings settings = superadmin.settings().get(InternalDataAclSettings.class);
 		assertEquals(0, settings.size());
-		assertTrue(settings.get(schema.name()).isEmpty());
 
 		// in empty acl, nobody can create a message but superadmins
 		guest.post("/1/data/msge").bodyJson("t", "hi").go(403);
@@ -222,13 +221,13 @@ public class DataAccessControlTest extends SpaceTest {
 		// set message schema with custom acl settings
 		Schema schema = Schema.builder("msge").text("t").build();
 		schema.acl("all", Permission.create);
-		schema.acl("user", Permission.readMyGroup);
+		schema.acl("user", Permission.readGroup, Permission.updateGroup, Permission.deleteGroup);
 		superadmin.schema().set(schema);
 
 		// only users (and superadmins) can create messages
-		guest.data().save("msge", "guest", Json.object("t", "guest"));
-		vince.data().save("msge", "vince", Json.object("t", "vince"));
-		fred.data().save("msge", "fred", Json.object("t", "fred"));
+		guest.data().save("msge", "guest", msge("guest"));
+		vince.data().save("msge", "vince", msge("vince"));
+		fred.data().save("msge", "fred", msge("fred"));
 
 		// guest don't have read permission even on their own objects
 		guest.get("/1/data/msge/guest").go(403);
@@ -239,8 +238,8 @@ public class DataAccessControlTest extends SpaceTest {
 		fred.data().get("msge", "fred");
 
 		// nath has read access on fred's objects
-		// since they shre the same group
-		// and users have 'readMyGroup" permission
+		// since they share the same group
+		// and users have 'readGroup" permission
 		nath.data().get("msge", "fred");
 
 		// vince does not have read access to fred's objects
@@ -250,6 +249,51 @@ public class DataAccessControlTest extends SpaceTest {
 		// nath does not have read access to vince's objects
 		// since not in the same group
 		nath.get("/1/data/msge/vince").go(403);
+
+		// vince and fred have update access on their own objects
+		// the one's they have created
+		vince.data().save("msge", "vince", msge("vince2"));
+		fred.data().save("msge", "fred", msge("fred2"));
+
+		// nath can still read fred's message
+		assertEquals("fred2", msge(nath.data().get("msge", "fred")));
+
+		// nath has update access on fred's objects
+		// since they share the same group
+		// and users have 'updateGroup" permission
+		fred.data().save("msge", "fred", Json.object("t", "fred3"));
+
+		// fred can still read his message modified by nath
+		assertEquals("fred3", msge(fred.data().get("msge", "fred")));
+
+		// vince does not have update access to fred's objects
+		// since not in the same group
+		vince.put("/1/data/msge/fred").bodyJson(msge("XXX")).go(403);
+
+		// nath does not have update access to vince's objects
+		// since not in the same group
+		nath.put("/1/data/msge/vince").bodyJson(msge("XXX")).go(403);
+
+		// vince does not have delete access to fred's objects
+		// since not in the same group
+		vince.delete("/1/data/msge/fred").go(403);
+
+		// nath does not have update access to vince's objects
+		// since not in the same group
+		nath.delete("/1/data/msge/vince").go(403);
+
+		// nath has delete access on fred's objects
+		// since they share the same group
+		// and users have 'deleteGroup" permission
+		nath.data().delete("msge", "fred");
+	}
+
+	private static ObjectNode msge(String text) {
+		return Json.object("t", text);
+	}
+
+	private static String msge(DataObject<ObjectNode> object) {
+		return object.source().get("t").asText();
 	}
 
 	@Test

@@ -4,6 +4,7 @@
 package io.spacedog.server;
 
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.lucene.uid.Versions;
@@ -82,16 +83,17 @@ public class DataService extends SpaceService {
 			return doDeleteById(type, id);
 
 		if (DataAccessControl.check(credentials, type, Permission.deleteMine)) {
-			Optional<DataObject<MetadataBase>> metadata = DataStore.get().getMetadata(type, id);
-
-			if (!metadata.isPresent())
-				throw Exceptions.notFound(type, id);
-
-			if (credentials.id().equals(metadata.get().owner()))
-				return doDeleteById(type, id);
-
-			throw Exceptions.forbidden("not the owner of object [%s][%s]", type, id);
+			DataObject<MetadataBase> metadata = getMetadataOrThrow(type, id);
+			checkOwner(credentials, metadata);
+			return doDeleteById(type, id);
 		}
+
+		if (DataAccessControl.check(credentials, type, Permission.deleteGroup)) {
+			DataObject<MetadataBase> metadata = getMetadataOrThrow(type, id);
+			checkGroup(credentials, metadata);
+			return doDeleteById(type, id);
+		}
+
 		throw Exceptions.forbidden("forbidden to delete [%s] objects", type);
 	}
 
@@ -124,29 +126,22 @@ public class DataService extends SpaceService {
 	//
 
 	protected DataObject<ObjectNode> doGet(String type, String id) {
-
 		Credentials credentials = SpaceContext.credentials();
+		Supplier<DataObject<ObjectNode>> supplier = () -> DataStore.get().getObject(//
+				new JsonDataObject().type(type).id(id));
+
 		if (DataAccessControl.check(credentials, type, Permission.read, Permission.search))
-			return DataStore.get().getObject(new JsonDataObject().type(type).id(id));
+			return supplier.get();
 
-		if (DataAccessControl.check(credentials, type, Permission.readMine)) {
-			DataObject<ObjectNode> object = DataStore.get().getObject(//
-					new JsonDataObject().type(type).id(id));
-
-			if (!credentials.id().equals(object.owner()))
-				throw Exceptions.forbidden("not owner of [%s][%s]", type, id);
-
+		else if (DataAccessControl.check(credentials, type, Permission.readMine)) {
+			DataObject<ObjectNode> object = supplier.get();
+			checkOwner(credentials, object);
 			return object;
 		}
 
-		if (DataAccessControl.check(credentials, type, Permission.readMyGroup)) {
-			DataObject<ObjectNode> object = DataStore.get().getObject(//
-					new JsonDataObject().type(type).id(id));
-
-			if (Strings.isNullOrEmpty(credentials.group()) //
-					|| !credentials.group().equals(object.group()))
-				throw Exceptions.forbidden("not in the same group than [%s][%s]", type, id);
-
+		else if (DataAccessControl.check(credentials, type, Permission.readGroup)) {
+			DataObject<ObjectNode> object = supplier.get();
+			checkGroup(credentials, object);
 			return object;
 		}
 
@@ -160,7 +155,7 @@ public class DataService extends SpaceService {
 		if (metaOpt.isPresent()) {
 			DataObject<MetadataBase> metadata = metaOpt.get();
 			Credentials credentials = SpaceContext.credentials();
-			checkPutPermissions(metadata, credentials);
+			checkPutPermissions(credentials, metadata);
 
 			// avoid any update on createdAt field
 			object.createdAt(metadata.createdAt());
@@ -195,20 +190,40 @@ public class DataService extends SpaceService {
 		return JsonPayload.ok().build();
 	}
 
-	public void checkPutPermissions(DataObject<MetadataBase> metadata, Credentials credentials) {
+	public void checkPutPermissions(Credentials credentials, DataObject<MetadataBase> metadata) {
 
 		if (DataAccessControl.check(credentials, metadata.type(), Permission.update))
 			return;
 
 		if (DataAccessControl.check(credentials, metadata.type(), Permission.updateMine)) {
-
-			if (credentials.id().equals(metadata.owner()))
-				return;
-
-			throw Exceptions.forbidden("not the owner of [%s][%s] object", //
-					metadata.type(), metadata.id());
+			checkOwner(credentials, metadata);
+			return;
 		}
+
+		if (DataAccessControl.check(credentials, metadata.type(), Permission.updateGroup)) {
+			checkGroup(credentials, metadata);
+			return;
+		}
+
 		throw Exceptions.forbidden("forbidden to update [%s] objects", metadata.type());
+	}
+
+	private void checkGroup(Credentials credentials, DataObject<?> object) {
+		if (Strings.isNullOrEmpty(credentials.group()) //
+				|| !credentials.group().equals(object.group()))
+			throw Exceptions.forbidden("not in the same group than [%s][%s] object", //
+					object.type(), object.id());
+	}
+
+	private void checkOwner(Credentials credentials, DataObject<?> object) {
+		if (!credentials.id().equals(object.owner()))
+			throw Exceptions.forbidden("not the owner of [%s][%s] object", //
+					object.type(), object.id());
+	}
+
+	private DataObject<MetadataBase> getMetadataOrThrow(String type, String id) {
+		return DataStore.get().getMetadata(type, id)//
+				.orElseThrow(() -> Exceptions.notFound(type, id));
 	}
 
 	//

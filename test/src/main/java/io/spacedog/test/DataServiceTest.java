@@ -57,7 +57,7 @@ public class DataServiceTest extends SpaceTest {
 		DataObject<ObjectNode> car1 = vince.data().get("car", carDO.id());
 
 		assertEquals(vince.id(), car1.owner());
-		assertNull(car1.group());
+		assertNotNull(car1.group());
 		DateTime createdAt = assertDateIsRecent(car1.createdAt());
 		DateTime updatedAt = assertDateIsRecent(car1.updatedAt());
 		assertEquals(createdAt, updatedAt);
@@ -72,7 +72,7 @@ public class DataServiceTest extends SpaceTest {
 
 		DataObject<ObjectNode> car3 = vince.data().get("car", carDO.id());
 		assertEquals(vince.id(), car3.owner());
-		assertNull(car3.group());
+		assertNotNull(car3.group());
 		assertEquals(createdAt, car3.createdAt());
 
 		updatedAt = assertDateIsRecent(car3.updatedAt());
@@ -121,7 +121,7 @@ public class DataServiceTest extends SpaceTest {
 		// find by id
 		DataObject<ObjectNode> carbis = vince.data().get("car", id);
 		assertEquals(vince.id(), carbis.owner());
-		assertEquals(null, carbis.group());
+		assertNotNull(carbis.group());
 		assertNotNull(carbis.createdAt());
 		assertSourceAlmostEquals(car, carbis.source());
 

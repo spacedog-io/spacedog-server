@@ -157,7 +157,7 @@ public class DataServiceTest2 extends SpaceTest {
 		DataObject<Sale> saleDO3 = fred.data().fetch(new SaleDataObject().id(saleDO2.id()));
 
 		assertEquals(fred.id(), saleDO3.owner());
-		assertNull(saleDO3.group());
+		assertNotNull(saleDO3.group());
 		assertEquals(1, saleDO3.version());
 		assertEquals("sale", saleDO3.type());
 		assertEquals(saleDO2.id(), saleDO3.id());
@@ -216,7 +216,7 @@ public class DataServiceTest2 extends SpaceTest {
 		// check update is correct
 		DataObject<Sale> saleDO6 = fred.data().fetch(new SaleDataObject().id(saleDO2.id()));
 		assertEquals(fred.id(), saleDO6.owner());
-		assertNull(saleDO6.group());
+		assertNotNull(saleDO6.group());
 		// assertEquals(sale2.source().meta().createdAt,
 		// sale6.source().meta().createdAt);
 		// assertDateIsRecent(sale6.source().meta().updatedAt);
