@@ -5,6 +5,7 @@ package io.spacedog.server;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
@@ -68,6 +69,7 @@ public class CredentialsService extends SpaceService {
 				.string(USERNAME_FIELD)//
 				.string(EMAIL_FIELD)//
 				.string(ROLES_FIELD).array()//
+				.string(GROUP_FIELD)//
 
 				.string(HASHED_PASSWORD_FIELD)//
 				.string(PASSWORD_RESET_CODE_FIELD)//
@@ -697,6 +699,10 @@ public class CredentialsService extends SpaceService {
 			requester.checkAuthorizedToSet(request.roles());
 			credentials.addRoles(request.roles());
 		}
+
+		credentials.group(requester.group());
+		if (Strings.isNullOrEmpty(credentials.group()))
+			credentials.group(UUID.randomUUID().toString());
 
 		CredentialsSettings settings = credentialsSettings();
 

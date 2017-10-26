@@ -5,14 +5,15 @@ package io.spacedog.server;
 
 import java.util.Optional;
 
+import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.lucene.uid.Versions;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.model.DataObject;
-import io.spacedog.model.Permission;
 import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.MetadataBase;
+import io.spacedog.model.Permission;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -133,10 +134,22 @@ public class DataService extends SpaceService {
 					new JsonDataObject().type(type).id(id));
 
 			if (!credentials.id().equals(object.owner()))
-				throw Exceptions.forbidden("not the owner of object [%s][%s]", type, id);
+				throw Exceptions.forbidden("not owner of [%s][%s]", type, id);
 
 			return object;
 		}
+
+		if (DataAccessControl.check(credentials, type, Permission.readMyGroup)) {
+			DataObject<ObjectNode> object = DataStore.get().getObject(//
+					new JsonDataObject().type(type).id(id));
+
+			if (Strings.isNullOrEmpty(credentials.group()) //
+					|| !credentials.group().equals(object.group()))
+				throw Exceptions.forbidden("not in the same group than [%s][%s]", type, id);
+
+			return object;
+		}
+
 		throw Exceptions.forbidden("forbidden to read [%s] objects", type);
 	}
 
@@ -168,8 +181,8 @@ public class DataService extends SpaceService {
 		Credentials credentials = SpaceContext.credentials();
 
 		if (DataAccessControl.check(credentials, object.type(), Permission.create)) {
-			if (object.owner() == null)
-				object.owner(credentials.id());
+			object.owner(credentials.id());
+			object.group(credentials.group());
 			object = DataStore.get().createObject(object);
 			return ElasticPayload.saved("/1/data", object).build();
 		}

@@ -203,6 +203,56 @@ public class DataAccessControlTest extends SpaceTest {
 	}
 
 	@Test
+	public void testGroupDataAccess() {
+
+		// prepare
+		prepareTest();
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog guest = SpaceDog.backend(superadmin);
+		superadmin.credentials().enableGuestSignUp(true);
+
+		// vince and fred signs up
+		SpaceDog vince = createTempDog(guest, "vince");
+		SpaceDog fred = createTempDog(guest, "fred");
+
+		// fred creates nath credentials
+		// they share the same group
+		SpaceDog nath = createTempDog(fred, "nath");
+
+		// set message schema with custom acl settings
+		Schema schema = Schema.builder("msge").text("t").build();
+		schema.acl("all", Permission.create);
+		schema.acl("user", Permission.readMyGroup);
+		superadmin.schema().set(schema);
+
+		// only users (and superadmins) can create messages
+		guest.data().save("msge", "guest", Json.object("t", "guest"));
+		vince.data().save("msge", "vince", Json.object("t", "vince"));
+		fred.data().save("msge", "fred", Json.object("t", "fred"));
+
+		// guest don't have read permission even on their own objects
+		guest.get("/1/data/msge/guest").go(403);
+
+		// vince and fred have read access on their own objects
+		// the one's they have created
+		vince.data().get("msge", "vince");
+		fred.data().get("msge", "fred");
+
+		// nath has read access on fred's objects
+		// since they shre the same group
+		// and users have 'readMyGroup" permission
+		nath.data().get("msge", "fred");
+
+		// vince does not have read access to fred's objects
+		// since not in the same group
+		vince.get("/1/data/msge/fred").go(403);
+
+		// nath does not have read access to vince's objects
+		// since not in the same group
+		nath.get("/1/data/msge/vince").go(403);
+	}
+
+	@Test
 	public void testDataAccessWithRolesAndPermissions() throws JsonProcessingException {
 
 		// prepare

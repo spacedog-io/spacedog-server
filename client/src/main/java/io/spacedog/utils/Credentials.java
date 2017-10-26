@@ -70,6 +70,7 @@ public class Credentials {
 	private DateTime enableAfter;
 	private DateTime disableAfter;
 	private Set<String> roles;
+	private String group;
 	private List<Session> sessions;
 	private ObjectNode stash;
 	private String passwordResetCode;
@@ -188,7 +189,7 @@ public class Credentials {
 	public Set<String> roles() {
 		if (roles == null)
 			return Collections.emptySet();
-		return roles;
+		return Collections.unmodifiableSet(roles);
 	}
 
 	public Credentials clearRoles() {
@@ -197,14 +198,14 @@ public class Credentials {
 		return this;
 	}
 
-	public Credentials addRoles(String... newRoles) {
-		if (newRoles == null)
+	public Credentials addRoles(String... values) {
+		if (values == null)
 			return this;
 
 		if (roles == null)
 			roles = Sets.newHashSet();
 
-		for (String role : newRoles) {
+		for (String role : values) {
 			Roles.checkIfValid(role);
 			roles.add(role);
 		}
@@ -220,6 +221,15 @@ public class Credentials {
 
 			type = Type.fromRoles(this.roles);
 		}
+		return this;
+	}
+
+	public String group() {
+		return group;
+	}
+
+	public Credentials group(String group) {
+		this.group = group;
 		return this;
 	}
 
@@ -704,4 +714,5 @@ public class Credentials {
 		}
 
 	}
+
 }
