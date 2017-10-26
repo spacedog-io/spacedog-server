@@ -59,10 +59,10 @@ public class PushSpaceServiceTest extends SpaceTest {
 
 		// add create permission to guest requests
 		Schema schema = superadmin.schema().get("installation");
-		schema.acl("all", Permission.create, Permission.update);
-		schema.acl("user", Permission.create, Permission.read, Permission.update);
-		schema.acl("admin", Permission.create, Permission.update_all, //
-				Permission.search, Permission.delete_all);
+		schema.acl("all", Permission.create, Permission.updateMine);
+		schema.acl("user", Permission.create, Permission.readMine, Permission.updateMine);
+		schema.acl("admin", Permission.create, Permission.update, //
+				Permission.search, Permission.delete);
 		superadmin.schema().set(schema);
 
 		// non authenticated user installs joho

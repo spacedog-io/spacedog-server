@@ -77,10 +77,10 @@ public class DataService extends SpaceService {
 	public Payload deleteById(String type, String id, Context context) {
 		Credentials credentials = SpaceContext.credentials();
 
-		if (DataAccessControl.check(credentials, type, Permission.delete_all))
+		if (DataAccessControl.check(credentials, type, Permission.delete))
 			return doDeleteById(type, id);
 
-		if (DataAccessControl.check(credentials, type, Permission.delete)) {
+		if (DataAccessControl.check(credentials, type, Permission.deleteMine)) {
 			Optional<DataObject<MetadataBase>> metadata = DataStore.get().getMetadata(type, id);
 
 			if (!metadata.isPresent())
@@ -125,10 +125,10 @@ public class DataService extends SpaceService {
 	protected DataObject<ObjectNode> doGet(String type, String id) {
 
 		Credentials credentials = SpaceContext.credentials();
-		if (DataAccessControl.check(credentials, type, Permission.read_all, Permission.search))
+		if (DataAccessControl.check(credentials, type, Permission.read, Permission.search))
 			return DataStore.get().getObject(new JsonDataObject().type(type).id(id));
 
-		if (DataAccessControl.check(credentials, type, Permission.read)) {
+		if (DataAccessControl.check(credentials, type, Permission.readMine)) {
 			DataObject<ObjectNode> object = DataStore.get().getObject(//
 					new JsonDataObject().type(type).id(id));
 
@@ -184,10 +184,10 @@ public class DataService extends SpaceService {
 
 	public void checkPutPermissions(DataObject<MetadataBase> metadata, Credentials credentials) {
 
-		if (DataAccessControl.check(credentials, metadata.type(), Permission.update_all))
+		if (DataAccessControl.check(credentials, metadata.type(), Permission.update))
 			return;
 
-		if (DataAccessControl.check(credentials, metadata.type(), Permission.update)) {
+		if (DataAccessControl.check(credentials, metadata.type(), Permission.updateMine)) {
 
 			if (credentials.id().equals(metadata.owner()))
 				return;

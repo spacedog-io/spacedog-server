@@ -28,7 +28,7 @@ public class BatchServiceTest extends SpaceTest {
 		SpaceDog superadmin = resetTestBackend();
 		superadmin.credentials().enableGuestSignUp(true);
 		Schema schema = Schema.builder("message").text("text")//
-				.acl("user", Permission.create, Permission.update, Permission.search).build();
+				.acl("user", Permission.create, Permission.updateMine, Permission.search).build();
 
 		// should succeed to reset test account and create message schema with
 		// admin credentials

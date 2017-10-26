@@ -76,8 +76,8 @@ public class ShareServiceTest extends SpaceTest {
 		// superadmin sets custom share permissions
 		ShareSettings settings = new ShareSettings();
 		settings.enableS3Location = true;
-		settings.sharePermissions.put("all", Permission.read_all)//
-				.put("user", Permission.create, Permission.delete);
+		settings.sharePermissions.put("all", Permission.read)//
+				.put("user", Permission.create, Permission.deleteMine);
 		superadmin.settings().save(settings);
 
 		// this account is brand new, no shared files
@@ -222,7 +222,7 @@ public class ShareServiceTest extends SpaceTest {
 		ShareSettings settings = new ShareSettings();
 		settings.enableS3Location = false;
 		settings.sharePermissions.put("all", Permission.create)//
-				.put("user", Permission.create, Permission.read, Permission.delete);
+				.put("user", Permission.create, Permission.readMine, Permission.deleteMine);
 		superadmin.settings().save(settings);
 
 		// only admin can get all shared locations
@@ -335,7 +335,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// prepare share settings
 		ShareSettings settings = new ShareSettings();
-		settings.sharePermissions.put("admin", Permission.read, Permission.create);
+		settings.sharePermissions.put("admin", Permission.readMine, Permission.create);
 		superadmin.settings().save(settings);
 
 		// share file with name that needs escaping
@@ -368,7 +368,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// superadmin updates share settings to allow admin
 		// to download multiple shares
-		settings.sharePermissions.put("admin", Permission.read_all, Permission.create);
+		settings.sharePermissions.put("admin", Permission.read, Permission.create);
 		superadmin.settings().save(settings);
 
 		// superadmin downloads zip containing specified shares

@@ -64,8 +64,8 @@ public class PushSpaceService extends SpaceService {
 
 	public static Schema getDefaultInstallationSchema() {
 		return Schema.builder(TYPE)//
-				.acl(Credentials.Type.user.name(), Permission.create, Permission.read, //
-						Permission.update, Permission.delete) //
+				.acl(Credentials.Type.user.name(), Permission.create, Permission.readMine, //
+						Permission.updateMine, Permission.deleteMine) //
 
 				.string(APP_ID)//
 				.string(PUSH_SERVICE)//

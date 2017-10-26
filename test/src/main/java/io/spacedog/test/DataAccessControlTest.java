@@ -35,11 +35,11 @@ public class DataAccessControlTest extends SpaceTest {
 		// set message schema
 		Schema schema = Schema.builder("msge").text("t").build();
 		RolePermissions acl = new RolePermissions()//
-				.put(Credentials.ALL_ROLE, Permission.read_all)//
+				.put(Credentials.ALL_ROLE, Permission.read)//
 				.put(Credentials.Type.user.name(), Permission.create, //
-						Permission.update, Permission.delete, Permission.search) //
+						Permission.updateMine, Permission.deleteMine, Permission.search) //
 				.put(Credentials.Type.admin.name(), Permission.create, //
-						Permission.update_all, Permission.delete_all, Permission.search);
+						Permission.update, Permission.delete, Permission.search);
 		schema.acl(acl);
 		superadmin.schema().set(schema);
 
@@ -212,12 +212,12 @@ public class DataAccessControlTest extends SpaceTest {
 		// set schema
 		Schema schema = Schema.builder("message")//
 				.text("text")//
-				.acl("iron", Permission.read_all)//
-				.acl("silver", Permission.read_all, Permission.update_all)//
-				.acl("gold", Permission.read_all, Permission.update_all, //
+				.acl("iron", Permission.read)//
+				.acl("silver", Permission.read, Permission.update)//
+				.acl("gold", Permission.read, Permission.update, //
 						Permission.create)//
-				.acl("platine", Permission.read_all, Permission.update_all, //
-						Permission.create, Permission.delete_all)//
+				.acl("platine", Permission.read, Permission.update, //
+						Permission.create, Permission.delete)//
 				.build();
 
 		superadmin.schema().set(schema);

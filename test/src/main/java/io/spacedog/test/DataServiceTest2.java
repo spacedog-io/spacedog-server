@@ -111,8 +111,8 @@ public class DataServiceTest2 extends SpaceTest {
 		SpaceDog fred = createTempDog(test, "fred");
 
 		Schema saleSchema = SchemaServiceTest.buildSaleSchema()//
-				.acl("user", Permission.create, Permission.update, //
-						Permission.read, Permission.delete, Permission.search)//
+				.acl("user", Permission.create, Permission.updateMine, //
+						Permission.readMine, Permission.deleteMine, Permission.search)//
 				.build();
 		test.schema().set(saleSchema);
 

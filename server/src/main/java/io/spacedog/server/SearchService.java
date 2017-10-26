@@ -64,7 +64,7 @@ public class SearchService extends SpaceService {
 	@Delete("/")
 	public Payload deleteAllTypes(String query, Context context) {
 		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
-		String[] types = DataAccessControl.types(credentials, Permission.delete_all);
+		String[] types = DataAccessControl.types(credentials, Permission.delete);
 
 		if (Utils.isNullOrEmpty(types))
 			return JsonPayload.ok().build();
@@ -100,7 +100,7 @@ public class SearchService extends SpaceService {
 	public Payload deleteSearchForType(String type, String query, Context context) {
 
 		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
-		if (DataAccessControl.check(credentials, type, Permission.delete_all)) {
+		if (DataAccessControl.check(credentials, type, Permission.delete)) {
 
 			DataStore.get().refreshDataTypes(isRefreshRequested(context, true), type);
 			DeleteByQueryResponse response = elastic()//

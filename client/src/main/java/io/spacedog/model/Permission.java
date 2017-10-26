@@ -1,5 +1,5 @@
 package io.spacedog.model;
 
 public enum Permission {
-	create, read, read_all, search, update, update_all, delete, delete_all
+	create, readMine, read, search, updateMine, update, deleteMine, delete
 }

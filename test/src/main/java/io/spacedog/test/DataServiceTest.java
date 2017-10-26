@@ -27,8 +27,8 @@ public class DataServiceTest extends SpaceTest {
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		Schema carSchema = SchemaServiceTest.buildCarSchema()//
-				.acl("user", Permission.create, Permission.update, //
-						Permission.read, Permission.delete, Permission.search)//
+				.acl("user", Permission.create, Permission.updateMine, //
+						Permission.readMine, Permission.deleteMine, Permission.search)//
 				.build();
 		superadmin.schema().set(carSchema);
 
@@ -94,8 +94,8 @@ public class DataServiceTest extends SpaceTest {
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		Schema carSchema = SchemaServiceTest.buildCarSchema()//
-				.acl("user", Permission.create, Permission.update, //
-						Permission.read, Permission.delete, Permission.search)//
+				.acl("user", Permission.create, Permission.updateMine, //
+						Permission.readMine, Permission.deleteMine, Permission.search)//
 				.build();
 		superadmin.schema().set(carSchema);
 

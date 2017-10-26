@@ -53,14 +53,14 @@ public class ShareService extends S3Service {
 	@Delete("")
 	@Delete("/")
 	public Payload deleteAll() {
-		checkPermission(Permission.delete_all);
+		checkPermission(Permission.delete);
 		return doDelete(SHARE_BUCKET_SUFFIX, WebPath.ROOT, false, false);
 	}
 
 	@Post("/_zip")
 	@Post("/_zip/")
 	public Payload postDownload(String body, Context context) {
-		checkPermission(Permission.read_all);
+		checkPermission(Permission.read);
 		ZipRequest request = Json.toPojo(body, ZipRequest.class);
 		return doDownload(SHARE_BUCKET_SUFFIX, request, context);
 	}
@@ -70,7 +70,7 @@ public class ShareService extends S3Service {
 	public Payload get(String id, Context context) {
 
 		boolean checkOwnership = checkPermissionAndIsOwnershipRequired(//
-				Permission.read, Permission.read_all);
+				Permission.readMine, Permission.read);
 
 		return doGet(SHARE_BUCKET_SUFFIX, WebPath.newPath(id), //
 				context, checkOwnership);
@@ -80,7 +80,7 @@ public class ShareService extends S3Service {
 	@Delete("/:id/")
 	public Payload delete(String id, Context context) {
 		boolean checkOwnership = checkPermissionAndIsOwnershipRequired(//
-				Permission.delete, Permission.delete_all);
+				Permission.deleteMine, Permission.delete);
 
 		return doDelete(SHARE_BUCKET_SUFFIX, WebPath.newPath(id), //
 				true, checkOwnership);
