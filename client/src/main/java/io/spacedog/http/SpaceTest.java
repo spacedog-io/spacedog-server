@@ -58,8 +58,8 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 
 	public static SpaceDog createBackend(String backendId) {
 		String password = Passwords.random();
-		SpaceDog.backendId(backendId).admin()//
-				.createBackend(backendId, password, DEFAULT_EMAIL, false);
+		SpaceDog.defaultBackend().admin()//
+				.createBackend(backendId, backendId, password, DEFAULT_EMAIL, false);
 		return SpaceDog.backendId(backendId).username(backendId)//
 				.password(password).email(DEFAULT_EMAIL);
 	}

@@ -340,7 +340,7 @@ public class ElasticClient implements SpaceParams {
 
 		String[] indices = backendIndices();
 
-		if (indices != null && indices.length > 0) {
+		if (!Utils.isNullOrEmpty(indices)) {
 			DeleteIndexResponse deleteIndexResponse = internalClient.admin()//
 					.indices().prepareDelete(indices).get();
 

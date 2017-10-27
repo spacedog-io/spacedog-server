@@ -1,5 +1,7 @@
 package io.spacedog.client;
 
+import io.spacedog.model.CreateBackendRequest;
+import io.spacedog.model.CreateCredentialsRequest;
 import io.spacedog.utils.SpaceFields;
 import io.spacedog.utils.SpaceParams;
 
@@ -16,29 +18,38 @@ public class AdminEndpoint implements SpaceParams, SpaceFields {
 	}
 
 	public boolean doesMyBackendExist() {
-		return dog.get("/1/backend").go().status() == 200;
+		return dog.get("/1/backends").go().status() == 200;
 	}
 
 	public AdminEndpoint createMyBackend(boolean notification) {
-		return SpaceDog.backend(dog).admin()//
-				.createBackend(dog.username(), dog.password().get(), //
+		return SpaceDog.defaultBackend().admin()//
+				.createBackend(dog.backendId(), dog.username(), dog.password().get(), //
 						dog.email().get(), notification);
-
 	}
 
-	public AdminEndpoint createBackend(String username, String password, String email, //
+	public AdminEndpoint createBackend(String backendId, String username, String password, String email, //
 			boolean notification) {
 
-		dog.post("/1/backend")//
+		CreateCredentialsRequest superadmin = new CreateCredentialsRequest()//
+				.username(username).password(password).email(email);
+
+		return createBackend(new CreateBackendRequest()//
+				.backendId(backendId).superadmin(superadmin), notification);
+	}
+
+	public AdminEndpoint createBackend(CreateBackendRequest request, boolean notification) {
+
+		dog.post("/1/backends")//
 				.queryParam(NOTIF_PARAM, notification)//
-				.bodyJson(USERNAME_FIELD, username, PASSWORD_FIELD, password, EMAIL_FIELD, email)//
+				.bodyPojo(request)//
 				.go(201);
 
 		return this;
 	}
 
 	public AdminEndpoint deleteBackend(String backendId) {
-		dog.delete("/1/backend").backend(backendId).go(200, 401);
+		dog.delete("/1/backends/{id}")//
+				.routeParam("id", backendId).backend(backendId).go(200, 401);
 		return this;
 	}
 

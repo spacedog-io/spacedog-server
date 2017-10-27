@@ -9,6 +9,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.http.SpaceBackend;
 import io.spacedog.jobs.Internals;
 import io.spacedog.model.BackendSettings;
+import io.spacedog.model.CreateBackendRequest;
+import io.spacedog.model.CreateBackendRequest.Type;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -34,8 +36,8 @@ public class BackendService extends SpaceService {
 		return JsonPayload.ok().withObject(payload).build();
 	}
 
-	@Get("/1/backend")
-	@Get("/1/backend/")
+	@Get("/1/backends")
+	@Get("/1/backends/")
 	public Payload getAll(Context context) {
 		SpaceContext.credentials().checkAtLeastSuperAdmin();
 		int from = context.query().getInteger(FROM_PARAM, 0);
@@ -46,9 +48,9 @@ public class BackendService extends SpaceService {
 		return toPayload(superAdmins);
 	}
 
-	@Delete("/1/backend")
-	@Delete("/1/backend/")
-	public Payload delete(Context context) {
+	@Delete("/1/backends/:backendId")
+	@Delete("/1/backends/:backendId/")
+	public Payload delete(String backendId, Context context) {
 		SpaceContext.credentials().checkAtLeastSuperAdmin();
 
 		if (SpaceContext.backend().isDefault())
@@ -64,34 +66,30 @@ public class BackendService extends SpaceService {
 		return JsonPayload.ok().build();
 	}
 
-	@Post("/1/backend")
-	@Post("/1/backend/")
+	@Post("/1/backends")
+	@Post("/1/backends/")
 	public Payload post(String body, Context context) {
-		return post(SpaceContext.backendId(), body, context);
-	}
-
-	// TODO these routes are deprecated
-	@Post("/1/backend/:id")
-	@Post("/1/backend/:id/")
-	public Payload post(String backendId, String body, Context context) {
-
 		ServerConfiguration configuration = Start.get().configuration();
+
 		SpaceBackend backend = configuration.apiBackend();
 		if (!backend.multi())
 			throw Exceptions.illegalArgument(//
 					"backend [%s] does not allow sub backends", backend);
 
-		SpaceBackend.checkIsValid(backendId);
+		CreateBackendRequest request = Json.toPojo(body, CreateBackendRequest.class);
+		if (request.type().equals(Type.dedicated))
+			throw Exceptions.illegalArgument("dedicated backend not yet supported");
+		SpaceBackend.checkIsValid(request.backendId());
 
 		if (configuration.backendCreateRestricted())
 			SpaceContext.credentials().checkSuperDog();
 
-		initBackendIndices(backendId, true);
+		initBackendIndices(request.backendId(), true);
 
-		CredentialsService credentialsResource = CredentialsService.get();
-		Credentials credentials = credentialsResource//
-				.createCredentialsRequestToCredentials(body, Credentials.Type.superadmin);
-		credentialsResource.create(credentials);
+		CredentialsService credentialsService = CredentialsService.get();
+		Credentials credentials = credentialsService.createCredentialsRequestToCredentials(//
+				request.superadmin(), Credentials.Type.superadmin);
+		credentialsService.create(request.backendId(), credentials);
 
 		if (context.query().getBoolean(NOTIF_PARAM, true)) {
 			Optional7<String> topic = configuration.awsSuperdogNotificationTopic();
@@ -99,10 +97,10 @@ public class BackendService extends SpaceService {
 				Internals.get().notify(topic.get(), //
 						String.format("New backend (%s)", spaceRootUrl()), //
 						String.format("backend id = %s\nadmin email = %s", //
-								backendId, credentials.email().get()));
+								request.backendId(), credentials.email().get()));
 		}
 
-		return JsonPayload.saved(true, "/1", TYPE, backendId).build();
+		return JsonPayload.saved(true, "/1", TYPE, request.backendId()).build();
 	}
 
 	//

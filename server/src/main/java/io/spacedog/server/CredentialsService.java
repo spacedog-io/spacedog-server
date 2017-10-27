@@ -34,7 +34,6 @@ import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
-import io.spacedog.utils.Passwords;
 import io.spacedog.utils.Roles;
 import io.spacedog.utils.Usernames;
 import io.spacedog.utils.Utils;
@@ -169,8 +168,8 @@ public class CredentialsService extends SpaceService {
 		if (!settings.guestSignUpEnabled)
 			SpaceContext.credentials().checkAtLeastUser();
 
-		Credentials credentials = createCredentialsRequestToCredentials(body, //
-				Credentials.Type.user);
+		Credentials credentials = createCredentialsRequestToCredentials(//
+				Json.toPojo(body, CreateCredentialsRequest.class), Credentials.Type.user);
 		create(credentials);
 
 		JsonPayload payload = JsonPayload.saved(true, "/1", TYPE, credentials.id());
@@ -578,9 +577,13 @@ public class CredentialsService extends SpaceService {
 	}
 
 	Credentials create(Credentials credentials) {
+		return create(SpaceContext.backendId(), credentials);
+	}
+
+	Credentials create(String backendId, Credentials credentials) {
 
 		// This is the only place where name uniqueness is checked
-		if (exists(credentials.name()))
+		if (exists(backendId, credentials.name()))
 			throw Exceptions.alreadyExists(TYPE, credentials.name());
 
 		String now = DateTime.now().toString();
@@ -588,11 +591,12 @@ public class CredentialsService extends SpaceService {
 		credentials.createdAt(now);
 
 		String json = Json.toString(credentials);
+		Index index = credentialsIndex().backendId(backendId);
 
 		// refresh index after each index change
 		IndexResponse response = Strings.isNullOrEmpty(credentials.id()) //
-				? elastic().index(credentialsIndex(), json, true) //
-				: elastic().index(credentialsIndex(), credentials.id(), json, true);
+				? elastic().index(index, json, true) //
+				: elastic().index(index, credentials.id(), json, true);
 
 		credentials.id(response.getId());
 		credentials.version(response.getVersion());
@@ -637,15 +641,6 @@ public class CredentialsService extends SpaceService {
 		return getCredentials(new BoolSearch(credentialsIndex(), query, from, size));
 	}
 
-	Credentials createSuperdog(String username, String password, String email) {
-		Usernames.checkValid(username);
-		Credentials credentials = new Credentials(username).email(email)//
-				.addRoles(Type.superdog.name());
-		Passwords.check(password);
-		credentials.changePassword(password, Optional7.empty());
-		return create(credentials);
-	}
-
 	Credentials checkAdminAndGet(String id) {
 		Credentials requester = SpaceContext.credentials().checkAtLeastAdmin();
 		Credentials credentials = getById(id, true).get();
@@ -685,13 +680,11 @@ public class CredentialsService extends SpaceService {
 				.build();
 	}
 
-	public Credentials createCredentialsRequestToCredentials(String body, //
-			Credentials.Type type) {
+	public Credentials createCredentialsRequestToCredentials(//
+			CreateCredentialsRequest request, Credentials.Type type) {
 
 		Credentials requester = SpaceContext.credentials();
 		Credentials credentials = new Credentials();
-		CreateCredentialsRequest request = Json.toPojo(body, //
-				CreateCredentialsRequest.class);
 
 		if (Utils.isNullOrEmpty(request.roles()))
 			credentials.addRoles(type.name());
@@ -771,8 +764,9 @@ public class CredentialsService extends SpaceService {
 		return Json.object("total", response.total, "results", results);
 	}
 
-	private boolean exists(String username) {
-		return elastic().exists(toQuery(username), credentialsIndex());
+	private boolean exists(String backendId, String username) {
+		return elastic().exists(toQuery(username), //
+				credentialsIndex().backendId(backendId));
 	}
 
 	private SearchResults<Credentials> getCredentials(BoolSearch query) {
