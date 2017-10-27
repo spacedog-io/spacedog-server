@@ -14,6 +14,7 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -136,8 +137,14 @@ public class CredentialsService extends SpaceService {
 		// TODO add more settings and permissions to control this
 		// credentials check
 		SpaceContext.credentials().checkAtLeastUser();
+
+		SearchSourceBuilder builder = SearchSourceBuilder.searchSource()//
+				.query(toQuery(context))//
+				.from(context.query().getInteger(FROM_PARAM, 0)) //
+				.size(context.query().getInteger(SIZE_PARAM, 10));
+
 		return JsonPayload.ok()//
-				.withObject(fromCredentialsSearch(getCredentials(toQuery(context))))//
+				.withObject(fromCredentialsSearch(getCredentials(builder)))//
 				.build();
 	}
 
@@ -145,13 +152,13 @@ public class CredentialsService extends SpaceService {
 	@Delete("/1/credentials/")
 	public Payload deleteAll(Context context) {
 		SpaceContext.credentials().checkAtLeastSuperAdmin();
-		ElasticClient elastic = elastic();
 
-		BoolQueryBuilder query = toQuery(context).query;
 		// superadmins can only be deleted when backend is deleted
-		query.mustNot(QueryBuilders.termQuery(ROLES_FIELD, Type.superadmin));
+		BoolQueryBuilder query = toQuery(context)//
+				.mustNot(QueryBuilders.termQuery(ROLES_FIELD, Type.superadmin));
 
 		// always refresh before and after credentials index updates
+		ElasticClient elastic = elastic();
 		elastic.refreshType(credentialsIndex());
 		elastic.deleteByQuery(query, credentialsIndex());
 		elastic.refreshType(credentialsIndex());
@@ -207,7 +214,7 @@ public class CredentialsService extends SpaceService {
 
 		// forbidden to delete last backend superadmin
 		if (credentials.isSuperAdmin()) {
-			if (getBackendSuperAdmins(0, 0).total == 1)
+			if (getSuperAdmins(0, 0).total == 1)
 				throw Exceptions.forbidden("backend must at least have one superadmin");
 		}
 
@@ -627,18 +634,13 @@ public class CredentialsService extends SpaceService {
 		elastic().delete(credentialsIndex(), id, true, true);
 	}
 
-	SearchResults<Credentials> getAllSuperAdmins(int from, int size) {
-		BoolQueryBuilder query = QueryBuilders.boolQuery()//
-				.filter(QueryBuilders.termQuery(ROLES_FIELD, Type.superadmin));
+	SearchResults<Credentials> getSuperAdmins(int from, int size) {
+		SearchSourceBuilder builder = SearchSourceBuilder.searchSource()//
+				.query(QueryBuilders.boolQuery()//
+						.filter(QueryBuilders.termQuery(ROLES_FIELD, Type.superadmin)))//
+				.from(from).size(size);
 
-		return getCredentials(new BoolSearch(credentialsIndex(), query, from, size));
-	}
-
-	SearchResults<Credentials> getBackendSuperAdmins(int from, int size) {
-		BoolQueryBuilder query = QueryBuilders.boolQuery()//
-				.filter(QueryBuilders.termQuery(ROLES_FIELD, Type.superadmin));
-
-		return getCredentials(new BoolSearch(credentialsIndex(), query, from, size));
+		return getCredentials(builder);
 	}
 
 	Credentials checkAdminAndGet(String id) {
@@ -713,7 +715,7 @@ public class CredentialsService extends SpaceService {
 		return credentials;
 	}
 
-	private BoolSearch toQuery(Context context) {
+	private BoolQueryBuilder toQuery(Context context) {
 		BoolQueryBuilder query = QueryBuilders.boolQuery();
 
 		String username = context.get(USERNAME_FIELD);
@@ -728,11 +730,7 @@ public class CredentialsService extends SpaceService {
 		if (!Strings.isNullOrEmpty(role))
 			query.filter(QueryBuilders.termQuery(ROLES_FIELD, role));
 
-		BoolSearch search = new BoolSearch(credentialsIndex(), query, //
-				context.query().getInteger(FROM_PARAM, 0), //
-				context.query().getInteger(SIZE_PARAM, 10));
-
-		return search;
+		return query;
 	}
 
 	private BoolQueryBuilder toQuery(String username) {
@@ -769,20 +767,14 @@ public class CredentialsService extends SpaceService {
 				credentialsIndex().backendId(backendId));
 	}
 
-	private SearchResults<Credentials> getCredentials(BoolSearch query) {
-		Check.isTrue(query.from + query.size <= 1000, "from + size is greater than 1000");
+	private SearchResults<Credentials> getCredentials(SearchSourceBuilder builder) {
 
-		SearchHits hits = elastic().prepareSearch(query.index)//
-				.setQuery(query.query)//
-				.setFrom(query.from)//
-				.setSize(query.size)//
-				.get()//
-				.getHits();
+		Index index = credentialsIndex();
+		SearchHits hits = elastic().prepareSearch(index)//
+				.setSource(builder.toString()).get().getHits();
 
 		SearchResults<Credentials> response = new SearchResults<>();
-		response.type = query.index.type();
-		response.from = query.from;
-		response.size = query.size;
+		response.type = index.type();
 		response.total = hits.totalHits();
 		response.results = Lists.newArrayList();
 

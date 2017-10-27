@@ -42,10 +42,8 @@ public class BackendService extends SpaceService {
 		SpaceContext.credentials().checkAtLeastSuperAdmin();
 		int from = context.query().getInteger(FROM_PARAM, 0);
 		int size = context.query().getInteger(SIZE_PARAM, 10);
-
-		SearchResults<Credentials> superAdmins = CredentialsService.get()//
-				.getAllSuperAdmins(from, size);
-		return toPayload(superAdmins);
+		return toPayload(CredentialsService.get()//
+				.getSuperAdmins(from, size));
 	}
 
 	@Delete("/1/backends/:backendId")
