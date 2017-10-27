@@ -17,7 +17,7 @@ public class FileServiceTest extends SpaceTest {
 		// prepare
 		prepareTest(false);
 		SpaceDog superadmin = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(superadmin);
+		SpaceDog guest = SpaceDog.backend(superadmin.backend());
 
 		// superadmin checks backend is truly empty
 		assertEquals(0, superadmin.files().listAll().files.length);

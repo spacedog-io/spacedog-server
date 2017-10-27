@@ -22,7 +22,7 @@ public class SmsServiceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog test = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(test);
+		SpaceDog guest = SpaceDog.backend(test.backend());
 
 		// superadmin creates user vince with 'sms' role
 		SpaceDog vince = createTempDog(test, "vince");

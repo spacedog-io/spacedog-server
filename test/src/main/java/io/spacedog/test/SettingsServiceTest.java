@@ -24,7 +24,7 @@ public class SettingsServiceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(superadmin);
+		SpaceDog guest = SpaceDog.backend(superadmin.backend());
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		ObjectNode animals = Json.object("lion", "Lion", "tiger", "Tiger");
@@ -161,7 +161,7 @@ public class SettingsServiceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(superadmin);
+		SpaceDog guest = SpaceDog.backend(superadmin.backend());
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		// only superadmins can update settings

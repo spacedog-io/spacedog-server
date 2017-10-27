@@ -98,7 +98,7 @@ public class LogServiceTest extends SpaceTest {
 
 		// creates test backend and user
 		SpaceDog superadmin = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(superadmin);
+		SpaceDog guest = SpaceDog.backend(superadmin.backend());
 		guest.get("/1/data").go(200);
 		guest.get("/1/data/user").go(403);
 		SpaceDog vince = createTempDog(superadmin, "vince").login();

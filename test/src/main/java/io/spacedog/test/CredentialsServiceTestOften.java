@@ -19,7 +19,7 @@ import io.spacedog.http.SpaceTest;
 import io.spacedog.model.CredentialsSettings;
 import io.spacedog.utils.Json;
 
-public class CredentialsResourceTestOften extends SpaceTest {
+public class CredentialsServiceTestOften extends SpaceTest {
 
 	@Test
 	public void userIsSigningUpAndMore() {
@@ -344,7 +344,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(superadmin);
+		SpaceDog guest = SpaceDog.backend(superadmin.backend());
 		superadmin.credentials().enableGuestSignUp(true);
 		SpaceDog fred = createTempDog(superadmin, "fred");
 

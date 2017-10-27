@@ -34,7 +34,7 @@ public class ShareServiceTest extends SpaceTest {
 		// prepare
 		prepareTest(false);
 		SpaceDog superadmin = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(superadmin);
+		SpaceDog guest = SpaceDog.backend(superadmin.backend());
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog admin = createTempDog(superadmin, "admin", Type.admin.name());
 
@@ -69,7 +69,7 @@ public class ShareServiceTest extends SpaceTest {
 		// prepare
 		prepareTest(false);
 		SpaceDog superadmin = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(superadmin);
+		SpaceDog guest = SpaceDog.backend(superadmin.backend());
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog fred = createTempDog(superadmin, "fred");
 
@@ -212,7 +212,7 @@ public class ShareServiceTest extends SpaceTest {
 		// prepare
 		prepareTest(false);
 		SpaceDog superadmin = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(superadmin);
+		SpaceDog guest = SpaceDog.backend(superadmin.backend());
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog fred = createTempDog(superadmin, "fred");
 		byte[] pngBytes = Resources.toByteArray(//

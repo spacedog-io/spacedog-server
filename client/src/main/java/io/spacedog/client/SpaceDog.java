@@ -106,8 +106,8 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 		return new SpaceDog(SpaceRequest.env().target().instanciate(backendId));
 	}
 
-	public static SpaceDog backend(SpaceDog dog) {
-		return new SpaceDog(dog.backend);
+	public static SpaceDog backend(SpaceBackend backend) {
+		return new SpaceDog(backend);
 	}
 
 	//

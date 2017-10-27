@@ -382,7 +382,7 @@ public class DataServiceTest2 extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(superadmin);
+		SpaceDog guest = SpaceDog.backend(superadmin.backend());
 		Schema schema = Schema.builder("home").text("name")//
 				.object("garage").integer("places").build();
 		superadmin.schema().set(schema);

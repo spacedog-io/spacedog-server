@@ -199,7 +199,7 @@ public class CredentialsServiceTest extends SpaceTest {
 		fred.login();
 
 		// fred logs in again creating a second session
-		SpaceDog fred2 = SpaceDog.backend(test)//
+		SpaceDog fred2 = SpaceDog.backend(test.backend())//
 				.username(fred.username()).login(fred.password().get());
 
 		// fred can access data with his first token
