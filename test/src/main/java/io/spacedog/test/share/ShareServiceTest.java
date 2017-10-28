@@ -76,7 +76,7 @@ public class ShareServiceTest extends SpaceTest {
 		// superadmin sets custom share permissions
 		ShareSettings settings = new ShareSettings();
 		settings.enableS3Location = true;
-		settings.sharePermissions.put("all", Permission.read)//
+		settings.sharePermissions.put("all", Permission.readAll)//
 				.put("user", Permission.create, Permission.deleteMine);
 		superadmin.settings().save(settings);
 
@@ -339,40 +339,40 @@ public class ShareServiceTest extends SpaceTest {
 		superadmin.settings().save(settings);
 
 		// share file with name that needs escaping
-		String path1 = superadmin.put("/1/share/toto.txt")//
+		String path1 = superadmin.put("/1/shares/toto.txt")//
 				.bodyBytes("toto".getBytes())//
 				.go(200)//
 				.getString("path");
 
-		superadmin.get("/1/share/" + path1).go(200);
+		superadmin.get("/1/shares/" + path1).go(200);
 
-		String path2 = superadmin.put("/1/share/titi.txt")//
+		String path2 = superadmin.put("/1/shares/titi.txt")//
 				.bodyBytes("titi".getBytes())//
 				.go(200)//
 				.getString("path");
 
-		superadmin.get("/1/share/" + path2).go(200);
+		superadmin.get("/1/shares/" + path2).go(200);
 
-		String path3 = superadmin.put("/1/share/tweeter.png")//
+		String path3 = superadmin.put("/1/shares/tweeter.png")//
 				.bodyResource(getClass(), "tweeter.png")//
 				.go(200)//
 				.getString("path");
 
-		superadmin.get("/1/share/" + path3).go(200);
+		superadmin.get("/1/shares/" + path3).go(200);
 
 		// superadmin needs read_all permission to downloads many shares
-		superadmin.post("/1/share/_zip")//
+		superadmin.post("/1/shares/_zip")//
 				.bodyJson("fileName", "download.zip", //
 						"paths", Json.array(path1, path2, path3))//
 				.go(403);
 
 		// superadmin updates share settings to allow admin
 		// to download multiple shares
-		settings.sharePermissions.put("admin", Permission.read, Permission.create);
+		settings.sharePermissions.put("admin", Permission.readAll, Permission.create);
 		superadmin.settings().save(settings);
 
 		// superadmin downloads zip containing specified shares
-		byte[] bytes = superadmin.post("/1/share/_zip")//
+		byte[] bytes = superadmin.post("/1/shares/_zip")//
 				.bodyJson("fileName", "download.zip", //
 						"paths", Json.array(path1, path2, path3))//
 				.go(200)//

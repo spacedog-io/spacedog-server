@@ -35,11 +35,11 @@ public class DataAccessControlTest extends SpaceTest {
 		// set message schema
 		Schema schema = Schema.builder("msge").text("t").build();
 		RolePermissions acl = new RolePermissions()//
-				.put(Credentials.ALL_ROLE, Permission.read)//
+				.put(Credentials.ALL_ROLE, Permission.readAll)//
 				.put(Credentials.Type.user.name(), Permission.create, //
 						Permission.updateMine, Permission.deleteMine, Permission.search) //
 				.put(Credentials.Type.admin.name(), Permission.create, //
-						Permission.update, Permission.delete, Permission.search);
+						Permission.updateAll, Permission.deleteAll, Permission.search);
 		schema.acl(acl);
 		superadmin.schema().set(schema);
 
@@ -307,12 +307,12 @@ public class DataAccessControlTest extends SpaceTest {
 		// set schema
 		Schema schema = Schema.builder("message")//
 				.text("text")//
-				.acl("iron", Permission.read)//
-				.acl("silver", Permission.read, Permission.update)//
-				.acl("gold", Permission.read, Permission.update, //
+				.acl("iron", Permission.readAll)//
+				.acl("silver", Permission.readAll, Permission.updateAll)//
+				.acl("gold", Permission.readAll, Permission.updateAll, //
 						Permission.create)//
-				.acl("platine", Permission.read, Permission.update, //
-						Permission.create, Permission.delete)//
+				.acl("platine", Permission.readAll, Permission.updateAll, //
+						Permission.create, Permission.deleteAll)//
 				.build();
 
 		superadmin.schema().set(schema);

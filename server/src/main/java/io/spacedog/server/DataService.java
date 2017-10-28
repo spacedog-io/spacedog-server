@@ -79,7 +79,7 @@ public class DataService extends SpaceService {
 	public Payload deleteById(String type, String id, Context context) {
 		Credentials credentials = SpaceContext.credentials();
 
-		if (DataAccessControl.check(credentials, type, Permission.delete))
+		if (DataAccessControl.check(credentials, type, Permission.deleteAll))
 			return doDeleteById(type, id);
 
 		if (DataAccessControl.check(credentials, type, Permission.deleteMine)) {
@@ -130,7 +130,7 @@ public class DataService extends SpaceService {
 		Supplier<DataObject<ObjectNode>> supplier = () -> DataStore.get().getObject(//
 				new JsonDataObject().type(type).id(id));
 
-		if (DataAccessControl.check(credentials, type, Permission.read, Permission.search))
+		if (DataAccessControl.check(credentials, type, Permission.readAll, Permission.search))
 			return supplier.get();
 
 		else if (DataAccessControl.check(credentials, type, Permission.readMine)) {
@@ -192,7 +192,7 @@ public class DataService extends SpaceService {
 
 	public void checkPutPermissions(Credentials credentials, DataObject<MetadataBase> metadata) {
 
-		if (DataAccessControl.check(credentials, metadata.type(), Permission.update))
+		if (DataAccessControl.check(credentials, metadata.type(), Permission.updateAll))
 			return;
 
 		if (DataAccessControl.check(credentials, metadata.type(), Permission.updateMine)) {
