@@ -52,18 +52,18 @@ public class SnapshotServiceTest extends SpaceTest {
 		// first snapshot
 		// returns 202 since wait for completion false
 		// snapshot authorized because superdog credentials and root backend
-		String firstSnapId = superdog.post("/1/snapshot")//
+		String firstSnapId = superdog.post("/1/snapshots")//
 				.go(202)//
 				.getString("id");
 
 		// fails since snapshot is not yet completed
 		// returns 400 if not yet restorable or if restoreInfo is null
-		SpaceResponse response = superdog.post("/1/snapshot/latest/restore").go(400);
+		SpaceResponse response = superdog.post("/1/snapshots/latest/restore").go(400);
 
 		// poll and wait for snapshot to complete
 		do {
 
-			response = superdog.get("/1/snapshot/latest").go(200)//
+			response = superdog.get("/1/snapshots/latest").go(200)//
 					.assertEquals(firstSnapId, "id");
 
 			// let server work a bit
@@ -74,7 +74,7 @@ public class SnapshotServiceTest extends SpaceTest {
 		ObjectNode firstSnap = response.asJsonObject();
 
 		// gets snapshot by id
-		superdog.get("/1/snapshot/" + firstSnapId).go(200)//
+		superdog.get("/1/snapshots/" + firstSnapId).go(200)//
 				.assertEquals(firstSnap);
 
 		// creates another backend and credentials
@@ -84,7 +84,7 @@ public class SnapshotServiceTest extends SpaceTest {
 		// second snapshot
 		// returns 201 since wait for completion true (202 otherwise)
 		// Authorized since superdog even with non root backend
-		response = superdog("test").post("/1/snapshot")//
+		response = superdog("test").post("/1/snapshots")//
 				.queryParam("waitForCompletion", true)//
 				.go(201)//
 				.assertEquals(repository, "snapshot.repository")//
@@ -94,7 +94,7 @@ public class SnapshotServiceTest extends SpaceTest {
 		ObjectNode secondSnap = (ObjectNode) response.get("snapshot");
 		String secondSnapId = response.getString("id");
 
-		superdog.get("/1/snapshot").go(200)//
+		superdog.get("/1/snapshots").go(200)//
 				.assertEquals(secondSnap, "results.0")//
 				.assertEquals(firstSnap, "results.1");
 
@@ -106,7 +106,7 @@ public class SnapshotServiceTest extends SpaceTest {
 		// returns 201 since wait for completion true (202 otherwise)
 		// Authorized since snapshotUser is a root backend user
 		// and has the snapshotall role
-		response = snapDog.post("/1/snapshot")//
+		response = snapDog.post("/1/snapshots")//
 				.queryParam("waitForCompletion", true)//
 				.go(201)//
 				.assertEquals(repository, "snapshot.repository")//
@@ -117,18 +117,18 @@ public class SnapshotServiceTest extends SpaceTest {
 		String thirdSnapId = response.getString("id");
 
 		// snapshotAll gets first and second latest snapshots info
-		snapDog.get("/1/snapshot").from(0).size(2).go(200)//
+		snapDog.get("/1/snapshots").from(0).size(2).go(200)//
 				.assertSizeEquals(2, "results")//
 				.assertEquals(thirdSnap, "results.0")//
 				.assertEquals(secondSnap, "results.1");
 
 		// snapshotAll gets third latest snapshot info
-		snapDog.get("/1/snapshot").from(2).size(1).go(200)//
+		snapDog.get("/1/snapshots").from(2).size(1).go(200)//
 				.assertSizeEquals(1, "results")//
 				.assertEquals(firstSnap, "results.0");
 
 		// restore to oldest snapshot
-		superdog.post("/1/snapshot/{id}/restore")//
+		superdog.post("/1/snapshots/{id}/restore")//
 				.routeParam("id", firstSnapId)//
 				.queryParam("waitForCompletion", true)//
 				.go(200);
@@ -139,7 +139,7 @@ public class SnapshotServiceTest extends SpaceTest {
 		nath.get("/1/login").go(401);
 
 		// restore to second (middle) snapshot
-		superdog.post("/1/snapshot/{id}/restore")//
+		superdog.post("/1/snapshots/{id}/restore")//
 				.routeParam("id", secondSnapId)//
 				.queryParam("waitForCompletion", true)//
 				.go(200);
@@ -151,7 +151,7 @@ public class SnapshotServiceTest extends SpaceTest {
 		nath.get("/1/login").go(401);
 
 		// restore to latest (third) snapshot
-		superdog.post("/1/snapshot/{id}/restore")//
+		superdog.post("/1/snapshots/{id}/restore")//
 				.routeParam("id", thirdSnapId)//
 				.queryParam("waitForCompletion", true)//
 				.go(200);
@@ -172,7 +172,7 @@ public class SnapshotServiceTest extends SpaceTest {
 		nath.get("/1/login").go(401);
 
 		// restore to latest (third) snapshot
-		superdog.post("/1/snapshot/latest/restore")//
+		superdog.post("/1/snapshots/latest/restore")//
 				.queryParam("waitForCompletion", true)//
 				.go(200);
 
@@ -182,15 +182,15 @@ public class SnapshotServiceTest extends SpaceTest {
 		nath.login();
 
 		// fails to restore snapshot if invalid id format
-		superdog.post("/1/snapshot/xxxx/restore")//
+		superdog.post("/1/snapshots/xxxx/restore")//
 				.queryParam("waitForCompletion", true)//
 				.go(400);
 
 		// fails to get snapshot if id not found
-		superdog.get("/1/snapshot/all-utc-2011-01-01-00-00-00-000").go(404);
+		superdog.get("/1/snapshots/all-utc-2011-01-01-00-00-00-000").go(404);
 
 		// check account administrator can not restore the platform
-		test1.post("/1/snapshot/latest/restore").go(403);
+		test1.post("/1/snapshots/latest/restore").go(403);
 
 		// clean up
 		deleteBackend("test1");
@@ -198,7 +198,7 @@ public class SnapshotServiceTest extends SpaceTest {
 		deleteBackend("test3");
 
 		// check snapshot list did not change since last snapshot
-		superdog.get("/1/snapshot").go(200)//
+		superdog.get("/1/snapshots").go(200)//
 				.assertEquals(thirdSnap, "results.0")//
 				.assertEquals(secondSnap, "results.1")//
 				.assertEquals(firstSnap, "results.2");

@@ -25,7 +25,7 @@ import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/1/snapshot")
+@Prefix("/1/snapshots")
 public class SnapshotService extends SpaceService {
 
 	public static final String SNAPSHOT_ALL = "snapshotall";
