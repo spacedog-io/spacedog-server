@@ -47,24 +47,24 @@ public class SchemaServiceTest extends SpaceTest {
 				guest.schema().getAll());
 
 		// anonymous is not allowed to delete schema
-		guest.delete("/1/schema/sale").go(403);
+		guest.delete("/1/schemas/sale").go(403);
 
 		// user is not allowed to delete schema
-		bob.delete("/1/schema/sale").go(403);
+		bob.delete("/1/schemas/sale").go(403);
 
 		// admin fails to delete a non existing schema
-		superadmin.delete("/1/schema/XXX").go(404);
+		superadmin.delete("/1/schemas/XXX").go(404);
 
 		// admin deletes a schema and all its objects
 		superadmin.delete(saleSchema.name());
 
 		// admin fails to create an invalid schema
-		superadmin.put("/1/schema/toto")//
+		superadmin.put("/1/schemas/toto")//
 				.bodyString("{\"toto\":{\"_type\":\"XXX\"}}").go(400);
 
 		// admin fails to update car schema color property type
 		carSchema.node().with("car").with("color").put("_type", "date");
-		superadmin.put("/1/schema/car").bodySchema(carSchema).go(400);
+		superadmin.put("/1/schemas/car").bodySchema(carSchema).go(400);
 
 		// fails to remove the car schema color property
 		// json = buildCarSchema();
@@ -153,8 +153,8 @@ public class SchemaServiceTest extends SpaceTest {
 		SpaceDog guest = SpaceDog.backend(superadmin.backend());
 
 		// settings is a reserved schema name
-		guest.get("/1/schema/settings").go(400);
-		superadmin.put("/1/schema/settings").go(400);
+		guest.get("/1/schemas/settings").go(400);
+		superadmin.put("/1/schemas/settings").go(400);
 	}
 
 	@Test

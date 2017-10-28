@@ -27,30 +27,30 @@ public class SchemaEndpoint {
 	}
 
 	public SchemaEndpoint delete(String name) {
-		dog.delete("/1/schema/{name}")//
+		dog.delete("/1/schemas/{name}")//
 				.routeParam("name", name).go(200, 404);
 		return this;
 	}
 
 	public SchemaEndpoint set(Schema schema) {
-		dog.put("/1/schema/{name}").routeParam("name", schema.name())//
+		dog.put("/1/schemas/{name}").routeParam("name", schema.name())//
 				.bodySchema(schema).go(200, 201);
 		return this;
 	}
 
 	public Schema get(String name) {
-		ObjectNode node = dog.get("/1/schema/{name}")//
+		ObjectNode node = dog.get("/1/schemas/{name}")//
 				.routeParam("name", name).go(200).asJsonObject();
 		return new Schema(name, node);
 	}
 
 	public SchemaEndpoint setDefault(String name) {
-		dog.put("/1/schema/{name}").routeParam("name", name).go(201);
+		dog.put("/1/schemas/{name}").routeParam("name", name).go(201);
 		return this;
 	}
 
 	public Set<Schema> getAll() {
-		ObjectNode payload = dog.get("/1/schema").go(200).asJsonObject();
+		ObjectNode payload = dog.get("/1/schemas").go(200).asJsonObject();
 		Set<Schema> schemas = Sets.newHashSet();
 		Iterator<String> fieldNames = payload.fieldNames();
 		while (fieldNames.hasNext()) {

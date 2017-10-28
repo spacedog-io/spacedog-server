@@ -16,12 +16,11 @@ import io.spacedog.utils.Json.JsonMerger;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
-import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.annotations.Put;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/1/schema")
+@Prefix("/1/schemas")
 public class SchemaService extends SpaceService {
 
 	//
@@ -48,9 +47,6 @@ public class SchemaService extends SpaceService {
 
 	@Put("/:type")
 	@Put("/:type/")
-	// deprecated
-	@Post("/:type")
-	@Post("/:type/")
 	public Payload put(String type, String newSchemaAsString, Context context) {
 
 		SpaceContext.credentials().checkAtLeastAdmin();
