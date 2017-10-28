@@ -90,8 +90,12 @@ public class LinkedinService extends SpaceService {
 		return new Payload(302).withHeader(SpaceHeaders.LOCATION, location.toString());
 	}
 
-	@Get("/1/linkedin/people/me/:fields")
-	@Get("/1/linkedin/people/me/:fields/")
+	// client can directly access linkedin api
+	// using spacedog access token since token comes from linkedin
+	// this is only request forwarding
+	@Deprecated
+	@Get("/1/linkedin/me/:fields")
+	@Get("/1/linkedin/me/:fields/")
 	public Payload get(String fields, Context context) {
 
 		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
