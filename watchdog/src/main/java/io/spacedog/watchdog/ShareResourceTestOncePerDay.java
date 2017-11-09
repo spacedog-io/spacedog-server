@@ -354,4 +354,30 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		Files.write(bytes, new File(System.getProperty("user.home"), "download.zip"));
 	}
 
+	@Test
+	public void testFileOwnershipErrorsDoNotDrainAllS3Connection() throws IOException {
+
+		// prepare
+		prepareTest(false);
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog vince = signUp(superadmin, "vince", "hi vince", "vince@dog.com");
+		SpaceDog fred = signUp(superadmin, "fred", "hi fred", "fred@dog.com");
+
+		// super admin sets custom share permissions
+		ShareSettings settings = new ShareSettings();
+		settings.acl.put("user", Sets.newHashSet(DataPermission.create, //
+				DataPermission.read));
+		superadmin.settings().save(settings);
+
+		// vince shares a file
+		String location = vince.post("/1/share/vince.txt")//
+				.bodyBytes("vince".getBytes()).go(200)//
+				.getString("location");
+
+		// fred is not allowed to read vince's file
+		// check ownership error do not drain s3 connection pool
+		for (int i = 0; i < 75; i++)
+			fred.get(location).go(403);
+	}
+
 }
