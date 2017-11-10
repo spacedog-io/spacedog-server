@@ -142,4 +142,9 @@ public class ShareEndpoint {
 				.toPojo("deleted", String[].class);
 	}
 
+	public String[] deleteAll() {
+		return dog.delete("/1/shares").go(200)//
+				.toPojo("deleted", String[].class);
+	}
+
 }
