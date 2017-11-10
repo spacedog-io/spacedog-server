@@ -331,7 +331,7 @@ public class ShareServiceTest extends SpaceTest {
 	}
 
 	@Test
-	public void testDownloadManyShares() throws IOException {
+	public void downloadZipOfShares() throws IOException {
 
 		// prepare
 		SpaceDog superadmin = resetTestBackend();
@@ -387,6 +387,29 @@ public class ShareServiceTest extends SpaceTest {
 		else if (entry.getName().endsWith("tweeter.png"))
 			assertArrayEquals(Utils.readResource(this.getClass(), "tweeter.png"), //
 					bytes);
+	}
+
+	@Test
+	public void testFileOwnershipErrorsDoNotDrainAllS3Connection() throws IOException {
+
+		// prepare
+		prepareTest(false);
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog vince = createTempDog(superadmin, "vince");
+		SpaceDog fred = createTempDog(superadmin, "fred");
+
+		// super admin sets custom share permissions
+		ShareSettings settings = new ShareSettings();
+		settings.sharePermissions.put("user", Permission.create, Permission.readMine);
+		superadmin.settings().save(settings);
+
+		// vince shares a file
+		ShareMeta share = vince.shares().upload("vince".getBytes(), "vince.txt");
+
+		// fred is not allowed to read vince's file
+		// check ownership error do not drain s3 connection pool
+		for (int i = 0; i < 70; i++)
+			fred.get(share.location).go(403);
 	}
 
 }

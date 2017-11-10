@@ -1,5 +1,6 @@
 package io.spacedog.utils;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Collection;
@@ -191,6 +192,15 @@ public class Utils {
 		} catch (IOException e) {
 			throw Exceptions.runtime(e, "error reading resource [%s][%s]", //
 					contextClass.getSimpleName(), resourceName);
+		}
+	}
+
+	public static void closeSilently(Closeable closeable) {
+		try {
+			if (closeable != null)
+				closeable.close();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 

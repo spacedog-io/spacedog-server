@@ -36,6 +36,7 @@ import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceHeaders;
+import io.spacedog.utils.Utils;
 import io.spacedog.utils.WebPath;
 import net.codestory.http.Context;
 import net.codestory.http.constants.HttpStatus;
@@ -86,13 +87,16 @@ public class S3Service extends SpaceService {
 				owner = getOrCheckOwnership(metadata, checkOwnership);
 			}
 
-		} catch (AmazonS3Exception e) {
+		} catch (Throwable t) {
+
+			Utils.closeSilently(s3Object);
 
 			// 404 is OK
-			if (e.getStatusCode() == 404)
+			if (t instanceof AmazonS3Exception //
+					&& ((AmazonS3Exception) t).getStatusCode() == 404)
 				return Payload.notFound();
 
-			throw e;
+			throw t;
 		}
 
 		Payload payload = new Payload(metadata.getContentType(), fileContent)//
@@ -269,8 +273,7 @@ public class S3Service extends SpaceService {
 
 		@Override
 		public void write(OutputStream output) throws IOException {
-			ByteStreams.copy(s3Object.getObjectContent(), output);
-			s3Object.close();
+			writeS3ObjectContent(s3Object, output);
 		}
 
 	}
@@ -296,12 +299,12 @@ public class S3Service extends SpaceService {
 			ZipOutputStream zip = new ZipOutputStream(output);
 			for (String path : request.paths) {
 				WebPath webPath = WebPath.parse(path);
-				S3Object object = getS3Object(bucketSuffix, backendId, webPath);
 				zip.putNextEntry(new ZipEntry(webPath.last()));
-				ByteStreams.copy(object.getObjectContent(), zip);
-				object.close();
+				S3Object s3Object = getS3Object(bucketSuffix, backendId, webPath);
+				writeS3ObjectContent(s3Object, zip);
 				zip.flush();
 			}
+			// TODO put this in a finally block?
 			zip.close();
 		}
 
@@ -311,6 +314,14 @@ public class S3Service extends SpaceService {
 		String bucketName = getBucketName(bucketSuffix);
 		WebPath s3Path = path.addFirst(backendId);
 		return s3.getObject(bucketName, s3Path.toS3Key());
+	}
+
+	private void writeS3ObjectContent(S3Object s3Object, OutputStream output) throws IOException {
+		try {
+			ByteStreams.copy(s3Object.getObjectContent(), output);
+		} finally {
+			Utils.closeSilently(s3Object);
+		}
 	}
 
 	private String contentType(String fileName, Context context) {
