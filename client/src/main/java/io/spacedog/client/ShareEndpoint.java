@@ -2,6 +2,7 @@ package io.spacedog.client;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import org.joda.time.DateTime;
 
@@ -14,6 +15,7 @@ import com.google.common.io.Files;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceResponse;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceHeaders;
 
 public class ShareEndpoint {
@@ -107,6 +109,13 @@ public class ShareEndpoint {
 		share.owner = response.header(SpaceHeaders.SPACEDOG_OWNER);
 		share.etag = response.header(SpaceHeaders.ETAG);
 		return share;
+	}
+
+	public byte[] zip(List<String> ids) {
+		return dog.post("/1/shares/zip")//
+				.bodyJson("paths", Json.toJsonNode(ids))//
+				.go(200)//
+				.asBytes();
 	}
 
 	public ShareMeta upload(File file) {

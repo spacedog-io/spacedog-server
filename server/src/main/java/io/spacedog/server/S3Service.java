@@ -283,16 +283,17 @@ public class S3Service extends SpaceService {
 
 		private String bucketSuffix;
 		private ZipRequest request;
+		private String backendId;
 
 		public ZipStreamingOutput(String bucketSuffix, ZipRequest request) {
 			this.bucketSuffix = bucketSuffix;
 			this.request = request;
+			this.backendId = SpaceContext.backendId();
 		}
 
 		@Override
 		public void write(OutputStream output) throws IOException {
 			ZipOutputStream zip = new ZipOutputStream(output);
-			String backendId = SpaceContext.backendId();
 			for (String path : request.paths) {
 				WebPath webPath = WebPath.parse(path);
 				S3Object object = getS3Object(bucketSuffix, backendId, webPath);

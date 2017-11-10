@@ -1,15 +1,17 @@
 package io.spacedog.test.share;
 
-import java.io.File;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.collect.Sets;
-import com.google.common.io.Files;
+import com.google.common.io.ByteStreams;
 import com.google.common.io.Resources;
 
 import io.spacedog.client.ShareEndpoint.Share;
@@ -23,6 +25,7 @@ import io.spacedog.model.ShareSettings;
 import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceHeaders;
+import io.spacedog.utils.Utils;
 
 public class ShareServiceTest extends SpaceTest {
 
@@ -332,47 +335,34 @@ public class ShareServiceTest extends SpaceTest {
 
 		// prepare
 		SpaceDog superadmin = resetTestBackend();
+		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		// prepare share settings
 		ShareSettings settings = new ShareSettings();
-		settings.sharePermissions.put("admin", Permission.readMine, Permission.create);
+		settings.sharePermissions.put("user", Permission.readMine, Permission.create);
 		superadmin.settings().save(settings);
 
-		// share file with name that needs escaping
-		String path1 = superadmin.put("/1/shares/toto.txt")//
-				.bodyBytes("toto".getBytes())//
-				.go(200)//
-				.getString("path");
+		// vince uploads 3 shares
+		String path1 = vince.shares().upload("toto".getBytes(), "toto.txt").id;
+		String path2 = vince.shares().upload("titi".getBytes(), "titi.txt").id;
+		String path3 = vince.shares().upload(//
+				Utils.readResource(this.getClass(), "tweeter.png"), "tweeter.png").id;
 
-		superadmin.get("/1/shares/" + path1).go(200);
+		// vince has the right to get his own shares
+		vince.shares().get(path1);
+		vince.shares().get(path2);
+		vince.shares().get(path3);
 
-		String path2 = superadmin.put("/1/shares/titi.txt")//
-				.bodyBytes("titi".getBytes())//
-				.go(200)//
-				.getString("path");
+		// vince needs readAll permission to downloads many shares
+		vince.post("/1/shares/zip").go(403);
 
-		superadmin.get("/1/shares/" + path2).go(200);
-
-		String path3 = superadmin.put("/1/shares/tweeter.png")//
-				.bodyResource(getClass(), "tweeter.png")//
-				.go(200)//
-				.getString("path");
-
-		superadmin.get("/1/shares/" + path3).go(200);
-
-		// superadmin needs read_all permission to downloads many shares
-		superadmin.post("/1/shares/_zip")//
-				.bodyJson("fileName", "download.zip", //
-						"paths", Json.array(path1, path2, path3))//
-				.go(403);
-
-		// superadmin updates share settings to allow admin
+		// superadmin updates share settings to allow users
 		// to download multiple shares
-		settings.sharePermissions.put("admin", Permission.readAll, Permission.create);
+		settings.sharePermissions.put("user", Permission.readAll, Permission.create);
 		superadmin.settings().save(settings);
 
-		// superadmin downloads zip containing specified shares
-		byte[] bytes = superadmin.post("/1/shares/_zip")//
+		// vince downloads zip containing specified shares
+		byte[] bytes = vince.post("/1/shares/zip")//
 				.bodyJson("fileName", "download.zip", //
 						"paths", Json.array(path1, path2, path3))//
 				.go(200)//
@@ -380,7 +370,23 @@ public class ShareServiceTest extends SpaceTest {
 						SpaceHeaders.CONTENT_DISPOSITION)//
 				.asBytes();
 
-		Files.write(bytes, new File(System.getProperty("user.home"), "download.zip"));
+		ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(bytes));
+		checkEntry(zip);
+		checkEntry(zip);
+		checkEntry(zip);
+	}
+
+	private void checkEntry(ZipInputStream zip) throws IOException {
+		ZipEntry entry = zip.getNextEntry();
+		byte[] bytes = ByteStreams.toByteArray(zip);
+
+		if (entry.getName().endsWith("toto.txt"))
+			assertArrayEquals("toto".getBytes(), bytes);
+		else if (entry.getName().endsWith("titi.txt"))
+			assertArrayEquals("titi".getBytes(), bytes);
+		else if (entry.getName().endsWith("tweeter.png"))
+			assertArrayEquals(Utils.readResource(this.getClass(), "tweeter.png"), //
+					bytes);
 	}
 
 }

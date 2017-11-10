@@ -57,8 +57,8 @@ public class ShareService extends S3Service {
 		return doDelete(SHARE_BUCKET_SUFFIX, WebPath.ROOT, false, false);
 	}
 
-	@Post("/_zip")
-	@Post("/_zip/")
+	@Post("/zip")
+	@Post("/zip/")
 	public Payload postDownload(String body, Context context) {
 		checkPermission(Permission.readAll);
 		ZipRequest request = Json.toPojo(body, ZipRequest.class);
