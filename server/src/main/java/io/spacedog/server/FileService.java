@@ -78,7 +78,7 @@ public class FileService extends S3Service {
 
 	Payload delete(WebPath path) {
 		SpaceContext.credentials().checkAtLeastAdmin();
-		return doDelete(FILE_BUCKET_SUFFIX, path, false, false);
+		return doDelete(FILE_BUCKET_SUFFIX, path, false);
 	}
 
 	private static WebPath toWebPath(String uri) {

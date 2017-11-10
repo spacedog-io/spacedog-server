@@ -516,8 +516,9 @@ public class Json {
 	}
 
 	public static <K> K toPojo(String json, Class<K> pojoClass) {
-		Check.notNullOrEmpty(json, "json");
 		Check.notNull(pojoClass, "pojoClass");
+		if (Strings.isNullOrEmpty(json))
+			json = pojoClass.isArray() ? "[]" : "{}";
 
 		try {
 			return mapper().readValue(json, pojoClass);

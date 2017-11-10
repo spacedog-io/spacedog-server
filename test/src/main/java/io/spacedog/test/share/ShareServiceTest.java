@@ -9,7 +9,6 @@ import java.util.zip.ZipInputStream;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Resources;
@@ -75,6 +74,7 @@ public class ShareServiceTest extends SpaceTest {
 		SpaceDog guest = SpaceDog.backend(superadmin.backend());
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog fred = createTempDog(superadmin, "fred");
+		SpaceDog admin = createTempDog(superadmin, "admin", Type.admin.name());
 
 		// superadmin sets custom share permissions
 		ShareSettings settings = new ShareSettings();
@@ -189,13 +189,14 @@ public class ShareServiceTest extends SpaceTest {
 		assertEquals(1, list.shares.length);
 		assertEquals(pngMeta.id, list.shares[0].id);
 
-		// only admin can delete all shared files
+		// only superadmin can delete all shared files
 		guest.delete("/1/shares").go(403);
 		fred.delete("/1/shares").go(403);
 		vince.delete("/1/shares").go(403);
-		superadmin.delete("/1/shares").go(200)//
-				.assertSizeEquals(1, "deleted")//
-				.assertContains(TextNode.valueOf(pngMeta.id), "deleted");
+		admin.delete("/1/shares").go(403);
+		String[] deleted = superadmin.shares().deleteAll();
+		assertEquals(1, deleted.length);
+		assertEquals(pngMeta.id, deleted[0]);
 
 		// superadmin lists all shares but there is no more
 		assertEquals(0, superadmin.shares().list().shares.length);
@@ -336,25 +337,55 @@ public class ShareServiceTest extends SpaceTest {
 		// prepare
 		SpaceDog superadmin = resetTestBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
+		SpaceDog nath = createTempDog(superadmin, "nath");
 
 		// prepare share settings
 		ShareSettings settings = new ShareSettings();
 		settings.sharePermissions.put("user", Permission.readMine, Permission.create);
 		superadmin.settings().save(settings);
 
-		// vince uploads 3 shares
-		String path1 = vince.shares().upload("toto".getBytes(), "toto.txt").id;
+		// nath uploads 1 share
+		String path1 = nath.shares().upload("toto".getBytes(), "toto.txt").id;
+
+		// nath has the right to get his own shares
+		nath.shares().get(path1);
+
+		// vince does not have access to nath's shares
+		vince.get("/1/shares" + path1).go(403);
+
+		// nath gets a zip of her shares
+		byte[] zip = nath.shares().zip(path1);
+		assertEquals(1, zipFileNumber(zip));
+		assertZipContains(zip, "toto.txt", "toto".getBytes());
+
+		// vince uploads 2 shares
 		String path2 = vince.shares().upload("titi".getBytes(), "titi.txt").id;
-		String path3 = vince.shares().upload(//
-				Utils.readResource(this.getClass(), "tweeter.png"), "tweeter.png").id;
+		byte[] pngBytes = Utils.readResource(this.getClass(), "tweeter.png");
+		String path3 = vince.shares().upload(pngBytes, "tweeter.png").id;
 
 		// vince has the right to get his own shares
-		vince.shares().get(path1);
 		vince.shares().get(path2);
 		vince.shares().get(path3);
 
-		// vince needs readAll permission to downloads many shares
-		vince.post("/1/shares/zip").go(403);
+		// nath does not have access to vince's shares
+		nath.get("/1/shares" + path2).go(403);
+		nath.get("/1/shares" + path3).go(403);
+
+		// vince gets a zip of his shares
+		zip = vince.shares().zip(path2, path3);
+		assertEquals(2, zipFileNumber(zip));
+		assertZipContains(zip, "titi.txt", "titi".getBytes());
+		assertZipContains(zip, "tweeter.png", pngBytes);
+
+		// vince needs readAll permission to zip nath's shares
+		vince.post("/1/shares/zip")//
+				.bodyJson("paths", Json.array(path1, path2))//
+				.go(403);
+
+		// nath needs readAll permission to zip vince's shares
+		nath.post("/1/shares/zip")//
+				.bodyJson("paths", Json.array(path1, path2))//
+				.go(403);
 
 		// superadmin updates share settings to allow users
 		// to download multiple shares
@@ -362,7 +393,7 @@ public class ShareServiceTest extends SpaceTest {
 		superadmin.settings().save(settings);
 
 		// vince downloads zip containing specified shares
-		byte[] bytes = vince.post("/1/shares/zip")//
+		zip = vince.post("/1/shares/zip")//
 				.bodyJson("fileName", "download.zip", //
 						"paths", Json.array(path1, path2, path3))//
 				.go(200)//
@@ -370,23 +401,30 @@ public class ShareServiceTest extends SpaceTest {
 						SpaceHeaders.CONTENT_DISPOSITION)//
 				.asBytes();
 
-		ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(bytes));
-		checkEntry(zip);
-		checkEntry(zip);
-		checkEntry(zip);
+		assertZipContains(zip, "toto.txt", "toto".getBytes());
+		assertZipContains(zip, "titi.txt", "titi".getBytes());
+		assertZipContains(zip, "tweeter.png", pngBytes);
 	}
 
-	private void checkEntry(ZipInputStream zip) throws IOException {
-		ZipEntry entry = zip.getNextEntry();
-		byte[] bytes = ByteStreams.toByteArray(zip);
+	private int zipFileNumber(byte[] zip) throws IOException {
+		ZipInputStream zipStream = new ZipInputStream(new ByteArrayInputStream(zip));
+		int size = 0;
+		while (zipStream.getNextEntry() != null)
+			size = size + 1;
+		return size;
+	}
 
-		if (entry.getName().endsWith("toto.txt"))
-			assertArrayEquals("toto".getBytes(), bytes);
-		else if (entry.getName().endsWith("titi.txt"))
-			assertArrayEquals("titi".getBytes(), bytes);
-		else if (entry.getName().endsWith("tweeter.png"))
-			assertArrayEquals(Utils.readResource(this.getClass(), "tweeter.png"), //
-					bytes);
+	private void assertZipContains(byte[] zip, String name, byte[] file) throws IOException {
+		ZipInputStream zipStream = new ZipInputStream(new ByteArrayInputStream(zip));
+		ZipEntry entry = null;
+		while ((entry = zipStream.getNextEntry()) != null) {
+			if (entry.getName().endsWith(name)) {
+				byte[] bytes = ByteStreams.toByteArray(zipStream);
+				assertArrayEquals(file, bytes);
+				return;
+			}
+		}
+		fail(String.format("[%s] zip entry not found", name));
 	}
 
 	@Test

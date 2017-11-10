@@ -2,7 +2,7 @@ package io.spacedog.client;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
+import java.util.Set;
 
 import org.joda.time.DateTime;
 
@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 
 import io.spacedog.http.SpaceRequest;
@@ -111,7 +112,11 @@ public class ShareEndpoint {
 		return share;
 	}
 
-	public byte[] zip(List<String> ids) {
+	public byte[] zip(String... ids) {
+		return zip(Sets.newHashSet(ids));
+	}
+
+	public byte[] zip(Set<String> ids) {
 		return dog.post("/1/shares/zip")//
 				.bodyJson("paths", Json.toJsonNode(ids))//
 				.go(200)//

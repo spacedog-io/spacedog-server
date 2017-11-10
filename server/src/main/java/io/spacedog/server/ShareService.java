@@ -54,15 +54,14 @@ public class ShareService extends S3Service {
 	@Delete("/")
 	public Payload deleteAll() {
 		checkPermission(Permission.deleteAll);
-		return doDelete(SHARE_BUCKET_SUFFIX, WebPath.ROOT, false, false);
+		return doDelete(SHARE_BUCKET_SUFFIX, WebPath.ROOT, false);
 	}
 
 	@Post("/zip")
 	@Post("/zip/")
-	public Payload postDownload(String body, Context context) {
-		checkPermission(Permission.readAll);
+	public Payload postZip(String body, Context context) {
 		ZipRequest request = Json.toPojo(body, ZipRequest.class);
-		return doDownload(SHARE_BUCKET_SUFFIX, request, context);
+		return doZip(SHARE_BUCKET_SUFFIX, request, shareSettings().sharePermissions);
 	}
 
 	@Get("/:id")
@@ -83,7 +82,7 @@ public class ShareService extends S3Service {
 				Permission.deleteMine, Permission.deleteAll);
 
 		return doDelete(SHARE_BUCKET_SUFFIX, WebPath.newPath(id), //
-				true, checkOwnership);
+				checkOwnership);
 	}
 
 	//
