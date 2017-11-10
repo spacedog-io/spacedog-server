@@ -16,7 +16,6 @@ import io.spacedog.client.elastic.ESSortBuilders;
 import io.spacedog.client.elastic.ESSortOrder;
 import io.spacedog.http.SpaceBackend;
 import io.spacedog.http.SpaceRequest;
-import io.spacedog.http.SpaceTest;
 
 public class LogServiceTest extends SpaceTest {
 

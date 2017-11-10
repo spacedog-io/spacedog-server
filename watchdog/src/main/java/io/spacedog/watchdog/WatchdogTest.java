@@ -10,17 +10,17 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceRequest;
-import io.spacedog.http.SpaceTest;
 import io.spacedog.utils.Json;
 
-public class WatchdogTest extends SpaceTest {
+public class WatchdogTest {
 
 	@Test
 	public void userIsSigningUpAndMore() {
 
 		// prepare
-		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
+		// prepareTest();
+		SpaceDog superadmin = null; // resetTestBackend();
+
 		superadmin.credentials().enableGuestSignUp(true);
 
 		// fails since empty user body
@@ -97,7 +97,7 @@ public class WatchdogTest extends SpaceTest {
 		SpaceRequest.get("/1/credentials/" + vince.id()).backend(superadmin).go(403);
 
 		// another user fails to get vince credentials
-		SpaceDog fred = signUpTempDog("test", "fred");
+		SpaceDog fred = null;// signUpTempDog("test", "fred");
 		fred.get("/1/credentials/" + vince.id()).go(403);
 
 		// vince succeeds to login

@@ -9,9 +9,9 @@ import com.google.common.io.Resources;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceEnv;
 import io.spacedog.http.SpaceRequest;
-import io.spacedog.http.SpaceTest;
 import io.spacedog.model.MailSettings;
 import io.spacedog.model.MailSettings.SmtpSettings;
+import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Utils;
 
 public class MailServiceTest extends SpaceTest {

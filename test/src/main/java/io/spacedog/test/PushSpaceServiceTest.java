@@ -16,7 +16,6 @@ import com.google.common.collect.Sets;
 
 import io.spacedog.client.PushRequest;
 import io.spacedog.client.SpaceDog;
-import io.spacedog.http.SpaceTest;
 import io.spacedog.model.BadgeStrategy;
 import io.spacedog.model.DataObject;
 import io.spacedog.model.Installation;

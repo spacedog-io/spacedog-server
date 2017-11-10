@@ -12,9 +12,9 @@ import org.junit.Test;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceEnv;
 import io.spacedog.http.SpaceRequest;
-import io.spacedog.http.SpaceTest;
 import io.spacedog.model.CredentialsSettings;
 import io.spacedog.model.CredentialsSettings.OAuthSettings;
+import io.spacedog.test.SpaceTest;
 
 public class Linkedin extends SpaceTest {
 

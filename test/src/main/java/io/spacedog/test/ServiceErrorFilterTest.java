@@ -3,7 +3,6 @@ package io.spacedog.test;
 import org.junit.Test;
 
 import io.spacedog.http.SpaceRequest;
-import io.spacedog.http.SpaceTest;
 
 public class ServiceErrorFilterTest extends SpaceTest {
 

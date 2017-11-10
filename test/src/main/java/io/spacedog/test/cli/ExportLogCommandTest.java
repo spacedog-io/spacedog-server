@@ -14,8 +14,8 @@ import io.spacedog.cli.ExportLogCommand;
 import io.spacedog.cli.LoginCommand;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.LogEndpoint.LogSearchResults;
-import io.spacedog.http.SpaceTest;
 import io.spacedog.model.CredentialsSettings;
+import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 

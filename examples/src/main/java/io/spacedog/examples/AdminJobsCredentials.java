@@ -5,9 +5,9 @@ import org.junit.Test;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceBackend;
 import io.spacedog.http.SpaceEnv;
-import io.spacedog.http.SpaceTest;
 import io.spacedog.server.LogService;
 import io.spacedog.server.SnapshotService;
+import io.spacedog.test.SpaceTest;
 
 public class AdminJobsCredentials extends SpaceTest {
 

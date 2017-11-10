@@ -7,7 +7,6 @@ import com.google.common.collect.Sets;
 import io.spacedog.client.FileEndpoint.FileList;
 import io.spacedog.client.FileEndpoint.SpaceFile;
 import io.spacedog.client.SpaceDog;
-import io.spacedog.http.SpaceTest;
 
 public class FileServiceTest extends SpaceTest {
 

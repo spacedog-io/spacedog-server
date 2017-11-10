@@ -18,9 +18,9 @@ import io.spacedog.client.ShareEndpoint.ShareList;
 import io.spacedog.client.ShareEndpoint.ShareMeta;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceRequest;
-import io.spacedog.http.SpaceTest;
 import io.spacedog.model.Permission;
 import io.spacedog.model.ShareSettings;
+import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceHeaders;
@@ -29,6 +29,7 @@ import io.spacedog.utils.Utils;
 public class ShareServiceTest extends SpaceTest {
 
 	private static final String FILE_CONTENT = "This is a test file!";
+	private static final byte[] BYTES = "blablabla".getBytes();
 
 	@Test
 	public void shareWithDefaultSettings() throws IOException {
@@ -41,27 +42,29 @@ public class ShareServiceTest extends SpaceTest {
 		SpaceDog admin = createTempDog(superadmin, "admin", Type.admin.name());
 
 		// only superadmins can list shares
-		guest.get("/1/shares").go(403);
-		vince.get("/1/shares").go(403);
-		admin.get("/1/shares").go(403);
+		assertHttpError(403, () -> guest.shares().list());
+		assertHttpError(403, () -> vince.shares().list());
+		assertHttpError(403, () -> admin.shares().list());
 
 		// only superadmins can create shares
-		guest.post("/1/shares").go(403);
-		vince.post("/1/shares").go(403);
-		admin.post("/1/shares").go(403);
+		assertHttpError(403, () -> guest.shares().upload(BYTES));
+		assertHttpError(403, () -> vince.shares().upload(BYTES));
+		assertHttpError(403, () -> admin.shares().upload(BYTES));
+
+		// superadmins creates a shared file
 		ShareMeta shareMeta = superadmin.shares().upload(FILE_CONTENT.getBytes());
 		assertNull(shareMeta.s3);
 
 		// only superadmins can read shares
-		guest.get("/1/shares/" + shareMeta.id).go(403);
-		vince.get("/1/shares/" + shareMeta.id).go(403);
-		admin.get("/1/shares/" + shareMeta.id).go(403);
+		assertHttpError(403, () -> guest.shares().get(shareMeta.id));
+		assertHttpError(403, () -> vince.shares().get(shareMeta.id));
+		assertHttpError(403, () -> admin.shares().get(shareMeta.id));
 		superadmin.shares().get(shareMeta.id);
 
 		// only superadmins can delete shares
-		guest.delete("/1/shares/" + shareMeta.id).go(403);
-		vince.delete("/1/shares/" + shareMeta.id).go(403);
-		admin.delete("/1/shares/" + shareMeta.id).go(403);
+		assertHttpError(403, () -> guest.shares().delete(shareMeta.id));
+		assertHttpError(403, () -> vince.shares().delete(shareMeta.id));
+		assertHttpError(403, () -> admin.shares().delete(shareMeta.id));
 		superadmin.shares().delete(shareMeta.id);
 	}
 

@@ -9,7 +9,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceDog;
-import io.spacedog.http.SpaceTest;
 import io.spacedog.model.DataObject;
 import io.spacedog.model.InternalDataAclSettings;
 import io.spacedog.model.JsonDataObject;

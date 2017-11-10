@@ -12,7 +12,6 @@ import com.google.common.collect.Sets;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceResponse;
-import io.spacedog.http.SpaceTest;
 import io.spacedog.model.Permission;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;

@@ -7,7 +7,6 @@ import org.junit.Test;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceRequest;
-import io.spacedog.http.SpaceTest;
 import io.spacedog.utils.SpaceHeaders;
 
 public class CrossOriginFilterTest extends SpaceTest {

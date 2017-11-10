@@ -21,7 +21,6 @@ import com.stripe.model.Token;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceEnv;
 import io.spacedog.http.SpaceRequest;
-import io.spacedog.http.SpaceTest;
 import io.spacedog.model.StripeSettings;
 
 public class StripeServiceTest extends SpaceTest {

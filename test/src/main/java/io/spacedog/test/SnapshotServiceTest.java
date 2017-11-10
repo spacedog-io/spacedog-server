@@ -12,7 +12,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceResponse;
-import io.spacedog.http.SpaceTest;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Optional7;
 

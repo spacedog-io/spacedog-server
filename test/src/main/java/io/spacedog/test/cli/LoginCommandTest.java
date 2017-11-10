@@ -7,7 +7,7 @@ import org.junit.Test;
 import io.spacedog.cli.LoginCommand;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceRequestException;
-import io.spacedog.http.SpaceTest;
+import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Credentials.Type;
 
 public class LoginCommandTest extends SpaceTest {

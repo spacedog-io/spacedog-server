@@ -27,7 +27,6 @@ import com.google.common.collect.Sets;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.http.SpaceRequest;
-import io.spacedog.http.SpaceTest;
 import io.spacedog.model.DataObject;
 import io.spacedog.model.DataObjectAbstract;
 import io.spacedog.model.GeoPoint;

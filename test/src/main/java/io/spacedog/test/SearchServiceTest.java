@@ -13,7 +13,6 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.client.elastic.ESSortOrder;
 import io.spacedog.http.SpaceRequest;
-import io.spacedog.http.SpaceTest;
 import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.Permission;
 import io.spacedog.model.Schema;

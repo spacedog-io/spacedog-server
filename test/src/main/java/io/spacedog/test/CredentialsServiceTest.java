@@ -12,7 +12,6 @@ import com.google.common.collect.Maps;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceRequestException;
-import io.spacedog.http.SpaceTest;
 import io.spacedog.model.CredentialsSettings;
 import io.spacedog.model.MailSettings;
 import io.spacedog.model.MailTemplate;

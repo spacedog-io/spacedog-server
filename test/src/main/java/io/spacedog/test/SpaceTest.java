@@ -1,7 +1,8 @@
-package io.spacedog.http;
+package io.spacedog.test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.joda.time.DateTime;
 import org.junit.Assert;
@@ -11,6 +12,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.http.SpaceBackend;
+import io.spacedog.http.SpaceEnv;
+import io.spacedog.http.SpaceRequest;
+import io.spacedog.http.SpaceRequestException;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Passwords;
@@ -102,19 +107,12 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 				.id("superdog");
 	}
 
-	public static void fail(String message, Object... args) {
-		Assert.fail(String.format(message, args));
-	}
-
-	public static void fail(Throwable t) {
-		t.printStackTrace();
-		fail(t.getMessage());
-	}
-
 	public static DateTime assertDateIsValid(JsonNode date) {
 		assertNotNull(date);
-		if (!date.isTextual())
-			fail("json date [%s] is not valid", date);
+		if (!date.isTextual()) {
+			Object[] args = { date };
+			throw failure("json date [%s] is not valid", args);
+		}
 		return assertDateIsValid(date.asText());
 	}
 
@@ -123,8 +121,7 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 		try {
 			return DateTime.parse(date);
 		} catch (IllegalArgumentException e) {
-			fail("string date [%s] is not valid", date);
-			return null;
+			throw failure("string date [%s] is not valid", date);
 		}
 	}
 
@@ -143,8 +140,7 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 	public static DateTime assertDateIsRecent(DateTime date) {
 		long now = DateTime.now().getMillis();
 		if (date.isBefore(now - 3000) || date.isAfter(now + 3000))
-			Assert.fail(String.format("date time [%s] is " //
-					+ "not a recent enough (now +/- 3s)", date));
+			throw failure("date time [%s] is not a recent enough (now +/- 3s)", date);
 		return date;
 	}
 
@@ -160,8 +156,43 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 		JsonNode fieldNode = Json.get(node, fieldPath);
 		if (fieldNode != null && fieldNode.isTextual())
 			assertEquals(expected, fieldNode.asText());
-		else
-			fail("field [%s] null or not a string", fieldPath);
+		else {
+			Object[] args = { fieldPath };
+			throw failure("field [%s] null or not a string", args);
+		}
+	}
+
+	public static <T> SpaceRequestException assertHttpError(int status, Supplier<T> action) {
+		SpaceRequestException exception = assertRequestException(action);
+		assertEquals(status, exception.httpStatus());
+		return exception;
+	}
+
+	public static <T> SpaceRequestException assertRequestException(Supplier<T> action) {
+
+		try {
+			action.get();
+			throw failure("function did not throw any SpaceRequestException");
+
+		} catch (SpaceRequestException e) {
+			return e;
+
+		} catch (Throwable t) {
+			throw failure(t);
+		}
+	}
+
+	public static AssertionError failure(String message, Object... args) {
+		return new AssertionError(String.format(message, args));
+	}
+
+	public static AssertionError failure(Throwable t) {
+		return failure(t, "unexpected exception");
+	}
+
+	public static AssertionError failure(Throwable t, String message, Object... args) {
+		t.printStackTrace();
+		return new AssertionError(String.format(message, args), t);
 	}
 
 }
