@@ -3,9 +3,7 @@
  */
 package io.spacedog.server;
 
-import java.io.IOException;
 import java.net.URL;
-import java.util.List;
 
 import org.apache.commons.mail.Email;
 import org.apache.commons.mail.ImageHtmlEmail;
@@ -13,17 +11,16 @@ import org.apache.commons.mail.SimpleEmail;
 import org.apache.commons.mail.resolver.DataSourceUrlResolver;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceResponse;
+import io.spacedog.model.Mail;
 import io.spacedog.model.MailSettings;
 import io.spacedog.model.MailSettings.MailGunSettings;
 import io.spacedog.model.MailSettings.SmtpSettings;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import net.codestory.http.Context;
-import net.codestory.http.Part;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.payload.Payload;
 
@@ -47,73 +44,21 @@ public class MailService extends SpaceService {
 
 	@Post("/1/mail")
 	@Post("/1/mail/")
-	public Payload post(Context context) {
+	public Payload post(Mail mail, Context context) {
 		Credentials credentials = SpaceContext.credentials();
 		MailSettings settings = SettingsService.get().getAsObject(MailSettings.class);
 
 		if (!credentials.isAtLeastSuperAdmin())
 			credentials.checkRoles(settings.authorizedRoles);
 
-		return email(toMessage(context));
+		return email(mail);
 	}
 
 	//
 	// Implementation
 	//
 
-	static class Message {
-		public String from;
-		public List<String> to;
-		public List<String> cc;
-		public List<String> bcc;
-		public String subject;
-		public String text;
-		public String html;
-	}
-
-	private Message toMessage(Context context) {
-		Message message = new Message();
-
-		if (context.parts().isEmpty()) {
-			message.from = context.get(FROM);
-			message.to = toList(context.get(TO));
-			message.cc = toList(context.get(CC));
-			message.bcc = toList(context.get(BCC));
-			message.subject = context.get(SUBJECT);
-			message.text = context.get(TEXT);
-			message.html = context.get(HTML);
-
-		} else
-			for (Part part : context.parts()) {
-				try {
-					if (part.name().equals(FROM))
-						message.from = part.content();
-					if (part.name().equals(TO))
-						message.to = toList(part.content());
-					else if (part.name().equals(CC))
-						message.cc = toList(part.content());
-					else if (part.name().equals(BCC))
-						message.bcc = toList(part.content());
-					else if (part.name().equals(SUBJECT))
-						message.subject = part.content();
-					else if (part.name().equals(TEXT))
-						message.text = part.content();
-					else if (part.name().equals(HTML))
-						message.html = part.content();
-
-				} catch (IOException e) {
-					throw Exceptions.illegalArgument(e, "invalid [%s] part in multipart request", part.name());
-				}
-			}
-
-		return message;
-	}
-
-	private List<String> toList(String value) {
-		return value == null ? null : Lists.newArrayList(value);
-	}
-
-	public Payload email(Message message) {
+	public Payload email(Mail message) {
 
 		MailSettings settings = SettingsService.get().getAsObject(MailSettings.class);
 
@@ -127,7 +72,7 @@ public class MailService extends SpaceService {
 		return emailWithDefaultSettings(message);
 	}
 
-	Payload emailWithDefaultSettings(Message message) {
+	Payload emailWithDefaultSettings(Mail message) {
 
 		MailGunSettings settings = new MailGunSettings();
 		settings.key = Start.get().configuration().mailGunKey();
@@ -147,11 +92,11 @@ public class MailService extends SpaceService {
 		return emailViaGun(settings, message);
 	}
 
-	Payload emailViaGun(MailGunSettings settings, Message message) {
+	Payload emailViaGun(MailGunSettings settings, Mail message) {
 		return mailgun(message, settings);
 	}
 
-	Payload emailViaSmtp(SmtpSettings settings, Message message) {
+	Payload emailViaSmtp(SmtpSettings settings, Mail message) {
 
 		Email email = null;
 
@@ -210,7 +155,7 @@ public class MailService extends SpaceService {
 
 	}
 
-	private Payload mailgun(Message message, MailGunSettings settings) {
+	private Payload mailgun(Mail message, MailGunSettings settings) {
 
 		SpaceRequest request = SpaceRequest.post("/v3/{domain}/messages")//
 				.backend("https://api.mailgun.net")//

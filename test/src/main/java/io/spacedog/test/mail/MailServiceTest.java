@@ -4,11 +4,14 @@ import java.io.IOException;
 
 import org.junit.Test;
 
+import com.beust.jcommander.internal.Lists;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceEnv;
+import io.spacedog.model.Mail;
 import io.spacedog.model.MailSettings;
 import io.spacedog.model.MailSettings.SmtpSettings;
 import io.spacedog.test.SpaceTest;
@@ -29,39 +32,27 @@ public class MailServiceTest extends SpaceTest {
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		// by default only superadmins can send emails
-		vince.post("/1/mail").go(403);
+		assertHttpError(403, () -> vince.mail().send(defaultMail()));
 
-		// admin emails a simple text message
-		superadmin.post("/1/mail")//
-				.formField("to", DEFAULT_TO)//
-				.formField("subject", DEFAULT_SUBJECT)//
-				.formField("text", DEFAULT_TEXT)//
-				.go(200);
+		// superadmin emails a simple text message
+		superadmin.mail().send(defaultMail());
 
-		// admin allows users to send emails
+		// superadmin allows users to send emails
 		MailSettings settings = new MailSettings();
 		settings.authorizedRoles = Sets.newHashSet("user");
 		superadmin.settings().save(settings);
 
 		// now vince can email a simple html message
-		vince.post("/1/mail")//
-				.formField("to", DEFAULT_TO)//
-				.formField("subject", DEFAULT_SUBJECT)//
-				.formField("html", "<html><h1>So don't bother read this!</h1></html>")//
-				.go(200);
+		Mail mail = defaultMail();
+		mail.html = "<html><h1>So don't bother read this!</h1></html>";
+		vince.mail().send(mail);
 
 		// vince fails to email since no 'to' field
-		vince.post("/1/mail")//
-				.formField("subject", DEFAULT_SUBJECT)//
-				.formField("text", DEFAULT_TEXT)//
-				.go(400);
+		assertHttpError(400, () -> vince.mail().send(defaultMail().to(null)));
 
 		// vince fails to email since no html end tag
-		vince.post("/1/mail")//
-				.formField("to", DEFAULT_TO)//
-				.formField("subject", DEFAULT_SUBJECT)//
-				.formField("html", "<html><h1>XXX</h1>")//
-				.go(400);
+		assertHttpError(400, () -> vince.mail().//
+				send(defaultMail().html("<html><h1>XXX</h1>")));
 
 		// superadmin sets specific mailgun settings with invalid key
 		settings.mailgun = new MailSettings.MailGunSettings();
@@ -70,45 +61,42 @@ public class MailServiceTest extends SpaceTest {
 		superadmin.settings().save(settings);
 
 		// superadmin fails to email since mailgun key is invalid
-		superadmin.post("/1/mail")//
-				.formField("from", DEFAULT_FROM)//
-				.formField("to", DEFAULT_TO)//
-				.formField("subject", DEFAULT_SUBJECT)//
-				.formField("text", DEFAULT_TEXT)//
-				.go(401);
+		assertHttpError(401, () -> superadmin.mail().send(defaultMail()));
 
 		// superadmin sets smtp settings
 		settings.mailgun = null;
-		settings.smtp = new SmtpSettings();
-		settings.smtp.host = "mail.gandi.net";
-		settings.smtp.startTlsRequired = false;
-		settings.smtp.sslOnConnect = true;
-		settings.smtp.login = SpaceEnv.defaultEnv().getOrElseThrow("spacedog.test.smtp.login");
-		settings.smtp.password = SpaceEnv.defaultEnv().getOrElseThrow("spacedog.test.smtp.password");
+		settings.smtp = smtpSettings();
 		superadmin.settings().save(settings);
 
-		// load your HTML email template
-		String emailBody = Resources.toString(//
-				Resources.getResource(this.getClass(), "email.html"), //
-				Utils.UTF8);
-
 		// vince emails a text message via smtp
-		vince.post("/1/mail")//
-				.formField("from", DEFAULT_FROM)//
-				.formField("to", DEFAULT_TO)//
-				.formField("subject", DEFAULT_SUBJECT)//
-				.formField("text", DEFAULT_TEXT)//
-				.go(200)//
-				.assertPresent("messageId");
+		ObjectNode response = vince.mail().send(defaultMail());
+		assertNotNull(response.get("messageId").asText());
 
 		// vince emails an html message via smtp
-		vince.post("/1/mail")//
-				.formField("from", DEFAULT_FROM)//
-				.formField("to", DEFAULT_TO)//
-				.formField("subject", DEFAULT_SUBJECT)//
-				.formField("html", emailBody)//
-				.formField("text", DEFAULT_TEXT)//
-				.go(200)//
-				.assertPresent("messageId");
+		mail = defaultMail();
+		mail.html = Resources.toString(//
+				Resources.getResource(this.getClass(), "email.html"), //
+				Utils.UTF8);
+		response = vince.mail().send(mail);
+		assertNotNull(response.get("messageId").asText());
+	}
+
+	private Mail defaultMail() {
+		Mail mail = new Mail();
+		mail.from = DEFAULT_FROM;
+		mail.to = Lists.newArrayList(DEFAULT_TO);
+		mail.text = DEFAULT_TEXT;
+		mail.subject = DEFAULT_SUBJECT;
+		return mail;
+	}
+
+	private SmtpSettings smtpSettings() {
+		SmtpSettings settings = new SmtpSettings();
+		settings.host = "mail.gandi.net";
+		settings.startTlsRequired = false;
+		settings.sslOnConnect = true;
+		settings.login = SpaceEnv.defaultEnv().getOrElseThrow("spacedog.test.smtp.login");
+		settings.password = SpaceEnv.defaultEnv().getOrElseThrow("spacedog.test.smtp.password");
+		return settings;
 	}
 }
