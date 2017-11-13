@@ -26,7 +26,7 @@ import com.google.common.collect.Maps;
 
 import io.spacedog.model.CreateCredentialsRequest;
 import io.spacedog.model.CredentialsSettings;
-import io.spacedog.model.MailTemplate;
+import io.spacedog.model.EmailTemplate;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
@@ -297,7 +297,7 @@ public class CredentialsService extends SpaceService {
 			throw Exceptions.illegalArgument("no email found in credentials [%s][%s]", //
 					credentials.type(), credentials.name());
 
-		MailTemplate template = MailTemplateService.get()//
+		EmailTemplate template = EmailTemplateService.get()//
 				.getTemplate(FORGOT_PASSWORD_MAIL_TEMPLATE_NAME)//
 				.orElseThrow(() -> Exceptions.illegalArgument(//
 						"no [forgotPassword] mail template in mail settings"));
@@ -317,7 +317,7 @@ public class CredentialsService extends SpaceService {
 		mailContext.put("credentialsId", credentials.id());
 		mailContext.put("passwordResetCode", credentials.passwordResetCode());
 
-		MailTemplateService.get().sendTemplatedMail(template, mailContext);
+		EmailTemplateService.get().sendTemplatedMail(template, mailContext);
 
 		return JsonPayload.ok().build();
 	}

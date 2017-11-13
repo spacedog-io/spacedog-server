@@ -4,21 +4,21 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.model.EmailBasicRequest;
 
-public class MailEndpoint {
+public class EmailEndpoint {
 
 	SpaceDog dog;
 
-	MailEndpoint(SpaceDog dog) {
+	EmailEndpoint(SpaceDog dog) {
 		this.dog = dog;
 	}
 
 	public ObjectNode send(EmailBasicRequest message) {
-		return dog.post("/1/mail")//
+		return dog.post("/1/emails")//
 				.bodyPojo(message).go(200).asJsonObject();
 	}
 
 	public void sendTemplate(String templateName, ObjectNode context) {
-		dog.post("/1/mail/template/{name}")//
+		dog.post("/1/emails/templates/{name}")//
 				.routeParam("name", templateName).bodyJson(context).go(200);
 	}
 

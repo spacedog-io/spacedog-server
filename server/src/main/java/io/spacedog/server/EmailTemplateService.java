@@ -7,24 +7,24 @@ import java.util.Map;
 import java.util.Optional;
 
 import io.spacedog.model.EmailBasicRequest;
-import io.spacedog.model.MailSettings;
-import io.spacedog.model.MailTemplate;
+import io.spacedog.model.EmailSettings;
+import io.spacedog.model.EmailTemplate;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.payload.Payload;
 
-public class MailTemplateService extends SpaceService {
+public class EmailTemplateService extends SpaceService {
 
 	//
 	// Routes
 	//
 
-	@Post("/1/mail/template/:name")
-	@Post("/1/mail/template/:name/")
+	@Post("/1/emails/templates/:name")
+	@Post("/1/emails/templates/:name/")
 	public Payload postTemplatedMail(String name, String body) {
 
-		MailTemplate template = getTemplate(name).orElseThrow(//
+		EmailTemplate template = getTemplate(name).orElseThrow(//
 				() -> new NotFoundException("mail template [%s] not found", name));
 
 		SpaceContext.credentials().checkRoles(template.roles);
@@ -33,21 +33,21 @@ public class MailTemplateService extends SpaceService {
 				.createContext(template.model, Json.readMap(body));
 
 		EmailBasicRequest message = toMessage(template, context);
-		return MailService.get().email(message);
+		return EmailService.get().email(message);
 	}
 
 	//
 	// internal public interface
 	//
 
-	Payload sendTemplatedMail(MailTemplate template, Map<String, Object> context) {
+	Payload sendTemplatedMail(EmailTemplate template, Map<String, Object> context) {
 		EmailBasicRequest message = toMessage(template, context);
-		return MailService.get().email(message);
+		return EmailService.get().email(message);
 	}
 
-	Optional<MailTemplate> getTemplate(String name) {
+	Optional<EmailTemplate> getTemplate(String name) {
 
-		MailSettings settings = SettingsService.get().getAsObject(MailSettings.class);
+		EmailSettings settings = SettingsService.get().getAsObject(EmailSettings.class);
 
 		if (settings.templates == null)
 			return Optional.empty();
@@ -59,7 +59,7 @@ public class MailTemplateService extends SpaceService {
 	// Implementation
 	//
 
-	private EmailBasicRequest toMessage(MailTemplate template, Map<String, Object> context) {
+	private EmailBasicRequest toMessage(EmailTemplate template, Map<String, Object> context) {
 
 		PebbleTemplating pebble = PebbleTemplating.get();
 
@@ -78,12 +78,12 @@ public class MailTemplateService extends SpaceService {
 	// singleton
 	//
 
-	private static MailTemplateService singleton = new MailTemplateService();
+	private static EmailTemplateService singleton = new EmailTemplateService();
 
-	static MailTemplateService get() {
+	static EmailTemplateService get() {
 		return singleton;
 	}
 
-	private MailTemplateService() {
+	private EmailTemplateService() {
 	}
 }

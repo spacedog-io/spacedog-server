@@ -10,7 +10,7 @@ import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MailTemplate {
+public class EmailTemplate {
 
 	public String from;
 	public List<String> to;

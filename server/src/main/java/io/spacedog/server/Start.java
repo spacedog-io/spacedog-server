@@ -201,8 +201,8 @@ public class Start {
 				.add(CredentialsService.get())//
 				.add(LinkedinService.get())//
 				.add(BatchService.get())//
-				.add(MailService.get())//
-				.add(MailTemplateService.get())//
+				.add(EmailService.get())//
+				.add(EmailTemplateService.get())//
 				.add(SmsService.get())//
 				.add(SmsTemplateService.get())//
 				.add(SnapshotService.get())//

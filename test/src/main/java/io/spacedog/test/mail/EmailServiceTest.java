@@ -12,12 +12,12 @@ import com.google.common.io.Resources;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceEnv;
 import io.spacedog.model.EmailBasicRequest;
-import io.spacedog.model.MailSettings;
-import io.spacedog.model.MailSettings.SmtpSettings;
+import io.spacedog.model.EmailSettings;
+import io.spacedog.model.EmailSettings.SmtpSettings;
 import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Utils;
 
-public class MailServiceTest extends SpaceTest {
+public class EmailServiceTest extends SpaceTest {
 
 	private static final String DEFAULT_FROM = "david@spacedog.io";
 	private static final String DEFAULT_TO = "platform@spacedog.io";
@@ -38,7 +38,7 @@ public class MailServiceTest extends SpaceTest {
 		superadmin.mail().send(defaultMail());
 
 		// superadmin allows users to send emails
-		MailSettings settings = new MailSettings();
+		EmailSettings settings = new EmailSettings();
 		settings.authorizedRoles = Sets.newHashSet("user");
 		superadmin.settings().save(settings);
 
@@ -55,7 +55,7 @@ public class MailServiceTest extends SpaceTest {
 		assertHttpError(400, () -> vince.mail().send(defaultMail().to(null)));
 
 		// superadmin sets specific mailgun settings with invalid key
-		settings.mailgun = new MailSettings.MailGunSettings();
+		settings.mailgun = new EmailSettings.MailGunSettings();
 		settings.mailgun.domain = "api.spacedog.io";
 		settings.mailgun.key = "123456789";
 		superadmin.settings().save(settings);

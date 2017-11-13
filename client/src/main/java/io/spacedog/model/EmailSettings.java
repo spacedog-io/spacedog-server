@@ -7,11 +7,11 @@ import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MailSettings extends SettingsBase {
+public class EmailSettings extends SettingsBase {
 	public SmtpSettings smtp;
 	public MailGunSettings mailgun;
 	public Set<String> authorizedRoles = Collections.emptySet();
-	public Map<String, MailTemplate> templates;
+	public Map<String, EmailTemplate> templates;
 
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	public static class MailGunSettings {

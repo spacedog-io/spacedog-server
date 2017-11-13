@@ -13,8 +13,8 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceRequestException;
 import io.spacedog.model.CredentialsSettings;
-import io.spacedog.model.MailSettings;
-import io.spacedog.model.MailTemplate;
+import io.spacedog.model.EmailSettings;
+import io.spacedog.model.EmailTemplate;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
@@ -363,9 +363,9 @@ public class CredentialsServiceTest extends SpaceTest {
 				.bodyJson(USERNAME_PARAM, fred.username()).go(400);
 
 		// set the forgotPassword mail template
-		MailSettings settings = new MailSettings();
+		EmailSettings settings = new EmailSettings();
 		settings.templates = Maps.newHashMap();
-		MailTemplate template = new MailTemplate();
+		EmailTemplate template = new EmailTemplate();
 		template.from = "no-reply@api.spacedog.io";
 		template.to = Lists.newArrayList("{{to}}");
 		template.subject = "Password forgotten request";

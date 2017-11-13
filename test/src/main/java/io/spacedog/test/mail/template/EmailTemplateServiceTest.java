@@ -14,15 +14,15 @@ import com.google.common.io.Resources;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceEnv;
 import io.spacedog.http.SpaceRequest;
+import io.spacedog.model.EmailTemplate;
+import io.spacedog.model.EmailSettings;
+import io.spacedog.model.EmailSettings.SmtpSettings;
 import io.spacedog.model.Permission;
-import io.spacedog.model.MailSettings;
-import io.spacedog.model.MailSettings.SmtpSettings;
-import io.spacedog.test.SpaceTest;
-import io.spacedog.model.MailTemplate;
 import io.spacedog.model.Schema;
+import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Json;
 
-public class MailTemplateServiceTest extends SpaceTest {
+public class EmailTemplateServiceTest extends SpaceTest {
 
 	@Test
 	public void sendTemplatedEmails() throws IOException {
@@ -55,7 +55,7 @@ public class MailTemplateServiceTest extends SpaceTest {
 				.getString("id");
 
 		// set smtp provider in mail settings
-		MailSettings mailSettings = new MailSettings();
+		EmailSettings mailSettings = new EmailSettings();
 		mailSettings.smtp = new SmtpSettings();
 		mailSettings.smtp.host = "mail.gandi.net";
 		mailSettings.smtp.startTlsRequired = false;
@@ -65,7 +65,7 @@ public class MailTemplateServiceTest extends SpaceTest {
 
 		// set the demande mail template
 		mailSettings.templates = Maps.newHashMap();
-		MailTemplate template = new MailTemplate();
+		EmailTemplate template = new EmailTemplate();
 		template.from = "attias666@gmail.com";
 		template.to = Lists.newArrayList("{{demande.email}}");
 		template.subject = "Demande d'inscription de {{demande.prenom}} {{demande.nom}} (M-0370)";
@@ -82,11 +82,11 @@ public class MailTemplateServiceTest extends SpaceTest {
 		test.settings().save(mailSettings);
 
 		// send inscription email
-		SpaceRequest.post("/1/mail/template/demande").backend(test)//
+		SpaceRequest.post("/1/emails/templates/demande").backend(test)//
 				.bodyJson("demande", inscriptionId).go(200);
 
 		// set the confirmation mail template
-		template = new MailTemplate();
+		template = new EmailTemplate();
 		template.to = Lists.newArrayList("{{demande.email}}");
 		template.subject = "Votre demande d'inscription a bien été enregistrée";
 		template.html = Resources.toString(//
@@ -105,7 +105,7 @@ public class MailTemplateServiceTest extends SpaceTest {
 		test.settings().save(mailSettings);
 
 		// send inscription confirmation email
-		SpaceRequest.post("/1/mail/template/confirmation").backend(test)//
+		SpaceRequest.post("/1/emails/templates/confirmation").backend(test)//
 				.bodyJson("demande", inscriptionId).go(200);
 	}
 }

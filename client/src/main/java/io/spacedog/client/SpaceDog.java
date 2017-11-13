@@ -240,12 +240,12 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 		return adminEndpoint;
 	}
 
-	MailEndpoint mailEndpoint;
+	EmailEndpoint emailEndpoint;
 
-	public MailEndpoint mail() {
-		if (mailEndpoint == null)
-			mailEndpoint = new MailEndpoint(this);
-		return mailEndpoint;
+	public EmailEndpoint mail() {
+		if (emailEndpoint == null)
+			emailEndpoint = new EmailEndpoint(this);
+		return emailEndpoint;
 	}
 
 	FileEndpoint fileEndpoint;

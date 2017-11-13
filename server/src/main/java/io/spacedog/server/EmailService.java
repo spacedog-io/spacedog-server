@@ -13,16 +13,16 @@ import com.google.common.base.Strings;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceResponse;
 import io.spacedog.model.EmailBasicRequest;
-import io.spacedog.model.MailSettings;
-import io.spacedog.model.MailSettings.MailGunSettings;
-import io.spacedog.model.MailSettings.SmtpSettings;
+import io.spacedog.model.EmailSettings;
+import io.spacedog.model.EmailSettings.MailGunSettings;
+import io.spacedog.model.EmailSettings.SmtpSettings;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.payload.Payload;
 
-public class MailService extends SpaceService {
+public class EmailService extends SpaceService {
 
 	//
 	// MailGun parameter names
@@ -40,11 +40,11 @@ public class MailService extends SpaceService {
 	// Routes
 	//
 
-	@Post("/1/mail")
-	@Post("/1/mail/")
+	@Post("/1/emails")
+	@Post("/1/emails/")
 	public Payload post(EmailBasicRequest mail, Context context) {
 		Credentials credentials = SpaceContext.credentials();
-		MailSettings settings = SettingsService.get().getAsObject(MailSettings.class);
+		EmailSettings settings = SettingsService.get().getAsObject(EmailSettings.class);
 
 		if (!credentials.isAtLeastSuperAdmin())
 			credentials.checkRoles(settings.authorizedRoles);
@@ -56,26 +56,26 @@ public class MailService extends SpaceService {
 	// Implementation
 	//
 
-	public Payload email(EmailBasicRequest message) {
+	public Payload email(EmailBasicRequest request) {
 
-		if (Strings.isNullOrEmpty(message.html))
-			message.html = message.text;
-		if (Strings.isNullOrEmpty(message.html))
+		if (Strings.isNullOrEmpty(request.html))
+			request.html = request.text;
+		if (Strings.isNullOrEmpty(request.html))
 			throw Exceptions.illegalArgument("mail body is empty");
 
-		MailSettings settings = SettingsService.get().getAsObject(MailSettings.class);
+		EmailSettings settings = SettingsService.get().getAsObject(EmailSettings.class);
 
 		if (settings.smtp != null)
-			return emailViaSmtp(message, settings.smtp);
+			return emailViaSmtp(request, settings.smtp);
 
 		if (settings.mailgun != null)
-			return emailViaGun(message, settings.mailgun);
+			return emailViaGun(request, settings.mailgun);
 
 		// if no settings, use default ...
-		return emailWithDefaultSettings(message);
+		return emailWithDefaultSettings(request);
 	}
 
-	Payload emailWithDefaultSettings(EmailBasicRequest message) {
+	Payload emailWithDefaultSettings(EmailBasicRequest request) {
 
 		MailGunSettings settings = new MailGunSettings();
 		settings.key = Start.get().configuration().mailGunKey();
@@ -84,47 +84,47 @@ public class MailService extends SpaceService {
 		String target = SpaceContext.backendId();
 
 		// ... add footnotes to the message
-		if (!Strings.isNullOrEmpty(message.text))
-			message.text = addFootnotesToTextMessage(message.text, target);
-		if (!Strings.isNullOrEmpty(message.html))
-			message.html = addFootnotesToHtmlMessage(message.html, target);
+		if (!Strings.isNullOrEmpty(request.text))
+			request.text = addFootnotesToTextMessage(request.text, target);
+		if (!Strings.isNullOrEmpty(request.html))
+			request.html = addFootnotesToHtmlMessage(request.html, target);
 
 		// force the from
-		message.from = target.toUpperCase() + " <no-reply@" + settings.domain + ">";
+		request.from = target.toUpperCase() + " <no-reply@" + settings.domain + ">";
 
-		return emailViaGun(message, settings);
+		return emailViaGun(request, settings);
 	}
 
-	Payload emailViaGun(EmailBasicRequest message, MailGunSettings settings) {
-		return mailgun(message, settings);
+	Payload emailViaGun(EmailBasicRequest request, MailGunSettings settings) {
+		return mailgun(request, settings);
 	}
 
-	Payload emailViaSmtp(EmailBasicRequest message, SmtpSettings settings) {
+	Payload emailViaSmtp(EmailBasicRequest request, SmtpSettings settings) {
 
 		try {
 			ImageHtmlEmail email = new ImageHtmlEmail();
 			email.setCharset("UTF-8");
-			email.setHtmlMsg(message.html);
+			email.setHtmlMsg(request.html);
 			email.setDataSourceResolver(new DataSourceUrlResolver(//
 					new URL(spaceRootUrl().toString())));
-			if (!Strings.isNullOrEmpty(message.text))
-				email.setTextMsg(message.text);
+			if (!Strings.isNullOrEmpty(request.text))
+				email.setTextMsg(request.text);
 
 			email.setDebug(Start.get().configuration().mailSmtpDebug());
 
-			if (message.from != null)
-				email.setFrom(message.from);
-			if (message.to != null)
-				for (String to : message.to)
+			if (request.from != null)
+				email.setFrom(request.from);
+			if (request.to != null)
+				for (String to : request.to)
 					email.addTo(to);
-			if (message.cc != null)
-				for (String cc : message.cc)
+			if (request.cc != null)
+				for (String cc : request.cc)
 					email.addCc(cc);
-			if (message.bcc != null)
-				for (String bcc : message.bcc)
+			if (request.bcc != null)
+				for (String bcc : request.bcc)
 					email.addBcc(bcc);
-			if (message.subject != null)
-				email.setSubject(message.subject);
+			if (request.subject != null)
+				email.setSubject(request.subject);
 
 			if (!Strings.isNullOrEmpty(settings.login))
 				email.setAuthentication(settings.login, settings.password);
@@ -146,34 +146,34 @@ public class MailService extends SpaceService {
 
 	}
 
-	private Payload mailgun(EmailBasicRequest message, MailGunSettings settings) {
+	private Payload mailgun(EmailBasicRequest emailRequest, MailGunSettings settings) {
 
-		SpaceRequest request = SpaceRequest.post("/v3/{domain}/messages")//
+		SpaceRequest httpRequest = SpaceRequest.post("/v3/{domain}/messages")//
 				.backend("https://api.mailgun.net")//
 				.routeParam("domain", settings.domain)//
 				.basicAuth("api", settings.key)//
-				.formField(FROM, message.from)//
-				.formField(SUBJECT, message.subject);
+				.formField(FROM, emailRequest.from)//
+				.formField(SUBJECT, emailRequest.subject);
 
-		if (message.to != null)
-			for (String to : message.to)
-				request.formField(TO, to);
+		if (emailRequest.to != null)
+			for (String to : emailRequest.to)
+				httpRequest.formField(TO, to);
 
-		if (message.cc != null)
-			for (String cc : message.cc)
-				request.formField(CC, cc);
+		if (emailRequest.cc != null)
+			for (String cc : emailRequest.cc)
+				httpRequest.formField(CC, cc);
 
-		if (message.bcc != null)
-			for (String bcc : message.bcc)
-				request.formField(BCC, bcc);
+		if (emailRequest.bcc != null)
+			for (String bcc : emailRequest.bcc)
+				httpRequest.formField(BCC, bcc);
 
-		if (!Strings.isNullOrEmpty(message.text))
-			request.formField(TEXT, message.text);
+		if (!Strings.isNullOrEmpty(emailRequest.text))
+			httpRequest.formField(TEXT, emailRequest.text);
 
-		if (!Strings.isNullOrEmpty(message.html))
-			request.formField(HTML, message.html);
+		if (!Strings.isNullOrEmpty(emailRequest.html))
+			httpRequest.formField(HTML, emailRequest.html);
 
-		SpaceResponse response = request.go();
+		SpaceResponse response = httpRequest.go();
 
 		return JsonPayload.status(response.status())//
 				.withFields("mailgun", response.isJson() //
@@ -214,13 +214,13 @@ public class MailService extends SpaceService {
 	// singleton
 	//
 
-	private static MailService singleton = new MailService();
+	private static EmailService singleton = new EmailService();
 
-	static MailService get() {
+	static EmailService get() {
 		return singleton;
 	}
 
-	private MailService() {
-		SettingsService.get().registerSettings(MailSettings.class);
+	private EmailService() {
+		SettingsService.get().registerSettings(EmailSettings.class);
 	}
 }
