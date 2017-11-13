@@ -11,7 +11,7 @@ import com.google.common.io.Resources;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceEnv;
-import io.spacedog.model.Mail;
+import io.spacedog.model.EmailBasicRequest;
 import io.spacedog.model.MailSettings;
 import io.spacedog.model.MailSettings.SmtpSettings;
 import io.spacedog.test.SpaceTest;
@@ -43,7 +43,7 @@ public class MailServiceTest extends SpaceTest {
 		superadmin.settings().save(settings);
 
 		// now vince can email a simple html message
-		Mail mail = defaultMail();
+		EmailBasicRequest mail = defaultMail();
 		mail.html = "<html><h1>" + DEFAULT_TEXT + "</h1></html>";
 		vince.mail().send(mail);
 
@@ -81,8 +81,8 @@ public class MailServiceTest extends SpaceTest {
 		assertNotNull(response.get("messageId").asText());
 	}
 
-	private Mail defaultMail() {
-		Mail mail = new Mail();
+	private EmailBasicRequest defaultMail() {
+		EmailBasicRequest mail = new EmailBasicRequest();
 		mail.from = DEFAULT_FROM;
 		mail.to = Lists.newArrayList(DEFAULT_TO);
 		mail.text = DEFAULT_TEXT;

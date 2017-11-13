@@ -6,7 +6,7 @@ package io.spacedog.server;
 import java.util.Map;
 import java.util.Optional;
 
-import io.spacedog.model.Mail;
+import io.spacedog.model.EmailBasicRequest;
 import io.spacedog.model.MailSettings;
 import io.spacedog.model.MailTemplate;
 import io.spacedog.utils.Json;
@@ -32,7 +32,7 @@ public class MailTemplateService extends SpaceService {
 		Map<String, Object> context = PebbleTemplating.get()//
 				.createContext(template.model, Json.readMap(body));
 
-		Mail message = toMessage(template, context);
+		EmailBasicRequest message = toMessage(template, context);
 		return MailService.get().email(message);
 	}
 
@@ -41,7 +41,7 @@ public class MailTemplateService extends SpaceService {
 	//
 
 	Payload sendTemplatedMail(MailTemplate template, Map<String, Object> context) {
-		Mail message = toMessage(template, context);
+		EmailBasicRequest message = toMessage(template, context);
 		return MailService.get().email(message);
 	}
 
@@ -59,11 +59,11 @@ public class MailTemplateService extends SpaceService {
 	// Implementation
 	//
 
-	private Mail toMessage(MailTemplate template, Map<String, Object> context) {
+	private EmailBasicRequest toMessage(MailTemplate template, Map<String, Object> context) {
 
 		PebbleTemplating pebble = PebbleTemplating.get();
 
-		Mail message = new Mail();
+		EmailBasicRequest message = new EmailBasicRequest();
 		message.from = pebble.render("from", template.from, context);
 		message.to = pebble.render("to", template.to, context);
 		message.cc = pebble.render("cc", template.cc, context);

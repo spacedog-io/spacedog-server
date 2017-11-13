@@ -12,7 +12,7 @@ import com.google.common.base.Strings;
 
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceResponse;
-import io.spacedog.model.Mail;
+import io.spacedog.model.EmailBasicRequest;
 import io.spacedog.model.MailSettings;
 import io.spacedog.model.MailSettings.MailGunSettings;
 import io.spacedog.model.MailSettings.SmtpSettings;
@@ -42,7 +42,7 @@ public class MailService extends SpaceService {
 
 	@Post("/1/mail")
 	@Post("/1/mail/")
-	public Payload post(Mail mail, Context context) {
+	public Payload post(EmailBasicRequest mail, Context context) {
 		Credentials credentials = SpaceContext.credentials();
 		MailSettings settings = SettingsService.get().getAsObject(MailSettings.class);
 
@@ -56,7 +56,7 @@ public class MailService extends SpaceService {
 	// Implementation
 	//
 
-	public Payload email(Mail message) {
+	public Payload email(EmailBasicRequest message) {
 
 		if (Strings.isNullOrEmpty(message.html))
 			message.html = message.text;
@@ -75,7 +75,7 @@ public class MailService extends SpaceService {
 		return emailWithDefaultSettings(message);
 	}
 
-	Payload emailWithDefaultSettings(Mail message) {
+	Payload emailWithDefaultSettings(EmailBasicRequest message) {
 
 		MailGunSettings settings = new MailGunSettings();
 		settings.key = Start.get().configuration().mailGunKey();
@@ -95,11 +95,11 @@ public class MailService extends SpaceService {
 		return emailViaGun(message, settings);
 	}
 
-	Payload emailViaGun(Mail message, MailGunSettings settings) {
+	Payload emailViaGun(EmailBasicRequest message, MailGunSettings settings) {
 		return mailgun(message, settings);
 	}
 
-	Payload emailViaSmtp(Mail message, SmtpSettings settings) {
+	Payload emailViaSmtp(EmailBasicRequest message, SmtpSettings settings) {
 
 		try {
 			ImageHtmlEmail email = new ImageHtmlEmail();
@@ -146,7 +146,7 @@ public class MailService extends SpaceService {
 
 	}
 
-	private Payload mailgun(Mail message, MailGunSettings settings) {
+	private Payload mailgun(EmailBasicRequest message, MailGunSettings settings) {
 
 		SpaceRequest request = SpaceRequest.post("/v3/{domain}/messages")//
 				.backend("https://api.mailgun.net")//
@@ -183,7 +183,7 @@ public class MailService extends SpaceService {
 	}
 
 	//
-	// Foot notes
+	// Footnotes
 	//
 
 	private static final String FOOTNOTE_TEXT_TEMPLATE = "%s\n\n---\n%s\n%s";
