@@ -21,8 +21,8 @@ public class MailServiceTest extends SpaceTest {
 
 	private static final String DEFAULT_FROM = "david@spacedog.io";
 	private static final String DEFAULT_TO = "platform@spacedog.io";
-	private static final String DEFAULT_TEXT = "So don't bother read this!";
-	private static final String DEFAULT_SUBJECT = "SpaceDog Email Test ...";
+	private static final String DEFAULT_TEXT = "∆ hello ∆";
+	private static final String DEFAULT_SUBJECT = "SpaceDog Email Test";
 
 	@Test
 	public void sendEmails() throws IOException {
@@ -44,15 +44,15 @@ public class MailServiceTest extends SpaceTest {
 
 		// now vince can email a simple html message
 		Mail mail = defaultMail();
-		mail.html = "<html><h1>So don't bother read this!</h1></html>";
+		mail.html = "<html><h1>" + DEFAULT_TEXT + "</h1></html>";
+		vince.mail().send(mail);
+
+		// vince can email with html without ending tags
+		mail.html = "<html><h1>" + DEFAULT_TEXT + "</h1>";
 		vince.mail().send(mail);
 
 		// vince fails to email since no 'to' field
 		assertHttpError(400, () -> vince.mail().send(defaultMail().to(null)));
-
-		// vince fails to email since no html end tag
-		assertHttpError(400, () -> vince.mail().//
-				send(defaultMail().html("<html><h1>XXX</h1>")));
 
 		// superadmin sets specific mailgun settings with invalid key
 		settings.mailgun = new MailSettings.MailGunSettings();

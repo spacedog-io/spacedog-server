@@ -5,9 +5,7 @@ package io.spacedog.server;
 
 import java.net.URL;
 
-import org.apache.commons.mail.Email;
 import org.apache.commons.mail.ImageHtmlEmail;
-import org.apache.commons.mail.SimpleEmail;
 import org.apache.commons.mail.resolver.DataSourceUrlResolver;
 
 import com.google.common.base.Strings;
@@ -60,13 +58,18 @@ public class MailService extends SpaceService {
 
 	public Payload email(Mail message) {
 
+		if (Strings.isNullOrEmpty(message.html))
+			message.html = message.text;
+		if (Strings.isNullOrEmpty(message.html))
+			throw Exceptions.illegalArgument("mail body is empty");
+
 		MailSettings settings = SettingsService.get().getAsObject(MailSettings.class);
 
 		if (settings.smtp != null)
-			return emailViaSmtp(settings.smtp, message);
+			return emailViaSmtp(message, settings.smtp);
 
 		if (settings.mailgun != null)
-			return emailViaGun(settings.mailgun, message);
+			return emailViaGun(message, settings.mailgun);
 
 		// if no settings, use default ...
 		return emailWithDefaultSettings(message);
@@ -80,44 +83,32 @@ public class MailService extends SpaceService {
 
 		String target = SpaceContext.backendId();
 
-		// ... add a footer to the message
+		// ... add footnotes to the message
 		if (!Strings.isNullOrEmpty(message.text))
-			message.text = addFooterToTextMessage(message.text, target);
+			message.text = addFootnotesToTextMessage(message.text, target);
 		if (!Strings.isNullOrEmpty(message.html))
-			message.html = addFooterToHtmlMessage(message.html, target);
+			message.html = addFootnotesToHtmlMessage(message.html, target);
 
 		// force the from
 		message.from = target.toUpperCase() + " <no-reply@" + settings.domain + ">";
 
-		return emailViaGun(settings, message);
+		return emailViaGun(message, settings);
 	}
 
-	Payload emailViaGun(MailGunSettings settings, Mail message) {
+	Payload emailViaGun(Mail message, MailGunSettings settings) {
 		return mailgun(message, settings);
 	}
 
-	Payload emailViaSmtp(SmtpSettings settings, Mail message) {
-
-		Email email = null;
+	Payload emailViaSmtp(Mail message, SmtpSettings settings) {
 
 		try {
-			if (!Strings.isNullOrEmpty(message.html)) {
-				ImageHtmlEmail imageHtmlEmail = new ImageHtmlEmail();
-				imageHtmlEmail.setCharset("UTF-8");
-				imageHtmlEmail.setHtmlMsg(message.html);
-				imageHtmlEmail.setDataSourceResolver(new DataSourceUrlResolver(//
-						new URL("http://www.apache.org")));
-				if (!Strings.isNullOrEmpty(message.text))
-					imageHtmlEmail.setTextMsg(message.text);
-				email = imageHtmlEmail;
-
-			} else if (!Strings.isNullOrEmpty(message.text)) {
-				SimpleEmail simpleEmail = new SimpleEmail();
-				simpleEmail.setMsg(message.text);
-				email = simpleEmail;
-
-			} else
-				throw Exceptions.illegalArgument("no text or html message");
+			ImageHtmlEmail email = new ImageHtmlEmail();
+			email.setCharset("UTF-8");
+			email.setHtmlMsg(message.html);
+			email.setDataSourceResolver(new DataSourceUrlResolver(//
+					new URL(spaceRootUrl().toString())));
+			if (!Strings.isNullOrEmpty(message.text))
+				email.setTextMsg(message.text);
 
 			email.setDebug(Start.get().configuration().mailSmtpDebug());
 
@@ -191,26 +182,32 @@ public class MailService extends SpaceService {
 				.build();
 	}
 
-	private String addFooterToTextMessage(String text, String backendId) {
-		if (Strings.isNullOrEmpty(text))
-			throw Exceptions.illegalArgument("mail text is empty");
+	//
+	// Foot notes
+	//
 
-		return String.format(
-				"%s\n\n---\nThis is an automatic email sent by the [%s] application.\nContact your administrator for more information.",
-				text, backendId.toUpperCase());
+	private static final String FOOTNOTE_TEXT_TEMPLATE = "%s\n\n---\n%s\n%s";
+	private static final String FOOTNOTE_HTML_TEMPLATE = "%s<p><p>---<p>%s<p>%s%s";
+	private static final String FOOTNOTE_LINE_1 = "This is an automatic email sent by the [%s] application.";
+	private static final String FOOTNOTE_LINE_2 = "Contact your administrator for more information.";
+
+	private String addFootnotesToTextMessage(String text, String backendId) {
+		text = String.format(FOOTNOTE_TEXT_TEMPLATE, text, FOOTNOTE_LINE_1, FOOTNOTE_LINE_2);
+		return String.format(text, backendId.toUpperCase());
 	}
 
-	private String addFooterToHtmlMessage(String html, String backendId) {
-		if (Strings.isNullOrEmpty(html))
-			throw Exceptions.illegalArgument("mail html is empty");
+	private String addFootnotesToHtmlMessage(String html, String backendId) {
 
-		int index = html.lastIndexOf("</html>");
+		int index = html.lastIndexOf("</body>");
 		if (index < 0)
-			throw Exceptions.illegalArgument("no html end tag");
+			index = html.lastIndexOf("</html>");
 
-		return String.format(
-				"%s<p><p>---<p>This is an automatic email sent by the [%s] application.<p>Contact your administrator for more information.</html>",
-				html.substring(0, index), backendId.toUpperCase());
+		html = index < 0 //
+				? String.format(FOOTNOTE_HTML_TEMPLATE, html, FOOTNOTE_LINE_1, FOOTNOTE_LINE_2, "") //
+				: String.format(FOOTNOTE_HTML_TEMPLATE, html.substring(0, index), FOOTNOTE_LINE_1, FOOTNOTE_LINE_2,
+						html.substring(index));
+
+		return String.format(html, backendId.toUpperCase());
 	}
 
 	//
