@@ -242,7 +242,7 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 
 	EmailEndpoint emailEndpoint;
 
-	public EmailEndpoint mail() {
+	public EmailEndpoint emails() {
 		if (emailEndpoint == null)
 			emailEndpoint = new EmailEndpoint(this);
 		return emailEndpoint;

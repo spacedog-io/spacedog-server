@@ -297,7 +297,7 @@ public class CredentialsService extends SpaceService {
 			throw Exceptions.illegalArgument("no email found in credentials [%s][%s]", //
 					credentials.type(), credentials.name());
 
-		EmailTemplate template = EmailTemplateService.get()//
+		EmailTemplate template = EmailService.get()//
 				.getTemplate(FORGOT_PASSWORD_MAIL_TEMPLATE_NAME)//
 				.orElseThrow(() -> Exceptions.illegalArgument(//
 						"no [forgotPassword] mail template in mail settings"));
@@ -317,7 +317,7 @@ public class CredentialsService extends SpaceService {
 		mailContext.put("credentialsId", credentials.id());
 		mailContext.put("passwordResetCode", credentials.passwordResetCode());
 
-		EmailTemplateService.get().sendTemplatedMail(template, mailContext);
+		EmailService.get().email(template, mailContext);
 
 		return JsonPayload.ok().build();
 	}

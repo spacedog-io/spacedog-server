@@ -5,7 +5,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class EmailBasicRequest {
+public class EmailBasicRequest extends EmailRequest {
 	public String from;
 	public List<String> to;
 	public List<String> cc;

@@ -1,10 +1,11 @@
 package io.spacedog.model;
 
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class EmailTemplateRequest {
+public class EmailTemplateRequest extends EmailRequest {
 	public String templateName;
-	public ObjectNode parameters;
+	public Map<String, Object> parameters;
 }

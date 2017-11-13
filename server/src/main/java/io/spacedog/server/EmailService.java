@@ -4,6 +4,8 @@
 package io.spacedog.server;
 
 import java.net.URL;
+import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.mail.ImageHtmlEmail;
 import org.apache.commons.mail.resolver.DataSourceUrlResolver;
@@ -13,11 +15,15 @@ import com.google.common.base.Strings;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceResponse;
 import io.spacedog.model.EmailBasicRequest;
+import io.spacedog.model.EmailRequest;
 import io.spacedog.model.EmailSettings;
 import io.spacedog.model.EmailSettings.MailGunSettings;
 import io.spacedog.model.EmailSettings.SmtpSettings;
+import io.spacedog.model.EmailTemplate;
+import io.spacedog.model.EmailTemplateRequest;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.NotFoundException;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.payload.Payload;
@@ -42,24 +48,43 @@ public class EmailService extends SpaceService {
 
 	@Post("/1/emails")
 	@Post("/1/emails/")
-	public Payload post(EmailBasicRequest mail, Context context) {
-		Credentials credentials = SpaceContext.credentials();
-		EmailSettings settings = SettingsService.get().getAsObject(EmailSettings.class);
+	public Payload post(EmailRequest email, Context context) {
 
-		if (!credentials.isAtLeastSuperAdmin())
-			credentials.checkRoles(settings.authorizedRoles);
+		if (email instanceof EmailBasicRequest) {
+			Credentials credentials = SpaceContext.credentials();
+			EmailSettings settings = SettingsService.get().getAsObject(EmailSettings.class);
 
-		return email(mail);
+			if (!credentials.isAtLeastSuperAdmin())
+				credentials.checkRoles(settings.authorizedRoles);
+
+			return email((EmailBasicRequest) email);
+		}
+
+		if (email instanceof EmailTemplateRequest) {
+			EmailTemplateRequest templateRequest = (EmailTemplateRequest) email;
+
+			EmailTemplate template = getTemplate(templateRequest.templateName)//
+					.orElseThrow(() -> new NotFoundException(//
+							"mail template [%s] not found", templateRequest.templateName));
+
+			SpaceContext.credentials().checkRoles(template.roles);
+
+			return email(templateRequest, template);
+		}
+
+		throw Exceptions.illegalArgument("invalid email request type [%s]", //
+				email.getClass().getSimpleName());
 	}
 
 	//
-	// Implementation
+	// Basic Request Interface and Implementation
 	//
 
 	public Payload email(EmailBasicRequest request) {
 
 		if (Strings.isNullOrEmpty(request.html))
 			request.html = request.text;
+
 		if (Strings.isNullOrEmpty(request.html))
 			throw Exceptions.illegalArgument("mail body is empty");
 
@@ -208,6 +233,48 @@ public class EmailService extends SpaceService {
 						html.substring(index));
 
 		return String.format(html, backendId.toUpperCase());
+	}
+
+	//
+	// Template Request Interface and Implementation
+	//
+
+	public Payload email(EmailTemplateRequest request, EmailTemplate template) {
+
+		Map<String, Object> context = PebbleTemplating.get()//
+				.createContext(template.model, request.parameters);
+
+		return email(template, context);
+	}
+
+	public Payload email(EmailTemplate template, Map<String, Object> context) {
+		EmailBasicRequest basicRequest = toBasicRequest(template, context);
+		return email(basicRequest);
+	}
+
+	public Optional<EmailTemplate> getTemplate(String name) {
+
+		EmailSettings settings = SettingsService.get().getAsObject(EmailSettings.class);
+
+		if (settings.templates == null)
+			return Optional.empty();
+
+		return Optional.ofNullable(settings.templates.get(name));
+	}
+
+	private EmailBasicRequest toBasicRequest(EmailTemplate template, Map<String, Object> context) {
+
+		PebbleTemplating pebble = PebbleTemplating.get();
+
+		EmailBasicRequest basicRequest = new EmailBasicRequest();
+		basicRequest.from = pebble.render("from", template.from, context);
+		basicRequest.to = pebble.render("to", template.to, context);
+		basicRequest.cc = pebble.render("cc", template.cc, context);
+		basicRequest.bcc = pebble.render("bcc", template.bcc, context);
+		basicRequest.subject = pebble.render("subject", template.subject, context);
+		basicRequest.text = pebble.render("text", template.text, context);
+		basicRequest.html = pebble.render("html", template.html, context);
+		return basicRequest;
 	}
 
 	//
