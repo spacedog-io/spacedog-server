@@ -20,6 +20,7 @@ import io.spacedog.http.SpaceResponse;
 import io.spacedog.model.MailSettings;
 import io.spacedog.model.MailSettings.MailGunSettings;
 import io.spacedog.model.MailSettings.SmtpSettings;
+import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import net.codestory.http.Context;
 import net.codestory.http.Part;
@@ -47,13 +48,11 @@ public class MailService extends SpaceService {
 	@Post("/1/mail")
 	@Post("/1/mail/")
 	public Payload post(Context context) {
-
+		Credentials credentials = SpaceContext.credentials();
 		MailSettings settings = SettingsService.get().getAsObject(MailSettings.class);
 
-		if (settings.enableUserFullAccess)
-			SpaceContext.credentials().checkAtLeastUser();
-		else
-			SpaceContext.credentials().checkAtLeastAdmin();
+		if (!credentials.isAtLeastSuperAdmin())
+			credentials.checkRoles(settings.authorizedRoles);
 
 		return email(toMessage(context));
 	}
