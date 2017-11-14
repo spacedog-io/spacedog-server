@@ -12,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 		getterVisibility = Visibility.NONE, //
 		isGetterVisibility = Visibility.NONE, //
 		setterVisibility = Visibility.NONE)
-public class ZipRequest {
+public class DownloadRequest {
 	public String fileName;
 	public Set<String> paths = Collections.emptySet();
 }

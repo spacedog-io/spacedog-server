@@ -101,7 +101,7 @@ public class ShareEndpoint {
 		public byte[] content;
 	}
 
-	public Share get(String id) {
+	public Share download(String id) {
 		SpaceResponse response = dog.get("/1/shares/" + id).go(200);
 		Share share = new Share();
 		share.id = id;
@@ -112,12 +112,12 @@ public class ShareEndpoint {
 		return share;
 	}
 
-	public byte[] zip(String... ids) {
-		return zip(Sets.newHashSet(ids));
+	public byte[] downloadAll(String... ids) {
+		return downloadAll(Sets.newHashSet(ids));
 	}
 
-	public byte[] zip(Set<String> ids) {
-		return dog.post("/1/shares/zip")//
+	public byte[] downloadAll(Set<String> ids) {
+		return dog.post("/1/shares/download")//
 				.bodyJson("paths", Json.toJsonNode(ids))//
 				.go(200)//
 				.asBytes();

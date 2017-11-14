@@ -56,10 +56,10 @@ public class ShareServiceTest extends SpaceTest {
 		assertNull(shareMeta.s3);
 
 		// only superadmins can read shares
-		assertHttpError(403, () -> guest.shares().get(shareMeta.id));
-		assertHttpError(403, () -> vince.shares().get(shareMeta.id));
-		assertHttpError(403, () -> admin.shares().get(shareMeta.id));
-		superadmin.shares().get(shareMeta.id);
+		assertHttpError(403, () -> guest.shares().download(shareMeta.id));
+		assertHttpError(403, () -> vince.shares().download(shareMeta.id));
+		assertHttpError(403, () -> admin.shares().download(shareMeta.id));
+		superadmin.shares().download(shareMeta.id);
 
 		// only superadmins can delete shares
 		assertHttpError(403, () -> guest.shares().delete(shareMeta.id));
@@ -104,7 +104,7 @@ public class ShareServiceTest extends SpaceTest {
 		assertEquals(pngMeta.id, list.shares[0].id);
 
 		// anonymous gets png share with its id
-		Share png = guest.shares().get(pngMeta.id);
+		Share png = guest.shares().download(pngMeta.id);
 		assertEquals("image/png", png.contentType);
 		assertEquals(vince.id(), png.owner);
 		assertEquals(pngMeta.etag, png.etag);
@@ -351,13 +351,13 @@ public class ShareServiceTest extends SpaceTest {
 		String path1 = nath.shares().upload("toto".getBytes(), "toto.txt").id;
 
 		// nath has the right to get his own shares
-		nath.shares().get(path1);
+		nath.shares().download(path1);
 
 		// vince does not have access to nath's shares
-		vince.get("/1/shares" + path1).go(403);
+		assertHttpError(403, () -> vince.shares().download(path1));
 
 		// nath gets a zip of her shares
-		byte[] zip = nath.shares().zip(path1);
+		byte[] zip = nath.shares().downloadAll(path1);
 		assertEquals(1, zipFileNumber(zip));
 		assertZipContains(zip, "toto.txt", "toto".getBytes());
 
@@ -367,28 +367,24 @@ public class ShareServiceTest extends SpaceTest {
 		String path3 = vince.shares().upload(pngBytes, "tweeter.png").id;
 
 		// vince has the right to get his own shares
-		vince.shares().get(path2);
-		vince.shares().get(path3);
+		vince.shares().download(path2);
+		vince.shares().download(path3);
 
 		// nath does not have access to vince's shares
-		nath.get("/1/shares" + path2).go(403);
-		nath.get("/1/shares" + path3).go(403);
+		assertHttpError(403, () -> nath.shares().download(path2));
+		assertHttpError(403, () -> nath.shares().download(path3));
 
 		// vince gets a zip of his shares
-		zip = vince.shares().zip(path2, path3);
+		zip = vince.shares().downloadAll(path2, path3);
 		assertEquals(2, zipFileNumber(zip));
 		assertZipContains(zip, "titi.txt", "titi".getBytes());
 		assertZipContains(zip, "tweeter.png", pngBytes);
 
 		// vince needs readAll permission to zip nath's shares
-		vince.post("/1/shares/zip")//
-				.bodyJson("paths", Json.array(path1, path2))//
-				.go(403);
+		assertHttpError(403, () -> vince.shares().downloadAll(path1, path2));
 
 		// nath needs readAll permission to zip vince's shares
-		nath.post("/1/shares/zip")//
-				.bodyJson("paths", Json.array(path1, path2))//
-				.go(403);
+		assertHttpError(403, () -> nath.shares().downloadAll(path1, path2));
 
 		// superadmin updates share settings to allow users
 		// to download multiple shares
@@ -396,7 +392,7 @@ public class ShareServiceTest extends SpaceTest {
 		superadmin.settings().save(settings);
 
 		// vince downloads zip containing specified shares
-		zip = vince.post("/1/shares/zip")//
+		zip = vince.post("/1/shares/download")//
 				.bodyJson("fileName", "download.zip", //
 						"paths", Json.array(path1, path2, path3))//
 				.go(200)//

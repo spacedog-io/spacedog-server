@@ -31,7 +31,7 @@ import com.google.common.base.Strings;
 
 import io.spacedog.model.Permission;
 import io.spacedog.model.RolePermissions;
-import io.spacedog.model.ZipRequest;
+import io.spacedog.model.DownloadRequest;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceHeaders;
@@ -222,7 +222,7 @@ public class S3Service extends SpaceService {
 		return payload.build();
 	}
 
-	public Payload doZip(String bucketSuffix, ZipRequest request, RolePermissions permissions) {
+	public Payload doZip(String bucketSuffix, DownloadRequest request, RolePermissions permissions) {
 
 		Set<S3File> files = toS3Files(bucketSuffix, request);
 		Credentials credentials = SpaceContext.credentials();
@@ -278,7 +278,7 @@ public class S3Service extends SpaceService {
 		return new S3File(bucketName, webPath.addFirst(backendId));
 	}
 
-	private Set<S3File> toS3Files(String bucketSuffix, ZipRequest request) {
+	private Set<S3File> toS3Files(String bucketSuffix, DownloadRequest request) {
 		String backendId = SpaceContext.backendId();
 		String bucketName = getBucketName(bucketSuffix);
 		return request.paths.stream()//
