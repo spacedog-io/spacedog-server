@@ -203,7 +203,6 @@ public class Start {
 				.add(BatchService.get())//
 				.add(EmailService.get())//
 				.add(SmsService.get())//
-				.add(SmsTemplateService.get())//
 				.add(SnapshotService.get())//
 				.add(LogService.get())//
 				.add(PushSpaceService.get())//

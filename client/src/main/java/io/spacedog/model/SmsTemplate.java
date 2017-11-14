@@ -6,8 +6,12 @@ package io.spacedog.model;
 import java.util.Map;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SmsTemplate {
 
+	public String name;
 	public String from;
 	public String to;
 	public String body;

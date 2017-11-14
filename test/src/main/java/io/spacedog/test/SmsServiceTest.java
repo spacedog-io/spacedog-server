@@ -1,80 +1,147 @@
 package io.spacedog.test;
 
 import java.io.IOException;
+import java.util.Collections;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceEnv;
 import io.spacedog.http.SpaceRequestException;
+import io.spacedog.model.Schema;
 import io.spacedog.model.SmsSettings;
 import io.spacedog.model.SmsSettings.TwilioSettings;
+import io.spacedog.model.SmsTemplate;
+import io.spacedog.model.SmsTemplateRequest;
+import io.spacedog.utils.Json;
 
 public class SmsServiceTest extends SpaceTest {
 
 	@Test
-	public void sendSms() throws IOException {
+	public void sendSmsBasicRequest() throws IOException {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(test.backend());
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog guest = SpaceDog.backend(superadmin.backend());
+		SpaceDog vince = createTempDog(superadmin, "vince");
 
-		// superadmin creates user vince with 'sms' role
-		SpaceDog vince = createTempDog(test, "vince");
-		test.credentials().setRole(vince.id(), "sms");
-
-		// no sms settings => nobody can send any sms
-		guest.post("/1/sms").go(403);
-		vince.post("/1/sms").go(403);
-		test.post("/1/sms").go(403);
-
-		// superadmin sets the list of roles allowed to send sms
-		SmsSettings settings = new SmsSettings();
-		settings.rolesAllowedToSendSms = Sets.newHashSet("sms");
-		test.settings().save(settings);
-
-		// vince is now allowed to send sms
-		// since he's got the 'sms' role
-		// but he fails since no sms provider settings are set
-		assertHttpError(400, () -> vince.sms().send("?", "?"));
-		vince.post("/1/sms").go(400);
-
-		// only user with sms role are allowed to send sms
-		// anonymous and admin fail to send sms
+		// nobody is authorized to send sms
+		// since no authorized role defined
 		assertHttpError(403, () -> guest.sms().send("?", "?"));
-		assertHttpError(403, () -> test.sms().send("?", "?"));
-		// guest.post("/1/sms").go(403);
-		// test.post("/1/sms").go(403);
+		assertHttpError(403, () -> vince.sms().send("?", "?"));
+		assertHttpError(403, () -> superadmin.sms().send("?", "?"));
+
+		// superadmin authorizes users with 'sms' role to send sms
+		SmsSettings settings = new SmsSettings();
+		settings.authorizedRoles = Sets.newHashSet("sms");
+		superadmin.settings().save(settings);
+
+		// nobody is authorized to send sms
+		// since nobody has the right role
+		assertHttpError(403, () -> guest.sms().send("?", "?"));
+		assertHttpError(403, () -> vince.sms().send("?", "?"));
+		assertHttpError(403, () -> superadmin.sms().send("?", "?"));
+
+		// superadmin gives vince the sms role
+		superadmin.credentials().setRole(vince.id(), "sms");
+
+		// vince is now authorized but no sms provider set
+		assertHttpError(400, () -> vince.sms().send("?", "?"));
 
 		// superadmin sets twilio settings
-		SpaceEnv env = SpaceEnv.defaultEnv();
-		settings.twilio = new TwilioSettings();
-		settings.twilio.accountSid = env.getOrElseThrow("caremen.twilio.accountSid");
-		settings.twilio.authToken = env.getOrElseThrow("caremen.twilio.authToken");
-		settings.twilio.defaultFrom = env.getOrElseThrow("caremen.twilio.defaultFrom");
-		test.settings().save(settings);
+		settings.twilio = twilioSettings();
+		superadmin.settings().save(settings);
 
-		// vince sends an sms
-		String messageId = vince.sms().send("33662627520", "Hi from SpaceDog");
+		// since sends an sms
+		String messageId = vince.sms().send("33662627520", "Hi from Vince");
 
 		// vince gets info on the previously sent sms
 		// since he's got the 'sms' role
 		vince.sms().get(messageId);
 
-		// anonymous and superadmin don't have 'sms' role
-		// they fail to get sms info
-		assertHttpError(403, () -> guest.sms().get(messageId));
-		assertHttpError(403, () -> test.sms().get(messageId));
-		// guest.get("/1/sms/" + messageId).go(403);//
-		// test.get("/1/sms/" + messageId).go(403);//
+		// superadmin is not authorized to get sms info
+		assertHttpError(403, () -> superadmin.sms().get(messageId));
 
 		// vince sends an sms to invalid mobile number
 		SpaceRequestException exception = assertHttpError(400, //
 				() -> vince.sms().send("33162627520", "Hi from SpaceDog"));
 		Assert.assertEquals("twilio:21614", exception.serverErrorCode());
 	}
+
+	@Test
+	public void senddSmsTemplateRequest() throws IOException {
+
+		// prepare
+		prepareTest();
+		SpaceDog guest = SpaceDog.backendId("test");
+		SpaceDog superadmin = resetTestBackend();
+
+		// superadmin creates user vince with 'sms' role
+		SpaceDog vince = createTempDog(superadmin, "vince");
+		superadmin.credentials().setRole(vince.id(), "sms");
+
+		// superadmin creates a customer schema
+		Schema schema = Schema.builder("customer")//
+				.text("name").string("phone").close().build();
+
+		superadmin.schema().set(schema);
+
+		// superadmin creates a customer
+		String customerId = superadmin.data().save("customer", //
+				Json.object("name", "David A.", "phone", "+33662627520")).id();
+
+		// superadmin sets Twilio sms settings
+		SmsSettings settings = new SmsSettings();
+		settings.twilio = twilioSettings();
+		superadmin.settings().save(settings);
+
+		// superadmin saves 'hello' sms template
+		SmsTemplate template = new SmsTemplate();
+		template.name = "hello";
+		template.to = "{{customer.phone}}";
+		template.body = "Hello {{customer.name}}";
+		template.model = Maps.newHashMap();
+		template.model.put("customer", "customer");
+		template.roles = Collections.singleton("sms");
+		superadmin.sms().saveTemplate(template);
+
+		// nobody is allowed to send simple sms
+		assertHttpError(403, () -> guest.sms().send("?", "?"));
+		assertHttpError(403, () -> vince.sms().send("?", "?"));
+		assertHttpError(403, () -> superadmin.sms().send("?", "?"));
+
+		// vince sends request to 'hello' sms template
+		SmsTemplateRequest request = new SmsTemplateRequest();
+		request.templateName = template.name;
+		request.parameters = Maps.newHashMap();
+		request.parameters.put("customer", customerId);
+		vince.sms().send(request);
+
+		// anonymous and superadmin don't have the 'sms' role,
+		// they are not allowed to use the 'hello' sms template
+		assertHttpError(403, () -> guest.sms().send(request));
+		assertHttpError(403, () -> superadmin.sms().send(request));
+
+		// superadmin deletes 'hello' sms template
+		superadmin.sms().deleteTemplate(template.name);
+
+		// vince can not send sms request to 'hello' template
+		// since template is gone
+		assertHttpError(404, () -> vince.sms().send(request));
+	}
+
+	private TwilioSettings twilioSettings() {
+		TwilioSettings settings = new TwilioSettings();
+		SpaceEnv env = SpaceEnv.defaultEnv();
+		settings.accountSid = env.getOrElseThrow("caremen.twilio.accountSid");
+		settings.authToken = env.getOrElseThrow("caremen.twilio.authToken");
+		settings.defaultFrom = env.getOrElseThrow("caremen.twilio.defaultFrom");
+		return settings;
+	}
+
 }

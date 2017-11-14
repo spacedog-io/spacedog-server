@@ -1,10 +1,10 @@
 package io.spacedog.client;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Strings;
 
-import io.spacedog.http.SpaceRequest;
-import io.spacedog.utils.Json;
+import io.spacedog.model.SmsBasicRequest;
+import io.spacedog.model.SmsRequest;
+import io.spacedog.model.SmsTemplate;
 
 public class SmsEndpoint {
 
@@ -24,22 +24,26 @@ public class SmsEndpoint {
 	}
 
 	public String send(String from, String to, String message) {
-		SpaceRequest request = dog.post("/1/sms").formField("To", to)//
-				.formField("Body", message);
-
-		if (!Strings.isNullOrEmpty(from))
-			request.formField("From", from);
-
-		return request.go(201).getString("sid");
+		return send(new SmsBasicRequest().from(from).to(to).body(message));
 	}
 
-	public void sendTemplated(String templateName, Object... parameters) {
-		sendTemplated(templateName, Json.object(parameters));
+	public String send(SmsRequest request) {
+		return dog.post("/1/sms")//
+				.bodyPojo(request)//
+				.go(201)//
+				.getString("sid");
 	}
 
-	public void sendTemplated(String templateName, ObjectNode parameters) {
-		dog.post("/1/sms/template/{name}").routeParam("name", templateName)//
-				.bodyJson(parameters).go(201);
+	public void saveTemplate(SmsTemplate template) {
+		dog.put("/1/sms/templates/{name}")//
+				.routeParam("name", template.name)//
+				.bodyPojo(template).go(200, 201);
+	}
+
+	public void deleteTemplate(String templateName) {
+		dog.delete("/1/sms/templates/{name}")//
+				.routeParam("name", templateName)//
+				.go(200);
 	}
 
 }
