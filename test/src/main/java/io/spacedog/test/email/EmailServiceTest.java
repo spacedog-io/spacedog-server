@@ -34,22 +34,31 @@ public class EmailServiceTest extends SpaceTest {
 	private static final String DEFAULT_SUBJECT = "SpaceDog Email Test";
 
 	@Test
-	public void sendBasicEmails() throws IOException {
+	public void sendEmailBasicRequests() throws IOException {
 
 		prepareTest();
+		SpaceDog guest = SpaceDog.backendId("test");
 		SpaceDog superadmin = resetTestBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
-		// by default only superadmins can send emails
+		// by default nobody is authorized to send emails
+		assertHttpError(403, () -> guest.emails().send(defaultMail()));
 		assertHttpError(403, () -> vince.emails().send(defaultMail()));
+		assertHttpError(403, () -> superadmin.emails().send(defaultMail()));
 
-		// superadmin emails a simple text message
-		superadmin.emails().send(defaultMail());
-
-		// superadmin allows users to send emails
+		// superadmin allows users with 'email' role to send emails
 		EmailSettings settings = new EmailSettings();
-		settings.authorizedRoles = Sets.newHashSet("user");
+		settings.authorizedRoles = Sets.newHashSet("email");
 		superadmin.settings().save(settings);
+
+		// since nobody has 'email' role
+		// nobody is authorized to send emails
+		assertHttpError(403, () -> guest.emails().send(defaultMail()));
+		assertHttpError(403, () -> vince.emails().send(defaultMail()));
+		assertHttpError(403, () -> superadmin.emails().send(defaultMail()));
+
+		// superadmin adds 'email' role to vince
+		superadmin.credentials().setRole(vince.id(), "email");
 
 		// now vince can email a simple html message
 		EmailBasicRequest mail = defaultMail();
@@ -70,7 +79,7 @@ public class EmailServiceTest extends SpaceTest {
 		superadmin.settings().save(settings);
 
 		// superadmin fails to email since mailgun key is invalid
-		assertHttpError(401, () -> superadmin.emails().send(defaultMail()));
+		assertHttpError(401, () -> vince.emails().send(defaultMail()));
 
 		// superadmin sets smtp settings
 		settings.mailgun = null;
@@ -110,7 +119,7 @@ public class EmailServiceTest extends SpaceTest {
 	}
 
 	@Test
-	public void useEmailTemplates() throws IOException {
+	public void sendEmailTemplateRequests() throws IOException {
 
 		// prepare
 		prepareTest();

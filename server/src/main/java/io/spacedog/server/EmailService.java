@@ -22,7 +22,6 @@ import io.spacedog.model.EmailSettings.MailGunSettings;
 import io.spacedog.model.EmailSettings.SmtpSettings;
 import io.spacedog.model.EmailTemplate;
 import io.spacedog.model.EmailTemplateRequest;
-import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;
@@ -55,12 +54,8 @@ public class EmailService extends SpaceService {
 	public Payload postEmail(EmailRequest email, Context context) {
 
 		if (email instanceof EmailBasicRequest) {
-			Credentials credentials = SpaceContext.credentials();
 			EmailSettings settings = SettingsService.get().getAsObject(EmailSettings.class);
-
-			if (!credentials.isAtLeastSuperAdmin())
-				credentials.checkRoles(settings.authorizedRoles);
-
+			SpaceContext.credentials().checkRoles(settings.authorizedRoles);
 			return email((EmailBasicRequest) email);
 		}
 
@@ -72,7 +67,6 @@ public class EmailService extends SpaceService {
 							"email template [%s] not found", templateRequest.templateName));
 
 			SpaceContext.credentials().checkRoles(template.roles);
-
 			return email(templateRequest, template);
 		}
 
