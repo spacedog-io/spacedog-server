@@ -82,7 +82,7 @@ public class ShareServiceTest extends SpaceTest {
 		// superadmin sets custom share permissions
 		ShareSettings settings = new ShareSettings();
 		settings.enableS3Location = true;
-		settings.sharePermissions.put("all", Permission.readAll)//
+		settings.permissions.put("all", Permission.readAll)//
 				.put("user", Permission.create, Permission.deleteMine);
 		superadmin.settings().save(settings);
 
@@ -228,7 +228,7 @@ public class ShareServiceTest extends SpaceTest {
 		// superadmin sets custom share permissions
 		ShareSettings settings = new ShareSettings();
 		settings.enableS3Location = false;
-		settings.sharePermissions.put("all", Permission.create)//
+		settings.permissions.put("all", Permission.create)//
 				.put("user", Permission.create, Permission.readMine, Permission.deleteMine);
 		superadmin.settings().save(settings);
 
@@ -344,7 +344,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// prepare share settings
 		ShareSettings settings = new ShareSettings();
-		settings.sharePermissions.put("user", Permission.readMine, Permission.create);
+		settings.permissions.put("user", Permission.readMine, Permission.create);
 		superadmin.settings().save(settings);
 
 		// nath uploads 1 share
@@ -388,7 +388,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// superadmin updates share settings to allow users
 		// to download multiple shares
-		settings.sharePermissions.put("user", Permission.readAll, Permission.create);
+		settings.permissions.put("user", Permission.readAll, Permission.create);
 		superadmin.settings().save(settings);
 
 		// vince downloads zip containing specified shares
@@ -437,7 +437,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// super admin sets custom share permissions
 		ShareSettings settings = new ShareSettings();
-		settings.sharePermissions.put("user", Permission.create, Permission.readMine);
+		settings.permissions.put("user", Permission.create, Permission.readMine);
 		superadmin.settings().save(settings);
 
 		// vince shares a file

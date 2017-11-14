@@ -59,7 +59,7 @@ public class ShareService extends S3Service {
 	@Post("/download")
 	@Post("/download/")
 	public Payload postDownload(DownloadRequest request, Context context) {
-		return doZip(SHARE_BUCKET_SUFFIX, request, shareSettings().sharePermissions);
+		return doZip(SHARE_BUCKET_SUFFIX, request, shareSettings().permissions);
 	}
 
 	@Get("/:id")
@@ -91,7 +91,7 @@ public class ShareService extends S3Service {
 		Credentials credentials = SpaceContext.credentials();
 		ShareSettings settings = shareSettings();
 
-		if (settings.sharePermissions.check(credentials, permissions))
+		if (settings.permissions.check(credentials, permissions))
 			return credentials;
 
 		throw Exceptions.insufficientCredentials(credentials);
@@ -104,10 +104,10 @@ public class ShareService extends S3Service {
 		Credentials credentials = SpaceContext.credentials();
 		ShareSettings settings = shareSettings();
 
-		if (settings.sharePermissions.check(credentials, ownerchipNotRequiredPermission))
+		if (settings.permissions.check(credentials, ownerchipNotRequiredPermission))
 			return false;
 
-		if (settings.sharePermissions.check(credentials, ownerchipRequiredPermission))
+		if (settings.permissions.check(credentials, ownerchipRequiredPermission))
 			return true;
 
 		throw Exceptions.insufficientCredentials(credentials);
