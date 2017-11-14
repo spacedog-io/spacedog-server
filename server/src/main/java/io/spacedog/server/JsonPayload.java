@@ -113,13 +113,13 @@ public class JsonPayload implements SpaceFields {
 		return new JsonPayload(status);
 	}
 
+	public static JsonPayload status(boolean created) {
+		return new JsonPayload(created ? HttpStatus.CREATED : HttpStatus.OK);
+	}
+
 	public static JsonPayload saved(boolean created, String uri, String type, String id) {
-
-		JsonPayload payload2 = status(created ? HttpStatus.CREATED : HttpStatus.OK);
-		payload2.object().put("id", id) //
-				.put("type", type);
-
-		return payload2.withLocation(uri, type, id)//
+		return status(created)//
+				.withFields("id", id, "type", type)//
 				.withLocation(uri, type, id)//
 				.withHeader(SpaceHeaders.SPACEDOG_OBJECT_ID, id);
 	}

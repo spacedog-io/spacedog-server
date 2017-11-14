@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EmailTemplate {
 
+	public String name;
 	public String from;
 	public List<String> to;
 	public List<String> cc;

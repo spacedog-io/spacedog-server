@@ -13,7 +13,6 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceRequestException;
 import io.spacedog.model.CredentialsSettings;
-import io.spacedog.model.EmailSettings;
 import io.spacedog.model.EmailTemplate;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Json;
@@ -362,16 +361,14 @@ public class CredentialsServiceTest extends SpaceTest {
 		fred.post("/1/credentials/forgotPassword")//
 				.bodyJson(USERNAME_PARAM, fred.username()).go(400);
 
-		// set the forgotPassword mail template
-		EmailSettings settings = new EmailSettings();
-		settings.templates = Maps.newHashMap();
+		// superadmin saves the forgotPassword email template
 		EmailTemplate template = new EmailTemplate();
+		template.name = "forgotPassword";
 		template.from = "no-reply@api.spacedog.io";
 		template.to = Lists.newArrayList("{{to}}");
 		template.subject = "Password forgotten request";
 		template.text = "{{passwordResetCode}}";
-		settings.templates.put("forgotPassword", template);
-		superadmin.settings().save(settings);
+		superadmin.emails().saveTemplate(template);
 
 		// fred declares he's forgot his password
 		fred.credentials().forgotMyPassword();
@@ -387,7 +384,7 @@ public class CredentialsServiceTest extends SpaceTest {
 		template.model = Maps.newHashMap();
 		template.model.put("url", "string");
 		template.text = "{{url}}?code={{passwordResetCode}}";
-		superadmin.settings().save(settings);
+		superadmin.emails().saveTemplate(template);
 
 		// fred declares he's forgot his password
 		// passing an url parameter

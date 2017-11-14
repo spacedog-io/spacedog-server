@@ -111,7 +111,7 @@ public class SettingsService extends SpaceService {
 	public Payload put(String id, String body) {
 		checkNotInternalSettings(id);
 		checkAuthorizedTo(id, Permission.update);
-		IndexResponse response = saveAsString(id, body);
+		IndexResponse response = doSave(id, body);
 		return ElasticPayload.saved("/1", response).build();
 	}
 
@@ -120,7 +120,7 @@ public class SettingsService extends SpaceService {
 	public Payload delete(String id) {
 		checkNotInternalSettings(id);
 		checkAuthorizedTo(id, Permission.update);
-		elastic().delete(settingsIndex(), id, false, true);
+		doDelete(id);
 		return JsonPayload.ok().build();
 	}
 
@@ -144,7 +144,7 @@ public class SettingsService extends SpaceService {
 		JsonNode value = Json.readNode(body);
 		Json.set(object, field, value);
 		String source = object.toString();
-		IndexResponse response = saveAsString(id, source);
+		IndexResponse response = doSave(id, source);
 		return ElasticPayload.saved("/1", response).build();
 	}
 
@@ -156,7 +156,7 @@ public class SettingsService extends SpaceService {
 		ObjectNode object = getAsNode(id)//
 				.orElseThrow(() -> Exceptions.notFound(TYPE, id));
 		Json.remove(object, field);
-		IndexResponse response = saveAsString(id, object.toString());
+		IndexResponse response = doSave(id, object.toString());
 		return ElasticPayload.saved("/1", response).build();
 	}
 
@@ -195,6 +195,31 @@ public class SettingsService extends SpaceService {
 				.get();
 	}
 
+	public Optional<ObjectNode> getAsNode(String id) {
+		return doGet(id).map(source -> Json.readObject(source));
+	}
+
+	public Optional<String> doGet(String id) {
+		if (elastic().exists(settingsIndex())) {
+			GetResponse response = elastic().get(settingsIndex(), id);
+
+			if (response.isExists())
+				return Optional.of(response.getSourceAsString());
+		}
+		return Optional.empty();
+	}
+
+	public IndexResponse doSave(String id, String source) {
+		checkSettingsAreValid(id, source);
+		makeSureIndexIsCreated();
+		return elastic().prepareIndex(settingsIndex(), id)//
+				.setSource(source).get();
+	}
+
+	public void doDelete(String id) {
+		elastic().delete(settingsIndex(), id, false, true);
+	}
+
 	public <K extends Settings> void registerSettings(Class<K> settingsClass) {
 		if (registeredSettingsClasses == null)
 			registeredSettingsClasses = Maps.newHashMap();
@@ -208,25 +233,6 @@ public class SettingsService extends SpaceService {
 
 	private static Index settingsIndex() {
 		return Index.toIndex(TYPE);
-	}
-
-	private Optional<ObjectNode> getAsNode(String id) {
-		if (elastic().exists(settingsIndex())) {
-			GetResponse response = elastic().get(settingsIndex(), id);
-
-			if (response.isExists()) {
-				String source = response.getSourceAsString();
-				return Optional.of(Json.readObject(source));
-			}
-		}
-		return Optional.empty();
-	}
-
-	private IndexResponse saveAsString(String id, String source) {
-		checkSettingsAreValid(id, source);
-		makeSureIndexIsCreated();
-		return elastic().prepareIndex(settingsIndex(), id)//
-				.setSource(source).get();
 	}
 
 	private ObjectNode instantiateDefaultAsNode(String id) {

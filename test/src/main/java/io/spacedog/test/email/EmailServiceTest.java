@@ -110,7 +110,7 @@ public class EmailServiceTest extends SpaceTest {
 	}
 
 	@Test
-	public void sendTemplatedEmails() throws IOException {
+	public void useEmailTemplates() throws IOException {
 
 		// prepare
 		prepareTest();
@@ -141,13 +141,9 @@ public class EmailServiceTest extends SpaceTest {
 						"cvUrl", "https://spacedog.io", "dispos", dispos))//
 				.id();
 
-		// set smtp provider in mail settings
-		EmailSettings mailSettings = new EmailSettings();
-		mailSettings.smtp = smtpSettings();
-
-		// set the demande mail template
-		mailSettings.templates = Maps.newHashMap();
+		// superadmin saves the demande email template
 		EmailTemplate template = new EmailTemplate();
+		template.name = "demande";
 		template.from = "attias666@gmail.com";
 		template.to = Lists.newArrayList("{{demande.email}}");
 		template.subject = "Demande d'inscription de {{demande.prenom}} {{demande.nom}} (M-0370)";
@@ -157,24 +153,27 @@ public class EmailServiceTest extends SpaceTest {
 		template.model = Maps.newHashMap();
 		template.model.put("demande", "demande");
 		template.roles = Collections.singleton("emailboss");
-
-		mailSettings.templates.put("demande", template);
-
-		// save mail settings
-		superadmin.settings().save(mailSettings);
+		superadmin.emails().saveTemplate(template);
 
 		// send inscription email
 		Map<String, Object> parameters = Maps.newHashMap();
 		parameters.put("demande", inscriptionId);
 
-		// guests are not allowed to send this templated email
-		assertHttpError(403, () -> guest.emails().send("demande", parameters));
+		// guests are not allowed to use this email template
+		assertHttpError(403, () -> guest.emails().send(template.name, parameters));
 
-		// vince is not allowed to send this templated email
-		assertHttpError(403, () -> vince.emails().send("demande", parameters));
+		// vince is not allowed to use this email template
+		assertHttpError(403, () -> vince.emails().send(template.name, parameters));
 
 		// nath's got the emailboss role
-		// she is allowed to send this templated email
-		nath.emails().send("demande", parameters);
+		// she is allowed to use this email template
+		nath.emails().send(template.name, parameters);
+
+		// superadmins deletes this email template
+		superadmin.emails().deleteTemplate(template.name);
+
+		// nath can not use this email template anymore
+		assertHttpError(404, () -> nath.emails().send(template.name, parameters));
+
 	}
 }

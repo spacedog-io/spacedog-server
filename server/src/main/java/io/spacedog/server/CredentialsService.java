@@ -300,7 +300,7 @@ public class CredentialsService extends SpaceService {
 		EmailTemplate template = EmailService.get()//
 				.getTemplate(FORGOT_PASSWORD_MAIL_TEMPLATE_NAME)//
 				.orElseThrow(() -> Exceptions.illegalArgument(//
-						"no [forgotPassword] mail template in mail settings"));
+						"email template [forgotPassword] not found"));
 
 		// make sure the model has at least the username parameter
 		if (template.model == null)

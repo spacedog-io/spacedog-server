@@ -9,6 +9,7 @@ import java.util.Optional;
 
 import org.apache.commons.mail.ImageHtmlEmail;
 import org.apache.commons.mail.resolver.DataSourceUrlResolver;
+import org.elasticsearch.action.index.IndexResponse;
 
 import com.google.common.base.Strings;
 
@@ -23,9 +24,12 @@ import io.spacedog.model.EmailTemplate;
 import io.spacedog.model.EmailTemplateRequest;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;
 import net.codestory.http.Context;
+import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Post;
+import net.codestory.http.annotations.Put;
 import net.codestory.http.payload.Payload;
 
 public class EmailService extends SpaceService {
@@ -48,7 +52,7 @@ public class EmailService extends SpaceService {
 
 	@Post("/1/emails")
 	@Post("/1/emails/")
-	public Payload post(EmailRequest email, Context context) {
+	public Payload postEmail(EmailRequest email, Context context) {
 
 		if (email instanceof EmailBasicRequest) {
 			Credentials credentials = SpaceContext.credentials();
@@ -65,7 +69,7 @@ public class EmailService extends SpaceService {
 
 			EmailTemplate template = getTemplate(templateRequest.templateName)//
 					.orElseThrow(() -> new NotFoundException(//
-							"mail template [%s] not found", templateRequest.templateName));
+							"email template [%s] not found", templateRequest.templateName));
 
 			SpaceContext.credentials().checkRoles(template.roles);
 
@@ -74,6 +78,28 @@ public class EmailService extends SpaceService {
 
 		throw Exceptions.illegalArgument("invalid email request type [%s]", //
 				email.getClass().getSimpleName());
+	}
+
+	@Put("/1/emails/templates/:name")
+	@Put("/1/emails/templates/:name/")
+	public Payload putTemplate(String templateName, EmailTemplate template, Context context) {
+		SpaceContext.credentials().checkAtLeastSuperAdmin();
+		template.name = templateName;
+		IndexResponse response = SettingsService.get()//
+				.doSave(toSettingsId(templateName), Json.toString(template));
+
+		return JsonPayload.status(response.isCreated())//
+				.withFields("id", templateName, "type", "EmailTemplate")//
+				.withLocation("/1/emails/templates/" + templateName)//
+				.build();
+	}
+
+	@Delete("/1/emails/templates/:name")
+	@Delete("/1/emails/templates/:name/")
+	public Payload deleteTemplate(String templateName) {
+		SpaceContext.credentials().checkAtLeastSuperAdmin();
+		SettingsService.get().doDelete(toSettingsId(templateName));
+		return JsonPayload.ok().build();
 	}
 
 	//
@@ -253,13 +279,8 @@ public class EmailService extends SpaceService {
 	}
 
 	public Optional<EmailTemplate> getTemplate(String name) {
-
-		EmailSettings settings = SettingsService.get().getAsObject(EmailSettings.class);
-
-		if (settings.templates == null)
-			return Optional.empty();
-
-		return Optional.ofNullable(settings.templates.get(name));
+		return SettingsService.get().doGet(toSettingsId(name))//
+				.map(source -> Json.toPojo(source, EmailTemplate.class));
 	}
 
 	private EmailBasicRequest toBasicRequest(EmailTemplate template, Map<String, Object> context) {
@@ -275,6 +296,10 @@ public class EmailService extends SpaceService {
 		basicRequest.text = pebble.render("text", template.text, context);
 		basicRequest.html = pebble.render("html", template.html, context);
 		return basicRequest;
+	}
+
+	private String toSettingsId(String templateName) {
+		return "internal-email-template-" + templateName;
 	}
 
 	//

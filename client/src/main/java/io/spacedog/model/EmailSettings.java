@@ -1,7 +1,6 @@
 package io.spacedog.model;
 
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -11,7 +10,6 @@ public class EmailSettings extends SettingsBase {
 	public SmtpSettings smtp;
 	public MailGunSettings mailgun;
 	public Set<String> authorizedRoles = Collections.emptySet();
-	public Map<String, EmailTemplate> templates;
 
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	public static class MailGunSettings {
