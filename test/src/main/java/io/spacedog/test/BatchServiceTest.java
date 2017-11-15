@@ -33,7 +33,7 @@ public class BatchServiceTest extends SpaceTest {
 		// admin credentials
 		ArrayNode batch = Json.builder().array()//
 				.object()//
-				.add("method", "PUT").add("path", "/1/schema/message")//
+				.add("method", "PUT").add("path", "/1/schemas/message")//
 				.add("content", schema.node())//
 				.end()//
 
@@ -83,7 +83,7 @@ public class BatchServiceTest extends SpaceTest {
 		superadmin.get("/1/batch")//
 				.queryParam("vince", "/credentials/" + vinceId) //
 				.queryParam("dave", "/credentials/" + daveId) //
-				.queryParam("schema", "/schema/message") //
+				.queryParam("schema", "/schemas/message") //
 				.go(200)//
 				.assertEquals(vinceId, "vince.id")//
 				.assertEquals("vince", "vince.username")//
