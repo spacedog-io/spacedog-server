@@ -18,7 +18,7 @@ import io.spacedog.http.SpaceRequestException;
 import io.spacedog.model.CredentialsSettings;
 import io.spacedog.utils.Json;
 
-public class CredentialsServiceTestOften extends SpaceTest {
+public class CredentialsServiceTest2 extends SpaceTest {
 
 	@Test
 	public void userIsSigningUpAndMore() {
