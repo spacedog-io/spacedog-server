@@ -152,7 +152,7 @@ public class S3Resource extends Resource {
 				WebPath webPath = WebPath.parse(path);
 				zip.putNextEntry(new ZipEntry(webPath.last()));
 				S3Object s3Object = getS3Object(bucketSuffix, backendId, webPath);
-				writeS3ObjectContent(s3Object, output);
+				writeS3ObjectContent(s3Object, zip);
 				zip.flush();
 			}
 			zip.close();

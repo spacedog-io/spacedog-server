@@ -1,9 +1,12 @@
 package io.spacedog.watchdog;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -12,6 +15,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.collect.Sets;
+import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 
@@ -22,6 +26,7 @@ import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json7;
 import io.spacedog.utils.SpaceHeaders;
+import io.spacedog.utils.Utils;
 
 public class ShareResourceTestOncePerDay extends SpaceTest {
 
@@ -301,6 +306,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 
 		// prepare
 		SpaceDog superadmin = resetTestBackend();
+		byte[] pngBytes = Utils.readResource(this.getClass(), "tweeter.png");
 
 		// prepare share settings
 		ShareSettings settings = new ShareSettings();
@@ -324,7 +330,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		superadmin.get("/1/share/" + path2).go(200);
 
 		String path3 = superadmin.put("/1/share/tweeter.png")//
-				.bodyResource(getClass(), "tweeter.png")//
+				.bodyBytes(pngBytes)//
 				.go(200)//
 				.getString("path");
 
@@ -343,7 +349,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		superadmin.settings().save(settings);
 
 		// superadmin downloads zip containing specified shares
-		byte[] bytes = superadmin.post("/1/share/_zip")//
+		byte[] zip = superadmin.post("/1/share/_zip")//
 				.bodyJson("fileName", "download.zip", //
 						"paths", Json7.array(path1, path2, path3))//
 				.go(200)//
@@ -351,9 +357,34 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 						SpaceHeaders.CONTENT_DISPOSITION)//
 				.asBytes();
 
-		Files.write(bytes, new File(System.getProperty("user.home"), "download.zip"));
+		assertEquals(3, zipFileNumber(zip));
+		assertZipContains(zip, "toto.txt", "toto".getBytes());
+		assertZipContains(zip, "titi.txt", "titi".getBytes());
+		assertZipContains(zip, "tweeter.png", pngBytes);
 	}
 
+
+	private int zipFileNumber(byte[] zip) throws IOException {
+		ZipInputStream zipStream = new ZipInputStream(new ByteArrayInputStream(zip));
+		int size = 0;
+		while (zipStream.getNextEntry() != null)
+			size = size + 1;
+		return size;
+	}
+
+	private void assertZipContains(byte[] zip, String name, byte[] file) throws IOException {
+		ZipInputStream zipStream = new ZipInputStream(new ByteArrayInputStream(zip));
+		ZipEntry entry = null;
+		while ((entry = zipStream.getNextEntry()) != null) {
+			if (entry.getName().endsWith(name)) {
+				byte[] bytes = ByteStreams.toByteArray(zipStream);
+				assertArrayEquals(file, bytes);
+				return;
+			}
+		}
+		fail(String.format("[%s] zip entry not found", name));
+	}
+	
 	@Test
 	public void testFileOwnershipErrorsDoNotDrainAllS3Connection() throws IOException {
 
