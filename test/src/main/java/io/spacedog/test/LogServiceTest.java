@@ -1,13 +1,16 @@
 package io.spacedog.test;
 
 import java.util.Iterator;
+import java.util.List;
 
 import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.client.LogEndpoint.LogItem;
 import io.spacedog.client.LogEndpoint.LogSearchResults;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.elastic.ESQueryBuilders;
@@ -16,6 +19,11 @@ import io.spacedog.client.elastic.ESSortBuilders;
 import io.spacedog.client.elastic.ESSortOrder;
 import io.spacedog.http.SpaceBackend;
 import io.spacedog.http.SpaceRequest;
+import io.spacedog.model.DataObject;
+import io.spacedog.model.Permission;
+import io.spacedog.model.Schema;
+import io.spacedog.utils.Json;
+import io.spacedog.utils.SpaceHeaders;
 
 public class LogServiceTest extends SpaceTest {
 
@@ -38,12 +46,11 @@ public class LogServiceTest extends SpaceTest {
 		// superadmin checks everything is in place
 		LogSearchResults log = test.log().get(6, true);
 
-		assertEquals(5, log.results.size());
+		assertEquals(4, log.results.size());
 		assertEquals("/1/data", log.results.get(0).path);
 		assertEquals("/1/data", log.results.get(1).path);
 		assertEquals("/1/login", log.results.get(2).path);
 		assertEquals("/1/credentials", log.results.get(3).path);
-		assertEquals("/1/backend", log.results.get(4).path);
 
 		DateTime before = log.results.get(1).receivedAt;
 
@@ -118,43 +125,40 @@ public class LogServiceTest extends SpaceTest {
 				.query(ESQueryBuilders.termsQuery("credentials.type", "superadmin", "user", "guest"))//
 				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
 		results = superadmin.log().search(query, true);
-		assertEquals(7, results.results.size());
+		assertEquals(6, results.results.size());
 		assertEquals("/1/log/search", results.results.get(0).path);
 		assertEquals("/1/credentials/" + vince.id(), results.results.get(1).path);
 		assertEquals("/1/login", results.results.get(2).path);
 		assertEquals("/1/credentials", results.results.get(3).path);
 		assertEquals("/1/data/user", results.results.get(4).path);
 		assertEquals("/1/data", results.results.get(5).path);
-		assertEquals("/1/backend", results.results.get(6).path);
 
 		// superadmin search for test backend log to only get user and lower logs
 		query = ESSearchSourceBuilder.searchSource()//
 				.query(ESQueryBuilders.termsQuery("credentials.type", "user", "guest"))//
 				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
 		results = superadmin.log().search(query, true);
-		assertEquals(5, results.results.size());
+		assertEquals(4, results.results.size());
 		assertEquals("/1/credentials/" + vince.id(), results.results.get(0).path);
 		assertEquals("/1/login", results.results.get(1).path);
 		assertEquals("/1/data/user", results.results.get(2).path);
 		assertEquals("/1/data", results.results.get(3).path);
-		assertEquals("/1/backend", results.results.get(4).path);
 
 		// superadmin search for test backend log to only get guest logs
 		query = ESSearchSourceBuilder.searchSource()//
 				.query(ESQueryBuilders.termQuery("credentials.type", "guest"))//
 				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
 		results = superadmin.log().search(query, true);
-		assertEquals(3, results.results.size());
+		assertEquals(2, results.results.size());
 		assertEquals("/1/data/user", results.results.get(0).path);
 		assertEquals("/1/data", results.results.get(1).path);
-		assertEquals("/1/backend", results.results.get(2).path);
 
-		// superdog gets all test backend logs
+		// superadmin gets all test backend logs
 		query = ESSearchSourceBuilder.searchSource()//
 				.query(ESQueryBuilders.matchAllQuery())//
 				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
 		results = superadmin.log().search(query, true);
-		assertEquals(10, results.results.size());
+		assertEquals(9, results.results.size());
 		assertEquals("/1/log/search", results.results.get(0).path);
 		assertEquals("/1/log/search", results.results.get(1).path);
 		assertEquals("/1/log/search", results.results.get(2).path);
@@ -164,7 +168,6 @@ public class LogServiceTest extends SpaceTest {
 		assertEquals("/1/credentials", results.results.get(6).path);
 		assertEquals("/1/data/user", results.results.get(7).path);
 		assertEquals("/1/data", results.results.get(8).path);
-		assertEquals("/1/backend", results.results.get(9).path);
 	}
 
 	@Test
@@ -189,4 +192,174 @@ public class LogServiceTest extends SpaceTest {
 				Assert.fail();
 		}
 	}
+
+	@Test
+	public void doAFewThingsAndGetTheLogs() {
+
+		// prepare
+		prepareTest();
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin2 = resetTest2Backend();
+
+		// create message schema in test backend
+		Schema schema = Schema.builder("message").text("text")//
+				.acl("user", Permission.create, Permission.search).build();
+		superadmin.schema().set(schema);
+
+		// create a user in test backend
+		SpaceDog user = createTempDog(superadmin, "user").login();
+
+		// create a user in test2 backend
+		createTempDog(superadmin2, "user2").login();
+
+		// create message in test backend
+		DataObject<ObjectNode> message = user.data()//
+				.save("message", Json.object("text", "What's up boys?"));
+
+		// find message by id in test backend
+		user.data().fetch(message);
+
+		// find all messages in test backend
+		user.data().getAll().type("message").get();
+
+		// get all test backend logs
+		// the delete request is not part of the logs
+		// since log starts with the backend creation
+		List<LogItem> results = superadmin.log().get(10, true).results;
+		assertEquals(6, results.size());
+		assertEquals("GET", results.get(0).method);
+		assertEquals("/1/data/message", results.get(0).path);
+		assertEquals("GET", results.get(1).method);
+		assertEquals("/1/data/message/" + message.id(), results.get(1).path);
+		assertEquals("POST", results.get(2).method);
+		assertEquals("/1/data/message", results.get(2).path);
+		assertEquals("GET", results.get(3).method);
+		assertEquals("/1/login", results.get(3).path);
+		assertEquals("POST", results.get(4).method);
+		assertEquals("/1/credentials", results.get(4).path);
+		assertEquals("PUT", results.get(5).method);
+		assertEquals("/1/schemas/message", results.get(5).path);
+
+		// get all test2 backend logs
+		results = superadmin2.log().get(4, true).results;
+		assertEquals(2, results.size());
+		assertEquals("GET", results.get(0).method);
+		assertEquals("/1/login", results.get(0).path);
+		assertEquals("POST", results.get(1).method);
+		assertEquals("/1/credentials", results.get(1).path);
+		assertEquals("********", results.get(1).payload.get(PASSWORD_FIELD).asText());
+
+		// after backend deletion, logs are not accessible to backend
+		superadmin.admin().deleteBackend(superadmin.backendId());
+		superadmin.get("/1/log").go(401);
+
+		superadmin2.admin().deleteBackend(superadmin2.backendId());
+		superadmin2.get("/1/log").go(401);
+	}
+
+	@Test
+	public void checkPasswordsAreNotLogged() {
+
+		prepareTest();
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog fred = createTempDog(superadmin, "fred").login();
+
+		String passwordResetCode = superadmin.delete("/1/credentials/{id}/password")//
+				.routeParam("id", fred.id()).go(200)//
+				.getString("passwordResetCode");
+
+		SpaceRequest.post("/1/credentials/{id}/password")//
+				.routeParam("id", fred.id())//
+				.queryParam("passwordResetCode", passwordResetCode)//
+				.backend(superadmin).formField("password", "hi fred 2").go(200);
+
+		SpaceRequest.put("/1/credentials/{id}/password").backend(superadmin)//
+				.routeParam("id", fred.id()).basicAuth("fred", "hi fred 2")//
+				.formField("password", "hi fred 3").go(200);
+
+		List<LogItem> results = superadmin.log().get(7, true).results;
+		assertEquals(5, results.size());
+		assertEquals("PUT", results.get(0).method);
+		assertEquals("/1/credentials/" + fred.id() + "/password", results.get(0).path);
+		assertEquals("********", results.get(0).getParameter(PASSWORD_FIELD));
+		assertEquals("POST", results.get(1).method);
+		assertEquals("/1/credentials/" + fred.id() + "/password", results.get(1).path);
+		assertEquals("********", results.get(1).getParameter(PASSWORD_FIELD));
+		assertEquals(passwordResetCode, //
+				results.get(1).getParameter(PASSWORD_RESET_CODE_FIELD));
+		assertEquals("DELETE", results.get(2).method);
+		assertEquals("/1/credentials/" + fred.id() + "/password", results.get(2).path);
+		assertEquals(passwordResetCode, //
+				results.get(2).response.get(PASSWORD_RESET_CODE_FIELD).asText());
+		assertEquals("GET", results.get(3).method);
+		assertEquals("/1/login", results.get(3).path);
+		assertEquals("POST", results.get(4).method);
+		assertEquals("/1/credentials", results.get(4).path);
+		assertEquals("fred", results.get(4).payload.get(USERNAME_FIELD).asText());
+		assertEquals("********", results.get(4).payload.get(PASSWORD_FIELD).asText());
+	}
+
+	@Test
+	public void testSpecialCases() {
+
+		// prepare
+		prepareTest();
+		SpaceDog superadmin = resetTestBackend();
+
+		// fails because invalid body
+		superadmin.put("/1/schemas/toto").bodyString("XXX").go(400);
+
+		// but logs the failed request without the json content
+		LogItem logItem = superadmin.log().get(1, true).results.get(0);
+		assertEquals("PUT", logItem.method);
+		assertEquals("/1/schemas/toto", logItem.path);
+		assertEquals(400, logItem.status);
+		assertNull(logItem.payload);
+		assertNull(logItem.parameters);
+
+		// check that log response results are not logged
+		superadmin.log().get(10);
+		logItem = superadmin.log().get(1, true).results.get(0);
+		assertEquals("GET", logItem.method);
+		assertEquals("/1/log", logItem.path);
+		assertNull(logItem.response.get("results"));
+
+		// Headers are logged if not empty
+		// and 'Authorization' header is not logged
+		superadmin.get("/1/log")//
+				.setHeader("x-empty", "")//
+				.setHeader("x-blank", " ")//
+				.setHeader("x-color", "YELLOW")//
+				.addHeader("x-color-list", "RED")//
+				.addHeader("x-color-list", "BLUE")//
+				.addHeader("x-color-list", "GREEN")//
+				.go(200);
+
+		logItem = superadmin.log().get(1, true).results.get(0);
+		assertTrue(logItem.getHeader(SpaceHeaders.AUTHORIZATION).isEmpty());
+		assertTrue(logItem.getHeader("x-empty").isEmpty());
+		assertTrue(logItem.getHeader("x-blank").isEmpty());
+		assertTrue(logItem.getHeader("x-color").contains("YELLOW"));
+		assertTrue(logItem.getHeader("x-color-list").contains("RED"));
+		assertTrue(logItem.getHeader("x-color-list").contains("BLUE"));
+		assertTrue(logItem.getHeader("x-color-list").contains("GREEN"));
+	}
+
+	@Test
+	public void defaultLogShouldContainDeleteAndCreateBackendLog() {
+
+		// prepare
+		prepareTest();
+		resetTestBackend();
+
+		// superdog gets default backend (api) log
+		List<LogItem> results = superdog().log().get(2, true).results;
+		assertEquals("POST", results.get(0).method);
+		assertEquals("/1/backends", results.get(0).path);
+		assertEquals("test", results.get(0).payload.get(BACKEND_ID_FIELD).asText());
+		assertEquals("********", Json.get(results.get(0).payload, "superadmin.password").asText());
+		assertEquals("DELETE", results.get(1).method);
+		assertEquals("/1/backends/test", results.get(1).path);
+	}
+
 }
