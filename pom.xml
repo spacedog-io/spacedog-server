@@ -19,8 +19,8 @@
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.test.redirectTestOutputToFile>true</maven.test.redirectTestOutputToFile>
-		<aws-version>1.10.52</aws-version>
-		<es-version>2.2.0</es-version>
+		<aws-version>1.10.69</aws-version>
+		<es-version>2.4.4</es-version>
 		<jackson-version>2.6.2</jackson-version>
 	</properties>
 
