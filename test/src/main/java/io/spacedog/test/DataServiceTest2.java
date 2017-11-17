@@ -25,8 +25,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.client.elastic.ESQueryBuilders;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
-import io.spacedog.http.SpaceRequest;
 import io.spacedog.model.DataObject;
 import io.spacedog.model.DataObjectAbstract;
 import io.spacedog.model.GeoPoint;
@@ -186,25 +186,20 @@ public class DataServiceTest2 extends SpaceTest {
 		assertSourceAlmostEquals(saleNode, saleNode3);
 
 		// find by simple text search
-		new SaleSearchResults();
 		SaleSearchResults sale4 = fred.data().getAllRequest().type("sale")//
 				.q("museum").refresh().go(SaleSearchResults.class);
 
 		assertEquals(1, sale4.total);
-
 		ObjectNode saleNode4 = Json.checkObject(Json.toJsonNode(sale4.results.get(0).source()));
 		assertSourceAlmostEquals(saleNode, saleNode4);
 
 		// find by advanced text search
-		String query = Json.builder().object()//
-				.object("query")//
-				.object("query_string")//
-				.add("query", "museum")//
-				.build().toString();
+		ESSearchSourceBuilder source = ESSearchSourceBuilder.searchSource()
+				.query(ESQueryBuilders.queryStringQuery("museum"));
+		SaleSearchResults sale5 = fred.data().searchRequest()//
+				.type("sale").source(source).go(SaleSearchResults.class);
 
-		SaleSearchResults sale5 = fred.post("/1/search/sale").bodyString(query).go(200)//
-				.assertEquals(1, "total").toPojo(SaleSearchResults.class);
-
+		assertEquals(1, sale5.total);
 		ObjectNode saleNode5 = Json.checkObject(Json.toJsonNode(sale5.results.get(0).source()));
 		assertSourceAlmostEquals(saleNode, saleNode5);
 
@@ -229,12 +224,12 @@ public class DataServiceTest2 extends SpaceTest {
 		assertSourceAlmostEquals(saleNode, saleNode6, "items");
 
 		// update with invalid version should fail
-		fred.put("/1/data/sale/" + saleDO2.id()).queryParam("version", 1)//
-				.bodyJson("number", "0987654321").go(409);
+		assertHttpError(409, () -> fred.data().patch("sale", //
+				saleDO2.id(), Json.object("number", "0987654321"), 1l));
 
 		// update with invalid version should fail
-		fred.put("/1/data/sale/" + saleDO2.id()).queryParam("version", "XXX")//
-				.bodyJson("number", "0987654321").go(400);
+		assertHttpError(400, () -> fred.put("/1/data/sale/" + saleDO2.id())//
+				.queryParam("version", "XXX").bodyJson("number", "0987654321").go(200));
 
 		// update with correct version should succeed
 		saleDO6.source().number = "0987654321";
@@ -252,13 +247,13 @@ public class DataServiceTest2 extends SpaceTest {
 
 		// vince fails to update nor delete this sale since not the owner
 		SpaceDog vince = createTempDog(test, "vince");
-		vince.put("/1/data/sale/" + saleDO7.id())//
-				.bodyJson("number", "0123456789").go(403);
-		vince.delete("/1/data/sale/" + saleDO7.id()).go(403);
+		assertHttpError(403, () -> vince.data().patch("sale", //
+				saleDO7.id(), Json.object("number", "0123456789")));
+		assertHttpError(403, () -> vince.data().delete(saleDO7));
 
 		// fred deletes this sale since he is the owner
 		fred.data().delete(saleDO7);
-		fred.get("/1/data/sale/" + saleDO7.id()).go(404);
+		assertHttpError(404, () -> fred.data().fetch(saleDO7));
 	}
 
 	@Test
@@ -267,28 +262,30 @@ public class DataServiceTest2 extends SpaceTest {
 		// prepare
 
 		prepareTest();
-		SpaceDog test = resetTestBackend();
-		test.schema().set(Schema.builder("message").text("text").build());
+		SpaceDog superadmin = resetTestBackend();
+		superadmin.schema().set(Schema.builder("message").text("text").build());
 
 		// should successfully create 4 messages
 
-		SpaceRequest.post("/1/data/message").auth(test)//
-				.bodyJson("text", "what's up?").go(201);
-		SpaceRequest.post("/1/data/message").auth(test)//
-				.bodyJson("text", "wanna drink something?").go(201);
-		SpaceRequest.post("/1/data/message").auth(test)//
-				.bodyJson("text", "pretty cool, hein?").go(201);
-		SpaceRequest.post("/1/data/message").auth(test)//
-				.bodyJson("text", "so long guys").go(201);
+		superadmin.data().save("message", //
+				Json.object("text", "what's up?"));
+		superadmin.data().save("message", //
+				Json.object("text", "wanna drink something?"));
+		superadmin.data().save("message", //
+				Json.object("text", "pretty cool, hein?"));
+		superadmin.data().save("message", //
+				Json.object("text", "so long guys"));
 
-		SpaceRequest.get("/1/data").refresh().auth(test).go(200)//
-				.assertEquals(4, "total");
+		long total = superadmin.data().getAllRequest().refresh().go().total;
+		assertEquals(4, total);
 
 		// should succeed to delete all messages
-		SpaceRequest.delete("/1/data/message").auth(test).go(200)//
-				.assertEquals(4, "totalDeleted");
-		SpaceRequest.get("/1/data").refresh().auth(test).go(200)//
-				.assertEquals(0, "total");
+		total = superadmin.data().deleteAll("message");
+		assertEquals(4, total);
+
+		// check no data anymore
+		total = superadmin.data().getAllRequest().refresh().go().total;
+		assertEquals(0, total);
 	}
 
 	@Test

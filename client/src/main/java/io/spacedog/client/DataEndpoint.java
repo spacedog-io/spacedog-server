@@ -67,10 +67,15 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 	}
 
 	public long patch(String type, String id, Object source) {
+		return patch(type, id, source, null);
+	}
+
+	public long patch(String type, String id, Object source, Long version) {
 		return dog.put("/1/data/{type}/{id}")//
 				.routeParam(ID_FIELD, id)//
 				.routeParam(TYPE_FIELD, type)//
 				.queryParam(STRICT_PARAM, false)//
+				.queryParam(VERSION_PARAM, version)//
 				.bodyPojo(source).go(200)//
 				.get(VERSION_FIELD).asLong();
 	}
@@ -188,9 +193,8 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 	// Delete All Request
 	//
 
-	public DataEndpoint deleteAll(String type) {
-		deleteAllRequest().type(type).go();
-		return this;
+	public long deleteAll(String type) {
+		return deleteAllRequest().type(type).go();
 	}
 
 	public DeleteAllRequest deleteAllRequest() {
@@ -221,7 +225,7 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 			return source(source.toString());
 		}
 
-		public void go() {
+		public long go() {
 
 			String path = "/1/search";
 			if (!Strings.isNullOrEmpty(type))
@@ -230,7 +234,9 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 			if (Strings.isNullOrEmpty(source))
 				source = Json.EMPTY_OBJECT;
 
-			dog.delete(path).bodyJson(source).refresh(refresh).go(200);
+			return dog.delete(path).bodyJson(source)//
+					.refresh(refresh).go(200).get("totalDeleted").asLong();
+
 		}
 
 	}
