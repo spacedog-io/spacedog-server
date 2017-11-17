@@ -62,7 +62,8 @@ public class PushEndpoint {
 	}
 
 	public InstallationDataObject.Results searchInstallations(ESSearchSourceBuilder source) {
-		return dog.data().search("installation", source, InstallationDataObject.Results.class);
+		return dog.data().searchRequest().type("installation")//
+				.source(source).go(InstallationDataObject.Results.class);
 	}
 
 	public PushEndpoint deleteInstallation(String id) {

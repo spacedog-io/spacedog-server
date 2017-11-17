@@ -36,8 +36,8 @@ public class LogServiceTest extends SpaceTest {
 		SpaceDog test = resetTestBackend();
 		SpaceDog fred = createTempDog(test, "fred").login();
 
-		fred.data().getAll().get();
-		fred.data().getAll().get();
+		fred.data().getAllRequest().go();
+		fred.data().getAllRequest().go();
 
 		// superadmin gets test2 backend total log count to check
 		// later that they aren't affected by test backend log purge
@@ -220,7 +220,7 @@ public class LogServiceTest extends SpaceTest {
 		user.data().fetch(message);
 
 		// find all messages in test backend
-		user.data().getAll().type("message").get();
+		user.data().getAllRequest().type("message").go();
 
 		// get all test backend logs
 		// the delete request is not part of the logs

@@ -122,9 +122,8 @@ public class PushSpaceServiceTest extends SpaceTest {
 		vince.get("/1/installation").go(403);
 
 		// admin gets all installations
-		List<InstallationDataObject> installations = superadmin.data().getAll()//
-				.type("installation").refresh()//
-				.get(InstallationDataObject.Results.class).results;
+		List<InstallationDataObject> installations = superadmin.data().getAllRequest()//
+				.type("installation").refresh().go(InstallationDataObject.Results.class).results;
 
 		assertEquals(5, installations.size());
 		Set<String> ids = Sets.newHashSet(unknownInstallId, daveInstall.id(), //

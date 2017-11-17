@@ -10,10 +10,11 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.client.elastic.ESQueryBuilders;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.client.elastic.ESSortOrder;
-import io.spacedog.http.SpaceRequest;
 import io.spacedog.model.JsonDataObject;
+import io.spacedog.model.JsonDataObject.Results;
 import io.spacedog.model.Permission;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
@@ -30,58 +31,54 @@ public class SearchServiceTest extends SpaceTest {
 		superadmin.schema().set(Schema.builder("rubric").text("name").build());
 
 		// creates 4 messages and 1 rubric
-		superadmin.post("/1/data/rubric")//
-				.bodyJson("name", "riri, fifi and loulou").go(201);
-		superadmin.post("/1/data/message")//
-				.bodyJson("text", "what's up?").go(201);
-		superadmin.post("/1/data/message")//
-				.bodyJson("text", "wanna drink something?").go(201);
-		superadmin.post("/1/data/message")//
-				.bodyJson("text", "pretty cool something, hein?").go(201);
-		superadmin.post("/1/data/message")//
-				.bodyJson("text", "so long guys").go(201);
+		superadmin.data().save("rubric", //
+				Json.object("name", "riri, fifi and loulou"));
+		superadmin.data().save("message", //
+				Json.object("text", "what's up?"));
+		superadmin.data().save("message", //
+				Json.object("text", "wanna drink something?"));
+		superadmin.data().save("message", //
+				Json.object("text", "pretty cool something, hein?"));
+		superadmin.data().save("message", //
+				Json.object("text", "so long guys"));
 
-		superadmin.get("/1/data").refresh().go(200)//
-				.assertEquals(5, "total");
+		assertEquals(5, superadmin.data().searchRequest().refresh().go().total);
 
 		// search for messages with full text query
-		ObjectNode query = Json.builder().object()//
-				.object("query").object("match").add("text", "something to drink")//
-				.build();
+		ESSearchSourceBuilder source = ESSearchSourceBuilder.searchSource().query(//
+				ESQueryBuilders.matchQuery("text", "something to drink"));
+		Results results = superadmin.data().searchRequest().source(source).go();
 
-		ObjectNode results = SpaceRequest.post("/1/search")//
-				.debugServer().auth(superadmin).bodyJson(query).go(200)//
-				.assertEquals("wanna drink something?", "results.0.source.text")//
-				.assertEquals("pretty cool something, hein?", "results.1.source.text")//
-				.asJsonObject();
+		assertEquals("wanna drink something?", //
+				results.results.get(0).source().get("text").asText());
+		assertEquals("pretty cool something, hein?", //
+				results.results.get(1).source().get("text").asText());
 
 		// check search scores
-		assertTrue(Json.checkDouble(Json.get(results, "results.0.score")) > 1);
-		assertTrue(Json.checkDouble(Json.get(results, "results.1.score")) < 1);
+		assertTrue(results.results.get(0).score() > 1);
+		assertTrue(results.results.get(1).score() < 1);
 
 		// check all meta are there
-		assertNotNull(Json.get(results, "results.0.id"));
-		assertNotNull(Json.get(results, "results.0.type"));
-		assertNotNull(Json.get(results, "results.0.version"));
-		assertNotNull(Json.get(results, "results.0.source.owner"));
-		assertNotNull(Json.get(results, "results.0.source.createdAt"));
-		assertNotNull(Json.get(results, "results.0.source.updatedAt"));
+		assertNotNull(results.results.get(0).id());
+		assertNotNull(results.results.get(0).version());
+		assertNotNull(results.results.get(0).owner());
+		assertNotNull(results.results.get(0).group());
+		assertNotNull(results.results.get(0).createdAt());
+		assertNotNull(results.results.get(0).updatedAt());
 
 		// deletes messages containing 'up' by query
+		source = ESSearchSourceBuilder.searchSource().query(//
+				ESQueryBuilders.matchQuery("text", "up"));
+		superadmin.data().deleteAllRequest().source(source).go();
+		long total = superadmin.data().getAllRequest().type("message").refresh().go().total;
+		assertEquals(3, total);
 
-		query = Json.builder().object().object("query")//
-				.object("match").add("text", "up").build();
-		SpaceRequest.delete("/1/search/message").auth(superadmin).bodyJson(query).go(200);
-		SpaceRequest.get("/1/data/message").refresh().auth(superadmin).go(200)//
-				.assertEquals(3, "total");
-
-		// deletes data objects containing 'wanna' or 'riri' but not users
-
-		query = Json.builder().object().object("query")//
-				.object("match").add("_all", "wanna riri").build();
-		SpaceRequest.delete("/1/search").auth(superadmin).bodyJson(query).go(200);
-		SpaceRequest.get("/1/data").refresh().auth(superadmin).go(200)//
-				.assertEquals(2, "total");
+		// deletes data objects containing 'wanna' or 'riri'
+		source = ESSearchSourceBuilder.searchSource().query(//
+				ESQueryBuilders.matchQuery("_all", "wanna riri"));
+		superadmin.data().deleteAllRequest().source(source).go();
+		total = superadmin.data().getAllRequest().refresh().go().total;
+		assertEquals(2, total);
 	}
 
 	@Test
@@ -113,12 +110,14 @@ public class SearchServiceTest extends SpaceTest {
 				.add("field", "name")//
 				.build();
 
-		vince.post("/1/search").refresh().bodyJson(query).go(200)//
-				.assertEquals(0, "results")//
-				.assertEquals(3, "aggregations.distinctCities.buckets")//
-				.assertContainsValue("Paris", "key")//
-				.assertContainsValue("Bordeaux", "key")//
-				.assertContainsValue("Nice", "key");
+		Results results = vince.data().searchRequest()//
+				.source(query.toString()).refresh().go();
+
+		assertEquals(0, results.results.size());
+		assertEquals(3, Json.get(results.aggregations, "distinctCities.buckets").size());
+		assertContainsValue("Paris", results.aggregations, "key");
+		assertContainsValue("Bordeaux", results.aggregations, "key");
+		assertContainsValue("Nice", results.aggregations, "key");
 	}
 
 	@Test
@@ -126,18 +125,18 @@ public class SearchServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
+		SpaceDog superadmin = resetTestBackend();
 
-		test.schema().set(Schema.builder("number").integer("i").string("t").build());
+		superadmin.schema().set(Schema.builder("number").integer("i").string("t").build());
 
 		// creates 5 numbers
 		for (int i = 0; i < 5; i++)
-			test.data().save("number", Json.object("i", i, "t", "" + i));
+			superadmin.data().save("number", Json.object("i", i, "t", "" + i));
 
 		// search with ascendent sorting
-		ESSearchSourceBuilder builder = ESSearchSourceBuilder.searchSource().sort("i");
-		JsonDataObject.Results results = test.data().search(//
-				builder, JsonDataObject.Results.class, true);
+		ESSearchSourceBuilder searchSource = ESSearchSourceBuilder.searchSource().sort("i");
+		JsonDataObject.Results results = superadmin.data().searchRequest()//
+				.source(searchSource).refresh().go();
 		assertEquals(5, results.total);
 
 		List<JsonDataObject> objects = results.results;
@@ -147,8 +146,9 @@ public class SearchServiceTest extends SpaceTest {
 		}
 
 		// search with descendant sorting
-		builder = ESSearchSourceBuilder.searchSource().sort("t", ESSortOrder.DESC);
-		results = test.data().search(builder, JsonDataObject.Results.class, true);
+		searchSource = ESSearchSourceBuilder.searchSource().sort("t", ESSortOrder.DESC);
+		results = superadmin.data().searchRequest()//
+				.source(searchSource).refresh().go();
 		assertEquals(5, results.total);
 
 		objects = results.results;

@@ -187,8 +187,8 @@ public class DataServiceTest2 extends SpaceTest {
 
 		// find by simple text search
 		new SaleSearchResults();
-		SaleSearchResults sale4 = fred.data()//
-				.search("sale", "museum", SaleSearchResults.class, true);
+		SaleSearchResults sale4 = fred.data().getAllRequest().type("sale")//
+				.q("museum").refresh().go(SaleSearchResults.class);
 
 		assertEquals(1, sale4.total);
 
@@ -364,8 +364,8 @@ public class DataServiceTest2 extends SpaceTest {
 	private Collection<String> fetchMessages(SpaceDog user, int from, int size) {
 		ESSearchSourceBuilder builder = ESSearchSourceBuilder.searchSource()//
 				.from(from).size(size);
-		JsonDataObject.Results results = user.data()//
-				.search("message", builder, JsonDataObject.Results.class, true);
+		JsonDataObject.Results results = user.data().searchRequest()//
+				.type("message").source(builder).refresh().go();
 
 		assertEquals(4, results.total);
 		assertEquals(size, results.results.size());

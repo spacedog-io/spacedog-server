@@ -8,6 +8,8 @@ import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceResponse;
 import io.spacedog.model.DataObject;
 import io.spacedog.model.JsonDataObject;
+import io.spacedog.model.JsonDataObject.Results;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.SpaceFields;
 import io.spacedog.utils.SpaceParams;
@@ -122,10 +124,10 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 	}
 
 	//
-	// Get/Delete All methods
+	// Get All Request
 	//
 
-	public GetAllRequest getAll() {
+	public GetAllRequest getAllRequest() {
 		return new GetAllRequest();
 	}
 
@@ -133,10 +135,16 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 		private String type;
 		private Integer from;
 		private Integer size;
-		private Boolean refresh;
+		private boolean refresh;
+		private String q;
 
 		public GetAllRequest type(String type) {
 			this.type = type;
+			return this;
+		}
+
+		public GetAllRequest q(String q) {
+			this.q = q;
 			return this;
 		}
 
@@ -155,67 +163,127 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 			return this;
 		}
 
-		public JsonDataObject.Results get() {
-			return get(JsonDataObject.Results.class);
+		public JsonDataObject.Results go() {
+			return go(JsonDataObject.Results.class);
 		}
 
-		public <K> K get(Class<K> resultsClass) {
+		public <K> K go(Class<K> resultsClass) {
 
-			// if (type == null)
-			SpaceRequest request = type == null //
-					? dog.get("/1/data") //
-					: dog.get("/1/data/{type}").routeParam("type", type);
+			String path = "/1/data";
+			if (!Strings.isNullOrEmpty(type))
+				path = path + "/" + type;
 
-			return request.queryParam(REFRESH_PARAM, refresh)//
+			return dog.get(path)//
+					.refresh(refresh)//
+					.queryParam(Q_PARAM, q)//
 					.queryParam(FROM_PARAM, from)//
 					.queryParam(SIZE_PARAM, size)//
-					.go(200).toPojo(resultsClass);
+					.go(200)//
+					.toPojo(resultsClass);
 		}
 
 	}
 
+	//
+	// Delete All Request
+	//
+
 	public DataEndpoint deleteAll(String type) {
-		dog.delete("/1/data/{type}").routeParam("type", type).go(200);
+		deleteAllRequest().type(type).go();
 		return this;
 	}
 
+	public DeleteAllRequest deleteAllRequest() {
+		return new DeleteAllRequest();
+	}
+
+	public class DeleteAllRequest {
+		private boolean refresh;
+		private String type;
+		private String source;
+
+		public DeleteAllRequest refresh() {
+			this.refresh = true;
+			return this;
+		}
+
+		public DeleteAllRequest type(String type) {
+			this.type = type;
+			return this;
+		}
+
+		public DeleteAllRequest source(String source) {
+			this.source = source;
+			return this;
+		}
+
+		public DeleteAllRequest source(ESSearchSourceBuilder source) {
+			return source(source.toString());
+		}
+
+		public void go() {
+
+			String path = "/1/search";
+			if (!Strings.isNullOrEmpty(type))
+				path = path + "/" + type;
+
+			if (Strings.isNullOrEmpty(source))
+				source = Json.EMPTY_OBJECT;
+
+			dog.delete(path).bodyJson(source).refresh(refresh).go(200);
+		}
+
+	}
+
 	//
-	// Search
+	// Search Request
 	//
 
-	public <K> K search(String type, String q, //
-			Class<K> resultsClass, boolean refresh) {
-
-		String path = "/1/search";
-		if (!Strings.isNullOrEmpty(type))
-			path = path + "/" + type;
-
-		return dog.get(path).refresh(refresh)//
-				.queryParam("q", q).go(200).toPojo(resultsClass);
+	public SearchRequest searchRequest() {
+		return new SearchRequest();
 	}
 
-	public <K> K search(ESSearchSourceBuilder builder, Class<K> resultsClass) {
-		return search(null, builder, resultsClass, false);
+	public class SearchRequest {
+		public boolean refresh;
+		public String type;
+		public String source;
+
+		public SearchRequest refresh() {
+			this.refresh = true;
+			return this;
+		}
+
+		public SearchRequest type(String type) {
+			this.type = type;
+			return this;
+		}
+
+		public SearchRequest source(String source) {
+			this.source = source;
+			return this;
+		}
+
+		public SearchRequest source(ESSearchSourceBuilder source) {
+			return source(source.toString());
+		}
+
+		public Results go() {
+			return go(Results.class);
+		}
+
+		public <K> K go(Class<K> resultsClass) {
+
+			String path = "/1/search";
+			if (!Strings.isNullOrEmpty(type))
+				path = path + "/" + type;
+
+			if (Strings.isNullOrEmpty(source))
+				source = Json.EMPTY_OBJECT;
+
+			return dog.post(path).bodyJson(source)//
+					.refresh(refresh).go(200).toPojo(resultsClass);
+		}
+
 	}
 
-	public <K> K search(ESSearchSourceBuilder builder, Class<K> resultsClass, boolean refresh) {
-		return search(null, builder, resultsClass, refresh);
-	}
-
-	public <K> K search(String type, ESSearchSourceBuilder builder, //
-			Class<K> resultsClass) {
-		return search(type, builder, resultsClass, false);
-	}
-
-	public <K> K search(String type, ESSearchSourceBuilder builder, //
-			Class<K> resultsClass, boolean refresh) {
-
-		String path = "/1/search";
-		if (!Strings.isNullOrEmpty(type))
-			path = path + "/" + type;
-
-		return dog.post(path)//
-				.queryParam(REFRESH_PARAM, refresh)//
-				.bodyJson(builder.toString()).go(200).toPojo(resultsClass);
-	}
 }

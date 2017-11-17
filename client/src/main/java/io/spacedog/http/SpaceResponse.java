@@ -17,7 +17,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
-import com.google.common.collect.Iterators;
 
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -357,22 +356,6 @@ public class SpaceResponse {
 		assertJsonContent();
 		if (!asJson().findValuesAsText(fieldName).contains(expected))
 			Assert.fail(String.format("no field named [%s] found with value [%s]", fieldName, expected));
-		return this;
-	}
-
-	public SpaceResponse assertContains(JsonNode expected) {
-		assertJsonContent();
-		if (!Iterators.contains(asJson().elements(), expected))
-			Assert.fail(String.format(//
-					"response does not contain [%s]", expected));
-		return this;
-	}
-
-	public SpaceResponse assertContains(JsonNode expected, String jsonPath) {
-		assertJsonContent();
-		if (!Iterators.contains(Json.get(asJson(), jsonPath).elements(), expected))
-			Assert.fail(String.format(//
-					"field [%s] does not contain [%s]", jsonPath, expected));
 		return this;
 	}
 

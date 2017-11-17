@@ -30,7 +30,7 @@ public class ExportLogCommandTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		superadmin.data().getAll().get();
+		superadmin.data().getAllRequest().go();
 		superadmin.credentials().getByUsername("fred");
 		superadmin.settings().get(CredentialsSettings.class);
 

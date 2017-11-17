@@ -9,6 +9,7 @@ import org.junit.Assert;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
 import io.spacedog.client.SpaceDog;
@@ -142,6 +143,22 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 		if (date.isBefore(now - 3000) || date.isAfter(now + 3000))
 			throw failure("date time [%s] is not a recent enough (now +/- 3s)", date);
 		return date;
+	}
+
+	public void assertContainsValue(String expected, JsonNode node, String fieldName) {
+		if (!node.findValuesAsText(fieldName).contains(expected))
+			throw failure("no field [%s] found with value [%s]", fieldName, expected);
+	}
+
+	public void assertContains(JsonNode expected, JsonNode node) {
+		if (!Iterators.contains(node.elements(), expected))
+			throw failure("node [%s] does not contain [%s]", node, expected);
+	}
+
+	public void assertContains(JsonNode expected, JsonNode node, String fieldPath) {
+		if (!Iterators.contains(Json.get(node, fieldPath).elements(), expected))
+			throw failure("node [%s] does not contain field [%s] containing value [%s]", //
+					node, fieldPath, expected);
 	}
 
 	private static final List<String> metadataFieldNames = Lists.newArrayList(//

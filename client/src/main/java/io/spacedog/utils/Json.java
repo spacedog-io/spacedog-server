@@ -31,6 +31,7 @@ public class Json {
 
 	public static final String JSON_CONTENT = "application/json";
 	public static final String JSON_CONTENT_UTF8 = JSON_CONTENT + ";charset=UTF-8";
+	public static final String EMPTY_OBJECT = "{}";
 
 	//
 	// Get, set, with, remove

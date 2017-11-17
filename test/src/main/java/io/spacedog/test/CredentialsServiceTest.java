@@ -11,7 +11,6 @@ import com.google.common.collect.Maps;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceRequest;
-import io.spacedog.http.SpaceRequestException;
 import io.spacedog.model.CredentialsSettings;
 import io.spacedog.model.EmailTemplate;
 import io.spacedog.utils.Credentials;
@@ -100,33 +99,18 @@ public class CredentialsServiceTest extends SpaceTest {
 		fred.login();
 
 		// fred gets data
-		fred.data().getAll().get();
+		fred.data().getAllRequest().go();
 
 		// only admins are allowed to update credentials enable after date
-		try {
-			fred.credentials().prepareUpdate()//
-					.enableAfter(Optional7.of(DateTime.now())).go();
-			fail();
-		} catch (SpaceRequestException e) {
-			assertEquals(403, e.httpStatus());
-		}
+		assertHttpError(403, () -> fred.credentials().prepareUpdate()//
+				.enableAfter(Optional7.of(DateTime.now())).go());
 
 		// only admins are allowed to update credentials disable after date
-		try {
-			fred.credentials().prepareUpdate()//
-					.disableAfter(Optional7.of(DateTime.now())).go();
-			fail();
-		} catch (SpaceRequestException e) {
-			assertEquals(403, e.httpStatus());
-		}
+		assertHttpError(403, () -> fred.credentials().prepareUpdate()//
+				.disableAfter(Optional7.of(DateTime.now())).go());
 
 		// only admins are allowed to update credentials enabled status
-		try {
-			fred.credentials().prepareUpdate().enabled(true).go();
-			fail();
-		} catch (SpaceRequestException e) {
-			assertEquals(403, e.httpStatus());
-		}
+		assertHttpError(403, () -> fred.credentials().prepareUpdate().enabled(true).go());
 
 		// superadmin can update fred's credentials disable after date
 		// before now so fred's credentials are disabled
@@ -201,10 +185,10 @@ public class CredentialsServiceTest extends SpaceTest {
 				.username(fred.username()).login(fred.password().get());
 
 		// fred can access data with his first token
-		fred.data().getAll().get();
+		fred.data().getAllRequest().go();
 
 		// fred can access data with his second token
-		fred2.data().getAll().get();
+		fred2.data().getAllRequest().go();
 
 		// superadmin updates fred's password
 		String newPassword = Passwords.random();
@@ -212,20 +196,10 @@ public class CredentialsServiceTest extends SpaceTest {
 				.newPassword(newPassword).go();
 
 		// fred can no longer access data with his first token now invalid
-		try {
-			fred.data().getAll().get();
-			fail();
-		} catch (SpaceRequestException e) {
-			assertEquals(401, e.httpStatus());
-		}
+		assertHttpError(401, () -> fred.data().getAllRequest().go());
 
 		// fred can no longer access data with his second token now invalid
-		try {
-			fred2.data().getAll().get();
-			fail();
-		} catch (SpaceRequestException e) {
-			assertEquals(401, e.httpStatus());
-		}
+		assertHttpError(401, () -> fred2.data().getAllRequest().go());
 
 		// but fred can log in with his new password
 		fred.login(newPassword);

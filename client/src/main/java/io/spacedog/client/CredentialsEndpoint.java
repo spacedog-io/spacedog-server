@@ -178,11 +178,11 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 			return this;
 		}
 
-		public void go() {
-			go(null);
+		public SpaceResponse go() {
+			return go(null);
 		}
 
-		public void go(String password) {
+		public SpaceResponse go(String password) {
 			ObjectNode body = Json.object();
 
 			if (username != null)
@@ -211,7 +211,7 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 			else if (dog.password().isPresent())
 				request.basicAuth(dog);
 
-			request.go(200);
+			return request.go(200);
 		}
 	}
 
