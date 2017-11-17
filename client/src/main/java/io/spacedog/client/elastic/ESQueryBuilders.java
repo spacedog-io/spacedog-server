@@ -72,6 +72,34 @@ public abstract class ESQueryBuilders {
 	}
 
 	/**
+	 * A query that parses a query string and runs it. There are two modes that this
+	 * operates. The first, when no field is added (using
+	 * {@link ESQueryStringQueryBuilder#field(String)}, will run the query once and
+	 * non prefixed fields will use the
+	 * {@link ESQueryStringQueryBuilder#defaultField(String)} set. The second, when
+	 * one or more fields are added (using
+	 * {@link ESQueryStringQueryBuilder#field(String)}), will run the parsed query
+	 * against the provided fields, and combine them either using DisMax or a plain
+	 * boolean query (see {@link ESQueryStringQueryBuilder#useDisMax(boolean)}).
+	 *
+	 * @param queryString
+	 *            The query string to run
+	 */
+	public static ESQueryStringQueryBuilder queryStringQuery(String queryString) {
+		return new ESQueryStringQueryBuilder(queryString);
+	}
+
+	/**
+	 * A query that acts similar to a query_string query, but won't throw exceptions
+	 * for any weird string syntax. See
+	 * {@link org.LuceneSimpleQueryParserConstants.lucene.queryparser.simple.SimpleQueryParser}
+	 * for the full supported syntax.
+	 */
+	public static ESSimpleQueryStringBuilder simpleQueryStringQuery(String queryString) {
+		return new ESSimpleQueryStringBuilder(queryString);
+	}
+
+	/**
 	 * Constructs a query that will match only specific ids within types.
 	 *
 	 * @param types
