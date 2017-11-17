@@ -34,6 +34,44 @@ public abstract class ESQueryBuilders {
 	}
 
 	/**
+	 * Creates a match query with type "BOOLEAN" for the provided field name and
+	 * text.
+	 *
+	 * @param name
+	 *            The field name.
+	 * @param text
+	 *            The query text (to be analyzed).
+	 */
+	public static ESMatchQueryBuilder matchQuery(String name, Object text) {
+		return new ESMatchQueryBuilder(name, text).type(ESMatchQueryBuilder.Type.BOOLEAN);
+	}
+
+	/**
+	 * Creates a text query with type "PHRASE" for the provided field name and text.
+	 *
+	 * @param name
+	 *            The field name.
+	 * @param text
+	 *            The query text (to be analyzed).
+	 */
+	public static ESMatchQueryBuilder matchPhraseQuery(String name, Object text) {
+		return new ESMatchQueryBuilder(name, text).type(ESMatchQueryBuilder.Type.PHRASE);
+	}
+
+	/**
+	 * Creates a match query with type "PHRASE_PREFIX" for the provided field name
+	 * and text.
+	 *
+	 * @param name
+	 *            The field name.
+	 * @param text
+	 *            The query text (to be analyzed).
+	 */
+	public static ESMatchQueryBuilder matchPhrasePrefixQuery(String name, Object text) {
+		return new ESMatchQueryBuilder(name, text).type(ESMatchQueryBuilder.Type.PHRASE_PREFIX);
+	}
+
+	/**
 	 * Constructs a query that will match only specific ids within types.
 	 *
 	 * @param types
@@ -230,8 +268,8 @@ public abstract class ESQueryBuilders {
 	}
 
 	/**
-	 * A filter to filter based on a specific distance from a specific geo
-	 * location / point.
+	 * A filter to filter based on a specific distance from a specific geo location
+	 * / point.
 	 *
 	 * @param name
 	 *            The location field name.
