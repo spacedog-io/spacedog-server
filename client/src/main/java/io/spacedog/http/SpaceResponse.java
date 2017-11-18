@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -203,6 +204,15 @@ public class SpaceResponse {
 		return okResponse.header(name);
 	}
 
+	// when header contains multiple comma separated values
+	public List<String> headerAsList(String name) {
+		String[] values = header(name).split(",");
+		for (int i = 0; i < values.length; i++)
+			values[i] = values[i].trim();
+		return Lists.newArrayList(values);
+	}
+
+	// when same header multiple times
 	public List<String> headers(String name) {
 		return okResponse.headers(name);
 	}
@@ -404,15 +414,14 @@ public class SpaceResponse {
 	}
 
 	public SpaceResponse assertHeaderContains(String expected, String headerName) {
-		List<String> headerValues = headers(headerName);
+		List<String> headerValues = headerAsList(headerName);
 
 		if (headerValues == null)
 			Assert.fail(String.format("response header [%s] not found", headerName));
 
-		if (!headerValues.contains(expected))
-			Assert.fail(String.format(//
-					"response header [%s] does not contain value [%s] but %s", //
-					headerName, expected, headerValues));
+		if (!Utils.containsIgnoreCase(headerValues, expected))
+			Assert.fail(String.format("[%s] not found in header [%s] containing %s", //
+					expected, headerName, headerValues));
 
 		return this;
 	}
