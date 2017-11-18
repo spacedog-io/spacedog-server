@@ -4,6 +4,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -37,6 +38,15 @@ public class Utils {
 			if (value.equalsIgnoreCase(string))
 				return true;
 		return false;
+	}
+
+	public static boolean equalsIgnoreCase(List<String> list1, List<String> list2) {
+		if (list1.size() != list2.size())
+			return false;
+		for (int i = 0; i < list1.size(); i++)
+			if (!list1.get(i).equalsIgnoreCase(list2.get(i)))
+				return false;
+		return true;
 	}
 
 	//
