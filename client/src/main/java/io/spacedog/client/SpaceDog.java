@@ -177,6 +177,10 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 		return SpaceRequest.delete(uri).auth(this);
 	}
 
+	public SpaceRequest options(String uri) {
+		return SpaceRequest.options(uri).auth(this);
+	}
+
 	//
 	// resources
 	//
