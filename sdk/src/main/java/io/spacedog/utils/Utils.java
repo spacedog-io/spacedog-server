@@ -15,6 +15,17 @@ public class Utils {
 	public static final Charset UTF8 = Charset.forName("UTF-8");
 
 	//
+	// Collections utils
+	//
+
+	public static boolean containsIgnoreCase(Collection<String> strings, String value) {
+		for (String string : strings)
+			if (value.equalsIgnoreCase(string))
+				return true;
+		return false;
+	}
+
+	//
 	// Exceptions utils
 	//
 
