@@ -6,7 +6,6 @@ package io.spacedog.http;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -406,9 +405,10 @@ public class SpaceResponse {
 	}
 
 	public SpaceResponse assertHeaderEquals(String expected, String headerName) {
-		if (!Arrays.asList(expected).equals(headers(headerName)))
-			Assert.fail(String.format("response header [%s] not equal to [%s] but to %s", //
-					headerName, expected, headers(headerName)));
+		String headerValue = header(headerName);
+		if (!expected.equalsIgnoreCase(headerValue))
+			Assert.fail(String.format("header [%s] not equal to [%s] but %s", //
+					headerName, expected, headerValue));
 
 		return this;
 	}
@@ -417,10 +417,10 @@ public class SpaceResponse {
 		List<String> headerValues = headerAsList(headerName);
 
 		if (headerValues == null)
-			Assert.fail(String.format("response header [%s] not found", headerName));
+			Assert.fail(String.format("header [%s] not found", headerName));
 
 		if (!Utils.containsIgnoreCase(headerValues, expected))
-			Assert.fail(String.format("[%s] not found in header [%s] containing %s", //
+			Assert.fail(String.format("value [%s] not found in header [%s] containing %s", //
 					expected, headerName, headerValues));
 
 		return this;
