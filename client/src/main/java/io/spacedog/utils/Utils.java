@@ -104,22 +104,26 @@ public class Utils {
 		return builder.toString();
 	}
 
-	public static String[] splitByDot(String propertyPath) {
-		propertyPath = propertyPath.trim();
-		if (propertyPath.startsWith("."))
-			propertyPath = propertyPath.substring(1);
-		if (propertyPath.endsWith("."))
-			propertyPath = propertyPath.substring(0, propertyPath.length() - 1);
-		return propertyPath.split("\\.");
+	public static String[] splitByDot(String s) {
+		return split(s, "\\.");
 	}
 
-	public static String[] splitBySlash(String propertyPath) {
-		propertyPath = propertyPath.trim();
-		if (propertyPath.startsWith("/"))
-			propertyPath = propertyPath.substring(1);
-		if (propertyPath.endsWith("/"))
-			propertyPath = propertyPath.substring(0, propertyPath.length() - 1);
-		return propertyPath.split("/");
+	public static String[] splitBySlash(String s) {
+		return split(s, "/");
+	}
+
+	public static String[] splitByDash(String s) {
+		return split(s, "-");
+	}
+
+	public static String[] split(String s, String regex) {
+		String unEscapedRegex = regex.replace("\\", "");
+		s = s.trim();
+		if (s.startsWith(unEscapedRegex))
+			s = s.substring(1);
+		if (s.endsWith(unEscapedRegex))
+			s = s.substring(0, s.length() - 1);
+		return s.split(regex);
 	}
 
 	public static String removePreffix(String s, String preffix) {
