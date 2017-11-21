@@ -37,10 +37,13 @@ public class ApplicationServiceTest extends SpaceTest {
 		superadmin.push().saveApp(app);
 
 		// superadmin lists all backend push apps
-		// wait 5 seconds to make sure previous request has propagated
-		Thread.sleep(5000);
-		List<PushApplication> apps = superadmin.push().listApps();
-		assertEquals(1, apps.size());
+		// retry since app save request is asynch
+		List<PushApplication> apps = retry(5, 3000, () -> {
+			List<PushApplication> list = superadmin.push().listApps();
+			assertEquals(1, list.size());
+			return list;
+		});
+
 		assertEquals("test", apps.get(0).backendId);
 		assertEquals("myapp", apps.get(0).name);
 		assertEquals("APNS", apps.get(0).service.toString());
@@ -57,10 +60,12 @@ public class ApplicationServiceTest extends SpaceTest {
 		superadmin.push().deleteApp(app);
 
 		// superadmin lists all backend push apps
-		// wait 5 seconds to make sure previous request has propagated
-		Thread.sleep(5000);
-		apps = superadmin.push().listApps();
-		assertEquals(0, apps.size());
+		// retry since app delete request is asynch
+		retry(5, 3000, () -> {
+			List<PushApplication> list = superadmin.push().listApps();
+			assertEquals(0, list.size());
+			return list;
+		});
 
 		// deleting non existing credentials succeeds
 		superadmin.push().deleteApp("myapp", "GCM");

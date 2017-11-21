@@ -199,6 +199,30 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 		}
 	}
 
+	public static <T> T retry(int tries, long millis, Supplier<T> action) {
+
+		AssertionError e = null;
+
+		for (int i = 0; i < tries; i++) {
+			try {
+				return action.get();
+
+			} catch (AssertionError ee) {
+
+				if (i == tries - 1)
+					e = failure(ee, "assertion error despite [%s] tries", tries);
+				else
+					try {
+						Thread.sleep(millis);
+					} catch (InterruptedException e1) {
+						e1.printStackTrace();
+					}
+			}
+		}
+
+		throw e;
+	}
+
 	public static AssertionError failure(String message, Object... args) {
 		return new AssertionError(String.format(message, args));
 	}
