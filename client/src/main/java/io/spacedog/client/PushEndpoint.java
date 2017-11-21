@@ -1,12 +1,17 @@
 package io.spacedog.client;
 
+import java.util.List;
+
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Lists;
 
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.model.DataObject;
 import io.spacedog.model.DataObjectAbstract;
 import io.spacedog.model.Installation;
 import io.spacedog.model.InstallationDataObject;
+import io.spacedog.model.PushApplication;
+import io.spacedog.model.PushApplication.Credentials;
 import io.spacedog.utils.Check;
 
 public class PushEndpoint {
@@ -16,6 +21,54 @@ public class PushEndpoint {
 	PushEndpoint(SpaceDog dog) {
 		this.dog = dog;
 	}
+
+	//
+	// Applications management
+	//
+
+	public List<PushApplication> listApps() {
+		return Lists.newArrayList(//
+				dog.get("/1/applications").go(200)//
+						.toPojo(PushApplication[].class));
+	}
+
+	public PushEndpoint saveApp(String name, String service, Credentials credentials) {
+		Check.notNull(name, "push app name");
+		Check.notNull(service, "push app service");
+		Check.notNull(credentials, "push app credentials");
+
+		dog.put("/1/applications/{name}/{service}")//
+				.routeParam("name", name)//
+				.routeParam("service", service.toString())//
+				.bodyPojo(credentials)//
+				.go(200);
+
+		return this;
+	}
+
+	public PushEndpoint saveApp(PushApplication app) {
+		return saveApp(app.name, app.service.toString(), app.credentials);
+	}
+
+	public PushEndpoint deleteApp(String name, String service) {
+		Check.notNull(name, "push app name");
+		Check.notNull(service, "push app service");
+
+		dog.delete("/1/applications/{name}/{service}")//
+				.routeParam("name", name)//
+				.routeParam("service", service)//
+				.go(200);
+
+		return this;
+	}
+
+	public PushEndpoint deleteApp(PushApplication app) {
+		return deleteApp(app.name, app.service.toString());
+	}
+
+	//
+	// Push
+	//
 
 	public ObjectNode push(String installationId, PushRequest request) {
 		return dog.post("/1/installation/{id}/push")//

@@ -3,14 +3,16 @@
  */
 package io.spacedog.test.application;
 
+import java.util.List;
+
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import io.spacedog.client.SpaceDog;
+import io.spacedog.model.PushApplication;
+import io.spacedog.model.PushApplication.Credentials;
+import io.spacedog.model.PushService;
 import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.ClassResources;
-import io.spacedog.utils.Json;
 
 public class ApplicationServiceTest extends SpaceTest {
 
@@ -20,46 +22,47 @@ public class ApplicationServiceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		ObjectNode apnsCredentials = Json.object(//
-				"principal", ClassResources.loadToString(this, "apns-principal.pem"), //
-				"credentials", ClassResources.loadToString(this, "apns-credentials.pem"));
 
 		// put fails since invalid push service
-		superadmin.put("/1/applications/myapp/XXX").bodyJson(apnsCredentials).go(400);
+		assertHttpError(400, () -> superadmin.push().saveApp("myapp", "XXX", new Credentials()));
 
 		// put fails since no push credentials
-		superadmin.put("/1/applications/myapp/APNS").go(400);
+		assertHttpError(400, () -> superadmin.push().saveApp("myapp", "APNS", new Credentials()));
 
 		// superadmin sets test-myapp APNS push credentials
-		superadmin.put("/1/applications/myapp/APNS").bodyJson(apnsCredentials).go(200);
+		PushApplication app = new PushApplication().name("myapp").service(PushService.APNS)//
+				.principal(ClassResources.loadToString(this, "apns-principal.pem"))//
+				.credentials(ClassResources.loadToString(this, "apns-credentials.pem"));
+
+		superadmin.push().saveApp(app);
 
 		// superadmin lists all backend push apps
 		// wait 5 seconds to make sure previous request has propagated
 		Thread.sleep(5000);
-		superadmin.get("/1/applications").go(200)//
-				.assertSizeEquals(1)//
-				.assertEquals("test", "0.backendId")//
-				.assertEquals("myapp", "0.name")//
-				.assertEquals("APNS", "0.service")//
-				.assertEquals("true", "0.attributes.Enabled")//
-				.assertPresent("0.attributes.AppleCertificateExpirationDate");
+		List<PushApplication> apps = superadmin.push().listApps();
+		assertEquals(1, apps.size());
+		assertEquals("test", apps.get(0).backendId);
+		assertEquals("myapp", apps.get(0).name);
+		assertEquals("APNS", apps.get(0).service.toString());
+		assertEquals("true", apps.get(0).attributes.get("Enabled"));
+		assertNotNull(apps.get(0).attributes.get("AppleCertificateExpirationDate"));
 
 		// superadmin sets test-myapp APNS push credentials again
-		superadmin.put("/1/applications/myapp/APNS").bodyJson(apnsCredentials).go(200);
+		superadmin.push().saveApp(app);
 
 		// delete fails since invalid push service
-		superadmin.delete("/1/applications/myapp/XXX").go(400);
+		assertHttpError(400, () -> superadmin.push().deleteApp("myapp", "XXX"));
 
-		// superadmin deletes test-myapp application APNS credentials
-		superadmin.delete("/1/applications/myapp/APNS").go(200);
+		// superadmin deletes myapp application APNS credentials
+		superadmin.push().deleteApp(app);
 
 		// superadmin lists all backend push apps
 		// wait 5 seconds to make sure previous request has propagated
 		Thread.sleep(5000);
-		superadmin.get("/1/applications").go(200)//
-				.assertSizeEquals(0);
+		apps = superadmin.push().listApps();
+		assertEquals(0, apps.size());
 
 		// deleting non existing credentials succeeds
-		superadmin.delete("/1/applications/myapp/GCM").go(200);
+		superadmin.push().deleteApp("myapp", "GCM");
 	}
 }

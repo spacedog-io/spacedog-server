@@ -4,7 +4,6 @@
 package io.spacedog.server;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -13,9 +12,9 @@ import com.amazonaws.services.sns.model.DeletePlatformApplicationRequest;
 import com.amazonaws.services.sns.model.ListPlatformApplicationsResult;
 import com.amazonaws.services.sns.model.PlatformApplication;
 import com.amazonaws.services.sns.model.SetPlatformApplicationAttributesRequest;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Strings;
 
+import io.spacedog.model.PushApplication;
 import io.spacedog.model.PushService;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -33,7 +32,7 @@ public class ApplicationService extends SpaceService {
 
 	@Get("/1/applications")
 	@Get("/1/applications/")
-	public Object getApplications() {
+	public Payload getApplications() {
 
 		SpaceContext.credentials().checkAtLeastAdmin();
 		String backendId = SpaceContext.backendId();
@@ -46,7 +45,7 @@ public class ApplicationService extends SpaceService {
 				.filter(application -> backendId.equals(application.backendId))//
 				.collect(Collectors.toList());
 
-		return Json.toString(pushApps);
+		return JsonPayload.ok().withObject(Json.toJsonNode(pushApps)).build();
 	}
 
 	@Put("/1/applications/:name/:pushService")
@@ -78,7 +77,7 @@ public class ApplicationService extends SpaceService {
 		} else {
 
 			CreatePlatformApplicationRequest request = new CreatePlatformApplicationRequest()//
-					.withName(pushApp.applicationId())//
+					.withName(pushApp.id())//
 					.withPlatform(pushService);
 
 			if (!Strings.isNullOrEmpty(pushApp.credentials.credentials))
@@ -122,7 +121,7 @@ public class ApplicationService extends SpaceService {
 	//
 
 	private Optional<PlatformApplication> getPlatformApplication(PushApplication pushApp) {
-		return AwsSnsPusher.getApplication(pushApp.applicationId(), pushApp.service);
+		return AwsSnsPusher.getApplication(pushApp.id(), pushApp.service);
 	}
 
 	private PushApplication fromApplicationArn(String arn) {
@@ -144,26 +143,6 @@ public class ApplicationService extends SpaceService {
 		PushApplication pushApp = fromApplicationArn(application.getPlatformApplicationArn());
 		pushApp.attributes = application.getAttributes();
 		return pushApp;
-	}
-
-	@SuppressWarnings("unused")
-	public static class PushApplication {
-		public String name;
-		public String backendId;
-		public PushService service;
-		public Map<String, String> attributes;
-		@JsonIgnore
-		public Credentials credentials;
-
-		public static class Credentials {
-			public String principal;
-			public String credentials;
-		}
-
-		public String applicationId() {
-			return backendId + '-' + name;
-		}
-
 	}
 
 	//
