@@ -57,12 +57,12 @@ public class GettingStarted {
 		Schema courseSchema = new Schema("course", Json.checkObject(//
 				Json.readNode(Resources.getResource(getClass(), "course.schema.json"))));
 
-		superadmin.schema().set(courseSchema);
+		superadmin.schemas().set(courseSchema);
 
 		// superadmin gives permissions to users on 'course' objects
 
 		courseSchema.acl("user", Permission.create, Permission.updateMine, Permission.readMine);
-		superadmin.schema().set(courseSchema);
+		superadmin.schemas().set(courseSchema);
 
 		// superadmin authorizes guests to sign up
 

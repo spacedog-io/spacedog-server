@@ -113,7 +113,7 @@ public class DataServiceTest2 extends SpaceTest {
 				.acl("user", Permission.create, Permission.updateMine, //
 						Permission.readMine, Permission.deleteMine, Permission.search)//
 				.build();
-		test.schema().set(saleSchema);
+		test.schemas().set(saleSchema);
 
 		// fred fails to create a sale with no body
 		fred.post("/1/data/sale").go(400);
@@ -263,7 +263,7 @@ public class DataServiceTest2 extends SpaceTest {
 
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		superadmin.schema().set(Schema.builder("message").text("text").build());
+		superadmin.schemas().set(Schema.builder("message").text("text").build());
 
 		// should successfully create 4 messages
 
@@ -295,7 +295,7 @@ public class DataServiceTest2 extends SpaceTest {
 		SpaceDog superadmin = resetTestBackend();
 
 		// creates message schema with auto generated id strategy
-		superadmin.schema().set(Schema.builder("message").string("text").build());
+		superadmin.schemas().set(Schema.builder("message").string("text").build());
 
 		// creates a message object with auto generated id
 		ObjectNode message = Json.object("text", "id=?");
@@ -327,7 +327,7 @@ public class DataServiceTest2 extends SpaceTest {
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		Schema schema = Schema.builder("message").string("text")//
 				.acl("user", Permission.create, Permission.search).build();
-		superadmin.schema().set(schema);
+		superadmin.schemas().set(schema);
 
 		// superadmins creates 4 messages
 		HashSet<String> originalMessages = Sets.newHashSet(//
@@ -381,7 +381,7 @@ public class DataServiceTest2 extends SpaceTest {
 		SpaceDog guest = SpaceDog.backend(superadmin.backend());
 		Schema schema = Schema.builder("home").text("name")//
 				.object("garage").integer("places").build();
-		superadmin.schema().set(schema);
+		superadmin.schemas().set(schema);
 
 		// home XXX does not exist
 		superadmin.get("/1/data/home/XXX/name").go(404);

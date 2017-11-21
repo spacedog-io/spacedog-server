@@ -20,8 +20,8 @@ public class CockTest {
 		// superadmin.admin().deleteBackend("cocktest");
 		// superadmin.admin().createMyBackend(false);
 
-		superadmin.schema().set(buildHomeSchema());
-		superadmin.schema().set(buildPersonSchema());
+		superadmin.schemas().set(buildHomeSchema());
+		superadmin.schemas().set(buildPersonSchema());
 	}
 
 	private Schema buildPersonSchema() {

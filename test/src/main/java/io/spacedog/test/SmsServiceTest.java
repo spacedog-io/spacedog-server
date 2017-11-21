@@ -89,7 +89,7 @@ public class SmsServiceTest extends SpaceTest {
 		Schema schema = Schema.builder("customer")//
 				.text("name").string("phone").close().build();
 
-		superadmin.schema().set(schema);
+		superadmin.schemas().set(schema);
 
 		// superadmin creates a customer
 		String customerId = superadmin.data().save("customer", //

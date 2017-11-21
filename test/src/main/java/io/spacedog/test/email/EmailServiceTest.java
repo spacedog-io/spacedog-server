@@ -137,7 +137,7 @@ public class EmailServiceTest extends SpaceTest {
 				.date("date").time("debut").time("fin")//
 				.close().build();
 
-		superadmin.schema().set(schema);
+		superadmin.schemas().set(schema);
 
 		// create an inscription
 		ArrayNode dispos = Json.array(//

@@ -27,7 +27,7 @@ public class QueryTest extends SpaceTest {
 		prepareTest();
 		SpaceDog test = resetTestBackend();
 
-		test.schema().set(buildCarSchema());
+		test.schemas().set(buildCarSchema());
 
 		for (int i = 0; i < 500; i++)
 			SpaceRequest.post("/1/data/car").auth(test).bodyJson(jsonCar(i)).go(201);

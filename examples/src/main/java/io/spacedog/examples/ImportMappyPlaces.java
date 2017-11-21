@@ -23,7 +23,7 @@ public class ImportMappyPlaces extends SpaceTest {
 
 			SpaceRequest.setForTestingDefault(false);
 			superadmin = resetBackend("examples");
-			superadmin.schema().set(buildRestoSchema());
+			superadmin.schemas().set(buildRestoSchema());
 
 			double step = 0.01;
 

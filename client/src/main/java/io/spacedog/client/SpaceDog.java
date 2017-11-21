@@ -230,7 +230,7 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 
 	SchemaEndpoint schemaEndpoint;
 
-	public SchemaEndpoint schema() {
+	public SchemaEndpoint schemas() {
 		if (schemaEndpoint == null)
 			schemaEndpoint = new SchemaEndpoint(this);
 		return schemaEndpoint;

@@ -54,15 +54,15 @@ public class PushSpaceServiceTest extends SpaceTest {
 		SpaceDog nath = createTempDog(superadmin, "nath");
 
 		// prepare installation schema
-		superadmin.schema().setDefault("installation");
+		superadmin.schemas().setDefault("installation");
 
 		// add create permission to guest requests
-		Schema schema = superadmin.schema().get("installation");
+		Schema schema = superadmin.schemas().get("installation");
 		schema.acl("all", Permission.create, Permission.updateMine);
 		schema.acl("user", Permission.create, Permission.readMine, Permission.updateMine);
 		schema.acl("admin", Permission.create, Permission.updateAll, //
 				Permission.search, Permission.deleteAll);
-		superadmin.schema().set(schema);
+		superadmin.schemas().set(schema);
 
 		// non authenticated user installs joho
 		// and fails to set installation userId and endpoint fields
@@ -287,7 +287,7 @@ public class PushSpaceServiceTest extends SpaceTest {
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		// prepare installation schema
-		superadmin.schema().setDefault("installation");
+		superadmin.schemas().setDefault("installation");
 
 		// vince and dave install joho
 		DataObject<Installation> vinceInstall = installApplication("joho", PushService.APNS, vince);

@@ -40,7 +40,7 @@ public class DataAccessControlTest extends SpaceTest {
 				.put(Credentials.Type.admin.name(), Permission.create, //
 						Permission.updateAll, Permission.deleteAll, Permission.search);
 		schema.acl(acl);
-		superadmin.schema().set(schema);
+		superadmin.schemas().set(schema);
 
 		// message schema does not contain any acl
 		// it means message schema has default acl
@@ -99,7 +99,7 @@ public class DataAccessControlTest extends SpaceTest {
 
 		// superadmin sets message schema with default empty acl
 		Schema schema = Schema.builder("msge").text("t").build();
-		superadmin.schema().set(schema);
+		superadmin.schemas().set(schema);
 
 		// superadmin check schema acl are empty
 		InternalDataAclSettings settings = superadmin.settings().get(InternalDataAclSettings.class);
@@ -153,7 +153,7 @@ public class DataAccessControlTest extends SpaceTest {
 		Schema schema = Schema.builder("msge").text("t").build();
 		schema.acl("user", Permission.create);
 		schema.acl("admin", Permission.search);
-		superadmin.schema().set(schema);
+		superadmin.schemas().set(schema);
 
 		// check message schema acl are set
 		InternalDataAclSettings settings = superadmin.settings().get(InternalDataAclSettings.class);
@@ -222,7 +222,7 @@ public class DataAccessControlTest extends SpaceTest {
 		Schema schema = Schema.builder("msge").text("t").build();
 		schema.acl("all", Permission.create);
 		schema.acl("user", Permission.readGroup, Permission.updateGroup, Permission.deleteGroup);
-		superadmin.schema().set(schema);
+		superadmin.schemas().set(schema);
 
 		// only users (and superadmins) can create messages
 		guest.data().save("msge", "guest", msge("guest"));
@@ -314,7 +314,7 @@ public class DataAccessControlTest extends SpaceTest {
 						Permission.create, Permission.deleteAll)//
 				.build();
 
-		superadmin.schema().set(schema);
+		superadmin.schemas().set(schema);
 
 		// dave has the platine role
 		// he's got all the rights
@@ -384,14 +384,14 @@ public class DataAccessControlTest extends SpaceTest {
 				.text("text")//
 				.build();
 
-		superadmin.schema().set(schema);
+		superadmin.schemas().set(schema);
 
 		// check schema settings contains message schema acl
 		InternalDataAclSettings settings = superadmin.settings().get(InternalDataAclSettings.class);
 		assertEquals(schema.acl(), settings.get(schema.name()));
 
 		// delete message schema
-		superadmin.schema().delete(schema);
+		superadmin.schemas().delete(schema);
 
 		// check schema settings does not contain
 		// message schema acl anymore

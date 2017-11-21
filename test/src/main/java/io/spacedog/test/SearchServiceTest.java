@@ -27,8 +27,8 @@ public class SearchServiceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		superadmin.schema().set(Schema.builder("message").text("text").build());
-		superadmin.schema().set(Schema.builder("rubric").text("name").build());
+		superadmin.schemas().set(Schema.builder("message").text("text").build());
+		superadmin.schemas().set(Schema.builder("rubric").text("name").build());
 
 		// creates 4 messages and 1 rubric
 		superadmin.data().save("rubric", //
@@ -91,7 +91,7 @@ public class SearchServiceTest extends SpaceTest {
 
 		Schema schema = Schema.builder("city").string("name")//
 				.acl("user", Permission.create, Permission.search).build();
-		superadmin.schema().set(schema);
+		superadmin.schemas().set(schema);
 
 		// creates 5 cities but whith only 3 distinct names
 		vince.data().save("city", Json.object("name", "Paris"));
@@ -127,7 +127,7 @@ public class SearchServiceTest extends SpaceTest {
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
 
-		superadmin.schema().set(Schema.builder("number").integer("i").string("t").build());
+		superadmin.schemas().set(Schema.builder("number").integer("i").string("t").build());
 
 		// creates 5 numbers
 		for (int i = 0; i < 5; i++)

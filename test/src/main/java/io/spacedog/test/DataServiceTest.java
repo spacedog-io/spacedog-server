@@ -29,7 +29,7 @@ public class DataServiceTest extends SpaceTest {
 				.acl("user", Permission.create, Permission.updateMine, //
 						Permission.readMine, Permission.deleteMine, Permission.search)//
 				.build();
-		superadmin.schema().set(carSchema);
+		superadmin.schemas().set(carSchema);
 
 		ObjectNode car = Json.builder().object() //
 				.add("serialNumber", "1234567890") //
@@ -96,7 +96,7 @@ public class DataServiceTest extends SpaceTest {
 				.acl("user", Permission.create, Permission.updateMine, //
 						Permission.readMine, Permission.deleteMine, Permission.search)//
 				.build();
-		superadmin.schema().set(carSchema);
+		superadmin.schemas().set(carSchema);
 
 		ObjectNode car = Json.builder().object() //
 				.add("serialNumber", "1234567890") //

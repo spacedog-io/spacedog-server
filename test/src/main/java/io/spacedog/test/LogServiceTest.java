@@ -204,7 +204,7 @@ public class LogServiceTest extends SpaceTest {
 		// create message schema in test backend
 		Schema schema = Schema.builder("message").text("text")//
 				.acl("user", Permission.create, Permission.search).build();
-		superadmin.schema().set(schema);
+		superadmin.schemas().set(schema);
 
 		// create a user in test backend
 		SpaceDog user = createTempDog(superadmin, "user").login();

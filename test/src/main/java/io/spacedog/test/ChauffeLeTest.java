@@ -31,8 +31,8 @@ public class ChauffeLeTest extends SpaceTest {
 
 		superadmin = resetTestBackend();
 
-		superadmin.schema().set(buildBigPostSchema());
-		superadmin.schema().set(buildSmallPostSchema());
+		superadmin.schemas().set(buildBigPostSchema());
+		superadmin.schemas().set(buildSmallPostSchema());
 
 		lui = createTempDog(superadmin, "lui");
 		elle = createTempDog(superadmin, "elle");

@@ -26,24 +26,24 @@ public class SchemaServiceTest extends SpaceTest {
 
 		// anonymous gets all backend schema
 		// if no schema returns empty object
-		guest.schema().getAll().isEmpty();
+		guest.schemas().getAll().isEmpty();
 
 		// admin creates car, home and sale schemas
 		Schema carSchema = buildCarSchema().build();
-		superadmin.schema().set(carSchema);
+		superadmin.schemas().set(carSchema);
 		Schema homeSchema = buildHomeSchema().build();
-		superadmin.schema().set(homeSchema);
+		superadmin.schemas().set(homeSchema);
 		Schema saleSchema = buildSaleSchema().build();
-		superadmin.schema().set(saleSchema);
+		superadmin.schemas().set(saleSchema);
 
 		// anonymous gets car, home and sale schemas
-		assertEquals(carSchema, guest.schema().get(carSchema.name()));
-		assertEquals(homeSchema, guest.schema().get(homeSchema.name()));
-		assertEquals(saleSchema, guest.schema().get(saleSchema.name()));
+		assertEquals(carSchema, guest.schemas().get(carSchema.name()));
+		assertEquals(homeSchema, guest.schemas().get(homeSchema.name()));
+		assertEquals(saleSchema, guest.schemas().get(saleSchema.name()));
 
 		// anonymous gets all schemas
 		assertEquals(Sets.newHashSet(carSchema, homeSchema, saleSchema), //
-				guest.schema().getAll());
+				guest.schemas().getAll());
 
 		// anonymous is not allowed to delete schema
 		guest.delete("/1/schemas/sale").go(403);
@@ -135,11 +135,11 @@ public class SchemaServiceTest extends SpaceTest {
 				.string("owner").required().refType("user")//
 				.build();
 
-		superadmin.schema().set(schemaClient);
+		superadmin.schemas().set(schemaClient);
 
 		// superadmin gets the schema from backend
 		// and check it is unchanged
-		Schema schemaServer = superadmin.schema().get(schemaClient.name());
+		Schema schemaServer = superadmin.schemas().get(schemaClient.name());
 		assertEquals(schemaClient, schemaServer);
 	}
 
@@ -167,7 +167,7 @@ public class SchemaServiceTest extends SpaceTest {
 		// superadmin creates document schema
 		Schema schema = Schema.builder("document").stash("data")//
 				.acl("all", Permission.create).build();
-		superadmin.schema().set(schema);
+		superadmin.schemas().set(schema);
 
 		// guest saves a first document with data as an object
 		guest.data().save("document", Json.object("data", //
