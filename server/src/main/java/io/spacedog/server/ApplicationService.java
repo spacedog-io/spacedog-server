@@ -21,17 +21,19 @@ import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
+import net.codestory.http.annotations.Prefix;
 import net.codestory.http.annotations.Put;
 import net.codestory.http.payload.Payload;
 
+@Prefix("/1/push/applications")
 public class ApplicationService extends SpaceService {
 
 	//
 	// Routes
 	//
 
-	@Get("/1/applications")
-	@Get("/1/applications/")
+	@Get("")
+	@Get("/")
 	public Payload getApplications() {
 
 		SpaceContext.credentials().checkAtLeastAdmin();
@@ -48,16 +50,16 @@ public class ApplicationService extends SpaceService {
 		return JsonPayload.ok().withObject(Json.toJsonNode(pushApps)).build();
 	}
 
-	@Put("/1/applications/:name/:pushService")
-	@Put("/1/applications/:name/:pushService/")
-	public Payload putApplication(String name, String pushService, String body) {
+	@Put("/:name/:service")
+	@Put("/:name/:service/")
+	public Payload putApplication(String name, String service, String body) {
 
 		SpaceContext.credentials().checkAtLeastAdmin();
 
 		PushApplication pushApp = new PushApplication();
 		pushApp.backendId = SpaceContext.backendId();
 		pushApp.name = name;
-		pushApp.service = PushService.valueOf(pushService);
+		pushApp.service = PushService.valueOf(service);
 		pushApp.credentials = Json.toPojo(body, PushApplication.Credentials.class);
 
 		Optional<PlatformApplication> application = getPlatformApplication(pushApp);
@@ -78,7 +80,7 @@ public class ApplicationService extends SpaceService {
 
 			CreatePlatformApplicationRequest request = new CreatePlatformApplicationRequest()//
 					.withName(pushApp.id())//
-					.withPlatform(pushService);
+					.withPlatform(service);
 
 			if (!Strings.isNullOrEmpty(pushApp.credentials.credentials))
 				request.addAttributesEntry("PlatformCredential", pushApp.credentials.credentials);
@@ -92,16 +94,16 @@ public class ApplicationService extends SpaceService {
 		return JsonPayload.ok().build();
 	}
 
-	@Delete("/1/applications/:name/:pushService")
-	@Delete("/1/applications/:name/:pushService/")
-	public Payload deleteApplication(String name, String pushService) {
+	@Delete("/:name/:service")
+	@Delete("/:name/:service/")
+	public Payload deleteApplication(String name, String service) {
 
 		SpaceContext.credentials().checkAtLeastSuperAdmin();
 
 		PushApplication pushApp = new PushApplication();
 		pushApp.backendId = SpaceContext.backendId();
 		pushApp.name = name;
-		pushApp.service = PushService.valueOf(pushService);
+		pushApp.service = PushService.valueOf(service);
 
 		Optional<PlatformApplication> application = getPlatformApplication(pushApp);
 
