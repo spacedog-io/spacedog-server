@@ -6,6 +6,7 @@ package io.spacedog.services;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.ShardOperationFailedException;
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
+import org.elasticsearch.action.search.SearchPhaseExecutionException;
 
 import com.amazonaws.AmazonServiceException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -45,6 +46,11 @@ public class JsonPayload {
 			return ((AmazonServiceException) t).getStatusCode();
 		if (t instanceof SpaceException)
 			return ((SpaceException) t).httpStatus();
+		// elastic returns 500 when result window is too large
+		// let's return 400 instead
+		if (t instanceof SearchPhaseExecutionException)
+			if (t.toString().contains("from + size must be less"))
+				return HttpStatus.BAD_REQUEST;
 		if (t instanceof ElasticsearchException)
 			return ((ElasticsearchException) t).status().getStatus();
 		if (t.getCause() != null)
@@ -217,11 +223,10 @@ public class JsonPayload {
 					"the delete by query operation timed out, some objects might have been deleted");
 
 		if (response.getTotalFound() != response.getTotalDeleted())
-			return error(500,
-					String.format(//
-							"the delete by query operation failed to delete all objects found, "
-									+ "objects found [%s], objects deleted [%s]",
-							response.getTotalFound(), response.getTotalDeleted()));
+			return error(500, String.format(//
+					"the delete by query operation failed to delete all objects found, "
+							+ "objects found [%s], objects deleted [%s]",
+					response.getTotalFound(), response.getTotalDeleted()));
 
 		if (response.getShardFailures().length > 0)
 			return json(500, response.getShardFailures());

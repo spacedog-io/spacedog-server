@@ -363,4 +363,15 @@ public class LogResourceTest extends SpaceTest {
 				Assert.fail();
 		}
 	}
+
+	@Test
+	public void test() {
+
+		prepareTest();
+
+		// since from + size invalid since bigger than authorized window
+		// request should return http error 400
+		superdog().post("/1/log/search")//
+				.bodyJson(Json7.object()).size(11000).go(400);
+	}
 }
