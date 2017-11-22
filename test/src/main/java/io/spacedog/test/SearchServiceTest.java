@@ -157,4 +157,20 @@ public class SearchServiceTest extends SpaceTest {
 			assertEquals(String.valueOf(4 - i), objects.get(i).sort()[0]);
 		}
 	}
+
+	@Test
+	public void testBadSimpleQueryStringQueries() {
+
+		// prepare
+		prepareTest();
+		SpaceDog superadmin = resetTestBackend();
+		superadmin.schemas().set(Schema.builder("message").text("text").build());
+
+		// check simple query string '**' doesn't throw null pointer exception
+		// ElasticSearch version 2.2 do contain this bug
+		// Fixeds in ElasticSearech version 2.4.6
+		ESSearchSourceBuilder source = ESSearchSourceBuilder.searchSource().query(//
+				ESQueryBuilders.simpleQueryStringQuery("**").analyzeWildcard(true));
+		superadmin.data().searchRequest().source(source).go();
+	}
 }
