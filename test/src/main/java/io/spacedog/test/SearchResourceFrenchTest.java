@@ -18,12 +18,12 @@ public class SearchResourceFrenchTest extends SpaceTest {
 	private SpaceDog superadmin;
 
 	@Test
-	public void searchWithFrenchAnalyser() {
+	public void searchWithFrenchMaxAnalyser() {
 
 		// prepare
 		prepareTest();
 		superadmin = resetTestBackend();
-		superadmin.schema().set(Schema.builder("message").text("text").frenchMax().build());
+		superadmin.schema().set(Schema.builder("message").frenchMax().text("text").build());
 
 		// écoles
 

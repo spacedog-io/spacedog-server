@@ -42,7 +42,8 @@ public class SchemaTranslator {
 
 		String type = schema.path("_type").asText("object");
 
-		ObjectNode propertiesNode = toElasticProperties(schema);
+		String defaultLanguage = language(schema, "french");
+		ObjectNode propertiesNode = toElasticProperties(schema, defaultLanguage);
 		propertiesNode.set("meta", META_MAPPING);
 
 		if ("object".equals(type)) {
@@ -56,27 +57,31 @@ public class SchemaTranslator {
 			throw Exceptions.illegalArgument("invalid schema root type [%s]", type);
 	}
 
-	private static ObjectNode toElasticProperties(JsonNode schema) {
+	private static ObjectNode toElasticProperties(JsonNode schema, String defaultLanguage) {
 
 		JsonBuilder<ObjectNode> builder = Json7.objectBuilder();
 		Iterator<String> fieldNames = schema.fieldNames();
 		while (fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
 			if (fieldName.charAt(0) != '_') {
-				builder.node(fieldName, toElasticProperty(fieldName, schema.get(fieldName)));
+				builder.node(fieldName, toElasticProperty(fieldName, schema.get(fieldName), defaultLanguage));
 			}
 		}
 		return builder.build();
 	}
 
-	private static ObjectNode toElasticProperty(String key, JsonNode schema) {
+	private static String language(JsonNode schema, String defaultLanguage) {
+		return schema.path("_language").asText(defaultLanguage);
+	}
+
+	private static ObjectNode toElasticProperty(String key, JsonNode schema, String defaultLanguage) {
 		JsonBuilder<ObjectNode> mapping = Json7.objectBuilder();
 		String type = schema.path("_type").asText("object");
 
 		if ("text".equals(type)) {
 			mapping.put("type", "string");
 			mapping.put("index", "analyzed");
-			mapping.put("analyzer", schema.path("_language").asText("english"));
+			mapping.put("analyzer", language(schema, defaultLanguage));
 		} else if ("string".equals(type)) {
 			mapping.put("type", "string");
 			mapping.put("index", "not_analyzed");
@@ -114,7 +119,8 @@ public class SchemaTranslator {
 			mapping.put("geohash_prefix", "true");
 		} else if ("object".equals(type)) {
 			mapping.put("type", "object");
-			mapping.node("properties", toElasticProperties(schema));
+			mapping.node("properties", //
+					toElasticProperties(schema, language(schema, defaultLanguage)));
 		} else if ("stash".equals(type)) {
 			mapping.put("type", "object");
 			mapping.put("enabled", false);
