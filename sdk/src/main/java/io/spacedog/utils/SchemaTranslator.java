@@ -46,15 +46,16 @@ public class SchemaTranslator {
 		ObjectNode propertiesNode = toElasticProperties(schema, defaultLanguage);
 		propertiesNode.set("meta", META_MAPPING);
 
-		if ("object".equals(type)) {
-			JsonBuilder<ObjectNode> builder = Json7.objectBuilder()//
+		if ("object".equals(type))
+			return Json7.objectBuilder()//
 					.put("dynamic", "strict")//
 					.put("date_detection", false)//
-					.node("properties", propertiesNode);
+					.node("properties", propertiesNode)//
+					.object("_all")//
+					.put("analyzer", defaultLanguage)//
+					.build();
 
-			return builder.build();
-		} else
-			throw Exceptions.illegalArgument("invalid schema root type [%s]", type);
+		throw Exceptions.illegalArgument("invalid schema root type [%s]", type);
 	}
 
 	private static ObjectNode toElasticProperties(JsonNode schema, String defaultLanguage) {

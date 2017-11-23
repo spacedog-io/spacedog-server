@@ -1,5 +1,6 @@
 {
   "myschema": {
+    "_language": "english",
     "string": {
       "_type": "string",
       "_required": true

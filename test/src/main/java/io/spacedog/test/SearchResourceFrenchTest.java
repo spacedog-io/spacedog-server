@@ -26,7 +26,6 @@ public class SearchResourceFrenchTest extends SpaceTest {
 		superadmin.schema().set(Schema.builder("message").frenchMax().text("text").build());
 
 		// écoles
-
 		index("Les écoles enseignent");
 
 		match("ecole");
@@ -41,7 +40,6 @@ public class SearchResourceFrenchTest extends SpaceTest {
 		noMatch("enseigne");
 
 		// bœuf
-
 		index("les Bœufs ruminent");
 
 		match("BoEuf");
@@ -49,7 +47,6 @@ public class SearchResourceFrenchTest extends SpaceTest {
 		match("boeufs");
 
 		// :) and :(
-
 		index("Je suis :), tu es :(");
 
 		match("heureux");
@@ -61,25 +58,24 @@ public class SearchResourceFrenchTest extends SpaceTest {
 
 		noMatch(":-)");
 
-		// 123.45
+		//
+		index("1234.56");
 
-		index("123.45");
-
-		match("123");
-		match("123.");
-		match("123,");
-		match("123.45");
-		match("123,45");
-		match("45");
-		match(".45");
-		match(",45");
+		match("1234");
+		match("1234.");
+		match("1234,");
+		match("1234.56");
+		match("1234,56");
+		match("56");
+		match(".56");
+		match(",56");
 
 		// match because default operator is OR
 		// and at least one token match
-		match("123.4");
-		match("23.45");
+		match("1234.5");
+		match("234.56");
 
-		noMatch("23.4");
+		noMatch("234.5");
 	}
 
 	private void index(String text) {
@@ -88,17 +84,19 @@ public class SearchResourceFrenchTest extends SpaceTest {
 
 	private void match(String text) {
 		assertEquals(1, search(text, "text"));
-		// assertEquals(1, search(text, "_all"));
+		assertEquals(1, search(text, "_all"));
 	}
 
 	private void noMatch(String text) {
 		assertEquals(0, search(text, "text"));
-		// assertEquals(0, search(text, "_all"));
+		assertEquals(0, search(text, "_all"));
 	}
 
 	private long search(String text, String field) {
-		String source = Json7.objectBuilder().object("query").object("match").put(field, text).build().toString();
-		SearchResults<ObjectNode> results = superadmin.data().search(null, source, ObjectNode.class, true);
+		String source = Json7.objectBuilder().object("query")//
+				.object("match").put(field, text).build().toString();
+		SearchResults<ObjectNode> results = superadmin.data()//
+				.search(null, source, ObjectNode.class, true);
 		return results.total();
 	}
 }
