@@ -37,8 +37,6 @@ import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.Passwords;
 import io.spacedog.utils.Roles;
-import io.spacedog.utils.SchemaTranslator;
-import io.spacedog.utils.SchemaValidator;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Usernames;
 import net.codestory.http.Context;
@@ -60,6 +58,9 @@ public class CredentialsResource extends Resource {
 
 	void init() {
 		Schema schema = Schema.builder(TYPE)//
+				// 'english' default language for compatibility
+				// with already existing production credentials schema
+				.english()//
 				.string(FIELD_USERNAME)//
 				.string(FIELD_BACKEND_ID)//
 				.bool(FIELD_ENABLED)//
@@ -88,15 +89,19 @@ public class CredentialsResource extends Resource {
 
 				.build();
 
-		SchemaValidator.validate(schema.name(), schema.node());
-		String mapping = SchemaTranslator.translate(schema.name(), schema.node())//
-				.toString();
+		String mapping = schema.validate().translate().toString();
 		ElasticClient elastic = Start.get().getElasticClient();
 
-		if (elastic.existsIndex(SPACEDOG_BACKEND, TYPE))
-			elastic.putMapping(SPACEDOG_BACKEND, TYPE, mapping);
-		else
+		// WARNING
+		// I do not update existing mapping anymore. If the mapping needs to be updated,
+		// be careful that translated schemas explicitly configures their _all field
+		// analyzer. The following code was used for th
+
+		if (!elastic.existsIndex(SPACEDOG_BACKEND, TYPE))
 			elastic.createIndex(SPACEDOG_BACKEND, TYPE, mapping, false);
+
+		// else
+		// elastic.putMapping(SPACEDOG_BACKEND, TYPE, mapping);
 	}
 
 	//

@@ -21,10 +21,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
-import com.google.common.io.Resources;
 
 import io.spacedog.core.Json8;
 import io.spacedog.utils.Check;
+import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Level;
 import io.spacedog.utils.Exceptions;
@@ -52,10 +52,7 @@ public class LogResource extends Resource {
 	void init() throws IOException {
 
 		ElasticClient client = Start.get().getElasticClient();
-
-		String mapping = Resources.toString(//
-				Resources.getResource(this.getClass(), "log-mapping.json"), //
-				Utils.UTF8);
+		String mapping = ClassResources.loadToString(getClass(), "log-mapping.json");
 
 		if (client.existsIndex(SPACEDOG_BACKEND, TYPE))
 			client.putMapping(SPACEDOG_BACKEND, TYPE, mapping);
@@ -143,7 +140,8 @@ public class LogResource extends Resource {
 		// no delete response means no logs to delete means success
 
 		return response.isPresent()//
-				? JsonPayload.json(response.get()) : JsonPayload.success();
+				? JsonPayload.json(response.get())
+				: JsonPayload.success();
 	}
 
 	//
@@ -321,7 +319,8 @@ public class LogResource extends Resource {
 		ObjectNode logQuery = log.putObject("query");
 		for (String key : context.query().keys()) {
 			String value = key.equals(FIELD_PASSWORD) //
-					? "******" : context.get(key);
+					? "******"
+					: context.get(key);
 			logQuery.put(key, value);
 		}
 	}
