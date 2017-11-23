@@ -117,4 +117,13 @@ public class Exceptions {
 		return new AuthenticationException(INVALID_CREDENTIALS, //
 				"invalid username or password");
 	}
+
+	//
+	// 405
+	//
+
+	public static Exception methodNotAllowed(String method, String uri) {
+		return new SpaceException(405, "method [%s] not allowed for uri [%s]", method, uri);
+	}
+
 }

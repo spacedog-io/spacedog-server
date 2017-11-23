@@ -18,6 +18,12 @@ public class FileServiceTest extends SpaceTest {
 		SpaceDog superadmin = resetTestBackend();
 		SpaceDog guest = SpaceDog.backend(superadmin.backend());
 
+		// invalid uri throws 404
+		assertHttpError(404, () -> superadmin.files().get("toto"));
+
+		// invalid method throws 405
+		superadmin.post("/1/files").go(405);
+
 		// superadmin checks backend is truly empty
 		assertEquals(0, superadmin.files().listAll().files.length);
 
