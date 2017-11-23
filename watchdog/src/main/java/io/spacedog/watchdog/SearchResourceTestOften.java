@@ -23,9 +23,8 @@ public class SearchResourceTestOften extends SpaceTest {
 		prepareTest();
 		SpaceDog test = resetTestBackend();
 
-		test.schema().set(Schema.builder("message").text("text").build());
-
-		test.schema().set(Schema.builder("rubric").text("name").build());
+		test.schema().set(Schema.builder("message").english().text("text").build());
+		test.schema().set(Schema.builder("rubric").english().text("name").build());
 
 		// creates 4 messages and 1 rubric
 
@@ -50,7 +49,7 @@ public class SearchResourceTestOften extends SpaceTest {
 				.build();
 
 		ObjectNode results = SpaceRequest.post("/1/search")//
-		.debugServer().auth(test).bodyJson(query).go(200)//
+				.debugServer().auth(test).bodyJson(query).go(200)//
 				.assertEquals("wanna drink something?", "results.0.text")//
 				.assertEquals("pretty cool something, hein?", "results.1.text")//
 				.asJsonObject();
