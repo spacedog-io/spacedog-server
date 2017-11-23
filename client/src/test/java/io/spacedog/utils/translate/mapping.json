@@ -10,7 +10,7 @@
       "text" : {
         "type" : "string",
         "index" : "analyzed",
-        "analyzer" : "french"
+        "analyzer" : "english"
       },
       "boolean" : {
         "type" : "boolean"
@@ -107,8 +107,12 @@
         "format" : "date_time"
       }
     },
+    "_all" : {
+      "analyzer" : "english"
+    },
     "_meta" : {
       "myschema" : {
+        "_language" : "english",
         "string" : {
           "_type" : "string",
           "_required" : true

@@ -52,15 +52,16 @@ public class SchemaTranslator implements SpaceFields {
 		ObjectNode propertiesNode = toElasticProperties(schema, defaultLanguage);
 		addMetadataFields(propertiesNode);
 
-		if ("object".equals(type)) {
-			JsonBuilder<ObjectNode> builder = Json.builder().object()//
+		if ("object".equals(type))
+			return Json.builder().object()//
 					.add("dynamic", "strict")//
 					.add("date_detection", false)//
-					.add("properties", propertiesNode);
+					.add("properties", propertiesNode)//
+					.object("_all")//
+					.add("analyzer", defaultLanguage)//
+					.build();
 
-			return builder.build();
-		} else
-			throw Exceptions.illegalArgument("invalid schema root type [%s]", type);
+		throw Exceptions.illegalArgument("invalid schema root type [%s]", type);
 	}
 
 	private static void addMetadataFields(ObjectNode propertiesNode) {

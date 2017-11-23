@@ -57,25 +57,24 @@ public class SearchServiceFrenchTest extends SpaceTest {
 		noMatch(":-)");
 
 		///////////////
-		index("1234.56");
+		index("1234.567");
 
 		match("1234");
 		match("1234.");
 		match("1234,");
+		match("1234.567");
+		match("1234,567");
+		match("1234567");
+		match("567");
+		match(".567");
+		match(",567");
+
+		// match because default operator is OR
+		// and at least one token match
 		match("1234.56");
-		match("1234,56");
-		match("56");
-		match(".56");
-		match(",56");
-		match("234.56");
-		match("1234.5");
+		match("234.567");
 
-		noMatch("234.5");
-		noMatch("1");
-		noMatch("2");
-		noMatch("3");
-		noMatch("4");
-
+		noMatch("234.56");
 	}
 
 	private void index(String text) {
@@ -84,12 +83,12 @@ public class SearchServiceFrenchTest extends SpaceTest {
 
 	private void match(String text) {
 		assertEquals(1, search(text, "text"));
-		// assertEquals(1, search(text, "_all"));
+		assertEquals(1, search(text, "_all"));
 	}
 
 	private void noMatch(String text) {
 		assertEquals(0, search(text, "text"));
-		// assertEquals(0, search(text, "_all"));
+		assertEquals(0, search(text, "_all"));
 	}
 
 	private long search(String text, String field) {
