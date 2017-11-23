@@ -2,7 +2,6 @@ package io.spacedog.watchdog;
 
 import org.junit.Test;
 
-import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.SpaceHeaders;
@@ -15,46 +14,54 @@ public class FileResourceTestOncePerDay extends SpaceTest {
 	public void test() throws Exception {
 
 		prepareTest(false);
-		SpaceDog test = resetTestBackend();
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog guest = SpaceDog.backend(superadmin);
 
-		SpaceRequest.get("/1/file").auth(test).go(200)//
+		// invalid uri throws 404
+		superadmin.get("/1/filetoto").go(404);
+
+		// invalid method throws 405
+		superadmin.post("/1/file").go(405);
+
+		// superadmin gets file root list
+		superadmin.get("/1/file").go(200)//
 				.assertSizeEquals(0, "results");
 
 		// upload file without prefix is illegal
-		SpaceRequest.put("/1/file/index.html").auth(test).bodyBytes(BYTES).go(400);
+		superadmin.put("/1/file/index.html").bodyBytes(BYTES).go(400);
 
 		// admin can upload a web site
-		SpaceRequest.put("/1/file/www/app.html").auth(test).bodyBytes(BYTES).go(200);
-		SpaceRequest.put("/1/file/www/app.js").auth(test).bodyBytes(BYTES).go(200);
-		SpaceRequest.put("/1/file/www/images/riri.png").auth(test).bodyBytes(BYTES).go(200);
-		SpaceRequest.put("/1/file/www/images/fifi.jpg").auth(test).bodyBytes(BYTES).go(200);
-		SpaceRequest.put("/1/file/www/css/black.css").auth(test).bodyBytes(BYTES).go(200);
-		SpaceRequest.put("/1/file/www/css/white.css").auth(test).bodyBytes(BYTES).go(200);
+		superadmin.put("/1/file/www/app.html").bodyBytes(BYTES).go(200);
+		superadmin.put("/1/file/www/app.js").bodyBytes(BYTES).go(200);
+		superadmin.put("/1/file/www/images/riri.png").bodyBytes(BYTES).go(200);
+		superadmin.put("/1/file/www/images/fifi.jpg").bodyBytes(BYTES).go(200);
+		superadmin.put("/1/file/www/css/black.css").bodyBytes(BYTES).go(200);
+		superadmin.put("/1/file/www/css/white.css").bodyBytes(BYTES).go(200);
 
-		SpaceRequest.get("/1/file").auth(test).go(200)//
+		superadmin.get("/1/file").go(200)//
 				.assertSizeEquals(6, "results");
 
-		SpaceRequest.get("/1/file/www/app.html").backend(test).go(200)//
+		guest.get("/1/file/www/app.html").go(200)//
 				.assertHeaderEquals("text/html", SpaceHeaders.CONTENT_TYPE);
 
-		SpaceRequest.get("/1/file/www/app.js").backend(test).go(200)//
+		guest.get("/1/file/www/app.js").go(200)//
 				.assertHeaderEquals("application/javascript", SpaceHeaders.CONTENT_TYPE);
 
-		SpaceRequest.get("/1/file/www/css/black.css").backend(test).go(200)//
+		guest.get("/1/file/www/css/black.css").go(200)//
 				.assertHeaderEquals("text/css", SpaceHeaders.CONTENT_TYPE);
 
-		SpaceRequest.get("/1/file/www/images").auth(test).go(200)//
+		superadmin.get("/1/file/www/images").go(200)//
 				.assertSizeEquals(2, "results");
 
-		SpaceRequest.delete("/1/file/www/css").auth(test).go(200)//
+		superadmin.delete("/1/file/www/css").go(200)//
 				.assertSizeEquals(2, "deleted");
 
-		SpaceRequest.get("/1/file/www").auth(test).go(200)//
+		superadmin.get("/1/file/www").go(200)//
 				.assertSizeEquals(4, "results");
 
-		SpaceRequest.get("/1/file/www/css/black.css").backend(test).go(404);
+		guest.get("/1/file/www/css/black.css").go(404);
 
-		SpaceRequest.delete("/1/file").auth(test).go(200)//
+		superadmin.delete("/1/file").go(200)//
 				.assertSizeEquals(4, "deleted");
 	}
 }

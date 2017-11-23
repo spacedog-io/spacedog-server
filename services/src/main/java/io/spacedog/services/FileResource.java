@@ -27,7 +27,9 @@ public class FileResource extends S3Resource {
 
 			@Override
 			public boolean matches(String uri, Context context) {
-				return uri.startsWith("/1/file");
+				// accepts '/1/file' or '/1/file/*'
+				return uri.startsWith("/1/file") //
+						&& (uri.length() == 7 || uri.charAt(7) == '/');
 			}
 
 			@Override
@@ -44,7 +46,7 @@ public class FileResource extends S3Resource {
 				if (Methods.DELETE.equals(method))
 					return delete(toWebPath(uri));
 
-				throw Exceptions.runtime("path [%s] invalid for method [%s]", uri, method);
+				throw Exceptions.methodNotAllowed(method, uri);
 			}
 
 		};
