@@ -48,7 +48,8 @@ public class SchemaTranslator implements SpaceFields {
 
 		String type = schema.path("_type").asText("object");
 
-		ObjectNode propertiesNode = toElasticProperties(schema);
+		String defaultLanguage = language(schema, "french");
+		ObjectNode propertiesNode = toElasticProperties(schema, defaultLanguage);
 		addMetadataFields(propertiesNode);
 
 		if ("object".equals(type)) {
@@ -69,24 +70,29 @@ public class SchemaTranslator implements SpaceFields {
 		propertiesNode.set(UPDATED_AT_FIELD, TIMESTAMP);
 	}
 
-	private static ObjectNode toElasticProperties(JsonNode schema) {
+	private static ObjectNode toElasticProperties(JsonNode schema, String defaultLanguage) {
 
 		JsonBuilder<ObjectNode> builder = Json.builder().object();
 		Iterator<String> fieldNames = schema.fieldNames();
 		while (fieldNames.hasNext()) {
 			String fieldName = fieldNames.next();
 			if (fieldName.charAt(0) != '_') {
-				builder.add(fieldName, toElasticProperty(fieldName, schema.get(fieldName)));
+				builder.add(fieldName, toElasticProperty(//
+						fieldName, schema.get(fieldName), defaultLanguage));
 			}
 		}
 		return builder.build();
 	}
 
-	private static ObjectNode toElasticProperty(String key, JsonNode schema) {
+	private static String language(JsonNode schema, String defaultLanguage) {
+		return schema.path("_language").asText(defaultLanguage);
+	}
+
+	private static ObjectNode toElasticProperty(String key, JsonNode schema, String defaultLanguage) {
 		String type = schema.path("_type").asText("object");
 		if ("text".equals(type))
 			return Json.object("type", "string", "index", "analyzed", //
-					"analyzer", schema.path("_language").asText("english"));
+					"analyzer", language(schema, defaultLanguage));
 		else if ("string".equals(type))
 			return STRING;
 		else if ("boolean".equals(type))
@@ -111,7 +117,7 @@ public class SchemaTranslator implements SpaceFields {
 			return GEOPOINT;
 		else if ("object".equals(type))
 			return Json.object("type", "object", //
-					"properties", toElasticProperties(schema));
+					"properties", toElasticProperties(schema, language(schema, defaultLanguage)));
 		else if ("stash".equals(type))
 			return STASH;
 

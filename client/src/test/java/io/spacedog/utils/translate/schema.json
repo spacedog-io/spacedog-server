@@ -24,6 +24,7 @@
     },
     "object": {
       "_type": "object",
+      "_language": "french_max",
       "date": {
         "_type": "date"
       },
@@ -32,6 +33,12 @@
       },
       "timestamp": {
         "_type": "timestamp"
+      },
+      "text1": {
+        "_type": "text"
+      },
+      "text2": {
+        "_type": "text"
       }
     },
     "geopoint": {

@@ -4,18 +4,16 @@
 package io.spacedog.utils.translate;
 
 import java.io.IOException;
-import java.net.URL;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.io.Resources;
 
+import io.spacedog.model.Schema;
+import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.SchemaTranslator;
-import io.spacedog.utils.SchemaValidator;
 
 public class SchemaTranslatorTest extends Assert {
 
@@ -23,18 +21,18 @@ public class SchemaTranslatorTest extends Assert {
 	public void shouldTranslateSchema() throws IOException {
 
 		// load schema
-		URL urlSchema = Resources.getResource(this.getClass(), "schema.json");
-		JsonNode schema = Json.readNode(urlSchema);
+		JsonNode node = Json.readNode(ClassResources.loadToString(getClass(), "schema.json"));
+		Schema schema = new Schema("myschema", Json.checkObject(node));
 
 		// validate and translate
-		SchemaValidator.validate("myschema", schema);
-		ObjectNode mapping = SchemaTranslator.translate("myschema", schema);
+		ObjectNode mapping = schema.validate().translate();
+
 		System.out.println("Translated schema into mapping =");
-		System.out.println(mapping.toString());
+		System.out.println(Json.toPrettyString(mapping));
 
 		// load expected mapping
-		URL urlExpectedMapping = Resources.getResource(this.getClass(), "mapping.json");
-		JsonNode expectedMapping = Json.readNode(urlExpectedMapping);
+		JsonNode expectedMapping = Json.readNode(//
+				ClassResources.loadToString(getClass(), "mapping.json"));
 
 		// assert
 		assertEquals(mapping, expectedMapping);

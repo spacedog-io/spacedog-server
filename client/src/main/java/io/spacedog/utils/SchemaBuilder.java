@@ -149,7 +149,7 @@ public class SchemaBuilder {
 
 	public SchemaBuilder language(String language) {
 		checkCurrentPropertyExists();
-		checkCurrentPropertyByValidType(_LANGUAGE, SchemaType.TEXT);
+		checkCurrentPropertyByValidType(_LANGUAGE, SchemaType.TEXT, SchemaType.OBJECT);
 		builder.add(_LANGUAGE, language);
 		return this;
 	}

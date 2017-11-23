@@ -7,7 +7,6 @@ import org.junit.Test;
 
 import io.spacedog.client.DataEndpoint.SearchRequest;
 import io.spacedog.client.SpaceDog;
-import io.spacedog.client.elastic.ESMatchQueryBuilder.Operator;
 import io.spacedog.client.elastic.ESQueryBuilders;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.model.Schema;
@@ -18,15 +17,13 @@ public class SearchServiceFrenchTest extends SpaceTest {
 	private SpaceDog superadmin;
 
 	@Test
-	public void searchWithFrenchAnalyser() {
+	public void searchWithFrenchMaxAnalyser() {
 
-		// prepare
 		prepareTest();
 		superadmin = resetTestBackend();
-		superadmin.schemas().set(Schema.builder("message").text("text").frenchMax().build());
+		superadmin.schemas().set(Schema.builder("message").frenchMax().text("text").build());
 
-		// écoles
-
+		///////////////
 		index("Les écoles enseignent");
 
 		match("ecole");
@@ -40,16 +37,14 @@ public class SearchServiceFrenchTest extends SpaceTest {
 
 		noMatch("enseigne");
 
-		// bœuf
-
+		///////////////
 		index("les Bœufs ruminent");
 
 		match("BoEuf");
 		match("Bœuf");
 		match("boeufs");
 
-		// :) and :(
-
+		///////////////
 		index("Je suis :), tu es :(");
 
 		match("heureux");
@@ -61,21 +56,25 @@ public class SearchServiceFrenchTest extends SpaceTest {
 
 		noMatch(":-)");
 
-		// 123.45
+		///////////////
+		index("1234.56");
 
-		index("123.45");
+		match("1234");
+		match("1234.");
+		match("1234,");
+		match("1234.56");
+		match("1234,56");
+		match("56");
+		match(".56");
+		match(",56");
+		match("234.56");
+		match("1234.5");
 
-		match("123");
-		match("123.");
-		match("123,");
-		match("123.45");
-		match("123,45");
-		match("45");
-		match(".45");
-		match(",45");
-
-		noMatch("123.4");
-		noMatch("23.45");
+		noMatch("234.5");
+		noMatch("1");
+		noMatch("2");
+		noMatch("3");
+		noMatch("4");
 
 	}
 
@@ -85,7 +84,7 @@ public class SearchServiceFrenchTest extends SpaceTest {
 
 	private void match(String text) {
 		assertEquals(1, search(text, "text"));
-		assertEquals(1, search(text, "_all"));
+		// assertEquals(1, search(text, "_all"));
 	}
 
 	private void noMatch(String text) {
@@ -95,7 +94,7 @@ public class SearchServiceFrenchTest extends SpaceTest {
 
 	private long search(String text, String field) {
 		ESSearchSourceBuilder source = ESSearchSourceBuilder.searchSource()//
-				.query(ESQueryBuilders.matchQuery(field, text).operator(Operator.AND));
+				.query(ESQueryBuilders.matchQuery(field, text));
 		SearchRequest searchRequest = superadmin.data().searchRequest().refresh().source(source);
 		return searchRequest.go().total;
 	}
