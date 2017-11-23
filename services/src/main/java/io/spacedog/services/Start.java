@@ -65,6 +65,7 @@ public class Start {
 		try {
 			start.info();
 			start.startElasticNode();
+			start.initTemplates();
 			start.initServices();
 			start.upgradeAndCleanUp();
 			start.startFluent();
@@ -81,6 +82,11 @@ public class Start {
 			}
 			System.exit(-1);
 		}
+	}
+
+	private void initTemplates() {
+		this.elasticNode.client().admin().indices().preparePutTemplate("data")//
+				.setSource(Utils.readResource(getClass(), "data-template.json")).get();
 	}
 
 	public static class Info {

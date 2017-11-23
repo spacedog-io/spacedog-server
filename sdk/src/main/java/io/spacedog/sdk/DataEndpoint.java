@@ -211,6 +211,11 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 
 	public <K> SearchResults<K> search(String type, ESSearchSourceBuilder builder, Class<K> dataClass,
 			boolean refresh) {
+		return search(type, builder.toString(), dataClass, refresh);
+
+	}
+
+	public <K> SearchResults<K> search(String type, String source, Class<K> dataClass, boolean refresh) {
 
 		String path = "/1/search";
 		if (!Strings.isNullOrEmpty(type))
@@ -218,7 +223,7 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 
 		ObjectNode results = dog.post(path)//
 				.queryParam(PARAM_REFRESH, Boolean.toString(refresh))//
-				.bodyJson(builder.toString()).go(200).asJsonObject();
+				.bodyJson(source).go(200).asJsonObject();
 
 		return new SearchResults<>(results, dataClass);
 	}

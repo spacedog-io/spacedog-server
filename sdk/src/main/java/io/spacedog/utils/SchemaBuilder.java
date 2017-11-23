@@ -144,6 +144,10 @@ public class SchemaBuilder {
 		return language("french");
 	}
 
+	public SchemaBuilder frenchMax() {
+		return language("french_max");
+	}
+
 	public SchemaBuilder english() {
 		return language("english");
 	}
