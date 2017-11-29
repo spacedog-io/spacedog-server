@@ -3,6 +3,7 @@ package io.spacedog.server;
 import java.util.Map;
 import java.util.Optional;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.net.HttpHeaders;
 
@@ -163,13 +164,19 @@ public class SpaceContext {
 	//
 
 	private void checkAuthorizationHeader() {
+
 		if (!authorizationChecked) {
 			authorizationChecked = true;
+			Credentials userCredentials = null;
 			SpaceContext.debug().credentialCheck();
 			String headerValue = context.header(SpaceHeaders.AUTHORIZATION);
 
-			if (headerValue != null) {
-				Credentials userCredentials = null;
+			if (headerValue == null) {
+				String token = context.get("accessToken");
+				if (!Strings.isNullOrEmpty(token))
+					userCredentials = checkAccessToken(token);
+
+			} else {
 				AuthorizationHeader authHeader = new AuthorizationHeader(headerValue, true);
 
 				if (authHeader.isBasic()) {
@@ -177,16 +184,20 @@ public class SpaceContext {
 							.checkUsernamePassword(authHeader.username(), //
 									authHeader.password());
 
-				} else if (authHeader.isBearer()) {
-					userCredentials = CredentialsService.get()//
-							.checkToken(authHeader.token());
-				}
+				} else if (authHeader.isBearer())
+					userCredentials = checkAccessToken(authHeader.token());
+			}
 
+			if (userCredentials != null) {
 				userCredentials.checkReallyEnabled();
 				checkPasswordMustChange(userCredentials, context);
 				credentials = userCredentials;
 			}
 		}
+	}
+
+	private Credentials checkAccessToken(String token) {
+		return CredentialsService.get().checkToken(token);
 	}
 
 	private void checkPasswordMustChange(Credentials credentials, Context context) {

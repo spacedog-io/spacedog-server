@@ -449,4 +449,40 @@ public class ShareServiceTest extends SpaceTest {
 			fred.get(share.location).go(403);
 	}
 
+	@Test
+	public void shareDownloadAuthenticatedViaQueryParam() {
+
+		// prepare
+		prepareTest(false);
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog guest = SpaceDog.backend(superadmin.backend());
+		SpaceDog vince = createTempDog(superadmin, "vince").login();
+		SpaceDog fred = createTempDog(superadmin, "fred").login();
+
+		// super admin sets custom share permissions
+		ShareSettings settings = new ShareSettings();
+		settings.permissions.put("user", Permission.create, Permission.readMine);
+		superadmin.settings().save(settings);
+
+		// vince shares a file
+		ShareMeta share = vince.shares().upload("vince".getBytes());
+
+		// guest fails to get shared file since no access token query param
+		guest.get(share.location).go(403);
+
+		// vince gets his shared file via access token query param
+		byte[] bytes = guest.get(share.location)//
+				.queryParam("accessToken", vince.accessToken().get())//
+				.go(200).asBytes();
+
+		assertArrayEquals("vince".getBytes(), bytes);
+
+		// fred fails to get vince's shared file
+		// via access token query param
+		// since not the owner
+		guest.get(share.location)//
+				.queryParam("accessToken", fred.accessToken().get())//
+				.go(403);
+	}
+
 }
