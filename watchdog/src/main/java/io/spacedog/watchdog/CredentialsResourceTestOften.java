@@ -846,4 +846,27 @@ public class CredentialsResourceTestOften extends SpaceTest {
 				.assertEquals("invalid-access-token", "error.code");
 	}
 
+	@Test
+	public void authenticateRequestsViaAccessTokenAsQueryParam() {
+
+		// prepare
+		prepareTest();
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog guest = SpaceDog.backend(superadmin);
+
+		// superadmin logs in to get access token
+		superadmin.login();
+
+		// superadmin fails to get his credentials
+		// via an invalid access token as query param
+		guest.get("/1/credentials")//
+				.queryParam("accessToken", "XXX").go(401);
+
+		// superadmin gets his credentials
+		// via valid access token as query param
+		guest.get("/1/credentials")//
+				.queryParam("accessToken", superadmin.accessToken().get())//
+				.go(200)//
+				.assertEquals(superadmin.id(), "results.0.id");
+	}
 }

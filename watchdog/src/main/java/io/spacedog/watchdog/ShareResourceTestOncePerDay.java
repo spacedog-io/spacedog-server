@@ -1,7 +1,6 @@
 package io.spacedog.watchdog;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Set;
@@ -14,9 +13,9 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
 import com.google.common.io.Resources;
 
 import io.spacedog.model.DataPermission;
@@ -363,7 +362,6 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		assertZipContains(zip, "tweeter.png", pngBytes);
 	}
 
-
 	private int zipFileNumber(byte[] zip) throws IOException {
 		ZipInputStream zipStream = new ZipInputStream(new ByteArrayInputStream(zip));
 		int size = 0;
@@ -384,7 +382,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		}
 		fail(String.format("[%s] zip entry not found", name));
 	}
-	
+
 	@Test
 	public void testFileOwnershipErrorsDoNotDrainAllS3Connection() throws IOException {
 
@@ -396,6 +394,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 
 		// super admin sets custom share permissions
 		ShareSettings settings = new ShareSettings();
+		settings.acl = Maps.newHashMap();
 		settings.acl.put("user", Sets.newHashSet(DataPermission.create, //
 				DataPermission.read));
 		superadmin.settings().save(settings);
@@ -411,4 +410,43 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 			fred.get(location).go(403);
 	}
 
+	@Test
+	public void shareDownloadAuthenticatedViaQueryParam() {
+
+		// prepare
+		prepareTest(false);
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog guest = SpaceDog.backend(superadmin);
+		SpaceDog vince = signUp(superadmin, "vince", "hi vince", "vince@dog.com");
+		SpaceDog fred = signUp(superadmin, "fred", "hi fred", "fred@dog.com");
+
+		// super admin sets custom share permissions
+		ShareSettings settings = new ShareSettings();
+		settings.acl = Maps.newHashMap();
+		settings.acl.put("user", Sets.newHashSet(DataPermission.create, //
+				DataPermission.read));
+		superadmin.settings().save(settings);
+
+		// vince shares a file
+		String location = vince.post("/1/share/vince.txt")//
+				.bodyBytes("vince".getBytes()).go(200)//
+				.getString("location");
+
+		// guest fails to get shared file since no access token query param
+		guest.get(location).go(403);
+
+		// vince gets his shared file via access token query param
+		byte[] bytes = guest.get(location)//
+				.queryParam("accessToken", vince.accessToken().get())//
+				.go(200).asBytes();
+
+		assertArrayEquals("vince".getBytes(), bytes);
+
+		// fred fails to get vince's shared file
+		// via access token query param
+		// since not the owner
+		guest.get(location)//
+				.queryParam("accessToken", fred.accessToken().get())//
+				.go(403);
+	}
 }

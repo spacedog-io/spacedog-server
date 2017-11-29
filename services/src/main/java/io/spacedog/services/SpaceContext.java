@@ -2,6 +2,8 @@ package io.spacedog.services;
 
 import java.util.Map;
 
+import org.elasticsearch.common.Strings;
+
 import com.google.common.collect.Maps;
 import com.google.common.net.HttpHeaders;
 
@@ -209,34 +211,41 @@ public class SpaceContext {
 			SpaceContext.debug().credentialCheck();
 			String backendId = backendId();
 			String headerValue = context.header(SpaceHeaders.AUTHORIZATION);
+			Credentials realCredentials = null;
 
-			if (headerValue != null) {
-				boolean superdog = false;
-				Credentials userCredentials = null;
+			if (headerValue == null) {
+				String token = context.get("accessToken");
+				if (!Strings.isNullOrEmpty(token))
+					realCredentials = checkAccessToken(backendId, token);
+
+			} else {
 				AuthorizationHeader authHeader = new AuthorizationHeader(headerValue, true);
 
 				if (authHeader.isBasic()) {
-					superdog = authHeader.username().startsWith("superdog-");
-					userCredentials = CredentialsResource.get()//
+					boolean superdog = authHeader.username().startsWith("superdog-");
+					realCredentials = CredentialsResource.get()//
 							.checkUsernamePassword(//
 									superdog ? Backends.rootApi() : backendId, //
 									authHeader.username(), authHeader.password());
 
-				} else if (authHeader.isBearer()) {
-					userCredentials = CredentialsResource.get()//
-							.checkToken(backendId, authHeader.token());
-				}
+					// sets superdog target to the requested backend
+					if (superdog)
+						realCredentials.target(backendId);
 
-				userCredentials.checkReallyEnabled();
-				checkPasswordMustChange(userCredentials, context);
-				credentials = userCredentials;
-
-				// sets superdog target to the requested backend id
-				if (superdog)
-					credentials.target(backendId);
+				} else if (authHeader.isBearer())
+					realCredentials = checkAccessToken(backendId, authHeader.token());
 			}
 
+			if (realCredentials != null) {
+				realCredentials.checkReallyEnabled();
+				checkPasswordMustChange(realCredentials, context);
+				this.credentials = realCredentials;
+			}
 		}
+	}
+
+	private Credentials checkAccessToken(String backendId, String token) {
+		return CredentialsResource.get().checkToken(backendId, token);
 	}
 
 	private void checkPasswordMustChange(Credentials credentials, Context context) {
