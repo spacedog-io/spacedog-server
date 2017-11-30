@@ -28,7 +28,7 @@
 		<module>services</module>
 		<module>sdk</module>
 		<module>watchdog</module>
-		<module>examples</module>
+		
 		<module>cli</module>
 		<module>jobs</module>
 		<module>test</module>
