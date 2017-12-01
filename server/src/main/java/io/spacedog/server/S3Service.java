@@ -3,7 +3,6 @@
  */
 package io.spacedog.server;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Set;
@@ -29,10 +28,11 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.base.Strings;
 
+import io.spacedog.model.DownloadRequest;
 import io.spacedog.model.Permission;
 import io.spacedog.model.RolePermissions;
-import io.spacedog.model.DownloadRequest;
 import io.spacedog.utils.Credentials;
+import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.WebPath;
@@ -181,13 +181,13 @@ public class S3Service extends SpaceService {
 		return JsonPayload.ok().withFields("deleted", deleted).build();
 	}
 
-	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, WebPath path, byte[] bytes,
-			String fileName, Context context) {
-		return doUpload(bucketSuffix, rootUri, credentials, path, bytes, fileName, true, context);
+	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, //
+			WebPath path, String fileName, Context context) {
+		return doUpload(bucketSuffix, rootUri, credentials, path, fileName, true, context);
 	}
 
-	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, WebPath path, byte[] bytes,
-			String fileName, boolean enableS3Location, Context context) {
+	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, //
+			WebPath path, String fileName, boolean enableS3Location, Context context) {
 
 		// TODO check if this upload does not replace an older upload
 		// in this case, check crdentials and owner rights
@@ -204,22 +204,26 @@ public class S3Service extends SpaceService {
 		metadata.setContentDisposition(contentDisposition(fileName));
 		metadata.addUserMetadata(OWNER_FIELD, credentials.id());
 
-		PutObjectResult putResult = s3.putObject(new PutObjectRequest(bucketName, //
-				s3Path.toS3Key(), new ByteArrayInputStream(bytes), //
-				metadata));
+		try {
+			PutObjectResult putResult = s3.putObject(new PutObjectRequest(bucketName, //
+					s3Path.toS3Key(), context.request().inputStream(), metadata));
 
-		JsonPayload payload = JsonPayload.ok()//
-				.withFields("path", path.toString())//
-				.withFields("location", toSpaceLocation(backendId, rootUri, path))//
-				.withFields("contentType", metadata.getContentType())//
-				.withFields("expirationTime", putResult.getExpirationTime())//
-				.withFields("etag", putResult.getETag())//
-				.withFields("contentMd5", putResult.getContentMd5());
+			JsonPayload payload = JsonPayload.ok()//
+					.withFields("path", path.toString())//
+					.withFields("location", toSpaceLocation(backendId, rootUri, path))//
+					.withFields("contentType", metadata.getContentType())//
+					.withFields("expirationTime", putResult.getExpirationTime())//
+					.withFields("etag", putResult.getETag())//
+					.withFields("contentMd5", putResult.getContentMd5());
 
-		if (enableS3Location)
-			payload.withFields("s3", toS3Location(bucketName, s3Path));
+			if (enableS3Location)
+				payload.withFields("s3", toS3Location(bucketName, s3Path));
 
-		return payload.build();
+			return payload.build();
+
+		} catch (IOException e) {
+			throw Exceptions.runtime(e, "error reading request input stream");
+		}
 	}
 
 	public Payload doZip(String bucketSuffix, DownloadRequest request, RolePermissions permissions) {

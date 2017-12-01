@@ -41,7 +41,7 @@ public class FileService extends S3Service {
 					return get(toWebPath(uri), context);
 
 				if (Methods.PUT.equals(method))
-					return put(toWebPath(uri), context.request().contentAsBytes(), context);
+					return put(toWebPath(uri), context);
 
 				if (Methods.DELETE.equals(method))
 					return delete(toWebPath(uri));
@@ -65,13 +65,13 @@ public class FileService extends S3Service {
 		return doList(FILE_BUCKET_SUFFIX, "/1/files", path, context);
 	}
 
-	Payload put(WebPath path, byte[] bytes, Context context) {
+	Payload put(WebPath path, Context context) {
 		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
 
 		if (path.size() < 2)
 			throw Exceptions.illegalArgument("no prefix in file path [%s]", path.toString());
 
-		return doUpload(FILE_BUCKET_SUFFIX, "/1/files", credentials, path, bytes, path.last(), context);
+		return doUpload(FILE_BUCKET_SUFFIX, "/1/files", credentials, path, path.last(), context);
 	}
 
 	Payload deleteAll() {

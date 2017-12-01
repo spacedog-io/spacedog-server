@@ -38,7 +38,7 @@ public class ShareService extends S3Service {
 
 	@Post("")
 	@Post("/")
-	public Payload post(byte[] bytes, Context context) {
+	public Payload post(Context context) {
 		Credentials credentials = checkPermission(Permission.create);
 		String fileName = context.get("fileName");
 		ShareSettings settings = shareSettings();
@@ -46,7 +46,7 @@ public class ShareService extends S3Service {
 		if (!Strings.isNullOrEmpty(fileName))
 			id = id + '-' + fileName;
 		return doUpload(SHARE_BUCKET_SUFFIX, "/1/shares", credentials, //
-				WebPath.newPath(id), bytes, fileName, settings.enableS3Location, context);
+				WebPath.newPath(id), fileName, settings.enableS3Location, context);
 	}
 
 	@Delete("")
