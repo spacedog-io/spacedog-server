@@ -41,7 +41,7 @@ public class FileResource extends S3Resource {
 					return get(toWebPath(uri), context);
 
 				if (Methods.PUT.equals(method))
-					return put(toWebPath(uri), context.request().contentAsBytes(), context);
+					return put(toWebPath(uri), context);
 
 				if (Methods.DELETE.equals(method))
 					return delete(toWebPath(uri));
@@ -66,9 +66,9 @@ public class FileResource extends S3Resource {
 		return doList(FILE_BUCKET_SUFFIX, credentials.backendId(), path, context);
 	}
 
-	Payload put(WebPath path, byte[] bytes, Context context) {
+	Payload put(WebPath path, Context context) {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
-		return doUpload(FILE_BUCKET_SUFFIX, "/1/file", credentials, path, bytes, context);
+		return doUpload(FILE_BUCKET_SUFFIX, "/1/file", credentials, path, context);
 	}
 
 	Payload deleteAll() {

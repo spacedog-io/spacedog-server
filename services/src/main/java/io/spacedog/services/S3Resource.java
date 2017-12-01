@@ -3,7 +3,6 @@
  */
 package io.spacedog.services;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.stream.Collectors;
@@ -275,13 +274,13 @@ public class S3Resource extends Resource {
 		return JsonPayload.json(builder);
 	}
 
-	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, WebPath path, byte[] bytes,
+	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, WebPath path,
 			Context context) {
-		return doUpload(bucketSuffix, rootUri, credentials, path, bytes, context, true);
+		return doUpload(bucketSuffix, rootUri, credentials, path, context, true);
 	}
 
-	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, WebPath path, byte[] bytes,
-			Context context, boolean enableS3Location) {
+	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, WebPath path, Context context,
+			boolean enableS3Location) {
 
 		// TODO check if this upload does not replace an older upload
 		// in this case, check crdentials and owner rights
@@ -305,22 +304,26 @@ public class S3Resource extends Resource {
 		metadata.addUserMetadata("owner", credentials.name());
 		metadata.addUserMetadata("owner-type", credentials.level().toString());
 
-		PutObjectResult result = s3.putObject(new PutObjectRequest(bucketName, //
-				s3Path.toS3Key(), new ByteArrayInputStream(bytes), //
-				metadata));
+		try {
+			PutObjectResult result = s3.putObject(new PutObjectRequest(bucketName, //
+					s3Path.toS3Key(), context.request().inputStream(), metadata));
 
-		JsonBuilder<ObjectNode> builder = JsonPayload.builder()//
-				.put("path", path.toString())//
-				.put("location", toSpaceLocation(credentials.backendId(), rootUri, path))//
-				.put("contentType", metadata.getContentType())//
-				.put("expirationTime", result.getExpirationTime())//
-				.put("etag", result.getETag())//
-				.put("contentMd5", result.getContentMd5());
+			JsonBuilder<ObjectNode> builder = JsonPayload.builder()//
+					.put("path", path.toString())//
+					.put("location", toSpaceLocation(credentials.backendId(), rootUri, path))//
+					.put("contentType", metadata.getContentType())//
+					.put("expirationTime", result.getExpirationTime())//
+					.put("etag", result.getETag())//
+					.put("contentMd5", result.getContentMd5());
 
-		if (enableS3Location)
-			builder.put("s3", toS3Location(bucketName, s3Path));
+			if (enableS3Location)
+				builder.put("s3", toS3Location(bucketName, s3Path));
 
-		return JsonPayload.json(builder);
+			return JsonPayload.json(builder);
+
+		} catch (IOException e) {
+			throw Exceptions.runtime(e, "error reading request input stream");
+		}
 	}
 
 	protected String contentDisposition(String fileName) {

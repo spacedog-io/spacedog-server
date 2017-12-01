@@ -6,8 +6,8 @@ package io.spacedog.services;
 import java.util.UUID;
 
 import io.spacedog.model.DataPermission;
-import io.spacedog.model.ZipRequest;
 import io.spacedog.model.ShareSettings;
+import io.spacedog.model.ZipRequest;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json7;
@@ -60,12 +60,12 @@ public class ShareResource extends S3Resource {
 	// deprecated since not idempotent
 	@Put("/:fileName")
 	@Put("/:fileName/")
-	public Payload post(String fileName, byte[] bytes, Context context) {
+	public Payload post(String fileName, Context context) {
 		Credentials credentials = checkPermission(DataPermission.create);
 		ShareSettings settings = SettingsResource.get().load(ShareSettings.class);
 		String uuid = UUID.randomUUID().toString();
 		return doUpload(SHARE_BUCKET_SUFFIX, "/1/share", credentials, //
-				WebPath.newPath(uuid, fileName), bytes, context, settings.enableS3Location);
+				WebPath.newPath(uuid, fileName), context, settings.enableS3Location);
 	}
 
 	@Delete("")
