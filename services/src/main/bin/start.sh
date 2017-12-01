@@ -5,6 +5,9 @@ then
 	exit -1
 fi
 
+# sets max number of open file descriptors 
+ulimit -n 50000
+
 echo "SpaceDog is starting ..."
 java -d64 -cp "lib/*" io.spacedog.services.Start &>log &
 
