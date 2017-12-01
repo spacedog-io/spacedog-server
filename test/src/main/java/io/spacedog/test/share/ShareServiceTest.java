@@ -485,4 +485,26 @@ public class ShareServiceTest extends SpaceTest {
 				.go(403);
 	}
 
+	@Test
+	public void shareUploadHasSizeLimit() {
+
+		// prepare
+		prepareTest(false);
+		SpaceDog superadmin = resetTestBackend();
+
+		// superadmin sets custom share permissions
+		// with share size limit of 1 KB
+		ShareSettings settings = new ShareSettings();
+		settings.permissions.put("superadmin", Permission.create);
+		settings.sizeLimitInKB = 1;
+		superadmin.settings().save(settings);
+
+		// vince fails to share file with size of 2048 bytes
+		// since settings forbids file with size above 1024 bytes
+		assertHttpError(400, () -> superadmin.shares().upload(new byte[2048]));
+
+		// vince succeeds to share file with size of 1024 bytes
+		superadmin.shares().upload(new byte[1024]);
+	}
+
 }

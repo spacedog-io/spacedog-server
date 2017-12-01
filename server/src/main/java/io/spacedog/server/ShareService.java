@@ -42,11 +42,12 @@ public class ShareService extends S3Service {
 		Credentials credentials = checkPermission(Permission.create);
 		String fileName = context.get("fileName");
 		ShareSettings settings = shareSettings();
+		long contentLength = checkContentLength(context, settings.sizeLimitInKB);
 		String id = UUID.randomUUID().toString();
 		if (!Strings.isNullOrEmpty(fileName))
 			id = id + '-' + fileName;
 		return doUpload(SHARE_BUCKET_SUFFIX, "/1/shares", credentials, //
-				WebPath.newPath(id), fileName, settings.enableS3Location, context);
+				WebPath.newPath(id), fileName, contentLength, settings.enableS3Location, context);
 	}
 
 	@Delete("")

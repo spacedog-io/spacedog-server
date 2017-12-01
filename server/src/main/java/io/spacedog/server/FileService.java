@@ -3,6 +3,7 @@
  */
 package io.spacedog.server;
 
+import io.spacedog.model.FileSettings;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.WebPath;
@@ -69,9 +70,12 @@ public class FileService extends S3Service {
 		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
 
 		if (path.size() < 2)
-			throw Exceptions.illegalArgument("no prefix in file path [%s]", path.toString());
+			throw Exceptions.illegalArgument("path [%s] has no prefix", path.toString());
 
-		return doUpload(FILE_BUCKET_SUFFIX, "/1/files", credentials, path, path.last(), context);
+		FileSettings settings = SettingsService.get().getAsObject(FileSettings.class);
+		long contentLength = checkContentLength(context, settings.sizeLimitInKB);
+		return doUpload(FILE_BUCKET_SUFFIX, "/1/files", credentials, //
+				path, path.last(), contentLength, context);
 	}
 
 	Payload deleteAll() {
@@ -99,5 +103,6 @@ public class FileService extends S3Service {
 	}
 
 	private FileService() {
+		SettingsService.get().registerSettings(FileSettings.class);
 	}
 }

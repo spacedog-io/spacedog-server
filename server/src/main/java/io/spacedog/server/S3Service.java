@@ -182,12 +182,12 @@ public class S3Service extends SpaceService {
 	}
 
 	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, //
-			WebPath path, String fileName, Context context) {
-		return doUpload(bucketSuffix, rootUri, credentials, path, fileName, true, context);
+			WebPath path, String fileName, long contentLength, Context context) {
+		return doUpload(bucketSuffix, rootUri, credentials, path, fileName, contentLength, true, context);
 	}
 
 	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, //
-			WebPath path, String fileName, boolean enableS3Location, Context context) {
+			WebPath path, String fileName, long contentLength, boolean enableS3Location, Context context) {
 
 		// TODO check if this upload does not replace an older upload
 		// in this case, check crdentials and owner rights
@@ -200,7 +200,7 @@ public class S3Service extends SpaceService {
 
 		ObjectMetadata metadata = new ObjectMetadata();
 		metadata.setContentType(contentType(fileName, context));
-		metadata.setContentLength(Long.valueOf(context.header("Content-Length")));
+		metadata.setContentLength(contentLength);
 		metadata.setContentDisposition(contentDisposition(fileName));
 		metadata.addUserMetadata(OWNER_FIELD, credentials.id());
 
@@ -212,6 +212,7 @@ public class S3Service extends SpaceService {
 					.withFields("path", path.toString())//
 					.withFields("location", toSpaceLocation(backendId, rootUri, path))//
 					.withFields("contentType", metadata.getContentType())//
+					.withFields("contentLength", metadata.getContentLength())//
 					.withFields("expirationTime", putResult.getExpirationTime())//
 					.withFields("etag", putResult.getETag())//
 					.withFields("contentMd5", putResult.getContentMd5());
@@ -245,6 +246,20 @@ public class S3Service extends SpaceService {
 	//
 	// Implementation
 	//
+
+	protected long checkContentLength(Context context, long sizeLimitInKB) {
+		String contentLength = context.header(SpaceHeaders.CONTENT_LENGTH);
+		if (Strings.isNullOrEmpty(contentLength))
+			throw Exceptions.illegalArgument("no Content-Length header");
+
+		long length = Long.valueOf(contentLength);
+		if (length > sizeLimitInKB * 1024)
+			throw Exceptions.illegalArgument(//
+					"content length ([%s] bytes) is too big, limit is [%s] KB", //
+					length, sizeLimitInKB);
+
+		return length;
+	}
 
 	protected String contentDisposition(String fileName) {
 		return String.format("attachment; filename=\"%s\"", fileName);
