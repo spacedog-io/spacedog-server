@@ -3,6 +3,7 @@
  */
 package io.spacedog.services;
 
+import io.spacedog.model.FileSettings;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.WebPath;
@@ -68,7 +69,9 @@ public class FileResource extends S3Resource {
 
 	Payload put(WebPath path, Context context) {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
-		return doUpload(FILE_BUCKET_SUFFIX, "/1/file", credentials, path, context);
+		FileSettings settings = SettingsResource.get().load(FileSettings.class);
+		long contentLength = checkContentLength(context, settings.fileSizeLimitInKB);
+		return doUpload(FILE_BUCKET_SUFFIX, "/1/file", credentials, path, context, contentLength);
 	}
 
 	Payload deleteAll() {
@@ -96,5 +99,6 @@ public class FileResource extends S3Resource {
 	}
 
 	private FileResource() {
+		SettingsResource.get().registerSettingsClass(FileSettings.class);
 	}
 }

@@ -25,6 +25,7 @@ public class ShareSettings extends Settings {
 
 	public Map<String, Set<DataPermission>> acl;
 	public boolean enableS3Location = true;
+	public long shareSizeLimitInKB = 20000; // 20MB
 
 	public ShareSettings() {
 		this.acl = defaultAcl;

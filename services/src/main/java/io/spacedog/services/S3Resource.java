@@ -274,32 +274,32 @@ public class S3Resource extends Resource {
 		return JsonPayload.json(builder);
 	}
 
-	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, WebPath path,
-			Context context) {
-		return doUpload(bucketSuffix, rootUri, credentials, path, context, true);
+	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, //
+			WebPath path, Context context, long contentLength) {
+		return doUpload(bucketSuffix, rootUri, credentials, path, context, contentLength, true);
 	}
 
-	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, WebPath path, Context context,
-			boolean enableS3Location) {
+	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, //
+			WebPath path, Context context, long contentLength, boolean enableS3Location) {
 
 		// TODO check if this upload does not replace an older upload
-		// in this case, check crdentials and owner rights
+		// in this case, check credentials and owner rights
 		// should return FORBIDDEN if user not the owner of previous file
 		// admin can replace whatever they need to replace?
 
 		if (path.size() < 2)
-			throw Exceptions.illegalArgument("no prefix in file path [%s]", path.toString());
+			throw Exceptions.illegalArgument("path [%s] has no prefix", path.toString());
 
 		String fileName = path.last();
 		String bucketName = getBucketName(bucketSuffix);
 		WebPath s3Path = path.addFirst(credentials.backendId());
-
 		ObjectMetadata metadata = new ObjectMetadata();
+
 		// TODO
 		// use the provided content-type if specific first
 		// if none derive from file extension
 		metadata.setContentType(typeMap.getContentType(fileName));
-		metadata.setContentLength(Long.valueOf(context.header("Content-Length")));
+		metadata.setContentLength(contentLength);
 		metadata.setContentDisposition(contentDisposition(fileName));
 		metadata.addUserMetadata("owner", credentials.name());
 		metadata.addUserMetadata("owner-type", credentials.level().toString());
@@ -312,6 +312,7 @@ public class S3Resource extends Resource {
 					.put("path", path.toString())//
 					.put("location", toSpaceLocation(credentials.backendId(), rootUri, path))//
 					.put("contentType", metadata.getContentType())//
+					.put("contentLength", metadata.getContentLength())//
 					.put("expirationTime", result.getExpirationTime())//
 					.put("etag", result.getETag())//
 					.put("contentMd5", result.getContentMd5());
@@ -333,6 +334,20 @@ public class S3Resource extends Resource {
 	//
 	// Implementation
 	//
+
+	protected long checkContentLength(Context context, long sizeLimitInKB) {
+		String contentLength = context.header(SpaceHeaders.CONTENT_LENGTH);
+		if (Strings.isNullOrEmpty(contentLength))
+			throw Exceptions.illegalArgument("no Content-Length header");
+
+		long length = Long.valueOf(contentLength);
+		if (length > sizeLimitInKB * 1024)
+			throw Exceptions.illegalArgument(//
+					"content length ([%s] bytes) is too big, limit is [%s] KB", //
+					length, sizeLimitInKB);
+
+		return length;
+	}
 
 	private String getOrCheckOwnership(ObjectMetadata metadata, boolean checkOwnership) {
 

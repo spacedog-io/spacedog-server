@@ -449,4 +449,29 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 				.queryParam("accessToken", fred.accessToken().get())//
 				.go(403);
 	}
+
+	@Test
+	public void shareUploadHasSizeLimit() {
+
+		// prepare
+		prepareTest(false);
+		SpaceDog superadmin = resetTestBackend();
+
+		// superadmin sets custom share permissions
+		// with share size limit of 1 KB
+		ShareSettings settings = new ShareSettings();
+		settings.acl = Maps.newHashMap();
+		settings.acl.put("super_admin", Sets.newHashSet(DataPermission.create));
+		settings.shareSizeLimitInKB = 1;
+		superadmin.settings().save(settings);
+
+		// vince fails to share file with size of 2048 bytes
+		// since settings forbids file with size above 1024 bytes
+		superadmin.post("/1/share/toto.bin")//
+				.bodyBytes(new byte[2048]).go(400);
+
+		// vince succeeds to share file with size of 1024 bytes
+		superadmin.post("/1/share/toto.bin")//
+				.bodyBytes(new byte[1024]).go(200);
+	}
 }

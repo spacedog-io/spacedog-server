@@ -63,9 +63,10 @@ public class ShareResource extends S3Resource {
 	public Payload post(String fileName, Context context) {
 		Credentials credentials = checkPermission(DataPermission.create);
 		ShareSettings settings = SettingsResource.get().load(ShareSettings.class);
+		long contentLength = checkContentLength(context, settings.shareSizeLimitInKB);
 		String uuid = UUID.randomUUID().toString();
 		return doUpload(SHARE_BUCKET_SUFFIX, "/1/share", credentials, //
-				WebPath.newPath(uuid, fileName), context, settings.enableS3Location);
+				WebPath.newPath(uuid, fileName), context, contentLength, settings.enableS3Location);
 	}
 
 	@Delete("")
