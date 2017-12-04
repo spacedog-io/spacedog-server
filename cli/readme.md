@@ -12,9 +12,9 @@ mvn clean package
 
 - Download a CLI bundle fron the github release page : https://github.com/spacedog-io/spacedog-server/releases.
 - Unzip the bundle on your linux or mac computer wherever you want. 
-- Set the `DOG_HOME`variable to the CLI install directory.
+- Set the `DOG_HOME`variable with the absolute path (do not use ~) ro the CLI install directory.
 - Type `java —version` to make sure a java version 8 is installed and accessible in the path.
-- Create the soft symbolic link `/usr/local/bin/dog` to point to the CLI `dog.sh`script to have access to the SpaceDog command in the path.
+- Create the soft symbolic link `/usr/local/bin/dog` to point to the CLI `dog.sh` script to have access to the SpaceDog command in the path.
 - Type `dog` to see the command usage help.
 
 
