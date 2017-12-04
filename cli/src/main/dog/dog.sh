@@ -7,7 +7,7 @@
 
 if [ "X$DOG_HOME" == "X" ]
 then
-	echo "Variable DOG_HOME must be set with the path to the dog CLI install directory."
+	echo "Variable DOG_HOME must be set with the absolute path (do not use ~) to the dog CLI install directory."
 	exit -1
 fi
 
