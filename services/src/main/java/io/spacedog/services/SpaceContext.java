@@ -12,6 +12,7 @@ import io.spacedog.utils.Backends;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.SpaceHeaders;
+import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 import net.codestory.http.constants.Methods;
 
@@ -214,7 +215,7 @@ public class SpaceContext {
 			Credentials realCredentials = null;
 
 			if (headerValue == null) {
-				String token = context.get("accessToken");
+				String token = context.get(SpaceParams.PARAM_ACCESS_TOKEN);
 				if (!Strings.isNullOrEmpty(token))
 					realCredentials = checkAccessToken(backendId, token);
 
