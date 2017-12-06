@@ -9,8 +9,6 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import javax.activation.MimetypesFileTypeMap;
-
 import org.joda.time.DateTime;
 
 import com.amazonaws.regions.Region;
@@ -31,6 +29,7 @@ import com.google.common.base.Strings;
 import com.google.common.io.ByteStreams;
 
 import io.spacedog.model.ZipRequest;
+import io.spacedog.utils.ContentTypes;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.JsonBuilder;
@@ -45,7 +44,6 @@ import net.codestory.http.payload.StreamingOutput;
 public class S3Resource extends Resource {
 
 	private static AmazonS3Client s3 = new AmazonS3Client();
-	private static MimetypesFileTypeMap typeMap = new MimetypesFileTypeMap();
 
 	static {
 		String awsRegion = Start.get().configuration().awsRegion().orElse("eu-west-1");
@@ -298,7 +296,7 @@ public class S3Resource extends Resource {
 		// TODO
 		// use the provided content-type if specific first
 		// if none derive from file extension
-		metadata.setContentType(typeMap.getContentType(fileName));
+		metadata.setContentType(ContentTypes.parseFileExtension(fileName));
 		metadata.setContentLength(contentLength);
 		metadata.setContentDisposition(contentDisposition(fileName));
 		metadata.addUserMetadata("owner", credentials.name());
