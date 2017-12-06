@@ -21,4 +21,5 @@ public interface SpaceParams {
 	int REPLICAS_DEFAULT_PARAM = 0;
 	String WAIT_FOR_COMPLETION_PARAM = "waitForCompletion";
 	String WITH_CONTENT_DISPOSITION = "withContentDisposition";
+	String ACCESS_TOKEN_PARAM = "accessToken";
 }
