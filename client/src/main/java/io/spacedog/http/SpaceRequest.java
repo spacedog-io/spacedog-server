@@ -346,6 +346,9 @@ public class SpaceRequest {
 		if (body instanceof String)
 			return RequestBody.create(contentType, (String) body);
 
+		if (body instanceof MultipartBody)
+			return (MultipartBody) body;
+
 		// OkHttp doesn't accept null body for PUT and POST
 		if (method.equals(HttpVerb.PUT) //
 				|| method.equals(HttpVerb.POST))
