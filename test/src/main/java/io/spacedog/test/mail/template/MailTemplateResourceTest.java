@@ -48,7 +48,7 @@ public class MailTemplateResourceTest extends SpaceTest {
 				Json7.object("date", "2016-12-03", "debut", "16:00:00", "fin", "17:00:00"));
 
 		String inscriptionId = SpaceRequest.post("/1/data/demande").backend(test)//
-				.bodyJson("nom", "Pons", "prenom", "Stéphane", "email", "david@spacedog.io", //
+				.bodyJson("nom", "Pons", "prenom", "Stéphane", "email", "David <david@spacedog.io>", //
 						"civilite", "Monsieur", "tel", "0607080920", "statut", "fuzzy", //
 						"cvUrl", "https://spacedog.io", "dispos", dispos)
 				.go(201)//
@@ -67,7 +67,7 @@ public class MailTemplateResourceTest extends SpaceTest {
 		mailSettings.templates = Maps.newHashMap();
 		MailTemplate template = new MailTemplate();
 		template.from = "attias666@gmail.com";
-		template.to = Lists.newArrayList("{{demande.email}}");
+		template.to = Lists.newArrayList("{{demande.email|raw}}");
 		template.subject = "Demande d'inscription de {{demande.prenom}} {{demande.nom}} (M-0370)";
 		template.html = Resources.toString(//
 				Resources.getResource(this.getClass(), "mail.demande.inscription.pebble"), //
@@ -87,7 +87,7 @@ public class MailTemplateResourceTest extends SpaceTest {
 
 		// set the confirmation mail template
 		template = new MailTemplate();
-		template.to = Lists.newArrayList("{{demande.email}}");
+		template.to = Lists.newArrayList("{{demande.email|raw}}");
 		template.subject = "Votre demande d'inscription a bien été enregistrée";
 		template.html = Resources.toString(//
 				Resources.getResource(this.getClass(), "mail.demande.confirmation.pebble"), //
