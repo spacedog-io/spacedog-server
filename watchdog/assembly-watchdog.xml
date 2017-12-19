@@ -16,27 +16,8 @@
 		<dependencySet>
 			<outputDirectory>/lib</outputDirectory>
 			<unpack>false</unpack>
-			<excludes>
-				<exclude>io.spacedog:spacedog-watchdog</exclude>
-			</excludes>
+			<scope>runtime</scope>
 		</dependencySet>
 	</dependencySets>
-
-	<fileSets>
-		<fileSet>
-			<directory>target/classes</directory>
-			<outputDirectory></outputDirectory>
-			<includes>
-				<include>**</include>
-			</includes>
-		</fileSet>
-		<fileSet>
-			<directory>target/test-classes</directory>
-			<outputDirectory></outputDirectory>
-			<includes>
-				<include>**</include>
-			</includes>
-		</fileSet>
-	</fileSets>
 
 </assembly>
