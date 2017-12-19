@@ -10,8 +10,6 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import javax.activation.MimetypesFileTypeMap;
-
 import org.joda.time.DateTime;
 
 import com.amazonaws.regions.Region;
@@ -31,6 +29,7 @@ import com.google.common.base.Strings;
 import io.spacedog.model.DownloadRequest;
 import io.spacedog.model.Permission;
 import io.spacedog.model.RolePermissions;
+import io.spacedog.utils.ContentTypes;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -43,7 +42,6 @@ import net.codestory.http.payload.StreamingOutput;
 public class S3Service extends SpaceService {
 
 	private static AmazonS3Client s3 = new AmazonS3Client();
-	private static MimetypesFileTypeMap typeMap = new MimetypesFileTypeMap();
 
 	static {
 		String awsRegion = Start.get().configuration().awsRegion().orElse("eu-west-1");
@@ -311,7 +309,7 @@ public class S3Service extends SpaceService {
 		// if none derive from file extension
 		return Strings.isNullOrEmpty(fileName) //
 				? "application/octet-stream"
-				: typeMap.getContentType(fileName);
+				: ContentTypes.parseFileExtension(fileName);
 	}
 
 	private WebPath fromS3Key(String s3Key) {
