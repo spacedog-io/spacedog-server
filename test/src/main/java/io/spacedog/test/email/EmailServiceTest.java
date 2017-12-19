@@ -145,7 +145,7 @@ public class EmailServiceTest extends SpaceTest {
 				Json.object("date", "2016-12-03", "debut", "16:00:00", "fin", "17:00:00"));
 
 		String inscriptionId = guest.data().save("demande", //
-				Json.object("nom", "Pons", "prenom", "Stéphane", "email", "david@spacedog.io", //
+				Json.object("nom", "Pons", "prenom", "Stéphane", "email", "David <david@spacedog.io>", //
 						"civilite", "Monsieur", "tel", "0607080920", "statut", "fuzzy", //
 						"cvUrl", "https://spacedog.io", "dispos", dispos))//
 				.id();
@@ -154,7 +154,7 @@ public class EmailServiceTest extends SpaceTest {
 		EmailTemplate template = new EmailTemplate();
 		template.name = "demande";
 		template.from = "attias666@gmail.com";
-		template.to = Lists.newArrayList("{{demande.email}}");
+		template.to = Lists.newArrayList("{{demande.email|raw}}");
 		template.subject = "Demande d'inscription de {{demande.prenom}} {{demande.nom}} (M-0370)";
 		template.html = Resources.toString(//
 				Resources.getResource(this.getClass(), "mail.demande.inscription.pebble"), //
@@ -183,6 +183,5 @@ public class EmailServiceTest extends SpaceTest {
 
 		// nath can not use this email template anymore
 		assertHttpError(404, () -> nath.emails().send(template.name, parameters));
-
 	}
 }
