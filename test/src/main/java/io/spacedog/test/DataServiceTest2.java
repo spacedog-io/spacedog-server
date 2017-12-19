@@ -299,7 +299,7 @@ public class DataServiceTest2 extends SpaceTest {
 
 		// creates a message object with auto generated id
 		ObjectNode message = Json.object("text", "id=?");
-		DataObject<ObjectNode> createObject = superadmin.data().save("message", message);
+		JsonDataObject createObject = superadmin.data().save("message", message);
 		DataObject<ObjectNode> getObject = superadmin.data().get("message", createObject.id());
 		assertSourceAlmostEquals(message, getObject.source());
 

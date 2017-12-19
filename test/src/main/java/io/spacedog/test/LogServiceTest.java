@@ -8,7 +8,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.LogEndpoint.LogItem;
 import io.spacedog.client.LogEndpoint.LogSearchResults;
@@ -19,7 +18,7 @@ import io.spacedog.client.elastic.ESSortBuilders;
 import io.spacedog.client.elastic.ESSortOrder;
 import io.spacedog.http.SpaceBackend;
 import io.spacedog.http.SpaceRequest;
-import io.spacedog.model.DataObject;
+import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.Permission;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
@@ -213,7 +212,7 @@ public class LogServiceTest extends SpaceTest {
 		createTempDog(superadmin2, "user2").login();
 
 		// create message in test backend
-		DataObject<ObjectNode> message = user.data()//
+		JsonDataObject message = user.data()//
 				.save("message", Json.object("text", "What's up boys?"));
 
 		// find message by id in test backend

@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceRequestException;
-import io.spacedog.model.DataObject;
+import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.Permission;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
@@ -48,12 +48,12 @@ public class DataServiceTest extends SpaceTest {
 				.build();
 
 		// create
-		DataObject<ObjectNode> carDO = vince.data().save("car", car);
+		JsonDataObject carDO = vince.data().save("car", car);
 		assertEquals("car", carDO.type());
 		assertNotNull(carDO.id());
 
 		// find by id
-		DataObject<ObjectNode> car1 = vince.data().get("car", carDO.id());
+		JsonDataObject car1 = vince.data().get("car", carDO.id());
 
 		assertEquals(vince.id(), car1.owner());
 		assertNotNull(car1.group());
@@ -69,7 +69,7 @@ public class DataServiceTest extends SpaceTest {
 		// update
 		vince.data().patch("car", carDO.id(), Json.object("color", "blue"));
 
-		DataObject<ObjectNode> car3 = vince.data().get("car", carDO.id());
+		JsonDataObject car3 = vince.data().get("car", carDO.id());
 		assertEquals(vince.id(), car3.owner());
 		assertNotNull(car3.group());
 		assertEquals(createdAt, car3.createdAt());
@@ -118,7 +118,7 @@ public class DataServiceTest extends SpaceTest {
 		String id = vince.data().save("car", car).id();
 
 		// find by id
-		DataObject<ObjectNode> carbis = vince.data().get("car", id);
+		JsonDataObject carbis = vince.data().get("car", id);
 		assertEquals(vince.id(), carbis.owner());
 		assertNotNull(carbis.group());
 		assertNotNull(carbis.createdAt());

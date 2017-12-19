@@ -6,6 +6,7 @@ import com.google.common.base.Strings;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceResponse;
+import io.spacedog.model.BasicDataObject;
 import io.spacedog.model.DataObject;
 import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.JsonDataObject.Results;
@@ -13,6 +14,7 @@ import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.SpaceFields;
 import io.spacedog.utils.SpaceParams;
+import io.spacedog.utils.Utils;
 
 public class DataEndpoint implements SpaceFields, SpaceParams {
 
@@ -23,27 +25,57 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 	}
 
 	//
-	// Data object simple CRUD methods
+	// Get
 	//
 
-	public DataObject<ObjectNode> get(String type, String id) {
-		return fetch(new JsonDataObject().type(type).id(id));
+	public JsonDataObject get(String type, String id) {
+		return get(type, id, JsonDataObject.class);
+	}
+
+	public <K> K get(String type, String id, Class<K> pojoClass) {
+		return fetch(type, id, Utils.instantiate(pojoClass));
 	}
 
 	public <K> DataObject<K> fetch(DataObject<K> object) {
+		return fetch(object.type(), object.id(), object);
+	}
+
+	public <K> K fetch(String type, String id, K object) {
 		return dog.get("/1/data/{type}/{id}")//
-				.routeParam(TYPE_FIELD, object.type())//
-				.routeParam(ID_FIELD, object.id())//
+				.routeParam(TYPE_FIELD, type)//
+				.routeParam(ID_FIELD, id)//
 				.go(200)//
 				.toPojo(object);
 	}
 
-	public DataObject<ObjectNode> save(String type, ObjectNode source) {
-		return save(new JsonDataObject().type(type).source(source));
+	//
+	// Save
+	//
+
+	public JsonDataObject save(String type, ObjectNode source) {
+		return save(type, null, source);
 	}
 
-	public DataObject<ObjectNode> save(String type, String id, ObjectNode source) {
-		return save(new JsonDataObject().type(type).id(id).source(source));
+	public JsonDataObject save(String type, String id, ObjectNode source) {
+		return save(type, id, source, 0);
+	}
+
+	public JsonDataObject save(String type, String id, ObjectNode source, long version) {
+		return (JsonDataObject) save(new JsonDataObject()//
+				.type(type).id(id).source(source).version(version));
+	}
+
+	public BasicDataObject save(String type, Object source) {
+		return save(type, null, source);
+	}
+
+	public BasicDataObject save(String type, String id, Object source) {
+		return save(type, id, source, 0);
+	}
+
+	public BasicDataObject save(String type, String id, Object source, long version) {
+		return (BasicDataObject) save(new BasicDataObject()//
+				.type(type).id(id).source(source).version(version));
 	}
 
 	public <K> DataObject<K> save(DataObject<K> object) {
@@ -66,19 +98,30 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 		return request.go(200, 201).toPojo(object);
 	}
 
+	//
+	// Patch
+	//
+
 	public long patch(String type, String id, Object source) {
-		return patch(type, id, source, null);
+		return patch(type, id, source, 0);
 	}
 
-	public long patch(String type, String id, Object source, Long version) {
-		return dog.put("/1/data/{type}/{id}")//
+	public long patch(String type, String id, Object source, long version) {
+		SpaceRequest request = dog.put("/1/data/{type}/{id}")//
 				.routeParam(ID_FIELD, id)//
 				.routeParam(TYPE_FIELD, type)//
-				.queryParam(STRICT_PARAM, false)//
-				.queryParam(VERSION_PARAM, version)//
-				.bodyPojo(source).go(200)//
+				.queryParam(STRICT_PARAM, false);
+
+		if (version > 0)
+			request.queryParam(VERSION_PARAM, version);
+
+		return request.bodyPojo(source).go(200)//
 				.get(VERSION_FIELD).asLong();
 	}
+
+	//
+	// Delete
+	//
 
 	public DataEndpoint delete(DataObject<?> object) {
 		return delete(object.type(), object.id());
@@ -102,7 +145,7 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 	}
 
 	//
-	// Field simple CRUD methods
+	// Field methods
 	//
 
 	public <K> K get(String type, String id, String field, Class<K> dataClass) {
