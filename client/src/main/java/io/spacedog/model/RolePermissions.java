@@ -9,6 +9,7 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 
 import io.spacedog.utils.Credentials;
+import io.spacedog.utils.Exceptions;
 
 @SuppressWarnings("serial")
 public class RolePermissions extends HashMap<String, Set<Permission>> {
@@ -16,7 +17,7 @@ public class RolePermissions extends HashMap<String, Set<Permission>> {
 	public RolePermissions() {
 	}
 
-	public boolean check(String role, Permission... permissions) {
+	public boolean containsOne(String role, Permission... permissions) {
 
 		Set<Permission> rolePermissions = get(role);
 
@@ -30,18 +31,23 @@ public class RolePermissions extends HashMap<String, Set<Permission>> {
 		return false;
 	}
 
-	public boolean check(Credentials credentials, Permission... permissions) {
+	public boolean containsOne(Credentials credentials, Permission... permissions) {
 		if (credentials.isAtLeastSuperAdmin())
 			return true;
 
-		if (check("all", permissions))
+		if (containsOne("all", permissions))
 			return true;
 
 		for (String role : credentials.roles())
-			if (check(role, permissions))
+			if (containsOne(role, permissions))
 				return true;
 
 		return false;
+	}
+
+	public void check(Credentials credentials, Permission... permissions) {
+		if (!containsOne(credentials, permissions))
+			throw Exceptions.insufficientCredentials(credentials);
 	}
 
 	public RolePermissions put(String role, Permission... permissions) {

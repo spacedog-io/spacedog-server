@@ -15,6 +15,7 @@ import io.spacedog.model.DataObject;
 import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.MetadataBase;
 import io.spacedog.model.Permission;
+import io.spacedog.model.RolePermissions;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -78,17 +79,18 @@ public class DataService extends SpaceService {
 	@Delete("/:type/:id/")
 	public Payload deleteById(String type, String id, Context context) {
 		Credentials credentials = SpaceContext.credentials();
+		RolePermissions roles = DataAccessControl.roles(type);
 
-		if (DataAccessControl.check(credentials, type, Permission.deleteAll))
+		if (roles.containsOne(credentials, Permission.deleteAll))
 			return doDeleteById(type, id);
 
-		if (DataAccessControl.check(credentials, type, Permission.deleteMine)) {
+		if (roles.containsOne(credentials, Permission.deleteMine)) {
 			DataObject<MetadataBase> metadata = getMetadataOrThrow(type, id);
 			checkOwner(credentials, metadata);
 			return doDeleteById(type, id);
 		}
 
-		if (DataAccessControl.check(credentials, type, Permission.deleteGroup)) {
+		if (roles.containsOne(credentials, Permission.deleteGroup)) {
 			DataObject<MetadataBase> metadata = getMetadataOrThrow(type, id);
 			checkGroup(credentials, metadata);
 			return doDeleteById(type, id);
@@ -127,19 +129,20 @@ public class DataService extends SpaceService {
 
 	protected DataObject<ObjectNode> doGet(String type, String id) {
 		Credentials credentials = SpaceContext.credentials();
+		RolePermissions roles = DataAccessControl.roles(type);
 		Supplier<DataObject<ObjectNode>> supplier = () -> DataStore.get().getObject(//
 				new JsonDataObject().type(type).id(id));
 
-		if (DataAccessControl.check(credentials, type, Permission.readAll, Permission.search))
+		if (roles.containsOne(credentials, Permission.readAll, Permission.search))
 			return supplier.get();
 
-		else if (DataAccessControl.check(credentials, type, Permission.readMine)) {
+		else if (roles.containsOne(credentials, Permission.readMine)) {
 			DataObject<ObjectNode> object = supplier.get();
 			checkOwner(credentials, object);
 			return object;
 		}
 
-		else if (DataAccessControl.check(credentials, type, Permission.readGroup)) {
+		else if (roles.containsOne(credentials, Permission.readGroup)) {
 			DataObject<ObjectNode> object = supplier.get();
 			checkGroup(credentials, object);
 			return object;
@@ -175,7 +178,8 @@ public class DataService extends SpaceService {
 	protected <K> Payload doPost(DataObject<K> object) {
 		Credentials credentials = SpaceContext.credentials();
 
-		if (DataAccessControl.check(credentials, object.type(), Permission.create)) {
+		if (DataAccessControl.roles(object.type())//
+				.containsOne(credentials, Permission.create)) {
 			object.owner(credentials.id());
 			object.group(credentials.group());
 			object = DataStore.get().createObject(object);
@@ -192,15 +196,17 @@ public class DataService extends SpaceService {
 
 	public void checkPutPermissions(Credentials credentials, DataObject<MetadataBase> metadata) {
 
-		if (DataAccessControl.check(credentials, metadata.type(), Permission.updateAll))
+		RolePermissions roles = DataAccessControl.roles(metadata.type());
+
+		if (roles.containsOne(credentials, Permission.updateAll))
 			return;
 
-		if (DataAccessControl.check(credentials, metadata.type(), Permission.updateMine)) {
+		if (roles.containsOne(credentials, Permission.updateMine)) {
 			checkOwner(credentials, metadata);
 			return;
 		}
 
-		if (DataAccessControl.check(credentials, metadata.type(), Permission.updateGroup)) {
+		if (roles.containsOne(credentials, Permission.updateGroup)) {
 			checkGroup(credentials, metadata);
 			return;
 		}

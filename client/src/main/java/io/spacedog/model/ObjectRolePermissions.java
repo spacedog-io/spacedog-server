@@ -23,17 +23,14 @@ public class ObjectRolePermissions extends HashMap<String, RolePermissions> {
 		return this;
 	}
 
-	public boolean check(String objectId, String role, Permission... permissions) {
-		RolePermissions roles = get(objectId);
-		return roles == null ? false : roles.check(role, permissions);
+	public boolean containsOne(String objectId, String role, Permission... permissions) {
+		RolePermissions roles = super.get(objectId);
+		return roles == null ? false : roles.containsOne(role, permissions);
 	}
 
-	public boolean check(String objectId, Credentials credentials, Permission... permissions) {
-		if (credentials.isAtLeastSuperAdmin())
-			return true;
-
-		RolePermissions roles = get(objectId);
-		return roles == null ? false : roles.check(credentials, permissions);
+	public RolePermissions roles(String objectId) {
+		RolePermissions roles = super.get(objectId);
+		return roles == null ? new RolePermissions() : roles;
 	}
 
 	public String[] accessList(Credentials credentials, Permission permission) {
@@ -43,11 +40,11 @@ public class ObjectRolePermissions extends HashMap<String, RolePermissions> {
 			ids.addAll(keySet());
 		else
 			for (String id : keySet()) {
-				if (check(id, Credentials.ALL_ROLE, permission))
+				if (containsOne(id, Credentials.ALL_ROLE, permission))
 					ids.add(id);
 				else
 					for (String role : credentials.roles())
-						if (check(id, role, permission))
+						if (containsOne(id, role, permission))
 							ids.add(id);
 			}
 

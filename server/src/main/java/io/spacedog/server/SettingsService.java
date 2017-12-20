@@ -253,7 +253,7 @@ public class SettingsService extends SpaceService {
 		Credentials credentials = SpaceContext.credentials();
 		if (!credentials.isAtLeastSuperAdmin()) {
 			RolePermissions permissions = getSettingsAcl(settingsId);
-			if (!permissions.check(credentials, permission))
+			if (!permissions.containsOne(credentials, permission))
 				throw Exceptions.insufficientCredentials(credentials);
 		}
 		return credentials;

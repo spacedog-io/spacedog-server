@@ -84,9 +84,10 @@ public class SearchService extends SpaceService {
 	@Post("/:type")
 	@Post("/:type/")
 	public Payload postSearchForType(String type, String body, Context context) {
-
 		Credentials credentials = SpaceContext.credentials();
-		if (DataAccessControl.check(credentials, type, Permission.search)) {
+
+		if (DataAccessControl.roles(type)//
+				.containsOne(credentials, Permission.search)) {
 
 			DataStore.get().refreshDataTypes(isRefreshRequested(context), type);
 			ObjectNode result = searchInternal(body, credentials, context, type);
@@ -98,9 +99,10 @@ public class SearchService extends SpaceService {
 	@Delete("/:type")
 	@Delete("/:type/")
 	public Payload deleteSearchForType(String type, String query, Context context) {
-
 		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
-		if (DataAccessControl.check(credentials, type, Permission.deleteAll)) {
+
+		if (DataAccessControl.roles(type)//
+				.containsOne(credentials, Permission.deleteAll)) {
 
 			DataStore.get().refreshDataTypes(isRefreshRequested(context, true), type);
 			DeleteByQueryResponse response = elastic()//
