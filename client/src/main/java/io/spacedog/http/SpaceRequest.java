@@ -261,14 +261,6 @@ public class SpaceRequest {
 		return this;
 	}
 
-	public SpaceRequest bodyResource(String path) {
-		return bodyBytes(Utils.readResource(path));
-	}
-
-	public SpaceRequest bodyResource(Class<?> contextClass, String resourceName) {
-		return bodyBytes(Utils.readResource(contextClass, resourceName));
-	}
-
 	public SpaceRequest routeParam(String name, String value) {
 		this.pathParams.put('{' + name + '}', value);
 		return this;
