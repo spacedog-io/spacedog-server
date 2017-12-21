@@ -82,8 +82,10 @@ public class Start {
 	}
 
 	private void initTemplates() {
-		this.elasticNode.client().admin().indices().preparePutTemplate("data")//
-				.setSource(Utils.readResource(getClass(), "data-template.json")).get();
+		this.elasticNode.client().admin().indices()//
+				.preparePutTemplate("data")//
+				.setSource(ClassResources.loadToBytes(getClass(), "data-template.json"))//
+				.get();
 	}
 
 	public static class Info {

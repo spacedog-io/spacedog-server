@@ -25,7 +25,6 @@ import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceHeaders;
-import io.spacedog.utils.Utils;
 
 public class ShareServiceTest extends SpaceTest {
 
@@ -365,7 +364,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// vince uploads 2 shares
 		String path2 = vince.shares().upload("titi".getBytes(), "titi.txt").id;
-		byte[] pngBytes = Utils.readResource(this.getClass(), "tweeter.png");
+		byte[] pngBytes = ClassResources.loadToBytes(getClass(), "tweeter.png");
 		String path3 = vince.shares().upload(pngBytes, "tweeter.png").id;
 
 		// vince has the right to get his own shares
