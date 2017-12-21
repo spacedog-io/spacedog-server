@@ -10,10 +10,10 @@ public class WebPath implements Iterable<String> {
 
 	private String[] segments;
 	private String uriPath;
-	private String s3Key;
+	// private String s3Key;
 
 	public static final String SLASH = "/";
-	public static final WebPath ROOT = new WebPath();;
+	public static final WebPath ROOT = new WebPath();
 
 	private WebPath(String... segments) {
 		this.segments = segments;
@@ -70,19 +70,17 @@ public class WebPath implements Iterable<String> {
 		return false;
 	}
 
+	public boolean isRoot() {
+		return Utils.isNullOrEmpty(segments);
+	}
+
+	public String join() {
+		return String.join(SLASH, segments);
+	}
+
 	@Override
 	public String toString() {
-		return SLASH + toS3Key();
-	}
-
-	public String toS3Key() {
-		if (this.s3Key == null)
-			this.s3Key = Utils.join(SLASH, segments);
-		return this.s3Key;
-	}
-
-	public String toS3Prefix() {
-		return toS3Key() + SLASH;
+		return SLASH + join();
 	}
 
 	public String toEscapedString() {

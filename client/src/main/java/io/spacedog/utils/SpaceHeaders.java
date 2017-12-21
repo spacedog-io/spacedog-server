@@ -6,10 +6,11 @@ public class SpaceHeaders {
 
 	// SpaceDog custom headers
 
-	public static final String SPACEDOG_TEST = "x-spacedog-test";
-	public static final String SPACEDOG_DEBUG = "x-spacedog-debug";
-	public static final String SPACEDOG_OWNER = "x-spacedog-owner";
-	public static final String SPACEDOG_OBJECT_ID = "x-spacedog-object-id";
+	public static final String SPACEDOG_TEST = "X-Spacedog-Test";
+	public static final String SPACEDOG_DEBUG = "X-Spacedog-Debug";
+	public static final String SPACEDOG_OWNER = "X-Spacedog-Owner";
+	public static final String SPACEDOG_GROUP = "X-Spacedog-Group";
+	public static final String SPACEDOG_OBJECT_ID = "X-Spacedog-Object-Id";
 
 	// Common values
 

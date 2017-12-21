@@ -21,6 +21,7 @@ import io.spacedog.http.SpaceRequest;
 import io.spacedog.model.Permission;
 import io.spacedog.model.ShareSettings;
 import io.spacedog.test.SpaceTest;
+import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceHeaders;
@@ -65,7 +66,8 @@ public class ShareServiceTest extends SpaceTest {
 		assertHttpError(403, () -> guest.shares().delete(shareMeta.id));
 		assertHttpError(403, () -> vince.shares().delete(shareMeta.id));
 		assertHttpError(403, () -> admin.shares().delete(shareMeta.id));
-		superadmin.shares().delete(shareMeta.id);
+		String[] deleted = superadmin.shares().delete(shareMeta.id);
+		assertEquals(shareMeta.id, deleted[0]);
 	}
 
 	@Test
@@ -93,9 +95,7 @@ public class ShareServiceTest extends SpaceTest {
 		guest.post("/1/shares").go(403);
 
 		// vince shares a small png file
-		byte[] pngBytes = Resources.toByteArray(//
-				Resources.getResource(this.getClass(), "tweeter.png"));
-
+		byte[] pngBytes = ClassResources.loadToBytes(this.getClass(), "tweeter.png");
 		ShareMeta pngMeta = vince.shares().upload(pngBytes, "tweeter.png");
 
 		// admin lists all shared files should return tweeter.png path only
@@ -181,7 +181,8 @@ public class ShareServiceTest extends SpaceTest {
 		vince.delete(txtMeta.location).go(403);
 
 		// owner (fred) can delete its own shared file (test.txt)
-		fred.shares().delete(txtMeta.id);
+		String[] deleted = fred.shares().delete(txtMeta.id);
+		assertEquals(txtMeta.id, deleted[0]);
 
 		// superadmin sets share list size to 100
 		superadmin.shares().listSize(100);
@@ -197,7 +198,7 @@ public class ShareServiceTest extends SpaceTest {
 		fred.delete("/1/shares").go(403);
 		vince.delete("/1/shares").go(403);
 		admin.delete("/1/shares").go(403);
-		String[] deleted = superadmin.shares().deleteAll();
+		deleted = superadmin.shares().deleteAll();
 		assertEquals(1, deleted.length);
 		assertEquals(pngMeta.id, deleted[0]);
 
@@ -339,6 +340,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// prepare
 		SpaceDog superadmin = resetTestBackend();
+		SpaceDog guest = SpaceDog.backendId("test");
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog nath = createTempDog(superadmin, "nath");
 
@@ -385,6 +387,9 @@ public class ShareServiceTest extends SpaceTest {
 
 		// nath needs readAll permission to zip vince's shares
 		assertHttpError(403, () -> nath.shares().downloadAll(path1, path2));
+
+		// guests don't have permission to zip shares
+		assertHttpError(403, () -> guest.shares().downloadAll(path1, path2));
 
 		// superadmin updates share settings to allow users
 		// to download multiple shares

@@ -26,11 +26,7 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.base.Strings;
 
-import io.spacedog.model.DownloadRequest;
-import io.spacedog.model.Permission;
-import io.spacedog.model.RolePermissions;
 import io.spacedog.utils.ContentTypes;
-import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.SpaceHeaders;
@@ -52,22 +48,7 @@ public class S3Service extends SpaceService {
 		return s3;
 	}
 
-	public Payload doGet(String bucketSuffix, WebPath path, Context context) {
-		return doGet(bucketSuffix, path, context, false);
-	}
-
-	public Payload doGet(String bucketSuffix, WebPath path, Context context, boolean checkOwnership) {
-		return doGet(true, bucketSuffix, path, context, checkOwnership);
-	}
-
-	public Payload doGet(boolean withContent, String bucketSuffix, WebPath path, Context context) {
-		return doGet(withContent, bucketSuffix, path, context, false);
-	}
-
-	private Payload doGet(boolean withContent, String bucketSuffix, WebPath path, Context context,
-			boolean checkOwnership) {
-
-		S3File file = toS3File(bucketSuffix, path);
+	public Payload doGet(boolean withContent, S3File file, Context context) {
 
 		if (withContent)
 			file.open();
@@ -75,39 +56,35 @@ public class S3Service extends SpaceService {
 		if (!file.exists())
 			return Payload.notFound();
 
-		if (checkOwnership)
-			file.checkOwner();
-
-		Payload payload = new Payload(file.metadata().getContentType(), file)//
-				.withHeader(SpaceHeaders.ETAG, file.metadata().getETag())//
-				.withHeader(SpaceHeaders.SPACEDOG_OWNER, file.owner());
+		Payload payload = new Payload(file.contentType(), file)//
+				.withHeader(SpaceHeaders.ETAG, file.eTag())//
+				.withHeader(SpaceHeaders.SPACEDOG_OWNER, file.owner())//
+				.withHeader(SpaceHeaders.SPACEDOG_GROUP, file.group());
 
 		if (context.query().getBoolean(WITH_CONTENT_DISPOSITION, false))
 			payload = payload.withHeader(SpaceHeaders.CONTENT_DISPOSITION, //
-					file.metadata().getContentDisposition());
+					file.contentDisposition());
 
 		return payload;
 	}
 
-	public Payload doList(String bucketSuffix, String rootUri, WebPath path, Context context) {
-
-		String backendId = SpaceContext.backendId();
-		WebPath s3Path = path.addFirst(backendId);
-		String bucketName = getBucketName(bucketSuffix);
+	public Payload doList(S3File file, Context context) {
 
 		ListObjectsRequest request = new ListObjectsRequest()//
-				.withBucketName(bucketName)//
-				.withPrefix(s3Path.toS3Prefix())//
+				.withBucketName(file.bucketName())//
+				.withPrefix(file.s3Prefix())//
 				.withMaxKeys(context.query().getInteger("size", 100));
 
 		String next = context.get("next");
-		if (!Strings.isNullOrEmpty(next))
-			request.setMarker(WebPath.parse(next).addFirst(backendId).toS3Key());
+		if (!Strings.isNullOrEmpty(next)) {
+			S3File marker = new S3File(file.bucketName(), file.backendId(), next);
+			request.setMarker(marker.s3Key());
+		}
 
 		ObjectListing objects = s3.listObjects(request);
 
 		// only root path allows empty list
-		if (objects.getObjectSummaries().isEmpty() && s3Path.size() > 1)
+		if (objects.getObjectSummaries().isEmpty() && file.path().size() > 1)
 			return JsonPayload.error(404).build();
 
 		JsonPayload payload = JsonPayload.ok();
@@ -121,7 +98,7 @@ public class S3Service extends SpaceService {
 			WebPath objectPath = fromS3Key(summary.getKey());
 			results.add(Json.object(//
 					"path", objectPath.toString(), //
-					"location", toSpaceLocation(backendId, rootUri, objectPath), //
+					"location", toSpaceLocation(file.rootUri(), objectPath), //
 					"size", summary.getSize(), //
 					"lastModified", new DateTime(summary.getLastModified().getTime()).toString(), //
 					"etag", summary.getETag()));
@@ -130,30 +107,31 @@ public class S3Service extends SpaceService {
 		return payload.withResults(results).build();
 	}
 
-	public Payload doDelete(String bucketSuffix, WebPath path, boolean checkOwnership) {
+	public Payload doDelete(S3File file) {
 
-		S3File file = toS3File(bucketSuffix, path);
 		ArrayNode deleted = Json.array();
 
-		// first try to delete this path as file
-
 		if (file.exists()) {
-			if (checkOwnership)
-				file.checkOwner();
-
 			file.delete();
-			deleted.add(path.toString());
+			deleted.add(file.path().toString());
 		}
 
-		// second delete all files with this path as prefix
+		return JsonPayload.ok().withFields("deleted", deleted).build();
+	}
+
+	public Payload doDeleteAll(S3File file) {
+
+		if (file.exists())
+			throw Exceptions.runtime("file [%s] exists", file);
 
 		String next = null;
+		ArrayNode deleted = Json.array();
 
 		do {
 
 			ListObjectsRequest request = new ListObjectsRequest()//
 					.withBucketName(file.bucketName())//
-					.withPrefix(file.path().toS3Prefix())//
+					.withPrefix(file.s3Prefix())//
 					.withMaxKeys(100);
 
 			if (next != null)
@@ -179,36 +157,27 @@ public class S3Service extends SpaceService {
 		return JsonPayload.ok().withFields("deleted", deleted).build();
 	}
 
-	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, //
-			WebPath path, String fileName, long contentLength, Context context) {
-		return doUpload(bucketSuffix, rootUri, credentials, path, fileName, contentLength, true, context);
+	public Payload doUpload(S3File file, Context context) {
+		return doUpload(file, false, context);
 	}
 
-	public Payload doUpload(String bucketSuffix, String rootUri, Credentials credentials, //
-			WebPath path, String fileName, long contentLength, boolean enableS3Location, Context context) {
+	public Payload doUpload(S3File file, boolean enableS3Location, Context context) {
 
 		// TODO check if this upload does not replace an older upload
 		// in this case, check crdentials and owner rights
 		// should return FORBIDDEN if user not the owner of previous file
 		// admin can replace whatever they need to replace?
 
-		String bucketName = getBucketName(bucketSuffix);
-		String backendId = SpaceContext.backendId();
-		WebPath s3Path = path.addFirst(backendId);
-
-		ObjectMetadata metadata = new ObjectMetadata();
-		metadata.setContentType(contentType(fileName, context));
-		metadata.setContentLength(contentLength);
-		metadata.setContentDisposition(contentDisposition(fileName));
-		metadata.addUserMetadata(OWNER_FIELD, credentials.id());
+		ObjectMetadata metadata = s3Metadata(file, context);
 
 		try {
-			PutObjectResult putResult = s3.putObject(new PutObjectRequest(bucketName, //
-					s3Path.toS3Key(), context.request().inputStream(), metadata));
+			PutObjectResult putResult = s3.putObject(new PutObjectRequest(//
+					file.bucketName(), file.s3Key(), //
+					context.request().inputStream(), metadata));
 
 			JsonPayload payload = JsonPayload.ok()//
-					.withFields("path", path.toString())//
-					.withFields("location", toSpaceLocation(backendId, rootUri, path))//
+					.withFields("path", file.path().toString())//
+					.withFields("location", toSpaceLocation(file.rootUri(), file.path()))//
 					.withFields("contentType", metadata.getContentType())//
 					.withFields("contentLength", metadata.getContentLength())//
 					.withFields("expirationTime", putResult.getExpirationTime())//
@@ -216,7 +185,7 @@ public class S3Service extends SpaceService {
 					.withFields("contentMd5", putResult.getContentMd5());
 
 			if (enableS3Location)
-				payload.withFields("s3", toS3Location(bucketName, s3Path));
+				payload.withFields("s3", file.s3Location());
 
 			return payload.build();
 
@@ -225,35 +194,36 @@ public class S3Service extends SpaceService {
 		}
 	}
 
-	public Payload doZip(String bucketSuffix, DownloadRequest request, RolePermissions permissions) {
-
-		Set<S3File> files = toS3Files(bucketSuffix, request);
-		Credentials credentials = SpaceContext.credentials();
-
-		if (!permissions.check(credentials, Permission.readAll))
-			if (permissions.check(credentials, Permission.readMine))
-				for (S3File file : files)
-					file.checkOwner(credentials);
+	public Payload doZip(Set<S3File> files, String fileName) {
 
 		return new Payload("application/octet-stream", //
 				new ZipStreamingOutput(files))//
 						.withHeader(SpaceHeaders.CONTENT_DISPOSITION, //
-								contentDisposition(request.fileName));
+								contentDisposition(fileName));
 	}
 
 	//
 	// Implementation
 	//
 
+	private ObjectMetadata s3Metadata(S3File file, Context context) {
+		ObjectMetadata metadata = new ObjectMetadata();
+		metadata.setContentType(contentType(file.fileName(), context));
+		metadata.setContentLength(file.contentLength());
+		metadata.setContentDisposition(contentDisposition(file.fileName()));
+		metadata.addUserMetadata(OWNER_FIELD, file.owner());
+		return metadata;
+	}
+
 	protected long checkContentLength(Context context, long sizeLimitInKB) {
 		String contentLength = context.header(SpaceHeaders.CONTENT_LENGTH);
 		if (Strings.isNullOrEmpty(contentLength))
-			throw Exceptions.illegalArgument("no Content-Length header");
+			throw Exceptions.illegalArgument("Content-Length header is required");
 
 		long length = Long.valueOf(contentLength);
 		if (length > sizeLimitInKB * 1024)
 			throw Exceptions.illegalArgument(//
-					"content length ([%s] bytes) is too big, limit is [%s] KB", //
+					"content is too big, limit is [%s] KB", //
 					length, sizeLimitInKB);
 
 		return length;
@@ -275,7 +245,7 @@ public class S3Service extends SpaceService {
 		public void write(OutputStream output) throws IOException {
 			ZipOutputStream zip = new ZipOutputStream(output);
 			for (S3File file : files) {
-				zip.putNextEntry(new ZipEntry(file.path().removeFirst().toString()));
+				zip.putNextEntry(new ZipEntry(file.path().toString()));
 				file.write(zip);
 				zip.flush();
 			}
@@ -285,21 +255,10 @@ public class S3Service extends SpaceService {
 
 	}
 
-	private S3File toS3File(String bucketSuffix, WebPath path) {
-		return new S3File(getBucketName(bucketSuffix), //
-				path.addFirst(SpaceContext.backendId()));
-	}
-
-	private S3File toS3File(String bucketName, String backendId, String path) {
-		WebPath webPath = WebPath.parse(path);
-		return new S3File(bucketName, webPath.addFirst(backendId));
-	}
-
-	private Set<S3File> toS3Files(String bucketSuffix, DownloadRequest request) {
+	public static Set<S3File> toS3Files(String bucketName, Set<String> paths) {
 		String backendId = SpaceContext.backendId();
-		String bucketName = getBucketName(bucketSuffix);
-		return request.paths.stream()//
-				.map(path -> toS3File(bucketName, backendId, path))//
+		return paths.stream()//
+				.map(path -> new S3File(bucketName, backendId, path))//
 				.collect(Collectors.toSet());
 	}
 
@@ -316,13 +275,8 @@ public class S3Service extends SpaceService {
 		return WebPath.parse(s3Key).removeFirst();
 	}
 
-	private String toSpaceLocation(String backendId, String root, WebPath path) {
+	private String toSpaceLocation(String root, WebPath path) {
 		return spaceUrl(root).append(path.toEscapedString()).toString();
-	}
-
-	private String toS3Location(String bucketName, WebPath path) {
-		return new StringBuilder("https://").append(bucketName)//
-				.append(".s3.amazonaws.com").append(path.toEscapedString()).toString();
 	}
 
 }
