@@ -31,8 +31,8 @@ public class ApplicationServiceTest extends SpaceTest {
 
 		// superadmin sets test-myapp APNS push credentials
 		PushApplication app = new PushApplication().name("myapp").service(PushService.APNS)//
-				.principal(ClassResources.loadToString(this, "apns-principal.pem"))//
-				.credentials(ClassResources.loadToString(this, "apns-credentials.pem"));
+				.principal(ClassResources.loadAsString(this, "apns-principal.pem"))//
+				.credentials(ClassResources.loadAsString(this, "apns-credentials.pem"));
 
 		superadmin.push().saveApp(app);
 

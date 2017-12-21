@@ -21,7 +21,7 @@ public class SchemaTranslatorTest extends Assert {
 	public void shouldTranslateSchema() throws IOException {
 
 		// load schema
-		JsonNode node = Json.readNode(ClassResources.loadToString(getClass(), "schema.json"));
+		JsonNode node = Json.readNode(ClassResources.loadAsString(this, "schema.json"));
 		Schema schema = new Schema("myschema", Json.checkObject(node));
 
 		// validate and translate
@@ -32,7 +32,7 @@ public class SchemaTranslatorTest extends Assert {
 
 		// load expected mapping
 		JsonNode expectedMapping = Json.readNode(//
-				ClassResources.loadToString(getClass(), "mapping.json"));
+				ClassResources.loadAsString(this, "mapping.json"));
 
 		// assert
 		assertEquals(mapping, expectedMapping);

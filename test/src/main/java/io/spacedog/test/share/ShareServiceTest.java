@@ -94,7 +94,7 @@ public class ShareServiceTest extends SpaceTest {
 		guest.post("/1/shares").go(403);
 
 		// vince shares a small png file
-		byte[] pngBytes = ClassResources.loadToBytes(this.getClass(), "tweeter.png");
+		byte[] pngBytes = ClassResources.loadAsBytes(this, "tweeter.png");
 		ShareMeta pngMeta = vince.shares().upload(pngBytes, "tweeter.png");
 
 		// admin lists all shared files should return tweeter.png path only
@@ -364,7 +364,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// vince uploads 2 shares
 		String path2 = vince.shares().upload("titi".getBytes(), "titi.txt").id;
-		byte[] pngBytes = ClassResources.loadToBytes(getClass(), "tweeter.png");
+		byte[] pngBytes = ClassResources.loadAsBytes(this, "tweeter.png");
 		String path3 = vince.shares().upload(pngBytes, "tweeter.png").id;
 
 		// vince has the right to get his own shares

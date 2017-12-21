@@ -100,7 +100,7 @@ public class GettingStarted {
 		template.from = "CAREMEN <no-reply@caremen.fr>";
 		template.to = Lists.newArrayList("{{credentials.email}}");
 		template.subject = "Bienvenue chez CAREMEN";
-		template.html = ClassResources.loadToString(this, "caremen-welcome.html");
+		template.html = ClassResources.loadAsString(this, "caremen-welcome.html");
 		template.text = "Bienvenue à vous. Nous sommes heureux de pouvoir vous "
 				+ "compter parmi les nouveaux utilisateurs de l’application CAREMEN.";
 		template.model = Maps.newHashMap();
@@ -129,7 +129,7 @@ public class GettingStarted {
 		smsTemplate.model = Maps.newHashMap();
 		smsTemplate.model.put("customer", "customer");
 		smsTemplate.roles = Collections.singleton("superadmin");
-		
+
 		superadmin.sms().saveTemplate(smsTemplate);
 
 		// superadmin sends a welcome SMS

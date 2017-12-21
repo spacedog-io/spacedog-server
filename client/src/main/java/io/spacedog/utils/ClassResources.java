@@ -6,7 +6,7 @@ import com.google.common.io.Resources;
 
 public class ClassResources {
 
-	public static String loadToString(Object context, String resourceName) {
+	public static String loadAsString(Object context, String resourceName) {
 		try {
 			return Resources.toString(//
 					toUrl(context, resourceName), Utils.UTF8);
@@ -16,7 +16,7 @@ public class ClassResources {
 		}
 	}
 
-	public static byte[] loadToBytes(Object context, String resourceName) {
+	public static byte[] loadAsBytes(Object context, String resourceName) {
 		try {
 			return Resources.toByteArray(toUrl(context, resourceName));
 

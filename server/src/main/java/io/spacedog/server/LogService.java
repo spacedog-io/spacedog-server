@@ -48,7 +48,7 @@ public class LogService extends SpaceService {
 	//
 
 	public void initIndex(String backendId) {
-		String mapping = ClassResources.loadToString(this, "log-mapping.json");
+		String mapping = ClassResources.loadAsString(this, "log-mapping.json");
 		Index index = logIndex().backendId(backendId);
 
 		if (!elastic().exists(index))

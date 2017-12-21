@@ -84,7 +84,7 @@ public class Start {
 	private void initTemplates() {
 		this.elasticNode.client().admin().indices()//
 				.preparePutTemplate("data")//
-				.setSource(ClassResources.loadToBytes(getClass(), "data-template.json"))//
+				.setSource(ClassResources.loadAsBytes(this, "data-template.json"))//
 				.get();
 	}
 
@@ -95,7 +95,7 @@ public class Start {
 
 	public Info info() {
 		if (info == null) {
-			String string = ClassResources.loadToString(this, "info.json");
+			String string = ClassResources.loadAsString(this, "info.json");
 			info = Json.toPojo(string, Info.class);
 		}
 		return info;
