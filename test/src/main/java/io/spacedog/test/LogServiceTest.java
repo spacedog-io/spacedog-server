@@ -40,10 +40,10 @@ public class LogServiceTest extends SpaceTest {
 
 		// superadmin gets test2 backend total log count to check
 		// later that they aren't affected by test backend log purge
-		long test2TotalLogs = test2.log().get(0, true).total;
+		long test2TotalLogs = test2.logs().get(0, true).total;
 
 		// superadmin checks everything is in place
-		LogSearchResults log = test.log().get(6, true);
+		LogSearchResults log = test.logs().get(6, true);
 
 		assertEquals(4, log.results.size());
 		assertEquals("/1/data", log.results.get(0).path);
@@ -54,10 +54,10 @@ public class LogServiceTest extends SpaceTest {
 		DateTime before = log.results.get(1).receivedAt;
 
 		// superadmin deletes all logs before GET /data requests
-		test.log().delete(before);
+		test.logs().delete(before);
 
 		// superadmin checks all test backend logs are deleted but ...
-		log = test.log().get(10, true);
+		log = test.logs().get(10, true);
 
 		assertEquals(4, log.total);
 		assertEquals("DELETE", log.results.get(0).method);
@@ -72,10 +72,10 @@ public class LogServiceTest extends SpaceTest {
 		before = log.results.get(1).receivedAt;
 
 		// superdog deletes all logs before GET /log requests
-		superdog(test).log().delete(before);
+		superdog(test).logs().delete(before);
 
 		// superadmin checks all test backend logs are deleted but ...
-		log = superdog(test).log().get(10, true);
+		log = superdog(test).logs().get(10, true);
 
 		assertEquals(4, log.total);
 		assertEquals("DELETE", log.results.get(0).method);
@@ -90,7 +90,7 @@ public class LogServiceTest extends SpaceTest {
 		// count = last time checked + 1, because of the first check.
 		// It demonstrates purge of specific backend doesn't affect other
 		// backends
-		log = test2.log().get(0, true);
+		log = test2.logs().get(0, true);
 
 		assertEquals(test2TotalLogs + 1, log.total);
 	}
@@ -113,7 +113,7 @@ public class LogServiceTest extends SpaceTest {
 		ESSearchSourceBuilder query = ESSearchSourceBuilder.searchSource()//
 				.query(ESQueryBuilders.rangeQuery("status").gte(400))//
 				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
-		LogSearchResults results = superadmin.log().search(query, true);
+		LogSearchResults results = superadmin.logs().search(query, true);
 		assertEquals(1, results.results.size());
 		assertEquals("/1/data/user", results.results.get(0).path);
 		assertEquals(403, results.results.get(0).status);
@@ -123,7 +123,7 @@ public class LogServiceTest extends SpaceTest {
 		query = ESSearchSourceBuilder.searchSource()//
 				.query(ESQueryBuilders.termsQuery("credentials.type", "superadmin", "user", "guest"))//
 				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
-		results = superadmin.log().search(query, true);
+		results = superadmin.logs().search(query, true);
 		assertEquals(6, results.results.size());
 		assertEquals("/1/log/search", results.results.get(0).path);
 		assertEquals("/1/credentials/" + vince.id(), results.results.get(1).path);
@@ -136,7 +136,7 @@ public class LogServiceTest extends SpaceTest {
 		query = ESSearchSourceBuilder.searchSource()//
 				.query(ESQueryBuilders.termsQuery("credentials.type", "user", "guest"))//
 				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
-		results = superadmin.log().search(query, true);
+		results = superadmin.logs().search(query, true);
 		assertEquals(4, results.results.size());
 		assertEquals("/1/credentials/" + vince.id(), results.results.get(0).path);
 		assertEquals("/1/login", results.results.get(1).path);
@@ -147,7 +147,7 @@ public class LogServiceTest extends SpaceTest {
 		query = ESSearchSourceBuilder.searchSource()//
 				.query(ESQueryBuilders.termQuery("credentials.type", "guest"))//
 				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
-		results = superadmin.log().search(query, true);
+		results = superadmin.logs().search(query, true);
 		assertEquals(2, results.results.size());
 		assertEquals("/1/data/user", results.results.get(0).path);
 		assertEquals("/1/data", results.results.get(1).path);
@@ -156,7 +156,7 @@ public class LogServiceTest extends SpaceTest {
 		query = ESSearchSourceBuilder.searchSource()//
 				.query(ESQueryBuilders.matchAllQuery())//
 				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
-		results = superadmin.log().search(query, true);
+		results = superadmin.logs().search(query, true);
 		assertEquals(9, results.results.size());
 		assertEquals("/1/log/search", results.results.get(0).path);
 		assertEquals("/1/log/search", results.results.get(1).path);
@@ -224,7 +224,7 @@ public class LogServiceTest extends SpaceTest {
 		// get all test backend logs
 		// the delete request is not part of the logs
 		// since log starts with the backend creation
-		List<LogItem> results = superadmin.log().get(10, true).results;
+		List<LogItem> results = superadmin.logs().get(10, true).results;
 		assertEquals(6, results.size());
 		assertEquals("GET", results.get(0).method);
 		assertEquals("/1/data/message", results.get(0).path);
@@ -240,7 +240,7 @@ public class LogServiceTest extends SpaceTest {
 		assertEquals("/1/schemas/message", results.get(5).path);
 
 		// get all test2 backend logs
-		results = superadmin2.log().get(4, true).results;
+		results = superadmin2.logs().get(4, true).results;
 		assertEquals(2, results.size());
 		assertEquals("GET", results.get(0).method);
 		assertEquals("/1/login", results.get(0).path);
@@ -276,7 +276,7 @@ public class LogServiceTest extends SpaceTest {
 				.routeParam("id", fred.id()).basicAuth("fred", "hi fred 2")//
 				.formField("password", "hi fred 3").go(200);
 
-		List<LogItem> results = superadmin.log().get(7, true).results;
+		List<LogItem> results = superadmin.logs().get(7, true).results;
 		assertEquals(5, results.size());
 		assertEquals("PUT", results.get(0).method);
 		assertEquals("/1/credentials/" + fred.id() + "/password", results.get(0).path);
@@ -309,7 +309,7 @@ public class LogServiceTest extends SpaceTest {
 		superadmin.put("/1/schemas/toto").bodyString("XXX").go(400);
 
 		// but logs the failed request without the json content
-		LogItem logItem = superadmin.log().get(1, true).results.get(0);
+		LogItem logItem = superadmin.logs().get(1, true).results.get(0);
 		assertEquals("PUT", logItem.method);
 		assertEquals("/1/schemas/toto", logItem.path);
 		assertEquals(400, logItem.status);
@@ -317,8 +317,8 @@ public class LogServiceTest extends SpaceTest {
 		assertNull(logItem.parameters);
 
 		// check that log response results are not logged
-		superadmin.log().get(10);
-		logItem = superadmin.log().get(1, true).results.get(0);
+		superadmin.logs().get(10);
+		logItem = superadmin.logs().get(1, true).results.get(0);
 		assertEquals("GET", logItem.method);
 		assertEquals("/1/log", logItem.path);
 		assertNull(logItem.response.get("results"));
@@ -334,7 +334,7 @@ public class LogServiceTest extends SpaceTest {
 				.addHeader("x-color-list", "GREEN")//
 				.go(200);
 
-		logItem = superadmin.log().get(1, true).results.get(0);
+		logItem = superadmin.logs().get(1, true).results.get(0);
 		assertTrue(logItem.getHeader(SpaceHeaders.AUTHORIZATION).isEmpty());
 		assertTrue(logItem.getHeader("x-empty").isEmpty());
 		assertTrue(logItem.getHeader("x-blank").isEmpty());
@@ -352,7 +352,7 @@ public class LogServiceTest extends SpaceTest {
 		resetTestBackend();
 
 		// superdog gets default backend (api) log
-		List<LogItem> results = superdog().log().get(2, true).results;
+		List<LogItem> results = superdog().logs().get(2, true).results;
 		assertEquals("POST", results.get(0).method);
 		assertEquals("/1/backends", results.get(0).path);
 		assertEquals("test", results.get(0).payload.get(BACKEND_ID_FIELD).asText());

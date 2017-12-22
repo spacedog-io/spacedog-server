@@ -270,7 +270,7 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 
 	LogEndpoint logEndpoint;
 
-	public LogEndpoint log() {
+	public LogEndpoint logs() {
 		if (logEndpoint == null)
 			logEndpoint = new LogEndpoint(this);
 		return logEndpoint;
