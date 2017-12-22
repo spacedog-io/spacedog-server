@@ -8,7 +8,7 @@ import io.spacedog.cli.LoginCommand;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceRequestException;
 import io.spacedog.test.SpaceTest;
-import io.spacedog.utils.Credentials.Type;
+import io.spacedog.utils.Roles;
 
 public class LoginCommandTest extends SpaceTest {
 
@@ -18,7 +18,7 @@ public class LoginCommandTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		SpaceDog fred = createTempDog(superadmin, "fred", Type.superadmin.name());
+		SpaceDog fred = createTempDog(superadmin, "fred", Roles.superadmin);
 
 		// login without fails
 		try {

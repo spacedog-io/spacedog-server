@@ -9,10 +9,11 @@ import com.google.common.base.Strings;
 
 public class Roles {
 
-	public static String all = "all";
-	public static String user = "user";
-	public static String admin = "admin";
-	public static String superadmin = "superadmin";
+	public static final String all = "all";
+	public static final String user = "user";
+	public static final String admin = "admin";
+	public static final String superadmin = "superadmin";
+	public static final String superdog = "superdog";
 
 	private static final Pattern ROLE_PATTERN = Pattern.compile("[a-z]{3,}");
 

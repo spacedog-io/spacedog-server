@@ -507,22 +507,22 @@ public class CredentialsServiceTest2 extends SpaceTest {
 		// anymore since he's got no roles
 		fred.get("/1/credentials/me").go(403);
 
-		// test super admin gives fred 'admin' role
+		// superadmin gives fred admin role
 		superadmin.credentials().setRole(fred.id(), "admin");
 		roles = fred.credentials().getAllRoles(fred.id());
 		assertEquals(Sets.newHashSet("admin"), roles);
 
-		// fred fails to give himself 'super_admin' role
+		// fred fails to give himself superadmin role
 		// since he is only admin
 		fred.put("/1/credentials/{id}/roles/superadmin")//
 				.routeParam("id", fred.id()).go(403);
 
-		// fred can now give himself 'user' role
+		// fred can now give himself user role
 		fred.credentials().setRole(fred.id(), "user");
 		roles = fred.credentials().getAllRoles(fred.id());
 		assertEquals(Sets.newHashSet("user", "admin"), roles);
 
-		// test super admin fails to give himself 'superdog' role
+		// test super admin fails to give himself superdog role
 		// since he is only super admin
 		superadmin.put("/1/credentials/{id}/roles/superdog")//
 				.routeParam("id", superadmin.id()).go(403);

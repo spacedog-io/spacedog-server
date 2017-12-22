@@ -39,7 +39,7 @@ public class SmsService extends SpaceService {
 	public Payload postSms(SmsRequest request, Context context) {
 
 		if (request instanceof SmsBasicRequest) {
-			SpaceContext.credentials().checkRoles(smsSettings().authorizedRoles);
+			SpaceContext.credentials().checkIfAuthorized(smsSettings().authorizedRoles);
 			return send((SmsBasicRequest) request);
 		}
 
@@ -50,7 +50,7 @@ public class SmsService extends SpaceService {
 					.orElseThrow(() -> new NotFoundException(//
 							"sms template [%s] not found", templateRequest.templateName));
 
-			SpaceContext.credentials().checkRoles(template.roles);
+			SpaceContext.credentials().checkIfAuthorized(template.roles);
 			return send(toBasicRequest(templateRequest, template));
 		}
 
@@ -61,7 +61,7 @@ public class SmsService extends SpaceService {
 	@Get("/1/sms/:messageId")
 	@Get("/1/sms/:messageId")
 	public Payload getSms(String messageId, Context context) {
-		SpaceContext.credentials().checkRoles(smsSettings().authorizedRoles);
+		SpaceContext.credentials().checkIfAuthorized(smsSettings().authorizedRoles);
 		return fetch(messageId);
 	}
 

@@ -106,7 +106,7 @@ public class GettingStarted {
 		template.model = Maps.newHashMap();
 		template.model.put("credentials", "credentials");
 		template.model.put("customer", "customer");
-		template.roles = Collections.singleton("superadmin");
+		template.authorizedRoles = Collections.singleton("superadmin");
 
 		superadmin.emails().saveTemplate(template);
 

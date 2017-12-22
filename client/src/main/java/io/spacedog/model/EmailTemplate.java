@@ -21,5 +21,5 @@ public class EmailTemplate {
 	public String text;
 	public String html;
 	public Map<String, String> model;
-	public Set<String> roles;
+	public Set<String> authorizedRoles;
 }

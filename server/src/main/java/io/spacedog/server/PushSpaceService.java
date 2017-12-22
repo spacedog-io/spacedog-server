@@ -30,6 +30,7 @@ import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.Roles;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -64,7 +65,7 @@ public class PushSpaceService extends SpaceService {
 
 	public static Schema getDefaultInstallationSchema() {
 		return Schema.builder(TYPE)//
-				.acl(Credentials.Type.user.name(), Permission.create, Permission.readMine, //
+				.acl(Roles.user, Permission.create, Permission.readMine, //
 						Permission.updateMine, Permission.deleteMine) //
 
 				.string(APP_ID)//

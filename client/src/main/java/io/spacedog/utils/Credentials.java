@@ -17,7 +17,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -28,40 +27,6 @@ import com.google.common.collect.Sets;
 		setterVisibility = Visibility.NONE)
 public class Credentials {
 
-	public static final String ALL_ROLE = "all";
-
-	public static enum Type {
-		guest, user, admin, superadmin, superdog;
-
-		public static Type fromRoles(Set<String> roles) {
-			if (roles.contains(superdog.toString()))
-				return superdog;
-			if (roles.contains(superadmin.toString()))
-				return superadmin;
-			if (roles.contains(admin.toString()))
-				return admin;
-			if (roles.contains(user.toString()))
-				return user;
-			return guest;
-		}
-
-		public boolean isGreaterThanOrEqualTo(Type type) {
-			return ordinal() >= type.ordinal();
-		}
-
-		public boolean isGreaterThan(Type type) {
-			return ordinal() > type.ordinal();
-		}
-
-		public static Type authorizedToManage(String role) {
-			try {
-				return Type.valueOf(role);
-			} catch (IllegalArgumentException e) {
-				return Type.admin;
-			}
-		}
-	}
-
 	public static final Credentials GUEST = new Credentials("guest").id("guest");
 
 	private String username;
@@ -69,7 +34,7 @@ public class Credentials {
 	private boolean enabled = true;
 	private DateTime enableAfter;
 	private DateTime disableAfter;
-	private Set<String> roles;
+	private Set<String> roles = Sets.newHashSet();
 	private String group;
 	private List<Session> sessions;
 	private ObjectNode stash;
@@ -89,8 +54,6 @@ public class Credentials {
 	private String id;
 	@JsonIgnore
 	private long version;
-	@JsonIgnore
-	private Type type;
 
 	public Credentials() {
 	}
@@ -118,7 +81,7 @@ public class Credentials {
 	}
 
 	public String name() {
-		return username == null ? Type.guest.name() : username;
+		return username == null ? GUEST.name() : username;
 	}
 
 	public Credentials name(String name) {
@@ -187,40 +150,25 @@ public class Credentials {
 	}
 
 	public Set<String> roles() {
-		if (roles == null)
-			return Collections.emptySet();
 		return Collections.unmodifiableSet(roles);
 	}
 
 	public Credentials clearRoles() {
-		if (roles != null)
-			roles.clear();
+		roles.clear();
 		return this;
 	}
 
-	public Credentials addRoles(String... values) {
-		if (values == null)
-			return this;
-
-		if (roles == null)
-			roles = Sets.newHashSet();
-
-		for (String role : values) {
+	public Credentials addRoles(String... roles) {
+		for (String role : roles) {
 			Roles.checkIfValid(role);
-			roles.add(role);
+			this.roles.add(role);
 		}
-
-		type = Type.fromRoles(this.roles);
 		return this;
 	}
 
-	public Credentials removeRoles(String... values) {
-		if (roles != null && values != null) {
-			for (String role : values)
-				roles.remove(role);
-
-			type = Type.fromRoles(this.roles);
-		}
+	public Credentials removeRoles(String... roles) {
+		for (String role : roles)
+			this.roles.remove(role);
 		return this;
 	}
 
@@ -290,7 +238,7 @@ public class Credentials {
 	}
 
 	//
-	// Object overrides
+	// Override
 	//
 
 	@Override
@@ -319,17 +267,23 @@ public class Credentials {
 	}
 
 	//
-	// Level and roles
+	// Type
 	//
 
-	public Type type() {
-		if (type == null)
-			type = Type.fromRoles(roles());
-		return type;
+	public String type() {
+		if (isSuperDog())
+			return Roles.superdog;
+		if (isSuperAdmin())
+			return Roles.superadmin;
+		if (isAdmin())
+			return Roles.admin;
+		if (isUser())
+			return Roles.user;
+		return GUEST.name();
 	}
 
 	public boolean isSuperDog() {
-		return Type.superdog.equals(type());
+		return roles.contains(Roles.superdog);
 	}
 
 	public Credentials checkSuperDog() {
@@ -339,11 +293,11 @@ public class Credentials {
 	}
 
 	public boolean isSuperAdmin() {
-		return Type.superadmin.equals(type());
+		return roles.contains(Roles.superadmin);
 	}
 
 	public boolean isAtLeastSuperAdmin() {
-		return type().ordinal() >= Type.superadmin.ordinal();
+		return isSuperAdmin() || isSuperDog();
 	}
 
 	public Credentials checkAtLeastSuperAdmin() {
@@ -353,11 +307,11 @@ public class Credentials {
 	}
 
 	public boolean isAdmin() {
-		return Type.admin.equals(type());
+		return roles.contains(Roles.admin);
 	}
 
 	public boolean isAtLeastAdmin() {
-		return type().ordinal() >= Type.admin.ordinal();
+		return isAdmin() || isAtLeastSuperAdmin();
 	}
 
 	public Credentials checkAtLeastAdmin() {
@@ -367,11 +321,11 @@ public class Credentials {
 	}
 
 	public boolean isUser() {
-		return Type.user.equals(type());
+		return roles.contains(Roles.user);
 	}
 
 	public boolean isAtLeastUser() {
-		return type().ordinal() >= Type.user.ordinal();
+		return isUser() || isAtLeastAdmin();
 	}
 
 	public Credentials checkAtLeastUser() {
@@ -381,39 +335,79 @@ public class Credentials {
 	}
 
 	public boolean isGuest() {
-		return Type.guest.equals(type());
+		return GUEST.name().equals(type());
 	}
 
-	public boolean isGreaterThan(Credentials other) {
-		return type().isGreaterThan(other.type());
+	//
+	// Can manage
+	//
+
+	public boolean canManage(String role) {
+		return level() >= level(typeManaging(role));
 	}
 
-	public boolean isGreaterThanOrEqualTo(Credentials other) {
-		return type().isGreaterThanOrEqualTo(other.type());
-	}
-
-	public void checkAuthorizedToSet(String... roles) {
+	public boolean canManage(String... roles) {
 		if (roles != null)
 			for (String role : roles)
-				if (Type.authorizedToManage(role).isGreaterThan(type()))
-					throw Exceptions.insufficientCredentials(this);
+				if (!canManage(role))
+					return false;
+		return true;
 	}
 
-	public boolean isReal() {
-		return !Strings.isNullOrEmpty(id);
+	public Credentials checkCanManage(Credentials other) {
+		checkCanManage(other.type());
+		return this;
 	}
 
-	public void checkRoles(String... authorizedRoles) {
-		checkRoles(Sets.newHashSet(authorizedRoles));
+	public Credentials checkCanManage(String... roles) {
+		if (!canManage(roles))
+			throw Exceptions.insufficientCredentials(this);
+		return this;
 	}
 
-	public void checkRoles(Iterable<String> authorizedRoles) {
+	private int level() {
+		return level(type());
+	}
+
+	private static int level(String type) {
+		if (Roles.superdog.equals(type))
+			return 4;
+		if (Roles.superadmin.equals(type))
+			return 3;
+		if (Roles.admin.equals(type))
+			return 2;
+		if (Roles.user.equals(type))
+			return 1;
+		return 0;
+	}
+
+	private static String typeManaging(String role) {
+		if (Roles.superdog.equals(role))
+			return Roles.superdog;
+		if (Roles.superadmin.equals(role))
+			return Roles.superadmin;
+		if (Roles.admin.equals(role))
+			return Roles.admin;
+		if (Roles.user.equals(role))
+			return Roles.user;
+		return Roles.admin;
+	}
+
+	//
+	// Check if authorized
+	//
+
+	public Credentials checkIfAuthorized(String... authorizedRoles) {
+		checkIfAuthorized(Sets.newHashSet(authorizedRoles));
+		return this;
+	}
+
+	public Credentials checkIfAuthorized(Iterable<String> authorizedRoles) {
 		if (authorizedRoles != null) {
-			Set<String> thisCredentialsRoles = roles();
-			for (String authorizedRole : authorizedRoles)
-				if (authorizedRole.equals(ALL_ROLE) //
-						|| thisCredentialsRoles.contains(authorizedRole))
-					return;
+			for (String authorized : authorizedRoles)
+				if (authorized.equals(Roles.all) //
+						|| roles.contains(authorized))
+					return this;
 		}
 		throw Exceptions.insufficientCredentials(this);
 	}

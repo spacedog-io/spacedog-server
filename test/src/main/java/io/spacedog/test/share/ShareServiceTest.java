@@ -22,8 +22,8 @@ import io.spacedog.model.Permission;
 import io.spacedog.model.ShareSettings;
 import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.ClassResources;
-import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.Roles;
 import io.spacedog.utils.SpaceHeaders;
 
 public class ShareServiceTest extends SpaceTest {
@@ -39,7 +39,7 @@ public class ShareServiceTest extends SpaceTest {
 		SpaceDog superadmin = resetTestBackend();
 		SpaceDog guest = SpaceDog.backend(superadmin.backend());
 		SpaceDog vince = createTempDog(superadmin, "vince");
-		SpaceDog admin = createTempDog(superadmin, "admin", Type.admin.name());
+		SpaceDog admin = createTempDog(superadmin, "admin", Roles.admin);
 
 		// only superadmins can list shares
 		assertHttpError(403, () -> guest.shares().list());
@@ -78,7 +78,7 @@ public class ShareServiceTest extends SpaceTest {
 		SpaceDog guest = SpaceDog.backend(superadmin.backend());
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog fred = createTempDog(superadmin, "fred");
-		SpaceDog admin = createTempDog(superadmin, "admin", Type.admin.name());
+		SpaceDog admin = createTempDog(superadmin, "admin", Roles.admin);
 
 		// superadmin sets custom share permissions
 		ShareSettings settings = new ShareSettings();

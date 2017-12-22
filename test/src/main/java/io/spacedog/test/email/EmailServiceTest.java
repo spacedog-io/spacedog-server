@@ -161,7 +161,7 @@ public class EmailServiceTest extends SpaceTest {
 				Charset.forName("UTF-8"));
 		template.model = Maps.newHashMap();
 		template.model.put("demande", "demande");
-		template.roles = Collections.singleton("emailboss");
+		template.authorizedRoles = Collections.singleton("emailboss");
 		superadmin.emails().saveTemplate(template);
 
 		// send inscription email

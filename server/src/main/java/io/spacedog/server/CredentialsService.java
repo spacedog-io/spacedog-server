@@ -31,7 +31,6 @@ import io.spacedog.model.Schema;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Session;
-import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
@@ -155,7 +154,7 @@ public class CredentialsService extends SpaceService {
 
 		// superadmins can only be deleted when backend is deleted
 		BoolQueryBuilder query = toQuery(context)//
-				.mustNot(QueryBuilders.termQuery(ROLES_FIELD, Type.superadmin));
+				.mustNot(QueryBuilders.termQuery(ROLES_FIELD, Roles.superadmin));
 
 		// always refresh before and after credentials index updates
 		ElasticClient elastic = elastic();
@@ -176,7 +175,7 @@ public class CredentialsService extends SpaceService {
 			SpaceContext.credentials().checkAtLeastUser();
 
 		Credentials credentials = createCredentialsRequestToCredentials(//
-				Json.toPojo(body, CreateCredentialsRequest.class), Credentials.Type.user);
+				Json.toPojo(body, CreateCredentialsRequest.class), Roles.user);
 		create(credentials);
 
 		JsonPayload payload = JsonPayload.saved(true, "/1", TYPE, credentials.id());
@@ -426,7 +425,7 @@ public class CredentialsService extends SpaceService {
 		Roles.checkIfValid(role);
 		Credentials requester = SpaceContext.credentials();
 		Credentials updated = checkAdminAndGet(id);
-		requester.checkAuthorizedToSet(role);
+		requester.checkCanManage(role);
 
 		if (!updated.roles().contains(role)) {
 			updated.addRoles(role);
@@ -493,7 +492,7 @@ public class CredentialsService extends SpaceService {
 			throw Exceptions.invalidUsernamePassword();
 
 		return new Credentials(SUPERDOG)//
-				.addRoles(Credentials.Type.superdog.toString())//
+				.addRoles(Roles.superdog)//
 				.id(SUPERDOG);
 	}
 
@@ -637,7 +636,7 @@ public class CredentialsService extends SpaceService {
 	SearchResults<Credentials> getSuperAdmins(int from, int size) {
 		SearchSourceBuilder builder = SearchSourceBuilder.searchSource()//
 				.query(QueryBuilders.boolQuery()//
-						.filter(QueryBuilders.termQuery(ROLES_FIELD, Type.superadmin)))//
+						.filter(QueryBuilders.termQuery(ROLES_FIELD, Roles.superadmin)))//
 				.from(from).size(size);
 
 		return getCredentials(builder);
@@ -646,8 +645,7 @@ public class CredentialsService extends SpaceService {
 	Credentials checkAdminAndGet(String id) {
 		Credentials requester = SpaceContext.credentials().checkAtLeastAdmin();
 		Credentials credentials = getById(id, true).get();
-		if (credentials.isGreaterThan(requester))
-			throw Exceptions.insufficientCredentials(requester);
+		requester.checkCanManage(credentials);
 		return credentials;
 	}
 
@@ -664,8 +662,7 @@ public class CredentialsService extends SpaceService {
 
 		if (requester.isAtLeastAdmin()) {
 			Credentials credentials = getById(credentialsId, true).get();
-			if (credentials.isGreaterThan(requester))
-				throw Exceptions.insufficientCredentials(requester);
+			requester.checkCanManage(credentials);
 			return credentials;
 		}
 
@@ -683,15 +680,15 @@ public class CredentialsService extends SpaceService {
 	}
 
 	public Credentials createCredentialsRequestToCredentials(//
-			CreateCredentialsRequest request, Credentials.Type type) {
+			CreateCredentialsRequest request, String defaultRole) {
 
 		Credentials requester = SpaceContext.credentials();
 		Credentials credentials = new Credentials();
 
 		if (Utils.isNullOrEmpty(request.roles()))
-			credentials.addRoles(type.name());
+			credentials.addRoles(defaultRole);
 		else {
-			requester.checkAuthorizedToSet(request.roles());
+			requester.checkCanManage(request.roles());
 			credentials.addRoles(request.roles());
 		}
 

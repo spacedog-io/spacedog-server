@@ -15,9 +15,8 @@ import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.Permission;
 import io.spacedog.model.RolePermissions;
 import io.spacedog.model.Schema;
-import io.spacedog.utils.Credentials;
-import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.Roles;
 
 public class DataAccessControlTest extends SpaceTest {
 
@@ -29,15 +28,15 @@ public class DataAccessControlTest extends SpaceTest {
 		SpaceDog superadmin = resetTestBackend();
 		SpaceDog guest = SpaceDog.backend(superadmin.backend());
 		SpaceDog vince = createTempDog(superadmin, "vince");
-		SpaceDog admin = createTempDog(superadmin, "admin", Type.admin.name());
+		SpaceDog admin = createTempDog(superadmin, "admin", Roles.admin);
 
 		// set message schema
 		Schema schema = Schema.builder("msge").text("t").build();
 		RolePermissions acl = new RolePermissions()//
-				.put(Credentials.ALL_ROLE, Permission.readAll)//
-				.put(Credentials.Type.user.name(), Permission.create, //
+				.put(Roles.all, Permission.readAll)//
+				.put(Roles.user, Permission.create, //
 						Permission.updateMine, Permission.deleteMine, Permission.search) //
-				.put(Credentials.Type.admin.name(), Permission.create, //
+				.put(Roles.admin, Permission.create, //
 						Permission.updateAll, Permission.deleteAll, Permission.search);
 		schema.acl(acl);
 		superadmin.schemas().set(schema);
@@ -95,7 +94,7 @@ public class DataAccessControlTest extends SpaceTest {
 		SpaceDog superadmin = resetTestBackend();
 		SpaceDog guest = SpaceDog.backend(superadmin.backend());
 		SpaceDog vince = createTempDog(superadmin, "vince");
-		SpaceDog admin = createTempDog(superadmin, "admin", Type.admin.name());
+		SpaceDog admin = createTempDog(superadmin, "admin", Roles.admin);
 
 		// superadmin sets message schema with default empty acl
 		Schema schema = Schema.builder("msge").text("t").build();
@@ -147,7 +146,7 @@ public class DataAccessControlTest extends SpaceTest {
 		SpaceDog superadmin = resetTestBackend();
 		SpaceDog guest = SpaceDog.backend(superadmin.backend());
 		SpaceDog vince = createTempDog(superadmin, "vince");
-		SpaceDog admin = createTempDog(superadmin, "admin", Type.admin.name());
+		SpaceDog admin = createTempDog(superadmin, "admin", Roles.admin);
 
 		// set message schema with custom acl settings
 		Schema schema = Schema.builder("msge").text("t").build();

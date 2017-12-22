@@ -160,7 +160,7 @@ public class StripeService extends SpaceService {
 				.basicAuth(settings.secretKey, "");
 
 		if (myself) {
-			credentials.checkRoles(settings.rolesAllowedToPay);
+			credentials.checkIfAuthorized(settings.rolesAllowedToPay);
 
 			if (!Strings.isNullOrEmpty(context.get(STRIPE_CUSTOMER)))
 				throw Exceptions.illegalArgument(//
@@ -169,7 +169,7 @@ public class StripeService extends SpaceService {
 			request.formField(STRIPE_CUSTOMER, getStripeCustomerId(credentials));
 
 		} else
-			credentials.checkRoles(settings.rolesAllowedToCharge);
+			credentials.checkIfAuthorized(settings.rolesAllowedToCharge);
 
 		for (String key : context.request().query().keys())
 			request.formField(key, context.get(key));

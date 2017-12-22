@@ -8,8 +8,8 @@ import io.spacedog.model.CredentialsSettings;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Credentials.Session;
-import io.spacedog.utils.Credentials.Type;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Roles;
 import io.spacedog.utils.SpaceException;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Uris;
@@ -192,7 +192,7 @@ public class LinkedinService extends SpaceService {
 
 		CredentialsService credentialsResource = CredentialsService.get();
 		Credentials credentials = credentialsResource.getByName(email, false)//
-				.orElse(new Credentials(email).addRoles(Type.user.name()));
+				.orElse(new Credentials(email).addRoles(Roles.user));
 
 		credentials.setCurrentSession(session);
 		credentials.email(email);

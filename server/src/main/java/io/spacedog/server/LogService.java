@@ -271,7 +271,7 @@ public class LogService extends SpaceService {
 		ObjectNode logCredentials = log.putObject(CREDENTIALS_FIELD);
 		logCredentials.put(ID_FIELD, credentials.id());
 		logCredentials.put(USERNAME_FIELD, credentials.name());
-		logCredentials.put(TYPE_FIELD, credentials.type().name());
+		logCredentials.put(TYPE_FIELD, credentials.type());
 	}
 
 	private void addHeaders(ObjectNode log, Set<Entry<String, List<String>>> headers) {

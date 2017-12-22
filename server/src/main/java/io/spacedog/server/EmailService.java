@@ -55,7 +55,7 @@ public class EmailService extends SpaceService {
 
 		if (email instanceof EmailBasicRequest) {
 			EmailSettings settings = SettingsService.get().getAsObject(EmailSettings.class);
-			SpaceContext.credentials().checkRoles(settings.authorizedRoles);
+			SpaceContext.credentials().checkIfAuthorized(settings.authorizedRoles);
 			return email((EmailBasicRequest) email);
 		}
 
@@ -66,7 +66,7 @@ public class EmailService extends SpaceService {
 					.orElseThrow(() -> new NotFoundException(//
 							"email template [%s] not found", templateRequest.templateName));
 
-			SpaceContext.credentials().checkRoles(template.roles);
+			SpaceContext.credentials().checkIfAuthorized(template.authorizedRoles);
 			return email(templateRequest, template);
 		}
 

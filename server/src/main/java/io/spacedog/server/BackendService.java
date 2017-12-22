@@ -15,6 +15,7 @@ import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
+import io.spacedog.utils.Roles;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -86,7 +87,7 @@ public class BackendService extends SpaceService {
 
 		CredentialsService credentialsService = CredentialsService.get();
 		Credentials credentials = credentialsService.createCredentialsRequestToCredentials(//
-				request.superadmin(), Credentials.Type.superadmin);
+				request.superadmin(), Roles.superadmin);
 		credentialsService.create(request.backendId(), credentials);
 
 		if (context.query().getBoolean(NOTIF_PARAM, true)) {

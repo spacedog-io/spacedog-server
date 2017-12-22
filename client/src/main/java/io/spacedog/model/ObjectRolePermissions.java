@@ -9,6 +9,7 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 
 import io.spacedog.utils.Credentials;
+import io.spacedog.utils.Roles;
 
 @SuppressWarnings("serial")
 public class ObjectRolePermissions extends HashMap<String, RolePermissions> {
@@ -40,7 +41,7 @@ public class ObjectRolePermissions extends HashMap<String, RolePermissions> {
 			ids.addAll(keySet());
 		else
 			for (String id : keySet()) {
-				if (containsOne(id, Credentials.ALL_ROLE, permission))
+				if (containsOne(id, Roles.all, permission))
 					ids.add(id);
 				else
 					for (String role : credentials.roles())
