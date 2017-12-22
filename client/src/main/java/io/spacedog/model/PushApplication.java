@@ -15,7 +15,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class PushApplication {
 	public String name;
 	public String backendId;
-	public PushService service;
+	public PushProtocol protocol;
 	public Map<String, String> attributes;
 	@JsonIgnore
 	public Credentials credentials;
@@ -40,8 +40,8 @@ public class PushApplication {
 		return this;
 	}
 
-	public PushApplication service(PushService service) {
-		this.service = service;
+	public PushApplication protocol(PushProtocol protocol) {
+		this.protocol = protocol;
 		return this;
 	}
 

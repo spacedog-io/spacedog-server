@@ -10,7 +10,7 @@ import org.junit.Test;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.model.PushApplication;
 import io.spacedog.model.PushApplication.Credentials;
-import io.spacedog.model.PushService;
+import io.spacedog.model.PushProtocol;
 import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.ClassResources;
 
@@ -30,7 +30,7 @@ public class ApplicationServiceTest extends SpaceTest {
 		assertHttpError(400, () -> superadmin.push().saveApp("myapp", "APNS", new Credentials()));
 
 		// superadmin sets test-myapp APNS push credentials
-		PushApplication app = new PushApplication().name("myapp").service(PushService.APNS)//
+		PushApplication app = new PushApplication().name("myapp").protocol(PushProtocol.APNS)//
 				.principal(ClassResources.loadAsString(this, "apns-principal.pem"))//
 				.credentials(ClassResources.loadAsString(this, "apns-credentials.pem"));
 
@@ -46,7 +46,7 @@ public class ApplicationServiceTest extends SpaceTest {
 
 		assertEquals("test", apps.get(0).backendId);
 		assertEquals("myapp", apps.get(0).name);
-		assertEquals("APNS", apps.get(0).service.toString());
+		assertEquals("APNS", apps.get(0).protocol.toString());
 		assertEquals("true", apps.get(0).attributes.get("Enabled"));
 		assertNotNull(apps.get(0).attributes.get("AppleCertificateExpirationDate"));
 

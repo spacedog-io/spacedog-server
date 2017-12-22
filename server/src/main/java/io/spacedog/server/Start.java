@@ -213,7 +213,7 @@ public class Start {
 				.add(SmsService.get())//
 				.add(SnapshotService.get())//
 				.add(LogService.get())//
-				.add(PushSpaceService.get())//
+				.add(PushService.get())//
 				.add(ApplicationService.get())//
 				.add(StripeService.get())//
 				.add(ShareService.get())//

@@ -47,7 +47,7 @@ public class PushEndpoint {
 	}
 
 	public PushEndpoint saveApp(PushApplication app) {
-		return saveApp(app.name, app.service.toString(), app.credentials);
+		return saveApp(app.name, app.protocol.toString(), app.credentials);
 	}
 
 	public PushEndpoint deleteApp(String name, String service) {
@@ -63,7 +63,7 @@ public class PushEndpoint {
 	}
 
 	public PushEndpoint deleteApp(PushApplication app) {
-		return deleteApp(app.name, app.service.toString());
+		return deleteApp(app.name, app.protocol.toString());
 	}
 
 	//

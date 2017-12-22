@@ -1,6 +1,6 @@
 package io.spacedog.model;
 
-public enum PushService {
+public enum PushProtocol {
 	APNS, // Apple Push Notification Service
 	APNS_SANDBOX, // Sandbox version of APNS
 	ADM, // Amazon Device Messaging

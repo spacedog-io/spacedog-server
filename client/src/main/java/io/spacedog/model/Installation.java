@@ -15,7 +15,7 @@ import com.google.common.collect.Sets;
 public class Installation extends MetadataBase {
 
 	private String appId;
-	private PushService pushService;
+	private PushProtocol protocol;
 	private String token;
 	private String endpoint;
 	private String credentialsId;
@@ -31,12 +31,12 @@ public class Installation extends MetadataBase {
 		return this;
 	}
 
-	public PushService pushService() {
-		return pushService;
+	public PushProtocol protocol() {
+		return protocol;
 	}
 
-	public Installation pushService(PushService pushService) {
-		this.pushService = pushService;
+	public Installation protocol(PushProtocol protocol) {
+		this.protocol = protocol;
 		return this;
 	}
 

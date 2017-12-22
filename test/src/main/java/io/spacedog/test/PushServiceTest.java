@@ -21,11 +21,11 @@ import io.spacedog.model.DataObject;
 import io.spacedog.model.Installation;
 import io.spacedog.model.InstallationDataObject;
 import io.spacedog.model.Permission;
-import io.spacedog.model.PushService;
+import io.spacedog.model.PushProtocol;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
 
-public class PushSpaceServiceTest extends SpaceTest {
+public class PushServiceTest extends SpaceTest {
 
 	private static final String PUSHED_TO = "pushedTo";
 	private static final String FAILURES = "failures";
@@ -36,7 +36,7 @@ public class PushSpaceServiceTest extends SpaceTest {
 	private static final String ENDPOINT = "endpoint";
 	private static final String TOKEN = "token";
 	private static final String BADGE = "badge";
-	private static final String PUSH_SERVICE = "pushService";
+	private static final String PROTOCOL = "protocol";
 	private static final String APP_ID = "appId";
 
 	@Test
@@ -68,23 +68,23 @@ public class PushSpaceServiceTest extends SpaceTest {
 		// and fails to set installation userId and endpoint fields
 		String unknownInstallId = guest.post("/1/installation")//
 				.bodyJson(TOKEN, "token-unknown", APP_ID, "joho", //
-						PUSH_SERVICE, PushService.GCM, //
+						PROTOCOL, PushProtocol.GCM, //
 						CREDENTIALS_ID, "XXX", ENDPOINT, "XXX")//
 				.go(201).getString(ID);
 
 		DataObject<Installation> unknownInstall = superadmin.push().getInstallation(unknownInstallId);
 
 		assertEquals("joho", unknownInstall.source().appId());
-		assertEquals(PushService.GCM, unknownInstall.source().pushService());
+		assertEquals(PushProtocol.GCM, unknownInstall.source().protocol());
 		assertEquals("token-unknown", unknownInstall.source().token());
 		assertEquals("FAKE_ENDPOINT_FOR_TESTING", unknownInstall.source().endpoint());
 		assertNull(unknownInstall.source().credentialsId());
 		assertTrue(unknownInstall.source().tags().isEmpty());
 
 		// vince and fred install joho
-		DataObject<Installation> vinceInstall = installApplication("joho", PushService.GCM, vince);
-		DataObject<Installation> fredInstall = installApplication("joho", PushService.APNS, fred);
-		DataObject<Installation> daveInstall = installApplication("joho", PushService.APNS, dave);
+		DataObject<Installation> vinceInstall = installApplication("joho", PushProtocol.GCM, vince);
+		DataObject<Installation> fredInstall = installApplication("joho", PushProtocol.APNS, fred);
+		DataObject<Installation> daveInstall = installApplication("joho", PushProtocol.APNS, dave);
 
 		// vince pushes a simple message to fred
 		ObjectNode response = vince.push().push(fredInstall.id(), //
@@ -105,11 +105,11 @@ public class PushSpaceServiceTest extends SpaceTest {
 		vince.post("/1/installation/XXX/push").bodyJson(TEXT, "coucou").go(404);
 
 		// nath installs birdee
-		DataObject<Installation> nathInstall = installApplication("birdee", PushService.APNS, nath);
+		DataObject<Installation> nathInstall = installApplication("birdee", PushProtocol.APNS, nath);
 
 		// vince updates its installation
 		vinceInstall.source().token("super-token-vince").appId("joho")//
-				.pushService(PushService.GCM);
+				.protocol(PushProtocol.GCM);
 		vince.push().saveInstallation(vinceInstall);
 
 		vinceInstall = vince.push().getInstallation(vinceInstall.id());
@@ -214,7 +214,7 @@ public class PushSpaceServiceTest extends SpaceTest {
 				.assertContainsValue(fred.id(), CREDENTIALS_ID);
 
 		// vince pushes to APNS only joho users
-		pushRequest.pushService(PushService.APNS);
+		pushRequest.protocol(PushProtocol.APNS);
 		response = vince.push().push(pushRequest);
 
 		Json.assertNode(response)//
@@ -233,7 +233,7 @@ public class PushSpaceServiceTest extends SpaceTest {
 				.assertContainsValue(fred.id(), CREDENTIALS_ID);
 
 		// vince pushes to all joho users with tag bonjour
-		pushRequest.pushService(null);
+		pushRequest.protocol(null);
 		response = vince.push().push(pushRequest);
 
 		Json.assertNode(response)//
@@ -258,7 +258,7 @@ public class PushSpaceServiceTest extends SpaceTest {
 		// vince can not read, update nor delete dave's installation
 		vince.get("/1/installation/" + daveInstall.id()).go(403);
 		vince.put("/1/installation/" + daveInstall.id())//
-				.bodyJson(APP_ID, "XXX", TOKEN, "XXX", PUSH_SERVICE, "GCM").go(403);
+				.bodyJson(APP_ID, "XXX", TOKEN, "XXX", PROTOCOL, "GCM").go(403);
 		vince.delete("/1/installation/" + daveInstall.id()).go(403);
 
 		// also true with /data/installation route
@@ -271,7 +271,7 @@ public class PushSpaceServiceTest extends SpaceTest {
 		// if he does not provide the token
 		// this is also true for push service and endpoint
 		dave.put("/1/installation/" + daveInstall.id()).bodyJson(APP_ID, "joho2").go(400);
-		dave.put("/1/installation/" + daveInstall.id()).bodyJson(PUSH_SERVICE, "GCM").go(400);
+		dave.put("/1/installation/" + daveInstall.id()).bodyJson(PROTOCOL, "GCM").go(400);
 		dave.put("/1/installation/" + daveInstall.id()).bodyJson(ENDPOINT, "XXX").go(400);
 	}
 
@@ -290,11 +290,11 @@ public class PushSpaceServiceTest extends SpaceTest {
 		superadmin.schemas().setDefault("installation");
 
 		// vince and dave install joho
-		DataObject<Installation> vinceInstall = installApplication("joho", PushService.APNS, vince);
-		DataObject<Installation> daveInstall = installApplication("joho", PushService.APNS, dave);
+		DataObject<Installation> vinceInstall = installApplication("joho", PushProtocol.APNS, vince);
+		DataObject<Installation> daveInstall = installApplication("joho", PushProtocol.APNS, dave);
 
 		// vince pushes a message to dave with manual badge = 3
-		ObjectNode message = Json.object(PushService.APNS, //
+		ObjectNode message = Json.object(PushProtocol.APNS, //
 				Json.object("aps", Json.object("alert", "coucou", BADGE, 3)));
 		ObjectNode response = vince.push().push(daveInstall.id(), //
 				new PushRequest().data(message));
@@ -364,16 +364,16 @@ public class PushSpaceServiceTest extends SpaceTest {
 		assertEquals(1, installation.source().badge());
 	}
 
-	private DataObject<Installation> installApplication(String appId, PushService pushService, SpaceDog user) {
+	private DataObject<Installation> installApplication(String appId, PushProtocol protocol, SpaceDog user) {
 
 		String installId = user.push().saveInstallation(new Installation()//
 				.appId(appId).token("token-" + user.username())//
-				.pushService(pushService)).id();
+				.protocol(protocol)).id();
 
 		DataObject<Installation> installation = user.push().getInstallation(installId);
 
 		assertEquals(appId, installation.source().appId());
-		assertEquals(pushService, installation.source().pushService());
+		assertEquals(protocol, installation.source().protocol());
 		assertEquals("token-" + user.username(), installation.source().token());
 		assertEquals(user.id(), installation.source().credentialsId());
 		assertTrue(installation.source().tags().isEmpty());

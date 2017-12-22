@@ -15,7 +15,7 @@ import com.amazonaws.services.sns.model.SetPlatformApplicationAttributesRequest;
 import com.google.common.base.Strings;
 
 import io.spacedog.model.PushApplication;
-import io.spacedog.model.PushService;
+import io.spacedog.model.PushProtocol;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
@@ -50,16 +50,16 @@ public class ApplicationService extends SpaceService {
 		return JsonPayload.ok().withObject(Json.toJsonNode(pushApps)).build();
 	}
 
-	@Put("/:name/:service")
-	@Put("/:name/:service/")
-	public Payload putApplication(String name, String service, String body) {
+	@Put("/:name/:protocol")
+	@Put("/:name/:protocol/")
+	public Payload putApplication(String name, String protocol, String body) {
 
 		SpaceContext.credentials().checkAtLeastAdmin();
 
 		PushApplication pushApp = new PushApplication();
 		pushApp.backendId = SpaceContext.backendId();
 		pushApp.name = name;
-		pushApp.service = PushService.valueOf(service);
+		pushApp.protocol = PushProtocol.valueOf(protocol);
 		pushApp.credentials = Json.toPojo(body, PushApplication.Credentials.class);
 
 		Optional<PlatformApplication> application = getPlatformApplication(pushApp);
@@ -80,7 +80,7 @@ public class ApplicationService extends SpaceService {
 
 			CreatePlatformApplicationRequest request = new CreatePlatformApplicationRequest()//
 					.withName(pushApp.id())//
-					.withPlatform(service);
+					.withPlatform(protocol);
 
 			if (!Strings.isNullOrEmpty(pushApp.credentials.credentials))
 				request.addAttributesEntry("PlatformCredential", pushApp.credentials.credentials);
@@ -94,16 +94,16 @@ public class ApplicationService extends SpaceService {
 		return JsonPayload.ok().build();
 	}
 
-	@Delete("/:name/:service")
-	@Delete("/:name/:service/")
-	public Payload deleteApplication(String name, String service) {
+	@Delete("/:name/:protocol")
+	@Delete("/:name/:protocol/")
+	public Payload deleteApplication(String name, String protocol) {
 
 		SpaceContext.credentials().checkAtLeastSuperAdmin();
 
 		PushApplication pushApp = new PushApplication();
 		pushApp.backendId = SpaceContext.backendId();
 		pushApp.name = name;
-		pushApp.service = PushService.valueOf(service);
+		pushApp.protocol = PushProtocol.valueOf(protocol);
 
 		Optional<PlatformApplication> application = getPlatformApplication(pushApp);
 
@@ -123,7 +123,7 @@ public class ApplicationService extends SpaceService {
 	//
 
 	private Optional<PlatformApplication> getPlatformApplication(PushApplication pushApp) {
-		return AwsSnsPusher.getApplication(pushApp.id(), pushApp.service);
+		return AwsSnsPusher.getApplication(pushApp.id(), pushApp.protocol);
 	}
 
 	private PushApplication fromApplicationArn(String arn) {
@@ -131,7 +131,7 @@ public class ApplicationService extends SpaceService {
 		String[] splitedArn = Utils.splitBySlash(arn);
 		if (splitedArn.length != 3)
 			throw Exceptions.runtime("invalid amazon platform application arn [%s]", arn);
-		pushApp.service = PushService.valueOf(splitedArn[1]);
+		pushApp.protocol = PushProtocol.valueOf(splitedArn[1]);
 		String[] splitedAppId = Utils.splitByDash(splitedArn[2]);
 		if (splitedAppId.length == 2) {
 			pushApp.backendId = splitedAppId[0];

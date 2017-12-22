@@ -24,7 +24,7 @@ import io.spacedog.model.Installation;
 import io.spacedog.model.InstallationDataObject;
 import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.Permission;
-import io.spacedog.model.PushService;
+import io.spacedog.model.PushProtocol;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
@@ -42,13 +42,13 @@ import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/1")
-public class PushSpaceService extends SpaceService {
+public class PushService extends SpaceService {
 
 	public static final String TYPE = "installation";
 
 	// installation field names
 	public static final String APP_ID = "appId";
-	public static final String PUSH_SERVICE = "pushService";
+	public static final String PROTOCOL = "protocol";
 	public static final String CREDENTIALS_ID = "credentialsId";
 	public static final String TOKEN = "token";
 	public static final String ENDPOINT = "endpoint";
@@ -69,7 +69,7 @@ public class PushSpaceService extends SpaceService {
 						Permission.updateMine, Permission.deleteMine) //
 
 				.string(APP_ID)//
-				.string(PUSH_SERVICE)//
+				.string(PROTOCOL)//
 				.string(TOKEN)//
 				.string(ENDPOINT)//
 				.string(CREDENTIALS_ID)//
@@ -215,8 +215,8 @@ public class PushSpaceService extends SpaceService {
 		if (!Strings.isNullOrEmpty(request.credentialsId))
 			query.must(QueryBuilders.termQuery(CREDENTIALS_ID, request.credentialsId));
 
-		if (request.pushService != null)
-			query.must(QueryBuilders.termQuery(PUSH_SERVICE, request.pushService));
+		if (request.protocol != null)
+			query.must(QueryBuilders.termQuery(PROTOCOL, request.protocol));
 
 		if (request.usersOnly)
 			query.must(QueryBuilders.existsQuery(CREDENTIALS_ID));
@@ -233,7 +233,7 @@ public class PushSpaceService extends SpaceService {
 				.setFrom(0)//
 				.setSize(1000)//
 				.setVersion(false)//
-				.setFetchSource(new String[] { CREDENTIALS_ID, ENDPOINT, PUSH_SERVICE, BADGE }, null)//
+				.setFetchSource(new String[] { CREDENTIALS_ID, ENDPOINT, PROTOCOL, BADGE }, null)//
 				.get()//
 				.getHits();
 
@@ -300,7 +300,7 @@ public class PushSpaceService extends SpaceService {
 			jsonMessage = badgeObjectMessage(installation, jsonMessage, //
 					credentials, logItem, badgeStrategy);
 
-			ObjectNode snsMessage = toSnsMessage(installation.source().pushService(), jsonMessage);
+			ObjectNode snsMessage = toSnsMessage(installation.source().protocol(), jsonMessage);
 
 			if (!SpaceContext.isTest()) {
 				PublishRequest pushRequest = new PublishRequest()//
@@ -341,21 +341,21 @@ public class PushSpaceService extends SpaceService {
 				: request.data;
 	}
 
-	static ObjectNode toSnsMessage(PushService service, ObjectNode message) {
+	static ObjectNode toSnsMessage(PushProtocol protocol, ObjectNode message) {
 
-		JsonNode node = message.get(service.toString());
+		JsonNode node = message.get(protocol.toString());
 		if (!Json.isNull(node))
-			return Json.object(service.toString(), toSnsMessageStringValue(service, node));
+			return Json.object(protocol.toString(), toSnsMessageStringValue(protocol, node));
 
 		node = message.get("default");
 		if (!Json.isNull(node))
-			return Json.object("default", toSnsMessageStringValue(service, node));
+			return Json.object("default", toSnsMessageStringValue(protocol, node));
 
 		throw Exceptions.illegalArgument(//
-				"no push message for default nor [%s] service", service);
+				"no push message for default nor [%s] service", protocol);
 	}
 
-	static String toSnsMessageStringValue(PushService service, JsonNode message) {
+	static String toSnsMessageStringValue(PushProtocol protocol, JsonNode message) {
 		if (message.isObject())
 			return message.toString();
 
@@ -364,7 +364,7 @@ public class PushSpaceService extends SpaceService {
 		if (message.isValueNode())
 			return message.asText();
 
-		throw Exceptions.illegalArgument("push message [%s][%s] invalid", service, message);
+		throw Exceptions.illegalArgument("push message [%s][%s] is invalid", protocol, message);
 	}
 
 	private ObjectNode badgeObjectMessage(DataObject<Installation> installation, //
@@ -375,8 +375,8 @@ public class PushSpaceService extends SpaceService {
 				BadgeStrategy.manual.equals(badgeStrategy))
 			return message;
 
-		if (PushService.APNS.equals(installation.source().pushService())//
-				|| PushService.APNS_SANDBOX.equals(installation.source().pushService())) {
+		if (PushProtocol.APNS.equals(installation.source().protocol())//
+				|| PushProtocol.APNS_SANDBOX.equals(installation.source().protocol())) {
 
 			if (BadgeStrategy.auto.equals(badgeStrategy)) {
 				installation.source().badge(installation.source().badge() + 1);
@@ -389,7 +389,7 @@ public class PushSpaceService extends SpaceService {
 				DataStore.get().patchObject(patch);
 			}
 
-			message.with(installation.source().pushService().toString())//
+			message.with(installation.source().protocol().toString())//
 					.with("aps").put(BADGE, installation.source().badge());
 		}
 		return message;
@@ -418,12 +418,12 @@ public class PushSpaceService extends SpaceService {
 
 		Check.notNullOrEmpty(source.token(), TOKEN);
 		Check.notNullOrEmpty(source.appId(), APP_ID);
-		Check.notNull(source.pushService(), PUSH_SERVICE);
+		Check.notNull(source.protocol(), PROTOCOL);
 
 		source.endpoint(//
 				SpaceContext.isTest() ? "FAKE_ENDPOINT_FOR_TESTING" //
 						: AwsSnsPusher.createApplicationEndpoint(source.appId(), //
-								source.pushService(), source.token()));
+								source.protocol(), source.token()));
 
 		source.credentialsId(credentials.isAtLeastUser() ? credentials.id() : null);
 
@@ -440,12 +440,12 @@ public class PushSpaceService extends SpaceService {
 	// Singleton
 	//
 
-	private static PushSpaceService singleton = new PushSpaceService();
+	private static PushService singleton = new PushService();
 
-	public static PushSpaceService get() {
+	public static PushService get() {
 		return singleton;
 	}
 
-	private PushSpaceService() {
+	private PushService() {
 	}
 }

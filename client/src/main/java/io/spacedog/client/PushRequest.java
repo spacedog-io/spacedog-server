@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
 import io.spacedog.model.BadgeStrategy;
-import io.spacedog.model.PushService;
+import io.spacedog.model.PushProtocol;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, //
@@ -18,7 +18,7 @@ import io.spacedog.model.PushService;
 		setterVisibility = Visibility.NONE)
 public class PushRequest {
 	public String appId;
-	public PushService pushService;
+	public PushProtocol protocol;
 	public BadgeStrategy badgeStrategy = BadgeStrategy.manual;
 	public String credentialsId;
 	public boolean usersOnly;
@@ -32,8 +32,8 @@ public class PushRequest {
 		return this;
 	}
 
-	public PushRequest pushService(PushService pushService) {
-		this.pushService = pushService;
+	public PushRequest protocol(PushProtocol protocol) {
+		this.protocol = protocol;
 		return this;
 	}
 

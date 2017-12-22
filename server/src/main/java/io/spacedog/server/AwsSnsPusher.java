@@ -19,7 +19,7 @@ import com.amazonaws.services.sns.model.NotFoundException;
 import com.amazonaws.services.sns.model.PlatformApplication;
 import com.amazonaws.services.sns.model.SetEndpointAttributesRequest;
 
-import io.spacedog.model.PushService;
+import io.spacedog.model.PushProtocol;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Utils;
 
@@ -36,9 +36,9 @@ public class AwsSnsPusher {
 		return snsClient;
 	}
 
-	static Optional<PlatformApplication> getApplication(String appId, PushService service) {
+	static Optional<PlatformApplication> getApplication(String appId, PushProtocol protocol) {
 
-		final String internalName = String.join("/", "app", service.toString(), appId);
+		final String internalName = String.join("/", "app", protocol.toString(), appId);
 		Optional<String> nextToken = Optional.empty();
 
 		do {
@@ -60,14 +60,14 @@ public class AwsSnsPusher {
 		return Optional.empty();
 	}
 
-	static String createApplicationEndpoint(String appId, PushService service, String token) {
+	static String createApplicationEndpoint(String appId, PushProtocol protocol, String token) {
 
-		Optional<PlatformApplication> application = getApplication(appId, service);
+		Optional<PlatformApplication> application = getApplication(appId, protocol);
 
 		if (!application.isPresent())
 			throw Exceptions.illegalArgument(//
-					"push service [%s] of mobile application [%s] not registered in AWS", //
-					appId, service);
+					"push notification protocol [%s] not registered in AWS for application [%s] ", //
+					protocol, appId);
 
 		String applicationArn = application.get().getPlatformApplicationArn();
 
