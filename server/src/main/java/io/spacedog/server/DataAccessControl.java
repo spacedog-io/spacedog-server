@@ -13,7 +13,7 @@ import io.spacedog.utils.Credentials;
 public class DataAccessControl {
 
 	public static RolePermissions roles(String type) {
-		return getDataAclSettings().roles(type);
+		return getDataAclSettings().get(type);
 	}
 
 	public static String[] types(Credentials credentials, Permission permission) {

@@ -65,7 +65,7 @@ public class FileService extends S3Service {
 			return doList(file, context);
 		}
 
-		RolePermissions prefixRoles = fileSettings().permissions.roles(path.first());
+		RolePermissions prefixRoles = fileSettings().permissions.get(path.first());
 
 		file.open();
 
@@ -94,7 +94,7 @@ public class FileService extends S3Service {
 				.owner(SpaceContext.credentials())//
 				.rootUri("/1/files");
 
-		RolePermissions prefixRoles = fileSettings().permissions.roles(path.first());
+		RolePermissions prefixRoles = fileSettings().permissions.get(path.first());
 		file.checkUpdate(prefixRoles);
 
 		return doUpload(file, context);
@@ -108,7 +108,7 @@ public class FileService extends S3Service {
 			return doDeleteAll(file);
 		}
 
-		RolePermissions prefixPermissions = fileSettings().permissions.roles(path.first());
+		RolePermissions prefixPermissions = fileSettings().permissions.get(path.first());
 
 		if (file.exists()) {
 			file.checkDelete(prefixPermissions);

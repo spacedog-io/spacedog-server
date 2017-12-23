@@ -15,7 +15,7 @@ import io.spacedog.utils.Roles;
 public class ObjectRolePermissions extends HashMap<String, RolePermissions> {
 
 	public ObjectRolePermissions put(String objectId, String role, Permission... permissions) {
-		RolePermissions rolePermissions = get(objectId);
+		RolePermissions rolePermissions = super.get(objectId);
 		if (rolePermissions == null) {
 			rolePermissions = new RolePermissions();
 			super.put(objectId, rolePermissions);
@@ -29,7 +29,8 @@ public class ObjectRolePermissions extends HashMap<String, RolePermissions> {
 		return roles == null ? false : roles.containsOne(role, permissions);
 	}
 
-	public RolePermissions roles(String objectId) {
+	@Override
+	public RolePermissions get(Object objectId) {
 		RolePermissions roles = super.get(objectId);
 		return roles == null ? new RolePermissions() : roles;
 	}

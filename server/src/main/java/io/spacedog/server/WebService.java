@@ -69,7 +69,7 @@ public class WebService extends S3Service {
 
 			WebSettings settings = webSettings();
 			Credentials credentials = SpaceContext.credentials();
-			settings.prefixPermissions.roles(path.first())//
+			settings.prefixPermissions.get(path.first())//
 					.check(credentials, Permission.readAll);
 
 			String bucketName = FileService.getBucketName();
