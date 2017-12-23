@@ -11,6 +11,7 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.model.Permission;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.Roles;
 import io.spacedog.utils.SchemaBuilder;
 
 public class SchemaServiceTest extends SpaceTest {
@@ -166,7 +167,7 @@ public class SchemaServiceTest extends SpaceTest {
 
 		// superadmin creates document schema
 		Schema schema = Schema.builder("document").stash("data")//
-				.acl("all", Permission.create).build();
+				.acl(Roles.all, Permission.create).build();
 		superadmin.schemas().set(schema);
 
 		// guest saves a first document with data as an object

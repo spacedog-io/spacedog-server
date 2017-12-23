@@ -36,6 +36,7 @@ import io.spacedog.model.Permission;
 import io.spacedog.model.Schema;
 import io.spacedog.test.DataServiceTest2.Sale.Item;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.Roles;
 
 public class DataServiceTest2 extends SpaceTest {
 
@@ -110,7 +111,7 @@ public class DataServiceTest2 extends SpaceTest {
 		SpaceDog fred = createTempDog(test, "fred");
 
 		Schema saleSchema = SchemaServiceTest.buildSaleSchema()//
-				.acl("user", Permission.create, Permission.updateMine, //
+				.acl(Roles.user, Permission.create, Permission.updateMine, //
 						Permission.readMine, Permission.deleteMine, Permission.search)//
 				.build();
 		test.schemas().set(saleSchema);
@@ -326,7 +327,7 @@ public class DataServiceTest2 extends SpaceTest {
 		SpaceDog superadmin = resetTestBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		Schema schema = Schema.builder("message").string("text")//
-				.acl("user", Permission.create, Permission.search).build();
+				.acl(Roles.user, Permission.create, Permission.search).build();
 		superadmin.schemas().set(schema);
 
 		// superadmins creates 4 messages

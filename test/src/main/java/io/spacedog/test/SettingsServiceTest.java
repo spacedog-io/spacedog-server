@@ -14,6 +14,7 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.model.Permission;
 import io.spacedog.model.SettingsAclSettings;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.Roles;
 
 public class SettingsServiceTest extends SpaceTest {
 
@@ -84,8 +85,8 @@ public class SettingsServiceTest extends SpaceTest {
 		// superadmin authorizes all to get/read animals settings
 		// and authorizes role 'user' to put/update/delete animals settings
 		SettingsAclSettings settings = new SettingsAclSettings();
-		settings.put("animals", "all", Permission.read);
-		settings.put("animals", "user", Permission.update);
+		settings.put("animals", Roles.all, Permission.read);
+		settings.put("animals", Roles.user, Permission.update);
 		superadmin.settings().save(settings);
 
 		// all can get the animals settings

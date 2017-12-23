@@ -15,6 +15,7 @@ import io.spacedog.http.SpaceResponse;
 import io.spacedog.model.Permission;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.Roles;
 
 public class BatchServiceTest extends SpaceTest {
 
@@ -27,7 +28,7 @@ public class BatchServiceTest extends SpaceTest {
 		SpaceDog superadmin = resetTestBackend();
 		superadmin.credentials().enableGuestSignUp(true);
 		Schema schema = Schema.builder("message").text("text")//
-				.acl("user", Permission.create, Permission.updateMine, Permission.search).build();
+				.acl(Roles.user, Permission.create, Permission.updateMine, Permission.search).build();
 
 		// should succeed to reset test account and create message schema with
 		// admin credentials

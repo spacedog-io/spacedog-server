@@ -150,8 +150,8 @@ public class DataAccessControlTest extends SpaceTest {
 
 		// set message schema with custom acl settings
 		Schema schema = Schema.builder("msge").text("t").build();
-		schema.acl("user", Permission.create);
-		schema.acl("admin", Permission.search);
+		schema.acl(Roles.user, Permission.create);
+		schema.acl(Roles.admin, Permission.search);
 		superadmin.schemas().set(schema);
 
 		// check message schema acl are set
@@ -219,8 +219,8 @@ public class DataAccessControlTest extends SpaceTest {
 
 		// set message schema with custom acl settings
 		Schema schema = Schema.builder("msge").text("t").build();
-		schema.acl("all", Permission.create);
-		schema.acl("user", Permission.readGroup, Permission.updateGroup, Permission.deleteGroup);
+		schema.acl(Roles.all, Permission.create);
+		schema.acl(Roles.user, Permission.readGroup, Permission.updateGroup, Permission.deleteGroup);
 		superadmin.schemas().set(schema);
 
 		// only users (and superadmins) can create messages
@@ -379,7 +379,7 @@ public class DataAccessControlTest extends SpaceTest {
 
 		// create message schema with simple acl
 		Schema schema = Schema.builder("message")//
-				.acl("user", Permission.search)//
+				.acl(Roles.user, Permission.search)//
 				.text("text")//
 				.build();
 

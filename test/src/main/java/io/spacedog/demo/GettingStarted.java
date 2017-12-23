@@ -36,6 +36,7 @@ import io.spacedog.model.SmsTemplate;
 import io.spacedog.model.SmsTemplateRequest;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.Roles;
 
 public class GettingStarted {
 
@@ -61,7 +62,7 @@ public class GettingStarted {
 
 		// superadmin gives permissions to users on 'course' objects
 
-		courseSchema.acl("user", Permission.create, Permission.updateMine, Permission.readMine);
+		courseSchema.acl(Roles.user, Permission.create, Permission.updateMine, Permission.readMine);
 		superadmin.schemas().set(courseSchema);
 
 		// superadmin authorizes guests to sign up

@@ -17,6 +17,7 @@ import io.spacedog.model.Permission;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.Roles;
 
 public class ChauffeLeTest extends SpaceTest {
 
@@ -41,7 +42,7 @@ public class ChauffeLeTest extends SpaceTest {
 
 	static Schema buildBigPostSchema() {
 		return Schema.builder("bigpost") //
-				.acl("user", Permission.create, Permission.search, Permission.update)//
+				.acl(Roles.user, Permission.create, Permission.search, Permission.update)//
 				.text("title").french()//
 
 				.object("responses").array() //
@@ -54,7 +55,7 @@ public class ChauffeLeTest extends SpaceTest {
 
 	static Schema buildSmallPostSchema() {
 		return Schema.builder("smallpost") //
-				.acl("user", Permission.create, Permission.search)//
+				.acl(Roles.user, Permission.create, Permission.search)//
 				.text("title").french()//
 				.string("parent")//
 				.build();

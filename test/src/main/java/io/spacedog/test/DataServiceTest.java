@@ -14,6 +14,7 @@ import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.Permission;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.Roles;
 
 public class DataServiceTest extends SpaceTest {
 
@@ -26,7 +27,7 @@ public class DataServiceTest extends SpaceTest {
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		Schema carSchema = SchemaServiceTest.buildCarSchema()//
-				.acl("user", Permission.create, Permission.updateMine, //
+				.acl(Roles.user, Permission.create, Permission.updateMine, //
 						Permission.readMine, Permission.deleteMine, Permission.search)//
 				.build();
 		superadmin.schemas().set(carSchema);
@@ -93,7 +94,7 @@ public class DataServiceTest extends SpaceTest {
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		Schema carSchema = SchemaServiceTest.buildCarSchema()//
-				.acl("user", Permission.create, Permission.updateMine, //
+				.acl(Roles.user, Permission.create, Permission.updateMine, //
 						Permission.readMine, Permission.deleteMine, Permission.search)//
 				.build();
 		superadmin.schemas().set(carSchema);

@@ -18,6 +18,7 @@ import io.spacedog.model.JsonDataObject.Results;
 import io.spacedog.model.Permission;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.Roles;
 
 public class SearchServiceTest extends SpaceTest {
 
@@ -90,7 +91,7 @@ public class SearchServiceTest extends SpaceTest {
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		Schema schema = Schema.builder("city").string("name")//
-				.acl("user", Permission.create, Permission.search).build();
+				.acl(Roles.user, Permission.create, Permission.search).build();
 		superadmin.schemas().set(schema);
 
 		// creates 5 cities but whith only 3 distinct names

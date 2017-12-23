@@ -24,6 +24,7 @@ import io.spacedog.model.Permission;
 import io.spacedog.model.Schema;
 import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.Roles;
 import io.spacedog.utils.Utils;
 
 public class EmailServiceTest extends SpaceTest {
@@ -130,7 +131,7 @@ public class EmailServiceTest extends SpaceTest {
 
 		// create a schema
 		Schema schema = Schema.builder("demande")//
-				.acl("all", Permission.create)//
+				.acl(Roles.all, Permission.create)//
 				.string("email").text("nom").text("prenom").text("civilite")//
 				.string("cvUrl").string("tel").string("statut")//
 				.object("dispos").array()//

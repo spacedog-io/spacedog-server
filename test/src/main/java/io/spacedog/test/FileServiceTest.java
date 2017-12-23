@@ -9,6 +9,7 @@ import io.spacedog.client.FileEndpoint.SpaceFile;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.model.FileSettings;
 import io.spacedog.model.Permission;
+import io.spacedog.utils.Roles;
 
 public class FileServiceTest extends SpaceTest {
 
@@ -105,7 +106,7 @@ public class FileServiceTest extends SpaceTest {
 
 		// superadmin sets file settings for 'assets' prefix
 		FileSettings settings = new FileSettings();
-		settings.permissions.put("assets", "user", Permission.readMine, //
+		settings.permissions.put("assets", Roles.user, Permission.readMine, //
 				Permission.updateMine, Permission.deleteMine);
 		superadmin.settings().save(settings);
 

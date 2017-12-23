@@ -24,6 +24,7 @@ import io.spacedog.model.Permission;
 import io.spacedog.model.PushProtocol;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.Roles;
 
 public class PushServiceTest extends SpaceTest {
 
@@ -58,9 +59,9 @@ public class PushServiceTest extends SpaceTest {
 
 		// add create permission to guest requests
 		Schema schema = superadmin.schemas().get("installation");
-		schema.acl("all", Permission.create, Permission.updateMine);
-		schema.acl("user", Permission.create, Permission.readMine, Permission.updateMine);
-		schema.acl("admin", Permission.create, Permission.update, //
+		schema.acl(Roles.all, Permission.create, Permission.updateMine);
+		schema.acl(Roles.user, Permission.create, Permission.readMine, Permission.updateMine);
+		schema.acl(Roles.admin, Permission.create, Permission.update, //
 				Permission.search, Permission.delete);
 		superadmin.schemas().set(schema);
 
