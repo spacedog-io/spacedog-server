@@ -13,33 +13,33 @@ import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 
-public class SchemaTranslator implements SpaceFields {
+public class SchemaTranslator implements SpaceFields, SchemaDirectives, MappingDirectives {
 
 	private static final ObjectNode STASH = //
-			Json.object("type", "object", "enabled", false);
+			Json.object(type_, object_, enable_, false);
 	private static final ObjectNode STRING = //
-			Json.object("type", "string", "index", "not_analyzed");
+			Json.object(type_, string_, index_, not_analyzed_);
 
 	private static final ObjectNode TIMESTAMP = //
-			Json.object("type", "date", "format", "date_time");
+			Json.object(type_, date_, format_, "date_time");
 	private static final ObjectNode DATE = //
-			Json.object("type", "date", "format", "date");
+			Json.object(type_, date_, format_, "date");
 	private static final ObjectNode TIME = //
-			Json.object("type", "date", "format", "hour_minute_second");
+			Json.object(type_, date_, format_, "hour_minute_second");
 
 	private static final ObjectNode BOOLEAN = //
-			Json.object("type", "boolean");
+			Json.object(type_, boolean_);
 	private static final ObjectNode INTEGER = //
-			Json.object("type", "integer", "coerce", "false");
+			Json.object(type_, integer_, coerce_, false);
 	private static final ObjectNode LONG = //
-			Json.object("type", "long", "coerce", "false");
+			Json.object(type_, longg, coerce_, false);
 	private static final ObjectNode FLOAT = //
-			Json.object("type", "float", "coerce", "false");
+			Json.object(type_, float_, coerce_, false);
 	private static final ObjectNode DOUBLE = //
-			Json.object("type", "double", "coerce", "false");
+			Json.object(type_, double_, coerce_, false);
 	private static final ObjectNode GEOPOINT = //
-			Json.object("type", "geo_point", "lat_lon", true, "geohash", true, //
-					"geohash_precision", "1m", "geohash_prefix", "true");
+			Json.object(type_, "geo_point", "lat_lon", true, "geohash", true, //
+					"geohash_precision", "1m", "geohash_prefix", true);
 
 	public static ObjectNode translate(String type, JsonNode schema) {
 
@@ -51,17 +51,17 @@ public class SchemaTranslator implements SpaceFields {
 
 	private static ObjectNode toElasticMapping(JsonNode schema) {
 
-		String type = schema.path("_type").asText("object");
+		String type = schema.path(_TYPE).asText(object_);
 
 		String defaultLanguage = language(schema, "french");
 		ObjectNode propertiesNode = toElasticProperties(schema, defaultLanguage);
 		addMetadataFields(propertiesNode);
 
-		if ("object".equals(type))
+		if (object_.equals(type))
 			return Json.builder().object()//
 					.add("dynamic", "strict")//
 					.add("date_detection", false)//
-					.add("properties", propertiesNode)//
+					.add(properties_, propertiesNode)//
 					.object("_all")//
 					.add("analyzer", defaultLanguage)//
 					.build();
@@ -91,27 +91,27 @@ public class SchemaTranslator implements SpaceFields {
 	}
 
 	private static String language(JsonNode schema, String defaultLanguage) {
-		return schema.path("_language").asText(defaultLanguage);
+		return schema.path(_LANGUAGE).asText(defaultLanguage);
 	}
 
 	private static ObjectNode toElasticProperty(String key, JsonNode schema, String defaultLanguage) {
-		String type = schema.path("_type").asText("object");
+		String type = schema.path(_TYPE).asText(object_);
 		if ("text".equals(type))
-			return Json.object("type", "string", "index", "analyzed", //
+			return Json.object(type_, string_, index_, "analyzed", //
 					"analyzer", language(schema, defaultLanguage));
-		else if ("string".equals(type))
+		else if (string_.equals(type))
 			return STRING;
-		else if ("boolean".equals(type))
+		else if (boolean_.equals(type))
 			return BOOLEAN;
-		else if ("integer".equals(type))
+		else if (integer_.equals(type))
 			return INTEGER;
-		else if ("long".equals(type))
+		else if (longg.equals(type))
 			return LONG;
-		else if ("float".equals(type))
+		else if (float_.equals(type))
 			return FLOAT;
-		else if ("double".equals(type))
+		else if (double_.equals(type))
 			return DOUBLE;
-		else if ("date".equals(type))
+		else if (date_.equals(type))
 			return DATE;
 		else if ("time".equals(type))
 			return TIME;
@@ -121,9 +121,9 @@ public class SchemaTranslator implements SpaceFields {
 			return STRING;
 		else if ("geopoint".equals(type))
 			return GEOPOINT;
-		else if ("object".equals(type))
-			return Json.object("type", "object", //
-					"properties", toElasticProperties(schema, language(schema, defaultLanguage)));
+		else if (object_.equals(type))
+			return Json.object(type_, object_, //
+					properties_, toElasticProperties(schema, language(schema, defaultLanguage)));
 		else if ("stash".equals(type))
 			return STASH;
 

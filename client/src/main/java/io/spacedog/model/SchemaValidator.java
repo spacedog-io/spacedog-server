@@ -15,7 +15,7 @@ import io.spacedog.model.SchemaBuilder.SchemaType;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
 
-public class SchemaValidator {
+public class SchemaValidator implements SchemaDirectives {
 
 	private static enum JsonType {
 		OBJECT, ARRAY, BOOLEAN, STRING, NUMBER
@@ -27,14 +27,13 @@ public class SchemaValidator {
 
 		checkIfInvalidField(schema, false, type);
 
-		String rootType = checkField(rootObjectSchema, "_type", false, JsonType.STRING)//
+		String rootType = checkField(rootObjectSchema, _TYPE, false, JsonType.STRING)//
 				.orElse(TextNode.valueOf("object")).asText();
 
 		if (SchemaType.OBJECT.equals(rootType)) {
 			checkCommonDirectives(rootObjectSchema);
-			checkField(rootObjectSchema, "_id", false, JsonType.STRING);
 
-			Optional7<JsonNode> opt = checkField(rootObjectSchema, "_acl", false, JsonType.OBJECT);
+			Optional7<JsonNode> opt = checkField(rootObjectSchema, _ACL, false, JsonType.OBJECT);
 			if (opt.isPresent())
 				checkAcl(type, opt.get());
 
@@ -77,7 +76,7 @@ public class SchemaValidator {
 			throw new SchemaException("invalid schema [%s] for field [%s]", //
 					propertySchema, propertyName);
 
-		Optional7<JsonNode> optional = checkField(propertySchema, "_type", false, JsonType.STRING);
+		Optional7<JsonNode> optional = checkField(propertySchema, _TYPE, false, JsonType.STRING);
 		String propertyType = optional.isPresent() ? optional.get().asText() : "object";
 
 		if (!SchemaType.isValid(propertyType))
@@ -93,19 +92,19 @@ public class SchemaValidator {
 	}
 
 	private static void checkCommonDirectives(JsonNode propertySchema) {
-		checkField(propertySchema, SchemaBuilder._REQUIRED, false, JsonType.BOOLEAN);
-		checkField(propertySchema, SchemaBuilder._ARRAY, false, JsonType.BOOLEAN);
-		checkField(propertySchema, SchemaBuilder._EXTRA, false, JsonType.OBJECT);
-		checkField(propertySchema, SchemaBuilder._VALUES, false, JsonType.ARRAY);
-		checkField(propertySchema, SchemaBuilder._EXAMPLES, false, JsonType.ARRAY);
-		checkField(propertySchema, SchemaBuilder._LANGUAGE, false, JsonType.STRING);
+		checkField(propertySchema, _REQUIRED, false, JsonType.BOOLEAN);
+		checkField(propertySchema, _ARRAY, false, JsonType.BOOLEAN);
+		checkField(propertySchema, _EXTRA, false, JsonType.OBJECT);
+		checkField(propertySchema, _VALUES, false, JsonType.ARRAY);
+		checkField(propertySchema, _EXAMPLES, false, JsonType.ARRAY);
+		checkField(propertySchema, _LANGUAGE, false, JsonType.STRING);
 		checkField(propertySchema, "_gt", false, JsonType.NUMBER);
 		checkField(propertySchema, "_gte", false, JsonType.NUMBER);
 		checkField(propertySchema, "_lt", false, JsonType.NUMBER);
 		checkField(propertySchema, "_lte", false, JsonType.NUMBER);
 		checkField(propertySchema, "_pattern", false, JsonType.STRING);
-		checkField(propertySchema, SchemaBuilder._LABELS, false, JsonType.OBJECT);
-		checkField(propertySchema, SchemaBuilder._REF_TYPE, false, JsonType.STRING);
+		checkField(propertySchema, _LABELS, false, JsonType.OBJECT);
+		checkField(propertySchema, _REF_TYPE, false, JsonType.STRING);
 	}
 
 	private static void checkNoFields(String propertyName, JsonNode propertySchema) throws SchemaException {

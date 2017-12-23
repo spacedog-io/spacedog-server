@@ -11,18 +11,7 @@ import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 
-public class SchemaBuilder {
-
-	public static final String _LABELS = "_labels";
-	public static final String _ENUM_TYPE = "_enumType";
-	public static final String _EXTRA = "_extra";
-	public static final String _EXAMPLES = "_examples";
-	public static final String _VALUES = "_values";
-	public static final String _REQUIRED = "_required";
-	public static final String _ARRAY = "_array";
-	public static final String _ACL = "_acl";
-	public static final String _LANGUAGE = "_language";
-	public static final String _REF_TYPE = "_ref_type";
+public class SchemaBuilder implements SchemaDirectives {
 
 	public static SchemaBuilder builder(String type) {
 		return new SchemaBuilder(type);
