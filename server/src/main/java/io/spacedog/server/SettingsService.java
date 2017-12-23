@@ -38,7 +38,6 @@ public class SettingsService extends SpaceService {
 	//
 
 	public static final String TYPE = "settings";
-	private static final RolePermissions emptyPermissions = new RolePermissions();
 
 	//
 	// Fields
@@ -251,18 +250,12 @@ public class SettingsService extends SpaceService {
 
 	private Credentials checkAuthorizedTo(String settingsId, Permission permission) {
 		Credentials credentials = SpaceContext.credentials();
-		if (!credentials.isAtLeastSuperAdmin()) {
-			RolePermissions permissions = getSettingsAcl(settingsId);
-			if (!permissions.containsOne(credentials, permission))
-				throw Exceptions.insufficientCredentials(credentials);
-		}
+		getSettingsAcl(settingsId).check(credentials, permission);
 		return credentials;
 	}
 
 	private RolePermissions getSettingsAcl(String settingsId) {
-		RolePermissions permissions = getAsObject(SettingsAclSettings.class)//
-				.get(settingsId);
-		return permissions == null ? emptyPermissions : permissions;
+		return getAsObject(SettingsAclSettings.class).get(settingsId);
 	}
 
 	private void checkSettingsAreValid(String id, String body) {
@@ -288,7 +281,7 @@ public class SettingsService extends SpaceService {
 
 	private void checkNotInternalSettings(String settingsId) {
 		if (settingsId.toLowerCase().startsWith("internal"))
-			throw Exceptions.forbidden("direct update of internal settings forbidden");
+			throw Exceptions.forbidden("direct update of internal settings is forbidden");
 	}
 
 	//
