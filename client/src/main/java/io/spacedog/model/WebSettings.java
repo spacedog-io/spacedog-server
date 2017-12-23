@@ -4,5 +4,5 @@ public class WebSettings extends SettingsBase {
 
 	public String notFoundPage = "/404.html";
 	public ObjectRolePermissions prefixPermissions = new ObjectRolePermissions()//
-			.put("www", "all", Permission.readAll);
+			.put("www", "all", Permission.read);
 }

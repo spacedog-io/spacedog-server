@@ -81,7 +81,7 @@ public class DataService extends SpaceService {
 		Credentials credentials = SpaceContext.credentials();
 		RolePermissions roles = DataAccessControl.roles(type);
 
-		if (roles.containsOne(credentials, Permission.deleteAll))
+		if (roles.containsOne(credentials, Permission.delete))
 			return doDeleteById(type, id);
 
 		if (roles.containsOne(credentials, Permission.deleteMine)) {
@@ -133,7 +133,7 @@ public class DataService extends SpaceService {
 		Supplier<DataObject<ObjectNode>> supplier = () -> DataStore.get().getObject(//
 				new JsonDataObject().type(type).id(id));
 
-		if (roles.containsOne(credentials, Permission.readAll, Permission.search))
+		if (roles.containsOne(credentials, Permission.read, Permission.search))
 			return supplier.get();
 
 		else if (roles.containsOne(credentials, Permission.readMine)) {
@@ -198,7 +198,7 @@ public class DataService extends SpaceService {
 
 		RolePermissions roles = DataAccessControl.roles(metadata.type());
 
-		if (roles.containsOne(credentials, Permission.updateAll))
+		if (roles.containsOne(credentials, Permission.update))
 			return;
 
 		if (roles.containsOne(credentials, Permission.updateMine)) {

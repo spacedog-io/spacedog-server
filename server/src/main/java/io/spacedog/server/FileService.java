@@ -114,7 +114,7 @@ public class FileService extends S3Service {
 			file.checkDelete(prefixPermissions);
 			return doDelete(file);
 		} else {
-			prefixPermissions.check(SpaceContext.credentials(), Permission.deleteAll);
+			prefixPermissions.check(SpaceContext.credentials(), Permission.delete);
 			return doDeleteAll(file);
 		}
 	}

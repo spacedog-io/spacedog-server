@@ -12,5 +12,5 @@ public class FileSettings extends SettingsBase {
 
 	public long sizeLimitInKB = 20000; // 20MB
 	public ObjectRolePermissions permissions = new ObjectRolePermissions()//
-			.put("www", Roles.all, Permission.readAll);
+			.put("www", Roles.all, Permission.read);
 }

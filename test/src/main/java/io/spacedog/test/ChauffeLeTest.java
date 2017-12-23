@@ -41,7 +41,7 @@ public class ChauffeLeTest extends SpaceTest {
 
 	static Schema buildBigPostSchema() {
 		return Schema.builder("bigpost") //
-				.acl("user", Permission.create, Permission.search, Permission.updateAll)//
+				.acl("user", Permission.create, Permission.search, Permission.update)//
 				.text("title").french()//
 
 				.object("responses").array() //

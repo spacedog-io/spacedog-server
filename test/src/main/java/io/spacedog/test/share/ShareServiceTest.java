@@ -83,7 +83,7 @@ public class ShareServiceTest extends SpaceTest {
 		// superadmin sets custom share permissions
 		ShareSettings settings = new ShareSettings();
 		settings.enableS3Location = true;
-		settings.permissions.put("all", Permission.readAll)//
+		settings.permissions.put("all", Permission.read)//
 				.put("user", Permission.create, Permission.deleteMine);
 		superadmin.settings().save(settings);
 
@@ -392,7 +392,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// superadmin updates share settings to allow users
 		// to download multiple shares
-		settings.permissions.put("user", Permission.readAll, Permission.create);
+		settings.permissions.put("user", Permission.read, Permission.create);
 		superadmin.settings().save(settings);
 
 		// vince downloads zip containing specified shares

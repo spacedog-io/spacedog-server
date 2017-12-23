@@ -228,17 +228,17 @@ public class S3File implements Closeable, StreamingOutput {
 
 	public void checkRead(RolePermissions permissions) {
 		checkPermissions(permissions, //
-				Permission.readAll, Permission.readGroup, Permission.readMine);
+				Permission.read, Permission.readGroup, Permission.readMine);
 	}
 
 	public void checkUpdate(RolePermissions permissions) {
 		checkPermissions(permissions, //
-				Permission.updateAll, Permission.updateGroup, Permission.updateMine);
+				Permission.update, Permission.updateGroup, Permission.updateMine);
 	}
 
 	public void checkDelete(RolePermissions permissions) {
 		checkPermissions(permissions, //
-				Permission.deleteAll, Permission.deleteGroup, Permission.deleteMine);
+				Permission.delete, Permission.deleteGroup, Permission.deleteMine);
 	}
 
 	private void checkPermissions(RolePermissions permissions, //

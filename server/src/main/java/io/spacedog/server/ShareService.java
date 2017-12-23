@@ -61,7 +61,7 @@ public class ShareService extends S3Service {
 	@Delete("/")
 	public Payload deleteAll() {
 		shareSettings().permissions.check(//
-				SpaceContext.credentials(), Permission.deleteAll);
+				SpaceContext.credentials(), Permission.delete);
 		return doDeleteAll(new S3File(getBucketName(), WebPath.ROOT));
 	}
 
@@ -70,7 +70,7 @@ public class ShareService extends S3Service {
 	public Payload postDownload(DownloadRequest request, Context context) {
 		Set<S3File> files = toS3Files(getBucketName(), request.paths);
 		S3File.checkPermissions(files, shareSettings().permissions, //
-				Permission.readAll, Permission.readGroup, Permission.readMine);
+				Permission.read, Permission.readGroup, Permission.readMine);
 		return doZip(files, request.fileName);
 	}
 

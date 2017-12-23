@@ -60,8 +60,8 @@ public class PushServiceTest extends SpaceTest {
 		Schema schema = superadmin.schemas().get("installation");
 		schema.acl("all", Permission.create, Permission.updateMine);
 		schema.acl("user", Permission.create, Permission.readMine, Permission.updateMine);
-		schema.acl("admin", Permission.create, Permission.updateAll, //
-				Permission.search, Permission.deleteAll);
+		schema.acl("admin", Permission.create, Permission.update, //
+				Permission.search, Permission.delete);
 		superadmin.schemas().set(schema);
 
 		// non authenticated user installs joho
