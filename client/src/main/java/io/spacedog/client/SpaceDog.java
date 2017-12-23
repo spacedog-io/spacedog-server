@@ -15,13 +15,13 @@ import io.spacedog.utils.SpaceParams;
 
 public class SpaceDog implements SpaceFields, SpaceParams {
 
-	SpaceBackend backend;
-	String id;
-	String username;
-	String email;
-	String password;
-	String accessToken;
-	DateTime expiresAt;
+	private SpaceBackend backend;
+	private String credentialsId;
+	private String username;
+	private String email;
+	private String password;
+	private String accessToken;
+	private DateTime expiresAt;
 
 	private SpaceDog(SpaceBackend backend) {
 		this.backend = backend;
@@ -45,11 +45,11 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 	}
 
 	public String id() {
-		return id;
+		return credentialsId;
 	}
 
 	public SpaceDog id(String id) {
-		this.id = id;
+		this.credentialsId = id;
 		return this;
 	}
 
