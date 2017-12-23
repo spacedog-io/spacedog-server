@@ -212,6 +212,7 @@ public class S3Service extends SpaceService {
 		metadata.setContentLength(file.contentLength());
 		metadata.setContentDisposition(contentDisposition(file.fileName()));
 		metadata.addUserMetadata(OWNER_FIELD, file.owner());
+		metadata.addUserMetadata(GROUP_FIELD, file.group());
 		return metadata;
 	}
 
