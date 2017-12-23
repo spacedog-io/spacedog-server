@@ -10,8 +10,8 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.http.SpaceHeaders;
 import io.spacedog.http.SpaceResponse;
-import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Utils;
 
 public class SpaceRequestResponseTest extends SpaceTest {

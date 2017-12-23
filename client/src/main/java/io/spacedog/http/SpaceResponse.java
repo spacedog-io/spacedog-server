@@ -20,7 +20,6 @@ import com.google.common.collect.Lists;
 
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Utils;
 import okhttp3.Headers;
 import okhttp3.OkHttpClient;

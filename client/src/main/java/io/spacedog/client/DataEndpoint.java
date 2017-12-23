@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
+import io.spacedog.http.SpaceFields;
+import io.spacedog.http.SpaceParams;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceResponse;
 import io.spacedog.model.BasicDataObject;
@@ -12,8 +14,6 @@ import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.JsonDataObject.Results;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
-import io.spacedog.utils.SpaceFields;
-import io.spacedog.utils.SpaceParams;
 import io.spacedog.utils.Utils;
 
 public class DataEndpoint implements SpaceFields, SpaceParams {

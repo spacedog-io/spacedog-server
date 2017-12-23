@@ -9,7 +9,7 @@ import io.spacedog.client.FileEndpoint.SpaceFile;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.model.FileSettings;
 import io.spacedog.model.Permission;
-import io.spacedog.utils.Roles;
+import io.spacedog.model.Roles;
 
 public class FileServiceTest extends SpaceTest {
 

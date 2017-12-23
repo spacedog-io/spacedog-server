@@ -48,9 +48,9 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 import com.google.common.base.Strings;
 
+import io.spacedog.http.SpaceParams;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.SpaceParams;
 import io.spacedog.utils.Utils;
 
 public class ElasticClient implements SpaceParams {

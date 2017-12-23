@@ -1,15 +1,15 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.utils;
+package io.spacedog.model;
 
 import java.util.Arrays;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.model.Permission;
-import io.spacedog.model.RolePermissions;
-import io.spacedog.model.Schema;
+import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
+import io.spacedog.utils.JsonBuilder;
 
 public class SchemaBuilder {
 

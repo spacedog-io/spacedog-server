@@ -1,12 +1,17 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.utils;
+package io.spacedog.model;
 
 import java.util.Iterator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import io.spacedog.http.SpaceFields;
+import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
+import io.spacedog.utils.JsonBuilder;
 
 public class SchemaTranslator implements SpaceFields {
 

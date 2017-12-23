@@ -17,14 +17,14 @@ import io.spacedog.client.ShareEndpoint.Share;
 import io.spacedog.client.ShareEndpoint.ShareList;
 import io.spacedog.client.ShareEndpoint.ShareMeta;
 import io.spacedog.client.SpaceDog;
+import io.spacedog.http.SpaceHeaders;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.model.Permission;
+import io.spacedog.model.Roles;
 import io.spacedog.model.ShareSettings;
 import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.Roles;
-import io.spacedog.utils.SpaceHeaders;
 
 public class ShareServiceTest extends SpaceTest {
 

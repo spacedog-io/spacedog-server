@@ -9,9 +9,9 @@ import org.elasticsearch.action.index.IndexResponse;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
+import io.spacedog.http.SpaceFields;
 import io.spacedog.model.DataObject;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.SpaceFields;
 
 public class ElasticPayload implements SpaceFields {
 

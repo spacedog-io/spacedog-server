@@ -11,9 +11,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.io.Files;
 
+import io.spacedog.http.SpaceHeaders;
 import io.spacedog.http.SpaceResponse;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.SpaceHeaders;
 
 public class FileEndpoint {
 

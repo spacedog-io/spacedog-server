@@ -1,4 +1,4 @@
-package io.spacedog.utils;
+package io.spacedog.http;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -6,11 +6,12 @@ import java.util.Iterator;
 import com.google.common.base.Strings;
 import com.google.common.collect.ObjectArrays;
 
+import io.spacedog.utils.Utils;
+
 public class WebPath implements Iterable<String> {
 
 	private String[] segments;
 	private String uriPath;
-	// private String s3Key;
 
 	public static final String SLASH = "/";
 	public static final WebPath ROOT = new WebPath();

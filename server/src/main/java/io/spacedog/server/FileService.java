@@ -3,12 +3,12 @@
  */
 package io.spacedog.server;
 
+import io.spacedog.http.WebPath;
+import io.spacedog.model.Credentials;
 import io.spacedog.model.FileSettings;
 import io.spacedog.model.Permission;
 import io.spacedog.model.RolePermissions;
-import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.WebPath;
 import net.codestory.http.Context;
 import net.codestory.http.constants.Methods;
 import net.codestory.http.filters.PayloadSupplier;

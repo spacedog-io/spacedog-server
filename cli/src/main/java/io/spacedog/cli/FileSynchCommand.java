@@ -17,9 +17,9 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.client.FileEndpoint.FileList;
 import io.spacedog.client.FileEndpoint.FileMeta;
 import io.spacedog.http.SpaceRequest;
+import io.spacedog.http.WebPath;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.WebPath;
 
 @Parameters(commandNames = { "sync" }, //
 		commandDescription = "synchronize source folder to backend")

@@ -22,9 +22,9 @@ import io.spacedog.model.Installation;
 import io.spacedog.model.InstallationDataObject;
 import io.spacedog.model.Permission;
 import io.spacedog.model.PushProtocol;
+import io.spacedog.model.Roles;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.Roles;
 
 public class PushServiceTest extends SpaceTest {
 

@@ -8,11 +8,11 @@ import java.util.UUID;
 
 import com.google.common.base.Strings;
 
+import io.spacedog.http.WebPath;
+import io.spacedog.model.Credentials;
 import io.spacedog.model.DownloadRequest;
 import io.spacedog.model.Permission;
 import io.spacedog.model.ShareSettings;
-import io.spacedog.utils.Credentials;
-import io.spacedog.utils.WebPath;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;

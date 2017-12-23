@@ -8,13 +8,13 @@ import com.google.common.collect.Maps;
 import com.google.common.net.HttpHeaders;
 
 import io.spacedog.http.SpaceBackend;
+import io.spacedog.http.SpaceHeaders;
+import io.spacedog.http.SpaceParams;
+import io.spacedog.model.Credentials;
 import io.spacedog.model.Settings;
 import io.spacedog.utils.AuthorizationHeader;
-import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Optional7;
-import io.spacedog.utils.SpaceHeaders;
-import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 import net.codestory.http.constants.Methods;
 

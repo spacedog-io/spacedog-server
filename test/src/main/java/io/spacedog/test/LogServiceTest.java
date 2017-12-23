@@ -17,13 +17,13 @@ import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.client.elastic.ESSortBuilders;
 import io.spacedog.client.elastic.ESSortOrder;
 import io.spacedog.http.SpaceBackend;
+import io.spacedog.http.SpaceHeaders;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.Permission;
+import io.spacedog.model.Roles;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.Roles;
-import io.spacedog.utils.SpaceHeaders;
 
 public class LogServiceTest extends SpaceTest {
 

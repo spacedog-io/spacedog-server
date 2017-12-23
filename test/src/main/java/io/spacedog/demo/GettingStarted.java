@@ -31,12 +31,12 @@ import io.spacedog.model.EmailTemplate;
 import io.spacedog.model.EmailTemplateRequest;
 import io.spacedog.model.GeoPoint;
 import io.spacedog.model.Permission;
+import io.spacedog.model.Roles;
 import io.spacedog.model.Schema;
 import io.spacedog.model.SmsTemplate;
 import io.spacedog.model.SmsTemplateRequest;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.Roles;
 
 public class GettingStarted {
 

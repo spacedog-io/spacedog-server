@@ -14,9 +14,9 @@ import io.spacedog.model.InternalDataAclSettings;
 import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.Permission;
 import io.spacedog.model.RolePermissions;
+import io.spacedog.model.Roles;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.Roles;
 
 public class DataAccessControlTest extends SpaceTest {
 

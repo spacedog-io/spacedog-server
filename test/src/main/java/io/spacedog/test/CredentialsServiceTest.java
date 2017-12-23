@@ -11,12 +11,12 @@ import com.google.common.collect.Maps;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceRequest;
+import io.spacedog.model.Credentials;
 import io.spacedog.model.CredentialsSettings;
 import io.spacedog.model.EmailTemplate;
-import io.spacedog.utils.Credentials;
+import io.spacedog.model.Passwords;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
-import io.spacedog.utils.Passwords;
 
 public class CredentialsServiceTest extends SpaceTest {
 

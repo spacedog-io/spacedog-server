@@ -1,7 +1,9 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.utils;
+package io.spacedog.model;
+
+import io.spacedog.utils.Check;
 
 public class Usernames {
 

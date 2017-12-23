@@ -1,14 +1,17 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.utils;
+package io.spacedog.model;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.utils.SchemaValidator.SchemaException;
+import io.spacedog.model.SchemaValidator;
+import io.spacedog.model.SchemaValidator.SchemaException;
+import io.spacedog.utils.Json;
+import io.spacedog.utils.JsonBuilder;
 
 public class SchemaValidatorTest extends Assert {
 

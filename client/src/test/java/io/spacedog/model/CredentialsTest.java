@@ -1,10 +1,11 @@
-package io.spacedog.utils;
+package io.spacedog.model;
 
 import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.spacedog.utils.Credentials.Session;
+import io.spacedog.model.Credentials;
+import io.spacedog.model.Credentials.Session;
 
 public class CredentialsTest extends Assert {
 

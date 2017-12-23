@@ -12,9 +12,6 @@ import com.google.common.collect.Sets;
 
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.SchemaBuilder;
-import io.spacedog.utils.SchemaTranslator;
-import io.spacedog.utils.SchemaValidator;
 
 public class Schema {
 

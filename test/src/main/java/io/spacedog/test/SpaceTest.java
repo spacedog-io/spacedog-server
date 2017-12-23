@@ -15,13 +15,13 @@ import com.google.common.collect.Lists;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceBackend;
 import io.spacedog.http.SpaceEnv;
+import io.spacedog.http.SpaceFields;
+import io.spacedog.http.SpaceParams;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceRequestException;
+import io.spacedog.model.Passwords;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.Passwords;
-import io.spacedog.utils.SpaceFields;
-import io.spacedog.utils.SpaceParams;
 import io.spacedog.utils.Utils;
 
 public class SpaceTest extends Assert implements SpaceFields, SpaceParams {

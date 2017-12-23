@@ -14,12 +14,12 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
 
+import io.spacedog.model.Credentials;
 import io.spacedog.model.Permission;
 import io.spacedog.model.RolePermissions;
 import io.spacedog.model.Settings;
 import io.spacedog.model.SettingsAclSettings;
 import io.spacedog.model.SettingsBase;
-import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;

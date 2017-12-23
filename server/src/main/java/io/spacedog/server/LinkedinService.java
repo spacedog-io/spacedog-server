@@ -2,17 +2,17 @@ package io.spacedog.server;
 
 import com.google.common.base.Strings;
 
+import io.spacedog.http.SpaceException;
+import io.spacedog.http.SpaceHeaders;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceResponse;
+import io.spacedog.http.Uris;
+import io.spacedog.model.Credentials;
 import io.spacedog.model.CredentialsSettings;
+import io.spacedog.model.Roles;
+import io.spacedog.model.Credentials.Session;
 import io.spacedog.utils.Check;
-import io.spacedog.utils.Credentials;
-import io.spacedog.utils.Credentials.Session;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Roles;
-import io.spacedog.utils.SpaceException;
-import io.spacedog.utils.SpaceHeaders;
-import io.spacedog.utils.Uris;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Get;

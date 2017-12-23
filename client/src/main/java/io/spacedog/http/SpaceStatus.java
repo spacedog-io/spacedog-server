@@ -41,7 +41,6 @@ public abstract class SpaceStatus {
 	public static final int VERSION_NOT_SUPPORTED = 505;
 
 	private SpaceStatus() {
-		// Do not allow subclassing
 	}
 
 }

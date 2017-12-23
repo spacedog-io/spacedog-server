@@ -14,10 +14,10 @@ import org.elasticsearch.common.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import io.spacedog.http.SpaceFields;
+import io.spacedog.http.SpaceParams;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.SpaceFields;
-import io.spacedog.utils.SpaceParams;
 import net.codestory.http.Context;
 import net.codestory.http.Part;
 import net.codestory.http.Query;

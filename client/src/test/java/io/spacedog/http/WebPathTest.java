@@ -1,7 +1,9 @@
-package io.spacedog.utils;
+package io.spacedog.http;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import io.spacedog.http.WebPath;
 
 public class WebPathTest extends Assert {
 

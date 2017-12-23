@@ -9,10 +9,10 @@ import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.model.Permission;
+import io.spacedog.model.Roles;
 import io.spacedog.model.Schema;
+import io.spacedog.model.SchemaBuilder;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.Roles;
-import io.spacedog.utils.SchemaBuilder;
 
 public class SchemaServiceTest extends SpaceTest {
 

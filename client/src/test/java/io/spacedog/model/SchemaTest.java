@@ -3,8 +3,8 @@ package io.spacedog.model;
 import org.junit.Assert;
 import org.junit.Test;
 
+import io.spacedog.http.SpaceException;
 import io.spacedog.model.Schema;
-import io.spacedog.utils.SpaceException;
 
 public class SchemaTest extends Assert {
 

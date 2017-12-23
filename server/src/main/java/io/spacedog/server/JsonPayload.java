@@ -12,11 +12,11 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
+import io.spacedog.http.SpaceException;
+import io.spacedog.http.SpaceFields;
+import io.spacedog.http.SpaceHeaders;
 import io.spacedog.model.DataObject;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.SpaceException;
-import io.spacedog.utils.SpaceFields;
-import io.spacedog.utils.SpaceHeaders;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 

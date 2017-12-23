@@ -8,9 +8,6 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 
-import io.spacedog.utils.Credentials;
-import io.spacedog.utils.Roles;
-
 @SuppressWarnings("serial")
 public class ObjectRolePermissions extends HashMap<String, RolePermissions> {
 

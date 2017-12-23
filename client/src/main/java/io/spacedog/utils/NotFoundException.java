@@ -1,5 +1,7 @@
 package io.spacedog.utils;
 
+import io.spacedog.http.SpaceException;
+
 public class NotFoundException extends SpaceException {
 
 	private static final long serialVersionUID = 5495027748335056224L;

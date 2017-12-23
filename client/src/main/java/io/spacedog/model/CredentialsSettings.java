@@ -2,9 +2,6 @@ package io.spacedog.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import io.spacedog.utils.Passwords;
-import io.spacedog.utils.Usernames;
-
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CredentialsSettings extends SettingsBase {
 

@@ -2,6 +2,9 @@ package io.spacedog.utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import io.spacedog.http.SpaceException;
+import io.spacedog.model.Credentials;
+
 public class Exceptions {
 
 	public static final String ALREADY_EXISTS = "already-exists";

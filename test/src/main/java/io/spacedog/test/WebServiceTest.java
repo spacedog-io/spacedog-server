@@ -3,9 +3,9 @@ package io.spacedog.test;
 import org.junit.Test;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.http.SpaceHeaders;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.model.WebSettings;
-import io.spacedog.utils.SpaceHeaders;
 
 public class WebServiceTest extends SpaceTest {
 

@@ -16,9 +16,9 @@ import io.spacedog.client.elastic.ESSortOrder;
 import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.JsonDataObject.Results;
 import io.spacedog.model.Permission;
+import io.spacedog.model.Roles;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.Roles;
 
 public class SearchServiceTest extends SpaceTest {
 

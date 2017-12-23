@@ -28,6 +28,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
+import io.spacedog.http.SpaceFields;
+import io.spacedog.http.SpaceParams;
 import io.spacedog.model.DataObject;
 import io.spacedog.model.MetadataBase;
 import io.spacedog.model.MetadataDataObject;
@@ -35,8 +37,6 @@ import io.spacedog.model.Schema;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;
-import io.spacedog.utils.SpaceFields;
-import io.spacedog.utils.SpaceParams;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 

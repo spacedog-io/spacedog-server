@@ -5,13 +5,13 @@ import org.joda.time.DateTime;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.http.SpaceBackend;
+import io.spacedog.http.SpaceFields;
+import io.spacedog.http.SpaceParams;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceResponse;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
-import io.spacedog.utils.SpaceFields;
-import io.spacedog.utils.SpaceParams;
 
 public class SpaceDog implements SpaceFields, SpaceParams {
 

@@ -14,7 +14,7 @@ import org.elasticsearch.snapshots.RestoreInfo;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
-import io.spacedog.utils.Credentials;
+import io.spacedog.model.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;

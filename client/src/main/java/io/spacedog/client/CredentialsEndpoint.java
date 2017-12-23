@@ -10,16 +10,16 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.collect.Sets;
 
+import io.spacedog.http.SpaceFields;
+import io.spacedog.http.SpaceParams;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceResponse;
 import io.spacedog.model.CreateCredentialsRequest;
+import io.spacedog.model.Credentials;
 import io.spacedog.model.CredentialsSettings;
-import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
-import io.spacedog.utils.SpaceFields;
-import io.spacedog.utils.SpaceParams;
 
 public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 

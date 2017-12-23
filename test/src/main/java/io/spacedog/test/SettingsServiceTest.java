@@ -12,9 +12,9 @@ import com.fasterxml.jackson.databind.node.TextNode;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.model.Permission;
+import io.spacedog.model.Roles;
 import io.spacedog.model.SettingsAclSettings;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.Roles;
 
 public class SettingsServiceTest extends SpaceTest {
 

@@ -10,8 +10,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
-import io.spacedog.utils.Credentials;
-import io.spacedog.utils.SpaceParams;
+import io.spacedog.http.SpaceParams;
+import io.spacedog.model.Credentials;
 
 public class LogEndpoint implements SpaceParams {
 

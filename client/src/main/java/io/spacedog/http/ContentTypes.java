@@ -1,4 +1,4 @@
-package io.spacedog.utils;
+package io.spacedog.http;
 
 import javax.activation.MimetypesFileTypeMap;
 

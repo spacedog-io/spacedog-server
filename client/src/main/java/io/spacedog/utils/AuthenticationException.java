@@ -3,6 +3,8 @@
  */
 package io.spacedog.utils;
 
+import io.spacedog.http.SpaceException;
+
 public class AuthenticationException extends SpaceException {
 
 	private static final long serialVersionUID = 25496310542011899L;

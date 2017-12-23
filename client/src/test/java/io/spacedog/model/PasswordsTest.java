@@ -1,10 +1,12 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.utils;
+package io.spacedog.model;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import io.spacedog.model.Passwords;
 
 public class PasswordsTest extends Assert {
 

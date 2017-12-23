@@ -12,12 +12,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.Sets;
 import com.google.common.io.BaseEncoding;
 
+import io.spacedog.http.SpaceHeaders;
+import io.spacedog.model.Credentials;
 import io.spacedog.model.KeyValue;
 import io.spacedog.model.Schema;
-import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;

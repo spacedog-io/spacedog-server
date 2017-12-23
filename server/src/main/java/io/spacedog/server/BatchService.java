@@ -17,10 +17,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import io.spacedog.core.Json8;
+import io.spacedog.http.SpaceException;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
-import io.spacedog.utils.SpaceException;
 import net.codestory.http.Context;
 import net.codestory.http.Cookie;
 import net.codestory.http.Cookies;

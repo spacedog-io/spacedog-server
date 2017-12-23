@@ -1,4 +1,4 @@
-package io.spacedog.utils;
+package io.spacedog.http;
 
 public interface SpaceFields {
 

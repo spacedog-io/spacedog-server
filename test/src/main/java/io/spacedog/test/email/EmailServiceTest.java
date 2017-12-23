@@ -21,10 +21,10 @@ import io.spacedog.model.EmailSettings;
 import io.spacedog.model.EmailSettings.SmtpSettings;
 import io.spacedog.model.EmailTemplate;
 import io.spacedog.model.Permission;
+import io.spacedog.model.Roles;
 import io.spacedog.model.Schema;
 import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.Roles;
 import io.spacedog.utils.Utils;
 
 public class EmailServiceTest extends SpaceTest {

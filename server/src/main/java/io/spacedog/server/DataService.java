@@ -11,12 +11,12 @@ import org.elasticsearch.common.lucene.uid.Versions;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.model.Credentials;
 import io.spacedog.model.DataObject;
 import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.MetadataBase;
 import io.spacedog.model.Permission;
 import io.spacedog.model.RolePermissions;
-import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import net.codestory.http.Context;

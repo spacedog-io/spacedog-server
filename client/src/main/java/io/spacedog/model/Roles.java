@@ -1,11 +1,13 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.utils;
+package io.spacedog.model;
 
 import java.util.regex.Pattern;
 
 import com.google.common.base.Strings;
+
+import io.spacedog.utils.Exceptions;
 
 public class Roles {
 

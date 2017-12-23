@@ -1,4 +1,4 @@
-package io.spacedog.utils;
+package io.spacedog.http;
 
 import com.google.common.escape.Escaper;
 import com.google.common.net.UrlEscapers;
