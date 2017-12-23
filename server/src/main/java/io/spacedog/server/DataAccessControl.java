@@ -22,8 +22,6 @@ public class DataAccessControl {
 
 	public static void save(String type, RolePermissions schemaAcl) {
 		InternalDataAclSettings settings = getDataAclSettings();
-		if (schemaAcl == null)
-			schemaAcl = new RolePermissions();
 		settings.put(type, schemaAcl);
 		saveDataAclSetting(settings);
 	}
