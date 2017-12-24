@@ -1,4 +1,4 @@
-package io.spacedog.core;
+package io.spacedog.server;
 /**
  * © David Attias 2015
  */
