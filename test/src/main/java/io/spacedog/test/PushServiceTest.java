@@ -17,6 +17,7 @@ import com.google.common.collect.Sets;
 import io.spacedog.client.PushRequest;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.model.BadgeStrategy;
+import io.spacedog.model.Credentials;
 import io.spacedog.model.DataObject;
 import io.spacedog.model.Installation;
 import io.spacedog.model.InstallationDataObject;
@@ -33,7 +34,6 @@ public class PushServiceTest extends SpaceTest {
 	private static final String ID = "id";
 	private static final String INSTALLATION_ID = "installationId";
 	private static final String TEXT = "text";
-	private static final String CREDENTIALS_ID = "credentialsId";
 	private static final String ENDPOINT = "endpoint";
 	private static final String TOKEN = "token";
 	private static final String BADGE = "badge";
@@ -66,11 +66,10 @@ public class PushServiceTest extends SpaceTest {
 		superadmin.schemas().set(schema);
 
 		// non authenticated user installs joho
-		// and fails to set installation userId and endpoint fields
+		// and fails to set endpoint fields
 		String unknownInstallId = guest.post("/1/installation")//
 				.bodyJson(TOKEN, "token-unknown", APP_ID, "joho", //
-						PROTOCOL, PushProtocol.GCM, //
-						CREDENTIALS_ID, "XXX", ENDPOINT, "XXX")//
+						PROTOCOL, PushProtocol.GCM, ENDPOINT, "XXX")//
 				.go(201).getString(ID);
 
 		DataObject<Installation> unknownInstall = superadmin.push().getInstallation(unknownInstallId);
@@ -79,7 +78,7 @@ public class PushServiceTest extends SpaceTest {
 		assertEquals(PushProtocol.GCM, unknownInstall.source().protocol());
 		assertEquals("token-unknown", unknownInstall.source().token());
 		assertEquals("FAKE_ENDPOINT_FOR_TESTING", unknownInstall.source().endpoint());
-		assertNull(unknownInstall.source().credentialsId());
+		assertEquals(Credentials.GUEST.id(), unknownInstall.owner());
 		assertTrue(unknownInstall.source().tags().isEmpty());
 
 		// vince and fred install joho
@@ -93,7 +92,7 @@ public class PushServiceTest extends SpaceTest {
 
 		Json.assertNode(response)//
 				.assertEquals(fredInstall.id(), "pushedTo.0.installationId")//
-				.assertEquals(fred.id(), "pushedTo.0.credentialsId");
+				.assertEquals(fred.id(), "pushedTo.0.owner");
 
 		// vince pushes a complex object message to dave
 		ObjectNode message = Json.object("APNS", //
@@ -116,7 +115,7 @@ public class PushServiceTest extends SpaceTest {
 		vinceInstall = vince.push().getInstallation(vinceInstall.id());
 		assertEquals("joho", vinceInstall.source().appId());
 		assertEquals("super-token-vince", vinceInstall.source().token());
-		assertEquals(vince.id(), vinceInstall.source().credentialsId());
+		assertEquals(vince.id(), vinceInstall.owner());
 		assertTrue(vinceInstall.source().tags().isEmpty());
 
 		// vince fails to get all installations since not admin
@@ -196,9 +195,9 @@ public class PushServiceTest extends SpaceTest {
 				.assertFalse(FAILURES)//
 				.assertEquals(4, PUSHED_TO)//
 				.assertContainsValue(unknownInstallId, INSTALLATION_ID)//
-				.assertContainsValue(dave.id(), CREDENTIALS_ID)//
-				.assertContainsValue(vince.id(), CREDENTIALS_ID)//
-				.assertContainsValue(fred.id(), CREDENTIALS_ID);
+				.assertContainsValue(dave.id(), OWNER_FIELD)//
+				.assertContainsValue(vince.id(), OWNER_FIELD)//
+				.assertContainsValue(fred.id(), OWNER_FIELD);
 
 		// vince pushes to all joho users
 		// this means excluding anonymous installations
@@ -210,9 +209,9 @@ public class PushServiceTest extends SpaceTest {
 		Json.assertNode(response)//
 				.assertFalse(FAILURES)//
 				.assertEquals(3, PUSHED_TO)//
-				.assertContainsValue(dave.id(), CREDENTIALS_ID)//
-				.assertContainsValue(vince.id(), CREDENTIALS_ID)//
-				.assertContainsValue(fred.id(), CREDENTIALS_ID);
+				.assertContainsValue(dave.id(), OWNER_FIELD)//
+				.assertContainsValue(vince.id(), OWNER_FIELD)//
+				.assertContainsValue(fred.id(), OWNER_FIELD);
 
 		// vince pushes to APNS only joho users
 		pushRequest.protocol(PushProtocol.APNS);
@@ -221,8 +220,8 @@ public class PushServiceTest extends SpaceTest {
 		Json.assertNode(response)//
 				.assertFalse(FAILURES)//
 				.assertEquals(2, PUSHED_TO)//
-				.assertContainsValue(dave.id(), CREDENTIALS_ID)//
-				.assertContainsValue(fred.id(), CREDENTIALS_ID);
+				.assertContainsValue(dave.id(), OWNER_FIELD)//
+				.assertContainsValue(fred.id(), OWNER_FIELD);
 
 		// vince pushes to APNS only joho users with tag bonjour
 		pushRequest.tags("bonjour");
@@ -231,7 +230,7 @@ public class PushServiceTest extends SpaceTest {
 		Json.assertNode(response)//
 				.assertFalse(FAILURES)//
 				.assertEquals(1, PUSHED_TO)//
-				.assertContainsValue(fred.id(), CREDENTIALS_ID);
+				.assertContainsValue(fred.id(), OWNER_FIELD);
 
 		// vince pushes to all joho users with tag bonjour
 		pushRequest.protocol(null);
@@ -240,8 +239,8 @@ public class PushServiceTest extends SpaceTest {
 		Json.assertNode(response)//
 				.assertFalse(FAILURES)//
 				.assertEquals(2, PUSHED_TO)//
-				.assertContainsValue(vince.id(), CREDENTIALS_ID)//
-				.assertContainsValue(fred.id(), CREDENTIALS_ID);
+				.assertContainsValue(vince.id(), OWNER_FIELD)//
+				.assertContainsValue(fred.id(), OWNER_FIELD);
 
 		// vince pushes to all joho users with tags bonjour and hi
 		pushRequest.tags("bonjour", "hi");
@@ -250,7 +249,7 @@ public class PushServiceTest extends SpaceTest {
 		Json.assertNode(response)//
 				.assertFalse(FAILURES)//
 				.assertEquals(1, PUSHED_TO)//
-				.assertContainsValue(vince.id(), CREDENTIALS_ID);
+				.assertContainsValue(vince.id(), OWNER_FIELD);
 
 		// vince gets 404 when he pushes to invalid app id
 		pushRequest = new PushRequest().appId("XXX").text("This is a push!");
@@ -291,8 +290,10 @@ public class PushServiceTest extends SpaceTest {
 		superadmin.schemas().setDefault("installation");
 
 		// vince and dave install joho
-		DataObject<Installation> vinceInstall = installApplication("joho", PushProtocol.APNS, vince);
-		DataObject<Installation> daveInstall = installApplication("joho", PushProtocol.APNS, dave);
+		DataObject<Installation> vinceInstall = installApplication(//
+				"joho", PushProtocol.APNS, vince);
+		DataObject<Installation> daveInstall = installApplication(//
+				"joho", PushProtocol.APNS, dave);
 
 		// vince pushes a message to dave with manual badge = 3
 		ObjectNode message = Json.object(PushProtocol.APNS, //
@@ -305,7 +306,8 @@ public class PushServiceTest extends SpaceTest {
 
 		// badge is not set in installation
 		// since badge management is still manual
-		DataObject<Installation> installation = dave.push().getInstallation(daveInstall.id());
+		DataObject<Installation> installation = dave.push()//
+				.getInstallation(daveInstall.id());
 		assertEquals(0, installation.source().badge());
 
 		// vince pushes a message to all with automatic badging
@@ -376,7 +378,7 @@ public class PushServiceTest extends SpaceTest {
 		assertEquals(appId, installation.source().appId());
 		assertEquals(protocol, installation.source().protocol());
 		assertEquals("token-" + user.username(), installation.source().token());
-		assertEquals(user.id(), installation.source().credentialsId());
+		assertEquals(user.id(), installation.owner());
 		assertTrue(installation.source().tags().isEmpty());
 
 		return installation;

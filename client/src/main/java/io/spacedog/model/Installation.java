@@ -18,7 +18,6 @@ public class Installation extends MetadataBase {
 	private PushProtocol protocol;
 	private String token;
 	private String endpoint;
-	private String credentialsId;
 	private int badge;
 	private Set<String> tags;
 
@@ -55,15 +54,6 @@ public class Installation extends MetadataBase {
 
 	public Installation endpoint(String endpoint) {
 		this.endpoint = endpoint;
-		return this;
-	}
-
-	public String credentialsId() {
-		return credentialsId;
-	}
-
-	public Installation credentialsId(String credentialsId) {
-		this.credentialsId = credentialsId;
 		return this;
 	}
 

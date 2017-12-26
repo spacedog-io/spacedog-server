@@ -49,7 +49,6 @@ public class PushService extends SpaceService {
 	// installation field names
 	public static final String APP_ID = "appId";
 	public static final String PROTOCOL = "protocol";
-	public static final String CREDENTIALS_ID = "credentialsId";
 	public static final String TOKEN = "token";
 	public static final String ENDPOINT = "endpoint";
 	public static final String BADGE = "badge";
@@ -72,7 +71,6 @@ public class PushService extends SpaceService {
 				.string(PROTOCOL)//
 				.string(TOKEN)//
 				.string(ENDPOINT)//
-				.string(CREDENTIALS_ID)//
 				.integer(BADGE)//
 				.string(TAGS).array()//
 				.close()//
@@ -213,13 +211,15 @@ public class PushService extends SpaceService {
 			query.must(QueryBuilders.termQuery(APP_ID, request.appId));
 
 		if (!Strings.isNullOrEmpty(request.credentialsId))
-			query.must(QueryBuilders.termQuery(CREDENTIALS_ID, request.credentialsId));
+			query.must(QueryBuilders.termQuery(OWNER_FIELD, request.credentialsId));
 
 		if (request.protocol != null)
 			query.must(QueryBuilders.termQuery(PROTOCOL, request.protocol));
 
 		if (request.usersOnly)
-			query.must(QueryBuilders.existsQuery(CREDENTIALS_ID));
+			query.must(QueryBuilders.existsQuery(OWNER_FIELD))//
+					.mustNot(QueryBuilders.termQuery(OWNER_FIELD, //
+							Credentials.GUEST.id()));
 
 		if (!Utils.isNullOrEmpty(request.tags))
 			for (String tag : request.tags)
@@ -233,7 +233,7 @@ public class PushService extends SpaceService {
 				.setFrom(0)//
 				.setSize(1000)//
 				.setVersion(false)//
-				.setFetchSource(new String[] { CREDENTIALS_ID, ENDPOINT, PROTOCOL, BADGE }, null)//
+				.setFetchSource(new String[] { OWNER_FIELD, ENDPOINT, PROTOCOL, BADGE }, null)//
 				.get()//
 				.getHits();
 
@@ -294,8 +294,8 @@ public class PushService extends SpaceService {
 
 		try {
 
-			if (!Strings.isNullOrEmpty(installation.source().credentialsId()))
-				logItem.put(CREDENTIALS_ID, installation.source().credentialsId());
+			if (!Strings.isNullOrEmpty(installation.owner()))
+				logItem.put(OWNER_FIELD, installation.owner());
 
 			jsonMessage = badgeObjectMessage(installation, jsonMessage, //
 					credentials, logItem, badgeStrategy);
@@ -407,7 +407,6 @@ public class PushService extends SpaceService {
 
 	public Payload upsertInstallation(Optional<String> id, String body, Context context) {
 
-		Credentials credentials = SpaceContext.credentials();
 		DataObject<Installation> installation = new InstallationDataObject()//
 				.type(TYPE).source(Json.toPojo(body, Installation.class));
 
@@ -424,8 +423,6 @@ public class PushService extends SpaceService {
 				SpaceContext.isTest() ? "FAKE_ENDPOINT_FOR_TESTING" //
 						: AwsSnsPusher.createApplicationEndpoint(source.appId(), //
 								source.protocol(), source.token()));
-
-		source.credentialsId(credentials.isAtLeastUser() ? credentials.id() : null);
 
 		return id.isPresent() //
 				? DataService.get().doPut(installation, false, context) //
