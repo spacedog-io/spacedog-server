@@ -9,6 +9,8 @@ import java.util.function.Supplier;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.lucene.uid.Versions;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.model.Credentials;
@@ -99,27 +101,46 @@ public class DataService extends SpaceService {
 		throw Exceptions.forbidden("forbidden to delete [%s] objects", type);
 	}
 
-	@Get("/:type/:id/:field")
-	@Get("/:type/:id/:field/")
-	public Payload getField(String type, String id, String fieldPath, Context context) {
-		return JsonPayload.ok().withObject(Json.get(doGet(type, id).source(), fieldPath)).build();
+	@Get("/:type/:id/:path")
+	@Get("/:type/:id/:path/")
+	public Payload getField(String type, String id, String path, Context context) {
+		return JsonPayload.ok().withObject(//
+				Json.get(doGet(type, id).source(), path)).build();
 	}
 
-	@Put("/:type/:id/:field")
-	@Put("/:type/:id/:field/")
-	public Payload putField(String type, String id, String fieldPath, String body, Context context) {
+	@Put("/:type/:id/:path")
+	@Put("/:type/:id/:path/")
+	public Payload putField(String type, String id, String path, String body, Context context) {
 		ObjectNode source = Json.object();
-		Json.with(source, fieldPath, Json.readNode(body));
+		Json.with(source, path, Json.readNode(body));
 		DataObject<ObjectNode> object = new JsonDataObject()//
 				.type(type).id(id).source(source);
 		return doPut(object, true, context);
 	}
 
-	@Delete("/:type/:id/:field")
-	@Delete("/:type/:id/:field/")
-	public Payload deleteField(String type, String id, String fieldPath, Context context) {
+	@Post("/:type/:id/:path")
+	@Post("/:type/:id/:path/")
+	public Payload postField(String type, String id, String path, String body, Context context) {
 		DataObject<ObjectNode> object = doGet(type, id);
-		Json.remove(object.source(), fieldPath);
+		Object[] toAdd = Json.toPojo(body, JsonNode[].class);
+		ArrayNode fieldNode = Json.withArray(object.source(), path);
+		Json.addToSet(fieldNode, toAdd);
+		return doPut(object, false, context);
+	}
+
+	@Delete("/:type/:id/:path")
+	@Delete("/:type/:id/:path/")
+	public Payload deleteField(String type, String id, String path, String body, Context context) {
+		DataObject<ObjectNode> object = doGet(type, id);
+
+		if (Strings.isNullOrEmpty(body))
+			Json.remove(object.source(), path);
+		else {
+			Object[] toDelete = Json.toPojo(body, JsonNode[].class);
+			ArrayNode fieldNode = Json.withArray(object.source(), path);
+			Json.removeFromSet(fieldNode, toDelete);
+		}
+
 		return doPut(object, false, context);
 	}
 
