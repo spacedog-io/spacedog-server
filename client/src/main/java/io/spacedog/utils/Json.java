@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
@@ -26,6 +27,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 
 public class Json {
 
@@ -132,7 +134,27 @@ public class Json {
 		} else
 			throw Exceptions.invalidFieldPath(json, fieldPath);
 
-		return json;
+		return valueNode;
+	}
+
+	public static ArrayNode withArray(JsonNode json, String fieldPath) {
+		JsonNode node = get(json, fieldPath);
+		if (Json.isNull(node)) {
+			ArrayNode array = array();
+			with(json, fieldPath, array);
+			return array;
+		} else
+			return checkArray(node);
+	}
+
+	public static ObjectNode withObject(JsonNode json, String fieldPath) {
+		JsonNode node = get(json, fieldPath);
+		if (Json.isNull(node)) {
+			ObjectNode object = object();
+			with(json, fieldPath, object);
+			return object;
+		} else
+			return checkObject(node);
 	}
 
 	public static void remove(JsonNode json, String fieldPath) {
@@ -152,6 +174,26 @@ public class Json {
 			((ArrayNode) parent).remove(Integer.parseInt(lastPathName));
 		else
 			throw Exceptions.invalidFieldPath(json, fieldPath);
+	}
+
+	public static void removeFromSet(ArrayNode set, Object... values) {
+		Set<JsonNode> valuesToRemove = Sets.newHashSet();
+		for (Object value : values)
+			valuesToRemove.add(toJsonNode(value));
+		Iterator<JsonNode> elements = set.elements();
+		while (elements.hasNext())
+			if (valuesToRemove.contains(elements.next()))
+				elements.remove();
+	}
+
+	public static void addToSet(ArrayNode set, Object... values) {
+		Set<JsonNode> valuesToAdd = Sets.newHashSet();
+		for (Object value : values)
+			valuesToAdd.add(toJsonNode(value));
+		for (int i = 0; i < set.size(); i++)
+			valuesToAdd.remove(set.get(i));
+		for (JsonNode node : valuesToAdd)
+			set.add(node);
 	}
 
 	//

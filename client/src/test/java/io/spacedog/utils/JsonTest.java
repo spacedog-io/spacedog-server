@@ -184,4 +184,42 @@ public class JsonTest extends Assert {
 		assertEquals(1, object.version());
 	}
 
+	@Test
+	public void shouldAddToSet() {
+		// prepare
+		ObjectNode object = Json.object();
+		ArrayNode array = Json.withArray(object, "values");
+		// test 1
+		Json.addToSet(array, "toto");
+		assertEquals(Json.array("toto"), object.get("values"));
+		// test 2
+		Json.addToSet(array, "titi", Json.object());
+		assertEquals(Json.array("toto", Json.object(), "titi"), //
+				object.get("values"));
+		// test 3
+		Json.addToSet(array, "titi", Json.object());
+		assertEquals(Json.array("toto", Json.object(), "titi"), //
+				object.get("values"));
+	}
+
+	@Test
+	public void shouldRemoveFromSet() {
+		// prepare
+		ObjectNode object = Json.object();
+		ArrayNode array = Json.withArray(object, "values");
+		Json.addToSet(array, "toto", "titi", Json.object());
+		// test 1
+		Json.removeFromSet(array, "tata");
+		assertEquals(Json.array("toto", Json.object(), "titi"), //
+				object.get("values"));
+		// test 2
+		Json.removeFromSet(array, "titi");
+		assertEquals(Json.array("toto", Json.object()), object.get("values"));
+		// test 3
+		Json.removeFromSet(array, "tata", Json.object(), "toto");
+		assertEquals(Json.array(), object.get("values"));
+		// test 4
+		Json.removeFromSet(array, Json.object(), "titi");
+		assertEquals(Json.array(), object.get("values"));
+	}
 }
