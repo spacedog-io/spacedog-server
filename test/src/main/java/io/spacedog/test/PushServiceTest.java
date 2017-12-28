@@ -10,7 +10,6 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
@@ -31,14 +30,8 @@ public class PushServiceTest extends SpaceTest {
 
 	private static final String PUSHED_TO = "pushedTo";
 	private static final String FAILURES = "failures";
-	private static final String ID = "id";
 	private static final String INSTALLATION_ID = "installationId";
-	private static final String TEXT = "text";
-	private static final String ENDPOINT = "endpoint";
-	private static final String TOKEN = "token";
 	private static final String BADGE = "badge";
-	private static final String PROTOCOL = "protocol";
-	private static final String APP_ID = "appId";
 
 	@Test
 	public void usersInstallAppAndPush() {
@@ -67,10 +60,10 @@ public class PushServiceTest extends SpaceTest {
 
 		// non authenticated user installs joho
 		// and fails to set endpoint fields
-		String unknownInstallId = guest.post("/1/installation")//
-				.bodyJson(TOKEN, "token-unknown", APP_ID, "joho", //
-						PROTOCOL, PushProtocol.GCM, ENDPOINT, "XXX")//
-				.go(201).getString(ID);
+		String unknownInstallId = guest.push().saveInstallation(//
+				new Installation().token("token-unknown").appId("joho")//
+						.protocol(PushProtocol.GCM).endpoint("XXX"))
+				.id();
 
 		DataObject<Installation> unknownInstall = superadmin.push().getInstallation(unknownInstallId);
 
@@ -87,8 +80,8 @@ public class PushServiceTest extends SpaceTest {
 		DataObject<Installation> daveInstall = installApplication("joho", PushProtocol.APNS, dave);
 
 		// vince pushes a simple message to fred
-		ObjectNode response = vince.push().push(fredInstall.id(), //
-				new PushRequest().text("coucou"));
+		ObjectNode response = vince.push().push(new PushRequest()//
+				.text("coucou").installationId(fredInstall.id()).refresh(true));
 
 		Json.assertNode(response)//
 				.assertEquals(fredInstall.id(), "pushedTo.0.installationId")//
@@ -98,11 +91,12 @@ public class PushServiceTest extends SpaceTest {
 		ObjectNode message = Json.object("APNS", //
 				Json.object("aps", Json.object("alert", "coucou")));
 
-		response = vince.push().push(daveInstall.id(), //
-				new PushRequest().data(message));
+		response = vince.push().push(new PushRequest()//
+				.data(message).installationId(daveInstall.id()));
 
 		// vince fails to push to invalid installation id
-		vince.post("/1/installation/XXX/push").bodyJson(TEXT, "coucou").go(404);
+		assertHttpError(404, () -> vince.push().push(//
+				new PushRequest().installationId("XXX")));
 
 		// nath installs birdee
 		DataObject<Installation> nathInstall = installApplication("birdee", PushProtocol.APNS, nath);
@@ -119,7 +113,8 @@ public class PushServiceTest extends SpaceTest {
 		assertTrue(vinceInstall.source().tags().isEmpty());
 
 		// vince fails to get all installations since not admin
-		vince.get("/1/installation").go(403);
+		assertHttpError(403, () -> vince.data()//
+				.getAllRequest().type("installation").go());
 
 		// admin gets all installations
 		List<InstallationDataObject> installations = superadmin.data().getAllRequest()//
@@ -132,7 +127,7 @@ public class PushServiceTest extends SpaceTest {
 			ids.contains(installation.id());
 
 		// nath adds bonjour tag to her install
-		nath.push().addTag(nathInstall.id(), "bonjour");
+		nath.push().addTags(nathInstall.id(), "bonjour");
 
 		String[] tags = nath.push().getTags(nathInstall.id());
 		assertEquals(1, tags.length);
@@ -140,17 +135,17 @@ public class PushServiceTest extends SpaceTest {
 
 		// nath adds again the same tag and it changes nothing
 		// there is no duplicate as a result
-		nath.push().addTag(nathInstall.id(), "bonjour");
+		nath.push().addTags(nathInstall.id(), "bonjour");
 
 		tags = nath.push().getTags(nathInstall.id());
 		assertEquals(1, tags.length);
 		assertThat(tags, hasItemInArray("bonjour"));
 
 		// vince adds bonjour tag to his install
-		vince.push().addTag(vinceInstall.id(), "bonjour");
+		vince.push().addTags(vinceInstall.id(), "bonjour");
 
 		// vince adds hi tag to his install
-		vince.push().addTag(vinceInstall.id(), "hi");
+		vince.push().addTags(vinceInstall.id(), "hi");
 
 		tags = vince.push().getTags(vinceInstall.id());
 		assertEquals(2, tags.length);
@@ -158,14 +153,14 @@ public class PushServiceTest extends SpaceTest {
 		assertThat(tags, hasItemInArray("bonjour"));
 
 		// vince deletes bonjour tag from his install
-		vince.push().deleteTag(vinceInstall.id(), "bonjour");
+		vince.push().removeTags(vinceInstall.id(), "bonjour");
 
 		tags = vince.push().getTags(vinceInstall.id());
 		assertEquals(1, tags.length);
 		assertThat(tags, hasItemInArray("hi"));
 
 		// vince deletes hi tag from his install
-		vince.push().deleteTag(vinceInstall.id(), "hi");
+		vince.push().removeTags(vinceInstall.id(), "hi");
 
 		tags = vince.push().getTags(vinceInstall.id());
 		assertEquals(0, tags.length);
@@ -252,27 +247,25 @@ public class PushServiceTest extends SpaceTest {
 				.assertContainsValue(vince.id(), OWNER_FIELD);
 
 		// vince gets 404 when he pushes to invalid app id
-		pushRequest = new PushRequest().appId("XXX").text("This is a push!");
-		vince.post("/1/push").bodyPojo(pushRequest).go(404);
+		assertHttpError(404, () -> vince.push()//
+				.push(new PushRequest().appId("XXX").text("This is a push!")));
 
 		// vince can not read, update nor delete dave's installation
-		vince.get("/1/installation/" + daveInstall.id()).go(403);
-		vince.put("/1/installation/" + daveInstall.id())//
-				.bodyJson(APP_ID, "XXX", TOKEN, "XXX", PROTOCOL, "GCM").go(403);
-		vince.delete("/1/installation/" + daveInstall.id()).go(403);
-
-		// also true with /data/installation route
-		vince.get("/1/data/installation/" + daveInstall.id()).go(403);
-		vince.put("/1/data/installation/" + daveInstall.id() + "/badge")//
-				.bodyJson(IntNode.valueOf(0)).go(403);
-		vince.delete("/1/data/installation/" + daveInstall.id()).go(403);
+		assertHttpError(403, () -> vince.data().get("installation", daveInstall.id()));
+		assertHttpError(403, () -> vince.data().save("installation", daveInstall.id(), //
+				new Installation().appId("XXX").token("XXX").protocol(PushProtocol.GCM)));
+		assertHttpError(403, () -> vince.data().save("installation", daveInstall.id(), "badge", 0));
+		assertHttpError(403, () -> vince.data().delete("installation", daveInstall.id()));
 
 		// dave can not update his installation app id
 		// if he does not provide the token
 		// this is also true for push service and endpoint
-		dave.put("/1/installation/" + daveInstall.id()).bodyJson(APP_ID, "joho2").go(400);
-		dave.put("/1/installation/" + daveInstall.id()).bodyJson(PROTOCOL, "GCM").go(400);
-		dave.put("/1/installation/" + daveInstall.id()).bodyJson(ENDPOINT, "XXX").go(400);
+		assertHttpError(400, () -> dave.push().saveInstallation(daveInstall.id(), //
+				new Installation().appId("joho2")));
+		assertHttpError(400, () -> dave.push().saveInstallation(daveInstall.id(), //
+				new Installation().protocol(PushProtocol.GCM)));
+		assertHttpError(400, () -> dave.push().saveInstallation(daveInstall.id(), //
+				new Installation().endpoint("XXX")));
 	}
 
 	@Test
@@ -298,8 +291,8 @@ public class PushServiceTest extends SpaceTest {
 		// vince pushes a message to dave with manual badge = 3
 		ObjectNode message = Json.object(PushProtocol.APNS, //
 				Json.object("aps", Json.object("alert", "coucou", BADGE, 3)));
-		ObjectNode response = vince.push().push(daveInstall.id(), //
-				new PushRequest().data(message));
+		ObjectNode response = vince.push().push(new PushRequest().data(message)//
+				.installationId(daveInstall.id()).refresh(true));
 
 		Json.assertNode(response)//
 				.assertEquals(daveInstall.id(), "pushedTo.0.installationId");

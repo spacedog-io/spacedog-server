@@ -70,16 +70,8 @@ public class PushEndpoint {
 	// Push
 	//
 
-	public ObjectNode push(String installationId, PushRequest request) {
-		return dog.post("/1/installation/{id}/push")//
-				.routeParam("id", installationId)//
-				.bodyPojo(request).go(200, 404).asJsonObject();
-	}
-
 	public ObjectNode push(PushRequest request) {
-		Check.notNull(request.appId, "appId");
-		return dog.post("/1/push").refresh(request.refresh)//
-				.bodyPojo(request).go(200, 404).asJsonObject();
+		return dog.post("/1/push").bodyPojo(request).go(200).asJsonObject();
 	}
 
 	//
@@ -129,25 +121,18 @@ public class PushEndpoint {
 	//
 
 	public String[] getTags(String installationId) {
-		return dog.get("/1/installation/{id}/tags")//
-				.routeParam("id", installationId).go(200).toPojo(String[].class);
+		return dog.data().get("installation", installationId, "tags", String[].class);
 	}
 
-	public PushEndpoint setTags(String installationId, String... tags) {
-		dog.put("/1/installation/{id}/tags")//
-				.routeParam("id", installationId).bodyPojo(tags).go(200);
-		return this;
+	public long setTags(String installationId, String... tags) {
+		return dog.data().save("installation", installationId, "tags", tags);
 	}
 
-	public PushEndpoint addTag(String installationId, String... tags) {
-		dog.post("/1/installation/{id}/tags")//
-				.routeParam("id", installationId).bodyPojo(tags).go(200);
-		return this;
+	public long addTags(String installationId, String... tags) {
+		return dog.data().add("installation", installationId, "tags", tags);
 	}
 
-	public PushEndpoint deleteTag(String installationId, String... tags) {
-		dog.delete("/1/installation/{id}/tags")//
-				.routeParam("id", installationId).bodyPojo(tags).go(200);
-		return this;
+	public long removeTags(String installationId, String... tags) {
+		return dog.data().remove("installation", installationId, "tags", tags);
 	}
 }

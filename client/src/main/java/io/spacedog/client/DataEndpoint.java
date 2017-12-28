@@ -70,10 +70,10 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 	}
 
 	public BasicDataObject save(String type, String id, Object source) {
-		return save(type, id, source, 0);
+		return save(type, id, 0, source);
 	}
 
-	public BasicDataObject save(String type, String id, Object source, long version) {
+	public BasicDataObject save(String type, String id, long version, Object source) {
 		return (BasicDataObject) save(new BasicDataObject()//
 				.type(type).id(id).source(source).version(version));
 	}
@@ -169,6 +169,20 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 			return Optional7.empty();
 
 		return Optional7.of(response.get(VERSION_FIELD).asLong());
+	}
+
+	public <T> long add(String type, String id, String field, //
+			@SuppressWarnings("unchecked") T... objects) {
+		return dog.post("/1/data/{t}/{i}/{f}").routeParam("i", id)//
+				.routeParam("t", type).routeParam("f", field)//
+				.bodyPojo(objects).go(200).get(VERSION_FIELD).asLong();
+	}
+
+	public <T> long remove(String type, String id, String field, //
+			@SuppressWarnings("unchecked") T... objects) {
+		return dog.delete("/1/data/{t}/{i}/{f}").routeParam("i", id)//
+				.routeParam("t", type).routeParam("f", field)//
+				.bodyPojo(objects).go(200).get(VERSION_FIELD).asLong();
 	}
 
 	//

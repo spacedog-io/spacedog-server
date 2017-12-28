@@ -14,7 +14,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
-import com.google.common.collect.Sets;
 
 import io.spacedog.client.PushRequest;
 import io.spacedog.model.BadgeStrategy;
@@ -33,8 +32,6 @@ import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
-import net.codestory.http.annotations.Delete;
-import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.annotations.Put;
@@ -81,116 +78,20 @@ public class PushService extends SpaceService {
 	// Routes
 	//
 
-	@Get("/installation")
-	@Get("/installation/")
-	@Get("/data/installation")
-	@Get("/data/installation/")
-	public Payload getAll(Context context) {
-		return DataService.get().getByType(TYPE, context);
-	}
-
-	@Post("/installation")
-	@Post("/installation/")
+	@Post("/push/installations")
+	@Post("/push/installations/")
 	@Post("/data/installation")
 	@Post("/data/installation/")
 	public Payload post(String body, Context context) {
 		return upsertInstallation(Optional.empty(), body, context);
 	}
 
-	@Delete("/installation")
-	@Delete("/installation/")
-	@Delete("/data/installation")
-	@Delete("/data/installation/")
-	public Payload deleteAll(Context context) {
-		return DataService.get().deleteByType(TYPE, context);
-	}
-
-	@Get("/installation/:id")
-	@Get("/installation/:id/")
-	@Get("/data/installation/:id")
-	@Get("/data/installation/:id/")
-	public Payload get(String id, Context context) {
-		return DataService.get().getById(TYPE, id, context);
-	}
-
-	@Delete("/installation/:id")
-	@Delete("/installation/:id/")
-	@Delete("/data/installation/:id")
-	@Delete("/data/installation/:id/")
-	public Payload delete(String id, Context context) {
-		return DataService.get().deleteById(TYPE, id, context);
-	}
-
-	@Put("/installation/:id")
-	@Put("/installation/:id/")
+	@Put("/push/installations/:id")
+	@Put("/push/installations/:id/")
 	@Put("/data/installation/:id")
 	@Put("/data/installation/:id/")
 	public Payload put(String id, String body, Context context) {
 		return upsertInstallation(Optional.of(id), body, context);
-	}
-
-	@Post("/installation/:id/push")
-	@Post("/installation/:id/push/")
-	public Payload pushById(String id, String body, Context context) {
-
-		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
-		PushRequest request = Json.toPojo(body, PushRequest.class);
-		DataObject<Installation> installation = load(id);
-
-		PushLog log = new PushLog();
-		pushToInstallation(log, installation, toJsonMessage(request), //
-				credentials, request.badgeStrategy);
-		return log.toPayload();
-	}
-
-	@Get("/installation/:id/tags")
-	@Get("/installation/:id/tags/")
-	public Payload getTags(String id, Context context) {
-		return getField(id, TAGS, context);
-	}
-
-	@Post("/installation/:id/tags")
-	@Post("/installation/:id/tags/")
-	public Payload postTags(String id, String body, Context context) {
-		DataObject<Installation> installation = load(id);
-		String[] tags = Json.toPojo(body, String[].class);
-		installation.source().tags().addAll(Sets.newHashSet(tags));
-		DataStore.get().updateObject(installation);
-		return JsonPayload.saved(false, "/1", TYPE, id).build();
-	}
-
-	@Put("/installation/:id/tags")
-	@Put("/installation/:id/tags/")
-	public Payload putTags(String id, String body, Context context) {
-		return putField(id, TAGS, body, context);
-	}
-
-	@Delete("/installation/:id/tags")
-	@Delete("/installation/:id/tags/")
-	public Payload deleteTags(String id, String body, Context context) {
-		DataObject<Installation> installation = load(id);
-		String[] tags = Json.toPojo(body, String[].class);
-		installation.source().tags().removeAll(Sets.newHashSet(tags));
-		DataStore.get().updateObject(installation);
-		return JsonPayload.saved(false, "/1", TYPE, id).build();
-	}
-
-	@Get("/installation/:id/:field")
-	@Get("/installation/:id/:field/")
-	public Payload getField(String id, String field, Context context) {
-		return DataService.get().getField(TYPE, id, field, context);
-	}
-
-	@Put("/installation/:id/:field")
-	@Put("/installation/:id/:field/")
-	public Payload putField(String id, String field, String body, Context context) {
-		return DataService.get().putField(TYPE, id, field, body, context);
-	}
-
-	@Delete("/installation/:id/:field")
-	@Delete("/installation/:id/:field/")
-	public Payload deleteField(String id, String field, Context context) {
-		return DataService.get().deleteField(TYPE, id, field, context);
 	}
 
 	/**
@@ -199,8 +100,6 @@ public class PushService extends SpaceService {
 	 */
 	@Post("/push")
 	@Post("/push/")
-	@Post("/installation/push")
-	@Post("/installation/push/")
 	public Payload pushByTags(String body, Context context) {
 
 		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
@@ -210,8 +109,11 @@ public class PushService extends SpaceService {
 		if (!Strings.isNullOrEmpty(request.appId))
 			query.must(QueryBuilders.termQuery(APP_ID, request.appId));
 
-		if (!Strings.isNullOrEmpty(request.credentialsId))
-			query.must(QueryBuilders.termQuery(OWNER_FIELD, request.credentialsId));
+		if (!Utils.isNullOrEmpty(request.credentialsIds))
+			query.must(QueryBuilders.termsQuery(OWNER_FIELD, request.credentialsIds));
+
+		if (!Utils.isNullOrEmpty(request.installationIds))
+			query.must(QueryBuilders.idsQuery().ids(request.installationIds));
 
 		if (request.protocol != null)
 			query.must(QueryBuilders.termQuery(PROTOCOL, request.protocol));
@@ -427,10 +329,6 @@ public class PushService extends SpaceService {
 		return id.isPresent() //
 				? DataService.get().doPut(installation, false, context) //
 				: DataService.get().doPost(installation);
-	}
-
-	private DataObject<Installation> load(String id) {
-		return DataStore.get().getObject(new InstallationDataObject().id(id));
 	}
 
 	//

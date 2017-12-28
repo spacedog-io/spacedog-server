@@ -20,7 +20,8 @@ public class PushRequest {
 	public String appId;
 	public PushProtocol protocol;
 	public BadgeStrategy badgeStrategy = BadgeStrategy.manual;
-	public String credentialsId;
+	public String[] credentialsIds;
+	public String[] installationIds;
 	public boolean usersOnly;
 	public Set<String> tags;
 	public boolean refresh;
@@ -42,8 +43,13 @@ public class PushRequest {
 		return this;
 	}
 
-	public PushRequest credentialsId(String credentialsId) {
-		this.credentialsId = credentialsId;
+	public PushRequest credentialsId(String... credentialsId) {
+		this.credentialsIds = credentialsId;
+		return this;
+	}
+
+	public PushRequest installationId(String... installationId) {
+		this.installationIds = installationId;
 		return this;
 	}
 
