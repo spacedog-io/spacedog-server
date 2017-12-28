@@ -24,6 +24,7 @@ import io.spacedog.model.Permission;
 import io.spacedog.model.PushProtocol;
 import io.spacedog.model.PushResponse;
 import io.spacedog.model.PushResponse.Notification;
+import io.spacedog.model.PushSettings;
 import io.spacedog.model.Roles;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
@@ -76,7 +77,15 @@ public class PushServiceTest extends SpaceTest {
 		DataObject<Installation> fredInstall = installApplication("joho", PushProtocol.APNS, fred);
 		DataObject<Installation> daveInstall = installApplication("joho", PushProtocol.APNS, dave);
 
-		// vince pushes a simple message to fred
+		// vince fails to push since no roles are yet authorized to push
+		assertHttpError(403, () -> vince.push().push(new PushRequest()));
+
+		// superadmin authorizes users to push
+		PushSettings settings = new PushSettings();
+		settings.authorizedRoles.add(Roles.user);
+		superadmin.settings().save(settings);
+
+		// vince pushes a simple message to fred via installation id
 		PushResponse response = vince.push().push(new PushRequest()//
 				.text("coucou").installationId(fredInstall.id()).refresh(true));
 
@@ -85,12 +94,12 @@ public class PushServiceTest extends SpaceTest {
 		assertEquals(fredInstall.id(), response.notifications.get(0).installationId);
 		assertEquals(fred.id(), response.notifications.get(0).owner);
 
-		// vince pushes a complex object message to dave
+		// vince pushes a complex object message to dave via credentials id
 		ObjectNode message = Json.object("APNS", //
 				Json.object("aps", Json.object("alert", "coucou")));
 
 		response = vince.push().push(new PushRequest()//
-				.data(message).installationId(daveInstall.id()));
+				.data(message).credentialsId(dave.id()));
 
 		assertEquals(0, response.failures);
 		assertEquals(1, response.notifications.size());
@@ -278,6 +287,12 @@ public class PushServiceTest extends SpaceTest {
 		// prepare installation schema
 		superadmin.schemas().setDefault("installation");
 
+		// superadmin authorizes users and superadmins to push
+		PushSettings settings = new PushSettings();
+		settings.authorizedRoles.add(Roles.user);
+		settings.authorizedRoles.add(Roles.superadmin);
+		superadmin.settings().save(settings);
+
 		// vince and dave install joho
 		DataObject<Installation> vinceInstall = installApplication(//
 				"joho", PushProtocol.APNS, vince);
@@ -300,7 +315,7 @@ public class PushServiceTest extends SpaceTest {
 				.getInstallation(daveInstall.id());
 		assertEquals(0, installation.source().badge());
 
-		// vince pushes a message to all with automatic badging
+		// superadmin pushes a message to all with automatic badging
 		// this means installation.badge is incremented on the server
 		// and installation.badge is sent to each installation
 		PushRequest pushRequest = new PushRequest().appId("joho").refresh(true)//
@@ -327,7 +342,7 @@ public class PushServiceTest extends SpaceTest {
 		installation = vince.push().getInstallation(vinceInstall.id());
 		assertEquals(0, installation.source().badge());
 
-		// admin pushes again to all with automatic badging
+		// superadmin pushes again to all with automatic badging
 		response = superadmin.push().push(pushRequest);
 
 		assertEquals(0, response.failures);
@@ -343,7 +358,7 @@ public class PushServiceTest extends SpaceTest {
 		installation = vince.push().getInstallation(vinceInstall.id());
 		assertEquals(1, installation.source().badge());
 
-		// admin pushes again to all but with semi automatic badging
+		// superadmin pushes again to all but with semi automatic badging
 		pushRequest.badgeStrategy(BadgeStrategy.semi);
 		response = superadmin.push().push(pushRequest);
 

@@ -26,6 +26,7 @@ import io.spacedog.model.Permission;
 import io.spacedog.model.PushProtocol;
 import io.spacedog.model.PushResponse;
 import io.spacedog.model.PushResponse.Notification;
+import io.spacedog.model.PushSettings;
 import io.spacedog.model.Roles;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Check;
@@ -103,7 +104,10 @@ public class PushService extends SpaceService {
 	@Post("/push/")
 	public Payload pushByTags(String body, Context context) {
 
-		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
+		PushSettings settings = SettingsService.get().getAsObject(PushSettings.class);
+		Credentials credentials = SpaceContext.credentials();
+		credentials.checkIfAuthorized(settings.authorizedRoles);
+
 		PushRequest request = Json.toPojo(body, PushRequest.class);
 		BoolQueryBuilder query = QueryBuilders.boolQuery();
 
@@ -317,5 +321,6 @@ public class PushService extends SpaceService {
 	}
 
 	private PushService() {
+		SettingsService.get().registerSettings(PushSettings.class);
 	}
 }
