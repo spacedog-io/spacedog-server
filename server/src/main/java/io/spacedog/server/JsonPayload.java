@@ -15,7 +15,6 @@ import com.google.common.base.Strings;
 import io.spacedog.http.SpaceException;
 import io.spacedog.http.SpaceFields;
 import io.spacedog.http.SpaceHeaders;
-import io.spacedog.model.DataObject;
 import io.spacedog.utils.Json;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
@@ -61,13 +60,8 @@ public class JsonPayload implements SpaceFields {
 		return this;
 	}
 
-	public <K extends ObjectNode> JsonPayload withObject(DataObject<K> object) {
+	public JsonPayload withObject(Object object) {
 		this.node = Json.toJsonNode(object);
-		return this;
-	}
-
-	public JsonPayload withObject(JsonNode node) {
-		this.node = node;
 		return this;
 	}
 
@@ -101,6 +95,10 @@ public class JsonPayload implements SpaceFields {
 	// Factory methods
 	//
 
+	public static JsonPayload status(int status) {
+		return new JsonPayload(status);
+	}
+
 	public static JsonPayload ok() {
 		return status(HttpStatus.OK);
 	}
@@ -109,16 +107,12 @@ public class JsonPayload implements SpaceFields {
 		return status(HttpStatus.CREATED);
 	}
 
-	public static JsonPayload status(int status) {
-		return new JsonPayload(status);
-	}
-
-	public static JsonPayload status(boolean created) {
+	public static JsonPayload saved(boolean created) {
 		return new JsonPayload(created ? HttpStatus.CREATED : HttpStatus.OK);
 	}
 
 	public static JsonPayload saved(boolean created, String uri, String type, String id) {
-		return status(created)//
+		return saved(created)//
 				.withFields("id", id, "type", type)//
 				.withLocation(uri, type, id)//
 				.withHeader(SpaceHeaders.SPACEDOG_OBJECT_ID, id);
@@ -175,7 +169,7 @@ public class JsonPayload implements SpaceFields {
 		return HttpStatus.INTERNAL_SERVER_ERROR;
 	}
 
-	public static JsonNode toJson(Throwable t, boolean debug) {
+	public static ObjectNode toJson(Throwable t, boolean debug) {
 		ObjectNode json = Json.object();
 
 		if (!Strings.isNullOrEmpty(t.getMessage()))//
@@ -195,7 +189,7 @@ public class JsonPayload implements SpaceFields {
 			if (t instanceof ElasticsearchException) {
 				ElasticsearchException elasticException = ((ElasticsearchException) t);
 				for (String key : elasticException.getHeaderKeys()) {
-					json.with("elastic").set(key, Json.toJsonNode(elasticException.getHeader(key)));
+					json.with("details").set(key, Json.toJsonNode(elasticException.getHeader(key)));
 				}
 			}
 

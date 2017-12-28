@@ -82,7 +82,7 @@ public class EmailService extends SpaceService {
 		IndexResponse response = SettingsService.get()//
 				.doSave(toSettingsId(templateName), Json.toString(template));
 
-		return JsonPayload.status(response.isCreated())//
+		return JsonPayload.saved(response.isCreated())//
 				.withFields("id", templateName, "type", "EmailTemplate")//
 				.withLocation("/1/emails/templates/" + templateName)//
 				.build();
