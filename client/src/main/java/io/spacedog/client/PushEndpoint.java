@@ -2,7 +2,6 @@ package io.spacedog.client;
 
 import java.util.List;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
@@ -12,6 +11,7 @@ import io.spacedog.model.Installation;
 import io.spacedog.model.InstallationDataObject;
 import io.spacedog.model.PushApplication;
 import io.spacedog.model.PushApplication.Credentials;
+import io.spacedog.model.PushResponse;
 import io.spacedog.utils.Check;
 
 public class PushEndpoint {
@@ -70,8 +70,9 @@ public class PushEndpoint {
 	// Push
 	//
 
-	public ObjectNode push(PushRequest request) {
-		return dog.post("/1/push").bodyPojo(request).go(200).asJsonObject();
+	public PushResponse push(PushRequest request) {
+		return dog.post("/1/push").bodyPojo(request).go(200)//
+				.toPojo(PushResponse.class);
 	}
 
 	//

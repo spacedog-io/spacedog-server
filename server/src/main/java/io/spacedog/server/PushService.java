@@ -11,7 +11,6 @@ import com.amazonaws.services.sns.model.EndpointDisabledException;
 import com.amazonaws.services.sns.model.PlatformApplicationDisabledException;
 import com.amazonaws.services.sns.model.PublishRequest;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
@@ -25,6 +24,8 @@ import io.spacedog.model.InstallationDataObject;
 import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.Permission;
 import io.spacedog.model.PushProtocol;
+import io.spacedog.model.PushResponse;
+import io.spacedog.model.PushResponse.Notification;
 import io.spacedog.model.Roles;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Check;
@@ -145,62 +146,39 @@ public class PushService extends SpaceService {
 							hits.totalHits())//
 					.build();
 
-		PushLog log = new PushLog();
+		PushResponse response = new PushResponse();
 
 		for (SearchHit hit : hits.getHits()) {
 			DataObject<Installation> installation = new InstallationDataObject()//
 					.source(Json.toPojo(hit.source(), Installation.class))//
 					.id(hit.id());
-			pushToInstallation(log, installation, toJsonMessage(request), //
+			pushToInstallation(response, installation, toJsonMessage(request), //
 					credentials, request.badgeStrategy);
-			if (log.applicationDisabled)
+			if (response.applicationDisabled)
 				break;
 		}
 
-		return log.toPayload();
+		return JsonPayload.ok().withObject(response).build();
 	}
 
 	//
 	// Implementation
 	//
 
-	public static class PushLog {
-		public int successes = 0;
-		public boolean failures;
-		public ArrayNode logItems = Json.array();
-		public boolean applicationDisabled;
-
-		public Payload toPayload() {
-			int httpStatus = logItems.size() == 0 ? HttpStatus.NOT_FOUND //
-					: successes > 0 ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
-
-			return JsonPayload.status(httpStatus)//
-					.withFields(FAILURES, failures, //
-							"applicationDisabled", applicationDisabled, //
-							PUSHED_TO, logItems)//
-					.build();
-		}
-
-		public ObjectNode toNode() {
-			return Json.object(FAILURES, failures, //
-					"applicationDisabled", applicationDisabled, //
-					PUSHED_TO, logItems);
-		}
-	}
-
-	public void pushToInstallation(PushLog log, DataObject<Installation> installation, //
+	public void pushToInstallation(PushResponse response, DataObject<Installation> installation, //
 			ObjectNode jsonMessage, Credentials credentials, BadgeStrategy badgeStrategy) {
 
-		ObjectNode logItem = Json.object("installationId", installation.id());
-		log.logItems.add(logItem);
+		Notification notification = new Notification();
+		notification.installationId = installation.id();
+		response.notifications.add(notification);
 
 		try {
 
 			if (!Strings.isNullOrEmpty(installation.owner()))
-				logItem.put(OWNER_FIELD, installation.owner());
+				notification.owner = installation.owner();
 
 			jsonMessage = badgeObjectMessage(installation, jsonMessage, //
-					credentials, logItem, badgeStrategy);
+					credentials, badgeStrategy);
 
 			ObjectNode snsMessage = toSnsMessage(installation.source().protocol(), jsonMessage);
 
@@ -212,24 +190,22 @@ public class PushService extends SpaceService {
 
 				AwsSnsPusher.getSnsClient().publish(pushRequest);
 			} else
-				logItem.set("message", snsMessage);
-
-			log.successes = log.successes + 1;
+				notification.message = snsMessage;
 
 		} catch (Exception e) {
-			log.failures = true;
-			logItem.set(ERROR_FIELD, JsonPayload.toJson(e, SpaceContext.isDebug()));
+			response.failures = response.failures + 1;
+			notification.error = JsonPayload.toJson(e, SpaceContext.isDebug());
 
 			if (e instanceof EndpointDisabledException //
 					|| e.getMessage().contains(//
 							"No endpoint found for the target arn specified")) {
 
-				logItem.put("installationDisabled", true);
+				notification.installationDisabled = true;
 				removeEndpointQuietly(installation.id());
 			}
 
 			if (e instanceof PlatformApplicationDisabledException)
-				log.applicationDisabled = true;
+				response.applicationDisabled = true;
 		}
 	}
 
@@ -270,8 +246,7 @@ public class PushService extends SpaceService {
 	}
 
 	private ObjectNode badgeObjectMessage(DataObject<Installation> installation, //
-			ObjectNode message, Credentials credentials, //
-			ObjectNode logItem, BadgeStrategy badgeStrategy) {
+			ObjectNode message, Credentials credentials, BadgeStrategy badgeStrategy) {
 
 		if (badgeStrategy == null || //
 				BadgeStrategy.manual.equals(badgeStrategy))

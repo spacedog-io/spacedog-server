@@ -22,16 +22,13 @@ import io.spacedog.model.Installation;
 import io.spacedog.model.InstallationDataObject;
 import io.spacedog.model.Permission;
 import io.spacedog.model.PushProtocol;
+import io.spacedog.model.PushResponse;
+import io.spacedog.model.PushResponse.Notification;
 import io.spacedog.model.Roles;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
 
 public class PushServiceTest extends SpaceTest {
-
-	private static final String PUSHED_TO = "pushedTo";
-	private static final String FAILURES = "failures";
-	private static final String INSTALLATION_ID = "installationId";
-	private static final String BADGE = "badge";
 
 	@Test
 	public void usersInstallAppAndPush() {
@@ -80,12 +77,13 @@ public class PushServiceTest extends SpaceTest {
 		DataObject<Installation> daveInstall = installApplication("joho", PushProtocol.APNS, dave);
 
 		// vince pushes a simple message to fred
-		ObjectNode response = vince.push().push(new PushRequest()//
+		PushResponse response = vince.push().push(new PushRequest()//
 				.text("coucou").installationId(fredInstall.id()).refresh(true));
 
-		Json.assertNode(response)//
-				.assertEquals(fredInstall.id(), "pushedTo.0.installationId")//
-				.assertEquals(fred.id(), "pushedTo.0.owner");
+		assertEquals(0, response.failures);
+		assertEquals(1, response.notifications.size());
+		assertEquals(fredInstall.id(), response.notifications.get(0).installationId);
+		assertEquals(fred.id(), response.notifications.get(0).owner);
 
 		// vince pushes a complex object message to dave
 		ObjectNode message = Json.object("APNS", //
@@ -94,9 +92,13 @@ public class PushServiceTest extends SpaceTest {
 		response = vince.push().push(new PushRequest()//
 				.data(message).installationId(daveInstall.id()));
 
+		assertEquals(0, response.failures);
+		assertEquals(1, response.notifications.size());
+		assertNotificationsContains(response, daveInstall.id(), dave.id());
+
 		// vince fails to push to invalid installation id
-		assertHttpError(404, () -> vince.push().push(//
-				new PushRequest().installationId("XXX")));
+		response = vince.push().push(new PushRequest().installationId("XXX"));
+		assertEquals(0, response.notifications.size());
 
 		// nath installs birdee
 		DataObject<Installation> nathInstall = installApplication("birdee", PushProtocol.APNS, nath);
@@ -186,13 +188,12 @@ public class PushServiceTest extends SpaceTest {
 				.refresh(true).text("This is a push!");
 		response = vince.push().push(pushRequest);
 
-		Json.assertNode(response)//
-				.assertFalse(FAILURES)//
-				.assertEquals(4, PUSHED_TO)//
-				.assertContainsValue(unknownInstallId, INSTALLATION_ID)//
-				.assertContainsValue(dave.id(), OWNER_FIELD)//
-				.assertContainsValue(vince.id(), OWNER_FIELD)//
-				.assertContainsValue(fred.id(), OWNER_FIELD);
+		assertEquals(0, response.failures);
+		assertEquals(4, response.notifications.size());
+		assertNotificationsContains(response, unknownInstall.id(), null);
+		assertNotificationsContains(response, daveInstall.id(), dave.id());
+		assertNotificationsContains(response, vinceInstall.id(), vince.id());
+		assertNotificationsContains(response, fredInstall.id(), fred.id());
 
 		// vince pushes to all joho users
 		// this means excluding anonymous installations
@@ -201,54 +202,49 @@ public class PushServiceTest extends SpaceTest {
 		pushRequest.refresh(false).usersOnly(true);
 		response = vince.push().push(pushRequest);
 
-		Json.assertNode(response)//
-				.assertFalse(FAILURES)//
-				.assertEquals(3, PUSHED_TO)//
-				.assertContainsValue(dave.id(), OWNER_FIELD)//
-				.assertContainsValue(vince.id(), OWNER_FIELD)//
-				.assertContainsValue(fred.id(), OWNER_FIELD);
+		assertEquals(0, response.failures);
+		assertEquals(3, response.notifications.size());
+		assertNotificationsContains(response, daveInstall.id(), dave.id());
+		assertNotificationsContains(response, vinceInstall.id(), vince.id());
+		assertNotificationsContains(response, fredInstall.id(), fred.id());
 
 		// vince pushes to APNS only joho users
 		pushRequest.protocol(PushProtocol.APNS);
 		response = vince.push().push(pushRequest);
 
-		Json.assertNode(response)//
-				.assertFalse(FAILURES)//
-				.assertEquals(2, PUSHED_TO)//
-				.assertContainsValue(dave.id(), OWNER_FIELD)//
-				.assertContainsValue(fred.id(), OWNER_FIELD);
+		assertEquals(0, response.failures);
+		assertEquals(2, response.notifications.size());
+		assertNotificationsContains(response, daveInstall.id(), dave.id());
+		assertNotificationsContains(response, fredInstall.id(), fred.id());
 
 		// vince pushes to APNS only joho users with tag bonjour
 		pushRequest.tags("bonjour");
 		response = vince.push().push(pushRequest);
 
-		Json.assertNode(response)//
-				.assertFalse(FAILURES)//
-				.assertEquals(1, PUSHED_TO)//
-				.assertContainsValue(fred.id(), OWNER_FIELD);
+		assertEquals(0, response.failures);
+		assertEquals(1, response.notifications.size());
+		assertNotificationsContains(response, fredInstall.id(), fred.id());
 
 		// vince pushes to all joho users with tag bonjour
 		pushRequest.protocol(null);
 		response = vince.push().push(pushRequest);
 
-		Json.assertNode(response)//
-				.assertFalse(FAILURES)//
-				.assertEquals(2, PUSHED_TO)//
-				.assertContainsValue(vince.id(), OWNER_FIELD)//
-				.assertContainsValue(fred.id(), OWNER_FIELD);
+		assertEquals(0, response.failures);
+		assertEquals(2, response.notifications.size());
+		assertNotificationsContains(response, vinceInstall.id(), vince.id());
+		assertNotificationsContains(response, fredInstall.id(), fred.id());
 
 		// vince pushes to all joho users with tags bonjour and hi
 		pushRequest.tags("bonjour", "hi");
 		response = vince.push().push(pushRequest);
 
-		Json.assertNode(response)//
-				.assertFalse(FAILURES)//
-				.assertEquals(1, PUSHED_TO)//
-				.assertContainsValue(vince.id(), OWNER_FIELD);
+		assertEquals(0, response.failures);
+		assertEquals(1, response.notifications.size());
+		assertNotificationsContains(response, vinceInstall.id(), vince.id());
 
 		// vince gets 404 when he pushes to invalid app id
-		assertHttpError(404, () -> vince.push()//
-				.push(new PushRequest().appId("XXX").text("This is a push!")));
+		response = vince.push().push(new PushRequest().appId("XXX").text("This is a push!"));
+		assertEquals(0, response.notifications.size());
 
 		// vince can not read, update nor delete dave's installation
 		assertHttpError(403, () -> vince.data().get("installation", daveInstall.id()));
@@ -290,12 +286,13 @@ public class PushServiceTest extends SpaceTest {
 
 		// vince pushes a message to dave with manual badge = 3
 		ObjectNode message = Json.object(PushProtocol.APNS, //
-				Json.object("aps", Json.object("alert", "coucou", BADGE, 3)));
-		ObjectNode response = vince.push().push(new PushRequest().data(message)//
+				Json.object("aps", Json.object("alert", "coucou", "badge", 3)));
+		PushResponse response = vince.push().push(new PushRequest().data(message)//
 				.installationId(daveInstall.id()).refresh(true));
 
-		Json.assertNode(response)//
-				.assertEquals(daveInstall.id(), "pushedTo.0.installationId");
+		assertEquals(0, response.failures);
+		assertEquals(1, response.notifications.size());
+		assertNotificationsContains(response, daveInstall.id(), dave.id());
 
 		// badge is not set in installation
 		// since badge management is still manual
@@ -311,10 +308,10 @@ public class PushServiceTest extends SpaceTest {
 
 		response = superadmin.push().push(pushRequest);
 
-		Json.assertNode(response)//
-				.assertSizeEquals(2, PUSHED_TO)//
-				.assertContainsValue(vinceInstall.id(), INSTALLATION_ID)//
-				.assertContainsValue(daveInstall.id(), INSTALLATION_ID);
+		assertEquals(0, response.failures);
+		assertEquals(2, response.notifications.size());
+		assertNotificationsContains(response, vinceInstall.id(), vince.id());
+		assertNotificationsContains(response, daveInstall.id(), dave.id());
 
 		// check badge is 1 in dave's installation
 		installation = dave.push().getInstallation(daveInstall.id());
@@ -333,8 +330,10 @@ public class PushServiceTest extends SpaceTest {
 		// admin pushes again to all with automatic badging
 		response = superadmin.push().push(pushRequest);
 
-		Json.assertNode(response)//
-				.assertSizeEquals(2, PUSHED_TO);
+		assertEquals(0, response.failures);
+		assertEquals(2, response.notifications.size());
+		assertNotificationsContains(response, vinceInstall.id(), vince.id());
+		assertNotificationsContains(response, daveInstall.id(), dave.id());
 
 		// check badge is 2 in dave's installation
 		installation = dave.push().getInstallation(daveInstall.id());
@@ -348,8 +347,10 @@ public class PushServiceTest extends SpaceTest {
 		pushRequest.badgeStrategy(BadgeStrategy.semi);
 		response = superadmin.push().push(pushRequest);
 
-		Json.assertNode(response)//
-				.assertSizeEquals(2, PUSHED_TO);
+		assertEquals(0, response.failures);
+		assertEquals(2, response.notifications.size());
+		assertNotificationsContains(response, vinceInstall.id(), vince.id());
+		assertNotificationsContains(response, daveInstall.id(), dave.id());
 
 		// check badge is 2 in dave's installation
 		installation = dave.push().getInstallation(daveInstall.id());
@@ -375,5 +376,16 @@ public class PushServiceTest extends SpaceTest {
 		assertTrue(installation.source().tags().isEmpty());
 
 		return installation;
+	}
+
+	private void assertNotificationsContains(PushResponse response, String installationId, String owner) {
+		for (Notification notification : response.notifications) {
+
+			if (notification.installationId.equals(installationId) //
+					&& (owner == notification.owner //
+							|| (owner != null && owner.equals(notification.owner))))
+				return;
+		}
+		failure("no notification to installation [%s] owned by [%s]", installationId, owner);
 	}
 }
