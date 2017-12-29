@@ -27,7 +27,6 @@
 	<modules>
 		<module>server</module>
 		<module>client</module>
-		<module>watchdog</module>
 		<module>cli</module>
 		<module>jobs</module>
 		<module>test</module>
