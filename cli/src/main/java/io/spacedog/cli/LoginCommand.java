@@ -17,6 +17,7 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Utils;
 
 @Parameters(commandNames = { "login" }, //
 		commandDescription = "login to specific backend")
@@ -49,7 +50,7 @@ public class LoginCommand extends AbstractCommand<LoginCommand> {
 		return this;
 	}
 
-	public SpaceDog login() throws IOException {
+	public SpaceDog login() {
 		Check.notNullOrEmpty(backend, "backend");
 		Check.notNullOrEmpty(username, "username");
 
@@ -68,22 +69,25 @@ public class LoginCommand extends AbstractCommand<LoginCommand> {
 		session = SpaceDog.backendId(backend)//
 				.username(username).login(password);
 
-		Path path = Paths.get(userHome, ".spacedog");
-		Files.createDirectories(path);
-		path = path.resolve("cli.properties");
-
-		Properties properties = new Properties();
-		properties.put("backend", backend);
-		properties.put("accessToken", session.accessToken().get());
-
 		OutputStream out = null;
+		Path path = Paths.get(userHome, ".spacedog");
+
 		try {
+			Files.createDirectories(path);
+			path = path.resolve("cli.properties");
+
+			Properties properties = new Properties();
+			properties.put("backend", backend);
+			properties.put("accessToken", session.accessToken().get());
+
 			out = Files.newOutputStream(path);
 			properties.store(out, "SpaceDog CLI properties");
 
+		} catch (IOException e) {
+			throw Exceptions.runtime(e, "error writing CLI session properties");
+
 		} finally {
-			if (out != null)
-				out.close();
+			Utils.closeSilently(out);
 		}
 
 		return session;

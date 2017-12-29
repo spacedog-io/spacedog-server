@@ -149,30 +149,39 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 		}
 	}
 
-	public static <T> SpaceRequestException assertHttpError(int status, Supplier<T> action) {
+	public static SpaceRequestException assertHttpError(int status, Supplier<?> action) {
 		return assertHttpError(status, () -> {
 			action.get();
 		});
 	}
 
 	public static SpaceRequestException assertHttpError(int status, Runnable action) {
-		SpaceRequestException exception = assertRequestException(action);
+		SpaceRequestException exception = assertThrow(SpaceRequestException.class, action);
 		assertEquals(status, exception.httpStatus());
 		return exception;
 	}
 
-	public static SpaceRequestException assertRequestException(Runnable action) {
+	public static <T extends RuntimeException> T assertThrow(//
+			Class<T> exceptionClass, Supplier<?> action) {
+
+		return assertThrow(exceptionClass, () -> {
+			action.get();
+		});
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T extends RuntimeException> T assertThrow(//
+			Class<T> exceptionClass, Runnable action) {
 
 		try {
 			action.run();
-			throw failure("function did not throw any SpaceRequestException");
 
-		} catch (SpaceRequestException e) {
-			return e;
-
-		} catch (Throwable t) {
-			throw failure(t);
+		} catch (Exception e) {
+			if (exceptionClass.isAssignableFrom(e.getClass()))
+				return (T) e;
+			throw e;
 		}
+		throw failure("function did not throw any [%s]", exceptionClass);
 	}
 
 	public static <T> T retry(int tries, long millis, Supplier<T> action) {
