@@ -80,7 +80,7 @@ public class ServiceErrorFilter implements SpaceFilter {
 			appendContent(builder, "Response body", payload.rawContent().toString());
 
 			Internals.get().notify(//
-					Start.get().configuration().awsSuperdogNotificationTopic().orElse(null), //
+					Server.get().configuration().awsSuperdogNotificationTopic().orElse(null), //
 					String.format("%s is 500 500 500", uri), //
 					builder.toString());
 

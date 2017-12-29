@@ -64,7 +64,7 @@ public class BatchService extends SpaceService {
 
 			try {
 				checkRequestAuthorizedInBatch(request);
-				requestPayload = Start.get().executeRequest(request, null);
+				requestPayload = Server.get().executeRequest(request, null);
 			} catch (Throwable t) {
 				requestPayload = JsonPayload.error(t).build();
 			}
@@ -107,7 +107,7 @@ public class BatchService extends SpaceService {
 						context);
 
 				try {
-					payload = Start.get().executeRequest(request, null);
+					payload = Server.get().executeRequest(request, null);
 				} catch (Throwable t) {
 					payload = JsonPayload.error(t).build();
 				}

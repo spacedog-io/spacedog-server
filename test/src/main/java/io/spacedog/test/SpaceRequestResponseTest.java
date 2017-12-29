@@ -20,8 +20,8 @@ public class SpaceRequestResponseTest extends SpaceTest {
 	public void testHeadersIgnoreCase() {
 
 		prepareTest();
-		resetTestBackend();
-		SpaceDog guest = SpaceDog.backendId("test");
+		clearRootBackend();
+		SpaceDog guest = SpaceDog.defaultBackend();
 
 		// CORS for simple requests
 		SpaceResponse response = guest.get("/1/data").go(200)//

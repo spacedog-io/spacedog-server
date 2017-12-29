@@ -32,33 +32,30 @@ public class LogServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test2 = resetTest2Backend();
-		SpaceDog test = resetTestBackend();
-		SpaceDog fred = createTempDog(test, "fred").login();
+		SpaceDog superadmin = clearRootBackend();
+		SpaceDog fred = createTempDog(superadmin, "fred").login();
 
 		fred.data().getAllRequest().go();
 		fred.data().getAllRequest().go();
-
-		// superadmin gets test2 backend total log count to check
-		// later that they aren't affected by test backend log purge
-		long test2TotalLogs = test2.logs().get(0, true).total;
 
 		// superadmin checks everything is in place
-		LogSearchResults log = test.logs().get(6, true);
+		LogSearchResults log = superadmin.logs().get(10, true);
 
-		assertEquals(4, log.results.size());
+		assertEquals(6, log.results.size());
 		assertEquals("/1/data", log.results.get(0).path);
 		assertEquals("/1/data", log.results.get(1).path);
 		assertEquals("/1/login", log.results.get(2).path);
 		assertEquals("/1/credentials", log.results.get(3).path);
+		assertEquals("/1/credentials", log.results.get(4).path);
+		assertEquals("/1/admin/clear", log.results.get(5).path);
 
 		DateTime before = log.results.get(1).receivedAt;
 
 		// superadmin deletes all logs before GET /data requests
-		test.logs().delete(before);
+		superadmin.logs().delete(before);
 
 		// superadmin checks all test backend logs are deleted but ...
-		log = test.logs().get(10, true);
+		log = superadmin.logs().get(10, true);
 
 		assertEquals(4, log.total);
 		assertEquals("DELETE", log.results.get(0).method);
@@ -73,10 +70,10 @@ public class LogServiceTest extends SpaceTest {
 		before = log.results.get(1).receivedAt;
 
 		// superdog deletes all logs before GET /log requests
-		superdog(test).logs().delete(before);
+		superdog().logs().delete(before);
 
 		// superadmin checks all test backend logs are deleted but ...
-		log = superdog(test).logs().get(10, true);
+		log = superdog().logs().get(10, true);
 
 		assertEquals(4, log.total);
 		assertEquals("DELETE", log.results.get(0).method);
@@ -87,13 +84,6 @@ public class LogServiceTest extends SpaceTest {
 		assertEquals("/1/log", log.results.get(2).path);
 		assertEquals("GET", log.results.get(3).method);
 		assertEquals("/1/log", log.results.get(3).path);
-
-		// count = last time checked + 1, because of the first check.
-		// It demonstrates purge of specific backend doesn't affect other
-		// backends
-		log = test2.logs().get(0, true);
-
-		assertEquals(test2TotalLogs + 1, log.total);
 	}
 
 	@Test
@@ -103,8 +93,8 @@ public class LogServiceTest extends SpaceTest {
 		prepareTest();
 
 		// creates test backend and user
-		SpaceDog superadmin = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(superadmin.backend());
+		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog superadmin = clearRootBackend();
 		guest.get("/1/data").go(200);
 		guest.get("/1/data/user").go(403);
 		SpaceDog vince = createTempDog(superadmin, "vince").login();
@@ -156,9 +146,10 @@ public class LogServiceTest extends SpaceTest {
 		// superadmin gets all test backend logs
 		query = ESSearchSourceBuilder.searchSource()//
 				.query(ESQueryBuilders.matchAllQuery())//
-				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
+				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC))//
+				.size(20);
 		results = superadmin.logs().search(query, true);
-		assertEquals(9, results.results.size());
+		assertEquals(11, results.results.size());
 		assertEquals("/1/log/search", results.results.get(0).path);
 		assertEquals("/1/log/search", results.results.get(1).path);
 		assertEquals("/1/log/search", results.results.get(2).path);
@@ -168,6 +159,8 @@ public class LogServiceTest extends SpaceTest {
 		assertEquals("/1/credentials", results.results.get(6).path);
 		assertEquals("/1/data/user", results.results.get(7).path);
 		assertEquals("/1/data", results.results.get(8).path);
+		assertEquals("/1/credentials", results.results.get(9).path);
+		assertEquals("/1/admin/clear", results.results.get(10).path);
 	}
 
 	@Test
@@ -198,8 +191,7 @@ public class LogServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
-		SpaceDog superadmin2 = resetTest2Backend();
+		SpaceDog superadmin = clearRootBackend();
 
 		// create message schema in test backend
 		Schema schema = Schema.builder("message").text("text")//
@@ -208,9 +200,6 @@ public class LogServiceTest extends SpaceTest {
 
 		// create a user in test backend
 		SpaceDog user = createTempDog(superadmin, "user").login();
-
-		// create a user in test2 backend
-		createTempDog(superadmin2, "user2").login();
 
 		// create message in test backend
 		JsonDataObject message = user.data()//
@@ -226,7 +215,7 @@ public class LogServiceTest extends SpaceTest {
 		// the delete request is not part of the logs
 		// since log starts with the backend creation
 		List<LogItem> results = superadmin.logs().get(10, true).results;
-		assertEquals(6, results.size());
+		assertEquals(8, results.size());
 		assertEquals("GET", results.get(0).method);
 		assertEquals("/1/data/message", results.get(0).path);
 		assertEquals("GET", results.get(1).method);
@@ -239,29 +228,17 @@ public class LogServiceTest extends SpaceTest {
 		assertEquals("/1/credentials", results.get(4).path);
 		assertEquals("PUT", results.get(5).method);
 		assertEquals("/1/schemas/message", results.get(5).path);
-
-		// get all test2 backend logs
-		results = superadmin2.logs().get(4, true).results;
-		assertEquals(2, results.size());
-		assertEquals("GET", results.get(0).method);
-		assertEquals("/1/login", results.get(0).path);
-		assertEquals("POST", results.get(1).method);
-		assertEquals("/1/credentials", results.get(1).path);
-		assertEquals("********", results.get(1).payload.get(PASSWORD_FIELD).asText());
-
-		// after backend deletion, logs are not accessible to backend
-		superadmin.admin().deleteBackend(superadmin.backendId());
-		superadmin.get("/1/log").go(401);
-
-		superadmin2.admin().deleteBackend(superadmin2.backendId());
-		superadmin2.get("/1/log").go(401);
+		assertEquals("POST", results.get(6).method);
+		assertEquals("/1/credentials", results.get(6).path);
+		assertEquals("POST", results.get(7).method);
+		assertEquals("/1/admin/clear", results.get(7).path);
 	}
 
 	@Test
 	public void checkPasswordsAreNotLogged() {
 
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin = clearRootBackend();
 		SpaceDog fred = createTempDog(superadmin, "fred").login();
 
 		String passwordResetCode = superadmin.delete("/1/credentials/{id}/password")//
@@ -277,8 +254,8 @@ public class LogServiceTest extends SpaceTest {
 				.routeParam("id", fred.id()).basicAuth("fred", "hi fred 2")//
 				.formField("password", "hi fred 3").go(200);
 
-		List<LogItem> results = superadmin.logs().get(7, true).results;
-		assertEquals(5, results.size());
+		List<LogItem> results = superadmin.logs().get(10, true).results;
+		assertEquals(7, results.size());
 		assertEquals("PUT", results.get(0).method);
 		assertEquals("/1/credentials/" + fred.id() + "/password", results.get(0).path);
 		assertEquals("********", results.get(0).getParameter(PASSWORD_FIELD));
@@ -297,6 +274,12 @@ public class LogServiceTest extends SpaceTest {
 		assertEquals("/1/credentials", results.get(4).path);
 		assertEquals("fred", results.get(4).payload.get(USERNAME_FIELD).asText());
 		assertEquals("********", results.get(4).payload.get(PASSWORD_FIELD).asText());
+		assertEquals("POST", results.get(5).method);
+		assertEquals("/1/credentials", results.get(5).path);
+		assertEquals("superadmin", results.get(5).payload.get(USERNAME_FIELD).asText());
+		assertEquals("********", results.get(5).payload.get(PASSWORD_FIELD).asText());
+		assertEquals("POST", results.get(6).method);
+		assertEquals("/1/admin/clear", results.get(6).path);
 	}
 
 	@Test
@@ -304,7 +287,7 @@ public class LogServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin = clearRootBackend();
 
 		// fails because invalid body
 		superadmin.put("/1/schemas/toto").bodyString("XXX").go(400);
@@ -344,22 +327,4 @@ public class LogServiceTest extends SpaceTest {
 		assertTrue(logItem.getHeader("x-color-list").contains("BLUE"));
 		assertTrue(logItem.getHeader("x-color-list").contains("GREEN"));
 	}
-
-	@Test
-	public void defaultLogShouldContainDeleteAndCreateBackendLog() {
-
-		// prepare
-		prepareTest();
-		resetTestBackend();
-
-		// superdog gets default backend (api) log
-		List<LogItem> results = superdog().logs().get(2, true).results;
-		assertEquals("POST", results.get(0).method);
-		assertEquals("/1/backends", results.get(0).path);
-		assertEquals("test", results.get(0).payload.get(BACKEND_ID_FIELD).asText());
-		assertEquals("********", Json.get(results.get(0).payload, "superadmin.password").asText());
-		assertEquals("DELETE", results.get(1).method);
-		assertEquals("/1/backends/test", results.get(1).path);
-	}
-
 }

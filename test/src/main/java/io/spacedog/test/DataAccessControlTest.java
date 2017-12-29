@@ -25,8 +25,8 @@ public class DataAccessControlTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(superadmin.backend());
+		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog admin = createTempDog(superadmin, "admin", Roles.admin);
 
@@ -91,8 +91,8 @@ public class DataAccessControlTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(superadmin.backend());
+		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog admin = createTempDog(superadmin, "admin", Roles.admin);
 
@@ -143,8 +143,8 @@ public class DataAccessControlTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(superadmin.backend());
+		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog admin = createTempDog(superadmin, "admin", Roles.admin);
 
@@ -205,8 +205,8 @@ public class DataAccessControlTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(superadmin.backend());
+		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog superadmin = clearRootBackend();
 		superadmin.credentials().enableGuestSignUp(true);
 
 		// vince and fred signs up
@@ -300,7 +300,7 @@ public class DataAccessControlTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin = clearRootBackend();
 
 		// set schema
 		Schema schema = Schema.builder("message")//
@@ -375,7 +375,7 @@ public class DataAccessControlTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin = clearRootBackend();
 
 		// create message schema with simple acl
 		Schema schema = Schema.builder("message")//
@@ -395,6 +395,6 @@ public class DataAccessControlTest extends SpaceTest {
 		// check schema settings does not contain
 		// message schema acl anymore
 		settings = superadmin.settings().get(InternalDataAclSettings.class);
-		assertNull(settings.get(schema.name()));
+		assertTrue(settings.get(schema.name()).isEmpty());
 	}
 }

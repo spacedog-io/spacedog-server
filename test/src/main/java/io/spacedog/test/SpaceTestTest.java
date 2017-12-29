@@ -9,7 +9,7 @@ public class SpaceTestTest extends SpaceTest {
 	@Test
 	public void shouldCheckRequestFails() {
 		assertHttpError(403, //
-				() -> SpaceDog.backendId("test").data().deleteAll("toto"));
+				() -> SpaceDog.defaultBackend().data().deleteAll("toto"));
 	}
 
 	@Test

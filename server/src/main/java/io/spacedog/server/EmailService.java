@@ -123,8 +123,8 @@ public class EmailService extends SpaceService {
 	Payload emailWithDefaultSettings(EmailBasicRequest request) {
 
 		MailGunSettings settings = new MailGunSettings();
-		settings.key = Start.get().configuration().mailGunKey();
-		settings.domain = Start.get().configuration().mailDomain();
+		settings.key = Server.get().configuration().mailGunKey();
+		settings.domain = Server.get().configuration().mailDomain();
 
 		String target = SpaceContext.backendId();
 
@@ -155,7 +155,7 @@ public class EmailService extends SpaceService {
 			if (!Strings.isNullOrEmpty(request.text))
 				email.setTextMsg(request.text);
 
-			email.setDebug(Start.get().configuration().mailSmtpDebug());
+			email.setDebug(Server.get().configuration().mailSmtpDebug());
 
 			if (request.from != null)
 				email.setFrom(request.from);

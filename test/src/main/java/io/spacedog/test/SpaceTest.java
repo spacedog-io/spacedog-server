@@ -13,14 +13,12 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
 import io.spacedog.client.SpaceDog;
-import io.spacedog.http.SpaceBackend;
-import io.spacedog.http.SpaceEnv;
 import io.spacedog.http.SpaceFields;
 import io.spacedog.http.SpaceParams;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceRequestException;
 import io.spacedog.model.Passwords;
-import io.spacedog.utils.Check;
+import io.spacedog.model.Roles;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 
@@ -43,31 +41,10 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 				.create(username, Passwords.random(), DEFAULT_EMAIL);
 	}
 
-	public static SpaceDog resetTestBackend() {
-		return resetBackend("test");
-	}
-
-	public static SpaceDog resetTest2Backend() {
-		return resetBackend("test2");
-	}
-
-	public static SpaceDog resetBackend(String backendId) {
-		deleteBackend(backendId);
-		return createBackend(backendId);
-	}
-
-	public static void deleteBackend(String backendId) {
-		Check.isTrue(backendId.startsWith("test"), //
-				"only test backends can be deleted this way");
-		superdog().admin().deleteBackend(backendId);
-	}
-
-	public static SpaceDog createBackend(String backendId) {
-		String password = Passwords.random();
-		SpaceDog.defaultBackend().admin()//
-				.createBackend(backendId, backendId, password, DEFAULT_EMAIL, false);
-		return SpaceDog.backendId(backendId).username(backendId)//
-				.password(password).email(DEFAULT_EMAIL);
+	public static SpaceDog clearRootBackend() {
+		superdog().post("/1/admin/clear").go(200);
+		return superdog.credentials().create("superadmin", Passwords.random(), //
+				"platform@spacedog.io", Roles.superadmin);
 	}
 
 	public static void prepareTest() {
@@ -92,20 +69,13 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 	private static SpaceDog superdog;
 
 	public static SpaceDog superdog() {
-		if (superdog == null)
-			superdog = superdog(SpaceBackend.defaultBackendId());
+		if (superdog == null) {
+			String password = SpaceRequest.env()//
+					.getOrElseThrow("spacedog.superdog.password");
+			superdog = SpaceDog.defaultBackend().username("superdog")//
+					.password(password).id("superdog");
+		}
 		return superdog;
-	}
-
-	public static SpaceDog superdog(SpaceDog dog) {
-		return superdog(dog.backendId());
-	}
-
-	public static SpaceDog superdog(String backendId) {
-		SpaceEnv env = SpaceRequest.env();
-		return SpaceDog.backendId(backendId).username("superdog")//
-				.password(env.getOrElseThrow("spacedog.superdog.password"))//
-				.id("superdog");
 	}
 
 	public static DateTime assertDateIsValid(JsonNode date) {
@@ -180,15 +150,21 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 	}
 
 	public static <T> SpaceRequestException assertHttpError(int status, Supplier<T> action) {
+		return assertHttpError(status, () -> {
+			action.get();
+		});
+	}
+
+	public static SpaceRequestException assertHttpError(int status, Runnable action) {
 		SpaceRequestException exception = assertRequestException(action);
 		assertEquals(status, exception.httpStatus());
 		return exception;
 	}
 
-	public static <T> SpaceRequestException assertRequestException(Supplier<T> action) {
+	public static SpaceRequestException assertRequestException(Runnable action) {
 
 		try {
-			action.get();
+			action.run();
 			throw failure("function did not throw any SpaceRequestException");
 
 		} catch (SpaceRequestException e) {

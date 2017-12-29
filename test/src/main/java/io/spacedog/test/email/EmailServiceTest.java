@@ -38,8 +38,8 @@ public class EmailServiceTest extends SpaceTest {
 	public void sendEmailBasicRequests() throws IOException {
 
 		prepareTest();
-		SpaceDog guest = SpaceDog.backendId("test");
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		// by default nobody is authorized to send emails
@@ -124,8 +124,8 @@ public class EmailServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(superadmin.backend());
+		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog nath = createTempDog(superadmin, "nath", "emailboss");
 

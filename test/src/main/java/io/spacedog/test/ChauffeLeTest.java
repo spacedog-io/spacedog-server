@@ -30,7 +30,7 @@ public class ChauffeLeTest extends SpaceTest {
 	@BeforeClass
 	public static void resetBackend() {
 
-		superadmin = resetTestBackend();
+		superadmin = clearRootBackend();
 
 		superadmin.schemas().set(buildBigPostSchema());
 		superadmin.schemas().set(buildSmallPostSchema());

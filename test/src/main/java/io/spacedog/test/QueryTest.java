@@ -25,7 +25,7 @@ public class QueryTest extends SpaceTest {
 	public void importCarDataset() {
 
 		prepareTest();
-		SpaceDog test = resetTestBackend();
+		SpaceDog test = clearRootBackend();
 
 		test.schemas().set(buildCarSchema());
 

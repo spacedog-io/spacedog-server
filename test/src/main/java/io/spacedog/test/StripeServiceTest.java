@@ -31,7 +31,7 @@ public class StripeServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
+		SpaceDog test = clearRootBackend();
 		SpaceDog david = createTempDog(test, "david");
 
 		// set stripe settings

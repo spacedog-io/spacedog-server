@@ -23,7 +23,7 @@ public class DataServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		Schema carSchema = SchemaServiceTest.buildCarSchema()//
@@ -90,7 +90,7 @@ public class DataServiceTest extends SpaceTest {
 	public void createFindUpdateAndDeleteWithSdk() {
 
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		Schema carSchema = SchemaServiceTest.buildCarSchema()//

@@ -18,8 +18,8 @@ public class FileServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest(false);
-		SpaceDog superadmin = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(superadmin.backend());
+		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		// invalid uri throws 404
@@ -100,8 +100,8 @@ public class FileServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest(false);
-		SpaceDog superadmin = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(superadmin.backend());
+		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		// superadmin sets file settings for 'assets' prefix

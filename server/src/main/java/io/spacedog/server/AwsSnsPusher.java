@@ -30,7 +30,7 @@ public class AwsSnsPusher {
 	static AmazonSNSClient getSnsClient() {
 		if (snsClient == null) {
 			snsClient = new AmazonSNSClient();
-			String awsRegion = Start.get().configuration().awsRegion().orElse("eu-west-1");
+			String awsRegion = Server.get().configuration().awsRegion().orElse("eu-west-1");
 			snsClient.setRegion(Region.getRegion(Regions.fromName(awsRegion)));
 		}
 		return snsClient;

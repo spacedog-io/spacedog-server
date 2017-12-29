@@ -487,7 +487,7 @@ public class CredentialsService extends SpaceService {
 	}
 
 	private Credentials checkSuperdog(String password) {
-		ServerConfiguration conf = Start.get().configuration();
+		ServerConfiguration conf = Server.get().configuration();
 		if (password == null || !password.equals(conf.superdogPassword()))
 			throw Exceptions.invalidUsernamePassword();
 

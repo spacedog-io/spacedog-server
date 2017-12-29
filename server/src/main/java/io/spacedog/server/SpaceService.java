@@ -27,7 +27,7 @@ public abstract class SpaceService implements SpaceFields, SpaceParams {
 	public static final String SLASH = "/";
 
 	protected static ElasticClient elastic() {
-		return Start.get().getElasticClient();
+		return Server.get().elasticClient();
 	}
 
 	protected static boolean isRefreshRequested(Context context) {
@@ -58,7 +58,7 @@ public abstract class SpaceService implements SpaceFields, SpaceParams {
 	}
 
 	public static String getBucketName(String bucketSuffix) {
-		return Start.get().configuration().awsBucketPrefix() + bucketSuffix;
+		return Server.get().configuration().awsBucketPrefix() + bucketSuffix;
 	}
 
 	public static FormQuery formQuery(Context context) {

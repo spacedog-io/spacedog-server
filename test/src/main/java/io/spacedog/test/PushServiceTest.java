@@ -36,8 +36,8 @@ public class PushServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(superadmin.backend());
+		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog superadmin = clearRootBackend();
 
 		// prepare users
 		SpaceDog dave = createTempDog(superadmin, "dave");
@@ -278,7 +278,7 @@ public class PushServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin = clearRootBackend();
 
 		// prepare users
 		SpaceDog dave = createTempDog(superadmin, "dave");

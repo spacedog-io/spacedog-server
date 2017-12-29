@@ -25,7 +25,7 @@ public class BatchServiceTest extends SpaceTest {
 		// we need to make sure the test account is reset and exists before to
 		// be able to reset it again by batch requests
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin = clearRootBackend();
 		superadmin.credentials().enableGuestSignUp(true);
 		Schema schema = Schema.builder("message").text("text")//
 				.acl(Roles.user, Permission.create, Permission.updateMine, Permission.search).build();
@@ -46,7 +46,7 @@ public class BatchServiceTest extends SpaceTest {
 		superadmin.post("/1/batch").debugServer().bodyJson(batch).go(200)//
 				.assertEquals("message", "responses.0.id")//
 				.assertEquals("schema", "responses.0.type")//
-				.assertEquals("test", "responses.1.credentials.username")//
+				.assertEquals("superadmin", "responses.1.credentials.username")//
 				.assertEquals(1, "debug.batchCredentialChecks");
 
 		// should succeed to create dave and vince users and fetch them with
@@ -179,7 +179,7 @@ public class BatchServiceTest extends SpaceTest {
 				.build();
 
 		SpaceResponse response = SpaceRequest.post("/1/batch")//
-				.debugServer().backend("test")//
+				.debugServer().backend(superadmin)//
 				.basicAuth("vince", "hi vince")//
 				.bodyJson(batch).go(200)//
 				// .assertEquals(201, "responses.0.status")//
@@ -225,7 +225,7 @@ public class BatchServiceTest extends SpaceTest {
 				.build();
 
 		SpaceRequest.post("/1/batch").debugServer()//
-				.queryParam("stopOnError", true).backend("test")//
+				.queryParam("stopOnError", true).backend(superadmin)//
 				.basicAuth("vince", "hi vince").bodyJson(batch).go(200)//
 				.assertEquals(2, "responses.0.total")//
 				.assertEquals(403, "responses.1.status")//

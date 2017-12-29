@@ -11,7 +11,7 @@ public class ServiceErrorFilterTest extends SpaceTest {
 	public void catchesFluentResourceErrors() {
 
 		prepareTest();
-		SpaceDog test = resetTestBackend();
+		SpaceDog test = clearRootBackend();
 
 		// should fail to access invalid route
 

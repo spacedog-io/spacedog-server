@@ -290,7 +290,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 	//
 
 	private static ElasticClient elastic() {
-		return Start.get().getElasticClient();
+		return Server.get().elasticClient();
 	}
 
 	//

@@ -19,7 +19,7 @@ public class LinkedinServiceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceEnv env = SpaceEnv.defaultEnv();
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin = clearRootBackend();
 		String redirectUri = superadmin.backend().url("/1/login/linkedin");
 
 		// no linkedin settings means no linkedin credentials

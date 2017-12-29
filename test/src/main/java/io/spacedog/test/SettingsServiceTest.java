@@ -23,8 +23,8 @@ public class SettingsServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(superadmin.backend());
+		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		ObjectNode animals = Json.object("lion", "Lion", "tiger", "Tiger");
@@ -120,7 +120,7 @@ public class SettingsServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin = clearRootBackend();
 
 		// schema settings are not directly updatable
 		superadmin.put("/1/settings/inTErnalsettings").bodyJson("XXX", "XXX").go(403);
@@ -131,8 +131,8 @@ public class SettingsServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
-		SpaceDog superdog = superdog(superadmin);
+		SpaceDog superdog = superdog();
+		SpaceDog superadmin = clearRootBackend();
 		ObjectNode settings = Json.object("toto", 23);
 
 		// superdog creates test settings
@@ -160,8 +160,8 @@ public class SettingsServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(superadmin.backend());
+		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		// only superadmins can update settings

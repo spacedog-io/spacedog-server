@@ -20,7 +20,7 @@ public class SearchServiceFrenchTest extends SpaceTest {
 	public void searchWithFrenchMaxAnalyser() {
 
 		prepareTest();
-		superadmin = resetTestBackend();
+		superadmin = clearRootBackend();
 		superadmin.schemas().set(Schema.builder("message").frenchMax().text("text").build());
 
 		///////////////

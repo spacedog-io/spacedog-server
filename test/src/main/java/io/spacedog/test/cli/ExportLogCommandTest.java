@@ -29,7 +29,7 @@ public class ExportLogCommandTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin = clearRootBackend();
 		superadmin.data().getAllRequest().go();
 		superadmin.credentials().getByUsername("fred");
 		superadmin.settings().get(CredentialsSettings.class);
@@ -38,7 +38,8 @@ public class ExportLogCommandTest extends SpaceTest {
 		new LoginCommand().verbose(true)//
 				.backend(superadmin.backendId())//
 				.username(superadmin.username())//
-				.password(superadmin.password().get()).login();
+				.password(superadmin.password().get())//
+				.login();
 
 		String today = dateFormatter.print(DateTime.now());
 
@@ -53,11 +54,13 @@ public class ExportLogCommandTest extends SpaceTest {
 
 		// checking export file
 		LogSearchResults results = Json.toPojo(Files.readAllBytes(target), LogSearchResults.class);
-		assertEquals(5, results.total);
-		assertEquals("/1/data", results.results.get(0).path);
+		assertEquals(7, results.total);
+		assertEquals("/1/admin/clear", results.results.get(0).path);
 		assertEquals("/1/credentials", results.results.get(1).path);
-		assertEquals("/1/settings/credentials", results.results.get(2).path);
-		assertEquals("/1/login", results.results.get(3).path);
-		assertEquals("/1/login", results.results.get(4).path);
+		assertEquals("/1/data", results.results.get(2).path);
+		assertEquals("/1/credentials", results.results.get(3).path);
+		assertEquals("/1/settings/credentials", results.results.get(4).path);
+		assertEquals("/1/login", results.results.get(5).path);
+		assertEquals("/1/login", results.results.get(6).path);
 	}
 }

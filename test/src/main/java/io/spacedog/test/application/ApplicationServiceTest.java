@@ -21,7 +21,7 @@ public class ApplicationServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin = clearRootBackend();
 
 		// put fails since invalid push service
 		assertHttpError(400, () -> superadmin.push().saveApp("myapp", "XXX", new Credentials()));
@@ -44,7 +44,7 @@ public class ApplicationServiceTest extends SpaceTest {
 			return list;
 		});
 
-		assertEquals("test", apps.get(0).backendId);
+		assertEquals("api", apps.get(0).backendId);
 		assertEquals("myapp", apps.get(0).name);
 		assertEquals("APNS", apps.get(0).protocol.toString());
 		assertEquals("true", apps.get(0).attributes.get("Enabled"));

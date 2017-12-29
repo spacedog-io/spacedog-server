@@ -107,7 +107,7 @@ public class DataServiceTest2 extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
+		SpaceDog test = clearRootBackend();
 		SpaceDog fred = createTempDog(test, "fred");
 
 		Schema saleSchema = SchemaServiceTest.buildSaleSchema()//
@@ -263,7 +263,7 @@ public class DataServiceTest2 extends SpaceTest {
 		// prepare
 
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin = clearRootBackend();
 		superadmin.schemas().set(Schema.builder("message").text("text").build());
 
 		// should successfully create 4 messages
@@ -293,7 +293,7 @@ public class DataServiceTest2 extends SpaceTest {
 	public void testAllObjectIdStrategies() {
 
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin = clearRootBackend();
 
 		// creates message schema with auto generated id strategy
 		superadmin.schemas().set(Schema.builder("message").string("text").build());
@@ -324,7 +324,7 @@ public class DataServiceTest2 extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		Schema schema = Schema.builder("message").string("text")//
 				.acl(Roles.user, Permission.create, Permission.search).build();
@@ -378,8 +378,8 @@ public class DataServiceTest2 extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(superadmin.backend());
+		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog superadmin = clearRootBackend();
 		Schema schema = Schema.builder("home").text("name")//
 				.object("garage").integer("places").build();
 		superadmin.schemas().set(schema);

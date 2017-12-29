@@ -49,7 +49,7 @@ public class SpaceContext {
 	}
 
 	private static SpaceBackend backend(String hostAndPort) {
-		ServerConfiguration conf = Start.get().configuration();
+		ServerConfiguration conf = Server.get().configuration();
 
 		// first try to match api backend
 		SpaceBackend api = conf.apiBackend();
@@ -117,7 +117,7 @@ public class SpaceContext {
 	public static SpaceBackend backend() {
 		SpaceContext context = threadLocal.get();
 		return context == null //
-				? Start.get().configuration().apiBackend()
+				? Server.get().configuration().apiBackend()
 				: context.backend;
 	}
 

@@ -36,8 +36,8 @@ public class ShareServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest(false);
-		SpaceDog superadmin = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(superadmin.backend());
+		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog admin = createTempDog(superadmin, "admin", Roles.admin);
 
@@ -74,8 +74,8 @@ public class ShareServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest(false);
-		SpaceDog superadmin = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(superadmin.backend());
+		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog fred = createTempDog(superadmin, "fred");
 		SpaceDog admin = createTempDog(superadmin, "admin", Roles.admin);
@@ -218,8 +218,8 @@ public class ShareServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest(false);
-		SpaceDog superadmin = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(superadmin.backend());
+		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog fred = createTempDog(superadmin, "fred");
 		byte[] pngBytes = Resources.toByteArray(//
@@ -295,7 +295,7 @@ public class ShareServiceTest extends SpaceTest {
 	public void shareWithContentDispositionAndEscaping() {
 
 		// prepare
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin = clearRootBackend();
 
 		// superadmin enables s3 locations
 		ShareSettings settings = new ShareSettings();
@@ -338,8 +338,8 @@ public class ShareServiceTest extends SpaceTest {
 	public void downloadZipOfShares() throws IOException {
 
 		// prepare
-		SpaceDog superadmin = resetTestBackend();
-		SpaceDog guest = SpaceDog.backendId("test");
+		SpaceDog superadmin = clearRootBackend();
+		SpaceDog guest = SpaceDog.defaultBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog nath = createTempDog(superadmin, "nath");
 
@@ -435,7 +435,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest(false);
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog fred = createTempDog(superadmin, "fred");
 
@@ -458,8 +458,8 @@ public class ShareServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest(false);
-		SpaceDog superadmin = resetTestBackend();
-		SpaceDog guest = SpaceDog.backend(superadmin.backend());
+		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince").login();
 		SpaceDog fred = createTempDog(superadmin, "fred").login();
 
@@ -494,7 +494,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest(false);
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin = clearRootBackend();
 
 		// superadmin sets custom share permissions
 		// with share size limit of 1 KB

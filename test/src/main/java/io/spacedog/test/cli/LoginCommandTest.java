@@ -17,10 +17,10 @@ public class LoginCommandTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin = clearRootBackend();
 		SpaceDog fred = createTempDog(superadmin, "fred", Roles.superadmin);
 
-		// login without fails
+		// login without any argument fails
 		try {
 			new LoginCommand().verbose(true).login();
 			fail();
@@ -30,7 +30,8 @@ public class LoginCommandTest extends SpaceTest {
 
 		// login without backend fails
 		try {
-			new LoginCommand().verbose(true).username("test").login();
+			new LoginCommand().verbose(true)//
+					.username(superadmin.username()).login();
 			fail();
 
 		} catch (IllegalArgumentException ignore) {
@@ -39,8 +40,7 @@ public class LoginCommandTest extends SpaceTest {
 		// login without username fails
 		try {
 			new LoginCommand().verbose(true)//
-					.backend(superadmin.backendId())//
-					.login();
+					.backend(superadmin.backendId()).login();
 			fail();
 
 		} catch (IllegalArgumentException ignore) {
@@ -109,31 +109,31 @@ public class LoginCommandTest extends SpaceTest {
 				.password(superadmin.password().get())//
 				.login();
 
-		assertEquals("test", session.backendId());
-		assertEquals("test", session.username());
+		assertEquals(superadmin.backendId(), session.backendId());
+		assertEquals(superadmin.username(), session.username());
 
 		// clears cache to force login command to load session from file
 		LoginCommand.clearCache();
 		SpaceDog fromFile = LoginCommand.session();
 
-		assertEquals("test", fromFile.backendId());
+		assertEquals(superadmin.backendId(), fromFile.backendId());
 		assertEquals(session.accessToken(), fromFile.accessToken());
 
 		// login to test backend with full backend url succeeds
 		session = new LoginCommand().verbose(true)//
-				.backend("http://test.lvh.me:8443")//
+				.backend("http://api.lvh.me:8443")//
 				.username(fred.username())//
 				.password(fred.password().get())//
 				.login();
 
-		assertEquals("http://test.lvh.me:8443", session.backendId());
-		assertEquals("fred", session.username());
+		assertEquals("http://api.lvh.me:8443", session.backendId());
+		assertEquals(fred.username(), session.username());
 
 		// clears cache to force login command to load session from file
 		LoginCommand.clearCache();
 		fromFile = LoginCommand.session();
 
-		assertEquals("http://test.lvh.me:8443", fromFile.backendId());
+		assertEquals("http://api.lvh.me:8443", fromFile.backendId());
 		assertEquals(session.accessToken(), fromFile.accessToken());
 
 	}

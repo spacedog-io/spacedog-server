@@ -40,7 +40,7 @@ public class S3Service extends SpaceService {
 	private static AmazonS3Client s3 = new AmazonS3Client();
 
 	static {
-		String awsRegion = Start.get().configuration().awsRegion().orElse("eu-west-1");
+		String awsRegion = Server.get().configuration().awsRegion().orElse("eu-west-1");
 		s3.setRegion(Region.getRegion(Regions.fromName(awsRegion)));
 	}
 

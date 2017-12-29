@@ -25,66 +25,41 @@ public class CredentialsServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = resetTestBackend();
-		SpaceDog test2 = resetTest2Backend();
-		SpaceDog superdog = superdog(test);
-
-		test.login();
-		test2.login();
+		SpaceDog superadmin = clearRootBackend().login();
+		SpaceDog superdog = superdog();
 
 		// forbidden to delete superadmin if last superadmin of backend
-		test.delete("/1/credentials/" + test.id()).go(403);
-		superdog.delete("/1/credentials/" + test.id()).go(403);
+		superadmin.delete("/1/credentials/" + superadmin.id()).go(403);
+		superdog.delete("/1/credentials/" + superadmin.id()).go(403);
 
 		// superadmin test can create another superadmin (test1)
-		SpaceDog superfred = test.credentials()//
+		SpaceDog superfred = superadmin.credentials()//
 				.create("superfred", "hi superfred", "superfred@test.com", "superadmin")//
 				.login("hi superfred");
 
 		// superadmin test can delete superadmin superfred
-		test.credentials().delete(superfred.id());
+		superadmin.credentials().delete(superfred.id());
 
 		// superfred can no longer login
 		superfred.get("/1/login").go(401);
 
 		// superdog can not be deleted
 		superdog.delete("/1/credentials/me").go(404);
-
-		// superadmin test fails to delete superadmin of another backend
-		test.delete("/1/credentials/" + test2.id()).go(404);
-
-		// superadmin test2 fails to delete superadmin of another backend
-		test2.delete("/1/credentials/" + test.id()).go(404);
 	}
 
 	@Test
-	public void superdogCanLoginAndAccessAllBackends() {
+	public void superdogCanDoAnything() {
 
 		// prepare
 		prepareTest();
-		resetTestBackend();
+		clearRootBackend();
 
 		// superdog with root backend id
-		SpaceDog apiSuperdog = superdog();
+		SpaceDog superdog = superdog();
 
 		// superdog can access anything in root backend
-		apiSuperdog.credentials().getByUsername("fred");
-		apiSuperdog.settings().get(CredentialsSettings.class);
-
-		// superdog can access any backend
-		apiSuperdog.get("/1/credentials").backend("test").go(200);
-		apiSuperdog.get("/1/settings/credentials").backend("test").go(200);
-
-		// superdog with "test" backend id
-		SpaceDog testSuperdog = superdog("test");
-
-		// "test" superdog can access anything in test backend
-		testSuperdog.credentials().getByUsername("fred");
-		testSuperdog.settings().get(CredentialsSettings.class);
-
-		// "test" superdog can also access any backend
-		testSuperdog.get("/1/credentials").backend("api").go(200);
-		testSuperdog.get("/1/settings/credentials").backend("api").go(200);
+		superdog.credentials().getByUsername("fred");
+		superdog.settings().get(CredentialsSettings.class);
 	}
 
 	@Test
@@ -92,7 +67,7 @@ public class CredentialsServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin = clearRootBackend();
 		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		// fred logs in
@@ -173,15 +148,15 @@ public class CredentialsServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = SpaceDog.backendId("test");
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog superadmin = clearRootBackend();
 		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		// fred logs in
 		fred.login();
 
 		// fred logs in again creating a second session
-		SpaceDog fred2 = SpaceDog.backend(test.backend())//
+		SpaceDog fred2 = SpaceDog.backend(guest.backend())//
 				.username(fred.username()).login(fred.password().get());
 
 		// fred can access data with his first token
@@ -210,8 +185,8 @@ public class CredentialsServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = SpaceDog.backendId("test");
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog superadmin = clearRootBackend();
 		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		Credentials credentials = superadmin.credentials().get(fred.id());//
@@ -219,7 +194,7 @@ public class CredentialsServiceTest extends SpaceTest {
 		assertNull(credentials.lastInvalidChallengeAt());
 
 		// fred tries to log in with an invalid password
-		SpaceRequest.get("/1/login").backend(test)//
+		SpaceRequest.get("/1/login").backend(guest)//
 				.basicAuth(fred.username(), "XXX").go(401);
 
 		// fred's invalid challenges count is still zero
@@ -235,7 +210,7 @@ public class CredentialsServiceTest extends SpaceTest {
 		superadmin.settings().save(settings);
 
 		// fred tries to log in with an invalid password
-		SpaceRequest.get("/1/login").backend(test)//
+		SpaceRequest.get("/1/login").backend(guest)//
 				.basicAuth(fred.username(), "XXX").go(401);
 
 		// superadmin gets fred's credentials
@@ -245,7 +220,7 @@ public class CredentialsServiceTest extends SpaceTest {
 		assertNotNull(credentials.lastInvalidChallengeAt());
 
 		// fred tries to log in with an invalid password
-		SpaceRequest.get("/1/login").backend(test)//
+		SpaceRequest.get("/1/login").backend(guest)//
 				.basicAuth(fred.username(), "XXX").go(401);
 
 		// superadmin gets fred's credentials; fred has 2 invalid password
@@ -277,7 +252,7 @@ public class CredentialsServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin = clearRootBackend();
 		SpaceDog fred = createTempDog(superadmin, "fred").login();
 
 		// fred can get data objects
@@ -316,7 +291,7 @@ public class CredentialsServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin = clearRootBackend();
 		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		// fred can get data objects

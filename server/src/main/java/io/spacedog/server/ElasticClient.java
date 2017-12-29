@@ -61,6 +61,10 @@ public class ElasticClient implements SpaceParams {
 		this.internalClient = client;
 	}
 
+	public Client internal() {
+		return internalClient;
+	}
+
 	public void close() {
 		internalClient.close();
 	}
@@ -300,7 +304,7 @@ public class ElasticClient implements SpaceParams {
 
 	public void ensureIndicesAreGreen(String... indices) {
 		String indicesString = Arrays.toString(indices);
-		ServerConfiguration conf = Start.get().configuration();
+		ServerConfiguration conf = Server.get().configuration();
 		Utils.info("[SpaceDog] Ensure indices %s are green ...", indicesString);
 
 		ClusterHealthResponse response = this.internalClient.admin().cluster()

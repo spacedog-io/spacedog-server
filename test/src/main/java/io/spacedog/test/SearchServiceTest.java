@@ -27,7 +27,7 @@ public class SearchServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin = clearRootBackend();
 		superadmin.schemas().set(Schema.builder("message").text("text").build());
 		superadmin.schemas().set(Schema.builder("rubric").text("name").build());
 
@@ -56,8 +56,8 @@ public class SearchServiceTest extends SpaceTest {
 				results.results.get(1).source().get("text").asText());
 
 		// check search scores
-		assertTrue(results.results.get(0).score() > 1);
-		assertTrue(results.results.get(1).score() < 1);
+		assertTrue(results.results.get(0).score() //
+		> results.results.get(1).score());
 
 		// check all meta are there
 		assertNotNull(results.results.get(0).id());
@@ -87,7 +87,7 @@ public class SearchServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		Schema schema = Schema.builder("city").string("name")//
@@ -126,7 +126,7 @@ public class SearchServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin = clearRootBackend();
 
 		superadmin.schemas().set(Schema.builder("number").integer("i").string("t").build());
 
@@ -164,7 +164,7 @@ public class SearchServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend();
+		SpaceDog superadmin = clearRootBackend();
 		superadmin.schemas().set(Schema.builder("message").text("text").build());
 
 		// check simple query string '**' doesn't throw null pointer exception
