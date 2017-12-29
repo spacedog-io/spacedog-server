@@ -13,6 +13,20 @@
 	<artifactId>spacedog-test</artifactId>
 	<packaging>jar</packaging>
 
+	<build>
+		<resources>
+			<resource>
+				<directory>${project.basedir}/src/main/java</directory>
+			</resource>
+		</resources>
+
+		<testResources>
+			<testResource>
+				<directory>${project.basedir}/src/test/java</directory>
+			</testResource>
+		</testResources>
+	</build>
+
 	<dependencies>
 		<dependency>
 			<groupId>io.spacedog</groupId>
