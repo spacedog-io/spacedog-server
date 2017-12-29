@@ -224,7 +224,6 @@ public class SpaceBackend {
 
 	public static SpaceBackend local = fromUrl("http://*.lvh.me:8443");
 	public static SpaceBackend staging = fromUrl("https://*.spacerepublic.net");
-	public static SpaceBackend colibee = fromUrl("https://connect.colibee.com");
 	public static SpaceBackend production = fromUrl("https://*.spacedog.io");
 
 	private static Map<String, SpaceBackend> defaultTargets = Maps.newHashMap();
@@ -232,7 +231,6 @@ public class SpaceBackend {
 	static {
 		defaultTargets.put("local", local);
 		defaultTargets.put("staging", staging);
-		defaultTargets.put("colibee", colibee);
 		defaultTargets.put("production", production);
 	}
 
