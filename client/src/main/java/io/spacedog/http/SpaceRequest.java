@@ -21,7 +21,6 @@ import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Utils;
 import okhttp3.Credentials;
 import okhttp3.FormBody;
@@ -143,31 +142,12 @@ public class SpaceRequest {
 		return this;
 	}
 
-	public SpaceRequest auth(SpaceDog dog) {
-		// TODO when all test are refactored like
-		// vince.get("/1/...")...
-		// this method should be removed
-
-		backend(dog);
-
-		Optional7<String> accessToken = dog.accessToken();
-		if (accessToken.isPresent())
-			return bearerAuth(accessToken.get());
-
-		Optional7<String> password = dog.password();
-		if (password.isPresent())
-			return basicAuth(dog.username(), password.get());
-
-		// if no password nor access token then no auth
-		return this;
-	}
-
-	public SpaceRequest basicAuth(SpaceDog user) {
+	public SpaceRequest basicAuth(SpaceDog dog) {
 		// TODO when all tests are refactored like
 		// vince.delete("/1/...")...
 		// this method should not set the backend of the space request
 		// but only the basic authorization
-		return backend(user).basicAuth(user.username(), user.password().get());
+		return backend(dog).basicAuth(dog.username(), dog.password().get());
 	}
 
 	public SpaceRequest basicAuth(String username, String password) {
@@ -177,12 +157,12 @@ public class SpaceRequest {
 				Credentials.basic(username, password, Utils.UTF8));
 	}
 
-	public SpaceRequest bearerAuth(SpaceDog user) {
+	public SpaceRequest bearerAuth(SpaceDog dog) {
 		// TODO when all tests are refactored like
 		// vince.get("/1/...")...
 		// this method should not set the backend of the space request
 		// but only the basic authorization
-		return backend(user).bearerAuth(user.accessToken().get());
+		return backend(dog).bearerAuth(dog.accessToken().get());
 	}
 
 	public SpaceRequest bearerAuth(String accessToken) {

@@ -21,7 +21,7 @@ public class ServiceErrorFilterTest extends SpaceTest {
 
 		// should fail to use this method for this valid route
 
-		SpaceRequest.put("/1/login").auth(test).go(405)//
+		test.put("/1/login").go(405)//
 				.assertFalse("success")//
 				.assertEquals("method [PUT] invalid for path [/1/login]", "error.message");
 	}

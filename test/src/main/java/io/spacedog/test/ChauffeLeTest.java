@@ -12,7 +12,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceDog;
-import io.spacedog.http.SpaceRequest;
 import io.spacedog.model.Permission;
 import io.spacedog.model.Roles;
 import io.spacedog.model.Schema;
@@ -115,7 +114,7 @@ public class ChauffeLeTest extends SpaceTest {
 		@Override
 		public String createSubject(SpaceDog user, String subject) {
 
-			return SpaceRequest.post("/1/data/bigpost").auth(user)//
+			return user.post("/1/data/bigpost")//
 					.bodyJson("title", subject, "responses", Json.array())//
 					.go(201)//
 					.asJsonObject().get("id").asText();
@@ -150,7 +149,7 @@ public class ChauffeLeTest extends SpaceTest {
 					.object("match_all")//
 					.build().toString();
 
-			return SpaceRequest.post("/1/search/bigpost").refresh().auth(user)//
+			return user.post("/1/search/bigpost").refresh()//
 					.bodyString(wallQuery).go(200).asJson().get("results").elements();
 		}
 	}
@@ -160,14 +159,14 @@ public class ChauffeLeTest extends SpaceTest {
 		@Override
 		public String createSubject(SpaceDog user, String subject) {
 
-			return SpaceRequest.post("/1/data/smallpost").auth(user)//
+			return user.post("/1/data/smallpost")//
 					.bodyJson("title", subject).go(201).asJsonObject().get("id").asText();
 		}
 
 		@Override
 		public void addComment(SpaceDog user, String parentId, String comment) {
 
-			SpaceRequest.post("/1/data/smallpost").auth(user)//
+			user.post("/1/data/smallpost")//
 					.bodyJson("title", comment, "parent", parentId).go(201);
 		}
 

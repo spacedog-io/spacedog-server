@@ -160,23 +160,38 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 	//
 
 	public SpaceRequest get(String uri) {
-		return SpaceRequest.get(uri).auth(this);
+		return auth(SpaceRequest.get(uri));
 	}
 
 	public SpaceRequest post(String uri) {
-		return SpaceRequest.post(uri).auth(this);
+		return auth(SpaceRequest.post(uri));
 	}
 
 	public SpaceRequest put(String uri) {
-		return SpaceRequest.put(uri).auth(this);
+		return auth(SpaceRequest.put(uri));
 	}
 
 	public SpaceRequest delete(String uri) {
-		return SpaceRequest.delete(uri).auth(this);
+		return auth(SpaceRequest.delete(uri));
 	}
 
 	public SpaceRequest options(String uri) {
-		return SpaceRequest.options(uri).auth(this);
+		return auth(SpaceRequest.options(uri));
+	}
+
+	private SpaceRequest auth(SpaceRequest request) {
+		request.backend(backend());
+
+		Optional7<String> accessToken = accessToken();
+		if (accessToken.isPresent())
+			return request.bearerAuth(accessToken.get());
+
+		Optional7<String> password = password();
+		if (password.isPresent())
+			return request.basicAuth(username(), password.get());
+
+		// if no password nor access token then no auth
+		return request;
 	}
 
 	//

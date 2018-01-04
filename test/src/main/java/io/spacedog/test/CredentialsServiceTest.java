@@ -262,7 +262,7 @@ public class CredentialsServiceTest extends SpaceTest {
 
 		// fred can no longer get data objects with his token
 		// because he must first change his password
-		fred.get("/1/data").bearerAuth(fred).go(403)//
+		SpaceRequest.get("/1/data").bearerAuth(fred).go(403)//
 				.assertEquals("password-must-change", "error.code");
 
 		// fred can no longer get data objects with his password
