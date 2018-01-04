@@ -6,7 +6,7 @@ import java.util.Set;
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
@@ -62,8 +62,8 @@ public class LogEndpoint implements SpaceParams {
 		public Credentials credentials;
 		public List<String> headers;
 		public List<String> parameters;
-		public JsonNode payload;
-		public JsonNode response;
+		public ObjectNode payload;
+		public ObjectNode response;
 
 		public String getParameter(String name) {
 			for (String string : parameters) {

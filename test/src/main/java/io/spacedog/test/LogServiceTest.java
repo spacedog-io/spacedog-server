@@ -105,34 +105,31 @@ public class LogServiceTest extends SpaceTest {
 		assertEquals("/1/data/user", results.results.get(0).path);
 		assertEquals(403, results.results.get(0).status);
 
-		// superadmin search for test backend logs
-		// with credentials type equal to superadmin and lower
+		// superadmin search for backend logs
+		// with credentials roles superadmin or user
 		query = ESSearchSourceBuilder.searchSource()//
-				.query(ESQueryBuilders.termsQuery("credentials.type", "superadmin", "user", "guest"))//
+				.query(ESQueryBuilders.termsQuery("credentials.roles", "superadmin", "user"))//
 				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
 		results = superadmin.logs().search(query, true);
-		assertEquals(6, results.results.size());
+		assertEquals(4, results.results.size());
 		assertEquals("/1/log/search", results.results.get(0).path);
 		assertEquals("/1/credentials/" + vince.id(), results.results.get(1).path);
 		assertEquals("/1/login", results.results.get(2).path);
 		assertEquals("/1/credentials", results.results.get(3).path);
-		assertEquals("/1/data/user", results.results.get(4).path);
-		assertEquals("/1/data", results.results.get(5).path);
 
 		// superadmin search for test backend log to only get user and lower logs
 		query = ESSearchSourceBuilder.searchSource()//
-				.query(ESQueryBuilders.termsQuery("credentials.type", "user", "guest"))//
+				.query(ESQueryBuilders.termsQuery("credentials.roles", "user"))//
 				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
 		results = superadmin.logs().search(query, true);
-		assertEquals(4, results.results.size());
+		assertEquals(2, results.results.size());
 		assertEquals("/1/credentials/" + vince.id(), results.results.get(0).path);
 		assertEquals("/1/login", results.results.get(1).path);
-		assertEquals("/1/data/user", results.results.get(2).path);
-		assertEquals("/1/data", results.results.get(3).path);
 
 		// superadmin search for test backend log to only get guest logs
 		query = ESSearchSourceBuilder.searchSource()//
-				.query(ESQueryBuilders.termQuery("credentials.type", "guest"))//
+				.query(ESQueryBuilders.boolQuery().mustNot(//
+						ESQueryBuilders.existsQuery("credentials.roles")))//
 				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
 		results = superadmin.logs().search(query, true);
 		assertEquals(2, results.results.size());

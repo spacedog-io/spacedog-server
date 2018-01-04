@@ -35,12 +35,13 @@ import net.codestory.http.payload.Payload;
 @Prefix("/1/log")
 public class LogService extends SpaceService {
 
+	public static final String TYPE = "log";
+	public static final String PURGE_ALL = "purgeall";
+
 	private static final String PAYLOAD_FIELD = "payload";
 	private static final String CREDENTIALS_FIELD = "credentials";
 	private static final String PARAMETERS_FIELD = "parameters";
 	private static final String HEADERS_FIELD = "headers";
-	public static final String TYPE = "log";
-	public static final String PURGE_ALL = "purgeall";
 
 	//
 	// init
@@ -197,7 +198,7 @@ public class LogService extends SpaceService {
 		addRequestPayload(log, context);
 		addResponsePayload(log, payload, context);
 
-		return elastic().index(logIndex(), log.toString()).getId();
+		return elastic().index(logIndex(), log).getId();
 	}
 
 	private void addResponsePayload(ObjectNode log, Payload payload, Context context) {
@@ -262,7 +263,7 @@ public class LogService extends SpaceService {
 		ObjectNode logCredentials = log.putObject(CREDENTIALS_FIELD);
 		logCredentials.put(ID_FIELD, credentials.id());
 		logCredentials.put(USERNAME_FIELD, credentials.name());
-		logCredentials.put(TYPE_FIELD, credentials.type());
+		logCredentials.putPOJO(ROLES_FIELD, credentials.roles());
 	}
 
 	private void addHeaders(ObjectNode log, Set<Entry<String, List<String>>> headers) {
