@@ -3,8 +3,6 @@ package io.spacedog.http;
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.spacedog.http.SpaceBackend;
-
 public class SpaceBackendTest extends Assert {
 
 	@Test
@@ -35,11 +33,10 @@ public class SpaceBackendTest extends Assert {
 		assertEquals("api.spacedog.io", backend.host());
 		assertEquals(443, backend.port());
 		assertEquals("https", backend.scheme());
-		assertEquals("api", backend.backendId());
-		assertFalse(backend.webApp());
+		assertEquals("spacedog", backend.backendId());
 		assertTrue(backend.ssl());
 		assertEquals("https://*.spacedog.io", backend.toString());
-		assertEquals("https://api.spacedog.io/1/data", backend.url("/1/data"));
+		assertEquals("https://api.spacedog.io/index.html", backend.url("/index.html"));
 	}
 
 	@Test
@@ -49,10 +46,9 @@ public class SpaceBackendTest extends Assert {
 		assertEquals(443, backend.port());
 		assertEquals("https", backend.scheme());
 		assertEquals("test", backend.backendId());
-		assertFalse(backend.webApp());
 		assertTrue(backend.ssl());
 		assertEquals("https://test.spacedog.io", backend.toString());
-		assertEquals("https://test.spacedog.io/1/data", backend.url("/1/data"));
+		assertEquals("https://test.spacedog.io/index.html", backend.url("/index.html"));
 	}
 
 	@Test
@@ -61,37 +57,34 @@ public class SpaceBackendTest extends Assert {
 		assertEquals("connect.acme.net", backend.host());
 		assertEquals(80, backend.port());
 		assertEquals("http", backend.scheme());
-		assertEquals("api", backend.backendId());
-		assertFalse(backend.webApp());
+		assertEquals("spacedog", backend.backendId());
 		assertFalse(backend.ssl());
 		assertEquals("http://connect.acme.net", backend.toString());
-		assertEquals("http://connect.acme.net/1/data", backend.url("/1/data"));
+		assertEquals("http://connect.acme.net/index.html", backend.url("/index.html"));
 	}
 
 	@Test
 	public void testFromUrlMultiWebAppBackend() {
-		SpaceBackend backend = SpaceBackend.fromUrl("http://www.*.acme.net:8080", true);
+		SpaceBackend backend = SpaceBackend.fromUrl("http://www.*.acme.net:8080");
 		assertEquals("www.api.acme.net", backend.host());
 		assertEquals(8080, backend.port());
 		assertEquals("http", backend.scheme());
-		assertEquals("api", backend.backendId());
-		assertTrue(backend.webApp());
+		assertEquals("spacedog", backend.backendId());
 		assertFalse(backend.ssl());
 		assertEquals("http://www.*.acme.net:8080", backend.toString());
-		assertEquals("http://www.api.acme.net:8080/1/data", backend.url("/1/data"));
+		assertEquals("http://www.api.acme.net:8080/index.html", backend.url("/index.html"));
 	}
 
 	@Test
 	public void apiMultiBackendCanHandleApiRequest() {
 		SpaceBackend backend = SpaceBackend.fromDefaults("production")//
-				.checkAndInstantiate("test.spacedog.io").get();
+				.checkRequest("test.spacedog.io").get();
 
 		assertEquals("test.spacedog.io", backend.host());
 		assertEquals("https://test.spacedog.io", backend.toString());
 		assertEquals(443, backend.port());
 		assertEquals("https", backend.scheme());
 		assertEquals("test", backend.backendId());
-		assertFalse(backend.webApp());
 		assertTrue(backend.ssl());
 
 		try {
@@ -105,22 +98,23 @@ public class SpaceBackendTest extends Assert {
 	@Test
 	public void apiMultiBackendCanNotHandleWebAppRequest() {
 		assertFalse(SpaceBackend.fromDefaults("production")//
-				.checkAndInstantiate("test.www.spacedog.io").isPresent());
+				.checkRequest("test.www.spacedog.io")//
+				.isPresent());
 	}
 
 	@Test
 	public void webAppMultiBackendCanHandleWebAppRequest() {
-		SpaceBackend backend = SpaceBackend.fromUrl("https://*.www.spacedog.io", true)//
-				.checkAndInstantiate("test.www.spacedog.io").get();
+		SpaceBackend backend = SpaceBackend.fromUrl("https://*.www.spacedog.io")//
+				.checkRequest("test.www.spacedog.io").get();
 
 		assertEquals("test.www.spacedog.io", backend.host());
 		assertEquals(443, backend.port());
 		assertEquals("https", backend.scheme());
 		assertEquals("test", backend.backendId());
-		assertTrue(backend.webApp());
 		assertTrue(backend.ssl());
-		assertFalse(backend.multi());
+		assertFalse(backend.isMulti());
 		assertEquals("https://test.www.spacedog.io", backend.toString());
+		assertEquals("https://test.www.spacedog.io/index.html", backend.url("/index.html"));
 	}
 
 }

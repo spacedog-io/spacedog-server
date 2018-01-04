@@ -63,7 +63,7 @@ public class DogCLI {
 
 	private static void setEnv() {
 		SpaceEnv env = new SpaceEnv();
-		env.target(SpaceBackend.production);
+		env.apiBackend(SpaceBackend.production);
 		env.debug(false);
 		SpaceRequest.env(env);
 	}

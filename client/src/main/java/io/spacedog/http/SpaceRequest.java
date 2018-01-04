@@ -74,7 +74,7 @@ public class SpaceRequest {
 
 	private HttpUrl.Builder computeHttpUrlFromBackendAndPath() {
 		if (backend == null)
-			backend = env().target();
+			backend = env().apiBackend();
 
 		HttpUrl.Builder builder = new HttpUrl.Builder()//
 				.scheme(backend.scheme())//
@@ -125,14 +125,6 @@ public class SpaceRequest {
 		return new SpaceRequest(path, HttpVerb.HEAD);
 	}
 
-	public SpaceRequest www(SpaceDog backend) {
-		return www(backend.backendId());
-	}
-
-	private SpaceRequest www(String backendId) {
-		return backend(backendId + ".www");
-	}
-
 	public SpaceRequest backend(SpaceDog dog) {
 		return backend(dog.backend());
 	}
@@ -143,9 +135,12 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest backend(String backend) {
-		this.backend = backend.startsWith("http") //
-				? SpaceBackend.fromUrl(backend)
-				: env().target().instanciate(backend);
+		this.backend = SpaceBackend.valueOf(backend);
+		return this;
+	}
+
+	public SpaceRequest backendId(String backendId) {
+		this.backend = env().apiBackend().instanciate(backendId);
 		return this;
 	}
 

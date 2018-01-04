@@ -44,7 +44,7 @@ public class ApplicationServiceTest extends SpaceTest {
 			return list;
 		});
 
-		assertEquals("api", apps.get(0).backendId);
+		assertEquals("spacedog", apps.get(0).backendId);
 		assertEquals("myapp", apps.get(0).name);
 		assertEquals("APNS", apps.get(0).protocol.toString());
 		assertEquals("true", apps.get(0).attributes.get("Enabled"));

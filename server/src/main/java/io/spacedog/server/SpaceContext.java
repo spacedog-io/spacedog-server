@@ -1,11 +1,9 @@
 package io.spacedog.server;
 
 import java.util.Map;
-import java.util.Optional;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
-import com.google.common.net.HttpHeaders;
 
 import io.spacedog.http.SpaceBackend;
 import io.spacedog.http.SpaceHeaders;
@@ -29,10 +27,11 @@ public class SpaceContext {
 	private String uri;
 	private Context context;
 	private SpaceBackend backend;
-	private boolean isTest;
 	private Debug debug;
 	private Credentials credentials;
 	private boolean authorizationChecked;
+	private boolean isTest = false;
+	private boolean isWww = false;
 
 	private Map<Class<?>, Settings> settings;
 
@@ -44,28 +43,30 @@ public class SpaceContext {
 		this.debug = new Debug(Boolean.parseBoolean(//
 				context().header(SpaceHeaders.SPACEDOG_DEBUG)));
 		this.credentials = Credentials.GUEST;
-		this.backend = backend(//
-				context.request().header(HttpHeaders.HOST));
+
+		initSpaceBackend();
 	}
 
-	private static SpaceBackend backend(String hostAndPort) {
+	private void initSpaceBackend() {
+
+		String hostAndPort = context.request().header(SpaceHeaders.HOST);
 		ServerConfiguration conf = Server.get().configuration();
 
 		// first try to match api backend
-		SpaceBackend api = conf.apiBackend();
-		Optional7<SpaceBackend> backend = api.checkAndInstantiate(hostAndPort);
-		if (backend.isPresent())
-			return backend.get();
-
-		// second try to match webapp backend
-		Optional<SpaceBackend> webApp = conf.wwwBackend();
-		if (webApp.isPresent()) {
-			backend = webApp.get().checkAndInstantiate(hostAndPort);
-			if (backend.isPresent())
-				return backend.get();
+		SpaceBackend apiBackend = conf.apiBackend();
+		Optional7<SpaceBackend> opt = apiBackend.checkRequest(hostAndPort);
+		if (opt.isPresent())
+			this.backend = opt.get();
+		else {
+			// second try to match www backend
+			SpaceBackend wwwBackend = conf.wwwBackend();
+			opt = wwwBackend.checkRequest(hostAndPort);
+			if (opt.isPresent()) {
+				this.backend = opt.get();
+				this.isWww = true;
+			} else
+				this.backend = apiBackend;
 		}
-
-		return api.instanciate();
 	}
 
 	public Context context() {
@@ -103,7 +104,7 @@ public class SpaceContext {
 	}
 
 	public static boolean isWww() {
-		return backend().webApp();
+		return get().isWww;
 	}
 
 	public static boolean isDebug() {

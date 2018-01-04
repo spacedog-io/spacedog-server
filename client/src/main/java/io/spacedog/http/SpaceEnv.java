@@ -15,6 +15,13 @@ import io.spacedog.utils.Utils;
 
 public class SpaceEnv {
 
+	private static final String SPACEDOG_DEBUG = "spacedog.debug";
+	private static final String SPACEDOG_HTTP_TIMEOUT = "spacedog.http.timeout";
+	private static final String SPACEDOG_SUPERDOG_PASSWORD = "spacedog.superdog.password";
+	private static final String SPACEDOG_SUPERDOG_NOTIFICATION_TOPIC = "spacedog_superdog_notification_topic";
+	private static final String SPACEDOG_BACKEND_WWW_PUBLIC_URL = "spacedog.backend.www.public.url";
+	private static final String SPACEDOG_BACKEND_API_PUBLIC_URL = "spacedog.backend.api.public.url";
+
 	private Properties properties;
 
 	public SpaceEnv() {
@@ -26,31 +33,54 @@ public class SpaceEnv {
 	}
 
 	public String superdogNotificationTopic() {
-		return getOrElseThrow("spacedog_superdog_notification_topic");
+		return getOrElseThrow(SPACEDOG_SUPERDOG_NOTIFICATION_TOPIC);
 	}
 
 	public boolean debug() {
-		return get("spacedog.debug", true);
+		return get(SPACEDOG_DEBUG, true);
 	}
 
 	public void debug(boolean debug) {
-		properties.setProperty("spacedog.debug", Boolean.toString(debug));
+		properties.setProperty(SPACEDOG_DEBUG, Boolean.toString(debug));
 	}
 
-	public SpaceBackend target() {
-		return SpaceBackend.valueOf(get("spacedog.target", "production"));
+	private SpaceBackend apiBackend;
+
+	public SpaceBackend apiBackend() {
+		if (apiBackend == null)
+			apiBackend = SpaceBackend.valueOf(//
+					get(SPACEDOG_BACKEND_API_PUBLIC_URL, "production"));
+		return apiBackend;
 	}
 
-	public void target(SpaceBackend backend) {
-		properties.setProperty("spacedog.target", backend.toString());
+	public void apiBackend(SpaceBackend backend) {
+		properties.setProperty(SPACEDOG_BACKEND_API_PUBLIC_URL, backend.toString());
+	}
+
+	private SpaceBackend wwwBackend;
+
+	public SpaceBackend wwwBackend() {
+		if (wwwBackend == null)
+			wwwBackend = SpaceBackend.valueOf(//
+					get(SPACEDOG_BACKEND_WWW_PUBLIC_URL, "wwwProduction"));
+		return wwwBackend;
+	}
+
+	public void wwwBackend(SpaceBackend backend) {
+		wwwBackend = backend;
+		properties.setProperty(SPACEDOG_BACKEND_WWW_PUBLIC_URL, backend.toString());
 	}
 
 	public int httpTimeoutMillis() {
-		return get("spacedog.http.timeout", 30000);
+		return get(SPACEDOG_HTTP_TIMEOUT, 30000);
 	}
 
 	public void httpTimeoutMillis(int timeout) {
-		properties.setProperty("spacedog.http.timeout", Integer.toString(timeout));
+		properties.setProperty(SPACEDOG_HTTP_TIMEOUT, Integer.toString(timeout));
+	}
+
+	public String superdogPassword() {
+		return getOrElseThrow(SPACEDOG_SUPERDOG_PASSWORD);
 	}
 
 	//

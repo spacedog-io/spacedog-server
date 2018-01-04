@@ -14,6 +14,7 @@ import com.beust.jcommander.Parameters;
 import com.google.common.base.Strings;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.http.SpaceBackend;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
@@ -26,7 +27,7 @@ public class LoginCommand extends AbstractCommand<LoginCommand> {
 	@Parameter(names = { "-b", "--backend" }, //
 			required = true, //
 			description = "the backend to login to (ex. https://vick.spacedog.io)")
-	private String backend;
+	private SpaceBackend backend;
 
 	@Parameter(names = { "-u", "--username" }, //
 			required = true, //
@@ -36,6 +37,11 @@ public class LoginCommand extends AbstractCommand<LoginCommand> {
 	private String password;
 
 	public LoginCommand backend(String backend) {
+		this.backend = SpaceBackend.valueOf(backend);
+		return this;
+	}
+
+	public LoginCommand backend(SpaceBackend backend) {
 		this.backend = backend;
 		return this;
 	}
@@ -51,7 +57,7 @@ public class LoginCommand extends AbstractCommand<LoginCommand> {
 	}
 
 	public SpaceDog login() {
-		Check.notNullOrEmpty(backend, "backend");
+		Check.notNull(backend, "backend");
 		Check.notNullOrEmpty(username, "username");
 
 		SpaceRequest.env().debug(verbose());
@@ -66,7 +72,7 @@ public class LoginCommand extends AbstractCommand<LoginCommand> {
 					: String.valueOf(//
 							console.readPassword("Enter %s password: ", username));
 
-		session = SpaceDog.backendId(backend)//
+		session = SpaceDog.backend(backend)//
 				.username(username).login(password);
 
 		OutputStream out = null;
@@ -77,7 +83,7 @@ public class LoginCommand extends AbstractCommand<LoginCommand> {
 			path = path.resolve("cli.properties");
 
 			Properties properties = new Properties();
-			properties.put("backend", backend);
+			properties.put("backend", backend.url());
 			properties.put("accessToken", session.accessToken().get());
 
 			out = Files.newOutputStream(path);
@@ -125,7 +131,7 @@ public class LoginCommand extends AbstractCommand<LoginCommand> {
 					in.close();
 			}
 
-			session = SpaceDog.backendId(properties.get("backend").toString())//
+			session = SpaceDog.backend(properties.get("backend").toString())//
 					.accessToken(properties.get("accessToken").toString());
 		}
 

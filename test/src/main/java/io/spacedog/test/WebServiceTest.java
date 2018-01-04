@@ -3,6 +3,8 @@ package io.spacedog.test;
 import org.junit.Test;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.http.SpaceBackend;
+import io.spacedog.http.SpaceEnv;
 import io.spacedog.http.SpaceHeaders;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.model.WebSettings;
@@ -91,17 +93,19 @@ public class WebServiceTest extends SpaceTest {
 	}
 
 	private void browse(String prefix, String uri, String expectedBody, String expectedContentType) {
+		SpaceBackend wwwBackend = SpaceEnv.defaultEnv().wwwBackend();
+
 		SpaceRequest.head("/1/web/" + prefix + uri).backend(superadmin).go(200)//
 				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE);
 
-		SpaceRequest.head(uri).www(superadmin).go(200)//
+		SpaceRequest.head(uri).backend(wwwBackend).go(200)//
 				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE);
 
 		SpaceRequest.get("/1/web/" + prefix + uri).backend(superadmin).go(200)//
 				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE)//
 				.assertBodyEquals(expectedBody);
 
-		SpaceRequest.get(uri).www(superadmin).go(200)//
+		SpaceRequest.get(uri).backend(wwwBackend).go(200)//
 				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE)//
 				.assertBodyEquals(expectedBody);
 	}

@@ -181,7 +181,7 @@ public class LogServiceTest extends SpaceTest {
 		while (elements.hasNext()) {
 			JsonNode element = elements.next();
 			if (element.get("path").asText().equals("/")
-					&& element.get("credentials").get("backendId").asText().equals(SpaceBackend.defaultBackendId()))
+					&& element.get("credentials").get("backendId").asText().equals(SpaceBackend.SPACEDOG))
 				Assert.fail();
 		}
 	}

@@ -12,16 +12,15 @@ import io.spacedog.utils.Utils;
 
 public class SpaceBackend {
 
-	// main fields
-	private String host;
-	private int port;
-	private boolean ssl;
+	public static final String API = "api";
+	public static final String SPACEDOG = "spacedog";
 
-	// specific multi backend fields
+	private boolean ssl;
+	private String hostPrefix = "";
+	private String backendId = "";
+	private String hostSuffix;
+	private int port;
 	private boolean multi = false;
-	private String prefix = "";
-	private String backendId = defaultBackendId();
-	private boolean webApp = false;
 
 	private SpaceBackend() {
 	}
@@ -30,40 +29,48 @@ public class SpaceBackend {
 	// Getters, setters and common methods
 	//
 
-	public String host() {
-		return multi ? new UrlBuilder().appendHost().toString() : host;
+	public String scheme() {
+		return ssl ? "https" : "http";
 	}
 
 	public String backendId() {
-		return backendId;
+		return backendId.isEmpty() ? SPACEDOG : backendId;
+	}
+
+	public String host() {
+		return new UrlBuilder().appendHost().toString();
 	}
 
 	public int port() {
 		return port;
 	}
 
-	public boolean webApp() {
-		return webApp;
+	private String hostSuffixAndPort() {
+		return new UrlBuilder().append(hostSuffix).appendPort().toString();
 	}
 
 	public boolean ssl() {
 		return ssl;
 	}
 
-	public boolean multi() {
+	public boolean isMulti() {
 		return multi;
-	}
-
-	public String scheme() {
-		return ssl ? "https" : "http";
 	}
 
 	@Override
 	public String toString() {
-		if (multi)
-			return new UrlBuilder().appendScheme().appendHost("*").appendPort().toString();
-		else
-			return url();
+		return isMulti() //
+				? new UrlBuilder().appendScheme().appendHost("*").appendPort().toString()//
+				: url();
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		if (object != null && object instanceof SpaceBackend) {
+			SpaceBackend other = (SpaceBackend) object;
+			return url().equalsIgnoreCase(other.url());
+		}
+		return false;
 	}
 
 	//
@@ -82,15 +89,11 @@ public class SpaceBackend {
 		}
 
 		private UrlBuilder appendHost() {
-			if (multi)
-				appendHost(defaultBackendId());
-			else
-				builder.append(host);
-			return this;
+			return appendHost(multi ? API : backendId);
 		}
 
 		private UrlBuilder appendHost(String backendId) {
-			builder.append(prefix).append(backendId).append(host);
+			builder.append(hostPrefix).append(backendId).append(hostSuffix);
 			return this;
 		}
 
@@ -131,12 +134,7 @@ public class SpaceBackend {
 	//
 
 	public static SpaceBackend fromUrl(String url) {
-		return fromUrl(url, false);
-	}
-
-	public static SpaceBackend fromUrl(String url, boolean webApp) {
 		SpaceBackend target = new SpaceBackend();
-		target.webApp = webApp;
 
 		// handle scheme
 		if (url.startsWith("https://")) {
@@ -146,27 +144,27 @@ public class SpaceBackend {
 			url = Utils.removePreffix(url, "http://");
 			target.ssl = false;
 		} else
-			throw Exceptions.illegalArgument("invalid backend url [%s]", url);
+			throw Exceptions.illegalArgument("backend url [%s] is invalid", url);
 
 		// handle multi backend
-		if (url.indexOf('*') < 0) {
-			target.multi = false;
-			target.host = url;
+		String suffixAndPort = null;
+		int index = url.indexOf('*');
+		if (index < 0) {
+			suffixAndPort = url;
 		} else {
-			String[] parts = url.split("\\*", 2);
 			target.multi = true;
-			target.host = parts[1];
-			target.prefix = parts[0];
-			target.backendId = defaultBackendId();
+			target.hostPrefix = url.substring(0, index);
+			suffixAndPort = url.substring(index + 1);
 		}
 
 		// handle url port
-		if (target.host.indexOf(':') < 0) {
+		index = suffixAndPort.indexOf(':');
+		if (index < 0) {
+			target.hostSuffix = suffixAndPort;
 			target.port = target.ssl ? 443 : 80;
 		} else {
-			String[] parts = target.host.split(":", 2);
-			target.host = parts[0];
-			target.port = Integer.valueOf(parts[1]);
+			target.hostSuffix = suffixAndPort.substring(0, index);
+			target.port = Integer.valueOf(suffixAndPort.substring(index + 1));
 		}
 
 		return target;
@@ -177,44 +175,49 @@ public class SpaceBackend {
 	}
 
 	public static SpaceBackend valueOf(String string) {
-		return string.startsWith("http") ? fromUrl(string) : fromDefaults(string);
+		SpaceBackend backend = string.startsWith("http") //
+				? fromUrl(string)
+				: fromDefaults(string);
+		if (backend == null)
+			throw Exceptions.illegalArgument("backend url [%s] is invalid");
+		return backend;
 	}
 
-	public Optional7<SpaceBackend> checkAndInstantiate(String requestHostAndPort) {
-		String backendhostAndPort = hostAndPort();
+	public Optional7<SpaceBackend> checkRequest(String requestHostAndPort) {
+		String backendSuffixAndPort = hostSuffixAndPort();
 
-		if (multi && requestHostAndPort.startsWith(prefix) //
-				&& requestHostAndPort.endsWith(backendhostAndPort)) {
+		if (isMulti() && requestHostAndPort.startsWith(hostPrefix) //
+				&& requestHostAndPort.endsWith(backendSuffixAndPort)) {
 
 			String backendId = Utils.removeSuffix(//
-					Utils.removePreffix(requestHostAndPort, prefix), //
-					backendhostAndPort);
+					Utils.removePreffix(requestHostAndPort, hostPrefix), //
+					backendSuffixAndPort);
 
 			// check if resulting backing id is well formed
 			if (backendId.length() > 0 && !backendId.contains("."))
 				return Optional7.of(instanciate(backendId));
 
-		} else if (backendhostAndPort.equalsIgnoreCase(requestHostAndPort))
+		} else if (backendSuffixAndPort.equalsIgnoreCase(requestHostAndPort))
 			return Optional7.of(this);
 
 		return Optional7.empty();
 	}
 
-	public SpaceBackend instanciate() {
-		return instanciate(defaultBackendId());
-	}
-
 	public SpaceBackend instanciate(String backendId) {
-		checkIsMultiple();
+		if (!isMulti())
+			throw Exceptions.illegalArgument(//
+					"backend [%s] is not instanciable", this);
+
+		if (SPACEDOG.equalsIgnoreCase(backendId) //
+				|| API.equalsIgnoreCase(backendId))
+			return this;
 
 		SpaceBackend backend = new SpaceBackend();
-		backend.multi = false;
-		backend.host = new UrlBuilder().appendHost(backendId).toString();
+		backend.hostPrefix = hostPrefix;
 		backend.backendId = backendId;
+		backend.hostSuffix = hostSuffix;
 		backend.port = port;
 		backend.ssl = ssl;
-		backend.webApp = webApp;
-
 		return backend;
 	}
 
@@ -223,28 +226,21 @@ public class SpaceBackend {
 	//
 
 	public static SpaceBackend local = fromUrl("http://*.lvh.me:8443");
+	public static SpaceBackend wwwLocal = fromUrl("http://*.www.lvh.me:8443");
 	public static SpaceBackend staging = fromUrl("https://*.spacerepublic.net");
+	public static SpaceBackend wwwStaging = fromUrl("https://*.www.spacerepublic.net");
 	public static SpaceBackend production = fromUrl("https://*.spacedog.io");
+	public static SpaceBackend wwwProduction = fromUrl("https://*.www.spacedog.io");
 
 	private static Map<String, SpaceBackend> defaultTargets = Maps.newHashMap();
 
 	static {
 		defaultTargets.put("local", local);
+		defaultTargets.put("wwwLocal", wwwLocal);
 		defaultTargets.put("staging", staging);
+		defaultTargets.put("wwwStaging", wwwStaging);
 		defaultTargets.put("production", production);
-	}
-
-	//
-	// Private methods
-	//
-
-	private String hostAndPort() {
-		return new UrlBuilder().append(host).appendPort().toString();
-	}
-
-	private void checkIsMultiple() {
-		if (!multi)
-			throw Exceptions.illegalArgument("backend [%s] is not multiple", this);
+		defaultTargets.put("wwwProduction", wwwProduction);
 	}
 
 	//
@@ -258,10 +254,7 @@ public class SpaceBackend {
 		if (!BACKEND_ID_PATTERN.matcher(backendId).matches())
 			return false;
 
-		if (backendId.indexOf("spacedog") > -1)
-			return false;
-
-		if (backendId.startsWith(defaultBackendId()))
+		if (backendId.indexOf(SPACEDOG) > -1)
 			return false;
 
 		return true;
@@ -276,20 +269,7 @@ public class SpaceBackend {
 			throw Exceptions.illegalArgument("backend id does not comply to: "//
 					+ "is at least 4 characters long, "//
 					+ "is only composed of a-z and 0-9 characters, "//
-					+ "is lowercase, does not start with '%s', "//
-					+ "does not contain 'spacedog'.", //
-					defaultBackendId());
+					+ "is lowercase, does not contain 'spacedog'.");
 	}
 
-	public static String defaultBackendId() {
-		return "api";
-	}
-
-	public boolean isDefault() {
-		return backendId.equals(defaultBackendId());
-	}
-
-	public static boolean isDefaultBackendId(String backendId) {
-		return defaultBackendId().equals(backendId);
-	}
 }

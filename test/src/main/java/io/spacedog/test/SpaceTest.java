@@ -13,6 +13,7 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.http.SpaceBackend;
 import io.spacedog.http.SpaceFields;
 import io.spacedog.http.SpaceParams;
 import io.spacedog.http.SpaceRequest;
@@ -36,8 +37,8 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 				.create(username, Passwords.random(), DEFAULT_EMAIL, role);
 	}
 
-	public static SpaceDog signUpTempDog(String backendId, String username) {
-		return SpaceDog.backendId(backendId).credentials()//
+	public static SpaceDog signUpTempDog(SpaceBackend backend, String username) {
+		return SpaceDog.backend(backend).credentials()//
 				.create(username, Passwords.random(), DEFAULT_EMAIL);
 	}
 
@@ -69,12 +70,12 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 	private static SpaceDog superdog;
 
 	public static SpaceDog superdog() {
-		if (superdog == null) {
-			String password = SpaceRequest.env()//
-					.getOrElseThrow("spacedog.superdog.password");
-			superdog = SpaceDog.defaultBackend().username("superdog")//
-					.password(password).id("superdog");
-		}
+		if (superdog == null)
+			superdog = SpaceDog.defaultBackend()//
+					.username("superdog")//
+					.password(SpaceRequest.env().superdogPassword())//
+					.id("superdog");
+
 		return superdog;
 	}
 

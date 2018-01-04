@@ -18,8 +18,6 @@ public class ServerConfiguration {
 	private static final String HOME_PATH = "spacedog.home.path";
 	private static final String PRODUCTION = "spacedog.production";
 	private static final String OFFLINE = "spacedog.offline";
-	private static final String BACKEND_API_PUBLIC_URL = "spacedog.backend.api.public.url";
-	private static final String BACKEND_WWW_PUBLIC_URL = "spacedog.backend.www.public.url";
 	private static final String BACKEND_CREATE_RESTRICTED = "spacedog.backend.create.restricted";
 	private static final String SERVER_PORT = "spacedog.server.port";
 	private static final String SERVER_GREEN_CHECK = "spacedog.server.green.check";
@@ -35,7 +33,6 @@ public class ServerConfiguration {
 	private static final String AWS_SUPERDOG_NOTIFICATION_TOPIC = "spacedog.aws.superdog.notification.topic";
 	private static final String AWS_BUCKET_PREFIX = "spacedog.aws.bucket.prefix";
 	private static final String AWS_REGION = "spacedog.aws.region";
-	private static final String SUPERDOG_PASSWORD = "spacedog.superdog.password";
 
 	private SpaceEnv env;
 
@@ -68,25 +65,12 @@ public class ServerConfiguration {
 		return env.get(OFFLINE, false);
 	}
 
-	private SpaceBackend apiBackend;
-
 	public SpaceBackend apiBackend() {
-		if (apiBackend == null)
-			apiBackend = SpaceBackend.fromUrl(//
-					env.getOrElseThrow(BACKEND_API_PUBLIC_URL));
-		return apiBackend;
+		return env.apiBackend();
 	}
 
-	private Optional<SpaceBackend> wwwBackend;
-
-	public Optional<SpaceBackend> wwwBackend() {
-		if (wwwBackend == null) {
-			Optional7<String> url = env.get(BACKEND_WWW_PUBLIC_URL);
-			wwwBackend = url.isPresent() //
-					? Optional.of(SpaceBackend.fromUrl(url.get(), true)) //
-					: Optional.empty();
-		}
-		return wwwBackend;
+	public SpaceBackend wwwBackend() {
+		return env.wwwBackend();
 	}
 
 	public int serverPort() {
@@ -164,7 +148,7 @@ public class ServerConfiguration {
 
 	public String superdogPassword() {
 		if (superdogPassword == null)
-			superdogPassword = env.getOrElseThrow(SUPERDOG_PASSWORD);
+			superdogPassword = env.superdogPassword();
 		return superdogPassword;
 	}
 

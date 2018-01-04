@@ -19,7 +19,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
-import io.spacedog.http.SpaceBackend;
 import io.spacedog.http.SpaceHeaders;
 import io.spacedog.model.Credentials;
 import io.spacedog.utils.ClassResources;
@@ -117,9 +116,9 @@ public class LogService extends SpaceService {
 			@Override
 			public boolean matches(String uri, Context context) {
 
-				// https://api.spacedog.io ping requests should not be logged
+				// ping requests should not be logged
 				if (uri.isEmpty() || uri.equals(SLASH))
-					return !SpaceContext.backend().isDefault();
+					return SpaceContext.isWww();
 
 				return true;
 			}
@@ -198,15 +197,7 @@ public class LogService extends SpaceService {
 		addRequestPayload(log, context);
 		addResponsePayload(log, payload, context);
 
-		// in case incoming request is targeting non existent backend
-		// or backend without any log index, they should be logged to
-		// default backend
-		Index indexToLogTo = logIndex();
-
-		if (!elastic().exists(indexToLogTo))
-			indexToLogTo.backendId(SpaceBackend.defaultBackendId());
-
-		return elastic().index(indexToLogTo, log.toString()).getId();
+		return elastic().index(logIndex(), log.toString()).getId();
 	}
 
 	private void addResponsePayload(ObjectNode log, Payload payload, Context context) {

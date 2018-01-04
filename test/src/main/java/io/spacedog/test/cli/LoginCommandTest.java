@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import io.spacedog.cli.LoginCommand;
 import io.spacedog.client.SpaceDog;
+import io.spacedog.http.SpaceRequest;
 import io.spacedog.model.Roles;
 import io.spacedog.test.SpaceTest;
 
@@ -31,44 +32,51 @@ public class LoginCommandTest extends SpaceTest {
 		// login without username fails
 		assertThrow(IllegalArgumentException.class, //
 				() -> new LoginCommand().verbose(true)//
-						.backend(superadmin.backendId()).login());
+						.backend(superadmin.backend()).login());
 
 		// login with invalid username fails
 		assertHttpError(401, () -> new LoginCommand().verbose(true)//
-				.backend(superadmin.backendId()).username("XXX")//
-				.password(superadmin.password().get()).login());
+				.backend(superadmin.backend())//
+				.username("XXX")//
+				.password(superadmin.password().get())//
+				.login());
 
 		// login with invalid backend fails
 		assertHttpError(401, () -> new LoginCommand().verbose(true)//
-				.backend("XXXX").username(superadmin.username())//
+				.backend(SpaceRequest.env().apiBackend().instanciate("XXXX"))//
+				.username(superadmin.username())//
 				.password(superadmin.password().get())//
 				.login());
 
 		// superadmin fails to login with fred's password
 		assertHttpError(401, () -> new LoginCommand().verbose(true)//
-				.backend(superadmin.backendId()).username(superadmin.username())//
-				.password(fred.password().get()).login());
+				.backend(superadmin.backend())//
+				.username(superadmin.username())//
+				.password(fred.password().get())//
+				.login());
 
 		// fred fails to login with superadmin's password
 		assertHttpError(401, () -> new LoginCommand().verbose(true)//
-				.backend(fred.backendId()).username(fred.username())//
-				.password(superadmin.password().get()).login());
+				.backend(fred.backend())//
+				.username(fred.username())//
+				.password(superadmin.password().get())//
+				.login());
 
 		// superadmin succeeds to login
 		SpaceDog session = new LoginCommand().verbose(true)//
-				.backend(superadmin.backendId())//
+				.backend(superadmin.backend())//
 				.username(superadmin.username())//
 				.password(superadmin.password().get())//
 				.login();
 
-		assertEquals(superadmin.backendId(), session.backendId());
+		assertEquals(superadmin.backend(), session.backend());
 		assertEquals(superadmin.username(), session.username());
 
 		// clears cache to force login command to load session from file
 		LoginCommand.clearCache();
 		SpaceDog fromFile = LoginCommand.session();
 
-		assertEquals(superadmin.backendId(), fromFile.backendId());
+		assertEquals(superadmin.backend(), fromFile.backend());
 		assertEquals(session.accessToken(), fromFile.accessToken());
 
 		// login to test backend with full backend url succeeds
@@ -78,14 +86,14 @@ public class LoginCommandTest extends SpaceTest {
 				.password(fred.password().get())//
 				.login();
 
-		assertEquals("http://api.lvh.me:8443", session.backendId());
+		assertEquals("http://api.lvh.me:8443", session.backend().url());
 		assertEquals(fred.username(), session.username());
 
 		// clears cache to force login command to load session from file
 		LoginCommand.clearCache();
 		fromFile = LoginCommand.session();
 
-		assertEquals("http://api.lvh.me:8443", fromFile.backendId());
+		assertEquals("http://api.lvh.me:8443", fromFile.backend().url());
 		assertEquals(session.accessToken(), fromFile.accessToken());
 	}
 }

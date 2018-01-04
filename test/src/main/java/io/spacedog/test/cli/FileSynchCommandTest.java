@@ -41,7 +41,7 @@ public class FileSynchCommandTest extends SpaceTest {
 
 		// superadmin logs in with spacedog cli
 		new LoginCommand().verbose(true)//
-				.backend(superadmin.backendId())//
+				.backend(superadmin.backend())//
 				.username(superadmin.username())//
 				.password(superadmin.password().get())//
 				.login();

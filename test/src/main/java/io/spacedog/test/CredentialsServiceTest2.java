@@ -99,13 +99,13 @@ public class CredentialsServiceTest2 extends SpaceTest {
 				.backend(superadmin).basicAuth("vince", "XXX").go(401);
 
 		// vince fails to get his credentials if wrong backend id
-		vince.get("/1/credentials/" + vince.id()).backend("XXX").go(401);
+		vince.get("/1/credentials/" + vince.id()).backendId("XXX").go(401);
 
 		// anonymous fails to get vince credentials
 		SpaceRequest.get("/1/credentials/" + vince.id()).backend(superadmin).go(403);
 
 		// another user fails to get vince credentials
-		SpaceDog fred = signUpTempDog(superadmin.backendId(), "fred");
+		SpaceDog fred = signUpTempDog(superadmin.backend(), "fred");
 		fred.get("/1/credentials/" + vince.id()).go(403);
 
 		// vince succeeds to login

@@ -49,7 +49,7 @@ public class AdminEndpoint implements SpaceParams, SpaceFields {
 
 	public AdminEndpoint deleteBackend(String backendId) {
 		dog.delete("/1/backends/{id}")//
-				.routeParam("id", backendId).backend(backendId).go(200, 401);
+				.routeParam("id", backendId).backendId(backendId).go(200, 401);
 		return this;
 	}
 
