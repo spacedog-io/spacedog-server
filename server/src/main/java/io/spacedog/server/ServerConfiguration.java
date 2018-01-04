@@ -37,7 +37,7 @@ public class ServerConfiguration {
 	private SpaceEnv env;
 
 	public ServerConfiguration() {
-		this(SpaceEnv.defaultEnv());
+		this(SpaceEnv.env());
 	}
 
 	public ServerConfiguration(SpaceEnv env) {

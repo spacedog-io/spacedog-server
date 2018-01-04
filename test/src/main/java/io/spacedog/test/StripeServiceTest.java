@@ -36,7 +36,7 @@ public class StripeServiceTest extends SpaceTest {
 
 		// set stripe settings
 		StripeSettings settings = new StripeSettings();
-		settings.secretKey = SpaceEnv.defaultEnv().getOrElseThrow("spacedog.stripe.test.secret.key");
+		settings.secretKey = SpaceEnv.env().getOrElseThrow("spacedog.stripe.test.secret.key");
 		settings.rolesAllowedToCharge = Sets.newHashSet("superadmin");
 		settings.rolesAllowedToPay = Sets.newHashSet("user");
 		Stripe.apiKey = settings.secretKey;

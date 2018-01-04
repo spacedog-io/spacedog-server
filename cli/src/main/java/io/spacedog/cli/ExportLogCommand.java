@@ -13,7 +13,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
 import io.spacedog.client.SpaceDog;
-import io.spacedog.http.SpaceRequest;
+import io.spacedog.http.SpaceEnv;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 
@@ -43,7 +43,7 @@ public class ExportLogCommand extends AbstractCommand<ExportLogCommand> {
 
 	public void export() throws IOException {
 
-		SpaceRequest.env().debug(verbose());
+		SpaceEnv.env().debug(verbose());
 		SpaceDog dog = LoginCommand.session();
 
 		DateTime date = Strings.isNullOrEmpty(day) ? DateTime.now() //

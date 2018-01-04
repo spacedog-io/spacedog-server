@@ -64,9 +64,8 @@ public class Job {
 	}
 
 	void notify(String titleSuffix, String message) {
-		SpaceEnv env = SpaceEnv.defaultEnv();
 		Internals.get().notify(//
-				env.superdogNotificationTopic(), //
+				SpaceEnv.env().superdogNotificationTopic(), //
 				description() + titleSuffix, //
 				message);
 	}

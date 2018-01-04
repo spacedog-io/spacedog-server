@@ -15,7 +15,7 @@ import com.google.common.base.Strings;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceBackend;
-import io.spacedog.http.SpaceRequest;
+import io.spacedog.http.SpaceEnv;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Utils;
@@ -60,7 +60,7 @@ public class LoginCommand extends AbstractCommand<LoginCommand> {
 		Check.notNull(backend, "backend");
 		Check.notNullOrEmpty(username, "username");
 
-		SpaceRequest.env().debug(verbose());
+		SpaceEnv.env().debug(verbose());
 		String userHome = System.getProperty("user.home");
 
 		if (Strings.isNullOrEmpty(userHome))

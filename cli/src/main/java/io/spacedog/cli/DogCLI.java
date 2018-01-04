@@ -6,7 +6,6 @@ import com.google.common.base.Strings;
 
 import io.spacedog.http.SpaceBackend;
 import io.spacedog.http.SpaceEnv;
-import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceRequestException;
 import io.spacedog.utils.Utils;
 
@@ -65,7 +64,7 @@ public class DogCLI {
 		SpaceEnv env = new SpaceEnv();
 		env.apiBackend(SpaceBackend.production);
 		env.debug(false);
-		SpaceRequest.env(env);
+		SpaceEnv.env(env);
 	}
 
 }

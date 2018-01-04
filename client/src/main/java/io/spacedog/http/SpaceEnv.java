@@ -141,21 +141,29 @@ public class SpaceEnv {
 
 	private static final String SPACEDOG_CONFIGURATION_PATH = "spacedog.configuration.path";
 
-	private static SpaceEnv defaultEnv;
+	private static SpaceEnv env;
+
+	public static SpaceEnv env() {
+		if (env == null)
+			env = defaultEnv();
+		return env;
+	}
+
+	public static void env(SpaceEnv env) {
+		SpaceEnv.env = env;
+	}
 
 	public static SpaceEnv defaultEnv() {
-		if (defaultEnv == null) {
+		Properties properties = tryCustomConfigurationPath();
 
-			Properties properties = tryCustomConfigurationPath();
+		if (properties == null)
+			properties = tryDefaultConfigurationPaths();
 
-			if (properties == null)
-				properties = tryDefaultConfigurationPaths();
+		SpaceEnv defaultEnv = new SpaceEnv(properties);
 
-			defaultEnv = new SpaceEnv(properties);
+		if (defaultEnv.debug())
+			defaultEnv.log();
 
-			if (defaultEnv.debug())
-				defaultEnv.log();
-		}
 		return defaultEnv;
 	}
 
@@ -169,7 +177,7 @@ public class SpaceEnv {
 			return loadProperties(file);
 
 		throw Exceptions.illegalArgument(//
-				"SpaceDog configuration file [%s] not found", path);
+				"configuration file [%s] not found", path);
 	}
 
 	private static Properties tryDefaultConfigurationPaths() {
@@ -205,13 +213,9 @@ public class SpaceEnv {
 
 		} catch (IOException e) {
 			throw Exceptions.runtime(e, "error loading env properties");
+
 		} finally {
-			if (input != null)
-				try {
-					input.close();
-				} catch (IOException ignore) {
-					ignore.printStackTrace();
-				}
+			Utils.closeSilently(input);
 		}
 	}
 }

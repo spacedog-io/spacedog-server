@@ -93,7 +93,7 @@ public class WebServiceTest extends SpaceTest {
 	}
 
 	private void browse(String prefix, String uri, String expectedBody, String expectedContentType) {
-		SpaceBackend wwwBackend = SpaceEnv.defaultEnv().wwwBackend();
+		SpaceBackend wwwBackend = SpaceEnv.env().wwwBackend();
 
 		SpaceRequest.head("/1/web/" + prefix + uri).backend(superadmin).go(200)//
 				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE);

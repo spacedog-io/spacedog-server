@@ -5,6 +5,7 @@ import org.joda.time.DateTime;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.http.SpaceBackend;
+import io.spacedog.http.SpaceEnv;
 import io.spacedog.http.SpaceFields;
 import io.spacedog.http.SpaceParams;
 import io.spacedog.http.SpaceRequest;
@@ -99,7 +100,7 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 	//
 
 	public static SpaceDog dog() {
-		return dog(SpaceRequest.env().apiBackend());
+		return dog(SpaceEnv.env().apiBackend());
 	}
 
 	public static SpaceDog dog(String backend) {

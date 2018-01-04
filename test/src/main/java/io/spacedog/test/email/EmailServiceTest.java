@@ -114,8 +114,8 @@ public class EmailServiceTest extends SpaceTest {
 		settings.host = "mail.gandi.net";
 		settings.startTlsRequired = false;
 		settings.sslOnConnect = true;
-		settings.login = SpaceEnv.defaultEnv().getOrElseThrow("spacedog.test.smtp.login");
-		settings.password = SpaceEnv.defaultEnv().getOrElseThrow("spacedog.test.smtp.password");
+		settings.login = SpaceEnv.env().getOrElseThrow("spacedog.test.smtp.login");
+		settings.password = SpaceEnv.env().getOrElseThrow("spacedog.test.smtp.password");
 		return settings;
 	}
 

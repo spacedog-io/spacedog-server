@@ -42,7 +42,7 @@ public class SpaceResponse {
 	public SpaceResponse(SpaceRequest spaceRequest, Request okRequest) {
 
 		this.okRequest = okRequest;
-		boolean debug = SpaceRequest.env().debug();
+		boolean debug = SpaceEnv.env().debug();
 
 		if (debug) {
 			Utils.info();
@@ -80,7 +80,7 @@ public class SpaceResponse {
 	public static OkHttpClient okHttpClient() {
 
 		if (okHttpClient == null) {
-			SpaceEnv env = SpaceRequest.env();
+			SpaceEnv env = SpaceEnv.env();
 
 			okHttpClient = new OkHttpClient.Builder()//
 					.connectTimeout(env.httpTimeoutMillis(), TimeUnit.MILLISECONDS)//

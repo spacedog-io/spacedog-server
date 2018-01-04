@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import io.spacedog.cli.LoginCommand;
 import io.spacedog.client.SpaceDog;
-import io.spacedog.http.SpaceRequest;
+import io.spacedog.http.SpaceEnv;
 import io.spacedog.model.Roles;
 import io.spacedog.test.SpaceTest;
 
@@ -43,7 +43,7 @@ public class LoginCommandTest extends SpaceTest {
 
 		// login with invalid backend fails
 		assertHttpError(401, () -> new LoginCommand().verbose(true)//
-				.backend(SpaceRequest.env().apiBackend().instanciate("XXXX"))//
+				.backend(SpaceEnv.env().apiBackend().instanciate("XXXX"))//
 				.username(superadmin.username())//
 				.password(superadmin.password().get())//
 				.login());

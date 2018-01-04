@@ -52,7 +52,6 @@ public class SpaceRequest {
 
 	// static defaults
 	private static boolean forTestingDefault = false;
-	private static SpaceEnv env;
 
 	private SpaceRequest(String path, HttpVerb verb) {
 		this.path = path;
@@ -74,7 +73,7 @@ public class SpaceRequest {
 
 	private HttpUrl.Builder computeHttpUrlFromBackendAndPath() {
 		if (backend == null)
-			backend = env().apiBackend();
+			backend = SpaceEnv.env().apiBackend();
 
 		HttpUrl.Builder builder = new HttpUrl.Builder()//
 				.scheme(backend.scheme())//
@@ -140,7 +139,7 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest backendId(String backendId) {
-		this.backend = env().apiBackend().instanciate(backendId);
+		this.backend = SpaceEnv.env().apiBackend().instanciate(backendId);
 		return this;
 	}
 
@@ -236,7 +235,7 @@ public class SpaceRequest {
 
 	public SpaceRequest bodyJson(String body) {
 		this.contentType = OkHttp.JSON;
-		if (env().debug())
+		if (SpaceEnv.env().debug())
 			this.bodyJson = Json.readNode(body);
 		this.body = body;
 		return this;
@@ -354,16 +353,6 @@ public class SpaceRequest {
 
 	public static void setForTestingDefault(boolean value) {
 		forTestingDefault = value;
-	}
-
-	public static void env(SpaceEnv value) {
-		env = value;
-	}
-
-	public static SpaceEnv env() {
-		if (env == null)
-			env(SpaceEnv.defaultEnv());
-		return env;
 	}
 
 	public static String getBackendKey(JsonNode account) {

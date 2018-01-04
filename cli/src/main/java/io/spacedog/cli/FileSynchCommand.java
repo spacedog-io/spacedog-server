@@ -13,10 +13,10 @@ import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
-import io.spacedog.client.SpaceDog;
 import io.spacedog.client.FileEndpoint.FileList;
 import io.spacedog.client.FileEndpoint.FileMeta;
-import io.spacedog.http.SpaceRequest;
+import io.spacedog.client.SpaceDog;
+import io.spacedog.http.SpaceEnv;
 import io.spacedog.http.WebPath;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
@@ -36,8 +36,8 @@ public class FileSynchCommand extends AbstractCommand<FileSynchCommand> {
 	private String prefix;
 
 	/**
-	 * Set of server file path checked with matching local files. A checked
-	 * local file is uploaded if different.
+	 * Set of server file path checked with matching local files. A checked local
+	 * file is uploaded if different.
 	 */
 	private Set<String> checked = Sets.newHashSet();
 
@@ -72,7 +72,7 @@ public class FileSynchCommand extends AbstractCommand<FileSynchCommand> {
 		Check.notNull(source, "source");
 		Check.notNullOrEmpty(prefix, "prefix");
 
-		SpaceRequest.env().debug(verbose());
+		SpaceEnv.env().debug(verbose());
 		dog = LoginCommand.session();
 
 		synchFromServer();

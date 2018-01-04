@@ -137,7 +137,7 @@ public class SmsServiceTest extends SpaceTest {
 
 	private TwilioSettings twilioSettings() {
 		TwilioSettings settings = new TwilioSettings();
-		SpaceEnv env = SpaceEnv.defaultEnv();
+		SpaceEnv env = SpaceEnv.env();
 		settings.accountSid = env.getOrElseThrow("caremen.twilio.accountSid");
 		settings.authToken = env.getOrElseThrow("caremen.twilio.authToken");
 		settings.defaultFrom = env.getOrElseThrow("caremen.twilio.defaultFrom");

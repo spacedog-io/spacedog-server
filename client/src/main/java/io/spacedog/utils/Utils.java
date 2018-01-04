@@ -202,25 +202,6 @@ public class Utils {
 	// Resource Utils
 	//
 
-	// public static byte[] readResource(String path) {
-	// try {
-	// return Resources.toByteArray(Resources.getResource(path));
-	// } catch (IOException e) {
-	// throw Exceptions.runtime(e, "error reading resource [%s]", path);
-	// }
-	// }
-	//
-	// public static byte[] readResource(Class<?> contextClass, String resourceName)
-	// {
-	// try {
-	// return Resources.toByteArray(Resources.getResource(contextClass,
-	// resourceName));
-	// } catch (IOException e) {
-	// throw Exceptions.runtime(e, "error reading resource [%s][%s]", //
-	// contextClass.getSimpleName(), resourceName);
-	// }
-	// }
-
 	public static void closeSilently(Closeable closeable) {
 		try {
 			if (closeable != null)

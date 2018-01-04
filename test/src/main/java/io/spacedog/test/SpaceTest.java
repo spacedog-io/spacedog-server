@@ -14,6 +14,7 @@ import com.google.common.collect.Lists;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceBackend;
+import io.spacedog.http.SpaceEnv;
 import io.spacedog.http.SpaceFields;
 import io.spacedog.http.SpaceParams;
 import io.spacedog.http.SpaceRequest;
@@ -73,7 +74,7 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 		if (superdog == null)
 			superdog = SpaceDog.dog()//
 					.username("superdog")//
-					.password(SpaceRequest.env().superdogPassword())//
+					.password(SpaceEnv.env().superdogPassword())//
 					.id("superdog");
 
 		return superdog;
