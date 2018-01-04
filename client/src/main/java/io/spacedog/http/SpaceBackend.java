@@ -21,6 +21,7 @@ public class SpaceBackend {
 	private String hostSuffix;
 	private int port;
 	private boolean multi = false;
+	private String name;
 
 	private SpaceBackend() {
 	}
@@ -55,6 +56,15 @@ public class SpaceBackend {
 
 	public boolean isMulti() {
 		return multi;
+	}
+
+	public String name() {
+		return name;
+	}
+
+	public SpaceBackend name(String name) {
+		this.name = name;
+		return this;
 	}
 
 	@Override
@@ -171,7 +181,7 @@ public class SpaceBackend {
 	}
 
 	public static SpaceBackend fromDefaults(String name) {
-		return defaultTargets.get(name);
+		return defaultBackends.get(name);
 	}
 
 	public static SpaceBackend valueOf(String string) {
@@ -222,25 +232,25 @@ public class SpaceBackend {
 	}
 
 	//
-	// Default targets
+	// Default backends
 	//
 
-	public static SpaceBackend local = fromUrl("http://*.lvh.me:8443");
-	public static SpaceBackend wwwLocal = fromUrl("http://*.www.lvh.me:8443");
-	public static SpaceBackend staging = fromUrl("https://*.spacerepublic.net");
-	public static SpaceBackend wwwStaging = fromUrl("https://*.www.spacerepublic.net");
-	public static SpaceBackend production = fromUrl("https://*.spacedog.io");
-	public static SpaceBackend wwwProduction = fromUrl("https://*.www.spacedog.io");
+	public static SpaceBackend local = fromUrl("http://*.lvh.me:8443").name("local");
+	public static SpaceBackend wwwLocal = fromUrl("http://*.www.lvh.me:8443").name("wwwLocal");
+	public static SpaceBackend staging = fromUrl("https://*.spacerepublic.net").name("staging");
+	public static SpaceBackend wwwStaging = fromUrl("https://*.www.spacerepublic.net").name("wwwStaging");
+	public static SpaceBackend production = fromUrl("https://*.spacedog.io").name("production");
+	public static SpaceBackend wwwProduction = fromUrl("https://*.www.spacedog.io").name("wwwProduction");
 
-	private static Map<String, SpaceBackend> defaultTargets = Maps.newHashMap();
+	private static Map<String, SpaceBackend> defaultBackends = Maps.newHashMap();
 
 	static {
-		defaultTargets.put("local", local);
-		defaultTargets.put("wwwLocal", wwwLocal);
-		defaultTargets.put("staging", staging);
-		defaultTargets.put("wwwStaging", wwwStaging);
-		defaultTargets.put("production", production);
-		defaultTargets.put("wwwProduction", wwwProduction);
+		defaultBackends.put(local.name(), local);
+		defaultBackends.put(wwwLocal.name(), wwwLocal);
+		defaultBackends.put(staging.name(), staging);
+		defaultBackends.put(wwwStaging.name(), wwwStaging);
+		defaultBackends.put(production.name(), production);
+		defaultBackends.put(wwwProduction.name(), wwwProduction);
 	}
 
 	//

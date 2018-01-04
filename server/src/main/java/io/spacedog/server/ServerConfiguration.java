@@ -144,12 +144,8 @@ public class ServerConfiguration {
 		return env.get(SERVER_USER_AGENT, "spacedog-server");
 	}
 
-	private static String superdogPassword;
-
 	public String superdogPassword() {
-		if (superdogPassword == null)
-			superdogPassword = env.superdogPassword();
-		return superdogPassword;
+		return env.superdogPassword();
 	}
 
 	public void log() {

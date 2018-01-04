@@ -49,7 +49,8 @@ public class SpaceEnv {
 	public SpaceBackend apiBackend() {
 		if (apiBackend == null)
 			apiBackend = SpaceBackend.valueOf(//
-					get(SPACEDOG_BACKEND_API_PUBLIC_URL, "production"));
+					get(SPACEDOG_BACKEND_API_PUBLIC_URL, //
+							SpaceBackend.production.name()));
 		return apiBackend;
 	}
 
@@ -62,7 +63,8 @@ public class SpaceEnv {
 	public SpaceBackend wwwBackend() {
 		if (wwwBackend == null)
 			wwwBackend = SpaceBackend.valueOf(//
-					get(SPACEDOG_BACKEND_WWW_PUBLIC_URL, "wwwProduction"));
+					get(SPACEDOG_BACKEND_WWW_PUBLIC_URL, //
+							SpaceBackend.wwwProduction.name()));
 		return wwwBackend;
 	}
 
@@ -79,8 +81,12 @@ public class SpaceEnv {
 		properties.setProperty(SPACEDOG_HTTP_TIMEOUT, Integer.toString(timeout));
 	}
 
+	private String superdogPassword;
+
 	public String superdogPassword() {
-		return getOrElseThrow(SPACEDOG_SUPERDOG_PASSWORD);
+		if (superdogPassword == null)
+			superdogPassword = getOrElseThrow(SPACEDOG_SUPERDOG_PASSWORD);
+		return superdogPassword;
 	}
 
 	//
