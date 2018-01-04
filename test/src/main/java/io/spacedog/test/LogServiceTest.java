@@ -1,13 +1,9 @@
 package io.spacedog.test;
 
-import java.util.Iterator;
 import java.util.List;
 
 import org.joda.time.DateTime;
-import org.junit.Assert;
 import org.junit.Test;
-
-import com.fasterxml.jackson.databind.JsonNode;
 
 import io.spacedog.client.LogEndpoint.LogItem;
 import io.spacedog.client.LogEndpoint.LogSearchResults;
@@ -16,7 +12,7 @@ import io.spacedog.client.elastic.ESQueryBuilders;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.client.elastic.ESSortBuilders;
 import io.spacedog.client.elastic.ESSortOrder;
-import io.spacedog.http.SpaceBackend;
+import io.spacedog.http.SpaceEnv;
 import io.spacedog.http.SpaceHeaders;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.model.JsonDataObject;
@@ -164,26 +160,43 @@ public class LogServiceTest extends SpaceTest {
 	}
 
 	@Test
-	public void pingRequestAreNotLogged() {
+	public void pingRequestsAreNotLogged() {
 
+		// prepare
 		prepareTest();
+		SpaceDog guest = SpaceDog.dog();
+		SpaceDog superadmin = clearRootBackend();
 
-		// load balancer pings a SpaceDog instance
+		// guest (or load balancer) pings his backend
+		guest.get("").go(200);
+		guest.get("/").go(200);
 
-		SpaceRequest.get("").go(200);
+		// check those pings are not logged
+		LogSearchResults results = superadmin.logs().get(10, true);
+		assertEquals(2, results.total);
+		assertEquals("/1/credentials", results.results.get(0).path);
+		assertEquals("/1/admin/clear", results.results.get(1).path);
+	}
 
-		// this ping should not be present in logs
+	@Test
+	public void webRootRequestsAreLogged() {
 
-		JsonNode results = superdog().get("/1/log")//
-				.size(5).go(200).get("results");
+		// prepare
+		prepareTest();
+		SpaceDog wwwGuest = SpaceDog.dog(SpaceEnv.env().wwwBackend());
+		SpaceDog superadmin = clearRootBackend();
 
-		Iterator<JsonNode> elements = results.elements();
-		while (elements.hasNext()) {
-			JsonNode element = elements.next();
-			if (element.get("path").asText().equals("/")
-					&& element.get("credentials").get("backendId").asText().equals(SpaceBackend.SPACEDOG))
-				Assert.fail();
-		}
+		// wwwGuest fails to loads root page since doesn't exist
+		wwwGuest.get("").go(404);
+		wwwGuest.get("/").go(404);
+
+		// check those web requests are logged
+		LogSearchResults results = superadmin.logs().get(10, true);
+		assertEquals(4, results.total);
+		assertEquals("/", results.results.get(0).path);
+		assertEquals("/", results.results.get(1).path);
+		assertEquals("/1/credentials", results.results.get(2).path);
+		assertEquals("/1/admin/clear", results.results.get(3).path);
 	}
 
 	@Test
