@@ -17,7 +17,6 @@ import io.spacedog.model.Credentials;
 import io.spacedog.model.KeyValue;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
@@ -198,7 +197,7 @@ public class CallbackService extends SpaceService {
 		demand.headers = extractHeaders(context);
 		demand.payload = extractPayload(context);
 
-		return elastic().index(callbackIndex(), Json.toString(demand))//
+		return elastic().index(callbackIndex(), demand)//
 				.getId();
 	}
 

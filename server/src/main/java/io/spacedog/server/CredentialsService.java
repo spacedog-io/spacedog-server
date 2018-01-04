@@ -26,12 +26,12 @@ import com.google.common.collect.Maps;
 
 import io.spacedog.model.CreateCredentialsRequest;
 import io.spacedog.model.Credentials;
+import io.spacedog.model.Credentials.Session;
 import io.spacedog.model.CredentialsSettings;
 import io.spacedog.model.EmailTemplate;
 import io.spacedog.model.Roles;
 import io.spacedog.model.Schema;
 import io.spacedog.model.Usernames;
-import io.spacedog.model.Credentials.Session;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -596,13 +596,12 @@ public class CredentialsService extends SpaceService {
 		credentials.updatedAt(now);
 		credentials.createdAt(now);
 
-		String json = Json.toString(credentials);
 		Index index = credentialsIndex().backendId(backendId);
 
 		// refresh index after each index change
 		IndexResponse response = Strings.isNullOrEmpty(credentials.id()) //
-				? elastic().index(index, json, true) //
-				: elastic().index(index, credentials.id(), json, true);
+				? elastic().index(index, credentials, true) //
+				: elastic().index(index, credentials.id(), credentials, true);
 
 		credentials.id(response.getId());
 		credentials.version(response.getVersion());
@@ -620,8 +619,7 @@ public class CredentialsService extends SpaceService {
 
 		// refresh index after each index change
 		IndexResponse response = elastic().index(credentialsIndex(), //
-				credentials.id(), Json.toString(credentials), //
-				true);
+				credentials.id(), credentials, true);
 
 		credentials.version(response.getVersion());
 		return credentials;

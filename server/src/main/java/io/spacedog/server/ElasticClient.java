@@ -51,6 +51,7 @@ import com.google.common.base.Strings;
 import io.spacedog.http.SpaceParams;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 
 public class ElasticClient implements SpaceParams {
@@ -99,20 +100,28 @@ public class ElasticClient implements SpaceParams {
 	// Index
 	//
 
-	public IndexResponse index(Index index, String source) {
+	public IndexResponse index(Index index, Object source) {
 		return index(index, source, false);
 	}
 
-	public IndexResponse index(Index index, String source, boolean refresh) {
-		return prepareIndex(index).setSource(source).setRefresh(refresh).get();
+	public IndexResponse index(Index index, Object source, boolean refresh) {
+		String sourceString = source instanceof String //
+				? source.toString()
+				: Json.toString(source);
+
+		return prepareIndex(index).setSource(sourceString).setRefresh(refresh).get();
 	}
 
-	public IndexResponse index(Index index, String id, String source) {
+	public IndexResponse index(Index index, String id, Object source) {
 		return index(index, id, source, false);
 	}
 
-	public IndexResponse index(Index index, String id, String source, boolean refresh) {
-		return prepareIndex(index, id).setSource(source).setRefresh(refresh).get();
+	public IndexResponse index(Index index, String id, Object source, boolean refresh) {
+		String sourceString = source instanceof String //
+				? source.toString()
+				: Json.toString(source);
+
+		return prepareIndex(index, id).setSource(sourceString).setRefresh(refresh).get();
 	}
 
 	public IndexResponse index(Index index, String id, byte[] source) {

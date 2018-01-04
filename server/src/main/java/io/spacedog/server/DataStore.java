@@ -138,11 +138,9 @@ public class DataStore implements SpaceParams, SpaceFields {
 		object.createdAt(now);
 		object.updatedAt(now);
 
-		String source = Json.toString(object.source());
-
 		IndexResponse response = object.id() == null //
-				? elastic().index(toDataIndex(object.type()), source)//
-				: elastic().index(toDataIndex(object.type()), object.id(), source);
+				? elastic().index(toDataIndex(object.type()), object.source())//
+				: elastic().index(toDataIndex(object.type()), object.id(), object.source());
 
 		return object.id(response.getId())//
 				.version(response.getVersion())//
