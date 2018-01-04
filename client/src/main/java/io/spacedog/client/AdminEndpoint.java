@@ -22,7 +22,7 @@ public class AdminEndpoint implements SpaceParams, SpaceFields {
 	}
 
 	public AdminEndpoint createMyBackend(boolean notification) {
-		return SpaceDog.defaultBackend().admin()//
+		return SpaceDog.dog().admin()//
 				.createBackend(dog.backendId(), dog.username(), dog.password().get(), //
 						dog.email().get(), notification);
 	}

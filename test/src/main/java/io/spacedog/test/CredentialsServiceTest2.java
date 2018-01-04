@@ -77,7 +77,7 @@ public class CredentialsServiceTest2 extends SpaceTest {
 				.assertPresent("credentials.updatedAt")//
 				.asJsonObject();
 
-		SpaceDog vince = SpaceDog.defaultBackend().username("vince")//
+		SpaceDog vince = SpaceDog.dog().username("vince")//
 				.id(vinceId).password("hi vince").email("vince@dog.com")//
 				.accessToken(node.get("accessToken").asText()) //
 				.expiresAt(DateTime.now().plus(node.get("expiresIn").asLong()));
@@ -236,7 +236,7 @@ public class CredentialsServiceTest2 extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog guest = SpaceDog.dog();
 		SpaceDog superadmin = clearRootBackend();
 		SpaceDog fred = createTempDog(superadmin, "fred");
 		SpaceDog vince = createTempDog(superadmin, "vince");
@@ -340,7 +340,7 @@ public class CredentialsServiceTest2 extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog guest = SpaceDog.dog();
 		SpaceDog superadmin = clearRootBackend();
 		superadmin.credentials().enableGuestSignUp(true);
 		SpaceDog fred = createTempDog(superadmin, "fred");
@@ -836,7 +836,7 @@ public class CredentialsServiceTest2 extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog guest = SpaceDog.dog();
 		SpaceDog superadmin = clearRootBackend();
 
 		// superadmin logs in to get access token

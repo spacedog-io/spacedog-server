@@ -81,7 +81,6 @@ public class CallbackService extends SpaceService {
 	public Payload putSafe() throws IOException {
 
 		SpaceContext.credentials().checkAtLeastSuperAdmin();
-		String backendId = SpaceContext.backendId();
 
 		Index index = callbackIndex();
 		ElasticClient elastic = elastic();

@@ -18,7 +18,7 @@ public class FileServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest(false);
-		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog guest = SpaceDog.dog();
 		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
@@ -100,7 +100,7 @@ public class FileServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest(false);
-		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog guest = SpaceDog.dog();
 		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 

@@ -38,7 +38,7 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 	}
 
 	public static SpaceDog signUpTempDog(SpaceBackend backend, String username) {
-		return SpaceDog.backend(backend).credentials()//
+		return SpaceDog.dog(backend).credentials()//
 				.create(username, Passwords.random(), DEFAULT_EMAIL);
 	}
 
@@ -71,7 +71,7 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 
 	public static SpaceDog superdog() {
 		if (superdog == null)
-			superdog = SpaceDog.defaultBackend()//
+			superdog = SpaceDog.dog()//
 					.username("superdog")//
 					.password(SpaceRequest.env().superdogPassword())//
 					.id("superdog");

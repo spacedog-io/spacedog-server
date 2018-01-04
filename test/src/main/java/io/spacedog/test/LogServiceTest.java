@@ -93,7 +93,7 @@ public class LogServiceTest extends SpaceTest {
 		prepareTest();
 
 		// creates test backend and user
-		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog guest = SpaceDog.dog();
 		SpaceDog superadmin = clearRootBackend();
 		guest.get("/1/data").go(200);
 		guest.get("/1/data/user").go(403);

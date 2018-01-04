@@ -36,7 +36,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest(false);
-		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog guest = SpaceDog.dog();
 		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog admin = createTempDog(superadmin, "admin", Roles.admin);
@@ -74,7 +74,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest(false);
-		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog guest = SpaceDog.dog();
 		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog fred = createTempDog(superadmin, "fred");
@@ -218,7 +218,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest(false);
-		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog guest = SpaceDog.dog();
 		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog fred = createTempDog(superadmin, "fred");
@@ -339,7 +339,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// prepare
 		SpaceDog superadmin = clearRootBackend();
-		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog guest = SpaceDog.dog();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog nath = createTempDog(superadmin, "nath");
 
@@ -458,7 +458,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest(false);
-		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog guest = SpaceDog.dog();
 		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince").login();
 		SpaceDog fred = createTempDog(superadmin, "fred").login();

@@ -26,7 +26,7 @@ public class SmsServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog guest = SpaceDog.dog();
 		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
@@ -78,7 +78,7 @@ public class SmsServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog guest = SpaceDog.dog();
 		SpaceDog superadmin = clearRootBackend();
 
 		// superadmin creates user vince with 'sms' role

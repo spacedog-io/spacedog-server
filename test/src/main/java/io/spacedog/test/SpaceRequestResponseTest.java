@@ -21,7 +21,7 @@ public class SpaceRequestResponseTest extends SpaceTest {
 
 		prepareTest();
 		clearRootBackend();
-		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog guest = SpaceDog.dog();
 
 		// CORS for simple requests
 		SpaceResponse response = guest.get("/1/data").go(200)//

@@ -148,7 +148,6 @@ public class CredentialsServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog guest = SpaceDog.defaultBackend();
 		SpaceDog superadmin = clearRootBackend();
 		SpaceDog fred = createTempDog(superadmin, "fred");
 
@@ -156,8 +155,8 @@ public class CredentialsServiceTest extends SpaceTest {
 		fred.login();
 
 		// fred logs in again creating a second session
-		SpaceDog fred2 = SpaceDog.backend(guest.backend())//
-				.username(fred.username()).login(fred.password().get());
+		SpaceDog fred2 = SpaceDog.dog().username(fred.username())//
+				.login(fred.password().get());
 
 		// fred can access data with his first token
 		fred.data().getAllRequest().go();
@@ -185,7 +184,7 @@ public class CredentialsServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog guest = SpaceDog.defaultBackend();
+		SpaceDog guest = SpaceDog.dog();
 		SpaceDog superadmin = clearRootBackend();
 		SpaceDog fred = createTempDog(superadmin, "fred");
 

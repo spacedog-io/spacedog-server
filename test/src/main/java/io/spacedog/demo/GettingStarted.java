@@ -45,12 +45,12 @@ public class GettingStarted {
 
 		// guest creates a demo backend
 
-		SpaceDog guest = SpaceDog.backendId("demo");
+		SpaceDog guest = SpaceDog.dog("http://demo.lvh.me:8443");
 		guest.admin().createBackend("test", "superadmin", "hi dave", "superadmin@demo.net", false);
 
 		// superadmin logs in
 
-		SpaceDog superadmin = SpaceDog.backendId("test")//
+		SpaceDog superadmin = SpaceDog.dog("http://test.lvh.me:8443")//
 				.username("superadmin").email("superadmin@demo.net").login("hi dave");
 
 		// superadmin creates the course schema

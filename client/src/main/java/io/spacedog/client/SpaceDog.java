@@ -98,15 +98,15 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 	// Factory methods
 	//
 
-	public static SpaceDog defaultBackend() {
-		return new SpaceDog(SpaceRequest.env().target());
+	public static SpaceDog dog() {
+		return dog(SpaceRequest.env().apiBackend());
 	}
 
-	public static SpaceDog backendId(String backendId) {
-		return new SpaceDog(SpaceRequest.env().target().instanciate(backendId));
+	public static SpaceDog dog(String backend) {
+		return dog(SpaceBackend.valueOf(backend));
 	}
 
-	public static SpaceDog backend(SpaceBackend backend) {
+	public static SpaceDog dog(SpaceBackend backend) {
 		return new SpaceDog(backend);
 	}
 
@@ -128,7 +128,8 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 
 	public SpaceDog login(String password, long lifetime) {
 
-		SpaceRequest request = SpaceRequest.get("/1/login").backend(backendId()).basicAuth(username(), password);
+		SpaceRequest request = SpaceRequest.get("/1/login")//
+				.backend(backend()).basicAuth(username(), password);
 
 		if (lifetime > 0)
 			request.queryParam(LIFETIME_PARAM, lifetime);
@@ -142,11 +143,7 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 
 	public boolean isTokenStillValid() {
 		Check.notNullOrEmpty(accessToken, "access token");
-
-		SpaceResponse response = SpaceRequest.get("/1/login")//
-				.backend(backendId()).bearerAuth(accessToken)//
-				.go(200, 401);
-
+		SpaceResponse response = get("/1/login").go(200, 401);
 		return response.status() == 200;
 	}
 
