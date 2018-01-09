@@ -19,6 +19,7 @@ import io.spacedog.http.SpaceFields;
 import io.spacedog.http.SpaceParams;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceRequestException;
+import io.spacedog.model.Credentials;
 import io.spacedog.model.Passwords;
 import io.spacedog.model.Roles;
 import io.spacedog.utils.Json;
@@ -73,9 +74,8 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 	public static SpaceDog superdog() {
 		if (superdog == null)
 			superdog = SpaceDog.dog()//
-					.username("superdog")//
-					.password(SpaceEnv.env().superdogPassword())//
-					.id("superdog");
+					.username(Credentials.SUPERDOG.name())//
+					.password(SpaceEnv.env().superdogPassword());
 
 		return superdog;
 	}

@@ -2,8 +2,6 @@ package io.spacedog.client;
 
 import org.joda.time.DateTime;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import io.spacedog.http.SpaceBackend;
 import io.spacedog.http.SpaceEnv;
 import io.spacedog.http.SpaceFields;
@@ -11,13 +9,11 @@ import io.spacedog.http.SpaceParams;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceResponse;
 import io.spacedog.utils.Check;
-import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
 
 public class SpaceDog implements SpaceFields, SpaceParams {
 
 	private SpaceBackend backend;
-	private String credentialsId;
 	private String username;
 	private String email;
 	private String password;
@@ -46,12 +42,7 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 	}
 
 	public String id() {
-		return credentialsId;
-	}
-
-	public SpaceDog id(String id) {
-		this.credentialsId = id;
-		return this;
+		return credentials().me().id();
 	}
 
 	public Optional7<String> email() {
@@ -128,18 +119,7 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 	}
 
 	public SpaceDog login(String password, long lifetime) {
-
-		SpaceRequest request = SpaceRequest.get("/1/login")//
-				.backend(backend()).basicAuth(username(), password);
-
-		if (lifetime > 0)
-			request.queryParam(LIFETIME_PARAM, lifetime);
-
-		ObjectNode node = request.go(200).asJsonObject();
-
-		this.accessToken = Json.checkStringNotNullOrEmpty(node, ACCESS_TOKEN_FIELD);
-		this.id(Json.checkStringNotNullOrEmpty(node, "credentials.id"));
-		return this;
+		return credentials().login(password, lifetime);
 	}
 
 	public boolean isTokenStillValid() {
@@ -149,10 +129,7 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 	}
 
 	public SpaceDog logout() {
-		SpaceRequest.get("/1/logout").backend(this).bearerAuth(accessToken).go(200);
-		this.accessToken = null;
-		this.expiresAt = null;
-		return this;
+		return credentials().logout();
 	}
 
 	//

@@ -4,7 +4,6 @@ import java.util.Set;
 
 import org.joda.time.DateTime;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -41,9 +40,14 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 	public Credentials me(boolean reload) {
 		if (credentials == null || reload) {
 			SpaceResponse response = dog.get("/1/credentials/me").go(200);
-			this.credentials = toCredentials(response.asJsonObject());
+			credentials = Credentials.fromJson(response.asJsonObject());
 		}
-		return this.credentials;
+		return credentials;
+	}
+
+	CredentialsEndpoint me(Credentials credentials) {
+		this.credentials = credentials;
+		return this;
 	}
 
 	public Optional7<Credentials> getByUsername(String username) {
@@ -60,13 +64,41 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 			throw Exceptions.runtime("[%s] credentials with username [%s]", //
 					total, username);
 
-		return Optional7.of(toCredentials(response.get("results.0")));
+		return Optional7.of(Credentials.fromJson(response.get("results.0")));
 	}
 
 	public Credentials get(String id) {
-		return toCredentials(//
-				dog.get("/1/credentials/{id}")//
-						.routeParam("id", id).go(200).asJsonObject());
+		SpaceResponse response = dog.get("/1/credentials/")//
+				.routeParam("id", id).go(200);
+		return Credentials.fromJson(response.asJsonObject());
+	}
+
+	//
+	// Login logout
+	//
+
+	public SpaceDog login(String password, long lifetime) {
+
+		SpaceRequest request = SpaceRequest.get("/1/login")//
+				.backend(dog.backend()).basicAuth(dog.username(), password);
+
+		if (lifetime > 0)
+			request.queryParam(LIFETIME_PARAM, lifetime);
+
+		ObjectNode node = request.go(200).asJsonObject();
+		dog.accessToken(Json.checkStringNotNullOrEmpty(node, ACCESS_TOKEN_FIELD));
+		credentials = Credentials.fromJson(Json.checkObject(node.get("credentials")));
+
+		return dog;
+	}
+
+	public SpaceDog logout() {
+		if (dog.accessToken() != null) {
+			dog.get("/1/logout").go(200);
+			dog.accessToken(null);
+			dog.expiresAt(null);
+		}
+		return dog;
 	}
 
 	//
@@ -79,12 +111,9 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 	}
 
 	public SpaceDog create(CreateCredentialsRequest request) {
-		String id = dog.post("/1/credentials")//
-				.bodyPojo(request).go(201).getString(ID_FIELD);
-
+		dog.post("/1/credentials").bodyPojo(request).go(201);
 		return SpaceDog.dog(dog.backend()).username(request.username())//
-				.password(request.password()).email(request.email())//
-				.id(id);
+				.password(request.password()).email(request.email());
 	}
 
 	public SpaceDog signUp() {
@@ -92,12 +121,9 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 	}
 
 	public SpaceDog signUp(String password) {
-		String id = SpaceDog.dog(dog.backend())//
-				.credentials()//
-				.create(dog.username(), password, dog.email().get())//
-				.id();
-
-		return dog.id(id);
+		SpaceDog.dog(dog.backend()).credentials()//
+				.create(dog.username(), password, dog.email().get());
+		return dog;
 	}
 
 	//
@@ -314,13 +340,4 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 		dog.settings().save(settings);
 	}
 
-	//
-	// Implementation
-	//
-
-	private Credentials toCredentials(JsonNode node) {
-		Credentials credentials = Json.toPojo(node, Credentials.class);
-		credentials.id(node.get(ID_FIELD).asText());
-		return credentials;
-	}
 }
