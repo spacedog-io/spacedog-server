@@ -30,6 +30,7 @@
 		<module>cli</module>
 		<module>jobs</module>
 		<module>test</module>
+		<module>tutorials</module>
 	</modules>
 
 	<build>

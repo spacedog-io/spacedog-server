@@ -1,11 +1,13 @@
 package io.spacedog.demo;
 
+import java.net.URL;
 import java.util.Collections;
 import java.util.Map;
 
 import org.joda.time.DateTime;
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -25,6 +27,7 @@ import io.spacedog.demo.Course.CourseDataObject;
 import io.spacedog.demo.Customer.CustomerDataObject;
 import io.spacedog.demo.Driver.DriverDataObject;
 import io.spacedog.demo.Driver.Results;
+import io.spacedog.http.SpaceEnv;
 import io.spacedog.model.CredentialsSettings;
 import io.spacedog.model.DataObject;
 import io.spacedog.model.EmailTemplate;
@@ -41,60 +44,60 @@ import io.spacedog.utils.Json;
 public class GettingStarted {
 
 	@Test
-	public void showMe() {
+	public void superdogInitsBackend() {
+		superdog().post("/1/admin/clear").go(200);
+		superdog().credentials().create("superadmin", "hi superadmin", //
+				"platform@spacedog.io", Roles.superadmin);
+	}
 
-		// guest creates a demo backend
+	@Test
+	public void superadminInitsCourseSchema() {
 
-		SpaceDog guest = SpaceDog.dog("http://demo.lvh.me:8443");
-		guest.admin().createBackend("test", "superadmin", "hi dave", "superadmin@demo.net", false);
-
-		// superadmin logs in
-
-		SpaceDog superadmin = SpaceDog.dog("http://test.lvh.me:8443")//
-				.username("superadmin").email("superadmin@demo.net").login("hi dave");
-
-		// superadmin creates the course schema
-
-		Schema courseSchema = new Schema("course", Json.checkObject(//
-				Json.readNode(Resources.getResource(getClass(), "course.schema.json"))));
-
-		superadmin.schemas().set(courseSchema);
+		URL url = Resources.getResource(getClass(), "course.schema.json");
+		JsonNode node = Json.readNode(url);
+		Schema courseSchema = new Schema("course", Json.checkObject(node));
+		superadmin().schemas().set(courseSchema);
 
 		// superadmin gives permissions to users on 'course' objects
-
 		courseSchema.acl(Roles.user, Permission.create, Permission.updateMine, Permission.readMine);
-		superadmin.schemas().set(courseSchema);
+		superadmin().schemas().set(courseSchema);
+	}
 
-		// superadmin authorizes guests to sign up
-
+	@Test
+	public void superadminAuthorizesGuestsToSignUp() {
 		CredentialsSettings settings = new CredentialsSettings();
 		settings.guestSignUpEnabled = true;
-		superadmin.settings().save(settings);
+		superadmin().settings().save(settings);
+	}
 
-		// new user signs up
+	@Test
+	public void customerSignsUp() {
+		SpaceDog david = guest().credentials()//
+				.create("david", "hi dave", "david@spacedog.io");
 
-		SpaceDog david = guest.credentials().create("david", "hi dave", "david@spacedog.io");
+		Customer source = new Customer();
+		source.firstname = "David";
+		source.firstname = "Attias";
+		source.phone = "+33123456789";
 
-		DataObject<Customer> customer = new CustomerDataObject();
-		customer.id(david.id());
-		customer.source(new Customer());
-		customer.source().firstname = "David";
-		customer.source().firstname = "Attias";
-		customer.source().phone = "+331234567899";
+		DataObject<Customer> customer = new CustomerDataObject()//
+				.id(david.id()).source(source);
 
 		customer = david.data().save(customer);
 
 		// customer uploads his picture
 
-		byte[] picture = null; // get picture from smartphone
+		byte[] picture = ClassResources.loadAsBytes(this, "mapommme.jpg");
 		ShareMeta meta = david.shares().upload(picture);
 
 		// customer saves his picture url to his customer object
 
 		customer.source().photo = meta.location;
 		customer = david.data().save(customer);
+	}
 
-		// superadmin creates a welcome email template
+	@Test
+	public void superadminInitsWelcomeEmailTemplate() {
 
 		EmailTemplate template = new EmailTemplate();
 		template.name = "customer-welcome";
@@ -109,19 +112,27 @@ public class GettingStarted {
 		template.model.put("customer", "customer");
 		template.authorizedRoles = Collections.singleton("superadmin");
 
-		superadmin.emails().saveTemplate(template);
+		superadmin().emails().saveTemplate(template);
+	}
 
-		// system sends a welcome email
+	@Test
+	public void systemSendsWelcomeEmail() {
+
+		SpaceDog david = david();
+		SpaceDog superadmin = superadmin();
 
 		EmailTemplateRequest emailTemplateRequest = new EmailTemplateRequest();
 		emailTemplateRequest.templateName = "customer-welcome";
 		emailTemplateRequest.parameters = Maps.newHashMap();
 		emailTemplateRequest.parameters.put("credentials", david.id());
-		emailTemplateRequest.parameters.put("customer", customer.id());
+		emailTemplateRequest.parameters.put("customer", david.id());
 
 		superadmin.emails().send(emailTemplateRequest);
 
-		// superadmin creates a welcome SMS template
+	}
+
+	@Test
+	public void superadminCreatesWelcomeSmsTemplate() {
 
 		SmsTemplate smsTemplate = new SmsTemplate();
 		smsTemplate.name = "Welcome";
@@ -131,75 +142,88 @@ public class GettingStarted {
 		smsTemplate.model.put("customer", "customer");
 		smsTemplate.roles = Collections.singleton("superadmin");
 
-		superadmin.sms().saveTemplate(smsTemplate);
+		superadmin().sms().saveTemplate(smsTemplate);
 
-		// superadmin sends a welcome SMS
+	}
+
+	@Test
+	public void systemSendsWelcomeSms() {
 
 		SmsTemplateRequest smsTemplateRequest = new SmsTemplateRequest();
 		smsTemplateRequest.templateName = "welcome";
 		smsTemplateRequest.parameters = Maps.newHashMap();
-		smsTemplateRequest.parameters.put("customer", customer.id());
+		smsTemplateRequest.parameters.put("customer", david().id());
 
-		superadmin.sms().send(smsTemplateRequest);
+		superadmin().sms().send(smsTemplateRequest);
+	}
 
-		// user creates and saves a course
+	@Test
+	public void userRequestsCourse() {
 
-		DataObject<Course> course = new CourseDataObject();
-		course.source(new Course());
-		course.source().status = "new-immediate";
-		course.source().requestedPickupTimestamp = DateTime.now();
-		course.source().requestedVehiculeType = "green";
+		SpaceDog david = david();
 
-		course.source().customer = new Course.Customer();
-		course.source().customer.firstname = david.username();
-		course.source().customer.credentialsId = david.id();
+		Course source = new Course();
+		source.status = "new-immediate";
+		source.requestedPickupTimestamp = DateTime.now();
+		source.requestedVehiculeType = "green";
 
-		course.source().from = new Course.Location();
-		course.source().from.address = "7 avenue du Chateau 92190 Meudon";
-		course.source().from.geopoint = new GeoPoint(48.816673, 2.230358);
+		source.customer = new Course.Customer();
+		source.customer.firstname = david.username();
+		source.customer.credentialsId = david.id();
 
-		course.source().to = new Course.Location();
-		course.source().to.address = "Aéroport Paris Charles de Gaulle";
-		course.source().to.geopoint = new GeoPoint(49.008649, 2.548504);
+		source.from = new Course.Location();
+		source.from.address = "7 avenue du Chateau 92190 Meudon";
+		source.from.geopoint = new GeoPoint(48.816673, 2.230358);
 
-		course.source().payment = new Course.Payment();
-		course.source().payment.companyId = "LHJKBVCJFCFCK";
-		course.source().payment.companyName = "SpaceDog";
+		source.to = new Course.Location();
+		source.to.address = "Aéroport Paris Charles de Gaulle";
+		source.to.geopoint = new GeoPoint(49.008649, 2.548504);
 
+		source.payment = new Course.Payment();
+		source.payment.companyId = "LHJKBVCJFCFCK";
+		source.payment.companyName = "SpaceDog";
+
+		DataObject<Course> course = new CourseDataObject().source(source);
 		course = david.data().save(course);
+	}
+
+	@Test
+	public void customerPushesNotificationToNearbyDrivers() {
 
 		// customer searches for nearby drivers
 
 		ESBoolQueryBuilder query = ESQueryBuilders.boolQuery()//
 				.must(ESQueryBuilders.termQuery("status", "working"))//
 				.must(ESQueryBuilders.termsQuery("vehicule.type", //
-						compatibleVehiculeTypes(course.source().requestedVehiculeType)))//
+						compatibleVehiculeTypes(course().source().requestedVehiculeType)))//
 				.must(ESQueryBuilders.rangeQuery("lastLocation.when")//
 						.gt("now-30m"));
 
 		ESGeoDistanceSortBuilder sort = ESSortBuilders.geoDistanceSort("lastLocation.where")//
-				.point(course.source().from.geopoint.lat, course.source().from.geopoint.lon)//
+				.point(course().source().from.geopoint.lat, course().source().from.geopoint.lon)//
 				.order(ESSortOrder.ASC).unit(ESDistanceUnit.METERS).sortMode("min");
 
-		Results drivers = david.data().searchRequest().type("driver")//
+		Results drivers = david().data().searchRequest().type("driver")//
 				.source(ESSearchSourceBuilder.searchSource().query(query).sort(sort).size(5))//
 				.go(Driver.Results.class);
 
 		// customer pushes notifications to nearby drivers
 
-		ObjectNode message = Json.object("APNS", Json.object("courseId", course.id(), //
+		ObjectNode message = Json.object("APNS", Json.object("courseId", course().id(), //
 				"aps", Json.object("alert", "New course")), //
 				"GCM", Json.object("notification", Json.object("body", "New course")),
-				Json.object("data", Json.object("courseId", course.id())));
+				Json.object("data", Json.object("courseId", course().id())));
 
 		for (DriverDataObject driver : drivers.results)
 			david.push().push(new PushRequest().appId("demo")//
 					.credentialsId(driver.source().credentialsId)//
 					.data(message));
+	}
 
-		// cashier charge customer's course on his credity card
+	@Test
+	public void cashierChargesCustomersForCompletedCourse() {
 
-		SpaceDog cashier = null; // specific app user 'cashier' logs in
+		SpaceDog cashier = cashier();
 		Course.Results completedCourses = searchForCompletedCourses();
 
 		for (DataObject<Course> completed : completedCourses.results) {
@@ -258,5 +282,51 @@ public class GettingStarted {
 
 	private String compatibleVehiculeTypes(String requestedVehiculeType) {
 		return null;
+	}
+
+	private SpaceDog superadmin;
+
+	private SpaceDog superadmin() {
+		if (superadmin == null)
+			superadmin = SpaceDog.dog()//
+					.username("superadmin")//
+					.password("hi superadmin")//
+					.login();
+		return superadmin;
+	}
+
+	private SpaceDog guest() {
+		return SpaceDog.dog();
+	}
+
+	private SpaceDog david;
+
+	private SpaceDog david() {
+		if (david == null)
+			david = SpaceDog.dog()//
+					.username("david")//
+					.password("hi dave")//
+					.login();
+		return david;
+	}
+
+	private SpaceDog superdog() {
+		return SpaceDog.dog().username("superdog")//
+				.password(SpaceEnv.env().superdogPassword());
+	}
+
+	private DataObject<Course> course;
+
+	private DataObject<Course> course() {
+		if (course == null)
+			course = superadmin().data().fetch(//
+					new CourseDataObject().id("myCourse"));
+		return course;
+	}
+
+	private SpaceDog cashier() {
+		return SpaceDog.dog()//
+				.username("cashier")//
+				.password("hi cashier");
 	}
 }
