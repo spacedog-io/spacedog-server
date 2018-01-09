@@ -35,6 +35,8 @@ import io.spacedog.utils.Utils;
 public class Credentials {
 
 	public static final Credentials GUEST = new Credentials("guest").id("guest");
+	public static final Credentials SUPERDOG = new Credentials(Roles.superdog)//
+			.id(Roles.superdog).addRoles(Roles.superdog);
 
 	private String username;
 	private String email;
@@ -560,6 +562,12 @@ public class Credentials {
 				SpaceFields.ROLES_FIELD, roles(), //
 				SpaceFields.CREATED_AT_FIELD, createdAt(), //
 				SpaceFields.UPDATED_AT_FIELD, updatedAt());
+	}
+
+	public static Credentials fromJson(JsonNode node) {
+		Credentials credentials = Json.toPojo(node, Credentials.class);
+		String id = Json.checkStringNotNullOrEmpty(node, SpaceFields.ID_FIELD);
+		return credentials.id(id);
 	}
 
 	@Override

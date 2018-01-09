@@ -48,7 +48,6 @@ import net.codestory.http.payload.Payload;
 public class CredentialsService extends SpaceService {
 
 	public static final String TYPE = "credentials";
-	public static final String SUPERDOG = "superdog";
 	private static final String FORGOT_PASSWORD_MAIL_TEMPLATE_NAME = "forgotPassword";
 
 	//
@@ -463,7 +462,7 @@ public class CredentialsService extends SpaceService {
 
 	Credentials checkUsernamePassword(String username, String password) {
 
-		if (username.equals(SUPERDOG))
+		if (username.equals(Credentials.SUPERDOG.name()))
 			return checkSuperdog(password);
 
 		return checkRegularUser(username, password);
@@ -491,9 +490,7 @@ public class CredentialsService extends SpaceService {
 		if (password == null || !password.equals(conf.superdogPassword()))
 			throw Exceptions.invalidUsernamePassword();
 
-		return new Credentials(SUPERDOG)//
-				.addRoles(Roles.superdog)//
-				.id(SUPERDOG);
+		return Credentials.SUPERDOG;
 	}
 
 	private void updateInvalidChallenges(Credentials credentials) {
