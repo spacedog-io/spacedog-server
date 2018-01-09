@@ -44,7 +44,7 @@ public class FileEndpoint {
 				.go(200, 404);
 
 		if (response.status() == 200)
-			return response.toPojo(FileList.class);
+			return response.asPojo(FileList.class);
 
 		// in case of 404
 		return FileList.EMPTY;
@@ -117,7 +117,7 @@ public class FileEndpoint {
 
 	public FileMeta upload(String webPath, byte[] bytes) {
 		return dog.put("/1/files/" + webPath).bodyBytes(bytes)//
-				.go(200).toPojo(FileMeta.class);
+				.go(200).asPojo(FileMeta.class);
 	}
 
 	public String[] deleteAll() {
@@ -126,7 +126,7 @@ public class FileEndpoint {
 
 	public String[] delete(String webPath) {
 		return dog.delete("/1/files/" + webPath)//
-				.go(200, 404).toPojo("deleted", String[].class);
+				.go(200, 404).asPojo("deleted", String[].class);
 	}
 
 }

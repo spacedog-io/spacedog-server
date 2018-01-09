@@ -27,7 +27,7 @@ public class SettingsEndpoint {
 		if (response.status() == 404)
 			return Optional7.empty();
 
-		return Optional7.of(response.toPojo(settingsClass));
+		return Optional7.of(response.asPojo(settingsClass));
 	}
 
 	// get settings
@@ -41,7 +41,7 @@ public class SettingsEndpoint {
 	}
 
 	public <K> K get(String id, Class<K> settingsClass) {
-		return doGet(id).toPojo(settingsClass);
+		return doGet(id).asPojo(settingsClass);
 	}
 
 	public SpaceResponse doGet(String id) {
@@ -64,7 +64,7 @@ public class SettingsEndpoint {
 	}
 
 	public <K> K get(String id, String field, Class<K> fieldClass) {
-		return doGet(id, field).toPojo(fieldClass);
+		return doGet(id, field).asPojo(fieldClass);
 	}
 
 	private SpaceResponse doGet(String id, String field) {

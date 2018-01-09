@@ -29,7 +29,7 @@ public class PushEndpoint {
 	public List<PushApplication> listApps() {
 		return Lists.newArrayList(//
 				dog.get("/1/push/applications").go(200)//
-						.toPojo(PushApplication[].class));
+						.asPojo(PushApplication[].class));
 	}
 
 	public PushEndpoint saveApp(String name, String service, Credentials credentials) {
@@ -72,7 +72,7 @@ public class PushEndpoint {
 
 	public PushResponse push(PushRequest request) {
 		return dog.post("/1/push").bodyPojo(request).go(200)//
-				.toPojo(PushResponse.class);
+				.asPojo(PushResponse.class);
 	}
 
 	//

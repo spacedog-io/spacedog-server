@@ -260,7 +260,7 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 	public Set<String> getAllRoles(String id) {
 		return Sets.newHashSet(//
 				dog.get("/1/credentials/{id}/roles")//
-						.routeParam("id", id).go(200).toPojo(String[].class));
+						.routeParam("id", id).go(200).asPojo(String[].class));
 	}
 
 	public void setAllRoles(String id, String... roles) {

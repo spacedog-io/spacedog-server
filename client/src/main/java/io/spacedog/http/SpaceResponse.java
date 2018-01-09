@@ -184,6 +184,18 @@ public class SpaceResponse {
 		return okResponse.body().charStream();
 	}
 
+	public <K> K asPojo(Class<K> pojoClass) {
+		return Json.toPojo(asString(), pojoClass);
+	}
+
+	public <K> K asPojo(K result) {
+		return Json.updatePojo(asString(), result);
+	}
+
+	public <K> K asPojo(String fieldPath, Class<K> pojoClass) {
+		return Json.toPojo(asJson(), fieldPath, pojoClass);
+	}
+
 	public Request okRequest() {
 		return okRequest;
 	}
@@ -427,18 +439,6 @@ public class SpaceResponse {
 
 	public void assertBodyEquals(String expected) {
 		Assert.assertEquals(expected, asString());
-	}
-
-	public <K> K toPojo(Class<K> pojoClass) {
-		return Json.toPojo(asString(), pojoClass);
-	}
-
-	public <K> K toPojo(K result) {
-		return Json.updatePojo(asString(), result);
-	}
-
-	public <K> K toPojo(String fieldPath, Class<K> pojoClass) {
-		return Json.toPojo(asJson(), fieldPath, pojoClass);
 	}
 
 	public int status() {

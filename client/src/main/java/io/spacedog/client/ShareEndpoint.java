@@ -47,7 +47,7 @@ public class ShareEndpoint {
 		SpaceResponse response = request.go(200, 404);
 
 		if (response.status() == 200)
-			return response.toPojo(ShareList.class);
+			return response.asPojo(ShareList.class);
 
 		// in case of 404
 		return ShareList.EMPTY;
@@ -139,17 +139,17 @@ public class ShareEndpoint {
 		return dog.post("/1/shares")//
 				.queryParam("fileName", fileName)//
 				.bodyBytes(bytes).go(200)//
-				.toPojo(ShareMeta.class);
+				.asPojo(ShareMeta.class);
 	}
 
 	public String[] delete(String id) {
 		return dog.delete("/1/shares/" + id).go(200)//
-				.toPojo("deleted", String[].class);
+				.asPojo("deleted", String[].class);
 	}
 
 	public String[] deleteAll() {
 		return dog.delete("/1/shares").go(200)//
-				.toPojo("deleted", String[].class);
+				.asPojo("deleted", String[].class);
 	}
 
 }

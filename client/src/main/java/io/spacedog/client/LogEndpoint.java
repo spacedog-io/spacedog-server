@@ -31,7 +31,7 @@ public class LogEndpoint implements SpaceParams {
 
 	public LogSearchResults get(int size, boolean refresh) {
 		return dog.get("/1/log").size(size).refresh(refresh).go(200)//
-				.toPojo(LogSearchResults.class);
+				.asPojo(LogSearchResults.class);
 	}
 
 	public LogSearchResults search(ESSearchSourceBuilder builder) {
@@ -41,7 +41,7 @@ public class LogEndpoint implements SpaceParams {
 	public LogSearchResults search(ESSearchSourceBuilder builder, boolean refresh) {
 		return dog.post("/1/log/search").refresh(refresh)//
 				.bodyJson(builder.toString()).go(200)//
-				.toPojo(LogSearchResults.class);
+				.asPojo(LogSearchResults.class);
 	}
 
 	// ignore unknown fields
