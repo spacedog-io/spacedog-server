@@ -28,52 +28,58 @@ public abstract class DataObjectAbstract<K> implements DataObject<K>, SpaceField
 	public DataObjectAbstract() {
 	}
 
+	@Override
 	public String id() {
 		return id;
 	}
 
+	@Override
 	public DataObjectAbstract<K> id(String id) {
 		this.id = id;
 		return this;
 	}
 
+	@Override
 	public String type() {
-		return type == null ? type(this.getClass()) : type;
+		return type == null ? sourceClass().getSimpleName().toLowerCase() : type;
 	}
 
+	@Override
 	public DataObjectAbstract<K> type(String type) {
 		this.type = type;
 		return this;
 	}
 
+	@Override
 	public long version() {
 		return version;
 	}
 
+	@Override
 	public DataObjectAbstract<K> version(long version) {
 		this.version = version;
 		return this;
 	}
 
+	@Override
 	public float score() {
 		return score;
 	}
 
+	@Override
 	public Object[] sort() {
 		return sort;
 	}
 
+	@Override
 	public boolean justCreated() {
 		return this.justCreated;
 	}
 
+	@Override
 	public DataObjectAbstract<K> justCreated(boolean created) {
 		this.justCreated = created;
 		return this;
-	}
-
-	public static String type(Class<?> dataClass) {
-		return dataClass.getSimpleName().toLowerCase();
 	}
 
 	@Override
