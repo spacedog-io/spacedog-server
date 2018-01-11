@@ -201,8 +201,10 @@ public class DataService extends SpaceService {
 
 		if (DataAccessControl.roles(object.type())//
 				.containsOne(credentials, Permission.create)) {
-			object.owner(credentials.id());
-			object.group(credentials.group());
+			if (object.owner() == null)
+				object.owner(credentials.id());
+			if (object.group() == null)
+				object.group(credentials.group());
 			object = DataStore.get().createObject(object);
 			return ElasticPayload.saved("/1/data", object).build();
 		}
