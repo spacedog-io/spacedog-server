@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.http.SpaceFields;
+import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -101,6 +102,9 @@ public abstract class DataObjectAbstract<K> implements DataObject<K>, SpaceField
 			((Metadata) source).owner(owner);
 		else if (source instanceof ObjectNode)
 			((ObjectNode) source).put(OWNER_FIELD, owner);
+		else
+			throw Exceptions.unsupported("class [%s] doesn't implement this operation", //
+					source.getClass().getSimpleName());
 	}
 
 	@Override
@@ -122,6 +126,9 @@ public abstract class DataObjectAbstract<K> implements DataObject<K>, SpaceField
 			((Metadata) source).group(group);
 		else if (source instanceof ObjectNode)
 			((ObjectNode) source).put(GROUP_FIELD, group);
+		else
+			throw Exceptions.unsupported("class [%s] doesn't implement this operation", //
+					source.getClass().getSimpleName());
 	}
 
 	@Override
@@ -141,6 +148,9 @@ public abstract class DataObjectAbstract<K> implements DataObject<K>, SpaceField
 			((Metadata) source).createdAt(createdAt);
 		else if (source instanceof ObjectNode)
 			((ObjectNode) source).put(CREATED_AT_FIELD, createdAt.toString());
+		else
+			throw Exceptions.unsupported("class [%s] doesn't implement this operation", //
+					source.getClass().getSimpleName());
 	}
 
 	@Override
@@ -160,6 +170,9 @@ public abstract class DataObjectAbstract<K> implements DataObject<K>, SpaceField
 			((Metadata) source).updatedAt(updatedAt);
 		else if (source instanceof ObjectNode)
 			((ObjectNode) source).put(UPDATED_AT_FIELD, updatedAt.toString());
+		else
+			throw Exceptions.unsupported("class [%s] doesn't implement this operation", //
+					source.getClass().getSimpleName());
 	}
 
 }
