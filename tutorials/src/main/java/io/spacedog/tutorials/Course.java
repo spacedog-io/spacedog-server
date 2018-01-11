@@ -1,4 +1,4 @@
-package io.spacedog.demo;
+package io.spacedog.tutorials;
 
 import java.util.List;
 
@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.model.DataObject;
 import io.spacedog.model.DataObjectAbstract;
 import io.spacedog.model.GeoPoint;
+import io.spacedog.model.MetadataBase;
 import io.spacedog.utils.Exceptions;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -19,7 +20,7 @@ import io.spacedog.utils.Exceptions;
 		getterVisibility = Visibility.NONE, //
 		isGetterVisibility = Visibility.NONE, //
 		setterVisibility = Visibility.NONE)
-public class Course {
+public class Course extends MetadataBase {
 
 	public String status;
 	public String requestedVehiculeType;

@@ -1,0 +1,54 @@
+{
+    "driver": {
+        "credentialsId": {
+            "_type": "string"
+        },
+        "status": {
+            "_type": "string"
+        },
+        "firstname": {
+            "_type": "text",
+            "_language": "french"
+        },
+        "lastname": {
+            "_type": "text",
+            "_language": "french"
+        },
+        "phone": {
+            "_type": "string"
+        },
+        "photo": {
+            "_type": "string"
+        },
+        "lastLocation": {
+            "_type": "object",
+            "where": {
+                "_type": "geopoint"
+            },
+            "when": {
+                "_type": "timestamp"
+            }
+        },
+        "vehicule": {
+            "_type": "object",
+            "type": {
+                "_type": "string"
+            },
+            "brand": {
+                "_type": "text",
+                "_language": "french"
+            },
+            "model": {
+                "_type": "text",
+                "_language": "french"
+            },
+            "color": {
+                "_type": "text",
+                "_language": "french"
+            },
+            "licencePlate": {
+                "_type": "string"
+            }
+        }
+    }
+}

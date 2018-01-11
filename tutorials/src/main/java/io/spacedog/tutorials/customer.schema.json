@@ -1,0 +1,24 @@
+{
+    "customer": {
+        "credentialsId": {
+            "_type": "string"
+        },
+        "status": {
+            "_type": "string"
+        },
+        "firstname": {
+            "_type": "text",
+            "_language": "french"
+        },
+        "lastname": {
+            "_type": "text",
+            "_language": "french"
+        },
+        "phone": {
+            "_type": "string"
+        },
+        "photo": {
+            "_type": "string"
+        }
+    }
+}

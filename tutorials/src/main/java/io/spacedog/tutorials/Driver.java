@@ -1,4 +1,4 @@
-package io.spacedog.demo;
+package io.spacedog.tutorials;
 
 import java.util.List;
 
@@ -12,24 +12,20 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.model.DataObject;
 import io.spacedog.model.DataObjectAbstract;
 import io.spacedog.model.GeoPoint;
+import io.spacedog.model.MetadataBase;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, //
 		getterVisibility = Visibility.NONE, //
 		isGetterVisibility = Visibility.NONE, //
 		setterVisibility = Visibility.NONE)
-public class Driver {
+public class Driver extends MetadataBase {
 
 	public String status;
-	public String credentialsId;
 	public String firstname;
 	public String lastname;
 	public String phone;
 	public String photo;
-	public String homeAddress;
-	public String companyName;
-	public String siret;
-	public RIB RIB;
 	public LastLocation lastLocation;
 	public Vehicule vehicule;
 
@@ -37,13 +33,6 @@ public class Driver {
 	public static class LastLocation {
 		public GeoPoint where;
 		public DateTime when;
-	}
-
-	@JsonIgnoreProperties(ignoreUnknown = true)
-	public static class RIB {
-		public String bankName;
-		public String bankCode;
-		public String accountIBAN;
 	}
 
 	@JsonIgnoreProperties(ignoreUnknown = true)

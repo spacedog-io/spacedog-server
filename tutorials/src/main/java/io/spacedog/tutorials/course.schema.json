@@ -1,0 +1,173 @@
+{
+    "course": {
+        "status": {
+            "_type": "string"
+        },
+        "requestedVehiculeType": {
+            "_type": "string"
+        },
+        "requestedPickupTimestamp": {
+            "_type": "timestamp"
+        },
+        "driverIsComingTimestamp": {
+            "_type": "timestamp"
+        },
+        "driverIsReadyToLoadTimestamp": {
+            "_type": "timestamp"
+        },
+        "cancelledTimestamp": {
+            "_type": "timestamp"
+        },
+        "pickupTimestamp": {
+            "_type": "timestamp"
+        },
+        "dropoffTimestamp": {
+            "_type": "timestamp"
+        },
+        "noteForDriver": {
+            "_type": "text",
+            "_language": "french"
+        },
+        "fare": {
+            "_type": "float"
+        },
+        "time": {
+            "_type": "long"
+        },
+        "distance": {
+            "_type": "integer"
+        },
+        "customer": {
+            "_type": "object",
+            "id": {
+                "_type": "string",
+                "_ref_type": "customer"
+            },
+            "credentialsId": {
+                "_type": "string"
+            },
+            "firstname": {
+                "_type": "text",
+                "_language": "french"
+            },
+            "lastname": {
+                "_type": "text",
+                "_language": "french"
+            },
+            "phone": {
+                "_type": "string"
+            }
+        },
+        "payment": {
+            "_type": "object",
+            "companyId": {
+                "_type": "string"
+            },
+            "companyName": {
+                "_type": "text",
+                "_language": "french"
+            },
+            "stripe": {
+                "_type": "object",
+                "customerId": {
+                    "_type": "string"
+                },
+                "cardId": {
+                    "_type": "string"
+                },
+                "paymentId": {
+                    "_type": "string"
+                }
+            }
+        },
+        "from": {
+            "_type": "object",
+            "flatRateCode": {
+                "_type": "string"
+            },
+            "address": {
+                "_type": "text",
+                "_language": "french"
+            },
+            "geopoint": {
+                "_type": "geopoint"
+            }
+        },
+        "to": {
+            "_type": "object",
+            "flatRateCode": {
+                "_type": "string"
+            },
+            "address": {
+                "_type": "text",
+                "_language": "french"
+            },
+            "geopoint": {
+                "_type": "geopoint"
+            },
+            "_extra": {
+                "_favorite": false,
+                "_label": ""
+            }
+        },
+        "driver": {
+            "_type": "object",
+            "driverId": {
+                "_type": "string",
+                "_ref_type": "driver"
+            },
+            "credentialsId": {
+                "_type": "string"
+            },
+            "gain": {
+                "_type": "float"
+            },
+            "firstname": {
+                "_type": "text",
+                "_language": "french"
+            },
+            "lastname": {
+                "_type": "text",
+                "_language": "french"
+            },
+            "phone": {
+                "_type": "string"
+            },
+            "photo": {
+                "_type": "string"
+            },
+            "vehicule": {
+                "_type": "object",
+                "type": {
+                    "_type": "string"
+                },
+                "brand": {
+                    "_type": "text",
+                    "_language": "french"
+                },
+                "model": {
+                    "_type": "text",
+                    "_language": "french"
+                },
+                "color": {
+                    "_type": "text",
+                    "_language": "french"
+                },
+                "licencePlate": {
+                    "_type": "string"
+                }
+            },
+            "company": {
+                "_type": "object",
+                "name": {
+                    "_type": "text",
+                    "_language": "french"
+                },
+                "address": {
+                    "_type": "text",
+                    "_language": "french"
+                }
+            }
+        }
+    }
+}

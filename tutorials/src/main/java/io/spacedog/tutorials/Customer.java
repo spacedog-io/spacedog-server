@@ -1,4 +1,4 @@
-package io.spacedog.demo;
+package io.spacedog.tutorials;
 
 import java.util.List;
 
@@ -9,13 +9,14 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.model.DataObject;
 import io.spacedog.model.DataObjectAbstract;
+import io.spacedog.model.MetadataBase;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, //
 		getterVisibility = Visibility.NONE, //
 		isGetterVisibility = Visibility.NONE, //
 		setterVisibility = Visibility.NONE)
-public class Customer {
+public class Customer extends MetadataBase {
 
 	public String status;
 	public String firstname;
