@@ -102,7 +102,7 @@ public class PushService extends SpaceService {
 	 */
 	@Post("/push")
 	@Post("/push/")
-	public Payload pushByTags(String body, Context context) {
+	public Payload postPushRequest(String body, Context context) {
 
 		PushSettings settings = SettingsService.get().getAsObject(PushSettings.class);
 		Credentials credentials = SpaceContext.credentials();
