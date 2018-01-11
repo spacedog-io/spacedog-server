@@ -167,9 +167,6 @@ public class SpaceEnv {
 
 		SpaceEnv defaultEnv = new SpaceEnv(properties);
 
-		if (defaultEnv.debug())
-			defaultEnv.log();
-
 		return defaultEnv;
 	}
 
