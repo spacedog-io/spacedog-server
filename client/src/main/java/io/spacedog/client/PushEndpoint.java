@@ -114,7 +114,11 @@ public class PushEndpoint {
 	}
 
 	public PushEndpoint deleteInstallation(String id) {
-		dog.data().delete(TYPE, id);
+		return deleteInstallation(id, true);
+	}
+
+	public PushEndpoint deleteInstallation(String id, boolean throwNotFound) {
+		dog.data().delete(TYPE, id, throwNotFound);
 		return this;
 	}
 
