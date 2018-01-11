@@ -44,6 +44,18 @@ public class PebbleTemplating {
 				continue;
 			}
 
+			if (type.equals(CredentialsService.TYPE)) {
+				if (value != null && value instanceof String) {
+					value = CredentialsService.get().getById(value.toString(), true).get();
+					value = Json.mapper().convertValue(value, Map.class);
+					context.put(name, value);
+					continue;
+				}
+
+				throw Exceptions.illegalArgument("parameter value [%s][%s] is invalid", //
+						name, value);
+			}
+
 			if (DataStore.get().isType(type)) {
 
 				if (value != null && value instanceof String) {
