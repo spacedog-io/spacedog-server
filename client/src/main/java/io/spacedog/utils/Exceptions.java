@@ -24,6 +24,10 @@ public class Exceptions {
 		return new RuntimeException(t);
 	}
 
+	public static UnsupportedOperationException unsupported(String message, Object... args) {
+		return new UnsupportedOperationException(String.format(message, args));
+	}
+
 	public static RuntimeException runtime(Throwable t, String message, Object... args) {
 		return new RuntimeException(String.format(message, args), t);
 	}
