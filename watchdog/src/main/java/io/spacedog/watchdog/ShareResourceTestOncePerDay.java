@@ -301,7 +301,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 	}
 
 	@Test
-	public void testDownloadManyShares() throws IOException {
+	public void testDownloadMultipleShares() throws IOException {
 
 		// prepare
 		SpaceDog superadmin = resetTestBackend();
@@ -313,32 +313,30 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		settings.acl.put("admin", Sets.newHashSet(DataPermission.read, DataPermission.create));
 		superadmin.settings().save(settings);
 
-		// share file with name that needs escaping
+		// superadmin shares file 1
 		String path1 = superadmin.put("/1/share/toto.txt")//
 				.bodyBytes("toto".getBytes())//
-				.go(200)//
-				.getString("path");
+				.go(200).getString("path");
 
-		superadmin.get("/1/share/" + path1).go(200);
-
+		// superadmin shares file 2
 		String path2 = superadmin.put("/1/share/titi.txt")//
 				.bodyBytes("titi".getBytes())//
-				.go(200)//
-				.getString("path");
+				.go(200).getString("path");
 
-		superadmin.get("/1/share/" + path2).go(200);
-
+		// superadmin shares file 3
 		String path3 = superadmin.put("/1/share/tweeter.png")//
 				.bodyBytes(pngBytes)//
-				.go(200)//
-				.getString("path");
+				.go(200).getString("path");
 
-		superadmin.get("/1/share/" + path3).go(200);
+		// superadmin shares file 4 with same name than file 1
+		String path4 = superadmin.put("/1/share/toto.txt")//
+				.bodyBytes("toto2".getBytes())//
+				.go(200).getString("path");
 
 		// superadmin needs read_all permission to downloads many shares
 		superadmin.post("/1/share/_zip")//
 				.bodyJson("fileName", "download.zip", //
-						"paths", Json7.array(path1, path2, path3))//
+						"paths", Json7.array(path1, path2, path3, path4))//
 				.go(403);
 
 		// superadmin updates share settings to allow admin
@@ -350,16 +348,17 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		// superadmin downloads zip containing specified shares
 		byte[] zip = superadmin.post("/1/share/_zip")//
 				.bodyJson("fileName", "download.zip", //
-						"paths", Json7.array(path1, path2, path3))//
+						"paths", Json7.array(path1, path2, path3, path4))//
 				.go(200)//
 				.assertHeaderContains("attachment; filename=\"download.zip\"", //
 						SpaceHeaders.CONTENT_DISPOSITION)//
 				.asBytes();
 
-		assertEquals(3, zipFileNumber(zip));
-		assertZipContains(zip, "toto.txt", "toto".getBytes());
-		assertZipContains(zip, "titi.txt", "titi".getBytes());
-		assertZipContains(zip, "tweeter.png", pngBytes);
+		assertEquals(4, zipFileNumber(zip));
+		assertZipContains(zip, 1, "toto.txt", "toto".getBytes());
+		assertZipContains(zip, 2, "titi.txt", "titi".getBytes());
+		assertZipContains(zip, 3, "tweeter.png", pngBytes);
+		assertZipContains(zip, 4, "toto.txt", "toto2".getBytes());
 	}
 
 	private int zipFileNumber(byte[] zip) throws IOException {
@@ -370,17 +369,13 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		return size;
 	}
 
-	private void assertZipContains(byte[] zip, String name, byte[] file) throws IOException {
+	private void assertZipContains(byte[] zip, int position, String name, byte[] file) throws IOException {
 		ZipInputStream zipStream = new ZipInputStream(new ByteArrayInputStream(zip));
-		ZipEntry entry = null;
-		while ((entry = zipStream.getNextEntry()) != null) {
-			if (entry.getName().endsWith(name)) {
-				byte[] bytes = ByteStreams.toByteArray(zipStream);
-				assertArrayEquals(file, bytes);
-				return;
-			}
-		}
-		fail(String.format("[%s] zip entry not found", name));
+		for (int i = 1; i < position; i++)
+			zipStream.getNextEntry();
+		ZipEntry entry = zipStream.getNextEntry();
+		assertTrue(entry.getName().endsWith(name));
+		assertArrayEquals(file, ByteStreams.toByteArray(zipStream));
 	}
 
 	@Test

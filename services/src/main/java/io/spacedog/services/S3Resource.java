@@ -144,10 +144,11 @@ public class S3Resource extends Resource {
 
 		@Override
 		public void write(OutputStream output) throws IOException {
+			int index = 1;
 			ZipOutputStream zip = new ZipOutputStream(output);
 			for (String path : request.paths) {
 				WebPath webPath = WebPath.parse(path);
-				zip.putNextEntry(new ZipEntry(webPath.last()));
+				zip.putNextEntry(new ZipEntry(index++ + "-" + webPath.last()));
 				S3Object s3Object = getS3Object(bucketSuffix, backendId, webPath);
 				writeS3ObjectContent(s3Object, zip);
 				zip.flush();

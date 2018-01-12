@@ -1,6 +1,6 @@
 package io.spacedog.model;
 
-import java.util.Set;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
@@ -16,7 +16,7 @@ import io.spacedog.utils.Utils;
 		setterVisibility = Visibility.NONE)
 public class ZipRequest {
 	public String fileName;
-	public Set<String> paths;
+	public List<String> paths;
 
 	public boolean isValid() {
 		return !Utils.isNullOrEmpty(paths);
