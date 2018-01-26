@@ -39,7 +39,7 @@ public class StripeService extends SpaceService {
 		if (hasStripeCustomerId(credentials))
 			throw Exceptions.illegalArgument(//
 					"credentials [%s][%s] already have a stripe customer", //
-					credentials.type(), credentials.name());
+					credentials.type(), credentials.username());
 
 		StripeSettings settings = stripeSettings();
 
@@ -205,7 +205,7 @@ public class StripeService extends SpaceService {
 			return value.asText();
 
 		throw new NotFoundException("no stripe customer for credentials [%s][%s]", //
-				credentials.type(), credentials.name());
+				credentials.type(), credentials.username());
 	}
 
 	private void updateStripeCustomerId(Credentials credentials, String stripeCustomerId) {

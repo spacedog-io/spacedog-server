@@ -74,7 +74,7 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 	public static SpaceDog superdog() {
 		if (superdog == null)
 			superdog = SpaceDog.dog()//
-					.username(Credentials.SUPERDOG.name())//
+					.username(Credentials.SUPERDOG.username())//
 					.password(SpaceEnv.env().superdogPassword());
 
 		return superdog;

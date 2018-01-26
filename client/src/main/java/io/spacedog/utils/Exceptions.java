@@ -74,7 +74,7 @@ public class Exceptions {
 
 	public static ForbiddenException insufficientCredentials(Credentials credentials) {
 		return forbidden("[%s][%s] has insufficient credentials", //
-				credentials.type(), credentials.name());
+				credentials.type(), credentials.username());
 	}
 
 	public static SpaceException alreadyExists(String type, String value) {
@@ -89,7 +89,7 @@ public class Exceptions {
 	public static SpaceException passwordMustChange(Credentials credentials) {
 		return new SpaceException(PASSWORD_MUST_CHANGE, 403, //
 				"[%s][%s] credentials password must change", //
-				credentials.type(), credentials.name());
+				credentials.type(), credentials.username());
 	}
 
 	//
@@ -108,7 +108,7 @@ public class Exceptions {
 
 	public static AuthenticationException disabledCredentials(Credentials credentials) {
 		return new AuthenticationException(DISABLED_CREDENTIALS, //
-				"[%s][%s] credentials disabled", credentials.type(), credentials.name());
+				"[%s][%s] credentials disabled", credentials.type(), credentials.username());
 	}
 
 	public static AuthenticationException invalidAccessToken() {

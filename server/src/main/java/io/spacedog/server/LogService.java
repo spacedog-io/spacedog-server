@@ -262,7 +262,7 @@ public class LogService extends SpaceService {
 		Credentials credentials = SpaceContext.credentials();
 		ObjectNode logCredentials = log.putObject(CREDENTIALS_FIELD);
 		logCredentials.put(ID_FIELD, credentials.id());
-		logCredentials.put(USERNAME_FIELD, credentials.name());
+		logCredentials.put(USERNAME_FIELD, credentials.username());
 		logCredentials.putPOJO(ROLES_FIELD, credentials.roles());
 	}
 

@@ -190,7 +190,7 @@ public class CallbackService extends SpaceService {
 
 		demand.credentials = new Request.Credentials();
 		demand.credentials.id = credentials.id();
-		demand.credentials.name = credentials.name();
+		demand.credentials.name = credentials.username();
 		demand.credentials.roles = credentials.roles();
 
 		demand.parameters = extractParameters(context);

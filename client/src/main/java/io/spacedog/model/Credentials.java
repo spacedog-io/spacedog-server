@@ -89,8 +89,8 @@ public class Credentials {
 		return this;
 	}
 
-	public String name() {
-		return username == null ? GUEST.name() : username;
+	public String username() {
+		return username == null ? GUEST.username() : username;
 	}
 
 	public Credentials name(String name) {
@@ -288,7 +288,7 @@ public class Credentials {
 			return Roles.admin;
 		if (isUser())
 			return Roles.user;
-		return GUEST.name();
+		return GUEST.username();
 	}
 
 	public boolean isSuperDog() {
@@ -344,7 +344,7 @@ public class Credentials {
 	}
 
 	public boolean isGuest() {
-		return GUEST.name().equals(type());
+		return GUEST.username().equals(type());
 	}
 
 	//
@@ -551,7 +551,7 @@ public class Credentials {
 	public ObjectNode toJson() {
 		return Json.object(//
 				SpaceFields.ID_FIELD, id(), //
-				SpaceFields.USERNAME_FIELD, name(), //
+				SpaceFields.USERNAME_FIELD, username(), //
 				SpaceFields.EMAIL_FIELD, email().orElse(null), //
 				"reallyEnabled", isReallyEnabled(), //
 				SpaceFields.ENABLED_FIELD, enabled(), //
@@ -572,7 +572,7 @@ public class Credentials {
 
 	@Override
 	public String toString() {
-		return String.format("[%s][%s]", type(), name());
+		return String.format("[%s][%s]", type(), username());
 	}
 
 	//

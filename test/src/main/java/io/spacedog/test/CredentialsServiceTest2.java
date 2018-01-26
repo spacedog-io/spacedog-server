@@ -627,7 +627,7 @@ public class CredentialsServiceTest2 extends SpaceTest {
 		Credentials credentials = superadmin2.credentials().me();
 
 		assertTrue(credentials.isSuperAdmin());
-		assertEquals("superadmin2", credentials.name());
+		assertEquals("superadmin2", credentials.username());
 		assertEquals("superadmin2@dog.com", credentials.email().get());
 		assertEquals(Sets.newHashSet(Roles.superadmin), credentials.roles());
 
@@ -638,7 +638,7 @@ public class CredentialsServiceTest2 extends SpaceTest {
 		credentials = admin1.credentials().me();
 
 		assertTrue(credentials.isAdmin());
-		assertEquals("admin1", credentials.name());
+		assertEquals("admin1", credentials.username());
 		assertEquals("admin1@dog.com", credentials.email().get());
 		assertEquals(Sets.newHashSet(Roles.admin), credentials.roles());
 	}

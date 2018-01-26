@@ -293,7 +293,7 @@ public class CredentialsService extends SpaceService {
 
 		if (!credentials.email().isPresent())
 			throw Exceptions.illegalArgument("no email found in credentials [%s][%s]", //
-					credentials.type(), credentials.name());
+					credentials.type(), credentials.username());
 
 		EmailTemplate template = EmailService.get()//
 				.getTemplate(FORGOT_PASSWORD_MAIL_TEMPLATE_NAME)//
@@ -462,7 +462,7 @@ public class CredentialsService extends SpaceService {
 
 	Credentials checkUsernamePassword(String username, String password) {
 
-		if (username.equals(Credentials.SUPERDOG.name()))
+		if (username.equals(Credentials.SUPERDOG.username()))
 			return checkSuperdog(password);
 
 		return checkRegularUser(username, password);
@@ -586,8 +586,8 @@ public class CredentialsService extends SpaceService {
 	Credentials create(String backendId, Credentials credentials) {
 
 		// This is the only place where name uniqueness is checked
-		if (exists(backendId, credentials.name()))
-			throw Exceptions.alreadyExists(TYPE, credentials.name());
+		if (exists(backendId, credentials.username()))
+			throw Exceptions.alreadyExists(TYPE, credentials.username());
 
 		String now = DateTime.now().toString();
 		credentials.updatedAt(now);
@@ -694,7 +694,7 @@ public class CredentialsService extends SpaceService {
 		CredentialsSettings settings = credentialsSettings();
 
 		credentials.name(Check.notNullOrEmpty(request.username(), USERNAME_FIELD));
-		Usernames.checkValid(credentials.name(), settings.usernameRegex());
+		Usernames.checkValid(credentials.username(), settings.usernameRegex());
 
 		credentials.email(Check.notNullOrEmpty(request.email(), EMAIL_FIELD));
 
