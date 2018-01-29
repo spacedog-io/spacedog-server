@@ -3,7 +3,7 @@
  */
 package io.spacedog.server;
 
-import java.util.Set;
+import java.util.List;
 import java.util.UUID;
 
 import com.google.common.base.Strings;
@@ -68,7 +68,7 @@ public class ShareService extends S3Service {
 	@Post("/download")
 	@Post("/download/")
 	public Payload postDownload(DownloadRequest request, Context context) {
-		Set<S3File> files = toS3Files(getBucketName(), request.paths);
+		List<S3File> files = toS3Files(getBucketName(), request.paths);
 		S3File.checkPermissions(files, shareSettings().permissions, //
 				Permission.read, Permission.readGroup, Permission.readMine);
 		return doZip(files, request.fileName);

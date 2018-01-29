@@ -11,7 +11,6 @@ import org.junit.Test;
 
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.Resources;
 
 import io.spacedog.client.ShareEndpoint.Share;
 import io.spacedog.client.ShareEndpoint.ShareList;
@@ -222,8 +221,7 @@ public class ShareServiceTest extends SpaceTest {
 		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog fred = createTempDog(superadmin, "fred");
-		byte[] pngBytes = Resources.toByteArray(//
-				Resources.getResource(getClass(), "tweeter.png"));
+		byte[] pngBytes = ClassResources.loadAsBytes(this, "tweeter.png");
 
 		// superadmin sets custom share permissions
 		ShareSettings settings = new ShareSettings();
@@ -360,7 +358,7 @@ public class ShareServiceTest extends SpaceTest {
 		// nath gets a zip of her shares
 		byte[] zip = nath.shares().downloadAll(path1);
 		assertEquals(1, zipFileNumber(zip));
-		assertZipContains(zip, "toto.txt", "toto".getBytes());
+		assertZipContains(zip, 1, "toto.txt", "toto".getBytes());
 
 		// vince uploads 2 shares
 		String path2 = vince.shares().upload("titi".getBytes(), "titi.txt").id;
@@ -378,8 +376,8 @@ public class ShareServiceTest extends SpaceTest {
 		// vince gets a zip of his shares
 		zip = vince.shares().downloadAll(path2, path3);
 		assertEquals(2, zipFileNumber(zip));
-		assertZipContains(zip, "titi.txt", "titi".getBytes());
-		assertZipContains(zip, "tweeter.png", pngBytes);
+		assertZipContains(zip, 1, "titi.txt", "titi".getBytes());
+		assertZipContains(zip, 2, "tweeter.png", pngBytes);
 
 		// vince needs readAll permission to zip nath's shares
 		assertHttpError(403, () -> vince.shares().downloadAll(path1, path2));
@@ -404,9 +402,9 @@ public class ShareServiceTest extends SpaceTest {
 						SpaceHeaders.CONTENT_DISPOSITION)//
 				.asBytes();
 
-		assertZipContains(zip, "toto.txt", "toto".getBytes());
-		assertZipContains(zip, "titi.txt", "titi".getBytes());
-		assertZipContains(zip, "tweeter.png", pngBytes);
+		assertZipContains(zip, 1, "toto.txt", "toto".getBytes());
+		assertZipContains(zip, 2, "titi.txt", "titi".getBytes());
+		assertZipContains(zip, 3, "tweeter.png", pngBytes);
 	}
 
 	private int zipFileNumber(byte[] zip) throws IOException {
@@ -417,17 +415,14 @@ public class ShareServiceTest extends SpaceTest {
 		return size;
 	}
 
-	private void assertZipContains(byte[] zip, String name, byte[] file) throws IOException {
+	private void assertZipContains(byte[] zip, int position, String name, byte[] file) throws IOException {
 		ZipInputStream zipStream = new ZipInputStream(new ByteArrayInputStream(zip));
-		ZipEntry entry = null;
-		while ((entry = zipStream.getNextEntry()) != null) {
-			if (entry.getName().endsWith(name)) {
-				byte[] bytes = ByteStreams.toByteArray(zipStream);
-				assertArrayEquals(file, bytes);
-				return;
-			}
-		}
-		fail(String.format("[%s] zip entry not found", name));
+		for (int i = 1; i < position; i++)
+			zipStream.getNextEntry();
+		ZipEntry entry = zipStream.getNextEntry();
+		System.out.println(entry.getName());
+		assertTrue(entry.getName().endsWith(name));
+		assertArrayEquals(file, ByteStreams.toByteArray(zipStream));
 	}
 
 	@Test

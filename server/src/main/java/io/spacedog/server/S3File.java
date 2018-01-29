@@ -4,7 +4,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collections;
-import java.util.Set;
+import java.util.List;
 
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -244,10 +244,10 @@ public class S3File implements Closeable, StreamingOutput {
 	private void checkPermissions(RolePermissions permissions, //
 			Permission all, Permission group, Permission mine) {
 
-		checkPermissions(Collections.singleton(this), permissions, all, group, mine);
+		checkPermissions(Collections.singletonList(this), permissions, all, group, mine);
 	}
 
-	public static void checkPermissions(Set<S3File> files, RolePermissions roles, //
+	public static void checkPermissions(List<S3File> files, RolePermissions roles, //
 			Permission allPermission, Permission groupPermission, Permission minePermission) {
 
 		Credentials credentials = SpaceContext.credentials();

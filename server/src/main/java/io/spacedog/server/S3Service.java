@@ -5,7 +5,7 @@ package io.spacedog.server;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Set;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -194,7 +194,7 @@ public class S3Service extends SpaceService {
 		}
 	}
 
-	public Payload doZip(Set<S3File> files, String fileName) {
+	public Payload doZip(List<S3File> files, String fileName) {
 
 		return new Payload("application/octet-stream", //
 				new ZipStreamingOutput(files))//
@@ -236,17 +236,18 @@ public class S3Service extends SpaceService {
 
 	private class ZipStreamingOutput implements StreamingOutput {
 
-		private Set<S3File> files;
+		private List<S3File> files;
 
-		public ZipStreamingOutput(Set<S3File> files) {
+		public ZipStreamingOutput(List<S3File> files) {
 			this.files = files;
 		}
 
 		@Override
 		public void write(OutputStream output) throws IOException {
 			ZipOutputStream zip = new ZipOutputStream(output);
-			for (S3File file : files) {
-				zip.putNextEntry(new ZipEntry(file.path().toString()));
+			for (int i = 0; i < files.size(); i++) {
+				S3File file = files.get(i);
+				zip.putNextEntry(new ZipEntry(file.path().last()));
 				file.write(zip);
 				zip.flush();
 			}
@@ -256,11 +257,11 @@ public class S3Service extends SpaceService {
 
 	}
 
-	public static Set<S3File> toS3Files(String bucketName, Set<String> paths) {
+	public static List<S3File> toS3Files(String bucketName, List<String> paths) {
 		String backendId = SpaceContext.backendId();
 		return paths.stream()//
 				.map(path -> new S3File(bucketName, backendId, path))//
-				.collect(Collectors.toSet());
+				.collect(Collectors.toList());
 	}
 
 	private String contentType(String fileName, Context context) {

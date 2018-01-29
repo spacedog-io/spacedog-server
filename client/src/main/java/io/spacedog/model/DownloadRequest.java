@@ -1,11 +1,11 @@
 package io.spacedog.model;
 
-import java.util.Collections;
-import java.util.Set;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.collect.Lists;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(fieldVisibility = Visibility.PUBLIC_ONLY, //
@@ -14,5 +14,5 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 		setterVisibility = Visibility.NONE)
 public class DownloadRequest {
 	public String fileName;
-	public Set<String> paths = Collections.emptySet();
+	public List<String> paths = Lists.newArrayList();
 }
