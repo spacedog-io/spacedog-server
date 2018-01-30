@@ -70,4 +70,10 @@ public class UtilsTest extends Assert {
 		assertEquals("toto/titi", Utils.join("/", "toto", "titi"));
 	}
 
+	@Test
+	public void testReplaceLesserGreaterThanCharacters() {
+		assertEquals("SpaceDog (spacedog@toolee.fr)", //
+				Utils.replaceLesserGreaterThanCharacters("SpaceDog <spacedog@toolee.fr>"));
+	}
+
 }

@@ -205,4 +205,8 @@ public class Utils {
 		}
 	}
 
+	public static String replaceLesserGreaterThanCharacters(String s) {
+		return s.replace('<', '(').replace('>', ')');
+	}
+
 }
