@@ -9,6 +9,9 @@ import io.spacedog.model.GeoPoint;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 class Driver {
+
+	public final static String TYPE = "driver";
+
 	@JsonIgnore
 	public String id;
 	public String status;

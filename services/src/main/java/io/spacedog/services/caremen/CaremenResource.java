@@ -58,8 +58,8 @@ public class CaremenResource extends Resource {
 	private static final String CANCELLED = "cancelled";
 	private static final String PASSENGER_APP_ID_SUFFIX = "passenger";
 	private static final String DRIVER_APP_ID_SUFFIX = "driver";
-	// status values
 
+	// status values
 	private static final String NEW_IMMEDIATE = "new-immediate";
 	private static final String NEW_SCHEDULED = "new-scheduled";
 	private static final String SCHEDULED_ASSIGNED = "scheduled-assigned";
@@ -278,7 +278,7 @@ public class CaremenResource extends Resource {
 		TermQueryBuilder query = QueryBuilders.termQuery("credentialsId", credentials.id());
 
 		SearchResponse response = Start.get().getElasticClient()//
-				.prepareSearch(credentials.backendId(), "driver")//
+				.prepareSearch(credentials.backendId(), Driver.TYPE)//
 				.setQuery(query)//
 				.setSize(1)//
 				.get();
@@ -294,7 +294,7 @@ public class CaremenResource extends Resource {
 
 	private Credentials checkDriverCredentials() {
 		Credentials credentials = SpaceContext.checkUserCredentials();
-		if (!credentials.roles().contains("driver"))
+		if (!credentials.roles().contains(Driver.TYPE))
 			throw Exceptions.forbidden(//
 					"credentials [%s] not a driver", credentials.name());
 		return credentials;
@@ -318,19 +318,17 @@ public class CaremenResource extends Resource {
 
 	private long setStatusToNoDriverAvailable(String courseId, Credentials credentials) {
 		ObjectNode patch = Json8.object(STATUS, "no-driver-available");
-		return DataStore.get()
-				.patchObject(//
-						credentials.backendId(), COURSE, courseId, //
-						patch, credentials.name())//
+		return DataStore.get().patchObject(//
+				credentials.backendId(), COURSE, courseId, //
+				patch, credentials.name())//
 				.getVersion();
 	}
 
 	private Course removeDriverFromCourse(Course course, Credentials credentials) {
 		ObjectNode patch = Json8.object("driver", null, STATUS, NEW_IMMEDIATE);
-		course.meta.version = DataStore.get()
-				.patchObject(//
-						credentials.backendId(), COURSE, course.meta.id, //
-						patch, credentials.name())//
+		course.meta.version = DataStore.get().patchObject(//
+				credentials.backendId(), COURSE, course.meta.id, //
+				patch, credentials.name())//
 				.getVersion();
 		course.status = NEW_IMMEDIATE;
 		course.driver = null;
@@ -403,7 +401,7 @@ public class CaremenResource extends Resource {
 				credentials.backendId(), course);
 
 		// if requester is a driver, he does not need the push
-		if (credentials.roles().contains("driver"))
+		if (credentials.roles().contains(Driver.TYPE))
 			credentialsIds.remove(credentials.id());
 
 		// search for installations
@@ -448,7 +446,7 @@ public class CaremenResource extends Resource {
 				.order(SortOrder.ASC).unit(DistanceUnit.METERS).sortMode("min");
 
 		SearchResponse response = Start.get().getElasticClient()//
-				.prepareSearch(backendId, "driver").setQuery(query).setSize(5)//
+				.prepareSearch(backendId, Driver.TYPE).setQuery(query).setSize(5)//
 				.setFetchSource(false).addField(CREDENTIALS_ID)//
 				.addSort(sort).get();
 
@@ -549,7 +547,7 @@ public class CaremenResource extends Resource {
 	//
 
 	private PushLog pushDriverHasGivenUpToCustomer(Course course, Credentials credentials) {
-		ObjectNode message = toPushMessage(course.meta.id, NEW_IMMEDIATE,
+		ObjectNode message = toPushMessage(course.meta.id, NEW_IMMEDIATE, //
 				Alert.of("Chauffeur indisponible", //
 						"Votre chauffeur a rencontré un problème et ne peut pas vous rejoindre."
 								+ " Nous recherchons un autre chauffeur.",
@@ -671,7 +669,7 @@ public class CaremenResource extends Resource {
 		SearchResponse response = searchInstallations(credentials.backendId(), //
 				DRIVER_APP_ID_SUFFIX, Lists.newArrayList(course.driver.credentialsId));
 
-		return pushTo(course.driver.credentialsId, "driver", //
+		return pushTo(course.driver.credentialsId, Driver.TYPE, //
 				response, message, credentials);
 	}
 
@@ -727,9 +725,14 @@ public class CaremenResource extends Resource {
 	private Credentials checkCustomerCredentials() {
 		Credentials credentials = SpaceContext.checkUserCredentials();
 		Set<String> roles = credentials.roles();
-		if (!roles.contains(Credentials.USER) || roles.size() > 1)
-			throw Exceptions.insufficientCredentials(credentials);
-		return credentials;
+		// assistants are authorized
+		if (roles.contains("assistant"))
+			return credentials;
+		// simple users (customers) are authorized
+		if (roles.contains(Credentials.USER) && roles.size() == 1)
+			return credentials;
+		// all other
+		throw Exceptions.insufficientCredentials(credentials);
 	}
 
 	private void checkIfAuthorizedToRemoveDriver(Course course, Credentials credentials) {
@@ -741,7 +744,7 @@ public class CaremenResource extends Resource {
 		if (credentials.roles().contains(Credentials.ADMIN))
 			return;
 
-		if (credentials.roles().contains("driver") //
+		if (credentials.roles().contains(Driver.TYPE) //
 				&& !credentials.id().equals(course.driver.credentialsId))
 			throw Exceptions.forbidden(//
 					"you are not the driver of course [%s]", course.meta.id);
