@@ -5,10 +5,8 @@ package io.spacedog.test;
 
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.node.LongNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.model.Permission;
@@ -169,10 +167,10 @@ public class SettingsServiceTest extends SpaceTest {
 		vince.put("/1/settings/db/type").go(403);
 
 		// superadmin creates db settings with version field
-		superadmin.settings().save("db", "type", TextNode.valueOf("mysql"));
+		superadmin.settings().save("db", "type", "mysql");
 
 		// superadmin sets db settings version
-		superadmin.settings().save("db", "version", LongNode.valueOf(12));
+		superadmin.settings().save("db", "version", 12);
 
 		// superadmin sets db settings credentials
 		superadmin.settings().save("db", "credentials", //
@@ -200,8 +198,8 @@ public class SettingsServiceTest extends SpaceTest {
 		superadmin.get("/1/settings/XXX/YYY").go(404);
 
 		// superadmin updates each field
-		superadmin.settings().save("db", "type", TextNode.valueOf("postgres"));
-		superadmin.settings().save("db", "version", LongNode.valueOf(13));
+		superadmin.settings().save("db", "type", "postgres");
+		superadmin.settings().save("db", "version", 13);
 		superadmin.settings().save("db", "credentials", //
 				Json.object("username", "lion", "password", "arf"));
 
@@ -218,7 +216,7 @@ public class SettingsServiceTest extends SpaceTest {
 		superadmin.settings().delete("db", "version");
 
 		// superadmin nulls credentials
-		superadmin.settings().save("db", "credentials", NullNode.getInstance());
+		superadmin.settings().save("db", "credentials", null);
 
 		// superadmin checks settings are correct
 		settings = superadmin.settings().get("db");

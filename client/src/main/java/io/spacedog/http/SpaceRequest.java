@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.google.common.primitives.Ints;
@@ -226,6 +227,8 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest bodyJson(JsonNode body) {
+		if (body == null)
+			body = NullNode.instance;
 		this.contentType = OkHttp.JSON;
 		this.bodyJson = body;
 		this.body = body.toString();

@@ -84,27 +84,12 @@ public class SettingsEndpoint {
 				.routeParam("id", id).bodyPojo(settings).go(200, 201);
 	}
 
-	public void save(String id, ObjectNode settings) {
-		dog.put("/1/settings/{id}")//
-				.routeParam("id", id).bodyJson(settings).go(200, 201);
-	}
-
 	public void save(String id, String settings) {
 		dog.put("/1/settings/{id}")//
 				.routeParam("id", id).bodyString(settings).go(200, 201);
 	}
 
 	// save field
-
-	public void save(Class<? extends Settings> settingsClass, String field, JsonNode value) {
-		save(SettingsBase.id(settingsClass), field, value);
-	}
-
-	public void save(String id, String field, JsonNode value) {
-		dog.put("/1/settings/{id}/{field}")//
-				.routeParam("id", id).routeParam("field", field)//
-				.bodyJson(value).go(200, 201);
-	}
 
 	public void save(Class<? extends Settings> settingsClass, String field, Object value) {
 		save(SettingsBase.id(settingsClass), field, value);
