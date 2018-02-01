@@ -5,10 +5,8 @@ package io.spacedog.test;
 
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.node.LongNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
 
 import io.spacedog.model.SchemaSettings;
 import io.spacedog.model.SettingsSettings;
@@ -174,10 +172,10 @@ public class SettingsResourceTest extends SpaceTest {
 		vince.put("/1/settings/db/type").go(403);
 
 		// test creates db settings with version field
-		test.settings().save("db", "type", TextNode.valueOf("mysql"));
+		test.settings().save("db", "type", "mysql");
 
 		// test sets db settings version
-		test.settings().save("db", "version", LongNode.valueOf(12));
+		test.settings().save("db", "version", 12);
 
 		// test sets db settings credentials
 		test.settings().save("db", "credentials", //
@@ -205,8 +203,8 @@ public class SettingsResourceTest extends SpaceTest {
 		test.get("/1/settings/XXX/YYY").go(404);
 
 		// test updates each field
-		test.settings().save("db", "type", TextNode.valueOf("postgres"));
-		test.settings().save("db", "version", LongNode.valueOf(13));
+		test.settings().save("db", "type", "postgres");
+		test.settings().save("db", "version", 13);
 		test.settings().save("db", "credentials", //
 				Json7.object("username", "lion", "password", "arf"));
 
@@ -223,7 +221,7 @@ public class SettingsResourceTest extends SpaceTest {
 		test.settings().delete("db", "version");
 
 		// test nulls credentials
-		test.settings().save("db", "credentials", NullNode.getInstance());
+		test.settings().save("db", "credentials", null);
 
 		// test checks settings are correct
 		settings = test.settings().get("db");
