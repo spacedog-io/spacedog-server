@@ -17,11 +17,26 @@ import io.spacedog.model.BadgeStrategy;
 import io.spacedog.model.PushService;
 import io.spacedog.services.PushResource;
 import io.spacedog.services.PushResource.PushLog;
+import io.spacedog.services.SmsResource;
+import io.spacedog.services.SmsResource.SmsMessage;
 import io.spacedog.services.Start;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.JsonBuilder;
 
 public class Notificator implements CourseStatus {
+
+	//
+	// Sms Notification
+	//
+
+	protected void sendSms(String to, String body) {
+		SmsMessage message = new SmsMessage().to(to).body(body);
+		SmsResource.get().send(message);
+	}
+
+	//
+	// Push Notification
+	//
 
 	protected static class Alert {
 		String title;
@@ -155,4 +170,5 @@ public class Notificator implements CourseStatus {
 
 		return pushLog;
 	}
+
 }

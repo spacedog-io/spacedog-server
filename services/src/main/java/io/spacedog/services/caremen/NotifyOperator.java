@@ -7,20 +7,9 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import io.spacedog.services.SettingsResource;
-import io.spacedog.services.SmsResource;
-import io.spacedog.services.SmsResource.SmsMessage;
 import io.spacedog.utils.Credentials;
 
-public class NotifyOperator implements CourseStatus {
-
-	//
-	// text messages
-	//
-
-	private static DateTimeZone parisZone = DateTimeZone.forID("Europe/Paris");
-
-	private static DateTimeFormatter pickupFormatter = DateTimeFormat//
-			.forPattern("dd/MM' à 'HH'h'mm").withZone(parisZone).withLocale(Locale.FRENCH);
+public class NotifyOperator extends Notificator {
 
 	void newScheduled(Course course) {
 
@@ -31,9 +20,7 @@ public class NotifyOperator implements CourseStatus {
 				.append(". Catégorie : ").append(course.requestedVehiculeType)//
 				.append(".");
 
-		SmsMessage message = new SmsMessage()//
-				.to(operatorPhoneNumber()).body(builder.toString());
-		SmsResource.get().send(message);
+		sendSms(builder);
 	}
 
 	void newImmediate(Course course, int notifications) {
@@ -44,9 +31,7 @@ public class NotifyOperator implements CourseStatus {
 				.append(course.requestedVehiculeType).append(". Chauffeurs notifiés : ")//
 				.append(notifications);
 
-		SmsMessage message = new SmsMessage()//
-				.to(operatorPhoneNumber()).body(builder.toString());
-		SmsResource.get().send(message);
+		sendSms(builder);
 	}
 
 	void driverHasGivenUp(Course course, Credentials credentials) {
@@ -58,9 +43,20 @@ public class NotifyOperator implements CourseStatus {
 				.append(course.customer.lastname)//
 				.append("]. La course a été proposée à d'autres chauffeurs.");
 
-		SmsMessage message = new SmsMessage()//
-				.to(operatorPhoneNumber()).body(builder.toString());
-		SmsResource.get().send(message);
+		sendSms(builder);
+	}
+
+	//
+	// Implementation
+	//
+
+	private static DateTimeZone parisZone = DateTimeZone.forID("Europe/Paris");
+
+	private static DateTimeFormatter pickupFormatter = DateTimeFormat//
+			.forPattern("dd/MM' à 'HH'h'mm").withZone(parisZone).withLocale(Locale.FRENCH);
+
+	private void sendSms(StringBuilder builder) {
+		sendSms(operatorPhoneNumber(), builder.toString());
 	}
 
 	private String operatorPhoneNumber() {
