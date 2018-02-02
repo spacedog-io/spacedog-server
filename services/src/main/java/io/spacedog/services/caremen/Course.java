@@ -13,6 +13,8 @@ import io.spacedog.utils.Exceptions;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Course implements Metable {
 
+	public final static String TYPE = "course";
+
 	public Meta meta;
 	public String status;
 	public String requestedVehiculeType;
