@@ -54,7 +54,7 @@ public class ShareService extends S3Service {
 				.owner(credentials)//
 				.rootUri("/1/shares");
 
-		return doUpload(file, settings.enableS3Location, context);
+		return doUpload(file, settings.enablePublicLocation, context);
 	}
 
 	@Delete("")

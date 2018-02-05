@@ -52,7 +52,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// superadmins creates a shared file
 		ShareMeta shareMeta = superadmin.shares().upload(FILE_CONTENT.getBytes());
-		assertNull(shareMeta.s3);
+		assertNull(shareMeta.publicLocation);
 
 		// only superadmins can read shares
 		assertHttpError(403, () -> guest.shares().download(shareMeta.id));
@@ -81,7 +81,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// superadmin sets custom share permissions
 		ShareSettings settings = new ShareSettings();
-		settings.enableS3Location = true;
+		settings.enablePublicLocation = true;
 		settings.permissions.put("all", Permission.read)//
 				.put("user", Permission.create, Permission.deleteMine);
 		superadmin.settings().save(settings);
@@ -123,7 +123,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// anonymous gets png share through S3 direct access
 		// with wrong etag
-		downloadedBytes = SpaceRequest.get(pngMeta.s3)//
+		downloadedBytes = SpaceRequest.get(pngMeta.publicLocation)//
 				.addHeader(SpaceHeaders.IF_NONE_MATCH, "XXX")//
 				.go(200)//
 				.assertHeaderEquals("image/png", SpaceHeaders.CONTENT_TYPE)//
@@ -134,7 +134,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// anonymous gets png share through S3 direct access
 		// with correct etag to get 304 Not Modified
-		SpaceRequest.get(pngMeta.s3)//
+		SpaceRequest.get(pngMeta.publicLocation)//
 				.addHeader(SpaceHeaders.IF_NONE_MATCH, pngMeta.etag)//
 				.go(304);
 
@@ -170,7 +170,7 @@ public class ShareServiceTest extends SpaceTest {
 		assertEquals(FILE_CONTENT, stringContent);
 
 		// download shared text file through direct S3 access
-		stringContent = SpaceRequest.get(txtMeta.s3).go(200)//
+		stringContent = SpaceRequest.get(txtMeta.publicLocation).go(200)//
 				.assertHeaderEquals("text/plain", SpaceHeaders.CONTENT_TYPE)//
 				.asString();
 
@@ -227,7 +227,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// superadmin sets custom share permissions
 		ShareSettings settings = new ShareSettings();
-		settings.enableS3Location = false;
+		settings.enablePublicLocation = false;
 		settings.permissions.put("all", Permission.create)//
 				.put("user", Permission.create, Permission.readMine, Permission.deleteMine);
 		superadmin.settings().save(settings);
@@ -241,7 +241,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// anonymous is allowed to share a file
 		ShareMeta guestPngMeta = guest.shares().upload(pngBytes, "guest.png");
-		assertNull(guestPngMeta.s3);
+		assertNull(guestPngMeta.publicLocation);
 
 		// backend contains 1 shared file
 		ShareList list = superadmin.shares().list();
@@ -267,7 +267,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// vince is allowed to share a file
 		ShareMeta vincePngMeta = vince.shares().upload(pngBytes, "vince.png");
-		assertNull(vincePngMeta.s3);
+		assertNull(vincePngMeta.publicLocation);
 
 		// backend contains 1 shared file
 		list = superadmin.shares().list();
@@ -299,7 +299,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// superadmin enables s3 locations
 		ShareSettings settings = new ShareSettings();
-		settings.enableS3Location = true;
+		settings.enablePublicLocation = true;
 		superadmin.settings().save(settings);
 
 		// share file with name that needs escaping
@@ -325,7 +325,7 @@ public class ShareServiceTest extends SpaceTest {
 		// get file from S3 location URI
 		// no file extension => no specific content type
 		// by default S3 returns content disposition header if set in metadata
-		stringContent = SpaceRequest.get(meta.s3).go(200)//
+		stringContent = SpaceRequest.get(meta.publicLocation).go(200)//
 				.assertHeaderEquals("application/octet-stream", SpaceHeaders.CONTENT_TYPE)//
 				.assertHeaderEquals("attachment; filename=\"un petit text ?\"", //
 						SpaceHeaders.CONTENT_DISPOSITION)//

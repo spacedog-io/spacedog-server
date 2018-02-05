@@ -81,7 +81,7 @@ public class ShareEndpoint {
 		@JsonProperty("path")
 		public String id;
 		public String location;
-		public String s3;
+		public String publicLocation;
 		public String etag;
 		public String contentMd5;
 		public long size;

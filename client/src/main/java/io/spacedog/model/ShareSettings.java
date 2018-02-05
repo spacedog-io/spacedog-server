@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ShareSettings extends SettingsBase {
 
-	public boolean enableS3Location = false;
+	public boolean enablePublicLocation = false;
 	public RolePermissions permissions = new RolePermissions();
 	public long sizeLimitInKB = 20000; // 20MB
 }
