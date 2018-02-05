@@ -96,6 +96,7 @@ public class ShareEndpoint {
 	public static class Share {
 		public String id;
 		public String contentType;
+		public long contentLength;
 		public String owner;
 		public String etag;
 		public byte[] content;
@@ -106,6 +107,8 @@ public class ShareEndpoint {
 		Share share = new Share();
 		share.id = id;
 		share.content = response.asBytes();
+		share.contentLength = Long.valueOf(//
+				response.header(SpaceHeaders.CONTENT_LENGTH));
 		share.contentType = response.header(SpaceHeaders.CONTENT_TYPE);
 		share.owner = response.header(SpaceHeaders.SPACEDOG_OWNER);
 		share.etag = response.header(SpaceHeaders.ETAG);

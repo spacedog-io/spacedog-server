@@ -57,6 +57,8 @@ public class S3Service extends SpaceService {
 			return Payload.notFound();
 
 		Payload payload = new Payload(file.contentType(), file)//
+				.withHeader(SpaceHeaders.CONTENT_LENGTH, //
+						Long.toString(file.contentLength()))//
 				.withHeader(SpaceHeaders.ETAG, file.eTag())//
 				.withHeader(SpaceHeaders.SPACEDOG_OWNER, file.owner())//
 				.withHeader(SpaceHeaders.SPACEDOG_GROUP, file.group());

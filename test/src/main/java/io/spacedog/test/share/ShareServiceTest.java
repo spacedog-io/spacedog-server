@@ -104,6 +104,7 @@ public class ShareServiceTest extends SpaceTest {
 		// anonymous gets png share with its id
 		Share png = guest.shares().download(pngMeta.id);
 		assertEquals("image/png", png.contentType);
+		assertEquals(pngBytes.length, png.contentLength);
 		assertEquals(vince.id(), png.owner);
 		assertEquals(pngMeta.etag, png.etag);
 
@@ -113,6 +114,7 @@ public class ShareServiceTest extends SpaceTest {
 		byte[] downloadedBytes = guest.get(pngMeta.location).go(200)//
 				// .assertHeaderEquals("gzip", SpaceHeaders.CONTENT_ENCODING)//
 				.assertHeaderEquals("image/png", SpaceHeaders.CONTENT_TYPE)//
+				.assertHeaderEquals(Long.toString(pngBytes.length), SpaceHeaders.CONTENT_LENGTH)//
 				.assertHeaderEquals(vince.id(), SpaceHeaders.SPACEDOG_OWNER)//
 				.assertHeaderEquals(pngMeta.etag, SpaceHeaders.ETAG)//
 				.asBytes();
