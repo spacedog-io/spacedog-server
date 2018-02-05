@@ -55,10 +55,7 @@ public class SettingsService extends SpaceService {
 		SpaceContext.credentials().checkAtLeastSuperAdmin();
 
 		if (!elastic().exists(settingsIndex()))
-			return JsonPayload.ok()//
-					.withFields("total", 0)//
-					.withResults(Json.array())//
-					.build();
+			return JsonPayload.ok().build();
 
 		elastic().refreshType(settingsIndex(), isRefreshRequested(context));
 

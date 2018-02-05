@@ -30,7 +30,18 @@ public class SettingsEndpoint {
 		return Optional7.of(response.asPojo(settingsClass));
 	}
 
-	// get settings
+	// get all
+
+	public ObjectNode getAll() {
+		return getAll(false);
+	}
+
+	public ObjectNode getAll(boolean refresh) {
+		return dog.get("/1/settings")//
+				.refresh(refresh).go(200).asJsonObject();
+	}
+
+	// get
 
 	public ObjectNode get(String id) {
 		return this.doGet(id).asJsonObject();
