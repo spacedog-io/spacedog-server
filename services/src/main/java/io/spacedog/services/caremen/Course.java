@@ -81,6 +81,7 @@ public class Course implements Metable {
 		public String firstname;
 		public String lastname;
 		public String phone;
+		public boolean smsNotification;
 	}
 
 	@JsonIgnoreProperties(ignoreUnknown = true)
