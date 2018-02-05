@@ -68,7 +68,8 @@ public class WebServiceTest extends SpaceTest {
 		browse("www", "/a/b/c/index.html", html("/index.html"));
 
 		// browse without prefix returns default not found html page
-		SpaceRequest.get("/1/web").backend(superadmin).go(404)//
+		SpaceRequest.get("/1/web")//
+				.backend(superadmin.backend()).go(404)//
 				.assertHeaderEquals("text/html", SpaceHeaders.CONTENT_TYPE);
 	}
 
@@ -95,13 +96,15 @@ public class WebServiceTest extends SpaceTest {
 	private void browse(String prefix, String uri, String expectedBody, String expectedContentType) {
 		SpaceBackend wwwBackend = SpaceEnv.env().wwwBackend();
 
-		SpaceRequest.head("/1/web/" + prefix + uri).backend(superadmin).go(200)//
+		SpaceRequest.head("/1/web/" + prefix + uri)//
+				.backend(superadmin.backend()).go(200)//
 				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE);
 
 		SpaceRequest.head(uri).backend(wwwBackend).go(200)//
 				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE);
 
-		SpaceRequest.get("/1/web/" + prefix + uri).backend(superadmin).go(200)//
+		SpaceRequest.get("/1/web/" + prefix + uri)//
+				.backend(superadmin.backend()).go(200)//
 				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE)//
 				.assertBodyEquals(expectedBody);
 

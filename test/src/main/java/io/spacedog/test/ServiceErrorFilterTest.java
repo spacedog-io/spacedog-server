@@ -11,17 +11,17 @@ public class ServiceErrorFilterTest extends SpaceTest {
 	public void catchesFluentResourceErrors() {
 
 		prepareTest();
-		SpaceDog test = clearRootBackend();
+		SpaceDog superadmin = clearRootBackend();
 
 		// should fail to access invalid route
-
-		SpaceRequest.get("/1/toto").backend(test).go(404)//
+		SpaceRequest.get("/1/toto")//
+				.backend(superadmin.backend())//
+				.go(404)//
 				.assertFalse("success")//
 				.assertEquals("path [/1/toto] invalid", "error.message");
 
 		// should fail to use this method for this valid route
-
-		test.put("/1/login").go(405)//
+		superadmin.put("/1/login").go(405)//
 				.assertFalse("success")//
 				.assertEquals("method [PUT] invalid for path [/1/login]", "error.message");
 	}

@@ -23,7 +23,8 @@ public class LinkedinServiceTest extends SpaceTest {
 		String redirectUri = superadmin.backend().url("/1/login/linkedin");
 
 		// no linkedin settings means no linkedin credentials
-		SpaceRequest.post("/1/login/linkedin").backend(superadmin)//
+		SpaceRequest.post("/1/login/linkedin")//
+				.backend(superadmin.backend())//
 				.formField("code", "XXX")//
 				.formField("redirect_uri", "XXX")//
 				.go(400);
@@ -37,18 +38,21 @@ public class LinkedinServiceTest extends SpaceTest {
 		superadmin.settings().save(settings);
 
 		// fails to create linkedin credentials if no authorization code
-		SpaceRequest.post("/1/login/linkedin").backend(superadmin)//
+		SpaceRequest.post("/1/login/linkedin")//
+				.backend(superadmin.backend())//
 				.formField("redirect_uri", redirectUri)//
 				.go(400);
 
 		// fails to create linkedin credentials if invalid redirect_uri
-		SpaceRequest.post("/1/login/linkedin").backend(superadmin)//
+		SpaceRequest.post("/1/login/linkedin")//
+				.backend(superadmin.backend())//
 				.formField("code", "XXX")//
 				.formField("redirect_uri", "XXX")//
 				.go(400);
 
 		// fails to create linkedin credentials if invalid code
-		SpaceRequest.post("/1/login/linkedin").backend(superadmin)//
+		SpaceRequest.post("/1/login/linkedin")//
+				.backend(superadmin.backend())//
 				.formField("code", "XXX")//
 				.formField("redirect_uri", redirectUri)//
 				.go(400);
@@ -56,7 +60,8 @@ public class LinkedinServiceTest extends SpaceTest {
 		// fails to create linkedin credentials if invalid code
 		// if no redirect_uri parameter is set spacedog uses
 		// its default redirect uri
-		SpaceRequest.post("/1/login/linkedin").backend(superadmin)//
+		SpaceRequest.post("/1/login/linkedin")//
+				.backend(superadmin.backend())//
 				.formField("code", "XXX")//
 				.go(400);
 	}

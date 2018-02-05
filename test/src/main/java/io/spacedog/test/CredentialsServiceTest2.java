@@ -126,8 +126,10 @@ public class CredentialsServiceTest2 extends SpaceTest {
 		SpaceRequest.get("/1/data").backend(superadmin).bearerAuth("XXX").go(401);
 
 		// superadmin creates vince
-		// vince gets a brand new access token
-		SpaceDog vince = createTempDog(superadmin, "vince").login();
+		SpaceDog vince = createTempDog(superadmin, "vince");
+
+		// vince logs in and gets a brand new access token
+		vince.login();
 
 		// vince request succeeds since valid [backend / access token] pair
 		SpaceRequest.get("/1/data").bearerAuth(vince).go(200);

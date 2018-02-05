@@ -193,8 +193,10 @@ public class CredentialsServiceTest extends SpaceTest {
 		assertNull(credentials.lastInvalidChallengeAt());
 
 		// fred tries to log in with an invalid password
-		SpaceRequest.get("/1/login").backend(guest)//
-				.basicAuth(fred.username(), "XXX").go(401);
+		SpaceRequest.get("/1/login")//
+				.backend(guest.backend())//
+				.basicAuth(fred.username(), "XXX")//
+				.go(401);
 
 		// fred's invalid challenges count is still zero
 		// since no maximum invalid challenges set in credentials settings
@@ -209,8 +211,10 @@ public class CredentialsServiceTest extends SpaceTest {
 		superadmin.settings().save(settings);
 
 		// fred tries to log in with an invalid password
-		SpaceRequest.get("/1/login").backend(guest)//
-				.basicAuth(fred.username(), "XXX").go(401);
+		SpaceRequest.get("/1/login")//
+				.backend(guest.backend())//
+				.basicAuth(fred.username(), "XXX")//
+				.go(401);
 
 		// superadmin gets fred's credentials
 		// fred has 1 invalid password challenge
@@ -219,7 +223,8 @@ public class CredentialsServiceTest extends SpaceTest {
 		assertNotNull(credentials.lastInvalidChallengeAt());
 
 		// fred tries to log in with an invalid password
-		SpaceRequest.get("/1/login").backend(guest)//
+		SpaceRequest.get("/1/login")//
+				.backend(guest.backend())//
 				.basicAuth(fred.username(), "XXX").go(401);
 
 		// superadmin gets fred's credentials; fred has 2 invalid password

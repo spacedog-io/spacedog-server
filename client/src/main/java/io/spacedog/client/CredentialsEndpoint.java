@@ -296,7 +296,8 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 	}
 
 	public void updatePassword(String id, String requesterPassword, String newPassword) {
-		SpaceRequest.put("/1/credentials/{id}/password").backend(dog)//
+		SpaceRequest.put("/1/credentials/{id}/password")//
+				.backend(dog.backend())//
 				.routeParam("id", id)//
 				.basicAuth(dog.username(), requesterPassword)//
 				.bodyJson(TextNode.valueOf(newPassword))//

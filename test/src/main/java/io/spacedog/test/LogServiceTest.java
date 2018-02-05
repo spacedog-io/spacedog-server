@@ -256,11 +256,14 @@ public class LogServiceTest extends SpaceTest {
 				.getString("passwordResetCode");
 
 		SpaceRequest.post("/1/credentials/{id}/password")//
+				.backend(superadmin.backend())//
 				.routeParam("id", fred.id())//
 				.queryParam("passwordResetCode", passwordResetCode)//
-				.backend(superadmin).formField("password", "hi fred 2").go(200);
+				.formField("password", "hi fred 2")//
+				.go(200);
 
-		SpaceRequest.put("/1/credentials/{id}/password").backend(superadmin)//
+		SpaceRequest.put("/1/credentials/{id}/password")//
+				.backend(superadmin.backend())//
 				.routeParam("id", fred.id()).basicAuth("fred", "hi fred 2")//
 				.formField("password", "hi fred 3").go(200);
 
