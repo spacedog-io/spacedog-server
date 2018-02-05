@@ -78,14 +78,16 @@ public class JsonPayload implements SpaceFields {
 	public Payload build() {
 
 		int status = payload.code();
+		ObjectNode content = object();
+
 		if (status >= 400)
-			object().put("success", status < 400)//
+			content.put("success", false)//
 					.put("status", status);
 
-		if (Json.isObject(node) && SpaceContext.isDebug())
-			((ObjectNode) node).set("debug", SpaceContext.debug().toNode());
+		if (SpaceContext.isDebug())
+			content.set("debug", SpaceContext.debug().toNode());
 
-		return new Payload(Json.JSON_CONTENT_UTF8, node)//
+		return new Payload(Json.JSON_CONTENT_UTF8, content)//
 				.withCode(status)//
 				.withHeaders(payload.headers())//
 				.withCookies(payload.cookies());
