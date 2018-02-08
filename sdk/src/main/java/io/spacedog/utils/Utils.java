@@ -205,7 +205,7 @@ public class Utils {
 		}
 	}
 
-	public static String replaceLesserGreaterThanCharacters(String s) {
+	public static String replaceTagDelimiters(String s) {
 		return s.replace('<', '(').replace('>', ')');
 	}
 

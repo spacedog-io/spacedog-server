@@ -71,9 +71,9 @@ public class UtilsTest extends Assert {
 	}
 
 	@Test
-	public void testReplaceLesserGreaterThanCharacters() {
+	public void testReplaceTagDelimiters() {
 		assertEquals("SpaceDog (spacedog@toolee.fr)", //
-				Utils.replaceLesserGreaterThanCharacters("SpaceDog <spacedog@toolee.fr>"));
+				Utils.replaceTagDelimiters("SpaceDog <spacedog@toolee.fr>"));
 	}
 
 }
