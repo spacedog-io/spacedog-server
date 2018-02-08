@@ -2,12 +2,12 @@ package io.spacedog.services.caremen;
 
 import java.util.Locale;
 
-import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import io.spacedog.services.SettingsResource;
 import io.spacedog.utils.Credentials;
+import io.spacedog.utils.DateTimeZones;
 
 public class NotifyOperator extends Notificator {
 
@@ -50,10 +50,10 @@ public class NotifyOperator extends Notificator {
 	// Implementation
 	//
 
-	private static DateTimeZone parisZone = DateTimeZone.forID("Europe/Paris");
-
-	private static DateTimeFormatter pickupFormatter = DateTimeFormat//
-			.forPattern("dd/MM' à 'HH'h'mm").withZone(parisZone).withLocale(Locale.FRENCH);
+	private static final DateTimeFormatter pickupFormatter = DateTimeFormat//
+			.forPattern("dd/MM' à 'HH'h'mm")//
+			.withZone(DateTimeZones.PARIS)//
+			.withLocale(Locale.FRENCH);
 
 	private void sendSms(StringBuilder builder) {
 		sendSms(operatorPhoneNumber(), builder.toString());

@@ -22,6 +22,7 @@ import io.spacedog.core.Json8;
 import io.spacedog.services.caremen.CaremenResource;
 import io.spacedog.services.toolee.TooleeResource;
 import io.spacedog.utils.ClassResources;
+import io.spacedog.utils.DateTimeZones;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Utils;
 import net.codestory.http.AbstractWebServer;
@@ -57,7 +58,7 @@ public class Start {
 	}
 
 	public static void main(String[] args) {
-		DateTimeZone.setDefault(DateTimeZone.forID("Europe/Paris"));
+		DateTimeZone.setDefault(DateTimeZones.PARIS);
 		Start start = get();
 		System.setProperty("http.agent", start.configuration().serverUserAgent());
 

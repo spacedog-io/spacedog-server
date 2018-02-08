@@ -6,7 +6,6 @@ import java.nio.file.Path;
 import java.util.Iterator;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.junit.Test;
@@ -17,13 +16,14 @@ import io.spacedog.cli.ExportLogCommand;
 import io.spacedog.cli.LoginCommand;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
+import io.spacedog.utils.DateTimeZones;
 import io.spacedog.utils.Json7;
 import io.spacedog.utils.Utils;
 
 public class ExportLogCommandTest extends SpaceTest {
 
 	private static DateTimeFormatter dateFormatter = DateTimeFormat.//
-			forPattern("yyyy-MM-dd").withZone(DateTimeZone.forID("Europe/Paris"));
+			forPattern("yyyy-MM-dd").withZone(DateTimeZones.PARIS);
 
 	@Test
 	public void test() throws IOException {
