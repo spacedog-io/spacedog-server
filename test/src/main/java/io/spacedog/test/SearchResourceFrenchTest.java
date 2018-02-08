@@ -84,12 +84,12 @@ public class SearchResourceFrenchTest extends SpaceTest {
 
 	private void match(String text) {
 		assertEquals(1, search(text, "text"));
-		assertEquals(1, search(text, "_all"));
+		// assertEquals(1, search(text, "_all"));
 	}
 
 	private void noMatch(String text) {
 		assertEquals(0, search(text, "text"));
-		assertEquals(0, search(text, "_all"));
+		// assertEquals(0, search(text, "_all"));
 	}
 
 	private long search(String text, String field) {

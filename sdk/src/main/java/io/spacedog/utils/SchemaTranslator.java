@@ -51,8 +51,11 @@ public class SchemaTranslator {
 					.put("dynamic", "strict")//
 					.put("date_detection", false)//
 					.node("properties", propertiesNode)//
-					.object("_all")//
-					.put("analyzer", defaultLanguage)//
+					// This breaks when updating mappings since default language
+					// of old indices was mostly english and it is now
+					// replaced by french
+					// .object("_all")//
+					// .put("analyzer", defaultLanguage)//
 					.build();
 
 		throw Exceptions.illegalArgument("invalid schema root type [%s]", type);
