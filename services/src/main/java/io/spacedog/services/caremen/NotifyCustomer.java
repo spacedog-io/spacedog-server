@@ -1,8 +1,11 @@
 package io.spacedog.services.caremen;
 
+import java.util.Locale;
 import java.util.Optional;
 
 import org.elasticsearch.action.search.SearchResponse;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
@@ -10,10 +13,16 @@ import com.google.common.collect.Lists;
 
 import io.spacedog.services.PushResource.PushLog;
 import io.spacedog.utils.Credentials;
+import io.spacedog.utils.DateTimeZones;
 
 public class NotifyCustomer extends Notificator {
 
 	public static final String PASSENGER_APP_ID_SUFFIX = "passenger";
+
+	private static final DateTimeFormatter pickupTimeFormatter = DateTimeFormat//
+			.forPattern("HH'h'mm")//
+			.withZone(DateTimeZones.PARIS)//
+			.withLocale(Locale.FRENCH);
 
 	PushLog driverHasGivenUp(Course course, Credentials credentials) {
 		String message = "Votre chauffeur a rencontré un problème et ne peut pas "
@@ -40,7 +49,8 @@ public class NotifyCustomer extends Notificator {
 
 		StringBuilder builder = new StringBuilder()//
 				.append("Votre chauffeur CAREMEN est en route.")//
-				.append("\nLieu de prise en charge : ").append(course.from.address)//
+				.append("\nHeure de départ : ").append(pickupTimeFormatter.print(course.requestedPickupTimestamp))//
+				.append("\nLieu de départ : ").append(course.from.address)//
 				.append("\nDestination : ").append(course.to.address)//
 				.append("\nNuméro du chauffeur : ").append(course.driver.phone);
 
