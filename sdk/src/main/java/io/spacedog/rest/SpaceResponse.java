@@ -430,6 +430,15 @@ public class SpaceResponse {
 		return this;
 	}
 
+	public SpaceResponse assertHeaderNotPresent(String headerName) {
+		String headerValue = header(headerName);
+		if (headerValue != null)
+			Assert.fail(String.format("header [%s] is present with value [%s]", //
+					headerName, headerValue));
+
+		return this;
+	}
+
 	public SpaceResponse assertHeaderContains(String expected, String headerName) {
 		List<String> headerValues = headerAsList(headerName);
 

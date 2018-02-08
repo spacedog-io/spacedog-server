@@ -18,11 +18,10 @@ import org.elasticsearch.plugin.cloud.aws.CloudAwsPlugin;
 import org.elasticsearch.plugin.deletebyquery.DeleteByQueryPlugin;
 import org.joda.time.DateTimeZone;
 
-import com.google.common.io.Resources;
-
 import io.spacedog.core.Json8;
 import io.spacedog.services.caremen.CaremenResource;
 import io.spacedog.services.toolee.TooleeResource;
+import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Utils;
 import net.codestory.http.AbstractWebServer;
@@ -98,9 +97,7 @@ public class Start {
 		if (info == null)
 			try {
 				info = Json8.mapper().readValue(//
-						Resources.toString(//
-								Resources.getResource(this.getClass(), "info.json"), //
-								Utils.UTF8), //
+						ClassResources.loadToString(this, "info.json"), //
 						Info.class);
 			} catch (IOException e) {
 				throw Exceptions.runtime(e, "error loading server info file");
@@ -200,11 +197,11 @@ public class Start {
 
 	private void startFluent() throws IOException {
 		fluent = new MyFluentServer();
-		fluent.configure(Start::configure);
+		fluent.configure(routes -> configure(routes));
 		fluent.start(config.serverPort());
 	}
 
-	private static void configure(Routes routes) {
+	private void configure(Routes routes) {
 		routes.add(BackendResource.get())//
 				.add(AdminResource.get())//
 				.add(DataResource.get())//

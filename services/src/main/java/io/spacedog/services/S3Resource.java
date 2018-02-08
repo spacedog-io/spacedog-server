@@ -3,6 +3,9 @@
  */
 package io.spacedog.services;
 
+import static net.codestory.http.constants.Encodings.GZIP;
+import static net.codestory.http.constants.Headers.ACCEPT_ENCODING;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.stream.Collectors;
@@ -100,8 +103,18 @@ public class S3Resource extends Resource {
 				.withHeader(SpaceHeaders.ETAG, metadata.getETag())//
 				.withHeader(SpaceHeaders.SPACEDOG_OWNER, owner);
 
+		// Since fluent-http only provides gzip encoding,
+		// we only set Content-Length header if Accept-encoding
+		// does not contain gzip. In case client accepts gzip,
+		// fluent will gzip this file stream and use 'chunked'
+		// Transfer-Encoding incompatible with Content-Length header
+
+		if (!context.header(ACCEPT_ENCODING).contains(GZIP))
+			payload.withHeader(SpaceHeaders.CONTENT_LENGTH, //
+					Long.toString(metadata.getContentLength()));
+
 		if (context.query().getBoolean("withContentDisposition", false))
-			payload = payload.withHeader(SpaceHeaders.CONTENT_DISPOSITION, //
+			payload.withHeader(SpaceHeaders.CONTENT_DISPOSITION, //
 					metadata.getContentDisposition());
 
 		return payload;
@@ -119,7 +132,6 @@ public class S3Resource extends Resource {
 		public void write(OutputStream output) throws IOException {
 			writeS3ObjectContent(s3Object, output);
 		}
-
 	}
 
 	public Payload doDownload(String bucketSuffix, String backendId, ZipRequest request, Context context) {

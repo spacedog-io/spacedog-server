@@ -2,7 +2,6 @@ package io.spacedog.watchdog;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -23,6 +22,7 @@ import io.spacedog.model.ShareSettings;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
+import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Json7;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Utils;
@@ -52,8 +52,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		SpaceRequest.put("/1/share/tweeter.png").backend(test).go(403);
 
 		// vince shares a small png file
-		byte[] pngBytes = Resources.toByteArray(//
-				Resources.getResource(this.getClass(), "tweeter.png"));
+		byte[] pngBytes = ClassResources.loadToBytes(this, "tweeter.png");
 
 		JsonNode json = SpaceRequest.put("/1/share/tweeter.png").auth(vince)//
 				.bodyBytes(pngBytes)//
@@ -70,25 +69,25 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 
 		// anonymous gets shared file with its location
 		byte[] downloadedBytes = SpaceRequest.get(pngLocation).go(200)//
-				// .assertHeaderEquals("gzip", SpaceHeaders.CONTENT_ENCODING)//
 				.assertHeaderEquals("image/png", SpaceHeaders.CONTENT_TYPE)//
 				.assertHeaderEquals("vince", SpaceHeaders.SPACEDOG_OWNER)//
 				.asBytes();
 
-		Assert.assertTrue(Arrays.equals(pngBytes, downloadedBytes));
+		assertArrayEquals(pngBytes, downloadedBytes);
 
 		// download shared png file through S3 direct access
 		downloadedBytes = SpaceRequest.get(pngS3Location).go(200)//
 				.assertHeaderEquals("image/png", SpaceHeaders.CONTENT_TYPE)//
+				.assertHeaderEquals(Integer.toString(pngBytes.length), //
+						SpaceHeaders.CONTENT_LENGTH)//
 				.asBytes();
 
-		Assert.assertTrue(Arrays.equals(pngBytes, downloadedBytes));
+		assertArrayEquals(pngBytes, downloadedBytes);
 
 		// share small text file
 		json = SpaceRequest.put("/1/share/test.txt").auth(fred)//
 				.bodyBytes(FILE_CONTENT.getBytes())//
-				.go(200)//
-				.asJson();
+				.go(200).asJson();
 
 		String txtPath = json.get("path").asText();
 		String txtLocation = json.get("location").asText();
@@ -468,5 +467,42 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		// vince succeeds to share file with size of 1024 bytes
 		superadmin.post("/1/share/toto.bin")//
 				.bodyBytes(new byte[1024]).go(200);
+	}
+
+	@Test
+	public void shareDownloadGetsContentLengthHeaderIfNoGzipEncoding() throws IOException, InterruptedException {
+
+		// prepare
+		prepareTest(false);
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog vince = signUp(superadmin, "vince", "hi vince", "vince@dog.com");
+		byte[] pngBytes = ClassResources.loadToBytes(this, "tweeter.png");
+
+		// vince shares a small png file
+		String pngLocation = vince.put("/1/share/tweeter.png")//
+				.bodyBytes(pngBytes)//
+				.go(200).getString("location");
+
+		// anonymous gets shared file with its location
+		// default stream encoding is chunked since content is gziped
+		byte[] downloadedBytes = vince.get(pngLocation).go(200)//
+				.assertHeaderEquals("chunked", SpaceHeaders.TRANSFER_ENCODING)//
+				.assertHeaderNotPresent(SpaceHeaders.CONTENT_LENGTH)//
+				.asBytes();
+
+		assertArrayEquals(pngBytes, downloadedBytes);
+
+		// anonymous gets shared file with its location
+		// if request Accept-Encoding without gzip
+		// then response contains Content-Length
+		downloadedBytes = vince.get(pngLocation)//
+				.addHeader(SpaceHeaders.ACCEPT_ENCODING, "identity")//
+				.go(200)//
+				.assertHeaderNotPresent(SpaceHeaders.TRANSFER_ENCODING)//
+				.assertHeaderEquals(Integer.toString(pngBytes.length), //
+						SpaceHeaders.CONTENT_LENGTH)//
+				.asBytes();
+
+		assertArrayEquals(pngBytes, downloadedBytes);
 	}
 }
