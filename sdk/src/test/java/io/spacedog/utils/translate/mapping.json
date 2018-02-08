@@ -112,9 +112,6 @@
         }
       }
     },
-    "_all" : {
-      "analyzer" : "english"
-    },
     "_meta" : {
       "myschema" : {
         "_language" : "english",
