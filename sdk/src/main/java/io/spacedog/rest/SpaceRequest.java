@@ -13,7 +13,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
-import com.google.common.io.Files;
 import com.google.common.primitives.Ints;
 
 import io.spacedog.model.Schema;
@@ -22,6 +21,7 @@ import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Check;
+import io.spacedog.utils.ContentTypes;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json7;
 import io.spacedog.utils.Optional7;
@@ -210,13 +210,11 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest bodyBytes(byte[] bytes) {
-		this.contentType = OkHttp.OCTET_STREAM;
 		this.body = bytes;
 		return this;
 	}
 
 	public SpaceRequest bodyString(String body) {
-		this.contentType = OkHttp.TEXT_PLAIN;
 		this.body = body;
 		return this;
 	}
@@ -226,12 +224,13 @@ public class SpaceRequest {
 		return this;
 	}
 
-	public SpaceRequest bodyFile(File file) {
-		try {
-			return bodyBytes(Files.toByteArray(file));
-		} catch (IOException e) {
-			throw Exceptions.runtime(e);
-		}
+	public SpaceRequest bodyFile(final File file) {
+		if (contentType == null) //
+			contentType = MediaType.parse(//
+					ContentTypes.parseFileExtension(file.getName()));
+
+		this.body = RequestBody.create(contentType, file);
+		return this;
 	}
 
 	public SpaceRequest bodySettings(Settings settings) {
@@ -344,14 +343,18 @@ public class SpaceRequest {
 			return builder.build();
 		}
 
-		if (body instanceof byte[])
+		if (body instanceof byte[]) {
+			if (contentType == null)
+				contentType = OkHttp.OCTET_STREAM;
 			return RequestBody.create(contentType, (byte[]) body);
 
-		if (body instanceof String)
+		} else if (body instanceof String) {
+			if (contentType == null)
+				contentType = OkHttp.TEXT_PLAIN;
 			return RequestBody.create(contentType, (String) body);
 
-		if (body instanceof MultipartBody)
-			return (MultipartBody) body;
+		} else if (body instanceof RequestBody)
+			return (RequestBody) body;
 
 		// OkHttp doesn't accept null body for PUT and POST
 		if (method.equals(HttpVerb.PUT) //
