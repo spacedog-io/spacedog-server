@@ -7,6 +7,7 @@ import static net.codestory.http.constants.Encodings.GZIP;
 import static net.codestory.http.constants.Headers.ACCEPT_ENCODING;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -23,7 +24,6 @@ import com.amazonaws.services.s3.model.DeleteObjectsRequest.KeyVersion;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectResult;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
@@ -315,27 +315,33 @@ public class S3Resource extends Resource {
 		metadata.addUserMetadata("owner", credentials.name());
 		metadata.addUserMetadata("owner-type", credentials.level().toString());
 
+		InputStream input = null;
+		PutObjectResult result = null;
+
 		try {
-			PutObjectResult result = s3.putObject(new PutObjectRequest(bucketName, //
-					s3Path.toS3Key(), context.request().inputStream(), metadata));
-
-			JsonBuilder<ObjectNode> builder = JsonPayload.builder()//
-					.put("path", path.toString())//
-					.put("location", toSpaceLocation(credentials.backendId(), rootUri, path))//
-					.put("contentType", metadata.getContentType())//
-					.put("contentLength", metadata.getContentLength())//
-					.put("expirationTime", result.getExpirationTime())//
-					.put("etag", result.getETag())//
-					.put("contentMd5", result.getContentMd5());
-
-			if (enableS3Location)
-				builder.put("s3", toS3Location(bucketName, s3Path));
-
-			return JsonPayload.json(builder);
+			input = context.request().inputStream();
+			result = s3.putObject(bucketName, s3Path.toS3Key(), input, metadata);
 
 		} catch (IOException e) {
-			throw Exceptions.runtime(e, "error reading request input stream");
+			throw Exceptions.runtime(e, "error uploading file to s3");
+
+		} finally {
+			Utils.closeSilently(input);
 		}
+
+		JsonBuilder<ObjectNode> builder = JsonPayload.builder()//
+				.put("path", path.toString())//
+				.put("location", toSpaceLocation(credentials.backendId(), rootUri, path))//
+				.put("contentType", metadata.getContentType())//
+				.put("contentLength", metadata.getContentLength())//
+				.put("expirationTime", result.getExpirationTime())//
+				.put("etag", result.getETag())//
+				.put("contentMd5", result.getContentMd5());
+
+		if (enableS3Location)
+			builder.put("s3", toS3Location(bucketName, s3Path));
+
+		return JsonPayload.json(builder);
 	}
 
 	protected String contentDisposition(String fileName) {
