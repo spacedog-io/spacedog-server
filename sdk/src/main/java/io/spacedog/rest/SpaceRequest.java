@@ -204,9 +204,21 @@ public class SpaceRequest {
 				Utils.join(" ", SpaceHeaders.BEARER_SCHEME, accessToken));
 	}
 
-	public SpaceRequest contentType(MediaType contentType) {
+	public SpaceRequest withContentType(String contentType) {
+		return withContentType(MediaType.parse(contentType));
+	}
+
+	public SpaceRequest withContentType(MediaType contentType) {
 		this.contentType = contentType;
 		return this;
+	}
+
+	public MediaType getContentType(String defaultContentType) {
+		return getContentType(MediaType.parse(defaultContentType));
+	}
+
+	public MediaType getContentType(MediaType defaultContentType) {
+		return contentType == null ? defaultContentType : contentType;
 	}
 
 	public SpaceRequest bodyBytes(byte[] bytes) {
@@ -343,23 +355,22 @@ public class SpaceRequest {
 			return builder.build();
 		}
 
-		if (body instanceof byte[]) {
-			if (contentType == null)
-				contentType = OkHttp.OCTET_STREAM;
-			return RequestBody.create(contentType, (byte[]) body);
+		if (body instanceof byte[])
+			return RequestBody.create(//
+					getContentType(OkHttp.OCTET_STREAM), (byte[]) body);
 
-		} else if (body instanceof String) {
-			if (contentType == null)
-				contentType = OkHttp.TEXT_PLAIN;
-			return RequestBody.create(contentType, (String) body);
+		else if (body instanceof String)
+			return RequestBody.create(//
+					getContentType(OkHttp.TEXT_PLAIN), (String) body);
 
-		} else if (body instanceof RequestBody)
+		else if (body instanceof RequestBody)
 			return (RequestBody) body;
 
 		// OkHttp doesn't accept null body for PUT and POST
-		if (method.equals(HttpVerb.PUT) //
+		else if (method.equals(HttpVerb.PUT) //
 				|| method.equals(HttpVerb.POST))
-			return RequestBody.create(OkHttp.TEXT_PLAIN, "");
+			return RequestBody.create(//
+					getContentType(OkHttp.OCTET_STREAM), "");
 
 		return null;
 	}
