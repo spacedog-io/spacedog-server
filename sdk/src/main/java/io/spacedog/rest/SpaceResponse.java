@@ -85,6 +85,7 @@ public class SpaceResponse {
 			SpaceEnv env = SpaceRequest.env();
 
 			okHttpClient = new OkHttpClient.Builder()//
+					.followRedirects(true)//
 					.connectTimeout(env.httpTimeoutMillis(), TimeUnit.MILLISECONDS)//
 					.readTimeout(env.httpTimeoutMillis(), TimeUnit.MILLISECONDS)//
 					.writeTimeout(env.httpTimeoutMillis(), TimeUnit.MILLISECONDS)//
