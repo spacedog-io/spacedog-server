@@ -9,18 +9,22 @@ import static net.codestory.http.constants.Headers.ACCEPT_ENCODING;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URL;
+import java.util.Date;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.joda.time.DateTime;
 
+import com.amazonaws.HttpMethod;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.DeleteObjectsRequest;
 import com.amazonaws.services.s3.model.DeleteObjectsRequest.KeyVersion;
+import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -35,6 +39,7 @@ import io.spacedog.model.ZipRequest;
 import io.spacedog.utils.ContentTypes;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json7;
 import io.spacedog.utils.JsonBuilder;
 import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.Utils;
@@ -45,6 +50,10 @@ import net.codestory.http.payload.Payload;
 import net.codestory.http.payload.StreamingOutput;
 
 public class S3Resource extends Resource {
+
+	private static final String X_AMZ_META = "x-amz-meta-";
+	private static final String OWNER_TYPE_META = "owner-type";
+	private static final String OWNER_META = "owner";
 
 	private static AmazonS3Client s3 = new AmazonS3Client();
 
@@ -113,7 +122,7 @@ public class S3Resource extends Resource {
 			payload.withHeader(SpaceHeaders.CONTENT_LENGTH, //
 					Long.toString(metadata.getContentLength()));
 
-		if (context.query().getBoolean("withContentDisposition", false))
+		if (context.query().getBoolean(PARAM_WITH_CONTENT_DISPOSITION, false))
 			payload.withHeader(SpaceHeaders.CONTENT_DISPOSITION, //
 					metadata.getContentDisposition());
 
@@ -139,7 +148,7 @@ public class S3Resource extends Resource {
 		return new Payload("application/octet-stream", //
 				new ZipStreamingOutput(bucketSuffix, backendId, request))//
 						.withHeader(SpaceHeaders.CONTENT_DISPOSITION, //
-								contentDisposition(request.fileName));
+								SpaceHeaders.contentDisposition(request.fileName));
 	}
 
 	private class ZipStreamingOutput implements StreamingOutput {
@@ -304,6 +313,19 @@ public class S3Resource extends Resource {
 		String fileName = path.last();
 		String bucketName = getBucketName(bucketSuffix);
 		WebPath s3Path = path.addFirst(credentials.backendId());
+
+		ObjectNode payload = Json7.object("success", true, "status", 200, //
+				"path", path.toString(), //
+				"location", toSpaceLocation(credentials.backendId(), rootUri, path), //
+				"contentType", ContentTypes.parseFileExtension(fileName), //
+				"contentLength", contentLength);
+
+		if (enableS3Location)
+			payload.put("s3", toS3Location(bucketName, s3Path));
+
+		if (isDelayed(contentLength, context))
+			return delayUpload(bucketName, fileName, s3Path, credentials, payload);
+
 		ObjectMetadata metadata = new ObjectMetadata();
 
 		// TODO
@@ -311,9 +333,9 @@ public class S3Resource extends Resource {
 		// if none derive from file extension
 		metadata.setContentType(ContentTypes.parseFileExtension(fileName));
 		metadata.setContentLength(contentLength);
-		metadata.setContentDisposition(contentDisposition(fileName));
-		metadata.addUserMetadata("owner", credentials.name());
-		metadata.addUserMetadata("owner-type", credentials.level().toString());
+		metadata.setContentDisposition(SpaceHeaders.contentDisposition(fileName));
+		metadata.addUserMetadata(OWNER_META, credentials.name());
+		metadata.addUserMetadata(OWNER_TYPE_META, credentials.level().toString());
 
 		InputStream input = null;
 		PutObjectResult result = null;
@@ -329,28 +351,47 @@ public class S3Resource extends Resource {
 			Utils.closeSilently(input);
 		}
 
-		JsonBuilder<ObjectNode> builder = JsonPayload.builder()//
-				.put("path", path.toString())//
-				.put("location", toSpaceLocation(credentials.backendId(), rootUri, path))//
-				.put("contentType", metadata.getContentType())//
-				.put("contentLength", metadata.getContentLength())//
-				.put("expirationTime", result.getExpirationTime())//
-				.put("etag", result.getETag())//
+		payload.put("etag", result.getETag())//
 				.put("contentMd5", result.getContentMd5());
 
-		if (enableS3Location)
-			builder.put("s3", toS3Location(bucketName, s3Path));
-
-		return JsonPayload.json(builder);
-	}
-
-	protected String contentDisposition(String fileName) {
-		return String.format("attachment; filename=\"%s\"", fileName);
+		return JsonPayload.json(payload);
 	}
 
 	//
 	// Implementation
 	//
+
+	// Upload is delayed if file is bigger than 10 MB
+	// or if query parameter 'delay' is true.
+	private boolean isDelayed(long contentLength, Context context) {
+		return contentLength > 10000000 || context.query().getBoolean(PARAM_DELAY, false);
+	}
+
+	protected Payload delayUpload(String bucketName, String fileName, WebPath s3Path, //
+			Credentials credentials, ObjectNode payload) {
+
+		GeneratePresignedUrlRequest signedRequest = new GeneratePresignedUrlRequest(//
+				bucketName, s3Path.toS3Key(), HttpMethod.PUT);
+
+		signedRequest.setContentType(ContentTypes.parseFileExtension(fileName));
+		signedRequest.setExpiration( // 5 minutes to start upload
+				new Date(System.currentTimeMillis() + 1000 * 60 * 5));
+
+		// Adding Content-Disposition as parameter doesn't work yet
+		// signedRequest.addRequestParameter(SpaceHeaders.CONTENT_DISPOSITION, //
+		// SpaceHeaders.contentDisposition(fileName));
+
+		signedRequest.addRequestParameter(X_AMZ_META + OWNER_META, credentials.name());
+		signedRequest.addRequestParameter(X_AMZ_META + OWNER_TYPE_META, credentials.level().toString());
+
+		URL url = s3.generatePresignedUrl(signedRequest);
+
+		payload.put("status", HttpStatus.ACCEPTED)//
+				.put("uploadTo", url.toString())//
+				.put("message", "file is big, please HTTP PUT your file to 'uploadTo' location");
+
+		return JsonPayload.json(payload, HttpStatus.ACCEPTED);
+	}
 
 	protected long checkContentLength(Context context, long sizeLimitInKB) {
 		String contentLength = context.header(SpaceHeaders.CONTENT_LENGTH);
@@ -368,13 +409,13 @@ public class S3Resource extends Resource {
 
 	private String getOrCheckOwnership(ObjectMetadata metadata, boolean checkOwnership) {
 
-		String owner = metadata.getUserMetaDataOf("owner");
+		String owner = metadata.getUserMetaDataOf(OWNER_META);
 		Credentials credentials = SpaceContext.getCredentials();
 
 		if (!checkOwnership)
 			return owner;
 
-		String ownerLevel = metadata.getUserMetaDataOf("owner-type");
+		String ownerLevel = metadata.getUserMetaDataOf(OWNER_TYPE_META);
 
 		if (credentials.name().equals(owner) //
 				&& credentials.level().toString().equals(ownerLevel))

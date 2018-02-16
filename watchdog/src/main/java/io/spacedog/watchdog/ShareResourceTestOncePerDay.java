@@ -20,11 +20,13 @@ import com.google.common.io.Resources;
 import io.spacedog.model.DataPermission;
 import io.spacedog.model.ShareSettings;
 import io.spacedog.rest.SpaceRequest;
+import io.spacedog.rest.SpaceResponse;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Json7;
 import io.spacedog.utils.SpaceHeaders;
+import io.spacedog.utils.SpaceParams;
 import io.spacedog.utils.Utils;
 
 public class ShareResourceTestOncePerDay extends SpaceTest {
@@ -217,7 +219,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		SpaceRequest.get(location).auth(vince).go(403);
 		SpaceRequest.get(location).auth(test).go(403);
 
-		// nobody is allowed to read this file but super admins
+		// nobody is allowed to delete this file but superadmins
 		// since they got delete_all permission
 		SpaceRequest.delete(location).go(403);
 		SpaceRequest.delete(location).auth(fred).go(403);
@@ -505,4 +507,55 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 
 		assertArrayEquals(pngBytes, downloadedBytes);
 	}
+
+	@Test
+	public void bigFileUploadIsDelayed() throws IOException, InterruptedException {
+
+		// prepare
+		prepareTest(false);
+		SpaceDog superadmin = resetTestBackend();
+		SpaceDog vince = signUp(superadmin, "vince", "hi vince", "vince@dog.com");
+		SpaceDog nath = signUp(superadmin, "nath", "hi nath", "nath@dog.com");
+		byte[] pngBytes = ClassResources.loadToBytes(this, "tweeter.png");
+
+		// superadmin sets custom share permissions
+		ShareSettings settings = new ShareSettings();
+		settings.enableS3Location = false;
+		settings.acl.put("user", Sets.newHashSet(DataPermission.create, DataPermission.read, //
+				DataPermission.delete));
+		settings.acl.put("admin", Sets.newHashSet(DataPermission.delete_all, DataPermission.search));
+		superadmin.settings().save(settings);
+
+		// vince wants to upload big file
+		// vince sets delay = true to force delayed upload to s3
+		SpaceResponse response = vince.post("/1/share/tweeter.png")//
+				.queryParam(PARAM_DELAY, "true")//
+				.withContentType("image/png")//
+				.go(202);
+
+		String downloadLocation = response.getString("location");
+		String uploadLocation = response.getString("uploadTo");
+
+		// vince uploads file via 'uploadTo' location
+		SpaceRequest.put(uploadLocation)//
+				.withContentType("image/png")//
+				.bodyBytes(pngBytes)//
+				.go(200);
+
+		// vince download file
+		byte[] downloadedBytes = vince.get(downloadLocation)//
+				.addHeader(SpaceHeaders.ACCEPT_ENCODING, "identity")//
+				.queryParam(SpaceParams.PARAM_WITH_CONTENT_DISPOSITION, "true").go(200)//
+				.assertHeaderEquals(Long.toString(pngBytes.length), //
+						SpaceHeaders.CONTENT_LENGTH)//
+				// .assertHeaderEquals(SpaceHeaders.contentDisposition("tweeter.png"), //
+				// SpaceHeaders.CONTENT_DISPOSITION)//
+				.asBytes();
+
+		assertArrayEquals(pngBytes, downloadedBytes);
+
+		// nath is not allowed to download file since not the owner
+		nath.get(downloadLocation).go(403);
+	}
+
 }

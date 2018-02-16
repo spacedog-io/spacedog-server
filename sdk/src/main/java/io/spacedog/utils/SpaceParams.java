@@ -23,4 +23,6 @@ public interface SpaceParams {
 	int PARAM_REPLICAS_DEFAULT = 0;
 	String PARAM_WAIT_FOR_COMPLETION = "waitForCompletion";
 	String PARAM_ACCESS_TOKEN = "accessToken";
+	String PARAM_DELAY = "delay";
+	String PARAM_WITH_CONTENT_DISPOSITION = "withContentDisposition";
 }
