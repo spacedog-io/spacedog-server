@@ -25,4 +25,5 @@ public interface SpaceParams {
 	String PARAM_ACCESS_TOKEN = "accessToken";
 	String PARAM_DELAY = "delay";
 	String PARAM_WITH_CONTENT_DISPOSITION = "withContentDisposition";
+	String PARAM_SAVE_CUSTOM_META = "saveCustomMeta";
 }

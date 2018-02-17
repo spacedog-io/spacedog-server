@@ -90,8 +90,15 @@ public class DataStore implements SpaceParams, SpaceFields {
 
 	IndexResponse createObject(String backendId, String type, Optional<String> id, ObjectNode object,
 			String createdBy) {
+		return createObject(backendId, type, id, object, createdBy, false);
+	}
 
-		object = setMetaBeforeCreate(object, createdBy);
+	IndexResponse createObject(String backendId, String type, Optional<String> id, ObjectNode object, String createdBy,
+			boolean saveCustomMedia) {
+
+		if (!saveCustomMedia)
+			object = setMetaBeforeCreate(object, createdBy);
+
 		ElasticClient elasticClient = Start.get().getElasticClient();
 
 		return id.isPresent() //
@@ -104,13 +111,12 @@ public class DataStore implements SpaceParams, SpaceFields {
 
 		// replace meta to avoid developers to
 		// set any meta fields directly
-		object.set("meta",
-				Json8.objectBuilder()//
-						.put("createdBy", createdBy)//
-						.put("updatedBy", createdBy)//
-						.put("createdAt", now)//
-						.put("updatedAt", now)//
-						.build());
+		object.set("meta", Json8.objectBuilder()//
+				.put("createdBy", createdBy)//
+				.put("updatedBy", createdBy)//
+				.put("createdAt", now)//
+				.put("updatedAt", now)//
+				.build());
 
 		return object;
 	}
@@ -309,10 +315,9 @@ public class DataStore implements SpaceParams, SpaceFields {
 		}
 
 		public FilteredSearchBuilder applyFilters(JsonNode filters) {
-			filters.fields()
-					.forEachRemaining(field -> boolBuilder.filter(//
-							QueryBuilders.termQuery(field.getKey(), //
-									Json8.toValue(field.getValue()))));
+			filters.fields().forEachRemaining(field -> boolBuilder.filter(//
+					QueryBuilders.termQuery(field.getKey(), //
+							Json8.toValue(field.getValue()))));
 			return this;
 		}
 
