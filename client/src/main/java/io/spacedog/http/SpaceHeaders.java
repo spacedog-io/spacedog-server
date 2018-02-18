@@ -72,4 +72,7 @@ public class SpaceHeaders {
 		return contentType.toLowerCase().startsWith("application/json");
 	}
 
+	public static String contentDisposition(String fileName) {
+		return String.format("attachment; filename=\"%s\"", fileName);
+	}
 }

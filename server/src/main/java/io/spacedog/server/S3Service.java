@@ -201,7 +201,7 @@ public class S3Service extends SpaceService {
 		return new Payload("application/octet-stream", //
 				new ZipStreamingOutput(files))//
 						.withHeader(SpaceHeaders.CONTENT_DISPOSITION, //
-								contentDisposition(fileName));
+								SpaceHeaders.contentDisposition(fileName));
 	}
 
 	//
@@ -212,7 +212,7 @@ public class S3Service extends SpaceService {
 		ObjectMetadata metadata = new ObjectMetadata();
 		metadata.setContentType(contentType(file.fileName(), context));
 		metadata.setContentLength(file.contentLength());
-		metadata.setContentDisposition(contentDisposition(file.fileName()));
+		metadata.setContentDisposition(SpaceHeaders.contentDisposition(file.fileName()));
 		metadata.addUserMetadata(OWNER_FIELD, file.owner());
 		metadata.addUserMetadata(GROUP_FIELD, file.group());
 		return metadata;
@@ -230,10 +230,6 @@ public class S3Service extends SpaceService {
 					length, sizeLimitInKB);
 
 		return length;
-	}
-
-	protected String contentDisposition(String fileName) {
-		return String.format("attachment; filename=\"%s\"", fileName);
 	}
 
 	private class ZipStreamingOutput implements StreamingOutput {
