@@ -31,6 +31,7 @@ import com.google.common.collect.Maps;
 import io.spacedog.http.SpaceFields;
 import io.spacedog.http.SpaceParams;
 import io.spacedog.model.DataObject;
+import io.spacedog.model.Metadata;
 import io.spacedog.model.MetadataBase;
 import io.spacedog.model.MetadataDataObject;
 import io.spacedog.model.Schema;
@@ -116,13 +117,13 @@ public class DataStore implements SpaceParams, SpaceFields {
 	private static final String[] METADATA_FIELDS = //
 			new String[] { OWNER_FIELD, GROUP_FIELD, CREATED_AT_FIELD, UPDATED_AT_FIELD };
 
-	public Optional<DataObject<MetadataBase>> getMetadata(String type, String id) {
+	public Optional<DataObject<Metadata>> getMetadata(String type, String id) {
 
 		GetResponse response = elastic().prepareGet(toDataIndex(type), id)//
 				.setFetchSource(METADATA_FIELDS, null)//
 				.get();
 
-		DataObject<MetadataBase> metadata = null;
+		DataObject<Metadata> metadata = null;
 
 		if (response.isExists())
 			metadata = new MetadataDataObject()//
@@ -134,10 +135,6 @@ public class DataStore implements SpaceParams, SpaceFields {
 
 	<K> DataObject<K> createObject(DataObject<K> object) {
 
-		DateTime now = DateTime.now();
-		object.createdAt(now);
-		object.updatedAt(now);
-
 		IndexResponse response = object.id() == null //
 				? elastic().index(toDataIndex(object.type()), object.source())//
 				: elastic().index(toDataIndex(object.type()), object.id(), object.source());
@@ -148,8 +145,6 @@ public class DataStore implements SpaceParams, SpaceFields {
 	}
 
 	public <K> DataObject<K> updateObject(DataObject<K> object) {
-
-		object.updatedAt(DateTime.now());
 
 		IndexResponse response = elastic().prepareIndex(//
 				toDataIndex(object.type()), object.id())//

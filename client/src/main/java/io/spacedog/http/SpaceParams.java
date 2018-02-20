@@ -22,4 +22,6 @@ public interface SpaceParams {
 	String WAIT_FOR_COMPLETION_PARAM = "waitForCompletion";
 	String WITH_CONTENT_DISPOSITION = "withContentDisposition";
 	String ACCESS_TOKEN_PARAM = "accessToken";
+	String FORCE_META_PARAM = "forceMeta";
+
 }

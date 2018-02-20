@@ -9,19 +9,22 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 		getterVisibility = Visibility.NONE, //
 		isGetterVisibility = Visibility.NONE, //
 		setterVisibility = Visibility.NONE)
-public class MetadataDataObject extends DataObjectAbstract<MetadataBase> {
+public class MetadataDataObject extends DataObjectAbstract<Metadata> {
 
-	private MetadataBase source;
+	private Metadata source;
 
-	public Class<MetadataBase> sourceClass() {
-		return MetadataBase.class;
+	@Override
+	public Class<Metadata> sourceClass() {
+		return Metadata.class;
 	}
 
-	public MetadataBase source() {
+	@Override
+	public Metadata source() {
 		return this.source;
 	}
 
-	public DataObject<MetadataBase> source(MetadataBase source) {
+	@Override
+	public DataObject<Metadata> source(Metadata source) {
 		this.source = source;
 		return this;
 	}

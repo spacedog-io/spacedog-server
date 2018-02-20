@@ -6,11 +6,15 @@ package io.spacedog.test;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceRequestException;
+import io.spacedog.model.DataObject;
+import io.spacedog.model.DataObjectAbstract;
 import io.spacedog.model.JsonDataObject;
+import io.spacedog.model.MetadataBase;
 import io.spacedog.model.Permission;
 import io.spacedog.model.Roles;
 import io.spacedog.model.Schema;
@@ -141,5 +145,119 @@ public class DataServiceTest extends SpaceTest {
 		} catch (SpaceRequestException e) {
 			assertEquals(404, e.httpStatus());
 		}
+	}
+
+	@JsonIgnoreProperties(ignoreUnknown = true)
+	public static class Message extends MetadataBase {
+		public String text;
+
+		public static Schema schema() {
+			return Schema.builder("message")//
+					.text("text")//
+					.acl(Roles.user, Permission.create//
+							, Permission.readMine)//
+					.acl("operator", Permission.create, Permission.update, //
+							Permission.updateMeta, Permission.read)//
+					.build();
+		}
+	}
+
+	@JsonIgnoreProperties(ignoreUnknown = true)
+	public static class MessageDataObject extends DataObjectAbstract<Message> {
+
+		private Message source;
+
+		@Override
+		public Class<Message> sourceClass() {
+			return Message.class;
+		}
+
+		@Override
+		public Message source() {
+			return this.source;
+		}
+
+		@Override
+		public DataObject<Message> source(Message source) {
+			this.source = source;
+			return this;
+		}
+
+		@Override
+		public String type() {
+			return "message";
+		}
+	}
+
+	@Test
+	public void createDataObjectWithCustomMeta() {
+
+		prepareTest();
+		SpaceDog superadmin = clearRootBackend();
+		superadmin.schemas().set(Message.schema());
+		SpaceDog vince = createTempDog(superadmin, "vince");
+		SpaceDog nath = createTempDog(superadmin, "nath");
+		SpaceDog operator = createTempDog(superadmin, "operator", "operator");
+
+		// old message to insert again in database
+		DateTime now = DateTime.now();
+		Message message = new Message();
+		message.text = "toto";
+		message.owner(nath.id());
+		message.group(nath.group());
+		message.createdAt(now.minusDays(2));
+		message.updatedAt(now.minusDays(2).plusHours(1));
+
+		// vince creates a message object
+		vince.put("/1/data/message/1")//
+				.bodyPojo(message)//
+				.go(201);
+
+		// but provided meta dates are not saved
+		Message downloaded = vince.data()//
+				.fetch(new MessageDataObject().id("1"))//
+				.source();
+
+		assertEquals(message.text, downloaded.text);
+		assertEquals(vince.id(), downloaded.owner());
+		assertEquals(vince.group(), downloaded.group());
+		assertTrue(downloaded.createdAt().isAfter(now.minusHours(1)));
+		assertTrue(downloaded.updatedAt().isAfter(now.minusHours(1)));
+		assertTrue(downloaded.createdAt().isEqual(downloaded.updatedAt()));
+
+		// vince is not allowed to force save custom meta
+		// since he does'nt have 'updateMeta' permission
+		vince.put("/1/data/message/2")//
+				.queryParam(FORCE_META_PARAM, true)//
+				.bodyPojo(message)//
+				.go(403);
+
+		// operator can create a new message with custom metadata
+		operator.put("/1/data/message/2")//
+				.queryParam(FORCE_META_PARAM, true)//
+				.bodyPojo(message)//
+				.go(201);
+
+		// provided custom meta are saved
+		// and nath can access this object since the owner
+		downloaded = nath.data()//
+				.fetch(new MessageDataObject().id("2"))//
+				.source();
+
+		assertEquals(message.text, downloaded.text);
+		assertEquals(nath.id(), downloaded.owner());
+		assertEquals(nath.group(), downloaded.group());
+		assertTrue(message.createdAt().isEqual(downloaded.createdAt()));
+		assertTrue(message.updatedAt().isEqual(downloaded.updatedAt()));
+
+		// operator is allowed to force update vince's object
+		operator.put("/1/data/message/1")//
+				.queryParam(FORCE_META_PARAM, true)//
+				.bodyPojo(message)//
+				.go(200);
+
+		// vince can not access his object anymore
+		// since owner has been updated to nath by operator
+		vince.get("/1/data/message/1").go(403);
 	}
 }

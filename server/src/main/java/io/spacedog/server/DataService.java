@@ -8,6 +8,7 @@ import java.util.function.Supplier;
 
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.lucene.uid.Versions;
+import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -16,7 +17,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.model.Credentials;
 import io.spacedog.model.DataObject;
 import io.spacedog.model.JsonDataObject;
-import io.spacedog.model.MetadataBase;
+import io.spacedog.model.Metadata;
 import io.spacedog.model.Permission;
 import io.spacedog.model.RolePermissions;
 import io.spacedog.utils.Exceptions;
@@ -53,7 +54,7 @@ public class DataService extends SpaceService {
 	public Payload post(String type, String body, Context context) {
 		DataObject<ObjectNode> object = new JsonDataObject()//
 				.type(type).source(Json.readObject(body));
-		return doPost(object);
+		return doPost(object, context);
 	}
 
 	@Delete("/:type")
@@ -87,13 +88,13 @@ public class DataService extends SpaceService {
 			return doDeleteById(type, id);
 
 		if (roles.containsOne(credentials, Permission.deleteMine)) {
-			DataObject<MetadataBase> metadata = getMetadataOrThrow(type, id);
+			DataObject<Metadata> metadata = getMetadataOrThrow(type, id);
 			checkOwner(credentials, metadata);
 			return doDeleteById(type, id);
 		}
 
 		if (roles.containsOne(credentials, Permission.deleteGroup)) {
-			DataObject<MetadataBase> metadata = getMetadataOrThrow(type, id);
+			DataObject<Metadata> metadata = getMetadataOrThrow(type, id);
 			checkGroup(credentials, metadata);
 			return doDeleteById(type, id);
 		}
@@ -173,16 +174,16 @@ public class DataService extends SpaceService {
 	}
 
 	public <K> Payload doPut(DataObject<K> object, boolean patch, Context context) {
-		Optional<DataObject<MetadataBase>> metaOpt = DataStore.get()//
+		Optional<DataObject<Metadata>> metaOpt = DataStore.get()//
 				.getMetadata(object.type(), object.id());
 
 		if (metaOpt.isPresent()) {
-			DataObject<MetadataBase> metadata = metaOpt.get();
+			DataObject<Metadata> metadata = metaOpt.get();
 			Credentials credentials = SpaceContext.credentials();
 			checkPutPermissions(credentials, metadata);
 
-			// avoid any update on createdAt field
-			object.createdAt(metadata.createdAt());
+			boolean forceMeta = checkForceMeta(object.type(), credentials, context);
+			updateMetadata(object, metadata.source(), forceMeta);
 
 			// TODO return better exception-message in case of invalid format
 			object.version(context.query().getLong(VERSION_PARAM, Versions.MATCH_ANY));
@@ -193,23 +194,69 @@ public class DataService extends SpaceService {
 			return ElasticPayload.saved("/1/data", object).build();
 
 		} else
-			return doPost(object);
+			return doPost(object, context);
 	}
 
-	protected <K> Payload doPost(DataObject<K> object) {
+	protected <K> Payload doPost(DataObject<K> object, Context context) {
 		Credentials credentials = SpaceContext.credentials();
 
 		if (DataAccessControl.roles(object.type())//
 				.containsOne(credentials, Permission.create)) {
-			if (object.owner() == null)
-				object.owner(credentials.id());
-			if (object.group() == null)
-				object.group(credentials.group());
+
+			boolean forceMeta = checkForceMeta(object.type(), credentials, context);
+			createMetadata(object, credentials, forceMeta);
+
 			object = DataStore.get().createObject(object);
+
 			return ElasticPayload.saved("/1/data", object).build();
 		}
 
 		throw Exceptions.forbidden("forbidden to create [%s] objects", object.type());
+	}
+
+	private <K> void createMetadata(DataObject<K> object, //
+			Credentials credentials, boolean forceMeta) {
+
+		if (forceMeta == false) {
+			object.owner(credentials.id());
+			object.group(credentials.group());
+		}
+
+		DateTime now = DateTime.now();
+
+		if (forceMeta == false || object.createdAt() == null)
+			object.createdAt(now);
+
+		if (forceMeta == false || object.updatedAt() == null)
+			object.updatedAt(now);
+	}
+
+	private <K> void updateMetadata(DataObject<K> object, //
+			Metadata metadata, boolean forceMeta) {
+
+		if (forceMeta == false) {
+			object.owner(metadata.owner());
+			object.group(metadata.group());
+		}
+
+		if (forceMeta == false || object.createdAt() == null)
+			object.createdAt(metadata.createdAt());
+
+		if (forceMeta == false || object.updatedAt() == null)
+			object.updatedAt(DateTime.now());
+	}
+
+	private <K> boolean checkForceMeta(String type, //
+			Credentials credentials, Context context) {
+
+		boolean forceMeta = context.query()//
+				.getBoolean(FORCE_META_PARAM, false);
+
+		if (forceMeta)
+			DataAccessControl.roles(type)//
+					.check(credentials, Permission.updateMeta);
+
+		return forceMeta;
 	}
 
 	private Payload doDeleteById(String type, String id) {
@@ -217,7 +264,7 @@ public class DataService extends SpaceService {
 		return JsonPayload.ok().build();
 	}
 
-	public void checkPutPermissions(Credentials credentials, DataObject<MetadataBase> metadata) {
+	public void checkPutPermissions(Credentials credentials, DataObject<Metadata> metadata) {
 
 		RolePermissions roles = DataAccessControl.roles(metadata.type());
 
@@ -250,7 +297,7 @@ public class DataService extends SpaceService {
 					object.type(), object.id());
 	}
 
-	private DataObject<MetadataBase> getMetadataOrThrow(String type, String id) {
+	private DataObject<Metadata> getMetadataOrThrow(String type, String id) {
 		return DataStore.get().getMetadata(type, id)//
 				.orElseThrow(() -> Exceptions.notFound(type, id));
 	}
