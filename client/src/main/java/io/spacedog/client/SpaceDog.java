@@ -45,6 +45,10 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 		return credentials().me().id();
 	}
 
+	public String group() {
+		return credentials().me().group();
+	}
+
 	public Optional7<String> email() {
 		return Optional7.ofNullable(email);
 	}

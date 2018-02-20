@@ -553,6 +553,7 @@ public class Credentials {
 				SpaceFields.ID_FIELD, id(), //
 				SpaceFields.USERNAME_FIELD, username(), //
 				SpaceFields.EMAIL_FIELD, email().orElse(null), //
+				SpaceFields.GROUP_FIELD, group(), //
 				"reallyEnabled", isReallyEnabled(), //
 				SpaceFields.ENABLED_FIELD, enabled(), //
 				SpaceFields.ENABLE_AFTER_FIELD, enableAfter(), //
