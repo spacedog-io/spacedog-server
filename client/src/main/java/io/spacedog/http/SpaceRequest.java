@@ -247,11 +247,11 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest size(int size) {
-		return this.queryParam("size", size);
+		return this.queryParam(SpaceParams.SIZE_PARAM, size);
 	}
 
 	public SpaceRequest from(int from) {
-		return this.queryParam("from", from);
+		return this.queryParam(SpaceParams.FROM_PARAM, from);
 	}
 
 	public SpaceRequest refresh() {

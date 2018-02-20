@@ -46,8 +46,8 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 
 	public static SpaceDog clearRootBackend() {
 		superdog().post("/1/admin/clear").go(200);
-		return superdog.credentials().create("superadmin", Passwords.random(), //
-				"platform@spacedog.io", Roles.superadmin);
+		return superdog.credentials().create(Roles.superadmin, //
+				Passwords.random(), DEFAULT_EMAIL, Roles.superadmin);
 	}
 
 	public static void prepareTest() {

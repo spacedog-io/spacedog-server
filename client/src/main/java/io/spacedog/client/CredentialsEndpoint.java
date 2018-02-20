@@ -106,8 +106,8 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 	//
 
 	public SpaceDog create(String username, String password, String email, String... roles) {
-		return create(new CreateCredentialsRequest().username(username).password(password)//
-				.email(email).roles(roles));
+		return create(new CreateCredentialsRequest()//
+				.username(username).password(password).email(email).roles(roles));
 	}
 
 	public SpaceDog create(CreateCredentialsRequest request) {
