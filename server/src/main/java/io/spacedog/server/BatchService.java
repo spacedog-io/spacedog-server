@@ -122,7 +122,7 @@ public class BatchService extends SpaceService {
 			}
 		}
 
-		return JsonPayload.ok().withObject(response).build();
+		return JsonPayload.ok().withContent(response).build();
 	}
 
 	private static JsonNode toJson(Payload payload, BatchJsonRequestWrapper request) {

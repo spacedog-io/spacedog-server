@@ -182,7 +182,7 @@ public class SmsService extends SpaceService {
 			return payload.withError(error).build();
 		}
 
-		return payload.withObject(twilio).build();
+		return payload.withContent(twilio).build();
 	}
 
 	private SmsSettings smsSettings() {

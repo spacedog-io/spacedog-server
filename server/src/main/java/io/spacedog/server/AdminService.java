@@ -21,7 +21,7 @@ public class AdminService extends SpaceService {
 	@Get("/")
 	public Payload ping() {
 		ObjectNode payload = (ObjectNode) Json.toJsonNode(Server.get().info());
-		return JsonPayload.ok().withObject(payload).build();
+		return JsonPayload.ok().withContent(payload).build();
 	}
 
 	@Get("/1/admin/return500")

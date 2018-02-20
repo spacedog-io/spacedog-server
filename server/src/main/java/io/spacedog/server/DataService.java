@@ -66,7 +66,7 @@ public class DataService extends SpaceService {
 	@Get("/:type/:id")
 	@Get("/:type/:id/")
 	public Payload getById(String type, String id, Context context) {
-		return JsonPayload.ok().withObject(doGet(type, id)).build();
+		return JsonPayload.ok().withContent(doGet(type, id)).build();
 	}
 
 	@Put("/:type/:id")
@@ -105,7 +105,7 @@ public class DataService extends SpaceService {
 	@Get("/:type/:id/:path")
 	@Get("/:type/:id/:path/")
 	public Payload getField(String type, String id, String path, Context context) {
-		return JsonPayload.ok().withObject(//
+		return JsonPayload.ok().withContent(//
 				Json.get(doGet(type, id).source(), path)).build();
 	}
 

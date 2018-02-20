@@ -60,7 +60,7 @@ public class JsonPayload implements SpaceFields {
 		return this;
 	}
 
-	public JsonPayload withObject(Object object) {
+	public JsonPayload withContent(Object object) {
 		this.node = Json.toJsonNode(object);
 		return this;
 	}
@@ -76,18 +76,23 @@ public class JsonPayload implements SpaceFields {
 	}
 
 	public Payload build() {
-
 		int status = payload.code();
-		ObjectNode content = object();
 
-		if (status >= 400)
-			content.put("success", false)//
-					.put("status", status);
+		if (node == null)
+			node = Json.object();
 
-		if (SpaceContext.isDebug())
-			content.set("debug", SpaceContext.debug().toNode());
+		if (node.isObject()) {
+			ObjectNode object = (ObjectNode) node;
 
-		return new Payload(Json.JSON_CONTENT_UTF8, content)//
+			if (status >= 400)
+				object.put("success", false)//
+						.put("status", status);
+
+			if (SpaceContext.isDebug())
+				object.set("debug", SpaceContext.debug().toNode());
+		}
+
+		return new Payload(Json.JSON_CONTENT_UTF8, node)//
 				.withCode(status)//
 				.withHeaders(payload.headers())//
 				.withCookies(payload.cookies());

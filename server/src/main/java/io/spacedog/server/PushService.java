@@ -162,7 +162,7 @@ public class PushService extends SpaceService {
 				break;
 		}
 
-		return JsonPayload.ok().withObject(response).build();
+		return JsonPayload.ok().withContent(response).build();
 	}
 
 	//

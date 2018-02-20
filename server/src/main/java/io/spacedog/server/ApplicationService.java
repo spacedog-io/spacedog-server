@@ -47,7 +47,7 @@ public class ApplicationService extends SpaceService {
 				.filter(application -> backendId.equals(application.backendId))//
 				.collect(Collectors.toList());
 
-		return JsonPayload.ok().withObject(Json.toJsonNode(pushApps)).build();
+		return JsonPayload.ok().withContent(pushApps).build();
 	}
 
 	@Put("/:name/:protocol")

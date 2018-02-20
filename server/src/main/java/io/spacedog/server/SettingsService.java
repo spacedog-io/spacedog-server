@@ -74,7 +74,7 @@ public class SettingsService extends SpaceService {
 		for (SearchHit hit : response.getHits().getHits())
 			results.set(hit.getId(), Json.readNode(hit.sourceAsString()));
 
-		return JsonPayload.ok().withObject(results).build();
+		return JsonPayload.ok().withContent(results).build();
 	}
 
 	@Delete("")
@@ -93,11 +93,11 @@ public class SettingsService extends SpaceService {
 
 		if (object.isPresent())
 			return JsonPayload.ok()//
-					.withObject(object.get()).build();
+					.withContent(object.get()).build();
 
 		if (registeredSettingsClasses.containsKey(id))
 			return JsonPayload.ok()//
-					.withObject(instantiateDefaultAsNode(id)).build();
+					.withContent(instantiateDefaultAsNode(id)).build();
 
 		throw Exceptions.notFound(TYPE, id);
 	}
@@ -128,7 +128,7 @@ public class SettingsService extends SpaceService {
 				.orElseThrow(() -> Exceptions.notFound(TYPE, id));
 		JsonNode value = Json.get(object, field);
 		value = value == null ? NullNode.getInstance() : value;
-		return JsonPayload.ok().withObject(value).build();
+		return JsonPayload.ok().withContent(value).build();
 	}
 
 	@Put("/:id/:field")

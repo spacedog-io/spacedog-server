@@ -57,7 +57,7 @@ public class SearchService extends SpaceService {
 
 		DataStore.get().refreshDataTypes(isRefreshRequested(context), types);
 		ObjectNode result = searchInternal(body, credentials, context, types);
-		return JsonPayload.ok().withObject(result).build();
+		return JsonPayload.ok().withContent(result).build();
 	}
 
 	@Delete("")
@@ -91,7 +91,7 @@ public class SearchService extends SpaceService {
 
 			DataStore.get().refreshDataTypes(isRefreshRequested(context), type);
 			ObjectNode result = searchInternal(body, credentials, context, type);
-			return JsonPayload.ok().withObject(result).build();
+			return JsonPayload.ok().withContent(result).build();
 		}
 		throw Exceptions.forbidden("forbidden to search [%s] objects", type);
 	}

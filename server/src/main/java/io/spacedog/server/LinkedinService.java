@@ -108,7 +108,7 @@ public class LinkedinService extends SpaceService {
 				.go();
 
 		checkLinkedinError(response, "linkedin error fetching your profil");
-		return JsonPayload.ok().withObject(response.asJsonObject()).build();
+		return JsonPayload.ok().withContent(response.asJsonObject()).build();
 	}
 
 	//

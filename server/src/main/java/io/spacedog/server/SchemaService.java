@@ -33,7 +33,7 @@ public class SchemaService extends SpaceService {
 		JsonMerger merger = Json.merger();
 		Map<String, Schema> schemas = DataStore.get().getAllSchemas();
 		schemas.values().forEach(schema -> merger.merge(schema.node()));
-		return JsonPayload.ok().withObject(merger.get()).build();
+		return JsonPayload.ok().withContent(merger.get()).build();
 	}
 
 	@Get("/:type")
@@ -41,7 +41,7 @@ public class SchemaService extends SpaceService {
 	public Payload get(String type) {
 		Schema.checkName(type);
 		return JsonPayload.ok()//
-				.withObject(DataStore.get().getSchema(type).node())//
+				.withContent(DataStore.get().getSchema(type).node())//
 				.build();
 	}
 

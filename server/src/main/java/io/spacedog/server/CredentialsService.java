@@ -142,7 +142,7 @@ public class CredentialsService extends SpaceService {
 				.size(context.query().getInteger(SIZE_PARAM, 10));
 
 		return JsonPayload.ok()//
-				.withObject(fromCredentialsSearch(getCredentials(builder)))//
+				.withContent(fromCredentialsSearch(getCredentials(builder)))//
 				.build();
 	}
 
@@ -188,14 +188,14 @@ public class CredentialsService extends SpaceService {
 	@Get("/1/credentials/me/")
 	public Payload getMe(Context context) {
 		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
-		return JsonPayload.ok().withObject(credentials.toJson()).build();
+		return JsonPayload.ok().withContent(credentials.toJson()).build();
 	}
 
 	@Get("/1/credentials/:id")
 	@Get("/1/credentials/:id/")
 	public Payload getById(String id, Context context) {
 		Credentials credentials = checkMyselfOrHigherAdminAndGet(id, false);
-		return JsonPayload.ok().withObject(credentials.toJson()).build();
+		return JsonPayload.ok().withContent(credentials.toJson()).build();
 	}
 
 	@Delete("/1/credentials/me")
@@ -670,7 +670,7 @@ public class CredentialsService extends SpaceService {
 
 	private Payload saved(boolean created, Credentials credentials) {
 		return JsonPayload.saved(false, "/1", TYPE, credentials.id())//
-				.withVersion(credentials.version()).withObject(credentials.toJson())//
+				.withVersion(credentials.version()).withContent(credentials.toJson())//
 				.build();
 	}
 
