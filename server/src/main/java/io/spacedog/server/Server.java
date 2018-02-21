@@ -13,6 +13,7 @@ import org.elasticsearch.plugin.deletebyquery.DeleteByQueryPlugin;
 import org.joda.time.DateTimeZone;
 
 import io.spacedog.utils.ClassResources;
+import io.spacedog.utils.DateTimeZones;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import net.codestory.http.AbstractWebServer;
@@ -44,7 +45,7 @@ public class Server {
 	}
 
 	public static void main(String[] args) {
-		DateTimeZone.setDefault(DateTimeZone.forID("Europe/Paris"));
+		DateTimeZone.setDefault(DateTimeZones.PARIS);
 		Server server = new Server();
 		server.start();
 	}
