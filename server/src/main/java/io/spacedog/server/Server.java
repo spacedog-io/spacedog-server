@@ -132,14 +132,14 @@ public class Server {
 
 	protected void startFluent() {
 		fluent = new FluentServer();
-		fluent.configure(Server::configure);
+		fluent.configure(routes -> configure(routes));
 		fluent.start(config.serverPort());
 	}
 
 	protected void fluentIsStarted() {
 	}
 
-	protected static void configure(Routes routes) {
+	protected void configure(Routes routes) {
 		routes.add(AdminService.get())//
 				.add(DataService.get())//
 				.add(SchemaService.get())//
