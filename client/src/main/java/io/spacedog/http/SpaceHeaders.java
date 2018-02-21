@@ -4,7 +4,7 @@ import com.google.common.base.Strings;
 
 public class SpaceHeaders {
 
-	// SpaceDog custom headers
+	// SpaceDog headers
 
 	public static final String SPACEDOG_TEST = "X-Spacedog-Test";
 	public static final String SPACEDOG_DEBUG = "X-Spacedog-Debug";
@@ -18,12 +18,19 @@ public class SpaceHeaders {
 	public static final String BEARER_SCHEME = "Bearer";
 	public static final String ALLOW_METHODS = "GET, POST, PUT, DELETE, HEAD";
 
+	// Encodings
+
+	public static final String GZIP = "gzip";
+	public static final String IDENTITY = "identity";
+	public static final String CHUNKED = "chunked";
+
 	// Common headers from CodeStory
 
 	public static final String ACCEPT = "Accept";
 	public static final String ACCEPT_CHARSET = "Accept-Charset";
 	public static final String ACCEPT_ENCODING = "Accept-Encoding";
 	public static final String ACCEPT_LANGUAGE = "Accept-Language";
+	public static final String TRANSFER_ENCODING = "Transfer-Encoding";
 	public static final String ALLOW = "Allow";
 	public static final String AUTHORIZATION = "Authorization";
 	public static final String CACHE_CONTROL = "Cache-Control";

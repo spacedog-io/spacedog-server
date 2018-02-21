@@ -112,9 +112,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// anonymous gets png share with its location
 		byte[] downloadedBytes = guest.get(pngMeta.location).go(200)//
-				// .assertHeaderEquals("gzip", SpaceHeaders.CONTENT_ENCODING)//
 				.assertHeaderEquals("image/png", SpaceHeaders.CONTENT_TYPE)//
-				.assertHeaderEquals(Long.toString(pngBytes.length), SpaceHeaders.CONTENT_LENGTH)//
 				.assertHeaderEquals(vince.id(), SpaceHeaders.SPACEDOG_OWNER)//
 				.assertHeaderEquals(pngMeta.etag, SpaceHeaders.ETAG)//
 				.asBytes();
@@ -162,7 +160,6 @@ public class ShareServiceTest extends SpaceTest {
 
 		// download shared text file
 		String stringContent = SpaceRequest.get(txtMeta.location).go(200)//
-				// .assertHeaderEquals("gzip", SpaceHeaders.CONTENT_ENCODING)//
 				.assertHeaderEquals("text/plain", SpaceHeaders.CONTENT_TYPE)//
 				.assertHeaderEquals(fred.id(), SpaceHeaders.SPACEDOG_OWNER)//
 				.asString();
@@ -508,4 +505,36 @@ public class ShareServiceTest extends SpaceTest {
 		superadmin.shares().upload(new byte[1024]);
 	}
 
+	@Test
+	public void shareDownloadGetsContentLengthHeaderIfNoGzipEncoding() {
+
+		// prepare
+		prepareTest(false);
+		SpaceDog superadmin = clearRootBackend();
+
+		// superadmin shares a small png file
+		String pngLocation = superadmin.shares()//
+				.upload(FILE_CONTENT.getBytes(), "test.txt").location;
+
+		// superadmin gets shared file with its location
+		// default stream encoding is chunked since content is gziped
+		String downloadedString = superadmin.get(pngLocation).go(200)//
+				.assertHeaderEquals(SpaceHeaders.CHUNKED, SpaceHeaders.TRANSFER_ENCODING)//
+				.assertHeaderNotPresent(SpaceHeaders.CONTENT_LENGTH)//
+				.asString();
+
+		assertEquals(FILE_CONTENT, downloadedString);
+
+		// superadmin gets shared file with its location
+		// if request Accept-Encoding without gzip
+		// then response contains Content-Length
+		downloadedString = superadmin.get(pngLocation)//
+				.addHeader(SpaceHeaders.ACCEPT_ENCODING, SpaceHeaders.IDENTITY)//
+				.go(200)//
+				.assertHeaderNotPresent(SpaceHeaders.TRANSFER_ENCODING)//
+				.assertHeaderEquals(FILE_CONTENT.getBytes().length, SpaceHeaders.CONTENT_LENGTH)//
+				.asString();
+
+		assertEquals(FILE_CONTENT, downloadedString);
+	}
 }

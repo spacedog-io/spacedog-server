@@ -57,11 +57,19 @@ public class S3Service extends SpaceService {
 			return Payload.notFound();
 
 		Payload payload = new Payload(file.contentType(), file)//
-				.withHeader(SpaceHeaders.CONTENT_LENGTH, //
-						Long.toString(file.contentLength()))//
 				.withHeader(SpaceHeaders.ETAG, file.eTag())//
 				.withHeader(SpaceHeaders.SPACEDOG_OWNER, file.owner())//
 				.withHeader(SpaceHeaders.SPACEDOG_GROUP, file.group());
+
+		// Since fluent-http only provides gzip encoding,
+		// we only set Content-Length header if Accept-encoding
+		// does not contain gzip. In case client accepts gzip,
+		// fluent will gzip this file stream and use 'chunked'
+		// Transfer-Encoding incompatible with Content-Length header
+
+		if (!context.header(SpaceHeaders.ACCEPT_ENCODING).contains(SpaceHeaders.GZIP))
+			payload.withHeader(SpaceHeaders.CONTENT_LENGTH, //
+					Long.toString(file.contentLength()));
 
 		if (context.query().getBoolean(WITH_CONTENT_DISPOSITION, false))
 			payload = payload.withHeader(SpaceHeaders.CONTENT_DISPOSITION, //
@@ -187,7 +195,7 @@ public class S3Service extends SpaceService {
 					.withFields("contentMd5", putResult.getContentMd5());
 
 			if (enableS3Location)
-				payload.withFields("s3", file.s3Location());
+				payload.withFields("publicLocation", file.s3Location());
 
 			return payload.build();
 
