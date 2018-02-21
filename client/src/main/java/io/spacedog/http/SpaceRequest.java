@@ -28,7 +28,6 @@ import okhttp3.FormBody;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
-import okhttp3.MultipartBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 
@@ -172,24 +171,34 @@ public class SpaceRequest {
 				Utils.join(" ", SpaceHeaders.BEARER_SCHEME, accessToken));
 	}
 
-	public SpaceRequest contentType(MediaType contentType) {
+	public MediaType getContentType(String defaultContentType) {
+		return getContentType(MediaType.parse(defaultContentType));
+	}
+
+	public MediaType getContentType(MediaType defaultContentType) {
+		return contentType == null ? defaultContentType : contentType;
+	}
+
+	public SpaceRequest withContentType(String contentType) {
+		return withContentType(MediaType.parse(contentType));
+	}
+
+	public SpaceRequest withContentType(MediaType contentType) {
 		this.contentType = contentType;
 		return this;
 	}
 
 	public SpaceRequest bodyBytes(byte[] bytes) {
-		this.contentType = OkHttp.OCTET_STREAM;
 		this.body = bytes;
 		return this;
 	}
 
 	public SpaceRequest bodyString(String body) {
-		this.contentType = OkHttp.TEXT_PLAIN;
 		this.body = body;
 		return this;
 	}
 
-	public SpaceRequest bodyMultipart(MultipartBody body) {
+	public SpaceRequest body(RequestBody body) {
 		this.body = body;
 		return this;
 	}
@@ -307,18 +316,21 @@ public class SpaceRequest {
 		}
 
 		if (body instanceof byte[])
-			return RequestBody.create(contentType, (byte[]) body);
+			return RequestBody.create(//
+					getContentType(OkHttp.OCTET_STREAM), (byte[]) body);
 
 		if (body instanceof String)
-			return RequestBody.create(contentType, (String) body);
+			return RequestBody.create(//
+					getContentType(OkHttp.TEXT_PLAIN), (String) body);
 
-		if (body instanceof MultipartBody)
-			return (MultipartBody) body;
+		if (body instanceof RequestBody)
+			return (RequestBody) body;
 
 		// OkHttp doesn't accept null body for PUT and POST
 		if (method.equals(HttpVerb.PUT) //
 				|| method.equals(HttpVerb.POST))
-			return RequestBody.create(OkHttp.TEXT_PLAIN, "");
+			return RequestBody.create(//
+					getContentType(OkHttp.OCTET_STREAM), "");
 
 		return null;
 	}
