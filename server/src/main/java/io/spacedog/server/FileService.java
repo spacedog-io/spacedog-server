@@ -3,12 +3,17 @@
  */
 package io.spacedog.server;
 
+import java.io.IOException;
+import java.util.List;
+
 import io.spacedog.http.WebPath;
 import io.spacedog.model.Credentials;
+import io.spacedog.model.DownloadRequest;
 import io.spacedog.model.FileSettings;
 import io.spacedog.model.Permission;
 import io.spacedog.model.RolePermissions;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
 import net.codestory.http.Context;
 import net.codestory.http.constants.Methods;
 import net.codestory.http.filters.PayloadSupplier;
@@ -34,7 +39,7 @@ public class FileService extends S3Service {
 			}
 
 			@Override
-			public Payload apply(String uri, Context context, PayloadSupplier nextFilter) throws Exception {
+			public Payload apply(String uri, Context context, PayloadSupplier nextFilter) {
 
 				String method = context.method();
 
@@ -46,6 +51,9 @@ public class FileService extends S3Service {
 
 				if (Methods.DELETE.equals(method))
 					return delete(toWebPath(uri));
+
+				if (Methods.POST.equals(method))
+					return download(toWebPath(uri), context);
 
 				throw Exceptions.methodNotAllowed(method, uri);
 			}
@@ -117,6 +125,30 @@ public class FileService extends S3Service {
 			prefixPermissions.check(SpaceContext.credentials(), Permission.delete);
 			return doDeleteAll(file);
 		}
+	}
+
+	public Payload download(WebPath path, Context context) {
+
+		if (path.size() < 2 //
+				|| path.last().equals("_download") == false)
+			throw Exceptions.methodNotAllowed(context.method(), context.uri());
+
+		DownloadRequest request;
+
+		try {
+			request = Json.toPojo(//
+					context.request().content(), DownloadRequest.class);
+
+		} catch (IOException e) {
+			throw Exceptions.illegalArgument(e, "error reading file download request content");
+		}
+
+		List<S3File> files = toS3Files(getBucketName(), request.paths);
+		S3File.checkPermissions(files, //
+				fileSettings().permissions.get(path.first()), //
+				Permission.read, Permission.readGroup, Permission.readMine);
+
+		return doZip(files, request.fileName);
 	}
 
 	public Payload deleteAll() {

@@ -7,15 +7,15 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import io.spacedog.client.ShareEndpoint.ShareMeta;
+import io.spacedog.client.FileEndpoint.FileMeta;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.model.CredentialsSettings;
 import io.spacedog.model.DataObject;
 import io.spacedog.model.EmailTemplate;
 import io.spacedog.model.EmailTemplateRequest;
+import io.spacedog.model.FileSettings;
 import io.spacedog.model.Permission;
 import io.spacedog.model.Roles;
-import io.spacedog.model.ShareSettings;
 import io.spacedog.tutorials.Customer.CustomerDataObject;
 import io.spacedog.utils.ClassResources;
 
@@ -48,9 +48,9 @@ public class T1_CustomerSignUp extends DemoBase {
 
 	@Test
 	public void superadminAuthorizesUsersToShare() {
-		ShareSettings settings = new ShareSettings();
-		settings.permissions.put(Roles.user, Permission.create);
-		settings.permissions.put(Roles.all, Permission.read);
+		FileSettings settings = new FileSettings();
+		settings.permissions.put("shares", Roles.user, Permission.create);
+		settings.permissions.put("shares", Roles.all, Permission.read);
 		superadmin().settings().save(settings);
 	}
 
@@ -59,7 +59,7 @@ public class T1_CustomerSignUp extends DemoBase {
 
 		SpaceDog david = david();
 		byte[] picture = ClassResources.loadAsBytes(this, "mapomme.jpg");
-		ShareMeta meta = david.shares().upload(picture);
+		FileMeta meta = david.files().share(picture);
 
 		DataObject<Customer> customer = davidCustomer();
 		customer.source().photo = meta.location;

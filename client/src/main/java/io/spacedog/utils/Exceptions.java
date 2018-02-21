@@ -129,7 +129,7 @@ public class Exceptions {
 	// 405
 	//
 
-	public static Exception methodNotAllowed(String method, String uri) {
+	public static SpaceException methodNotAllowed(String method, String uri) {
 		return new SpaceException(405, "method [%s] not allowed for uri [%s]", method, uri);
 	}
 

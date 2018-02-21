@@ -234,7 +234,7 @@ public class S3Service extends SpaceService {
 		long length = Long.valueOf(contentLength);
 		if (length > sizeLimitInKB * 1024)
 			throw Exceptions.illegalArgument(//
-					"content is too big, limit is [%s] KB", //
+					"content length limit is [%s] KB", //
 					length, sizeLimitInKB);
 
 		return length;

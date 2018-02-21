@@ -153,7 +153,6 @@ public class Server {
 				.add(PushService.get())//
 				.add(ApplicationService.get())//
 				.add(StripeService.get())//
-				.add(ShareService.get())//
 				.add(SettingsService.get())//
 				.add(SearchService.get());
 

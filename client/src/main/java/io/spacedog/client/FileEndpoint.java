@@ -2,6 +2,8 @@ package io.spacedog.client;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
+import java.util.UUID;
 
 import org.joda.time.DateTime;
 
@@ -9,13 +11,18 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 import io.spacedog.http.SpaceHeaders;
 import io.spacedog.http.SpaceResponse;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
 
 public class FileEndpoint {
+
+	public static final String SHARES_PATH = "/shares";
 
 	int listSize = 100;
 	SpaceDog dog;
@@ -107,6 +114,39 @@ public class FileEndpoint {
 		return file;
 	}
 
+	public byte[] downloadAll(String bucket, String... paths) {
+		return downloadAll(bucket, Lists.newArrayList(paths));
+	}
+
+	public byte[] downloadAll(String bucket, List<String> paths) {
+		return dog.post("/1/files/{bucket}/_download")//
+				.routeParam("bucket", bucket)//
+				.bodyJson("paths", Json.toJsonNode(paths))//
+				.go(200)//
+				.asBytes();
+	}
+
+	private String shareRandomPath(String fileName) {
+		String path = "/shares/" + UUID.randomUUID().toString();
+
+		if (!Strings.isNullOrEmpty(fileName))
+			path = path + "/" + fileName;
+
+		return path;
+	}
+
+	public FileMeta share(File file) {
+		return upload(shareRandomPath(file.getName()), file);
+	}
+
+	public FileMeta share(byte[] bytes) {
+		return share(bytes, null);
+	}
+
+	public FileMeta share(byte[] bytes, String fileName) {
+		return upload(shareRandomPath(fileName), bytes);
+	}
+
 	public FileMeta upload(String webPath, File file) {
 		try {
 			return upload(webPath, Files.toByteArray(file));
@@ -127,6 +167,10 @@ public class FileEndpoint {
 	public String[] delete(String webPath) {
 		return dog.delete("/1/files/" + webPath)//
 				.go(200, 404).asPojo("deleted", String[].class);
+	}
+
+	public String[] deleteShares() {
+		return delete("/shares");
 	}
 
 }

@@ -254,14 +254,6 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 		return fileEndpoint;
 	}
 
-	ShareEndpoint shareEndpoint;
-
-	public ShareEndpoint shares() {
-		if (shareEndpoint == null)
-			shareEndpoint = new ShareEndpoint(this);
-		return shareEndpoint;
-	}
-
 	LogEndpoint logEndpoint;
 
 	public LogEndpoint logs() {

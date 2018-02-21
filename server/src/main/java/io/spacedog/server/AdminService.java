@@ -59,7 +59,6 @@ public class AdminService extends SpaceService {
 				&& !configuration.isOffline()) {
 
 			FileService.get().deleteAll();
-			ShareService.get().deleteAll();
 		}
 	}
 
