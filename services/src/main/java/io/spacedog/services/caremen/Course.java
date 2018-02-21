@@ -95,7 +95,7 @@ public class Course implements Metable {
 	public static class Stripe {
 		public String customerId;
 		public String cardId;
-		public Stripe paymentId;
+		public String paymentId;
 	}
 
 	public void check(String... validStatuses) {
