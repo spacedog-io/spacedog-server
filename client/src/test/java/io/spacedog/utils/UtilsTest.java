@@ -70,4 +70,9 @@ public class UtilsTest extends Assert {
 		assertEquals("toto/titi", Utils.join("/", "toto", "titi"));
 	}
 
+	@Test
+	public void testReplaceTagDelimiters() {
+		assertEquals("SpaceDog (spacedog@toolee.fr)", //
+				Utils.replaceTagDelimiters("SpaceDog <spacedog@toolee.fr>"));
+	}
 }

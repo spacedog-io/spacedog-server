@@ -137,6 +137,10 @@ public class Utils {
 		return s.endsWith(suffix) ? s.substring(0, s.length() - suffix.length()) : s;
 	}
 
+	public static String replaceTagDelimiters(String s) {
+		return s.replace('<', '(').replace('>', ')');
+	}
+
 	//
 	// Others
 	//
