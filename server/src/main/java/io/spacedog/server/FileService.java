@@ -55,7 +55,7 @@ public class FileService extends S3Service {
 				if (Methods.POST.equals(method))
 					return download(toWebPath(uri), context);
 
-				throw Exceptions.methodNotAllowed(method, uri);
+				throw Exceptions.unsupportedHttpRequest(method, uri);
 			}
 
 		};
@@ -131,7 +131,7 @@ public class FileService extends S3Service {
 
 		if (path.size() < 2 //
 				|| path.last().equals("_download") == false)
-			throw Exceptions.methodNotAllowed(context.method(), context.uri());
+			throw Exceptions.unsupportedHttpRequest(context.method(), context.uri());
 
 		DownloadRequest request;
 

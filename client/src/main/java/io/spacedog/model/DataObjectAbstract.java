@@ -103,7 +103,7 @@ public abstract class DataObjectAbstract<K> implements DataObject<K>, SpaceField
 		else if (source instanceof ObjectNode)
 			((ObjectNode) source).put(OWNER_FIELD, owner);
 		else
-			throw Exceptions.unsupported("class [%s] doesn't implement this operation", //
+			throw Exceptions.unsupportedOperation("class [%s] doesn't implement this operation", //
 					source.getClass().getSimpleName());
 	}
 
@@ -127,7 +127,7 @@ public abstract class DataObjectAbstract<K> implements DataObject<K>, SpaceField
 		else if (source instanceof ObjectNode)
 			((ObjectNode) source).put(GROUP_FIELD, group);
 		else
-			throw Exceptions.unsupported("class [%s] doesn't implement this operation", //
+			throw Exceptions.unsupportedOperation("class [%s] doesn't implement this operation", //
 					source.getClass().getSimpleName());
 	}
 
@@ -149,7 +149,7 @@ public abstract class DataObjectAbstract<K> implements DataObject<K>, SpaceField
 		else if (source instanceof ObjectNode)
 			((ObjectNode) source).put(CREATED_AT_FIELD, createdAt.toString());
 		else
-			throw Exceptions.unsupported("class [%s] doesn't implement this operation", //
+			throw Exceptions.unsupportedOperation("class [%s] doesn't implement this operation", //
 					source.getClass().getSimpleName());
 	}
 
@@ -171,7 +171,7 @@ public abstract class DataObjectAbstract<K> implements DataObject<K>, SpaceField
 		else if (source instanceof ObjectNode)
 			((ObjectNode) source).put(UPDATED_AT_FIELD, updatedAt.toString());
 		else
-			throw Exceptions.unsupported("class [%s] doesn't implement this operation", //
+			throw Exceptions.unsupportedOperation("class [%s] doesn't implement this operation", //
 					source.getClass().getSimpleName());
 	}
 

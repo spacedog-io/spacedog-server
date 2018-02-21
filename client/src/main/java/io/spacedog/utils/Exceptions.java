@@ -24,7 +24,7 @@ public class Exceptions {
 		return new RuntimeException(t);
 	}
 
-	public static UnsupportedOperationException unsupported(String message, Object... args) {
+	public static UnsupportedOperationException unsupportedOperation(String message, Object... args) {
 		return new UnsupportedOperationException(String.format(message, args));
 	}
 
@@ -129,8 +129,8 @@ public class Exceptions {
 	// 405
 	//
 
-	public static SpaceException methodNotAllowed(String method, String uri) {
-		return new SpaceException(405, "method [%s] not allowed for uri [%s]", method, uri);
+	public static SpaceException unsupportedHttpRequest(String method, String uri) {
+		return new SpaceException("unsupported", 405, "http request [%s][%s] is not supported", method, uri);
 	}
 
 }
