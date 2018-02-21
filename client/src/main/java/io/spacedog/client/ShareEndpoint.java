@@ -84,7 +84,7 @@ public class ShareEndpoint {
 		public String publicLocation;
 		public String etag;
 		public String contentMd5;
-		public long size;
+		public long contentLength;
 		public DateTime lastModified;
 	}
 
@@ -107,8 +107,7 @@ public class ShareEndpoint {
 		Share share = new Share();
 		share.id = id;
 		share.content = response.asBytes();
-		share.contentLength = Long.valueOf(//
-				response.header(SpaceHeaders.CONTENT_LENGTH));
+		share.contentLength = share.content.length;
 		share.contentType = response.header(SpaceHeaders.CONTENT_TYPE);
 		share.owner = response.header(SpaceHeaders.SPACEDOG_OWNER);
 		share.etag = response.header(SpaceHeaders.ETAG);
