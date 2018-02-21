@@ -33,7 +33,7 @@ public class CrossOriginFilterTest extends SpaceTest {
 				.go(200)//
 				.assertHeaderEquals("https://app.toolee.fr", SpaceHeaders.ACCESS_CONTROL_ALLOW_ORIGIN)//
 				.assertHeaderEquals(SpaceHeaders.ALLOW_METHODS, SpaceHeaders.ACCESS_CONTROL_ALLOW_METHODS)//
-				.assertHeaderEquals("31536000", SpaceHeaders.ACCESS_CONTROL_MAX_AGE);
+				.assertHeaderEquals(31536000, SpaceHeaders.ACCESS_CONTROL_MAX_AGE);
 	}
 
 }

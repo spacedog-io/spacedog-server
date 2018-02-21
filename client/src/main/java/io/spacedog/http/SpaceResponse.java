@@ -417,24 +417,34 @@ public class SpaceResponse {
 		return this;
 	}
 
-	public SpaceResponse assertHeaderEquals(String expected, String headerName) {
+	public SpaceResponse assertHeaderEquals(Object expected, String headerName) {
 		String headerValue = header(headerName);
-		if (!expected.equalsIgnoreCase(headerValue))
+		if (!expected.toString().equalsIgnoreCase(headerValue))
 			Assert.fail(String.format("header [%s] not equal to [%s] but %s", //
 					headerName, expected, headerValue));
 
 		return this;
 	}
 
-	public SpaceResponse assertHeaderContains(String expected, String headerName) {
+	public SpaceResponse assertHeaderContains(Object expected, String headerName) {
 		List<String> headerValues = headerAsList(headerName);
 
 		if (headerValues == null)
 			Assert.fail(String.format("header [%s] not found", headerName));
 
-		if (!Utils.containsIgnoreCase(headerValues, expected))
+		if (!Utils.containsIgnoreCase(headerValues, expected.toString()))
 			Assert.fail(String.format("value [%s] not found in header [%s] containing %s", //
 					expected, headerName, headerValues));
+
+		return this;
+	}
+
+	public SpaceResponse assertHeaderNotPresent(String headerName) {
+		String headerValue = header(headerName);
+
+		if (headerValue != null)
+			Assert.fail(String.format("header [%s] is present with value [%s]", //
+					headerName, headerValue));
 
 		return this;
 	}
