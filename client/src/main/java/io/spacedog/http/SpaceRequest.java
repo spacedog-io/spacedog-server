@@ -12,7 +12,6 @@ import java.util.Map.Entry;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.google.common.collect.Maps;
-import com.google.common.io.Files;
 import com.google.common.primitives.Ints;
 
 import io.spacedog.client.SpaceDog;
@@ -20,7 +19,6 @@ import io.spacedog.model.Schema;
 import io.spacedog.model.Settings;
 import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Check;
-import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 import okhttp3.Credentials;
@@ -204,11 +202,11 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest bodyFile(File file) {
-		try {
-			return bodyBytes(Files.toByteArray(file));
-		} catch (IOException e) {
-			throw Exceptions.runtime(e);
-		}
+		if (contentType == null) //
+			contentType = MediaType.parse(//
+					ContentTypes.parseFileExtension(file.getName()));
+
+		return body(RequestBody.create(contentType, file));
 	}
 
 	public SpaceRequest bodySettings(Settings settings) {
