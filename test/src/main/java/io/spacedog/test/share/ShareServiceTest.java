@@ -29,7 +29,7 @@ public class ShareServiceTest extends SpaceTest {
 
 	private static final String FILE_CONTENT = "This is a test file!";
 	private static final byte[] BYTES = "blablabla".getBytes();
-	private static final String SHARES = "/shares/";
+	private static final String SHARES = "/shares";
 	private static final String SHARES_BUCKET = "shares";
 
 	@Test
@@ -48,12 +48,12 @@ public class ShareServiceTest extends SpaceTest {
 		assertHttpError(403, () -> admin.files().list(SHARES));
 
 		// only superadmins can create shares
-		assertHttpError(403, () -> guest.files().share(BYTES));
-		assertHttpError(403, () -> vince.files().share(BYTES));
-		assertHttpError(403, () -> admin.files().share(BYTES));
+		assertHttpError(403, () -> guest.files().share(SHARES, BYTES));
+		assertHttpError(403, () -> vince.files().share(SHARES, BYTES));
+		assertHttpError(403, () -> admin.files().share(SHARES, BYTES));
 
 		// superadmins creates a shared file
-		FileMeta shareMeta = superadmin.files().share(FILE_CONTENT.getBytes());
+		FileMeta shareMeta = superadmin.files().share(SHARES, FILE_CONTENT.getBytes());
 		// assertNull(shareMeta.publicLocation);
 
 		// only superadmins can read shares
@@ -96,7 +96,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// vince shares a small png file
 		byte[] pngBytes = ClassResources.loadAsBytes(this, "tweeter.png");
-		FileMeta pngMeta = vince.files().share(pngBytes, "tweeter.png");
+		FileMeta pngMeta = vince.files().share(SHARES, pngBytes, "tweeter.png");
 
 		// admin lists all shared files should return tweeter.png path only
 		FileList list = superadmin.files().list(SHARES);
@@ -139,7 +139,7 @@ public class ShareServiceTest extends SpaceTest {
 		// .go(304);
 
 		// share small text file
-		FileMeta txtMeta = fred.files().share(FILE_CONTENT.getBytes(), "text.txt");
+		FileMeta txtMeta = fred.files().share(SHARES, FILE_CONTENT.getBytes(), "text.txt");
 
 		// superadmin sets share list size to 1
 		superadmin.files().listSize(1);
@@ -198,7 +198,7 @@ public class ShareServiceTest extends SpaceTest {
 		assertHttpError(403, () -> vince.files().delete(SHARES));
 		assertHttpError(403, () -> admin.files().delete(SHARES));
 
-		deleted = superadmin.files().deleteShares();
+		deleted = superadmin.files().delete(SHARES);
 		assertEquals(1, deleted.length);
 		assertEquals(pngMeta.path, deleted[0]);
 
@@ -206,7 +206,7 @@ public class ShareServiceTest extends SpaceTest {
 		assertEquals(0, superadmin.files().list(SHARES).files.length);
 
 		// share small text file
-		txtMeta = fred.files().share(FILE_CONTENT.getBytes(), "text.txt");
+		txtMeta = fred.files().share(SHARES, FILE_CONTENT.getBytes(), "text.txt");
 
 		// admin can delete shared file (test.txt) even if not owner
 		// with default share ACL settings
@@ -240,7 +240,7 @@ public class ShareServiceTest extends SpaceTest {
 		assertEquals(0, superadmin.files().list(SHARES).files.length);
 
 		// anonymous is allowed to share a file
-		FileMeta guestPngMeta = guest.files().share(pngBytes, "guest.png");
+		FileMeta guestPngMeta = guest.files().share(SHARES, pngBytes, "guest.png");
 		// assertNull(guestPngMeta.publicLocation);
 
 		// backend contains 1 shared file
@@ -266,7 +266,7 @@ public class ShareServiceTest extends SpaceTest {
 		assertEquals(0, superadmin.files().list(SHARES).files.length);
 
 		// vince is allowed to share a file
-		FileMeta vincePngMeta = vince.files().share(pngBytes, "vince.png");
+		FileMeta vincePngMeta = vince.files().share(SHARES, pngBytes, "vince.png");
 		// assertNull(vincePngMeta.publicLocation);
 
 		// backend contains 1 shared file
@@ -304,7 +304,7 @@ public class ShareServiceTest extends SpaceTest {
 		// superadmin.settings().save(settings);
 
 		// share file with name that needs escaping
-		FileMeta meta = superadmin.files().share(FILE_CONTENT.getBytes(), "un petit text ?");
+		FileMeta meta = superadmin.files().share(SHARES, FILE_CONTENT.getBytes(), "un petit text ?");
 
 		// get file from location URI
 		// no file extension => no specific content type
@@ -351,7 +351,7 @@ public class ShareServiceTest extends SpaceTest {
 		superadmin.settings().save(settings);
 
 		// nath uploads 1 share
-		String path1 = nath.files().share("toto".getBytes(), "toto.txt").path;
+		String path1 = nath.files().share(SHARES, "toto".getBytes(), "toto.txt").path;
 
 		// nath has the right to get his own shares
 		nath.files().get(path1);
@@ -365,9 +365,9 @@ public class ShareServiceTest extends SpaceTest {
 		assertZipContains(zip, 1, "toto.txt", "toto".getBytes());
 
 		// vince uploads 2 shares
-		String path2 = vince.files().share("titi".getBytes(), "titi.txt").path;
+		String path2 = vince.files().share(SHARES, "titi".getBytes(), "titi.txt").path;
 		byte[] pngBytes = ClassResources.loadAsBytes(this, "tweeter.png");
-		String path3 = vince.files().share(pngBytes, "tweeter.png").path;
+		String path3 = vince.files().share(SHARES, pngBytes, "tweeter.png").path;
 
 		// vince has the right to get his own shares
 		vince.files().get(path2);
@@ -445,7 +445,7 @@ public class ShareServiceTest extends SpaceTest {
 		superadmin.settings().save(settings);
 
 		// vince shares a file
-		FileMeta share = vince.files().share("vince".getBytes(), "vince.txt");
+		FileMeta share = vince.files().share(SHARES, "vince".getBytes(), "vince.txt");
 
 		// fred is not allowed to read vince's file
 		// check ownership error do not drain s3 connection pool
@@ -470,7 +470,7 @@ public class ShareServiceTest extends SpaceTest {
 		superadmin.settings().save(settings);
 
 		// vince shares a file
-		FileMeta share = vince.files().share("vince".getBytes());
+		FileMeta share = vince.files().share(SHARES, "vince".getBytes());
 
 		// guest fails to get shared file since no access token query param
 		guest.get(share.location).go(403);
@@ -504,10 +504,10 @@ public class ShareServiceTest extends SpaceTest {
 
 		// vince fails to share file with size of 2048 bytes
 		// since settings forbids file with size above 1024 bytes
-		assertHttpError(400, () -> superadmin.files().share(new byte[2048]));
+		assertHttpError(400, () -> superadmin.files().share(SHARES, new byte[2048]));
 
 		// vince succeeds to share file with size of 1024 bytes
-		superadmin.files().share(new byte[1024]);
+		superadmin.files().share(SHARES, new byte[1024]);
 	}
 
 	@Test
@@ -519,7 +519,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// superadmin shares a small png file
 		String pngLocation = superadmin.files()//
-				.share(FILE_CONTENT.getBytes(), "test.txt").location;
+				.share(SHARES, FILE_CONTENT.getBytes(), "test.txt").location;
 
 		// superadmin gets shared file with its location
 		// default stream encoding is chunked since content is gziped

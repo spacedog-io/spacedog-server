@@ -59,7 +59,7 @@ public class T1_CustomerSignUp extends DemoBase {
 
 		SpaceDog david = david();
 		byte[] picture = ClassResources.loadAsBytes(this, "mapomme.jpg");
-		FileMeta meta = david.files().share(picture);
+		FileMeta meta = david.files().share("/shares", picture);
 
 		DataObject<Customer> customer = davidCustomer();
 		customer.source().photo = meta.location;

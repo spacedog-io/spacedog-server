@@ -11,18 +11,16 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 import io.spacedog.http.SpaceHeaders;
 import io.spacedog.http.SpaceResponse;
+import io.spacedog.http.WebPath;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 
 public class FileEndpoint {
-
-	public static final String SHARES_PATH = "/shares";
 
 	int listSize = 100;
 	SpaceDog dog;
@@ -40,12 +38,12 @@ public class FileEndpoint {
 		return list("/");
 	}
 
-	public FileList list(String webPath) {
-		return list(webPath, null);
+	public FileList list(String path) {
+		return list(path, null);
 	}
 
-	public FileList list(String webPath, String next) {
-		SpaceResponse response = dog.get("/1/files" + webPath)//
+	public FileList list(String path, String next) {
+		SpaceResponse response = dog.get("/1/files" + path)//
 				.size(listSize)//
 				.queryParam("next", next)//
 				.go(200, 404);
@@ -96,17 +94,17 @@ public class FileEndpoint {
 			isGetterVisibility = Visibility.NONE, //
 			setterVisibility = Visibility.NONE)
 	public static class SpaceFile {
-		public String id;
+		public String path;
 		public String contentType;
 		public String owner;
 		public String etag;
 		public byte[] content;
 	}
 
-	public SpaceFile get(String webPath) {
-		SpaceResponse response = dog.get("/1/files" + webPath).go(200);
+	public SpaceFile get(String path) {
+		SpaceResponse response = dog.get("/1/files" + path).go(200);
 		SpaceFile file = new SpaceFile();
-		file.id = webPath;
+		file.path = path;
 		file.content = response.asBytes();
 		file.contentType = response.header(SpaceHeaders.CONTENT_TYPE);
 		file.owner = response.header(SpaceHeaders.SPACEDOG_OWNER);
@@ -126,37 +124,35 @@ public class FileEndpoint {
 				.asBytes();
 	}
 
-	private String shareRandomPath(String fileName) {
-		String path = "/shares/" + UUID.randomUUID().toString();
-
-		if (!Strings.isNullOrEmpty(fileName))
-			path = path + "/" + fileName;
-
-		return path;
+	private String randomPath(String rootPath, String fileName) {
+		return WebPath.parse(rootPath)//
+				.addLast(UUID.randomUUID().toString())//
+				.addLast(fileName)//
+				.toString();
 	}
 
-	public FileMeta share(File file) {
-		return upload(shareRandomPath(file.getName()), file);
+	public FileMeta share(String rootPath, File file) {
+		return upload(randomPath(rootPath, file.getName()), file);
 	}
 
-	public FileMeta share(byte[] bytes) {
-		return share(bytes, null);
+	public FileMeta share(String rootPath, byte[] bytes) {
+		return share(rootPath, bytes, null);
 	}
 
-	public FileMeta share(byte[] bytes, String fileName) {
-		return upload(shareRandomPath(fileName), bytes);
+	public FileMeta share(String rootPath, byte[] bytes, String fileName) {
+		return upload(randomPath(rootPath, fileName), bytes);
 	}
 
-	public FileMeta upload(String webPath, File file) {
+	public FileMeta upload(String path, File file) {
 		try {
-			return upload(webPath, Files.toByteArray(file));
+			return upload(path, Files.toByteArray(file));
 		} catch (IOException e) {
 			throw Exceptions.runtime(e);
 		}
 	}
 
-	public FileMeta upload(String webPath, byte[] bytes) {
-		return dog.put("/1/files/" + webPath).bodyBytes(bytes)//
+	public FileMeta upload(String path, byte[] bytes) {
+		return dog.put("/1/files" + path).bodyBytes(bytes)//
 				.go(200).asPojo(FileMeta.class);
 	}
 
@@ -164,13 +160,9 @@ public class FileEndpoint {
 		return delete("/");
 	}
 
-	public String[] delete(String webPath) {
-		return dog.delete("/1/files/" + webPath)//
+	public String[] delete(String path) {
+		return dog.delete("/1/files" + path)//
 				.go(200, 404).asPojo("deleted", String[].class);
-	}
-
-	public String[] deleteShares() {
-		return delete("/shares");
 	}
 
 }
