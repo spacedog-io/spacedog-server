@@ -1,7 +1,6 @@
 package io.spacedog.utils;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.List;
@@ -210,7 +209,7 @@ public class Utils {
 		try {
 			if (closeable != null)
 				closeable.close();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}

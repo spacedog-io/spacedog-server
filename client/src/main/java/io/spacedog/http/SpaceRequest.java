@@ -5,6 +5,7 @@ package io.spacedog.http;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -28,6 +29,9 @@ import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import okio.BufferedSink;
+import okio.Okio;
+import okio.Source;
 
 public class SpaceRequest {
 
@@ -46,6 +50,7 @@ public class SpaceRequest {
 	private Map<String, String> formFields = Maps.newHashMap();
 	private Boolean forTesting = null;
 	private MediaType contentType;
+	private long contentLength = -1;
 
 	// static defaults
 	private static boolean forTestingDefault = false;
@@ -186,6 +191,14 @@ public class SpaceRequest {
 		return this;
 	}
 
+	public SpaceRequest withContentLength(long contentLength) {
+		if (contentLength >= 0)
+			setHeader(SpaceHeaders.CONTENT_LENGTH, contentLength);
+
+		this.contentLength = contentLength;
+		return this;
+	}
+
 	public SpaceRequest bodyBytes(byte[] bytes) {
 		this.body = bytes;
 		return this;
@@ -206,7 +219,16 @@ public class SpaceRequest {
 			contentType = MediaType.parse(//
 					ContentTypes.parseFileExtension(file.getName()));
 
-		return body(RequestBody.create(contentType, file));
+		this.body = file;
+		return this;
+	}
+
+	public SpaceRequest body(InputStream byteStream) {
+		if (contentType == null)
+			contentType = OkHttp.OCTET_STREAM;
+
+		this.body = byteStream;
+		return this;
 	}
 
 	public SpaceRequest bodySettings(Settings settings) {
@@ -271,13 +293,13 @@ public class SpaceRequest {
 		return this;
 	}
 
-	public SpaceRequest setHeader(String name, String value) {
-		this.requestBuilder.header(name, value);
+	public SpaceRequest setHeader(String name, Object value) {
+		this.requestBuilder.header(name, value.toString());
 		return this;
 	}
 
-	public SpaceRequest addHeader(String name, String value) {
-		this.requestBuilder.addHeader(name, value);
+	public SpaceRequest addHeader(String name, Object value) {
+		this.requestBuilder.addHeader(name, value.toString());
 		return this;
 	}
 
@@ -321,6 +343,13 @@ public class SpaceRequest {
 			return RequestBody.create(//
 					getContentType(OkHttp.TEXT_PLAIN), (String) body);
 
+		if (body instanceof InputStream)
+			return new ByteStreamRequestBody();
+
+		if (body instanceof File)
+			return RequestBody.create(//
+					getContentType(OkHttp.OCTET_STREAM), (File) body);
+
 		if (body instanceof RequestBody)
 			return (RequestBody) body;
 
@@ -331,6 +360,31 @@ public class SpaceRequest {
 					getContentType(OkHttp.OCTET_STREAM), "");
 
 		return null;
+	}
+
+	public class ByteStreamRequestBody extends RequestBody {
+
+		@Override
+		public MediaType contentType() {
+			return SpaceRequest.this.getContentType(OkHttp.OCTET_STREAM);
+		}
+
+		@Override
+		public long contentLength() {
+			return SpaceRequest.this.contentLength;
+		}
+
+		@Override
+		public void writeTo(BufferedSink sink) throws IOException {
+			Source source = null;
+			try {
+				source = Okio.source((InputStream) SpaceRequest.this.body);
+				sink.writeAll(source);
+			} finally {
+				Utils.closeSilently(source);
+			}
+		}
+
 	}
 
 	public SpaceRequest formField(String name, String value) {

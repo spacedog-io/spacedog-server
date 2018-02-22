@@ -1,6 +1,7 @@
 package io.spacedog.test.share;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.util.Set;
 import java.util.zip.ZipEntry;
@@ -96,7 +97,8 @@ public class ShareServiceTest extends SpaceTest {
 
 		// vince shares a small png file
 		byte[] pngBytes = ClassResources.loadAsBytes(this, "tweeter.png");
-		FileMeta pngMeta = vince.files().share(SHARES, pngBytes, "tweeter.png");
+		// FileMeta pngMeta = vince.files().share(SHARES, pngBytes, "tweeter.png");
+		FileMeta pngMeta = vince.files().share(SHARES, new File("tweeter.png"));
 
 		// admin lists all shared files should return tweeter.png path only
 		FileList list = superadmin.files().list(SHARES);
@@ -534,7 +536,7 @@ public class ShareServiceTest extends SpaceTest {
 		// if request Accept-Encoding without gzip
 		// then response contains Content-Length
 		downloadedString = superadmin.get(pngLocation)//
-				.addHeader(SpaceHeaders.ACCEPT_ENCODING, SpaceHeaders.IDENTITY)//
+				.setHeader(SpaceHeaders.ACCEPT_ENCODING, SpaceHeaders.IDENTITY)//
 				.go(200)//
 				.assertHeaderNotPresent(SpaceHeaders.TRANSFER_ENCODING)//
 				.assertHeaderEquals(FILE_CONTENT.getBytes().length, SpaceHeaders.CONTENT_LENGTH)//

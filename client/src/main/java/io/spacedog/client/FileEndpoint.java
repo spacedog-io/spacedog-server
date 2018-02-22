@@ -1,13 +1,15 @@
 package io.spacedog.client;
 
 import java.io.File;
-import java.io.IOException;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
 
 import com.google.common.collect.Lists;
-import com.google.common.io.Files;
 
+import io.spacedog.http.ContentTypes;
 import io.spacedog.http.SpaceResponse;
 import io.spacedog.http.WebPath;
 import io.spacedog.model.SpaceFile;
@@ -100,10 +102,23 @@ public class FileEndpoint {
 
 	public FileMeta upload(String path, File file) {
 		try {
-			return upload(path, Files.toByteArray(file));
-		} catch (IOException e) {
-			throw Exceptions.runtime(e);
+			return upload(path, new FileInputStream(file), file.length(), //
+					ContentTypes.parseFileExtension(file.getName()));
+
+		} catch (FileNotFoundException e) {
+			throw Exceptions.runtime(e, "error accessing file [%s]", file.getName());
 		}
+	}
+
+	public FileMeta upload(String path, InputStream byteStream, //
+			long contentLength, String contentType) {
+
+		return dog.put("/1/files" + path)//
+				.withContentType(contentType)//
+				.withContentLength(contentLength)//
+				.body(byteStream)//
+				.go(200)//
+				.asPojo(FileMeta.class);
 	}
 
 	public FileMeta upload(String path, byte[] bytes) {
