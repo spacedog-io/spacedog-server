@@ -39,7 +39,7 @@ public class ApplicationService extends SpaceService {
 		SpaceContext.credentials().checkAtLeastAdmin();
 		String backendId = SpaceContext.backendId();
 
-		ListPlatformApplicationsResult applications = AwsSnsPusher.getSnsClient()//
+		ListPlatformApplicationsResult applications = AwsSnsPusher.sns()//
 				.listPlatformApplications();
 
 		List<PushApplication> pushApps = applications.getPlatformApplications().stream()//
@@ -74,7 +74,7 @@ public class ApplicationService extends SpaceService {
 			if (!Strings.isNullOrEmpty(pushApp.credentials.principal))
 				request.addAttributesEntry("PlatformPrincipal", pushApp.credentials.principal);
 
-			AwsSnsPusher.getSnsClient().setPlatformApplicationAttributes(request);
+			AwsSnsPusher.sns().setPlatformApplicationAttributes(request);
 
 		} else {
 
@@ -88,7 +88,7 @@ public class ApplicationService extends SpaceService {
 			if (!Strings.isNullOrEmpty(pushApp.credentials.principal))
 				request.addAttributesEntry("PlatformPrincipal", pushApp.credentials.principal);
 
-			AwsSnsPusher.getSnsClient().createPlatformApplication(request);
+			AwsSnsPusher.sns().createPlatformApplication(request);
 		}
 
 		return JsonPayload.ok().build();
@@ -110,7 +110,7 @@ public class ApplicationService extends SpaceService {
 		if (application.isPresent()) {
 			String applicationArn = application.get().getPlatformApplicationArn();
 
-			AwsSnsPusher.getSnsClient().deletePlatformApplication(//
+			AwsSnsPusher.sns().deletePlatformApplication(//
 					new DeletePlatformApplicationRequest()//
 							.withPlatformApplicationArn(applicationArn));
 		}

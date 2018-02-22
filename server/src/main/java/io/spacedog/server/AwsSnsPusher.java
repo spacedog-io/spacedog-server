@@ -6,9 +6,9 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
-import com.amazonaws.services.sns.AmazonSNSClient;
+import com.amazonaws.services.sns.AmazonSNS;
+import com.amazonaws.services.sns.AmazonSNSClientBuilder;
 import com.amazonaws.services.sns.model.CreatePlatformEndpointRequest;
 import com.amazonaws.services.sns.model.GetEndpointAttributesRequest;
 import com.amazonaws.services.sns.model.GetEndpointAttributesResult;
@@ -25,15 +25,18 @@ import io.spacedog.utils.Utils;
 
 public class AwsSnsPusher {
 
-	private static AmazonSNSClient snsClient;
+	private final static AmazonSNS sns;
 
-	static AmazonSNSClient getSnsClient() {
-		if (snsClient == null) {
-			snsClient = new AmazonSNSClient();
-			String awsRegion = Server.get().configuration().awsRegion().orElse("eu-west-1");
-			snsClient.setRegion(Region.getRegion(Regions.fromName(awsRegion)));
-		}
-		return snsClient;
+	static {
+		Regions region = Server.get().configuration()//
+				.awsRegion().orElse(Regions.EU_WEST_1);
+
+		sns = AmazonSNSClientBuilder.standard()//
+				.withRegion(region).build();
+	}
+
+	static AmazonSNS sns() {
+		return sns;
 	}
 
 	static Optional<PlatformApplication> getApplication(String appId, PushProtocol protocol) {
@@ -47,7 +50,7 @@ public class AwsSnsPusher {
 			if (nextToken.isPresent())
 				listAppRequest.withNextToken(nextToken.get());
 
-			ListPlatformApplicationsResult listAppResult = getSnsClient().listPlatformApplications(listAppRequest);
+			ListPlatformApplicationsResult listAppResult = sns().listPlatformApplications(listAppRequest);
 
 			nextToken = Optional.ofNullable(listAppResult.getNextToken());
 
@@ -74,7 +77,7 @@ public class AwsSnsPusher {
 		String endpointArn = null;
 
 		try {
-			endpointArn = getSnsClient().createPlatformEndpoint(//
+			endpointArn = sns().createPlatformEndpoint(//
 					new CreatePlatformEndpointRequest()//
 							.withPlatformApplicationArn(applicationArn)//
 							.withToken(token))//
@@ -102,7 +105,7 @@ public class AwsSnsPusher {
 		boolean updateNeeded = false;
 
 		try {
-			GetEndpointAttributesResult endpointAttributes = getSnsClient()
+			GetEndpointAttributesResult endpointAttributes = sns()
 					.getEndpointAttributes(new GetEndpointAttributesRequest().withEndpointArn(endpointArn));
 
 			updateNeeded = !endpointAttributes.getAttributes().get("Token").equals(token)
@@ -123,7 +126,7 @@ public class AwsSnsPusher {
 			Map<String, String> attribs = new HashMap<>();
 			attribs.put("Token", token);
 			attribs.put("Enabled", "true");
-			getSnsClient().setEndpointAttributes(//
+			sns().setEndpointAttributes(//
 					new SetEndpointAttributesRequest()//
 							.withEndpointArn(endpointArn)//
 							.withAttributes(attribs));

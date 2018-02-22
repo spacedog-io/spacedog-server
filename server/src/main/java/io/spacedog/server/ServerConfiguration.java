@@ -7,6 +7,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
+import com.amazonaws.regions.Regions;
+
 import io.spacedog.http.SpaceBackend;
 import io.spacedog.http.SpaceEnv;
 import io.spacedog.utils.Exceptions;
@@ -112,8 +114,12 @@ public class ServerConfiguration {
 		}
 	}
 
-	public Optional7<String> awsRegion() {
-		return env.get(AWS_REGION);
+	public Optional7<Regions> awsRegion() {
+		Optional7<String> opt = env.get(AWS_REGION);
+		return opt.isPresent() //
+				? Optional7.of(Regions.fromName(opt.get())) //
+				: Optional7.empty();
+
 	}
 
 	public String awsBucketPrefix() {
