@@ -3,6 +3,7 @@ package io.spacedog.client;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
+import io.spacedog.client.elastic.ESQueryBuilder;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.http.SpaceFields;
 import io.spacedog.http.SpaceParams;
@@ -247,39 +248,39 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 	}
 
 	//
-	// Delete All Request
+	// Delete Bulk Request
 	//
 
 	public long deleteAll(String type) {
-		return deleteAllRequest().type(type).go();
+		return deleteBulkRequest().type(type).go();
 	}
 
-	public DeleteAllRequest deleteAllRequest() {
-		return new DeleteAllRequest();
+	public DeleteBulkRequest deleteBulkRequest() {
+		return new DeleteBulkRequest();
 	}
 
-	public class DeleteAllRequest {
+	public class DeleteBulkRequest {
 		private boolean refresh;
 		private String type;
-		private String source;
+		private String query;
 
-		public DeleteAllRequest refresh() {
+		public DeleteBulkRequest refresh() {
 			this.refresh = true;
 			return this;
 		}
 
-		public DeleteAllRequest type(String type) {
+		public DeleteBulkRequest type(String type) {
 			this.type = type;
 			return this;
 		}
 
-		public DeleteAllRequest source(String source) {
-			this.source = source;
+		public DeleteBulkRequest query(String query) {
+			this.query = query;
 			return this;
 		}
 
-		public DeleteAllRequest source(ESSearchSourceBuilder source) {
-			return source(source.toString());
+		public DeleteBulkRequest query(ESQueryBuilder query) {
+			return query(query.toString());
 		}
 
 		public long go() {
@@ -288,12 +289,11 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 			if (!Strings.isNullOrEmpty(type))
 				path = path + "/" + type;
 
-			if (Strings.isNullOrEmpty(source))
-				source = Json.EMPTY_OBJECT;
+			if (Strings.isNullOrEmpty(query))
+				query = Json.EMPTY_OBJECT;
 
-			return dog.delete(path).bodyJson(source)//
+			return dog.delete(path).bodyJson(query)//
 					.refresh(refresh).go(200).get("totalDeleted").asLong();
-
 		}
 
 	}

@@ -68,16 +68,17 @@ public class SearchServiceTest extends SpaceTest {
 		assertNotNull(results.results.get(0).updatedAt());
 
 		// deletes messages containing 'up' by query
-		source = ESSearchSourceBuilder.searchSource().query(//
-				ESQueryBuilders.matchQuery("text", "up"));
-		superadmin.data().deleteAllRequest().source(source).go();
+		superadmin.data().deleteBulkRequest()//
+				.query(ESQueryBuilders.matchQuery("text", "up"))//
+				.go();
+
 		long total = superadmin.data().getAllRequest().type("message").refresh().go().total;
 		assertEquals(3, total);
 
 		// deletes data objects containing 'wanna' or 'riri'
-		source = ESSearchSourceBuilder.searchSource().query(//
-				ESQueryBuilders.matchQuery("_all", "wanna riri"));
-		superadmin.data().deleteAllRequest().source(source).go();
+		superadmin.data().deleteBulkRequest()//
+				.query(ESQueryBuilders.matchQuery("_all", "wanna riri")).go();
+
 		total = superadmin.data().getAllRequest().refresh().go().total;
 		assertEquals(2, total);
 	}
