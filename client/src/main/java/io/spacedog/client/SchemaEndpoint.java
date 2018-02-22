@@ -34,7 +34,7 @@ public class SchemaEndpoint {
 
 	public SchemaEndpoint set(Schema schema) {
 		dog.put("/1/schemas/{name}").routeParam("name", schema.name())//
-				.bodySchema(schema).go(200, 201);
+				.bodyJson(schema.node()).go(200, 201);
 		return this;
 	}
 

@@ -97,7 +97,7 @@ public class SettingsEndpoint {
 
 	public void save(String id, String settings) {
 		dog.put("/1/settings/{id}")//
-				.routeParam("id", id).bodyString(settings).go(200, 201);
+				.routeParam("id", id).body(settings).go(200, 201);
 	}
 
 	// save field

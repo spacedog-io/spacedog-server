@@ -60,11 +60,11 @@ public class SchemaServiceTest extends SpaceTest {
 
 		// admin fails to create an invalid schema
 		superadmin.put("/1/schemas/toto")//
-				.bodyString("{\"toto\":{\"_type\":\"XXX\"}}").go(400);
+				.body("{\"toto\":{\"_type\":\"XXX\"}}").go(400);
 
 		// admin fails to update car schema color property type
 		carSchema.node().with("car").with("color").put("_type", "date");
-		superadmin.put("/1/schemas/car").bodySchema(carSchema).go(400);
+		superadmin.put("/1/schemas/car").bodyJson(carSchema.node()).go(400);
 
 		// fails to remove the car schema color property
 		// json = buildCarSchema();

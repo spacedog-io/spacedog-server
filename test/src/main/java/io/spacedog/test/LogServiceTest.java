@@ -303,7 +303,7 @@ public class LogServiceTest extends SpaceTest {
 		SpaceDog superadmin = clearRootBackend();
 
 		// fails because invalid body
-		superadmin.put("/1/schemas/toto").bodyString("XXX").go(400);
+		superadmin.put("/1/schemas/toto").body("XXX").go(400);
 
 		// but logs the failed request without the json content
 		LogItem logItem = superadmin.logs().get(1, true).results.get(0);

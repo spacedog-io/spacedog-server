@@ -122,7 +122,7 @@ public class FileEndpoint {
 	}
 
 	public FileMeta upload(String path, byte[] bytes) {
-		return dog.put("/1/files" + path).bodyBytes(bytes)//
+		return dog.put("/1/files" + path).body(bytes)//
 				.go(200).asPojo(FileMeta.class);
 	}
 

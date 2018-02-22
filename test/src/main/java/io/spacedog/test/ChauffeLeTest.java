@@ -150,7 +150,7 @@ public class ChauffeLeTest extends SpaceTest {
 					.build().toString();
 
 			return user.post("/1/search/bigpost").refresh()//
-					.bodyString(wallQuery).go(200).asJson().get("results").elements();
+					.body(wallQuery).go(200).asJson().get("results").elements();
 		}
 	}
 

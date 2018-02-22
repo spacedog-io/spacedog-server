@@ -306,7 +306,7 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 
 	public void passwordMustChange(String id) {
 		dog.put("/1/credentials/{id}/passwordMustChange")//
-				.routeParam("id", id).bodyString("true").go(200);
+				.routeParam("id", id).body("true").go(200);
 	}
 
 	public void forgotMyPassword() {

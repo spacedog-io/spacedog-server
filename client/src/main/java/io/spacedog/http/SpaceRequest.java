@@ -17,7 +17,6 @@ import com.google.common.primitives.Ints;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.model.Schema;
-import io.spacedog.model.Settings;
 import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Json;
@@ -199,13 +198,13 @@ public class SpaceRequest {
 		return this;
 	}
 
-	public SpaceRequest bodyBytes(byte[] bytes) {
+	public SpaceRequest body(byte[] bytes) {
 		this.body = bytes;
 		return this;
 	}
 
-	public SpaceRequest bodyString(String body) {
-		this.body = body;
+	public SpaceRequest body(String string) {
+		this.body = string;
 		return this;
 	}
 
@@ -214,7 +213,7 @@ public class SpaceRequest {
 		return this;
 	}
 
-	public SpaceRequest bodyFile(File file) {
+	public SpaceRequest body(File file) {
 		if (contentType == null) //
 			contentType = MediaType.parse(//
 					ContentTypes.parseFileExtension(file.getName()));
@@ -231,23 +230,15 @@ public class SpaceRequest {
 		return this;
 	}
 
-	public SpaceRequest bodySettings(Settings settings) {
-		return bodyJson(Json.toJsonNode(settings));
-	}
-
 	public SpaceRequest bodyPojo(Object pojo) {
 		return bodyJson(Json.toJsonNode(pojo));
 	}
 
-	public SpaceRequest bodySchema(Schema schema) {
-		return bodyJson(schema.node());
-	}
-
-	public SpaceRequest bodyJson(String body) {
+	public SpaceRequest bodyJson(String json) {
 		this.contentType = OkHttp.JSON;
 		if (SpaceEnv.env().debug())
-			this.bodyJson = Json.readNode(body);
-		this.body = body;
+			this.bodyJson = Json.readNode(json);
+		this.body = json;
 		return this;
 	}
 
@@ -255,12 +246,12 @@ public class SpaceRequest {
 		return bodyJson(Json.object(elements));
 	}
 
-	public SpaceRequest bodyJson(JsonNode body) {
-		if (body == null)
-			body = NullNode.instance;
+	public SpaceRequest bodyJson(JsonNode jsonNode) {
+		if (jsonNode == null)
+			jsonNode = NullNode.instance;
 		this.contentType = OkHttp.JSON;
-		this.bodyJson = body;
-		this.body = body.toString();
+		this.bodyJson = jsonNode;
+		this.body = jsonNode.toString();
 		return this;
 	}
 
