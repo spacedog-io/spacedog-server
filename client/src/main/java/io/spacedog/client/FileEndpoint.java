@@ -8,7 +8,6 @@ import java.util.UUID;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
-import io.spacedog.http.SpaceHeaders;
 import io.spacedog.http.SpaceResponse;
 import io.spacedog.http.WebPath;
 import io.spacedog.model.SpaceFile;
@@ -59,15 +58,13 @@ public class FileEndpoint {
 		EMPTY_FILE_LIST.files = new FileMeta[0];
 	}
 
+	@SuppressWarnings("resource")
 	public SpaceFile get(String path) {
 		SpaceResponse response = dog.get("/1/files" + path).go(200);
 
 		return new SpaceFile()//
 				.withPath(path)//
-				.withBody(response.body())//
-				.withContentType(response.header(SpaceHeaders.CONTENT_TYPE))//
-				.withOwner(response.header(SpaceHeaders.SPACEDOG_OWNER))//
-				.withEtag(response.header(SpaceHeaders.ETAG));
+				.withResponse(response);
 	}
 
 	public byte[] downloadAll(String bucket, String... paths) {

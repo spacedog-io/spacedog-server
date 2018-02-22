@@ -91,7 +91,8 @@ public class FileService extends S3Service {
 	Payload put(WebPath path, Context context) {
 
 		if (path.size() < 2)
-			throw Exceptions.illegalArgument("path [%s] is invalid, no prefix", path.toString());
+			throw Exceptions.illegalArgument(//
+					"path [%s] doesn't specify any bucket", path.toString());
 
 		FileSettings settings = SettingsService.get().getAsObject(FileSettings.class);
 		long contentLength = checkContentLength(context, settings.sizeLimitInKB);

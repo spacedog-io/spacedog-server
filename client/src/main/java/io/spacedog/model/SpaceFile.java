@@ -1,6 +1,9 @@
 package io.spacedog.model;
 
+import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 
 import org.joda.time.DateTime;
 
@@ -9,15 +12,13 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import io.spacedog.utils.Exceptions;
-import okhttp3.ResponseBody;
+import io.spacedog.http.SpaceHeaders;
+import io.spacedog.http.SpaceResponse;
 
-public class SpaceFile {
+public class SpaceFile implements Closeable {
+
 	private String path;
-	private String contentType;
-	private String owner;
-	private String etag;
-	private ResponseBody body;
+	private SpaceResponse response;
 
 	public String path() {
 		return path;
@@ -29,46 +30,44 @@ public class SpaceFile {
 	}
 
 	public String contentType() {
-		return contentType;
-	}
-
-	public SpaceFile withContentType(String contentType) {
-		this.contentType = contentType;
-		return this;
+		return response.header(SpaceHeaders.CONTENT_TYPE);
 	}
 
 	public String owner() {
-		return owner;
-	}
-
-	public SpaceFile withOwner(String owner) {
-		this.owner = owner;
-		return this;
+		return response.header(SpaceHeaders.SPACEDOG_OWNER);
 	}
 
 	public String etag() {
-		return etag;
+		return response.header(SpaceHeaders.ETAG);
 	}
 
-	public SpaceFile withEtag(String etag) {
-		this.etag = etag;
-		return this;
+	public byte[] asBytes() {
+		return response.asBytes();
 	}
 
-	public byte[] content() {
-		try {
-			return body.bytes();
-		} catch (IOException e) {
-			throw Exceptions.runtime(e, "error reading file content");
-		}
+	public String asString() {
+		return response.asString();
 	}
 
-	public ResponseBody body() {
-		return body;
+	public InputStream asByteStream() {
+		return response.body().byteStream();
 	}
 
-	public SpaceFile withBody(ResponseBody body) {
-		this.body = body;
+	public Reader asCharStream() {
+		return response.body().charStream();
+	}
+
+	@Override
+	public void close() throws IOException {
+		response.close();
+	}
+
+	public SpaceResponse response() {
+		return response;
+	}
+
+	public SpaceFile withResponse(SpaceResponse body) {
+		this.response = body;
 		return this;
 	}
 
@@ -96,4 +95,5 @@ public class SpaceFile {
 		public FileMeta[] files;
 		public String next;
 	}
+
 }

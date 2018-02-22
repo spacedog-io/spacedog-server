@@ -3,6 +3,7 @@
  */
 package io.spacedog.http;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -27,7 +28,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
-public class SpaceResponse {
+public class SpaceResponse implements Closeable {
 
 	private Request okRequest;
 	private Response okResponse;
@@ -211,6 +212,15 @@ public class SpaceResponse {
 		if (okResponse == null)
 			throw new IllegalStateException("no response yet");
 		return okResponse;
+	}
+
+	public int status() {
+		return okResponse.code();
+	}
+
+	@Override
+	public void close() throws IOException {
+		this.body().close();
 	}
 
 	public String contentType() {
@@ -458,7 +468,4 @@ public class SpaceResponse {
 		Assert.assertEquals(expected, asString());
 	}
 
-	public int status() {
-		return okResponse.code();
-	}
 }

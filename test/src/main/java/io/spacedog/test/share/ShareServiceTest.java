@@ -110,7 +110,7 @@ public class ShareServiceTest extends SpaceTest {
 		assertEquals(vince.id(), png.owner());
 		assertEquals(pngMeta.etag, png.etag());
 
-		assertArrayEquals(pngBytes, png.content());
+		assertArrayEquals(pngBytes, png.asBytes());
 
 		// anonymous gets png share with its location
 		byte[] downloadedBytes = guest.get(pngMeta.location).go(200)//
