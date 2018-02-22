@@ -4,12 +4,12 @@ import org.junit.Test;
 
 import com.google.common.collect.Sets;
 
-import io.spacedog.client.FileEndpoint.FileList;
-import io.spacedog.client.FileEndpoint.SpaceFile;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.model.FileSettings;
 import io.spacedog.model.Permission;
 import io.spacedog.model.Roles;
+import io.spacedog.model.SpaceFile;
+import io.spacedog.model.SpaceFile.FileList;
 
 public class FileServiceTest extends SpaceTest {
 
@@ -60,18 +60,18 @@ public class FileServiceTest extends SpaceTest {
 
 		// superadmin gets app.html
 		SpaceFile file = superadmin.files().get("/www/app.html");
-		assertArrayEquals("/www/app.html".getBytes(), file.content);
-		assertEquals("text/html", file.contentType);
+		assertArrayEquals("/www/app.html".getBytes(), file.content());
+		assertEquals("text/html", file.contentType());
 
 		// guest gets app.js
 		file = guest.files().get("/www/app.js");
-		assertArrayEquals("/www/app.js".getBytes(), file.content);
-		assertEquals("application/javascript", file.contentType);
+		assertArrayEquals("/www/app.js".getBytes(), file.content());
+		assertEquals("application/javascript", file.contentType());
 
 		// guest gets black.css
 		file = guest.files().get("/www/css/black.css");
-		assertArrayEquals("/www/css/black.css".getBytes(), file.content);
-		assertEquals("text/css", file.contentType);
+		assertArrayEquals("/www/css/black.css".getBytes(), file.content());
+		assertEquals("text/css", file.contentType());
 
 		// superadmin lists all images
 		assertEquals(2, superadmin.files().list("/www/images").files.length);
@@ -140,13 +140,13 @@ public class FileServiceTest extends SpaceTest {
 
 		// vince can read his own files
 		SpaceFile file = vince.files().get("/assets/vince/vince.txt");
-		assertArrayEquals("vince".getBytes(), file.content);
+		assertArrayEquals("vince".getBytes(), file.content());
 
 		// superadmin can read all files
 		file = superadmin.files().get("/assets/superadmin.txt");
-		assertArrayEquals("superadmin".getBytes(), file.content);
+		assertArrayEquals("superadmin".getBytes(), file.content());
 		file = superadmin.files().get("/assets/vince/vince.txt");
-		assertArrayEquals("vince".getBytes(), file.content);
+		assertArrayEquals("vince".getBytes(), file.content());
 
 		// only superadmins are allowed to list
 		assertHttpError(403, () -> guest.files().list("/assets"));

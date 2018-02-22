@@ -25,6 +25,7 @@ import okhttp3.Headers;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 public class SpaceResponse {
 
@@ -101,6 +102,10 @@ public class SpaceResponse {
 		return duration;
 	}
 
+	public ResponseBody body() {
+		return this.okResponse.body();
+	}
+
 	public byte[] asBytes() {
 
 		if (bytesBody != null)
@@ -111,7 +116,7 @@ public class SpaceResponse {
 
 		try {
 			consumed = true;
-			bytesBody = this.okResponse.body().bytes();
+			bytesBody = this.body().bytes();
 		} catch (IOException e) {
 			throw Exceptions.runtime(e, //
 					"failed to read as bytes payload of request [%s][%s]", //

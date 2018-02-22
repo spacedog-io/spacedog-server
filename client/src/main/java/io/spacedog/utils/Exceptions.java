@@ -24,12 +24,12 @@ public class Exceptions {
 		return new RuntimeException(t);
 	}
 
-	public static UnsupportedOperationException unsupportedOperation(String message, Object... args) {
-		return new UnsupportedOperationException(String.format(message, args));
-	}
-
 	public static RuntimeException runtime(Throwable t, String message, Object... args) {
 		return new RuntimeException(String.format(message, args), t);
+	}
+
+	public static UnsupportedOperationException unsupportedOperation(String message, Object... args) {
+		return new UnsupportedOperationException(String.format(message, args));
 	}
 
 	public static IllegalArgumentException illegalArgument(String message, Object... args) {

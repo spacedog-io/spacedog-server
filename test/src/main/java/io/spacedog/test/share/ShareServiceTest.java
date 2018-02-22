@@ -12,15 +12,15 @@ import org.junit.Test;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 
-import io.spacedog.client.FileEndpoint.FileList;
-import io.spacedog.client.FileEndpoint.FileMeta;
-import io.spacedog.client.FileEndpoint.SpaceFile;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceHeaders;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.model.FileSettings;
 import io.spacedog.model.Permission;
 import io.spacedog.model.Roles;
+import io.spacedog.model.SpaceFile;
+import io.spacedog.model.SpaceFile.FileList;
+import io.spacedog.model.SpaceFile.FileMeta;
 import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Json;
@@ -105,12 +105,12 @@ public class ShareServiceTest extends SpaceTest {
 
 		// anonymous gets png share with its id
 		SpaceFile png = guest.files().get(pngMeta.path);
-		assertEquals("image/png", png.contentType);
+		assertEquals("image/png", png.contentType());
 		// assertEquals(pngBytes.length, png.contentLength);
-		assertEquals(vince.id(), png.owner);
-		assertEquals(pngMeta.etag, png.etag);
+		assertEquals(vince.id(), png.owner());
+		assertEquals(pngMeta.etag, png.etag());
 
-		assertArrayEquals(pngBytes, png.content);
+		assertArrayEquals(pngBytes, png.content());
 
 		// anonymous gets png share with its location
 		byte[] downloadedBytes = guest.get(pngMeta.location).go(200)//

@@ -5,18 +5,15 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
-import org.joda.time.DateTime;
-
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 import io.spacedog.http.SpaceHeaders;
 import io.spacedog.http.SpaceResponse;
 import io.spacedog.http.WebPath;
+import io.spacedog.model.SpaceFile;
+import io.spacedog.model.SpaceFile.FileList;
+import io.spacedog.model.SpaceFile.FileMeta;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 
@@ -52,64 +49,25 @@ public class FileEndpoint {
 			return response.asPojo(FileList.class);
 
 		// in case of 404
-		return FileList.EMPTY;
+		return EMPTY_FILE_LIST;
 	}
 
-	@JsonIgnoreProperties(ignoreUnknown = true)
-	@JsonAutoDetect(fieldVisibility = Visibility.PUBLIC_ONLY, //
-			getterVisibility = Visibility.NONE, //
-			isGetterVisibility = Visibility.NONE, //
-			setterVisibility = Visibility.NONE)
-	public static class FileList {
+	private final static FileList EMPTY_FILE_LIST;
 
-		@JsonProperty("results")
-		public FileMeta[] files;
-		public String next;
-
-		private static FileList EMPTY;
-
-		static {
-			EMPTY = new FileList();
-			EMPTY.files = new FileMeta[0];
-		}
-	}
-
-	@JsonIgnoreProperties(ignoreUnknown = true)
-	@JsonAutoDetect(fieldVisibility = Visibility.PUBLIC_ONLY, //
-			getterVisibility = Visibility.NONE, //
-			isGetterVisibility = Visibility.NONE, //
-			setterVisibility = Visibility.NONE)
-	public static class FileMeta {
-		public String path;
-		public String location;
-		public long size;
-		public DateTime lastModified;
-		public String etag;
-		public String contentMd5;
-	}
-
-	@JsonIgnoreProperties(ignoreUnknown = true)
-	@JsonAutoDetect(fieldVisibility = Visibility.PUBLIC_ONLY, //
-			getterVisibility = Visibility.NONE, //
-			isGetterVisibility = Visibility.NONE, //
-			setterVisibility = Visibility.NONE)
-	public static class SpaceFile {
-		public String path;
-		public String contentType;
-		public String owner;
-		public String etag;
-		public byte[] content;
+	static {
+		EMPTY_FILE_LIST = new FileList();
+		EMPTY_FILE_LIST.files = new FileMeta[0];
 	}
 
 	public SpaceFile get(String path) {
 		SpaceResponse response = dog.get("/1/files" + path).go(200);
-		SpaceFile file = new SpaceFile();
-		file.path = path;
-		file.content = response.asBytes();
-		file.contentType = response.header(SpaceHeaders.CONTENT_TYPE);
-		file.owner = response.header(SpaceHeaders.SPACEDOG_OWNER);
-		file.etag = response.header(SpaceHeaders.ETAG);
-		return file;
+
+		return new SpaceFile()//
+				.withPath(path)//
+				.withBody(response.body())//
+				.withContentType(response.header(SpaceHeaders.CONTENT_TYPE))//
+				.withOwner(response.header(SpaceHeaders.SPACEDOG_OWNER))//
+				.withEtag(response.header(SpaceHeaders.ETAG));
 	}
 
 	public byte[] downloadAll(String bucket, String... paths) {

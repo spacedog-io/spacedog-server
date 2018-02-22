@@ -7,7 +7,6 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import io.spacedog.client.FileEndpoint.FileMeta;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.model.CredentialsSettings;
 import io.spacedog.model.DataObject;
@@ -16,6 +15,7 @@ import io.spacedog.model.EmailTemplateRequest;
 import io.spacedog.model.FileSettings;
 import io.spacedog.model.Permission;
 import io.spacedog.model.Roles;
+import io.spacedog.model.SpaceFile.FileMeta;
 import io.spacedog.tutorials.Customer.CustomerDataObject;
 import io.spacedog.utils.ClassResources;
 
