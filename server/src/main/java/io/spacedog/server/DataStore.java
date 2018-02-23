@@ -141,7 +141,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 
 		return object.id(response.getId())//
 				.version(response.getVersion())//
-				.justCreated(response.isCreated());
+				.justCreated(ElasticUtils.isCreated(response));
 	}
 
 	public <K> DataObject<K> updateObject(DataObject<K> object) {
@@ -153,7 +153,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 				.get();
 
 		return object.version(response.getVersion())//
-				.justCreated(response.isCreated());
+				.justCreated(ElasticUtils.isCreated(response));
 	}
 
 	public <K> DataObject<K> patchObject(DataObject<K> object) {
@@ -165,7 +165,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 				.setVersion(version(object)).setDoc(source.toString()).get();
 
 		return object.version(response.getVersion())//
-				.justCreated(response.isCreated());
+				.justCreated(ElasticUtils.isCreated(response));
 	}
 
 	public static long version(DataObject<?> object) {

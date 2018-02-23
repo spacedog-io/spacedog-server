@@ -73,7 +73,7 @@ public class SmsService extends SpaceService {
 		IndexResponse response = SettingsService.get()//
 				.doSave(toSettingsId(templateName), Json.toString(template));
 
-		return JsonPayload.saved(response.isCreated())//
+		return JsonPayload.saved(ElasticUtils.isCreated(response))//
 				.withFields("id", templateName, "type", "SmsTemplate")//
 				.withLocation("/1/sms/templates/" + templateName)//
 				.build();

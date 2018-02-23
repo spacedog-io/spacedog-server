@@ -3,15 +3,11 @@
  */
 package io.spacedog.server;
 
-import org.elasticsearch.action.ShardOperationFailedException;
-import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.index.IndexResponse;
-
-import com.fasterxml.jackson.databind.node.ArrayNode;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
 
 import io.spacedog.http.SpaceFields;
 import io.spacedog.model.DataObject;
-import io.spacedog.utils.Json;
 
 public class ElasticPayload implements SpaceFields {
 
@@ -21,40 +17,21 @@ public class ElasticPayload implements SpaceFields {
 	}
 
 	public static JsonPayload saved(String uriBase, IndexResponse response) {
-		return JsonPayload.saved(response.isCreated(), uriBase, response.getType(), //
+		final boolean created = ElasticUtils.isCreated(response);
+		return JsonPayload.saved(created, uriBase, response.getType(), //
 				response.getId()).withVersion(response.getVersion());
 	}
 
-	public static JsonPayload deleted(DeleteByQueryResponse response) {
+	public static JsonPayload bulk(BulkByScrollResponse response) {
 
-		if (response.isTimedOut())
-			return JsonPayload.error(504, //
-					"the delete by query operation timed out, some objects might have been deleted");
-
-		if (response.getTotalFound() != response.getTotalDeleted())
-			return JsonPayload.error(500,
-					"the delete by query operation failed to delete all objects found, "
-							+ "objects found [%s], objects deleted [%s]",
-					response.getTotalFound(), response.getTotalDeleted());
-
-		if (response.getShardFailures().length > 0)
-			return toPayload(500, response.getShardFailures());
-
-		return JsonPayload.ok()//
-				.withFields("totalDeleted", response.getTotalDeleted());
-	}
-
-	public static JsonPayload toPayload(int status, ShardOperationFailedException[] failures) {
-
-		if (status < 400)
-			return JsonPayload.status(status);
-
-		ArrayNode errors = Json.array();
-		for (ShardOperationFailedException failure : failures)
-			errors.add(Json.object("type", failure.getClass().getName(), //
-					"message", failure.reason(), "shardId", failure.shardId()));
-
-		return JsonPayload.status(status).withError(errors);
+		return JsonPayload.ok().withFields(//
+				"timedOut", response.isTimedOut(), //
+				"created", response.getCreated(), //
+				"updated", response.getUpdated(), //
+				"deleted", response.getDeleted(), //
+				"reasonCancelled", response.getReasonCancelled(), //
+				"searchFailures", response.getSearchFailures(), //
+				"bulkFailures", response.getBulkFailures());
 	}
 
 }

@@ -60,7 +60,7 @@ public class DataService extends SpaceService {
 	@Delete("/:type")
 	@Delete("/:type/")
 	public Payload deleteByType(String type, Context context) {
-		return SearchService.get().deleteSearchForType(type, null, context);
+		return SearchService.get().deleteSearchType(type, null, context);
 	}
 
 	@Get("/:type/:id")

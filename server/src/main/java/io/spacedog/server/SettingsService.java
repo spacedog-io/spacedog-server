@@ -72,7 +72,7 @@ public class SettingsService extends SpaceService {
 		ObjectNode results = Json.object();
 
 		for (SearchHit hit : response.getHits().getHits())
-			results.set(hit.getId(), Json.readNode(hit.sourceAsString()));
+			results.set(hit.getId(), Json.readNode(hit.getSourceAsString()));
 
 		return JsonPayload.ok().withContent(results).build();
 	}

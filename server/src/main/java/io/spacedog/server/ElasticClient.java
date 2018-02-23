@@ -20,18 +20,15 @@ import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.delete.DeleteResponse;
-import org.elasticsearch.action.deletebyquery.DeleteByQueryAction;
-import org.elasticsearch.action.deletebyquery.DeleteByQueryRequest;
-import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.get.GetRequestBuilder;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.action.support.IndicesOptions;
-import org.elasticsearch.action.support.QuerySourceBuilder;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.ClusterAdminClient;
@@ -40,13 +37,16 @@ import org.elasticsearch.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.common.Priority;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.index.reindex.DeleteByQueryAction;
+import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-
-import com.google.common.base.Strings;
 
 import io.spacedog.http.SpaceParams;
 import io.spacedog.utils.Check;
@@ -109,7 +109,8 @@ public class ElasticClient implements SpaceParams {
 				? source.toString()
 				: Json.toString(source);
 
-		return prepareIndex(index).setSource(sourceString).setRefresh(refresh).get();
+		return prepareIndex(index).setSource(sourceString)//
+				.setRefreshPolicy(ElasticUtils.toPolicy(refresh)).get();
 	}
 
 	public IndexResponse index(Index index, String id, Object source) {
@@ -121,7 +122,8 @@ public class ElasticClient implements SpaceParams {
 				? source.toString()
 				: Json.toString(source);
 
-		return prepareIndex(index, id).setSource(sourceString).setRefresh(refresh).get();
+		return prepareIndex(index, id).setSource(sourceString)//
+				.setRefreshPolicy(ElasticUtils.toPolicy(refresh)).get();
 	}
 
 	public IndexResponse index(Index index, String id, byte[] source) {
@@ -129,7 +131,8 @@ public class ElasticClient implements SpaceParams {
 	}
 
 	public IndexResponse index(Index index, String id, byte[] source, boolean refresh) {
-		return prepareIndex(index, id).setSource(source).setRefresh(refresh).get();
+		return prepareIndex(index, id).setSource(source)//
+				.setRefreshPolicy(ElasticUtils.toPolicy(refresh)).get();
 	}
 
 	//
@@ -203,41 +206,33 @@ public class ElasticClient implements SpaceParams {
 
 	public boolean delete(Index index, String id, boolean refresh, boolean throwNotFound) {
 		DeleteResponse response = internalClient.prepareDelete(//
-				index.alias(), index.type(), id).setRefresh(refresh).get();
+				index.alias(), index.type(), id)//
+				.setRefreshPolicy(ElasticUtils.toPolicy(refresh))//
+				.get();
 
-		if (response.isFound())
+		if (ElasticUtils.isDeleted(response))
 			return true;
+
 		if (throwNotFound)
 			throw Exceptions.notFound(index.type(), id);
 
 		return false;
 	}
 
-	public DeleteByQueryResponse deleteByQuery(QueryBuilder query, Index... indices) {
-
-		DeleteByQueryRequest request = new DeleteByQueryRequest(Index.aliases(indices))//
-				.timeout(new TimeValue(60000))//
-				.source(new QuerySourceBuilder().setQuery(query));
-
-		try {
-			return execute(DeleteByQueryAction.INSTANCE, request).get();
-
-		} catch (ExecutionException | InterruptedException e) {
-			throw Exceptions.runtime(e);
-		}
+	public BulkByScrollResponse deleteByQuery(String query, Index... indices) {
+		return deleteByQuery(QueryBuilders.wrapperQuery(query), indices);
 	}
 
-	public DeleteByQueryResponse deleteByQuery(String query, Index... indices) {
+	public BulkByScrollResponse deleteByQuery(QueryBuilder query, Index... indices) {
 
-		if (Strings.isNullOrEmpty(query))
-			query = SearchSourceBuilder.searchSource().toString();
+		SearchRequest searchRequest = new SearchRequest(Index.aliases(indices))//
+				.source(new SearchSourceBuilder().query(query));
 
-		DeleteByQueryRequest delete = new DeleteByQueryRequest(Index.aliases(indices))//
-				.timeout(new TimeValue(60000))//
-				.source(query);
+		DeleteByQueryRequest deleteRequest = new DeleteByQueryRequest(searchRequest)//
+				.setTimeout(new TimeValue(60000));
 
 		try {
-			return execute(DeleteByQueryAction.INSTANCE, delete).get();
+			return execute(DeleteByQueryAction.INSTANCE, deleteRequest).get();
 
 		} catch (ExecutionException | InterruptedException e) {
 			throw Exceptions.runtime(e);
@@ -252,9 +247,8 @@ public class ElasticClient implements SpaceParams {
 		return internalClient.prepareBulk();
 	}
 
-	public <Request extends ActionRequest<?>, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>> ActionFuture<Response> execute(
-			final Action<Request, Response, RequestBuilder> action, //
-			final Request request) {
+	public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>> ActionFuture<Response> execute(
+			Action<Request, Response, RequestBuilder> action, Request request) {
 		return internalClient.execute(action, request);
 	}
 
@@ -289,7 +283,7 @@ public class ElasticClient implements SpaceParams {
 
 		CreateIndexResponse createIndexResponse = internalClient.admin().indices()//
 				.prepareCreate(index.toString())//
-				.addMapping(index.type(), mapping)//
+				.addMapping(index.type(), mapping, XContentType.JSON)//
 				.addAlias(new Alias(index.alias()))//
 				.setSettings(settings)//
 				.get();
@@ -321,7 +315,7 @@ public class ElasticClient implements SpaceParams {
 						.timeout(TimeValue.timeValueSeconds(conf.serverGreenTimeout()))//
 						.waitForGreenStatus()//
 						.waitForEvents(Priority.LOW)//
-						.waitForRelocatingShards(0))//
+						.waitForNoRelocatingShards(true))//
 				.actionGet();
 
 		if (conf.serverGreenCheck()) {

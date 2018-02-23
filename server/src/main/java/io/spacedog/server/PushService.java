@@ -2,6 +2,7 @@ package io.spacedog.server;
 
 import java.util.Optional;
 
+import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
@@ -118,7 +119,7 @@ public class PushService extends SpaceService {
 			query.must(QueryBuilders.termsQuery(OWNER_FIELD, request.credentialsIds));
 
 		if (!Utils.isNullOrEmpty(request.installationIds))
-			query.must(QueryBuilders.idsQuery().ids(request.installationIds));
+			query.must(QueryBuilders.idsQuery().addIds(request.installationIds));
 
 		if (request.protocol != null)
 			query.must(QueryBuilders.termQuery(PROTOCOL, request.protocol));
@@ -144,18 +145,21 @@ public class PushService extends SpaceService {
 				.get()//
 				.getHits();
 
-		if (hits.totalHits() > 1000)
+		if (hits.getTotalHits() > 1000)
 			return JsonPayload.error(HttpStatus.NOT_IMPLEMENTED) //
 					.withError("push to [%s] installations is a premium feature", //
-							hits.totalHits())//
+							hits.getTotalHits())//
 					.build();
 
 		PushResponse response = new PushResponse();
 
 		for (SearchHit hit : hits.getHits()) {
 			DataObject<Installation> installation = new InstallationDataObject()//
-					.source(Json.toPojo(hit.source(), Installation.class))//
-					.id(hit.id());
+					.source(Json.toPojo(//
+							BytesReference.toBytes(hit.getSourceRef()), //
+							Installation.class))//
+					.id(hit.getId());
+
 			pushToInstallation(response, installation, toJsonMessage(request), //
 					credentials, request.badgeStrategy);
 			if (response.applicationDisabled)
@@ -192,7 +196,7 @@ public class PushService extends SpaceService {
 						.withMessageStructure("json")//
 						.withMessage(snsMessage.toString());
 
-				AwsSnsPusher.getSnsClient().publish(pushRequest);
+				AwsSnsPusher.sns().publish(pushRequest);
 			} else
 				notification.message = snsMessage;
 

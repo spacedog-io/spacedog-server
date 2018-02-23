@@ -5,11 +5,10 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.support.QuerySourceBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeQueryBuilder;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.sort.SortOrder;
 import org.joda.time.DateTime;
@@ -85,8 +84,12 @@ public class LogService extends SpaceService {
 
 		SpaceContext.credentials().checkAtLeastAdmin();
 		elastic().refreshType(logIndex(), isRefreshRequested(context));
+
 		SearchResponse response = elastic().prepareSearch(logIndex())//
-				.setTypes(TYPE).setSource(body).get();
+				.setTypes(TYPE)//
+				.setSource(ElasticUtils.toSourceBuilder(body))//
+				.get();
+
 		return extractLogs(response);
 	}
 
@@ -100,8 +103,8 @@ public class LogService extends SpaceService {
 		DateTime before = param == null ? DateTime.now().minusDays(7) //
 				: DateTime.parse(param);
 
-		DeleteByQueryResponse response = doPurge(before);
-		return ElasticPayload.deleted(response).build();
+		BulkByScrollResponse response = doPurge(before);
+		return ElasticPayload.bulk(response).build();
 	}
 
 	//
@@ -160,24 +163,22 @@ public class LogService extends SpaceService {
 		return credentials.isSuperDog() || credentials.roles().contains(PURGE_ALL);
 	}
 
-	private DeleteByQueryResponse doPurge(DateTime before) {
+	private BulkByScrollResponse doPurge(DateTime before) {
 
 		RangeQueryBuilder builder = QueryBuilders.rangeQuery(RECEIVED_AT_FIELD)//
 				.lt(before.toString());
 
-		String query = new QuerySourceBuilder().setQuery(builder).toString();
-		DeleteByQueryResponse response = elastic().deleteByQuery(query, logIndex());
-		return response;
+		return elastic().deleteByQuery(builder, logIndex());
 	}
 
 	private Payload extractLogs(SearchResponse response) {
 
 		ArrayNode array = Json.array();
 		for (SearchHit hit : response.getHits().getHits())
-			array.add(Json.readNode(hit.sourceAsString()));
+			array.add(Json.readNode(hit.getSourceAsString()));
 
 		return JsonPayload.ok()//
-				.withFields("took", response.getTookInMillis())//
+				.withFields("took", response.getTook().millis())//
 				.withFields("total", response.getHits().getTotalHits())//
 				.withResults(array)//
 				.build();

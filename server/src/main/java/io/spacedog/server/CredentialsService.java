@@ -526,10 +526,10 @@ public class CredentialsService extends SpaceService {
 					.get()//
 					.getHits();
 
-			if (hits.totalHits() == 0)
+			if (hits.getTotalHits() == 0)
 				throw Exceptions.invalidAccessToken();
 
-			if (hits.totalHits() == 1) {
+			if (hits.getTotalHits() == 1) {
 				Credentials credentials = toCredentials(hits.getAt(0));
 				credentials.setCurrentSession(accessToken);
 
@@ -541,7 +541,7 @@ public class CredentialsService extends SpaceService {
 
 			throw Exceptions.runtime(//
 					"access token [%s] associated with [%s] credentials", //
-					accessToken, hits.totalHits());
+					accessToken, hits.getTotalHits());
 
 		} catch (IndexNotFoundException e) {
 			throw Exceptions.invalidAccessToken();
@@ -763,11 +763,11 @@ public class CredentialsService extends SpaceService {
 
 		Index index = credentialsIndex();
 		SearchHits hits = elastic().prepareSearch(index)//
-				.setSource(builder.toString()).get().getHits();
+				.setSource(builder).get().getHits();
 
 		SearchResults<Credentials> response = new SearchResults<>();
 		response.type = index.type();
-		response.total = hits.totalHits();
+		response.total = hits.getTotalHits();
 		response.results = Lists.newArrayList();
 
 		for (SearchHit hit : hits)

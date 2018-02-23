@@ -5,7 +5,6 @@ package io.spacedog.server;
 
 import java.io.IOException;
 
-import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.text.Text;
@@ -13,9 +12,9 @@ import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.json.JsonXContent;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.InternalAggregations;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -62,7 +61,7 @@ public class SearchService extends SpaceService {
 
 	@Delete("")
 	@Delete("/")
-	public Payload deleteAllTypes(String query, Context context) {
+	public Payload deleteSearchAllTypes(String query, Context context) {
 		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
 		String[] types = DataAccessControl.types(credentials, Permission.delete);
 
@@ -70,9 +69,9 @@ public class SearchService extends SpaceService {
 			return JsonPayload.ok().build();
 
 		DataStore.get().refreshDataTypes(isRefreshRequested(context, true), types);
-		DeleteByQueryResponse response = elastic().deleteByQuery(//
+		BulkByScrollResponse response = elastic().deleteByQuery(//
 				query, DataStore.toDataIndex(types));
-		return ElasticPayload.deleted(response).build();
+		return ElasticPayload.bulk(response).build();
 	}
 
 	@Get("/:type")
@@ -98,16 +97,16 @@ public class SearchService extends SpaceService {
 
 	@Delete("/:type")
 	@Delete("/:type/")
-	public Payload deleteSearchForType(String type, String query, Context context) {
+	public Payload deleteSearchType(String type, String query, Context context) {
 		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
 
 		if (DataAccessControl.roles(type)//
 				.containsOne(credentials, Permission.delete)) {
 
 			DataStore.get().refreshDataTypes(isRefreshRequested(context, true), type);
-			DeleteByQueryResponse response = elastic()//
+			BulkByScrollResponse response = elastic()//
 					.deleteByQuery(query, DataStore.toDataIndex(type));
-			return ElasticPayload.deleted(response).build();
+			return ElasticPayload.bulk(response).build();
 		}
 		throw Exceptions.forbidden("forbidden to delete [%s] objects", type);
 	}
@@ -140,9 +139,7 @@ public class SearchService extends SpaceService {
 				search.setQuery(QueryBuilders.simpleQueryStringQuery(queryText));
 
 		} else {
-			search.setExtraSource(//
-					SearchSourceBuilder.searchSource().version(true).buildAsBytes());
-			search.setSource(jsonQuery);
+			search.setSource(ElasticUtils.toSourceBuilder(jsonQuery).version(true));
 		}
 
 		return extractResults(search.get(), context, credentials);
@@ -157,20 +154,20 @@ public class SearchService extends SpaceService {
 			// when the data is not requested
 			// fetch-source = false for GET requests
 			// or _source = false for POST requests
-			JsonNode source = hit.isSourceEmpty() //
+			JsonNode source = hit.hasSource() //
 					? NullNode.getInstance()
-					: Json.readObject(hit.sourceAsString());
+					: Json.readObject(hit.getSourceAsString());
 
-			ObjectNode object = Json.object("id", hit.id(), //
-					"type", hit.type(), "version", hit.version(), //
+			ObjectNode object = Json.object("id", hit.getId(), //
+					"type", hit.getType(), "version", hit.getVersion(), //
 					"source", source);
 
-			if (Float.isFinite(hit.score()))
-				object.put("score", hit.score());
+			if (Float.isFinite(hit.getScore()))
+				object.put("score", hit.getScore());
 
-			if (!Utils.isNullOrEmpty(hit.sortValues())) {
+			if (!Utils.isNullOrEmpty(hit.getSortValues())) {
 				ArrayNode array = Json.array();
-				for (Object value : hit.sortValues()) {
+				for (Object value : hit.getSortValues()) {
 					if (value instanceof Text)
 						value = value.toString();
 					array.add(Json.toJsonNode(value));
