@@ -4,19 +4,17 @@
 package io.spacedog.server;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 
-import org.elasticsearch.action.support.AutoCreateIndex;
 import org.elasticsearch.analysis.common.CommonAnalysisPlugin;
-import org.elasticsearch.cluster.ClusterName;
-import org.elasticsearch.common.network.NetworkModule;
-import org.elasticsearch.common.network.NetworkService;
+import org.elasticsearch.cli.Terminal;
+import org.elasticsearch.common.logging.LogConfigurator;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.settings.Settings.Builder;
 import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.discovery.DiscoveryModule;
 import org.elasticsearch.env.Environment;
-import org.elasticsearch.node.Node;
+import org.elasticsearch.node.InternalSettingsPreparer;
 import org.elasticsearch.node.NodeValidationException;
 import org.elasticsearch.transport.Netty4Plugin;
 import org.joda.time.DateTimeZone;
@@ -91,34 +89,49 @@ public class Server {
 			throws InterruptedException, ExecutionException, IOException, NodeValidationException {
 
 		Builder builder = Settings.builder()//
-				.put(Node.NODE_MASTER_SETTING.getKey(), true)//
-				.put(Node.NODE_DATA_SETTING.getKey(), true)//
-				.put(DiscoveryModule.DISCOVERY_TYPE_SETTING.getKey(), "single-node")//
-				// .put(NetworkModule.TRANSPORT_TYPE_SETTING.getKey(), "netty4") //
-				.put(ClusterName.CLUSTER_NAME_SETTING.getKey(), CLUSTER_NAME)//
-				// disable automatic index creation
-				.put(AutoCreateIndex.AUTO_CREATE_INDEX_SETTING.getKey(), false)//
-				// disable dynamic indexing
-				// .put("index.mapper.dynamic", false)//
-				// .put("index.max_result_window", 5000)//
-				// disable rebalance to avoid automatic rebalance
-				// when a temporary second node appears
-				.put("cluster.routing.rebalance.enable", "none")//
-				.put(NetworkModule.HTTP_ENABLED.getKey(), //
-						config.elasticIsHttpEnabled())//
-				.put(NetworkService.GLOBAL_NETWORK_HOST_SETTING.getKey(), //
-						config.elasticNetworkHost())//
 				.put(Environment.PATH_HOME_SETTING.getKey(), //
-						config.homePath().toAbsolutePath().toString())
-				.put(Environment.PATH_DATA_SETTING.getKey(), //
-						config.elasticDataPath().toAbsolutePath().toString());
+						config.homePath().toAbsolutePath().toString());
+		// .put(Node.NODE_MASTER_SETTING.getKey(), true)//
+		// .put(Node.NODE_DATA_SETTING.getKey(), true)//
+		// .put(DiscoveryModule.DISCOVERY_TYPE_SETTING.getKey(), "single-node")//
+		// // .put(NetworkModule.TRANSPORT_TYPE_SETTING.getKey(), "netty4") //
+		// .put(ClusterName.CLUSTER_NAME_SETTING.getKey(), CLUSTER_NAME)//
+		// // disable automatic index creation
+		// .put(AutoCreateIndex.AUTO_CREATE_INDEX_SETTING.getKey(), false)//
+		// // disable dynamic indexing
+		// // .put("index.mapper.dynamic", false)//
+		// // .put("index.max_result_window", 5000)//
+		// // disable rebalance to avoid automatic rebalance
+		// // when a temporary second node appears
+		// .put("cluster.routing.rebalance.enable", "none")//
+		// .put(NetworkModule.HTTP_ENABLED.getKey(), //
+		// config.elasticIsHttpEnabled())//
+		// .put(NetworkService.GLOBAL_NETWORK_HOST_SETTING.getKey(), //
+		// config.elasticNetworkHost())//
+		// .put(Environment.PATH_LOGS_SETTING.getKey(), //
+		// config.elasticLogsPath().toAbsolutePath().toString())
+		// .put(Environment.PATH_DATA_SETTING.getKey(), //
+		// config.elasticDataPath().toAbsolutePath().toString());
+		//
+		// if (config.elasticSnapshotsPath().isPresent())
+		// builder.put(Environment.PATH_REPO_SETTING.getKey(), //
+		// config.elasticSnapshotsPath().get().toAbsolutePath().toString());
 
-		if (config.elasticSnapshotsPath().isPresent())
-			builder.put(Environment.PATH_REPO_SETTING.getKey(), //
-					config.elasticSnapshotsPath().get().toAbsolutePath().toString());
+		Settings settings = builder.build();
 
-		elasticNode = new ElasticNode(builder.build(), //
-				Netty4Plugin.class, CommonAnalysisPlugin.class);// , //
+		Environment environment = InternalSettingsPreparer.prepareEnvironment(//
+				settings, Terminal.DEFAULT, Collections.emptyMap(), config.elasticConfigPath());
+
+		try {
+			LogConfigurator.configure(environment);
+		} catch (Exception e) {
+			throw Exceptions.runtime(e, "error configuring elastic log");
+		}
+
+		elasticNode = new ElasticNode(environment, //
+				Netty4Plugin.class, //
+				CommonAnalysisPlugin.class);
+
 		// S3RepositoryPlugin.class);
 
 		elasticNode.start();
