@@ -155,8 +155,8 @@ public class SearchService extends SpaceService {
 			// fetch-source = false for GET requests
 			// or _source = false for POST requests
 			JsonNode source = hit.hasSource() //
-					? NullNode.getInstance()
-					: Json.readObject(hit.getSourceAsString());
+					? Json.readObject(hit.getSourceAsString())//
+					: NullNode.getInstance();
 
 			ObjectNode object = Json.object("id", hit.getId(), //
 					"type", hit.getType(), "version", hit.getVersion(), //
