@@ -38,8 +38,7 @@ public class SchemaTranslator implements SpaceFields, SchemaDirectives, MappingD
 	private static final ObjectNode DOUBLE = //
 			Json.object(m_type, m_double, m_coerce, false);
 	private static final ObjectNode GEOPOINT = //
-			Json.object(m_type, "geo_point", "lat_lon", true, "geohash", true, //
-					"geohash_precision", "1m", "geohash_prefix", true);
+			Json.object(m_type, "geo_point");
 
 	public static ObjectNode translate(String type, JsonNode schema) {
 
