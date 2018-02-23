@@ -139,7 +139,7 @@ public class SearchService extends SpaceService {
 				search.setQuery(QueryBuilders.simpleQueryStringQuery(queryText));
 
 		} else {
-			search.setSource(ElasticUtils.toSourceBuilder(jsonQuery).version(true));
+			search.setSource(ElasticUtils.toSearchSourceBuilder(jsonQuery).version(true));
 		}
 
 		return extractResults(search.get(), context, credentials);

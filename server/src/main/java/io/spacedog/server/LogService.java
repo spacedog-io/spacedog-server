@@ -87,7 +87,7 @@ public class LogService extends SpaceService {
 
 		SearchResponse response = elastic().prepareSearch(logIndex())//
 				.setTypes(TYPE)//
-				.setSource(ElasticUtils.toSourceBuilder(body))//
+				.setSource(ElasticUtils.toSearchSourceBuilder(body))//
 				.get();
 
 		return extractLogs(response);

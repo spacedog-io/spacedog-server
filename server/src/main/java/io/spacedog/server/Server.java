@@ -47,6 +47,10 @@ public class Server {
 		return elasticClient;
 	}
 
+	public ElasticNode elasticNode() {
+		return elasticNode;
+	}
+
 	public ServerConfiguration configuration() {
 		return config;
 	}
