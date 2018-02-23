@@ -12,7 +12,6 @@ import java.util.zip.ZipOutputStream;
 
 import org.joda.time.DateTime;
 
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.DeleteObjectsRequest;
@@ -37,15 +36,9 @@ import net.codestory.http.payload.StreamingOutput;
 
 public class S3Service extends SpaceService {
 
-	private final static AmazonS3 s3;;
-
-	static {
-		Regions region = Server.get().configuration()//
-				.awsRegion().orElse(Regions.EU_WEST_1);
-
-		s3 = AmazonS3ClientBuilder.standard()//
-				.withRegion(region).build();
-	}
+	private final static AmazonS3 s3 = AmazonS3ClientBuilder.standard()//
+			.withRegion(Server.get().configuration().awsRegionOrDefault())//
+			.build();
 
 	static AmazonS3 s3() {
 		return s3;

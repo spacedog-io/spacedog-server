@@ -122,6 +122,10 @@ public class ServerConfiguration {
 
 	}
 
+	public Regions awsRegionOrDefault() {
+		return awsRegion().orElse(Regions.EU_WEST_1);
+	}
+
 	public String awsBucketPrefix() {
 		return env.getOrElseThrow(AWS_BUCKET_PREFIX);
 	}

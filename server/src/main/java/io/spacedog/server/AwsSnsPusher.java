@@ -6,7 +6,6 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.AmazonSNSClientBuilder;
 import com.amazonaws.services.sns.model.CreatePlatformEndpointRequest;
@@ -25,15 +24,9 @@ import io.spacedog.utils.Utils;
 
 public class AwsSnsPusher {
 
-	private final static AmazonSNS sns;
-
-	static {
-		Regions region = Server.get().configuration()//
-				.awsRegion().orElse(Regions.EU_WEST_1);
-
-		sns = AmazonSNSClientBuilder.standard()//
-				.withRegion(region).build();
-	}
+	private final static AmazonSNS sns = AmazonSNSClientBuilder.standard()//
+			.withRegion(Server.get().configuration().awsRegionOrDefault())//
+			.build();
 
 	static AmazonSNS sns() {
 		return sns;
