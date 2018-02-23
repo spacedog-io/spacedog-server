@@ -293,7 +293,7 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 				query = Json.EMPTY_OBJECT;
 
 			return dog.delete(path).bodyJson(query)//
-					.refresh(refresh).go(200).get("totalDeleted").asLong();
+					.refresh(refresh).go(200).get("deleted").asLong();
 		}
 
 	}

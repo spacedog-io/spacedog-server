@@ -50,6 +50,7 @@ public class SearchServiceTest extends SpaceTest {
 				ESQueryBuilders.matchQuery("text", "something to drink"));
 		Results results = superadmin.data().searchRequest().source(source).go();
 
+		assertEquals(2, results.total);
 		assertEquals("wanna drink something?", //
 				results.results.get(0).source().get("text").asText());
 		assertEquals("pretty cool something, hein?", //
@@ -68,19 +69,29 @@ public class SearchServiceTest extends SpaceTest {
 		assertNotNull(results.results.get(0).updatedAt());
 
 		// deletes messages containing 'up' by query
-		superadmin.data().deleteBulkRequest()//
-				.query(ESQueryBuilders.matchQuery("text", "up"))//
+		long deleted = superadmin.data().deleteBulkRequest()//
+				.query(ESQueryBuilders.matchQuery("text", "something"))//
 				.go();
 
-		long total = superadmin.data().getAllRequest().type("message").refresh().go().total;
-		assertEquals(3, total);
+		assertEquals(2, deleted);
+		assertEquals(2, //
+				superadmin.data().getAllRequest()//
+						.type("message").refresh().go().total);
 
 		// deletes data objects containing 'wanna' or 'riri'
-		superadmin.data().deleteBulkRequest()//
-				.query(ESQueryBuilders.matchQuery("_all", "wanna riri")).go();
+		deleted = superadmin.data().deleteBulkRequest()//
+				.query(ESQueryBuilders.boolQuery()//
+						.should(ESQueryBuilders.matchQuery("name", "riri"))//
+						.should(ESQueryBuilders.matchQuery("text", "so")))//
+				.go();
 
-		total = superadmin.data().getAllRequest().refresh().go().total;
-		assertEquals(2, total);
+		assertEquals(2, deleted);
+
+		// only "what's up?" remains
+		results = superadmin.data().getAllRequest().refresh().go();
+		assertEquals(1, results.total);
+		assertEquals("what's up?", //
+				results.results.get(0).source().get("text").asText());
 	}
 
 	@Test

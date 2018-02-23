@@ -46,7 +46,6 @@ import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 import io.spacedog.http.SpaceParams;
 import io.spacedog.utils.Check;
@@ -225,14 +224,20 @@ public class ElasticClient implements SpaceParams {
 
 	public BulkByScrollResponse deleteByQuery(QueryBuilder query, Index... indices) {
 
-		SearchRequest searchRequest = new SearchRequest(Index.aliases(indices))//
-				.source(new SearchSourceBuilder().query(query));
-
-		DeleteByQueryRequest deleteRequest = new DeleteByQueryRequest(searchRequest)//
+		SearchRequest search = new SearchRequest(Index.aliases(indices));
+		DeleteByQueryRequest delete = new DeleteByQueryRequest(search)//
 				.setTimeout(new TimeValue(60000));
 
+		// TODO
+		// do not set source query above since new DeleteByQueryRequest(search)
+		// sets an empty SearchSourceBuilder replacing previously set
+		// TODO
+		// search source size is also forced at 1000 by same ctor
+		// i hope it doen't count since this is a bulk delete
+		search.source().query(query);
+
 		try {
-			return execute(DeleteByQueryAction.INSTANCE, deleteRequest).get();
+			return execute(DeleteByQueryAction.INSTANCE, delete).get();
 
 		} catch (ExecutionException | InterruptedException e) {
 			throw Exceptions.runtime(e);
