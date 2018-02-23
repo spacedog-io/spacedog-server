@@ -162,8 +162,11 @@ public class DataStore implements SpaceParams, SpaceFields {
 		ObjectNode source = Json.toObjectNode(object.source());
 		source.put(UPDATED_AT_FIELD, DateTime.now().toString());
 
-		UpdateResponse response = elastic().prepareUpdate(toDataIndex(object.type()), object.id())//
-				.setVersion(version(object)).setDoc(source.toString()).get();
+		UpdateResponse response = elastic()//
+				.prepareUpdate(toDataIndex(object.type()), object.id())//
+				.setVersion(version(object))//
+				.setDoc(source.toString(), XContentType.JSON)//
+				.get();
 
 		return object.version(response.getVersion())//
 				.justCreated(ElasticUtils.isCreated(response));
