@@ -1,12 +1,5 @@
 {  
    "template":"*-data-*",
-   "mappings":{  
-      "_default_":{  
-         "_all":{  
-            "analyzer":"french"
-         }
-      }
-   },
    "settings":{
       "analysis":{
          "filter":{

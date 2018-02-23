@@ -23,7 +23,6 @@ public interface MappingDirectives {
 	String m_analyzer = "analyzer";
 	String m_dynamic = "dynamic";
 	String m_date_detection = "date_detection";
-	String m_all = "_all";
 	String m_strict = "strict";
 	String m_meta = "_meta";
 

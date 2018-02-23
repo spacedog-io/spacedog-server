@@ -61,8 +61,6 @@ public class SchemaTranslator implements SpaceFields, SchemaDirectives, MappingD
 					.add(m_dynamic, m_strict)//
 					.add(m_date_detection, false)//
 					.add(m_properties, propertiesNode)//
-					.object(m_all)//
-					.add(m_analyzer, defaultLanguage)//
 					.build();
 
 		throw Exceptions.illegalArgument("invalid schema root type [%s]", type);
