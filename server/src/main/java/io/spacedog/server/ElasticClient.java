@@ -379,7 +379,7 @@ public class ElasticClient implements SpaceParams {
 		PutMappingResponse putMappingResponse = internalClient.admin().indices()//
 				.preparePutMapping(index.alias())//
 				.setType(index.type())//
-				.setSource(mapping)//
+				.setSource(mapping, XContentType.JSON)//
 				.setUpdateAllTypes(true)//
 				.get();
 
