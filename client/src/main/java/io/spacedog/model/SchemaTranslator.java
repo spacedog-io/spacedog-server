@@ -16,7 +16,7 @@ import io.spacedog.utils.JsonBuilder;
 public class SchemaTranslator implements SpaceFields, SchemaDirectives, MappingDirectives {
 
 	private static final ObjectNode STASH = //
-			Json.object(m_type, m_object, m_enable, false);
+			Json.object(m_type, m_object, m_enabled, false);
 	private static final ObjectNode KEYWORD = //
 			Json.object(m_type, m_keyword);
 
@@ -97,7 +97,7 @@ public class SchemaTranslator implements SpaceFields, SchemaDirectives, MappingD
 	private static ObjectNode toElasticProperty(String key, JsonNode schema, String defaultLanguage) {
 		String type = schema.path(s_type).asText(m_object);
 		if (s_text.equals(type))
-			return Json.object(m_type, m_text, m_index, m_analyzed, //
+			return Json.object(m_type, m_text, m_index, true, //
 					m_analyzer, language(schema, defaultLanguage));
 		else if (s_string.equals(type))
 			return KEYWORD;

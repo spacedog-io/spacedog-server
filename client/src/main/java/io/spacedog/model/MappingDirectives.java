@@ -12,12 +12,12 @@ public interface MappingDirectives {
 	String m_text = "text";
 	String m_keyword = "keyword";
 	String m_object = "object";
+
+	// parameters
 	String m_format = "format";
 	String m_coerce = "coerce";
 	String m_index = "index";
-	String m_enable = "enabled";
-
-	// fields
+	String m_enabled = "enabled";
 	String m_type = "type";
 	String m_properties = "properties";
 	String m_analyzer = "analyzer";
@@ -25,10 +25,9 @@ public interface MappingDirectives {
 	String m_date_detection = "date_detection";
 	String m_all = "_all";
 	String m_strict = "strict";
+	String m_meta = "_meta";
 
 	// values
-	String m_analyzed = "analyzed";
-	String m_not_analyzed = "not_analyzed";
 	String m_french = "french";
 	String m_english = "english";
 }
