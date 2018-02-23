@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 
@@ -186,7 +187,7 @@ public class SettingsService extends SpaceService {
 	public <K extends Settings> IndexResponse saveAsObject(K settings) {
 		makeSureIndexIsCreated();
 		return elastic().prepareIndex(settingsIndex(), settings.id())//
-				.setSource(Json.toString(settings))//
+				.setSource(Json.toString(settings), XContentType.JSON)//
 				.setVersion(settings.version())//
 				.get();
 	}
@@ -209,7 +210,7 @@ public class SettingsService extends SpaceService {
 		checkSettingsAreValid(id, source);
 		makeSureIndexIsCreated();
 		return elastic().prepareIndex(settingsIndex(), id)//
-				.setSource(source).get();
+				.setSource(source, XContentType.JSON).get();
 	}
 
 	public void doDelete(String id) {

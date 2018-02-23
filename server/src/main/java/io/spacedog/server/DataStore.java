@@ -17,6 +17,7 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.lucene.uid.Versions;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHits;
@@ -148,7 +149,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 
 		IndexResponse response = elastic().prepareIndex(//
 				toDataIndex(object.type()), object.id())//
-				.setSource(Json.toString(object.source()))//
+				.setSource(Json.toString(object.source()), XContentType.JSON)//
 				.setVersion(version(object))//
 				.get();
 

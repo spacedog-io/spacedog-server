@@ -109,7 +109,7 @@ public class ElasticClient implements SpaceParams {
 				? source.toString()
 				: Json.toString(source);
 
-		return prepareIndex(index).setSource(sourceString)//
+		return prepareIndex(index).setSource(sourceString, XContentType.JSON)//
 				.setRefreshPolicy(ElasticUtils.toPolicy(refresh)).get();
 	}
 
@@ -122,7 +122,7 @@ public class ElasticClient implements SpaceParams {
 				? source.toString()
 				: Json.toString(source);
 
-		return prepareIndex(index, id).setSource(sourceString)//
+		return prepareIndex(index, id).setSource(sourceString, XContentType.JSON)//
 				.setRefreshPolicy(ElasticUtils.toPolicy(refresh)).get();
 	}
 
@@ -131,7 +131,7 @@ public class ElasticClient implements SpaceParams {
 	}
 
 	public IndexResponse index(Index index, String id, byte[] source, boolean refresh) {
-		return prepareIndex(index, id).setSource(source)//
+		return prepareIndex(index, id).setSource(source, XContentType.JSON)//
 				.setRefreshPolicy(ElasticUtils.toPolicy(refresh)).get();
 	}
 
