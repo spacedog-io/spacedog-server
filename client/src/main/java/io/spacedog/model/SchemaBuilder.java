@@ -82,7 +82,7 @@ public class SchemaBuilder implements SchemaDirectives {
 	public Schema build() {
 		ObjectNode node = builder.build();
 		if (acl != null)
-			node.with(name).set(_ACL, Json.mapper().valueToTree(acl));
+			node.with(name).set(s_acl, Json.mapper().valueToTree(acl));
 		return new Schema(name, node);
 	}
 
@@ -101,26 +101,26 @@ public class SchemaBuilder implements SchemaDirectives {
 
 	public SchemaBuilder array() {
 		checkCurrentPropertyExists();
-		checkCurrentPropertyByInvalidTypes(_ARRAY, SchemaType.STASH);
-		builder.add(_ARRAY, true);
+		checkCurrentPropertyByInvalidTypes(s_array, SchemaType.STASH);
+		builder.add(s_array, true);
 		return this;
 	}
 
 	public SchemaBuilder required() {
 		checkCurrentPropertyExists();
-		builder.add(_REQUIRED, true);
+		builder.add(s_required, true);
 		return this;
 	}
 
 	public SchemaBuilder values(Object... values) {
 		checkCurrentPropertyExists();
-		builder.array(_VALUES).add(values).end();
+		builder.array(s_values).add(values).end();
 		return this;
 	}
 
 	public SchemaBuilder examples(Object... examples) {
 		checkCurrentPropertyExists();
-		builder.array(_EXAMPLES).add(examples).end();
+		builder.array(s_examples).add(examples).end();
 		return this;
 	}
 
@@ -138,15 +138,15 @@ public class SchemaBuilder implements SchemaDirectives {
 
 	public SchemaBuilder language(String language) {
 		checkCurrentPropertyExists();
-		checkCurrentPropertyByValidType(_LANGUAGE, SchemaType.TEXT, SchemaType.OBJECT);
-		builder.add(_LANGUAGE, language);
+		checkCurrentPropertyByValidType(s_language, SchemaType.TEXT, SchemaType.OBJECT);
+		builder.add(s_language, language);
 		return this;
 	}
 
 	public SchemaBuilder refType(String type) {
 		checkCurrentPropertyExists();
-		checkCurrentPropertyByValidType(_REF_TYPE, SchemaType.STRING);
-		builder.add(_REF_TYPE, type);
+		checkCurrentPropertyByValidType(s_ref_type, SchemaType.STRING);
+		builder.add(s_ref_type, type);
 		return this;
 	}
 
@@ -155,17 +155,17 @@ public class SchemaBuilder implements SchemaDirectives {
 	}
 
 	public SchemaBuilder extra(ObjectNode extra) {
-		builder.add(_EXTRA, extra);
+		builder.add(s_extra, extra);
 		return this;
 	}
 
 	public SchemaBuilder enumType(String type) {
-		builder.add(_ENUM_TYPE, type);
+		builder.add(s_enum_type, type);
 		return this;
 	}
 
 	public SchemaBuilder labels(String... labels) {
-		builder.add(_LABELS, Json.object(//
+		builder.add(s_labels, Json.object(//
 				Arrays.copyOf(labels, labels.length, Object[].class)));
 		return this;
 	}

@@ -16,29 +16,29 @@ import io.spacedog.utils.JsonBuilder;
 public class SchemaTranslator implements SpaceFields, SchemaDirectives, MappingDirectives {
 
 	private static final ObjectNode STASH = //
-			Json.object(type_, object_, enable_, false);
-	private static final ObjectNode STRING = //
-			Json.object(type_, string_, index_, not_analyzed_);
+			Json.object(m_type, m_object, m_enable, false);
+	private static final ObjectNode KEYWORD = //
+			Json.object(m_type, m_keyword);
 
 	private static final ObjectNode TIMESTAMP = //
-			Json.object(type_, date_, format_, "date_time");
+			Json.object(m_type, m_date, m_format, "date_time");
 	private static final ObjectNode DATE = //
-			Json.object(type_, date_, format_, "date");
+			Json.object(m_type, m_date, m_format, "date");
 	private static final ObjectNode TIME = //
-			Json.object(type_, date_, format_, "hour_minute_second");
+			Json.object(m_type, m_date, m_format, "hour_minute_second");
 
 	private static final ObjectNode BOOLEAN = //
-			Json.object(type_, boolean_);
+			Json.object(m_type, m_boolean);
 	private static final ObjectNode INTEGER = //
-			Json.object(type_, integer_, coerce_, false);
+			Json.object(m_type, m_integer, m_coerce, false);
 	private static final ObjectNode LONG = //
-			Json.object(type_, longg, coerce_, false);
+			Json.object(m_type, m_long, m_coerce, false);
 	private static final ObjectNode FLOAT = //
-			Json.object(type_, float_, coerce_, false);
+			Json.object(m_type, m_float, m_coerce, false);
 	private static final ObjectNode DOUBLE = //
-			Json.object(type_, double_, coerce_, false);
+			Json.object(m_type, m_double, m_coerce, false);
 	private static final ObjectNode GEOPOINT = //
-			Json.object(type_, "geo_point", "lat_lon", true, "geohash", true, //
+			Json.object(m_type, "geo_point", "lat_lon", true, "geohash", true, //
 					"geohash_precision", "1m", "geohash_prefix", true);
 
 	public static ObjectNode translate(String type, JsonNode schema) {
@@ -51,27 +51,27 @@ public class SchemaTranslator implements SpaceFields, SchemaDirectives, MappingD
 
 	private static ObjectNode toElasticMapping(JsonNode schema) {
 
-		String type = schema.path(_TYPE).asText(object_);
+		String type = schema.path(s_type).asText(m_object);
 
-		String defaultLanguage = language(schema, "french");
+		String defaultLanguage = language(schema, m_french);
 		ObjectNode propertiesNode = toElasticProperties(schema, defaultLanguage);
 		addMetadataFields(propertiesNode);
 
-		if (object_.equals(type))
+		if (m_object.equals(type))
 			return Json.builder().object()//
-					.add("dynamic", "strict")//
-					.add("date_detection", false)//
-					.add(properties_, propertiesNode)//
-					.object("_all")//
-					.add("analyzer", defaultLanguage)//
+					.add(m_dynamic, m_strict)//
+					.add(m_date_detection, false)//
+					.add(m_properties, propertiesNode)//
+					.object(m_all)//
+					.add(m_analyzer, defaultLanguage)//
 					.build();
 
 		throw Exceptions.illegalArgument("invalid schema root type [%s]", type);
 	}
 
 	private static void addMetadataFields(ObjectNode propertiesNode) {
-		propertiesNode.set(OWNER_FIELD, STRING);
-		propertiesNode.set(GROUP_FIELD, STRING);
+		propertiesNode.set(OWNER_FIELD, KEYWORD);
+		propertiesNode.set(GROUP_FIELD, KEYWORD);
 		propertiesNode.set(CREATED_AT_FIELD, TIMESTAMP);
 		propertiesNode.set(UPDATED_AT_FIELD, TIMESTAMP);
 	}
@@ -91,40 +91,40 @@ public class SchemaTranslator implements SpaceFields, SchemaDirectives, MappingD
 	}
 
 	private static String language(JsonNode schema, String defaultLanguage) {
-		return schema.path(_LANGUAGE).asText(defaultLanguage);
+		return schema.path(s_language).asText(defaultLanguage);
 	}
 
 	private static ObjectNode toElasticProperty(String key, JsonNode schema, String defaultLanguage) {
-		String type = schema.path(_TYPE).asText(object_);
-		if ("text".equals(type))
-			return Json.object(type_, string_, index_, "analyzed", //
-					"analyzer", language(schema, defaultLanguage));
-		else if (string_.equals(type))
-			return STRING;
-		else if (boolean_.equals(type))
+		String type = schema.path(s_type).asText(m_object);
+		if (s_text.equals(type))
+			return Json.object(m_type, m_text, m_index, m_analyzed, //
+					m_analyzer, language(schema, defaultLanguage));
+		else if (s_string.equals(type))
+			return KEYWORD;
+		else if (s_boolean.equals(type))
 			return BOOLEAN;
-		else if (integer_.equals(type))
+		else if (s_integer.equals(type))
 			return INTEGER;
-		else if (longg.equals(type))
+		else if (s_long.equals(type))
 			return LONG;
-		else if (float_.equals(type))
+		else if (s_float.equals(type))
 			return FLOAT;
-		else if (double_.equals(type))
+		else if (s_double.equals(type))
 			return DOUBLE;
-		else if (date_.equals(type))
+		else if (s_date.equals(type))
 			return DATE;
-		else if ("time".equals(type))
+		else if (s_time.equals(type))
 			return TIME;
-		else if ("timestamp".equals(type))
+		else if (s_timestamp.equals(type))
 			return TIMESTAMP;
-		else if ("enum".equals(type))
-			return STRING;
-		else if ("geopoint".equals(type))
+		else if (s_enum.equals(type))
+			return KEYWORD;
+		else if (s_geopoint.equals(type))
 			return GEOPOINT;
-		else if (object_.equals(type))
-			return Json.object(type_, object_, //
-					properties_, toElasticProperties(schema, language(schema, defaultLanguage)));
-		else if ("stash".equals(type))
+		else if (m_object.equals(type))
+			return Json.object(m_type, m_object, m_properties, //
+					toElasticProperties(schema, language(schema, defaultLanguage)));
+		else if (s_stash.equals(type))
 			return STASH;
 
 		throw Exceptions.illegalArgument("invalid type [%s] for property [%s]", type, key);

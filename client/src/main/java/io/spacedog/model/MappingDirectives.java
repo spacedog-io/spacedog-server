@@ -2,19 +2,33 @@ package io.spacedog.model;
 
 public interface MappingDirectives {
 
-	String double_ = "double";
-	String float_ = "float";
-	String longg = "long";
-	String integer_ = "integer";
-	String boolean_ = "boolean";
-	String format_ = "format";
-	String date_ = "date";
-	String index_ = "index";
-	String string_ = "string";
-	String enable_ = "enabled";
-	String object_ = "object";
-	String type_ = "type";
-	String properties_ = "properties";
-	String coerce_ = "coerce";
-	String not_analyzed_ = "not_analyzed";
+	// types
+	String m_double = "double";
+	String m_float = "float";
+	String m_long = "long";
+	String m_integer = "integer";
+	String m_boolean = "boolean";
+	String m_date = "date";
+	String m_text = "text";
+	String m_keyword = "keyword";
+	String m_object = "object";
+	String m_format = "format";
+	String m_coerce = "coerce";
+	String m_index = "index";
+	String m_enable = "enabled";
+
+	// fields
+	String m_type = "type";
+	String m_properties = "properties";
+	String m_analyzer = "analyzer";
+	String m_dynamic = "dynamic";
+	String m_date_detection = "date_detection";
+	String m_all = "_all";
+	String m_strict = "strict";
+
+	// values
+	String m_analyzed = "analyzed";
+	String m_not_analyzed = "not_analyzed";
+	String m_french = "french";
+	String m_english = "english";
 }

@@ -2,20 +2,20 @@
     "log" : {
         "dynamic" : "strict",
         "properties" : {
-            "method" : {"type" : "string", "index" : "not_analyzed"},
-            "path" : {"type" : "string", "index" : "not_analyzed"},
+            "method" : {"type" : "keyword"},
+            "path" : {"type" : "keyword"},
             "receivedAt" : {"type" : "date", "format" : "date_time"},
             "processedIn" : {"type" : "long", "coerce" : false},
             "credentials" : {
                 "type" : "object",
                 "properties" : {
-                    "id" : {"type" : "string", "index" : "not_analyzed"},
-                    "username" : {"type" : "string", "index" : "not_analyzed"},
-                    "roles" : {"type" : "string", "index" : "not_analyzed"}
+                    "id" : {"type" : "keyword"},
+                    "username" : {"type" : "keyword"},
+                    "roles" : {"type" : "keyword"}
                 }
             },
-            "parameters" : {"type" : "string", "index" : "not_analyzed"},
-            "headers" : {"type" : "string"},
+            "parameters" : {"type" : "keyword"},
+            "headers" : {"type" : "keyword"},
             "payload" : {"type" : "object", "enabled" : false},
             "status" : {"type" : "integer", "coerce" : false},
             "response" : {"type" : "object", "enabled" : false}
