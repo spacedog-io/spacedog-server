@@ -14,6 +14,7 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.settings.Settings.Builder;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.env.Environment;
+import org.elasticsearch.index.reindex.ReindexPlugin;
 import org.elasticsearch.node.InternalSettingsPreparer;
 import org.elasticsearch.node.NodeValidationException;
 import org.elasticsearch.transport.Netty4Plugin;
@@ -134,7 +135,8 @@ public class Server {
 
 		elasticNode = new ElasticNode(environment, //
 				Netty4Plugin.class, //
-				CommonAnalysisPlugin.class);
+				CommonAnalysisPlugin.class, //
+				ReindexPlugin.class);
 
 		// S3RepositoryPlugin.class);
 
