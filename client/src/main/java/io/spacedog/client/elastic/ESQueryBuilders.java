@@ -34,8 +34,7 @@ public abstract class ESQueryBuilders {
 	}
 
 	/**
-	 * Creates a match query with type "BOOLEAN" for the provided field name and
-	 * text.
+	 * Creates a match query for the provided field name and text.
 	 *
 	 * @param name
 	 *            The field name.
@@ -43,32 +42,31 @@ public abstract class ESQueryBuilders {
 	 *            The query text (to be analyzed).
 	 */
 	public static ESMatchQueryBuilder matchQuery(String name, Object text) {
-		return new ESMatchQueryBuilder(name, text).type(ESMatchQueryBuilder.Type.BOOLEAN);
+		return new ESMatchQueryBuilder(name, text);
 	}
 
 	/**
-	 * Creates a text query with type "PHRASE" for the provided field name and text.
+	 * Creates a match phrase text query for the provided field name and text.
 	 *
 	 * @param name
 	 *            The field name.
 	 * @param text
 	 *            The query text (to be analyzed).
 	 */
-	public static ESMatchQueryBuilder matchPhraseQuery(String name, Object text) {
-		return new ESMatchQueryBuilder(name, text).type(ESMatchQueryBuilder.Type.PHRASE);
+	public static ESMatchPhraseQueryBuilder matchPhraseQuery(String name, Object text) {
+		return new ESMatchPhraseQueryBuilder(name, text);
 	}
 
 	/**
-	 * Creates a match query with type "PHRASE_PREFIX" for the provided field name
-	 * and text.
+	 * Creates a match phrase prefix query for the provided field name and text.
 	 *
 	 * @param name
 	 *            The field name.
 	 * @param text
 	 *            The query text (to be analyzed).
 	 */
-	public static ESMatchQueryBuilder matchPhrasePrefixQuery(String name, Object text) {
-		return new ESMatchQueryBuilder(name, text).type(ESMatchQueryBuilder.Type.PHRASE_PREFIX);
+	public static ESMatchPhrasePrefixQueryBuilder matchPhrasePrefixQuery(String name, Object text) {
+		return new ESMatchPhrasePrefixQueryBuilder(name, text);
 	}
 
 	/**

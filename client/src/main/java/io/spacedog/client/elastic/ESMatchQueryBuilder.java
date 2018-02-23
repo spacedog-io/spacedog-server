@@ -20,7 +20,6 @@
 package io.spacedog.client.elastic;
 
 import java.io.IOException;
-import java.util.Locale;
 
 /**
  * Match query is a query that analyzes the text and constructs a query as the
@@ -33,74 +32,33 @@ public class ESMatchQueryBuilder extends ESQueryBuilder implements ESBoostableQu
 		OR, AND
 	}
 
-	public enum Type {
-		/**
-		 * The text is analyzed and terms are added to a boolean query.
-		 */
-		BOOLEAN,
-		/**
-		 * The text is analyzed and used as a phrase query.
-		 */
-		PHRASE,
-		/**
-		 * The text is analyzed and used in a phrase query, with the last term acting as
-		 * a prefix.
-		 */
-		PHRASE_PREFIX
-	}
-
 	public enum ZeroTermsQuery {
 		NONE, ALL
 	}
 
-	private final String name;
-
+	private final String fieldName;
 	private final Object text;
-
-	private Type type;
-
 	private Operator operator;
-
 	private String analyzer;
-
 	private Float boost;
-
 	private Integer slop;
-
 	private ESFuzziness fuzziness;
-
 	private Integer prefixLength;
-
 	private Integer maxExpansions;
-
 	private String minimumShouldMatch;
-
 	private String fuzzyRewrite = null;
-
 	private Boolean lenient;
-
 	private Boolean fuzzyTranspositions = null;
-
 	private ZeroTermsQuery zeroTermsQuery;
-
 	private Float cutoff_Frequency = null;
-
 	private String queryName;
 
 	/**
 	 * Constructs a new text query.
 	 */
-	public ESMatchQueryBuilder(String name, Object text) {
-		this.name = name;
+	public ESMatchQueryBuilder(String fieldName, Object text) {
+		this.fieldName = fieldName;
 		this.text = text;
-	}
-
-	/**
-	 * Sets the type of the text query.
-	 */
-	public ESMatchQueryBuilder type(Type type) {
-		this.type = type;
-		return this;
 	}
 
 	/**
@@ -212,55 +170,39 @@ public class ESMatchQueryBuilder extends ESQueryBuilder implements ESBoostableQu
 	@Override
 	public void doXContent(ESJsonContentBuilder builder) throws IOException {
 		builder.startObject("match");
-		builder.startObject(name);
+		builder.startObject(fieldName);
 
 		builder.field("query", text);
-		if (type != null) {
-			builder.field("type", type.toString().toLowerCase(Locale.ENGLISH));
-		}
-		if (operator != null) {
+
+		if (operator != null)
 			builder.field("operator", operator.toString());
-		}
-		if (analyzer != null) {
+		if (analyzer != null)
 			builder.field("analyzer", analyzer);
-		}
-		if (boost != null) {
+		if (boost != null)
 			builder.field("boost", boost);
-		}
-		if (slop != null) {
+		if (slop != null)
 			builder.field("slop", slop);
-		}
-		if (fuzziness != null) {
+		if (fuzziness != null)
 			fuzziness.toJsonContent(builder);
-		}
-		if (prefixLength != null) {
+		if (prefixLength != null)
 			builder.field("prefix_length", prefixLength);
-		}
-		if (maxExpansions != null) {
+		if (maxExpansions != null)
 			builder.field("max_expansions", maxExpansions);
-		}
-		if (minimumShouldMatch != null) {
+		if (minimumShouldMatch != null)
 			builder.field("minimum_should_match", minimumShouldMatch);
-		}
-		if (fuzzyRewrite != null) {
+		if (fuzzyRewrite != null)
 			builder.field("fuzzy_rewrite", fuzzyRewrite);
-		}
-		if (fuzzyTranspositions != null) {
+		if (fuzzyTranspositions != null)
 			// LUCENE 4 UPGRADE we need to document this & test this
 			builder.field("fuzzy_transpositions", fuzzyTranspositions);
-		}
-		if (lenient != null) {
+		if (lenient != null)
 			builder.field("lenient", lenient);
-		}
-		if (zeroTermsQuery != null) {
+		if (zeroTermsQuery != null)
 			builder.field("zero_terms_query", zeroTermsQuery.toString());
-		}
-		if (cutoff_Frequency != null) {
+		if (cutoff_Frequency != null)
 			builder.field("cutoff_frequency", cutoff_Frequency);
-		}
-		if (queryName != null) {
+		if (queryName != null)
 			builder.field("_name", queryName);
-		}
 
 		builder.endObject();
 		builder.endObject();
