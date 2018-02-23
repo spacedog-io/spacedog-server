@@ -68,7 +68,7 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 	}
 
 	public Credentials get(String id) {
-		SpaceResponse response = dog.get("/1/credentials/")//
+		SpaceResponse response = dog.get("/1/credentials/{id}")//
 				.routeParam("id", id).go(200);
 		return Credentials.fromJson(response.asJsonObject());
 	}
