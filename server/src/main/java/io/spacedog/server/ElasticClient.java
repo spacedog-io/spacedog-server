@@ -364,7 +364,7 @@ public class ElasticClient implements SpaceParams {
 	}
 
 	public void deleteIndex(Index... indices) {
-		internalClient.admin().indices().prepareDelete(Index.aliases(indices)).get();
+		internalClient.admin().indices().prepareDelete(Index.toString(indices)).get();
 	}
 
 	public GetMappingsResponse getBackendMappings() {
