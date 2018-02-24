@@ -52,6 +52,7 @@ import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
+import joptsimple.internal.Strings;
 
 public class ElasticClient implements SpaceParams {
 
@@ -219,10 +220,17 @@ public class ElasticClient implements SpaceParams {
 	}
 
 	public BulkByScrollResponse deleteByQuery(String query, Index... indices) {
-		return deleteByQuery(QueryBuilders.wrapperQuery(query), indices);
+		QueryBuilder builder = Strings.isNullOrEmpty(query) //
+				? QueryBuilders.matchAllQuery()//
+				: QueryBuilders.wrapperQuery(query);
+
+		return deleteByQuery(builder, indices);
 	}
 
 	public BulkByScrollResponse deleteByQuery(QueryBuilder query, Index... indices) {
+
+		if (query == null)//
+			query = QueryBuilders.matchAllQuery();
 
 		SearchRequest search = new SearchRequest(Index.aliases(indices));
 		DeleteByQueryRequest delete = new DeleteByQueryRequest(search)//
