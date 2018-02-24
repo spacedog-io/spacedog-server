@@ -4,6 +4,9 @@
 package io.spacedog.test;
 
 import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -12,11 +15,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.client.elastic.ESQueryBuilders;
+import io.spacedog.client.elastic.ESSearchSourceBuilder;
+import io.spacedog.client.elastic.ESSortOrder;
 import io.spacedog.model.Permission;
 import io.spacedog.model.Roles;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.JsonBuilder;
 
 public class ChauffeLeTest extends SpaceTest {
 
@@ -173,58 +178,28 @@ public class ChauffeLeTest extends SpaceTest {
 		@Override
 		public Iterator<JsonNode> showWall(SpaceDog user) {
 
-			ObjectNode subjectQuery = Json.builder().object()//
-					.add("from", 0)//
-					.add("size", 10)//
-					.array("sort")//
-					.object()//
-					.object("updatedAt")//
-					.add("order", "asc")//
-					.end()//
-					.end()//
-					.end()//
-					.object("query")//
-					.object("filtered")//
-					.object("query")//
-					.object("match_all")//
-					.end()//
-					.end()//
-					.object("filter")//
-					.object("not")//
-					.object("exists")//
-					.add("field", "parent")//
-					.build();
+			ESSearchSourceBuilder builder = ESSearchSourceBuilder.searchSource()//
+					.from(0)//
+					.size(10)//
+					.sort("updatedAt", ESSortOrder.ASC)//
+					.query(ESQueryBuilders.boolQuery()//
+							.mustNot(ESQueryBuilders.existsQuery("parent")));
 
 			JsonNode subjectResults = user.post("/1/search/smallpost")//
-					.refresh().bodyJson(subjectQuery).go(200).asJson();
+					.refresh().body(builder.toString()).go(200).asJson();
 
-			JsonBuilder<ObjectNode> responsesQuery = Json.builder().object()//
-					.add("from", 0)//
-					.add("size", 10)//
-					.array("sort")//
-					.add("parent")//
-					.object()//
-					.object("updatedAt")//
-					.add("order", "asc")//
-					.end()//
-					.end()//
-					.end()//
-					.object("query")//
-					.object("filtered")//
-					.object("query")//
-					.object("match_all")//
-					.end()//
-					.end()//
-					.object("filter")//
-					.object("terms")//
-					.array("parent");
+			Iterable<JsonNode> nodes = () -> subjectResults.get("results").elements();
+			List<String> subjects = StreamSupport.stream(nodes.spliterator(), false)//
+					.map(node -> node.asText()).collect(Collectors.toList());
 
-			Iterator<JsonNode> subjects = subjectResults.get("results").elements();
+			builder = ESSearchSourceBuilder.searchSource()//
+					.from(0)//
+					.size(10)//
+					.sort("parent")//
+					.sort("updatedAt", ESSortOrder.ASC)//
+					.query(ESQueryBuilders.termsQuery("parent", subjects));
 
-			while (subjects.hasNext())
-				responsesQuery.add(subjects.next().get("id").asText());
-
-			user.post("/1/search/smallpost").bodyJson(responsesQuery.build()).go(200);
+			user.post("/1/search/smallpost").body(builder.toString()).go(200);
 
 			return subjectResults.get("results").elements();
 		}
