@@ -11,6 +11,7 @@ import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.client.http.SpaceResponse;
+import io.spacedog.client.sms.SmsClient;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Optional7;
 

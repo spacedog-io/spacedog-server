@@ -12,11 +12,11 @@ import com.google.common.collect.Sets;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.http.SpaceEnv;
 import io.spacedog.client.http.SpaceRequestException;
+import io.spacedog.client.sms.SmsSettings;
+import io.spacedog.client.sms.SmsTemplate;
+import io.spacedog.client.sms.SmsTemplateRequest;
+import io.spacedog.client.sms.SmsSettings.TwilioSettings;
 import io.spacedog.model.Schema;
-import io.spacedog.model.SmsSettings;
-import io.spacedog.model.SmsSettings.TwilioSettings;
-import io.spacedog.model.SmsTemplate;
-import io.spacedog.model.SmsTemplateRequest;
 import io.spacedog.utils.Json;
 
 public class SmsServiceTest extends SpaceTest {

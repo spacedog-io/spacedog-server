@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.model;
+package io.spacedog.client.sms;
 
 import java.util.Map;
 import java.util.Set;

@@ -1,8 +1,10 @@
-package io.spacedog.model;
+package io.spacedog.client.sms;
 
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import io.spacedog.model.SettingsBase;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SmsSettings extends SettingsBase {

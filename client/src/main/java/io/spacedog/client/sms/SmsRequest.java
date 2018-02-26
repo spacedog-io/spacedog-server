@@ -1,4 +1,4 @@
-package io.spacedog.model;
+package io.spacedog.client.sms;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;

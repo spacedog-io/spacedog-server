@@ -1,16 +1,14 @@
-package io.spacedog.client;
+package io.spacedog.client.sms;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.model.SmsBasicRequest;
-import io.spacedog.model.SmsRequest;
-import io.spacedog.model.SmsTemplate;
+import io.spacedog.client.SpaceDog;
 
 public class SmsClient {
 
-	SpaceDog dog;
+	private SpaceDog dog;
 
-	SmsClient(SpaceDog session) {
+	public SmsClient(SpaceDog session) {
 		this.dog = session;
 	}
 

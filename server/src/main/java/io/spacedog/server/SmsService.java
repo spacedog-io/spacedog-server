@@ -12,12 +12,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.client.http.SpaceResponse;
-import io.spacedog.model.SmsBasicRequest;
-import io.spacedog.model.SmsRequest;
-import io.spacedog.model.SmsSettings;
-import io.spacedog.model.SmsSettings.TwilioSettings;
-import io.spacedog.model.SmsTemplate;
-import io.spacedog.model.SmsTemplateRequest;
+import io.spacedog.client.sms.SmsBasicRequest;
+import io.spacedog.client.sms.SmsRequest;
+import io.spacedog.client.sms.SmsSettings;
+import io.spacedog.client.sms.SmsTemplate;
+import io.spacedog.client.sms.SmsTemplateRequest;
+import io.spacedog.client.sms.SmsSettings.TwilioSettings;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;
