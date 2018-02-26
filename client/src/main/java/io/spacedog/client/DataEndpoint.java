@@ -286,14 +286,16 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 		public long go() {
 
 			String path = "/1/search";
+
 			if (!Strings.isNullOrEmpty(type))
 				path = path + "/" + type;
 
-			if (Strings.isNullOrEmpty(query))
-				query = Json.EMPTY_OBJECT;
+			SpaceRequest request = dog.delete(path).refresh(refresh);
 
-			return dog.delete(path).bodyJson(query)//
-					.refresh(refresh).go(200).get("deleted").asLong();
+			if (!Strings.isNullOrEmpty(query))
+				request.bodyJson(query);
+
+			return request.go(200).get("deleted").asLong();
 		}
 
 	}
@@ -337,6 +339,7 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 		public <K> K go(Class<K> resultsClass) {
 
 			String path = "/1/search";
+
 			if (!Strings.isNullOrEmpty(type))
 				path = path + "/" + type;
 
