@@ -179,95 +179,95 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 	// resources
 	//
 
-	DataEndpoint dataEndpoint;
+	DataClient dataClient;
 
-	public DataEndpoint data() {
-		if (dataEndpoint == null)
-			dataEndpoint = new DataEndpoint(this);
+	public DataClient data() {
+		if (dataClient == null)
+			dataClient = new DataClient(this);
 
-		return dataEndpoint;
+		return dataClient;
 	}
 
-	SettingsEndpoint settingsEndpoint;
+	SettingsClient settingsClient;
 
-	public SettingsEndpoint settings() {
-		if (settingsEndpoint == null)
-			settingsEndpoint = new SettingsEndpoint(this);
+	public SettingsClient settings() {
+		if (settingsClient == null)
+			settingsClient = new SettingsClient(this);
 
-		return settingsEndpoint;
+		return settingsClient;
 	}
 
-	StripeEndpoint stripeEndpoint;
+	StripeClient stripeClient;
 
-	public StripeEndpoint stripe() {
-		if (stripeEndpoint == null)
-			stripeEndpoint = new StripeEndpoint(this);
+	public StripeClient stripe() {
+		if (stripeClient == null)
+			stripeClient = new StripeClient(this);
 
-		return stripeEndpoint;
+		return stripeClient;
 	}
 
-	PushEndpoint pushEndpoint;
+	PushClient pushClient;
 
-	public PushEndpoint push() {
-		if (pushEndpoint == null)
-			pushEndpoint = new PushEndpoint(this);
-		return pushEndpoint;
+	public PushClient push() {
+		if (pushClient == null)
+			pushClient = new PushClient(this);
+		return pushClient;
 	}
 
-	CredentialsEndpoint credentialsEndpoint;
+	CredentialsClient credentialsClient;
 
-	public CredentialsEndpoint credentials() {
-		if (credentialsEndpoint == null)
-			credentialsEndpoint = new CredentialsEndpoint(this);
-		return credentialsEndpoint;
+	public CredentialsClient credentials() {
+		if (credentialsClient == null)
+			credentialsClient = new CredentialsClient(this);
+		return credentialsClient;
 	}
 
-	SchemaEndpoint schemaEndpoint;
+	SchemaClient schemaClient;
 
-	public SchemaEndpoint schemas() {
-		if (schemaEndpoint == null)
-			schemaEndpoint = new SchemaEndpoint(this);
-		return schemaEndpoint;
+	public SchemaClient schemas() {
+		if (schemaClient == null)
+			schemaClient = new SchemaClient(this);
+		return schemaClient;
 	}
 
-	AdminEndpoint adminEndpoint;
+	AdminClient adminClient;
 
-	public AdminEndpoint admin() {
-		if (adminEndpoint == null)
-			adminEndpoint = new AdminEndpoint(this);
-		return adminEndpoint;
+	public AdminClient admin() {
+		if (adminClient == null)
+			adminClient = new AdminClient(this);
+		return adminClient;
 	}
 
-	EmailEndpoint emailEndpoint;
+	EmailClient emailClient;
 
-	public EmailEndpoint emails() {
-		if (emailEndpoint == null)
-			emailEndpoint = new EmailEndpoint(this);
-		return emailEndpoint;
+	public EmailClient emails() {
+		if (emailClient == null)
+			emailClient = new EmailClient(this);
+		return emailClient;
 	}
 
-	FileEndpoint fileEndpoint;
+	FileClient fileClient;
 
-	public FileEndpoint files() {
-		if (fileEndpoint == null)
-			fileEndpoint = new FileEndpoint(this);
-		return fileEndpoint;
+	public FileClient files() {
+		if (fileClient == null)
+			fileClient = new FileClient(this);
+		return fileClient;
 	}
 
-	LogEndpoint logEndpoint;
+	LogClient logClient;
 
-	public LogEndpoint logs() {
-		if (logEndpoint == null)
-			logEndpoint = new LogEndpoint(this);
-		return logEndpoint;
+	public LogClient logs() {
+		if (logClient == null)
+			logClient = new LogClient(this);
+		return logClient;
 	}
 
-	SmsEndpoint smsEndpoint;
+	SmsClient smsClient;
 
-	public SmsEndpoint sms() {
-		if (smsEndpoint == null)
-			smsEndpoint = new SmsEndpoint(this);
-		return smsEndpoint;
+	public SmsClient sms() {
+		if (smsClient == null)
+			smsClient = new SmsClient(this);
+		return smsClient;
 	}
 
 }

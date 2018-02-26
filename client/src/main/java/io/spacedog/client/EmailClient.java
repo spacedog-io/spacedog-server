@@ -8,11 +8,11 @@ import io.spacedog.model.EmailRequest;
 import io.spacedog.model.EmailTemplate;
 import io.spacedog.model.EmailTemplateRequest;
 
-public class EmailEndpoint {
+public class EmailClient {
 
 	SpaceDog dog;
 
-	EmailEndpoint(SpaceDog dog) {
+	EmailClient(SpaceDog dog) {
 		this.dog = dog;
 	}
 

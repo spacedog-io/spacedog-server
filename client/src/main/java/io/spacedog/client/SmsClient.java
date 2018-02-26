@@ -6,11 +6,11 @@ import io.spacedog.model.SmsBasicRequest;
 import io.spacedog.model.SmsRequest;
 import io.spacedog.model.SmsTemplate;
 
-public class SmsEndpoint {
+public class SmsClient {
 
 	SpaceDog dog;
 
-	SmsEndpoint(SpaceDog session) {
+	SmsClient(SpaceDog session) {
 		this.dog = session;
 	}
 

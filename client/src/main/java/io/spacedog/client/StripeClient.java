@@ -7,11 +7,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.http.SpaceRequest;
 
-public class StripeEndpoint {
+public class StripeClient {
 
 	SpaceDog dog;
 
-	StripeEndpoint(SpaceDog dog) {
+	StripeClient(SpaceDog dog) {
 		this.dog = dog;
 	}
 

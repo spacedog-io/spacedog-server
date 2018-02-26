@@ -9,30 +9,30 @@ import com.google.common.collect.Sets;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
 
-public class SchemaEndpoint {
+public class SchemaClient {
 
 	SpaceDog dog;
 
-	SchemaEndpoint(SpaceDog session) {
+	SchemaClient(SpaceDog session) {
 		this.dog = session;
 	}
 
-	public SchemaEndpoint reset(Schema schema) {
+	public SchemaClient reset(Schema schema) {
 		delete(schema);
 		return set(schema);
 	}
 
-	public SchemaEndpoint delete(Schema schema) {
+	public SchemaClient delete(Schema schema) {
 		return delete(schema.name());
 	}
 
-	public SchemaEndpoint delete(String name) {
+	public SchemaClient delete(String name) {
 		dog.delete("/1/schemas/{name}")//
 				.routeParam("name", name).go(200, 404);
 		return this;
 	}
 
-	public SchemaEndpoint set(Schema schema) {
+	public SchemaClient set(Schema schema) {
 		dog.put("/1/schemas/{name}").routeParam("name", schema.name())//
 				.bodyJson(schema.node()).go(200, 201);
 		return this;
@@ -44,7 +44,7 @@ public class SchemaEndpoint {
 		return new Schema(name, node);
 	}
 
-	public SchemaEndpoint setDefault(String name) {
+	public SchemaClient setDefault(String name) {
 		dog.put("/1/schemas/{name}").routeParam("name", name).go(201);
 		return this;
 	}

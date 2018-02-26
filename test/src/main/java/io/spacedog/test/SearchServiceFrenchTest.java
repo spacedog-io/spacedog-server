@@ -5,7 +5,7 @@ package io.spacedog.test;
 
 import org.junit.Test;
 
-import io.spacedog.client.DataEndpoint.SearchRequest;
+import io.spacedog.client.DataClient.SearchRequest;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.elastic.ESQueryBuilders;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;

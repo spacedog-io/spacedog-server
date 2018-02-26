@@ -18,16 +18,16 @@ import io.spacedog.model.SpaceFile.FileMeta;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 
-public class FileEndpoint {
+public class FileClient {
 
 	int listSize = 100;
 	SpaceDog dog;
 
-	FileEndpoint(SpaceDog session) {
+	FileClient(SpaceDog session) {
 		this.dog = session;
 	}
 
-	public FileEndpoint listSize(int listSize) {
+	public FileClient listSize(int listSize) {
 		this.listSize = listSize;
 		return this;
 	}

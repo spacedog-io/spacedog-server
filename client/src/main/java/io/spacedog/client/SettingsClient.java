@@ -8,11 +8,11 @@ import io.spacedog.model.Settings;
 import io.spacedog.model.SettingsBase;
 import io.spacedog.utils.Optional7;
 
-public class SettingsEndpoint {
+public class SettingsClient {
 
 	SpaceDog dog;
 
-	SettingsEndpoint(SpaceDog session) {
+	SettingsClient(SpaceDog session) {
 		this.dog = session;
 	}
 

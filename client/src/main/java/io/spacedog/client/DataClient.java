@@ -17,11 +17,11 @@ import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Utils;
 
-public class DataEndpoint implements SpaceFields, SpaceParams {
+public class DataClient implements SpaceFields, SpaceParams {
 
 	SpaceDog dog;
 
-	DataEndpoint(SpaceDog session) {
+	DataClient(SpaceDog session) {
 		this.dog = session;
 	}
 
@@ -124,15 +124,15 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 	// Delete
 	//
 
-	public DataEndpoint delete(DataObject<?> object) {
+	public DataClient delete(DataObject<?> object) {
 		return delete(object.type(), object.id());
 	}
 
-	public DataEndpoint delete(String type, String id) {
+	public DataClient delete(String type, String id) {
 		return delete(type, id, true);
 	}
 
-	public DataEndpoint delete(String type, String id, boolean throwNotFound) {
+	public DataClient delete(String type, String id, boolean throwNotFound) {
 		SpaceRequest request = dog.delete("/1/data/{type}/{id}")//
 				.routeParam(TYPE_FIELD, type)//
 				.routeParam(ID_FIELD, id);

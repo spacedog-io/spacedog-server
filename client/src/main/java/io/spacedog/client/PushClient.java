@@ -13,13 +13,13 @@ import io.spacedog.model.PushApplication.Credentials;
 import io.spacedog.model.PushResponse;
 import io.spacedog.utils.Check;
 
-public class PushEndpoint {
+public class PushClient {
 
 	private static final String TYPE = "installation";
 
 	SpaceDog dog;
 
-	PushEndpoint(SpaceDog dog) {
+	PushClient(SpaceDog dog) {
 		this.dog = dog;
 	}
 
@@ -33,7 +33,7 @@ public class PushEndpoint {
 						.asPojo(PushApplication[].class));
 	}
 
-	public PushEndpoint saveApp(String name, String service, Credentials credentials) {
+	public PushClient saveApp(String name, String service, Credentials credentials) {
 		Check.notNull(name, "push app name");
 		Check.notNull(service, "push app service");
 		Check.notNull(credentials, "push app credentials");
@@ -47,11 +47,11 @@ public class PushEndpoint {
 		return this;
 	}
 
-	public PushEndpoint saveApp(PushApplication app) {
+	public PushClient saveApp(PushApplication app) {
 		return saveApp(app.name, app.protocol.toString(), app.credentials);
 	}
 
-	public PushEndpoint deleteApp(String name, String service) {
+	public PushClient deleteApp(String name, String service) {
 		Check.notNull(name, "push app name");
 		Check.notNull(service, "push app service");
 
@@ -63,7 +63,7 @@ public class PushEndpoint {
 		return this;
 	}
 
-	public PushEndpoint deleteApp(PushApplication app) {
+	public PushClient deleteApp(PushApplication app) {
 		return deleteApp(app.name, app.protocol.toString());
 	}
 
@@ -113,11 +113,11 @@ public class PushEndpoint {
 				.source(source).go(InstallationDataObject.Results.class);
 	}
 
-	public PushEndpoint deleteInstallation(String id) {
+	public PushClient deleteInstallation(String id) {
 		return deleteInstallation(id, true);
 	}
 
-	public PushEndpoint deleteInstallation(String id, boolean throwNotFound) {
+	public PushClient deleteInstallation(String id, boolean throwNotFound) {
 		dog.data().delete(TYPE, id, throwNotFound);
 		return this;
 	}

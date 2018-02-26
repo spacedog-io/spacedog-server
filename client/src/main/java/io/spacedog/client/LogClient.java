@@ -13,11 +13,11 @@ import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.http.SpaceParams;
 import io.spacedog.model.Credentials;
 
-public class LogEndpoint implements SpaceParams {
+public class LogClient implements SpaceParams {
 
 	SpaceDog dog;
 
-	LogEndpoint(SpaceDog session) {
+	LogClient(SpaceDog session) {
 		this.dog = session;
 	}
 

@@ -5,8 +5,8 @@ import java.util.List;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
-import io.spacedog.client.LogEndpoint.LogItem;
-import io.spacedog.client.LogEndpoint.LogSearchResults;
+import io.spacedog.client.LogClient.LogItem;
+import io.spacedog.client.LogClient.LogSearchResults;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.elastic.ESQueryBuilders;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;

@@ -20,12 +20,12 @@ import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
 
-public class CredentialsEndpoint implements SpaceParams, SpaceFields {
+public class CredentialsClient implements SpaceParams, SpaceFields {
 
 	SpaceDog dog;
 	Credentials credentials;
 
-	CredentialsEndpoint(SpaceDog session) {
+	CredentialsClient(SpaceDog session) {
 		this.dog = session;
 	}
 
@@ -45,7 +45,7 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 		return credentials;
 	}
 
-	CredentialsEndpoint me(Credentials credentials) {
+	CredentialsClient me(Credentials credentials) {
 		this.credentials = credentials;
 		return this;
 	}
@@ -145,7 +145,7 @@ public class CredentialsEndpoint implements SpaceParams, SpaceFields {
 			dog.credentials().delete(optional.get().id());
 	}
 
-	public CredentialsEndpoint deleteAllButSuperAdmins() {
+	public CredentialsClient deleteAllButSuperAdmins() {
 		dog.delete("/1/credentials").go(200);
 		return this;
 	}
