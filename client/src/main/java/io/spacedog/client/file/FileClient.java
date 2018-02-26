@@ -1,4 +1,4 @@
-package io.spacedog.client;
+package io.spacedog.client.file;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -9,21 +9,21 @@ import java.util.UUID;
 
 import com.google.common.collect.Lists;
 
+import io.spacedog.client.SpaceDog;
+import io.spacedog.client.file.SpaceFile.FileList;
+import io.spacedog.client.file.SpaceFile.FileMeta;
 import io.spacedog.client.http.ContentTypes;
 import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.client.http.WebPath;
-import io.spacedog.model.SpaceFile;
-import io.spacedog.model.SpaceFile.FileList;
-import io.spacedog.model.SpaceFile.FileMeta;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 
 public class FileClient {
 
-	int listSize = 100;
-	SpaceDog dog;
+	private SpaceDog dog;
+	private int listSize = 100;
 
-	FileClient(SpaceDog session) {
+	public FileClient(SpaceDog session) {
 		this.dog = session;
 	}
 

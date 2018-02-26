@@ -1,4 +1,4 @@
-package io.spacedog.model;
+package io.spacedog.client.file;
 
 import io.spacedog.client.credentials.ObjectRolePermissions;
 import io.spacedog.client.credentials.Permission;

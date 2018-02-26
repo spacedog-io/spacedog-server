@@ -1,4 +1,4 @@
-package io.spacedog.model;
+package io.spacedog.client.file;
 
 import java.io.Closeable;
 import java.io.IOException;

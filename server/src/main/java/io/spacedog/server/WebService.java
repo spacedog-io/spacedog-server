@@ -7,8 +7,8 @@ import org.elasticsearch.common.Strings;
 
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.Permission;
+import io.spacedog.client.file.WebSettings;
 import io.spacedog.client.http.WebPath;
-import io.spacedog.model.WebSettings;
 import io.spacedog.utils.Exceptions;
 import net.codestory.http.Context;
 import net.codestory.http.constants.Methods;

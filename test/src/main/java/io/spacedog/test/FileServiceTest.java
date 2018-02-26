@@ -7,9 +7,9 @@ import com.google.common.collect.Sets;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.model.FileSettings;
-import io.spacedog.model.SpaceFile;
-import io.spacedog.model.SpaceFile.FileList;
+import io.spacedog.client.file.FileSettings;
+import io.spacedog.client.file.SpaceFile;
+import io.spacedog.client.file.SpaceFile.FileList;
 
 public class FileServiceTest extends SpaceTest {
 

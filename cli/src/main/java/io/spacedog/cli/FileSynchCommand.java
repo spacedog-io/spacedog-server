@@ -14,10 +14,10 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.client.file.SpaceFile.FileList;
+import io.spacedog.client.file.SpaceFile.FileMeta;
 import io.spacedog.client.http.SpaceEnv;
 import io.spacedog.client.http.WebPath;
-import io.spacedog.model.SpaceFile.FileList;
-import io.spacedog.model.SpaceFile.FileMeta;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 

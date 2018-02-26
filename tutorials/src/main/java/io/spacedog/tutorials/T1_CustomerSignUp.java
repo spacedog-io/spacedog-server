@@ -14,8 +14,8 @@ import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.data.DataObject;
 import io.spacedog.client.email.EmailTemplate;
 import io.spacedog.client.email.EmailTemplateRequest;
-import io.spacedog.model.FileSettings;
-import io.spacedog.model.SpaceFile.FileMeta;
+import io.spacedog.client.file.FileSettings;
+import io.spacedog.client.file.SpaceFile.FileMeta;
 import io.spacedog.tutorials.Customer.CustomerDataObject;
 import io.spacedog.utils.ClassResources;
 
