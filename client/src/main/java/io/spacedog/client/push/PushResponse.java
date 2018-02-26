@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.model;
+package io.spacedog.client.push;
 
 import java.util.ArrayList;
 import java.util.List;

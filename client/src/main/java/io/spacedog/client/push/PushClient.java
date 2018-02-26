@@ -1,25 +1,22 @@
-package io.spacedog.client;
+package io.spacedog.client.push;
 
 import java.util.List;
 
 import com.google.common.collect.Lists;
 
+import io.spacedog.client.SpaceDog;
 import io.spacedog.client.data.DataObject;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
-import io.spacedog.model.Installation;
-import io.spacedog.model.InstallationDataObject;
-import io.spacedog.model.PushApplication;
-import io.spacedog.model.PushApplication.Credentials;
-import io.spacedog.model.PushResponse;
+import io.spacedog.client.push.PushApplication.Credentials;
 import io.spacedog.utils.Check;
 
 public class PushClient {
 
 	private static final String TYPE = "installation";
 
-	SpaceDog dog;
+	private SpaceDog dog;
 
-	PushClient(SpaceDog dog) {
+	public PushClient(SpaceDog dog) {
 		this.dog = dog;
 	}
 

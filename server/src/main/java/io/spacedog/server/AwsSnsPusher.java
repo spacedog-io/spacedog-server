@@ -18,7 +18,7 @@ import com.amazonaws.services.sns.model.NotFoundException;
 import com.amazonaws.services.sns.model.PlatformApplication;
 import com.amazonaws.services.sns.model.SetEndpointAttributesRequest;
 
-import io.spacedog.model.PushProtocol;
+import io.spacedog.client.push.PushProtocol;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Utils;
 

@@ -14,8 +14,8 @@ import com.amazonaws.services.sns.model.PlatformApplication;
 import com.amazonaws.services.sns.model.SetPlatformApplicationAttributesRequest;
 import com.google.common.base.Strings;
 
-import io.spacedog.model.PushApplication;
-import io.spacedog.model.PushProtocol;
+import io.spacedog.client.push.PushApplication;
+import io.spacedog.client.push.PushProtocol;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;

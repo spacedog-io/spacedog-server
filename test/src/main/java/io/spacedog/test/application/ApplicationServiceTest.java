@@ -8,9 +8,9 @@ import java.util.List;
 import org.junit.Test;
 
 import io.spacedog.client.SpaceDog;
-import io.spacedog.model.PushApplication;
-import io.spacedog.model.PushApplication.Credentials;
-import io.spacedog.model.PushProtocol;
+import io.spacedog.client.push.PushApplication;
+import io.spacedog.client.push.PushProtocol;
+import io.spacedog.client.push.PushApplication.Credentials;
 import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.ClassResources;
 

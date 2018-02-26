@@ -13,19 +13,19 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
-import io.spacedog.client.PushRequest;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.data.DataObject;
-import io.spacedog.model.BadgeStrategy;
-import io.spacedog.model.Installation;
-import io.spacedog.model.InstallationDataObject;
-import io.spacedog.model.PushProtocol;
-import io.spacedog.model.PushResponse;
-import io.spacedog.model.PushResponse.Notification;
-import io.spacedog.model.PushSettings;
+import io.spacedog.client.push.BadgeStrategy;
+import io.spacedog.client.push.Installation;
+import io.spacedog.client.push.InstallationDataObject;
+import io.spacedog.client.push.PushProtocol;
+import io.spacedog.client.push.PushRequest;
+import io.spacedog.client.push.PushResponse;
+import io.spacedog.client.push.PushSettings;
+import io.spacedog.client.push.PushResponse.Notification;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
 

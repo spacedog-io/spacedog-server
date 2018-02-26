@@ -1,4 +1,4 @@
-package io.spacedog.model;
+package io.spacedog.client.push;
 
 import java.util.Set;
 

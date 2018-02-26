@@ -1,4 +1,4 @@
-package io.spacedog.client;
+package io.spacedog.client.push;
 
 import java.util.Set;
 
@@ -7,9 +7,6 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
-
-import io.spacedog.model.BadgeStrategy;
-import io.spacedog.model.PushProtocol;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, //
