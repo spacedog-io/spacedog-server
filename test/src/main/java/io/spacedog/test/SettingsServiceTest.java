@@ -196,8 +196,13 @@ public class SettingsServiceTest extends SpaceTest {
 		// superadmin gets an unknown field of db settings
 		assertEquals(NullNode.getInstance(), superadmin.settings().get("db", "XXX"));
 
-		// superadmin gets an unknown field of an unknown settings
-		assertHttpError(403, () -> superadmin.settings().get("XXX", "YYY"));
+		// superadmin fails to get an unknown field of an unknown settings
+		// he is always allowed since superadmin but not found error
+		assertHttpError(404, () -> superadmin.settings().get("XXX", "YYY"));
+
+		// vince fails to get an unknown field of an unknown settings
+		// since not allowed
+		assertHttpError(403, () -> vince.settings().get("XXX", "YYY"));
 
 		// superadmin updates each field
 		superadmin.settings().save("db", "type", "postgres");
