@@ -1,4 +1,4 @@
-package io.spacedog.upgrade;
+package io.spacedog.client.upgrade;
 
 import io.spacedog.client.SpaceDog;
 

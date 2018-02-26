@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.upgrade;
+package io.spacedog.client.upgrade;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package io.spacedog.upgrade;
+package io.spacedog.client.upgrade;
 
 public interface Upgrade<T extends UpgradeEnv> {
 
