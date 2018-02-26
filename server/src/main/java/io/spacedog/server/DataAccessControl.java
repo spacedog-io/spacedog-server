@@ -8,7 +8,7 @@ import org.elasticsearch.action.index.IndexResponse;
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.RolePermissions;
-import io.spacedog.model.InternalDataAclSettings;
+import io.spacedog.client.data.InternalDataAclSettings;
 
 public class DataAccessControl {
 

@@ -28,12 +28,12 @@ import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.data.DataObject;
 import io.spacedog.client.data.DataObjectAbstract;
+import io.spacedog.client.data.JsonDataObject;
 import io.spacedog.client.data.MetadataBase;
 import io.spacedog.client.elastic.ESQueryBuilders;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.client.schema.Schema;
 import io.spacedog.model.GeoPoint;
-import io.spacedog.model.JsonDataObject;
 import io.spacedog.test.DataServiceTest2.Sale.Item;
 import io.spacedog.utils.Json;
 

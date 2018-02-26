@@ -7,6 +7,7 @@ import org.junit.Test;
 
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
+import io.spacedog.client.data.JsonDataObject;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.elastic.ESQueryBuilders;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
@@ -18,7 +19,6 @@ import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.client.log.LogClient.LogItem;
 import io.spacedog.client.log.LogClient.LogSearchResults;
 import io.spacedog.client.schema.Schema;
-import io.spacedog.model.JsonDataObject;
 import io.spacedog.utils.Json;
 
 public class LogServiceTest extends SpaceTest {

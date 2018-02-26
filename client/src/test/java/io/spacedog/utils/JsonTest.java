@@ -16,7 +16,7 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
-import io.spacedog.model.JsonDataObject;
+import io.spacedog.client.data.JsonDataObject;
 
 public class JsonTest extends Assert {
 
