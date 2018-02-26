@@ -1,4 +1,4 @@
-package io.spacedog.client;
+package io.spacedog.client.log;
 
 import java.util.List;
 import java.util.Set;
@@ -9,15 +9,16 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
+import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.client.http.SpaceParams;
 
 public class LogClient implements SpaceParams {
 
-	SpaceDog dog;
+	private SpaceDog dog;
 
-	LogClient(SpaceDog session) {
+	public LogClient(SpaceDog session) {
 		this.dog = session;
 	}
 

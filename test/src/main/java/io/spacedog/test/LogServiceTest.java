@@ -5,8 +5,6 @@ import java.util.List;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
-import io.spacedog.client.LogClient.LogItem;
-import io.spacedog.client.LogClient.LogSearchResults;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.SpaceDog;
@@ -17,6 +15,8 @@ import io.spacedog.client.elastic.ESSortOrder;
 import io.spacedog.client.http.SpaceEnv;
 import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.client.http.SpaceRequest;
+import io.spacedog.client.log.LogClient.LogItem;
+import io.spacedog.client.log.LogClient.LogSearchResults;
 import io.spacedog.client.schema.Schema;
 import io.spacedog.model.JsonDataObject;
 import io.spacedog.utils.Json;
