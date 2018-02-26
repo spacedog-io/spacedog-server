@@ -31,9 +31,9 @@ import io.spacedog.client.data.DataObjectAbstract;
 import io.spacedog.client.data.MetadataBase;
 import io.spacedog.client.elastic.ESQueryBuilders;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
+import io.spacedog.client.schema.Schema;
 import io.spacedog.model.GeoPoint;
 import io.spacedog.model.JsonDataObject;
-import io.spacedog.model.Schema;
 import io.spacedog.test.DataServiceTest2.Sale.Item;
 import io.spacedog.utils.Json;
 

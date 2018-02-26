@@ -26,7 +26,7 @@ import io.spacedog.client.push.PushRequest;
 import io.spacedog.client.push.PushResponse;
 import io.spacedog.client.push.PushSettings;
 import io.spacedog.client.push.PushResponse.Notification;
-import io.spacedog.model.Schema;
+import io.spacedog.client.schema.Schema;
 import io.spacedog.utils.Json;
 
 public class PushServiceTest extends SpaceTest {

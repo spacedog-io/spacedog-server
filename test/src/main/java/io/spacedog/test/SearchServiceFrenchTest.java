@@ -9,7 +9,7 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.client.data.DataClient.SearchRequest;
 import io.spacedog.client.elastic.ESQueryBuilders;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
-import io.spacedog.model.Schema;
+import io.spacedog.client.schema.Schema;
 import io.spacedog.utils.Json;
 
 public class SearchServiceFrenchTest extends SpaceTest {

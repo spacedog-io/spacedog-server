@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.model;
+package io.spacedog.client.schema;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.base.Strings;
 
 import io.spacedog.client.http.SpaceException;
-import io.spacedog.model.SchemaBuilder.SchemaType;
+import io.spacedog.client.schema.SchemaBuilder.SchemaType;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
 

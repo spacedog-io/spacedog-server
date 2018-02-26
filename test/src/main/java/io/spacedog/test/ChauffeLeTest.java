@@ -20,7 +20,7 @@ import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.elastic.ESQueryBuilders;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.client.elastic.ESSortOrder;
-import io.spacedog.model.Schema;
+import io.spacedog.client.schema.Schema;
 import io.spacedog.utils.Json;
 
 public class ChauffeLeTest extends SpaceTest {

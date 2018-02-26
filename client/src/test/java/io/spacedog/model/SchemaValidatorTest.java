@@ -8,8 +8,8 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.model.SchemaValidator;
-import io.spacedog.model.SchemaValidator.SchemaException;
+import io.spacedog.client.schema.SchemaValidator;
+import io.spacedog.client.schema.SchemaValidator.SchemaException;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 

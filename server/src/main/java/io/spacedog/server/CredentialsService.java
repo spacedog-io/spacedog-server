@@ -31,7 +31,7 @@ import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.credentials.Usernames;
 import io.spacedog.client.credentials.Credentials.Session;
 import io.spacedog.client.email.EmailTemplate;
-import io.spacedog.model.Schema;
+import io.spacedog.client.schema.Schema;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;

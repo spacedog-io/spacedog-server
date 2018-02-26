@@ -5,7 +5,7 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.model.Schema;
+import io.spacedog.client.schema.Schema;
 
 public class JsonGeneratorTest extends Assert {
 

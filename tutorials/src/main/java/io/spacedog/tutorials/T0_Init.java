@@ -9,7 +9,7 @@ import com.google.common.io.Resources;
 
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.model.Schema;
+import io.spacedog.client.schema.Schema;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 

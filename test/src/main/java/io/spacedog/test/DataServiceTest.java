@@ -12,8 +12,8 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.http.SpaceRequestException;
+import io.spacedog.client.schema.Schema;
 import io.spacedog.model.JsonDataObject;
-import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
 
 public class DataServiceTest extends SpaceTest {

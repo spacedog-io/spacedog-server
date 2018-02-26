@@ -4,7 +4,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import io.spacedog.client.http.SpaceException;
-import io.spacedog.model.Schema;
+import io.spacedog.client.schema.Schema;
 
 public class SchemaTest extends Assert {
 

@@ -1,4 +1,4 @@
-package io.spacedog.client;
+package io.spacedog.client.schema;
 
 import java.util.Iterator;
 import java.util.Set;
@@ -6,14 +6,14 @@ import java.util.Set;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
-import io.spacedog.model.Schema;
+import io.spacedog.client.SpaceDog;
 import io.spacedog.utils.Json;
 
 public class SchemaClient {
 
-	SpaceDog dog;
+	private SpaceDog dog;
 
-	SchemaClient(SpaceDog session) {
+	public SchemaClient(SpaceDog session) {
 		this.dog = session;
 	}
 

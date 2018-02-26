@@ -35,7 +35,7 @@ import io.spacedog.client.data.MetadataBase;
 import io.spacedog.client.data.MetadataDataObject;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
-import io.spacedog.model.Schema;
+import io.spacedog.client.schema.Schema;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;

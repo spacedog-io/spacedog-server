@@ -3,7 +3,7 @@ package io.spacedog.test;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import io.spacedog.client.data.MetadataBase;
-import io.spacedog.model.Schema;
+import io.spacedog.client.schema.Schema;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Message extends MetadataBase {

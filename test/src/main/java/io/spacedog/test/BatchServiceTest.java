@@ -14,7 +14,7 @@ import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.client.http.SpaceResponse;
-import io.spacedog.model.Schema;
+import io.spacedog.client.schema.Schema;
 import io.spacedog.utils.Json;
 
 public class BatchServiceTest extends SpaceTest {

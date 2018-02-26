@@ -23,7 +23,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import io.spacedog.model.Schema;
+import io.spacedog.client.schema.Schema;
 
 public class JsonGenerator {
 
