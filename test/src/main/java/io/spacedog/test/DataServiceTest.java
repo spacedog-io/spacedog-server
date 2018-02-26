@@ -6,15 +6,11 @@ package io.spacedog.test;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceRequestException;
-import io.spacedog.model.DataObject;
-import io.spacedog.model.DataObjectAbstract;
 import io.spacedog.model.JsonDataObject;
-import io.spacedog.model.MetadataBase;
 import io.spacedog.model.Permission;
 import io.spacedog.model.Roles;
 import io.spacedog.model.Schema;
@@ -147,57 +143,21 @@ public class DataServiceTest extends SpaceTest {
 		}
 	}
 
-	@JsonIgnoreProperties(ignoreUnknown = true)
-	public static class Message extends MetadataBase {
-		public String text;
-
-		public static Schema schema() {
-			return Schema.builder("message")//
-					.text("text")//
-					.acl(Roles.user, Permission.create//
-							, Permission.readMine)//
-					.acl("operator", Permission.create, Permission.update, //
-							Permission.updateMeta, Permission.read)//
-					.build();
-		}
-	}
-
-	@JsonIgnoreProperties(ignoreUnknown = true)
-	public static class MessageDataObject extends DataObjectAbstract<Message> {
-
-		private Message source;
-
-		@Override
-		public Class<Message> sourceClass() {
-			return Message.class;
-		}
-
-		@Override
-		public Message source() {
-			return this.source;
-		}
-
-		@Override
-		public DataObject<Message> source(Message source) {
-			this.source = source;
-			return this;
-		}
-
-		@Override
-		public String type() {
-			return "message";
-		}
-	}
-
 	@Test
 	public void createDataObjectWithCustomMeta() {
 
 		prepareTest();
 		SpaceDog superadmin = clearRootBackend();
-		superadmin.schemas().set(Message.schema());
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog nath = createTempDog(superadmin, "nath");
 		SpaceDog operator = createTempDog(superadmin, "operator", "operator");
+
+		// superadmin creates message schema
+		Schema schema = Message.schema()//
+				.acl(Roles.user, Permission.create, Permission.readMine)//
+				.acl("operator", Permission.create, Permission.update, //
+						Permission.updateMeta, Permission.read);
+		superadmin.schemas().set(schema);
 
 		// old message to insert again in database
 		DateTime now = DateTime.now();
@@ -209,13 +169,11 @@ public class DataServiceTest extends SpaceTest {
 		message.updatedAt(now.minusDays(2).plusHours(1));
 
 		// vince creates a message object
-		vince.put("/1/data/message/1")//
-				.bodyPojo(message)//
-				.go(201);
+		vince.data().save(Message.TYPE, "1", message);
 
 		// but provided meta dates are not saved
 		Message downloaded = vince.data()//
-				.fetch(new MessageDataObject().id("1"))//
+				.get(Message.TYPE, "1", MessageDataObject.class)//
 				.source();
 
 		assertEquals(message.text, downloaded.text);

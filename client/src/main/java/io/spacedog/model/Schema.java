@@ -70,20 +70,23 @@ public class Schema {
 		}
 	}
 
-	public void acl(RolePermissions acl) {
+	public Schema acl(RolePermissions acl) {
 		content().set("_acl", Json.mapper().valueToTree(acl));
+		return this;
 	}
 
-	public void acl(String role, Permission... permissions) {
+	public Schema acl(String role, Permission... permissions) {
 		acl(role, Sets.newHashSet(permissions));
+		return this;
 	}
 
-	public void acl(String role, Set<Permission> permissions) {
+	public Schema acl(String role, Set<Permission> permissions) {
 		RolePermissions acl = acl();
 		if (acl == null)
 			acl = new RolePermissions();
 		acl.put(role, permissions);
 		acl(acl);
+		return this;
 	}
 
 	public static void checkName(String name) {

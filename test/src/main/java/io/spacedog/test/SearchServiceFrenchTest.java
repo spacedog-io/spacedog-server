@@ -94,7 +94,6 @@ public class SearchServiceFrenchTest extends SpaceTest {
 	private long search(String text, String field) {
 		ESSearchSourceBuilder source = ESSearchSourceBuilder.searchSource()//
 				.query(ESQueryBuilders.matchQuery(field, text));
-		SearchRequest searchRequest = superadmin.data().searchRequest().refresh().source(source);
-		return searchRequest.go().total;
+		return superadmin.data().searchRequest().refresh().source(source).go().total;
 	}
 }

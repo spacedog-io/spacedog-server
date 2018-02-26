@@ -4,7 +4,6 @@
 package io.spacedog.test;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -296,18 +295,18 @@ public class DataServiceTest2 extends SpaceTest {
 		SpaceDog superadmin = clearRootBackend();
 
 		// creates message schema with auto generated id strategy
-		superadmin.schemas().set(Schema.builder("message").string("text").build());
+		superadmin.schemas().set(Message.schema());
 
 		// creates a message object with auto generated id
 		ObjectNode message = Json.object("text", "id=?");
-		JsonDataObject createObject = superadmin.data().save("message", message);
-		DataObject<ObjectNode> getObject = superadmin.data().get("message", createObject.id());
+		JsonDataObject createObject = superadmin.data().save(Message.TYPE, message);
+		DataObject<ObjectNode> getObject = superadmin.data().get(Message.TYPE, createObject.id());
 		assertSourceAlmostEquals(message, getObject.source());
 
 		// creates a message object with self provided id
 		message = Json.object("text", "id=1");
-		superadmin.data().save("message", "1", message);
-		getObject = superadmin.data().get("message", "1");
+		superadmin.data().save(Message.TYPE, "1", message);
+		getObject = superadmin.data().get(Message.TYPE, "1");
 		assertSourceAlmostEquals(message, getObject.source());
 
 		// an id field does not force the id field
@@ -326,15 +325,15 @@ public class DataServiceTest2 extends SpaceTest {
 		prepareTest();
 		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
-		Schema schema = Schema.builder("message").string("text")//
-				.acl(Roles.user, Permission.create, Permission.search).build();
+		Schema schema = Message.schema()//
+				.acl(Roles.user, Permission.create, Permission.search);
 		superadmin.schemas().set(schema);
 
 		// superadmins creates 4 messages
-		HashSet<String> originalMessages = Sets.newHashSet(//
+		Set<String> originalMessages = Sets.newHashSet(//
 				"hello", "bonjour", "guttentag", "hola");
 		for (String message : originalMessages)
-			vince.data().save("message", Json.object("text", message));
+			vince.data().save(Message.TYPE, new Message(message));
 
 		// fetches messages by 4 pages of 1 object
 		Set<String> messages = Sets.newHashSet();
@@ -362,14 +361,14 @@ public class DataServiceTest2 extends SpaceTest {
 	private Collection<String> fetchMessages(SpaceDog user, int from, int size) {
 		ESSearchSourceBuilder builder = ESSearchSourceBuilder.searchSource()//
 				.from(from).size(size);
-		JsonDataObject.Results results = user.data().searchRequest()//
-				.type("message").source(builder).refresh().go();
+		MessageDataObject.Results results = user.data().searchRequest()//
+				.type(Message.TYPE).source(builder).refresh().go(MessageDataObject.Results.class);
 
 		assertEquals(4, results.total);
 		assertEquals(size, results.results.size());
 
 		return results.results.stream()//
-				.map(object -> object.source().get("text").asText())//
+				.map(object -> object.source().text)//
 				.collect(Collectors.toList());
 	}
 
