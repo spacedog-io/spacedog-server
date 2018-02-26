@@ -25,9 +25,9 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.base.Strings;
 
-import io.spacedog.http.ContentTypes;
-import io.spacedog.http.SpaceHeaders;
-import io.spacedog.http.WebPath;
+import io.spacedog.client.http.ContentTypes;
+import io.spacedog.client.http.SpaceHeaders;
+import io.spacedog.client.http.WebPath;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import net.codestory.http.Context;

@@ -11,7 +11,7 @@ import com.google.common.collect.Sets;
 
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
-import io.spacedog.http.SpaceParams;
+import io.spacedog.client.http.SpaceParams;
 
 public class LogClient implements SpaceParams {
 

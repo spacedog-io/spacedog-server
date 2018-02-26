@@ -3,7 +3,7 @@ package io.spacedog.client;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.http.SpaceResponse;
+import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.model.Settings;
 import io.spacedog.model.SettingsBase;
 import io.spacedog.utils.Optional7;

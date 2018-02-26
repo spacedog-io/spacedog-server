@@ -21,7 +21,7 @@ import io.spacedog.client.email.EmailBasicRequest;
 import io.spacedog.client.email.EmailSettings;
 import io.spacedog.client.email.EmailTemplate;
 import io.spacedog.client.email.EmailSettings.SmtpSettings;
-import io.spacedog.http.SpaceEnv;
+import io.spacedog.client.http.SpaceEnv;
 import io.spacedog.model.Schema;
 import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Json;

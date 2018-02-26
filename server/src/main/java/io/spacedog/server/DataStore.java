@@ -29,8 +29,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
-import io.spacedog.http.SpaceFields;
-import io.spacedog.http.SpaceParams;
+import io.spacedog.client.http.SpaceFields;
+import io.spacedog.client.http.SpaceParams;
 import io.spacedog.model.DataObject;
 import io.spacedog.model.Metadata;
 import io.spacedog.model.MetadataBase;

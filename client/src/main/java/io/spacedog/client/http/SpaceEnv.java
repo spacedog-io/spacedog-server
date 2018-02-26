@@ -1,4 +1,4 @@
-package io.spacedog.http;
+package io.spacedog.client.http;
 
 import java.io.File;
 import java.io.FileInputStream;

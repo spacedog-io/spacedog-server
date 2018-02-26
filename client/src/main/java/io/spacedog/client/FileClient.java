@@ -9,9 +9,9 @@ import java.util.UUID;
 
 import com.google.common.collect.Lists;
 
-import io.spacedog.http.ContentTypes;
-import io.spacedog.http.SpaceResponse;
-import io.spacedog.http.WebPath;
+import io.spacedog.client.http.ContentTypes;
+import io.spacedog.client.http.SpaceResponse;
+import io.spacedog.client.http.WebPath;
 import io.spacedog.model.SpaceFile;
 import io.spacedog.model.SpaceFile.FileList;
 import io.spacedog.model.SpaceFile.FileMeta;

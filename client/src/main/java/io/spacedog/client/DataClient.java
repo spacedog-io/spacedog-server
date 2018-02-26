@@ -5,10 +5,10 @@ import com.google.common.base.Strings;
 
 import io.spacedog.client.elastic.ESQueryBuilder;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
-import io.spacedog.http.SpaceFields;
-import io.spacedog.http.SpaceParams;
-import io.spacedog.http.SpaceRequest;
-import io.spacedog.http.SpaceResponse;
+import io.spacedog.client.http.SpaceFields;
+import io.spacedog.client.http.SpaceParams;
+import io.spacedog.client.http.SpaceRequest;
+import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.model.BasicDataObject;
 import io.spacedog.model.DataObject;
 import io.spacedog.model.JsonDataObject;

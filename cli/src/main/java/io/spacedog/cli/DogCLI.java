@@ -4,9 +4,9 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
 import com.google.common.base.Strings;
 
-import io.spacedog.http.SpaceBackend;
-import io.spacedog.http.SpaceEnv;
-import io.spacedog.http.SpaceRequestException;
+import io.spacedog.client.http.SpaceBackend;
+import io.spacedog.client.http.SpaceEnv;
+import io.spacedog.client.http.SpaceRequestException;
 import io.spacedog.utils.Utils;
 
 public class DogCLI {

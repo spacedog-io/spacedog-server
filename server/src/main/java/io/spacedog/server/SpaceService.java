@@ -14,8 +14,8 @@ import org.elasticsearch.common.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-import io.spacedog.http.SpaceFields;
-import io.spacedog.http.SpaceParams;
+import io.spacedog.client.http.SpaceFields;
+import io.spacedog.client.http.SpaceParams;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import net.codestory.http.Context;

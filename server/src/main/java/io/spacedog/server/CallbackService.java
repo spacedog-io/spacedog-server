@@ -13,7 +13,7 @@ import com.google.common.collect.Sets;
 import com.google.common.io.BaseEncoding;
 
 import io.spacedog.client.credentials.Credentials;
-import io.spacedog.http.SpaceHeaders;
+import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.model.KeyValue;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Exceptions;

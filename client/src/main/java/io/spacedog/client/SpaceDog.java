@@ -4,12 +4,12 @@ import org.joda.time.DateTime;
 
 import io.spacedog.client.credentials.CredentialsClient;
 import io.spacedog.client.email.EmailClient;
-import io.spacedog.http.SpaceBackend;
-import io.spacedog.http.SpaceEnv;
-import io.spacedog.http.SpaceFields;
-import io.spacedog.http.SpaceParams;
-import io.spacedog.http.SpaceRequest;
-import io.spacedog.http.SpaceResponse;
+import io.spacedog.client.http.SpaceBackend;
+import io.spacedog.client.http.SpaceEnv;
+import io.spacedog.client.http.SpaceFields;
+import io.spacedog.client.http.SpaceParams;
+import io.spacedog.client.http.SpaceRequest;
+import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Optional7;
 

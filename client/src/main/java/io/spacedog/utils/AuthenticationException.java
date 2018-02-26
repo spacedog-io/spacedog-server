@@ -3,7 +3,7 @@
  */
 package io.spacedog.utils;
 
-import io.spacedog.http.SpaceException;
+import io.spacedog.client.http.SpaceException;
 
 public class AuthenticationException extends SpaceException {
 

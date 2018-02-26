@@ -10,8 +10,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceDog;
-import io.spacedog.http.SpaceEnv;
-import io.spacedog.http.SpaceRequestException;
+import io.spacedog.client.http.SpaceEnv;
+import io.spacedog.client.http.SpaceRequestException;
 import io.spacedog.model.Schema;
 import io.spacedog.model.SmsSettings;
 import io.spacedog.model.SmsSettings.TwilioSettings;

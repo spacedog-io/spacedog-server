@@ -14,7 +14,7 @@ import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.CredentialsSettings;
 import io.spacedog.client.credentials.Passwords;
 import io.spacedog.client.email.EmailTemplate;
-import io.spacedog.http.SpaceRequest;
+import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
 

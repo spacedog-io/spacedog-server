@@ -8,7 +8,7 @@ import java.util.List;
 import com.google.common.base.Strings;
 import com.google.common.io.BaseEncoding;
 
-import io.spacedog.http.SpaceHeaders;
+import io.spacedog.client.http.SpaceHeaders;
 
 public class AuthorizationHeader {
 

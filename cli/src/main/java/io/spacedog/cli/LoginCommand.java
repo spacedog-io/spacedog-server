@@ -14,8 +14,8 @@ import com.beust.jcommander.Parameters;
 import com.google.common.base.Strings;
 
 import io.spacedog.client.SpaceDog;
-import io.spacedog.http.SpaceBackend;
-import io.spacedog.http.SpaceEnv;
+import io.spacedog.client.http.SpaceBackend;
+import io.spacedog.client.http.SpaceEnv;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Utils;

@@ -8,8 +8,8 @@ import org.junit.Test;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.CredentialsSettings;
 import io.spacedog.client.credentials.CredentialsSettings.OAuthSettings;
-import io.spacedog.http.SpaceEnv;
-import io.spacedog.http.SpaceRequest;
+import io.spacedog.client.http.SpaceEnv;
+import io.spacedog.client.http.SpaceRequest;
 
 public class LinkedinServiceTest extends SpaceTest {
 

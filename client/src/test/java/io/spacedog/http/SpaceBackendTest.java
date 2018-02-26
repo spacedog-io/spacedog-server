@@ -3,6 +3,8 @@ package io.spacedog.http;
 import org.junit.Assert;
 import org.junit.Test;
 
+import io.spacedog.client.http.SpaceBackend;
+
 public class SpaceBackendTest extends Assert {
 
 	@Test

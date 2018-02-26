@@ -10,8 +10,8 @@ import org.elasticsearch.action.index.IndexResponse;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.http.SpaceRequest;
-import io.spacedog.http.SpaceResponse;
+import io.spacedog.client.http.SpaceRequest;
+import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.model.SmsBasicRequest;
 import io.spacedog.model.SmsRequest;
 import io.spacedog.model.SmsSettings;

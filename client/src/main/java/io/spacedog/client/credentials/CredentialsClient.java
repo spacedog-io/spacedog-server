@@ -10,10 +10,10 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceDog;
-import io.spacedog.http.SpaceFields;
-import io.spacedog.http.SpaceParams;
-import io.spacedog.http.SpaceRequest;
-import io.spacedog.http.SpaceResponse;
+import io.spacedog.client.http.SpaceFields;
+import io.spacedog.client.http.SpaceParams;
+import io.spacedog.client.http.SpaceRequest;
+import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;

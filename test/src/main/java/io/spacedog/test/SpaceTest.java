@@ -16,12 +16,12 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.Passwords;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.http.SpaceBackend;
-import io.spacedog.http.SpaceEnv;
-import io.spacedog.http.SpaceFields;
-import io.spacedog.http.SpaceParams;
-import io.spacedog.http.SpaceRequest;
-import io.spacedog.http.SpaceRequestException;
+import io.spacedog.client.http.SpaceBackend;
+import io.spacedog.client.http.SpaceEnv;
+import io.spacedog.client.http.SpaceFields;
+import io.spacedog.client.http.SpaceParams;
+import io.spacedog.client.http.SpaceRequest;
+import io.spacedog.client.http.SpaceRequestException;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 

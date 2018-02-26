@@ -1,7 +1,7 @@
 package io.spacedog.tutorials;
 
 import io.spacedog.client.SpaceDog;
-import io.spacedog.http.SpaceEnv;
+import io.spacedog.client.http.SpaceEnv;
 import io.spacedog.model.DataObject;
 import io.spacedog.tutorials.Course.CourseDataObject;
 import io.spacedog.tutorials.Customer.CustomerDataObject;

@@ -9,7 +9,7 @@ import java.util.List;
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.RolePermissions;
-import io.spacedog.http.WebPath;
+import io.spacedog.client.http.WebPath;
 import io.spacedog.model.DownloadRequest;
 import io.spacedog.model.FileSettings;
 import io.spacedog.utils.Exceptions;

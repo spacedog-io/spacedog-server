@@ -6,7 +6,7 @@ package io.spacedog.server;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 
-import io.spacedog.http.SpaceFields;
+import io.spacedog.client.http.SpaceFields;
 import io.spacedog.model.DataObject;
 
 public class ElasticPayload implements SpaceFields {

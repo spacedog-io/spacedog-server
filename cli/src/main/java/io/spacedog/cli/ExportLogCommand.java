@@ -13,7 +13,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
 import io.spacedog.client.SpaceDog;
-import io.spacedog.http.SpaceEnv;
+import io.spacedog.client.http.SpaceEnv;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 

@@ -3,7 +3,7 @@
  */
 package io.spacedog.server;
 
-import io.spacedog.http.SpaceHeaders;
+import io.spacedog.client.http.SpaceHeaders;
 import net.codestory.http.Context;
 import net.codestory.http.filters.PayloadSupplier;
 import net.codestory.http.payload.Payload;

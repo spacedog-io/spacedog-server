@@ -12,8 +12,8 @@ import com.google.common.collect.Sets;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.http.SpaceRequest;
-import io.spacedog.http.SpaceResponse;
+import io.spacedog.client.http.SpaceRequest;
+import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
 

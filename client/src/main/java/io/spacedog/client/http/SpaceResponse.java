@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.http;
+package io.spacedog.client.http;
 
 import java.io.Closeable;
 import java.io.IOException;

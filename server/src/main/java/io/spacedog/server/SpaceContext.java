@@ -6,9 +6,9 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
 import io.spacedog.client.credentials.Credentials;
-import io.spacedog.http.SpaceBackend;
-import io.spacedog.http.SpaceHeaders;
-import io.spacedog.http.SpaceParams;
+import io.spacedog.client.http.SpaceBackend;
+import io.spacedog.client.http.SpaceHeaders;
+import io.spacedog.client.http.SpaceParams;
 import io.spacedog.model.Settings;
 import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Exceptions;

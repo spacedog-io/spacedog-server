@@ -3,10 +3,10 @@ package io.spacedog.test;
 import org.junit.Test;
 
 import io.spacedog.client.SpaceDog;
-import io.spacedog.http.SpaceBackend;
-import io.spacedog.http.SpaceEnv;
-import io.spacedog.http.SpaceHeaders;
-import io.spacedog.http.SpaceRequest;
+import io.spacedog.client.http.SpaceBackend;
+import io.spacedog.client.http.SpaceEnv;
+import io.spacedog.client.http.SpaceHeaders;
+import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.model.WebSettings;
 
 public class WebServiceTest extends SpaceTest {

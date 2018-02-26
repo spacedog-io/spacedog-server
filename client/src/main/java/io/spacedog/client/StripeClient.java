@@ -5,7 +5,7 @@ import java.util.Map.Entry;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.http.SpaceRequest;
+import io.spacedog.client.http.SpaceRequest;
 
 public class StripeClient {
 

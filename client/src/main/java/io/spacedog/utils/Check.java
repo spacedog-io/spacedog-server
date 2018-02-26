@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 
 import com.google.common.base.Strings;
 
-import io.spacedog.http.SpaceStatus;
+import io.spacedog.client.http.SpaceStatus;
 
 public class Check {
 

@@ -1,8 +1,8 @@
 package io.spacedog.client;
 
 import io.spacedog.client.credentials.CreateCredentialsRequest;
-import io.spacedog.http.SpaceFields;
-import io.spacedog.http.SpaceParams;
+import io.spacedog.client.http.SpaceFields;
+import io.spacedog.client.http.SpaceParams;
 import io.spacedog.model.CreateBackendRequest;
 
 public class AdminClient implements SpaceParams, SpaceFields {
