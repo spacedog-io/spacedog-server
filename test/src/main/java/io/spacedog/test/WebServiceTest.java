@@ -27,32 +27,32 @@ public class WebServiceTest extends SpaceTest {
 		superadmin.put("/1/files/XXX.html").go(400);
 
 		// admin uploads web site at prefix 'www'
-		upload("www", "/index.html");
-		upload("www", "/toto.html");
-		upload("www", "/a/b/index.html");
-		upload("www", "/a/b/toto.html");
+		upload("/www", "/index.html");
+		upload("/www", "/toto.html");
+		upload("/www", "/a/b/index.html");
+		upload("/www", "/a/b/toto.html");
 
 		// anonymous user can browse 'www' pages
-		browse("www", "/index.html");
-		browse("www", "/toto.html");
-		browse("www", "", html("/index.html"));
-		browse("www", "/", html("/index.html"));
-		browse("www", "/a/b/index.html");
-		browse("www", "/a/b/toto.html");
-		browse("www", "/a/b", html("/a/b/index.html"));
-		browse("www", "/a/b/", html("/a/b/index.html"));
+		browse("/www", "/index.html");
+		browse("/www", "/toto.html");
+		browse("/www", "", html("/index.html"));
+		browse("/www", "/", html("/index.html"));
+		browse("/www", "/a/b/index.html");
+		browse("/www", "/a/b/toto.html");
+		browse("/www", "/a/b", html("/a/b/index.html"));
+		browse("/www", "/a/b/", html("/a/b/index.html"));
 
 		// admin uploads custom 404.html file to 'www'
 		// '/404.html' is the default not found path
-		upload("www", "/404.html");
+		upload("/www", "/404.html");
 
 		// if user browses invalid URIs
 		// the server returns the default not found path
 		// i.e. the /404.html page with status code 200
-		browse("www", "/index", html("/404.html"));
-		browse("www", "/c", html("/404.html"));
-		browse("www", "/a/", html("/404.html"));
-		browse("www", "/a/b/c/index.html", html("/404.html"));
+		browse("/www", "/index", html("/404.html"));
+		browse("/www", "/c", html("/404.html"));
+		browse("/www", "/a/", html("/404.html"));
+		browse("/www", "/a/b/c/index.html", html("/404.html"));
 
 		// changes the not found path to /index.html
 		WebSettings settings = new WebSettings();
@@ -62,10 +62,10 @@ public class WebServiceTest extends SpaceTest {
 		// if user browses invalid URIs
 		// the server returns the not found path
 		// i.e. the /index.html page with status code 200
-		browse("www", "/index", html("/index.html"));
-		browse("www", "/c", html("/index.html"));
-		browse("www", "/a/", html("/index.html"));
-		browse("www", "/a/b/c/index.html", html("/index.html"));
+		browse("/www", "/index", html("/index.html"));
+		browse("/www", "/c", html("/index.html"));
+		browse("/www", "/a/", html("/index.html"));
+		browse("/www", "/a/b/c/index.html", html("/index.html"));
 
 		// browse without prefix returns default not found html page
 		SpaceRequest.get("/1/web")//
@@ -96,14 +96,14 @@ public class WebServiceTest extends SpaceTest {
 	private void browse(String prefix, String uri, String expectedBody, String expectedContentType) {
 		SpaceBackend wwwBackend = SpaceEnv.env().wwwBackend();
 
-		SpaceRequest.head("/1/web/" + prefix + uri)//
+		SpaceRequest.head("/1/web" + prefix + uri)//
 				.backend(superadmin.backend()).go(200)//
 				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE);
 
 		SpaceRequest.head(uri).backend(wwwBackend).go(200)//
 				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE);
 
-		SpaceRequest.get("/1/web/" + prefix + uri)//
+		SpaceRequest.get("/1/web" + prefix + uri)//
 				.backend(superadmin.backend()).go(200)//
 				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE)//
 				.assertBodyEquals(expectedBody);
