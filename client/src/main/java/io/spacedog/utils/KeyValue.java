@@ -1,4 +1,4 @@
-package io.spacedog.model;
+package io.spacedog.utils;
 
 import java.util.AbstractMap.SimpleEntry;
 
