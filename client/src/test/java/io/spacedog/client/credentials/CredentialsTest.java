@@ -1,4 +1,4 @@
-package io.spacedog.model;
+package io.spacedog.client.credentials;
 
 import org.joda.time.DateTime;
 import org.junit.Assert;

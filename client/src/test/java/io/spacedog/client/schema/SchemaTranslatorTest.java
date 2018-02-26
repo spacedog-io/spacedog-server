@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.utils.translate;
+package io.spacedog.client.schema;
 
 import java.io.IOException;
 

@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.model;
+package io.spacedog.client.schema;
 
 import org.junit.Assert;
 import org.junit.Test;
