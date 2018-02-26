@@ -1,4 +1,4 @@
-package io.spacedog.model;
+package io.spacedog.client.admin;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;

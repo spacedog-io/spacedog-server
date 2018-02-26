@@ -5,7 +5,7 @@ package io.spacedog.upgrade;
 
 import java.util.List;
 
-import io.spacedog.model.BackendSettings;
+import io.spacedog.client.admin.BackendSettings;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Utils;
