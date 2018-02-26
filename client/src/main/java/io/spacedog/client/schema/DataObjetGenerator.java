@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.utils;
+package io.spacedog.client.schema;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -23,15 +23,19 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import io.spacedog.client.schema.Schema;
+import io.spacedog.utils.Json;
+import io.spacedog.utils.JsonBuilder;
+import io.spacedog.utils.Utils;
 
-public class JsonGenerator {
+//import io.spacedog.client.schema.Schema;
+
+public class DataObjetGenerator {
 
 	private Map<String, List<Object>> paths = Maps.newHashMap();
 	private Map<String, List<String>> types = Maps.newHashMap();
 	private Random random = new Random();
 
-	public JsonGenerator() {
+	public DataObjetGenerator() {
 	}
 
 	public void regPath(String path, Object value) {

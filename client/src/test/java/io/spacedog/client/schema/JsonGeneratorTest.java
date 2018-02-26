@@ -1,11 +1,14 @@
-package io.spacedog.utils;
+package io.spacedog.client.schema;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.client.schema.DataObjetGenerator;
 import io.spacedog.client.schema.Schema;
+import io.spacedog.utils.Json;
+import io.spacedog.utils.Utils;
 
 public class JsonGeneratorTest extends Assert {
 
@@ -21,7 +24,7 @@ public class JsonGeneratorTest extends Assert {
 				.close()//
 				.build();
 
-		JsonGenerator generator = new JsonGenerator();
+		DataObjetGenerator generator = new DataObjetGenerator();
 		generator.regPath("name", "vince", "william");
 		generator.regPath("address.name", "vince", "william");
 		ObjectNode person = generator.gen(schema);
