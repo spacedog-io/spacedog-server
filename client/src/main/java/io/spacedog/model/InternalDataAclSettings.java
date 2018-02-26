@@ -6,6 +6,8 @@ package io.spacedog.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import io.spacedog.client.credentials.ObjectRolePermissions;
+import io.spacedog.client.settings.Settings;
+import io.spacedog.client.settings.SettingsBase;
 
 @SuppressWarnings("serial")
 public class InternalDataAclSettings extends ObjectRolePermissions implements Settings {

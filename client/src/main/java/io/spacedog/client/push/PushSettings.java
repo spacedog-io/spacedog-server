@@ -4,7 +4,7 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 
-import io.spacedog.model.SettingsBase;
+import io.spacedog.client.settings.SettingsBase;
 
 public class PushSettings extends SettingsBase {
 

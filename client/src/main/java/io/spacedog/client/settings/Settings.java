@@ -1,4 +1,4 @@
-package io.spacedog.model;
+package io.spacedog.client.settings;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 

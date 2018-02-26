@@ -1,18 +1,17 @@
-package io.spacedog.client;
+package io.spacedog.client.settings;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.client.SpaceDog;
 import io.spacedog.client.http.SpaceResponse;
-import io.spacedog.model.Settings;
-import io.spacedog.model.SettingsBase;
 import io.spacedog.utils.Optional7;
 
 public class SettingsClient {
 
-	SpaceDog dog;
+	private SpaceDog dog;
 
-	SettingsClient(SpaceDog session) {
+	public SettingsClient(SpaceDog session) {
 		this.dog = session;
 	}
 

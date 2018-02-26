@@ -2,6 +2,8 @@ package io.spacedog.model;
 
 import java.util.Set;
 
+import io.spacedog.client.settings.SettingsBase;
+
 public class StripeSettings extends SettingsBase {
 
 	public String secretKey;

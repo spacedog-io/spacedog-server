@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.spacedog.client.credentials.ObjectRolePermissions;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
+import io.spacedog.client.settings.SettingsBase;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FileSettings extends SettingsBase {

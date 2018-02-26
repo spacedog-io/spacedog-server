@@ -9,7 +9,7 @@ import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.http.SpaceBackend;
 import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.client.http.SpaceParams;
-import io.spacedog.model.Settings;
+import io.spacedog.client.settings.Settings;
 import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Optional7;

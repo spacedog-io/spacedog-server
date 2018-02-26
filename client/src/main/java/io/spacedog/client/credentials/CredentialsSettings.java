@@ -2,7 +2,7 @@ package io.spacedog.client.credentials;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import io.spacedog.model.SettingsBase;
+import io.spacedog.client.settings.SettingsBase;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CredentialsSettings extends SettingsBase {
