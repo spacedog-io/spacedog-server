@@ -1,4 +1,4 @@
-package io.spacedog.model;
+package io.spacedog.client.data;
 
 public final class DataObjects {
 

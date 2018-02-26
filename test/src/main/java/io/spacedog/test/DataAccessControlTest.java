@@ -11,7 +11,7 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.RolePermissions;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.model.DataObject;
+import io.spacedog.client.data.DataObject;
 import io.spacedog.model.InternalDataAclSettings;
 import io.spacedog.model.Schema;
 

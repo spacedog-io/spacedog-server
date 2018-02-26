@@ -1,4 +1,4 @@
-package io.spacedog.model;
+package io.spacedog.client.data;
 
 public interface DataObject<K> extends Metadata {
 

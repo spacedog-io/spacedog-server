@@ -29,12 +29,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
+import io.spacedog.client.data.DataObject;
+import io.spacedog.client.data.Metadata;
+import io.spacedog.client.data.MetadataBase;
+import io.spacedog.client.data.MetadataDataObject;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
-import io.spacedog.model.DataObject;
-import io.spacedog.model.Metadata;
-import io.spacedog.model.MetadataBase;
-import io.spacedog.model.MetadataDataObject;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;

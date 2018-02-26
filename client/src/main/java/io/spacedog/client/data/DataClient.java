@@ -1,16 +1,15 @@
-package io.spacedog.client;
+package io.spacedog.client.data;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
+import io.spacedog.client.SpaceDog;
 import io.spacedog.client.elastic.ESQueryBuilder;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.client.http.SpaceResponse;
-import io.spacedog.model.BasicDataObject;
-import io.spacedog.model.DataObject;
 import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.JsonDataObject.Results;
 import io.spacedog.utils.Json;
@@ -19,9 +18,9 @@ import io.spacedog.utils.Utils;
 
 public class DataClient implements SpaceFields, SpaceParams {
 
-	SpaceDog dog;
+	private SpaceDog dog;
 
-	DataClient(SpaceDog session) {
+	public DataClient(SpaceDog session) {
 		this.dog = session;
 	}
 

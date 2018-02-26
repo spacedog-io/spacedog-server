@@ -4,8 +4,8 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import io.spacedog.model.DataObject;
-import io.spacedog.model.DataObjectAbstract;
+import io.spacedog.client.data.DataObject;
+import io.spacedog.client.data.DataObjectAbstract;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MessageDataObject extends DataObjectAbstract<Message> {

@@ -7,9 +7,9 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.model.DataObject;
-import io.spacedog.model.DataObjectAbstract;
-import io.spacedog.model.MetadataBase;
+import io.spacedog.client.data.DataObject;
+import io.spacedog.client.data.DataObjectAbstract;
+import io.spacedog.client.data.MetadataBase;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, //

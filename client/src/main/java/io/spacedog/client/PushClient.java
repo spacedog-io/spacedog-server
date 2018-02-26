@@ -4,8 +4,8 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
+import io.spacedog.client.data.DataObject;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
-import io.spacedog.model.DataObject;
 import io.spacedog.model.Installation;
 import io.spacedog.model.InstallationDataObject;
 import io.spacedog.model.PushApplication;

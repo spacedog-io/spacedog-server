@@ -4,7 +4,7 @@ import org.joda.time.DateTime;
 import org.junit.Test;
 
 import io.spacedog.client.SpaceDog;
-import io.spacedog.model.DataObject;
+import io.spacedog.client.data.DataObject;
 import io.spacedog.model.GeoPoint;
 import io.spacedog.model.Installation;
 import io.spacedog.model.PushProtocol;
