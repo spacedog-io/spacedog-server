@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.client.data.DataObject;
 import io.spacedog.client.data.DataObjectAbstract;
 import io.spacedog.client.data.MetadataBase;
-import io.spacedog.model.GeoPoint;
+import io.spacedog.client.schema.GeoPoint;
 import io.spacedog.utils.Exceptions;
 
 @JsonIgnoreProperties(ignoreUnknown = true)

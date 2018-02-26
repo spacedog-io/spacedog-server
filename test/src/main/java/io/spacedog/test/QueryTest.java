@@ -14,8 +14,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.client.schema.GeoPoint;
 import io.spacedog.client.schema.Schema;
-import io.spacedog.model.GeoPoint;
 import io.spacedog.utils.Json;
 
 public class QueryTest extends SpaceTest {

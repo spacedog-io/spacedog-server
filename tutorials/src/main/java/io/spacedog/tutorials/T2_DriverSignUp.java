@@ -7,7 +7,7 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.client.data.DataObject;
 import io.spacedog.client.push.Installation;
 import io.spacedog.client.push.PushProtocol;
-import io.spacedog.model.GeoPoint;
+import io.spacedog.client.schema.GeoPoint;
 import io.spacedog.tutorials.Driver.DriverDataObject;
 import io.spacedog.tutorials.Driver.LastLocation;
 

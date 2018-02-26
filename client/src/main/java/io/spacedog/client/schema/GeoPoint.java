@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.model;
+package io.spacedog.client.schema;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
