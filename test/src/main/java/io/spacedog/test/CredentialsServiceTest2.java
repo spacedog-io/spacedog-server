@@ -98,9 +98,6 @@ public class CredentialsServiceTest2 extends SpaceTest {
 		SpaceRequest.get("/1/credentials/" + vince.id())//
 				.backend(superadmin).basicAuth("vince", "XXX").go(401);
 
-		// vince fails to get his credentials if wrong backend id
-		vince.get("/1/credentials/" + vince.id()).backendId("XXX").go(401);
-
 		// anonymous fails to get vince credentials
 		SpaceRequest.get("/1/credentials/" + vince.id()).backend(superadmin).go(403);
 
