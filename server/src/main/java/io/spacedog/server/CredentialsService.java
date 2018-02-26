@@ -24,11 +24,11 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import io.spacedog.client.email.EmailTemplate;
 import io.spacedog.model.CreateCredentialsRequest;
 import io.spacedog.model.Credentials;
 import io.spacedog.model.Credentials.Session;
 import io.spacedog.model.CredentialsSettings;
-import io.spacedog.model.EmailTemplate;
 import io.spacedog.model.Roles;
 import io.spacedog.model.Schema;
 import io.spacedog.model.Usernames;

@@ -13,15 +13,15 @@ import org.elasticsearch.action.index.IndexResponse;
 
 import com.google.common.base.Strings;
 
+import io.spacedog.client.email.EmailBasicRequest;
+import io.spacedog.client.email.EmailRequest;
+import io.spacedog.client.email.EmailSettings;
+import io.spacedog.client.email.EmailTemplate;
+import io.spacedog.client.email.EmailTemplateRequest;
+import io.spacedog.client.email.EmailSettings.MailGunSettings;
+import io.spacedog.client.email.EmailSettings.SmtpSettings;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceResponse;
-import io.spacedog.model.EmailBasicRequest;
-import io.spacedog.model.EmailRequest;
-import io.spacedog.model.EmailSettings;
-import io.spacedog.model.EmailSettings.MailGunSettings;
-import io.spacedog.model.EmailSettings.SmtpSettings;
-import io.spacedog.model.EmailTemplate;
-import io.spacedog.model.EmailTemplateRequest;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;

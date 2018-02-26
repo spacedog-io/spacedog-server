@@ -1,9 +1,11 @@
-package io.spacedog.model;
+package io.spacedog.client.email;
 
 import java.util.Collections;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import io.spacedog.model.SettingsBase;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EmailSettings extends SettingsBase {

@@ -1,18 +1,16 @@
-package io.spacedog.client;
+package io.spacedog.client.email;
 
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.model.EmailRequest;
-import io.spacedog.model.EmailTemplate;
-import io.spacedog.model.EmailTemplateRequest;
+import io.spacedog.client.SpaceDog;
 
 public class EmailClient {
 
-	SpaceDog dog;
+	private SpaceDog dog;
 
-	EmailClient(SpaceDog dog) {
+	public EmailClient(SpaceDog dog) {
 		this.dog = dog;
 	}
 

@@ -1,18 +1,11 @@
-/**
- * © David Attias 2015
- */
-package io.spacedog.model;
+package io.spacedog.client.email;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class EmailTemplate {
-
-	public String name;
+public class EmailBasicRequest extends EmailRequest {
 	public String from;
 	public List<String> to;
 	public List<String> cc;
@@ -20,6 +13,14 @@ public class EmailTemplate {
 	public String subject;
 	public String text;
 	public String html;
-	public Map<String, String> model;
-	public Set<String> authorizedRoles;
+
+	public EmailBasicRequest to(List<String> to) {
+		this.to = to;
+		return this;
+	}
+
+	public EmailBasicRequest html(String html) {
+		this.html = html;
+		return this;
+	}
 }

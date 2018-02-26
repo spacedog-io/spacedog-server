@@ -1,4 +1,4 @@
-package io.spacedog.model;
+package io.spacedog.client.email;
 
 import java.util.Map;
 
