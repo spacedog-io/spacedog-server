@@ -5,10 +5,10 @@ package io.spacedog.server;
 
 import org.elasticsearch.action.index.IndexResponse;
 
-import io.spacedog.model.Credentials;
+import io.spacedog.client.credentials.Credentials;
+import io.spacedog.client.credentials.Permission;
+import io.spacedog.client.credentials.RolePermissions;
 import io.spacedog.model.InternalDataAclSettings;
-import io.spacedog.model.Permission;
-import io.spacedog.model.RolePermissions;
 
 public class DataAccessControl {
 

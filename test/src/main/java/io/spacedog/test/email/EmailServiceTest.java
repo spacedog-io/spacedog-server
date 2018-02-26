@@ -15,13 +15,13 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.client.credentials.Permission;
+import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.email.EmailBasicRequest;
 import io.spacedog.client.email.EmailSettings;
 import io.spacedog.client.email.EmailTemplate;
 import io.spacedog.client.email.EmailSettings.SmtpSettings;
 import io.spacedog.http.SpaceEnv;
-import io.spacedog.model.Permission;
-import io.spacedog.model.Roles;
 import io.spacedog.model.Schema;
 import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Json;

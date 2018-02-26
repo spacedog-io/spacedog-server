@@ -10,11 +10,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.client.credentials.Credentials;
+import io.spacedog.client.credentials.CredentialsSettings;
+import io.spacedog.client.credentials.Passwords;
 import io.spacedog.client.email.EmailTemplate;
 import io.spacedog.http.SpaceRequest;
-import io.spacedog.model.Credentials;
-import io.spacedog.model.CredentialsSettings;
-import io.spacedog.model.Passwords;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
 

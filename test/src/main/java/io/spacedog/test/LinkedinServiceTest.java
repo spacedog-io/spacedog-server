@@ -6,10 +6,10 @@ package io.spacedog.test;
 import org.junit.Test;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.client.credentials.CredentialsSettings;
+import io.spacedog.client.credentials.CredentialsSettings.OAuthSettings;
 import io.spacedog.http.SpaceEnv;
 import io.spacedog.http.SpaceRequest;
-import io.spacedog.model.CredentialsSettings;
-import io.spacedog.model.CredentialsSettings.OAuthSettings;
 
 public class LinkedinServiceTest extends SpaceTest {
 

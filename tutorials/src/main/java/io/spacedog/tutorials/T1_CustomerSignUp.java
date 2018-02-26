@@ -8,13 +8,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.client.credentials.CredentialsSettings;
+import io.spacedog.client.credentials.Permission;
+import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.email.EmailTemplate;
 import io.spacedog.client.email.EmailTemplateRequest;
-import io.spacedog.model.CredentialsSettings;
 import io.spacedog.model.DataObject;
 import io.spacedog.model.FileSettings;
-import io.spacedog.model.Permission;
-import io.spacedog.model.Roles;
 import io.spacedog.model.SpaceFile.FileMeta;
 import io.spacedog.tutorials.Customer.CustomerDataObject;
 import io.spacedog.utils.ClassResources;

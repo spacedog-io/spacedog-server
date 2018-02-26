@@ -6,12 +6,12 @@ package io.spacedog.server;
 import java.io.IOException;
 import java.util.List;
 
+import io.spacedog.client.credentials.Credentials;
+import io.spacedog.client.credentials.Permission;
+import io.spacedog.client.credentials.RolePermissions;
 import io.spacedog.http.WebPath;
-import io.spacedog.model.Credentials;
 import io.spacedog.model.DownloadRequest;
 import io.spacedog.model.FileSettings;
-import io.spacedog.model.Permission;
-import io.spacedog.model.RolePermissions;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import net.codestory.http.Context;

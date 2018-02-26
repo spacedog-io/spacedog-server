@@ -2,6 +2,7 @@ package io.spacedog.client;
 
 import org.joda.time.DateTime;
 
+import io.spacedog.client.credentials.CredentialsClient;
 import io.spacedog.client.email.EmailClient;
 import io.spacedog.http.SpaceBackend;
 import io.spacedog.http.SpaceEnv;

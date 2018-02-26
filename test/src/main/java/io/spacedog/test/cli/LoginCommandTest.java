@@ -6,8 +6,8 @@ import org.junit.Test;
 
 import io.spacedog.cli.LoginCommand;
 import io.spacedog.client.SpaceDog;
+import io.spacedog.client.credentials.Roles;
 import io.spacedog.http.SpaceEnv;
-import io.spacedog.model.Roles;
 import io.spacedog.test.SpaceTest;
 
 public class LoginCommandTest extends SpaceTest {

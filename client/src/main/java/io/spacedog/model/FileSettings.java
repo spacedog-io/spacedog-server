@@ -5,6 +5,10 @@ package io.spacedog.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import io.spacedog.client.credentials.ObjectRolePermissions;
+import io.spacedog.client.credentials.Permission;
+import io.spacedog.client.credentials.Roles;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FileSettings extends SettingsBase {
 

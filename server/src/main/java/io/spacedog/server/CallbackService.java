@@ -12,8 +12,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.Sets;
 import com.google.common.io.BaseEncoding;
 
+import io.spacedog.client.credentials.Credentials;
 import io.spacedog.http.SpaceHeaders;
-import io.spacedog.model.Credentials;
 import io.spacedog.model.KeyValue;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Exceptions;

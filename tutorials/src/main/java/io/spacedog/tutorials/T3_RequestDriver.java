@@ -12,6 +12,7 @@ import com.google.common.collect.Sets;
 
 import io.spacedog.client.PushRequest;
 import io.spacedog.client.SpaceDog;
+import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.elastic.ESBoolQueryBuilder;
 import io.spacedog.client.elastic.ESDistanceUnit;
 import io.spacedog.client.elastic.ESGeoDistanceSortBuilder;
@@ -22,7 +23,6 @@ import io.spacedog.client.elastic.ESSortOrder;
 import io.spacedog.model.DataObject;
 import io.spacedog.model.GeoPoint;
 import io.spacedog.model.PushSettings;
-import io.spacedog.model.Roles;
 import io.spacedog.model.SmsTemplate;
 import io.spacedog.model.SmsTemplateRequest;
 import io.spacedog.tutorials.Course.CourseDataObject;

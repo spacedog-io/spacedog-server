@@ -6,7 +6,7 @@ package io.spacedog.model;
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.spacedog.model.Usernames;
+import io.spacedog.client.credentials.Usernames;
 
 public class UsernamesTest extends Assert {
 

@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.model;
+package io.spacedog.client.credentials;
 
 import java.util.Base64;
 import java.util.Collections;

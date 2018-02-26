@@ -1,4 +1,4 @@
-package io.spacedog.client;
+package io.spacedog.client.credentials;
 
 import java.util.Set;
 
@@ -9,23 +9,21 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.collect.Sets;
 
+import io.spacedog.client.SpaceDog;
 import io.spacedog.http.SpaceFields;
 import io.spacedog.http.SpaceParams;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceResponse;
-import io.spacedog.model.CreateCredentialsRequest;
-import io.spacedog.model.Credentials;
-import io.spacedog.model.CredentialsSettings;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
 
 public class CredentialsClient implements SpaceParams, SpaceFields {
 
-	SpaceDog dog;
-	Credentials credentials;
+	private SpaceDog dog;
+	private Credentials credentials;
 
-	CredentialsClient(SpaceDog session) {
+	public CredentialsClient(SpaceDog session) {
 		this.dog = session;
 	}
 

@@ -7,8 +7,8 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.io.Resources;
 
-import io.spacedog.model.Permission;
-import io.spacedog.model.Roles;
+import io.spacedog.client.credentials.Permission;
+import io.spacedog.client.credentials.Roles;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;

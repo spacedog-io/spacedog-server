@@ -9,10 +9,10 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.client.credentials.Permission;
+import io.spacedog.client.credentials.Roles;
 import io.spacedog.http.SpaceRequestException;
 import io.spacedog.model.JsonDataObject;
-import io.spacedog.model.Permission;
-import io.spacedog.model.Roles;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Json;
 

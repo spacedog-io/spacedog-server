@@ -7,6 +7,8 @@ import java.util.Arrays;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.client.credentials.Permission;
+import io.spacedog.client.credentials.RolePermissions;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;

@@ -18,8 +18,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
+import io.spacedog.client.credentials.Credentials;
 import io.spacedog.http.SpaceHeaders;
-import io.spacedog.model.Credentials;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;

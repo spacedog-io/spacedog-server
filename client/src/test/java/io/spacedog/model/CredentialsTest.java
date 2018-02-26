@@ -4,8 +4,8 @@ import org.joda.time.DateTime;
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.spacedog.model.Credentials;
-import io.spacedog.model.Credentials.Session;
+import io.spacedog.client.credentials.Credentials;
+import io.spacedog.client.credentials.Credentials.Session;
 
 public class CredentialsTest extends Assert {
 

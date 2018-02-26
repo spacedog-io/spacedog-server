@@ -5,9 +5,9 @@ import org.junit.Test;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.client.credentials.Permission;
+import io.spacedog.client.credentials.Roles;
 import io.spacedog.model.FileSettings;
-import io.spacedog.model.Permission;
-import io.spacedog.model.Roles;
 import io.spacedog.model.SpaceFile;
 import io.spacedog.model.SpaceFile.FileList;
 

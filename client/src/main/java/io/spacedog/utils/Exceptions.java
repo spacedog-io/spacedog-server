@@ -2,8 +2,8 @@ package io.spacedog.utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import io.spacedog.client.credentials.Credentials;
 import io.spacedog.http.SpaceException;
-import io.spacedog.model.Credentials;
 
 public class Exceptions {
 

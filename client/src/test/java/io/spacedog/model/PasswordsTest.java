@@ -6,7 +6,7 @@ package io.spacedog.model;
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.spacedog.model.Passwords;
+import io.spacedog.client.credentials.Passwords;
 
 public class PasswordsTest extends Assert {
 

@@ -14,12 +14,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.model.Credentials;
+import io.spacedog.client.credentials.Credentials;
+import io.spacedog.client.credentials.Permission;
+import io.spacedog.client.credentials.RolePermissions;
 import io.spacedog.model.DataObject;
 import io.spacedog.model.JsonDataObject;
 import io.spacedog.model.Metadata;
-import io.spacedog.model.Permission;
-import io.spacedog.model.RolePermissions;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import net.codestory.http.Context;

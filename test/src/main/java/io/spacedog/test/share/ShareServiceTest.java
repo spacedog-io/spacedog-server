@@ -14,11 +14,11 @@ import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.client.credentials.Permission;
+import io.spacedog.client.credentials.Roles;
 import io.spacedog.http.SpaceHeaders;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.model.FileSettings;
-import io.spacedog.model.Permission;
-import io.spacedog.model.Roles;
 import io.spacedog.model.SpaceFile;
 import io.spacedog.model.SpaceFile.FileList;
 import io.spacedog.model.SpaceFile.FileMeta;

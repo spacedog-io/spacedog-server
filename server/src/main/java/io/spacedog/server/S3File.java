@@ -11,11 +11,11 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.google.common.io.ByteStreams;
 
+import io.spacedog.client.credentials.Credentials;
+import io.spacedog.client.credentials.Permission;
+import io.spacedog.client.credentials.RolePermissions;
 import io.spacedog.http.SpaceFields;
 import io.spacedog.http.WebPath;
-import io.spacedog.model.Credentials;
-import io.spacedog.model.Permission;
-import io.spacedog.model.RolePermissions;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Utils;
 import net.codestory.http.constants.HttpStatus;

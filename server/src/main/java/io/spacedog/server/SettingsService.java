@@ -15,9 +15,9 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
 
-import io.spacedog.model.Credentials;
-import io.spacedog.model.Permission;
-import io.spacedog.model.RolePermissions;
+import io.spacedog.client.credentials.Credentials;
+import io.spacedog.client.credentials.Permission;
+import io.spacedog.client.credentials.RolePermissions;
 import io.spacedog.model.Settings;
 import io.spacedog.model.SettingsAclSettings;
 import io.spacedog.model.SettingsBase;

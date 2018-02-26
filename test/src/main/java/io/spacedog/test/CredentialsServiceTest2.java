@@ -13,12 +13,12 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.client.credentials.Credentials;
+import io.spacedog.client.credentials.CredentialsSettings;
+import io.spacedog.client.credentials.Passwords;
+import io.spacedog.client.credentials.Roles;
 import io.spacedog.http.SpaceRequest;
 import io.spacedog.http.SpaceRequestException;
-import io.spacedog.model.Credentials;
-import io.spacedog.model.CredentialsSettings;
-import io.spacedog.model.Passwords;
-import io.spacedog.model.Roles;
 import io.spacedog.utils.Json;
 
 public class CredentialsServiceTest2 extends SpaceTest {
