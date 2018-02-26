@@ -9,7 +9,7 @@ import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.http.SpaceException;
 import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.client.http.SpaceResponse;
-import io.spacedog.model.StripeSettings;
+import io.spacedog.client.stripe.StripeSettings;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;

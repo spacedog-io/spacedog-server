@@ -20,7 +20,7 @@ import com.stripe.model.Token;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.http.SpaceEnv;
-import io.spacedog.model.StripeSettings;
+import io.spacedog.client.stripe.StripeSettings;
 
 public class StripeServiceTest extends SpaceTest {
 

@@ -1,17 +1,18 @@
-package io.spacedog.client;
+package io.spacedog.client.stripe;
 
 import java.util.Map;
 import java.util.Map.Entry;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.client.SpaceDog;
 import io.spacedog.client.http.SpaceRequest;
 
 public class StripeClient {
 
-	SpaceDog dog;
+	private SpaceDog dog;
 
-	StripeClient(SpaceDog dog) {
+	public StripeClient(SpaceDog dog) {
 		this.dog = dog;
 	}
 
