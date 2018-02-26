@@ -10,7 +10,10 @@ import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Utils;
 
-public class Upgrader {
+public class Upgrades {
+
+	private Upgrades() {
+	}
 
 	public static <T extends UpgradeEnv> void upgrade(T env, List<Upgrade<T>> upgrades) {
 
