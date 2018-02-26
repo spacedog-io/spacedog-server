@@ -4,7 +4,7 @@ import org.joda.time.DateTime;
 
 import com.google.common.base.Throwables;
 
-import io.spacedog.http.SpaceEnv;
+import io.spacedog.client.http.SpaceEnv;
 import io.spacedog.utils.Utils;
 
 public class Job {
