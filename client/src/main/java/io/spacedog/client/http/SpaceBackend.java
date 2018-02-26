@@ -203,7 +203,7 @@ public class SpaceBackend {
 					Utils.removePreffix(requestHostAndPort, hostPrefix), //
 					backendSuffixAndPort);
 
-			// check if resulting backing id is well formed
+			// check if resulting backeng id is well formed
 			if (backendId.length() > 0 && !backendId.contains("."))
 				return Optional7.of(instanciate(backendId));
 
