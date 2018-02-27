@@ -55,17 +55,22 @@ public class SpaceContext {
 		// first try to match api backend
 		SpaceBackend apiBackend = conf.apiBackend();
 		Optional7<SpaceBackend> opt = apiBackend.fromRequest(hostAndPort);
+
 		if (opt.isPresent())
 			this.backend = opt.get();
+
 		else {
 			// second try to match www backend
 			SpaceBackend wwwBackend = conf.wwwBackend();
 			opt = wwwBackend.fromRequest(hostAndPort);
+
 			if (opt.isPresent()) {
 				this.backend = opt.get();
 				this.isWww = true;
+
 			} else
-				this.backend = apiBackend;
+				throw Exceptions.illegalArgument(//
+						"host [%s] is invalid", hostAndPort);
 		}
 	}
 
