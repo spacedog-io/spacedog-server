@@ -16,10 +16,10 @@ import com.google.common.base.Strings;
 import io.spacedog.client.email.EmailBasicRequest;
 import io.spacedog.client.email.EmailRequest;
 import io.spacedog.client.email.EmailSettings;
-import io.spacedog.client.email.EmailTemplate;
-import io.spacedog.client.email.EmailTemplateRequest;
 import io.spacedog.client.email.EmailSettings.MailGunSettings;
 import io.spacedog.client.email.EmailSettings.SmtpSettings;
+import io.spacedog.client.email.EmailTemplate;
+import io.spacedog.client.email.EmailTemplateRequest;
 import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.utils.Exceptions;
@@ -302,7 +302,7 @@ public class EmailService extends SpaceService {
 
 	private static EmailService singleton = new EmailService();
 
-	static EmailService get() {
+	public static EmailService get() {
 		return singleton;
 	}
 

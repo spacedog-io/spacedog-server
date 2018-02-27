@@ -292,7 +292,7 @@ public class BatchService extends SpaceService {
 
 	private static BatchService singleton = new BatchService();
 
-	static BatchService get() {
+	public static BatchService get() {
 		return singleton;
 	}
 

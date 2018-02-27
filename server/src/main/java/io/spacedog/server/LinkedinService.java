@@ -3,9 +3,9 @@ package io.spacedog.server;
 import com.google.common.base.Strings;
 
 import io.spacedog.client.credentials.Credentials;
+import io.spacedog.client.credentials.Credentials.Session;
 import io.spacedog.client.credentials.CredentialsSettings;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.client.credentials.Credentials.Session;
 import io.spacedog.client.http.SpaceException;
 import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.client.http.SpaceRequest;
@@ -225,7 +225,7 @@ public class LinkedinService extends SpaceService {
 
 	private static LinkedinService singleton = new LinkedinService();
 
-	static LinkedinService get() {
+	public static LinkedinService get() {
 		return singleton;
 	}
 

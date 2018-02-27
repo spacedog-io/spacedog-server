@@ -153,7 +153,7 @@ public class ApplicationService extends SpaceService {
 
 	private static ApplicationService singleton = new ApplicationService();
 
-	static ApplicationService get() {
+	public static ApplicationService get() {
 		return singleton;
 	}
 

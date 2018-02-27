@@ -68,7 +68,7 @@ public class AdminService extends SpaceService {
 
 	private static AdminService singleton = new AdminService();
 
-	static AdminService get() {
+	public static AdminService get() {
 		return singleton;
 	}
 

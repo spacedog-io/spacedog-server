@@ -26,7 +26,7 @@ public abstract class SpaceService implements SpaceFields, SpaceParams {
 
 	public static final String SLASH = "/";
 
-	protected static ElasticClient elastic() {
+	public static ElasticClient elastic() {
 		return Server.get().elasticClient();
 	}
 

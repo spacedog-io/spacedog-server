@@ -239,7 +239,7 @@ public class Server {
 		return singleton;
 	}
 
-	private Server() {
+	protected Server() {
 		if (singleton != null)
 			throw Exceptions.runtime("server already running");
 		singleton = this;

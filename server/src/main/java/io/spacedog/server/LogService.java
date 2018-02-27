@@ -298,7 +298,7 @@ public class LogService extends SpaceService {
 
 	private static LogService singleton = new LogService();
 
-	static LogService get() {
+	public static LogService get() {
 		return singleton;
 	}
 

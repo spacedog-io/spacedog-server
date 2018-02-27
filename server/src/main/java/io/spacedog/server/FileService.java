@@ -179,7 +179,7 @@ public class FileService extends S3Service {
 
 	private static FileService singleton = new FileService();
 
-	static FileService get() {
+	public static FileService get() {
 		return singleton;
 	}
 

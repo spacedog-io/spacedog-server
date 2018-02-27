@@ -228,7 +228,7 @@ public class StripeService extends SpaceService {
 
 	private static StripeService singleton = new StripeService();
 
-	static StripeService get() {
+	public static StripeService get() {
 		return singleton;
 	}
 

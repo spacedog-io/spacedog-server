@@ -26,10 +26,10 @@ import com.google.common.collect.Maps;
 
 import io.spacedog.client.credentials.CreateCredentialsRequest;
 import io.spacedog.client.credentials.Credentials;
+import io.spacedog.client.credentials.Credentials.Session;
 import io.spacedog.client.credentials.CredentialsSettings;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.credentials.Usernames;
-import io.spacedog.client.credentials.Credentials.Session;
 import io.spacedog.client.email.EmailTemplate;
 import io.spacedog.client.schema.Schema;
 import io.spacedog.utils.Check;
@@ -583,7 +583,7 @@ public class CredentialsService extends SpaceService {
 		return create(SpaceContext.backendId(), credentials);
 	}
 
-	Credentials create(String backendId, Credentials credentials) {
+	public Credentials create(String backendId, Credentials credentials) {
 
 		// This is the only place where name uniqueness is checked
 		if (exists(backendId, credentials.username()))
@@ -628,7 +628,7 @@ public class CredentialsService extends SpaceService {
 		elastic().delete(credentialsIndex(), id, true, true);
 	}
 
-	SearchResults<Credentials> getSuperAdmins(int from, int size) {
+	public SearchResults<Credentials> getSuperAdmins(int from, int size) {
 		SearchSourceBuilder builder = SearchSourceBuilder.searchSource()//
 				.query(QueryBuilders.boolQuery()//
 						.filter(QueryBuilders.termQuery(ROLES_FIELD, Roles.superadmin)))//
@@ -791,7 +791,7 @@ public class CredentialsService extends SpaceService {
 
 	private static CredentialsService singleton = new CredentialsService();
 
-	static CredentialsService get() {
+	public static CredentialsService get() {
 		return singleton;
 	}
 

@@ -204,7 +204,7 @@ public class SearchService extends SpaceService {
 
 	private static SearchService singleton = new SearchService();
 
-	static SearchService get() {
+	public static SearchService get() {
 		return singleton;
 	}
 

@@ -113,7 +113,7 @@ public class WebService extends S3Service {
 
 	private static WebService singleton = new WebService();
 
-	static WebService get() {
+	public static WebService get() {
 		return singleton;
 	}
 

@@ -105,7 +105,7 @@ public class SchemaService extends SpaceService {
 
 	private static SchemaService singleton = new SchemaService();
 
-	static SchemaService get() {
+	public static SchemaService get() {
 		return singleton;
 	}
 
