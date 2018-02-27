@@ -9,8 +9,8 @@ import java.util.Optional;
 
 import com.amazonaws.regions.Regions;
 
-import io.spacedog.http.SpaceBackend;
-import io.spacedog.http.SpaceEnv;
+import io.spacedog.client.http.SpaceBackend;
+import io.spacedog.client.http.SpaceEnv;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Utils;
@@ -25,6 +25,7 @@ public class ServerConfiguration {
 	private static final String SERVER_GREEN_CHECK = "spacedog.server.green.check";
 	private static final String SERVER_GREEN_TIMEOUT = "spacedog.server.green.timeout";
 	private static final String SERVER_USER_AGENT = "spacedog.server.user.agent";
+	private static final String ELASTIC_CONFIG_PATH = "spacedog.elastic.config.path";
 	private static final String ELASTIC_DATA_PATH = "spacedog.elastic.data.path";
 	private static final String ELASTIC_HTTP_ENABLED = "spacedog.elastic.http.enabled";
 	private static final String ELASTIC_NETWORK_HOST = "spacedog.elastic.network.host";
@@ -85,6 +86,12 @@ public class ServerConfiguration {
 
 	public int serverGreenTimeout() {
 		return env.get(SERVER_GREEN_TIMEOUT, 60);
+	}
+
+	public Path elasticConfigPath() {
+		Optional7<String> path = env.get(ELASTIC_CONFIG_PATH);
+		return path.isPresent() ? //
+				Paths.get(path.get()) : homePath().resolve("config");
 	}
 
 	public Path elasticDataPath() {
