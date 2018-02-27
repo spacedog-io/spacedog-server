@@ -205,7 +205,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 
 		if (terms.length % 2 == 1)
 			throw Exceptions.illegalArgument(//
-					"invalid search terms %s: missing term value", Arrays.toString(terms));
+					"search terms %s are invalid: one is missing", Arrays.toString(terms));
 
 		BoolQueryBuilder builder = QueryBuilders.boolQuery();
 		for (int i = 0; i < terms.length; i = i + 2)
