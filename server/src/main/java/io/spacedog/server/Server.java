@@ -86,7 +86,7 @@ public class Server {
 	protected void init() {
 		this.config = new ServerConfiguration();
 		System.setProperty("http.agent", configuration().serverUserAgent());
-		String string = ClassResources.loadAsString(this, "info.json");
+		String string = ClassResources.loadAsString(Server.class, "info.json");
 		info = Json.toPojo(string, Info.class);
 	}
 
@@ -155,7 +155,7 @@ public class Server {
 		this.elasticClient.internal().admin().indices()//
 				.preparePutTemplate("data")//
 				.setSource(//
-						ClassResources.loadAsBytes(this, "data-template.json"), //
+						ClassResources.loadAsBytes(Server.class, "data-template.json"), //
 						XContentType.JSON)//
 				.get();
 
