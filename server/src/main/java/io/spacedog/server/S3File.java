@@ -23,7 +23,8 @@ import net.codestory.http.payload.StreamingOutput;
 
 public class S3File implements Closeable, StreamingOutput {
 
-	private String bucketName;
+	private static final String bucketName = S3Service.getBucketName("files");
+
 	private String backendId;
 	private WebPath path;
 	private S3Object s3Object;
@@ -41,16 +42,15 @@ public class S3File implements Closeable, StreamingOutput {
 	private String contentType;
 	private String contentDisposition;
 
-	public S3File(String bucketName, WebPath path) {
-		this(bucketName, SpaceContext.backendId(), path);
+	public S3File(WebPath path) {
+		this(SpaceContext.backendId(), path);
 	}
 
-	public S3File(String bucketName, String backendId, String path) {
-		this(bucketName, backendId, WebPath.parse(path));
+	public S3File(String backendId, String path) {
+		this(backendId, WebPath.parse(path));
 	}
 
-	public S3File(String bucketName, String backendId, WebPath path) {
-		this.bucketName = bucketName;
+	public S3File(String backendId, WebPath path) {
 		this.backendId = backendId;
 		this.path = path;
 	}

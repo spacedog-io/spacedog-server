@@ -83,7 +83,7 @@ public class S3Service extends SpaceService {
 
 		String next = context.get("next");
 		if (!Strings.isNullOrEmpty(next)) {
-			S3File marker = new S3File(file.bucketName(), file.backendId(), next);
+			S3File marker = new S3File(file.backendId(), next);
 			request.setMarker(marker.s3Key());
 		}
 
@@ -259,10 +259,10 @@ public class S3Service extends SpaceService {
 
 	}
 
-	public static List<S3File> toS3Files(String bucketName, List<String> paths) {
+	public static List<S3File> toS3Files(List<String> paths) {
 		String backendId = SpaceContext.backendId();
 		return paths.stream()//
-				.map(path -> new S3File(bucketName, backendId, path))//
+				.map(path -> new S3File(backendId, path))//
 				.collect(Collectors.toList());
 	}
 
@@ -281,6 +281,23 @@ public class S3Service extends SpaceService {
 
 	private String toSpaceLocation(String root, WebPath path) {
 		return spaceUrl(root).append(path.toEscapedString()).toString();
+	}
+
+	//
+	// singleton
+	//
+
+	public static String getBucketName(String bucketSuffix) {
+		return Server.get().configuration().awsBucketPrefix() + bucketSuffix;
+	}
+
+	private static S3Service singleton = new S3Service();
+
+	public static S3Service get() {
+		return singleton;
+	}
+
+	private S3Service() {
 	}
 
 }

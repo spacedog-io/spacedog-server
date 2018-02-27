@@ -57,10 +57,6 @@ public abstract class SpaceService implements SpaceFields, SpaceParams {
 		return value == null ? defaultValue : value;
 	}
 
-	public static String getBucketName(String bucketSuffix) {
-		return Server.get().configuration().awsBucketPrefix() + bucketSuffix;
-	}
-
 	public static FormQuery formQuery(Context context) {
 		return new FormQuery(context);
 	}

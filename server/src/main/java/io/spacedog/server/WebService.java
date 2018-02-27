@@ -15,7 +15,7 @@ import net.codestory.http.constants.Methods;
 import net.codestory.http.filters.PayloadSupplier;
 import net.codestory.http.payload.Payload;
 
-public class WebService extends S3Service {
+public class WebService extends SpaceService {
 
 	//
 	// Routes
@@ -72,23 +72,24 @@ public class WebService extends S3Service {
 			settings.prefixPermissions.get(path.first())//
 					.check(credentials, Permission.read);
 
-			String bucketName = FileService.getBucketName();
-			S3File file = new S3File(bucketName, path);
-			payload = doGet(withContent, file, context);
+			S3Service s3Service = S3Service.get();
+			S3File file = new S3File(path);
+
+			payload = s3Service.doGet(withContent, file, context);
 
 			if (payload.isSuccess())
 				return payload;
 
-			file = new S3File(bucketName, path.addLast("index.html"));
-			payload = doGet(withContent, file, context);
+			file = new S3File(path.addLast("index.html"));
+			payload = s3Service.doGet(withContent, file, context);
 
 			if (payload.isSuccess())
 				return payload;
 
 			if (!Strings.isNullOrEmpty(settings.notFoundPage)) {
-				file = new S3File(bucketName, //
-						WebPath.parse(settings.notFoundPage).addFirst(path.first()));
-				payload = doGet(withContent, file, context);
+				file = new S3File(WebPath.parse(settings.notFoundPage)//
+						.addFirst(path.first()));
+				payload = s3Service.doGet(withContent, file, context);
 			}
 		}
 		return payload;

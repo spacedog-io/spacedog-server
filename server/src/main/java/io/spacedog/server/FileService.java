@@ -19,7 +19,7 @@ import net.codestory.http.constants.Methods;
 import net.codestory.http.filters.PayloadSupplier;
 import net.codestory.http.payload.Payload;
 
-public class FileService extends S3Service {
+public class FileService extends SpaceService {
 
 	//
 	// Routes
@@ -66,11 +66,11 @@ public class FileService extends S3Service {
 	//
 
 	public Payload get(WebPath path, Context context) {
-		S3File file = new S3File(getBucketName(), path).rootUri("/1/files");
+		S3File file = new S3File(path).rootUri("/1/files");
 
 		if (path.isRoot()) {
 			SpaceContext.credentials().checkAtLeastSuperAdmin();
-			return doList(file, context);
+			return s3().doList(file, context);
 		}
 
 		RolePermissions prefixRoles = fileSettings().permissions.get(path.first());
@@ -79,11 +79,11 @@ public class FileService extends S3Service {
 
 		if (file.exists()) {
 			file.checkRead(prefixRoles);
-			return doGet(true, file, context);
+			return s3().doGet(true, file, context);
 		} else {
 			Credentials credentials = SpaceContext.credentials();
 			prefixRoles.check(credentials, Permission.search);
-			return doList(file, context);
+			return s3().doList(file, context);
 		}
 
 	}
@@ -95,9 +95,9 @@ public class FileService extends S3Service {
 					"path [%s] doesn't specify any bucket", path.toString());
 
 		FileSettings settings = SettingsService.get().getAsObject(FileSettings.class);
-		long contentLength = checkContentLength(context, settings.sizeLimitInKB);
+		long contentLength = s3().checkContentLength(context, settings.sizeLimitInKB);
 
-		S3File file = new S3File(getBucketName(), path)//
+		S3File file = new S3File(path)//
 				.fileName(path.last())//
 				.contentLength(contentLength)//
 				.owner(SpaceContext.credentials())//
@@ -106,25 +106,25 @@ public class FileService extends S3Service {
 		RolePermissions prefixRoles = fileSettings().permissions.get(path.first());
 		file.checkUpdate(prefixRoles);
 
-		return doUpload(file, context);
+		return s3().doUpload(file, context);
 	}
 
 	public Payload delete(WebPath path) {
-		S3File file = new S3File(getBucketName(), path);
+		S3File file = new S3File(path);
 
 		if (path.isRoot()) {
 			SpaceContext.credentials().isAtLeastSuperAdmin();
-			return doDeleteAll(file);
+			return s3().doDeleteAll(file);
 		}
 
 		RolePermissions prefixPermissions = fileSettings().permissions.get(path.first());
 
 		if (file.exists()) {
 			file.checkDelete(prefixPermissions);
-			return doDelete(file);
+			return s3().doDelete(file);
 		} else {
 			prefixPermissions.check(SpaceContext.credentials(), Permission.delete);
-			return doDeleteAll(file);
+			return s3().doDeleteAll(file);
 		}
 	}
 
@@ -144,16 +144,12 @@ public class FileService extends S3Service {
 			throw Exceptions.illegalArgument(e, "error reading file download request content");
 		}
 
-		List<S3File> files = toS3Files(getBucketName(), request.paths);
+		List<S3File> files = S3Service.toS3Files(request.paths);
 		S3File.checkPermissions(files, //
 				fileSettings().permissions.get(path.first()), //
 				Permission.read, Permission.readGroup, Permission.readMine);
 
-		return doZip(files, request.fileName);
-	}
-
-	public Payload deleteAll() {
-		return delete(WebPath.ROOT);
+		return s3().doZip(files, request.fileName);
 	}
 
 	//
@@ -169,8 +165,8 @@ public class FileService extends S3Service {
 		return SettingsService.get().getAsObject(FileSettings.class);
 	}
 
-	public static String getBucketName() {
-		return getBucketName("files");
+	private S3Service s3() {
+		return S3Service.get();
 	}
 
 	//
