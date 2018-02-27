@@ -43,7 +43,7 @@ public class LoginCommandTest extends SpaceTest {
 
 		// login with invalid backend fails
 		assertHttpError(401, () -> new LoginCommand().verbose(true)//
-				.backend(SpaceEnv.env().apiBackend().instanciate("XXXX"))//
+				.backend(SpaceEnv.env().apiBackend().fromBackendId("XXXX"))//
 				.username(superadmin.username())//
 				.password(superadmin.password().get())//
 				.login());

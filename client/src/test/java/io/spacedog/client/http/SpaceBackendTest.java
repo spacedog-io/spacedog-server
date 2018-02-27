@@ -42,7 +42,7 @@ public class SpaceBackendTest extends Assert {
 
 	@Test
 	public void testInstanciate() {
-		SpaceBackend backend = SpaceBackend.production.instanciate("test");
+		SpaceBackend backend = SpaceBackend.production.fromBackendId("test");
 		assertEquals("test.spacedog.io", backend.host());
 		assertEquals(443, backend.port());
 		assertEquals("https", backend.scheme());
@@ -82,7 +82,7 @@ public class SpaceBackendTest extends Assert {
 	@Test
 	public void apiMultiBackendCanHandleRequests() {
 		SpaceBackend backend = SpaceBackend.fromDefaults("production")//
-				.checkRequest("test.spacedog.io").get();
+				.fromRequest("test.spacedog.io").get();
 
 		assertEquals("test.spacedog.io", backend.host());
 		assertEquals("https://test.spacedog.io", backend.toString());
@@ -93,7 +93,7 @@ public class SpaceBackendTest extends Assert {
 		assertFalse(backend.isMulti());
 
 		try {
-			backend.instanciate("test2");
+			backend.fromBackendId("test2");
 			fail();
 
 		} catch (IllegalArgumentException ignored) {
@@ -103,14 +103,14 @@ public class SpaceBackendTest extends Assert {
 	@Test
 	public void apiMultiBackendCanNotHandleWebAppRequest() {
 		assertFalse(SpaceBackend.fromDefaults("production")//
-				.checkRequest("test.www.spacedog.io")//
+				.fromRequest("test.www.spacedog.io")//
 				.isPresent());
 	}
 
 	@Test
 	public void webAppMultiBackendCanHandleWebAppRequest() {
 		SpaceBackend backend = SpaceBackend.fromUrl("https://*.www.spacedog.io")//
-				.checkRequest("test.www.spacedog.io").get();
+				.fromRequest("test.www.spacedog.io").get();
 
 		assertEquals("test.www.spacedog.io", backend.host());
 		assertEquals(443, backend.port());
@@ -126,7 +126,7 @@ public class SpaceBackendTest extends Assert {
 	public void api_backend_id_is_special() {
 
 		SpaceBackend prod = SpaceBackend.fromDefaults("production");
-		SpaceBackend backend = prod.checkRequest("api.spacedog.io").get();
+		SpaceBackend backend = prod.fromRequest("api.spacedog.io").get();
 
 		assertEquals(prod, backend);
 
@@ -143,7 +143,7 @@ public class SpaceBackendTest extends Assert {
 	public void spacedog_backend_id_is_special() {
 
 		SpaceBackend prod = SpaceBackend.fromDefaults("production");
-		SpaceBackend backend = prod.checkRequest("spacedog.spacedog.io").get();
+		SpaceBackend backend = prod.fromRequest("spacedog.spacedog.io").get();
 
 		assertEquals(prod, backend);
 

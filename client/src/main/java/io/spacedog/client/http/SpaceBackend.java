@@ -193,7 +193,7 @@ public class SpaceBackend {
 		return backend;
 	}
 
-	public Optional7<SpaceBackend> checkRequest(String requestHostAndPort) {
+	public Optional7<SpaceBackend> fromRequest(String requestHostAndPort) {
 		String backendSuffixAndPort = hostSuffixAndPort();
 
 		if (isMulti() && requestHostAndPort.startsWith(hostPrefix) //
@@ -205,7 +205,7 @@ public class SpaceBackend {
 
 			// check if resulting backeng id is well formed
 			if (backendId.length() > 0 && !backendId.contains("."))
-				return Optional7.of(instanciate(backendId));
+				return Optional7.of(fromBackendId(backendId));
 
 		} else if (backendSuffixAndPort.equalsIgnoreCase(requestHostAndPort))
 			return Optional7.of(this);
@@ -213,7 +213,7 @@ public class SpaceBackend {
 		return Optional7.empty();
 	}
 
-	public SpaceBackend instanciate(String backendId) {
+	public SpaceBackend fromBackendId(String backendId) {
 		if (!isMulti())
 			throw Exceptions.illegalArgument(//
 					"backend [%s] is not instanciable", this);

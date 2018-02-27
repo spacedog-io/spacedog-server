@@ -139,7 +139,7 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest backendId(String backendId) {
-		this.backend = SpaceEnv.env().apiBackend().instanciate(backendId);
+		this.backend = SpaceEnv.env().apiBackend().fromBackendId(backendId);
 		return this;
 	}
 
