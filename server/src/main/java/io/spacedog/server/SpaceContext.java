@@ -216,4 +216,17 @@ public class SpaceContext {
 				throw Exceptions.passwordMustChange(credentials);
 		}
 	}
+
+	public static void runAsBackend(String backendId, Runnable action) {
+		SpaceContext context = get();
+		SpaceBackend mainBackend = context.backend;
+		SpaceBackend tempBackend = mainBackend.fromBackendId(backendId);
+
+		try {
+			context.backend = tempBackend;
+			action.run();
+		} finally {
+			context.backend = mainBackend;
+		}
+	}
 }
