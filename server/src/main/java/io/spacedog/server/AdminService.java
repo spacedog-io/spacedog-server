@@ -5,6 +5,7 @@ package io.spacedog.server;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.client.http.WebPath;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import net.codestory.http.annotations.Get;
@@ -32,33 +33,31 @@ public class AdminService extends SpaceService {
 
 	@Post("/1/admin/clear")
 	@Post("/1/admin/clear")
-	public void reset() {
-		ElasticClient elastic = Server.get().elasticClient();
-		elastic.deleteBackendIndices();
-		deleteFilesAndSharesIfNecessary();
-		initBackendIndices(SpaceContext.backendId());
+	public void clear() {
+		elastic().deleteBackendIndices();
+		deleteAllFiles();
+		initBackendIndices();
 	}
 
 	//
 	// Public interface
 	//
 
-	public void initBackendIndices(String backendId) {
-		Index index = CredentialsService.credentialsIndex().backendId(backendId);
-		if (!elastic().exists(index)) {
-			CredentialsService.get().initIndex(backendId);
-			LogService.get().initIndex(backendId);
-		}
+	// TODO
+	// Move this somewhere else. ElasticClient ?
+	public void initBackendIndices() {
+		CredentialsService.get().initIndex();
+		LogService.get().initIndex();
 	}
 
-	public void deleteFilesAndSharesIfNecessary() {
+	public void deleteAllFiles() {
 		ServerConfiguration configuration = Server.get().configuration();
 
 		if (!SpaceContext.isTest() //
 				&& configuration.awsRegion().isPresent() //
 				&& !configuration.isOffline()) {
 
-			FileService.get().deleteAll();
+			S3Service.get().doDeleteAll(new S3File(WebPath.ROOT));
 		}
 	}
 

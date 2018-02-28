@@ -54,8 +54,8 @@ public class CredentialsService extends SpaceService {
 	// Type and schema
 	//
 
-	public void initIndex(String backendId) {
-		Index index = credentialsIndex().backendId(backendId);
+	public void initIndex() {
+		Index index = credentialsIndex();
 		if (!elastic().exists(index)) {
 			String mapping = schema().validate().translate().toString();
 			elastic().createIndex(index, mapping, false);
@@ -173,9 +173,9 @@ public class CredentialsService extends SpaceService {
 		if (!settings.guestSignUpEnabled)
 			SpaceContext.credentials().checkAtLeastUser();
 
-		Credentials credentials = createCredentialsRequestToCredentials(//
-				Json.toPojo(body, CreateCredentialsRequest.class), Roles.user);
-		create(credentials);
+		Credentials credentials = create(//
+				Json.toPojo(body, CreateCredentialsRequest.class), //
+				Roles.user);
 
 		JsonPayload payload = JsonPayload.saved(true, "/1", TYPE, credentials.id());
 		if (credentials.passwordResetCode() != null)
@@ -579,21 +579,17 @@ public class CredentialsService extends SpaceService {
 		return Optional.of(toCredentials(searchHit.get()));
 	}
 
-	Credentials create(Credentials credentials) {
-		return create(SpaceContext.backendId(), credentials);
-	}
-
-	public Credentials create(String backendId, Credentials credentials) {
+	public Credentials create(Credentials credentials) {
 
 		// This is the only place where name uniqueness is checked
-		if (exists(backendId, credentials.username()))
+		if (exists(credentials.username()))
 			throw Exceptions.alreadyExists(TYPE, credentials.username());
 
 		String now = DateTime.now().toString();
 		credentials.updatedAt(now);
 		credentials.createdAt(now);
 
-		Index index = credentialsIndex().backendId(backendId);
+		Index index = credentialsIndex();
 
 		// refresh index after each index change
 		IndexResponse response = Strings.isNullOrEmpty(credentials.id()) //
@@ -674,8 +670,7 @@ public class CredentialsService extends SpaceService {
 				.build();
 	}
 
-	public Credentials createCredentialsRequestToCredentials(//
-			CreateCredentialsRequest request, String defaultRole) {
+	public Credentials create(CreateCredentialsRequest request, String defaultRole) {
 
 		Credentials requester = SpaceContext.credentials();
 		Credentials credentials = new Credentials();
@@ -704,6 +699,7 @@ public class CredentialsService extends SpaceService {
 			credentials.changePassword(request.password(), //
 					Optional7.of(settings.passwordRegex()));
 
+		create(credentials);
 		return credentials;
 	}
 
@@ -754,9 +750,8 @@ public class CredentialsService extends SpaceService {
 		return Json.object("total", response.total, "results", results);
 	}
 
-	private boolean exists(String backendId, String username) {
-		return elastic().exists(toQuery(username), //
-				credentialsIndex().backendId(backendId));
+	private boolean exists(String username) {
+		return elastic().exists(toQuery(username), credentialsIndex());
 	}
 
 	private SearchResults<Credentials> getCredentials(SearchSourceBuilder builder) {

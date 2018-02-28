@@ -159,9 +159,8 @@ public class Server {
 						XContentType.JSON)//
 				.get();
 
-		// init root backend indices
-		String backendId = config.apiBackend().backendId();
-		AdminService.get().initBackendIndices(backendId);
+		// init backend indices
+		AdminService.get().initBackendIndices();
 	}
 
 	protected void startFluent() {

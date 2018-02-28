@@ -46,10 +46,9 @@ public class LogService extends SpaceService {
 	// init
 	//
 
-	public void initIndex(String backendId) {
+	public void initIndex() {
+		Index index = logIndex();
 		String mapping = ClassResources.loadAsString(this, "log-mapping.json");
-		Index index = logIndex().backendId(backendId);
-
 		if (!elastic().exists(index))
 			elastic().createIndex(index, mapping, false);
 	}
