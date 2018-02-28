@@ -36,7 +36,8 @@ public class Credentials {
 
 	public static final Credentials GUEST = new Credentials("guest").id("guest");
 	public static final Credentials SUPERDOG = new Credentials(Roles.superdog)//
-			.id(Roles.superdog).addRoles(Roles.superdog);
+			.id(Roles.superdog).addRoles(Roles.superdog)//
+			.passwordHasBeenChallenged(true);
 
 	private String username;
 	private String email;
@@ -117,6 +118,11 @@ public class Credentials {
 
 	public boolean hasPasswordBeenChallenged() {
 		return passwordHasBeenChallenged;
+	}
+
+	public Credentials passwordHasBeenChallenged(boolean passwordHasBeenChallenged) {
+		this.passwordHasBeenChallenged = passwordHasBeenChallenged;
+		return this;
 	}
 
 	public String passwordResetCode() {
