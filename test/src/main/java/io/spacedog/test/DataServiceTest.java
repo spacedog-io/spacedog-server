@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.client.data.JsonDataObject;
+import io.spacedog.client.data.ObjectNodeWrap;
 import io.spacedog.client.http.SpaceRequestException;
 import io.spacedog.client.schema.Schema;
 import io.spacedog.utils.Json;
@@ -49,12 +49,12 @@ public class DataServiceTest extends SpaceTest {
 				.build();
 
 		// create
-		JsonDataObject carDO = vince.data().save("car", car);
-		assertEquals("car", carDO.type());
-		assertNotNull(carDO.id());
+		ObjectNodeWrap carWrap = vince.data().save("car", car);
+		assertEquals("car", carWrap.type());
+		assertNotNull(carWrap.id());
 
 		// find by id
-		JsonDataObject car1 = vince.data().get("car", carDO.id());
+		ObjectNodeWrap car1 = vince.data().get("car", carWrap.id());
 
 		assertEquals(vince.id(), car1.owner());
 		assertNotNull(car1.group());
@@ -65,12 +65,12 @@ public class DataServiceTest extends SpaceTest {
 
 		// find by full text search
 		vince.get("/1/search/car").refresh().queryParam("q", "inVENT*").go(200)//
-				.assertEquals(carDO.id(), "results.0.id");
+				.assertEquals(carWrap.id(), "results.0.id");
 
 		// update
-		vince.data().patch("car", carDO.id(), Json.object("color", "blue"));
+		vince.data().patch("car", carWrap.id(), Json.object("color", "blue"));
 
-		JsonDataObject car3 = vince.data().get("car", carDO.id());
+		ObjectNodeWrap car3 = vince.data().get("car", carWrap.id());
 		assertEquals(vince.id(), car3.owner());
 		assertNotNull(car3.group());
 		assertEquals(createdAt, car3.createdAt());
@@ -82,8 +82,8 @@ public class DataServiceTest extends SpaceTest {
 		assertEquals("blue", car3.source().get("color").asText());
 
 		// delete
-		vince.data().delete(carDO);
-		vince.get("/1/data/car/" + carDO.id()).go(404);
+		vince.data().delete(carWrap);
+		vince.get("/1/data/car/" + carWrap.id()).go(404);
 	}
 
 	@Test
@@ -119,11 +119,11 @@ public class DataServiceTest extends SpaceTest {
 		String id = vince.data().save("car", car).id();
 
 		// find by id
-		JsonDataObject carbis = vince.data().get("car", id);
-		assertEquals(vince.id(), carbis.owner());
-		assertNotNull(carbis.group());
-		assertNotNull(carbis.createdAt());
-		assertSourceAlmostEquals(car, carbis.source());
+		ObjectNodeWrap carWrap = vince.data().get("car", id);
+		assertEquals(vince.id(), carWrap.owner());
+		assertNotNull(carWrap.group());
+		assertNotNull(carWrap.createdAt());
+		assertSourceAlmostEquals(car, carWrap.source());
 
 		// find by full text search
 		vince.get("/1/search/car").refresh().queryParam("q", "inVENT*").go(200)//
@@ -131,8 +131,8 @@ public class DataServiceTest extends SpaceTest {
 
 		// update
 		vince.data().patch("car", id, Json.object("color", "blue"));
-		carbis = vince.data().get("car", id);
-		assertEquals("blue", carbis.source().get("color").asText());
+		carWrap = vince.data().get("car", id);
+		assertEquals("blue", carWrap.source().get("color").asText());
 
 		// delete
 		vince.data().delete("car", id);
@@ -173,7 +173,7 @@ public class DataServiceTest extends SpaceTest {
 
 		// but provided meta dates are not saved
 		Message downloaded = vince.data()//
-				.get(Message.TYPE, "1", MessageDataObject.class)//
+				.get(Message.TYPE, "1", Message.Wrap.class)//
 				.source();
 
 		assertEquals(message.text, downloaded.text);
@@ -199,7 +199,7 @@ public class DataServiceTest extends SpaceTest {
 		// provided custom meta are saved
 		// and nath can access this object since the owner
 		downloaded = nath.data()//
-				.fetch(new MessageDataObject().id("2"))//
+				.fetch(new Message.Wrap().id("2"))//
 				.source();
 
 		assertEquals(message.text, downloaded.text);

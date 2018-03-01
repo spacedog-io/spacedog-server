@@ -7,15 +7,15 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.data.DataObject;
-import io.spacedog.client.data.DataObjectAbstract;
+import io.spacedog.client.data.DataWrap;
+import io.spacedog.client.data.DataWrapAbstract;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, //
 		getterVisibility = Visibility.NONE, //
 		isGetterVisibility = Visibility.NONE, //
 		setterVisibility = Visibility.NONE)
-public class InstallationDataObject extends DataObjectAbstract<Installation> {
+public class InstallationDataObject extends DataWrapAbstract<Installation> {
 
 	private Installation source;
 
@@ -27,7 +27,7 @@ public class InstallationDataObject extends DataObjectAbstract<Installation> {
 		return this.source;
 	}
 
-	public DataObject<Installation> source(Installation source) {
+	public DataWrap<Installation> source(Installation source) {
 		this.source = source;
 		return this;
 	}

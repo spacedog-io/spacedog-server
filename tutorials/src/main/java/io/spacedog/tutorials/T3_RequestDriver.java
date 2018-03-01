@@ -12,7 +12,7 @@ import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.client.data.DataObject;
+import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.elastic.ESBoolQueryBuilder;
 import io.spacedog.client.elastic.ESDistanceUnit;
 import io.spacedog.client.elastic.ESGeoDistanceSortBuilder;
@@ -25,9 +25,6 @@ import io.spacedog.client.push.PushSettings;
 import io.spacedog.client.schema.GeoPoint;
 import io.spacedog.client.sms.SmsTemplate;
 import io.spacedog.client.sms.SmsTemplateRequest;
-import io.spacedog.tutorials.Course.CourseDataObject;
-import io.spacedog.tutorials.Driver.DriverDataObject;
-import io.spacedog.tutorials.Driver.Results;
 import io.spacedog.utils.Json;
 
 public class T3_RequestDriver extends DemoBase {
@@ -58,7 +55,7 @@ public class T3_RequestDriver extends DemoBase {
 		source.payment.companyId = "LHJKBVCJFCFCK";
 		source.payment.companyName = "SpaceDog";
 
-		DataObject<Course> course = new CourseDataObject()//
+		DataWrap<Course> course = new Course.Wrap()//
 				.source(source)//
 				.id("myCourse");
 
@@ -76,7 +73,7 @@ public class T3_RequestDriver extends DemoBase {
 	public void systemPushesNotificationToNearbyDrivers() {
 
 		SpaceDog superadmin = superadmin();
-		DataObject<Course> course = course();
+		DataWrap<Course> course = course();
 
 		// system searches for nearby drivers
 
@@ -93,7 +90,7 @@ public class T3_RequestDriver extends DemoBase {
 				.unit(ESDistanceUnit.METERS)//
 				.sortMode("min");
 
-		Results drivers = superadmin.data().searchRequest().type("driver")//
+		Driver.Results drivers = superadmin.data().searchRequest().type("driver")//
 				.source(ESSearchSourceBuilder.searchSource().query(query).sort(sort).size(5))//
 				.go(Driver.Results.class);
 
@@ -110,7 +107,7 @@ public class T3_RequestDriver extends DemoBase {
 
 		ObjectNode message = Json.object("APNS", apsMessage, "GCM", gcmMessage);
 
-		for (DriverDataObject driver : drivers.results)
+		for (Driver.Wrap driver : drivers.results)
 			superadmin.push().push(new PushRequest().appId("carerec-driver")//
 					.credentialsId(driver.id())//
 					.data(message));
@@ -153,7 +150,7 @@ public class T3_RequestDriver extends DemoBase {
 
 		Course.Results completedCourses = searchForCompletedCourses();
 
-		for (DataObject<Course> completed : completedCourses.results) {
+		for (DataWrap<Course> completed : completedCourses.results) {
 
 			// cashier calculates time, distance and fare if necessary
 
@@ -187,17 +184,17 @@ public class T3_RequestDriver extends DemoBase {
 		}
 	}
 
-	private Double calculateFare(DataObject<Course> completed) {
+	private Double calculateFare(DataWrap<Course> completed) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private Long calculateDistance(DataObject<Course> completed) {
+	private Long calculateDistance(DataWrap<Course> completed) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	private Long calculateTime(DataObject<Course> completed) {
+	private Long calculateTime(DataWrap<Course> completed) {
 		// TODO Auto-generated method stub
 		return null;
 	}

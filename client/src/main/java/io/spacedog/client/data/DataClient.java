@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
 import io.spacedog.client.SpaceDog;
-import io.spacedog.client.data.JsonDataObject.Results;
+import io.spacedog.client.data.ObjectNodeWrap.Results;
 import io.spacedog.client.elastic.ESQueryBuilder;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.client.http.SpaceFields;
@@ -27,15 +27,15 @@ public class DataClient implements SpaceFields, SpaceParams {
 	// Get
 	//
 
-	public JsonDataObject get(String type, String id) {
-		return get(type, id, JsonDataObject.class);
+	public ObjectNodeWrap get(String type, String id) {
+		return get(type, id, ObjectNodeWrap.class);
 	}
 
 	public <K> K get(String type, String id, Class<K> pojoClass) {
 		return fetch(type, id, Utils.instantiate(pojoClass));
 	}
 
-	public <K> DataObject<K> fetch(DataObject<K> object) {
+	public <K> DataWrap<K> fetch(DataWrap<K> object) {
 		return fetch(object.type(), object.id(), object);
 	}
 
@@ -51,33 +51,33 @@ public class DataClient implements SpaceFields, SpaceParams {
 	// Save
 	//
 
-	public JsonDataObject save(String type, ObjectNode source) {
+	public ObjectNodeWrap save(String type, ObjectNode source) {
 		return save(type, null, source);
 	}
 
-	public JsonDataObject save(String type, String id, ObjectNode source) {
+	public ObjectNodeWrap save(String type, String id, ObjectNode source) {
 		return save(type, id, source, 0);
 	}
 
-	public JsonDataObject save(String type, String id, ObjectNode source, long version) {
-		return (JsonDataObject) save(new JsonDataObject()//
+	public ObjectNodeWrap save(String type, String id, ObjectNode source, long version) {
+		return (ObjectNodeWrap) save(new ObjectNodeWrap()//
 				.type(type).id(id).source(source).version(version));
 	}
 
-	public BasicDataObject save(String type, Object source) {
+	public ObjectWrap save(String type, Object source) {
 		return save(type, null, source);
 	}
 
-	public BasicDataObject save(String type, String id, Object source) {
+	public ObjectWrap save(String type, String id, Object source) {
 		return save(type, id, 0, source);
 	}
 
-	public BasicDataObject save(String type, String id, long version, Object source) {
-		return (BasicDataObject) save(new BasicDataObject()//
+	public ObjectWrap save(String type, String id, long version, Object source) {
+		return (ObjectWrap) save(new ObjectWrap()//
 				.type(type).id(id).source(source).version(version));
 	}
 
-	public <K> DataObject<K> save(DataObject<K> object) {
+	public <K> DataWrap<K> save(DataWrap<K> object) {
 
 		if (object.id() == null)
 			return dog.post("/1/data/{type}")//
@@ -122,7 +122,7 @@ public class DataClient implements SpaceFields, SpaceParams {
 	// Delete
 	//
 
-	public DataClient delete(DataObject<?> object) {
+	public DataClient delete(DataWrap<?> object) {
 		return delete(object.type(), object.id());
 	}
 
@@ -224,8 +224,8 @@ public class DataClient implements SpaceFields, SpaceParams {
 			return this;
 		}
 
-		public JsonDataObject.Results go() {
-			return go(JsonDataObject.Results.class);
+		public ObjectNodeWrap.Results go() {
+			return go(ObjectNodeWrap.Results.class);
 		}
 
 		public <K> K go(Class<K> resultsClass) {

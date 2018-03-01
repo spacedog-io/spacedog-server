@@ -1,18 +1,16 @@
 package io.spacedog.tutorials;
 
 import io.spacedog.client.SpaceDog;
-import io.spacedog.client.data.DataObject;
+import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.http.SpaceEnv;
-import io.spacedog.tutorials.Course.CourseDataObject;
-import io.spacedog.tutorials.Customer.CustomerDataObject;
 
 public class DemoBase {
 
 	private SpaceDog david;
 	private SpaceDog max;
 	private SpaceDog superadmin;
-	private DataObject<Course> course;
-	private DataObject<Customer> customer;
+	private DataWrap<Course> course;
+	private DataWrap<Customer> customer;
 
 	protected SpaceDog max() {
 		if (max == null)
@@ -45,10 +43,10 @@ public class DemoBase {
 		return david;
 	}
 
-	protected DataObject<Customer> davidCustomer() {
+	protected DataWrap<Customer> davidCustomer() {
 		if (customer == null)
 			customer = david().data()//
-					.get("customer", david().id(), CustomerDataObject.class);
+					.get("customer", david().id(), Customer.Wrap.class);
 		return customer;
 	}
 
@@ -57,10 +55,10 @@ public class DemoBase {
 				.password(SpaceEnv.env().superdogPassword());
 	}
 
-	protected DataObject<Course> course() {
+	protected DataWrap<Course> course() {
 		if (course == null)
 			course = superadmin().data().fetch(//
-					new CourseDataObject().id("myCourse"));
+					new Course.Wrap().id("myCourse"));
 		return course;
 	}
 

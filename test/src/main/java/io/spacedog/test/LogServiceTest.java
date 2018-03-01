@@ -7,7 +7,7 @@ import org.junit.Test;
 
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.client.data.JsonDataObject;
+import io.spacedog.client.data.ObjectNodeWrap;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.elastic.ESQueryBuilders;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
@@ -212,7 +212,7 @@ public class LogServiceTest extends SpaceTest {
 		SpaceDog user = createTempDog(superadmin, "user").login();
 
 		// create message in test backend
-		JsonDataObject message = user.data()//
+		ObjectNodeWrap message = user.data()//
 				.save("message", Json.object("text", "What's up boys?"));
 
 		// find message by id in test backend

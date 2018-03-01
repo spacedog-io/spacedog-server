@@ -17,7 +17,7 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.client.data.DataObject;
+import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.push.BadgeStrategy;
 import io.spacedog.client.push.Installation;
 import io.spacedog.client.push.InstallationDataObject;
@@ -63,7 +63,7 @@ public class PushServiceTest extends SpaceTest {
 						.protocol(PushProtocol.GCM).endpoint("XXX"))
 				.id();
 
-		DataObject<Installation> unknownInstall = superadmin.push().getInstallation(unknownInstallId);
+		DataWrap<Installation> unknownInstall = superadmin.push().getInstallation(unknownInstallId);
 
 		assertEquals("joho", unknownInstall.source().appId());
 		assertEquals(PushProtocol.GCM, unknownInstall.source().protocol());
@@ -73,9 +73,9 @@ public class PushServiceTest extends SpaceTest {
 		assertTrue(unknownInstall.source().tags().isEmpty());
 
 		// vince and fred install joho
-		DataObject<Installation> vinceInstall = installApplication("joho", PushProtocol.GCM, vince);
-		DataObject<Installation> fredInstall = installApplication("joho", PushProtocol.APNS, fred);
-		DataObject<Installation> daveInstall = installApplication("joho", PushProtocol.APNS, dave);
+		DataWrap<Installation> vinceInstall = installApplication("joho", PushProtocol.GCM, vince);
+		DataWrap<Installation> fredInstall = installApplication("joho", PushProtocol.APNS, fred);
+		DataWrap<Installation> daveInstall = installApplication("joho", PushProtocol.APNS, dave);
 
 		// vince fails to push since no roles are yet authorized to push
 		assertHttpError(403, () -> vince.push().push(new PushRequest()));
@@ -110,7 +110,7 @@ public class PushServiceTest extends SpaceTest {
 		assertEquals(0, response.notifications.size());
 
 		// nath installs birdee
-		DataObject<Installation> nathInstall = installApplication("birdee", PushProtocol.APNS, nath);
+		DataWrap<Installation> nathInstall = installApplication("birdee", PushProtocol.APNS, nath);
 
 		// vince updates its installation
 		vinceInstall.source().token("super-token-vince").appId("joho")//
@@ -134,7 +134,7 @@ public class PushServiceTest extends SpaceTest {
 		assertEquals(5, installations.size());
 		Set<String> ids = Sets.newHashSet(unknownInstallId, daveInstall.id(), //
 				vinceInstall.id(), fredInstall.id(), nathInstall.id());
-		for (DataObject<Installation> installation : installations)
+		for (DataWrap<Installation> installation : installations)
 			ids.contains(installation.id());
 
 		// nath adds bonjour tag to her install
@@ -294,9 +294,9 @@ public class PushServiceTest extends SpaceTest {
 		superadmin.settings().save(settings);
 
 		// vince and dave install joho
-		DataObject<Installation> vinceInstall = installApplication(//
+		DataWrap<Installation> vinceInstall = installApplication(//
 				"joho", PushProtocol.APNS, vince);
-		DataObject<Installation> daveInstall = installApplication(//
+		DataWrap<Installation> daveInstall = installApplication(//
 				"joho", PushProtocol.APNS, dave);
 
 		// vince pushes a message to dave with manual badge = 3
@@ -311,7 +311,7 @@ public class PushServiceTest extends SpaceTest {
 
 		// badge is not set in installation
 		// since badge management is still manual
-		DataObject<Installation> installation = dave.push()//
+		DataWrap<Installation> installation = dave.push()//
 				.getInstallation(daveInstall.id());
 		assertEquals(0, installation.source().badge());
 
@@ -376,13 +376,13 @@ public class PushServiceTest extends SpaceTest {
 		assertEquals(1, installation.source().badge());
 	}
 
-	private DataObject<Installation> installApplication(String appId, PushProtocol protocol, SpaceDog user) {
+	private DataWrap<Installation> installApplication(String appId, PushProtocol protocol, SpaceDog user) {
 
 		String installId = user.push().saveInstallation(new Installation()//
 				.appId(appId).token("token-" + user.username())//
 				.protocol(protocol)).id();
 
-		DataObject<Installation> installation = user.push().getInstallation(installId);
+		DataWrap<Installation> installation = user.push().getInstallation(installId);
 
 		assertEquals(appId, installation.source().appId());
 		assertEquals(protocol, installation.source().protocol());

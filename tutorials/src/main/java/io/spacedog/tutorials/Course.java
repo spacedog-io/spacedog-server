@@ -9,9 +9,9 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.data.DataObject;
-import io.spacedog.client.data.DataObjectAbstract;
-import io.spacedog.client.data.MetadataBase;
+import io.spacedog.client.data.DataWrap;
+import io.spacedog.client.data.DataWrapAbstract;
+import io.spacedog.client.data.DataObjectBase;
 import io.spacedog.client.schema.GeoPoint;
 import io.spacedog.utils.Exceptions;
 
@@ -20,7 +20,7 @@ import io.spacedog.utils.Exceptions;
 		getterVisibility = Visibility.NONE, //
 		isGetterVisibility = Visibility.NONE, //
 		setterVisibility = Visibility.NONE)
-public class Course extends MetadataBase {
+public class Course extends DataObjectBase {
 
 	public String status;
 	public String requestedVehiculeType;
@@ -131,7 +131,7 @@ public class Course extends MetadataBase {
 		}
 	}
 
-	public static class CourseDataObject extends DataObjectAbstract<Course> {
+	public static class Wrap extends DataWrapAbstract<Course> {
 
 		private Course source;
 
@@ -146,7 +146,7 @@ public class Course extends MetadataBase {
 		}
 
 		@Override
-		public DataObject<Course> source(Course source) {
+		public DataWrap<Course> source(Course source) {
 			this.source = source;
 			return this;
 		}
@@ -156,7 +156,7 @@ public class Course extends MetadataBase {
 	public static class Results {
 
 		public long total;
-		public List<CourseDataObject> results;
+		public List<Wrap> results;
 		public ObjectNode aggregations;
 	}
 

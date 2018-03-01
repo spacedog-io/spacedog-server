@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import org.joda.time.DateTime;
 import org.junit.Assert;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -193,6 +194,10 @@ public class SpaceResponse implements Closeable {
 	}
 
 	public <K> K asPojo(Class<K> pojoClass) {
+		return Json.toPojo(asString(), pojoClass);
+	}
+
+	public <K> K asPojo(TypeReference<K> pojoClass) {
 		return Json.toPojo(asString(), pojoClass);
 	}
 

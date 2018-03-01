@@ -11,12 +11,12 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.CredentialsSettings;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.client.data.DataObject;
+import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.email.EmailTemplate;
 import io.spacedog.client.email.EmailTemplateRequest;
 import io.spacedog.client.file.FileSettings;
 import io.spacedog.client.file.SpaceFile.FileMeta;
-import io.spacedog.tutorials.Customer.CustomerDataObject;
+import io.spacedog.tutorials.Customer.Wrap;
 import io.spacedog.utils.ClassResources;
 
 public class T1_CustomerSignUp extends DemoBase {
@@ -39,7 +39,7 @@ public class T1_CustomerSignUp extends DemoBase {
 		source.lastname = "Attias";
 		source.phone = "+33662627520";
 
-		DataObject<Customer> customer = new CustomerDataObject()//
+		DataWrap<Customer> customer = new Wrap()//
 				.id(david.id())//
 				.source(source);
 
@@ -61,7 +61,7 @@ public class T1_CustomerSignUp extends DemoBase {
 		byte[] picture = ClassResources.loadAsBytes(this, "mapomme.jpg");
 		FileMeta meta = david.files().share("/shares", picture);
 
-		DataObject<Customer> customer = davidCustomer();
+		DataWrap<Customer> customer = davidCustomer();
 		customer.source().photo = meta.location;
 		customer = david.data().save(customer);
 	}

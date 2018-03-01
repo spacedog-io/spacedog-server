@@ -9,9 +9,9 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.data.DataObject;
-import io.spacedog.client.data.DataObjectAbstract;
-import io.spacedog.client.data.MetadataBase;
+import io.spacedog.client.data.DataWrap;
+import io.spacedog.client.data.DataWrapAbstract;
+import io.spacedog.client.data.DataObjectBase;
 import io.spacedog.client.schema.GeoPoint;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -19,7 +19,7 @@ import io.spacedog.client.schema.GeoPoint;
 		getterVisibility = Visibility.NONE, //
 		isGetterVisibility = Visibility.NONE, //
 		setterVisibility = Visibility.NONE)
-public class Driver extends MetadataBase {
+public class Driver extends DataObjectBase {
 
 	public String status;
 	public String firstname;
@@ -44,7 +44,7 @@ public class Driver extends MetadataBase {
 		public String licencePlate;
 	}
 
-	public static class DriverDataObject extends DataObjectAbstract<Driver> {
+	public static class Wrap extends DataWrapAbstract<Driver> {
 
 		private Driver source;
 
@@ -59,7 +59,7 @@ public class Driver extends MetadataBase {
 		}
 
 		@Override
-		public DataObject<Driver> source(Driver source) {
+		public DataWrap<Driver> source(Driver source) {
 			this.source = source;
 			return this;
 		}
@@ -69,7 +69,7 @@ public class Driver extends MetadataBase {
 	public static class Results {
 
 		public long total;
-		public List<DriverDataObject> results;
+		public List<Wrap> results;
 		public ObjectNode aggregations;
 	}
 

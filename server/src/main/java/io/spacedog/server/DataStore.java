@@ -29,10 +29,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
+import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.data.DataObject;
-import io.spacedog.client.data.Metadata;
-import io.spacedog.client.data.MetadataBase;
-import io.spacedog.client.data.MetadataDataObject;
+import io.spacedog.client.data.DataObjectBase;
+import io.spacedog.client.data.DataObjectWrap;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.client.schema.Schema;
@@ -99,12 +99,12 @@ public class DataStore implements SpaceParams, SpaceFields {
 				: null;
 	}
 
-	public <K> DataObject<K> getObject(DataObject<K> object) {
+	public <K> DataWrap<K> getObject(DataWrap<K> object) {
 		return getObject(object, true);
 	}
 
-	public <K> DataObject<K> getObject(//
-			DataObject<K> object, boolean throwNotFound) {
+	public <K> DataWrap<K> getObject(//
+			DataWrap<K> object, boolean throwNotFound) {
 
 		GetResponse response = getObject(object.type(), object.id(), throwNotFound);
 
@@ -118,23 +118,23 @@ public class DataStore implements SpaceParams, SpaceFields {
 	private static final String[] METADATA_FIELDS = //
 			new String[] { OWNER_FIELD, GROUP_FIELD, CREATED_AT_FIELD, UPDATED_AT_FIELD };
 
-	public Optional<DataObject<Metadata>> getMetadata(String type, String id) {
+	public Optional<DataWrap<DataObject>> getMetadata(String type, String id) {
 
 		GetResponse response = elastic().prepareGet(toDataIndex(type), id)//
 				.setFetchSource(METADATA_FIELDS, null)//
 				.get();
 
-		DataObject<Metadata> metadata = null;
+		DataWrap<DataObject> metadata = null;
 
 		if (response.isExists())
-			metadata = new MetadataDataObject()//
+			metadata = new DataObjectWrap()//
 					.type(type).id(id).version(response.getVersion())//
-					.source(Json.toPojo(response.getSourceAsBytes(), MetadataBase.class));
+					.source(Json.toPojo(response.getSourceAsBytes(), DataObjectBase.class));
 
 		return Optional.ofNullable(metadata);
 	}
 
-	<K> DataObject<K> createObject(DataObject<K> object) {
+	<K> DataWrap<K> createObject(DataWrap<K> object) {
 
 		IndexResponse response = object.id() == null //
 				? elastic().index(toDataIndex(object.type()), object.source())//
@@ -145,7 +145,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 				.justCreated(ElasticUtils.isCreated(response));
 	}
 
-	public <K> DataObject<K> updateObject(DataObject<K> object) {
+	public <K> DataWrap<K> updateObject(DataWrap<K> object) {
 
 		IndexResponse response = elastic().prepareIndex(//
 				toDataIndex(object.type()), object.id())//
@@ -157,7 +157,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 				.justCreated(ElasticUtils.isCreated(response));
 	}
 
-	public <K> DataObject<K> patchObject(DataObject<K> object) {
+	public <K> DataWrap<K> patchObject(DataWrap<K> object) {
 
 		ObjectNode source = Json.toObjectNode(object.source());
 		source.put(UPDATED_AT_FIELD, DateTime.now().toString());
@@ -172,7 +172,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 				.justCreated(ElasticUtils.isCreated(response));
 	}
 
-	public static long version(DataObject<?> object) {
+	public static long version(DataWrap<?> object) {
 		return object.version() == 0 ? Versions.MATCH_ANY : object.version();
 	}
 

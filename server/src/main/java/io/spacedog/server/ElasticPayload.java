@@ -6,12 +6,12 @@ package io.spacedog.server;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 
-import io.spacedog.client.data.DataObject;
+import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.http.SpaceFields;
 
 public class ElasticPayload implements SpaceFields {
 
-	public static JsonPayload saved(String uriBase, DataObject<?> object) {
+	public static JsonPayload saved(String uriBase, DataWrap<?> object) {
 		return JsonPayload.saved(object.justCreated(), uriBase, object.type(), //
 				object.id()).withVersion(object.version());
 	}

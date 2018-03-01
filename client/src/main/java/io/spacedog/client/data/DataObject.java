@@ -1,30 +1,22 @@
 package io.spacedog.client.data;
 
-public interface DataObject<K> extends Metadata {
+import org.joda.time.DateTime;
 
-	String id();
+public interface DataObject {
 
-	DataObject<K> id(String id);
+	public String owner();
 
-	String type();
+	public void owner(String owner);
 
-	DataObject<K> type(String type);
+	public String group();
 
-	long version();
+	public void group(String group);
 
-	DataObject<K> version(long version);
+	public DateTime createdAt();
 
-	Class<K> sourceClass();
+	public void createdAt(DateTime createdAt);
 
-	K source();
+	public DateTime updatedAt();
 
-	DataObject<K> source(K source);
-
-	float score();
-
-	Object[] sort();
-
-	boolean justCreated();
-
-	DataObject<K> justCreated(boolean created);
+	public void updatedAt(DateTime updatedAt);
 }

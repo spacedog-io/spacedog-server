@@ -7,16 +7,16 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.data.DataObject;
-import io.spacedog.client.data.DataObjectAbstract;
-import io.spacedog.client.data.MetadataBase;
+import io.spacedog.client.data.DataWrap;
+import io.spacedog.client.data.DataWrapAbstract;
+import io.spacedog.client.data.DataObjectBase;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, //
 		getterVisibility = Visibility.NONE, //
 		isGetterVisibility = Visibility.NONE, //
 		setterVisibility = Visibility.NONE)
-public class Customer extends MetadataBase {
+public class Customer extends DataObjectBase {
 
 	public String status;
 	public String firstname;
@@ -24,7 +24,7 @@ public class Customer extends MetadataBase {
 	public String phone;
 	public String photo;
 
-	public static class CustomerDataObject extends DataObjectAbstract<Customer> {
+	public static class Wrap extends DataWrapAbstract<Customer> {
 
 		private Customer source;
 
@@ -39,7 +39,7 @@ public class Customer extends MetadataBase {
 		}
 
 		@Override
-		public DataObject<Customer> source(Customer source) {
+		public DataWrap<Customer> source(Customer source) {
 			this.source = source;
 			return this;
 		}
@@ -49,7 +49,7 @@ public class Customer extends MetadataBase {
 	public static class Results {
 
 		public long total;
-		public List<CustomerDataObject> results;
+		public List<Wrap> results;
 		public ObjectNode aggregations;
 	}
 

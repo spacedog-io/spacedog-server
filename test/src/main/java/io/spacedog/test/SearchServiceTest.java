@@ -12,8 +12,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.client.data.JsonDataObject;
-import io.spacedog.client.data.JsonDataObject.Results;
+import io.spacedog.client.data.ObjectNodeWrap;
+import io.spacedog.client.data.ObjectNodeWrap.Results;
 import io.spacedog.client.elastic.ESQueryBuilders;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.client.elastic.ESSortOrder;
@@ -148,11 +148,11 @@ public class SearchServiceTest extends SpaceTest {
 
 		// search with ascendent sorting
 		ESSearchSourceBuilder searchSource = ESSearchSourceBuilder.searchSource().sort("i");
-		JsonDataObject.Results results = superadmin.data().searchRequest()//
+		ObjectNodeWrap.Results results = superadmin.data().searchRequest()//
 				.source(searchSource).refresh().go();
 		assertEquals(5, results.total);
 
-		List<JsonDataObject> objects = results.results;
+		List<ObjectNodeWrap> objects = results.results;
 		for (int i = 0; i < objects.size(); i++) {
 			assertEquals(i, objects.get(i).source().get("i").asInt());
 			assertEquals(i, objects.get(i).sort()[0]);

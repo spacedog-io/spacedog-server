@@ -7,14 +7,14 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.Sets;
 
-import io.spacedog.client.data.MetadataBase;
+import io.spacedog.client.data.DataObjectBase;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, //
 		getterVisibility = Visibility.NONE, //
 		isGetterVisibility = Visibility.NONE, //
 		setterVisibility = Visibility.NONE)
-public class Installation extends MetadataBase {
+public class Installation extends DataObjectBase {
 
 	private String appId;
 	private PushProtocol protocol;

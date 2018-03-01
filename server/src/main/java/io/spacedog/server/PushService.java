@@ -18,9 +18,9 @@ import com.google.common.base.Strings;
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.client.data.DataObject;
-import io.spacedog.client.data.DataObjects;
-import io.spacedog.client.data.JsonDataObject;
+import io.spacedog.client.data.DataWrap;
+import io.spacedog.client.data.DataWraps;
+import io.spacedog.client.data.ObjectNodeWrap;
 import io.spacedog.client.push.BadgeStrategy;
 import io.spacedog.client.push.Installation;
 import io.spacedog.client.push.InstallationDataObject;
@@ -154,7 +154,7 @@ public class PushService extends SpaceService {
 		PushResponse response = new PushResponse();
 
 		for (SearchHit hit : hits.getHits()) {
-			DataObject<Installation> installation = new InstallationDataObject()//
+			DataWrap<Installation> installation = new InstallationDataObject()//
 					.source(Json.toPojo(//
 							BytesReference.toBytes(hit.getSourceRef()), //
 							Installation.class))//
@@ -173,7 +173,7 @@ public class PushService extends SpaceService {
 	// Implementation
 	//
 
-	public void pushToInstallation(PushResponse response, DataObject<Installation> installation, //
+	public void pushToInstallation(PushResponse response, DataWrap<Installation> installation, //
 			ObjectNode jsonMessage, Credentials credentials, BadgeStrategy badgeStrategy) {
 
 		Notification notification = new Notification();
@@ -253,7 +253,7 @@ public class PushService extends SpaceService {
 		throw Exceptions.illegalArgument("push message [%s][%s] is invalid", protocol, message);
 	}
 
-	private ObjectNode badgeObjectMessage(DataObject<Installation> installation, //
+	private ObjectNode badgeObjectMessage(DataWrap<Installation> installation, //
 			ObjectNode message, Credentials credentials, BadgeStrategy badgeStrategy) {
 
 		if (badgeStrategy == null || //
@@ -267,8 +267,8 @@ public class PushService extends SpaceService {
 				installation.source().badge(installation.source().badge() + 1);
 
 				// update installation badge in data store
-				DataObject<ObjectNode> patch = DataObjects.copyIdentity(//
-						installation, new JsonDataObject())//
+				DataWrap<ObjectNode> patch = DataWraps.copyIdentity(//
+						installation, new ObjectNodeWrap())//
 						.source(Json.object(BADGE, installation.source().badge()));
 
 				DataStore.get().patchObject(patch);
@@ -292,7 +292,7 @@ public class PushService extends SpaceService {
 
 	public Payload upsertInstallation(Optional<String> id, String body, Context context) {
 
-		DataObject<Installation> installation = new InstallationDataObject()//
+		DataWrap<Installation> installation = new InstallationDataObject()//
 				.type(TYPE).source(Json.toPojo(body, Installation.class));
 
 		if (id.isPresent())

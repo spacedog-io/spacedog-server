@@ -5,7 +5,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 
 import io.spacedog.client.SpaceDog;
-import io.spacedog.client.data.DataObject;
+import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.client.push.PushApplication.Credentials;
 import io.spacedog.utils.Check;
@@ -77,23 +77,23 @@ public class PushClient {
 	// Installations
 	//
 
-	public DataObject<Installation> getInstallation(String id) {
+	public DataWrap<Installation> getInstallation(String id) {
 		return dog.data().fetch(new InstallationDataObject().id(id));
 	}
 
-	public DataObject<Installation> fetchInstallation(DataObject<Installation> installation) {
+	public DataWrap<Installation> fetchInstallation(DataWrap<Installation> installation) {
 		return dog.data().fetch(installation);
 	}
 
-	public DataObject<Installation> saveInstallation(Installation source) {
+	public DataWrap<Installation> saveInstallation(Installation source) {
 		return dog.data().save(new InstallationDataObject().source(source));
 	}
 
-	public DataObject<Installation> saveInstallation(String id, Installation source) {
+	public DataWrap<Installation> saveInstallation(String id, Installation source) {
 		return dog.data().save(new InstallationDataObject().id(id).source(source));
 	}
 
-	public DataObject<Installation> saveInstallation(DataObject<Installation> object) {
+	public DataWrap<Installation> saveInstallation(DataWrap<Installation> object) {
 		return dog.data().save(object);
 	}
 

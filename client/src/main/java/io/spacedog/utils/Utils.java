@@ -1,11 +1,14 @@
 package io.spacedog.utils;
 
 import java.io.Closeable;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Strings;
 
@@ -25,6 +28,20 @@ public class Utils {
 			throw Exceptions.runtime(e, "error instantiating [%s] object class", //
 					objectClass.getSimpleName());
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <K> K instantiate(TypeReference<K> typeRef) {
+		Type type = typeRef.getType();
+
+		if (type instanceof Class<?>)
+			return instantiate((Class<K>) type);
+
+		if (type instanceof ParameterizedType)
+			return instantiate((Class<K>) ((ParameterizedType) type).getRawType());
+
+		throw Exceptions.illegalArgument(//
+				"type reference [%s] is not instanciable", type);
 	}
 
 	//

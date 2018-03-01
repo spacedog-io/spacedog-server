@@ -4,11 +4,11 @@ import org.joda.time.DateTime;
 import org.junit.Test;
 
 import io.spacedog.client.SpaceDog;
-import io.spacedog.client.data.DataObject;
+import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.push.Installation;
 import io.spacedog.client.push.PushProtocol;
 import io.spacedog.client.schema.GeoPoint;
-import io.spacedog.tutorials.Driver.DriverDataObject;
+import io.spacedog.tutorials.Driver.Wrap;
 import io.spacedog.tutorials.Driver.LastLocation;
 
 public class T2_DriverSignUp extends DemoBase {
@@ -35,7 +35,7 @@ public class T2_DriverSignUp extends DemoBase {
 		source.vehicule.type = "premium";
 		source.vehicule.licencePlate = "ZZ-666-ZZ";
 
-		DataObject<Driver> driver = new DriverDataObject()//
+		DataWrap<Driver> driver = new Wrap()//
 				.id(max.id())//
 				.source(source);
 

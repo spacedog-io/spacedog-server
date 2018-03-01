@@ -17,9 +17,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.RolePermissions;
+import io.spacedog.client.data.DataWrap;
+import io.spacedog.client.data.ObjectNodeWrap;
 import io.spacedog.client.data.DataObject;
-import io.spacedog.client.data.JsonDataObject;
-import io.spacedog.client.data.Metadata;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import net.codestory.http.Context;
@@ -52,7 +52,7 @@ public class DataService extends SpaceService {
 	@Post("/:type")
 	@Post("/:type/")
 	public Payload post(String type, String body, Context context) {
-		DataObject<ObjectNode> object = new JsonDataObject()//
+		DataWrap<ObjectNode> object = new ObjectNodeWrap()//
 				.type(type).source(Json.readObject(body));
 		return doPost(object, context);
 	}
@@ -72,7 +72,7 @@ public class DataService extends SpaceService {
 	@Put("/:type/:id")
 	@Put("/:type/:id/")
 	public Payload put(String type, String id, String body, Context context) {
-		DataObject<ObjectNode> object = new JsonDataObject()//
+		DataWrap<ObjectNode> object = new ObjectNodeWrap()//
 				.type(type).id(id).source(Json.readObject(body));
 		boolean patch = !context.query().getBoolean(STRICT_PARAM, false);
 		return doPut(object, patch, context);
@@ -88,13 +88,13 @@ public class DataService extends SpaceService {
 			return doDeleteById(type, id);
 
 		if (roles.containsOne(credentials, Permission.deleteMine)) {
-			DataObject<Metadata> metadata = getMetadataOrThrow(type, id);
+			DataWrap<DataObject> metadata = getMetadataOrThrow(type, id);
 			checkOwner(credentials, metadata);
 			return doDeleteById(type, id);
 		}
 
 		if (roles.containsOne(credentials, Permission.deleteGroup)) {
-			DataObject<Metadata> metadata = getMetadataOrThrow(type, id);
+			DataWrap<DataObject> metadata = getMetadataOrThrow(type, id);
 			checkGroup(credentials, metadata);
 			return doDeleteById(type, id);
 		}
@@ -114,7 +114,7 @@ public class DataService extends SpaceService {
 	public Payload putField(String type, String id, String path, String body, Context context) {
 		ObjectNode source = Json.object();
 		Json.with(source, path, Json.readNode(body));
-		DataObject<ObjectNode> object = new JsonDataObject()//
+		DataWrap<ObjectNode> object = new ObjectNodeWrap()//
 				.type(type).id(id).source(source);
 		return doPut(object, true, context);
 	}
@@ -122,7 +122,7 @@ public class DataService extends SpaceService {
 	@Post("/:type/:id/:path")
 	@Post("/:type/:id/:path/")
 	public Payload postField(String type, String id, String path, String body, Context context) {
-		DataObject<ObjectNode> object = doGet(type, id);
+		DataWrap<ObjectNode> object = doGet(type, id);
 		Object[] toAdd = Json.toPojo(body, JsonNode[].class);
 		ArrayNode fieldNode = Json.withArray(object.source(), path);
 		Json.addToSet(fieldNode, toAdd);
@@ -132,7 +132,7 @@ public class DataService extends SpaceService {
 	@Delete("/:type/:id/:path")
 	@Delete("/:type/:id/:path/")
 	public Payload deleteField(String type, String id, String path, String body, Context context) {
-		DataObject<ObjectNode> object = doGet(type, id);
+		DataWrap<ObjectNode> object = doGet(type, id);
 
 		if (Strings.isNullOrEmpty(body))
 			Json.remove(object.source(), path);
@@ -149,23 +149,23 @@ public class DataService extends SpaceService {
 	// Implementation
 	//
 
-	protected DataObject<ObjectNode> doGet(String type, String id) {
+	protected DataWrap<ObjectNode> doGet(String type, String id) {
 		Credentials credentials = SpaceContext.credentials();
 		RolePermissions roles = DataAccessControl.roles(type);
-		Supplier<DataObject<ObjectNode>> supplier = () -> DataStore.get().getObject(//
-				new JsonDataObject().type(type).id(id));
+		Supplier<DataWrap<ObjectNode>> supplier = () -> DataStore.get().getObject(//
+				new ObjectNodeWrap().type(type).id(id));
 
 		if (roles.containsOne(credentials, Permission.read, Permission.search))
 			return supplier.get();
 
 		else if (roles.containsOne(credentials, Permission.readMine)) {
-			DataObject<ObjectNode> object = supplier.get();
+			DataWrap<ObjectNode> object = supplier.get();
 			checkOwner(credentials, object);
 			return object;
 		}
 
 		else if (roles.containsOne(credentials, Permission.readGroup)) {
-			DataObject<ObjectNode> object = supplier.get();
+			DataWrap<ObjectNode> object = supplier.get();
 			checkGroup(credentials, object);
 			return object;
 		}
@@ -173,12 +173,12 @@ public class DataService extends SpaceService {
 		throw Exceptions.forbidden("forbidden to read [%s] objects", type);
 	}
 
-	public <K> Payload doPut(DataObject<K> object, boolean patch, Context context) {
-		Optional<DataObject<Metadata>> metaOpt = DataStore.get()//
+	public <K> Payload doPut(DataWrap<K> object, boolean patch, Context context) {
+		Optional<DataWrap<DataObject>> metaOpt = DataStore.get()//
 				.getMetadata(object.type(), object.id());
 
 		if (metaOpt.isPresent()) {
-			DataObject<Metadata> metadata = metaOpt.get();
+			DataWrap<DataObject> metadata = metaOpt.get();
 			Credentials credentials = SpaceContext.credentials();
 			checkPutPermissions(credentials, metadata);
 
@@ -197,7 +197,7 @@ public class DataService extends SpaceService {
 			return doPost(object, context);
 	}
 
-	protected <K> Payload doPost(DataObject<K> object, Context context) {
+	protected <K> Payload doPost(DataWrap<K> object, Context context) {
 		Credentials credentials = SpaceContext.credentials();
 
 		if (DataAccessControl.roles(object.type())//
@@ -214,7 +214,7 @@ public class DataService extends SpaceService {
 		throw Exceptions.forbidden("forbidden to create [%s] objects", object.type());
 	}
 
-	private <K> void createMetadata(DataObject<K> object, //
+	private <K> void createMetadata(DataWrap<K> object, //
 			Credentials credentials, boolean forceMeta) {
 
 		if (forceMeta == false) {
@@ -231,8 +231,8 @@ public class DataService extends SpaceService {
 			object.updatedAt(now);
 	}
 
-	private <K> void updateMetadata(DataObject<K> object, //
-			Metadata metadata, boolean forceMeta) {
+	private <K> void updateMetadata(DataWrap<K> object, //
+			DataObject metadata, boolean forceMeta) {
 
 		if (forceMeta == false) {
 			object.owner(metadata.owner());
@@ -264,7 +264,7 @@ public class DataService extends SpaceService {
 		return JsonPayload.ok().build();
 	}
 
-	public void checkPutPermissions(Credentials credentials, DataObject<Metadata> metadata) {
+	public void checkPutPermissions(Credentials credentials, DataWrap<DataObject> metadata) {
 
 		RolePermissions roles = DataAccessControl.roles(metadata.type());
 
@@ -284,20 +284,20 @@ public class DataService extends SpaceService {
 		throw Exceptions.forbidden("forbidden to update [%s] objects", metadata.type());
 	}
 
-	private void checkGroup(Credentials credentials, DataObject<?> object) {
+	private void checkGroup(Credentials credentials, DataWrap<?> object) {
 		if (Strings.isNullOrEmpty(credentials.group()) //
 				|| !credentials.group().equals(object.group()))
 			throw Exceptions.forbidden("not in the same group than [%s][%s] object", //
 					object.type(), object.id());
 	}
 
-	private void checkOwner(Credentials credentials, DataObject<?> object) {
+	private void checkOwner(Credentials credentials, DataWrap<?> object) {
 		if (!credentials.id().equals(object.owner()))
 			throw Exceptions.forbidden("not the owner of [%s][%s] object", //
 					object.type(), object.id());
 	}
 
-	private DataObject<Metadata> getMetadataOrThrow(String type, String id) {
+	private DataWrap<DataObject> getMetadataOrThrow(String type, String id) {
 		return DataStore.get().getMetadata(type, id)//
 				.orElseThrow(() -> Exceptions.notFound(type, id));
 	}

@@ -11,10 +11,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import javax.lang.model.type.ArrayType;
+
 import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.core.util.DefaultIndenter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -418,10 +421,6 @@ public class Json {
 				.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 	}
 
-	//
-	// Check and assert methods
-	//
-
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static <K extends JsonNode> JsonAssert<K> assertNode(K node) {
 		return new JsonAssert(node);
@@ -569,6 +568,19 @@ public class Json {
 		} catch (IOException e) {
 			throw Exceptions.runtime(e, "error mapping string [%s] to pojo class [%s]", //
 					json, pojoClass.getSimpleName());
+		}
+	}
+
+	public static <K> K toPojo(String json, TypeReference<K> typeRef) {
+		if (Strings.isNullOrEmpty(json))
+			json = typeRef.getType() instanceof ArrayType ? "[]" : "{}";
+
+		try {
+			return mapper().readValue(json, typeRef);
+
+		} catch (IOException e) {
+			throw Exceptions.runtime(e, "error mapping string [%s] to type [%s]", //
+					json, typeRef);
 		}
 	}
 

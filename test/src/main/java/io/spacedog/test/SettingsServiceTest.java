@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.client.data.JsonDataObject.Results;
+import io.spacedog.client.data.ObjectNodeWrap.Results;
 import io.spacedog.client.settings.SettingsAclSettings;
 import io.spacedog.utils.Json;
 
