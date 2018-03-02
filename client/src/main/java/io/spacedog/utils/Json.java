@@ -295,7 +295,7 @@ public class Json {
 	}
 
 	public static ObjectMapper mapper() {
-		return jsonMapper;
+		return mapper;
 	}
 
 	public static String toPrettyString(JsonNode node) {
@@ -321,7 +321,7 @@ public class Json {
 	public static JsonNode readNode(String json) {
 		Check.notNullOrEmpty(json, "json");
 		try {
-			return jsonMapper.readTree(json);
+			return mapper.readTree(json);
 		} catch (IOException e) {
 			throw Exceptions.illegalArgument(e, //
 					"error deserializing JSON string [%s]", json);
@@ -331,7 +331,7 @@ public class Json {
 	public static JsonNode readNode(URL url) {
 		Check.notNull(url, "url");
 		try {
-			return jsonMapper.readTree(url);
+			return mapper.readTree(url);
 		} catch (IOException e) {
 			throw Exceptions.illegalArgument(e);
 		}
@@ -404,7 +404,7 @@ public class Json {
 		return array;
 	}
 
-	private static ObjectMapper jsonMapper;
+	private static ObjectMapper mapper;
 
 	static {
 		SimpleModule jodaModule = new JodaModule()//
@@ -413,7 +413,7 @@ public class Json {
 				.addSerializer(LocalDate.class, new MyLocalDateSerializer())//
 				.addDeserializer(LocalDate.class, new MyLocalDateDeserializer());
 
-		jsonMapper = new ObjectMapper()//
+		mapper = new ObjectMapper()//
 				.setDefaultPrettyPrinter(new DefaultPrettyPrinter()//
 						.withArrayIndenter(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE))//
 				.registerModule(jodaModule)//
