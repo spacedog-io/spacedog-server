@@ -2,11 +2,10 @@ package io.spacedog.client.settings;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-
-import io.spacedog.client.credentials.ObjectRolePermissions;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import io.spacedog.client.credentials.ObjectRolePermissions;
 
 @SuppressWarnings("serial")
 @JsonIgnoreProperties(ignoreUnknown = true)

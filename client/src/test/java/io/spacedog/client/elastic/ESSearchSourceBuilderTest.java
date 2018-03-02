@@ -3,8 +3,6 @@ package io.spacedog.client.elastic;
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.spacedog.client.elastic.ESQueryBuilders;
-import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 

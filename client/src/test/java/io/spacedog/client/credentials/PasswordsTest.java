@@ -6,8 +6,6 @@ package io.spacedog.client.credentials;
 import org.junit.Assert;
 import org.junit.Test;
 
-import io.spacedog.client.credentials.Passwords;
-
 public class PasswordsTest extends Assert {
 
 	@Test

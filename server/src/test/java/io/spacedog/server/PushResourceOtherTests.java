@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.push.PushProtocol;
 import io.spacedog.client.push.PushRequest;
-import io.spacedog.server.PushService;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 

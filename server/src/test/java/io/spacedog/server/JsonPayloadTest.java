@@ -5,7 +5,6 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import io.spacedog.server.JsonPayload;
 import io.spacedog.utils.Exceptions;
 
 public class JsonPayloadTest extends Assert {

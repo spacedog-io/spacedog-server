@@ -8,8 +8,8 @@ import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.push.Installation;
 import io.spacedog.client.push.PushProtocol;
 import io.spacedog.client.schema.GeoPoint;
-import io.spacedog.tutorials.Driver.Wrap;
 import io.spacedog.tutorials.Driver.LastLocation;
+import io.spacedog.tutorials.Driver.Wrap;
 
 public class T2_DriverSignUp extends DemoBase {
 

@@ -5,10 +5,10 @@ import java.util.List;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
+import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.data.ObjectNodeWrap;
-import io.spacedog.client.SpaceDog;
 import io.spacedog.client.elastic.ESQueryBuilders;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.client.elastic.ESSortBuilders;

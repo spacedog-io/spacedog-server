@@ -6,8 +6,6 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import io.spacedog.server.PebbleTemplating;
-
 public class PebbleTemplatingTest extends Assert {
 
 	@Test

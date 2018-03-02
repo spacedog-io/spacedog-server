@@ -11,7 +11,6 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.schema.Schema;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Json;
 
