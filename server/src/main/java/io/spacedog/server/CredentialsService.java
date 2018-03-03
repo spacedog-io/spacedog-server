@@ -68,6 +68,7 @@ public class CredentialsService extends SpaceService {
 				.string(EMAIL_FIELD)//
 				.string(ROLES_FIELD).array()//
 				.string(GROUP_FIELD)//
+				.string(TAGS_FIELD).array()//
 
 				.string(HASHED_PASSWORD_FIELD)//
 				.string(PASSWORD_RESET_CODE_FIELD)//
@@ -87,8 +88,7 @@ public class CredentialsService extends SpaceService {
 				.string(ACCESS_TOKEN_FIELD)//
 				.string(ACCESS_TOKEN_EXPIRES_AT_FIELD)//
 				.close()//
-
-				.stash(STASH_FIELD)//
+				
 				.build();
 	}
 

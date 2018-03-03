@@ -2,7 +2,6 @@ package io.spacedog.server;
 
 import org.elasticsearch.common.Strings;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.credentials.Credentials;
@@ -12,6 +11,7 @@ import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.client.stripe.StripeSettings;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.KeyValue;
 import io.spacedog.utils.NotFoundException;
 import io.spacedog.utils.Optional7;
 import net.codestory.http.Context;
@@ -192,29 +192,29 @@ public class StripeService extends SpaceService {
 	}
 
 	private boolean hasStripeCustomerId(Credentials credentials) {
-
-		JsonNode value = credentials.getFromStash(CREDENTIALS_STASH_STRIPE_CUSTOMER_ID);
-		return value != null && value.isTextual();
+		return credentials.getTag(//
+				CREDENTIALS_STASH_STRIPE_CUSTOMER_ID).isPresent();
 	}
 
 	private String getStripeCustomerId(Credentials credentials) {
 
-		JsonNode value = credentials.getFromStash(CREDENTIALS_STASH_STRIPE_CUSTOMER_ID);
+		 Optional7<String> value = credentials.getTag(//
+				 CREDENTIALS_STASH_STRIPE_CUSTOMER_ID);
 
-		if (value != null && value.isTextual())
-			return value.asText();
+		if (value.isPresent())
+			return value.get();
 
-		throw new NotFoundException("no stripe customer for credentials [%s][%s]", //
+		throw new NotFoundException("credentials [%s][%s] has no stripe customer id", //
 				credentials.type(), credentials.username());
 	}
 
 	private void updateStripeCustomerId(Credentials credentials, String stripeCustomerId) {
-		credentials.addToStash(CREDENTIALS_STASH_STRIPE_CUSTOMER_ID, stripeCustomerId);
+		credentials.setTag(CREDENTIALS_STASH_STRIPE_CUSTOMER_ID, stripeCustomerId);
 		CredentialsService.get().update(credentials);
 	}
 
 	private void removeStripeCustomerId(Credentials credentials) {
-		credentials.removeFromStash(CREDENTIALS_STASH_STRIPE_CUSTOMER_ID);
+		credentials.removeTag(CREDENTIALS_STASH_STRIPE_CUSTOMER_ID);
 		CredentialsService.get().update(credentials);
 	}
 

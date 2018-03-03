@@ -5,6 +5,7 @@ package io.spacedog.client.credentials;
 
 import java.util.Base64;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -24,6 +25,7 @@ import io.spacedog.client.http.SpaceFields;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.KeyValue;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Utils;
 
@@ -47,7 +49,7 @@ public class Credentials {
 	private Set<String> roles = Sets.newHashSet();
 	private String group;
 	private List<Session> sessions;
-	private ObjectNode stash;
+	private Set<String> tags = Sets.newHashSet();
 	private String passwordResetCode;
 	private String hashedPassword;
 	private boolean passwordMustChange;
@@ -236,20 +238,38 @@ public class Credentials {
 	// Stash
 	//
 
-	public JsonNode getFromStash(String path) {
-		return stash == null ? null : Json.get(stash, path);
+	public Set<String> tags() {
+		return Collections.unmodifiableSet(tags);
 	}
 
-	public void addToStash(String path, Object value) {
-		if (stash == null)
-			stash = Json.object();
-
-		Json.set(stash, path, value);
+	public Credentials clearTags() {
+		tags.clear();
+		return this;
 	}
 
-	public void removeFromStash(String path) {
-		if (stash != null)
-			Json.remove(stash, path);
+	public Credentials setTag(String key, Object value) {
+		this.tags.add(new KeyValue(key, value).asTag());
+		return this;
+	}
+
+	public Optional7<String> getTag(String key) {
+		for (String tag : tags) {
+			KeyValue keyValue = KeyValue.parse(tag);
+			if (key.equals(keyValue.getKey()))
+				return Optional7.of(keyValue.getValue().toString());
+		}
+		return Optional7.empty();
+	}
+
+	public Credentials removeTag(String key) {
+		Iterator<String> iterator = tags.iterator();
+		while (iterator.hasNext()) {
+			String tag = iterator.next();
+			KeyValue keyValue = KeyValue.parse(tag);
+			if (key.equals(keyValue.getKey()))
+				iterator.remove();
+		}
+		return this;
 	}
 
 	//
