@@ -22,4 +22,15 @@ public class KeyValue extends SimpleEntry<String, Object> {
 	public KeyValue(String key, Object value) {
 		super(key, value);
 	}
+
+	public static KeyValue parse(String tag) {
+		int index = tag.indexOf('=');
+		return index < 0 ? new KeyValue("", tag) //
+				: new KeyValue(tag.substring(0, index), tag.substring(index + 1));
+	}
+
+	public String asTag() {
+		return toString();
+	}
+
 }
