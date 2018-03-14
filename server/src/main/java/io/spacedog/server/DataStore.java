@@ -29,10 +29,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
-import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.data.DataObject;
 import io.spacedog.client.data.DataObjectBase;
 import io.spacedog.client.data.DataObjectWrap;
+import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.client.schema.Schema;
@@ -134,46 +134,46 @@ public class DataStore implements SpaceParams, SpaceFields {
 		return Optional.ofNullable(metadata);
 	}
 
-	<K> DataWrap<K> createObject(DataWrap<K> object) {
+	public <K> DataWrap<K> createObject(DataWrap<K> wrap) {
 
-		IndexResponse response = object.id() == null //
-				? elastic().index(toDataIndex(object.type()), object.source())//
-				: elastic().index(toDataIndex(object.type()), object.id(), object.source());
+		IndexResponse response = wrap.id() == null //
+				? elastic().index(toDataIndex(wrap.type()), wrap.source())//
+				: elastic().index(toDataIndex(wrap.type()), wrap.id(), wrap.source());
 
-		return object.id(response.getId())//
+		return wrap.id(response.getId())//
 				.version(response.getVersion())//
 				.justCreated(ElasticUtils.isCreated(response));
 	}
 
-	public <K> DataWrap<K> updateObject(DataWrap<K> object) {
+	public <K> DataWrap<K> updateObject(DataWrap<K> wrap) {
 
 		IndexResponse response = elastic().prepareIndex(//
-				toDataIndex(object.type()), object.id())//
-				.setSource(Json.toString(object.source()), XContentType.JSON)//
-				.setVersion(version(object))//
+				toDataIndex(wrap.type()), wrap.id())//
+				.setSource(Json.toString(wrap.source()), XContentType.JSON)//
+				.setVersion(version(wrap))//
 				.get();
 
-		return object.version(response.getVersion())//
+		return wrap.version(response.getVersion())//
 				.justCreated(ElasticUtils.isCreated(response));
 	}
 
-	public <K> DataWrap<K> patchObject(DataWrap<K> object) {
+	public <K> DataWrap<K> patchObject(DataWrap<K> wrap) {
 
-		ObjectNode source = Json.toObjectNode(object.source());
+		ObjectNode source = Json.toObjectNode(wrap.source());
 		source.put(UPDATED_AT_FIELD, DateTime.now().toString());
 
 		UpdateResponse response = elastic()//
-				.prepareUpdate(toDataIndex(object.type()), object.id())//
-				.setVersion(version(object))//
+				.prepareUpdate(toDataIndex(wrap.type()), wrap.id())//
+				.setVersion(version(wrap))//
 				.setDoc(source.toString(), XContentType.JSON)//
 				.get();
 
-		return object.version(response.getVersion())//
+		return wrap.version(response.getVersion())//
 				.justCreated(ElasticUtils.isCreated(response));
 	}
 
-	public static long version(DataWrap<?> object) {
-		return object.version() == 0 ? Versions.MATCH_ANY : object.version();
+	public static long version(DataWrap<?> wrap) {
+		return wrap.version() == 0 ? Versions.MATCH_ANY : wrap.version();
 	}
 
 	//
