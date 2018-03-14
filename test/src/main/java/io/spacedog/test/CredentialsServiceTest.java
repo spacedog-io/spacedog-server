@@ -277,17 +277,17 @@ public class CredentialsServiceTest extends SpaceTest {
 
 		// fred can change his password
 		String newPassword = Passwords.random();
-		fred.credentials().updateMyPassword(fred.password().get(), newPassword);
-		fred.password(newPassword);
+		fred.credentials().setMyPassword(fred.password().get(), newPassword);
 
-		// fred can get data objects again with basic auth
-		SpaceRequest.get("/1/data").basicAuth(fred).go(200);
+		// fred fails to get data objects
+		// since old access token is no more valid
+		fred.get("/1/data").go(401);
 
-		// fred can log in
-		fred.login();
+		// fred logs in with his new password
+		fred.login(newPassword);
 
-		// fred can get data objects again with bearer auth
-		SpaceRequest.get("/1/data").bearerAuth(fred).go(200);
+		// fred can get data objects again
+		fred.get("/1/data").go(200);
 	}
 
 	@Test
@@ -303,20 +303,21 @@ public class CredentialsServiceTest extends SpaceTest {
 
 		// to declare that you forgot your password
 		// you need to pass your username
-		superadmin.post("/1/credentials/forgotPassword").go(400);
+		assertHttpError(404, () -> superadmin.credentials()//
+				.forgottenPassword(""));
 
 		// if invalid username, you get a 404
-		superadmin.post("/1/credentials/forgotPassword")//
-				.bodyJson(USERNAME_PARAM, "XXX").go(404);
+		assertHttpError(404, () -> superadmin.credentials()//
+				.forgottenPassword("XXX"));
 
 		// fred fails to declare "forgot password" if no
 		// forgotPassword template set in mail settings
-		fred.post("/1/credentials/forgotPassword")//
-				.bodyJson(USERNAME_PARAM, fred.username()).go(400);
+		assertHttpError(400, () -> fred.credentials()//
+				.forgotMyPassword());
 
 		// superadmin saves the forgotPassword email template
 		EmailTemplate template = new EmailTemplate();
-		template.name = "forgotPassword";
+		template.name = "_forgotten_password";
 		template.from = "no-reply@api.spacedog.io";
 		template.to = Lists.newArrayList("{{to}}");
 		template.subject = "Password forgotten request";
@@ -328,10 +329,8 @@ public class CredentialsServiceTest extends SpaceTest {
 
 		// fred can not pass any parameter unless they
 		// are registered in the template model
-		fred.post("/1/credentials/forgotPassword")//
-				.bodyJson(USERNAME_PARAM, fred.username(), //
-						"url", "http://localhost:8080")
-				.go(400);
+		assertHttpError(400, () -> fred.credentials().forgotMyPassword(//
+				Json.object("url", "http://localhost:8080")));
 
 		// add an url parameter to the template model
 		template.model = Maps.newHashMap();

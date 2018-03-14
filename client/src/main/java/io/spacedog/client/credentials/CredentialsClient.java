@@ -6,7 +6,6 @@ import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceDog;
@@ -275,30 +274,34 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	// Password methods
 	//
 
-	public String deletePassword(String id) {
-		return dog.delete("/1/credentials/{id}/password")//
+	public String resetPassword(String id) {
+		return dog.post("/1/credentials/{id}/_reset_password")//
 				.routeParam("id", id).go(200)//
 				.getString(PASSWORD_RESET_CODE_FIELD);
 	}
 
-	public void resetPassword(String id, String resetCode, String newPassword) {
-		dog.post("/1/credentials/{id}/password")//
-				.routeParam("id", id)//
-				.formField(PASSWORD_RESET_CODE_FIELD, resetCode)//
-				.formField(PASSWORD_FIELD, newPassword)//
+	public void setPasswordWithCode(String credentialsId, //
+			String newPassword, String passwordResetCode) {
+		SpaceRequest.post("/1/credentials/{id}/_set_password")//
+				.backend(dog.backend())//
+				.routeParam("id", credentialsId)//
+				.bodyPojo(new SetPasswordRequest()//
+						.withPassword(newPassword)//
+						.withPasswordResetCode(passwordResetCode))//
 				.go(200);
 	}
 
-	public void updateMyPassword(String oldPassword, String newPassword) {
-		updatePassword("me", oldPassword, newPassword);
+	public void setMyPassword(String oldPassword, String newPassword) {
+		setPassword("me", oldPassword, newPassword);
 	}
 
-	public void updatePassword(String id, String requesterPassword, String newPassword) {
-		SpaceRequest.put("/1/credentials/{id}/password")//
+	public void setPassword(String credentialsId, //
+			String requesterPassword, String newPassword) {
+		SpaceRequest.post("/1/credentials/{id}/_set_password")//
 				.backend(dog.backend())//
-				.routeParam("id", id)//
 				.basicAuth(dog.username(), requesterPassword)//
-				.bodyJson(TextNode.valueOf(newPassword))//
+				.routeParam("id", credentialsId)//
+				.bodyPojo(new SetPasswordRequest().withPassword(newPassword))//
 				.go(200);
 	}
 
@@ -312,8 +315,18 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	}
 
 	public void forgotMyPassword(ObjectNode parameters) {
-		parameters.put(USERNAME_PARAM, dog.username());
-		dog.post("/1/credentials/forgotPassword").bodyJson(parameters).go(200);
+		forgottenPassword(dog.username(), parameters);
+	}
+
+	public void forgottenPassword(String username) {
+		forgottenPassword(username, Json.object());
+	}
+
+	public void forgottenPassword(String username, ObjectNode parameters) {
+		parameters.put(USERNAME_FIELD, username);
+		dog.post("/1/credentials/_forgotten_password")//
+				.bodyJson(parameters)//
+				.go(200);
 	}
 
 	//

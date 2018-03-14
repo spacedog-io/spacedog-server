@@ -19,7 +19,7 @@ public interface SpaceFields {
 	String UPDATED_AT_FIELD = "updatedAt";
 	String CREATED_AT_FIELD = "createdAt";
 	String SESSIONS_FIELD = "sessions";
-	String STASH_FIELD = "stash";
+	String TAGS_FIELD = "tags";
 	String ACCESS_TOKEN_FIELD = "accessToken";
 	String ACCESS_TOKEN_EXPIRES_AT_FIELD = "accessTokenExpiresAt";
 	String SESSIONS_ACCESS_TOKEN_FIELD = SESSIONS_FIELD + '.' + ACCESS_TOKEN_FIELD;

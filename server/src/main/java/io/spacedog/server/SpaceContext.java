@@ -210,8 +210,8 @@ public class SpaceContext {
 	private void checkPasswordMustChange(Credentials credentials, Context context) {
 		if (credentials.passwordMustChange()) {
 
-			if (!(Methods.PUT.equals(context.method()) //
-					&& "/1/credentials/me/password".equals(uri)))
+			if ((uri.equals("/1/credentials/me/_set_password")//
+					&& context.method().equals(Methods.POST)) == false)
 
 				throw Exceptions.passwordMustChange(credentials);
 		}

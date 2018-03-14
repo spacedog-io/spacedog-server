@@ -556,8 +556,8 @@ public class Credentials {
 		Check.notNullOrEmpty(passwordResetCode, "passwordResetCode");
 
 		if (!passwordResetCode.equals(this.passwordResetCode))
-			throw Exceptions.illegalArgument(//
-					"password reset code [%s] invalid", passwordResetCode);
+			throw Exceptions.forbidden("password reset code [%s] is invalid", //
+					passwordResetCode);
 
 		changePassword(password, regex);
 	}

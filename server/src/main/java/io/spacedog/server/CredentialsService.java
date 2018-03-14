@@ -29,6 +29,7 @@ import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.Credentials.Session;
 import io.spacedog.client.credentials.CredentialsSettings;
 import io.spacedog.client.credentials.Roles;
+import io.spacedog.client.credentials.SetPasswordRequest;
 import io.spacedog.client.credentials.Usernames;
 import io.spacedog.client.email.EmailTemplate;
 import io.spacedog.client.schema.Schema;
@@ -48,7 +49,7 @@ import net.codestory.http.payload.Payload;
 public class CredentialsService extends SpaceService {
 
 	public static final String TYPE = "credentials";
-	private static final String FORGOT_PASSWORD_MAIL_TEMPLATE_NAME = "forgotPassword";
+	private static final String FORGOTTEN_PASSWORD_MAIL_TEMPLATE_NAME = "_forgotten_password";
 
 	//
 	// Type and schema
@@ -88,7 +89,7 @@ public class CredentialsService extends SpaceService {
 				.string(ACCESS_TOKEN_FIELD)//
 				.string(ACCESS_TOKEN_EXPIRES_AT_FIELD)//
 				.close()//
-				
+
 				.build();
 	}
 
@@ -283,22 +284,23 @@ public class CredentialsService extends SpaceService {
 		return saved(false, credentials);
 	}
 
-	@Post("/1/credentials/forgotPassword")
-	@Post("/1/credentials/forgotPassword/")
-	public Payload postForgotPassword(String body, Context context) {
+	@Post("/1/credentials/_forgotten_password")
+	@Post("/1/credentials/_forgotten_password/")
+	public Payload postForgottenPassword(String body, Context context) {
 		Map<String, Object> parameters = Json.readMap(body);
 		String username = Check.notNull(parameters.get(USERNAME_PARAM), "username").toString();
 
 		Credentials credentials = getByName(username, true).get();
 
 		if (!credentials.email().isPresent())
-			throw Exceptions.illegalArgument("no email found in credentials [%s][%s]", //
+			throw Exceptions.illegalArgument("credentials [%s][%s] has no email", //
 					credentials.type(), credentials.username());
 
 		EmailTemplate template = EmailService.get()//
-				.getTemplate(FORGOT_PASSWORD_MAIL_TEMPLATE_NAME)//
+				.getTemplate(FORGOTTEN_PASSWORD_MAIL_TEMPLATE_NAME)//
 				.orElseThrow(() -> Exceptions.illegalArgument(//
-						"email template [forgotPassword] not found"));
+						"email template [%s] not found", //
+						FORGOTTEN_PASSWORD_MAIL_TEMPLATE_NAME));
 
 		// make sure the model has at least the username parameter
 		if (template.model == null)
@@ -320,9 +322,9 @@ public class CredentialsService extends SpaceService {
 		return JsonPayload.ok().build();
 	}
 
-	@Delete("/1/credentials/:id/password")
-	@Delete("/1/credentials/:id/password/")
-	public Payload deletePassword(String id, Context context) {
+	@Post("/1/credentials/:id/_reset_password")
+	@Post("/1/credentials/:id/_reset_password/")
+	public Payload postResetPassword(String id, Context context) {
 		Credentials credentials = checkAdminAndGet(id);
 
 		credentials.clearPasswordAndTokens();
@@ -335,41 +337,31 @@ public class CredentialsService extends SpaceService {
 				.build();
 	}
 
-	@Post("/1/credentials/:id/password")
-	@Post("/1/credentials/:id/password/")
-	public Payload postPassword(String id, Context context) {
+	@Post("/1/credentials/me/_set_password")
+	@Post("/1/credentials/me/_set_password/")
+	public Payload postSetMyPassword(String body, Context context) {
+		return postSetPassword(SpaceContext.credentials().id(), body, context);
+	}
+
+	@Post("/1/credentials/:id/_set_password")
+	@Post("/1/credentials/:id/_set_password/")
+	public Payload postSetPassword(String id, String body, Context context) {
 		// TODO do we need a password reset expire date to limit the reset
 		// time scope
-		String passwordResetCode = context.get(PASSWORD_RESET_CODE_FIELD);
-		String password = context.get(PASSWORD_FIELD);
+		Credentials credentials = null;
+		SetPasswordRequest request = Json.toPojo(body, SetPasswordRequest.class);
+		Optional7<String> passwordRegex = Optional7.of(//
+				credentialsSettings().passwordRegex());
 
-		Credentials credentials = getById(id, true).get();
-		CredentialsSettings settings = credentialsSettings();
-		credentials.changePassword(password, passwordResetCode, //
-				Optional7.of(settings.passwordRegex()));
-		credentials = update(credentials);
+		if (Strings.isNullOrEmpty(request.passwordResetCode())) {
+			credentials = checkMyselfOrHigherAdminAndGet(id, true);
+			credentials.changePassword(request.password(), passwordRegex);
 
-		return saved(false, credentials);
-	}
-
-	@Put("/1/credentials/me/password")
-	@Put("/1/credentials/me/password/")
-	public Payload putMyPassword(String body, Context context) {
-		return putPassword(SpaceContext.credentials().id(), body, context);
-	}
-
-	@Put("/1/credentials/:id/password")
-	@Put("/1/credentials/:id/password/")
-	public Payload putPassword(String id, String body, Context context) {
-
-		Credentials credentials = checkMyselfOrHigherAdminAndGet(id, true);
-
-		String password = SpaceContext.get().isJsonContent() && !Strings.isNullOrEmpty(body)//
-				? Json.checkString(Json.checkNotNull(Json.readNode(body)))//
-				: context.get(PASSWORD_FIELD);
-
-		CredentialsSettings settings = credentialsSettings();
-		credentials.changePassword(password, Optional7.of(settings.passwordRegex()));
+		} else {
+			credentials = getById(id, true).get();
+			credentials.changePassword(request.password(), //
+					request.passwordResetCode(), passwordRegex);
+		}
 
 		credentials = update(credentials);
 		return saved(false, credentials);
@@ -393,11 +385,10 @@ public class CredentialsService extends SpaceService {
 	public Payload putEnabled(String id, String body, Context context) {
 		Credentials credentials = checkAdminAndGet(id);
 
-		JsonNode enabled = Json.readNode(body);
-		if (!enabled.isBoolean())
-			throw Exceptions.illegalArgument("body not a boolean but [%s]", body);
+		Boolean enabled = Json.checkBoolean(//
+				Json.checkNotNull(Json.readNode(body)));
 
-		credentials.doEnableOrDisable(enabled.asBoolean());
+		credentials.doEnableOrDisable(enabled);
 		credentials = update(credentials);
 
 		return saved(false, credentials);

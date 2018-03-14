@@ -9,7 +9,6 @@ import org.joda.time.DateTime;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceDog;
@@ -343,11 +342,12 @@ public class CredentialsServiceTest2 extends SpaceTest {
 		SpaceDog superadmin = clearRootBackend();
 		superadmin.credentials().enableGuestSignUp(true);
 		SpaceDog fred = createTempDog(superadmin, "fred");
+		SpaceDog titi = SpaceDog.dog().username("titi");
 
 		// sign up without password should succeed
-		ObjectNode node = SpaceRequest.post("/1/credentials/")//
-				.backend(guest)//
-				.bodyJson("username", "titi", "email", "titi@dog.com").go(201)//
+		ObjectNode node = guest.post("/1/credentials/")//
+				.bodyJson("username", titi.username(), "email", "titi@dog.com")//
+				.go(201)//
 				.assertNotNull("passwordResetCode")//
 				.asJsonObject();
 
@@ -356,103 +356,76 @@ public class CredentialsServiceTest2 extends SpaceTest {
 
 		// no password user login should fail
 		// I can not pass a null password anyway to the basicAuth method
-		SpaceRequest.get("/1/login").backend(guest)//
-				.basicAuth("titi", "XXX").go(401);
+		assertHttpError(401, () -> titi.login("XXX"));
 
-		// no password user trying to create password with empty reset code
-		// should fail
-		SpaceRequest.post("/1/credentials/" + titiId + "/password")//
-				.backend(guest)//
-				.queryParam("passwordResetCode", "")//
-				.formField("password", "hi titi").go(400);
+		// guest fails to set password with empty reset code
+		assertHttpError(403, () -> guest.credentials()//
+				.setPasswordWithCode(titiId, "hi titi", ""));
 
-		SpaceRequest.get("/1/login").backend(guest)//
-				.basicAuth("titi", "hi titi").go(401);
+		// titi fails to login since no password set yet
+		assertHttpError(401, () -> titi.login("hi titi"));
 
-		// no password user setting password with wrong reset code should fail
-		SpaceRequest.post("/1/credentials/" + titiId + "/password")//
-				.backend(guest)//
-				.queryParam("passwordResetCode", "XXX")//
-				.formField("password", "hi titi").go(400);
+		// guest fails to set password with wrong reset
+		assertHttpError(403, () -> guest.credentials()//
+				.setPasswordWithCode(titiId, "hi titi", "XXX"));
 
-		SpaceRequest.get("/1/login").backend(guest)//
-				.basicAuth("titi", "hi titi").go(401);
+		// titi fails to login since no password set yet
+		assertHttpError(401, () -> titi.login("hi titi"));
 
 		// titi inits its own password with right reset code should succeed
-		SpaceRequest.post("/1/credentials/" + titiId + "/password")//
-				.backend(guest)//
-				.formField("passwordResetCode", passwordResetCode)//
-				.formField("password", "hi titi")//
-				.go(200);
+		guest.credentials().setPasswordWithCode(//
+				titiId, "hi titi", passwordResetCode);
 
-		SpaceRequest.get("/1/login").backend(guest)//
-				.basicAuth("titi", "hi titi").go(200);
+		// titi logs in successfully
+		titi.login("hi titi");
 
-		// fred changes titi password should fail
-		fred.put("/1/credentials/" + titiId + "/password")//
-				.formField("password", "XXX")//
-				.go(403);
+		// fred fails to changes titi password since not allowed
+		assertHttpError(403, () -> fred.credentials()//
+				.setPassword(titiId, fred.password().get(), "XXX"));
 
-		SpaceRequest.get("/1/login").backend(guest)//
-				.basicAuth("titi", "XXX").go(401);
+		// titi fails to login with fred's password since not set
+		assertHttpError(401, () -> titi.login("XXX"));
 
-		// titi changes its password should fail since password size < 6
-		SpaceRequest.put("/1/credentials/" + titiId + "/password")//
-				.backend(guest)//
-				.basicAuth("titi", "hi titi")//
-				.formField("password", "XXX")//
-				.go(400);
+		// titi fails to change his password since password size < 6
+		assertHttpError(400, () -> titi.credentials()//
+				.setMyPassword("hi titi", "XXX"));
 
-		// titi changes its password should succeed
-		// deprecated query param style
-		SpaceRequest.put("/1/credentials/" + titiId + "/password")//
-				.backend(guest)//
-				.basicAuth("titi", "hi titi")//
-				.queryParam("password", "hi titi 2")//
-				.go(200);
+		// titi changes its password
+		titi.credentials().setMyPassword("hi titi", "hi titi 2");
 
-		SpaceRequest.get("/1/login").backend(guest)//
-				.basicAuth("titi", "hi titi 2").go(200);
+		// titi logs in with new password
+		titi.login("hi titi 2");
 
-		// login with old password should fail
-		SpaceRequest.get("/1/login").backend(guest)//
-				.basicAuth("titi", "hi titi").go(401);
+		// titi fails to login with old password
+		assertHttpError(401, () -> titi.login("hi titi"));
 
-		// superadmin changes titi user password should succeed
-		// official json body style
-		superadmin.put("/1/credentials/" + titiId + "/password")//
-				.bodyJson(TextNode.valueOf("hi titi 3"))//
-				.go(200);
+		// superadmin sets titi with new password
+		superadmin.credentials().setPassword(titi.id(), //
+				superadmin.password().get(), "hi titi 3");
 
-		SpaceRequest.get("/1/login").backend(guest)//
-				.basicAuth("titi", "hi titi 3").go(200);
+		// titi logs in with new password
+		titi.login("hi titi 3");
 
-		// login with old password should fail
-		SpaceRequest.get("/1/login").backend(guest)//
-				.basicAuth("titi", "hi titi 2").go(401);
+		// titi fails to log in with old password
+		assertHttpError(401, () -> titi.login("hi titi 2"));
 
 		// superadmin deletes titi password should succeed
-		String newPasswordResetCode = superadmin.delete("/1/credentials/" + titiId + "/password")//
-				.go(200).getString("passwordResetCode");
+		String newPasswordResetCode = superadmin.credentials()//
+				.resetPassword(titi.id());
 
 		// titi login should fail
-		SpaceRequest.get("/1/login").backend(guest)//
-				.basicAuth("titi", "hi titi 3").go(401);
+		assertHttpError(401, () -> titi.login("hi titi 3"));
 
-		// titi inits its password with old reset code should fail
-		guest.post("/1/credentials/" + titiId + "/password")//
-				.queryParam("passwordResetCode", passwordResetCode)//
-				.formField("password", "hi titi")//
-				.go(400);
+		// titi fails to set his password with old reset code
+		assertHttpError(403, () -> guest.credentials()//
+				.setPasswordWithCode(titi.id(), "hi titi", passwordResetCode));
 
-		// titi inits its password with new reset code should fail
-		guest.post("/1/credentials/" + titiId + "/password")//
-				.queryParam("passwordResetCode", newPasswordResetCode)//
-				.formField("password", "hi titi")//
-				.go(200);
+		// titi sets his password with new reset code
+		guest.credentials().setPasswordWithCode(//
+				titi.id(), "hi titi", newPasswordResetCode);
 
-		SpaceRequest.get("/1/login").backend(guest)//
-				.basicAuth("titi", "hi titi").go(200);
+		// titi logs in with new password
+		titi.login("hi titi");
 	}
 
 	@Test
@@ -525,6 +498,7 @@ public class CredentialsServiceTest2 extends SpaceTest {
 
 		// prepare
 		prepareTest();
+		SpaceDog guest = SpaceDog.dog();
 		SpaceDog superadmin = clearRootBackend();
 		SpaceDog fred = createTempDog(superadmin, "fred");
 
@@ -547,12 +521,8 @@ public class CredentialsServiceTest2 extends SpaceTest {
 		String vinceId = node.get("id").asText();
 		String resetCode = node.get("passwordResetCode").asText();
 
-		// someone can set password if he receives a password reset code
-		SpaceRequest.post("/1/credentials/" + vinceId + "/password")//
-				.backend(superadmin)//
-				.queryParam("passwordResetCode", resetCode)//
-				.formField("password", "hi vince")//
-				.go(200);
+		// guest can set password if he receives a password reset code
+		guest.credentials().setPasswordWithCode(vinceId, "hi vince", resetCode);
 	}
 
 	@Test
@@ -652,21 +622,17 @@ public class CredentialsServiceTest2 extends SpaceTest {
 		SpaceDog superadmin = clearRootBackend();
 		SpaceDog fred = createTempDog(superadmin, "fred").login();
 
-		// fred fails to update his password
+		// fred fails to set his password
 		// since his password is not challenged
 		// because authentication is done with access token
-		SpaceRequest.put("/1/credentials/" + fred.id() + "/password")//
+		SpaceRequest.post("/1/credentials/" + fred.id() + "/_set_password")//
 				.bearerAuth(fred)//
-				.formField("password", "hello fred")//
+				.bodyJson("password", "hello fred")//
 				.go(403)//
 				.assertEquals("unchallenged-password", "error.code");
 
 		// fred updates his password since his password is challenged
-		// because authentication is done with username and password
-		SpaceRequest.put("/1/credentials/" + fred.id() + "/password")//
-				.basicAuth(fred)//
-				.formField("password", "hello fred")//
-				.go(200);
+		fred.credentials().setMyPassword(fred.password().get(), "hello fred");
 	}
 
 	@Test
