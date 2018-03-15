@@ -673,8 +673,7 @@ public class CredentialsServiceTest2 extends SpaceTest {
 				.assertEquals("unchallenged-password", "error.code");
 
 		// fred updates his password
-		SpaceRequest.put("/1/credentials/" + fred.id()).basicAuth(fred)//
-				.bodyJson("password", "hi fred2").go(200);
+		fred.credentials().setMyPassword(fred.password().get(), "hi fred2");
 
 		// fred's old access token is not valid anymore
 		SpaceRequest.get("/1/credentials/" + fred.id()).bearerAuth(fred).go(401);

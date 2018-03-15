@@ -15,6 +15,8 @@ import io.spacedog.client.credentials.CredentialsSettings;
 import io.spacedog.client.credentials.Passwords;
 import io.spacedog.client.email.EmailTemplate;
 import io.spacedog.client.http.SpaceRequest;
+import io.spacedog.client.http.SpaceRequestException;
+import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
 
@@ -166,8 +168,8 @@ public class CredentialsServiceTest extends SpaceTest {
 
 		// superadmin updates fred's password
 		String newPassword = Passwords.random();
-		superadmin.credentials().prepareUpdate(fred.id())//
-				.newPassword(newPassword).go();
+		superadmin.credentials().setPassword(fred.id(), //
+				superadmin.password().get(), newPassword);
 
 		// fred can no longer access data with his first token now invalid
 		assertHttpError(401, () -> fred.data().getAllRequest().go());
@@ -346,5 +348,32 @@ public class CredentialsServiceTest extends SpaceTest {
 		// fred can still access services if he remembers his password
 		// or if he's got a valid token
 		fred.get("/1/data").go(200);
+	}
+
+	@Test
+	public void changeUsername() {
+
+		// prepare
+		prepareTest();
+		SpaceDog superadmin = clearRootBackend();
+		SpaceDog fred = createTempDog(superadmin, "fred");
+		SpaceDog nath = createTempDog(superadmin, "nath");
+
+		// fred fails to set his username to 'nath'
+		SpaceRequestException exception = assertHttpError(400, () -> fred.credentials()//
+				.prepareUpdate().username(nath.username()).go());
+
+		assertEquals(Exceptions.ALREADY_EXISTS, exception.serverErrorCode());
+
+		// fred sets his username to 'fred2'
+		fred.credentials().prepareUpdate().username("fred2").go();
+
+		// fred old username is no more valid
+		assertHttpError(401, () -> fred.credentials().me(true));
+
+		// fred new username is valid
+		fred.username("fred2");
+		Credentials credentials = fred.credentials().me(true);
+		assertEquals("fred2", credentials.username());
 	}
 }

@@ -242,6 +242,7 @@ public class CredentialsService extends SpaceService {
 		String username = data.path(USERNAME_FIELD).asText();
 		if (!Strings.isNullOrEmpty(username)) {
 			Usernames.checkValid(username, settings.usernameRegex());
+			checkAlreadyExists(username);
 			credentials.name(username);
 		}
 
@@ -249,14 +250,6 @@ public class CredentialsService extends SpaceService {
 		String email = data.path(EMAIL_FIELD).asText();
 		if (!Strings.isNullOrEmpty(email))
 			credentials.email(email);
-
-		String password = data.path(PASSWORD_FIELD).asText();
-		if (!Strings.isNullOrEmpty(password)) {
-			// check for all not just users
-			requester.checkPasswordHasBeenChallenged();
-			credentials.changePassword(password, //
-					Optional7.of(settings.passwordRegex()));
-		}
 
 		JsonNode enabled = data.get(ENABLED_FIELD);
 		if (!Json.isNull(enabled)) {
@@ -572,9 +565,7 @@ public class CredentialsService extends SpaceService {
 
 	public Credentials create(Credentials credentials) {
 
-		// This is the only place where name uniqueness is checked
-		if (exists(credentials.username()))
-			throw Exceptions.alreadyExists(TYPE, credentials.username());
+		checkAlreadyExists(credentials.username());
 
 		String now = DateTime.now().toString();
 		credentials.updatedAt(now);
@@ -741,8 +732,9 @@ public class CredentialsService extends SpaceService {
 		return Json.object("total", response.total, "results", results);
 	}
 
-	private boolean exists(String username) {
-		return elastic().exists(toQuery(username), credentialsIndex());
+	private void checkAlreadyExists(String username) {
+		if (elastic().exists(toQuery(username), credentialsIndex()))
+			throw Exceptions.alreadyExists(TYPE, username);
 	}
 
 	private SearchResults<Credentials> getCredentials(SearchSourceBuilder builder) {
