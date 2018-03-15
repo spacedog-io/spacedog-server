@@ -2,10 +2,9 @@ package io.spacedog.client.admin;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import io.spacedog.client.credentials.CreateCredentialsRequest;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, //
@@ -14,19 +13,15 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 		setterVisibility = Visibility.NONE)
 public class CreateBackendRequest {
 
-	public enum Type {
-		standard, dedicated
-	}
-
 	private String backendId;
-	private Type type = Type.standard;
+	private Backend.Type type = Backend.Type.standard;
 	private CreateCredentialsRequest superadmin;
 
-	public Type type() {
+	public Backend.Type type() {
 		return type;
 	}
 
-	public CreateBackendRequest type(Type type) {
+	public CreateBackendRequest type(Backend.Type type) {
 		this.type = type;
 		return this;
 	}
