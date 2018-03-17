@@ -283,12 +283,12 @@ public class DataClient implements SpaceFields, SpaceParams {
 
 		public long go() {
 
-			String path = "/1/search";
+			String path = "/1/data";
 
 			if (!Strings.isNullOrEmpty(type))
 				path = path + "/" + type;
 
-			SpaceRequest request = dog.delete(path).refresh(refresh);
+			SpaceRequest request = dog.delete(path + "/_search").refresh(refresh);
 
 			if (!Strings.isNullOrEmpty(query))
 				request.bodyJson(query);
@@ -336,7 +336,7 @@ public class DataClient implements SpaceFields, SpaceParams {
 
 		public <K> K go(Class<K> resultsClass) {
 
-			String path = "/1/search";
+			String path = "/1/data";
 
 			if (!Strings.isNullOrEmpty(type))
 				path = path + "/" + type;
@@ -344,7 +344,7 @@ public class DataClient implements SpaceFields, SpaceParams {
 			if (Strings.isNullOrEmpty(source))
 				source = Json.EMPTY_OBJECT;
 
-			return dog.post(path).bodyJson(source)//
+			return dog.post(path + "/_search").bodyJson(source)//
 					.refresh(refresh).go(200).asPojo(resultsClass);
 		}
 
