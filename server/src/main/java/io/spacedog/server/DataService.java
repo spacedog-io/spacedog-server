@@ -40,13 +40,13 @@ public class DataService extends SpaceService {
 	@Get("")
 	@Get("/")
 	public Payload getAll(Context context) {
-		return SearchService.get().getSearchAllTypes(context);
+		return SearchService.get().postSearchAllTypes(null, context);
 	}
 
 	@Get("/:type")
 	@Get("/:type/")
 	public Payload getByType(String type, Context context) {
-		return SearchService.get().getSearchForType(type, context);
+		return SearchService.get().postSearchForType(type, null, context);
 	}
 
 	@Post("/:type")

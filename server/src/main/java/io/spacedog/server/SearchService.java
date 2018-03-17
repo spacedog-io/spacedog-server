@@ -30,26 +30,19 @@ import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
-import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/1/search")
+@Prefix("/1/data")
 public class SearchService extends SpaceService {
 
 	//
 	// Routes
 	//
 
-	@Get("")
-	@Get("/")
-	public Payload getSearchAllTypes(Context context) {
-		return postSearchAllTypes(null, context);
-	}
-
-	@Post("")
-	@Post("/")
+	@Post("/_search")
+	@Post("/_search/")
 	public Payload postSearchAllTypes(String body, Context context) {
 		Credentials credentials = SpaceContext.credentials();
 		String[] types = DataAccessControl.types(credentials, Permission.search);
@@ -59,8 +52,8 @@ public class SearchService extends SpaceService {
 		return JsonPayload.ok().withContent(result).build();
 	}
 
-	@Delete("")
-	@Delete("/")
+	@Delete("/_search")
+	@Delete("/_search/")
 	public Payload deleteSearchAllTypes(String query, Context context) {
 		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
 		String[] types = DataAccessControl.types(credentials, Permission.delete);
@@ -74,14 +67,8 @@ public class SearchService extends SpaceService {
 		return ElasticPayload.bulk(response).build();
 	}
 
-	@Get("/:type")
-	@Get("/:type/")
-	public Payload getSearchForType(String type, Context context) {
-		return postSearchForType(type, null, context);
-	}
-
-	@Post("/:type")
-	@Post("/:type/")
+	@Post("/:type/_search")
+	@Post("/:type/_search/")
 	public Payload postSearchForType(String type, String body, Context context) {
 		Credentials credentials = SpaceContext.credentials();
 
@@ -95,8 +82,8 @@ public class SearchService extends SpaceService {
 		throw Exceptions.forbidden("forbidden to search [%s] objects", type);
 	}
 
-	@Delete("/:type")
-	@Delete("/:type/")
+	@Delete("/:type/_search")
+	@Delete("/:type/_search/")
 	public Payload deleteSearchType(String type, String query, Context context) {
 		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
 
