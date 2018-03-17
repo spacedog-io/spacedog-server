@@ -52,10 +52,10 @@ public class BatchServiceTest extends SpaceTest {
 
 		superadmin.post("/1/batch").debugServer().bodyJson(batch).go(200)//
 				.assertEquals("message", "responses.0.id")//
-				.assertEquals("schema", "responses.0.type")//
+				.assertEquals("schemas", "responses.0.type")//
 				.assertEquals("dataacl", "responses.1.id")//
 				.assertEquals("settings", "responses.1.type")//
-				.assertEquals("superadmin", "responses.1.credentials.username")//
+				.assertEquals("superadmin", "responses.2.credentials.username")//
 				.assertEquals(1, "debug.batchCredentialChecks");
 
 		// should succeed to create dave and vince users and fetch them with
@@ -99,7 +99,7 @@ public class BatchServiceTest extends SpaceTest {
 				.assertEquals("vince", "vince.username")//
 				.assertEquals(daveId, "dave.id")//
 				.assertEquals("dave", "dave.username")//
-				.assertEquals("text", "schema.message.text._type");
+				.assertEquals("text", "schema.message.properties.text.type");
 
 		// should succeed to return errors when batch requests are invalid, not
 		// found, unauthorized, ...
@@ -122,8 +122,8 @@ public class BatchServiceTest extends SpaceTest {
 				.end()//
 
 				.object()//
-				.add("method", "PUT").add("path", "/1/credentials/vince/password")//
-				.add("content", "hi vince 2")//
+				.add("method", "POST").add("path", "/1/credentials/vince/_set_password")//
+				.add("content", Json.object("password", "hi vince 2"))//
 				.end()//
 				.build();
 

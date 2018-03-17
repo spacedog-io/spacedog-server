@@ -8,9 +8,11 @@ import java.util.Set;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
+import io.spacedog.client.http.SpaceFields;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
 
-public class Schema {
+public class Schema implements MappingDirectives {
 
 	private String name;
 	private ObjectNode mapping;
@@ -26,6 +28,25 @@ public class Schema {
 
 	public ObjectNode mapping() {
 		return mapping;
+	}
+
+	public Schema enhance() {
+
+		// add object mapping settings
+		ObjectNode object = Json.checkObject(Json.get(mapping, name));
+		object.put(m_dynamic, m_strict);
+		object.put(m_date_detection, false);
+
+		// add mapping for meta fields
+		ObjectNode properties = Json.checkObject(Json.get(object, m_properties));
+		properties.set(SpaceFields.OWNER_FIELD, Json.object(m_type, m_keyword));
+		properties.set(SpaceFields.GROUP_FIELD, Json.object(m_type, m_keyword));
+		properties.set(SpaceFields.CREATED_AT_FIELD, //
+				Json.object(m_type, m_date, m_format, m_timestamp_format));
+		properties.set(SpaceFields.UPDATED_AT_FIELD, //
+				Json.object(m_type, m_date, m_format, m_timestamp_format));
+
+		return this;
 	}
 
 	public static SchemaBuilder builder(String name) {
@@ -61,4 +82,5 @@ public class Schema {
 	}
 
 	private static Set<String> reservedNames = Sets.newHashSet("settings");
+
 }

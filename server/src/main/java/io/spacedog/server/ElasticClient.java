@@ -283,16 +283,15 @@ public class ElasticClient implements SpaceParams {
 	}
 
 	public void createIndex(Index index, String mapping, boolean async) {
-		createIndex(index, mapping, async, SHARDS_DEFAULT_PARAM, REPLICAS_DEFAULT_PARAM);
+		Settings settings = Settings.builder()//
+				.put("number_of_shards", SHARDS_DEFAULT_PARAM)//
+				.put("number_of_replicas", REPLICAS_DEFAULT_PARAM)//
+				.build();
+
+		createIndex(index, mapping, settings, async);
 	}
 
-	public void createIndex(Index index, String mapping, //
-			boolean async, int shards, int replicas) {
-
-		Settings settings = Settings.builder()//
-				.put("number_of_shards", shards)//
-				.put("number_of_replicas", replicas)//
-				.build();
+	public void createIndex(Index index, String mapping, Settings settings, boolean async) {
 
 		CreateIndexResponse createIndexResponse = internalClient.admin().indices()//
 				.prepareCreate(index.toString())//

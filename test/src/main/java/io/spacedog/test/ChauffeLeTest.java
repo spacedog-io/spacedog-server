@@ -35,6 +35,7 @@ public class ChauffeLeTest extends SpaceTest {
 	@BeforeClass
 	public static void resetBackend() {
 
+		prepareTest();
 		superadmin = clearRootBackend();
 
 		superadmin.schemas().set(buildBigPostSchema());

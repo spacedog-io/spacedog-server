@@ -11,8 +11,8 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.data.DataAclSettings;
-import io.spacedog.client.schema.SchemaBuilder;
 import io.spacedog.client.schema.Schema;
+import io.spacedog.client.schema.SchemaBuilder;
 import io.spacedog.utils.Json;
 
 public class SchemaServiceTest extends SpaceTest {
@@ -39,38 +39,40 @@ public class SchemaServiceTest extends SpaceTest {
 		superadmin.schemas().set(saleSchema);
 
 		// anonymous gets car, home and sale schemas
-		assertEquals(carSchema, guest.schemas().get(carSchema.name()));
-		assertEquals(homeSchema, guest.schemas().get(homeSchema.name()));
-		assertEquals(saleSchema, guest.schemas().get(saleSchema.name()));
+		assertEquals(carSchema.enhance(), guest.schemas().get(carSchema.name()));
+		assertEquals(homeSchema.enhance(), guest.schemas().get(homeSchema.name()));
+		assertEquals(saleSchema.enhance(), guest.schemas().get(saleSchema.name()));
 
 		// anonymous gets all schemas
 		assertEquals(Sets.newHashSet(carSchema, homeSchema, saleSchema), //
 				guest.schemas().getAll());
 
 		// anonymous is not allowed to delete schema
-		guest.delete("/1/schemas/sale").go(403);
+		assertHttpError(403, () -> guest.schemas().delete("sale"));
 
 		// user is not allowed to delete schema
-		bob.delete("/1/schemas/sale").go(403);
+		assertHttpError(403, () -> bob.schemas().delete("sale"));
 
-		// admin fails to delete a non existing schema
-		superadmin.delete("/1/schemas/XXX").go(404);
+		// superadmin can delete a non existing schema
+		superadmin.schemas().delete("XXX");
 
 		// admin deletes a schema and all its objects
 		superadmin.delete(saleSchema.name());
 
 		// admin fails to create an invalid schema
-		superadmin.put("/1/schemas/toto")//
-				.body("{\"toto\":{\"_type\":\"XXX\"}}").go(400);
+		assertHttpError(400, () -> superadmin.schemas().set(//
+				Schema.builder("toto").property("content", "XXX").build()));
 
-		// admin fails to update car schema color property type
-		carSchema.mapping().with("car").with("color").put("_type", "date");
-		superadmin.put("/1/schemas/car").bodyJson(carSchema.mapping()).go(400);
+		// superadmin fails to update car schema color field
+		// since field type change is not allowed
+		carSchema.mapping().with("car").with("properties")//
+				.with("color").put("type", "date");
+		assertHttpError(400, () -> superadmin.schemas().set(carSchema));
 
-		// fails to remove the car schema color property
-		// json = buildCarSchema();
-		// json.with("car").remove("color");
-		// SpaceRequest.put("/1/schema/car").adminAuth(testBackend).body(json).go(400);
+		// superadmin fails to remove car schema color field
+		// since removing fields is not allowed
+		// carSchema.mapping().with("car").with("properties").remove("color");
+		// assertHttpError(400, () -> superadmin.schemas().set(carSchema));
 	}
 
 	private static SchemaBuilder buildHomeSchema() {

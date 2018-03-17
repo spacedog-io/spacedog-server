@@ -20,7 +20,8 @@ public class SearchServiceFrenchTest extends SpaceTest {
 
 		prepareTest();
 		superadmin = clearRootBackend();
-		superadmin.schemas().set(Schema.builder("message").frenchMax().text("text").build());
+		superadmin.schemas().set(Schema.builder("message")//
+				.text("text").frenchMax().build());
 
 		///////////////
 		index("Les écoles enseignent");

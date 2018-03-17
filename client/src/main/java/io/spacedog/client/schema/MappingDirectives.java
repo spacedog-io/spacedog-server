@@ -30,4 +30,9 @@ public interface MappingDirectives {
 	// values
 	String m_french = "french";
 	String m_english = "english";
+
+	// date formats
+	String m_date_format = "date";
+	String m_time_format = "hour_minute_second";
+	String m_timestamp_format = "date_time";
 }

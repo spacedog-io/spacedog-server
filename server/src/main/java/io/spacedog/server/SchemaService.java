@@ -58,21 +58,19 @@ public class SchemaService extends SpaceService {
 		if (schema == null)
 			throw Exceptions.illegalArgument("no default schema for type [%s]", type);
 
-		String mapping = schema.mapping().toString();
+		int shards = context.query().getInteger(SHARDS_PARAM, SHARDS_DEFAULT_PARAM);
+		int replicas = context.query().getInteger(REPLICAS_PARAM, REPLICAS_DEFAULT_PARAM);
+		boolean async = context.query().getBoolean(ASYNC_PARAM, ASYNC_DEFAULT_PARAM);
 
-		Index index = DataStore.toDataIndex(type);
-		boolean indexExists = elastic().exists(index);
+		org.elasticsearch.common.settings.Settings settings = //
+				org.elasticsearch.common.settings.Settings.builder()//
+						.put("number_of_shards", shards)//
+						.put("number_of_replicas", replicas)//
+						.build();
 
-		if (indexExists)
-			elastic().putMapping(index, mapping);
-		else {
-			int shards = context.query().getInteger(SHARDS_PARAM, SHARDS_DEFAULT_PARAM);
-			int replicas = context.query().getInteger(REPLICAS_PARAM, REPLICAS_DEFAULT_PARAM);
-			boolean async = context.query().getBoolean(ASYNC_PARAM, ASYNC_DEFAULT_PARAM);
-			elastic().createIndex(index, mapping, async, shards, replicas);
-		}
+		boolean created = DataStore.get().setSchema(schema, settings, async);
 
-		return JsonPayload.saved(!indexExists, "/1", "schemas", type).build();
+		return JsonPayload.saved(created, "/1", "schemas", type).build();
 	}
 
 	@Delete("/:type")

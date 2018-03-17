@@ -19,6 +19,7 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.lucene.uid.Versions;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -79,6 +80,21 @@ public class DataStore implements SpaceParams, SpaceFields {
 
 	public Map<String, Schema> getAllSchemas() {
 		return getSchemas(allDataIndices());
+	}
+
+	public boolean setSchema(Schema schema, Settings settings, boolean async) {
+
+		ObjectNode mapping = schema.enhance().mapping();
+
+		Index index = DataStore.toDataIndex(schema.name());
+		boolean indexExists = elastic().exists(index);
+
+		if (indexExists)
+			elastic().putMapping(index, mapping.toString());
+		else
+			elastic().createIndex(index, mapping.toString(), settings, async);
+
+		return !indexExists;
 	}
 
 	//

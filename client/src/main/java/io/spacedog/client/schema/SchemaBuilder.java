@@ -71,19 +71,19 @@ public class SchemaBuilder implements MappingDirectives {
 
 	public SchemaBuilder date(String key) {
 		property(key, m_date)//
-				.builder.add(m_format, "date");
+				.builder.add(m_format, m_date_format);
 		return this;
 	}
 
 	public SchemaBuilder time(String key) {
 		property(key, m_date)//
-				.builder.add(m_format, "hour_minute_second");
+				.builder.add(m_format, m_time_format);
 		return this;
 	}
 
 	public SchemaBuilder timestamp(String key) {
 		property(key, m_date)//
-				.builder.add(m_format, "date_time");
+				.builder.add(m_format, m_timestamp_format);
 		return this;
 	}
 

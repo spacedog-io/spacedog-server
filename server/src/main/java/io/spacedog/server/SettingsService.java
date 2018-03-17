@@ -268,12 +268,19 @@ public class SettingsService extends SpaceService {
 
 		if (!elastic.exists(index)) {
 			Context context = SpaceContext.get().context();
+			ObjectNode mapping = Json.object(TYPE, Json.object("enabled", false));
+
 			int shards = context.query().getInteger(SHARDS_PARAM, SHARDS_DEFAULT_PARAM);
 			int replicas = context.query().getInteger(REPLICAS_PARAM, REPLICAS_DEFAULT_PARAM);
 			boolean async = context.query().getBoolean(ASYNC_PARAM, ASYNC_DEFAULT_PARAM);
 
-			ObjectNode mapping = Json.object(TYPE, Json.object("enabled", false));
-			elastic.createIndex(index, mapping.toString(), async, shards, replicas);
+			org.elasticsearch.common.settings.Settings settings = //
+					org.elasticsearch.common.settings.Settings.builder()//
+							.put("number_of_shards", shards)//
+							.put("number_of_replicas", replicas)//
+							.build();
+
+			elastic.createIndex(index, mapping.toString(), settings, async);
 		}
 	}
 
