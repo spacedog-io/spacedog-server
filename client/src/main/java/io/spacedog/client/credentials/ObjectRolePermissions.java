@@ -32,7 +32,7 @@ public class ObjectRolePermissions extends HashMap<String, RolePermissions> {
 		return roles == null ? new RolePermissions() : roles;
 	}
 
-	public String[] accessList(Credentials credentials, Permission permission) {
+	public Set<String> accessList(Credentials credentials, Permission permission) {
 		Set<String> ids = Sets.newHashSet();
 
 		if (credentials.isAtLeastSuperAdmin())
@@ -47,7 +47,7 @@ public class ObjectRolePermissions extends HashMap<String, RolePermissions> {
 							ids.add(id);
 			}
 
-		return ids.toArray(new String[ids.size()]);
+		return ids;
 	}
 
 }

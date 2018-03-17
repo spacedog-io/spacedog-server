@@ -17,6 +17,7 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
+import io.spacedog.client.data.DataAclSettings;
 import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.push.BadgeStrategy;
 import io.spacedog.client.push.Installation;
@@ -26,7 +27,6 @@ import io.spacedog.client.push.PushRequest;
 import io.spacedog.client.push.PushResponse;
 import io.spacedog.client.push.PushResponse.Notification;
 import io.spacedog.client.push.PushSettings;
-import io.spacedog.client.schema.Schema;
 import io.spacedog.utils.Json;
 
 public class PushServiceTest extends SpaceTest {
@@ -46,15 +46,17 @@ public class PushServiceTest extends SpaceTest {
 		SpaceDog nath = createTempDog(superadmin, "nath");
 
 		// prepare installation schema
-		superadmin.schemas().setDefault("installation");
+		superadmin.schemas().setDefault(Installation.TYPE);
 
-		// add create permission to guest requests
-		Schema schema = superadmin.schemas().get("installation");
-		schema.acl(Roles.all, Permission.create, Permission.updateMine);
-		schema.acl(Roles.user, Permission.create, Permission.readMine, Permission.updateMine);
-		schema.acl(Roles.admin, Permission.create, Permission.update, //
-				Permission.search, Permission.delete);
-		superadmin.schemas().set(schema);
+		// superadmin sets data acl
+		DataAclSettings acl = new DataAclSettings();
+		acl.put(Installation.TYPE, Roles.all, Permission.create, //
+				Permission.updateMine);
+		acl.put(Installation.TYPE, Roles.user, Permission.create, //
+				Permission.readMine, Permission.updateMine);
+		acl.put(Installation.TYPE, Roles.admin, Permission.create, //
+				Permission.update, Permission.search, Permission.delete);
+		superadmin.settings().save(acl);
 
 		// non authenticated user installs joho
 		// and fails to set endpoint fields

@@ -58,21 +58,21 @@ public class CredentialsService extends SpaceService {
 	public void initIndex() {
 		Index index = credentialsIndex();
 		if (!elastic().exists(index)) {
-			String mapping = schema().validate().translate().toString();
+			String mapping = schema().mapping().toString();
 			elastic().createIndex(index, mapping, false);
 		}
 	}
 
 	public static Schema schema() {
 		return Schema.builder(TYPE)//
-				.string(USERNAME_FIELD)//
-				.string(EMAIL_FIELD)//
-				.string(ROLES_FIELD).array()//
-				.string(GROUP_FIELD)//
-				.string(TAGS_FIELD).array()//
+				.keyword(USERNAME_FIELD)//
+				.keyword(EMAIL_FIELD)//
+				.keyword(ROLES_FIELD)//
+				.keyword(GROUP_FIELD)//
+				.keyword(TAGS_FIELD)//
 
-				.string(HASHED_PASSWORD_FIELD)//
-				.string(PASSWORD_RESET_CODE_FIELD)//
+				.keyword(HASHED_PASSWORD_FIELD)//
+				.keyword(PASSWORD_RESET_CODE_FIELD)//
 				.bool(PASSWORD_MUST_CHANGE_FIELD)//
 
 				.bool(ENABLED_FIELD)//
@@ -84,11 +84,11 @@ public class CredentialsService extends SpaceService {
 				.timestamp(CREATED_AT_FIELD)//
 				.timestamp(UPDATED_AT_FIELD)//
 
-				.object(SESSIONS_FIELD).array()//
-				.string(CREATED_AT_FIELD)//
-				.string(ACCESS_TOKEN_FIELD)//
-				.string(ACCESS_TOKEN_EXPIRES_AT_FIELD)//
-				.close()//
+				.object(SESSIONS_FIELD)//
+				.keyword(CREATED_AT_FIELD)//
+				.keyword(ACCESS_TOKEN_FIELD)//
+				.keyword(ACCESS_TOKEN_EXPIRES_AT_FIELD)//
+				.closeObject()//
 
 				.build();
 	}

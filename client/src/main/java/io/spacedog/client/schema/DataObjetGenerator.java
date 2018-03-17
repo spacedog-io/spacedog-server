@@ -70,7 +70,7 @@ public class DataObjetGenerator {
 
 	public ObjectNode gen(Schema schema, int index) {
 		LinkedList<String> stack = new LinkedList<>();
-		return generateObject(stack, (ObjectNode) schema.node().elements().next(), index);
+		return generateObject(stack, (ObjectNode) schema.mapping().elements().next(), index);
 	}
 
 	private ObjectNode generateObject(LinkedList<String> stack, ObjectNode schema, int index) {

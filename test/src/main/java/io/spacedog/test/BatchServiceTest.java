@@ -12,9 +12,9 @@ import com.google.common.collect.Sets;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
+import io.spacedog.client.data.DataAclSettings;
 import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.client.http.SpaceResponse;
-import io.spacedog.client.schema.Schema;
 import io.spacedog.utils.Json;
 
 public class BatchServiceTest extends SpaceTest {
@@ -27,15 +27,22 @@ public class BatchServiceTest extends SpaceTest {
 		prepareTest();
 		SpaceDog superadmin = clearRootBackend();
 		superadmin.credentials().enableGuestSignUp(true);
-		Schema schema = Schema.builder("message").text("text")//
-				.acl(Roles.user, Permission.create, Permission.updateMine, Permission.search).build();
+
+		DataAclSettings dataAcl = new DataAclSettings();
+		dataAcl.put(Message.TYPE, Roles.user, //
+				Permission.create, Permission.updateMine, Permission.search);
 
 		// should succeed to reset test account and create message schema with
 		// admin credentials
 		ArrayNode batch = Json.builder().array()//
 				.object()//
 				.add("method", "PUT").add("path", "/1/schemas/message")//
-				.add("content", schema.node())//
+				.add("content", Message.schema().mapping())//
+				.end()//
+
+				.object()//
+				.add("method", "PUT").add("path", "/1/settings/dataacl")//
+				.add("content", dataAcl)//
 				.end()//
 
 				.object()//
@@ -46,6 +53,8 @@ public class BatchServiceTest extends SpaceTest {
 		superadmin.post("/1/batch").debugServer().bodyJson(batch).go(200)//
 				.assertEquals("message", "responses.0.id")//
 				.assertEquals("schema", "responses.0.type")//
+				.assertEquals("dataacl", "responses.1.id")//
+				.assertEquals("settings", "responses.1.type")//
 				.assertEquals("superadmin", "responses.1.credentials.username")//
 				.assertEquals(1, "debug.batchCredentialChecks");
 

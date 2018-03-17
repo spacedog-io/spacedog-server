@@ -3,126 +3,114 @@
  */
 package io.spacedog.client.schema;
 
-import java.util.Arrays;
-
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.credentials.Permission;
-import io.spacedog.client.credentials.RolePermissions;
-import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 
-public class SchemaBuilder implements SchemaDirectives {
+public class SchemaBuilder implements MappingDirectives {
 
 	public static SchemaBuilder builder(String type) {
 		return new SchemaBuilder(type);
 	}
 
-	public SchemaBuilder enumm(String key) {
-		return property(key, SchemaType.ENUM);
+	public SchemaBuilder property(String name, String type) {
+		if (openProperty)
+			builder.end();
+		else
+			builder.object(m_properties);
+
+		openProperty = true;
+		builder.object(name).add(m_type, type);
+		return this;
 	}
 
-	public SchemaBuilder string(String key) {
-		return property(key, SchemaType.STRING);
+	public SchemaBuilder keyword(String key) {
+		property(key, m_keyword);
+		return this;
 	}
 
 	public SchemaBuilder text(String key) {
-		return property(key, SchemaType.TEXT);
+		property(key, m_text);
+		return this;
 	}
 
 	public SchemaBuilder bool(String key) {
-		return property(key, SchemaType.BOOLEAN);
+		property(key, m_boolean);
+		return this;
 	}
 
 	public SchemaBuilder integer(String key) {
-		return property(key, SchemaType.INTEGER);
+		property(key, m_integer);
+		builder.add(m_coerce, false);
+		return this;
 	}
 
 	public SchemaBuilder longg(String key) {
-		return property(key, SchemaType.LONG);
+		property(key, m_long);
+		builder.add(m_coerce, false);
+		return this;
 	}
 
 	public SchemaBuilder floatt(String key) {
-		return property(key, SchemaType.FLOAT);
+		property(key, m_float);
+		builder.add(m_coerce, false);
+		return this;
 	}
 
 	public SchemaBuilder doublee(String key) {
-		return property(key, SchemaType.DOUBLE);
+		property(key, m_double);
+		builder.add(m_coerce, false);
+		return this;
 	}
 
 	public SchemaBuilder geopoint(String key) {
-		return property(key, SchemaType.GEOPOINT);
+		property(key, m_geo_point);
+		return this;
 	}
 
 	public SchemaBuilder date(String key) {
-		return property(key, SchemaType.DATE);
+		property(key, m_date)//
+				.builder.add(m_format, "date");
+		return this;
 	}
 
 	public SchemaBuilder time(String key) {
-		return property(key, SchemaType.TIME);
+		property(key, m_date)//
+				.builder.add(m_format, "hour_minute_second");
+		return this;
 	}
 
 	public SchemaBuilder timestamp(String key) {
-		return property(key, SchemaType.TIMESTAMP);
+		property(key, m_date)//
+				.builder.add(m_format, "date_time");
+		return this;
 	}
 
 	public SchemaBuilder stash(String key) {
-		return property(key, SchemaType.STASH);
+		property(key, m_object)//
+				.builder.add(m_enabled, false);
+		return this;
 	}
 
 	public SchemaBuilder object(String key) {
-		return property(key, SchemaType.OBJECT);
+		if (openProperty)
+			builder.end();
+		openProperty = false;
+		builder.object(key);
+		return this;
 	}
 
-	public SchemaBuilder close() {
-		currentPropertyType = null;
+	public SchemaBuilder closeObject() {
+		if (openProperty) {
+			openProperty = false;
+			// end property
+			builder.end();
+		}
+		// end properties
 		builder.end();
-		return this;
-	}
-
-	public Schema build() {
-		ObjectNode node = builder.build();
-		if (acl != null)
-			node.with(name).set(s_acl, Json.mapper().valueToTree(acl));
-		return new Schema(name, node);
-	}
-
-	@Override
-	public String toString() {
-		return build().toString();
-	}
-
-	public SchemaBuilder acl(String role, Permission... permissions) {
-		if (acl == null)
-			acl = new RolePermissions();
-
-		acl.put(role, permissions);
-		return this;
-	}
-
-	public SchemaBuilder array() {
-		checkCurrentPropertyExists();
-		checkCurrentPropertyByInvalidTypes(s_array, SchemaType.STASH);
-		builder.add(s_array, true);
-		return this;
-	}
-
-	public SchemaBuilder required() {
-		checkCurrentPropertyExists();
-		builder.add(s_required, true);
-		return this;
-	}
-
-	public SchemaBuilder values(Object... values) {
-		checkCurrentPropertyExists();
-		builder.array(s_values).add(values).end();
-		return this;
-	}
-
-	public SchemaBuilder examples(Object... examples) {
-		checkCurrentPropertyExists();
-		builder.array(s_examples).add(examples).end();
+		// end object
+		builder.end();
 		return this;
 	}
 
@@ -139,65 +127,17 @@ public class SchemaBuilder implements SchemaDirectives {
 	}
 
 	public SchemaBuilder language(String language) {
-		checkCurrentPropertyExists();
-		checkCurrentPropertyByValidType(s_language, SchemaType.TEXT, SchemaType.OBJECT);
-		builder.add(s_language, language);
+		builder.add(m_analyzer, language);
 		return this;
 	}
 
-	public SchemaBuilder refType(String type) {
-		checkCurrentPropertyExists();
-		checkCurrentPropertyByValidType(s_ref_type, SchemaType.STRING);
-		builder.add(s_ref_type, type);
-		return this;
+	public Schema build() {
+		return new Schema(name, builder.build());
 	}
 
-	public SchemaBuilder extra(Object... extra) {
-		return extra(Json.object(extra));
-	}
-
-	public SchemaBuilder extra(ObjectNode extra) {
-		builder.add(s_extra, extra);
-		return this;
-	}
-
-	public SchemaBuilder enumType(String type) {
-		builder.add(s_enum_type, type);
-		return this;
-	}
-
-	public SchemaBuilder labels(String... labels) {
-		builder.add(s_labels, Json.object(//
-				Arrays.copyOf(labels, labels.length, Object[].class)));
-		return this;
-	}
-
-	public static enum SchemaType {
-
-		OBJECT, TEXT, STRING, BOOLEAN, GEOPOINT, INTEGER, FLOAT, LONG, //
-		DOUBLE, DATE, TIME, TIMESTAMP, ENUM, STASH;
-
-		@Override
-		public String toString() {
-			return name().toLowerCase();
-		}
-
-		public boolean equals(String string) {
-			return this.toString().equals(string);
-		}
-
-		public static SchemaType valueOfNoCase(String value) {
-			return valueOf(value.toUpperCase());
-		}
-
-		public static boolean isValid(String value) {
-			try {
-				valueOfNoCase(value);
-				return true;
-			} catch (Exception e) {
-				return false;
-			}
-		}
+	@Override
+	public String toString() {
+		return build().toString();
 	}
 
 	//
@@ -206,43 +146,11 @@ public class SchemaBuilder implements SchemaDirectives {
 
 	private String name;
 	private JsonBuilder<ObjectNode> builder;
-	private RolePermissions acl;
-	private SchemaType currentPropertyType = SchemaType.OBJECT;
+	private boolean openProperty = false;
 
 	private SchemaBuilder(String name) {
 		this.name = name;
 		this.builder = Json.builder().object().object(name);
 	}
 
-	private SchemaBuilder property(String key, SchemaType type) {
-		if (currentPropertyType != SchemaType.OBJECT)
-			builder.end();
-
-		currentPropertyType = type;
-		builder.object(key).add("_type", type.toString());
-		return this;
-	}
-
-	private void checkCurrentPropertyExists() {
-		if (currentPropertyType == null)
-			throw Exceptions.illegalState("no current property in [%s]", builder);
-	}
-
-	private void checkCurrentPropertyByValidType(String fieldName, SchemaType... validTypes) {
-
-		for (SchemaType validType : validTypes)
-			if (currentPropertyType.equals(validType))
-				return;
-
-		throw Exceptions.illegalState("invalid property type [%s] for this field [%s]", //
-				currentPropertyType, fieldName);
-	}
-
-	private void checkCurrentPropertyByInvalidTypes(String fieldName, SchemaType... invalidTypes) {
-
-		for (SchemaType invalidType : invalidTypes)
-			if (currentPropertyType.equals(invalidType))
-				throw Exceptions.illegalState("invalid property type [%s] for this field [%s]", //
-						currentPropertyType, fieldName);
-	}
 }

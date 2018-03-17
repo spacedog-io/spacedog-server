@@ -30,10 +30,10 @@ public class Backend extends DataObjectBase {
 
 	public static Schema schema() {
 		return Schema.builder(TYPE)//
-				.string("name")//
-				.string("type")//
-				.string("version")//
-				.string("customers")//
+				.keyword("name")//
+				.keyword("type")//
+				.keyword("version")//
+				.keyword("customers")//
 				.build();
 	}
 

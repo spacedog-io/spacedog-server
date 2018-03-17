@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
+import io.spacedog.client.data.DataAclSettings;
 import io.spacedog.client.elastic.ESQueryBuilders;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.client.elastic.ESSortOrder;
@@ -39,6 +40,12 @@ public class ChauffeLeTest extends SpaceTest {
 		superadmin.schemas().set(buildBigPostSchema());
 		superadmin.schemas().set(buildSmallPostSchema());
 
+		// superadmin sets data schema acls
+		DataAclSettings settings = new DataAclSettings();
+		settings.put("bigpost", Roles.user, Permission.create, Permission.search, Permission.update);
+		settings.put("smallpost", Roles.user, Permission.create, Permission.search);
+		superadmin.settings().save(settings);
+
 		lui = createTempDog(superadmin, "lui");
 		elle = createTempDog(superadmin, "elle");
 		laCopine = createTempDog(superadmin, "lacopine");
@@ -46,22 +53,17 @@ public class ChauffeLeTest extends SpaceTest {
 
 	static Schema buildBigPostSchema() {
 		return Schema.builder("bigpost") //
-				.acl(Roles.user, Permission.create, Permission.search, Permission.update)//
 				.text("title").french()//
-
-				.object("responses").array() //
+				.object("responses") //
 				.text("title").french()//
-				.string("author") //
-				.close() //
-
+				.keyword("author") //
 				.build();
 	}
 
 	static Schema buildSmallPostSchema() {
 		return Schema.builder("smallpost") //
-				.acl(Roles.user, Permission.create, Permission.search)//
 				.text("title").french()//
-				.string("parent")//
+				.keyword("parent")//
 				.build();
 	}
 

@@ -17,6 +17,7 @@ import com.google.common.io.Resources;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
+import io.spacedog.client.data.DataAclSettings;
 import io.spacedog.client.email.EmailBasicRequest;
 import io.spacedog.client.email.EmailSettings;
 import io.spacedog.client.email.EmailSettings.SmtpSettings;
@@ -131,14 +132,19 @@ public class EmailServiceTest extends SpaceTest {
 
 		// create a schema
 		Schema schema = Schema.builder("demande")//
-				.acl(Roles.all, Permission.create)//
-				.string("email").text("nom").text("prenom").text("civilite")//
-				.string("cvUrl").string("tel").string("statut")//
-				.object("dispos").array()//
-				.date("date").time("debut").time("fin")//
-				.close().build();
+				.keyword("email").text("nom")//
+				.text("prenom").text("civilite")//
+				.keyword("cvUrl").keyword("tel")//
+				.keyword("statut").object("dispos")//
+				.date("date").time("debut")//
+				.time("fin").build();
 
 		superadmin.schemas().set(schema);
+
+		// superadmin sets data acls
+		DataAclSettings settings = new DataAclSettings();
+		settings.put("demande", Roles.all, Permission.create);
+		superadmin.settings().save(settings);
 
 		// create an inscription
 		ArrayNode dispos = Json.array(//

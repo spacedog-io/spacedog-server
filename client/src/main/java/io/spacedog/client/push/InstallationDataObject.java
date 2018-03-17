@@ -19,14 +19,17 @@ public class InstallationDataObject extends DataWrapAbstract<Installation> {
 
 	private Installation source;
 
+	@Override
 	public Class<Installation> sourceClass() {
 		return Installation.class;
 	}
 
+	@Override
 	public Installation source() {
 		return this.source;
 	}
 
+	@Override
 	public DataWrap<Installation> source(Installation source) {
 		this.source = source;
 		return this;

@@ -16,6 +16,8 @@ import io.spacedog.client.data.DataObjectBase;
 		setterVisibility = Visibility.NONE)
 public class Installation extends DataObjectBase {
 
+	public static final String TYPE = "installation";
+
 	private String appId;
 	private PushProtocol protocol;
 	private String token;

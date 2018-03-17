@@ -6,7 +6,9 @@ package io.spacedog.server;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.action.get.GetResponse;
@@ -67,9 +69,9 @@ public class DataStore implements SpaceParams, SpaceFields {
 		: response.mappings().values()) {
 
 			MappingMetaData mapping = indexMappings.value.iterator().next().value;
-			JsonNode node = Json.readObject(mapping.source().toString())//
-					.get(mapping.type()).get("_meta");
-			schemas.put(mapping.type(), new Schema(mapping.type(), Json.checkObject(node)));
+			schemas.put(mapping.type(), //
+					new Schema(mapping.type(), //
+							Json.readObject(mapping.source().toString())));
 		}
 
 		return schemas;
@@ -180,9 +182,14 @@ public class DataStore implements SpaceParams, SpaceFields {
 	// Index help methods
 	//
 
+	public static Set<String> allDataTypes() {
+		return elastic().filteredBackendIndexStream(Optional.of("data"))//
+				.map(index -> Index.valueOf(index).type())//
+				.collect(Collectors.toSet());
+	}
+
 	public static Index[] allDataIndices() {
-		String[] indices = elastic().filteredBackendIndices(Optional.of("data"));
-		return Arrays.stream(indices)//
+		return elastic().filteredBackendIndexStream(Optional.of("data"))//
 				.map(index -> Index.valueOf(index))//
 				.toArray(Index[]::new);
 	}

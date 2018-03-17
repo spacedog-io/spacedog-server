@@ -9,6 +9,8 @@ import com.google.common.io.Resources;
 
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
+import io.spacedog.client.data.DataAclSettings;
+import io.spacedog.client.push.Installation;
 import io.spacedog.client.schema.Schema;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
@@ -38,39 +40,46 @@ public class T0_Init extends DemoBase {
 	public void createCourseSchema() {
 
 		Schema schema = loadSchemaFromFile("course.schema.json");
-		schema.acl(Roles.user, Permission.create, //
-				Permission.updateMine, Permission.readMine);
 		superadmin().schemas().set(schema);
+
+		DataAclSettings acl = new DataAclSettings();
+		acl.put("course", Roles.user, Permission.create, //
+				Permission.updateMine, Permission.readMine);
+		superadmin().settings().save(acl);
 	}
 
 	public void createCustomerSchema() {
 
 		Schema schema = loadSchemaFromFile("customer.schema.json");
-		schema.acl(Roles.user, Permission.create, //
-				Permission.updateMine, Permission.readMine);
 		superadmin().schemas().set(schema);
+
+		DataAclSettings acl = new DataAclSettings();
+		acl.put("customer", Roles.user, Permission.create, //
+				Permission.updateMine, Permission.readMine);
+		superadmin().settings().save(acl);
 	}
 
 	public void createInstallationSchema() {
 
-		superadmin().schemas().setDefault("installation");
+		superadmin().schemas().setDefault(Installation.TYPE);
 
-		Schema schema = superadmin().schemas().get("installation");
-		schema.acl(Roles.user, Permission.create, //
+		DataAclSettings acl = new DataAclSettings();
+		acl.put(Installation.TYPE, Roles.user, Permission.create, //
 				Permission.updateMine, Permission.readMine, Permission.deleteMine);
-		superadmin().schemas().set(schema);
+		superadmin().settings().save(acl);
 	}
 
 	public void createDriverSchema() {
 
 		Schema schema = loadSchemaFromFile("driver.schema.json");
-
-		schema.acl(Roles.admin, Permission.create, Permission.search, //
-				Permission.update, Permission.delete);
-		schema.acl("driver", Permission.create, //
-				Permission.readMine, Permission.updateMine);
-
 		superadmin().schemas().set(schema);
+
+		DataAclSettings acl = new DataAclSettings();
+		acl.put("driver", Roles.admin, Permission.create, Permission.search, //
+				Permission.update, Permission.delete);
+		acl.put("driver", "driver", Permission.create, //
+				Permission.readMine, Permission.updateMine);
+		superadmin().settings().save(acl);
 	}
 
 	private Schema loadSchemaFromFile(String fileName) {

@@ -24,6 +24,7 @@ import com.google.common.collect.Sets;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
+import io.spacedog.client.data.DataAclSettings;
 import io.spacedog.client.data.DataObjectBase;
 import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.data.DataWrapAbstract;
@@ -94,14 +95,17 @@ public class DataServiceTest2 extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = clearRootBackend();
-		SpaceDog fred = createTempDog(test, "fred");
+		SpaceDog superadmin = clearRootBackend();
+		SpaceDog fred = createTempDog(superadmin, "fred");
 
-		Schema saleSchema = SchemaServiceTest.buildSaleSchema()//
-				.acl(Roles.user, Permission.create, Permission.updateMine, //
-						Permission.readMine, Permission.deleteMine, Permission.search)//
-				.build();
-		test.schemas().set(saleSchema);
+		// superadmin sets sale schema
+		superadmin.schemas().set(SchemaServiceTest.buildSaleSchema().build());
+
+		// superadmin sets acl of sale schema
+		DataAclSettings settings = new DataAclSettings();
+		settings.put("sale", Roles.user, Permission.create, Permission.updateMine, //
+				Permission.readMine, Permission.deleteMine, Permission.search);
+		superadmin.settings().save(settings);
 
 		// fred fails to create a sale with no body
 		fred.post("/1/data/sale").go(400);
@@ -233,7 +237,7 @@ public class DataServiceTest2 extends SpaceTest {
 		assertSourceAlmostEquals(saleNode6, saleNode7, "items");
 
 		// vince fails to update nor delete this sale since not the owner
-		SpaceDog vince = createTempDog(test, "vince");
+		SpaceDog vince = createTempDog(superadmin, "vince");
 		assertHttpError(403, () -> vince.data().patch("sale", //
 				saleDO7.id(), Json.object("number", "0123456789")));
 		assertHttpError(403, () -> vince.data().delete(saleDO7));
@@ -250,17 +254,17 @@ public class DataServiceTest2 extends SpaceTest {
 
 		prepareTest();
 		SpaceDog superadmin = clearRootBackend();
-		superadmin.schemas().set(Schema.builder("message").text("text").build());
+		superadmin.schemas().set(Message.schema());
 
 		// should successfully create 4 messages
 
-		superadmin.data().save("message", //
+		superadmin.data().save(Message.TYPE, //
 				Json.object("text", "what's up?"));
-		superadmin.data().save("message", //
+		superadmin.data().save(Message.TYPE, //
 				Json.object("text", "wanna drink something?"));
-		superadmin.data().save("message", //
+		superadmin.data().save(Message.TYPE, //
 				Json.object("text", "pretty cool, hein?"));
-		superadmin.data().save("message", //
+		superadmin.data().save(Message.TYPE, //
 				Json.object("text", "so long guys"));
 
 		long total = superadmin.data().getAllRequest().refresh().go().total;
@@ -312,9 +316,15 @@ public class DataServiceTest2 extends SpaceTest {
 		prepareTest();
 		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
-		Schema schema = Message.schema()//
-				.acl(Roles.user, Permission.create, Permission.search);
+
+		// superadmin sets message schema
+		Schema schema = Message.schema();
 		superadmin.schemas().set(schema);
+
+		// superadmin sets data acl
+		DataAclSettings acl = new DataAclSettings();
+		acl.put(schema.name(), Roles.user, Permission.create, Permission.search);
+		superadmin.settings().save(acl);
 
 		// superadmins creates 4 messages
 		Set<String> originalMessages = Sets.newHashSet(//

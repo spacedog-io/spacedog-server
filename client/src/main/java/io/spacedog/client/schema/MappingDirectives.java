@@ -12,6 +12,7 @@ public interface MappingDirectives {
 	String m_text = "text";
 	String m_keyword = "keyword";
 	String m_object = "object";
+	String m_geo_point = "geo_point";
 
 	// parameters
 	String m_format = "format";

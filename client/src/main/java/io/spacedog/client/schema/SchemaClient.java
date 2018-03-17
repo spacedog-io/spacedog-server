@@ -34,7 +34,7 @@ public class SchemaClient {
 
 	public SchemaClient set(Schema schema) {
 		dog.put("/1/schemas/{name}").routeParam("name", schema.name())//
-				.bodyJson(schema.node()).go(200, 201);
+				.bodyJson(schema.mapping()).go(200, 201);
 		return this;
 	}
 

@@ -87,8 +87,7 @@ public class SmsServiceTest extends SpaceTest {
 
 		// superadmin creates a customer schema
 		Schema schema = Schema.builder("customer")//
-				.text("name").string("phone").close().build();
-
+				.text("name").keyword("phone").build();
 		superadmin.schemas().set(schema);
 
 		// superadmin creates a customer

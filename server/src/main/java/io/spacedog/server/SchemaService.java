@@ -8,7 +8,7 @@ import java.util.Map;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.indices.TypeMissingException;
 
-import io.spacedog.client.data.InternalDataAclSettings;
+import io.spacedog.client.data.DataAclSettings;
 import io.spacedog.client.schema.Schema;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -32,7 +32,7 @@ public class SchemaService extends SpaceService {
 	public Payload getAll(Context context) {
 		JsonMerger merger = Json.merger();
 		Map<String, Schema> schemas = DataStore.get().getAllSchemas();
-		schemas.values().forEach(schema -> merger.merge(schema.node()));
+		schemas.values().forEach(schema -> merger.merge(schema.mapping()));
 		return JsonPayload.ok().withContent(merger.get()).build();
 	}
 
@@ -41,7 +41,7 @@ public class SchemaService extends SpaceService {
 	public Payload get(String type) {
 		Schema.checkName(type);
 		return JsonPayload.ok()//
-				.withContent(DataStore.get().getSchema(type).node())//
+				.withContent(DataStore.get().getSchema(type).mapping())//
 				.build();
 	}
 
@@ -58,7 +58,7 @@ public class SchemaService extends SpaceService {
 		if (schema == null)
 			throw Exceptions.illegalArgument("no default schema for type [%s]", type);
 
-		String mapping = schema.validate().translate().toString();
+		String mapping = schema.mapping().toString();
 
 		Index index = DataStore.toDataIndex(type);
 		boolean indexExists = elastic().exists(index);
@@ -72,9 +72,7 @@ public class SchemaService extends SpaceService {
 			elastic().createIndex(index, mapping, async, shards, replicas);
 		}
 
-		DataAccessControl.save(type, schema.acl());
-
-		return JsonPayload.saved(!indexExists, "/1", "schema", type).build();
+		return JsonPayload.saved(!indexExists, "/1", "schemas", type).build();
 	}
 
 	@Delete("/:type")
@@ -83,7 +81,6 @@ public class SchemaService extends SpaceService {
 		try {
 			SpaceContext.credentials().checkAtLeastAdmin();
 			elastic().deleteIndex(DataStore.toDataIndex(type));
-			DataAccessControl.delete(type);
 		} catch (TypeMissingException ignored) {
 		}
 		return JsonPayload.ok().build();
@@ -110,6 +107,6 @@ public class SchemaService extends SpaceService {
 	}
 
 	private SchemaService() {
-		SettingsService.get().registerSettings(InternalDataAclSettings.class);
+		SettingsService.get().registerSettings(DataAclSettings.class);
 	}
 }

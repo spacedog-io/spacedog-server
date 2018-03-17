@@ -14,12 +14,11 @@ public class JsonGeneratorTest extends Assert {
 	public void test() {
 
 		Schema schema = Schema.builder("person")//
-				.string("name")//
+				.keyword("name")//
 				.object("address")//
-				.string("street")//
-				.string("city")//
-				.string("name")//
-				.close()//
+				.keyword("street")//
+				.keyword("city")//
+				.keyword("name")//
 				.build();
 
 		DataObjetGenerator generator = new DataObjetGenerator();

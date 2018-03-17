@@ -33,11 +33,11 @@ public class QueryTest extends SpaceTest {
 
 	private Schema buildCarSchema() {
 		return Schema.builder("car") //
-				.string("serialNumber")//
+				.keyword("serialNumber")//
 				.date("buyDate")//
 				.time("buyTime")//
 				.timestamp("buyTimestamp") //
-				.enumm("color")//
+				.keyword("color")//
 				.bool("techChecked") //
 				.geopoint("location") //
 
@@ -45,7 +45,7 @@ public class QueryTest extends SpaceTest {
 				.text("description").french()//
 				.integer("fiscalPower")//
 				.floatt("size")//
-				.close() //
+				.closeObject() //
 
 				.build();
 	}

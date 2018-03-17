@@ -16,8 +16,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
 import io.spacedog.client.credentials.Credentials;
-import io.spacedog.client.credentials.Permission;
-import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.data.DataWraps;
 import io.spacedog.client.data.ObjectNodeWrap;
@@ -64,16 +62,12 @@ public class PushService extends SpaceService {
 
 	public static Schema getDefaultInstallationSchema() {
 		return Schema.builder(TYPE)//
-				.acl(Roles.user, Permission.create, Permission.readMine, //
-						Permission.updateMine, Permission.deleteMine) //
-
-				.string(APP_ID)//
-				.string(PROTOCOL)//
-				.string(TOKEN)//
-				.string(ENDPOINT)//
+				.keyword(APP_ID)//
+				.keyword(PROTOCOL)//
+				.keyword(TOKEN)//
+				.keyword(ENDPOINT)//
 				.integer(BADGE)//
-				.string(TAGS).array()//
-				.close()//
+				.keyword(TAGS)//
 				.build();
 	}
 

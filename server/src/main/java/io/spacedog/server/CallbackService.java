@@ -46,27 +46,27 @@ public class CallbackService extends SpaceService {
 
 	public Schema requestSchema() {
 		return Schema.builder(TYPE)//
-				.string("status")//
-				.string("method")//
-				.string("path")//
+				.keyword("status")//
+				.keyword("method")//
+				.keyword("path")//
 				.stash("payload")//
 				.stash("response")//
 
 				.object("credentials")//
-				.string("id")//
-				.string("name")//
-				.string("roles").array()//
-				.close()//
+				.keyword("id")//
+				.keyword("name")//
+				.keyword("roles")//
+				.closeObject()//
 
-				.object("headers").array()//
-				.string("name")//
-				.string("values").array()//
-				.close()//
+				.object("headers")//
+				.keyword("name")//
+				.keyword("values")//
+				.closeObject()//
 
-				.object("parameters").array()//
-				.string("name")//
-				.string("values")//
-				.close()//
+				.object("parameters")//
+				.keyword("name")//
+				.keyword("values")//
+				.closeObject()//
 
 				.build();
 	}
@@ -83,7 +83,7 @@ public class CallbackService extends SpaceService {
 
 		Index index = callbackIndex();
 		ElasticClient elastic = elastic();
-		String mapping = requestSchema().validate().translate().toString();
+		String mapping = requestSchema().mapping().toString();
 
 		if (!elastic.exists(index))
 			elastic.createIndex(index, mapping, false);

@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
+import io.spacedog.client.data.DataAclSettings;
 import io.spacedog.client.data.ObjectNodeWrap;
 import io.spacedog.client.data.ObjectNodeWrap.Results;
 import io.spacedog.client.elastic.ESQueryBuilders;
@@ -102,9 +103,13 @@ public class SearchServiceTest extends SpaceTest {
 		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
-		Schema schema = Schema.builder("city").string("name")//
-				.acl(Roles.user, Permission.create, Permission.search).build();
-		superadmin.schemas().set(schema);
+		// superadmin sets schemas
+		superadmin.schemas().set(Schema.builder("city").keyword("name").build());
+
+		// superadmin sets data acls
+		DataAclSettings settings = new DataAclSettings();
+		settings.put("city", Roles.user, Permission.create, Permission.search);
+		superadmin.settings().save(settings);
 
 		// creates 5 cities but whith only 3 distinct names
 		vince.data().save("city", Json.object("name", "Paris"));
@@ -140,7 +145,7 @@ public class SearchServiceTest extends SpaceTest {
 		prepareTest();
 		SpaceDog superadmin = clearRootBackend();
 
-		superadmin.schemas().set(Schema.builder("number").integer("i").string("t").build());
+		superadmin.schemas().set(Schema.builder("number").integer("i").keyword("t").build());
 
 		// creates 5 numbers
 		for (int i = 0; i < 5; i++)

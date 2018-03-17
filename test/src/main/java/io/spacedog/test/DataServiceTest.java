@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
+import io.spacedog.client.data.DataAclSettings;
 import io.spacedog.client.data.ObjectNodeWrap;
 import io.spacedog.client.http.SpaceRequestException;
 import io.spacedog.client.schema.Schema;
@@ -26,11 +27,14 @@ public class DataServiceTest extends SpaceTest {
 		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
-		Schema carSchema = SchemaServiceTest.buildCarSchema()//
-				.acl(Roles.user, Permission.create, Permission.updateMine, //
-						Permission.readMine, Permission.deleteMine, Permission.search)//
-				.build();
-		superadmin.schemas().set(carSchema);
+		// superadmin sets car schema
+		superadmin.schemas().set(SchemaServiceTest.buildCarSchema().build());
+
+		// superadmin sets acl of car schema
+		DataAclSettings settings = new DataAclSettings();
+		settings.put("car", Roles.user, Permission.create, Permission.updateMine, //
+				Permission.readMine, Permission.deleteMine, Permission.search);
+		superadmin.settings().save(settings);
 
 		ObjectNode car = Json.builder().object() //
 				.add("serialNumber", "1234567890") //
@@ -93,11 +97,12 @@ public class DataServiceTest extends SpaceTest {
 		SpaceDog superadmin = clearRootBackend();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
-		Schema carSchema = SchemaServiceTest.buildCarSchema()//
-				.acl(Roles.user, Permission.create, Permission.updateMine, //
-						Permission.readMine, Permission.deleteMine, Permission.search)//
-				.build();
-		superadmin.schemas().set(carSchema);
+		superadmin.schemas().set(SchemaServiceTest.buildCarSchema().build());
+
+		DataAclSettings settings = new DataAclSettings();
+		settings.put("car", Roles.user, Permission.create, Permission.updateMine, //
+				Permission.readMine, Permission.deleteMine, Permission.search);
+		superadmin.settings().save(settings);
 
 		ObjectNode car = Json.builder().object() //
 				.add("serialNumber", "1234567890") //
@@ -153,11 +158,15 @@ public class DataServiceTest extends SpaceTest {
 		SpaceDog operator = createTempDog(superadmin, "operator", "operator");
 
 		// superadmin creates message schema
-		Schema schema = Message.schema()//
-				.acl(Roles.user, Permission.create, Permission.readMine)//
-				.acl("operator", Permission.create, Permission.update, //
-						Permission.updateMeta, Permission.read);
+		Schema schema = Message.schema();
 		superadmin.schemas().set(schema);
+
+		// superadmin sets data acl
+		DataAclSettings acl = new DataAclSettings();
+		acl.put(schema.name(), Roles.user, Permission.create, Permission.readMine);
+		acl.put(schema.name(), "operator", Permission.create, Permission.update, //
+				Permission.updateMeta, Permission.read);
+		superadmin.settings().save(acl);
 
 		// old message to insert again in database
 		DateTime now = DateTime.now();

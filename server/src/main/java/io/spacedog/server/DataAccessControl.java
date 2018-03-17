@@ -3,12 +3,12 @@
  */
 package io.spacedog.server;
 
-import org.elasticsearch.action.index.IndexResponse;
+import java.util.Set;
 
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.RolePermissions;
-import io.spacedog.client.data.InternalDataAclSettings;
+import io.spacedog.client.data.DataAclSettings;
 
 public class DataAccessControl {
 
@@ -17,27 +17,16 @@ public class DataAccessControl {
 	}
 
 	public static String[] types(Credentials credentials, Permission permission) {
-		return getDataAclSettings().accessList(credentials, permission);
+		Set<String> types = DataStore.allDataTypes();
+		if (!credentials.isAtLeastSuperAdmin()) {
+			Set<String> accessibleTypes = getDataAclSettings().accessList(credentials, permission);
+			types.retainAll(accessibleTypes);
+		}
+		return types.toArray(new String[types.size()]);
 	}
 
-	public static void save(String type, RolePermissions schemaAcl) {
-		InternalDataAclSettings settings = getDataAclSettings();
-		settings.put(type, schemaAcl);
-		saveDataAclSetting(settings);
-	}
-
-	public static void delete(String type) {
-		InternalDataAclSettings settings = getDataAclSettings();
-		settings.remove(type);
-		saveDataAclSetting(settings);
-	}
-
-	private static InternalDataAclSettings getDataAclSettings() {
-		return SettingsService.get().getAsObject(InternalDataAclSettings.class);
-	}
-
-	private static IndexResponse saveDataAclSetting(InternalDataAclSettings settings) {
-		return SettingsService.get().saveAsObject(settings);
+	private static DataAclSettings getDataAclSettings() {
+		return SettingsService.get().getAsObject(DataAclSettings.class);
 	}
 
 }
