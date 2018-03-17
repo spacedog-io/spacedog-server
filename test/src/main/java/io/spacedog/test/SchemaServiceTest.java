@@ -10,7 +10,7 @@ import com.google.common.collect.Sets;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.client.data.DataAclSettings;
+import io.spacedog.client.data.DataSettings;
 import io.spacedog.client.schema.Schema;
 import io.spacedog.client.schema.SchemaBuilder;
 import io.spacedog.utils.Json;
@@ -173,8 +173,8 @@ public class SchemaServiceTest extends SpaceTest {
 		superadmin.schemas().set(schema);
 
 		// superadmin sets acl of document schema
-		DataAclSettings settings = new DataAclSettings();
-		settings.put("document", Roles.all, Permission.create);
+		DataSettings settings = new DataSettings();
+		settings.acl().put("document", Roles.all, Permission.create);
 		superadmin.settings().save(settings);
 
 		// guest saves a first document with data as an object

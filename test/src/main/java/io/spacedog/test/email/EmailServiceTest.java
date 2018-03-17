@@ -17,7 +17,7 @@ import com.google.common.io.Resources;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.client.data.DataAclSettings;
+import io.spacedog.client.data.DataSettings;
 import io.spacedog.client.email.EmailBasicRequest;
 import io.spacedog.client.email.EmailSettings;
 import io.spacedog.client.email.EmailSettings.SmtpSettings;
@@ -142,8 +142,8 @@ public class EmailServiceTest extends SpaceTest {
 		superadmin.schemas().set(schema);
 
 		// superadmin sets data acls
-		DataAclSettings settings = new DataAclSettings();
-		settings.put("demande", Roles.all, Permission.create);
+		DataSettings settings = new DataSettings();
+		settings.acl().put("demande", Roles.all, Permission.create);
 		superadmin.settings().save(settings);
 
 		// create an inscription

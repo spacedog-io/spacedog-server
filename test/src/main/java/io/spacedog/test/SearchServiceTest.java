@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.client.data.DataAclSettings;
+import io.spacedog.client.data.DataSettings;
 import io.spacedog.client.data.ObjectNodeWrap;
 import io.spacedog.client.data.ObjectNodeWrap.Results;
 import io.spacedog.client.elastic.ESQueryBuilders;
@@ -29,7 +29,7 @@ public class SearchServiceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = clearRootBackend();
-		superadmin.schemas().set(Schema.builder("message").text("text").build());
+		superadmin.schemas().set(Message.schema());
 		superadmin.schemas().set(Schema.builder("rubric").text("name").build());
 
 		// creates 4 messages and 1 rubric
@@ -107,8 +107,8 @@ public class SearchServiceTest extends SpaceTest {
 		superadmin.schemas().set(Schema.builder("city").keyword("name").build());
 
 		// superadmin sets data acls
-		DataAclSettings settings = new DataAclSettings();
-		settings.put("city", Roles.user, Permission.create, Permission.search);
+		DataSettings settings = new DataSettings();
+		settings.acl().put("city", Roles.user, Permission.create, Permission.search);
 		superadmin.settings().save(settings);
 
 		// creates 5 cities but whith only 3 distinct names

@@ -17,7 +17,7 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.client.data.DataAclSettings;
+import io.spacedog.client.data.DataSettings;
 import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.push.BadgeStrategy;
 import io.spacedog.client.push.Installation;
@@ -48,14 +48,14 @@ public class PushServiceTest extends SpaceTest {
 		superadmin.schemas().setDefault(Installation.TYPE);
 
 		// superadmin sets data acl
-		DataAclSettings acl = new DataAclSettings();
-		acl.put(Installation.TYPE, Roles.all, Permission.create, //
+		DataSettings settings = new DataSettings();
+		settings.acl().put(Installation.TYPE, Roles.all, Permission.create, //
 				Permission.updateMine);
-		acl.put(Installation.TYPE, Roles.user, Permission.create, //
+		settings.acl().put(Installation.TYPE, Roles.user, Permission.create, //
 				Permission.readMine, Permission.updateMine);
-		acl.put(Installation.TYPE, Roles.admin, Permission.create, //
+		settings.acl().put(Installation.TYPE, Roles.admin, Permission.create, //
 				Permission.update, Permission.search, Permission.delete);
-		superadmin.settings().save(acl);
+		superadmin.settings().save(settings);
 
 		// non authenticated user installs joho
 		// and fails to set endpoint fields
@@ -82,9 +82,9 @@ public class PushServiceTest extends SpaceTest {
 		assertHttpError(403, () -> vince.push().push(new PushRequest()));
 
 		// superadmin authorizes users to push
-		PushSettings settings = new PushSettings();
-		settings.authorizedRoles.add(Roles.user);
-		superadmin.settings().save(settings);
+		PushSettings pushSettings = new PushSettings();
+		pushSettings.authorizedRoles.add(Roles.user);
+		superadmin.settings().save(pushSettings);
 
 		// vince pushes a simple message to fred via installation id
 		PushResponse response = vince.push().push(new PushRequest()//

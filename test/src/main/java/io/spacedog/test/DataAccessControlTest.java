@@ -10,7 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.client.data.DataAclSettings;
+import io.spacedog.client.data.DataSettings;
 import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.schema.Schema;
 
@@ -31,15 +31,15 @@ public class DataAccessControlTest extends SpaceTest {
 		superadmin.schemas().set(schema);
 
 		// superadmin sets data acl
-		DataAclSettings acl = new DataAclSettings();
-		acl.put(schema.name(), Roles.all, Permission.read);
-		acl.put(schema.name(), Roles.user, Permission.create, //
+		DataSettings dataSettings = new DataSettings();
+		dataSettings.acl().put(schema.name(), Roles.all, Permission.read);
+		dataSettings.acl().put(schema.name(), Roles.user, Permission.create, //
 				Permission.updateMine, Permission.deleteMine, Permission.search);
-		acl.put(schema.name(), Roles.admin, Permission.create, //
+		dataSettings.acl().put(schema.name(), Roles.admin, Permission.create, //
 				Permission.update, Permission.delete, Permission.search);
-		superadmin.settings().save(acl);
+		superadmin.settings().save(dataSettings);
 
-		assertEquals(acl, superadmin.settings().get(DataAclSettings.class));
+		assertEquals(dataSettings, superadmin.settings().get(DataSettings.class));
 
 		// in default acl, only users and admins can create objects
 		guest.post("/1/data/message").bodyJson("text", "hello").go(403);
@@ -96,8 +96,8 @@ public class DataAccessControlTest extends SpaceTest {
 		superadmin.schemas().set(schema);
 
 		// superadmin check message acl is empty
-		assertTrue(superadmin.settings().get(DataAclSettings.class)//
-				.get(schema.name()).isEmpty());
+		assertTrue(superadmin.settings().get(DataSettings.class)//
+				.acl().get(schema.name()).isEmpty());
 
 		// in empty acl, nobody can create a message but superadmins
 		guest.post("/1/data/message").bodyJson("text", "hi").go(403);
@@ -147,13 +147,13 @@ public class DataAccessControlTest extends SpaceTest {
 		superadmin.schemas().set(schema);
 
 		// superadmin sets data acl
-		DataAclSettings acl = new DataAclSettings();
-		acl.put(schema.name(), Roles.user, Permission.create);
-		acl.put(schema.name(), Roles.admin, Permission.search);
-		superadmin.settings().save(acl);
+		DataSettings dataSettings = new DataSettings();
+		dataSettings.acl().put(schema.name(), Roles.user, Permission.create);
+		dataSettings.acl().put(schema.name(), Roles.admin, Permission.search);
+		superadmin.settings().save(dataSettings);
 
 		// check message schema acl are set
-		assertEquals(acl, superadmin.settings().get(DataAclSettings.class));
+		assertEquals(dataSettings, superadmin.settings().get(DataSettings.class));
 
 		// only users (and superadmins) can create messages
 		guest.post("/1/data/message").bodyJson("text", "hi").go(403);
@@ -218,11 +218,11 @@ public class DataAccessControlTest extends SpaceTest {
 		superadmin.schemas().set(schema);
 
 		// superadmin sets data acl
-		DataAclSettings acl = new DataAclSettings();
-		acl.put(schema.name(), Roles.all, Permission.create);
-		acl.put(schema.name(), Roles.user, Permission.readGroup, //
+		DataSettings dataSettings = new DataSettings();
+		dataSettings.acl().put(schema.name(), Roles.all, Permission.create);
+		dataSettings.acl().put(schema.name(), Roles.user, Permission.readGroup, //
 				Permission.updateGroup, Permission.deleteGroup);
-		superadmin.settings().save(acl);
+		superadmin.settings().save(dataSettings);
 
 		// only users (and superadmins) can create messages
 		guest.data().save(Message.TYPE, "guest", new Message("guest"));
@@ -306,14 +306,14 @@ public class DataAccessControlTest extends SpaceTest {
 		superadmin.schemas().set(schema);
 
 		// superadmin sets data acl
-		DataAclSettings acl = new DataAclSettings();
-		acl.put(schema.name(), "iron", Permission.read);
-		acl.put(schema.name(), "silver", Permission.read, Permission.update);
-		acl.put(schema.name(), "gold", Permission.read, Permission.update, //
+		DataSettings dataSettings = new DataSettings();
+		dataSettings.acl().put(schema.name(), "iron", Permission.read);
+		dataSettings.acl().put(schema.name(), "silver", Permission.read, Permission.update);
+		dataSettings.acl().put(schema.name(), "gold", Permission.read, Permission.update, //
 				Permission.create);
-		acl.put(schema.name(), "platine", Permission.read, Permission.update, //
+		dataSettings.acl().put(schema.name(), "platine", Permission.read, Permission.update, //
 				Permission.create, Permission.delete);
-		superadmin.settings().save(acl);
+		superadmin.settings().save(dataSettings);
 
 		// dave has the platine role
 		// he's got all the rights
@@ -382,17 +382,17 @@ public class DataAccessControlTest extends SpaceTest {
 		superadmin.schemas().set(schema);
 
 		// superadmin sets data acl
-		DataAclSettings acl = new DataAclSettings();
-		acl.put(schema.name(), Roles.user, Permission.search);
-		superadmin.settings().save(acl);
+		DataSettings dataSettings = new DataSettings();
+		dataSettings.acl().put(schema.name(), Roles.user, Permission.search);
+		superadmin.settings().save(dataSettings);
 
 		// check data acl settings contains message acl
-		assertEquals(acl, superadmin.settings().get(DataAclSettings.class));
+		assertEquals(dataSettings, superadmin.settings().get(DataSettings.class));
 
 		// delete message schema
 		superadmin.schemas().delete(schema);
 
 		// check data acl settings still contains message acl
-		assertEquals(acl, superadmin.settings().get(DataAclSettings.class));
+		assertEquals(dataSettings, superadmin.settings().get(DataSettings.class));
 	}
 }

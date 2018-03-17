@@ -8,7 +8,7 @@ import org.junit.Test;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.client.data.DataAclSettings;
+import io.spacedog.client.data.DataSettings;
 import io.spacedog.client.data.ObjectNodeWrap;
 import io.spacedog.client.elastic.ESQueryBuilders;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
@@ -207,8 +207,8 @@ public class LogServiceTest extends SpaceTest {
 		superadmin.schemas().set(Message.schema());
 
 		// superadmin sets data acls
-		DataAclSettings settings = new DataAclSettings();
-		settings.put(Message.TYPE, Roles.user, Permission.create, Permission.search);
+		DataSettings settings = new DataSettings();
+		settings.acl().put(Message.TYPE, Roles.user, Permission.create, Permission.search);
 		superadmin.settings().save(settings);
 
 		// create a user in test backend

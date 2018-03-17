@@ -8,7 +8,7 @@ import java.util.Map;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.indices.TypeMissingException;
 
-import io.spacedog.client.data.DataAclSettings;
+import io.spacedog.client.data.DataSettings;
 import io.spacedog.client.schema.Schema;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -105,6 +105,6 @@ public class SchemaService extends SpaceService {
 	}
 
 	private SchemaService() {
-		SettingsService.get().registerSettings(DataAclSettings.class);
+		SettingsService.get().registerSettings(DataSettings.class);
 	}
 }

@@ -12,7 +12,7 @@ import com.google.common.collect.Sets;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.client.data.DataAclSettings;
+import io.spacedog.client.data.DataSettings;
 import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.utils.Json;
@@ -28,8 +28,8 @@ public class BatchServiceTest extends SpaceTest {
 		SpaceDog superadmin = clearRootBackend();
 		superadmin.credentials().enableGuestSignUp(true);
 
-		DataAclSettings dataAcl = new DataAclSettings();
-		dataAcl.put(Message.TYPE, Roles.user, //
+		DataSettings dataSettings = new DataSettings();
+		dataSettings.acl().put(Message.TYPE, Roles.user, //
 				Permission.create, Permission.updateMine, Permission.search);
 
 		// should succeed to reset test account and create message schema with
@@ -42,7 +42,7 @@ public class BatchServiceTest extends SpaceTest {
 
 				.object()//
 				.add("method", "PUT").add("path", "/1/settings/dataacl")//
-				.add("content", dataAcl)//
+				.add("content", dataSettings)//
 				.end()//
 
 				.object()//

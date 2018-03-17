@@ -24,8 +24,8 @@ import com.google.common.collect.Sets;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.client.data.DataAclSettings;
 import io.spacedog.client.data.DataObjectBase;
+import io.spacedog.client.data.DataSettings;
 import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.data.DataWrapAbstract;
 import io.spacedog.client.data.ObjectNodeWrap;
@@ -98,8 +98,8 @@ public class DataServiceTest2 extends SpaceTest {
 		superadmin.schemas().set(SchemaServiceTest.buildSaleSchema().build());
 
 		// superadmin sets acl of sale schema
-		DataAclSettings settings = new DataAclSettings();
-		settings.put("sale", Roles.user, Permission.create, Permission.updateMine, //
+		DataSettings settings = new DataSettings();
+		settings.acl().put("sale", Roles.user, Permission.create, Permission.updateMine, //
 				Permission.readMine, Permission.deleteMine, Permission.search);
 		superadmin.settings().save(settings);
 
@@ -318,9 +318,9 @@ public class DataServiceTest2 extends SpaceTest {
 		superadmin.schemas().set(schema);
 
 		// superadmin sets data acl
-		DataAclSettings acl = new DataAclSettings();
-		acl.put(schema.name(), Roles.user, Permission.create, Permission.search);
-		superadmin.settings().save(acl);
+		DataSettings dataSettings = new DataSettings();
+		dataSettings.acl().put(schema.name(), Roles.user, Permission.create, Permission.search);
+		superadmin.settings().save(dataSettings);
 
 		// superadmins creates 4 messages
 		Set<String> originalMessages = Sets.newHashSet(//

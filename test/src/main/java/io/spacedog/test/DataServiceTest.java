@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.client.data.DataAclSettings;
+import io.spacedog.client.data.DataSettings;
 import io.spacedog.client.data.ObjectNodeWrap;
 import io.spacedog.client.http.SpaceRequestException;
 import io.spacedog.client.schema.Schema;
@@ -31,8 +31,8 @@ public class DataServiceTest extends SpaceTest {
 		superadmin.schemas().set(SchemaServiceTest.buildCarSchema().build());
 
 		// superadmin sets acl of car schema
-		DataAclSettings settings = new DataAclSettings();
-		settings.put("car", Roles.user, Permission.create, Permission.updateMine, //
+		DataSettings settings = new DataSettings();
+		settings.acl().put("car", Roles.user, Permission.create, Permission.updateMine, //
 				Permission.readMine, Permission.deleteMine, Permission.search);
 		superadmin.settings().save(settings);
 
@@ -99,8 +99,8 @@ public class DataServiceTest extends SpaceTest {
 
 		superadmin.schemas().set(SchemaServiceTest.buildCarSchema().build());
 
-		DataAclSettings settings = new DataAclSettings();
-		settings.put("car", Roles.user, Permission.create, Permission.updateMine, //
+		DataSettings settings = new DataSettings();
+		settings.acl().put("car", Roles.user, Permission.create, Permission.updateMine, //
 				Permission.readMine, Permission.deleteMine, Permission.search);
 		superadmin.settings().save(settings);
 
@@ -162,11 +162,11 @@ public class DataServiceTest extends SpaceTest {
 		superadmin.schemas().set(schema);
 
 		// superadmin sets data acl
-		DataAclSettings acl = new DataAclSettings();
-		acl.put(schema.name(), Roles.user, Permission.create, Permission.readMine);
-		acl.put(schema.name(), "operator", Permission.create, Permission.update, //
+		DataSettings settings = new DataSettings();
+		settings.acl().put(schema.name(), Roles.user, Permission.create, Permission.readMine);
+		settings.acl().put(schema.name(), "operator", Permission.create, Permission.update, //
 				Permission.updateMeta, Permission.read);
-		superadmin.settings().save(acl);
+		superadmin.settings().save(settings);
 
 		// old message to insert again in database
 		DateTime now = DateTime.now();
