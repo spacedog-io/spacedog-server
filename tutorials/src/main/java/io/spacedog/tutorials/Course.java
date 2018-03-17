@@ -156,7 +156,7 @@ public class Course extends DataObjectBase {
 	public static class Results {
 
 		public long total;
-		public List<Wrap> results;
+		public List<Course.Wrap> results;
 		public ObjectNode aggregations;
 	}
 

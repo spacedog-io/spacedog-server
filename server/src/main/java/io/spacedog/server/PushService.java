@@ -21,7 +21,6 @@ import io.spacedog.client.data.DataWraps;
 import io.spacedog.client.data.ObjectNodeWrap;
 import io.spacedog.client.push.BadgeStrategy;
 import io.spacedog.client.push.Installation;
-import io.spacedog.client.push.InstallationDataObject;
 import io.spacedog.client.push.PushProtocol;
 import io.spacedog.client.push.PushRequest;
 import io.spacedog.client.push.PushResponse;
@@ -148,7 +147,7 @@ public class PushService extends SpaceService {
 		PushResponse response = new PushResponse();
 
 		for (SearchHit hit : hits.getHits()) {
-			DataWrap<Installation> installation = new InstallationDataObject()//
+			DataWrap<Installation> installation = new Installation.Wrap()//
 					.source(Json.toPojo(//
 							BytesReference.toBytes(hit.getSourceRef()), //
 							Installation.class))//
@@ -286,7 +285,7 @@ public class PushService extends SpaceService {
 
 	public Payload upsertInstallation(Optional<String> id, String body, Context context) {
 
-		DataWrap<Installation> installation = new InstallationDataObject()//
+		DataWrap<Installation> installation = new Installation.Wrap()//
 				.type(TYPE).source(Json.toPojo(body, Installation.class));
 
 		if (id.isPresent())

@@ -75,10 +75,6 @@ public class DataServiceTest2 extends SpaceTest {
 				return this;
 			}
 
-			@Override
-			public String type() {
-				return "sale";
-			}
 		}
 
 		@JsonIgnoreProperties(ignoreUnknown = true)

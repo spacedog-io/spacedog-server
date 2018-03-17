@@ -62,6 +62,6 @@ public class Backend extends DataObjectBase {
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	public static class Results {
 		public long total;
-		public List<Wrap> results;
+		public List<Backend.Wrap> results;
 	}
 }

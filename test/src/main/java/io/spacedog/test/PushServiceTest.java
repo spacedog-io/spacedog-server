@@ -21,7 +21,6 @@ import io.spacedog.client.data.DataAclSettings;
 import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.push.BadgeStrategy;
 import io.spacedog.client.push.Installation;
-import io.spacedog.client.push.InstallationDataObject;
 import io.spacedog.client.push.PushProtocol;
 import io.spacedog.client.push.PushRequest;
 import io.spacedog.client.push.PushResponse;
@@ -127,11 +126,11 @@ public class PushServiceTest extends SpaceTest {
 
 		// vince fails to get all installations since not admin
 		assertHttpError(403, () -> vince.data()//
-				.getAllRequest().type("installation").go());
+				.getAllRequest().type(Installation.TYPE).go());
 
 		// admin gets all installations
-		List<InstallationDataObject> installations = superadmin.data().getAllRequest()//
-				.type("installation").refresh().go(InstallationDataObject.Results.class).results;
+		List<Installation.Wrap> installations = superadmin.data().getAllRequest()//
+				.type(Installation.TYPE).refresh().go(Installation.Results.class).results;
 
 		assertEquals(5, installations.size());
 		Set<String> ids = Sets.newHashSet(unknownInstallId, daveInstall.id(), //
@@ -258,11 +257,11 @@ public class PushServiceTest extends SpaceTest {
 		assertEquals(0, response.notifications.size());
 
 		// vince can not read, update nor delete dave's installation
-		assertHttpError(403, () -> vince.data().get("installation", daveInstall.id()));
-		assertHttpError(403, () -> vince.data().save("installation", daveInstall.id(), //
+		assertHttpError(403, () -> vince.data().get(Installation.TYPE, daveInstall.id()));
+		assertHttpError(403, () -> vince.data().save(Installation.TYPE, daveInstall.id(), //
 				new Installation().appId("XXX").token("XXX").protocol(PushProtocol.GCM)));
-		assertHttpError(403, () -> vince.data().save("installation", daveInstall.id(), "badge", 0));
-		assertHttpError(403, () -> vince.data().delete("installation", daveInstall.id()));
+		assertHttpError(403, () -> vince.data().save(Installation.TYPE, daveInstall.id(), "badge", 0));
+		assertHttpError(403, () -> vince.data().delete(Installation.TYPE, daveInstall.id()));
 
 		// dave can not update his installation app id
 		// if he does not provide the token
@@ -287,7 +286,7 @@ public class PushServiceTest extends SpaceTest {
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		// prepare installation schema
-		superadmin.schemas().setDefault("installation");
+		superadmin.schemas().setDefault(Installation.TYPE);
 
 		// superadmin authorizes users and superadmins to push
 		PushSettings settings = new PushSettings();

@@ -49,7 +49,7 @@ public class Customer extends DataObjectBase {
 	public static class Results {
 
 		public long total;
-		public List<Wrap> results;
+		public List<Customer.Wrap> results;
 		public ObjectNode aggregations;
 	}
 

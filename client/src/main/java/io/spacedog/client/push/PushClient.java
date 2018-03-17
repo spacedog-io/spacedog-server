@@ -78,7 +78,7 @@ public class PushClient {
 	//
 
 	public DataWrap<Installation> getInstallation(String id) {
-		return dog.data().fetch(new InstallationDataObject().id(id));
+		return dog.data().fetch(new Installation.Wrap().id(id));
 	}
 
 	public DataWrap<Installation> fetchInstallation(DataWrap<Installation> installation) {
@@ -86,11 +86,11 @@ public class PushClient {
 	}
 
 	public DataWrap<Installation> saveInstallation(Installation source) {
-		return dog.data().save(new InstallationDataObject().source(source));
+		return dog.data().save(new Installation.Wrap().source(source));
 	}
 
 	public DataWrap<Installation> saveInstallation(String id, Installation source) {
-		return dog.data().save(new InstallationDataObject().id(id).source(source));
+		return dog.data().save(new Installation.Wrap().id(id).source(source));
 	}
 
 	public DataWrap<Installation> saveInstallation(DataWrap<Installation> object) {
@@ -105,9 +105,9 @@ public class PushClient {
 		return dog.data().save(TYPE, id, field, object);
 	}
 
-	public InstallationDataObject.Results searchInstallations(ESSearchSourceBuilder source) {
+	public Installation.Results searchInstallations(ESSearchSourceBuilder source) {
 		return dog.data().searchRequest().type(TYPE)//
-				.source(source).go(InstallationDataObject.Results.class);
+				.source(source).go(Installation.Results.class);
 	}
 
 	public PushClient deleteInstallation(String id) {
