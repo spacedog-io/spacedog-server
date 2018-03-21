@@ -103,7 +103,13 @@ public class CaremenResource extends Resource implements CourseStatus {
 		course.check(NEW_IMMEDIATE, SCHEDULED_ASSIGNED);
 		course.status = DRIVER_IS_COMING;
 		course.driverIsComingTimestamp = DateTime.now();
-		course.driver = new CourseDriver(getDriver(credentials));
+
+		if (course.driver == null)
+			course.driver = new CourseDriver(getDriver(credentials));
+		else if (!credentials.id().equals(course.driver.credentialsId))
+			throw Exceptions.forbidden(//
+					"course [%s] isn't assigned to you", courseId);
+
 		saveCourse(course, credentials);
 
 		saveCourseLogs(courseId, body, context);
