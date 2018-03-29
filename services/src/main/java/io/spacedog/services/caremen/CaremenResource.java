@@ -60,7 +60,7 @@ public class CaremenResource extends Resource implements CourseStatus {
 		Course course = createNewCourse(body, credentials);
 		course.check(NEW_IMMEDIATE, NEW_SCHEDULED);
 
-		if (course.requestedPickupTimestamp == null) {
+		if (NEW_IMMEDIATE.equals(course.status)) {
 			driverPushLog = notifyDriver.newImmediate(course, credentials);
 
 			if (driverPushLog.successes == 0) {
@@ -291,7 +291,7 @@ public class CaremenResource extends Resource implements CourseStatus {
 	}
 
 	private long setStatusToNoDriverAvailable(String courseId, Credentials credentials) {
-		ObjectNode patch = Json8.object(STATUS, "no-driver-available");
+		ObjectNode patch = Json8.object(STATUS, NO_DRIVER_AVAILABLE);
 		return DataStore.get().patchObject(//
 				credentials.backendId(), Course.TYPE, courseId, //
 				patch, credentials.name())//
