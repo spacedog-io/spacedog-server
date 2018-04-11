@@ -97,12 +97,8 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 				grandParentStackTraceElement.getMethodName());
 	}
 
-	private static SpaceDog superdog;
-
 	public static SpaceDog superdog() {
-		if (superdog == null)
-			superdog = superdog(Backends.rootApi());
-		return superdog;
+		return superdog(Backends.rootApi());
 	}
 
 	public static SpaceDog superdog(SpaceDog dog) {
