@@ -59,8 +59,7 @@ public class SearchResource extends Resource {
 	public Payload postSearchAllTypes(String body, Context context) {
 		Credentials credentials = SpaceContext.getCredentials();
 		String[] types = DataAccessControl.types(DataPermission.search, credentials);
-		boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);
-		DataStore.get().refreshBackend(refresh, credentials.backendId());
+		refreshBackendIfNecessary(context, false);
 		ObjectNode result = searchInternal(body, credentials, context, types);
 		return JsonPayload.json(result);
 	}
@@ -72,8 +71,7 @@ public class SearchResource extends Resource {
 		// credentials and user data at the same time
 		Credentials credentials = SpaceContext.checkAdminCredentials();
 		String[] types = DataAccessControl.types(DataPermission.delete_all, credentials);
-		boolean refresh = context.query().getBoolean(PARAM_REFRESH, true);
-		DataStore.get().refreshBackend(refresh, credentials.backendId());
+		refreshBackendIfNecessary(context, true);
 		DeleteByQueryResponse response = Start.get().getElasticClient()//
 				.deleteByQuery(query, credentials.backendId(), types);
 		return JsonPayload.json(response);
@@ -89,30 +87,27 @@ public class SearchResource extends Resource {
 	@Post("/:type/")
 	public Payload postSearchForType(String type, String body, Context context) {
 		Credentials credentials = SpaceContext.getCredentials();
-		if (DataAccessControl.check(credentials, type, DataPermission.search)) {
-			boolean refresh = context.query().getBoolean(PARAM_REFRESH, false);
-			DataStore.get().refreshType(refresh, credentials.backendId(), type);
-			ObjectNode result = searchInternal(body, credentials, context, type);
-			return JsonPayload.json(result);
-		}
-		throw Exceptions.forbidden("forbidden to search [%s] objects", type);
+		if (!DataAccessControl.check(credentials, type, DataPermission.search))
+			throw Exceptions.forbidden("forbidden to search [%s] objects", type);
+
+		refreshTypeIfNecessary(type, context, false);
+		ObjectNode result = searchInternal(body, credentials, context, type);
+		return JsonPayload.json(result);
 	}
 
 	@Delete("/:type")
 	@Delete("/:type/")
 	public Payload deleteSearchForType(String type, String query, Context context) {
 		Credentials credentials = SpaceContext.checkAdminCredentials();
-		if (DataAccessControl.check(credentials, type, DataPermission.delete_all)) {
+		if (!DataAccessControl.check(credentials, type, DataPermission.delete_all))
+			throw Exceptions.forbidden("forbidden to delete [%s] objects", type);
 
-			boolean refresh = context.query().getBoolean(PARAM_REFRESH, true);
-			DataStore.get().refreshType(refresh, credentials.backendId(), type);
+		refreshTypeIfNecessary(type, context, true);
 
-			DeleteByQueryResponse response = Start.get().getElasticClient()//
-					.deleteByQuery(query, credentials.backendId(), type);
+		DeleteByQueryResponse response = Start.get().getElasticClient()//
+				.deleteByQuery(query, credentials.backendId(), type);
 
-			return JsonPayload.json(response);
-		}
-		throw Exceptions.forbidden("forbidden to delete [%s] objects", type);
+		return JsonPayload.json(response);
 	}
 
 	// @Post("/1/filter/:type")
@@ -137,6 +132,16 @@ public class SearchResource extends Resource {
 	//
 	// implementation
 	//
+
+	private void refreshTypeIfNecessary(String type, Context context, boolean defaultValue) {
+		boolean refresh = context.query().getBoolean(PARAM_REFRESH, defaultValue);
+		DataStore.get().refreshType(refresh, SpaceContext.backendId(), type);
+	}
+
+	private void refreshBackendIfNecessary(Context context, boolean defaultValue) {
+		boolean refresh = context.query().getBoolean(PARAM_REFRESH, defaultValue);
+		DataStore.get().refreshBackend(refresh, SpaceContext.backendId());
+	}
 
 	ObjectNode searchInternal(String jsonQuery, Credentials credentials, Context context, String... types) {
 
