@@ -22,7 +22,6 @@ import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Backends;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.ContentTypes;
-import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json7;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.SpaceHeaders;
@@ -150,8 +149,6 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest backend(String backend) {
-		if (!Strings.isNullOrEmpty(this.backend))
-			Exceptions.runtime("backend already set");
 		this.backend = backend;
 		return this;
 	}
