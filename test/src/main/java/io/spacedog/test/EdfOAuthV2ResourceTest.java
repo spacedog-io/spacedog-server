@@ -3,8 +3,6 @@
  */
 package io.spacedog.test;
 
-import org.junit.Test;
-
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.model.CredentialsSettings;
@@ -21,7 +19,6 @@ public class EdfOAuthV2ResourceTest extends SpaceTest {
 	private static final String redirectUri = "https://paas-pp.edf.fr" //
 			+ "/gardian/oauth2/v2/redirect";
 
-	@Test
 	public void spacedogAuthenticationWithEdfOAuthV2() {
 
 		// prepare without any test header because EDF OAuth
@@ -91,7 +88,6 @@ public class EdfOAuthV2ResourceTest extends SpaceTest {
 		assertEquals(digital01.username(), credentials.name());
 	}
 
-	@Test
 	public void directAuthenticationWithEdfOAuthV2() {
 
 		// prepare
