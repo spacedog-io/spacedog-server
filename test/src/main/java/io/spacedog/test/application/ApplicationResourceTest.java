@@ -3,8 +3,6 @@
  */
 package io.spacedog.test.application;
 
-import org.junit.Test;
-
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.rest.SpaceTest;
@@ -14,7 +12,6 @@ import io.spacedog.utils.Json7;
 
 public class ApplicationResourceTest extends SpaceTest {
 
-	@Test
 	public void shouldSetAndDeleteApplicationPushCredentials() throws InterruptedException {
 
 		// prepare
