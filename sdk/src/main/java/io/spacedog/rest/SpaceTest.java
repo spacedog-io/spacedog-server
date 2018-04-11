@@ -14,12 +14,14 @@ import io.spacedog.utils.Utils;
 
 public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 
+	private static final String DEFAULT_PLATFORM_EMAIL = "platform@spacedog.io";
+
 	public static SpaceDog signUp(SpaceDog backend, String username, String password) {
 		return signUp(backend.backendId(), username, password);
 	}
 
 	public static SpaceDog signUp(String backendId, String username, String password) {
-		return signUp(backendId, username, password, "platform@spacedog.io");
+		return signUp(backendId, username, password, DEFAULT_PLATFORM_EMAIL);
 	}
 
 	public static SpaceDog signUp(SpaceDog backend, String username, String password, String email) {
@@ -37,7 +39,7 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 	public static SpaceDog createTempUser(String backendId, String username) {
 		String password = Passwords.random();
 		Credentials credentials = SpaceDog.backend(backendId)//
-				.credentials().create(username, password, "platform@spacedog.io");
+				.credentials().create(username, password, DEFAULT_PLATFORM_EMAIL);
 		return SpaceDog.fromCredentials(credentials).password(password);
 	}
 
@@ -58,22 +60,26 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 	}
 
 	public static SpaceDog resetTestBackend() {
-		return resetBackend("test", "test", "hi test");
+		return resetTestBackend("test");
 	}
 
 	public static SpaceDog resetTest2Backend() {
-		return resetBackend("test2", "test2", "hi test2");
+		return resetTestBackend("test2");
+	}
+
+	public static SpaceDog resetTestBackend(String backendId) {
+		return resetBackend(backendId, backendId, Passwords.random(), DEFAULT_PLATFORM_EMAIL);
 	}
 
 	public static SpaceDog resetBackend(String backendId, String username, String password) {
-		return resetBackend(backendId, username, password, "platform@spacedog.io");
+		return resetBackend(backendId, username, password, DEFAULT_PLATFORM_EMAIL);
 	}
 
 	public static SpaceDog resetBackend(String backendId, String username, String password, //
 			String email) {
 		SpaceDog superadmin = SpaceDog.backend(backendId)//
 				.username(username).password(password).email(email);
-		superadmin.admin().deleteBackend(backendId);
+		superdog().admin().deleteBackend(backendId);
 		SpaceDog.backend(backendId).admin().createBackend(username, password, email, false);
 		return superadmin;
 	}
