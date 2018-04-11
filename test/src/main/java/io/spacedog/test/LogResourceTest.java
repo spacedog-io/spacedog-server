@@ -303,8 +303,7 @@ public class LogResourceTest extends SpaceTest {
 				.assertEquals("/1/credentials", "results.2.path")//
 				.assertEquals("/1/data/user", "results.3.path")//
 				.assertEquals("/1/data", "results.4.path")//
-				.assertEquals("/1/backend", "results.5.path")//
-				.assertEquals("/1/backend", "results.6.path");
+				.assertEquals("/1/backend", "results.5.path");
 
 		// superdog search for test backend log to only get USER and lower logs
 		superdog(test).post("/1/log/search").size(7)//

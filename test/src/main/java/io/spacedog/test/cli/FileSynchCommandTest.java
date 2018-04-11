@@ -40,8 +40,11 @@ public class FileSynchCommandTest extends SpaceTest {
 		createHtmlFile("x/y/z/a et b");
 
 		// superadmin logs in with spacedog cli
-		new LoginCommand().verbose(true).backend(superadmin.backendId())//
-				.username(superadmin.username()).login();
+		new LoginCommand().verbose(true)//
+				.backend(superadmin.backendId())//
+				.username(superadmin.username())//
+				.password(superadmin.password().get())//
+				.login();
 
 		// synch temp folder
 		FileSynchCommand synch = new FileSynchCommand()//

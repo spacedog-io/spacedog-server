@@ -14,7 +14,7 @@ import io.spacedog.utils.Utils;
 
 public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 
-	private static final String DEFAULT_PLATFORM_EMAIL = "platform@spacedog.io";
+	public static final String DEFAULT_PLATFORM_EMAIL = "platform@spacedog.io";
 
 	public static SpaceDog signUp(SpaceDog backend, String username, String password) {
 		return signUp(backend.backendId(), username, password);

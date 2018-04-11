@@ -264,7 +264,8 @@ public class UserResourceTest extends SpaceTest {
 
 		// admin user changes titi user password should succeed
 
-		SpaceRequest.put("/1/user/titi/password").backend(test).basicAuth("test", "hi test")//
+		SpaceRequest.put("/1/user/titi/password").backend(test)//
+				.basicAuth("test", test.password().get())//
 				.formField("password", "hi titi 3").go(200);
 		SpaceRequest.get("/1/login").backend(test).basicAuth("titi", "hi titi 3").go(200);
 
@@ -274,8 +275,9 @@ public class UserResourceTest extends SpaceTest {
 
 		// admin deletes titi password should succeed
 
-		String newPasswordResetCode = SpaceRequest.delete("/1/user/titi/password").backend(test)
-				.basicAuth("test", "hi test").go(200).getString("passwordResetCode");
+		String newPasswordResetCode = SpaceRequest.delete("/1/user/titi/password")//
+				.backend(test).basicAuth("test", test.password().get()).go(200)//
+				.getString("passwordResetCode");
 
 		// titi login should fail
 

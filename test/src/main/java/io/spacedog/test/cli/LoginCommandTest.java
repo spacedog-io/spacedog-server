@@ -8,7 +8,6 @@ import io.spacedog.cli.LoginCommand;
 import io.spacedog.rest.SpaceRequestException;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
-import io.spacedog.utils.Credentials.Level;
 
 public class LoginCommandTest extends SpaceTest {
 
@@ -18,10 +17,9 @@ public class LoginCommandTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = resetTestBackend();
-		superadmin.credentials().create("fred", //
-				"hi fred", "platform@spacedog.io", Level.SUPER_ADMIN);
+		SpaceDog fred = createTempUser(superadmin, "fred");
 
-		// login without fails
+		// login with nothing fails
 		try {
 			new LoginCommand().verbose(true).login();
 			fail();
@@ -47,8 +45,8 @@ public class LoginCommandTest extends SpaceTest {
 
 		// login with invalid username fails
 		try {
-			new LoginCommand().verbose(true).backend("test")//
-					.username("XXX").password("hi test").login();
+			new LoginCommand().verbose(true).backend("test").username("XXX")//
+					.password(superadmin.password().get()).login();
 			fail();
 
 		} catch (SpaceRequestException e) {
@@ -58,8 +56,8 @@ public class LoginCommandTest extends SpaceTest {
 
 		// login with invalid backend fails
 		try {
-			new LoginCommand().verbose(true).backend("XXXX")//
-					.username("test").password("hi test").login();
+			new LoginCommand().verbose(true).backend("XXXX").username("test")//
+					.password(superadmin.password().get()).login();
 			fail();
 
 		} catch (SpaceRequestException e) {
@@ -69,8 +67,8 @@ public class LoginCommandTest extends SpaceTest {
 
 		// superadmin fails to login with fred's password
 		try {
-			new LoginCommand().verbose(true).backend("test")//
-					.username("test").password("hi fred").login();
+			new LoginCommand().verbose(true).backend("test").username("test")//
+					.password(fred.password().get()).login();
 			fail();
 
 		} catch (SpaceRequestException e) {
@@ -80,8 +78,8 @@ public class LoginCommandTest extends SpaceTest {
 
 		// fred fails to login with superadmin's password
 		try {
-			new LoginCommand().verbose(true).backend("test")//
-					.username("fred").password("hi test").login();
+			new LoginCommand().verbose(true).backend("test").username("fred")//
+					.password(superadmin.password().get()).login();
 			fail();
 
 		} catch (SpaceRequestException e) {
@@ -91,7 +89,7 @@ public class LoginCommandTest extends SpaceTest {
 
 		// login to test backend with backend id only succeeds
 		SpaceDog session = new LoginCommand().verbose(true).backend("test")//
-				.username("test").password("hi test").login();
+				.username("test").password(superadmin.password().get()).login();
 
 		assertEquals("test", session.backendId());
 		assertEquals("test", session.username());
@@ -106,7 +104,9 @@ public class LoginCommandTest extends SpaceTest {
 		// login to test backend with full backend url succeeds
 		session = new LoginCommand().verbose(true)//
 				.backend("http://test.lvh.me:8443")//
-				.username("fred").password("hi fred").login();
+				.username("fred")//
+				.password(fred.password().get())//
+				.login();
 
 		assertEquals("http://test.lvh.me:8443", session.backendId());
 		assertEquals("fred", session.username());

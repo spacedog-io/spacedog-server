@@ -34,7 +34,8 @@ public class ExportLogCommandTest extends SpaceTest {
 
 		// superadmin logs in with spacedog cli
 		new LoginCommand().backend(superadmin.backendId())//
-				.verbose(true).username(superadmin.username()).login();
+				.verbose(true).username(superadmin.username())//
+				.password(superadmin.password().get()).login();
 
 		String today = dateFormatter.print(DateTime.now());
 
