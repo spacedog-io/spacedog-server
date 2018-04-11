@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.watchdog;
+package io.spacedog.test;
 
 import org.junit.Test;
 
@@ -17,8 +17,7 @@ public class BackendResourceTestOncePerDay extends SpaceTest {
 		prepareTest();
 
 		// delete test backend if necessary
-		SpaceDog.backend("test").username("test").password("hi test")//
-				.admin().deleteBackend("test");
+		superdog().admin().deleteBackend("test");
 
 		// re create test backend with notification
 		SpaceDog.backend("test").admin().createBackend("test", "hi test", "test@dog.com", true);

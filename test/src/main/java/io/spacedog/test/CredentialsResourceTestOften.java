@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.watchdog;
+package io.spacedog.test;
 
 import org.joda.time.DateTime;
 import org.junit.Test;
@@ -418,7 +418,8 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// admin user changes titi user password should succeed
 		// official json body style
 
-		SpaceRequest.put("/1/credentials/" + titiId + "/password").backend("test").basicAuth("test", "hi test")//
+		SpaceRequest.put("/1/credentials/" + titiId + "/password").backend("test")//
+				.basicAuth("test", test.password().get())//
 				.bodyJson(TextNode.valueOf("hi titi 3"))//
 				.go(200);
 
@@ -431,7 +432,8 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// admin deletes titi password should succeed
 
 		String newPasswordResetCode = SpaceRequest//
-				.delete("/1/credentials/" + titiId + "/password").backend("test").basicAuth("test", "hi test")//
+				.delete("/1/credentials/" + titiId + "/password").backend("test")//
+				.basicAuth("test", test.password().get())//
 				.go(200)//
 				.getString("passwordResetCode");
 

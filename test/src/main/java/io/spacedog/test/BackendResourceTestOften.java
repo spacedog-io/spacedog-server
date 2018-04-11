@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.watchdog;
+package io.spacedog.test;
 
 import org.junit.Test;
 
@@ -13,6 +13,7 @@ import io.spacedog.rest.SpaceTarget;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
 import io.spacedog.utils.Json7;
+import io.spacedog.utils.Passwords;
 import io.spacedog.utils.SpaceParams;
 
 public class BackendResourceTestOften extends SpaceTest {
@@ -25,7 +26,7 @@ public class BackendResourceTestOften extends SpaceTest {
 		SpaceDog test = resetTestBackend();
 
 		// gets backend super admin info
-		SpaceRequest.get("/1/backend").auth(test).go(200)//
+		test.get("/1/backend").go(200)//
 				.assertEquals("test", "results.0.backendId")//
 				.assertEquals("test", "results.0.username")//
 				.assertEquals("platform@spacedog.io", "results.0.email");
@@ -35,12 +36,12 @@ public class BackendResourceTestOften extends SpaceTest {
 				.assertSizeEquals(0, "results");
 
 		// creates new backend with different id but same username
-		resetBackend("test1", "test", "hi test");
+		resetBackend("test1", "test", Passwords.random());
 
 		// fails to create new backend with non available id
-		SpaceRequest.post("/1/backend/test")
+		SpaceRequest.post("/1/backend/test")//
 				.bodyJson("backendId", "test", "username", "anotheruser", //
-						"password", "hi anotheruser", "email", "hello@spacedog.io")//
+						"password", Passwords.random(), "email", "hello@spacedog.io")//
 				.go(400)//
 				.assertEquals("test", "invalidParameters.backendId.value");
 
@@ -52,10 +53,12 @@ public class BackendResourceTestOften extends SpaceTest {
 		SpaceRequest.get("/1/login").backend(test).go(403);
 
 		// invalid admin username login fails
-		SpaceRequest.get("/1/login").backend("test").basicAuth("XXX", "hi test").go(401);
+		SpaceRequest.get("/1/login").backend("test")//
+				.basicAuth("XXX", test.password().get()).go(401);
 
 		// invalid admin password login fails
-		SpaceRequest.get("/1/login").backend("test").basicAuth("test", "hi XXX").go(401);
+		SpaceRequest.get("/1/login").backend("test")//
+				.basicAuth("test", "hi XXX").go(401);
 
 		// data access without credentials succeeds
 		SpaceRequest.get("/1/data").refresh().backend(test).go(200)//
@@ -77,10 +80,10 @@ public class BackendResourceTestOften extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = SpaceDog.backend("test").username("test").password("hi test");
-		test.admin().deleteBackend(test.backendId());
+		superdog().admin().deleteBackend("test");
 		ObjectNode body = Json7.object("username", "test", //
-				"password", "hi test", "email", "hello@spacedog.io");
+				"password", Passwords.random(), //
+				"email", "hello@spacedog.io");
 
 		// fails to create a backend whom id contains invalid characters
 		SpaceRequest.post("/1/backend/xxx-xxx").bodyJson(body).go(400);
@@ -135,8 +138,9 @@ public class BackendResourceTestOften extends SpaceTest {
 		prepareTest();
 
 		// super admin deletes the test backend
-		SpaceDog test = SpaceDog.backend("test").username("test").password("hi test");
-		test.admin().deleteBackend(test.backendId());
+		SpaceDog test = SpaceDog.backend("test").username("test")//
+				.password(Passwords.random());
+		superdog().admin().deleteBackend(test.backendId());
 
 		// it is also possible to create a backend with the same request host as
 		// other backend requests. Example https://cel.suez.fr
@@ -144,11 +148,12 @@ public class BackendResourceTestOften extends SpaceTest {
 		// record
 		SpaceRequest.post("/1/backend").backend("test")//
 				.queryParam(SpaceParams.PARAM_NOTIF, "false")//
-				.bodyJson("username", "test", "password", "hi test", "email", "test@test.fr")//
+				.bodyJson("username", "test", "password", test.password().get(), //
+						"email", "test@test.fr")//
 				.go(201);
 
-		// super admin gets its backend info
-		SpaceRequest.get("/1/backend").backend("test").basicAuth("test", "hi test").go(200)//
+		// superadmin gets its backend info
+		test.get("/1/backend").go(200)//
 				.assertEquals(1, "total")//
 				.assertEquals("test", "results.0.backendId")//
 				.assertEquals("test", "results.0.username")//

@@ -1,4 +1,4 @@
-package io.spacedog.watchdog;
+package io.spacedog.test.share;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -15,7 +15,6 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.Resources;
 
 import io.spacedog.model.DataPermission;
 import io.spacedog.model.ShareSettings;
@@ -183,8 +182,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		SpaceDog test = resetTestBackend();
 		SpaceDog vince = signUp(test, "vince", "hi vince", "vince@dog.com");
 		SpaceDog fred = signUp(test, "fred", "hi fred", "fred@dog.com");
-		byte[] pngBytes = Resources.toByteArray(//
-				Resources.getResource("io/spacedog/watchdog/tweeter.png"));
+		byte[] pngBytes = ClassResources.loadToBytes(this, "tweeter.png");
 
 		// super admin sets custom share permissions
 		ShareSettings settings = new ShareSettings();

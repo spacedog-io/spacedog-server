@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.watchdog;
+package io.spacedog.test;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;

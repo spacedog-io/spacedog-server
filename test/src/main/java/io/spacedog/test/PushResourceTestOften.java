@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.watchdog;
+package io.spacedog.test;
 
 import static org.hamcrest.collection.IsArrayContaining.hasItemInArray;
 

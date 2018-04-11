@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.watchdog;
+package io.spacedog.test;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -110,7 +110,7 @@ public class DataResource2TestOften extends SpaceTest {
 		// find by simple text search
 
 		SpaceResponse res1b = SpaceRequest.get("/1/search/sale")//
-		.queryParam("q", "museum").refresh().auth(fred)//
+				.queryParam("q", "museum").refresh().auth(fred)//
 				.go(200).assertEquals(1, "total");
 
 		res1.assertEqualsWithoutMeta(Json7.checkObject(res1b.get("results.0")));
@@ -123,7 +123,8 @@ public class DataResource2TestOften extends SpaceTest {
 				.put("query", "museum")//
 				.build().toString();
 
-		SpaceResponse res1c = SpaceRequest.post("/1/search/sale").auth(fred).bodyString(query).go(200).assertEquals(1, "total");
+		SpaceResponse res1c = SpaceRequest.post("/1/search/sale").auth(fred).bodyString(query).go(200).assertEquals(1,
+				"total");
 
 		res1.assertEqualsWithoutMeta(Json7.checkObject(res1c.get("results.0")));
 
@@ -161,7 +162,7 @@ public class DataResource2TestOften extends SpaceTest {
 		// update with invalid version should fail
 
 		SpaceRequest.put("/1/data/sale/" + id)//
-		.queryParam("version", "XXX").auth(fred)//
+				.queryParam("version", "XXX").auth(fred)//
 				.bodyJson("number", "0987654321").go(400)//
 				.assertFalse("success");
 
@@ -350,7 +351,7 @@ public class DataResource2TestOften extends SpaceTest {
 
 	private Collection<String> fetchMessages(SpaceDog user, int from, int size) {
 		JsonNode results = SpaceRequest.get("/1/data/message")//
-		.refresh().from(from).size(size).auth(user).go(200)//
+				.refresh().from(from).size(size).auth(user).go(200)//
 				.assertEquals(4, "total")//
 				.assertSizeEquals(size, "results")//
 				.get("results");
