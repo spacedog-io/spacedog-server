@@ -93,6 +93,12 @@
 			<artifactId>pebble</artifactId>
 			<version> 2.2.3 </version>
 		</dependency>
+		<dependency>
+			<groupId>com.univocity</groupId>
+			<artifactId>univocity-parsers</artifactId>
+			<version>2.6.1</version>
+			<type>jar</type>
+		</dependency>
 	</dependencies>
 
 </project>

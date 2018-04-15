@@ -10,7 +10,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
+import io.spacedog.model.CsvRequest;
 import io.spacedog.rest.SpaceRequest;
+import io.spacedog.rest.SpaceResponse;
 import io.spacedog.sdk.elastic.ESSearchSourceBuilder;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json7;
@@ -346,6 +348,16 @@ public class DataEndpoint implements SpaceFields, SpaceParams {
 		complex.query = builder.build();
 
 		return search(complex, dataClass);
+	}
+
+	//
+	// CSV
+	//
+
+	public SpaceResponse csv(String type, CsvRequest request) {
+		return dog.post("/1/search/{type}/_csv")//
+				.routeParam("type", type)//
+				.bodyPojo(request).go(200);
 	}
 
 	//

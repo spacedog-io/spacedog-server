@@ -8,12 +8,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
 import org.elasticsearch.action.deletebyquery.DeleteByQueryResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.json.JsonXContent;
@@ -28,6 +30,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
 import io.spacedog.core.Json8;
+import io.spacedog.model.CsvRequest;
 import io.spacedog.model.DataPermission;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Credentials;
@@ -110,24 +113,30 @@ public class SearchResource extends Resource {
 		return JsonPayload.json(response);
 	}
 
-	// @Post("/1/filter/:type")
-	// @Post("/1/filter/:type")
-	// public Payload postFilterForType(String type, String body, Context
-	// context) {
-	// try {
-	// Credentials credentials = SpaceContext.checkCredentials();
-	// boolean refresh = context.query().getBoolean(REFRESH, false);
-	// DataStore.get().refreshType(refresh, credentials.backendId(), type);
-	// FilteredSearchBuilder builder =
-	// DataStore.get().searchBuilder(credentials.backendId(), type)
-	// .applyContext(context).applyFilters(Json.readObject(body));
-	// return JsonPayload.json(extractResults(builder.get(), context,
-	// credentials));
-	//
-	// } catch (InterruptedException | ExecutionException e) {
-	// throw new RuntimeException(e);
-	// }
-	// }
+	@Post("/:type/_csv")
+	@Post("/:type/_csv/")
+	public Payload postSearchForTypeToCsv(String type, CsvRequest request, Context context) {
+
+		Credentials credentials = SpaceContext.getCredentials();
+		if (!DataAccessControl.check(credentials, type, DataPermission.search))
+			throw Exceptions.forbidden("forbidden to search [%s] objects", type);
+
+		DataStore.get().refreshType(request.refresh, SpaceContext.backendId(), type);
+		Locale requestLocale = getRequestLocale(context);
+		ElasticClient elastic = Start.get().getElasticClient();
+
+		SearchResponse response = elastic.prepareSearch()//
+				.setIndices(elastic.toAliases(credentials.backendId(), type))//
+				.setTypes(type)//
+				.setSource(request.query.toString())//
+				.setScroll(TimeValue.timeValueSeconds(60))//
+				.setSize(1000)//
+				.get();
+
+		return new Payload("text/plain;charset=utf-8;", //
+				new CsvStreamingOutput(request, response, requestLocale));
+
+	}
 
 	//
 	// implementation
