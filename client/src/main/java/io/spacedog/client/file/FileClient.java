@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.UUID;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
 import io.spacedog.client.SpaceDog;
@@ -82,10 +83,11 @@ public class FileClient {
 	}
 
 	private String randomPath(String rootPath, String fileName) {
-		return WebPath.parse(rootPath)//
-				.addLast(UUID.randomUUID().toString())//
-				.addLast(fileName)//
-				.toString();
+		String last = UUID.randomUUID().toString();
+		if (!Strings.isNullOrEmpty(fileName))
+			last = last + "-" + fileName;
+
+		return WebPath.parse(rootPath).addLast(last).toString();
 	}
 
 	public FileMeta share(String rootPath, File file) {
