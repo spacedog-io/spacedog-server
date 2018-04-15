@@ -6,6 +6,7 @@ package io.spacedog.services;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -17,6 +18,7 @@ import com.google.common.collect.Sets;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.SpaceFields;
+import io.spacedog.utils.SpaceHeaders;
 import io.spacedog.utils.SpaceParams;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
@@ -60,6 +62,13 @@ public abstract class Resource implements SpaceFields, SpaceParams {
 				.orElseThrow(() -> Exceptions.runtime("no AWS bucket prefix configuration"));
 
 		return awsBucketPrefix + bucketSuffix;
+	}
+
+	public Locale getRequestLocale(Context context) {
+		String languageTag = context.header(SpaceHeaders.ACCEPT_LANGUAGE);
+		return Strings.isNullOrEmpty(languageTag) //
+				? Locale.getDefault()//
+				: Locale.forLanguageTag(languageTag);
 	}
 
 	public static FormQuery formQuery(Context context) {
