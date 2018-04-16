@@ -6,6 +6,7 @@ package io.spacedog.server;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -15,6 +16,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.http.SpaceFields;
+import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
@@ -59,6 +61,13 @@ public abstract class SpaceService implements SpaceFields, SpaceParams {
 
 	public static FormQuery formQuery(Context context) {
 		return new FormQuery(context);
+	}
+
+	public Locale getRequestLocale(Context context) {
+		String languageTag = context.header(SpaceHeaders.ACCEPT_LANGUAGE);
+		return Strings.isNullOrEmpty(languageTag) //
+				? Locale.getDefault()//
+				: Locale.forLanguageTag(languageTag);
 	}
 
 	public static class FormQuery {
