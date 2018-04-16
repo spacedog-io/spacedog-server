@@ -17,8 +17,8 @@ public class WebServiceTest extends SpaceTest {
 	public void test() {
 
 		// prepare
-		prepareTest(false);
-		superadmin = clearRootBackend();
+		prepareTest();
+		superadmin = clearRootBackend(true);
 
 		// check no file in backend
 		assertEquals(0, superadmin.files().listAll().files.length);

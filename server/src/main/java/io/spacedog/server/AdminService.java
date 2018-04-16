@@ -5,9 +5,9 @@ package io.spacedog.server;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import io.spacedog.client.http.WebPath;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
+import net.codestory.http.Context;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.payload.Payload;
@@ -31,34 +31,15 @@ public class AdminService extends SpaceService {
 		throw Exceptions.runtime("this route always returns http code 500");
 	}
 
-	@Post("/1/admin/clear")
-	@Post("/1/admin/clear")
-	public void clear() {
-		elastic().deleteBackendIndices();
-		deleteAllFiles();
-		initBackendIndices();
-	}
+	@Post("/1/admin/_clear")
+	@Post("/1/admin/_clear")
+	public void clear(Context context) {
+		SpaceContext.credentials().checkSuperDog();
 
-	//
-	// Public interface
-	//
+		if (!SpaceContext.backend().host().endsWith("lvh.me"))
+			throw Exceptions.forbidden("only allowed for [*.lvh.me] env");
 
-	// TODO
-	// Move this somewhere else. ElasticClient ?
-	public void initBackendIndices() {
-		CredentialsService.get().initIndex();
-		LogService.get().initIndex();
-	}
-
-	public void deleteAllFiles() {
-		ServerConfiguration configuration = Server.get().configuration();
-
-		if (!SpaceContext.isTest() //
-				&& configuration.awsRegion().isPresent() //
-				&& !configuration.isOffline()) {
-
-			S3Service.get().doDeleteAll(new S3File(WebPath.ROOT));
-		}
+		Server.get().clear(context.query().getBoolean("files", false));
 	}
 
 	//

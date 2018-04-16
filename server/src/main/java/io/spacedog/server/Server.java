@@ -159,8 +159,20 @@ public class Server {
 						XContentType.JSON)//
 				.get();
 
-		// init backend indices
-		AdminService.get().initBackendIndices();
+		// init indices
+		initBackendIndices();
+	}
+
+	public void initBackendIndices() {
+		CredentialsService.get().initIndex();
+		LogService.get().initIndex();
+	}
+
+	public void clear(boolean files) {
+		elasticClient().deleteAbsolutelyAllIndices();
+		if (files)
+			FileService.get().deleteAbsolutelyAllFiles();
+		initBackendIndices();
 	}
 
 	protected void startFluent() {
@@ -240,7 +252,8 @@ public class Server {
 
 	protected Server() {
 		if (singleton != null)
-			throw Exceptions.runtime("server already running");
+			throw Exceptions.runtime("server is already running");
 		singleton = this;
 	}
+
 }

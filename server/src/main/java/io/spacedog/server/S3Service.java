@@ -24,6 +24,7 @@ import com.amazonaws.services.s3.model.PutObjectResult;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 
 import io.spacedog.client.http.ContentTypes;
 import io.spacedog.client.http.SpaceHeaders;
@@ -130,14 +131,25 @@ public class S3Service extends SpaceService {
 		if (file.exists())
 			throw Exceptions.runtime("file [%s] exists", file);
 
-		String next = null;
+		List<String> keys = doDeleteAll(file.bucketName(), file.s3Prefix());
+
 		ArrayNode deleted = Json.array();
+		for (String key : keys)
+			deleted.add(fromS3Key(key).toString());
+
+		return JsonPayload.ok().withFields("deleted", deleted).build();
+	}
+
+	public List<String> doDeleteAll(String bucketName, String s3Prefix) {
+
+		String next = null;
+		List<String> deleted = Lists.newArrayList();
 
 		do {
 
 			ListObjectsRequest request = new ListObjectsRequest()//
-					.withBucketName(file.bucketName())//
-					.withPrefix(file.s3Prefix())//
+					.withBucketName(bucketName)//
+					.withPrefix(s3Prefix)//
 					.withMaxKeys(100);
 
 			if (next != null)
@@ -146,7 +158,7 @@ public class S3Service extends SpaceService {
 			ObjectListing objects = s3.listObjects(request);
 
 			if (!objects.getObjectSummaries().isEmpty()) {
-				s3.deleteObjects(new DeleteObjectsRequest(file.bucketName())//
+				s3.deleteObjects(new DeleteObjectsRequest(bucketName)//
 						.withKeys(objects.getObjectSummaries()//
 								.stream()//
 								.map(summary -> new KeyVersion(summary.getKey()))//
@@ -154,13 +166,13 @@ public class S3Service extends SpaceService {
 			}
 
 			for (S3ObjectSummary summary : objects.getObjectSummaries())
-				deleted.add(fromS3Key(summary.getKey()).toString());
+				deleted.add(summary.getKey());
 
 			next = objects.getNextMarker();
 
 		} while (next != null);
 
-		return JsonPayload.ok().withFields("deleted", deleted).build();
+		return deleted;
 	}
 
 	public Payload doUpload(S3File file, Context context) {

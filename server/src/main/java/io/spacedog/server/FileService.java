@@ -62,6 +62,30 @@ public class FileService extends SpaceService {
 	}
 
 	//
+	// public interface
+	//
+
+	public void deleteBackendFiles() {
+		ServerConfiguration configuration = Server.get().configuration();
+
+		if (configuration.awsRegion().isPresent() //
+				&& !configuration.isOffline()) {
+
+			S3Service.get().doDeleteAll(new S3File(WebPath.ROOT));
+		}
+	}
+
+	public void deleteAbsolutelyAllFiles() {
+		ServerConfiguration configuration = Server.get().configuration();
+
+		if (configuration.awsRegion().isPresent() //
+				&& !configuration.isOffline()) {
+
+			S3Service.get().doDeleteAll(S3Service.getBucketName("files"), "");
+		}
+	}
+
+	//
 	// Implementation
 	//
 

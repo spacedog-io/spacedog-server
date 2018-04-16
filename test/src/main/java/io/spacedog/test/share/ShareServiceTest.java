@@ -25,6 +25,7 @@ import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.Utils;
 
 public class ShareServiceTest extends SpaceTest {
 
@@ -37,9 +38,9 @@ public class ShareServiceTest extends SpaceTest {
 	public void shareWithDefaultSettings() throws IOException {
 
 		// prepare
-		prepareTest(false);
+		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearRootBackend(true);
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog admin = createTempDog(superadmin, "admin", Roles.admin);
 
@@ -75,9 +76,9 @@ public class ShareServiceTest extends SpaceTest {
 	public void shareWithCustomSettings() throws IOException {
 
 		// prepare
-		prepareTest(false);
+		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearRootBackend(true);
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog fred = createTempDog(superadmin, "fred");
 		SpaceDog admin = createTempDog(superadmin, "admin", Roles.admin);
@@ -220,9 +221,9 @@ public class ShareServiceTest extends SpaceTest {
 	public void shareWithAnotherCustomSettings() throws IOException {
 
 		// prepare
-		prepareTest(false);
+		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearRootBackend(true);
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog fred = createTempDog(superadmin, "fred");
 		byte[] pngBytes = ClassResources.loadAsBytes(this, "tweeter.png");
@@ -319,7 +320,8 @@ public class ShareServiceTest extends SpaceTest {
 		// get file from location URI with content disposition
 		stringContent = superadmin.get(meta.location)//
 				.queryParam(WITH_CONTENT_DISPOSITION, true).go(200)//
-				.assertHeaderEquals("attachment; filename=\"un petit text ?\"", //
+				.assertHeaderEquals("attachment; filename=\"" //
+						+ Utils.removePreffix(meta.path, "/shares/") + "\"", //
 						SpaceHeaders.CONTENT_DISPOSITION)//
 				.asString();
 
@@ -435,8 +437,8 @@ public class ShareServiceTest extends SpaceTest {
 	public void testFileOwnershipErrorsDoNotDrainAllS3Connection() throws IOException {
 
 		// prepare
-		prepareTest(false);
-		SpaceDog superadmin = clearRootBackend();
+		prepareTest();
+		SpaceDog superadmin = clearRootBackend(true);
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog fred = createTempDog(superadmin, "fred");
 
@@ -459,9 +461,9 @@ public class ShareServiceTest extends SpaceTest {
 	public void shareDownloadAuthenticatedViaQueryParam() {
 
 		// prepare
-		prepareTest(false);
+		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearRootBackend(true);
 		SpaceDog vince = createTempDog(superadmin, "vince").login();
 		SpaceDog fred = createTempDog(superadmin, "fred").login();
 
@@ -496,8 +498,8 @@ public class ShareServiceTest extends SpaceTest {
 	public void shareUploadHasSizeLimit() {
 
 		// prepare
-		prepareTest(false);
-		SpaceDog superadmin = clearRootBackend();
+		prepareTest();
+		SpaceDog superadmin = clearRootBackend(true);
 
 		// superadmin sets file settings with size limit of 1 KB
 		FileSettings settings = new FileSettings();
@@ -516,8 +518,8 @@ public class ShareServiceTest extends SpaceTest {
 	public void shareDownloadGetsContentLengthHeaderIfNoGzipEncoding() {
 
 		// prepare
-		prepareTest(false);
-		SpaceDog superadmin = clearRootBackend();
+		prepareTest();
+		SpaceDog superadmin = clearRootBackend(true);
 
 		// superadmin shares a small png file
 		String pngLocation = superadmin.files()//

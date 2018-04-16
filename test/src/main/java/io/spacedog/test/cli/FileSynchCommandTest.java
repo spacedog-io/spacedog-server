@@ -24,8 +24,8 @@ public class FileSynchCommandTest extends SpaceTest {
 	public void test() throws IOException {
 
 		// prepare
-		prepareTest(false);
-		SpaceDog superadmin = clearRootBackend();
+		prepareTest();
+		SpaceDog superadmin = clearRootBackend(true);
 
 		// prepare temp folder to synch
 		source = Files.createTempDirectory(this.getClass().getSimpleName());

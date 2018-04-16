@@ -45,7 +45,12 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 	}
 
 	public static SpaceDog clearRootBackend() {
-		superdog().post("/1/admin/clear").go(200);
+		return clearRootBackend(false);
+	}
+
+	public static SpaceDog clearRootBackend(boolean files) {
+		SpaceDog superdog = superdog();
+		superdog.post("/1/admin/_clear").queryParam("files", files).go(200);
 		return superdog.credentials().create(Roles.superadmin, //
 				Passwords.random(), DEFAULT_EMAIL, Roles.superadmin);
 	}
@@ -69,15 +74,10 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 				grandParentStackTraceElement.getMethodName());
 	}
 
-	private static SpaceDog superdog;
-
 	public static SpaceDog superdog() {
-		if (superdog == null)
-			superdog = SpaceDog.dog()//
-					.username(Credentials.SUPERDOG.username())//
-					.password(SpaceEnv.env().superdogPassword());
-
-		return superdog;
+		return SpaceDog.dog()//
+				.username(Credentials.SUPERDOG.username())//
+				.password(SpaceEnv.env().superdogPassword());
 	}
 
 	public static DateTime assertDateIsValid(JsonNode date) {

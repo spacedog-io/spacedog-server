@@ -17,9 +17,9 @@ public class FileServiceTest extends SpaceTest {
 	public void testDefaultWwwSettings() throws Exception {
 
 		// prepare
-		prepareTest(false);
+		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearRootBackend(true);
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		// invalid uri throws 404
@@ -99,9 +99,9 @@ public class FileServiceTest extends SpaceTest {
 	public void testCustomPrefixSettings() throws Exception {
 
 		// prepare
-		prepareTest(false);
+		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearRootBackend(true);
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		// superadmin sets file settings for 'assets' prefix
