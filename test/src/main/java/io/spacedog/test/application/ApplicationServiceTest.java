@@ -5,8 +5,6 @@ package io.spacedog.test.application;
 
 import java.util.List;
 
-import org.junit.Test;
-
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.push.PushApplication;
 import io.spacedog.client.push.PushApplication.Credentials;
@@ -16,7 +14,7 @@ import io.spacedog.utils.ClassResources;
 
 public class ApplicationServiceTest extends SpaceTest {
 
-	@Test
+	// @Test
 	public void shouldSetAndDeleteApplicationPushCredentials() throws InterruptedException {
 
 		// prepare
