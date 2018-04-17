@@ -4,10 +4,12 @@
 package io.spacedog.server;
 
 import java.io.IOException;
+import java.util.Locale;
 
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.text.Text;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.json.JsonXContent;
@@ -15,6 +17,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.InternalAggregations;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -25,6 +28,7 @@ import com.google.common.base.Strings;
 
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.Permission;
+import io.spacedog.client.data.CsvRequest;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
@@ -80,6 +84,32 @@ public class SearchService extends SpaceService {
 			return JsonPayload.ok().withContent(result).build();
 		}
 		throw Exceptions.forbidden("forbidden to search [%s] objects", type);
+	}
+
+	@Post("/:type/_csv")
+	@Post("/:type/_csv/")
+	public Payload postSearchForTypeToCsv(String type, CsvRequest request, Context context) {
+
+		Credentials credentials = SpaceContext.credentials();
+		if (!DataAccessControl.roles(type).containsOne(credentials, Permission.search))
+			throw Exceptions.forbidden("forbidden to search [%s] objects", type);
+
+		ElasticClient elastic = elastic();
+		DataStore.get().refreshDataTypes(request.refresh, type);
+		Locale requestLocale = getRequestLocale(context);
+		SearchSourceBuilder builder = SearchSourceBuilder.searchSource()//
+				.query(ElasticUtils.toQueryBuilder(request.query.toString()));
+
+		SearchResponse response = elastic.prepareSearch(//
+				DataStore.toDataIndex(type))//
+				.setTypes(type)//
+				.setSource(builder)//
+				.setScroll(TimeValue.timeValueSeconds(60))//
+				.setSize(request.pageSize)//
+				.get();
+
+		return new Payload("text/plain;charset=utf-8;", //
+				new CsvStreamingOutput(request, response, requestLocale));
 	}
 
 	@Delete("/:type/_search")

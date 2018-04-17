@@ -350,4 +350,14 @@ public class DataClient implements SpaceFields, SpaceParams {
 
 	}
 
+	//
+	// CSV
+	//
+
+	public SpaceResponse csv(String type, CsvRequest request) {
+		return dog.post("/1/data/{type}/_csv")//
+				.routeParam("type", type)//
+				.bodyPojo(request).go(200);
+	}
+
 }
