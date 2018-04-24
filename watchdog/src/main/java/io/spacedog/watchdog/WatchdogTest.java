@@ -20,6 +20,8 @@ import io.spacedog.utils.SpaceHeaders;
 
 public class WatchdogTest extends SpaceTest {
 
+	public static final String TEST_V0_BACKEND_ID = "testv0";
+
 	public static class Message extends DataObject<Message> {
 		public String text;
 
@@ -40,7 +42,7 @@ public class WatchdogTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend("v0test");
+		SpaceDog superadmin = resetTestBackend(TEST_V0_BACKEND_ID);
 		SpaceDog vince = createTempUser(superadmin, "vince");
 
 		// set message schema
@@ -88,7 +90,7 @@ public class WatchdogTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend("v0test");
+		SpaceDog superadmin = resetTestBackend(TEST_V0_BACKEND_ID);
 		SpaceDog vince = createTempUser(superadmin, "vince");
 
 		// vince logs in
@@ -108,7 +110,7 @@ public class WatchdogTest extends SpaceTest {
 
 		// prepare
 		prepareTest(false);
-		SpaceDog superadmin = resetTestBackend("v0test");
+		SpaceDog superadmin = resetTestBackend(TEST_V0_BACKEND_ID);
 		SpaceDog vince = createTempUser(superadmin, "vince");
 
 		// backend is brand new, no shared files

@@ -7,6 +7,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import io.spacedog.jobs.Job;
 import io.spacedog.rest.SpaceEnv;
 import io.spacedog.rest.SpaceRequest;
+import io.spacedog.utils.Backends;
 
 public class Purge extends Job {
 
@@ -19,7 +20,7 @@ public class Purge extends Job {
 
 		try {
 			SpaceEnv env = SpaceEnv.defaultEnv();
-			lastname(env.target().host("api"));
+			lastname(env.target().host(Backends.rootApi()));
 
 			// set high timeout to wait for purge response from server
 			// since delete of thousands of logs might take long
@@ -28,7 +29,8 @@ public class Purge extends Job {
 			int keepInDays = env.get("keep_in_days", 7);
 			String before = DateTime.now().minusDays(keepInDays).toString();
 
-			SpaceRequest.delete("/1/log").backend("api")//
+			SpaceRequest.delete("/1/log")//
+					.backend(Backends.rootApi())//
 					.basicAuth("purgeall", password)//
 					.queryParam("before", before).go(200);
 

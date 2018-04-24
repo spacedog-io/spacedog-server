@@ -98,12 +98,12 @@ public class LogResourceTest extends SpaceTest {
 		prepareTest();
 
 		// superdog creates purge user in root backend
-		superdogDeletesCredentials("api", "purgealltest");
-		SpaceDog purgeUser = createTempUser("api", "purgealltest");
+		superdogDeletesCredentials(Backends.rootApi(), "purgealltest");
+		SpaceDog purgeUser = createTempUser(Backends.rootApi(), "purgealltest");
 
 		// purge user fails to delete any logs
 		// since it doesn't have the 'purgeall' role
-		SpaceRequest.delete("/1/log").auth(purgeUser).go(403);
+		purgeUser.delete("/1/log").go(403);
 
 		// superdog assigns 'purgeall' role to purge user
 		superdog().put("/1/credentials/" + purgeUser.id() + "/roles/purgeall")//
@@ -116,10 +116,10 @@ public class LogResourceTest extends SpaceTest {
 		SpaceDog vince = signUp(test2, "vince", "hi vince");
 
 		// data requests for logs
-		SpaceRequest.get("/1/data").auth(fred).go(200);
-		SpaceRequest.get("/1/data").auth(vince).go(200);
-		SpaceRequest.get("/1/data").auth(fred).go(200);
-		SpaceRequest.get("/1/data").auth(vince).go(200);
+		fred.get("/1/data").go(200);
+		vince.get("/1/data").go(200);
+		fred.get("/1/data").go(200);
+		vince.get("/1/data").go(200);
 
 		// check everything is in place
 		String before = superdog().get("/1/log").refresh().go(200)//
@@ -142,10 +142,10 @@ public class LogResourceTest extends SpaceTest {
 				.getString("results.0.receivedAt");
 
 		// purge user fails to get logs
-		SpaceRequest.get("/1/log").auth(purgeUser).go(403);
+		purgeUser.get("/1/log").go(403);
 
 		// purge user deletes all backend logs before the last data request
-		SpaceRequest.delete("/1/log").queryParam("before", before).auth(purgeUser).go(200);
+		purgeUser.delete("/1/log").queryParam("before", before).go(200);
 
 		// superdog checks all backend logs are deleted but ...
 		before = superdog().get("/1/log").refresh().go(200)//
@@ -218,7 +218,7 @@ public class LogResourceTest extends SpaceTest {
 				.assertEquals("test", "results.1.credentials.backendId")//
 				.assertEquals("GET", "results.2.method")//
 				.assertEquals("/1/log", "results.2.path")//
-				.assertEquals("api", "results.2.credentials.backendId")//
+				.assertEquals(Backends.rootApi(), "results.2.credentials.backendId")//
 				.assertEquals("GET", "results.3.method")//
 				.assertEquals("/1/login", "results.3.path")//
 				.assertEquals("test2", "results.3.credentials.backendId")//
@@ -241,8 +241,9 @@ public class LogResourceTest extends SpaceTest {
 		prepareTest();
 		SpaceDog superdog = superdog();
 		String nathPassword = Passwords.random();
-		SpaceDog nath = SpaceDog.backend("api").username("nath")//
-				.email("nath@dog.com").password(nathPassword);
+		SpaceDog nath = SpaceDog.backend(Backends.rootApi())//
+				.username("nath").email("nath@dog.com")//
+				.password(nathPassword);
 
 		// superdog deletes nath if she exists for fresh start
 		Optional7<Credentials> credentials = superdog.credentials()//

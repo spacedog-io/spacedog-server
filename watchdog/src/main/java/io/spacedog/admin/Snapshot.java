@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import io.spacedog.jobs.Job;
 import io.spacedog.rest.SpaceEnv;
 import io.spacedog.sdk.SpaceDog;
+import io.spacedog.utils.Backends;
 
 public class Snapshot extends Job {
 
@@ -17,13 +18,14 @@ public class Snapshot extends Job {
 
 		try {
 			SpaceEnv env = SpaceEnv.defaultEnv();
-			lastname(env.target().host("api"));
+			lastname(env.target().host(Backends.rootApi()));
 
 			// set high timeout to wait for server
 			// since snapshot service is slow
 			env.httpTimeoutMillis(120000);
 
-			SpaceDog snapshotDog = SpaceDog.backend("api").username("snapshotall")//
+			SpaceDog snapshotDog = SpaceDog.backend(Backends.rootApi())//
+					.username("snapshotall")//
 					.password(env.get("spacedog_jobs_snapshotall_password"));
 
 			snapshotDog.post("/1/snapshot").go(202);

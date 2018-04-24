@@ -18,6 +18,7 @@ import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceRequestException;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.SpaceDog;
+import io.spacedog.utils.Backends;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Json7;
 import io.spacedog.utils.Optional7;
@@ -97,7 +98,7 @@ public class CredentialsResourceTest extends SpaceTest {
 		// superdog credentials backendId is not changed
 		// by login into "test" backend
 		superdog().get("/1/credentials/" + testSuperdog.id()).go(200)//
-				.assertEquals("api", "backendId");
+				.assertEquals(Backends.rootApi(), "backendId");
 
 		// superdog can still access anything in any backend with the old token
 		SpaceRequest.get("/1/backend").backend("api").bearerAuth(apiToken).go(200);
