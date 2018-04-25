@@ -76,7 +76,6 @@ The server is configured by a the following properties :
 | spacedog.server.port                     | Mandatory. Port the server should bind to listen to incoming http requests. For example, `spacedog.io`servers are bound to `8443` port. |
 | spacedog.api.url.base                    | Mandatory. Base of SpaceDog Server URLs. `spacedog.io`base URL is `.spacedog.io`. A debug server running locally with port `8443` should have `.lvh.me:8443` as base URL. The base URL is used to build all server URLs returned in request responses. |
 | spacedog.api.url.scheme                  | Mandatory. Values `http`or `https`. Scheme of the SpaceDog Server URLs. `spacedog.io` sheme is `https`. A debug server running locally with port `8443` should have `http` as scheme. The scheme is used to build all server URLs returned in request responses. |
-| spacedog.root.backend.id                 | Defaults to `api`. Name of the server root backend. |
 | spacedog.elastic.data.path               | Path to the directory where the server stores all ElasticSearch data files. Defaults to `<spacedog.home.path>/data`. |
 | spacedog.elastic.http.enabled            | `true` to enable ElasticSearch http REST API on port `9200`. Defaults to `false`. |
 | spacedog.aws.bucket.prefix               | AWS S3 bucket name prefix of the buckets used by the SpaceDog Server. The server stores files in `<prefix>-files` bucket, shares in `<prefix>-shared` bucket, snapshots in `spacedog-snapshots` bucket. For example, `spacedog.io`platform S3 prefix is `spacedog-`. |
