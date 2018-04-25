@@ -1,10 +1,4 @@
----
-layout: doc
-title: Credentials
-rank: 0
----
-
-#### Credentials
+### Credentials
 
 Users must have credentials to access a backend, its data and services. Users have standard roles (`user`, `admin`, `super_admin`) and custom app roles. Users must log in with a valid username and password pair provided as regular http basic authorization.
 
@@ -25,7 +19,7 @@ A credentials object has the following public fields:
 | updatedAt              | Timestamp. Read only. The credentials las update timestamp. |
 
 
-##### /1/login
+#### /1/login
 
 *POST* checks if the credentials specified by the `Authorization` header is authorized to access the specified backend. Credentials's username and password must be provided through regular http `Basic authorization scheme. It also creates a new user session and returns its access token.
 
@@ -57,11 +51,11 @@ Returns:
 }
 ```
 
-##### /1/logout
+#### /1/logout
 
 *POST* closes a valid user session. Session access token must be provided through regular http `Bearer` authorization scheme.
 
-##### /1/settings/credentials
+#### /1/settings/credentials
 
 *GET* returns the credentials service settings. Only authorized to superadmins by default. See [Settings](settings.html) for more information on settings ACL.
 
@@ -100,7 +94,7 @@ Default credentials settings:
 | resetInvalidChallengesAfterMinutes | Integer (in minutes). Defaults to 60. The number of minutes after the last invalid password challenge before this credentials invalid challenge count is reset to 0. |
 
 
-##### /1/credentials
+#### /1/credentials
 
 *POST* creates the credentials of a new user of the specified backend. Guests are authorized to create credentials if credentials settings `disableGuestSignUp` is false.
 
@@ -152,7 +146,7 @@ If no password is provided, it returns a password reset code. This is commonly u
 *DELETE* deletes all backend credentials but superadmins. Only authorized to superadmins.
 
 
-##### /1/credentials/{id}
+#### /1/credentials/{id}
 
 *GET* returns the specified credentials.
 
@@ -170,7 +164,7 @@ Request payload exemple :
 *DELETE* deletes the specified credentials. A superadmin can't be deleted if he is the last superadmin of the backend.
 
 
-##### /1/credentials/{id}/password
+#### /1/credentials/{id}/password
 
 *DELETE* deletes the specified credentials password. Returns a password reset code to be used when setting the new password. The user can not log in anymore until he sets his password. Only authorized to administrators.
 
@@ -188,7 +182,7 @@ Request payload exemple :
 ```
 
 
-##### /1/credentials/{id}/enabled
+#### /1/credentials/{id}/enabled
 
 *PUT* enables/disables the specified credentials. Only authorized to administrators.
 
@@ -198,13 +192,13 @@ The request payload must be a JSON boolean and decides if the specified credenti
 true
 ```
 
-##### /1/credentials/{id}/roles
+#### /1/credentials/{id}/roles
 
 *GET* returns the roles of the specified credentials.
 
 *DELETE* removes all custom roles from the specified credentials. Standard default roles (`user`, `admin` and `super_admin`) can't be removed.
 
-##### /1/credentials/{id}/roles/{role}
+#### /1/credentials/{id}/roles/{role}
 
 *PUT* adds the specified custom role to the specified credentials.
 

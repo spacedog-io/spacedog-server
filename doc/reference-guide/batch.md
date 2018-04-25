@@ -1,14 +1,8 @@
----
-layout: doc
-title: Batch
-rank: 8
----
-
-#### /1/batch
+### Batch
 
 Use a batch request when you need to send to your backend a batch of requests. It speeds up operations since there is only one round trip to the server.
 
-##### {backendId}.spacedog.io/1/batch
+#### /1/batch
 
 `POST` processes a batch of maximum 10 requests. The body is an array of request JSON objects. Example:
 

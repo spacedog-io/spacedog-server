@@ -1,18 +1,12 @@
----
-layout: doc
-title: Schema
-rank: 1
----
-
-#### /1/schema
+### Schema
 
 A schema object defines a type of data objects. A schema must be defined first before objects can be stored.
 
-##### {backendId}.spacedog.io/1/schema
+#### /1/schema
 
 `GET` returns all schemas as a map.
 
-##### {backendId}.spacedog.io/1/schema/{type}
+#### /1/schema/{type}
 
 `GET` returns the specified schema.
 
@@ -20,7 +14,7 @@ A schema object defines a type of data objects. A schema must be defined first b
 
 `DELETE` deletes the specified schema and all its data objects. Only authorized to adminsitrators.
 
-##### Schema JSON format
+#### Schema JSON format
 
 ```json
 {

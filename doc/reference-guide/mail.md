@@ -1,18 +1,12 @@
----
-layout: doc
-title: Mail
-rank: 10
----
-
-#### Mail
+### Mail
 
 Use this endpoint to send emails.
 
-##### /1/settings/mail
+#### /1/settings/mail
 
-*GET* returns the mail service settings. Only authorized to superadmins by default. See [Settings](settings.html) for more information on settings ACL.
+*GET* returns the mail service settings. Only authorized to superadmins by default. See [Settings](settings.md) for more information on settings ACL.
 
-*PUT* sets the mail service settings. Only authorized to superadmins by default. See [Settings](settings.html) for more information on settings ACL.
+*PUT* sets the mail service settings. Only authorized to superadmins by default. See [Settings](settings.md) for more information on settings ACL.
 Mail settings can be updated with `/1/settings/mail`. Default mail settings:
 
 Default mail settings:
@@ -62,7 +56,7 @@ SMTP settings example:
 | tempates | Object. Optional. The mail templates. |
 
 
-##### /1/mail
+#### /1/mail
 
 *POST* sends an email with the specified parameters. Only authorized to administrators by default. 
 
@@ -77,7 +71,7 @@ SMTP settings example:
 
 The `from` email property sent through this endpoint is not customizable and is set to `no-reply@api.spacedog.io`.
 
-##### /1/mail/template/{name}
+#### /1/mail/template/{name}
 
 *POST* sends an email using the specified template. Templates are define in mail settings.
 

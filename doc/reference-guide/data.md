@@ -1,12 +1,6 @@
----
-layout: doc
-title: Data
-rank: 2
----
+### Data
 
 #### /1/data
-
-##### {backendId}.spacedog.io/1/data
 
 `GET` returns all the specified backend data objects of all types.
 
@@ -22,7 +16,7 @@ rank: 2
 | ---------- | ---------------------------------------- |
 | refresh    | Boolean. Defaults to false. If true, forces index refresh to make sure the latests created objects are deleted. |
 
-##### {backendId}.spacedog.io/1/data/{type}
+#### /1/data/{type}
 
 `GET` returns all the specified backend data objects of the specified type.
 
@@ -46,7 +40,7 @@ rank: 2
 | saveCustomMeta | Boolean. Default to `false`. If true, save `meta` field provided in body along with the rest of the data. The `meta` field should contain a sub object with the following sub fields: `createdAt`, `createdBy`, `updatedAt`, `updatedBy` |
 | body       | String. Required. The JSON repredentation of the data object. Must comply to the type schema. |
 
-##### {backendId}.spacedog.io/1/data/{type}/{id}
+#### /1/data/{type}/{id}
 
 `GET` returns the data object of the specified type and id.
 

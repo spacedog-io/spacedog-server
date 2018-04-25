@@ -1,14 +1,8 @@
----
-layout: doc
-title: Push
-rank: 11
----
-
-#### /1/applications
+### Applications
 
 Use this endpoint to manage your applications and their push credentials.
 
-##### /1/applications/{name}/{pushService}
+#### /1/applications/{name}/{pushService}
 
 *PUT* sets the credentials of the specified `name` application with the specified push service. Available push services are APNS, APNS_SANDBOX and GCM. The request body must contain principal and credentials specific to the specified push service.
 
@@ -33,7 +27,7 @@ sets the APNS push credentials of an application named `caremen-driver`.
 
 Use this endpoint to manage your mobile app installations on user devices and to push mobile notifications to them.
 
-##### /1/installation
+#### /1/installation
 
 *GET* returns all the specified backend installations. Only authorized to administrators.
 
@@ -64,7 +58,7 @@ Use this endpoint to manage your mobile app installations on user devices and to
 
 If an installation is posted with credentials of a valid user, the new installation is associated with this user. Otherwise the new installation is not associated with any user.
 
-##### /1/installation/{id}
+#### /1/installation/{id}
 
 *GET* returns the specified installation.
 
@@ -72,7 +66,7 @@ If an installation is posted with credentials of a valid user, the new installat
 
 *DELETE* deletes the specified installation. Only authorized to administrators or the owner of this object.
 
-##### /1/installation/{id}/tags
+#### /1/installation/{id}/tags
 
 *GET* returns the tags of the specified installation.
 
@@ -104,7 +98,7 @@ If an installation is posted with credentials of a valid user, the new installat
 ]
 ```
 
-##### /1/installation/push
+#### /1/installation/push
 
 *POST* pushes a notification to all installations of the specified app. Only authorized to users and administrators. Request body example:
 

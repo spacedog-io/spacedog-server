@@ -1,14 +1,8 @@
----
-layout: doc
-title: Backends
-rank: 7
----
-
-#### /1/backend
+### Backends
 
 A new customer must sign up to create his backend on the SpaceDog platform.
 
-##### api.spacedog.io/1/backend/{id}
+#### api.spacedog.io/1/backend/{id}
 
 `POST` creates a new backend. The body is a create backend request JSON object:
 
@@ -22,7 +16,7 @@ A new customer must sign up to create his backend on the SpaceDog platform.
 
 - `id` the backend identifier.
 
-##### {backendId}.spacedog.io/1/backend
+#### {backendId}.spacedog.io/1/backend
 
 `GET` returns the specified backend list of super admins.
 

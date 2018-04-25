@@ -1,20 +1,14 @@
----
-layout: doc
-title: Share
-rank: 5
----
-
-#### /1/share
+### Share
 
 The share endpoint provides a way to share files with other users. Endpoint ACL are managed via `share` settings.
 
-##### {backendId}.spacedog.io/1/share
+#### /1/share
 
 `GET` lists all the specified backend shared files. Only authorized to administrators.
 
 `DELETE` deletes all the specified backend shared files. Only authorized to administrators.
 
-##### {backendId}.spacedog.io/1/share/{filename}
+#### /1/share/{filename}
 
 `PUT` uploads a file for sharing. Users are authorized depending on ACL settings.
 
@@ -28,7 +22,7 @@ Parameters | Param type | Description
 `Content-Type` | Header | String. Defaults to `application/octet-stream`. The format of file. If not set, the file name extension if present is used to derive the content type. 
 Body | Payload | The file byte array.
 
-##### {backendId}.spacedog.io/1/share/{id}/{filename}
+#### /1/share/{id}/{filename}
 
 `GET` retuns the specified shared file binary.
 

@@ -1,10 +1,4 @@
----
-layout: doc
-title: Settings
-rank: 8
----
-
-#### Settings
+### Settings
 
 Use `settings` service to configure SpaceDog internal services but also custom backend specific settings. Each SpaceDog service has the corresponding settings like `mail`, `credentials`, ... Checkout the pages of these different services for details on their specific settings.
 
@@ -36,7 +30,7 @@ A settings resource is a JSON document and has a name. Common SpaceDog insternal
 ```
 
 
-##### /1/settings
+#### /1/settings
 
 *GET* returns all the backend settings. Only authorized to superadmins.
 
@@ -56,7 +50,7 @@ Response example:
 }
 ```
 
-##### /1/settings/{name}
+#### /1/settings/{name}
 
 *GET* returns the specified settings. Only authorized to superadmins by default. Can be configured with `settings` settings. See below. For SpaceDog internal settings, you get the defaults even if you didn't update them before.
 

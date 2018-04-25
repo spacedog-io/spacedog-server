@@ -1,14 +1,8 @@
----
-layout: doc
-title: Logging
-rank: 6
----
-
-#### /1/log
+### Log
 
 Use the log endpoint to monitor your backend. SpaceDog logs all service requests sent to your backend.
 
-##### {id}.spacedog.io/1/log
+#### /1/log
 
 *GET* returns the last requests logged. Only authorized to administrators.
 
@@ -44,7 +38,7 @@ Response body example:
 }
 ```
 
-##### {id}.spacedog.io/1/log/search
+#### /1/log/search
 
 *POST* search for logged requests. Only authorized to administrators.
 

@@ -1,15 +1,9 @@
----
-layout: doc
-title: Files
-rank: 4
----
-
-#### /1/file
+### Files
 
 The file endpoint allows developers and apps to upload/download files to/from the cloud.
 Uploaded files will be available to download to authorized users. Uploaded files are identified by a path and a file name. Examples: `a/b/c/index.html` or `a/b/c/z`.
 
-##### {backendId}.spacedog.io/1/file/{path}
+#### /1/file/{path}
 
 Path params | Description
 -------|------------
@@ -54,7 +48,7 @@ returns
 }
 ```
 
-##### {backendId}.spacedog.io/1/file/{path}/{filename}
+#### /1/file/{path}/{filename}
 
 Path Parameters | Description
 -------|------------
