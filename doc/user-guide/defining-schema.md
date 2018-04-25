@@ -31,7 +31,7 @@ Data object fields are defined in schemas. Find below all the permitted field ty
 
 `text` fields are suitable for all string data that do contain real text and should be analyzed for latter full text search. Descriptions, forum posts, messages, emails are good examples. `text` fields are better search with full text type queries.
 
-`_language` contains the language setting for better text analysis. Defaults to `english`. Here is a list of available [languages](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-lang-analyzer.html).
+`_language` contains the language setting for better text analysis. Defaults to `english`. Here is a list of available [languages](https://www.elastic.co/guide/en/elasticsearch/reference/2.4/analysis-lang-analyzer.html).
 
 ##### Boolean
 

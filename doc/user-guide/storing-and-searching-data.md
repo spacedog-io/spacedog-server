@@ -42,7 +42,7 @@ Here is a very simple schema for a car object:
 ```
 
 - `car` is the schema identifier and the name of the object type this schema defines.
-- `_type` is the field type. Read the [defining schema](defining-schema.html) page for more details.
+- `_type` is the field type. Read the [defining schema](defining-schema.md) page for more details.
 - `_language` is useful for `text` fields. It indicates the language and allow a better full text indexing.
 
 The `car` schema defines objects like:
@@ -56,7 +56,7 @@ The `car` schema defines objects like:
 }
 ```
 
-To create a schema, `POST /1/schema/car` with a body set to the `car` JSON schema and an admin user `Authorization` header (see Security section in [Getting started](getting-started.html) page). It will return a status object, either a success:
+To create a schema, `POST /1/schema/car` with a body set to the `car` JSON schema and an admin user `Authorization` header (see Security section in [Getting started](getting-started.md) page). It will return a status object, either a success:
 
 ```json
 {
@@ -139,7 +139,7 @@ To delete the car object, send a `DELETE /1/data/car/{id}` and get a status resp
 
 ### More advanced search
 
-For an advanced search, send a `POST /1/search` or a `POST /1/search/car` with a body set to a query JSON. Since SpaceDog uses ElasticSearch for storing and searching data objects, the query JSON must be compliant with the ElasticSearch query DSL. Please read the [query DSL documentation](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html) on the Elastic web site.
+For an advanced search, send a `POST /1/search` or a `POST /1/search/car` with a body set to a query JSON. Since SpaceDog uses ElasticSearch for storing and searching data objects, the query JSON must be compliant with the ElasticSearch query DSL. Please read the [query DSL documentation](https://www.elastic.co/guide/en/elasticsearch/reference/2.4/query-dsl.html) on the Elastic web site.
 
 For example, this query JSON will full text search for car objects containing `air-cooled` in there description but only when it is a `Citroën`:
 
