@@ -1,10 +1,4 @@
----
-layout: doc
-title: Deploy to the cloud
-rank: 5
----
-
-#### Publish files to the cloud
+### Publish files to the cloud
 
 Use the `/1/file` endpoint to upload and publish files to the cloud.
 
@@ -37,11 +31,7 @@ returns
 
 The content type is usually derived from the file name extension. If none, provide a `Content-Type` header with the right value.
 
-#### Attach a domain name to your cloud resources
-
-You can use your own domain names to serve your files and create a real web site. Contact us by email to help us do so.
-
-#### Share a file
+### Share a file
 
 Use the `/1/share` endpoint when the system or a user need to share a single file with others.
 

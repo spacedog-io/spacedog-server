@@ -1,10 +1,4 @@
----
-layout: doc
-title: Getting started
-rank: 1
----
-
-#### Getting started
+## Getting started
 
 
 The **User's Guide** is a step by step guide to learn the basics of the SpaceDog backend services using code examples extensively.
@@ -13,7 +7,7 @@ The **Reference Guide** is the complete reference documentation of all the Space
 
 #### Sign up
 
-First, [sign up](https://cockpit.spacedog.io/sign-up.html) for free to the SpaceDog platform. Provide
+First, [sign up](https://spacedog.io) for free to the SpaceDog platform. Provide
 
 - the backend administrator username, password and email address,
 - the backend id to identify your backend. A valid id is at least 4 characters long, only composed of a-z and 0-9 characters, lowercase and does not start with 'api' nor 'spacedog'.
@@ -45,4 +39,4 @@ Authorization: Basic ZG9jOmhpIGRvYw==
 
 ⋮
 
-Next: [Storing and searching data](storing-and-searching-data.html) ⋙
+Next: [Storing and searching data](storing-and-searching-data.md) ⋙

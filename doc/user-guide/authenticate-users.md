@@ -1,12 +1,6 @@
----
-layout: doc
-title: Authenticate users
-rank: 4
----
+### Create user credentials
 
-#### Create a new user
-
-If your application has a sign up form to allow users to create an account, your app can create users by sending `POST /1/user` with a user sign up JSON:
+If your application has a sign up form to allow users to create an account, your app can create credentials by sending `POST /1/credentials` with a new credentials request JSON:
 
 ```json
 {
@@ -16,7 +10,7 @@ If your application has a sign up form to allow users to create an account, your
 }
 ```
 
-Once a user is created, you can authenticate requests with an `Authorization` header using `Basic` scheme and providing the user username and password, BASE64 encoded.
+Once credentials are created, you can authenticate requests with an `Authorization` header using `Basic` scheme and providing the credentials username and password, BASE64 encoded.
 
 Example:
 
@@ -25,10 +19,10 @@ GET /1/data HTTP/1.1
 Authorization: Basic ZG9jOmhpIGRvYw==
 ```
 
-#### Log in a user
+### Login
 
-To log in a user, send a `GET /1/login` with an `Authorization` header using `Basic` scheme. Log in is not mandatory since, all requests are authenticated the same way. It is a convenient method to check whether the user credentials are valid or not before going further.
+For user to login, send a `GET /1/login` with an `Authorization` header using `Basic` scheme. Login is not mandatory since all requests can be authenticated with `Basic` scheme. But a login request returns an session access token that can be used to authenticate request with `Bearer` scheme. This way, client app can forget user password and only store the session access token in local storage. Access tokens lifetime depends on back-end credentials settings.
 
 ⋮
 
-Next: [Deploy to the cloud](deploy-to-the-cloud.html) ⋙
+Next: [Deploy to the cloud](deploy-to-the-cloud.md) ⋙

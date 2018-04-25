@@ -1,10 +1,4 @@
----
-layout: doc
-title: Storing and searching data
-rank: 2
----
-
-#### Data objects
+### Data objects
 
 A SpaceDog data object is a typed JSON document. To get some of your backend data objects, send a `GET /1/data`. You will get the following answer since you did not create any object yet:
 
@@ -16,7 +10,7 @@ A SpaceDog data object is a typed JSON document. To get some of your backend dat
 }
 ```
 
-#### Create a schema
+### Create a schema
 
 To create objects, you first need to create a schema. Schemas are used to:
 
@@ -89,15 +83,15 @@ or a failure:
 
 This is generally true for `POST`, `PUT` and `DELETE` requests on the other API endpoints.
 
-#### Create a data object
+### Create a data object
 
 To store a new car, send a `POST /1/data/car` with a body set to a JSON car. You'll get the new car id from the status object.
 
-#### Fetch a data object
+### Fetch a data object
 
 To check that the new car is correctly stored, send a `GET /1/data/car/{id}` and check the car JSON returned.
 
-#### Full text search data objects
+### Full text search data objects
 
 Send a `GET /1/search` to search into all types of objects or `GET /1/search/car` to search only cars. Add a `q` query param set to `deux chevaux` to full text search this text and you'll get the response:
 
@@ -135,7 +129,7 @@ Only the analyzed field value is indexed for later full text search. The value r
 
 Non `text` fields are also indexed for search but only the raw value will match a full text search query.
 
-#### Update or delete a data object
+### Update or delete a data object
 
 To update the car object, send a `PUT /1/data/car/{id}?version={current}` where `id` is the car identifier and `current` is the current object version. Add a body set to the updated car JSON. You'll get a regular status response.
 
@@ -143,7 +137,7 @@ When updating a data object, the current object version can be used to enforce o
 
 To delete the car object, send a `DELETE /1/data/car/{id}` and get a status response. No need to provide a version in this case since a delete will always win over an update.
 
-#### More advanced search
+### More advanced search
 
 For an advanced search, send a `POST /1/search` or a `POST /1/search/car` with a body set to a query JSON. Since SpaceDog uses ElasticSearch for storing and searching data objects, the query JSON must be compliant with the ElasticSearch query DSL. Please read the [query DSL documentation](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html) on the Elastic web site.
 
@@ -164,7 +158,7 @@ For example, this query JSON will full text search for car objects containing `a
 }
 ```
 
-#### Update or delete a schema
+### Update or delete a schema
 
 To update the `car` schema, send a `PUT /1/schema/car` with a body set with the updated JSON schema.
 
@@ -182,4 +176,4 @@ To delete the `car` schema, send a `DELETE /1/schema/car`. It will also delete a
 
 ⋮
 
-Next: [Defining schema](defining-schema.html) ⋙
+Next: [Defining schema](defining-schema.md) ⋙
