@@ -6,6 +6,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
@@ -61,14 +62,19 @@ public class LogService extends SpaceService {
 	@Get("/")
 	public Payload getAll(Context context) {
 		SpaceContext.credentials().checkAtLeastSuperAdmin();
+		elastic().refreshType(logIndex(), isRefreshRequested(context));
 
 		int from = context.query().getInteger(FROM_PARAM, 0);
 		int size = context.query().getInteger(SIZE_PARAM, 10);
-		elastic().refreshType(logIndex(), isRefreshRequested(context));
+		String q = context.get(Q_PARAM);
+
+		QueryBuilder query = Strings.isNullOrEmpty(q) //
+				? QueryBuilders.matchAllQuery() //
+				: QueryBuilders.simpleQueryStringQuery(q);
 
 		SearchResponse response = elastic().prepareSearch(logIndex())//
 				.setTypes(TYPE)//
-				.setQuery(QueryBuilders.matchAllQuery())//
+				.setQuery(query)//
 				.addSort(RECEIVED_AT_FIELD, SortOrder.DESC)//
 				.setFrom(from)//
 				.setSize(size)//

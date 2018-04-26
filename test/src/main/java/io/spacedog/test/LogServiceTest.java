@@ -99,7 +99,9 @@ public class LogServiceTest extends SpaceTest {
 		ESSearchSourceBuilder query = ESSearchSourceBuilder.searchSource()//
 				.query(ESQueryBuilders.rangeQuery("status").gte(400))//
 				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
+
 		LogSearchResults results = superadmin.logs().search(query, true);
+
 		assertEquals(1, results.results.size());
 		assertEquals("/1/data/user", results.results.get(0).path);
 		assertEquals(403, results.results.get(0).status);
@@ -109,6 +111,7 @@ public class LogServiceTest extends SpaceTest {
 		query = ESSearchSourceBuilder.searchSource()//
 				.query(ESQueryBuilders.termsQuery("credentials.roles", "superadmin", "user"))//
 				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
+
 		results = superadmin.logs().search(query, true);
 		assertEquals(4, results.results.size());
 		assertEquals("/1/log/_search", results.results.get(0).path);
@@ -120,6 +123,7 @@ public class LogServiceTest extends SpaceTest {
 		query = ESSearchSourceBuilder.searchSource()//
 				.query(ESQueryBuilders.termsQuery("credentials.roles", "user"))//
 				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
+
 		results = superadmin.logs().search(query, true);
 		assertEquals(2, results.results.size());
 		assertEquals("/1/credentials/" + vince.id(), results.results.get(0).path);
@@ -130,6 +134,7 @@ public class LogServiceTest extends SpaceTest {
 				.query(ESQueryBuilders.boolQuery().mustNot(//
 						ESQueryBuilders.existsQuery("credentials.roles")))//
 				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
+
 		results = superadmin.logs().search(query, true);
 		assertEquals(2, results.results.size());
 		assertEquals("/1/data/user", results.results.get(0).path);
@@ -140,6 +145,7 @@ public class LogServiceTest extends SpaceTest {
 				.query(ESQueryBuilders.matchAllQuery())//
 				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC))//
 				.size(20);
+
 		results = superadmin.logs().search(query, true);
 		assertEquals(11, results.results.size());
 		assertEquals("/1/log/_search", results.results.get(0).path);
@@ -153,6 +159,12 @@ public class LogServiceTest extends SpaceTest {
 		assertEquals("/1/data", results.results.get(8).path);
 		assertEquals("/1/credentials", results.results.get(9).path);
 		assertEquals("/1/admin/_clear", results.results.get(10).path);
+
+		// superadmin gets logs with q = ...
+		assertEquals(2, superadmin.logs().get("vince", 10, false).total);
+		assertEquals(2, superadmin.logs().get("vin*", 10, true).total);
+		assertEquals(1, superadmin.logs().get("403", 10, false).total);
+		assertEquals(2, superadmin.logs().get("/1/credentials", 10, false).total);
 	}
 
 	@Test

@@ -31,7 +31,12 @@ public class LogClient implements SpaceParams {
 	}
 
 	public LogSearchResults get(int size, boolean refresh) {
-		return dog.get("/1/log").size(size).refresh(refresh).go(200)//
+		return get(null, size, refresh);
+	}
+
+	public LogSearchResults get(String q, int size, boolean refresh) {
+		return dog.get("/1/log").size(size).refresh(refresh)//
+				.queryParam(Q_PARAM, q).go(200)//
 				.asPojo(LogSearchResults.class);
 	}
 
