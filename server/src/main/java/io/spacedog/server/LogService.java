@@ -61,7 +61,7 @@ public class LogService extends SpaceService {
 	@Get("")
 	@Get("/")
 	public Payload getAll(Context context) {
-		SpaceContext.credentials().checkAtLeastSuperAdmin();
+		SpaceContext.credentials().checkAtLeastAdmin();
 		elastic().refreshType(logIndex(), isRefreshRequested(context));
 
 		int from = context.query().getInteger(FROM_PARAM, 0);
