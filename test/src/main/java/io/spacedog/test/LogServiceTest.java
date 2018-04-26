@@ -111,7 +111,7 @@ public class LogServiceTest extends SpaceTest {
 				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
 		results = superadmin.logs().search(query, true);
 		assertEquals(4, results.results.size());
-		assertEquals("/1/log/search", results.results.get(0).path);
+		assertEquals("/1/log/_search", results.results.get(0).path);
 		assertEquals("/1/credentials/" + vince.id(), results.results.get(1).path);
 		assertEquals("/1/login", results.results.get(2).path);
 		assertEquals("/1/credentials", results.results.get(3).path);
@@ -142,10 +142,10 @@ public class LogServiceTest extends SpaceTest {
 				.size(20);
 		results = superadmin.logs().search(query, true);
 		assertEquals(11, results.results.size());
-		assertEquals("/1/log/search", results.results.get(0).path);
-		assertEquals("/1/log/search", results.results.get(1).path);
-		assertEquals("/1/log/search", results.results.get(2).path);
-		assertEquals("/1/log/search", results.results.get(3).path);
+		assertEquals("/1/log/_search", results.results.get(0).path);
+		assertEquals("/1/log/_search", results.results.get(1).path);
+		assertEquals("/1/log/_search", results.results.get(2).path);
+		assertEquals("/1/log/_search", results.results.get(3).path);
 		assertEquals("/1/credentials/" + vince.id(), results.results.get(4).path);
 		assertEquals("/1/login", results.results.get(5).path);
 		assertEquals("/1/credentials", results.results.get(6).path);

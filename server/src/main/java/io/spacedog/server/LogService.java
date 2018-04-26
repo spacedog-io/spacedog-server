@@ -77,8 +77,8 @@ public class LogService extends SpaceService {
 		return extractLogs(response);
 	}
 
-	@Post("/search")
-	@Post("/search/")
+	@Post("/_search")
+	@Post("/_search/")
 	public Payload search(String body, Context context) {
 
 		SpaceContext.credentials().checkAtLeastAdmin();

@@ -40,7 +40,7 @@ public class LogClient implements SpaceParams {
 	}
 
 	public LogSearchResults search(ESSearchSourceBuilder builder, boolean refresh) {
-		return dog.post("/1/log/search").refresh(refresh)//
+		return dog.post("/1/log/_search").refresh(refresh)//
 				.bodyJson(builder.toString()).go(200)//
 				.asPojo(LogSearchResults.class);
 	}
