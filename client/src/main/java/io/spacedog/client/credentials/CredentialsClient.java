@@ -280,6 +280,10 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 				.getString(PASSWORD_RESET_CODE_FIELD);
 	}
 
+	public void setMyPasswordWithCode(String newPassword, String passwordResetCode) {
+		setPasswordWithCode(dog.id(), newPassword, passwordResetCode);
+	}
+
 	public void setPasswordWithCode(String credentialsId, //
 			String newPassword, String passwordResetCode) {
 		SpaceRequest.post("/1/credentials/{id}/_set_password")//

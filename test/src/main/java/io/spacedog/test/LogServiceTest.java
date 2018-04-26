@@ -16,7 +16,6 @@ import io.spacedog.client.elastic.ESSortBuilders;
 import io.spacedog.client.elastic.ESSortOrder;
 import io.spacedog.client.http.SpaceEnv;
 import io.spacedog.client.http.SpaceHeaders;
-import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.client.log.LogClient.LogItem;
 import io.spacedog.client.log.LogClient.LogSearchResults;
 import io.spacedog.utils.Json;
@@ -43,7 +42,7 @@ public class LogServiceTest extends SpaceTest {
 		assertEquals("/1/login", log.results.get(2).path);
 		assertEquals("/1/credentials", log.results.get(3).path);
 		assertEquals("/1/credentials", log.results.get(4).path);
-		assertEquals("/1/admin/clear", log.results.get(5).path);
+		assertEquals("/1/admin/_clear", log.results.get(5).path);
 
 		DateTime before = log.results.get(1).receivedAt;
 
@@ -153,7 +152,7 @@ public class LogServiceTest extends SpaceTest {
 		assertEquals("/1/data/user", results.results.get(7).path);
 		assertEquals("/1/data", results.results.get(8).path);
 		assertEquals("/1/credentials", results.results.get(9).path);
-		assertEquals("/1/admin/clear", results.results.get(10).path);
+		assertEquals("/1/admin/_clear", results.results.get(10).path);
 	}
 
 	@Test
@@ -172,7 +171,7 @@ public class LogServiceTest extends SpaceTest {
 		LogSearchResults results = superadmin.logs().get(10, true);
 		assertEquals(2, results.total);
 		assertEquals("/1/credentials", results.results.get(0).path);
-		assertEquals("/1/admin/clear", results.results.get(1).path);
+		assertEquals("/1/admin/_clear", results.results.get(1).path);
 	}
 
 	@Test
@@ -193,7 +192,7 @@ public class LogServiceTest extends SpaceTest {
 		assertEquals("/", results.results.get(0).path);
 		assertEquals("/", results.results.get(1).path);
 		assertEquals("/1/credentials", results.results.get(2).path);
-		assertEquals("/1/admin/clear", results.results.get(3).path);
+		assertEquals("/1/admin/_clear", results.results.get(3).path);
 	}
 
 	@Test
@@ -228,7 +227,7 @@ public class LogServiceTest extends SpaceTest {
 		// the delete request is not part of the logs
 		// since log starts with the backend creation
 		List<LogItem> results = superadmin.logs().get(10, true).results;
-		assertEquals(8, results.size());
+		assertEquals(9, results.size());
 		assertEquals("GET", results.get(0).method);
 		assertEquals("/1/data/message", results.get(0).path);
 		assertEquals("GET", results.get(1).method);
@@ -240,11 +239,13 @@ public class LogServiceTest extends SpaceTest {
 		assertEquals("POST", results.get(4).method);
 		assertEquals("/1/credentials", results.get(4).path);
 		assertEquals("PUT", results.get(5).method);
-		assertEquals("/1/schemas/message", results.get(5).path);
-		assertEquals("POST", results.get(6).method);
-		assertEquals("/1/credentials", results.get(6).path);
+		assertEquals("/1/settings/data", results.get(5).path);
+		assertEquals("PUT", results.get(6).method);
+		assertEquals("/1/schemas/message", results.get(6).path);
 		assertEquals("POST", results.get(7).method);
-		assertEquals("/1/admin/clear", results.get(7).path);
+		assertEquals("/1/credentials", results.get(7).path);
+		assertEquals("POST", results.get(8).method);
+		assertEquals("/1/admin/_clear", results.get(8).path);
 	}
 
 	@Test
@@ -252,50 +253,57 @@ public class LogServiceTest extends SpaceTest {
 
 		prepareTest();
 		SpaceDog superadmin = clearRootBackend();
-		SpaceDog fred = createTempDog(superadmin, "fred").login();
+		SpaceDog fred = createTempDog(superadmin, "fred");
+		fred.login();
 
-		String passwordResetCode = superadmin.delete("/1/credentials/{id}/password")//
-				.routeParam("id", fred.id()).go(200)//
-				.getString("passwordResetCode");
+		// fred has forgotten his password
+		fred.password(null);
+		fred.accessToken(null);
 
-		SpaceRequest.post("/1/credentials/{id}/password")//
-				.backend(superadmin.backend())//
-				.routeParam("id", fred.id())//
-				.queryParam("passwordResetCode", passwordResetCode)//
-				.formField("password", "hi fred 2")//
-				.go(200);
+		// fred ask an admin to reset his password
+		String passwordResetCode = superadmin.credentials().resetPassword(fred.id());
 
-		SpaceRequest.put("/1/credentials/{id}/password")//
-				.backend(superadmin.backend())//
-				.routeParam("id", fred.id()).basicAuth("fred", "hi fred 2")//
-				.formField("password", "hi fred 3").go(200);
+		// fred sets his new password with reset code received by email
+		fred.credentials().setMyPasswordWithCode("hi fred 2", passwordResetCode);
+		fred.password("hi fred 2");
 
+		// fred changes his password
+		fred.credentials().setMyPassword("hi fred 2", "hi fred 3");
+
+		// superadmin checks backend logs
 		List<LogItem> results = superadmin.logs().get(10, true).results;
 		assertEquals(7, results.size());
-		assertEquals("PUT", results.get(0).method);
-		assertEquals("/1/credentials/" + fred.id() + "/password", results.get(0).path);
-		assertEquals("********", results.get(0).getParameter(PASSWORD_FIELD));
+		assertEquals("POST", results.get(0).method);
+		assertEquals("/1/credentials/me/_set_password", results.get(0).path);
+		assertEquals("fred", results.get(0).credentials.username());
+		assertEquals("********", results.get(0).payload.get(PASSWORD_FIELD).asText());
+
 		assertEquals("POST", results.get(1).method);
-		assertEquals("/1/credentials/" + fred.id() + "/password", results.get(1).path);
-		assertEquals("********", results.get(1).getParameter(PASSWORD_FIELD));
+		assertEquals("/1/credentials/" + fred.id() + "/_set_password", results.get(1).path);
+		assertEquals("********", results.get(1).payload.get(PASSWORD_FIELD).asText());
 		assertEquals(passwordResetCode, //
-				results.get(1).getParameter(PASSWORD_RESET_CODE_FIELD));
-		assertEquals("DELETE", results.get(2).method);
-		assertEquals("/1/credentials/" + fred.id() + "/password", results.get(2).path);
+				results.get(1).payload.get(PASSWORD_RESET_CODE_FIELD).asText());
+
+		assertEquals("POST", results.get(2).method);
+		assertEquals("/1/credentials/" + fred.id() + "/_reset_password", results.get(2).path);
 		assertEquals(passwordResetCode, //
 				results.get(2).response.get(PASSWORD_RESET_CODE_FIELD).asText());
+
 		assertEquals("GET", results.get(3).method);
 		assertEquals("/1/login", results.get(3).path);
+
 		assertEquals("POST", results.get(4).method);
 		assertEquals("/1/credentials", results.get(4).path);
 		assertEquals("fred", results.get(4).payload.get(USERNAME_FIELD).asText());
 		assertEquals("********", results.get(4).payload.get(PASSWORD_FIELD).asText());
+
 		assertEquals("POST", results.get(5).method);
 		assertEquals("/1/credentials", results.get(5).path);
 		assertEquals("superadmin", results.get(5).payload.get(USERNAME_FIELD).asText());
 		assertEquals("********", results.get(5).payload.get(PASSWORD_FIELD).asText());
+
 		assertEquals("POST", results.get(6).method);
-		assertEquals("/1/admin/clear", results.get(6).path);
+		assertEquals("/1/admin/_clear", results.get(6).path);
 	}
 
 	@Test
