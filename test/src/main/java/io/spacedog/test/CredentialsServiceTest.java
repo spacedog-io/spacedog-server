@@ -262,7 +262,7 @@ public class CredentialsServiceTest extends SpaceTest {
 		SpaceDog fred = createTempDog(superadmin, "fred").login();
 
 		// fred can get data objects
-		SpaceRequest.get("/1/data").basicAuth(fred).go(200);
+		fred.data().getAllRequest().go();
 
 		// superadmin forces fred to change his password
 		superadmin.credentials().passwordMustChange(fred.id());
@@ -280,16 +280,20 @@ public class CredentialsServiceTest extends SpaceTest {
 		// fred can change his password
 		String newPassword = Passwords.random();
 		fred.credentials().setMyPassword(fred.password().get(), newPassword);
+		fred.password(newPassword);
 
 		// fred fails to get data objects
 		// since old access token is no more valid
-		fred.get("/1/data").go(401);
+		SpaceRequest.get("/1/data").bearerAuth(fred).go(401);
+
+		// but fred gets data with his new password
+		SpaceRequest.get("/1/data").basicAuth(fred).go(200);
 
 		// fred logs in with his new password
 		fred.login(newPassword);
 
 		// fred can get data objects again
-		fred.get("/1/data").go(200);
+		SpaceRequest.get("/1/data").bearerAuth(fred).go(200);
 	}
 
 	@Test

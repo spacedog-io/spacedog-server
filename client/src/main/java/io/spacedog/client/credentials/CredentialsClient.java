@@ -331,9 +331,9 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 				.go(200);
 	}
 
-	public void passwordMustChange(String id) {
-		dog.put("/1/credentials/{id}/passwordMustChange")//
-				.routeParam("id", id).body("true").go(200);
+	public void passwordMustChange(String credentialsId) {
+		dog.post("/1/credentials/{id}/_password_must_change")//
+				.routeParam("id", credentialsId).go(200);
 	}
 
 	public void sendMePasswordResetEmail() {

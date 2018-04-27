@@ -364,15 +364,11 @@ public class CredentialsService extends SpaceService {
 		return saved(false, credentials);
 	}
 
-	@Put("/1/credentials/:id/passwordMustChange")
-	@Put("/1/credentials/:id/passwordMustChange/")
-	public Payload putPasswordMustChange(String id, String body, Context context) {
+	@Post("/1/credentials/:id/_password_must_change")
+	@Post("/1/credentials/:id/_password_must_change/")
+	public Payload postForcePasswordUpdate(String id, Context context) {
 		Credentials credentials = checkAdminAndGet(id);
-
-		Boolean passwordMustChange = Json.checkBoolean(//
-				Json.checkNotNull(Json.readNode(body)));
-		credentials.passwordMustChange(passwordMustChange);
-
+		credentials.passwordMustChange(true);
 		credentials = update(credentials);
 		return saved(false, credentials);
 	}
