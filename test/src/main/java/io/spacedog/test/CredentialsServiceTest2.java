@@ -688,31 +688,25 @@ public class CredentialsServiceTest2 extends SpaceTest {
 
 		// prepare
 		prepareTest();
+		SpaceDog guest = SpaceDog.dog();
 		SpaceDog superadmin = clearRootBackend();
-		SpaceDog fred = createTempDog(superadmin, "fred").login();
+		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		// fred logs in
-		fred.get("/1/login").go(200);
+		fred.login();
 
 		// anonymous fails to disable fred's credentials
-		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json.toJsonNode(false)).backend(superadmin).go(403);
+		assertHttpError(403, () -> guest.credentials().disable(fred.id()));
 
 		// fred fails to disable his credentials
-		fred.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json.toJsonNode(false)).go(403);
+		assertHttpError(403, () -> fred.credentials().disable(fred.id()));
 
-		// admin fails to disable fred's credentials because body not a boolean
-		superadmin.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json.toJsonNode("false")).go(400);
-
-		// only admin can disable fred's credentials
-		superadmin.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json.toJsonNode(false)).go(200);
+		// only superadmins can disable fred's credentials
+		superadmin.credentials().disable(fred.id());
 
 		// fred fails to login from now on
-		fred.get("/1/login").go(401)//
-				.assertEquals("disabled-credentials", "error.code");
+		SpaceRequestException sre = assertHttpError(401, () -> fred.login());
+		assertEquals("disabled-credentials", sre.serverErrorCode());
 
 		// fred fails to access any resources from now on
 		// with basic authentication scheme
@@ -725,20 +719,17 @@ public class CredentialsServiceTest2 extends SpaceTest {
 				.assertEquals("disabled-credentials", "error.code");
 
 		// fred fails to update his credentials from now on
-		fred.put("/1/credentials/" + fred.id())//
-				.bodyJson("username", "fredy").go(401);
+		assertHttpError(401, () -> fred.credentials()//
+				.prepareUpdate(fred.id()).username("freddy").go());
 
 		// anonymous fails to enable fred's credentials
-		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json.toJsonNode(true)).backend(superadmin).go(403);
+		assertHttpError(403, () -> guest.credentials().enable(fred.id()));
 
 		// fred fails to enable his credentials
-		fred.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json.toJsonNode(true)).go(401);
+		assertHttpError(401, () -> fred.credentials().enable(fred.id()));
 
-		// only admin can enable fred's credentials
-		superadmin.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json.toJsonNode(true)).go(200);
+		// only superadmin can enable fred's credentials
+		superadmin.credentials().enable(fred.id());
 
 		// fred logs in again normally
 		fred.login();

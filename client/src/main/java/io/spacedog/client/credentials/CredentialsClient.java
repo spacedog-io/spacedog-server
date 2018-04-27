@@ -4,7 +4,6 @@ import java.util.Set;
 
 import org.joda.time.DateTime;
 
-import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
@@ -359,9 +358,18 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	// Enable methods
 	//
 
+	public void enable(String id) {
+		enable(id, true);
+	}
+
+	public void disable(String id) {
+		enable(id, false);
+	}
+
 	public void enable(String id, boolean enable) {
-		dog.put("/1/credentials/{id}/enabled").routeParam("id", id)//
-				.bodyJson(BooleanNode.valueOf(enable)).go(200);
+		StringBuilder builder = new StringBuilder("/1/credentials/") //
+				.append(id).append(enable ? "/_enable" : "/_disable");
+		dog.post(builder.toString()).go(200);
 	}
 
 	//

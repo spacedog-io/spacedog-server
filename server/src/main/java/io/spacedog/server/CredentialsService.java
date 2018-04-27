@@ -373,18 +373,16 @@ public class CredentialsService extends SpaceService {
 		return saved(false, credentials);
 	}
 
-	@Put("/1/credentials/:id/enabled")
-	@Put("/1/credentials/:id/enabled/")
-	public Payload putEnabled(String id, String body, Context context) {
-		Credentials credentials = checkAdminAndGet(id);
+	@Post("/1/credentials/:id/_enable")
+	@Post("/1/credentials/:id/_enable/")
+	public Payload postEnable(String id, String body, Context context) {
+		return doEnableOrDisable(id, true);
+	}
 
-		Boolean enabled = Json.checkBoolean(//
-				Json.checkNotNull(Json.readNode(body)));
-
-		credentials.doEnableOrDisable(enabled);
-		credentials = update(credentials);
-
-		return saved(false, credentials);
+	@Post("/1/credentials/:id/_disable")
+	@Post("/1/credentials/:id/_disable/")
+	public Payload postDisable(String id, String body, Context context) {
+		return doEnableOrDisable(id, false);
 	}
 
 	@Get("/1/credentials/:id/roles")
@@ -434,6 +432,13 @@ public class CredentialsService extends SpaceService {
 	//
 	// Internal services
 	//
+
+	public Payload doEnableOrDisable(String credentialsId, boolean enable) {
+		Credentials credentials = checkAdminAndGet(credentialsId);
+		credentials.doEnableOrDisable(enable);
+		credentials = update(credentials);
+		return saved(false, credentials);
+	}
 
 	long getCheckSessionLifetime(Context context) {
 		CredentialsSettings settings = credentialsSettings();
