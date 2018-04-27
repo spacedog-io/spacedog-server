@@ -49,7 +49,7 @@ import net.codestory.http.payload.Payload;
 public class CredentialsService extends SpaceService {
 
 	public static final String TYPE = "credentials";
-	private static final String FORGOTTEN_PASSWORD_MAIL_TEMPLATE_NAME = "_forgotten_password";
+	private static final String PASSWORD_RESET_EMAIL_TEMPLATE_NAME = "password_reset_email_template";
 
 	//
 	// Type and schema
@@ -277,9 +277,9 @@ public class CredentialsService extends SpaceService {
 		return saved(false, credentials);
 	}
 
-	@Post("/1/credentials/_forgotten_password")
-	@Post("/1/credentials/_forgotten_password/")
-	public Payload postForgottenPassword(String body, Context context) {
+	@Post("/1/credentials/_send_password_reset_email")
+	@Post("/1/credentials/_send_password_reset_email/")
+	public Payload postSendPasswordResetEmail(String body, Context context) {
 		Map<String, Object> parameters = Json.readMap(body);
 		String username = Check.notNull(parameters.get(USERNAME_PARAM), "username").toString();
 
@@ -290,10 +290,10 @@ public class CredentialsService extends SpaceService {
 					credentials.type(), credentials.username());
 
 		EmailTemplate template = EmailService.get()//
-				.getTemplate(FORGOTTEN_PASSWORD_MAIL_TEMPLATE_NAME)//
+				.getTemplate(PASSWORD_RESET_EMAIL_TEMPLATE_NAME)//
 				.orElseThrow(() -> Exceptions.illegalArgument(//
 						"email template [%s] not found", //
-						FORGOTTEN_PASSWORD_MAIL_TEMPLATE_NAME));
+						PASSWORD_RESET_EMAIL_TEMPLATE_NAME));
 
 		// make sure the model has at least the username parameter
 		if (template.model == null)

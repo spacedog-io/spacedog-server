@@ -306,32 +306,32 @@ public class CredentialsServiceTest extends SpaceTest {
 		// to declare that you forgot your password
 		// you need to pass your username
 		assertHttpError(404, () -> superadmin.credentials()//
-				.forgottenPassword(""));
+				.sendPasswordResetEmail(""));
 
 		// if invalid username, you get a 404
 		assertHttpError(404, () -> superadmin.credentials()//
-				.forgottenPassword("XXX"));
+				.sendPasswordResetEmail("XXX"));
 
 		// fred fails to declare "forgot password" if no
 		// forgotPassword template set in mail settings
 		assertHttpError(400, () -> fred.credentials()//
-				.forgotMyPassword());
+				.sendMePasswordResetEmail());
 
 		// superadmin saves the forgotPassword email template
 		EmailTemplate template = new EmailTemplate();
-		template.name = "_forgotten_password";
+		template.name = "password_reset_email_template";
 		template.from = "no-reply@api.spacedog.io";
 		template.to = Lists.newArrayList("{{to}}");
-		template.subject = "Password forgotten request";
+		template.subject = "You've forgotten your password!";
 		template.text = "{{passwordResetCode}}";
 		superadmin.emails().saveTemplate(template);
 
 		// fred declares he's forgot his password
-		fred.credentials().forgotMyPassword();
+		fred.credentials().sendMePasswordResetEmail();
 
 		// fred can not pass any parameter unless they
 		// are registered in the template model
-		assertHttpError(400, () -> fred.credentials().forgotMyPassword(//
+		assertHttpError(400, () -> fred.credentials().sendMePasswordResetEmail(//
 				Json.object("url", "http://localhost:8080")));
 
 		// add an url parameter to the template model
@@ -342,7 +342,7 @@ public class CredentialsServiceTest extends SpaceTest {
 
 		// fred declares he's forgot his password
 		// passing an url parameter
-		fred.credentials().forgotMyPassword(//
+		fred.credentials().sendMePasswordResetEmail(//
 				Json.object("url", "http://localhost:8080"));
 
 		// fred can still access services if he remembers his password

@@ -314,21 +314,21 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 				.routeParam("id", id).body("true").go(200);
 	}
 
-	public void forgotMyPassword() {
-		forgotMyPassword(Json.object());
+	public void sendMePasswordResetEmail() {
+		sendMePasswordResetEmail(Json.object());
 	}
 
-	public void forgotMyPassword(ObjectNode parameters) {
-		forgottenPassword(dog.username(), parameters);
+	public void sendMePasswordResetEmail(ObjectNode parameters) {
+		sendPasswordResetEmail(dog.username(), parameters);
 	}
 
-	public void forgottenPassword(String username) {
-		forgottenPassword(username, Json.object());
+	public void sendPasswordResetEmail(String username) {
+		sendPasswordResetEmail(username, Json.object());
 	}
 
-	public void forgottenPassword(String username, ObjectNode parameters) {
+	public void sendPasswordResetEmail(String username, ObjectNode parameters) {
 		parameters.put(USERNAME_FIELD, username);
-		dog.post("/1/credentials/_forgotten_password")//
+		SpaceDog.dog().post("/1/credentials/_send_password_reset_email")//
 				.bodyJson(parameters)//
 				.go(200);
 	}
