@@ -37,7 +37,7 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	public Credentials me(boolean reload) {
 		if (credentials == null || reload) {
 			SpaceResponse response = dog.get("/1/credentials/me").go(200);
-			credentials = Credentials.fromJson(response.asJsonObject());
+			credentials = Credentials.parse(response.asJsonObject());
 		}
 		return credentials;
 	}
@@ -61,13 +61,35 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 			throw Exceptions.runtime("[%s] credentials with username [%s]", //
 					total, username);
 
-		return Optional7.of(Credentials.fromJson(response.get("results.0")));
+		return Optional7.of(Credentials.parse(response.get("results.0")));
 	}
 
 	public Credentials get(String id) {
 		SpaceResponse response = dog.get("/1/credentials/{id}")//
 				.routeParam("id", id).go(200);
-		return Credentials.fromJson(response.asJsonObject());
+		return Credentials.parse(response.asJsonObject());
+	}
+
+	//
+	// Get All Credentials
+	//
+
+	public Credentials.Results getAll() {
+		return getAll(null, null, null);
+	}
+
+	public Credentials.Results getAll(int from, int size) {
+		return getAll(null, from, size);
+	}
+
+	public Credentials.Results getAll(String q) {
+		return getAll(q, null, null);
+	}
+
+	public Credentials.Results getAll(String q, Integer from, Integer size) {
+		SpaceResponse response = dog.get("/1/credentials")//
+				.queryParam("q", q).from(from).size(size).go(200);
+		return Credentials.Results.parse(response.asJsonObject());
 	}
 
 	//
@@ -84,7 +106,7 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 
 		ObjectNode node = request.go(200).asJsonObject();
 		dog.accessToken(Json.checkStringNotNullOrEmpty(node, ACCESS_TOKEN_FIELD));
-		credentials = Credentials.fromJson(Json.checkObject(node.get("credentials")));
+		credentials = Credentials.parse(Json.checkObject(node.get("credentials")));
 
 		return dog;
 	}

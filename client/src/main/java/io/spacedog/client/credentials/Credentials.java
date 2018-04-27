@@ -591,7 +591,7 @@ public class Credentials {
 				SpaceFields.UPDATED_AT_FIELD, updatedAt());
 	}
 
-	public static Credentials fromJson(JsonNode node) {
+	public static Credentials parse(JsonNode node) {
 		Credentials credentials = Json.toPojo(node, Credentials.class);
 		String id = Json.checkStringNotNullOrEmpty(node, SpaceFields.ID_FIELD);
 		return credentials.id(id);
@@ -663,6 +663,20 @@ public class Credentials {
 	//
 	// Inner classes
 	//
+
+	public static class Results {
+		public long total;
+		public List<Credentials> results;
+
+		public static Results parse(ObjectNode node) {
+			Results results = new Results();
+			results.total = node.get("total").asLong();
+			results.results = Lists.newArrayList();
+			for (JsonNode credsNode : Json.checkArray(node.get("results")))
+				results.results.add(Credentials.parse(credsNode));
+			return results;
+		}
+	}
 
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	@JsonAutoDetect(fieldVisibility = Visibility.ANY, //

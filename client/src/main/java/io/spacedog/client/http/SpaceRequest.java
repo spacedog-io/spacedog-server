@@ -265,11 +265,11 @@ public class SpaceRequest {
 		return this;
 	}
 
-	public SpaceRequest size(int size) {
+	public SpaceRequest size(Integer size) {
 		return this.queryParam(SpaceParams.SIZE_PARAM, size);
 	}
 
-	public SpaceRequest from(int from) {
+	public SpaceRequest from(Integer from) {
 		return this.queryParam(SpaceParams.FROM_PARAM, from);
 	}
 

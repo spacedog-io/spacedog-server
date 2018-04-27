@@ -11,6 +11,7 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
@@ -133,12 +134,15 @@ public class CredentialsService extends SpaceService {
 	@Get("/1/credentials")
 	@Get("/1/credentials/")
 	public Payload getAll(Context context) {
-		// TODO add more settings and permissions to control this
-		// credentials check
-		SpaceContext.credentials().checkAtLeastUser();
+		SpaceContext.credentials().checkAtLeastAdmin();
+
+		String q = context.get(Q_PARAM);
+		QueryBuilder query = Strings.isNullOrEmpty(q) //
+				? QueryBuilders.matchAllQuery() //
+				: QueryBuilders.simpleQueryStringQuery(q);
 
 		SearchSourceBuilder builder = SearchSourceBuilder.searchSource()//
-				.query(toQuery(context))//
+				.query(query)//
 				.from(context.query().getInteger(FROM_PARAM, 0)) //
 				.size(context.query().getInteger(SIZE_PARAM, 10));
 
@@ -152,8 +156,8 @@ public class CredentialsService extends SpaceService {
 	public Payload deleteAll(Context context) {
 		SpaceContext.credentials().checkAtLeastSuperAdmin();
 
-		// superadmins can only be deleted when backend is deleted
-		BoolQueryBuilder query = toQuery(context)//
+		// superadmins can not be deleted this way
+		BoolQueryBuilder query = QueryBuilders.boolQuery()//
 				.mustNot(QueryBuilders.termQuery(ROLES_FIELD, Roles.superadmin));
 
 		// always refresh before and after credentials index updates
@@ -683,24 +687,6 @@ public class CredentialsService extends SpaceService {
 
 		create(credentials);
 		return credentials;
-	}
-
-	private BoolQueryBuilder toQuery(Context context) {
-		BoolQueryBuilder query = QueryBuilders.boolQuery();
-
-		String username = context.get(USERNAME_FIELD);
-		if (!Strings.isNullOrEmpty(username))
-			query.filter(QueryBuilders.termQuery(USERNAME_FIELD, username));
-
-		String email = context.get(EMAIL_FIELD);
-		if (!Strings.isNullOrEmpty(email))
-			query.filter(QueryBuilders.termQuery(EMAIL_FIELD, email));
-
-		String role = context.get("role");
-		if (!Strings.isNullOrEmpty(role))
-			query.filter(QueryBuilders.termQuery(ROLES_FIELD, role));
-
-		return query;
 	}
 
 	private BoolQueryBuilder toQuery(String username) {

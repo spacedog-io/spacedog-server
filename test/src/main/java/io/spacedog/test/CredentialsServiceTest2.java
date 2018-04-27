@@ -3,6 +3,7 @@
  */
 package io.spacedog.test;
 
+import java.util.List;
 import java.util.Set;
 
 import org.joda.time.DateTime;
@@ -13,6 +14,7 @@ import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Credentials;
+import io.spacedog.client.credentials.Credentials.Results;
 import io.spacedog.client.credentials.CredentialsSettings;
 import io.spacedog.client.credentials.Passwords;
 import io.spacedog.client.credentials.Roles;
@@ -276,61 +278,57 @@ public class CredentialsServiceTest2 extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = clearRootBackend();
-		SpaceDog fred = createTempDog(superadmin, "fred");
+		createTempDog(superadmin, "fred");
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
-		// vince searches for all credentials
-		vince.get("/1/credentials").go(200)//
-				.assertEquals(3, "total")//
-				.assertSizeEquals(3, "results")//
-				.assertContainsValue("superadmin", "username")//
-				.assertContainsValue("vince", "username")//
-				.assertContainsValue("fred", "username");
+		// vince not authaurized to search for credentials
+		assertHttpError(403, () -> vince.credentials().getAll());
+
+		// superadmin searches for all credentials
+		Results results = superadmin.credentials().getAll();
+
+		assertEquals(3, results.total);
+		assertEquals(3, results.results.size());
+		assertContainsCredsOf("superadmin", results.results);
+		assertContainsCredsOf("vince", results.results);
+		assertContainsCredsOf("fred", results.results);
 
 		// superadmin searches for user credentials
-		superadmin.get("/1/credentials").queryParam("role", "user").go(200)//
-				.assertEquals(2, "total")//
-				.assertSizeEquals(2, "results")//
-				.assertContainsValue("vince", "username")//
-				.assertContainsValue("fred", "username");
+		results = superadmin.credentials().getAll("user");
+		assertEquals(2, results.total);
+		assertEquals(2, results.results.size());
+		assertContainsCredsOf("vince", results.results);
+		assertContainsCredsOf("fred", results.results);
 
-		// fred searches for credentials with a specified email
-		fred.get("/1/credentials")//
-				.queryParam("email", "platform@spacedog.io").go(200)//
-				.assertEquals(3, "total")//
-				.assertSizeEquals(3, "results")//
-				.assertContainsValue("superadmin", "username")//
-				.assertContainsValue("vince", "username")//
-				.assertContainsValue("fred", "username");
+		// superadmin searches for credentials with a specified email
+		results = superadmin.credentials().getAll("platform@spacedog.io");
+		assertEquals(3, results.total);
+		assertEquals(3, results.results.size());
+		assertContainsCredsOf("superadmin", results.results);
+		assertContainsCredsOf("vince", results.results);
+		assertContainsCredsOf("fred", results.results);
 
-		// vince searches for credentials with specified username
-		vince.get("/1/credentials")//
-				.queryParam("username", "fred").go(200)//
-				.assertSizeEquals(1, "results")//
-				.assertContainsValue("fred", "username")//
-				.assertContainsValue("platform@spacedog.io", "email");
+		// superadmin searches for credentials with specified username
+		results = superadmin.credentials().getAll("fred");
+		assertEquals(1, results.total);
+		assertEquals(1, results.results.size());
+		assertContainsCredsOf("fred", results.results);
 
-		// super admin deletes credentials with specified username
-		superadmin.delete("/1/credentials").queryParam("username", "fred").go(200);
+		// superadmin deletes all credentials but superadmins
+		superadmin.credentials().deleteAllButSuperAdmins();
 
-		superadmin.get("/1/credentials").go(200)//
-				.assertSizeEquals(2, "results")//
-				.assertContainsValue("superadmin", "username")//
-				.assertContainsValue("vince", "username");
+		results = superadmin.credentials().getAll();
+		assertEquals(1, results.total);
+		assertEquals(1, results.results.size());
+		assertContainsCredsOf("superadmin", results.results);
+	}
 
-		// super admin deletes credentials with specified level
-		superadmin.delete("/1/credentials").queryParam("level", "USER").go(200);
+	private void assertContainsCredsOf(String username, List<Credentials> results) {
+		for (Credentials credentials : results)
+			if (credentials.username().equals(username))
+				return;
 
-		superadmin.get("/1/credentials").go(200)//
-				.assertSizeEquals(1, "results")//
-				.assertContainsValue("superadmin", "username");
-
-		// superadmin deletes all credentials but himself
-		superadmin.delete("/1/credentials").go(200);
-
-		superadmin.get("/1/credentials").go(200)//
-				.assertSizeEquals(1, "results")//
-				.assertContainsValue("superadmin", "username");
+		fail("credentials [" + username + "] not found");
 	}
 
 	@Test
