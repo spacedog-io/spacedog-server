@@ -154,23 +154,25 @@ public class FileService extends SpaceService {
 
 	public Payload download(WebPath path, Context context) {
 
-		if (path.size() < 2 //
+		if (path.size() != 2 //
 				|| path.last().equals("_download") == false)
 			throw Exceptions.unsupportedHttpRequest(context.method(), context.uri());
 
+		String bucket = path.first();
 		DownloadRequest request;
 
 		try {
-			request = Json.toPojo(//
-					context.request().content(), DownloadRequest.class);
+			request = Json.toPojo(context.request().content(), //
+					DownloadRequest.class);
 
 		} catch (IOException e) {
 			throw Exceptions.illegalArgument(e, "error reading file download request content");
 		}
 
+		checkBucketAndPaths(bucket, request.paths);
+
 		List<S3File> files = S3Service.toS3Files(request.paths);
-		S3File.checkPermissions(files, //
-				fileSettings().permissions.get(path.first()), //
+		S3File.checkPermissions(files, fileSettings().permissions.get(bucket), //
 				Permission.read, Permission.readGroup, Permission.readMine);
 
 		return s3().doZip(files, request.fileName);
@@ -179,6 +181,14 @@ public class FileService extends SpaceService {
 	//
 	// Implementation
 	//
+
+	private void checkBucketAndPaths(String bucket, List<String> paths) {
+		bucket = '/' + bucket;
+		for (String path : paths)
+			if (path.startsWith(bucket) == false)
+				throw Exceptions.illegalArgument(//
+						"file [%s] not from bucket [%s]", path, bucket);
+	}
 
 	private static WebPath toWebPath(String uri) {
 		// removes '/1/files'

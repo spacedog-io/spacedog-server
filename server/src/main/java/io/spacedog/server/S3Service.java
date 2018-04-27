@@ -181,8 +181,8 @@ public class S3Service extends SpaceService {
 
 	public Payload doUpload(S3File file, boolean enableS3Location, Context context) {
 
-		// TODO check if this upload does not replace an older upload
-		// in this case, check crdentials and owner rights
+		// TODO add test to check if this upload does not replace an older upload
+		// in this case, check credentials and owner rights
 		// should return FORBIDDEN if user not the owner of previous file
 		// admin can replace whatever they need to replace?
 

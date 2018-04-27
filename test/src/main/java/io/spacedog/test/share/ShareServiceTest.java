@@ -387,13 +387,18 @@ public class ShareServiceTest extends SpaceTest {
 		assertZipContains(zip, 1, "titi.txt", "titi".getBytes());
 		assertZipContains(zip, 2, "tweeter.png", pngBytes);
 
-		// vince needs read all permission to zip nath's shares
+		// vince fails to download files from share bucket
+		// since first file path isn't from the specified bucket
+		assertHttpError(400, () -> vince.files().downloadAll(//
+				SHARES_BUCKET, "/www/index.html", "/shares/toto.txt"));
+
+		// vince needs read (all) permission to zip nath's shares
 		assertHttpError(403, () -> vince.files().downloadAll(SHARES_BUCKET, path1, path2));
 
-		// nath needs read all permission to zip vince's shares
+		// nath needs read (all) permission to zip vince's shares
 		assertHttpError(403, () -> nath.files().downloadAll(SHARES_BUCKET, path1, path2));
 
-		// guests don't have permission to read shares
+		// guests needs read (all) permission to zip shares
 		assertHttpError(403, () -> guest.files().downloadAll(SHARES_BUCKET, path1, path2));
 
 		// superadmin updates share settings to allow users
