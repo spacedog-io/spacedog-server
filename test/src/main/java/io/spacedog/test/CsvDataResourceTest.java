@@ -46,14 +46,13 @@ public class CsvDataResourceTest extends SpaceTest {
 		request.refresh = true;
 		request.settings = new CsvRequest.Settings();
 		request.settings.delimiter = ';';
-		request.columns = Lists.newArrayList(//
-				new CsvRequest.Column("meta.createdAt"), //
-				new CsvRequest.Column("status"), //
-				new CsvRequest.Column("to.address"), //
-				new CsvRequest.Column("to.geopoint"), //
-				new CsvRequest.Column("tags"), //
-				new CsvRequest.Column("time"), //
-				new CsvRequest.Column("fare"));
+		request.addColumn("meta.createdAt");
+		request.addColumn("status");
+		request.addColumn("to.address");
+		request.addColumn("to.geopoint");
+		request.addColumn("tags");
+		request.addColumn("time");
+		request.addColumn("fare");
 
 		String csv = superadmin.data().csv(Course.TYPE, request).asString();
 

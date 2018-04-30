@@ -128,7 +128,7 @@ public class SearchResource extends Resource {
 		SearchResponse response = elastic.prepareSearch()//
 				.setIndices(elastic.toAliases(credentials.backendId(), type))//
 				.setTypes(type)//
-				.setSource(request.query.toString())//
+				.setSource(request.query)//
 				.setScroll(TimeValue.timeValueSeconds(60))//
 				.setSize(1000)//
 				.get();
