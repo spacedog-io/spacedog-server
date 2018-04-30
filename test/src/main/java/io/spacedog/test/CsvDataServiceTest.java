@@ -19,9 +19,9 @@ import io.spacedog.client.data.CsvRequest.Column;
 import io.spacedog.client.data.DataObjectBase;
 import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.data.DataWrapAbstract;
+import io.spacedog.client.elastic.ESQueryBuilders;
 import io.spacedog.client.schema.GeoPoint;
 import io.spacedog.client.schema.Schema;
-import io.spacedog.utils.Json;
 import io.spacedog.utils.RandomUtils;
 
 public class CsvDataServiceTest extends SpaceTest {
@@ -48,18 +48,16 @@ public class CsvDataServiceTest extends SpaceTest {
 		CsvRequest request = new CsvRequest();
 		request.refresh = true;
 		request.pageSize = 10;
-		request.query = Json.object("range", //
-				Json.object("time", Json.object("gt", 0)));
+		request.query = ESQueryBuilders.rangeQuery("time").gt(0).toString();
 		request.settings = new CsvRequest.Settings();
 		request.settings.delimiter = ';';
-		request.columns = Lists.newArrayList(//
-				new CsvRequest.Column("createdAt"), //
-				new CsvRequest.Column("status"), //
-				new CsvRequest.Column("to.address"), //
-				new CsvRequest.Column("to.geopoint"), //
-				new CsvRequest.Column("tags"), //
-				new CsvRequest.Column("time"), //
-				new CsvRequest.Column("fare"));
+		request.addColumn("meta.createdAt");
+		request.addColumn("status");
+		request.addColumn("to.address");
+		request.addColumn("to.geopoint");
+		request.addColumn("tags");
+		request.addColumn("time");
+		request.addColumn("fare");
 
 		String csv = superadmin.data().csv(Course.TYPE, request).asString();
 

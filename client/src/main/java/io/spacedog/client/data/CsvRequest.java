@@ -5,10 +5,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
-
-import io.spacedog.utils.Json;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(fieldVisibility = Visibility.PUBLIC_ONLY, //
@@ -19,9 +16,17 @@ public class CsvRequest {
 
 	public boolean refresh;
 	public int pageSize = 1000;
-	public ObjectNode query = Json.object("match_all", Json.object());
+	public String query = "{\"match_all\":{}}";
 	public Settings settings = new Settings();
 	public List<Column> columns = Lists.newArrayList();
+
+	public Column addColumn(String field) {
+		Column column = new Column(field);
+		if (columns == null)
+			columns = Lists.newArrayList();
+		columns.add(column);
+		return column;
+	}
 
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	@JsonAutoDetect(fieldVisibility = Visibility.PUBLIC_ONLY, //
