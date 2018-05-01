@@ -1,16 +1,13 @@
 package io.spacedog.watchdog;
 
 import org.joda.time.DateTime;
-import org.junit.runner.JUnitCore;
-import org.junit.runner.notification.Failure;
-import org.junit.runner.notification.RunListener;
 
 import com.amazonaws.services.lambda.runtime.Context;
 
 import io.spacedog.jobs.Job;
 import io.spacedog.rest.SpaceEnv;
 
-public class Watchdog extends RunListener {
+public class Watchdog {
 
 	private Job job = new Job();
 
@@ -30,28 +27,21 @@ public class Watchdog extends RunListener {
 					SpaceEnv.defaultEnv().target()//
 							.host(WatchdogTest.TEST_V0_BACKEND_ID));
 
-			JUnitCore junit = new JUnitCore();
-			junit.addListener(this);
+			WatchdogTest test = new WatchdogTest();
 
-			junit.run(WatchdogTest.class);
+			test.shouldCreatAndDeleteCredentials();
+			test.shouldCreateReadSearchAndDeleteDataMessages();
+			test.shouldShareFiles();
 
 			int hourOfDay = DateTime.now().getHourOfDay();
-			if (4 <= hourOfDay && hourOfDay < 5) {
+			if (4 <= hourOfDay && hourOfDay < 5)
 				job.ok();
-			}
 
 			return Job.OK;
 
 		} catch (Throwable t) {
 			return job.error(t);
 		}
-	}
-
-	@Override
-	public void testFailure(Failure failure) {
-		job.error(new StringBuilder()//
-				.append(failure.getMessage()).append('\n')//
-				.append(failure.getTrace()).toString());
 	}
 
 	public static void main(String[] args) {
