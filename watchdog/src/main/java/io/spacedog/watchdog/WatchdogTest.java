@@ -12,6 +12,7 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import io.spacedog.model.Schema;
+import io.spacedog.rest.SpaceEnv;
 import io.spacedog.rest.SpaceRequest;
 import io.spacedog.rest.SpaceTest;
 import io.spacedog.sdk.DataObject;
@@ -42,7 +43,7 @@ public class WatchdogTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend(TEST_V0_BACKEND_ID);
+		SpaceDog superadmin = resetTestV0Backend();
 		SpaceDog vince = createTempUser(superadmin, "vince");
 
 		// set message schema
@@ -90,7 +91,7 @@ public class WatchdogTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = resetTestBackend(TEST_V0_BACKEND_ID);
+		SpaceDog superadmin = resetTestV0Backend();
 		SpaceDog vince = createTempUser(superadmin, "vince");
 
 		// vince logs in
@@ -110,7 +111,7 @@ public class WatchdogTest extends SpaceTest {
 
 		// prepare
 		prepareTest(false);
-		SpaceDog superadmin = resetTestBackend(TEST_V0_BACKEND_ID);
+		SpaceDog superadmin = resetTestV0Backend();
 		SpaceDog vince = createTempUser(superadmin, "vince");
 
 		// backend is brand new, no shared files
@@ -151,4 +152,14 @@ public class WatchdogTest extends SpaceTest {
 		superadmin.get("/1/share").go(200)//
 				.assertSizeEquals(0, "results");
 	}
+
+	private static SpaceDog resetTestV0Backend() {
+		SpaceDog superadmin = SpaceDog.backend(TEST_V0_BACKEND_ID)//
+				.username(TEST_V0_BACKEND_ID).email(DEFAULT_PLATFORM_EMAIL)//
+				.password(SpaceEnv.defaultEnv().get("spacedog_test_watchdog_password"));
+		superadmin.admin().deleteBackend(TEST_V0_BACKEND_ID);
+		superadmin.admin().createMyBackend(false);
+		return superadmin;
+	}
+
 }
