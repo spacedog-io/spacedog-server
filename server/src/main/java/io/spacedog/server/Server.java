@@ -147,7 +147,7 @@ public class Server {
 		// RED status to GREEN before to initialize anything else
 		// wait for 60 seconds maximum by default
 		// configurable with spacedog.server.green.check and timeout properties
-		elasticClient.ensureAllIndicesAreGreen();
+		elasticClient.ensureAllIndicesAreAtLeastYellow();
 	}
 
 	protected void elasticIsStarted() {

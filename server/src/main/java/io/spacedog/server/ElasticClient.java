@@ -48,6 +48,7 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 
 import io.spacedog.client.http.SpaceParams;
+import io.spacedog.jobs.Internals;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -310,17 +311,17 @@ public class ElasticClient implements SpaceParams {
 	}
 
 	public void ensureIndexIsGreen(Index... indices) {
-		ensureIndicesAreGreen(Index.aliases(indices));
+		ensureIndicesAreAtLeastYellow(Index.aliases(indices));
 	}
 
-	public void ensureAllIndicesAreGreen() {
-		ensureIndicesAreGreen("_all");
+	public void ensureAllIndicesAreAtLeastYellow() {
+		ensureIndicesAreAtLeastYellow("_all");
 	}
 
-	public void ensureIndicesAreGreen(String... indices) {
+	public void ensureIndicesAreAtLeastYellow(String... indices) {
 		String indicesString = Arrays.toString(indices);
 		ServerConfiguration conf = Server.get().configuration();
-		Utils.info("[SpaceDog] Ensure indices %s are green ...", indicesString);
+		Utils.info("[SpaceDog] Ensure indices %s are at least yellow ...", indicesString);
 
 		ClusterHealthResponse response = this.internalClient.admin().cluster()
 				.health(Requests.clusterHealthRequest(indices)//
@@ -332,12 +333,20 @@ public class ElasticClient implements SpaceParams {
 
 		if (conf.serverGreenCheck()) {
 			if (response.isTimedOut())
-				throw Exceptions.runtime("ensure indices %s status are green timed out", //
+				throw Exceptions.runtime("ensure indices %s status are at least yellow timed out", //
 						indicesString);
 
-			if (!response.getStatus().equals(ClusterHealthStatus.GREEN))
-				throw Exceptions.runtime("indices %s failed to turn green", //
+			if (response.getStatus().equals(ClusterHealthStatus.RED))
+				throw Exceptions.runtime("indices %s failed to turn at least yellow", //
 						indicesString);
+
+			if (response.getStatus().equals(ClusterHealthStatus.YELLOW)) {
+				String message = String.format(//
+						"indices %s status are yellow", indicesString);
+				String topicId = Server.get().configuration()//
+						.awsSuperdogNotificationTopic().orElse(null);
+				Internals.get().notify(topicId, message, message);
+			}
 		}
 		Utils.info("[SpaceDog] indices %s are [%s]", indicesString, response.getStatus());
 	}
