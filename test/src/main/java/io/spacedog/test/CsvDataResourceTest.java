@@ -2,12 +2,14 @@ package io.spacedog.test;
 
 import java.io.StringReader;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.joda.time.DateTime;
 import org.junit.Test;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.univocity.parsers.csv.CsvParser;
@@ -35,7 +37,7 @@ public class CsvDataResourceTest extends SpaceTest {
 
 		// superadmin creates bunch of random courses
 		Set<Course> objects = Sets.newHashSet();
-		for (int i = 0; i < 2000; i++) {
+		for (int i = 0; i < 200; i++) {
 			Course course = randomCourse();
 			superadmin.data().save(course);
 			objects.add(course);
@@ -84,7 +86,8 @@ public class CsvDataResourceTest extends SpaceTest {
 		course.to = new Course.Location();
 		course.to.address = strings[2];
 		course.time = Long.valueOf(strings[5]);
-		course.fare = Double.valueOf(strings[6]);
+		if (!Strings.isNullOrEmpty(strings[6]))
+			course.fare = Double.valueOf(strings[6]);
 		return course;
 	}
 
@@ -93,7 +96,9 @@ public class CsvDataResourceTest extends SpaceTest {
 		course.status = RandomUtils.nextKeyword();
 		course.tags = Lists.newArrayList("hi", "ola");
 		course.time = RandomUtils.nextLong();
-		course.fare = RandomUtils.nextDouble();
+		course.fare = RandomUtils.nextBoolean() //
+				? RandomUtils.nextDouble() * 100
+				: null;
 		course.to = new Course.Location();
 		course.to.address = RandomUtils.nextAddress();
 		course.to.geopoint = RandomUtils.nextGeoPoint();
@@ -119,10 +124,10 @@ public class CsvDataResourceTest extends SpaceTest {
 		@Override
 		public boolean equals(Object obj) {
 			Course course = (Course) obj;
-			return course.status.equals(status) //
-					&& course.to.address.equals(to.address) //
-					&& course.time.equals(time) //
-					&& course.fare.equals(fare);
+			return Objects.equals(course.status, status) //
+					&& Objects.equals(course.to.address, to.address) //
+					&& Objects.equals(course.time, time) //
+					&& Objects.equals(course.fare, fare);
 		}
 
 		@Override

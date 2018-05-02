@@ -30,6 +30,7 @@ import net.codestory.http.payload.StreamingOutput;
 
 public class CsvStreamingOutput implements StreamingOutput {
 
+	private static final String FORMAT_ERROR = "FORMAT_ERROR";
 	private static Function<JsonNode, Object> defaultFormatter = value -> toValue(value);
 
 	private CsvRequest request;
@@ -84,10 +85,11 @@ public class CsvStreamingOutput implements StreamingOutput {
 
 		return value -> {
 			try {
-				return formatter.format(value.asDouble());
+				return Json7.isNull(value) ? null //
+						: formatter.format(value.asDouble());
 
 			} catch (Exception e) {
-				return value.asText();
+				return FORMAT_ERROR;
 			}
 		};
 	}
@@ -101,10 +103,11 @@ public class CsvStreamingOutput implements StreamingOutput {
 
 		return value -> {
 			try {
-				return formatter.print(DateTime.parse(value.asText()));
+				return Json7.isNull(value) ? null //
+						: formatter.print(DateTime.parse(value.asText()));
 
 			} catch (Exception e) {
-				return value.asText();
+				return FORMAT_ERROR;
 			}
 		};
 	}

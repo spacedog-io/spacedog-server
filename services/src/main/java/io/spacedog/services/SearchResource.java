@@ -125,10 +125,13 @@ public class SearchResource extends Resource {
 		Locale requestLocale = getRequestLocale(context);
 		ElasticClient elastic = Start.get().getElasticClient();
 
+		SearchSourceBuilder source = SearchSourceBuilder.searchSource()//
+				.query(QueryBuilders.wrapperQuery(request.query));
+
 		SearchResponse response = elastic.prepareSearch()//
 				.setIndices(elastic.toAliases(credentials.backendId(), type))//
 				.setTypes(type)//
-				.setSource(request.query)//
+				.setExtraSource(source.buildAsBytes())//
 				.setScroll(TimeValue.timeValueSeconds(60))//
 				.setSize(1000)//
 				.get();
