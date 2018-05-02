@@ -50,6 +50,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
 import io.spacedog.core.Json8;
+import io.spacedog.jobs.Internals;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
@@ -270,39 +271,47 @@ public class ElasticClient implements SpaceParams {
 					toIndex0(backendId, type));
 
 		if (!async)
-			ensureGreen(backendId, type);
+			ensureYellowGreen(backendId, type);
 	}
 
-	public void ensureAllIndicesGreen() {
-		ensureGreen("_all");
+	public void ensureAllIndicesYellowGreen() {
+		ensureYellowGreen("_all");
 	}
 
-	public void ensureGreen(String backendId, String type) {
-		ensureGreen(toAlias(backendId, type));
+	public void ensureYellowGreen(String backendId, String type) {
+		ensureYellowGreen(toAlias(backendId, type));
 	}
 
-	public void ensureGreen(String... indices) {
+	public void ensureYellowGreen(String... indices) {
 		String indicesString = Arrays.toString(indices);
 		boolean check = Start.get().configuration().serverGreenCheck();
 		int timeout = Start.get().configuration().serverGreenTimeout();
-		Utils.info("[SpaceDog] Ensure indices %s are green ...", indicesString);
+		Utils.info("[SpaceDog] Ensure indices %s are yellow/green ...", indicesString);
 
 		ClusterHealthResponse response = this.internalClient.admin().cluster()
 				.health(Requests.clusterHealthRequest(indices)//
 						.timeout(TimeValue.timeValueSeconds(timeout))//
-						.waitForGreenStatus()//
+						.waitForYellowStatus()//
 						.waitForEvents(Priority.LOW)//
 						.waitForRelocatingShards(0))//
 				.actionGet();
 
 		if (check) {
 			if (response.isTimedOut())
-				throw Exceptions.runtime("ensure indices %s status are green timed out", //
+				throw Exceptions.runtime("ensure indices %s status are yellow/green timed out", //
 						indicesString);
 
-			if (!response.getStatus().equals(ClusterHealthStatus.GREEN))
-				throw Exceptions.runtime("indices %s failed to turn green", //
+			if (response.getStatus().equals(ClusterHealthStatus.RED))
+				throw Exceptions.runtime("indices %s failed to turn yellow/green", //
 						indicesString);
+
+			if (response.getStatus().equals(ClusterHealthStatus.YELLOW)) {
+				String message = String.format(//
+						"indices %s status are yellow", indicesString);
+				String topicId = Start.get().configuration()//
+						.superdogAwsNotificationTopic().orElse(null);
+				Internals.get().notify(topicId, message, message);
+			}
 		}
 
 		Utils.info("[SpaceDog] indices %s are [%s]", //
