@@ -6,8 +6,8 @@ import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
 import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.index.query.AbstractQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 import io.spacedog.utils.Exceptions;
@@ -53,18 +53,6 @@ public class ElasticUtils {
 	}
 
 	public static QueryBuilder toQueryBuilder(String query) {
-		try {
-			NamedXContentRegistry registry = Server.get().elasticNode()//
-					.injector().getInstance(NamedXContentRegistry.class);
-
-			XContentParser parser = XContentType.JSON.xContent()//
-					.createParser(registry, query);
-
-			return AbstractQueryBuilder.parseInnerQueryBuilder(parser);
-
-		} catch (Exception e) {
-			throw Exceptions.illegalArgument(e, //
-					"error parsing query [%s]", query);
-		}
+		return QueryBuilders.wrapperQuery(query);
 	}
 }

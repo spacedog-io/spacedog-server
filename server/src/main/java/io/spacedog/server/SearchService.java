@@ -97,15 +97,16 @@ public class SearchService extends SpaceService {
 		ElasticClient elastic = elastic();
 		DataStore.get().refreshDataTypes(request.refresh, type);
 		Locale requestLocale = getRequestLocale(context);
+
 		SearchSourceBuilder builder = SearchSourceBuilder.searchSource()//
-				.query(ElasticUtils.toQueryBuilder(request.query));
+				.query(QueryBuilders.wrapperQuery(request.query))//
+				.size(request.pageSize);
 
 		SearchResponse response = elastic.prepareSearch(//
 				DataStore.toDataIndex(type))//
 				.setTypes(type)//
 				.setSource(builder)//
 				.setScroll(TimeValue.timeValueSeconds(60))//
-				.setSize(request.pageSize)//
 				.get();
 
 		return new Payload("text/plain;charset=utf-8;", //

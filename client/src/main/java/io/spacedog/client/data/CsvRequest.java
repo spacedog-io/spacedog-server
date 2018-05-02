@@ -7,6 +7,8 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.Lists;
 
+import io.spacedog.client.elastic.ESQueryBuilders;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(fieldVisibility = Visibility.PUBLIC_ONLY, //
 		getterVisibility = Visibility.NONE, //
@@ -16,7 +18,7 @@ public class CsvRequest {
 
 	public boolean refresh;
 	public int pageSize = 1000;
-	public String query = "{\"match_all\":{}}";
+	public String query = ESQueryBuilders.matchAllQuery().toString();
 	public Settings settings = new Settings();
 	public List<Column> columns = Lists.newArrayList();
 
