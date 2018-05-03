@@ -3,6 +3,37 @@
 The file endpoint allows users to upload/download files to/from the cloud. Uploaded files will be available to download to authorized users. Uploaded files are identified by a path and a name. Examples: `a/b/c/index.html` or `a/b/c/z`.
 
 ---
+#### /1/settings/file
+
+**GET** returns file settings.
+**PUT** updates file settings.
+**DELETE** reset file settings to defaults.
+
+File settings example:
+
+```json
+{
+  "sizeLimitInKB": 20000,
+  "permissions": {
+    "www": {
+      "all": ["read"],
+      "user": ["updateMine", "deleteMine"]  
+    }
+  }
+}
+```
+
+Settings | Description
+---------|------------
+sizeLimitInKB | Long. Defaults to 20,000. File size limit for all buckets.
+permissions   | Hash. Defaults to empty hash. Map of bucket/roles/permissions.
+permissions.{bucket} | Hash. Map of role/permissions for the specified bucket.
+permissions.{bucket}.{role} | List of strings. List of permissions for the specified bucket and role.
+
+- Special role `all` means: any user.
+- Bucket permissions are: `readMine`, `readGroup`, `read`, `updateMine`, `updateGroup`, `update`, `deleteMine`, `deleteGroup`, `delete`.
+
+---
 #### /1/files/{bucket}/{path}
 
 Path Parameters | Description
@@ -147,34 +178,3 @@ Authorized to users with:
 - `readMine` permission for files owned by user,
 - `readGroup` permission for files part of user's group,
 - `read` permission.
-
----
-#### /1/settings/file
-
-**GET** returns file settings.
-**PUT** updates file settings.
-**DELETE** reset file settings to defaults.
-
-File settings example:
-
-```json
-{
-  "sizeLimitInKB": 20000,
-  "permissions": {
-    "www": {
-      "all": ["read"],
-      "user": ["updateMine", "deleteMine"]  
-    }
-  }
-}
-```
-
-Settings | Description
----------|------------
-sizeLimitInKB | Long. Defaults to 20,000. File size limit for all buckets.
-permissions   | Hash. Defaults to empty hash. Map of bucket/roles/permissions.
-permissions.{bucket} | Hash. Map of role/permissions for the specified bucket.
-permissions.{bucket}.{role} | List of strings. List of permissions for the specified bucket and role.
-
-- Special role `all` means: any user.
-- Bucket permissions are: `readMine`, `readGroup`, `read`, `updateMine`, `updateGroup`, `update`, `deleteMine`, `deleteGroup`, `delete`.
