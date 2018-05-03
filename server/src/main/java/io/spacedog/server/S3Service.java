@@ -38,7 +38,7 @@ import net.codestory.http.payload.StreamingOutput;
 public class S3Service extends SpaceService {
 
 	private final static AmazonS3 s3 = AmazonS3ClientBuilder.standard()//
-			.withRegion(Server.get().configuration().awsRegionOrDefault())//
+			.withRegion(ServerConfig.awsRegionOrDefault())//
 			.build();
 
 	static AmazonS3 s3() {
@@ -300,7 +300,7 @@ public class S3Service extends SpaceService {
 	//
 
 	public static String getBucketName(String bucketSuffix) {
-		return Server.get().configuration().awsBucketPrefix() + bucketSuffix;
+		return ServerConfig.awsBucketPrefix() + bucketSuffix;
 	}
 
 	private static S3Service singleton = new S3Service();

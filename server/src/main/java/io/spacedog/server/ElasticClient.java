@@ -320,18 +320,17 @@ public class ElasticClient implements SpaceParams {
 
 	public void ensureIndicesAreAtLeastYellow(String... indices) {
 		String indicesString = Arrays.toString(indices);
-		ServerConfiguration conf = Server.get().configuration();
 		Utils.info("[SpaceDog] Ensure indices %s are at least yellow ...", indicesString);
 
 		ClusterHealthResponse response = this.internalClient.admin().cluster()
 				.health(Requests.clusterHealthRequest(indices)//
-						.timeout(TimeValue.timeValueSeconds(conf.serverGreenTimeout()))//
+						.timeout(TimeValue.timeValueSeconds(ServerConfig.serverGreenTimeout()))//
 						.waitForGreenStatus()//
 						.waitForEvents(Priority.LOW)//
 						.waitForNoRelocatingShards(true))//
 				.actionGet();
 
-		if (conf.serverGreenCheck()) {
+		if (ServerConfig.serverGreenCheck()) {
 			if (response.isTimedOut())
 				throw Exceptions.runtime("ensure indices %s status are at least yellow timed out", //
 						indicesString);
@@ -343,8 +342,7 @@ public class ElasticClient implements SpaceParams {
 			if (response.getStatus().equals(ClusterHealthStatus.YELLOW)) {
 				String message = String.format(//
 						"indices %s status are yellow", indicesString);
-				String topicId = Server.get().configuration()//
-						.awsSuperdogNotificationTopic().orElse(null);
+				String topicId = ServerConfig.awsSuperdogNotificationTopic().orElse(null);
 				Internals.get().notify(topicId, message, message);
 			}
 		}

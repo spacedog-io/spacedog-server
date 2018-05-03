@@ -50,10 +50,9 @@ public class SpaceContext {
 	private void initSpaceBackend() {
 
 		String hostAndPort = context.request().header(SpaceHeaders.HOST);
-		ServerConfiguration conf = Server.get().configuration();
 
 		// first try to match api backend
-		SpaceBackend apiBackend = conf.apiBackend();
+		SpaceBackend apiBackend = ServerConfig.apiBackend();
 		Optional7<SpaceBackend> opt = apiBackend.fromRequest(hostAndPort);
 
 		if (opt.isPresent())
@@ -61,7 +60,7 @@ public class SpaceContext {
 
 		else {
 			// second try to match www backend
-			SpaceBackend wwwBackend = conf.wwwBackend();
+			SpaceBackend wwwBackend = ServerConfig.wwwBackend();
 			opt = wwwBackend.fromRequest(hostAndPort);
 
 			if (opt.isPresent()) {
@@ -123,7 +122,7 @@ public class SpaceContext {
 	public static SpaceBackend backend() {
 		SpaceContext context = threadLocal.get();
 		return context == null //
-				? Server.get().configuration().apiBackend()
+				? ServerConfig.apiBackend()
 				: context.backend;
 	}
 

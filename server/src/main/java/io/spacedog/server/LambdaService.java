@@ -26,7 +26,7 @@ import net.codestory.http.payload.Payload;
 public class LambdaService extends SpaceService {
 
 	private final static AWSLambda lambda = AWSLambdaClient.builder()//
-			.withRegion(Server.get().configuration().awsRegionOrDefault())//
+			.withRegion(ServerConfig.awsRegionOrDefault())//
 			.build();
 
 	static AWSLambda lambda() {

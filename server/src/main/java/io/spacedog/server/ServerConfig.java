@@ -15,12 +15,11 @@ import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Utils;
 
-public class ServerConfiguration {
+public class ServerConfig {
 
 	private static final String HOME_PATH = "spacedog.home.path";
 	private static final String PRODUCTION = "spacedog.production";
 	private static final String OFFLINE = "spacedog.offline";
-	private static final String BACKEND_CREATE_RESTRICTED = "spacedog.backend.create.restricted";
 	private static final String SERVER_PORT = "spacedog.server.port";
 	private static final String SERVER_GREEN_CHECK = "spacedog.server.green.check";
 	private static final String SERVER_GREEN_TIMEOUT = "spacedog.server.green.timeout";
@@ -37,80 +36,63 @@ public class ServerConfiguration {
 	private static final String AWS_BUCKET_PREFIX = "spacedog.aws.bucket.prefix";
 	private static final String AWS_REGION = "spacedog.aws.region";
 
-	private SpaceEnv env;
-
-	public ServerConfiguration() {
-		this(SpaceEnv.env());
-	}
-
-	public ServerConfiguration(SpaceEnv env) {
-		this.env = env;
-		this.log();
-
-		if (isProduction()) {
-			// Force Fluent HTTP to production mode
-			System.setProperty("PROD_MODE", "true");
-		}
-
-	}
-
-	public Path homePath() {
-		Optional7<String> path = env.get(HOME_PATH);
+	public static Path homePath() {
+		Optional7<String> path = SpaceEnv.env().get(HOME_PATH);
 		return path.isPresent() ? Paths.get(path.get()) //
 				: Paths.get(System.getProperty("user.home"), "spacedog");
 	}
 
-	public boolean isProduction() {
-		return env.get(PRODUCTION, false);
+	public static boolean isProduction() {
+		return SpaceEnv.env().get(PRODUCTION, false);
 	}
 
-	public boolean isOffline() {
-		return env.get(OFFLINE, false);
+	public static boolean isOffline() {
+		return SpaceEnv.env().get(OFFLINE, false);
 	}
 
-	public SpaceBackend apiBackend() {
-		return env.apiBackend();
+	public static SpaceBackend apiBackend() {
+		return SpaceEnv.env().apiBackend();
 	}
 
-	public SpaceBackend wwwBackend() {
-		return env.wwwBackend();
+	public static SpaceBackend wwwBackend() {
+		return SpaceEnv.env().wwwBackend();
 	}
 
-	public int serverPort() {
-		return env.get(SERVER_PORT, 8443);
+	public static int serverPort() {
+		return SpaceEnv.env().get(SERVER_PORT, 8443);
 	}
 
-	public boolean serverGreenCheck() {
-		return env.get(SERVER_GREEN_CHECK, true);
+	public static boolean serverGreenCheck() {
+		return SpaceEnv.env().get(SERVER_GREEN_CHECK, true);
 	}
 
-	public int serverGreenTimeout() {
-		return env.get(SERVER_GREEN_TIMEOUT, 60);
+	public static int serverGreenTimeout() {
+		return SpaceEnv.env().get(SERVER_GREEN_TIMEOUT, 60);
 	}
 
-	public Path elasticConfigPath() {
-		Optional7<String> path = env.get(ELASTIC_CONFIG_PATH);
+	public static Path elasticConfigPath() {
+		Optional7<String> path = SpaceEnv.env().get(ELASTIC_CONFIG_PATH);
 		return path.isPresent() ? //
 				Paths.get(path.get()) : homePath().resolve("config");
 	}
 
-	public Path elasticDataPath() {
-		Optional7<String> path = env.get(ELASTIC_DATA_PATH);
+	public static Path elasticDataPath() {
+		Optional7<String> path = SpaceEnv.env().get(ELASTIC_DATA_PATH);
 		return path.isPresent() ? //
 				Paths.get(path.get()) : homePath().resolve("data");
 	}
 
-	public Optional<Path> elasticSnapshotsPath() {
-		Optional7<String> path = env.get(ELASTIC_SNAPSHOTS_PATH);
+	public static Optional<Path> elasticSnapshotsPath() {
+		Optional7<String> path = SpaceEnv.env().get(ELASTIC_SNAPSHOTS_PATH);
 		return path.isPresent() ? Optional.of(Paths.get(path.get())) : Optional.empty();
 	}
 
-	public boolean elasticIsHttpEnabled() {
-		return env.get(ELASTIC_HTTP_ENABLED, false);
+	public static boolean elasticIsHttpEnabled() {
+		return SpaceEnv.env().get(ELASTIC_HTTP_ENABLED, false);
 	}
 
-	public String elasticNetworkHost() {
-		Optional7<String> ip = env.get(ELASTIC_NETWORK_HOST);
+	public static String elasticNetworkHost() {
+		Optional7<String> ip = SpaceEnv.env().get(ELASTIC_NETWORK_HOST);
 		if (ip.isPresent())
 			return ip.get();
 
@@ -121,51 +103,47 @@ public class ServerConfiguration {
 		}
 	}
 
-	public Optional7<Regions> awsRegion() {
-		Optional7<String> opt = env.get(AWS_REGION);
+	public static Optional7<Regions> awsRegion() {
+		Optional7<String> opt = SpaceEnv.env().get(AWS_REGION);
 		return opt.isPresent() //
 				? Optional7.of(Regions.fromName(opt.get())) //
 				: Optional7.empty();
 
 	}
 
-	public Regions awsRegionOrDefault() {
+	public static Regions awsRegionOrDefault() {
 		return awsRegion().orElse(Regions.EU_WEST_1);
 	}
 
-	public String awsBucketPrefix() {
-		return env.getOrElseThrow(AWS_BUCKET_PREFIX);
+	public static String awsBucketPrefix() {
+		return SpaceEnv.env().getOrElseThrow(AWS_BUCKET_PREFIX);
 	}
 
-	public Optional7<String> awsSuperdogNotificationTopic() {
-		return env.get(AWS_SUPERDOG_NOTIFICATION_TOPIC);
+	public static Optional7<String> awsSuperdogNotificationTopic() {
+		return SpaceEnv.env().get(AWS_SUPERDOG_NOTIFICATION_TOPIC);
 	}
 
-	public String mailGunKey() {
-		return env.getOrElseThrow(MAIL_MAILGUN_KEY);
+	public static String mailGunKey() {
+		return SpaceEnv.env().getOrElseThrow(MAIL_MAILGUN_KEY);
 	}
 
-	public String mailDomain() {
-		return env.getOrElseThrow(MAIL_DOMAIN);
+	public static String mailDomain() {
+		return SpaceEnv.env().getOrElseThrow(MAIL_DOMAIN);
 	}
 
-	public boolean mailSmtpDebug() {
-		return env.get(MAIL_SMTP_DEBUG, false);
+	public static boolean mailSmtpDebug() {
+		return SpaceEnv.env().get(MAIL_SMTP_DEBUG, false);
 	}
 
-	public boolean backendCreateRestricted() {
-		return env.get(BACKEND_CREATE_RESTRICTED, true);
+	public static String serverUserAgent() {
+		return SpaceEnv.env().get(SERVER_USER_AGENT, "spacedog-server");
 	}
 
-	public String serverUserAgent() {
-		return env.get(SERVER_USER_AGENT, "spacedog-server");
+	public static String superdogPassword() {
+		return SpaceEnv.env().superdogPassword();
 	}
 
-	public String superdogPassword() {
-		return env.superdogPassword();
-	}
-
-	public void log() {
+	public static void log() {
 		Utils.info("[SpaceDog] Server configuration =");
 
 		log("API URL", apiBackend());
@@ -199,16 +177,19 @@ public class ServerConfiguration {
 	// Implementation
 	//
 
-	private void log(String property, Object value) {
+	private ServerConfig() {
+	}
+
+	private static void log(String property, Object value) {
 		Utils.info("-- %s: %s", property, value);
 	}
 
-	private void checkPath(String property, Optional<Path> path, boolean directory) {
+	private static void checkPath(String property, Optional<Path> path, boolean directory) {
 		if (path.isPresent())
 			checkPath(property, path.get(), directory);
 	}
 
-	private void checkPath(String property, Path path, boolean directory) {
+	private static void checkPath(String property, Path path, boolean directory) {
 
 		if (path == null)
 			throw Exceptions.illegalArgument(//

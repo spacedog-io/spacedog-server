@@ -41,7 +41,6 @@ public class Server {
 	private ElasticNode elasticNode;
 	private ElasticClient elasticClient;
 	private FluentServer fluent;
-	private ServerConfiguration config;
 	private Info info;
 
 	public ElasticClient elasticClient() {
@@ -50,10 +49,6 @@ public class Server {
 
 	public ElasticNode elasticNode() {
 		return elasticNode;
-	}
-
-	public ServerConfiguration configuration() {
-		return config;
 	}
 
 	public static void main(String[] args) {
@@ -84,8 +79,8 @@ public class Server {
 	}
 
 	protected void init() {
-		this.config = new ServerConfiguration();
-		System.setProperty("http.agent", configuration().serverUserAgent());
+		ServerConfig.log();
+		System.setProperty("http.agent", ServerConfig.serverUserAgent());
 		String string = ClassResources.loadAsString(Server.class, "info.json");
 		info = Json.toPojo(string, Info.class);
 	}
@@ -95,7 +90,7 @@ public class Server {
 
 		Builder builder = Settings.builder()//
 				.put(Environment.PATH_HOME_SETTING.getKey(), //
-						config.homePath().toAbsolutePath().toString());
+						ServerConfig.homePath().toAbsolutePath().toString());
 		// .put(Node.NODE_MASTER_SETTING.getKey(), true)//
 		// .put(Node.NODE_DATA_SETTING.getKey(), true)//
 		// .put(DiscoveryModule.DISCOVERY_TYPE_SETTING.getKey(), "single-node")//
@@ -125,7 +120,8 @@ public class Server {
 		Settings settings = builder.build();
 
 		Environment environment = InternalSettingsPreparer.prepareEnvironment(//
-				settings, Terminal.DEFAULT, Collections.emptyMap(), config.elasticConfigPath());
+				settings, Terminal.DEFAULT, Collections.emptyMap(), //
+				ServerConfig.elasticConfigPath());
 
 		try {
 			LogConfigurator.configure(environment);
@@ -176,9 +172,13 @@ public class Server {
 	}
 
 	protected void startFluent() {
+		if (ServerConfig.isProduction())
+			// Force Fluent HTTP to production mode
+			System.setProperty("PROD_MODE", "true");
+
 		fluent = new FluentServer();
 		fluent.configure(routes -> configure(routes));
-		fluent.start(config.serverPort());
+		fluent.start(ServerConfig.serverPort());
 	}
 
 	protected void fluentIsStarted() {
