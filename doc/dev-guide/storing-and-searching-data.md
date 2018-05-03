@@ -23,7 +23,7 @@ Here is a very simple schema for a car object:
 ```json
 {
   "car" : {
-    "properties" {
+    "properties": {
       "brand" : {
         "type" : "keyword",
       },
@@ -108,7 +108,7 @@ Send a `GET /1/data` to list all types of objects or `GET /1/data/car` to list o
         "owner" : "AVURQaf1kYZydi-1LnY5",
         "group" : "AVURQaf1kYZydi-1LnY5",
         "createdAt" : "2015-06-01T15:12:56.123Z",
-        "updatedAt" : "2015-06-01T15:17:06.123Z"
+        "updatedAt" : "2015-06-01T15:17:06.123Z",
         "brand" : "Citroën",
         "model" : "2CV",
         "color" : "blue",
