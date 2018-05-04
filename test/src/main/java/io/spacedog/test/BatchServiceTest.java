@@ -41,7 +41,7 @@ public class BatchServiceTest extends SpaceTest {
 				.end()//
 
 				.object()//
-				.add("method", "PUT").add("path", "/1/settings/dataacl")//
+				.add("method", "PUT").add("path", "/1/settings/data")//
 				.add("content", dataSettings)//
 				.end()//
 
@@ -53,7 +53,7 @@ public class BatchServiceTest extends SpaceTest {
 		superadmin.post("/1/batch").debugServer().bodyJson(batch).go(200)//
 				.assertEquals("message", "responses.0.id")//
 				.assertEquals("schemas", "responses.0.type")//
-				.assertEquals("dataacl", "responses.1.id")//
+				.assertEquals("data", "responses.1.id")//
 				.assertEquals("settings", "responses.1.type")//
 				.assertEquals("superadmin", "responses.2.credentials.username")//
 				.assertEquals(1, "debug.batchCredentialChecks");
@@ -131,8 +131,8 @@ public class BatchServiceTest extends SpaceTest {
 				.backend(superadmin).bodyJson(batch).go(200)//
 				.assertEquals(400, "responses.0.status")//
 				.assertEquals(404, "responses.1.status")//
-				.assertEquals(403, "responses.2.status")//
-				.assertEquals(403, "responses.3.status")//
+				.assertEquals(401, "responses.2.status")//
+				.assertEquals(401, "responses.3.status")//
 				.assertEquals(1, "debug.batchCredentialChecks");
 
 		// should succeed to create and update messages by batch
