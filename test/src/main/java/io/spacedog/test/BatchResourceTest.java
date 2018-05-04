@@ -53,9 +53,8 @@ public class BatchResourceTest extends SpaceTest {
 
 				.object()//
 				.put("method", "POST").put("path", "/1/schema/message")//
-				.node("content",
-						Schema.builder("message").id("code")//
-								.string("code").text("text").toString())//
+				.node("content", Schema.builder("message").id("code")//
+						.string("code").text("text").toString())//
 				.end()//
 
 				.object()//
@@ -151,8 +150,8 @@ public class BatchResourceTest extends SpaceTest {
 				.backend(test).bodyJson(batch).go(200)//
 				.assertEquals(400, "responses.0.status")//
 				.assertEquals(404, "responses.1.status")//
-				.assertEquals(403, "responses.2.status")//
-				.assertEquals(403, "responses.3.status")//
+				.assertEquals(401, "responses.2.status")//
+				.assertEquals(401, "responses.3.status")//
 				.assertEquals(1, "debug.batchCredentialChecks");
 
 		// should succeed to create and update messages by batch

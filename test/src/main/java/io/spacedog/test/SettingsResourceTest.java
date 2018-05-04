@@ -31,7 +31,7 @@ public class SettingsResourceTest extends SpaceTest {
 				"soldier", Json7.object("en", "Soldier", "fr", "Soldat"));
 
 		// only super admins can get all settings
-		SpaceRequest.get("/1/settings").backend(test).go(403);
+		SpaceRequest.get("/1/settings").backend(test).go(401);
 		SpaceRequest.get("/1/settings").auth(vince).go(403);
 		SpaceRequest.get("/1/settings").auth(test).go(200)//
 				.assertSizeEquals(0, "results");
@@ -40,24 +40,24 @@ public class SettingsResourceTest extends SpaceTest {
 		SpaceRequest.get("/1/settings/xxx").auth(test).go(404);
 
 		// by default only super admins can create settings
-		SpaceRequest.put("/1/settings/animals").backend(test).bodyJson(animals).go(403);
+		SpaceRequest.put("/1/settings/animals").backend(test).bodyJson(animals).go(401);
 		SpaceRequest.put("/1/settings/animals").auth(vince).bodyJson(animals).go(403);
 		SpaceRequest.put("/1/settings/animals").auth(test).bodyJson(animals).go(201);
 
 		// by default only super admins can get settings
-		SpaceRequest.get("/1/settings/animals").backend(test).go(403);
+		SpaceRequest.get("/1/settings/animals").backend(test).go(401);
 		SpaceRequest.get("/1/settings/animals").auth(vince).go(403);
 		SpaceRequest.get("/1/settings/animals").auth(test).go(200).assertEquals(animals);
 
 		// by default only super admins can update settings
 		animals.put("puma", "Puma");
-		SpaceRequest.put("/1/settings/animals").backend(test).bodyJson(animals).go(403);
+		SpaceRequest.put("/1/settings/animals").backend(test).bodyJson(animals).go(401);
 		SpaceRequest.put("/1/settings/animals").auth(vince).bodyJson(animals).go(403);
 		SpaceRequest.put("/1/settings/animals").auth(test).bodyJson(animals).go(200);
 		SpaceRequest.get("/1/settings/animals").auth(test).go(200).assertEquals(animals);
 
 		// by default only super admins can delete settings
-		SpaceRequest.delete("/1/settings/animals").backend(test).go(403);
+		SpaceRequest.delete("/1/settings/animals").backend(test).go(401);
 		SpaceRequest.delete("/1/settings/animals").auth(vince).go(403);
 		SpaceRequest.delete("/1/settings/animals").auth(test).go(200);
 
@@ -100,7 +100,7 @@ public class SettingsResourceTest extends SpaceTest {
 		// users can delete the animals settings
 		// guests are still forbidden
 		// super admins are always authorized
-		SpaceRequest.delete("/1/settings/animals").backend(test).bodyJson(animals).go(403);
+		SpaceRequest.delete("/1/settings/animals").backend(test).bodyJson(animals).go(401);
 		SpaceRequest.delete("/1/settings/animals").auth(vince).bodyJson(animals).go(200);
 
 		// super admin can delete settings settings
@@ -114,7 +114,7 @@ public class SettingsResourceTest extends SpaceTest {
 
 		// guests can not read animals settings anymore
 		// but super admins can
-		SpaceRequest.get("/1/settings/animals").backend(test).go(403);
+		SpaceRequest.get("/1/settings/animals").backend(test).go(401);
 		SpaceRequest.get("/1/settings/animals").auth(test).go(200).assertEquals(animals);
 	}
 
@@ -168,7 +168,7 @@ public class SettingsResourceTest extends SpaceTest {
 		SpaceDog vince = signUp(test, "vince", "hi vince");
 
 		// only superadmins can update settings
-		guest.put("/1/settings/db/type").go(403);
+		guest.put("/1/settings/db/type").go(401);
 		vince.put("/1/settings/db/type").go(403);
 
 		// test creates db settings with version field
@@ -187,7 +187,7 @@ public class SettingsResourceTest extends SpaceTest {
 				Json7.object("username", "tiger", "password", "miaou")), settings);
 
 		// only superadmins can get settings
-		guest.get("/1/settings/db/type").go(403);
+		guest.get("/1/settings/db/type").go(401);
 		vince.get("/1/settings/db/type").go(403);
 
 		// test gets each field
@@ -214,7 +214,7 @@ public class SettingsResourceTest extends SpaceTest {
 				Json7.object("username", "lion", "password", "arf")), settings);
 
 		// only superadmins can delete settings fields
-		guest.delete("/1/settings/db/type").go(403);
+		guest.delete("/1/settings/db/type").go(401);
 		vince.delete("/1/settings/db/type").go(403);
 
 		// test deletes version

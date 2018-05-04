@@ -49,8 +49,8 @@ public class BackendResourceTestOften extends SpaceTest {
 		test.login();
 
 		// login is not possible for anonymous users
-		SpaceRequest.get("/1/login").go(403);
-		SpaceRequest.get("/1/login").backend(test).go(403);
+		SpaceRequest.get("/1/login").go(401);
+		SpaceRequest.get("/1/login").backend(test).go(401);
 
 		// invalid admin username login fails
 		SpaceRequest.get("/1/login").backend("test")//

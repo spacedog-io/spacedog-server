@@ -29,7 +29,7 @@ public class SmsResourceTest extends SpaceTest {
 		test.credentials().setRole(vince.id(), "sms");
 
 		// no sms settings => nobody can send any sms
-		guest.post("/1/sms").go(403);
+		guest.post("/1/sms").go(401);
 		vince.post("/1/sms").go(403);
 		test.post("/1/sms").go(403);
 
@@ -46,7 +46,7 @@ public class SmsResourceTest extends SpaceTest {
 
 		// only user with sms role are allowed to send sms
 		// anonymous and admin fail to send sms
-		AssertFails.assertHttpStatus(403, () -> guest.sms().send("?", "?"));
+		AssertFails.assertHttpStatus(401, () -> guest.sms().send("?", "?"));
 		AssertFails.assertHttpStatus(403, () -> test.sms().send("?", "?"));
 		// guest.post("/1/sms").go(403);
 		// test.post("/1/sms").go(403);
@@ -68,7 +68,7 @@ public class SmsResourceTest extends SpaceTest {
 
 		// anonymous and superadmin don't have 'sms' role
 		// they fail to get sms info
-		AssertFails.assertHttpStatus(403, () -> guest.sms().get(messageId));
+		AssertFails.assertHttpStatus(401, () -> guest.sms().get(messageId));
 		AssertFails.assertHttpStatus(403, () -> test.sms().get(messageId));
 		// guest.get("/1/sms/" + messageId).go(403);//
 		// test.get("/1/sms/" + messageId).go(403);//

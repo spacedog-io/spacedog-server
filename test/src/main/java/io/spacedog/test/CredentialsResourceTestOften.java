@@ -99,7 +99,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		vince.get("/1/credentials/" + vince.id()).backend("XXX").go(401);
 
 		// anonymous fails to get vince credentials
-		SpaceRequest.get("/1/credentials/" + vince.id()).backend(test).go(403);
+		SpaceRequest.get("/1/credentials/" + vince.id()).backend(test).go(401);
 
 		// another user fails to get vince credentials
 		SpaceDog fred = signUp("test", "fred", "hi fred");
@@ -248,7 +248,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		try {
 			guest.credentials().delete(vince.id());
 		} catch (SpaceRequestException e) {
-			assertEquals(403, e.httpStatus());
+			assertEquals(401, e.httpStatus());
 		}
 
 		// fred fails to delete vince credentials
@@ -541,7 +541,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 		// guest can not create credentials
 		SpaceRequest.post("/1/credentials").backend(test)//
 				.bodyJson("username", "vince", "password", "hi vince", "email", "vince@dog.com")//
-				.go(403);
+				.go(401);
 
 		// fred fails to create credentials if no email
 		SpaceRequest.post("/1/credentials").auth(fred)//
@@ -735,7 +735,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// anonymous fails to disable fred's credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json7.toNode(false)).backend(test).go(403);
+				.bodyJson(Json7.toNode(false)).backend(test).go(401);
 
 		// fred fails to disable his credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
@@ -769,7 +769,7 @@ public class CredentialsResourceTestOften extends SpaceTest {
 
 		// anonymous fails to enable fred's credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//
-				.bodyJson(Json7.toNode(true)).backend(test).go(403);
+				.bodyJson(Json7.toNode(true)).backend(test).go(401);
 
 		// fred fails to enable his credentials
 		SpaceRequest.put("/1/credentials/" + fred.id() + "/enabled")//

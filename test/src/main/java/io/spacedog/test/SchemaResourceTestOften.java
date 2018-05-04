@@ -50,7 +50,7 @@ public class SchemaResourceTestOften extends SpaceTest {
 						.get());
 
 		// anonymous is not allowed to delete schema
-		SpaceRequest.delete("/1/schema/sale").backend(test).go(403);
+		SpaceRequest.delete("/1/schema/sale").backend(test).go(401);
 
 		// user is not allowed to delete schema
 		SpaceRequest.delete("/1/schema/sale").auth(bob).go(403);

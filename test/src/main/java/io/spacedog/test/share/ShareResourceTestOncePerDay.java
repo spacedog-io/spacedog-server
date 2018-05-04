@@ -42,7 +42,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		SpaceDog fred = signUp(test, "fred", "hi fred", "fred@dog.com");
 
 		// only admin can get all shared locations
-		SpaceRequest.get("/1/share").backend(test).go(403);
+		SpaceRequest.get("/1/share").backend(test).go(401);
 		SpaceRequest.get("/1/share").auth(vince).go(403);
 
 		// this account is brand new, no shared files
@@ -50,7 +50,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 				.assertSizeEquals(0, "results");
 
 		// anonymous users are not allowed to share files
-		SpaceRequest.put("/1/share/tweeter.png").backend(test).go(403);
+		SpaceRequest.put("/1/share/tweeter.png").backend(test).go(401);
 
 		// vince shares a small png file
 		byte[] pngBytes = ClassResources.loadToBytes(this, "tweeter.png");
@@ -138,8 +138,8 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		Assert.assertEquals(FILE_CONTENT, stringContent);
 
 		// only admin or owner can delete a shared file
-		SpaceRequest.delete(txtLocation).go(403);
-		SpaceRequest.delete(txtLocation).backend(test).go(403);
+		SpaceRequest.delete(txtLocation).go(401);
+		SpaceRequest.delete(txtLocation).backend(test).go(401);
 		SpaceRequest.delete(txtLocation).auth(vince).go(403);
 
 		// owner (fred) can delete its own shared file (test.txt)
@@ -151,7 +151,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 				.assertEquals(pngPath, "results.0.path");
 
 		// only admin can delete all shared files
-		SpaceRequest.delete("/1/share").backend(test).go(403);
+		SpaceRequest.delete("/1/share").backend(test).go(401);
 		SpaceRequest.delete("/1/share").auth(fred).go(403);
 		SpaceRequest.delete("/1/share").auth(vince).go(403);
 		SpaceRequest.delete("/1/share").auth(test).go(200)//
@@ -194,7 +194,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 		test.settings().save(settings);
 
 		// only admin can get all shared locations
-		SpaceRequest.get("/1/share").backend(test).go(403);
+		SpaceRequest.get("/1/share").backend(test).go(401);
 		SpaceRequest.get("/1/share").auth(vince).go(403);
 
 		// backend contains no shared file
@@ -212,14 +212,14 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 				.assertSizeEquals(1, "results");
 
 		// nobody is allowed to read this file
-		SpaceRequest.get(location).go(403);
+		SpaceRequest.get(location).go(401);
 		SpaceRequest.get(location).auth(fred).go(403);
 		SpaceRequest.get(location).auth(vince).go(403);
 		SpaceRequest.get(location).auth(test).go(403);
 
 		// nobody is allowed to delete this file but superadmins
 		// since they got delete_all permission
-		SpaceRequest.delete(location).go(403);
+		SpaceRequest.delete(location).go(401);
 		SpaceRequest.delete(location).auth(fred).go(403);
 		SpaceRequest.delete(location).auth(vince).go(403);
 		SpaceRequest.delete(location).auth(test).go(200);
@@ -238,14 +238,14 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 				.assertSizeEquals(1, "results");
 
 		// nobody is allowed to read this file but vince the owner
-		SpaceRequest.get(location).go(403);
+		SpaceRequest.get(location).go(401);
 		SpaceRequest.get(location).auth(fred).go(403);
 		SpaceRequest.get(location).auth(test).go(403);
 		SpaceRequest.get(location).auth(vince).go(200);
 
 		// nobody is allowed to delete this file
 		// but vince the owner (and super admins)
-		SpaceRequest.delete(location).go(403);
+		SpaceRequest.delete(location).go(401);
 		SpaceRequest.delete(location).auth(fred).go(403);
 		SpaceRequest.delete(location).auth(vince).go(200);
 
@@ -427,7 +427,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 				.getString("location");
 
 		// guest fails to get shared file since no access token query param
-		guest.get(location).go(403);
+		guest.get(location).go(401);
 
 		// vince gets his shared file via access token query param
 		byte[] bytes = guest.get(location)//
