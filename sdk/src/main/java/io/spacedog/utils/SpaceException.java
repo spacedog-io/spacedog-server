@@ -1,6 +1,9 @@
 package io.spacedog.utils;
 
+import java.util.Map;
+
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Maps;
 
 public class SpaceException extends RuntimeException {
 
@@ -9,6 +12,7 @@ public class SpaceException extends RuntimeException {
 	private int httpStatus;
 	private String code;
 	private ObjectNode details;
+	private Map<String, String> headers = Maps.newLinkedHashMap();
 
 	public SpaceException(int httpStatus, String message, Object... args) {
 		this(fromStatusToCode(httpStatus), httpStatus, message, args);
@@ -55,6 +59,16 @@ public class SpaceException extends RuntimeException {
 	public SpaceException cause(Throwable t) {
 		this.initCause(t);
 		return this;
+	}
+
+	public SpaceException withHeader(String key, String value) {
+		if (value != null)
+			headers.put(key, value);
+		return this;
+	}
+
+	public Map<String, String> headers() {
+		return headers;
 	}
 
 	//

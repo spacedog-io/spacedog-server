@@ -69,7 +69,10 @@ public class JsonPayload {
 
 	public static Payload error(int httpStatus, Throwable throwable) {
 		JsonNode errorNode = toJson(throwable, SpaceContext.isDebug() || httpStatus >= 500);
-		return json(builder(httpStatus).node("error", errorNode), httpStatus);
+		Payload payload = json(builder(httpStatus).node("error", errorNode), httpStatus);
+		if (throwable instanceof SpaceException)
+			payload.withHeaders(((SpaceException) throwable).headers());
+		return payload;
 	}
 
 	public static JsonNode toJson(Throwable t, boolean debug) {
