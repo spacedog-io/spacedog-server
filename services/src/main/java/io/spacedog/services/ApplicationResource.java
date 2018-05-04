@@ -145,7 +145,6 @@ public class ApplicationResource extends Resource {
 		return pushApp;
 	}
 
-	@SuppressWarnings("unused")
 	public static class PushApplication {
 		public String name;
 		public String backendId;
