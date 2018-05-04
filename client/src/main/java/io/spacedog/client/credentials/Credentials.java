@@ -370,7 +370,7 @@ public class Credentials {
 	}
 
 	public boolean isGuest() {
-		return GUEST.username().equals(type());
+		return GUEST.id().equals(id());
 	}
 
 	//
