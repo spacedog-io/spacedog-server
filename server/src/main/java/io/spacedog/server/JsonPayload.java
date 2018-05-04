@@ -3,6 +3,8 @@
  */
 package io.spacedog.server;
 
+import java.util.Map;
+
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.search.SearchPhaseExecutionException;
 
@@ -57,6 +59,11 @@ public class JsonPayload implements SpaceFields {
 
 	public JsonPayload withHeader(String key, String value) {
 		payload.withHeader(key, value);
+		return this;
+	}
+
+	public JsonPayload withHeaders(Map<String, String> headers) {
+		payload.withHeaders(headers);
 		return this;
 	}
 
@@ -147,7 +154,10 @@ public class JsonPayload implements SpaceFields {
 
 	public JsonPayload withError(Throwable throwable) {
 		boolean debug = SpaceContext.isDebug() || payload.code() >= 500;
-		return withError(toJson(throwable, debug));
+		JsonPayload payload = withError(toJson(throwable, debug));
+		if (throwable instanceof SpaceException)
+			payload.withHeaders(((SpaceException) throwable).headers());
+		return payload;
 	}
 
 	public JsonPayload withError(JsonNode error) {

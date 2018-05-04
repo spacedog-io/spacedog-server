@@ -6,6 +6,7 @@ import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -15,6 +16,7 @@ import com.google.common.base.Strings;
 public class Utils {
 
 	public static final Charset UTF8 = Charset.forName("UTF-8");
+	public static final char UTF8_BOM = '\ufeff';
 
 	//
 	// Object utils
@@ -173,8 +175,12 @@ public class Utils {
 				|| c == '6' || c == '7' || c == '8' || c == '9';
 	}
 
-	public static <T> boolean isNullOrEmpty(Collection<T> collection) {
+	public static boolean isNullOrEmpty(Collection<?> collection) {
 		return collection == null || collection.isEmpty();
+	}
+
+	public static boolean isNullOrEmpty(Map<?, ?> map) {
+		return map == null || map.isEmpty();
 	}
 
 	public static <T> boolean isNullOrEmpty(T[] array) {

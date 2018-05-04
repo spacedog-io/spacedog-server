@@ -4,6 +4,7 @@
 package io.spacedog.utils;
 
 import io.spacedog.client.http.SpaceException;
+import io.spacedog.client.http.SpaceHeaders;
 
 public class AuthenticationException extends SpaceException {
 
@@ -11,9 +12,15 @@ public class AuthenticationException extends SpaceException {
 
 	public AuthenticationException(String code, String message, Object... args) {
 		super(code, 401, message, args);
+		addWwwAuthenticateHeader();
 	}
 
 	public AuthenticationException(String code, Throwable cause, String message, Object... args) {
 		super(code, 401, cause, message, args);
+		addWwwAuthenticateHeader();
+	}
+
+	private void addWwwAuthenticateHeader() {
+		withHeader(SpaceHeaders.WWW_AUTHENTICATE, SpaceHeaders.BASIC_SCHEME);
 	}
 }
