@@ -189,7 +189,7 @@ public class DataAccessControlTest extends SpaceTest {
 		superadmin.delete("/1/data/message/2").go(200);
 
 		// nobody can delete all message but superadmins
-		guest.delete("/1/data/message").go(403);
+		guest.delete("/1/data/message").go(401);
 		vince.delete("/1/data/message").go(403);
 		admin.delete("/1/data/message").go(403);
 		superadmin.delete("/1/data/message").go(200)//

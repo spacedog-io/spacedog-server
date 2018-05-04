@@ -29,43 +29,44 @@ public class CredentialsServiceTest2 extends SpaceTest {
 
 		// prepare
 		prepareTest();
+		SpaceDog guest = SpaceDog.dog();
 		SpaceDog superadmin = clearRootBackend();
 		superadmin.credentials().enableGuestSignUp(true);
 
 		// fails since empty user body
-		SpaceRequest.post("/1/credentials/").backend(superadmin)//
-				.bodyJson(Json.object()).go(400);
+		guest.post("/1/credentials/").bodyJson(Json.object()).go(400);
 
 		// fails since no username
-		SpaceRequest.post("/1/credentials/").backend(superadmin)//
+		guest.post("/1/credentials/")//
 				.bodyJson("password", "hi titi", "email", "titi@dog.com").go(400);
 
 		// fails since no email
-		SpaceRequest.post("/1/credentials/").backend(superadmin)//
+		guest.post("/1/credentials/")//
 				.bodyJson("username", "titi", "password", "hi titi").go(400);
 
 		// fails since username too small
-		SpaceRequest.post("/1/credentials/").backend(superadmin)//
+		guest.post("/1/credentials/")//
 				.bodyJson("username", "ti", "password", "hi titi").go(400);
 
 		// fails since password too small
-		SpaceRequest.post("/1/credentials/").backend(superadmin)//
-				.bodyJson("username", "titi", "password", "hi", "email", "titi@dog.com").go(400);
+		guest.post("/1/credentials/")//
+				.bodyJson("username", "titi", "password", "hi", "email", "titi@dog.com")//
+				.go(400);
 
 		// vince signs up
-		String vinceId = SpaceRequest.post("/1/credentials").backend(superadmin)
+		String vinceId = guest.post("/1/credentials")
 				.bodyJson("username", "vince", "password", "hi vince", "email", "vince@dog.com")//
 				.go(201).getString("id");
 
 		// vince fails to sign up again since his credentials already exixts
-		SpaceRequest.post("/1/credentials").backend(superadmin)
+		guest.post("/1/credentials")//
 				.bodyJson("username", "vince", "password", "hello boby", "email", "vince@dog.com")//
 				.go(400)//
 				.assertEquals("already-exists", "error.code");
 
 		// vince logs in
 		ObjectNode node = SpaceRequest.get("/1/login")//
-				.backend(superadmin).basicAuth("vince", "hi vince").go(200)//
+				.backend(guest).basicAuth("vince", "hi vince").go(200)//
 				.assertPresent("accessToken")//
 				.assertPresent("expiresIn")//
 				.assertEquals(vinceId, "credentials.id")//
@@ -100,7 +101,7 @@ public class CredentialsServiceTest2 extends SpaceTest {
 				.backend(superadmin).basicAuth("vince", "XXX").go(401);
 
 		// anonymous fails to get vince credentials
-		SpaceRequest.get("/1/credentials/" + vince.id()).backend(superadmin).go(403);
+		guest.get("/1/credentials/" + vince.id()).go(401);
 
 		// another user fails to get vince credentials
 		SpaceDog fred = signUpTempDog(superadmin.backend(), "fred");
@@ -246,18 +247,10 @@ public class CredentialsServiceTest2 extends SpaceTest {
 		fred.login();
 
 		// anonymous fails to deletes vince credentials
-		try {
-			guest.credentials().delete(vince.id());
-		} catch (SpaceRequestException e) {
-			assertEquals(403, e.httpStatus());
-		}
+		assertHttpError(401, () -> guest.credentials().delete(vince.id()));
 
 		// fred fails to delete vince credentials
-		try {
-			fred.credentials().delete(vince.id());
-		} catch (SpaceRequestException e) {
-			assertEquals(403, e.httpStatus());
-		}
+		assertHttpError(403, () -> fred.credentials().delete(vince.id()));
 
 		// fred deletes his own credentials
 		fred.credentials().delete();
@@ -357,7 +350,7 @@ public class CredentialsServiceTest2 extends SpaceTest {
 		assertHttpError(401, () -> titi.login("XXX"));
 
 		// guest fails to set password with empty reset code
-		assertHttpError(403, () -> guest.credentials()//
+		assertHttpError(401, () -> guest.credentials()//
 				.setPasswordWithCode(titiId, "hi titi", ""));
 
 		// titi fails to login since no password set yet
@@ -504,9 +497,9 @@ public class CredentialsServiceTest2 extends SpaceTest {
 		superadmin.credentials().enableGuestSignUp(false);
 
 		// guest can not create credentials
-		SpaceRequest.post("/1/credentials").backend(superadmin)//
+		guest.post("/1/credentials")//
 				.bodyJson("username", "vince", "password", "hi vince", "email", "vince@dog.com")//
-				.go(403);
+				.go(401);
 
 		// fred fails to create credentials if no email
 		fred.post("/1/credentials").bodyJson("username", "vince").go(400);
@@ -696,7 +689,7 @@ public class CredentialsServiceTest2 extends SpaceTest {
 		fred.login();
 
 		// anonymous fails to disable fred's credentials
-		assertHttpError(403, () -> guest.credentials().disable(fred.id()));
+		assertHttpError(401, () -> guest.credentials().disable(fred.id()));
 
 		// fred fails to disable his credentials
 		assertHttpError(403, () -> fred.credentials().disable(fred.id()));
@@ -723,7 +716,7 @@ public class CredentialsServiceTest2 extends SpaceTest {
 				.prepareUpdate(fred.id()).username("freddy").go());
 
 		// anonymous fails to enable fred's credentials
-		assertHttpError(403, () -> guest.credentials().enable(fred.id()));
+		assertHttpError(401, () -> guest.credentials().enable(fred.id()));
 
 		// fred fails to enable his credentials
 		assertHttpError(401, () -> fred.credentials().enable(fred.id()));

@@ -44,7 +44,7 @@ public class EmailServiceTest extends SpaceTest {
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		// by default nobody is authorized to send emails
-		assertHttpError(403, () -> guest.emails().send(defaultMail()));
+		assertHttpError(401, () -> guest.emails().send(defaultMail()));
 		assertHttpError(403, () -> vince.emails().send(defaultMail()));
 		assertHttpError(403, () -> superadmin.emails().send(defaultMail()));
 
@@ -55,7 +55,7 @@ public class EmailServiceTest extends SpaceTest {
 
 		// since nobody has 'email' role
 		// nobody is authorized to send emails
-		assertHttpError(403, () -> guest.emails().send(defaultMail()));
+		assertHttpError(401, () -> guest.emails().send(defaultMail()));
 		assertHttpError(403, () -> vince.emails().send(defaultMail()));
 		assertHttpError(403, () -> superadmin.emails().send(defaultMail()));
 
@@ -176,7 +176,7 @@ public class EmailServiceTest extends SpaceTest {
 		parameters.put("demande", inscriptionId);
 
 		// guests are not allowed to use this email template
-		assertHttpError(403, () -> guest.emails().send(template.name, parameters));
+		assertHttpError(401, () -> guest.emails().send(template.name, parameters));
 
 		// vince is not allowed to use this email template
 		assertHttpError(403, () -> vince.emails().send(template.name, parameters));

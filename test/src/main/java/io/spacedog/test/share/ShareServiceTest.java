@@ -45,12 +45,12 @@ public class ShareServiceTest extends SpaceTest {
 		SpaceDog admin = createTempDog(superadmin, "admin", Roles.admin);
 
 		// only superadmins can list shares
-		assertHttpError(403, () -> guest.files().list(SHARES));
+		assertHttpError(401, () -> guest.files().list(SHARES));
 		assertHttpError(403, () -> vince.files().list(SHARES));
 		assertHttpError(403, () -> admin.files().list(SHARES));
 
 		// only superadmins can create shares
-		assertHttpError(403, () -> guest.files().share(SHARES, BYTES));
+		assertHttpError(401, () -> guest.files().share(SHARES, BYTES));
 		assertHttpError(403, () -> vince.files().share(SHARES, BYTES));
 		assertHttpError(403, () -> admin.files().share(SHARES, BYTES));
 
@@ -59,13 +59,13 @@ public class ShareServiceTest extends SpaceTest {
 		// assertNull(shareMeta.publicLocation);
 
 		// only superadmins can read shares
-		assertHttpError(403, () -> guest.files().get(shareMeta.path));
+		assertHttpError(401, () -> guest.files().get(shareMeta.path));
 		assertHttpError(403, () -> vince.files().get(shareMeta.path));
 		assertHttpError(403, () -> admin.files().get(shareMeta.path));
 		superadmin.files().get(shareMeta.path);
 
 		// only superadmins can delete shares
-		assertHttpError(403, () -> guest.files().delete(shareMeta.path));
+		assertHttpError(401, () -> guest.files().delete(shareMeta.path));
 		assertHttpError(403, () -> vince.files().delete(shareMeta.path));
 		assertHttpError(403, () -> admin.files().delete(shareMeta.path));
 		String[] deleted = superadmin.files().delete(shareMeta.path);
@@ -94,7 +94,7 @@ public class ShareServiceTest extends SpaceTest {
 		assertEquals(0, superadmin.files().list(SHARES).files.length);
 
 		// anonymous users are not allowed to share files
-		assertHttpError(403, () -> guest.files().list(SHARES));
+		assertHttpError(401, () -> guest.files().list(SHARES));
 
 		// vince shares a small png file
 		byte[] pngBytes = ClassResources.loadAsBytes(this, "tweeter.png");
@@ -179,7 +179,7 @@ public class ShareServiceTest extends SpaceTest {
 		// assertEquals(FILE_CONTENT, stringContent);
 
 		// only admin or owner can delete a shared file
-		SpaceRequest.delete(txtMeta.location).go(403);
+		guest.delete(txtMeta.location).go(401);
 		vince.delete(txtMeta.location).go(403);
 
 		// owner (fred) can delete its own shared file (test.txt)
@@ -196,7 +196,7 @@ public class ShareServiceTest extends SpaceTest {
 		assertEquals(pngMeta.path, list.files[0].path);
 
 		// only superadmin can delete all shared files
-		assertHttpError(403, () -> guest.files().delete(SHARES));
+		assertHttpError(401, () -> guest.files().delete(SHARES));
 		assertHttpError(403, () -> fred.files().delete(SHARES));
 		assertHttpError(403, () -> vince.files().delete(SHARES));
 		assertHttpError(403, () -> admin.files().delete(SHARES));
@@ -236,7 +236,7 @@ public class ShareServiceTest extends SpaceTest {
 		superadmin.settings().save(settings);
 
 		// only admin can get all shared locations
-		assertHttpError(403, () -> guest.files().list(SHARES));
+		assertHttpError(401, () -> guest.files().list(SHARES));
 		assertHttpError(403, () -> vince.files().list(SHARES));
 
 		// backend contains no shared file
@@ -253,14 +253,14 @@ public class ShareServiceTest extends SpaceTest {
 
 		// nobody is allowed to read this file
 		// but superadmins
-		guest.get(guestPngMeta.location).go(403);
+		guest.get(guestPngMeta.location).go(401);
 		fred.get(guestPngMeta.location).go(403);
 		vince.get(guestPngMeta.location).go(403);
 		superadmin.get(guestPngMeta.location).go(200);
 
 		// nobody is allowed to delete this file
 		// but superadmins
-		guest.delete(guestPngMeta.location).go(403);
+		guest.delete(guestPngMeta.location).go(401);
 		fred.delete(guestPngMeta.location).go(403);
 		vince.delete(guestPngMeta.location).go(403);
 		superadmin.delete(guestPngMeta.location).go(200);
@@ -279,14 +279,14 @@ public class ShareServiceTest extends SpaceTest {
 
 		// nobody is allowed to read this file
 		// but vince the owner and superadmins
-		guest.get(vincePngMeta.location).go(403);
+		guest.get(vincePngMeta.location).go(401);
 		fred.get(vincePngMeta.location).go(403);
 		vince.get(vincePngMeta.location).go(200);
 		superadmin.get(vincePngMeta.location).go(200);
 
 		// nobody is allowed to delete this file
 		// but vince the owner and superadmins
-		guest.delete(vincePngMeta.location).go(403);
+		guest.delete(vincePngMeta.location).go(401);
 		fred.delete(vincePngMeta.location).go(403);
 		vince.delete(vincePngMeta.location).go(200);
 
@@ -399,7 +399,7 @@ public class ShareServiceTest extends SpaceTest {
 		assertHttpError(403, () -> nath.files().downloadAll(SHARES_BUCKET, path1, path2));
 
 		// guests needs read (all) permission to zip shares
-		assertHttpError(403, () -> guest.files().downloadAll(SHARES_BUCKET, path1, path2));
+		assertHttpError(401, () -> guest.files().downloadAll(SHARES_BUCKET, path1, path2));
 
 		// superadmin updates share settings to allow users
 		// to download all shares
@@ -482,7 +482,7 @@ public class ShareServiceTest extends SpaceTest {
 		FileMeta share = vince.files().share(SHARES, "vince".getBytes());
 
 		// guest fails to get shared file since no access token query param
-		guest.get(share.location).go(403);
+		guest.get(share.location).go(401);
 
 		// vince gets his shared file via access token query param
 		byte[] bytes = guest.get(share.location)//

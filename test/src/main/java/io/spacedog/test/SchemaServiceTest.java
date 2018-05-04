@@ -48,7 +48,7 @@ public class SchemaServiceTest extends SpaceTest {
 				guest.schemas().getAll());
 
 		// anonymous is not allowed to delete schema
-		assertHttpError(403, () -> guest.schemas().delete("sale"));
+		assertHttpError(401, () -> guest.schemas().delete("sale"));
 
 		// user is not allowed to delete schema
 		assertHttpError(403, () -> bob.schemas().delete("sale"));

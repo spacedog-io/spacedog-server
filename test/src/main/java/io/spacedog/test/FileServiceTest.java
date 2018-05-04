@@ -46,7 +46,7 @@ public class FileServiceTest extends SpaceTest {
 		assertEquals(6, list.files.length);
 
 		// only superadmins are allowed to upload
-		assertHttpError(403, () -> guest.files().upload(//
+		assertHttpError(401, () -> guest.files().upload(//
 				"/www/xxx.html", "/www/xxx.html".getBytes()));
 		assertHttpError(403, () -> vince.files().upload(//
 				"/www/xxx.html", "/www/xxx.html".getBytes()));
@@ -55,7 +55,7 @@ public class FileServiceTest extends SpaceTest {
 		assertEquals(6, list.files.length);
 
 		// only superadmins are allowed to list
-		assertHttpError(403, () -> guest.files().list("/www"));
+		assertHttpError(401, () -> guest.files().list("/www"));
 		assertHttpError(403, () -> vince.files().list("/www"));
 
 		// superadmin gets app.html
@@ -78,7 +78,7 @@ public class FileServiceTest extends SpaceTest {
 
 		// superadmin deletes all css files
 		// only superadmins are allowed to delete files
-		assertHttpError(403, () -> guest.files().delete("/www/css"));
+		assertHttpError(401, () -> guest.files().delete("/www/css"));
 		assertHttpError(403, () -> vince.files().delete("/www/css"));
 		superadmin.files().delete("/www/css");
 
@@ -120,11 +120,11 @@ public class FileServiceTest extends SpaceTest {
 		vince.files().upload("/assets/vince/vince.txt", "vince".getBytes());
 
 		// vince is not allowed to upload files to another prefix
-		assertHttpError(403, () -> guest.files().upload(//
+		assertHttpError(403, () -> vince.files().upload(//
 				"/xxx/vince.txt", "vince".getBytes()));
 
-		// guestis not allowed to upload files to assets prefix
-		assertHttpError(403, () -> guest.files().upload(//
+		// guest is not allowed to upload files to assets prefix
+		assertHttpError(401, () -> guest.files().upload(//
 				"/assets/guest.txt", "guest".getBytes()));
 
 		// superadmin is allowed to list files for all prefixes
@@ -132,7 +132,7 @@ public class FileServiceTest extends SpaceTest {
 		assertEquals(2, list.files.length);
 
 		// guests don't have any read permission for assets prefix
-		assertHttpError(403, () -> guest.files().get("/assets/superadmin.txt"));
+		assertHttpError(401, () -> guest.files().get("/assets/superadmin.txt"));
 
 		// users can not read superadmin uploaded file
 		// since users only have read mine permission
@@ -149,7 +149,7 @@ public class FileServiceTest extends SpaceTest {
 		assertArrayEquals("vince".getBytes(), file.asBytes());
 
 		// only superadmins are allowed to list
-		assertHttpError(403, () -> guest.files().list("/assets"));
+		assertHttpError(401, () -> guest.files().list("/assets"));
 		assertHttpError(403, () -> vince.files().list("/assets"));
 
 		// vince can not update assets file he doesn't own
@@ -157,7 +157,7 @@ public class FileServiceTest extends SpaceTest {
 				"/assets/superadmin.txt", "vince".getBytes()));
 
 		// guest can not delete any assets files
-		assertHttpError(403, () -> guest.files().delete("/assets/superadmin.txt"));
+		assertHttpError(401, () -> guest.files().delete("/assets/superadmin.txt"));
 
 		// vince can not delete assets files he doesn't own
 		assertHttpError(403, () -> vince.files().delete("/assets/superadmin.txt"));

@@ -32,7 +32,7 @@ public class SmsServiceTest extends SpaceTest {
 
 		// nobody is authorized to send sms
 		// since no authorized role defined
-		assertHttpError(403, () -> guest.sms().send("?", "?"));
+		assertHttpError(401, () -> guest.sms().send("?", "?"));
 		assertHttpError(403, () -> vince.sms().send("?", "?"));
 		assertHttpError(403, () -> superadmin.sms().send("?", "?"));
 
@@ -43,7 +43,7 @@ public class SmsServiceTest extends SpaceTest {
 
 		// nobody is authorized to send sms
 		// since nobody has the right role
-		assertHttpError(403, () -> guest.sms().send("?", "?"));
+		assertHttpError(401, () -> guest.sms().send("?", "?"));
 		assertHttpError(403, () -> vince.sms().send("?", "?"));
 		assertHttpError(403, () -> superadmin.sms().send("?", "?"));
 
@@ -110,7 +110,7 @@ public class SmsServiceTest extends SpaceTest {
 		superadmin.sms().saveTemplate(template);
 
 		// nobody is allowed to send simple sms
-		assertHttpError(403, () -> guest.sms().send("?", "?"));
+		assertHttpError(401, () -> guest.sms().send("?", "?"));
 		assertHttpError(403, () -> vince.sms().send("?", "?"));
 		assertHttpError(403, () -> superadmin.sms().send("?", "?"));
 
@@ -123,7 +123,7 @@ public class SmsServiceTest extends SpaceTest {
 
 		// anonymous and superadmin don't have the 'sms' role,
 		// they are not allowed to use the 'hello' sms template
-		assertHttpError(403, () -> guest.sms().send(request));
+		assertHttpError(401, () -> guest.sms().send(request));
 		assertHttpError(403, () -> superadmin.sms().send(request));
 
 		// superadmin deletes 'hello' sms template

@@ -10,6 +10,7 @@ public class Exceptions {
 	public static final String ALREADY_EXISTS = "already-exists";
 	public static final String UNCHALLENGED_PASSWORD = "unchallenged-password";
 	public static final String PASSWORD_MUST_CHANGE = "password-must-change";
+	public static final String NO_AUTHORIZATION_HEADER = "no-authorization-header";
 	public static final String INVALID_AUTHORIZATION_HEADER = "invalid-authorization-header";
 	public static final String DISABLED_CREDENTIALS = "disabled-credentials";
 	public static final String INVALID_ACCESS_TOKEN = "invalid-access-token";
@@ -72,9 +73,10 @@ public class Exceptions {
 		return new ForbiddenException(message, args);
 	}
 
-	public static ForbiddenException insufficientCredentials(Credentials credentials) {
-		return forbidden("[%s][%s] has insufficient credentials", //
-				credentials.type(), credentials.username());
+	public static SpaceException insufficientCredentials(Credentials credentials) {
+		return credentials.isGuest() ? noAuthorizationHeader()//
+				: forbidden("[%s][%s] has insufficient credentials", //
+						credentials.type(), credentials.username());
 	}
 
 	public static SpaceException alreadyExists(String type, String value) {
@@ -95,6 +97,11 @@ public class Exceptions {
 	//
 	// 401
 	//
+
+	public static AuthenticationException noAuthorizationHeader() {
+		return new AuthenticationException(NO_AUTHORIZATION_HEADER, "no authorization header");
+
+	}
 
 	public static AuthenticationException invalidAuthorizationHeader(//
 			String message, Object... args) {
