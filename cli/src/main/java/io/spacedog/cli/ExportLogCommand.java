@@ -67,7 +67,7 @@ public class ExportLogCommand extends AbstractCommand<ExportLogCommand> {
 				.add("lt", lt.toString())//
 				.build();
 
-		ObjectNode payload = dog.post("/1/log/search").refresh()//
+		ObjectNode payload = dog.post("/1/log/_search").refresh()//
 				.bodyJson(query).go(200).asJsonObject();
 
 		if (payload.get("total").asLong() > 5000)

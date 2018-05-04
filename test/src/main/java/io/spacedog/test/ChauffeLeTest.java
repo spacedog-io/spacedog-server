@@ -157,7 +157,7 @@ public class ChauffeLeTest extends SpaceTest {
 					.object("match_all")//
 					.build().toString();
 
-			return user.post("/1/search/bigpost").refresh()//
+			return user.post("/1/data/bigpost/_search").refresh()//
 					.body(wallQuery).go(200).asJson().get("results").elements();
 		}
 	}
@@ -188,7 +188,7 @@ public class ChauffeLeTest extends SpaceTest {
 					.query(ESQueryBuilders.boolQuery()//
 							.mustNot(ESQueryBuilders.existsQuery("parent")));
 
-			JsonNode subjectResults = user.post("/1/search/smallpost")//
+			JsonNode subjectResults = user.post("/1/data/smallpost/_search")//
 					.refresh().body(builder.toString()).go(200).asJson();
 
 			Iterable<JsonNode> nodes = () -> subjectResults.get("results").elements();
@@ -202,7 +202,7 @@ public class ChauffeLeTest extends SpaceTest {
 					.sort("updatedAt", ESSortOrder.ASC)//
 					.query(ESQueryBuilders.termsQuery("parent", subjects));
 
-			user.post("/1/search/smallpost").body(builder.toString()).go(200);
+			user.post("/1/data/smallpost/_search").body(builder.toString()).go(200);
 
 			return subjectResults.get("results").elements();
 		}

@@ -68,7 +68,7 @@ public class DataServiceTest extends SpaceTest {
 		assertSourceAlmostEquals(car, car1.source());
 
 		// find by full text search
-		vince.get("/1/search/car").refresh().queryParam("q", "inVENT*").go(200)//
+		vince.get("/1/data/car").refresh().queryParam("q", "inVENT*").go(200)//
 				.assertEquals(carWrap.id(), "results.0.id");
 
 		// update
@@ -131,7 +131,7 @@ public class DataServiceTest extends SpaceTest {
 		assertSourceAlmostEquals(car, carWrap.source());
 
 		// find by full text search
-		vince.get("/1/search/car").refresh().queryParam("q", "inVENT*").go(200)//
+		vince.get("/1/data/car").refresh().queryParam("q", "inVENT*").go(200)//
 				.assertEquals(id, "results.0.id");
 
 		// update
