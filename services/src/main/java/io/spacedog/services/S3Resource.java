@@ -35,6 +35,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.io.ByteStreams;
 
+import io.spacedog.model.ShareSettings;
 import io.spacedog.model.ZipRequest;
 import io.spacedog.utils.ContentTypes;
 import io.spacedog.utils.Credentials;
@@ -361,10 +362,12 @@ public class S3Resource extends Resource {
 	// Implementation
 	//
 
-	// Upload is delayed if file is bigger than 10 MB
-	// or if query parameter 'delay' is true.
+	// Upload is delayed and redirected if file is bigger than settings limit
+	// 'redirectUploadAboveInKB' or if query parameter 'delay' is true.
 	private boolean isDelayed(long contentLength, Context context) {
-		return contentLength > 10000000 || context.query().getBoolean(PARAM_DELAY, false);
+		ShareSettings settings = SettingsResource.get().load(ShareSettings.class);
+		return contentLength > settings.redirectUploadAboveInKB * 1024//
+				|| context.query().getBoolean(PARAM_DELAY, false);
 	}
 
 	protected Payload delayUpload(String bucketName, String fileName, WebPath s3Path, //

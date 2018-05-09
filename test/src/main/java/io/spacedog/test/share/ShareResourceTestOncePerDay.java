@@ -554,6 +554,24 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 
 		// nath is not allowed to download file since not the owner
 		nath.get(downloadLocation).go(403);
+
+		// no delay param means no uploadTo location in response
+		response = vince.post("/1/share/tweeter.png")//
+				.bodyBytes(pngBytes)//
+				.go(200);
+		assertNull(response.getString("uploadTo"));
+
+		// superadmin sets redirectUploadAboseInKB to 0
+		settings.redirectUploadAboveInKB = 0;
+		superadmin.settings().save(settings);
+
+		// no need to force delay since file is big enough
+		// to get an uploadTo location
+		response = vince.post("/1/share/tweeter.png") //
+				.bodyBytes(pngBytes)//
+				.go(202);
+		assertNotNull(response.getString("uploadTo"));
+
 	}
 
 }
