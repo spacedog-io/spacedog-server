@@ -72,7 +72,7 @@ public class WebService extends SpaceService {
 			settings.prefixPermissions.get(path.first())//
 					.check(credentials, Permission.read);
 
-			S3Service s3Service = S3Service.get();
+			S3FileStore s3Service = S3FileStore.get();
 			S3File file = new S3File(path);
 
 			payload = s3Service.doGet(withContent, file, context);

@@ -69,7 +69,7 @@ public class FileService extends SpaceService {
 		if (ServerConfig.awsRegion().isPresent() //
 				&& !ServerConfig.isOffline()) {
 
-			S3Service.get().doDeleteAll(new S3File(WebPath.ROOT));
+			S3FileStore.get().doDeleteAll(new S3File(WebPath.ROOT));
 		}
 	}
 
@@ -77,7 +77,7 @@ public class FileService extends SpaceService {
 		if (ServerConfig.awsRegion().isPresent() //
 				&& !ServerConfig.isOffline()) {
 
-			S3Service.get().doDeleteAll(S3Service.getBucketName("files"), "");
+			S3FileStore.get().doDeleteAll(S3FileStore.getBucketName("files"), "");
 		}
 	}
 
@@ -167,7 +167,7 @@ public class FileService extends SpaceService {
 
 		checkBucketAndPaths(bucket, request.paths);
 
-		List<S3File> files = S3Service.toS3Files(request.paths);
+		List<S3File> files = S3FileStore.toS3Files(request.paths);
 		S3File.checkPermissions(files, fileSettings().permissions.get(bucket), //
 				Permission.read, Permission.readGroup, Permission.readMine);
 
@@ -195,8 +195,8 @@ public class FileService extends SpaceService {
 		return SettingsService.get().getAsObject(FileSettings.class);
 	}
 
-	private S3Service s3() {
-		return S3Service.get();
+	private S3FileStore s3() {
+		return S3FileStore.get();
 	}
 
 	//

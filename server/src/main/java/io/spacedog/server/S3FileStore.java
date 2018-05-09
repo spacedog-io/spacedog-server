@@ -27,7 +27,9 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
 import io.spacedog.client.http.ContentTypes;
+import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceHeaders;
+import io.spacedog.client.http.SpaceParams;
 import io.spacedog.client.http.WebPath;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -35,7 +37,7 @@ import net.codestory.http.Context;
 import net.codestory.http.payload.Payload;
 import net.codestory.http.payload.StreamingOutput;
 
-public class S3Service extends SpaceService {
+public class S3FileStore {
 
 	private final static AmazonS3 s3 = AmazonS3ClientBuilder.standard()//
 			.withRegion(ServerConfig.awsRegionOrDefault())//
@@ -68,7 +70,7 @@ public class S3Service extends SpaceService {
 			payload.withHeader(SpaceHeaders.CONTENT_LENGTH, //
 					Long.toString(file.contentLength()));
 
-		if (context.query().getBoolean(WITH_CONTENT_DISPOSITION, false))
+		if (context.query().getBoolean(SpaceParams.WITH_CONTENT_DISPOSITION, false))
 			payload = payload.withHeader(SpaceHeaders.CONTENT_DISPOSITION, //
 					file.contentDisposition());
 
@@ -229,8 +231,8 @@ public class S3Service extends SpaceService {
 		metadata.setContentType(contentType(file.fileName(), context));
 		metadata.setContentLength(file.contentLength());
 		metadata.setContentDisposition(SpaceHeaders.contentDisposition(file.fileName()));
-		metadata.addUserMetadata(OWNER_FIELD, file.owner());
-		metadata.addUserMetadata(GROUP_FIELD, file.group());
+		metadata.addUserMetadata(SpaceFields.OWNER_FIELD, file.owner());
+		metadata.addUserMetadata(SpaceFields.GROUP_FIELD, file.group());
 		return metadata;
 	}
 
@@ -292,7 +294,7 @@ public class S3Service extends SpaceService {
 	}
 
 	private String toSpaceLocation(String root, WebPath path) {
-		return spaceUrl(root).append(path.toEscapedString()).toString();
+		return SpaceService.spaceUrl(root).append(path.toEscapedString()).toString();
 	}
 
 	//
@@ -303,13 +305,13 @@ public class S3Service extends SpaceService {
 		return ServerConfig.awsBucketPrefix() + bucketSuffix;
 	}
 
-	private static S3Service singleton = new S3Service();
+	private static S3FileStore singleton = new S3FileStore();
 
-	public static S3Service get() {
+	public static S3FileStore get() {
 		return singleton;
 	}
 
-	private S3Service() {
+	private S3FileStore() {
 	}
 
 }

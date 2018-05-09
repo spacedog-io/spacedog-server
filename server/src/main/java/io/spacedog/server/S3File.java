@@ -23,7 +23,7 @@ import net.codestory.http.payload.StreamingOutput;
 
 public class S3File implements Closeable, StreamingOutput {
 
-	private static final String bucketName = S3Service.getBucketName("files");
+	private static final String bucketName = S3FileStore.getBucketName("files");
 
 	private String backendId;
 	private WebPath path;
@@ -171,7 +171,7 @@ public class S3File implements Closeable, StreamingOutput {
 		try {
 			if (s3Object == null) {
 				loaded = true;
-				s3Object = S3Service.s3().getObject(bucketName, s3Key());
+				s3Object = S3FileStore.s3().getObject(bucketName, s3Key());
 				digest(s3Object.getObjectMetadata());
 			}
 
@@ -183,7 +183,7 @@ public class S3File implements Closeable, StreamingOutput {
 	}
 
 	public void delete() {
-		S3Service.s3().deleteObject(bucketName, s3Key());
+		S3FileStore.s3().deleteObject(bucketName, s3Key());
 	}
 
 	@Override
@@ -280,7 +280,7 @@ public class S3File implements Closeable, StreamingOutput {
 		try {
 			if (!loaded) {
 				loaded = true;
-				digest(S3Service.s3().getObjectMetadata(bucketName, s3Key()));
+				digest(S3FileStore.s3().getObjectMetadata(bucketName, s3Key()));
 			}
 
 		} catch (AmazonS3Exception e) {
