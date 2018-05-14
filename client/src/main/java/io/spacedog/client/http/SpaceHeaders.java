@@ -76,7 +76,7 @@ public class SpaceHeaders {
 	public static boolean isJsonContent(String contentType) {
 		if (Strings.isNullOrEmpty(contentType))
 			return false;
-		return contentType.toLowerCase().startsWith("application/json");
+		return contentType.toLowerCase().startsWith(ContentTypes.JSON);
 	}
 
 	public static String contentDisposition(String fileName) {

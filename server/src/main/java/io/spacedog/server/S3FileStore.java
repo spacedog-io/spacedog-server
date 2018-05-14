@@ -216,7 +216,7 @@ public class S3FileStore {
 
 	public Payload doZip(List<S3File> files, String fileName) {
 
-		return new Payload("application/octet-stream", //
+		return new Payload(ContentTypes.OCTET_STREAM, //
 				new ZipStreamingOutput(files))//
 						.withHeader(SpaceHeaders.CONTENT_DISPOSITION, //
 								SpaceHeaders.contentDisposition(fileName));
@@ -285,7 +285,7 @@ public class S3FileStore {
 		// use the provided content-type if specific first
 		// if none derive from file extension
 		return Strings.isNullOrEmpty(fileName) //
-				? "application/octet-stream"
+				? ContentTypes.OCTET_STREAM
 				: ContentTypes.parseFileExtension(fileName);
 	}
 

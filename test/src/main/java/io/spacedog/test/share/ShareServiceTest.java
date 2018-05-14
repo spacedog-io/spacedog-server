@@ -20,6 +20,7 @@ import io.spacedog.client.file.FileSettings;
 import io.spacedog.client.file.SpaceFile;
 import io.spacedog.client.file.SpaceFile.FileList;
 import io.spacedog.client.file.SpaceFile.FileMeta;
+import io.spacedog.client.http.ContentTypes;
 import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.test.SpaceTest;
@@ -312,7 +313,7 @@ public class ShareServiceTest extends SpaceTest {
 		// get file from location URI
 		// no file extension => no specific content type
 		String stringContent = superadmin.get(meta.location).go(200)//
-				.assertHeaderEquals("application/octet-stream", SpaceHeaders.CONTENT_TYPE)//
+				.assertHeaderEquals(ContentTypes.OCTET_STREAM, SpaceHeaders.CONTENT_TYPE)//
 				.asString();
 
 		Assert.assertEquals(FILE_CONTENT, stringContent);

@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
+import io.spacedog.client.http.ContentTypes;
 import io.spacedog.client.http.SpaceException;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceHeaders;
@@ -99,7 +100,7 @@ public class JsonPayload implements SpaceFields {
 				object.set("debug", SpaceContext.debug().toNode());
 		}
 
-		return new Payload(Json.JSON_CONTENT_UTF8, node)//
+		return new Payload(ContentTypes.JSON_UTF8, node)//
 				.withCode(status)//
 				.withHeaders(payload.headers())//
 				.withCookies(payload.cookies());

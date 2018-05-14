@@ -13,6 +13,7 @@ import com.google.common.collect.Sets;
 import com.google.common.io.BaseEncoding;
 
 import io.spacedog.client.credentials.Credentials;
+import io.spacedog.client.http.ContentTypes;
 import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.client.schema.Schema;
 import io.spacedog.utils.Exceptions;
@@ -218,7 +219,7 @@ public class CallbackService extends SpaceService {
 	}
 
 	private boolean isTextual(String contentType) {
-		return contentType.startsWith("application/json");
+		return contentType.startsWith(ContentTypes.JSON);
 	}
 
 	private Set<KeyValue> extractParameters(Context context) {
