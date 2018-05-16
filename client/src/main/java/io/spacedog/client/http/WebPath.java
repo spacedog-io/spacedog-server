@@ -88,7 +88,7 @@ public class WebPath implements Iterable<String> {
 		if (this.uriPath == null) {
 			StringBuilder builder = new StringBuilder();
 			for (String segment : segments)
-				builder.append(SLASH).append(Uris.escapeSegment(segment));
+				builder.append(SLASH).append(Uris.escapePathSegment(segment));
 			this.uriPath = builder.length() == 0 ? SLASH : builder.toString();
 		}
 		return this.uriPath;
