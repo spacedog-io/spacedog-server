@@ -22,10 +22,8 @@ import net.codestory.http.constants.Methods;
  */
 public class SpaceContext {
 
-	private static ThreadLocal<SpaceContext> threadLocal = new ThreadLocal<>();
-
 	private String uri;
-	private Context context;
+	private Context fluentContext;
 	private SpaceBackend backend;
 	private Debug debug;
 	private Credentials credentials;
@@ -35,13 +33,13 @@ public class SpaceContext {
 
 	private Map<Class<?>, Settings> settings;
 
-	private SpaceContext(String uri, Context context) {
+	private SpaceContext(String uri, Context fluentContext) {
 		this.uri = uri;
-		this.context = context;
+		this.fluentContext = fluentContext;
 		this.isTest = Boolean.parseBoolean(//
-				context().header(SpaceHeaders.SPACEDOG_TEST));
+				fluentContext.header(SpaceHeaders.SPACEDOG_TEST));
 		this.debug = new Debug(Boolean.parseBoolean(//
-				context().header(SpaceHeaders.SPACEDOG_DEBUG)));
+				fluentContext.header(SpaceHeaders.SPACEDOG_DEBUG)));
 		this.credentials = Credentials.GUEST;
 
 		initSpaceBackend();
@@ -49,7 +47,7 @@ public class SpaceContext {
 
 	private void initSpaceBackend() {
 
-		String hostAndPort = context.request().header(SpaceHeaders.HOST);
+		String hostAndPort = fluentContext.request().header(SpaceHeaders.HOST);
 
 		// first try to match api backend
 		SpaceBackend apiBackend = ServerConfig.apiBackend();
@@ -73,8 +71,8 @@ public class SpaceContext {
 		}
 	}
 
-	public Context context() {
-		return context;
+	public static Context fluentContext() {
+		return get().fluentContext;
 	}
 
 	public static SpaceFilter filter() {
@@ -82,12 +80,12 @@ public class SpaceContext {
 		// uri is already checked by SpaceFilter default matches method
 
 		return (uri, context, nextFilter) -> {
-			if (threadLocal.get() == null) {
+			if (threadLocalSpaceContext.get() == null) {
 				try {
-					threadLocal.set(new SpaceContext(uri, context));
+					threadLocalSpaceContext.set(new SpaceContext(uri, context));
 					return nextFilter.get();
 				} finally {
-					threadLocal.set(null);
+					threadLocalSpaceContext.set(null);
 				}
 			} else
 				// means there is another filter higher in the stack managing
@@ -96,12 +94,22 @@ public class SpaceContext {
 		};
 	}
 
-	public static SpaceContext get() {
-		SpaceContext context = threadLocal.get();
+	//
+	// Thread local context
+	//
+
+	private final static ThreadLocal<SpaceContext> threadLocalSpaceContext = new ThreadLocal<>();
+
+	private static SpaceContext get() {
+		SpaceContext context = threadLocalSpaceContext.get();
 		if (context == null)
-			throw Exceptions.runtime("no thread local context set");
+			throw Exceptions.runtime("no space context set");
 		return context;
 	}
+
+	//
+	// Static getters and setters
+	//
 
 	public static boolean isTest() {
 		return get().isTest;
@@ -120,7 +128,7 @@ public class SpaceContext {
 	}
 
 	public static SpaceBackend backend() {
-		SpaceContext context = threadLocal.get();
+		SpaceContext context = threadLocalSpaceContext.get();
 		return context == null //
 				? ServerConfig.apiBackend()
 				: context.backend;
@@ -130,8 +138,8 @@ public class SpaceContext {
 		return backend().backendId();
 	}
 
-	public boolean isJsonContent() {
-		String contentType = context.header(SpaceHeaders.CONTENT_TYPE);
+	public static boolean isJsonContent() {
+		String contentType = fluentContext().header(SpaceHeaders.CONTENT_TYPE);
 		return SpaceHeaders.isJsonContent(contentType);
 	}
 
@@ -175,10 +183,10 @@ public class SpaceContext {
 			authorizationChecked = true;
 			Credentials userCredentials = null;
 			SpaceContext.debug().credentialCheck();
-			String headerValue = context.header(SpaceHeaders.AUTHORIZATION);
+			String headerValue = fluentContext.header(SpaceHeaders.AUTHORIZATION);
 
 			if (headerValue == null) {
-				String token = context.get(SpaceParams.ACCESS_TOKEN_PARAM);
+				String token = fluentContext.get(SpaceParams.ACCESS_TOKEN_PARAM);
 				if (!Strings.isNullOrEmpty(token))
 					userCredentials = checkAccessToken(token);
 
@@ -196,7 +204,7 @@ public class SpaceContext {
 
 			if (userCredentials != null) {
 				userCredentials.checkReallyEnabled();
-				checkPasswordMustChange(userCredentials, context);
+				checkPasswordMustChange(userCredentials, fluentContext);
 				credentials = userCredentials;
 			}
 		}
