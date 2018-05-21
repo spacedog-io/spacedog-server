@@ -131,6 +131,16 @@ public class SchemaBuilder implements MappingDirectives {
 		return this;
 	}
 
+	public SchemaBuilder enabled(boolean enabled) {
+		builder.add(m_enabled, enabled);
+		return this;
+	}
+
+	public SchemaBuilder index(boolean index) {
+		builder.add(m_index, index);
+		return this;
+	}
+
 	public Schema build() {
 		return new Schema(name, builder.build());
 	}
