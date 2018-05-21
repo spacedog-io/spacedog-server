@@ -4,10 +4,14 @@ import java.io.Closeable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
+import java.text.Normalizer;
+import java.text.Normalizer.Form;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -157,6 +161,17 @@ public class Utils {
 
 	public static String replaceTagDelimiters(String s) {
 		return s.replace('<', '(').replace('>', ')');
+	}
+
+	private static final Pattern NONLATIN = Pattern.compile("[^\\w_-]");
+	private static final Pattern SEPARATORS = Pattern.compile("[\\s\\p{Punct}&&[^-]]");
+
+	public static String slugify(String input) {
+		String noseparators = SEPARATORS.matcher(input).replaceAll("-");
+		String normalized = Normalizer.normalize(noseparators, Form.NFD);
+		String slug = NONLATIN.matcher(normalized).replaceAll("");
+		return slug.toLowerCase(Locale.ENGLISH)//
+				.replaceAll("-{2,}", "-").replaceAll("^-|-$", "");
 	}
 
 	//

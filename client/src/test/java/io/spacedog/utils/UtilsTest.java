@@ -75,4 +75,18 @@ public class UtilsTest extends Assert {
 		assertEquals("SpaceDog (spacedog@toolee.fr)", //
 				Utils.replaceTagDelimiters("SpaceDog <spacedog@toolee.fr>"));
 	}
+
+	@Test
+	public void shouldSlugify() {
+		assertEquals("foobar", Utils.slugify("foobar"));
+		assertEquals("foobar", Utils.slugify("  foobar "));
+		assertEquals("foobar", Utils.slugify(" --foobar- -"));
+		assertEquals("foo-bar", Utils.slugify("foo!bar"));
+		assertEquals("buf", Utils.slugify("bœuf"));
+		assertEquals("etre", Utils.slugify("êTRe"));
+		assertEquals("les-amis", Utils.slugify("Les Amis"));
+		assertEquals("les-amis", Utils.slugify("leS -aMis"));
+		assertEquals("123-soleil", Utils.slugify("123 soleil"));
+		assertEquals("a-50", Utils.slugify("à 50%"));
+	}
 }
