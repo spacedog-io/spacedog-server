@@ -25,6 +25,7 @@ import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
+import net.codestory.http.Request;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Prefix;
@@ -53,7 +54,7 @@ public class SettingsService extends SpaceService {
 	@Get("")
 	@Get("/")
 	public Payload getAll(Context context) {
-		SpaceContext.credentials().checkAtLeastSuperAdmin();
+		Server.context().credentials().checkAtLeastSuperAdmin();
 
 		if (!elastic().exists(settingsIndex()))
 			return JsonPayload.ok().build();
@@ -81,7 +82,7 @@ public class SettingsService extends SpaceService {
 	@Delete("")
 	@Delete("/")
 	public Payload deleteIndex() {
-		SpaceContext.credentials().checkAtLeastSuperAdmin();
+		Server.context().credentials().checkAtLeastSuperAdmin();
 		elastic().deleteIndex(settingsIndex());
 		return JsonPayload.ok().build();
 	}
@@ -162,7 +163,7 @@ public class SettingsService extends SpaceService {
 	//
 
 	public <K extends Settings> K getAsObject(Class<K> settingsClass) {
-		K settings = SpaceContext.getSettings(settingsClass);
+		K settings = Server.context().getSettings(settingsClass);
 		if (settings != null)
 			return settings;
 
@@ -180,7 +181,7 @@ public class SettingsService extends SpaceService {
 		if (settings == null)
 			settings = instantiateDefaultAsObject(settingsClass);
 
-		SpaceContext.setSettings(settings);
+		Server.context().setSettings(settings);
 		return settings;
 	}
 
@@ -247,7 +248,7 @@ public class SettingsService extends SpaceService {
 	}
 
 	private Credentials checkAuthorizedTo(String settingsId, Permission permission) {
-		Credentials credentials = SpaceContext.credentials();
+		Credentials credentials = Server.context().credentials();
 		getSettingsAcl(settingsId).check(credentials, permission);
 		return credentials;
 	}
@@ -267,12 +268,12 @@ public class SettingsService extends SpaceService {
 		ElasticClient elastic = elastic();
 
 		if (!elastic.exists(index)) {
-			Context context = SpaceContext.fluentContext();
+			Request request = Server.context().request();
 			ObjectNode mapping = Json.object(TYPE, Json.object("enabled", false));
 
-			int shards = context.query().getInteger(SHARDS_PARAM, SHARDS_DEFAULT_PARAM);
-			int replicas = context.query().getInteger(REPLICAS_PARAM, REPLICAS_DEFAULT_PARAM);
-			boolean async = context.query().getBoolean(ASYNC_PARAM, ASYNC_DEFAULT_PARAM);
+			int shards = request.query().getInteger(SHARDS_PARAM, SHARDS_DEFAULT_PARAM);
+			int replicas = request.query().getInteger(REPLICAS_PARAM, REPLICAS_DEFAULT_PARAM);
+			boolean async = request.query().getBoolean(ASYNC_PARAM, ASYNC_DEFAULT_PARAM);
 
 			org.elasticsearch.common.settings.Settings settings = //
 					org.elasticsearch.common.settings.Settings.builder()//

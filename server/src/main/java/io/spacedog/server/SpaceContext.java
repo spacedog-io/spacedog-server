@@ -13,7 +13,8 @@ import io.spacedog.client.settings.Settings;
 import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Optional7;
-import net.codestory.http.Context;
+import net.codestory.http.Request;
+import net.codestory.http.Response;
 import net.codestory.http.constants.Methods;
 
 /**
@@ -22,8 +23,8 @@ import net.codestory.http.constants.Methods;
  */
 public class SpaceContext {
 
-	private String uri;
-	private Context fluentContext;
+	private Request request;
+	private Response response;
 	private SpaceBackend backend;
 	private Debug debug;
 	private Credentials credentials;
@@ -33,21 +34,20 @@ public class SpaceContext {
 
 	private Map<Class<?>, Settings> settings;
 
-	private SpaceContext(String uri, Context fluentContext) {
-		this.uri = uri;
-		this.fluentContext = fluentContext;
+	public SpaceContext(Request request, Response response) {
+		this.request = request;
+		this.response = response;
 		this.isTest = Boolean.parseBoolean(//
-				fluentContext.header(SpaceHeaders.SPACEDOG_TEST));
+				request.header(SpaceHeaders.SPACEDOG_TEST));
 		this.debug = new Debug(Boolean.parseBoolean(//
-				fluentContext.header(SpaceHeaders.SPACEDOG_DEBUG)));
+				request.header(SpaceHeaders.SPACEDOG_DEBUG)));
 		this.credentials = Credentials.GUEST;
-
 		initSpaceBackend();
 	}
 
 	private void initSpaceBackend() {
 
-		String hostAndPort = fluentContext.request().header(SpaceHeaders.HOST);
+		String hostAndPort = request.header(SpaceHeaders.HOST);
 
 		// first try to match api backend
 		SpaceBackend apiBackend = ServerConfig.apiBackend();
@@ -71,122 +71,76 @@ public class SpaceContext {
 		}
 	}
 
-	public static Context fluentContext() {
-		return get().fluentContext;
-	}
-
-	public static SpaceFilter filter() {
-
-		// uri is already checked by SpaceFilter default matches method
-
-		return (uri, context, nextFilter) -> {
-			if (threadLocalSpaceContext.get() == null) {
-				try {
-					threadLocalSpaceContext.set(new SpaceContext(uri, context));
-					return nextFilter.get();
-				} finally {
-					threadLocalSpaceContext.set(null);
-				}
-			} else
-				// means there is another filter higher in the stack managing
-				// the space context
-				return nextFilter.get();
-		};
-	}
-
 	//
-	// Thread local context
+	// Getters and setters
 	//
 
-	private final static ThreadLocal<SpaceContext> threadLocalSpaceContext = new ThreadLocal<>();
-
-	private static SpaceContext get() {
-		SpaceContext context = threadLocalSpaceContext.get();
-		if (context == null)
-			throw Exceptions.runtime("no space context set");
-		return context;
+	public Request request() {
+		return request;
 	}
 
-	//
-	// Static getters and setters
-	//
-
-	public static boolean isTest() {
-		return get().isTest;
+	public Response response() {
+		return response;
 	}
 
-	public static boolean isWww() {
-		return get().isWww;
+	public boolean isTest() {
+		return isTest;
 	}
 
-	public static boolean isDebug() {
-		return get().debug.isTrue();
+	public boolean isWww() {
+		return isWww;
 	}
 
-	public static Debug debug() {
-		return get().debug;
+	public Debug debug() {
+		return debug;
 	}
 
-	public static SpaceBackend backend() {
-		SpaceContext context = threadLocalSpaceContext.get();
-		return context == null //
-				? ServerConfig.apiBackend()
-				: context.backend;
+	public SpaceBackend backend() {
+		return backend;
 	}
 
-	public static String backendId() {
-		return backend().backendId();
-	}
-
-	public static boolean isJsonContent() {
-		String contentType = fluentContext().header(SpaceHeaders.CONTENT_TYPE);
+	public boolean isJsonContent() {
+		String contentType = request.header(SpaceHeaders.CONTENT_TYPE);
 		return SpaceHeaders.isJsonContent(contentType);
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T extends Settings> T getSettings(Class<T> settingsId) {
-		SpaceContext context = get();
-		return context.settings == null ? null //
-				: (T) context.settings.get(settingsId);
+	public <T extends Settings> T getSettings(Class<T> settingsId) {
+		return settings == null ? null : (T) settings.get(settingsId);
 	}
 
-	public static <T extends Settings> void setSettings(Settings settings) {
-		SpaceContext context = get();
-		if (context.settings == null)
-			context.settings = Maps.newHashMap();
-		context.settings.put(settings.getClass(), settings);
+	public <T extends Settings> void setSettings(Settings settings) {
+		if (this.settings == null)
+			this.settings = Maps.newHashMap();
+		this.settings.put(settings.getClass(), settings);
 	}
 
 	//
-	// Check credentials static methods
+	// Check credentials
 	//
 
 	public static SpaceFilter checkAuthorizationFilter() {
 
 		return (uri, context, nextFilter) -> {
-			get().checkAuthorizationHeader();
+			Server.context().checkAuthorizationHeader();
 			return nextFilter.get();
 		};
 	}
 
-	public static Credentials credentials() {
-		return get().credentials;
+	public Credentials credentials() {
+		return credentials;
 	}
-
-	//
-	// Implementation
-	//
 
 	private void checkAuthorizationHeader() {
 
 		if (!authorizationChecked) {
 			authorizationChecked = true;
 			Credentials userCredentials = null;
-			SpaceContext.debug().credentialCheck();
-			String headerValue = fluentContext.header(SpaceHeaders.AUTHORIZATION);
+			debug().credentialCheck();
+			String headerValue = request.header(SpaceHeaders.AUTHORIZATION);
 
 			if (headerValue == null) {
-				String token = fluentContext.get(SpaceParams.ACCESS_TOKEN_PARAM);
+				String token = request.query().get(SpaceParams.ACCESS_TOKEN_PARAM);
 				if (!Strings.isNullOrEmpty(token))
 					userCredentials = checkAccessToken(token);
 
@@ -204,7 +158,7 @@ public class SpaceContext {
 
 			if (userCredentials != null) {
 				userCredentials.checkReallyEnabled();
-				checkPasswordMustChange(userCredentials, fluentContext);
+				checkPasswordMustChange(userCredentials);
 				credentials = userCredentials;
 			}
 		}
@@ -214,26 +168,29 @@ public class SpaceContext {
 		return CredentialsService.get().checkToken(token);
 	}
 
-	private void checkPasswordMustChange(Credentials credentials, Context context) {
+	private void checkPasswordMustChange(Credentials credentials) {
 		if (credentials.passwordMustChange()) {
 
-			if ((uri.equals("/1/credentials/me/_set_password")//
-					&& context.method().equals(Methods.POST)) == false)
+			if ((request.uri().equals("/1/credentials/me/_set_password")//
+					&& request.method().equals(Methods.POST)) == false)
 
 				throw Exceptions.passwordMustChange(credentials);
 		}
 	}
 
-	public static void runAsBackend(String backendId, Runnable action) {
-		SpaceContext context = get();
-		SpaceBackend mainBackend = context.backend;
+	//
+	// Other
+	//
+
+	public void runAsBackend(String backendId, Runnable action) {
+		SpaceBackend mainBackend = this.backend;
 		SpaceBackend tempBackend = mainBackend.fromBackendId(backendId);
 
 		try {
-			context.backend = tempBackend;
+			this.backend = tempBackend;
 			action.run();
 		} finally {
-			context.backend = mainBackend;
+			this.backend = mainBackend;
 		}
 	}
 }

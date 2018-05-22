@@ -36,8 +36,8 @@ public class ApplicationService extends SpaceService {
 	@Get("/")
 	public Payload getApplications() {
 
-		SpaceContext.credentials().checkAtLeastAdmin();
-		String backendId = SpaceContext.backendId();
+		Server.context().credentials().checkAtLeastAdmin();
+		String backendId = Server.backend().backendId();
 
 		ListPlatformApplicationsResult applications = AwsSnsPusher.sns()//
 				.listPlatformApplications();
@@ -54,10 +54,10 @@ public class ApplicationService extends SpaceService {
 	@Put("/:name/:protocol/")
 	public Payload putApplication(String name, String protocol, String body) {
 
-		SpaceContext.credentials().checkAtLeastAdmin();
+		Server.context().credentials().checkAtLeastAdmin();
 
 		PushApplication pushApp = new PushApplication();
-		pushApp.backendId = SpaceContext.backendId();
+		pushApp.backendId = Server.backend().backendId();
 		pushApp.name = name;
 		pushApp.protocol = PushProtocol.valueOf(protocol);
 		pushApp.credentials = Json.toPojo(body, PushApplication.Credentials.class);
@@ -98,10 +98,10 @@ public class ApplicationService extends SpaceService {
 	@Delete("/:name/:protocol/")
 	public Payload deleteApplication(String name, String protocol) {
 
-		SpaceContext.credentials().checkAtLeastSuperAdmin();
+		Server.context().credentials().checkAtLeastSuperAdmin();
 
 		PushApplication pushApp = new PushApplication();
-		pushApp.backendId = SpaceContext.backendId();
+		pushApp.backendId = Server.backend().backendId();
 		pushApp.name = name;
 		pushApp.protocol = PushProtocol.valueOf(protocol);
 

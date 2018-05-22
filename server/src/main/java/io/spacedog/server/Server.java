@@ -24,6 +24,7 @@ import org.joda.time.DateTimeZone;
 
 import com.google.common.collect.Lists;
 
+import io.spacedog.client.http.SpaceBackend;
 import io.spacedog.server.file.FileService;
 import io.spacedog.server.file.WebService;
 import io.spacedog.utils.ClassResources;
@@ -34,17 +35,11 @@ import io.spacedog.utils.Utils;
 import net.codestory.http.AbstractWebServer;
 import net.codestory.http.Request;
 import net.codestory.http.Response;
-import net.codestory.http.compilers.CompilerFacade;
-import net.codestory.http.extensions.Extensions;
 import net.codestory.http.internal.Handler;
 import net.codestory.http.internal.HttpServerWrapper;
 import net.codestory.http.internal.SimpleServerWrapper;
-import net.codestory.http.io.Resources;
-import net.codestory.http.misc.Env;
 import net.codestory.http.payload.Payload;
-import net.codestory.http.payload.PayloadWriter;
 import net.codestory.http.routes.Routes;
-import net.codestory.http.templating.Site;
 import net.codestory.http.websockets.WebSocketHandler;
 
 public class Server {
@@ -214,7 +209,6 @@ public class Server {
 				.add(SearchService.get());
 
 		routes.filter(new CrossOriginFilter())//
-				.filter(SpaceContext.filter())//
 				.filter(LogService.filter())//
 				.filter(SpaceContext.checkAuthorizationFilter())//
 				// web filter before error filter
@@ -222,8 +216,6 @@ public class Server {
 				.filter(WebService.get().filter())//
 				.filter(new ServiceErrorFilter())//
 				.filter(FileService.get().filter());
-
-		routes.setExtensions(fluent);
 	}
 
 	public static class Info {
@@ -243,8 +235,7 @@ public class Server {
 	// Implementation
 	//
 
-	@SuppressWarnings("serial")
-	private static class FluentServer extends AbstractWebServer<FluentServer> implements Extensions {
+	private static class FluentServer extends AbstractWebServer<FluentServer> {
 
 		@Override
 		protected HttpServerWrapper createHttpServer(Handler httpHandler, WebSocketHandler webSocketHandler) {
@@ -256,36 +247,44 @@ public class Server {
 		}
 
 		@Override
-		public PayloadWriter createPayloadWriter(Request request, Response response, Env env, Site site,
-				Resources resources, CompilerFacade compilers) {
-			return new SpacePayloadWriter(request, response, env, site, resources, compilers);
+		protected void handleHttp(Request request, Response response) {
+
+			if (threadLocalSpaceContext.get() == null) {
+				try {
+
+					threadLocalSpaceContext.set(//
+							new SpaceContext(request, response));
+
+					super.handleHttp(request, response);
+
+				} finally {
+					doCloseAfterAll();
+					threadLocalSpaceContext.set(null);
+				}
+			} else
+				// means space context is managed higher in the stack
+				super.handleHttp(request, response);
 		}
 	}
 
-	private static class SpacePayloadWriter extends PayloadWriter {
+	//
+	// Thread local space context
+	//
 
-		public SpacePayloadWriter(Request request, Response response, //
-				Env env, Site site, Resources resources, CompilerFacade compilers) {
-			super(request, response, env, site, resources, compilers);
-		}
+	private final static ThreadLocal<SpaceContext> threadLocalSpaceContext = new ThreadLocal<>();
 
-		@Override
-		public void writeAndClose(Payload payload) throws IOException {
-			try {
-				super.writeAndClose(payload);
-			} finally {
-				closeCloseables();
-			}
-		}
+	public static SpaceContext context() {
+		SpaceContext context = threadLocalSpaceContext.get();
+		if (context == null)
+			throw Exceptions.runtime("no space context set");
+		return context;
+	}
 
-		private void closeCloseables() {
-			List<Closeable> list = threadLocalCloseables.get();
-			if (!Utils.isNullOrEmpty(list)) {
-				for (Closeable closeable : list)
-					Utils.closeSilently(closeable);
-				list.clear();
-			}
-		}
+	public static SpaceBackend backend() {
+		SpaceContext context = threadLocalSpaceContext.get();
+		return context == null //
+				? ServerConfig.apiBackend()
+				: context.backend();
 	}
 
 	//
@@ -303,6 +302,14 @@ public class Server {
 		list.add(closeable);
 	}
 
+	private static void doCloseAfterAll() {
+		List<Closeable> list = threadLocalCloseables.get();
+		if (!Utils.isNullOrEmpty(list)) {
+			for (Closeable closeable : list)
+				Utils.closeSilently(closeable);
+			list.clear();
+		}
+	}
 	//
 	// Singleton
 	//

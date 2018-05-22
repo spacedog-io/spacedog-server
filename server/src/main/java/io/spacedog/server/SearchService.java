@@ -48,7 +48,7 @@ public class SearchService extends SpaceService {
 	@Post("/_search")
 	@Post("/_search/")
 	public Payload postSearchAllTypes(String body, Context context) {
-		Credentials credentials = SpaceContext.credentials();
+		Credentials credentials = Server.context().credentials();
 		String[] types = DataAccessControl.types(credentials, Permission.search);
 
 		DataStore.get().refreshDataTypes(isRefreshRequested(context), types);
@@ -59,7 +59,7 @@ public class SearchService extends SpaceService {
 	@Delete("/_search")
 	@Delete("/_search/")
 	public Payload deleteSearchAllTypes(String query, Context context) {
-		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
+		Credentials credentials = Server.context().credentials().checkAtLeastAdmin();
 		String[] types = DataAccessControl.types(credentials, Permission.delete);
 
 		if (Utils.isNullOrEmpty(types))
@@ -74,7 +74,7 @@ public class SearchService extends SpaceService {
 	@Post("/:type/_search")
 	@Post("/:type/_search/")
 	public Payload postSearchForType(String type, String body, Context context) {
-		Credentials credentials = SpaceContext.credentials();
+		Credentials credentials = Server.context().credentials();
 
 		if (DataAccessControl.roles(type)//
 				.containsOne(credentials, Permission.search)) {
@@ -90,7 +90,7 @@ public class SearchService extends SpaceService {
 	@Post("/:type/_csv/")
 	public Payload postSearchForTypeToCsv(String type, CsvRequest request, Context context) {
 
-		Credentials credentials = SpaceContext.credentials();
+		Credentials credentials = Server.context().credentials();
 		if (!DataAccessControl.roles(type).containsOne(credentials, Permission.search))
 			throw Exceptions.forbidden("forbidden to search [%s] objects", type);
 
@@ -116,7 +116,7 @@ public class SearchService extends SpaceService {
 	@Delete("/:type/_search")
 	@Delete("/:type/_search/")
 	public Payload deleteSearchType(String type, String query, Context context) {
-		Credentials credentials = SpaceContext.credentials().checkAtLeastAdmin();
+		Credentials credentials = Server.context().credentials().checkAtLeastAdmin();
 
 		if (DataAccessControl.roles(type)//
 				.containsOne(credentials, Permission.delete)) {

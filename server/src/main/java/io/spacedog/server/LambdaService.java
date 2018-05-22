@@ -62,7 +62,7 @@ public class LambdaService extends SpaceService {
 				lambdaRequest.payload = extractBody(context);
 
 				InvokeRequest request = new InvokeRequest()//
-						.withFunctionName(SpaceContext.backendId() //
+						.withFunctionName(Server.backend().backendId() //
 								+ '-' + settings.awsLambda.name)//
 						.withPayload(lambdaRequest.toJsonString());
 

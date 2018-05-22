@@ -11,7 +11,6 @@ import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.client.stripe.StripeSettings;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.KeyValue;
 import io.spacedog.utils.NotFoundException;
 import io.spacedog.utils.Optional7;
 import net.codestory.http.Context;
@@ -34,7 +33,7 @@ public class StripeService extends SpaceService {
 	@Post("/customers")
 	@Post("/customers/")
 	public Payload postCustomer() {
-		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
+		Credentials credentials = Server.context().credentials().checkAtLeastUser();
 
 		if (hasStripeCustomerId(credentials))
 			throw Exceptions.illegalArgument(//
@@ -59,7 +58,7 @@ public class StripeService extends SpaceService {
 	@Get("/customers/me")
 	@Get("/customers/me/")
 	public Payload getCustomer(Context context) {
-		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
+		Credentials credentials = Server.context().credentials().checkAtLeastUser();
 		String customerId = getStripeCustomerId(credentials);
 		StripeSettings settings = stripeSettings();
 
@@ -77,7 +76,7 @@ public class StripeService extends SpaceService {
 	@Delete("/customers/me/")
 	public Payload deleteStripeCustomer() {
 
-		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
+		Credentials credentials = Server.context().credentials().checkAtLeastUser();
 		String customerId = getStripeCustomerId(credentials);
 		StripeSettings settings = stripeSettings();
 
@@ -96,7 +95,7 @@ public class StripeService extends SpaceService {
 	@Post("/customers/me/sources")
 	@Post("/customers/me/sources/")
 	public Payload postCard(String body, Context context) {
-		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
+		Credentials credentials = Server.context().credentials().checkAtLeastUser();
 		String customerId = getStripeCustomerId(credentials);
 		ObjectNode node = Json.readObject(body);
 		StripeSettings settings = stripeSettings();
@@ -120,7 +119,7 @@ public class StripeService extends SpaceService {
 	@Delete("/customers/me/sources/:cardId")
 	@Delete("/customers/me/sources/:cardId/")
 	public Payload deleteStripeCard(String cardId, Context context) {
-		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
+		Credentials credentials = Server.context().credentials().checkAtLeastUser();
 		String customerId = getStripeCustomerId(credentials);
 		StripeSettings settings = stripeSettings();
 
@@ -153,7 +152,7 @@ public class StripeService extends SpaceService {
 	//
 
 	private Payload charge(boolean myself, Context context) {
-		Credentials credentials = SpaceContext.credentials();
+		Credentials credentials = Server.context().credentials();
 		StripeSettings settings = stripeSettings();
 		SpaceRequest request = SpaceRequest.post("/v1/charges")//
 				.backend("https://api.stripe.com")//
@@ -198,8 +197,8 @@ public class StripeService extends SpaceService {
 
 	private String getStripeCustomerId(Credentials credentials) {
 
-		 Optional7<String> value = credentials.getTag(//
-				 CREDENTIALS_STASH_STRIPE_CUSTOMER_ID);
+		Optional7<String> value = credentials.getTag(//
+				CREDENTIALS_STASH_STRIPE_CUSTOMER_ID);
 
 		if (value.isPresent())
 			return value.get();

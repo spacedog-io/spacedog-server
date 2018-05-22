@@ -96,8 +96,9 @@ public class JsonPayload implements SpaceFields {
 				object.put("success", false)//
 						.put("status", status);
 
-			if (SpaceContext.isDebug())
-				object.set("debug", SpaceContext.debug().toNode());
+			Debug debug = Server.context().debug();
+			if (debug.isTrue())
+				object.set("debug", debug.toNode());
 		}
 
 		return new Payload(ContentTypes.JSON_UTF8, node)//
@@ -154,7 +155,8 @@ public class JsonPayload implements SpaceFields {
 	}
 
 	public JsonPayload withError(Throwable throwable) {
-		boolean debug = SpaceContext.isDebug() || payload.code() >= 500;
+		boolean debug = Server.context().debug().isTrue() //
+				|| payload.code() >= 500;
 		JsonPayload payload = withError(toJson(throwable, debug));
 		if (throwable instanceof SpaceException)
 			payload.withHeaders(((SpaceException) throwable).headers());

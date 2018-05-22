@@ -56,7 +56,7 @@ public abstract class SpaceService implements SpaceFields, SpaceParams {
 	}
 
 	public static StringBuilder spaceRootUrl() {
-		return SpaceContext.backend().urlBuilder();
+		return Server.backend().urlBuilder();
 	}
 
 	protected static String get(Context context, String name, String defaultValue) {

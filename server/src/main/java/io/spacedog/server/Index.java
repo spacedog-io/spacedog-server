@@ -18,7 +18,7 @@ public class Index {
 
 	public String backendId() {
 		if (backendId == null)
-			backendId = SpaceContext.backendId();
+			backendId = Server.backend().backendId();
 		return backendId;
 	}
 

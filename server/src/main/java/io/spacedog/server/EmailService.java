@@ -55,7 +55,7 @@ public class EmailService extends SpaceService {
 
 		if (email instanceof EmailBasicRequest) {
 			EmailSettings settings = SettingsService.get().getAsObject(EmailSettings.class);
-			SpaceContext.credentials().checkIfAuthorized(settings.authorizedRoles);
+			Server.context().credentials().checkIfAuthorized(settings.authorizedRoles);
 			return email((EmailBasicRequest) email);
 		}
 
@@ -66,7 +66,7 @@ public class EmailService extends SpaceService {
 					.orElseThrow(() -> new NotFoundException(//
 							"email template [%s] not found", templateRequest.templateName));
 
-			SpaceContext.credentials().checkIfAuthorized(template.authorizedRoles);
+			Server.context().credentials().checkIfAuthorized(template.authorizedRoles);
 			return email(templateRequest, template);
 		}
 
@@ -77,7 +77,7 @@ public class EmailService extends SpaceService {
 	@Put("/1/emails/templates/:name")
 	@Put("/1/emails/templates/:name/")
 	public Payload putTemplate(String templateName, EmailTemplate template, Context context) {
-		SpaceContext.credentials().checkAtLeastSuperAdmin();
+		Server.context().credentials().checkAtLeastSuperAdmin();
 		template.name = templateName;
 		IndexResponse response = SettingsService.get()//
 				.doSave(toSettingsId(templateName), Json.toString(template));
@@ -91,7 +91,7 @@ public class EmailService extends SpaceService {
 	@Delete("/1/emails/templates/:name")
 	@Delete("/1/emails/templates/:name/")
 	public Payload deleteTemplate(String templateName) {
-		SpaceContext.credentials().checkAtLeastSuperAdmin();
+		Server.context().credentials().checkAtLeastSuperAdmin();
 		SettingsService.get().doDelete(toSettingsId(templateName));
 		return JsonPayload.ok().build();
 	}
@@ -126,7 +126,7 @@ public class EmailService extends SpaceService {
 		settings.key = ServerConfig.mailGunKey();
 		settings.domain = ServerConfig.mailDomain();
 
-		String target = SpaceContext.backendId();
+		String target = Server.backend().backendId();
 
 		// ... add footnotes to the message
 		if (!Strings.isNullOrEmpty(request.text))

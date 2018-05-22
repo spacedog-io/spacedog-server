@@ -403,7 +403,7 @@ public class ElasticClient implements SpaceParams {
 			if (!deleteIndexResponse.isAcknowledged())
 				throw Exceptions.runtime(//
 						"deletion of all indices of backend [%s] not acknowledged by the whole cluster", //
-						SpaceContext.backendId());
+						Server.backend().backendId());
 		}
 	}
 
@@ -514,7 +514,7 @@ public class ElasticClient implements SpaceParams {
 	}
 
 	public Stream<String> filteredBackendIndexStream(Optional<String> service) {
-		String backendId = SpaceContext.backendId();
+		String backendId = Server.backend().backendId();
 		String fullPrefix = service.isPresent() //
 				? backendId + '-' + service.get() + '-' //
 				: backendId + '-';

@@ -103,7 +103,7 @@ public class CredentialsService extends SpaceService {
 	@Post("/1/login")
 	@Post("/1/login/")
 	public Payload login(Context context) {
-		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
+		Credentials credentials = Server.context().credentials().checkAtLeastUser();
 
 		if (credentials.hasPasswordBeenChallenged()) {
 			long lifetime = getCheckSessionLifetime(context);
@@ -123,7 +123,7 @@ public class CredentialsService extends SpaceService {
 	@Post("/1/logout")
 	@Post("/1/logout/")
 	public Payload logout(Context context) {
-		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
+		Credentials credentials = Server.context().credentials().checkAtLeastUser();
 		if (credentials.hasCurrentSession()) {
 			credentials.deleteCurrentSession();
 			update(credentials);
@@ -134,7 +134,7 @@ public class CredentialsService extends SpaceService {
 	@Get("/1/credentials")
 	@Get("/1/credentials/")
 	public Payload getAll(Context context) {
-		SpaceContext.credentials().checkAtLeastAdmin();
+		Server.context().credentials().checkAtLeastAdmin();
 
 		String q = context.get(Q_PARAM);
 		QueryBuilder query = Strings.isNullOrEmpty(q) //
@@ -154,7 +154,7 @@ public class CredentialsService extends SpaceService {
 	@Delete("/1/credentials")
 	@Delete("/1/credentials/")
 	public Payload deleteAll(Context context) {
-		SpaceContext.credentials().checkAtLeastSuperAdmin();
+		Server.context().credentials().checkAtLeastSuperAdmin();
 
 		// superadmins can not be deleted this way
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
@@ -176,7 +176,7 @@ public class CredentialsService extends SpaceService {
 		CredentialsSettings settings = credentialsSettings();
 
 		if (!settings.guestSignUpEnabled)
-			SpaceContext.credentials().checkAtLeastUser();
+			Server.context().credentials().checkAtLeastUser();
 
 		Credentials credentials = create(//
 				Json.toPojo(body, CreateCredentialsRequest.class), //
@@ -192,7 +192,7 @@ public class CredentialsService extends SpaceService {
 	@Get("/1/credentials/me")
 	@Get("/1/credentials/me/")
 	public Payload getMe(Context context) {
-		Credentials credentials = SpaceContext.credentials().checkAtLeastUser();
+		Credentials credentials = Server.context().credentials().checkAtLeastUser();
 		return JsonPayload.ok().withContent(credentials.toJson()).build();
 	}
 
@@ -206,7 +206,7 @@ public class CredentialsService extends SpaceService {
 	@Delete("/1/credentials/me")
 	@Delete("/1/credentials/me/")
 	public Payload deleteMe() {
-		String id = SpaceContext.credentials().checkAtLeastUser().id();
+		String id = Server.context().credentials().checkAtLeastUser().id();
 		return deleteById(id);
 	}
 
@@ -228,13 +228,13 @@ public class CredentialsService extends SpaceService {
 	@Put("/1/credentials/me")
 	@Put("/1/credentials/me/")
 	public Payload put(String body, Context context) {
-		return put(SpaceContext.credentials().id(), body, context);
+		return put(Server.context().credentials().id(), body, context);
 	}
 
 	@Put("/1/credentials/:id")
 	@Put("/1/credentials/:id/")
 	public Payload put(String id, String body, Context context) {
-		Credentials requester = SpaceContext.credentials();
+		Credentials requester = Server.context().credentials();
 		Credentials credentials = checkMyselfOrHigherAdminAndGet(id, false);
 
 		if (requester.isUser())
@@ -337,7 +337,7 @@ public class CredentialsService extends SpaceService {
 	@Post("/1/credentials/me/_set_password")
 	@Post("/1/credentials/me/_set_password/")
 	public Payload postSetMyPassword(String body, Context context) {
-		return postSetPassword(SpaceContext.credentials().id(), body, context);
+		return postSetPassword(Server.context().credentials().id(), body, context);
 	}
 
 	@Post("/1/credentials/:id/_set_password")
@@ -404,7 +404,7 @@ public class CredentialsService extends SpaceService {
 	@Put("/1/credentials/:id/roles/:role/")
 	public Payload putRole(String id, String role, Context context) {
 		Roles.checkIfValid(role);
-		Credentials requester = SpaceContext.credentials();
+		Credentials requester = Server.context().credentials();
 		Credentials updated = checkAdminAndGet(id);
 		requester.checkCanManage(role);
 
@@ -537,7 +537,7 @@ public class CredentialsService extends SpaceService {
 	}
 
 	Optional<Credentials> getById(String id, boolean throwNotFound) {
-		Credentials credentials = SpaceContext.credentials();
+		Credentials credentials = Server.context().credentials();
 
 		if (id.equals(credentials.id()))
 			return Optional.of(credentials);
@@ -620,7 +620,7 @@ public class CredentialsService extends SpaceService {
 	}
 
 	Credentials checkAdminAndGet(String id) {
-		Credentials requester = SpaceContext.credentials().checkAtLeastAdmin();
+		Credentials requester = Server.context().credentials().checkAtLeastAdmin();
 		Credentials credentials = getById(id, true).get();
 		requester.checkCanManage(credentials);
 		return credentials;
@@ -629,7 +629,7 @@ public class CredentialsService extends SpaceService {
 	Credentials checkMyselfOrHigherAdminAndGet(String credentialsId, //
 			boolean checkPasswordHasBeenChallenged) {
 
-		Credentials requester = SpaceContext.credentials().checkAtLeastUser();
+		Credentials requester = Server.context().credentials().checkAtLeastUser();
 
 		if (checkPasswordHasBeenChallenged)
 			requester.checkPasswordHasBeenChallenged();
@@ -658,7 +658,7 @@ public class CredentialsService extends SpaceService {
 
 	public Credentials create(CreateCredentialsRequest request, String defaultRole) {
 
-		Credentials requester = SpaceContext.credentials();
+		Credentials requester = Server.context().credentials();
 		Credentials credentials = new Credentials();
 
 		if (Utils.isNullOrEmpty(request.roles()))

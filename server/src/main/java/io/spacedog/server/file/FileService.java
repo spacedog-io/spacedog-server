@@ -39,9 +39,9 @@ import io.spacedog.client.http.WebPath;
 import io.spacedog.client.schema.Schema;
 import io.spacedog.server.Index;
 import io.spacedog.server.JsonPayload;
+import io.spacedog.server.Server;
 import io.spacedog.server.ServerConfig;
 import io.spacedog.server.SettingsService;
-import io.spacedog.server.SpaceContext;
 import io.spacedog.server.SpaceFilter;
 import io.spacedog.server.SpaceService;
 import io.spacedog.server.file.FileStore.PutResult;
@@ -143,7 +143,7 @@ public class FileService extends SpaceService {
 	public Payload get(WebPath absolutePath, Context context) {
 
 		if (absolutePath.isRoot()) {
-			SpaceContext.credentials().checkAtLeastSuperAdmin();
+			Server.context().credentials().checkAtLeastSuperAdmin();
 			return listBuckets(context);
 		}
 
@@ -181,7 +181,7 @@ public class FileService extends SpaceService {
 
 	public DogFile getMeta(String bucket, String id) {
 		RolePermissions bucketRoles = bucketSettings(bucket).permissions;
-		Credentials credentials = SpaceContext.credentials();
+		Credentials credentials = Server.context().credentials();
 		DogFile file = doGetMeta(bucket, id, true);
 		bucketRoles.checkRead(credentials, file.owner(), file.group());
 		return file;
@@ -211,7 +211,7 @@ public class FileService extends SpaceService {
 
 		String id = webPath.removeFirst().toString();
 		FileBucketSettings settings = bucketSettings(bucket);
-		Credentials credentials = SpaceContext.credentials();
+		Credentials credentials = Server.context().credentials();
 		long contentLength = checkContentLength(context, settings.sizeLimitInKB);
 
 		DogFile file = doGetMeta(bucket, id, false);
@@ -232,7 +232,7 @@ public class FileService extends SpaceService {
 	}
 
 	private Payload createBucket(String bucket, Context context) {
-		SpaceContext.credentials().checkAtLeastSuperAdmin();
+		Server.context().credentials().checkAtLeastSuperAdmin();
 		createBucketIndex(bucket, context);
 		return saveBucketSettings(bucket, context);
 	}
@@ -282,7 +282,7 @@ public class FileService extends SpaceService {
 	public Payload doUpload(String bucket, DogFile file, InputStream content) {
 
 		PutResult result = store.put(//
-				SpaceContext.backendId(), //
+				Server.backend().backendId(), //
 				bucket, //
 				content, //
 				file.getLength());
@@ -295,7 +295,7 @@ public class FileService extends SpaceService {
 
 		} catch (Exception e) {
 
-			store.delete(SpaceContext.backendId(), //
+			store.delete(Server.backend().backendId(), //
 					bucket, file.getBucketKey());
 
 			throw e;
@@ -344,7 +344,7 @@ public class FileService extends SpaceService {
 		String bucket = webPath.first();
 		String id = webPath.removeFirst().toString();
 		RolePermissions bucketPermissions = bucketSettings(bucket).permissions;
-		Credentials credentials = SpaceContext.credentials();
+		Credentials credentials = Server.context().credentials();
 
 		DogFile file = doGetMeta(bucket, id, false);
 
@@ -361,7 +361,7 @@ public class FileService extends SpaceService {
 		boolean deleted = elastic().delete(//
 				toFileIndex(bucket), id, false, false);
 		try {
-			store.delete(SpaceContext.backendId(), //
+			store.delete(Server.backend().backendId(), //
 					bucket, bucketKey);
 
 		} catch (Exception ignore) {
@@ -417,7 +417,7 @@ public class FileService extends SpaceService {
 		String path = webPath.removeFirst().toString();
 
 		RolePermissions bucketRoles = bucketSettings(bucket).permissions;
-		Credentials credentials = SpaceContext.credentials();
+		Credentials credentials = Server.context().credentials();
 
 		bucketRoles.check(credentials, Permission.search);
 		return doList(bucket, path, context);
@@ -467,13 +467,19 @@ public class FileService extends SpaceService {
 		return null;
 	}
 
-	public Payload export(WebPath path, Context context) {
-		String bucket = path.first();
+	public Payload export(WebPath webPath, Context context) {
+		String bucket = webPath.first();
+
 		FileExportRequest request = Json.toPojo(//
-				getRequestContentAsBytes(context), FileExportRequest.class);
+				getRequestContentAsBytes(context), //
+				FileExportRequest.class);
+
+		List<DogFile> files = Lists.newArrayListWithCapacity(request.paths.size());
+		for (String path : request.paths)
+			files.add(getMeta(bucket, path));
 
 		return new Payload(ContentTypes.OCTET_STREAM, //
-				new BucketExport(bucket, request))//
+				new BucketExport(bucket, files))//
 						.withHeader(SpaceHeaders.CONTENT_DISPOSITION, //
 								SpaceHeaders.contentDisposition(request.fileName));
 
@@ -482,19 +488,18 @@ public class FileService extends SpaceService {
 	private class BucketExport implements StreamingOutput {
 
 		private String bucket;
-		private FileExportRequest request;
+		private List<DogFile> files;
 
-		public BucketExport(String bucket, FileExportRequest request) {
+		public BucketExport(String bucket, List<DogFile> files) {
 			this.bucket = bucket;
-			this.request = request;
+			this.files = files;
 		}
 
 		@Override
 		public void write(OutputStream output) throws IOException {
 			ZipOutputStream zip = new ZipOutputStream(output);
-			for (String path : request.paths) {
-				DogFile file = getMeta(bucket, path);
-				zip.putNextEntry(new ZipEntry(path));
+			for (DogFile file : files) {
+				zip.putNextEntry(new ZipEntry(file.getPath()));
 				InputStream fileStream = getContent(bucket, file.getBucketKey());
 				ByteStreams.copy(fileStream, zip);
 				Utils.closeSilently(fileStream);
@@ -513,7 +518,7 @@ public class FileService extends SpaceService {
 		if (ServerConfig.awsRegion().isPresent() //
 				&& !ServerConfig.isOffline()) {
 
-			store.deleteAll(SpaceContext.backendId());
+			store.deleteAll(Server.backend().backendId());
 		}
 	}
 
@@ -542,7 +547,7 @@ public class FileService extends SpaceService {
 	//
 
 	public InputStream getContent(String bucket, String key) {
-		return store.get(SpaceContext.backendId(), bucket, key);
+		return store.get(Server.backend().backendId(), bucket, key);
 	}
 
 	private void checkBucket(WebPath webPath) {

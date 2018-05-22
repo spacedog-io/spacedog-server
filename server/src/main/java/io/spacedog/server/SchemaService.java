@@ -49,7 +49,7 @@ public class SchemaService extends SpaceService {
 	@Put("/:type/")
 	public Payload put(String type, String newSchemaAsString, Context context) {
 
-		SpaceContext.credentials().checkAtLeastAdmin();
+		Server.context().credentials().checkAtLeastAdmin();
 		Schema.checkName(type);
 
 		Schema schema = Strings.isNullOrEmpty(newSchemaAsString) ? getDefaultSchema(type) //
@@ -77,7 +77,7 @@ public class SchemaService extends SpaceService {
 	@Delete("/:type/")
 	public Payload delete(String type) {
 		try {
-			SpaceContext.credentials().checkAtLeastAdmin();
+			Server.context().credentials().checkAtLeastAdmin();
 			elastic().deleteIndex(DataStore.toDataIndex(type));
 		} catch (TypeMissingException ignored) {
 		}

@@ -343,7 +343,7 @@ public class ShareServiceTest extends SpaceTest {
 	}
 
 	@Test
-	public void downloadZipOfShares() throws IOException {
+	public void exportShares() throws IOException {
 
 		// prepare
 		SpaceDog superadmin = clearRootBackend();
@@ -366,7 +366,7 @@ public class ShareServiceTest extends SpaceTest {
 		// vince does not have access to nath's shares
 		assertHttpError(403, () -> vince.files().get(SHARES, path1));
 
-		// nath gets a zip of her shares
+		// nath exports her shares
 		byte[] zip = nath.files().export(SHARES, path1);
 		assertEquals(1, zipFileNumber(zip));
 		assertZipContains(zip, "toto.txt", "toto".getBytes());
@@ -384,38 +384,38 @@ public class ShareServiceTest extends SpaceTest {
 		assertHttpError(403, () -> nath.files().get(SHARES, path2));
 		assertHttpError(403, () -> nath.files().get(SHARES, path3));
 
-		// vince gets a zip of his shares
+		// vince exports his shares
 		zip = vince.files().export(SHARES, path2, path3);
 		assertEquals(2, zipFileNumber(zip));
 		assertZipContains(zip, "titi.txt", "titi".getBytes());
 		assertZipContains(zip, "tweeter.png", pngBytes);
 
-		// vince fails to download files from share bucket
-		// since first file path isn't from the specified bucket
-		assertHttpError(400, () -> vince.files().export(//
-				SHARES, "/www/index.html", "/shares/toto.txt"));
+		// vince fails to export files with invalid paths
+		assertHttpError(404, () -> vince.files().export(//
+				SHARES, "/foo/index.html", "/bar/toto.txt"));
 
-		// vince needs read (all) permission to zip nath's shares
+		// vince needs read (all) permission to export nath's shares
 		assertHttpError(403, () -> vince.files().export(SHARES, path1, path2));
 
-		// nath needs read (all) permission to zip vince's shares
+		// nath needs read (all) permission to export vince's shares
 		assertHttpError(403, () -> nath.files().export(SHARES, path1, path2));
 
-		// guests needs read (all) permission to zip shares
+		// guests needs read (all) permission to export shares
 		assertHttpError(401, () -> guest.files().export(SHARES, path1, path2));
 
-		// superadmin updates share settings to allow users
-		// to download all shares
+		// superadmin updates share settings
+		// to allow users to export all shares
 		bucket.permissions.put(Roles.user, Permission.read, Permission.updateMine);
 		superadmin.files().setBucket(bucket);
 
-		// vince downloads zip containing specified shares
-		zip = vince.post("/1/files/{bucket}/_download")//
+		// vince exports specified shares
+		zip = vince.post("/1/files/{bucket}")//
 				.routeParam("bucket", SHARES)//
-				.bodyJson("fileName", "download.zip", //
+				.queryParam("op", "export")//
+				.bodyJson("fileName", "export.zip", //
 						"paths", Json.array(path1, path2, path3))//
 				.go(200)//
-				.assertHeaderContains("attachment; filename=\"download.zip\"", //
+				.assertHeaderContains("attachment; filename=\"export.zip\"", //
 						SpaceHeaders.CONTENT_DISPOSITION)//
 				.asBytes();
 

@@ -39,7 +39,7 @@ public class SmsService extends SpaceService {
 	public Payload postSms(SmsRequest request, Context context) {
 
 		if (request instanceof SmsBasicRequest) {
-			SpaceContext.credentials().checkIfAuthorized(smsSettings().authorizedRoles);
+			Server.context().credentials().checkIfAuthorized(smsSettings().authorizedRoles);
 			return send((SmsBasicRequest) request);
 		}
 
@@ -50,7 +50,7 @@ public class SmsService extends SpaceService {
 					.orElseThrow(() -> new NotFoundException(//
 							"sms template [%s] not found", templateRequest.templateName));
 
-			SpaceContext.credentials().checkIfAuthorized(template.roles);
+			Server.context().credentials().checkIfAuthorized(template.roles);
 			return send(toBasicRequest(templateRequest, template));
 		}
 
@@ -61,14 +61,14 @@ public class SmsService extends SpaceService {
 	@Get("/1/sms/:messageId")
 	@Get("/1/sms/:messageId")
 	public Payload getSms(String messageId, Context context) {
-		SpaceContext.credentials().checkIfAuthorized(smsSettings().authorizedRoles);
+		Server.context().credentials().checkIfAuthorized(smsSettings().authorizedRoles);
 		return fetch(messageId);
 	}
 
 	@Put("/1/sms/templates/:name")
 	@Put("/1/sms/templates/:name/")
 	public Payload putTemplate(String templateName, SmsTemplate template, Context context) {
-		SpaceContext.credentials().checkAtLeastSuperAdmin();
+		Server.context().credentials().checkAtLeastSuperAdmin();
 		template.name = templateName;
 		IndexResponse response = SettingsService.get()//
 				.doSave(toSettingsId(templateName), Json.toString(template));
@@ -82,7 +82,7 @@ public class SmsService extends SpaceService {
 	@Delete("/1/sms/templates/:name")
 	@Delete("/1/sms/templates/:name/")
 	public Payload deleteTemplate(String templateName) {
-		SpaceContext.credentials().checkAtLeastSuperAdmin();
+		Server.context().credentials().checkAtLeastSuperAdmin();
 		SettingsService.get().doDelete(toSettingsId(templateName));
 		return JsonPayload.ok().build();
 	}

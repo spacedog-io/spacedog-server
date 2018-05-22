@@ -61,7 +61,7 @@ public class LogService extends SpaceService {
 	@Get("")
 	@Get("/")
 	public Payload getAll(Context context) {
-		SpaceContext.credentials().checkAtLeastAdmin();
+		Server.context().credentials().checkAtLeastAdmin();
 		elastic().refreshType(logIndex(), isRefreshRequested(context));
 
 		int from = context.query().getInteger(FROM_PARAM, 0);
@@ -87,7 +87,7 @@ public class LogService extends SpaceService {
 	@Post("/_search/")
 	public Payload search(String body, Context context) {
 
-		SpaceContext.credentials().checkAtLeastAdmin();
+		Server.context().credentials().checkAtLeastAdmin();
 		elastic().refreshType(logIndex(), isRefreshRequested(context));
 
 		SearchResponse response = elastic().prepareSearch(logIndex())//
@@ -102,7 +102,7 @@ public class LogService extends SpaceService {
 	@Delete("/")
 	public Payload purge(Context context) {
 
-		SpaceContext.credentials().checkAtLeastSuperAdmin();
+		Server.context().credentials().checkAtLeastSuperAdmin();
 
 		String param = context.request().query().get(BEFORE_PARAM);
 		DateTime before = param == null ? DateTime.now().minusDays(7) //
@@ -127,7 +127,7 @@ public class LogService extends SpaceService {
 
 				// ping requests should not be logged
 				if (uri.isEmpty() || uri.equals(SLASH))
-					return SpaceContext.isWww();
+					return Server.context().isWww();
 
 				return true;
 			}
@@ -265,7 +265,7 @@ public class LogService extends SpaceService {
 	}
 
 	private void addCredentials(ObjectNode log) {
-		Credentials credentials = SpaceContext.credentials();
+		Credentials credentials = Server.context().credentials();
 		ObjectNode logCredentials = log.putObject(CREDENTIALS_FIELD);
 		logCredentials.put(ID_FIELD, credentials.id());
 		logCredentials.put(USERNAME_FIELD, credentials.username());

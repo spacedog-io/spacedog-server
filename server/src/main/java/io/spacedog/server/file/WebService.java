@@ -13,8 +13,8 @@ import io.spacedog.client.file.InternalFileSettings.FileBucketSettings;
 import io.spacedog.client.file.WebSettings;
 import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.client.http.WebPath;
+import io.spacedog.server.Server;
 import io.spacedog.server.SettingsService;
-import io.spacedog.server.SpaceContext;
 import io.spacedog.server.SpaceFilter;
 import io.spacedog.server.SpaceService;
 import io.spacedog.utils.Exceptions;
@@ -37,7 +37,7 @@ public class WebService extends SpaceService {
 
 			@Override
 			public boolean matches(String uri, Context context) {
-				return uri.startsWith("/1/web") || SpaceContext.isWww();
+				return uri.startsWith("/1/web") || Server.context().isWww();
 			}
 
 			@Override
@@ -80,7 +80,7 @@ public class WebService extends SpaceService {
 
 			FileService fileService = FileService.get();
 			FileBucketSettings settings = fileService.bucketSettings(bucket);
-			Credentials credentials = SpaceContext.credentials();
+			Credentials credentials = Server.context().credentials();
 			settings.permissions.check(credentials, Permission.read);
 
 			DogFile file = fileService.doGetMeta(bucket, path.toString(), false);
@@ -126,7 +126,7 @@ public class WebService extends SpaceService {
 
 	private static WebPath toWebPath(String uri) {
 
-		return SpaceContext.isWww() //
+		return Server.context().isWww() //
 				// add www bucket prefix
 				? WebPath.parse(uri).addFirst("www")
 				// remove '/1/web'

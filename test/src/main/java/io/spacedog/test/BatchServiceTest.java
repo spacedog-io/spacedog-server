@@ -20,7 +20,7 @@ import io.spacedog.utils.Json;
 public class BatchServiceTest extends SpaceTest {
 
 	@Test
-	public void executeBatch() {
+	public void test() {
 
 		// we need to make sure the test account is reset and exists before to
 		// be able to reset it again by batch requests

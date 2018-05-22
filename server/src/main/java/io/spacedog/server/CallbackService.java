@@ -80,7 +80,7 @@ public class CallbackService extends SpaceService {
 	@Put("/")
 	public Payload putSafe() throws IOException {
 
-		SpaceContext.credentials().checkAtLeastSuperAdmin();
+		Server.context().credentials().checkAtLeastSuperAdmin();
 
 		Index index = callbackIndex();
 		ElasticClient elastic = elastic();
@@ -182,7 +182,7 @@ public class CallbackService extends SpaceService {
 
 	private String stash(String uri, Context context, DateTime receivedAt) {
 
-		Credentials credentials = SpaceContext.credentials();
+		Credentials credentials = Server.context().credentials();
 
 		Request demand = new Request();
 		demand.method = context.method();

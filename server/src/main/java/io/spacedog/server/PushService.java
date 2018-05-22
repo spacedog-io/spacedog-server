@@ -99,7 +99,7 @@ public class PushService extends SpaceService {
 	public Payload postPushRequest(String body, Context context) {
 
 		PushSettings settings = SettingsService.get().getAsObject(PushSettings.class);
-		Credentials credentials = SpaceContext.credentials();
+		Credentials credentials = Server.context().credentials();
 		credentials.checkIfAuthorized(settings.authorizedRoles);
 
 		PushRequest request = Json.toPojo(body, PushRequest.class);
@@ -183,7 +183,7 @@ public class PushService extends SpaceService {
 
 			ObjectNode snsMessage = toSnsMessage(installation.source().protocol(), jsonMessage);
 
-			if (!SpaceContext.isTest()) {
+			if (!Server.context().isTest()) {
 				PublishRequest pushRequest = new PublishRequest()//
 						.withTargetArn(installation.source().endpoint())//
 						.withMessageStructure("json")//
@@ -195,7 +195,8 @@ public class PushService extends SpaceService {
 
 		} catch (Exception e) {
 			response.failures = response.failures + 1;
-			notification.error = JsonPayload.toJson(e, SpaceContext.isDebug());
+			notification.error = JsonPayload.toJson(e, //
+					Server.context().debug().isTrue());
 
 			if (e instanceof EndpointDisabledException //
 					|| e.getMessage().contains(//
@@ -298,7 +299,7 @@ public class PushService extends SpaceService {
 		Check.notNull(source.protocol(), PROTOCOL);
 
 		source.endpoint(//
-				SpaceContext.isTest() ? "FAKE_ENDPOINT_FOR_TESTING" //
+				Server.context().isTest() ? "FAKE_ENDPOINT_FOR_TESTING" //
 						: AwsSnsPusher.createApplicationEndpoint(source.appId(), //
 								source.protocol(), source.token()));
 

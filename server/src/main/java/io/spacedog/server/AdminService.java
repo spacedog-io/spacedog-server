@@ -34,9 +34,9 @@ public class AdminService extends SpaceService {
 	@Post("/1/admin/_clear")
 	@Post("/1/admin/_clear")
 	public void postClear(Context context) {
-		SpaceContext.credentials().checkSuperDog();
+		Server.context().credentials().checkSuperDog();
 
-		if (!SpaceContext.backend().host().endsWith("lvh.me"))
+		if (!Server.backend().host().endsWith("lvh.me"))
 			throw Exceptions.forbidden("only allowed for [*.lvh.me] env");
 
 		Server.get().clear(context.query().getBoolean("files", false));

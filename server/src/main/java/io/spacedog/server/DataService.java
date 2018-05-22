@@ -81,7 +81,7 @@ public class DataService extends SpaceService {
 	@Delete("/:type/:id")
 	@Delete("/:type/:id/")
 	public Payload deleteById(String type, String id, Context context) {
-		Credentials credentials = SpaceContext.credentials();
+		Credentials credentials = Server.context().credentials();
 		RolePermissions roles = DataAccessControl.roles(type);
 
 		if (roles.containsOne(credentials, Permission.delete))
@@ -150,7 +150,7 @@ public class DataService extends SpaceService {
 	//
 
 	protected DataWrap<ObjectNode> doGet(String type, String id) {
-		Credentials credentials = SpaceContext.credentials();
+		Credentials credentials = Server.context().credentials();
 		RolePermissions roles = DataAccessControl.roles(type);
 		Supplier<DataWrap<ObjectNode>> supplier = () -> DataStore.get().getObject(//
 				new ObjectNodeWrap().type(type).id(id));
@@ -179,7 +179,7 @@ public class DataService extends SpaceService {
 
 		if (metaOpt.isPresent()) {
 			DataWrap<DataObject> metadata = metaOpt.get();
-			Credentials credentials = SpaceContext.credentials();
+			Credentials credentials = Server.context().credentials();
 			checkPutPermissions(credentials, metadata);
 
 			boolean forceMeta = checkForceMeta(object.type(), credentials, context);
@@ -198,7 +198,7 @@ public class DataService extends SpaceService {
 	}
 
 	public <K> Payload doPost(DataWrap<K> object, Context context) {
-		Credentials credentials = SpaceContext.credentials();
+		Credentials credentials = Server.context().credentials();
 
 		if (DataAccessControl.roles(object.type())//
 				.containsOne(credentials, Permission.create)) {
