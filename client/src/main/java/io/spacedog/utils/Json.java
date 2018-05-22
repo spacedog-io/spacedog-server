@@ -549,8 +549,9 @@ public class Json {
 		try {
 			return mapper().treeToValue(jsonNode, pojoClass);
 
-		} catch (JsonProcessingException e) {
-			throw Exceptions.runtime(e, "failed to map json [%s] to pojo class [%s]", //
+		} catch (Exception e) {
+			throw Exceptions.illegalArgument(e, //
+					"error mapping json [%s] to pojo class [%s]", //
 					jsonNode, pojoClass.getSimpleName());
 		}
 	}
@@ -563,8 +564,9 @@ public class Json {
 		try {
 			return mapper().readValue(json, pojoClass);
 
-		} catch (IOException e) {
-			throw Exceptions.runtime(e, "error mapping string [%s] to pojo class [%s]", //
+		} catch (Exception e) {
+			throw Exceptions.illegalArgument(e, //
+					"error mapping string [%s] to pojo class [%s]", //
 					json, pojoClass.getSimpleName());
 		}
 	}
@@ -576,8 +578,9 @@ public class Json {
 		try {
 			return mapper().readValue(json, typeRef);
 
-		} catch (IOException e) {
-			throw Exceptions.runtime(e, "error mapping string [%s] to type [%s]", //
+		} catch (Exception e) {
+			throw Exceptions.illegalArgument(e, //
+					"error mapping string [%s] to type [%s]", //
 					json, typeRef);
 		}
 	}
@@ -589,8 +592,9 @@ public class Json {
 		try {
 			return mapper().readValue(jsonBytes, pojoClass);
 
-		} catch (IOException e) {
-			throw Exceptions.runtime(e, "error mapping bytes to pojo class [%s]", //
+		} catch (Exception e) {
+			throw Exceptions.illegalArgument(e, //
+					"error mapping bytes to pojo class [%s]", //
 					pojoClass.getSimpleName());
 		}
 	}
@@ -598,11 +602,11 @@ public class Json {
 	public static <K> K toPojo(JsonNode jsonNode, String fieldPath, Class<K> pojoClass) {
 		Check.notNull(jsonNode, "jsonNode");
 		Check.notNull(fieldPath, "fieldPath");
-
 		jsonNode = get(jsonNode, fieldPath);
+
 		if (isNull(jsonNode))
-			throw Exceptions.illegalArgument("field [%s] is null in json [%s]", //
-					fieldPath, jsonNode);
+			throw Exceptions.illegalArgument(//
+					"field [%s] is null", fieldPath);
 
 		return toPojo(jsonNode, pojoClass);
 	}
@@ -614,8 +618,9 @@ public class Json {
 		try {
 			return mapper().readerForUpdating(pojo).readValue(json);
 
-		} catch (IOException e) {
-			throw Exceptions.runtime(e, "failed to map json [%s] to pojo class [%s]", //
+		} catch (Exception e) {
+			throw Exceptions.illegalArgument(e, //
+					"error mapping json [%s] to pojo object [%s]", //
 					json, pojo.getClass().getSimpleName());
 		}
 	}
