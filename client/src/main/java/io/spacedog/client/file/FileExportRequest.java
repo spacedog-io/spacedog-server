@@ -12,7 +12,7 @@ import com.google.common.collect.Lists;
 		getterVisibility = Visibility.NONE, //
 		isGetterVisibility = Visibility.NONE, //
 		setterVisibility = Visibility.NONE)
-public class DownloadRequest {
+public class FileExportRequest {
 	public String fileName;
 	public List<String> paths = Lists.newArrayList();
 }

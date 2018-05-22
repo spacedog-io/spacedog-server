@@ -39,6 +39,7 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.IndexNotFoundException;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
@@ -46,6 +47,7 @@ import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.jobs.Internals;
@@ -72,7 +74,7 @@ public class ElasticClient implements SpaceParams {
 	}
 
 	//
-	// prepare methods
+	// prepare
 	//
 
 	public IndexRequestBuilder prepareIndex(Index index) {
@@ -95,6 +97,32 @@ public class ElasticClient implements SpaceParams {
 
 	public SearchScrollRequestBuilder prepareSearchScroll(String scrollId) {
 		return internalClient.prepareSearchScroll(scrollId);
+	}
+
+	//
+	// Search
+	//
+
+	public SearchHits search(Index index, Object... terms) {
+
+		if (terms.length % 2 == 1)
+			throw Exceptions.illegalArgument(//
+					"search terms %s are invalid: one is missing", Arrays.toString(terms));
+
+		BoolQueryBuilder bool = QueryBuilders.boolQuery();
+		SearchSourceBuilder source = SearchSourceBuilder.searchSource()//
+				.query(bool);
+
+		for (int i = 0; i < terms.length; i = i + 2)
+			bool.filter(QueryBuilders.termQuery(terms[i].toString(), terms[i + 1]));
+
+		return prepareSearch(index).setTypes(index.type())//
+				.setSource(source).get().getHits();
+	}
+
+	public SearchHits search(SearchSourceBuilder source, Index... indices) {
+		return prepareSearch(indices).setTypes(Index.types(indices))//
+				.setSource(source).get().getHits();
 	}
 
 	//
@@ -167,11 +195,13 @@ public class ElasticClient implements SpaceParams {
 
 			if (hits.getTotalHits() == 0)
 				return Optional.empty();
+
 			else if (hits.getTotalHits() == 1)
 				return Optional.of(hits.getAt(0));
 
 			throw Exceptions.runtime(//
-					"unicity violation in [%s] data collection", index.type());
+					"unicity violation for [%s] objects with query [%s]", //
+					index.type(), query);
 
 		} catch (IndexNotFoundException e) {
 			return Optional.empty();

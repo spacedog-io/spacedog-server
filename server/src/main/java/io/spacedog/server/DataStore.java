@@ -24,6 +24,7 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.joda.time.DateTime;
 
 import com.carrotsearch.hppc.cursors.ObjectCursor;
@@ -39,7 +40,6 @@ import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.client.schema.Schema;
-import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;
 import io.spacedog.utils.Utils;
@@ -190,6 +190,10 @@ public class DataStore implements SpaceParams, SpaceFields {
 				.justCreated(ElasticUtils.isCreated(response));
 	}
 
+	public boolean deleteObject(String type, String id, boolean refresh, boolean throwNotFound) {
+		return elastic().delete(toDataIndex(type), id, refresh, throwNotFound);
+	}
+
 	public static long version(DataWrap<?> wrap) {
 		return wrap.version() == 0 ? Versions.MATCH_ANY : wrap.version();
 	}
@@ -225,19 +229,11 @@ public class DataStore implements SpaceParams, SpaceFields {
 	//
 
 	public SearchHits search(String type, Object... terms) {
+		return elastic().search(toDataIndex(type), terms);
+	}
 
-		if (terms.length % 2 == 1)
-			throw Exceptions.illegalArgument(//
-					"search terms %s are invalid: one is missing", Arrays.toString(terms));
-
-		BoolQueryBuilder builder = QueryBuilders.boolQuery();
-		for (int i = 0; i < terms.length; i = i + 2)
-			builder.filter(QueryBuilders.termQuery(terms[i].toString(), terms[i + 1]));
-
-		SearchResponse response = elastic().prepareSearch(toDataIndex(type))//
-				.setTypes(type).setQuery(builder).get();
-
-		return response.getHits();
+	public SearchHits search(SearchSourceBuilder source, String... types) {
+		return elastic().search(source, toDataIndex(types));
 	}
 
 	public class FilteredSearchBuilder {

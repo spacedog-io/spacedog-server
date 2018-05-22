@@ -1,14 +1,22 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.server;
+package io.spacedog.server.file;
+
+import java.io.InputStream;
 
 import org.elasticsearch.common.Strings;
 
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.Permission;
+import io.spacedog.client.file.InternalFileSettings.FileBucketSettings;
 import io.spacedog.client.file.WebSettings;
+import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.client.http.WebPath;
+import io.spacedog.server.SettingsService;
+import io.spacedog.server.SpaceContext;
+import io.spacedog.server.SpaceFilter;
+import io.spacedog.server.SpaceService;
 import io.spacedog.utils.Exceptions;
 import net.codestory.http.Context;
 import net.codestory.http.constants.Methods;
@@ -61,37 +69,58 @@ public class WebService extends SpaceService {
 		return doGet(false, path, context);
 	}
 
-	private Payload doGet(boolean withContent, WebPath path, Context context) {
+	private Payload doGet(boolean withContent, WebPath webPath, Context context) {
 
 		Payload payload = Payload.notFound();
 
-		if (path.size() > 0) {
+		if (webPath.size() > 0) {
 
-			WebSettings settings = webSettings();
+			String bucket = webPath.first();
+			WebPath path = webPath.removeFirst();
+
+			FileService fileService = FileService.get();
+			FileBucketSettings settings = fileService.bucketSettings(bucket);
 			Credentials credentials = SpaceContext.credentials();
-			settings.prefixPermissions.get(path.first())//
-					.check(credentials, Permission.read);
+			settings.permissions.check(credentials, Permission.read);
 
-			S3FileStore s3Service = S3FileStore.get();
-			S3File file = new S3File(path);
+			DogFile file = fileService.doGetMeta(bucket, path.toString(), false);
 
-			payload = s3Service.doGet(withContent, file, context);
+			if (file == null)
+				file = fileService.doGetMeta(bucket, //
+						path.addLast("index.html").toString(), //
+						false);
 
-			if (payload.isSuccess())
-				return payload;
+			if (file == null //
+					&& !Strings.isNullOrEmpty(settings.notFoundPage))
+				file = fileService.doGetMeta(bucket, //
+						WebPath.parse(settings.notFoundPage).toString(), //
+						false);
 
-			file = new S3File(path.addLast("index.html"));
-			payload = s3Service.doGet(withContent, file, context);
-
-			if (payload.isSuccess())
-				return payload;
-
-			if (!Strings.isNullOrEmpty(settings.notFoundPage)) {
-				file = new S3File(WebPath.parse(settings.notFoundPage)//
-						.addFirst(path.first()));
-				payload = s3Service.doGet(withContent, file, context);
+			if (file != null) {
+				payload = toPayload(file, //
+						fileService.getContent(bucket, file.getBucketKey()), //
+						context);
 			}
 		}
+
+		return payload;
+	}
+
+	private Payload toPayload(DogFile file, InputStream content, Context context) {
+
+		Payload payload = new Payload(file.getContentType(), content)//
+				.withHeader(SpaceHeaders.ETAG, file.getHash());
+
+		// Since fluent-http only provides gzip encoding,
+		// we only set Content-Length header if Accept-encoding
+		// does not contain gzip. In case client accepts gzip,
+		// fluent will gzip this file stream and use 'chunked'
+		// Transfer-Encoding incompatible with Content-Length header
+
+		if (!context.header(SpaceHeaders.ACCEPT_ENCODING).contains(SpaceHeaders.GZIP))
+			payload.withHeader(SpaceHeaders.CONTENT_LENGTH, //
+					Long.toString(file.getLength()));
+
 		return payload;
 	}
 
@@ -102,10 +131,6 @@ public class WebService extends SpaceService {
 				? WebPath.parse(uri).addFirst("www")
 				// remove '/1/web'
 				: WebPath.parse(uri.substring(6));
-	}
-
-	private WebSettings webSettings() {
-		return SettingsService.get().getAsObject(WebSettings.class);
 	}
 
 	//
