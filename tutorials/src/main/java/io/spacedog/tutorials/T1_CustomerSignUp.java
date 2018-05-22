@@ -14,7 +14,7 @@ import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.email.EmailTemplate;
 import io.spacedog.client.email.EmailTemplateRequest;
-import io.spacedog.client.file.FileSettings;
+import io.spacedog.client.file.InternalFileSettings.FileBucketSettings;
 import io.spacedog.client.file.SpaceFile.FileMeta;
 import io.spacedog.tutorials.Customer.Wrap;
 import io.spacedog.utils.ClassResources;
@@ -48,10 +48,10 @@ public class T1_CustomerSignUp extends DemoBase {
 
 	@Test
 	public void superadminAuthorizesUsersToShare() {
-		FileSettings settings = new FileSettings();
-		settings.permissions.put("shares", Roles.user, Permission.create);
-		settings.permissions.put("shares", Roles.all, Permission.read);
-		superadmin().settings().save(settings);
+		FileBucketSettings bucket = new FileBucketSettings("shares");
+		bucket.permissions.put(Roles.user, Permission.create);
+		bucket.permissions.put(Roles.all, Permission.read);
+		superadmin().files().setBucket(bucket);
 	}
 
 	@Test

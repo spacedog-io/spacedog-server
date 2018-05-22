@@ -197,7 +197,7 @@ public class DataService extends SpaceService {
 			return doPost(object, context);
 	}
 
-	protected <K> Payload doPost(DataWrap<K> object, Context context) {
+	public <K> Payload doPost(DataWrap<K> object, Context context) {
 		Credentials credentials = SpaceContext.credentials();
 
 		if (DataAccessControl.roles(object.type())//

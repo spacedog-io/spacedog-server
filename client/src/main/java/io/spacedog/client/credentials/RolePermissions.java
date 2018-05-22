@@ -53,4 +53,33 @@ public class RolePermissions extends HashMap<String, Set<Permission>> {
 		put(role, Sets.newHashSet(permissions));
 		return this;
 	}
+
+	public void checkRead(Credentials credentials, String owner, String group) {
+		check(credentials, owner, group, Permission.read, Permission.readGroup, Permission.readMine);
+	}
+
+	public void checkUpdate(Credentials credentials, String owner, String group) {
+		check(credentials, owner, group, Permission.update, Permission.updateGroup, Permission.updateMine);
+	}
+
+	public void checkDelete(Credentials credentials, String owner, String group) {
+		check(credentials, owner, group, Permission.delete, Permission.deleteGroup, Permission.deleteMine);
+	}
+
+	public void check(Credentials credentials, String owner, String group, //
+			Permission allPermission, Permission groupPermission, Permission minePermission) {
+
+		if (containsOne(credentials, allPermission))
+			return;
+
+		if (containsOne(credentials, groupPermission))
+			if (group.equals(credentials.group()))
+				return;
+
+		if (containsOne(credentials, minePermission))
+			if (owner.equals(credentials.id()))
+				return;
+
+		throw Exceptions.insufficientCredentials(credentials);
+	}
 }

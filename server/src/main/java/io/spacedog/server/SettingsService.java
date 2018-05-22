@@ -267,7 +267,7 @@ public class SettingsService extends SpaceService {
 		ElasticClient elastic = elastic();
 
 		if (!elastic.exists(index)) {
-			Context context = SpaceContext.get().context();
+			Context context = SpaceContext.fluentContext();
 			ObjectNode mapping = Json.object(TYPE, Json.object("enabled", false));
 
 			int shards = context.query().getInteger(SHARDS_PARAM, SHARDS_DEFAULT_PARAM);

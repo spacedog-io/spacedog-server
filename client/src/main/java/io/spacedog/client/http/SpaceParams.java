@@ -23,5 +23,6 @@ public interface SpaceParams {
 	String WITH_CONTENT_DISPOSITION = "withContentDisposition";
 	String ACCESS_TOKEN_PARAM = "accessToken";
 	String FORCE_META_PARAM = "forceMeta";
+	String FAIL_PARAM = "_fail";
 
 }

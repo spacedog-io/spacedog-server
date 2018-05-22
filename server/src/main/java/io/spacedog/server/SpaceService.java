@@ -4,6 +4,7 @@
 package io.spacedog.server;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -32,12 +33,16 @@ public abstract class SpaceService implements SpaceFields, SpaceParams {
 		return Server.get().elasticClient();
 	}
 
-	protected static boolean isRefreshRequested(Context context) {
+	public static boolean isRefreshRequested(Context context) {
 		return isRefreshRequested(context, false);
 	}
 
-	protected static boolean isRefreshRequested(Context context, boolean defaultValue) {
+	public static boolean isRefreshRequested(Context context, boolean defaultValue) {
 		return context.query().getBoolean(REFRESH_PARAM, defaultValue);
+	}
+
+	public static boolean isFailRequested(Context context) {
+		return context.get(FAIL_PARAM) != null;
 	}
 
 	public static StringBuilder spaceUrl(String uri, String type, String id) {
@@ -57,6 +62,30 @@ public abstract class SpaceService implements SpaceFields, SpaceParams {
 	protected static String get(Context context, String name, String defaultValue) {
 		String value = context.get(name);
 		return value == null ? defaultValue : value;
+	}
+
+	protected static String getRequestContent(Context context) {
+		try {
+			return context.request().content();
+		} catch (IOException e) {
+			throw Exceptions.illegalArgument(e, "error reading http request content");
+		}
+	}
+
+	protected static byte[] getRequestContentAsBytes(Context context) {
+		try {
+			return context.request().contentAsBytes();
+		} catch (IOException e) {
+			throw Exceptions.illegalArgument(e, "error reading http request content");
+		}
+	}
+
+	protected static InputStream getRequestContentAsInputStream(Context context) {
+		try {
+			return context.request().inputStream();
+		} catch (IOException e) {
+			throw Exceptions.illegalArgument(e, "error reading http request content");
+		}
 	}
 
 	public static FormQuery formQuery(Context context) {

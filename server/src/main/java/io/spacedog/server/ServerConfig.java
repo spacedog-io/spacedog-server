@@ -21,6 +21,7 @@ public class ServerConfig {
 	private static final String PRODUCTION = "spacedog.production";
 	private static final String OFFLINE = "spacedog.offline";
 	private static final String SERVER_PORT = "spacedog.server.port";
+	private static final String SERVER_FILE_STORE = "spacedog.server.file.store";
 	private static final String SERVER_GREEN_CHECK = "spacedog.server.green.check";
 	private static final String SERVER_GREEN_TIMEOUT = "spacedog.server.green.timeout";
 	private static final String SERVER_USER_AGENT = "spacedog.server.user.agent";
@@ -141,6 +142,10 @@ public class ServerConfig {
 
 	public static String superdogPassword() {
 		return SpaceEnv.env().superdogPassword();
+	}
+
+	public static Optional7<String> serverFileStore() {
+		return SpaceEnv.env().get(SERVER_FILE_STORE);
 	}
 
 	public static void log() {

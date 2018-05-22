@@ -20,7 +20,7 @@ public class AdminService extends SpaceService {
 
 	@Get("")
 	@Get("/")
-	public Payload ping() {
+	public Payload getPing() {
 		ObjectNode payload = (ObjectNode) Json.toJsonNode(Server.get().info());
 		return JsonPayload.ok().withContent(payload).build();
 	}
@@ -33,7 +33,7 @@ public class AdminService extends SpaceService {
 
 	@Post("/1/admin/_clear")
 	@Post("/1/admin/_clear")
-	public void clear(Context context) {
+	public void postClear(Context context) {
 		SpaceContext.credentials().checkSuperDog();
 
 		if (!SpaceContext.backend().host().endsWith("lvh.me"))

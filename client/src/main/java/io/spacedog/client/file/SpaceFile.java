@@ -4,21 +4,32 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.util.Set;
 
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Sets;
 
 import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.client.http.SpaceResponse;
 
 public class SpaceFile implements Closeable {
 
+	private String bucket;
 	private String path;
 	private SpaceResponse response;
+
+	public String bucket() {
+		return bucket;
+	}
+
+	public SpaceFile withBucket(String bucket) {
+		this.bucket = bucket;
+		return this;
+	}
 
 	public String path() {
 		return path;
@@ -77,12 +88,18 @@ public class SpaceFile implements Closeable {
 			isGetterVisibility = Visibility.NONE, //
 			setterVisibility = Visibility.NONE)
 	public static class FileMeta {
+		public String name;
 		public String path;
 		public String location;
-		public long size;
-		public DateTime lastModified;
-		public String etag;
-		public String contentMd5;
+		public long length;
+		public String contentType;
+		public String hash;
+		public String encryption;
+		public Set<String> tags = Sets.newLinkedHashSet();
+		public String owner;
+		public String group;
+		public DateTime createdAt;
+		public DateTime updatedAt;
 	}
 
 	@JsonIgnoreProperties(ignoreUnknown = true)
@@ -91,7 +108,7 @@ public class SpaceFile implements Closeable {
 			isGetterVisibility = Visibility.NONE, //
 			setterVisibility = Visibility.NONE)
 	public static class FileList {
-		@JsonProperty("results")
+		public long total;
 		public FileMeta[] files;
 		public String next;
 	}

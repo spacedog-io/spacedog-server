@@ -63,28 +63,28 @@ public class LinkedinService extends SpaceService {
 		// TODO why the hell do i escape path segment style
 		// instead of parameter escaping
 		if (state != null)
-			location.append(Uris.escapeSegment(state));
+			location.append(Uris.escapePathSegment(state));
 
 		try {
 			Credentials credentials = login(context);
 
 			location.append("&access_token=")//
-					.append(Uris.escapeSegment(credentials.accessToken()))//
+					.append(Uris.escapePathSegment(credentials.accessToken()))//
 					.append("&expires=")//
 					.append(credentials.accessTokenExpiresIn())//
 					.append("&credentialsId=")//
-					.append(Uris.escapeSegment(credentials.id()));
+					.append(Uris.escapePathSegment(credentials.id()));
 
 		} catch (SpaceException e) {
 			location.append("&error=")//
-					.append(Uris.escapeSegment(e.code()))//
+					.append(Uris.escapePathSegment(e.code()))//
 					.append("&error_description=")//
-					.append(Uris.escapeSegment(e.getMessage()));
+					.append(Uris.escapePathSegment(e.getMessage()));
 
 		} catch (Throwable t) {
 			location.append("&error=internal-server-error")//
 					.append("&error_description=")//
-					.append(Uris.escapeSegment(t.getMessage()));
+					.append(Uris.escapePathSegment(t.getMessage()));
 		}
 
 		return new Payload(302).withHeader(SpaceHeaders.LOCATION, location.toString());

@@ -17,9 +17,9 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.client.file.SpaceFile.FileList;
 import io.spacedog.client.file.SpaceFile.FileMeta;
 import io.spacedog.client.http.SpaceEnv;
-import io.spacedog.client.http.WebPath;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Utils;
 
 @Parameters(commandNames = { "sync" }, //
 		commandDescription = "synchronize source folder to backend")
@@ -30,10 +30,10 @@ public class FileSynchCommand extends AbstractCommand<FileSynchCommand> {
 			description = "the source directory to synchronize")
 	private String source;
 
-	@Parameter(names = { "-p", "--prefix" }, //
+	@Parameter(names = { "-b", "--bucket" }, //
 			required = true, //
-			description = "the file bucket prefix to use")
-	private String prefix;
+			description = "the file bucket to synchronize")
+	private String bucket;
 
 	/**
 	 * Set of server file path checked with matching local files. A checked local
@@ -63,14 +63,14 @@ public class FileSynchCommand extends AbstractCommand<FileSynchCommand> {
 		return this;
 	}
 
-	public FileSynchCommand prefix(String prefix) {
-		this.prefix = prefix;
+	public FileSynchCommand bucket(String bucket) {
+		this.bucket = bucket;
 		return this;
 	}
 
 	public void synch() throws IOException {
 		Check.notNull(source, "source");
-		Check.notNullOrEmpty(prefix, "prefix");
+		Check.notNullOrEmpty(bucket, "bucket");
 
 		SpaceEnv.env().debug(verbose());
 		dog = LoginCommand.session();
@@ -103,10 +103,9 @@ public class FileSynchCommand extends AbstractCommand<FileSynchCommand> {
 
 	private void synchFromServer() throws IOException {
 		String next = null;
-		String webPath = WebPath.newPath(prefix).toString();
 
 		do {
-			FileList list = dog.files().list(webPath, next);
+			FileList list = dog.files().list(bucket, "/", next);
 
 			for (FileMeta file : list.files)
 				check(file);
@@ -117,14 +116,12 @@ public class FileSynchCommand extends AbstractCommand<FileSynchCommand> {
 	}
 
 	private void check(FileMeta file) throws IOException {
-		// removes slash, prefix and slash
-		String relativePath = file.path.substring(prefix.length() + 2);
-		Path filePath = Paths.get(source).resolve(relativePath);
+		Path filePath = Paths.get(source).resolve(Utils.removePreffix(file.path, "/"));
 
 		if (Files.isRegularFile(filePath)) {
 			checked.add(file.path);
 
-			if (!check(filePath, file.etag))
+			if (!check(filePath, file.hash))
 				upload(filePath);
 
 		} else
@@ -141,27 +138,24 @@ public class FileSynchCommand extends AbstractCommand<FileSynchCommand> {
 	}
 
 	private boolean notAlreadyCheckedAndSynched(Path filePath) {
-		String webPath = toWebPath(filePath).toString();
-		return !checked.contains(webPath);
+		return checked.contains(toWebPath(filePath)) == false;
 	}
 
-	private WebPath toWebPath(Path filePath) {
-		return WebPath//
-				.parse(Paths.get(source).relativize(filePath).toString())//
-				.addFirst(prefix);
+	private String toWebPath(Path filePath) {
+		return "/" + Paths.get(source).relativize(filePath).toString();
 	}
 
 	private void delete(String webPath) {
-		dog.files().delete(webPath);
+		dog.files().delete(bucket, webPath);
 		deleted.add(webPath);
 	}
 
 	private void upload(Path filePath) {
 
 		try {
-			String webPath = toWebPath(filePath).toString();
+			String webPath = toWebPath(filePath);
 			// no need to escape since sdk is already escaping
-			dog.files().upload(webPath, filePath.toFile());
+			dog.files().upload(bucket, webPath, filePath.toFile());
 			uploaded.add(webPath);
 
 		} catch (Exception e) {

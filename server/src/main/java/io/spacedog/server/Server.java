@@ -3,8 +3,10 @@
  */
 package io.spacedog.server;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import org.elasticsearch.analysis.common.CommonAnalysisPlugin;
@@ -20,18 +22,29 @@ import org.elasticsearch.node.NodeValidationException;
 import org.elasticsearch.transport.Netty4Plugin;
 import org.joda.time.DateTimeZone;
 
+import com.google.common.collect.Lists;
+
+import io.spacedog.server.file.FileService;
+import io.spacedog.server.file.WebService;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.DateTimeZones;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.Utils;
 import net.codestory.http.AbstractWebServer;
 import net.codestory.http.Request;
 import net.codestory.http.Response;
+import net.codestory.http.compilers.CompilerFacade;
+import net.codestory.http.extensions.Extensions;
 import net.codestory.http.internal.Handler;
 import net.codestory.http.internal.HttpServerWrapper;
 import net.codestory.http.internal.SimpleServerWrapper;
+import net.codestory.http.io.Resources;
+import net.codestory.http.misc.Env;
 import net.codestory.http.payload.Payload;
+import net.codestory.http.payload.PayloadWriter;
 import net.codestory.http.routes.Routes;
+import net.codestory.http.templating.Site;
 import net.codestory.http.websockets.WebSocketHandler;
 
 public class Server {
@@ -209,6 +222,8 @@ public class Server {
 				.filter(WebService.get().filter())//
 				.filter(new ServiceErrorFilter())//
 				.filter(FileService.get().filter());
+
+		routes.setExtensions(fluent);
 	}
 
 	public static class Info {
@@ -228,7 +243,8 @@ public class Server {
 	// Implementation
 	//
 
-	private static class FluentServer extends AbstractWebServer<FluentServer> {
+	@SuppressWarnings("serial")
+	private static class FluentServer extends AbstractWebServer<FluentServer> implements Extensions {
 
 		@Override
 		protected HttpServerWrapper createHttpServer(Handler httpHandler, WebSocketHandler webSocketHandler) {
@@ -238,6 +254,53 @@ public class Server {
 		public Payload executeRequest(Request request, Response response) throws Exception {
 			return routesProvider.get().apply(request, response);
 		}
+
+		@Override
+		public PayloadWriter createPayloadWriter(Request request, Response response, Env env, Site site,
+				Resources resources, CompilerFacade compilers) {
+			return new SpacePayloadWriter(request, response, env, site, resources, compilers);
+		}
+	}
+
+	private static class SpacePayloadWriter extends PayloadWriter {
+
+		public SpacePayloadWriter(Request request, Response response, //
+				Env env, Site site, Resources resources, CompilerFacade compilers) {
+			super(request, response, env, site, resources, compilers);
+		}
+
+		@Override
+		public void writeAndClose(Payload payload) throws IOException {
+			try {
+				super.writeAndClose(payload);
+			} finally {
+				closeCloseables();
+			}
+		}
+
+		private void closeCloseables() {
+			List<Closeable> list = threadLocalCloseables.get();
+			if (!Utils.isNullOrEmpty(list)) {
+				for (Closeable closeable : list)
+					Utils.closeSilently(closeable);
+				list.clear();
+			}
+		}
+	}
+
+	//
+	// Thread local closeables
+	//
+
+	private final static ThreadLocal<List<Closeable>> threadLocalCloseables = new ThreadLocal<>();
+
+	public static void closeAfterAll(Closeable closeable) {
+		List<Closeable> list = threadLocalCloseables.get();
+		if (list == null) {
+			list = Lists.newArrayList();
+			threadLocalCloseables.set(list);
+		}
+		list.add(closeable);
 	}
 
 	//

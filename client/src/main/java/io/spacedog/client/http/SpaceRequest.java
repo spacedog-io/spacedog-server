@@ -259,6 +259,11 @@ public class SpaceRequest {
 		return this;
 	}
 
+	public SpaceRequest queryParam(String name) {
+		this.queryParams.put(name, null);
+		return this;
+	}
+
 	public SpaceRequest queryParam(String name, Object value) {
 		if (value != null)
 			this.queryParams.put(name, value.toString());
