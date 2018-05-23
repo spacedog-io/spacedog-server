@@ -254,9 +254,6 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 			if (password != null)
 				request.basicAuth(dog.username(), password);
 
-			else if (dog.password().isPresent())
-				request.basicAuth(dog);
-
 			return request.go(200);
 		}
 	}

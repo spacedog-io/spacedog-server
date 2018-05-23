@@ -220,7 +220,8 @@ public class CredentialsServiceTest2 extends SpaceTest {
 
 		// fred fails to login with a token lifetime of 4s
 		// since max token lifetime is 3s
-		SpaceRequest.get("/1/login").basicAuth(fred).queryParam(LIFETIME_PARAM, 4).go(403);
+		SpaceRequest.get("/1/login").basicAuth(fred)//
+				.queryParam(LIFETIME_PARAM, 4).go(403);
 
 		// fred logs in with a token lifetime of 2s
 		// since max token lifetime is 3s

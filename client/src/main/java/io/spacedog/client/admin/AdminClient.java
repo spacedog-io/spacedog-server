@@ -5,6 +5,8 @@ import io.spacedog.client.credentials.CreateCredentialsRequest;
 import io.spacedog.client.http.SpaceBackend;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
+import io.spacedog.client.http.SpaceRequest;
+import io.spacedog.utils.Exceptions;
 
 public class AdminClient implements SpaceParams, SpaceFields {
 
@@ -54,10 +56,17 @@ public class AdminClient implements SpaceParams, SpaceFields {
 	}
 
 	public AdminClient deleteBackend(String backendId) {
-		dog.delete("/1/backends/{id}")//
+		if (dog.password().isPresent())
+			return deleteBackend(backendId, dog.password().get());
+		throw Exceptions.illegalArgument("password not set");
+	}
+
+	public AdminClient deleteBackend(String backendId, String password) {
+		SpaceRequest.delete("/1/backends/{id}")//
+				.backend(dog)//
+				// password must be challenged
+				.basicAuth(dog.username(), password)//
 				.routeParam("id", backendId)//
-				// force basic auth since password must be challenged
-				.basicAuth(dog)//
 				.go(200);
 
 		return this;

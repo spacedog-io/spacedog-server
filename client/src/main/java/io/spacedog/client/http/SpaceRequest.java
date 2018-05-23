@@ -18,6 +18,7 @@ import com.google.common.primitives.Ints;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Check;
+import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 import okhttp3.Credentials;
@@ -144,11 +145,9 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest basicAuth(SpaceDog dog) {
-		// TODO when all tests are refactored like
-		// vince.delete("/1/...")...
-		// this method should not set the backend of the space request
-		// but only the basic authorization
-		return backend(dog).basicAuth(dog.username(), dog.password().get());
+		if (dog.password().isPresent())
+			return basicAuth(dog.username(), dog.password().get());
+		throw Exceptions.illegalArgument("password not set");
 	}
 
 	public SpaceRequest basicAuth(String username, String password) {
@@ -159,11 +158,7 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest bearerAuth(SpaceDog dog) {
-		// TODO when all tests are refactored like
-		// vince.get("/1/...")...
-		// this method should not set the backend of the space request
-		// but only the basic authorization
-		return backend(dog).bearerAuth(dog.accessToken().get());
+		return bearerAuth(dog.accessToken().get());
 	}
 
 	public SpaceRequest bearerAuth(String accessToken) {
