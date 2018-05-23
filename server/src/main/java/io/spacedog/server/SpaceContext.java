@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.http.SpaceBackend;
+import io.spacedog.client.http.SpaceException;
 import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.client.settings.Settings;
@@ -115,6 +116,15 @@ public class SpaceContext {
 		this.settings.put(settings.getClass(), settings);
 	}
 
+	public SpaceContext checkRootApi() {
+		if (!backend().isMulti())
+			throw new SpaceException("unsupported", 405, //
+					"request [%s][%s] only supported by root backend", //
+					request.method(), request.uri());
+
+		return this;
+	}
+
 	//
 	// Check credentials
 	//
@@ -193,4 +203,5 @@ public class SpaceContext {
 			this.backend = mainBackend;
 		}
 	}
+
 }
