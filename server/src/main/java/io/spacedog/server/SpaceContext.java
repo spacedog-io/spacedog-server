@@ -126,7 +126,24 @@ public class SpaceContext {
 	}
 
 	//
-	// Check credentials
+	// Check Backend
+	//
+
+	public static SpaceFilter checkBackendFilter() {
+
+		return (uri, context, nextFilter) -> {
+			Index index = CredentialsService.credentialsIndex();
+			return Server.get().elasticClient().exists(index) //
+					? nextFilter.get() //
+					: JsonPayload.error(404).withError(//
+							"[backend][%s] not found", Server.backend().backendId())//
+							.build();
+		};
+
+	}
+
+	//
+	// Check Credentials
 	//
 
 	public static SpaceFilter checkAuthorizationFilter() {
@@ -203,5 +220,4 @@ public class SpaceContext {
 			this.backend = mainBackend;
 		}
 	}
-
 }

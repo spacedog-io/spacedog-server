@@ -207,7 +207,8 @@ public class Server {
 				.add(SettingsService.get())//
 				.add(SearchService.get());
 
-		routes.filter(new CrossOriginFilter())//
+		routes.filter(SpaceContext.checkBackendFilter())//
+				.filter(new CrossOriginFilter())//
 				.filter(LogService.filter())//
 				.filter(SpaceContext.checkAuthorizationFilter())//
 				// web filter before error filter
