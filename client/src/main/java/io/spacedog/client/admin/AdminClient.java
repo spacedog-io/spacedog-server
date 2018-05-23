@@ -55,7 +55,11 @@ public class AdminClient implements SpaceParams, SpaceFields {
 
 	public AdminClient deleteBackend(String backendId) {
 		dog.delete("/1/backends/{id}")//
-				.routeParam("id", backendId).go(200, 401);
+				.routeParam("id", backendId)//
+				// force basic auth since password must be challenged
+				.basicAuth(dog)//
+				.go(200);
+
 		return this;
 	}
 
