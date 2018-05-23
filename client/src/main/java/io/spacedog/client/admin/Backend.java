@@ -1,10 +1,8 @@
 package io.spacedog.client.admin;
 
 import java.util.List;
-import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.google.common.collect.Sets;
 
 import io.spacedog.client.data.DataObjectBase;
 import io.spacedog.client.data.DataWrap;
@@ -20,20 +18,16 @@ public class Backend extends DataObjectBase {
 
 	public final static String TYPE = "backend";
 
-	public String name;
 	public Type type;
 	public String version;
-	public Set<String> customers = Sets.newHashSet();
 
 	public Backend() {
 	}
 
 	public static Schema schema() {
 		return Schema.builder(TYPE)//
-				.keyword("name")//
 				.keyword("type")//
 				.keyword("version")//
-				.keyword("customers")//
 				.build();
 	}
 
