@@ -13,7 +13,6 @@ import org.elasticsearch.analysis.common.CommonAnalysisPlugin;
 import org.elasticsearch.cli.Terminal;
 import org.elasticsearch.common.logging.LogConfigurator;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.settings.Settings.Builder;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.env.Environment;
 import org.elasticsearch.index.reindex.ReindexPlugin;
@@ -96,9 +95,11 @@ public class Server {
 	protected void startElastic()
 			throws InterruptedException, ExecutionException, IOException, NodeValidationException {
 
-		Builder builder = Settings.builder()//
+		Settings settings = Settings.builder()//
 				.put(Environment.PATH_HOME_SETTING.getKey(), //
-						ServerConfig.homePath().toAbsolutePath().toString());
+						ServerConfig.homePath().toAbsolutePath().toString())//
+				.build();
+
 		// .put(Node.NODE_MASTER_SETTING.getKey(), true)//
 		// .put(Node.NODE_DATA_SETTING.getKey(), true)//
 		// .put(DiscoveryModule.DISCOVERY_TYPE_SETTING.getKey(), "single-node")//
@@ -124,8 +125,6 @@ public class Server {
 		// if (config.elasticSnapshotsPath().isPresent())
 		// builder.put(Environment.PATH_REPO_SETTING.getKey(), //
 		// config.elasticSnapshotsPath().get().toAbsolutePath().toString());
-
-		Settings settings = builder.build();
 
 		Environment environment = InternalSettingsPreparer.prepareEnvironment(//
 				settings, Terminal.DEFAULT, Collections.emptyMap(), //
@@ -186,7 +185,7 @@ public class Server {
 
 		fluent = new FluentServer();
 		fluent.configure(routes -> configure(routes));
-		fluent.start(ServerConfig.serverPort());
+		fluent.start(ServerConfig.port());
 	}
 
 	protected void fluentIsStarted() {

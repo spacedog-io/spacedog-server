@@ -17,25 +17,23 @@ import io.spacedog.utils.Utils;
 
 public class ServerConfig {
 
-	private static final String HOME_PATH = "spacedog.home.path";
-	private static final String PRODUCTION = "spacedog.production";
-	private static final String OFFLINE = "spacedog.offline";
-	private static final String SERVER_PORT = "spacedog.server.port";
-	private static final String SERVER_FILE_STORE = "spacedog.server.file.store";
-	private static final String SERVER_GREEN_CHECK = "spacedog.server.green.check";
-	private static final String SERVER_GREEN_TIMEOUT = "spacedog.server.green.timeout";
-	private static final String SERVER_USER_AGENT = "spacedog.server.user.agent";
-	private static final String ELASTIC_CONFIG_PATH = "spacedog.elastic.config.path";
-	private static final String ELASTIC_DATA_PATH = "spacedog.elastic.data.path";
-	private static final String ELASTIC_HTTP_ENABLED = "spacedog.elastic.http.enabled";
-	private static final String ELASTIC_NETWORK_HOST = "spacedog.elastic.network.host";
-	private static final String ELASTIC_SNAPSHOTS_PATH = "spacedog.elastic.snapshots.path";
-	private static final String MAIL_SMTP_DEBUG = "spacedog.mail.smtp.debug";
-	private static final String MAIL_DOMAIN = "spacedog.mail.domain";
-	private static final String MAIL_MAILGUN_KEY = "spacedog.mail.mailgun.key";
-	private static final String AWS_SUPERDOG_NOTIFICATION_TOPIC = "spacedog.aws.superdog.notification.topic";
-	private static final String AWS_BUCKET_PREFIX = "spacedog.aws.bucket.prefix";
-	private static final String AWS_REGION = "spacedog.aws.region";
+	private static final String PORT = "spacedog.server.port";
+	private static final String HOME_PATH = "spacedog.server.home.path";
+	private static final String PRODUCTION = "spacedog.server.production";
+	private static final String OFFLINE = "spacedog.server.offline";
+	private static final String FILE_STORE = "spacedog.server.file.store";
+	private static final String GREEN_CHECK = "spacedog.server.green.check";
+	private static final String GREEN_TIMEOUT = "spacedog.server.green.timeout";
+	private static final String USER_AGENT = "spacedog.server.user.agent";
+	private static final String ELASTIC_CONFIG_PATH = "spacedog.server.elastic.config.path";
+	private static final String ELASTIC_NETWORK_HOST = "spacedog.server.elastic.network.host";
+	private static final String ELASTIC_SNAPSHOTS_PATH = "spacedog.server.elastic.snapshots.path";
+	private static final String MAIL_SMTP_DEBUG = "spacedog.server.mail.smtp.debug";
+	private static final String MAIL_DOMAIN = "spacedog.server.mail.domain";
+	private static final String MAIL_MAILGUN_KEY = "spacedog.server.mail.mailgun.key";
+	private static final String AWS_SUPERDOG_NOTIFICATION_TOPIC = "spacedog.server.aws.superdog.notification.topic";
+	private static final String AWS_BUCKET_PREFIX = "spacedog.server.aws.bucket.prefix";
+	private static final String AWS_REGION = "spacedog.server.aws.region";
 
 	public static Path homePath() {
 		Optional7<String> path = SpaceEnv.env().get(HOME_PATH);
@@ -59,37 +57,26 @@ public class ServerConfig {
 		return SpaceEnv.env().wwwBackend();
 	}
 
-	public static int serverPort() {
-		return SpaceEnv.env().get(SERVER_PORT, 8443);
+	public static int port() {
+		return SpaceEnv.env().get(PORT, 8443);
 	}
 
-	public static boolean serverGreenCheck() {
-		return SpaceEnv.env().get(SERVER_GREEN_CHECK, true);
+	public static boolean greenCheck() {
+		return SpaceEnv.env().get(GREEN_CHECK, true);
 	}
 
-	public static int serverGreenTimeout() {
-		return SpaceEnv.env().get(SERVER_GREEN_TIMEOUT, 60);
+	public static int greenTimeout() {
+		return SpaceEnv.env().get(GREEN_TIMEOUT, 60);
 	}
 
 	public static Path elasticConfigPath() {
 		Optional7<String> path = SpaceEnv.env().get(ELASTIC_CONFIG_PATH);
-		return path.isPresent() ? //
-				Paths.get(path.get()) : homePath().resolve("config");
-	}
-
-	public static Path elasticDataPath() {
-		Optional7<String> path = SpaceEnv.env().get(ELASTIC_DATA_PATH);
-		return path.isPresent() ? //
-				Paths.get(path.get()) : homePath().resolve("data");
+		return path.isPresent() ? Paths.get(path.get()) : null;
 	}
 
 	public static Optional<Path> elasticSnapshotsPath() {
 		Optional7<String> path = SpaceEnv.env().get(ELASTIC_SNAPSHOTS_PATH);
 		return path.isPresent() ? Optional.of(Paths.get(path.get())) : Optional.empty();
-	}
-
-	public static boolean elasticIsHttpEnabled() {
-		return SpaceEnv.env().get(ELASTIC_HTTP_ENABLED, false);
 	}
 
 	public static String elasticNetworkHost() {
@@ -137,7 +124,7 @@ public class ServerConfig {
 	}
 
 	public static String serverUserAgent() {
-		return SpaceEnv.env().get(SERVER_USER_AGENT, "spacedog-server");
+		return SpaceEnv.env().get(USER_AGENT, "spacedog-server");
 	}
 
 	public static String superdogPassword() {
@@ -145,7 +132,7 @@ public class ServerConfig {
 	}
 
 	public static Optional7<String> serverFileStore() {
-		return SpaceEnv.env().get(SERVER_FILE_STORE);
+		return SpaceEnv.env().get(FILE_STORE);
 	}
 
 	public static void log() {
@@ -157,13 +144,11 @@ public class ServerConfig {
 		log(PRODUCTION, isProduction());
 
 		Utils.info();
-		log(SERVER_PORT, serverPort());
-		log(SERVER_GREEN_CHECK, serverGreenCheck());
-		log(SERVER_GREEN_TIMEOUT, serverGreenTimeout());
+		log(PORT, port());
+		log(GREEN_CHECK, greenCheck());
+		log(GREEN_TIMEOUT, greenTimeout());
 
 		Utils.info();
-		checkPath(ELASTIC_DATA_PATH, elasticDataPath(), true);
-		log(ELASTIC_HTTP_ENABLED, elasticIsHttpEnabled());
 		log(ELASTIC_NETWORK_HOST, elasticNetworkHost());
 		checkPath(ELASTIC_SNAPSHOTS_PATH, elasticSnapshotsPath(), true);
 

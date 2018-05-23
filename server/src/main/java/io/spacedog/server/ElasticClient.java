@@ -354,13 +354,13 @@ public class ElasticClient implements SpaceParams {
 
 		ClusterHealthResponse response = this.internalClient.admin().cluster()
 				.health(Requests.clusterHealthRequest(indices)//
-						.timeout(TimeValue.timeValueSeconds(ServerConfig.serverGreenTimeout()))//
+						.timeout(TimeValue.timeValueSeconds(ServerConfig.greenTimeout()))//
 						.waitForGreenStatus()//
 						.waitForEvents(Priority.LOW)//
 						.waitForNoRelocatingShards(true))//
 				.actionGet();
 
-		if (ServerConfig.serverGreenCheck()) {
+		if (ServerConfig.greenCheck()) {
 			if (response.isTimedOut())
 				throw Exceptions.runtime("ensure indices %s status are at least yellow timed out", //
 						indicesString);
