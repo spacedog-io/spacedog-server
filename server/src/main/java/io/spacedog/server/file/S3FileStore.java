@@ -28,7 +28,14 @@ import net.codestory.http.constants.HttpStatus;
 
 public class S3FileStore implements FileStore {
 
+	private static final String bucketName = ServerConfig.awsBucketPrefix() + "files";
+
+	private AmazonS3 s3;
+
 	S3FileStore() {
+		s3 = AmazonS3ClientBuilder.standard()//
+				.withRegion(ServerConfig.awsRegionOrDefault())//
+				.build();
 	}
 
 	//
@@ -100,7 +107,7 @@ public class S3FileStore implements FileStore {
 		return new S3Iterator(listing);
 	}
 
-	private static class S3Iterator implements Iterator<String> {
+	private class S3Iterator implements Iterator<String> {
 
 		private ObjectListing listing;
 		private List<S3ObjectSummary> summaries;
@@ -198,11 +205,5 @@ public class S3FileStore implements FileStore {
 	private String toS3Key(String... keySegments) {
 		return String.join("/", keySegments);
 	}
-
-	private static final String bucketName = ServerConfig.awsBucketPrefix() + "files";
-
-	private final static AmazonS3 s3 = AmazonS3ClientBuilder.standard()//
-			.withRegion(ServerConfig.awsRegionOrDefault())//
-			.build();
 
 }
