@@ -8,6 +8,8 @@ import java.util.Map.Entry;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Strings;
 
+import io.spacedog.client.http.ContentTypes;
+import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.jobs.Internals;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
@@ -75,9 +77,10 @@ public class ServiceErrorFilter implements SpaceFilter {
 			appendQueryParams(builder, context.query().keyValues());
 			appendHeaders(builder, context.request().headers());
 
-			if (!context.request().isUrlEncodedForm())
+			if (ContentTypes.isJsonContent(context.header(SpaceHeaders.CONTENT_TYPE)))
 				appendContent(builder, "Request body", context.request().content());
-			appendContent(builder, "Response body", payload.rawContent().toString());
+			if (ContentTypes.isJsonContent(payload.rawContentType()))
+				appendContent(builder, "Response body", payload.rawContent().toString());
 
 			Internals.get().notify(//
 					ServerConfig.awsSuperdogNotificationTopic().orElse(null), //

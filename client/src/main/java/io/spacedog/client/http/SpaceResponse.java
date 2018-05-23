@@ -156,7 +156,7 @@ public class SpaceResponse implements Closeable {
 	}
 
 	public boolean isJson() {
-		return SpaceHeaders.isJsonContent(contentType());
+		return ContentTypes.isJsonContent(contentType());
 	}
 
 	public JsonNode asJson() {

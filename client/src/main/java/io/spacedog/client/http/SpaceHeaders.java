@@ -1,7 +1,5 @@
 package io.spacedog.client.http;
 
-import com.google.common.base.Strings;
-
 public class SpaceHeaders {
 
 	// SpaceDog headers
@@ -72,12 +70,6 @@ public class SpaceHeaders {
 	//
 	// Utils
 	//
-
-	public static boolean isJsonContent(String contentType) {
-		if (Strings.isNullOrEmpty(contentType))
-			return false;
-		return contentType.toLowerCase().startsWith(ContentTypes.JSON);
-	}
 
 	public static String contentDisposition(String fileName) {
 		return String.format("attachment; filename=\"%s\"", fileName);

@@ -19,4 +19,11 @@ public class ContentTypes {
 				? OCTET_STREAM//
 				: typeMap.getContentType(fileName.toLowerCase());
 	}
+
+	public static boolean isJsonContent(String contentType) {
+		if (Strings.isNullOrEmpty(contentType))
+			return false;
+		return contentType.toLowerCase().startsWith(JSON);
+	}
+
 }

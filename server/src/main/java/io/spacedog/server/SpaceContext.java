@@ -6,6 +6,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
 import io.spacedog.client.credentials.Credentials;
+import io.spacedog.client.http.ContentTypes;
 import io.spacedog.client.http.SpaceBackend;
 import io.spacedog.client.http.SpaceException;
 import io.spacedog.client.http.SpaceHeaders;
@@ -102,7 +103,7 @@ public class SpaceContext {
 
 	public boolean isJsonContent() {
 		String contentType = request.header(SpaceHeaders.CONTENT_TYPE);
-		return SpaceHeaders.isJsonContent(contentType);
+		return ContentTypes.isJsonContent(contentType);
 	}
 
 	@SuppressWarnings("unchecked")
