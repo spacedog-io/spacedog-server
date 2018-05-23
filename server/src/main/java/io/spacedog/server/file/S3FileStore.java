@@ -31,6 +31,10 @@ public class S3FileStore implements FileStore {
 	S3FileStore() {
 	}
 
+	//
+	// Get
+	//
+
 	@Override
 	public boolean exists(String backendId, String bucket, String id) {
 		try {
@@ -60,6 +64,10 @@ public class S3FileStore implements FileStore {
 		}
 	}
 
+	//
+	// Upload
+	//
+
 	@Override
 	public PutResult put(String backendId, String bucket, InputStream bytes, Long length) {
 		PutResult result = new PutResult();
@@ -76,10 +84,9 @@ public class S3FileStore implements FileStore {
 		return result;
 	}
 
-	@Override
-	public void delete(String backendId, String bucket, String key) {
-		s3.deleteObject(bucketName, toS3Key(backendId, bucket, key));
-	}
+	//
+	// List
+	//
 
 	@Override
 	public Iterator<String> list(String backendId, String bucket) {
@@ -91,27 +98,7 @@ public class S3FileStore implements FileStore {
 						.withMaxKeys(1000));
 
 		return new S3Iterator(listing);
-
 	}
-
-	@Override
-	public void deleteAll() {
-		doDeleteAll(toS3Key());
-	}
-
-	@Override
-	public void deleteAll(String backendId) {
-		doDeleteAll(toS3Key(backendId));
-	}
-
-	@Override
-	public void deleteAll(String backendId, String bucket) {
-		doDeleteAll(toS3Key(backendId, bucket));
-	}
-
-	//
-	// Implementation
-	//
 
 	private static class S3Iterator implements Iterator<String> {
 
@@ -148,6 +135,30 @@ public class S3FileStore implements FileStore {
 		}
 	};
 
+	//
+	// Delete
+	//
+
+	@Override
+	public void delete(String backendId, String bucket, String key) {
+		s3.deleteObject(bucketName, toS3Key(backendId, bucket, key));
+	}
+
+	@Override
+	public void deleteAll() {
+		doDeleteAll(toS3Key());
+	}
+
+	@Override
+	public void deleteAll(String backendId) {
+		doDeleteAll(toS3Key(backendId));
+	}
+
+	@Override
+	public void deleteAll(String backendId, String bucket) {
+		doDeleteAll(toS3Key(backendId, bucket));
+	}
+
 	private void doDeleteAll(String s3KeyPrefix) {
 
 		String next = null;
@@ -179,6 +190,10 @@ public class S3FileStore implements FileStore {
 				.map(summary -> new KeyVersion(summary.getKey()))//
 				.collect(Collectors.toList());
 	}
+
+	//
+	// Implementation
+	//
 
 	private String toS3Key(String... keySegments) {
 		return String.join("/", keySegments);

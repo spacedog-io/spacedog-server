@@ -183,6 +183,7 @@ public class CredentialsService extends SpaceService {
 				Roles.user);
 
 		JsonPayload payload = JsonPayload.saved(true, "/1", TYPE, credentials.id());
+
 		if (credentials.passwordResetCode() != null)
 			payload.withFields(PASSWORD_RESET_CODE_FIELD, credentials.passwordResetCode());
 
