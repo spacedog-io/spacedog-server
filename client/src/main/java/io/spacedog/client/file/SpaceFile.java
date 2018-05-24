@@ -48,6 +48,10 @@ public class SpaceFile implements Closeable {
 		return response.header(SpaceHeaders.SPACEDOG_OWNER);
 	}
 
+	public String group() {
+		return response.header(SpaceHeaders.SPACEDOG_GROUP);
+	}
+
 	public String etag() {
 		return response.header(SpaceHeaders.ETAG);
 	}
