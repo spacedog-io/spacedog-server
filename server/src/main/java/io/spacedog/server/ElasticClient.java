@@ -379,13 +379,13 @@ public class ElasticClient implements SpaceParams {
 		Utils.info("[SpaceDog] indices %s are [%s]", indicesString, response.getStatus());
 	}
 
-	public void refreshType(Index... indices) {
+	public void refreshIndex(Index... indices) {
 		refreshIndex(Index.toString(indices));
 	}
 
-	public void refreshType(Index index, boolean refresh) {
+	public void refreshIndex(boolean refresh, Index... indices) {
 		if (refresh)
-			refreshIndex(index.toString());
+			refreshIndex(indices);
 	}
 
 	public void refreshBackend() {

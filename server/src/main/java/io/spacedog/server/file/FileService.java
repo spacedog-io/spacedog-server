@@ -430,8 +430,8 @@ public class FileService extends SpaceService {
 
 		if (Strings.isNullOrEmpty(next)) {
 
-			elastic().refreshType(toFileIndex(bucket), //
-					isRefreshRequested(context, true));
+			elastic().refreshIndex(isRefreshRequested(context, true), //
+					toFileIndex(bucket));
 
 			SearchSourceBuilder source = SearchSourceBuilder.searchSource()//
 					.query(QueryBuilders.prefixQuery(PATH, path))//

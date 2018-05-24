@@ -288,7 +288,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 
 	public void refreshDataTypes(boolean refresh, String... types) {
 		if (refresh && !Utils.isNullOrEmpty(types))
-			elastic().refreshType(toDataIndex(types));
+			elastic().refreshIndex(toDataIndex(types));
 	}
 
 	public void refreshAllDataTypes() {

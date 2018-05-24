@@ -59,7 +59,7 @@ public class SettingsService extends SpaceService {
 		if (!elastic().exists(settingsIndex()))
 			return JsonPayload.ok().build();
 
-		elastic().refreshType(settingsIndex(), isRefreshRequested(context));
+		elastic().refreshIndex(isRefreshRequested(context), settingsIndex());
 
 		int from = context.query().getInteger(FROM_PARAM, 0);
 		int size = context.query().getInteger(SIZE_PARAM, 10);

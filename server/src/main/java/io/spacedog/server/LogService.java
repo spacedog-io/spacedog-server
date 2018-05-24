@@ -62,7 +62,7 @@ public class LogService extends SpaceService {
 	@Get("/")
 	public Payload getAll(Context context) {
 		Server.context().credentials().checkAtLeastAdmin();
-		elastic().refreshType(logIndex(), isRefreshRequested(context));
+		elastic().refreshIndex(isRefreshRequested(context), logIndex());
 
 		int from = context.query().getInteger(FROM_PARAM, 0);
 		int size = context.query().getInteger(SIZE_PARAM, 10);
@@ -88,7 +88,7 @@ public class LogService extends SpaceService {
 	public Payload search(String body, Context context) {
 
 		Server.context().credentials().checkAtLeastAdmin();
-		elastic().refreshType(logIndex(), isRefreshRequested(context));
+		elastic().refreshIndex(isRefreshRequested(context), logIndex());
 
 		SearchResponse response = elastic().prepareSearch(logIndex())//
 				.setTypes(TYPE)//

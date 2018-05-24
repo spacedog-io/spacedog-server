@@ -162,9 +162,9 @@ public class CredentialsService extends SpaceService {
 
 		// always refresh before and after credentials index updates
 		ElasticClient elastic = elastic();
-		elastic.refreshType(credentialsIndex());
+		elastic.refreshIndex(credentialsIndex());
 		elastic.deleteByQuery(query, credentialsIndex());
-		elastic.refreshType(credentialsIndex());
+		elastic.refreshIndex(credentialsIndex());
 
 		return JsonPayload.ok().build();
 	}
