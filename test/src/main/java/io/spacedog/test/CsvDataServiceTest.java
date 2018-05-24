@@ -33,7 +33,7 @@ public class CsvDataServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		Schema schema = Course.schema();
 		superadmin.schemas().set(schema);
 

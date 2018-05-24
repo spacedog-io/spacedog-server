@@ -39,7 +39,7 @@ public class ShareServiceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend(true);
+		SpaceDog superadmin = clearServer(true);
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog admin = createTempDog(superadmin, "admin", Roles.admin);
 
@@ -83,7 +83,7 @@ public class ShareServiceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend(true);
+		SpaceDog superadmin = clearServer(true);
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog fred = createTempDog(superadmin, "fred");
 		SpaceDog admin = createTempDog(superadmin, "admin", Roles.admin);
@@ -228,7 +228,7 @@ public class ShareServiceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend(true);
+		SpaceDog superadmin = clearServer(true);
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog fred = createTempDog(superadmin, "fred");
 		byte[] pngBytes = ClassResources.loadAsBytes(this, "tweeter.png");
@@ -302,7 +302,7 @@ public class ShareServiceTest extends SpaceTest {
 	public void shareWithContentDispositionAndEscaping() {
 
 		// prepare
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 
 		// superadmin sets 'shares' file bucket
 		FileBucketSettings bucket = new FileBucketSettings(SHARES);
@@ -346,7 +346,7 @@ public class ShareServiceTest extends SpaceTest {
 	public void exportShares() throws IOException {
 
 		// prepare
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		SpaceDog guest = SpaceDog.dog();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog nath = createTempDog(superadmin, "nath");
@@ -450,7 +450,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend(true);
+		SpaceDog superadmin = clearServer(true);
 
 		// superadmin sets 'shares' file bucket
 		superadmin.files().setBucket(new FileBucketSettings(SHARES));
@@ -471,7 +471,7 @@ public class ShareServiceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend(true);
+		SpaceDog superadmin = clearServer(true);
 		SpaceDog vince = createTempDog(superadmin, "vince").login();
 		SpaceDog fred = createTempDog(superadmin, "fred").login();
 
@@ -507,7 +507,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend(true);
+		SpaceDog superadmin = clearServer(true);
 
 		// superadmin sets 'shares' file bucket with size limit of 1 KB
 		FileBucketSettings bucket = new FileBucketSettings(SHARES);
@@ -527,7 +527,7 @@ public class ShareServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend(true);
+		SpaceDog superadmin = clearServer(true);
 
 		// superadmin sets 'shares' file bucket
 		superadmin.files().setBucket(new FileBucketSettings(SHARES));

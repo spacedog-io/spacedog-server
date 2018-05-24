@@ -22,7 +22,7 @@ public class DataAccessControlTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog admin = createTempDog(superadmin, "admin", Roles.admin);
 
@@ -87,7 +87,7 @@ public class DataAccessControlTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog admin = createTempDog(superadmin, "admin", Roles.admin);
 
@@ -138,7 +138,7 @@ public class DataAccessControlTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog admin = createTempDog(superadmin, "admin", Roles.admin);
 
@@ -202,7 +202,7 @@ public class DataAccessControlTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		superadmin.credentials().enableGuestSignUp(true);
 
 		// vince and fred signs up
@@ -299,7 +299,7 @@ public class DataAccessControlTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 
 		// set schema
 		Schema schema = Message.schema();
@@ -375,7 +375,7 @@ public class DataAccessControlTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 
 		// create message schema with simple acl
 		Schema schema = Message.schema();

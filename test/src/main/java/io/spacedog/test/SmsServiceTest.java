@@ -27,7 +27,7 @@ public class SmsServiceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		// nobody is authorized to send sms
@@ -79,7 +79,7 @@ public class SmsServiceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 
 		// superadmin creates user vince with 'sms' role
 		SpaceDog vince = createTempDog(superadmin, "vince");

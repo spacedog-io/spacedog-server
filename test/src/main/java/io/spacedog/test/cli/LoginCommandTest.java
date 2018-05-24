@@ -17,7 +17,7 @@ public class LoginCommandTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		SpaceDog fred = createTempDog(superadmin, "fred", Roles.superadmin);
 
 		// login without any argument fails

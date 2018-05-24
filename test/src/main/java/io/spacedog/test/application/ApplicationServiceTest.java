@@ -19,7 +19,7 @@ public class ApplicationServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 
 		// put fails since invalid push service
 		assertHttpError(400, () -> superadmin.push().saveApp("myapp", "XXX", new Credentials()));

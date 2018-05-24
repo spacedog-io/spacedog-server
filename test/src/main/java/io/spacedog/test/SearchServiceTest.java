@@ -28,7 +28,7 @@ public class SearchServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		superadmin.schemas().set(Message.schema());
 		superadmin.schemas().set(Schema.builder("rubric").text("name").build());
 
@@ -100,7 +100,7 @@ public class SearchServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		// superadmin sets schemas
@@ -143,7 +143,7 @@ public class SearchServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 
 		superadmin.schemas().set(Schema.builder("number").integer("i").keyword("t").build());
 
@@ -181,7 +181,7 @@ public class SearchServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		superadmin.schemas().set(Schema.builder("message").text("text").build());
 
 		// check simple query string '**' doesn't throw null pointer exception

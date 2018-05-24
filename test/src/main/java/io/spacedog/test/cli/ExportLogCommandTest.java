@@ -29,7 +29,7 @@ public class ExportLogCommandTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		superadmin.data().getAllRequest().go();
 		superadmin.credentials().getByUsername("fred");
 		superadmin.settings().get(CredentialsSettings.class);

@@ -20,7 +20,7 @@ public class SpaceRequestResponseTest extends SpaceTest {
 	public void testHeadersIgnoreCase() {
 
 		prepareTest();
-		clearRootBackend();
+		clearServer();
 		SpaceDog guest = SpaceDog.dog();
 
 		// CORS for simple requests

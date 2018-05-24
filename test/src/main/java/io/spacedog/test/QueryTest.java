@@ -24,7 +24,7 @@ public class QueryTest extends SpaceTest {
 	public void importCarDataset() {
 
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		superadmin.schemas().set(buildCarSchema());
 
 		for (int i = 0; i < 500; i++)

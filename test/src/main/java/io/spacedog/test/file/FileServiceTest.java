@@ -21,7 +21,7 @@ public class FileServiceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend(true);
+		SpaceDog superadmin = clearServer(true);
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		// invalid uri throws 404
@@ -106,7 +106,7 @@ public class FileServiceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend(true);
+		SpaceDog superadmin = clearServer(true);
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		// superadmin sets 'assets' file bucket

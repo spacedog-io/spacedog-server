@@ -27,7 +27,7 @@ public class LogServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		SpaceDog fred = createTempDog(superadmin, "fred").login();
 
 		fred.data().getAllRequest().go();
@@ -89,7 +89,7 @@ public class LogServiceTest extends SpaceTest {
 
 		// creates test backend and user
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		guest.get("/1/data").go(200);
 		guest.get("/1/data/user").go(403);
 		SpaceDog vince = createTempDog(superadmin, "vince").login();
@@ -173,7 +173,7 @@ public class LogServiceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 
 		// guest (or load balancer) pings his backend
 		guest.get("").go(200);
@@ -192,7 +192,7 @@ public class LogServiceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog wwwGuest = SpaceDog.dog(SpaceEnv.env().wwwBackend());
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 
 		// wwwGuest fails to loads root page since doesn't exist
 		wwwGuest.get("").go(404);
@@ -212,7 +212,7 @@ public class LogServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 
 		// superadmin sets schemas
 		superadmin.schemas().set(Message.schema());
@@ -264,7 +264,7 @@ public class LogServiceTest extends SpaceTest {
 	public void checkPasswordsAreNotLogged() {
 
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		SpaceDog fred = createTempDog(superadmin, "fred");
 		fred.login();
 
@@ -323,7 +323,7 @@ public class LogServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 
 		// fails because invalid body
 		superadmin.put("/1/schemas/toto").body("XXX").go(400);

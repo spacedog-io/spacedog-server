@@ -30,7 +30,7 @@ public class CredentialsServiceTest2 extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		superadmin.credentials().enableGuestSignUp(true);
 
 		// fails since empty user body
@@ -119,7 +119,7 @@ public class CredentialsServiceTest2 extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 
 		// fails to access backend if unknown token
 		SpaceRequest.get("/1/data").backend(superadmin).bearerAuth("XXX").go(401);
@@ -210,7 +210,7 @@ public class CredentialsServiceTest2 extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		// admin saves settings with token max lifetime set to 3s
@@ -239,7 +239,7 @@ public class CredentialsServiceTest2 extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		SpaceDog fred = createTempDog(superadmin, "fred");
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
@@ -271,7 +271,7 @@ public class CredentialsServiceTest2 extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		createTempDog(superadmin, "fred");
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
@@ -331,7 +331,7 @@ public class CredentialsServiceTest2 extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		superadmin.credentials().enableGuestSignUp(true);
 		SpaceDog fred = createTempDog(superadmin, "fred");
 		SpaceDog titi = SpaceDog.dog().username("titi");
@@ -425,7 +425,7 @@ public class CredentialsServiceTest2 extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend().login();
+		SpaceDog superadmin = clearServer().login();
 		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		// test gets his credentials roles
@@ -491,7 +491,7 @@ public class CredentialsServiceTest2 extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		// admin disables guest sign up
@@ -522,7 +522,7 @@ public class CredentialsServiceTest2 extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		superadmin.credentials().enableGuestSignUp(true);
 
 		// get default username and password settings
@@ -571,7 +571,7 @@ public class CredentialsServiceTest2 extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		// fred fails to create admin credentials
@@ -611,7 +611,7 @@ public class CredentialsServiceTest2 extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		SpaceDog fred = createTempDog(superadmin, "fred").login();
 
 		// fred fails to set his password
@@ -632,7 +632,7 @@ public class CredentialsServiceTest2 extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		SpaceDog fred = createTempDog(superadmin, "fred").login();
 
 		// fred fails to updates his username
@@ -683,7 +683,7 @@ public class CredentialsServiceTest2 extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		// fred logs in
@@ -734,7 +734,7 @@ public class CredentialsServiceTest2 extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 
 		// superadmin logs in with session lifetime of 1 second
 		String firstToken = superadmin.login(1).accessToken().get();
@@ -784,7 +784,7 @@ public class CredentialsServiceTest2 extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 
 		// superadmin logs in to get access token
 		superadmin.login();

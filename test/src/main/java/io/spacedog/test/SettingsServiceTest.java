@@ -23,7 +23,7 @@ public class SettingsServiceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		ObjectNode animals = Json.object("lion", "Lion", "tiger", "Tiger");
@@ -119,7 +119,7 @@ public class SettingsServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 
 		// schema settings are not directly updatable
 		assertHttpError(403, () -> superadmin.settings().save(//
@@ -132,7 +132,7 @@ public class SettingsServiceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superdog = superdog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		ObjectNode settings = Json.object("toto", 23);
 
 		// superdog creates test settings
@@ -161,7 +161,7 @@ public class SettingsServiceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		// only superadmins can update settings

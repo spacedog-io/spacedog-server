@@ -44,11 +44,11 @@ public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
 				.create(username, Passwords.random(), DEFAULT_EMAIL);
 	}
 
-	public static SpaceDog clearRootBackend() {
-		return clearRootBackend(false);
+	public static SpaceDog clearServer() {
+		return clearServer(false);
 	}
 
-	public static SpaceDog clearRootBackend(boolean files) {
+	public static SpaceDog clearServer(boolean files) {
 		SpaceDog superdog = superdog();
 		superdog.post("/1/admin/_clear").queryParam("files", files).go(200);
 		return superdog.credentials().create(Roles.superadmin, //

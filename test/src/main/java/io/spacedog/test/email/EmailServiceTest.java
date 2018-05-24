@@ -40,7 +40,7 @@ public class EmailServiceTest extends SpaceTest {
 
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		// by default nobody is authorized to send emails
@@ -126,7 +126,7 @@ public class EmailServiceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog nath = createTempDog(superadmin, "nath", "emailboss");
 

@@ -25,7 +25,7 @@ public class BatchServiceTest extends SpaceTest {
 		// we need to make sure the test account is reset and exists before to
 		// be able to reset it again by batch requests
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		superadmin.credentials().enableGuestSignUp(true);
 
 		DataSettings dataSettings = new DataSettings();

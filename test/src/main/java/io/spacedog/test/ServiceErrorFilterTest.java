@@ -11,7 +11,7 @@ public class ServiceErrorFilterTest extends SpaceTest {
 	public void catchesFluentResourceErrors() {
 
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 
 		// should fail to access invalid route
 		SpaceRequest.get("/1/toto")//

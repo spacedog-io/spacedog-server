@@ -23,7 +23,7 @@ public class SchemaServiceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		SpaceDog bob = createTempDog(superadmin, "bob");
 
 		// anonymous gets all backend schema
@@ -153,7 +153,7 @@ public class SchemaServiceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 
 		// settings is a reserved schema name
 		guest.get("/1/schemas/settings").go(400);
@@ -166,7 +166,7 @@ public class SchemaServiceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 
 		// superadmin creates document schema
 		Schema schema = Schema.builder("document").stash("data").build();

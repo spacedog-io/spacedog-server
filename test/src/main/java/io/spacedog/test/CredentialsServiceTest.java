@@ -27,7 +27,7 @@ public class CredentialsServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend().login();
+		SpaceDog superadmin = clearServer().login();
 		SpaceDog superdog = superdog();
 
 		// forbidden to delete superadmin if last superadmin of backend
@@ -54,7 +54,7 @@ public class CredentialsServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		clearRootBackend();
+		clearServer();
 
 		// superdog with root backend id
 		SpaceDog superdog = superdog();
@@ -69,7 +69,7 @@ public class CredentialsServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		// fred logs in
@@ -150,7 +150,7 @@ public class CredentialsServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		// fred logs in
@@ -187,7 +187,7 @@ public class CredentialsServiceTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		Credentials credentials = superadmin.credentials().get(fred.id());//
@@ -258,7 +258,7 @@ public class CredentialsServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		SpaceDog fred = createTempDog(superadmin, "fred").login();
 
 		// fred can get data objects
@@ -301,7 +301,7 @@ public class CredentialsServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		// fred can get data objects
@@ -359,7 +359,7 @@ public class CredentialsServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearRootBackend();
+		SpaceDog superadmin = clearServer();
 		SpaceDog fred = createTempDog(superadmin, "fred");
 		SpaceDog nath = createTempDog(superadmin, "nath");
 

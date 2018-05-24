@@ -14,7 +14,7 @@ public class CrossOriginFilterTest extends SpaceTest {
 	public void returnCORSHeaders() {
 
 		prepareTest();
-		clearRootBackend();
+		clearServer();
 		SpaceDog guest = SpaceDog.dog();
 
 		// CORS for simple requests

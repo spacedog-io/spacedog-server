@@ -22,7 +22,7 @@ public class WebServiceTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		superadmin = clearRootBackend(true);
+		superadmin = clearServer(true);
 
 		// superadmin sets www bucket
 		FileBucketSettings settings = new FileBucketSettings(WWW);
