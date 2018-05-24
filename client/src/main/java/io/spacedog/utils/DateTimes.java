@@ -3,7 +3,7 @@ package io.spacedog.utils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
-public class DateTimeZones {
+public class DateTimes {
 	public final static DateTimeZone PARIS = DateTimeZone.forID("Europe/Paris");
 
 	public static double toEpochSeconds(DateTime date) {

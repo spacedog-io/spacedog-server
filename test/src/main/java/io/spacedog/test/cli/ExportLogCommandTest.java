@@ -15,14 +15,14 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.CredentialsSettings;
 import io.spacedog.client.log.LogClient.LogSearchResults;
 import io.spacedog.test.SpaceTest;
-import io.spacedog.utils.DateTimeZones;
+import io.spacedog.utils.DateTimes;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 
 public class ExportLogCommandTest extends SpaceTest {
 
 	private static DateTimeFormatter dateFormatter = DateTimeFormat.//
-			forPattern("yyyy-MM-dd").withZone(DateTimeZones.PARIS);
+			forPattern("yyyy-MM-dd").withZone(DateTimes.PARIS);
 
 	@Test
 	public void test() throws IOException {

@@ -27,7 +27,7 @@ import io.spacedog.client.http.SpaceBackend;
 import io.spacedog.server.file.FileService;
 import io.spacedog.server.file.WebService;
 import io.spacedog.utils.ClassResources;
-import io.spacedog.utils.DateTimeZones;
+import io.spacedog.utils.DateTimes;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
@@ -59,7 +59,7 @@ public class Server {
 	}
 
 	public static void main(String[] args) {
-		DateTimeZone.setDefault(DateTimeZones.PARIS);
+		DateTimeZone.setDefault(DateTimes.PARIS);
 		Server server = new Server();
 		server.start();
 	}
