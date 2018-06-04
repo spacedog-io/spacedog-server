@@ -134,7 +134,7 @@ public class DataObject<K extends DataObject<K>> implements Datable<K> {
 		return (K) this;
 	}
 
-	public DateTime updatesdAt() {
+	public DateTime updatedAt() {
 		return meta.updatedAt;
 	}
 

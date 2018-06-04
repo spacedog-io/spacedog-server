@@ -3,11 +3,16 @@
  */
 package io.spacedog.services;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Optional;
 
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.common.Strings;
+import org.elasticsearch.index.query.QueryBuilders;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -16,9 +21,12 @@ import io.spacedog.core.Json8;
 import io.spacedog.model.DataPermission;
 import io.spacedog.model.Schema;
 import io.spacedog.utils.Check;
+import io.spacedog.utils.ContentTypes;
 import io.spacedog.utils.Credentials;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json7;
 import net.codestory.http.Context;
+import net.codestory.http.Request;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
@@ -177,6 +185,53 @@ public class DataResource extends Resource {
 						"not the owner of object of type [%s] and id [%s]", type, id);
 		}
 		throw Exceptions.forbidden("forbidden to delete [%s] objects", type);
+	}
+
+	@Post("/:type/_export")
+	@Post("/:type/_export/")
+	public Payload postExport(String type, String body, Context context) {
+		Credentials credentials = SpaceContext.checkSuperAdminCredentials();
+
+		if (context.query().getBoolean(PARAM_REFRESH, false))
+			DataStore.get().refreshType(credentials.backendId(), type);
+
+		if (Strings.isNullOrEmpty(body))
+			body = QueryBuilders.matchAllQuery().toString();
+
+		SearchResponse response = elastic().prepareSearch(credentials.backendId(), type)//
+				.setScroll(DataExportStreamningOutput.TIMEOUT)//
+				.setSize(DataExportStreamningOutput.SIZE)//
+				.setQuery(body)//
+				.get();
+
+		return new Payload(ContentTypes.TEXT_PLAIN_UTF8, //
+				new DataExportStreamningOutput(response));
+	}
+
+	@Post("/:type/_import")
+	@Post("/:type/_import/")
+	public void postImport(String type, Request request) throws IOException {
+		Credentials credentials = SpaceContext.checkSuperAdminCredentials();
+		String backendId = credentials.backendId();
+
+		boolean preserveIds = request.query().getBoolean("preserveIds", false);
+
+		BufferedReader reader = new BufferedReader(//
+				new InputStreamReader(request.inputStream()));
+
+		String json = reader.readLine();
+		while (json != null) {
+			ObjectNode object = Json7.readObject(json);
+			String source = object.get("source").toString();
+
+			if (preserveIds) {
+				String id = object.get("id").asText();
+				elastic().index(backendId, type, id, source);
+			} else
+				elastic().index(backendId, type, source);
+
+			json = reader.readLine();
+		}
 	}
 
 	//
