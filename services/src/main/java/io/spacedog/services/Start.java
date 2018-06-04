@@ -209,8 +209,6 @@ public class Start {
 				.add(SchemaResource.get())//
 				.add(CredentialsResource.get())//
 				.add(LinkedinResource.get())//
-				.add(EdfResource.get())//
-				.add(EdfResourceV2.get())//
 				.add(CaremenResource.get())//
 				.add(UserResource.get())//
 				.add(BatchResource.get())//
