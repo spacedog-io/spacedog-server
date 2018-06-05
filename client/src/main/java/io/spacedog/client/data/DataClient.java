@@ -1,5 +1,8 @@
 package io.spacedog.client.data;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
@@ -7,6 +10,7 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.client.data.ObjectNodeWrap.Results;
 import io.spacedog.client.elastic.ESQueryBuilder;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
+import io.spacedog.client.http.OkHttp;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.client.http.SpaceRequest;
@@ -358,6 +362,79 @@ public class DataClient implements SpaceFields, SpaceParams {
 		return dog.post("/1/data/{type}/_csv")//
 				.routeParam("type", type)//
 				.bodyPojo(request).go(200);
+	}
+
+	//
+	// Import Export
+	//
+
+	public ExportRequest exportRequest(String type) {
+		return new ExportRequest(type);
+	}
+
+	public ImportRequest importRequest(String type) {
+		return new ImportRequest(type);
+	}
+
+	public class ExportRequest {
+
+		private String type;
+		private Boolean refresh;
+		private String query;
+
+		public ExportRequest(String type) {
+			this.type = type;
+		}
+
+		public ExportRequest withRefresh(boolean value) {
+			this.refresh = value;
+			return this;
+		}
+
+		public ExportRequest withQuery(ESQueryBuilder query) {
+			return withQuery(query.toString());
+		}
+
+		public ExportRequest withQuery(String query) {
+			this.query = query;
+			return this;
+		}
+
+		public SpaceResponse go() {
+			return dog.post("/1/data/{type}/_export")//
+					.routeParam("type", type)//
+					.queryParam(REFRESH_PARAM, refresh)//
+					.body(query)//
+					.go(200);
+		}
+	}
+
+	public class ImportRequest {
+
+		private String type;
+		private Boolean preserveIds;
+
+		public ImportRequest(String type) {
+			this.type = type;
+		}
+
+		public ImportRequest withPreserveIds(boolean value) {
+			this.preserveIds = value;
+			return this;
+		}
+
+		public void go(String export) {
+			go(new ByteArrayInputStream(export.getBytes()));
+		}
+
+		public void go(InputStream export) {
+			dog.post("/1/data/{type}/_import")//
+					.withContentType(OkHttp.TEXT_PLAIN)//
+					.routeParam("type", type)//
+					.queryParam(PRESERVE_IDS_PARAM, preserveIds)//
+					.body(export)//
+					.go(200);
+		}
 	}
 
 }

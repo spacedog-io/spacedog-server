@@ -24,5 +24,5 @@ public interface SpaceParams {
 	String ACCESS_TOKEN_PARAM = "accessToken";
 	String FORCE_META_PARAM = "forceMeta";
 	String FAIL_PARAM = "_fail";
-
+	String PRESERVE_IDS_PARAM = "preserveIds";
 }

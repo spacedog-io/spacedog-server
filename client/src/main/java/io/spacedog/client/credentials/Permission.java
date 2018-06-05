@@ -5,5 +5,5 @@ public enum Permission {
 	readMine, readGroup, read, search, //
 	updateMine, updateGroup, update, //
 	deleteMine, deleteGroup, delete, //
-	updateMeta
+	updateMeta, importAll
 }

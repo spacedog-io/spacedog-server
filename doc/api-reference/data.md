@@ -37,6 +37,33 @@ Query Parameters | Description
 `forceMeta` | Boolean. Default to `false`. If true, initialize meta fields with those provided in body along with the rest of the data. Meta fields are: `createdAt`, `updatedAt`, `owner`, `group`. `updateMeta` permission is required in user's credentials to force meta fields.
 
 ---
+#### /1/data/{type}/_export
+
+**POST** returns all data objects of the specified type and matching the specified query as a multi lines json text. Only users with `search` permission are authorized.
+
+
+Query Parameters | Description
+-----------------|--------------
+`refresh` | Boolean. Defaults to false. If true, forces index refresh to make sure the latests created objects are there.
+
+---
+#### /1/data/{type}/_import
+
+**POST** index all data objects of the request body to the specified type. Only users with `importAll` permission are authorized. The body must be a multi line json text. Each line represents a data object of the following form:
+
+```json
+{"id": "...", "source": {"...": "..."}}
+{"id": "...", "source": {"...": "..."}}
+{"id": "...", "source": {"...": "..."}}
+```
+
+Metadata of imported objets (owner, group, createdAt, updatedAt) is imported as is and should be specified for each object in json body.
+
+Query Parameters | Description
+-----------------|--------------
+`preserveIds` | Boolean. Defaults to false. If true, imports objects preserving the specified ids. If false, imported objects get a new id like if they were newly created.
+
+---
 #### /1/data/{type}/{id}
 
 **GET** returns the data object of the specified type and id. One of these permissions is required depending on the context: `read`, `readMine` or `readGroup`.

@@ -3,11 +3,17 @@
  */
 package io.spacedog.server;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.lucene.uid.Versions;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -20,9 +26,11 @@ import io.spacedog.client.credentials.RolePermissions;
 import io.spacedog.client.data.DataObject;
 import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.data.ObjectNodeWrap;
+import io.spacedog.client.http.ContentTypes;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import net.codestory.http.Context;
+import net.codestory.http.Request;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
@@ -143,6 +151,58 @@ public class DataService extends SpaceService {
 		}
 
 		return doPut(object, false, context);
+	}
+
+	@Post("/:type/_export")
+	@Post("/:type/_export/")
+	public Payload postExport(String type, String body, Context context) {
+		Credentials credentials = Server.context().credentials();
+		DataAccessControl.roles(type).check(credentials, Permission.search);
+
+		if (context.query().getBoolean(REFRESH_PARAM, false))
+			DataStore.get().refreshDataTypes(type);
+
+		QueryBuilder query = Strings.isNullOrEmpty(body) //
+				? QueryBuilders.matchAllQuery()
+				: ElasticUtils.toQueryBuilder(body);
+
+		SearchResponse response = elastic()//
+				.prepareSearch(DataStore.toDataIndex(type))//
+				.setScroll(DataExportStreamningOutput.TIMEOUT)//
+				.setSize(DataExportStreamningOutput.SIZE)//
+				.setQuery(query)//
+				.get();
+
+		return new Payload(ContentTypes.TEXT_PLAIN_UTF8, //
+				new DataExportStreamningOutput(response));
+	}
+
+	@Post("/:type/_import")
+	@Post("/:type/_import/")
+	public void postImport(String type, Request request) throws IOException {
+		Credentials credentials = Server.context().credentials();
+		DataAccessControl.roles(type).check(credentials, Permission.importAll);
+
+		boolean preserveIds = request.query().getBoolean(PRESERVE_IDS_PARAM, false);
+
+		BufferedReader reader = new BufferedReader(//
+				new InputStreamReader(request.inputStream()));
+
+		Index index = DataStore.toDataIndex(type);
+		String json = reader.readLine();
+
+		while (json != null) {
+			ObjectNode object = Json.readObject(json);
+			String source = object.get("source").toString();
+
+			if (preserveIds) {
+				String id = object.get("id").asText();
+				elastic().index(index, id, source);
+			} else
+				elastic().index(index, source);
+
+			json = reader.readLine();
+		}
 	}
 
 	//
