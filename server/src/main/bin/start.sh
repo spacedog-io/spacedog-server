@@ -6,10 +6,10 @@ then
 fi
 
 # sets max number of open file descriptors 
-ulimit -n 50000
+ulimit -n 60000
 
 echo "SpaceDog is starting ..."
-java -d64 -cp "lib/*" io.spacedog.server.Start &>log &
+java -d64 -cp "lib/*" io.spacedog.server.Server &>log &
 
 if [ $? -eq 0 ]
 then
