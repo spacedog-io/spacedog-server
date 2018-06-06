@@ -29,7 +29,9 @@ public class SpaceEnv {
 	}
 
 	public SpaceEnv(Properties properties) {
-		this.properties = properties;
+		this.properties = properties == null //
+				? new Properties()
+				: properties;
 	}
 
 	public String superdogNotificationTopic() {
