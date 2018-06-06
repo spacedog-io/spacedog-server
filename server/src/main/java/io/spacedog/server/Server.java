@@ -87,7 +87,7 @@ public class Server {
 
 	protected void init() {
 		ServerConfig.log();
-		System.setProperty("http.agent", ServerConfig.serverUserAgent());
+		System.setProperty("http.agent", ServerConfig.userAgent());
 		String string = ClassResources.loadAsString(Server.class, "info.json");
 		info = Json.toPojo(string, Info.class);
 	}

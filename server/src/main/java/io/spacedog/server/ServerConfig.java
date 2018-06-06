@@ -123,15 +123,15 @@ public class ServerConfig {
 		return SpaceEnv.env().get(MAIL_SMTP_DEBUG, false);
 	}
 
-	public static String serverUserAgent() {
-		return SpaceEnv.env().get(USER_AGENT, "spacedog-server");
+	public static String userAgent() {
+		return SpaceEnv.env().get(USER_AGENT, "spacedog");
 	}
 
 	public static String superdogPassword() {
 		return SpaceEnv.env().superdogPassword();
 	}
 
-	public static Optional7<String> serverFileStore() {
+	public static Optional7<String> fileStore() {
 		return SpaceEnv.env().get(FILE_STORE);
 	}
 
