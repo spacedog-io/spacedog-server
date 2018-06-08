@@ -24,12 +24,6 @@ public class AdminClient implements SpaceParams, SpaceFields {
 		return dog.get("/1/backends").go().status() == 200;
 	}
 
-	public SpaceDog createMyBackend(boolean notification) {
-		return SpaceDog.dog().admin()//
-				.createBackend(dog.backendId(), dog.username(), dog.password().get(), //
-						dog.email().get(), notification);
-	}
-
 	public SpaceDog createBackend(String backendId, String username, String password, String email, //
 			boolean notification) {
 
