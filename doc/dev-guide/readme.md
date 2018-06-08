@@ -5,18 +5,15 @@ The **Developer's Guide** is a step by step guide to learn the basics of the Spa
 The **Reference Guide** is the complete reference documentation of all the SpaceDog backend services, parameters, object structures, ...
 
 ---
-#### Provision your backend
+#### Use a SpaceDog backend
 
-There are 2 ways to provision a SpaceDog backend:
+There are 3 ways to provision a SpaceDog backend:
 
 - Run your own SpaceDog backend on your own server. Check out server build/install/run [readme](../../server/readme.md) in the `server` sub project.
 
 - Contact [SpaceDog](https://spacedog.io) by email to get a free fully managed SpaceDog backend in the AWS cloud.
 
-In the following, we consider that your backend is up and running in the SpaceDog cloud. In this case, you get
-
-- administrator username, password and email address,
-- backend id to identify your backend.
+- Use our REST API to provision a free fully managed SpaceDog backend in the AWS cloud. We will get to it in the following...
 
 ---
 #### Security
@@ -27,7 +24,7 @@ For example, if the GetMePizza iOS application want to get data from its `getmep
 
 ```http
 GET /1/data HTTP/1.1
-host: getmepizza.spacedog.io
+Host: getmepizza.spacedog.io
 ```
 
 To access services for authorized users, the request must contain a regular `Authorization` header using `Basic` scheme and the BASE64 encoded username and password of the user.
@@ -36,9 +33,47 @@ For example, delete the `pizza` schema (a.k.a. type of data object) is an admin 
 
 ```http
 DELETE /1/schema/pizza HTTP/1.1
-host: getmepizza.spacedog.io
+Host: getmepizza.spacedog.io
 Authorization: Basic ZG9jOmhpIGRvYw==
 ```
+
+---
+#### Provision a backend
+
+First you need to sign in with SpaceDog and get credentials. Send this request:
+
+```http
+POST /1/credentials
+Host: api.spacedog.io
+
+{
+	"username": "mario",
+	"password": "********",
+	"email": "mario@getmepizza.it"
+}
+```
+
+With your new SpaceDog credentials, your are able to provision a new backend with the request bellow. You need to use your SpaceDog credentials to authenticate this request.
+
+```http
+POST /1/backends
+Host: api.spacedog.io
+Authorization: Basic base64(mario:********)
+
+{
+	"backendId": "getmepizza",
+	"superadmin": {
+		"username": "superadmin",
+		"password": "********",
+		"email": "mario@getmepizza.it"
+	}
+}
+```
+
+It provisions the `getmepizza` backend and creates superadmin credentials for this backend. To access this backend, send requests to `https://getmepizza.spacedog.io`.
+
+SpaceDog credentials are use to access SpaceDog admin API (https://api.spacedog.io). Backend `getmepizza` credentials are used to access the backend API (https://getmepizza.spacedog.io).
+
 
 ⋮
 
