@@ -16,11 +16,9 @@ import io.spacedog.utils.KeyValue;
 		@Type(value = EmailBasicRequest.class, name = "basic"), //
 		@Type(value = EmailTemplateRequest.class, name = "template")//
 })
-public class BasicSpaceJob {
+public class BasicSpaceJob extends SpaceJob {
 	String method;
 	String path;
-	String when;
 	Set<KeyValue> headers;
 	Set<KeyValue> params;
-	Object payload;
 }

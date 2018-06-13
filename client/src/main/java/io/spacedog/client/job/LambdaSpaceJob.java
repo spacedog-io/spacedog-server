@@ -13,7 +13,6 @@ import io.spacedog.client.email.EmailTemplateRequest;
 		@Type(value = EmailBasicRequest.class, name = "basic"), //
 		@Type(value = EmailTemplateRequest.class, name = "template")//
 })
-public class LambdaSpaceJob {
+public class LambdaSpaceJob extends SpaceJob {
 	String lambdaId;
-	Object payload;
 }
