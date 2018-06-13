@@ -303,8 +303,7 @@ public class ElasticClient implements SpaceParams {
 	public boolean exists(Index index) {
 		try {
 			return internalClient.admin().indices()//
-					.prepareTypesExists(index.alias())//
-					.setTypes(index.type())//
+					.prepareExists(index.alias())//
 					.get()//
 					.isExists();
 
