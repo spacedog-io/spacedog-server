@@ -17,7 +17,7 @@ public class DataAccessControl {
 	}
 
 	public static String[] types(Credentials credentials, Permission permission) {
-		Set<String> types = DataStore.allDataTypes();
+		Set<String> types = DataStore.backendDataTypes();
 		if (!credentials.isAtLeastSuperAdmin()) {
 			Set<String> accessibleTypes = getDataSettings()//
 					.acl().accessList(credentials, permission);

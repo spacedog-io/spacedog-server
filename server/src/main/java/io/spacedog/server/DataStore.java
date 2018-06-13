@@ -81,7 +81,7 @@ public class DataStore implements SpaceParams, SpaceFields {
 	}
 
 	public Map<String, Schema> getAllSchemas() {
-		return getSchemas(allDataIndices());
+		return getSchemas(backendDataIndices());
 	}
 
 	public boolean setSchema(Schema schema, Settings settings, boolean async) {
@@ -204,13 +204,13 @@ public class DataStore implements SpaceParams, SpaceFields {
 	// Index help methods
 	//
 
-	public static Set<String> allDataTypes() {
+	public static Set<String> backendDataTypes() {
 		return elastic().filteredBackendIndexStream(Optional.of(SERVICE_NAME))//
 				.map(index -> Index.valueOf(index).type())//
 				.collect(Collectors.toSet());
 	}
 
-	public static Index[] allDataIndices() {
+	public static Index[] backendDataIndices() {
 		return elastic().filteredBackendIndexStream(Optional.of(SERVICE_NAME))//
 				.map(index -> Index.valueOf(index))//
 				.toArray(Index[]::new);
