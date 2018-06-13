@@ -47,6 +47,8 @@ import net.codestory.http.Context;
 
 public class DataStore implements SpaceParams, SpaceFields {
 
+	public static final String SERVICE_NAME = "data";
+
 	//
 	// Schema help methods
 	//
@@ -203,19 +205,19 @@ public class DataStore implements SpaceParams, SpaceFields {
 	//
 
 	public static Set<String> allDataTypes() {
-		return elastic().filteredBackendIndexStream(Optional.of("data"))//
+		return elastic().filteredBackendIndexStream(Optional.of(SERVICE_NAME))//
 				.map(index -> Index.valueOf(index).type())//
 				.collect(Collectors.toSet());
 	}
 
 	public static Index[] allDataIndices() {
-		return elastic().filteredBackendIndexStream(Optional.of("data"))//
+		return elastic().filteredBackendIndexStream(Optional.of(SERVICE_NAME))//
 				.map(index -> Index.valueOf(index))//
 				.toArray(Index[]::new);
 	}
 
 	public static Index toDataIndex(String type) {
-		return Index.toIndex(type).service("data");
+		return new Index(SERVICE_NAME).type(type);
 	}
 
 	public static Index[] toDataIndex(String... types) {

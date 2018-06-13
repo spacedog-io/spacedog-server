@@ -12,8 +12,8 @@ public class Index {
 	private String type;
 	private int version = 0;
 
-	public Index(String type) {
-		this.type = Check.notNullOrEmpty(type, "type");
+	public Index(String service) {
+		this.service = Check.notNullOrEmpty(service, "service");
 	}
 
 	public String backendId() {
@@ -37,18 +37,12 @@ public class Index {
 	}
 
 	public String type() {
-		return type;
+		return type == null ? service : type;
 	}
 
 	public Index type(String type) {
 		this.type = Check.notNullOrEmpty(type, "type");
 		return this;
-	}
-
-	public static String[] types(Index[] indices) {
-		return Arrays.stream(indices)//
-				.map(index -> index.type())//
-				.toArray(String[]::new);
 	}
 
 	public int version() {
@@ -68,9 +62,14 @@ public class Index {
 	@Override
 	public String toString() {
 		String version = String.valueOf(this.version);
-		return service == null //
-				? String.join("-", backendId(), type, version)//
+		return type == null //
+				? String.join("-", backendId(), service, version)//
 				: String.join("-", backendId(), service, type, version);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		return obj == null ? false : toString().equals(obj.toString());
 	}
 
 	public static String[] toString(Index... indices) {
@@ -80,8 +79,8 @@ public class Index {
 	}
 
 	public String alias() {
-		return service == null //
-				? String.join("-", backendId(), type)//
+		return type == null //
+				? String.join("-", backendId(), service)//
 				: String.join("-", backendId(), service, type);
 	}
 
@@ -91,10 +90,6 @@ public class Index {
 				.toArray(String[]::new);
 	}
 
-	public static Index toIndex(String type) {
-		return new Index(type);
-	}
-
 	public static Index valueOf(String index) {
 		String[] parts = index.split("-", 4);
 
@@ -102,8 +97,8 @@ public class Index {
 			return new Index(parts[1]).backendId(parts[0]).version(parts[2]);
 
 		if (parts.length == 4)
-			return new Index(parts[2]).backendId(parts[0])//
-					.service(parts[1]).version(parts[3]);
+			return new Index(parts[1]).backendId(parts[0])//
+					.type(parts[2]).version(parts[3]);
 
 		throw Exceptions.runtime("index [%s] is invalid", index);
 	}

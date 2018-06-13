@@ -44,7 +44,7 @@ public class PebbleTemplating {
 				continue;
 			}
 
-			if (type.equals(CredentialsService.TYPE)) {
+			if (type.equals(CredentialsService.SERVICE_NAME)) {
 				if (value != null && value instanceof String) {
 					value = CredentialsService.get().getById(value.toString(), true).get();
 					value = Json.mapper().convertValue(value, Map.class);

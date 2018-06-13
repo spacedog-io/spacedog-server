@@ -89,7 +89,7 @@ public class SchemaService extends SpaceService {
 	//
 
 	private Schema getDefaultSchema(String type) {
-		if (PushService.TYPE.equals(type))
+		if (PushService.DATA_TYPE.equals(type))
 			return PushService.getDefaultInstallationSchema();
 		return null;
 	}

@@ -39,7 +39,7 @@ public class SettingsService extends SpaceService {
 	// SpaceDog constants and schema
 	//
 
-	public static final String TYPE = "settings";
+	public static final String SERVICE_NAME = "settings";
 
 	//
 	// Fields
@@ -65,7 +65,7 @@ public class SettingsService extends SpaceService {
 		int size = context.query().getInteger(SIZE_PARAM, 10);
 
 		SearchResponse response = elastic().prepareSearch(settingsIndex())//
-				.setTypes(TYPE)//
+				.setTypes(SERVICE_NAME)//
 				.setFrom(from)//
 				.setSize(size)//
 				.setQuery(QueryBuilders.matchAllQuery())//
@@ -101,7 +101,7 @@ public class SettingsService extends SpaceService {
 			return JsonPayload.ok()//
 					.withContent(instantiateDefaultAsNode(id)).build();
 
-		throw Exceptions.notFound(TYPE, id);
+		throw Exceptions.notFound(SERVICE_NAME, id);
 	}
 
 	@Put("/:id")
@@ -127,7 +127,7 @@ public class SettingsService extends SpaceService {
 	public Payload get(String id, String field) {
 		checkAuthorizedTo(id, Permission.read);
 		ObjectNode object = getAsNode(id)//
-				.orElseThrow(() -> Exceptions.notFound(TYPE, id));
+				.orElseThrow(() -> Exceptions.notFound(SERVICE_NAME, id));
 		JsonNode value = Json.get(object, field);
 		value = value == null ? NullNode.getInstance() : value;
 		return JsonPayload.ok().withContent(value).build();
@@ -152,7 +152,7 @@ public class SettingsService extends SpaceService {
 		checkNotInternalSettings(id);
 		checkAuthorizedTo(id, Permission.update);
 		ObjectNode object = getAsNode(id)//
-				.orElseThrow(() -> Exceptions.notFound(TYPE, id));
+				.orElseThrow(() -> Exceptions.notFound(SERVICE_NAME, id));
 		Json.remove(object, field);
 		IndexResponse response = doSave(id, object.toString());
 		return ElasticPayload.saved("/1", response).build();
@@ -230,7 +230,7 @@ public class SettingsService extends SpaceService {
 	//
 
 	private static Index settingsIndex() {
-		return Index.toIndex(TYPE);
+		return new Index(SERVICE_NAME);
 	}
 
 	private ObjectNode instantiateDefaultAsNode(String id) {
@@ -269,7 +269,7 @@ public class SettingsService extends SpaceService {
 
 		if (!elastic.exists(index)) {
 			Request request = Server.context().request();
-			ObjectNode mapping = Json.object(TYPE, Json.object("enabled", false));
+			ObjectNode mapping = Json.object(SERVICE_NAME, Json.object("enabled", false));
 
 			int shards = request.query().getInteger(SHARDS_PARAM, SHARDS_DEFAULT_PARAM);
 			int replicas = request.query().getInteger(REPLICAS_PARAM, REPLICAS_DEFAULT_PARAM);

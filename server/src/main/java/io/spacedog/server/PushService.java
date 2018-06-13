@@ -41,7 +41,7 @@ import net.codestory.http.payload.Payload;
 @Prefix("/1")
 public class PushService extends SpaceService {
 
-	public static final String TYPE = "installation";
+	public static final String DATA_TYPE = "installation";
 
 	// installation field names
 	public static final String APP_ID = "appId";
@@ -60,7 +60,7 @@ public class PushService extends SpaceService {
 	//
 
 	public static Schema getDefaultInstallationSchema() {
-		return Schema.builder(TYPE)//
+		return Schema.builder(DATA_TYPE)//
 				.keyword(APP_ID)//
 				.keyword(PROTOCOL)//
 				.keyword(TOKEN)//
@@ -126,10 +126,10 @@ public class PushService extends SpaceService {
 			for (String tag : request.tags)
 				query.must(QueryBuilders.termQuery(TAGS, tag));
 
-		DataStore.get().refreshDataTypes(request.refresh, TYPE);
+		DataStore.get().refreshDataTypes(request.refresh, DATA_TYPE);
 
 		// TODO use a scroll to push to all installations found
-		SearchHits hits = elastic().prepareSearch(DataStore.toDataIndex(TYPE))//
+		SearchHits hits = elastic().prepareSearch(DataStore.toDataIndex(DATA_TYPE))//
 				.setQuery(query)//
 				.setFrom(0)//
 				.setSize(1000)//
@@ -276,7 +276,7 @@ public class PushService extends SpaceService {
 
 	private void removeEndpointQuietly(String id) {
 		try {
-			elastic().delete(DataStore.toDataIndex(TYPE), id, false, true);
+			elastic().delete(DataStore.toDataIndex(DATA_TYPE), id, false, true);
 		} catch (Exception e) {
 			System.err.println(String.format(//
 					"[Warning] failed to delete disabled installation [%s]", id));
@@ -287,7 +287,7 @@ public class PushService extends SpaceService {
 	public Payload upsertInstallation(Optional<String> id, String body, Context context) {
 
 		DataWrap<Installation> installation = new Installation.Wrap()//
-				.type(TYPE).source(Json.toPojo(body, Installation.class));
+				.type(DATA_TYPE).source(Json.toPojo(body, Installation.class));
 
 		if (id.isPresent())
 			installation.id(id.get());

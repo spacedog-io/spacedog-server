@@ -57,6 +57,8 @@ import net.codestory.http.payload.StreamingOutput;
 
 public class FileService extends SpaceService {
 
+	public static final String SERVICE_NAME = "files";
+
 	// field names
 	public static final String PATH = "path";
 	public static final String BUCKET_KEY = "bucketKey";
@@ -260,7 +262,7 @@ public class FileService extends SpaceService {
 
 		Schema.checkName(bucket);
 		ObjectNode mapping = getSchema(bucket).mapping();
-		Index index = Index.toIndex(bucket).service("files");
+		Index index = toFileIndex(bucket);
 
 		if (elastic().exists(index))
 			elastic().putMapping(index, mapping.toString());
@@ -556,8 +558,8 @@ public class FileService extends SpaceService {
 					"no bucket specified in path [%s]", webPath.toString());
 	}
 
-	private Index toFileIndex(String first) {
-		return Index.toIndex(first).service("files");
+	private Index toFileIndex(String bucket) {
+		return new Index(SERVICE_NAME).type(bucket);
 	}
 
 	private static WebPath toWebPath(String uri) {

@@ -49,7 +49,7 @@ import net.codestory.http.payload.Payload;
 
 public class CredentialsService extends SpaceService {
 
-	public static final String TYPE = "credentials";
+	public static final String SERVICE_NAME = "credentials";
 	private static final String PASSWORD_RESET_EMAIL_TEMPLATE_NAME = "password_reset_email_template";
 
 	//
@@ -65,7 +65,7 @@ public class CredentialsService extends SpaceService {
 	}
 
 	public static Schema schema() {
-		return Schema.builder(TYPE)//
+		return Schema.builder(SERVICE_NAME)//
 				.keyword(USERNAME_FIELD)//
 				.keyword(EMAIL_FIELD)//
 				.keyword(ROLES_FIELD)//
@@ -182,7 +182,7 @@ public class CredentialsService extends SpaceService {
 				Json.toPojo(body, CreateCredentialsRequest.class), //
 				Roles.user);
 
-		JsonPayload payload = JsonPayload.saved(true, "/1", TYPE, credentials.id());
+		JsonPayload payload = JsonPayload.saved(true, "/1", SERVICE_NAME, credentials.id());
 
 		if (credentials.passwordResetCode() != null)
 			payload.withFields(PASSWORD_RESET_CODE_FIELD, credentials.passwordResetCode());
@@ -329,7 +329,7 @@ public class CredentialsService extends SpaceService {
 		credentials.newPasswordResetCode();
 		credentials = update(credentials);
 
-		return JsonPayload.saved(false, "/1", TYPE, credentials.id())//
+		return JsonPayload.saved(false, "/1", SERVICE_NAME, credentials.id())//
 				.withVersion(credentials.version())//
 				.withFields(PASSWORD_RESET_CODE_FIELD, credentials.passwordResetCode())//
 				.build();
@@ -549,7 +549,7 @@ public class CredentialsService extends SpaceService {
 			return Optional.of(toCredentials(response));
 
 		if (throwNotFound)
-			throw Exceptions.notFound(TYPE, id);
+			throw Exceptions.notFound(SERVICE_NAME, id);
 		else
 			return Optional.empty();
 	}
@@ -561,7 +561,7 @@ public class CredentialsService extends SpaceService {
 
 		if (!searchHit.isPresent()) {
 			if (throwNotFound)
-				throw Exceptions.notFound(TYPE, username);
+				throw Exceptions.notFound(SERVICE_NAME, username);
 			else
 				return Optional.empty();
 		}
@@ -652,7 +652,7 @@ public class CredentialsService extends SpaceService {
 	//
 
 	private Payload saved(boolean created, Credentials credentials) {
-		return JsonPayload.saved(false, "/1", TYPE, credentials.id())//
+		return JsonPayload.saved(false, "/1", SERVICE_NAME, credentials.id())//
 				.withVersion(credentials.version()).withContent(credentials.toJson())//
 				.build();
 	}
@@ -721,7 +721,7 @@ public class CredentialsService extends SpaceService {
 
 	private void checkAlreadyExists(String username) {
 		if (elastic().exists(toQuery(username), credentialsIndex()))
-			throw Exceptions.alreadyExists(TYPE, username);
+			throw Exceptions.alreadyExists(SERVICE_NAME, username);
 	}
 
 	private SearchResults<Credentials> getCredentials(SearchSourceBuilder builder) {
@@ -742,7 +742,7 @@ public class CredentialsService extends SpaceService {
 	}
 
 	public static Index credentialsIndex() {
-		return Index.toIndex(TYPE);
+		return new Index(SERVICE_NAME);
 	}
 
 	protected CredentialsSettings credentialsSettings() {

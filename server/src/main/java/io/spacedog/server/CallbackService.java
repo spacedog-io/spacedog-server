@@ -39,14 +39,14 @@ import net.codestory.http.payload.Payload;
 @Prefix("/1/callbacks")
 public class CallbackService extends SpaceService {
 
-	public static final String TYPE = "callback";
+	public static final String DATA_TYPE = "callback";
 
 	//
 	// Schema
 	//
 
 	public Schema requestSchema() {
-		return Schema.builder(TYPE)//
+		return Schema.builder(DATA_TYPE)//
 				.keyword("status")//
 				.keyword("method")//
 				.keyword("path")//
@@ -101,25 +101,25 @@ public class CallbackService extends SpaceService {
 	@Post("/search")
 	@Post("/search/")
 	public Payload search(String body, Context context) {
-		return SearchService.get().postSearchForType(TYPE, body, context);
+		return SearchService.get().postSearchForType(DATA_TYPE, body, context);
 	}
 
 	@Get("/:id")
 	@Get("/:id/")
 	public Payload getDemand(String id, Context context) {
-		return DataService.get().getById(TYPE, id, context);
+		return DataService.get().getById(DATA_TYPE, id, context);
 	}
 
 	@Put("/:id")
 	@Put("/:id/")
 	public Payload putDemand(String id, String body, Context context) {
-		return DataService.get().put(TYPE, id, body, context);
+		return DataService.get().put(DATA_TYPE, id, body, context);
 	}
 
 	@Delete("/:id")
 	@Delete("/:id/")
 	public Payload deleteDemand(String id, Context context) {
-		return DataService.get().deleteById(TYPE, id, context);
+		return DataService.get().deleteById(DATA_TYPE, id, context);
 	}
 
 	//
@@ -260,7 +260,7 @@ public class CallbackService extends SpaceService {
 	}
 
 	public static Index callbackIndex() {
-		return Index.toIndex(TYPE);
+		return DataStore.toDataIndex(DATA_TYPE);
 	}
 
 	//

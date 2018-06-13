@@ -35,8 +35,7 @@ import net.codestory.http.payload.Payload;
 @Prefix("/1/log")
 public class LogService extends SpaceService {
 
-	public static final String TYPE = "log";
-	public static final String PURGE_ALL = "purgeall";
+	public static final String SERVICE_NAME = "log";
 
 	private static final String PAYLOAD_FIELD = "payload";
 	private static final String CREDENTIALS_FIELD = "credentials";
@@ -49,9 +48,10 @@ public class LogService extends SpaceService {
 
 	public void initIndex() {
 		Index index = logIndex();
-		String mapping = ClassResources.loadAsString(this, "log-mapping.json");
-		if (!elastic().exists(index))
+		if (!elastic().exists(index)) {
+			String mapping = ClassResources.loadAsString(this, "log-mapping.json");
 			elastic().createIndex(index, mapping, false);
+		}
 	}
 
 	//
@@ -73,7 +73,7 @@ public class LogService extends SpaceService {
 				: QueryBuilders.simpleQueryStringQuery(q);
 
 		SearchResponse response = elastic().prepareSearch(logIndex())//
-				.setTypes(TYPE)//
+				.setTypes(SERVICE_NAME)//
 				.setQuery(query)//
 				.addSort(RECEIVED_AT_FIELD, SortOrder.DESC)//
 				.setFrom(from)//
@@ -91,7 +91,7 @@ public class LogService extends SpaceService {
 		elastic().refreshIndex(isRefreshRequested(context), logIndex());
 
 		SearchResponse response = elastic().prepareSearch(logIndex())//
-				.setTypes(TYPE)//
+				.setTypes(SERVICE_NAME)//
 				.setSource(ElasticUtils.toSearchSourceBuilder(body))//
 				.get();
 
@@ -161,20 +161,20 @@ public class LogService extends SpaceService {
 	}
 
 	//
-	// Implementation
+	// Public interface
 	//
 
-	private boolean hasPurgeAllRole(Credentials credentials) {
-		return credentials.isSuperDog() || credentials.roles().contains(PURGE_ALL);
-	}
-
-	private BulkByScrollResponse doPurge(DateTime before) {
+	public BulkByScrollResponse doPurge(DateTime before) {
 
 		RangeQueryBuilder builder = QueryBuilders.rangeQuery(RECEIVED_AT_FIELD)//
 				.lt(before.toString());
 
 		return elastic().deleteByQuery(builder, logIndex());
 	}
+
+	//
+	// Implementation
+	//
 
 	private Payload extractLogs(SearchResponse response) {
 
@@ -294,7 +294,7 @@ public class LogService extends SpaceService {
 	}
 
 	public static Index logIndex() {
-		return Index.toIndex(TYPE);
+		return new Index(SERVICE_NAME);
 	}
 
 	//
