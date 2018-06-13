@@ -5,6 +5,9 @@ package io.spacedog.client.upgrade;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
+
+import io.spacedog.client.SpaceDog;
 import io.spacedog.client.admin.BackendSettings;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
@@ -15,13 +18,19 @@ public class Upgrades {
 	private Upgrades() {
 	}
 
+	@SafeVarargs
+	public static <T extends UpgradeEnv> void upgrade(T env, Upgrade<T>... upgrades) {
+		upgrade(env, Lists.newArrayList(upgrades));
+	}
+
 	public static <T extends UpgradeEnv> void upgrade(T env, List<Upgrade<T>> upgrades) {
 
 		String version = null;
 		boolean upgradeStarted = false;
+		SpaceDog superadmin = env.superadmin();
 
-		if (env.superadmin().admin().doesMyBackendExist())
-			version = env.superadmin().settings()//
+		if (superadmin.admin().checkMyBackendExists())
+			version = superadmin.settings()//
 					.get(BackendSettings.class, "version", String.class);
 
 		for (Upgrade<T> upgrade : upgrades) {
