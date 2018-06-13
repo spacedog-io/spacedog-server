@@ -192,7 +192,8 @@ public class Server {
 	}
 
 	protected void configure(Routes routes) {
-		routes.add(AdminService.get())//
+		routes.add(HealthCheckService.get())//
+				.add(AdminService.get())//
 				.add(DataService.get())//
 				.add(SchemaService.get())//
 				.add(CredentialsService.get())//

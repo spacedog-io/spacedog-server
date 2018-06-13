@@ -3,36 +3,28 @@
  */
 package io.spacedog.server;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Json;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
+import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
 
+@Prefix("/1/admin")
 public class AdminService extends SpaceService {
 
 	//
 	// Routes
 	//
 
-	@Get("")
-	@Get("/")
-	public Payload getPing() {
-		ObjectNode payload = (ObjectNode) Json.toJsonNode(Server.get().info());
-		return JsonPayload.ok().withContent(payload).build();
-	}
-
-	@Get("/1/admin/return500")
-	@Get("/1/admin/return500")
+	@Get("/return500")
+	@Get("/return500/")
 	public Payload getLog() {
 		throw Exceptions.runtime("this route always returns http code 500");
 	}
 
-	@Post("/1/admin/_clear")
-	@Post("/1/admin/_clear")
+	@Post("/_clear")
+	@Post("/_clear/")
 	public void postClear(Context context) {
 		Server.context().credentials().checkSuperDog();
 

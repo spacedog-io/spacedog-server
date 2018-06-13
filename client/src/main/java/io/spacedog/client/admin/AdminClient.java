@@ -20,8 +20,8 @@ public class AdminClient implements SpaceParams, SpaceFields {
 		return dog;
 	}
 
-	public boolean doesMyBackendExist() {
-		return dog.get("/1/backends").go().status() == 200;
+	public boolean checkMyBackendExists() {
+		return dog.post("/").go().status() == 200;
 	}
 
 	public SpaceDog createBackend(String backendId, String username, String password, String email, //
