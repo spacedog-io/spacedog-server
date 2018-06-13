@@ -5,7 +5,6 @@ package io.spacedog.server;
 
 import io.spacedog.utils.Exceptions;
 import net.codestory.http.Context;
-import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
@@ -17,8 +16,8 @@ public class AdminService extends SpaceService {
 	// Routes
 	//
 
-	@Get("/return500")
-	@Get("/return500/")
+	@Post("/_return_500")
+	@Post("/_return_500/")
 	public Payload getLog() {
 		throw Exceptions.runtime("this route always returns http code 500");
 	}

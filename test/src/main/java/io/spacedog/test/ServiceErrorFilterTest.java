@@ -33,6 +33,6 @@ public class ServiceErrorFilterTest extends SpaceTest {
 		prepareTest();
 
 		// this fails and send notification to superdogs with error details
-		SpaceRequest.get("/1/admin/return500").go(500);
+		SpaceRequest.post("/1/admin/_return_500").go(500);
 	}
 }
