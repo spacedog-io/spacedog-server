@@ -116,13 +116,11 @@ public class ElasticClient implements SpaceParams {
 		for (int i = 0; i < terms.length; i = i + 2)
 			bool.filter(QueryBuilders.termQuery(terms[i].toString(), terms[i + 1]));
 
-		return prepareSearch(index).setTypes(index.type())//
-				.setSource(source).get().getHits();
+		return search(source, index);
 	}
 
 	public SearchHits search(SearchSourceBuilder source, Index... indices) {
-		return prepareSearch(indices).setTypes(Index.types(indices))//
-				.setSource(source).get().getHits();
+		return prepareSearch(indices).setSource(source).get().getHits();
 	}
 
 	//
@@ -188,7 +186,6 @@ public class ElasticClient implements SpaceParams {
 	public Optional<SearchHit> getUnique(Index index, QueryBuilder query) {
 		try {
 			SearchHits hits = prepareSearch(index)//
-					.setTypes(index.type())//
 					.setQuery(query)//
 					.get()//
 					.getHits();
@@ -223,7 +220,6 @@ public class ElasticClient implements SpaceParams {
 
 	public boolean exists(QueryBuilder query, Index... indices) {
 		return internalClient.prepareSearch(Index.aliases(indices))//
-				.setTypes(Index.types(indices))//
 				.setQuery(query)//
 				.setFetchSource(false)//
 				.get()//
@@ -419,7 +415,6 @@ public class ElasticClient implements SpaceParams {
 	public GetMappingsResponse getMappings(Index... indices) {
 		return internalClient.admin().indices()//
 				.prepareGetMappings(Index.aliases(indices))//
-				.setTypes(Index.types(indices))//
 				.get();
 	}
 
@@ -428,7 +423,6 @@ public class ElasticClient implements SpaceParams {
 				.preparePutMapping(index.alias())//
 				.setType(index.type())//
 				.setSource(mapping, XContentType.JSON)//
-				.setUpdateAllTypes(true)//
 				.get();
 
 		if (!putMappingResponse.isAcknowledged())
