@@ -130,18 +130,9 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 
 	public SpaceDog create(CreateCredentialsRequest request) {
 		dog.post("/1/credentials").bodyPojo(request).go(201);
-		return SpaceDog.dog(dog.backend()).username(request.username())//
-				.password(request.password()).email(request.email());
-	}
-
-	public SpaceDog signUp() {
-		return signUp(dog.password().get());
-	}
-
-	public SpaceDog signUp(String password) {
-		SpaceDog.dog(dog.backend()).credentials()//
-				.create(dog.username(), password, dog.email().get());
-		return dog;
+		return SpaceDog.dog(dog.backend())//
+				.username(request.username())//
+				.password(request.password());
 	}
 
 	//

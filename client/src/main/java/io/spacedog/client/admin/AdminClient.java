@@ -24,8 +24,8 @@ public class AdminClient implements SpaceParams, SpaceFields {
 		return dog.post("/").go().status() == 200;
 	}
 
-	public SpaceDog createBackend(String backendId, String username, String password, String email, //
-			boolean notification) {
+	public SpaceDog createBackend(String backendId, String username, //
+			String password, String email, boolean notification) {
 
 		CreateCredentialsRequest superadmin = new CreateCredentialsRequest()//
 				.username(username).password(password).email(email);
@@ -45,8 +45,7 @@ public class AdminClient implements SpaceParams, SpaceFields {
 
 		return SpaceDog.dog(newBackend)//
 				.username(request.superadmin().username())//
-				.password(request.superadmin().password())//
-				.email(request.superadmin().email());
+				.password(request.superadmin().password());
 	}
 
 	public AdminClient deleteBackend(String backendId) {

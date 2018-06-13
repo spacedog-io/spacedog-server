@@ -20,14 +20,13 @@ import io.spacedog.client.http.SpaceBackend;
 import io.spacedog.client.http.SpaceEnv;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
+import io.spacedog.client.http.SpacePlatform;
 import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.client.http.SpaceRequestException;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 
-public class SpaceTest extends Assert implements SpaceFields, SpaceParams {
-
-	public static final String DEFAULT_EMAIL = "platform@spacedog.io";
+public class SpaceTest extends Assert implements SpacePlatform, SpaceFields, SpaceParams {
 
 	public static SpaceDog createTempDog(SpaceDog dog, String username) {
 		return dog.credentials()//

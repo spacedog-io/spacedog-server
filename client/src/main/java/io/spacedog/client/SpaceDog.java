@@ -26,7 +26,6 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 
 	private SpaceBackend backend;
 	private String username;
-	private String email;
 	private String password;
 	private String accessToken;
 	private DateTime expiresAt;
@@ -58,15 +57,6 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 
 	public String group() {
 		return credentials().me().group();
-	}
-
-	public Optional7<String> email() {
-		return Optional7.ofNullable(email);
-	}
-
-	public SpaceDog email(String email) {
-		this.email = email;
-		return this;
 	}
 
 	public Optional7<String> accessToken() {

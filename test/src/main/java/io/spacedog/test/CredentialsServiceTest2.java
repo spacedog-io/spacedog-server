@@ -79,8 +79,9 @@ public class CredentialsServiceTest2 extends SpaceTest {
 				.assertPresent("credentials.updatedAt")//
 				.asJsonObject();
 
-		SpaceDog vince = SpaceDog.dog().username("vince")//
-				.password("hi vince").email("vince@dog.com")//
+		SpaceDog vince = SpaceDog.dog()//
+				.username("vince")//
+				.password("hi vince")//
 				.accessToken(node.get("accessToken").asText()) //
 				.expiresAt(DateTime.now().plus(node.get("expiresIn").asLong()));
 
