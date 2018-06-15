@@ -13,6 +13,7 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.client.SpacePlatform;
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.Passwords;
 import io.spacedog.client.credentials.Roles;
@@ -20,7 +21,6 @@ import io.spacedog.client.http.SpaceBackend;
 import io.spacedog.client.http.SpaceEnv;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
-import io.spacedog.client.http.SpacePlatform;
 import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.client.http.SpaceRequestException;
 import io.spacedog.utils.Json;

@@ -214,8 +214,8 @@ public class SettingsService extends SpaceService {
 				.setSource(source, XContentType.JSON).get();
 	}
 
-	public void doDelete(String id) {
-		elastic().delete(settingsIndex(), id, false, true);
+	public boolean doDelete(String id) {
+		return elastic().delete(settingsIndex(), id, false, true);
 	}
 
 	public <K extends Settings> void registerSettings(Class<K> settingsClass) {

@@ -3,16 +3,21 @@
  */
 package io.spacedog.test;
 
+import java.util.List;
+
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.client.batch.SpaceCall;
+import io.spacedog.client.credentials.CreateCredentialsRequest;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.data.DataSettings;
+import io.spacedog.client.http.SpaceMethod;
 import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.utils.Json;
@@ -22,9 +27,10 @@ public class BatchServiceTest extends SpaceTest {
 	@Test
 	public void test() {
 
-		// we need to make sure the test account is reset and exists before to
-		// be able to reset it again by batch requests
+		// prepare
 		prepareTest();
+		SpaceRequest.setDebugServerDefault(true);
+		SpaceDog guest = SpaceDog.dog();
 		SpaceDog superadmin = clearServer();
 		superadmin.credentials().enableGuestSignUp(true);
 
@@ -34,23 +40,14 @@ public class BatchServiceTest extends SpaceTest {
 
 		// should succeed to reset test account and create message schema with
 		// admin credentials
-		ArrayNode batch = Json.builder().array()//
-				.object()//
-				.add("method", "PUT").add("path", "/1/schemas/message")//
-				.add("content", Message.schema().mapping())//
-				.end()//
+		List<SpaceCall> batch = Lists.newArrayList(//
+				new SpaceCall(SpaceMethod.PUT, "/1/schemas/message")//
+						.withPayload(Message.schema().mapping()),
+				new SpaceCall(SpaceMethod.PUT, "/1/settings/data")//
+						.withPayload(dataSettings),
+				new SpaceCall(SpaceMethod.GET, "/1/login"));
 
-				.object()//
-				.add("method", "PUT").add("path", "/1/settings/data")//
-				.add("content", dataSettings)//
-				.end()//
-
-				.object()//
-				.add("method", "GET").add("path", "/1/login")//
-				.end()//
-				.build();
-
-		superadmin.post("/1/batch").debugServer().bodyJson(batch).go(200)//
+		superadmin.batch().execute(batch)//
 				.assertEquals("message", "responses.0.id")//
 				.assertEquals("schemas", "responses.0.type")//
 				.assertEquals("data", "responses.1.id")//
@@ -61,29 +58,17 @@ public class BatchServiceTest extends SpaceTest {
 		// should succeed to create dave and vince users and fetch them with
 		// simple backend key credentials
 
-		batch = Json.builder().array()//
-				.object()//
-				.add("method", "POST").add("path", "/1/credentials")//
-				.object("content")//
-				.add("username", "vince")//
-				.add("password", "hi vince")//
-				.add("email", "vince@dog.com")//
-				.end()//
-				.end()//
+		batch = Lists.newArrayList();
+		CreateCredentialsRequest ccr = new CreateCredentialsRequest()//
+				.username("vince").password("hi vince").email("vince@dog.com");
+		batch.add(new SpaceCall(SpaceMethod.POST, "/1/credentials")//
+				.withPayload(ccr));
+		ccr = new CreateCredentialsRequest()//
+				.username("dave").password("hi dave").email("dave@dog.com");
+		batch.add(new SpaceCall(SpaceMethod.POST, "/1/credentials")//
+				.withPayload(ccr));
 
-				.object()//
-				.add("method", "POST").add("path", "/1/credentials")//
-				.object("content")//
-				.add("username", "dave")//
-				.add("password", "hi dave")//
-				.add("email", "dave@dog.com")//
-				.end()//
-				.end()//
-
-				.build();
-
-		ObjectNode node = superadmin.post("/1/batch")//
-				.debugServer().bodyJson(batch).go(200).asJsonObject();
+		ObjectNode node = superadmin.batch().execute(batch).asJsonObject();
 
 		String vinceId = Json.get(node, "responses.0.id").asText();
 		String daveId = Json.get(node, "responses.1.id").asText();
@@ -104,31 +89,16 @@ public class BatchServiceTest extends SpaceTest {
 		// should succeed to return errors when batch requests are invalid, not
 		// found, unauthorized, ...
 
-		batch = Json.builder().array()//
-				.object()//
-				.add("method", "POST").add("path", "/1/credentials")//
-				.object("content")//
-				.add("username", "fred")//
-				.add("password", "hi fred")//
-				.end()//
-				.end()//
+		batch = Lists.newArrayList();
+		batch.add(new SpaceCall(SpaceMethod.POST, "/1/credentials")//
+				.withPayload(new CreateCredentialsRequest()//
+						.username("fred").password("hi fred")));
+		batch.add(new SpaceCall(SpaceMethod.GET, "/1/toto"));
+		batch.add(new SpaceCall(SpaceMethod.DELETE, "/1/credentials/vince"));
+		batch.add(new SpaceCall(SpaceMethod.POST, "/1/credentials/vince/_set_password")//
+				.withPayload(Json.object("password", "hi vince 2")));
 
-				.object()//
-				.add("method", "GET").add("path", "/1/toto")//
-				.end()//
-
-				.object()//
-				.add("method", "DELETE").add("path", "/1/credentials/vince")//
-				.end()//
-
-				.object()//
-				.add("method", "POST").add("path", "/1/credentials/vince/_set_password")//
-				.add("content", Json.object("password", "hi vince 2"))//
-				.end()//
-				.build();
-
-		SpaceRequest.post("/1/batch").debugServer()//
-				.backend(superadmin).bodyJson(batch).go(200)//
+		guest.batch().execute(batch)//
 				.assertEquals(400, "responses.0.status")//
 				.assertEquals(404, "responses.1.status")//
 				.assertEquals(401, "responses.2.status")//
@@ -137,60 +107,30 @@ public class BatchServiceTest extends SpaceTest {
 
 		// should succeed to create and update messages by batch
 
-		batch = Json.builder().array()//
-				.object()//
-				.add("method", "PUT").add("path", "/1/data/message/1")//
-				.object("content")//
-				.add("text", "Hi guys!")//
-				.end()//
-				.object("parameters")//
-				.add("strict", true)//
-				.end()//
-				.end()//
+		batch = Lists.newArrayList();
+		batch.add(new SpaceCall(SpaceMethod.PUT, "/1/data/message/1")//
+				.withPayload(Json.object("text", "Hi guys!"))//
+				.withParams("strict", true));
 
-				.object()//
-				.add("method", "PUT").add("path", "/1/data/message/2")//
-				.object("content")//
-				.add("text", "Pretty cool, huhh?")//
-				.end()//
-				.object("parameters")//
-				.add("strict", true)//
-				.end()//
-				.end()//
+		batch.add(new SpaceCall(SpaceMethod.PUT, "/1/data/message/2")//
+				.withPayload(Json.object("text", "Pretty cool, huhh?"))//
+				.withParams("strict", true));
 
-				.object()//
-				.add("method", "GET").add("path", "/1/data/message")//
-				.object("parameters")//
-				.add("refresh", true)//
-				.end()//
-				.end()//
+		batch.add(new SpaceCall(SpaceMethod.GET, "/1/data/message")//
+				.withParams("refresh", true));
 
-				.object()//
-				.add("method", "PUT").add("path", "/1/data/message/1")//
-				.object("content")//
-				.add("text", "Hi guys, what's up?")//
-				.end()//
-				.end()//
+		batch.add(new SpaceCall(SpaceMethod.PUT, "/1/data/message/1")//
+				.withPayload(Json.object("text", "Hi guys, what's up?")));
 
-				.object()//
-				.add("method", "PUT").add("path", "/1/data/message/2")//
-				.object("content")//
-				.add("text", "Pretty cool, huhhhhh?")//
-				.end()//
-				.end()//
+		batch.add(new SpaceCall(SpaceMethod.PUT, "/1/data/message/2")//
+				.withPayload(Json.object("text", "Pretty cool, huhhhhh?")));
 
-				.object()//
-				.add("method", "GET").add("path", "/1/data/message")//
-				.object("parameters")//
-				.add("refresh", true)//
-				.end()//
-				.end()//
-				.build();
+		batch.add(new SpaceCall(SpaceMethod.GET, "/1/data/message")//
+				.withParams("refresh", true));
 
-		SpaceResponse response = SpaceRequest.post("/1/batch")//
-				.debugServer().backend(superadmin)//
-				.basicAuth("vince", "hi vince")//
-				.bodyJson(batch).go(200)//
+		SpaceDog vince = SpaceDog.dog().username("vince").password("hi vince");
+
+		SpaceResponse response = vince.batch().execute(batch)
 				// .assertEquals(201, "responses.0.status")//
 				.assertEquals("1", "responses.0.id")//
 				.assertEquals(1, "responses.0.version")//
@@ -219,23 +159,12 @@ public class BatchServiceTest extends SpaceTest {
 
 		// should succeed to stop on first batch request error
 
-		batch = Json.builder().array()//
-				.object()//
-				.add("method", "GET").add("path", "/1/data/message")//
-				.end()//
+		batch = Lists.newArrayList();
+		batch.add(new SpaceCall(SpaceMethod.GET, "/1/data/message"));
+		batch.add(new SpaceCall(SpaceMethod.GET, "/1/data/XXX"));
+		batch.add(new SpaceCall(SpaceMethod.GET, "/1/data/message"));
 
-				.object()//
-				.add("method", "GET").add("path", "/1/data/XXX")//
-				.end()//
-
-				.object()//
-				.add("method", "GET").add("path", "/1/data/message")//
-				.end()//
-				.build();
-
-		SpaceRequest.post("/1/batch").debugServer()//
-				.queryParam("stopOnError", true).backend(superadmin)//
-				.basicAuth("vince", "hi vince").bodyJson(batch).go(200)//
+		vince.batch().execute(batch, true)//
 				.assertEquals(2, "responses.0.total")//
 				.assertEquals(403, "responses.1.status")//
 				.assertSizeEquals(2, "responses")//
@@ -243,11 +172,12 @@ public class BatchServiceTest extends SpaceTest {
 
 		// should fail since batch are limited to 10 sub requests
 
-		ArrayNode bigBatch = Json.array();
+		List<SpaceCall> bigBatch = Lists.newArrayList();
 		for (int i = 0; i < 11; i++)
-			bigBatch.add(Json.object("method", "GET", "path", "/1/login"));
+			bigBatch.add(new SpaceCall(SpaceMethod.GET, "/1/login"));
 
-		SpaceRequest.post("/1/batch").backend(superadmin).bodyJson(bigBatch).go(400)//
+		assertHttpError(400, () -> guest.batch().execute(bigBatch))//
+				.spaceResponse()//
 				.assertEquals("batch-limit-exceeded", "error.code");
 	}
 }

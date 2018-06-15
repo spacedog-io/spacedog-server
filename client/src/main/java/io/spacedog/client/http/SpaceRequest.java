@@ -47,11 +47,13 @@ public class SpaceRequest {
 	private Map<String, String> pathParams = Maps.newHashMap();
 	private Map<String, String> queryParams = Maps.newHashMap();
 	private Boolean forTesting = null;
+	private Boolean debugServer = null;
 	private MediaType contentType;
 	private long contentLength = -1;
 
 	// static defaults
 	private static boolean forTestingDefault = false;
+	private static boolean debugServerDefault = false;
 
 	private SpaceRequest(String path, HttpVerb verb) {
 		this.path = path;
@@ -306,6 +308,10 @@ public class SpaceRequest {
 				|| (forTesting != null && forTesting))
 			this.setHeader(SpaceHeaders.SPACEDOG_TEST, "true");
 
+		if ((debugServer == null && debugServerDefault)//
+				|| (debugServer != null && debugServer))
+			this.setHeader(SpaceHeaders.SPACEDOG_DEBUG, "true");
+
 		requestBuilder.url(computeHttpUrl())//
 				.method(method.name(), computeRequestBody());
 
@@ -395,8 +401,13 @@ public class SpaceRequest {
 		forTestingDefault = value;
 	}
 
+	public static void setDebugServerDefault(boolean value) {
+		debugServerDefault = value;
+	}
+
 	public SpaceRequest debugServer() {
-		return setHeader(SpaceHeaders.SPACEDOG_DEBUG, "true");
+		debugServer = true;
+		return this;
 	}
 
 	public SpaceRequest cookies(String... cookies) {

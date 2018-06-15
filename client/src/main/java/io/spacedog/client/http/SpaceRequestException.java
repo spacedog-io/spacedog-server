@@ -16,6 +16,10 @@ public class SpaceRequestException extends RuntimeException {
 		this.response = response;
 	}
 
+	public SpaceResponse spaceResponse() {
+		return response;
+	}
+
 	public int httpStatus() {
 		return response.status();
 	}
