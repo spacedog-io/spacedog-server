@@ -12,6 +12,7 @@ import io.spacedog.client.http.SpaceException;
 import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.client.settings.Settings;
+import io.spacedog.services.credentials.CredentialsService;
 import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Optional7;
