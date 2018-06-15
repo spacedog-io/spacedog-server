@@ -25,25 +25,25 @@ import com.google.common.collect.Lists;
 
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.http.SpaceBackend;
-import io.spacedog.services.AdminService;
-import io.spacedog.services.BatchService;
+import io.spacedog.services.AdminResty;
+import io.spacedog.services.BatchResty;
 import io.spacedog.services.CrossOriginFilter;
-import io.spacedog.services.EmailService;
-import io.spacedog.services.HealthCheckService;
-import io.spacedog.services.JobService;
-import io.spacedog.services.LogService;
-import io.spacedog.services.SettingsService;
-import io.spacedog.services.SmsService;
-import io.spacedog.services.StripeService;
-import io.spacedog.services.credentials.CredentialsService;
-import io.spacedog.services.credentials.LinkedinService;
-import io.spacedog.services.data.DataService;
-import io.spacedog.services.data.SchemaService;
-import io.spacedog.services.data.SearchService;
-import io.spacedog.services.file.FileService;
-import io.spacedog.services.file.WebService;
-import io.spacedog.services.push.ApplicationService;
-import io.spacedog.services.push.PushService;
+import io.spacedog.services.EmailResty;
+import io.spacedog.services.HealthCheckResty;
+import io.spacedog.services.JobResty;
+import io.spacedog.services.LogResty;
+import io.spacedog.services.SettingsResty;
+import io.spacedog.services.SmsResty;
+import io.spacedog.services.StripeResty;
+import io.spacedog.services.credentials.CredentialsResty;
+import io.spacedog.services.credentials.LinkedinResty;
+import io.spacedog.services.data.DataResty;
+import io.spacedog.services.data.SchemaResty;
+import io.spacedog.services.data.SearchResty;
+import io.spacedog.services.file.FileResty;
+import io.spacedog.services.file.WebResty;
+import io.spacedog.services.push.ApplicationResty;
+import io.spacedog.services.push.PushResty;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.DateTimes;
 import io.spacedog.utils.Exceptions;
@@ -185,14 +185,14 @@ public class Server {
 	}
 
 	public void initBackendIndices() {
-		CredentialsService.get().initIndex();
-		LogService.get().initIndex();
+		CredentialsResty.get().initIndex();
+		LogResty.get().initIndex();
 	}
 
 	public void clear(boolean files) {
 		elasticClient().deleteAbsolutelyAllIndices();
 		if (files)
-			FileService.get().deleteAbsolutelyAllFiles();
+			FileResty.get().deleteAbsolutelyAllFiles();
 		initBackendIndices();
 	}
 
@@ -210,32 +210,32 @@ public class Server {
 	}
 
 	protected void configure(Routes routes) {
-		routes.add(HealthCheckService.get())//
-				.add(AdminService.get())//
-				.add(DataService.get())//
-				.add(JobService.get())//
-				.add(SchemaService.get())//
-				.add(CredentialsService.get())//
-				.add(LinkedinService.get())//
-				.add(BatchService.get())//
-				.add(EmailService.get())//
-				.add(SmsService.get())//
-				.add(LogService.get())//
-				.add(PushService.get())//
-				.add(ApplicationService.get())//
-				.add(StripeService.get())//
-				.add(SettingsService.get())//
-				.add(SearchService.get());
+		routes.add(HealthCheckResty.get())//
+				.add(AdminResty.get())//
+				.add(DataResty.get())//
+				.add(JobResty.get())//
+				.add(SchemaResty.get())//
+				.add(CredentialsResty.get())//
+				.add(LinkedinResty.get())//
+				.add(BatchResty.get())//
+				.add(EmailResty.get())//
+				.add(SmsResty.get())//
+				.add(LogResty.get())//
+				.add(PushResty.get())//
+				.add(ApplicationResty.get())//
+				.add(StripeResty.get())//
+				.add(SettingsResty.get())//
+				.add(SearchResty.get());
 
 		routes.filter(SpaceContext.checkBackendFilter())//
 				.filter(new CrossOriginFilter())//
-				.filter(LogService.filter())//
+				.filter(LogResty.filter())//
 				.filter(SpaceContext.checkAuthorizationFilter())//
 				// web filter before error filter
 				// so web errors are html pages
-				.filter(WebService.get().filter())//
+				.filter(WebResty.get().filter())//
 				.filter(new ServiceErrorFilter())//
-				.filter(FileService.get().filter());
+				.filter(FileResty.get().filter());
 	}
 
 	public static class Info {

@@ -14,7 +14,7 @@ import com.google.common.collect.Maps;
 import com.mitchellbosecke.pebble.PebbleEngine;
 import com.mitchellbosecke.pebble.loader.StringLoader;
 
-import io.spacedog.services.credentials.CredentialsService;
+import io.spacedog.services.credentials.CredentialsResty;
 import io.spacedog.services.data.DataStore;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -46,9 +46,9 @@ public class PebbleTemplating {
 				continue;
 			}
 
-			if (type.equals(CredentialsService.SERVICE_NAME)) {
+			if (type.equals(CredentialsResty.SERVICE_NAME)) {
 				if (value != null && value instanceof String) {
-					value = CredentialsService.get().getById(value.toString(), true).get();
+					value = CredentialsResty.get().getById(value.toString(), true).get();
 					value = Json.mapper().convertValue(value, Map.class);
 					context.put(name, value);
 					continue;

@@ -9,7 +9,7 @@ import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.RolePermissions;
 import io.spacedog.client.data.DataSettings;
-import io.spacedog.services.SettingsService;
+import io.spacedog.services.SettingsResty;
 
 public class DataAccessControl {
 
@@ -28,7 +28,7 @@ public class DataAccessControl {
 	}
 
 	private static DataSettings getDataSettings() {
-		return SettingsService.get().getAsObject(DataSettings.class);
+		return SettingsResty.get().getAsObject(DataSettings.class);
 	}
 
 }

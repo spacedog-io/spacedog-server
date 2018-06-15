@@ -12,7 +12,7 @@ import io.spacedog.client.http.SpaceException;
 import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.client.settings.Settings;
-import io.spacedog.services.credentials.CredentialsService;
+import io.spacedog.services.credentials.CredentialsResty;
 import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Optional7;
@@ -142,7 +142,7 @@ public class SpaceContext {
 	public static SpaceFilter checkBackendFilter() {
 
 		return (uri, context, nextFilter) -> {
-			Index index = CredentialsService.credentialsIndex();
+			Index index = CredentialsResty.credentialsIndex();
 			return Server.get().elasticClient().exists(index) //
 					? nextFilter.get() //
 					: JsonPayload.error(404).withError(//
@@ -185,7 +185,7 @@ public class SpaceContext {
 				AuthorizationHeader authHeader = new AuthorizationHeader(headerValue, true);
 
 				if (authHeader.isBasic()) {
-					userCredentials = CredentialsService.get()//
+					userCredentials = CredentialsResty.get()//
 							.checkUsernamePassword(authHeader.username(), //
 									authHeader.password());
 
@@ -202,7 +202,7 @@ public class SpaceContext {
 	}
 
 	private Credentials checkAccessToken(String token) {
-		return CredentialsService.get().checkToken(token);
+		return CredentialsResty.get().checkToken(token);
 	}
 
 	private void checkPasswordMustChange(Credentials credentials) {
