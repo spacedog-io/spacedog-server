@@ -23,6 +23,7 @@ import org.joda.time.DateTimeZone;
 
 import com.google.common.collect.Lists;
 
+import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.http.SpaceBackend;
 import io.spacedog.server.file.FileService;
 import io.spacedog.server.file.WebService;
@@ -195,6 +196,7 @@ public class Server {
 		routes.add(HealthCheckService.get())//
 				.add(AdminService.get())//
 				.add(DataService.get())//
+				.add(JobService.get())//
 				.add(SchemaService.get())//
 				.add(CredentialsService.get())//
 				.add(LinkedinService.get())//
@@ -286,6 +288,21 @@ public class Server {
 		return context == null //
 				? ServerConfig.apiBackend()
 				: context.backend();
+	}
+
+	public static void runWithContext(String backendId, //
+			Credentials credentials, Runnable action) {
+
+		SpaceContext oldContext = threadLocalSpaceContext.get();
+
+		try {
+			threadLocalSpaceContext.set(//
+					new SpaceContext(backendId, credentials));
+			action.run();
+
+		} finally {
+			threadLocalSpaceContext.set(oldContext);
+		}
 	}
 
 	//

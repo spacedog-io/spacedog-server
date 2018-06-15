@@ -47,6 +47,14 @@ public class SpaceContext {
 		initSpaceBackend();
 	}
 
+	public SpaceContext(String backendId, Credentials credentials) {
+		this.backend = ServerConfig.apiBackend().fromBackendId(backendId);
+		this.credentials = credentials == null //
+				? Credentials.GUEST
+				: credentials;
+		this.debug = new Debug(false);
+	}
+
 	private void initSpaceBackend() {
 
 		String hostAndPort = request.header(SpaceHeaders.HOST);
