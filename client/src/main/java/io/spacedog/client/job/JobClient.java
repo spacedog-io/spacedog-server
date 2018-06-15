@@ -12,30 +12,30 @@ public class JobClient {
 		this.dog = dog;
 	}
 
-	public String create(SpaceJob job) {
-		return dog.post("/1/jobs")//
+	public void create(SpaceJob job) {
+		dog.put("/1/jobs/{name}")//
+				.routeParam("name", job.name)//
 				.bodyPojo(job)//
-				.go(201)//
-				.getString("id");
+				.go(201, 200);
 	}
 
-	public void delete(String jobId) {
-		dog.delete("/1/jobs/{id}")//
-				.routeParam("id", jobId)//
+	public void delete(String jobName) {
+		dog.delete("/1/jobs/{name}")//
+				.routeParam("name", jobName)//
 				.go(200);
 	}
 
-	public ObjectNode execute(String jobId, Object jobRequest) {
-		return dog.post("/1/jobs/{id}")//
-				.routeParam("id", jobId)//
+	public ObjectNode execute(String jobName, Object jobRequest) {
+		return dog.post("/1/jobs/{name}")//
+				.routeParam("name", jobName)//
 				.bodyPojo(jobRequest)//
 				.go(201)//
 				.asJsonObject();
 	}
 
-	public void deleteExecution(String jobId, String jobExecId) {
-		dog.delete("/1/jobs/{id}/{execId}")//
-				.routeParam("id", jobId)//
+	public void deleteExecution(String jobName, String jobExecId) {
+		dog.delete("/1/jobs/{name}/{execId}")//
+				.routeParam("name", jobName)//
 				.routeParam("execId", jobExecId)//
 				.go(200);
 	}
