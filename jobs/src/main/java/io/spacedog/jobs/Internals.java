@@ -6,25 +6,28 @@ import com.amazonaws.services.sns.AmazonSNSClientBuilder;
 import com.amazonaws.services.sns.model.PublishRequest;
 import com.google.common.base.Throwables;
 
+import io.spacedog.client.http.SpaceEnv;
+import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Utils;
 
 public class Internals {
 
 	private final AmazonSNS sns;
 
-	public void notify(String topicId, String title, Throwable t) {
-		notify(toString(), title, Throwables.getStackTraceAsString(t));
+	public void notify(String title, Throwable t) {
+		notify(title, Throwables.getStackTraceAsString(t));
 	}
 
-	public void notify(String topicId, String title, String message) {
+	public void notify(String title, String message) {
 
 		try {
-			if (topicId == null)
-				Utils.warn("Unable to send internal notification [%s][%s]: no SNS topic id.", //
+			Optional7<String> topic = SpaceEnv.env().superdogNotificationTopic();
+			if (!topic.isPresent())
+				Utils.warn("unable to send platform alert [%s][%s]: no SNS topic in env", //
 						title, message);
 			else
 				sns.publish(new PublishRequest()//
-						.withTopicArn(topicId)//
+						.withTopicArn(topic.get())//
 						.withSubject(title)//
 						.withMessage(message));
 

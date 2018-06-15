@@ -18,7 +18,7 @@ public class SpaceEnv {
 	private static final String DEBUG = "spacedog.debug";
 	private static final String HTTP_TIMEOUT = "spacedog.http.timeout";
 	private static final String SUPERDOG_PASSWORD = "spacedog.superdog.password";
-	private static final String SUPERDOG_NOTIFICATION_TOPIC = "spacedog.server.aws.superdog.notification.topic";
+	private static final String SUPERDOG_NOTIFICATION_TOPIC = "spacedog.superdog.notification.topic";
 	private static final String BACKEND_WWW_PUBLIC_URL = "spacedog.backend.www.public.url";
 	private static final String BACKEND_API_PUBLIC_URL = "spacedog.backend.api.public.url";
 
@@ -34,8 +34,8 @@ public class SpaceEnv {
 				: properties;
 	}
 
-	public String superdogNotificationTopic() {
-		return getOrElseThrow(SUPERDOG_NOTIFICATION_TOPIC);
+	public Optional7<String> superdogNotificationTopic() {
+		return get(SUPERDOG_NOTIFICATION_TOPIC);
 	}
 
 	public boolean debug() {

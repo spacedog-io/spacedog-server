@@ -367,8 +367,7 @@ public class ElasticClient implements SpaceParams {
 			if (response.getStatus().equals(ClusterHealthStatus.YELLOW)) {
 				String message = String.format(//
 						"indices %s status are yellow", indicesString);
-				String topicId = ServerConfig.awsSuperdogNotificationTopic().orElse(null);
-				Internals.get().notify(topicId, message, message);
+				Internals.get().notify(message, message);
 			}
 		}
 		Utils.info("[SpaceDog] indices %s are [%s]", indicesString, response.getStatus());

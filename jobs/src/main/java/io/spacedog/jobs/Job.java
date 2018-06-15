@@ -4,7 +4,6 @@ import org.joda.time.DateTime;
 
 import com.google.common.base.Throwables;
 
-import io.spacedog.client.http.SpaceEnv;
 import io.spacedog.utils.Utils;
 
 public class Job {
@@ -64,9 +63,6 @@ public class Job {
 	}
 
 	void notify(String titleSuffix, String message) {
-		Internals.get().notify(//
-				SpaceEnv.env().superdogNotificationTopic(), //
-				description() + titleSuffix, //
-				message);
+		Internals.get().notify(description() + titleSuffix, message);
 	}
 }

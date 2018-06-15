@@ -31,7 +31,6 @@ public class ServerConfig {
 	private static final String MAIL_SMTP_DEBUG = "spacedog.server.mail.smtp.debug";
 	private static final String MAIL_DOMAIN = "spacedog.server.mail.domain";
 	private static final String MAIL_MAILGUN_KEY = "spacedog.server.mail.mailgun.key";
-	private static final String AWS_SUPERDOG_NOTIFICATION_TOPIC = "spacedog.server.aws.superdog.notification.topic";
 	private static final String AWS_BUCKET_PREFIX = "spacedog.server.aws.bucket.prefix";
 	private static final String AWS_REGION = "spacedog.server.aws.region";
 
@@ -107,10 +106,6 @@ public class ServerConfig {
 		return SpaceEnv.env().getOrElseThrow(AWS_BUCKET_PREFIX);
 	}
 
-	public static Optional7<String> awsSuperdogNotificationTopic() {
-		return SpaceEnv.env().get(AWS_SUPERDOG_NOTIFICATION_TOPIC);
-	}
-
 	public static String mailGunKey() {
 		return SpaceEnv.env().getOrElseThrow(MAIL_MAILGUN_KEY);
 	}
@@ -155,7 +150,6 @@ public class ServerConfig {
 		Utils.info();
 		log(AWS_REGION, awsRegion());
 		log(AWS_BUCKET_PREFIX, awsBucketPrefix());
-		log(AWS_SUPERDOG_NOTIFICATION_TOPIC, awsSuperdogNotificationTopic());
 
 		Utils.info();
 		log(MAIL_DOMAIN, mailDomain());
