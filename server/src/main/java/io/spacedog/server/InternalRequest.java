@@ -12,9 +12,9 @@ import java.util.Set;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import io.spacedog.client.batch.SpaceCall;
+import io.spacedog.client.batch.ServiceCall;
+import io.spacedog.client.http.ContentTypes;
 import io.spacedog.utils.Json;
-import net.codestory.http.Context;
 import net.codestory.http.Cookie;
 import net.codestory.http.Cookies;
 import net.codestory.http.Part;
@@ -23,12 +23,10 @@ import net.codestory.http.Request;
 
 public class InternalRequest implements Request {
 
-	private SpaceCall request;
-	private Context context;
+	private ServiceCall request;
 
-	public InternalRequest(SpaceCall request, Context context) {
+	public InternalRequest(ServiceCall request) {
 		this.request = request;
-		this.context = context;
 	}
 
 	@Override
@@ -36,7 +34,7 @@ public class InternalRequest implements Request {
 	public <T> T unwrap(Class<T> type) {
 		return type.isInstance(request) //
 				? (T) request
-				: type.isInstance(context) ? (T) context : null;
+				: null;
 	}
 
 	@Override
@@ -63,13 +61,12 @@ public class InternalRequest implements Request {
 
 	@Override
 	public String contentType() {
-		return context.request().contentType();
+		return ContentTypes.JSON_UTF8;
 	}
 
 	@Override
 	public List<String> headerNames() {
 		Set<String> headerNames = Sets.newHashSet();
-		headerNames.addAll(context.request().headerNames());
 		if (request.headers != null)
 			headerNames.addAll(request.headers.keySet());
 		return Lists.newArrayList(headerNames.iterator());
@@ -82,7 +79,7 @@ public class InternalRequest implements Request {
 			if (object != null)
 				return Collections.singletonList(object.toString());
 		}
-		return context.request().headers(name);
+		return null;
 	}
 
 	@Override
@@ -92,7 +89,7 @@ public class InternalRequest implements Request {
 			if (object != null)
 				return object.toString();
 		}
-		return context.request().header(name);
+		return null;
 	}
 
 	@Override
@@ -103,12 +100,12 @@ public class InternalRequest implements Request {
 
 	@Override
 	public InetSocketAddress clientAddress() {
-		return context.request().clientAddress();
+		return null;
 	}
 
 	@Override
 	public boolean isSecure() {
-		return context.request().isSecure();
+		return true;
 	}
 
 	@Override
@@ -117,7 +114,7 @@ public class InternalRequest implements Request {
 
 			@Override
 			public Iterator<Cookie> iterator() {
-				return context.cookies().iterator();
+				return null;
 			}
 
 			@Override
@@ -127,7 +124,7 @@ public class InternalRequest implements Request {
 
 			@Override
 			public Cookie get(String name) {
-				return context.cookies().get(name);
+				return null;
 			}
 		};
 	}

@@ -10,51 +10,38 @@ import org.elasticsearch.common.Strings;
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.file.InternalFileSettings.FileBucketSettings;
-import io.spacedog.client.file.WebSettings;
 import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.client.http.WebPath;
 import io.spacedog.server.Server;
+import io.spacedog.server.Services;
 import io.spacedog.server.SpaceFilter;
 import io.spacedog.server.SpaceResty;
-import io.spacedog.services.SettingsResty;
 import io.spacedog.utils.Exceptions;
 import net.codestory.http.Context;
 import net.codestory.http.constants.Methods;
 import net.codestory.http.filters.PayloadSupplier;
 import net.codestory.http.payload.Payload;
 
-public class WebResty extends SpaceResty {
+@SuppressWarnings("serial")
+public class WebResty extends SpaceResty implements SpaceFilter {
 
-	//
-	// Routes
-	//
+	@Override
+	public boolean matches(String uri, Context context) {
+		return uri.startsWith("/1/web") || Server.context().isWww();
+	}
 
-	public SpaceFilter filter() {
+	@Override
+	public Payload apply(String uri, Context context, PayloadSupplier nextFilter) throws Exception {
 
-		return new SpaceFilter() {
+		String method = context.method();
 
-			private static final long serialVersionUID = 1L;
+		if (Methods.GET.equals(method))
+			return doGet(toWebPath(uri), context);
 
-			@Override
-			public boolean matches(String uri, Context context) {
-				return uri.startsWith("/1/web") || Server.context().isWww();
-			}
+		if (Methods.HEAD.equals(method))
+			return doHead(toWebPath(uri), context);
 
-			@Override
-			public Payload apply(String uri, Context context, PayloadSupplier nextFilter) throws Exception {
-
-				String method = context.method();
-
-				if (Methods.GET.equals(method))
-					return doGet(toWebPath(uri), context);
-
-				if (Methods.HEAD.equals(method))
-					return doHead(toWebPath(uri), context);
-
-				throw Exceptions.runtime("path [%s] invalid for method [%s]", uri, method);
-			}
-
-		};
+		throw Exceptions.runtime("path [%s] invalid for method [%s]", uri, method);
 	}
 
 	//
@@ -78,27 +65,26 @@ public class WebResty extends SpaceResty {
 			String bucket = webPath.first();
 			WebPath path = webPath.removeFirst();
 
-			FileResty fileService = FileResty.get();
-			FileBucketSettings settings = fileService.bucketSettings(bucket);
+			FileBucketSettings settings = Services.files().getBucketSettings(bucket);
 			Credentials credentials = Server.context().credentials();
 			settings.permissions.check(credentials, Permission.read);
 
-			DogFile file = fileService.doGetMeta(bucket, path.toString(), false);
+			DogFile file = Services.files().getMeta(bucket, path.toString(), false);
 
 			if (file == null)
-				file = fileService.doGetMeta(bucket, //
+				file = Services.files().getMeta(bucket, //
 						path.addLast("index.html").toString(), //
 						false);
 
 			if (file == null //
 					&& !Strings.isNullOrEmpty(settings.notFoundPage))
-				file = fileService.doGetMeta(bucket, //
+				file = Services.files().getMeta(bucket, //
 						WebPath.parse(settings.notFoundPage).toString(), //
 						false);
 
 			if (file != null) {
 				payload = toPayload(file, //
-						fileService.getContent(bucket, file.getBucketKey()), //
+						Services.files().getContent(bucket, file), //
 						context);
 			}
 		}
@@ -124,7 +110,7 @@ public class WebResty extends SpaceResty {
 		return payload;
 	}
 
-	private static WebPath toWebPath(String uri) {
+	private WebPath toWebPath(String uri) {
 
 		return Server.context().isWww() //
 				// add www bucket prefix
@@ -133,17 +119,4 @@ public class WebResty extends SpaceResty {
 				: WebPath.parse(uri.substring(6));
 	}
 
-	//
-	// singleton
-	//
-
-	private static WebResty singleton = new WebResty();
-
-	public static WebResty get() {
-		return singleton;
-	}
-
-	private WebResty() {
-		SettingsResty.get().registerSettings(WebSettings.class);
-	}
 }

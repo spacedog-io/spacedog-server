@@ -6,13 +6,16 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.elasticsearch.common.lucene.uid.Versions;
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 import com.google.common.io.BaseEncoding;
 
 import io.spacedog.client.credentials.Credentials;
+import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.http.ContentTypes;
 import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.client.schema.Schema;
@@ -20,12 +23,11 @@ import io.spacedog.server.ElasticClient;
 import io.spacedog.server.Index;
 import io.spacedog.server.JsonPayload;
 import io.spacedog.server.Server;
+import io.spacedog.server.Services;
 import io.spacedog.server.SpaceFilter;
 import io.spacedog.server.SpaceResty;
-import io.spacedog.services.data.DataResty;
-import io.spacedog.services.data.DataStore;
-import io.spacedog.services.data.SearchResty;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.KeyValue;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
@@ -104,31 +106,38 @@ public class CallbackResty extends SpaceResty {
 	@Get("")
 	@Get("/")
 	public Payload getSafe(Context context) {
-		return DataResty.get().getAll(context);
+		return null;
 	}
 
 	@Post("/search")
 	@Post("/search/")
 	public Payload search(String body, Context context) {
-		return SearchResty.get().postSearchForType(DATA_TYPE, body, context);
+		return null;
 	}
 
 	@Get("/:id")
 	@Get("/:id/")
 	public Payload getDemand(String id, Context context) {
-		return DataResty.get().getById(DATA_TYPE, id, context);
+		DataWrap<ObjectNode> wrap = Services.data().getIfAuthorized(DATA_TYPE, id);
+		return JsonPayload.ok().withContent(wrap).build();
 	}
 
 	@Put("/:id")
 	@Put("/:id/")
 	public Payload putDemand(String id, String body, Context context) {
-		return DataResty.get().put(DATA_TYPE, id, body, context);
+		DataWrap<ObjectNode> object = DataWrap.wrap(Json.readObject(body))//
+				.version(context.query().getLong(VERSION_PARAM, Versions.MATCH_ANY))//
+				.type(DATA_TYPE).id(id);
+
+		object = Services.data().saveIfAuthorized(object, false, false);
+		return JsonPayload.saved(object).build();
 	}
 
 	@Delete("/:id")
 	@Delete("/:id/")
 	public Payload deleteDemand(String id, Context context) {
-		return DataResty.get().deleteById(DATA_TYPE, id, context);
+		boolean deleted = Services.data().deleteIfAuthorized(DATA_TYPE, id);
+		return JsonPayload.ok().withFields("deleted", deleted).build();
 	}
 
 	//
@@ -269,19 +278,6 @@ public class CallbackResty extends SpaceResty {
 	}
 
 	public static Index callbackIndex() {
-		return DataStore.toDataIndex(DATA_TYPE);
-	}
-
-	//
-	// Singleton
-	//
-
-	private static CallbackResty singleton = new CallbackResty();
-
-	static CallbackResty get() {
-		return singleton;
-	}
-
-	private CallbackResty() {
+		return Services.data().index(DATA_TYPE);
 	}
 }

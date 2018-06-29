@@ -33,6 +33,13 @@ public class EmailClient {
 				.bodyPojo(template).go(200, 201);
 	}
 
+	public EmailTemplate getTemplate(String name) {
+		return dog.get("/1/emails/templates/{name}")//
+				.routeParam("name", name)//
+				.go(200)//
+				.asPojo(EmailTemplate.class);
+	}
+
 	public void deleteTemplate(String templateName) {
 		dog.delete("/1/emails/templates/{name}")//
 				.routeParam("name", templateName)//

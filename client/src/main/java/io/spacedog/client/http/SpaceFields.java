@@ -33,4 +33,12 @@ public interface SpaceFields {
 	String RECEIVED_AT_FIELD = "receivedAt";
 	String DISABLE_AFTER_FIELD = "disableAfter";
 	String ENABLE_AFTER_FIELD = "enableAfter";
+	String PATH_FIELD = "path";
+	String BUCKET_KEY_FIELD = "bucketKey";
+	String NAME_FIELD = "name";
+	String ENCRYPTION_FIELD = "encryption";
+	String HASH_FIELD = "hash";
+	String CONTENT_TYPE_FIELD = "contentType";
+	String LENGTH_FIELD = "length";
+
 }

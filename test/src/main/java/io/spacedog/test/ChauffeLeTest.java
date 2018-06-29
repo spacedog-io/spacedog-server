@@ -3,20 +3,18 @@
  */
 package io.spacedog.test;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
+import io.spacedog.client.data.DataResults;
 import io.spacedog.client.data.DataSettings;
 import io.spacedog.client.elastic.ESQueryBuilders;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
@@ -114,51 +112,40 @@ public class ChauffeLeTest extends SpaceTest {
 
 		void addComment(SpaceDog user, String threadId, String comment);
 
-		Iterator<JsonNode> showWall(SpaceDog user);
+		void showWall(SpaceDog user);
 	}
 
 	public static class BigPost implements ChauffeLeEngine {
 
 		@Override
 		public String createSubject(SpaceDog user, String subject) {
-
-			return user.post("/1/data/bigpost")//
-					.bodyJson("title", subject, "responses", Json.array())//
-					.go(201)//
-					.asJsonObject().get("id").asText();
+			return user.data().save("bigpost", //
+					Json.object("title", subject, "responses", Json.array()))//
+					.id();
 		}
 
 		@Override
 		public void addComment(SpaceDog user, String postId, String comment) {
 
-			ObjectNode bigPost = (ObjectNode) user.get("/1/data/bigpost/" + postId)//
-					.go(200).get("source");
+			ObjectNode bigPost = user.data().get("bigpost", postId);
 
 			bigPost.withArray("responses")//
 					.add(Json.object("title", comment, "author", user.username()));
 
-			user.put("/1/data/bigpost/" + postId).bodyJson(bigPost).go(200);
+			user.data().save("bigpost", postId, bigPost);
 		}
 
 		@Override
-		public Iterator<JsonNode> showWall(SpaceDog user) {
+		public void showWall(SpaceDog user) {
 
-			String wallQuery = Json.builder().object()//
-					.add("from", 0)//
-					.add("size", 10)//
-					.array("sort")//
-					.object()//
-					.object("updatedAt")//
-					.add("order", "asc")//
-					.end()//
-					.end()//
-					.end()//
-					.object("query")//
-					.object("match_all")//
-					.build().toString();
+			ESSearchSourceBuilder builder = ESSearchSourceBuilder.searchSource()//
+					.from(0)//
+					.size(10)//
+					.sort("updatedAt", ESSortOrder.ASC)//
+					.query(ESQueryBuilders.matchAllQuery());
 
-			return user.post("/1/data/bigpost/_search").refresh()//
-					.body(wallQuery).go(200).asJson().get("results").elements();
+			user.data().prepareSearch().type("bigpost")//
+					.refresh().source(builder).go();
 		}
 	}
 
@@ -166,20 +153,16 @@ public class ChauffeLeTest extends SpaceTest {
 
 		@Override
 		public String createSubject(SpaceDog user, String subject) {
-
-			return user.post("/1/data/smallpost")//
-					.bodyJson("title", subject).go(201).asJsonObject().get("id").asText();
+			return user.data().save("smallpost", Json.object("title", subject)).id();
 		}
 
 		@Override
 		public void addComment(SpaceDog user, String parentId, String comment) {
-
-			user.post("/1/data/smallpost")//
-					.bodyJson("title", comment, "parent", parentId).go(201);
+			user.data().save("smallpost", Json.object("title", comment, "parent", parentId));
 		}
 
 		@Override
-		public Iterator<JsonNode> showWall(SpaceDog user) {
+		public void showWall(SpaceDog user) {
 
 			ESSearchSourceBuilder builder = ESSearchSourceBuilder.searchSource()//
 					.from(0)//
@@ -188,23 +171,25 @@ public class ChauffeLeTest extends SpaceTest {
 					.query(ESQueryBuilders.boolQuery()//
 							.mustNot(ESQueryBuilders.existsQuery("parent")));
 
-			JsonNode subjectResults = user.post("/1/data/smallpost/_search")//
-					.refresh().body(builder.toString()).go(200).asJson();
+			DataResults<ObjectNode> results = user.data().prepareSearch().type("smallpost")//
+					.refresh().source(builder).go();
 
-			Iterable<JsonNode> nodes = () -> subjectResults.get("results").elements();
-			List<String> subjects = StreamSupport.stream(nodes.spliterator(), false)//
-					.map(node -> node.asText()).collect(Collectors.toList());
+			assertEquals(5, results.total);
+
+			List<String> subjectIds = results.objects.stream().map(//
+					wrap -> wrap.id()).collect(Collectors.toList());
 
 			builder = ESSearchSourceBuilder.searchSource()//
 					.from(0)//
 					.size(10)//
 					.sort("parent")//
 					.sort("updatedAt", ESSortOrder.ASC)//
-					.query(ESQueryBuilders.termsQuery("parent", subjects));
+					.query(ESQueryBuilders.termsQuery("parent", subjectIds));
 
-			user.post("/1/data/smallpost/_search").body(builder.toString()).go(200);
+			results = user.data().prepareSearch().type("smallpost").source(builder).go();
 
-			return subjectResults.get("results").elements();
+			assertEquals(13, results.total);
+
 		}
 	}
 }

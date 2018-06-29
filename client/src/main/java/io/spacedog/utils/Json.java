@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.core.util.DefaultIndenter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -292,6 +293,10 @@ public class Json {
 		return value == null || value.isNull();
 	}
 
+	public static boolean isNullOrEmpty(JsonNode node) {
+		return isNull(node) || node.size() == 0;
+	}
+
 	public static ObjectMapper mapper() {
 		return mapper;
 	}
@@ -414,8 +419,7 @@ public class Json {
 		mapper = new ObjectMapper()//
 				.setDefaultPrettyPrinter(new DefaultPrettyPrinter()//
 						.withArrayIndenter(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE))//
-				.registerModule(jodaModule)//
-				.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)//
+				.registerModule(jodaModule).configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)//
 				.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 	}
 
@@ -551,7 +555,7 @@ public class Json {
 
 		} catch (Exception e) {
 			throw Exceptions.illegalArgument(e, //
-					"error mapping json [%s] to pojo class [%s]", //
+					"unable to map json tree [%s] to [%s] class", //
 					jsonNode, pojoClass.getSimpleName());
 		}
 	}
@@ -566,12 +570,29 @@ public class Json {
 
 		} catch (Exception e) {
 			throw Exceptions.illegalArgument(e, //
-					"error mapping string [%s] to pojo class [%s]", //
+					"unable to map json string [%s] to [%s] class", //
 					json, pojoClass.getSimpleName());
 		}
 	}
 
+	public static <K> K toPojo(String json, JavaType pojoType) {
+		Check.notNull(pojoType, "pojoType");
+		if (Strings.isNullOrEmpty(json))
+			json = pojoType.isArrayType() ? "[]" : "{}";
+
+		try {
+			return mapper().readValue(json, pojoType);
+
+		} catch (Exception e) {
+			throw Exceptions.illegalArgument(e, //
+					"unable to map json string [%s] to [%s] type", //
+					json, pojoType.getTypeName());
+		}
+	}
+
 	public static <K> K toPojo(String json, TypeReference<K> typeRef) {
+		// TODO WTF
+		// should be same no null check than other toPojo functions
 		if (Strings.isNullOrEmpty(json))
 			json = typeRef.getType() instanceof ArrayType ? "[]" : "{}";
 
@@ -580,7 +601,7 @@ public class Json {
 
 		} catch (Exception e) {
 			throw Exceptions.illegalArgument(e, //
-					"error mapping string [%s] to type [%s]", //
+					"unable to map json string [%s] to [%s] type", //
 					json, typeRef);
 		}
 	}
@@ -594,7 +615,7 @@ public class Json {
 
 		} catch (Exception e) {
 			throw Exceptions.illegalArgument(e, //
-					"error mapping bytes to pojo class [%s]", //
+					"unable to map json bytes to [%s] class", //
 					pojoClass.getSimpleName());
 		}
 	}
@@ -620,8 +641,22 @@ public class Json {
 
 		} catch (Exception e) {
 			throw Exceptions.illegalArgument(e, //
-					"error mapping json [%s] to pojo object [%s]", //
+					"unable to map json string [%s] to [%s] object", //
 					json, pojo.getClass().getSimpleName());
+		}
+	}
+
+	public static <K> K updatePojo(byte[] json, K pojo) {
+		Check.notNull(json, "json");
+		Check.notNull(pojo, "pojo");
+
+		try {
+			return mapper().readerForUpdating(pojo).readValue(json);
+
+		} catch (Exception e) {
+			throw Exceptions.illegalArgument(e, //
+					"unable to map json bytes to [%s] object", //
+					pojo.getClass().getSimpleName());
 		}
 	}
 
@@ -649,7 +684,8 @@ public class Json {
 		try {
 			return mapper().writeValueAsString(object);
 		} catch (JsonProcessingException e) {
-			throw Exceptions.illegalArgument(e, "error processing object to json string");
+			throw Exceptions.illegalArgument(e, "unable to map [%s] object to json string", //
+					object.getClass().getSimpleName());
 		}
 	}
 

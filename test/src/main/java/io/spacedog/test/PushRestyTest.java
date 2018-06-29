@@ -70,7 +70,7 @@ public class PushRestyTest extends SpaceTest {
 		assertEquals(PushProtocol.GCM, unknownInstall.source().protocol());
 		assertEquals("token-unknown", unknownInstall.source().token());
 		assertEquals("FAKE_ENDPOINT_FOR_TESTING", unknownInstall.source().endpoint());
-		assertEquals(Credentials.GUEST.id(), unknownInstall.owner());
+		assertEquals(Credentials.GUEST.id(), unknownInstall.source().owner());
 		assertTrue(unknownInstall.source().tags().isEmpty());
 
 		// vince and fred install joho
@@ -121,16 +121,16 @@ public class PushRestyTest extends SpaceTest {
 		vinceInstall = vince.push().getInstallation(vinceInstall.id());
 		assertEquals("joho", vinceInstall.source().appId());
 		assertEquals("super-token-vince", vinceInstall.source().token());
-		assertEquals(vince.id(), vinceInstall.owner());
+		assertEquals(vince.id(), vinceInstall.source().owner());
 		assertTrue(vinceInstall.source().tags().isEmpty());
 
 		// vince fails to get all installations since not admin
 		assertHttpError(403, () -> vince.data()//
-				.getAllRequest().type(Installation.TYPE).go());
+				.prepareGetAll().type(Installation.TYPE).go());
 
 		// admin gets all installations
-		List<Installation.Wrap> installations = superadmin.data().getAllRequest()//
-				.type(Installation.TYPE).refresh().go(Installation.Results.class).results;
+		List<DataWrap<Installation>> installations = superadmin.data().prepareGetAll()//
+				.type(Installation.TYPE).refresh().go(Installation.class).objects;
 
 		assertEquals(5, installations.size());
 		Set<String> ids = Sets.newHashSet(unknownInstallId, daveInstall.id(), //
@@ -139,43 +139,31 @@ public class PushRestyTest extends SpaceTest {
 			ids.contains(installation.id());
 
 		// nath adds bonjour tag to her install
-		nath.push().addTags(nathInstall.id(), "bonjour");
+		nath.push().setTags(nathInstall.id(), "bonjour");
 
 		String[] tags = nath.push().getTags(nathInstall.id());
 		assertEquals(1, tags.length);
 		assertThat(tags, hasItemInArray("bonjour"));
 
-		// nath adds again the same tag and it changes nothing
-		// there is no duplicate as a result
-		nath.push().addTags(nathInstall.id(), "bonjour");
-
-		tags = nath.push().getTags(nathInstall.id());
-		assertEquals(1, tags.length);
-		assertThat(tags, hasItemInArray("bonjour"));
-
 		// vince adds bonjour tag to his install
-		vince.push().addTags(vinceInstall.id(), "bonjour");
-
-		// vince adds hi tag to his install
-		vince.push().addTags(vinceInstall.id(), "hi");
+		vince.push().setTags(vinceInstall.id(), "bonjour", "hi");
 
 		tags = vince.push().getTags(vinceInstall.id());
 		assertEquals(2, tags.length);
 		assertThat(tags, hasItemInArray("hi"));
 		assertThat(tags, hasItemInArray("bonjour"));
 
-		// vince deletes bonjour tag from his install
-		vince.push().removeTags(vinceInstall.id(), "bonjour");
+		// vince removes 'bonjour' tag from his install
+		vince.push().setTags(vinceInstall.id(), "hi");
 
 		tags = vince.push().getTags(vinceInstall.id());
 		assertEquals(1, tags.length);
 		assertThat(tags, hasItemInArray("hi"));
 
 		// vince deletes hi tag from his install
-		vince.push().removeTags(vinceInstall.id(), "hi");
+		vince.push().deleteTags(vinceInstall.id());
 
-		tags = vince.push().getTags(vinceInstall.id());
-		assertEquals(0, tags.length);
+		assertNull(vince.push().getTags(vinceInstall.id()));
 
 		// vince sets all his install tags to bonjour and hi
 		vince.push().setTags(vinceInstall.id(), "hi", "bonjour");
@@ -388,7 +376,7 @@ public class PushRestyTest extends SpaceTest {
 		assertEquals(appId, installation.source().appId());
 		assertEquals(protocol, installation.source().protocol());
 		assertEquals("token-" + user.username(), installation.source().token());
-		assertEquals(user.id(), installation.owner());
+		assertEquals(user.id(), installation.source().owner());
 		assertTrue(installation.source().tags().isEmpty());
 
 		return installation;

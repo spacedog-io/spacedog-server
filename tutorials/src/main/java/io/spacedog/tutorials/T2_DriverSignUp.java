@@ -9,7 +9,6 @@ import io.spacedog.client.push.Installation;
 import io.spacedog.client.push.PushProtocol;
 import io.spacedog.client.schema.GeoPoint;
 import io.spacedog.tutorials.Driver.LastLocation;
-import io.spacedog.tutorials.Driver.Wrap;
 
 public class T2_DriverSignUp extends DemoBase {
 
@@ -35,9 +34,8 @@ public class T2_DriverSignUp extends DemoBase {
 		source.vehicule.type = "premium";
 		source.vehicule.licencePlate = "ZZ-666-ZZ";
 
-		DataWrap<Driver> driver = new Wrap()//
-				.id(max.id())//
-				.source(source);
+		DataWrap<Driver> driver = DataWrap.wrap(source)//
+				.id(max.id());
 
 		driver.owner(max.id());
 

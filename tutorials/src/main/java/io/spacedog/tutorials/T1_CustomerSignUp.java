@@ -16,7 +16,6 @@ import io.spacedog.client.email.EmailTemplate;
 import io.spacedog.client.email.EmailTemplateRequest;
 import io.spacedog.client.file.InternalFileSettings.FileBucketSettings;
 import io.spacedog.client.file.SpaceFile.FileMeta;
-import io.spacedog.tutorials.Customer.Wrap;
 import io.spacedog.utils.ClassResources;
 
 public class T1_CustomerSignUp extends DemoBase {
@@ -39,9 +38,8 @@ public class T1_CustomerSignUp extends DemoBase {
 		source.lastname = "Attias";
 		source.phone = "+33662627520";
 
-		DataWrap<Customer> customer = new Wrap()//
-				.id(david.id())//
-				.source(source);
+		DataWrap<Customer> customer = DataWrap.wrap(source)//
+				.id(david.id());
 
 		david.data().save(customer);
 	}

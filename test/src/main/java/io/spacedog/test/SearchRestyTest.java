@@ -3,8 +3,6 @@
  */
 package io.spacedog.test;
 
-import java.util.List;
-
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -12,9 +10,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
+import io.spacedog.client.data.DataResults;
 import io.spacedog.client.data.DataSettings;
-import io.spacedog.client.data.ObjectNodeWrap;
-import io.spacedog.client.data.ObjectNodeWrap.Results;
 import io.spacedog.client.elastic.ESQueryBuilders;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.client.elastic.ESSortOrder;
@@ -44,43 +41,43 @@ public class SearchRestyTest extends SpaceTest {
 		superadmin.data().save("message", //
 				Json.object("text", "so long guys"));
 
-		assertEquals(5, superadmin.data().searchRequest().refresh().go().total);
+		assertEquals(5, superadmin.data().prepareSearch().refresh().go().total);
 
 		// search for messages with full text query
 		ESSearchSourceBuilder source = ESSearchSourceBuilder.searchSource().query(//
 				ESQueryBuilders.matchQuery("text", "something to drink"));
-		Results results = superadmin.data().searchRequest().source(source).go();
+		DataResults<ObjectNode> results = superadmin.data().prepareSearch().source(source).go();
 
 		assertEquals(2, results.total);
 		assertEquals("wanna drink something?", //
-				results.results.get(0).source().get("text").asText());
+				results.objects.get(0).source().get("text").asText());
 		assertEquals("pretty cool something, hein?", //
-				results.results.get(1).source().get("text").asText());
+				results.objects.get(1).source().get("text").asText());
 
 		// check search scores
-		assertTrue(results.results.get(0).score() //
-		> results.results.get(1).score());
+		assertTrue(results.objects.get(0).score() //
+		> results.objects.get(1).score());
 
 		// check all meta are there
-		assertNotNull(results.results.get(0).id());
-		assertNotNull(results.results.get(0).version());
-		assertNotNull(results.results.get(0).owner());
-		assertNotNull(results.results.get(0).group());
-		assertNotNull(results.results.get(0).createdAt());
-		assertNotNull(results.results.get(0).updatedAt());
+		assertNotNull(results.objects.get(0).id());
+		assertNotNull(results.objects.get(0).version());
+		assertNotNull(results.objects.get(0).owner());
+		assertNotNull(results.objects.get(0).group());
+		assertNotNull(results.objects.get(0).createdAt());
+		assertNotNull(results.objects.get(0).updatedAt());
 
 		// deletes messages containing 'up' by query
-		long deleted = superadmin.data().deleteBulkRequest()//
+		long deleted = superadmin.data().prepareBulkDelete()//
 				.query(ESQueryBuilders.matchQuery("text", "something"))//
 				.go();
 
 		assertEquals(2, deleted);
 		assertEquals(2, //
-				superadmin.data().getAllRequest()//
+				superadmin.data().prepareGetAll()//
 						.type("message").refresh().go().total);
 
 		// deletes data objects containing 'wanna' or 'riri'
-		deleted = superadmin.data().deleteBulkRequest()//
+		deleted = superadmin.data().prepareBulkDelete()//
 				.query(ESQueryBuilders.boolQuery()//
 						.should(ESQueryBuilders.matchQuery("name", "riri"))//
 						.should(ESQueryBuilders.matchQuery("text", "so")))//
@@ -89,10 +86,10 @@ public class SearchRestyTest extends SpaceTest {
 		assertEquals(2, deleted);
 
 		// only "what's up?" remains
-		results = superadmin.data().getAllRequest().refresh().go();
+		results = superadmin.data().prepareGetAll().refresh().go();
 		assertEquals(1, results.total);
 		assertEquals("what's up?", //
-				results.results.get(0).source().get("text").asText());
+				results.objects.get(0).source().get("text").asText());
 	}
 
 	@Test
@@ -128,10 +125,10 @@ public class SearchRestyTest extends SpaceTest {
 				.add("field", "name")//
 				.build();
 
-		Results results = vince.data().searchRequest()//
+		DataResults<ObjectNode> results = vince.data().prepareSearch()//
 				.source(query.toString()).refresh().go();
 
-		assertEquals(0, results.results.size());
+		assertEquals(0, results.objects.size());
 		assertEquals(3, Json.get(results.aggregations, "distinctCities.buckets").size());
 		assertContainsValue("Paris", results.aggregations, "key");
 		assertContainsValue("Bordeaux", results.aggregations, "key");
@@ -153,26 +150,24 @@ public class SearchRestyTest extends SpaceTest {
 
 		// search with ascendent sorting
 		ESSearchSourceBuilder searchSource = ESSearchSourceBuilder.searchSource().sort("i");
-		ObjectNodeWrap.Results results = superadmin.data().searchRequest()//
+		DataResults<ObjectNode> results = superadmin.data().prepareSearch()//
 				.source(searchSource).refresh().go();
 		assertEquals(5, results.total);
 
-		List<ObjectNodeWrap> objects = results.results;
-		for (int i = 0; i < objects.size(); i++) {
-			assertEquals(i, objects.get(i).source().get("i").asInt());
-			assertEquals(i, objects.get(i).sort()[0]);
+		for (int i = 0; i < results.objects.size(); i++) {
+			assertEquals(i, results.objects.get(i).source().get("i").asInt());
+			assertEquals(i, results.objects.get(i).sort()[0]);
 		}
 
 		// search with descendant sorting
 		searchSource = ESSearchSourceBuilder.searchSource().sort("t", ESSortOrder.DESC);
-		results = superadmin.data().searchRequest()//
+		results = superadmin.data().prepareSearch()//
 				.source(searchSource).refresh().go();
 		assertEquals(5, results.total);
 
-		objects = results.results;
-		for (int i = 0; i < objects.size(); i++) {
-			assertEquals(4 - i, objects.get(i).source().get("i").asInt());
-			assertEquals(String.valueOf(4 - i), objects.get(i).sort()[0]);
+		for (int i = 0; i < results.objects.size(); i++) {
+			assertEquals(4 - i, results.objects.get(i).source().get("i").asInt());
+			assertEquals(String.valueOf(4 - i), results.objects.get(i).sort()[0]);
 		}
 	}
 
@@ -189,6 +184,6 @@ public class SearchRestyTest extends SpaceTest {
 		// Fixeds in ElasticSearech version 2.4.6
 		ESSearchSourceBuilder source = ESSearchSourceBuilder.searchSource().query(//
 				ESQueryBuilders.simpleQueryStringQuery("**").analyzeWildcard(true));
-		superadmin.data().searchRequest().source(source).go();
+		superadmin.data().prepareSearch().source(source).go();
 	}
 }

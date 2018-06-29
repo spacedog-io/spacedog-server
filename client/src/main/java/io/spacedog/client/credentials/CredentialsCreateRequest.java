@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 		getterVisibility = Visibility.NONE, //
 		isGetterVisibility = Visibility.NONE, //
 		setterVisibility = Visibility.NONE)
-public class CreateCredentialsRequest {
+public class CredentialsCreateRequest {
 
 	private String username;
 	private String password;
@@ -25,7 +25,7 @@ public class CreateCredentialsRequest {
 		return username;
 	}
 
-	public CreateCredentialsRequest username(String username) {
+	public CredentialsCreateRequest username(String username) {
 		this.username = username;
 		return this;
 	}
@@ -34,7 +34,7 @@ public class CreateCredentialsRequest {
 		return password;
 	}
 
-	public CreateCredentialsRequest password(String password) {
+	public CredentialsCreateRequest password(String password) {
 		this.password = password;
 		return this;
 	}
@@ -43,7 +43,7 @@ public class CreateCredentialsRequest {
 		return email;
 	}
 
-	public CreateCredentialsRequest email(String email) {
+	public CredentialsCreateRequest email(String email) {
 		this.email = email;
 		return this;
 	}
@@ -52,7 +52,7 @@ public class CreateCredentialsRequest {
 		return roles;
 	}
 
-	public CreateCredentialsRequest roles(String... roles) {
+	public CredentialsCreateRequest roles(String... roles) {
 		this.roles = roles;
 		return this;
 	}
@@ -61,7 +61,7 @@ public class CreateCredentialsRequest {
 		return enabled;
 	}
 
-	public CreateCredentialsRequest enabled(boolean enabled) {
+	public CredentialsCreateRequest enabled(boolean enabled) {
 		this.enabled = enabled;
 		return this;
 	}
@@ -70,7 +70,7 @@ public class CreateCredentialsRequest {
 		return enableAfter;
 	}
 
-	public CreateCredentialsRequest enableAfter(DateTime enableAfter) {
+	public CredentialsCreateRequest enableAfter(DateTime enableAfter) {
 		this.enableAfter = enableAfter;
 		return this;
 	}
@@ -79,7 +79,7 @@ public class CreateCredentialsRequest {
 		return disableAfter;
 	}
 
-	public CreateCredentialsRequest disableAfter(DateTime disableAfter) {
+	public CredentialsCreateRequest disableAfter(DateTime disableAfter) {
 		this.disableAfter = disableAfter;
 		return this;
 	}

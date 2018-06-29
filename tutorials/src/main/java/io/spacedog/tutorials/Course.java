@@ -1,17 +1,12 @@
 package io.spacedog.tutorials;
 
-import java.util.List;
-
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.data.DataObjectBase;
-import io.spacedog.client.data.DataWrap;
-import io.spacedog.client.data.DataWrapAbstract;
 import io.spacedog.client.schema.GeoPoint;
 import io.spacedog.utils.Exceptions;
 
@@ -130,34 +125,4 @@ public class Course extends DataObjectBase {
 
 		}
 	}
-
-	public static class Wrap extends DataWrapAbstract<Course> {
-
-		private Course source;
-
-		@Override
-		public Class<Course> sourceClass() {
-			return Course.class;
-		}
-
-		@Override
-		public Course source() {
-			return source;
-		}
-
-		@Override
-		public DataWrap<Course> source(Course source) {
-			this.source = source;
-			return this;
-		}
-	}
-
-	@JsonIgnoreProperties(ignoreUnknown = true)
-	public static class Results {
-
-		public long total;
-		public List<Course.Wrap> results;
-		public ObjectNode aggregations;
-	}
-
 }

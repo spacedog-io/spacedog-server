@@ -9,7 +9,7 @@ import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.RolePermissions;
 import io.spacedog.client.data.DataSettings;
-import io.spacedog.services.SettingsResty;
+import io.spacedog.server.Services;
 
 public class DataAccessControl {
 
@@ -18,7 +18,7 @@ public class DataAccessControl {
 	}
 
 	public static String[] types(Credentials credentials, Permission permission) {
-		Set<String> types = DataStore.backendDataTypes();
+		Set<String> types = Services.data().types();
 		if (!credentials.isAtLeastSuperAdmin()) {
 			Set<String> accessibleTypes = getDataSettings()//
 					.acl().accessList(credentials, permission);
@@ -28,7 +28,7 @@ public class DataAccessControl {
 	}
 
 	private static DataSettings getDataSettings() {
-		return SettingsResty.get().getAsObject(DataSettings.class);
+		return Services.settings().get(DataSettings.class).get();
 	}
 
 }

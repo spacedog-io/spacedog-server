@@ -1,23 +1,17 @@
 package io.spacedog.client.data;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
 import io.spacedog.client.SpaceDog;
-import io.spacedog.client.data.ObjectNodeWrap.Results;
-import io.spacedog.client.elastic.ESQueryBuilder;
-import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.client.http.OkHttp;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.Optional7;
-import io.spacedog.utils.Utils;
 
 public class DataClient implements SpaceFields, SpaceParams {
 
@@ -28,57 +22,86 @@ public class DataClient implements SpaceFields, SpaceParams {
 	}
 
 	//
-	// Get
+	// GET
 	//
 
-	public ObjectNodeWrap get(String type, String id) {
-		return get(type, id, ObjectNodeWrap.class);
+	public ObjectNode get(String type, String id) {
+		return get(type, id, true);
 	}
 
-	public <K> K get(String type, String id, Class<K> pojoClass) {
-		return fetch(type, id, Utils.instantiate(pojoClass));
+	public ObjectNode get(String type, String id, boolean throwNotFound) {
+		return get(type, id, ObjectNode.class, throwNotFound);
 	}
 
-	public <K> DataWrap<K> fetch(DataWrap<K> object) {
-		return fetch(object.type(), object.id(), object);
+	public <K> K get(String type, String id, Class<K> sourceClass) {
+		return get(type, id, sourceClass, true);
+	}
+
+	public <K> K get(String type, String id, Class<K> sourceClass, boolean throwNotFound) {
+		DataWrap<K> wrap = getWrapped(type, id, sourceClass, throwNotFound);
+		return wrap == null ? null : wrap.source();
+	}
+
+	public DataWrap<ObjectNode> getWrapped(String type, String id) {
+		return getWrapped(type, id, true);
+	}
+
+	public DataWrap<ObjectNode> getWrapped(String type, String id, boolean throwNotFound) {
+		return getWrapped(type, id, ObjectNode.class, throwNotFound);
+	}
+
+	public <K> DataWrap<K> getWrapped(String type, String id, Class<K> sourceClass) {
+		return getWrapped(type, id, sourceClass, true);
+	}
+
+	public <K> DataWrap<K> getWrapped(String type, String id, Class<K> sourceClass, boolean throwNotFound) {
+		DataWrap<K> wrap = DataWrap.wrap(sourceClass).type(type).id(id);
+		return fetch(wrap, throwNotFound);
+	}
+
+	public <K> DataWrap<K> fetch(DataWrap<K> wrap) {
+		return fetch(wrap, true);
+	}
+
+	public <K> DataWrap<K> fetch(DataWrap<K> wrap, boolean throwNotFound) {
+		return fetch(wrap.type(), wrap.id(), wrap, throwNotFound);
 	}
 
 	public <K> K fetch(String type, String id, K object) {
+		return fetch(type, id, object, true);
+	}
+
+	public <K> K fetch(String type, String id, K object, boolean throwNotFound) {
+		SpaceResponse response = doGet(type, id, throwNotFound);
+		return response.status() == 404 ? null //
+				: response.asPojo(object);
+	}
+
+	private SpaceResponse doGet(String type, String id, boolean throwNotFound) {
+		int[] expectedStatus = throwNotFound //
+				? new int[] { 200 }
+				: new int[] { 200, 404 };
+
 		return dog.get("/1/data/{type}/{id}")//
 				.routeParam(TYPE_FIELD, type)//
 				.routeParam(ID_FIELD, id)//
-				.go(200)//
-				.asPojo(object);
+				.go(expectedStatus);
 	}
 
 	//
 	// Save
 	//
 
-	public ObjectNodeWrap save(String type, ObjectNode source) {
+	public <K> DataWrap<K> save(String type, K source) {
 		return save(type, null, source);
 	}
 
-	public ObjectNodeWrap save(String type, String id, ObjectNode source) {
-		return save(type, id, source, 0);
+	public <K> DataWrap<K> save(String type, String id, K source) {
+		return save(type, id, -3, source);
 	}
 
-	public ObjectNodeWrap save(String type, String id, ObjectNode source, long version) {
-		return (ObjectNodeWrap) save(new ObjectNodeWrap()//
-				.type(type).id(id).source(source).version(version));
-	}
-
-	public ObjectWrap save(String type, Object source) {
-		return save(type, null, source);
-	}
-
-	public ObjectWrap save(String type, String id, Object source) {
-		return save(type, id, 0, source);
-	}
-
-	public ObjectWrap save(String type, String id, long version, Object source) {
-		return (ObjectWrap) save(new ObjectWrap()//
-				.type(type).id(id).source(source).version(version));
+	public <K> DataWrap<K> save(String type, String id, long version, K source) {
+		return save(DataWrap.wrap(source).type(type).id(id).version(version));
 	}
 
 	public <K> DataWrap<K> save(DataWrap<K> object) {
@@ -106,16 +129,16 @@ public class DataClient implements SpaceFields, SpaceParams {
 	//
 
 	public long patch(String type, String id, Object source) {
-		return patch(type, id, source, 0);
+		return patch(type, id, source, DataWrap.MATCH_ANY_VERSIONS);
 	}
 
 	public long patch(String type, String id, Object source, long version) {
 		SpaceRequest request = dog.put("/1/data/{type}/{id}")//
 				.routeParam(ID_FIELD, id)//
 				.routeParam(TYPE_FIELD, type)//
-				.queryParam(STRICT_PARAM, false);
+				.queryParam(PATCH_PARAM, true);
 
-		if (version > 0)
+		if (version >= 0)
 			request.queryParam(VERSION_PARAM, version);
 
 		return request.bodyPojo(source).go(200)//
@@ -126,15 +149,15 @@ public class DataClient implements SpaceFields, SpaceParams {
 	// Delete
 	//
 
-	public DataClient delete(DataWrap<?> object) {
-		return delete(object.type(), object.id());
+	public void delete(DataWrap<?> object) {
+		delete(object.type(), object.id());
 	}
 
-	public DataClient delete(String type, String id) {
-		return delete(type, id, true);
+	public void delete(String type, String id) {
+		delete(type, id, true);
 	}
 
-	public DataClient delete(String type, String id, boolean throwNotFound) {
+	public void delete(String type, String id, boolean throwNotFound) {
 		SpaceRequest request = dog.delete("/1/data/{type}/{id}")//
 				.routeParam(TYPE_FIELD, type)//
 				.routeParam(ID_FIELD, id);
@@ -143,8 +166,6 @@ public class DataClient implements SpaceFields, SpaceParams {
 			request.go(200);
 		else
 			request.go(200, 404);
-
-		return this;
 	}
 
 	//
@@ -163,90 +184,38 @@ public class DataClient implements SpaceFields, SpaceParams {
 				.bodyPojo(object).go(200).get(VERSION_FIELD).asLong();
 	}
 
-	public Optional7<Long> delete(String type, String id, String field) {
-		SpaceResponse response = dog.delete("/1/data/{t}/{i}/{f}")//
+	public Long delete(String type, String id, String field) {
+		return dog.delete("/1/data/{t}/{i}/{f}")//
 				.routeParam("i", id).routeParam("t", type)//
-				.routeParam("f", field).go(200, 404);
-
-		if (response.status() == 404)
-			return Optional7.empty();
-
-		return Optional7.of(response.get(VERSION_FIELD).asLong());
-	}
-
-	public <T> long add(String type, String id, String field, //
-			@SuppressWarnings("unchecked") T... objects) {
-		return dog.post("/1/data/{t}/{i}/{f}").routeParam("i", id)//
-				.routeParam("t", type).routeParam("f", field)//
-				.bodyPojo(objects).go(200).get(VERSION_FIELD).asLong();
-	}
-
-	public <T> long remove(String type, String id, String field, //
-			@SuppressWarnings("unchecked") T... objects) {
-		return dog.delete("/1/data/{t}/{i}/{f}").routeParam("i", id)//
-				.routeParam("t", type).routeParam("f", field)//
-				.bodyPojo(objects).go(200).get(VERSION_FIELD).asLong();
+				.routeParam("f", field).go(200).get(VERSION_FIELD).asLong();
 	}
 
 	//
 	// Get All Request
 	//
 
-	public GetAllRequest getAllRequest() {
-		return new GetAllRequest();
+	public DataGetAllRequest prepareGetAll() {
+		return new DataGetAllRequest() {
+			@Override
+			public <K> DataResults<K> go(Class<K> resultsClass) {
+				return getAll(this, resultsClass);
+			}
+		};
 	}
 
-	public class GetAllRequest {
-		private String type;
-		private Integer from;
-		private Integer size;
-		private boolean refresh;
-		private String q;
+	public <K> DataResults<K> getAll(DataGetAllRequest request, Class<K> sourceClass) {
 
-		public GetAllRequest type(String type) {
-			this.type = type;
-			return this;
-		}
+		String path = "/1/data";
+		if (!Strings.isNullOrEmpty(request.type))
+			path = path + "/" + request.type;
 
-		public GetAllRequest q(String q) {
-			this.q = q;
-			return this;
-		}
-
-		public GetAllRequest from(int from) {
-			this.from = from;
-			return this;
-		}
-
-		public GetAllRequest size(int size) {
-			this.size = size;
-			return this;
-		}
-
-		public GetAllRequest refresh() {
-			this.refresh = true;
-			return this;
-		}
-
-		public ObjectNodeWrap.Results go() {
-			return go(ObjectNodeWrap.Results.class);
-		}
-
-		public <K> K go(Class<K> resultsClass) {
-
-			String path = "/1/data";
-			if (!Strings.isNullOrEmpty(type))
-				path = path + "/" + type;
-
-			return dog.get(path)//
-					.refresh(refresh)//
-					.queryParam(Q_PARAM, q)//
-					.queryParam(FROM_PARAM, from)//
-					.queryParam(SIZE_PARAM, size)//
-					.go(200)//
-					.asPojo(resultsClass);
-		}
-
+		return dog.get(path)//
+				.refresh(request.refresh)//
+				.queryParam(Q_PARAM, request.q)//
+				.queryParam(FROM_PARAM, request.from)//
+				.queryParam(SIZE_PARAM, request.size)//
+				.go(200)//
+				.asPojo(DataResults.of(sourceClass));
 	}
 
 	//
@@ -254,104 +223,61 @@ public class DataClient implements SpaceFields, SpaceParams {
 	//
 
 	public long deleteAll(String type) {
-		return deleteBulkRequest().type(type).go();
+		return dog.delete("/1/data/" + type)//
+				.refresh().go(200).get("deleted").asLong();
 	}
 
-	public DeleteBulkRequest deleteBulkRequest() {
-		return new DeleteBulkRequest();
+	public DataBulkDeleteRequest prepareBulkDelete() {
+		return new DataBulkDeleteRequest() {
+			@Override
+			public long go() {
+				return bulkDelete(this);
+			}
+		};
 	}
 
-	public class DeleteBulkRequest {
-		private boolean refresh;
-		private String type;
-		private String query;
+	public long bulkDelete(DataBulkDeleteRequest request) {
 
-		public DeleteBulkRequest refresh() {
-			this.refresh = true;
-			return this;
-		}
+		String path = "/1/data";
 
-		public DeleteBulkRequest type(String type) {
-			this.type = type;
-			return this;
-		}
+		if (!Strings.isNullOrEmpty(request.type))
+			path = path + "/" + request.type;
 
-		public DeleteBulkRequest query(String query) {
-			this.query = query;
-			return this;
-		}
+		SpaceRequest spaceRequest = dog.delete(path + "/_search")//
+				.refresh(request.refresh);
 
-		public DeleteBulkRequest query(ESQueryBuilder query) {
-			return query(query.toString());
-		}
+		if (!Strings.isNullOrEmpty(request.query))
+			spaceRequest.bodyJson(request.query);
 
-		public long go() {
-
-			String path = "/1/data";
-
-			if (!Strings.isNullOrEmpty(type))
-				path = path + "/" + type;
-
-			SpaceRequest request = dog.delete(path + "/_search").refresh(refresh);
-
-			if (!Strings.isNullOrEmpty(query))
-				request.bodyJson(query);
-
-			return request.go(200).get("deleted").asLong();
-		}
-
+		return spaceRequest.go(200).get("deleted").asLong();
 	}
 
 	//
 	// Search Request
 	//
 
-	public SearchRequest searchRequest() {
-		return new SearchRequest();
+	public DataSearchRequest prepareSearch() {
+		return new DataSearchRequest() {
+			@Override
+			public <K> DataResults<K> go(Class<K> sourceClass) {
+				return search(this, sourceClass);
+			}
+		};
 	}
 
-	public class SearchRequest {
-		public boolean refresh;
-		public String type;
-		public String source;
+	public <K> DataResults<K> search(DataSearchRequest request, Class<K> sourceClass) {
 
-		public SearchRequest refresh() {
-			this.refresh = true;
-			return this;
-		}
+		String path = "/1/data";
 
-		public SearchRequest type(String type) {
-			this.type = type;
-			return this;
-		}
+		if (!Strings.isNullOrEmpty(request.type))
+			path = path + "/" + request.type;
 
-		public SearchRequest source(String source) {
-			this.source = source;
-			return this;
-		}
+		if (Strings.isNullOrEmpty(request.source))
+			request.source = Json.EMPTY_OBJECT;
 
-		public SearchRequest source(ESSearchSourceBuilder source) {
-			return source(source.toString());
-		}
-
-		public Results go() {
-			return go(Results.class);
-		}
-
-		public <K> K go(Class<K> resultsClass) {
-
-			String path = "/1/data";
-
-			if (!Strings.isNullOrEmpty(type))
-				path = path + "/" + type;
-
-			if (Strings.isNullOrEmpty(source))
-				source = Json.EMPTY_OBJECT;
-
-			return dog.post(path + "/_search").bodyJson(source)//
-					.refresh(refresh).go(200).asPojo(resultsClass);
-		}
-
+		return dog.post(path + "/_search").bodyJson(request.source)//
+				.refresh(request.refresh).go(200)//
+				.asPojo(DataResults.of(sourceClass));
 	}
 
 	//
@@ -368,73 +294,39 @@ public class DataClient implements SpaceFields, SpaceParams {
 	// Import Export
 	//
 
-	public ExportRequest exportRequest(String type) {
-		return new ExportRequest(type);
+	public DataExportRequest prepareExport(String type) {
+		return new DataExportRequest(type) {
+			@Override
+			public SpaceResponse go() {
+				return exportNow(this);
+			}
+
+		};
 	}
 
-	public ImportRequest importRequest(String type) {
-		return new ImportRequest(type);
+	public SpaceResponse exportNow(DataExportRequest request) {
+		return dog.post("/1/data/{type}/_export")//
+				.routeParam("type", request.type)//
+				.queryParam(REFRESH_PARAM, request.refresh)//
+				.body(request.query)//
+				.go(200);
 	}
 
-	public class ExportRequest {
-
-		private String type;
-		private Boolean refresh;
-		private String query;
-
-		public ExportRequest(String type) {
-			this.type = type;
-		}
-
-		public ExportRequest withRefresh(boolean value) {
-			this.refresh = value;
-			return this;
-		}
-
-		public ExportRequest withQuery(ESQueryBuilder query) {
-			return withQuery(query.toString());
-		}
-
-		public ExportRequest withQuery(String query) {
-			this.query = query;
-			return this;
-		}
-
-		public SpaceResponse go() {
-			return dog.post("/1/data/{type}/_export")//
-					.routeParam("type", type)//
-					.queryParam(REFRESH_PARAM, refresh)//
-					.body(query)//
-					.go(200);
-		}
+	public DataImportRequest prepareImport(String type) {
+		return new DataImportRequest(type) {
+			@Override
+			public void go(InputStream export) {
+				importNow(this, export);
+			}
+		};
 	}
 
-	public class ImportRequest {
-
-		private String type;
-		private Boolean preserveIds;
-
-		public ImportRequest(String type) {
-			this.type = type;
-		}
-
-		public ImportRequest withPreserveIds(boolean value) {
-			this.preserveIds = value;
-			return this;
-		}
-
-		public void go(String export) {
-			go(new ByteArrayInputStream(export.getBytes()));
-		}
-
-		public void go(InputStream export) {
-			dog.post("/1/data/{type}/_import")//
-					.withContentType(OkHttp.TEXT_PLAIN)//
-					.routeParam("type", type)//
-					.queryParam(PRESERVE_IDS_PARAM, preserveIds)//
-					.body(export)//
-					.go(200);
-		}
+	public void importNow(DataImportRequest request, InputStream export) {
+		dog.post("/1/data/{type}/_import")//
+				.withContentType(OkHttp.TEXT_PLAIN)//
+				.routeParam("type", request.type)//
+				.queryParam(PRESERVE_IDS_PARAM, request.preserveIds)//
+				.body(export)//
+				.go(200);
 	}
-
 }

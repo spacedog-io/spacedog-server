@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.client.data.ObjectNodeWrap.Results;
+import io.spacedog.client.data.DataResults;
 import io.spacedog.client.settings.SettingsAclSettings;
 import io.spacedog.utils.Json;
 
@@ -78,7 +78,7 @@ public class SettingsRestyTest extends SpaceTest {
 
 		// settings are not data objects
 
-		Results results = superadmin.data().getAllRequest().refresh().go();
+		DataResults<ObjectNode> results = superadmin.data().prepareGetAll().refresh().go();
 		assertEquals(0, results.total);
 
 		// superadmin authorizes all to get/read animals settings

@@ -12,13 +12,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceDog;
-import io.spacedog.client.batch.SpaceCall;
-import io.spacedog.client.credentials.CreateCredentialsRequest;
+import io.spacedog.client.batch.ServiceCall;
+import io.spacedog.client.credentials.CredentialsCreateRequest;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.data.DataSettings;
 import io.spacedog.client.http.SpaceMethod;
-import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.utils.Json;
 
@@ -28,8 +27,7 @@ public class BatchRestyTest extends SpaceTest {
 	public void test() {
 
 		// prepare
-		prepareTest();
-		SpaceRequest.setDebugServerDefault(true);
+		prepareTest(true, true);
 		SpaceDog guest = SpaceDog.dog();
 		SpaceDog superadmin = clearServer();
 		superadmin.credentials().enableGuestSignUp(true);
@@ -40,12 +38,12 @@ public class BatchRestyTest extends SpaceTest {
 
 		// should succeed to reset test account and create message schema with
 		// admin credentials
-		List<SpaceCall> batch = Lists.newArrayList(//
-				new SpaceCall(SpaceMethod.PUT, "/1/schemas/message")//
+		List<ServiceCall> batch = Lists.newArrayList(//
+				new ServiceCall(SpaceMethod.PUT, "/1/schemas/message")//
 						.withPayload(Message.schema().mapping()),
-				new SpaceCall(SpaceMethod.PUT, "/1/settings/data")//
+				new ServiceCall(SpaceMethod.PUT, "/1/settings/data")//
 						.withPayload(dataSettings),
-				new SpaceCall(SpaceMethod.GET, "/1/login"));
+				new ServiceCall(SpaceMethod.GET, "/1/login"));
 
 		superadmin.batch().execute(batch)//
 				.assertEquals("message", "responses.0.id")//
@@ -59,13 +57,13 @@ public class BatchRestyTest extends SpaceTest {
 		// simple backend key credentials
 
 		batch = Lists.newArrayList();
-		CreateCredentialsRequest ccr = new CreateCredentialsRequest()//
+		CredentialsCreateRequest ccr = new CredentialsCreateRequest()//
 				.username("vince").password("hi vince").email("vince@dog.com");
-		batch.add(new SpaceCall(SpaceMethod.POST, "/1/credentials")//
+		batch.add(new ServiceCall(SpaceMethod.POST, "/1/credentials")//
 				.withPayload(ccr));
-		ccr = new CreateCredentialsRequest()//
+		ccr = new CredentialsCreateRequest()//
 				.username("dave").password("hi dave").email("dave@dog.com");
-		batch.add(new SpaceCall(SpaceMethod.POST, "/1/credentials")//
+		batch.add(new ServiceCall(SpaceMethod.POST, "/1/credentials")//
 				.withPayload(ccr));
 
 		ObjectNode node = superadmin.batch().execute(batch).asJsonObject();
@@ -90,12 +88,12 @@ public class BatchRestyTest extends SpaceTest {
 		// found, unauthorized, ...
 
 		batch = Lists.newArrayList();
-		batch.add(new SpaceCall(SpaceMethod.POST, "/1/credentials")//
-				.withPayload(new CreateCredentialsRequest()//
+		batch.add(new ServiceCall(SpaceMethod.POST, "/1/credentials")//
+				.withPayload(new CredentialsCreateRequest()//
 						.username("fred").password("hi fred")));
-		batch.add(new SpaceCall(SpaceMethod.GET, "/1/toto"));
-		batch.add(new SpaceCall(SpaceMethod.DELETE, "/1/credentials/vince"));
-		batch.add(new SpaceCall(SpaceMethod.POST, "/1/credentials/vince/_set_password")//
+		batch.add(new ServiceCall(SpaceMethod.GET, "/1/toto"));
+		batch.add(new ServiceCall(SpaceMethod.DELETE, "/1/credentials/vince"));
+		batch.add(new ServiceCall(SpaceMethod.POST, "/1/credentials/vince/_set_password")//
 				.withPayload(Json.object("password", "hi vince 2")));
 
 		guest.batch().execute(batch)//
@@ -108,24 +106,24 @@ public class BatchRestyTest extends SpaceTest {
 		// should succeed to create and update messages by batch
 
 		batch = Lists.newArrayList();
-		batch.add(new SpaceCall(SpaceMethod.PUT, "/1/data/message/1")//
+		batch.add(new ServiceCall(SpaceMethod.PUT, "/1/data/message/1")//
 				.withPayload(Json.object("text", "Hi guys!"))//
 				.withParams("strict", true));
 
-		batch.add(new SpaceCall(SpaceMethod.PUT, "/1/data/message/2")//
+		batch.add(new ServiceCall(SpaceMethod.PUT, "/1/data/message/2")//
 				.withPayload(Json.object("text", "Pretty cool, huhh?"))//
 				.withParams("strict", true));
 
-		batch.add(new SpaceCall(SpaceMethod.GET, "/1/data/message")//
+		batch.add(new ServiceCall(SpaceMethod.GET, "/1/data/message")//
 				.withParams("refresh", true));
 
-		batch.add(new SpaceCall(SpaceMethod.PUT, "/1/data/message/1")//
+		batch.add(new ServiceCall(SpaceMethod.PUT, "/1/data/message/1")//
 				.withPayload(Json.object("text", "Hi guys, what's up?")));
 
-		batch.add(new SpaceCall(SpaceMethod.PUT, "/1/data/message/2")//
+		batch.add(new ServiceCall(SpaceMethod.PUT, "/1/data/message/2")//
 				.withPayload(Json.object("text", "Pretty cool, huhhhhh?")));
 
-		batch.add(new SpaceCall(SpaceMethod.GET, "/1/data/message")//
+		batch.add(new ServiceCall(SpaceMethod.GET, "/1/data/message")//
 				.withParams("refresh", true));
 
 		SpaceDog vince = SpaceDog.dog().username("vince").password("hi vince");
@@ -150,19 +148,19 @@ public class BatchRestyTest extends SpaceTest {
 				.assertEquals(1, "debug.batchCredentialChecks");
 
 		assertEquals(Sets.newHashSet("Hi guys, what's up?", "Pretty cool, huhhhhh?"), //
-				Sets.newHashSet(response.getString("responses.5.results.0.source.text"),
-						response.getString("responses.5.results.1.source.text")));
+				Sets.newHashSet(response.getString("responses.5.objects.0.source.text"),
+						response.getString("responses.5.objects.1.source.text")));
 
 		assertEquals(Sets.newHashSet("1", "2"), //
-				Sets.newHashSet(response.getString("responses.5.results.0.id"),
-						response.getString("responses.5.results.1.id")));
+				Sets.newHashSet(response.getString("responses.5.objects.0.id"),
+						response.getString("responses.5.objects.1.id")));
 
 		// should succeed to stop on first batch request error
 
 		batch = Lists.newArrayList();
-		batch.add(new SpaceCall(SpaceMethod.GET, "/1/data/message"));
-		batch.add(new SpaceCall(SpaceMethod.GET, "/1/data/XXX"));
-		batch.add(new SpaceCall(SpaceMethod.GET, "/1/data/message"));
+		batch.add(new ServiceCall(SpaceMethod.GET, "/1/data/message"));
+		batch.add(new ServiceCall(SpaceMethod.GET, "/1/data/XXX"));
+		batch.add(new ServiceCall(SpaceMethod.GET, "/1/data/message"));
 
 		vince.batch().execute(batch, true)//
 				.assertEquals(2, "responses.0.total")//
@@ -172,9 +170,9 @@ public class BatchRestyTest extends SpaceTest {
 
 		// should fail since batch are limited to 10 sub requests
 
-		List<SpaceCall> bigBatch = Lists.newArrayList();
-		for (int i = 0; i < 11; i++)
-			bigBatch.add(new SpaceCall(SpaceMethod.GET, "/1/login"));
+		List<ServiceCall> bigBatch = Lists.newArrayList();
+		for (int i = 0; i < 21; i++)
+			bigBatch.add(new ServiceCall(SpaceMethod.GET, "/1/login"));
 
 		assertHttpError(400, () -> guest.batch().execute(bigBatch))//
 				.spaceResponse()//

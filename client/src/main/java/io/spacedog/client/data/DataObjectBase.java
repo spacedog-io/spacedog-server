@@ -1,5 +1,7 @@
 package io.spacedog.client.data;
 
+import java.util.Objects;
+
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -61,4 +63,15 @@ public class DataObjectBase implements DataObject {
 		this.updatedAt = updatedAt;
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == null)
+			return false;
+		DataObjectBase meta = (DataObjectBase) obj;
+
+		return Objects.equals(this.owner, meta.owner)//
+				&& Objects.equals(this.group, meta.group)//
+				&& Objects.equals(this.createdAt, meta.createdAt)//
+				&& Objects.equals(this.updatedAt, meta.updatedAt);
+	}
 }

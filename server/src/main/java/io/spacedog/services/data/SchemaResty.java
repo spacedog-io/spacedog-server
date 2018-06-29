@@ -6,16 +6,12 @@ package io.spacedog.services.data;
 import java.util.Map;
 
 import org.elasticsearch.common.Strings;
-import org.elasticsearch.indices.TypeMissingException;
 
-import io.spacedog.client.data.DataSettings;
 import io.spacedog.client.schema.Schema;
 import io.spacedog.server.JsonPayload;
 import io.spacedog.server.Server;
+import io.spacedog.server.Services;
 import io.spacedog.server.SpaceResty;
-import io.spacedog.services.SettingsResty;
-import io.spacedog.services.push.PushResty;
-import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Json.JsonMerger;
 import net.codestory.http.Context;
@@ -35,19 +31,17 @@ public class SchemaResty extends SpaceResty {
 	@Get("")
 	@Get("/")
 	public Payload getAll(Context context) {
+		Map<String, Schema> all = Services.schemas().getAll();
 		JsonMerger merger = Json.merger();
-		Map<String, Schema> schemas = DataStore.get().getAllSchemas();
-		schemas.values().forEach(schema -> merger.merge(schema.mapping()));
+		all.values().forEach(schema -> merger.merge(schema.mapping()));
 		return JsonPayload.ok().withContent(merger.get()).build();
 	}
 
 	@Get("/:type")
 	@Get("/:type/")
 	public Payload get(String type) {
-		Schema.checkName(type);
-		return JsonPayload.ok()//
-				.withContent(DataStore.get().getSchema(type).mapping())//
-				.build();
+		Schema schema = Services.schemas().get(type);
+		return JsonPayload.ok().withContent(schema.mapping()).build();
 	}
 
 	@Put("/:type")
@@ -57,59 +51,22 @@ public class SchemaResty extends SpaceResty {
 		Server.context().credentials().checkAtLeastAdmin();
 		Schema.checkName(type);
 
-		Schema schema = Strings.isNullOrEmpty(newSchemaAsString) ? getDefaultSchema(type) //
-				: new Schema(type, Json.readObject(newSchemaAsString));
+		if (Strings.isNullOrEmpty(newSchemaAsString))
+			Services.schemas().setDefault(type);
+		else {
+			Schema schema = new Schema(type, Json.readObject(newSchemaAsString));
+			Services.schemas().set(schema);
+		}
 
-		if (schema == null)
-			throw Exceptions.illegalArgument("no default schema for type [%s]", type);
-
-		int shards = context.query().getInteger(SHARDS_PARAM, SHARDS_DEFAULT_PARAM);
-		int replicas = context.query().getInteger(REPLICAS_PARAM, REPLICAS_DEFAULT_PARAM);
-		boolean async = context.query().getBoolean(ASYNC_PARAM, ASYNC_DEFAULT_PARAM);
-
-		org.elasticsearch.common.settings.Settings settings = //
-				org.elasticsearch.common.settings.Settings.builder()//
-						.put("number_of_shards", shards)//
-						.put("number_of_replicas", replicas)//
-						.build();
-
-		boolean created = DataStore.get().setSchema(schema, settings, async);
-
-		return JsonPayload.saved(created, "/1", "schemas", type).build();
+		return JsonPayload.saved(false, "/1", "schemas", type).build();
 	}
 
 	@Delete("/:type")
 	@Delete("/:type/")
 	public Payload delete(String type) {
-		try {
-			Server.context().credentials().checkAtLeastAdmin();
-			elastic().deleteIndex(DataStore.toDataIndex(type));
-		} catch (TypeMissingException ignored) {
-		}
+		Server.context().credentials().checkAtLeastAdmin();
+		Services.schemas().delete(type);
 		return JsonPayload.ok().build();
 	}
 
-	//
-	// Implementation
-	//
-
-	private Schema getDefaultSchema(String type) {
-		if (PushResty.DATA_TYPE.equals(type))
-			return PushResty.getDefaultInstallationSchema();
-		return null;
-	}
-
-	//
-	// Singleton
-	//
-
-	private static SchemaResty singleton = new SchemaResty();
-
-	public static SchemaResty get() {
-		return singleton;
-	}
-
-	private SchemaResty() {
-		SettingsResty.get().registerSettings(DataSettings.class);
-	}
 }

@@ -7,11 +7,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.push.PushProtocol;
 import io.spacedog.client.push.PushRequest;
-import io.spacedog.services.push.PushResty;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 
-public class PushRestyUnitTests extends Assert {
+public class PushServiceUnitTests extends Assert {
 
 	@Test
 	public void convertJsonMessageToSnsMessageTest() {
@@ -22,14 +21,14 @@ public class PushRestyUnitTests extends Assert {
 
 		// convert json message to sns message
 		// it converts field objects to string
-		ObjectNode convertedSnsMessage = PushResty.toSnsMessage(PushProtocol.APNS, jsonMessage);
+		ObjectNode convertedSnsMessage = PushService.toSnsMessage(PushProtocol.APNS, jsonMessage);
 		Utils.info("convertedSnsMessageString = %s", convertedSnsMessage.toString());
 		assertEquals(Json.object("aps", Json.object("alert", "coucou")), //
 				Json.readObject(convertedSnsMessage.get("APNS").asText()));
 
 		// convert sns message to sns message
 		// it should not change anything since already converted
-		convertedSnsMessage = PushResty.toSnsMessage(PushProtocol.APNS, convertedSnsMessage);
+		convertedSnsMessage = PushService.toSnsMessage(PushProtocol.APNS, convertedSnsMessage);
 		Utils.info("convertedSnsMessageString = %s", convertedSnsMessage.toString());
 		assertEquals(Json.object("aps", Json.object("alert", "coucou")), //
 				Json.readObject(convertedSnsMessage.get("APNS").asText()));
@@ -39,20 +38,20 @@ public class PushRestyUnitTests extends Assert {
 	public void convertTextMessageToSnsMessage() {
 
 		PushRequest request = new PushRequest().text("coucou");
-		ObjectNode objectMessage = PushResty.toJsonMessage(request);
+		ObjectNode objectMessage = PushService.toJsonMessage(request);
 
-		ObjectNode snsMessage = PushResty.toSnsMessage(PushProtocol.BAIDU, objectMessage);
+		ObjectNode snsMessage = PushService.toSnsMessage(PushProtocol.BAIDU, objectMessage);
 		assertEquals("coucou", snsMessage.get("default").asText());
 
-		snsMessage = PushResty.toSnsMessage(PushProtocol.APNS, objectMessage);
+		snsMessage = PushService.toSnsMessage(PushProtocol.APNS, objectMessage);
 		assertEquals(Json.object("aps", Json.object("alert", "coucou")), //
 				Json.readObject(snsMessage.get("APNS").asText()));
 
-		snsMessage = PushResty.toSnsMessage(PushProtocol.APNS_SANDBOX, objectMessage);
+		snsMessage = PushService.toSnsMessage(PushProtocol.APNS_SANDBOX, objectMessage);
 		assertEquals(Json.object("aps", Json.object("alert", "coucou")), //
 				Json.readObject(snsMessage.get("APNS_SANDBOX").asText()));
 
-		snsMessage = PushResty.toSnsMessage(PushProtocol.GCM, objectMessage);
+		snsMessage = PushService.toSnsMessage(PushProtocol.GCM, objectMessage);
 		assertEquals(Json.object("data", Json.object("message", "coucou")), //
 				Json.readObject(snsMessage.get("GCM").asText()));
 	}

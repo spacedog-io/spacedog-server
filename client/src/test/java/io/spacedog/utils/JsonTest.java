@@ -16,7 +16,7 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
-import io.spacedog.client.data.ObjectNodeWrap;
+import io.spacedog.client.data.DataWrap;
 
 public class JsonTest extends Assert {
 
@@ -178,7 +178,7 @@ public class JsonTest extends Assert {
 
 	@Test
 	public void shouldPartiallyUpdatePojo() {
-		ObjectNodeWrap object = new ObjectNodeWrap();
+		DataWrap<ObjectNode> object = DataWrap.wrap(ObjectNode.class);
 		String json = Json.object("version", 1).toString();
 		Json.updatePojo(json, object);
 		assertEquals(1, object.version());

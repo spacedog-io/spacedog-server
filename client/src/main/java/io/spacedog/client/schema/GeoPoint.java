@@ -25,6 +25,17 @@ public class GeoPoint {
 	}
 
 	@Override
+	public boolean equals(Object obj) {
+		if (obj == null)
+			return false;
+
+		GeoPoint other = (GeoPoint) obj;
+
+		return this.lat == other.lat//
+				&& this.lon == other.lon;
+	}
+
+	@Override
 	public String toString() {
 		return "{" + lat + ", " + lon + "}";
 	}

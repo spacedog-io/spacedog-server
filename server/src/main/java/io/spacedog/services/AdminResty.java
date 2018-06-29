@@ -14,10 +14,6 @@ import net.codestory.http.payload.Payload;
 @Prefix("/1/admin")
 public class AdminResty extends SpaceResty {
 
-	//
-	// Routes
-	//
-
 	@Post("/_return_500")
 	@Post("/_return_500/")
 	public Payload getLog() {
@@ -34,18 +30,4 @@ public class AdminResty extends SpaceResty {
 
 		Server.get().clear(context.query().getBoolean("files", false));
 	}
-
-	//
-	// Singleton
-	//
-
-	private static AdminResty singleton = new AdminResty();
-
-	public static AdminResty get() {
-		return singleton;
-	}
-
-	private AdminResty() {
-	}
-
 }

@@ -13,6 +13,7 @@ import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.data.DataSettings;
 import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.schema.Schema;
+import io.spacedog.utils.Json;
 
 public class DataAccessControlTest extends SpaceTest {
 
@@ -116,7 +117,7 @@ public class DataAccessControlTest extends SpaceTest {
 		vince.get("/1/data/message").go(403);
 		admin.get("/1/data/message").go(403);
 		superadmin.get("/1/data/message").refresh().go(200)//
-				.assertEquals("1", "results.0.id");
+				.assertEquals("1", "objects.0.id");
 
 		// in empty acl, nobody can update any object but superadmins
 		guest.put("/1/data/message/1").bodyJson("text", "ola").go(403);
@@ -174,8 +175,8 @@ public class DataAccessControlTest extends SpaceTest {
 		guest.get("/1/data/message/").go(403);
 		vince.get("/1/data/message/").go(403);
 		admin.get("/1/data/message/").refresh().go(200)//
-				.assertSizeEquals(2, "results")//
-				.assertEquals("2", "results.1.id");
+				.assertSizeEquals(2, "objects")//
+				.assertEquals("2", "objects.1.id");
 
 		// nobody can update any object (but superadmins)
 		guest.put("/1/data/message/2").bodyJson("text", "ola").go(403);
@@ -257,7 +258,7 @@ public class DataAccessControlTest extends SpaceTest {
 
 		// nath can still read fred's message
 		assertEquals("fred2", nath.data()//
-				.get(Message.TYPE, "fred", Message.Wrap.class).source().text);
+				.get(Message.TYPE, "fred", Message.class).text);
 
 		// nath has update access on fred's objects
 		// since they share the same group
@@ -266,7 +267,7 @@ public class DataAccessControlTest extends SpaceTest {
 
 		// fred can still read his message modified by nath
 		assertEquals("fred3", fred.data()//
-				.get(Message.TYPE, "fred", Message.Wrap.class).source().text);
+				.get(Message.TYPE, "fred", Message.class).text);
 
 		// vince does not have update access to fred's objects
 		// since not in the same group
@@ -319,18 +320,15 @@ public class DataAccessControlTest extends SpaceTest {
 		// he's got all the rights
 		SpaceDog dave = createTempDog(superadmin, "dave");
 		superadmin.credentials().setRole(dave.id(), "platine");
-		DataWrap<Message> message = new Message.Wrap()//
-				.source(new Message("hi")).id("1");
+		DataWrap<Message> message = DataWrap.wrap(new Message("hi")).id("1");
 		message = dave.data().save(message);
-		message = dave.data().get(Message.TYPE, "1", Message.Wrap.class);
+		message = dave.data().getWrapped(Message.TYPE, "1", Message.class);
 		message.source().text = "ola";
 		dave.data().save(message);
 		dave.data().delete(message);
 
 		// message for users without create permission
-		message.id("2");
-		message.source().text = "salut";
-		dave.data().save(message);
+		dave.data().save("message", "2", Json.object("text", "salut"));
 
 		// maelle is a simple user
 		// she's got no right on the message schema

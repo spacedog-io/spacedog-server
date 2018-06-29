@@ -3,38 +3,32 @@
  */
 package io.spacedog.services.data;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.Optional;
-import java.util.function.Supplier;
+import java.util.Locale;
 
-import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.lucene.uid.Versions;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.joda.time.DateTime;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.Permission;
-import io.spacedog.client.credentials.RolePermissions;
-import io.spacedog.client.data.DataObject;
+import io.spacedog.client.data.CsvRequest;
 import io.spacedog.client.data.DataWrap;
-import io.spacedog.client.data.ObjectNodeWrap;
 import io.spacedog.client.http.ContentTypes;
-import io.spacedog.server.ElasticPayload;
 import io.spacedog.server.ElasticUtils;
-import io.spacedog.server.Index;
 import io.spacedog.server.JsonPayload;
 import io.spacedog.server.Server;
+import io.spacedog.server.Services;
 import io.spacedog.server.SpaceResty;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.Request;
 import net.codestory.http.annotations.Delete;
@@ -43,84 +37,123 @@ import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.annotations.Put;
 import net.codestory.http.payload.Payload;
+import net.codestory.http.payload.StreamingOutput;
 
 @Prefix("/1/data")
 public class DataResty extends SpaceResty {
 
-	//
-	// Routes
-	//
-
 	@Get("")
 	@Get("/")
 	public Payload getAll(Context context) {
-		return SearchResty.get().postSearchAllTypes(null, context);
+		Credentials credentials = Server.context().credentials();
+		String[] types = DataAccessControl.types(credentials, Permission.search);
+		return doGet(context, types);
+	}
+
+	@Post("/_search")
+	@Post("/_search/")
+	public Payload postSearchAll(String body, Context context) {
+		Credentials credentials = Server.context().credentials();
+		String[] types = DataAccessControl.types(credentials, Permission.search);
+		return doSearch(body, context, types);
+	}
+
+	@Delete("/_search")
+	@Delete("/_search/")
+	public Payload deleteSearchAll(String query, Context context) {
+		Credentials credentials = Server.context().credentials().checkAtLeastAdmin();
+		String[] types = DataAccessControl.types(credentials, Permission.delete);
+
+		if (Utils.isNullOrEmpty(types))
+			return JsonPayload.ok().build();
+
+		return doDelete(query, context, types);
 	}
 
 	@Get("/:type")
 	@Get("/:type/")
-	public Payload getByType(String type, Context context) {
-		return SearchResty.get().postSearchForType(type, null, context);
+	public Payload getType(String type, Context context) {
+
+		Credentials credentials = Server.context().credentials();
+		if (!DataAccessControl.roles(type).containsOne(credentials, Permission.search))
+			throw Exceptions.forbidden("forbidden to search [%s] objects", type);
+
+		return doGet(context, type);
 	}
 
 	@Post("/:type")
 	@Post("/:type/")
-	public Payload post(String type, String body, Context context) {
-		DataWrap<ObjectNode> object = new ObjectNodeWrap()//
-				.type(type).source(Json.readObject(body));
-		return doPost(object, context);
+	public Payload postType(String type, String body, Context context) {
+		DataWrap<ObjectNode> object = DataWrap.wrap(Json.readObject(body)).type(type);
+		boolean forceMeta = context.query().getBoolean(FORCE_META_PARAM, false);
+		object = Services.data().saveIfAuthorized(object, false, forceMeta);
+		return JsonPayload.saved(object).build();
 	}
 
 	@Delete("/:type")
 	@Delete("/:type/")
 	public Payload deleteByType(String type, Context context) {
-		return SearchResty.get().deleteSearchType(type, null, context);
+		return deleteSearchType(type, null, context);
+	}
+
+	@Post("/:type/_search")
+	@Post("/:type/_search/")
+	public Payload postSearchType(String type, String body, Context context) {
+
+		Credentials credentials = Server.context().credentials();
+		if (!DataAccessControl.roles(type).containsOne(credentials, Permission.search))
+			throw Exceptions.forbidden("forbidden to search [%s] objects", type);
+
+		return doSearch(body, context, type);
+	}
+
+	@Delete("/:type/_search")
+	@Delete("/:type/_search/")
+	public Payload deleteSearchType(String type, String query, Context context) {
+		Credentials credentials = Server.context().credentials().checkAtLeastAdmin();
+
+		if (!DataAccessControl.roles(type).containsOne(credentials, Permission.delete))
+			throw Exceptions.forbidden("forbidden to delete [%s] objects", type);
+
+		return doDelete(query, context, type);
 	}
 
 	@Get("/:type/:id")
 	@Get("/:type/:id/")
 	public Payload getById(String type, String id, Context context) {
-		return JsonPayload.ok().withContent(doGet(type, id)).build();
+		DataWrap<ObjectNode> wrap = Services.data().getIfAuthorized(type, id);
+		return JsonPayload.ok().withContent(wrap).build();
 	}
 
 	@Put("/:type/:id")
 	@Put("/:type/:id/")
 	public Payload put(String type, String id, String body, Context context) {
-		DataWrap<ObjectNode> object = new ObjectNodeWrap()//
-				.type(type).id(id).source(Json.readObject(body));
-		boolean patch = !context.query().getBoolean(STRICT_PARAM, false);
-		return doPut(object, patch, context);
+		DataWrap<ObjectNode> object = DataWrap.wrap(Json.readObject(body))//
+				.version(context.query().getLong(VERSION_PARAM, Versions.MATCH_ANY))//
+				.type(type).id(id);
+
+		boolean forceMeta = context.query().getBoolean(FORCE_META_PARAM, false);
+		boolean patch = context.query().getBoolean(PATCH_PARAM, false);
+
+		object = Services.data().saveIfAuthorized(object, patch, forceMeta);
+		return JsonPayload.saved(object).build();
 	}
 
 	@Delete("/:type/:id")
 	@Delete("/:type/:id/")
 	public Payload deleteById(String type, String id, Context context) {
-		Credentials credentials = Server.context().credentials();
-		RolePermissions roles = DataAccessControl.roles(type);
-
-		if (roles.containsOne(credentials, Permission.delete))
-			return doDeleteById(type, id);
-
-		if (roles.containsOne(credentials, Permission.deleteMine)) {
-			DataWrap<DataObject> metadata = getMetadataOrThrow(type, id);
-			checkOwner(credentials, metadata);
-			return doDeleteById(type, id);
-		}
-
-		if (roles.containsOne(credentials, Permission.deleteGroup)) {
-			DataWrap<DataObject> metadata = getMetadataOrThrow(type, id);
-			checkGroup(credentials, metadata);
-			return doDeleteById(type, id);
-		}
-
-		throw Exceptions.forbidden("forbidden to delete [%s] objects", type);
+		boolean deleted = Services.data().deleteIfAuthorized(type, id);
+		return JsonPayload.ok().withFields("deleted", deleted).build();
 	}
 
 	@Get("/:type/:id/:path")
 	@Get("/:type/:id/:path/")
 	public Payload getField(String type, String id, String path, Context context) {
-		return JsonPayload.ok().withContent(//
-				Json.get(doGet(type, id).source(), path)).build();
+		DataWrap<ObjectNode> wrap = Services.data().getIfAuthorized(type, id);
+		JsonNode value = Json.get(wrap.source(), path);
+		if (value == null)
+			value = NullNode.getInstance();
+		return JsonPayload.ok().withContent(value).build();
 	}
 
 	@Put("/:type/:id/:path")
@@ -128,35 +161,20 @@ public class DataResty extends SpaceResty {
 	public Payload putField(String type, String id, String path, String body, Context context) {
 		ObjectNode source = Json.object();
 		Json.with(source, path, Json.readNode(body));
-		DataWrap<ObjectNode> object = new ObjectNodeWrap()//
-				.type(type).id(id).source(source);
-		return doPut(object, true, context);
-	}
-
-	@Post("/:type/:id/:path")
-	@Post("/:type/:id/:path/")
-	public Payload postField(String type, String id, String path, String body, Context context) {
-		DataWrap<ObjectNode> object = doGet(type, id);
-		Object[] toAdd = Json.toPojo(body, JsonNode[].class);
-		ArrayNode fieldNode = Json.withArray(object.source(), path);
-		Json.addToSet(fieldNode, toAdd);
-		return doPut(object, false, context);
+		DataWrap<ObjectNode> object = DataWrap.wrap(source)//
+				.version(context.query().getLong(VERSION_PARAM, Versions.MATCH_ANY))//
+				.type(type).id(id);
+		object = Services.data().saveIfAuthorized(object, true, false);
+		return JsonPayload.saved(object).build();
 	}
 
 	@Delete("/:type/:id/:path")
 	@Delete("/:type/:id/:path/")
 	public Payload deleteField(String type, String id, String path, String body, Context context) {
-		DataWrap<ObjectNode> object = doGet(type, id);
-
-		if (Strings.isNullOrEmpty(body))
-			Json.remove(object.source(), path);
-		else {
-			Object[] toDelete = Json.toPojo(body, JsonNode[].class);
-			ArrayNode fieldNode = Json.withArray(object.source(), path);
-			Json.removeFromSet(fieldNode, toDelete);
-		}
-
-		return doPut(object, false, context);
+		DataWrap<ObjectNode> object = Services.data().getWrapped(type, id);
+		Json.remove(object.source(), path);
+		object = Services.data().saveIfAuthorized(object, false, false);
+		return JsonPayload.saved(object).build();
 	}
 
 	@Post("/:type/_export")
@@ -166,219 +184,97 @@ public class DataResty extends SpaceResty {
 		DataAccessControl.roles(type).check(credentials, Permission.search);
 
 		if (context.query().getBoolean(REFRESH_PARAM, false))
-			DataStore.get().refreshDataTypes(type);
+			Services.data().refresh(type);
 
 		QueryBuilder query = Strings.isNullOrEmpty(body) //
 				? QueryBuilders.matchAllQuery()
 				: ElasticUtils.toQueryBuilder(body);
 
-		SearchResponse response = elastic()//
-				.prepareSearch(DataStore.toDataIndex(type))//
-				.setScroll(DataExportStreamningOutput.TIMEOUT)//
-				.setSize(DataExportStreamningOutput.SIZE)//
-				.setQuery(query)//
-				.get();
-
-		return new Payload(ContentTypes.TEXT_PLAIN_UTF8, //
-				new DataExportStreamningOutput(response));
+		StreamingOutput output = Services.data().exportNow(type, query);
+		return new Payload(ContentTypes.TEXT_PLAIN_UTF8, output);
 	}
 
 	@Post("/:type/_import")
 	@Post("/:type/_import/")
 	public void postImport(String type, Request request) throws IOException {
+
 		Credentials credentials = Server.context().credentials();
 		DataAccessControl.roles(type).check(credentials, Permission.importAll);
-
 		boolean preserveIds = request.query().getBoolean(PRESERVE_IDS_PARAM, false);
 
-		BufferedReader reader = new BufferedReader(//
-				new InputStreamReader(request.inputStream()));
+		Services.data().prepareImport(type)//
+				.withPreserveIds(preserveIds)//
+				.go(request.inputStream());
+	}
 
-		Index index = DataStore.toDataIndex(type);
-		String json = reader.readLine();
+	@Post("/:type/_csv")
+	@Post("/:type/_csv/")
+	public Payload postSearchForTypeToCsv(String type, CsvRequest request, Context context) {
+		Credentials credentials = Server.context().credentials();
 
-		while (json != null) {
-			ObjectNode object = Json.readObject(json);
-			String source = object.get("source").toString();
+		if (!DataAccessControl.roles(type).containsOne(credentials, Permission.search))
+			throw Exceptions.forbidden("forbidden to search [%s] objects", type);
 
-			if (preserveIds) {
-				String id = object.get("id").asText();
-				elastic().index(index, id, source);
-			} else
-				elastic().index(index, source);
-
-			json = reader.readLine();
-		}
+		Locale locale = getRequestLocale(context);
+		StreamingOutput csv = Services.data().csv(type, request, locale);
+		return new Payload("text/plain;charset=utf-8;", csv);
 	}
 
 	//
 	// Implementation
 	//
 
-	protected DataWrap<ObjectNode> doGet(String type, String id) {
-		Credentials credentials = Server.context().credentials();
-		RolePermissions roles = DataAccessControl.roles(type);
-		Supplier<DataWrap<ObjectNode>> supplier = () -> DataStore.get().getObject(//
-				new ObjectNodeWrap().type(type).id(id));
+	private Payload doGet(Context context, String... types) {
 
-		if (roles.containsOne(credentials, Permission.read, Permission.search))
-			return supplier.get();
+		DataResults<ObjectNode> results = DataResults.of(ObjectNode.class);
+		if (!Utils.isNullOrEmpty(types)) {
 
-		else if (roles.containsOne(credentials, Permission.readMine)) {
-			DataWrap<ObjectNode> object = supplier.get();
-			checkOwner(credentials, object);
-			return object;
+			refreshIfRequested(context, types);
+
+			String q = context.get(Q_PARAM);
+			int from = context.query().getInteger(FROM_PARAM, 0);
+			int size = context.query().getInteger(SIZE_PARAM, 10);
+			boolean fetchSource = context.query().getBoolean("fetch-contents", true);
+
+			QueryBuilder query = Strings.isNullOrEmpty(q) //
+					? QueryBuilders.matchAllQuery() //
+					: QueryBuilders.simpleQueryStringQuery(q);
+
+			SearchSourceBuilder search = SearchSourceBuilder.searchSource()//
+					.query(query).from(from).size(size).fetchSource(fetchSource);
+
+			results = Services.data().search(ObjectNode.class, search, types);
 		}
+		return JsonPayload.ok().withContent(results).build();
+	}
 
-		else if (roles.containsOne(credentials, Permission.readGroup)) {
-			DataWrap<ObjectNode> object = supplier.get();
-			checkGroup(credentials, object);
-			return object;
+	private Payload doSearch(String body, Context context, String... types) {
+
+		DataResults<ObjectNode> results = DataResults.of(ObjectNode.class);
+		if (!Utils.isNullOrEmpty(types)) {
+			refreshIfRequested(context, types);
+			SearchSourceBuilder builder = ElasticUtils.toSearchSourceBuilder(body).version(true);
+			results = Services.data().search(ObjectNode.class, builder, types);
 		}
-
-		throw Exceptions.forbidden("forbidden to read [%s] objects", type);
+		return JsonPayload.ok().withContent(results).build();
 	}
 
-	public <K> Payload doPut(DataWrap<K> object, boolean patch, Context context) {
-		Optional<DataWrap<DataObject>> metaOpt = DataStore.get()//
-				.getMetadata(object.type(), object.id());
+	private Payload doDelete(String query, Context context, String... types) {
 
-		if (metaOpt.isPresent()) {
-			DataWrap<DataObject> metadata = metaOpt.get();
-			Credentials credentials = Server.context().credentials();
-			checkPutPermissions(credentials, metadata);
+		long deleted = 0;
+		if (!Utils.isNullOrEmpty(types)) {
+			refreshIfRequested(context, types);
 
-			boolean forceMeta = checkForceMeta(object.type(), credentials, context);
-			updateMetadata(object, metadata.source(), forceMeta);
+			QueryBuilder builder = Strings.isNullOrEmpty(query) //
+					? QueryBuilders.matchAllQuery()
+					: QueryBuilders.wrapperQuery(query);
 
-			// TODO return better exception-message in case of invalid format
-			object.version(context.query().getLong(VERSION_PARAM, Versions.MATCH_ANY));
-
-			object = patch ? DataStore.get().patchObject(object)//
-					: DataStore.get().updateObject(object);
-
-			return ElasticPayload.saved("/1/data", object).build();
-
-		} else
-			return doPost(object, context);
-	}
-
-	public <K> Payload doPost(DataWrap<K> object, Context context) {
-		Credentials credentials = Server.context().credentials();
-
-		if (DataAccessControl.roles(object.type())//
-				.containsOne(credentials, Permission.create)) {
-
-			boolean forceMeta = checkForceMeta(object.type(), credentials, context);
-			createMetadata(object, credentials, forceMeta);
-
-			object = DataStore.get().createObject(object);
-
-			return ElasticPayload.saved("/1/data", object).build();
+			deleted = Services.data().deleteAll(builder, types);
 		}
-
-		throw Exceptions.forbidden("forbidden to create [%s] objects", object.type());
+		return JsonPayload.ok().withFields("deleted", deleted).build();
 	}
 
-	private <K> void createMetadata(DataWrap<K> object, //
-			Credentials credentials, boolean forceMeta) {
-
-		if (forceMeta == false) {
-			object.owner(credentials.id());
-			object.group(credentials.group());
-		}
-
-		DateTime now = DateTime.now();
-
-		if (forceMeta == false || object.createdAt() == null)
-			object.createdAt(now);
-
-		if (forceMeta == false || object.updatedAt() == null)
-			object.updatedAt(now);
+	private void refreshIfRequested(Context context, String... types) {
+		Services.data().refresh(isRefreshRequested(context), types);
 	}
-
-	private <K> void updateMetadata(DataWrap<K> object, //
-			DataObject metadata, boolean forceMeta) {
-
-		if (forceMeta == false) {
-			object.owner(metadata.owner());
-			object.group(metadata.group());
-		}
-
-		if (forceMeta == false || object.createdAt() == null)
-			object.createdAt(metadata.createdAt());
-
-		if (forceMeta == false || object.updatedAt() == null)
-			object.updatedAt(DateTime.now());
-	}
-
-	private <K> boolean checkForceMeta(String type, //
-			Credentials credentials, Context context) {
-
-		boolean forceMeta = context.query()//
-				.getBoolean(FORCE_META_PARAM, false);
-
-		if (forceMeta)
-			DataAccessControl.roles(type)//
-					.check(credentials, Permission.updateMeta);
-
-		return forceMeta;
-	}
-
-	private Payload doDeleteById(String type, String id) {
-		elastic().delete(DataStore.toDataIndex(type), id, false, true);
-		return JsonPayload.ok().build();
-	}
-
-	public void checkPutPermissions(Credentials credentials, DataWrap<DataObject> metadata) {
-
-		RolePermissions roles = DataAccessControl.roles(metadata.type());
-
-		if (roles.containsOne(credentials, Permission.update))
-			return;
-
-		if (roles.containsOne(credentials, Permission.updateMine)) {
-			checkOwner(credentials, metadata);
-			return;
-		}
-
-		if (roles.containsOne(credentials, Permission.updateGroup)) {
-			checkGroup(credentials, metadata);
-			return;
-		}
-
-		throw Exceptions.forbidden("forbidden to update [%s] objects", metadata.type());
-	}
-
-	private void checkGroup(Credentials credentials, DataWrap<?> object) {
-		if (Strings.isNullOrEmpty(credentials.group()) //
-				|| !credentials.group().equals(object.group()))
-			throw Exceptions.forbidden("not in the same group than [%s][%s] object", //
-					object.type(), object.id());
-	}
-
-	private void checkOwner(Credentials credentials, DataWrap<?> object) {
-		if (!credentials.id().equals(object.owner()))
-			throw Exceptions.forbidden("not the owner of [%s][%s] object", //
-					object.type(), object.id());
-	}
-
-	private DataWrap<DataObject> getMetadataOrThrow(String type, String id) {
-		return DataStore.get().getMetadata(type, id)//
-				.orElseThrow(() -> Exceptions.notFound(type, id));
-	}
-
-	//
-	// singleton
-	//
-
-	private static DataResty singleton = new DataResty();
-
-	public static DataResty get() {
-		return singleton;
-	}
-
-	private DataResty() {
-	}
-
 }

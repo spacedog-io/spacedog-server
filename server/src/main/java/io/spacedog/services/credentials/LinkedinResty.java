@@ -12,9 +12,8 @@ import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.client.http.Uris;
 import io.spacedog.server.JsonPayload;
-import io.spacedog.server.Server;
+import io.spacedog.server.Services;
 import io.spacedog.server.SpaceResty;
-import io.spacedog.services.SettingsResty;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Utils;
@@ -49,7 +48,7 @@ public class LinkedinResty extends SpaceResty {
 		String state = context.get("state");
 
 		if (Strings.isNullOrEmpty(finalRedirectUri)) {
-			finalRedirectUri = getCredentialsSettings()//
+			finalRedirectUri = settings()//
 					.linkedin.finalRedirectUri;
 
 			if (Strings.isNullOrEmpty(finalRedirectUri))
@@ -94,27 +93,6 @@ public class LinkedinResty extends SpaceResty {
 		return new Payload(302).withHeader(SpaceHeaders.LOCATION, location.toString());
 	}
 
-	// client can directly access linkedin api
-	// using spacedog access token since token comes from linkedin
-	// this is only request forwarding
-	@Deprecated
-	@Get("/1/linkedin/me/:fields")
-	@Get("/1/linkedin/me/:fields/")
-	public Payload get(String fields, Context context) {
-
-		Credentials credentials = Server.context().credentials().checkAtLeastUser();
-
-		SpaceResponse response = SpaceRequest.get("/v1/people/~:({fields})")//
-				.backend("https://api.linkedin.com")//
-				.bearerAuth(credentials.accessToken())//
-				.routeParam("fields", fields)//
-				.queryParam("format", "json")//
-				.go();
-
-		checkLinkedinError(response, "linkedin error fetching your profil");
-		return JsonPayload.ok().withContent(response.asJsonObject()).build();
-	}
-
 	//
 	// implementation
 	//
@@ -152,7 +130,7 @@ public class LinkedinResty extends SpaceResty {
 	private Credentials login(Context context) {
 		String code = Check.notNullOrEmpty(context.get("code"), "code");
 
-		CredentialsSettings settings = getCredentialsSettings();
+		CredentialsSettings settings = settings();
 		String redirectUri = context.get("redirect_uri");
 
 		// no redirect_uri in context means
@@ -181,7 +159,7 @@ public class LinkedinResty extends SpaceResty {
 
 		long expiresIn = settings.linkedin.useExpiresIn //
 				? response.asJsonObject().get("expires_in").asLong() //
-				: CredentialsResty.get().getCheckSessionLifetime(context);
+				: CredentialsResty.getCheckSessionLifetime(context);
 
 		Session session = Session.newSession(accessToken, expiresIn);
 
@@ -194,8 +172,7 @@ public class LinkedinResty extends SpaceResty {
 		checkLinkedinError(response, "linkedin error fetching email");
 		String email = response.asJsonObject().get("emailAddress").asText();
 
-		CredentialsResty credentialsResource = CredentialsResty.get();
-		Credentials credentials = credentialsResource.getByName(email, false)//
+		Credentials credentials = Services.credentials().getByUsername(email)//
 				.orElse(new Credentials(email).addRoles(Roles.user));
 
 		credentials.setCurrentSession(session);
@@ -207,15 +184,15 @@ public class LinkedinResty extends SpaceResty {
 			if (!settings.guestSignUpEnabled)
 				throw Exceptions.forbidden("guest sign up is disabled");
 
-			credentials = credentialsResource.create(credentials);
+			credentials = Services.credentials().create(credentials);
 		} else
-			credentials = credentialsResource.update(credentials);
+			credentials = Services.credentials().update(credentials);
 
 		return credentials;
 	}
 
-	private CredentialsSettings getCredentialsSettings() {
-		CredentialsSettings settings = SettingsResty.get().getAsObject(CredentialsSettings.class);
+	private CredentialsSettings settings() {
+		CredentialsSettings settings = Services.credentials().settings();
 		Check.notNull(settings.linkedin, "linkedin");
 		Check.notNull(settings.linkedin.clientId, "linkedin.clientId");
 		Check.notNull(settings.linkedin.clientSecret, "linkedin.clientSecret");
@@ -223,16 +200,4 @@ public class LinkedinResty extends SpaceResty {
 		return settings;
 	}
 
-	//
-	// singleton
-	//
-
-	private static LinkedinResty singleton = new LinkedinResty();
-
-	public static LinkedinResty get() {
-		return singleton;
-	}
-
-	private LinkedinResty() {
-	}
 }

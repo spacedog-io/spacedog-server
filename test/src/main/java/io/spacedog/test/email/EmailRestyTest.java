@@ -90,7 +90,7 @@ public class EmailRestyTest extends SpaceTest {
 
 		// vince emails a text message via smtp
 		ObjectNode response = vince.emails().send(defaultMail());
-		assertNotNull(response.get("messageId").asText());
+		assertNotNull(response.get("smtp").get("messageId").asText());
 
 		// vince emails an html message via smtp
 		mail = defaultMail();
@@ -98,7 +98,7 @@ public class EmailRestyTest extends SpaceTest {
 				Resources.getResource(this.getClass(), "email.html"), //
 				Utils.UTF8);
 		response = vince.emails().send(mail);
-		assertNotNull(response.get("messageId").asText());
+		assertNotNull(response.get("smtp").get("messageId").asText());
 	}
 
 	private EmailBasicRequest defaultMail() {
@@ -189,6 +189,6 @@ public class EmailRestyTest extends SpaceTest {
 		superadmin.emails().deleteTemplate(template.name);
 
 		// nath can not use this email template anymore
-		assertHttpError(404, () -> nath.emails().send(template.name, parameters));
+		assertHttpError(400, () -> nath.emails().send(template.name, parameters));
 	}
 }

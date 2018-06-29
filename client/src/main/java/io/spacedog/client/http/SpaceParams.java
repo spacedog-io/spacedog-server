@@ -8,7 +8,7 @@ public interface SpaceParams {
 	String SHARDS_PARAM = "shards";
 	String REPLICAS_PARAM = "replicas";
 	String REFRESH_PARAM = "refresh";
-	String STRICT_PARAM = "strict";
+	String PATCH_PARAM = "strict";
 	String VERSION_PARAM = "version";
 	String ASYNC_PARAM = "async";
 	String LIFETIME_PARAM = "lifetime";
@@ -25,4 +25,5 @@ public interface SpaceParams {
 	String FORCE_META_PARAM = "forceMeta";
 	String FAIL_PARAM = "_fail";
 	String PRESERVE_IDS_PARAM = "preserveIds";
+	String NEXT_PARAM = "next";
 }

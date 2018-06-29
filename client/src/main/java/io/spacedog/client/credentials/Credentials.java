@@ -17,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -656,6 +657,23 @@ public class Credentials {
 		}
 	}
 
+	public void deleteSession(String accessToken) {
+		if (sessions != null) {
+			Iterator<Session> iterator = sessions.iterator();
+			while (iterator.hasNext()) {
+				Session session = iterator.next();
+				if (session.accessToken.equals(accessToken)) {
+					iterator.remove();
+					return;
+				}
+			}
+		}
+
+		throw Exceptions.illegalArgument(//
+				"access token [%s] not found in [%s][%s]", //
+				type(), username);
+	}
+
 	public boolean isBrandNew() {
 		return updatedAt == null ? true : updatedAt.equals(createdAt);
 	}
@@ -676,6 +694,15 @@ public class Credentials {
 				results.results.add(Credentials.parse(credsNode));
 			return results;
 		}
+
+		// TODO replace this by automatic jackson serialization
+		public ObjectNode toJson() {
+			ArrayNode array = Json.array();
+			for (Credentials creds : this.results)
+				array.add(creds.toJson());
+			return Json.object("total", this.total, "results", array);
+		}
+
 	}
 
 	@JsonIgnoreProperties(ignoreUnknown = true)

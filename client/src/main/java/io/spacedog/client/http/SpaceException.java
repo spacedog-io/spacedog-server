@@ -2,7 +2,7 @@ package io.spacedog.client.http;
 
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Maps;
 
 public class SpaceException extends RuntimeException {
@@ -11,7 +11,7 @@ public class SpaceException extends RuntimeException {
 
 	private int httpStatus;
 	private String code;
-	private ObjectNode details;
+	private JsonNode details;
 	private Map<String, String> headers = Maps.newLinkedHashMap();
 
 	public SpaceException(int httpStatus, String message, Object... args) {
@@ -47,11 +47,11 @@ public class SpaceException extends RuntimeException {
 		return this;
 	}
 
-	public ObjectNode details() {
+	public JsonNode details() {
 		return details;
 	}
 
-	public SpaceException details(ObjectNode details) {
+	public SpaceException details(JsonNode details) {
 		this.details = details;
 		return this;
 	}

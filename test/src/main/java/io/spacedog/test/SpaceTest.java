@@ -55,16 +55,14 @@ public class SpaceTest extends Assert implements SpacePlatform, SpaceFields, Spa
 	}
 
 	public static void prepareTest() {
-		prepareTestInternal(true);
+		prepareTest(true, false);
 	}
 
-	public static void prepareTest(boolean forTesting) {
-		prepareTestInternal(forTesting);
-	}
-
-	private static void prepareTestInternal(boolean forTesting) {
+	public static void prepareTest(boolean forTesting, boolean serverDebug) {
 
 		SpaceRequest.setForTestingDefault(forTesting);
+		SpaceRequest.setDebugServerDefault(serverDebug);
+
 		StackTraceElement grandParentStackTraceElement = Utils.getGrandParentStackTraceElement();
 
 		Utils.info();
@@ -132,12 +130,16 @@ public class SpaceTest extends Assert implements SpacePlatform, SpaceFields, Spa
 					node, fieldPath, expected);
 	}
 
-	private static final List<String> metadataFieldNames = Lists.newArrayList(//
+	private static final List<String> metaFieldNames = Lists.newArrayList(//
 			OWNER_FIELD, GROUP_FIELD, CREATED_AT_FIELD, UPDATED_AT_FIELD);
 
-	public static void assertSourceAlmostEquals(ObjectNode expected, ObjectNode value, String... without) {
-		assertEquals(expected.deepCopy().without(metadataFieldNames).without(Arrays.asList(without)), //
-				value.deepCopy().without(metadataFieldNames).without(Arrays.asList(without)));
+	public static void assertAlmostEquals(Object expected, Object value, String... without) {
+		assertAlmostEquals(Json.toObjectNode(expected), Json.toObjectNode(value), without);
+	}
+
+	public static void assertAlmostEquals(ObjectNode expected, ObjectNode value, String... without) {
+		assertEquals(expected.deepCopy().without(metaFieldNames).without(Arrays.asList(without)), //
+				value.deepCopy().without(metaFieldNames).without(Arrays.asList(without)));
 	}
 
 	public static void assertFieldEquals(String expected, JsonNode node, String fieldPath) {
@@ -162,27 +164,19 @@ public class SpaceTest extends Assert implements SpacePlatform, SpaceFields, Spa
 		return exception;
 	}
 
-	public static <T extends RuntimeException> T assertThrow(//
-			Class<T> exceptionClass, Supplier<?> action) {
-
-		return assertThrow(exceptionClass, () -> {
-			action.get();
-		});
-	}
-
 	@SuppressWarnings("unchecked")
-	public static <T extends RuntimeException> T assertThrow(//
-			Class<T> exceptionClass, Runnable action) {
+	public static <T extends Throwable> T assertThrow(//
+			Class<T> throwableClass, Runnable action) {
 
 		try {
 			action.run();
 
-		} catch (Exception e) {
-			if (exceptionClass.isAssignableFrom(e.getClass()))
+		} catch (Throwable e) {
+			if (throwableClass.isAssignableFrom(e.getClass()))
 				return (T) e;
 			throw e;
 		}
-		throw failure("function did not throw any [%s]", exceptionClass);
+		throw failure("did not throw any [%s]", throwableClass);
 	}
 
 	public static <T> T retry(int tries, long millis, Supplier<T> action) {

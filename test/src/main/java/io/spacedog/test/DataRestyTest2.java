@@ -5,6 +5,7 @@ package io.spacedog.test;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -13,8 +14,6 @@ import org.joda.time.LocalDate;
 import org.joda.time.LocalTime;
 import org.junit.Test;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -25,10 +24,9 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.data.DataObjectBase;
+import io.spacedog.client.data.DataResults;
 import io.spacedog.client.data.DataSettings;
 import io.spacedog.client.data.DataWrap;
-import io.spacedog.client.data.DataWrapAbstract;
-import io.spacedog.client.data.ObjectNodeWrap;
 import io.spacedog.client.elastic.ESQueryBuilders;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.client.schema.GeoPoint;
@@ -52,38 +50,35 @@ public class DataRestyTest2 extends SpaceTest {
 			public String description;
 			public int quantity;
 			public String type;
-		}
-
-		@JsonIgnoreProperties(ignoreUnknown = true)
-		public static class Wrap extends DataWrapAbstract<Sale> {
-
-			private Sale source;
 
 			@Override
-			public Class<Sale> sourceClass() {
-				return Sale.class;
-			}
+			public boolean equals(Object obj) {
+				if (obj == null)
+					return false;
+				Item item = (Item) obj;
 
-			@Override
-			public Sale source() {
-				return source;
+				return Objects.equals(this.ref, item.ref)//
+						&& Objects.equals(this.description, item.description)//
+						&& Objects.equals(this.quantity, item.quantity)//
+						&& Objects.equals(this.type, item.type);
 			}
-
-			@Override
-			public DataWrap<Sale> source(Sale source) {
-				this.source = source;
-				return this;
-			}
-
 		}
 
-		@JsonIgnoreProperties(ignoreUnknown = true)
-		public static class Results {
-			public long total;
-			public List<Sale.Wrap> results;
-			public JsonNode aggregations;
-		}
+		@Override
+		public boolean equals(Object obj) {
+			if (obj == null)
+				return false;
+			Sale sale = (Sale) obj;
 
+			return super.equals(sale)//
+					&& Objects.equals(this.number, sale.number)//
+					&& Objects.equals(this.when, sale.when)//
+					&& Objects.equals(this.where, sale.where)//
+					&& Objects.equals(this.online, sale.online)//
+					&& Objects.equals(this.deliveryDate, sale.deliveryDate)//
+					&& Objects.equals(this.deliveryTime, sale.deliveryTime)//
+					&& Objects.equals(this.items, sale.items);
+		}
 	}
 
 	@Test
@@ -95,7 +90,7 @@ public class DataRestyTest2 extends SpaceTest {
 		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		// superadmin sets sale schema
-		superadmin.schemas().set(SchemaRestyTest.buildSaleSchema().build());
+		superadmin.schemas().set(SchemaRestyTest.buildSaleSchema());
 
 		// superadmin sets acl of sale schema
 		DataSettings settings = new DataSettings();
@@ -128,119 +123,112 @@ public class DataRestyTest2 extends SpaceTest {
 		item2.type = "visit";
 
 		sale.items = Lists.newArrayList(item1, item2);
-		DataWrap<Sale> saleWrap1 = new Sale.Wrap().source(sale);
-		ObjectNode saleNode = Json.checkObject(Json.toJsonNode(sale));
+		DataWrap<Sale> wrap1 = fred.data().save(DataWrap.wrap(sale));
 
-		DataWrap<Sale> saleWrap2 = fred.data().save(saleWrap1);
-		assertEquals("sale", saleWrap2.type());
-		assertEquals(1, saleWrap2.version());
-		assertNotNull(saleWrap2.id());
+		assertEquals("sale", wrap1.type());
+		assertEquals(1, wrap1.version());
+		assertNotNull(wrap1.id());
+		assertEquals(fred.id(), wrap1.owner());
+		assertNotNull(wrap1.group());
+		assertDateIsRecent(wrap1.createdAt());
+		assertDateIsRecent(wrap1.updatedAt());
+		assertEquals(wrap1.createdAt(), wrap1.updatedAt());
 
-		ObjectNode saleNode2 = Json.checkObject(Json.toJsonNode(saleWrap2.source()));
-		assertEquals(saleNode, saleNode2);
+		assertAlmostEquals(sale, wrap1.source());
 
 		// find by id
-		DataWrap<Sale> saleWrap3 = fred.data().fetch(new Sale.Wrap().id(saleWrap2.id()));
+		DataWrap<Sale> wrap2 = fred.data().getWrapped("sale", wrap1.id(), Sale.class);
 
-		assertEquals(fred.id(), saleWrap3.owner());
-		assertNotNull(saleWrap3.group());
-		assertEquals(1, saleWrap3.version());
-		assertEquals("sale", saleWrap3.type());
-		assertEquals(saleWrap2.id(), saleWrap3.id());
-		assertEquals("1234567890", saleWrap3.source().number);
-		assertEquals(-55.6765, saleWrap3.source().where.lat, 0.00002);
-		assertEquals(-54.6765, saleWrap3.source().where.lon, 0.00002);
-		assertEquals(sale.when, saleWrap3.source().when);
-		assertFalse(saleWrap3.source().online);
-		assertEquals(sale.deliveryDate, saleWrap3.source().deliveryDate);
-		assertEquals(sale.deliveryTime, saleWrap3.source().deliveryTime);
-		assertEquals(2, saleWrap3.source().items.size());
-		assertEquals("JDM", saleWrap3.source().items.get(0).ref);
+		assertEquals(fred.id(), wrap2.owner());
+		assertNotNull(wrap2.group());
+		assertEquals(1, wrap2.version());
+		assertEquals("sale", wrap2.type());
+		assertEquals(wrap1.id(), wrap2.id());
+		assertEquals("1234567890", wrap2.source().number);
+		assertEquals(-55.6765, wrap2.source().where.lat, 0.00002);
+		assertEquals(-54.6765, wrap2.source().where.lon, 0.00002);
+		assertEquals(sale.when, wrap2.source().when);
+		assertFalse(wrap2.source().online);
+		assertEquals(sale.deliveryDate, wrap2.source().deliveryDate);
+		assertEquals(sale.deliveryTime, wrap2.source().deliveryTime);
+		assertEquals(2, wrap2.source().items.size());
+		assertEquals("JDM", wrap2.source().items.get(0).ref);
 		assertEquals("2 rooms appartment in the heart of montmartre", //
-				saleWrap3.source().items.get(0).description);
-		assertEquals(8, saleWrap3.source().items.get(0).quantity);
-		assertEquals("appartment", saleWrap3.source().items.get(0).type);
-		assertEquals("LOUVRE", saleWrap3.source().items.get(1).ref);
+				wrap2.source().items.get(0).description);
+		assertEquals(8, wrap2.source().items.get(0).quantity);
+		assertEquals("appartment", wrap2.source().items.get(0).type);
+		assertEquals("LOUVRE", wrap2.source().items.get(1).ref);
 		assertEquals("Louvre museum 2 days visit with a personal guide", //
-				saleWrap3.source().items.get(1).description);
-		assertEquals(2, saleWrap3.source().items.get(1).quantity);
-		assertEquals("visit", saleWrap3.source().items.get(1).type);
+				wrap2.source().items.get(1).description);
+		assertEquals(2, wrap2.source().items.get(1).quantity);
+		assertEquals("visit", wrap2.source().items.get(1).type);
 
-		assertEquals(saleWrap3.createdAt(), saleWrap3.updatedAt());
-		assertDateIsRecent(saleWrap3.createdAt());
-
-		ObjectNode saleNode3 = Json.checkObject(Json.toJsonNode(saleWrap3.source()));
-		assertSourceAlmostEquals(saleNode, saleNode3);
+		assertAlmostEquals(sale, wrap2.source());
 
 		// find by simple text search
-		Sale.Results saleResults4 = fred.data().getAllRequest().type("sale")//
-				.q("museum").refresh().go(Sale.Results.class);
+		DataResults<Sale> results = fred.data().prepareGetAll().type("sale")//
+				.q("museum").refresh().go(Sale.class);
 
-		assertEquals(1, saleResults4.total);
-		ObjectNode saleNode4 = Json.checkObject(Json.toJsonNode(saleResults4.results.get(0).source()));
-		assertSourceAlmostEquals(saleNode, saleNode4);
+		assertEquals(1, results.total);
+		assertAlmostEquals(sale, results.objects.get(0).source());
 
 		// find by advanced text search
 		ESSearchSourceBuilder source = ESSearchSourceBuilder.searchSource()
 				.query(ESQueryBuilders.queryStringQuery("museum"));
-		Sale.Results saleResults5 = fred.data().searchRequest()//
-				.type("sale").source(source).go(Sale.Results.class);
+		results = fred.data().prepareSearch()//
+				.type("sale").source(source).go(Sale.class);
 
-		assertEquals(1, saleResults5.total);
-		ObjectNode saleNode5 = Json.checkObject(Json.toJsonNode(saleResults5.results.get(0).source()));
-		assertSourceAlmostEquals(saleNode, saleNode5);
+		assertEquals(1, results.total);
+		assertAlmostEquals(sale, results.objects.get(0).source());
 
 		// small update no version should succeed
-		JsonNode updateJson2 = Json.builder().object().array("items").object().add("quantity", 7).build();
-		fred.data().patch("sale", saleWrap2.id(), updateJson2);
+		fred.data().patch("sale", wrap1.id(), //
+				Json.object("items", Json.array(Json.object("quantity", 7))));
 
 		// check update is correct
-		DataWrap<Sale> saleDO6 = fred.data().fetch(new Sale.Wrap().id(saleWrap2.id()));
-		assertEquals(fred.id(), saleDO6.owner());
-		assertNotNull(saleDO6.group());
-		// assertEquals(sale2.source().meta().createdAt,
-		// sale6.source().meta().createdAt);
-		// assertDateIsRecent(sale6.source().meta().updatedAt);
-		assertEquals(2, saleDO6.version());
-		assertEquals("sale", saleDO6.type());
-		assertEquals(saleWrap2.id(), saleDO6.id());
-		assertEquals(7, saleDO6.source().items.get(0).quantity);
+		DataWrap<Sale> wrap3 = fred.data().getWrapped("sale", wrap1.id(), Sale.class);
+		assertEquals(fred.id(), wrap3.owner());
+		assertNotNull(wrap3.group());
+		assertEquals(wrap1.createdAt(), wrap3.createdAt());
+		assertDateIsRecent(wrap3.updatedAt());
+		assertTrue(wrap1.updatedAt().isBefore(wrap3.updatedAt()));
+		assertEquals(2, wrap3.version());
+		assertEquals("sale", wrap3.type());
+		assertEquals(wrap1.id(), wrap3.id());
+		assertEquals(7, wrap3.source().items.get(0).quantity);
 
 		// check equality on what has not been updated
-		ObjectNode saleNode6 = Json.checkObject(Json.toJsonNode(saleDO6.source()));
-		assertSourceAlmostEquals(saleNode, saleNode6, "items");
+		assertAlmostEquals(sale, wrap3.source(), "items");
 
 		// update with invalid version should fail
 		assertHttpError(409, () -> fred.data().patch("sale", //
-				saleWrap2.id(), Json.object("number", "0987654321"), 1l));
+				wrap1.id(), Json.object("number", "0987654321"), 1));
 
 		// update with invalid version should fail
-		assertHttpError(400, () -> fred.put("/1/data/sale/" + saleWrap2.id())//
-				.queryParam("version", "XXX").bodyJson("number", "0987654321").go(200));
+		fred.put("/1/data/sale/" + wrap1.id())//
+				.queryParam("version", "XXX").bodyJson("number", "0987654321").go(400);
 
 		// update with correct version should succeed
-		saleDO6.source().number = "0987654321";
-		fred.data().save(saleDO6);
-		assertEquals(3, saleDO6.version());
+		wrap3.source().number = "0987654321";
+		fred.data().save(wrap3);
+		assertEquals(3, wrap3.version());
 
 		// get sale to check update did fine
-		DataWrap<Sale> saleDO7 = fred.data().fetch(new Sale.Wrap().id(saleDO6.id()));
-		assertEquals("0987654321", saleDO7.source().number);
-		assertEquals(3, saleDO7.version());
+		DataWrap<Sale> wrap4 = fred.data().getWrapped("sale", wrap1.id(), Sale.class);
+		assertEquals("0987654321", wrap4.source().number);
+		assertEquals(3, wrap4.version());
 
-		saleNode6 = Json.checkObject(Json.toJsonNode(saleDO6.source()));
-		ObjectNode saleNode7 = Json.checkObject(Json.toJsonNode(saleDO7.source()));
-		assertSourceAlmostEquals(saleNode6, saleNode7, "items");
+		assertAlmostEquals(wrap3.source(), wrap4.source(), "items");
 
 		// vince fails to update nor delete this sale since not the owner
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		assertHttpError(403, () -> vince.data().patch("sale", //
-				saleDO7.id(), Json.object("number", "0123456789")));
-		assertHttpError(403, () -> vince.data().delete(saleDO7));
+				wrap4.id(), Json.object("number", "0123456789")));
+		assertHttpError(403, () -> vince.data().delete(wrap4));
 
 		// fred deletes this sale since he is the owner
-		fred.data().delete(saleDO7);
-		assertHttpError(404, () -> fred.data().fetch(saleDO7));
+		fred.data().delete(wrap4);
+		assertHttpError(404, () -> fred.data().fetch(wrap4));
 	}
 
 	@Test
@@ -263,7 +251,7 @@ public class DataRestyTest2 extends SpaceTest {
 		superadmin.data().save(Message.TYPE, //
 				Json.object("text", "so long guys"));
 
-		long total = superadmin.data().getAllRequest().refresh().go().total;
+		long total = superadmin.data().prepareGetAll().refresh().go().total;
 		assertEquals(4, total);
 
 		// should succeed to delete all messages
@@ -271,7 +259,7 @@ public class DataRestyTest2 extends SpaceTest {
 		assertEquals(4, total);
 
 		// check no data anymore
-		total = superadmin.data().getAllRequest().refresh().go().total;
+		total = superadmin.data().prepareGetAll().refresh().go().total;
 		assertEquals(0, total);
 	}
 
@@ -286,15 +274,15 @@ public class DataRestyTest2 extends SpaceTest {
 
 		// creates a message object with auto generated id
 		ObjectNode message = Json.object("text", "id=?");
-		ObjectNodeWrap createObject = superadmin.data().save(Message.TYPE, message);
-		DataWrap<ObjectNode> getObject = superadmin.data().get(Message.TYPE, createObject.id());
-		assertSourceAlmostEquals(message, getObject.source());
+		DataWrap<ObjectNode> createObject = superadmin.data().save(Message.TYPE, message);
+		DataWrap<ObjectNode> getObject = superadmin.data().getWrapped(Message.TYPE, createObject.id());
+		assertAlmostEquals(message, getObject.source());
 
 		// creates a message object with self provided id
 		message = Json.object("text", "id=1");
 		superadmin.data().save(Message.TYPE, "1", message);
-		getObject = superadmin.data().get(Message.TYPE, "1");
-		assertSourceAlmostEquals(message, getObject.source());
+		getObject = superadmin.data().getWrapped(Message.TYPE, "1");
+		assertAlmostEquals(message, getObject.source());
 
 		// an id field does not force the id field
 		superadmin.post("/1/data/message").bodyJson("text", "id=2", "id", 2).go(400);
@@ -354,13 +342,13 @@ public class DataRestyTest2 extends SpaceTest {
 	private Collection<String> fetchMessages(SpaceDog user, int from, int size) {
 		ESSearchSourceBuilder builder = ESSearchSourceBuilder.searchSource()//
 				.from(from).size(size);
-		Message.Results results = user.data().searchRequest()//
-				.type(Message.TYPE).source(builder).refresh().go(Message.Results.class);
+		DataResults<Message> results = user.data().prepareSearch()//
+				.type(Message.TYPE).source(builder).refresh().go(Message.class);
 
 		assertEquals(4, results.total);
-		assertEquals(size, results.results.size());
+		assertEquals(size, results.objects.size());
 
-		return results.results.stream()//
+		return results.objects.stream()//
 				.map(object -> object.source().text)//
 				.collect(Collectors.toList());
 	}
@@ -382,9 +370,9 @@ public class DataRestyTest2 extends SpaceTest {
 		// superadmin creates home 1 with name dupont
 		superadmin.put("/1/data/home/1/name")//
 				.bodyJson(TextNode.valueOf("dupont")).go(201);
-		DataWrap<ObjectNode> home = superadmin.data().get("home", "1");
+		DataWrap<ObjectNode> home = superadmin.data().getWrapped("home", "1");
 		ObjectNode homeNode = Json.object("name", "dupont");
-		assertSourceAlmostEquals(homeNode, home.source());
+		assertAlmostEquals(homeNode, home.source());
 
 		// guest is forbidden to update home 1 name
 		guest.put("/1/data/home/1/name")//
@@ -393,15 +381,15 @@ public class DataRestyTest2 extends SpaceTest {
 		// superadmin sets home 1 garage places to 6
 		superadmin.put("/1/data/home/1/garage.places")//
 				.bodyJson(IntNode.valueOf(6)).go(200);
-		home = superadmin.data().get("home", "1");
+		home = superadmin.data().getWrapped("home", "1");
 		homeNode.set("garage", Json.object("places", 6));
-		assertSourceAlmostEquals(homeNode, home.source());
+		assertAlmostEquals(homeNode, home.source());
 
 		// superadmin removes home 1 garage
 		superadmin.delete("/1/data/home/1/garage").go(200);
-		home = superadmin.data().get("home", "1");
+		home = superadmin.data().getWrapped("home", "1");
 		homeNode.remove("garage");
-		assertSourceAlmostEquals(homeNode, home.source());
+		assertAlmostEquals(homeNode, home.source());
 
 		// guest is forbidden to remove home 1 name
 		guest.delete("/1/data/home/1/name").go(403);

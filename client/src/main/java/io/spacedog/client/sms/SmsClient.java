@@ -38,6 +38,13 @@ public class SmsClient {
 				.bodyPojo(template).go(200, 201);
 	}
 
+	public SmsTemplate getTemplate(String name) {
+		return dog.get("/1/sms/templates/{name}")//
+				.routeParam("name", name)//
+				.go(200)//
+				.asPojo(SmsTemplate.class);
+	}
+
 	public void deleteTemplate(String templateName) {
 		dog.delete("/1/sms/templates/{name}")//
 				.routeParam("name", templateName)//

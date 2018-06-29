@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 
+import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.http.ContentTypes;
 import io.spacedog.client.http.SpaceException;
 import io.spacedog.client.http.SpaceFields;
@@ -132,6 +133,13 @@ public class JsonPayload implements SpaceFields {
 				.withFields("id", id, "type", type)//
 				.withLocation(uri, type, id)//
 				.withHeader(SpaceHeaders.SPACEDOG_OBJECT_ID, id);
+	}
+
+	public static JsonPayload saved(DataWrap<?> object) {
+		// return JsonPayload.saved(object.isCreated(), "/1/data", object.type(),
+		// object.id())
+		// .withVersion(object.version());
+		return JsonPayload.saved(object.isCreated()).withContent(object);
 	}
 
 	//

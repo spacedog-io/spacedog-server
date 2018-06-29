@@ -33,6 +33,11 @@ public class Exceptions {
 		return new UnsupportedOperationException(String.format(message, args));
 	}
 
+	public static UnsupportedOperationException unsupportedOperation(Class<?> objectClass) {
+		return unsupportedOperation("class [%s] doesn't implement this operation", //
+				objectClass.getSimpleName());
+	}
+
 	public static IllegalArgumentException illegalArgument(String message, Object... args) {
 		return new IllegalArgumentException(String.format(message, args));
 	}

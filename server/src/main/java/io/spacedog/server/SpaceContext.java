@@ -1,7 +1,10 @@
 package io.spacedog.server;
 
 import java.util.Map;
+import java.util.Optional;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
@@ -12,9 +15,10 @@ import io.spacedog.client.http.SpaceException;
 import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.client.settings.Settings;
-import io.spacedog.services.credentials.CredentialsResty;
+import io.spacedog.client.settings.SettingsBase;
 import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
 import net.codestory.http.Request;
 import net.codestory.http.Response;
@@ -34,8 +38,6 @@ public class SpaceContext {
 	private boolean authorizationChecked;
 	private boolean isTest = false;
 	private boolean isWww = false;
-
-	private Map<Class<?>, Settings> settings;
 
 	public SpaceContext(Request request, Response response) {
 		this.request = request;
@@ -115,15 +117,29 @@ public class SpaceContext {
 		return ContentTypes.isJsonContent(contentType);
 	}
 
-	@SuppressWarnings("unchecked")
-	public <T extends Settings> T getSettings(Class<T> settingsId) {
-		return settings == null ? null : (T) settings.get(settingsId);
+	//
+	// Settings cache
+	//
+
+	private Map<String, Object> settings = Maps.newHashMap();
+
+	public Optional<ObjectNode> getSettings(String id) {
+		Object object = settings.get(id);
+		return object == null ? Optional.empty() : Optional.of(Json.toObjectNode(object));
 	}
 
-	public <T extends Settings> void setSettings(Settings settings) {
-		if (this.settings == null)
-			this.settings = Maps.newHashMap();
-		this.settings.put(settings.getClass(), settings);
+	@SuppressWarnings("unchecked")
+	public <T extends Settings> Optional<T> getSettings(Class<T> settingsClass) {
+		Object object = settings.get(SettingsBase.id(settingsClass));
+		if (object == null)
+			return Optional.empty();
+		if (object instanceof JsonNode)
+			return Optional.of(Json.toPojo(((JsonNode) object), settingsClass));
+		return Optional.of((T) object);
+	}
+
+	public <T extends Settings> void setSettings(String id, Object settings) {
+		this.settings.put(id, settings);
 	}
 
 	public SpaceContext checkRootApi() {
@@ -142,7 +158,7 @@ public class SpaceContext {
 	public static SpaceFilter checkBackendFilter() {
 
 		return (uri, context, nextFilter) -> {
-			Index index = CredentialsResty.credentialsIndex();
+			Index index = Services.credentials().index();
 			return Server.get().elasticClient().exists(index) //
 					? nextFilter.get() //
 					: JsonPayload.error(404).withError(//
@@ -179,18 +195,18 @@ public class SpaceContext {
 			if (headerValue == null) {
 				String token = request.query().get(SpaceParams.ACCESS_TOKEN_PARAM);
 				if (!Strings.isNullOrEmpty(token))
-					userCredentials = checkAccessToken(token);
+					userCredentials = Services.credentials().checkToken(token);
 
 			} else {
 				AuthorizationHeader authHeader = new AuthorizationHeader(headerValue, true);
 
 				if (authHeader.isBasic()) {
-					userCredentials = CredentialsResty.get()//
+					userCredentials = Services.credentials()//
 							.checkUsernamePassword(authHeader.username(), //
 									authHeader.password());
 
 				} else if (authHeader.isBearer())
-					userCredentials = checkAccessToken(authHeader.token());
+					userCredentials = Services.credentials().checkToken(authHeader.token());
 			}
 
 			if (userCredentials != null) {
@@ -199,10 +215,6 @@ public class SpaceContext {
 				credentials = userCredentials;
 			}
 		}
-	}
-
-	private Credentials checkAccessToken(String token) {
-		return CredentialsResty.get().checkToken(token);
 	}
 
 	private void checkPasswordMustChange(Credentials credentials) {

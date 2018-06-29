@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.http.SpaceResponse;
-import io.spacedog.utils.Optional7;
 
 public class SettingsClient {
 
@@ -15,18 +14,15 @@ public class SettingsClient {
 		this.dog = session;
 	}
 
-	public <K extends Settings> Optional7<K> exists(Class<K> settingsClass) {
-		return exists(SettingsBase.id(settingsClass), settingsClass);
+	public <K extends Settings> boolean exists(Class<K> settingsClass) {
+		return exists(SettingsBase.id(settingsClass));
 	}
 
-	public <K> Optional7<K> exists(String id, Class<K> settingsClass) {
+	public boolean exists(String id) {
 		SpaceResponse response = dog.get("/1/settings/{id}")//
 				.routeParam("id", id).go(200, 404);
 
-		if (response.status() == 404)
-			return Optional7.empty();
-
-		return Optional7.of(response.asPojo(settingsClass));
+		return response.status() == 404;
 	}
 
 	// get all
@@ -37,6 +33,11 @@ public class SettingsClient {
 
 	public ObjectNode getAll(boolean refresh) {
 		return dog.get("/1/settings")//
+				.refresh(refresh).go(200).asJsonObject();
+	}
+
+	public ObjectNode getAll(int from, int size, boolean refresh) {
+		return dog.get("/1/settings").from(from).size(size)//
 				.refresh(refresh).go(200).asJsonObject();
 	}
 
@@ -54,7 +55,7 @@ public class SettingsClient {
 		return doGet(id).asPojo(settingsClass);
 	}
 
-	public SpaceResponse doGet(String id) {
+	private SpaceResponse doGet(String id) {
 		return dog.get("/1/settings/{id}")//
 				.routeParam("id", id).go(200);
 	}
@@ -85,30 +86,33 @@ public class SettingsClient {
 
 	// save settings
 
-	public <K extends Settings> void save(K settings) {
-		save(settings.id(), settings);
+	public <K extends Settings> long save(K settings) {
+		return save(settings.id(), settings);
 	}
 
-	public void save(String id, Object settings) {
-		dog.put("/1/settings/{id}")//
-				.routeParam("id", id).bodyPojo(settings).go(200, 201);
+	public long save(String id, Object settings) {
+		return dog.put("/1/settings/{id}").routeParam("id", id)//
+				.bodyPojo(settings).go(200, 201)//
+				.get("version").asLong();
 	}
 
-	public void save(String id, String settings) {
-		dog.put("/1/settings/{id}")//
-				.routeParam("id", id).body(settings).go(200, 201);
+	public long save(String id, String settings) {
+		return dog.put("/1/settings/{id}").routeParam("id", id)//
+				.body(settings).go(200, 201)//
+				.get("version").asLong();
 	}
 
 	// save field
 
-	public void save(Class<? extends Settings> settingsClass, String field, Object value) {
-		save(SettingsBase.id(settingsClass), field, value);
+	public long save(Class<? extends Settings> settingsClass, String field, Object value) {
+		return save(SettingsBase.id(settingsClass), field, value);
 	}
 
-	public void save(String id, String field, Object value) {
-		dog.put("/1/settings/{id}/{field}")//
+	public long save(String id, String field, Object value) {
+		return dog.put("/1/settings/{id}/{field}")//
 				.routeParam("id", id).routeParam("field", field)//
-				.bodyPojo(value).go(200, 201);
+				.bodyPojo(value).go(200, 201)//
+				.get("version").asLong();
 	}
 
 	// delete settings
@@ -123,13 +127,14 @@ public class SettingsClient {
 
 	// delete field
 
-	public <K extends Settings> void delete(Class<K> settingsClass, String field) {
-		delete(SettingsBase.id(settingsClass), field);
+	public <K extends Settings> long delete(Class<K> settingsClass, String field) {
+		return delete(SettingsBase.id(settingsClass), field);
 	}
 
-	public void delete(String id, String field) {
-		dog.delete("/1/settings/{id}/{field}")//
-				.routeParam("id", id).routeParam("field", field).go(200);
+	public long delete(String id, String field) {
+		return dog.delete("/1/settings/{id}/{field}")//
+				.routeParam("id", id).routeParam("field", field)//
+				.go(200).get("version").asLong();
 	}
 
 }

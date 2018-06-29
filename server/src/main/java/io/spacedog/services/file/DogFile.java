@@ -1,5 +1,6 @@
 package io.spacedog.services.file;
 
+import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -95,5 +96,16 @@ public class DogFile extends DataObjectBase {
 
 	public String getEscapedPath() {
 		return WebPath.parse(path).toEscapedString();
+	}
+
+	@JsonIgnoreProperties(ignoreUnknown = true)
+	@JsonAutoDetect(fieldVisibility = Visibility.PUBLIC_ONLY, //
+			getterVisibility = Visibility.NONE, //
+			isGetterVisibility = Visibility.NONE, //
+			setterVisibility = Visibility.NONE)
+	public static class FileList {
+		public long total;
+		public List<DogFile> files;
+		public String next;
 	}
 }

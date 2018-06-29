@@ -9,13 +9,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
 import com.mitchellbosecke.pebble.PebbleEngine;
 import com.mitchellbosecke.pebble.loader.StringLoader;
 
-import io.spacedog.services.credentials.CredentialsResty;
-import io.spacedog.services.data.DataStore;
+import io.spacedog.server.Services;
+import io.spacedog.services.credentials.CredentialsService;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 
@@ -46,9 +45,9 @@ public class PebbleTemplating {
 				continue;
 			}
 
-			if (type.equals(CredentialsResty.SERVICE_NAME)) {
+			if (type.equals(CredentialsService.SERVICE_NAME)) {
 				if (value != null && value instanceof String) {
-					value = CredentialsResty.get().getById(value.toString(), true).get();
+					value = Services.credentials().get(value.toString());
 					value = Json.mapper().convertValue(value, Map.class);
 					context.put(name, value);
 					continue;
@@ -58,13 +57,11 @@ public class PebbleTemplating {
 						name, value);
 			}
 
-			if (DataStore.get().isType(type)) {
+			if (Services.data().isType(type)) {
 
 				if (value != null && value instanceof String) {
-					value = DataStore.get().getObject(//
-							type, value.toString(), ObjectNode.class, true);
-					value = Json.mapper().convertValue(value, Map.class);
-					context.put(name, value);
+					context.put(name, Services.data()//
+							.get(type, value.toString(), Map.class));
 					continue;
 				}
 

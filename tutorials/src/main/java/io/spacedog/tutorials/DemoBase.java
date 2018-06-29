@@ -46,7 +46,7 @@ public class DemoBase {
 	protected DataWrap<Customer> davidCustomer() {
 		if (customer == null)
 			customer = david().data()//
-					.get("customer", david().id(), Customer.Wrap.class);
+					.getWrapped("customer", david().id(), Customer.class);
 		return customer;
 	}
 
@@ -57,8 +57,8 @@ public class DemoBase {
 
 	protected DataWrap<Course> course() {
 		if (course == null)
-			course = superadmin().data().fetch(//
-					new Course.Wrap().id("myCourse"));
+			course = superadmin().data()//
+					.getWrapped("course", "myCourse", Course.class);
 		return course;
 	}
 

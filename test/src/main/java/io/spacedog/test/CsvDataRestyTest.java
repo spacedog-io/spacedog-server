@@ -20,7 +20,6 @@ import io.spacedog.client.data.CsvRequest;
 import io.spacedog.client.data.CsvRequest.Column;
 import io.spacedog.client.data.DataObjectBase;
 import io.spacedog.client.data.DataWrap;
-import io.spacedog.client.data.DataWrapAbstract;
 import io.spacedog.client.elastic.ESQueryBuilders;
 import io.spacedog.client.schema.GeoPoint;
 import io.spacedog.client.schema.Schema;
@@ -41,7 +40,7 @@ public class CsvDataRestyTest extends SpaceTest {
 		Set<Course> objects = Sets.newHashSet();
 		for (int i = 0; i < 100; i++) {
 			Course course = randomCourse();
-			superadmin.data().save(new Course.Wrap().source(course));
+			superadmin.data().save(DataWrap.wrap(course));
 			if (course.time > 0)
 				objects.add(course);
 		}
@@ -154,34 +153,6 @@ public class CsvDataRestyTest extends SpaceTest {
 					.closeObject()//
 
 					.build();
-		}
-
-		@JsonIgnoreProperties(ignoreUnknown = true)
-		public static class Wrap extends DataWrapAbstract<Course> {
-
-			private Course source;
-
-			@Override
-			public Class<Course> sourceClass() {
-				return Course.class;
-			}
-
-			@Override
-			public Course source() {
-				return this.source;
-			}
-
-			@Override
-			public DataWrap<Course> source(Course source) {
-				this.source = source;
-				return this;
-			}
-		}
-
-		@JsonIgnoreProperties(ignoreUnknown = true)
-		public static class Results {
-			public long total;
-			public List<Wrap> results;
 		}
 	}
 }

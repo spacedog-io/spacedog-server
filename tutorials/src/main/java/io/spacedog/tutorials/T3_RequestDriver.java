@@ -12,6 +12,7 @@ import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Roles;
+import io.spacedog.client.data.DataResults;
 import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.elastic.ESBoolQueryBuilder;
 import io.spacedog.client.elastic.ESDistanceUnit;
@@ -55,8 +56,7 @@ public class T3_RequestDriver extends DemoBase {
 		source.payment.companyId = "LHJKBVCJFCFCK";
 		source.payment.companyName = "SpaceDog";
 
-		DataWrap<Course> course = new Course.Wrap()//
-				.source(source)//
+		DataWrap<Course> course = DataWrap.wrap(source)//
 				.id("myCourse");
 
 		course = david.data().save(course);
@@ -90,9 +90,9 @@ public class T3_RequestDriver extends DemoBase {
 				.unit(ESDistanceUnit.METERS)//
 				.sortMode("min");
 
-		Driver.Results drivers = superadmin.data().searchRequest().type("driver")//
+		DataResults<Driver> drivers = superadmin.data().prepareSearch().type("driver")//
 				.source(ESSearchSourceBuilder.searchSource().query(query).sort(sort).size(5))//
-				.go(Driver.Results.class);
+				.go(Driver.class);
 
 		// system pushes notifications to nearby drivers
 
@@ -107,7 +107,7 @@ public class T3_RequestDriver extends DemoBase {
 
 		ObjectNode message = Json.object("APNS", apsMessage, "GCM", gcmMessage);
 
-		for (Driver.Wrap driver : drivers.results)
+		for (DataWrap<Driver> driver : drivers)
 			superadmin.push().push(new PushRequest().appId("carerec-driver")//
 					.credentialsId(driver.id())//
 					.data(message));
@@ -148,9 +148,9 @@ public class T3_RequestDriver extends DemoBase {
 
 		SpaceDog cashier = cashier();
 
-		Course.Results completedCourses = searchForCompletedCourses();
+		DataResults<Course> completedCourses = searchForCompletedCourses();
 
-		for (DataWrap<Course> completed : completedCourses.results) {
+		for (DataWrap<Course> completed : completedCourses) {
 
 			// cashier calculates time, distance and fare if necessary
 
@@ -199,7 +199,7 @@ public class T3_RequestDriver extends DemoBase {
 		return null;
 	}
 
-	private io.spacedog.tutorials.Course.Results searchForCompletedCourses() {
+	private DataResults<Course> searchForCompletedCourses() {
 		// TODO Auto-generated method stub
 		return null;
 	}

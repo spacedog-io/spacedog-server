@@ -8,17 +8,18 @@ import org.junit.Test;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.CredentialsSettings;
 import io.spacedog.client.credentials.Passwords;
+import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.email.EmailTemplate;
 import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.client.http.SpaceRequestException;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.Optional7;
 
 public class CredentialsRestyTest extends SpaceTest {
 
@@ -65,7 +66,7 @@ public class CredentialsRestyTest extends SpaceTest {
 	}
 
 	@Test
-	public void testEnableAfterAndDisableAfter() {
+	public void enableDisableAfter() {
 
 		// prepare
 		prepareTest();
@@ -76,36 +77,36 @@ public class CredentialsRestyTest extends SpaceTest {
 		fred.login();
 
 		// fred gets data
-		fred.data().getAllRequest().go();
+		fred.data().prepareGetAll().go();
 
-		// only admins are allowed to update credentials enable after date
+		// only admins are allowed to update credentials enable disable after dates
 		assertHttpError(403, () -> fred.credentials().prepareUpdate()//
-				.enableAfter(Optional7.of(DateTime.now())).go());
-
-		// only admins are allowed to update credentials disable after date
-		assertHttpError(403, () -> fred.credentials().prepareUpdate()//
-				.disableAfter(Optional7.of(DateTime.now())).go());
+				.enableDisableAfter(DateTime.now(), null).go());
 
 		// only admins are allowed to update credentials enabled status
 		assertHttpError(403, () -> fred.credentials().prepareUpdate().enabled(true).go());
 
-		// superadmin can update fred's credentials disable after date
+		// superadmin updates fred's credentials disable after date
 		// before now so fred's credentials are disabled
+		DateTime enableAfter = null;
+		DateTime disableAfter = DateTime.now().minus(100000);
 		superadmin.credentials().prepareUpdate(fred.id())//
-				.disableAfter(Optional7.of(DateTime.now().minus(100000))).go();
+				.enableDisableAfter(enableAfter, disableAfter).go();
 
 		// fred's credentials are disabled so he fails to gets any data
-		fred.get("/1/data").go(401)//
-				.assertEquals("disabled-credentials", "error.code");
+		SpaceRequestException e = assertHttpError(401, () -> fred.data().prepareGetAll().go());
+		assertEquals("disabled-credentials", e.serverErrorCode());
 
 		// fred's credentials are disabled so he fails to log in
-		fred.get("/1/login").go(401);
+		e = assertHttpError(401, () -> fred.login());
+		assertEquals("disabled-credentials", e.serverErrorCode());
 
-		// superadmin can update fred's credentials enable after date
+		// superadmin update fred's credentials enable after date
 		// before now and after disable after date so fred's credentials
 		// are enabled again
+		enableAfter = DateTime.now().minus(100000);
 		superadmin.credentials().prepareUpdate(fred.id())//
-				.enableAfter(Optional7.of(DateTime.now().minus(100000))).go();
+				.enableDisableAfter(enableAfter, disableAfter).go();
 
 		// fred's credentials are enabled again so he gets data
 		// with his old access token from first login
@@ -117,24 +118,28 @@ public class CredentialsRestyTest extends SpaceTest {
 		// superadmin updates fred's credentials disable after date
 		// before now but after enable after date so fred's credentials
 		// are disabled again
+		disableAfter = DateTime.now().minus(100000);
 		superadmin.credentials().prepareUpdate(fred.id())//
-				.disableAfter(Optional7.of(DateTime.now().minus(100000))).go();
+				.enableDisableAfter(enableAfter, disableAfter).go();
 
 		// fred's credentials are disabled so he fails to gets any data
-		fred.get("/1/data").go(401)//
-				.assertEquals("disabled-credentials", "error.code");
+		e = assertHttpError(401, () -> fred.data().prepareGetAll().go());
+		assertEquals("disabled-credentials", e.serverErrorCode());
 
 		// fred's credentials are disabled so he fails to log in
-		fred.get("/1/login").go(401);
+		e = assertHttpError(401, () -> fred.login());
+		assertEquals("disabled-credentials", e.serverErrorCode());
 
 		// superadmin updates fred's credentials to remove enable and
 		// disable after dates so fred's credentials are enabled again
+		enableAfter = null;
+		disableAfter = null;
 		superadmin.credentials().prepareUpdate(fred.id())//
-				.enableAfter(Optional7.empty()).disableAfter(Optional7.empty()).go();
+				.enableDisableAfter(enableAfter, disableAfter).go();
 
 		// fred's credentials are enabled again so he gets data
 		// with his old access token from first login
-		SpaceRequest.get("/1/data").bearerAuth(fred).go(200);
+		fred.get("/1/data").bearerAuth(fred).go(200);
 
 		// fred's credentials are enabled again so he can log in
 		fred.login();
@@ -142,7 +147,7 @@ public class CredentialsRestyTest extends SpaceTest {
 		// superadmin fails to update fred's credentials enable after date
 		// since invalid format
 		superadmin.put("/1/credentials/{id}").routeParam("id", fred.id())//
-				.bodyJson(ENABLE_AFTER_FIELD, "XXX").go(400);
+				.bodyJson("enableDisableAfter", Json.object("enable", "XXX")).go(400);
 	}
 
 	@Test
@@ -161,10 +166,10 @@ public class CredentialsRestyTest extends SpaceTest {
 				.login(fred.password().get());
 
 		// fred can access data with his first token
-		fred.data().getAllRequest().go();
+		fred.data().prepareGetAll().go();
 
 		// fred can access data with his second token
-		fred2.data().getAllRequest().go();
+		fred2.data().prepareGetAll().go();
 
 		// superadmin updates fred's password
 		String newPassword = Passwords.random();
@@ -172,10 +177,10 @@ public class CredentialsRestyTest extends SpaceTest {
 				superadmin.password().get(), newPassword);
 
 		// fred can no longer access data with his first token now invalid
-		assertHttpError(401, () -> fred.data().getAllRequest().go());
+		assertHttpError(401, () -> fred.data().prepareGetAll().go());
 
 		// fred can no longer access data with his second token now invalid
-		assertHttpError(401, () -> fred2.data().getAllRequest().go());
+		assertHttpError(401, () -> fred2.data().prepareGetAll().go());
 
 		// but fred can log in with his new password
 		fred.login(newPassword);
@@ -262,7 +267,7 @@ public class CredentialsRestyTest extends SpaceTest {
 		SpaceDog fred = createTempDog(superadmin, "fred").login();
 
 		// fred can get data objects
-		fred.data().getAllRequest().go();
+		fred.data().prepareGetAll().go();
 
 		// superadmin forces fred to change his password
 		superadmin.credentials().passwordMustChange(fred.id());
@@ -301,57 +306,66 @@ public class CredentialsRestyTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
+		SpaceDog guest = SpaceDog.dog();
 		SpaceDog superadmin = clearServer();
 		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		// fred can get data objects
 		fred.get("/1/data").go(200);
 
-		// to declare that you forgot your password
-		// you need to pass your username
-		assertHttpError(404, () -> superadmin.credentials()//
+		// to declare password is forgotten
+		// you need to pass its username
+		assertHttpError(400, () -> superadmin.credentials()//
 				.sendPasswordResetEmail(""));
 
 		// if invalid username, you get a 404
 		assertHttpError(404, () -> superadmin.credentials()//
 				.sendPasswordResetEmail("XXX"));
 
-		// fred fails to declare "forgot password" if no
-		// forgotPassword template set in mail settings
-		assertHttpError(400, () -> fred.credentials()//
-				.sendMePasswordResetEmail());
+		// guest fails to declare that his password is forgotten
+		// if no forgot password template set in mail settings
+		assertHttpError(400, () -> guest.credentials()//
+				.sendPasswordResetEmail("fred"));
 
 		// superadmin saves the forgotPassword email template
 		EmailTemplate template = new EmailTemplate();
 		template.name = "password_reset_email_template";
 		template.from = "no-reply@api.spacedog.io";
-		template.to = Lists.newArrayList("{{to}}");
+		template.to = Lists.newArrayList("{{credentials.email}}");
 		template.subject = "You've forgotten your password!";
-		template.text = "{{passwordResetCode}}";
+		template.text = "{{credentials.passwordResetCode}}";
 		superadmin.emails().saveTemplate(template);
 
-		// fred declares he's forgot his password
-		fred.credentials().sendMePasswordResetEmail();
+		// guest declares fred's forgot his password
+		assertHttpError(401, () -> guest.credentials().sendPasswordResetEmail("fred"));
 
-		// fred can not pass any parameter unless they
+		// superadmin updates forgot password email template
+		// to authorize all
+		template.authorizedRoles = Sets.newHashSet(Roles.all);
+		superadmin.emails().saveTemplate(template);
+
+		// guest declares fred's forgot his password
+		guest.credentials().sendPasswordResetEmail("fred");
+
+		// guest can not pass any parameter unless they
 		// are registered in the template model
-		assertHttpError(400, () -> fred.credentials().sendMePasswordResetEmail(//
+		assertHttpError(400, () -> guest.credentials().sendPasswordResetEmail("fred", //
 				Json.object("url", "http://localhost:8080")));
 
 		// add an url parameter to the template model
 		template.model = Maps.newHashMap();
 		template.model.put("url", "string");
-		template.text = "{{url}}?code={{passwordResetCode}}";
+		template.text = "{{url}}?code={{credentials.passwordResetCode}}";
 		superadmin.emails().saveTemplate(template);
 
-		// fred declares he's forgot his password
+		// guest declares fred's forgot his password
 		// passing an url parameter
-		fred.credentials().sendMePasswordResetEmail(//
+		guest.credentials().sendPasswordResetEmail("fred", //
 				Json.object("url", "http://localhost:8080"));
 
 		// fred can still access services if he remembers his password
 		// or if he's got a valid token
-		fred.get("/1/data").go(200);
+		fred.data().prepareGetAll().go();
 	}
 
 	@Test

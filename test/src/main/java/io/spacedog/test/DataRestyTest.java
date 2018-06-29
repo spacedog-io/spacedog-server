@@ -11,9 +11,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
+import io.spacedog.client.data.DataResults;
 import io.spacedog.client.data.DataSettings;
-import io.spacedog.client.data.ObjectNodeWrap;
-import io.spacedog.client.http.SpaceRequestException;
+import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.schema.Schema;
 import io.spacedog.utils.Json;
 
@@ -28,7 +28,7 @@ public class DataRestyTest extends SpaceTest {
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		// superadmin sets car schema
-		superadmin.schemas().set(SchemaRestyTest.buildCarSchema().build());
+		superadmin.schemas().set(SchemaRestyTest.buildCarSchema());
 
 		// superadmin sets acl of car schema
 		DataSettings settings = new DataSettings();
@@ -53,28 +53,29 @@ public class DataRestyTest extends SpaceTest {
 				.build();
 
 		// create
-		ObjectNodeWrap carWrap = vince.data().save("car", car);
+		DataWrap<ObjectNode> carWrap = vince.data().save("car", car);
 		assertEquals("car", carWrap.type());
 		assertNotNull(carWrap.id());
 
 		// find by id
-		ObjectNodeWrap car1 = vince.data().get("car", carWrap.id());
+		DataWrap<ObjectNode> car1 = vince.data().getWrapped("car", carWrap.id());
 
 		assertEquals(vince.id(), car1.owner());
 		assertNotNull(car1.group());
 		DateTime createdAt = assertDateIsRecent(car1.createdAt());
 		DateTime updatedAt = assertDateIsRecent(car1.updatedAt());
 		assertEquals(createdAt, updatedAt);
-		assertSourceAlmostEquals(car, car1.source());
+		assertAlmostEquals(car, car1.source());
 
 		// find by full text search
-		vince.get("/1/data/car").refresh().queryParam("q", "inVENT*").go(200)//
-				.assertEquals(carWrap.id(), "results.0.id");
+		DataResults<ObjectNode> results = vince.data().prepareGetAll().refresh().q("inVENT*").go();
+		assertEquals(1, results.total);
+		assertEquals(carWrap.id(), results.objects.get(0).id());
 
 		// update
 		vince.data().patch("car", carWrap.id(), Json.object("color", "blue"));
 
-		ObjectNodeWrap car3 = vince.data().get("car", carWrap.id());
+		DataWrap<ObjectNode> car3 = vince.data().getWrapped("car", carWrap.id());
 		assertEquals(vince.id(), car3.owner());
 		assertNotNull(car3.group());
 		assertEquals(createdAt, car3.createdAt());
@@ -97,7 +98,7 @@ public class DataRestyTest extends SpaceTest {
 		SpaceDog superadmin = clearServer();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
-		superadmin.schemas().set(SchemaRestyTest.buildCarSchema().build());
+		superadmin.schemas().set(SchemaRestyTest.buildCarSchema());
 
 		DataSettings settings = new DataSettings();
 		settings.acl().put("car", Roles.user, Permission.create, Permission.updateMine, //
@@ -124,28 +125,26 @@ public class DataRestyTest extends SpaceTest {
 		String id = vince.data().save("car", car).id();
 
 		// find by id
-		ObjectNodeWrap carWrap = vince.data().get("car", id);
+		DataWrap<ObjectNode> carWrap = vince.data().getWrapped("car", id);
 		assertEquals(vince.id(), carWrap.owner());
 		assertNotNull(carWrap.group());
 		assertNotNull(carWrap.createdAt());
-		assertSourceAlmostEquals(car, carWrap.source());
+		assertAlmostEquals(car, carWrap.source());
 
 		// find by full text search
-		vince.get("/1/data/car").refresh().queryParam("q", "inVENT*").go(200)//
-				.assertEquals(id, "results.0.id");
+		DataResults<ObjectNode> results = vince.data().prepareGetAll()//
+				.refresh().q("inVENT*").go();
+		assertEquals(1, results.total);
+		assertEquals(id, results.objects.get(0).id());
 
 		// update
 		vince.data().patch("car", id, Json.object("color", "blue"));
-		carWrap = vince.data().get("car", id);
+		carWrap = vince.data().getWrapped("car", id);
 		assertEquals("blue", carWrap.source().get("color").asText());
 
 		// delete
 		vince.data().delete("car", id);
-		try {
-			vince.data().delete("car", id);
-		} catch (SpaceRequestException e) {
-			assertEquals(404, e.httpStatus());
-		}
+		assertHttpError(404, () -> vince.data().delete("car", id));
 	}
 
 	@Test
@@ -181,9 +180,7 @@ public class DataRestyTest extends SpaceTest {
 		vince.data().save(Message.TYPE, "1", message);
 
 		// but provided meta dates are not saved
-		Message downloaded = vince.data()//
-				.get(Message.TYPE, "1", Message.Wrap.class)//
-				.source();
+		Message downloaded = vince.data().get(Message.TYPE, "1", Message.class);
 
 		assertEquals(message.text, downloaded.text);
 		assertEquals(vince.id(), downloaded.owner());
@@ -199,17 +196,15 @@ public class DataRestyTest extends SpaceTest {
 				.bodyPojo(message)//
 				.go(403);
 
-		// operator can create a new message with custom metadata
+		// operator can create a new message with custom meta
 		operator.put("/1/data/message/2")//
 				.queryParam(FORCE_META_PARAM, true)//
 				.bodyPojo(message)//
-				.go(201);
+				.go(200);
 
 		// provided custom meta are saved
 		// and nath can access this object since the owner
-		downloaded = nath.data()//
-				.fetch(new Message.Wrap().id("2"))//
-				.source();
+		downloaded = nath.data().get(Message.TYPE, "2", Message.class);
 
 		assertEquals(message.text, downloaded.text);
 		assertEquals(nath.id(), downloaded.owner());

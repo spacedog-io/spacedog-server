@@ -12,7 +12,14 @@ public class JobClient {
 		this.dog = dog;
 	}
 
-	public void create(SpaceJob job) {
+	public SpaceJob get(String jobName) {
+		return dog.get("/1/jobs/{name}")//
+				.routeParam("name", jobName)//
+				.go(200)//
+				.asPojo(SpaceJob.class);
+	}
+
+	public void save(SpaceJob job) {
 		dog.put("/1/jobs/{name}")//
 				.routeParam("name", job.name)//
 				.bodyPojo(job)//

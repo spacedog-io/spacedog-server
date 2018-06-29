@@ -5,6 +5,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.client.data.DataResults;
 import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.client.push.PushApplication.Credentials;
@@ -30,7 +31,7 @@ public class PushClient {
 						.asPojo(PushApplication[].class));
 	}
 
-	public PushClient saveApp(String name, String service, Credentials credentials) {
+	public void saveApp(String name, String service, Credentials credentials) {
 		Check.notNull(name, "push app name");
 		Check.notNull(service, "push app service");
 		Check.notNull(credentials, "push app credentials");
@@ -40,15 +41,13 @@ public class PushClient {
 				.routeParam("service", service.toString())//
 				.bodyPojo(credentials)//
 				.go(200);
-
-		return this;
 	}
 
-	public PushClient saveApp(PushApplication app) {
-		return saveApp(app.name, app.protocol.toString(), app.credentials);
+	public void saveApp(PushApplication app) {
+		saveApp(app.name, app.protocol.toString(), app.credentials);
 	}
 
-	public PushClient deleteApp(String name, String service) {
+	public void deleteApp(String name, String service) {
 		Check.notNull(name, "push app name");
 		Check.notNull(service, "push app service");
 
@@ -56,12 +55,10 @@ public class PushClient {
 				.routeParam("name", name)//
 				.routeParam("service", service)//
 				.go(200);
-
-		return this;
 	}
 
-	public PushClient deleteApp(PushApplication app) {
-		return deleteApp(app.name, app.protocol.toString());
+	public void deleteApp(PushApplication app) {
+		deleteApp(app.name, app.protocol.toString());
 	}
 
 	//
@@ -78,7 +75,7 @@ public class PushClient {
 	//
 
 	public DataWrap<Installation> getInstallation(String id) {
-		return dog.data().fetch(new Installation.Wrap().id(id));
+		return dog.data().fetch(DataWrap.wrap(Installation.class).id(id));
 	}
 
 	public DataWrap<Installation> fetchInstallation(DataWrap<Installation> installation) {
@@ -86,11 +83,11 @@ public class PushClient {
 	}
 
 	public DataWrap<Installation> saveInstallation(Installation source) {
-		return dog.data().save(new Installation.Wrap().source(source));
+		return dog.data().save(DataWrap.wrap(source));
 	}
 
 	public DataWrap<Installation> saveInstallation(String id, Installation source) {
-		return dog.data().save(new Installation.Wrap().id(id).source(source));
+		return dog.data().save(DataWrap.wrap(source).id(id));
 	}
 
 	public DataWrap<Installation> saveInstallation(DataWrap<Installation> object) {
@@ -105,18 +102,16 @@ public class PushClient {
 		return dog.data().save(TYPE, id, field, object);
 	}
 
-	public Installation.Results searchInstallations(ESSearchSourceBuilder source) {
-		return dog.data().searchRequest().type(TYPE)//
-				.source(source).go(Installation.Results.class);
+	public DataResults<Installation> searchInstallations(ESSearchSourceBuilder source) {
+		return dog.data().prepareSearch().type(TYPE).source(source).go(Installation.class);
 	}
 
-	public PushClient deleteInstallation(String id) {
-		return deleteInstallation(id, true);
+	public void deleteInstallation(String id) {
+		deleteInstallation(id, true);
 	}
 
-	public PushClient deleteInstallation(String id, boolean throwNotFound) {
+	public void deleteInstallation(String id, boolean throwNotFound) {
 		dog.data().delete(TYPE, id, throwNotFound);
-		return this;
 	}
 
 	//
@@ -131,11 +126,7 @@ public class PushClient {
 		return dog.data().save(TYPE, installationId, "tags", tags);
 	}
 
-	public long addTags(String installationId, String... tags) {
-		return dog.data().add(TYPE, installationId, "tags", tags);
-	}
-
-	public long removeTags(String installationId, String... tags) {
-		return dog.data().remove(TYPE, installationId, "tags", tags);
+	public long deleteTags(String installationId) {
+		return dog.data().delete(TYPE, installationId, "tags");
 	}
 }

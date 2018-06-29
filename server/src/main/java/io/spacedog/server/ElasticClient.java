@@ -27,6 +27,7 @@ import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
@@ -103,7 +104,7 @@ public class ElasticClient implements SpaceParams {
 	// Search
 	//
 
-	public SearchHits search(Index index, Object... terms) {
+	public SearchResponse search(Index index, Object... terms) {
 
 		if (terms.length % 2 == 1)
 			throw Exceptions.illegalArgument(//
@@ -119,8 +120,8 @@ public class ElasticClient implements SpaceParams {
 		return search(source, index);
 	}
 
-	public SearchHits search(SearchSourceBuilder source, Index... indices) {
-		return prepareSearch(indices).setSource(source).get().getHits();
+	public SearchResponse search(SearchSourceBuilder source, Index... indices) {
+		return prepareSearch(indices).setSource(source).get();
 	}
 
 	//
@@ -220,6 +221,7 @@ public class ElasticClient implements SpaceParams {
 
 	public boolean exists(QueryBuilder query, Index... indices) {
 		return internalClient.prepareSearch(Index.aliases(indices))//
+				.setSize(0)//
 				.setQuery(query)//
 				.setFetchSource(false)//
 				.get()//

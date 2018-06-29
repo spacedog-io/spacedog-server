@@ -31,7 +31,7 @@ import io.spacedog.utils.Exceptions;
  * construction using
  * {@link io.spacedog.client.elastic.ESSearchSourceBuilder#searchSource()}.
  *
- * @see org.elasticsearch.action.search.SearchRequest#query(ESSearchSourceBuilder)
+ * @see org.DataSearchRequest.action.search.SearchRequest#query(ESSearchSourceBuilder)
  */
 public class ESSearchSourceBuilder { // extends ToXContentToBytes {
 

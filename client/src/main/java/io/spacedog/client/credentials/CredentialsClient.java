@@ -2,8 +2,6 @@ package io.spacedog.client.credentials;
 
 import java.util.Set;
 
-import org.joda.time.DateTime;
-
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
@@ -18,7 +16,7 @@ import io.spacedog.utils.Optional7;
 
 public class CredentialsClient implements SpaceParams, SpaceFields {
 
-	private SpaceDog dog;
+	SpaceDog dog;
 	private Credentials credentials;
 
 	public CredentialsClient(SpaceDog session) {
@@ -39,11 +37,6 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 			credentials = Credentials.parse(response.asJsonObject());
 		}
 		return credentials;
-	}
-
-	CredentialsClient me(Credentials credentials) {
-		this.credentials = credentials;
-		return this;
 	}
 
 	public Optional7<Credentials> getByUsername(String username) {
@@ -124,11 +117,11 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	//
 
 	public SpaceDog create(String username, String password, String email, String... roles) {
-		return create(new CreateCredentialsRequest()//
+		return create(new CredentialsCreateRequest()//
 				.username(username).password(password).email(email).roles(roles));
 	}
 
-	public SpaceDog create(CreateCredentialsRequest request) {
+	public SpaceDog create(CredentialsCreateRequest request) {
 		dog.post("/1/credentials").bodyPojo(request).go(201);
 		return SpaceDog.dog(dog.backend())//
 				.username(request.username())//
@@ -163,90 +156,35 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	// Update credentials methods
 	//
 
-	public CredentialsUpdateRequest prepareUpdate() {
-		return new CredentialsUpdateRequest("me");
+	public CredentialsUpdateRequestBuilder prepareUpdate() {
+		return prepareUpdate("me");
 	}
 
-	public CredentialsUpdateRequest prepareUpdate(String credentialsId) {
-		return new CredentialsUpdateRequest(credentialsId);
+	public CredentialsUpdateRequestBuilder prepareUpdate(String credentialsId) {
+
+		return new CredentialsUpdateRequestBuilder(credentialsId) {
+
+			@Override
+			public SpaceResponse go(String password) {
+				return update(this.request, password);
+			}
+		};
 	}
 
-	public class CredentialsUpdateRequest {
+	public SpaceResponse update(CredentialsUpdateRequest request) {
+		return update(request, null);
+	}
 
-		String credentialsId;
-		String username;
-		String newPassword;
-		String email;
-		Boolean enabled;
-		Optional7<DateTime> enableAfter;
-		Optional7<DateTime> disableAfter;
+	public SpaceResponse update(CredentialsUpdateRequest updateRequest, String password) {
 
-		private CredentialsUpdateRequest(String credentialsId) {
-			this.credentialsId = credentialsId;
-		}
+		SpaceRequest spaceRequest = dog.put("/1/credentials/{id}")//
+				.routeParam("id", updateRequest.credentialsId)//
+				.bodyPojo(updateRequest);
 
-		public CredentialsUpdateRequest username(String username) {
-			this.username = username;
-			return this;
-		}
+		if (password != null)
+			spaceRequest.basicAuth(dog.username(), password);
 
-		public CredentialsUpdateRequest newPassword(String password) {
-			this.newPassword = password;
-			return this;
-		}
-
-		public CredentialsUpdateRequest email(String email) {
-			this.email = email;
-			return this;
-		}
-
-		public CredentialsUpdateRequest enabled(boolean enabled) {
-			this.enabled = enabled;
-			return this;
-		}
-
-		public CredentialsUpdateRequest enableAfter(Optional7<DateTime> enableAfter) {
-			this.enableAfter = enableAfter;
-			return this;
-		}
-
-		public CredentialsUpdateRequest disableAfter(Optional7<DateTime> disableAfter) {
-			this.disableAfter = disableAfter;
-			return this;
-		}
-
-		public SpaceResponse go() {
-			return go(null);
-		}
-
-		public SpaceResponse go(String password) {
-			ObjectNode body = Json.object();
-
-			if (username != null)
-				body.put(USERNAME_FIELD, username);
-			if (newPassword != null)
-				body.put(PASSWORD_FIELD, newPassword);
-			if (email != null)
-				body.put(EMAIL_FIELD, email);
-			if (enabled != null)
-				body.put(ENABLED_FIELD, enabled);
-			if (enableAfter != null)
-				body.put(ENABLE_AFTER_FIELD, enableAfter.isPresent() //
-						? enableAfter.get().toString()
-						: null);
-			if (disableAfter != null)
-				body.put(DISABLE_AFTER_FIELD, disableAfter.isPresent() //
-						? disableAfter.get().toString()
-						: null);
-
-			SpaceRequest request = dog.put("/1/credentials/{id}")//
-					.routeParam("id", credentialsId).bodyJson(body);
-
-			if (password != null)
-				request.basicAuth(dog.username(), password);
-
-			return request.go(200);
-		}
+		return spaceRequest.go(200);
 	}
 
 	//
@@ -323,21 +261,13 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 				.routeParam("id", credentialsId).go(200);
 	}
 
-	public void sendMePasswordResetEmail() {
-		sendMePasswordResetEmail(Json.object());
-	}
-
-	public void sendMePasswordResetEmail(ObjectNode parameters) {
-		sendPasswordResetEmail(dog.username(), parameters);
-	}
-
 	public void sendPasswordResetEmail(String username) {
 		sendPasswordResetEmail(username, Json.object());
 	}
 
 	public void sendPasswordResetEmail(String username, ObjectNode parameters) {
 		parameters.put(USERNAME_FIELD, username);
-		SpaceDog.dog().post("/1/credentials/_send_password_reset_email")//
+		dog.post("/1/credentials/_send_password_reset_email")//
 				.bodyJson(parameters)//
 				.go(200);
 	}

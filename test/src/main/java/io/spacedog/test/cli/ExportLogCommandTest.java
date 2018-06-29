@@ -13,7 +13,7 @@ import io.spacedog.cli.ExportLogCommand;
 import io.spacedog.cli.LoginCommand;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.CredentialsSettings;
-import io.spacedog.client.log.LogClient.LogSearchResults;
+import io.spacedog.client.log.LogSearchResults;
 import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.DateTimes;
 import io.spacedog.utils.Json;
@@ -30,7 +30,7 @@ public class ExportLogCommandTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = clearServer();
-		superadmin.data().getAllRequest().go();
+		superadmin.data().prepareGetAll().go();
 		superadmin.credentials().getByUsername("fred");
 		superadmin.settings().get(CredentialsSettings.class);
 

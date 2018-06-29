@@ -268,7 +268,7 @@ public class CredentialsRestyTest2 extends SpaceTest {
 	}
 
 	@Test
-	public void searchAndDeleteCredentials() {
+	public void search() {
 
 		// prepare
 		prepareTest();
@@ -307,6 +307,25 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		results = superadmin.credentials().getAll("fred");
 		assertEquals(1, results.total);
 		assertEquals(1, results.results.size());
+		assertContainsCredsOf("fred", results.results);
+	}
+
+	@Test
+	public void deleteButSuperadmins() {
+
+		// prepare
+		prepareTest();
+		SpaceDog superadmin = clearServer();
+		createTempDog(superadmin, "fred");
+		createTempDog(superadmin, "vince");
+
+		// superadmin searches for all credentials
+		Results results = superadmin.credentials().getAll();
+
+		assertEquals(3, results.total);
+		assertEquals(3, results.results.size());
+		assertContainsCredsOf("superadmin", results.results);
+		assertContainsCredsOf("vince", results.results);
 		assertContainsCredsOf("fred", results.results);
 
 		// superadmin deletes all credentials but superadmins
@@ -659,10 +678,10 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		fred.get("/1/credentials/" + fred.id())//
 				.go(200).assertEquals("fred2@dog.com", "email");
 
-		// fred fails to updates his password
-		// since principal password must be challenged
+		// fred fails to updates his username
+		// since password must be challenged
 		SpaceRequest.put("/1/credentials/" + fred.id()).bearerAuth(fred)//
-				.bodyJson("password", "hi fred2").go(403)//
+				.bodyJson("username", "fred2").go(403)//
 				.assertEquals("unchallenged-password", "error.code");
 
 		// fred updates his password

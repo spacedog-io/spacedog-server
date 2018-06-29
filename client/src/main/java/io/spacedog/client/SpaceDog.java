@@ -178,7 +178,7 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 	}
 
 	//
-	// resources
+	// Services
 	//
 
 	DataClient dataClient;

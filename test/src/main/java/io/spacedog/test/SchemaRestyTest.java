@@ -3,16 +3,17 @@
  */
 package io.spacedog.test;
 
+import java.util.Map;
+
 import org.junit.Test;
 
-import com.google.common.collect.Sets;
+import com.google.common.collect.Maps;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.data.DataSettings;
 import io.spacedog.client.schema.Schema;
-import io.spacedog.client.schema.SchemaBuilder;
 import io.spacedog.utils.Json;
 
 public class SchemaRestyTest extends SpaceTest {
@@ -31,21 +32,21 @@ public class SchemaRestyTest extends SpaceTest {
 		guest.schemas().getAll().isEmpty();
 
 		// admin creates car, home and sale schemas
-		Schema carSchema = buildCarSchema().build();
-		superadmin.schemas().set(carSchema);
-		Schema homeSchema = buildHomeSchema().build();
-		superadmin.schemas().set(homeSchema);
-		Schema saleSchema = buildSaleSchema().build();
-		superadmin.schemas().set(saleSchema);
+		superadmin.schemas().set(buildCarSchema());
+		superadmin.schemas().set(buildHomeSchema());
+		superadmin.schemas().set(buildSaleSchema());
 
 		// anonymous gets car, home and sale schemas
-		assertEquals(carSchema.enhance(), guest.schemas().get(carSchema.name()));
-		assertEquals(homeSchema.enhance(), guest.schemas().get(homeSchema.name()));
-		assertEquals(saleSchema.enhance(), guest.schemas().get(saleSchema.name()));
+		assertEquals(buildCarSchema().enhance(), guest.schemas().get("car"));
+		assertEquals(buildHomeSchema().enhance(), guest.schemas().get("home"));
+		assertEquals(buildSaleSchema().enhance(), guest.schemas().get("sale"));
 
 		// anonymous gets all schemas
-		assertEquals(Sets.newHashSet(carSchema, homeSchema, saleSchema), //
-				guest.schemas().getAll());
+		Map<String, Schema> schemas = Maps.newHashMap();
+		schemas.put("car", buildCarSchema().enhance());
+		schemas.put("home", buildHomeSchema().enhance());
+		schemas.put("sale", buildSaleSchema().enhance());
+		assertEquals(schemas, guest.schemas().getAll());
 
 		// anonymous is not allowed to delete schema
 		assertHttpError(401, () -> guest.schemas().delete("sale"));
@@ -57,7 +58,7 @@ public class SchemaRestyTest extends SpaceTest {
 		superadmin.schemas().delete("XXX");
 
 		// admin deletes a schema and all its objects
-		superadmin.delete(saleSchema.name());
+		superadmin.delete("sale");
 
 		// admin fails to create an invalid schema
 		assertHttpError(400, () -> superadmin.schemas().set(//
@@ -65,9 +66,10 @@ public class SchemaRestyTest extends SpaceTest {
 
 		// superadmin fails to update car schema color field
 		// since field type change is not allowed
-		carSchema.mapping().with("car").with("properties")//
+		Schema schema = buildCarSchema();
+		schema.mapping().with("car").with("properties")//
 				.with("color").put("type", "date");
-		assertHttpError(400, () -> superadmin.schemas().set(carSchema));
+		assertHttpError(400, () -> superadmin.schemas().set(schema));
 
 		// superadmin fails to remove car schema color field
 		// since removing fields is not allowed
@@ -75,7 +77,7 @@ public class SchemaRestyTest extends SpaceTest {
 		// assertHttpError(400, () -> superadmin.schemas().set(carSchema));
 	}
 
-	private static SchemaBuilder buildHomeSchema() {
+	private static Schema buildHomeSchema() {
 		return Schema.builder("home") //
 				.keyword("type")//
 				.keyword("phone")//
@@ -86,11 +88,12 @@ public class SchemaRestyTest extends SpaceTest {
 				.text("street")//
 				.keyword("city")//
 				.keyword("country")//
-				.closeObject();
+				.closeObject()//
+				.build();
 
 	}
 
-	public static SchemaBuilder buildSaleSchema() {
+	public static Schema buildSaleSchema() {
 		return Schema.builder("sale") //
 				.keyword("number") //
 				.timestamp("when") //
@@ -104,10 +107,11 @@ public class SchemaRestyTest extends SpaceTest {
 				.text("description").english()//
 				.integer("quantity")//
 				.keyword("type")//
-				.closeObject();
+				.closeObject()//
+				.build();
 	}
 
-	public static SchemaBuilder buildCarSchema() {
+	public static Schema buildCarSchema() {
 		return Schema.builder("car") //
 				.keyword("serialNumber")//
 				.date("buyDate")//
@@ -121,7 +125,8 @@ public class SchemaRestyTest extends SpaceTest {
 				.text("description").french()//
 				.integer("fiscalPower")//
 				.floatt("size")//
-				.closeObject();
+				.closeObject()//
+				.build();
 	}
 
 	// @Test

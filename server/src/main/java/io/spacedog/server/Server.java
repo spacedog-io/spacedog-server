@@ -13,17 +13,23 @@ import org.elasticsearch.analysis.common.CommonAnalysisPlugin;
 import org.elasticsearch.cli.Terminal;
 import org.elasticsearch.common.logging.LogConfigurator;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.env.Environment;
 import org.elasticsearch.index.reindex.ReindexPlugin;
 import org.elasticsearch.node.InternalSettingsPreparer;
 import org.elasticsearch.node.NodeValidationException;
+import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.transport.Netty4Plugin;
 import org.joda.time.DateTimeZone;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.collect.Lists;
 
 import io.spacedog.client.credentials.Credentials;
+import io.spacedog.client.data.DataResults;
+import io.spacedog.client.data.DataResultsDeserializer;
+import io.spacedog.client.data.DataWrap;
+import io.spacedog.client.data.DataWrapDeserializer;
 import io.spacedog.client.http.SpaceBackend;
 import io.spacedog.services.AdminResty;
 import io.spacedog.services.BatchResty;
@@ -31,17 +37,18 @@ import io.spacedog.services.CrossOriginFilter;
 import io.spacedog.services.EmailResty;
 import io.spacedog.services.HealthCheckResty;
 import io.spacedog.services.JobResty;
-import io.spacedog.services.LogResty;
 import io.spacedog.services.SettingsResty;
 import io.spacedog.services.SmsResty;
 import io.spacedog.services.StripeResty;
 import io.spacedog.services.credentials.CredentialsResty;
 import io.spacedog.services.credentials.LinkedinResty;
+import io.spacedog.services.data.AggregationSerializer;
 import io.spacedog.services.data.DataResty;
 import io.spacedog.services.data.SchemaResty;
-import io.spacedog.services.data.SearchResty;
 import io.spacedog.services.file.FileResty;
 import io.spacedog.services.file.WebResty;
+import io.spacedog.services.log.LogFilter;
+import io.spacedog.services.log.LogResty;
 import io.spacedog.services.push.ApplicationResty;
 import io.spacedog.services.push.PushResty;
 import io.spacedog.utils.ClassResources;
@@ -52,14 +59,17 @@ import io.spacedog.utils.Utils;
 import net.codestory.http.AbstractWebServer;
 import net.codestory.http.Request;
 import net.codestory.http.Response;
+import net.codestory.http.extensions.Extensions;
 import net.codestory.http.internal.Handler;
 import net.codestory.http.internal.HttpServerWrapper;
 import net.codestory.http.internal.SimpleServerWrapper;
+import net.codestory.http.misc.Env;
 import net.codestory.http.payload.Payload;
 import net.codestory.http.routes.Routes;
 import net.codestory.http.websockets.WebSocketHandler;
 
-public class Server {
+@SuppressWarnings("serial")
+public class Server implements Extensions {
 
 	public static final String CLUSTER_NAME = "spacedog-v1-cluster";
 
@@ -78,8 +88,18 @@ public class Server {
 
 	public static void main(String[] args) {
 		DateTimeZone.setDefault(DateTimes.PARIS);
+		initJsonMapper();
 		Server server = new Server();
 		server.start();
+	}
+
+	private static void initJsonMapper() {
+		SimpleModule module = new SimpleModule()//
+				.addDeserializer(DataWrap.class, new DataWrapDeserializer())//
+				.addDeserializer(DataResults.class, new DataResultsDeserializer())//
+				.addSerializer(Aggregation.class, new AggregationSerializer());
+
+		Json.mapper().registerModule(module);
 	}
 
 	public void start() {
@@ -172,27 +192,19 @@ public class Server {
 	}
 
 	protected void elasticIsStarted() {
-		// init templates
-		this.elasticClient.internal().admin().indices()//
-				.preparePutTemplate("data")//
-				.setSource(//
-						ClassResources.loadAsBytes(Server.class, "data-template.json"), //
-						XContentType.JSON)//
-				.get();
-
-		// init indices
+		Services.data().init();
 		initBackendIndices();
 	}
 
 	public void initBackendIndices() {
-		CredentialsResty.get().initIndex();
-		LogResty.get().initIndex();
+		Services.credentials().initIndex();
+		Services.logs().initIndex();
 	}
 
 	public void clear(boolean files) {
 		elasticClient().deleteAbsolutelyAllIndices();
 		if (files)
-			FileResty.get().deleteAbsolutelyAllFiles();
+			Services.files().deleteAbsolutelyAllFiles();
 		initBackendIndices();
 	}
 
@@ -210,32 +222,41 @@ public class Server {
 	}
 
 	protected void configure(Routes routes) {
-		routes.add(HealthCheckResty.get())//
-				.add(AdminResty.get())//
-				.add(DataResty.get())//
-				.add(JobResty.get())//
-				.add(SchemaResty.get())//
-				.add(CredentialsResty.get())//
-				.add(LinkedinResty.get())//
-				.add(BatchResty.get())//
-				.add(EmailResty.get())//
-				.add(SmsResty.get())//
-				.add(LogResty.get())//
-				.add(PushResty.get())//
-				.add(ApplicationResty.get())//
-				.add(StripeResty.get())//
-				.add(SettingsResty.get())//
-				.add(SearchResty.get());
+		routes.add(HealthCheckResty.class)//
+				.add(AdminResty.class)//
+				.add(DataResty.class)//
+				.add(JobResty.class)//
+				.add(SchemaResty.class)//
+				.add(CredentialsResty.class)//
+				.add(LinkedinResty.class)//
+				.add(BatchResty.class)//
+				.add(EmailResty.class)//
+				.add(SmsResty.class)//
+				.add(LogResty.class)//
+				.add(PushResty.class)//
+				.add(ApplicationResty.class)//
+				.add(StripeResty.class)//
+				.add(SettingsResty.class);
 
 		routes.filter(SpaceContext.checkBackendFilter())//
 				.filter(new CrossOriginFilter())//
-				.filter(LogResty.filter())//
+				.filter(new LogFilter())//
 				.filter(SpaceContext.checkAuthorizationFilter())//
 				// web filter before error filter
 				// so web errors are html pages
-				.filter(WebResty.get().filter())//
+				.filter(new WebResty())//
 				.filter(new ServiceErrorFilter())//
-				.filter(FileResty.get().filter());
+				.filter(new FileResty());
+
+		routes.setExtensions(this);
+	}
+
+	/**
+	 * Replace fluent http default mapper by Json mapper
+	 */
+	@Override
+	public ObjectMapper configureOrReplaceObjectMapper(ObjectMapper defaultObjectMapper, Env env) {
+		return Json.mapper();
 	}
 
 	public static class Info {

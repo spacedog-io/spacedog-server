@@ -4,24 +4,24 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import io.spacedog.client.credentials.CreateCredentialsRequest;
+import io.spacedog.client.credentials.CredentialsCreateRequest;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, //
 		getterVisibility = Visibility.NONE, //
 		isGetterVisibility = Visibility.NONE, //
 		setterVisibility = Visibility.NONE)
-public class CreateBackendRequest {
+public class BackendCreateRequest {
 
 	private String backendId;
 	private Backend.Type type = Backend.Type.standard;
-	private CreateCredentialsRequest superadmin;
+	private CredentialsCreateRequest superadmin;
 
 	public Backend.Type type() {
 		return type;
 	}
 
-	public CreateBackendRequest type(Backend.Type type) {
+	public BackendCreateRequest type(Backend.Type type) {
 		this.type = type;
 		return this;
 	}
@@ -30,16 +30,16 @@ public class CreateBackendRequest {
 		return backendId;
 	}
 
-	public CreateBackendRequest backendId(String backendId) {
+	public BackendCreateRequest backendId(String backendId) {
 		this.backendId = backendId;
 		return this;
 	}
 
-	public CreateCredentialsRequest superadmin() {
+	public CredentialsCreateRequest superadmin() {
 		return superadmin;
 	}
 
-	public CreateBackendRequest superadmin(CreateCredentialsRequest superadmin) {
+	public BackendCreateRequest superadmin(CredentialsCreateRequest superadmin) {
 		this.superadmin = superadmin;
 		return this;
 	}

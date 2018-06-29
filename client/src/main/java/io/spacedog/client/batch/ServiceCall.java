@@ -8,27 +8,28 @@ import com.google.common.collect.Maps;
 import io.spacedog.client.http.SpaceMethod;
 import io.spacedog.utils.Exceptions;
 
-public class SpaceCall {
+public class ServiceCall {
+
 	public SpaceMethod method;
 	public String path;
 	public Map<String, Object> headers;
 	public Map<String, Object> params;
 	public Object payload;
 
-	public SpaceCall() {
+	public ServiceCall() {
 	}
 
-	public SpaceCall(SpaceMethod method, String path) {
+	public ServiceCall(SpaceMethod method, String path) {
 		this.method = method;
 		this.path = path;
 	}
 
-	public SpaceCall withPayload(Object payload) {
+	public ServiceCall withPayload(Object payload) {
 		this.payload = payload;
 		return this;
 	}
 
-	public SpaceCall withParams(Object... values) {
+	public ServiceCall withParams(Object... values) {
 		if (values.length % 2 != 0)
 			throw Exceptions.illegalArgument(//
 					"params [%s] not even", Arrays.toString(values));
