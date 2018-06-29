@@ -4,41 +4,42 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import io.spacedog.client.batch.ServiceResponse;
 import io.spacedog.client.batch.ServiceCall;
 import io.spacedog.client.http.SpaceMethod;
 import io.spacedog.server.InternalRequest;
 import io.spacedog.server.JsonPayload;
 import io.spacedog.server.Server;
 import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Json;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
 public class BatchService {
 
-	public List<ObjectNode> execute(List<ServiceCall> batch) {
+	public List<ServiceResponse> execute(List<ServiceCall> batch) {
 		return execute(batch, true);
 	}
 
-	public List<ObjectNode> execute(List<ServiceCall> batch, Boolean stopOnError) {
+	public List<ServiceResponse> execute(List<ServiceCall> batch, Boolean stopOnError) {
 
-		List<ObjectNode> responses = Lists.newArrayList();
+		List<ServiceResponse> responses = Lists.newArrayList();
 
 		for (int i = 0; i < batch.size(); i++) {
 			ServiceCall call = batch.get(i);
-			Payload payload = execute(call);
-			responses.add(toJson(payload, call));
+			ServiceResponse payload = execute(call);
+			responses.add(payload);
 
-			if (stopOnError && payload.isError())
+			if (stopOnError && payload.success == false)
 				break;
 		}
 		return responses;
 	}
 
-	public Payload execute(ServiceCall call) {
+	public ServiceResponse execute(ServiceCall call) {
 
 		checkBatchCall(call);
 
@@ -55,19 +56,27 @@ public class BatchService {
 		if (payload == null)
 			payload = new Payload(HttpStatus.INTERNAL_SERVER_ERROR);
 
-		return payload;
+		return toServiceAnswer(payload);
 	}
 
-	public Map<String, ObjectNode> get(Map<String, String> paths, Boolean stopOnError) {
+	private ServiceResponse toServiceAnswer(Payload payload) {
+		ServiceResponse answer = new ServiceResponse();
+		answer.success = payload.isSuccess();
+		answer.status = payload.code();
+		answer.content = Json.toJsonNode(payload.rawContent());
+		return answer;
+	}
 
-		Map<String, ObjectNode> objects = Maps.newHashMap();
+	public Map<String, Object> get(Map<String, String> paths, Boolean stopOnError) {
+
+		Map<String, Object> objects = Maps.newHashMap();
 
 		for (Entry<String, String> entry : paths.entrySet()) {
 			ServiceCall call = new ServiceCall(SpaceMethod.GET, "/1" + entry.getValue());
-			Payload payload = execute(call);
-			objects.put(entry.getKey(), toJson(payload, call));
+			ServiceResponse payload = execute(call);
+			objects.put(entry.getKey(), payload.content);
 
-			if (stopOnError && payload.isError())
+			if (stopOnError && payload.success == false)
 				break;
 		}
 		return objects;
@@ -85,21 +94,4 @@ public class BatchService {
 			throw Exceptions.illegalArgument(//
 					"/backend requests forbidden in batch");
 	}
-
-	private static ObjectNode toJson(Payload payload, ServiceCall call) {
-
-		Object rawContent = payload.rawContent();
-
-		if (rawContent == null)
-			rawContent = JsonPayload.status(payload.code())//
-					.build().rawContent();
-
-		if (rawContent instanceof ObjectNode)
-			return (ObjectNode) rawContent;
-
-		throw Exceptions.illegalArgument(//
-				"batch sub request [%s][%s] returned a non JSON response", //
-				call.method, call.path);
-	}
-
 }

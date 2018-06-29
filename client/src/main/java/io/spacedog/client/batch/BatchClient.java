@@ -2,8 +2,9 @@ package io.spacedog.client.batch;
 
 import java.util.List;
 
+import com.fasterxml.jackson.databind.type.TypeFactory;
+
 import io.spacedog.client.SpaceDog;
-import io.spacedog.client.http.SpaceResponse;
 
 public class BatchClient {
 
@@ -13,14 +14,16 @@ public class BatchClient {
 		this.dog = session;
 	}
 
-	public SpaceResponse execute(List<ServiceCall> batch, Boolean stopOnError) {
+	public List<ServiceResponse> execute(List<ServiceCall> batch, Boolean stopOnError) {
 		return dog.post("/1/batch")//
 				.bodyPojo(batch)//
 				.queryParam("stopOnError", stopOnError)//
-				.go(200);
+				.go(200)//
+				.asPojo(TypeFactory.defaultInstance()//
+						.constructCollectionLikeType(List.class, ServiceResponse.class));
 	}
 
-	public SpaceResponse execute(List<ServiceCall> batch) {
+	public List<ServiceResponse> execute(List<ServiceCall> batch) {
 		return execute(batch, null);
 	}
 

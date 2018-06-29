@@ -7,18 +7,17 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.client.batch.ServiceResponse;
 import io.spacedog.client.batch.ServiceCall;
 import io.spacedog.client.credentials.CredentialsCreateRequest;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.data.DataSettings;
 import io.spacedog.client.http.SpaceMethod;
-import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.utils.Json;
 
 public class BatchRestyTest extends SpaceTest {
@@ -45,13 +44,15 @@ public class BatchRestyTest extends SpaceTest {
 						.withPayload(dataSettings),
 				new ServiceCall(SpaceMethod.GET, "/1/login"));
 
-		superadmin.batch().execute(batch)//
-				.assertEquals("message", "responses.0.id")//
-				.assertEquals("schemas", "responses.0.type")//
-				.assertEquals("data", "responses.1.id")//
-				.assertEquals("settings", "responses.1.type")//
-				.assertEquals("superadmin", "responses.2.credentials.username")//
-				.assertEquals(1, "debug.batchCredentialChecks");
+		List<ServiceResponse> responses = superadmin.batch().execute(batch);
+
+		assertEquals("message", responses.get(0).content.get("id").asText());
+		assertEquals("schemas", responses.get(0).content.get("type").asText());
+		assertEquals("data", responses.get(1).content.get("id").asText());
+		assertEquals("settings", responses.get(1).content.get("type").asText());
+		assertEquals("superadmin", responses.get(2).content.get("credentials").get("username").asText());
+
+		// assertEquals(Json.object("batchCredentialChecks", 1), response.debug());
 
 		// should succeed to create dave and vince users and fetch them with
 		// simple backend key credentials
@@ -66,10 +67,10 @@ public class BatchRestyTest extends SpaceTest {
 		batch.add(new ServiceCall(SpaceMethod.POST, "/1/credentials")//
 				.withPayload(ccr));
 
-		ObjectNode node = superadmin.batch().execute(batch).asJsonObject();
+		responses = superadmin.batch().execute(batch);
 
-		String vinceId = Json.get(node, "responses.0.id").asText();
-		String daveId = Json.get(node, "responses.1.id").asText();
+		String vinceId = responses.get(0).content.get("id").asText();
+		String daveId = responses.get(1).content.get("id").asText();
 
 		// should succeed to fetch dave and vince credentials
 		// and the message schema
@@ -96,12 +97,14 @@ public class BatchRestyTest extends SpaceTest {
 		batch.add(new ServiceCall(SpaceMethod.POST, "/1/credentials/vince/_set_password")//
 				.withPayload(Json.object("password", "hi vince 2")));
 
-		guest.batch().execute(batch)//
-				.assertEquals(400, "responses.0.status")//
-				.assertEquals(404, "responses.1.status")//
-				.assertEquals(401, "responses.2.status")//
-				.assertEquals(401, "responses.3.status")//
-				.assertEquals(1, "debug.batchCredentialChecks");
+		responses = guest.batch().execute(batch);
+
+		assertEquals(400, responses.get(0).status);
+		assertEquals(404, responses.get(1).status);
+		assertEquals(401, responses.get(2).status);
+		assertEquals(401, responses.get(3).status);
+
+		// assertEquals(Json.object("batchCredentialChecks", 1), response.debug());
 
 		// should succeed to create and update messages by batch
 
@@ -128,32 +131,27 @@ public class BatchRestyTest extends SpaceTest {
 
 		SpaceDog vince = SpaceDog.dog().username("vince").password("hi vince");
 
-		SpaceResponse response = vince.batch().execute(batch)
-				// .assertEquals(201, "responses.0.status")//
-				.assertEquals("1", "responses.0.id")//
-				.assertEquals(1, "responses.0.version")//
-				// .assertEquals(201, "responses.1.status")//
-				.assertEquals("2", "responses.1.id")//
-				.assertEquals(1, "responses.1.version")//
-				// .assertEquals(200, "responses.2.status")//
-				.assertEquals(2, "responses.2.total")//
-				// .assertEquals(200, "responses.3.status")//
-				.assertEquals("1", "responses.3.id")//
-				.assertEquals(2, "responses.3.version")//
-				// .assertEquals(200, "responses.4.status")//
-				.assertEquals("2", "responses.4.id")//
-				.assertEquals(2, "responses.4.version")//
-				// .assertEquals(200, "responses.5.status")//
-				.assertEquals(2, "responses.5.total")//
-				.assertEquals(1, "debug.batchCredentialChecks");
+		responses = vince.batch().execute(batch);
+		assertEquals("1", responses.get(0).content.get("id").asText());
+		assertEquals(1, responses.get(0).content.get("version").asLong());
+		assertEquals("2", responses.get(1).content.get("id").asText());
+		assertEquals(1, responses.get(1).content.get("version").asLong());
+		assertEquals(2, responses.get(2).content.get("total").asLong());
+		assertEquals("1", responses.get(3).content.get("id").asText());
+		assertEquals(2, responses.get(3).content.get("version").asLong());
+		assertEquals("2", responses.get(4).content.get("id").asText());
+		assertEquals(2, responses.get(4).content.get("version").asLong());
+		assertEquals(2, responses.get(5).content.get("total").asLong());
+
+		// assertEquals(Json.object("batchCredentialChecks", 1), response.debug());
 
 		assertEquals(Sets.newHashSet("Hi guys, what's up?", "Pretty cool, huhhhhh?"), //
-				Sets.newHashSet(response.getString("responses.5.objects.0.source.text"),
-						response.getString("responses.5.objects.1.source.text")));
+				Sets.newHashSet(Json.get(responses.get(5).content, "objects.0.source.text").asText(),
+						Json.get(responses.get(5).content, "objects.1.source.text").asText()));
 
 		assertEquals(Sets.newHashSet("1", "2"), //
-				Sets.newHashSet(response.getString("responses.5.objects.0.id"),
-						response.getString("responses.5.objects.1.id")));
+				Sets.newHashSet(Json.get(responses.get(5).content, "objects.0.id").asText(),
+						Json.get(responses.get(5).content, "objects.1.id").asText()));
 
 		// should succeed to stop on first batch request error
 
@@ -162,11 +160,12 @@ public class BatchRestyTest extends SpaceTest {
 		batch.add(new ServiceCall(SpaceMethod.GET, "/1/data/XXX"));
 		batch.add(new ServiceCall(SpaceMethod.GET, "/1/data/message"));
 
-		vince.batch().execute(batch, true)//
-				.assertEquals(2, "responses.0.total")//
-				.assertEquals(403, "responses.1.status")//
-				.assertSizeEquals(2, "responses")//
-				.assertEquals(1, "debug.batchCredentialChecks");
+		responses = vince.batch().execute(batch, true);
+		assertEquals(2, responses.get(0).content.get("total").asLong());
+		assertEquals(403, responses.get(1).status);
+		assertEquals(2, responses.size());
+
+		// assertEquals(Json.object("batchCredentialChecks", 1), response.debug());
 
 		// should fail since batch are limited to 10 sub requests
 
