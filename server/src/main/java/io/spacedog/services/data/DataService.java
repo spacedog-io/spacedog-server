@@ -40,6 +40,7 @@ import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.server.Index;
+import io.spacedog.server.J8;
 import io.spacedog.server.Server;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceService;
@@ -350,7 +351,7 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 		results.objects = Lists.newArrayListWithCapacity(hits.getHits().length);
 		for (SearchHit hit : hits)
 			results.objects.add(wrap(hit, sourceClass));
-		results.aggregations = response.getAggregations().asMap();
+		results.aggregations = J8.map(response.getAggregations(), aggs -> aggs.asMap());
 		return results;
 	}
 

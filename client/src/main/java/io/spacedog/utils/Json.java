@@ -33,6 +33,11 @@ import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 
+import io.spacedog.client.data.DataResults;
+import io.spacedog.client.data.DataResultsDeserializer;
+import io.spacedog.client.data.DataWrap;
+import io.spacedog.client.data.DataWrapDeserializer;
+
 public class Json {
 
 	public static final String EMPTY_OBJECT = "{}";
@@ -410,6 +415,10 @@ public class Json {
 	private static ObjectMapper mapper;
 
 	static {
+		SimpleModule spaceModule = new SimpleModule()//
+				.addDeserializer(DataWrap.class, new DataWrapDeserializer())//
+				.addDeserializer(DataResults.class, new DataResultsDeserializer());
+
 		SimpleModule jodaModule = new JodaModule()//
 				.addSerializer(LocalTime.class, new MyLocalTimeSerializer())//
 				.addDeserializer(LocalTime.class, new MyLocalTimeDeserializer())//
@@ -417,9 +426,11 @@ public class Json {
 				.addDeserializer(LocalDate.class, new MyLocalDateDeserializer());
 
 		mapper = new ObjectMapper()//
+				.registerModule(jodaModule)//
+				.registerModule(spaceModule)//
 				.setDefaultPrettyPrinter(new DefaultPrettyPrinter()//
 						.withArrayIndenter(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE))//
-				.registerModule(jodaModule).configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)//
+				.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)//
 				.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 	}
 

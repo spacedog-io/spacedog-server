@@ -5,6 +5,7 @@ package io.spacedog.server;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -12,7 +13,7 @@ import com.google.common.collect.Lists;
 
 import io.spacedog.utils.Exceptions;
 
-public class Json8 {
+public class J8 {
 
 	public static List<String> toStrings(JsonNode node) {
 		if (node.isArray())
@@ -30,6 +31,14 @@ public class Json8 {
 
 		throw Exceptions.illegalArgument(//
 				"can not convert this json node [%s] to a list of strings", node);
+	}
+
+	public static <T, R> R map(T t, Function<T, R> f) {
+		return map(t, f, null);
+	}
+
+	public static <T, R> R map(T t, Function<T, R> f, R defaultValue) {
+		return t == null ? defaultValue : f.apply(t);
 	}
 
 }
