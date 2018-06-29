@@ -238,6 +238,7 @@ public class Server implements Extensions {
 				// web filter before error filter
 				// so web errors are html pages
 				.filter(new WebResty())//
+				.filter(new DebugFilter())//
 				.filter(new ServiceErrorFilter())//
 				.filter(new FileResty());
 

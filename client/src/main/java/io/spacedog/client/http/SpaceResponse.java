@@ -14,8 +14,10 @@ import org.joda.time.DateTime;
 import org.junit.Assert;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -201,6 +203,10 @@ public class SpaceResponse implements Closeable {
 		return Json.toPojo(asString(), pojoClass);
 	}
 
+	public <K> K asPojo(JavaType type) {
+		return Json.toPojo(asString(), type);
+	}
+
 	public <K> K asPojo(K result) {
 		return Json.updatePojo(asString(), result);
 	}
@@ -247,6 +253,11 @@ public class SpaceResponse implements Closeable {
 	// when same header multiple times
 	public List<String> headers(String name) {
 		return okResponse.headers(name);
+	}
+
+	public JsonNode debug() {
+		String header = header(SpaceHeaders.SPACEDOG_DEBUG);
+		return Strings.isNullOrEmpty(header) ? NullNode.getInstance() : Json.readNode(header);
 	}
 
 	public boolean has(String jsonPath) {
