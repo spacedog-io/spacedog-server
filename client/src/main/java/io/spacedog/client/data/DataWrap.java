@@ -221,7 +221,7 @@ public class DataWrap<K> implements DataObject, SpaceFields {
 	@Override
 	@SuppressWarnings("unchecked")
 	public boolean equals(Object obj) {
-		if (obj == null)
+		if (obj instanceof DataWrap == false)
 			return false;
 		DataWrap<K> wrap = (DataWrap<K>) obj;
 		return Objects.equals(id(), wrap.id()) //
