@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.log.LogSearchResults;
 import io.spacedog.server.ElasticUtils;
-import io.spacedog.server.JsonPayload;
 import io.spacedog.server.Server;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceResty;
@@ -15,7 +14,6 @@ import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
-import net.codestory.http.payload.Payload;
 
 @Prefix("/1/log")
 public class LogResty extends SpaceResty {
@@ -49,7 +47,7 @@ public class LogResty extends SpaceResty {
 
 	@Delete("")
 	@Delete("/")
-	public Payload purge(Context context) {
+	public ObjectNode purge(Context context) {
 
 		Server.context().credentials().checkAtLeastSuperAdmin();
 
@@ -57,8 +55,7 @@ public class LogResty extends SpaceResty {
 		DateTime before = param == null ? DateTime.now().minusDays(7) //
 				: DateTime.parse(param);
 
-		ObjectNode node = Services.logs().delete(before);
-		return JsonPayload.ok().withContent(node).build();
+		return Services.logs().delete(before);
 	}
 
 }

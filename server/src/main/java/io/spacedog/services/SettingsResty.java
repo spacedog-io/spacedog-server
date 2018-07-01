@@ -28,24 +28,20 @@ public class SettingsResty extends SpaceResty {
 
 	@Get("")
 	@Get("/")
-	public Payload getAll(Context context) {
+	public ObjectNode getAll(Context context) {
 		Server.context().credentials().checkAtLeastSuperAdmin();
 
 		int from = context.query().getInteger(FROM_PARAM, 0);
 		int size = context.query().getInteger(SIZE_PARAM, 10);
 
-		ObjectNode settings = Services.settings()//
-				.getAll(from, size, isRefreshRequested(context));
-
-		return JsonPayload.ok().withContent(settings).build();
+		return Services.settings().getAll(from, size, isRefreshRequested(context));
 	}
 
 	@Delete("")
 	@Delete("/")
-	public Payload deleteIndex() {
+	public void deleteIndex() {
 		Server.context().credentials().checkAtLeastSuperAdmin();
 		elastic().deleteIndex(Services.settings().index());
-		return JsonPayload.ok().build();
 	}
 
 	@Get("/:id")
@@ -68,11 +64,10 @@ public class SettingsResty extends SpaceResty {
 
 	@Delete("/:id")
 	@Delete("/:id/")
-	public Payload delete(String id) {
+	public void delete(String id) {
 		checkNotInternalSettings(id);
 		checkAuthorizedTo(id, Permission.update);
 		Services.settings().delete(id);
-		return JsonPayload.ok().build();
 	}
 
 	@Get("/:id/:field")

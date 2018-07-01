@@ -47,14 +47,11 @@ public class PushResty extends SpaceResty {
 	 */
 	@Post("/push")
 	@Post("/push/")
-	public Payload postPushRequest(PushRequest request, Context context) {
-
+	public PushResponse postPushRequest(PushRequest request, Context context) {
 		PushSettings settings = Services.settings().get(PushSettings.class).get();
 		Credentials credentials = Server.context().credentials();
 		credentials.checkIfAuthorized(settings.authorizedRoles);
-
-		PushResponse response = Services.push().push(request);
-		return JsonPayload.ok().withContent(response).build();
+		return Services.push().push(request);
 	}
 
 }

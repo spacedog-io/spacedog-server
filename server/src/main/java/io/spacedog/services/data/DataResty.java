@@ -44,7 +44,7 @@ public class DataResty extends SpaceResty {
 
 	@Get("")
 	@Get("/")
-	public Payload getAll(Context context) {
+	public DataResults<ObjectNode> getAll(Context context) {
 		Credentials credentials = Server.context().credentials();
 		String[] types = DataAccessControl.types(credentials, Permission.search);
 		return doGet(context, types);
@@ -52,7 +52,7 @@ public class DataResty extends SpaceResty {
 
 	@Post("/_search")
 	@Post("/_search/")
-	public Payload postSearchAll(String body, Context context) {
+	public DataResults<ObjectNode> postSearchAll(String body, Context context) {
 		Credentials credentials = Server.context().credentials();
 		String[] types = DataAccessControl.types(credentials, Permission.search);
 		return doSearch(body, context, types);
@@ -72,7 +72,7 @@ public class DataResty extends SpaceResty {
 
 	@Get("/:type")
 	@Get("/:type/")
-	public Payload getType(String type, Context context) {
+	public DataResults<ObjectNode> getType(String type, Context context) {
 
 		Credentials credentials = Server.context().credentials();
 		if (!DataAccessControl.roles(type).containsOne(credentials, Permission.search))
@@ -98,7 +98,7 @@ public class DataResty extends SpaceResty {
 
 	@Post("/:type/_search")
 	@Post("/:type/_search/")
-	public Payload postSearchType(String type, String body, Context context) {
+	public DataResults<ObjectNode> postSearchType(String type, String body, Context context) {
 
 		Credentials credentials = Server.context().credentials();
 		if (!DataAccessControl.roles(type).containsOne(credentials, Permission.search))
@@ -120,9 +120,8 @@ public class DataResty extends SpaceResty {
 
 	@Get("/:type/:id")
 	@Get("/:type/:id/")
-	public Payload getById(String type, String id, Context context) {
-		DataWrap<ObjectNode> wrap = Services.data().getIfAuthorized(type, id);
-		return JsonPayload.ok().withContent(wrap).build();
+	public DataWrap<ObjectNode> getById(String type, String id, Context context) {
+		return Services.data().getIfAuthorized(type, id);
 	}
 
 	@Put("/:type/:id")
@@ -148,12 +147,12 @@ public class DataResty extends SpaceResty {
 
 	@Get("/:type/:id/:path")
 	@Get("/:type/:id/:path/")
-	public Payload getField(String type, String id, String path, Context context) {
+	public JsonNode getField(String type, String id, String path, Context context) {
 		DataWrap<ObjectNode> wrap = Services.data().getIfAuthorized(type, id);
 		JsonNode value = Json.get(wrap.source(), path);
 		if (value == null)
 			value = NullNode.getInstance();
-		return JsonPayload.ok().withContent(value).build();
+		return value;
 	}
 
 	@Put("/:type/:id/:path")
@@ -224,7 +223,7 @@ public class DataResty extends SpaceResty {
 	// Implementation
 	//
 
-	private Payload doGet(Context context, String... types) {
+	private DataResults<ObjectNode> doGet(Context context, String... types) {
 
 		DataResults<ObjectNode> results = DataResults.of(ObjectNode.class);
 		if (!Utils.isNullOrEmpty(types)) {
@@ -245,10 +244,10 @@ public class DataResty extends SpaceResty {
 
 			results = Services.data().search(ObjectNode.class, search, types);
 		}
-		return JsonPayload.ok().withContent(results).build();
+		return results;
 	}
 
-	private Payload doSearch(String body, Context context, String... types) {
+	private DataResults<ObjectNode> doSearch(String body, Context context, String... types) {
 
 		DataResults<ObjectNode> results = DataResults.of(ObjectNode.class);
 		if (!Utils.isNullOrEmpty(types)) {
@@ -256,7 +255,7 @@ public class DataResty extends SpaceResty {
 			SearchSourceBuilder builder = ElasticUtils.toSearchSourceBuilder(body).version(true);
 			results = Services.data().search(ObjectNode.class, builder, types);
 		}
-		return JsonPayload.ok().withContent(results).build();
+		return results;
 	}
 
 	private Payload doDelete(String query, Context context, String... types) {

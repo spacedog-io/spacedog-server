@@ -4,6 +4,7 @@
 package io.spacedog.services.credentials;
 
 import java.util.Map;
+import java.util.Set;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.type.MapLikeType;
@@ -59,15 +60,14 @@ public class CredentialsResty extends SpaceResty {
 	@Get("/1/logout/")
 	@Post("/1/logout")
 	@Post("/1/logout/")
-	public Payload logout(Context context) {
+	public void logout(Context context) {
 		Server.context().credentials().checkAtLeastUser();
 		Services.credentials().logout();
-		return JsonPayload.ok().build();
 	}
 
 	@Get("/1/credentials")
 	@Get("/1/credentials/")
-	public Payload getAll(Context context) {
+	public ObjectNode getAll(Context context) {
 		Server.context().credentials().checkAtLeastAdmin();
 
 		Credentials.Results all = Services.credentials().getAll(//
@@ -76,15 +76,14 @@ public class CredentialsResty extends SpaceResty {
 				context.query().getInteger(SIZE_PARAM, 10));
 
 		// TODO replace this by automatic jackson serialization
-		return JsonPayload.ok().withContent(all.toJson()).build();
+		return all.toJson();
 	}
 
 	@Delete("/1/credentials")
 	@Delete("/1/credentials/")
-	public Payload deleteAll(Context context) {
+	public void deleteAll(Context context) {
 		Server.context().credentials().checkAtLeastSuperAdmin();
 		Services.credentials().deleteAllButSuperAdmins();
-		return JsonPayload.ok().build();
 	}
 
 	@Post("/1/credentials")
@@ -110,28 +109,28 @@ public class CredentialsResty extends SpaceResty {
 
 	@Get("/1/credentials/me")
 	@Get("/1/credentials/me/")
-	public Payload getMe(Context context) {
+	public ObjectNode getMe(Context context) {
 		Credentials credentials = Server.context().credentials().checkAtLeastUser();
-		return JsonPayload.ok().withContent(credentials.toJson()).build();
+		return credentials.toJson();
 	}
 
 	@Get("/1/credentials/:id")
 	@Get("/1/credentials/:id/")
-	public Payload getById(String id, Context context) {
+	public ObjectNode getById(String id, Context context) {
 		Credentials credentials = checkMyselfOrHigherAdminAndGet(id, false);
-		return JsonPayload.ok().withContent(credentials.toJson()).build();
+		return credentials.toJson();
 	}
 
 	@Delete("/1/credentials/me")
 	@Delete("/1/credentials/me/")
-	public Payload deleteMe() {
+	public void deleteMe() {
 		Credentials credentials = Server.context().credentials().checkAtLeastUser();
-		return deleteById(credentials.id());
+		deleteById(credentials.id());
 	}
 
 	@Delete("/1/credentials/:id")
 	@Delete("/1/credentials/:id/")
-	public Payload deleteById(String id) {
+	public void deleteById(String id) {
 		Credentials credentials = checkMyselfOrHigherAdminAndGet(id, false);
 
 		// forbidden to delete last backend superadmin
@@ -140,7 +139,6 @@ public class CredentialsResty extends SpaceResty {
 				throw Exceptions.forbidden("backend must at least have one superadmin");
 
 		Services.credentials().delete(id);
-		return JsonPayload.ok().build();
 	}
 
 	@Put("/1/credentials/me")
@@ -235,7 +233,7 @@ public class CredentialsResty extends SpaceResty {
 
 	@Get("/1/credentials/:id/roles")
 	@Get("/1/credentials/:id/roles/")
-	public Object getRoles(String id, Context context) {
+	public Set<String> getRoles(String id, Context context) {
 		return checkMyselfOrHigherAdminAndGet(id, false).roles();
 	}
 

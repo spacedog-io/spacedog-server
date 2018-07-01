@@ -40,18 +40,16 @@ public class EmailResty extends SpaceResty {
 
 	@Get("/1/emails/templates/:name")
 	@Get("/1/emails/templates/:name/")
-	public Payload getTemplate(String templateName) {
+	public EmailTemplate getTemplate(String templateName) {
 		Server.context().credentials().checkAtLeastSuperAdmin();
-		EmailTemplate template = Services.emails().getTemplate(templateName);
-		return JsonPayload.ok().withContent(template).build();
+		return Services.emails().getTemplate(templateName);
 	}
 
 	@Delete("/1/emails/templates/:name")
 	@Delete("/1/emails/templates/:name/")
-	public Payload deleteTemplate(String templateName) {
+	public void deleteTemplate(String templateName) {
 		Server.context().credentials().checkAtLeastSuperAdmin();
 		Services.emails().deleteTemplate(templateName);
-		return JsonPayload.ok().build();
 	}
 
 }

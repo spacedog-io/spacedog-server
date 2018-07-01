@@ -22,18 +22,16 @@ public class SmsResty extends SpaceResty {
 
 	@Post("/1/sms")
 	@Post("/1/sms/")
-	public Payload postSms(SmsRequest request, Context context) {
-		ObjectNode response = Services.sms().sendIfAuthorized(request);
-		return JsonPayload.created().withContent(response).build();
+	public ObjectNode postSms(SmsRequest request, Context context) {
+		return Services.sms().sendIfAuthorized(request);
 	}
 
 	@Get("/1/sms/:messageId")
 	@Get("/1/sms/:messageId")
-	public Payload getSms(String messageId, Context context) {
+	public ObjectNode getSms(String messageId, Context context) {
 		Server.context().credentials().checkIfAuthorized(//
 				Services.sms().settings().authorizedRoles);
-		ObjectNode response = Services.sms().get(messageId);
-		return JsonPayload.ok().withContent(response).build();
+		return Services.sms().get(messageId);
 	}
 
 	@Put("/1/sms/templates/:name")
@@ -50,18 +48,16 @@ public class SmsResty extends SpaceResty {
 
 	@Get("/1/sms/templates/:name")
 	@Get("/1/sms/templates/:name/")
-	public Payload getTemplate(String templateName) {
+	public SmsTemplate getTemplate(String templateName) {
 		Server.context().credentials().checkAtLeastSuperAdmin();
-		SmsTemplate template = Services.sms().getTemplate(templateName);
-		return JsonPayload.ok().withContent(template).build();
+		return Services.sms().getTemplate(templateName);
 	}
 
 	@Delete("/1/sms/templates/:name")
 	@Delete("/1/sms/templates/:name/")
-	public Payload deleteTemplate(String templateName) {
+	public void deleteTemplate(String templateName) {
 		Server.context().credentials().checkAtLeastSuperAdmin();
 		Services.sms().deleteTemplate(templateName);
-		return JsonPayload.ok().build();
 	}
 
 }

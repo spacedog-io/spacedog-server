@@ -89,7 +89,7 @@ public class CallbackResty extends SpaceResty {
 
 	@Put("")
 	@Put("/")
-	public Payload putSafe() throws IOException {
+	public void putSafe() throws IOException {
 
 		Server.context().credentials().checkAtLeastSuperAdmin();
 
@@ -99,8 +99,6 @@ public class CallbackResty extends SpaceResty {
 
 		if (!elastic.exists(index))
 			elastic.createIndex(index, mapping, false);
-
-		return JsonPayload.ok().build();
 	}
 
 	@Get("")
@@ -117,9 +115,8 @@ public class CallbackResty extends SpaceResty {
 
 	@Get("/:id")
 	@Get("/:id/")
-	public Payload getDemand(String id, Context context) {
-		DataWrap<ObjectNode> wrap = Services.data().getIfAuthorized(DATA_TYPE, id);
-		return JsonPayload.ok().withContent(wrap).build();
+	public DataWrap<ObjectNode> getDemand(String id, Context context) {
+		return Services.data().getIfAuthorized(DATA_TYPE, id);
 	}
 
 	@Put("/:id")

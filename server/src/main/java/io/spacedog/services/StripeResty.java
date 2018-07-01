@@ -36,26 +36,20 @@ public class StripeResty extends SpaceResty {
 
 	@Get("/customers/me")
 	@Get("/customers/me/")
-	public Payload getCustomer(Context context) {
+	public ObjectNode getCustomer(Context context) {
 		Credentials credentials = Server.context()//
 				.credentials().checkAtLeastUser();
 
-		ObjectNode response = Services.stripe()//
-				.getCustomerFor(credentials);
-
-		return JsonPayload.ok().withContent(response).build();
+		return Services.stripe().getCustomerFor(credentials);
 	}
 
 	@Delete("/customers/me")
 	@Delete("/customers/me/")
-	public Payload deleteStripeCustomer() {
+	public ObjectNode deleteStripeCustomer() {
 		Credentials credentials = Server.context()//
 				.credentials().checkAtLeastUser();
 
-		ObjectNode response = Services.stripe()//
-				.deleteCustomerFor(credentials);
-
-		return JsonPayload.ok().withContent(response).build();
+		return Services.stripe().deleteCustomerFor(credentials);
 	}
 
 	@Post("/customers/me/sources")
@@ -78,43 +72,31 @@ public class StripeResty extends SpaceResty {
 
 	@Delete("/customers/me/sources/:cardId")
 	@Delete("/customers/me/sources/:cardId/")
-	public Payload deleteStripeCard(String cardId, Context context) {
+	public ObjectNode deleteStripeCard(String cardId, Context context) {
 		Credentials credentials = Server.context()//
 				.credentials().checkAtLeastUser();
 
-		ObjectNode response = Services.stripe()//
-				.deleteSourceFor(credentials, cardId);
-
-		return JsonPayload.ok().withContent(response).build();
+		return Services.stripe().deleteSourceFor(credentials, cardId);
 	}
 
 	@Post("/charges")
 	@Post("/charges/")
-	public Payload postCharge(Context context) {
+	public ObjectNode postCharge(Context context) {
 		Credentials credentials = Server.context().credentials();
 		StripeSettings settings = Services.stripe().settings();
 
 		credentials.checkIfAuthorized(settings.rolesAllowedToCharge);
 
-		ObjectNode response = Services.stripe()//
-				.charge(context.query().keyValues());
-
-		return JsonPayload.ok().withContent(response).build();
-
+		return Services.stripe().charge(context.query().keyValues());
 	}
 
 	@Post("/charges/me")
 	@Post("/charges/me/")
-	public Payload postChargeMe(Context context) {
+	public ObjectNode postChargeMe(Context context) {
 		Credentials credentials = Server.context().credentials();
 		StripeSettings settings = Services.stripe().settings();
 
 		credentials.checkIfAuthorized(settings.rolesAllowedToPay);
-
-		ObjectNode response = Services.stripe()//
-				.charge(credentials, context.query().keyValues());
-
-		return JsonPayload.ok().withContent(response).build();
-
+		return Services.stripe().charge(credentials, context.query().keyValues());
 	}
 }

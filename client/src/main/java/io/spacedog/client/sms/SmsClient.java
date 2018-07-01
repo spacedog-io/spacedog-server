@@ -28,7 +28,7 @@ public class SmsClient {
 	public String send(SmsRequest request) {
 		return dog.post("/1/sms")//
 				.bodyPojo(request)//
-				.go(201)//
+				.go(200)//
 				.getString("sid");
 	}
 

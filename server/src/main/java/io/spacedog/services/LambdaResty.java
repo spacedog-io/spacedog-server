@@ -114,18 +114,4 @@ public class LambdaResty extends SpaceResty {
 	private String toServiceSubPath(String uri) {
 		return Utils.removePreffix(uri, "/1/services");
 	}
-
-	//
-	// Singleton
-	//
-
-	private static LambdaResty singleton = new LambdaResty();
-
-	public static LambdaResty get() {
-		return singleton;
-	}
-
-	private LambdaResty() {
-	}
-
 }
