@@ -7,6 +7,7 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -289,9 +290,7 @@ public class Credentials {
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
+		if (obj instanceof Credentials == false)
 			return false;
 		Credentials other = (Credentials) obj;
 		if (username == null) {
@@ -734,15 +733,11 @@ public class Credentials {
 
 		@Override
 		public boolean equals(Object obj) {
-			if (obj == null || !(obj instanceof Session))
+			if (obj instanceof Session == false)
 				return false;
 
 			Session other = (Session) obj;
-
-			if (accessToken == other.accessToken)
-				return true;
-
-			return accessToken.equals(other.accessToken);
+			return Objects.equals(accessToken, other.accessToken);
 		}
 
 		@Override

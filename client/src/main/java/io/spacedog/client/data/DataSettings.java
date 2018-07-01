@@ -38,8 +38,6 @@ public class DataSettings extends SettingsBase {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj == null)
-			return false;
 		if (obj instanceof DataSettings == false)
 			return false;
 		return Objects.equal(acl, ((DataSettings) obj).acl);

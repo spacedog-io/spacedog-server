@@ -127,6 +127,8 @@ public class CsvDataRestyTest extends SpaceTest {
 
 		@Override
 		public boolean equals(Object obj) {
+			if (obj instanceof Course == false)
+				return false;
 			Course course = (Course) obj;
 			return Objects.equals(course.status, status) //
 					&& Objects.equals(course.to.address, to.address) //

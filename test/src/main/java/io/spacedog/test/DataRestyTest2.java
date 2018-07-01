@@ -53,10 +53,10 @@ public class DataRestyTest2 extends SpaceTest {
 
 			@Override
 			public boolean equals(Object obj) {
-				if (obj == null)
+				if (obj instanceof Item == false)
 					return false;
-				Item item = (Item) obj;
 
+				Item item = (Item) obj;
 				return Objects.equals(this.ref, item.ref)//
 						&& Objects.equals(this.description, item.description)//
 						&& Objects.equals(this.quantity, item.quantity)//
@@ -66,10 +66,10 @@ public class DataRestyTest2 extends SpaceTest {
 
 		@Override
 		public boolean equals(Object obj) {
-			if (obj == null)
+			if (obj instanceof Sale == false)
 				return false;
-			Sale sale = (Sale) obj;
 
+			Sale sale = (Sale) obj;
 			return super.equals(sale)//
 					&& Objects.equals(this.number, sale.number)//
 					&& Objects.equals(this.when, sale.when)//

@@ -57,13 +57,11 @@ public final class Optional7<T> {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj) {
+		if (this == obj)
 			return true;
-		}
 
-		if (!(obj instanceof Optional7)) {
+		if (obj instanceof Optional7 == false)
 			return false;
-		}
 
 		Optional7<?> other = (Optional7<?>) obj;
 		return Objects.equals(value, other.value);

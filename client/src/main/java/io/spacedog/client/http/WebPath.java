@@ -62,13 +62,11 @@ public class WebPath implements Iterable<String> {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj == null)
-			return false;
 		if (this == obj)
 			return true;
-		if (obj instanceof WebPath)
-			return Arrays.equals(segments, ((WebPath) obj).segments);
-		return false;
+		if (obj instanceof WebPath == false)
+			return false;
+		return Arrays.equals(segments, ((WebPath) obj).segments);
 	}
 
 	public boolean isRoot() {

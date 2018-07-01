@@ -76,11 +76,11 @@ public class SpaceBackend {
 
 	@Override
 	public boolean equals(Object object) {
-		if (object != null && object instanceof SpaceBackend) {
-			SpaceBackend other = (SpaceBackend) object;
-			return url().equalsIgnoreCase(other.url());
-		}
-		return false;
+		if (object instanceof SpaceBackend == false)
+			return false;
+
+		SpaceBackend other = (SpaceBackend) object;
+		return url().equalsIgnoreCase(other.url());
 	}
 
 	//

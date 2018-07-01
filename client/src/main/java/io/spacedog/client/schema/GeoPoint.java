@@ -26,11 +26,12 @@ public class GeoPoint {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj == null)
+		if (this == obj)
+			return true;
+		if (obj instanceof GeoPoint == false)
 			return false;
 
 		GeoPoint other = (GeoPoint) obj;
-
 		return this.lat == other.lat//
 				&& this.lon == other.lon;
 	}

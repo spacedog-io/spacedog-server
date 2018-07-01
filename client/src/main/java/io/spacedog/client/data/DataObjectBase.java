@@ -65,10 +65,10 @@ public class DataObjectBase implements DataObject {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj == null)
+		if (obj instanceof DataObjectBase == false)
 			return false;
-		DataObjectBase meta = (DataObjectBase) obj;
 
+		DataObjectBase meta = (DataObjectBase) obj;
 		return Objects.equals(this.owner, meta.owner)//
 				&& Objects.equals(this.group, meta.group)//
 				&& Objects.equals(this.createdAt, meta.createdAt)//

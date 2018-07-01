@@ -31,8 +31,8 @@ public final class ESGeoPoint {
 	}
 
 	/**
-	 * Create a new Geopointform a string. This String must either be a geohash
-	 * or a lat-lon tuple.
+	 * Create a new Geopointform a string. This String must either be a geohash or a
+	 * lat-lon tuple.
 	 *
 	 * @param value
 	 *            String to create the point from
@@ -119,7 +119,7 @@ public final class ESGeoPoint {
 	public boolean equals(Object o) {
 		if (this == o)
 			return true;
-		if (o == null || getClass() != o.getClass())
+		if (o instanceof ESGeoPoint == false)
 			return false;
 
 		ESGeoPoint geoPoint = (ESGeoPoint) o;

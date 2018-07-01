@@ -3,6 +3,7 @@
  */
 package io.spacedog.client.schema;
 
+import java.util.Objects;
 import java.util.Set;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -70,15 +71,13 @@ public class Schema implements MappingDirectives {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj == null || name == null || mapping == null)
-			return false;
 		if (this == obj)
 			return true;
-		if (obj instanceof Schema) {
-			Schema other = (Schema) obj;
-			return name.equals(other.name) && mapping.equals(other.mapping);
-		}
-		return false;
+		if (obj instanceof Schema == false)
+			return false;
+		Schema other = (Schema) obj;
+		return Objects.equals(name, other.name) //
+				&& Objects.equals(mapping, other.mapping);
 	}
 
 	private static Set<String> reservedNames = Sets.newHashSet("settings");
