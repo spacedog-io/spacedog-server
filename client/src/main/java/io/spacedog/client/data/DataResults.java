@@ -7,6 +7,7 @@ import java.util.List;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class DataResults<K> implements Iterable<DataWrap<K>> {
+
 	public long total;
 	public List<DataWrap<K>> objects;
 	public String next;
