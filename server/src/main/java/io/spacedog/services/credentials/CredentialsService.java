@@ -474,7 +474,7 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 	//
 
 	public CredentialsSettings settings() {
-		return Services.settings().get(CredentialsSettings.class).get();
+		return Services.settings().getOrThrow(CredentialsSettings.class);
 	}
 
 	public void enableGuestSignUp(boolean enable) {

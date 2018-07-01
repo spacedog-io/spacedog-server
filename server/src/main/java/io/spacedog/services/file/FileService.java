@@ -236,7 +236,7 @@ public class FileService extends SpaceService {
 	//
 
 	public InternalFileSettings settings() {
-		return Services.settings().get(InternalFileSettings.class).get();
+		return Services.settings().getOrThrow(InternalFileSettings.class);
 	}
 
 	public FileBucketSettings getBucketSettings(String bucket) {

@@ -107,8 +107,7 @@ public class SettingsResty extends SpaceResty {
 	private Credentials checkAuthorizedTo(String settingsId, Permission permission) {
 		Credentials credentials = Server.context().credentials();
 		Services.settings()//
-				.get(SettingsAclSettings.class)//
-				.get()//
+				.getOrThrow(SettingsAclSettings.class)//
 				.get(settingsId)//
 				.check(credentials, permission);
 		return credentials;

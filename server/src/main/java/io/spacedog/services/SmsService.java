@@ -92,7 +92,7 @@ public class SmsService {
 	}
 
 	public SmsSettings settings() {
-		return Services.settings().get(SmsSettings.class).get();
+		return Services.settings().getOrThrow(SmsSettings.class);
 	}
 
 	//

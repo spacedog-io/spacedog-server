@@ -97,7 +97,7 @@ public class EmailService {
 	}
 
 	public EmailSettings settings() {
-		return Services.settings().get(EmailSettings.class).get();
+		return Services.settings().getOrThrow(EmailSettings.class);
 	}
 
 	//

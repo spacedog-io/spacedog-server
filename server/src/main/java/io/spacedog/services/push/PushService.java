@@ -32,6 +32,7 @@ import io.spacedog.client.push.PushProtocol;
 import io.spacedog.client.push.PushRequest;
 import io.spacedog.client.push.PushResponse;
 import io.spacedog.client.push.PushResponse.Notification;
+import io.spacedog.client.push.PushSettings;
 import io.spacedog.client.schema.Schema;
 import io.spacedog.server.JsonPayload;
 import io.spacedog.server.Server;
@@ -431,6 +432,10 @@ public class PushService extends SpaceService implements SpaceFields {
 					"[Warning] failed to delete disabled installation [%s]", id));
 			t.printStackTrace();
 		}
+	}
+
+	public PushSettings settings() {
+		return Services.settings().getOrThrow(PushSettings.class);
 	}
 
 }

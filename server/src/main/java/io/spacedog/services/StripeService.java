@@ -145,7 +145,7 @@ public class StripeService {
 	}
 
 	public StripeSettings settings() {
-		return Services.settings().get(StripeSettings.class).get();
+		return Services.settings().getOrThrow(StripeSettings.class);
 	}
 
 	//

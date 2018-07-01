@@ -36,6 +36,7 @@ import io.spacedog.client.data.DataGetAllRequest;
 import io.spacedog.client.data.DataImportRequest;
 import io.spacedog.client.data.DataObject;
 import io.spacedog.client.data.DataObjectBase;
+import io.spacedog.client.data.DataSettings;
 import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
@@ -651,6 +652,10 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 						ClassResources.loadAsBytes(this, "data-template.json"), //
 						XContentType.JSON)//
 				.get();
+	}
+
+	public DataSettings settings() {
+		return Services.settings().getOrThrow(DataSettings.class);
 	}
 
 }

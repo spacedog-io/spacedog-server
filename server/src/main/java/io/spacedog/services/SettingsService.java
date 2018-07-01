@@ -138,6 +138,11 @@ public class SettingsService extends SpaceService {
 		return Optional.ofNullable(settings);
 	}
 
+	public <K extends Settings> K getOrThrow(Class<K> settingsClass) {
+		return get(settingsClass).orElseThrow(//
+				() -> Exceptions.notFound("settings", SettingsBase.id(settingsClass)));
+	}
+
 	public <K> Optional<K> get(String id, Class<K> settingsClass) {
 		return get(id).map(settings -> Json.toPojo(settings, settingsClass));
 	}
