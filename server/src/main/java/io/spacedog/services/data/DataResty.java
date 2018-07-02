@@ -145,21 +145,21 @@ public class DataResty extends SpaceResty {
 		return JsonPayload.ok().withFields("deleted", deleted).build();
 	}
 
-	@Get("/:type/:id/:path")
-	@Get("/:type/:id/:path/")
-	public JsonNode getField(String type, String id, String path, Context context) {
+	@Get("/:type/:id/:field")
+	@Get("/:type/:id/:field/")
+	public JsonNode getField(String type, String id, String field, Context context) {
 		DataWrap<ObjectNode> wrap = Services.data().getIfAuthorized(type, id);
-		JsonNode value = Json.get(wrap.source(), path);
+		JsonNode value = Json.get(wrap.source(), field);
 		if (value == null)
 			value = NullNode.getInstance();
 		return value;
 	}
 
-	@Put("/:type/:id/:path")
-	@Put("/:type/:id/:path/")
-	public Payload putField(String type, String id, String path, String body, Context context) {
+	@Put("/:type/:id/:field")
+	@Put("/:type/:id/:field/")
+	public Payload putField(String type, String id, String field, String body, Context context) {
 		ObjectNode source = Json.object();
-		Json.with(source, path, Json.readNode(body));
+		Json.with(source, field, Json.readNode(body));
 		DataWrap<ObjectNode> object = DataWrap.wrap(source)//
 				.version(context.query().getLong(VERSION_PARAM, Versions.MATCH_ANY))//
 				.type(type).id(id);
@@ -167,11 +167,11 @@ public class DataResty extends SpaceResty {
 		return JsonPayload.saved(object).build();
 	}
 
-	@Delete("/:type/:id/:path")
-	@Delete("/:type/:id/:path/")
-	public Payload deleteField(String type, String id, String path, String body, Context context) {
+	@Delete("/:type/:id/:field")
+	@Delete("/:type/:id/:field/")
+	public Payload deleteField(String type, String id, String field, String body, Context context) {
 		DataWrap<ObjectNode> object = Services.data().getWrapped(type, id);
-		Json.remove(object.source(), path);
+		Json.remove(object.source(), field);
 		object = Services.data().saveIfAuthorized(object, false, false);
 		return JsonPayload.saved(object).build();
 	}
