@@ -51,6 +51,6 @@ public class Check {
 		notNull(value, valueName);
 		if (!Pattern.matches(regex, value))
 			throw Exceptions.illegalArgument(//
-					"[%s] is invalid: does not comply [%s] regex", valueName, regex);
+					"[%s][%s] is invalid: doesn't comply [%s] regex", valueName, value, regex);
 	}
 }

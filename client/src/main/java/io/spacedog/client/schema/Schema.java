@@ -4,13 +4,11 @@
 package io.spacedog.client.schema;
 
 import java.util.Objects;
-import java.util.Set;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Sets;
 
 import io.spacedog.client.http.SpaceFields;
-import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Check;
 import io.spacedog.utils.Json;
 
 public class Schema implements MappingDirectives {
@@ -65,8 +63,7 @@ public class Schema implements MappingDirectives {
 	}
 
 	public static void checkName(String name) {
-		if (reservedNames.contains(name))
-			throw Exceptions.illegalArgument("schema name [%s] is reserved", name);
+		Check.matchRegex("[a-z0-9]{1,}", name, "schema name");
 	}
 
 	@Override
@@ -79,7 +76,5 @@ public class Schema implements MappingDirectives {
 		return Objects.equals(name, other.name) //
 				&& Objects.equals(mapping, other.mapping);
 	}
-
-	private static Set<String> reservedNames = Sets.newHashSet("settings");
 
 }
