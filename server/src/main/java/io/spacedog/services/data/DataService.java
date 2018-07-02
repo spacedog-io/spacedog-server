@@ -138,23 +138,23 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 	// Meta
 	//
 
-	private static final String[] METADATA_FIELDS = //
+	private static final String[] META_FIELDS = //
 			new String[] { OWNER_FIELD, GROUP_FIELD, CREATED_AT_FIELD, UPDATED_AT_FIELD };
 
 	public Optional<DataWrap<DataObjectBase>> getMeta(String type, String id) {
 
 		GetResponse response = elastic().prepareGet(index(type), id)//
-				.setFetchSource(METADATA_FIELDS, null)//
+				.setFetchSource(META_FIELDS, null)//
 				.get();
 
-		DataWrap<DataObjectBase> metadata = null;
+		DataWrap<DataObjectBase> wrap = null;
 
 		if (response.isExists()) {
 			DataObjectBase base = Json.toPojo(response.getSourceAsBytes(), DataObjectBase.class);
-			metadata = DataWrap.wrap(base).type(type)//
+			wrap = DataWrap.wrap(base).type(type)//
 					.id(id).version(response.getVersion());
 		}
-		return Optional.ofNullable(metadata);
+		return Optional.ofNullable(wrap);
 	}
 
 	public DataWrap<DataObjectBase> getMetaOrThrow(String type, String id) {
@@ -180,15 +180,15 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 	}
 
 	private <K> void updateMeta(DataWrap<K> object, //
-			DataObject metadata, boolean forceMeta) {
+			DataObject meta, boolean forceMeta) {
 
 		if (forceMeta == false) {
-			object.owner(metadata.owner());
-			object.group(metadata.group());
+			object.owner(meta.owner());
+			object.group(meta.group());
 		}
 
 		if (forceMeta == false || object.createdAt() == null)
-			object.createdAt(metadata.createdAt());
+			object.createdAt(meta.createdAt());
 
 		if (forceMeta == false || object.updatedAt() == null)
 			object.updatedAt(DateTime.now());
