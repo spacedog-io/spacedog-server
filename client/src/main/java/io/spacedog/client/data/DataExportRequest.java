@@ -1,9 +1,6 @@
 package io.spacedog.client.data;
 
-import io.spacedog.client.elastic.ESQueryBuilder;
-import io.spacedog.client.http.SpaceResponse;
-
-public abstract class DataExportRequest {
+public class DataExportRequest {
 
 	public String type;
 	public Boolean refresh;
@@ -18,15 +15,8 @@ public abstract class DataExportRequest {
 		return this;
 	}
 
-	public DataExportRequest withQuery(ESQueryBuilder query) {
-		return withQuery(query.toString());
-	}
-
 	public DataExportRequest withQuery(String query) {
 		this.query = query;
 		return this;
 	}
-
-	public abstract SpaceResponse go();
-
 }

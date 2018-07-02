@@ -176,7 +176,7 @@ public class DataRestyTest2 extends SpaceTest {
 		ESSearchSourceBuilder source = ESSearchSourceBuilder.searchSource()
 				.query(ESQueryBuilders.queryStringQuery("museum"));
 		results = fred.data().prepareSearch()//
-				.type("sale").source(source).go(Sale.class);
+				.type("sale").source(source.toString()).go(Sale.class);
 
 		assertEquals(1, results.total);
 		assertAlmostEquals(sale, results.objects.get(0).source());
@@ -343,7 +343,7 @@ public class DataRestyTest2 extends SpaceTest {
 		ESSearchSourceBuilder builder = ESSearchSourceBuilder.searchSource()//
 				.from(from).size(size);
 		DataResults<Message> results = user.data().prepareSearch()//
-				.type(Message.TYPE).source(builder).refresh().go(Message.class);
+				.type(Message.TYPE).source(builder.toString()).refresh().go(Message.class);
 
 		assertEquals(4, results.total);
 		assertEquals(size, results.objects.size());

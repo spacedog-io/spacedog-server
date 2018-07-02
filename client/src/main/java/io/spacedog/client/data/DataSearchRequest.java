@@ -1,10 +1,6 @@
 package io.spacedog.client.data;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import io.spacedog.client.elastic.ESSearchSourceBuilder;
-
-public abstract class DataSearchRequest {
+public class DataSearchRequest {
 
 	public boolean refresh;
 	public String type;
@@ -25,13 +21,4 @@ public abstract class DataSearchRequest {
 		return this;
 	}
 
-	public DataSearchRequest source(ESSearchSourceBuilder source) {
-		return source(source.toString());
-	}
-
-	public DataResults<ObjectNode> go() {
-		return go(ObjectNode.class);
-	}
-
-	public abstract <K> DataResults<K> go(Class<K> sourceClass);
 }

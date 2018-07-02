@@ -1,8 +1,7 @@
 package io.spacedog.client.data;
 
-import io.spacedog.client.elastic.ESQueryBuilder;
+public class DataBulkDeleteRequest {
 
-public abstract class DataBulkDeleteRequest {
 	public boolean refresh;
 	public String type;
 	public String query;
@@ -21,11 +20,5 @@ public abstract class DataBulkDeleteRequest {
 		this.query = query;
 		return this;
 	}
-
-	public DataBulkDeleteRequest query(ESQueryBuilder query) {
-		return query(query.toString());
-	}
-
-	public abstract long go();
 
 }

@@ -61,13 +61,13 @@ public class DataImportExportTest extends SpaceTest {
 
 		// superamdin gets all message1 messages
 		List<DataWrap<Message>> messages1 = superadmin.data().prepareSearch()//
-				.source(ESSearchSourceBuilder.searchSource())//
+				.source(ESSearchSourceBuilder.searchSource().toString())//
 				.type("message1").refresh()//
 				.go(Message.class).objects;
 
 		// superamdin gets all message2 messages
 		List<DataWrap<Message>> messages2 = superadmin.data().prepareSearch()//
-				.source(ESSearchSourceBuilder.searchSource())//
+				.source(ESSearchSourceBuilder.searchSource().toString())//
 				.type("message2").refresh()//
 				.go(Message.class).objects;
 
@@ -95,7 +95,7 @@ public class DataImportExportTest extends SpaceTest {
 		// starting with an 'h'
 		ESQueryBuilder query = ESQueryBuilders.matchPhrasePrefixQuery("text", "h");
 		String export = superadmin.data().prepareExport("message1")//
-				.withQuery(query).withRefresh(true).go().asString();
+				.withQuery(query.toString()).withRefresh(true).go().asString();
 
 		// superadmin creates message2 index
 		superadmin.schemas().set(messageSchema("message2"));
@@ -108,12 +108,12 @@ public class DataImportExportTest extends SpaceTest {
 		ESSearchSourceBuilder source = ESSearchSourceBuilder.searchSource()//
 				.query(query);
 		List<DataWrap<Message>> messages1 = superadmin.data().prepareSearch()//
-				.source(source).type("message1").refresh()//
+				.source(source.toString()).type("message1").refresh()//
 				.go(Message.class).objects;
 
 		// superadmin gets all message2 messages
 		List<DataWrap<Message>> messages2 = superadmin.data().prepareSearch()//
-				.source(ESSearchSourceBuilder.searchSource())//
+				.source(ESSearchSourceBuilder.searchSource().toString())//
 				.type("message2").refresh()//
 				.go(Message.class).objects;
 

@@ -103,7 +103,7 @@ public class PushClient {
 	}
 
 	public DataResults<Installation> searchInstallations(ESSearchSourceBuilder source) {
-		return dog.data().prepareSearch().type(TYPE).source(source).go(Installation.class);
+		return dog.data().prepareSearch().type(TYPE).source(source.toString()).go(Installation.class);
 	}
 
 	public void deleteInstallation(String id) {

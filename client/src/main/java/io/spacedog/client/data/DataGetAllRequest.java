@@ -1,8 +1,6 @@
 package io.spacedog.client.data;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-public abstract class DataGetAllRequest {
+public class DataGetAllRequest {
 
 	public String type;
 	public int from = 0;
@@ -34,11 +32,5 @@ public abstract class DataGetAllRequest {
 		this.refresh = true;
 		return this;
 	}
-
-	public DataResults<ObjectNode> go() {
-		return go(ObjectNode.class);
-	}
-
-	public abstract <K> DataResults<K> go(Class<K> sourceClass);
 
 }

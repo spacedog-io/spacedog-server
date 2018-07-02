@@ -91,7 +91,7 @@ public class T3_RequestDriver extends DemoBase {
 				.sortMode("min");
 
 		DataResults<Driver> drivers = superadmin.data().prepareSearch().type("driver")//
-				.source(ESSearchSourceBuilder.searchSource().query(query).sort(sort).size(5))//
+				.source(ESSearchSourceBuilder.searchSource().query(query).sort(sort).size(5).toString())//
 				.go(Driver.class);
 
 		// system pushes notifications to nearby drivers

@@ -194,11 +194,11 @@ public class DataClient implements SpaceFields, SpaceParams {
 	// Get All Request
 	//
 
-	public DataGetAllRequest prepareGetAll() {
-		return new DataGetAllRequest() {
+	public DataGetAllRequestBuilder prepareGetAll() {
+		return new DataGetAllRequestBuilder() {
 			@Override
 			public <K> DataResults<K> go(Class<K> resultsClass) {
-				return getAll(this, resultsClass);
+				return getAll(this.build(), resultsClass);
 			}
 		};
 	}
@@ -227,11 +227,11 @@ public class DataClient implements SpaceFields, SpaceParams {
 				.refresh().go(200).get("deleted").asLong();
 	}
 
-	public DataBulkDeleteRequest prepareBulkDelete() {
-		return new DataBulkDeleteRequest() {
+	public DataBulkDeleteRequestBuilder prepareBulkDelete() {
+		return new DataBulkDeleteRequestBuilder() {
 			@Override
 			public long go() {
-				return bulkDelete(this);
+				return bulkDelete(this.build());
 			}
 		};
 	}
@@ -256,11 +256,11 @@ public class DataClient implements SpaceFields, SpaceParams {
 	// Search Request
 	//
 
-	public DataSearchRequest prepareSearch() {
-		return new DataSearchRequest() {
+	public DataSearchRequestBuilder prepareSearch() {
+		return new DataSearchRequestBuilder() {
 			@Override
 			public <K> DataResults<K> go(Class<K> sourceClass) {
-				return search(this, sourceClass);
+				return search(this.build(), sourceClass);
 			}
 		};
 	}
@@ -294,11 +294,11 @@ public class DataClient implements SpaceFields, SpaceParams {
 	// Import Export
 	//
 
-	public DataExportRequest prepareExport(String type) {
-		return new DataExportRequest(type) {
+	public DataExportRequestBuilder prepareExport(String type) {
+		return new DataExportRequestBuilder(type) {
 			@Override
 			public SpaceResponse go() {
-				return exportNow(this);
+				return exportNow(this.build());
 			}
 
 		};
@@ -312,11 +312,11 @@ public class DataClient implements SpaceFields, SpaceParams {
 				.go(200);
 	}
 
-	public DataImportRequest prepareImport(String type) {
-		return new DataImportRequest(type) {
+	public DataImportRequestBuilder prepareImport(String type) {
+		return new DataImportRequestBuilder(type) {
 			@Override
 			public void go(InputStream export) {
-				importNow(this, export);
+				importNow(this.build(), export);
 			}
 		};
 	}

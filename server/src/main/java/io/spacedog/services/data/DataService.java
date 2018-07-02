@@ -34,6 +34,7 @@ import io.spacedog.client.credentials.RolePermissions;
 import io.spacedog.client.data.CsvRequest;
 import io.spacedog.client.data.DataGetAllRequest;
 import io.spacedog.client.data.DataImportRequest;
+import io.spacedog.client.data.DataImportRequestBuilder;
 import io.spacedog.client.data.DataObject;
 import io.spacedog.client.data.DataObjectBase;
 import io.spacedog.client.data.DataSettings;
@@ -424,11 +425,11 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 		return new DataExportStreamingOutput(response);
 	}
 
-	public DataImportRequest prepareImport(String type) {
-		return new DataImportRequest(type) {
+	public DataImportRequestBuilder prepareImport(String type) {
+		return new DataImportRequestBuilder(type) {
 			@Override
 			public void go(InputStream export) throws IOException {
-				importNow(this, export);
+				importNow(this.build(), export);
 			}
 		};
 	}

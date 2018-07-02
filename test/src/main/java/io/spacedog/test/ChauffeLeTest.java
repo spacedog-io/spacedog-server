@@ -145,7 +145,7 @@ public class ChauffeLeTest extends SpaceTest {
 					.query(ESQueryBuilders.matchAllQuery());
 
 			user.data().prepareSearch().type("bigpost")//
-					.refresh().source(builder).go();
+					.refresh().source(builder.toString()).go();
 		}
 	}
 
@@ -172,7 +172,7 @@ public class ChauffeLeTest extends SpaceTest {
 							.mustNot(ESQueryBuilders.existsQuery("parent")));
 
 			DataResults<ObjectNode> results = user.data().prepareSearch().type("smallpost")//
-					.refresh().source(builder).go();
+					.refresh().source(builder.toString()).go();
 
 			assertEquals(5, results.total);
 
@@ -186,7 +186,7 @@ public class ChauffeLeTest extends SpaceTest {
 					.sort("updatedAt", ESSortOrder.ASC)//
 					.query(ESQueryBuilders.termsQuery("parent", subjectIds));
 
-			results = user.data().prepareSearch().type("smallpost").source(builder).go();
+			results = user.data().prepareSearch().type("smallpost").source(builder.toString()).go();
 
 			assertEquals(13, results.total);
 

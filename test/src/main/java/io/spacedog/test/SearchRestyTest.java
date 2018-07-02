@@ -46,7 +46,8 @@ public class SearchRestyTest extends SpaceTest {
 		// search for messages with full text query
 		ESSearchSourceBuilder source = ESSearchSourceBuilder.searchSource().query(//
 				ESQueryBuilders.matchQuery("text", "something to drink"));
-		DataResults<ObjectNode> results = superadmin.data().prepareSearch().source(source).go();
+		DataResults<ObjectNode> results = superadmin.data()//
+				.prepareSearch().source(source.toString()).go();
 
 		assertEquals(2, results.total);
 		assertEquals("wanna drink something?", //
@@ -68,7 +69,7 @@ public class SearchRestyTest extends SpaceTest {
 
 		// deletes messages containing 'up' by query
 		long deleted = superadmin.data().prepareBulkDelete()//
-				.query(ESQueryBuilders.matchQuery("text", "something"))//
+				.query(ESQueryBuilders.matchQuery("text", "something").toString())//
 				.go();
 
 		assertEquals(2, deleted);
@@ -80,7 +81,8 @@ public class SearchRestyTest extends SpaceTest {
 		deleted = superadmin.data().prepareBulkDelete()//
 				.query(ESQueryBuilders.boolQuery()//
 						.should(ESQueryBuilders.matchQuery("name", "riri"))//
-						.should(ESQueryBuilders.matchQuery("text", "so")))//
+						.should(ESQueryBuilders.matchQuery("text", "so")) //
+						.toString())//
 				.go();
 
 		assertEquals(2, deleted);
@@ -151,7 +153,7 @@ public class SearchRestyTest extends SpaceTest {
 		// search with ascendent sorting
 		ESSearchSourceBuilder searchSource = ESSearchSourceBuilder.searchSource().sort("i");
 		DataResults<ObjectNode> results = superadmin.data().prepareSearch()//
-				.source(searchSource).refresh().go();
+				.source(searchSource.toString()).refresh().go();
 		assertEquals(5, results.total);
 
 		for (int i = 0; i < results.objects.size(); i++) {
@@ -162,7 +164,7 @@ public class SearchRestyTest extends SpaceTest {
 		// search with descendant sorting
 		searchSource = ESSearchSourceBuilder.searchSource().sort("t", ESSortOrder.DESC);
 		results = superadmin.data().prepareSearch()//
-				.source(searchSource).refresh().go();
+				.source(searchSource.toString()).refresh().go();
 		assertEquals(5, results.total);
 
 		for (int i = 0; i < results.objects.size(); i++) {
@@ -184,6 +186,6 @@ public class SearchRestyTest extends SpaceTest {
 		// Fixeds in ElasticSearech version 2.4.6
 		ESSearchSourceBuilder source = ESSearchSourceBuilder.searchSource().query(//
 				ESQueryBuilders.simpleQueryStringQuery("**").analyzeWildcard(true));
-		superadmin.data().prepareSearch().source(source).go();
+		superadmin.data().prepareSearch().source(source.toString()).go();
 	}
 }
