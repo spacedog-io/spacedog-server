@@ -183,12 +183,11 @@ public class SchemaRestyTest extends SpaceTest {
 		superadmin.settings().save(settings);
 
 		// guest saves a first document with data as an object
-		guest.data().save("document", Json.object("data", //
-				Json.object("a", "aaa", "b", Json.object("b", "bbb"))));
+		guest.data().save("document", //
+				Json.object("data", Json.object("a", "aaa", "b", Json.object("b", "bbb"))));
 
 		// guest saves a second document with data as an array
-		guest.data().save("document", Json.object("data", //
-				Json.array("a", Json.array(1, 2, 3))));
+		guest.data().save("document", Json.object("data", Json.array("a", Json.array(1, 2, 3))));
 
 		// guest saves a thirst document with data as a boolean
 		guest.data().save("document", Json.object("data", true));

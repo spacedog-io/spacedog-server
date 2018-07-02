@@ -92,7 +92,8 @@ public class SmsRestyTest extends SpaceTest {
 
 		// superadmin creates a customer
 		String customerId = superadmin.data().save("customer", //
-				Json.object("name", "David A.", "phone", "+33662627520")).id();
+				Json.object("name", "David A.", "phone", "+33662627520"))//
+				.id();
 
 		// superadmin sets Twilio sms settings
 		SmsSettings settings = new SmsSettings();

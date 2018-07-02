@@ -132,7 +132,7 @@ public class ChauffeLeTest extends SpaceTest {
 			bigPost.withArray("responses")//
 					.add(Json.object("title", comment, "author", user.username()));
 
-			user.data().save("bigpost", postId, bigPost);
+			user.data().prepareSave(bigPost).type("bigpost").id(postId).go();
 		}
 
 		@Override

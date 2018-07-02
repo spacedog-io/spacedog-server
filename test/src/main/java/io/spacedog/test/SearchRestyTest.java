@@ -30,16 +30,11 @@ public class SearchRestyTest extends SpaceTest {
 		superadmin.schemas().set(Schema.builder("rubric").text("name").build());
 
 		// creates 4 messages and 1 rubric
-		superadmin.data().save("rubric", //
-				Json.object("name", "riri, fifi and loulou"));
-		superadmin.data().save("message", //
-				Json.object("text", "what's up?"));
-		superadmin.data().save("message", //
-				Json.object("text", "wanna drink something?"));
-		superadmin.data().save("message", //
-				Json.object("text", "pretty cool something, hein?"));
-		superadmin.data().save("message", //
-				Json.object("text", "so long guys"));
+		superadmin.data().save("rubric", Json.object("name", "riri, fifi and loulou"));
+		superadmin.data().save("message", Json.object("text", "what's up?"));
+		superadmin.data().save("message", Json.object("text", "wanna drink something?"));
+		superadmin.data().save("message", Json.object("text", "pretty cool something, hein?"));
+		superadmin.data().save("message", Json.object("text", "so long guys"));
 
 		assertEquals(5, superadmin.data().prepareSearch().refresh().go().total);
 

@@ -226,9 +226,9 @@ public class DataAccessControlTest extends SpaceTest {
 		superadmin.settings().save(dataSettings);
 
 		// only users (and superadmins) can create messages
-		guest.data().save(Message.TYPE, "guest", new Message("guest"));
-		vince.data().save(Message.TYPE, "vince", new Message("vince"));
-		fred.data().save(Message.TYPE, "fred", new Message("fred"));
+		guest.data().save(new Message("guest"), "guest");
+		vince.data().save(new Message("vince"), "vince");
+		fred.data().save(new Message("fred"), "fred");
 
 		// guest don't have read permission even on their own objects
 		assertHttpError(403, () -> guest.data().get(Message.TYPE, "guest"));
@@ -253,41 +253,35 @@ public class DataAccessControlTest extends SpaceTest {
 
 		// vince and fred have update access on their own objects
 		// the one's they have created
-		vince.data().save(Message.TYPE, "vince", new Message("vince2"));
-		fred.data().save(Message.TYPE, "fred", new Message("fred2"));
+		vince.data().save(new Message("vince2"), "vince");
+		fred.data().save(new Message("fred2"), "fred");
 
 		// nath can still read fred's message
-		assertEquals("fred2", nath.data()//
-				.get(Message.TYPE, "fred", Message.class).text);
+		assertEquals("fred2", nath.data().get("fred", Message.class).text);
 
 		// nath has update access on fred's objects
 		// since they share the same group
 		// and users have 'updateGroup" permission
-		fred.data().save(Message.TYPE, "fred", new Message("fred3"));
+		fred.data().save(new Message("fred3"), "fred");
 
 		// fred can still read his message modified by nath
-		assertEquals("fred3", fred.data()//
-				.get(Message.TYPE, "fred", Message.class).text);
+		assertEquals("fred3", fred.data().get("fred", Message.class).text);
 
 		// vince does not have update access to fred's objects
 		// since not in the same group
-		assertHttpError(403, () -> vince.data()//
-				.save(Message.TYPE, "fred", new Message("XXX")));
+		assertHttpError(403, () -> vince.data().save(new Message("XXX"), "fred"));
 
 		// nath does not have update access to vince's objects
 		// since not in the same group
-		assertHttpError(403, () -> nath.data()//
-				.save(Message.TYPE, "vince", new Message("XXX")));
+		assertHttpError(403, () -> nath.data().save(new Message("XXX"), "vince"));
 
 		// vince does not have delete access to fred's objects
 		// since not in the same group
-		assertHttpError(403, () -> vince.data()//
-				.delete(Message.TYPE, "fred"));
+		assertHttpError(403, () -> vince.data().delete(Message.TYPE, "fred"));
 
 		// nath does not have update access to vince's objects
 		// since not in the same group
-		assertHttpError(403, () -> nath.data()//
-				.delete(Message.TYPE, "vince"));
+		assertHttpError(403, () -> nath.data().delete(Message.TYPE, "vince"));
 
 		// nath has delete access on fred's objects
 		// since they share the same group
@@ -328,7 +322,7 @@ public class DataAccessControlTest extends SpaceTest {
 		dave.data().delete(message);
 
 		// message for users without create permission
-		dave.data().save("message", "2", Json.object("text", "salut"));
+		dave.data().save(DataWrap.wrap(Json.object("text", "salut")).type("message").id("2"));
 
 		// maelle is a simple user
 		// she's got no right on the message schema
@@ -342,11 +336,9 @@ public class DataAccessControlTest extends SpaceTest {
 		// he's only got the right to read
 		SpaceDog fred = createTempDog(superadmin, "fred");
 		superadmin.credentials().setRole(fred.id(), "iron");
-		assertHttpError(403, () -> fred.data()//
-				.save(Message.TYPE, new Message("hi")));
+		assertHttpError(403, () -> fred.data().save(new Message("hi")));
 		fred.data().get(Message.TYPE, "2");
-		assertHttpError(403, () -> fred.data()//
-				.save(Message.TYPE, "2", new Message("hi")));
+		assertHttpError(403, () -> fred.data().save(new Message("hi"), "2"));
 		assertHttpError(403, () -> fred.data().delete(Message.TYPE, "2"));
 
 		// nath has the silver role

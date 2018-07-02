@@ -242,14 +242,10 @@ public class DataRestyTest2 extends SpaceTest {
 
 		// should successfully create 4 messages
 
-		superadmin.data().save(Message.TYPE, //
-				Json.object("text", "what's up?"));
-		superadmin.data().save(Message.TYPE, //
-				Json.object("text", "wanna drink something?"));
-		superadmin.data().save(Message.TYPE, //
-				Json.object("text", "pretty cool, hein?"));
-		superadmin.data().save(Message.TYPE, //
-				Json.object("text", "so long guys"));
+		superadmin.data().save(Message.TYPE, Json.object("text", "what's up?"));
+		superadmin.data().save(Message.TYPE, Json.object("text", "wanna drink something?"));
+		superadmin.data().save(Message.TYPE, Json.object("text", "pretty cool, hein?"));
+		superadmin.data().save(Message.TYPE, Json.object("text", "so long guys"));
 
 		long total = superadmin.data().prepareGetAll().refresh().go().total;
 		assertEquals(4, total);
@@ -274,13 +270,13 @@ public class DataRestyTest2 extends SpaceTest {
 
 		// creates a message object with auto generated id
 		ObjectNode message = Json.object("text", "id=?");
-		DataWrap<ObjectNode> createObject = superadmin.data().save(Message.TYPE, message);
+		DataWrap<ObjectNode> createObject = superadmin.data().save(message);
 		DataWrap<ObjectNode> getObject = superadmin.data().getWrapped(Message.TYPE, createObject.id());
 		assertAlmostEquals(message, getObject.source());
 
 		// creates a message object with self provided id
 		message = Json.object("text", "id=1");
-		superadmin.data().save(Message.TYPE, "1", message);
+		superadmin.data().save(message, "1");
 		getObject = superadmin.data().getWrapped(Message.TYPE, "1");
 		assertAlmostEquals(message, getObject.source());
 
@@ -314,7 +310,7 @@ public class DataRestyTest2 extends SpaceTest {
 		Set<String> originalMessages = Sets.newHashSet(//
 				"hello", "bonjour", "guttentag", "hola");
 		for (String message : originalMessages)
-			vince.data().save(Message.TYPE, new Message(message));
+			vince.data().save(new Message(message));
 
 		// fetches messages by 4 pages of 1 object
 		Set<String> messages = Sets.newHashSet();

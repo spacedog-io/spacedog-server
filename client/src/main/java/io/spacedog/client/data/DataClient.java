@@ -21,6 +21,13 @@ public class DataClient implements SpaceFields, SpaceParams {
 		this.dog = session;
 	}
 
+	public static String type(Object source) {
+		Class<?> sourceClass = source instanceof Class<?> //
+				? (Class<?>) source
+				: source.getClass();
+		return sourceClass.getSimpleName().toLowerCase();
+	}
+
 	//
 	// GET
 	//
@@ -31,6 +38,10 @@ public class DataClient implements SpaceFields, SpaceParams {
 
 	public ObjectNode get(String type, String id, boolean throwNotFound) {
 		return get(type, id, ObjectNode.class, throwNotFound);
+	}
+
+	public <K> K get(String id, Class<K> sourceClass) {
+		return get(type(sourceClass), id, sourceClass, true);
 	}
 
 	public <K> K get(String type, String id, Class<K> sourceClass) {
@@ -50,8 +61,16 @@ public class DataClient implements SpaceFields, SpaceParams {
 		return getWrapped(type, id, ObjectNode.class, throwNotFound);
 	}
 
+	public <K> DataWrap<K> getWrapped(String id, Class<K> sourceClass) {
+		return getWrapped(type(sourceClass), id, sourceClass, true);
+	}
+
 	public <K> DataWrap<K> getWrapped(String type, String id, Class<K> sourceClass) {
 		return getWrapped(type, id, sourceClass, true);
+	}
+
+	public <K> DataWrap<K> getWrapped(String id, Class<K> sourceClass, boolean throwNotFound) {
+		return getWrapped(type(sourceClass), id, sourceClass, throwNotFound);
 	}
 
 	public <K> DataWrap<K> getWrapped(String type, String id, Class<K> sourceClass, boolean throwNotFound) {
@@ -92,16 +111,37 @@ public class DataClient implements SpaceFields, SpaceParams {
 	// Save
 	//
 
+	public <K> DataWrap<K> save(K source) {
+		return save(source, null);
+	}
+
+	public <K> DataWrap<K> save(K source, String id) {
+		return save(source, id, -3);
+	}
+
+	public <K> DataWrap<K> save(K source, String id, long version) {
+		return save(DataWrap.wrap(source).id(id).version(version));
+	}
+
 	public <K> DataWrap<K> save(String type, K source) {
-		return save(type, null, source);
+		return save(type, source, null);
 	}
 
-	public <K> DataWrap<K> save(String type, String id, K source) {
-		return save(type, id, -3, source);
+	public <K> DataWrap<K> save(String type, K source, String id) {
+		return save(type, source, id, -3);
 	}
 
-	public <K> DataWrap<K> save(String type, String id, long version, K source) {
+	public <K> DataWrap<K> save(String type, K source, String id, long version) {
 		return save(DataWrap.wrap(source).type(type).id(id).version(version));
+	}
+
+	public <K> DataSaveRequestBuilder<K> prepareSave(K source) {
+		return new DataSaveRequestBuilder<K>(source) {
+			@Override
+			public DataWrap<K> go() {
+				return save(build());
+			}
+		};
 	}
 
 	public <K> DataWrap<K> save(DataWrap<K> object) {

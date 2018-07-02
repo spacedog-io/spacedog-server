@@ -53,7 +53,7 @@ public class DataRestyTest extends SpaceTest {
 				.build();
 
 		// create
-		DataWrap<ObjectNode> carWrap = vince.data().save("car", car);
+		DataWrap<ObjectNode> carWrap = vince.data().save(car);
 		assertEquals("car", carWrap.type());
 		assertNotNull(carWrap.id());
 
@@ -122,7 +122,7 @@ public class DataRestyTest extends SpaceTest {
 				.build();
 
 		// create
-		String id = vince.data().save("car", car).id();
+		String id = vince.data().save(car).id();
 
 		// find by id
 		DataWrap<ObjectNode> carWrap = vince.data().getWrapped("car", id);
@@ -177,7 +177,7 @@ public class DataRestyTest extends SpaceTest {
 		message.updatedAt(now.minusDays(2).plusHours(1));
 
 		// vince creates a message object
-		vince.data().save(Message.TYPE, "1", message);
+		vince.data().save(message, "1");
 
 		// but provided meta dates are not saved
 		Message downloaded = vince.data().get(Message.TYPE, "1", Message.class);
