@@ -355,7 +355,7 @@ public class CredentialsRestyTest extends SpaceTest {
 		// add an url parameter to the template model
 		template.model = Maps.newHashMap();
 		template.model.put("url", "string");
-		template.text = "{{url}}?code={{credentials.passwordResetCode}}";
+		template.text = "{{url}}?code={{passwordResetCode}}";
 		superadmin.emails().saveTemplate(template);
 
 		// guest declares fred's forgot his password
