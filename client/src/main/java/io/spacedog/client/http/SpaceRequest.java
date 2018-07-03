@@ -16,7 +16,6 @@ import com.google.common.collect.Maps;
 import com.google.common.primitives.Ints;
 
 import io.spacedog.client.SpaceDog;
-import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;

@@ -9,6 +9,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
 import io.spacedog.client.credentials.Credentials;
+import io.spacedog.client.http.AuthorizationHeader;
 import io.spacedog.client.http.ContentTypes;
 import io.spacedog.client.http.SpaceBackend;
 import io.spacedog.client.http.SpaceException;
@@ -16,7 +17,6 @@ import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.client.settings.Settings;
 import io.spacedog.client.settings.SettingsBase;
-import io.spacedog.utils.AuthorizationHeader;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;

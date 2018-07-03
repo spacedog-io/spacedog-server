@@ -1,14 +1,16 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.utils;
+package io.spacedog.client.http;
 
 import java.util.List;
 
 import com.google.common.base.Strings;
 import com.google.common.io.BaseEncoding;
 
-import io.spacedog.client.http.SpaceHeaders;
+import io.spacedog.utils.Check;
+import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Utils;
 
 public class AuthorizationHeader {
 
