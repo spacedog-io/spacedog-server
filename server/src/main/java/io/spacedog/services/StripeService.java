@@ -3,6 +3,7 @@ package io.spacedog.services;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 
 import org.elasticsearch.common.Strings;
 
@@ -18,7 +19,6 @@ import io.spacedog.client.stripe.StripeSettings;
 import io.spacedog.server.Services;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.NotFoundException;
-import io.spacedog.utils.Optional7;
 
 public class StripeService {
 
@@ -166,29 +166,33 @@ public class StripeService {
 	}
 
 	private boolean hasStripeCustomerId(Credentials credentials) {
-		return credentials.getTag(//
-				CREDENTIALS_TAG_STRIPE_CUSTOMER_ID).isPresent();
+		return credentials.getTagValues(CREDENTIALS_TAG_STRIPE_CUSTOMER_ID)//
+				.isEmpty() == false;
 	}
 
 	private String getStripeCustomerId(Credentials credentials) {
 
-		Optional7<String> value = credentials.getTag(//
+		Set<String> values = credentials.getTagValues(//
 				CREDENTIALS_TAG_STRIPE_CUSTOMER_ID);
 
-		if (value.isPresent())
-			return value.get();
+		if (values.isEmpty())
+			throw new NotFoundException("credentials [%s][%s] has no stripe customer id", //
+					credentials.type(), credentials.username());
 
-		throw new NotFoundException("credentials [%s][%s] has no stripe customer id", //
-				credentials.type(), credentials.username());
+		if (values.size() > 1)
+			throw Exceptions.runtime("credentials [%s][%s] has [%s] stripe customer ids", //
+					credentials.type(), values.size(), credentials.username());
+
+		return values.iterator().next();
 	}
 
 	private void updateStripeCustomerId(Credentials credentials, String stripeCustomerId) {
-		credentials.setTag(CREDENTIALS_TAG_STRIPE_CUSTOMER_ID, stripeCustomerId);
+		credentials.addTag(CREDENTIALS_TAG_STRIPE_CUSTOMER_ID, stripeCustomerId);
 		Services.credentials().update(credentials);
 	}
 
 	private void removeStripeCustomerId(Credentials credentials) {
-		credentials.removeTag(CREDENTIALS_TAG_STRIPE_CUSTOMER_ID);
+		credentials.removeTags(CREDENTIALS_TAG_STRIPE_CUSTOMER_ID);
 		Services.credentials().update(credentials);
 	}
 

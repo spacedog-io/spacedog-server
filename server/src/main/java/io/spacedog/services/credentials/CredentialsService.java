@@ -1,5 +1,6 @@
 package io.spacedog.services.credentials;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -15,12 +16,16 @@ import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.joda.time.DateTime;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import io.spacedog.client.TemplateParameterTypes;
 import io.spacedog.client.credentials.Credentials;
+import io.spacedog.client.credentials.Credentials.Session;
 import io.spacedog.client.credentials.CredentialsCreateRequest;
 import io.spacedog.client.credentials.CredentialsSettings;
 import io.spacedog.client.credentials.CredentialsUpdateRequest;
@@ -246,16 +251,16 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 			throw Exceptions.alreadyExists(//
 					SERVICE_NAME, credentials.username());
 
-		String now = DateTime.now().toString();
-		credentials.updatedAt(now);
-		credentials.createdAt(now);
+		credentials.createdAt(DateTime.now());
+		credentials.updatedAt(credentials.createdAt());
 
 		Index index = index();
+		ObjectNode source = toElasticSource(credentials);
 
 		// refresh index after each index change
 		IndexResponse response = Strings.isNullOrEmpty(credentials.id()) //
-				? elastic().index(index, credentials, true) //
-				: elastic().index(index, credentials.id(), credentials, true);
+				? elastic().index(index, source, true) //
+				: elastic().index(index, credentials.id(), source, true);
 
 		credentials.id(response.getId());
 		credentials.version(response.getVersion());
@@ -286,7 +291,7 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 
 		CredentialsSettings settings = settings();
 
-		credentials.name(Check.notNullOrEmpty(request.username(), USERNAME_FIELD));
+		credentials.username(Check.notNullOrEmpty(request.username(), USERNAME_FIELD));
 		Usernames.checkValid(credentials.username(), settings.usernameRegex());
 
 		credentials.email(Check.notNullOrEmpty(request.email(), EMAIL_FIELD));
@@ -338,11 +343,11 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 
 		// TODO replace 10 by sessionsSizeMax from CredentialsSettings
 		credentials.purgeOldSessions(10);
-		credentials.updatedAt(DateTime.now().toString());
+		credentials.updatedAt(DateTime.now());
 
 		// refresh index after each index change
 		IndexResponse response = elastic().index(index(), //
-				credentials.id(), credentials, true);
+				credentials.id(), toElasticSource(credentials), true);
 
 		credentials.version(response.getVersion());
 		return credentials;
@@ -356,7 +361,7 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 			Usernames.checkValid(request.username, settings.usernameRegex());
 			if (exists(request.username))
 				throw Exceptions.alreadyExists(SERVICE_NAME, request.username);
-			credentials.name(request.username);
+			credentials.username(request.username);
 		}
 
 		// TODO check email with minimal regex
@@ -420,8 +425,8 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 
 		// removed because not part of the template model
 		Object object = parameters.remove(USERNAME_PARAM);
-		String username = Check.notNull(object, "username").toString();
-		Check.notNullOrEmpty(username, "username");
+		String username = Check.notNull(object, USERNAME_PARAM).toString();
+		Check.notNullOrEmpty(username, USERNAME_PARAM);
 
 		Credentials credentials = getByUsername(username)//
 				.orElseThrow(() -> Exceptions.notFound(SERVICE_NAME, username));
@@ -436,17 +441,18 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 		EmailTemplateRequest request = new EmailTemplateRequest();
 		request.templateName = PASSWORD_RESET_EMAIL_TEMPLATE_NAME;
 		request.parameters = parameters;
-		request.parameters.put("credentials", credentials.id());
-		// emailContext.put("to", credentials.email().get());
-		// emailContext.put("credentialsId", credentials.id());
-		// emailContext.put("passwordResetCode", credentials.passwordResetCode());
+		request.parameters.put("credentials", Json.mapper().convertValue(credentials, Map.class));
+		// we need to manually add password reset code
+		// since it is ignored by jackson mapper for security reasons
+		request.parameters.put("passwordResetCode", credentials.passwordResetCode());
 
 		EmailTemplate template = Services.emails().getTemplate(PASSWORD_RESET_EMAIL_TEMPLATE_NAME);
 		Server.context().credentials().checkIfAuthorized(template.authorizedRoles);
 
 		if (template.model == null)
 			template.model = Maps.newHashMap();
-		template.model.put("credentials", "credentials");
+		template.model.put("credentials", TemplateParameterTypes.object);
+		template.model.put("passwordResetCode", TemplateParameterTypes.string);
 
 		return Services.emails().send(request, template);
 	}
@@ -538,20 +544,51 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 	}
 
 	private Credentials toCredentials(SearchHit hit) {
-		return toCredentials(hit.getSourceAsString(), //
+		return fromElasticSource(hit.getSourceAsString(), //
 				hit.getId(), hit.getVersion());
 	}
 
 	private Credentials toCredentials(GetResponse response) {
-		return toCredentials(response.getSourceAsString(), //
+		return fromElasticSource(response.getSourceAsString(), //
 				response.getId(), response.getVersion());
 	}
 
-	private Credentials toCredentials(String sourceAsString, String id, long version) {
-		Credentials credentials = Json.toPojo(sourceAsString, Credentials.class);
-		credentials.id(id);
-		credentials.version(version);
+	private Credentials fromElasticSource(String sourceAsString, String id, long version) {
+		ObjectNode source = Json.readObject(sourceAsString);
+
+		Credentials credentials = Json.toPojo(source, Credentials.class)//
+				.version(version).id(id);
+
+		JsonNode hashed = source.get(HASHED_PASSWORD_FIELD);
+
+		if (!Json.isNull(hashed))
+			credentials.hashedPassword(hashed.asText());
+
+		JsonNode resetCode = source.get(PASSWORD_RESET_CODE_FIELD);
+
+		if (!Json.isNull(resetCode))
+			credentials.passwordResetCode(resetCode.asText());
+
+		JsonNode sessions = source.get(SESSIONS_FIELD);
+
+		if (!Json.isNull(sessions))
+			credentials.sessions(Json.toPojo(sessions,
+					TypeFactory.defaultInstance().constructCollectionLikeType(List.class, Session.class)));
+
 		return credentials;
+	}
+
+	private ObjectNode toElasticSource(Credentials credentials) {
+
+		ObjectNode object = Json.toObjectNode(credentials);
+
+		object.remove(ID_FIELD);
+		object.remove(VERSION_FIELD);
+		object.put(HASHED_PASSWORD_FIELD, credentials.hashedPassword());
+		object.put(PASSWORD_RESET_CODE_FIELD, credentials.passwordResetCode());
+		object.putPOJO(SESSIONS_FIELD, credentials.sessions());
+
+		return object;
 	}
 
 	public Index index() {

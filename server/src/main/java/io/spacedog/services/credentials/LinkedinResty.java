@@ -36,7 +36,7 @@ public class LinkedinResty extends SpaceResty {
 		return JsonPayload.ok()//
 				.withFields(ACCESS_TOKEN_FIELD, credentials.accessToken()) //
 				.withFields(EXPIRES_IN_FIELD, credentials.accessTokenExpiresIn()) //
-				.withFields(CREDENTIALS_FIELD, credentials.toJson())//
+				.withFields(CREDENTIALS_FIELD, credentials)//
 				.build();
 	}
 

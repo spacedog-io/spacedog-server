@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.google.common.base.Strings;
 
 import io.spacedog.client.credentials.Credentials;
+import io.spacedog.client.credentials.Credentials.Results;
 import io.spacedog.client.credentials.Credentials.Session;
 import io.spacedog.client.credentials.CredentialsCreateRequest;
 import io.spacedog.client.credentials.CredentialsSettings;
@@ -52,7 +53,7 @@ public class CredentialsResty extends SpaceResty {
 		return JsonPayload.ok()//
 				.withFields(ACCESS_TOKEN_FIELD, credentials.accessToken(), //
 						EXPIRES_IN_FIELD, credentials.accessTokenExpiresIn(), //
-						CREDENTIALS_FIELD, credentials.toJson())//
+						CREDENTIALS_FIELD, credentials)//
 				.build();
 	}
 
@@ -67,16 +68,13 @@ public class CredentialsResty extends SpaceResty {
 
 	@Get("/1/credentials")
 	@Get("/1/credentials/")
-	public ObjectNode getAll(Context context) {
+	public Results getAll(Context context) {
 		Server.context().credentials().checkAtLeastAdmin();
 
-		Credentials.Results all = Services.credentials().getAll(//
+		return Services.credentials().getAll(//
 				context.get(Q_PARAM), //
 				context.query().getInteger(FROM_PARAM, 0), //
 				context.query().getInteger(SIZE_PARAM, 10));
-
-		// TODO replace this by automatic jackson serialization
-		return all.toJson();
 	}
 
 	@Delete("/1/credentials")
@@ -109,16 +107,14 @@ public class CredentialsResty extends SpaceResty {
 
 	@Get("/1/credentials/me")
 	@Get("/1/credentials/me/")
-	public ObjectNode getMe(Context context) {
-		Credentials credentials = Server.context().credentials().checkAtLeastUser();
-		return credentials.toJson();
+	public Credentials getMe(Context context) {
+		return Server.context().credentials().checkAtLeastUser();
 	}
 
 	@Get("/1/credentials/:id")
 	@Get("/1/credentials/:id/")
-	public ObjectNode getById(String id, Context context) {
-		Credentials credentials = checkMyselfOrHigherAdminAndGet(id, false);
-		return credentials.toJson();
+	public Credentials getById(String id, Context context) {
+		return checkMyselfOrHigherAdminAndGet(id, false);
 	}
 
 	@Delete("/1/credentials/me")
@@ -330,7 +326,7 @@ public class CredentialsResty extends SpaceResty {
 
 	private Payload saved(boolean created, Credentials credentials) {
 		return JsonPayload.saved(false, "/1", CredentialsService.SERVICE_NAME, credentials.id())//
-				.withVersion(credentials.version()).withContent(credentials.toJson())//
+				.withVersion(credentials.version()).withContent(credentials)//
 				.build();
 	}
 

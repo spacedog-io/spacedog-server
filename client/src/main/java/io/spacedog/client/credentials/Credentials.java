@@ -17,63 +17,76 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Json;
 import io.spacedog.utils.KeyValue;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Utils;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonAutoDetect(fieldVisibility = Visibility.ANY, //
+@JsonAutoDetect(fieldVisibility = Visibility.NONE, //
 		getterVisibility = Visibility.NONE, //
 		isGetterVisibility = Visibility.NONE, //
 		setterVisibility = Visibility.NONE)
-public class Credentials {
+public class Credentials implements SpaceFields {
 
 	public static final Credentials GUEST = new Credentials("guest").id("guest");
 	public static final Credentials SUPERDOG = new Credentials(Roles.superdog)//
 			.id(Roles.superdog).addRoles(Roles.superdog)//
 			.passwordHasBeenChallenged(true);
 
+	@JsonProperty
+	private String id;
+	@JsonProperty
+	private long version;
+	@JsonProperty
 	private String username;
+	@JsonProperty
 	private String email;
+	@JsonProperty
 	private boolean enabled = true;
+	@JsonProperty
 	private DateTime enableAfter;
+	@JsonProperty
 	private DateTime disableAfter;
+	@JsonProperty
 	private Set<String> roles = Sets.newHashSet();
+	@JsonProperty
 	private String group;
-	private List<Session> sessions;
+	@JsonProperty
 	private Set<String> tags = Sets.newHashSet();
-	private String passwordResetCode;
-	private String hashedPassword;
+	@JsonProperty
 	private boolean passwordMustChange;
+	@JsonProperty
 	private int invalidChallenges;
+	@JsonProperty
 	private DateTime lastInvalidChallengeAt;
-	private String createdAt;
-	private String updatedAt;
+	@JsonProperty
+	private DateTime createdAt;
+	@JsonProperty
+	private DateTime updatedAt;
 
+	@JsonIgnore
+	private String hashedPassword;
+	@JsonIgnore
+	private String passwordResetCode;
 	@JsonIgnore
 	private Session currentSession;
 	@JsonIgnore
+	private List<Session> sessions;
+	@JsonIgnore
 	private boolean passwordHasBeenChallenged;
-	@JsonIgnore
-	private String id;
-	@JsonIgnore
-	private long version;
 
 	public Credentials() {
 	}
 
-	public Credentials(String name) {
-		this.username = name;
+	public Credentials(String username) {
+		this.username = username;
 	}
 
 	public String id() {
@@ -95,10 +108,10 @@ public class Credentials {
 	}
 
 	public String username() {
-		return username == null ? GUEST.username() : username;
+		return username;
 	}
 
-	public Credentials name(String name) {
+	public Credentials username(String name) {
 		this.username = name;
 		return this;
 	}
@@ -131,6 +144,20 @@ public class Credentials {
 
 	public String passwordResetCode() {
 		return passwordResetCode;
+	}
+
+	public Credentials passwordResetCode(String passwordResetCode) {
+		this.passwordResetCode = passwordResetCode;
+		return this;
+	}
+
+	public String hashedPassword() {
+		return hashedPassword;
+	}
+
+	public Credentials hashedPassword(String hashedPassword) {
+		this.hashedPassword = hashedPassword;
+		return this;
 	}
 
 	public boolean passwordMustChange() {
@@ -200,20 +227,20 @@ public class Credentials {
 		return this;
 	}
 
-	public String createdAt() {
+	public DateTime createdAt() {
 		return createdAt;
 	}
 
-	public Credentials createdAt(String value) {
+	public Credentials createdAt(DateTime value) {
 		createdAt = value;
 		return this;
 	}
 
-	public String updatedAt() {
+	public DateTime updatedAt() {
 		return updatedAt;
 	}
 
-	public Credentials updatedAt(String value) {
+	public Credentials updatedAt(DateTime value) {
 		updatedAt = value;
 		return this;
 	}
@@ -244,26 +271,34 @@ public class Credentials {
 		return Collections.unmodifiableSet(tags);
 	}
 
-	public Credentials clearTags() {
-		tags.clear();
+	public Credentials tags(Iterable<String> tags) {
+		if (tags == null)
+			this.tags.clear();
+		else
+			this.tags = Sets.newHashSet(tags);
 		return this;
 	}
 
-	public Credentials setTag(String key, Object value) {
-		this.tags.add(new KeyValue(key, value).asTag());
+	public Credentials addTag(String key, Object value) {
+		return addTag(new KeyValue(key, value).asTag());
+	}
+
+	public Credentials addTag(String tag) {
+		this.tags.add(tag);
 		return this;
 	}
 
-	public Optional7<String> getTag(String key) {
+	public Set<String> getTagValues(String key) {
+		Set<String> values = Sets.newHashSet();
 		for (String tag : tags) {
 			KeyValue keyValue = KeyValue.parse(tag);
 			if (key.equals(keyValue.getKey()))
-				return Optional7.of(keyValue.getValue().toString());
+				values.add(keyValue.getValue().toString());
 		}
-		return Optional7.empty();
+		return values;
 	}
 
-	public Credentials removeTag(String key) {
+	public Credentials removeTags(String key) {
 		Iterator<String> iterator = tags.iterator();
 		while (iterator.hasNext()) {
 			String tag = iterator.next();
@@ -293,12 +328,7 @@ public class Credentials {
 		if (obj instanceof Credentials == false)
 			return false;
 		Credentials other = (Credentials) obj;
-		if (username == null) {
-			if (other.username != null)
-				return false;
-		} else if (!username.equals(other.username))
-			return false;
-		return true;
+		return Objects.equals(username, other.username);
 	}
 
 	//
@@ -570,33 +600,6 @@ public class Credentials {
 		passwordMustChange = false;
 	}
 
-	//
-	// Other logic
-	//
-
-	public ObjectNode toJson() {
-		return Json.object(//
-				SpaceFields.ID_FIELD, id(), //
-				SpaceFields.USERNAME_FIELD, username(), //
-				SpaceFields.EMAIL_FIELD, email().orElse(null), //
-				SpaceFields.GROUP_FIELD, group(), //
-				"reallyEnabled", isReallyEnabled(), //
-				SpaceFields.ENABLED_FIELD, enabled(), //
-				SpaceFields.ENABLE_AFTER_FIELD, enableAfter(), //
-				SpaceFields.DISABLE_AFTER_FIELD, disableAfter(), //
-				SpaceFields.INVALID_CHALLENGES_FIELD, invalidChallenges, //
-				SpaceFields.LAST_INVALID_CHALLENGE_AT_FIELD, lastInvalidChallengeAt, //
-				SpaceFields.ROLES_FIELD, roles(), //
-				SpaceFields.CREATED_AT_FIELD, createdAt(), //
-				SpaceFields.UPDATED_AT_FIELD, updatedAt());
-	}
-
-	public static Credentials parse(JsonNode node) {
-		Credentials credentials = Json.toPojo(node, Credentials.class);
-		String id = Json.checkStringNotNullOrEmpty(node, SpaceFields.ID_FIELD);
-		return credentials.id(id);
-	}
-
 	@Override
 	public String toString() {
 		return String.format("[%s][%s]", type(), username());
@@ -607,7 +610,14 @@ public class Credentials {
 	//
 
 	public List<Session> sessions() {
+		if (sessions == null)
+			return Collections.emptyList();
 		return Collections.unmodifiableList(sessions);
+	}
+
+	public Credentials sessions(Iterable<Session> sessions) {
+		this.sessions = Lists.newArrayList(sessions);
+		return this;
 	}
 
 	public void setCurrentSession(String accessToken) {
@@ -622,16 +632,12 @@ public class Credentials {
 
 		if (!found)
 			throw Exceptions.invalidAccessToken();
-
 	}
 
 	public void setCurrentSession(Session session) {
-
 		currentSession = session;
-
 		if (sessions == null)
 			sessions = Lists.newArrayList();
-
 		sessions.add(currentSession);
 	}
 
@@ -684,24 +690,6 @@ public class Credentials {
 	public static class Results {
 		public long total;
 		public List<Credentials> results;
-
-		public static Results parse(ObjectNode node) {
-			Results results = new Results();
-			results.total = node.get("total").asLong();
-			results.results = Lists.newArrayList();
-			for (JsonNode credsNode : Json.checkArray(node.get("results")))
-				results.results.add(Credentials.parse(credsNode));
-			return results;
-		}
-
-		// TODO replace this by automatic jackson serialization
-		public ObjectNode toJson() {
-			ArrayNode array = Json.array();
-			for (Credentials creds : this.results)
-				array.add(creds.toJson());
-			return Json.object("total", this.total, "results", array);
-		}
-
 	}
 
 	@JsonIgnoreProperties(ignoreUnknown = true)
@@ -786,5 +774,4 @@ public class Credentials {
 		}
 
 	}
-
 }

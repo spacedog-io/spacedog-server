@@ -571,6 +571,20 @@ public class Json {
 		}
 	}
 
+	public static <K> K toPojo(JsonNode node, JavaType type) {
+		Check.notNull(node, "json node");
+		Check.notNull(type, "type");
+
+		try {
+			return mapper().readValue(mapper().treeAsTokens(node), type);
+
+		} catch (Exception e) {
+			throw Exceptions.illegalArgument(e, //
+					"unable to map json tree [%s] to [%s] type", //
+					node, type);
+		}
+	}
+
 	public static <K> K toPojo(String json, Class<K> pojoClass) {
 		Check.notNull(pojoClass, "pojoClass");
 		if (Strings.isNullOrEmpty(json))

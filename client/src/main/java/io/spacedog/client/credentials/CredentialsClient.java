@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.client.credentials.Credentials.Results;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.client.http.SpaceRequest;
@@ -32,34 +33,31 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	}
 
 	public Credentials me(boolean reload) {
-		if (credentials == null || reload) {
-			SpaceResponse response = dog.get("/1/credentials/me").go(200);
-			credentials = Credentials.parse(response.asJsonObject());
-		}
+		if (credentials == null || reload)
+			credentials = dog.get("/1/credentials/me")//
+					.go(200).asPojo(Credentials.class);
 		return credentials;
 	}
 
 	public Optional7<Credentials> getByUsername(String username) {
-		SpaceResponse response = dog.get("/1/credentials")//
+		Results results = dog.get("/1/credentials")//
 				.queryParam(USERNAME_PARAM, username)//
-				.go(200);
+				.go(200)//
+				.asPojo(Credentials.Results.class);
 
-		int total = response.get("total").asInt();
-
-		if (total == 0)
+		if (results.total == 0)
 			return Optional7.empty();
 
-		if (total > 1)
+		if (results.total > 1)
 			throw Exceptions.runtime("[%s] credentials with username [%s]", //
-					total, username);
+					results.total, username);
 
-		return Optional7.of(Credentials.parse(response.get("results.0")));
+		return Optional7.of(results.results.get(0));
 	}
 
 	public Credentials get(String id) {
-		SpaceResponse response = dog.get("/1/credentials/{id}")//
-				.routeParam("id", id).go(200);
-		return Credentials.parse(response.asJsonObject());
+		return dog.get("/1/credentials/{id}")//
+				.routeParam("id", id).go(200).asPojo(Credentials.class);
 	}
 
 	//
@@ -79,9 +77,8 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	}
 
 	public Credentials.Results getAll(String q, Integer from, Integer size) {
-		SpaceResponse response = dog.get("/1/credentials")//
-				.queryParam("q", q).from(from).size(size).go(200);
-		return Credentials.Results.parse(response.asJsonObject());
+		return dog.get("/1/credentials").queryParam("q", q)//
+				.from(from).size(size).go(200).asPojo(Credentials.Results.class);
 	}
 
 	//
@@ -89,7 +86,6 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	//
 
 	public SpaceDog login(String password, long lifetime) {
-
 		SpaceRequest request = SpaceRequest.get("/1/login")//
 				.backend(dog.backend()).basicAuth(dog.username(), password);
 
@@ -98,8 +94,7 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 
 		ObjectNode node = request.go(200).asJsonObject();
 		dog.accessToken(Json.checkStringNotNullOrEmpty(node, ACCESS_TOKEN_FIELD));
-		credentials = Credentials.parse(Json.checkObject(node.get("credentials")));
-
+		credentials = Json.toPojo(node.get("credentials"), Credentials.class);
 		return dog;
 	}
 

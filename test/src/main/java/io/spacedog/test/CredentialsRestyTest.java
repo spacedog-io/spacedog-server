@@ -333,7 +333,7 @@ public class CredentialsRestyTest extends SpaceTest {
 		template.from = "no-reply@api.spacedog.io";
 		template.to = Lists.newArrayList("{{credentials.email}}");
 		template.subject = "You've forgotten your password!";
-		template.text = "{{credentials.passwordResetCode}}";
+		template.text = "{{passwordResetCode}}";
 		superadmin.emails().saveTemplate(template);
 
 		// guest declares fred's forgot his password
