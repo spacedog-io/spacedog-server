@@ -13,12 +13,13 @@ import com.google.common.collect.Maps;
 import com.mitchellbosecke.pebble.PebbleEngine;
 import com.mitchellbosecke.pebble.loader.StringLoader;
 
+import io.spacedog.client.TemplateParameterTypes;
 import io.spacedog.server.Services;
 import io.spacedog.services.credentials.CredentialsService;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 
-public class PebbleTemplating {
+public class PebbleTemplating implements TemplateParameterTypes {
 
 	private PebbleEngine pebble;
 
@@ -103,21 +104,21 @@ public class PebbleTemplating {
 	}
 
 	static boolean checkValueSimpleAndValid(String name, Object value, String type) {
-		if ("string".equals(type))
+		if (string.equals(type))
 			return checkValueType(name, value, String.class);
-		if ("integer".equals(type))
+		if (integer.equals(type))
 			return checkValueType(name, value, Integer.class);
-		if ("long".equals(type))
+		if (longg.equals(type))
 			return checkValueType(name, value, Long.class);
-		if ("float".equals(type))
+		if (floatt.equals(type))
 			return checkValueType(name, value, Float.class);
-		if ("double".equals(type))
+		if (doublee.equals(type))
 			return checkValueType(name, value, Double.class);
-		if ("boolean".equals(type))
+		if (booleann.equals(type))
 			return checkValueType(name, value, Boolean.class);
-		if ("array".equals(type))
+		if (array.equals(type))
 			return checkValueType(name, value, List.class);
-		if ("object".equals(type))
+		if (object.equals(type))
 			return checkValueType(name, value, Map.class);
 
 		return false;
