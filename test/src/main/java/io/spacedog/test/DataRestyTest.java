@@ -53,7 +53,7 @@ public class DataRestyTest extends SpaceTest {
 				.build();
 
 		// create
-		DataWrap<ObjectNode> carWrap = vince.data().save(car);
+		DataWrap<ObjectNode> carWrap = vince.data().save("car", car);
 		assertEquals("car", carWrap.type());
 		assertNotNull(carWrap.id());
 
@@ -122,7 +122,7 @@ public class DataRestyTest extends SpaceTest {
 				.build();
 
 		// create
-		String id = vince.data().save(car).id();
+		String id = vince.data().save("car", car).id();
 
 		// find by id
 		DataWrap<ObjectNode> carWrap = vince.data().getWrapped("car", id);

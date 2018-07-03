@@ -270,13 +270,13 @@ public class DataRestyTest2 extends SpaceTest {
 
 		// creates a message object with auto generated id
 		ObjectNode message = Json.object("text", "id=?");
-		DataWrap<ObjectNode> createObject = superadmin.data().save(message);
+		DataWrap<ObjectNode> createObject = superadmin.data().save(Message.TYPE, message);
 		DataWrap<ObjectNode> getObject = superadmin.data().getWrapped(Message.TYPE, createObject.id());
 		assertAlmostEquals(message, getObject.source());
 
 		// creates a message object with self provided id
 		message = Json.object("text", "id=1");
-		superadmin.data().save(message, "1");
+		superadmin.data().save(Message.TYPE, message, "1");
 		getObject = superadmin.data().getWrapped(Message.TYPE, "1");
 		assertAlmostEquals(message, getObject.source());
 
