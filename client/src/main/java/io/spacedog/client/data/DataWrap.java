@@ -6,6 +6,7 @@ import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -25,6 +26,7 @@ public class DataWrap<K> implements DataObject, SpaceFields {
 	public static final long MATCH_ANY_VERSIONS = -3L;
 
 	private K source;
+	@JsonIgnore
 	private Class<K> sourceClass;
 	private String id;
 	private String type;

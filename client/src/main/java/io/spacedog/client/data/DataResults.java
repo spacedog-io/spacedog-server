@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class DataResults<K> implements Iterable<DataWrap<K>> {
@@ -12,6 +13,7 @@ public class DataResults<K> implements Iterable<DataWrap<K>> {
 	public List<DataWrap<K>> objects;
 	public String next;
 	public ObjectNode aggregations;
+	@JsonIgnore
 	public Class<K> sourceClass;
 
 	private DataResults() {

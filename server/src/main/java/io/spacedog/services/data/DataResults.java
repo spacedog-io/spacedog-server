@@ -7,6 +7,8 @@ import java.util.Map;
 
 import org.elasticsearch.search.aggregations.Aggregation;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import io.spacedog.client.data.DataWrap;
 
 public class DataResults<K> implements Iterable<DataWrap<K>> {
@@ -15,6 +17,7 @@ public class DataResults<K> implements Iterable<DataWrap<K>> {
 	public List<DataWrap<K>> objects;
 	public String next;
 	public Map<String, Aggregation> aggregations;
+	@JsonIgnore
 	public Class<K> sourceClass;
 
 	private DataResults() {
