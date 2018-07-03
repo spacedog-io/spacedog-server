@@ -9,6 +9,7 @@ import java.util.zip.ZipOutputStream;
 
 import com.google.common.io.ByteStreams;
 
+import io.spacedog.client.file.SpaceFile;
 import io.spacedog.server.Services;
 import io.spacedog.utils.Utils;
 import net.codestory.http.payload.StreamingOutput;
@@ -16,9 +17,9 @@ import net.codestory.http.payload.StreamingOutput;
 class FileBucketExport implements StreamingOutput {
 
 	private String bucket;
-	private List<DogFile> files;
+	private List<SpaceFile> files;
 
-	public FileBucketExport(String bucket, List<DogFile> files) {
+	public FileBucketExport(String bucket, List<SpaceFile> files) {
 		this.bucket = bucket;
 		this.files = files;
 	}
@@ -26,9 +27,9 @@ class FileBucketExport implements StreamingOutput {
 	@Override
 	public void write(OutputStream output) throws IOException {
 		ZipOutputStream zip = new ZipOutputStream(output);
-		for (DogFile file : files) {
+		for (SpaceFile file : files) {
 			zip.putNextEntry(new ZipEntry(file.getPath()));
-			InputStream fileStream = Services.files().getContent(bucket, file);
+			InputStream fileStream = Services.files().getAsByteStream(bucket, file);
 			ByteStreams.copy(fileStream, zip);
 			Utils.closeSilently(fileStream);
 			zip.flush();

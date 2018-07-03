@@ -13,6 +13,8 @@ import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.RolePermissions;
 import io.spacedog.client.file.FileExportRequest;
 import io.spacedog.client.file.InternalFileSettings.FileBucketSettings;
+import io.spacedog.client.file.SpaceFile;
+import io.spacedog.client.file.SpaceFile.FileList;
 import io.spacedog.client.http.ContentTypes;
 import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.client.http.SpaceParams;
@@ -22,7 +24,6 @@ import io.spacedog.server.Server;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceFilter;
 import io.spacedog.server.SpaceResty;
-import io.spacedog.services.file.DogFile.FileList;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import net.codestory.http.Context;
@@ -74,7 +75,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 
 		String bucket = absolutePath.first();
 		String path = absolutePath.removeFirst().toString();
-		DogFile file = checkRead(bucket, path);
+		SpaceFile file = checkRead(bucket, path);
 
 		// This auto fail is necessary to test if closeable resources
 		// are finally closed in error conditions
@@ -82,7 +83,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 			throw Exceptions.illegalArgument("fail is requested for test purposes");
 
 		Payload payload = new Payload(file.getContentType(), //
-				Services.files().getContent(bucket, file.getBucketKey()))//
+				Services.files().getAsByteStream(bucket, file.getBucketKey()))//
 						.withHeader(SpaceHeaders.ETAG, file.getHash())//
 						.withHeader(SpaceHeaders.SPACEDOG_OWNER, file.owner())//
 						.withHeader(SpaceHeaders.SPACEDOG_GROUP, file.group());
@@ -104,10 +105,10 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		return payload;
 	}
 
-	public DogFile checkRead(String bucket, String id) {
+	public SpaceFile checkRead(String bucket, String id) {
 		RolePermissions bucketRoles = Services.files().getBucketSettings(bucket).permissions;
 		Credentials credentials = Server.context().credentials();
-		DogFile file = Services.files().getMeta(bucket, id, true);
+		SpaceFile file = Services.files().getMeta(bucket, id, true);
 		bucketRoles.checkRead(credentials, file.owner(), file.group());
 		return file;
 	}
@@ -139,11 +140,11 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		Credentials credentials = Server.context().credentials();
 		long contentLength = checkContentLength(context, settings.sizeLimitInKB);
 
-		DogFile file = Services.files().getMeta(bucket, path, false);
+		SpaceFile file = Services.files().getMeta(bucket, path, false);
 
 		if (file == null) {
 			settings.permissions.check(credentials, Permission.create);
-			file = new DogFile(path);
+			file = new SpaceFile(path);
 			file.setName(webPath.last());
 		} else
 			settings.permissions.checkUpdate(credentials, file.owner(), file.group());
@@ -153,17 +154,15 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		file.group(credentials.group());
 		file.setContentType(fileContentType(file.getName(), context));
 
-		file = Services.files().upload(bucket, file, //
-				getRequestContentAsInputStream(context));
+		file = Services.files().upload(bucket, file, getRequestContentAsInputStream(context));
 
-		String escapedPath = file.getEscapedPath();
 		StringBuilder location = SpaceResty.spaceUrl("/1/files/")//
-				.append(bucket).append(escapedPath);
+				.append(bucket).append(file.getEscapedPath());
 
 		return JsonPayload.ok()//
 				.withFields("bucket", bucket, //
 						NAME_FIELD, file.getName(), //
-						PATH_FIELD, escapedPath, //
+						PATH_FIELD, file.getPath(), //
 						LENGTH_FIELD, file.getLength(), //
 						HASH_FIELD, file.getHash(), //
 						ENCRYPTION_FIELD, file.getEncryption(), //
@@ -219,7 +218,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		RolePermissions bucketPermissions = Services.files().getBucketSettings(bucket).permissions;
 		Credentials credentials = Server.context().credentials();
 
-		DogFile file = Services.files().getMeta(bucket, path, false);
+		SpaceFile file = Services.files().getMeta(bucket, path, false);
 
 		if (file == null) {
 			bucketPermissions.check(credentials, Permission.delete);
@@ -294,7 +293,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 				getRequestContentAsBytes(context), //
 				FileExportRequest.class);
 
-		List<DogFile> files = Lists.newArrayListWithCapacity(request.paths.size());
+		List<SpaceFile> files = Lists.newArrayListWithCapacity(request.paths.size());
 		for (String path : request.paths)
 			files.add(checkRead(bucket, path));
 

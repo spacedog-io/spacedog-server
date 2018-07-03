@@ -1,109 +1,101 @@
 package io.spacedog.client.file;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
+import java.util.List;
 import java.util.Set;
-
-import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.Sets;
 
-import io.spacedog.client.http.SpaceHeaders;
-import io.spacedog.client.http.SpaceResponse;
+import io.spacedog.client.data.DataObjectBase;
+import io.spacedog.client.http.WebPath;
 
-public class SpaceFile implements Closeable {
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonAutoDetect(fieldVisibility = Visibility.ANY, //
+		getterVisibility = Visibility.NONE, //
+		isGetterVisibility = Visibility.NONE, //
+		setterVisibility = Visibility.NONE)
+public class SpaceFile extends DataObjectBase {
 
-	private String bucket;
 	private String path;
-	private SpaceResponse response;
+	private String bucketKey;
+	private String name;
+	private long length;
+	private String contentType;
+	private String hash;
+	private String encryption;
+	private Set<String> tags = Sets.newLinkedHashSet();
 
-	public String bucket() {
-		return bucket;
+	public SpaceFile() {
 	}
 
-	public SpaceFile withBucket(String bucket) {
-		this.bucket = bucket;
-		return this;
+	public SpaceFile(String path) {
+		this.path = path;
 	}
 
-	public String path() {
+	public String getPath() {
 		return path;
 	}
 
-	public SpaceFile withPath(String path) {
-		this.path = path;
-		return this;
+	public String getBucketKey() {
+		return bucketKey;
 	}
 
-	public String contentType() {
-		return response.header(SpaceHeaders.CONTENT_TYPE);
+	public void setBucketKey(String bucketKey) {
+		this.bucketKey = bucketKey;
 	}
 
-	public String owner() {
-		return response.header(SpaceHeaders.SPACEDOG_OWNER);
+	public String getName() {
+		return name;
 	}
 
-	public String group() {
-		return response.header(SpaceHeaders.SPACEDOG_GROUP);
+	public void setName(String name) {
+		this.name = name;
 	}
 
-	public String etag() {
-		return response.header(SpaceHeaders.ETAG);
+	public long getLength() {
+		return length;
 	}
 
-	public byte[] asBytes() {
-		return response.asBytes();
+	public void setLength(long length) {
+		this.length = length;
 	}
 
-	public String asString() {
-		return response.asString();
+	public String getContentType() {
+		return contentType;
 	}
 
-	public InputStream asByteStream() {
-		return response.body().byteStream();
+	public void setContentType(String contentType) {
+		this.contentType = contentType;
 	}
 
-	public Reader asCharStream() {
-		return response.body().charStream();
+	public Set<String> getTags() {
+		return tags;
 	}
 
-	@Override
-	public void close() throws IOException {
-		response.close();
+	public void setTags(Set<String> tags) {
+		this.tags = tags;
 	}
 
-	public SpaceResponse response() {
-		return response;
+	public String getEncryption() {
+		return encryption;
 	}
 
-	public SpaceFile withResponse(SpaceResponse body) {
-		this.response = body;
-		return this;
+	public void setEncryption(String Encryption) {
+		this.encryption = Encryption;
 	}
 
-	@JsonIgnoreProperties(ignoreUnknown = true)
-	@JsonAutoDetect(fieldVisibility = Visibility.PUBLIC_ONLY, //
-			getterVisibility = Visibility.NONE, //
-			isGetterVisibility = Visibility.NONE, //
-			setterVisibility = Visibility.NONE)
-	public static class FileMeta {
-		public String name;
-		public String path;
-		public String location;
-		public long length;
-		public String contentType;
-		public String hash;
-		public String encryption;
-		public Set<String> tags = Sets.newLinkedHashSet();
-		public String owner;
-		public String group;
-		public DateTime createdAt;
-		public DateTime updatedAt;
+	public String getHash() {
+		return hash;
+	}
+
+	public void setHash(String hash) {
+		this.hash = hash;
+	}
+
+	public String getEscapedPath() {
+		return WebPath.parse(path).toEscapedString();
 	}
 
 	@JsonIgnoreProperties(ignoreUnknown = true)
@@ -113,8 +105,7 @@ public class SpaceFile implements Closeable {
 			setterVisibility = Visibility.NONE)
 	public static class FileList {
 		public long total;
-		public FileMeta[] files;
+		public List<SpaceFile> files;
 		public String next;
 	}
-
 }

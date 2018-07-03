@@ -6,8 +6,8 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.file.InternalFileSettings.FileBucketSettings;
-import io.spacedog.client.file.SpaceFile;
 import io.spacedog.client.file.SpaceFile.FileList;
+import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.test.SpaceTest;
 
 public class FileRestyTest extends SpaceTest {
@@ -25,7 +25,7 @@ public class FileRestyTest extends SpaceTest {
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		// invalid uri throws 404
-		assertHttpError(404, () -> superadmin.files().get(WWW, "toto"));
+		assertHttpError(404, () -> superadmin.files().getAsByteArray(WWW, "toto"));
 
 		// invalid POST operation throws 400
 		superadmin.post("/1/files").go(400);
@@ -36,7 +36,7 @@ public class FileRestyTest extends SpaceTest {
 		superadmin.files().setBucket(settings);
 
 		// superadmin checks bucket www is truly empty
-		assertEquals(0, superadmin.files().listAll(WWW).files.length);
+		assertEquals(0, superadmin.files().listAll(WWW).files.size());
 
 		// upload file without bucket is invalid
 		superadmin.put("/1/files").go(400);
@@ -50,7 +50,7 @@ public class FileRestyTest extends SpaceTest {
 		superadmin.files().upload(WWW, "/css/white.css", "/css/white.css".getBytes());
 
 		FileList list = superadmin.files().listAll(WWW);
-		assertEquals(6, list.files.length);
+		assertEquals(6, list.files.size());
 
 		// only superadmins are allowed to upload
 		assertHttpError(401, () -> guest.files().upload(WWW, //
@@ -58,36 +58,36 @@ public class FileRestyTest extends SpaceTest {
 		assertHttpError(403, () -> vince.files().upload(WWW, //
 				"/xxx.html", "/xxx.html".getBytes()));
 
-		assertEquals(6, superadmin.files().listAll(WWW).files.length);
+		assertEquals(6, superadmin.files().listAll(WWW).files.size());
 
 		// only superadmins are allowed to list
 		assertHttpError(401, () -> guest.files().listAll(WWW));
 		assertHttpError(403, () -> vince.files().listAll(WWW));
 
 		// superadmin gets app.html
-		SpaceFile file = superadmin.files().get(WWW, "/app.html");
-		assertArrayEquals("/app.html".getBytes(), file.asBytes());
-		assertEquals("text/html", file.contentType());
+		SpaceResponse response = superadmin.get("/1/files/www/app.html").go(200);
+		assertArrayEquals("/app.html".getBytes(), response.asBytes());
+		assertEquals("text/html", response.contentType());
 
 		// guest gets app.js
-		file = guest.files().get(WWW, "/app.js");
-		assertArrayEquals("/app.js".getBytes(), file.asBytes());
-		assertEquals("application/javascript", file.contentType());
+		response = guest.get("/1/files/www/app.js").go(200);
+		assertArrayEquals("/app.js".getBytes(), response.asBytes());
+		assertEquals("application/javascript", response.contentType());
 
 		// guest gets black.css
-		file = guest.files().get(WWW, "/css/black.css");
-		assertArrayEquals("/css/black.css".getBytes(), file.asBytes());
-		assertEquals("text/css", file.contentType());
+		response = guest.get("/1/files/www/css/black.css").go(200);
+		assertArrayEquals("/css/black.css".getBytes(), response.asBytes());
+		assertEquals("text/css", response.contentType());
 
 		// superadmin lists all images
-		assertEquals(2, superadmin.files().list(WWW, "/images").files.length);
+		assertEquals(2, superadmin.files().list(WWW, "/images").files.size());
 
 		// superadmin deletes all css files
 		// only superadmins are allowed to delete files
 		assertHttpError(401, () -> guest.files().delete(WWW, "/css"));
 		assertHttpError(403, () -> vince.files().delete(WWW, "/css"));
 		assertEquals(2, superadmin.files().delete(WWW, "/css"));
-		assertEquals(0, superadmin.files().list(WWW, "/css").files.length);
+		assertEquals(0, superadmin.files().list(WWW, "/css").files.size());
 
 		// superadmin fails to get just deleted css file
 		superadmin.get("/1/files/www/css/black.css").go(404);
@@ -97,7 +97,7 @@ public class FileRestyTest extends SpaceTest {
 		// assertEquals(Sets.newHashSet("/www/app.html", "/www/app.js", //
 		// "/www/images/fifi.jpg", "/www/images/riri.png"), //
 		// Sets.newHashSet(deleted));
-		assertEquals(0, superadmin.files().listAll(WWW).files.length);
+		assertEquals(0, superadmin.files().listAll(WWW).files.size());
 	}
 
 	@Test
@@ -116,7 +116,7 @@ public class FileRestyTest extends SpaceTest {
 		superadmin.files().setBucket(bucket);
 
 		// superadmin checks backend is truly empty
-		assertEquals(0, superadmin.files().listAll(ASSETS).files.length);
+		assertEquals(0, superadmin.files().listAll(ASSETS).files.size());
 
 		// superadmin can upload files to assets prefix
 		superadmin.files().upload(ASSETS, "/superadmin.txt", "superadmin".getBytes());
@@ -138,21 +138,21 @@ public class FileRestyTest extends SpaceTest {
 		// assertEquals(2, list.files.length);
 
 		// guests don't have any read permission for assets prefix
-		assertHttpError(401, () -> guest.files().get(ASSETS, "/superadmin.txt"));
+		assertHttpError(401, () -> guest.files().getAsByteArray(ASSETS, "/superadmin.txt"));
 
 		// users can not read superadmin uploaded file
 		// since users only have read mine permission
-		assertHttpError(403, () -> vince.files().get(ASSETS, "/superadmin.txt"));
+		assertHttpError(403, () -> vince.files().getAsByteArray(ASSETS, "/superadmin.txt"));
 
 		// vince can read his own files
-		SpaceFile file = vince.files().get(ASSETS, "/vince/vince.txt");
-		assertArrayEquals("vince".getBytes(), file.asBytes());
+		assertArrayEquals("vince".getBytes(), //
+				vince.files().getAsByteArray(ASSETS, "/vince/vince.txt"));
 
 		// superadmin can read all files
-		file = superadmin.files().get(ASSETS, "/superadmin.txt");
-		assertArrayEquals("superadmin".getBytes(), file.asBytes());
-		file = superadmin.files().get(ASSETS, "/vince/vince.txt");
-		assertArrayEquals("vince".getBytes(), file.asBytes());
+		assertArrayEquals("superadmin".getBytes(), //
+				superadmin.files().getAsByteArray(ASSETS, "/superadmin.txt"));
+		assertArrayEquals("vince".getBytes(), //
+				superadmin.files().getAsByteArray(ASSETS, "/vince/vince.txt"));
 
 		// only superadmins are allowed to list
 		assertHttpError(401, () -> guest.files().listAll(ASSETS));

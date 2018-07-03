@@ -30,7 +30,7 @@ public class WebRestyTest extends SpaceTest {
 		superadmin.files().setBucket(settings);
 
 		// superadmin checks bucket www is empty
-		assertEquals(0, superadmin.files().listAll(WWW).files.length);
+		assertEquals(0, superadmin.files().listAll(WWW).files.size());
 
 		// upload to unknown bucket is illegal
 		superadmin.put("/1/files/XXX.html").go(400);

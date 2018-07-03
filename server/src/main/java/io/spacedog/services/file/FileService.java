@@ -20,6 +20,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
+import io.spacedog.client.file.SpaceFile;
+import io.spacedog.client.file.SpaceFile.FileList;
 import io.spacedog.client.file.InternalFileSettings;
 import io.spacedog.client.file.InternalFileSettings.FileBucketSettings;
 import io.spacedog.client.schema.Schema;
@@ -28,11 +30,11 @@ import io.spacedog.server.Server;
 import io.spacedog.server.ServerConfig;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceService;
-import io.spacedog.services.file.DogFile.FileList;
 import io.spacedog.services.file.FileStore.PutResult;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.NotFoundException;
+import io.spacedog.utils.Utils;
 import net.codestory.http.payload.StreamingOutput;
 
 public class FileService extends SpaceService {
@@ -100,20 +102,20 @@ public class FileService extends SpaceService {
 		return fileList;
 	}
 
-	private DogFile toDogFile(SearchHit hit) {
+	private SpaceFile toDogFile(SearchHit hit) {
 		byte[] bytes = BytesReference.toBytes(hit.getSourceRef());
-		return Json.toPojo(bytes, DogFile.class);
+		return Json.toPojo(bytes, SpaceFile.class);
 	}
 
 	//
 	// Get
 	//
 
-	public DogFile getMeta(String bucket, String path, boolean throwNotFound) {
+	public SpaceFile getMeta(String bucket, String path, boolean throwNotFound) {
 		GetResponse response = elastic().get(index(bucket), path);
 
 		if (response.isExists())
-			return Json.toPojo(response.getSourceAsBytes(), DogFile.class);
+			return Json.toPojo(response.getSourceAsBytes(), SpaceFile.class);
 
 		if (throwNotFound)
 			throw Exceptions.notFound(bucket, path);
@@ -121,11 +123,19 @@ public class FileService extends SpaceService {
 		return null;
 	}
 
-	public InputStream getContent(String bucket, DogFile file) {
-		return getContent(bucket, file.getBucketKey());
+	public byte[] getAsByteArray(String bucket, SpaceFile file) {
+		return Utils.toByteArray(getAsByteStream(bucket, file));
 	}
 
-	public InputStream getContent(String bucket, String key) {
+	public InputStream getAsByteStream(String bucket, SpaceFile file) {
+		return getAsByteStream(bucket, file.getBucketKey());
+	}
+
+	public byte[] getAsByteArray(String bucket, String key) {
+		return Utils.toByteArray(getAsByteStream(bucket, key));
+	}
+
+	public InputStream getAsByteStream(String bucket, String key) {
 		return store.get(Server.backend().backendId(), bucket, key);
 	}
 
@@ -138,14 +148,14 @@ public class FileService extends SpaceService {
 	}
 
 	public StreamingOutput exportFromPaths(String bucket, List<String> paths) {
-		List<DogFile> files = paths.stream()//
+		List<SpaceFile> files = paths.stream()//
 				.map(path -> getMeta(bucket, path, true))//
 				.collect(Collectors.toList());
 
 		return export(bucket, files);
 	}
 
-	public StreamingOutput export(String bucket, List<DogFile> files) {
+	public StreamingOutput export(String bucket, List<SpaceFile> files) {
 		return new FileBucketExport(bucket, files);
 	}
 
@@ -153,11 +163,11 @@ public class FileService extends SpaceService {
 	// Put
 	//
 
-	public DogFile upload(String bucket, DogFile file, byte[] bytes) {
+	public SpaceFile upload(String bucket, SpaceFile file, byte[] bytes) {
 		return upload(bucket, file, new ByteArrayInputStream(bytes));
 	}
 
-	public DogFile upload(String bucket, DogFile file, InputStream content) {
+	public SpaceFile upload(String bucket, SpaceFile file, InputStream content) {
 
 		PutResult result = store.put(//
 				Server.backend().backendId(), //
@@ -198,7 +208,7 @@ public class FileService extends SpaceService {
 		return response.getDeleted();
 	}
 
-	public boolean delete(String bucket, DogFile file) {
+	public boolean delete(String bucket, SpaceFile file) {
 		boolean deleted = elastic().delete(//
 				index(bucket), file.getPath(), false, false);
 		try {

@@ -15,7 +15,7 @@ import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.email.EmailTemplate;
 import io.spacedog.client.email.EmailTemplateRequest;
 import io.spacedog.client.file.InternalFileSettings.FileBucketSettings;
-import io.spacedog.client.file.SpaceFile.FileMeta;
+import io.spacedog.client.file.SpaceFile;
 import io.spacedog.utils.ClassResources;
 
 public class T1_CustomerSignUp extends DemoBase {
@@ -57,10 +57,10 @@ public class T1_CustomerSignUp extends DemoBase {
 
 		SpaceDog david = david();
 		byte[] picture = ClassResources.loadAsBytes(this, "mapomme.jpg");
-		FileMeta meta = david.files().share("/shares", picture);
+		SpaceFile file = david.files().share("shares", picture);
 
 		DataWrap<Customer> customer = davidCustomer();
-		customer.source().photo = meta.location;
+		customer.source().photo = "/1/files/shares" + file.getEscapedPath();
 		customer = david.data().save(customer);
 	}
 

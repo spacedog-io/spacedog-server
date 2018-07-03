@@ -1,6 +1,8 @@
 package io.spacedog.utils;
 
 import java.io.Closeable;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
@@ -16,6 +18,7 @@ import java.util.regex.Pattern;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Strings;
+import com.google.common.io.ByteStreams;
 
 public class Utils {
 
@@ -249,6 +252,20 @@ public class Utils {
 				closeable.close();
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+	}
+
+	//
+	// Streams
+	//
+
+	public static byte[] toByteArray(InputStream stream) {
+		try {
+			return ByteStreams.toByteArray(stream);
+		} catch (IOException e) {
+			throw Exceptions.runtime(e, "unable to read input stream");
+		} finally {
+			Utils.closeSilently(stream);
 		}
 	}
 

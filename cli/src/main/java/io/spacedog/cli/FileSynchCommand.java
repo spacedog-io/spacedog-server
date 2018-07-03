@@ -14,8 +14,8 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.client.file.SpaceFile;
 import io.spacedog.client.file.SpaceFile.FileList;
-import io.spacedog.client.file.SpaceFile.FileMeta;
 import io.spacedog.client.http.SpaceEnv;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
@@ -107,7 +107,7 @@ public class FileSynchCommand extends AbstractCommand<FileSynchCommand> {
 		do {
 			FileList list = dog.files().list(bucket, "/", next);
 
-			for (FileMeta file : list.files)
+			for (SpaceFile file : list.files)
 				check(file);
 
 			next = list.next;
@@ -115,17 +115,17 @@ public class FileSynchCommand extends AbstractCommand<FileSynchCommand> {
 		} while (next != null);
 	}
 
-	private void check(FileMeta file) throws IOException {
-		Path filePath = Paths.get(source).resolve(Utils.removePreffix(file.path, "/"));
+	private void check(SpaceFile file) throws IOException {
+		Path filePath = Paths.get(source).resolve(Utils.removePreffix(file.getPath(), "/"));
 
 		if (Files.isRegularFile(filePath)) {
-			checked.add(file.path);
+			checked.add(file.getPath());
 
-			if (!check(filePath, file.hash))
+			if (!check(filePath, file.getHash()))
 				upload(filePath);
 
 		} else
-			delete(file.path);
+			delete(file.getPath());
 	}
 
 	private void synchFromLocal() throws IOException {

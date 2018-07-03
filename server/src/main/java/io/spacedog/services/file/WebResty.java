@@ -9,6 +9,7 @@ import org.elasticsearch.common.Strings;
 
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.Permission;
+import io.spacedog.client.file.SpaceFile;
 import io.spacedog.client.file.InternalFileSettings.FileBucketSettings;
 import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.client.http.WebPath;
@@ -69,7 +70,7 @@ public class WebResty extends SpaceResty implements SpaceFilter {
 			Credentials credentials = Server.context().credentials();
 			settings.permissions.check(credentials, Permission.read);
 
-			DogFile file = Services.files().getMeta(bucket, path.toString(), false);
+			SpaceFile file = Services.files().getMeta(bucket, path.toString(), false);
 
 			if (file == null)
 				file = Services.files().getMeta(bucket, //
@@ -84,7 +85,7 @@ public class WebResty extends SpaceResty implements SpaceFilter {
 
 			if (file != null) {
 				payload = toPayload(file, //
-						Services.files().getContent(bucket, file), //
+						Services.files().getAsByteStream(bucket, file), //
 						context);
 			}
 		}
@@ -92,7 +93,7 @@ public class WebResty extends SpaceResty implements SpaceFilter {
 		return payload;
 	}
 
-	private Payload toPayload(DogFile file, InputStream content, Context context) {
+	private Payload toPayload(SpaceFile file, InputStream content, Context context) {
 
 		Payload payload = new Payload(file.getContentType(), content)//
 				.withHeader(SpaceHeaders.ETAG, file.getHash());

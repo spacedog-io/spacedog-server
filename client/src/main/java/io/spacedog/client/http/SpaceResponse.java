@@ -238,6 +238,15 @@ public class SpaceResponse implements Closeable {
 		return header(SpaceHeaders.CONTENT_TYPE);
 	}
 
+	public long contentLength() {
+		String header = header(SpaceHeaders.CONTENT_LENGTH);
+		return Strings.isNullOrEmpty(header) ? 0 : Long.valueOf(header);
+	}
+
+	public String etag() {
+		return header(SpaceHeaders.ETAG);
+	}
+
 	public String header(String name) {
 		return okResponse.header(name);
 	}

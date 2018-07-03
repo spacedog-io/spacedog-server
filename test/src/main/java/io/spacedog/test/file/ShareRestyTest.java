@@ -19,10 +19,10 @@ import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.file.InternalFileSettings.FileBucketSettings;
 import io.spacedog.client.file.SpaceFile;
 import io.spacedog.client.file.SpaceFile.FileList;
-import io.spacedog.client.file.SpaceFile.FileMeta;
 import io.spacedog.client.http.ContentTypes;
 import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.client.http.SpaceRequest;
+import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Json;
@@ -58,20 +58,20 @@ public class ShareRestyTest extends SpaceTest {
 		assertHttpError(403, () -> admin.files().share(SHARES, BYTES));
 
 		// superadmins creates a shared file
-		FileMeta shareMeta = superadmin.files().share(SHARES, FILE_CONTENT.getBytes());
+		SpaceFile file = superadmin.files().share(SHARES, FILE_CONTENT.getBytes());
 		// assertNull(shareMeta.publicLocation);
 
 		// only superadmins can read shares
-		assertHttpError(401, () -> guest.files().get(SHARES, shareMeta.path));
-		assertHttpError(403, () -> vince.files().get(SHARES, shareMeta.path));
-		assertHttpError(403, () -> admin.files().get(SHARES, shareMeta.path));
-		superadmin.files().get(SHARES, shareMeta.path);
+		assertHttpError(401, () -> guest.files().getAsByteArray(SHARES, file.getPath()));
+		assertHttpError(403, () -> vince.files().getAsByteArray(SHARES, file.getPath()));
+		assertHttpError(403, () -> admin.files().getAsByteArray(SHARES, file.getPath()));
+		superadmin.files().getAsByteArray(SHARES, file.getPath());
 
 		// only superadmins can delete shares
-		assertHttpError(401, () -> guest.files().delete(SHARES, shareMeta.path));
-		assertHttpError(403, () -> vince.files().delete(SHARES, shareMeta.path));
-		assertHttpError(403, () -> admin.files().delete(SHARES, shareMeta.path));
-		long deleted = superadmin.files().delete(SHARES, shareMeta.path);
+		assertHttpError(401, () -> guest.files().delete(SHARES, file.getPath()));
+		assertHttpError(403, () -> vince.files().delete(SHARES, file.getPath()));
+		assertHttpError(403, () -> admin.files().delete(SHARES, file.getPath()));
+		long deleted = superadmin.files().delete(SHARES, file.getPath());
 		// assertEquals(shareMeta.path, deleted[0]);
 		assertEquals(1, deleted);
 
@@ -95,7 +95,7 @@ public class ShareRestyTest extends SpaceTest {
 		superadmin.files().setBucket(bucket);
 
 		// this account is brand new, no shared files
-		assertEquals(0, superadmin.files().listAll(SHARES).files.length);
+		assertEquals(0, superadmin.files().listAll(SHARES).files.size());
 
 		// anonymous users are not allowed to share files
 		assertHttpError(401, () -> guest.files().listAll(SHARES));
@@ -103,49 +103,24 @@ public class ShareRestyTest extends SpaceTest {
 		// vince shares a small png file
 		byte[] pngBytes = ClassResources.loadAsBytes(this, "tweeter.png");
 		// FileMeta pngMeta = vince.files().share(SHARES, pngBytes, "tweeter.png");
-		FileMeta pngMeta = vince.files().share(SHARES, new File("tweeter.png"));
+		SpaceFile pngFile = vince.files().share(SHARES, new File("tweeter.png"));
 
 		// admin lists all shared files should return tweeter.png path only
 		FileList list = superadmin.files().listAll(SHARES);
-		assertEquals(1, list.files.length);
-		assertEquals(pngMeta.path, list.files[0].path);
+		assertEquals(1, list.files.size());
+		assertEquals(pngFile.getPath(), list.files.get(0).getPath());
 
-		// anonymous gets png share with its id
-		SpaceFile png = guest.files().get(SHARES, pngMeta.path);
+		// anonymous gets png share with its path
+		SpaceResponse png = guest.get("/1/files/" + SHARES + pngFile.getPath()).go(200);
 		assertEquals("image/png", png.contentType());
-		// assertEquals(pngBytes.length, png.contentLength);
-		assertEquals(vince.id(), png.owner());
-		// assertEquals(pngMeta.etag, png.etag());
 		assertArrayEquals(pngBytes, png.asBytes());
-
-		// anonymous gets png share with its location
-		byte[] downloadedBytes = guest.get(pngMeta.location).go(200)//
-				.assertHeaderEquals("image/png", SpaceHeaders.CONTENT_TYPE)//
-				.assertHeaderEquals(vince.id(), SpaceHeaders.SPACEDOG_OWNER)//
-				// .assertHeaderEquals(pngMeta.etag, SpaceHeaders.ETAG)//
-				.asBytes();
-
-		assertArrayEquals(pngBytes, downloadedBytes);
-
-		// anonymous gets png share through S3 direct access
-		// with wrong etag
-		// downloadedBytes = SpaceRequest.get(pngMeta.publicLocation)//
-		// .addHeader(SpaceHeaders.IF_NONE_MATCH, "XXX")//
-		// .go(200)//
-		// .assertHeaderEquals("image/png", SpaceHeaders.CONTENT_TYPE)//
-		// .assertHeaderEquals('"' + pngMeta.etag + '"', SpaceHeaders.ETAG)//
-		// .asBytes();
-
-		assertArrayEquals(pngBytes, downloadedBytes);
-
-		// anonymous gets png share through S3 direct access
-		// with correct etag to get 304 Not Modified
-		// SpaceRequest.get(pngMeta.publicLocation)//
-		// .addHeader(SpaceHeaders.IF_NONE_MATCH, pngMeta.etag)//
-		// .go(304);
+		assertEquals(vince.id(), png.header(SpaceHeaders.SPACEDOG_OWNER));
+		assertEquals(vince.credentials().me().group(), png.header(SpaceHeaders.SPACEDOG_GROUP));
+		// assertEquals(pngBytes.length, png.contentLength());
+		// assertEquals(pngMeta.etag, png.etag());
 
 		// share small text file
-		FileMeta txtMeta = fred.files().share(SHARES, FILE_CONTENT.getBytes(), "text.txt");
+		final SpaceFile txtFile = fred.files().share(SHARES, FILE_CONTENT.getBytes(), "text.txt");
 
 		// superadmin sets share list size to 1
 		superadmin.files().listSize(1);
@@ -153,40 +128,33 @@ public class ShareRestyTest extends SpaceTest {
 		// list all shared files should return 2 paths
 		// superadmin gets first share page with only one path
 		list = superadmin.files().listAll(SHARES);
-		assertEquals(1, list.files.length);
-		Set<String> all = Sets.newHashSet(list.files[0].path);
+		assertEquals(1, list.files.size());
+		Set<String> all = Sets.newHashSet(list.files.get(0).getPath());
 
 		// superadmin gets second (and last) share page with only one path
 		list = superadmin.files().list(SHARES, "/", list.next);
-		assertEquals(1, list.files.length);
+		assertEquals(1, list.files.size());
 		// assertNull(list.next);
-		all.add(list.files[0].path);
+		all.add(list.files.get(0).getPath());
 
 		// the set should contain both file paths
-		assertTrue(all.contains(pngMeta.path));
-		assertTrue(all.contains(txtMeta.path));
+		assertTrue(all.contains(pngFile.getPath()));
+		assertTrue(all.contains(txtFile.getPath()));
 
 		// download shared text file
-		String stringContent = SpaceRequest.get(txtMeta.location).go(200)//
+		String txtContent = SpaceRequest.get(location(txtFile)).go(200)//
 				.assertHeaderEquals("text/plain", SpaceHeaders.CONTENT_TYPE)//
 				.assertHeaderEquals(fred.id(), SpaceHeaders.SPACEDOG_OWNER)//
 				.asString();
 
-		assertEquals(FILE_CONTENT, stringContent);
-
-		// download shared text file through direct S3 access
-		// stringContent = SpaceRequest.get(txtMeta.publicLocation).go(200)//
-		// .assertHeaderEquals("text/plain", SpaceHeaders.CONTENT_TYPE)//
-		// .asString();
-		//
-		// assertEquals(FILE_CONTENT, stringContent);
+		assertEquals(FILE_CONTENT, txtContent);
 
 		// only admin or owner can delete a shared file
-		guest.delete(txtMeta.location).go(401);
-		vince.delete(txtMeta.location).go(403);
+		assertHttpError(401, () -> guest.files().delete(SHARES, txtFile.getPath()));
+		assertHttpError(403, () -> vince.files().delete(SHARES, txtFile.getPath()));
 
 		// owner (fred) can delete its own shared file (test.txt)
-		long deleted = fred.files().delete(SHARES, txtMeta.path);
+		long deleted = fred.files().delete(SHARES, txtFile.getPath());
 		// assertEquals(txtMeta.path, deleted[0]);
 		assertEquals(1, deleted);
 
@@ -196,8 +164,8 @@ public class ShareRestyTest extends SpaceTest {
 		// superadmin lists shares and
 		// it should only return the png file path
 		list = superadmin.files().listAll(SHARES);
-		assertEquals(1, list.files.length);
-		assertEquals(pngMeta.path, list.files[0].path);
+		assertEquals(1, list.files.size());
+		assertEquals(pngFile.getPath(), list.files.get(0).getPath());
 
 		// only superadmin can delete all shared files
 		assertHttpError(401, () -> guest.files().deleteAll(SHARES));
@@ -210,16 +178,16 @@ public class ShareRestyTest extends SpaceTest {
 		// assertEquals(pngMeta.path, deleted[0]);
 
 		// superadmin lists all shares but there is no more
-		assertEquals(0, superadmin.files().listAll(SHARES).files.length);
+		assertEquals(0, superadmin.files().listAll(SHARES).files.size());
 
 		// share small text file
-		txtMeta = fred.files().share(SHARES, FILE_CONTENT.getBytes(), "text.txt");
-		assertEquals(1, superadmin.files().listAll(SHARES).files.length);
+		SpaceFile txtFile2 = fred.files().share(SHARES, FILE_CONTENT.getBytes(), "text.txt");
+		assertEquals(1, superadmin.files().listAll(SHARES).files.size());
 
 		// admin can delete shared file (test.txt) even if not owner
 		// with default share ACL settings
-		superadmin.delete(txtMeta.location).go(200);
-		assertEquals(0, superadmin.files().listAll(SHARES).files.length);
+		superadmin.files().delete(SHARES, txtFile2.getPath());
+		assertEquals(0, superadmin.files().listAll(SHARES).files.size());
 	}
 
 	@Test
@@ -244,58 +212,62 @@ public class ShareRestyTest extends SpaceTest {
 		assertHttpError(403, () -> vince.files().listAll(SHARES));
 
 		// backend contains no shared file
-		assertEquals(0, superadmin.files().listAll(SHARES).files.length);
+		assertEquals(0, superadmin.files().listAll(SHARES).files.size());
 
 		// anonymous is allowed to share a file
-		FileMeta guestPngMeta = guest.files().share(SHARES, pngBytes, "guest.png");
+		SpaceFile guestPng = guest.files().share(SHARES, pngBytes, "guest.png");
 		// assertNull(guestPngMeta.publicLocation);
 
 		// backend contains 1 shared file
 		FileList list = superadmin.files().listAll(SHARES);
-		assertEquals(1, list.files.length);
-		assertEquals(guestPngMeta.path, list.files[0].path);
+		assertEquals(1, list.files.size());
+		assertEquals(guestPng.getPath(), list.files.get(0).getPath());
 
 		// nobody is allowed to read this file
 		// but superadmins
-		guest.get(guestPngMeta.location).go(401);
-		fred.get(guestPngMeta.location).go(403);
-		vince.get(guestPngMeta.location).go(403);
-		superadmin.get(guestPngMeta.location).go(200);
+		guest.get(location(guestPng)).go(401);
+		fred.get(location(guestPng)).go(403);
+		vince.get(location(guestPng)).go(403);
+		superadmin.get(location(guestPng)).go(200);
 
 		// nobody is allowed to delete this file
 		// but superadmins
-		guest.delete(guestPngMeta.location).go(401);
-		fred.delete(guestPngMeta.location).go(403);
-		vince.delete(guestPngMeta.location).go(403);
-		superadmin.delete(guestPngMeta.location).go(200);
+		guest.delete(location(guestPng)).go(401);
+		fred.delete(location(guestPng)).go(403);
+		vince.delete(location(guestPng)).go(403);
+		superadmin.delete(location(guestPng)).go(200);
 
 		// backend contains no shared file
-		assertEquals(0, superadmin.files().listAll(SHARES).files.length);
+		assertEquals(0, superadmin.files().listAll(SHARES).files.size());
 
 		// vince is allowed to share a file
-		FileMeta vincePngMeta = vince.files().share(SHARES, pngBytes, "vince.png");
+		SpaceFile vincePng = vince.files().share(SHARES, pngBytes, "vince.png");
 		// assertNull(vincePngMeta.publicLocation);
 
 		// backend contains 1 shared file
 		list = superadmin.files().listAll(SHARES);
-		assertEquals(1, list.files.length);
-		assertEquals(vincePngMeta.path, list.files[0].path);
+		assertEquals(1, list.files.size());
+		assertEquals(vincePng.getPath(), list.files.get(0).getPath());
 
 		// nobody is allowed to read this file
 		// but vince the owner and superadmins
-		guest.get(vincePngMeta.location).go(401);
-		fred.get(vincePngMeta.location).go(403);
-		vince.get(vincePngMeta.location).go(200);
-		superadmin.get(vincePngMeta.location).go(200);
+		assertHttpError(401, () -> guest.files().getAsByteArray(SHARES, vincePng.getPath()));
+		assertHttpError(403, () -> fred.files().getAsByteArray(SHARES, vincePng.getPath()));
+		vince.files().getAsByteArray(SHARES, vincePng.getPath());
+		superadmin.files().getAsByteArray(SHARES, vincePng.getPath());
 
 		// nobody is allowed to delete this file
 		// but vince the owner and superadmins
-		guest.delete(vincePngMeta.location).go(401);
-		fred.delete(vincePngMeta.location).go(403);
-		vince.delete(vincePngMeta.location).go(200);
+		guest.delete(location(vincePng)).go(401);
+		fred.delete(location(vincePng)).go(403);
+		vince.delete(location(vincePng)).go(200);
 
 		// backend contains no shared file
-		assertEquals(0, superadmin.files().listAll(SHARES).files.length);
+		assertEquals(0, superadmin.files().listAll(SHARES).files.size());
+	}
+
+	private String location(SpaceFile file) {
+		return "/1/files/" + SHARES + file.getPath();
 	}
 
 	@Test
@@ -309,37 +281,25 @@ public class ShareRestyTest extends SpaceTest {
 		superadmin.files().setBucket(bucket);
 
 		// share file with name that needs escaping
-		FileMeta meta = superadmin.files()//
+		SpaceFile file = superadmin.files()//
 				.share(SHARES, FILE_CONTENT.getBytes(), "un petit text ?");
 
 		// get file from location URI
 		// no file extension => no specific content type
-		String stringContent = superadmin.get(meta.location).refresh().go(200)//
+		String stringContent = superadmin.get(location(file)).refresh().go(200)//
 				.assertHeaderEquals(ContentTypes.OCTET_STREAM, SpaceHeaders.CONTENT_TYPE)//
 				.asString();
 
 		Assert.assertEquals(FILE_CONTENT, stringContent);
 
 		// get file from location URI with content disposition
-		stringContent = superadmin.get(meta.location)//
+		stringContent = superadmin.get(location(file))//
 				.queryParam(WITH_CONTENT_DISPOSITION, true).go(200)//
-				.assertHeaderEquals(SpaceHeaders.contentDisposition(meta.name), //
+				.assertHeaderEquals(SpaceHeaders.contentDisposition(file.getName()), //
 						SpaceHeaders.CONTENT_DISPOSITION)//
 				.asString();
 
 		Assert.assertEquals(FILE_CONTENT, stringContent);
-
-		// TODO
-		// get file from S3 location URI
-		// no file extension => no specific content type
-		// by default S3 returns content disposition header if set in metadata
-		// stringContent = SpaceRequest.get(meta.publicLocation).go(200)//
-		// .assertHeaderEquals("application/octet-stream", SpaceHeaders.CONTENT_TYPE)//
-		// .assertHeaderEquals("attachment; filename=\"un petit text ?\"", //
-		// SpaceHeaders.CONTENT_DISPOSITION)//
-		// .asString();
-		//
-		// Assert.assertEquals(FILE_CONTENT, stringContent);
 	}
 
 	@Test
@@ -358,50 +318,50 @@ public class ShareRestyTest extends SpaceTest {
 		superadmin.files().setBucket(bucket);
 
 		// nath uploads 1 share
-		String path1 = nath.files().share(SHARES, "toto".getBytes(), "toto.txt").path;
+		String path1 = nath.files().share(SHARES, "toto".getBytes(), "toto.txt").getPath();
 
 		// nath has the right to get his own shares
-		nath.files().get(SHARES, path1);
+		nath.files().getAsByteArray(SHARES, path1);
 
 		// vince does not have access to nath's shares
-		assertHttpError(403, () -> vince.files().get(SHARES, path1));
+		assertHttpError(403, () -> vince.files().getAsByteArray(SHARES, path1));
 
 		// nath exports her shares
-		byte[] zip = nath.files().export(SHARES, path1);
+		byte[] zip = nath.files().exportAsByteArray(SHARES, path1);
 		assertEquals(1, zipFileNumber(zip));
 		assertZipContains(zip, "toto.txt", "toto".getBytes());
 
 		// vince uploads 2 shares
-		String path2 = vince.files().share(SHARES, "titi".getBytes(), "titi.txt").path;
+		String path2 = vince.files().share(SHARES, "titi".getBytes(), "titi.txt").getPath();
 		byte[] pngBytes = ClassResources.loadAsBytes(this, "tweeter.png");
-		String path3 = vince.files().share(SHARES, pngBytes, "tweeter.png").path;
+		String path3 = vince.files().share(SHARES, pngBytes, "tweeter.png").getPath();
 
 		// vince has the right to get his own shares
-		vince.files().get(SHARES, path2);
-		vince.files().get(SHARES, path3);
+		vince.files().getAsByteArray(SHARES, path2);
+		vince.files().getAsByteArray(SHARES, path3);
 
 		// nath does not have access to vince's shares
-		assertHttpError(403, () -> nath.files().get(SHARES, path2));
-		assertHttpError(403, () -> nath.files().get(SHARES, path3));
+		assertHttpError(403, () -> nath.files().getAsByteArray(SHARES, path2));
+		assertHttpError(403, () -> nath.files().getAsByteArray(SHARES, path3));
 
 		// vince exports his shares
-		zip = vince.files().export(SHARES, path2, path3);
+		zip = vince.files().exportAsByteArray(SHARES, path2, path3);
 		assertEquals(2, zipFileNumber(zip));
 		assertZipContains(zip, "titi.txt", "titi".getBytes());
 		assertZipContains(zip, "tweeter.png", pngBytes);
 
 		// vince fails to export files with invalid paths
-		assertHttpError(404, () -> vince.files().export(//
+		assertHttpError(404, () -> vince.files().exportAsByteArray(//
 				SHARES, "/foo/index.html", "/bar/toto.txt"));
 
 		// vince needs read (all) permission to export nath's shares
-		assertHttpError(403, () -> vince.files().export(SHARES, path1, path2));
+		assertHttpError(403, () -> vince.files().exportAsByteArray(SHARES, path1, path2));
 
 		// nath needs read (all) permission to export vince's shares
-		assertHttpError(403, () -> nath.files().export(SHARES, path1, path2));
+		assertHttpError(403, () -> nath.files().exportAsByteArray(SHARES, path1, path2));
 
 		// guests needs read (all) permission to export shares
-		assertHttpError(401, () -> guest.files().export(SHARES, path1, path2));
+		assertHttpError(401, () -> guest.files().exportAsByteArray(SHARES, path1, path2));
 
 		// superadmin updates share settings
 		// to allow users to export all shares
@@ -456,13 +416,13 @@ public class ShareRestyTest extends SpaceTest {
 		superadmin.files().setBucket(new FileBucketSettings(SHARES));
 
 		// superadmin shares a file
-		FileMeta share = superadmin.files().share(SHARES, "foobar".getBytes());
+		SpaceFile share = superadmin.files().share(SHARES, "foobar".getBytes());
 
 		// superadmin tries 70 times to get this file
 		// he fails since he forces request failure via the _fail param
 		// this checks that unexpected errors do not drain s3 connection pool
 		for (int i = 0; i < 70; i++)
-			superadmin.get(share.location).queryParam(FAIL_PARAM).go(400);
+			superadmin.get(location(share)).queryParam(FAIL_PARAM).go(400);
 	}
 
 	@Test
@@ -482,13 +442,13 @@ public class ShareRestyTest extends SpaceTest {
 		superadmin.files().setBucket(bucket);
 
 		// vince shares a file
-		FileMeta share = vince.files().share(SHARES, "vince".getBytes());
+		SpaceFile share = vince.files().share(SHARES, "vince".getBytes());
 
 		// guest fails to get shared file since no access token query param
-		guest.get(share.location).go(401);
+		guest.get(location(share)).go(401);
 
 		// vince gets his shared file via access token query param
-		byte[] bytes = guest.get(share.location)//
+		byte[] bytes = guest.get(location(share))//
 				.queryParam("accessToken", vince.accessToken().get())//
 				.go(200).asBytes();
 
@@ -497,7 +457,7 @@ public class ShareRestyTest extends SpaceTest {
 		// fred fails to get vince's shared file
 		// via access token query param
 		// since not the owner
-		guest.get(share.location)//
+		guest.get(location(share))//
 				.queryParam("accessToken", fred.accessToken().get())//
 				.go(403);
 	}
@@ -533,12 +493,12 @@ public class ShareRestyTest extends SpaceTest {
 		superadmin.files().setBucket(new FileBucketSettings(SHARES));
 
 		// superadmin shares a small png file
-		String pngLocation = superadmin.files()//
-				.share(SHARES, FILE_CONTENT.getBytes(), "test.txt").location;
+		SpaceFile pngFile = superadmin.files()//
+				.share(SHARES, FILE_CONTENT.getBytes(), "test.txt");
 
 		// superadmin gets shared file with its location
 		// default stream encoding is chunked since content is gziped
-		String downloadedString = superadmin.get(pngLocation).go(200)//
+		String downloadedString = superadmin.get(location(pngFile)).go(200)//
 				.assertHeaderEquals(SpaceHeaders.CHUNKED, SpaceHeaders.TRANSFER_ENCODING)//
 				.assertHeaderNotPresent(SpaceHeaders.CONTENT_LENGTH)//
 				.asString();
@@ -548,7 +508,7 @@ public class ShareRestyTest extends SpaceTest {
 		// superadmin gets shared file with its location
 		// if request Accept-Encoding without gzip
 		// then response contains Content-Length
-		downloadedString = superadmin.get(pngLocation)//
+		downloadedString = superadmin.get(location(pngFile))//
 				.setHeader(SpaceHeaders.ACCEPT_ENCODING, SpaceHeaders.IDENTITY)//
 				.go(200)//
 				.assertHeaderNotPresent(SpaceHeaders.TRANSFER_ENCODING)//

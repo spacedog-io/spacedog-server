@@ -13,11 +13,10 @@ import com.google.common.collect.Lists;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.file.InternalFileSettings.FileBucketSettings;
 import io.spacedog.client.file.SpaceFile.FileList;
-import io.spacedog.client.file.SpaceFile.FileMeta;
 import io.spacedog.client.http.ContentTypes;
-import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.Utils;
 
 public class FileClient {
 
@@ -51,28 +50,36 @@ public class FileClient {
 				.asPojo(FileList.class);
 	}
 
-	@SuppressWarnings("resource")
-	public SpaceFile get(String bucket, String path) {
-		SpaceResponse response = dog.get("/1/files/" + bucket + path)//
-				.go(200);
-
-		return new SpaceFile()//
-				.withBucket(bucket)//
-				.withPath(path)//
-				.withResponse(response);
+	public byte[] getAsByteArray(String bucket, String path) {
+		return Utils.toByteArray(getAsByteStream(bucket, path));
 	}
 
-	public byte[] export(String bucket, String... paths) {
-		return export(bucket, Lists.newArrayList(paths));
+	public InputStream getAsByteStream(String bucket, String path) {
+		return dog.get("/1/files/{bucket}{path}")//
+				.routeParam("bucket", bucket)//
+				.routeParam("path", path)//
+				.go(200).asByteStream();
 	}
 
-	public byte[] export(String bucket, List<String> paths) {
+	public byte[] exportAsByteArray(String bucket, String... paths) {
+		return exportAsByteArray(bucket, Lists.newArrayList(paths));
+	}
+
+	public byte[] exportAsByteArray(String bucket, List<String> paths) {
+		return Utils.toByteArray(exportAsByteStream(bucket, paths));
+	}
+
+	public InputStream exportAsByteStream(String bucket, String... paths) {
+		return exportAsByteStream(bucket, Lists.newArrayList(paths));
+	}
+
+	public InputStream exportAsByteStream(String bucket, List<String> paths) {
 		return dog.post("/1/files/{bucket}")//
 				.routeParam("bucket", bucket)//
 				.queryParam("op", "export")//
 				.bodyJson("paths", Json.toJsonNode(paths))//
 				.go(200)//
-				.asBytes();
+				.asByteStream();
 	}
 
 	private String randomPath(String fileName) {
@@ -83,19 +90,19 @@ public class FileClient {
 		return builder.toString();
 	}
 
-	public FileMeta share(String bucket, File file) {
+	public SpaceFile share(String bucket, File file) {
 		return upload(bucket, randomPath(file.getName()), file);
 	}
 
-	public FileMeta share(String bucket, byte[] bytes) {
+	public SpaceFile share(String bucket, byte[] bytes) {
 		return share(bucket, bytes, null);
 	}
 
-	public FileMeta share(String bucket, byte[] bytes, String fileName) {
+	public SpaceFile share(String bucket, byte[] bytes, String fileName) {
 		return upload(bucket, randomPath(fileName), bytes);
 	}
 
-	public FileMeta upload(String bucket, String path, File file) {
+	public SpaceFile upload(String bucket, String path, File file) {
 		try {
 			return upload(bucket, path, new FileInputStream(file), file.length(), //
 					ContentTypes.parseFileExtension(file.getName()));
@@ -105,7 +112,7 @@ public class FileClient {
 		}
 	}
 
-	public FileMeta upload(String bucket, String path, InputStream byteStream, //
+	public SpaceFile upload(String bucket, String path, InputStream byteStream, //
 			long contentLength, String contentType) {
 
 		return dog.put("/1/files/" + bucket + path)//
@@ -113,12 +120,12 @@ public class FileClient {
 				.withContentLength(contentLength)//
 				.body(byteStream)//
 				.go(200)//
-				.asPojo(FileMeta.class);
+				.asPojo(SpaceFile.class);
 	}
 
-	public FileMeta upload(String bucket, String path, byte[] bytes) {
+	public SpaceFile upload(String bucket, String path, byte[] bytes) {
 		return dog.put("/1/files/" + bucket + path).body(bytes)//
-				.go(200).asPojo(FileMeta.class);
+				.go(200).asPojo(SpaceFile.class);
 	}
 
 	public long deleteAll(String bucket) {
