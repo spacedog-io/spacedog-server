@@ -11,7 +11,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
 import io.spacedog.client.SpaceDog;
-import io.spacedog.client.file.InternalFileSettings.FileBucketSettings;
 import io.spacedog.client.file.SpaceFile.FileList;
 import io.spacedog.client.http.ContentTypes;
 import io.spacedog.utils.Exceptions;

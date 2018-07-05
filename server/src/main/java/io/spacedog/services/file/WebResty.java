@@ -9,8 +9,8 @@ import org.elasticsearch.common.Strings;
 
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.Permission;
+import io.spacedog.client.file.FileBucketSettings;
 import io.spacedog.client.file.SpaceFile;
-import io.spacedog.client.file.InternalFileSettings.FileBucketSettings;
 import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.client.http.WebPath;
 import io.spacedog.server.Server;

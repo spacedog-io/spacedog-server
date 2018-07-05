@@ -5,7 +5,7 @@ import org.junit.Test;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.client.file.InternalFileSettings.FileBucketSettings;
+import io.spacedog.client.file.FileBucketSettings;
 import io.spacedog.client.http.SpaceBackend;
 import io.spacedog.client.http.SpaceEnv;
 import io.spacedog.client.http.SpaceHeaders;

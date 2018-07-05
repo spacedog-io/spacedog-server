@@ -14,7 +14,7 @@ import com.google.common.io.Resources;
 import io.spacedog.cli.FileSynchCommand;
 import io.spacedog.cli.LoginCommand;
 import io.spacedog.client.SpaceDog;
-import io.spacedog.client.file.InternalFileSettings.FileBucketSettings;
+import io.spacedog.client.file.FileBucketSettings;
 import io.spacedog.test.SpaceTest;
 
 public class FileSynchCommandTest extends SpaceTest {

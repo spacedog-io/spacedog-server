@@ -20,10 +20,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
+import io.spacedog.client.file.FileBucketSettings;
 import io.spacedog.client.file.SpaceFile;
 import io.spacedog.client.file.SpaceFile.FileList;
-import io.spacedog.client.file.InternalFileSettings;
-import io.spacedog.client.file.InternalFileSettings.FileBucketSettings;
 import io.spacedog.client.schema.Schema;
 import io.spacedog.server.Index;
 import io.spacedog.server.Server;
@@ -250,7 +249,7 @@ public class FileService extends SpaceService {
 	}
 
 	public FileBucketSettings getBucketSettings(String bucket) {
-		FileBucketSettings bucketSettings = settings().buckets.get(bucket);
+		FileBucketSettings bucketSettings = settings().get(bucket);
 		if (bucketSettings == null)
 			throw new NotFoundException("bucket [%s] not found", bucket);
 		return bucketSettings;
@@ -263,7 +262,7 @@ public class FileService extends SpaceService {
 
 	private void saveBucketSettings(FileBucketSettings bucket) {
 		InternalFileSettings fileSettings = settings();
-		fileSettings.buckets.put(bucket.name, bucket);
+		fileSettings.put(bucket.name, bucket);
 		Services.settings().save(fileSettings);
 	}
 

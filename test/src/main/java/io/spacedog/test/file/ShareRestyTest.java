@@ -16,7 +16,7 @@ import com.google.common.io.ByteStreams;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.client.file.InternalFileSettings.FileBucketSettings;
+import io.spacedog.client.file.FileBucketSettings;
 import io.spacedog.client.file.SpaceFile;
 import io.spacedog.client.file.SpaceFile.FileList;
 import io.spacedog.client.http.ContentTypes;
