@@ -602,8 +602,9 @@ public class CredentialsRestyTest2 extends SpaceTest {
 
 		// test (backend default superadmin) creates credentials for new
 		// superadmin
-		SpaceDog superadmin2 = superadmin.credentials().create("superadmin2", //
-				Passwords.random(), "superadmin2@dog.com", Roles.superadmin);
+		SpaceDog superadmin2 = SpaceDog.dog().username("superadmin2").password(Passwords.random());
+		superadmin.credentials().create(superadmin2.username(), superadmin2.password().get(), //
+				"superadmin2@dog.com", Roles.superadmin);
 
 		Credentials credentials = superadmin2.credentials().me();
 
@@ -613,8 +614,9 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		assertEquals(Sets.newHashSet(Roles.superadmin), credentials.roles());
 
 		// superadmin2 creates credentials for new admin
-		SpaceDog admin1 = superadmin2.credentials().create("admin1", //
-				Passwords.random(), "admin1@dog.com", Roles.admin);
+		SpaceDog admin1 = SpaceDog.dog().username("admin1").password(Passwords.random());
+		superadmin2.credentials().create(admin1.username(), admin1.password().get(), //
+				"admin1@dog.com", Roles.admin);
 
 		credentials = admin1.credentials().me();
 

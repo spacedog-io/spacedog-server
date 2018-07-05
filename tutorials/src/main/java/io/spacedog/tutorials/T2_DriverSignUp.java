@@ -17,8 +17,8 @@ public class T2_DriverSignUp extends DemoBase {
 
 		SpaceDog superadmin = superadmin();
 
-		SpaceDog max = superadmin.credentials()//
-				.create("max", "hi max", "max@caremen.fr");
+		superadmin.credentials().create("max", "hi max", "max@caremen.fr");
+		SpaceDog max = SpaceDog.dog().username("max").password("hi max");
 
 		superadmin.credentials().setRole(max.id(), "driver");
 

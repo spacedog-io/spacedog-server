@@ -36,18 +36,17 @@ public class CredentialsRestyTest extends SpaceTest {
 		superdog.delete("/1/credentials/" + superadmin.id()).go(403);
 
 		// superadmin test can create another superadmin (test1)
-		SpaceDog superfred = superadmin.credentials()//
-				.create("superfred", "hi superfred", "superfred@test.com", "superadmin")//
-				.login("hi superfred");
+		SpaceDog superfred = createTempDog(superadmin, "superfred", Roles.superadmin);
+		superfred.login();
 
 		// superadmin test can delete superadmin superfred
 		superadmin.credentials().delete(superfred.id());
 
 		// superfred can no longer login
-		superfred.get("/1/login").go(401);
+		assertHttpError(401, () -> superfred.login());
 
 		// superdog can not be deleted
-		superdog.delete("/1/credentials/me").go(404);
+		assertHttpError(404, () -> superdog.credentials().delete("me"));
 	}
 
 	@Test

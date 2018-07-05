@@ -22,19 +22,17 @@ import io.spacedog.utils.Utils;
 
 public class SpaceAssert extends Assert implements SpacePlatform, SpaceFields, SpaceParams {
 
-	public static SpaceDog createTempDog(SpaceDog dog, String username) {
-		return dog.credentials()//
-				.create(username, Passwords.random(), DEFAULT_EMAIL);
-	}
-
-	public static SpaceDog createTempDog(SpaceDog dog, String username, String role) {
-		return dog.credentials()//
-				.create(username, Passwords.random(), DEFAULT_EMAIL, role);
+	public static SpaceDog createTempDog(SpaceDog parentDog, String username, String... role) {
+		SpaceDog childDog = SpaceDog.dog(parentDog.backend()).username(username).password(Passwords.random());
+		parentDog.credentials().create(childDog.username(), childDog.password().get(), DEFAULT_EMAIL, role);
+		return childDog;
 	}
 
 	public static SpaceDog signUpTempDog(SpaceBackend backend, String username) {
-		return SpaceDog.dog(backend).credentials()//
-				.create(username, Passwords.random(), DEFAULT_EMAIL);
+		SpaceDog guest = SpaceDog.dog(backend);
+		SpaceDog dog = SpaceDog.dog(backend).username(username).password(Passwords.random());
+		guest.credentials().create(dog.username(), dog.password().get(), DEFAULT_EMAIL);
+		return dog;
 	}
 
 	public static SpaceDog clearServer() {
@@ -44,8 +42,7 @@ public class SpaceAssert extends Assert implements SpacePlatform, SpaceFields, S
 	public static SpaceDog clearServer(boolean files) {
 		SpaceDog superdog = superdog();
 		superdog.post("/1/admin/_clear").queryParam("files", files).go(200);
-		return superdog.credentials().create(Roles.superadmin, //
-				Passwords.random(), DEFAULT_EMAIL, Roles.superadmin);
+		return createTempDog(superdog, Roles.superadmin, Roles.superadmin);
 	}
 
 	public static void prepareTest() {

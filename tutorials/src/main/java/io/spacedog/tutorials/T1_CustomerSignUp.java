@@ -14,7 +14,7 @@ import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.email.EmailTemplate;
 import io.spacedog.client.email.EmailTemplateRequest;
-import io.spacedog.client.file.InternalFileSettings.FileBucketSettings;
+import io.spacedog.client.file.FileBucketSettings;
 import io.spacedog.client.file.SpaceFile;
 import io.spacedog.utils.ClassResources;
 
@@ -30,8 +30,8 @@ public class T1_CustomerSignUp extends DemoBase {
 	@Test
 	public void customerSignsUp() {
 
-		SpaceDog david = guest().credentials()//
-				.create("david", "hi dave", "david@spacedog.io");
+		SpaceDog david = SpaceDog.dog().username("dave").password("hi dave");
+		guest().credentials().create(david.username(), david.password().get(), "david@spacedog.io");
 
 		Customer source = new Customer();
 		source.firstname = "David";

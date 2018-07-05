@@ -111,16 +111,13 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	// Create credentials method
 	//
 
-	public SpaceDog create(String username, String password, String email, String... roles) {
+	public String create(String username, String password, String email, String... roles) {
 		return create(new CredentialsCreateRequest()//
 				.username(username).password(password).email(email).roles(roles));
 	}
 
-	public SpaceDog create(CredentialsCreateRequest request) {
-		dog.post("/1/credentials").bodyPojo(request).go(201);
-		return SpaceDog.dog(dog.backend())//
-				.username(request.username())//
-				.password(request.password());
+	public String create(CredentialsCreateRequest request) {
+		return dog.post("/1/credentials").bodyPojo(request).go(201).getString(ID_FIELD);
 	}
 
 	//
@@ -128,12 +125,11 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	//
 
 	public void delete() {
-		dog.delete("/1/credentials/me").go(200);
+		delete("me");
 	}
 
 	public void delete(String id) {
-		dog.delete("/1/credentials/{id}")//
-				.routeParam("id", id).go(200, 404);
+		dog.delete("/1/credentials/{id}").routeParam("id", id).go(200);
 	}
 
 	public void deleteByUsername(String username) {
@@ -142,9 +138,8 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 			dog.credentials().delete(optional.get().id());
 	}
 
-	public CredentialsClient deleteAllButSuperAdmins() {
+	public void deleteAllButSuperAdmins() {
 		dog.delete("/1/credentials").go(200);
-		return this;
 	}
 
 	//
