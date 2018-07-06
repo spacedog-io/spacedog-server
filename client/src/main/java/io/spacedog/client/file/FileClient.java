@@ -15,6 +15,7 @@ import com.google.common.collect.Lists;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.file.SpaceFile.FileList;
 import io.spacedog.client.http.ContentTypes;
+import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
@@ -52,14 +53,22 @@ public class FileClient {
 	}
 
 	public byte[] getAsByteArray(String bucket, String path) {
-		return Utils.toByteArray(getAsByteStream(bucket, path));
+		return get(bucket, path).asBytes();
+	}
+
+	public String getAsString(String bucket, String path) {
+		return get(bucket, path).asString();
 	}
 
 	public InputStream getAsByteStream(String bucket, String path) {
+		return get(bucket, path).asByteStream();
+	}
+
+	private SpaceResponse get(String bucket, String path) {
 		return dog.get("/1/files/{bucket}{path}")//
 				.routeParam("bucket", bucket)//
 				.routeParam("path", path)//
-				.go(200).asByteStream();
+				.go(200);
 	}
 
 	public byte[] exportAsByteArray(String bucket, String... paths) {
@@ -154,5 +163,4 @@ public class FileClient {
 	public void setBucket(FileBucketSettings settings) {
 		dog.put("/1/files/{name}").routeParam("name", settings.name).bodyPojo(settings).go(200);
 	}
-
 }
