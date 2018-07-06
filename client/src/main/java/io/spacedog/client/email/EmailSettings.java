@@ -9,6 +9,7 @@ import io.spacedog.client.settings.SettingsBase;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EmailSettings extends SettingsBase {
+
 	public SmtpSettings smtp;
 	public MailGunSettings mailgun;
 	public Set<String> authorizedRoles = Collections.emptySet();

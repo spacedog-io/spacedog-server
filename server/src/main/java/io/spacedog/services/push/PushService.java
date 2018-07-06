@@ -80,7 +80,7 @@ public class PushService extends SpaceService implements SpaceFields {
 	//
 
 	public List<PushApplication> listApps() {
-		String backendId = Server.backend().backendId();
+		String backendId = Server.backend().id();
 
 		List<PlatformApplication> applications = AwsSnsPusher.sns()//
 				.listPlatformApplications()//
@@ -97,7 +97,7 @@ public class PushService extends SpaceService implements SpaceFields {
 
 		PushApplication app = new PushApplication();
 		app.name = name;
-		app.backendId = Server.backend().backendId();
+		app.backendId = Server.backend().id();
 		app.protocol = protocol;
 		app.credentials = credentials;
 		deleteApp(app);
@@ -138,7 +138,7 @@ public class PushService extends SpaceService implements SpaceFields {
 	public void deleteApp(String name, PushProtocol protocol) {
 		PushApplication app = new PushApplication();
 		app.name = name;
-		app.backendId = Server.backend().backendId();
+		app.backendId = Server.backend().id();
 		app.protocol = protocol;
 		deleteApp(app);
 	}

@@ -40,7 +40,7 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 	}
 
 	public String backendId() {
-		return backend.backendId();
+		return backend.id();
 	}
 
 	public String username() {

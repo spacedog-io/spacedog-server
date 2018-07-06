@@ -135,7 +135,7 @@ public class FileService extends SpaceService {
 	}
 
 	public InputStream getAsByteStream(String bucket, String key) {
-		return store.get(Server.backend().backendId(), bucket, key);
+		return store.get(Server.backend().id(), bucket, key);
 	}
 
 	//
@@ -169,7 +169,7 @@ public class FileService extends SpaceService {
 	public SpaceFile upload(String bucket, SpaceFile file, InputStream content) {
 
 		PutResult result = store.put(//
-				Server.backend().backendId(), //
+				Server.backend().id(), //
 				bucket, //
 				content, //
 				file.getLength());
@@ -183,9 +183,7 @@ public class FileService extends SpaceService {
 
 		} catch (Exception e) {
 
-			store.delete(Server.backend().backendId(), //
-					bucket, file.getBucketKey());
-
+			store.delete(Server.backend().id(), bucket, file.getBucketKey());
 			throw e;
 		}
 	}
@@ -211,8 +209,7 @@ public class FileService extends SpaceService {
 		boolean deleted = elastic().delete(//
 				index(bucket), file.getPath(), false, false);
 		try {
-			store.delete(Server.backend().backendId(), //
-					bucket, file.getBucketKey());
+			store.delete(Server.backend().id(), bucket, file.getBucketKey());
 
 		} catch (Exception ignore) {
 			// It's not a big deal if file is not deleted:
@@ -228,7 +225,7 @@ public class FileService extends SpaceService {
 		if (ServerConfig.awsRegion().isPresent() //
 				&& !ServerConfig.isOffline()) {
 
-			store.deleteAll(Server.backend().backendId());
+			store.deleteAll(Server.backend().id());
 		}
 	}
 

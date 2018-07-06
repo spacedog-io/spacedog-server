@@ -118,7 +118,7 @@ public class EmailService {
 		settings.key = ServerConfig.mailGunKey();
 		settings.domain = ServerConfig.mailDomain();
 
-		String target = Server.backend().backendId();
+		String target = Server.backend().id();
 
 		// ... add footnotes to the message
 		if (!Strings.isNullOrEmpty(request.text))

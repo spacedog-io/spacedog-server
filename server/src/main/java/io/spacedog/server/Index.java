@@ -18,7 +18,7 @@ public class Index {
 
 	public String backendId() {
 		if (backendId == null)
-			backendId = Server.backend().backendId();
+			backendId = Server.backend().id();
 		return backendId;
 	}
 

@@ -66,7 +66,7 @@ public class LambdaResty extends SpaceResty {
 				lambdaRequest.payload = extractBody(context);
 
 				InvokeRequest request = new InvokeRequest()//
-						.withFunctionName(Server.backend().backendId() //
+						.withFunctionName(Server.backend().id() //
 								+ '-' + settings.awsLambda.name)//
 						.withPayload(lambdaRequest.toJsonString());
 

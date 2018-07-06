@@ -17,7 +17,7 @@ public class SpaceBackend {
 
 	private boolean ssl;
 	private String hostPrefix = "";
-	private String backendId = "";
+	private String id = "";
 	private String hostSuffix;
 	private int port;
 	private boolean multi = false;
@@ -34,8 +34,8 @@ public class SpaceBackend {
 		return ssl ? "https" : "http";
 	}
 
-	public String backendId() {
-		return backendId.isEmpty() ? SPACEDOG : backendId;
+	public String id() {
+		return id.isEmpty() ? SPACEDOG : id;
 	}
 
 	public String host() {
@@ -99,7 +99,7 @@ public class SpaceBackend {
 		}
 
 		private UrlBuilder appendHost() {
-			return appendHost(multi ? API : backendId);
+			return appendHost(multi ? API : id);
 		}
 
 		private UrlBuilder appendHost(String backendId) {
@@ -224,7 +224,7 @@ public class SpaceBackend {
 
 		SpaceBackend backend = new SpaceBackend();
 		backend.hostPrefix = hostPrefix;
-		backend.backendId = backendId;
+		backend.id = backendId;
 		backend.hostSuffix = hostSuffix;
 		backend.port = port;
 		backend.ssl = ssl;

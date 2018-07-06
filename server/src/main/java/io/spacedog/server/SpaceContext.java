@@ -162,7 +162,7 @@ public class SpaceContext {
 			return Server.get().elasticClient().exists(index) //
 					? nextFilter.get() //
 					: JsonPayload.error(404).withError(//
-							"[backend][%s] not found", Server.backend().backendId())//
+							"[backend][%s] not found", Server.backend().id())//
 							.build();
 		};
 

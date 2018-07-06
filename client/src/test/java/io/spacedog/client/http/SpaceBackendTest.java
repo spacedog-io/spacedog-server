@@ -33,7 +33,7 @@ public class SpaceBackendTest extends Assert {
 		assertEquals("api.spacedog.io", backend.host());
 		assertEquals(443, backend.port());
 		assertEquals("https", backend.scheme());
-		assertEquals("spacedog", backend.backendId());
+		assertEquals("spacedog", backend.id());
 		assertTrue(backend.ssl());
 		assertTrue(backend.isMulti());
 		assertEquals("https://*.spacedog.io", backend.toString());
@@ -46,7 +46,7 @@ public class SpaceBackendTest extends Assert {
 		assertEquals("test.spacedog.io", backend.host());
 		assertEquals(443, backend.port());
 		assertEquals("https", backend.scheme());
-		assertEquals("test", backend.backendId());
+		assertEquals("test", backend.id());
 		assertTrue(backend.ssl());
 		assertFalse(backend.isMulti());
 		assertEquals("https://test.spacedog.io", backend.toString());
@@ -59,7 +59,7 @@ public class SpaceBackendTest extends Assert {
 		assertEquals("connect.acme.net", backend.host());
 		assertEquals(80, backend.port());
 		assertEquals("http", backend.scheme());
-		assertEquals("spacedog", backend.backendId());
+		assertEquals("spacedog", backend.id());
 		assertFalse(backend.ssl());
 		assertFalse(backend.isMulti());
 		assertEquals("http://connect.acme.net", backend.toString());
@@ -72,7 +72,7 @@ public class SpaceBackendTest extends Assert {
 		assertEquals("www.api.acme.net", backend.host());
 		assertEquals(8080, backend.port());
 		assertEquals("http", backend.scheme());
-		assertEquals("spacedog", backend.backendId());
+		assertEquals("spacedog", backend.id());
 		assertFalse(backend.ssl());
 		assertTrue(backend.isMulti());
 		assertEquals("http://www.*.acme.net:8080", backend.toString());
@@ -88,7 +88,7 @@ public class SpaceBackendTest extends Assert {
 		assertEquals("https://test.spacedog.io", backend.toString());
 		assertEquals(443, backend.port());
 		assertEquals("https", backend.scheme());
-		assertEquals("test", backend.backendId());
+		assertEquals("test", backend.id());
 		assertTrue(backend.ssl());
 		assertFalse(backend.isMulti());
 
@@ -115,7 +115,7 @@ public class SpaceBackendTest extends Assert {
 		assertEquals("test.www.spacedog.io", backend.host());
 		assertEquals(443, backend.port());
 		assertEquals("https", backend.scheme());
-		assertEquals("test", backend.backendId());
+		assertEquals("test", backend.id());
 		assertTrue(backend.ssl());
 		assertFalse(backend.isMulti());
 		assertEquals("https://test.www.spacedog.io", backend.toString());
@@ -134,7 +134,7 @@ public class SpaceBackendTest extends Assert {
 		assertEquals("https://*.spacedog.io", backend.toString());
 		assertEquals(443, backend.port());
 		assertEquals("https", backend.scheme());
-		assertEquals("spacedog", backend.backendId());
+		assertEquals("spacedog", backend.id());
 		assertTrue(backend.ssl());
 		assertTrue(backend.isMulti());
 		assertEquals("https://api.spacedog.io/1/data", backend.url("/1/data"));
@@ -152,7 +152,7 @@ public class SpaceBackendTest extends Assert {
 		assertEquals("https://*.spacedog.io", backend.toString());
 		assertEquals(443, backend.port());
 		assertEquals("https", backend.scheme());
-		assertEquals("spacedog", backend.backendId());
+		assertEquals("spacedog", backend.id());
 		assertTrue(backend.ssl());
 		assertTrue(backend.isMulti());
 		assertEquals("https://api.spacedog.io/1/data", backend.url("/1/data"));
