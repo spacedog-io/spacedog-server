@@ -288,10 +288,14 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 		return dog.settings().get(CredentialsSettings.class);
 	}
 
+	public void settings(CredentialsSettings settings) {
+		dog.settings().save(settings);
+	}
+
 	public void enableGuestSignUp(boolean enable) {
 		CredentialsSettings settings = settings();
 		settings.guestSignUpEnabled = enable;
-		dog.settings().save(settings);
+		settings(settings);
 	}
 
 }

@@ -24,7 +24,7 @@ public class T1_CustomerSignUp extends DemoBase {
 	public void superadminAuthorizesGuestsToSignUp() {
 		CredentialsSettings settings = new CredentialsSettings();
 		settings.guestSignUpEnabled = true;
-		superadmin().settings().save(settings);
+		superadmin().credentials().settings(settings);
 	}
 
 	@Test

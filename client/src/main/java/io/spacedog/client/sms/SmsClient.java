@@ -51,4 +51,16 @@ public class SmsClient {
 				.go(200);
 	}
 
+	//
+	// Settings
+	//
+
+	public SmsSettings settings() {
+		return dog.settings().get(SmsSettings.class);
+	}
+
+	public void settings(SmsSettings settings) {
+		dog.settings().save(settings);
+	}
+
 }

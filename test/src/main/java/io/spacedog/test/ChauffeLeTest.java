@@ -43,7 +43,7 @@ public class ChauffeLeTest extends SpaceTest {
 		DataSettings settings = new DataSettings();
 		settings.acl().put("bigpost", Roles.user, Permission.create, Permission.search, Permission.update);
 		settings.acl().put("smallpost", Roles.user, Permission.create, Permission.search);
-		superadmin.settings().save(settings);
+		superadmin.data().settings(settings);
 
 		lui = createTempDog(superadmin, "lui");
 		elle = createTempDog(superadmin, "elle");

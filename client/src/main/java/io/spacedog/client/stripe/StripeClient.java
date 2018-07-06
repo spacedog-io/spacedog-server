@@ -25,4 +25,17 @@ public class StripeClient {
 
 		return request.go(200).asJsonObject();
 	}
+
+	//
+	// Settings
+	//
+
+	public StripeSettings settings() {
+		return dog.settings().get(StripeSettings.class);
+	}
+
+	public void settings(StripeSettings settings) {
+		dog.settings().save(settings);
+	}
+
 }

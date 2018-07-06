@@ -35,7 +35,7 @@ public class LinkedinRestyTest extends SpaceTest {
 		settings.linkedin.backendUrl = "https://www.linkedin.com";
 		settings.linkedin.clientId = env.getOrElseThrow("spacedog.test.linkedin.client.id");
 		settings.linkedin.clientSecret = env.getOrElseThrow("spacedog.test.linkedin.client.secret");
-		superadmin.settings().save(settings);
+		superadmin.credentials().settings(settings);
 
 		// fails to create linkedin credentials if no authorization code
 		SpaceRequest.post("/1/login/linkedin")//

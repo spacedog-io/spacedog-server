@@ -45,7 +45,7 @@ public class T0_Init extends DemoBase {
 		DataSettings dataSettings = new DataSettings();
 		dataSettings.acl().put("course", Roles.user, Permission.create, //
 				Permission.updateMine, Permission.readMine);
-		superadmin().settings().save(dataSettings);
+		superadmin().data().settings(dataSettings);
 	}
 
 	public void createCustomerSchema() {
@@ -56,7 +56,7 @@ public class T0_Init extends DemoBase {
 		DataSettings dataSettings = new DataSettings();
 		dataSettings.acl().put("customer", Roles.user, Permission.create, //
 				Permission.updateMine, Permission.readMine);
-		superadmin().settings().save(dataSettings);
+		superadmin().data().settings(dataSettings);
 	}
 
 	public void createInstallationSchema() {
@@ -66,7 +66,7 @@ public class T0_Init extends DemoBase {
 		DataSettings dataSettings = new DataSettings();
 		dataSettings.acl().put(Installation.TYPE, Roles.user, Permission.create, //
 				Permission.updateMine, Permission.readMine, Permission.deleteMine);
-		superadmin().settings().save(dataSettings);
+		superadmin().data().settings(dataSettings);
 	}
 
 	public void createDriverSchema() {
@@ -79,7 +79,7 @@ public class T0_Init extends DemoBase {
 				Permission.update, Permission.delete);
 		dataSettings.acl().put("driver", "driver", Permission.create, //
 				Permission.readMine, Permission.updateMine);
-		superadmin().settings().save(dataSettings);
+		superadmin().data().settings(dataSettings);
 	}
 
 	private Schema loadSchemaFromFile(String fileName) {

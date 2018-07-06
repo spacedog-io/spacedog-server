@@ -214,7 +214,7 @@ public class CredentialsRestyTest extends SpaceTest {
 		CredentialsSettings settings = new CredentialsSettings();
 		settings.maximumInvalidChallenges = 2;
 		settings.resetInvalidChallengesAfterMinutes = 1;
-		superadmin.settings().save(settings);
+		superadmin.credentials().settings(settings);
 
 		// fred tries to log in with an invalid password
 		SpaceRequest.get("/1/login")//

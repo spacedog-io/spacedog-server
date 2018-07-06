@@ -129,4 +129,17 @@ public class PushClient {
 	public long deleteTags(String installationId) {
 		return dog.data().delete(TYPE, installationId, "tags");
 	}
+
+	//
+	// Settings
+	//
+
+	public PushSettings settings() {
+		return dog.settings().get(PushSettings.class);
+	}
+
+	public void settings(PushSettings settings) {
+		dog.settings().save(settings);
+	}
+
 }

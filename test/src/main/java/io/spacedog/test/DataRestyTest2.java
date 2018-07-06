@@ -96,7 +96,7 @@ public class DataRestyTest2 extends SpaceTest {
 		DataSettings settings = new DataSettings();
 		settings.acl().put("sale", Roles.user, Permission.create, Permission.updateMine, //
 				Permission.readMine, Permission.deleteMine, Permission.search);
-		superadmin.settings().save(settings);
+		superadmin.data().settings(settings);
 
 		// fred fails to create a sale with no body
 		fred.post("/1/data/sale").go(400);
@@ -304,7 +304,7 @@ public class DataRestyTest2 extends SpaceTest {
 		// superadmin sets data acl
 		DataSettings dataSettings = new DataSettings();
 		dataSettings.acl().put(schema.name(), Roles.user, Permission.create, Permission.search);
-		superadmin.settings().save(dataSettings);
+		superadmin.data().settings(dataSettings);
 
 		// superadmins creates 4 messages
 		Set<String> originalMessages = Sets.newHashSet(//

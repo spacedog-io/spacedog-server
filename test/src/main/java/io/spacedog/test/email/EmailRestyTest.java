@@ -51,7 +51,7 @@ public class EmailRestyTest extends SpaceTest {
 		// superadmin allows users with 'email' role to send emails
 		EmailSettings settings = new EmailSettings();
 		settings.authorizedRoles = Sets.newHashSet("email");
-		superadmin.settings().save(settings);
+		superadmin.emails().settings(settings);
 
 		// since nobody has 'email' role
 		// nobody is authorized to send emails
@@ -78,7 +78,7 @@ public class EmailRestyTest extends SpaceTest {
 		settings.mailgun = new EmailSettings.MailGunSettings();
 		settings.mailgun.domain = "api.spacedog.io";
 		settings.mailgun.key = "123456789";
-		superadmin.settings().save(settings);
+		superadmin.emails().settings(settings);
 
 		// superadmin fails to email since mailgun key is invalid
 		assertHttpError(401, () -> vince.emails().send(defaultMail()));
@@ -86,7 +86,7 @@ public class EmailRestyTest extends SpaceTest {
 		// superadmin sets smtp settings
 		settings.mailgun = null;
 		settings.smtp = smtpSettings();
-		superadmin.settings().save(settings);
+		superadmin.emails().settings(settings);
 
 		// vince emails a text message via smtp
 		ObjectNode response = vince.emails().send(defaultMail());
@@ -144,7 +144,7 @@ public class EmailRestyTest extends SpaceTest {
 		// superadmin sets data acls
 		DataSettings settings = new DataSettings();
 		settings.acl().put("demande", Roles.all, Permission.create);
-		superadmin.settings().save(settings);
+		superadmin.data().settings(settings);
 
 		// create an inscription
 		ArrayNode dispos = Json.array(//

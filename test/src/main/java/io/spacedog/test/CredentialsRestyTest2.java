@@ -217,7 +217,7 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		// admin saves settings with token max lifetime set to 3s
 		CredentialsSettings settings = new CredentialsSettings();
 		settings.sessionMaximumLifetime = 3; // seconds
-		superadmin.settings().save(settings);
+		superadmin.credentials().settings(settings);
 
 		// fred fails to login with a token lifetime of 4s
 		// since max token lifetime is 3s
@@ -568,7 +568,7 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		// set username and password specific regex
 		settings.usernameRegex = "[a-zA-Z]{3,}";
 		settings.passwordRegex = "[a-zA-Z]{3,}";
-		superadmin.settings().save(settings);
+		superadmin.credentials().settings(settings);
 
 		// invalid username considering new username regex
 		SpaceRequest.post("/1/credentials").backend(superadmin)//

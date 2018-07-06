@@ -30,8 +30,8 @@ public class StripeRestyTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog test = clearServer();
-		SpaceDog david = createTempDog(test, "david");
+		SpaceDog superdamin = clearServer();
+		SpaceDog david = createTempDog(superdamin, "david");
 
 		// set stripe settings
 		StripeSettings settings = new StripeSettings();
@@ -39,7 +39,7 @@ public class StripeRestyTest extends SpaceTest {
 		settings.rolesAllowedToCharge = Sets.newHashSet("superadmin");
 		settings.rolesAllowedToPay = Sets.newHashSet("user");
 		Stripe.apiKey = settings.secretKey;
-		test.settings().save(settings);
+		superdamin.stripe().settings(settings);
 
 		// david's stripe customer is not yet created
 		david.get("/1/stripe/customers/me").go(404);
@@ -75,7 +75,7 @@ public class StripeRestyTest extends SpaceTest {
 
 		// superadmin is not allowed to pay
 		// because of settings.rolesAllowedToPay
-		test.post("/1/stripe/charges/me").go(403);
+		superdamin.post("/1/stripe/charges/me").go(403);
 
 		// david fails to pays because 'customer' field is forbidden
 		// because the stripe customer must be the one stored in credentials
@@ -119,10 +119,10 @@ public class StripeRestyTest extends SpaceTest {
 		david.post("/1/stripe/charges").go(403);
 
 		// superadmin fails to make charge a customer if no parameter
-		test.post("/1/stripe/charges").go(400);
+		superdamin.post("/1/stripe/charges").go(400);
 
 		// superadmin charges david's lcl card
-		test.post("/1/stripe/charges")//
+		superdamin.post("/1/stripe/charges")//
 				.formField("amount", "1200")//
 				.formField("currency", "eur")//
 				.formField("customer", stripeCustomer.get("id").asText())//

@@ -39,7 +39,7 @@ public class SmsRestyTest extends SpaceTest {
 		// superadmin authorizes users with 'sms' role to send sms
 		SmsSettings settings = new SmsSettings();
 		settings.authorizedRoles = Sets.newHashSet("sms");
-		superadmin.settings().save(settings);
+		superadmin.sms().settings(settings);
 
 		// nobody is authorized to send sms
 		// since nobody has the right role
@@ -55,7 +55,7 @@ public class SmsRestyTest extends SpaceTest {
 
 		// superadmin sets twilio settings
 		settings.twilio = twilioSettings();
-		superadmin.settings().save(settings);
+		superadmin.sms().settings(settings);
 
 		// since sends an sms
 		String messageId = vince.sms().send("33662627520", "Hi from Vince");
@@ -98,7 +98,7 @@ public class SmsRestyTest extends SpaceTest {
 		// superadmin sets Twilio sms settings
 		SmsSettings settings = new SmsSettings();
 		settings.twilio = twilioSettings();
-		superadmin.settings().save(settings);
+		superadmin.sms().settings(settings);
 
 		// superadmin saves 'hello' sms template
 		SmsTemplate template = new SmsTemplate();

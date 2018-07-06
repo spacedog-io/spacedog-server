@@ -55,7 +55,7 @@ public class PushRestyTest extends SpaceTest {
 				Permission.readMine, Permission.updateMine);
 		settings.acl().put(Installation.TYPE, Roles.admin, Permission.create, //
 				Permission.update, Permission.search, Permission.delete);
-		superadmin.settings().save(settings);
+		superadmin.data().settings(settings);
 
 		// non authenticated user installs joho
 		// and fails to set endpoint fields
@@ -84,7 +84,7 @@ public class PushRestyTest extends SpaceTest {
 		// superadmin authorizes users to push
 		PushSettings pushSettings = new PushSettings();
 		pushSettings.authorizedRoles.add(Roles.user);
-		superadmin.settings().save(pushSettings);
+		superadmin.push().settings(pushSettings);
 
 		// vince pushes a simple message to fred via installation id
 		PushResponse response = vince.push().push(new PushRequest()//
@@ -281,7 +281,7 @@ public class PushRestyTest extends SpaceTest {
 		PushSettings settings = new PushSettings();
 		settings.authorizedRoles.add(Roles.user);
 		settings.authorizedRoles.add(Roles.superadmin);
-		superadmin.settings().save(settings);
+		superadmin.push().settings(settings);
 
 		// vince and dave install joho
 		DataWrap<Installation> vinceInstall = installApplication(//

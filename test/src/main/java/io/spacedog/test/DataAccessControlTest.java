@@ -38,7 +38,7 @@ public class DataAccessControlTest extends SpaceTest {
 				Permission.updateMine, Permission.deleteMine, Permission.search);
 		dataSettings.acl().put(schema.name(), Roles.admin, Permission.create, //
 				Permission.update, Permission.delete, Permission.search);
-		superadmin.settings().save(dataSettings);
+		superadmin.data().settings(dataSettings);
 
 		assertEquals(dataSettings, superadmin.settings().get(DataSettings.class));
 
@@ -151,7 +151,7 @@ public class DataAccessControlTest extends SpaceTest {
 		DataSettings dataSettings = new DataSettings();
 		dataSettings.acl().put(schema.name(), Roles.user, Permission.create);
 		dataSettings.acl().put(schema.name(), Roles.admin, Permission.search);
-		superadmin.settings().save(dataSettings);
+		superadmin.data().settings(dataSettings);
 
 		// check message schema acl are set
 		assertEquals(dataSettings, superadmin.settings().get(DataSettings.class));
@@ -223,7 +223,7 @@ public class DataAccessControlTest extends SpaceTest {
 		dataSettings.acl().put(schema.name(), Roles.all, Permission.create);
 		dataSettings.acl().put(schema.name(), Roles.user, Permission.readGroup, //
 				Permission.updateGroup, Permission.deleteGroup);
-		superadmin.settings().save(dataSettings);
+		superadmin.data().settings(dataSettings);
 
 		// only users (and superadmins) can create messages
 		guest.data().save(new Message("guest"), "guest");
@@ -308,7 +308,7 @@ public class DataAccessControlTest extends SpaceTest {
 				Permission.create);
 		dataSettings.acl().put(schema.name(), "platine", Permission.read, Permission.update, //
 				Permission.create, Permission.delete);
-		superadmin.settings().save(dataSettings);
+		superadmin.data().settings(dataSettings);
 
 		// dave has the platine role
 		// he's got all the rights
@@ -374,7 +374,7 @@ public class DataAccessControlTest extends SpaceTest {
 		// superadmin sets data acl
 		DataSettings dataSettings = new DataSettings();
 		dataSettings.acl().put(schema.name(), Roles.user, Permission.search);
-		superadmin.settings().save(dataSettings);
+		superadmin.data().settings(dataSettings);
 
 		// check data acl settings contains message acl
 		assertEquals(dataSettings, superadmin.settings().get(DataSettings.class));

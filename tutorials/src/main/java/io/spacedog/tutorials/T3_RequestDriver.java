@@ -66,7 +66,7 @@ public class T3_RequestDriver extends DemoBase {
 	public void superadminSetsPushSettings() {
 		PushSettings settings = new PushSettings();
 		settings.authorizedRoles = Sets.newHashSet(Roles.superadmin);
-		superadmin().settings().save(settings);
+		superadmin().push().settings(settings);
 	}
 
 	@Test

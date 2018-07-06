@@ -180,7 +180,7 @@ public class SchemaRestyTest extends SpaceTest {
 		// superadmin sets acl of document schema
 		DataSettings settings = new DataSettings();
 		settings.acl().put("document", Roles.all, Permission.create);
-		superadmin.settings().save(settings);
+		superadmin.data().settings(settings);
 
 		// guest saves a first document with data as an object
 		guest.data().save("document", //

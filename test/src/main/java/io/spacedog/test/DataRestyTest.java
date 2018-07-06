@@ -34,7 +34,7 @@ public class DataRestyTest extends SpaceTest {
 		DataSettings settings = new DataSettings();
 		settings.acl().put("car", Roles.user, Permission.create, Permission.updateMine, //
 				Permission.readMine, Permission.deleteMine, Permission.search);
-		superadmin.settings().save(settings);
+		superadmin.data().settings(settings);
 
 		ObjectNode car = Json.builder().object() //
 				.add("serialNumber", "1234567890") //
@@ -103,7 +103,7 @@ public class DataRestyTest extends SpaceTest {
 		DataSettings settings = new DataSettings();
 		settings.acl().put("car", Roles.user, Permission.create, Permission.updateMine, //
 				Permission.readMine, Permission.deleteMine, Permission.search);
-		superadmin.settings().save(settings);
+		superadmin.data().settings(settings);
 
 		ObjectNode car = Json.builder().object() //
 				.add("serialNumber", "1234567890") //
@@ -165,7 +165,7 @@ public class DataRestyTest extends SpaceTest {
 		settings.acl().put(schema.name(), Roles.user, Permission.create, Permission.readMine);
 		settings.acl().put(schema.name(), "operator", Permission.create, Permission.update, //
 				Permission.updateMeta, Permission.read);
-		superadmin.settings().save(settings);
+		superadmin.data().settings(settings);
 
 		// old message to insert again in database
 		DateTime now = DateTime.now();

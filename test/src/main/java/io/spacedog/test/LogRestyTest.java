@@ -222,7 +222,7 @@ public class LogRestyTest extends SpaceTest {
 		// superadmin sets data acls
 		DataSettings settings = new DataSettings();
 		settings.acl().put(Message.TYPE, Roles.user, Permission.create, Permission.search);
-		superadmin.settings().save(settings);
+		superadmin.data().settings(settings);
 
 		// create a user in test backend
 		SpaceDog user = createTempDog(superadmin, "user").login();

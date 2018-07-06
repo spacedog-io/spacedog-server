@@ -103,7 +103,7 @@ public class SearchRestyTest extends SpaceTest {
 		// superadmin sets data acls
 		DataSettings settings = new DataSettings();
 		settings.acl().put("city", Roles.user, Permission.create, Permission.search);
-		superadmin.settings().save(settings);
+		superadmin.data().settings(settings);
 
 		// creates 5 cities but whith only 3 distinct names
 		vince.data().save("city", Json.object("name", "Paris"));

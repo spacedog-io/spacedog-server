@@ -369,4 +369,16 @@ public class DataClient implements SpaceFields, SpaceParams {
 				.body(export)//
 				.go(200);
 	}
+
+	//
+	// Settings
+	//
+
+	public DataSettings settings() {
+		return dog.settings().get(DataSettings.class);
+	}
+
+	public void settings(DataSettings settings) {
+		dog.settings().save(settings);
+	}
 }

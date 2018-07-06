@@ -46,4 +46,16 @@ public class EmailClient {
 				.go(200);
 	}
 
+	//
+	// Settings
+	//
+
+	public EmailSettings settings() {
+		return dog.settings().get(EmailSettings.class);
+	}
+
+	public void settings(EmailSettings settings) {
+		dog.settings().save(settings);
+	}
+
 }
