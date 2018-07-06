@@ -66,15 +66,26 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 	// GET
 	//
 
-	public Payload get(WebPath absolutePath, Context context) {
+	private Payload get(WebPath absolutePath, Context context) {
 
 		if (absolutePath.isRoot()) {
 			Server.context().credentials().checkAtLeastSuperAdmin();
-			return listBuckets(context);
+			return new Payload(Services.files().listBuckets());
 		}
 
 		String bucket = absolutePath.first();
+
+		if (absolutePath.size() == 1) {
+			Server.context().credentials().checkAtLeastSuperAdmin();
+			return new Payload(Services.files().getBucketSettings(bucket));
+		}
+
 		String path = absolutePath.removeFirst().toString();
+		return doGet(bucket, path, context);
+	}
+
+	private Payload doGet(String bucket, String path, Context context) {
+
 		SpaceFile file = checkRead(bucket, path);
 
 		// This auto fail is necessary to test if closeable resources
@@ -105,7 +116,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		return payload;
 	}
 
-	public SpaceFile checkRead(String bucket, String id) {
+	private SpaceFile checkRead(String bucket, String id) {
 		RolePermissions bucketRoles = Services.files().getBucketSettings(bucket).permissions;
 		Credentials credentials = Server.context().credentials();
 		SpaceFile file = Services.files().getMeta(bucket, id, true);
@@ -113,22 +124,18 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		return file;
 	}
 
-	private Payload listBuckets(Context context) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 	//
 	// PUT
 	//
 
-	Payload put(WebPath webPath, Context context) {
+	private Payload put(WebPath webPath, Context context) {
 
 		String bucket = checkBucket(webPath);
 
-		if (webPath.size() == 1)
-			return createBucket(bucket, context);
-		else {
+		if (webPath.size() == 1) {
+			createBucket(bucket, context);
+			return JsonPayload.ok().build();
+		} else {
 			return doPut(bucket, webPath, context);
 		}
 	}
@@ -174,12 +181,11 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 				.build();
 	}
 
-	private Payload createBucket(String bucket, Context context) {
+	private void createBucket(String bucket, Context context) {
 		Server.context().credentials().checkAtLeastSuperAdmin();
 		FileBucketSettings bucketSettings = Json.toPojo(//
 				getRequestContentAsBytes(context), FileBucketSettings.class);
 		Services.files().setBucketSettings(bucketSettings);
-		return JsonPayload.ok().build();
 	}
 
 	private String fileContentType(String fileName, Context context) {
@@ -193,7 +199,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		return contentType;
 	}
 
-	protected long checkContentLength(Context context, long sizeLimitInKB) {
+	private long checkContentLength(Context context, long sizeLimitInKB) {
 		String contentLength = context.header(SpaceHeaders.CONTENT_LENGTH);
 		if (Strings.isNullOrEmpty(contentLength))
 			throw Exceptions.illegalArgument("Content-Length header is required");
@@ -211,7 +217,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 	// DELETE
 	//
 
-	public Payload delete(WebPath webPath, Context context) {
+	private Payload delete(WebPath webPath, Context context) {
 
 		String bucket = checkBucket(webPath);
 		String path = checkPath(webPath);
@@ -240,7 +246,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 	// POST
 	//
 
-	public Payload post(WebPath webPath, Context context) {
+	private Payload post(WebPath webPath, Context context) {
 
 		String op = context.get("op");
 
@@ -260,7 +266,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 				op, webPath);
 	}
 
-	public Payload list(WebPath webPath, Context context) {
+	private Payload list(WebPath webPath, Context context) {
 		String bucket = checkBucket(webPath);
 		String path = checkPath(webPath);
 
@@ -281,12 +287,12 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 				.build();
 	}
 
-	public Payload search(WebPath webPath, Context context) {
+	private Payload search(WebPath webPath, Context context) {
 		// TODO Auto-generated method stub
-		return null;
+		throw Exceptions.unsupportedOperation("service not yet implemented");
 	}
 
-	public Payload export(WebPath webPath, Context context) {
+	private Payload export(WebPath webPath, Context context) {
 		String bucket = webPath.first();
 
 		FileExportRequest request = Json.toPojo(//

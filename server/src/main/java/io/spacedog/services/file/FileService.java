@@ -241,12 +241,12 @@ public class FileService extends SpaceService {
 	// Settings
 	//
 
-	public InternalFileSettings settings() {
+	public InternalFileSettings listBuckets() {
 		return Services.settings().getOrThrow(InternalFileSettings.class);
 	}
 
 	public FileBucketSettings getBucketSettings(String bucket) {
-		FileBucketSettings bucketSettings = settings().get(bucket);
+		FileBucketSettings bucketSettings = listBuckets().get(bucket);
 		if (bucketSettings == null)
 			throw new NotFoundException("bucket [%s] not found", bucket);
 		return bucketSettings;
@@ -258,7 +258,7 @@ public class FileService extends SpaceService {
 	}
 
 	private void saveBucketSettings(FileBucketSettings bucket) {
-		InternalFileSettings fileSettings = settings();
+		InternalFileSettings fileSettings = listBuckets();
 		fileSettings.put(bucket.name, bucket);
 		Services.settings().save(fileSettings);
 	}

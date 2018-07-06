@@ -5,8 +5,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
@@ -140,8 +142,17 @@ public class FileClient {
 	// Buckets
 	//
 
+	public Map<String, FileBucketSettings> listBuckets() {
+		return dog.get("/1/files").go(200).asPojo(TypeFactory.defaultInstance()//
+				.constructMapLikeType(Map.class, String.class, FileBucketSettings.class));
+	}
+
+	public FileBucketSettings getBucket(String bucket) {
+		return dog.get("/1/files/{name}").routeParam("name", bucket).go(200).asPojo(FileBucketSettings.class);
+	}
+
 	public void setBucket(FileBucketSettings settings) {
-		dog.put("/1/files/" + settings.name).bodyPojo(settings).go(200);
+		dog.put("/1/files/{name}").routeParam("name", settings.name).bodyPojo(settings).go(200);
 	}
 
 }
