@@ -94,6 +94,6 @@ public class SearchRestyFrenchTest extends SpaceTest {
 	private long search(String text, String field) {
 		ESSearchSourceBuilder source = ESSearchSourceBuilder.searchSource()//
 				.query(ESQueryBuilders.matchQuery(field, text));
-		return superadmin.data().prepareSearch().refresh().source(source.toString()).go().total;
+		return superadmin.data().prepareSearch().refresh(true).source(source.toString()).go().total;
 	}
 }

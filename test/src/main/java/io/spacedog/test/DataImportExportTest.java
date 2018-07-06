@@ -62,13 +62,13 @@ public class DataImportExportTest extends SpaceTest {
 		// superamdin gets all message1 messages
 		List<DataWrap<Message>> messages1 = superadmin.data().prepareSearch()//
 				.source(ESSearchSourceBuilder.searchSource().toString())//
-				.type("message1").refresh()//
+				.type("message1").refresh(true)//
 				.go(Message.class).objects;
 
 		// superamdin gets all message2 messages
 		List<DataWrap<Message>> messages2 = superadmin.data().prepareSearch()//
 				.source(ESSearchSourceBuilder.searchSource().toString())//
-				.type("message2").refresh()//
+				.type("message2").refresh(true)//
 				.go(Message.class).objects;
 
 		// check message1 and message2 contains the same messages
@@ -108,13 +108,13 @@ public class DataImportExportTest extends SpaceTest {
 		ESSearchSourceBuilder source = ESSearchSourceBuilder.searchSource()//
 				.query(query);
 		List<DataWrap<Message>> messages1 = superadmin.data().prepareSearch()//
-				.source(source.toString()).type("message1").refresh()//
+				.source(source.toString()).type("message1").refresh(true)//
 				.go(Message.class).objects;
 
 		// superadmin gets all message2 messages
 		List<DataWrap<Message>> messages2 = superadmin.data().prepareSearch()//
 				.source(ESSearchSourceBuilder.searchSource().toString())//
-				.type("message2").refresh()//
+				.type("message2").refresh(true)//
 				.go(Message.class).objects;
 
 		// check message1 and message2 contains the same messages

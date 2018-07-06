@@ -339,7 +339,7 @@ public class DataRestyTest2 extends SpaceTest {
 		ESSearchSourceBuilder builder = ESSearchSourceBuilder.searchSource()//
 				.from(from).size(size);
 		DataResults<Message> results = user.data().prepareSearch()//
-				.type(Message.TYPE).source(builder.toString()).refresh().go(Message.class);
+				.type(Message.TYPE).source(builder.toString()).refresh(true).go(Message.class);
 
 		assertEquals(4, results.total);
 		assertEquals(size, results.objects.size());

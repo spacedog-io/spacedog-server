@@ -6,8 +6,8 @@ public abstract class DataSearchRequestBuilder {
 
 	private DataSearchRequest request = new DataSearchRequest();
 
-	public DataSearchRequestBuilder refresh() {
-		this.request.refresh = true;
+	public DataSearchRequestBuilder refresh(boolean refresh) {
+		this.request.refresh = refresh;
 		return this;
 	}
 

@@ -6,8 +6,8 @@ public class DataSearchRequest {
 	public String type;
 	public String source;
 
-	public DataSearchRequest refresh() {
-		this.refresh = true;
+	public DataSearchRequest refresh(boolean refresh) {
+		this.refresh = refresh;
 		return this;
 	}
 

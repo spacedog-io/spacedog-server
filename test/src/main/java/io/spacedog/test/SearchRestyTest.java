@@ -36,7 +36,7 @@ public class SearchRestyTest extends SpaceTest {
 		superadmin.data().save("message", Json.object("text", "pretty cool something, hein?"));
 		superadmin.data().save("message", Json.object("text", "so long guys"));
 
-		assertEquals(5, superadmin.data().prepareSearch().refresh().go().total);
+		assertEquals(5, superadmin.data().prepareSearch().refresh(true).go().total);
 
 		// search for messages with full text query
 		ESSearchSourceBuilder source = ESSearchSourceBuilder.searchSource().query(//
@@ -123,7 +123,7 @@ public class SearchRestyTest extends SpaceTest {
 				.build();
 
 		DataResults<ObjectNode> results = vince.data().prepareSearch()//
-				.source(query.toString()).refresh().go();
+				.source(query.toString()).refresh(true).go();
 
 		assertEquals(0, results.objects.size());
 		assertEquals(3, Json.get(results.aggregations, "distinctCities.buckets").size());
@@ -148,7 +148,7 @@ public class SearchRestyTest extends SpaceTest {
 		// search with ascendent sorting
 		ESSearchSourceBuilder searchSource = ESSearchSourceBuilder.searchSource().sort("i");
 		DataResults<ObjectNode> results = superadmin.data().prepareSearch()//
-				.source(searchSource.toString()).refresh().go();
+				.source(searchSource.toString()).refresh(true).go();
 		assertEquals(5, results.total);
 
 		for (int i = 0; i < results.objects.size(); i++) {
@@ -159,7 +159,7 @@ public class SearchRestyTest extends SpaceTest {
 		// search with descendant sorting
 		searchSource = ESSearchSourceBuilder.searchSource().sort("t", ESSortOrder.DESC);
 		results = superadmin.data().prepareSearch()//
-				.source(searchSource.toString()).refresh().go();
+				.source(searchSource.toString()).refresh(true).go();
 		assertEquals(5, results.total);
 
 		for (int i = 0; i < results.objects.size(); i++) {
