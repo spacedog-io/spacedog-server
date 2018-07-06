@@ -12,11 +12,7 @@ import com.google.common.collect.Sets;
 public class ObjectRolePermissions extends HashMap<String, RolePermissions> {
 
 	public ObjectRolePermissions put(String objectId, String role, Permission... permissions) {
-		RolePermissions rolePermissions = super.get(objectId);
-		if (rolePermissions == null) {
-			rolePermissions = new RolePermissions();
-			super.put(objectId, rolePermissions);
-		}
+		RolePermissions rolePermissions = get(objectId);
 		rolePermissions.put(role, permissions);
 		return this;
 	}
@@ -29,7 +25,11 @@ public class ObjectRolePermissions extends HashMap<String, RolePermissions> {
 	@Override
 	public RolePermissions get(Object objectId) {
 		RolePermissions roles = super.get(objectId);
-		return roles == null ? new RolePermissions() : roles;
+		if (roles == null) {
+			roles = new RolePermissions();
+			super.put(objectId.toString(), roles);
+		}
+		return roles;
 	}
 
 	public Set<String> accessList(Credentials credentials, Permission permission) {
