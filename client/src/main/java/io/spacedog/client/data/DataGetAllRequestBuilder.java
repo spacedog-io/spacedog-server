@@ -26,8 +26,8 @@ public abstract class DataGetAllRequestBuilder {
 		return this;
 	}
 
-	public DataGetAllRequestBuilder refresh() {
-		this.request.refresh = true;
+	public DataGetAllRequestBuilder refresh(boolean refresh) {
+		this.request.refresh = refresh;
 		return this;
 	}
 

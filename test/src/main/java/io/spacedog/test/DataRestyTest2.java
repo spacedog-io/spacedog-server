@@ -167,7 +167,7 @@ public class DataRestyTest2 extends SpaceTest {
 
 		// find by simple text search
 		DataResults<Sale> results = fred.data().prepareGetAll().type("sale")//
-				.q("museum").refresh().go(Sale.class);
+				.q("museum").refresh(true).go(Sale.class);
 
 		assertEquals(1, results.total);
 		assertAlmostEquals(sale, results.objects.get(0).source());
@@ -247,7 +247,7 @@ public class DataRestyTest2 extends SpaceTest {
 		superadmin.data().save(Message.TYPE, Json.object("text", "pretty cool, hein?"));
 		superadmin.data().save(Message.TYPE, Json.object("text", "so long guys"));
 
-		long total = superadmin.data().prepareGetAll().refresh().go().total;
+		long total = superadmin.data().prepareGetAll().refresh(true).go().total;
 		assertEquals(4, total);
 
 		// should succeed to delete all messages
@@ -255,7 +255,7 @@ public class DataRestyTest2 extends SpaceTest {
 		assertEquals(4, total);
 
 		// check no data anymore
-		total = superadmin.data().prepareGetAll().refresh().go().total;
+		total = superadmin.data().prepareGetAll().refresh(true).go().total;
 		assertEquals(0, total);
 	}
 

@@ -68,7 +68,7 @@ public class DataRestyTest extends SpaceTest {
 		assertAlmostEquals(car, car1.source());
 
 		// find by full text search
-		DataResults<ObjectNode> results = vince.data().prepareGetAll().refresh().q("inVENT*").go();
+		DataResults<ObjectNode> results = vince.data().prepareGetAll().refresh(true).q("inVENT*").go();
 		assertEquals(1, results.total);
 		assertEquals(carWrap.id(), results.objects.get(0).id());
 
@@ -133,7 +133,7 @@ public class DataRestyTest extends SpaceTest {
 
 		// find by full text search
 		DataResults<ObjectNode> results = vince.data().prepareGetAll()//
-				.refresh().q("inVENT*").go();
+				.refresh(true).q("inVENT*").go();
 		assertEquals(1, results.total);
 		assertEquals(id, results.objects.get(0).id());
 

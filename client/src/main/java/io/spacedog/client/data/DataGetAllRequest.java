@@ -28,8 +28,8 @@ public class DataGetAllRequest {
 		return this;
 	}
 
-	public DataGetAllRequest refresh() {
-		this.refresh = true;
+	public DataGetAllRequest refresh(boolean refresh) {
+		this.refresh = refresh;
 		return this;
 	}
 

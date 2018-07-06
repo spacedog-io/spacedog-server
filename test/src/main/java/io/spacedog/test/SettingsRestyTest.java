@@ -78,7 +78,7 @@ public class SettingsRestyTest extends SpaceTest {
 
 		// settings are not data objects
 
-		DataResults<ObjectNode> results = superadmin.data().prepareGetAll().refresh().go();
+		DataResults<ObjectNode> results = superadmin.data().prepareGetAll().refresh(true).go();
 		assertEquals(0, results.total);
 
 		// superadmin authorizes all to get/read animals settings

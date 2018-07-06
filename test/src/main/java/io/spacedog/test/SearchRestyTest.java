@@ -70,7 +70,7 @@ public class SearchRestyTest extends SpaceTest {
 		assertEquals(2, deleted);
 		assertEquals(2, //
 				superadmin.data().prepareGetAll()//
-						.type("message").refresh().go().total);
+						.type("message").refresh(true).go().total);
 
 		// deletes data objects containing 'wanna' or 'riri'
 		deleted = superadmin.data().prepareBulkDelete()//
@@ -83,7 +83,7 @@ public class SearchRestyTest extends SpaceTest {
 		assertEquals(2, deleted);
 
 		// only "what's up?" remains
-		results = superadmin.data().prepareGetAll().refresh().go();
+		results = superadmin.data().prepareGetAll().refresh(true).go();
 		assertEquals(1, results.total);
 		assertEquals("what's up?", //
 				results.objects.get(0).source().get("text").asText());

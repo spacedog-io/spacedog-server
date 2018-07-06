@@ -130,7 +130,7 @@ public class PushRestyTest extends SpaceTest {
 
 		// admin gets all installations
 		List<DataWrap<Installation>> installations = superadmin.data().prepareGetAll()//
-				.type(Installation.TYPE).refresh().go(Installation.class).objects;
+				.type(Installation.TYPE).refresh(true).go(Installation.class).objects;
 
 		assertEquals(5, installations.size());
 		Set<String> ids = Sets.newHashSet(unknownInstallId, daveInstall.id(), //
