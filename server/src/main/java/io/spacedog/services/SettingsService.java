@@ -49,7 +49,7 @@ public class SettingsService extends SpaceService {
 		register(SmsSettings.class);
 	}
 
-	private <K extends Settings> void register(Class<K> settingsClass) {
+	public <K extends Settings> void register(Class<K> settingsClass) {
 		registeredSettingsClasses.put(SettingsBase.id(settingsClass), settingsClass);
 	}
 
