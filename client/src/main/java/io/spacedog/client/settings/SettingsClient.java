@@ -115,7 +115,13 @@ public class SettingsClient {
 				.get("version").asLong();
 	}
 
-	// delete settings
+	//
+	// Delete
+	//
+
+	public void deleteAll() {
+		dog.delete("/1/settings").go(200);
+	}
 
 	public <K extends Settings> void delete(Class<K> settingsClass) {
 		delete(SettingsBase.id(settingsClass));
@@ -124,8 +130,6 @@ public class SettingsClient {
 	public void delete(String id) {
 		dog.delete("/1/settings/{id}").routeParam("id", id).go(200, 404);
 	}
-
-	// delete field
 
 	public <K extends Settings> long delete(Class<K> settingsClass, String field) {
 		return delete(SettingsBase.id(settingsClass), field);
