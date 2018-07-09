@@ -164,7 +164,7 @@ public class DataRestyTest extends SpaceTest {
 		DataSettings settings = new DataSettings();
 		settings.acl().put(schema.name(), Roles.user, Permission.create, Permission.readMine);
 		settings.acl().put(schema.name(), "operator", Permission.create, Permission.update, //
-				Permission.updateMeta, Permission.read);
+				Permission.forceMeta, Permission.read);
 		superadmin.data().settings(settings);
 
 		// old message to insert again in database

@@ -145,10 +145,15 @@ public class DataClient implements SpaceFields, SpaceParams {
 	}
 
 	public <K> DataWrap<K> save(DataWrap<K> object) {
+		return save(object, false);
+	}
+
+	public <K> DataWrap<K> save(DataWrap<K> object, boolean forceMeta) {
 
 		if (object.id() == null)
 			return dog.post("/1/data/{type}")//
 					.routeParam(TYPE_FIELD, object.type())//
+					.queryParam(FORCE_META_PARAM, forceMeta)//
 					.bodyPojo(object.source())//
 					.go(201)//
 					.asPojo(object);
@@ -156,6 +161,7 @@ public class DataClient implements SpaceFields, SpaceParams {
 		SpaceRequest request = dog.put("/1/data/{type}/{id}")//
 				.routeParam(TYPE_FIELD, object.type())//
 				.routeParam(ID_FIELD, object.id())//
+				.queryParam(FORCE_META_PARAM, forceMeta)//
 				.bodyPojo(object.source());
 
 		if (object.version() > 0)
