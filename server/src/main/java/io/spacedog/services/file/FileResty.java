@@ -132,12 +132,10 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 
 		String bucket = checkBucket(webPath);
 
-		if (webPath.size() == 1) {
-			createBucket(bucket, context);
-			return JsonPayload.ok().build();
-		} else {
+		if (webPath.size() == 1)
+			return createBucket(bucket, context);
+		else
 			return doPut(bucket, webPath, context);
-		}
 	}
 
 	private Payload doPut(String bucket, WebPath webPath, Context context) {
@@ -181,11 +179,14 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 				.build();
 	}
 
-	private void createBucket(String bucket, Context context) {
+	private Payload createBucket(String bucket, Context context) {
 		Server.context().credentials().checkAtLeastSuperAdmin();
 		FileBucketSettings bucketSettings = Json.toPojo(//
 				getRequestContentAsBytes(context), FileBucketSettings.class);
 		Services.files().setBucketSettings(bucketSettings);
+		return JsonPayload.saved(false).withFields("id", bucket, "type", "bucket")//
+				.withLocation("/1/files/" + bucket)//
+				.build();
 	}
 
 	private String fileContentType(String fileName, Context context) {
