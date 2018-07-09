@@ -249,7 +249,7 @@ public class PushRestyTest extends SpaceTest {
 		assertHttpError(403, () -> vince.data().save(//
 				new Installation().appId("XXX").token("XXX").protocol(PushProtocol.GCM), //
 				daveInstall.id()));
-		assertHttpError(403, () -> vince.data().save(Installation.TYPE, daveInstall.id(), "badge", 0));
+		assertHttpError(403, () -> vince.data().saveField(Installation.TYPE, daveInstall.id(), "badge", 0));
 		assertHttpError(403, () -> vince.data().delete(Installation.TYPE, daveInstall.id()));
 
 		// dave can not update his installation app id

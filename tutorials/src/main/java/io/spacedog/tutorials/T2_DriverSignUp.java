@@ -63,7 +63,7 @@ public class T2_DriverSignUp extends DemoBase {
 
 		// max sets her status to 'working'
 
-		max.data().save("driver", max.id(), "status", "working");
+		max.data().saveField("driver", max.id(), "status", "working");
 
 		// max's phone sets regularly her last known position
 
@@ -71,7 +71,7 @@ public class T2_DriverSignUp extends DemoBase {
 		location.when = DateTime.now();
 		location.where = new GeoPoint(48.816674, 2.230359);
 
-		max.data().save("driver", max.id(), "lastLocation", location);
+		max.data().saveField("driver", max.id(), "lastLocation", location);
 	}
 
 	@Test

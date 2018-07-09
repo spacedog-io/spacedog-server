@@ -218,19 +218,19 @@ public class DataClient implements SpaceFields, SpaceParams {
 	// Field methods
 	//
 
-	public <K> K get(String type, String id, String field, Class<K> dataClass) {
+	public <K> K getField(String type, String id, String field, Class<K> dataClass) {
 		return dog.get("/1/data/{t}/{i}/{f}").routeParam("i", id)//
 				.routeParam("t", type).routeParam("f", field)//
 				.go(200).asPojo(dataClass);
 	}
 
-	public long save(String type, String id, String field, Object object) {
+	public long saveField(String type, String id, String field, Object object) {
 		return dog.put("/1/data/{t}/{i}/{f}").routeParam("i", id)//
 				.routeParam("t", type).routeParam("f", field)//
 				.bodyPojo(object).go(200).get(VERSION_FIELD).asLong();
 	}
 
-	public Long delete(String type, String id, String field) {
+	public Long deleteField(String type, String id, String field) {
 		return dog.delete("/1/data/{t}/{i}/{f}")//
 				.routeParam("i", id).routeParam("t", type)//
 				.routeParam("f", field).go(200).get(VERSION_FIELD).asLong();

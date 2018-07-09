@@ -99,7 +99,7 @@ public class PushClient {
 	}
 
 	public long saveInstallationField(String id, String field, Object object) {
-		return dog.data().save(TYPE, id, field, object);
+		return dog.data().saveField(TYPE, id, field, object);
 	}
 
 	public DataResults<Installation> searchInstallations(ESSearchSourceBuilder source) {
@@ -119,15 +119,15 @@ public class PushClient {
 	//
 
 	public String[] getTags(String installationId) {
-		return dog.data().get(TYPE, installationId, "tags", String[].class);
+		return dog.data().getField(TYPE, installationId, "tags", String[].class);
 	}
 
 	public long setTags(String installationId, String... tags) {
-		return dog.data().save(TYPE, installationId, "tags", tags);
+		return dog.data().saveField(TYPE, installationId, "tags", tags);
 	}
 
 	public long deleteTags(String installationId) {
-		return dog.data().delete(TYPE, installationId, "tags");
+		return dog.data().deleteField(TYPE, installationId, "tags");
 	}
 
 	//
