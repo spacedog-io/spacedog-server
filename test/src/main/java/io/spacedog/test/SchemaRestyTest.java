@@ -54,8 +54,8 @@ public class SchemaRestyTest extends SpaceTest {
 		// user is not allowed to delete schema
 		assertHttpError(403, () -> bob.schemas().delete("sale"));
 
-		// superadmin can delete a non existing schema
-		superadmin.schemas().delete("XXX");
+		// superadmin faisl to delete a non existing schema
+		assertHttpError(404, () -> superadmin.schemas().delete("XXX"));
 
 		// admin deletes a schema and all its objects
 		superadmin.delete("sale");
@@ -151,19 +151,6 @@ public class SchemaRestyTest extends SpaceTest {
 	// Schema schemaServer = superadmin.schemas().get(schemaClient.name());
 	// assertEquals(schemaClient, schemaServer);
 	// }
-
-	@Test
-	public void schemaNameSettingsIsReserved() {
-
-		// prepare
-		prepareTest();
-		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearServer();
-
-		// settings is a reserved schema name
-		guest.get("/1/schemas/settings").go(400);
-		superadmin.put("/1/schemas/settings").go(400);
-	}
 
 	@Test
 	public void testStashField() {

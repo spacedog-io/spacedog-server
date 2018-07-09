@@ -1,11 +1,11 @@
 package io.spacedog.services.data;
 
+import java.util.Arrays;
 import java.util.Map;
 
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
-import org.elasticsearch.indices.TypeMissingException;
 
 import com.carrotsearch.hppc.cursors.ObjectCursor;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -28,10 +28,12 @@ public class SchemaService extends SpaceService {
 	}
 
 	public void delete(String name) {
-		try {
-			elastic().deleteIndex(Services.data().index(name));
-		} catch (TypeMissingException ignored) {
-		}
+		elastic().deleteIndex(Services.data().index(name));
+	}
+
+	public void deleteAll() {
+		Arrays.stream(Services.data().indices())//
+				.forEach(index -> elastic().deleteIndex(index));
 	}
 
 	public void set(Schema schema) {

@@ -27,8 +27,11 @@ public class SchemaClient {
 	}
 
 	public void delete(String name) {
-		dog.delete("/1/schemas/{name}")//
-				.routeParam("name", name).go(200, 404);
+		dog.delete("/1/schemas/{name}").routeParam("name", name).go(200);
+	}
+
+	public void deleteAll() {
+		dog.delete("/1/schemas").go(200);
 	}
 
 	public void set(Schema schema) {

@@ -7,6 +7,8 @@ import java.util.Map;
 
 import org.elasticsearch.common.Strings;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import io.spacedog.client.schema.Schema;
 import io.spacedog.server.JsonPayload;
 import io.spacedog.server.Server;
@@ -30,18 +32,24 @@ public class SchemaResty extends SpaceResty {
 
 	@Get("")
 	@Get("/")
-	public Payload getAll(Context context) {
+	public ObjectNode getAll(Context context) {
 		Map<String, Schema> all = Services.schemas().getAll();
 		JsonMerger merger = Json.merger();
 		all.values().forEach(schema -> merger.merge(schema.mapping()));
-		return JsonPayload.ok().withContent(merger.get()).build();
+		return merger.get();
+	}
+
+	@Delete("")
+	@Delete("/")
+	public void deleteAll() {
+		Server.context().credentials().checkAtLeastSuperAdmin();
+		Services.schemas().deleteAll();
 	}
 
 	@Get("/:type")
 	@Get("/:type/")
-	public Payload get(String type) {
-		Schema schema = Services.schemas().get(type);
-		return JsonPayload.ok().withContent(schema.mapping()).build();
+	public ObjectNode get(String type) {
+		return Services.schemas().get(type).mapping();
 	}
 
 	@Put("/:type")
@@ -63,10 +71,9 @@ public class SchemaResty extends SpaceResty {
 
 	@Delete("/:type")
 	@Delete("/:type/")
-	public Payload delete(String type) {
+	public void delete(String type) {
 		Server.context().credentials().checkAtLeastAdmin();
 		Services.schemas().delete(type);
-		return JsonPayload.ok().build();
 	}
 
 }
