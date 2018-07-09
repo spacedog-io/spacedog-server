@@ -14,6 +14,20 @@ public class SchemaBuilder implements MappingDirectives {
 		return new SchemaBuilder(type);
 	}
 
+	public SchemaBuilder dynamicStrict() {
+		return dynamic(m_strict);
+	}
+
+	public SchemaBuilder dynamic(String type) {
+		builder.add(m_dynamic, type);
+		return this;
+	}
+
+	public SchemaBuilder dateDetection(boolean detection) {
+		builder.add(m_date_detection, detection);
+		return this;
+	}
+
 	public SchemaBuilder property(String name, String type) {
 		if (openProperty)
 			builder.end();

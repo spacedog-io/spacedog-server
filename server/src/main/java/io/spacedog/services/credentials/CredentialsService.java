@@ -510,6 +510,10 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 
 	public Schema schema() {
 		return Schema.builder(SERVICE_NAME)//
+
+				.dynamicStrict()//
+				.dateDetection(false)//
+
 				.keyword(USERNAME_FIELD)//
 				.keyword(EMAIL_FIELD)//
 				.keyword(ROLES_FIELD)//
