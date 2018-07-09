@@ -727,7 +727,7 @@ public class Json {
 		return node;
 	}
 
-	public static JsonNode fullRemove(JsonNode node, String fieldName) {
+	public static JsonNode removeDeeply(JsonNode node, String fieldName) {
 		List<JsonNode> parents = node.findParents(fieldName);
 		for (JsonNode parent : parents)
 			((ObjectNode) parent).remove(fieldName);

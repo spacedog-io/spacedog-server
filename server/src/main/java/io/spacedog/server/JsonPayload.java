@@ -119,9 +119,6 @@ public class JsonPayload implements SpaceFields {
 	}
 
 	public static JsonPayload saved(DataWrap<?> object) {
-		// return JsonPayload.saved(object.isCreated(), "/1/data", object.type(),
-		// object.id())
-		// .withVersion(object.version());
 		return JsonPayload.saved(object.isCreated()).withContent(object);
 	}
 
