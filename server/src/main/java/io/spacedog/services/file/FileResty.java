@@ -5,6 +5,8 @@ package io.spacedog.services.file;
 
 import java.util.List;
 
+import org.joda.time.DateTime;
+
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
@@ -144,6 +146,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		FileBucketSettings settings = Services.files().getBucketSettings(bucket);
 		Credentials credentials = Server.context().credentials();
 		long contentLength = checkContentLength(context, settings.sizeLimitInKB);
+		DateTime now = DateTime.now();
 
 		SpaceFile file = Services.files().getMeta(bucket, path, false);
 
@@ -151,6 +154,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 			settings.permissions.check(credentials, Permission.create);
 			file = new SpaceFile(path);
 			file.setName(webPath.last());
+			file.createdAt(now);
 		} else
 			settings.permissions.checkUpdate(credentials, file.owner(), file.group());
 
@@ -158,6 +162,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		file.owner(credentials.id());
 		file.group(credentials.group());
 		file.setContentType(fileContentType(file.getName(), context));
+		file.updatedAt(now);
 
 		file = Services.files().upload(bucket, file, getRequestContentAsInputStream(context));
 
