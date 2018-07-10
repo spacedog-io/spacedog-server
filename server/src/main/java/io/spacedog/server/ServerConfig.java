@@ -22,6 +22,7 @@ public class ServerConfig {
 	private static final String PRODUCTION = "spacedog.server.production";
 	private static final String OFFLINE = "spacedog.server.offline";
 	private static final String FILE_STORE = "spacedog.server.file.store";
+	private static final String FILE_STORE_PATH = "spacedog.server.file.store.path";
 	private static final String GREEN_CHECK = "spacedog.server.green.check";
 	private static final String GREEN_TIMEOUT = "spacedog.server.green.timeout";
 	private static final String USER_AGENT = "spacedog.server.user.agent";
@@ -128,6 +129,10 @@ public class ServerConfig {
 
 	public static Optional7<String> fileStore() {
 		return SpaceEnv.env().get(FILE_STORE);
+	}
+
+	public static Path fileStorePath() {
+		return Paths.get(SpaceEnv.env().getOrElseThrow(FILE_STORE_PATH));
 	}
 
 	public static void log() {
