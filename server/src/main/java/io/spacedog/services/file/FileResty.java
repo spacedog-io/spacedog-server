@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
@@ -166,22 +167,15 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 
 		file = Services.files().upload(bucket, file, getRequestContentAsInputStream(context));
 
-		StringBuilder location = SpaceResty.spaceUrl("/1/files/")//
-				.append(bucket).append(file.getEscapedPath());
+		ObjectNode fileNode = Json.toObjectNode(file);
 
-		return JsonPayload.ok()//
-				.withFields("bucket", bucket, //
-						NAME_FIELD, file.getName(), //
-						PATH_FIELD, file.getPath(), //
-						LENGTH_FIELD, file.getLength(), //
-						HASH_FIELD, file.getHash(), //
-						ENCRYPTION_FIELD, file.getEncryption(), //
-						CREATED_AT_FIELD, file.createdAt(), //
-						UPDATED_AT_FIELD, file.updatedAt(), //
-						OWNER_FIELD, file.owner(), //
-						GROUP_FIELD, file.group(), //
-						"location", location)
-				.build();
+		// TODO
+		// Do we really need to add these?
+		fileNode.put("bucket", bucket);
+		fileNode.put("location", SpaceResty.spaceUrl("/1/files/")//
+				.append(bucket).append(file.getEscapedPath()).toString());
+
+		return JsonPayload.ok().withContent(fileNode).build();
 	}
 
 	private Payload createBucket(String bucket, Context context) {
