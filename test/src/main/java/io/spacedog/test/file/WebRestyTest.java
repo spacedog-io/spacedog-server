@@ -14,11 +14,23 @@ import io.spacedog.test.SpaceTest;
 
 public class WebRestyTest extends SpaceTest {
 
+	@Test
+	public void testDefault404() {
+
+		// prepare
+		prepareTest();
+		superdog().admin().clearBackend(false);
+
+		// browse without bucket returns default not found html page
+		SpaceRequest.get("/1/web").go(404)//
+				.assertHeaderEquals("text/html", SpaceHeaders.CONTENT_TYPE);
+	}
+
 	private static final String WWW = "www";
 	private static SpaceDog superadmin;
 
 	@Test
-	public void test() {
+	public void testWebBrowsing() {
 
 		// prepare
 		prepareTest();
@@ -74,10 +86,6 @@ public class WebRestyTest extends SpaceTest {
 		browse("/c", html("/index.html"));
 		browse("/a/", html("/index.html"));
 		browse("/a/b/c/index.html", html("/index.html"));
-
-		// browse without bucket returns default not found html page
-		superadmin.get("/1/web").go(404)//
-				.assertHeaderEquals("text/html", SpaceHeaders.CONTENT_TYPE);
 	}
 
 	private void upload(String uri) {
