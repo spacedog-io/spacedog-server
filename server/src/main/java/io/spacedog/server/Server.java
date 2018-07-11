@@ -83,16 +83,8 @@ public class Server implements Extensions {
 	}
 
 	public static void main(String[] args) {
-		DateTimeZone.setDefault(DateTimes.PARIS);
-		initJsonMapper();
 		Server server = new Server();
 		server.start();
-	}
-
-	private static void initJsonMapper() {
-		SimpleModule module = new SimpleModule()//
-				.addSerializer(Aggregation.class, new AggregationSerializer());
-		Json.mapper().registerModule(module);
 	}
 
 	public void start() {
@@ -117,10 +109,18 @@ public class Server implements Extensions {
 	}
 
 	protected void init() {
+		DateTimeZone.setDefault(DateTimes.PARIS);
+		initJsonMapper();
 		ServerConfig.log();
 		System.setProperty("http.agent", ServerConfig.userAgent());
 		String string = ClassResources.loadAsString(Server.class, "info.json");
 		info = Json.toPojo(string, Info.class);
+	}
+
+	protected void initJsonMapper() {
+		SimpleModule module = new SimpleModule()//
+				.addSerializer(Aggregation.class, new AggregationSerializer());
+		Json.mapper().registerModule(module);
 	}
 
 	protected void startElastic()
@@ -234,12 +234,11 @@ public class Server implements Extensions {
 		routes.filter(SpaceContext.checkBackendFilter())//
 				.filter(new CrossOriginFilter())//
 				.filter(new LogFilter())//
-				.filter(SpaceContext.checkAuthorizationFilter())//
-				// web filter before error filter
-				// so web errors are html pages
-				.filter(new WebResty())//
 				.filter(new DebugFilter())//
-				.filter(new ServiceErrorFilter())//
+				.filter(ErrorFilters.global())//
+				.filter(SpaceContext.checkAuthorizationFilter())//
+				.filter(new WebResty())//
+				.filter(ErrorFilters.specific())//
 				.filter(new FileResty());
 
 		routes.setExtensions(this);

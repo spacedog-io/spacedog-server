@@ -142,7 +142,7 @@ public class Exceptions {
 	//
 
 	public static SpaceException unsupportedHttpRequest(String method, String uri) {
-		return new SpaceException("unsupported", 405, "http request [%s][%s] is not supported", method, uri);
+		return new SpaceException("unsupported", 405, "[%s][%s] is not supported", method, uri);
 	}
 
 }
