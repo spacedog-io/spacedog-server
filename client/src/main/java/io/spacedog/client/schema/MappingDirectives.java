@@ -26,6 +26,7 @@ public interface MappingDirectives {
 	String m_date_detection = "date_detection";
 	String m_strict = "strict";
 	String m_meta = "_meta";
+	String m_fields = "fields";
 
 	// values
 	String m_french = "french";

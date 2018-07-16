@@ -45,7 +45,17 @@ public class SchemaBuilder implements MappingDirectives {
 	}
 
 	public SchemaBuilder text(String key) {
+		return text(key, false);
+	}
+
+	public SchemaBuilder text(String key, boolean addRawSubField) {
 		property(key, m_text);
+		if (addRawSubField)
+			builder.object(m_fields)//
+					.object("raw")//
+					.add(m_type, m_keyword)//
+					.end()//
+					.end();
 		return this;
 	}
 
