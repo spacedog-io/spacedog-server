@@ -164,7 +164,7 @@ public class Json {
 			return checkObject(node);
 	}
 
-	public static void remove(JsonNode json, String fieldPath) {
+	public static JsonNode remove(JsonNode json, String fieldPath) {
 
 		int lastDotIndex = fieldPath.lastIndexOf('.');
 		String lastPathName = fieldPath.substring(lastDotIndex + 1);
@@ -176,9 +176,9 @@ public class Json {
 		}
 
 		if (parent.isObject())
-			((ObjectNode) parent).remove(lastPathName);
+			return ((ObjectNode) parent).remove(lastPathName);
 		else if (parent.isArray())
-			((ArrayNode) parent).remove(Integer.parseInt(lastPathName));
+			return ((ArrayNode) parent).remove(Integer.parseInt(lastPathName));
 		else
 			throw Exceptions.invalidFieldPath(json, fieldPath);
 	}
