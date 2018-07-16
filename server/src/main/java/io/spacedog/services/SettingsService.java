@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Maps;
 
+import io.spacedog.client.admin.BackendSettings;
 import io.spacedog.client.credentials.CredentialsSettings;
 import io.spacedog.client.data.DataSettings;
 import io.spacedog.client.email.EmailSettings;
@@ -47,6 +48,7 @@ public class SettingsService extends SpaceService {
 		register(DataSettings.class);
 		register(EmailSettings.class);
 		register(SmsSettings.class);
+		register(BackendSettings.class);
 	}
 
 	public <K extends Settings> void register(Class<K> settingsClass) {
