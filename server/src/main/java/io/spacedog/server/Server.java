@@ -276,7 +276,7 @@ public class Server implements Extensions {
 			return new SimpleServerWrapper(httpHandler, webSocketHandler, 12, 1, 1);
 		}
 
-		public Payload executeRequest(Request request, Response response) throws Exception {
+		protected Payload executeRequest(Request request, Response response) throws Exception {
 			return routesProvider.get().apply(request, response);
 		}
 
@@ -359,6 +359,7 @@ public class Server implements Extensions {
 			list.clear();
 		}
 	}
+
 	//
 	// Singleton
 	//
