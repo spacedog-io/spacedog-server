@@ -51,11 +51,6 @@ public class LogFilter implements SpaceFilter, SpaceFields {
 			payload = JsonPayload.error(t).build();
 		}
 
-		if (payload == null)
-			payload = JsonPayload.error(500, //
-					"unexpected null payload for [%s] request to [%s]", context.method(), uri)//
-					.build();
-
 		try {
 			log(uri, context, receivedAt, payload);
 		} catch (Exception e) {
