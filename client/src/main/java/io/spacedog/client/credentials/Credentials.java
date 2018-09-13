@@ -205,16 +205,18 @@ public class Credentials implements SpaceFields {
 	}
 
 	public Credentials addRoles(String... roles) {
-		for (String role : roles) {
-			Roles.checkIfValid(role);
-			this.roles.add(role);
-		}
+		if (roles != null)
+			for (String role : roles) {
+				Roles.checkIfValid(role);
+				this.roles.add(role);
+			}
 		return this;
 	}
 
 	public Credentials removeRoles(String... roles) {
-		for (String role : roles)
-			this.roles.remove(role);
+		if (roles != null)
+			for (String role : roles)
+				this.roles.remove(role);
 		return this;
 	}
 

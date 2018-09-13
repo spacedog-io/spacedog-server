@@ -46,7 +46,6 @@ import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
-import io.spacedog.utils.Utils;
 
 public class CredentialsService extends SpaceService implements SpaceParams, SpaceFields {
 
@@ -278,12 +277,10 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 		Credentials requester = Server.context().credentials();
 		Credentials credentials = new Credentials();
 
-		if (Utils.isNullOrEmpty(request.roles()))
+		requester.checkCanManage(request.roles());
+		credentials.addRoles(request.roles());
+		if (!credentials.isAtLeastUser())
 			credentials.addRoles(defaultRole);
-		else {
-			requester.checkCanManage(request.roles());
-			credentials.addRoles(request.roles());
-		}
 
 		credentials.group(requester.group());
 		if (Strings.isNullOrEmpty(credentials.group()))

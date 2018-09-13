@@ -393,4 +393,20 @@ public class CredentialsRestyTest extends SpaceTest {
 		Credentials credentials = fred.credentials().me(true);
 		assertEquals("fred2", credentials.username());
 	}
+
+	@Test
+	public void credentialsCreatedWitOrWithhoutRoleShouldBeUsers() {
+
+		// prepare
+		prepareTest();
+		SpaceDog superadmin = clearServer();
+		SpaceDog fred = createTempDog(superadmin, "fred");
+		SpaceDog nath = createTempDog(superadmin, "nath", "superwoman");
+		SpaceDog vince = createTempDog(superadmin, "vince", "admin");
+
+		assertTrue(fred.credentials().me().isUser());
+		assertTrue(nath.credentials().me().isUser());
+		assertFalse(vince.credentials().me().isUser());
+		assertTrue(vince.credentials().me().isAdmin());
+	}
 }
