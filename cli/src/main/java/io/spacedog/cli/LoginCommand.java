@@ -26,6 +26,7 @@ public class LoginCommand extends AbstractCommand<LoginCommand> {
 
 	@Parameter(names = { "-b", "--backend" }, //
 			required = true, //
+			converter = SpaceBackendConverter.class, //
 			description = "the backend to login to (ex. https://vick.spacedog.io)")
 	private SpaceBackend backend;
 
