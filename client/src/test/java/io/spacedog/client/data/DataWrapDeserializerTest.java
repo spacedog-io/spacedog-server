@@ -76,7 +76,7 @@ public class DataWrapDeserializerTest extends Assert {
 		message.priority = 2;
 		message.isPublic = true;
 
-		DataWrap<Message> original = DataWrap.wrap(new Message())//
+		DataWrap<Message> original = DataWrap.wrap(message)//
 				.id("123").type("message").version(2).score(2.3f)//
 				.sort(new Object[] { 1.2d, "toto" });
 
