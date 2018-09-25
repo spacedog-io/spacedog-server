@@ -119,10 +119,10 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		return payload;
 	}
 
-	private SpaceFile checkRead(String bucket, String id) {
+	private SpaceFile checkRead(String bucket, String path) {
 		RolePermissions bucketRoles = Services.files().getBucketSettings(bucket).permissions;
 		Credentials credentials = Server.context().credentials();
-		SpaceFile file = Services.files().getMeta(bucket, id, true);
+		SpaceFile file = Services.files().getMeta(bucket, path, true);
 		bucketRoles.checkRead(credentials, file.owner(), file.group());
 		return file;
 	}
