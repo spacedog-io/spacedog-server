@@ -17,26 +17,29 @@ public class Exceptions {
 	public static final String EXPIRED_ACCESS_TOKEN = "expired-access-token";
 	public static final String INVALID_CREDENTIALS = "invalid-credentials";
 
-	public static RuntimeException runtime(String message, Object... args) {
-		return new RuntimeException(String.format(message, args));
+	//
+	// Generic
+	//
+
+	public static SpaceException space(String code, int httpStatus, String message, Object... args) {
+		return new SpaceException(code, httpStatus, message, args);
 	}
 
-	public static RuntimeException runtime(Throwable t) {
-		return new RuntimeException(t);
+	public static SpaceException space(String code, int httpStatus, Throwable cause, String message, Object... args) {
+		return new SpaceException(code, httpStatus, cause, message, args);
 	}
 
-	public static RuntimeException runtime(Throwable t, String message, Object... args) {
-		return new RuntimeException(String.format(message, args), t);
+	public static SpaceException space(int httpStatus, String message, Object... args) {
+		return new SpaceException(httpStatus, message, args);
 	}
 
-	public static UnsupportedOperationException unsupportedOperation(String message, Object... args) {
-		return new UnsupportedOperationException(String.format(message, args));
+	public static SpaceException space(int httpStatus, Throwable cause, String message, Object... args) {
+		return new SpaceException(httpStatus, cause, message, args);
 	}
 
-	public static UnsupportedOperationException unsupportedOperation(Class<?> objectClass) {
-		return unsupportedOperation("class [%s] doesn't implement this operation", //
-				objectClass.getSimpleName());
-	}
+	//
+	// 400
+	//
 
 	public static IllegalArgumentException illegalArgument(String message, Object... args) {
 		return new IllegalArgumentException(String.format(message, args));
@@ -54,49 +57,9 @@ public class Exceptions {
 		return illegalArgument("field path [%s] invalid for [%s]", fieldPath, json);
 	}
 
-	public static NotFoundException notFound(String type, String id) {
-		return new NotFoundException("[%s][%s] not found", type, id);
-	}
-
-	public static SpaceException space(int httpStatus, String message, Object... args) {
-		return new SpaceException(httpStatus, message, args);
-	}
-
-	public static SpaceException space(int httpStatus, Throwable cause, String message, Object... args) {
-		return new SpaceException(httpStatus, cause, message, args);
-	}
-
-	public static SpaceException illegalState(String message, Object... args) {
-		return new SpaceException(409, message, args);
-	}
-
-	public static SpaceException illegalState(Throwable t, String message, Object... args) {
-		return new SpaceException(409, message, args);
-	}
-
-	public static ForbiddenException forbidden(String message, Object... args) {
-		return new ForbiddenException(message, args);
-	}
-
-	public static SpaceException insufficientCredentials(Credentials credentials) {
-		return credentials.isGuest() ? noAuthorizationHeader()//
-				: forbidden("[%s][%s] has insufficient credentials", //
-						credentials.type(), credentials.username());
-	}
-
 	public static SpaceException alreadyExists(String type, String value) {
 		return new SpaceException(ALREADY_EXISTS, 400, "[%s][%s] already exists", //
 				type, value);
-	}
-
-	public static SpaceException passwordMustBeChallenged() {
-		return new SpaceException(UNCHALLENGED_PASSWORD, 403, "password must be challenged");
-	}
-
-	public static SpaceException passwordMustChange(Credentials credentials) {
-		return new SpaceException(PASSWORD_MUST_CHANGE, 403, //
-				"[%s][%s] credentials password must change", //
-				credentials.type(), credentials.username());
 	}
 
 	//
@@ -138,11 +101,84 @@ public class Exceptions {
 	}
 
 	//
+	// 401/403
+	//
+
+	public static SpaceException insufficientCredentials(Credentials credentials) {
+		return credentials.isGuest() ? noAuthorizationHeader()//
+				: forbidden("[%s][%s] has insufficient credentials", //
+						credentials.type(), credentials.username());
+	}
+
+	//
+	// 403
+	//
+
+	public static ForbiddenException forbidden(String message, Object... args) {
+		return new ForbiddenException(message, args);
+	}
+
+	public static SpaceException passwordMustBeChallenged() {
+		return new SpaceException(UNCHALLENGED_PASSWORD, 403, "password must be challenged");
+	}
+
+	public static SpaceException passwordMustChange(Credentials credentials) {
+		return new SpaceException(PASSWORD_MUST_CHANGE, 403, //
+				"[%s][%s] credentials password must change", //
+				credentials.type(), credentials.username());
+	}
+
+	//
+	// 404
+	//
+
+	public static NotFoundException notFound(String type, String id) {
+		return new NotFoundException("[%s][%s] not found", type, id);
+	}
+
+	//
 	// 405
 	//
 
 	public static SpaceException unsupportedHttpRequest(String method, String uri) {
 		return new SpaceException("unsupported", 405, "[%s][%s] is not supported", method, uri);
+	}
+
+	public static UnsupportedOperationException unsupportedOperation(String message, Object... args) {
+		return new UnsupportedOperationException(String.format(message, args));
+	}
+
+	public static UnsupportedOperationException unsupportedOperation(Class<?> objectClass) {
+		return unsupportedOperation("class [%s] doesn't implement this operation", //
+				objectClass.getSimpleName());
+	}
+
+	//
+	// 409
+	//
+
+	public static SpaceException illegalState(String message, Object... args) {
+		return new SpaceException(409, message, args);
+	}
+
+	public static SpaceException illegalState(Throwable t, String message, Object... args) {
+		return new SpaceException(409, message, args);
+	}
+
+	//
+	// 500
+	//
+
+	public static RuntimeException runtime(String message, Object... args) {
+		return new RuntimeException(String.format(message, args));
+	}
+
+	public static RuntimeException runtime(Throwable t) {
+		return new RuntimeException(t);
+	}
+
+	public static RuntimeException runtime(Throwable t, String message, Object... args) {
+		return new RuntimeException(String.format(message, args), t);
 	}
 
 }
