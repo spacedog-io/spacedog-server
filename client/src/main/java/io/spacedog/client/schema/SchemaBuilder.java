@@ -5,6 +5,7 @@ package io.spacedog.client.schema;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.JsonBuilder;
 
@@ -45,18 +46,7 @@ public class SchemaBuilder implements MappingDirectives {
 	}
 
 	public SchemaBuilder text(String key) {
-		return text(key, false);
-	}
-
-	public SchemaBuilder text(String key, boolean addRawSubField) {
-		property(key, m_text);
-		if (addRawSubField)
-			builder.object(m_fields)//
-					.object("raw")//
-					.add(m_type, m_keyword)//
-					.end()//
-					.end();
-		return this;
+		return property(key, m_text);
 	}
 
 	public SchemaBuilder bool(String key) {
@@ -137,6 +127,36 @@ public class SchemaBuilder implements MappingDirectives {
 		builder.end();
 		return this;
 	}
+
+	//
+	// raw sub fields
+	//
+
+	public SchemaBuilder rawKeyword() {
+		return raw(m_keyword);
+	}
+
+	public SchemaBuilder rawText(String analyzer) {
+		return raw(m_text, m_analyzer, analyzer);
+	}
+
+	public SchemaBuilder raw(String type, Object... attributes) {
+		if (!this.openProperty)
+			throw Exceptions.illegalState("only applicable on a field");
+
+		builder.object(m_fields)//
+				.object("raw")//
+				.add(m_type, type)//
+				.add(attributes)//
+				.end()//
+				.end();
+
+		return this;
+	}
+
+	//
+	// field attributes
+	//
 
 	public SchemaBuilder french() {
 		return language("french");
