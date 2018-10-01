@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.test;
+package io.spacedog.test.data;
 
 import java.util.Map;
 
@@ -14,6 +14,7 @@ import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.data.DataSettings;
 import io.spacedog.client.schema.Schema;
+import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Json;
 
 public class SchemaRestyTest extends SpaceTest {

@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.test;
+package io.spacedog.test.credentials;
 
 import org.junit.Test;
 
@@ -10,6 +10,7 @@ import io.spacedog.client.credentials.CredentialsSettings;
 import io.spacedog.client.credentials.CredentialsSettings.OAuthSettings;
 import io.spacedog.client.http.SpaceEnv;
 import io.spacedog.client.http.SpaceRequest;
+import io.spacedog.test.SpaceTest;
 
 public class LinkedinRestyTest extends SpaceTest {
 

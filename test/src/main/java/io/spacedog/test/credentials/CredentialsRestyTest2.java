@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.test;
+package io.spacedog.test.credentials;
 
 import java.util.List;
 import java.util.Set;
@@ -20,6 +20,7 @@ import io.spacedog.client.credentials.Passwords;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.client.http.SpaceRequestException;
+import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Json;
 
 public class CredentialsRestyTest2 extends SpaceTest {

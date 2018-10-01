@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.test;
+package io.spacedog.test.data;
 
 import java.util.List;
 
@@ -13,6 +13,8 @@ import io.spacedog.client.elastic.ESQueryBuilder;
 import io.spacedog.client.elastic.ESQueryBuilders;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.client.schema.Schema;
+import io.spacedog.test.Message;
+import io.spacedog.test.SpaceTest;
 
 public class DataImportExportTest extends SpaceTest {
 

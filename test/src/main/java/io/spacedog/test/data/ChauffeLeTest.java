@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.test;
+package io.spacedog.test.data;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,6 +20,7 @@ import io.spacedog.client.elastic.ESQueryBuilders;
 import io.spacedog.client.elastic.ESSearchSourceBuilder;
 import io.spacedog.client.elastic.ESSortOrder;
 import io.spacedog.client.schema.Schema;
+import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Json;
 
 public class ChauffeLeTest extends SpaceTest {

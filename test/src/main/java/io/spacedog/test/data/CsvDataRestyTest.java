@@ -1,4 +1,4 @@
-package io.spacedog.test;
+package io.spacedog.test.data;
 
 import java.io.StringReader;
 import java.util.List;
@@ -23,6 +23,7 @@ import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.elastic.ESQueryBuilders;
 import io.spacedog.client.schema.GeoPoint;
 import io.spacedog.client.schema.Schema;
+import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.RandomUtils;
 
 public class CsvDataRestyTest extends SpaceTest {

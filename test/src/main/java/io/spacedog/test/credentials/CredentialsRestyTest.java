@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.test;
+package io.spacedog.test.credentials;
 
 import org.joda.time.DateTime;
 import org.junit.Test;
@@ -18,6 +18,7 @@ import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.email.EmailTemplate;
 import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.client.http.SpaceRequestException;
+import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 

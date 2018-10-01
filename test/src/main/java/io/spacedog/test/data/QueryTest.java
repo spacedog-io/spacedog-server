@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.test;
+package io.spacedog.test.data;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -16,6 +16,7 @@ import com.google.common.collect.Lists;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.schema.GeoPoint;
 import io.spacedog.client.schema.Schema;
+import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Json;
 
 public class QueryTest extends SpaceTest {
