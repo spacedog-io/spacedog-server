@@ -1,4 +1,4 @@
-package io.spacedog.services;
+package io.spacedog.services.email;
 
 import java.net.URL;
 import java.util.Map;
@@ -24,6 +24,7 @@ import io.spacedog.server.Server;
 import io.spacedog.server.ServerConfig;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceResty;
+import io.spacedog.services.PebbleTemplating;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 

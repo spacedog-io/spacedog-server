@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.services;
+package io.spacedog.services.email;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 

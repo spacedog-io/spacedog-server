@@ -1,4 +1,4 @@
-package io.spacedog.services;
+package io.spacedog.services.job;
 
 import java.util.List;
 import java.util.concurrent.ScheduledFuture;

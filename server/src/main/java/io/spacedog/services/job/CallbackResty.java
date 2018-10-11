@@ -1,4 +1,4 @@
-package io.spacedog.services;
+package io.spacedog.services.job;
 
 import java.io.IOException;
 import java.util.Collection;

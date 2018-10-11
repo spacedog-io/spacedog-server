@@ -1,4 +1,4 @@
-package io.spacedog.services;
+package io.spacedog.services.batch;
 
 import java.util.List;
 import java.util.Map;

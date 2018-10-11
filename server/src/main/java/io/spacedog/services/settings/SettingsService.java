@@ -1,4 +1,4 @@
-package io.spacedog.services;
+package io.spacedog.services.settings;
 
 import java.util.Map;
 import java.util.Optional;

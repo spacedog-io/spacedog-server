@@ -2,18 +2,18 @@ package io.spacedog.server;
 
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
-import io.spacedog.services.BatchService;
-import io.spacedog.services.EmailService;
-import io.spacedog.services.JobService;
-import io.spacedog.services.SettingsService;
-import io.spacedog.services.SmsService;
-import io.spacedog.services.StripeService;
+import io.spacedog.services.batch.BatchService;
 import io.spacedog.services.credentials.CredentialsService;
 import io.spacedog.services.data.DataService;
 import io.spacedog.services.data.SchemaService;
+import io.spacedog.services.email.EmailService;
 import io.spacedog.services.file.FileService;
+import io.spacedog.services.job.JobService;
 import io.spacedog.services.log.LogService;
 import io.spacedog.services.push.PushService;
+import io.spacedog.services.settings.SettingsService;
+import io.spacedog.services.sms.SmsService;
+import io.spacedog.services.stripe.StripeService;
 
 public class Services implements SpaceFields, SpaceParams {
 

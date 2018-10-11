@@ -1,4 +1,4 @@
-package io.spacedog.services;
+package io.spacedog.services.settings;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.NullNode;

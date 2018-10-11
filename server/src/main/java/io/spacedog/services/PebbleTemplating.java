@@ -93,7 +93,7 @@ public class PebbleTemplating implements TemplateParameterTypes {
 		}
 	}
 
-	List<String> render(String propertyName, List<String> propertyValue, Map<String, Object> context) {
+	public List<String> render(String propertyName, List<String> propertyValue, Map<String, Object> context) {
 
 		if (propertyValue == null)
 			return null;

@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.services;
+package io.spacedog.services.job;
 
 import io.spacedog.client.job.SpaceJob;
 import io.spacedog.server.Server;

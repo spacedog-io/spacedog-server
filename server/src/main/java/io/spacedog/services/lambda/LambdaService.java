@@ -1,4 +1,4 @@
-package io.spacedog.services;
+package io.spacedog.services.lambda;
 
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.client.http.SpaceRequest;

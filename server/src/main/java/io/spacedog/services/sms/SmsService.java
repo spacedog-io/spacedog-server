@@ -1,4 +1,4 @@
-package io.spacedog.services;
+package io.spacedog.services.sms;
 
 import java.util.Map;
 
@@ -15,6 +15,7 @@ import io.spacedog.client.sms.SmsTemplate;
 import io.spacedog.client.sms.SmsTemplateRequest;
 import io.spacedog.server.Server;
 import io.spacedog.server.Services;
+import io.spacedog.services.PebbleTemplating;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.NotFoundException;
 

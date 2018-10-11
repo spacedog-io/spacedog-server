@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.services;
+package io.spacedog.services.admin;
 
 import io.spacedog.server.JsonPayload;
 import io.spacedog.server.Server;
