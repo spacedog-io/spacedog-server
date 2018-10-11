@@ -29,7 +29,7 @@ public class SmsResty extends SpaceResty {
 	@Get("/1/sms/:messageId")
 	@Get("/1/sms/:messageId")
 	public ObjectNode getSms(String messageId, Context context) {
-		Server.context().credentials().checkIfAuthorized(//
+		Server.context().credentials().checkRoleAccess(//
 				Services.sms().settings().authorizedRoles);
 		return Services.sms().get(messageId);
 	}

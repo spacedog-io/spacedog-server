@@ -50,7 +50,7 @@ public class PushResty extends SpaceResty {
 	public PushResponse postPushRequest(PushRequest request, Context context) {
 		PushSettings settings = Services.push().settings();
 		Credentials credentials = Server.context().credentials();
-		credentials.checkIfAuthorized(settings.authorizedRoles);
+		credentials.checkRoleAccess(settings.authorizedRoles);
 		return Services.push().push(request);
 	}
 

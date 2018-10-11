@@ -464,12 +464,12 @@ public class Credentials implements SpaceFields {
 	// Check if authorized
 	//
 
-	public Credentials checkIfAuthorized(String... authorizedRoles) {
-		checkIfAuthorized(Sets.newHashSet(authorizedRoles));
+	public Credentials checkRoleAccess(String... authorizedRoles) {
+		checkRoleAccess(Sets.newHashSet(authorizedRoles));
 		return this;
 	}
 
-	public Credentials checkIfAuthorized(Iterable<String> authorizedRoles) {
+	public Credentials checkRoleAccess(Iterable<String> authorizedRoles) {
 		if (authorizedRoles != null) {
 			for (String authorized : authorizedRoles)
 				if (authorized.equals(Roles.all) //

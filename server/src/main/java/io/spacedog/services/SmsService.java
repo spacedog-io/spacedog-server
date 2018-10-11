@@ -51,12 +51,12 @@ public class SmsService {
 
 	private ObjectNode sendIfAuthorized(SmsTemplateRequest request) {
 		SmsTemplate template = getTemplate(request.templateName);
-		Server.context().credentials().checkIfAuthorized(template.roles);
+		Server.context().credentials().checkRoleAccess(template.roles);
 		return send(request, template);
 	}
 
 	private ObjectNode sendIfAuthorized(SmsBasicRequest request) {
-		Server.context().credentials().checkIfAuthorized(//
+		Server.context().credentials().checkRoleAccess(//
 				Services.sms().settings().authorizedRoles);
 		return send(request);
 	}

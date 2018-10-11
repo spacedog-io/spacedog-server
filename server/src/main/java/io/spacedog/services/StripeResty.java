@@ -85,7 +85,7 @@ public class StripeResty extends SpaceResty {
 		Credentials credentials = Server.context().credentials();
 		StripeSettings settings = Services.stripe().settings();
 
-		credentials.checkIfAuthorized(settings.rolesAllowedToCharge);
+		credentials.checkRoleAccess(settings.rolesAllowedToCharge);
 
 		return Services.stripe().charge(context.query().keyValues());
 	}
@@ -96,7 +96,7 @@ public class StripeResty extends SpaceResty {
 		Credentials credentials = Server.context().credentials();
 		StripeSettings settings = Services.stripe().settings();
 
-		credentials.checkIfAuthorized(settings.rolesAllowedToPay);
+		credentials.checkRoleAccess(settings.rolesAllowedToPay);
 		return Services.stripe().charge(credentials, context.query().keyValues());
 	}
 }

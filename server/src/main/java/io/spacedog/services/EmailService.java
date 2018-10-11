@@ -42,7 +42,7 @@ public class EmailService {
 	}
 
 	public ObjectNode sendIfAuthorized(EmailBasicRequest request) {
-		Server.context().credentials().checkIfAuthorized(settings().authorizedRoles);
+		Server.context().credentials().checkRoleAccess(settings().authorizedRoles);
 		return send(request);
 	}
 
@@ -68,7 +68,7 @@ public class EmailService {
 
 	public ObjectNode sendIfAuthorized(EmailTemplateRequest request) {
 		EmailTemplate template = getTemplate(request.templateName);
-		Server.context().credentials().checkIfAuthorized(template.authorizedRoles);
+		Server.context().credentials().checkRoleAccess(template.authorizedRoles);
 		return send(request, template);
 	}
 

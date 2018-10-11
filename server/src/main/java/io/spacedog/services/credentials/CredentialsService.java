@@ -444,7 +444,7 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 		request.parameters.put("passwordResetCode", credentials.passwordResetCode());
 
 		EmailTemplate template = Services.emails().getTemplate(PASSWORD_RESET_EMAIL_TEMPLATE_NAME);
-		Server.context().credentials().checkIfAuthorized(template.authorizedRoles);
+		Server.context().credentials().checkRoleAccess(template.authorizedRoles);
 
 		if (template.model == null)
 			template.model = Maps.newHashMap();
