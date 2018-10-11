@@ -1,4 +1,4 @@
-package io.spacedog.test;
+package io.spacedog.test.sms;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -15,6 +15,7 @@ import io.spacedog.client.http.SpaceRequestException;
 import io.spacedog.client.schema.Schema;
 import io.spacedog.client.sms.SmsSettings;
 import io.spacedog.client.sms.SmsSettings.TwilioSettings;
+import io.spacedog.test.SpaceTest;
 import io.spacedog.client.sms.SmsTemplate;
 import io.spacedog.client.sms.SmsTemplateRequest;
 import io.spacedog.utils.Json;

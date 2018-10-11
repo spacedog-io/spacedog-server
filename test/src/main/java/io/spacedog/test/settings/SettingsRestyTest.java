@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.test;
+package io.spacedog.test.settings;
 
 import org.junit.Test;
 
@@ -13,6 +13,7 @@ import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.data.DataResults;
 import io.spacedog.client.settings.SettingsAclSettings;
+import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Json;
 
 public class SettingsRestyTest extends SpaceTest {

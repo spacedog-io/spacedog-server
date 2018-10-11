@@ -1,9 +1,10 @@
-package io.spacedog.test;
+package io.spacedog.test.job;
 
 import org.junit.Test;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.log.LogSearchResults;
+import io.spacedog.test.SpaceTest;
 
 public class JobRestyTest extends SpaceTest {
 

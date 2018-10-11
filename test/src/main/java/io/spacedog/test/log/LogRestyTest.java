@@ -1,4 +1,4 @@
-package io.spacedog.test;
+package io.spacedog.test.log;
 
 import java.util.List;
 
@@ -20,6 +20,8 @@ import io.spacedog.client.http.SpaceEnv;
 import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.client.log.LogItem;
 import io.spacedog.client.log.LogSearchResults;
+import io.spacedog.test.Message;
+import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Json;
 
 public class LogRestyTest extends SpaceTest {

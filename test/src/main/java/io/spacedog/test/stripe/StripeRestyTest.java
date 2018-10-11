@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.test;
+package io.spacedog.test.stripe;
 
 import java.util.Map;
 
@@ -21,6 +21,7 @@ import com.stripe.model.Token;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.http.SpaceEnv;
 import io.spacedog.client.stripe.StripeSettings;
+import io.spacedog.test.SpaceTest;
 
 public class StripeRestyTest extends SpaceTest {
 

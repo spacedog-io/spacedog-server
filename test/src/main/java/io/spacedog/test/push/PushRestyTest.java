@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.test;
+package io.spacedog.test.push;
 
 import static org.hamcrest.collection.IsArrayContaining.hasItemInArray;
 
@@ -25,6 +25,7 @@ import io.spacedog.client.push.PushProtocol;
 import io.spacedog.client.push.PushRequest;
 import io.spacedog.client.push.PushResponse;
 import io.spacedog.client.push.PushResponse.Notification;
+import io.spacedog.test.SpaceTest;
 import io.spacedog.client.push.PushSettings;
 import io.spacedog.utils.Json;
 

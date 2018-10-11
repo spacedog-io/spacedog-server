@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.test;
+package io.spacedog.test.batch;
 
 import java.util.List;
 
@@ -18,6 +18,8 @@ import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.data.DataSettings;
 import io.spacedog.client.http.SpaceMethod;
+import io.spacedog.test.Message;
+import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Json;
 
 public class BatchRestyTest extends SpaceTest {

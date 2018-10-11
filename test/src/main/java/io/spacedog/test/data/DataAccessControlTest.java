@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.test;
+package io.spacedog.test.data;
 
 import org.junit.Test;
 
@@ -13,6 +13,8 @@ import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.data.DataSettings;
 import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.schema.Schema;
+import io.spacedog.test.Message;
+import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Json;
 
 public class DataAccessControlTest extends SpaceTest {
