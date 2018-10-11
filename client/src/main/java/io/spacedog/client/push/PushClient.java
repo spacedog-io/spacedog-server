@@ -27,7 +27,7 @@ public class PushClient {
 
 	public List<PushApplication> listApps() {
 		return Lists.newArrayList(//
-				dog.get("/1/push/applications").go(200)//
+				dog.get("/2/push/applications").go(200)//
 						.asPojo(PushApplication[].class));
 	}
 
@@ -36,7 +36,7 @@ public class PushClient {
 		Check.notNull(service, "push app service");
 		Check.notNull(credentials, "push app credentials");
 
-		dog.put("/1/push/applications/{name}/{service}")//
+		dog.put("/2/push/applications/{name}/{service}")//
 				.routeParam("name", name)//
 				.routeParam("service", service.toString())//
 				.bodyPojo(credentials)//
@@ -51,7 +51,7 @@ public class PushClient {
 		Check.notNull(name, "push app name");
 		Check.notNull(service, "push app service");
 
-		dog.delete("/1/push/applications/{name}/{service}")//
+		dog.delete("/2/push/applications/{name}/{service}")//
 				.routeParam("name", name)//
 				.routeParam("service", service)//
 				.go(200);
@@ -66,7 +66,7 @@ public class PushClient {
 	//
 
 	public PushResponse push(PushRequest request) {
-		return dog.post("/1/push").bodyPojo(request).go(200)//
+		return dog.post("/2/push").bodyPojo(request).go(200)//
 				.asPojo(PushResponse.class);
 	}
 

@@ -27,7 +27,7 @@ public class LogClient implements SpaceParams {
 	}
 
 	public LogSearchResults get(String q, int size, boolean refresh) {
-		return dog.get("/1/log").size(size).refresh(refresh)//
+		return dog.get("/2/log").size(size).refresh(refresh)//
 				.queryParam(Q_PARAM, q).go(200)//
 				.asPojo(LogSearchResults.class);
 	}
@@ -37,13 +37,13 @@ public class LogClient implements SpaceParams {
 	}
 
 	public LogSearchResults search(ESSearchSourceBuilder builder, boolean refresh) {
-		return dog.post("/1/log/_search").refresh(refresh)//
+		return dog.post("/2/log/_search").refresh(refresh)//
 				.bodyJson(builder.toString()).go(200)//
 				.asPojo(LogSearchResults.class);
 	}
 
 	public void delete(DateTime before) {
-		dog.delete("/1/log").queryParam("before", before).go(200);
+		dog.delete("/2/log").queryParam("before", before).go(200);
 	}
 
 }

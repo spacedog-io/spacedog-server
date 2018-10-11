@@ -40,8 +40,8 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 
 	@Override
 	public boolean matches(String uri, Context context) {
-		// accepts /1/files and /1/files/* uris
-		return uri.startsWith("/1/files") //
+		// accepts /2/files and /2/files/* uris
+		return uri.startsWith("/2/files") //
 				&& (uri.length() == 8 || uri.charAt(8) == '/');
 	}
 
@@ -184,7 +184,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 				getRequestContentAsBytes(context), FileBucketSettings.class);
 		Services.files().setBucketSettings(bucketSettings);
 		return JsonPayload.saved(false).withFields("id", bucket, "type", "bucket")//
-				.withLocation("/1/files/" + bucket)//
+				.withLocation("/2/files/" + bucket)//
 				.build();
 	}
 
@@ -326,7 +326,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 	}
 
 	private static WebPath toWebPath(String uri) {
-		// removes '/1/files'
+		// removes '/2/files'
 		return WebPath.parse(uri.substring(8));
 	}
 

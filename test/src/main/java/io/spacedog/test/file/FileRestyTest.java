@@ -28,7 +28,7 @@ public class FileRestyTest extends SpaceTest {
 		assertHttpError(404, () -> superadmin.files().getAsByteArray(WWW, "toto"));
 
 		// invalid POST operation throws 400
-		superadmin.post("/1/files").go(400);
+		superadmin.post("/2/files").go(400);
 
 		// superadmin sets www bucket
 		FileBucketSettings settings = new FileBucketSettings(WWW);
@@ -39,7 +39,7 @@ public class FileRestyTest extends SpaceTest {
 		assertEquals(0, superadmin.files().listAll(WWW).files.size());
 
 		// upload file without bucket is invalid
-		superadmin.put("/1/files").go(400);
+		superadmin.put("/2/files").go(400);
 
 		// admin can upload a web site
 		superadmin.files().upload(WWW, "/app.html", "/app.html".getBytes());
@@ -65,17 +65,17 @@ public class FileRestyTest extends SpaceTest {
 		assertHttpError(403, () -> vince.files().listAll(WWW));
 
 		// superadmin gets app.html
-		SpaceResponse response = superadmin.get("/1/files/www/app.html").go(200);
+		SpaceResponse response = superadmin.get("/2/files/www/app.html").go(200);
 		assertArrayEquals("/app.html".getBytes(), response.asBytes());
 		assertEquals("text/html", response.contentType());
 
 		// guest gets app.js
-		response = guest.get("/1/files/www/app.js").go(200);
+		response = guest.get("/2/files/www/app.js").go(200);
 		assertArrayEquals("/app.js".getBytes(), response.asBytes());
 		assertEquals("application/javascript", response.contentType());
 
 		// guest gets black.css
-		response = guest.get("/1/files/www/css/black.css").go(200);
+		response = guest.get("/2/files/www/css/black.css").go(200);
 		assertArrayEquals("/css/black.css".getBytes(), response.asBytes());
 		assertEquals("text/css", response.contentType());
 
@@ -90,7 +90,7 @@ public class FileRestyTest extends SpaceTest {
 		assertEquals(0, superadmin.files().list(WWW, "/css").files.size());
 
 		// superadmin fails to get just deleted css file
-		superadmin.get("/1/files/www/css/black.css").go(404);
+		superadmin.get("/2/files/www/css/black.css").go(404);
 
 		// superadmin deletes all files
 		assertEquals(4, superadmin.files().deleteAll(WWW));

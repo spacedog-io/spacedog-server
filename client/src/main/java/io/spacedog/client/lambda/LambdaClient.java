@@ -13,18 +13,18 @@ public class LambdaClient implements SpaceParams {
 	}
 
 	public SpaceRequest getRequest(String path) {
-		return dog.get("/1/services" + path);
+		return dog.get("/2/services" + path);
 	}
 
 	public SpaceRequest postRequest(String path) {
-		return dog.post("/1/services" + path);
+		return dog.post("/2/services" + path);
 	}
 
 	public SpaceRequest putRequest(String path) {
-		return dog.put("/1/services" + path);
+		return dog.put("/2/services" + path);
 	}
 
 	public SpaceRequest deleteRequest(String path) {
-		return dog.put("/1/services" + path);
+		return dog.put("/2/services" + path);
 	}
 }

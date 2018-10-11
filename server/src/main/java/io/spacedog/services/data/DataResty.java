@@ -39,7 +39,7 @@ import net.codestory.http.annotations.Put;
 import net.codestory.http.payload.Payload;
 import net.codestory.http.payload.StreamingOutput;
 
-@Prefix("/1/data")
+@Prefix("/2/data")
 public class DataResty extends SpaceResty {
 
 	@Get("")

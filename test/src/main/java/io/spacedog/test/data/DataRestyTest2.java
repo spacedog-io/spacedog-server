@@ -101,7 +101,7 @@ public class DataRestyTest2 extends SpaceTest {
 		superadmin.data().settings(settings);
 
 		// fred fails to create a sale with no body
-		fred.post("/1/data/sale").go(400);
+		fred.post("/2/data/sale").go(400);
 
 		// fred creates a new sale object
 		Sale sale = new Sale();
@@ -207,7 +207,7 @@ public class DataRestyTest2 extends SpaceTest {
 				wrap1.id(), Json.object("number", "0987654321"), 1));
 
 		// update with invalid version should fail
-		fred.put("/1/data/sale/" + wrap1.id())//
+		fred.put("/2/data/sale/" + wrap1.id())//
 				.queryParam("version", "XXX").bodyJson("number", "0987654321").go(400);
 
 		// update with correct version should succeed
@@ -283,10 +283,10 @@ public class DataRestyTest2 extends SpaceTest {
 		assertAlmostEquals(message, getObject.source());
 
 		// an id field does not force the id field
-		superadmin.post("/1/data/message").bodyJson("text", "id=2", "id", 2).go(400);
+		superadmin.post("/2/data/message").bodyJson("text", "id=2", "id", 2).go(400);
 
 		// an id param does not force the object id
-		String id = superadmin.post("/1/data/message").queryParam("id", 23)//
+		String id = superadmin.post("/2/data/message").queryParam("id", 23)//
 				.bodyJson("text", "hello").go(201).getString("id");
 		assertNotEquals("23", id);
 	}
@@ -334,7 +334,7 @@ public class DataRestyTest2 extends SpaceTest {
 		assertEquals(originalMessages, messages);
 
 		// fails to fetch messages if from + size > 10000
-		vince.get("/1/data/message").from(9999).size(10).go(400);
+		vince.get("/2/data/message").from(9999).size(10).go(400);
 	}
 
 	private Collection<String> fetchMessages(SpaceDog user, int from, int size) {
@@ -363,33 +363,33 @@ public class DataRestyTest2 extends SpaceTest {
 		superadmin.schemas().set(schema);
 
 		// home XXX does not exist
-		superadmin.get("/1/data/home/XXX/name").go(404);
+		superadmin.get("/2/data/home/XXX/name").go(404);
 
 		// superadmin creates home 1 with name dupont
-		superadmin.put("/1/data/home/1/name")//
+		superadmin.put("/2/data/home/1/name")//
 				.bodyJson(TextNode.valueOf("dupont")).go(201);
 		DataWrap<ObjectNode> home = superadmin.data().getWrapped("home", "1");
 		ObjectNode homeNode = Json.object("name", "dupont");
 		assertAlmostEquals(homeNode, home.source());
 
 		// guest is forbidden to update home 1 name
-		guest.put("/1/data/home/1/name")//
+		guest.put("/2/data/home/1/name")//
 				.bodyJson(TextNode.valueOf("meudon")).go(403);
 
 		// superadmin sets home 1 garage places to 6
-		superadmin.put("/1/data/home/1/garage.places")//
+		superadmin.put("/2/data/home/1/garage.places")//
 				.bodyJson(IntNode.valueOf(6)).go(200);
 		home = superadmin.data().getWrapped("home", "1");
 		homeNode.set("garage", Json.object("places", 6));
 		assertAlmostEquals(homeNode, home.source());
 
 		// superadmin removes home 1 garage
-		superadmin.delete("/1/data/home/1/garage").go(200);
+		superadmin.delete("/2/data/home/1/garage").go(200);
 		home = superadmin.data().getWrapped("home", "1");
 		homeNode.remove("garage");
 		assertAlmostEquals(homeNode, home.source());
 
 		// guest is forbidden to remove home 1 name
-		guest.delete("/1/data/home/1/name").go(403);
+		guest.delete("/2/data/home/1/name").go(403);
 	}
 }

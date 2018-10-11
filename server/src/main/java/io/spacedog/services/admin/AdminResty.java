@@ -11,7 +11,7 @@ import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/1/admin")
+@Prefix("/2/admin")
 public class AdminResty extends SpaceResty {
 
 	@Post("/_return_500")

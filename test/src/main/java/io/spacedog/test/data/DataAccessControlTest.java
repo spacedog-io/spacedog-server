@@ -45,43 +45,43 @@ public class DataAccessControlTest extends SpaceTest {
 		assertEquals(dataSettings, superadmin.settings().get(DataSettings.class));
 
 		// in default acl, only users and admins can create objects
-		guest.post("/1/data/message").bodyJson("text", "hello").go(403);
-		guest.put("/1/data/message/guest").bodyJson("text", "hello").go(403);
-		vince.put("/1/data/message/vince").bodyJson("text", "v1").go(201);
-		vince.put("/1/data/message/vince2").bodyJson("text", "v2").go(201);
-		admin.put("/1/data/message/admin").bodyJson("text", "a1").go(201);
+		guest.post("/2/data/message").bodyJson("text", "hello").go(403);
+		guest.put("/2/data/message/guest").bodyJson("text", "hello").go(403);
+		vince.put("/2/data/message/vince").bodyJson("text", "v1").go(201);
+		vince.put("/2/data/message/vince2").bodyJson("text", "v2").go(201);
+		admin.put("/2/data/message/admin").bodyJson("text", "a1").go(201);
 
 		// in default acl, everyone can read any objects
-		guest.get("/1/data/message/vince").go(200);
-		guest.get("/1/data/message/admin").go(200);
-		vince.get("/1/data/message/vince").go(200);
-		vince.get("/1/data/message/admin").go(200);
-		admin.get("/1/data/message/vince").go(200);
-		admin.get("/1/data/message/admin").go(200);
+		guest.get("/2/data/message/vince").go(200);
+		guest.get("/2/data/message/admin").go(200);
+		vince.get("/2/data/message/vince").go(200);
+		vince.get("/2/data/message/admin").go(200);
+		admin.get("/2/data/message/vince").go(200);
+		admin.get("/2/data/message/admin").go(200);
 
 		// in default acl, only users and admins can search for objects
-		guest.get("/1/data/message/").go(403);
-		vince.get("/1/data/message/").go(200);
-		admin.get("/1/data/message/").go(200);
+		guest.get("/2/data/message/").go(403);
+		vince.get("/2/data/message/").go(200);
+		admin.get("/2/data/message/").go(200);
 
 		// in default acl, users can update their own objects
 		// admin can update any objects
-		guest.put("/1/data/message/vince").bodyJson("text", "XXX").go(403);
-		guest.put("/1/data/message/admin").bodyJson("text", "XXX").go(403);
-		vince.put("/1/data/message/vince").bodyJson("text", "v3").go(200);
-		vince.put("/1/data/message/admin").bodyJson("text", "XXX").go(403);
-		admin.put("/1/data/message/vince").bodyJson("text", "v4").go(200);
-		admin.put("/1/data/message/admin").bodyJson("text", "a2").go(200);
+		guest.put("/2/data/message/vince").bodyJson("text", "XXX").go(403);
+		guest.put("/2/data/message/admin").bodyJson("text", "XXX").go(403);
+		vince.put("/2/data/message/vince").bodyJson("text", "v3").go(200);
+		vince.put("/2/data/message/admin").bodyJson("text", "XXX").go(403);
+		admin.put("/2/data/message/vince").bodyJson("text", "v4").go(200);
+		admin.put("/2/data/message/admin").bodyJson("text", "a2").go(200);
 
 		// in default acl, users can delete their own objects
 		// admin can delete any objects
-		guest.delete("/1/data/message/vince").go(403);
-		guest.delete("/1/data/message/admin").go(403);
-		vince.delete("/1/data/message/vince").go(200);
-		vince.delete("/1/data/message/admin").go(403);
-		admin.delete("/1/data/message/vince").go(404);
-		admin.delete("/1/data/message/vince2").go(200);
-		admin.delete("/1/data/message/admin").go(200);
+		guest.delete("/2/data/message/vince").go(403);
+		guest.delete("/2/data/message/admin").go(403);
+		vince.delete("/2/data/message/vince").go(200);
+		vince.delete("/2/data/message/admin").go(403);
+		admin.delete("/2/data/message/vince").go(404);
+		admin.delete("/2/data/message/vince2").go(200);
+		admin.delete("/2/data/message/admin").go(200);
 	}
 
 	@Test
@@ -103,35 +103,35 @@ public class DataAccessControlTest extends SpaceTest {
 				.acl().get(schema.name()).isEmpty());
 
 		// in empty acl, nobody can create a message but superadmins
-		guest.post("/1/data/message").bodyJson("text", "hi").go(403);
-		vince.post("/1/data/message").bodyJson("text", "hi").go(403);
-		admin.post("/1/data/message").bodyJson("text", "hi").go(403);
-		superadmin.put("/1/data/message/1").bodyJson("text", "hi").go(201);
+		guest.post("/2/data/message").bodyJson("text", "hi").go(403);
+		vince.post("/2/data/message").bodyJson("text", "hi").go(403);
+		admin.post("/2/data/message").bodyJson("text", "hi").go(403);
+		superadmin.put("/2/data/message/1").bodyJson("text", "hi").go(201);
 
 		// in empty acl, nobody can read a message but superadmins
-		guest.get("/1/data/message/1").go(403);
-		vince.get("/1/data/message/1").go(403);
-		admin.get("/1/data/message/1").go(403);
-		superadmin.get("/1/data/message/1").go(200);
+		guest.get("/2/data/message/1").go(403);
+		vince.get("/2/data/message/1").go(403);
+		admin.get("/2/data/message/1").go(403);
+		superadmin.get("/2/data/message/1").go(200);
 
 		// in empty acl, nobody can search for objects but superadmins
-		guest.get("/1/data/message").go(403);
-		vince.get("/1/data/message").go(403);
-		admin.get("/1/data/message").go(403);
-		superadmin.get("/1/data/message").refresh().go(200)//
+		guest.get("/2/data/message").go(403);
+		vince.get("/2/data/message").go(403);
+		admin.get("/2/data/message").go(403);
+		superadmin.get("/2/data/message").refresh().go(200)//
 				.assertEquals("1", "objects.0.id");
 
 		// in empty acl, nobody can update any object but superadmins
-		guest.put("/1/data/message/1").bodyJson("text", "ola").go(403);
-		vince.put("/1/data/message/1").bodyJson("text", "ola").go(403);
-		admin.put("/1/data/message/1").bodyJson("text", "ola").go(403);
-		superadmin.put("/1/data/message/1").bodyJson("text", "ola").go(200);
+		guest.put("/2/data/message/1").bodyJson("text", "ola").go(403);
+		vince.put("/2/data/message/1").bodyJson("text", "ola").go(403);
+		admin.put("/2/data/message/1").bodyJson("text", "ola").go(403);
+		superadmin.put("/2/data/message/1").bodyJson("text", "ola").go(200);
 
 		// in empty acl, nobody can delete any object but superadmins
-		guest.delete("/1/data/message/1").go(403);
-		vince.delete("/1/data/message/1").go(403);
-		admin.delete("/1/data/message/1").go(403);
-		superadmin.delete("/1/data/message/1").go(200);
+		guest.delete("/2/data/message/1").go(403);
+		vince.delete("/2/data/message/1").go(403);
+		admin.delete("/2/data/message/1").go(403);
+		superadmin.delete("/2/data/message/1").go(200);
 
 	}
 
@@ -159,43 +159,43 @@ public class DataAccessControlTest extends SpaceTest {
 		assertEquals(dataSettings, superadmin.settings().get(DataSettings.class));
 
 		// only users (and superadmins) can create messages
-		guest.post("/1/data/message").bodyJson("text", "hi").go(403);
-		vince.post("/1/data/message").bodyJson("text", "hi").go(201);
-		admin.post("/1/data/message").bodyJson("text", "hi").go(403);
+		guest.post("/2/data/message").bodyJson("text", "hi").go(403);
+		vince.post("/2/data/message").bodyJson("text", "hi").go(201);
+		admin.post("/2/data/message").bodyJson("text", "hi").go(403);
 
 		// only users (and superadmins) can create messages with specified id
-		guest.put("/1/data/message/1").bodyJson("text", "hi").go(403);
-		vince.put("/1/data/message/2").bodyJson("text", "hi").go(201);
-		admin.put("/1/data/message/3").bodyJson("text", "hi").go(403);
+		guest.put("/2/data/message/1").bodyJson("text", "hi").go(403);
+		vince.put("/2/data/message/2").bodyJson("text", "hi").go(201);
+		admin.put("/2/data/message/3").bodyJson("text", "hi").go(403);
 
 		// only admins (and superadmins) can search for messages
-		guest.get("/1/data/message/2").go(403);
-		vince.get("/1/data/message/2").go(403);
-		admin.get("/1/data/message/2").go(200);
+		guest.get("/2/data/message/2").go(403);
+		vince.get("/2/data/message/2").go(403);
+		admin.get("/2/data/message/2").go(200);
 
 		// only admins (and superadmins) can search for messages
-		guest.get("/1/data/message/").go(403);
-		vince.get("/1/data/message/").go(403);
-		admin.get("/1/data/message/").refresh().go(200)//
+		guest.get("/2/data/message/").go(403);
+		vince.get("/2/data/message/").go(403);
+		admin.get("/2/data/message/").refresh().go(200)//
 				.assertSizeEquals(2, "objects")//
 				.assertEquals("2", "objects.1.id");
 
 		// nobody can update any object (but superadmins)
-		guest.put("/1/data/message/2").bodyJson("text", "ola").go(403);
-		vince.put("/1/data/message/2").bodyJson("text", "ola").go(403);
-		admin.put("/1/data/message/2").bodyJson("text", "ola").go(403);
+		guest.put("/2/data/message/2").bodyJson("text", "ola").go(403);
+		vince.put("/2/data/message/2").bodyJson("text", "ola").go(403);
+		admin.put("/2/data/message/2").bodyJson("text", "ola").go(403);
 
 		// nobody can delete message but superadmins
-		guest.delete("/1/data/message/2").go(403);
-		vince.delete("/1/data/message/2").go(403);
-		admin.delete("/1/data/message/2").go(403);
-		superadmin.delete("/1/data/message/2").go(200);
+		guest.delete("/2/data/message/2").go(403);
+		vince.delete("/2/data/message/2").go(403);
+		admin.delete("/2/data/message/2").go(403);
+		superadmin.delete("/2/data/message/2").go(200);
 
 		// nobody can delete all message but superadmins
-		guest.delete("/1/data/message").go(401);
-		vince.delete("/1/data/message").go(403);
-		admin.delete("/1/data/message").go(403);
-		superadmin.delete("/1/data/message").go(200)//
+		guest.delete("/2/data/message").go(401);
+		vince.delete("/2/data/message").go(403);
+		admin.delete("/2/data/message").go(403);
+		superadmin.delete("/2/data/message").go(200)//
 				.assertEquals(1, "deleted");
 	}
 
@@ -329,10 +329,10 @@ public class DataAccessControlTest extends SpaceTest {
 		// maelle is a simple user
 		// she's got no right on the message schema
 		SpaceDog maelle = createTempDog(superadmin, "maelle");
-		maelle.post("/1/data/message").bodyJson("text", "hi").go(403);
-		maelle.get("/1/data/message/2").go(403);
-		maelle.put("/1/data/message/2").bodyJson("text", "hi").go(403);
-		maelle.delete("/1/data/message/2").go(403);
+		maelle.post("/2/data/message").bodyJson("text", "hi").go(403);
+		maelle.get("/2/data/message/2").go(403);
+		maelle.put("/2/data/message/2").bodyJson("text", "hi").go(403);
+		maelle.delete("/2/data/message/2").go(403);
 
 		// fred has the iron role
 		// he's only got the right to read
@@ -347,19 +347,19 @@ public class DataAccessControlTest extends SpaceTest {
 		// she's got the right to read and update
 		SpaceDog nath = createTempDog(superadmin, "nath");
 		superadmin.credentials().setRole(nath.id(), "silver");
-		nath.post("/1/data/message").bodyJson("text", "hi").go(403);
-		nath.get("/1/data/message/2").go(200);
-		nath.put("/1/data/message/2").bodyJson("text", "hi").go(200);
-		nath.delete("/1/data/message/2").go(403);
+		nath.post("/2/data/message").bodyJson("text", "hi").go(403);
+		nath.get("/2/data/message/2").go(200);
+		nath.put("/2/data/message/2").bodyJson("text", "hi").go(200);
+		nath.delete("/2/data/message/2").go(403);
 
 		// vince has the gold role
 		// he's got the right to create, read and update
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		superadmin.credentials().setRole(vince.id(), "gold");
-		vince.put("/1/data/message/3").bodyJson("text", "grunt").go(201);
-		vince.get("/1/data/message/3").go(200);
-		vince.put("/1/data/message/3").bodyJson("text", "flux").go(200);
-		vince.delete("/1/data/message/3").go(403);
+		vince.put("/2/data/message/3").bodyJson("text", "grunt").go(201);
+		vince.get("/2/data/message/3").go(200);
+		vince.put("/2/data/message/3").bodyJson("text", "flux").go(200);
+		vince.delete("/2/data/message/3").go(403);
 	}
 
 	@Test

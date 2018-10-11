@@ -34,13 +34,13 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 
 	public Credentials me(boolean reload) {
 		if (credentials == null || reload)
-			credentials = dog.get("/1/credentials/me")//
+			credentials = dog.get("/2/credentials/me")//
 					.go(200).asPojo(Credentials.class);
 		return credentials;
 	}
 
 	public Optional7<Credentials> getByUsername(String username) {
-		Results results = dog.get("/1/credentials")//
+		Results results = dog.get("/2/credentials")//
 				.queryParam(USERNAME_PARAM, username)//
 				.go(200)//
 				.asPojo(Credentials.Results.class);
@@ -56,7 +56,7 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	}
 
 	public Credentials get(String id) {
-		return dog.get("/1/credentials/{id}")//
+		return dog.get("/2/credentials/{id}")//
 				.routeParam("id", id).go(200).asPojo(Credentials.class);
 	}
 
@@ -77,7 +77,7 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	}
 
 	public Credentials.Results getAll(String q, Integer from, Integer size) {
-		return dog.get("/1/credentials").queryParam("q", q)//
+		return dog.get("/2/credentials").queryParam("q", q)//
 				.from(from).size(size).go(200).asPojo(Credentials.Results.class);
 	}
 
@@ -86,7 +86,7 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	//
 
 	public SpaceDog login(String password, long lifetime) {
-		SpaceRequest request = SpaceRequest.get("/1/login")//
+		SpaceRequest request = SpaceRequest.get("/2/login")//
 				.backend(dog.backend()).basicAuth(dog.username(), password);
 
 		if (lifetime > 0)
@@ -100,7 +100,7 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 
 	public SpaceDog logout() {
 		if (dog.accessToken() != null) {
-			dog.get("/1/logout").go(200);
+			dog.get("/2/logout").go(200);
 			dog.accessToken(null);
 			dog.expiresAt(null);
 		}
@@ -117,7 +117,7 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	}
 
 	public String create(CredentialsCreateRequest request) {
-		return dog.post("/1/credentials").bodyPojo(request).go(201).getString(ID_FIELD);
+		return dog.post("/2/credentials").bodyPojo(request).go(201).getString(ID_FIELD);
 	}
 
 	//
@@ -129,7 +129,7 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	}
 
 	public void delete(String id) {
-		dog.delete("/1/credentials/{id}").routeParam("id", id).go(200);
+		dog.delete("/2/credentials/{id}").routeParam("id", id).go(200);
 	}
 
 	public void deleteByUsername(String username) {
@@ -139,7 +139,7 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	}
 
 	public void deleteAllButSuperAdmins() {
-		dog.delete("/1/credentials").go(200);
+		dog.delete("/2/credentials").go(200);
 	}
 
 	//
@@ -167,7 +167,7 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 
 	public SpaceResponse update(CredentialsUpdateRequest updateRequest, String password) {
 
-		SpaceRequest spaceRequest = dog.put("/1/credentials/{id}")//
+		SpaceRequest spaceRequest = dog.put("/2/credentials/{id}")//
 				.routeParam("id", updateRequest.credentialsId)//
 				.bodyPojo(updateRequest);
 
@@ -182,28 +182,28 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	//
 
 	public void setRole(String id, String role) {
-		dog.put("/1/credentials/{id}/roles/{role}")//
+		dog.put("/2/credentials/{id}/roles/{role}")//
 				.routeParam("id", id).routeParam("role", role).go(200);
 	}
 
 	public void unsetRole(String id, String role) {
-		dog.delete("/1/credentials/{id}/roles/{role}")//
+		dog.delete("/2/credentials/{id}/roles/{role}")//
 				.routeParam("id", id).routeParam("role", role).go(200);
 	}
 
 	public Set<String> getAllRoles(String id) {
 		return Sets.newHashSet(//
-				dog.get("/1/credentials/{id}/roles")//
+				dog.get("/2/credentials/{id}/roles")//
 						.routeParam("id", id).go(200).asPojo(String[].class));
 	}
 
 	public void setAllRoles(String id, String... roles) {
-		dog.put("/1/credentials/{id}/roles")//
+		dog.put("/2/credentials/{id}/roles")//
 				.routeParam("id", id).bodyJson(Json.toJsonNode(roles)).go(200);
 	}
 
 	public void unsetAllRoles(String id) {
-		dog.delete("/1/credentials/{id}/roles")//
+		dog.delete("/2/credentials/{id}/roles")//
 				.routeParam("id", id).go(200);
 	}
 
@@ -212,7 +212,7 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	//
 
 	public String resetPassword(String id) {
-		return dog.post("/1/credentials/{id}/_reset_password")//
+		return dog.post("/2/credentials/{id}/_reset_password")//
 				.routeParam("id", id).go(200)//
 				.getString(PASSWORD_RESET_CODE_FIELD);
 	}
@@ -223,7 +223,7 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 
 	public void setPasswordWithCode(String credentialsId, //
 			String newPassword, String passwordResetCode) {
-		SpaceRequest.post("/1/credentials/{id}/_set_password")//
+		SpaceRequest.post("/2/credentials/{id}/_set_password")//
 				.backend(dog.backend())//
 				.routeParam("id", credentialsId)//
 				.bodyPojo(new SetPasswordRequest()//
@@ -238,7 +238,7 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 
 	public void setPassword(String credentialsId, //
 			String requesterPassword, String newPassword) {
-		SpaceRequest.post("/1/credentials/{id}/_set_password")//
+		SpaceRequest.post("/2/credentials/{id}/_set_password")//
 				.backend(dog.backend())//
 				.basicAuth(dog.username(), requesterPassword)//
 				.routeParam("id", credentialsId)//
@@ -247,7 +247,7 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	}
 
 	public void passwordMustChange(String credentialsId) {
-		dog.post("/1/credentials/{id}/_password_must_change")//
+		dog.post("/2/credentials/{id}/_password_must_change")//
 				.routeParam("id", credentialsId).go(200);
 	}
 
@@ -257,7 +257,7 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 
 	public void sendPasswordResetEmail(String username, ObjectNode parameters) {
 		parameters.put(USERNAME_FIELD, username);
-		dog.post("/1/credentials/_send_password_reset_email")//
+		dog.post("/2/credentials/_send_password_reset_email")//
 				.bodyJson(parameters)//
 				.go(200);
 	}
@@ -275,7 +275,7 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	}
 
 	public void enable(String id, boolean enable) {
-		StringBuilder builder = new StringBuilder("/1/credentials/") //
+		StringBuilder builder = new StringBuilder("/2/credentials/") //
 				.append(id).append(enable ? "/_enable" : "/_disable");
 		dog.post(builder.toString()).go(200);
 	}

@@ -111,7 +111,7 @@ public class ShareRestyTest extends SpaceTest {
 		assertEquals(pngFile.getPath(), list.files.get(0).getPath());
 
 		// anonymous gets png share with its path
-		SpaceResponse png = guest.get("/1/files/" + SHARES + pngFile.getPath()).go(200);
+		SpaceResponse png = guest.get("/2/files/" + SHARES + pngFile.getPath()).go(200);
 		assertEquals("image/png", png.contentType());
 		assertArrayEquals(pngBytes, png.asBytes());
 		assertEquals(vince.id(), png.header(SpaceHeaders.SPACEDOG_OWNER));
@@ -267,7 +267,7 @@ public class ShareRestyTest extends SpaceTest {
 	}
 
 	private String location(SpaceFile file) {
-		return "/1/files/" + SHARES + file.getPath();
+		return "/2/files/" + SHARES + file.getPath();
 	}
 
 	@Test
@@ -369,7 +369,7 @@ public class ShareRestyTest extends SpaceTest {
 		superadmin.files().setBucket(bucket);
 
 		// vince exports specified shares
-		zip = vince.post("/1/files/{bucket}")//
+		zip = vince.post("/2/files/{bucket}")//
 				.routeParam("bucket", SHARES)//
 				.queryParam("op", "export")//
 				.bodyJson("fileName", "export.zip", //

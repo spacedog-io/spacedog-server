@@ -101,7 +101,7 @@ public class DataClient implements SpaceFields, SpaceParams {
 				? new int[] { 200 }
 				: new int[] { 200, 404 };
 
-		return dog.get("/1/data/{type}/{id}")//
+		return dog.get("/2/data/{type}/{id}")//
 				.routeParam(TYPE_FIELD, type)//
 				.routeParam(ID_FIELD, id)//
 				.go(expectedStatus);
@@ -151,14 +151,14 @@ public class DataClient implements SpaceFields, SpaceParams {
 	public <K> DataWrap<K> save(DataWrap<K> object, boolean forceMeta) {
 
 		if (object.id() == null)
-			return dog.post("/1/data/{type}")//
+			return dog.post("/2/data/{type}")//
 					.routeParam(TYPE_FIELD, object.type())//
 					.queryParam(FORCE_META_PARAM, forceMeta)//
 					.bodyPojo(object.source())//
 					.go(201)//
 					.asPojo(object);
 
-		SpaceRequest request = dog.put("/1/data/{type}/{id}")//
+		SpaceRequest request = dog.put("/2/data/{type}/{id}")//
 				.routeParam(TYPE_FIELD, object.type())//
 				.routeParam(ID_FIELD, object.id())//
 				.queryParam(FORCE_META_PARAM, forceMeta)//
@@ -179,7 +179,7 @@ public class DataClient implements SpaceFields, SpaceParams {
 	}
 
 	public long patch(String type, String id, Object source, long version) {
-		SpaceRequest request = dog.put("/1/data/{type}/{id}")//
+		SpaceRequest request = dog.put("/2/data/{type}/{id}")//
 				.routeParam(ID_FIELD, id)//
 				.routeParam(TYPE_FIELD, type)//
 				.queryParam(PATCH_PARAM, true);
@@ -204,7 +204,7 @@ public class DataClient implements SpaceFields, SpaceParams {
 	}
 
 	public void delete(String type, String id, boolean throwNotFound) {
-		SpaceRequest request = dog.delete("/1/data/{type}/{id}")//
+		SpaceRequest request = dog.delete("/2/data/{type}/{id}")//
 				.routeParam(TYPE_FIELD, type)//
 				.routeParam(ID_FIELD, id);
 
@@ -219,19 +219,19 @@ public class DataClient implements SpaceFields, SpaceParams {
 	//
 
 	public <K> K getField(String type, String id, String field, Class<K> dataClass) {
-		return dog.get("/1/data/{t}/{i}/{f}").routeParam("i", id)//
+		return dog.get("/2/data/{t}/{i}/{f}").routeParam("i", id)//
 				.routeParam("t", type).routeParam("f", field)//
 				.go(200).asPojo(dataClass);
 	}
 
 	public long saveField(String type, String id, String field, Object object) {
-		return dog.put("/1/data/{t}/{i}/{f}").routeParam("i", id)//
+		return dog.put("/2/data/{t}/{i}/{f}").routeParam("i", id)//
 				.routeParam("t", type).routeParam("f", field)//
 				.bodyPojo(object).go(200).get(VERSION_FIELD).asLong();
 	}
 
 	public Long deleteField(String type, String id, String field) {
-		return dog.delete("/1/data/{t}/{i}/{f}")//
+		return dog.delete("/2/data/{t}/{i}/{f}")//
 				.routeParam("i", id).routeParam("t", type)//
 				.routeParam("f", field).go(200).get(VERSION_FIELD).asLong();
 	}
@@ -251,7 +251,7 @@ public class DataClient implements SpaceFields, SpaceParams {
 
 	public <K> DataResults<K> getAll(DataGetAllRequest request, Class<K> sourceClass) {
 
-		String path = "/1/data";
+		String path = "/2/data";
 		if (!Strings.isNullOrEmpty(request.type))
 			path = path + "/" + request.type;
 
@@ -269,7 +269,7 @@ public class DataClient implements SpaceFields, SpaceParams {
 	//
 
 	public long deleteAll(String type) {
-		return dog.delete("/1/data/" + type)//
+		return dog.delete("/2/data/" + type)//
 				.refresh().go(200).get("deleted").asLong();
 	}
 
@@ -284,7 +284,7 @@ public class DataClient implements SpaceFields, SpaceParams {
 
 	public long bulkDelete(DataBulkDeleteRequest request) {
 
-		String path = "/1/data";
+		String path = "/2/data";
 
 		if (!Strings.isNullOrEmpty(request.type))
 			path = path + "/" + request.type;
@@ -313,7 +313,7 @@ public class DataClient implements SpaceFields, SpaceParams {
 
 	public <K> DataResults<K> search(DataSearchRequest request, Class<K> sourceClass) {
 
-		String path = "/1/data";
+		String path = "/2/data";
 
 		if (!Strings.isNullOrEmpty(request.type))
 			path = path + "/" + request.type;
@@ -331,7 +331,7 @@ public class DataClient implements SpaceFields, SpaceParams {
 	//
 
 	public SpaceResponse csv(String type, CsvRequest request) {
-		return dog.post("/1/data/{type}/_csv")//
+		return dog.post("/2/data/{type}/_csv")//
 				.routeParam("type", type)//
 				.bodyPojo(request).go(200);
 	}
@@ -351,7 +351,7 @@ public class DataClient implements SpaceFields, SpaceParams {
 	}
 
 	public SpaceResponse exportNow(DataExportRequest request) {
-		return dog.post("/1/data/{type}/_export")//
+		return dog.post("/2/data/{type}/_export")//
 				.routeParam("type", request.type)//
 				.queryParam(REFRESH_PARAM, request.refresh)//
 				.body(request.query)//
@@ -368,7 +368,7 @@ public class DataClient implements SpaceFields, SpaceParams {
 	}
 
 	public void importNow(DataImportRequest request, InputStream export) {
-		dog.post("/1/data/{type}/_import")//
+		dog.post("/2/data/{type}/_import")//
 				.withContentType(OkHttp.TEXT_PLAIN)//
 				.routeParam("type", request.type)//
 				.queryParam(PRESERVE_IDS_PARAM, request.preserveIds)//

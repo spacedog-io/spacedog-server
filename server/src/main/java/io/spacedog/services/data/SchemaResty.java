@@ -23,7 +23,7 @@ import net.codestory.http.annotations.Prefix;
 import net.codestory.http.annotations.Put;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/1/schemas")
+@Prefix("/2/schemas")
 public class SchemaResty extends SpaceResty {
 
 	//
@@ -66,7 +66,7 @@ public class SchemaResty extends SpaceResty {
 			Services.schemas().set(schema);
 		}
 
-		return JsonPayload.saved(false, "/1", "schemas", type).build();
+		return JsonPayload.saved(false, "/2", "schemas", type).build();
 	}
 
 	@Delete("/:type")

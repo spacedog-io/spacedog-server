@@ -17,7 +17,7 @@ import net.codestory.http.annotations.Prefix;
 import net.codestory.http.annotations.Put;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/1/push/applications")
+@Prefix("/2/push/applications")
 public class ApplicationResty extends SpaceResty {
 
 	@Get("")

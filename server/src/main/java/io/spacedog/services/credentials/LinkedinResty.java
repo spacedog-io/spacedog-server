@@ -20,16 +20,18 @@ import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
+import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
 
+@Prefix("/2")
 public class LinkedinResty extends SpaceResty {
 
 	//
 	// Routes
 	//
 
-	@Post("/1/login/linkedin")
-	@Post("/1/login/linkedin/")
+	@Post("/login/linkedin")
+	@Post("/login/linkedin/")
 	public Payload getLogin(Context context) {
 		Credentials credentials = login(context);
 
@@ -40,8 +42,8 @@ public class LinkedinResty extends SpaceResty {
 				.build();
 	}
 
-	@Get("/1/login/linkedin/redirect")
-	@Get("/1/login/linkedin/redirect/")
+	@Get("/login/linkedin/redirect")
+	@Get("/login/linkedin/redirect/")
 	public Payload getRedirectLogin(Context context) {
 
 		String finalRedirectUri = context.get("redirect_uri");

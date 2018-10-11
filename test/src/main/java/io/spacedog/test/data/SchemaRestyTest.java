@@ -181,6 +181,6 @@ public class SchemaRestyTest extends SpaceTest {
 		guest.data().save("document", Json.object("data", true));
 
 		// document schema contains no fields but "data" stash field
-		guest.post("/1/data/document").bodyJson("a", "aaa").go(400);
+		guest.post("/2/data/document").bodyJson("a", "aaa").go(400);
 	}
 }

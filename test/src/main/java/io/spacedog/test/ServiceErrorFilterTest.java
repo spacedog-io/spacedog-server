@@ -14,14 +14,14 @@ public class ServiceErrorFilterTest extends SpaceTest {
 		SpaceDog superadmin = clearServer();
 
 		// should fail to access invalid route
-		SpaceRequest.get("/1/toto")//
+		SpaceRequest.get("/2/toto")//
 				.backend(superadmin.backend())//
 				.go(404)//
-				.assertEquals("[path][/1/toto] not found", "error.message");
+				.assertEquals("[path][/2/toto] not found", "error.message");
 
 		// should fail to use this method for this valid route
-		superadmin.put("/1/login").go(405)//
-				.assertEquals("[PUT][/1/login] is not supported", "error.message");
+		superadmin.put("/2/login").go(405)//
+				.assertEquals("[PUT][/2/login] is not supported", "error.message");
 	}
 
 	@Test
@@ -31,6 +31,6 @@ public class ServiceErrorFilterTest extends SpaceTest {
 		prepareTest();
 
 		// this fails and send notification to superdogs with error details
-		SpaceRequest.post("/1/admin/_return_500").go(500);
+		SpaceRequest.post("/2/admin/_return_500").go(500);
 	}
 }

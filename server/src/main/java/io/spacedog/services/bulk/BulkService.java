@@ -72,7 +72,7 @@ public class BulkService {
 		Map<String, Object> objects = Maps.newHashMap();
 
 		for (Entry<String, String> entry : paths.entrySet()) {
-			ServiceCall call = new ServiceCall(SpaceMethod.GET, "/1" + entry.getValue());
+			ServiceCall call = new ServiceCall(SpaceMethod.GET, "/2" + entry.getValue());
 			ServiceResponse payload = execute(call);
 			objects.put(entry.getKey(), payload.content);
 

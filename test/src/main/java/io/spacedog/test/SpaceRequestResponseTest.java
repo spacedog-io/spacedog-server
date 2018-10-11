@@ -24,7 +24,7 @@ public class SpaceRequestResponseTest extends SpaceTest {
 		SpaceDog guest = SpaceDog.dog();
 
 		// CORS for simple requests
-		SpaceResponse response = guest.get("/1/data").go(200)//
+		SpaceResponse response = guest.get("/2/data").go(200)//
 				.assertHeaderEquals("GET, POST, PUT, DELETE, HEAD", SpaceHeaders.ACCESS_CONTROL_ALLOW_METHODS)
 				.assertHeaderEquals("get, POST, put, DELETE, HEAD", SpaceHeaders.ACCESS_CONTROL_ALLOW_METHODS)//
 				.assertHeaderContains("authorization", SpaceHeaders.ACCESS_CONTROL_ALLOW_HEADERS)//

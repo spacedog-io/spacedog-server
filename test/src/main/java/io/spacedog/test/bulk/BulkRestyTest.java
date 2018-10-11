@@ -40,11 +40,11 @@ public class BulkRestyTest extends SpaceTest {
 		// should succeed to reset test account and create message schema with
 		// admin credentials
 		List<ServiceCall> bulk = Lists.newArrayList(//
-				new ServiceCall(SpaceMethod.PUT, "/1/schemas/message")//
+				new ServiceCall(SpaceMethod.PUT, "/2/schemas/message")//
 						.withPayload(Message.schema().mapping()),
-				new ServiceCall(SpaceMethod.PUT, "/1/settings/data")//
+				new ServiceCall(SpaceMethod.PUT, "/2/settings/data")//
 						.withPayload(dataSettings),
-				new ServiceCall(SpaceMethod.GET, "/1/login"));
+				new ServiceCall(SpaceMethod.GET, "/2/login"));
 
 		List<ServiceResponse> responses = superadmin.bulk().execute(bulk);
 
@@ -62,11 +62,11 @@ public class BulkRestyTest extends SpaceTest {
 		bulk = Lists.newArrayList();
 		CredentialsCreateRequest ccr = new CredentialsCreateRequest()//
 				.username("vince").password("hi vince").email("vince@dog.com");
-		bulk.add(new ServiceCall(SpaceMethod.POST, "/1/credentials")//
+		bulk.add(new ServiceCall(SpaceMethod.POST, "/2/credentials")//
 				.withPayload(ccr));
 		ccr = new CredentialsCreateRequest()//
 				.username("dave").password("hi dave").email("dave@dog.com");
-		bulk.add(new ServiceCall(SpaceMethod.POST, "/1/credentials")//
+		bulk.add(new ServiceCall(SpaceMethod.POST, "/2/credentials")//
 				.withPayload(ccr));
 
 		responses = superadmin.bulk().execute(bulk);
@@ -76,7 +76,7 @@ public class BulkRestyTest extends SpaceTest {
 
 		// should succeed to fetch dave and vince credentials
 		// and the message schema
-		superadmin.get("/1/bulk")//
+		superadmin.get("/2/bulk")//
 				.queryParam("vince", "/credentials/" + vinceId) //
 				.queryParam("dave", "/credentials/" + daveId) //
 				.queryParam("schema", "/schemas/message") //
@@ -91,12 +91,12 @@ public class BulkRestyTest extends SpaceTest {
 		// found, unauthorized, ...
 
 		bulk = Lists.newArrayList();
-		bulk.add(new ServiceCall(SpaceMethod.POST, "/1/credentials")//
+		bulk.add(new ServiceCall(SpaceMethod.POST, "/2/credentials")//
 				.withPayload(new CredentialsCreateRequest()//
 						.username("fred").password("hi fred")));
-		bulk.add(new ServiceCall(SpaceMethod.GET, "/1/toto"));
-		bulk.add(new ServiceCall(SpaceMethod.DELETE, "/1/credentials/vince"));
-		bulk.add(new ServiceCall(SpaceMethod.POST, "/1/credentials/vince/_set_password")//
+		bulk.add(new ServiceCall(SpaceMethod.GET, "/2/toto"));
+		bulk.add(new ServiceCall(SpaceMethod.DELETE, "/2/credentials/vince"));
+		bulk.add(new ServiceCall(SpaceMethod.POST, "/2/credentials/vince/_set_password")//
 				.withPayload(Json.object("password", "hi vince 2")));
 
 		responses = guest.bulk().execute(bulk);
@@ -111,24 +111,24 @@ public class BulkRestyTest extends SpaceTest {
 		// should succeed to create and update messages by batch
 
 		bulk = Lists.newArrayList();
-		bulk.add(new ServiceCall(SpaceMethod.PUT, "/1/data/message/1")//
+		bulk.add(new ServiceCall(SpaceMethod.PUT, "/2/data/message/1")//
 				.withPayload(Json.object("text", "Hi guys!"))//
 				.withParams("strict", true));
 
-		bulk.add(new ServiceCall(SpaceMethod.PUT, "/1/data/message/2")//
+		bulk.add(new ServiceCall(SpaceMethod.PUT, "/2/data/message/2")//
 				.withPayload(Json.object("text", "Pretty cool, huhh?"))//
 				.withParams("strict", true));
 
-		bulk.add(new ServiceCall(SpaceMethod.GET, "/1/data/message")//
+		bulk.add(new ServiceCall(SpaceMethod.GET, "/2/data/message")//
 				.withParams("refresh", true));
 
-		bulk.add(new ServiceCall(SpaceMethod.PUT, "/1/data/message/1")//
+		bulk.add(new ServiceCall(SpaceMethod.PUT, "/2/data/message/1")//
 				.withPayload(Json.object("text", "Hi guys, what's up?")));
 
-		bulk.add(new ServiceCall(SpaceMethod.PUT, "/1/data/message/2")//
+		bulk.add(new ServiceCall(SpaceMethod.PUT, "/2/data/message/2")//
 				.withPayload(Json.object("text", "Pretty cool, huhhhhh?")));
 
-		bulk.add(new ServiceCall(SpaceMethod.GET, "/1/data/message")//
+		bulk.add(new ServiceCall(SpaceMethod.GET, "/2/data/message")//
 				.withParams("refresh", true));
 
 		SpaceDog vince = SpaceDog.dog().username("vince").password("hi vince");
@@ -158,9 +158,9 @@ public class BulkRestyTest extends SpaceTest {
 		// should succeed to stop on first batch request error
 
 		bulk = Lists.newArrayList();
-		bulk.add(new ServiceCall(SpaceMethod.GET, "/1/data/message"));
-		bulk.add(new ServiceCall(SpaceMethod.GET, "/1/data/XXX"));
-		bulk.add(new ServiceCall(SpaceMethod.GET, "/1/data/message"));
+		bulk.add(new ServiceCall(SpaceMethod.GET, "/2/data/message"));
+		bulk.add(new ServiceCall(SpaceMethod.GET, "/2/data/XXX"));
+		bulk.add(new ServiceCall(SpaceMethod.GET, "/2/data/message"));
 
 		responses = vince.bulk().execute(bulk, true);
 		assertEquals(2, responses.get(0).content.get("total").asLong());
@@ -173,7 +173,7 @@ public class BulkRestyTest extends SpaceTest {
 
 		List<ServiceCall> bigBulk = Lists.newArrayList();
 		for (int i = 0; i < 21; i++)
-			bigBulk.add(new ServiceCall(SpaceMethod.GET, "/1/login"));
+			bigBulk.add(new ServiceCall(SpaceMethod.GET, "/2/login"));
 
 		assertHttpError(400, () -> guest.bulk().execute(bigBulk))//
 				.spaceResponse()//

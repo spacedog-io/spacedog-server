@@ -34,12 +34,12 @@ public class AdminClient implements SpaceParams {
 	}
 
 	public void clearBackend(boolean files) {
-		dog.post("/1/admin/_clear").queryParam("files", files).go(200);
+		dog.post("/2/admin/_clear").queryParam("files", files).go(200);
 	}
 
 	public SpaceDog createBackend(BackendCreateRequest request, boolean notification) {
 
-		dog.post("/1/backends")//
+		dog.post("/2/backends")//
 				.queryParam(NOTIF_PARAM, notification)//
 				.bodyPojo(request)//
 				.go(201);
@@ -59,7 +59,7 @@ public class AdminClient implements SpaceParams {
 	}
 
 	public void deleteBackend(String backendId, String password) {
-		SpaceRequest.delete("/1/backends/{id}")//
+		SpaceRequest.delete("/2/backends/{id}")//
 				.backend(dog)//
 				// password must be challenged
 				.basicAuth(dog.username(), password)//

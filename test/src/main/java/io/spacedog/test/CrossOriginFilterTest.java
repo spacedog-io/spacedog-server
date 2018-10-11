@@ -18,7 +18,7 @@ public class CrossOriginFilterTest extends SpaceTest {
 		SpaceDog guest = SpaceDog.dog();
 
 		// CORS for simple requests
-		guest.get("/1/data").go(200)//
+		guest.get("/2/data").go(200)//
 				.assertHeaderEquals("*", SpaceHeaders.ACCESS_CONTROL_ALLOW_ORIGIN)//
 				.assertHeaderEquals(SpaceHeaders.ALLOW_METHODS, SpaceHeaders.ACCESS_CONTROL_ALLOW_METHODS)
 				.assertHeaderContains(SpaceHeaders.AUTHORIZATION, SpaceHeaders.ACCESS_CONTROL_ALLOW_HEADERS)//

@@ -130,7 +130,7 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 
 	public boolean isTokenStillValid() {
 		Check.notNullOrEmpty(accessToken, "access token");
-		SpaceResponse response = get("/1/login").go(200, 401);
+		SpaceResponse response = get("/2/login").go(200, 401);
 		return response.status() == 200;
 	}
 

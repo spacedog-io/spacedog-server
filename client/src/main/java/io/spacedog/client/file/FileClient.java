@@ -43,7 +43,7 @@ public class FileClient {
 	}
 
 	public FileList list(String bucket, String path, String next) {
-		return dog.post("/1/files/" + bucket + path)//
+		return dog.post("/2/files/" + bucket + path)//
 				.queryParam("op", "list")//
 				.queryParam("next", next)//
 				.size(listSize)//
@@ -65,7 +65,7 @@ public class FileClient {
 	}
 
 	private SpaceResponse get(String bucket, String path) {
-		return dog.get("/1/files/{bucket}{path}")//
+		return dog.get("/2/files/{bucket}{path}")//
 				.routeParam("bucket", bucket)//
 				.routeParam("path", path)//
 				.go(200);
@@ -84,7 +84,7 @@ public class FileClient {
 	}
 
 	public InputStream exportAsByteStream(String bucket, List<String> paths) {
-		return dog.post("/1/files/{bucket}")//
+		return dog.post("/2/files/{bucket}")//
 				.routeParam("bucket", bucket)//
 				.queryParam("op", "export")//
 				.bodyJson("paths", Json.toJsonNode(paths))//
@@ -125,7 +125,7 @@ public class FileClient {
 	public SpaceFile upload(String bucket, String path, InputStream byteStream, //
 			long contentLength, String contentType) {
 
-		return dog.put("/1/files/" + bucket + path)//
+		return dog.put("/2/files/" + bucket + path)//
 				.withContentType(contentType)//
 				.withContentLength(contentLength)//
 				.body(byteStream)//
@@ -134,7 +134,7 @@ public class FileClient {
 	}
 
 	public SpaceFile upload(String bucket, String path, byte[] bytes) {
-		return dog.put("/1/files/" + bucket + path).body(bytes)//
+		return dog.put("/2/files/" + bucket + path).body(bytes)//
 				.go(200).asPojo(SpaceFile.class);
 	}
 
@@ -143,7 +143,7 @@ public class FileClient {
 	}
 
 	public long delete(String bucket, String path) {
-		return dog.delete("/1/files/" + bucket + path)//
+		return dog.delete("/2/files/" + bucket + path)//
 				.go(200).get("deleted").asLong(0);
 	}
 
@@ -152,15 +152,15 @@ public class FileClient {
 	//
 
 	public Map<String, FileBucketSettings> listBuckets() {
-		return dog.get("/1/files").go(200).asPojo(TypeFactory.defaultInstance()//
+		return dog.get("/2/files").go(200).asPojo(TypeFactory.defaultInstance()//
 				.constructMapLikeType(Map.class, String.class, FileBucketSettings.class));
 	}
 
 	public FileBucketSettings getBucket(String bucket) {
-		return dog.get("/1/files/{name}").routeParam("name", bucket).go(200).asPojo(FileBucketSettings.class);
+		return dog.get("/2/files/{name}").routeParam("name", bucket).go(200).asPojo(FileBucketSettings.class);
 	}
 
 	public void setBucket(FileBucketSettings settings) {
-		dog.put("/1/files/{name}").routeParam("name", settings.name).bodyPojo(settings).go(200);
+		dog.put("/2/files/{name}").routeParam("name", settings.name).bodyPojo(settings).go(200);
 	}
 }

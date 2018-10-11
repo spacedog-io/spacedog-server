@@ -19,7 +19,7 @@ import net.codestory.http.annotations.Prefix;
 import net.codestory.http.annotations.Put;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/1/settings")
+@Prefix("/2/settings")
 public class SettingsResty extends SpaceResty {
 
 	//

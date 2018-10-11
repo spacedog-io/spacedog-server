@@ -35,38 +35,38 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		superadmin.credentials().enableGuestSignUp(true);
 
 		// fails since empty user body
-		guest.post("/1/credentials/").bodyJson(Json.object()).go(400);
+		guest.post("/2/credentials/").bodyJson(Json.object()).go(400);
 
 		// fails since no username
-		guest.post("/1/credentials/")//
+		guest.post("/2/credentials/")//
 				.bodyJson("password", "hi titi", "email", "titi@dog.com").go(400);
 
 		// fails since no email
-		guest.post("/1/credentials/")//
+		guest.post("/2/credentials/")//
 				.bodyJson("username", "titi", "password", "hi titi").go(400);
 
 		// fails since username too small
-		guest.post("/1/credentials/")//
+		guest.post("/2/credentials/")//
 				.bodyJson("username", "ti", "password", "hi titi").go(400);
 
 		// fails since password too small
-		guest.post("/1/credentials/")//
+		guest.post("/2/credentials/")//
 				.bodyJson("username", "titi", "password", "hi", "email", "titi@dog.com")//
 				.go(400);
 
 		// vince signs up
-		String vinceId = guest.post("/1/credentials")
+		String vinceId = guest.post("/2/credentials")
 				.bodyJson("username", "vince", "password", "hi vince", "email", "vince@dog.com")//
 				.go(201).getString("id");
 
 		// vince fails to sign up again since his credentials already exixts
-		guest.post("/1/credentials")//
+		guest.post("/2/credentials")//
 				.bodyJson("username", "vince", "password", "hello boby", "email", "vince@dog.com")//
 				.go(400)//
 				.assertEquals("already-exists", "error.code");
 
 		// vince logs in
-		ObjectNode node = SpaceRequest.get("/1/login")//
+		ObjectNode node = SpaceRequest.get("/2/login")//
 				.backend(guest).basicAuth("vince", "hi vince").go(200)//
 				.assertPresent("accessToken")//
 				.assertPresent("expiresIn")//
@@ -87,7 +87,7 @@ public class CredentialsRestyTest2 extends SpaceTest {
 				.expiresAt(DateTime.now().plus(node.get("expiresIn").asLong()));
 
 		// vince gets his credentials
-		vince.get("/1/credentials/" + vince.id()).go(200)//
+		vince.get("/2/credentials/" + vince.id()).go(200)//
 				.assertEquals("vince", "username")//
 				.assertEquals("vince@dog.com", "email")//
 				.assertSizeEquals(1, "roles")//
@@ -95,25 +95,25 @@ public class CredentialsRestyTest2 extends SpaceTest {
 				.assertDateIsRecent("updatedAt");
 
 		// vince fails to get his credentials if wrong username
-		SpaceRequest.get("/1/credentials/" + vince.id())//
+		SpaceRequest.get("/2/credentials/" + vince.id())//
 				.backend(superadmin).basicAuth("XXX", "hi vince").go(401);
 
 		// vince fails to get his credentials if wrong password
-		SpaceRequest.get("/1/credentials/" + vince.id())//
+		SpaceRequest.get("/2/credentials/" + vince.id())//
 				.backend(superadmin).basicAuth("vince", "XXX").go(401);
 
 		// anonymous fails to get vince credentials
-		guest.get("/1/credentials/" + vince.id()).go(401);
+		guest.get("/2/credentials/" + vince.id()).go(401);
 
 		// another user fails to get vince credentials
 		SpaceDog fred = signUpTempDog(superadmin.backend(), "fred");
-		fred.get("/1/credentials/" + vince.id()).go(403);
+		fred.get("/2/credentials/" + vince.id()).go(403);
 
 		// vince succeeds to login
 		vince.login();
 
 		// vince fails to login if wrong password
-		SpaceRequest.get("/1/login").backend(superadmin).basicAuth("vince", "XXX").go(401);
+		SpaceRequest.get("/2/login").backend(superadmin).basicAuth("vince", "XXX").go(401);
 	}
 
 	@Test
@@ -124,7 +124,7 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		SpaceDog superadmin = clearServer();
 
 		// fails to access backend if unknown token
-		SpaceRequest.get("/1/data").backend(superadmin).bearerAuth("XXX").go(401);
+		SpaceRequest.get("/2/data").backend(superadmin).bearerAuth("XXX").go(401);
 
 		// superadmin creates vince
 		SpaceDog vince = createTempDog(superadmin, "vince");
@@ -133,24 +133,24 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		vince.login();
 
 		// vince request succeeds since valid [backend / access token] pair
-		SpaceRequest.get("/1/data").bearerAuth(vince).go(200);
+		SpaceRequest.get("/2/data").bearerAuth(vince).go(200);
 
 		// vince logs out and cancels its access token
-		SpaceRequest.get("/1/logout").bearerAuth(vince).go(200);
+		SpaceRequest.get("/2/logout").bearerAuth(vince).go(200);
 
 		// vince fails to logout a second time
 		// since its access token is canceled
-		SpaceRequest.get("/1/logout").bearerAuth(vince).go(401);
+		SpaceRequest.get("/2/logout").bearerAuth(vince).go(401);
 
 		// vince fails to access backend
 		// since its access token is canceled
-		SpaceRequest.get("/1/data").bearerAuth(vince).go(401);
+		SpaceRequest.get("/2/data").bearerAuth(vince).go(401);
 
 		// vince fails to login with its canceled access token
-		SpaceRequest.get("/1/login").bearerAuth(vince).go(401);
+		SpaceRequest.get("/2/login").bearerAuth(vince).go(401);
 
 		// vince logs in again
-		ObjectNode node = SpaceRequest.get("/1/login")//
+		ObjectNode node = SpaceRequest.get("/2/login")//
 				.basicAuth(vince).go(200).asJsonObject();
 		vince.accessToken(node.get("accessToken").asText());
 		long expiresIn = node.get("expiresIn").asLong();
@@ -158,17 +158,17 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		assertTrue(expiresIn < (1000 * 60 * 60 * 24));
 
 		// vince can access backend again with its brand new access token
-		SpaceRequest.get("/1/data").bearerAuth(vince).go(200);
+		SpaceRequest.get("/2/data").bearerAuth(vince).go(200);
 
 		// if vince logs in again with access token
 		// its access token is not reset
 		String vinceOldAccessToken = vince.accessToken().get();
-		SpaceRequest.get("/1/login").bearerAuth(vince).go(200)//
+		SpaceRequest.get("/2/login").bearerAuth(vince).go(200)//
 				.assertEquals(vinceOldAccessToken, "accessToken");
 
 		// vince can access backend with its old token
 		// since it has not changed
-		SpaceRequest.get("/1/data").backend(superadmin).bearerAuth(vinceOldAccessToken).go(200);
+		SpaceRequest.get("/2/data").backend(superadmin).bearerAuth(vinceOldAccessToken).go(200);
 
 		// if vince logs in again with its password
 		// he gets a new access token
@@ -177,26 +177,26 @@ public class CredentialsRestyTest2 extends SpaceTest {
 
 		// vince can access data with its new token
 		// but can also access data with its old token
-		SpaceRequest.get("/1/data").backend(superadmin).bearerAuth(vince.accessToken().get()).go(200);
-		SpaceRequest.get("/1/data").backend(superadmin).bearerAuth(vinceOldAccessToken).go(200);
+		SpaceRequest.get("/2/data").backend(superadmin).bearerAuth(vince.accessToken().get()).go(200);
+		SpaceRequest.get("/2/data").backend(superadmin).bearerAuth(vinceOldAccessToken).go(200);
 
 		// vince logs out of his newest session
-		SpaceRequest.get("/1/logout").bearerAuth(vince).go(200);
+		SpaceRequest.get("/2/logout").bearerAuth(vince).go(200);
 
 		// vince can no longer access data with its new token
 		// but can still access data with its old token
-		SpaceRequest.get("/1/data").backend(superadmin).bearerAuth(vince.accessToken().get()).go(401);
-		SpaceRequest.get("/1/data").backend(superadmin).bearerAuth(vinceOldAccessToken).go(200);
+		SpaceRequest.get("/2/data").backend(superadmin).bearerAuth(vince.accessToken().get()).go(401);
+		SpaceRequest.get("/2/data").backend(superadmin).bearerAuth(vinceOldAccessToken).go(200);
 
 		// vince logs out of his oldest session
-		SpaceRequest.get("/1/logout").backend(superadmin).bearerAuth(vinceOldAccessToken).go(200);
+		SpaceRequest.get("/2/logout").backend(superadmin).bearerAuth(vinceOldAccessToken).go(200);
 
 		// vince can no longer access data with both tokens
-		SpaceRequest.get("/1/data").backend(superadmin).bearerAuth(vince.accessToken().get()).go(401);
-		SpaceRequest.get("/1/data").backend(superadmin).bearerAuth(vinceOldAccessToken).go(401);
+		SpaceRequest.get("/2/data").backend(superadmin).bearerAuth(vince.accessToken().get()).go(401);
+		SpaceRequest.get("/2/data").backend(superadmin).bearerAuth(vinceOldAccessToken).go(401);
 
 		// vince logs in with token expiration of 2 seconds
-		node = SpaceRequest.get("/1/login").basicAuth(vince)//
+		node = SpaceRequest.get("/2/login").basicAuth(vince)//
 				.queryParam("lifetime", 2) // seconds
 				.go(200).asJsonObject();
 
@@ -222,17 +222,17 @@ public class CredentialsRestyTest2 extends SpaceTest {
 
 		// fred fails to login with a token lifetime of 4s
 		// since max token lifetime is 3s
-		SpaceRequest.get("/1/login").basicAuth(fred)//
+		SpaceRequest.get("/2/login").basicAuth(fred)//
 				.queryParam(LIFETIME_PARAM, 4).go(403);
 
 		// fred logs in with a token lifetime of 2s
 		// since max token lifetime is 3s
 		fred.login(2);
-		SpaceRequest.get("/1/data").bearerAuth(fred).go(200);
+		SpaceRequest.get("/2/data").bearerAuth(fred).go(200);
 
 		// after lifetime, token expires
 		Thread.sleep(2000); // in milliseconds
-		SpaceRequest.get("/1/data").bearerAuth(fred).go(401);
+		SpaceRequest.get("/2/data").bearerAuth(fred).go(401);
 	}
 
 	@Test
@@ -259,13 +259,13 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		fred.credentials().delete();
 
 		// fred fails to login from now on
-		fred.get("/1/login").go(401);
+		fred.get("/2/login").go(401);
 
 		// admin deletes vince credentials
 		superadmin.credentials().delete(vince.id());
 
 		// vince fails to login from now on
-		vince.get("/1/login").go(401);
+		vince.get("/2/login").go(401);
 	}
 
 	@Test
@@ -358,7 +358,7 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		SpaceDog titi = SpaceDog.dog().username("titi");
 
 		// sign up without password should succeed
-		ObjectNode node = guest.post("/1/credentials/")//
+		ObjectNode node = guest.post("/2/credentials/")//
 				.bodyJson("username", titi.username(), "email", "titi@dog.com")//
 				.go(201)//
 				.assertNotNull("passwordResetCode")//
@@ -458,7 +458,7 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		assertEquals(Sets.newHashSet("user"), roles);
 
 		// fred fails to set a role since he is no admin
-		fred.put("/1/credentials/{id}/roles/silver")//
+		fred.put("/2/credentials/{id}/roles/silver")//
 				.routeParam("id", fred.id()).go(403);
 
 		// admin sets fred's roles
@@ -468,7 +468,7 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		assertEquals(Sets.newHashSet("user", "silver", "gold"), roles);
 
 		// fred fails to delete one of his roles since he is no admin
-		fred.delete("/1/credentials/{id}/roles/silver")//
+		fred.delete("/2/credentials/{id}/roles/silver")//
 				.routeParam("id", fred.id()).go(403);
 
 		// admin deletes one of fred's roles
@@ -483,7 +483,7 @@ public class CredentialsRestyTest2 extends SpaceTest {
 
 		// fred can not access user authorized services
 		// anymore since he's got no roles
-		fred.get("/1/credentials/me").go(403);
+		fred.get("/2/credentials/me").go(403);
 
 		// superadmin gives fred admin role
 		superadmin.credentials().setRole(fred.id(), "admin");
@@ -492,7 +492,7 @@ public class CredentialsRestyTest2 extends SpaceTest {
 
 		// fred fails to give himself superadmin role
 		// since he is only admin
-		fred.put("/1/credentials/{id}/roles/superadmin")//
+		fred.put("/2/credentials/{id}/roles/superadmin")//
 				.routeParam("id", fred.id()).go(403);
 
 		// fred can now give himself user role
@@ -502,7 +502,7 @@ public class CredentialsRestyTest2 extends SpaceTest {
 
 		// test super admin fails to give himself superdog role
 		// since he is only super admin
-		superadmin.put("/1/credentials/{id}/roles/superdog")//
+		superadmin.put("/2/credentials/{id}/roles/superdog")//
 				.routeParam("id", superadmin.id()).go(403);
 	}
 
@@ -519,15 +519,15 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		superadmin.credentials().enableGuestSignUp(false);
 
 		// guest can not create credentials
-		guest.post("/1/credentials")//
+		guest.post("/2/credentials")//
 				.bodyJson("username", "vince", "password", "hi vince", "email", "vince@dog.com")//
 				.go(401);
 
 		// fred fails to create credentials if no email
-		fred.post("/1/credentials").bodyJson("username", "vince").go(400);
+		fred.post("/2/credentials").bodyJson("username", "vince").go(400);
 
 		// fred can create credentials for someone
-		ObjectNode node = fred.post("/1/credentials")//
+		ObjectNode node = fred.post("/2/credentials")//
 				.bodyJson("username", "vince", "email", "vince@dog.com")//
 				.go(201).asJsonObject();
 
@@ -552,17 +552,17 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		assertNotNull(settings.passwordRegex);
 
 		// invalid username considering default username regex
-		SpaceRequest.post("/1/credentials").backend(superadmin)//
+		SpaceRequest.post("/2/credentials").backend(superadmin)//
 				.bodyJson("username", "vi", "password", "hi", "email", "vince@dog.com")//
 				.go(400);
 
 		// invalid password considering default password regex
-		SpaceRequest.post("/1/credentials").backend(superadmin)//
+		SpaceRequest.post("/2/credentials").backend(superadmin)//
 				.bodyJson("username", "vince", "password", "hi", "email", "vince@dog.com")//
 				.go(400);
 
 		// valid username and password considering default credentials settings
-		SpaceRequest.post("/1/credentials").backend(superadmin)//
+		SpaceRequest.post("/2/credentials").backend(superadmin)//
 				.bodyJson("username", "vince", "password", "hi vince", "email", "vince@dog.com")//
 				.go(201);
 
@@ -572,17 +572,17 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		superadmin.credentials().settings(settings);
 
 		// invalid username considering new username regex
-		SpaceRequest.post("/1/credentials").backend(superadmin)//
+		SpaceRequest.post("/2/credentials").backend(superadmin)//
 				.bodyJson("username", "nath.lopez", "password", "hi nath", "email", "nath@dog.com")//
 				.go(400);
 
 		// invalid password considering new password regex
-		SpaceRequest.post("/1/credentials").backend(superadmin)//
+		SpaceRequest.post("/2/credentials").backend(superadmin)//
 				.bodyJson("username", "nathlopez", "password", "hi nath", "email", "nath@dog.com")//
 				.go(400);
 
 		// valid username and password considering credentials settings
-		SpaceRequest.post("/1/credentials").backend(superadmin)//
+		SpaceRequest.post("/2/credentials").backend(superadmin)//
 				.bodyJson("username", "nathlopez", "password", "hinath", "email", "nath@dog.com")//
 				.go(201);
 	}
@@ -596,7 +596,7 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		// fred fails to create admin credentials
-		fred.post("/1/credentials")//
+		fred.post("/2/credentials")//
 				.bodyJson("username", "vince", "password", "hi vince", //
 						"email", "vince@dog.com", "roles", Json.array("admin"))//
 				.go(403);
@@ -640,7 +640,7 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		// fred fails to set his password
 		// since his password is not challenged
 		// because authentication is done with access token
-		SpaceRequest.post("/1/credentials/" + fred.id() + "/_set_password")//
+		SpaceRequest.post("/2/credentials/" + fred.id() + "/_set_password")//
 				.bearerAuth(fred)//
 				.bodyJson("password", "hello fred")//
 				.go(403)//
@@ -660,30 +660,30 @@ public class CredentialsRestyTest2 extends SpaceTest {
 
 		// fred fails to updates his username
 		// since password must be challenged
-		SpaceRequest.put("/1/credentials/" + fred.id()).bearerAuth(fred)//
+		SpaceRequest.put("/2/credentials/" + fred.id()).bearerAuth(fred)//
 				.bodyJson("username", "fred2").go(403)//
 				.assertEquals("unchallenged-password", "error.code");
 
 		// fred updates his username with a challenged password
-		SpaceRequest.put("/1/credentials/" + fred.id()).basicAuth(fred)//
+		SpaceRequest.put("/2/credentials/" + fred.id()).basicAuth(fred)//
 				.bodyJson("username", "fred2").go(200);
 
 		// fred can no longer login with old username
-		SpaceRequest.get("/1/login").backend(superadmin).basicAuth("fred", "hi fred").go(401);
+		SpaceRequest.get("/2/login").backend(superadmin).basicAuth("fred", "hi fred").go(401);
 
 		// fred can login with his new username
 		fred.username("fred2").login();
 
 		// superadmin updates fred's email
-		superadmin.put("/1/credentials/" + fred.id())//
+		superadmin.put("/2/credentials/" + fred.id())//
 				.bodyJson("email", "fred2@dog.com").go(200);
 
-		fred.get("/1/credentials/" + fred.id())//
+		fred.get("/2/credentials/" + fred.id())//
 				.go(200).assertEquals("fred2@dog.com", "email");
 
 		// fred fails to updates his username
 		// since password must be challenged
-		SpaceRequest.put("/1/credentials/" + fred.id()).bearerAuth(fred)//
+		SpaceRequest.put("/2/credentials/" + fred.id()).bearerAuth(fred)//
 				.bodyJson("username", "fred2").go(403)//
 				.assertEquals("unchallenged-password", "error.code");
 
@@ -691,10 +691,10 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		fred.credentials().setMyPassword(fred.password().get(), "hi fred2");
 
 		// fred's old access token is not valid anymore
-		SpaceRequest.get("/1/credentials/" + fred.id()).bearerAuth(fred).go(401);
+		SpaceRequest.get("/2/credentials/" + fred.id()).bearerAuth(fred).go(401);
 
 		// fred's old password is not valid anymore
-		SpaceRequest.get("/1/login").basicAuth(fred).go(401);
+		SpaceRequest.get("/2/login").basicAuth(fred).go(401);
 
 		// fred can login with his new password
 		fred.password("hi fred2").login();
@@ -727,12 +727,12 @@ public class CredentialsRestyTest2 extends SpaceTest {
 
 		// fred fails to access any resources from now on
 		// with basic authentication scheme
-		SpaceRequest.get("/1/data").basicAuth(fred).go(401)//
+		SpaceRequest.get("/2/data").basicAuth(fred).go(401)//
 				.assertEquals("disabled-credentials", "error.code");
 
 		// fred fails to access any other resources from now on
 		// with bearer authentication scheme
-		SpaceRequest.get("/1/data").bearerAuth(fred).go(401)//
+		SpaceRequest.get("/2/data").bearerAuth(fred).go(401)//
 				.assertEquals("disabled-credentials", "error.code");
 
 		// fred fails to update his credentials from now on
@@ -766,12 +766,12 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		Thread.sleep(1000);
 
 		// check session has expired
-		SpaceRequest.get("/1/data").backend(superadmin).bearerAuth(firstToken).go(401)//
+		SpaceRequest.get("/2/data").backend(superadmin).bearerAuth(firstToken).go(401)//
 				.assertEquals("expired-access-token", "error.code");
 
 		// check session has expired a second time
 		// this means expired session has not yet been purged
-		SpaceRequest.get("/1/data").backend(superadmin).bearerAuth(firstToken).go(401)//
+		SpaceRequest.get("/2/data").backend(superadmin).bearerAuth(firstToken).go(401)//
 				.assertEquals("expired-access-token", "error.code");
 
 		// superadmin logs in again 9 times
@@ -788,7 +788,7 @@ public class CredentialsRestyTest2 extends SpaceTest {
 
 		// this means old session are not yet purged
 		// since oinly 10 latest sessions are kept
-		SpaceRequest.get("/1/data").backend(superadmin).bearerAuth(firstToken).go(401)//
+		SpaceRequest.get("/2/data").backend(superadmin).bearerAuth(firstToken).go(401)//
 				.assertEquals("expired-access-token", "error.code");
 
 		// superadmin logs in again an eleventh time
@@ -797,7 +797,7 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		// first superadmin session has been purged
 		// since only 10 latest sessions are kept
 		// this means first session token is no longer present
-		SpaceRequest.get("/1/data").backend(superadmin).bearerAuth(firstToken).go(401)//
+		SpaceRequest.get("/2/data").backend(superadmin).bearerAuth(firstToken).go(401)//
 				.assertEquals("invalid-access-token", "error.code");
 	}
 
@@ -814,12 +814,12 @@ public class CredentialsRestyTest2 extends SpaceTest {
 
 		// superadmin fails to get his credentials
 		// via an invalid access token as query param
-		guest.get("/1/credentials")//
+		guest.get("/2/credentials")//
 				.queryParam("accessToken", "XXX").go(401);
 
 		// superadmin gets his credentials
 		// via valid access token as query param
-		guest.get("/1/credentials")//
+		guest.get("/2/credentials")//
 				.queryParam("accessToken", superadmin.accessToken().get())//
 				.go(200)//
 				.assertEquals(superadmin.id(), "results.0.id");

@@ -18,7 +18,7 @@ public class StripeClient {
 
 	public ObjectNode charge(Map<String, Object> parameters) {
 
-		SpaceRequest request = dog.post("/1/stripe/charges");
+		SpaceRequest request = dog.post("/2/stripe/charges");
 
 		for (Entry<String, Object> param : parameters.entrySet())
 			request.formField(param.getKey(), param.getValue().toString());

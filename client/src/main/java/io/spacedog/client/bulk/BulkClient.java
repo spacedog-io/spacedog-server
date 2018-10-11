@@ -15,7 +15,7 @@ public class BulkClient {
 	}
 
 	public List<ServiceResponse> execute(List<ServiceCall> calls, Boolean stopOnError) {
-		return dog.post("/1/bulk")//
+		return dog.post("/2/bulk")//
 				.bodyPojo(calls)//
 				.queryParam("stopOnError", stopOnError)//
 				.go(200)//

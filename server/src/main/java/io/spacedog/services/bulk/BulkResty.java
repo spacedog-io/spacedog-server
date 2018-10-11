@@ -14,7 +14,7 @@ import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.constants.HttpStatus;
 
-@Prefix("/1/bulk")
+@Prefix("/2/bulk")
 public class BulkResty extends SpaceResty {
 
 	// query parameter names

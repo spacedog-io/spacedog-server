@@ -12,7 +12,7 @@ import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.annotations.Put;
 
-@Prefix("/1/jobs")
+@Prefix("/2/jobs")
 public class JobResty extends SpaceResty {
 
 	@Get("/:name")

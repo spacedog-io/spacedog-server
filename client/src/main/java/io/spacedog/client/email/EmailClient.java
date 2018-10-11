@@ -15,7 +15,7 @@ public class EmailClient {
 	}
 
 	public ObjectNode send(EmailRequest request) {
-		return dog.post("/1/emails")//
+		return dog.post("/2/emails")//
 				.bodyPojo(request).go(200)//
 				.asJsonObject();
 	}
@@ -28,20 +28,20 @@ public class EmailClient {
 	}
 
 	public void saveTemplate(EmailTemplate template) {
-		dog.put("/1/emails/templates/{name}")//
+		dog.put("/2/emails/templates/{name}")//
 				.routeParam("name", template.name)//
 				.bodyPojo(template).go(200, 201);
 	}
 
 	public EmailTemplate getTemplate(String name) {
-		return dog.get("/1/emails/templates/{name}")//
+		return dog.get("/2/emails/templates/{name}")//
 				.routeParam("name", name)//
 				.go(200)//
 				.asPojo(EmailTemplate.class);
 	}
 
 	public void deleteTemplate(String templateName) {
-		dog.delete("/1/emails/templates/{name}")//
+		dog.delete("/2/emails/templates/{name}")//
 				.routeParam("name", templateName)//
 				.go(200);
 	}

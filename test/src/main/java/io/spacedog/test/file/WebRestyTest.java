@@ -22,7 +22,7 @@ public class WebRestyTest extends SpaceTest {
 		superdog().admin().clearBackend(false);
 
 		// browse without bucket returns default not found html page
-		SpaceRequest.get("/1/web").go(404)//
+		SpaceRequest.get("/2/web").go(404)//
 				.assertHeaderEquals("text/html", SpaceHeaders.CONTENT_TYPE);
 	}
 
@@ -45,7 +45,7 @@ public class WebRestyTest extends SpaceTest {
 		assertEquals(0, superadmin.files().listAll(WWW).files.size());
 
 		// upload to unknown bucket is illegal
-		superadmin.put("/1/files/XXX.html").go(400);
+		superadmin.put("/2/files/XXX.html").go(400);
 
 		// superadmin uploads web site to www bucket
 		upload("/index.html");
@@ -111,14 +111,14 @@ public class WebRestyTest extends SpaceTest {
 	private void browse(String uri, String expectedBody, String expectedContentType) {
 		SpaceBackend wwwBackend = SpaceEnv.env().wwwBackend();
 
-		SpaceRequest.head("/1/web/" + WWW + uri)//
+		SpaceRequest.head("/2/web/" + WWW + uri)//
 				.backend(superadmin.backend()).go(200)//
 				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE);
 
 		SpaceRequest.head(uri).backend(wwwBackend).go(200)//
 				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE);
 
-		SpaceRequest.get("/1/web/" + WWW + uri)//
+		SpaceRequest.get("/2/web/" + WWW + uri)//
 				.backend(superadmin.backend()).go(200)//
 				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE)//
 				.assertBodyEquals(expectedBody);

@@ -15,46 +15,48 @@ import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
+import net.codestory.http.annotations.Prefix;
 import net.codestory.http.annotations.Put;
 import net.codestory.http.payload.Payload;
 
+@Prefix("/2/sms")
 public class SmsResty extends SpaceResty {
 
-	@Post("/1/sms")
-	@Post("/1/sms/")
+	@Post("")
+	@Post("/")
 	public ObjectNode postSms(SmsRequest request, Context context) {
 		return Services.sms().sendIfAuthorized(request);
 	}
 
-	@Get("/1/sms/:messageId")
-	@Get("/1/sms/:messageId")
+	@Get("/:messageId")
+	@Get("/:messageId")
 	public ObjectNode getSms(String messageId, Context context) {
 		Server.context().credentials().checkRoleAccess(//
 				Services.sms().settings().authorizedRoles);
 		return Services.sms().get(messageId);
 	}
 
-	@Put("/1/sms/templates/:name")
-	@Put("/1/sms/templates/:name/")
+	@Put("/templates/:name")
+	@Put("/templates/:name/")
 	public Payload putTemplate(String templateName, SmsTemplate template, Context context) {
 		Server.context().credentials().checkAtLeastSuperAdmin();
 		template.name = templateName;
 		Services.sms().saveTemplate(template);
 		return JsonPayload.ok().withFields(//
 				"id", templateName, "type", "SmsTemplate")//
-				.withLocation("/1/sms/templates/" + templateName)//
+				.withLocation("/2/sms/templates/" + templateName)//
 				.build();
 	}
 
-	@Get("/1/sms/templates/:name")
-	@Get("/1/sms/templates/:name/")
+	@Get("/templates/:name")
+	@Get("/templates/:name/")
 	public SmsTemplate getTemplate(String templateName) {
 		Server.context().credentials().checkAtLeastSuperAdmin();
 		return Services.sms().getTemplate(templateName);
 	}
 
-	@Delete("/1/sms/templates/:name")
-	@Delete("/1/sms/templates/:name/")
+	@Delete("/templates/:name")
+	@Delete("/templates/:name/")
 	public void deleteTemplate(String templateName) {
 		Server.context().credentials().checkAtLeastSuperAdmin();
 		Services.sms().deleteTemplate(templateName);

@@ -28,7 +28,7 @@ public class WebResty extends SpaceResty implements SpaceFilter {
 
 	@Override
 	public boolean matches(String uri, Context context) {
-		return uri.startsWith("/1/web") || Server.context().isWww();
+		return uri.startsWith("/2/web") || Server.context().isWww();
 	}
 
 	@Override

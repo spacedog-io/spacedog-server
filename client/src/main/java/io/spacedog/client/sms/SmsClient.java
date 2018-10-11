@@ -13,7 +13,7 @@ public class SmsClient {
 	}
 
 	public ObjectNode get(String messageId) {
-		return dog.get("/1/sms/{id}")//
+		return dog.get("/2/sms/{id}")//
 				.routeParam("id", messageId).go(200).asJsonObject();
 	}
 
@@ -26,27 +26,27 @@ public class SmsClient {
 	}
 
 	public String send(SmsRequest request) {
-		return dog.post("/1/sms")//
+		return dog.post("/2/sms")//
 				.bodyPojo(request)//
 				.go(200)//
 				.getString("sid");
 	}
 
 	public void saveTemplate(SmsTemplate template) {
-		dog.put("/1/sms/templates/{name}")//
+		dog.put("/2/sms/templates/{name}")//
 				.routeParam("name", template.name)//
 				.bodyPojo(template).go(200, 201);
 	}
 
 	public SmsTemplate getTemplate(String name) {
-		return dog.get("/1/sms/templates/{name}")//
+		return dog.get("/2/sms/templates/{name}")//
 				.routeParam("name", name)//
 				.go(200)//
 				.asPojo(SmsTemplate.class);
 	}
 
 	public void deleteTemplate(String templateName) {
-		dog.delete("/1/sms/templates/{name}")//
+		dog.delete("/2/sms/templates/{name}")//
 				.routeParam("name", templateName)//
 				.go(200);
 	}

@@ -90,7 +90,7 @@ public class DataRestyTest extends SpaceTest {
 
 		// delete
 		vince.data().delete(carWrap);
-		vince.get("/1/data/car/" + carWrap.id()).go(404);
+		vince.get("/2/data/car/" + carWrap.id()).go(404);
 	}
 
 	@Test
@@ -193,13 +193,13 @@ public class DataRestyTest extends SpaceTest {
 
 		// vince is not allowed to force save custom meta
 		// since he does'nt have 'updateMeta' permission
-		vince.put("/1/data/message/2")//
+		vince.put("/2/data/message/2")//
 				.queryParam(FORCE_META_PARAM, true)//
 				.bodyPojo(message)//
 				.go(403);
 
 		// operator can create a new message with custom meta
-		operator.put("/1/data/message/2")//
+		operator.put("/2/data/message/2")//
 				.queryParam(FORCE_META_PARAM, true)//
 				.bodyPojo(message)//
 				.go(200);
@@ -215,13 +215,13 @@ public class DataRestyTest extends SpaceTest {
 		assertTrue(message.updatedAt().isEqual(downloaded.updatedAt()));
 
 		// operator is allowed to force update vince's object
-		operator.put("/1/data/message/1")//
+		operator.put("/2/data/message/1")//
 				.queryParam(FORCE_META_PARAM, true)//
 				.bodyPojo(message)//
 				.go(200);
 
 		// vince can not access his object anymore
 		// since owner has been updated to nath by operator
-		vince.get("/1/data/message/1").go(403);
+		vince.get("/2/data/message/1").go(403);
 	}
 }

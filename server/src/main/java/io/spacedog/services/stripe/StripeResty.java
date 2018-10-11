@@ -19,7 +19,7 @@ import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/1/stripe")
+@Prefix("/2/stripe")
 public class StripeResty extends SpaceResty {
 
 	@Post("/customers")

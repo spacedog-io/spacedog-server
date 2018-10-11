@@ -29,7 +29,7 @@ public class QueryTest extends SpaceTest {
 		superadmin.schemas().set(buildCarSchema());
 
 		for (int i = 0; i < 500; i++)
-			superadmin.post("/1/data/car").bodyJson(jsonCar(i)).go(201);
+			superadmin.post("/2/data/car").bodyJson(jsonCar(i)).go(201);
 	}
 
 	private Schema buildCarSchema() {

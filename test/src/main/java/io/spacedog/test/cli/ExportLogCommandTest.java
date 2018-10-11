@@ -55,12 +55,12 @@ public class ExportLogCommandTest extends SpaceTest {
 		// checking export file
 		LogSearchResults results = Json.toPojo(Files.readAllBytes(target), LogSearchResults.class);
 		assertEquals(7, results.total);
-		assertEquals("/1/admin/_clear", results.results.get(0).path);
-		assertEquals("/1/credentials", results.results.get(1).path);
-		assertEquals("/1/data", results.results.get(2).path);
-		assertEquals("/1/credentials", results.results.get(3).path);
-		assertEquals("/1/settings/credentials", results.results.get(4).path);
-		assertEquals("/1/login", results.results.get(5).path);
-		assertEquals("/1/login", results.results.get(6).path);
+		assertEquals("/2/admin/_clear", results.results.get(0).path);
+		assertEquals("/2/credentials", results.results.get(1).path);
+		assertEquals("/2/data", results.results.get(2).path);
+		assertEquals("/2/credentials", results.results.get(3).path);
+		assertEquals("/2/settings/credentials", results.results.get(4).path);
+		assertEquals("/2/login", results.results.get(5).path);
+		assertEquals("/2/login", results.results.get(6).path);
 	}
 }
