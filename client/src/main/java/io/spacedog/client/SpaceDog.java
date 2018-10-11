@@ -3,7 +3,7 @@ package io.spacedog.client;
 import org.joda.time.DateTime;
 
 import io.spacedog.client.admin.AdminClient;
-import io.spacedog.client.batch.BatchClient;
+import io.spacedog.client.bulk.BulkClient;
 import io.spacedog.client.credentials.CredentialsClient;
 import io.spacedog.client.data.DataClient;
 import io.spacedog.client.email.EmailClient;
@@ -272,12 +272,12 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 		return smsClient;
 	}
 
-	BatchClient batchClient;
+	BulkClient bulkClient;
 
-	public BatchClient batch() {
-		if (batchClient == null)
-			batchClient = new BatchClient(this);
-		return batchClient;
+	public BulkClient bulk() {
+		if (bulkClient == null)
+			bulkClient = new BulkClient(this);
+		return bulkClient;
 	}
 
 }

@@ -1,10 +1,10 @@
-package io.spacedog.services.batch;
+package io.spacedog.services.bulk;
 
 import java.util.List;
 import java.util.Map;
 
-import io.spacedog.client.batch.ServiceResponse;
-import io.spacedog.client.batch.ServiceCall;
+import io.spacedog.client.bulk.ServiceCall;
+import io.spacedog.client.bulk.ServiceResponse;
 import io.spacedog.client.http.SpaceException;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceResty;
@@ -14,8 +14,8 @@ import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.constants.HttpStatus;
 
-@Prefix("/1/batch")
-public class BatchResty extends SpaceResty {
+@Prefix("/1/bulk")
+public class BulkResty extends SpaceResty {
 
 	// query parameter names
 
@@ -30,11 +30,11 @@ public class BatchResty extends SpaceResty {
 	public List<ServiceResponse> post(List<ServiceCall> batch, Context context) {
 
 		if (batch.size() > 20)
-			throw new SpaceException("batch-limit-exceeded", HttpStatus.BAD_REQUEST, //
-					"batch are limited to 20 sub requests");
+			throw new SpaceException("bulk-limit-exceeded", HttpStatus.BAD_REQUEST, //
+					"bulk are limited to 20 sub requests");
 
 		boolean stopOnError = context.query().getBoolean(STOP_ON_ERROR_QUERY_PARAM, false);
-		return Services.batch().execute(batch, stopOnError);
+		return Services.bulk().execute(batch, stopOnError);
 	}
 
 	@Get("")
@@ -47,6 +47,6 @@ public class BatchResty extends SpaceResty {
 		Map<String, String> params = context.query().keyValues();
 		params.remove(STOP_ON_ERROR_QUERY_PARAM);
 
-		return Services.batch().get(params, stopOnError);
+		return Services.bulk().get(params, stopOnError);
 	}
 }

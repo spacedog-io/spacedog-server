@@ -30,7 +30,7 @@ import io.spacedog.client.http.SpaceBackend;
 import io.spacedog.services.CrossOriginFilter;
 import io.spacedog.services.admin.AdminResty;
 import io.spacedog.services.admin.HealthCheckResty;
-import io.spacedog.services.batch.BatchResty;
+import io.spacedog.services.bulk.BulkResty;
 import io.spacedog.services.credentials.CredentialsResty;
 import io.spacedog.services.credentials.LinkedinResty;
 import io.spacedog.services.data.AggregationSerializer;
@@ -222,7 +222,7 @@ public class Server implements Extensions {
 				.add(SchemaResty.class)//
 				.add(CredentialsResty.class)//
 				.add(LinkedinResty.class)//
-				.add(BatchResty.class)//
+				.add(BulkResty.class)//
 				.add(EmailResty.class)//
 				.add(SmsResty.class)//
 				.add(LogResty.class)//

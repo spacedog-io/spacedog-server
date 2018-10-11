@@ -1,4 +1,4 @@
-package io.spacedog.client.batch;
+package io.spacedog.client.bulk;
 
 import java.util.Arrays;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package io.spacedog.services.batch;
+package io.spacedog.services.bulk;
 
 import java.util.List;
 import java.util.Map;
@@ -7,8 +7,8 @@ import java.util.Map.Entry;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import io.spacedog.client.batch.ServiceResponse;
-import io.spacedog.client.batch.ServiceCall;
+import io.spacedog.client.bulk.ServiceCall;
+import io.spacedog.client.bulk.ServiceResponse;
 import io.spacedog.client.http.SpaceMethod;
 import io.spacedog.server.InternalRequest;
 import io.spacedog.server.JsonPayload;
@@ -18,7 +18,7 @@ import io.spacedog.utils.Json;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
-public class BatchService {
+public class BulkService {
 
 	public List<ServiceResponse> execute(List<ServiceCall> batch) {
 		return execute(batch, true);

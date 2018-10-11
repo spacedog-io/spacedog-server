@@ -2,7 +2,7 @@ package io.spacedog.server;
 
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
-import io.spacedog.services.batch.BatchService;
+import io.spacedog.services.bulk.BulkService;
 import io.spacedog.services.credentials.CredentialsService;
 import io.spacedog.services.data.DataService;
 import io.spacedog.services.data.SchemaService;
@@ -97,12 +97,12 @@ public class Services implements SpaceFields, SpaceParams {
 		return smsService;
 	}
 
-	private static BatchService batchService;
+	private static BulkService bulkService;
 
-	public static BatchService batch() {
-		if (batchService == null)
-			batchService = new BatchService();
-		return batchService;
+	public static BulkService bulk() {
+		if (bulkService == null)
+			bulkService = new BulkService();
+		return bulkService;
 	}
 
 	private static JobService jobService;

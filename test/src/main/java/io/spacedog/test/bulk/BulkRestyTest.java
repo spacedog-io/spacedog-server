@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.test.batch;
+package io.spacedog.test.bulk;
 
 import java.util.List;
 
@@ -11,8 +11,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceDog;
-import io.spacedog.client.batch.ServiceResponse;
-import io.spacedog.client.batch.ServiceCall;
+import io.spacedog.client.bulk.ServiceCall;
+import io.spacedog.client.bulk.ServiceResponse;
 import io.spacedog.client.credentials.CredentialsCreateRequest;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
@@ -22,7 +22,7 @@ import io.spacedog.test.Message;
 import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Json;
 
-public class BatchRestyTest extends SpaceTest {
+public class BulkRestyTest extends SpaceTest {
 
 	@Test
 	public void test() {
@@ -39,14 +39,14 @@ public class BatchRestyTest extends SpaceTest {
 
 		// should succeed to reset test account and create message schema with
 		// admin credentials
-		List<ServiceCall> batch = Lists.newArrayList(//
+		List<ServiceCall> bulk = Lists.newArrayList(//
 				new ServiceCall(SpaceMethod.PUT, "/1/schemas/message")//
 						.withPayload(Message.schema().mapping()),
 				new ServiceCall(SpaceMethod.PUT, "/1/settings/data")//
 						.withPayload(dataSettings),
 				new ServiceCall(SpaceMethod.GET, "/1/login"));
 
-		List<ServiceResponse> responses = superadmin.batch().execute(batch);
+		List<ServiceResponse> responses = superadmin.bulk().execute(bulk);
 
 		assertEquals("message", responses.get(0).content.get("id").asText());
 		assertEquals("schemas", responses.get(0).content.get("type").asText());
@@ -59,24 +59,24 @@ public class BatchRestyTest extends SpaceTest {
 		// should succeed to create dave and vince users and fetch them with
 		// simple backend key credentials
 
-		batch = Lists.newArrayList();
+		bulk = Lists.newArrayList();
 		CredentialsCreateRequest ccr = new CredentialsCreateRequest()//
 				.username("vince").password("hi vince").email("vince@dog.com");
-		batch.add(new ServiceCall(SpaceMethod.POST, "/1/credentials")//
+		bulk.add(new ServiceCall(SpaceMethod.POST, "/1/credentials")//
 				.withPayload(ccr));
 		ccr = new CredentialsCreateRequest()//
 				.username("dave").password("hi dave").email("dave@dog.com");
-		batch.add(new ServiceCall(SpaceMethod.POST, "/1/credentials")//
+		bulk.add(new ServiceCall(SpaceMethod.POST, "/1/credentials")//
 				.withPayload(ccr));
 
-		responses = superadmin.batch().execute(batch);
+		responses = superadmin.bulk().execute(bulk);
 
 		String vinceId = responses.get(0).content.get("id").asText();
 		String daveId = responses.get(1).content.get("id").asText();
 
 		// should succeed to fetch dave and vince credentials
 		// and the message schema
-		superadmin.get("/1/batch")//
+		superadmin.get("/1/bulk")//
 				.queryParam("vince", "/credentials/" + vinceId) //
 				.queryParam("dave", "/credentials/" + daveId) //
 				.queryParam("schema", "/schemas/message") //
@@ -90,16 +90,16 @@ public class BatchRestyTest extends SpaceTest {
 		// should succeed to return errors when batch requests are invalid, not
 		// found, unauthorized, ...
 
-		batch = Lists.newArrayList();
-		batch.add(new ServiceCall(SpaceMethod.POST, "/1/credentials")//
+		bulk = Lists.newArrayList();
+		bulk.add(new ServiceCall(SpaceMethod.POST, "/1/credentials")//
 				.withPayload(new CredentialsCreateRequest()//
 						.username("fred").password("hi fred")));
-		batch.add(new ServiceCall(SpaceMethod.GET, "/1/toto"));
-		batch.add(new ServiceCall(SpaceMethod.DELETE, "/1/credentials/vince"));
-		batch.add(new ServiceCall(SpaceMethod.POST, "/1/credentials/vince/_set_password")//
+		bulk.add(new ServiceCall(SpaceMethod.GET, "/1/toto"));
+		bulk.add(new ServiceCall(SpaceMethod.DELETE, "/1/credentials/vince"));
+		bulk.add(new ServiceCall(SpaceMethod.POST, "/1/credentials/vince/_set_password")//
 				.withPayload(Json.object("password", "hi vince 2")));
 
-		responses = guest.batch().execute(batch);
+		responses = guest.bulk().execute(bulk);
 
 		assertEquals(400, responses.get(0).status);
 		assertEquals(404, responses.get(1).status);
@@ -110,30 +110,30 @@ public class BatchRestyTest extends SpaceTest {
 
 		// should succeed to create and update messages by batch
 
-		batch = Lists.newArrayList();
-		batch.add(new ServiceCall(SpaceMethod.PUT, "/1/data/message/1")//
+		bulk = Lists.newArrayList();
+		bulk.add(new ServiceCall(SpaceMethod.PUT, "/1/data/message/1")//
 				.withPayload(Json.object("text", "Hi guys!"))//
 				.withParams("strict", true));
 
-		batch.add(new ServiceCall(SpaceMethod.PUT, "/1/data/message/2")//
+		bulk.add(new ServiceCall(SpaceMethod.PUT, "/1/data/message/2")//
 				.withPayload(Json.object("text", "Pretty cool, huhh?"))//
 				.withParams("strict", true));
 
-		batch.add(new ServiceCall(SpaceMethod.GET, "/1/data/message")//
+		bulk.add(new ServiceCall(SpaceMethod.GET, "/1/data/message")//
 				.withParams("refresh", true));
 
-		batch.add(new ServiceCall(SpaceMethod.PUT, "/1/data/message/1")//
+		bulk.add(new ServiceCall(SpaceMethod.PUT, "/1/data/message/1")//
 				.withPayload(Json.object("text", "Hi guys, what's up?")));
 
-		batch.add(new ServiceCall(SpaceMethod.PUT, "/1/data/message/2")//
+		bulk.add(new ServiceCall(SpaceMethod.PUT, "/1/data/message/2")//
 				.withPayload(Json.object("text", "Pretty cool, huhhhhh?")));
 
-		batch.add(new ServiceCall(SpaceMethod.GET, "/1/data/message")//
+		bulk.add(new ServiceCall(SpaceMethod.GET, "/1/data/message")//
 				.withParams("refresh", true));
 
 		SpaceDog vince = SpaceDog.dog().username("vince").password("hi vince");
 
-		responses = vince.batch().execute(batch);
+		responses = vince.bulk().execute(bulk);
 		assertEquals("1", responses.get(0).content.get("id").asText());
 		assertEquals(1, responses.get(0).content.get("version").asLong());
 		assertEquals("2", responses.get(1).content.get("id").asText());
@@ -157,12 +157,12 @@ public class BatchRestyTest extends SpaceTest {
 
 		// should succeed to stop on first batch request error
 
-		batch = Lists.newArrayList();
-		batch.add(new ServiceCall(SpaceMethod.GET, "/1/data/message"));
-		batch.add(new ServiceCall(SpaceMethod.GET, "/1/data/XXX"));
-		batch.add(new ServiceCall(SpaceMethod.GET, "/1/data/message"));
+		bulk = Lists.newArrayList();
+		bulk.add(new ServiceCall(SpaceMethod.GET, "/1/data/message"));
+		bulk.add(new ServiceCall(SpaceMethod.GET, "/1/data/XXX"));
+		bulk.add(new ServiceCall(SpaceMethod.GET, "/1/data/message"));
 
-		responses = vince.batch().execute(batch, true);
+		responses = vince.bulk().execute(bulk, true);
 		assertEquals(2, responses.get(0).content.get("total").asLong());
 		assertEquals(403, responses.get(1).status);
 		assertEquals(2, responses.size());
@@ -171,12 +171,12 @@ public class BatchRestyTest extends SpaceTest {
 
 		// should fail since batch are limited to 10 sub requests
 
-		List<ServiceCall> bigBatch = Lists.newArrayList();
+		List<ServiceCall> bigBulk = Lists.newArrayList();
 		for (int i = 0; i < 21; i++)
-			bigBatch.add(new ServiceCall(SpaceMethod.GET, "/1/login"));
+			bigBulk.add(new ServiceCall(SpaceMethod.GET, "/1/login"));
 
-		assertHttpError(400, () -> guest.batch().execute(bigBatch))//
+		assertHttpError(400, () -> guest.bulk().execute(bigBulk))//
 				.spaceResponse()//
-				.assertEquals("batch-limit-exceeded", "error.code");
+				.assertEquals("bulk-limit-exceeded", "error.code");
 	}
 }

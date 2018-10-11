@@ -2,7 +2,7 @@ package io.spacedog.client.job;
 
 import org.joda.time.DateTime;
 
-import io.spacedog.client.batch.ServiceCall;
+import io.spacedog.client.bulk.ServiceCall;
 
 public class SpaceTask {
 

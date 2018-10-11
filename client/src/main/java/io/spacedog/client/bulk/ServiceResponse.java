@@ -1,4 +1,4 @@
-package io.spacedog.client.batch;
+package io.spacedog.client.bulk;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
