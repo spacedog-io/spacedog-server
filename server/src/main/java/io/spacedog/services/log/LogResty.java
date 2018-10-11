@@ -15,7 +15,7 @@ import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
 
-@Prefix("/2/log")
+@Prefix("/2/logs")
 public class LogResty extends SpaceResty {
 
 	//

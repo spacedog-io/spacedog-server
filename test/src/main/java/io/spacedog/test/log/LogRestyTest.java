@@ -58,9 +58,9 @@ public class LogRestyTest extends SpaceTest {
 
 		assertEquals(4, log.total);
 		assertEquals("DELETE", log.results.get(0).method);
-		assertEquals("/2/log", log.results.get(0).path);
+		assertEquals("/2/logs", log.results.get(0).path);
 		assertEquals("GET", log.results.get(1).method);
-		assertEquals("/2/log", log.results.get(1).path);
+		assertEquals("/2/logs", log.results.get(1).path);
 		assertEquals("GET", log.results.get(2).method);
 		assertEquals("/2/data", log.results.get(2).path);
 		assertEquals("GET", log.results.get(3).method);
@@ -76,13 +76,13 @@ public class LogRestyTest extends SpaceTest {
 
 		assertEquals(4, log.total);
 		assertEquals("DELETE", log.results.get(0).method);
-		assertEquals("/2/log", log.results.get(0).path);
+		assertEquals("/2/logs", log.results.get(0).path);
 		assertEquals("GET", log.results.get(1).method);
-		assertEquals("/2/log", log.results.get(1).path);
+		assertEquals("/2/logs", log.results.get(1).path);
 		assertEquals("DELETE", log.results.get(2).method);
-		assertEquals("/2/log", log.results.get(2).path);
+		assertEquals("/2/logs", log.results.get(2).path);
 		assertEquals("GET", log.results.get(3).method);
-		assertEquals("/2/log", log.results.get(3).path);
+		assertEquals("/2/logs", log.results.get(3).path);
 	}
 
 	@Test
@@ -118,7 +118,7 @@ public class LogRestyTest extends SpaceTest {
 
 		results = superadmin.logs().search(query, true);
 		assertEquals(4, results.results.size());
-		assertEquals("/2/log/_search", results.results.get(0).path);
+		assertEquals("/2/logs/_search", results.results.get(0).path);
 		assertEquals("/2/credentials/" + vince.id(), results.results.get(1).path);
 		assertEquals("/2/login", results.results.get(2).path);
 		assertEquals("/2/credentials", results.results.get(3).path);
@@ -152,10 +152,10 @@ public class LogRestyTest extends SpaceTest {
 
 		results = superadmin.logs().search(query, true);
 		assertEquals(11, results.results.size());
-		assertEquals("/2/log/_search", results.results.get(0).path);
-		assertEquals("/2/log/_search", results.results.get(1).path);
-		assertEquals("/2/log/_search", results.results.get(2).path);
-		assertEquals("/2/log/_search", results.results.get(3).path);
+		assertEquals("/2/logs/_search", results.results.get(0).path);
+		assertEquals("/2/logs/_search", results.results.get(1).path);
+		assertEquals("/2/logs/_search", results.results.get(2).path);
+		assertEquals("/2/logs/_search", results.results.get(3).path);
 		assertEquals("/2/credentials/" + vince.id(), results.results.get(4).path);
 		assertEquals("/2/login", results.results.get(5).path);
 		assertEquals("/2/credentials", results.results.get(6).path);
@@ -344,14 +344,14 @@ public class LogRestyTest extends SpaceTest {
 		superadmin.logs().get(10);
 		logItem = superadmin.logs().get(1, true).results.get(0);
 		assertEquals("GET", logItem.method);
-		assertEquals("/2/log", logItem.path);
+		assertEquals("/2/logs", logItem.path);
 		// TODO let's pospone this
 		// Is it important to avoid results in logs to minimize logs
 		// assertNull(logItem.response.get("results"));
 
 		// Headers are logged if not empty
 		// and 'Authorization' header is not logged
-		superadmin.get("/2/log")//
+		superadmin.get("/2/logs")//
 				.setHeader("x-empty", "")//
 				.setHeader("x-blank", " ")//
 				.setHeader("x-color", "YELLOW")//
