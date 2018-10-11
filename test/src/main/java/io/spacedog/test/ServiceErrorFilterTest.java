@@ -17,11 +17,11 @@ public class ServiceErrorFilterTest extends SpaceTest {
 		SpaceRequest.get("/1/toto")//
 				.backend(superadmin.backend())//
 				.go(404)//
-				.assertEquals("path [/1/toto] invalid", "error.message");
+				.assertEquals("[path][/1/toto] not found", "error.message");
 
 		// should fail to use this method for this valid route
 		superadmin.put("/1/login").go(405)//
-				.assertEquals("method [PUT] invalid for path [/1/login]", "error.message");
+				.assertEquals("[PUT][/1/login] is not supported", "error.message");
 	}
 
 	@Test
