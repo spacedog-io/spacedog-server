@@ -49,14 +49,14 @@ public class LinkedinRestyTest extends SpaceTest {
 				.backend(superadmin.backend())//
 				.formField("code", "XXX")//
 				.formField("redirect_uri", "XXX")//
-				.go(400);
+				.go(401);
 
 		// fails to create linkedin credentials if invalid code
 		SpaceRequest.post("/1/login/linkedin")//
 				.backend(superadmin.backend())//
 				.formField("code", "XXX")//
 				.formField("redirect_uri", redirectUri)//
-				.go(400);
+				.go(401);
 
 		// fails to create linkedin credentials if invalid code
 		// if no redirect_uri parameter is set spacedog uses
@@ -64,6 +64,6 @@ public class LinkedinRestyTest extends SpaceTest {
 		SpaceRequest.post("/1/login/linkedin")//
 				.backend(superadmin.backend())//
 				.formField("code", "XXX")//
-				.go(400);
+				.go(401);
 	}
 }
