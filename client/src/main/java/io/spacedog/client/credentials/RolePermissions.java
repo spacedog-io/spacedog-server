@@ -73,7 +73,7 @@ public class RolePermissions extends HashMap<String, Set<Permission>> {
 			return;
 
 		if (containsOne(credentials, groupPermission))
-			if (group.equals(credentials.group()))
+			if (credentials.hasGroupAccessTo(group))
 				return;
 
 		if (containsOne(credentials, minePermission))

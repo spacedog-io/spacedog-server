@@ -3,7 +3,6 @@ package io.spacedog.services.credentials;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
@@ -46,6 +45,7 @@ import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
+import io.spacedog.utils.Utils;
 
 public class CredentialsService extends SpaceService implements SpaceParams, SpaceFields {
 
@@ -282,9 +282,11 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 		if (!credentials.isAtLeastUser())
 			credentials.addRoles(defaultRole);
 
-		credentials.group(requester.group());
-		if (Strings.isNullOrEmpty(credentials.group()))
-			credentials.group(UUID.randomUUID().toString());
+		if (!Utils.isNullOrEmpty(request.groups()))
+			for (String group : request.groups()) {
+				requester.checkGroupAccessTo(group);
+				credentials.addGroup(group);
+			}
 
 		CredentialsSettings settings = settings();
 
@@ -455,24 +457,6 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 	}
 
 	//
-	// Enable methods
-	//
-
-	public void enable(String id) {
-		enable(id, true);
-	}
-
-	public void disable(String id) {
-		enable(id, false);
-	}
-
-	public Credentials enable(String id, boolean enable) {
-		Credentials credentials = get(id);
-		credentials.doEnableOrDisable(enable);
-		return update(credentials);
-	}
-
-	//
 	// Credentials Settings
 	//
 
@@ -514,7 +498,7 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 				.keyword(USERNAME_FIELD)//
 				.keyword(EMAIL_FIELD)//
 				.keyword(ROLES_FIELD)//
-				.keyword(GROUP_FIELD)//
+				.keyword(GROUPS_FIELD)//
 				.keyword(TAGS_FIELD)//
 
 				.keyword(HASHED_PASSWORD_FIELD)//

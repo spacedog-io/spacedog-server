@@ -165,10 +165,10 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 	private <K> void createMeta(DataWrap<K> object, //
 			Credentials credentials, boolean forceMeta) {
 
-		if (forceMeta == false) {
+		if (forceMeta == false)
 			object.owner(credentials.id());
-			object.group(credentials.group());
-		}
+
+		object.group(credentials.checkInitGroupTo(object.group()));
 
 		DateTime now = DateTime.now();
 
@@ -180,12 +180,12 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 	}
 
 	private <K> void updateMeta(DataWrap<K> object, //
-			DataObject meta, boolean forceMeta) {
+			DataObject meta, boolean forceMeta, Credentials credentials) {
 
-		if (forceMeta == false) {
+		if (forceMeta == false)
 			object.owner(meta.owner());
-			object.group(meta.group());
-		}
+
+		object.group(credentials.checkUpdateGroupTo(meta.group(), object.group()));
 
 		if (forceMeta == false || object.createdAt() == null)
 			object.createdAt(meta.createdAt());
@@ -518,7 +518,7 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 	public DataWrap<ObjectNode> getIfAuthorized(String type, String id) {
 
 		DataWrap<ObjectNode> object = Services.data().getWrapped(type, id);
-		checkReadPeremission(object);
+		checkReadPermission(object);
 		return object;
 	}
 
@@ -538,7 +538,7 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 			if (metaOpt.isPresent()) {
 				DataWrap<DataObjectBase> meta = metaOpt.get();
 				checkUpdatePermissions(meta);
-				updateMeta(object, meta.source(), forceMeta);
+				updateMeta(object, meta.source(), forceMeta, credentials);
 
 				return patch ? Services.data().patch(object) //
 						: Services.data().save(object);
@@ -564,7 +564,7 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 	// Check object permission
 	//
 
-	public void checkReadPeremission(DataWrap<?> object) {
+	public void checkReadPermission(DataWrap<?> object) {
 
 		Credentials credentials = Server.context().credentials();
 		RolePermissions permissions = DataAccessControl.roles(object.type());
@@ -573,12 +573,12 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 			return;
 
 		if (permissions.containsOne(credentials, Permission.readMine)) {
-			checkOwner(credentials, object);
+			credentials.checkOwnerAccess(object.owner(), object.type(), object.id());
 			return;
 		}
 
 		if (permissions.containsOne(credentials, Permission.readGroup)) {
-			checkGroup(credentials, object);
+			credentials.checkGroupAccessTo(object.group());
 			return;
 		}
 
@@ -594,12 +594,12 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 			return;
 
 		if (permissions.containsOne(credentials, Permission.updateMine)) {
-			checkOwner(credentials, object);
+			credentials.checkOwnerAccess(object.owner(), object.type(), object.id());
 			return;
 		}
 
 		if (permissions.containsOne(credentials, Permission.updateGroup)) {
-			checkGroup(credentials, object);
+			credentials.checkGroupAccessTo(object.group());
 			return;
 		}
 
@@ -616,30 +616,17 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 
 		if (permissions.containsOne(credentials, Permission.deleteMine)) {
 			DataWrap<DataObjectBase> meta = getMetaOrThrow(type, id);
-			checkOwner(credentials, meta);
+			credentials.checkOwnerAccess(meta.owner(), type, id);
 			return;
 		}
 
 		else if (permissions.containsOne(credentials, Permission.deleteGroup)) {
 			DataWrap<DataObjectBase> meta = getMetaOrThrow(type, id);
-			checkGroup(credentials, meta);
+			credentials.checkGroupAccessTo(meta.group());
 			return;
 		}
 
 		throw Exceptions.forbidden("forbidden to delete [%s] objects", type);
-	}
-
-	private void checkGroup(Credentials credentials, DataWrap<?> object) {
-		if (Strings.isNullOrEmpty(credentials.group()) //
-				|| !credentials.group().equals(object.group()))
-			throw Exceptions.forbidden("not in the same group than [%s][%s] object", //
-					object.type(), object.id());
-	}
-
-	private void checkOwner(Credentials credentials, DataWrap<?> object) {
-		if (!credentials.id().equals(object.owner()))
-			throw Exceptions.forbidden("not the owner of [%s][%s] object", //
-					object.type(), object.id());
 	}
 
 	//

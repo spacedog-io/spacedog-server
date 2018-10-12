@@ -18,6 +18,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -57,7 +58,7 @@ public class Credentials implements SpaceFields {
 	@JsonProperty
 	private Set<String> roles = Sets.newHashSet();
 	@JsonProperty
-	private String group;
+	private Set<String> groups;
 	@JsonProperty
 	private Set<String> tags = Sets.newHashSet();
 	@JsonProperty
@@ -220,15 +221,6 @@ public class Credentials implements SpaceFields {
 		return this;
 	}
 
-	public String group() {
-		return group;
-	}
-
-	public Credentials group(String group) {
-		this.group = group;
-		return this;
-	}
-
 	public DateTime createdAt() {
 		return createdAt;
 	}
@@ -263,6 +255,67 @@ public class Credentials implements SpaceFields {
 	public Credentials lastInvalidChallengeAt(DateTime lastInvalidChallengeAt) {
 		this.lastInvalidChallengeAt = lastInvalidChallengeAt;
 		return this;
+	}
+
+	//
+	// Groups
+	//
+
+	public String group() {
+		return id;
+	}
+
+	public Set<String> groups() {
+		Set<String> result = Sets.newHashSet(id);
+		if (groups != null)
+			result.addAll(groups);
+		return result;
+	}
+
+	public Credentials addGroup(String group) {
+		if (groups == null)
+			groups = Sets.newHashSet();
+		groups.add(group);
+		return this;
+	}
+
+	public Credentials removeGroup(String group) {
+		if (groups != null)
+			groups.remove(group);
+		return this;
+	}
+
+	public boolean hasGroupAccessTo(String group) {
+		return groups == null ? false : groups.contains(group);
+	}
+
+	public Credentials createGroup(String suffix) {
+		return addGroup(id + "__" + suffix);
+	}
+
+	public String checkInitGroupTo(String group) {
+		if (Strings.isNullOrEmpty(group))
+			return this.group();
+
+		checkGroupAccessTo(group);
+		return group;
+	}
+
+	public String checkUpdateGroupTo(String oldGroup, String newGroup) {
+		if (Strings.isNullOrEmpty(newGroup) || newGroup.equals(oldGroup))
+			return oldGroup;
+
+		checkGroupAccessTo(newGroup);
+		return newGroup;
+	}
+
+	public void checkGroupAccessTo(String group) {
+		if (id.equals(group))
+			return;
+		if (Utils.isNullOrEmpty(groups) //
+				|| !groups.contains(group))
+			throw Exceptions.forbidden("[%s][%s] not authorized for group [%s]", //
+					type(), username(), group);
 	}
 
 	//
@@ -477,6 +530,12 @@ public class Credentials implements SpaceFields {
 					return this;
 		}
 		throw Exceptions.insufficientCredentials(this);
+	}
+
+	public void checkOwnerAccess(String owner, String objectType, String objectId) {
+		if (!id().equals(owner))
+			throw Exceptions.forbidden("[%s][%s] not owner of [%s][%s]", //
+					type(), username(), objectType, objectId);
 	}
 
 	//

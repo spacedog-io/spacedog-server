@@ -150,18 +150,21 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		DateTime now = DateTime.now();
 
 		SpaceFile file = Services.files().getMeta(bucket, path, false);
+		String group = context.get(GROUP_PARAM);
 
 		if (file == null) {
 			settings.permissions.check(credentials, Permission.create);
 			file = new SpaceFile(path);
 			file.setName(webPath.last());
+			file.group(credentials.checkInitGroupTo(group));
 			file.createdAt(now);
-		} else
+		} else {
 			settings.permissions.checkUpdate(credentials, file.owner(), file.group());
+			file.group(credentials.checkUpdateGroupTo(file.group(), group));
+		}
 
 		file.setLength(contentLength);
 		file.owner(credentials.id());
-		file.group(credentials.group());
 		file.setContentType(fileContentType(file.getName(), context));
 		file.updatedAt(now);
 

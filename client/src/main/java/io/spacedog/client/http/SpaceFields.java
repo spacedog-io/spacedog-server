@@ -16,6 +16,7 @@ public interface SpaceFields {
 	String USERNAME_FIELD = "username";
 	String OWNER_FIELD = "owner";
 	String GROUP_FIELD = "group";
+	String GROUPS_FIELD = "groups";
 	String UPDATED_AT_FIELD = "updatedAt";
 	String CREATED_AT_FIELD = "createdAt";
 	String SESSIONS_FIELD = "sessions";

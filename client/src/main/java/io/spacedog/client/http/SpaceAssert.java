@@ -15,6 +15,7 @@ import com.google.common.collect.Lists;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.SpacePlatform;
 import io.spacedog.client.credentials.Credentials;
+import io.spacedog.client.credentials.CredentialsCreateRequest;
 import io.spacedog.client.credentials.Passwords;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.utils.Json;
@@ -22,17 +23,18 @@ import io.spacedog.utils.Utils;
 
 public class SpaceAssert extends Assert implements SpacePlatform, SpaceFields, SpaceParams {
 
-	public static SpaceDog createTempDog(SpaceDog parentDog, String username, String... role) {
-		SpaceDog childDog = SpaceDog.dog(parentDog.backend()).username(username).password(Passwords.random());
-		parentDog.credentials().create(childDog.username(), childDog.password().get(), DEFAULT_EMAIL, role);
-		return childDog;
+	public static SpaceDog createTempDog(SpaceDog parentDog, String username, String... roles) {
+		CredentialsCreateRequest createRequest = new CredentialsCreateRequest()//
+				.username(username)//
+				.password(Passwords.random())//
+				.email(DEFAULT_EMAIL)//
+				.roles(roles);
+		parentDog.credentials().create(createRequest);
+		return SpaceDog.dog(parentDog.backend()).username(username).password(createRequest.password());
 	}
 
 	public static SpaceDog signUpTempDog(SpaceBackend backend, String username) {
-		SpaceDog guest = SpaceDog.dog(backend);
-		SpaceDog dog = SpaceDog.dog(backend).username(username).password(Passwords.random());
-		guest.credentials().create(dog.username(), dog.password().get(), DEFAULT_EMAIL);
-		return dog;
+		return createTempDog(SpaceDog.dog(backend), username);
 	}
 
 	public static SpaceDog clearServer() {

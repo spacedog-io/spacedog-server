@@ -1,10 +1,13 @@
 package io.spacedog.client.credentials;
 
+import java.util.Set;
+
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.collect.Sets;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, //
@@ -16,6 +19,7 @@ public class CredentialsCreateRequest {
 	private String username;
 	private String password;
 	private String email;
+	private Set<String> groups;
 	private String[] roles;
 	private boolean enabled = true;
 	private DateTime enableAfter;
@@ -45,6 +49,19 @@ public class CredentialsCreateRequest {
 
 	public CredentialsCreateRequest email(String email) {
 		this.email = email;
+		return this;
+	}
+
+	public Set<String> groups() {
+		return groups;
+	}
+
+	public CredentialsCreateRequest groups(String... groups) {
+		return groups(Sets.newHashSet(groups));
+	}
+
+	public CredentialsCreateRequest groups(Set<String> groups) {
+		this.groups = groups;
 		return this;
 	}
 

@@ -6,6 +6,7 @@ package io.spacedog.test.data;
 import org.junit.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.base.Strings;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
@@ -212,22 +213,31 @@ public class DataAccessControlTest extends SpaceTest {
 		SpaceDog vince = createTempDog(guest, "vince");
 		SpaceDog fred = createTempDog(guest, "fred");
 
+		// vince and fred have their own unique group
+		assertFalse(Strings.isNullOrEmpty(vince.group()));
+		assertFalse(Strings.isNullOrEmpty(fred.group()));
+		assertNotEquals(vince.group(), fred.group());
+
 		// fred creates nath credentials
-		// they share the same group
 		SpaceDog nath = createTempDog(fred, "nath");
 
-		// set message schema with custom acl settings
+		// nath has a different group than fred
+		assertFalse(Strings.isNullOrEmpty(nath.group()));
+		assertNotEquals(fred.group(), nath.group());
+
+		// set message schema
 		Schema schema = Message.schema();
 		superadmin.schemas().set(schema);
 
-		// superadmin sets data acl
+		// superadmin sets message schema acl
 		DataSettings dataSettings = new DataSettings();
-		dataSettings.acl().put(schema.name(), Roles.all, Permission.create);
-		dataSettings.acl().put(schema.name(), Roles.user, Permission.readGroup, //
-				Permission.updateGroup, Permission.deleteGroup);
+		dataSettings.acl().get(schema.name())//
+				.put(Roles.all, Permission.create)//
+				.put(Roles.user, Permission.readGroup, //
+						Permission.updateGroup, Permission.deleteGroup);
 		superadmin.data().settings(dataSettings);
 
-		// only users (and superadmins) can create messages
+		// all guests and users can create messages
 		guest.data().save(new Message("guest"), "guest");
 		vince.data().save(new Message("vince"), "vince");
 		fred.data().save(new Message("fred"), "fred");
@@ -239,6 +249,9 @@ public class DataAccessControlTest extends SpaceTest {
 		// the one's they have created
 		vince.data().get(Message.TYPE, "vince");
 		fred.data().get(Message.TYPE, "fred");
+
+		// fred shares his group with nath
+		fred.credentials().shareGroup(nath.id(), fred.group());
 
 		// nath has read access on fred's objects
 		// since they share the same group

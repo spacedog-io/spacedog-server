@@ -15,6 +15,7 @@ import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.Credentials.Results;
 import io.spacedog.client.credentials.Credentials.Session;
 import io.spacedog.client.credentials.CredentialsCreateRequest;
+import io.spacedog.client.credentials.CredentialsGroupCreateRequest;
 import io.spacedog.client.credentials.CredentialsSettings;
 import io.spacedog.client.credentials.CredentialsUpdateRequest;
 import io.spacedog.client.credentials.Roles;
@@ -240,8 +241,7 @@ public class CredentialsResty extends SpaceResty {
 	public Payload deleteAllRoles(String id, Context context) {
 		Credentials credentials = checkAdminAndGet(id);
 		credentials.clearRoles();
-		credentials = Services.credentials().update(credentials);
-		return saved(false, credentials);
+		return doUpdate(credentials);
 	}
 
 	@Put("/credentials/:id/roles/:role")
@@ -270,6 +270,37 @@ public class CredentialsResty extends SpaceResty {
 		return saved(false, credentials);
 	}
 
+	@Post("/credentials/me/groups")
+	@Post("/credentials/me/groups/")
+	public Payload postCreateGroup(CredentialsGroupCreateRequest request, Context context) {
+		Credentials credentials = Server.context().credentials()//
+				.checkAtLeastUser().createGroup(request.suffix);
+		return doUpdate(credentials);
+	}
+
+	@Put("/credentials/:id/groups/:group")
+	@Put("/credentials/:id/groups/:group/")
+	public Payload putShareGroup(String id, String group, Context context) {
+		Server.context().credentials().checkGroupAccessTo(group);
+		Credentials credentials = Services.credentials().get(id).addGroup(group);
+		return doUpdate(credentials);
+	}
+
+	@Delete("/credentials/me/groups/:group")
+	@Delete("/credentials/me/groups/:group/")
+	public Payload deleteRemoveGroup(String group) {
+		Credentials credentials = Server.context().credentials().removeGroup(group);
+		return doUpdate(credentials);
+	}
+
+	@Delete("/credentials/:id/groups/:group")
+	@Delete("/credentials/:id/groups/:group/")
+	public Payload deleteUnshareGroup(String id, String group) {
+		Server.context().credentials().checkGroupAccessTo(group);
+		Credentials credentials = Services.credentials().get(id).removeGroup(group);
+		return doUpdate(credentials);
+	}
+
 	//
 	// Internal services
 	//
@@ -277,8 +308,7 @@ public class CredentialsResty extends SpaceResty {
 	private Payload doEnableOrDisable(String id, boolean enable) {
 		Credentials credentials = checkAdminAndGet(id);
 		credentials.doEnableOrDisable(enable);
-		credentials = Services.credentials().update(credentials);
-		return saved(false, credentials);
+		return doUpdate(credentials);
 	}
 
 	public static long getCheckSessionLifetime(Context context) {
@@ -325,6 +355,11 @@ public class CredentialsResty extends SpaceResty {
 	//
 	// Implementation
 	//
+
+	private Payload doUpdate(Credentials credentials) {
+		Services.credentials().update(credentials);
+		return saved(false, credentials);
+	}
 
 	private Payload saved(boolean created, Credentials credentials) {
 		return JsonPayload.saved(false, "/2", CredentialsService.SERVICE_NAME, credentials.id())//

@@ -1,6 +1,11 @@
 package io.spacedog.client;
 
+import java.util.Set;
+
 import org.joda.time.DateTime;
+
+import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 
 import io.spacedog.client.admin.AdminClient;
 import io.spacedog.client.bulk.BulkClient;
@@ -47,6 +52,10 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 		return username;
 	}
 
+	public boolean isGuest() {
+		return Strings.isNullOrEmpty(username);
+	}
+
 	public SpaceDog username(String username) {
 		this.username = username;
 		return this;
@@ -57,7 +66,13 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 	}
 
 	public String group() {
-		return credentials().me().group();
+		return isGuest() ? null : credentials().me().group();
+	}
+
+	public Set<String> groups() {
+		if (isGuest())
+			return Sets.newHashSet();
+		return credentials().me().groups();
 	}
 
 	public Optional7<String> accessToken() {
