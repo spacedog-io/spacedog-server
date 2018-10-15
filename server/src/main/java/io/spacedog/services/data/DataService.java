@@ -165,10 +165,10 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 	private <K> void createMeta(DataWrap<K> object, //
 			Credentials credentials, boolean forceMeta) {
 
-		if (forceMeta == false)
+		if (forceMeta == false) {
 			object.owner(credentials.id());
-
-		object.group(credentials.checkInitGroupTo(object.group()));
+			object.group(credentials.checkInitGroupTo(object.group()));
+		}
 
 		DateTime now = DateTime.now();
 
@@ -182,10 +182,10 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 	private <K> void updateMeta(DataWrap<K> object, //
 			DataObject meta, boolean forceMeta, Credentials credentials) {
 
-		if (forceMeta == false)
+		if (forceMeta == false) {
 			object.owner(meta.owner());
-
-		object.group(credentials.checkUpdateGroupTo(meta.group(), object.group()));
+			object.group(credentials.checkUpdateGroupTo(meta.group(), object.group()));
+		}
 
 		if (forceMeta == false || object.createdAt() == null)
 			object.createdAt(meta.createdAt());
