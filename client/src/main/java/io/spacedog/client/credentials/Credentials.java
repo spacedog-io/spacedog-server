@@ -310,10 +310,9 @@ public class Credentials implements SpaceFields {
 	}
 
 	public void checkGroupAccessTo(String group) {
-		if (id.equals(group))
-			return;
-		if (Utils.isNullOrEmpty(groups) //
-				|| !groups.contains(group))
+		if (!isAtLeastSuperAdmin() //
+				&& id.equals(group) //
+				&& (Utils.isNullOrEmpty(groups) || !groups.contains(group)))
 			throw Exceptions.forbidden("[%s][%s] not authorized for group [%s]", //
 					type(), username(), group);
 	}
