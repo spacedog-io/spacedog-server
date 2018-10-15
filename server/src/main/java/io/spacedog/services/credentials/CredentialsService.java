@@ -257,6 +257,10 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 			throw Exceptions.alreadyExists(//
 					SERVICE_NAME, credentials.username());
 
+		if (credentials.username().startsWith(Roles.superdog))
+			throw Exceptions.illegalArgument(//
+					"'superdog' is a reserved username prefix");
+
 		credentials.createdAt(DateTime.now());
 		credentials.updatedAt(credentials.createdAt());
 
