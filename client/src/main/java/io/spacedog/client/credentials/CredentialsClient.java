@@ -65,20 +65,25 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	//
 
 	public Credentials.Results getAll() {
-		return getAll(null, null, null);
+		return getAll(false);
+	}
+
+	public Credentials.Results getAll(boolean refresh) {
+		return getAll(null, null, null, refresh);
 	}
 
 	public Credentials.Results getAll(int from, int size) {
-		return getAll(null, from, size);
+		return getAll(null, from, size, false);
 	}
 
 	public Credentials.Results getAll(String q) {
-		return getAll(q, null, null);
+		return getAll(q, null, null, false);
 	}
 
-	public Credentials.Results getAll(String q, Integer from, Integer size) {
+	public Credentials.Results getAll(String q, Integer from, Integer size, boolean refresh) {
 		return dog.get("/2/credentials").queryParam("q", q)//
-				.from(from).size(size).go(200).asPojo(Credentials.Results.class);
+				.refresh(refresh).from(from).size(size)//
+				.go(200).asPojo(Credentials.Results.class);
 	}
 
 	//

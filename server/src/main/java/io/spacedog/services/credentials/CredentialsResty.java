@@ -77,7 +77,8 @@ public class CredentialsResty extends SpaceResty {
 		return Services.credentials().getAll(//
 				context.get(Q_PARAM), //
 				context.query().getInteger(FROM_PARAM, 0), //
-				context.query().getInteger(SIZE_PARAM, 10));
+				context.query().getInteger(SIZE_PARAM, 10), //
+				isRefreshRequested(context));
 	}
 
 	@Delete("/credentials")

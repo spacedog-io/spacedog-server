@@ -90,14 +90,14 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 	}
 
 	public Credentials.Results getAll(int from, int size) {
-		return getAll(null, from, size);
+		return getAll(null, from, size, false);
 	}
 
 	public Credentials.Results getAll(String q) {
-		return getAll(q, 0, 10);
+		return getAll(q, 0, 10, false);
 	}
 
-	public Credentials.Results getAll(String q, int from, int size) {
+	public Credentials.Results getAll(String q, int from, int size, boolean refresh) {
 
 		QueryBuilder query = Strings.isNullOrEmpty(q) //
 				? QueryBuilders.matchAllQuery() //
@@ -106,10 +106,17 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 		SearchSourceBuilder builder = SearchSourceBuilder.searchSource()//
 				.query(query).from(from).size(size);
 
-		return getAll(builder);
+		return getAll(builder, refresh);
 	}
 
 	public Credentials.Results getAll(SearchSourceBuilder builder) {
+		return getAll(builder, false);
+	}
+
+	public Credentials.Results getAll(SearchSourceBuilder builder, boolean refresh) {
+
+		if (refresh)
+			elastic().refreshIndex(index());
 
 		SearchHits hits = elastic()//
 				.prepareSearch(index())//
