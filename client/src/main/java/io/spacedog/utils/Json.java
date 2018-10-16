@@ -5,6 +5,7 @@ package io.spacedog.utils;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -406,9 +407,17 @@ public class Json {
 		return addAll(array(), values);
 	}
 
+	public static ArrayNode array(Iterable<?> values) {
+		return addAll(array(), values);
+	}
+
 	public static ArrayNode addAll(ArrayNode array, Object... values) {
-		for (int i = 0; i < values.length; i++)
-			array.add(toJsonNode(values[i]));
+		return addAll(array, Arrays.asList(values));
+	}
+
+	public static ArrayNode addAll(ArrayNode array, Iterable<?> values) {
+		for (Object value : values)
+			array.add(toJsonNode(value));
 		return array;
 	}
 
