@@ -286,7 +286,9 @@ public class Credentials implements SpaceFields {
 	}
 
 	public boolean hasGroupAccessTo(String group) {
-		return groups == null ? false : groups.contains(group);
+		return isAtLeastSuperAdmin() //
+				|| id.equals(group) //
+				|| (!Utils.isNullOrEmpty(groups) && groups.contains(group));
 	}
 
 	public Credentials createGroup(String suffix) {
@@ -310,9 +312,7 @@ public class Credentials implements SpaceFields {
 	}
 
 	public void checkGroupAccessTo(String group) {
-		if (!isAtLeastSuperAdmin() //
-				&& id.equals(group) //
-				&& (Utils.isNullOrEmpty(groups) || !groups.contains(group)))
+		if (!hasGroupAccessTo(group))
 			throw Exceptions.forbidden("[%s][%s] not authorized for group [%s]", //
 					type(), username(), group);
 	}
