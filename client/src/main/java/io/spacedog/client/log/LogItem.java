@@ -9,8 +9,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
-import io.spacedog.client.credentials.Credentials;
-
 @JsonIgnoreProperties(ignoreUnknown = true)
 public final class LogItem {
 	public String method;
@@ -18,7 +16,7 @@ public final class LogItem {
 	public DateTime receivedAt;
 	public int processedIn;
 	public int status;
-	public Credentials credentials;
+	public CredentialsResume credentials;
 	public List<String> headers;
 	public List<String> parameters;
 	public ObjectNode payload;
@@ -41,5 +39,11 @@ public final class LogItem {
 				values.add(parts[1]);
 		}
 		return values;
+	}
+
+	public static class CredentialsResume {
+		public String id;
+		public String username;
+		public Set<String> roles;
 	}
 }
