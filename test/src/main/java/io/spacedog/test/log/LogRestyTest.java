@@ -134,8 +134,8 @@ public class LogRestyTest extends SpaceTest {
 
 		// superadmin search for logs of guest users
 		query = ESSearchSourceBuilder.searchSource()//
-				.query(ESQueryBuilders.boolQuery().mustNot(//
-						ESQueryBuilders.existsQuery("credentials.roles")))//
+				.query(ESQueryBuilders.boolQuery().must(//
+						ESQueryBuilders.termQuery("credentials.id", Roles.guest)))//
 				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
 
 		results = superadmin.logs().search(query, true);
