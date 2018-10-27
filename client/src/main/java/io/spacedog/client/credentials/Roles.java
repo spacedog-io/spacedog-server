@@ -12,6 +12,7 @@ import io.spacedog.utils.Exceptions;
 public class Roles {
 
 	public static final String all = "all";
+	public static final String guest = "guest";
 	public static final String user = "user";
 	public static final String admin = "admin";
 	public static final String superadmin = "superadmin";

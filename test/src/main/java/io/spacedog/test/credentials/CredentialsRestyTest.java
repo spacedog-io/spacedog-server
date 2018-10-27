@@ -410,4 +410,19 @@ public class CredentialsRestyTest extends SpaceTest {
 		assertFalse(vince.credentials().me().isUser());
 		assertTrue(vince.credentials().me().isAdmin());
 	}
+
+	@Test
+	public void superdogAndGuestAreReservedUsernamePrefixes() {
+
+		// prepare
+		prepareTest();
+		SpaceDog superadmin = clearServer();
+
+		assertHttpError(400, () -> superadmin.credentials()//
+				.create("superdog", "hi toto", "toto@dog.com"));
+
+		assertHttpError(400, () -> superadmin.credentials()//
+				.create("guest", "hi toto", "toto@dog.com"));
+	}
+
 }

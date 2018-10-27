@@ -36,7 +36,8 @@ import io.spacedog.utils.Utils;
 		setterVisibility = Visibility.NONE)
 public class Credentials implements SpaceFields {
 
-	public static final Credentials GUEST = new Credentials("guest").id("guest");
+	public static final Credentials GUEST = new Credentials(Roles.guest)//
+			.id(Roles.guest).addRoles(Roles.guest);
 	public static final Credentials SUPERDOG = new Credentials(Roles.superdog)//
 			.id(Roles.superdog).addRoles(Roles.superdog)//
 			.passwordHasBeenChallenged(true);
