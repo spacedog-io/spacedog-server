@@ -161,6 +161,6 @@ public class FileClient {
 	}
 
 	public void setBucket(FileBucketSettings settings) {
-		dog.put("/2/files/{name}").routeParam("name", settings.name).bodyPojo(settings).go(200);
+		dog.put("/2/files/{name}").routeParam("name", settings.name).bodyPojo(settings).go(200).asVoid();
 	}
 }

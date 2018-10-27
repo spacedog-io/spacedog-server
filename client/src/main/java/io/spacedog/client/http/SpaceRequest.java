@@ -297,8 +297,11 @@ public class SpaceRequest {
 
 	public SpaceResponse go(int... expectedStatus) {
 		SpaceResponse response = go();
-		if (!Ints.contains(expectedStatus, response.okResponse().code()))
+		if (!Ints.contains(expectedStatus, response.okResponse().code())) {
+			// close response before throwing it within exception
+			Utils.closeSilently(response);
 			throw new SpaceRequestException(response);
+		}
 		return response;
 	}
 

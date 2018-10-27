@@ -35,7 +35,7 @@ public class SmsClient {
 	public void saveTemplate(SmsTemplate template) {
 		dog.put("/2/sms/templates/{name}")//
 				.routeParam("name", template.name)//
-				.bodyPojo(template).go(200, 201);
+				.bodyPojo(template).go(200, 201).asVoid();
 	}
 
 	public SmsTemplate getTemplate(String name) {
@@ -48,7 +48,7 @@ public class SmsClient {
 	public void deleteTemplate(String templateName) {
 		dog.delete("/2/sms/templates/{name}")//
 				.routeParam("name", templateName)//
-				.go(200);
+				.go(200).asVoid();
 	}
 
 	//

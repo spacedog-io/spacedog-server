@@ -30,7 +30,8 @@ public class EmailClient {
 	public void saveTemplate(EmailTemplate template) {
 		dog.put("/2/emails/templates/{name}")//
 				.routeParam("name", template.name)//
-				.bodyPojo(template).go(200, 201);
+				.bodyPojo(template)//
+				.go(200, 201).asVoid();
 	}
 
 	public EmailTemplate getTemplate(String name) {
@@ -43,7 +44,7 @@ public class EmailClient {
 	public void deleteTemplate(String templateName) {
 		dog.delete("/2/emails/templates/{name}")//
 				.routeParam("name", templateName)//
-				.go(200);
+				.go(200).asVoid();
 	}
 
 	//

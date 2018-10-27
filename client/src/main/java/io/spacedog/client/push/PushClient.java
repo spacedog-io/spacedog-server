@@ -40,7 +40,7 @@ public class PushClient {
 				.routeParam("name", name)//
 				.routeParam("service", service.toString())//
 				.bodyPojo(credentials)//
-				.go(200);
+				.go(200).asVoid();
 	}
 
 	public void saveApp(PushApplication app) {
@@ -54,7 +54,7 @@ public class PushClient {
 		dog.delete("/2/push/applications/{name}/{service}")//
 				.routeParam("name", name)//
 				.routeParam("service", service)//
-				.go(200);
+				.go(200).asVoid();
 	}
 
 	public void deleteApp(PushApplication app) {

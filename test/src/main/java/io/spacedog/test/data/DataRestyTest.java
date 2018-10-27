@@ -90,7 +90,7 @@ public class DataRestyTest extends SpaceTest {
 
 		// delete
 		vince.data().delete(carWrap);
-		vince.get("/2/data/car/" + carWrap.id()).go(404);
+		assertHttpError(404, () -> vince.data().delete(carWrap));
 	}
 
 	@Test
@@ -199,13 +199,13 @@ public class DataRestyTest extends SpaceTest {
 		vince.put("/2/data/message/2")//
 				.queryParam(FORCE_META_PARAM, true)//
 				.bodyPojo(message)//
-				.go(403);
+				.go(403).asVoid();
 
 		// operator can create a new message with custom meta
 		operator.put("/2/data/message/2")//
 				.queryParam(FORCE_META_PARAM, true)//
 				.bodyPojo(message)//
-				.go(200);
+				.go(200).asVoid();
 
 		// provided custom meta are saved
 		// and nath can access this object since the owner
@@ -222,10 +222,10 @@ public class DataRestyTest extends SpaceTest {
 		operator.put("/2/data/message/1")//
 				.queryParam(FORCE_META_PARAM, true)//
 				.bodyPojo(message)//
-				.go(200);
+				.go(200).asVoid();
 
 		// vince can not access his object anymore
 		// since owner has been updated to nath by operator
-		vince.get("/2/data/message/1").go(403);
+		vince.get("/2/data/message/1").go(403).asVoid();
 	}
 }

@@ -19,10 +19,10 @@ public class SettingsClient {
 	}
 
 	public boolean exists(String id) {
-		SpaceResponse response = dog.get("/2/settings/{id}")//
-				.routeParam("id", id).go(200, 404);
-
-		return response.status() == 404;
+		return dog.get("/2/settings/{id}")//
+				.routeParam("id", id)//
+				.go(200, 404).asVoid()//
+				.status() == 404;
 	}
 
 	// get all
@@ -120,7 +120,7 @@ public class SettingsClient {
 	//
 
 	public void deleteAll() {
-		dog.delete("/2/settings").go(200);
+		dog.delete("/2/settings").go(200).asVoid();
 	}
 
 	public <K extends Settings> void delete(Class<K> settingsClass) {
@@ -128,7 +128,7 @@ public class SettingsClient {
 	}
 
 	public void delete(String id) {
-		dog.delete("/2/settings/{id}").routeParam("id", id).go(200, 404);
+		dog.delete("/2/settings/{id}").routeParam("id", id).go(200, 404).asVoid();
 	}
 
 	public <K extends Settings> long delete(Class<K> settingsClass, String field) {

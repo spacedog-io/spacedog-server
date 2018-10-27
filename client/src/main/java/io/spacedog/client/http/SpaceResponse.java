@@ -39,7 +39,7 @@ public class SpaceResponse implements Closeable {
 	private long duration;
 	private byte[] bytesBody;
 	private String stringBody;
-	private JsonNode jsonNode;
+	private JsonNode jsonBody;
 	private boolean consumed;
 
 	private static OkHttpClient okHttpClient;
@@ -125,6 +125,8 @@ public class SpaceResponse implements Closeable {
 			throw Exceptions.runtime(e, //
 					"failed to read as bytes payload of request [%s][%s]", //
 					okRequest.method(), okRequest.url());
+		} finally {
+			this.close();
 		}
 
 		return bytesBody;
@@ -145,13 +147,8 @@ public class SpaceResponse implements Closeable {
 			throw Exceptions.runtime(e, //
 					"failed to read as string payload of request [%s][%s]", //
 					okRequest.method(), okRequest.url());
-		}
-
-		try {
-			if (Json.isJson(stringBody))
-				jsonNode = Json.readNode(stringBody);
-		} catch (Exception ignore) {
-			// not really a json body
+		} finally {
+			this.close();
 		}
 
 		return stringBody;
@@ -162,29 +159,30 @@ public class SpaceResponse implements Closeable {
 	}
 
 	public JsonNode asJson() {
-		if (jsonNode != null)
-			return jsonNode;
+		if (jsonBody != null)
+			return jsonBody;
 
-		asString();
+		String body = asString();
 
-		if (jsonNode == null)
+		try {
+			if (Json.isJson(body))
+				jsonBody = Json.readNode(body);
+		} catch (Exception ignore) {
+			// not really a json body
+		}
+
+		if (jsonBody == null)
 			throw Exceptions.runtime("payload isn't of type JSON");
 
-		return jsonNode;
+		return jsonBody;
 	}
 
 	public ObjectNode asJsonObject() {
-		JsonNode node = asJson();
-		if (!node.isObject())
-			throw Exceptions.runtime("not a JSON object but [%s]", node.getNodeType());
-		return (ObjectNode) node;
+		return Json.checkObject(asJson());
 	}
 
 	public ArrayNode asJsonArray() {
-		JsonNode node = asJson();
-		if (!node.isArray())
-			throw Exceptions.runtime("not a JSON array but [%s]", node.getNodeType());
-		return (ArrayNode) node;
+		return Json.checkArray(asJson());
 	}
 
 	public InputStream asByteStream() {
@@ -230,8 +228,14 @@ public class SpaceResponse implements Closeable {
 	}
 
 	@Override
-	public void close() throws IOException {
-		this.body().close();
+	public void close() {
+		if (this.okResponse != null)
+			this.okResponse.close();
+	}
+
+	public SpaceResponse asVoid() {
+		this.close();
+		return this;
 	}
 
 	public String contentType() {

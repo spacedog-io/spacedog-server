@@ -225,17 +225,17 @@ public class ShareRestyTest extends SpaceTest {
 
 		// nobody is allowed to read this file
 		// but superadmins
-		guest.get(location(guestPng)).go(401);
-		fred.get(location(guestPng)).go(403);
-		vince.get(location(guestPng)).go(403);
-		superadmin.get(location(guestPng)).go(200);
+		guest.get(location(guestPng)).go(401).asVoid();
+		fred.get(location(guestPng)).go(403).asVoid();
+		vince.get(location(guestPng)).go(403).asVoid();
+		superadmin.get(location(guestPng)).go(200).asVoid();
 
 		// nobody is allowed to delete this file
 		// but superadmins
-		guest.delete(location(guestPng)).go(401);
-		fred.delete(location(guestPng)).go(403);
-		vince.delete(location(guestPng)).go(403);
-		superadmin.delete(location(guestPng)).go(200);
+		guest.delete(location(guestPng)).go(401).asVoid();
+		fred.delete(location(guestPng)).go(403).asVoid();
+		vince.delete(location(guestPng)).go(403).asVoid();
+		superadmin.delete(location(guestPng)).go(200).asVoid();
 
 		// backend contains no shared file
 		assertEquals(0, superadmin.files().listAll(SHARES).files.size());
@@ -258,9 +258,9 @@ public class ShareRestyTest extends SpaceTest {
 
 		// nobody is allowed to delete this file
 		// but vince the owner and superadmins
-		guest.delete(location(vincePng)).go(401);
-		fred.delete(location(vincePng)).go(403);
-		vince.delete(location(vincePng)).go(200);
+		guest.delete(location(vincePng)).go(401).asVoid();
+		fred.delete(location(vincePng)).go(403).asVoid();
+		vince.delete(location(vincePng)).go(200).asVoid();
 
 		// backend contains no shared file
 		assertEquals(0, superadmin.files().listAll(SHARES).files.size());
@@ -422,7 +422,7 @@ public class ShareRestyTest extends SpaceTest {
 		// he fails since he forces request failure via the _fail param
 		// this checks that unexpected errors do not drain s3 connection pool
 		for (int i = 0; i < 70; i++)
-			superadmin.get(location(share)).queryParam(FAIL_PARAM).go(400);
+			superadmin.get(location(share)).queryParam(FAIL_PARAM).go(400).asVoid();
 	}
 
 	@Test
@@ -445,7 +445,7 @@ public class ShareRestyTest extends SpaceTest {
 		SpaceFile share = vince.files().share(SHARES, "vince".getBytes());
 
 		// guest fails to get shared file since no access token query param
-		guest.get(location(share)).go(401);
+		guest.get(location(share)).go(401).asVoid();
 
 		// vince gets his shared file via access token query param
 		byte[] bytes = guest.get(location(share))//
@@ -459,7 +459,7 @@ public class ShareRestyTest extends SpaceTest {
 		// since not the owner
 		guest.get(location(share))//
 				.queryParam("accessToken", fred.accessToken().get())//
-				.go(403);
+				.go(403).asVoid();
 	}
 
 	@Test

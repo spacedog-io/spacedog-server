@@ -20,7 +20,7 @@ public class AdminClient implements SpaceParams {
 		// status 200 means backend exists
 		// status 404 means the opposite
 		// any other status throws an exception
-		return dog.get("/").go(200, 404).status() == 200;
+		return dog.get("/").go(200, 404).asVoid().status() == 200;
 	}
 
 	public SpaceDog createBackend(String backendId, String username, String password, String email, //
@@ -34,7 +34,7 @@ public class AdminClient implements SpaceParams {
 	}
 
 	public void clearBackend(boolean files) {
-		dog.post("/2/admin/_clear").queryParam("files", files).go(200);
+		dog.post("/2/admin/_clear").queryParam("files", files).go(200).close();
 	}
 
 	public SpaceDog createBackend(BackendCreateRequest request, boolean notification) {
@@ -42,7 +42,8 @@ public class AdminClient implements SpaceParams {
 		dog.post("/2/backends")//
 				.queryParam(NOTIF_PARAM, notification)//
 				.bodyPojo(request)//
-				.go(201);
+				.go(201)//
+				.asVoid();
 
 		SpaceBackend newBackend = dog.backend().fromBackendId(request.backendId());
 
@@ -64,7 +65,8 @@ public class AdminClient implements SpaceParams {
 				// password must be challenged
 				.basicAuth(dog.username(), password)//
 				.routeParam("id", backendId)//
-				.go(200);
+				.go(200)//
+				.asVoid();
 	}
 
 }

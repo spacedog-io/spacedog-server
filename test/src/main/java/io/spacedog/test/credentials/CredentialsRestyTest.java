@@ -3,6 +3,9 @@
  */
 package io.spacedog.test.credentials;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.joda.time.DateTime;
 import org.junit.Test;
 
@@ -21,6 +24,7 @@ import io.spacedog.client.http.SpaceRequestException;
 import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
+import okhttp3.OkHttpClient;
 
 public class CredentialsRestyTest extends SpaceTest {
 
@@ -33,8 +37,8 @@ public class CredentialsRestyTest extends SpaceTest {
 		SpaceDog superdog = superdog();
 
 		// forbidden to delete superadmin if last superadmin of backend
-		superadmin.delete("/2/credentials/" + superadmin.id()).go(403);
-		superdog.delete("/2/credentials/" + superadmin.id()).go(403);
+		superadmin.delete("/2/credentials/" + superadmin.id()).go(403).asVoid();
+		superdog.delete("/2/credentials/" + superadmin.id()).go(403).asVoid();
 
 		// superadmin test can create another superadmin (test1)
 		SpaceDog superfred = createTempDog(superadmin, "superfred", Roles.superadmin);
@@ -110,7 +114,7 @@ public class CredentialsRestyTest extends SpaceTest {
 
 		// fred's credentials are enabled again so he gets data
 		// with his old access token from first login
-		SpaceRequest.get("/2/data").bearerAuth(fred).go(200);
+		SpaceRequest.get("/2/data").bearerAuth(fred).go(200).asVoid();
 
 		// fred's credentials are enabled again so he can log in
 		fred.login();
@@ -139,7 +143,7 @@ public class CredentialsRestyTest extends SpaceTest {
 
 		// fred's credentials are enabled again so he gets data
 		// with his old access token from first login
-		fred.get("/2/data").bearerAuth(fred).go(200);
+		fred.get("/2/data").bearerAuth(fred).go(200).asVoid();
 
 		// fred's credentials are enabled again so he can log in
 		fred.login();
@@ -147,7 +151,7 @@ public class CredentialsRestyTest extends SpaceTest {
 		// superadmin fails to update fred's credentials enable after date
 		// since invalid format
 		superadmin.put("/2/credentials/{id}").routeParam("id", fred.id())//
-				.bodyJson("enableDisableAfter", Json.object("enable", "XXX")).go(400);
+				.bodyJson("enableDisableAfter", Json.object("enable", "XXX")).go(400).asVoid();
 	}
 
 	@Test
@@ -203,7 +207,7 @@ public class CredentialsRestyTest extends SpaceTest {
 		SpaceRequest.get("/2/login")//
 				.backend(guest.backend())//
 				.basicAuth(fred.username(), "XXX")//
-				.go(401);
+				.go(401).asVoid();
 
 		// fred's invalid challenges count is still zero
 		// since no maximum invalid challenges set in credentials settings
@@ -221,7 +225,7 @@ public class CredentialsRestyTest extends SpaceTest {
 		SpaceRequest.get("/2/login")//
 				.backend(guest.backend())//
 				.basicAuth(fred.username(), "XXX")//
-				.go(401);
+				.go(401).asVoid();
 
 		// superadmin gets fred's credentials
 		// fred has 1 invalid password challenge
@@ -232,7 +236,8 @@ public class CredentialsRestyTest extends SpaceTest {
 		// fred tries to log in with an invalid password
 		SpaceRequest.get("/2/login")//
 				.backend(guest.backend())//
-				.basicAuth(fred.username(), "XXX").go(401);
+				.basicAuth(fred.username(), "XXX")//
+				.go(401).asVoid();
 
 		// superadmin gets fred's credentials; fred has 2 invalid password
 		// challenge; his credentials has been disabled since equal to settings
@@ -289,16 +294,16 @@ public class CredentialsRestyTest extends SpaceTest {
 
 		// fred fails to get data objects
 		// since old access token is no more valid
-		SpaceRequest.get("/2/data").bearerAuth(fred).go(401);
+		SpaceRequest.get("/2/data").bearerAuth(fred).go(401).asVoid();
 
 		// but fred gets data with his new password
-		SpaceRequest.get("/2/data").basicAuth(fred).go(200);
+		SpaceRequest.get("/2/data").basicAuth(fred).go(200).asVoid();
 
 		// fred logs in with his new password
 		fred.login(newPassword);
 
 		// fred can get data objects again
-		SpaceRequest.get("/2/data").bearerAuth(fred).go(200);
+		SpaceRequest.get("/2/data").bearerAuth(fred).go(200).asVoid();
 	}
 
 	@Test
@@ -311,7 +316,7 @@ public class CredentialsRestyTest extends SpaceTest {
 		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		// fred can get data objects
-		fred.get("/2/data").go(200);
+		fred.get("/2/data").go(200).asVoid();
 
 		// to declare password is forgotten
 		// you need to pass its username
@@ -413,6 +418,7 @@ public class CredentialsRestyTest extends SpaceTest {
 
 	@Test
 	public void superdogAndGuestAreReservedUsernamePrefixes() {
+		Logger.getLogger(OkHttpClient.class.getName()).setLevel(Level.FINE);
 
 		// prepare
 		prepareTest();

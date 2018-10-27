@@ -105,7 +105,7 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 
 	public SpaceDog logout() {
 		if (dog.accessToken() != null) {
-			dog.get("/2/logout").go(200);
+			dog.get("/2/logout").go(200).asVoid();
 			dog.accessToken(null);
 			dog.expiresAt(null);
 		}
@@ -134,7 +134,7 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	}
 
 	public void delete(String id) {
-		dog.delete("/2/credentials/{id}").routeParam("id", id).go(200);
+		dog.delete("/2/credentials/{id}").routeParam("id", id).go(200).asVoid();
 	}
 
 	public void deleteByUsername(String username) {
@@ -144,7 +144,7 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	}
 
 	public void deleteAllButSuperAdmins() {
-		dog.delete("/2/credentials").go(200);
+		dog.delete("/2/credentials").go(200).asVoid();
 	}
 
 	//
@@ -188,12 +188,12 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 
 	public void setRole(String id, String role) {
 		dog.put("/2/credentials/{id}/roles/{role}")//
-				.routeParam("id", id).routeParam("role", role).go(200);
+				.routeParam("id", id).routeParam("role", role).go(200).asVoid();
 	}
 
 	public void unsetRole(String id, String role) {
 		dog.delete("/2/credentials/{id}/roles/{role}")//
-				.routeParam("id", id).routeParam("role", role).go(200);
+				.routeParam("id", id).routeParam("role", role).go(200).asVoid();
 	}
 
 	public Set<String> getAllRoles(String id) {
@@ -209,7 +209,7 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 
 	public void unsetAllRoles(String id) {
 		dog.delete("/2/credentials/{id}/roles")//
-				.routeParam("id", id).go(200);
+				.routeParam("id", id).go(200).asVoid();
 	}
 
 	//
@@ -234,7 +234,8 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 				.bodyPojo(new SetPasswordRequest()//
 						.withPassword(newPassword)//
 						.withPasswordResetCode(passwordResetCode))//
-				.go(200);
+				.go(200)//
+				.asVoid();
 	}
 
 	public void setMyPassword(String oldPassword, String newPassword) {
@@ -248,12 +249,13 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 				.basicAuth(dog.username(), requesterPassword)//
 				.routeParam("id", credentialsId)//
 				.bodyPojo(new SetPasswordRequest().withPassword(newPassword))//
-				.go(200);
+				.go(200)//
+				.asVoid();
 	}
 
 	public void passwordMustChange(String credentialsId) {
 		dog.post("/2/credentials/{id}/_password_must_change")//
-				.routeParam("id", credentialsId).go(200);
+				.routeParam("id", credentialsId).go(200).asVoid();
 	}
 
 	public void sendPasswordResetEmail(String username) {
@@ -264,7 +266,8 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 		parameters.put(USERNAME_FIELD, username);
 		dog.post("/2/credentials/_send_password_reset_email")//
 				.bodyJson(parameters)//
-				.go(200);
+				.go(200)//
+				.asVoid();
 	}
 
 	//
@@ -282,7 +285,7 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	public void enable(String id, boolean enable) {
 		StringBuilder builder = new StringBuilder("/2/credentials/") //
 				.append(id).append(enable ? "/_enable" : "/_disable");
-		dog.post(builder.toString()).go(200);
+		dog.post(builder.toString()).go(200).asVoid();
 	}
 
 	//
@@ -305,14 +308,14 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 		dog.put("/2/credentials/{id}/groups/{group}")//
 				.routeParam("id", credentialsId)//
 				.routeParam("group", group)//
-				.go(200);
+				.go(200).asVoid();
 	}
 
 	public void unshareGroup(String credentialsId, String group) {
 		dog.delete("/2/credentials/{id}/groups/{group}")//
 				.routeParam("id", credentialsId)//
 				.routeParam("group", group)//
-				.go(200);
+				.go(200).asVoid();
 	}
 
 	//

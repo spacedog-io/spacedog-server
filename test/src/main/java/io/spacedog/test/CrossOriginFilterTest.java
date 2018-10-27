@@ -18,7 +18,7 @@ public class CrossOriginFilterTest extends SpaceTest {
 		SpaceDog guest = SpaceDog.dog();
 
 		// CORS for simple requests
-		guest.get("/2/data").go(200)//
+		guest.get("/2/data").go(200).asVoid()//
 				.assertHeaderEquals("*", SpaceHeaders.ACCESS_CONTROL_ALLOW_ORIGIN)//
 				.assertHeaderEquals(SpaceHeaders.ALLOW_METHODS, SpaceHeaders.ACCESS_CONTROL_ALLOW_METHODS)
 				.assertHeaderContains(SpaceHeaders.AUTHORIZATION, SpaceHeaders.ACCESS_CONTROL_ALLOW_HEADERS)//
@@ -30,7 +30,7 @@ public class CrossOriginFilterTest extends SpaceTest {
 		guest.options("/toto")//
 				.setHeader(SpaceHeaders.ORIGIN, "https://app.toolee.fr")
 				.setHeader(SpaceHeaders.ACCESS_CONTROL_REQUEST_METHOD, "PUT")//
-				.go(200)//
+				.go(200).asVoid()//
 				.assertHeaderEquals("https://app.toolee.fr", SpaceHeaders.ACCESS_CONTROL_ALLOW_ORIGIN)//
 				.assertHeaderEquals(SpaceHeaders.ALLOW_METHODS, SpaceHeaders.ACCESS_CONTROL_ALLOW_METHODS)//
 				.assertHeaderEquals(31536000, SpaceHeaders.ACCESS_CONTROL_MAX_AGE);

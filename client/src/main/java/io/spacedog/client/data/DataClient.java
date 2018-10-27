@@ -209,9 +209,9 @@ public class DataClient implements SpaceFields, SpaceParams {
 				.routeParam(ID_FIELD, id);
 
 		if (throwNotFound)
-			request.go(200);
+			request.go(200).asVoid();
 		else
-			request.go(200, 404);
+			request.go(200, 404).asVoid();
 	}
 
 	//
@@ -373,7 +373,8 @@ public class DataClient implements SpaceFields, SpaceParams {
 				.routeParam("type", request.type)//
 				.queryParam(PRESERVE_IDS_PARAM, request.preserveIds)//
 				.body(export)//
-				.go(200);
+				.go(200)//
+				.asVoid();
 	}
 
 	//

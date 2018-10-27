@@ -27,16 +27,16 @@ public class SchemaClient {
 	}
 
 	public void delete(String name) {
-		dog.delete("/2/schemas/{name}").routeParam("name", name).go(200);
+		dog.delete("/2/schemas/{name}").routeParam("name", name).go(200).asVoid();
 	}
 
 	public void deleteAll() {
-		dog.delete("/2/schemas").go(200);
+		dog.delete("/2/schemas").go(200).asVoid();
 	}
 
 	public void set(Schema schema) {
 		dog.put("/2/schemas/{name}").routeParam("name", schema.name())//
-				.bodyJson(schema.mapping()).go(200);
+				.bodyJson(schema.mapping()).go(200).asVoid();
 	}
 
 	public Schema get(String name) {
@@ -46,7 +46,7 @@ public class SchemaClient {
 	}
 
 	public void setDefault(String name) {
-		dog.put("/2/schemas/{name}").routeParam("name", name).go(200);
+		dog.put("/2/schemas/{name}").routeParam("name", name).go(200).asVoid();
 	}
 
 	public Map<String, Schema> getAll() {

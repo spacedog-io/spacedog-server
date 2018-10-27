@@ -28,7 +28,7 @@ public class FileRestyTest extends SpaceTest {
 		assertHttpError(404, () -> superadmin.files().getAsByteArray(WWW, "toto"));
 
 		// invalid POST operation throws 400
-		superadmin.post("/2/files").go(400);
+		superadmin.post("/2/files").go(400).asVoid();
 
 		// superadmin sets www bucket
 		FileBucketSettings settings = new FileBucketSettings(WWW);
@@ -39,7 +39,7 @@ public class FileRestyTest extends SpaceTest {
 		assertEquals(0, superadmin.files().listAll(WWW).files.size());
 
 		// upload file without bucket is invalid
-		superadmin.put("/2/files").go(400);
+		superadmin.put("/2/files").go(400).asVoid();
 
 		// admin can upload a web site
 		superadmin.files().upload(WWW, "/app.html", "/app.html".getBytes());
@@ -90,7 +90,7 @@ public class FileRestyTest extends SpaceTest {
 		assertEquals(0, superadmin.files().list(WWW, "/css").files.size());
 
 		// superadmin fails to get just deleted css file
-		superadmin.get("/2/files/www/css/black.css").go(404);
+		superadmin.get("/2/files/www/css/black.css").go(404).asVoid();
 
 		// superadmin deletes all files
 		assertEquals(4, superadmin.files().deleteAll(WWW));

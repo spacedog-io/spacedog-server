@@ -23,13 +23,13 @@ public class JobClient {
 		dog.put("/2/jobs/{name}")//
 				.routeParam("name", job.name)//
 				.bodyPojo(job)//
-				.go(201, 200);
+				.go(201, 200).asVoid();
 	}
 
 	public void delete(String jobName) {
 		dog.delete("/2/jobs/{name}")//
 				.routeParam("name", jobName)//
-				.go(200);
+				.go(200).asVoid();
 	}
 
 	public ObjectNode execute(String jobName, Object jobRequest) {
@@ -44,7 +44,7 @@ public class JobClient {
 		dog.delete("/2/jobs/{name}/{execId}")//
 				.routeParam("name", jobName)//
 				.routeParam("execId", jobExecId)//
-				.go(200);
+				.go(200).asVoid();
 	}
 
 }

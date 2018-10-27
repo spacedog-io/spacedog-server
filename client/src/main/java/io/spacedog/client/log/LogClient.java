@@ -43,7 +43,7 @@ public class LogClient implements SpaceParams {
 	}
 
 	public void delete(DateTime before) {
-		dog.delete("/2/logs").queryParam("before", before).go(200);
+		dog.delete("/2/logs").queryParam("before", before).go(200).asVoid();
 	}
 
 }

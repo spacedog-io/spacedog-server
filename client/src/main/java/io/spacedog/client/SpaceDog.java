@@ -18,7 +18,6 @@ import io.spacedog.client.http.SpaceEnv;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.client.http.SpaceRequest;
-import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.client.log.LogClient;
 import io.spacedog.client.push.PushClient;
 import io.spacedog.client.schema.SchemaClient;
@@ -145,8 +144,7 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 
 	public boolean isTokenStillValid() {
 		Check.notNullOrEmpty(accessToken, "access token");
-		SpaceResponse response = get("/2/login").go(200, 401);
-		return response.status() == 200;
+		return get("/2/login").go(200, 401).asVoid().status() == 200;
 	}
 
 	public SpaceDog logout() {

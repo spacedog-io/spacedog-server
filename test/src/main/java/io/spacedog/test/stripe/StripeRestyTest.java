@@ -43,7 +43,7 @@ public class StripeRestyTest extends SpaceTest {
 		superdamin.stripe().settings(settings);
 
 		// david's stripe customer is not yet created
-		david.get("/2/stripe/customers/me").go(404);
+		david.get("/2/stripe/customers/me").go(404).asVoid();
 
 		// david creates his stripe customer with his card token
 		ObjectNode stripeCustomer = david.post("/2/stripe/customers").go(201)//
@@ -54,7 +54,7 @@ public class StripeRestyTest extends SpaceTest {
 
 		// david fails to create another stripe customer
 		// since he's got one already
-		david.post("/2/stripe/customers").go(400);
+		david.post("/2/stripe/customers").go(400).asVoid();
 
 		// david gets his stripe customer
 		david.get("/2/stripe/customers/me").go(200)//
@@ -76,31 +76,32 @@ public class StripeRestyTest extends SpaceTest {
 
 		// superadmin is not allowed to pay
 		// because of settings.rolesAllowedToPay
-		superdamin.post("/2/stripe/charges/me").go(403);
+		superdamin.post("/2/stripe/charges/me").go(403).asVoid();
 
 		// david fails to pays because 'customer' field is forbidden
 		// because the stripe customer must be the one stored in credentials
 		david.post("/2/stripe/charges/me")//
-				.formField("customer", "XXX").go(400);
+				.formField("customer", "XXX").go(400).asVoid();
 
 		// david fails to pays because no fields
-		david.post("/2/stripe/charges/me").go(400);
+		david.post("/2/stripe/charges/me").go(400).asVoid();
 
 		// david pays with his bnp card
 		david.post("/2/stripe/charges/me")//
 				.formField("amount", "800")//
 				.formField("currency", "eur")//
-				.formField("source", bnpCardId).go(200);
+				.formField("source", bnpCardId)//
+				.go(200).asVoid();
 
 		// david deletes his card from his stripe customer account
-		david.delete("/2/stripe/customers/me/sources/" + bnpCardId).go(200);
+		david.delete("/2/stripe/customers/me/sources/" + bnpCardId).go(200).asVoid();
 
 		// check david has no card anymore
 		david.get("/2/stripe/customers/me").go(200)//
 				.assertSizeEquals(0, "sources.data");
 
 		// david deletes again his card to gets 404
-		david.delete("/2/stripe/customers/me/sources/" + bnpCardId).go(404);
+		david.delete("/2/stripe/customers/me/sources/" + bnpCardId).go(404).asVoid();
 
 		// david creates another card
 		String lclCardId = david.post("/2/stripe/customers/me/sources")//
@@ -117,20 +118,21 @@ public class StripeRestyTest extends SpaceTest {
 
 		// david is not allowed to charge a customer
 		// because of settings.rolesAllowedToCharge
-		david.post("/2/stripe/charges").go(403);
+		david.post("/2/stripe/charges").go(403).asVoid();
 
 		// superadmin fails to make charge a customer if no parameter
-		superdamin.post("/2/stripe/charges").go(400);
+		superdamin.post("/2/stripe/charges").go(400).asVoid();
 
 		// superadmin charges david's lcl card
 		superdamin.post("/2/stripe/charges")//
 				.formField("amount", "1200")//
 				.formField("currency", "eur")//
 				.formField("customer", stripeCustomer.get("id").asText())//
-				.formField("source", lclCardId).go(200);
+				.formField("source", lclCardId)//
+				.go(200).asVoid();
 
 		// david deletes his stripe customer account
-		david.delete("/2/stripe/customers/me").go(200);
+		david.delete("/2/stripe/customers/me").go(200).asVoid();
 
 		try {
 			Thread.sleep(2000);
@@ -139,7 +141,7 @@ public class StripeRestyTest extends SpaceTest {
 		}
 
 		// check david's stripe customer account is gone
-		david.get("/2/stripe/customers/me").go(404);
+		david.get("/2/stripe/customers/me").go(404).asVoid();
 	}
 
 	Token createCardToken() throws AuthenticationException, InvalidRequestException, APIConnectionException,

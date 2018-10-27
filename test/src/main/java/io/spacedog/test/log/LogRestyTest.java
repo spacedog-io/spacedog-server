@@ -94,12 +94,12 @@ public class LogRestyTest extends SpaceTest {
 		// creates test backend and user
 		SpaceDog guest = SpaceDog.dog();
 		SpaceDog superadmin = clearServer();
-		guest.get("/2/data").go(200);
-		guest.get("/2/data/user").go(403);
+		guest.get("/2/data").go(200).asVoid();
+		guest.get("/2/data/user").go(403).asVoid();
 		SpaceDog vince = createTempDog(superadmin, "vince").login();
 		vince.credentials().get(vince.id());
 
-		// superadmin search for test backend logs with status 400 and higher
+		// superadmin search for logs with status 400 and higher
 		ESSearchSourceBuilder query = ESSearchSourceBuilder.searchSource()//
 				.query(ESQueryBuilders.rangeQuery("status").gte(400))//
 				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
@@ -110,8 +110,7 @@ public class LogRestyTest extends SpaceTest {
 		assertEquals("/2/data/user", results.results.get(0).path);
 		assertEquals(403, results.results.get(0).status);
 
-		// superadmin search for backend logs
-		// with credentials roles superadmin or user
+		// superadmin search for logs of superadmins or lower level users
 		query = ESSearchSourceBuilder.searchSource()//
 				.query(ESQueryBuilders.termsQuery("credentials.roles", "superadmin", "user"))//
 				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
@@ -123,7 +122,7 @@ public class LogRestyTest extends SpaceTest {
 		assertEquals("/2/login", results.results.get(2).path);
 		assertEquals("/2/credentials", results.results.get(3).path);
 
-		// superadmin search for test backend log to only get user and lower logs
+		// superadmin search for logs of standard users or lower level
 		query = ESSearchSourceBuilder.searchSource()//
 				.query(ESQueryBuilders.termsQuery("credentials.roles", "user"))//
 				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC));
@@ -133,7 +132,7 @@ public class LogRestyTest extends SpaceTest {
 		assertEquals("/2/credentials/" + vince.id(), results.results.get(0).path);
 		assertEquals("/2/login", results.results.get(1).path);
 
-		// superadmin search for test backend log to only get guest logs
+		// superadmin search for logs of guest users
 		query = ESSearchSourceBuilder.searchSource()//
 				.query(ESQueryBuilders.boolQuery().mustNot(//
 						ESQueryBuilders.existsQuery("credentials.roles")))//
@@ -144,7 +143,7 @@ public class LogRestyTest extends SpaceTest {
 		assertEquals("/2/data/user", results.results.get(0).path);
 		assertEquals("/2/data", results.results.get(1).path);
 
-		// superadmin gets all test backend logs
+		// superadmin gets all logs
 		query = ESSearchSourceBuilder.searchSource()//
 				.query(ESQueryBuilders.matchAllQuery())//
 				.sort(ESSortBuilders.fieldSort("receivedAt").order(ESSortOrder.DESC))//
@@ -180,8 +179,8 @@ public class LogRestyTest extends SpaceTest {
 		SpaceDog superadmin = clearServer();
 
 		// guest (or load balancer) pings his backend
-		guest.get("").go(200);
-		guest.get("/").go(200);
+		guest.get("").go(200).asVoid();
+		guest.get("/").go(200).asVoid();
 
 		// check those pings are not logged
 		LogSearchResults results = superadmin.logs().get(10, true);
@@ -199,8 +198,8 @@ public class LogRestyTest extends SpaceTest {
 		SpaceDog superadmin = clearServer();
 
 		// wwwGuest fails to loads root page since doesn't exist
-		wwwGuest.get("").go(404);
-		wwwGuest.get("/").go(404);
+		wwwGuest.get("").go(404).asVoid();
+		wwwGuest.get("/").go(404).asVoid();
 
 		// check those web requests are logged
 		LogSearchResults results = superadmin.logs().get(10, true);
@@ -291,7 +290,7 @@ public class LogRestyTest extends SpaceTest {
 		assertEquals(7, results.size());
 		assertEquals("POST", results.get(0).method);
 		assertEquals("/2/credentials/me/_set_password", results.get(0).path);
-		assertEquals("fred", results.get(0).credentials.username());
+		assertEquals("fred", results.get(0).credentials.username);
 		assertEquals("********", results.get(0).payload.get(PASSWORD_FIELD).asText());
 
 		assertEquals("POST", results.get(1).method);
@@ -330,7 +329,7 @@ public class LogRestyTest extends SpaceTest {
 		SpaceDog superadmin = clearServer();
 
 		// fails because invalid body
-		superadmin.put("/2/schemas/toto").body("XXX").go(400);
+		superadmin.put("/2/schemas/toto").body("XXX").go(400).asVoid();
 
 		// but logs the failed request without the json content
 		LogItem logItem = superadmin.logs().get(1, true).results.get(0);
@@ -358,7 +357,7 @@ public class LogRestyTest extends SpaceTest {
 				.addHeader("x-color-list", "RED")//
 				.addHeader("x-color-list", "BLUE")//
 				.addHeader("x-color-list", "GREEN")//
-				.go(200);
+				.go(200).asVoid();
 
 		logItem = superadmin.logs().get(1, true).results.get(0);
 		assertTrue(logItem.getHeader(SpaceHeaders.AUTHORIZATION).isEmpty());
