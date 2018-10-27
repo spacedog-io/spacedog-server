@@ -8,7 +8,7 @@ public interface SpaceParams {
 	String SHARDS_PARAM = "shards";
 	String REPLICAS_PARAM = "replicas";
 	String REFRESH_PARAM = "refresh";
-	String PATCH_PARAM = "strict";
+	String PATCH_PARAM = "patch";
 	String VERSION_PARAM = "version";
 	String ASYNC_PARAM = "async";
 	String LIFETIME_PARAM = "lifetime";
