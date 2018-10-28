@@ -109,7 +109,7 @@ public class SettingsResty extends SpaceResty {
 		Services.settings()//
 				.getOrThrow(SettingsAclSettings.class)//
 				.get(settingsId)//
-				.check(credentials, permission);
+				.checkPermission(credentials, permission);
 		return credentials;
 	}
 

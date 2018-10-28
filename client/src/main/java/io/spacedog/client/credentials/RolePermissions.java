@@ -16,7 +16,12 @@ public class RolePermissions extends HashMap<String, Set<Permission>> {
 	public RolePermissions() {
 	}
 
-	public boolean containsOne(String role, Permission... permissions) {
+	public RolePermissions put(String role, Permission... permissions) {
+		put(role, Sets.newHashSet(permissions));
+		return this;
+	}
+
+	public boolean hasOne(String role, Permission... permissions) {
 
 		Set<Permission> rolePermissions = get(role);
 
@@ -30,53 +35,48 @@ public class RolePermissions extends HashMap<String, Set<Permission>> {
 		return false;
 	}
 
-	public boolean containsOne(Credentials credentials, Permission... permissions) {
+	public boolean hasOne(Credentials credentials, Permission... permissions) {
 		if (credentials.isAtLeastSuperAdmin())
 			return true;
 
-		if (containsOne(Roles.all, permissions))
+		if (hasOne(Roles.all, permissions))
 			return true;
 
 		for (String role : credentials.roles())
-			if (containsOne(role, permissions))
+			if (hasOne(role, permissions))
 				return true;
 
 		return false;
 	}
 
-	public void check(Credentials credentials, Permission... permissions) {
-		if (!containsOne(credentials, permissions))
+	public void checkPermission(Credentials credentials, Permission... permissions) {
+		if (!hasOne(credentials, permissions))
 			throw Exceptions.insufficientCredentials(credentials);
 	}
 
-	public RolePermissions put(String role, Permission... permissions) {
-		put(role, Sets.newHashSet(permissions));
-		return this;
-	}
-
-	public void checkRead(Credentials credentials, String owner, String group) {
+	public void checkReadPermission(Credentials credentials, String owner, String group) {
 		check(credentials, owner, group, Permission.read, Permission.readGroup, Permission.readMine);
 	}
 
-	public void checkUpdate(Credentials credentials, String owner, String group) {
+	public void checkUpdatePermission(Credentials credentials, String owner, String group) {
 		check(credentials, owner, group, Permission.update, Permission.updateGroup, Permission.updateMine);
 	}
 
-	public void checkDelete(Credentials credentials, String owner, String group) {
+	public void checkDeletePermission(Credentials credentials, String owner, String group) {
 		check(credentials, owner, group, Permission.delete, Permission.deleteGroup, Permission.deleteMine);
 	}
 
-	public void check(Credentials credentials, String owner, String group, //
+	private void check(Credentials credentials, String owner, String group, //
 			Permission allPermission, Permission groupPermission, Permission minePermission) {
 
-		if (containsOne(credentials, allPermission))
+		if (hasOne(credentials, allPermission))
 			return;
 
-		if (containsOne(credentials, groupPermission))
+		if (hasOne(credentials, groupPermission))
 			if (credentials.hasGroupAccessTo(group))
 				return;
 
-		if (containsOne(credentials, minePermission))
+		if (hasOne(credentials, minePermission))
 			if (owner.equals(credentials.id()))
 				return;
 

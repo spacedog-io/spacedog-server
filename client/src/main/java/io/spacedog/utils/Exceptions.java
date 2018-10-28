@@ -102,21 +102,16 @@ public class Exceptions {
 	}
 
 	//
-	// 401/403
-	//
-
-	public static SpaceException insufficientCredentials(Credentials credentials) {
-		return credentials.isGuest() ? noAuthorizationHeader()//
-				: forbidden("[%s][%s] has insufficient credentials", //
-						credentials.type(), credentials.username());
-	}
-
-	//
 	// 403
 	//
 
 	public static ForbiddenException forbidden(String message, Object... args) {
 		return new ForbiddenException(message, args);
+	}
+
+	public static SpaceException insufficientCredentials(Credentials credentials) {
+		return forbidden("[%s][%s] has insufficient credentials", //
+				credentials.type(), credentials.username());
 	}
 
 	public static SpaceException passwordMustBeChallenged() {

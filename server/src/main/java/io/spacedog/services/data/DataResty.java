@@ -26,7 +26,6 @@ import io.spacedog.server.JsonPayload;
 import io.spacedog.server.Server;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceResty;
-import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
@@ -73,11 +72,7 @@ public class DataResty extends SpaceResty {
 	@Get("/:type")
 	@Get("/:type/")
 	public DataResults<ObjectNode> getType(String type, Context context) {
-
-		Credentials credentials = Server.context().credentials();
-		if (!DataAccessControl.roles(type).containsOne(credentials, Permission.search))
-			throw Exceptions.forbidden("forbidden to search [%s] objects", type);
-
+		DataAccessControl.checkPermission(type, Permission.search);
 		return doGet(context, type);
 	}
 
@@ -99,22 +94,15 @@ public class DataResty extends SpaceResty {
 	@Post("/:type/_search")
 	@Post("/:type/_search/")
 	public DataResults<ObjectNode> postSearchType(String type, String body, Context context) {
-
-		Credentials credentials = Server.context().credentials();
-		if (!DataAccessControl.roles(type).containsOne(credentials, Permission.search))
-			throw Exceptions.forbidden("forbidden to search [%s] objects", type);
-
+		DataAccessControl.checkPermission(type, Permission.search);
 		return doSearch(body, context, type);
 	}
 
 	@Delete("/:type/_search")
 	@Delete("/:type/_search/")
 	public Payload deleteSearchType(String type, String query, Context context) {
-		Credentials credentials = Server.context().credentials().checkAtLeastAdmin();
-
-		if (!DataAccessControl.roles(type).containsOne(credentials, Permission.delete))
-			throw Exceptions.forbidden("forbidden to delete [%s] objects", type);
-
+		Server.context().credentials().checkAtLeastAdmin();
+		DataAccessControl.checkPermission(type, Permission.delete);
 		return doDelete(query, context, type);
 	}
 
@@ -182,8 +170,7 @@ public class DataResty extends SpaceResty {
 	@Post("/:type/_export")
 	@Post("/:type/_export/")
 	public Payload postExport(String type, String body, Context context) {
-		Credentials credentials = Server.context().credentials();
-		DataAccessControl.roles(type).check(credentials, Permission.search);
+		DataAccessControl.checkPermission(type, Permission.search);
 
 		if (context.query().getBoolean(REFRESH_PARAM, false))
 			Services.data().refresh(type);
@@ -199,9 +186,7 @@ public class DataResty extends SpaceResty {
 	@Post("/:type/_import")
 	@Post("/:type/_import/")
 	public void postImport(String type, Request request) throws IOException {
-
-		Credentials credentials = Server.context().credentials();
-		DataAccessControl.roles(type).check(credentials, Permission.importAll);
+		DataAccessControl.checkPermission(type, Permission.importAll);
 		boolean preserveIds = request.query().getBoolean(PRESERVE_IDS_PARAM, false);
 
 		Services.data().prepareImport(type)//
@@ -212,11 +197,7 @@ public class DataResty extends SpaceResty {
 	@Post("/:type/_csv")
 	@Post("/:type/_csv/")
 	public Payload postSearchForTypeToCsv(String type, CsvRequest request, Context context) {
-		Credentials credentials = Server.context().credentials();
-
-		if (!DataAccessControl.roles(type).containsOne(credentials, Permission.search))
-			throw Exceptions.forbidden("forbidden to search [%s] objects", type);
-
+		DataAccessControl.checkPermission(type, Permission.search);
 		Locale locale = getRequestLocale(context);
 		StreamingOutput csv = Services.data().csv(type, request, locale);
 		return new Payload("text/plain;charset=utf-8;", csv);

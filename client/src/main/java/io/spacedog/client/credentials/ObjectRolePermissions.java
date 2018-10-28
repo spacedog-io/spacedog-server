@@ -17,9 +17,9 @@ public class ObjectRolePermissions extends HashMap<String, RolePermissions> {
 		return this;
 	}
 
-	public boolean containsOne(String objectId, String role, Permission... permissions) {
+	public boolean hasOne(String objectId, String role, Permission... permissions) {
 		RolePermissions roles = super.get(objectId);
-		return roles == null ? false : roles.containsOne(role, permissions);
+		return roles == null ? false : roles.hasOne(role, permissions);
 	}
 
 	@Override
@@ -39,11 +39,11 @@ public class ObjectRolePermissions extends HashMap<String, RolePermissions> {
 			ids.addAll(keySet());
 		else
 			for (String id : keySet()) {
-				if (containsOne(id, Roles.all, permission))
+				if (hasOne(id, Roles.all, permission))
 					ids.add(id);
 				else
 					for (String role : credentials.roles())
-						if (containsOne(id, role, permission))
+						if (hasOne(id, role, permission))
 							ids.add(id);
 			}
 

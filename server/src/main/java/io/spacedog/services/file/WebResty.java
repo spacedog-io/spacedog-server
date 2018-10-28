@@ -68,7 +68,7 @@ public class WebResty extends SpaceResty implements SpaceFilter {
 
 			FileBucketSettings settings = Services.files().getBucketSettings(bucket);
 			Credentials credentials = Server.context().credentials();
-			settings.permissions.check(credentials, Permission.read);
+			settings.permissions.checkPermission(credentials, Permission.read);
 
 			SpaceFile file = Services.files().getMeta(bucket, path.toString(), false);
 

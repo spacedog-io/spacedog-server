@@ -488,9 +488,8 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 	}
 
 	public void refreshAllTypes(boolean refresh) {
-		if (refresh) {
+		if (refresh)
 			elastic().refreshBackend();
-		}
 	}
 
 	//
@@ -498,7 +497,6 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 	//
 
 	public DataWrap<ObjectNode> getIfAuthorized(String type, String id) {
-
 		DataWrap<ObjectNode> object = Services.data().getWrapped(type, id);
 		checkReadPermission(object);
 		return object;
@@ -510,7 +508,7 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 
 		if (forceMeta)
 			DataAccessControl.roles(object.type())//
-					.check(credentials, Permission.forceMeta);
+					.checkPermission(credentials, Permission.forceMeta);
 
 		if (object.id() != null) {
 
@@ -519,21 +517,21 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 
 			if (meta.isPresent()) {
 				checkUpdatePermissions(meta.get());
+
 				if (!forceMeta)
 					updateMeta(object, meta.get().source(), credentials);
+
 				return Services.data().save(object);
 			}
 		}
 
-		if (DataAccessControl.roles(object.type())//
-				.containsOne(credentials, Permission.create)) {
+		DataAccessControl.roles(object.type())//
+				.checkPermission(credentials, Permission.create);
 
-			if (!forceMeta)
-				createMeta(object, credentials);
-			return Services.data().save(object);
-		}
+		if (!forceMeta)
+			createMeta(object, credentials);
 
-		throw Exceptions.forbidden("forbidden to create [%s] objects", object.type());
+		return Services.data().save(object);
 	}
 
 	public <K> DataWrap<K> patchIfAuthorized(DataWrap<K> object) {
@@ -561,15 +559,15 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 		Credentials credentials = Server.context().credentials();
 		RolePermissions permissions = DataAccessControl.roles(object.type());
 
-		if (permissions.containsOne(credentials, Permission.read, Permission.search))
+		if (permissions.hasOne(credentials, Permission.read, Permission.search))
 			return;
 
-		if (permissions.containsOne(credentials, Permission.readMine)) {
+		if (permissions.hasOne(credentials, Permission.readMine)) {
 			credentials.checkOwnerAccess(object.owner(), object.type(), object.id());
 			return;
 		}
 
-		if (permissions.containsOne(credentials, Permission.readGroup)) {
+		if (permissions.hasOne(credentials, Permission.readGroup)) {
 			credentials.checkGroupAccessTo(object.group());
 			return;
 		}
@@ -582,15 +580,15 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 		Credentials credentials = Server.context().credentials();
 		RolePermissions permissions = DataAccessControl.roles(object.type());
 
-		if (permissions.containsOne(credentials, Permission.update))
+		if (permissions.hasOne(credentials, Permission.update))
 			return;
 
-		if (permissions.containsOne(credentials, Permission.updateMine)) {
+		if (permissions.hasOne(credentials, Permission.updateMine)) {
 			credentials.checkOwnerAccess(object.owner(), object.type(), object.id());
 			return;
 		}
 
-		if (permissions.containsOne(credentials, Permission.updateGroup)) {
+		if (permissions.hasOne(credentials, Permission.updateGroup)) {
 			credentials.checkGroupAccessTo(object.group());
 			return;
 		}
@@ -603,16 +601,16 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 		Credentials credentials = Server.context().credentials();
 		RolePermissions permissions = DataAccessControl.roles(type);
 
-		if (permissions.containsOne(credentials, Permission.delete))
+		if (permissions.hasOne(credentials, Permission.delete))
 			return;
 
-		if (permissions.containsOne(credentials, Permission.deleteMine)) {
+		if (permissions.hasOne(credentials, Permission.deleteMine)) {
 			DataWrap<DataObjectBase> meta = getMetaOrThrow(type, id);
 			credentials.checkOwnerAccess(meta.owner(), type, id);
 			return;
 		}
 
-		else if (permissions.containsOne(credentials, Permission.deleteGroup)) {
+		else if (permissions.hasOne(credentials, Permission.deleteGroup)) {
 			DataWrap<DataObjectBase> meta = getMetaOrThrow(type, id);
 			credentials.checkGroupAccessTo(meta.group());
 			return;

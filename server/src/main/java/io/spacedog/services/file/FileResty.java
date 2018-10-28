@@ -123,7 +123,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		RolePermissions bucketRoles = Services.files().getBucketSettings(bucket).permissions;
 		Credentials credentials = Server.context().credentials();
 		SpaceFile file = Services.files().getMeta(bucket, path, true);
-		bucketRoles.checkRead(credentials, file.owner(), file.group());
+		bucketRoles.checkReadPermission(credentials, file.owner(), file.group());
 		return file;
 	}
 
@@ -153,13 +153,13 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		String group = context.get(GROUP_PARAM);
 
 		if (file == null) {
-			settings.permissions.check(credentials, Permission.create);
+			settings.permissions.checkPermission(credentials, Permission.create);
 			file = new SpaceFile(path);
 			file.setName(webPath.last());
 			file.group(credentials.checkInitGroupTo(group));
 			file.createdAt(now);
 		} else {
-			settings.permissions.checkUpdate(credentials, file.owner(), file.group());
+			settings.permissions.checkUpdatePermission(credentials, file.owner(), file.group());
 			file.group(credentials.checkUpdateGroupTo(file.group(), group));
 		}
 
@@ -230,14 +230,14 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		SpaceFile file = Services.files().getMeta(bucket, path, false);
 
 		if (file == null) {
-			bucketPermissions.check(credentials, Permission.delete);
+			bucketPermissions.checkPermission(credentials, Permission.delete);
 			long deleted = Services.files().deleteAll(bucket, path);
 			return JsonPayload.ok()//
 					.withFields("deleted", deleted)//
 					.build();
 
 		} else {
-			bucketPermissions.checkDelete(credentials, file.owner(), file.group());
+			bucketPermissions.checkDeletePermission(credentials, file.owner(), file.group());
 			boolean deleted = Services.files().delete(bucket, file);
 			return JsonPayload.ok()//
 					.withFields("deleted", deleted ? 1 : 0)//
@@ -275,7 +275,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 
 		RolePermissions bucketRoles = Services.files().getBucketSettings(bucket).permissions;
 		Credentials credentials = Server.context().credentials();
-		bucketRoles.check(credentials, Permission.search);
+		bucketRoles.checkPermission(credentials, Permission.search);
 
 		boolean refresh = isRefreshRequested(context, true);
 		int size = context.query().getInteger(SIZE_PARAM, 50);
