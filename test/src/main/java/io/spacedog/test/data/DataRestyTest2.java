@@ -366,8 +366,7 @@ public class DataRestyTest2 extends SpaceTest {
 		superadmin.get("/2/data/home/XXX/name").go(404);
 
 		// superadmin creates home 1 with name dupont
-		superadmin.put("/2/data/home/1/name")//
-				.bodyJson(TextNode.valueOf("dupont")).go(201);
+		superadmin.put("/2/data/home/1").bodyJson("name", "dupont").go(201);
 		DataWrap<ObjectNode> home = superadmin.data().getWrapped("home", "1");
 		ObjectNode homeNode = Json.object("name", "dupont");
 		assertAlmostEquals(homeNode, home.source());

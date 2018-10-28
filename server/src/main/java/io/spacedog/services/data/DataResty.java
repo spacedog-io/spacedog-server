@@ -86,7 +86,7 @@ public class DataResty extends SpaceResty {
 	public Payload postType(String type, String body, Context context) {
 		DataWrap<ObjectNode> object = DataWrap.wrap(Json.readObject(body)).type(type);
 		boolean forceMeta = context.query().getBoolean(FORCE_META_PARAM, false);
-		object = Services.data().saveIfAuthorized(object, false, forceMeta);
+		object = Services.data().saveIfAuthorized(object, forceMeta);
 		return JsonPayload.saved(object).build();
 	}
 
@@ -134,7 +134,10 @@ public class DataResty extends SpaceResty {
 		boolean forceMeta = context.query().getBoolean(FORCE_META_PARAM, false);
 		boolean patch = context.query().getBoolean(PATCH_PARAM, false);
 
-		object = Services.data().saveIfAuthorized(object, patch, forceMeta);
+		object = patch //
+				? Services.data().patchIfAuthorized(object) //
+				: Services.data().saveIfAuthorized(object, forceMeta);
+
 		return JsonPayload.saved(object).build();
 	}
 
@@ -163,7 +166,7 @@ public class DataResty extends SpaceResty {
 		DataWrap<ObjectNode> object = DataWrap.wrap(source)//
 				.version(context.query().getLong(VERSION_PARAM, Versions.MATCH_ANY))//
 				.type(type).id(id);
-		object = Services.data().saveIfAuthorized(object, true, false);
+		object = Services.data().patchIfAuthorized(object);
 		return JsonPayload.saved(object).build();
 	}
 
@@ -172,7 +175,7 @@ public class DataResty extends SpaceResty {
 	public Payload deleteField(String type, String id, String field, String body, Context context) {
 		DataWrap<ObjectNode> object = Services.data().getWrapped(type, id);
 		Json.remove(object.source(), field);
-		object = Services.data().saveIfAuthorized(object, false, false);
+		object = Services.data().saveIfAuthorized(object, false);
 		return JsonPayload.saved(object).build();
 	}
 

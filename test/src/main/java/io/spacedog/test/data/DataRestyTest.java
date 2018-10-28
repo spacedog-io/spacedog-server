@@ -150,7 +150,7 @@ public class DataRestyTest extends SpaceTest {
 	}
 
 	@Test
-	public void createDataObjectWithCustomMeta() {
+	public void testForceMetaUpdate() {
 
 		prepareTest();
 		SpaceDog superadmin = clearServer();
@@ -227,5 +227,61 @@ public class DataRestyTest extends SpaceTest {
 		// vince can not access his object anymore
 		// since owner has been updated to nath by operator
 		vince.get("/2/data/message/1").go(403).asVoid();
+	}
+
+	@Test
+	public void patchMetaFieldsIsForbidden() {
+
+		// prepare
+		prepareTest();
+		SpaceDog superadmin = clearServer();
+		superadmin.schemas().set(Message.schema());
+
+		// superadmin creates a message
+		String messageId = superadmin.data().save(new Message("toto")).id();
+
+		// superadmin fails to patch message 'owner' meta field
+		assertHttpError(400, () -> superadmin.data().patch(//
+				Message.TYPE, messageId, Json.object(OWNER_FIELD, "XXX")));
+
+		// superadmin fails to patch message 'group' meta field
+		assertHttpError(400, () -> superadmin.data().patch(//
+				Message.TYPE, messageId, Json.object(GROUP_FIELD, "XXX")));
+
+		// superadmin fails to patch message 'createdAt' meta field
+		assertHttpError(400, () -> superadmin.data().patch(//
+				Message.TYPE, messageId, Json.object(CREATED_AT_FIELD, "XXX")));
+
+		// superadmin fails to patch message 'updatedAt' meta field
+		assertHttpError(400, () -> superadmin.data().patch(//
+				Message.TYPE, messageId, Json.object(UPDATED_AT_FIELD, "XXX")));
+	}
+
+	@Test
+	public void saveMetaFieldsIsForbidden() {
+
+		// prepare
+		prepareTest();
+		SpaceDog superadmin = clearServer();
+		superadmin.schemas().set(Message.schema());
+
+		// superadmin creates a message
+		String messageId = superadmin.data().save(new Message("toto")).id();
+
+		// superadmin fails to save 'owner' meta field
+		assertHttpError(400, () -> superadmin.data().saveField(//
+				Message.TYPE, messageId, OWNER_FIELD, "XXX"));
+
+		// superadmin fails to save 'group' meta field
+		assertHttpError(400, () -> superadmin.data().saveField(//
+				Message.TYPE, messageId, GROUP_FIELD, "XXX"));
+
+		// superadmin fails to save 'createdAt' meta field
+		assertHttpError(400, () -> superadmin.data().saveField(//
+				Message.TYPE, messageId, CREATED_AT_FIELD, "XXX"));
+
+		// superadmin fails to save 'updatedAt' meta field
+		assertHttpError(400, () -> superadmin.data().saveField(//
+				Message.TYPE, messageId, UPDATED_AT_FIELD, "XXX"));
 	}
 }

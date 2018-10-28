@@ -274,7 +274,7 @@ public class PushService extends SpaceService implements SpaceFields {
 						: AwsSnsPusher.createApplicationEndpoint(installation.appId(), //
 								installation.protocol(), installation.token()));
 
-		return Services.data().saveIfAuthorized(wrap, false, false);
+		return Services.data().saveIfAuthorized(wrap, false);
 	}
 
 	public long patchInstallation(String id, Object source) {

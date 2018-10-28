@@ -126,7 +126,7 @@ public class CallbackResty extends SpaceResty {
 				.version(context.query().getLong(VERSION_PARAM, Versions.MATCH_ANY))//
 				.type(DATA_TYPE).id(id);
 
-		object = Services.data().saveIfAuthorized(object, false, false);
+		object = Services.data().saveIfAuthorized(object, false);
 		return JsonPayload.saved(object).build();
 	}
 

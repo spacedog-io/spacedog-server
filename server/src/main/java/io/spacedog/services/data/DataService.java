@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.common.lucene.uid.Versions;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -227,29 +226,6 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 	// Patch
 	//
 
-	// TODO
-	// patch methods should return full object ?
-	//
-	// TODO
-	// should i set version of wrap parameter after patch is done ?
-	//
-	public <K> DataWrap<K> patch(DataWrap<K> wrap) {
-
-		// TODO
-		// forbid meta update if necessary
-
-		ObjectNode source = Json.toObjectNode(wrap.source());
-		source.put(UPDATED_AT_FIELD, DateTime.now().toString());
-
-		UpdateResponse response = elastic()//
-				.prepareUpdate(index(wrap.type()), wrap.id())//
-				.setVersion(elasticVersion(wrap.version()))//
-				.setDoc(source.toString(), XContentType.JSON)//
-				.get();
-
-		return wrap.version(response.getVersion());
-	}
-
 	public long patch(String type, String id, Object source) {
 		return patch(type, id, Versions.MATCH_ANY, source);
 	}
@@ -260,6 +236,24 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 
 	public static long elasticVersion(long version) {
 		return version < 0 ? Versions.MATCH_ANY : version;
+	}
+
+	public <K> DataWrap<K> patch(DataWrap<K> wrap) {
+
+		ObjectNode source = Json.toObjectNode(wrap.source());
+
+		if (source.has(OWNER_FIELD) || source.has(GROUP_FIELD) //
+				|| source.has(CREATED_AT_FIELD) || source.has(UPDATED_AT_FIELD))
+			throw Exceptions.illegalArgument("patching meta fields is forbidden");
+
+		source.put(UPDATED_AT_FIELD, DateTime.now().toString());
+
+		elastic().prepareUpdate(index(wrap.type()), wrap.id())//
+				.setVersion(elasticVersion(wrap.version()))//
+				.setDoc(source.toString(), XContentType.JSON)//
+				.get();
+
+		return getWrapped(wrap.type(), wrap.id(), wrap.sourceClass());
 	}
 
 	//
@@ -512,7 +506,7 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 	}
 
 	//
-	// Get, Update, Delete if authorized
+	// Get, Update, Patch, Delete if authorized
 	//
 
 	public DataWrap<ObjectNode> getIfAuthorized(String type, String id) {
@@ -522,7 +516,7 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 		return object;
 	}
 
-	public <K> DataWrap<K> saveIfAuthorized(DataWrap<K> object, boolean patch, boolean forceMeta) {
+	public <K> DataWrap<K> saveIfAuthorized(DataWrap<K> object, boolean forceMeta) {
 
 		Credentials credentials = Server.context().credentials();
 
@@ -540,8 +534,7 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 				checkUpdatePermissions(meta);
 				updateMeta(object, meta.source(), forceMeta, credentials);
 
-				return patch ? Services.data().patch(object) //
-						: Services.data().save(object);
+				return Services.data().save(object);
 			}
 		}
 
@@ -553,6 +546,17 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 		}
 
 		throw Exceptions.forbidden("forbidden to create [%s] objects", object.type());
+	}
+
+	public <K> DataWrap<K> patchIfAuthorized(DataWrap<K> object) {
+
+		DataWrap<DataObjectBase> meta = Services.data()//
+				.getMeta(object.type(), object.id())//
+				.orElseThrow(() -> Exceptions.notFound(object));
+
+		checkUpdatePermissions(meta);
+
+		return Services.data().patch(object);
 	}
 
 	public boolean deleteIfAuthorized(String type, String id) {

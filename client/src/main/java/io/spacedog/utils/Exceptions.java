@@ -3,6 +3,7 @@ package io.spacedog.utils;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import io.spacedog.client.credentials.Credentials;
+import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.http.SpaceException;
 
 public class Exceptions {
@@ -131,6 +132,10 @@ public class Exceptions {
 	//
 	// 404
 	//
+
+	public static NotFoundException notFound(DataWrap<?> object) {
+		return new NotFoundException("[%s][%s] not found", object.type(), object.id());
+	}
 
 	public static NotFoundException notFound(String type, String id) {
 		return new NotFoundException("[%s][%s] not found", type, id);
