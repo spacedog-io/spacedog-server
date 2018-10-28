@@ -161,36 +161,20 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 				.orElseThrow(() -> Exceptions.notFound(type, id));
 	}
 
-	private <K> void createMeta(DataWrap<K> object, //
-			Credentials credentials, boolean forceMeta) {
-
-		if (forceMeta == false) {
-			object.owner(credentials.id());
-			object.group(credentials.checkInitGroupTo(object.group()));
-		}
-
+	private <K> void createMeta(DataWrap<K> object, Credentials credentials) {
+		object.owner(credentials.id());
+		object.group(credentials.checkInitGroupTo(object.group()));
 		DateTime now = DateTime.now();
-
-		if (forceMeta == false || object.createdAt() == null)
-			object.createdAt(now);
-
-		if (forceMeta == false || object.updatedAt() == null)
-			object.updatedAt(now);
+		object.createdAt(now);
+		object.updatedAt(now);
 	}
 
 	private <K> void updateMeta(DataWrap<K> object, //
-			DataObject meta, boolean forceMeta, Credentials credentials) {
-
-		if (forceMeta == false) {
-			object.owner(meta.owner());
-			object.group(credentials.checkUpdateGroupTo(meta.group(), object.group()));
-		}
-
-		if (forceMeta == false || object.createdAt() == null)
-			object.createdAt(meta.createdAt());
-
-		if (forceMeta == false || object.updatedAt() == null)
-			object.updatedAt(DateTime.now());
+			DataObject meta, Credentials credentials) {
+		object.owner(meta.owner());
+		object.group(credentials.checkUpdateGroupTo(meta.group(), object.group()));
+		object.createdAt(meta.createdAt());
+		object.updatedAt(DateTime.now());
 	}
 
 	//
@@ -210,6 +194,10 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 	}
 
 	public <K> DataWrap<K> save(DataWrap<K> wrap) {
+
+		if (Utils.isNullOrEmpty(wrap.owner(), wrap.group())//
+				|| Utils.isNull(wrap.createdAt(), wrap.updatedAt()))
+			throw Exceptions.illegalArgument("meta fields are mandatory");
 
 		IndexResponse response = elastic()//
 				.prepareIndex(index(wrap.type()))//
@@ -526,14 +514,13 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 
 		if (object.id() != null) {
 
-			Optional<DataWrap<DataObjectBase>> metaOpt = Services.data()//
+			Optional<DataWrap<DataObjectBase>> meta = Services.data()//
 					.getMeta(object.type(), object.id());
 
-			if (metaOpt.isPresent()) {
-				DataWrap<DataObjectBase> meta = metaOpt.get();
-				checkUpdatePermissions(meta);
-				updateMeta(object, meta.source(), forceMeta, credentials);
-
+			if (meta.isPresent()) {
+				checkUpdatePermissions(meta.get());
+				if (!forceMeta)
+					updateMeta(object, meta.get().source(), credentials);
 				return Services.data().save(object);
 			}
 		}
@@ -541,7 +528,8 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 		if (DataAccessControl.roles(object.type())//
 				.containsOne(credentials, Permission.create)) {
 
-			createMeta(object, credentials, forceMeta);
+			if (!forceMeta)
+				createMeta(object, credentials);
 			return Services.data().save(object);
 		}
 

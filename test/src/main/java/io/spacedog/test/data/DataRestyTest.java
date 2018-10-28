@@ -173,19 +173,13 @@ public class DataRestyTest extends SpaceTest {
 		DateTime now = DateTime.now();
 		Message message = new Message();
 		message.text = "toto";
-		message.owner(nath.id());
-		// TODO with new group access control feature
-		// forceMeta is not anymore capable of forcing group
-		// refactor the force meta feature
-		// message.group(nath.group());
-		message.createdAt(now.minusDays(2));
-		message.updatedAt(now.minusDays(2).plusHours(1));
+		message.owner("XXX");
 
 		// vince creates a message object
-		vince.data().save(message, "1");
+		vince.data().save(message, "vince");
 
 		// but provided meta dates are not saved
-		Message downloaded = vince.data().get(Message.TYPE, "1", Message.class);
+		Message downloaded = vince.data().get("vince", Message.class);
 
 		assertEquals(message.text, downloaded.text);
 		assertEquals(vince.id(), downloaded.owner());
@@ -196,37 +190,32 @@ public class DataRestyTest extends SpaceTest {
 
 		// vince is not allowed to force save custom meta
 		// since he does'nt have 'updateMeta' permission
-		vince.put("/2/data/message/2")//
-				.queryParam(FORCE_META_PARAM, true)//
-				.bodyPojo(message)//
-				.go(403).asVoid();
+		assertHttpError(403, () -> vince.data().save(//
+				DataWrap.wrap(message).id("nath"), true));
 
 		// operator can create a new message with custom meta
-		operator.put("/2/data/message/2")//
-				.queryParam(FORCE_META_PARAM, true)//
-				.bodyPojo(message)//
-				.go(200).asVoid();
+		message.owner(nath.id());
+		message.group(nath.group());
+		message.createdAt(now.minusDays(2));
+		message.updatedAt(now.minusDays(2).plusHours(1));
+		operator.data().save(DataWrap.wrap(message).id("nath"), true);
 
 		// provided custom meta are saved
 		// and nath can access this object since the owner
-		downloaded = nath.data().get(Message.TYPE, "2", Message.class);
+		downloaded = nath.data().get("nath", Message.class);
 
 		assertEquals(message.text, downloaded.text);
 		assertEquals(nath.id(), downloaded.owner());
-		// TODO idem
-		// assertEquals(nath.group(), downloaded.group());
+		assertEquals(nath.group(), downloaded.group());
 		assertTrue(message.createdAt().isEqual(downloaded.createdAt()));
 		assertTrue(message.updatedAt().isEqual(downloaded.updatedAt()));
 
 		// operator is allowed to force update vince's object
-		operator.put("/2/data/message/1")//
-				.queryParam(FORCE_META_PARAM, true)//
-				.bodyPojo(message)//
-				.go(200).asVoid();
+		operator.data().save(DataWrap.wrap(message).id("vince"), true);
 
 		// vince can not access his object anymore
 		// since owner has been updated to nath by operator
-		vince.get("/2/data/message/1").go(403).asVoid();
+		assertHttpError(403, () -> vince.data().get("vince", Message.class));
 	}
 
 	@Test
