@@ -29,6 +29,17 @@ public class Utils {
 	// Object utils
 	//
 
+	public static boolean isNull(Object object) {
+		return object == null;
+	}
+
+	public static boolean isNull(Object... objects) {
+		for (Object object : objects)
+			if (isNull(object))
+				return true;
+		return false;
+	}
+
 	public static <K> K instantiate(Class<K> objectClass) {
 		try {
 			return objectClass.newInstance();
@@ -92,6 +103,17 @@ public class Utils {
 	//
 	// Strings utils
 	//
+
+	public static boolean isNullOrEmpty(String string) {
+		return string == null || string.isEmpty();
+	}
+
+	public static boolean isNullOrEmpty(String... strings) {
+		for (String string : strings)
+			if (isNullOrEmpty(string))
+				return true;
+		return false;
+	}
 
 	public static String join(CharSequence delimiter, CharSequence... elements) {
 		Objects.requireNonNull(delimiter);

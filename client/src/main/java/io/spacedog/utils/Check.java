@@ -3,8 +3,6 @@ package io.spacedog.utils;
 import java.util.Collection;
 import java.util.regex.Pattern;
 
-import com.google.common.base.Strings;
-
 import io.spacedog.client.http.SpaceStatus;
 
 public class Check {
@@ -21,7 +19,7 @@ public class Check {
 	}
 
 	public static String notNullOrEmpty(String value, String valueName) {
-		if (Strings.isNullOrEmpty(value))
+		if (Utils.isNullOrEmpty(value))
 			throw Exceptions.illegalArgument("[%s] is null or empty", valueName);
 		return value;
 	}
