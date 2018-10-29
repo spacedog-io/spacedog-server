@@ -538,8 +538,8 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 			}
 		}
 
-		DataAccessControl.roles(object.type())//
-				.checkPermission(credentials, Permission.create);
+		DataAccessControl.roles(object.type()).checkPermission(credentials, //
+				Permission.createMine, Permission.createGroup, Permission.create);
 
 		if (!forceMeta)
 			createMeta(object, credentials);
