@@ -83,7 +83,7 @@ public class SmsService {
 
 	public SmsTemplate getTemplate(String name) {
 		return Services.settings().get(toSettingsId(name), SmsTemplate.class)//
-				.orElseThrow(() -> Exceptions.notFound("SmsTemplate", name));
+				.orElseThrow(() -> Exceptions.objectNotFound("SmsTemplate", name));
 	}
 
 	public void deleteTemplate(String name) {

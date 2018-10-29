@@ -63,7 +63,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		if (Methods.POST.equals(method))
 			return post(toWebPath(uri), context);
 
-		throw Exceptions.unsupportedHttpRequest(method, uri);
+		throw Exceptions.methodNotAllowed(method, uri);
 	}
 
 	//
@@ -312,7 +312,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 	}
 
 	private Payload search(WebPath webPath, Context context) {
-		throw Exceptions.unsupportedOperation("POST", webPath.toString() + "?op=search");
+		throw Exceptions.notImplemented("POST /files/...?op=search not yet implemented");
 	}
 
 	private Payload export(WebPath webPath, Context context) {

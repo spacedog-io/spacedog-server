@@ -116,7 +116,7 @@ public class FileService extends SpaceService {
 			return Json.toPojo(response.getSourceAsBytes(), SpaceFile.class);
 
 		if (throwNotFound)
-			throw Exceptions.notFound(bucket, path);
+			throw Exceptions.objectNotFound(bucket, path);
 
 		return null;
 	}
@@ -247,7 +247,7 @@ public class FileService extends SpaceService {
 	public FileBucketSettings getBucketSettings(String bucket) {
 		FileBucketSettings bucketSettings = listBuckets().get(bucket);
 		if (bucketSettings == null)
-			throw Exceptions.notFound("bucket", bucket);
+			throw Exceptions.objectNotFound("bucket", bucket);
 		return bucketSettings;
 	}
 

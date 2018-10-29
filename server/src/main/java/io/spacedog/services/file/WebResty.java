@@ -42,7 +42,7 @@ public class WebResty extends SpaceResty implements SpaceFilter {
 		if (Methods.HEAD.equals(method))
 			return doHead(toWebPath(uri), context);
 
-		throw Exceptions.unsupportedHttpRequest(method, uri);
+		throw Exceptions.methodNotAllowed(method, uri);
 	}
 
 	//

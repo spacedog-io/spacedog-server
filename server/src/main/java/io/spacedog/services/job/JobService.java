@@ -23,7 +23,7 @@ public class JobService {
 		return Services.settings().get(//
 				SpaceJob.internalSettingsId(jobName), //
 				SpaceJob.class)//
-				.orElseThrow(() -> Exceptions.notFound("job", jobName));
+				.orElseThrow(() -> Exceptions.objectNotFound("job", jobName));
 	}
 
 	public void save(SpaceJob job) {

@@ -175,7 +175,7 @@ public class ElasticClient implements SpaceParams {
 		GetResponse response = prepareGet(index, id).get();
 
 		if (!response.isExists() && throwNotFound)
-			throw Exceptions.notFound(index.type(), id);
+			throw Exceptions.objectNotFound(index.type(), id);
 
 		return response;
 	}
@@ -243,7 +243,7 @@ public class ElasticClient implements SpaceParams {
 			return true;
 
 		if (throwNotFound)
-			throw Exceptions.notFound(index.type(), id);
+			throw Exceptions.objectNotFound(index.type(), id);
 
 		return false;
 	}

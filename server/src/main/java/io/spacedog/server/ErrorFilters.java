@@ -76,10 +76,10 @@ public class ErrorFilters {
 		if (payload.isError() && payload.rawContent() == null) {
 
 			if (payload.code() == HttpStatus.NOT_FOUND)
-				throw Exceptions.notFound("path", uri);
+				throw Exceptions.objectNotFound("path", uri);
 
 			if (payload.code() == HttpStatus.METHOD_NOT_ALLOWED)
-				throw Exceptions.unsupportedHttpRequest(context.method(), uri);
+				throw Exceptions.methodNotAllowed(context.method(), uri);
 
 			return JsonPayload.error(payload.code()) //
 					.withError("no details available")//

@@ -117,7 +117,7 @@ public class SettingsService extends SpaceService {
 	}
 
 	public ObjectNode getOrThrow(String id) {
-		return get(id).orElseThrow(() -> Exceptions.notFound("settings", id));
+		return get(id).orElseThrow(() -> Exceptions.objectNotFound("settings", id));
 	}
 
 	public <K extends Settings> Optional<K> get(Class<K> settingsClass) {
@@ -142,7 +142,7 @@ public class SettingsService extends SpaceService {
 
 	public <K extends Settings> K getOrThrow(Class<K> settingsClass) {
 		return get(settingsClass).orElseThrow(//
-				() -> Exceptions.notFound("settings", SettingsBase.id(settingsClass)));
+				() -> Exceptions.objectNotFound("settings", SettingsBase.id(settingsClass)));
 	}
 
 	public <K> Optional<K> get(String id, Class<K> settingsClass) {

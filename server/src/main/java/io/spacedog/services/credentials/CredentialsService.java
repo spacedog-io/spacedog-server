@@ -78,7 +78,7 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 		if (response.isExists())
 			return toCredentials(response);
 
-		throw Exceptions.notFound(SERVICE_NAME, id);
+		throw Exceptions.objectNotFound(SERVICE_NAME, id);
 	}
 
 	//
@@ -435,7 +435,7 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 		Check.notNullOrEmpty(username, USERNAME_PARAM);
 
 		Credentials credentials = getByUsername(username)//
-				.orElseThrow(() -> Exceptions.notFound(SERVICE_NAME, username));
+				.orElseThrow(() -> Exceptions.objectNotFound(SERVICE_NAME, username));
 
 		if (!credentials.email().isPresent())
 			throw Exceptions.illegalArgument("[%s][%s] has no email", //

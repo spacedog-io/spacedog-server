@@ -48,6 +48,10 @@ public class Exceptions {
 		return illegalArgument(null, message, args);
 	}
 
+	public static SpaceException illegalArgumentWithCode(String code, String message, Object... args) {
+		return illegalArgument(code, null, message, args);
+	}
+
 	public static SpaceException illegalArgument(Throwable t) {
 		return illegalArgument(t, t.getMessage());
 	}
@@ -138,24 +142,25 @@ public class Exceptions {
 	// 404
 	//
 
-	public static SpaceException notFound(String type, String id) {
-		return exception("not-found", 404, "[%s][%s] not found", type, id);
+	public static SpaceException notFound(String message, Object... args) {
+		return exception("not-found", 404, message, args);
 	}
 
-	public static SpaceException notFound(DataWrap<?> object) {
-		return notFound(object.type(), object.id());
+	public static SpaceException objectNotFound(String type, String resourceName) {
+		return notFound("[%s][%s] not found", type, resourceName);
+	}
+
+	public static SpaceException objectNotFound(DataWrap<?> object) {
+		return objectNotFound(object.type(), object.id());
 	}
 
 	//
 	// 405
 	//
 
-	public static SpaceException unsupportedOperation(String message, Object... args) {
-		return exception("unsupported", 405, message, args);
-	}
-
-	public static SpaceException unsupportedHttpRequest(String method, String uri) {
-		return unsupportedOperation("[%s][%s] is not yet supported", method, uri);
+	public static SpaceException methodNotAllowed(String method, String uri) {
+		return exception("http-method-not-allowed", 405, //
+				"[%s][%s] is not yet supported", method, uri);
 	}
 
 	//
@@ -180,6 +185,14 @@ public class Exceptions {
 
 	public static RuntimeException runtime(Throwable t, String message, Object... args) {
 		return new RuntimeException(String.format(message, args), t);
+	}
+
+	//
+	// 501
+	//
+
+	public static SpaceException notImplemented(String message, Object... args) {
+		return exception("not-implemented", 501, message, args);
 	}
 
 }

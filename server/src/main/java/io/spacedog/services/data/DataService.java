@@ -118,7 +118,7 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 		GetResponse response = elastic().get(index(type), id);
 
 		if (throwNotFound && !response.isExists())
-			throw Exceptions.notFound(type, id);
+			throw Exceptions.objectNotFound(type, id);
 
 		return response;
 	}
@@ -156,7 +156,7 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 
 	public DataWrap<DataObjectBase> getMetaOrThrow(String type, String id) {
 		return Services.data().getMeta(type, id)//
-				.orElseThrow(() -> Exceptions.notFound(type, id));
+				.orElseThrow(() -> Exceptions.objectNotFound(type, id));
 	}
 
 	private <K> void createMeta(DataWrap<K> object, Credentials credentials) {
@@ -551,7 +551,7 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 
 		DataWrap<DataObjectBase> meta = Services.data()//
 				.getMeta(object.type(), object.id())//
-				.orElseThrow(() -> Exceptions.notFound(object));
+				.orElseThrow(() -> Exceptions.objectNotFound(object));
 
 		checkUpdatePermissions(meta);
 
