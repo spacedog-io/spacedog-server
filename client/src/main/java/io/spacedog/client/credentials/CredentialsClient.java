@@ -292,16 +292,16 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	// Groups
 	//
 
-	public Credentials createGroup(String suffix) {
+	public String createGroup(String suffix) {
 		return dog.post("/2/credentials/me/groups")//
 				.bodyJson("suffix", suffix)//
-				.go(200).asPojo(Credentials.class);
+				.go(200).getString(GROUP_FIELD);
 	}
 
-	public Credentials deleteGroup(String group) {
-		return dog.delete("/2/credentials/me/groups/{group}")//
+	public void removeGroup(String group) {
+		dog.delete("/2/credentials/me/groups/{group}")//
 				.routeParam("group", group)//
-				.go(200).asPojo(Credentials.class);
+				.go(200).asVoid();
 	}
 
 	public void shareGroup(String credentialsId, String group) {

@@ -29,6 +29,7 @@ import io.spacedog.server.SpaceFilter;
 import io.spacedog.server.SpaceResty;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.constants.Methods;
 import net.codestory.http.filters.PayloadSupplier;
@@ -153,14 +154,17 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		String group = context.get(GROUP_PARAM);
 
 		if (file == null) {
-			settings.permissions.checkPermission(credentials, Permission.create);
+			settings.permissions.checkPermission(credentials, //
+					Permission.create, Permission.createGroup, Permission.createMine);
+
 			file = new SpaceFile(path);
 			file.setName(webPath.last());
-			file.group(credentials.checkInitGroupTo(group));
+			file.group(checkGroupCreate(settings, credentials, group));
 			file.createdAt(now);
+
 		} else {
 			settings.permissions.checkUpdatePermission(credentials, file.owner(), file.group());
-			file.group(credentials.checkUpdateGroupTo(file.group(), group));
+			file.group(checkGroupUpdate(settings, credentials, file.group(), group));
 		}
 
 		file.setLength(contentLength);
@@ -179,6 +183,23 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 				.append(bucket).append(file.getEscapedPath()).toString());
 
 		return JsonPayload.ok().withContent(fileNode).build();
+	}
+
+	private String checkGroupCreate(FileBucketSettings settings, Credentials credentials, String group) {
+		if (Utils.isNullOrEmpty(group))
+			return credentials.group();
+		else {
+			settings.permissions.checkGroupCreate(group, credentials);
+			return group;
+		}
+	}
+
+	private String checkGroupUpdate(FileBucketSettings settings, Credentials credentials, String oldGroup,
+			String newGroup) {
+		if (Strings.isNullOrEmpty(newGroup) || oldGroup.equals(newGroup))
+			return oldGroup;
+		settings.permissions.checkGroupUpdate(newGroup, credentials);
+		return newGroup;
 	}
 
 	private Payload createBucket(String bucket, Context context) {

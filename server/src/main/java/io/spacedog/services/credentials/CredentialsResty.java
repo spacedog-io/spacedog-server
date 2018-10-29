@@ -274,15 +274,16 @@ public class CredentialsResty extends SpaceResty {
 	@Post("/credentials/me/groups")
 	@Post("/credentials/me/groups/")
 	public Payload postCreateGroup(CredentialsGroupCreateRequest request, Context context) {
-		Credentials credentials = Server.context().credentials()//
-				.checkAtLeastUser().createGroup(request.suffix);
-		return doUpdate(credentials);
+		Credentials credentials = Server.context().credentials().checkAtLeastUser();
+		String group = credentials.createGroup(request.suffix);
+		credentials = Services.credentials().update(credentials);
+		return saved(false, credentials, GROUP_FIELD, group);
 	}
 
 	@Put("/credentials/:id/groups/:group")
 	@Put("/credentials/:id/groups/:group/")
 	public Payload putShareGroup(String id, String group, Context context) {
-		Server.context().credentials().checkGroupAccessTo(group);
+		Server.context().credentials().checkAtLeastUser().checkGroupIsMine(group);
 		Credentials credentials = Services.credentials().get(id).addGroup(group);
 		return doUpdate(credentials);
 	}
@@ -290,15 +291,21 @@ public class CredentialsResty extends SpaceResty {
 	@Delete("/credentials/me/groups/:group")
 	@Delete("/credentials/me/groups/:group/")
 	public Payload deleteRemoveGroup(String group) {
-		Credentials credentials = Server.context().credentials().removeGroup(group);
-		return doUpdate(credentials);
+		Credentials credentials = Server.context().credentials().checkAtLeastUser();
+		return deleteUnshareGroup(credentials.id(), group);
 	}
 
 	@Delete("/credentials/:id/groups/:group")
 	@Delete("/credentials/:id/groups/:group/")
 	public Payload deleteUnshareGroup(String id, String group) {
-		Server.context().credentials().checkGroupAccessTo(group);
-		Credentials credentials = Services.credentials().get(id).removeGroup(group);
+		Credentials credentials = Server.context().credentials().checkAtLeastUser();
+
+		// if I'm not removing on myself,
+		// I need to check I owns this group
+		if (!credentials.id().equals(id))
+			credentials.checkGroupIsMine(group);
+
+		credentials = Services.credentials().get(id).removeGroup(group);
 		return doUpdate(credentials);
 	}
 
@@ -362,9 +369,10 @@ public class CredentialsResty extends SpaceResty {
 		return saved(false, credentials);
 	}
 
-	private Payload saved(boolean created, Credentials credentials) {
+	private Payload saved(boolean created, Credentials credentials, Object... fields) {
 		return JsonPayload.saved(false, "/2", CredentialsService.SERVICE_NAME, credentials.id())//
-				.withVersion(credentials.version()).withContent(credentials)//
+				.withVersion(credentials.version())//
+				.withFields(fields)//
 				.build();
 	}
 

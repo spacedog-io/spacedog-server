@@ -73,7 +73,7 @@ public class RolePermissions extends HashMap<String, Set<Permission>> {
 			return;
 
 		if (hasOne(credentials, groupPermission))
-			if (credentials.hasGroupAccessTo(group))
+			if (credentials.hasGroupAccess(group))
 				return;
 
 		if (hasOne(credentials, minePermission))
@@ -81,5 +81,33 @@ public class RolePermissions extends HashMap<String, Set<Permission>> {
 				return;
 
 		throw Exceptions.insufficientPermissions(credentials);
+	}
+
+	public void checkGroupCreate(String group, Credentials credentials) {
+		if (hasOne(credentials, Permission.create))
+			return;
+
+		if (hasOne(credentials, Permission.createGroup))
+			credentials.checkGroupAccess(group);
+
+		else if (hasOne(credentials, Permission.createMine))
+			credentials.checkGroupIsMine(group);
+
+		else
+			throw Exceptions.insufficientPermissions(credentials);
+	}
+
+	public void checkGroupUpdate(String group, Credentials credentials) {
+		if (hasOne(credentials, Permission.update))
+			return;
+
+		if (hasOne(credentials, Permission.updateGroup))
+			credentials.checkGroupAccess(group);
+
+		else if (hasOne(credentials, Permission.updateMine))
+			credentials.checkGroupIsMine(group);
+
+		else
+			throw Exceptions.insufficientPermissions(credentials);
 	}
 }

@@ -121,29 +121,20 @@ public class ServerConfig {
 	}
 
 	public static void log() {
-		Utils.info("[SpaceDog] Server configuration =");
-
 		log("API URL", apiBackend());
 		checkPath(HOME_PATH, homePath(), true);
 		log(OFFLINE, isOffline());
 		log(PRODUCTION, isProduction());
-
-		Utils.info();
 		log(PORT, port());
 		log(GREEN_CHECK, greenCheck());
 		log(GREEN_TIMEOUT, greenTimeout());
-
-		Utils.info();
 		checkPath(ELASTIC_SNAPSHOTS_PATH, elasticSnapshotsPath(), true);
-
-		Utils.info();
 		log(AWS_REGION, awsRegion());
 		log(AWS_BUCKET_PREFIX, awsBucketPrefix());
-
-		Utils.info();
 		log(MAIL_DOMAIN, mailDomain());
 		log(MAIL_SMTP_DEBUG, mailSmtpDebug());
 		log(MAIL_MAILGUN_KEY, mailGunKey());
+		Utils.info();
 	}
 
 	//

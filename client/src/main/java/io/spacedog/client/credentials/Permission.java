@@ -1,7 +1,7 @@
 package io.spacedog.client.credentials;
 
 public enum Permission {
-	create, //
+	createMine, createGroup, create, //
 	readMine, readGroup, read, search, //
 	updateMine, updateGroup, update, //
 	deleteMine, deleteGroup, delete, //

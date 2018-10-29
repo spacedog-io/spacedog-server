@@ -1,8 +1,9 @@
 package io.spacedog.test.credentials;
 
+import java.util.Set;
+
 import org.junit.Test;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceDog;
@@ -11,106 +12,87 @@ import io.spacedog.test.SpaceTest;
 public class CredentialsGroupsRestyTest extends SpaceTest {
 
 	@Test
-	public void test() {
+	public void createAndShareGroups() {
 
 		// prepare
 		prepareTest();
-		SpaceDog guest = SpaceDog.dog();
 		SpaceDog superadmin = clearServer();
-		superadmin.credentials().enableGuestSignUp(true);
 
-		// fred signs up
-		SpaceDog fred = createTempDog(guest, "fred");
+		// superadmin creates fred, vince and nath credentials
+		SpaceDog fred = createTempDog(superadmin, "fred");
+		SpaceDog vince = createTempDog(superadmin, "vince");
+		SpaceDog nath = createTempDog(superadmin, "nath");
 
-		// fred has his own group
-		assertFalse(Strings.isNullOrEmpty(fred.group()));
+		// At first they all have theit own default group
+		checkDogGroups(fred);
+		checkDogGroups(vince);
+		checkDogGroups(nath);
 
-		// // fred creates nath credentials
-		// SpaceDog nath = createTempDog(fred, "nath");
-		//
-		// // nath has the same group than fred
-		// assertFalse(Strings.isNullOrEmpty(nath.group()));
-		// assertEquals(fredDefaultGroup, nath.group());
+		// fred creates a paris group
+		String fredParisGroup = fred.credentials().createGroup("paris");
+		checkDogGroups(fred, fredParisGroup);
 
-		// vince signs up
-		SpaceDog vince = createTempDog(guest, "vince");
+		// if fred reuses the same suffix to create a group
+		// it returns the same group
+		String fredParisGroup2 = fred.credentials().createGroup("paris");
+		assertEquals(fredParisGroup, fredParisGroup2);
+		checkDogGroups(fred, fredParisGroup);
 
-		// vince and fred have their own unique group
-		assertFalse(Strings.isNullOrEmpty(vince.group()));
-		assertNotEquals(vince.group(), fred.group());
+		// fred shares his paris group with vince
+		fred.credentials().shareGroup(vince.id(), fredParisGroup);
+		checkDogGroups(vince, fredParisGroup);
 
-		// fred shares his group with vince
-		fred.credentials().shareGroup(vince.id(), fred.group());
+		// vince creates another paris group
+		String vinceParisGroup = vince.credentials().createGroup("paris");
+		assertFalse(fredParisGroup.equals(vinceParisGroup));
+		checkDogGroups(vince, fredParisGroup, vinceParisGroup);
 
-		// vince has now 2 groups, his default and fred's group
-		vince.credentials().me(true);
-		assertTrue(vince.groups().contains(vince.group()));
-		assertTrue(vince.groups().contains(fred.group()));
-		assertEquals(2, vince.groups().size());
+		// vince shares his paris group with fred
+		vince.credentials().shareGroup(fred.id(), vinceParisGroup);
+		checkDogGroups(fred, fredParisGroup, vinceParisGroup);
 
-		// fred unshares his group with vince
-		fred.credentials().unshareGroup(vince.id(), fred.group());
+		// nath fails to share fred's paris group with herself
+		assertHttpError(403, () -> nath.credentials().shareGroup(nath.id(), fredParisGroup));
 
-		// vince only has his default group
-		vince.credentials().me(true);
-		assertEquals(vince.group(), vince.group());
-		assertEquals(1, vince.groups().size());
+		// vince fails to share fred's paris group with nath
+		// even if it is part of his groups, he doesn't own it
+		assertHttpError(403, () -> vince.credentials().shareGroup(nath.id(), fredParisGroup));
 
-		// fred fails to add to himself vince's group
-		assertHttpError(403, () -> fred.credentials().shareGroup(fred.id(), vince.group()));
+		// only fred can share the groups he owns with nath
+		fred.credentials().shareGroup(nath.id(), fredParisGroup);
+		checkDogGroups(nath, fredParisGroup);
 
-		// fred is not changed
-		fred.credentials().me(true);
-		assertFalse(fred.groups().contains(vince.group()));
+		// vince fails to remove fred's paris group from nath's groups
+		// even if it is part of his groups, he doesn't own it
+		assertHttpError(403, () -> vince.credentials().unshareGroup(nath.id(), fredParisGroup));
+		checkDogGroups(nath, fredParisGroup);
 
-		// vince share his default group with fred
-		vince.credentials().shareGroup(fred.id(), vince.group());
+		// fred unshares his paris group from nath's groups
+		fred.credentials().unshareGroup(nath.id(), fredParisGroup);
+		checkDogGroups(nath);
 
-		// fred has his default group and vince's group
-		fred.credentials().me(true);
-		assertTrue(fred.groups().contains(fred.group()));
-		assertTrue(fred.groups().contains(vince.group()));
+		// vince removes fred's paris group from his groups
+		vince.credentials().removeGroup(fredParisGroup);
+		checkDogGroups(vince, vinceParisGroup);
 
-		// fred fails to share a group he doesn't own
-		assertHttpError(403, () -> fred.credentials().shareGroup(vince.id(), "XXX"));
+		// vince shares his default group with nath
+		vince.credentials().shareGroup(nath.id(), vince.group());
+		checkDogGroups(nath, vince.group());
 
-		// vince is not changed
-		vince.credentials().me(true);
-		assertFalse(vince.groups().contains("XXX"));
+		// vince unshares his default group from nath
+		vince.credentials().unshareGroup(nath.id(), vince.group());
+		checkDogGroups(nath);
 
-		// fred fails to unshare a group he doesn't own
-		assertHttpError(403, () -> fred.credentials().unshareGroup(vince.id(), "XXX"));
-
-		// vince is not changed
-		vince.credentials().me(true);
-		assertEquals(1, vince.groups().size());
-		assertEquals(vince.group(), vince.group());
+		// vince fails to share a group he didn't create
+		// even if it is prefixed with his default group
+		assertHttpError(403, () -> vince.credentials().shareGroup(nath.id(), vince.group() + "_rome"));
+		checkDogGroups(nath);
 	}
 
-	@Test
-	public void testCreateGroup() {
-
-		// prepare
-		prepareTest();
-		SpaceDog superadmin = clearServer();
-
-		// fred signs up
-		SpaceDog fred = createTempDog(superadmin, "fred");
-
-		// fred creates a new group
-		fred.credentials().createGroup("spacedog");
-
-		// fred has 2 groups
-		fred.credentials().me(true);
-		assertEquals(2, fred.groups().size());
-		assertEquals(fred.groups(), Sets.newHashSet(fred.id(), fred.id() + "__" + "spacedog"));
-
-		// fred creates an already existing group
-		fred.credentials().createGroup("spacedog");
-
-		// fred does not change
-		fred.credentials().me(true);
-		assertEquals(2, fred.groups().size());
-		assertEquals(fred.groups(), Sets.newHashSet(fred.id(), fred.id() + "__" + "spacedog"));
+	private void checkDogGroups(SpaceDog dog, String... groups) {
+		dog.credentials().me(true);
+		Set<String> groupSet = Sets.newHashSet(groups);
+		groupSet.add(dog.id());
+		assertEquals(dog.groups(), groupSet);
 	}
 }

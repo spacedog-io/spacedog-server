@@ -161,18 +161,34 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 
 	private <K> void createMeta(DataWrap<K> object, Credentials credentials) {
 		object.owner(credentials.id());
-		object.group(credentials.checkInitGroupTo(object.group()));
+		object.group(checkGroupCreate(object.group(), object.type(), credentials));
 		DateTime now = DateTime.now();
 		object.createdAt(now);
 		object.updatedAt(now);
 	}
 
+	private String checkGroupCreate(String group, String type, Credentials credentials) {
+		if (Utils.isNullOrEmpty(group))
+			return credentials.group();
+		DataAccessControl.roles(type).checkGroupCreate(group, credentials);
+		return group;
+	}
+
 	private <K> void updateMeta(DataWrap<K> object, //
 			DataObject meta, Credentials credentials) {
 		object.owner(meta.owner());
-		object.group(credentials.checkUpdateGroupTo(meta.group(), object.group()));
+		object.group(checkGroupUpdate(meta.group(), object.group(), object.type(), credentials));
 		object.createdAt(meta.createdAt());
 		object.updatedAt(DateTime.now());
+	}
+
+	private String checkGroupUpdate(String oldGroup, String newGroup, String type, Credentials credentials) {
+
+		if (Utils.isNullOrEmpty(newGroup) || oldGroup.equals(newGroup))
+			return oldGroup;
+
+		DataAccessControl.roles(type).checkGroupUpdate(newGroup, credentials);
+		return newGroup;
 	}
 
 	//
@@ -565,7 +581,7 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 		}
 
 		if (permissions.hasOne(credentials, Permission.readGroup)) {
-			credentials.checkGroupAccessTo(object.group());
+			credentials.checkGroupAccess(object.group());
 			return;
 		}
 
@@ -587,7 +603,7 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 		}
 
 		if (permissions.hasOne(credentials, Permission.updateGroup)) {
-			credentials.checkGroupAccessTo(object.group());
+			credentials.checkGroupAccess(object.group());
 			return;
 		}
 
@@ -611,7 +627,7 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 
 		else if (permissions.hasOne(credentials, Permission.deleteGroup)) {
 			DataWrap<DataObjectBase> meta = getMetaOrThrow(type, id);
-			credentials.checkGroupAccessTo(meta.group());
+			credentials.checkGroupAccess(meta.group());
 			return;
 		}
 
