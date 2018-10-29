@@ -114,7 +114,7 @@ public class Exceptions {
 	// 403
 	//
 
-	public static SpaceException forbidden(Credentials credentials, String code, String message, Object... args) {
+	public static SpaceException forbidden(String code, Credentials credentials, String message, Object... args) {
 		if (credentials.isGuest())
 			return guestsAreUnauthorized();
 
@@ -123,19 +123,19 @@ public class Exceptions {
 	}
 
 	public static SpaceException forbidden(Credentials credentials, String message, Object... args) {
-		return forbidden(credentials, "forbidden", message, args);
+		return forbidden("forbidden", credentials, message, args);
 	}
 
 	public static SpaceException insufficientPermissions(Credentials credentials) {
-		return forbidden(credentials, "insufficient-permissions", "insufficient permissions");
+		return forbidden("insufficient-permissions", credentials, "insufficient permissions");
 	}
 
 	public static SpaceException passwordMustBeChallenged(Credentials credentials) {
-		return forbidden(credentials, "unchallenged-password", "password must be challenged");
+		return forbidden("unchallenged-password", credentials, "password must be challenged");
 	}
 
 	public static SpaceException passwordMustChange(Credentials credentials) {
-		return forbidden(credentials, "password-must-change", "password must change");
+		return forbidden("password-must-change", credentials, "password must change");
 	}
 
 	//
