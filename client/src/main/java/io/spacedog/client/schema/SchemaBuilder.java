@@ -142,7 +142,7 @@ public class SchemaBuilder implements MappingDirectives {
 
 	public SchemaBuilder raw(String type, Object... attributes) {
 		if (!this.openProperty)
-			throw Exceptions.illegalState("only applicable on a field");
+			throw Exceptions.runtime("only applicable on a field");
 
 		builder.object(m_fields)//
 				.object("raw")//

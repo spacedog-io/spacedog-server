@@ -18,7 +18,6 @@ import io.spacedog.client.stripe.PaymentRequest;
 import io.spacedog.client.stripe.StripeSettings;
 import io.spacedog.server.Services;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.NotFoundException;
 
 public class StripeService {
 
@@ -176,7 +175,8 @@ public class StripeService {
 				CREDENTIALS_TAG_STRIPE_CUSTOMER_ID);
 
 		if (values.isEmpty())
-			throw new NotFoundException("credentials [%s][%s] has no stripe customer id", //
+			throw Exceptions.invalidState("no-stripe-customer-id", //
+					"[%s][%s] has no stripe customer id", //
 					credentials.type(), credentials.username());
 
 		if (values.size() > 1)

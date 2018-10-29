@@ -130,12 +130,12 @@ public class Exceptions {
 	// 404
 	//
 
-	public static NotFoundException notFound(DataWrap<?> object) {
-		return new NotFoundException("[%s][%s] not found", object.type(), object.id());
+	public static SpaceException notFound(String type, String id) {
+		return new SpaceException("not-found", 404, "[%s][%s] not found", type, id);
 	}
 
-	public static NotFoundException notFound(String type, String id) {
-		return new NotFoundException("[%s][%s] not found", type, id);
+	public static SpaceException notFound(DataWrap<?> object) {
+		return notFound(object.type(), object.id());
 	}
 
 	//
@@ -154,12 +154,8 @@ public class Exceptions {
 	// 409
 	//
 
-	public static SpaceException illegalState(String message, Object... args) {
-		return new SpaceException(409, message, args);
-	}
-
-	public static SpaceException illegalState(Throwable t, String message, Object... args) {
-		return new SpaceException(409, message, args);
+	public static SpaceException invalidState(String code, String message, Object... args) {
+		return new SpaceException(code, 409, message, args);
 	}
 
 	//

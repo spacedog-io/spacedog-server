@@ -79,14 +79,14 @@ public class JsonBuilder<N extends JsonNode> {
 	private ObjectNode checkCurrentIsObject() {
 		JsonNode current = stack.getLast();
 		if (!current.isObject())
-			throw Exceptions.illegalState("[%s] not an object", current);
+			throw Exceptions.runtime("[%s] not an object", current);
 		return (ObjectNode) current;
 	}
 
 	private ArrayNode checkCurrentIsArray() {
 		JsonNode current = stack.getLast();
 		if (!current.isArray())
-			throw Exceptions.illegalState("[%s] not an array", current);
+			throw Exceptions.runtime("[%s] not an array", current);
 		return (ArrayNode) current;
 	}
 }

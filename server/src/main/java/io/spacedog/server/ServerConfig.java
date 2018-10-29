@@ -87,7 +87,7 @@ public class ServerConfig {
 		try {
 			return InetAddress.getLocalHost().getHostAddress();
 		} catch (UnknownHostException e) {
-			throw Exceptions.illegalState(e, "no IP address found for this server");
+			throw Exceptions.runtime(e, "no IP address found for this server");
 		}
 	}
 

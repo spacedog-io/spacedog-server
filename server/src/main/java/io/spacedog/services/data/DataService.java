@@ -48,7 +48,6 @@ import io.spacedog.server.SpaceService;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.NotFoundException;
 import io.spacedog.utils.Utils;
 import net.codestory.http.payload.StreamingOutput;
 
@@ -119,7 +118,7 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 		GetResponse response = elastic().get(index(type), id);
 
 		if (throwNotFound && !response.isExists())
-			throw NotFoundException.object(type, id);
+			throw Exceptions.notFound(type, id);
 
 		return response;
 	}

@@ -114,7 +114,7 @@ public class SpaceEnv {
 		Optional7<String> optional = get(propertyName);
 		if (optional.isPresent())
 			return optional.get();
-		throw Exceptions.illegalState("env property [%s] not found", propertyName);
+		throw Exceptions.runtime("env property [%s] not found", propertyName);
 	}
 
 	public void set(String propertyName, String propertyValue) {

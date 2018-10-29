@@ -17,7 +17,6 @@ import io.spacedog.server.Server;
 import io.spacedog.server.Services;
 import io.spacedog.services.PebbleTemplating;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.NotFoundException;
 
 public class SmsService {
 
@@ -84,8 +83,7 @@ public class SmsService {
 
 	public SmsTemplate getTemplate(String name) {
 		return Services.settings().get(toSettingsId(name), SmsTemplate.class)//
-				.orElseThrow(() -> new NotFoundException(//
-						"sms template [%s] not found", name));
+				.orElseThrow(() -> Exceptions.notFound("SmsTemplate", name));
 	}
 
 	public void deleteTemplate(String name) {

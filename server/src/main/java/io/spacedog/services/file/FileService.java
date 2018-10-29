@@ -32,7 +32,6 @@ import io.spacedog.server.SpaceService;
 import io.spacedog.services.file.FileStore.PutResult;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.NotFoundException;
 import io.spacedog.utils.Utils;
 import net.codestory.http.payload.StreamingOutput;
 
@@ -248,7 +247,7 @@ public class FileService extends SpaceService {
 	public FileBucketSettings getBucketSettings(String bucket) {
 		FileBucketSettings bucketSettings = listBuckets().get(bucket);
 		if (bucketSettings == null)
-			throw new NotFoundException("bucket [%s] not found", bucket);
+			throw Exceptions.notFound("bucket", bucket);
 		return bucketSettings;
 	}
 
