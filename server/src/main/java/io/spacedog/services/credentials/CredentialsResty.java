@@ -48,7 +48,7 @@ public class CredentialsResty extends SpaceResty {
 	public Payload login(Context context) {
 		Credentials credentials = Server.context().credentials().checkAtLeastUser();
 		if (credentials.hasPasswordBeenChallenged()) {
-			long lifetime = getCheckSessionLifetime(context);
+			long lifetime = getCheckSessionLifetime(credentials, context);
 			credentials.setCurrentSession(Session.newSession(lifetime));
 			credentials = Services.credentials().update(credentials);
 		}
@@ -136,7 +136,7 @@ public class CredentialsResty extends SpaceResty {
 		// forbidden to delete last backend superadmin
 		if (credentials.isSuperAdmin())
 			if (!Services.credentials().existsMoreThanOneSuperAdmin())
-				throw Exceptions.forbidden("backend must at least have one superadmin");
+				throw Exceptions.forbidden(credentials, "backend must at least have one superadmin");
 
 		Services.credentials().delete(id);
 	}
@@ -312,14 +312,14 @@ public class CredentialsResty extends SpaceResty {
 		return doUpdate(credentials);
 	}
 
-	public static long getCheckSessionLifetime(Context context) {
+	public static long getCheckSessionLifetime(Credentials credentials, Context context) {
 		CredentialsSettings settings = Services.credentials().settings();
 
 		long lifetime = context.query()//
 				.getLong(LIFETIME_PARAM, settings.sessionMaximumLifetime);
 
 		if (lifetime > settings.sessionMaximumLifetime)
-			throw Exceptions.forbidden(//
+			throw Exceptions.forbidden(credentials, //
 					"maximum access token lifetime is [%s] seconds", //
 					settings.sessionMaximumLifetime);
 
@@ -350,7 +350,7 @@ public class CredentialsResty extends SpaceResty {
 			return credentials;
 		}
 
-		throw Exceptions.insufficientCredentials(requester);
+		throw Exceptions.insufficientPermissions(requester);
 	}
 
 	//

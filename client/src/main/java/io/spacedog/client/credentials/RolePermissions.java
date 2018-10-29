@@ -51,7 +51,7 @@ public class RolePermissions extends HashMap<String, Set<Permission>> {
 
 	public void checkPermission(Credentials credentials, Permission... permissions) {
 		if (!hasOne(credentials, permissions))
-			throw Exceptions.insufficientCredentials(credentials);
+			throw Exceptions.insufficientPermissions(credentials);
 	}
 
 	public void checkReadPermission(Credentials credentials, String owner, String group) {
@@ -80,6 +80,6 @@ public class RolePermissions extends HashMap<String, Set<Permission>> {
 			if (owner.equals(credentials.id()))
 				return;
 
-		throw Exceptions.insufficientCredentials(credentials);
+		throw Exceptions.insufficientPermissions(credentials);
 	}
 }

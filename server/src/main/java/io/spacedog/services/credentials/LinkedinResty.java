@@ -156,14 +156,8 @@ public class LinkedinResty extends SpaceResty {
 				.go();
 
 		checkLinkedinError(response, "linkedin error fetching access token");
-
 		String accessToken = response.asJsonObject().get("access_token").asText();
-
-		long expiresIn = settings.linkedin.useExpiresIn //
-				? response.asJsonObject().get("expires_in").asLong() //
-				: CredentialsResty.getCheckSessionLifetime(context);
-
-		Session session = Session.newSession(accessToken, expiresIn);
+		long expiresIn = response.asJsonObject().get("expires_in").asLong();
 
 		response = SpaceRequest.get("/v1/people/~:(email-address)")//
 				.backend("https://api.linkedin.com")//
@@ -177,6 +171,10 @@ public class LinkedinResty extends SpaceResty {
 		Credentials credentials = Services.credentials().getByUsername(email)//
 				.orElse(new Credentials(email).addRoles(Roles.user));
 
+		expiresIn = settings.linkedin.useExpiresIn ? expiresIn //
+				: CredentialsResty.getCheckSessionLifetime(credentials, context);
+
+		Session session = Session.newSession(accessToken, expiresIn);
 		credentials.setCurrentSession(session);
 		credentials.email(email);
 
@@ -184,7 +182,7 @@ public class LinkedinResty extends SpaceResty {
 
 		if (isNew) {
 			if (!settings.guestSignUpEnabled)
-				throw Exceptions.forbidden("guest sign up is disabled");
+				throw Exceptions.guestNotAuthorized();
 
 			credentials = Services.credentials().create(credentials);
 		} else

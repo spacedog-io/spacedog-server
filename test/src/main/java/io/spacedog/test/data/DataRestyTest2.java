@@ -373,7 +373,7 @@ public class DataRestyTest2 extends SpaceTest {
 
 		// guest is forbidden to update home 1 name
 		guest.put("/2/data/home/1/name")//
-				.bodyJson(TextNode.valueOf("meudon")).go(403);
+				.bodyJson(TextNode.valueOf("meudon")).go(401);
 
 		// superadmin sets home 1 garage places to 6
 		superadmin.put("/2/data/home/1/garage.places")//
@@ -389,6 +389,6 @@ public class DataRestyTest2 extends SpaceTest {
 		assertAlmostEquals(homeNode, home.source());
 
 		// guest is forbidden to remove home 1 name
-		guest.delete("/2/data/home/1/name").go(403);
+		guest.delete("/2/data/home/1/name").go(401);
 	}
 }

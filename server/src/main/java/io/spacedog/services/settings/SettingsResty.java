@@ -115,7 +115,8 @@ public class SettingsResty extends SpaceResty {
 
 	private void checkNotInternalSettings(String settingsId) {
 		if (settingsId.toLowerCase().startsWith("internal"))
-			throw Exceptions.forbidden("direct update of internal settings is forbidden");
+			throw Exceptions.forbidden(Server.context().credentials(), //
+					"direct update of internal settings is forbidden");
 	}
 
 }

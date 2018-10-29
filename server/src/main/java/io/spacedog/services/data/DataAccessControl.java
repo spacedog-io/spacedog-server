@@ -32,7 +32,7 @@ public class DataAccessControl {
 	public static void checkPermission(String type, Permission permission) {
 		Credentials credentials = Server.context().credentials();
 		if (!roles(type).hasOne(credentials, permission))
-			throw Exceptions.insufficientCredentials(credentials);
+			throw Exceptions.insufficientPermissions(credentials);
 	}
 
 }

@@ -222,7 +222,7 @@ public class PushService extends SpaceService implements SpaceFields {
 				.getHits();
 
 		if (hits.getTotalHits() > 1000)
-			throw Exceptions.forbidden(//
+			throw Exceptions.forbidden(Server.context().credentials(), //
 					"push to [%s] installations is a premium feature", //
 					hits.getTotalHits());
 

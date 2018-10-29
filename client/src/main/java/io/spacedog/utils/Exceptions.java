@@ -9,9 +9,6 @@ import io.spacedog.client.http.SpaceException;
 public class Exceptions {
 
 	public static final String ALREADY_EXISTS = "already-exists";
-	public static final String UNCHALLENGED_PASSWORD = "unchallenged-password";
-	public static final String PASSWORD_MUST_CHANGE = "password-must-change";
-	public static final String NO_AUTHORIZATION_HEADER = "no-authorization-header";
 	public static final String INVALID_AUTHORIZATION_HEADER = "invalid-authorization-header";
 	public static final String DISABLED_CREDENTIALS = "disabled-credentials";
 	public static final String INVALID_ACCESS_TOKEN = "invalid-access-token";
@@ -67,8 +64,8 @@ public class Exceptions {
 	// 401
 	//
 
-	public static AuthenticationException noAuthorizationHeader() {
-		return new AuthenticationException(NO_AUTHORIZATION_HEADER, "no authorization header");
+	public static AuthenticationException guestNotAuthorized() {
+		return new AuthenticationException("guest-not-authorized", "guest not authorized");
 
 	}
 
@@ -84,7 +81,7 @@ public class Exceptions {
 
 	public static AuthenticationException disabledCredentials(Credentials credentials) {
 		return new AuthenticationException(DISABLED_CREDENTIALS, //
-				"[%s][%s] credentials disabled", credentials.type(), credentials.username());
+				"[%s][%s] => disabled", credentials.type(), credentials.username());
 	}
 
 	public static AuthenticationException invalidAccessToken() {
@@ -105,23 +102,28 @@ public class Exceptions {
 	// 403
 	//
 
-	public static ForbiddenException forbidden(String message, Object... args) {
-		return new ForbiddenException(message, args);
+	public static SpaceException forbidden(Credentials credentials, String code, String message, Object... args) {
+		if (credentials.isGuest())
+			return guestNotAuthorized();
+
+		String prefix = String.format("[%s][%s] => ", credentials.type(), credentials.username());
+		return new SpaceException(code, 403, prefix + message, args);
 	}
 
-	public static SpaceException insufficientCredentials(Credentials credentials) {
-		return forbidden("[%s][%s] has insufficient credentials", //
-				credentials.type(), credentials.username());
+	public static SpaceException forbidden(Credentials credentials, String message, Object... args) {
+		return forbidden(credentials, "forbidden", message, args);
 	}
 
-	public static SpaceException passwordMustBeChallenged() {
-		return new SpaceException(UNCHALLENGED_PASSWORD, 403, "password must be challenged");
+	public static SpaceException insufficientPermissions(Credentials credentials) {
+		return forbidden(credentials, "insufficient-permissions", "insufficient permissions");
+	}
+
+	public static SpaceException passwordMustBeChallenged(Credentials credentials) {
+		return forbidden(credentials, "unchallenged-password", "password must be challenged");
 	}
 
 	public static SpaceException passwordMustChange(Credentials credentials) {
-		return new SpaceException(PASSWORD_MUST_CHANGE, 403, //
-				"[%s][%s] credentials password must change", //
-				credentials.type(), credentials.username());
+		return forbidden(credentials, "password-must-change", "password must change");
 	}
 
 	//

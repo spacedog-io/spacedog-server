@@ -314,7 +314,7 @@ public class Credentials implements SpaceFields {
 
 	public void checkGroupAccessTo(String group) {
 		if (!hasGroupAccessTo(group))
-			throw Exceptions.forbidden("[%s][%s] not authorized for group [%s]", //
+			throw Exceptions.forbidden(this, "[%s][%s] not authorized for group [%s]", //
 					type(), username(), group);
 	}
 
@@ -408,7 +408,7 @@ public class Credentials implements SpaceFields {
 
 	public Credentials checkSuperDog() {
 		if (!isSuperDog())
-			throw Exceptions.insufficientCredentials(this);
+			throw Exceptions.insufficientPermissions(this);
 		return this;
 	}
 
@@ -422,7 +422,7 @@ public class Credentials implements SpaceFields {
 
 	public Credentials checkAtLeastSuperAdmin() {
 		if (!isAtLeastSuperAdmin())
-			throw Exceptions.insufficientCredentials(this);
+			throw Exceptions.insufficientPermissions(this);
 		return this;
 	}
 
@@ -436,7 +436,7 @@ public class Credentials implements SpaceFields {
 
 	public Credentials checkAtLeastAdmin() {
 		if (!isAtLeastAdmin())
-			throw Exceptions.insufficientCredentials(this);
+			throw Exceptions.insufficientPermissions(this);
 		return this;
 	}
 
@@ -450,7 +450,7 @@ public class Credentials implements SpaceFields {
 
 	public Credentials checkAtLeastUser() {
 		if (!isAtLeastUser())
-			throw Exceptions.insufficientCredentials(this);
+			throw Exceptions.insufficientPermissions(this);
 		return this;
 	}
 
@@ -481,7 +481,7 @@ public class Credentials implements SpaceFields {
 
 	public Credentials checkCanManage(String... roles) {
 		if (!canManage(roles))
-			throw Exceptions.insufficientCredentials(this);
+			throw Exceptions.insufficientPermissions(this);
 		return this;
 	}
 
@@ -529,12 +529,12 @@ public class Credentials implements SpaceFields {
 						|| roles.contains(authorized))
 					return this;
 		}
-		throw Exceptions.insufficientCredentials(this);
+		throw Exceptions.insufficientPermissions(this);
 	}
 
 	public void checkOwnerAccess(String owner, String objectType, String objectId) {
 		if (!id().equals(owner))
-			throw Exceptions.forbidden("[%s][%s] not owner of [%s][%s]", //
+			throw Exceptions.forbidden(this, "[%s][%s] not owner of [%s][%s]", //
 					type(), username(), objectType, objectId);
 	}
 
@@ -612,7 +612,7 @@ public class Credentials implements SpaceFields {
 
 	public void checkPasswordHasBeenChallenged() {
 		if (!hasPasswordBeenChallenged())
-			throw Exceptions.passwordMustBeChallenged();
+			throw Exceptions.passwordMustBeChallenged(this);
 	}
 
 	public void newPasswordResetCode() {
@@ -647,8 +647,8 @@ public class Credentials implements SpaceFields {
 		Check.notNullOrEmpty(passwordResetCode, "passwordResetCode");
 
 		if (!passwordResetCode.equals(this.passwordResetCode))
-			throw Exceptions.forbidden("password reset code [%s] is invalid", //
-					passwordResetCode);
+			throw Exceptions.forbidden(this, //
+					"password reset code [%s] is invalid", passwordResetCode);
 
 		changePassword(password, regex);
 	}
