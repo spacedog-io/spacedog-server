@@ -45,7 +45,6 @@ import io.spacedog.server.J8;
 import io.spacedog.server.Server;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceService;
-import io.spacedog.utils.Check;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -322,7 +321,6 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 	}
 
 	public <K> DataResults<K> search(Class<K> sourceClass, SearchSourceBuilder source, String... types) {
-		Check.notNullOrEmpty(types, "types");
 		Index[] indices = Utils.isNullOrEmpty(types) ? indices() : index(types);
 		return extract(elastic().search(source, indices), sourceClass);
 	}
