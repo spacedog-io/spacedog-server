@@ -11,7 +11,6 @@ import io.spacedog.server.JsonPayload;
 import io.spacedog.server.Server;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceResty;
-import io.spacedog.utils.Exceptions;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -47,15 +46,14 @@ public class SettingsResty extends SpaceResty {
 	@Get("/:id")
 	@Get("/:id/")
 	public ObjectNode get(String id) {
-		checkAuthorizedTo(id, Permission.read);
+		checkAuthorized(id, Permission.read);
 		return Services.settings().getOrThrow(id);
 	}
 
 	@Put("/:id")
 	@Put("/:id/")
 	public Payload put(String id, ObjectNode settings) {
-		checkNotInternalSettings(id);
-		checkAuthorizedTo(id, Permission.update);
+		checkAuthorized(id, Permission.update);
 		long version = Services.settings().save(id, settings);
 		return JsonPayload.ok().withFields("id", id, //
 				"type", "settings", "version", version)//
@@ -65,15 +63,14 @@ public class SettingsResty extends SpaceResty {
 	@Delete("/:id")
 	@Delete("/:id/")
 	public void delete(String id) {
-		checkNotInternalSettings(id);
-		checkAuthorizedTo(id, Permission.update);
+		checkAuthorized(id, Permission.update);
 		Services.settings().delete(id);
 	}
 
 	@Get("/:id/:field")
 	@Get("/:id/:field/")
 	public JsonNode get(String id, String field) {
-		checkAuthorizedTo(id, Permission.read);
+		checkAuthorized(id, Permission.read);
 		return Services.settings().get(id, field)//
 				.orElse(NullNode.getInstance());
 	}
@@ -81,8 +78,7 @@ public class SettingsResty extends SpaceResty {
 	@Put("/:id/:field")
 	@Put("/:id/:field/")
 	public Payload put(String id, String field, JsonNode value) {
-		checkNotInternalSettings(id);
-		checkAuthorizedTo(id, Permission.update);
+		checkAuthorized(id, Permission.update);
 		long version = Services.settings().save(id, field, value);
 		return JsonPayload.ok().withFields("id", id, //
 				"type", "settings", "version", version)//
@@ -92,8 +88,7 @@ public class SettingsResty extends SpaceResty {
 	@Delete("/:id/:field")
 	@Delete("/:id/:field/")
 	public Payload delete(String id, String field) {
-		checkNotInternalSettings(id);
-		checkAuthorizedTo(id, Permission.update);
+		checkAuthorized(id, Permission.update);
 		long version = Services.settings().delete(id, field);
 		return JsonPayload.ok().withFields("id", id, //
 				"type", "settings", "version", version)//
@@ -104,19 +99,18 @@ public class SettingsResty extends SpaceResty {
 	// implementation
 	//
 
-	private Credentials checkAuthorizedTo(String settingsId, Permission permission) {
+	private Credentials checkAuthorized(String settingsId, Permission permission) {
 		Credentials credentials = Server.context().credentials();
-		Services.settings()//
-				.getOrThrow(SettingsAclSettings.class)//
-				.get(settingsId)//
-				.checkPermission(credentials, permission);
+
+		if (settingsId.toLowerCase().startsWith("internal"))
+			credentials.checkSuperDog();
+		else {
+			Services.settings()//
+					.getOrThrow(SettingsAclSettings.class)//
+					.get(settingsId)//
+					.checkPermission(credentials, permission);
+		}
+
 		return credentials;
 	}
-
-	private void checkNotInternalSettings(String settingsId) {
-		if (settingsId.toLowerCase().startsWith("internal"))
-			throw Exceptions.forbidden(Server.context().credentials(), //
-					"direct update of internal settings is forbidden");
-	}
-
 }

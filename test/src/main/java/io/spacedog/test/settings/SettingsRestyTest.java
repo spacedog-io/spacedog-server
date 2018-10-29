@@ -122,9 +122,17 @@ public class SettingsRestyTest extends SpaceTest {
 		prepareTest();
 		SpaceDog superadmin = clearServer();
 
-		// schema settings are not directly updatable
+		// only superdogs are authorized to read/update internal settings
+		superdog().settings().save("internal-properties", Json.object("a", "1"));
+
+		// superadmin authorizes all to read/update 'internal-properties' settings
+		SettingsAclSettings settings = new SettingsAclSettings();
+		settings.put("internal-properties", Roles.all, Permission.read, Permission.update);
+		superadmin.settings().save(settings);
+
+		// but even so internal settings are forbidden to all but superdog
 		assertHttpError(403, () -> superadmin.settings().save(//
-				"inTErnalsettings", Json.object("XXX", "XXX")));
+				"internal-properties", Json.object("a", "2")));
 	}
 
 	@Test
