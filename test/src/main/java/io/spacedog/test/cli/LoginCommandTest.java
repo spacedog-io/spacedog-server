@@ -8,6 +8,7 @@ import io.spacedog.cli.LoginCommand;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.http.SpaceEnv;
+import io.spacedog.client.http.SpaceException;
 import io.spacedog.test.SpaceTest;
 
 public class LoginCommandTest extends SpaceTest {
@@ -21,16 +22,16 @@ public class LoginCommandTest extends SpaceTest {
 		SpaceDog fred = createTempDog(superadmin, "fred", Roles.superadmin);
 
 		// login without any argument fails
-		assertThrow(IllegalArgumentException.class, //
+		assertThrow(SpaceException.class, //
 				() -> new LoginCommand().verbose(true).login());
 
 		// login without backend fails
-		assertThrow(IllegalArgumentException.class, //
+		assertThrow(SpaceException.class, //
 				() -> new LoginCommand().verbose(true)//
 						.username(superadmin.username()).login());
 
 		// login without username fails
-		assertThrow(IllegalArgumentException.class, //
+		assertThrow(SpaceException.class, //
 				() -> new LoginCommand().verbose(true)//
 						.backend(superadmin.backend()).login());
 

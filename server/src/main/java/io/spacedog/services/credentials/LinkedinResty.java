@@ -121,7 +121,7 @@ public class LinkedinResty extends SpaceResty {
 					httpStatus = 400;
 			}
 
-			throw Exceptions.space(httpStatus, message.toString());
+			throw Exceptions.exception(httpStatus, message.toString());
 		}
 	}
 
@@ -182,7 +182,7 @@ public class LinkedinResty extends SpaceResty {
 
 		if (isNew) {
 			if (!settings.guestSignUpEnabled)
-				throw Exceptions.guestNotAuthorized();
+				throw Exceptions.guestsAreUnauthorized();
 
 			credentials = Services.credentials().create(credentials);
 		} else

@@ -43,7 +43,7 @@ public class StripeRestyTest extends SpaceTest {
 		superdamin.stripe().settings(settings);
 
 		// david's stripe customer is not yet created
-		david.get("/2/stripe/customers/me").go(404).asVoid();
+		david.get("/2/stripe/customers/me").go(409).asVoid();
 
 		// david creates his stripe customer with his card token
 		ObjectNode stripeCustomer = david.post("/2/stripe/customers").go(201)//
@@ -141,7 +141,7 @@ public class StripeRestyTest extends SpaceTest {
 		}
 
 		// check david's stripe customer account is gone
-		david.get("/2/stripe/customers/me").go(404).asVoid();
+		david.get("/2/stripe/customers/me").go(409).asVoid();
 	}
 
 	Token createCardToken() throws AuthenticationException, InvalidRequestException, APIConnectionException,

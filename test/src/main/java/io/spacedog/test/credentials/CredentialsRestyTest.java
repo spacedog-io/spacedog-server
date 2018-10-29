@@ -22,7 +22,6 @@ import io.spacedog.client.email.EmailTemplate;
 import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.client.http.SpaceRequestException;
 import io.spacedog.test.SpaceTest;
-import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import okhttp3.OkHttpClient;
 
@@ -386,7 +385,7 @@ public class CredentialsRestyTest extends SpaceTest {
 		SpaceRequestException exception = assertHttpError(400, () -> fred.credentials()//
 				.prepareUpdate().username(nath.username()).go());
 
-		assertEquals(Exceptions.ALREADY_EXISTS, exception.serverErrorCode());
+		assertEquals("already-exists", exception.serverErrorCode());
 
 		// fred sets his username to 'fred2'
 		fred.credentials().prepareUpdate().username("fred2").go();

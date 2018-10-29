@@ -21,7 +21,7 @@ public class ServiceErrorFilterTest extends SpaceTest {
 
 		// should fail to use this method for this valid route
 		superadmin.put("/2/login").go(405).asVoid()//
-				.assertEquals("[PUT][/2/login] is not supported", "error.message");
+				.assertEquals("[PUT][/2/login] is not yet supported", "error.message");
 	}
 
 	@Test

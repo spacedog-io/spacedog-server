@@ -95,7 +95,7 @@ public class LogRestyTest extends SpaceTest {
 		SpaceDog guest = SpaceDog.dog();
 		SpaceDog superadmin = clearServer();
 		guest.get("/2/data").go(200).asVoid();
-		guest.get("/2/data/user").go(403).asVoid();
+		guest.get("/2/data/user").go(401).asVoid();
 		SpaceDog vince = createTempDog(superadmin, "vince").login();
 		vince.credentials().get(vince.id());
 
@@ -108,7 +108,7 @@ public class LogRestyTest extends SpaceTest {
 
 		assertEquals(1, results.results.size());
 		assertEquals("/2/data/user", results.results.get(0).path);
-		assertEquals(403, results.results.get(0).status);
+		assertEquals(401, results.results.get(0).status);
 
 		// superadmin search for logs of superadmins or lower level users
 		query = ESSearchSourceBuilder.searchSource()//
@@ -166,7 +166,7 @@ public class LogRestyTest extends SpaceTest {
 		// superadmin gets logs with q = ...
 		assertEquals(2, superadmin.logs().get("vince", 10, false).total);
 		assertEquals(2, superadmin.logs().get("vin*", 10, true).total);
-		assertEquals(1, superadmin.logs().get("403", 10, false).total);
+		assertEquals(1, superadmin.logs().get("401", 10, false).total);
 		assertEquals(2, superadmin.logs().get("/2/credentials", 10, false).total);
 	}
 

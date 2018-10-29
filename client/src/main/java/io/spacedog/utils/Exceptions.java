@@ -5,97 +5,105 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.http.SpaceException;
+import io.spacedog.client.http.SpaceHeaders;
 
 public class Exceptions {
-
-	public static final String ALREADY_EXISTS = "already-exists";
-	public static final String INVALID_AUTHORIZATION_HEADER = "invalid-authorization-header";
-	public static final String DISABLED_CREDENTIALS = "disabled-credentials";
-	public static final String INVALID_ACCESS_TOKEN = "invalid-access-token";
-	public static final String EXPIRED_ACCESS_TOKEN = "expired-access-token";
-	public static final String INVALID_CREDENTIALS = "invalid-credentials";
 
 	//
 	// Generic
 	//
 
-	public static SpaceException space(String code, int httpStatus, String message, Object... args) {
-		return new SpaceException(code, httpStatus, message, args);
+	public static SpaceException exception(String code, int httpStatus, //
+			Throwable cause, String message, Object... args) {
+
+		return Utils.isNull(cause) ? new SpaceException(code, httpStatus, message, args)
+				: new SpaceException(code, httpStatus, cause, message, args);
 	}
 
-	public static SpaceException space(String code, int httpStatus, Throwable cause, String message, Object... args) {
-		return new SpaceException(code, httpStatus, cause, message, args);
+	public static SpaceException exception(String code, int httpStatus, String message, Object... args) {
+		return exception(code, httpStatus, null, message, args);
 	}
 
-	public static SpaceException space(int httpStatus, String message, Object... args) {
-		return new SpaceException(httpStatus, message, args);
+	public static SpaceException exception(int httpStatus, String message, Object... args) {
+		return exception(null, httpStatus, message, args);
 	}
 
-	public static SpaceException space(int httpStatus, Throwable cause, String message, Object... args) {
-		return new SpaceException(httpStatus, cause, message, args);
+	public static SpaceException exception(int httpStatus, Throwable cause, String message, Object... args) {
+		return exception(null, httpStatus, cause, message, args);
 	}
 
 	//
 	// 400
 	//
 
-	public static IllegalArgumentException illegalArgument(String message, Object... args) {
-		return new IllegalArgumentException(String.format(message, args));
+	public static SpaceException illegalArgument(String code, Throwable cause, String message, Object... args) {
+		return exception(code, 400, cause, message, args);
 	}
 
-	public static IllegalArgumentException illegalArgument(Throwable t) {
-		return new IllegalArgumentException(t);
+	public static SpaceException illegalArgument(Throwable t, String message, Object... args) {
+		return illegalArgument("bad-request", t, message, args);
 	}
 
-	public static IllegalArgumentException illegalArgument(Throwable t, String message, Object... args) {
-		return new IllegalArgumentException(String.format(message, args), t);
+	public static SpaceException illegalArgument(String message, Object... args) {
+		return illegalArgument(null, message, args);
 	}
 
-	public static IllegalArgumentException invalidFieldPath(JsonNode json, String fieldPath) {
+	public static SpaceException illegalArgument(Throwable t) {
+		return illegalArgument(t, t.getMessage());
+	}
+
+	public static SpaceException invalidFieldPath(JsonNode json, String fieldPath) {
 		return illegalArgument("field path [%s] invalid for [%s]", fieldPath, json);
 	}
 
 	public static SpaceException alreadyExists(String type, String value) {
-		return new SpaceException(ALREADY_EXISTS, 400, "[%s][%s] already exists", //
-				type, value);
+		return illegalArgument("already-exists", null, "[%s][%s] already exists", type, value);
 	}
 
 	//
 	// 401
 	//
 
-	public static AuthenticationException guestNotAuthorized() {
-		return new AuthenticationException("guest-not-authorized", "guest not authorized");
-
+	public static SpaceException unauthorized(String code, Throwable cause, String message, Object... args) {
+		return exception(code, 401, cause, message, args)//
+				.withHeader(SpaceHeaders.WWW_AUTHENTICATE, SpaceHeaders.BASIC_SCHEME);
 	}
 
-	public static AuthenticationException invalidAuthorizationHeader(//
-			String message, Object... args) {
-		return new AuthenticationException(INVALID_AUTHORIZATION_HEADER, message, args);
+	public static SpaceException unauthorized(String code, String message, Object... args) {
+		return unauthorized(code, null, message, args);
 	}
 
-	public static AuthenticationException invalidAuthorizationHeader(//
-			Throwable t, String message, Object... args) {
-		return new AuthenticationException(INVALID_AUTHORIZATION_HEADER, t, message, args);
+	public static SpaceException unauthorized(String message, Object... args) {
+		return unauthorized("unauthorized", message, args);
 	}
 
-	public static AuthenticationException disabledCredentials(Credentials credentials) {
-		return new AuthenticationException(DISABLED_CREDENTIALS, //
-				"[%s][%s] => disabled", credentials.type(), credentials.username());
+	public static SpaceException guestsAreUnauthorized() {
+		return unauthorized("guests-unauthorized", "guests are unauthorized");
 	}
 
-	public static AuthenticationException invalidAccessToken() {
-		return new AuthenticationException(INVALID_ACCESS_TOKEN, //
-				"invalid access token");
+	public static SpaceException invalidAuthorizationHeader(String message, Object... args) {
+		return invalidAuthorizationHeader(null, message, args);
 	}
 
-	public static AuthenticationException accessTokenHasExpired() {
-		return new AuthenticationException(EXPIRED_ACCESS_TOKEN, "access token has expired");
+	public static SpaceException invalidAuthorizationHeader(Throwable t, String message, Object... args) {
+		return unauthorized("invalid-authorization-header", t, message, args);
 	}
 
-	public static AuthenticationException invalidUsernamePassword() {
-		return new AuthenticationException(INVALID_CREDENTIALS, //
-				"invalid username or password");
+	public static SpaceException disabledCredentials(Credentials credentials) {
+		return unauthorized("disabled-credentials", "[%s][%s] => disabled", //
+				credentials.type(), credentials.username());
+	}
+
+	public static SpaceException invalidAccessToken() {
+		return unauthorized("invalid-access-token", "invalid access token");
+	}
+
+	public static SpaceException accessTokenHasExpired() {
+		return unauthorized("expired-access-token", "access token has expired");
+	}
+
+	public static SpaceException invalidUsernamePassword() {
+		return unauthorized("invalid-credentials", "invalid username or password");
 	}
 
 	//
@@ -104,10 +112,10 @@ public class Exceptions {
 
 	public static SpaceException forbidden(Credentials credentials, String code, String message, Object... args) {
 		if (credentials.isGuest())
-			return guestNotAuthorized();
+			return guestsAreUnauthorized();
 
 		String prefix = String.format("[%s][%s] => ", credentials.type(), credentials.username());
-		return new SpaceException(code, 403, prefix + message, args);
+		return exception(code, 403, prefix + message, args);
 	}
 
 	public static SpaceException forbidden(Credentials credentials, String message, Object... args) {
@@ -131,7 +139,7 @@ public class Exceptions {
 	//
 
 	public static SpaceException notFound(String type, String id) {
-		return new SpaceException("not-found", 404, "[%s][%s] not found", type, id);
+		return exception("not-found", 404, "[%s][%s] not found", type, id);
 	}
 
 	public static SpaceException notFound(DataWrap<?> object) {
@@ -143,7 +151,7 @@ public class Exceptions {
 	//
 
 	public static SpaceException unsupportedOperation(String message, Object... args) {
-		return new SpaceException("unsupported", 405, message, args);
+		return exception("unsupported", 405, message, args);
 	}
 
 	public static SpaceException unsupportedHttpRequest(String method, String uri) {
@@ -155,7 +163,7 @@ public class Exceptions {
 	//
 
 	public static SpaceException invalidState(String code, String message, Object... args) {
-		return new SpaceException(code, 409, message, args);
+		return exception(code, 409, message, args);
 	}
 
 	//

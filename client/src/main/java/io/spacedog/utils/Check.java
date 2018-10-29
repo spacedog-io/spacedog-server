@@ -42,7 +42,7 @@ public class Check {
 
 	public static void isTrue(boolean condition, int httpStatus, String message, Object... arguments) {
 		if (!condition)
-			throw Exceptions.space(httpStatus, message, arguments);
+			throw Exceptions.exception(httpStatus, message, arguments);
 	}
 
 	public static void matchRegex(String regex, String value, String valueName) {

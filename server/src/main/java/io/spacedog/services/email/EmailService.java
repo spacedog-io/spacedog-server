@@ -193,7 +193,7 @@ public class EmailService {
 				: TextNode.valueOf(response.asString());
 
 		if (response.status() >= 400)
-			throw Exceptions.space(response.status(), //
+			throw Exceptions.exception(response.status(), //
 					"send email via mailgun failed")//
 					.details(content);
 

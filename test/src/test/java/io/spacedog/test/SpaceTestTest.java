@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.client.http.SpaceException;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 
@@ -11,7 +12,7 @@ public class SpaceTestTest extends SpaceTest {
 
 	@Test
 	public void shouldPass() {
-		assertThrow(IllegalArgumentException.class, () -> {
+		assertThrow(SpaceException.class, () -> {
 			throw Exceptions.illegalArgument("error");
 		});
 	}
