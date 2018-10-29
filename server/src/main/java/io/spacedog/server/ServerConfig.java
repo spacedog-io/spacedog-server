@@ -1,7 +1,5 @@
 package io.spacedog.server;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -27,7 +25,6 @@ public class ServerConfig {
 	private static final String GREEN_TIMEOUT = "spacedog.server.green.timeout";
 	private static final String USER_AGENT = "spacedog.server.user.agent";
 	private static final String ELASTIC_CONFIG_PATH = "spacedog.server.elastic.config.path";
-	private static final String ELASTIC_NETWORK_HOST = "spacedog.server.elastic.network.host";
 	private static final String ELASTIC_SNAPSHOTS_PATH = "spacedog.server.elastic.snapshots.path";
 	private static final String MAIL_SMTP_DEBUG = "spacedog.server.mail.smtp.debug";
 	private static final String MAIL_DOMAIN = "spacedog.server.mail.domain";
@@ -77,18 +74,6 @@ public class ServerConfig {
 	public static Optional<Path> elasticSnapshotsPath() {
 		Optional7<String> path = SpaceEnv.env().get(ELASTIC_SNAPSHOTS_PATH);
 		return path.isPresent() ? Optional.of(Paths.get(path.get())) : Optional.empty();
-	}
-
-	public static String elasticNetworkHost() {
-		Optional7<String> ip = SpaceEnv.env().get(ELASTIC_NETWORK_HOST);
-		if (ip.isPresent())
-			return ip.get();
-
-		try {
-			return InetAddress.getLocalHost().getHostAddress();
-		} catch (UnknownHostException e) {
-			throw Exceptions.runtime(e, "no IP address found for this server");
-		}
 	}
 
 	public static Optional7<Regions> awsRegion() {
@@ -149,7 +134,6 @@ public class ServerConfig {
 		log(GREEN_TIMEOUT, greenTimeout());
 
 		Utils.info();
-		log(ELASTIC_NETWORK_HOST, elasticNetworkHost());
 		checkPath(ELASTIC_SNAPSHOTS_PATH, elasticSnapshotsPath(), true);
 
 		Utils.info();
