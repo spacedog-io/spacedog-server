@@ -33,7 +33,7 @@ public class Utils {
 		return object == null;
 	}
 
-	public static boolean isNull(Object... objects) {
+	public static boolean atLeastOneIsNull(Object... objects) {
 		for (Object object : objects)
 			if (isNull(object))
 				return true;
@@ -108,7 +108,7 @@ public class Utils {
 		return string == null || string.isEmpty();
 	}
 
-	public static boolean isNullOrEmpty(String... strings) {
+	public static boolean atLeastOneIsNullOrEmpty(String... strings) {
 		for (String string : strings)
 			if (isNullOrEmpty(string))
 				return true;

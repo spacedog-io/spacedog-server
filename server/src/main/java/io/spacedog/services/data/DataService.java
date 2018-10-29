@@ -194,8 +194,8 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 
 	public <K> DataWrap<K> save(DataWrap<K> wrap) {
 
-		if (Utils.isNullOrEmpty(wrap.owner(), wrap.group())//
-				|| Utils.isNull(wrap.createdAt(), wrap.updatedAt()))
+		if (Utils.atLeastOneIsNullOrEmpty(wrap.owner(), wrap.group())//
+				|| Utils.atLeastOneIsNull(wrap.createdAt(), wrap.updatedAt()))
 			throw Exceptions.illegalArgument("meta fields are mandatory");
 
 		IndexResponse response = elastic()//
