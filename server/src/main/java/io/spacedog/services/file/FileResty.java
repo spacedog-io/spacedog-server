@@ -291,8 +291,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 	}
 
 	private Payload search(WebPath webPath, Context context) {
-		// TODO Auto-generated method stub
-		throw Exceptions.unsupportedOperation("service not yet implemented");
+		throw Exceptions.unsupportedOperation("POST", webPath.toString() + "?op=search");
 	}
 
 	private Payload export(WebPath webPath, Context context) {

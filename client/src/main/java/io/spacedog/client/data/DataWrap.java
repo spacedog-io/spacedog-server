@@ -13,7 +13,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.http.SpaceFields;
-import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -152,7 +151,7 @@ public class DataWrap<K> implements DataObject, SpaceFields {
 		else if (source instanceof ObjectNode)
 			((ObjectNode) source).put(OWNER_FIELD, owner);
 		else
-			throw Exceptions.unsupportedOperation(source.getClass());
+			throw unsupportedOpperation();
 	}
 
 	@Override
@@ -175,7 +174,7 @@ public class DataWrap<K> implements DataObject, SpaceFields {
 		else if (source instanceof ObjectNode)
 			((ObjectNode) source).put(GROUP_FIELD, group);
 		else
-			throw Exceptions.unsupportedOperation(source.getClass());
+			throw unsupportedOpperation();
 	}
 
 	@Override
@@ -196,7 +195,7 @@ public class DataWrap<K> implements DataObject, SpaceFields {
 		else if (source instanceof ObjectNode)
 			((ObjectNode) source).put(CREATED_AT_FIELD, createdAt.toString());
 		else
-			throw Exceptions.unsupportedOperation(source.getClass());
+			throw unsupportedOpperation();
 	}
 
 	@Override
@@ -217,7 +216,7 @@ public class DataWrap<K> implements DataObject, SpaceFields {
 		else if (source instanceof ObjectNode)
 			((ObjectNode) source).put(UPDATED_AT_FIELD, updatedAt.toString());
 		else
-			throw Exceptions.unsupportedOperation(source.getClass());
+			throw unsupportedOpperation();
 	}
 
 	@Override
@@ -237,5 +236,11 @@ public class DataWrap<K> implements DataObject, SpaceFields {
 	public String toString() {
 		return String.format("DataWrap[%s][%s][%s][%s]", //
 				type(), id(), version(), source());
+	}
+
+	private UnsupportedOperationException unsupportedOpperation() {
+		return new UnsupportedOperationException(//
+				String.format("class [%s] doesn't implement this operation", //
+						sourceClass().getSimpleName()));
 	}
 }

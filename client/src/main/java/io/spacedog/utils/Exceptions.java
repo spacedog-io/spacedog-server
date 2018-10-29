@@ -142,17 +142,12 @@ public class Exceptions {
 	// 405
 	//
 
+	public static SpaceException unsupportedOperation(String message, Object... args) {
+		return new SpaceException("unsupported", 405, message, args);
+	}
+
 	public static SpaceException unsupportedHttpRequest(String method, String uri) {
-		return new SpaceException("unsupported", 405, "[%s][%s] is not supported", method, uri);
-	}
-
-	public static UnsupportedOperationException unsupportedOperation(String message, Object... args) {
-		return new UnsupportedOperationException(String.format(message, args));
-	}
-
-	public static UnsupportedOperationException unsupportedOperation(Class<?> objectClass) {
-		return unsupportedOperation("class [%s] doesn't implement this operation", //
-				objectClass.getSimpleName());
+		return unsupportedOperation("[%s][%s] is not yet supported", method, uri);
 	}
 
 	//
