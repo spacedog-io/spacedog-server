@@ -283,8 +283,10 @@ public class CredentialsResty extends SpaceResty {
 	@Put("/credentials/:id/groups/:group")
 	@Put("/credentials/:id/groups/:group/")
 	public Payload putShareGroup(String id, String group, Context context) {
-		Server.context().credentials().checkAtLeastUser().checkGroupIsMine(group);
-		Credentials credentials = Services.credentials().get(id).addGroup(group);
+		Credentials credentials = Server.context().credentials();
+		if (!credentials.isAtLeastSuperAdmin())
+			credentials.checkAtLeastUser().checkGroupIsMine(group);
+		credentials = Services.credentials().get(id).addGroup(group);
 		return doUpdate(credentials);
 	}
 
