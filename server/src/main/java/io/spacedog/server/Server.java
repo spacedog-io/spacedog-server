@@ -69,6 +69,7 @@ public class Server implements Extensions {
 
 	public static final String CLUSTER_NAME = "spacedog-v1-cluster";
 
+	private long startTime;
 	private ElasticNode elasticNode;
 	private ElasticClient elasticClient;
 	private FluentServer fluent;
@@ -95,6 +96,7 @@ public class Server implements Extensions {
 			elasticIsStarted();
 			startFluent();
 			fluentIsStarted();
+			logStartupDuration();
 
 		} catch (Throwable t) {
 			t.printStackTrace();
@@ -109,6 +111,7 @@ public class Server implements Extensions {
 	}
 
 	protected void init() {
+		startTime = System.currentTimeMillis();
 		DateTimeZone.setDefault(DateTimes.PARIS);
 		initJsonMapper();
 		ServerConfig.log();
@@ -268,6 +271,10 @@ public class Server implements Extensions {
 	//
 	// Implementation
 	//
+
+	private void logStartupDuration() {
+		System.err.println("Started in " + (System.currentTimeMillis() - startTime) + " ms");
+	}
 
 	private static class FluentServer extends AbstractWebServer<FluentServer> {
 
