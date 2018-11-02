@@ -96,7 +96,8 @@ public class SpaceBackendTest extends Assert {
 			backend.fromBackendId("test2");
 			fail();
 
-		} catch (IllegalArgumentException ignored) {
+		} catch (SpaceException e) {
+			assertEquals(400, e.httpStatus());
 		}
 	}
 

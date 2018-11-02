@@ -6,6 +6,8 @@ package io.spacedog.client.credentials;
 import org.junit.Assert;
 import org.junit.Test;
 
+import io.spacedog.client.http.SpaceException;
+
 public class UsernamesTest extends Assert {
 
 	@Test
@@ -40,7 +42,8 @@ public class UsernamesTest extends Assert {
 		try {
 			Usernames.checkValid(username);
 			fail(String.format("username [%s] shouldn't be valid", username));
-		} catch (IllegalArgumentException e) {
+		} catch (SpaceException e) {
+			assertEquals(400, e.httpStatus());
 		}
 	}
 }

@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
 import io.spacedog.client.data.DataWrap;
+import io.spacedog.client.http.SpaceException;
 
 public class JsonTest extends Assert {
 
@@ -143,7 +144,8 @@ public class JsonTest extends Assert {
 		try {
 			Json.checkString(node, "age");
 			fail();
-		} catch (IllegalArgumentException e) {
+		} catch (SpaceException e) {
+			assertEquals(400, e.httpStatus());
 		}
 	}
 
