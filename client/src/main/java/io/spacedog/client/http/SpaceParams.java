@@ -27,4 +27,5 @@ public interface SpaceParams {
 	String PRESERVE_IDS_PARAM = "preserveIds";
 	String NEXT_PARAM = "next";
 	String GROUP_PARAM = "group";
+	String FILES_PARAM = "files";
 }

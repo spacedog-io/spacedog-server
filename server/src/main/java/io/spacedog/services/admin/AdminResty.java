@@ -3,7 +3,6 @@
  */
 package io.spacedog.services.admin;
 
-import io.spacedog.client.credentials.Credentials;
 import io.spacedog.server.Server;
 import io.spacedog.server.SpaceResty;
 import io.spacedog.utils.Exceptions;
@@ -24,11 +23,7 @@ public class AdminResty extends SpaceResty {
 	@Post("/_clear")
 	@Post("/_clear/")
 	public void postClear(Context context) {
-		Credentials credentials = Server.context().credentials().checkSuperDog();
-
-		if (!Server.backend().host().endsWith("lvh.me"))
-			throw Exceptions.forbidden(credentials, "only allowed for [*.lvh.me] env");
-
-		Server.get().clear(context.query().getBoolean("files", false));
+		Server.context().credentials().checkSuperDog();
+		Server.get().clear(context.query().getBoolean(FILES_PARAM, false));
 	}
 }
