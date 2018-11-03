@@ -214,6 +214,14 @@ public class DataClient implements SpaceFields, SpaceParams {
 			request.go(200, 404).asVoid();
 	}
 
+	public long searchDelete(String type, String query) {
+		return dog.delete("/2/data/{type}/_search")//
+				.routeParam(TYPE_FIELD, type)//
+				.bodyJson(query)//
+				.go(200)//
+				.get("deleted").asLong();
+	}
+
 	//
 	// Field methods
 	//
