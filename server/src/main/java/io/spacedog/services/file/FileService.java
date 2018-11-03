@@ -295,7 +295,7 @@ public class FileService extends SpaceService {
 	}
 
 	private void initStore() {
-		String fsType = ServerConfig.fileStore().orElse(ELASTIC_FS);
+		String fsType = ServerConfig.fileStore();
 		if (fsType.equals(SYSTEM_FS))
 			store = new SystemFileStore();
 		else if (fsType.equals(ELASTIC_FS))

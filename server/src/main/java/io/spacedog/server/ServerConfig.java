@@ -38,6 +38,11 @@ public class ServerConfig {
 				: Paths.get(System.getProperty("user.home"), "spacedog");
 	}
 
+	public static Path elasticConfigPath() {
+		Optional7<String> path = SpaceEnv.env().get(ELASTIC_CONFIG_PATH);
+		return path.isPresent() ? Paths.get(path.get()) : null;
+	}
+
 	public static boolean isProduction() {
 		return SpaceEnv.env().get(PRODUCTION, false);
 	}
@@ -64,11 +69,6 @@ public class ServerConfig {
 
 	public static int greenTimeout() {
 		return SpaceEnv.env().get(GREEN_TIMEOUT, 60);
-	}
-
-	public static Path elasticConfigPath() {
-		Optional7<String> path = SpaceEnv.env().get(ELASTIC_CONFIG_PATH);
-		return path.isPresent() ? Paths.get(path.get()) : null;
 	}
 
 	public static Optional<Path> elasticSnapshotsPath() {
@@ -112,12 +112,14 @@ public class ServerConfig {
 		return SpaceEnv.env().superdogPassword();
 	}
 
-	public static Optional7<String> fileStore() {
-		return SpaceEnv.env().get(FILE_STORE);
+	public static String fileStore() {
+		return SpaceEnv.env().get(FILE_STORE, "system");
 	}
 
 	public static Path fileStorePath() {
-		return Paths.get(SpaceEnv.env().getOrElseThrow(FILE_STORE_PATH));
+		Optional7<String> opt = SpaceEnv.env().get(FILE_STORE_PATH);
+		return opt.isPresent() ? Paths.get(opt.get()) //
+				: homePath().resolve("files");
 	}
 
 	public static void log() {

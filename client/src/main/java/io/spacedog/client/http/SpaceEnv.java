@@ -51,8 +51,7 @@ public class SpaceEnv {
 	public SpaceBackend apiBackend() {
 		if (apiBackend == null)
 			apiBackend = SpaceBackend.valueOf(//
-					get(BACKEND_API_PUBLIC_URL, //
-							SpaceBackend.production.name()));
+					get(BACKEND_API_PUBLIC_URL, SpaceBackend.production.name()));
 		return apiBackend;
 	}
 
@@ -65,8 +64,7 @@ public class SpaceEnv {
 	public SpaceBackend wwwBackend() {
 		if (wwwBackend == null)
 			wwwBackend = SpaceBackend.valueOf(//
-					get(BACKEND_WWW_PUBLIC_URL, //
-							SpaceBackend.wwwProduction.name()));
+					get(BACKEND_WWW_PUBLIC_URL, SpaceBackend.wwwProduction.name()));
 		return wwwBackend;
 	}
 
