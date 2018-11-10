@@ -4,6 +4,7 @@ import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.DocWriteResponse.Result;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.support.WriteRequest.RefreshPolicy;
+import org.elasticsearch.common.xcontent.DeprecationHandler;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
 import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -45,7 +46,7 @@ public class ElasticUtils {
 					.injector().getInstance(NamedXContentRegistry.class);
 
 			XContentParser parser = XContentType.JSON.xContent()//
-					.createParser(registry, source);
+					.createParser(registry, DeprecationHandler.THROW_UNSUPPORTED_OPERATION, source);
 
 			SearchSourceBuilder builder = SearchSourceBuilder.searchSource();
 			builder.parseXContent(parser);
