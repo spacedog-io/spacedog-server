@@ -5,6 +5,7 @@ public interface SpaceParams {
 	String FROM_PARAM = "from";
 	String SIZE_PARAM = "size";
 	String Q_PARAM = "q";
+	String ROLE_PARAM = "role";
 	String SHARDS_PARAM = "shards";
 	String REPLICAS_PARAM = "replicas";
 	String REFRESH_PARAM = "refresh";

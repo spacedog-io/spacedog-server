@@ -8,7 +8,6 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
@@ -85,35 +84,11 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 	// Get All Credentials
 	//
 
-	public Credentials.Results getAll() {
-		return getAll((String) null);
+	public Credentials.Results search(SearchSourceBuilder builder) {
+		return search(builder, false);
 	}
 
-	public Credentials.Results getAll(int from, int size) {
-		return getAll(null, from, size, false);
-	}
-
-	public Credentials.Results getAll(String q) {
-		return getAll(q, 0, 10, false);
-	}
-
-	public Credentials.Results getAll(String q, int from, int size, boolean refresh) {
-
-		QueryBuilder query = Strings.isNullOrEmpty(q) //
-				? QueryBuilders.matchAllQuery() //
-				: QueryBuilders.simpleQueryStringQuery(q);
-
-		SearchSourceBuilder builder = SearchSourceBuilder.searchSource()//
-				.query(query).from(from).size(size);
-
-		return getAll(builder, refresh);
-	}
-
-	public Credentials.Results getAll(SearchSourceBuilder builder) {
-		return getAll(builder, false);
-	}
-
-	public Credentials.Results getAll(SearchSourceBuilder builder, boolean refresh) {
+	public Credentials.Results search(SearchSourceBuilder builder, boolean refresh) {
 
 		if (refresh)
 			elastic().refreshIndex(index());
@@ -137,7 +112,7 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 				.query(QueryBuilders.termQuery(ROLES_FIELD, Roles.superadmin))//
 				.size(0);
 
-		return getAll(builder).total > 1;
+		return search(builder).total > 1;
 	}
 
 	//
@@ -212,7 +187,7 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 
 		try {
 
-			Credentials.Results results = getAll(//
+			Credentials.Results results = search(//
 					SearchSourceBuilder.searchSource()//
 							.query(QueryBuilders.termQuery(//
 									SESSIONS_ACCESS_TOKEN_FIELD, accessToken))//

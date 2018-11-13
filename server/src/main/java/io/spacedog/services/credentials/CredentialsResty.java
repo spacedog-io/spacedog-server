@@ -6,6 +6,10 @@ package io.spacedog.services.credentials;
 import java.util.Map;
 import java.util.Set;
 
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.type.MapLikeType;
 import com.fasterxml.jackson.databind.type.TypeFactory;
@@ -74,11 +78,24 @@ public class CredentialsResty extends SpaceResty {
 	public Results getAll(Context context) {
 		Server.context().credentials().checkAtLeastAdmin();
 
-		return Services.credentials().getAll(//
-				context.get(Q_PARAM), //
-				context.query().getInteger(FROM_PARAM, 0), //
-				context.query().getInteger(SIZE_PARAM, 10), //
-				isRefreshRequested(context));
+		String q = context.get(Q_PARAM);
+		String role = context.get(ROLE_PARAM);
+
+		BoolQueryBuilder query = QueryBuilders.boolQuery();
+
+		if (!Strings.isNullOrEmpty(q)) //
+			query.must(QueryBuilders.simpleQueryStringQuery(q)//
+					.field(USERNAME_FIELD).field(EMAIL_FIELD).field(ROLES_FIELD).field(TAGS_FIELD));
+
+		if (!Strings.isNullOrEmpty(role)) //
+			query.must(QueryBuilders.termQuery(ROLES_FIELD, role));
+
+		SearchSourceBuilder builder = SearchSourceBuilder.searchSource()//
+				.query(query)//
+				.from(context.query().getInteger(FROM_PARAM, 0))//
+				.size(context.query().getInteger(SIZE_PARAM, 10));
+
+		return Services.credentials().search(builder, isRefreshRequested(context));
 	}
 
 	@Delete("/credentials")
