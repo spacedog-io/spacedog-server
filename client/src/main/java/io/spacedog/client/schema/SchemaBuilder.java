@@ -108,10 +108,8 @@ public class SchemaBuilder implements MappingDirectives {
 	}
 
 	public SchemaBuilder object(String key) {
-		if (openProperty)
-			builder.end();
+		property(key, m_object);
 		openProperty = false;
-		builder.object(key);
 		return this;
 	}
 
@@ -123,8 +121,8 @@ public class SchemaBuilder implements MappingDirectives {
 		}
 		// end properties
 		builder.end();
-		// end object
-		builder.end();
+		// object is closed by next property
+		openProperty = true;
 		return this;
 	}
 
