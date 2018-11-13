@@ -129,9 +129,9 @@ public class TooleeResource extends Resource {
 		BoolQueryBuilder query = QueryBuilders.boolQuery()//
 				.must(QueryBuilders.termsQuery(COMPANY_ID, companyIds));
 
-		TermsBuilder aggBuilder = AggregationBuilders.terms("documents")//
-				.field(COMPANY_ID).include(companyIds)//
-				.subAggregation(AggregationBuilders.terms("waiting")//
+		TermsBuilder aggBuilder = AggregationBuilders.terms("companies")//
+				.field(COMPANY_ID).include(companyIds).size(companyIds.length)//
+				.subAggregation(AggregationBuilders.terms("statuses")//
 						.field(STATUS).include(statuses));
 
 		Terms agg = (Terms) elastic.prepareSearch()//
@@ -141,12 +141,12 @@ public class TooleeResource extends Resource {
 				.setSize(0)//
 				.get()//
 				.getAggregations()//
-				.get("documents");
+				.get("companies");
 
 		for (Company company : companies) {
 			Bucket bucket = agg.getBucketByKey(company.id);
 			if (bucket != null) {
-				Terms agg2 = (Terms) bucket.getAggregations().get("waiting");
+				Terms agg2 = (Terms) bucket.getAggregations().get("statuses");
 				bucket = agg2.getBucketByKey(CLASSIFIED_STATUS);
 				company.docsToAnalyze = bucket == null ? 0 : bucket.getDocCount();
 				bucket = agg2.getBucketByKey(ANALYZED_STATUS);
