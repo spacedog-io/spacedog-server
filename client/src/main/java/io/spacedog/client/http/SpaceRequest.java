@@ -297,10 +297,14 @@ public class SpaceRequest {
 
 	public SpaceResponse go(int... expectedStatus) {
 		SpaceResponse response = go();
-		if (!Ints.contains(expectedStatus, response.okResponse().code())) {
+		if (!Ints.contains(expectedStatus, response.status())) {
+			int status = response.status();
+			String code = response.getString("error.code");
+			String message = response.getString("error.message");
+			JsonNode details = response.get("error");
 			// close response before throwing it within exception
 			Utils.closeSilently(response);
-			throw new SpaceRequestException(response);
+			throw new SpaceException(code, status, message).details(details);
 		}
 		return response;
 	}

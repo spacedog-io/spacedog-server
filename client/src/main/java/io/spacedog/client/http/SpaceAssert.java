@@ -145,8 +145,8 @@ public class SpaceAssert extends Assert implements SpacePlatform, SpaceFields, S
 		}
 	}
 
-	public static SpaceRequestException assertHttpError(int status, Runnable action) {
-		SpaceRequestException exception = assertThrow(SpaceRequestException.class, action);
+	public static SpaceException assertHttpError(int status, Runnable action) {
+		SpaceException exception = assertThrow(SpaceException.class, action);
 		assertEquals(status, exception.httpStatus());
 		return exception;
 	}

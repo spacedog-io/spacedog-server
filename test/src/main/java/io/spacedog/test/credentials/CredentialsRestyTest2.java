@@ -18,8 +18,8 @@ import io.spacedog.client.credentials.Credentials.Results;
 import io.spacedog.client.credentials.CredentialsSettings;
 import io.spacedog.client.credentials.Passwords;
 import io.spacedog.client.credentials.Roles;
+import io.spacedog.client.http.SpaceException;
 import io.spacedog.client.http.SpaceRequest;
-import io.spacedog.client.http.SpaceRequestException;
 import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Json;
 
@@ -731,8 +731,8 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		superadmin.credentials().disable(fred.id());
 
 		// fred fails to login from now on
-		SpaceRequestException sre = assertHttpError(401, () -> fred.login());
-		assertEquals("disabled-credentials", sre.serverErrorCode());
+		SpaceException sre = assertHttpError(401, () -> fred.login());
+		assertEquals("disabled-credentials", sre.code());
 
 		// fred fails to access any resources from now on
 		// with basic authentication scheme

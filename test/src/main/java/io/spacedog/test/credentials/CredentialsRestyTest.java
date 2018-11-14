@@ -19,8 +19,8 @@ import io.spacedog.client.credentials.CredentialsSettings;
 import io.spacedog.client.credentials.Passwords;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.email.EmailTemplate;
+import io.spacedog.client.http.SpaceException;
 import io.spacedog.client.http.SpaceRequest;
-import io.spacedog.client.http.SpaceRequestException;
 import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Json;
 import okhttp3.OkHttpClient;
@@ -97,12 +97,12 @@ public class CredentialsRestyTest extends SpaceTest {
 				.enableDisableAfter(enableAfter, disableAfter).go();
 
 		// fred's credentials are disabled so he fails to gets any data
-		SpaceRequestException e = assertHttpError(401, () -> fred.data().prepareGetAll().go());
-		assertEquals("disabled-credentials", e.serverErrorCode());
+		SpaceException e = assertHttpError(401, () -> fred.data().prepareGetAll().go());
+		assertEquals("disabled-credentials", e.code());
 
 		// fred's credentials are disabled so he fails to log in
 		e = assertHttpError(401, () -> fred.login());
-		assertEquals("disabled-credentials", e.serverErrorCode());
+		assertEquals("disabled-credentials", e.code());
 
 		// superadmin update fred's credentials enable after date
 		// before now and after disable after date so fred's credentials
@@ -127,11 +127,11 @@ public class CredentialsRestyTest extends SpaceTest {
 
 		// fred's credentials are disabled so he fails to gets any data
 		e = assertHttpError(401, () -> fred.data().prepareGetAll().go());
-		assertEquals("disabled-credentials", e.serverErrorCode());
+		assertEquals("disabled-credentials", e.code());
 
 		// fred's credentials are disabled so he fails to log in
 		e = assertHttpError(401, () -> fred.login());
-		assertEquals("disabled-credentials", e.serverErrorCode());
+		assertEquals("disabled-credentials", e.code());
 
 		// superadmin updates fred's credentials to remove enable and
 		// disable after dates so fred's credentials are enabled again
@@ -382,10 +382,10 @@ public class CredentialsRestyTest extends SpaceTest {
 		SpaceDog nath = createTempDog(superadmin, "nath");
 
 		// fred fails to set his username to 'nath'
-		SpaceRequestException exception = assertHttpError(400, () -> fred.credentials()//
+		SpaceException exception = assertHttpError(400, () -> fred.credentials()//
 				.prepareUpdate().username(nath.username()).go());
 
-		assertEquals("already-exists", exception.serverErrorCode());
+		assertEquals("already-exists", exception.code());
 
 		// fred sets his username to 'fred2'
 		fred.credentials().prepareUpdate().username("fred2").go();

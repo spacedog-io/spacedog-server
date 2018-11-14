@@ -6,7 +6,7 @@ import com.google.common.base.Strings;
 
 import io.spacedog.client.http.SpaceBackend;
 import io.spacedog.client.http.SpaceEnv;
-import io.spacedog.client.http.SpaceRequestException;
+import io.spacedog.client.http.SpaceException;
 import io.spacedog.utils.Utils;
 
 public class DogCLI {
@@ -52,8 +52,8 @@ public class DogCLI {
 		} catch (IllegalArgumentException e) {
 			System.err.println(e.getMessage());
 
-		} catch (SpaceRequestException e) {
-			System.err.println(e.serverErrorMessage());
+		} catch (SpaceException e) {
+			System.err.println(e.getMessage());
 
 		} catch (Exception e) {
 			e.printStackTrace();

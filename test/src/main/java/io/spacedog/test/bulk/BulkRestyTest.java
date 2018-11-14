@@ -17,6 +17,7 @@ import io.spacedog.client.credentials.CredentialsCreateRequest;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.data.DataSettings;
+import io.spacedog.client.http.SpaceException;
 import io.spacedog.client.http.SpaceMethod;
 import io.spacedog.test.Message;
 import io.spacedog.test.SpaceTest;
@@ -175,8 +176,7 @@ public class BulkRestyTest extends SpaceTest {
 		for (int i = 0; i < 21; i++)
 			bigBulk.add(new ServiceCall(SpaceMethod.GET, "/2/login"));
 
-		assertHttpError(400, () -> guest.bulk().execute(bigBulk))//
-				.spaceResponse()//
-				.assertEquals("bulk-limit-exceeded", "error.code");
+		SpaceException exc = assertHttpError(400, () -> guest.bulk().execute(bigBulk));
+		assertEquals("bulk-limit-exceeded", exc.code());
 	}
 }

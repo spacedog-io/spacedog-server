@@ -11,13 +11,13 @@ import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.http.SpaceEnv;
-import io.spacedog.client.http.SpaceRequestException;
+import io.spacedog.client.http.SpaceException;
 import io.spacedog.client.schema.Schema;
 import io.spacedog.client.sms.SmsSettings;
 import io.spacedog.client.sms.SmsSettings.TwilioSettings;
-import io.spacedog.test.SpaceTest;
 import io.spacedog.client.sms.SmsTemplate;
 import io.spacedog.client.sms.SmsTemplateRequest;
+import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Json;
 
 public class SmsRestyTest extends SpaceTest {
@@ -69,9 +69,9 @@ public class SmsRestyTest extends SpaceTest {
 		assertHttpError(403, () -> superadmin.sms().get(messageId));
 
 		// vince sends an sms to invalid mobile number
-		SpaceRequestException exception = assertHttpError(400, //
+		SpaceException exception = assertHttpError(400, //
 				() -> vince.sms().send("33162627520", "Hi from SpaceDog"));
-		Assert.assertEquals("twilio:21614", exception.serverErrorCode());
+		Assert.assertEquals("twilio:21614", exception.code());
 	}
 
 	@Test
