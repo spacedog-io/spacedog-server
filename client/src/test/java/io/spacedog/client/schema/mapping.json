@@ -13,6 +13,7 @@
         "type" : "boolean"
       },
       "metadata" : {
+        "type" : "object",
         "properties" : {
           "m1" : {
             "type" : "keyword"
