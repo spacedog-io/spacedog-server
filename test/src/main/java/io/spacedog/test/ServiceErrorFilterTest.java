@@ -20,8 +20,8 @@ public class ServiceErrorFilterTest extends SpaceTest {
 				.assertEquals("[path][/2/toto] not found", "error.message");
 
 		// should fail to use this method for this valid route
-		superadmin.put("/2/login").go(405).asVoid()//
-				.assertEquals("[PUT][/2/login] is not yet supported", "error.message");
+		superadmin.put("/2/credentials/_login").go(405).asVoid()//
+				.assertEquals("[PUT][/2/credentials/_login] is not yet supported", "error.message");
 	}
 
 	@Test

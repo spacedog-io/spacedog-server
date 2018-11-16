@@ -45,7 +45,7 @@ public class BulkRestyTest extends SpaceTest {
 						.withPayload(Message.schema().mapping()),
 				new ServiceCall(SpaceMethod.PUT, "/2/settings/data")//
 						.withPayload(dataSettings),
-				new ServiceCall(SpaceMethod.GET, "/2/login"));
+				new ServiceCall(SpaceMethod.POST, "/2/credentials/_login"));
 
 		List<ServiceResponse> responses = superadmin.bulk().execute(bulk);
 

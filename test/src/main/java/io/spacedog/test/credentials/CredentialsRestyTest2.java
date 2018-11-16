@@ -66,7 +66,7 @@ public class CredentialsRestyTest2 extends SpaceTest {
 				.assertEquals("already-exists", "error.code");
 
 		// vince logs in
-		ObjectNode node = SpaceRequest.get("/2/login")//
+		ObjectNode node = SpaceRequest.post("/2/credentials/_login")//
 				.backend(guest).basicAuth("vince", "hi vince").go(200)//
 				.assertPresent("accessToken")//
 				.assertPresent("expiresIn")//
@@ -113,7 +113,7 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		vince.login();
 
 		// vince fails to login if wrong password
-		SpaceRequest.get("/2/login").backend(superadmin).basicAuth("vince", "XXX").go(401).asVoid();
+		SpaceRequest.post("/2/credentials/_login").backend(superadmin).basicAuth("vince", "XXX").go(401).asVoid();
 	}
 
 	@Test
@@ -136,21 +136,21 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		SpaceRequest.get("/2/data").bearerAuth(vince).go(200).asVoid();
 
 		// vince logs out and cancels its access token
-		SpaceRequest.get("/2/logout").bearerAuth(vince).go(200).asVoid();
+		SpaceRequest.post("/2/credentials/_logout").bearerAuth(vince).go(200).asVoid();
 
 		// vince fails to logout a second time
 		// since its access token is canceled
-		SpaceRequest.get("/2/logout").bearerAuth(vince).go(401).asVoid();
+		SpaceRequest.post("/2/credentials/_logout").bearerAuth(vince).go(401).asVoid();
 
 		// vince fails to access backend
 		// since its access token is canceled
 		SpaceRequest.get("/2/data").bearerAuth(vince).go(401).asVoid();
 
 		// vince fails to login with its canceled access token
-		SpaceRequest.get("/2/login").bearerAuth(vince).go(401).asVoid();
+		SpaceRequest.post("/2/credentials/_login").bearerAuth(vince).go(401).asVoid();
 
 		// vince logs in again
-		ObjectNode node = SpaceRequest.get("/2/login")//
+		ObjectNode node = SpaceRequest.post("/2/credentials/_login")//
 				.basicAuth(vince).go(200).asJsonObject();
 		vince.accessToken(node.get("accessToken").asText());
 		long expiresIn = node.get("expiresIn").asLong();
@@ -163,7 +163,7 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		// if vince logs in again with access token
 		// its access token is not reset
 		String vinceOldAccessToken = vince.accessToken().get();
-		SpaceRequest.get("/2/login").bearerAuth(vince).go(200)//
+		SpaceRequest.post("/2/credentials/_login").bearerAuth(vince).go(200)//
 				.assertEquals(vinceOldAccessToken, "accessToken");
 
 		// vince can access backend with its old token
@@ -184,7 +184,7 @@ public class CredentialsRestyTest2 extends SpaceTest {
 				.bearerAuth(vinceOldAccessToken).go(200).asVoid();
 
 		// vince logs out of his newest session
-		SpaceRequest.get("/2/logout").bearerAuth(vince).go(200);
+		SpaceRequest.post("/2/credentials/_logout").bearerAuth(vince).go(200);
 
 		// vince can no longer access data with its new token
 		// but can still access data with its old token
@@ -194,7 +194,7 @@ public class CredentialsRestyTest2 extends SpaceTest {
 				.bearerAuth(vinceOldAccessToken).go(200).asVoid();
 
 		// vince logs out of his oldest session
-		SpaceRequest.get("/2/logout").backend(superadmin)//
+		SpaceRequest.post("/2/credentials/_logout").backend(superadmin)//
 				.bearerAuth(vinceOldAccessToken).go(200).asVoid();
 
 		// vince can no longer access data with both tokens
@@ -204,7 +204,7 @@ public class CredentialsRestyTest2 extends SpaceTest {
 				.bearerAuth(vinceOldAccessToken).go(401).asVoid();
 
 		// vince logs in with token expiration of 2 seconds
-		node = SpaceRequest.get("/2/login").basicAuth(vince)//
+		node = SpaceRequest.post("/2/credentials/_login").basicAuth(vince)//
 				.queryParam("lifetime", 2) // seconds
 				.go(200).asJsonObject();
 
@@ -230,7 +230,7 @@ public class CredentialsRestyTest2 extends SpaceTest {
 
 		// fred fails to login with a token lifetime of 4s
 		// since max token lifetime is 3s
-		SpaceRequest.get("/2/login").basicAuth(fred)//
+		SpaceRequest.post("/2/credentials/_login").basicAuth(fred)//
 				.queryParam(LIFETIME_PARAM, 4).go(403).asVoid();
 
 		// fred logs in with a token lifetime of 2s

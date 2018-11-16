@@ -60,7 +60,7 @@ public class ExportLogCommandTest extends SpaceTest {
 		assertEquals("/2/data", results.results.get(2).path);
 		assertEquals("/2/credentials", results.results.get(3).path);
 		assertEquals("/2/settings/credentials", results.results.get(4).path);
-		assertEquals("/2/login", results.results.get(5).path);
-		assertEquals("/2/login", results.results.get(6).path);
+		assertEquals("/2/credentials/_login", results.results.get(5).path);
+		assertEquals("/2/credentials/_login", results.results.get(6).path);
 	}
 }

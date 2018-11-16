@@ -43,7 +43,7 @@ public class LogRestyTest extends SpaceTest {
 		assertEquals(6, log.results.size());
 		assertEquals("/2/data", log.results.get(0).path);
 		assertEquals("/2/data", log.results.get(1).path);
-		assertEquals("/2/login", log.results.get(2).path);
+		assertEquals("/2/credentials/_login", log.results.get(2).path);
 		assertEquals("/2/credentials", log.results.get(3).path);
 		assertEquals("/2/credentials", log.results.get(4).path);
 		assertEquals("/2/admin/_clear", log.results.get(5).path);
@@ -119,7 +119,7 @@ public class LogRestyTest extends SpaceTest {
 		assertEquals(4, results.results.size());
 		assertEquals("/2/logs/_search", results.results.get(0).path);
 		assertEquals("/2/credentials/" + vince.id(), results.results.get(1).path);
-		assertEquals("/2/login", results.results.get(2).path);
+		assertEquals("/2/credentials/_login", results.results.get(2).path);
 		assertEquals("/2/credentials", results.results.get(3).path);
 
 		// superadmin search for logs of standard users or lower level
@@ -130,7 +130,7 @@ public class LogRestyTest extends SpaceTest {
 		results = superadmin.logs().search(query, true);
 		assertEquals(2, results.results.size());
 		assertEquals("/2/credentials/" + vince.id(), results.results.get(0).path);
-		assertEquals("/2/login", results.results.get(1).path);
+		assertEquals("/2/credentials/_login", results.results.get(1).path);
 
 		// superadmin search for logs of guest users
 		query = ESSearchSourceBuilder.searchSource()//
@@ -156,7 +156,7 @@ public class LogRestyTest extends SpaceTest {
 		assertEquals("/2/logs/_search", results.results.get(2).path);
 		assertEquals("/2/logs/_search", results.results.get(3).path);
 		assertEquals("/2/credentials/" + vince.id(), results.results.get(4).path);
-		assertEquals("/2/login", results.results.get(5).path);
+		assertEquals("/2/credentials/_login", results.results.get(5).path);
 		assertEquals("/2/credentials", results.results.get(6).path);
 		assertEquals("/2/data/user", results.results.get(7).path);
 		assertEquals("/2/data", results.results.get(8).path);
@@ -249,8 +249,8 @@ public class LogRestyTest extends SpaceTest {
 		assertEquals("/2/data/message/" + message.id(), results.get(1).path);
 		assertEquals("POST", results.get(2).method);
 		assertEquals("/2/data/message", results.get(2).path);
-		assertEquals("GET", results.get(3).method);
-		assertEquals("/2/login", results.get(3).path);
+		assertEquals("POST", results.get(3).method);
+		assertEquals("/2/credentials/_login", results.get(3).path);
 		assertEquals("POST", results.get(4).method);
 		assertEquals("/2/credentials", results.get(4).path);
 		assertEquals("PUT", results.get(5).method);
@@ -304,8 +304,8 @@ public class LogRestyTest extends SpaceTest {
 		assertEquals(passwordResetCode, //
 				results.get(2).response.get(PASSWORD_RESET_CODE_FIELD).asText());
 
-		assertEquals("GET", results.get(3).method);
-		assertEquals("/2/login", results.get(3).path);
+		assertEquals("POST", results.get(3).method);
+		assertEquals("/2/credentials/_login", results.get(3).path);
 
 		assertEquals("POST", results.get(4).method);
 		assertEquals("/2/credentials", results.get(4).path);

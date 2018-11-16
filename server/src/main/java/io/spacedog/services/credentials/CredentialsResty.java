@@ -40,17 +40,15 @@ import net.codestory.http.annotations.Prefix;
 import net.codestory.http.annotations.Put;
 import net.codestory.http.payload.Payload;
 
-@Prefix("/2")
+@Prefix("/2/credentials")
 public class CredentialsResty extends SpaceResty {
 
 	//
 	// Routes
 	//
 
-	@Get("/login")
-	@Get("/login/")
-	@Post("/login")
-	@Post("/login/")
+	@Post("/_login")
+	@Post("/_login/")
 	public Payload login(Context context) {
 		Credentials credentials = Server.context().credentials().checkAtLeastUser();
 
@@ -66,17 +64,15 @@ public class CredentialsResty extends SpaceResty {
 				CREDENTIALS_FIELD, credentials);
 	}
 
-	@Get("/logout")
-	@Get("/logout/")
-	@Post("/logout")
-	@Post("/logout/")
+	@Post("/_logout")
+	@Post("/_logout/")
 	public void logout(Context context) {
 		Server.context().credentials().checkAtLeastUser();
 		Services.credentials().logout();
 	}
 
-	@Get("/credentials")
-	@Get("/credentials/")
+	@Get("")
+	@Get("/")
 	public Results getAll(Context context) {
 		Server.context().credentials().checkAtLeastAdmin();
 
@@ -100,15 +96,15 @@ public class CredentialsResty extends SpaceResty {
 		return Services.credentials().search(builder, isRefreshRequested(context));
 	}
 
-	@Delete("/credentials")
-	@Delete("/credentials/")
+	@Delete("")
+	@Delete("/")
 	public void deleteAll(Context context) {
 		Server.context().credentials().checkAtLeastSuperAdmin();
 		Services.credentials().deleteAllButSuperAdmins();
 	}
 
-	@Post("/credentials")
-	@Post("/credentials/")
+	@Post("")
+	@Post("/")
 	public Payload post(CredentialsCreateRequest request, Context context) {
 
 		CredentialsSettings settings = Services.credentials().settings();
@@ -127,27 +123,27 @@ public class CredentialsResty extends SpaceResty {
 		return payload.build();
 	}
 
-	@Get("/credentials/me")
-	@Get("/credentials/me/")
+	@Get("/me")
+	@Get("/me/")
 	public Credentials getMe(Context context) {
 		return Server.context().credentials().checkAtLeastUser();
 	}
 
-	@Get("/credentials/:id")
-	@Get("/credentials/:id/")
+	@Get("/:id")
+	@Get("/:id/")
 	public Credentials getById(String id, Context context) {
 		return checkMyselfOrHigherAdminAndGet(id, false);
 	}
 
-	@Delete("/credentials/me")
-	@Delete("/credentials/me/")
+	@Delete("/me")
+	@Delete("/me/")
 	public void deleteMe() {
 		Credentials credentials = Server.context().credentials().checkAtLeastUser();
 		deleteById(credentials.id());
 	}
 
-	@Delete("/credentials/:id")
-	@Delete("/credentials/:id/")
+	@Delete("/:id")
+	@Delete("/:id/")
 	public void deleteById(String id) {
 		Credentials credentials = checkMyselfOrHigherAdminAndGet(id, false);
 
@@ -159,14 +155,14 @@ public class CredentialsResty extends SpaceResty {
 		Services.credentials().delete(id);
 	}
 
-	@Put("/credentials/me/username")
-	@Put("/credentials/me/username/")
+	@Put("/me/username")
+	@Put("/me/username/")
 	public Credentials putMyUsername(String body, Context context) {
 		return putUsername(Server.context().credentials().id(), body, context);
 	}
 
-	@Put("/credentials/:id/username")
-	@Put("/credentials/:id/username/")
+	@Put("/:id/username")
+	@Put("/:id/username/")
 	public Credentials putUsername(String id, String body, Context context) {
 
 		Credentials requester = Server.context().credentials();
@@ -188,14 +184,14 @@ public class CredentialsResty extends SpaceResty {
 		return Services.credentials().update(credentials);
 	}
 
-	@Put("/credentials/me/email")
-	@Put("/credentials/me/email/")
+	@Put("/me/email")
+	@Put("/me/email/")
 	public Credentials putMyEmail(String body, Context context) {
 		return putEmail(Server.context().credentials().id(), body, context);
 	}
 
-	@Put("/credentials/:id/email")
-	@Put("/credentials/:id/email/")
+	@Put("/:id/email")
+	@Put("/:id/email/")
 	public Credentials putEmail(String id, String body, Context context) {
 
 		Credentials requester = Server.context().credentials();
@@ -214,8 +210,8 @@ public class CredentialsResty extends SpaceResty {
 		return Services.credentials().update(credentials);
 	}
 
-	@Post("/credentials/:id/_enable_disable_after")
-	@Post("/credentials/:id/_enable_disable_after/")
+	@Post("/:id/_enable_disable_after")
+	@Post("/:id/_enable_disable_after/")
 	public Credentials postEnableDisableAfter(String id, //
 			EnableDisableAfterRequest enableDisableAfter, Context context) {
 
@@ -225,8 +221,8 @@ public class CredentialsResty extends SpaceResty {
 		return Services.credentials().update(credentials);
 	}
 
-	@Post("/credentials/_send_password_reset_email")
-	@Post("/credentials/_send_password_reset_email/")
+	@Post("/_send_password_reset_email")
+	@Post("/_send_password_reset_email/")
 	public Payload postSendPasswordResetEmail(String body, Context context) {
 		MapLikeType type = TypeFactory.defaultInstance()//
 				.constructMapLikeType(Map.class, String.class, Object.class);
@@ -236,8 +232,8 @@ public class CredentialsResty extends SpaceResty {
 		return JsonPayload.ok().withContent(response).build();
 	}
 
-	@Post("/credentials/:id/_reset_password")
-	@Post("/credentials/:id/_reset_password/")
+	@Post("/:id/_reset_password")
+	@Post("/:id/_reset_password/")
 	public Payload postResetPassword(String id, Context context) {
 		Credentials credentials = checkAdminAndGet(id);
 		credentials.resetPassword();
@@ -246,14 +242,14 @@ public class CredentialsResty extends SpaceResty {
 				PASSWORD_RESET_CODE_FIELD, credentials.passwordResetCode());
 	}
 
-	@Post("/credentials/me/_set_password")
-	@Post("/credentials/me/_set_password/")
+	@Post("/me/_set_password")
+	@Post("/me/_set_password/")
 	public Payload postSetMyPassword(SetPasswordRequest request, Context context) {
 		return postSetPassword(Server.context().credentials().id(), request, context);
 	}
 
-	@Post("/credentials/:id/_set_password")
-	@Post("/credentials/:id/_set_password/")
+	@Post("/:id/_set_password")
+	@Post("/:id/_set_password/")
 	public Payload postSetPassword(String id, SetPasswordRequest request, Context context) {
 		// TODO do we need a password reset expire date to limit the reset time scope
 
@@ -273,8 +269,8 @@ public class CredentialsResty extends SpaceResty {
 		return saved(false, credentials);
 	}
 
-	@Post("/credentials/:id/_password_must_change")
-	@Post("/credentials/:id/_password_must_change/")
+	@Post("/:id/_password_must_change")
+	@Post("/:id/_password_must_change/")
 	public Payload postForcePasswordUpdate(String id, Context context) {
 		Credentials credentials = checkAdminAndGet(id);
 		credentials.passwordMustChange(true);
@@ -282,34 +278,34 @@ public class CredentialsResty extends SpaceResty {
 		return saved(false, credentials);
 	}
 
-	@Post("/credentials/:id/_enable")
-	@Post("/credentials/:id/_enable/")
+	@Post("/:id/_enable")
+	@Post("/:id/_enable/")
 	public Credentials postEnable(String id, String body, Context context) {
 		return doEnableOrDisable(id, true);
 	}
 
-	@Post("/credentials/:id/_disable")
-	@Post("/credentials/:id/_disable/")
+	@Post("/:id/_disable")
+	@Post("/:id/_disable/")
 	public Credentials postDisable(String id, String body, Context context) {
 		return doEnableOrDisable(id, false);
 	}
 
-	@Get("/credentials/:id/roles")
-	@Get("/credentials/:id/roles/")
+	@Get("/:id/roles")
+	@Get("/:id/roles/")
 	public Set<String> getRoles(String id, Context context) {
 		return checkMyselfOrHigherAdminAndGet(id, false).roles();
 	}
 
-	@Delete("/credentials/:id/roles")
-	@Delete("/credentials/:id/roles/")
+	@Delete("/:id/roles")
+	@Delete("/:id/roles/")
 	public Credentials deleteAllRoles(String id, Context context) {
 		Credentials credentials = checkAdminAndGet(id);
 		credentials.clearRoles();
 		return Services.credentials().update(credentials);
 	}
 
-	@Put("/credentials/:id/roles/:role")
-	@Put("/credentials/:id/roles/:role/")
+	@Put("/:id/roles/:role")
+	@Put("/:id/roles/:role/")
 	public Credentials putRole(String id, String role, Context context) {
 		Roles.checkIfValid(role);
 		Credentials credentials = checkAdminAndGet(id);
@@ -322,8 +318,8 @@ public class CredentialsResty extends SpaceResty {
 		return credentials;
 	}
 
-	@Delete("/credentials/:id/roles/:role")
-	@Delete("/credentials/:id/roles/:role/")
+	@Delete("/:id/roles/:role")
+	@Delete("/:id/roles/:role/")
 	public Credentials deleteRole(String id, String role, Context context) {
 		Credentials credentials = checkAdminAndGet(id);
 		if (credentials.roles().contains(role)) {
@@ -333,8 +329,8 @@ public class CredentialsResty extends SpaceResty {
 		return credentials;
 	}
 
-	@Post("/credentials/me/groups")
-	@Post("/credentials/me/groups/")
+	@Post("/me/groups")
+	@Post("/me/groups/")
 	public Payload postCreateGroup(CredentialsGroupCreateRequest request, Context context) {
 		Credentials credentials = Server.context().credentials().checkAtLeastUser();
 		String group = credentials.createGroup(request.suffix);
@@ -342,8 +338,8 @@ public class CredentialsResty extends SpaceResty {
 		return saved(false, credentials, GROUP_FIELD, group);
 	}
 
-	@Put("/credentials/:id/groups/:group")
-	@Put("/credentials/:id/groups/:group/")
+	@Put("/:id/groups/:group")
+	@Put("/:id/groups/:group/")
 	public Credentials putShareGroup(String id, String group, Context context) {
 		Credentials credentials = Server.context().credentials();
 		if (!credentials.isAtLeastSuperAdmin())
@@ -352,15 +348,15 @@ public class CredentialsResty extends SpaceResty {
 		return Services.credentials().update(credentials);
 	}
 
-	@Delete("/credentials/me/groups/:group")
-	@Delete("/credentials/me/groups/:group/")
+	@Delete("/me/groups/:group")
+	@Delete("/me/groups/:group/")
 	public Credentials deleteRemoveGroup(String group) {
 		Credentials credentials = Server.context().credentials().checkAtLeastUser();
 		return deleteUnshareGroup(credentials.id(), group);
 	}
 
-	@Delete("/credentials/:id/groups/:group")
-	@Delete("/credentials/:id/groups/:group/")
+	@Delete("/:id/groups/:group")
+	@Delete("/:id/groups/:group/")
 	public Credentials deleteUnshareGroup(String id, String group) {
 		Credentials credentials = Server.context().credentials().checkAtLeastUser();
 

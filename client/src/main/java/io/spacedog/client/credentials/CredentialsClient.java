@@ -98,7 +98,7 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	//
 
 	public SpaceDog login(String password, long lifetime) {
-		SpaceRequest request = SpaceRequest.get("/2/login")//
+		SpaceRequest request = SpaceRequest.post("/2/credentials/_login")//
 				.backend(dog.backend()).basicAuth(dog.username(), password);
 
 		if (lifetime > 0)
@@ -112,7 +112,7 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 
 	public SpaceDog logout() {
 		if (dog.accessToken() != null)
-			dog.get("/2/logout").go(200).asVoid();
+			dog.post("/2/credentials/_logout").go(200).asVoid();
 
 		dog.accessToken(null);
 		dog.expiresAt(null);
