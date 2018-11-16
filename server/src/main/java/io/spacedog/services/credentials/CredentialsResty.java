@@ -74,7 +74,7 @@ public class CredentialsResty extends SpaceResty {
 	}
 
 	@Get("/credentials")
-	@Get("/2/credentials/")
+	@Get("/credentials/")
 	public Results getAll(Context context) {
 		Server.context().credentials().checkAtLeastAdmin();
 
