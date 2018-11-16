@@ -13,8 +13,6 @@ import io.spacedog.utils.Check;
 
 public class PushClient {
 
-	private static final String TYPE = "installation";
-
 	private SpaceDog dog;
 
 	public PushClient(SpaceDog dog) {
@@ -95,15 +93,15 @@ public class PushClient {
 	}
 
 	public long patchInstallation(String id, Object source) {
-		return dog.data().patch(TYPE, id, source);
+		return dog.data().patch(Installation.TYPE, id, source);
 	}
 
 	public long saveInstallationField(String id, String field, Object object) {
-		return dog.data().saveField(TYPE, id, field, object);
+		return dog.data().saveField(Installation.TYPE, id, field, object);
 	}
 
 	public DataResults<Installation> searchInstallations(ESSearchSourceBuilder source) {
-		return dog.data().prepareSearch().type(TYPE).source(source.toString()).go(Installation.class);
+		return dog.data().prepareSearch().type(Installation.TYPE).source(source.toString()).go(Installation.class);
 	}
 
 	public void deleteInstallation(String id) {
@@ -111,7 +109,7 @@ public class PushClient {
 	}
 
 	public void deleteInstallation(String id, boolean throwNotFound) {
-		dog.data().delete(TYPE, id, throwNotFound);
+		dog.data().delete(Installation.TYPE, id, throwNotFound);
 	}
 
 	//
@@ -119,15 +117,15 @@ public class PushClient {
 	//
 
 	public String[] getTags(String installationId) {
-		return dog.data().getField(TYPE, installationId, "tags", String[].class);
+		return dog.data().getField(Installation.TYPE, installationId, "tags", String[].class);
 	}
 
 	public long setTags(String installationId, String... tags) {
-		return dog.data().saveField(TYPE, installationId, "tags", tags);
+		return dog.data().saveField(Installation.TYPE, installationId, "tags", tags);
 	}
 
 	public long deleteTags(String installationId) {
-		return dog.data().deleteField(TYPE, installationId, "tags");
+		return dog.data().deleteField(Installation.TYPE, installationId, "tags");
 	}
 
 	//
