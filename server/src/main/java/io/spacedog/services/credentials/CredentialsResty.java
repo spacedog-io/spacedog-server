@@ -342,12 +342,12 @@ public class CredentialsResty extends SpaceResty {
 		CredentialsSettings settings = Services.credentials().settings();
 
 		long lifetime = context.query()//
-				.getLong(LIFETIME_PARAM, settings.sessionMaximumLifetime);
+				.getLong(LIFETIME_PARAM, settings.sessionMaximumLifetimeInSeconds);
 
-		if (lifetime > settings.sessionMaximumLifetime)
+		if (lifetime > settings.sessionMaximumLifetimeInSeconds)
 			throw Exceptions.forbidden(credentials, //
 					"maximum access token lifetime is [%s] seconds", //
-					settings.sessionMaximumLifetime);
+					settings.sessionMaximumLifetimeInSeconds);
 
 		return lifetime;
 	}

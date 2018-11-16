@@ -225,7 +225,7 @@ public class CredentialsRestyTest2 extends SpaceTest {
 
 		// admin saves settings with token max lifetime set to 3s
 		CredentialsSettings settings = new CredentialsSettings();
-		settings.sessionMaximumLifetime = 3; // seconds
+		settings.sessionMaximumLifetimeInSeconds = 3; // seconds
 		superadmin.credentials().settings(settings);
 
 		// fred fails to login with a token lifetime of 4s

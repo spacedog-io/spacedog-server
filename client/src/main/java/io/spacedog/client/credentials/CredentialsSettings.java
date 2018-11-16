@@ -13,8 +13,7 @@ public class CredentialsSettings extends SettingsBase {
 	public boolean guestSignUpEnabled = false;
 	public String usernameRegex = Usernames.USERNAME_DEFAULT_REGEX;
 	public String passwordRegex = Passwords.PASSWORD_DEFAULT_REGEX;
-	// in seconds
-	public long sessionMaximumLifetime = SESSION_DEFAULT_LIFETIME;
+	public long sessionMaximumLifetimeInSeconds = SESSION_DEFAULT_LIFETIME;
 	public int maximumInvalidChallenges = 0;
 	public int resetInvalidChallengesAfterMinutes = 60;
 
