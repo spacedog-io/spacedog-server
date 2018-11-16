@@ -508,7 +508,7 @@ public class Json {
 		if (node == null)
 			return null;
 		if (!node.isTextual())
-			throw Exceptions.illegalArgument("[%s] not a string", node);
+			throw Exceptions.illegalArgument("[%s] not a JSON string", node);
 		return node.asText();
 	}
 
@@ -516,7 +516,7 @@ public class Json {
 		if (node == null)
 			return null;
 		if (!node.isBoolean())
-			throw Exceptions.illegalArgument("[%s] not a boolean", node);
+			throw Exceptions.illegalArgument("[%s] not a JSON boolean", node);
 		return node.asBoolean();
 	}
 
@@ -524,7 +524,7 @@ public class Json {
 		if (node == null)
 			return null;
 		if (!node.isDouble())
-			throw Exceptions.illegalArgument("[%s] not a double", node);
+			throw Exceptions.illegalArgument("[%s] not a JSON double", node);
 		return node.asDouble();
 	}
 

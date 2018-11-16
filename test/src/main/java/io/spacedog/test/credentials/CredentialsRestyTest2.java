@@ -636,77 +636,36 @@ public class CredentialsRestyTest2 extends SpaceTest {
 	}
 
 	@Test
-	public void passwordIsChangedOnlyIfPasswordHasBeenChecked() {
-
-		// TODO move these tests to the setAndResetPasswords test
+	public void updatePassword() {
 
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = clearServer();
-		SpaceDog fred = createTempDog(superadmin, "fred").login();
+		SpaceDog fred = createTempDog(superadmin, "fred");
+
+		// fred logs in
+		fred.login(fred.password().get());
 
 		// fred fails to set his password
 		// since his password is not challenged
 		// because authentication is done with access token
 		SpaceRequest.post("/2/credentials/" + fred.id() + "/_set_password")//
 				.bearerAuth(fred)//
-				.bodyJson("password", "hello fred")//
+				.bodyJson("password", "hi fred2")//
 				.go(403)//
 				.assertEquals("unchallenged-password", "error.code");
 
-		// fred updates his password since his password is challenged
-		fred.credentials().setMyPassword(fred.password().get(), "hello fred");
-	}
-
-	@Test
-	public void updateUsernameEmailAndPassword() {
-
-		// prepare
-		prepareTest();
-		SpaceDog superadmin = clearServer();
-		SpaceDog fred = createTempDog(superadmin, "fred").login();
-
-		// fred fails to updates his username
-		// since password must be challenged
-		SpaceRequest.put("/2/credentials/" + fred.id()).bearerAuth(fred)//
-				.bodyJson("username", "fred2").go(403)//
-				.assertEquals("unchallenged-password", "error.code");
-
-		// fred updates his username with a challenged password
-		SpaceRequest.put("/2/credentials/" + fred.id()).basicAuth(fred)//
-				.bodyJson("username", "fred2").go(200).asVoid();
-
-		// fred can no longer login with old username
-		SpaceRequest.get("/2/login").backend(superadmin)//
-				.basicAuth("fred", "hi fred").go(401).asVoid();
-
-		// fred can login with his new username
-		fred.username("fred2").login();
-
-		// superadmin updates fred's email
-		superadmin.put("/2/credentials/" + fred.id())//
-				.bodyJson("email", "fred2@dog.com").go(200).asVoid();
-
-		fred.get("/2/credentials/" + fred.id())//
-				.go(200).assertEquals("fred2@dog.com", "email");
-
-		// fred fails to updates his username
-		// since password must be challenged
-		SpaceRequest.put("/2/credentials/" + fred.id()).bearerAuth(fred)//
-				.bodyJson("username", "fred2").go(403)//
-				.assertEquals("unchallenged-password", "error.code");
-
-		// fred updates his password
+		// fred updates his password since old password is challenged
 		fred.credentials().setMyPassword(fred.password().get(), "hi fred2");
 
 		// fred's old access token is not valid anymore
-		SpaceRequest.get("/2/credentials/" + fred.id()).bearerAuth(fred).go(401).asVoid();
+		SpaceRequest.get("/2/credentials/me").bearerAuth(fred).go(401).asVoid();
 
 		// fred's old password is not valid anymore
-		SpaceRequest.get("/2/login").basicAuth(fred).go(401).asVoid();
+		assertHttpError(401, () -> fred.login(fred.password().get()));
 
 		// fred can login with his new password
-		fred.password("hi fred2").login();
+		fred.login("hi fred2");
 	}
 
 	@Test
@@ -746,7 +705,7 @@ public class CredentialsRestyTest2 extends SpaceTest {
 
 		// fred fails to update his credentials from now on
 		assertHttpError(401, () -> fred.credentials()//
-				.prepareUpdate(fred.id()).username("freddy").go());
+				.updateMyUsername("freddy", fred.password().get()));
 
 		// anonymous fails to enable fred's credentials
 		assertHttpError(401, () -> guest.credentials().enable(fred.id()));

@@ -2,6 +2,8 @@ package io.spacedog.client.credentials;
 
 import java.util.Set;
 
+import org.joda.time.DateTime;
+
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
@@ -157,35 +159,28 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	// Update credentials methods
 	//
 
-	public CredentialsUpdateRequestBuilder prepareUpdate() {
-		return prepareUpdate("me");
+	public SpaceResponse updateMyUsername(String username, String password) {
+		return updateUsername("me", username, password);
 	}
 
-	public CredentialsUpdateRequestBuilder prepareUpdate(String credentialsId) {
-
-		return new CredentialsUpdateRequestBuilder(credentialsId) {
-
-			@Override
-			public SpaceResponse go(String password) {
-				return update(this.request, password);
-			}
-		};
+	public SpaceResponse updateUsername(String credentialsId, String username, String password) {
+		return dog.put("/2/credentials/{id}/username")//
+				.basicAuth(dog.username(), password)//
+				.routeParam("id", credentialsId)//
+				.bodyPojo(username)//
+				.go(200).asVoid();
 	}
 
-	public SpaceResponse update(CredentialsUpdateRequest request) {
-		return update(request, null);
+	public SpaceResponse updateMyEmail(String email, String password) {
+		return updateEmail("me", email, password);
 	}
 
-	public SpaceResponse update(CredentialsUpdateRequest updateRequest, String password) {
-
-		SpaceRequest spaceRequest = dog.put("/2/credentials/{id}")//
-				.routeParam("id", updateRequest.credentialsId)//
-				.bodyPojo(updateRequest);
-
-		if (password != null)
-			spaceRequest.basicAuth(dog.username(), password);
-
-		return spaceRequest.go(200);
+	public SpaceResponse updateEmail(String credentialsId, String email, String password) {
+		return dog.put("/2/credentials/{id}/email")//
+				.basicAuth(dog.username(), password)//
+				.routeParam("id", credentialsId)//
+				.bodyPojo(email)//
+				.go(200).asVoid();
 	}
 
 	//
@@ -292,6 +287,14 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 		StringBuilder builder = new StringBuilder("/2/credentials/") //
 				.append(id).append(enable ? "/_enable" : "/_disable");
 		dog.post(builder.toString()).go(200).asVoid();
+	}
+
+	public void enableDisableAfter(String id, DateTime enableAfter, DateTime disableAfter) {
+		EnableDisableAfterRequest pojo = new EnableDisableAfterRequest();
+		pojo.enableAfter = enableAfter;
+		pojo.disableAfter = disableAfter;
+		dog.post("/2/credentials/{id}/_enable_disable_after")//
+				.routeParam("id", id).bodyPojo(pojo).go(200).asVoid();
 	}
 
 	//

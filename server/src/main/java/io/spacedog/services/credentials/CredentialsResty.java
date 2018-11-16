@@ -21,15 +21,17 @@ import io.spacedog.client.credentials.Credentials.Session;
 import io.spacedog.client.credentials.CredentialsCreateRequest;
 import io.spacedog.client.credentials.CredentialsGroupCreateRequest;
 import io.spacedog.client.credentials.CredentialsSettings;
-import io.spacedog.client.credentials.CredentialsUpdateRequest;
+import io.spacedog.client.credentials.EnableDisableAfterRequest;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.credentials.SetPasswordRequest;
+import io.spacedog.client.credentials.Usernames;
 import io.spacedog.server.JsonPayload;
 import io.spacedog.server.Server;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceResty;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.Optional7;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -117,8 +119,7 @@ public class CredentialsResty extends SpaceResty {
 		Credentials credentials = Services.credentials()//
 				.create(request, Roles.user);
 
-		JsonPayload payload = JsonPayload.saved(true, "/2", //
-				CredentialsService.SERVICE_NAME, credentials.id());
+		JsonPayload payload = JsonPayload.saved(true, "/2", Credentials.TYPE, credentials.id());
 
 		if (credentials.passwordResetCode() != null)
 			payload.withFields(PASSWORD_RESET_CODE_FIELD, credentials.passwordResetCode());
@@ -158,15 +159,15 @@ public class CredentialsResty extends SpaceResty {
 		Services.credentials().delete(id);
 	}
 
-	@Put("/credentials/me")
-	@Put("/credentials/me/")
-	public Payload put(CredentialsUpdateRequest request, Context context) {
-		return put(Server.context().credentials().id(), request, context);
+	@Put("/credentials/me/username")
+	@Put("/credentials/me/username/")
+	public Payload putMyUsername(String body, Context context) {
+		return putUsername(Server.context().credentials().id(), body, context);
 	}
 
-	@Put("/credentials/:id")
-	@Put("/credentials/:id/")
-	public Payload put(String id, CredentialsUpdateRequest request, Context context) {
+	@Put("/credentials/:id/username")
+	@Put("/credentials/:id/username/")
+	public Payload putUsername(String id, String body, Context context) {
 
 		Credentials requester = Server.context().credentials();
 		Credentials credentials = checkMyselfOrHigherAdminAndGet(id, false);
@@ -174,12 +175,54 @@ public class CredentialsResty extends SpaceResty {
 		if (requester.isUser())
 			requester.checkPasswordHasBeenChallenged();
 
-		if (request.enabled != null //
-				|| request.enableDisableAfter != null)
-			requester.checkAtLeastAdmin();
+		String username = Json.checkString(Json.readNode(body));
+		if (Strings.isNullOrEmpty(username))
+			throw Exceptions.illegalArgument("username is empty");
 
-		credentials = Services.credentials().update(request, credentials);
-		return saved(false, credentials);
+		CredentialsSettings settings = Services.credentials().settings();
+		Usernames.checkValid(username, settings.usernameRegex());
+		if (Services.credentials().exists(username))
+			throw Exceptions.alreadyExists(Credentials.TYPE, username);
+
+		credentials.username(username);
+		return doUpdate(credentials);
+	}
+
+	@Put("/credentials/me/email")
+	@Put("/credentials/me/email/")
+	public Payload putMyEmail(String body, Context context) {
+		return putEmail(Server.context().credentials().id(), body, context);
+	}
+
+	@Put("/credentials/:id/email")
+	@Put("/credentials/:id/email/")
+	public Payload putEmail(String id, String body, Context context) {
+
+		Credentials requester = Server.context().credentials();
+		Credentials credentials = checkMyselfOrHigherAdminAndGet(id, false);
+
+		if (requester.isUser())
+			requester.checkPasswordHasBeenChallenged();
+
+		String email = Json.checkString(Json.readNode(body));
+
+		// TODO check email with minimal regex
+		if (Strings.isNullOrEmpty(email))
+			throw Exceptions.illegalArgument("email is empty");
+
+		credentials.email(email);
+		return doUpdate(credentials);
+	}
+
+	@Post("/credentials/:id/_enable_disable_after")
+	@Post("/credentials/:id/_enable_disable_after/")
+	public Payload postEnableDisableAfter(String id, //
+			EnableDisableAfterRequest enableDisableAfter, Context context) {
+
+		Credentials credentials = checkAdminAndGet(id);
+		credentials.enableAfter(enableDisableAfter.enableAfter);
+		credentials.disableAfter(enableDisableAfter.disableAfter);
+		return doUpdate(credentials);
 	}
 
 	@Post("/credentials/_send_password_reset_email")
@@ -196,9 +239,10 @@ public class CredentialsResty extends SpaceResty {
 	@Post("/credentials/:id/_reset_password")
 	@Post("/credentials/:id/_reset_password/")
 	public Payload postResetPassword(String id, Context context) {
-		checkAdminAndGet(id);
-		Credentials credentials = Services.credentials().resetPassword(id);
-		return JsonPayload.saved(false, "/2", CredentialsService.SERVICE_NAME, credentials.id())//
+		Credentials credentials = checkAdminAndGet(id);
+		credentials.resetPassword();
+		Services.credentials().update(credentials);
+		return JsonPayload.saved(false, "/2", Credentials.TYPE, credentials.id())//
 				.withVersion(credentials.version())//
 				.withFields(PASSWORD_RESET_CODE_FIELD, credentials.passwordResetCode())//
 				.build();
@@ -207,33 +251,35 @@ public class CredentialsResty extends SpaceResty {
 	@Post("/credentials/me/_set_password")
 	@Post("/credentials/me/_set_password/")
 	public Payload postSetMyPassword(SetPasswordRequest request, Context context) {
-		return postSetPassword(//
-				Server.context().credentials().id(), //
-				request, context);
+		return postSetPassword(Server.context().credentials().id(), request, context);
 	}
 
 	@Post("/credentials/:id/_set_password")
 	@Post("/credentials/:id/_set_password/")
 	public Payload postSetPassword(String id, SetPasswordRequest request, Context context) {
-		// TODO do we need a password reset expire date to limit the reset
-		// time scope
+		// TODO do we need a password reset expire date to limit the reset time scope
+
 		Credentials credentials = null;
+		CredentialsSettings settings = Services.credentials().settings();
+		Optional7<String> regex = Optional7.of(settings.passwordRegex());
+
 		if (Strings.isNullOrEmpty(request.passwordResetCode())) {
 			credentials = checkMyselfOrHigherAdminAndGet(id, true);
-			Services.credentials().setPassword(id, request.password());
-		} else
-			credentials = Services.credentials().setPasswordWithCode(id, //
-					request.password(), request.passwordResetCode());
+			credentials.changePassword(request.password(), regex);
+		} else {
+			credentials = Services.credentials().get(id);
+			credentials.changePassword(request.password(), request.passwordResetCode(), regex);
+		}
 
-		return saved(false, credentials);
+		return doUpdate(credentials);
 	}
 
 	@Post("/credentials/:id/_password_must_change")
 	@Post("/credentials/:id/_password_must_change/")
 	public Payload postForcePasswordUpdate(String id, Context context) {
-		checkAdminAndGet(id);
-		Credentials credentials = Services.credentials().passwordMustChange(id);
-		return saved(false, credentials);
+		Credentials credentials = checkAdminAndGet(id);
+		credentials.passwordMustChange(true);
+		return doUpdate(credentials);
 	}
 
 	@Post("/credentials/:id/_enable")
@@ -389,7 +435,7 @@ public class CredentialsResty extends SpaceResty {
 	}
 
 	private Payload saved(boolean created, Credentials credentials, Object... fields) {
-		return JsonPayload.saved(false, "/2", CredentialsService.SERVICE_NAME, credentials.id())//
+		return JsonPayload.saved(false, "/2", Credentials.TYPE, credentials.id())//
 				.withVersion(credentials.version())//
 				.withFields(fields)//
 				.build();

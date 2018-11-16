@@ -14,8 +14,8 @@ import com.mitchellbosecke.pebble.PebbleEngine;
 import com.mitchellbosecke.pebble.loader.StringLoader;
 
 import io.spacedog.client.TemplateParameterTypes;
+import io.spacedog.client.credentials.Credentials;
 import io.spacedog.server.Services;
-import io.spacedog.services.credentials.CredentialsService;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 
@@ -46,7 +46,7 @@ public class PebbleTemplating implements TemplateParameterTypes {
 				continue;
 			}
 
-			if (type.equals(CredentialsService.SERVICE_NAME)) {
+			if (type.equals(Credentials.TYPE)) {
 				if (value != null && value instanceof String) {
 					value = Services.credentials().get(value.toString());
 					value = Json.mapper().convertValue(value, Map.class);

@@ -26,7 +26,6 @@ import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.Credentials.Session;
 import io.spacedog.client.credentials.CredentialsCreateRequest;
 import io.spacedog.client.credentials.CredentialsSettings;
-import io.spacedog.client.credentials.CredentialsUpdateRequest;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.credentials.Usernames;
 import io.spacedog.client.email.EmailTemplate;
@@ -77,7 +76,7 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 		if (response.isExists())
 			return toCredentials(response);
 
-		throw Exceptions.objectNotFound(SERVICE_NAME, id);
+		throw Exceptions.objectNotFound(Credentials.TYPE, id);
 	}
 
 	//
@@ -139,10 +138,6 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 		if (username.equals(Credentials.SUPERDOG.username()))
 			return checkSuperdog(password);
 
-		return checkRegularUser(username, password);
-	}
-
-	Credentials checkRegularUser(String username, String password) {
 		try {
 			Optional<Credentials> credentials = getByUsername(username);
 
@@ -229,8 +224,7 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 	public Credentials create(Credentials credentials) {
 
 		if (exists(credentials.username()))
-			throw Exceptions.alreadyExists(//
-					SERVICE_NAME, credentials.username());
+			throw Exceptions.alreadyExists(Credentials.TYPE, credentials.username());
 
 		credentials.createdAt(DateTime.now());
 		credentials.updatedAt(credentials.createdAt());
@@ -317,10 +311,12 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 	// Update Credentials
 	//
 
+	// TODO
+	// Should I check username is not changed or still unique?
+	//
 	public Credentials update(Credentials credentials) {
 		if (Strings.isNullOrEmpty(credentials.id()))
-			throw Exceptions.illegalArgument(//
-					"failed to update credentials since id is null");
+			throw Exceptions.illegalArgument("credentials id is null or empty");
 
 		// TODO replace 10 by sessionsSizeMax from CredentialsSettings
 		credentials.purgeOldSessions(10);
@@ -334,67 +330,9 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 		return credentials;
 	}
 
-	public Credentials update(CredentialsUpdateRequest request, Credentials credentials) {
-
-		CredentialsSettings settings = Services.credentials().settings();
-
-		if (!Strings.isNullOrEmpty(request.username)) {
-			Usernames.checkValid(request.username, settings.usernameRegex());
-			if (exists(request.username))
-				throw Exceptions.alreadyExists(SERVICE_NAME, request.username);
-			credentials.username(request.username);
-		}
-
-		// TODO check email with minimal regex
-		if (!Strings.isNullOrEmpty(request.email))
-			credentials.email(request.email);
-
-		if (request.enabled != null)
-			credentials.doEnableOrDisable(request.enabled);
-
-		if (request.enableDisableAfter != null) {
-			credentials.enableAfter(request.enableDisableAfter.enable);
-			credentials.disableAfter(request.enableDisableAfter.disable);
-		}
-
-		// TODO check if at least one field has been changed
-		// before credentials update
-		return update(credentials);
-	}
-
 	//
-	// Password methods
+	// Password reset email
 	//
-
-	public Credentials resetPassword(String id) {
-		Credentials credentials = get(id);
-		credentials.clearPasswordAndTokens();
-		credentials.newPasswordResetCode();
-		credentials = update(credentials);
-		return credentials;
-	}
-
-	public Credentials setPasswordWithCode(String credentialsId, //
-			String newPassword, String passwordResetCode) {
-		Credentials credentials = Services.credentials().get(credentialsId);
-		credentials.changePassword(newPassword, passwordResetCode, //
-				Optional7.of(settings().passwordRegex()));
-		return update(credentials);
-	}
-
-	public Credentials setPassword(String credentialsId, String newPassword) {
-		Credentials credentials = Services.credentials().get(credentialsId);
-		credentials.changePassword(newPassword, //
-				Optional7.of(settings().passwordRegex()));
-		return update(credentials);
-
-	}
-
-	public Credentials passwordMustChange(String credentialsId) {
-		Credentials credentials = Services.credentials().get(credentialsId);
-		credentials.passwordMustChange(true);
-		return update(credentials);
-	}
 
 	public void sendPasswordResetEmail(String username) {
 		Map<String, Object> parameters = Maps.newHashMap();
@@ -410,7 +348,7 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 		Check.notNullOrEmpty(username, USERNAME_PARAM);
 
 		Credentials credentials = getByUsername(username)//
-				.orElseThrow(() -> Exceptions.objectNotFound(SERVICE_NAME, username));
+				.orElseThrow(() -> Exceptions.objectNotFound(Credentials.TYPE, username));
 
 		if (!credentials.email().isPresent())
 			throw Exceptions.illegalArgument("[%s][%s] has no email", //
@@ -456,7 +394,6 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 	//
 	//
 
-	public static final String SERVICE_NAME = "credentials";
 	private static final String PASSWORD_RESET_EMAIL_TEMPLATE_NAME = "password_reset_email_template";
 
 	//
@@ -472,7 +409,7 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 	}
 
 	public Schema schema() {
-		return Schema.builder(SERVICE_NAME)//
+		return Schema.builder(Credentials.TYPE)//
 
 				.dynamicStrict()//
 				.dateDetection(false)//
@@ -559,6 +496,6 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 	}
 
 	public Index index() {
-		return new Index(SERVICE_NAME);
+		return new Index(Credentials.TYPE);
 	}
 }

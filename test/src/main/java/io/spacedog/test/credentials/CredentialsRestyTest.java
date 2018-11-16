@@ -83,18 +83,17 @@ public class CredentialsRestyTest extends SpaceTest {
 		fred.data().prepareGetAll().go();
 
 		// only admins are allowed to update credentials enable disable after dates
-		assertHttpError(403, () -> fred.credentials().prepareUpdate()//
-				.enableDisableAfter(DateTime.now(), null).go());
+		assertHttpError(403, () -> fred.credentials()//
+				.enableDisableAfter(fred.id(), DateTime.now(), null));
 
 		// only admins are allowed to update credentials enabled status
-		assertHttpError(403, () -> fred.credentials().prepareUpdate().enabled(true).go());
+		assertHttpError(403, () -> fred.credentials().enable(fred.id()));
 
 		// superadmin updates fred's credentials disable after date
 		// before now so fred's credentials are disabled
 		DateTime enableAfter = null;
 		DateTime disableAfter = DateTime.now().minus(100000);
-		superadmin.credentials().prepareUpdate(fred.id())//
-				.enableDisableAfter(enableAfter, disableAfter).go();
+		superadmin.credentials().enableDisableAfter(fred.id(), enableAfter, disableAfter);
 
 		// fred's credentials are disabled so he fails to gets any data
 		SpaceException e = assertHttpError(401, () -> fred.data().prepareGetAll().go());
@@ -108,8 +107,7 @@ public class CredentialsRestyTest extends SpaceTest {
 		// before now and after disable after date so fred's credentials
 		// are enabled again
 		enableAfter = DateTime.now().minus(100000);
-		superadmin.credentials().prepareUpdate(fred.id())//
-				.enableDisableAfter(enableAfter, disableAfter).go();
+		superadmin.credentials().enableDisableAfter(fred.id(), enableAfter, disableAfter);
 
 		// fred's credentials are enabled again so he gets data
 		// with his old access token from first login
@@ -122,8 +120,7 @@ public class CredentialsRestyTest extends SpaceTest {
 		// before now but after enable after date so fred's credentials
 		// are disabled again
 		disableAfter = DateTime.now().minus(100000);
-		superadmin.credentials().prepareUpdate(fred.id())//
-				.enableDisableAfter(enableAfter, disableAfter).go();
+		superadmin.credentials().enableDisableAfter(fred.id(), enableAfter, disableAfter);
 
 		// fred's credentials are disabled so he fails to gets any data
 		e = assertHttpError(401, () -> fred.data().prepareGetAll().go());
@@ -137,8 +134,7 @@ public class CredentialsRestyTest extends SpaceTest {
 		// disable after dates so fred's credentials are enabled again
 		enableAfter = null;
 		disableAfter = null;
-		superadmin.credentials().prepareUpdate(fred.id())//
-				.enableDisableAfter(enableAfter, disableAfter).go();
+		superadmin.credentials().enableDisableAfter(fred.id(), enableAfter, disableAfter);
 
 		// fred's credentials are enabled again so he gets data
 		// with his old access token from first login
@@ -149,8 +145,8 @@ public class CredentialsRestyTest extends SpaceTest {
 
 		// superadmin fails to update fred's credentials enable after date
 		// since invalid format
-		superadmin.put("/2/credentials/{id}").routeParam("id", fred.id())//
-				.bodyJson("enableDisableAfter", Json.object("enable", "XXX")).go(400).asVoid();
+		superadmin.post("/2/credentials/{id}/_enable_disable_after")//
+				.routeParam("id", fred.id()).bodyJson(ENABLE_AFTER_FIELD, "XXX").go(400).asVoid();
 	}
 
 	@Test
@@ -253,7 +249,7 @@ public class CredentialsRestyTest extends SpaceTest {
 				.assertEquals("disabled-credentials", "error.code");
 
 		// superadmin enables fred's credentials
-		superadmin.credentials().prepareUpdate(fred.id()).enabled(true).go();
+		superadmin.credentials().enable(fred.id());
 
 		// fred can log in again
 		credentials = fred.login().credentials().me();
@@ -373,7 +369,7 @@ public class CredentialsRestyTest extends SpaceTest {
 	}
 
 	@Test
-	public void changeUsername() {
+	public void updateUsername() {
 
 		// prepare
 		prepareTest();
@@ -383,20 +379,45 @@ public class CredentialsRestyTest extends SpaceTest {
 
 		// fred fails to set his username to 'nath'
 		SpaceException exception = assertHttpError(400, () -> fred.credentials()//
-				.prepareUpdate().username(nath.username()).go());
+				.updateMyUsername(nath.username(), fred.password().get()));
 
 		assertEquals("already-exists", exception.code());
 
-		// fred sets his username to 'fred2'
-		fred.credentials().prepareUpdate().username("fred2").go();
+		// fred logs in to get an access token
+		fred.login();
+
+		// fred fails to updates his username since password must be challenged
+		SpaceRequest.put("/2/credentials/me/username")//
+				.bearerAuth(fred)//
+				.bodyPojo("fred2")//
+				.go(403)//
+				.assertEquals("unchallenged-password", "error.code");
+
+		// fred updates his username to 'fred2'
+		fred.credentials().updateMyUsername("fred2", fred.password().get());
 
 		// fred old username is no more valid
-		assertHttpError(401, () -> fred.credentials().me(true));
+		assertHttpError(401, () -> fred.login());
 
 		// fred new username is valid
 		fred.username("fred2");
-		Credentials credentials = fred.credentials().me(true);
-		assertEquals("fred2", credentials.username());
+		fred.login();
+		assertEquals("fred2", fred.credentials().me().username());
+	}
+
+	@Test
+	public void updateEmail() {
+
+		// prepare
+		prepareTest();
+		SpaceDog superadmin = clearServer();
+		SpaceDog fred = createTempDog(superadmin, "fred");
+
+		// fred updates his email to 'fred@dog.ch'
+		fred.credentials().updateMyEmail("fred@dog.ch", fred.password().get());
+
+		// fred checks his new email address
+		assertEquals("fred@dog.ch", fred.credentials().me(true).email().get());
 	}
 
 	@Test

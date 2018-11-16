@@ -35,8 +35,11 @@ import io.spacedog.utils.Utils;
 		setterVisibility = Visibility.NONE)
 public class Credentials implements SpaceFields {
 
+	public static final String TYPE = "credentials";
+
 	public static final Credentials GUEST = new Credentials(Roles.guest)//
 			.id(Roles.guest).addRoles(Roles.guest);
+
 	public static final Credentials SUPERDOG = new Credentials(Roles.superdog)//
 			.id(Roles.superdog).addRoles(Roles.superdog)//
 			.passwordHasBeenChallenged(true);
@@ -606,6 +609,11 @@ public class Credentials implements SpaceFields {
 	public void checkPasswordHasBeenChallenged() {
 		if (!hasPasswordBeenChallenged())
 			throw Exceptions.passwordMustBeChallenged(this);
+	}
+
+	public void resetPassword() {
+		clearPasswordAndTokens();
+		newPasswordResetCode();
 	}
 
 	public void newPasswordResetCode() {
