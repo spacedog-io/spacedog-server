@@ -12,6 +12,7 @@ import java.util.Map.Entry;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.NullNode;
+import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.primitives.Ints;
 
@@ -176,7 +177,8 @@ public class SpaceRequest {
 	}
 
 	public SpaceRequest withContentType(String contentType) {
-		return withContentType(MediaType.parse(contentType));
+		return Strings.isNullOrEmpty(contentType) ? this //
+				: withContentType(MediaType.parse(contentType));
 	}
 
 	public SpaceRequest withContentType(MediaType contentType) {
