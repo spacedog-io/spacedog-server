@@ -12,14 +12,13 @@ import io.spacedog.client.credentials.Credentials.Results;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.client.http.SpaceRequest;
-import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
 
 public class CredentialsClient implements SpaceParams, SpaceFields {
 
-	SpaceDog dog;
+	private SpaceDog dog;
 	private Credentials credentials;
 
 	public CredentialsClient(SpaceDog session) {
@@ -112,11 +111,11 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	}
 
 	public SpaceDog logout() {
-		if (dog.accessToken() != null) {
+		if (dog.accessToken() != null)
 			dog.get("/2/logout").go(200).asVoid();
-			dog.accessToken(null);
-			dog.expiresAt(null);
-		}
+
+		dog.accessToken(null);
+		dog.expiresAt(null);
 		return dog;
 	}
 
@@ -159,67 +158,76 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	// Update credentials methods
 	//
 
-	public SpaceResponse updateMyUsername(String username, String password) {
-		return updateUsername("me", username, password);
+	public Credentials updateMyUsername(String username, String password) {
+		credentials = updateUsername("me", username, password);
+		return credentials;
 	}
 
-	public SpaceResponse updateUsername(String credentialsId, String username, String password) {
+	public Credentials updateUsername(String credentialsId, String username, String password) {
 		return dog.put("/2/credentials/{id}/username")//
 				.basicAuth(dog.username(), password)//
 				.routeParam("id", credentialsId)//
 				.bodyPojo(username)//
-				.go(200).asVoid();
+				.go(200)//
+				.asPojo(Credentials.class);
 	}
 
-	public SpaceResponse updateMyEmail(String email, String password) {
-		return updateEmail("me", email, password);
+	public Credentials updateMyEmail(String email, String password) {
+		credentials = updateEmail("me", email, password);
+		return credentials;
 	}
 
-	public SpaceResponse updateEmail(String credentialsId, String email, String password) {
+	public Credentials updateEmail(String credentialsId, String email, String password) {
 		return dog.put("/2/credentials/{id}/email")//
 				.basicAuth(dog.username(), password)//
 				.routeParam("id", credentialsId)//
 				.bodyPojo(email)//
-				.go(200).asVoid();
+				.go(200)//
+				.asPojo(Credentials.class);
 	}
 
 	//
 	// Roles method
 	//
 
-	public void setRole(String id, String role) {
-		dog.put("/2/credentials/{id}/roles/{role}")//
-				.routeParam("id", id).routeParam("role", role).go(200).asVoid();
+	public Credentials setRole(String credentialsId, String role) {
+		return dog.put("/2/credentials/{id}/roles/{role}")//
+				.routeParam("id", credentialsId).routeParam("role", role)//
+				.go(200).asPojo(Credentials.class);
 	}
 
-	public void unsetRole(String id, String role) {
-		dog.delete("/2/credentials/{id}/roles/{role}")//
-				.routeParam("id", id).routeParam("role", role).go(200).asVoid();
+	public Credentials unsetRole(String credentialsId, String role) {
+		return dog.delete("/2/credentials/{id}/roles/{role}")//
+				.routeParam("id", credentialsId).routeParam("role", role)//
+				.go(200).asPojo(Credentials.class);
 	}
 
-	public Set<String> getAllRoles(String id) {
+	public Set<String> getAllRoles(String credentialsId) {
 		return Sets.newHashSet(//
 				dog.get("/2/credentials/{id}/roles")//
-						.routeParam("id", id).go(200).asPojo(String[].class));
+						.routeParam("id", credentialsId)//
+						.go(200).asPojo(String[].class));
 	}
 
-	public void setAllRoles(String id, String... roles) {
-		dog.put("/2/credentials/{id}/roles")//
-				.routeParam("id", id).bodyJson(Json.toJsonNode(roles)).go(200);
+	public Credentials setAllRoles(String credentialsId, String... roles) {
+		return dog.put("/2/credentials/{id}/roles")//
+				.routeParam("id", credentialsId).bodyJson(Json.toJsonNode(roles))//
+				.go(200).asPojo(Credentials.class);
 	}
 
-	public void unsetAllRoles(String id) {
-		dog.delete("/2/credentials/{id}/roles")//
-				.routeParam("id", id).go(200).asVoid();
+	public Credentials unsetAllRoles(String credentialsId) {
+		return dog.delete("/2/credentials/{id}/roles")//
+				.routeParam("id", credentialsId)//
+				.go(200).asPojo(Credentials.class);
 	}
 
 	//
 	// Password methods
 	//
 
-	public String resetPassword(String id) {
+	public String resetPassword(String credentialsId) {
 		return dog.post("/2/credentials/{id}/_reset_password")//
-				.routeParam("id", id).go(200)//
+				.routeParam("id", credentialsId).go(200)//
 				.getString(PASSWORD_RESET_CODE_FIELD);
 	}
 
@@ -275,26 +283,26 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	// Enable methods
 	//
 
-	public void enable(String id) {
-		enable(id, true);
+	public Credentials enable(String credentialsId) {
+		return enable(credentialsId, true);
 	}
 
-	public void disable(String id) {
-		enable(id, false);
+	public Credentials disable(String credentialsId) {
+		return enable(credentialsId, false);
 	}
 
-	public void enable(String id, boolean enable) {
+	public Credentials enable(String credentialsId, boolean enable) {
 		StringBuilder builder = new StringBuilder("/2/credentials/") //
-				.append(id).append(enable ? "/_enable" : "/_disable");
-		dog.post(builder.toString()).go(200).asVoid();
+				.append(credentialsId).append(enable ? "/_enable" : "/_disable");
+		return dog.post(builder.toString()).go(200).asPojo(Credentials.class);
 	}
 
-	public void enableDisableAfter(String id, DateTime enableAfter, DateTime disableAfter) {
+	public Credentials enableDisableAfter(String id, DateTime enableAfter, DateTime disableAfter) {
 		EnableDisableAfterRequest pojo = new EnableDisableAfterRequest();
 		pojo.enableAfter = enableAfter;
 		pojo.disableAfter = disableAfter;
-		dog.post("/2/credentials/{id}/_enable_disable_after")//
-				.routeParam("id", id).bodyPojo(pojo).go(200).asVoid();
+		return dog.post("/2/credentials/{id}/_enable_disable_after")//
+				.routeParam("id", id).bodyPojo(pojo).go(200).asPojo(Credentials.class);
 	}
 
 	//
@@ -307,24 +315,25 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 				.go(200).getString(GROUP_FIELD);
 	}
 
-	public void removeGroup(String group) {
-		dog.delete("/2/credentials/me/groups/{group}")//
+	public Credentials removeGroup(String group) {
+		credentials = dog.delete("/2/credentials/me/groups/{group}")//
 				.routeParam("group", group)//
-				.go(200).asVoid();
+				.go(200).asPojo(Credentials.class);
+		return credentials;
 	}
 
-	public void shareGroup(String credentialsId, String group) {
-		dog.put("/2/credentials/{id}/groups/{group}")//
+	public Credentials shareGroup(String credentialsId, String group) {
+		return dog.put("/2/credentials/{id}/groups/{group}")//
 				.routeParam("id", credentialsId)//
 				.routeParam("group", group)//
-				.go(200).asVoid();
+				.go(200).asPojo(Credentials.class);
 	}
 
-	public void unshareGroup(String credentialsId, String group) {
-		dog.delete("/2/credentials/{id}/groups/{group}")//
+	public Credentials unshareGroup(String credentialsId, String group) {
+		return dog.delete("/2/credentials/{id}/groups/{group}")//
 				.routeParam("id", credentialsId)//
 				.routeParam("group", group)//
-				.go(200).asVoid();
+				.go(200).asPojo(Credentials.class);
 	}
 
 	//
