@@ -4,6 +4,7 @@
 package io.spacedog.client.schema;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Strings;
 
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -36,7 +37,9 @@ public class SchemaBuilder implements MappingDirectives {
 			builder.object(m_properties);
 
 		openProperty = true;
-		builder.object(name).add(m_type, type);
+		builder.object(name);
+		if (!Strings.isNullOrEmpty(type))
+			builder.add(m_type, type);
 		return this;
 	}
 
@@ -108,7 +111,7 @@ public class SchemaBuilder implements MappingDirectives {
 	}
 
 	public SchemaBuilder object(String key) {
-		property(key, m_object);
+		property(key, null);
 		openProperty = false;
 		return this;
 	}
