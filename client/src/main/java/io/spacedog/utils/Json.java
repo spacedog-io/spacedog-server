@@ -445,7 +445,7 @@ public class Json {
 
 	public static ObjectNode checkObject(JsonNode node) {
 		if (!isObject(node))
-			throw Exceptions.illegalArgument("[%s] not a JSON object", node);
+			throw Exceptions.illegalArgument("JSON node [%s] not an object", node);
 		return (ObjectNode) node;
 	}
 
@@ -455,7 +455,7 @@ public class Json {
 
 	public static ArrayNode checkArray(JsonNode node) {
 		if (!isArray(node))
-			throw Exceptions.illegalArgument("[%s] not a JSON array ", node);
+			throw Exceptions.illegalArgument("JSON node [%s] not an array ", node);
 		return (ArrayNode) node;
 	}
 

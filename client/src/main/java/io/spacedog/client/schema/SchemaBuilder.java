@@ -205,7 +205,7 @@ public class SchemaBuilder implements MappingDirectives {
 
 	private SchemaBuilder(String name) {
 		this.name = name;
-		this.builder = Json.builder().object().object(name);
+		this.builder = Json.builder().object();
 	}
 
 }

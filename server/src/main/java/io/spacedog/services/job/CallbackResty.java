@@ -95,10 +95,9 @@ public class CallbackResty extends SpaceResty {
 
 		Index index = callbackIndex();
 		ElasticClient elastic = elastic();
-		String mapping = requestSchema().mapping().toString();
 
 		if (!elastic.exists(index))
-			elastic.createIndex(index, mapping, false);
+			elastic.createIndex(index, requestSchema(), false);
 	}
 
 	@Get("")

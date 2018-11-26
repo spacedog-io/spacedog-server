@@ -7,15 +7,12 @@ import java.util.Map;
 
 import org.elasticsearch.common.Strings;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import io.spacedog.client.schema.Schema;
 import io.spacedog.server.JsonPayload;
 import io.spacedog.server.Server;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceResty;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.Json.JsonMerger;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
@@ -32,11 +29,8 @@ public class SchemaResty extends SpaceResty {
 
 	@Get("")
 	@Get("/")
-	public ObjectNode getAll(Context context) {
-		Map<String, Schema> all = Services.schemas().getAll();
-		JsonMerger merger = Json.merger();
-		all.values().forEach(schema -> merger.merge(schema.mapping()));
-		return merger.get();
+	public Map<String, Schema> getAll(Context context) {
+		return Services.schemas().getAll();
 	}
 
 	@Delete("")
@@ -48,8 +42,8 @@ public class SchemaResty extends SpaceResty {
 
 	@Get("/:type")
 	@Get("/:type/")
-	public ObjectNode get(String type) {
-		return Services.schemas().get(type).mapping();
+	public Schema get(String type) {
+		return Services.schemas().get(type);
 	}
 
 	@Put("/:type")
@@ -62,7 +56,7 @@ public class SchemaResty extends SpaceResty {
 		if (Strings.isNullOrEmpty(newSchemaAsString))
 			Services.schemas().setDefault(type);
 		else {
-			Schema schema = new Schema(type, Json.readObject(newSchemaAsString));
+			Schema schema = Json.toPojo(newSchemaAsString, Schema.class).name(type);
 			Services.schemas().set(schema);
 		}
 

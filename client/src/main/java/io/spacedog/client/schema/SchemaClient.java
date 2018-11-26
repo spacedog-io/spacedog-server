@@ -1,13 +1,11 @@
 package io.spacedog.client.schema;
 
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.Maps;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 
 import io.spacedog.client.SpaceDog;
-import io.spacedog.utils.Json;
 
 public class SchemaClient {
 
@@ -36,13 +34,12 @@ public class SchemaClient {
 
 	public void set(Schema schema) {
 		dog.put("/2/schemas/{name}").routeParam("name", schema.name())//
-				.bodyJson(schema.mapping()).go(200).asVoid();
+				.bodyPojo(schema).go(200).asVoid();
 	}
 
 	public Schema get(String name) {
-		ObjectNode node = dog.get("/2/schemas/{name}")//
-				.routeParam("name", name).go(200).asJsonObject();
-		return new Schema(name, node);
+		return dog.get("/2/schemas/{name}")//
+				.routeParam("name", name).go(200).asPojo(Schema.class);
 	}
 
 	public void setDefault(String name) {
@@ -50,15 +47,8 @@ public class SchemaClient {
 	}
 
 	public Map<String, Schema> getAll() {
-		ObjectNode payload = dog.get("/2/schemas").go(200).asJsonObject();
-		Map<String, Schema> schemas = Maps.newHashMap();
-		Iterator<String> fieldNames = payload.fieldNames();
-		while (fieldNames.hasNext()) {
-			String name = fieldNames.next();
-			ObjectNode mapping = Json.object(name, payload.get(name));
-			schemas.put(name, new Schema(name, mapping));
-		}
-		return schemas;
+		return dog.get("/2/schemas").go(200).asPojo(TypeFactory.defaultInstance()//
+				.constructMapLikeType(HashMap.class, String.class, Schema.class));
 	}
 
 }

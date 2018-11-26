@@ -19,6 +19,8 @@ import io.spacedog.client.data.DataSettings;
 import io.spacedog.client.email.EmailSettings;
 import io.spacedog.client.file.WebSettings;
 import io.spacedog.client.push.PushSettings;
+import io.spacedog.client.schema.Schema;
+import io.spacedog.client.schema.SchemaBuilder;
 import io.spacedog.client.settings.Settings;
 import io.spacedog.client.settings.SettingsAclSettings;
 import io.spacedog.client.settings.SettingsBase;
@@ -32,7 +34,6 @@ import io.spacedog.services.file.InternalFileSettings;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
-import net.codestory.http.Request;
 
 public class SettingsService extends SpaceService {
 
@@ -255,20 +256,8 @@ public class SettingsService extends SpaceService {
 		ElasticClient elastic = elastic();
 
 		if (!elastic.exists(index)) {
-			Request request = Server.context().request();
-			ObjectNode mapping = Json.object(SERVICE_NAME, Json.object("enabled", false));
-
-			int shards = request.query().getInteger(SHARDS_PARAM, SHARDS_DEFAULT_PARAM);
-			int replicas = request.query().getInteger(REPLICAS_PARAM, REPLICAS_DEFAULT_PARAM);
-			boolean async = request.query().getBoolean(ASYNC_PARAM, ASYNC_DEFAULT_PARAM);
-
-			org.elasticsearch.common.settings.Settings settings = //
-					org.elasticsearch.common.settings.Settings.builder()//
-							.put("number_of_shards", shards)//
-							.put("number_of_replicas", replicas)//
-							.build();
-
-			elastic.createIndex(index, mapping.toString(), settings, async);
+			Schema schema = SchemaBuilder.builder(SERVICE_NAME).enabled(false).build();
+			elastic.createIndex(index, schema, false);
 		}
 	}
 

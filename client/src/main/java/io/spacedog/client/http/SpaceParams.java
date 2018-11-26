@@ -17,9 +17,6 @@ public interface SpaceParams {
 	String EMAIL_PARAM = "email";
 	String BEFORE_PARAM = "before";
 	String NOTIF_PARAM = "notif";
-	boolean ASYNC_DEFAULT_PARAM = false;
-	int SHARDS_DEFAULT_PARAM = 1;
-	int REPLICAS_DEFAULT_PARAM = 0;
 	String WAIT_FOR_COMPLETION_PARAM = "waitForCompletion";
 	String WITH_CONTENT_DISPOSITION = "withContentDisposition";
 	String ACCESS_TOKEN_PARAM = "accessToken";

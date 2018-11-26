@@ -402,10 +402,8 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 
 	public void initIndex() {
 		Index index = index();
-		if (!elastic().exists(index)) {
-			String mapping = schema().mapping().toString();
-			elastic().createIndex(index, mapping, false);
-		}
+		if (!elastic().exists(index))
+			elastic().createIndex(index, schema(), false);
 	}
 
 	public Schema schema() {

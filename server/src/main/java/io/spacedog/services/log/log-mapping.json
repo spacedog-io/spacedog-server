@@ -1,5 +1,5 @@
 {
-    "log" : {
+    "mapping" : {
         "dynamic" : "strict",
         "properties" : {
             "method" : {"type" : "keyword"},

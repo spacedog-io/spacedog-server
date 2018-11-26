@@ -42,7 +42,7 @@ public class BulkRestyTest extends SpaceTest {
 		// admin credentials
 		List<ServiceCall> bulk = Lists.newArrayList(//
 				new ServiceCall(SpaceMethod.PUT, "/2/schemas/message")//
-						.withPayload(Message.schema().mapping()),
+						.withPayload(Message.schema()),
 				new ServiceCall(SpaceMethod.PUT, "/2/settings/data")//
 						.withPayload(dataSettings),
 				new ServiceCall(SpaceMethod.POST, "/2/credentials/_login"));
@@ -86,7 +86,8 @@ public class BulkRestyTest extends SpaceTest {
 				.assertEquals("vince", "vince.username")//
 				.assertEquals(daveId, "dave.id")//
 				.assertEquals("dave", "dave.username")//
-				.assertEquals("text", "schema.message.properties.text.type");
+				.assertEquals("message", "schema.name")//
+				.assertEquals("text", "schema.mapping.properties.text.type");
 
 		// should succeed to return errors when batch requests are invalid, not
 		// found, unauthorized, ...

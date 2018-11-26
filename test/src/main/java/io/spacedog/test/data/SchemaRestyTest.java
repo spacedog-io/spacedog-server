@@ -67,15 +67,15 @@ public class SchemaRestyTest extends SpaceTest {
 
 		// superadmin fails to update car schema color field
 		// since field type change is not allowed
-		Schema schema = buildCarSchema();
-		schema.mapping().with("car").with("properties")//
-				.with("color").put("type", "date");
-		assertHttpError(400, () -> superadmin.schemas().set(schema));
+		Schema schema1 = buildCarSchema();
+		schema1.mapping().with("properties").with("color").put("type", "date");
+		assertHttpError(400, () -> superadmin.schemas().set(schema1));
 
 		// superadmin fails to remove car schema color field
 		// since removing fields is not allowed
-		// carSchema.mapping().with("car").with("properties").remove("color");
-		// assertHttpError(400, () -> superadmin.schemas().set(carSchema));
+		// Schema schema2 = buildCarSchema();
+		// schema2.mapping().with("properties").remove("color");
+		// assertHttpError(400, () -> superadmin.schemas().set(schema2));
 	}
 
 	private static Schema buildHomeSchema() {

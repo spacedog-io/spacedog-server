@@ -25,7 +25,7 @@ public class DataRestyTest extends SpaceTest {
 	public void createFindUpdateAndDelete() {
 
 		// prepare
-		prepareTest();
+		prepareTest(true, true);
 		SpaceDog superadmin = clearServer();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 

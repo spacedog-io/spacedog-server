@@ -18,6 +18,8 @@ import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
+import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
+import org.elasticsearch.action.admin.indices.settings.put.UpdateSettingsResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequestBuilder;
@@ -36,7 +38,6 @@ import org.elasticsearch.client.ClusterAdminClient;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.common.Priority;
-import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.IndexNotFoundException;
@@ -50,7 +51,10 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import io.spacedog.client.http.SpaceParams;
+import io.spacedog.client.schema.Schema;
 import io.spacedog.jobs.Internals;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
@@ -310,22 +314,13 @@ public class ElasticClient implements SpaceParams {
 		}
 	}
 
-	public void createIndex(Index index, String mapping, boolean async) {
-		Settings settings = Settings.builder()//
-				.put("number_of_shards", SHARDS_DEFAULT_PARAM)//
-				.put("number_of_replicas", REPLICAS_DEFAULT_PARAM)//
-				.build();
-
-		createIndex(index, mapping, settings, async);
-	}
-
-	public void createIndex(Index index, String mapping, Settings settings, boolean async) {
+	public void createIndex(Index index, Schema schema, boolean async) {
 
 		CreateIndexResponse createIndexResponse = internalClient.admin().indices()//
 				.prepareCreate(index.toString())//
-				.addMapping(index.type(), mapping, XContentType.JSON)//
+				.addMapping(index.type(), schema.mapping().toString(), XContentType.JSON)//
+				.setSettings(schema.settings(false).toString(), XContentType.JSON)//
 				.addAlias(new Alias(index.alias()))//
-				.setSettings(settings)//
 				.get();
 
 		if (!createIndexResponse.isAcknowledged())
@@ -419,14 +414,32 @@ public class ElasticClient implements SpaceParams {
 				.get();
 	}
 
-	public void putMapping(Index index, String mapping) {
+	public GetSettingsResponse getSettings(Index... indices) {
+		return internalClient.admin().indices()//
+				.prepareGetSettings(Index.aliases(indices))//
+				.get();
+	}
+
+	public void putMapping(Index index, ObjectNode mapping) {
 		PutMappingResponse putMappingResponse = internalClient.admin().indices()//
 				.preparePutMapping(index.alias())//
 				.setType(index.type())//
-				.setSource(mapping, XContentType.JSON)//
+				.setSource(mapping.toString(), XContentType.JSON)//
 				.get();
 
 		if (!putMappingResponse.isAcknowledged())
+			throw Exceptions.runtime(//
+					"mapping [%s] update not acknowledged by cluster", //
+					index.type());
+	}
+
+	public void putSettings(Index index, ObjectNode settings) {
+		UpdateSettingsResponse updateSettingsResponse = internalClient.admin().indices()//
+				.prepareUpdateSettings(index.alias())//
+				.setSettings(settings.toString(), XContentType.JSON)//
+				.get();
+
+		if (!updateSettingsResponse.isAcknowledged())
 			throw Exceptions.runtime(//
 					"mapping [%s] update not acknowledged by cluster", //
 					index.type());

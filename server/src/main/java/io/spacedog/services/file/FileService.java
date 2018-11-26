@@ -16,7 +16,6 @@ import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
@@ -264,13 +263,13 @@ public class FileService extends SpaceService {
 
 	private void createBucketIndex(FileBucketSettings bucket) {
 		Schema.checkName(bucket.name);
-		ObjectNode mapping = getSchema(bucket.name).mapping();
+		Schema schema = getSchema(bucket.name);
 		Index index = index(bucket.name);
 
 		if (elastic().exists(index))
-			elastic().putMapping(index, mapping.toString());
+			elastic().putMapping(index, schema.mapping());
 		else
-			elastic().createIndex(index, mapping.toString(), false);
+			elastic().createIndex(index, schema, false);
 	}
 
 	public Schema getSchema(String bucket) {

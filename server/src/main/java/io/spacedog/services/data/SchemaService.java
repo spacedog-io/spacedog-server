@@ -3,12 +3,11 @@ package io.spacedog.services.data;
 import java.util.Arrays;
 import java.util.Map;
 
-import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
+import org.elasticsearch.common.settings.Settings;
 
-import com.carrotsearch.hppc.cursors.ObjectCursor;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Maps;
 
 import io.spacedog.client.schema.Schema;
@@ -38,15 +37,16 @@ public class SchemaService extends SpaceService {
 
 	public void set(Schema schema) {
 
-		ObjectNode mapping = schema.enhance().mapping();
+		schema.enhance();
 
 		Index index = Services.data().index(schema.name());
 		boolean indexExists = elastic().exists(index);
 
-		if (indexExists)
-			elastic().putMapping(index, mapping.toString());
-		else
-			elastic().createIndex(index, mapping.toString(), false);
+		if (indexExists) {
+			elastic().putMapping(index, schema.mapping());
+			elastic().putSettings(index, schema.settings(true));
+		} else
+			elastic().createIndex(index, schema, false);
 	}
 
 	public Schema get(String name) {
@@ -77,14 +77,17 @@ public class SchemaService extends SpaceService {
 		if (Utils.isNullOrEmpty(indices))
 			return schemas;
 
-		GetMappingsResponse response = elastic().getMappings(indices);
+		ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetaData>> mappingsMap = //
+				elastic().getMappings(indices).mappings();
+		ImmutableOpenMap<String, Settings> settingsMap = //
+				elastic().getSettings(indices).getIndexToSettings();
 
-		for (ObjectCursor<ImmutableOpenMap<String, MappingMetaData>> indexMappings //
-		: response.mappings().values()) {
-
-			MappingMetaData mapping = indexMappings.value.iterator().next().value;
-			schemas.put(mapping.type(), new Schema(mapping.type(), //
-					Json.readObject(mapping.source().toString())));
+		for (Index index : indices) {
+			MappingMetaData mapping = mappingsMap.get(index.toString()).valuesIt().next();
+			Settings settings = settingsMap.get(index.toString());
+			JsonNode node = Json.readObject(mapping.source().toString()).get(mapping.type());
+			schemas.put(mapping.type(), new Schema(index.type(), Json.checkObject(node), //
+					Json.readObject(settings.toString())));
 		}
 
 		return schemas;

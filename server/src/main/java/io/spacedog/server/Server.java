@@ -67,7 +67,7 @@ import net.codestory.http.websockets.WebSocketHandler;
 @SuppressWarnings("serial")
 public class Server implements Extensions {
 
-	public static final String CLUSTER_NAME = "spacedog-v1-cluster";
+	public static final String CLUSTER_NAME = "spacedog-elastic-cluster";
 
 	private long startTime;
 	private ElasticNode elasticNode;
