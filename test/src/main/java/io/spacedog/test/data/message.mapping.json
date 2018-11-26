@@ -1,0 +1,25 @@
+{
+  "name": "message",
+  "mapping" : {
+    "properties" : {
+      "text" : {
+        "type" : "text",
+        "analyzer" : "french_prefix"
+      }
+   }
+  },
+  "settings" : {
+  	"analysis" : {
+        "analyzer" : {
+	        "french_prefix" : {
+               "tokenizer":"standard",
+               "filter":[
+                  "lowercase",
+                  "asciifolding",
+                  "word_delimiter"
+               ]
+            }
+        }
+      }
+   }
+}
