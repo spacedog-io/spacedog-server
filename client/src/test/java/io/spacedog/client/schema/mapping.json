@@ -1,5 +1,4 @@
 {
-  "message" : {
     "properties" : {
       "text" : {
         "type" : "text",
@@ -24,5 +23,4 @@
         }
       }
     }
-  }
 }
