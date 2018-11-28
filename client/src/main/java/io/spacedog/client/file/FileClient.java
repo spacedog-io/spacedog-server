@@ -68,23 +68,23 @@ public class FileClient implements SpaceParams {
 				.go(200);
 	}
 
-	public byte[] exportAsByteArray(String bucket, String... paths) {
-		return exportAsByteArray(bucket, Lists.newArrayList(paths));
+	public byte[] exportAsByteArray(String bucket, boolean flatZip, String... paths) {
+		return exportAsByteArray(bucket, flatZip, Lists.newArrayList(paths));
 	}
 
-	public byte[] exportAsByteArray(String bucket, List<String> paths) {
-		return Utils.toByteArray(exportAsByteStream(bucket, paths));
+	public byte[] exportAsByteArray(String bucket, boolean flatZip, List<String> paths) {
+		return Utils.toByteArray(exportAsByteStream(bucket, flatZip, paths));
 	}
 
-	public InputStream exportAsByteStream(String bucket, String... paths) {
-		return exportAsByteStream(bucket, Lists.newArrayList(paths));
+	public InputStream exportAsByteStream(String bucket, boolean flatZip, String... paths) {
+		return exportAsByteStream(bucket, flatZip, Lists.newArrayList(paths));
 	}
 
-	public InputStream exportAsByteStream(String bucket, List<String> paths) {
+	public InputStream exportAsByteStream(String bucket, boolean flatZip, List<String> paths) {
 		return dog.post("/2/files/{bucket}")//
 				.routeParam("bucket", bucket)//
 				.queryParam(OP_PARAM, "export")//
-				.bodyJson("paths", Json.toJsonNode(paths))//
+				.bodyJson("flatZip", flatZip, "paths", Json.toJsonNode(paths))//
 				.go(200)//
 				.asByteStream();
 	}

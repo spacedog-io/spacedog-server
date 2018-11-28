@@ -326,7 +326,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		for (String path : request.paths)
 			files.add(checkRead(bucket, path));
 
-		StreamingOutput output = Services.files().export(bucket, files);
+		StreamingOutput output = Services.files().export(bucket, request.flatZip, files);
 
 		return new Payload(ContentTypes.OCTET_STREAM, output)//
 				.withHeader(SpaceHeaders.CONTENT_DISPOSITION, //

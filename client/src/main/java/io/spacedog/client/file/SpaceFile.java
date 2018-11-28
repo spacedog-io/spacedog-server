@@ -108,4 +108,11 @@ public class SpaceFile extends DataObjectBase {
 		public List<SpaceFile> files;
 		public String next;
 	}
+
+	public static String flatPath(String path) {
+		if (path.charAt(0) == '/')
+			path = path.substring(1);
+		path = path.replace('/', '-');
+		return path;
+	}
 }

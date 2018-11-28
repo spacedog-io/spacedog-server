@@ -14,5 +14,6 @@ import com.google.common.collect.Lists;
 		setterVisibility = Visibility.NONE)
 public class FileExportRequest {
 	public String fileName;
+	public boolean flatZip;
 	public List<String> paths = Lists.newArrayList();
 }

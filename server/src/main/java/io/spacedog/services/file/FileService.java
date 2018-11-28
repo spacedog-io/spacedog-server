@@ -140,20 +140,20 @@ public class FileService extends SpaceService {
 	// Export
 	//
 
-	public StreamingOutput exportFromPaths(String bucket, String... paths) {
-		return exportFromPaths(bucket, Lists.newArrayList(paths));
+	public StreamingOutput exportFromPaths(String bucket, boolean flatZip, String... paths) {
+		return exportFromPaths(bucket, flatZip, Lists.newArrayList(paths));
 	}
 
-	public StreamingOutput exportFromPaths(String bucket, List<String> paths) {
+	public StreamingOutput exportFromPaths(String bucket, boolean flatZip, List<String> paths) {
 		List<SpaceFile> files = paths.stream()//
 				.map(path -> getMeta(bucket, path, true))//
 				.collect(Collectors.toList());
 
-		return export(bucket, files);
+		return export(bucket, flatZip, files);
 	}
 
-	public StreamingOutput export(String bucket, List<SpaceFile> files) {
-		return new FileBucketExport(bucket, files);
+	public StreamingOutput export(String bucket, boolean flatZip, List<SpaceFile> files) {
+		return new FileBucketExport(bucket, flatZip, files);
 	}
 
 	//

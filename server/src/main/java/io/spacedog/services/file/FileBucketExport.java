@@ -18,23 +18,32 @@ class FileBucketExport implements StreamingOutput {
 
 	private String bucket;
 	private List<SpaceFile> files;
+	private boolean flatZip;
 
-	public FileBucketExport(String bucket, List<SpaceFile> files) {
+	public FileBucketExport(String bucket, boolean flatZip, List<SpaceFile> files) {
 		this.bucket = bucket;
 		this.files = files;
+		this.flatZip = flatZip;
 	}
 
 	@Override
 	public void write(OutputStream output) throws IOException {
 		ZipOutputStream zip = new ZipOutputStream(output);
 		for (SpaceFile file : files) {
-			zip.putNextEntry(new ZipEntry(file.getPath()));
+			zip.putNextEntry(toZipEntry(file));
 			InputStream fileStream = Services.files().getAsByteStream(bucket, file);
 			ByteStreams.copy(fileStream, zip);
 			Utils.closeSilently(fileStream);
 			zip.flush();
 		}
 		zip.close();
+	}
+
+	private ZipEntry toZipEntry(SpaceFile file) {
+		String path = file.getPath();
+		if (flatZip)
+			path = SpaceFile.flatPath(path);
+		return new ZipEntry(path);
 	}
 
 }
