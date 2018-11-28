@@ -199,6 +199,12 @@ public class Utils {
 				.replaceAll("-{2,}", "-").replaceAll("^-|-$", "");
 	}
 
+	public static String uppercaseFirstLetter(String input) {
+		char[] value = input.toCharArray();
+		value[0] = Character.toUpperCase(value[0]);
+		return new String(value);
+	}
+
 	//
 	// Others
 	//

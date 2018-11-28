@@ -89,4 +89,12 @@ public class UtilsTest extends Assert {
 		assertEquals("123-soleil", Utils.slugify("123 soleil"));
 		assertEquals("a-50", Utils.slugify("à 50%"));
 	}
+
+	@Test
+	public void shouldUppercaseFirstLetter() {
+		assertEquals("Foobar", Utils.uppercaseFirstLetter("foobar"));
+		assertEquals("Étable", Utils.uppercaseFirstLetter("étable"));
+		assertEquals("-foobar", Utils.uppercaseFirstLetter("-foobar"));
+		assertEquals(" foobar", Utils.uppercaseFirstLetter(" foobar"));
+	}
 }
