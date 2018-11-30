@@ -78,6 +78,7 @@ public class CredentialsResty extends SpaceResty {
 
 		String q = context.get(Q_PARAM);
 		String role = context.get(ROLE_PARAM);
+		String username = context.get(USERNAME_PARAM);
 
 		BoolQueryBuilder query = QueryBuilders.boolQuery();
 
@@ -87,6 +88,9 @@ public class CredentialsResty extends SpaceResty {
 
 		if (!Strings.isNullOrEmpty(role)) //
 			query.must(QueryBuilders.termQuery(ROLES_FIELD, role));
+
+		if (!Strings.isNullOrEmpty(username)) //
+			query.must(QueryBuilders.termQuery(USERNAME_FIELD, username));
 
 		SearchSourceBuilder builder = SearchSourceBuilder.searchSource()//
 				.query(query)//

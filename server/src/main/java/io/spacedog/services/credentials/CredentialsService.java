@@ -1,6 +1,6 @@
 package io.spacedog.services.credentials;
 
-import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
 
@@ -474,8 +474,8 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 		JsonNode sessions = source.get(SESSIONS_FIELD);
 
 		if (!Json.isNull(sessions))
-			credentials.sessions(Json.toPojo(sessions,
-					TypeFactory.defaultInstance().constructCollectionLikeType(List.class, Session.class)));
+			credentials.sessions(Json.toPojo(sessions, TypeFactory.defaultInstance()//
+					.constructCollectionLikeType(ArrayList.class, Session.class)));
 
 		return credentials;
 	}

@@ -23,9 +23,32 @@ import io.spacedog.client.http.SpaceException;
 import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Json;
+import io.spacedog.utils.Optional7;
 import okhttp3.OkHttpClient;
 
 public class CredentialsRestyTest extends SpaceTest {
+
+	@Test
+	public void getAndDeleteByUsername() {
+
+		// prepare
+		prepareTest();
+		SpaceDog superadmin = clearServer();
+
+		// superadmin creates fred's credentials
+		SpaceDog fred = createTempDog(superadmin, "fred");
+
+		// superadmin searches for fred's credentials by username
+		Optional7<Credentials> opt = superadmin.credentials().getByUsername(fred.username());
+		assertEquals(fred.credentials().me(), opt.get());
+
+		// fred doesn't have permission to search for credentials since not an admin
+		assertHttpError(403, () -> fred.credentials().getByUsername(fred.username()));
+
+		// superadmin deletes fred's credentials
+		superadmin.credentials().deleteByUsername(fred.username());
+		assertHttpError(401, () -> fred.login());
+	}
 
 	@Test
 	public void deleteSuperAdminCredentials() {
