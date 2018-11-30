@@ -172,16 +172,36 @@ public class Utils {
 		return s.split(regex);
 	}
 
-	public static String removePreffix(String s, String preffix) {
+	public static String trimPreffix(String s, String preffix) {
 		if (Strings.isNullOrEmpty(preffix))
 			return s;
 		return s.startsWith(preffix) ? s.substring(preffix.length()) : s;
 	}
 
-	public static String removeSuffix(String s, String suffix) {
+	public static String trimUntil(String s, String until) {
+		int index = s.indexOf(until);
+		return index < 0 ? s : s.substring(index + until.length());
+	}
+
+	public static String trimBefore(String s, String before) {
+		int index = s.indexOf(before);
+		return index < 0 ? s : s.substring(index);
+	}
+
+	public static String trimSuffix(String s, String suffix) {
 		if (Strings.isNullOrEmpty(suffix))
 			return s;
 		return s.endsWith(suffix) ? s.substring(0, s.length() - suffix.length()) : s;
+	}
+
+	public static String trimFrom(String s, String from) {
+		int index = s.lastIndexOf(from);
+		return index < 0 ? s : s.substring(0, index);
+	}
+
+	public static String trimAfter(String s, String after) {
+		int index = s.lastIndexOf(after);
+		return index < 0 ? s : s.substring(0, index + after.length());
 	}
 
 	public static String replaceTagDelimiters(String s) {
@@ -200,6 +220,8 @@ public class Utils {
 	}
 
 	public static String uppercaseFirstLetter(String input) {
+		if (isNullOrEmpty(input))
+			return input;
 		char[] value = input.toCharArray();
 		value[0] = Character.toUpperCase(value[0]);
 		return new String(value);

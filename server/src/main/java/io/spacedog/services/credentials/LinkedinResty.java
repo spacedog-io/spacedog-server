@@ -60,7 +60,7 @@ public class LinkedinResty extends SpaceResty {
 			// TODO remove this when mikael finds out why
 			// the redirect_uri is passed with a ';' suffix
 			// in mobile apps
-			finalRedirectUri = Utils.removeSuffix(finalRedirectUri, ";");
+			finalRedirectUri = Utils.trimSuffix(finalRedirectUri, ";");
 
 		StringBuilder location = new StringBuilder(finalRedirectUri)//
 				.append("#state=");
@@ -144,7 +144,7 @@ public class LinkedinResty extends SpaceResty {
 			// TODO remove this when mikael finds out why
 			// the redirect_uri is passed with a ';' suffix
 			// in mobile app
-			redirectUri = Utils.removeSuffix(redirectUri, ";");
+			redirectUri = Utils.trimSuffix(redirectUri, ";");
 
 		SpaceResponse response = SpaceRequest.post("/oauth/v2/accessToken")//
 				.backend(settings.linkedin.backendUrl)//

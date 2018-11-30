@@ -116,7 +116,7 @@ public class FileSynchCommand extends AbstractCommand<FileSynchCommand> {
 	}
 
 	private void check(SpaceFile file) throws IOException {
-		Path filePath = Paths.get(source).resolve(Utils.removePreffix(file.getPath(), "/"));
+		Path filePath = Paths.get(source).resolve(Utils.trimPreffix(file.getPath(), "/"));
 
 		if (Files.isRegularFile(filePath)) {
 			checked.add(file.getPath());

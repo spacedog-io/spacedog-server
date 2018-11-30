@@ -27,7 +27,7 @@ public class SettingsBase implements Settings {
 	}
 
 	public static String id(Class<? extends Settings> settingsClass) {
-		return Utils.removeSuffix(settingsClass.getSimpleName(), "Settings")//
+		return Utils.trimSuffix(settingsClass.getSimpleName(), "Settings")//
 				.toLowerCase();
 	}
 

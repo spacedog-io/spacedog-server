@@ -45,23 +45,23 @@ public class UtilsTest extends Assert {
 	}
 
 	@Test
-	public void testRemoveSuffix() {
-		assertEquals("toto", Utils.removeSuffix("toto", "titi"));
-		assertEquals("toto", Utils.removeSuffix("tototiti", "titi"));
-		assertEquals("tititoto", Utils.removeSuffix("tititoto", "titi"));
-		assertEquals("toto", Utils.removeSuffix("toto", ""));
-		assertEquals("", Utils.removeSuffix("titi", "titi"));
-		assertEquals("", Utils.removeSuffix("", "titi"));
+	public void testTrimSuffix() {
+		assertEquals("toto", Utils.trimSuffix("toto", "titi"));
+		assertEquals("toto", Utils.trimSuffix("tototiti", "titi"));
+		assertEquals("tititoto", Utils.trimSuffix("tititoto", "titi"));
+		assertEquals("toto", Utils.trimSuffix("toto", ""));
+		assertEquals("", Utils.trimSuffix("titi", "titi"));
+		assertEquals("", Utils.trimSuffix("", "titi"));
 	}
 
 	@Test
-	public void testRemovePreffix() {
-		assertEquals("toto", Utils.removePreffix("toto", "titi"));
-		assertEquals("toto", Utils.removePreffix("tititoto", "titi"));
-		assertEquals("tototiti", Utils.removePreffix("tototiti", "titi"));
-		assertEquals("toto", Utils.removePreffix("toto", ""));
-		assertEquals("", Utils.removePreffix("titi", "titi"));
-		assertEquals("", Utils.removePreffix("", "titi"));
+	public void testTrimPreffix() {
+		assertEquals("toto", Utils.trimPreffix("toto", "titi"));
+		assertEquals("toto", Utils.trimPreffix("tititoto", "titi"));
+		assertEquals("tototiti", Utils.trimPreffix("tototiti", "titi"));
+		assertEquals("toto", Utils.trimPreffix("toto", ""));
+		assertEquals("", Utils.trimPreffix("titi", "titi"));
+		assertEquals("", Utils.trimPreffix("", "titi"));
 	}
 
 	@Test
@@ -96,5 +96,49 @@ public class UtilsTest extends Assert {
 		assertEquals("Étable", Utils.uppercaseFirstLetter("étable"));
 		assertEquals("-foobar", Utils.uppercaseFirstLetter("-foobar"));
 		assertEquals(" foobar", Utils.uppercaseFirstLetter(" foobar"));
+	}
+
+	@Test
+	public void shouldTrimUntil() {
+		assertEquals("titi", Utils.trimUntil("toto--titi", "--"));
+		assertEquals("titi", Utils.trimUntil("--titi", "--"));
+		assertEquals("-titi", Utils.trimUntil("-titi", "--"));
+		assertEquals("toto-titi", Utils.trimUntil("toto-titi", "--"));
+		assertEquals("", Utils.trimUntil("toto--", "--"));
+		assertEquals("-", Utils.trimUntil("-", "--"));
+		assertEquals("", Utils.trimUntil("--", "--"));
+	}
+
+	@Test
+	public void shouldTrimBefore() {
+		assertEquals("--titi", Utils.trimBefore("toto--titi", "--"));
+		assertEquals("--titi", Utils.trimBefore("--titi", "--"));
+		assertEquals("-titi", Utils.trimBefore("-titi", "--"));
+		assertEquals("toto-titi", Utils.trimBefore("toto-titi", "--"));
+		assertEquals("--", Utils.trimBefore("toto--", "--"));
+		assertEquals("-", Utils.trimBefore("-", "--"));
+		assertEquals("--", Utils.trimBefore("--", "--"));
+	}
+
+	@Test
+	public void shouldTrimFrom() {
+		assertEquals("toto", Utils.trimFrom("toto--titi", "--"));
+		assertEquals("toto", Utils.trimFrom("toto--", "--"));
+		assertEquals("toto-", Utils.trimFrom("toto-", "--"));
+		assertEquals("toto", Utils.trimFrom("toto", "--"));
+		assertEquals("", Utils.trimFrom("--titi", "--"));
+		assertEquals("-titi", Utils.trimFrom("-titi", "--"));
+		assertEquals("", Utils.trimFrom("--", "--"));
+	}
+
+	@Test
+	public void shouldTrimAfter() {
+		assertEquals("toto--", Utils.trimAfter("toto--titi", "--"));
+		assertEquals("toto--", Utils.trimAfter("toto--", "--"));
+		assertEquals("toto-", Utils.trimAfter("toto-", "--"));
+		assertEquals("toto", Utils.trimAfter("toto", "--"));
+		assertEquals("--", Utils.trimAfter("--titi", "--"));
+		assertEquals("-titi", Utils.trimAfter("-titi", "--"));
+		assertEquals("--", Utils.trimAfter("--", "--"));
 	}
 }

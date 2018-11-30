@@ -112,6 +112,6 @@ public class LambdaResty extends SpaceResty {
 	}
 
 	private String toServiceSubPath(String uri) {
-		return Utils.removePreffix(uri, "/1/services");
+		return Utils.trimUntil(uri, "/services");
 	}
 }

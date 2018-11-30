@@ -146,15 +146,12 @@ public class SpaceBackend {
 	public static SpaceBackend fromUrl(String url) {
 		SpaceBackend target = new SpaceBackend();
 
-		// handle scheme
-		if (url.startsWith("https://")) {
-			url = Utils.removePreffix(url, "https://");
-			target.ssl = true;
-		} else if (url.startsWith("http://")) {
-			url = Utils.removePreffix(url, "http://");
-			target.ssl = false;
-		} else
+		if (!url.toLowerCase().startsWith("http"))
 			throw Exceptions.illegalArgument("backend url [%s] is invalid", url);
+
+		// handle scheme
+		target.ssl = url.toLowerCase().startsWith("https");
+		url = Utils.trimUntil(url, "://");
 
 		// handle multi backend
 		String suffixAndPort = null;
@@ -199,8 +196,8 @@ public class SpaceBackend {
 		if (isMulti() && requestHostAndPort.startsWith(hostPrefix) //
 				&& requestHostAndPort.endsWith(backendSuffixAndPort)) {
 
-			String backendId = Utils.removeSuffix(//
-					Utils.removePreffix(requestHostAndPort, hostPrefix), //
+			String backendId = Utils.trimSuffix(//
+					Utils.trimPreffix(requestHostAndPort, hostPrefix), //
 					backendSuffixAndPort);
 
 			// check if resulting backeng id is well formed
