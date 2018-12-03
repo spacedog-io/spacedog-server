@@ -6,7 +6,7 @@ import java.util.Set;
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Sets;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -19,8 +19,8 @@ public final class LogItem {
 	public CredentialsResume credentials;
 	public List<String> headers;
 	public List<String> parameters;
-	public ObjectNode payload;
-	public ObjectNode response;
+	public JsonNode payload;
+	public JsonNode response;
 
 	public String getParameter(String name) {
 		for (String string : parameters) {
