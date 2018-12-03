@@ -23,6 +23,7 @@ import io.spacedog.client.push.PushClient;
 import io.spacedog.client.schema.SchemaClient;
 import io.spacedog.client.settings.SettingsClient;
 import io.spacedog.client.sms.SmsClient;
+import io.spacedog.client.snapshot.SnapshotClient;
 import io.spacedog.client.stripe.StripeClient;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Optional7;
@@ -291,6 +292,14 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 		if (bulkClient == null)
 			bulkClient = new BulkClient(this);
 		return bulkClient;
+	}
+
+	SnapshotClient snapshotClient;
+
+	public SnapshotClient snapshots() {
+		if (snapshotClient == null)
+			snapshotClient = new SnapshotClient(this);
+		return snapshotClient;
 	}
 
 }

@@ -9,6 +9,7 @@ import com.amazonaws.regions.Regions;
 
 import io.spacedog.client.http.SpaceBackend;
 import io.spacedog.client.http.SpaceEnv;
+import io.spacedog.client.snapshot.SpaceRepository;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Utils;
@@ -25,7 +26,7 @@ public class ServerConfig {
 	private static final String GREEN_TIMEOUT = "spacedog.server.green.timeout";
 	private static final String USER_AGENT = "spacedog.server.user.agent";
 	private static final String ELASTIC_CONFIG_PATH = "spacedog.server.elastic.config.path";
-	private static final String ELASTIC_SNAPSHOTS_PATH = "spacedog.server.elastic.snapshots.path";
+	private static final String ELASTIC_SNAPSHOTS_REPO_TYPE = "spacedog.server.elastic.snapshots.repo.type";
 	private static final String MAIL_SMTP_DEBUG = "spacedog.server.mail.smtp.debug";
 	private static final String MAIL_DOMAIN = "spacedog.server.mail.domain";
 	private static final String MAIL_MAILGUN_KEY = "spacedog.server.mail.mailgun.key";
@@ -71,9 +72,8 @@ public class ServerConfig {
 		return SpaceEnv.env().get(GREEN_TIMEOUT, 60);
 	}
 
-	public static Optional<Path> elasticSnapshotsPath() {
-		Optional7<String> path = SpaceEnv.env().get(ELASTIC_SNAPSHOTS_PATH);
-		return path.isPresent() ? Optional.of(Paths.get(path.get())) : Optional.empty();
+	public static String elasticSnapshotsRepoType() {
+		return SpaceEnv.env().get(ELASTIC_SNAPSHOTS_REPO_TYPE, SpaceRepository.TYPE_FS);
 	}
 
 	public static Optional7<Regions> awsRegion() {
@@ -130,7 +130,7 @@ public class ServerConfig {
 		log(PORT, port());
 		log(GREEN_CHECK, greenCheck());
 		log(GREEN_TIMEOUT, greenTimeout());
-		checkPath(ELASTIC_SNAPSHOTS_PATH, elasticSnapshotsPath(), true);
+		log(ELASTIC_SNAPSHOTS_REPO_TYPE, elasticSnapshotsRepoType());
 		log(AWS_REGION, awsRegion());
 		log(AWS_BUCKET_PREFIX, awsBucketPrefix());
 		log(MAIL_DOMAIN, mailDomain());
@@ -150,6 +150,7 @@ public class ServerConfig {
 		Utils.info("-- %s: %s", property, value);
 	}
 
+	@SuppressWarnings("unused")
 	private static void checkPath(String property, Optional<Path> path, boolean directory) {
 		if (path.isPresent())
 			checkPath(property, path.get(), directory);

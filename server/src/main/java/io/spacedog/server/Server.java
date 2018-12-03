@@ -46,6 +46,7 @@ import io.spacedog.services.push.ApplicationResty;
 import io.spacedog.services.push.PushResty;
 import io.spacedog.services.settings.SettingsResty;
 import io.spacedog.services.sms.SmsResty;
+import io.spacedog.services.snapshot.SnapshotResty;
 import io.spacedog.services.stripe.StripeResty;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.DateTimes;
@@ -220,6 +221,7 @@ public class Server implements Extensions {
 	protected void configure(Routes routes) {
 		routes.add(HealthCheckResty.class)//
 				.add(AdminResty.class)//
+				.add(SnapshotResty.class)//
 				.add(DataResty.class)//
 				.add(JobResty.class)//
 				.add(SchemaResty.class)//

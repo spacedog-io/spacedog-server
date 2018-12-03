@@ -13,6 +13,7 @@ import io.spacedog.services.log.LogService;
 import io.spacedog.services.push.PushService;
 import io.spacedog.services.settings.SettingsService;
 import io.spacedog.services.sms.SmsService;
+import io.spacedog.services.snapshot.SnapshotService;
 import io.spacedog.services.stripe.StripeService;
 
 public class Services implements SpaceFields, SpaceParams {
@@ -111,5 +112,13 @@ public class Services implements SpaceFields, SpaceParams {
 		if (jobService == null)
 			jobService = new JobService();
 		return jobService;
+	}
+
+	private static SnapshotService snapshotService;
+
+	public static SnapshotService snapshots() {
+		if (snapshotService == null)
+			snapshotService = new SnapshotService();
+		return snapshotService;
 	}
 }
