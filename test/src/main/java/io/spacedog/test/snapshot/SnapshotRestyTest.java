@@ -7,12 +7,19 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Sets;
+
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.client.snapshot.SpaceSnapshot;
 import io.spacedog.test.SpaceTest;
+import io.spacedog.utils.Json;
 
 public class SnapshotRestyTest extends SpaceTest {
+
+	private static final ObjectNode MY_SETTINGS = Json.object("size", 6);
+	private static final String MY_SETTINGS_ID = "mysettings";
 
 	@Test
 	public void snapshotAndRestoreMultipleTimes() throws InterruptedException, UnknownHostException {
@@ -60,15 +67,20 @@ public class SnapshotRestyTest extends SpaceTest {
 		// snapshoter gets first snapshot by id
 		snap1 = snapshoter.snapshots().get(snap1.id);
 		assertEquals(snapshot, snap1);
+		assertEquals(Sets.newHashSet("spacedog-credentials-0", //
+				"spacedog-log-0"), snap1.indices);
 
 		// superadmin creates fred's credentials
 		SpaceDog fred = createTempDog(superadmin, "fred");
+		superadmin.settings().save(MY_SETTINGS_ID, MY_SETTINGS);
 
 		// superadmin snapshots backend
 		SpaceSnapshot snap2 = superadmin.snapshots().snapshot(true);
 		assertEquals(repositoryId, snap2.repositoryId);
 		assertEquals("SUCCESS", snap2.state);
 		assertEquals("spacedog", snap2.backendId);
+		assertEquals(Sets.newHashSet("spacedog-credentials-0", //
+				"spacedog-log-0", "spacedog-settings-0"), snap2.indices);
 
 		// superadmin gets all snapshots
 		List<SpaceSnapshot> all = superadmin.snapshots().getAll();
@@ -77,12 +89,15 @@ public class SnapshotRestyTest extends SpaceTest {
 
 		// superadmin creates nath's credentials
 		SpaceDog nath = createTempDog(superadmin, "nath");
+		superadmin.settings().delete(MY_SETTINGS_ID);
 
 		// superadmin snapshots backend
 		SpaceSnapshot snap3 = superadmin.snapshots().snapshot(true);
 		assertEquals(repositoryId, snap3.repositoryId);
 		assertEquals("SUCCESS", snap3.state);
 		assertEquals("spacedog", snap3.backendId);
+		assertEquals(Sets.newHashSet("spacedog-credentials-0", //
+				"spacedog-log-0", "spacedog-settings-0"), snap2.indices);
 
 		// snapshoter gets first and second latest snapshots
 		all = snapshoter.snapshots().getAll(0, 2);
@@ -108,6 +123,7 @@ public class SnapshotRestyTest extends SpaceTest {
 		snapshoter.login();
 		vince.login();
 		assertHttpError(401, () -> fred.login());
+		assertHttpError(404, () -> superadmin.settings().get(MY_SETTINGS_ID));
 		assertHttpError(401, () -> nath.login());
 
 		// superadmin restores second (middle) snapshot
@@ -118,6 +134,7 @@ public class SnapshotRestyTest extends SpaceTest {
 		snapshoter.login();
 		vince.login();
 		fred.login();
+		superadmin.settings().get(MY_SETTINGS_ID).equals(MY_SETTINGS);
 		assertHttpError(401, () -> nath.login());
 
 		// superadmin restores latest (third) snapshot
@@ -129,6 +146,7 @@ public class SnapshotRestyTest extends SpaceTest {
 		vince.login();
 		fred.login();
 		nath.login();
+		assertHttpError(404, () -> superadmin.settings().get(MY_SETTINGS_ID));
 
 		// superdog cleans up all backend indices
 		superdog().admin().clearBackend(true);
