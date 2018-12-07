@@ -9,7 +9,7 @@ import org.elasticsearch.common.Strings;
 
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.Permission;
-import io.spacedog.client.file.FileBucketSettings;
+import io.spacedog.client.file.FileBucket;
 import io.spacedog.client.file.SpaceFile;
 import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.client.http.WebPath;
@@ -63,29 +63,28 @@ public class WebResty extends SpaceResty implements SpaceFilter {
 
 		if (webPath.size() > 0) {
 
-			String bucket = webPath.first();
 			WebPath path = webPath.removeFirst();
+			FileBucket bucket = Services.files().getBucket(webPath.first());
 
-			FileBucketSettings settings = Services.files().getBucketSettings(bucket);
 			Credentials credentials = Server.context().credentials();
-			settings.permissions.checkPermission(credentials, Permission.read);
+			bucket.permissions.checkPermission(credentials, Permission.read);
 
-			SpaceFile file = Services.files().getMeta(bucket, path.toString(), false);
+			SpaceFile file = Services.files().getMeta(bucket.name, path.toString(), false);
 
 			if (file == null)
-				file = Services.files().getMeta(bucket, //
+				file = Services.files().getMeta(bucket.name, //
 						path.addLast("index.html").toString(), //
 						false);
 
 			if (file == null //
-					&& !Strings.isNullOrEmpty(settings.notFoundPage))
-				file = Services.files().getMeta(bucket, //
-						WebPath.parse(settings.notFoundPage).toString(), //
+					&& !Strings.isNullOrEmpty(bucket.notFoundPage))
+				file = Services.files().getMeta(bucket.name, //
+						WebPath.parse(bucket.notFoundPage).toString(), //
 						false);
 
 			if (file != null) {
 				payload = toPayload(file, //
-						Services.files().getAsByteStream(bucket, file), //
+						Services.files().getAsByteStream(bucket.name, file), //
 						context);
 			}
 		}

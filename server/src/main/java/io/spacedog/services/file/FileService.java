@@ -19,7 +19,7 @@ import org.elasticsearch.search.sort.SortBuilders;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
-import io.spacedog.client.file.FileBucketSettings;
+import io.spacedog.client.file.FileBucket;
 import io.spacedog.client.file.SpaceFile;
 import io.spacedog.client.file.SpaceFile.FileList;
 import io.spacedog.client.schema.Schema;
@@ -243,25 +243,25 @@ public class FileService extends SpaceService {
 		return Services.settings().getOrThrow(InternalFileSettings.class);
 	}
 
-	public FileBucketSettings getBucketSettings(String bucket) {
-		FileBucketSettings bucketSettings = listBuckets().get(bucket);
+	public FileBucket getBucket(String name) {
+		FileBucket bucketSettings = listBuckets().get(name);
 		if (bucketSettings == null)
-			throw Exceptions.objectNotFound("bucket", bucket);
+			throw Exceptions.objectNotFound("file bucket", name);
 		return bucketSettings;
 	}
 
-	public void setBucketSettings(FileBucketSettings bucket) {
+	public void setBucket(FileBucket bucket) {
 		createBucketIndex(bucket);
-		saveBucketSettings(bucket);
+		saveBucket(bucket);
 	}
 
-	private void saveBucketSettings(FileBucketSettings bucket) {
+	private void saveBucket(FileBucket bucket) {
 		InternalFileSettings fileSettings = listBuckets();
 		fileSettings.put(bucket.name, bucket);
 		Services.settings().save(fileSettings);
 	}
 
-	private void createBucketIndex(FileBucketSettings bucket) {
+	private void createBucketIndex(FileBucket bucket) {
 		Schema.checkName(bucket.name);
 		Schema schema = getSchema(bucket.name);
 		Index index = index(bucket.name);

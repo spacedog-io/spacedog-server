@@ -16,7 +16,7 @@ import com.google.common.io.ByteStreams;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.client.file.FileBucketSettings;
+import io.spacedog.client.file.FileBucket;
 import io.spacedog.client.file.SpaceFile;
 import io.spacedog.client.file.SpaceFile.FileList;
 import io.spacedog.client.http.ContentTypes;
@@ -44,7 +44,7 @@ public class ShareRestyTest extends SpaceTest {
 		SpaceDog admin = createTempDog(superadmin, "admin", Roles.admin);
 
 		// superadmin sets 'shares' file bucket
-		FileBucketSettings bucket = new FileBucketSettings(SHARES);
+		FileBucket bucket = new FileBucket(SHARES);
 		superadmin.files().setBucket(bucket);
 
 		// only superadmins can list shares
@@ -89,7 +89,7 @@ public class ShareRestyTest extends SpaceTest {
 		SpaceDog admin = createTempDog(superadmin, "admin", Roles.admin);
 
 		// superadmin sets share file bucket
-		FileBucketSettings bucket = new FileBucketSettings(SHARES);
+		FileBucket bucket = new FileBucket(SHARES);
 		bucket.permissions.put(Roles.all, Permission.read)//
 				.put(Roles.user, Permission.create, Permission.update, Permission.deleteMine);
 		superadmin.files().setBucket(bucket);
@@ -202,7 +202,7 @@ public class ShareRestyTest extends SpaceTest {
 		byte[] pngBytes = ClassResources.loadAsBytes(this, "tweeter.png");
 
 		// superadmin sets 'shares' file bucket
-		FileBucketSettings bucket = new FileBucketSettings(SHARES);
+		FileBucket bucket = new FileBucket(SHARES);
 		bucket.permissions.put(Roles.all, Permission.create)//
 				.put(Roles.user, Permission.update, Permission.readMine, Permission.deleteMine);
 		superadmin.files().setBucket(bucket);
@@ -277,7 +277,7 @@ public class ShareRestyTest extends SpaceTest {
 		SpaceDog superadmin = clearServer();
 
 		// superadmin sets 'shares' file bucket
-		FileBucketSettings bucket = new FileBucketSettings(SHARES);
+		FileBucket bucket = new FileBucket(SHARES);
 		superadmin.files().setBucket(bucket);
 
 		// share file with name that needs escaping
@@ -312,7 +312,7 @@ public class ShareRestyTest extends SpaceTest {
 		SpaceDog nath = createTempDog(superadmin, "nath");
 
 		// superadmin sets 'shares' file bucket
-		FileBucketSettings bucket = new FileBucketSettings(SHARES);
+		FileBucket bucket = new FileBucket(SHARES);
 		bucket.permissions.put(Roles.user, Permission.create, //
 				Permission.readMine, Permission.updateMine);
 		superadmin.files().setBucket(bucket);
@@ -432,7 +432,7 @@ public class ShareRestyTest extends SpaceTest {
 		SpaceDog superadmin = clearServer(true);
 
 		// superadmin sets 'shares' file bucket
-		superadmin.files().setBucket(new FileBucketSettings(SHARES));
+		superadmin.files().setBucket(new FileBucket(SHARES));
 
 		// superadmin shares a file
 		SpaceFile share = superadmin.files().share(SHARES, "foobar".getBytes());
@@ -455,7 +455,7 @@ public class ShareRestyTest extends SpaceTest {
 		SpaceDog fred = createTempDog(superadmin, "fred").login();
 
 		// superadmin sets 'shares' file bucket
-		FileBucketSettings bucket = new FileBucketSettings(SHARES);
+		FileBucket bucket = new FileBucket(SHARES);
 		bucket.permissions.put(Roles.user, Permission.create, //
 				Permission.updateMine, Permission.readMine);
 		superadmin.files().setBucket(bucket);
@@ -489,7 +489,7 @@ public class ShareRestyTest extends SpaceTest {
 		SpaceDog superadmin = clearServer(true);
 
 		// superadmin sets 'shares' file bucket with size limit of 1 KB
-		FileBucketSettings bucket = new FileBucketSettings(SHARES);
+		FileBucket bucket = new FileBucket(SHARES);
 		bucket.sizeLimitInKB = 1;
 		superadmin.files().setBucket(bucket);
 
@@ -509,7 +509,7 @@ public class ShareRestyTest extends SpaceTest {
 		SpaceDog superadmin = clearServer(true);
 
 		// superadmin sets 'shares' file bucket
-		superadmin.files().setBucket(new FileBucketSettings(SHARES));
+		superadmin.files().setBucket(new FileBucket(SHARES));
 
 		// superadmin shares a small png file
 		SpaceFile pngFile = superadmin.files()//

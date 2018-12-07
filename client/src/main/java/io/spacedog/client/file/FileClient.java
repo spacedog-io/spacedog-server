@@ -154,16 +154,16 @@ public class FileClient implements SpaceParams {
 	// Buckets
 	//
 
-	public Map<String, FileBucketSettings> listBuckets() {
+	public Map<String, FileBucket> listBuckets() {
 		return dog.get("/2/files").go(200).asPojo(TypeFactory.defaultInstance()//
-				.constructMapLikeType(Map.class, String.class, FileBucketSettings.class));
+				.constructMapLikeType(Map.class, String.class, FileBucket.class));
 	}
 
-	public FileBucketSettings getBucket(String bucket) {
-		return dog.get("/2/files/{name}").routeParam("name", bucket).go(200).asPojo(FileBucketSettings.class);
+	public FileBucket getBucket(String name) {
+		return dog.get("/2/files/{name}").routeParam("name", name).go(200).asPojo(FileBucket.class);
 	}
 
-	public void setBucket(FileBucketSettings settings) {
-		dog.put("/2/files/{name}").routeParam("name", settings.name).bodyPojo(settings).go(200).asVoid();
+	public void setBucket(FileBucket bucket) {
+		dog.put("/2/files/{name}").routeParam("name", bucket.name).bodyPojo(bucket).go(200).asVoid();
 	}
 }

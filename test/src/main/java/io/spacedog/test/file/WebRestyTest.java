@@ -5,7 +5,7 @@ import org.junit.Test;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.client.file.FileBucketSettings;
+import io.spacedog.client.file.FileBucket;
 import io.spacedog.client.http.SpaceBackend;
 import io.spacedog.client.http.SpaceEnv;
 import io.spacedog.client.http.SpaceHeaders;
@@ -37,9 +37,9 @@ public class WebRestyTest extends SpaceTest {
 		superadmin = clearServer(true);
 
 		// superadmin sets www bucket
-		FileBucketSettings settings = new FileBucketSettings(WWW);
-		settings.permissions.put(Roles.all, Permission.read);
-		superadmin.files().setBucket(settings);
+		FileBucket bucket = new FileBucket(WWW);
+		bucket.permissions.put(Roles.all, Permission.read);
+		superadmin.files().setBucket(bucket);
 
 		// superadmin checks bucket www is empty
 		assertEquals(0, superadmin.files().listAll(WWW).files.size());
@@ -76,8 +76,8 @@ public class WebRestyTest extends SpaceTest {
 		browse("/a/b/c/index.html", html("/404.html"));
 
 		// superadmin sets the not found path of www bucket to /index.html
-		settings.notFoundPage = "/index.html";
-		superadmin.files().setBucket(settings);
+		bucket.notFoundPage = "/index.html";
+		superadmin.files().setBucket(bucket);
 
 		// if user browses invalid URIs
 		// server returns the not found path

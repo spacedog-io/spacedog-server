@@ -14,7 +14,7 @@ import com.google.common.collect.Lists;
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.RolePermissions;
-import io.spacedog.client.file.FileBucketSettings;
+import io.spacedog.client.file.FileBucket;
 import io.spacedog.client.file.FileExportRequest;
 import io.spacedog.client.file.SpaceFile;
 import io.spacedog.client.file.SpaceFile.FileList;
@@ -81,15 +81,16 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 
 		if (absolutePath.size() == 1) {
 			Server.context().credentials().checkAtLeastSuperAdmin();
-			return new Payload(Services.files().getBucketSettings(bucket));
+			return new Payload(Services.files().getBucket(bucket));
 		}
 
 		String path = absolutePath.removeFirst().toString();
 		return doGet(bucket, path, context);
 	}
 
-	private Payload doGet(String bucket, String path, Context context) {
+	private Payload doGet(String bucketName, String path, Context context) {
 
+		FileBucket bucket = Services.files().getBucket(bucketName);
 		SpaceFile file = checkRead(bucket, path);
 
 		// This auto fail is necessary to test if closeable resources
@@ -98,7 +99,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 			throw Exceptions.illegalArgument("fail is requested for test purposes");
 
 		Payload payload = new Payload(file.getContentType(), //
-				Services.files().getAsByteStream(bucket, file.getBucketKey()))//
+				Services.files().getAsByteStream(bucketName, file.getBucketKey()))//
 						.withHeader(SpaceHeaders.ETAG, file.getHash())//
 						.withHeader(SpaceHeaders.SPACEDOG_OWNER, file.owner())//
 						.withHeader(SpaceHeaders.SPACEDOG_GROUP, file.group());
@@ -120,11 +121,10 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		return payload;
 	}
 
-	private SpaceFile checkRead(String bucket, String path) {
-		RolePermissions bucketRoles = Services.files().getBucketSettings(bucket).permissions;
+	private SpaceFile checkRead(FileBucket bucket, String path) {
 		Credentials credentials = Server.context().credentials();
-		SpaceFile file = Services.files().getMeta(bucket, path, true);
-		bucketRoles.checkReadPermission(credentials, file.owner(), file.group());
+		SpaceFile file = Services.files().getMeta(bucket.name, path, true);
+		bucket.permissions.checkReadPermission(credentials, file.owner(), file.group());
 		return file;
 	}
 
@@ -142,29 +142,29 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 			return doPut(bucket, webPath, context);
 	}
 
-	private Payload doPut(String bucket, WebPath webPath, Context context) {
+	private Payload doPut(String bucketName, WebPath webPath, Context context) {
 
 		String path = checkPath(webPath);
-		FileBucketSettings settings = Services.files().getBucketSettings(bucket);
+		FileBucket bucket = Services.files().getBucket(bucketName);
 		Credentials credentials = Server.context().credentials();
-		long contentLength = checkContentLength(context, settings.sizeLimitInKB);
+		long contentLength = checkContentLength(context, bucket.sizeLimitInKB);
 		DateTime now = DateTime.now();
 
-		SpaceFile file = Services.files().getMeta(bucket, path, false);
+		SpaceFile file = Services.files().getMeta(bucketName, path, false);
 		String group = context.get(GROUP_PARAM);
 
 		if (file == null) {
-			settings.permissions.checkPermission(credentials, //
+			bucket.permissions.checkPermission(credentials, //
 					Permission.create, Permission.createGroup, Permission.createMine);
 
 			file = new SpaceFile(path);
 			file.setName(webPath.last());
-			file.group(checkGroupCreate(settings, credentials, group));
+			file.group(checkGroupCreate(bucket, credentials, group));
 			file.createdAt(now);
 
 		} else {
-			settings.permissions.checkUpdatePermission(credentials, file.owner(), file.group());
-			file.group(checkGroupUpdate(settings, credentials, file.group(), group));
+			bucket.permissions.checkUpdatePermission(credentials, file.owner(), file.group());
+			file.group(checkGroupUpdate(bucket, credentials, file.group(), group));
 		}
 
 		file.setLength(contentLength);
@@ -172,43 +172,42 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		file.setContentType(fileContentType(file.getName(), context));
 		file.updatedAt(now);
 
-		file = Services.files().upload(bucket, file, getRequestContentAsInputStream(context));
+		file = Services.files().upload(bucketName, file, getRequestContentAsInputStream(context));
 
 		ObjectNode fileNode = Json.toObjectNode(file);
 
 		// TODO
 		// Do we really need to add these?
-		fileNode.put("bucket", bucket);
+		fileNode.put("bucket", bucketName);
 		fileNode.put("location", SpaceResty.spaceUrl("/1/files/")//
-				.append(bucket).append(file.getEscapedPath()).toString());
+				.append(bucketName).append(file.getEscapedPath()).toString());
 
 		return JsonPayload.ok().withContent(fileNode).build();
 	}
 
-	private String checkGroupCreate(FileBucketSettings settings, Credentials credentials, String group) {
+	private String checkGroupCreate(FileBucket bucket, Credentials credentials, String group) {
 		if (Utils.isNullOrEmpty(group))
 			return credentials.group();
 		else {
-			settings.permissions.checkGroupCreate(group, credentials);
+			bucket.permissions.checkGroupCreate(group, credentials);
 			return group;
 		}
 	}
 
-	private String checkGroupUpdate(FileBucketSettings settings, Credentials credentials, String oldGroup,
-			String newGroup) {
+	private String checkGroupUpdate(FileBucket bucket, Credentials credentials, String oldGroup, String newGroup) {
 		if (Strings.isNullOrEmpty(newGroup) || oldGroup.equals(newGroup))
 			return oldGroup;
-		settings.permissions.checkGroupUpdate(newGroup, credentials);
+		bucket.permissions.checkGroupUpdate(newGroup, credentials);
 		return newGroup;
 	}
 
-	private Payload createBucket(String bucket, Context context) {
+	private Payload createBucket(String name, Context context) {
 		Server.context().credentials().checkAtLeastSuperAdmin();
-		FileBucketSettings bucketSettings = Json.toPojo(//
-				getRequestContentAsBytes(context), FileBucketSettings.class);
-		Services.files().setBucketSettings(bucketSettings);
-		return JsonPayload.saved(false).withFields("id", bucket, "type", "bucket")//
-				.withLocation("/2/files/" + bucket)//
+		FileBucket bucket = Json.toPojo(//
+				getRequestContentAsBytes(context), FileBucket.class);
+		Services.files().setBucket(bucket);
+		return JsonPayload.saved(false).withFields("id", name, "type", "bucket")//
+				.withLocation("/2/files/" + name)//
 				.build();
 	}
 
@@ -245,7 +244,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 
 		String bucket = checkBucket(webPath);
 		String path = checkPath(webPath);
-		RolePermissions bucketPermissions = Services.files().getBucketSettings(bucket).permissions;
+		RolePermissions bucketPermissions = Services.files().getBucket(bucket).permissions;
 		Credentials credentials = Server.context().credentials();
 
 		SpaceFile file = Services.files().getMeta(bucket, path, false);
@@ -294,7 +293,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		String bucket = checkBucket(webPath);
 		String path = checkPath(webPath);
 
-		RolePermissions bucketRoles = Services.files().getBucketSettings(bucket).permissions;
+		RolePermissions bucketRoles = Services.files().getBucket(bucket).permissions;
 		Credentials credentials = Server.context().credentials();
 		bucketRoles.checkPermission(credentials, Permission.search);
 
@@ -316,7 +315,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 	}
 
 	private Payload export(WebPath webPath, Context context) {
-		String bucket = webPath.first();
+		FileBucket bucket = Services.files().getBucket(webPath.first());
 
 		FileExportRequest request = Json.toPojo(//
 				getRequestContentAsBytes(context), //
@@ -326,7 +325,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		for (String path : request.paths)
 			files.add(checkRead(bucket, path));
 
-		StreamingOutput output = Services.files().export(bucket, request.flatZip, files);
+		StreamingOutput output = Services.files().export(bucket.name, request.flatZip, files);
 
 		return new Payload(ContentTypes.OCTET_STREAM, output)//
 				.withHeader(SpaceHeaders.CONTENT_DISPOSITION, //

@@ -8,13 +8,13 @@ import java.util.HashMap;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import io.spacedog.client.file.FileBucketSettings;
+import io.spacedog.client.file.FileBucket;
 import io.spacedog.client.settings.Settings;
 import io.spacedog.client.settings.SettingsBase;
 
 @SuppressWarnings("serial")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class InternalFileSettings extends HashMap<String, FileBucketSettings> implements Settings {
+public class InternalFileSettings extends HashMap<String, FileBucket> implements Settings {
 
 	@JsonIgnore
 	private long version = MATCH_ANY_VERSIONS;

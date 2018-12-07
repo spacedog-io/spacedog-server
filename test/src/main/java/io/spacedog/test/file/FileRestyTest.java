@@ -5,7 +5,7 @@ import org.junit.Test;
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
-import io.spacedog.client.file.FileBucketSettings;
+import io.spacedog.client.file.FileBucket;
 import io.spacedog.client.file.SpaceFile.FileList;
 import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.test.SpaceTest;
@@ -31,9 +31,9 @@ public class FileRestyTest extends SpaceTest {
 		superadmin.post("/2/files").go(400).asVoid();
 
 		// superadmin sets www bucket
-		FileBucketSettings settings = new FileBucketSettings(WWW);
-		settings.permissions.put(Roles.all, Permission.read);
-		superadmin.files().setBucket(settings);
+		FileBucket bucket = new FileBucket(WWW);
+		bucket.permissions.put(Roles.all, Permission.read);
+		superadmin.files().setBucket(bucket);
 
 		// superadmin checks bucket www is truly empty
 		assertEquals(0, superadmin.files().listAll(WWW).files.size());
@@ -110,7 +110,7 @@ public class FileRestyTest extends SpaceTest {
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		// superadmin sets 'assets' file bucket
-		FileBucketSettings bucket = new FileBucketSettings(ASSETS);
+		FileBucket bucket = new FileBucket(ASSETS);
 		bucket.permissions.put(Roles.user, Permission.create, //
 				Permission.readMine, Permission.updateMine, Permission.deleteMine);
 		superadmin.files().setBucket(bucket);

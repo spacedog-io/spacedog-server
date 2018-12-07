@@ -14,7 +14,7 @@ import com.google.common.io.Resources;
 import io.spacedog.cli.FileSynchCommand;
 import io.spacedog.cli.LoginCommand;
 import io.spacedog.client.SpaceDog;
-import io.spacedog.client.file.FileBucketSettings;
+import io.spacedog.client.file.FileBucket;
 import io.spacedog.test.SpaceTest;
 
 public class FileSynchCommandTest extends SpaceTest {
@@ -41,7 +41,7 @@ public class FileSynchCommandTest extends SpaceTest {
 		createHtmlFile("x/y/z/a et b");
 
 		// init bucket
-		superadmin.files().setBucket(new FileBucketSettings("0"));
+		superadmin.files().setBucket(new FileBucket("0"));
 
 		// superadmin logs in with spacedog cli
 		new LoginCommand().verbose(true)//
