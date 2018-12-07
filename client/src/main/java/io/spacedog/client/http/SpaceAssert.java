@@ -38,12 +38,8 @@ public class SpaceAssert extends Assert implements SpacePlatform, SpaceFields, S
 	}
 
 	public static SpaceDog clearServer() {
-		return clearServer(false);
-	}
-
-	public static SpaceDog clearServer(boolean files) {
 		SpaceDog superdog = superdog();
-		superdog.admin().clearBackend(files);
+		superdog.admin().clearBackend();
 		return createTempDog(superdog, Roles.superadmin, Roles.superadmin);
 	}
 

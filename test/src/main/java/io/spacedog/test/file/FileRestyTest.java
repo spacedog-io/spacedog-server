@@ -1,5 +1,7 @@
 package io.spacedog.test.file;
 
+import java.util.Map;
+
 import org.junit.Test;
 
 import io.spacedog.client.SpaceDog;
@@ -26,7 +28,7 @@ public class FileRestyTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearServer(true);
+		SpaceDog superadmin = clearServer();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		// invalid uri throws 404
@@ -114,7 +116,7 @@ public class FileRestyTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearServer(true);
+		SpaceDog superadmin = clearServer();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		// superadmin sets 'assets' file bucket
@@ -189,19 +191,53 @@ public class FileRestyTest extends SpaceTest {
 	}
 
 	@Test
-	public void updateFileBucketStorageIsForbidden() throws Exception {
+	public void manageBuckets() throws Exception {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearServer(true);
+		SpaceDog superadmin = clearServer();
 
-		// superadmin creates file bucket www
-		FileBucket bucket = new FileBucket(WWW);
-		bucket.type = FileBucket.StoreType.system;
-		superadmin.files().setBucket(bucket);
+		// superadmin creates www bucket
+		FileBucket www = new FileBucket(WWW);
+		superadmin.files().setBucket(www);
 
-		// superadmin fails to update file bucket storage type
-		bucket.type = FileBucket.StoreType.s3;
-		assertHttpError(400, () -> superadmin.files().setBucket(bucket));
+		// superadmin fails to update bucket store type
+		www.type = FileBucket.StoreType.s3;
+		assertHttpError(400, () -> superadmin.files().setBucket(www));
+
+		// superadmin uploads a file into www bucket
+		superadmin.files().upload(www.name, "/toto.html", "Hello".getBytes());
+
+		// superadmin deletes www bucket
+		superadmin.files().deleteBucket(www.name);
+
+		// superadmin re creates www bucket
+		superadmin.files().setBucket(www);
+
+		// superadmin fails to get www bucket file
+		// since it was deleted at bucket deletion
+		assertHttpError(404, () -> superadmin.files().getAsString(www.name, "/toto.html"));
+
+		// superadmin creates assets bucket
+		FileBucket assets = new FileBucket(ASSETS);
+		superadmin.files().setBucket(assets);
+
+		// superadmin list all buckets
+		Map<String, FileBucket> buckets = superadmin.files().listBuckets();
+		assertEquals(2, buckets.size());
+		assertEquals(www, buckets.get(www.name));
+		assertEquals(assets, buckets.get(assets.name));
+
+		// superadmin deletes www bucket
+		superadmin.files().deleteBucket(www.name);
+		buckets = superadmin.files().listBuckets();
+		assertEquals(1, buckets.size());
+		assertEquals(assets, buckets.get(assets.name));
+
+		// superadmin deletes assets bucket
+		superadmin.files().deleteBucket(assets.name);
+		buckets = superadmin.files().listBuckets();
+		assertEquals(0, buckets.size());
 	}
+
 }

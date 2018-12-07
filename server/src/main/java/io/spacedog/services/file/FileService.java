@@ -25,7 +25,6 @@ import io.spacedog.client.file.SpaceFile.FileList;
 import io.spacedog.client.schema.Schema;
 import io.spacedog.server.Index;
 import io.spacedog.server.Server;
-import io.spacedog.server.ServerConfig;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceService;
 import io.spacedog.services.file.FileStore.PutResult;
@@ -215,14 +214,8 @@ public class FileService extends SpaceService {
 		return deleted;
 	}
 
-	public void deleteAbsolutelyAll() {
-		if (!ServerConfig.isOffline())
-			for (FileBucket bucket : listBuckets().values())
-				store(bucket).deleteAll();
-	}
-
 	//
-	// Settings
+	// Buckets
 	//
 
 	public InternalFileSettings listBuckets() {
@@ -237,21 +230,33 @@ public class FileService extends SpaceService {
 	}
 
 	public void setBucket(FileBucket bucket) {
-		FileBucket previousBucket = listBuckets().get(bucket.name);
+		InternalFileSettings buckets = listBuckets();
+		FileBucket previousBucket = buckets.get(bucket.name);
 
-		if (previousBucket == null)
+		if (previousBucket == null) {
 			createBucketIndex(bucket);
+			// make sure no files from past deleted backend
+			store(bucket).deleteAll(Server.backend().id(), bucket.name);
 
-		else if (!bucket.type.equals(previousBucket.type))
-			throw Exceptions.illegalArgument("updating storage type of file buckets is forbidden");
+		} else if (!bucket.type.equals(previousBucket.type))
+			throw Exceptions.illegalArgument("updating store type of file buckets is forbidden");
 
-		saveBucket(bucket);
+		buckets.put(bucket.name, bucket);
+		Services.settings().save(buckets);
 	}
 
-	private void saveBucket(FileBucket bucket) {
-		InternalFileSettings fileSettings = listBuckets();
-		fileSettings.put(bucket.name, bucket);
-		Services.settings().save(fileSettings);
+	public void deleteBucket(String name) {
+		elastic().deleteIndex(index(name));
+		InternalFileSettings buckets = listBuckets();
+		FileBucket bucket = buckets.get(name);
+		store(bucket).deleteAll(Server.backend().id(), name);
+		buckets.remove(name);
+		Services.settings().save(buckets);
+	}
+
+	public void deleteAllBuckets() {
+		for (FileBucket bucket : listBuckets().values())
+			deleteBucket(bucket.name);
 	}
 
 	private void createBucketIndex(FileBucket bucket) {

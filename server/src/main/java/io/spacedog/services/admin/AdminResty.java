@@ -24,6 +24,6 @@ public class AdminResty extends SpaceResty {
 	@Post("/_clear/")
 	public void postClear(Context context) {
 		Server.context().credentials().checkSuperDog();
-		Server.get().clear(context.query().getBoolean(FILES_PARAM, false));
+		Server.get().clear();
 	}
 }

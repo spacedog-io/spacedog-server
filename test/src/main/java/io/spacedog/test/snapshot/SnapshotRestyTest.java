@@ -149,7 +149,7 @@ public class SnapshotRestyTest extends SpaceTest {
 		assertHttpError(404, () -> superadmin.settings().get(MY_SETTINGS_ID));
 
 		// superdog cleans up all backend indices
-		superdog().admin().clearBackend(true);
+		superdog().admin().clearBackend();
 
 		// all credentials are gone
 		assertHttpError(401, () -> superadmin.login());
@@ -175,7 +175,7 @@ public class SnapshotRestyTest extends SpaceTest {
 		assertHttpError(404, () -> superadmin.snapshots().get("all-utc-2011-01-01-00-00-00-000"));
 
 		// superdog cleans up backend
-		superdog().admin().clearBackend(true);
+		superdog().admin().clearBackend();
 
 		// superdog gets all snapshots since not part of backend data
 		all = superdog().snapshots().getAll();

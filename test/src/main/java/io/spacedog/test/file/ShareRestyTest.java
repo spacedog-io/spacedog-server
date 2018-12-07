@@ -39,7 +39,7 @@ public class ShareRestyTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearServer(true);
+		SpaceDog superadmin = clearServer();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog admin = createTempDog(superadmin, "admin", Roles.admin);
 
@@ -83,7 +83,7 @@ public class ShareRestyTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearServer(true);
+		SpaceDog superadmin = clearServer();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog fred = createTempDog(superadmin, "fred");
 		SpaceDog admin = createTempDog(superadmin, "admin", Roles.admin);
@@ -196,7 +196,7 @@ public class ShareRestyTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearServer(true);
+		SpaceDog superadmin = clearServer();
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog fred = createTempDog(superadmin, "fred");
 		byte[] pngBytes = ClassResources.loadAsBytes(this, "tweeter.png");
@@ -429,7 +429,7 @@ public class ShareRestyTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearServer(true);
+		SpaceDog superadmin = clearServer();
 
 		// superadmin sets 'shares' file bucket
 		superadmin.files().setBucket(new FileBucket(SHARES));
@@ -450,7 +450,7 @@ public class ShareRestyTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog guest = SpaceDog.dog();
-		SpaceDog superadmin = clearServer(true);
+		SpaceDog superadmin = clearServer();
 		SpaceDog vince = createTempDog(superadmin, "vince").login();
 		SpaceDog fred = createTempDog(superadmin, "fred").login();
 
@@ -486,7 +486,7 @@ public class ShareRestyTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearServer(true);
+		SpaceDog superadmin = clearServer();
 
 		// superadmin sets 'shares' file bucket with size limit of 1 KB
 		FileBucket bucket = new FileBucket(SHARES);
@@ -506,7 +506,7 @@ public class ShareRestyTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		SpaceDog superadmin = clearServer(true);
+		SpaceDog superadmin = clearServer();
 
 		// superadmin sets 'shares' file bucket
 		superadmin.files().setBucket(new FileBucket(SHARES));

@@ -138,8 +138,8 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 
 		if (webPath.size() == 1)
 			return setBucket(bucket, context);
-		else
-			return doPut(bucket, webPath, context);
+
+		return doPut(bucket, webPath, context);
 	}
 
 	private Payload doPut(String bucketName, WebPath webPath, Context context) {
@@ -243,6 +243,21 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 	private Payload delete(WebPath webPath, Context context) {
 
 		String bucket = checkBucket(webPath);
+
+		if (webPath.size() == 1)
+			return deleteBucket(bucket, context);
+
+		return doDelete(bucket, webPath, context);
+	}
+
+	private Payload deleteBucket(String name, Context context) {
+		Server.context().credentials().checkAtLeastSuperAdmin();
+		Services.files().deleteBucket(name);
+		return JsonPayload.ok().build();
+	}
+
+	private Payload doDelete(String bucket, WebPath webPath, Context context) {
+
 		String path = checkPath(webPath);
 		RolePermissions bucketPermissions = Services.files().getBucket(bucket).permissions;
 		Credentials credentials = Server.context().credentials();
@@ -339,7 +354,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 	private String checkBucket(WebPath webPath) {
 		if (webPath.isRoot())
 			throw Exceptions.illegalArgument(//
-					"no bucket specified in path [%s]", webPath.toString());
+					"path [%s] specifies no bucket", webPath.toString());
 		return webPath.first();
 	}
 

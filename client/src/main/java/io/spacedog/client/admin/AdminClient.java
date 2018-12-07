@@ -33,8 +33,8 @@ public class AdminClient implements SpaceParams {
 				.backendId(backendId).superadmin(superadmin), notification);
 	}
 
-	public void clearBackend(boolean files) {
-		dog.post("/2/admin/_clear").queryParam("files", files).go(200).close();
+	public void clearBackend() {
+		dog.post("/2/admin/_clear").go(200).close();
 	}
 
 	public SpaceDog createBackend(BackendCreateRequest request, boolean notification) {

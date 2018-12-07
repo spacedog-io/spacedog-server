@@ -166,4 +166,9 @@ public class FileClient implements SpaceParams {
 	public void setBucket(FileBucket bucket) {
 		dog.put("/2/files/{name}").routeParam("name", bucket.name).bodyPojo(bucket).go(200).asVoid();
 	}
+
+	public void deleteBucket(String name) {
+		dog.delete("/2/files/{name}").routeParam("name", name).go(200);
+	}
+
 }

@@ -19,7 +19,7 @@ public class WebRestyTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		superdog().admin().clearBackend(false);
+		superdog().admin().clearBackend();
 
 		// browse without bucket returns default not found html page
 		SpaceRequest.get("/2/web").go(404).asVoid()//
@@ -34,7 +34,7 @@ public class WebRestyTest extends SpaceTest {
 
 		// prepare
 		prepareTest();
-		superadmin = clearServer(true);
+		superadmin = clearServer();
 
 		// superadmin sets www bucket
 		FileBucket bucket = new FileBucket(WWW);

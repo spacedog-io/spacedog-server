@@ -198,9 +198,8 @@ public class Server implements Extensions {
 		Services.logs().initIndex();
 	}
 
-	public void clear(boolean files) {
-		if (files)
-			Services.files().deleteAbsolutelyAll();
+	public void clear() {
+		Services.files().deleteAllBuckets();
 		elasticClient().deleteAbsolutelyAllIndices();
 		initBackendIndices();
 	}
