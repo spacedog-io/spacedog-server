@@ -38,17 +38,13 @@ public class FileService extends SpaceService {
 
 	public static final String SERVICE_NAME = "files";
 
-	// file store types
-	public static final String ELASTIC_FS = "elastic";
-	public static final Object SYSTEM_FS = "system";
-	public static final Object S3_FS = "s3";
-
 	// fields
-	private FileStore store;
 	private int defaultListSize = 100;
+	private FileStore systemFileStore = new SystemFileStore();
+	private FileStore s3FileStore = new S3FileStore();
+	private FileStore elasticFileStore = new ElasticFileStore();
 
 	public FileService() {
-		initStore();
 	}
 
 	public FileService setDefaultListSize(int listSize) {
@@ -133,7 +129,7 @@ public class FileService extends SpaceService {
 	}
 
 	public InputStream getAsByteStream(String bucket, String key) {
-		return store.get(Server.backend().id(), bucket, key);
+		return store(bucket).get(Server.backend().id(), bucket, key);
 	}
 
 	//
@@ -166,7 +162,7 @@ public class FileService extends SpaceService {
 
 	public SpaceFile upload(String bucket, SpaceFile file, InputStream content) {
 
-		PutResult result = store.put(//
+		PutResult result = store(bucket).put(//
 				Server.backend().id(), //
 				bucket, //
 				content, //
@@ -181,7 +177,7 @@ public class FileService extends SpaceService {
 
 		} catch (Exception e) {
 
-			store.delete(Server.backend().id(), bucket, file.getBucketKey());
+			store(bucket).delete(Server.backend().id(), bucket, file.getBucketKey());
 			throw e;
 		}
 	}
@@ -207,7 +203,7 @@ public class FileService extends SpaceService {
 		boolean deleted = elastic().delete(//
 				index(bucket), file.getPath(), false, false);
 		try {
-			store.delete(Server.backend().id(), bucket, file.getBucketKey());
+			store(bucket).delete(Server.backend().id(), bucket, file.getBucketKey());
 
 		} catch (Exception ignore) {
 			// It's not a big deal if file is not deleted:
@@ -219,20 +215,10 @@ public class FileService extends SpaceService {
 		return deleted;
 	}
 
-	public void deleteBackendFiles() {
-		if (ServerConfig.awsRegion().isPresent() //
-				&& !ServerConfig.isOffline()) {
-
-			store.deleteAll(Server.backend().id());
-		}
-	}
-
-	public void deleteAbsolutelyAllFiles() {
-		if (ServerConfig.awsRegion().isPresent() //
-				&& !ServerConfig.isOffline()) {
-
-			store.deleteAll();
-		}
+	public void deleteAbsolutelyAll() {
+		if (!ServerConfig.isOffline())
+			for (FileBucket bucket : listBuckets().values())
+				store(bucket).deleteAll();
 	}
 
 	//
@@ -251,7 +237,14 @@ public class FileService extends SpaceService {
 	}
 
 	public void setBucket(FileBucket bucket) {
-		createBucketIndex(bucket);
+		FileBucket previousBucket = listBuckets().get(bucket.name);
+
+		if (previousBucket == null)
+			createBucketIndex(bucket);
+
+		else if (!bucket.type.equals(previousBucket.type))
+			throw Exceptions.illegalArgument("updating storage type of file buckets is forbidden");
+
 		saveBucket(bucket);
 	}
 
@@ -293,16 +286,19 @@ public class FileService extends SpaceService {
 		return new Index(SERVICE_NAME).type(bucket);
 	}
 
-	private void initStore() {
-		String fsType = ServerConfig.fileStore();
-		if (fsType.equals(SYSTEM_FS))
-			store = new SystemFileStore();
-		else if (fsType.equals(ELASTIC_FS))
-			store = new ElasticFileStore();
-		else if (fsType.equals(S3_FS))
-			store = new S3FileStore();
-		else
-			throw Exceptions.runtime("file store type [%s] is invalid", fsType);
+	private FileStore store(String bucket) {
+		return store(getBucket(bucket));
+	}
+
+	private FileStore store(FileBucket bucket) {
+		if (bucket.type.equals(FileBucket.StoreType.system))
+			return systemFileStore;
+		if (bucket.type.equals(FileBucket.StoreType.s3))
+			return s3FileStore;
+		if (bucket.type.equals(FileBucket.StoreType.elastic))
+			return elasticFileStore;
+
+		throw Exceptions.runtime("file bucket storage [%s] is invalid", bucket.type);
 	}
 
 }

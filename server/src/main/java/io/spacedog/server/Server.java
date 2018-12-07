@@ -199,9 +199,9 @@ public class Server implements Extensions {
 	}
 
 	public void clear(boolean files) {
-		elasticClient().deleteAbsolutelyAllIndices();
 		if (files)
-			Services.files().deleteAbsolutelyAllFiles();
+			Services.files().deleteAbsolutelyAll();
+		elasticClient().deleteAbsolutelyAllIndices();
 		initBackendIndices();
 	}
 

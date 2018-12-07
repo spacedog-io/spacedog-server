@@ -137,7 +137,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		String bucket = checkBucket(webPath);
 
 		if (webPath.size() == 1)
-			return createBucket(bucket, context);
+			return setBucket(bucket, context);
 		else
 			return doPut(bucket, webPath, context);
 	}
@@ -201,7 +201,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		return newGroup;
 	}
 
-	private Payload createBucket(String name, Context context) {
+	private Payload setBucket(String name, Context context) {
 		Server.context().credentials().checkAtLeastSuperAdmin();
 		FileBucket bucket = Json.toPojo(//
 				getRequestContentAsBytes(context), FileBucket.class);

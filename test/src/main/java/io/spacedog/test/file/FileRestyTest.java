@@ -17,6 +17,11 @@ public class FileRestyTest extends SpaceTest {
 
 	@Test
 	public void testDefaultWwwBucketSettings() throws Exception {
+		testDefaultWwwBucketSettings(FileBucket.StoreType.system);
+		testDefaultWwwBucketSettings(FileBucket.StoreType.s3);
+	}
+
+	private void testDefaultWwwBucketSettings(FileBucket.StoreType storeType) throws Exception {
 
 		// prepare
 		prepareTest();
@@ -32,6 +37,7 @@ public class FileRestyTest extends SpaceTest {
 
 		// superadmin sets www bucket
 		FileBucket bucket = new FileBucket(WWW);
+		bucket.type = storeType;
 		bucket.permissions.put(Roles.all, Permission.read);
 		superadmin.files().setBucket(bucket);
 
@@ -94,14 +100,16 @@ public class FileRestyTest extends SpaceTest {
 
 		// superadmin deletes all files
 		assertEquals(4, superadmin.files().deleteAll(WWW));
-		// assertEquals(Sets.newHashSet("/www/app.html", "/www/app.js", //
-		// "/www/images/fifi.jpg", "/www/images/riri.png"), //
-		// Sets.newHashSet(deleted));
 		assertEquals(0, superadmin.files().listAll(WWW).files.size());
 	}
 
 	@Test
 	public void testCustomBucketSettings() throws Exception {
+		testCustomBucketSettings(FileBucket.StoreType.system);
+		testCustomBucketSettings(FileBucket.StoreType.s3);
+	}
+
+	private void testCustomBucketSettings(FileBucket.StoreType storeType) throws Exception {
 
 		// prepare
 		prepareTest();
@@ -111,6 +119,7 @@ public class FileRestyTest extends SpaceTest {
 
 		// superadmin sets 'assets' file bucket
 		FileBucket bucket = new FileBucket(ASSETS);
+		bucket.type = storeType;
 		bucket.permissions.put(Roles.user, Permission.create, //
 				Permission.readMine, Permission.updateMine, Permission.deleteMine);
 		superadmin.files().setBucket(bucket);
@@ -177,5 +186,22 @@ public class FileRestyTest extends SpaceTest {
 		// superadmin can delete any assets files
 		vince.files().upload(ASSETS, "/vince/vince2.txt", "vince".getBytes());
 		superadmin.files().delete(ASSETS, "/vince/vince2.txt");
+	}
+
+	@Test
+	public void updateFileBucketStorageIsForbidden() throws Exception {
+
+		// prepare
+		prepareTest();
+		SpaceDog superadmin = clearServer(true);
+
+		// superadmin creates file bucket www
+		FileBucket bucket = new FileBucket(WWW);
+		bucket.type = FileBucket.StoreType.system;
+		superadmin.files().setBucket(bucket);
+
+		// superadmin fails to update file bucket storage type
+		bucket.type = FileBucket.StoreType.s3;
+		assertHttpError(400, () -> superadmin.files().setBucket(bucket));
 	}
 }
