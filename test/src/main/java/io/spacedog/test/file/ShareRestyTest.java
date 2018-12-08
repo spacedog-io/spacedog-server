@@ -17,6 +17,7 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.file.FileBucket;
+import io.spacedog.client.file.FileBucket.StoreType;
 import io.spacedog.client.file.SpaceFile;
 import io.spacedog.client.file.SpaceFile.FileList;
 import io.spacedog.client.http.ContentTypes;
@@ -425,22 +426,24 @@ public class ShareRestyTest extends SpaceTest {
 	}
 
 	@Test
-	public void testFileErrorsDoNotDrainAllConnection() {
+	public void testFileErrorsDoNotDrainAllS3Connections() {
 
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = clearServer();
 
 		// superadmin sets 'shares' file bucket
-		superadmin.files().setBucket(new FileBucket(SHARES));
+		FileBucket bucket = new FileBucket(SHARES);
+		bucket.type = StoreType.s3;
+		superadmin.files().setBucket(bucket);
 
 		// superadmin shares a file
 		SpaceFile share = superadmin.files().share(SHARES, "foobar".getBytes());
 
-		// superadmin tries 70 times to get this file
+		// superadmin tries 100 times to get this file
 		// he fails since he forces request failure via the _fail param
 		// this checks that unexpected errors do not drain s3 connection pool
-		for (int i = 0; i < 70; i++)
+		for (int i = 0; i < 100; i++)
 			superadmin.get(location(share)).queryParam(FAIL_PARAM).go(400).asVoid();
 	}
 

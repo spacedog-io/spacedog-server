@@ -93,11 +93,6 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		FileBucket bucket = Services.files().getBucket(bucketName);
 		SpaceFile file = checkRead(bucket, path);
 
-		// This auto fail is necessary to test if closeable resources
-		// are finally closed in error conditions
-		if (isFailRequested(context))
-			throw Exceptions.illegalArgument("fail is requested for test purposes");
-
 		Payload payload = new Payload(file.getContentType(), //
 				Services.files().getAsByteStream(bucketName, file.getBucketKey()))//
 						.withHeader(SpaceHeaders.ETAG, file.getHash())//
@@ -117,6 +112,11 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		if (context.query().getBoolean(SpaceParams.WITH_CONTENT_DISPOSITION, false))
 			payload = payload.withHeader(SpaceHeaders.CONTENT_DISPOSITION, //
 					SpaceHeaders.contentDisposition(file.getName()));
+
+		// This auto fail is necessary to test if closeable resources
+		// are finally closed in error conditions
+		if (isFailRequested(context))
+			throw Exceptions.illegalArgument("fail is requested for test purposes");
 
 		return payload;
 	}
