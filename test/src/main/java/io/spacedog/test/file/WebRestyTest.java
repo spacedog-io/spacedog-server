@@ -1,11 +1,17 @@
 package io.spacedog.test.file;
 
+import java.util.Map;
+
 import org.junit.Test;
+
+import com.google.common.collect.Maps;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.file.FileBucket;
+import io.spacedog.client.file.FileBucket.StoreType;
+import io.spacedog.client.file.SpaceFile;
 import io.spacedog.client.http.SpaceBackend;
 import io.spacedog.client.http.SpaceEnv;
 import io.spacedog.client.http.SpaceHeaders;
@@ -28,6 +34,7 @@ public class WebRestyTest extends SpaceTest {
 
 	private static final String WWW = "www";
 	private static SpaceDog superadmin;
+	private Map<String, SpaceFile> uploads;
 
 	@Test
 	public void testWebBrowsing() {
@@ -35,9 +42,11 @@ public class WebRestyTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		superadmin = clearServer();
+		uploads = Maps.newHashMap();
 
 		// superadmin sets www bucket
 		FileBucket bucket = new FileBucket(WWW);
+		bucket.type = StoreType.s3;
 		bucket.permissions.put(Roles.all, Permission.read);
 		superadmin.files().setBucket(bucket);
 
@@ -56,12 +65,12 @@ public class WebRestyTest extends SpaceTest {
 		// guest browses www pages
 		browse("/index.html");
 		browse("/toto.html");
-		browse("", html("/index.html"));
-		browse("/", html("/index.html"));
+		browse("", "/index.html");
+		browse("/", "/index.html");
 		browse("/a/b/index.html");
 		browse("/a/b/toto.html");
-		browse("/a/b", html("/a/b/index.html"));
-		browse("/a/b/", html("/a/b/index.html"));
+		browse("/a/b", "/a/b/index.html");
+		browse("/a/b/", "/a/b/index.html");
 
 		// superadmin uploads custom 404 file to www
 		// '/404.html' is the default not found path
@@ -70,10 +79,10 @@ public class WebRestyTest extends SpaceTest {
 		// if user browses invalid URIs
 		// server returns default not found path
 		// i.e. /404.html page with status code 200
-		browse("/index", html("/404.html"));
-		browse("/c", html("/404.html"));
-		browse("/a/", html("/404.html"));
-		browse("/a/b/c/index.html", html("/404.html"));
+		browse("/index", "/404.html");
+		browse("/c", "/404.html");
+		browse("/a/", "/404.html");
+		browse("/a/b/c/index.html", "/404.html");
 
 		// superadmin sets the not found path of www bucket to /index.html
 		bucket.notFoundPage = "/index.html";
@@ -82,10 +91,10 @@ public class WebRestyTest extends SpaceTest {
 		// if user browses invalid URIs
 		// server returns the not found path
 		// i.e. /index.html page with status code 200
-		browse("/index", html("/index.html"));
-		browse("/c", html("/index.html"));
-		browse("/a/", html("/index.html"));
-		browse("/a/b/c/index.html", html("/index.html"));
+		browse("/index", "/index.html");
+		browse("/c", "/index.html");
+		browse("/a/", "/index.html");
+		browse("/a/b/c/index.html", "/index.html");
 	}
 
 	private void upload(String uri) {
@@ -93,7 +102,8 @@ public class WebRestyTest extends SpaceTest {
 	}
 
 	private void upload(String uri, String html) {
-		superadmin.files().upload(WWW, uri, html.getBytes());
+		uploads.put(uri, //
+				superadmin.files().upload(WWW, uri, html.getBytes()));
 	}
 
 	private String html(String uri) {
@@ -101,30 +111,34 @@ public class WebRestyTest extends SpaceTest {
 	}
 
 	private void browse(String uri) {
-		browse(uri, html(uri), "text/html");
+		browse(uri, uri);
 	}
 
-	private void browse(String uri, String expectedBody) {
-		browse(uri, expectedBody, "text/html");
-	}
-
-	private void browse(String uri, String expectedBody, String expectedContentType) {
+	private void browse(String uri, String expectedUri) {
+		String expectedBody = html(expectedUri);
+		SpaceFile file = uploads.get(expectedUri);
 		SpaceBackend wwwBackend = SpaceEnv.env().wwwBackend();
 
 		SpaceRequest.head("/2/web/" + WWW + uri)//
 				.backend(superadmin.backend()).go(200).asVoid()//
-				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE);
+				.assertHeaderEquals(file.getContentType(), SpaceHeaders.CONTENT_TYPE)//
+				.assertHeaderEquals(file.getLength(), SpaceHeaders.CONTENT_LENGTH)//
+				.assertHeaderEquals(file.getHash(), SpaceHeaders.ETAG);
 
 		SpaceRequest.head(uri).backend(wwwBackend).go(200).asVoid()//
-				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE);
+				.assertHeaderEquals(file.getContentType(), SpaceHeaders.CONTENT_TYPE)//
+				.assertHeaderEquals(file.getLength(), SpaceHeaders.CONTENT_LENGTH)//
+				.assertHeaderEquals(file.getHash(), SpaceHeaders.ETAG);
 
 		SpaceRequest.get("/2/web/" + WWW + uri)//
 				.backend(superadmin.backend()).go(200)//
-				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE)//
+				.assertHeaderEquals(file.getContentType(), SpaceHeaders.CONTENT_TYPE)//
+				.assertHeaderEquals(file.getHash(), SpaceHeaders.ETAG)//
 				.assertBodyEquals(expectedBody);
 
 		SpaceRequest.get(uri).backend(wwwBackend).go(200)//
-				.assertHeaderEquals(expectedContentType, SpaceHeaders.CONTENT_TYPE)//
+				.assertHeaderEquals(file.getContentType(), SpaceHeaders.CONTENT_TYPE)//
+				.assertHeaderEquals(file.getHash(), SpaceHeaders.ETAG)//
 				.assertBodyEquals(expectedBody);
 	}
 }

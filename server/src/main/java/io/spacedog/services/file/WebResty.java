@@ -3,8 +3,6 @@
  */
 package io.spacedog.services.file;
 
-import java.io.InputStream;
-
 import org.elasticsearch.common.Strings;
 
 import io.spacedog.client.credentials.Credentials;
@@ -82,17 +80,20 @@ public class WebResty extends SpaceResty implements SpaceFilter {
 						WebPath.parse(bucket.notFoundPage).toString(), //
 						false);
 
-			if (file != null) {
-				payload = toPayload(file, //
-						Services.files().getAsByteStream(bucket.name, file), //
-						context);
-			}
+			if (file != null)
+				payload = toPayload(bucket.name, file, withContent, context);
 		}
 
 		return payload;
 	}
 
-	private Payload toPayload(SpaceFile file, InputStream content, Context context) {
+	private static final byte[] EMPTY_CONTENT = new byte[0];
+
+	private Payload toPayload(String bucket, SpaceFile file, boolean withContent, Context context) {
+
+		Object content = withContent //
+				? Services.files().getAsByteStream(bucket, file)
+				: EMPTY_CONTENT;
 
 		Payload payload = new Payload(file.getContentType(), content)//
 				.withHeader(SpaceHeaders.ETAG, file.getHash());
@@ -103,9 +104,9 @@ public class WebResty extends SpaceResty implements SpaceFilter {
 		// fluent will gzip this file stream and use 'chunked'
 		// Transfer-Encoding incompatible with Content-Length header
 
-		if (!context.header(SpaceHeaders.ACCEPT_ENCODING).contains(SpaceHeaders.GZIP))
-			payload.withHeader(SpaceHeaders.CONTENT_LENGTH, //
-					Long.toString(file.getLength()));
+		if (!withContent || //
+				!context.header(SpaceHeaders.ACCEPT_ENCODING).contains(SpaceHeaders.GZIP))
+			payload.withHeader(SpaceHeaders.CONTENT_LENGTH, Long.toString(file.getLength()));
 
 		return payload;
 	}
