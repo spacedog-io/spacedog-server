@@ -255,8 +255,15 @@ public class FileService extends SpaceService {
 	}
 
 	public void deleteAllBuckets() {
-		for (FileBucket bucket : listBuckets().values())
-			deleteBucket(bucket.name);
+		InternalFileSettings buckets = listBuckets();
+
+		for (FileBucket bucket : buckets.values())
+			// delete backend to make sure
+			// any unregistered bucket is deleted
+			store(bucket).deleteAll(Server.backend().id());
+
+		buckets.clear();
+		Services.settings().save(buckets);
 	}
 
 	private void createBucketIndex(FileBucket bucket) {
