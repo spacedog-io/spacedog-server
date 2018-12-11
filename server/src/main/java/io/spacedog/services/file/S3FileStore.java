@@ -151,10 +151,9 @@ public class S3FileStore implements FileStore {
 		s3.deleteObject(bucketName, toS3Key(backendId, bucket, key));
 	}
 
-	@Override
-	public void deleteAll() {
-		doDeleteAll(toS3Key());
-	}
+	// public void deleteAll() {
+	// doDeleteAll(toS3Key());
+	// }
 
 	@Override
 	public void deleteAll(String backendId) {

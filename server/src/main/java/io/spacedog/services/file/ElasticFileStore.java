@@ -36,27 +36,18 @@ public class ElasticFileStore implements FileStore {
 	}
 
 	@Override
-	public void deleteAll() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
 	public void deleteAll(String backendId) {
 		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void deleteAll(String backendId, String bucket) {
 		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void delete(String backendId, String bucket, String key) {
 		// TODO Auto-generated method stub
-
 	}
 
 }

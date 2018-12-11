@@ -69,10 +69,9 @@ public class SystemFileStore implements FileStore {
 		}
 	}
 
-	@Override
-	public void deleteAll() {
-		deleteAll(storePath);
-	}
+	// public void deleteAll() {
+	// deleteAll(storePath);
+	// }
 
 	@Override
 	public void deleteAll(String backendId) {

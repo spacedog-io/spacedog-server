@@ -18,8 +18,6 @@ public interface FileStore {
 
 	Iterator<String> list(String backendId, String bucket);
 
-	void deleteAll();
-
 	void deleteAll(String backendId);
 
 	void deleteAll(String backendId, String bucket);
