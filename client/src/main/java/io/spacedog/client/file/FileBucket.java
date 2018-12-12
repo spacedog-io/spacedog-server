@@ -1,9 +1,10 @@
 package io.spacedog.client.file;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import io.spacedog.client.credentials.RolePermissions;
-import io.spacedog.client.snapshot.SpaceSnapshot;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FileBucket {
@@ -28,9 +29,24 @@ public class FileBucket {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj == null || !(obj instanceof SpaceSnapshot))
+		if (this == obj)
+			return true;
+
+		if (!(obj instanceof FileBucket))
 			return false;
+
 		FileBucket fb = (FileBucket) obj;
-		return name.equals(fb.name);
+		return Objects.equals(name, fb.name);
 	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hashCode(name);
+	}
+
+	@Override
+	public String toString() {
+		return String.format("FileBucket[%s]", name);
+	}
+
 }

@@ -1,5 +1,6 @@
 package io.spacedog.client.snapshot;
 
+import java.util.Objects;
 import java.util.Set;
 
 import org.joda.time.DateTime;
@@ -18,20 +19,29 @@ public class SpaceSnapshot implements Comparable<SpaceSnapshot> {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj == null || !(obj instanceof SpaceSnapshot))
+		if (this == obj)
+			return true;
+
+		if (!(obj instanceof SpaceSnapshot))
 			return false;
+
 		SpaceSnapshot snap = (SpaceSnapshot) obj;
-		return id.equals(snap.id);
+		return Objects.equals(id, snap.id);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hashCode(id);
+	}
+
+	@Override
+	public String toString() {
+		return String.format("SpaceSnapshot[%s]", id);
 	}
 
 	@Override
 	// ordered from latest to oldest snapshots
 	public int compareTo(SpaceSnapshot obj) {
 		return obj.startTime.compareTo(this.startTime);
-	}
-
-	@Override
-	public String toString() {
-		return id;
 	}
 }

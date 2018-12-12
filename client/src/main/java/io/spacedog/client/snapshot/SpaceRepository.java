@@ -1,6 +1,7 @@
 package io.spacedog.client.snapshot;
 
 import java.util.Map;
+import java.util.Objects;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -50,21 +51,30 @@ public class SpaceRepository implements Comparable<SpaceRepository> {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj == null || !(obj instanceof SpaceRepository))
+		if (this == obj)
+			return true;
+
+		if (!(obj instanceof SpaceRepository))
 			return false;
-		SpaceRepository snap = (SpaceRepository) obj;
-		return id.equals(snap.id);
+
+		SpaceRepository repo = (SpaceRepository) obj;
+		return Objects.equals(id, repo.id);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hashCode(id);
+	}
+
+	@Override
+	public String toString() {
+		return String.format("SpaceRepository[%s]", id);
 	}
 
 	@Override
 	// ordered from latest to oldest repository
 	public int compareTo(SpaceRepository other) {
 		return other.id.compareTo(id);
-	}
-
-	@Override
-	public String toString() {
-		return id;
 	}
 
 	public static String currentRepositoryId() {
