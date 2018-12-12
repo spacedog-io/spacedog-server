@@ -137,6 +137,14 @@ public class SpaceEnv {
 				: defaultValue;
 	}
 
+	@SuppressWarnings("unchecked")
+	public <E extends Enum<E>> E get(String propertyName, E defaultValue) {
+		Optional7<String> value = get(propertyName);
+		if (value.isPresent())
+			return (E) Enum.valueOf(defaultValue.getClass(), value.get());
+		return defaultValue;
+	}
+
 	public void log() {
 		Utils.info("[SpaceDog] Env =");
 		for (Entry<Object, Object> property : properties.entrySet())
