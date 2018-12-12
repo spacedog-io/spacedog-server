@@ -12,31 +12,36 @@ import java.util.UUID;
 
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingInputStream;
+import com.google.common.io.ByteStreams;
 
-import io.spacedog.server.ServerConfig;
 import io.spacedog.utils.Exceptions;
 
 public class SystemFileStore implements FileStore {
 
 	private Path storePath;
 
-	SystemFileStore() {
-		storePath = ServerConfig.fileStorePath();
+	SystemFileStore(Path storePath) {
+		this.storePath = storePath;
 	}
 
 	@Override
 	public PutResult put(String backendId, String bucket, InputStream stream, Long length) {
+		PutResult result = new PutResult();
+		result.key = UUID.randomUUID().toString();
+		HashingInputStream hashedStream = new HashingInputStream(Hashing.md5(), stream);
+		restore(backendId, bucket, result.key, hashedStream, length);
+		result.hash = hashedStream.hash().toString();
+		return result;
+	}
+
+	@Override
+	public void restore(String backendId, String bucket, String key, InputStream bytes, Long length) {
 		try {
-			PutResult result = new PutResult();
-			result.key = UUID.randomUUID().toString();
 			Path path = storePath.resolve(backendId).resolve(bucket);
 			Files.createDirectories(path);
-			HashingInputStream hashedStream = new HashingInputStream(Hashing.md5(), stream);
-			Files.copy(hashedStream, path.resolve(result.key));
-			result.hash = hashedStream.hash().toString();
-			return result;
+			Files.copy(bytes, path.resolve(key));
 		} catch (IOException e) {
-			throw Exceptions.runtime(e, "unable to store file in bucket [%s][%s]", backendId, bucket);
+			throw Exceptions.runtime(e, "store file in bucket [%s][%s] failed", backendId, bucket);
 		}
 	}
 
@@ -47,12 +52,26 @@ public class SystemFileStore implements FileStore {
 	}
 
 	@Override
+	public boolean check(String backendId, String bucket, String key, String hash) {
+		Path path = storePath.resolve(backendId).resolve(bucket).resolve(key);
+		if (Files.exists(path)) {
+			try (HashingInputStream bytes = new HashingInputStream(Hashing.md5(), Files.newInputStream(path))) {
+				ByteStreams.copy(bytes, ByteStreams.nullOutputStream());
+				return bytes.hash().toString().equals(hash);
+			} catch (IOException e) {
+				throw Exceptions.runtime(e, "check file [%s][%s][%s] failed", backendId, bucket, key);
+			}
+		} else
+			return false;
+	}
+
+	@Override
 	public InputStream get(String backendId, String bucket, String key) {
 		try {
 			Path path = storePath.resolve(backendId).resolve(bucket).resolve(key);
 			return Files.newInputStream(path);
 		} catch (IOException e) {
-			throw Exceptions.runtime(e, "unable to get file [%s][%s][%s]", backendId, bucket, key);
+			throw Exceptions.runtime(e, "get file [%s][%s][%s] failed", backendId, bucket, key);
 		}
 	}
 
@@ -65,7 +84,7 @@ public class SystemFileStore implements FileStore {
 					.map(path -> path.getFileName().toString())//
 					.iterator();
 		} catch (IOException e) {
-			throw Exceptions.runtime(e, "unable to list bucket [%s][%s]", backendId, bucket);
+			throw Exceptions.runtime(e, "list bucket [%s][%s] failed", backendId, bucket);
 		}
 	}
 
@@ -94,11 +113,12 @@ public class SystemFileStore implements FileStore {
 
 	private void deleteAll(Path directory) {
 		try {
-			Files.walk(directory)//
-					.filter(path -> Files.isRegularFile(path))//
-					.forEach(path -> delete(path));
+			if (Files.isDirectory(directory))
+				Files.walk(directory)//
+						.filter(path -> Files.isRegularFile(path))//
+						.forEach(path -> delete(path));
 		} catch (IOException e) {
-			throw Exceptions.runtime(e, "unable to delete directory [%s]", directory);
+			throw Exceptions.runtime(e, "delete directory [%s] failed", directory);
 		}
 	}
 
@@ -106,7 +126,7 @@ public class SystemFileStore implements FileStore {
 		try {
 			Files.delete(path);
 		} catch (IOException e) {
-			throw Exceptions.runtime(e, "unable to delete file [%s]", path);
+			throw Exceptions.runtime(e, "delete file [%s] failed", path);
 		}
 	}
 

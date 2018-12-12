@@ -12,9 +12,13 @@ public interface FileStore {
 
 	PutResult put(String backendId, String bucket, InputStream bytes, Long length);
 
-	boolean exists(String backendId, String bucket, String key);
+	void restore(String backendId, String bucket, String key, InputStream bytes, Long length);
 
 	InputStream get(String backendId, String bucket, String key);
+
+	boolean exists(String backendId, String bucket, String key);
+
+	boolean check(String backendId, String bucket, String key, String hash);
 
 	Iterator<String> list(String backendId, String bucket);
 

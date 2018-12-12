@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -18,6 +19,7 @@ import com.amazonaws.services.s3.model.DeleteObjectsRequest.KeyVersion;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectResult;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
@@ -28,12 +30,12 @@ import net.codestory.http.constants.HttpStatus;
 
 public class S3FileStore implements FileStore {
 
-	private static final String bucketName = ServerConfig.awsBucketPrefix() + "files";
-
+	private final String bucketName;
 	private AmazonS3 s3;
 
-	S3FileStore() {
-		s3 = AmazonS3ClientBuilder.standard()//
+	S3FileStore(String bucketName) {
+		this.bucketName = bucketName;
+		this.s3 = AmazonS3ClientBuilder.standard()//
 				.withRegion(ServerConfig.awsRegionOrDefault())//
 				.build();
 	}
@@ -43,29 +45,39 @@ public class S3FileStore implements FileStore {
 	//
 
 	@Override
-	public boolean exists(String backendId, String bucket, String id) {
-		try {
-			s3.getObjectMetadata(bucketName, toS3Key(backendId, bucket, id));
-			return true;
-
-		} catch (AmazonS3Exception e) {
-			if (e.getStatusCode() == HttpStatus.NOT_FOUND)
-				return false;
-			throw e;
-		}
+	public boolean exists(String backendId, String bucket, String key) {
+		return getMeta(backendId, bucket, key).isPresent();
 	}
 
 	@Override
 	public InputStream get(String backendId, String bucket, String key) {
-		S3Object s3Object = null;
 		try {
-			s3Object = s3.getObject(bucketName, toS3Key(backendId, bucket, key));
+			S3Object s3Object = s3.getObject(bucketName, toS3Key(backendId, bucket, key));
 			Server.closeAfterAll(s3Object);
 			return s3Object.getObjectContent();
 
 		} catch (AmazonS3Exception e) {
 			if (e.getStatusCode() == HttpStatus.NOT_FOUND)
 				return null;
+
+			throw e;
+		}
+	}
+
+	@Override
+	public boolean check(String backendId, String bucket, String key, String hash) {
+		return getMeta(backendId, bucket, key)//
+				.map(meta -> meta.getETag()).orElse("")//
+				.equals(hash);
+	}
+
+	private Optional<ObjectMetadata> getMeta(String backendId, String bucket, String key) {
+		try {
+			return Optional.of(s3.getObjectMetadata(bucketName, toS3Key(backendId, bucket, key)));
+
+		} catch (AmazonS3Exception e) {
+			if (e.getStatusCode() == HttpStatus.NOT_FOUND)
+				return Optional.empty();
 
 			throw e;
 		}
@@ -79,16 +91,19 @@ public class S3FileStore implements FileStore {
 	public PutResult put(String backendId, String bucket, InputStream bytes, Long length) {
 		PutResult result = new PutResult();
 		result.key = UUID.randomUUID().toString();
+		result.hash = uploadToS3(backendId, bucket, result.key, bytes, length).getETag();
+		return result;
+	}
 
+	@Override
+	public void restore(String backendId, String bucket, String key, InputStream bytes, Long length) {
+		uploadToS3(backendId, bucket, key, bytes, length);
+	}
+
+	private PutObjectResult uploadToS3(String backendId, String bucket, String key, InputStream bytes, Long length) {
 		ObjectMetadata metadata = new ObjectMetadata();
 		metadata.setContentLength(length);
-
-		result.hash = s3.putObject(bucketName, //
-				toS3Key(backendId, bucket, result.key), //
-				bytes, metadata)//
-				.getETag();
-
-		return result;
+		return s3.putObject(bucketName, toS3Key(backendId, bucket, key), bytes, metadata);
 	}
 
 	//
