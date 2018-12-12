@@ -96,20 +96,21 @@ public class ShareRestyTest extends SpaceTest {
 		superadmin.files().setBucket(bucket);
 
 		// this account is brand new, no shared files
-		assertEquals(0, superadmin.files().listAll(SHARES).files.size());
+		FileList list = superadmin.files().listAll(SHARES);
+		assertEquals(0, list.total);
+		assertEquals(0, list.files.size());
 
 		// anonymous users are not allowed to share files
 		assertHttpError(401, () -> guest.files().listAll(SHARES));
 
 		// vince shares a small png file
 		byte[] pngBytes = ClassResources.loadAsBytes(this, "tweeter.png");
-		// FileMeta pngMeta = vince.files().share(SHARES, pngBytes, "tweeter.png");
 		SpaceFile pngFile = vince.files().share(SHARES, new File("tweeter.png"));
 
 		// admin lists all shared files should return tweeter.png path only
-		FileList list = superadmin.files().listAll(SHARES);
-		assertEquals(1, list.files.size());
-		assertEquals(pngFile.getPath(), list.files.get(0).getPath());
+		list = superadmin.files().listAll(SHARES);
+		assertEquals(1, list.total);
+		assertEquals(pngFile, list.files.get(0));
 
 		// anonymous gets png share with its path
 		SpaceResponse png = guest.get("/2/files/" + SHARES + pngFile.getPath()).go(200);
@@ -129,18 +130,25 @@ public class ShareRestyTest extends SpaceTest {
 		// list all shared files should return 2 paths
 		// superadmin gets first share page with only one path
 		list = superadmin.files().listAll(SHARES);
+		assertEquals(2, list.total);
 		assertEquals(1, list.files.size());
-		Set<String> all = Sets.newHashSet(list.files.get(0).getPath());
+		Set<SpaceFile> all = Sets.newHashSet(list.files);
 
 		// superadmin gets second (and last) share page with only one path
 		list = superadmin.files().list(SHARES, "/", list.next);
+		assertEquals(2, list.total);
 		assertEquals(1, list.files.size());
-		// assertNull(list.next);
-		all.add(list.files.get(0).getPath());
+		all.addAll(list.files);
+
+		// superadmin gets third empty share page
+		list = superadmin.files().list(SHARES, "/", list.next);
+		assertEquals(2, list.total);
+		assertEquals(0, list.files.size());
+		assertNull(list.next);
 
 		// the set should contain both file paths
-		assertTrue(all.contains(pngFile.getPath()));
-		assertTrue(all.contains(txtFile.getPath()));
+		assertTrue(all.contains(pngFile));
+		assertTrue(all.contains(txtFile));
 
 		// download shared text file
 		String txtContent = SpaceRequest.get(location(txtFile)).go(200)//
@@ -156,7 +164,6 @@ public class ShareRestyTest extends SpaceTest {
 
 		// owner (fred) can delete its own shared file (test.txt)
 		long deleted = fred.files().delete(SHARES, txtFile.getPath());
-		// assertEquals(txtMeta.path, deleted[0]);
 		assertEquals(1, deleted);
 
 		// superadmin sets share list size to 100
@@ -166,29 +173,33 @@ public class ShareRestyTest extends SpaceTest {
 		// it should only return the png file path
 		list = superadmin.files().listAll(SHARES);
 		assertEquals(1, list.files.size());
-		assertEquals(pngFile.getPath(), list.files.get(0).getPath());
-
-		// only superadmin can delete all shared files
-		assertHttpError(401, () -> guest.files().deleteAll(SHARES));
-		assertHttpError(403, () -> fred.files().deleteAll(SHARES));
-		assertHttpError(403, () -> vince.files().deleteAll(SHARES));
-		assertHttpError(403, () -> admin.files().deleteAll(SHARES));
-
-		deleted = superadmin.files().deleteAll(SHARES);
-		assertEquals(1, deleted);
-		// assertEquals(pngMeta.path, deleted[0]);
-
-		// superadmin lists all shares but there is no more
-		assertEquals(0, superadmin.files().listAll(SHARES).files.size());
+		assertEquals(pngFile, list.files.get(0));
 
 		// share small text file
 		SpaceFile txtFile2 = fred.files().share(SHARES, FILE_CONTENT.getBytes(), "text.txt");
-		assertEquals(1, superadmin.files().listAll(SHARES).files.size());
+		list = superadmin.files().listAll(SHARES);
+		assertEquals(2, list.total);
+		assertEquals(Sets.newHashSet(pngFile, txtFile2), Sets.newHashSet(list.files));
 
 		// admin can delete shared file (test.txt) even if not owner
 		// with default share ACL settings
 		superadmin.files().delete(SHARES, txtFile2.getPath());
-		assertEquals(0, superadmin.files().listAll(SHARES).files.size());
+		list = superadmin.files().listAll(SHARES);
+		assertEquals(1, list.total);
+		assertEquals(pngFile, list.files.get(0));
+
+		// only superadmin can delete bucket
+		assertHttpError(401, () -> guest.files().deleteBucket(SHARES));
+		assertHttpError(403, () -> fred.files().deleteBucket(SHARES));
+		assertHttpError(403, () -> vince.files().deleteBucket(SHARES));
+		assertHttpError(403, () -> admin.files().deleteBucket(SHARES));
+
+		deleted = superadmin.files().deleteBucket(SHARES);
+		assertEquals(1, deleted);
+
+		// shares bucket is no more
+		assertHttpError(404, () -> superadmin.files().getBucket(SHARES));
+		assertHttpError(404, () -> superadmin.files().listAll(SHARES));
 	}
 
 	@Test

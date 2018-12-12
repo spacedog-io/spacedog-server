@@ -100,9 +100,9 @@ public class FileRestyTest extends SpaceTest {
 		// superadmin fails to get just deleted css file
 		superadmin.get("/2/files/www/css/black.css").go(404).asVoid();
 
-		// superadmin deletes all files
-		assertEquals(4, superadmin.files().deleteAll(WWW));
-		assertEquals(0, superadmin.files().listAll(WWW).files.size());
+		// superadmin deletes www bucket
+		assertEquals(4, superadmin.files().deleteBucket(WWW));
+		assertHttpError(404, () -> superadmin.files().listAll(WWW));
 	}
 
 	@Test

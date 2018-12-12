@@ -94,7 +94,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		SpaceFile file = checkRead(bucket, path);
 
 		Payload payload = new Payload(file.getContentType(), //
-				Services.files().getAsByteStream(bucketName, file.getBucketKey()))//
+				Services.files().getAsByteStream(bucketName, file.getKey()))//
 						.withHeader(SpaceHeaders.ETAG, file.getHash())//
 						.withHeader(SpaceHeaders.SPACEDOG_OWNER, file.owner())//
 						.withHeader(SpaceHeaders.SPACEDOG_GROUP, file.group());
@@ -252,8 +252,9 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 
 	private Payload deleteBucket(String name, Context context) {
 		Server.context().credentials().checkAtLeastSuperAdmin();
+		long deleted = Services.files().listAll(name).total;
 		Services.files().deleteBucket(name);
-		return JsonPayload.ok().build();
+		return toDeletedPayload(deleted);
 	}
 
 	private Payload doDelete(String bucket, WebPath webPath, Context context) {
@@ -267,17 +268,19 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		if (file == null) {
 			bucketPermissions.checkPermission(credentials, Permission.delete);
 			long deleted = Services.files().deleteAll(bucket, path);
-			return JsonPayload.ok()//
-					.withFields("deleted", deleted)//
-					.build();
+			return toDeletedPayload(deleted);
 
 		} else {
 			bucketPermissions.checkDeletePermission(credentials, file.owner(), file.group());
 			boolean deleted = Services.files().delete(bucket, file);
-			return JsonPayload.ok()//
-					.withFields("deleted", deleted ? 1 : 0)//
-					.build();
+			return toDeletedPayload(deleted ? 1 : 0);
 		}
+	}
+
+	private Payload toDeletedPayload(long deleted) {
+		return JsonPayload.ok()//
+				.withFields("deleted", deleted)//
+				.build();
 	}
 
 	//

@@ -141,10 +141,6 @@ public class FileClient implements SpaceParams {
 		};
 	}
 
-	public long deleteAll(String bucket) {
-		return delete(bucket, "/");
-	}
-
 	public long delete(String bucket, String path) {
 		return dog.delete("/2/files/" + bucket + path)//
 				.go(200).get("deleted").asLong(0);
@@ -167,8 +163,8 @@ public class FileClient implements SpaceParams {
 		dog.put("/2/files/{name}").routeParam("name", bucket.name).bodyPojo(bucket).go(200).asVoid();
 	}
 
-	public void deleteBucket(String name) {
-		dog.delete("/2/files/{name}").routeParam("name", name).go(200);
+	public long deleteBucket(String name) {
+		return this.delete(name, "/");
 	}
 
 }
