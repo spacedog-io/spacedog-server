@@ -10,21 +10,21 @@ public interface FileStore {
 		public String hash;
 	}
 
-	PutResult put(String backendId, String bucket, InputStream bytes, Long length);
+	PutResult put(String repo, String bucket, Long length, InputStream bytes);
 
-	void restore(String backendId, String bucket, String key, InputStream bytes, Long length);
+	void restore(String repo, String bucket, String key, Long length, InputStream bytes);
 
-	InputStream get(String backendId, String bucket, String key);
+	InputStream get(String repo, String bucket, String key);
 
-	boolean exists(String backendId, String bucket, String key);
+	boolean exists(String repo, String bucket, String key);
 
-	boolean check(String backendId, String bucket, String key, String hash);
+	boolean check(String repo, String bucket, String key, String hash);
 
-	Iterator<String> list(String backendId, String bucket);
+	Iterator<String> list(String repo, String bucket);
 
-	void deleteAll(String backendId);
+	void deleteAll(String repo);
 
-	void deleteAll(String backendId, String bucket);
+	void deleteAll(String repo, String bucket);
 
-	void delete(String backendId, String bucket, String key);
+	void delete(String repo, String bucket, String key);
 }

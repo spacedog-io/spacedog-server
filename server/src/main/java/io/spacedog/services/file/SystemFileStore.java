@@ -20,71 +20,71 @@ public class SystemFileStore implements FileStore {
 
 	private Path storePath;
 
-	SystemFileStore(Path storePath) {
+	public SystemFileStore(Path storePath) {
 		this.storePath = storePath;
 	}
 
 	@Override
-	public PutResult put(String backendId, String bucket, InputStream stream, Long length) {
+	public PutResult put(String repo, String bucket, Long length, InputStream stream) {
 		PutResult result = new PutResult();
 		result.key = UUID.randomUUID().toString();
 		HashingInputStream hashedStream = new HashingInputStream(Hashing.md5(), stream);
-		restore(backendId, bucket, result.key, hashedStream, length);
+		restore(repo, bucket, result.key, length, hashedStream);
 		result.hash = hashedStream.hash().toString();
 		return result;
 	}
 
 	@Override
-	public void restore(String backendId, String bucket, String key, InputStream bytes, Long length) {
+	public void restore(String repo, String bucket, String key, Long length, InputStream bytes) {
 		try {
-			Path path = storePath.resolve(backendId).resolve(bucket);
+			Path path = storePath.resolve(repo).resolve(bucket);
 			Files.createDirectories(path);
 			Files.copy(bytes, path.resolve(key));
 		} catch (IOException e) {
-			throw Exceptions.runtime(e, "store file in bucket [%s][%s] failed", backendId, bucket);
+			throw Exceptions.runtime(e, "store file in bucket [%s][%s] failed", repo, bucket);
 		}
 	}
 
 	@Override
-	public boolean exists(String backendId, String bucket, String key) {
-		Path path = storePath.resolve(backendId).resolve(bucket).resolve(key);
+	public boolean exists(String repo, String bucket, String key) {
+		Path path = storePath.resolve(repo).resolve(bucket).resolve(key);
 		return Files.exists(path);
 	}
 
 	@Override
-	public boolean check(String backendId, String bucket, String key, String hash) {
-		Path path = storePath.resolve(backendId).resolve(bucket).resolve(key);
+	public boolean check(String repo, String bucket, String key, String hash) {
+		Path path = storePath.resolve(repo).resolve(bucket).resolve(key);
 		if (Files.exists(path)) {
 			try (HashingInputStream bytes = new HashingInputStream(Hashing.md5(), Files.newInputStream(path))) {
 				ByteStreams.copy(bytes, ByteStreams.nullOutputStream());
 				return bytes.hash().toString().equals(hash);
 			} catch (IOException e) {
-				throw Exceptions.runtime(e, "check file [%s][%s][%s] failed", backendId, bucket, key);
+				throw Exceptions.runtime(e, "check file [%s][%s][%s] failed", repo, bucket, key);
 			}
 		} else
 			return false;
 	}
 
 	@Override
-	public InputStream get(String backendId, String bucket, String key) {
+	public InputStream get(String repo, String bucket, String key) {
 		try {
-			Path path = storePath.resolve(backendId).resolve(bucket).resolve(key);
+			Path path = storePath.resolve(repo).resolve(bucket).resolve(key);
 			return Files.newInputStream(path);
 		} catch (IOException e) {
-			throw Exceptions.runtime(e, "get file [%s][%s][%s] failed", backendId, bucket, key);
+			throw Exceptions.runtime(e, "get file [%s][%s][%s] failed", repo, bucket, key);
 		}
 	}
 
 	@Override
-	public Iterator<String> list(String backendId, String bucket) {
+	public Iterator<String> list(String repo, String bucket) {
 		try {
-			Path directory = storePath.resolve(backendId).resolve(bucket);
+			Path directory = storePath.resolve(repo).resolve(bucket);
 			return Files.walk(directory)//
 					.filter(path -> Files.isRegularFile(path))//
 					.map(path -> path.getFileName().toString())//
 					.iterator();
 		} catch (IOException e) {
-			throw Exceptions.runtime(e, "list bucket [%s][%s] failed", backendId, bucket);
+			throw Exceptions.runtime(e, "list bucket [%s][%s] failed", repo, bucket);
 		}
 	}
 
@@ -93,18 +93,18 @@ public class SystemFileStore implements FileStore {
 	// }
 
 	@Override
-	public void deleteAll(String backendId) {
-		deleteAll(storePath.resolve(backendId));
+	public void deleteAll(String repo) {
+		deleteAll(storePath.resolve(repo));
 	}
 
 	@Override
-	public void deleteAll(String backendId, String bucket) {
-		deleteAll(storePath.resolve(backendId).resolve(bucket));
+	public void deleteAll(String repo, String bucket) {
+		deleteAll(storePath.resolve(repo).resolve(bucket));
 	}
 
 	@Override
-	public void delete(String backendId, String bucket, String key) {
-		delete(storePath.resolve(backendId).resolve(bucket).resolve(key));
+	public void delete(String repo, String bucket, String key) {
+		delete(storePath.resolve(repo).resolve(bucket).resolve(key));
 	}
 
 	//

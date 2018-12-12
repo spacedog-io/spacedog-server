@@ -33,7 +33,7 @@ public class S3FileStore implements FileStore {
 	private final String bucketName;
 	private AmazonS3 s3;
 
-	S3FileStore(String bucketName) {
+	public S3FileStore(String bucketName) {
 		this.bucketName = bucketName;
 		this.s3 = AmazonS3ClientBuilder.standard()//
 				.withRegion(ServerConfig.awsRegionOrDefault())//
@@ -45,14 +45,14 @@ public class S3FileStore implements FileStore {
 	//
 
 	@Override
-	public boolean exists(String backendId, String bucket, String key) {
-		return getMeta(backendId, bucket, key).isPresent();
+	public boolean exists(String repo, String bucket, String key) {
+		return getMeta(repo, bucket, key).isPresent();
 	}
 
 	@Override
-	public InputStream get(String backendId, String bucket, String key) {
+	public InputStream get(String repo, String bucket, String key) {
 		try {
-			S3Object s3Object = s3.getObject(bucketName, toS3Key(backendId, bucket, key));
+			S3Object s3Object = s3.getObject(bucketName, toS3Key(repo, bucket, key));
 			Server.closeAfterAll(s3Object);
 			return s3Object.getObjectContent();
 
@@ -65,15 +65,15 @@ public class S3FileStore implements FileStore {
 	}
 
 	@Override
-	public boolean check(String backendId, String bucket, String key, String hash) {
-		return getMeta(backendId, bucket, key)//
+	public boolean check(String repo, String bucket, String key, String hash) {
+		return getMeta(repo, bucket, key)//
 				.map(meta -> meta.getETag()).orElse("")//
 				.equals(hash);
 	}
 
-	private Optional<ObjectMetadata> getMeta(String backendId, String bucket, String key) {
+	private Optional<ObjectMetadata> getMeta(String repo, String bucket, String key) {
 		try {
-			return Optional.of(s3.getObjectMetadata(bucketName, toS3Key(backendId, bucket, key)));
+			return Optional.of(s3.getObjectMetadata(bucketName, toS3Key(repo, bucket, key)));
 
 		} catch (AmazonS3Exception e) {
 			if (e.getStatusCode() == HttpStatus.NOT_FOUND)
@@ -88,22 +88,22 @@ public class S3FileStore implements FileStore {
 	//
 
 	@Override
-	public PutResult put(String backendId, String bucket, InputStream bytes, Long length) {
+	public PutResult put(String repo, String bucket, Long length, InputStream bytes) {
 		PutResult result = new PutResult();
 		result.key = UUID.randomUUID().toString();
-		result.hash = uploadToS3(backendId, bucket, result.key, bytes, length).getETag();
+		result.hash = uploadToS3(repo, bucket, result.key, length, bytes).getETag();
 		return result;
 	}
 
 	@Override
-	public void restore(String backendId, String bucket, String key, InputStream bytes, Long length) {
-		uploadToS3(backendId, bucket, key, bytes, length);
+	public void restore(String repo, String bucket, String key, Long length, InputStream bytes) {
+		uploadToS3(repo, bucket, key, length, bytes);
 	}
 
-	private PutObjectResult uploadToS3(String backendId, String bucket, String key, InputStream bytes, Long length) {
+	private PutObjectResult uploadToS3(String repo, String bucket, String key, Long length, InputStream bytes) {
 		ObjectMetadata metadata = new ObjectMetadata();
 		metadata.setContentLength(length);
-		return s3.putObject(bucketName, toS3Key(backendId, bucket, key), bytes, metadata);
+		return s3.putObject(bucketName, toS3Key(repo, bucket, key), bytes, metadata);
 	}
 
 	//
@@ -111,12 +111,12 @@ public class S3FileStore implements FileStore {
 	//
 
 	@Override
-	public Iterator<String> list(String backendId, String bucket) {
+	public Iterator<String> list(String repo, String bucket) {
 
 		ObjectListing listing = s3.listObjects(//
 				new ListObjectsRequest()//
 						.withBucketName(bucketName)//
-						.withPrefix(toS3Key(backendId, bucket))//
+						.withPrefix(toS3Key(repo, bucket))//
 						.withMaxKeys(1000));
 
 		return new S3Iterator(listing);
@@ -162,8 +162,8 @@ public class S3FileStore implements FileStore {
 	//
 
 	@Override
-	public void delete(String backendId, String bucket, String key) {
-		s3.deleteObject(bucketName, toS3Key(backendId, bucket, key));
+	public void delete(String repo, String bucket, String key) {
+		s3.deleteObject(bucketName, toS3Key(repo, bucket, key));
 	}
 
 	// public void deleteAll() {
@@ -171,13 +171,13 @@ public class S3FileStore implements FileStore {
 	// }
 
 	@Override
-	public void deleteAll(String backendId) {
-		doDeleteAll(toS3Key(backendId));
+	public void deleteAll(String repo) {
+		doDeleteAll(toS3Key(repo));
 	}
 
 	@Override
-	public void deleteAll(String backendId, String bucket) {
-		doDeleteAll(toS3Key(backendId, bucket));
+	public void deleteAll(String repo, String bucket) {
+		doDeleteAll(toS3Key(repo, bucket));
 	}
 
 	private void doDeleteAll(String s3KeyPrefix) {
