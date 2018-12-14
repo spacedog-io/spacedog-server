@@ -35,7 +35,7 @@ public class SpaceBackend {
 	}
 
 	public String id() {
-		return id.isEmpty() ? SPACEDOG : id;
+		return id.isEmpty() ? SpaceEnv.env().backendId() : id;
 	}
 
 	public String host() {
