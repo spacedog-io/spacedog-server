@@ -1,6 +1,7 @@
 package io.spacedog.services.file;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,12 +23,15 @@ import com.google.common.collect.Lists;
 import io.spacedog.client.file.FileBucket;
 import io.spacedog.client.file.SpaceFile;
 import io.spacedog.client.file.SpaceFile.FileList;
+import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.schema.Schema;
 import io.spacedog.server.Index;
 import io.spacedog.server.Server;
+import io.spacedog.server.ServerConfig;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceService;
 import io.spacedog.services.file.FileStore.PutResult;
+import io.spacedog.services.snapshot.FileBackup;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
@@ -39,9 +43,8 @@ public class FileService extends SpaceService {
 
 	// fields
 	private int defaultListSize = 100;
-	private FileStore systemFileStore = new SystemFileStore();
-	private FileStore s3FileStore = new S3FileStore();
-	private FileStore elasticFileStore = new ElasticFileStore();
+	private FileStore systemStore = new SystemFileStore(ServerConfig.fileStorePath());
+	private FileStore s3Store = new S3FileStore(ServerConfig.awsBucketPrefix() + SERVICE_NAME);
 
 	public FileService() {
 	}
@@ -89,12 +92,12 @@ public class FileService extends SpaceService {
 		fileList.total = hits.getTotalHits();
 		fileList.files = Lists.newArrayListWithCapacity(hits.getHits().length);
 		for (SearchHit hit : hits.getHits())
-			fileList.files.add(toDogFile(hit));
+			fileList.files.add(toSpaceFile(hit));
 
 		return fileList;
 	}
 
-	private SpaceFile toDogFile(SearchHit hit) {
+	private SpaceFile toSpaceFile(SearchHit hit) {
 		byte[] bytes = BytesReference.toBytes(hit.getSourceRef());
 		return Json.toPojo(bytes, SpaceFile.class);
 	}
@@ -120,7 +123,7 @@ public class FileService extends SpaceService {
 	}
 
 	public InputStream getAsByteStream(String bucket, SpaceFile file) {
-		return getAsByteStream(bucket, file.getBucketKey());
+		return getAsByteStream(bucket, file.getKey());
 	}
 
 	public byte[] getAsByteArray(String bucket, String key) {
@@ -159,24 +162,21 @@ public class FileService extends SpaceService {
 		return upload(bucket, file, new ByteArrayInputStream(bytes));
 	}
 
-	public SpaceFile upload(String bucket, SpaceFile file, InputStream content) {
+	public SpaceFile upload(String bucket, SpaceFile file, InputStream bytes) {
 
-		PutResult result = store(bucket).put(//
-				Server.backend().id(), //
-				bucket, //
-				content, //
-				file.getLength());
+		FileStore store = store(bucket);
+		PutResult result = store.put(Server.backend().id(), //
+				bucket, file.getLength(), bytes);
 
-		file.setBucketKey(result.key);
+		file.setKey(result.key);
 		file.setHash(result.hash);
+		file.setSnapshot(false);
 
 		try {
-			elastic().index(index(bucket), file.getPath(), file);
-			return file;
+			return update(bucket, file);
 
 		} catch (Exception e) {
-
-			store(bucket).delete(Server.backend().id(), bucket, file.getBucketKey());
+			store.delete(Server.backend().id(), bucket, file.getKey());
 			throw e;
 		}
 	}
@@ -202,7 +202,7 @@ public class FileService extends SpaceService {
 		boolean deleted = elastic().delete(//
 				index(bucket), file.getPath(), false, false);
 		try {
-			store(bucket).delete(Server.backend().id(), bucket, file.getBucketKey());
+			store(bucket).delete(Server.backend().id(), bucket, file.getKey());
 
 		} catch (Exception ignore) {
 			// It's not a big deal if file is not deleted:
@@ -280,13 +280,14 @@ public class FileService extends SpaceService {
 	public Schema getSchema(String bucket) {
 		return Schema.builder(bucket)//
 				.keyword(PATH_FIELD)//
-				.keyword(BUCKET_KEY_FIELD)//
+				.keyword(KEY_FIELD)//
 				.keyword(NAME_FIELD)//
 				.keyword(ENCRYPTION_FIELD)//
 				.keyword(CONTENT_TYPE_FIELD)//
 				.longg(LENGTH_FIELD)//
 				.keyword(TAGS_FIELD)//
 				.keyword(HASH_FIELD)//
+				.keyword(SNAPSHOT_FIELD)//
 				.keyword(OWNER_FIELD)//
 				.keyword(GROUP_FIELD)//
 				.timestamp(CREATED_AT_FIELD)//
@@ -298,19 +299,125 @@ public class FileService extends SpaceService {
 		return new Index(SERVICE_NAME).type(bucket);
 	}
 
+	//
+	// Snapshot and restore
+	//
+
+	private static final TimeValue ONE_MINUTE = TimeValue.timeValueSeconds(60);
+
+	public void snapshot(FileBackup backup) {
+		Index[] indices = listBuckets().values().stream()//
+				.map(bucket -> Services.files().index(bucket.name))//
+				.toArray(Index[]::new);
+
+		if (!Utils.isNullOrEmpty(indices)) {
+			elastic().refreshIndex(indices);
+
+			SearchSourceBuilder builder = SearchSourceBuilder.searchSource()//
+					.query(QueryBuilders.termQuery(SpaceFields.SNAPSHOT_FIELD, false))//
+					.size(1000);
+
+			SearchResponse response = elastic()//
+					.prepareSearch(indices)//
+					.setSource(builder)//
+					.setScroll(ONE_MINUTE)//
+					.get();
+
+			do {
+				for (SearchHit hit : response.getHits()) {
+					SpaceFile file = toSpaceFile(hit);
+					snapshot(backup, hit.getType(), file);
+				}
+
+				response = elastic().prepareSearchScroll(response.getScrollId())//
+						.setScroll(ONE_MINUTE).get();
+
+			} while (response.getHits().getHits().length != 0);
+		}
+	}
+
+	private void snapshot(FileBackup backup, String bucket, SpaceFile file) {
+		Utils.info("Snapshoting /%s/%s%s", backup.backendId(), bucket, file.getPath());
+
+		try (InputStream bytes = store(bucket).get(backup.backendId(), bucket, file.getKey())) {
+			backup.restore(bucket, file.getKey(), file.getLength(), bytes);
+			// TODO read copy and check hash is correct
+			file.setSnapshot(true);
+			update(bucket, file);
+
+		} catch (IOException e) {
+			throw Exceptions.runtime(e, "snapshot file [%s][%s] failed", bucket, file.getPath());
+		}
+	}
+
+	public void restore(FileBackup backup) {
+
+		Index[] indices = listBuckets().values().stream()//
+				.map(bucket -> Services.files().index(bucket.name))//
+				.toArray(Index[]::new);
+
+		if (!Utils.isNullOrEmpty(indices)) {
+			elastic().refreshIndex(indices);
+
+			SearchSourceBuilder builder = SearchSourceBuilder.searchSource()//
+					.query(QueryBuilders.matchAllQuery())//
+					.size(1000);
+
+			SearchResponse response = elastic()//
+					.prepareSearch(indices)//
+					.setSource(builder)//
+					.setScroll(ONE_MINUTE)//
+					.get();
+
+			do {
+				for (SearchHit hit : response.getHits()) {
+					SpaceFile file = toSpaceFile(hit);
+					restore(backup, hit.getType(), file);
+				}
+
+				response = elastic().prepareSearchScroll(response.getScrollId())//
+						.setScroll(ONE_MINUTE).get();
+
+			} while (response.getHits().getHits().length != 0);
+		}
+	}
+
+	private void restore(FileBackup backup, String bucket, SpaceFile file) {
+		Utils.info("Restoring /%s/%s%s", backup.backendId(), bucket, file.getPath());
+
+		FileStore store = store(bucket);
+		if (!store.check(backup.backendId(), bucket, file.getKey(), file.getHash())) {
+
+			try (InputStream bytes = backup.get(bucket, file.getKey())) {
+				store.restore(backup.backendId(), bucket, file.getKey(), file.getLength(), bytes);
+
+			} catch (IOException e) {
+				throw Exceptions.runtime(e, "restore file [%s][%s] failed", bucket, file.getPath());
+			}
+		}
+	}
+
+	//
+	// Implementation
+	//
+
+	private SpaceFile update(String bucket, SpaceFile file) {
+		elastic().index(index(bucket), file.getPath(), file);
+		return file;
+	}
+
 	private FileStore store(String bucket) {
 		return store(getBucket(bucket));
 	}
 
 	private FileStore store(FileBucket bucket) {
 		if (bucket.type.equals(FileBucket.StoreType.system))
-			return systemFileStore;
-		if (bucket.type.equals(FileBucket.StoreType.s3))
-			return s3FileStore;
-		if (bucket.type.equals(FileBucket.StoreType.elastic))
-			return elasticFileStore;
+			return systemStore;
 
-		throw Exceptions.runtime("file bucket storage [%s] is invalid", bucket.type);
+		if (bucket.type.equals(FileBucket.StoreType.s3))
+			return s3Store;
+
+		throw Exceptions.runtime("file bucket type [%s] is invalid", bucket.type);
 	}
 
 }

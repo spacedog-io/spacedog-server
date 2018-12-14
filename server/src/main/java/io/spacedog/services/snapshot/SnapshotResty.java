@@ -5,8 +5,6 @@ package io.spacedog.services.snapshot;
 
 import java.util.List;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.snapshot.SpaceRepository;
 import io.spacedog.client.snapshot.SpaceSnapshot;
@@ -20,6 +18,7 @@ import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
+import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/2/snapshots")
@@ -84,18 +83,20 @@ public class SnapshotResty extends SpaceResty {
 
 	@Post("/_latest/_restore")
 	@Post("/_latest/_restore/")
-	public ObjectNode postRestoreLatest(Context context) {
+	public Payload postRestoreLatest(Context context) {
 		Server.context().credentials().checkAtLeastSuperAdmin();
-		return Services.snapshots().restoreLatest(//
-				context.query().getBoolean(WAIT_FOR_COMPLETION_PARAM, false));
+		return Services.snapshots().getLatest(0, 1).stream().findAny()//
+				.map(snapshot -> postRestoreById(snapshot.id, context))//
+				.orElseThrow(() -> Exceptions.notFound("no snapshot found"));
 	}
 
 	@Post("/:id/_restore")
 	@Post("/:id/_restore/")
-	public ObjectNode postRestoreById(String snapshotId, Context context) {
+	public Payload postRestoreById(String snapshotId, Context context) {
 		Server.context().credentials().checkAtLeastSuperAdmin();
-		return Services.snapshots().restore(snapshotId, //
-				context.query().getBoolean(WAIT_FOR_COMPLETION_PARAM, false));
+		boolean wait = context.query().getBoolean(WAIT_FOR_COMPLETION_PARAM, false);
+		Services.snapshots().restore(snapshotId, wait);
+		return wait ? Payload.ok() : new Payload(HttpStatus.ACCEPTED);
 	}
 
 	//

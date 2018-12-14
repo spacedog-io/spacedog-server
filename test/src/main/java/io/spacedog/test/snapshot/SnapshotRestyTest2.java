@@ -11,13 +11,16 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.client.file.FileBucket;
 import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.client.snapshot.SpaceSnapshot;
 import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Json;
 
-public class SnapshotRestyTest extends SpaceTest {
+public class SnapshotRestyTest2 extends SpaceTest {
 
+	private static final String CATS_BUCKET = "cats";
+	private static final String DOGS_BUCKET = "dogs";
 	private static final ObjectNode MY_SETTINGS = Json.object("size", 6);
 	private static final String MY_SETTINGS_ID = "mysettings";
 
@@ -70,17 +73,20 @@ public class SnapshotRestyTest extends SpaceTest {
 		assertEquals(Sets.newHashSet("spacedog-credentials-0", //
 				"spacedog-log-0"), snap1.indices);
 
-		// superadmin creates fred's credentials
+		// superadmin creates credentials, settings and file
 		SpaceDog fred = createTempDog(superadmin, "fred");
 		superadmin.settings().save(MY_SETTINGS_ID, MY_SETTINGS);
+		superadmin.files().setBucket(new FileBucket(CATS_BUCKET));
+		superadmin.files().upload(CATS_BUCKET, "/felix", "Felix".getBytes());
+		superadmin.files().upload(CATS_BUCKET, "/grosminet", "Grosminet".getBytes());
 
 		// superadmin snapshots backend
 		SpaceSnapshot snap2 = superadmin.snapshots().snapshot(true);
 		assertEquals(repositoryId, snap2.repositoryId);
 		assertEquals("SUCCESS", snap2.state);
 		assertEquals("spacedog", snap2.backendId);
-		assertEquals(Sets.newHashSet("spacedog-credentials-0", //
-				"spacedog-log-0", "spacedog-settings-0"), snap2.indices);
+		assertEquals(Sets.newHashSet("spacedog-credentials-0", "spacedog-log-0", //
+				"spacedog-settings-0", "spacedog-files-cats-0"), snap2.indices);
 
 		// superadmin gets all snapshots
 		List<SpaceSnapshot> all = superadmin.snapshots().getAll();
@@ -90,14 +96,18 @@ public class SnapshotRestyTest extends SpaceTest {
 		// superadmin creates nath's credentials
 		SpaceDog nath = createTempDog(superadmin, "nath");
 		superadmin.settings().delete(MY_SETTINGS_ID);
+		superadmin.files().delete(CATS_BUCKET, "/felix");
+		superadmin.files().setBucket(new FileBucket(DOGS_BUCKET));
+		superadmin.files().upload(DOGS_BUCKET, "/milou", "Milou".getBytes());
+		superadmin.files().upload(DOGS_BUCKET, "/pluto", "Pluto".getBytes());
 
 		// superadmin snapshots backend
 		SpaceSnapshot snap3 = superadmin.snapshots().snapshot(true);
 		assertEquals(repositoryId, snap3.repositoryId);
 		assertEquals("SUCCESS", snap3.state);
 		assertEquals("spacedog", snap3.backendId);
-		assertEquals(Sets.newHashSet("spacedog-credentials-0", //
-				"spacedog-log-0", "spacedog-settings-0"), snap2.indices);
+		assertEquals(Sets.newHashSet("spacedog-credentials-0", "spacedog-log-0", //
+				"spacedog-settings-0", "spacedog-files-cats-0", "spacedog-files-dogs-0"), snap3.indices);
 
 		// snapshoter gets first and second latest snapshots
 		all = snapshoter.snapshots().getAll(0, 2);
@@ -123,8 +133,14 @@ public class SnapshotRestyTest extends SpaceTest {
 		snapshoter.login();
 		vince.login();
 		assertHttpError(401, () -> fred.login());
-		assertHttpError(404, () -> superadmin.settings().get(MY_SETTINGS_ID));
 		assertHttpError(401, () -> nath.login());
+		assertHttpError(404, () -> superadmin.settings().get(MY_SETTINGS_ID));
+		assertHttpError(404, () -> superadmin.files().getBucket(DOGS_BUCKET));
+		assertHttpError(404, () -> superadmin.files().getAsByteArray(DOGS_BUCKET, "/pluto"));
+		assertHttpError(404, () -> superadmin.files().getAsByteArray(DOGS_BUCKET, "/milou"));
+		assertHttpError(404, () -> superadmin.files().getBucket(CATS_BUCKET));
+		assertHttpError(404, () -> superadmin.files().getAsByteArray(CATS_BUCKET, "/felix"));
+		assertHttpError(404, () -> superadmin.files().getAsByteArray(CATS_BUCKET, "/grosminet"));
 
 		// superadmin restores second (middle) snapshot
 		superadmin.snapshots().restore(snap2.id, true);
@@ -136,6 +152,12 @@ public class SnapshotRestyTest extends SpaceTest {
 		fred.login();
 		superadmin.settings().get(MY_SETTINGS_ID).equals(MY_SETTINGS);
 		assertHttpError(401, () -> nath.login());
+		superadmin.files().getBucket(CATS_BUCKET);
+		assertArrayEquals("Felix".getBytes(), superadmin.files().getAsByteArray(CATS_BUCKET, "/felix"));
+		assertArrayEquals("Grosminet".getBytes(), superadmin.files().getAsByteArray(CATS_BUCKET, "/grosminet"));
+		assertHttpError(404, () -> superadmin.files().getBucket(DOGS_BUCKET));
+		assertHttpError(404, () -> superadmin.files().getAsByteArray(DOGS_BUCKET, "/pluto"));
+		assertHttpError(404, () -> superadmin.files().getAsByteArray(DOGS_BUCKET, "/milou"));
 
 		// superadmin restores latest (third) snapshot
 		superadmin.snapshots().restoreLatest(true);
@@ -147,6 +169,12 @@ public class SnapshotRestyTest extends SpaceTest {
 		fred.login();
 		nath.login();
 		assertHttpError(404, () -> superadmin.settings().get(MY_SETTINGS_ID));
+		superadmin.files().getBucket(CATS_BUCKET);
+		assertHttpError(404, () -> superadmin.files().getAsByteArray(CATS_BUCKET, "/felix"));
+		assertArrayEquals("Grosminet".getBytes(), superadmin.files().getAsByteArray(CATS_BUCKET, "/grosminet"));
+		superadmin.files().getBucket(DOGS_BUCKET);
+		assertArrayEquals("Pluto".getBytes(), superadmin.files().getAsByteArray(DOGS_BUCKET, "/pluto"));
+		assertArrayEquals("Milou".getBytes(), superadmin.files().getAsByteArray(DOGS_BUCKET, "/milou"));
 
 		// superdog cleans up all backend indices
 		superdog().admin().clearBackend();
@@ -179,9 +207,9 @@ public class SnapshotRestyTest extends SpaceTest {
 
 		// superdog gets all snapshots since not part of backend data
 		all = superdog().snapshots().getAll();
+		assertEquals(3, all.size());
 		assertEquals(snap3, all.get(0));
 		assertEquals(snap2, all.get(1));
 		assertEquals(snap1, all.get(2));
-		assertEquals(3, all.size());
 	}
 }

@@ -21,9 +21,10 @@ public interface SpaceFields {
 	/// Files
 
 	String PATH_FIELD = "path";
-	String BUCKET_KEY_FIELD = "bucketKey";
+	String KEY_FIELD = "key";
 	String ENCRYPTION_FIELD = "encryption";
 	String HASH_FIELD = "hash";
+	String SNAPSHOT_FIELD = "snapshot";
 	String CONTENT_TYPE_FIELD = "contentType";
 	String LENGTH_FIELD = "length";
 

@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import com.amazonaws.regions.Regions;
 
+import io.spacedog.client.file.FileBucket;
 import io.spacedog.client.http.SpaceBackend;
 import io.spacedog.client.http.SpaceEnv;
 import io.spacedog.client.snapshot.SpaceRepository;
@@ -22,6 +23,9 @@ public class ServerConfig {
 	private static final String OFFLINE = "spacedog.server.offline";
 	private static final String FILE_STORE = "spacedog.server.file.store";
 	private static final String FILE_STORE_PATH = "spacedog.server.file.store.path";
+	private static final String FILE_SNAPSHOTS_STORE_TYPE = "spacedog.server.file.snapshots.store.type";
+	private static final String FILE_SNAPSHOTS_SYSTEM_PATH = "spacedog.server.file.snapshots.system.path";
+	private static final String FILE_SNAPSHOTS_S3_SUFFIX = "spacedog.server.file.snapshots.s3.suffix";
 	private static final String GREEN_CHECK = "spacedog.server.green.check";
 	private static final String GREEN_TIMEOUT = "spacedog.server.green.timeout";
 	private static final String USER_AGENT = "spacedog.server.user.agent";
@@ -120,6 +124,20 @@ public class ServerConfig {
 		Optional7<String> opt = SpaceEnv.env().get(FILE_STORE_PATH);
 		return opt.isPresent() ? Paths.get(opt.get()) //
 				: homePath().resolve("files");
+	}
+
+	public static FileBucket.StoreType fileSnapshotsStoreType() {
+		return SpaceEnv.env().get(FILE_SNAPSHOTS_STORE_TYPE, FileBucket.StoreType.system);
+	}
+
+	public static Path fileSnapshotsSystemPath() {
+		Optional7<String> opt = SpaceEnv.env().get(FILE_SNAPSHOTS_SYSTEM_PATH);
+		return opt.isPresent() ? Paths.get(opt.get()) //
+				: homePath().resolve("snapshots-files");
+	}
+
+	public static String fileSnapshotsS3Suffix() {
+		return SpaceEnv.env().get(FILE_SNAPSHOTS_S3_SUFFIX, "snapshots-files");
 	}
 
 	public static void log() {

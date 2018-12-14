@@ -5,21 +5,24 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.cluster.repositories.delete.DeleteRepositoryResponse;
 import org.elasticsearch.action.admin.cluster.repositories.put.PutRepositoryResponse;
+import org.elasticsearch.action.admin.cluster.snapshots.create.CreateSnapshotRequestBuilder;
 import org.elasticsearch.action.admin.cluster.snapshots.create.CreateSnapshotResponse;
+import org.elasticsearch.action.admin.cluster.snapshots.restore.RestoreSnapshotRequestBuilder;
+import org.elasticsearch.action.admin.cluster.snapshots.restore.RestoreSnapshotResponse;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.cluster.metadata.RepositoryMetaData;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.repositories.RepositoryMissingException;
-import org.elasticsearch.snapshots.RestoreInfo;
 import org.elasticsearch.snapshots.SnapshotInfo;
+import org.elasticsearch.snapshots.SnapshotState;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -28,11 +31,11 @@ import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.client.snapshot.SpaceRepository;
 import io.spacedog.client.snapshot.SpaceSnapshot;
+import io.spacedog.jobs.Internals;
 import io.spacedog.server.Server;
 import io.spacedog.server.ServerConfig;
 import io.spacedog.server.SpaceService;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 
 public class SnapshotService extends SpaceService implements SpaceFields, SpaceParams {
@@ -70,37 +73,61 @@ public class SnapshotService extends SpaceService implements SpaceFields, SpaceP
 				.findAny().map(info -> toSpaceSnapshot(repositoryId, info));
 	}
 
-	public SpaceSnapshot snapshot(boolean wait) {
+	public SpaceSnapshot snapshot(boolean waitForCompletion) {
 		SpaceSnapshot snapshot = prepareSnapshot();
 
 		// TODO rename correctly the snapshot repository
-		CreateSnapshotResponse response = elastic().cluster()//
+		CreateSnapshotRequestBuilder snapshotRequest = elastic().cluster()//
 				.prepareCreateSnapshot(snapshot.repositoryId, snapshot.id)//
 				.setIndicesOptions(IndicesOptions.fromOptions(true, true, true, true))//
-				.setWaitForCompletion(wait)//
+				.setWaitForCompletion(true)//
 				.setIncludeGlobalState(true)//
+				.setPartial(false);
+
+		SnapshotListener listener = new SnapshotListener();
+
+		if (waitForCompletion) {
+			CreateSnapshotResponse response = snapshotRequest.get();
+			listener.onResponse(response);
+			return toSpaceSnapshot(snapshot.repositoryId, response.getSnapshotInfo());
+		} else {
+			snapshotRequest.execute(listener);
+			return snapshot;
+		}
+	}
+
+	public void restore(String snapshotId, boolean waitForCompletion) {
+		SpaceSnapshot snapshot = get(snapshotId).orElseThrow(//
+				() -> Exceptions.notFound("snapshot [%s] not found", snapshotId));
+
+		if (!snapshot.completed)
+			throw Exceptions.illegalArgument(//
+					"snapshot [%s] is not yet completed", snapshot.id);
+
+		if (!snapshot.restorable)
+			throw Exceptions.illegalArgument(//
+					"snapshot [%s] is not restorable, state is [%s]", //
+					snapshot.id, snapshot.state);
+
+		// delete all indices of all backends before restore
+		// this is prefered to a close operation
+		// because it remove indices not present in restored snapshot
+		elastic().deleteAbsolutelyAllIndices();
+
+		RestoreSnapshotRequestBuilder restoreRequest = elastic().cluster()//
+				.prepareRestoreSnapshot(snapshot.repositoryId, snapshot.id)//
+				.setWaitForCompletion(true)//
+				.setIndicesOptions(IndicesOptions.fromOptions(false, true, true, true))//
 				.setPartial(false)//
-				.get();
+				.setIncludeAliases(true)//
+				.setRestoreGlobalState(true);
 
-		SnapshotInfo info = response.getSnapshotInfo();
-		return info != null //
-				? toSpaceSnapshot(snapshot.repositoryId, info)
-				: snapshot;
-	}
+		RestoreListener listener = new RestoreListener();
 
-	public ObjectNode restoreLatest(boolean waitForCompletion) {
-		List<SpaceSnapshot> snapshots = getLatest(0, 1);
-
-		if (Utils.isNullOrEmpty(snapshots))
-			throw Exceptions.notFound("no snapshot found");
-
-		return doRestore(snapshots.get(0), waitForCompletion);
-	}
-
-	public ObjectNode restore(String snapshotId, boolean waitForCompletion) {
-		SpaceSnapshot snapshot = get(snapshotId)//
-				.orElseThrow(() -> Exceptions.notFound("snapshot [%s] not found", snapshotId));
-		return doRestore(snapshot, waitForCompletion);
+		if (waitForCompletion)
+			listener.onResponse(restoreRequest.get());
+		else
+			restoreRequest.execute(listener);
 	}
 
 	public List<SpaceRepository> getRepositories() {
@@ -162,44 +189,63 @@ public class SnapshotService extends SpaceService implements SpaceFields, SpaceP
 	}
 
 	//
-	// Implementation
+	// Implementation for files
+	//
+
+	private class SnapshotListener implements ActionListener<CreateSnapshotResponse> {
+		@Override
+		public void onResponse(CreateSnapshotResponse response) {
+			// FileBackup fileBackup = new FileBackup(//
+			// Server.backend().id(), "backup", filesBackupStore());
+			// Services.files().snapshot(fileBackup);
+		}
+
+		@Override
+		public void onFailure(Exception e) {
+			notifyFailure(e, "snapshot");
+		}
+	}
+
+	private class RestoreListener implements ActionListener<RestoreSnapshotResponse> {
+		@Override
+		public void onResponse(RestoreSnapshotResponse response) {
+			// FileBackup fileBackup = new FileBackup(//
+			// Server.backend().id(), "backup", filesBackupStore());
+			// Services.files().restore(fileBackup);
+		}
+
+		@Override
+		public void onFailure(Exception e) {
+			notifyFailure(e, "restore");
+		}
+	}
+
+	private void notifyFailure(Throwable t, String type) {
+		t.printStackTrace();
+		String title = String.format("backend [%s] %s error", Server.backend(), type);
+		Internals.get().notify(title, t);
+	}
+
+	// private FileStore filesBackupStore() {
+	// StoreType storeType = ServerConfig.fileSnapshotsStoreType();
+	//
+	// if (StoreType.s3.equals(storeType))
+	// return new S3FileStore(ServerConfig.awsBucketPrefix() +
+	// ServerConfig.fileSnapshotsS3Suffix());
+	//
+	// if (StoreType.system.equals(storeType))
+	// return new SystemFileStore(ServerConfig.fileSnapshotsSystemPath());
+	//
+	// throw Exceptions.runtime("file bucket type [%s] is invalid", storeType);
+	// }
+
+	//
+	// Implementation for data
 	//
 
 	private final static String PREFIX = "-utc-";
 	private static final DateTimeFormatter SNAPSHOT_ID_FORMATTER = DateTimeFormat//
 			.forPattern("yyyy-MM-dd-HH-mm-ss-SSS").withZone(DateTimeZone.UTC);
-
-	private ObjectNode doRestore(SpaceSnapshot snapshot, boolean waitForCompletion) {
-
-		if (!snapshot.completed)
-			throw Exceptions.illegalArgument(//
-					"snapshot [%s] is not yet completed", snapshot.id);
-
-		if (!snapshot.restorable)
-			throw Exceptions.illegalArgument(//
-					"snapshot [%s] is not restorable, state is [%s]", //
-					snapshot.id, snapshot.state);
-
-		// delete all indices of all backends before restore
-		// this is prefered to a close operation
-		// because it remove indices not present in restored snapshot
-		elastic().deleteAbsolutelyAllIndices();
-
-		RestoreInfo restore = elastic().cluster()//
-				.prepareRestoreSnapshot(snapshot.repositoryId, snapshot.id)//
-				.setWaitForCompletion(waitForCompletion)//
-				.setIndicesOptions(IndicesOptions.fromOptions(false, true, true, true))//
-				.setPartial(false)//
-				.setIncludeAliases(true)//
-				.setRestoreGlobalState(true)//
-				.get()//
-				.getRestoreInfo();
-
-		if (restore == null)
-			throw Exceptions.illegalArgument("snapshot [%s] restore failed", snapshot.id);
-
-		return Json.object("id", restore.name(), "indices", restore.indices());
-	}
 
 	private SpaceRepository toSpaceRepository(RepositoryMetaData repo) {
 		Map<String, Object> settings = Maps.newHashMap();
@@ -232,6 +278,9 @@ public class SnapshotService extends SpaceService implements SpaceFields, SpaceP
 		snapshot.backendId = Server.backend().id();
 		snapshot.id = snapshot.backendId + PREFIX + SNAPSHOT_ID_FORMATTER.print(now);
 		snapshot.repositoryId = getOrCreateRepositoryFor(now);
+		snapshot.state = SnapshotState.IN_PROGRESS.toString();
+		snapshot.restorable = false;
+		snapshot.completed = false;
 		return snapshot;
 	}
 

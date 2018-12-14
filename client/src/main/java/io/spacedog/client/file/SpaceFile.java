@@ -1,6 +1,7 @@
 package io.spacedog.client.file;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -25,6 +26,7 @@ public class SpaceFile extends DataObjectBase {
 	private String contentType;
 	private String hash;
 	private String encryption;
+	private boolean snapshot;
 	private Set<String> tags = Sets.newLinkedHashSet();
 
 	public SpaceFile() {
@@ -38,11 +40,11 @@ public class SpaceFile extends DataObjectBase {
 		return path;
 	}
 
-	public String getBucketKey() {
+	public String getKey() {
 		return bucketKey;
 	}
 
-	public void setBucketKey(String bucketKey) {
+	public void setKey(String bucketKey) {
 		this.bucketKey = bucketKey;
 	}
 
@@ -94,6 +96,14 @@ public class SpaceFile extends DataObjectBase {
 		this.hash = hash;
 	}
 
+	public boolean getSnapshot() {
+		return snapshot;
+	}
+
+	public void setSnapshot(boolean snapshot) {
+		this.snapshot = snapshot;
+	}
+
 	public String getEscapedPath() {
 		return WebPath.parse(path).toEscapedString();
 	}
@@ -114,5 +124,27 @@ public class SpaceFile extends DataObjectBase {
 			path = path.substring(1);
 		path = path.replace('/', '-');
 		return path;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+
+		if (!(obj instanceof SpaceFile))
+			return false;
+
+		SpaceFile file = (SpaceFile) obj;
+		return Objects.equals(path, file.path);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hashCode(path);
+	}
+
+	@Override
+	public String toString() {
+		return String.format("SpaceFile[%s]", path);
 	}
 }
