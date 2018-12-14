@@ -43,6 +43,12 @@ public class SpaceAssert extends Assert implements SpacePlatform, SpaceFields, S
 		return createTempDog(superdog, Roles.superadmin, Roles.superadmin);
 	}
 
+	public static SpaceDog clearServer(SpaceBackend backend) {
+		SpaceDog superdog = superdog(backend);
+		superdog.admin().clearBackend();
+		return createTempDog(superdog, Roles.superadmin, Roles.superadmin);
+	}
+
 	public static void prepareTest() {
 		prepareTest(true, false);
 	}
@@ -62,6 +68,12 @@ public class SpaceAssert extends Assert implements SpacePlatform, SpaceFields, S
 
 	public static SpaceDog superdog() {
 		return SpaceDog.dog()//
+				.username(Credentials.SUPERDOG.username())//
+				.password(SpaceEnv.env().superdogPassword());
+	}
+
+	public static SpaceDog superdog(SpaceBackend backend) {
+		return SpaceDog.dog(backend)//
 				.username(Credentials.SUPERDOG.username())//
 				.password(SpaceEnv.env().superdogPassword());
 	}
