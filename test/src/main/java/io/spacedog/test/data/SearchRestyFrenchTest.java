@@ -64,6 +64,17 @@ public class SearchRestyFrenchTest extends SpaceTest {
 		matchPrefix("j z");
 
 		noMatchPrefix("jz");
+
+		index("17F11");
+
+		matchPrefix("1");
+		matchPrefix("17");
+		matchPrefix("17f");
+		matchPrefix("17f11");
+
+		noMatchPrefix("11");
+		noMatchPrefix("F");
+		noMatchPrefix("F11");
 	}
 
 	@Test
