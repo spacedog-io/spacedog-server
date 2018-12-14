@@ -44,10 +44,6 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 		return backend;
 	}
 
-	public String backendId() {
-		return backend.id();
-	}
-
 	public String username() {
 		return username;
 	}
