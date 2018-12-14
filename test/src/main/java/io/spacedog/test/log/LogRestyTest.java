@@ -336,7 +336,7 @@ public class LogRestyTest extends SpaceTest {
 		assertEquals("PUT", logItem.method);
 		assertEquals("/2/schemas/toto", logItem.path);
 		assertEquals(400, logItem.status);
-		assertNull(logItem.payload);
+		assertTrue(logItem.payload.isNull());
 		assertNull(logItem.parameters);
 
 		// check that log response results are not logged
