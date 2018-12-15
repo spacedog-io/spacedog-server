@@ -22,10 +22,10 @@ public class Internals {
 
 		try {
 			Optional7<String> topic = SpaceEnv.env().superdogNotificationTopic();
-			if (!topic.isPresent())
-				Utils.warn("unable to send platform alert [%s][%s]: no SNS topic in env", //
-						title, message);
-			else
+			if (!topic.isPresent()) {
+				Utils.warn("%s: %s", title, message);
+				Utils.warn("unable to notify superdogs: no superdog topic in env properties");
+			} else
 				sns.publish(new PublishRequest()//
 						.withTopicArn(topic.get())//
 						.withSubject(title)//
@@ -48,7 +48,8 @@ public class Internals {
 
 	private Internals() {
 		sns = AmazonSNSClientBuilder.standard()//
-				.withRegion(Regions.EU_WEST_1)//
+				.withRegion(Regions.fromName(SpaceEnv.env().backendRegion()))//
 				.build();
 	}
+
 }
