@@ -20,7 +20,7 @@ import io.spacedog.client.http.WebPath;
 public class SpaceFile extends DataObjectBase {
 
 	private String path;
-	private String bucketKey;
+	private String key;
 	private String name;
 	private long length;
 	private String contentType;
@@ -41,11 +41,11 @@ public class SpaceFile extends DataObjectBase {
 	}
 
 	public String getKey() {
-		return bucketKey;
+		return key;
 	}
 
-	public void setKey(String bucketKey) {
-		this.bucketKey = bucketKey;
+	public void setKey(String key) {
+		this.key = key;
 	}
 
 	public String getName() {
