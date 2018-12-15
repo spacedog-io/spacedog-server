@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
@@ -24,7 +23,7 @@ public class SnapshotRestyTest2 extends SpaceTest {
 	private static final ObjectNode MY_SETTINGS = Json.object("size", 6);
 	private static final String MY_SETTINGS_ID = "mysettings";
 
-	@Test
+	// @Test
 	public void snapshotAndRestoreMultipleTimes() throws InterruptedException, UnknownHostException {
 
 		// prepare
