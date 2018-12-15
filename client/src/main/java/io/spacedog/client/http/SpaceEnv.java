@@ -18,10 +18,11 @@ public class SpaceEnv {
 	private static final String DEBUG = "spacedog.debug";
 	private static final String HTTP_TIMEOUT = "spacedog.http.timeout";
 	private static final String SUPERDOG_PASSWORD = "spacedog.superdog.password";
-	private static final String SUPERDOG_NOTIFICATION_TOPIC = "spacedog.superdog.notification.topic";
 	private static final String BACKEND_ID = "spacedog.backend.id";
+	private static final String BACKEND_REGION = "spacedog.backend.region";
 	private static final String BACKEND_WWW_PUBLIC_URL = "spacedog.backend.www.public.url";
 	private static final String BACKEND_API_PUBLIC_URL = "spacedog.backend.api.public.url";
+	private static final String SUPERDOG_NOTIFICATION_TOPIC = "spacedog.superdog.notification.topic";
 
 	private Properties properties;
 
@@ -96,6 +97,14 @@ public class SpaceEnv {
 		if (superdogPassword == null)
 			superdogPassword = getOrElseThrow(SUPERDOG_PASSWORD);
 		return superdogPassword;
+	}
+
+	private String backendRegion;
+
+	public String backendRegion() {
+		if (backendRegion == null)
+			backendRegion = get(BACKEND_REGION, "eu-west-3");
+		return backendRegion;
 	}
 
 	//

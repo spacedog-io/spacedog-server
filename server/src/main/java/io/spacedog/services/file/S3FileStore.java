@@ -36,7 +36,7 @@ public class S3FileStore implements FileStore {
 	public S3FileStore(String bucketName) {
 		this.bucketName = bucketName;
 		this.s3 = AmazonS3ClientBuilder.standard()//
-				.withRegion(ServerConfig.awsRegionOrDefault())//
+				.withRegion(ServerConfig.awsRegion())//
 				.build();
 	}
 

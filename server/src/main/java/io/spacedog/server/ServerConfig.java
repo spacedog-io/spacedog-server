@@ -35,7 +35,6 @@ public class ServerConfig {
 	private static final String MAIL_DOMAIN = "spacedog.server.mail.domain";
 	private static final String MAIL_MAILGUN_KEY = "spacedog.server.mail.mailgun.key";
 	private static final String AWS_BUCKET_PREFIX = "spacedog.server.aws.bucket.prefix";
-	private static final String AWS_REGION = "spacedog.server.aws.region";
 
 	public static Path homePath() {
 		Optional7<String> path = SpaceEnv.env().get(HOME_PATH);
@@ -80,16 +79,8 @@ public class ServerConfig {
 		return SpaceEnv.env().get(ELASTIC_SNAPSHOTS_REPO_TYPE, SpaceRepository.TYPE_FS);
 	}
 
-	public static Optional7<Regions> awsRegion() {
-		Optional7<String> opt = SpaceEnv.env().get(AWS_REGION);
-		return opt.isPresent() //
-				? Optional7.of(Regions.fromName(opt.get())) //
-				: Optional7.empty();
-
-	}
-
-	public static Regions awsRegionOrDefault() {
-		return awsRegion().orElse(Regions.EU_WEST_1);
+	public static Regions awsRegion() {
+		return Regions.fromName(SpaceEnv.env().backendRegion());
 	}
 
 	public static String awsBucketPrefix() {
@@ -149,7 +140,6 @@ public class ServerConfig {
 		log(GREEN_CHECK, greenCheck());
 		log(GREEN_TIMEOUT, greenTimeout());
 		log(ELASTIC_SNAPSHOTS_REPO_TYPE, elasticSnapshotsRepoType());
-		log(AWS_REGION, awsRegion());
 		log(AWS_BUCKET_PREFIX, awsBucketPrefix());
 		log(MAIL_DOMAIN, mailDomain());
 		log(MAIL_SMTP_DEBUG, mailSmtpDebug());

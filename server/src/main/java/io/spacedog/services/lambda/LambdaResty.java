@@ -30,7 +30,7 @@ import net.codestory.http.payload.Payload;
 public class LambdaResty extends SpaceResty {
 
 	private final static AWSLambda lambda = AWSLambdaClient.builder()//
-			.withRegion(ServerConfig.awsRegionOrDefault())//
+			.withRegion(ServerConfig.awsRegion())//
 			.build();
 
 	static AWSLambda lambda() {

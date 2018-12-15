@@ -336,7 +336,7 @@ public class SnapshotService extends SpaceService implements SpaceFields, SpaceP
 
 			Settings settings = Settings.builder()//
 					.put("bucket", ServerConfig.awsBucketPrefix() + "snapshots")//
-					.put("region", ServerConfig.awsRegion().get().getName())//
+					.put("region", ServerConfig.awsRegion().getName())//
 					.put("base_path", id)//
 					.put("compress", true)//
 					.build();

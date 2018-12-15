@@ -26,7 +26,7 @@ import io.spacedog.utils.Utils;
 public class AwsSnsPusher {
 
 	private final static AmazonSNS sns = AmazonSNSClientBuilder.standard()//
-			.withRegion(ServerConfig.awsRegionOrDefault())//
+			.withRegion(ServerConfig.awsRegion())//
 			.build();
 
 	static AmazonSNS sns() {
