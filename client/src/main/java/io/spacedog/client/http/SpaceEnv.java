@@ -22,7 +22,7 @@ public class SpaceEnv {
 	private static final String BACKEND_REGION = "spacedog.backend.region";
 	private static final String BACKEND_WWW_PUBLIC_URL = "spacedog.backend.www.public.url";
 	private static final String BACKEND_API_PUBLIC_URL = "spacedog.backend.api.public.url";
-	private static final String SUPERDOG_NOTIFICATION_TOPIC = "spacedog.superdog.notification.topic";
+	private static final String SUPERDOG_NOTIFICATION_TOPIC = "spacedog_superdog_notification_topic";
 
 	private Properties properties;
 
