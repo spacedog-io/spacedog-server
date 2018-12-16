@@ -30,7 +30,7 @@ public class ServerConfig {
 	private static final String GREEN_TIMEOUT = "spacedog.server.green.timeout";
 	private static final String USER_AGENT = "spacedog.server.user.agent";
 	private static final String ELASTIC_CONFIG_PATH = "spacedog.server.elastic.config.path";
-	private static final String ELASTIC_SNAPSHOTS_REPO_TYPE = "spacedog.server.elastic.snapshots.repo.type";
+	private static final String SNAPSHOTS_REPO_TYPE = "spacedog.server.snapshots.repo.type";
 	private static final String MAIL_SMTP_DEBUG = "spacedog.server.mail.smtp.debug";
 	private static final String MAIL_DOMAIN = "spacedog.server.mail.domain";
 	private static final String MAIL_MAILGUN_KEY = "spacedog.server.mail.mailgun.key";
@@ -75,8 +75,8 @@ public class ServerConfig {
 		return SpaceEnv.env().get(GREEN_TIMEOUT, 60);
 	}
 
-	public static String elasticSnapshotsRepoType() {
-		return SpaceEnv.env().get(ELASTIC_SNAPSHOTS_REPO_TYPE, SpaceRepository.TYPE_FS);
+	public static String snapshotsRepoType() {
+		return SpaceEnv.env().get(SNAPSHOTS_REPO_TYPE, SpaceRepository.TYPE_FS);
 	}
 
 	public static Regions awsRegion() {
@@ -139,7 +139,7 @@ public class ServerConfig {
 		log(PORT, port());
 		log(GREEN_CHECK, greenCheck());
 		log(GREEN_TIMEOUT, greenTimeout());
-		log(ELASTIC_SNAPSHOTS_REPO_TYPE, elasticSnapshotsRepoType());
+		log(SNAPSHOTS_REPO_TYPE, snapshotsRepoType());
 		log(AWS_BUCKET_PREFIX, awsBucketPrefix());
 		log(MAIL_DOMAIN, mailDomain());
 		log(MAIL_SMTP_DEBUG, mailSmtpDebug());

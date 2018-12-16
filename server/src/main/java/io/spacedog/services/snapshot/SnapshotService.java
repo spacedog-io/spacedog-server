@@ -320,7 +320,7 @@ public class SnapshotService extends SpaceService implements SpaceFields, SpaceP
 
 	private static RepositoryMetaData createRepository(String id) {
 
-		String type = ServerConfig.elasticSnapshotsRepoType();
+		String type = ServerConfig.snapshotsRepoType();
 
 		if (type.equals(SpaceRepository.TYPE_FS)) {
 
