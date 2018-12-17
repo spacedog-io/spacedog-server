@@ -24,7 +24,7 @@ import net.codestory.http.payload.Payload;
 @Prefix("/2/snapshots")
 public class SnapshotResty extends SpaceResty {
 
-	public static final String SNAPSHOTER_ROLE = "snapshoter";
+	public static final String SNAPSHOT_MAN = "snapshotman";
 
 	//
 	// routes
@@ -33,7 +33,7 @@ public class SnapshotResty extends SpaceResty {
 	@Get("")
 	@Get("/")
 	public List<SpaceSnapshot> getAll(Context context) {
-		checkSnapshotOrSuperadmin();
+		checkAtLeastSnapshotMan();
 		int from = context.query().getInteger(FROM_PARAM, 0);
 		int size = context.query().getInteger(SIZE_PARAM, 10);
 		return Services.snapshots().getLatest(from, size);
@@ -42,7 +42,7 @@ public class SnapshotResty extends SpaceResty {
 	@Post("")
 	@Post("/")
 	public Payload postSnapshot(Context context) {
-		checkSnapshotOrSuperadmin();
+		checkAtLeastSnapshotMan();
 		boolean wait = context.query().getBoolean(WAIT_FOR_COMPLETION_PARAM, false);
 		return JsonPayload.status(wait ? 202 : 201)//
 				.withContent(Services.snapshots().snapshot(wait))//
@@ -52,7 +52,7 @@ public class SnapshotResty extends SpaceResty {
 	@Get("/repositories")
 	@Get("/repositories/")
 	public List<SpaceRepository> getRepositories(Context context) {
-		checkSnapshotOrSuperadmin();
+		checkAtLeastSnapshotMan();
 		return Services.snapshots().getRepositories();
 	}
 
@@ -67,7 +67,7 @@ public class SnapshotResty extends SpaceResty {
 	@Get("/_latest")
 	@Get("/_latest/")
 	public SpaceSnapshot getLatest() {
-		checkSnapshotOrSuperadmin();
+		checkAtLeastSnapshotMan();
 		return Services.snapshots().getLatest(0, 1)//
 				.stream().findAny()//
 				.orElseThrow(() -> Exceptions.notFound("no snapshot found"));
@@ -76,7 +76,7 @@ public class SnapshotResty extends SpaceResty {
 	@Get("/:id")
 	@Get("/:id/")
 	public SpaceSnapshot getById(String snapshotId) {
-		checkSnapshotOrSuperadmin();
+		checkAtLeastSnapshotMan();
 		return Services.snapshots().get(snapshotId)//
 				.orElseThrow(() -> Exceptions.notFound("snapshot [%s] not found", snapshotId));
 	}
@@ -103,17 +103,14 @@ public class SnapshotResty extends SpaceResty {
 	// implementation
 	//
 
-	private void checkSnapshotOrSuperadmin() {
+	private Credentials checkAtLeastSnapshotMan() {
 		Credentials credentials = Server.context().credentials();
 
-		if (credentials.isAtLeastSuperAdmin() || isSnapshot(credentials))
-			return;
+		if (credentials.isAtLeastSuperAdmin() //
+				|| credentials.roles().contains(SNAPSHOT_MAN))
+			return credentials;
 
 		throw Exceptions.insufficientPermissions(credentials);
-	}
-
-	private boolean isSnapshot(Credentials credentials) {
-		return credentials.roles().contains(SNAPSHOTER_ROLE);
 	}
 
 }
