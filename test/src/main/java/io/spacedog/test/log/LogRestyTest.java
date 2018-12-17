@@ -32,6 +32,7 @@ public class LogRestyTest extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = clearServer();
+		SpaceDog purgeman = createTempDog(superadmin, "purgeman", "purgeman");
 		SpaceDog fred = createTempDog(superadmin, "fred").login();
 
 		fred.data().prepareGetAll().go();
@@ -40,18 +41,19 @@ public class LogRestyTest extends SpaceTest {
 		// superadmin checks everything is in place
 		LogSearchResults log = superadmin.logs().get(10, true);
 
-		assertEquals(6, log.results.size());
+		assertEquals(7, log.results.size());
 		assertEquals("/2/data", log.results.get(0).path);
 		assertEquals("/2/data", log.results.get(1).path);
 		assertEquals("/2/credentials/_login", log.results.get(2).path);
 		assertEquals("/2/credentials", log.results.get(3).path);
 		assertEquals("/2/credentials", log.results.get(4).path);
-		assertEquals("/2/admin/_clear", log.results.get(5).path);
+		assertEquals("/2/credentials", log.results.get(5).path);
+		assertEquals("/2/admin/_clear", log.results.get(6).path);
 
+		// purgeman deletes all logs before GET /data requests
+		// purgeman is authorized since he's got the purgeman role
 		DateTime before = log.results.get(1).receivedAt;
-
-		// superadmin deletes all logs before GET /data requests
-		superadmin.logs().delete(before);
+		purgeman.logs().delete(before);
 
 		// superadmin checks all test backend logs are deleted but ...
 		log = superadmin.logs().get(10, true);
@@ -68,11 +70,11 @@ public class LogRestyTest extends SpaceTest {
 
 		before = log.results.get(1).receivedAt;
 
-		// superdog deletes all logs before GET /log requests
-		superdog().logs().delete(before);
+		// superadmin deletes all logs before GET /log requests
+		superadmin.logs().delete(before);
 
 		// superadmin checks all test backend logs are deleted but ...
-		log = superdog().logs().get(10, true);
+		log = superadmin.logs().get(10, true);
 
 		assertEquals(4, log.total);
 		assertEquals("DELETE", log.results.get(0).method);
@@ -83,6 +85,12 @@ public class LogRestyTest extends SpaceTest {
 		assertEquals("/2/logs", log.results.get(2).path);
 		assertEquals("GET", log.results.get(3).method);
 		assertEquals("/2/logs", log.results.get(3).path);
+
+		// fred is not authorized to purge logs
+		// since not superadmin nor purgeman role
+		assertHttpError(403, //
+				() -> fred.logs().delete(DateTime.now().minusMinutes(5)));
+
 	}
 
 	@Test
