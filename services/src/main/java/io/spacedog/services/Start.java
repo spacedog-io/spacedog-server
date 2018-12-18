@@ -25,15 +25,11 @@ import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.DateTimeZones;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Utils;
-import net.codestory.http.AbstractWebServer;
 import net.codestory.http.Request;
 import net.codestory.http.Response;
-import net.codestory.http.internal.Handler;
-import net.codestory.http.internal.HttpServerWrapper;
-import net.codestory.http.internal.SimpleServerWrapper;
+import net.codestory.http.WebServer;
 import net.codestory.http.payload.Payload;
 import net.codestory.http.routes.Routes;
-import net.codestory.http.websockets.WebSocketHandler;
 
 public class Start {
 
@@ -237,12 +233,7 @@ public class Start {
 				.filter(FileResource.get().filter());
 	}
 
-	private static class MyFluentServer extends AbstractWebServer<MyFluentServer> {
-
-		@Override
-		protected HttpServerWrapper createHttpServer(Handler httpHandler, WebSocketHandler webSocketHandler) {
-			return new SimpleServerWrapper(httpHandler, webSocketHandler);
-		}
+	private static class MyFluentServer extends WebServer {
 
 		public Payload executeRequest(Request request, Response response) throws Exception {
 			return routesProvider.get().apply(request, response);
