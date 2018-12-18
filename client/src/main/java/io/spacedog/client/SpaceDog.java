@@ -172,6 +172,10 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 		return auth(SpaceRequest.options(uri));
 	}
 
+	public SpaceRequest head(String uri) {
+		return auth(SpaceRequest.head(uri));
+	}
+
 	private SpaceRequest auth(SpaceRequest request) {
 		request.backend(backend());
 
