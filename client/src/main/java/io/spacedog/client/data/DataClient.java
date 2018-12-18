@@ -111,7 +111,7 @@ public class DataClient implements SpaceFields, SpaceParams {
 	// Save
 	//
 
-	public <K> DataWrap<K> save(K source) {
+	public <K> DataWrap<K> create(K source) {
 		return save(source, null);
 	}
 

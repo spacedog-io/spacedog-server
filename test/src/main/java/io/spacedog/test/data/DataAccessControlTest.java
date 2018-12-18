@@ -351,7 +351,7 @@ public class DataAccessControlTest extends SpaceTest {
 		// he's only got the right to read
 		SpaceDog fred = createTempDog(superadmin, "fred");
 		superadmin.credentials().setRole(fred.id(), "iron");
-		assertHttpError(403, () -> fred.data().save(new Message("hi")));
+		assertHttpError(403, () -> fred.data().create(new Message("hi")));
 		fred.data().get(Message.TYPE, "2");
 		assertHttpError(403, () -> fred.data().save(new Message("hi"), "2"));
 		assertHttpError(403, () -> fred.data().delete(Message.TYPE, "2"));

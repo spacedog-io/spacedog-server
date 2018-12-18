@@ -312,7 +312,7 @@ public class DataRestyTest2 extends SpaceTest {
 		Set<String> originalMessages = Sets.newHashSet(//
 				"hello", "bonjour", "guttentag", "hola");
 		for (String message : originalMessages)
-			vince.data().save(new Message(message));
+			vince.data().create(new Message(message));
 
 		// fetches messages by 4 pages of 1 object
 		Set<String> messages = Sets.newHashSet();

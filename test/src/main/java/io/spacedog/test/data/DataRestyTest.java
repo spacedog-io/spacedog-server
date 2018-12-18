@@ -227,7 +227,7 @@ public class DataRestyTest extends SpaceTest {
 		superadmin.schemas().set(Message.schema());
 
 		// superadmin creates a message
-		String messageId = superadmin.data().save(new Message("toto")).id();
+		String messageId = superadmin.data().create(new Message("toto")).id();
 
 		// superadmin fails to patch message 'owner' meta field
 		assertHttpError(400, () -> superadmin.data().patch(//
@@ -255,7 +255,7 @@ public class DataRestyTest extends SpaceTest {
 		superadmin.schemas().set(Message.schema());
 
 		// superadmin creates a message
-		String messageId = superadmin.data().save(new Message("toto")).id();
+		String messageId = superadmin.data().create(new Message("toto")).id();
 
 		// superadmin fails to save 'owner' meta field
 		assertHttpError(400, () -> superadmin.data().saveField(//
