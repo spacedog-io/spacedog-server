@@ -75,7 +75,7 @@ public class S3Resource extends Resource {
 		return doGet(withContent, bucketSuffix, backendId, path, context, false);
 	}
 
-	private Payload doGet(boolean withContent, String bucketSuffix, String backendId, WebPath path, Context context,
+	public Payload doGet(boolean withContent, String bucketSuffix, String backendId, WebPath path, Context context,
 			boolean checkOwnership) {
 
 		String bucketName = getBucketName(bucketSuffix);
