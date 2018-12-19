@@ -437,7 +437,30 @@ public class ShareRestyTest extends SpaceTest {
 	}
 
 	@Test
-	public void testFileErrorsDoNotDrainAllS3Connections() {
+	public void testHeadRequestOnFile() {
+
+		// prepare
+		prepareTest();
+		SpaceDog superadmin = clearServer();
+
+		// superadmin sets 'shares' file bucket
+		superadmin.files().setBucket(new FileBucket(SHARES));
+
+		// superadmin shares a file
+		SpaceFile share = superadmin.files().share(SHARES, "foobar".getBytes());
+
+		// superadmin gets HEAD of this file
+		superadmin.head(location(share)).go(200)//
+				.assertHeaderEquals(share.getHash(), SpaceHeaders.ETAG)//
+				// TODO fix Fluent-HTTP to allow HEAD request to return
+				// content-length and content-type of equivalent GET request
+				// .assertHeaderEquals(share.getContentType(), SpaceHeaders.CONTENT_TYPE)//
+				// .assertHeaderEquals(share.getLength(), SpaceHeaders.CONTENT_LENGTH)//
+				.asVoid();
+	}
+
+	@Test
+	public void errorsAndHeadRequestDoNotDrainAllS3Connections() {
 
 		// prepare
 		prepareTest();
@@ -451,10 +474,15 @@ public class ShareRestyTest extends SpaceTest {
 		// superadmin shares a file
 		SpaceFile share = superadmin.files().share(SHARES, "foobar".getBytes());
 
-		// superadmin tries 100 times to get this file
+		// superadmin requests 75 times the head this file
+		// this checks head requests do not drain s3 connection pool
+		for (int i = 0; i < 75; i++)
+			superadmin.head(location(share)).go(200).asVoid();
+
+		// superadmin tries 75 times to get this file
 		// he fails since he forces request failure via the _fail param
 		// this checks that unexpected errors do not drain s3 connection pool
-		for (int i = 0; i < 100; i++)
+		for (int i = 0; i < 75; i++)
 			superadmin.get(location(share)).queryParam(FAIL_PARAM).go(400).asVoid();
 	}
 

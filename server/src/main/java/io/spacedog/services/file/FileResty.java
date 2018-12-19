@@ -52,7 +52,10 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		String method = context.method();
 
 		if (Methods.GET.equals(method))
-			return get(toWebPath(uri), context);
+			return get(toWebPath(uri), true, context);
+
+		if (Methods.HEAD.equals(method))
+			return get(toWebPath(uri), false, context);
 
 		if (Methods.PUT.equals(method))
 			return put(toWebPath(uri), context);
@@ -70,7 +73,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 	// GET
 	//
 
-	private Payload get(WebPath absolutePath, Context context) {
+	private Payload get(WebPath absolutePath, boolean withContent, Context context) {
 
 		if (absolutePath.isRoot()) {
 			Server.context().credentials().checkAtLeastSuperAdmin();
@@ -85,19 +88,22 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		}
 
 		String path = absolutePath.removeFirst().toString();
-		return doGet(bucket, path, context);
+		return doGet(bucket, path, withContent, context);
 	}
 
-	private Payload doGet(String bucketName, String path, Context context) {
+	private Payload doGet(String bucketName, String path, boolean withContent, Context context) {
 
 		FileBucket bucket = Services.files().getBucket(bucketName);
 		SpaceFile file = checkRead(bucket, path);
 
-		Payload payload = new Payload(file.getContentType(), //
-				Services.files().getAsByteStream(bucketName, file.getKey()))//
-						.withHeader(SpaceHeaders.ETAG, file.getHash())//
-						.withHeader(SpaceHeaders.SPACEDOG_OWNER, file.owner())//
-						.withHeader(SpaceHeaders.SPACEDOG_GROUP, file.group());
+		Object content = withContent //
+				? Services.files().getAsByteStream(bucketName, file.getKey())
+				: null;
+
+		Payload payload = new Payload(file.getContentType(), content)//
+				.withHeader(SpaceHeaders.ETAG, file.getHash())//
+				.withHeader(SpaceHeaders.SPACEDOG_OWNER, file.owner())//
+				.withHeader(SpaceHeaders.SPACEDOG_GROUP, file.group());
 
 		// Since fluent-http only provides gzip encoding,
 		// we only set Content-Length header if Accept-encoding
