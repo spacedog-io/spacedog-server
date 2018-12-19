@@ -164,15 +164,16 @@ public class SpaceResponse implements Closeable {
 
 		String body = asString();
 
-		try {
-			if (Json.isJson(body))
-				jsonBody = Json.readNode(body);
-		} catch (Exception ignore) {
-			// not really a json body
-		}
+		// Body can be empty. Example:
+		// HEAD request strip response body
+		if (Utils.isNullOrEmpty(body))
+			jsonBody = NullNode.getInstance();
 
-		if (jsonBody == null)
-			throw Exceptions.runtime("payload isn't of type JSON");
+		else if (Json.isJson(body))
+			jsonBody = Json.readNode(body);
+
+		else
+			throw Exceptions.runtime("payload isn't JSON");
 
 		return jsonBody;
 	}

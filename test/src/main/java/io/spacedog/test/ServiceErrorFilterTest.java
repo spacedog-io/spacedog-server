@@ -25,6 +25,22 @@ public class ServiceErrorFilterTest extends SpaceTest {
 	}
 
 	@Test
+	public void headResquestDoNotReturnAnyResponseBody() {
+
+		prepareTest();
+		SpaceDog superadmin = clearServer();
+
+		// fails since invalid route
+		SpaceRequest.head("/2/toto")//
+				.backend(superadmin.backend())//
+				.go(404)//
+				// server error filter return JSON responses
+				.assertJsonContent()//
+				// but response is empty because this is a HEAD request
+				.assertBodyEquals("");
+	}
+
+	@Test
 	public void notifySuperdogsForInternalServerErrors() {
 
 		// prepare
