@@ -53,17 +53,13 @@ import io.spacedog.utils.DateTimes;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
-import net.codestory.http.AbstractWebServer;
 import net.codestory.http.Request;
 import net.codestory.http.Response;
+import net.codestory.http.WebServer;
 import net.codestory.http.extensions.Extensions;
-import net.codestory.http.internal.Handler;
-import net.codestory.http.internal.HttpServerWrapper;
-import net.codestory.http.internal.SimpleServerWrapper;
 import net.codestory.http.misc.Env;
 import net.codestory.http.payload.Payload;
 import net.codestory.http.routes.Routes;
-import net.codestory.http.websockets.WebSocketHandler;
 
 @SuppressWarnings("serial")
 public class Server implements Extensions {
@@ -277,11 +273,12 @@ public class Server implements Extensions {
 		System.err.println("Started in " + (System.currentTimeMillis() - startTime) + " ms");
 	}
 
-	private static class FluentServer extends AbstractWebServer<FluentServer> {
+	private static class FluentServer extends WebServer {
 
-		@Override
-		protected HttpServerWrapper createHttpServer(Handler httpHandler, WebSocketHandler webSocketHandler) {
-			return new SimpleServerWrapper(httpHandler, webSocketHandler, 12, 1, 1);
+		public FluentServer() {
+			withThreadCount(12);
+			withSelectThreads(1);
+			withWebSocketThreads(1);
 		}
 
 		protected Payload executeRequest(Request request, Response response) throws Exception {
