@@ -378,7 +378,7 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 	}
 
 	@Test
-	public void testFileOwnershipErrorsDoNotDrainAllS3Connection() throws IOException {
+	public void errorsOrHeadRequestsDoNotDrainAllS3Connection() throws IOException {
 
 		// prepare
 		prepareTest(false);
@@ -398,8 +398,13 @@ public class ShareResourceTestOncePerDay extends SpaceTest {
 				.bodyBytes("vince".getBytes()).go(200)//
 				.getString("location");
 
+		// vince requests head of his file
+		// check head request do not drain s3 connection pool
+		for (int i = 0; i < 75; i++)
+			vince.head(location).go(200);
+
 		// fred is not allowed to read vince's file
-		// check ownership error do not drain s3 connection pool
+		// check ownership errors do not drain s3 connection pool
 		for (int i = 0; i < 75; i++)
 			fred.get(location).go(403);
 	}

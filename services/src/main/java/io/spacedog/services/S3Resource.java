@@ -90,11 +90,11 @@ public class S3Resource extends Resource {
 			if (withContent) {
 				s3Object = s3.getObject(bucketName, s3Path.toS3Key());
 				metadata = s3Object.getObjectMetadata();
-				owner = getOrCheckOwnership(metadata, checkOwnership);
+				owner = checkOwnership(metadata, checkOwnership);
 				fileContent = new S3ObjectStreamingOutput(s3Object);
 			} else {
 				metadata = s3.getObjectMetadata(bucketName, s3Path.toS3Key());
-				owner = getOrCheckOwnership(metadata, checkOwnership);
+				owner = checkOwnership(metadata, checkOwnership);
 			}
 
 		} catch (Throwable t) {
@@ -119,7 +119,7 @@ public class S3Resource extends Resource {
 		// fluent will gzip this file stream and use 'chunked'
 		// Transfer-Encoding incompatible with Content-Length header
 
-		if (!context.header(ACCEPT_ENCODING).contains(GZIP))
+		if (!withContent || !context.header(ACCEPT_ENCODING).contains(GZIP))
 			payload.withHeader(SpaceHeaders.CONTENT_LENGTH, //
 					Long.toString(metadata.getContentLength()));
 
@@ -247,7 +247,7 @@ public class S3Resource extends Resource {
 		try {
 			ObjectMetadata metadata = s3.getObjectMetadata(bucketName, s3Path.toS3Key());
 
-			getOrCheckOwnership(metadata, checkOwnership);
+			checkOwnership(metadata, checkOwnership);
 
 			s3.deleteObject(bucketName, s3Path.toS3Key());
 			builder.add(path.toString());
@@ -410,7 +410,7 @@ public class S3Resource extends Resource {
 		return length;
 	}
 
-	private String getOrCheckOwnership(ObjectMetadata metadata, boolean checkOwnership) {
+	private String checkOwnership(ObjectMetadata metadata, boolean checkOwnership) {
 
 		String owner = metadata.getUserMetaDataOf(OWNER_META);
 		Credentials credentials = SpaceContext.getCredentials();

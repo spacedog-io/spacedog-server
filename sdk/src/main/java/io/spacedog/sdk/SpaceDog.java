@@ -180,6 +180,10 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 		return SpaceRequest.options(uri).auth(this);
 	}
 
+	public SpaceRequest head(String uri) {
+		return SpaceRequest.head(uri).auth(this);
+	}
+
 	//
 	// resources
 	//

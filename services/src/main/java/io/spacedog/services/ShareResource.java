@@ -18,6 +18,7 @@ import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.annotations.Put;
+import net.codestory.http.constants.Methods;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/1/share")
@@ -44,6 +45,14 @@ public class ShareResource extends S3Resource {
 		return doDownload(SHARE_BUCKET_SUFFIX, credentials.backendId(), request, context);
 	}
 
+	/**
+	 * Fluent-HTTP directly route HEAD requests to GET routes. "@Head" annotation do
+	 * not work since "@Get" annotation have precedence. This means GET routes must
+	 * manage both GET and HEAD requests.
+	 * 
+	 * TODO see if possible to fix Fluent-HTTP
+	 * 
+	 */
 	@Get("/:uuid/:fileName")
 	@Get("/:uuid/:fileName/")
 	public Payload get(String uuid, String fileName, Context context) {
@@ -51,7 +60,9 @@ public class ShareResource extends S3Resource {
 		boolean checkOwnership = checkPermissionAndIsOwnershipRequired(//
 				DataPermission.read, DataPermission.read_all);
 
-		return doGet(SHARE_BUCKET_SUFFIX, SpaceContext.backendId(), //
+		boolean withContent = !context.request().method().equalsIgnoreCase(Methods.HEAD);
+
+		return doGet(withContent, SHARE_BUCKET_SUFFIX, SpaceContext.backendId(), //
 				WebPath.newPath(uuid, fileName), context, checkOwnership);
 	}
 
