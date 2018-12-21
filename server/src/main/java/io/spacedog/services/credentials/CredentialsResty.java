@@ -337,40 +337,35 @@ public class CredentialsResty extends SpaceResty {
 	@Post("/me/groups/")
 	public Payload postCreateGroup(CredentialsGroupCreateRequest request, Context context) {
 		Credentials credentials = Server.context().credentials().checkAtLeastUser();
-		String group = credentials.createGroup(request.suffix);
-		credentials = Services.credentials().update(credentials);
-		return saved(false, credentials, GROUP_FIELD, group);
+		return createGroup(credentials, request.suffix);
+	}
+
+	@Post("/:id/groups")
+	@Post("/:id/groups/")
+	public Payload postCreateGroup(String id, CredentialsGroupCreateRequest request, Context context) {
+		Server.context().credentials().checkAtLeastSuperAdmin();
+		return createGroup(Services.credentials().get(id), request.suffix);
 	}
 
 	@Put("/:id/groups/:group")
 	@Put("/:id/groups/:group/")
 	public Credentials putShareGroup(String id, String group, Context context) {
-		Credentials credentials = Server.context().credentials();
-		if (!credentials.isAtLeastSuperAdmin())
-			credentials.checkAtLeastUser().checkGroupIsMine(group);
-		credentials = Services.credentials().get(id).addGroup(group);
+		Server.context().credentials().checkGroupAdminPermission(group);
+		Credentials credentials = Services.credentials().get(id).addGroup(group);
 		return Services.credentials().update(credentials);
 	}
 
 	@Delete("/me/groups/:group")
 	@Delete("/me/groups/:group/")
 	public Credentials deleteRemoveGroup(String group) {
-		Credentials credentials = Server.context().credentials().checkAtLeastUser();
-		return deleteUnshareGroup(credentials.id(), group);
+		return removeGroup(Server.context().credentials(), group);
 	}
 
 	@Delete("/:id/groups/:group")
 	@Delete("/:id/groups/:group/")
 	public Credentials deleteUnshareGroup(String id, String group) {
-		Credentials credentials = Server.context().credentials().checkAtLeastUser();
-
-		// if I'm not removing on myself,
-		// I need to check I owns this group
-		if (!credentials.id().equals(id))
-			credentials.checkGroupIsMine(group);
-
-		credentials = Services.credentials().get(id).removeGroup(group);
-		return Services.credentials().update(credentials);
+		Server.context().credentials().checkGroupAdminPermission(group);
+		return removeGroup(Services.credentials().get(id), group);
 	}
 
 	//
@@ -427,6 +422,20 @@ public class CredentialsResty extends SpaceResty {
 	//
 	// Implementation
 	//
+
+	private Payload createGroup(Credentials credentials, String suffix) {
+		String group = credentials.createGroup(suffix);
+		credentials = Services.credentials().update(credentials);
+		return saved(false, credentials, GROUP_FIELD, group);
+	}
+
+	private Credentials removeGroup(Credentials credentials, String group) {
+		if (credentials.hasGroupAccessPermission(group)) {
+			credentials.removeGroup(group);
+			credentials = Services.credentials().update(credentials);
+		}
+		return credentials;
+	}
 
 	private Payload saved(boolean created, Credentials credentials, Object... fields) {
 		return JsonPayload.saved(false, "/2", Credentials.TYPE, credentials.id())//

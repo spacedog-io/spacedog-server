@@ -260,7 +260,7 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 
 		if (!Utils.isNullOrEmpty(request.groups()))
 			for (String group : request.groups()) {
-				requester.checkGroupAccess(group);
+				requester.checkGroupAccessPermission(group);
 				credentials.addGroup(group);
 			}
 

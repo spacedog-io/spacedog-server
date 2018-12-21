@@ -118,7 +118,7 @@ public class Exceptions {
 		if (credentials.isGuest())
 			return guestsAreUnauthorized();
 
-		String prefix = String.format("[%s][%s] => ", credentials.type(), credentials.username());
+		String prefix = String.format("[%s][%s] is forbidden: ", credentials.type(), credentials.username());
 		return exception(code, 403, prefix + message, args);
 	}
 

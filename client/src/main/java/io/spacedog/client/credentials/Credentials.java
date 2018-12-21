@@ -288,14 +288,8 @@ public class Credentials implements SpaceFields {
 		return this;
 	}
 
-	public boolean hasGroupAccess(String group) {
-		return isAtLeastSuperAdmin() //
-				|| id.equals(group) //
-				|| (!Utils.isNullOrEmpty(groups) && groups.contains(group));
-	}
-
-	public boolean isGroupMine(String group) {
-		return group.startsWith(id) && hasGroupAccess(group);
+	public boolean hasGroup(String group) {
+		return id.equals(group) || (groups != null && groups.contains(group));
 	}
 
 	public String createGroup(String suffix) {
@@ -304,14 +298,34 @@ public class Credentials implements SpaceFields {
 		return group;
 	}
 
-	public void checkGroupAccess(String group) {
-		if (!hasGroupAccess(group))
-			throw Exceptions.forbidden(this, "group [%s] is forbidden", group);
+	public boolean hasGroupAccessPermission(String group) {
+		return isAtLeastSuperAdmin() || hasGroup(group);
 	}
 
-	public void checkGroupIsMine(String group) {
-		if (!isGroupMine(group))
-			throw Exceptions.forbidden(this, "group [%s] isn't mine", group);
+	public Credentials checkGroupAccessPermission(String group) {
+		if (hasGroupAccessPermission(group))
+			return this;
+		throw Exceptions.forbidden(this, "doesn't have access to group [%s]", group);
+	}
+
+	public boolean hasGroupAdminPermission(String group) {
+		return isAtLeastSuperAdmin() || isGroupMine(group);
+	}
+
+	public Credentials checkGroupAdminPermission(String group) {
+		if (hasGroupAdminPermission(group))
+			return this;
+		throw Exceptions.forbidden(this, "doesn't have admin permission for group [%s]", group);
+	}
+
+	public boolean isGroupMine(String group) {
+		return group.startsWith(id) && hasGroup(group);
+	}
+
+	public Credentials checkGroupIsMine(String group) {
+		if (isGroupMine(group))
+			return this;
+		throw Exceptions.forbidden(this, "doesn't own group [%s]", group);
 	}
 
 	//

@@ -581,7 +581,7 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 		}
 
 		if (permissions.hasOne(credentials, Permission.readGroup)) {
-			credentials.checkGroupAccess(object.group());
+			credentials.checkGroupAccessPermission(object.group());
 			return;
 		}
 
@@ -603,7 +603,7 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 		}
 
 		if (permissions.hasOne(credentials, Permission.updateGroup)) {
-			credentials.checkGroupAccess(object.group());
+			credentials.checkGroupAccessPermission(object.group());
 			return;
 		}
 
@@ -627,7 +627,7 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 
 		else if (permissions.hasOne(credentials, Permission.deleteGroup)) {
 			DataWrap<DataObjectBase> meta = getMetaOrThrow(type, id);
-			credentials.checkGroupAccess(meta.group());
+			credentials.checkGroupAccessPermission(meta.group());
 			return;
 		}
 

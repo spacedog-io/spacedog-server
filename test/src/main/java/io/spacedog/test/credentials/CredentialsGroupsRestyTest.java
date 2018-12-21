@@ -23,7 +23,7 @@ public class CredentialsGroupsRestyTest extends SpaceTest {
 		SpaceDog vince = createTempDog(superadmin, "vince");
 		SpaceDog nath = createTempDog(superadmin, "nath");
 
-		// At first they all have theit own default group
+		// At first they all have their own default group
 		checkDogGroups(fred);
 		checkDogGroups(vince);
 		checkDogGroups(nath);
@@ -79,8 +79,8 @@ public class CredentialsGroupsRestyTest extends SpaceTest {
 		vince.credentials().shareGroup(nath.id(), vince.group());
 		checkDogGroups(nath, vince.group());
 
-		// vince unshares his default group from nath
-		vince.credentials().unshareGroup(nath.id(), vince.group());
+		// superadmin unshares vince's default group from nath
+		superadmin.credentials().unshareGroup(nath.id(), vince.group());
 		checkDogGroups(nath);
 
 		// vince fails to share a group he didn't create
