@@ -49,13 +49,13 @@ public class LinkedinResourceTest extends SpaceTest {
 		SpaceRequest.post("/1/login/linkedin").backend(test)//
 				.formField("code", "XXX")//
 				.formField("redirect_uri", redirectUri)//
-				.go(400);
+				.go(401);
 
 		// fails to create linkedin credentials if invalid code
 		// if no redirect_uri parameter is set spacedog uses
 		// its default redirect uri
 		SpaceRequest.post("/1/login/linkedin").backend(test)//
 				.formField("code", "XXX")//
-				.go(400);
+				.go(401);
 	}
 }
