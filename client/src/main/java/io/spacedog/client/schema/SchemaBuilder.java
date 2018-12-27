@@ -130,23 +130,27 @@ public class SchemaBuilder implements MappingDirectives {
 	}
 
 	//
-	// raw sub fields
+	// Sub fields
 	//
 
-	public SchemaBuilder rawKeyword() {
-		return raw(m_keyword);
+	public SchemaBuilder subKeyword() {
+		return subField(m_keyword);
 	}
 
-	public SchemaBuilder rawText(String analyzer) {
-		return raw(m_text, m_analyzer, analyzer);
+	public SchemaBuilder subText() {
+		return subField(m_text);
 	}
 
-	public SchemaBuilder raw(String type, Object... attributes) {
+	public SchemaBuilder subText(String analyzer) {
+		return subField(m_text, m_analyzer, analyzer);
+	}
+
+	public SchemaBuilder subField(String type, Object... attributes) {
 		if (!this.openProperty)
 			throw Exceptions.runtime("only applicable on a field");
 
 		builder.object(m_fields)//
-				.object("raw")//
+				.object(type)//
 				.add(m_type, type)//
 				.add(attributes)//
 				.end()//
