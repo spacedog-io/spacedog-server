@@ -444,7 +444,7 @@ public class CredentialsRestyTest extends SpaceTest {
 	}
 
 	@Test
-	public void credentialsCreatedWitOrWithhoutRoleShouldBeUsers() {
+	public void credentialsCreatedWitOrWithoutRoleShouldBeUsers() {
 
 		// prepare
 		prepareTest();

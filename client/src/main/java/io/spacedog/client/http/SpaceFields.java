@@ -34,8 +34,10 @@ public interface SpaceFields {
 	String INVALID_CHALLENGES_FIELD = "invalidChallenges";
 	String LAST_INVALID_CHALLENGE_AT_FIELD = "lastInvalidChallengeAt";
 	String EMAIL_FIELD = "email";
+	String EMAIL_TEXT_FIELD = "email.text";
 	String ENABLED_FIELD = "enabled";
 	String USERNAME_FIELD = "username";
+	String USERNAME_TEXT_FIELD = "username.text";
 	String ACCESS_TOKEN_FIELD = "accessToken";
 	String ACCESS_TOKEN_EXPIRES_AT_FIELD = "accessTokenExpiresAt";
 	String EXPIRES_IN_FIELD = "expiresIn";

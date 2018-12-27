@@ -298,14 +298,14 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		assertContainsCredsOf("fred", results.results);
 
 		// superadmin searches for user credentials
-		results = superadmin.credentials().findByText("user");
+		results = superadmin.credentials().findByRole(Roles.user, 0, 10, true);
 		assertEquals(2, results.total);
 		assertEquals(2, results.results.size());
 		assertContainsCredsOf("vince", results.results);
 		assertContainsCredsOf("fred", results.results);
 
 		// superadmin searches for credentials with a specified email
-		results = superadmin.credentials().findByText("platform@spacedog.io");
+		results = superadmin.credentials().findByText("platform");
 		assertEquals(3, results.total);
 		assertEquals(3, results.results.size());
 		assertContainsCredsOf("superadmin", results.results);
@@ -313,7 +313,7 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		assertContainsCredsOf("fred", results.results);
 
 		// superadmin searches for credentials with specified username
-		results = superadmin.credentials().findByText("fred");
+		results = superadmin.credentials().findByText("fre*");
 		assertEquals(1, results.total);
 		assertEquals(1, results.results.size());
 		assertContainsCredsOf("fred", results.results);

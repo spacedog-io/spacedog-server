@@ -84,7 +84,7 @@ public class CredentialsResty extends SpaceResty {
 
 		if (!Strings.isNullOrEmpty(q)) //
 			query.must(QueryBuilders.simpleQueryStringQuery(q)//
-					.field(USERNAME_FIELD).field(EMAIL_FIELD).field(ROLES_FIELD).field(TAGS_FIELD));
+					.field(USERNAME_TEXT_FIELD).field(EMAIL_TEXT_FIELD));
 
 		if (!Strings.isNullOrEmpty(role)) //
 			query.must(QueryBuilders.termQuery(ROLES_FIELD, role));

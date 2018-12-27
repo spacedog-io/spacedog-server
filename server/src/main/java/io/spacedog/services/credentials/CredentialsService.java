@@ -412,8 +412,8 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 				.dynamicStrict()//
 				.dateDetection(false)//
 
-				.keyword(USERNAME_FIELD)//
-				.keyword(EMAIL_FIELD)//
+				.keyword(USERNAME_FIELD).subText()//
+				.keyword(EMAIL_FIELD).subText()//
 				.keyword(ROLES_FIELD)//
 				.keyword(GROUPS_FIELD)//
 				.keyword(TAGS_FIELD)//
