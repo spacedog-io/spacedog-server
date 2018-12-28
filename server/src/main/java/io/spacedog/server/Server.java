@@ -17,6 +17,7 @@ import org.elasticsearch.env.Environment;
 import org.elasticsearch.index.reindex.ReindexPlugin;
 import org.elasticsearch.node.InternalSettingsPreparer;
 import org.elasticsearch.node.NodeValidationException;
+import org.elasticsearch.repositories.s3.S3RepositoryPlugin;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.transport.Netty4Plugin;
 import org.joda.time.DateTimeZone;
@@ -170,9 +171,8 @@ public class Server implements Extensions {
 		elasticNode = new ElasticNode(environment, //
 				Netty4Plugin.class, //
 				CommonAnalysisPlugin.class, //
-				ReindexPlugin.class);
-
-		// S3RepositoryPlugin.class);
+				ReindexPlugin.class, //
+				S3RepositoryPlugin.class);
 
 		elasticNode.start();
 		this.elasticClient = new ElasticClient(elasticNode.client());
