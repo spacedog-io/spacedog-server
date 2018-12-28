@@ -6,8 +6,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.admin.cluster.repositories.delete.DeleteRepositoryResponse;
-import org.elasticsearch.action.admin.cluster.repositories.put.PutRepositoryResponse;
 import org.elasticsearch.action.admin.cluster.snapshots.create.CreateSnapshotRequestBuilder;
 import org.elasticsearch.action.admin.cluster.snapshots.create.CreateSnapshotResponse;
 import org.elasticsearch.action.admin.cluster.snapshots.restore.RestoreSnapshotRequestBuilder;
@@ -139,22 +137,49 @@ public class SnapshotService extends SpaceService implements SpaceFields, SpaceP
 				.sorted().collect(Collectors.toList());
 	}
 
-	public boolean deleteRepository(String repositoryId) {
+	public boolean openRepository(String repositoryId) {
+
+		// check repository id format
+		SpaceRepository.toDateTime(repositoryId);
+
 		try {
-			DeleteRepositoryResponse response = elastic().cluster()//
-					.prepareDeleteRepository(repositoryId)//
+			SnapshotResty.elastic().cluster()//
+					.prepareGetRepositories(repositoryId)//
 					.get();
 
-			return response.isAcknowledged();
+			return false;
+
+		} catch (RepositoryMissingException e) {
+
+			RepositoryMetaData repo = newRepositoryMetadata(repositoryId);
+
+			SnapshotResty.elastic().cluster()//
+					.preparePutRepository(repo.name())//
+					.setType(repo.type())//
+					.setSettings(repo.settings())//
+					.get();
+
+			return true;
+		}
+	}
+
+	public boolean closeRepository(String repositoryId) {
+
+		// check repository id format
+		SpaceRepository.toDateTime(repositoryId);
+
+		try {
+			elastic().cluster().prepareDeleteRepository(repositoryId).get();
+			return true;
 
 		} catch (RepositoryMissingException e) {
 			return false;
 		}
 	}
 
-	public void deleteMissingRepositories() {
+	public void closeMissingRepositories() {
 
-		Utils.info("[SpaceDog] deleting missing repositories ...");
+		Utils.info("[SpaceDog] close missing repositories ...");
 
 		List<RepositoryMetaData> repositories = elastic().cluster()//
 				.prepareGetRepositories().get().repositories();
@@ -168,8 +193,8 @@ public class SnapshotService extends SpaceService implements SpaceFields, SpaceP
 
 			} catch (RepositoryMissingException e) {
 
-				deleteRepository(repository.name());
-				Utils.info("[SpaceDog] repository [%s] deleted because missing", repository.name());
+				closeRepository(repository.name());
+				Utils.info("[SpaceDog] repository [%s] closed because missing", repository.name());
 			}
 		}
 	}
@@ -177,14 +202,14 @@ public class SnapshotService extends SpaceService implements SpaceFields, SpaceP
 	/**
 	 * TODO does not delete very obsolete repo if one is missing in between
 	 */
-	public void deleteObsoleteRepositories() {
+	public void closeObsoleteRepositories() {
 
-		Utils.info("[SpaceDog] deleting obsolete repositories ...");
+		Utils.info("[SpaceDog] close obsolete repositories ...");
 		String currentRepoId = SpaceRepository.currentRepositoryId();
 		String obsoleteRepoId = SpaceRepository.pastRepositoryId(currentRepoId, 4);
 
-		while (deleteRepository(obsoleteRepoId)) {
-			Utils.info("[SpaceDog] repository [%s] deleted because obsolete", obsoleteRepoId);
+		while (closeRepository(obsoleteRepoId)) {
+			Utils.info("[SpaceDog] repository [%s] closed because obsolete", obsoleteRepoId);
 			obsoleteRepoId = SpaceRepository.pastRepositoryId(obsoleteRepoId, 1);
 		}
 	}
@@ -273,12 +298,15 @@ public class SnapshotService extends SpaceService implements SpaceFields, SpaceP
 		return snapshot;
 	}
 
-	private static SpaceSnapshot prepareSnapshot() {
+	private SpaceSnapshot prepareSnapshot() {
 		DateTime now = DateTime.now().withZone(DateTimeZone.UTC);
+		String repositoryId = SpaceRepository.toRepositoryId(now);
+		openRepository(repositoryId);
+
 		SpaceSnapshot snapshot = new SpaceSnapshot();
 		snapshot.backendId = Server.backend().id();
 		snapshot.id = snapshot.backendId + PREFIX + SNAPSHOT_ID_FORMATTER.print(now);
-		snapshot.repositoryId = getOrCreateRepositoryFor(now);
+		snapshot.repositoryId = repositoryId;
 		snapshot.state = SnapshotState.IN_PROGRESS.toString();
 		snapshot.restorable = false;
 		snapshot.completed = false;
@@ -291,57 +319,30 @@ public class SnapshotService extends SpaceService implements SpaceFields, SpaceP
 		return SpaceRepository.toRepositoryId(dateTime);
 	}
 
-	private static String getOrCreateRepositoryFor(DateTime date) {
+	private static RepositoryMetaData newRepositoryMetadata(String repositoryId) {
 
-		String repoId = SpaceRepository.toRepositoryId(date);
-
-		try {
-			SnapshotResty.elastic().cluster()//
-					.prepareGetRepositories(repoId)//
-					.get();
-
-		} catch (RepositoryMissingException e) {
-
-			RepositoryMetaData repo = createRepository(repoId);
-
-			PutRepositoryResponse putRepositoryResponse = SnapshotResty.elastic().cluster()//
-					.preparePutRepository(repo.name())//
-					.setType(repo.type())//
-					.setSettings(repo.settings())//
-					.get();
-
-			if (!putRepositoryResponse.isAcknowledged())
-				throw Exceptions.runtime(//
-						"snapshot repository [%s] creation failed", //
-						repoId);
-		}
-
-		return repoId;
-	}
-
-	private static RepositoryMetaData createRepository(String id) {
-
-		FileStoreType type = ServerConfig.dataSnapshotsStoreType();
+		FileStoreType type = ServerConfig.snapshotsElasticStoreType();
+		String location = Server.backend().id() + "/elastic/" + repositoryId;
 		Settings settings = null;
 
 		if (type.equals(FileStoreType.fs))
 			settings = Settings.builder()//
-					.put("location", id)//
+					.put("location", location)//
 					.put("compress", true)//
 					.build();
 
 		else if (type.equals(FileStoreType.s3))
 			settings = Settings.builder()//
-					.put("bucket", ServerConfig.awsBucketPrefix() + "snapshots")//
+					.put("bucket", ServerConfig.snapshotsS3Bucket())//
 					.put("region", ServerConfig.awsRegion().getName())//
-					.put("base_path", id)//
+					.put("base_path", location)//
 					.put("compress", true)//
 					.build();
 
 		if (settings == null)
 			throw Exceptions.illegalArgument("snapshot repository type [%s] is invalid", type);
 
-		return new RepositoryMetaData(id, type.toElasticRepoType(), settings);
+		return new RepositoryMetaData(repositoryId, type.toElasticRepoType(), settings);
 	}
 
 }

@@ -7,10 +7,9 @@ import java.util.Optional;
 
 import com.amazonaws.regions.Regions;
 
-import io.spacedog.client.file.FileBucket;
+import io.spacedog.client.file.FileStoreType;
 import io.spacedog.client.http.SpaceBackend;
 import io.spacedog.client.http.SpaceEnv;
-import io.spacedog.client.snapshot.SpaceRepository;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Utils;
@@ -21,16 +20,15 @@ public class ServerConfig {
 	private static final String HOME_PATH = "spacedog.server.home.path";
 	private static final String PRODUCTION = "spacedog.server.production";
 	private static final String OFFLINE = "spacedog.server.offline";
-	private static final String FILE_STORE = "spacedog.server.file.store";
-	private static final String FILE_STORE_PATH = "spacedog.server.file.store.path";
-	private static final String FILE_SNAPSHOTS_STORE_TYPE = "spacedog.server.file.snapshots.store.type";
-	private static final String FILE_SNAPSHOTS_SYSTEM_PATH = "spacedog.server.file.snapshots.system.path";
-	private static final String FILE_SNAPSHOTS_S3_SUFFIX = "spacedog.server.file.snapshots.s3.suffix";
+	private static final String FILES_STORE_PATH = "spacedog.server.files.store.path";
 	private static final String GREEN_CHECK = "spacedog.server.green.check";
 	private static final String GREEN_TIMEOUT = "spacedog.server.green.timeout";
 	private static final String USER_AGENT = "spacedog.server.user.agent";
 	private static final String ELASTIC_CONFIG_PATH = "spacedog.server.elastic.config.path";
-	private static final String SNAPSHOTS_REPO_TYPE = "spacedog.server.snapshots.repo.type";
+	private static final String SNAPSHOTS_FILES_STORE_TYPE = "spacedog.server.snapshots.files.store.type";
+	private static final String SNAPSHOTS_ELASTIC_STORE_TYPE = "spacedog.server.snapshots.elastic.store.type";
+	private static final String SNAPSHOTS_FS_PATH = "spacedog.server.snapshots.fs.path";
+	private static final String SNAPSHOTS_S3_BUCKET = "spacedog.server.snapshots.s3.bucket";
 	private static final String MAIL_SMTP_DEBUG = "spacedog.server.mail.smtp.debug";
 	private static final String MAIL_DOMAIN = "spacedog.server.mail.domain";
 	private static final String MAIL_MAILGUN_KEY = "spacedog.server.mail.mailgun.key";
@@ -75,10 +73,6 @@ public class ServerConfig {
 		return SpaceEnv.env().get(GREEN_TIMEOUT, 60);
 	}
 
-	public static String snapshotsRepoType() {
-		return SpaceEnv.env().get(SNAPSHOTS_REPO_TYPE, SpaceRepository.TYPE_FS);
-	}
-
 	public static Regions awsRegion() {
 		return Regions.fromName(SpaceEnv.env().backendRegion());
 	}
@@ -107,28 +101,28 @@ public class ServerConfig {
 		return SpaceEnv.env().superdogPassword();
 	}
 
-	public static String fileStore() {
-		return SpaceEnv.env().get(FILE_STORE, "system");
-	}
-
-	public static Path fileStorePath() {
-		Optional7<String> opt = SpaceEnv.env().get(FILE_STORE_PATH);
+	public static Path filesStorePath() {
+		Optional7<String> opt = SpaceEnv.env().get(FILES_STORE_PATH);
 		return opt.isPresent() ? Paths.get(opt.get()) //
 				: homePath().resolve("files");
 	}
 
-	public static FileBucket.StoreType fileSnapshotsStoreType() {
-		return SpaceEnv.env().get(FILE_SNAPSHOTS_STORE_TYPE, FileBucket.StoreType.system);
+	public static FileStoreType snapshotsElasticStoreType() {
+		return SpaceEnv.env().get(SNAPSHOTS_ELASTIC_STORE_TYPE, FileStoreType.fs);
 	}
 
-	public static Path fileSnapshotsSystemPath() {
-		Optional7<String> opt = SpaceEnv.env().get(FILE_SNAPSHOTS_SYSTEM_PATH);
+	public static FileStoreType snapshotsFilesStoreType() {
+		return SpaceEnv.env().get(SNAPSHOTS_FILES_STORE_TYPE, FileStoreType.fs);
+	}
+
+	public static Path snapshotsFSPath() {
+		Optional7<String> opt = SpaceEnv.env().get(SNAPSHOTS_FS_PATH);
 		return opt.isPresent() ? Paths.get(opt.get()) //
-				: homePath().resolve("snapshots-files");
+				: homePath().resolve("snapshots");
 	}
 
-	public static String fileSnapshotsS3Suffix() {
-		return SpaceEnv.env().get(FILE_SNAPSHOTS_S3_SUFFIX, "snapshots-files");
+	public static String snapshotsS3Bucket() {
+		return SpaceEnv.env().getOrElseThrow(SNAPSHOTS_S3_BUCKET);
 	}
 
 	public static void log() {
@@ -139,7 +133,7 @@ public class ServerConfig {
 		log(PORT, port());
 		log(GREEN_CHECK, greenCheck());
 		log(GREEN_TIMEOUT, greenTimeout());
-		log(SNAPSHOTS_REPO_TYPE, snapshotsRepoType());
+		log(SNAPSHOTS_ELASTIC_STORE_TYPE, snapshotsElasticStoreType());
 		log(AWS_BUCKET_PREFIX, awsBucketPrefix());
 		log(MAIL_DOMAIN, mailDomain());
 		log(MAIL_SMTP_DEBUG, mailSmtpDebug());

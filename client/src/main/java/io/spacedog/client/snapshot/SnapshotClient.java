@@ -48,8 +48,8 @@ public class SnapshotClient implements SpaceParams {
 		return restore(LATEST, waitForCompletion);
 	}
 
-	public SpaceSnapshot get(String firstSnapId) {
-		return dog.get("/2/snapshots/{id}").routeParam("id", firstSnapId)//
+	public SpaceSnapshot get(String snapshotId) {
+		return dog.get("/2/snapshots/{id}").routeParam("id", snapshotId)//
 				.go(200).asPojo(SpaceSnapshot.class);
 	}
 
@@ -65,6 +65,24 @@ public class SnapshotClient implements SpaceParams {
 		return dog.get("/2/snapshots").from(from).size(size).go(200)//
 				.asPojo(TypeFactory.defaultInstance()//
 						.constructCollectionLikeType(ArrayList.class, SpaceSnapshot.class));
+	}
+
+	public List<SpaceRepository> getRepositories(Integer from, Integer size) {
+		return dog.get("/2/snapshots/repositories").from(from).size(size).go(200)//
+				.asPojo(TypeFactory.defaultInstance()//
+						.constructCollectionLikeType(ArrayList.class, SpaceRepository.class));
+	}
+
+	public boolean openRepository(String repositoryId) {
+		return dog.put("/2/snapshots/repositories/{id}")//
+				.routeParam("id", repositoryId)//
+				.go(200, 201).status() == 201;
+	}
+
+	public boolean closeRepository(String repositoryId) {
+		return dog.delete("/2/snapshots/repositories/{id}")//
+				.routeParam("id", repositoryId)//
+				.go(200).get("found").asBoolean();
 	}
 
 }

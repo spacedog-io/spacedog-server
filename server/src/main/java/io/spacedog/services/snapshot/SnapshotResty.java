@@ -18,13 +18,14 @@ import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
+import net.codestory.http.annotations.Put;
 import net.codestory.http.constants.HttpStatus;
 import net.codestory.http.payload.Payload;
 
 @Prefix("/2/snapshots")
 public class SnapshotResty extends SpaceResty {
 
-	public static final String SNAPSHOT_MAN = "snapshotman";
+	public static final String SNAPMAN = "snapman";
 
 	//
 	// routes
@@ -56,11 +57,19 @@ public class SnapshotResty extends SpaceResty {
 		return Services.snapshots().getRepositories();
 	}
 
+	@Put("/repositories/:id")
+	@Put("/repositories/:id/")
+	public Payload putRepository(String id, Context context) {
+		Server.context().credentials().checkAtLeastSuperAdmin();
+		boolean created = Services.snapshots().openRepository(id);
+		return JsonPayload.saved(created).build();
+	}
+
 	@Delete("/repositories/:id")
 	@Delete("/repositories/:id/")
 	public Payload deleteRepository(String id, Context context) {
 		Server.context().credentials().checkAtLeastSuperAdmin();
-		boolean found = Services.snapshots().deleteRepository(id);
+		boolean found = Services.snapshots().closeRepository(id);
 		return JsonPayload.ok().withFields("found", found).build();
 	}
 
@@ -107,7 +116,7 @@ public class SnapshotResty extends SpaceResty {
 		Credentials credentials = Server.context().credentials();
 
 		if (credentials.isAtLeastSuperAdmin() //
-				|| credentials.roles().contains(SNAPSHOT_MAN))
+				|| credentials.roles().contains(SNAPMAN))
 			return credentials;
 
 		throw Exceptions.insufficientPermissions(credentials);

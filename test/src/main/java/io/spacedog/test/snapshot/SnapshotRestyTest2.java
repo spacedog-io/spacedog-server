@@ -3,15 +3,12 @@ package io.spacedog.test.snapshot;
 import java.net.UnknownHostException;
 import java.util.List;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.file.FileBucket;
-import io.spacedog.client.http.SpaceRequest;
+import io.spacedog.client.snapshot.SpaceRepository;
 import io.spacedog.client.snapshot.SpaceSnapshot;
 import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Json;
@@ -24,31 +21,23 @@ public class SnapshotRestyTest2 extends SpaceTest {
 	private static final String MY_SETTINGS_ID = "mysettings";
 
 	// @Test
-	public void snapshotAndRestoreMultipleTimes() throws InterruptedException, UnknownHostException {
+	public void snapshotAndRestoreDataAndFiles() throws InterruptedException, UnknownHostException {
 
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = clearServer();
-		SpaceDog snapshoter = createTempDog(superadmin, "snapshoter");
-		superadmin.credentials().setRole(snapshoter.id(), "snapshoter");
+		SpaceDog snapman = createTempDog(superadmin, "snapman");
+		superadmin.credentials().setRole(snapman.id(), "snapman");
+		String currentRepoId = SpaceRepository.currentRepositoryId();
 
 		// superadmin creates vince's credentials
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
-		// deletes the current repository to force repo creation by this test
-		// use full url to avoid delete by mistake any prod repo
-		String repositoryId = DateTime.now().withZone(DateTimeZone.UTC).toString("yyyy-ww");
-		String ip = "127.0.0.1"; // InetAddress.getLocalHost().getHostAddress();
-		SpaceRequest.delete("/_snapshot/{repoId}")//
-				.backend("http://" + ip + ":9200")//
-				.routeParam("repoId", repositoryId)//
-				.go(200, 404);
-
-		// snapshoter snapshots backend
+		// snapman snapshots backend
 		// returns 202 since wait for completion false by default
-		SpaceSnapshot snap1 = snapshoter.snapshots().snapshot();
+		SpaceSnapshot snap1 = snapman.snapshots().snapshot();
 		assertEquals(snap1.backendId, "spacedog");
-		assertEquals(snap1.repositoryId, repositoryId);
+		assertEquals(snap1.repositoryId, currentRepoId);
 		assertTrue(snap1.id.startsWith(snap1.backendId + "-utc-"));
 
 		// superadmin fails to restore latest snapshot since not yet completed
@@ -66,8 +55,8 @@ public class SnapshotRestyTest2 extends SpaceTest {
 
 		} while (!snapshot.state.equalsIgnoreCase("SUCCESS"));
 
-		// snapshoter gets first snapshot by id
-		snap1 = snapshoter.snapshots().get(snap1.id);
+		// snapman gets first snapshot by id
+		snap1 = snapman.snapshots().get(snap1.id);
 		assertEquals(snapshot, snap1);
 		assertEquals(Sets.newHashSet("spacedog-credentials-0", //
 				"spacedog-log-0"), snap1.indices);
@@ -81,7 +70,7 @@ public class SnapshotRestyTest2 extends SpaceTest {
 
 		// superadmin snapshots backend
 		SpaceSnapshot snap2 = superadmin.snapshots().snapshot(true);
-		assertEquals(repositoryId, snap2.repositoryId);
+		assertEquals(currentRepoId, snap2.repositoryId);
 		assertEquals("SUCCESS", snap2.state);
 		assertEquals("spacedog", snap2.backendId);
 		assertEquals(Sets.newHashSet("spacedog-credentials-0", "spacedog-log-0", //
@@ -102,34 +91,34 @@ public class SnapshotRestyTest2 extends SpaceTest {
 
 		// superadmin snapshots backend
 		SpaceSnapshot snap3 = superadmin.snapshots().snapshot(true);
-		assertEquals(repositoryId, snap3.repositoryId);
+		assertEquals(currentRepoId, snap3.repositoryId);
 		assertEquals("SUCCESS", snap3.state);
 		assertEquals("spacedog", snap3.backendId);
 		assertEquals(Sets.newHashSet("spacedog-credentials-0", "spacedog-log-0", //
 				"spacedog-settings-0", "spacedog-files-cats-0", "spacedog-files-dogs-0"), snap3.indices);
 
-		// snapshoter gets first and second latest snapshots
-		all = snapshoter.snapshots().getAll(0, 2);
+		// snapman gets first and second latest snapshots
+		all = snapman.snapshots().getAll(0, 2);
 		assertEquals(2, all.size());
 		assertEquals(snap3, all.get(0));
 		assertEquals(snap2, all.get(1));
 
-		// snapshoter gets third latest snapshot
-		all = snapshoter.snapshots().getAll(2, 1);
+		// snapman gets third latest snapshot
+		all = snapman.snapshots().getAll(2, 1);
 		assertEquals(1, all.size());
 		assertEquals(snap1, all.get(0));
 
-		// snapshoter is not authorized to restore
+		// snapman is not authorized to restore
 		String firstSnapId = snap1.id;
-		assertHttpError(403, () -> snapshoter.snapshots().restoreLatest());
-		assertHttpError(403, () -> snapshoter.snapshots().restore(firstSnapId));
+		assertHttpError(403, () -> snapman.snapshots().restoreLatest());
+		assertHttpError(403, () -> snapman.snapshots().restore(firstSnapId));
 
 		// superadmin restores oldest snapshot
 		superadmin.snapshots().restore(snap1.id, true);
 
 		// fred and nath's credentials are gone
 		superadmin.login();
-		snapshoter.login();
+		snapman.login();
 		vince.login();
 		assertHttpError(401, () -> fred.login());
 		assertHttpError(401, () -> nath.login());
@@ -146,7 +135,7 @@ public class SnapshotRestyTest2 extends SpaceTest {
 
 		// fred's credentials are back
 		superadmin.login();
-		snapshoter.login();
+		snapman.login();
 		vince.login();
 		fred.login();
 		superadmin.settings().get(MY_SETTINGS_ID).equals(MY_SETTINGS);
@@ -163,7 +152,7 @@ public class SnapshotRestyTest2 extends SpaceTest {
 
 		// all credentials are present
 		superadmin.login();
-		snapshoter.login();
+		snapman.login();
 		vince.login();
 		fred.login();
 		nath.login();
@@ -180,7 +169,7 @@ public class SnapshotRestyTest2 extends SpaceTest {
 
 		// all credentials are gone
 		assertHttpError(401, () -> superadmin.login());
-		assertHttpError(401, () -> snapshoter.login());
+		assertHttpError(401, () -> snapman.login());
 		assertHttpError(401, () -> vince.login());
 		assertHttpError(401, () -> fred.login());
 		assertHttpError(401, () -> nath.login());
@@ -190,7 +179,7 @@ public class SnapshotRestyTest2 extends SpaceTest {
 
 		// all credentials are back
 		superadmin.login();
-		snapshoter.login();
+		snapman.login();
 		vince.login();
 		fred.login();
 		nath.login();
@@ -206,7 +195,6 @@ public class SnapshotRestyTest2 extends SpaceTest {
 
 		// superdog gets all snapshots since not part of backend data
 		all = superdog().snapshots().getAll();
-		assertEquals(3, all.size());
 		assertEquals(snap3, all.get(0));
 		assertEquals(snap2, all.get(1));
 		assertEquals(snap1, all.get(2));

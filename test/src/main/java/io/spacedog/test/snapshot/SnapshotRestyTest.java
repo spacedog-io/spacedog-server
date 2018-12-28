@@ -3,15 +3,15 @@ package io.spacedog.test.snapshot;
 import java.net.UnknownHostException;
 import java.util.List;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceDog;
-import io.spacedog.client.http.SpaceRequest;
+import io.spacedog.client.file.FileStoreType;
+import io.spacedog.client.http.SpaceBackend;
+import io.spacedog.client.snapshot.SpaceRepository;
 import io.spacedog.client.snapshot.SpaceSnapshot;
 import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Json;
@@ -22,31 +22,23 @@ public class SnapshotRestyTest extends SpaceTest {
 	private static final String MY_SETTINGS_ID = "mysettings";
 
 	@Test
-	public void snapshotAndRestoreMultipleTimes() throws InterruptedException, UnknownHostException {
+	public void snapshotAndRestore() throws InterruptedException, UnknownHostException {
 
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = clearServer();
-		SpaceDog snapshoter = createTempDog(superadmin, "snapshoter");
-		superadmin.credentials().setRole(snapshoter.id(), "snapshoter");
+		SpaceDog snapman = createTempDog(superadmin, "snapman");
+		superadmin.credentials().setRole(snapman.id(), "snapman");
+		String currentRepoId = SpaceRepository.currentRepositoryId();
 
 		// superadmin creates vince's credentials
 		SpaceDog vince = createTempDog(superadmin, "vince");
 
-		// deletes the current repository to force repo creation by this test
-		// use full url to avoid delete by mistake any prod repo
-		String repositoryId = DateTime.now().withZone(DateTimeZone.UTC).toString("yyyy-ww");
-		String ip = "127.0.0.1"; // InetAddress.getLocalHost().getHostAddress();
-		SpaceRequest.delete("/_snapshot/{repoId}")//
-				.backend("http://" + ip + ":9200")//
-				.routeParam("repoId", repositoryId)//
-				.go(200, 404);
-
-		// snapshoter snapshots backend
+		// snapman snapshots backend
 		// returns 202 since wait for completion false by default
-		SpaceSnapshot snap1 = snapshoter.snapshots().snapshot();
-		assertEquals(snap1.backendId, "spacedog");
-		assertEquals(snap1.repositoryId, repositoryId);
+		SpaceSnapshot snap1 = snapman.snapshots().snapshot();
+		assertEquals(SpaceBackend.SPACEDOG, snap1.backendId);
+		assertEquals(currentRepoId, snap1.repositoryId);
 		assertTrue(snap1.id.startsWith(snap1.backendId + "-utc-"));
 
 		// superadmin fails to restore latest snapshot since not yet completed
@@ -64,8 +56,8 @@ public class SnapshotRestyTest extends SpaceTest {
 
 		} while (!snapshot.state.equalsIgnoreCase("SUCCESS"));
 
-		// snapshoter gets first snapshot by id
-		snap1 = snapshoter.snapshots().get(snap1.id);
+		// snapman gets first snapshot by id
+		snap1 = snapman.snapshots().get(snap1.id);
 		assertEquals(snapshot, snap1);
 		assertEquals(Sets.newHashSet("spacedog-credentials-0", //
 				"spacedog-log-0"), snap1.indices);
@@ -76,7 +68,7 @@ public class SnapshotRestyTest extends SpaceTest {
 
 		// superadmin snapshots backend
 		SpaceSnapshot snap2 = superadmin.snapshots().snapshot(true);
-		assertEquals(repositoryId, snap2.repositoryId);
+		assertEquals(currentRepoId, snap2.repositoryId);
 		assertEquals("SUCCESS", snap2.state);
 		assertEquals("spacedog", snap2.backendId);
 		assertEquals(Sets.newHashSet("spacedog-credentials-0", //
@@ -93,34 +85,34 @@ public class SnapshotRestyTest extends SpaceTest {
 
 		// superadmin snapshots backend
 		SpaceSnapshot snap3 = superadmin.snapshots().snapshot(true);
-		assertEquals(repositoryId, snap3.repositoryId);
+		assertEquals(currentRepoId, snap3.repositoryId);
 		assertEquals("SUCCESS", snap3.state);
 		assertEquals("spacedog", snap3.backendId);
 		assertEquals(Sets.newHashSet("spacedog-credentials-0", //
 				"spacedog-log-0", "spacedog-settings-0"), snap2.indices);
 
-		// snapshoter gets first and second latest snapshots
-		all = snapshoter.snapshots().getAll(0, 2);
+		// snapman gets first and second latest snapshots
+		all = snapman.snapshots().getAll(0, 2);
 		assertEquals(2, all.size());
 		assertEquals(snap3, all.get(0));
 		assertEquals(snap2, all.get(1));
 
-		// snapshoter gets third latest snapshot
-		all = snapshoter.snapshots().getAll(2, 1);
+		// snapman gets third latest snapshot
+		all = snapman.snapshots().getAll(2, 1);
 		assertEquals(1, all.size());
 		assertEquals(snap1, all.get(0));
 
-		// snapshoter is not authorized to restore
+		// snapman is not authorized to restore
 		String firstSnapId = snap1.id;
-		assertHttpError(403, () -> snapshoter.snapshots().restoreLatest());
-		assertHttpError(403, () -> snapshoter.snapshots().restore(firstSnapId));
+		assertHttpError(403, () -> snapman.snapshots().restoreLatest());
+		assertHttpError(403, () -> snapman.snapshots().restore(firstSnapId));
 
 		// superadmin restores oldest snapshot
 		superadmin.snapshots().restore(snap1.id, true);
 
 		// fred and nath's credentials are gone
 		superadmin.login();
-		snapshoter.login();
+		snapman.login();
 		vince.login();
 		assertHttpError(401, () -> fred.login());
 		assertHttpError(404, () -> superadmin.settings().get(MY_SETTINGS_ID));
@@ -131,7 +123,7 @@ public class SnapshotRestyTest extends SpaceTest {
 
 		// fred's credentials are back
 		superadmin.login();
-		snapshoter.login();
+		snapman.login();
 		vince.login();
 		fred.login();
 		superadmin.settings().get(MY_SETTINGS_ID).equals(MY_SETTINGS);
@@ -142,7 +134,7 @@ public class SnapshotRestyTest extends SpaceTest {
 
 		// all credentials are present
 		superadmin.login();
-		snapshoter.login();
+		snapman.login();
 		vince.login();
 		fred.login();
 		nath.login();
@@ -153,7 +145,7 @@ public class SnapshotRestyTest extends SpaceTest {
 
 		// all credentials are gone
 		assertHttpError(401, () -> superadmin.login());
-		assertHttpError(401, () -> snapshoter.login());
+		assertHttpError(401, () -> snapman.login());
 		assertHttpError(401, () -> vince.login());
 		assertHttpError(401, () -> fred.login());
 		assertHttpError(401, () -> nath.login());
@@ -163,7 +155,7 @@ public class SnapshotRestyTest extends SpaceTest {
 
 		// all credentials are back
 		superadmin.login();
-		snapshoter.login();
+		snapman.login();
 		vince.login();
 		fred.login();
 		nath.login();
@@ -182,6 +174,57 @@ public class SnapshotRestyTest extends SpaceTest {
 		assertEquals(snap3, all.get(0));
 		assertEquals(snap2, all.get(1));
 		assertEquals(snap1, all.get(2));
-		assertEquals(3, all.size());
+	}
+
+	@Test
+	public void getOpenCloseRepositories() {
+
+		// prepare
+		prepareTest();
+		SpaceDog superadmin = clearServer();
+
+		// superadmin closes all existing repositories
+		superadmin.snapshots().getRepositories(0, 10).stream()//
+				.forEach(repo -> superadmin.snapshots().closeRepository(repo.id()));
+
+		// superadmin checks there is no repository anymore
+		assertEquals(0, superadmin.snapshots().getRepositories(0, 10).size());
+
+		// superadmin fails to open repository with invalid format
+		assertHttpError(400, () -> superadmin.snapshots().openRepository("XXX"));
+
+		// superadmin opens a first repository
+		superadmin.snapshots().openRepository("2017-22");
+
+		// superadmin checks open repositories
+		List<SpaceRepository> repositories = superadmin.snapshots().getRepositories(0, 10);
+		assertEquals(1, repositories.size());
+		assertEquals("2017-22", repositories.get(0).id());
+		assertEquals(FileStoreType.fs.toElasticRepoType(), repositories.get(0).type());
+		assertEquals("true", repositories.get(0).settings().get("compress"));
+		assertEquals("spacedog/elastic/2017-22", repositories.get(0).settings().get("location"));
+
+		// superadmin opens a second repository
+		superadmin.snapshots().openRepository("2017-33");
+
+		// superadmin checks open repositories
+		repositories = superadmin.snapshots().getRepositories(0, 10);
+		assertEquals(2, repositories.size());
+		assertEquals("2017-33", repositories.get(0).id());
+		assertEquals("2017-22", repositories.get(1).id());
+
+		// superadmin closes first repository
+		superadmin.snapshots().closeRepository("2017-22");
+
+		// superadmin checks open repositories
+		repositories = superadmin.snapshots().getRepositories(0, 10);
+		assertEquals(1, repositories.size());
+		assertEquals("2017-33", repositories.get(0).id());
+
+		// superadmin closes second repository
+		superadmin.snapshots().closeRepository("2017-33");
+
+		// superadmin checks there is no repository anymore
+		assertEquals(0, superadmin.snapshots().getRepositories(0, 10).size());
 	}
 }

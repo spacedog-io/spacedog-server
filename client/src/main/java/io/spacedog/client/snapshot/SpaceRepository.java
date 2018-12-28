@@ -8,6 +8,15 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonAutoDetect(fieldVisibility = Visibility.ANY, //
+		getterVisibility = Visibility.NONE, //
+		isGetterVisibility = Visibility.NONE, //
+		setterVisibility = Visibility.NONE)
 public class SpaceRepository implements Comparable<SpaceRepository> {
 
 	// using xxxx for week year and ww for week number

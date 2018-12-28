@@ -1,10 +1,11 @@
 package io.spacedog.client.snapshot;
 
 import org.joda.time.DateTime;
-import org.junit.Assert;
 import org.junit.Test;
 
-public class SpaceRepositoryTest extends Assert {
+import io.spacedog.client.http.SpaceAssert;
+
+public class SpaceRepositoryTest extends SpaceAssert {
 
 	@Test
 	public void testToRepositoryId() {
@@ -26,6 +27,16 @@ public class SpaceRepositoryTest extends Assert {
 				SpaceRepository.toDateTime("2014-01"));
 		assertEquals(DateTime.parse("2013-12-23T00:00:00.000Z"), //
 				SpaceRepository.toDateTime("2013-52"));
+	}
+
+	@Test
+	public void testToDateTimeFailsIfInvalidRepositoryId() {
+		assertThrow(IllegalArgumentException.class, new Runnable() {
+			@Override
+			public void run() {
+				SpaceRepository.toDateTime("toto");
+			}
+		});
 	}
 
 	@Test
