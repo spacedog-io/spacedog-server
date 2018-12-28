@@ -8,6 +8,7 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.file.FileBucket;
+import io.spacedog.client.file.FileStoreType;
 import io.spacedog.client.file.SpaceFile.FileList;
 import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.test.SpaceTest;
@@ -19,11 +20,11 @@ public class FileRestyTest extends SpaceTest {
 
 	@Test
 	public void testDefaultWwwBucketSettings() throws Exception {
-		testDefaultWwwBucketSettings(FileBucket.StoreType.system);
-		testDefaultWwwBucketSettings(FileBucket.StoreType.s3);
+		testDefaultWwwBucketSettings(FileStoreType.fs);
+		testDefaultWwwBucketSettings(FileStoreType.s3);
 	}
 
-	private void testDefaultWwwBucketSettings(FileBucket.StoreType storeType) throws Exception {
+	private void testDefaultWwwBucketSettings(FileStoreType storeType) throws Exception {
 
 		// prepare
 		prepareTest();
@@ -107,11 +108,11 @@ public class FileRestyTest extends SpaceTest {
 
 	@Test
 	public void testCustomBucketSettings() throws Exception {
-		testCustomBucketSettings(FileBucket.StoreType.system);
-		testCustomBucketSettings(FileBucket.StoreType.s3);
+		testCustomBucketSettings(FileStoreType.fs);
+		testCustomBucketSettings(FileStoreType.s3);
 	}
 
-	private void testCustomBucketSettings(FileBucket.StoreType storeType) throws Exception {
+	private void testCustomBucketSettings(FileStoreType storeType) throws Exception {
 
 		// prepare
 		prepareTest();
@@ -202,7 +203,7 @@ public class FileRestyTest extends SpaceTest {
 		superadmin.files().setBucket(www);
 
 		// superadmin fails to update bucket store type
-		www.type = FileBucket.StoreType.s3;
+		www.type = FileStoreType.s3;
 		assertHttpError(400, () -> superadmin.files().setBucket(www));
 
 		// superadmin uploads a file into www bucket

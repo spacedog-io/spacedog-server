@@ -15,9 +15,6 @@ public class SpaceRepository implements Comparable<SpaceRepository> {
 	private static final DateTimeFormatter REPO_ID_FORMATTER = DateTimeFormat//
 			.forPattern("xxxx-ww").withZone(DateTimeZone.UTC);
 
-	public static final String TYPE_S3 = "s3";
-	public static final String TYPE_FS = "fs";
-
 	private String id;
 	private String type;
 	private Map<String, Object> settings;

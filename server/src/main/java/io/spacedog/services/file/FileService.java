@@ -21,6 +21,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
 import io.spacedog.client.file.FileBucket;
+import io.spacedog.client.file.FileStoreType;
 import io.spacedog.client.file.SpaceFile;
 import io.spacedog.client.file.SpaceFile.FileList;
 import io.spacedog.client.http.SpaceFields;
@@ -43,7 +44,7 @@ public class FileService extends SpaceService {
 
 	// fields
 	private int defaultListSize = 100;
-	private FileStore systemStore = new SystemFileStore(ServerConfig.fileStorePath());
+	private FileStore systemStore = new SystemFileStore(ServerConfig.filesStorePath());
 	private FileStore s3Store = new S3FileStore(ServerConfig.awsBucketPrefix() + SERVICE_NAME);
 
 	public FileService() {
@@ -411,10 +412,10 @@ public class FileService extends SpaceService {
 	}
 
 	private FileStore store(FileBucket bucket) {
-		if (bucket.type.equals(FileBucket.StoreType.system))
+		if (bucket.type.equals(FileStoreType.fs))
 			return systemStore;
 
-		if (bucket.type.equals(FileBucket.StoreType.s3))
+		if (bucket.type.equals(FileStoreType.s3))
 			return s3Store;
 
 		throw Exceptions.runtime("file bucket type [%s] is invalid", bucket.type);

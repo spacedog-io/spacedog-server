@@ -27,6 +27,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import io.spacedog.client.file.FileStoreType;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.client.snapshot.SpaceRepository;
@@ -227,14 +228,14 @@ public class SnapshotService extends SpaceService implements SpaceFields, SpaceP
 	}
 
 	// private FileStore filesBackupStore() {
-	// StoreType storeType = ServerConfig.fileSnapshotsStoreType();
+	// FileStoreType storeType = ServerConfig.filesSnapshotsStoreType();
 	//
-	// if (StoreType.s3.equals(storeType))
+	// if (FileStoreType.S3.equals(storeType))
 	// return new S3FileStore(ServerConfig.awsBucketPrefix() +
-	// ServerConfig.fileSnapshotsS3Suffix());
+	// ServerConfig.filesSnapshotsS3Suffix());
 	//
-	// if (StoreType.system.equals(storeType))
-	// return new SystemFileStore(ServerConfig.fileSnapshotsSystemPath());
+	// if (FileStoreType.FS.equals(storeType))
+	// return new SystemFileStore(ServerConfig.filesSnapshotsFSPath());
 	//
 	// throw Exceptions.runtime("file bucket type [%s] is invalid", storeType);
 	// }
@@ -320,31 +321,27 @@ public class SnapshotService extends SpaceService implements SpaceFields, SpaceP
 
 	private static RepositoryMetaData createRepository(String id) {
 
-		String type = ServerConfig.snapshotsRepoType();
+		FileStoreType type = ServerConfig.dataSnapshotsStoreType();
+		Settings settings = null;
 
-		if (type.equals(SpaceRepository.TYPE_FS)) {
-
-			Settings settings = Settings.builder()//
+		if (type.equals(FileStoreType.fs))
+			settings = Settings.builder()//
 					.put("location", id)//
 					.put("compress", true)//
 					.build();
 
-			return new RepositoryMetaData(id, SpaceRepository.TYPE_FS, settings);
-		}
-
-		if (type.equals(SpaceRepository.TYPE_S3)) {
-
-			Settings settings = Settings.builder()//
+		else if (type.equals(FileStoreType.s3))
+			settings = Settings.builder()//
 					.put("bucket", ServerConfig.awsBucketPrefix() + "snapshots")//
 					.put("region", ServerConfig.awsRegion().getName())//
 					.put("base_path", id)//
 					.put("compress", true)//
 					.build();
 
-			return new RepositoryMetaData(id, SpaceRepository.TYPE_S3, settings);
-		}
+		if (settings == null)
+			throw Exceptions.illegalArgument("snapshot repository type [%s] is invalid", type);
 
-		throw Exceptions.illegalArgument("snapshot repository type [%s] is invalid", type);
+		return new RepositoryMetaData(id, type.toElasticRepoType(), settings);
 	}
 
 }

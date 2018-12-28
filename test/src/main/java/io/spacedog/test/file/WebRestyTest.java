@@ -10,7 +10,7 @@ import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.file.FileBucket;
-import io.spacedog.client.file.FileBucket.StoreType;
+import io.spacedog.client.file.FileStoreType;
 import io.spacedog.client.file.SpaceFile;
 import io.spacedog.client.http.SpaceBackend;
 import io.spacedog.client.http.SpaceEnv;
@@ -46,7 +46,7 @@ public class WebRestyTest extends SpaceTest {
 
 		// superadmin sets www bucket
 		FileBucket bucket = new FileBucket(WWW);
-		bucket.type = StoreType.s3;
+		bucket.type = FileStoreType.s3;
 		bucket.permissions.put(Roles.all, Permission.read);
 		superadmin.files().setBucket(bucket);
 
