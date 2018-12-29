@@ -34,7 +34,7 @@ public class SnapshotResty extends SpaceResty {
 	@Get("")
 	@Get("/")
 	public List<SpaceSnapshot> getAll(Context context) {
-		checkAtLeastSnapshotMan();
+		checkAtLeastSnapman();
 		int from = context.query().getInteger(FROM_PARAM, 0);
 		int size = context.query().getInteger(SIZE_PARAM, 10);
 		return Services.snapshots().getLatest(from, size);
@@ -43,7 +43,7 @@ public class SnapshotResty extends SpaceResty {
 	@Post("")
 	@Post("/")
 	public Payload postSnapshot(Context context) {
-		checkAtLeastSnapshotMan();
+		checkAtLeastSnapman();
 		boolean wait = context.query().getBoolean(WAIT_FOR_COMPLETION_PARAM, false);
 		return JsonPayload.status(wait ? 202 : 201)//
 				.withContent(Services.snapshots().snapshot(wait))//
@@ -53,7 +53,7 @@ public class SnapshotResty extends SpaceResty {
 	@Get("/repositories")
 	@Get("/repositories/")
 	public List<SpaceRepository> getRepositories(Context context) {
-		checkAtLeastSnapshotMan();
+		checkAtLeastSnapman();
 		return Services.snapshots().getRepositories();
 	}
 
@@ -76,7 +76,7 @@ public class SnapshotResty extends SpaceResty {
 	@Get("/_latest")
 	@Get("/_latest/")
 	public SpaceSnapshot getLatest() {
-		checkAtLeastSnapshotMan();
+		checkAtLeastSnapman();
 		return Services.snapshots().getLatest(0, 1)//
 				.stream().findAny()//
 				.orElseThrow(() -> Exceptions.notFound("no snapshot found"));
@@ -85,7 +85,7 @@ public class SnapshotResty extends SpaceResty {
 	@Get("/:id")
 	@Get("/:id/")
 	public SpaceSnapshot getById(String snapshotId) {
-		checkAtLeastSnapshotMan();
+		checkAtLeastSnapman();
 		return Services.snapshots().get(snapshotId)//
 				.orElseThrow(() -> Exceptions.notFound("snapshot [%s] not found", snapshotId));
 	}
@@ -112,7 +112,7 @@ public class SnapshotResty extends SpaceResty {
 	// implementation
 	//
 
-	private Credentials checkAtLeastSnapshotMan() {
+	private Credentials checkAtLeastSnapman() {
 		Credentials credentials = Server.context().credentials();
 
 		if (credentials.isAtLeastSuperAdmin() //
