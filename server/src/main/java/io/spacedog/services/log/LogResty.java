@@ -20,7 +20,7 @@ import net.codestory.http.annotations.Prefix;
 @Prefix("/2/logs")
 public class LogResty extends SpaceResty {
 
-	public static final String PURGE_MAN = "purgeman";
+	public static final String PURGEMAN = "purgeman";
 
 	//
 	// Routes
@@ -70,7 +70,7 @@ public class LogResty extends SpaceResty {
 		Credentials credentials = Server.context().credentials();
 
 		if (credentials.isAtLeastSuperAdmin() //
-				|| credentials.roles().contains(PURGE_MAN))
+				|| credentials.roles().contains(PURGEMAN))
 			return credentials;
 
 		throw Exceptions.insufficientPermissions(credentials);
