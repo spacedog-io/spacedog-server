@@ -277,13 +277,13 @@ public class CredentialsRestyTest2 extends SpaceTest {
 	}
 
 	@Test
-	public void search() {
+	public void findCredentials() {
 
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = clearServer();
-		createTempDog(superadmin, "fred");
-		SpaceDog vince = createTempDog(superadmin, "vince");
+		SpaceDog fred = createTempDog(superadmin, "fred");
+		SpaceDog vince = createTempDog(superadmin, "big.vince-mimi");
 
 		// vince not authaurized to search for credentials
 		assertHttpError(403, () -> vince.credentials().getAll());
@@ -293,30 +293,36 @@ public class CredentialsRestyTest2 extends SpaceTest {
 
 		assertEquals(3, results.total);
 		assertEquals(3, results.results.size());
-		assertContainsCredsOf("superadmin", results.results);
-		assertContainsCredsOf("vince", results.results);
-		assertContainsCredsOf("fred", results.results);
+		assertContainsCredsOf(superadmin, results.results);
+		assertContainsCredsOf(vince, results.results);
+		assertContainsCredsOf(fred, results.results);
 
 		// superadmin searches for user credentials
 		results = superadmin.credentials().findByRole(Roles.user, 0, 10, true);
 		assertEquals(2, results.total);
 		assertEquals(2, results.results.size());
-		assertContainsCredsOf("vince", results.results);
-		assertContainsCredsOf("fred", results.results);
+		assertContainsCredsOf(vince, results.results);
+		assertContainsCredsOf(fred, results.results);
 
 		// superadmin searches for credentials with a specified email
-		results = superadmin.credentials().findByText("platform");
+		results = superadmin.credentials().findByText("IO");
 		assertEquals(3, results.total);
 		assertEquals(3, results.results.size());
-		assertContainsCredsOf("superadmin", results.results);
-		assertContainsCredsOf("vince", results.results);
-		assertContainsCredsOf("fred", results.results);
+		assertContainsCredsOf(superadmin, results.results);
+		assertContainsCredsOf(vince, results.results);
+		assertContainsCredsOf(fred, results.results);
 
 		// superadmin searches for credentials with specified username
 		results = superadmin.credentials().findByText("fre*");
 		assertEquals(1, results.total);
 		assertEquals(1, results.results.size());
-		assertContainsCredsOf("fred", results.results);
+		assertContainsCredsOf(fred, results.results);
+
+		// superadmin searches for credentials with specified username
+		results = superadmin.credentials().findByText("Vince");
+		assertEquals(1, results.total);
+		assertEquals(1, results.results.size());
+		assertContainsCredsOf(vince, results.results);
 	}
 
 	@Test
@@ -325,17 +331,17 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		// prepare
 		prepareTest();
 		SpaceDog superadmin = clearServer();
-		createTempDog(superadmin, "fred");
-		createTempDog(superadmin, "vince");
+		SpaceDog fred = createTempDog(superadmin, "fred");
+		SpaceDog vince = createTempDog(superadmin, "vince");
 
 		// superadmin searches for all credentials
 		Results results = superadmin.credentials().getAll();
 
 		assertEquals(3, results.total);
 		assertEquals(3, results.results.size());
-		assertContainsCredsOf("superadmin", results.results);
-		assertContainsCredsOf("vince", results.results);
-		assertContainsCredsOf("fred", results.results);
+		assertContainsCredsOf(superadmin, results.results);
+		assertContainsCredsOf(vince, results.results);
+		assertContainsCredsOf(fred, results.results);
 
 		// superadmin deletes all credentials but superadmins
 		superadmin.credentials().deleteAllButSuperAdmins();
@@ -343,15 +349,15 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		results = superadmin.credentials().getAll();
 		assertEquals(1, results.total);
 		assertEquals(1, results.results.size());
-		assertContainsCredsOf("superadmin", results.results);
+		assertContainsCredsOf(superadmin, results.results);
 	}
 
-	private void assertContainsCredsOf(String username, List<Credentials> results) {
+	private void assertContainsCredsOf(SpaceDog dog, List<Credentials> results) {
 		for (Credentials credentials : results)
-			if (credentials.username().equals(username))
+			if (credentials.username().equals(dog.username()))
 				return;
 
-		fail("credentials [" + username + "] not found");
+		fail("credentials [" + dog.username() + "] not found");
 	}
 
 	@Test

@@ -402,8 +402,11 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 
 	public void initIndex() {
 		Index index = index();
+		Schema schema = schema();
 		if (!elastic().exists(index))
-			elastic().createIndex(index, schema(), false);
+			elastic().createIndex(index, schema, false);
+		else
+			elastic().putMapping(index, schema.mapping());
 	}
 
 	public Schema schema() {
@@ -412,8 +415,8 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 				.dynamicStrict()//
 				.dateDetection(false)//
 
-				.keyword(USERNAME_FIELD).subText()//
-				.keyword(EMAIL_FIELD).subText()//
+				.keyword(USERNAME_FIELD).subText("simple")//
+				.keyword(EMAIL_FIELD).subText("simple")//
 				.keyword(ROLES_FIELD)//
 				.keyword(GROUPS_FIELD)//
 				.keyword(TAGS_FIELD)//
