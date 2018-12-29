@@ -73,6 +73,6 @@ public class ExportLogCommand extends AbstractCommand<ExportLogCommand> {
 		if (payload.get("total").asLong() > 5000)
 			System.err.println("WARNING: log export limited to the first 5000 logs");
 
-		Files.write(target, Json.toPrettyString(payload).getBytes(Utils.UTF8));
+		Files.write(target, Json.toString(payload, true).getBytes(Utils.UTF8));
 	}
 }

@@ -268,7 +268,7 @@ public class Utils {
 	}
 
 	public static void info(String nodeName, JsonNode node) {
-		Utils.info("%s = %s", nodeName, Json.toPrettyString(node));
+		Utils.info("%s = %s", nodeName, Json.toString(node, true));
 	}
 
 	public static void warn(String message, Object... arguments) {

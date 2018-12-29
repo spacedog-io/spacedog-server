@@ -78,7 +78,7 @@ public class SpaceResponse implements Closeable {
 				Utils.info(" %s: %s", headers.name(i), headers.value(i));
 
 			if (isJson())
-				Utils.info("Response body: %s", Json.toPrettyString(asJson()));
+				Utils.info("Response body: %s", Json.toString(asJson(), true));
 		}
 	}
 

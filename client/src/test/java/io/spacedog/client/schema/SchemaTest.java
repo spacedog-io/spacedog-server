@@ -25,7 +25,7 @@ public class SchemaTest extends Assert {
 
 				.build();
 
-		System.out.println(Json.toPrettyString(schema.mapping()));
+		System.out.println(Json.toString(schema.mapping(), true));
 
 		JsonNode mapping = Json.readNode(//
 				ClassResources.loadAsString(this, "mapping.json"));

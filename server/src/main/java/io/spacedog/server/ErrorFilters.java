@@ -150,7 +150,7 @@ public class ErrorFilters {
 		builder.append(name).append(" : ");
 
 		if (Json.isJson(body))
-			body = Json.toPrettyString(Json.readNode(body));
+			body = Json.toString(Json.readNode(body), true);
 
 		builder.append(body).append('\n');
 	}

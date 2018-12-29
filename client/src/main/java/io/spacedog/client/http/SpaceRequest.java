@@ -459,7 +459,7 @@ public class SpaceRequest {
 		if (body != null) {
 			String string = body.toString();
 			if (OkHttp.JSON.equals(contentType))
-				string = Json.toPrettyString(Json.readNode(string));
+				string = Json.toString(Json.readNode(string), true);
 			Utils.info("Request body: %s", string);
 		}
 

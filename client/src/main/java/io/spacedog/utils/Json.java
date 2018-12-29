@@ -306,15 +306,6 @@ public class Json {
 		return mapper;
 	}
 
-	public static String toPrettyString(JsonNode node) {
-		try {
-			return mapper().writerWithDefaultPrettyPrinter()//
-					.writeValueAsString(node);
-		} catch (JsonProcessingException e) {
-			throw Exceptions.runtime(e);
-		}
-	}
-
 	@SuppressWarnings("unchecked")
 	public static Map<String, Object> readMap(String json) {
 		Check.notNullOrEmpty(json, "json");
@@ -706,10 +697,17 @@ public class Json {
 	}
 
 	public static String toString(Object object) {
+		return toString(object, false);
+	}
+
+	public static String toString(Object object, boolean pretty) {
 		try {
-			return mapper().writeValueAsString(object);
+			return pretty //
+					? mapper().writerWithDefaultPrettyPrinter().writeValueAsString(object)//
+					: mapper().writeValueAsString(object);
+
 		} catch (JsonProcessingException e) {
-			throw Exceptions.illegalArgument(e, "unable to map [%s] object to json string", //
+			throw Exceptions.runtime(e, "map [%s] object to json failed", //
 					object.getClass().getSimpleName());
 		}
 	}
