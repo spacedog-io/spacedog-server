@@ -6,12 +6,14 @@ import com.google.common.base.Throwables;
 
 import io.spacedog.utils.Utils;
 
-public class Job {
+public abstract class Job {
 
 	public static final String OK = "OK";
 
 	private String firstname;
 	private String lastname;
+
+	public abstract String run();
 
 	public Job firstname(String firstname) {
 		this.firstname = firstname;
@@ -25,7 +27,7 @@ public class Job {
 
 	public String description() {
 		if (firstname == null)
-			return "Unknown";
+			firstname = this.getClass().getSimpleName();
 
 		return Utils.join("/", firstname, lastname);
 	}
@@ -62,7 +64,7 @@ public class Job {
 		return message;
 	}
 
-	void notify(String titleSuffix, String message) {
+	public void notify(String titleSuffix, String message) {
 		Internals.get().notify(description() + titleSuffix, message);
 	}
 }
