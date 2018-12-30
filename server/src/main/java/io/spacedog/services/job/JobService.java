@@ -1,45 +1,108 @@
 package io.spacedog.services.job;
 
+import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
-import org.joda.time.DateTime;
+import com.amazonaws.services.lambda.AWSLambda;
+import com.amazonaws.services.lambda.AWSLambdaClient;
+import com.amazonaws.services.lambda.model.CreateFunctionRequest;
+import com.amazonaws.services.lambda.model.DeleteFunctionRequest;
+import com.amazonaws.services.lambda.model.Environment;
+import com.amazonaws.services.lambda.model.FunctionCode;
+import com.amazonaws.services.lambda.model.FunctionConfiguration;
+import com.amazonaws.services.lambda.model.GetFunctionRequest;
+import com.amazonaws.services.lambda.model.InvokeRequest;
+import com.amazonaws.services.lambda.model.InvokeResult;
+import com.amazonaws.services.lambda.model.ResourceNotFoundException;
+import com.amazonaws.services.lambda.model.UpdateFunctionCodeRequest;
+import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationRequest;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Throwables;
-
-import io.spacedog.client.job.SpaceJob;
-import io.spacedog.client.job.SpaceTask;
-import io.spacedog.client.job.SpaceTask.Status;
-import io.spacedog.jobs.Internals;
-import io.spacedog.server.Services;
-import io.spacedog.utils.Exceptions;
+import io.spacedog.client.http.ContentTypes;
+import io.spacedog.client.http.SpaceStatus;
+import io.spacedog.client.job.LambdaJob;
+import io.spacedog.server.Server;
+import io.spacedog.server.ServerConfig;
+import io.spacedog.utils.Json;
+import io.spacedog.utils.Utils;
+import net.codestory.http.payload.Payload;
 
 public class JobService {
 
-	public SpaceJob get(String jobName) {
-		return Services.settings().get(//
-				SpaceJob.internalSettingsId(jobName), //
-				SpaceJob.class)//
-				.orElseThrow(() -> Exceptions.objectNotFound("job", jobName));
+	private static AWSLambda lambda;
+
+	static {
+		lambda = AWSLambdaClient.builder()//
+				.withRegion(ServerConfig.awsRegion())//
+				.build();
 	}
 
-	public void save(SpaceJob job) {
-		Services.settings().save(job);
-		deleteNextScheduledTaskOf(job.name);
-		scheduleNextTaskOf(job);
+	public List<LambdaJob> list() {
+		return lambda.listFunctions().getFunctions().stream()//
+				.filter(function -> function.getFunctionName().startsWith(functionNamePrefix()))//
+				.map(function -> toJob(function))//
+				.peek(job -> System.out.println(Json.toString(job, true)))//
+				.collect(Collectors.toList());
+	}
+
+	public Optional<LambdaJob> get(String jobName) {
+		try {
+			return Optional.of(toJob(lambda.getFunction(//
+					new GetFunctionRequest() //
+							.withFunctionName(functionName(jobName)))//
+					.getConfiguration()));
+
+		} catch (ResourceNotFoundException e) {
+			return Optional.empty();
+		}
+	}
+
+	public void save(LambdaJob job) {
+		Optional<LambdaJob> oldJob = get(job.name);
+		if (oldJob.isPresent()) {
+			lambda.updateFunctionConfiguration(toUpdateFunctionConfigurationRequest(job));
+			lambda.updateFunctionCode(new UpdateFunctionCodeRequest()//
+					.withFunctionName(functionName(job.name))//
+					.withZipFile(ByteBuffer.wrap(job.code)));
+		} else
+			lambda.createFunction(toCreateFunctionRequest(job));
+	}
+
+	public String getCodeLocation(String jobName) {
+		return lambda.getFunction(//
+				new GetFunctionRequest()//
+						.withFunctionName(functionName(jobName)))//
+				.getCode()//
+				.getLocation();
+	}
+
+	public void setCode(String jobName, byte[] bytes) {
+		lambda.updateFunctionCode(//
+				new UpdateFunctionCodeRequest()//
+						.withFunctionName(functionName(jobName))//
+						.withZipFile(ByteBuffer.wrap(bytes)));
 	}
 
 	public void delete(String jobName) {
-		Services.settings().delete(//
-				SpaceJob.internalSettingsId(jobName));
-		deleteNextScheduledTaskOf(jobName);
+		lambda.deleteFunction(//
+				new DeleteFunctionRequest()//
+						.withFunctionName(functionName(jobName)));
 	}
 
-	public ObjectNode execute(String jobName, Object jobRequest) {
-		throw new UnsupportedOperationException();
+	public Payload execute(String jobName, byte[] payload) {
+		InvokeResult result = lambda.invoke(new InvokeRequest()//
+				.withFunctionName(functionName(jobName))//
+				.withPayload(ByteBuffer.wrap(payload)));
+
+		String error = result.getFunctionError();
+		int status = error == null ? SpaceStatus.CREATED//
+				: error.equals("Handled") ? SpaceStatus.BAD_REQUEST //
+						: SpaceStatus.INTERNAL_SERVER_ERROR;
+
+		return new Payload(ContentTypes.JSON_UTF8, //
+				result.getPayload().array(), //
+				status);
 	}
 
 	public void deleteExecution(String jobName, String jobExecId) {
@@ -47,132 +110,50 @@ public class JobService {
 	}
 
 	//
-	// Interface
+	// Implementation
 	//
 
-	public ScheduledFuture<?> schedule(Runnable command, //
-			long initialDelay, long period, TimeUnit unit) {
-		ScheduledFuture<?> future = executor.scheduleAtFixedRate(command, initialDelay, period, unit);
-		return future;
+	private String functionNamePrefix() {
+		return Server.backend().id() + '-';
 	}
 
-	//
-	//
-	//
-
-	private static final int DEFAULT_TIMEOUT_MILLIS = 1000 * 60 * 4;
-
-	private ScheduledThreadPoolExecutor executor;
-
-	//
-	// Job Manager
-	//
-
-	public void manageTasks() {
-		try {
-			List<SpaceTask> tasks = getNextjobTasks(3);
-			for (SpaceTask task : tasks) {
-				taskIsReady(task);
-
-				long delay = task.delay();
-				Runnable executeCommand = () -> JobService.this.execute(task);
-				ScheduledFuture<?> future = executor.schedule(executeCommand, delay, TimeUnit.MILLISECONDS);
-
-				long timeout = delay + DEFAULT_TIMEOUT_MILLIS;
-				Runnable completeCommand = () -> completeExecution(task.id(), future);
-				executor.schedule(completeCommand, timeout, TimeUnit.MILLISECONDS);
-			}
-
-		} catch (Throwable t) {
-			alertSuperdogs(t, "error managing job tasks");
-		}
+	private String functionName(String jobName) {
+		return functionNamePrefix() + jobName;
 	}
 
-	private void completeExecution(String taskId, ScheduledFuture<?> future) {
-		try {
-			SpaceTask task = load(taskId);
-			if (Status.in_progress.equals(task.status)) {
-				future.cancel(true);
-				taskIsCancelled(task);
-				alertSuperdogs("job execution [%s] timed out", taskId);
-			}
-		} catch (Throwable t) {
-			alertSuperdogs(t, "job execution [%s] failed when completing", taskId);
-		}
+	private LambdaJob toJob(FunctionConfiguration configuration) {
+		LambdaJob job = new LambdaJob();
+		job.name = Utils.trimPreffix(configuration.getFunctionName(), functionNamePrefix());
+		job.handler = configuration.getHandler();
+		job.env = configuration.getEnvironment().getVariables();
+		job.description = configuration.getDescription();
+		job.memoryInMBytes = configuration.getMemorySize();
+		job.timeoutInSeconds = configuration.getTimeout();
+		return job;
 	}
 
-	private void alertSuperdogs(String message, Object... args) {
-		message = String.format(message, args);
-		Internals.get().notify(message, message);
+	private UpdateFunctionConfigurationRequest toUpdateFunctionConfigurationRequest(LambdaJob job) {
+		return new UpdateFunctionConfigurationRequest()//
+				.withFunctionName(functionName(job.name))//
+				.withEnvironment(new Environment().withVariables(job.env))//
+				.withHandler(job.handler)//
+				.withDescription(job.description)//
+				.withTimeout(job.timeoutInSeconds)//
+				.withMemorySize(job.memoryInMBytes);
 	}
 
-	private void alertSuperdogs(Throwable t, String title, Object... args) {
-		title = String.format(title, args);
-		String message = Throwables.getStackTraceAsString(t);
-		Internals.get().notify(title, message);
-	}
-
-	private SpaceTask load(String taskId) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private void save(SpaceTask task) {
-		// TODO Auto-generated method stub
-
-	}
-
-	private void execute(SpaceTask task) {
-		taskInProgress(task);
-		doExecute(task);
-		taskCompleted(task);
-	}
-
-	private void taskIsReady(SpaceTask task) {
-		task.status = Status.ready;
-		save(task);
-	}
-
-	private void taskCompleted(SpaceTask task) {
-		task.status = Status.completed;
-		task.stopped = DateTime.now();
-		save(task);
-	}
-
-	private void taskInProgress(SpaceTask task) {
-		task.status = Status.in_progress;
-		task.started = DateTime.now();
-		save(task);
-	}
-
-	private void taskIsCancelled(SpaceTask task) {
-		task.stopped = DateTime.now();
-		task.status = SpaceTask.Status.cancelled;
-		save(task);
-	}
-
-	private void doExecute(SpaceTask task) {
-		// Server.get().executeRequest(request, response);
-	}
-
-	private void scheduleNextTaskOf(SpaceJob job) {
-		// TODO Auto-generated method stub
-
-	}
-
-	public List<SpaceTask> getNextjobTasks(int size) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	private void deleteNextScheduledTaskOf(String jobName) {
-		// TODO Auto-generated method stub
-
-	}
-
-	public JobService() {
-		executor = new ScheduledThreadPoolExecutor(1);
-		executor.setMaximumPoolSize(10);
+	private CreateFunctionRequest toCreateFunctionRequest(LambdaJob job) {
+		return new CreateFunctionRequest()//
+				.withFunctionName(functionName(job.name))//
+				.withEnvironment(new Environment().withVariables(job.env))//
+				.withHandler(job.handler)//
+				.withDescription(job.description)//
+				.withTimeout(job.timeoutInSeconds)//
+				.withMemorySize(job.memoryInMBytes)//
+				.withCode(new FunctionCode()//
+						.withZipFile(ByteBuffer.wrap(job.code)))//
+				.withRuntime("java8")//
+				.withRole("arn:aws:iam::309725721660:role/spacedog-job");
 	}
 
 }

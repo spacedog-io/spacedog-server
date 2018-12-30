@@ -14,7 +14,7 @@ import io.spacedog.client.settings.Settings;
 		include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({ //
 		@Type(value = BasicSpaceJob.class, name = "basic"), //
-		@Type(value = LambdaSpaceJob.class, name = "lambda")//
+		@Type(value = LambdaJob.class, name = "lambda")//
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, //

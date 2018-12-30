@@ -18,6 +18,7 @@ import io.spacedog.client.http.SpaceEnv;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.client.http.SpaceRequest;
+import io.spacedog.client.job.JobClient;
 import io.spacedog.client.log.LogClient;
 import io.spacedog.client.push.PushClient;
 import io.spacedog.client.schema.SchemaClient;
@@ -300,6 +301,14 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 		if (snapshotClient == null)
 			snapshotClient = new SnapshotClient(this);
 		return snapshotClient;
+	}
+
+	JobClient JobClient;
+
+	public JobClient jobs() {
+		if (JobClient == null)
+			JobClient = new JobClient(this);
+		return JobClient;
 	}
 
 }
