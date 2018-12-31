@@ -15,14 +15,14 @@ import io.spacedog.utils.Utils;
 
 public class SpaceEnv {
 
-	private static final String DEBUG = "spacedog.debug";
-	private static final String HTTP_TIMEOUT = "spacedog.http.timeout";
-	private static final String SUPERDOG_PASSWORD = "spacedog.superdog.password";
-	private static final String BACKEND_ID = "spacedog.backend.id";
-	private static final String BACKEND_REGION = "spacedog.backend.region";
-	private static final String BACKEND_WWW_PUBLIC_URL = "spacedog.backend.www.public.url";
-	private static final String BACKEND_API_PUBLIC_URL = "spacedog.backend.api.public.url";
-	private static final String SUPERDOG_NOTIFICATION_TOPIC = "spacedog_superdog_notification_topic";
+	public static final String DEBUG = "spacedog.debug";
+	public static final String HTTP_TIMEOUT = "spacedog.http.timeout";
+	public static final String SUPERDOG_PASSWORD = "spacedog.superdog.password";
+	public static final String BACKEND_ID = "spacedog.backend.id";
+	public static final String BACKEND_REGION = "spacedog.backend.region";
+	public static final String BACKEND_WWW_PUBLIC_URL = "spacedog.backend.www.public.url";
+	public static final String BACKEND_API_PUBLIC_URL = "spacedog.backend.api.public.url";
+	public static final String SUPERDOG_NOTIFICATION_TOPIC = "spacedog_superdog_notification_topic";
 
 	private Properties properties;
 
