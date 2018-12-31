@@ -32,7 +32,6 @@ import io.spacedog.client.http.SpaceStatus;
 import io.spacedog.client.job.LambdaJob;
 import io.spacedog.server.Server;
 import io.spacedog.server.ServerConfig;
-import io.spacedog.utils.Json;
 import io.spacedog.utils.Utils;
 import net.codestory.http.payload.Payload;
 
@@ -59,7 +58,6 @@ public class JobService {
 		return lambda.listFunctions().getFunctions().stream()//
 				.filter(function -> function.getFunctionName().startsWith(functionNamePrefix()))//
 				.map(function -> toJob(function))//
-				.peek(job -> System.out.println(Json.toString(job, true)))//
 				.collect(Collectors.toList());
 	}
 
@@ -120,7 +118,7 @@ public class JobService {
 				.withName(eventRuleName(jobName)));
 	}
 
-	public Payload execute(String jobName, byte[] payload) {
+	public Payload invoke(String jobName, byte[] payload) {
 		InvokeResult result = lambda.invoke(new InvokeRequest()//
 				.withFunctionName(functionName(jobName))//
 				.withPayload(ByteBuffer.wrap(payload)));

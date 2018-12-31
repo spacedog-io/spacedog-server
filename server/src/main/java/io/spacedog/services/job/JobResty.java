@@ -10,7 +10,6 @@ import io.spacedog.server.Server;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceResty;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Json;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
@@ -25,9 +24,7 @@ public class JobResty extends SpaceResty {
 	@Get("/")
 	public List<LambdaJob> getJobs() {
 		Server.context().credentials().checkAtLeastSuperAdmin();
-		List<LambdaJob> list = Services.jobs().list();
-		System.out.println(Json.toString(list, true));
-		return list;
+		return Services.jobs().list();
 	}
 
 	@Get("/:name")
@@ -71,7 +68,7 @@ public class JobResty extends SpaceResty {
 	@Post("/:name/")
 	public Payload postJobRequest(String name, byte[] body) {
 		Server.context().credentials().checkAtLeastSuperAdmin();
-		return Services.jobs().execute(name, body);
+		return Services.jobs().invoke(name, body);
 	}
 
 }
