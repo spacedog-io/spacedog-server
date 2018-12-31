@@ -192,6 +192,18 @@ public abstract class ESQueryBuilders {
 	}
 
 	/**
+	 * A Query that matches documents containing terms with a specified prefix.
+	 *
+	 * @param name
+	 *            The name of the field
+	 * @param prefix
+	 *            The prefix query
+	 */
+	public static ESPrefixQueryBuilder prefixQuery(String name, String prefix) {
+		return new ESPrefixQueryBuilder(name, prefix);
+	}
+
+	/**
 	 * A Query that matches documents within an range of terms.
 	 *
 	 * @param name
