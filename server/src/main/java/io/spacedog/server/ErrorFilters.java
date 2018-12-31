@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Strings;
 
 import io.spacedog.client.http.ContentTypes;
@@ -104,8 +104,9 @@ public class ErrorFilters {
 
 			if (ContentTypes.isJsonContent(context.header(SpaceHeaders.CONTENT_TYPE)))
 				appendContent(builder, "Request body", context.request().content());
+
 			if (ContentTypes.isJsonContent(payload.rawContentType()))
-				appendContent(builder, "Response body", payload.rawContent().toString());
+				appendContent(builder, "Response body", payload.rawContent());
 
 			Internals.get().notify(//
 					String.format("%s is 500 500 500", uri), //
@@ -146,12 +147,20 @@ public class ErrorFilters {
 		}
 	}
 
-	private static void appendContent(StringBuilder builder, String name, String body) throws JsonProcessingException {
-		builder.append(name).append(" : ");
+	private static void appendContent(StringBuilder builder, String name, Object body) {
 
-		if (Json.isJson(body))
-			body = Json.toString(Json.readNode(body), true);
+		try {
+			if (body instanceof String)
+				body = Json.readNode((String) body);
 
-		builder.append(body).append('\n');
+			else if (body instanceof byte[])
+				body = Json.readNode((byte[]) body);
+
+		} catch (Exception ignore) {
+		}
+
+		String bodyString = body instanceof JsonNode ? Json.toString(body, true) : body.toString();
+
+		builder.append(name).append(" : ").append(bodyString).append('\n');
 	}
 }

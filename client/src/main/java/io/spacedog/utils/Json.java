@@ -323,7 +323,17 @@ public class Json {
 			return mapper.readTree(json);
 		} catch (IOException e) {
 			throw Exceptions.illegalArgument(e, //
-					"error deserializing JSON string [%s]", json);
+					"deserializing JSON string [%s] failed", json);
+		}
+	}
+
+	public static JsonNode readNode(byte[] json) {
+		Check.notNull(json, "json");
+		try {
+			return mapper.readTree(json);
+		} catch (IOException e) {
+			throw Exceptions.illegalArgument(e, //
+					"deserializing JSON byte array failed");
 		}
 	}
 
