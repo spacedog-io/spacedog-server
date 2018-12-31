@@ -10,6 +10,7 @@ import com.amazonaws.services.cloudwatchevents.AmazonCloudWatchEventsClient;
 import com.amazonaws.services.cloudwatchevents.model.DeleteRuleRequest;
 import com.amazonaws.services.cloudwatchevents.model.PutRuleRequest;
 import com.amazonaws.services.cloudwatchevents.model.PutTargetsRequest;
+import com.amazonaws.services.cloudwatchevents.model.RemoveTargetsRequest;
 import com.amazonaws.services.cloudwatchevents.model.RuleState;
 import com.amazonaws.services.cloudwatchevents.model.Target;
 import com.amazonaws.services.lambda.AWSLambda;
@@ -37,6 +38,7 @@ import net.codestory.http.payload.Payload;
 
 public class JobService {
 
+	private static final String TARGET_ID = "target-0";
 	private static final String ROLE_SPACEDOG_JOB = "arn:aws:iam::309725721660:role/spacedog-job";
 	private static final String ROLE_SPACEDOG_JOB_RULE = "arn:aws:iam::309725721660:role/spacedog-job-rule";
 
@@ -109,6 +111,10 @@ public class JobService {
 		lambda.deleteFunction(//
 				new DeleteFunctionRequest()//
 						.withFunctionName(functionName(jobName)));
+
+		events.removeTargets(new RemoveTargetsRequest()//
+				.withRule(eventRuleName(jobName))//
+				.withIds(TARGET_ID));
 
 		events.deleteRule(new DeleteRuleRequest()//
 				.withName(eventRuleName(jobName)));
@@ -197,7 +203,7 @@ public class JobService {
 		events.putTargets(new PutTargetsRequest()//
 				.withRule(eventRuleName)//
 				.withTargets(new Target()//
-						.withId("target-0")//
+						.withId(TARGET_ID)//
 						.withArn(arn)));
 	}
 
