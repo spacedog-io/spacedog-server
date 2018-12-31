@@ -5,6 +5,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.amazonaws.services.cloudwatchevents.AmazonCloudWatchEvents;
+import com.amazonaws.services.cloudwatchevents.AmazonCloudWatchEventsClient;
+import com.amazonaws.services.cloudwatchevents.model.DeleteRuleRequest;
+import com.amazonaws.services.cloudwatchevents.model.PutRuleRequest;
+import com.amazonaws.services.cloudwatchevents.model.PutTargetsRequest;
+import com.amazonaws.services.cloudwatchevents.model.RuleState;
+import com.amazonaws.services.cloudwatchevents.model.Target;
 import com.amazonaws.services.lambda.AWSLambda;
 import com.amazonaws.services.lambda.AWSLambdaClient;
 import com.amazonaws.services.lambda.model.CreateFunctionRequest;
@@ -30,10 +37,18 @@ import net.codestory.http.payload.Payload;
 
 public class JobService {
 
+	private static final String ROLE_SPACEDOG_JOB = "arn:aws:iam::309725721660:role/spacedog-job";
+	private static final String ROLE_SPACEDOG_JOB_RULE = "arn:aws:iam::309725721660:role/spacedog-job-rule";
+
 	private static AWSLambda lambda;
+	private static AmazonCloudWatchEvents events;
 
 	static {
 		lambda = AWSLambdaClient.builder()//
+				.withRegion(ServerConfig.awsRegion())//
+				.build();
+
+		events = AmazonCloudWatchEventsClient.builder()//
 				.withRegion(ServerConfig.awsRegion())//
 				.build();
 	}
@@ -59,14 +74,20 @@ public class JobService {
 	}
 
 	public void save(LambdaJob job) {
+		String arn = null;
 		Optional<LambdaJob> oldJob = get(job.name);
 		if (oldJob.isPresent()) {
-			lambda.updateFunctionConfiguration(toUpdateFunctionConfigurationRequest(job));
+			arn = lambda.updateFunctionConfiguration(toUpdateFunctionConfigurationRequest(job))//
+					.getFunctionArn();
+
 			lambda.updateFunctionCode(new UpdateFunctionCodeRequest()//
 					.withFunctionName(functionName(job.name))//
 					.withZipFile(ByteBuffer.wrap(job.code)));
-		} else
-			lambda.createFunction(toCreateFunctionRequest(job));
+		} else {
+			arn = lambda.createFunction(toCreateFunctionRequest(job)).getFunctionArn();
+		}
+
+		setJobRule(job, arn);
 	}
 
 	public String getCodeLocation(String jobName) {
@@ -88,6 +109,9 @@ public class JobService {
 		lambda.deleteFunction(//
 				new DeleteFunctionRequest()//
 						.withFunctionName(functionName(jobName)));
+
+		events.deleteRule(new DeleteRuleRequest()//
+				.withName(eventRuleName(jobName)));
 	}
 
 	public Payload execute(String jobName, byte[] payload) {
@@ -119,6 +143,10 @@ public class JobService {
 
 	private String functionName(String jobName) {
 		return functionNamePrefix() + jobName;
+	}
+
+	private String eventRuleName(String name) {
+		return functionName(name) + "-rule";
 	}
 
 	private LambdaJob toJob(FunctionConfiguration configuration) {
@@ -153,7 +181,24 @@ public class JobService {
 				.withCode(new FunctionCode()//
 						.withZipFile(ByteBuffer.wrap(job.code)))//
 				.withRuntime("java8")//
-				.withRole("arn:aws:iam::309725721660:role/spacedog-job");
+				.withRole(ROLE_SPACEDOG_JOB);
+	}
+
+	private void setJobRule(LambdaJob job, String arn) {
+		String eventRuleName = eventRuleName(job.name);
+
+		events.putRule(new PutRuleRequest()//
+				.withName(eventRuleName)//
+				.withRoleArn(ROLE_SPACEDOG_JOB_RULE)//
+				.withScheduleExpression(job.when)//
+				.withDescription(job.when)//
+				.withState(RuleState.ENABLED));
+
+		events.putTargets(new PutTargetsRequest()//
+				.withRule(eventRuleName)//
+				.withTargets(new Target()//
+						.withId("target-0")//
+						.withArn(arn)));
 	}
 
 }

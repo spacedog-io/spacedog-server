@@ -31,6 +31,7 @@ public class JobRestyTest extends SpaceTest {
 		// superadmin creates a job
 		LambdaJob job = new LambdaJob();
 		job.name = "test";
+		job.when = "rate(5 minutes)";
 		job.description = "1.0";
 		job.handler = JobTest.class.getName() + "::run";
 		job.env = Maps.newHashMap();
