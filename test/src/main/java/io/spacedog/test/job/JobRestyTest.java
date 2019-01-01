@@ -28,7 +28,6 @@ public class JobRestyTest extends SpaceTest {
 		prepareTest();
 		SpaceDog superadmin = clearServer();
 
-		// superadmin creates a job
 		LambdaJob job = new LambdaJob();
 		job.name = "test";
 		job.when = "rate(5 minutes)";
@@ -39,9 +38,14 @@ public class JobRestyTest extends SpaceTest {
 		job.memoryInMBytes = 128;
 		job.timeoutInSeconds = 30;
 		job.code = zipFolder("src/main/java");
+
+		// superadmin cleans up test job if necessary
+		superadmin.jobs().delete(job.name);
+
+		// superadmin creates test job
 		superadmin.jobs().save(job);
 
-		// superadmin lists his jobs
+		// superadmin lists jobs
 		List<LambdaJob> jobs = superadmin.jobs().list();
 		assertEquals(1, jobs.size());
 		assertEquals(job.name, jobs.get(0).name);
