@@ -2,7 +2,7 @@ package io.spacedog.test.job;
 
 public class JobTest {
 
-	public String run() {
+	public Object run() {
 		return System.getenv("spacedog_url");
 	}
 

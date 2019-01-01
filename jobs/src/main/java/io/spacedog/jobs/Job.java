@@ -13,7 +13,7 @@ public abstract class Job {
 	private String firstname;
 	private String lastname;
 
-	public abstract String run();
+	public abstract Object run();
 
 	public Job firstname(String firstname) {
 		this.firstname = firstname;
