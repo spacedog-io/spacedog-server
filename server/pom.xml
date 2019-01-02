@@ -121,6 +121,11 @@
 			<version>${aws-version}</version>
 		</dependency>
 		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-logs</artifactId>
+			<version>${aws-version}</version>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-email</artifactId>
 			<version>1.4</version>

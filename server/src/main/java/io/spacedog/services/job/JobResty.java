@@ -71,4 +71,11 @@ public class JobResty extends SpaceResty {
 		return Services.jobs().invoke(name, body);
 	}
 
+	@Get("/:name/logs")
+	@Get("/:name/logs/")
+	public Object getJobLogs(String name) {
+		Server.context().credentials().checkAtLeastSuperAdmin();
+		return Services.jobs().getLogs(name);
+	}
+
 }

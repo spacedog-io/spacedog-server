@@ -87,6 +87,9 @@ public class JobRestyTest extends SpaceTest {
 
 		// superadmin fails to get test job since gone
 		assertHttpError(404, () -> superadmin.jobs().get(job.name));
+
+		// superadmin gets test job logs
+		superadmin.jobs().getLogs(job.name);
 	}
 
 	private byte[] zipFolder(String folder) throws IOException {

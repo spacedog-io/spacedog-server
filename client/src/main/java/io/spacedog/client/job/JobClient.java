@@ -67,4 +67,12 @@ public class JobClient {
 				.go(201)//
 				.asJson();
 	}
+
+	public List<JobLog> getLogs(String jobName) {
+		return dog.get("/2/jobs/{name}/logs")//
+				.routeParam("name", jobName)//
+				.go(200)//
+				.asPojo(TypeFactory.defaultInstance()//
+						.constructCollectionLikeType(List.class, JobLog.class));
+	}
 }

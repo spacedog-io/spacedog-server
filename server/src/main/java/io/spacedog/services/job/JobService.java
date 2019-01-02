@@ -27,9 +27,15 @@ import com.amazonaws.services.lambda.model.InvokeResult;
 import com.amazonaws.services.lambda.model.ResourceNotFoundException;
 import com.amazonaws.services.lambda.model.Runtime;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeRequest;
+import com.amazonaws.services.logs.AWSLogs;
+import com.amazonaws.services.logs.AWSLogsClient;
+import com.amazonaws.services.logs.model.DescribeLogStreamsRequest;
+import com.amazonaws.services.logs.model.GetLogEventsRequest;
+import com.amazonaws.services.logs.model.OrderBy;
 
 import io.spacedog.client.http.ContentTypes;
 import io.spacedog.client.http.SpaceStatus;
+import io.spacedog.client.job.JobLog;
 import io.spacedog.client.job.LambdaJob;
 import io.spacedog.jobs.Internals;
 import io.spacedog.server.Server;
@@ -47,6 +53,7 @@ public class JobService {
 
 	private static AWSLambda lambda;
 	private static AmazonCloudWatchEvents events;
+	private static AWSLogs logs;
 
 	static {
 		lambda = AWSLambdaClient.builder()//
@@ -54,6 +61,10 @@ public class JobService {
 				.build();
 
 		events = AmazonCloudWatchEventsClient.builder()//
+				.withRegion(ServerConfig.awsRegion())//
+				.build();
+
+		logs = AWSLogsClient.builder()//
 				.withRegion(ServerConfig.awsRegion())//
 				.build();
 	}
@@ -142,6 +153,22 @@ public class JobService {
 				status);
 	}
 
+	public List<JobLog> getLogs(String jobName) {
+		return logs.describeLogStreams(new DescribeLogStreamsRequest()//
+				.withLogGroupName(logGroupName(jobName))//
+				.withOrderBy(OrderBy.LastEventTime)//
+				.withDescending(true)//
+				.withLimit(1))//
+				.getLogStreams().stream()//
+				.flatMap(stream -> logs.getLogEvents(new GetLogEventsRequest()//
+						.withLogGroupName(logGroupName(jobName))//
+						.withLogStreamName(stream.getLogStreamName())//
+						.withLimit(2000))//
+						.getEvents().stream())//
+				.map(event -> new JobLog(event.getTimestamp(), event.getMessage()))//
+				.collect(Collectors.toList());
+	}
+
 	//
 	// Implementation
 	//
@@ -160,6 +187,10 @@ public class JobService {
 
 	private String statementId(String name) {
 		return functionName(name) + "-invoke-permission";
+	}
+
+	private String logGroupName(String jobName) {
+		return "/aws/lambda/" + functionName(jobName);
 	}
 
 	private LambdaJob toJob(FunctionConfiguration configuration) {
