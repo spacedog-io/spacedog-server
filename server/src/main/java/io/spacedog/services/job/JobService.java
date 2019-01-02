@@ -11,6 +11,7 @@ import com.amazonaws.services.cloudwatchevents.model.DeleteRuleRequest;
 import com.amazonaws.services.cloudwatchevents.model.PutRuleRequest;
 import com.amazonaws.services.cloudwatchevents.model.PutRuleResult;
 import com.amazonaws.services.cloudwatchevents.model.PutTargetsRequest;
+import com.amazonaws.services.cloudwatchevents.model.RemoveTargetsRequest;
 import com.amazonaws.services.cloudwatchevents.model.RuleState;
 import com.amazonaws.services.cloudwatchevents.model.Target;
 import com.amazonaws.services.lambda.AWSLambda;
@@ -111,14 +112,28 @@ public class JobService {
 	public void delete(String jobName) {
 
 		try {
-			events.deleteRule(new DeleteRuleRequest()//
-					.withName(eventRuleName(jobName)));
+			events.removeTargets(new RemoveTargetsRequest()//
+					.withRule(eventRuleName(jobName))//
+					.withIds(TARGET_ID));
 
-		} catch (ResourceNotFoundException ignore) {
+		} catch (com.amazonaws.services.cloudwatchevents.model.ResourceNotFoundException ignore) {
 		} catch (Exception e) {
 			e.printStackTrace();
 			String title = String.format(//
-					"%s is 500: delete job [%s] rule failed", //
+					"%s is 500: remove [%s] job rule target failed", //
+					Server.backend().url(), jobName);
+			Internals.get().notify(title, e);
+		}
+
+		try {
+			events.deleteRule(new DeleteRuleRequest()//
+					.withName(eventRuleName(jobName)));
+
+		} catch (com.amazonaws.services.cloudwatchevents.model.ResourceNotFoundException ignore) {
+		} catch (Exception e) {
+			e.printStackTrace();
+			String title = String.format(//
+					"%s is 500: delete [%s] job rule failed", //
 					Server.backend().url(), jobName);
 			Internals.get().notify(title, e);
 		}
@@ -132,7 +147,7 @@ public class JobService {
 		} catch (Exception e) {
 			e.printStackTrace();
 			String title = String.format(//
-					"%s is 500: delete job [%s] function failed", //
+					"%s is 500: delete [%s] job function failed", //
 					Server.backend().url(), jobName);
 			Internals.get().notify(title, e);
 		}
