@@ -11,7 +11,6 @@ import com.amazonaws.services.cloudwatchevents.model.DeleteRuleRequest;
 import com.amazonaws.services.cloudwatchevents.model.PutRuleRequest;
 import com.amazonaws.services.cloudwatchevents.model.PutRuleResult;
 import com.amazonaws.services.cloudwatchevents.model.PutTargetsRequest;
-import com.amazonaws.services.cloudwatchevents.model.RemoveTargetsRequest;
 import com.amazonaws.services.cloudwatchevents.model.RuleState;
 import com.amazonaws.services.cloudwatchevents.model.Target;
 import com.amazonaws.services.lambda.AWSLambda;
@@ -25,15 +24,14 @@ import com.amazonaws.services.lambda.model.FunctionConfiguration;
 import com.amazonaws.services.lambda.model.GetFunctionRequest;
 import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.lambda.model.InvokeResult;
-import com.amazonaws.services.lambda.model.RemovePermissionRequest;
 import com.amazonaws.services.lambda.model.ResourceNotFoundException;
 import com.amazonaws.services.lambda.model.Runtime;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeRequest;
-import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationRequest;
 
 import io.spacedog.client.http.ContentTypes;
 import io.spacedog.client.http.SpaceStatus;
 import io.spacedog.client.job.LambdaJob;
+import io.spacedog.jobs.Internals;
 import io.spacedog.server.Server;
 import io.spacedog.server.ServerConfig;
 import io.spacedog.utils.Utils;
@@ -45,6 +43,7 @@ public class JobService {
 	private static final String LAMBDA_INVOKE_ACTION = "lambda:InvokeFunction";
 	private static final String TARGET_ID = "target-0";
 	private static final String ROLE_SPACEDOG_JOB = "arn:aws:iam::309725721660:role/spacedog-job";
+	private static final String HANDLED_ERROR = "Handled";
 
 	private static AWSLambda lambda;
 	private static AmazonCloudWatchEvents events;
@@ -79,11 +78,8 @@ public class JobService {
 	}
 
 	public void save(LambdaJob job) {
-		Optional<LambdaJob> oldJob = get(job.name);
-		if (oldJob.isPresent())
-			updateJob(job);
-		else
-			createJob(job);
+		delete(job.name);
+		createJob(job);
 	}
 
 	public String getCodeLocation(String jobName) {
@@ -102,30 +98,18 @@ public class JobService {
 	}
 
 	public void delete(String jobName) {
-		try {
-			lambda.removePermission(new RemovePermissionRequest()//
-					.withFunctionName(functionName(jobName))//
-					.withStatementId(statementId(jobName)));
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		try {
-			events.removeTargets(new RemoveTargetsRequest()//
-					.withRule(eventRuleName(jobName))//
-					.withIds(TARGET_ID));
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 
 		try {
 			events.deleteRule(new DeleteRuleRequest()//
 					.withName(eventRuleName(jobName)));
 
+		} catch (ResourceNotFoundException ignore) {
 		} catch (Exception e) {
 			e.printStackTrace();
+			String title = String.format(//
+					"%s is 500: delete job [%s] rule failed", //
+					Server.backend().url(), jobName);
+			Internals.get().notify(title, e);
 		}
 
 		try {
@@ -133,8 +117,13 @@ public class JobService {
 					new DeleteFunctionRequest()//
 							.withFunctionName(functionName(jobName)));
 
+		} catch (ResourceNotFoundException ignore) {
 		} catch (Exception e) {
 			e.printStackTrace();
+			String title = String.format(//
+					"%s is 500: delete job [%s] function failed", //
+					Server.backend().url(), jobName);
+			Internals.get().notify(title, e);
 		}
 	}
 
@@ -145,7 +134,7 @@ public class JobService {
 
 		String error = result.getFunctionError();
 		int status = error == null ? SpaceStatus.CREATED//
-				: error.equals("Handled") ? SpaceStatus.BAD_REQUEST //
+				: error.equals(HANDLED_ERROR) ? SpaceStatus.BAD_REQUEST //
 						: SpaceStatus.INTERNAL_SERVER_ERROR;
 
 		return new Payload(ContentTypes.JSON_UTF8, //
@@ -225,25 +214,4 @@ public class JobService {
 				.withFunctionName(functionName(job.name)));
 	}
 
-	private void updateJob(LambdaJob job) {
-		UpdateFunctionConfigurationRequest updateRequest = new UpdateFunctionConfigurationRequest()//
-				.withFunctionName(functionName(job.name))//
-				.withEnvironment(new Environment().withVariables(job.env))//
-				.withHandler(job.handler)//
-				.withDescription(job.description)//
-				.withTimeout(job.timeoutInSeconds)//
-				.withMemorySize(job.memoryInMBytes);
-
-		lambda.updateFunctionConfiguration(updateRequest).getFunctionArn();
-
-		lambda.updateFunctionCode(new UpdateFunctionCodeRequest()//
-				.withFunctionName(functionName(job.name))//
-				.withZipFile(ByteBuffer.wrap(job.code)));
-
-		events.putRule(new PutRuleRequest()//
-				.withName(eventRuleName(job.name))//
-				.withScheduleExpression(job.when)//
-				.withDescription(job.when)//
-				.withState(RuleState.ENABLED));
-	}
 }
