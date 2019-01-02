@@ -104,11 +104,15 @@ public class WebResty extends SpaceResty implements SpaceFilter {
 		// fluent will gzip this file stream and use 'chunked'
 		// Transfer-Encoding incompatible with Content-Length header
 
-		if (!withContent || //
-				!context.header(SpaceHeaders.ACCEPT_ENCODING).contains(SpaceHeaders.GZIP))
+		if (!withContent || !gzipAccepted(context))
 			payload.withHeader(SpaceHeaders.CONTENT_LENGTH, Long.toString(file.getLength()));
 
 		return payload;
+	}
+
+	private boolean gzipAccepted(Context context) {
+		String header = context.header(SpaceHeaders.ACCEPT_ENCODING);
+		return header != null && header.contains(SpaceHeaders.GZIP);
 	}
 
 	private WebPath toWebPath(String uri) {

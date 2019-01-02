@@ -283,7 +283,7 @@ public class ShareRestyTest extends SpaceTest {
 	}
 
 	@Test
-	public void shareWithContentDispositionAndEscaping() {
+	public void contentDispositionAndEscaping() {
 
 		// prepare
 		SpaceDog superadmin = clearServer();
@@ -315,7 +315,7 @@ public class ShareRestyTest extends SpaceTest {
 	}
 
 	@Test
-	public void exportShares() throws IOException {
+	public void exportFiles() throws IOException {
 
 		// prepare
 		SpaceDog superadmin = clearServer();
@@ -487,7 +487,7 @@ public class ShareRestyTest extends SpaceTest {
 	}
 
 	@Test
-	public void shareDownloadAuthenticatedViaQueryParam() {
+	public void fileDownloadAuthenticatedViaQueryParam() {
 
 		// prepare
 		prepareTest();
@@ -524,7 +524,7 @@ public class ShareRestyTest extends SpaceTest {
 	}
 
 	@Test
-	public void shareUploadHasSizeLimit() {
+	public void fileUploadHasSizeLimit() {
 
 		// prepare
 		prepareTest();
@@ -544,7 +544,7 @@ public class ShareRestyTest extends SpaceTest {
 	}
 
 	@Test
-	public void shareDownloadGetsContentLengthHeaderIfNoGzipEncoding() {
+	public void fileDownloadGetsContentLengthHeaderIfNoGzipEncoding() {
 
 		// prepare
 		prepareTest();
