@@ -306,7 +306,7 @@ public class SpaceRequest {
 			JsonNode details = response.get("error");
 			// close response before throwing it within exception
 			Utils.closeSilently(response);
-			throw new SpaceException(code, status, message).details(details);
+			throw new SpaceException(code, status, message).withDetails(details);
 		}
 		return response;
 	}

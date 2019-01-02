@@ -54,7 +54,7 @@ public class SpaceException extends RuntimeException {
 		return code;
 	}
 
-	public SpaceException code(String code) {
+	public SpaceException withCode(String code) {
 		this.code = code;
 		return this;
 	}
@@ -63,12 +63,12 @@ public class SpaceException extends RuntimeException {
 		return details;
 	}
 
-	public SpaceException details(JsonNode details) {
+	public SpaceException withDetails(JsonNode details) {
 		this.details = details;
 		return this;
 	}
 
-	public SpaceException cause(Throwable t) {
+	public SpaceException withCause(Throwable t) {
 		this.initCause(t);
 		return this;
 	}

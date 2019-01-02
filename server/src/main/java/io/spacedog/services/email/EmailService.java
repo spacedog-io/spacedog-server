@@ -195,7 +195,7 @@ public class EmailService {
 		if (response.status() >= 400)
 			throw Exceptions.exception(response.status(), //
 					"send email via mailgun failed")//
-					.details(content);
+					.withDetails(content);
 
 		return Json.object("mailgun", content);
 	}

@@ -154,7 +154,7 @@ public class SmsService {
 		if (response.status() >= 400)
 			throw new SpaceException("twilio:" + twilio.get("code").asText(), //
 					response.status(), twilio.get("message").asText())//
-							.details(twilio);
+							.withDetails(twilio);
 
 		return twilio;
 	}
