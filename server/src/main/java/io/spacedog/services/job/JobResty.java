@@ -64,6 +64,13 @@ public class JobResty extends SpaceResty {
 		Services.jobs().setCode(name, body);
 	}
 
+	@Get("/:name/invocations")
+	@Get("/:name/invocations/")
+	public Object getJobInvocation(String name) {
+		Server.context().credentials().checkAtLeastSuperAdmin();
+		return Services.jobs().getInvocations(name);
+	}
+
 	@Post("/:name/invocations")
 	@Post("/:name/invocations/")
 	public Payload postJobInvocation(String name, byte[] body) {

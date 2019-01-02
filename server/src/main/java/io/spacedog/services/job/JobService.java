@@ -153,6 +153,10 @@ public class JobService {
 				status);
 	}
 
+	public Object getInvocations(String jobName) {
+		throw new UnsupportedOperationException();
+	}
+
 	public List<JobLog> getLogs(String jobName) {
 		return logs.describeLogStreams(new DescribeLogStreamsRequest()//
 				.withLogGroupName(logGroupName(jobName))//
