@@ -61,18 +61,10 @@ public class JobClient {
 	}
 
 	public JsonNode invoke(String jobName, Object payload) {
-		return dog.post("/2/jobs/{name}")//
+		return dog.post("/2/jobs/{name}/invocations")//
 				.routeParam("name", jobName)//
 				.bodyPojo(payload)//
 				.go(201)//
 				.asJson();
 	}
-
-	public void deleteInvocation(String jobName, String invocationId) {
-		dog.delete("/2/jobs/{name}/{invocationId}")//
-				.routeParam("name", jobName)//
-				.routeParam("invocationId", invocationId)//
-				.go(200).asVoid();
-	}
-
 }

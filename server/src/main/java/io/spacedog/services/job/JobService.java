@@ -142,10 +142,6 @@ public class JobService {
 				status);
 	}
 
-	public void deleteExecution(String jobName, String jobExecId) {
-		throw new UnsupportedOperationException();
-	}
-
 	//
 	// Implementation
 	//
