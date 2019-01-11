@@ -298,7 +298,7 @@ public class CredentialsRestyTest2 extends SpaceTest {
 		assertContainsCredsOf(fred, results.results);
 
 		// superadmin searches for user credentials
-		results = superadmin.credentials().findByRole(Roles.user, 0, 10, true);
+		results = superadmin.credentials().findByRole(Roles.user, 0, 10);
 		assertEquals(2, results.total);
 		assertEquals(2, results.results.size());
 		assertContainsCredsOf(vince, results.results);

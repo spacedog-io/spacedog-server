@@ -92,13 +92,6 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 	//
 
 	public Credentials.Results search(SearchSourceBuilder builder) {
-		return search(builder, false);
-	}
-
-	public Credentials.Results search(SearchSourceBuilder builder, boolean refresh) {
-
-		if (refresh)
-			elastic().refreshIndex(index());
 
 		SearchHits hits = elastic()//
 				.prepareSearch(index())//

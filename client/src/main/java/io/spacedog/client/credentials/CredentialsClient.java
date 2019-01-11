@@ -69,31 +69,25 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	//
 
 	public Credentials.Results getAll() {
-		return getAll(false);
-	}
-
-	public Credentials.Results getAll(boolean refresh) {
-		return findByText(null, null, null, refresh);
+		return findByText(null, null, null);
 	}
 
 	public Credentials.Results getAll(int from, int size) {
-		return findByText(null, from, size, false);
+		return findByText(null, from, size);
 	}
 
 	public Credentials.Results findByText(String q) {
-		return findByText(q, null, null, false);
+		return findByText(q, null, null);
 	}
 
-	public Credentials.Results findByText(String q, Integer from, Integer size, boolean refresh) {
+	public Credentials.Results findByText(String q, Integer from, Integer size) {
 		return dog.get("/2/credentials").queryParam(Q_PARAM, q)//
-				.refresh(refresh).from(from).size(size)//
-				.go(200).asPojo(Credentials.Results.class);
+				.from(from).size(size).go(200).asPojo(Credentials.Results.class);
 	}
 
-	public Credentials.Results findByRole(String role, Integer from, Integer size, boolean refresh) {
+	public Credentials.Results findByRole(String role, Integer from, Integer size) {
 		return dog.get("/2/credentials").queryParam(ROLE_PARAM, role)//
-				.refresh(refresh).from(from).size(size)//
-				.go(200).asPojo(Credentials.Results.class);
+				.from(from).size(size).go(200).asPojo(Credentials.Results.class);
 	}
 
 	//

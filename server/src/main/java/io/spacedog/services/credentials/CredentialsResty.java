@@ -103,7 +103,7 @@ public class CredentialsResty extends SpaceResty {
 				.from(context.query().getInteger(FROM_PARAM, 0))//
 				.size(context.query().getInteger(SIZE_PARAM, 10));
 
-		return Services.credentials().search(builder, isRefreshRequested(context));
+		return Services.credentials().search(builder);
 	}
 
 	@Delete("")
@@ -122,8 +122,7 @@ public class CredentialsResty extends SpaceResty {
 		if (!settings.guestSignUpEnabled)
 			Server.context().credentials().checkAtLeastUser();
 
-		Credentials credentials = Services.credentials()//
-				.create(request, Roles.user);
+		Credentials credentials = Services.credentials().create(request, Roles.user);
 
 		JsonPayload payload = JsonPayload.saved(true, "/2", Credentials.TYPE, credentials.id());
 
