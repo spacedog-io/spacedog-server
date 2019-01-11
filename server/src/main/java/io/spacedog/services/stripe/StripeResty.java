@@ -7,10 +7,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.stripe.StripeSettings;
-import io.spacedog.server.JsonPayload;
 import io.spacedog.server.Server;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceResty;
+import io.spacedog.services.JsonPayload;
 import io.spacedog.utils.Json;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;

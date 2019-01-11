@@ -8,10 +8,10 @@ import java.util.Map;
 import org.elasticsearch.common.Strings;
 
 import io.spacedog.client.schema.Schema;
-import io.spacedog.server.JsonPayload;
 import io.spacedog.server.Server;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceResty;
+import io.spacedog.services.JsonPayload;
 import io.spacedog.utils.Json;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;

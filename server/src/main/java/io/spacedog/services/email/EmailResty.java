@@ -7,10 +7,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.email.EmailRequest;
 import io.spacedog.client.email.EmailTemplate;
-import io.spacedog.server.JsonPayload;
 import io.spacedog.server.Server;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceResty;
+import io.spacedog.services.JsonPayload;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;

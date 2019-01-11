@@ -7,7 +7,7 @@ import org.elasticsearch.action.index.IndexResponse;
 
 import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.http.SpaceFields;
-import io.spacedog.server.JsonPayload;
+import io.spacedog.services.JsonPayload;
 
 public class ElasticPayload implements SpaceFields {
 

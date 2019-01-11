@@ -7,10 +7,10 @@ import java.util.List;
 
 import io.spacedog.client.push.PushApplication;
 import io.spacedog.client.push.PushProtocol;
-import io.spacedog.server.JsonPayload;
 import io.spacedog.server.Server;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceResty;
+import io.spacedog.services.JsonPayload;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Prefix;

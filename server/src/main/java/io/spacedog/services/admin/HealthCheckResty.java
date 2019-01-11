@@ -3,10 +3,10 @@
  */
 package io.spacedog.services.admin;
 
-import io.spacedog.server.JsonPayload;
 import io.spacedog.server.Server;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceResty;
+import io.spacedog.services.JsonPayload;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.payload.Payload;
 
