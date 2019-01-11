@@ -26,11 +26,11 @@ import io.spacedog.client.file.SpaceFile;
 import io.spacedog.client.file.SpaceFile.FileList;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.schema.Schema;
-import io.spacedog.server.Index;
 import io.spacedog.server.Server;
 import io.spacedog.server.ServerConfig;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceService;
+import io.spacedog.services.elastic.ElasticIndex;
 import io.spacedog.services.file.FileStore.PutResult;
 import io.spacedog.services.snapshot.FileBackup;
 import io.spacedog.utils.Exceptions;
@@ -270,7 +270,7 @@ public class FileService extends SpaceService {
 	private void createBucketIndex(FileBucket bucket) {
 		Schema.checkName(bucket.name);
 		Schema schema = getSchema(bucket.name);
-		Index index = index(bucket.name);
+		ElasticIndex index = index(bucket.name);
 
 		if (elastic().exists(index))
 			elastic().putMapping(index, schema.mapping());
@@ -296,8 +296,8 @@ public class FileService extends SpaceService {
 				.build();
 	}
 
-	public Index index(String bucket) {
-		return new Index(SERVICE_NAME).type(bucket);
+	public ElasticIndex index(String bucket) {
+		return new ElasticIndex(SERVICE_NAME).type(bucket);
 	}
 
 	//
@@ -307,9 +307,9 @@ public class FileService extends SpaceService {
 	private static final TimeValue ONE_MINUTE = TimeValue.timeValueSeconds(60);
 
 	public void snapshot(FileBackup backup) {
-		Index[] indices = listBuckets().values().stream()//
+		ElasticIndex[] indices = listBuckets().values().stream()//
 				.map(bucket -> Services.files().index(bucket.name))//
-				.toArray(Index[]::new);
+				.toArray(ElasticIndex[]::new);
 
 		if (!Utils.isNullOrEmpty(indices)) {
 			elastic().refreshIndex(indices);
@@ -353,9 +353,9 @@ public class FileService extends SpaceService {
 
 	public void restore(FileBackup backup) {
 
-		Index[] indices = listBuckets().values().stream()//
+		ElasticIndex[] indices = listBuckets().values().stream()//
 				.map(bucket -> Services.files().index(bucket.name))//
-				.toArray(Index[]::new);
+				.toArray(ElasticIndex[]::new);
 
 		if (!Utils.isNullOrEmpty(indices)) {
 			elastic().refreshIndex(indices);

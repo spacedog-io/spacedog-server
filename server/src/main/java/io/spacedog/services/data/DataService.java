@@ -40,12 +40,12 @@ import io.spacedog.client.data.DataSettings;
 import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
-import io.spacedog.server.Index;
 import io.spacedog.server.J8;
 import io.spacedog.server.Server;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceService;
 import io.spacedog.services.elastic.ElasticExportStreamingOutput;
+import io.spacedog.services.elastic.ElasticIndex;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -337,7 +337,7 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 	}
 
 	public <K> DataResults<K> search(Class<K> sourceClass, SearchSourceBuilder source, String... types) {
-		Index[] indices = Utils.isNullOrEmpty(types) ? indices() : index(types);
+		ElasticIndex[] indices = Utils.isNullOrEmpty(types) ? indices() : index(types);
 		return extract(elastic().search(source, indices), sourceClass);
 	}
 
@@ -435,7 +435,7 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 		BufferedReader reader = new BufferedReader(//
 				new InputStreamReader(data));
 
-		Index index = index(request.type);
+		ElasticIndex index = index(request.type);
 		String json = reader.readLine();
 
 		while (json != null) {
@@ -464,24 +464,24 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 
 	public Set<String> types() {
 		return elastic().filteredBackendIndexStream(Optional.of(SERVICE_NAME))//
-				.map(index -> Index.valueOf(index).type())//
+				.map(index -> ElasticIndex.valueOf(index).type())//
 				.collect(Collectors.toSet());
 	}
 
-	public Index[] indices() {
+	public ElasticIndex[] indices() {
 		return elastic().filteredBackendIndexStream(Optional.of(SERVICE_NAME))//
-				.map(index -> Index.valueOf(index))//
-				.toArray(Index[]::new);
+				.map(index -> ElasticIndex.valueOf(index))//
+				.toArray(ElasticIndex[]::new);
 	}
 
-	public Index index(String type) {
-		return new Index(SERVICE_NAME).type(type);
+	public ElasticIndex index(String type) {
+		return new ElasticIndex(SERVICE_NAME).type(type);
 	}
 
-	public Index[] index(String... types) {
+	public ElasticIndex[] index(String... types) {
 		return Arrays.stream(types)//
 				.map(type -> index(type))//
-				.toArray(Index[]::new);
+				.toArray(ElasticIndex[]::new);
 	}
 
 	//

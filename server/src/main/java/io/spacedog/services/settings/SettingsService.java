@@ -26,10 +26,10 @@ import io.spacedog.client.settings.SettingsAclSettings;
 import io.spacedog.client.settings.SettingsBase;
 import io.spacedog.client.sms.SmsSettings;
 import io.spacedog.client.stripe.StripeSettings;
-import io.spacedog.server.Index;
 import io.spacedog.server.Server;
 import io.spacedog.server.SpaceService;
 import io.spacedog.services.elastic.ElasticClient;
+import io.spacedog.services.elastic.ElasticIndex;
 import io.spacedog.services.file.InternalFileSettings;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -246,13 +246,13 @@ public class SettingsService extends SpaceService {
 	//
 	//
 
-	public Index index() {
-		return new Index(SERVICE_NAME);
+	public ElasticIndex index() {
+		return new ElasticIndex(SERVICE_NAME);
 	}
 
 	private void makeSureIndexIsCreated() {
 
-		Index index = index();
+		ElasticIndex index = index();
 		ElasticClient elastic = elastic();
 
 		if (!elastic.exists(index)) {

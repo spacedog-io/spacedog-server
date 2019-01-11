@@ -11,9 +11,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Maps;
 
 import io.spacedog.client.schema.Schema;
-import io.spacedog.server.Index;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceService;
+import io.spacedog.services.elastic.ElasticIndex;
 import io.spacedog.services.push.PushService;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -39,7 +39,7 @@ public class SchemaService extends SpaceService {
 
 		schema.enhance();
 
-		Index index = Services.data().index(schema.name());
+		ElasticIndex index = Services.data().index(schema.name());
 		boolean indexExists = elastic().exists(index);
 
 		if (indexExists) {
@@ -70,7 +70,7 @@ public class SchemaService extends SpaceService {
 	// Implementation
 	//
 
-	private Map<String, Schema> get(Index... indices) {
+	private Map<String, Schema> get(ElasticIndex... indices) {
 
 		Map<String, Schema> schemas = Maps.newHashMap();
 
@@ -82,7 +82,7 @@ public class SchemaService extends SpaceService {
 		ImmutableOpenMap<String, Settings> settingsMap = //
 				elastic().getSettings(indices).getIndexToSettings();
 
-		for (Index index : indices) {
+		for (ElasticIndex index : indices) {
 			MappingMetaData mapping = mappingsMap.get(index.toString()).valuesIt().next();
 			Settings settings = settingsMap.get(index.toString());
 			JsonNode node = Json.readObject(mapping.source().toString()).get(mapping.type());

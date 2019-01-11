@@ -17,9 +17,9 @@ import com.google.common.collect.Lists;
 import io.spacedog.client.log.LogItem;
 import io.spacedog.client.log.LogSearchResults;
 import io.spacedog.client.schema.Schema;
-import io.spacedog.server.Index;
 import io.spacedog.server.SpaceService;
 import io.spacedog.services.elastic.ElasticUtils;
+import io.spacedog.services.elastic.ElasticIndex;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Json;
 
@@ -87,7 +87,7 @@ public class LogService extends SpaceService {
 	//
 
 	public void initIndex() {
-		Index index = index();
+		ElasticIndex index = index();
 		if (!elastic().exists(index)) {
 			String string = ClassResources.loadAsString(//
 					LogService.class, "log-mapping.json");
@@ -102,8 +102,8 @@ public class LogService extends SpaceService {
 
 	public static final String SERVICE_NAME = "log";
 
-	public Index index() {
-		return new Index(SERVICE_NAME);
+	public ElasticIndex index() {
+		return new ElasticIndex(SERVICE_NAME);
 	}
 
 	private LogSearchResults extractLogs(SearchResponse response) {

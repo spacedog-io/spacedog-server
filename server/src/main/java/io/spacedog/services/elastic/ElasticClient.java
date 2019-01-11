@@ -56,7 +56,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.client.schema.Schema;
 import io.spacedog.jobs.Internals;
-import io.spacedog.server.Index;
 import io.spacedog.server.Server;
 import io.spacedog.server.ServerConfig;
 import io.spacedog.utils.Check;
@@ -85,21 +84,21 @@ public class ElasticClient implements SpaceParams {
 	// prepare
 	//
 
-	public IndexRequestBuilder prepareIndex(Index index) {
+	public IndexRequestBuilder prepareIndex(ElasticIndex index) {
 		return internalClient.prepareIndex(index.alias(), index.type());
 	}
 
-	public IndexRequestBuilder prepareIndex(Index index, String id) {
+	public IndexRequestBuilder prepareIndex(ElasticIndex index, String id) {
 		return internalClient.prepareIndex(index.alias(), index.type(), id);
 	}
 
-	public UpdateRequestBuilder prepareUpdate(Index index, String id) {
+	public UpdateRequestBuilder prepareUpdate(ElasticIndex index, String id) {
 		return internalClient.prepareUpdate(index.alias(), index.type(), id);
 	}
 
-	public SearchRequestBuilder prepareSearch(Index... indices) {
+	public SearchRequestBuilder prepareSearch(ElasticIndex... indices) {
 		Check.notNullOrEmpty(indices, "indices");
-		return internalClient.prepareSearch(Index.aliases(indices))//
+		return internalClient.prepareSearch(ElasticIndex.aliases(indices))//
 				.setIndicesOptions(IndicesOptions.fromOptions(false, false, false, false));
 	}
 
@@ -111,7 +110,7 @@ public class ElasticClient implements SpaceParams {
 	// Search
 	//
 
-	public SearchResponse search(Index index, Object... terms) {
+	public SearchResponse search(ElasticIndex index, Object... terms) {
 
 		if (terms.length % 2 == 1)
 			throw Exceptions.illegalArgument(//
@@ -127,7 +126,7 @@ public class ElasticClient implements SpaceParams {
 		return search(source, index);
 	}
 
-	public SearchResponse search(SearchSourceBuilder source, Index... indices) {
+	public SearchResponse search(SearchSourceBuilder source, ElasticIndex... indices) {
 		return prepareSearch(indices).setSource(source).get();
 	}
 
@@ -135,11 +134,11 @@ public class ElasticClient implements SpaceParams {
 	// Index
 	//
 
-	public IndexResponse index(Index index, Object source) {
+	public IndexResponse index(ElasticIndex index, Object source) {
 		return index(index, source, false);
 	}
 
-	public IndexResponse index(Index index, Object source, boolean refresh) {
+	public IndexResponse index(ElasticIndex index, Object source, boolean refresh) {
 		String sourceString = source instanceof String //
 				? source.toString()
 				: Json.toString(source);
@@ -148,11 +147,11 @@ public class ElasticClient implements SpaceParams {
 				.setRefreshPolicy(ElasticUtils.toPolicy(refresh)).get();
 	}
 
-	public IndexResponse index(Index index, String id, Object source) {
+	public IndexResponse index(ElasticIndex index, String id, Object source) {
 		return index(index, id, source, false);
 	}
 
-	public IndexResponse index(Index index, String id, Object source, boolean refresh) {
+	public IndexResponse index(ElasticIndex index, String id, Object source, boolean refresh) {
 		String sourceString = source instanceof String //
 				? source.toString()
 				: Json.toString(source);
@@ -161,11 +160,11 @@ public class ElasticClient implements SpaceParams {
 				.setRefreshPolicy(ElasticUtils.toPolicy(refresh)).get();
 	}
 
-	public IndexResponse index(Index index, String id, byte[] source) {
+	public IndexResponse index(ElasticIndex index, String id, byte[] source) {
 		return index(index, id, source, false);
 	}
 
-	public IndexResponse index(Index index, String id, byte[] source, boolean refresh) {
+	public IndexResponse index(ElasticIndex index, String id, byte[] source, boolean refresh) {
 		return prepareIndex(index, id).setSource(source, XContentType.JSON)//
 				.setRefreshPolicy(ElasticUtils.toPolicy(refresh)).get();
 	}
@@ -174,11 +173,11 @@ public class ElasticClient implements SpaceParams {
 	// Get
 	//
 
-	public GetResponse get(Index index, String id) {
+	public GetResponse get(ElasticIndex index, String id) {
 		return get(index, id, false);
 	}
 
-	public GetResponse get(Index index, String id, boolean throwNotFound) {
+	public GetResponse get(ElasticIndex index, String id, boolean throwNotFound) {
 		GetResponse response = prepareGet(index, id).get();
 
 		if (!response.isExists() && throwNotFound)
@@ -187,11 +186,11 @@ public class ElasticClient implements SpaceParams {
 		return response;
 	}
 
-	public GetRequestBuilder prepareGet(Index index, String id) {
+	public GetRequestBuilder prepareGet(ElasticIndex index, String id) {
 		return internalClient.prepareGet(index.alias(), index.type(), id);
 	}
 
-	public Optional<SearchHit> getUnique(Index index, QueryBuilder query) {
+	public Optional<SearchHit> getUnique(ElasticIndex index, QueryBuilder query) {
 		try {
 			SearchHits hits = prepareSearch(index)//
 					.setQuery(query)//
@@ -213,7 +212,7 @@ public class ElasticClient implements SpaceParams {
 		}
 	}
 
-	public MultiGetResponse getMulti(Index index, Set<String> ids) {
+	public MultiGetResponse getMulti(ElasticIndex index, Set<String> ids) {
 		return internalClient.prepareMultiGet().add(index.alias(), index.type(), ids).get();
 	}
 
@@ -221,13 +220,13 @@ public class ElasticClient implements SpaceParams {
 	// Exists
 	//
 
-	public boolean exists(Index index, String id) {
+	public boolean exists(ElasticIndex index, String id) {
 		return internalClient.prepareGet(index.alias(), index.type(), id)//
 				.setFetchSource(false).get().isExists();
 	}
 
-	public boolean exists(QueryBuilder query, Index... indices) {
-		return internalClient.prepareSearch(Index.aliases(indices))//
+	public boolean exists(QueryBuilder query, ElasticIndex... indices) {
+		return internalClient.prepareSearch(ElasticIndex.aliases(indices))//
 				.setSize(0)//
 				.setQuery(query)//
 				.setFetchSource(false)//
@@ -240,7 +239,7 @@ public class ElasticClient implements SpaceParams {
 	// Delete
 	//
 
-	public boolean delete(Index index, String id, boolean refresh, boolean throwNotFound) {
+	public boolean delete(ElasticIndex index, String id, boolean refresh, boolean throwNotFound) {
 		DeleteResponse response = internalClient.prepareDelete(//
 				index.alias(), index.type(), id)//
 				.setRefreshPolicy(ElasticUtils.toPolicy(refresh))//
@@ -255,7 +254,7 @@ public class ElasticClient implements SpaceParams {
 		return false;
 	}
 
-	public BulkByScrollResponse deleteByQuery(String query, Index... indices) {
+	public BulkByScrollResponse deleteByQuery(String query, ElasticIndex... indices) {
 		QueryBuilder builder = Strings.isNullOrEmpty(query) //
 				? QueryBuilders.matchAllQuery()//
 				: QueryBuilders.wrapperQuery(query);
@@ -263,12 +262,12 @@ public class ElasticClient implements SpaceParams {
 		return deleteByQuery(builder, indices);
 	}
 
-	public BulkByScrollResponse deleteByQuery(QueryBuilder query, Index... indices) {
+	public BulkByScrollResponse deleteByQuery(QueryBuilder query, ElasticIndex... indices) {
 
 		if (query == null)//
 			query = QueryBuilders.matchAllQuery();
 
-		SearchRequest search = new SearchRequest(Index.aliases(indices));
+		SearchRequest search = new SearchRequest(ElasticIndex.aliases(indices));
 		DeleteByQueryRequest delete = new DeleteByQueryRequest(search)//
 				.setTimeout(new TimeValue(60000));
 
@@ -305,7 +304,7 @@ public class ElasticClient implements SpaceParams {
 	// admin methods
 	//
 
-	public boolean exists(Index index) {
+	public boolean exists(ElasticIndex index) {
 		try {
 			return internalClient.admin().indices()//
 					.prepareExists(index.alias())//
@@ -317,7 +316,7 @@ public class ElasticClient implements SpaceParams {
 		}
 	}
 
-	public void createIndex(Index index, Schema schema, boolean async) {
+	public void createIndex(ElasticIndex index, Schema schema, boolean async) {
 
 		CreateIndexResponse createIndexResponse = internalClient.admin().indices()//
 				.prepareCreate(index.toString())//
@@ -335,8 +334,8 @@ public class ElasticClient implements SpaceParams {
 			ensureIndexIsGreen(index);
 	}
 
-	public void ensureIndexIsGreen(Index... indices) {
-		ensureIndicesAreAtLeastYellow(Index.aliases(indices));
+	public void ensureIndexIsGreen(ElasticIndex... indices) {
+		ensureIndicesAreAtLeastYellow(ElasticIndex.aliases(indices));
 	}
 
 	public void ensureAllIndicesAreAtLeastYellow() {
@@ -373,11 +372,11 @@ public class ElasticClient implements SpaceParams {
 		Utils.info("[SpaceDog] indices %s are [%s]", indicesString, response.getStatus());
 	}
 
-	public void refreshIndex(Index... indices) {
-		refreshIndex(Index.toString(indices));
+	public void refreshIndex(ElasticIndex... indices) {
+		refreshIndex(ElasticIndex.toString(indices));
 	}
 
-	public void refreshIndex(boolean refresh, Index... indices) {
+	public void refreshIndex(boolean refresh, ElasticIndex... indices) {
 		if (refresh)
 			refreshIndex(indices);
 	}
@@ -401,8 +400,8 @@ public class ElasticClient implements SpaceParams {
 		}
 	}
 
-	public void deleteIndex(Index... indices) {
-		internalClient.admin().indices().prepareDelete(Index.toString(indices)).get();
+	public void deleteIndex(ElasticIndex... indices) {
+		internalClient.admin().indices().prepareDelete(ElasticIndex.toString(indices)).get();
 	}
 
 	public GetMappingsResponse getBackendMappings() {
@@ -411,19 +410,19 @@ public class ElasticClient implements SpaceParams {
 				.get();
 	}
 
-	public GetMappingsResponse getMappings(Index... indices) {
+	public GetMappingsResponse getMappings(ElasticIndex... indices) {
 		return internalClient.admin().indices()//
-				.prepareGetMappings(Index.aliases(indices))//
+				.prepareGetMappings(ElasticIndex.aliases(indices))//
 				.get();
 	}
 
-	public GetSettingsResponse getSettings(Index... indices) {
+	public GetSettingsResponse getSettings(ElasticIndex... indices) {
 		return internalClient.admin().indices()//
-				.prepareGetSettings(Index.aliases(indices))//
+				.prepareGetSettings(ElasticIndex.aliases(indices))//
 				.get();
 	}
 
-	public void putMapping(Index index, ObjectNode mapping) {
+	public void putMapping(ElasticIndex index, ObjectNode mapping) {
 		PutMappingResponse putMappingResponse = internalClient.admin().indices()//
 				.preparePutMapping(index.alias())//
 				.setType(index.type())//
@@ -436,7 +435,7 @@ public class ElasticClient implements SpaceParams {
 					index.type());
 	}
 
-	public void putSettings(Index index, ObjectNode settings) {
+	public void putSettings(ElasticIndex index, ObjectNode settings) {
 		UpdateSettingsResponse updateSettingsResponse = internalClient.admin().indices()//
 				.prepareUpdateSettings(index.alias())//
 				.setSettings(settings.toString(), XContentType.JSON)//

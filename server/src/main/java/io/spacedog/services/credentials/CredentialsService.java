@@ -39,13 +39,13 @@ import io.spacedog.client.email.EmailTemplateRequest;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.client.schema.Schema;
-import io.spacedog.server.Index;
 import io.spacedog.server.Server;
 import io.spacedog.server.ServerConfig;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceService;
 import io.spacedog.services.elastic.ElasticClient;
 import io.spacedog.services.elastic.ElasticExportStreamingOutput;
+import io.spacedog.services.elastic.ElasticIndex;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -237,7 +237,7 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 		credentials.createdAt(DateTime.now());
 		credentials.updatedAt(credentials.createdAt());
 
-		Index index = index();
+		ElasticIndex index = index();
 		ObjectNode source = toElasticSource(credentials);
 
 		// refresh index after each index change
@@ -420,7 +420,7 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 		BufferedReader reader = new BufferedReader(//
 				new InputStreamReader(data));
 
-		Index index = index();
+		ElasticIndex index = index();
 		String json = reader.readLine();
 
 		while (json != null) {
@@ -444,7 +444,7 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 	//
 
 	public void initIndex() {
-		Index index = index();
+		ElasticIndex index = index();
 		Schema schema = schema();
 		if (!elastic().exists(index))
 			elastic().createIndex(index, schema, false);
@@ -486,8 +486,8 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 				.build();
 	}
 
-	public Index index() {
-		return new Index(Credentials.TYPE);
+	public ElasticIndex index() {
+		return new ElasticIndex(Credentials.TYPE);
 	}
 
 	private BoolQueryBuilder toQuery(String username) {

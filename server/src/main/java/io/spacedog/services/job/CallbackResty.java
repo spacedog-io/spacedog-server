@@ -19,13 +19,13 @@ import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.http.ContentTypes;
 import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.client.schema.Schema;
-import io.spacedog.server.Index;
 import io.spacedog.server.JsonPayload;
 import io.spacedog.server.Server;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceFilter;
 import io.spacedog.server.SpaceResty;
 import io.spacedog.services.elastic.ElasticClient;
+import io.spacedog.services.elastic.ElasticIndex;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.KeyValue;
@@ -93,7 +93,7 @@ public class CallbackResty extends SpaceResty {
 
 		Server.context().credentials().checkAtLeastSuperAdmin();
 
-		Index index = callbackIndex();
+		ElasticIndex index = callbackIndex();
 		ElasticClient elastic = elastic();
 
 		if (!elastic.exists(index))
@@ -273,7 +273,7 @@ public class CallbackResty extends SpaceResty {
 		return headers;
 	}
 
-	public static Index callbackIndex() {
+	public static ElasticIndex callbackIndex() {
 		return Services.data().index(DATA_TYPE);
 	}
 }
