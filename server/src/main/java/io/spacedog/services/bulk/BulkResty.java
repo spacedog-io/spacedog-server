@@ -7,7 +7,7 @@ import io.spacedog.client.bulk.ServiceCall;
 import io.spacedog.client.bulk.ServiceResponse;
 import io.spacedog.client.http.SpaceException;
 import io.spacedog.server.Services;
-import io.spacedog.server.SpaceResty;
+import io.spacedog.services.SpaceResty;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;

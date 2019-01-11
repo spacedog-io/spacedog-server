@@ -12,7 +12,7 @@ import com.google.common.collect.Maps;
 
 import io.spacedog.client.schema.Schema;
 import io.spacedog.server.Services;
-import io.spacedog.server.SpaceService;
+import io.spacedog.services.SpaceService;
 import io.spacedog.services.elastic.ElasticIndex;
 import io.spacedog.services.push.PushService;
 import io.spacedog.utils.Exceptions;

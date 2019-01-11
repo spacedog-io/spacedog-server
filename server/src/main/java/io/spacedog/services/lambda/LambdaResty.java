@@ -19,7 +19,7 @@ import io.spacedog.client.lambda.LambdaSettings;
 import io.spacedog.server.Server;
 import io.spacedog.server.ServerConfig;
 import io.spacedog.server.SpaceFilter;
-import io.spacedog.server.SpaceResty;
+import io.spacedog.services.SpaceResty;
 import io.spacedog.utils.Utils;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Prefix;

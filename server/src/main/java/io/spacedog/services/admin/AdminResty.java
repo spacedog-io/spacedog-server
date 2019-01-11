@@ -4,7 +4,7 @@
 package io.spacedog.services.admin;
 
 import io.spacedog.server.Server;
-import io.spacedog.server.SpaceResty;
+import io.spacedog.services.SpaceResty;
 import io.spacedog.utils.Exceptions;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Post;

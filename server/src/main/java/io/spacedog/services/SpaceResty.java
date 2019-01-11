@@ -1,7 +1,7 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.server;
+package io.spacedog.services;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,6 +19,7 @@ import com.google.common.collect.Sets;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.client.http.SpaceParams;
+import io.spacedog.server.Server;
 import io.spacedog.services.elastic.ElasticClient;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;

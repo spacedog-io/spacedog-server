@@ -33,7 +33,7 @@ import io.spacedog.client.snapshot.SpaceSnapshot;
 import io.spacedog.jobs.Internals;
 import io.spacedog.server.Server;
 import io.spacedog.server.ServerConfig;
-import io.spacedog.server.SpaceService;
+import io.spacedog.services.SpaceService;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Utils;
 

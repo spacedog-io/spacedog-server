@@ -27,7 +27,7 @@ import io.spacedog.client.settings.SettingsBase;
 import io.spacedog.client.sms.SmsSettings;
 import io.spacedog.client.stripe.StripeSettings;
 import io.spacedog.server.Server;
-import io.spacedog.server.SpaceService;
+import io.spacedog.services.SpaceService;
 import io.spacedog.services.elastic.ElasticClient;
 import io.spacedog.services.elastic.ElasticIndex;
 import io.spacedog.services.file.InternalFileSettings;

@@ -14,7 +14,7 @@ import io.spacedog.client.http.WebPath;
 import io.spacedog.server.Server;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceFilter;
-import io.spacedog.server.SpaceResty;
+import io.spacedog.services.SpaceResty;
 import io.spacedog.utils.Exceptions;
 import net.codestory.http.Context;
 import net.codestory.http.constants.Methods;
