@@ -1,4 +1,4 @@
-package io.spacedog.server;
+package io.spacedog.services.elastic;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -56,6 +56,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.client.schema.Schema;
 import io.spacedog.jobs.Internals;
+import io.spacedog.server.Index;
+import io.spacedog.server.Server;
+import io.spacedog.server.ServerConfig;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;

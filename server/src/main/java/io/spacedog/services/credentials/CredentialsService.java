@@ -39,13 +39,13 @@ import io.spacedog.client.email.EmailTemplateRequest;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.client.schema.Schema;
-import io.spacedog.server.ElasticClient;
 import io.spacedog.server.Index;
 import io.spacedog.server.Server;
 import io.spacedog.server.ServerConfig;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceService;
-import io.spacedog.services.data.DataExportStreamingOutput;
+import io.spacedog.services.elastic.ElasticClient;
+import io.spacedog.services.elastic.ElasticExportStreamingOutput;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -406,12 +406,12 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 
 	public StreamingOutput exportNow(QueryBuilder query) {
 		SearchResponse response = elastic().prepareSearch(index())//
-				.setScroll(DataExportStreamingOutput.TIMEOUT)//
-				.setSize(DataExportStreamingOutput.SIZE)//
+				.setScroll(ElasticExportStreamingOutput.TIMEOUT)//
+				.setSize(ElasticExportStreamingOutput.SIZE)//
 				.setQuery(query)//
 				.get();
 
-		return new DataExportStreamingOutput(response);
+		return new ElasticExportStreamingOutput(response);
 	}
 
 	public long importNow(InputStream data, boolean preserveIds) throws IOException {

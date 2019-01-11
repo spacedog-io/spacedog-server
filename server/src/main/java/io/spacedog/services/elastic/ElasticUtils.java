@@ -1,4 +1,4 @@
-package io.spacedog.server;
+package io.spacedog.services.elastic;
 
 import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.DocWriteResponse.Result;
@@ -15,6 +15,7 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import io.spacedog.server.Server;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 

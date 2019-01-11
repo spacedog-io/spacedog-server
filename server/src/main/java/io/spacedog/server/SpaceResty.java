@@ -19,6 +19,7 @@ import com.google.common.collect.Sets;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceHeaders;
 import io.spacedog.client.http.SpaceParams;
+import io.spacedog.services.elastic.ElasticClient;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import net.codestory.http.Context;

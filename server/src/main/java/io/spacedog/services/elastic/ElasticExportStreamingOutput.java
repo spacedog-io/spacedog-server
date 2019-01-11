@@ -1,4 +1,4 @@
-package io.spacedog.services.data;
+package io.spacedog.services.elastic;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -11,7 +11,7 @@ import org.elasticsearch.search.SearchHit;
 import io.spacedog.server.Server;
 import net.codestory.http.payload.StreamingOutput;
 
-public class DataExportStreamingOutput implements StreamingOutput {
+public class ElasticExportStreamingOutput implements StreamingOutput {
 
 	public static final int SIZE = 2000;
 	public static final TimeValue TIMEOUT = TimeValue.timeValueMinutes(1);
@@ -22,7 +22,7 @@ public class DataExportStreamingOutput implements StreamingOutput {
 
 	private SearchResponse response;
 
-	public DataExportStreamingOutput(SearchResponse response) {
+	public ElasticExportStreamingOutput(SearchResponse response) {
 		this.response = response;
 	}
 

@@ -1,4 +1,4 @@
-package io.spacedog.server;
+package io.spacedog.services.elastic;
 
 import java.util.Arrays;
 
@@ -9,7 +9,7 @@ import org.elasticsearch.plugins.Plugin;
 public class ElasticNode extends Node {
 
 	@SafeVarargs
-	protected ElasticNode(Environment environment, Class<? extends Plugin>... plugins) {
+	public ElasticNode(Environment environment, Class<? extends Plugin>... plugins) {
 		super(environment, Arrays.asList(plugins));
 	}
 }

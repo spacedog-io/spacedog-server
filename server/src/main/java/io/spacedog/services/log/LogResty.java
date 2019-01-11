@@ -6,10 +6,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.log.LogSearchResults;
-import io.spacedog.server.ElasticUtils;
 import io.spacedog.server.Server;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceResty;
+import io.spacedog.services.elastic.ElasticUtils;
 import io.spacedog.utils.Exceptions;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Delete;

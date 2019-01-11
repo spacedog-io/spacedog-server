@@ -1,12 +1,13 @@
 /**
  * © David Attias 2015
  */
-package io.spacedog.server;
+package io.spacedog.services.elastic;
 
 import org.elasticsearch.action.index.IndexResponse;
 
 import io.spacedog.client.data.DataWrap;
 import io.spacedog.client.http.SpaceFields;
+import io.spacedog.server.JsonPayload;
 
 public class ElasticPayload implements SpaceFields {
 

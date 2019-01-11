@@ -45,6 +45,7 @@ import io.spacedog.server.J8;
 import io.spacedog.server.Server;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceService;
+import io.spacedog.services.elastic.ElasticExportStreamingOutput;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -412,12 +413,12 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 	public StreamingOutput exportNow(String type, QueryBuilder query) {
 		SearchResponse response = elastic()//
 				.prepareSearch(index(type))//
-				.setScroll(DataExportStreamingOutput.TIMEOUT)//
-				.setSize(DataExportStreamingOutput.SIZE)//
+				.setScroll(ElasticExportStreamingOutput.TIMEOUT)//
+				.setSize(ElasticExportStreamingOutput.SIZE)//
 				.setQuery(query)//
 				.get();
 
-		return new DataExportStreamingOutput(response);
+		return new ElasticExportStreamingOutput(response);
 	}
 
 	public DataImportRequestBuilder prepareImport(String type) {

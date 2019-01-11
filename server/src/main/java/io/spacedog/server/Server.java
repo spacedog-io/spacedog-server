@@ -37,6 +37,8 @@ import io.spacedog.services.credentials.LinkedinResty;
 import io.spacedog.services.data.AggregationSerializer;
 import io.spacedog.services.data.DataResty;
 import io.spacedog.services.data.SchemaResty;
+import io.spacedog.services.elastic.ElasticClient;
+import io.spacedog.services.elastic.ElasticNode;
 import io.spacedog.services.email.EmailResty;
 import io.spacedog.services.file.FileResty;
 import io.spacedog.services.file.WebResty;
