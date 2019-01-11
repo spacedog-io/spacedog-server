@@ -6,7 +6,7 @@ import java.util.Map;
 import io.spacedog.client.bulk.ServiceCall;
 import io.spacedog.client.bulk.ServiceResponse;
 import io.spacedog.client.http.SpaceException;
-import io.spacedog.server.Services;
+import io.spacedog.services.Services;
 import io.spacedog.services.SpaceResty;
 import net.codestory.http.Context;
 import net.codestory.http.annotations.Get;

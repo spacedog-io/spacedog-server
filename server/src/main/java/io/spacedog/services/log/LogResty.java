@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.log.LogSearchResults;
 import io.spacedog.server.Server;
-import io.spacedog.server.Services;
+import io.spacedog.services.Services;
 import io.spacedog.services.SpaceResty;
 import io.spacedog.services.elastic.ElasticUtils;
 import io.spacedog.utils.Exceptions;

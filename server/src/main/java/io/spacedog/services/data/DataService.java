@@ -42,7 +42,7 @@ import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.server.J8;
 import io.spacedog.server.Server;
-import io.spacedog.server.Services;
+import io.spacedog.services.Services;
 import io.spacedog.services.SpaceService;
 import io.spacedog.services.elastic.ElasticExportStreamingOutput;
 import io.spacedog.services.elastic.ElasticIndex;

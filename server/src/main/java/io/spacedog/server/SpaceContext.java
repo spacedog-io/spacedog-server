@@ -18,6 +18,7 @@ import io.spacedog.client.http.SpaceParams;
 import io.spacedog.client.settings.Settings;
 import io.spacedog.client.settings.SettingsBase;
 import io.spacedog.services.JsonPayload;
+import io.spacedog.services.Services;
 import io.spacedog.services.elastic.ElasticIndex;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;

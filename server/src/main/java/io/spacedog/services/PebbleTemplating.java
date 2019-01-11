@@ -15,7 +15,6 @@ import com.mitchellbosecke.pebble.loader.StringLoader;
 
 import io.spacedog.client.TemplateParameterTypes;
 import io.spacedog.client.credentials.Credentials;
-import io.spacedog.server.Services;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 

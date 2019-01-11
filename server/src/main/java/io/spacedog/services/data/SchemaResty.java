@@ -9,8 +9,8 @@ import org.elasticsearch.common.Strings;
 
 import io.spacedog.client.schema.Schema;
 import io.spacedog.server.Server;
-import io.spacedog.server.Services;
 import io.spacedog.services.JsonPayload;
+import io.spacedog.services.Services;
 import io.spacedog.services.SpaceResty;
 import io.spacedog.utils.Json;
 import net.codestory.http.Context;

@@ -9,7 +9,7 @@ import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.RolePermissions;
 import io.spacedog.server.Server;
-import io.spacedog.server.Services;
+import io.spacedog.services.Services;
 import io.spacedog.utils.Exceptions;
 
 public class DataAccessControl {

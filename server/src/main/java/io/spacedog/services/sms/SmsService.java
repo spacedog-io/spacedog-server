@@ -14,8 +14,8 @@ import io.spacedog.client.sms.SmsSettings.TwilioSettings;
 import io.spacedog.client.sms.SmsTemplate;
 import io.spacedog.client.sms.SmsTemplateRequest;
 import io.spacedog.server.Server;
-import io.spacedog.server.Services;
 import io.spacedog.services.PebbleTemplating;
+import io.spacedog.services.Services;
 import io.spacedog.utils.Exceptions;
 
 public class SmsService {

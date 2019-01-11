@@ -14,7 +14,7 @@ import io.spacedog.client.job.SpaceJob;
 import io.spacedog.client.job.SpaceTask;
 import io.spacedog.client.job.SpaceTask.Status;
 import io.spacedog.jobs.Internals;
-import io.spacedog.server.Services;
+import io.spacedog.services.Services;
 import io.spacedog.utils.Exceptions;
 
 public class JobService2 {

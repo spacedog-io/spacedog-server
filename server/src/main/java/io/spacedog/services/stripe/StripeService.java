@@ -16,7 +16,7 @@ import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.client.stripe.PaymentRequest;
 import io.spacedog.client.stripe.StripeSettings;
-import io.spacedog.server.Services;
+import io.spacedog.services.Services;
 import io.spacedog.utils.Exceptions;
 
 public class StripeService {

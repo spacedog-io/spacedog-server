@@ -29,6 +29,7 @@ import com.google.common.collect.Lists;
 import io.spacedog.client.credentials.Credentials;
 import io.spacedog.client.http.SpaceBackend;
 import io.spacedog.services.CrossOriginFilter;
+import io.spacedog.services.Services;
 import io.spacedog.services.admin.AdminResty;
 import io.spacedog.services.admin.HealthCheckResty;
 import io.spacedog.services.bulk.BulkResty;

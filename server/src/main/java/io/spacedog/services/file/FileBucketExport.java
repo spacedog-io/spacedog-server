@@ -10,7 +10,7 @@ import java.util.zip.ZipOutputStream;
 import com.google.common.io.ByteStreams;
 
 import io.spacedog.client.file.SpaceFile;
-import io.spacedog.server.Services;
+import io.spacedog.services.Services;
 import io.spacedog.utils.Utils;
 import net.codestory.http.payload.StreamingOutput;
 

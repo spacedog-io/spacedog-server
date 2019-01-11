@@ -1,4 +1,4 @@
-package io.spacedog.server;
+package io.spacedog.services;
 
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
