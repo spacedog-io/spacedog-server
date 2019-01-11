@@ -411,7 +411,7 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 
 	public StreamingOutput exportNow(String type, QueryBuilder query) {
 		SearchResponse response = elastic()//
-				.prepareSearch(Services.data().index(type))//
+				.prepareSearch(index(type))//
 				.setScroll(DataExportStreamingOutput.TIMEOUT)//
 				.setSize(DataExportStreamingOutput.SIZE)//
 				.setQuery(query)//
@@ -434,7 +434,7 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 		BufferedReader reader = new BufferedReader(//
 				new InputStreamReader(data));
 
-		Index index = Services.data().index(request.type);
+		Index index = index(request.type);
 		String json = reader.readLine();
 
 		while (json != null) {

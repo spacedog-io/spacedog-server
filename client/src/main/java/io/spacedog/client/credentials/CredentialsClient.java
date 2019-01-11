@@ -1,5 +1,6 @@
 package io.spacedog.client.credentials;
 
+import java.io.InputStream;
 import java.util.Set;
 
 import org.joda.time.DateTime;
@@ -9,9 +10,11 @@ import com.google.common.collect.Sets;
 
 import io.spacedog.client.SpaceDog;
 import io.spacedog.client.credentials.Credentials.Results;
+import io.spacedog.client.http.OkHttp;
 import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.client.http.SpaceRequest;
+import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
@@ -336,6 +339,28 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 				.routeParam("id", credentialsId)//
 				.routeParam("group", group)//
 				.go(200).asPojo(Credentials.class);
+	}
+
+	//
+	// Import Export
+	//
+
+	public SpaceResponse exportNow() {
+		return exportNow(null);
+	}
+
+	public SpaceResponse exportNow(String query) {
+		return dog.post("/2/credentials/_export")//
+				.body(query)//
+				.go(200);
+	}
+
+	public long importNow(InputStream export, boolean preserveIds) {
+		return dog.post("/2/credentials/_import")//
+				.withContentType(OkHttp.TEXT_PLAIN)//
+				.queryParam(PRESERVE_IDS_PARAM, preserveIds)//
+				.body(export)//
+				.go(200).get(INDEXED_FIELD).asLong();
 	}
 
 	//

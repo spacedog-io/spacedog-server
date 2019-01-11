@@ -1,13 +1,19 @@
 package io.spacedog.services.credentials;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
 
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
@@ -39,11 +45,13 @@ import io.spacedog.server.Server;
 import io.spacedog.server.ServerConfig;
 import io.spacedog.server.Services;
 import io.spacedog.server.SpaceService;
+import io.spacedog.services.data.DataExportStreamingOutput;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Utils;
+import net.codestory.http.payload.StreamingOutput;
 
 public class CredentialsService extends SpaceService implements SpaceParams, SpaceFields {
 
@@ -376,6 +384,8 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 		return Services.emails().send(request, template);
 	}
 
+	private static final String PASSWORD_RESET_EMAIL_TEMPLATE_NAME = "password_reset_email_template";
+
 	//
 	// Credentials Settings
 	//
@@ -391,10 +401,43 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 	}
 
 	//
-	//
+	// Import Export
 	//
 
-	private static final String PASSWORD_RESET_EMAIL_TEMPLATE_NAME = "password_reset_email_template";
+	public StreamingOutput exportNow(QueryBuilder query) {
+		SearchResponse response = elastic().prepareSearch(index())//
+				.setScroll(DataExportStreamingOutput.TIMEOUT)//
+				.setSize(DataExportStreamingOutput.SIZE)//
+				.setQuery(query)//
+				.get();
+
+		return new DataExportStreamingOutput(response);
+	}
+
+	public long importNow(InputStream data, boolean preserveIds) throws IOException {
+
+		long indexed = 0;
+		BufferedReader reader = new BufferedReader(//
+				new InputStreamReader(data));
+
+		Index index = index();
+		String json = reader.readLine();
+
+		while (json != null) {
+			ObjectNode object = Json.readObject(json);
+			String source = object.get(SOURCE_FIELD).toString();
+
+			if (preserveIds) {
+				String id = object.get(ID_FIELD).asText();
+				elastic().index(index, id, source);
+			} else
+				elastic().index(index, source);
+
+			indexed++;
+			json = reader.readLine();
+		}
+		return indexed;
+	}
 
 	//
 	// Type and schema
@@ -441,6 +484,10 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 				.closeObject()//
 
 				.build();
+	}
+
+	public Index index() {
+		return new Index(Credentials.TYPE);
 	}
 
 	private BoolQueryBuilder toQuery(String username) {
@@ -494,9 +541,5 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 		object.putPOJO(SESSIONS_FIELD, credentials.sessions());
 
 		return object;
-	}
-
-	public Index index() {
-		return new Index(Credentials.TYPE);
 	}
 }

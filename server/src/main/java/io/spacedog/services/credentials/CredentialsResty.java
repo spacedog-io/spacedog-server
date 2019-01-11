@@ -3,10 +3,12 @@
  */
 package io.spacedog.services.credentials;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
@@ -25,6 +27,8 @@ import io.spacedog.client.credentials.EnableDisableAfterRequest;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.credentials.SetPasswordRequest;
 import io.spacedog.client.credentials.Usernames;
+import io.spacedog.client.http.ContentTypes;
+import io.spacedog.server.ElasticUtils;
 import io.spacedog.server.JsonPayload;
 import io.spacedog.server.Server;
 import io.spacedog.server.Services;
@@ -33,12 +37,14 @@ import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
 import io.spacedog.utils.Optional7;
 import net.codestory.http.Context;
+import net.codestory.http.Request;
 import net.codestory.http.annotations.Delete;
 import net.codestory.http.annotations.Get;
 import net.codestory.http.annotations.Post;
 import net.codestory.http.annotations.Prefix;
 import net.codestory.http.annotations.Put;
 import net.codestory.http.payload.Payload;
+import net.codestory.http.payload.StreamingOutput;
 
 @Prefix("/2/credentials")
 public class CredentialsResty extends SpaceResty {
@@ -366,6 +372,28 @@ public class CredentialsResty extends SpaceResty {
 	public Credentials deleteUnshareGroup(String id, String group) {
 		Server.context().credentials().checkGroupAdminPermission(group);
 		return removeGroup(Services.credentials().get(id), group);
+	}
+
+	@Post("/_export")
+	@Post("/_export/")
+	public Payload postExport(String body, Context context) {
+		Server.context().credentials().checkAtLeastSuperAdmin();
+
+		QueryBuilder query = Strings.isNullOrEmpty(body) //
+				? QueryBuilders.matchAllQuery()
+				: ElasticUtils.toQueryBuilder(body);
+
+		StreamingOutput output = Services.credentials().exportNow(query);
+		return new Payload(ContentTypes.TEXT_PLAIN_UTF8, output);
+	}
+
+	@Post("/_import")
+	@Post("/_import/")
+	public Payload postImport(Request request) throws IOException {
+		Server.context().credentials().checkAtLeastSuperAdmin();
+		boolean preserveIds = request.query().getBoolean(PRESERVE_IDS_PARAM, false);
+		long indexed = Services.credentials().importNow(request.inputStream(), preserveIds);
+		return JsonPayload.ok().withFields(INDEXED_FIELD, indexed).build();
 	}
 
 	//

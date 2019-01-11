@@ -3,6 +3,7 @@ package io.spacedog.client.http;
 public interface SpaceFields {
 
 	String ID_FIELD = "id";
+	String SOURCE_FIELD = "source";
 	String VERSION_FIELD = "version";
 	String TYPE_FIELD = "type";
 	String SORT_FIELD = "sort";
@@ -50,4 +51,10 @@ public interface SpaceFields {
 	String GROUPS_FIELD = "groups";
 	String SESSIONS_FIELD = "sessions";
 	String SESSIONS_ACCESS_TOKEN_FIELD = SESSIONS_FIELD + '.' + ACCESS_TOKEN_FIELD;
+
+	/// Payloads
+
+	String INDEXED_FIELD = "indexed";
+	String DELETED_FIELD = "deleted";
+
 }
