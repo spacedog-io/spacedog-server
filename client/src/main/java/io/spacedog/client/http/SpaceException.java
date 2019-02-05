@@ -38,7 +38,7 @@ public class SpaceException extends RuntimeException {
 			this.message = this.message + ": " + cause.getMessage();
 
 		this.httpStatus = httpStatus;
-		this.code = code;
+		this.code = Utils.isNullOrEmpty(code) ? fromStatusToCode(httpStatus) : code;
 	}
 
 	@Override

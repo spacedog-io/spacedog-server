@@ -297,18 +297,23 @@ public class SpaceRequest {
 		return this;
 	}
 
-	public SpaceResponse go(int... expectedStatus) {
+	public SpaceResponse go(int... expectedStatuses) {
 		SpaceResponse response = go();
-		if (!Ints.contains(expectedStatus, response.status())) {
-			int status = response.status();
+		int status = response.status();
+
+		if (Ints.contains(expectedStatuses, status))
+			return response;
+
+		if (response.isJson()) {
 			String code = response.getString("error.code");
 			String message = response.getString("error.message");
 			JsonNode details = response.get("error");
-			// close response before throwing it within exception
+			// close response before throwing exception
 			Utils.closeSilently(response);
 			throw new SpaceException(code, status, message).withDetails(details);
 		}
-		return response;
+
+		throw new SpaceException(status, "unexpected response status [%s]", status);
 	}
 
 	public SpaceResponse go() {

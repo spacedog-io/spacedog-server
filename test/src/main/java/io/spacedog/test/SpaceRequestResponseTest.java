@@ -10,11 +10,28 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 
 import io.spacedog.client.SpaceDog;
+import io.spacedog.client.http.SpaceException;
 import io.spacedog.client.http.SpaceHeaders;
+import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.utils.Utils;
 
 public class SpaceRequestResponseTest extends SpaceTest {
+
+	@Test
+	public void testUnexpectedStatusException() {
+		assertHttpError(200, () -> SpaceRequest.get("https://spacedog.io").go(400));
+	}
+
+	@Test
+	public void testSpaceExceptionWithDetails() {
+		SpaceException exception = assertThrow(SpaceException.class,
+				() -> SpaceRequest.get("https://testv0.spacedog.io/xxxx").go(200));
+
+		assertEquals(404, exception.httpStatus());
+		assertEquals("[/xxxx] not a valid path", exception.getMessage());
+		assertEquals("404", exception.code());
+	}
 
 	@Test
 	public void testHeadersIgnoreCase() {
