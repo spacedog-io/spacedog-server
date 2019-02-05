@@ -337,7 +337,7 @@ public class LogRestyTest extends SpaceTest {
 		SpaceDog superadmin = clearServer();
 
 		// fails because invalid body
-		superadmin.put("/2/schemas/toto").body("XXX").go(400).asVoid();
+		superadmin.put("/2/schemas/toto").bodyString("XXX").go(400).asVoid();
 
 		// but logs the failed request without the json content
 		LogItem logItem = superadmin.logs().get(1, true).results.get(0);

@@ -362,7 +362,7 @@ public class DataClient implements SpaceFields, SpaceParams {
 		return dog.post("/2/data/{type}/_export")//
 				.routeParam("type", request.type)//
 				.queryParam(REFRESH_PARAM, request.refresh)//
-				.body(request.query)//
+				.bodyJson(request.query)//
 				.go(200);
 	}
 
@@ -380,7 +380,7 @@ public class DataClient implements SpaceFields, SpaceParams {
 				.withContentType(OkHttp.TEXT_PLAIN)//
 				.routeParam("type", request.type)//
 				.queryParam(PRESERVE_IDS_PARAM, request.preserveIds)//
-				.body(export)//
+				.bodyStream(export)//
 				.go(200)//
 				.asVoid();
 	}

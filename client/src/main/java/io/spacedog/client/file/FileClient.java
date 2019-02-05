@@ -132,9 +132,8 @@ public class FileClient implements SpaceParams {
 			public SpaceFile go() {
 				return dog.put("/2/files/" + bucket + path)//
 						.withContentType(type)//
-						.withContentLength(length)//
 						.queryParam(SpaceParams.GROUP_PARAM, group)//
-						.body(inputStream)//
+						.bodyStream(inputStream, length)//
 						.go(200)//
 						.asPojo(SpaceFile.class);
 			}

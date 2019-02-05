@@ -46,7 +46,7 @@ public class JobClient {
 	public void setCode(String jobName, File code) {
 		dog.put("/2/jobs/{name}/code")//
 				.routeParam("name", jobName)//
-				.body(code)//
+				.bodyFile(code)//
 				.go(200).asVoid();
 	}
 

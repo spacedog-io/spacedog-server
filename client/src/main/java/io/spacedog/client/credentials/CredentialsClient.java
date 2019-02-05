@@ -345,7 +345,7 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 
 	public SpaceResponse exportNow(String query) {
 		return dog.post("/2/credentials/_export")//
-				.body(query)//
+				.bodyJson(query)//
 				.go(200);
 	}
 
@@ -353,7 +353,7 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 		return dog.post("/2/credentials/_import")//
 				.withContentType(OkHttp.TEXT_PLAIN)//
 				.queryParam(PRESERVE_IDS_PARAM, preserveIds)//
-				.body(export)//
+				.bodyStream(export)//
 				.go(200).get(INDEXED_FIELD).asLong();
 	}
 

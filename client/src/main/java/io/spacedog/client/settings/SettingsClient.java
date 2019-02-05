@@ -98,7 +98,7 @@ public class SettingsClient {
 
 	public long save(String id, String settings) {
 		return dog.put("/2/settings/{id}").routeParam("id", id)//
-				.body(settings).go(200, 201)//
+				.bodyJson(settings).go(200, 201)//
 				.get("version").asLong();
 	}
 

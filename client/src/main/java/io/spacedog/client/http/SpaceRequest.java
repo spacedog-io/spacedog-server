@@ -43,13 +43,13 @@ public class SpaceRequest {
 	private String path;
 	private Request.Builder requestBuilder;
 	private FormBody.Builder formBuilder;
-	private Object body;
+	private RequestBody body;
+	private String jsonBodyForDebug;
 	private Map<String, String> pathParams = Maps.newHashMap();
 	private Map<String, String> queryParams = Maps.newHashMap();
 	private Boolean forTesting = null;
 	private Boolean debugServer = null;
 	private MediaType contentType;
-	private long contentLength = -1;
 
 	// static defaults
 	private static boolean forTestingDefault = false;
@@ -186,39 +186,51 @@ public class SpaceRequest {
 		return this;
 	}
 
-	public SpaceRequest withContentLength(long contentLength) {
-		if (contentLength >= 0)
-			setHeader(SpaceHeaders.CONTENT_LENGTH, contentLength);
-
-		this.contentLength = contentLength;
-		return this;
+	public SpaceRequest bodyBytes(byte[] bytes) {
+		bytes = bytes == null ? new byte[0] : bytes;
+		return body(RequestBody.create(getContentType(OkHttp.OCTET_STREAM), bytes));
 	}
 
-	public SpaceRequest body(byte[] bytes) {
-		return doSetBody(bytes);
+	public SpaceRequest bodyString(String string) {
+		string = string == null ? "" : string;
+		return body(RequestBody.create(getContentType(OkHttp.TEXT_PLAIN), string));
 	}
 
-	public SpaceRequest body(String string) {
-		return doSetBody(string);
+	public SpaceRequest bodyFile(File file) {
+		MediaType contentType = MediaType.parse(//
+				ContentTypes.parseFileExtension(file.getName()));
+		return body(RequestBody.create(contentType, file));
 	}
 
-	public SpaceRequest body(RequestBody body) {
-		return doSetBody(body);
+	public SpaceRequest bodyStream(InputStream byteStream) {
+		return bodyStream(byteStream, -1);
 	}
 
-	public SpaceRequest body(File file) {
-		if (contentType == null) //
-			contentType = MediaType.parse(//
-					ContentTypes.parseFileExtension(file.getName()));
+	public SpaceRequest bodyStream(final InputStream byteStream, final long length) {
 
-		return doSetBody(file);
-	}
+		return body(new RequestBody() {
 
-	public SpaceRequest body(InputStream byteStream) {
-		if (contentType == null)
-			contentType = OkHttp.OCTET_STREAM;
+			@Override
+			public MediaType contentType() {
+				return getContentType(OkHttp.OCTET_STREAM);
+			}
 
-		return doSetBody(byteStream);
+			@Override
+			public long contentLength() {
+				return length;
+			}
+
+			@Override
+			public void writeTo(BufferedSink sink) throws IOException {
+				Source source = null;
+				try {
+					source = Okio.source(byteStream);
+					sink.writeAll(source);
+				} finally {
+					Utils.closeSilently(source);
+				}
+			}
+		});
 	}
 
 	public SpaceRequest bodyPojo(Object pojo) {
@@ -232,19 +244,21 @@ public class SpaceRequest {
 	public SpaceRequest bodyJson(JsonNode node) {
 		if (node == null)
 			node = NullNode.instance;
-		this.contentType = OkHttp.JSON;
-		return doSetBody(node);
+		return bodyJson(node.toString());
 	}
 
 	public SpaceRequest bodyJson(String json) {
+		this.jsonBodyForDebug = json;
 		this.contentType = OkHttp.JSON;
-		return doSetBody(json);
+		return bodyString(json);
 	}
 
-	private SpaceRequest doSetBody(Object value) {
+	public SpaceRequest body(RequestBody body) {
+		if (this.formBuilder != null)
+			throw Exceptions.runtime("form body in building");
 		if (this.body != null)
-			throw Exceptions.runtime("request body already set");
-		this.body = value;
+			throw Exceptions.runtime("body already set");
+		this.body = body;
 		return this;
 	}
 
@@ -334,61 +348,14 @@ public class SpaceRequest {
 	private RequestBody computeRequestBody() {
 
 		if (formBuilder != null)
-			doSetBody(formBuilder.build());
-
-		if (body instanceof RequestBody)
-			return (RequestBody) body;
-
-		if (body instanceof byte[])
-			return RequestBody.create(//
-					getContentType(OkHttp.OCTET_STREAM), //
-					(byte[]) body);
-
-		if (body instanceof InputStream)
-			return new ByteStreamRequestBody();
-
-		if (body instanceof File)
-			return RequestBody.create(//
-					getContentType(OkHttp.OCTET_STREAM), //
-					(File) body);
-
-		if (body != null)
-			return RequestBody.create(//
-					getContentType(OkHttp.TEXT_PLAIN), //
-					body.toString());
+			this.body = formBuilder.build();
 
 		// OkHttp doesn't accept null body for PUT and POST
-		if (method.equals(HttpVerb.PUT) //
-				|| method.equals(HttpVerb.POST))
-			return RequestBody.create(//
-					getContentType(OkHttp.OCTET_STREAM), "");
+		if (this.body == null)
+			if (method.equals(HttpVerb.PUT) || method.equals(HttpVerb.POST))
+				this.body = RequestBody.create(getContentType(OkHttp.OCTET_STREAM), "");
 
-		return null;
-	}
-
-	public class ByteStreamRequestBody extends RequestBody {
-
-		@Override
-		public MediaType contentType() {
-			return SpaceRequest.this.getContentType(OkHttp.OCTET_STREAM);
-		}
-
-		@Override
-		public long contentLength() {
-			return SpaceRequest.this.contentLength;
-		}
-
-		@Override
-		public void writeTo(BufferedSink sink) throws IOException {
-			Source source = null;
-			try {
-				source = Okio.source((InputStream) SpaceRequest.this.body);
-				sink.writeAll(source);
-			} finally {
-				Utils.closeSilently(source);
-			}
-		}
-
+		return body;
 	}
 
 	public SpaceRequest formField(String name, String value) {
@@ -397,7 +364,11 @@ public class SpaceRequest {
 
 	public SpaceRequest formField(String name, String value, boolean encoded) {
 		if (formBuilder == null)
-			formBuilder = new FormBody.Builder();
+			if (body == null)
+				formBuilder = new FormBody.Builder();
+			else
+				throw Exceptions.runtime("body already set");
+
 		if (encoded)
 			formBuilder.addEncoded(name, value);
 		else
@@ -461,13 +432,10 @@ public class SpaceRequest {
 		// Utils.info(" %s = %s", entry.getKey(), entry.getValue());
 		// }
 
-		if (body != null) {
-			String string = body.toString();
-			if (OkHttp.JSON.equals(contentType))
-				string = Json.toString(Json.readNode(string), true);
+		if (!Utils.isNullOrEmpty(jsonBodyForDebug)) {
+			String string = Json.toString(Json.readNode(jsonBodyForDebug), true);
 			Utils.info("Request body: %s", string);
 		}
-
 	}
 
 	private void printRequestHeader(String key, String value) {
