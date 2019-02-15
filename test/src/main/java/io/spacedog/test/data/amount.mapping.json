@@ -1,0 +1,46 @@
+{
+	"name": "amount",
+	"mapping": {
+		"properties": {
+			"value": {
+				"type": "long",
+				"fields": {
+					"text": {
+						"type": "text",
+						"analyzer": "number"
+					}
+				}
+			}
+		}
+	},
+	"settings": {
+		"analysis": {
+			"analyzer": {
+				"number": {
+					"tokenizer": "whitespace",
+					"char_filter": ["number_strip_noise", "number_replace_decimal_ponctuation"],
+					"filter": ["number_decimal_split"]
+				}
+			},
+			"char_filter": {
+				"number_strip_noise": {
+					"type": "pattern_replace",
+					"pattern": "[\\D&&[^,.]]",
+					"replacement": " "
+				},
+				"number_replace_decimal_ponctuation": {
+					"type": "pattern_replace",
+					"pattern": "[,.]",
+					"replacement": ""
+				}
+			},
+			"filter": {
+				"number_decimal_split": {
+					"type": "pattern_capture",
+					"patterns": ["(\\d+)\\d{2}"],
+					"preserve_original": true
+				}
+			}
+		}
+	}
+}
