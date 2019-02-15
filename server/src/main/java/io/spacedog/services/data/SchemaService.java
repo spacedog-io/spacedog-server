@@ -43,8 +43,11 @@ public class SchemaService extends SpaceService {
 		boolean indexExists = elastic().exists(index);
 
 		if (indexExists) {
+			// TODO
+			// lots of settings can't be updated
+			// we need to implement a function to trim not updatable settings
+			// elastic().putSettings(index, schema.settings(true));
 			elastic().putMapping(index, schema.mapping());
-			elastic().putSettings(index, schema.settings(true));
 		} else
 			elastic().createIndex(index, schema, false);
 	}
