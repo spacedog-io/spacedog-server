@@ -29,6 +29,7 @@ import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okio.BufferedSink;
+import okio.ByteString;
 import okio.Okio;
 import okio.Source;
 
@@ -353,7 +354,7 @@ public class SpaceRequest {
 		// OkHttp doesn't accept null body for PUT and POST
 		if (this.body == null)
 			if (method.equals(HttpVerb.PUT) || method.equals(HttpVerb.POST))
-				this.body = RequestBody.create(getContentType(OkHttp.OCTET_STREAM), "");
+				this.body = RequestBody.create(getContentType(OkHttp.OCTET_STREAM), ByteString.EMPTY);
 
 		return body;
 	}
