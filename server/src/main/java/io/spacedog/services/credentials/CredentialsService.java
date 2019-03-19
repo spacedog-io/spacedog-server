@@ -49,7 +49,6 @@ import io.spacedog.services.elastic.ElasticIndex;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Utils;
 import net.codestory.http.payload.StreamingOutput;
 
@@ -276,7 +275,7 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 			credentials.newPasswordResetCode();
 		else
 			credentials.changePassword(request.password(), //
-					Optional7.of(settings.passwordRegex()));
+					Optional.of(settings.passwordRegex()));
 
 		return create(credentials);
 	}

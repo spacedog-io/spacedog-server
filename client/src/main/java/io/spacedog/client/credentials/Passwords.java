@@ -3,6 +3,7 @@
  */
 package io.spacedog.client.credentials;
 
+import java.util.Optional;
 import java.util.Random;
 
 import javax.crypto.SecretKeyFactory;
@@ -10,7 +11,6 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.xml.bind.DatatypeConverter;
 
 import io.spacedog.utils.Check;
-import io.spacedog.utils.Optional7;
 
 public class Passwords {
 
@@ -23,16 +23,16 @@ public class Passwords {
 	}
 
 	public static String checkAndHash(String password, String regex) {
-		check(password, Optional7.of(regex));
+		check(password, Optional.of(regex));
 		return hash(password);
 	}
 
 	public static void check(String password) {
-		Optional7<String> none = Optional7.empty();
+		Optional<String> none = Optional.empty();
 		check(password, none);
 	}
 
-	public static void check(String password, Optional7<String> regex) {
+	public static void check(String password, Optional<String> regex) {
 		Check.matchRegex(regex.orElse(PASSWORD_DEFAULT_REGEX), password, "password");
 	}
 

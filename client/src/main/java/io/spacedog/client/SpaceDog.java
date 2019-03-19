@@ -1,5 +1,6 @@
 package io.spacedog.client;
 
+import java.util.Optional;
 import java.util.Set;
 
 import org.joda.time.DateTime;
@@ -27,7 +28,6 @@ import io.spacedog.client.sms.SmsClient;
 import io.spacedog.client.snapshot.SnapshotClient;
 import io.spacedog.client.stripe.StripeClient;
 import io.spacedog.utils.Check;
-import io.spacedog.utils.Optional7;
 
 public class SpaceDog implements SpaceFields, SpaceParams {
 
@@ -72,8 +72,8 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 		return credentials().me().groups();
 	}
 
-	public Optional7<String> accessToken() {
-		return Optional7.ofNullable(accessToken);
+	public Optional<String> accessToken() {
+		return Optional.ofNullable(accessToken);
 	}
 
 	public SpaceDog accessToken(String accessToken) {
@@ -90,8 +90,8 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 		return this;
 	}
 
-	public Optional7<String> password() {
-		return Optional7.ofNullable(password);
+	public Optional<String> password() {
+		return Optional.ofNullable(password);
 	}
 
 	public SpaceDog password(String password) {
@@ -180,11 +180,11 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 	private SpaceRequest auth(SpaceRequest request) {
 		request.backend(backend());
 
-		Optional7<String> password = password();
+		Optional<String> password = password();
 		if (password.isPresent())
 			return request.basicAuth(username(), password.get());
 
-		Optional7<String> accessToken = accessToken();
+		Optional<String> accessToken = accessToken();
 		if (accessToken.isPresent())
 			return request.bearerAuth(accessToken.get());
 

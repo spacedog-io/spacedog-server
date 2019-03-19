@@ -5,6 +5,7 @@ package io.spacedog.services.credentials;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -35,7 +36,6 @@ import io.spacedog.services.SpaceResty;
 import io.spacedog.services.elastic.ElasticUtils;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.Optional7;
 import net.codestory.http.Context;
 import net.codestory.http.Request;
 import net.codestory.http.annotations.Delete;
@@ -264,7 +264,7 @@ public class CredentialsResty extends SpaceResty {
 
 		Credentials credentials = null;
 		CredentialsSettings settings = Services.credentials().settings();
-		Optional7<String> regex = Optional7.of(settings.passwordRegex());
+		Optional<String> regex = Optional.of(settings.passwordRegex());
 
 		if (Strings.isNullOrEmpty(request.passwordResetCode())) {
 			credentials = checkMyselfOrHigherAdminAndGet(id, true);

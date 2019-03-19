@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -25,7 +26,6 @@ import io.spacedog.client.http.SpaceFields;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.KeyValue;
-import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Utils;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -120,8 +120,8 @@ public class Credentials implements SpaceFields {
 		return this;
 	}
 
-	public Optional7<String> email() {
-		return Optional7.ofNullable(email);
+	public Optional<String> email() {
+		return Optional.ofNullable(email);
 	}
 
 	public Credentials email(String value) {
@@ -657,7 +657,7 @@ public class Credentials implements SpaceFields {
 			sessions.clear();
 	}
 
-	public void changePassword(String password, String passwordResetCode, Optional7<String> regex) {
+	public void changePassword(String password, String passwordResetCode, Optional<String> regex) {
 		Check.notNullOrEmpty(password, "password");
 		Check.notNullOrEmpty(passwordResetCode, "passwordResetCode");
 
@@ -668,7 +668,7 @@ public class Credentials implements SpaceFields {
 		changePassword(password, regex);
 	}
 
-	public void changePassword(String password, Optional7<String> regex) {
+	public void changePassword(String password, Optional<String> regex) {
 		Passwords.check(password, regex);
 		clearPasswordAndTokens();
 		hashedPassword = Passwords.hash(password);

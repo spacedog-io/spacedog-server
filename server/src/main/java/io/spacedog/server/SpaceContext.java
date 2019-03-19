@@ -22,7 +22,6 @@ import io.spacedog.services.Services;
 import io.spacedog.services.elastic.ElasticIndex;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.Optional7;
 import net.codestory.http.Request;
 import net.codestory.http.Response;
 import net.codestory.http.constants.Methods;
@@ -67,7 +66,7 @@ public class SpaceContext {
 
 		// first try to match api backend
 		SpaceBackend apiBackend = ServerConfig.apiBackend();
-		Optional7<SpaceBackend> opt = apiBackend.fromRequest(hostAndPort);
+		Optional<SpaceBackend> opt = apiBackend.fromRequest(hostAndPort);
 
 		if (opt.isPresent())
 			this.backend = opt.get();

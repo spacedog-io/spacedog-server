@@ -1,5 +1,7 @@
 package io.spacedog.jobs;
 
+import java.util.Optional;
+
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.AmazonSNSClientBuilder;
@@ -7,7 +9,6 @@ import com.amazonaws.services.sns.model.PublishRequest;
 import com.google.common.base.Throwables;
 
 import io.spacedog.client.http.SpaceEnv;
-import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Utils;
 
 public class Internals {
@@ -21,7 +22,7 @@ public class Internals {
 	public void notify(String title, String message) {
 
 		try {
-			Optional7<String> topic = SpaceEnv.env().superdogNotificationTopic();
+			Optional<String> topic = SpaceEnv.env().superdogNotificationTopic();
 			if (!topic.isPresent()) {
 				Utils.warn("%s: %s", title, message);
 				Utils.warn("unable to notify superdogs: no superdog topic in env properties");

@@ -1,6 +1,7 @@
 package io.spacedog.client.credentials;
 
 import java.io.InputStream;
+import java.util.Optional;
 import java.util.Set;
 
 import org.joda.time.DateTime;
@@ -17,7 +18,6 @@ import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.Optional7;
 
 public class CredentialsClient implements SpaceParams, SpaceFields {
 
@@ -43,20 +43,20 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 		return credentials;
 	}
 
-	public Optional7<Credentials> getByUsername(String username) {
+	public Optional<Credentials> getByUsername(String username) {
 		Results results = dog.get("/2/credentials")//
 				.queryParam(USERNAME_PARAM, username)//
 				.go(200)//
 				.asPojo(Credentials.Results.class);
 
 		if (results.total == 0)
-			return Optional7.empty();
+			return Optional.empty();
 
 		if (results.total > 1)
 			throw Exceptions.runtime("[%s] credentials with username [%s]", //
 					results.total, username);
 
-		return Optional7.of(results.results.get(0));
+		return Optional.of(results.results.get(0));
 	}
 
 	public Credentials get(String id) {
@@ -142,7 +142,7 @@ public class CredentialsClient implements SpaceParams, SpaceFields {
 	}
 
 	public void deleteByUsername(String username) {
-		Optional7<Credentials> optional = dog.credentials().getByUsername(username);
+		Optional<Credentials> optional = dog.credentials().getByUsername(username);
 		if (optional.isPresent())
 			dog.credentials().delete(optional.get().id());
 	}

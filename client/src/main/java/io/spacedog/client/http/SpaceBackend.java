@@ -1,13 +1,13 @@
 package io.spacedog.client.http;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Utils;
 
 public class SpaceBackend {
@@ -190,7 +190,7 @@ public class SpaceBackend {
 		return backend;
 	}
 
-	public Optional7<SpaceBackend> fromRequest(String requestHostAndPort) {
+	public Optional<SpaceBackend> fromRequest(String requestHostAndPort) {
 		String backendSuffixAndPort = hostSuffixAndPort();
 
 		if (isMulti() && requestHostAndPort.startsWith(hostPrefix) //
@@ -202,12 +202,12 @@ public class SpaceBackend {
 
 			// check if resulting backeng id is well formed
 			if (backendId.length() > 0 && !backendId.contains("."))
-				return Optional7.of(fromBackendId(backendId));
+				return Optional.of(fromBackendId(backendId));
 
 		} else if (backendSuffixAndPort.equalsIgnoreCase(requestHostAndPort))
-			return Optional7.of(this);
+			return Optional.of(this);
 
-		return Optional7.empty();
+		return Optional.empty();
 	}
 
 	public SpaceBackend fromBackendId(String backendId) {

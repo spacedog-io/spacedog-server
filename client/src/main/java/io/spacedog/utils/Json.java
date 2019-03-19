@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.lang.model.type.ArrayType;
@@ -464,7 +465,7 @@ public class Json {
 	// Other check methods
 	//
 
-	public static Optional7<JsonNode> checkObject(JsonNode input, String propertyPath, boolean required) {
+	public static Optional<JsonNode> checkObject(JsonNode input, String propertyPath, boolean required) {
 		return checkType(input, propertyPath, JsonNodeType.OBJECT, required);
 	}
 
@@ -476,25 +477,25 @@ public class Json {
 		return string;
 	}
 
-	public static Optional7<String> checkString(JsonNode input, String path) {
-		Optional7<JsonNode> optional = checkStringNode(input, path, false);
-		return Optional7.ofNullable(optional.isPresent() ? optional.get().asText() : null);
+	public static Optional<String> checkString(JsonNode input, String path) {
+		Optional<JsonNode> optional = checkStringNode(input, path, false);
+		return Optional.ofNullable(optional.isPresent() ? optional.get().asText() : null);
 	}
 
-	public static Optional7<JsonNode> checkStringNode(JsonNode input, String propertyPath, boolean required) {
+	public static Optional<JsonNode> checkStringNode(JsonNode input, String propertyPath, boolean required) {
 		return checkType(input, propertyPath, JsonNodeType.STRING, required);
 	}
 
-	private static Optional7<JsonNode> checkType(JsonNode input, String fieldPath, JsonNodeType expected,
+	private static Optional<JsonNode> checkType(JsonNode input, String fieldPath, JsonNodeType expected,
 			boolean required) {
 		JsonNode node = get(input, fieldPath);
 		if (node == null) {
 			if (required)
 				throw Exceptions.illegalArgument("field [%s] is missing", fieldPath);
-			return Optional7.empty();
+			return Optional.empty();
 		}
 		if (node.getNodeType().equals(expected))
-			return Optional7.of(node);
+			return Optional.of(node);
 		else
 			throw Exceptions.illegalArgument(//
 					"field [%s] must be of type [%s] instead of [%s]", //

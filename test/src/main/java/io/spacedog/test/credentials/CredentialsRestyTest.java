@@ -3,6 +3,7 @@
  */
 package io.spacedog.test.credentials;
 
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,7 +24,6 @@ import io.spacedog.client.http.SpaceException;
 import io.spacedog.client.http.SpaceRequest;
 import io.spacedog.test.SpaceTest;
 import io.spacedog.utils.Json;
-import io.spacedog.utils.Optional7;
 import okhttp3.OkHttpClient;
 
 public class CredentialsRestyTest extends SpaceTest {
@@ -39,7 +39,7 @@ public class CredentialsRestyTest extends SpaceTest {
 		SpaceDog fred = createTempDog(superadmin, "fred");
 
 		// superadmin searches for fred's credentials by username
-		Optional7<Credentials> opt = superadmin.credentials().getByUsername(fred.username());
+		Optional<Credentials> opt = superadmin.credentials().getByUsername(fred.username());
 		assertEquals(fred.credentials().me(), opt.get());
 
 		// fred doesn't have permission to search for credentials since not an admin

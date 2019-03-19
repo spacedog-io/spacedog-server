@@ -5,12 +5,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Properties;
 
 import com.google.common.base.Strings;
 
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Utils;
 
 public class SpaceEnv {
@@ -36,7 +36,7 @@ public class SpaceEnv {
 				: properties;
 	}
 
-	public Optional7<String> superdogNotificationTopic() {
+	public Optional<String> superdogNotificationTopic() {
 		return get(SUPERDOG_NOTIFICATION_TOPIC);
 	}
 
@@ -111,23 +111,23 @@ public class SpaceEnv {
 	// Generic public methods
 	//
 
-	public Optional7<String> getFromSystem(String propertyName) {
+	public Optional<String> getFromSystem(String propertyName) {
 		String value = System.getenv(propertyName);
 		if (value == null)
 			value = System.getProperty(propertyName.replaceAll("\\.", "_"));
 		if (value == null)
 			value = System.getProperty(propertyName);
-		return Optional7.ofNullable(value);
+		return Optional.ofNullable(value);
 	}
 
-	public Optional7<String> get(String propertyName) {
-		Optional7<String> value = getFromSystem(propertyName);
+	public Optional<String> get(String propertyName) {
+		Optional<String> value = getFromSystem(propertyName);
 		return value.isPresent() ? value //
-				: Optional7.ofNullable(properties.getProperty(propertyName));
+				: Optional.ofNullable(properties.getProperty(propertyName));
 	}
 
 	public String getOrElseThrow(String propertyName) {
-		Optional7<String> optional = get(propertyName);
+		Optional<String> optional = get(propertyName);
 		if (optional.isPresent())
 			return optional.get();
 		throw Exceptions.runtime("env property [%s] not found", propertyName);
@@ -142,14 +142,14 @@ public class SpaceEnv {
 	}
 
 	public boolean get(String propertyName, boolean defaultValue) {
-		Optional7<String> value = get(propertyName);
+		Optional<String> value = get(propertyName);
 		return value.isPresent() //
 				? Boolean.parseBoolean(value.get())
 				: defaultValue;
 	}
 
 	public int get(String propertyName, int defaultValue) {
-		Optional7<String> value = get(propertyName);
+		Optional<String> value = get(propertyName);
 		return value.isPresent() //
 				? Integer.parseInt(value.get())
 				: defaultValue;
@@ -157,7 +157,7 @@ public class SpaceEnv {
 
 	@SuppressWarnings("unchecked")
 	public <E extends Enum<E>> E get(String propertyName, E defaultValue) {
-		Optional7<String> value = get(propertyName);
+		Optional<String> value = get(propertyName);
 		if (value.isPresent())
 			return (E) Enum.valueOf(defaultValue.getClass(), value.get());
 		return defaultValue;

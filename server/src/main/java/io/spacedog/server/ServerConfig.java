@@ -11,7 +11,6 @@ import io.spacedog.client.file.FileStoreType;
 import io.spacedog.client.http.SpaceBackend;
 import io.spacedog.client.http.SpaceEnv;
 import io.spacedog.utils.Exceptions;
-import io.spacedog.utils.Optional7;
 import io.spacedog.utils.Utils;
 
 public class ServerConfig {
@@ -35,13 +34,13 @@ public class ServerConfig {
 	private static final String AWS_BUCKET_PREFIX = "spacedog.server.aws.bucket.prefix";
 
 	public static Path homePath() {
-		Optional7<String> path = SpaceEnv.env().get(HOME_PATH);
+		Optional<String> path = SpaceEnv.env().get(HOME_PATH);
 		return path.isPresent() ? Paths.get(path.get()) //
 				: Paths.get(System.getProperty("user.home"), "spacedog");
 	}
 
 	public static Path elasticConfigPath() {
-		Optional7<String> path = SpaceEnv.env().get(ELASTIC_CONFIG_PATH);
+		Optional<String> path = SpaceEnv.env().get(ELASTIC_CONFIG_PATH);
 		return path.isPresent() ? Paths.get(path.get()) : null;
 	}
 
@@ -102,7 +101,7 @@ public class ServerConfig {
 	}
 
 	public static Path filesStorePath() {
-		Optional7<String> opt = SpaceEnv.env().get(FILES_STORE_PATH);
+		Optional<String> opt = SpaceEnv.env().get(FILES_STORE_PATH);
 		return opt.isPresent() ? Paths.get(opt.get()) //
 				: homePath().resolve("files");
 	}
@@ -116,7 +115,7 @@ public class ServerConfig {
 	}
 
 	public static Path snapshotsFSPath() {
-		Optional7<String> opt = SpaceEnv.env().get(SNAPSHOTS_FS_PATH);
+		Optional<String> opt = SpaceEnv.env().get(SNAPSHOTS_FS_PATH);
 		return opt.isPresent() ? Paths.get(opt.get()) //
 				: homePath().resolve("snapshots");
 	}
