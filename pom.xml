@@ -21,7 +21,7 @@
 		<maven.test.redirectTestOutputToFile>true</maven.test.redirectTestOutputToFile>
 		<aws-version>1.11.475</aws-version>
 		<es-version>6.4.3</es-version>
-		<jackson-version>2.8.10</jackson-version>
+		<jackson-version>2.9.8</jackson-version>
 	</properties>
 
 	<modules>
