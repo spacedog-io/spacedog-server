@@ -164,7 +164,7 @@ public class FileSynchCommand extends AbstractCommand<FileSynchCommand> {
 	}
 
 	private boolean check(Path path, String etag) throws IOException {
-		HashCode local = com.google.common.io.Files.hash(path.toFile(), Hashing.md5());
+		HashCode local = com.google.common.io.Files.asByteSource(path.toFile()).hash(Hashing.md5());
 		return local.equals(HashCode.fromString(etag));
 	}
 }
