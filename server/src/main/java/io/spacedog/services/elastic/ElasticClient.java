@@ -13,13 +13,9 @@ import org.elasticsearch.action.ActionRequestBuilder;
 import org.elasticsearch.action.ActionResponse;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.indices.alias.Alias;
-import org.elasticsearch.action.admin.indices.close.CloseIndexResponse;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
-import org.elasticsearch.action.admin.indices.settings.put.UpdateSettingsResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequestBuilder;
@@ -27,11 +23,11 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequestBuilder;
 import org.elasticsearch.action.support.IndicesOptions;
+import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.ClusterAdminClient;
@@ -267,17 +263,8 @@ public class ElasticClient implements SpaceParams {
 		if (query == null)//
 			query = QueryBuilders.matchAllQuery();
 
-		SearchRequest search = new SearchRequest(ElasticIndex.aliases(indices));
-		DeleteByQueryRequest delete = new DeleteByQueryRequest(search)//
-				.setTimeout(new TimeValue(60000));
-
-		// TODO
-		// do not set source query above since new DeleteByQueryRequest(search)
-		// sets an empty SearchSourceBuilder replacing previously set
-		// TODO
-		// search source size is also forced at 1000 by same ctor
-		// i hope it doen't count since this is a bulk delete
-		search.source().query(query);
+		DeleteByQueryRequest delete = new DeleteByQueryRequest(ElasticIndex.aliases(indices))//
+				.setQuery(query).setTimeout(new TimeValue(60000));
 
 		try {
 			return execute(DeleteByQueryAction.INSTANCE, delete).get();
@@ -390,10 +377,10 @@ public class ElasticClient implements SpaceParams {
 		String[] indices = backendIndices();
 
 		if (!Utils.isNullOrEmpty(indices)) {
-			DeleteIndexResponse deleteIndexResponse = internalClient.admin()//
+			AcknowledgedResponse response = internalClient.admin()//
 					.indices().prepareDelete(indices).get();
 
-			if (!deleteIndexResponse.isAcknowledged())
+			if (!response.isAcknowledged())
 				throw Exceptions.runtime(//
 						"deletion of all indices of backend [%s] not acknowledged by the whole cluster", //
 						Server.backend().id());
@@ -423,32 +410,32 @@ public class ElasticClient implements SpaceParams {
 	}
 
 	public void putMapping(ElasticIndex index, ObjectNode mapping) {
-		PutMappingResponse putMappingResponse = internalClient.admin().indices()//
+		AcknowledgedResponse response = internalClient.admin().indices()//
 				.preparePutMapping(index.alias())//
 				.setType(index.type())//
 				.setSource(mapping.toString(), XContentType.JSON)//
 				.get();
 
-		if (!putMappingResponse.isAcknowledged())
+		if (!response.isAcknowledged())
 			throw Exceptions.runtime(//
 					"mapping [%s] update not acknowledged by cluster", //
 					index.type());
 	}
 
 	public void putSettings(ElasticIndex index, ObjectNode settings) {
-		UpdateSettingsResponse updateSettingsResponse = internalClient.admin().indices()//
+		AcknowledgedResponse response = internalClient.admin().indices()//
 				.prepareUpdateSettings(index.alias())//
 				.setSettings(settings.toString(), XContentType.JSON)//
 				.get();
 
-		if (!updateSettingsResponse.isAcknowledged())
+		if (!response.isAcknowledged())
 			throw Exceptions.runtime(//
 					"mapping [%s] update not acknowledged by cluster", //
 					index.type());
 	}
 
 	public void deleteAbsolutelyAllIndices() {
-		DeleteIndexResponse response = internalClient.admin().indices()//
+		AcknowledgedResponse response = internalClient.admin().indices()//
 				.prepareDelete("_all")//
 				.setIndicesOptions(IndicesOptions.fromOptions(false, true, true, true))//
 				.get();
@@ -459,12 +446,12 @@ public class ElasticClient implements SpaceParams {
 	}
 
 	public void closeAbsolutelyAllIndices() {
-		CloseIndexResponse closeIndexResponse = internalClient.admin().indices()//
+		AcknowledgedResponse response = internalClient.admin().indices()//
 				.prepareClose("_all")//
 				.setIndicesOptions(IndicesOptions.fromOptions(false, true, true, true))//
 				.get();
 
-		if (!closeIndexResponse.isAcknowledged())
+		if (!response.isAcknowledged())
 			throw Exceptions.runtime(//
 					"close all indices not acknowledged by cluster");
 	}

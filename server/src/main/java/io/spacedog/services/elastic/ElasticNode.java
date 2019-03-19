@@ -10,6 +10,10 @@ public class ElasticNode extends Node {
 
 	@SafeVarargs
 	public ElasticNode(Environment environment, Class<? extends Plugin>... plugins) {
-		super(environment, Arrays.asList(plugins));
+		super(environment, Arrays.asList(plugins), true);
+	}
+
+	@Override
+	protected void registerDerivedNodeNameWithLogger(String nodeName) {
 	}
 }
