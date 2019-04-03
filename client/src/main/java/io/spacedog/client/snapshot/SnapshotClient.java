@@ -10,6 +10,7 @@ import io.spacedog.client.http.SpaceParams;
 
 public class SnapshotClient implements SpaceParams {
 
+	public static final String SNAPMAN = "snapman";
 	private static final String LATEST = "_latest";
 
 	private SpaceDog dog;

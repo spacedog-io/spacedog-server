@@ -6,6 +6,7 @@ package io.spacedog.services.snapshot;
 import java.util.List;
 
 import io.spacedog.client.credentials.Credentials;
+import io.spacedog.client.snapshot.SnapshotClient;
 import io.spacedog.client.snapshot.SpaceRepository;
 import io.spacedog.client.snapshot.SpaceSnapshot;
 import io.spacedog.server.Server;
@@ -24,8 +25,6 @@ import net.codestory.http.payload.Payload;
 
 @Prefix("/2/snapshots")
 public class SnapshotResty extends SpaceResty {
-
-	public static final String SNAPMAN = "snapman";
 
 	//
 	// routes
@@ -116,7 +115,7 @@ public class SnapshotResty extends SpaceResty {
 		Credentials credentials = Server.context().credentials();
 
 		if (credentials.isAtLeastSuperAdmin() //
-				|| credentials.roles().contains(SNAPMAN))
+				|| credentials.roles().contains(SnapshotClient.SNAPMAN))
 			return credentials;
 
 		throw Exceptions.insufficientPermissions(credentials);

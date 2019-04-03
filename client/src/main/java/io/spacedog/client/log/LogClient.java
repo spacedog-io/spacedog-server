@@ -8,6 +8,8 @@ import io.spacedog.client.http.SpaceParams;
 
 public class LogClient implements SpaceParams {
 
+	public static final String PURGEMAN = "purgeman";
+
 	private SpaceDog dog;
 
 	public LogClient(SpaceDog session) {

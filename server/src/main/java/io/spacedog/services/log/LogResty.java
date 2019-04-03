@@ -5,6 +5,7 @@ import org.joda.time.DateTime;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.spacedog.client.credentials.Credentials;
+import io.spacedog.client.log.LogClient;
 import io.spacedog.client.log.LogSearchResults;
 import io.spacedog.server.Server;
 import io.spacedog.services.Services;
@@ -19,8 +20,6 @@ import net.codestory.http.annotations.Prefix;
 
 @Prefix("/2/logs")
 public class LogResty extends SpaceResty {
-
-	public static final String PURGEMAN = "purgeman";
 
 	//
 	// Routes
@@ -70,7 +69,7 @@ public class LogResty extends SpaceResty {
 		Credentials credentials = Server.context().credentials();
 
 		if (credentials.isAtLeastSuperAdmin() //
-				|| credentials.roles().contains(PURGEMAN))
+				|| credentials.roles().contains(LogClient.PURGEMAN))
 			return credentials;
 
 		throw Exceptions.insufficientPermissions(credentials);
