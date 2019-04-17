@@ -330,54 +330,55 @@ public class ShareRestyTest extends SpaceTest {
 		superadmin.files().setBucket(bucket);
 
 		// nath uploads nath.txt
-		String pathToto = nath.files().share(SHARES, "toto".getBytes(), "toto.txt").getPath();
-		assertTrue(pathToto.endsWith("/toto.txt"));
+		SpaceFile toto = nath.files().share(SHARES, "toto".getBytes(), "toto.txt");
+		assertEquals(toto.getName(), "toto.txt");
 
 		// nath has the right to get his own shares
-		nath.files().getAsByteArray(SHARES, pathToto);
+		nath.files().getAsByteArray(SHARES, toto.getPath());
 
 		// vince does not have access to nath's shares
-		assertHttpError(403, () -> vince.files().getAsByteArray(SHARES, pathToto));
+		assertHttpError(403, () -> vince.files().getAsByteArray(SHARES, toto.getPath()));
 
 		// nath exports her shares
-		byte[] zip = nath.files().exportAsByteArray(SHARES, false, pathToto);
+		byte[] zip = nath.files().exportAsByteArray(SHARES, false, toto.getPath());
 		assertEquals(1, zipFileNumber(zip));
-		assertZipContains(zip, pathToto, "toto".getBytes());
+		assertZipContains(zip, toto.getExportEntry(), "toto".getBytes());
 
-		// vince shares titi.txt
-		String pathTiti = vince.files().share(SHARES, "titi".getBytes(), "titi.txt").getPath();
-		assertTrue(pathTiti.endsWith("/titi.txt"));
+		// vince shares "titi"
+		SpaceFile titi = vince.files().share(SHARES, "titi".getBytes());
+		// since no file name, name equal to last path segment
+		assertTrue(titi.getPath().endsWith(titi.getName()));
 
 		byte[] pngBytes = ClassResources.loadAsBytes(this, "tweeter.png");
-		String pathTweeter = vince.files().share(SHARES, pngBytes, "tweeter.png").getPath();
-		assertTrue(pathTweeter.endsWith("/tweeter.png"));
+		SpaceFile tweeter = vince.files().share(SHARES, pngBytes, "tweeter.png");
+		assertEquals(tweeter.getName(), "tweeter.png");
 
 		// vince has the right to get his own shares
-		vince.files().getAsByteArray(SHARES, pathTiti);
-		vince.files().getAsByteArray(SHARES, pathTweeter);
+		vince.files().getAsByteArray(SHARES, titi.getPath());
+		vince.files().getAsByteArray(SHARES, tweeter.getPath());
 
 		// nath does not have access to vince's shares
-		assertHttpError(403, () -> nath.files().getAsByteArray(SHARES, pathTiti));
-		assertHttpError(403, () -> nath.files().getAsByteArray(SHARES, pathTweeter));
+		assertHttpError(403, () -> nath.files().getAsByteArray(SHARES, titi.getPath()));
+		assertHttpError(403, () -> nath.files().getAsByteArray(SHARES, tweeter.getPath()));
 
 		// vince exports his shares
-		zip = vince.files().exportAsByteArray(SHARES, false, pathTiti, pathTweeter);
+		zip = vince.files().exportAsByteArray(SHARES, false, titi.getPath(), tweeter.getPath());
 		assertEquals(2, zipFileNumber(zip));
-		assertZipContains(zip, pathTiti, "titi".getBytes());
-		assertZipContains(zip, pathTweeter, pngBytes);
+		assertZipContains(zip, titi.getExportEntry(), "titi".getBytes());
+		assertZipContains(zip, tweeter.getExportEntry(), pngBytes);
 
 		// vince fails to export files with invalid paths
 		assertHttpError(404, () -> vince.files().exportAsByteArray(//
 				SHARES, false, "/foo/index.html", "/bar/toto.txt"));
 
 		// vince needs read (all) permission to export nath's shares
-		assertHttpError(403, () -> vince.files().exportAsByteArray(SHARES, false, pathToto, pathTiti));
+		assertHttpError(403, () -> vince.files().exportAsByteArray(SHARES, false, toto.getPath(), titi.getPath()));
 
 		// nath needs read (all) permission to export vince's shares
-		assertHttpError(403, () -> nath.files().exportAsByteArray(SHARES, false, pathToto, pathTiti));
+		assertHttpError(403, () -> nath.files().exportAsByteArray(SHARES, false, toto.getPath(), titi.getPath()));
 
 		// guests needs read (all) permission to export shares
-		assertHttpError(401, () -> guest.files().exportAsByteArray(SHARES, false, pathToto, pathTiti));
+		assertHttpError(401, () -> guest.files().exportAsByteArray(SHARES, false, toto.getPath(), titi.getPath()));
 
 		// superadmin updates share settings
 		// to allow users to read all shares
@@ -389,22 +390,22 @@ public class ShareRestyTest extends SpaceTest {
 				.routeParam("bucket", SHARES)//
 				.queryParam("op", "export")//
 				.bodyJson("fileName", "export.zip", "flatZip", false, //
-						"paths", Json.array(pathToto, pathTiti, pathTweeter))//
+						"paths", Json.array(toto.getPath(), titi.getPath(), tweeter.getPath()))//
 				.go(200)//
 				.assertHeaderContains("attachment; filename=\"export.zip\"", //
 						SpaceHeaders.CONTENT_DISPOSITION)//
 				.asBytes();
 
-		assertZipContains(zip, pathToto, "toto".getBytes());
-		assertZipContains(zip, pathTiti, "titi".getBytes());
-		assertZipContains(zip, pathTweeter, pngBytes);
+		assertZipContains(zip, toto.getExportEntry(), "toto".getBytes());
+		assertZipContains(zip, titi.getExportEntry(), "titi".getBytes());
+		assertZipContains(zip, tweeter.getExportEntry(), pngBytes);
 
 		// nath exports specified shares with flat zip
-		zip = nath.files().exportAsByteArray(SHARES, true, pathToto, pathTiti, pathTweeter);
+		zip = nath.files().exportAsByteArray(SHARES, true, toto.getPath(), titi.getPath(), tweeter.getPath());
 
-		assertZipContains(zip, pathToto, "toto".getBytes(), true);
-		assertZipContains(zip, pathTiti, "titi".getBytes(), true);
-		assertZipContains(zip, pathTweeter, pngBytes, true);
+		assertZipContains(zip, toto.getExportEntry(), "toto".getBytes(), true);
+		assertZipContains(zip, titi.getExportEntry(), "titi".getBytes(), true);
+		assertZipContains(zip, tweeter.getExportEntry(), pngBytes, true);
 	}
 
 	private int zipFileNumber(byte[] zip) throws IOException {

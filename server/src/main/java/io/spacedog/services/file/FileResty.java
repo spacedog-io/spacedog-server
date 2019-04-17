@@ -158,13 +158,13 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 
 		SpaceFile file = Services.files().getMeta(bucketName, path, false);
 		String group = context.get(GROUP_PARAM);
+		String fileName = context.get(FILE_NAME_PARAM);
 
 		if (file == null) {
 			bucket.permissions.checkPermission(credentials, //
 					Permission.create, Permission.createGroup, Permission.createMine);
 
 			file = new SpaceFile(path);
-			file.setName(webPath.last());
 			file.group(checkGroupCreate(bucket, credentials, group));
 			file.createdAt(now);
 
@@ -173,6 +173,8 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 			file.group(checkGroupUpdate(bucket, credentials, file.group(), group));
 		}
 
+		if (!Utils.isNullOrEmpty(fileName))
+			file.setName(fileName);
 		file.setLength(contentLength);
 		file.owner(credentials.id());
 		file.setContentType(fileContentType(file.getName(), context));
@@ -222,7 +224,7 @@ public class FileResty extends SpaceResty implements SpaceFilter {
 		String contentType = context.header(SpaceHeaders.CONTENT_TYPE);
 
 		if (Strings.isNullOrEmpty(contentType) //
-				|| ContentTypes.OCTET_STREAM.equals(contentType))
+				|| ContentTypes.OCTET_STREAM.equalsIgnoreCase(contentType))
 			contentType = ContentTypes.parseFileExtension(fileName);
 
 		return contentType;

@@ -135,8 +135,8 @@ public class SpaceBackend {
 		return urlBuilder().toString();
 	}
 
-	public String url(String uri) {
-		return urlBuilder().append(uri).toString();
+	public String url(String path) {
+		return urlBuilder().append(path).toString();
 	}
 
 	//

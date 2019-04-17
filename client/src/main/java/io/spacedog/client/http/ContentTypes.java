@@ -8,6 +8,7 @@ public class ContentTypes {
 
 	public static final String JSON = "application/json";
 	public static final String JSON_UTF8 = "application/json;charset=utf-8;";
+	public static final String TEXT_PLAIN = "text/plain";
 	public static final String TEXT_PLAIN_UTF8 = "text/plain;charset=utf-8;";
 	public static final String PDF = "application/pdf";
 	public static final String OCTET_STREAM = "application/octet-stream";

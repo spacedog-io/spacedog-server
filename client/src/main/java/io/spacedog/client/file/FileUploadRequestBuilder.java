@@ -13,6 +13,7 @@ public abstract class FileUploadRequestBuilder {
 
 	protected long length;
 	protected String path;
+	protected String fileName;
 	protected String bucket;
 	protected InputStream inputStream;
 	protected String type;
@@ -36,6 +37,7 @@ public abstract class FileUploadRequestBuilder {
 		try {
 			return inputStream(new FileInputStream(file))//
 					.type(ContentTypes.parseFileExtension(file.getName()))//
+					.fileName(file.getName())//
 					.length(file.length());
 
 		} catch (FileNotFoundException e) {
@@ -55,6 +57,11 @@ public abstract class FileUploadRequestBuilder {
 
 	public FileUploadRequestBuilder group(String group) {
 		this.group = group;
+		return this;
+	}
+
+	public FileUploadRequestBuilder fileName(String fileName) {
+		this.fileName = fileName;
 		return this;
 	}
 

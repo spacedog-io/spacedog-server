@@ -11,6 +11,7 @@ import com.google.common.collect.Sets;
 
 import io.spacedog.client.data.DataObjectBase;
 import io.spacedog.client.http.WebPath;
+import io.spacedog.utils.Utils;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(fieldVisibility = Visibility.ANY, //
@@ -49,11 +50,15 @@ public class SpaceFile extends DataObjectBase {
 	}
 
 	public String getName() {
-		return name;
+		return Utils.isNullOrEmpty(name) ? WebPath.parse(path).last() : name;
 	}
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public String getExportEntry() {
+		return Utils.isNullOrEmpty(name) ? path : path + "/" + name;
 	}
 
 	public long getLength() {

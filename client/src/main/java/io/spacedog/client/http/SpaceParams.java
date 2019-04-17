@@ -27,4 +27,5 @@ public interface SpaceParams {
 	String OP_PARAM = "op";
 	String GROUP_PARAM = "group";
 	String FILES_PARAM = "files";
+	String FILE_NAME_PARAM = "fileName";
 }

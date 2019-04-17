@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
 import io.spacedog.client.SpaceDog;
@@ -89,16 +88,8 @@ public class FileClient implements SpaceParams {
 				.asByteStream();
 	}
 
-	private String randomPath(String fileName) {
-		StringBuilder builder = new StringBuilder("/")//
-				.append(UUID.randomUUID().toString());
-		if (!Strings.isNullOrEmpty(fileName)) //
-			builder.append('/').append(fileName);
-		return builder.toString();
-	}
-
 	public SpaceFile share(String bucket, File file) {
-		return prepareShare(bucket, file.getName()).file(file).go();
+		return prepareShare(bucket).file(file).go();
 	}
 
 	public SpaceFile share(String bucket, byte[] bytes) {
@@ -106,15 +97,11 @@ public class FileClient implements SpaceParams {
 	}
 
 	public SpaceFile share(String bucket, byte[] bytes, String fileName) {
-		return prepareShare(bucket, fileName).bytes(bytes).go();
+		return prepareShare(bucket).fileName(fileName).bytes(bytes).go();
 	}
 
 	public FileUploadRequestBuilder prepareShare(String bucket) {
-		return prepareShare(bucket, null);
-	}
-
-	public FileUploadRequestBuilder prepareShare(String bucket, String fileName) {
-		return prepareUpload(bucket, randomPath(fileName));
+		return prepareUpload(bucket, "/" + UUID.randomUUID());
 	}
 
 	public SpaceFile upload(String bucket, String path, File file) {
@@ -125,6 +112,10 @@ public class FileClient implements SpaceParams {
 		return prepareUpload(bucket, path).bytes(bytes).go();
 	}
 
+	public SpaceFile upload(String bucket, String path, byte[] bytes, String fileName) {
+		return prepareUpload(bucket, path).bytes(bytes).fileName(fileName).go();
+	}
+
 	public FileUploadRequestBuilder prepareUpload(String bucket, String path) {
 		return new FileUploadRequestBuilder(bucket, path) {
 
@@ -133,6 +124,7 @@ public class FileClient implements SpaceParams {
 				return dog.put("/2/files/" + bucket + path)//
 						.withContentType(type)//
 						.queryParam(SpaceParams.GROUP_PARAM, group)//
+						.queryParam(SpaceParams.FILE_NAME_PARAM, fileName)//
 						.bodyStream(inputStream, length)//
 						.go(200)//
 						.asPojo(SpaceFile.class);

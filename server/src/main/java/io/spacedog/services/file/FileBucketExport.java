@@ -40,7 +40,7 @@ class FileBucketExport implements StreamingOutput {
 	}
 
 	private ZipEntry toZipEntry(SpaceFile file) {
-		String path = file.getPath();
+		String path = file.getExportEntry();
 		if (flatZip)
 			path = SpaceFile.flatPath(path);
 		return new ZipEntry(path);

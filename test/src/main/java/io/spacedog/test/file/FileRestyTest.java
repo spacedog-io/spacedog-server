@@ -9,7 +9,9 @@ import io.spacedog.client.credentials.Permission;
 import io.spacedog.client.credentials.Roles;
 import io.spacedog.client.file.FileBucket;
 import io.spacedog.client.file.FileStoreType;
+import io.spacedog.client.file.SpaceFile;
 import io.spacedog.client.file.SpaceFile.FileList;
+import io.spacedog.client.http.ContentTypes;
 import io.spacedog.client.http.SpaceResponse;
 import io.spacedog.test.SpaceTest;
 
@@ -241,4 +243,38 @@ public class FileRestyTest extends SpaceTest {
 		assertEquals(0, buckets.size());
 	}
 
+	@Test
+	public void uploadWithOrWithoutFileNamePassedAsParam() {
+
+		// prepare
+		prepareTest();
+		SpaceDog superadmin = clearServer();
+
+		// superadmin sets "documents" bucket
+		superadmin.files().setBucket(new FileBucket("docs"));
+
+		// superadmin uploads a file without any file name
+		SpaceFile doc = superadmin.files().upload("docs", "/titi", "titi".getBytes());
+		assertEquals("titi", doc.getName());
+		assertEquals("/titi", doc.getPath());
+		assertEquals("/titi", doc.getExportEntry());
+		assertEquals(ContentTypes.OCTET_STREAM, doc.getContentType());
+		assertEquals("titi".getBytes().length, doc.getLength());
+
+		// superadmin downloads this file
+		byte[] bytes = superadmin.files().getAsByteArray("docs", "/titi");
+		assertArrayEquals("titi".getBytes(), bytes);
+
+		// superadmin uploads a file with file name
+		doc = superadmin.files().upload("docs", "/toto", "toto".getBytes(), "toto.txt");
+		assertEquals("toto.txt", doc.getName());
+		assertEquals("/toto", doc.getPath());
+		assertEquals("/toto/toto.txt", doc.getExportEntry());
+		assertEquals(ContentTypes.TEXT_PLAIN, doc.getContentType());
+		assertEquals("toto".getBytes().length, doc.getLength());
+
+		// superadmin downloads this file
+		bytes = superadmin.files().getAsByteArray("docs", "/toto");
+		assertArrayEquals("toto".getBytes(), bytes);
+	}
 }
