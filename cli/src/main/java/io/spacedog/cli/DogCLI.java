@@ -45,6 +45,7 @@ public class DogCLI {
 
 			Utils.info();
 			Utils.info("Done.");
+			System.exit(0);
 
 		} catch (ParameterException e) {
 			System.err.println(e.getMessage());
@@ -58,6 +59,8 @@ public class DogCLI {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
+		System.exit(1);
 	}
 
 	private static void setEnv() {
