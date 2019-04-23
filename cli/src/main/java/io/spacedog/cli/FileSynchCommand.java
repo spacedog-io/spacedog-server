@@ -77,6 +77,9 @@ public class FileSynchCommand extends AbstractCommand<FileSynchCommand> {
 
 		synchFromServer();
 		synchFromLocal();
+
+		Utils.info();
+		Utils.info("Done.");
 	}
 
 	public Set<String> uploaded() {

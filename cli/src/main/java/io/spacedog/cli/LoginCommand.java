@@ -91,14 +91,17 @@ public class LoginCommand extends AbstractCommand<LoginCommand> {
 			out = Files.newOutputStream(path);
 			properties.store(out, "SpaceDog CLI properties");
 
+			Utils.info();
+			Utils.info("Done.");
+
+			return session;
+
 		} catch (IOException e) {
 			throw Exceptions.runtime(e, "error writing CLI session properties");
 
 		} finally {
 			Utils.closeSilently(out);
 		}
-
-		return session;
 	}
 
 	public static void logout() {
