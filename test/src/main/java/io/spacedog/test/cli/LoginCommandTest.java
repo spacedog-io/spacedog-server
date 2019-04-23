@@ -14,7 +14,7 @@ import io.spacedog.test.SpaceTest;
 public class LoginCommandTest extends SpaceTest {
 
 	@Test
-	public void test() throws IOException {
+	public void testLoginCommand() throws IOException {
 
 		// prepare
 		prepareTest();
@@ -73,8 +73,6 @@ public class LoginCommandTest extends SpaceTest {
 		assertEquals(superadmin.backend(), session.backend());
 		assertEquals(superadmin.username(), session.username());
 
-		// clears cache to force login command to load session from file
-		LoginCommand.clearCache();
 		SpaceDog fromFile = LoginCommand.session();
 
 		assertEquals(superadmin.backend(), fromFile.backend());
@@ -90,11 +88,71 @@ public class LoginCommandTest extends SpaceTest {
 		assertEquals("http://api.lvh.me:8443", session.backend().url());
 		assertEquals(fred.username(), session.username());
 
-		// clears cache to force login command to load session from file
-		LoginCommand.clearCache();
 		fromFile = LoginCommand.session();
 
 		assertEquals("http://api.lvh.me:8443", fromFile.backend().url());
 		assertEquals(session.accessToken(), fromFile.accessToken());
+	}
+
+	@Test
+	public void loginCommandShouldLogoutFromAnyPreviousSession() throws IOException {
+
+		// prepare
+		prepareTest();
+		SpaceDog superadmin = clearServer();
+
+		// superadmin logs in
+		SpaceDog session1 = new LoginCommand().verbose(true)//
+				.backend(superadmin.backend())//
+				.username(superadmin.username())//
+				.password(superadmin.password().get())//
+				.login();
+
+		assertTrue(session1.isTokenStillValid());
+
+		// superadmin logs in again
+		SpaceDog session2 = new LoginCommand().verbose(true)//
+				.backend(superadmin.backend())//
+				.username(superadmin.username())//
+				.password(superadmin.password().get())//
+				.login();
+
+		assertFalse(session1.isTokenStillValid());
+		assertTrue(session2.isTokenStillValid());
+
+		// invalid attempt to login
+		assertHttpError(401, () -> new LoginCommand().verbose(true)//
+				.backend(superadmin.backend())//
+				.username("XXX")//
+				.password("XXX")//
+				.login());
+
+		assertFalse(session1.isTokenStillValid());
+		assertFalse(session2.isTokenStillValid());
+	}
+
+	@Test
+	public void loginSessionIsStoredAndCanBeCleared() throws IOException {
+
+		// prepare
+		prepareTest();
+		SpaceDog superadmin = clearServer();
+
+		// superadmin logs in
+		SpaceDog session = new LoginCommand().verbose(true)//
+				.backend(superadmin.backend())//
+				.username(superadmin.username())//
+				.password(superadmin.password().get())//
+				.login();
+
+		// check session retrieved from file is correct
+		SpaceDog fromFile = LoginCommand.session();
+		assertEquals(session.backend(), fromFile.backend());
+		assertEquals(session.accessToken(), fromFile.accessToken());
+
+		// if session file is cleared, check session is no more
+		LoginCommand.clearSession();
+		RuntimeException exception = assertThrow(RuntimeException.class, () -> LoginCommand.session());
+		assertEquals(exception.getMessage(), "you must login first");
 	}
 }

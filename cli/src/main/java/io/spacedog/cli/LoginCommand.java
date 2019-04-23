@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.Properties;
 
 import com.beust.jcommander.Parameter;
@@ -58,22 +59,22 @@ public class LoginCommand extends AbstractCommand<LoginCommand> {
 	}
 
 	public SpaceDog login() {
+		SpaceEnv.env().debug(verbose());
+
+		// first logout from any previous session in case new login fails
+		// to avoid sending commands to previous dog session
+		logout();
+
 		Check.notNull(backend, "backend");
 		Check.notNullOrEmpty(username, "username");
 
-		SpaceEnv.env().debug(verbose());
 		String userHome = System.getProperty("user.home");
+		Check.notNullOrEmpty(userHome, "no user home directory available");
 
-		if (Strings.isNullOrEmpty(userHome))
-			throw Exceptions.runtime("no user home directory available");
-
-		Console console = System.console();
 		if (password == null)
-			password = console == null ? "hi " + username //
-					: String.valueOf(//
-							console.readPassword("Enter %s password: ", username));
+			password = askForPassword();
 
-		session = SpaceDog.dog(backend)//
+		SpaceDog session = SpaceDog.dog(backend)//
 				.username(username).login(password);
 
 		OutputStream out = null;
@@ -100,50 +101,76 @@ public class LoginCommand extends AbstractCommand<LoginCommand> {
 		return session;
 	}
 
-	//
-	// Static part
-	//
+	public static void logout() {
+		uncheckedSession().ifPresent(dog -> {
+			if (dog.isTokenStillValid())
+				dog.logout();
+		});
+	}
 
-	private static SpaceDog session;
+	public static SpaceDog session() {
+		return uncheckedSession()//
+				.filter(session -> session.isTokenStillValid())//
+				.orElseThrow(() -> Exceptions.runtime("you must login first"));
+	}
 
-	public static SpaceDog session() throws IOException {
+	public static Optional<SpaceDog> uncheckedSession() {
 
-		if (session == null) {
+		Optional<Path> path = sessionFilePath();
 
-			String userHome = System.getProperty("user.home");
-
-			if (Strings.isNullOrEmpty(userHome))
-				throw Exceptions.runtime("no user home directory available");
-
-			Path path = Paths.get(userHome, ".spacedog", "cli.properties");
-
-			if (!Files.exists(path))
-				throw Exceptions.runtime("you must first login");
+		if (path.isPresent() && Files.exists(path.get())) {
 
 			Properties properties = new Properties();
 
-			InputStream in = null;
-			try {
-				in = Files.newInputStream(path);
+			try (InputStream in = Files.newInputStream(path.get())) {
+
 				properties.load(in);
 
-			} finally {
-				if (in != null)
-					in.close();
-			}
+				String backend = properties.getProperty("backend");
+				String accesToken = properties.getProperty("accessToken");
 
-			session = SpaceDog.dog(properties.get("backend").toString())//
-					.accessToken(properties.get("accessToken").toString());
+				if (!Utils.isNullOrEmpty(backend) && !Utils.isNullOrEmpty(accesToken))
+					return Optional.of(SpaceDog.dog(backend).accessToken(accesToken));
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 
-		if (!session.isTokenStillValid())
-			throw Exceptions.runtime("SpaceDog session has expired, you must login again.");
-
-		return session;
+		return Optional.empty();
 	}
 
-	public static void clearCache() {
-		session = null;
+	public static void clearSession() {
+
+		sessionFilePath()//
+				.filter(path -> Files.exists(path))//
+				.ifPresent(path -> {
+					try {
+						Files.delete(path);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				});
 	}
 
+	////////
+	//////// Implementation
+	////////
+
+	private String askForPassword() {
+		Console console = System.console();
+		if (console == null)
+			throw Exceptions.runtime("no console to ask for password");
+
+		return String.valueOf(console.readPassword("Enter %s password: ", username));
+	}
+
+	private static Optional<Path> sessionFilePath() {
+		String userHome = System.getProperty("user.home");
+
+		if (Strings.isNullOrEmpty(userHome))
+			return Optional.empty();
+
+		return Optional.of(Paths.get(userHome, ".spacedog", "cli.properties"));
+	}
 }
