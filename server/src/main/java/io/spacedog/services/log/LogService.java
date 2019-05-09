@@ -6,6 +6,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.joda.time.DateTime;
@@ -17,9 +18,9 @@ import com.google.common.collect.Lists;
 import io.spacedog.client.log.LogItem;
 import io.spacedog.client.log.LogSearchResults;
 import io.spacedog.client.schema.Schema;
-import io.spacedog.services.elastic.ElasticUtils;
 import io.spacedog.services.SpaceService;
 import io.spacedog.services.elastic.ElasticIndex;
+import io.spacedog.services.elastic.ElasticUtils;
 import io.spacedog.utils.ClassResources;
 import io.spacedog.utils.Json;
 
@@ -114,6 +115,10 @@ public class LogService extends SpaceService {
 
 		for (SearchHit hit : response.getHits().getHits())
 			results.results.add(Json.toPojo(hit.getSourceAsString(), LogItem.class));
+
+		Aggregations aggregations = response.getAggregations();
+		if (aggregations != null)
+			results.aggregations = Json.toObjectNode(aggregations.asMap());
 
 		return results;
 	}

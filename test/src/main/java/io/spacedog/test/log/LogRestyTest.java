@@ -269,6 +269,18 @@ public class LogRestyTest extends SpaceTest {
 		assertEquals("/2/credentials", results.get(7).path);
 		assertEquals("POST", results.get(8).method);
 		assertEquals("/2/admin/_clear", results.get(8).path);
+
+		// aggregate logs per methods
+		ObjectNode aggs = Json.object("method", //
+				Json.object("terms", Json.object("field", "method")));
+
+		ObjectNode aggregations = superadmin.post("/2/logs/_search")//
+				.bodyJson("size", 0, "aggs", aggs).go(200)//
+				.asPojo(LogSearchResults.class)//
+						.aggregations;
+
+		assertEquals("POST", Json.get(aggregations, "method.buckets.0.key").asText());
+		assertEquals(5, Json.get(aggregations, "method.buckets.0.doc_count").asInt());
 	}
 
 	@Test
