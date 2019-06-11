@@ -5,12 +5,14 @@ package io.spacedog.client.credentials;
 
 import java.util.Optional;
 import java.util.Random;
+import java.util.regex.Pattern;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.xml.bind.DatatypeConverter;
 
-import io.spacedog.utils.Check;
+import io.spacedog.utils.Exceptions;
+import io.spacedog.utils.Utils;
 
 public class Passwords {
 
@@ -32,8 +34,11 @@ public class Passwords {
 		check(password, none);
 	}
 
-	public static void check(String password, Optional<String> regex) {
-		Check.matchRegex(regex.orElse(PASSWORD_DEFAULT_REGEX), password, "password");
+	public static void check(String password, Optional<String> regexOpt) {
+		String regex = regexOpt.orElse(PASSWORD_DEFAULT_REGEX);
+		if (Utils.isNull(password) || !Pattern.matches(regex, password))
+			throw Exceptions.illegalArgumentWithCode("non-compliant-password", //
+					"password isn't compliant to [%s] regular expression", regex);
 	}
 
 	public static String random() {
