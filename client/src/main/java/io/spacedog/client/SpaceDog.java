@@ -180,13 +180,13 @@ public class SpaceDog implements SpaceFields, SpaceParams {
 	private SpaceRequest auth(SpaceRequest request) {
 		request.backend(backend());
 
-		Optional<String> password = password();
-		if (password.isPresent())
-			return request.basicAuth(username(), password.get());
-
 		Optional<String> accessToken = accessToken();
 		if (accessToken.isPresent())
 			return request.bearerAuth(accessToken.get());
+
+		Optional<String> password = password();
+		if (password.isPresent())
+			return request.basicAuth(username(), password.get());
 
 		// if no password nor access token then no auth
 		return request;
