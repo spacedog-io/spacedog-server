@@ -106,8 +106,11 @@ public class LoginCommand extends AbstractCommand<LoginCommand> {
 
 	public static void logout() {
 		uncheckedSession().ifPresent(dog -> {
-			if (dog.isTokenStillValid())
+			try {
+				clearSession();
 				dog.logout();
+			} catch (Exception ignored) {
+			}
 		});
 	}
 
