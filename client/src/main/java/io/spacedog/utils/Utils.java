@@ -1,6 +1,5 @@
 package io.spacedog.utils;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.ParameterizedType;
@@ -296,7 +295,7 @@ public class Utils {
 	// Resource Utils
 	//
 
-	public static void closeSilently(Closeable closeable) {
+	public static void closeSilently(AutoCloseable closeable) {
 		try {
 			if (closeable != null)
 				closeable.close();
