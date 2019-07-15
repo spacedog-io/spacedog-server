@@ -12,6 +12,11 @@ public abstract class Job {
 
 	private String firstname;
 	private String lastname;
+	private DateTime started;
+
+	public Job() {
+		this.started = new DateTime();
+	}
 
 	public abstract Object run();
 
@@ -40,12 +45,11 @@ public abstract class Job {
 	}
 
 	public String ok() {
-		notify(" is OK OK OK", "Everything is working properly.");
-		return OK;
+		return ok("Everything is working properly.");
 	}
 
 	public String ok(String message) {
-		notify(" is OK OK OK", message);
+		notify("UP", message);
 		return OK;
 	}
 
@@ -60,11 +64,15 @@ public abstract class Job {
 	public String error(String message) {
 		System.err.println();
 		System.err.println(message);
-		notify(" is DOWN DOWN DOWN", message);
+		notify("DOWN", message);
 		return message;
 	}
 
-	public void notify(String titleSuffix, String message) {
-		Internals.get().notify(description() + titleSuffix, message);
+	public void notify(String titlePrefix, String message) {
+		Internals.get().notify(description(titlePrefix), message);
+	}
+
+	private String description(String prefix) {
+		return Utils.join(" → ", prefix, firstname, lastname, started.toString());
 	}
 }
