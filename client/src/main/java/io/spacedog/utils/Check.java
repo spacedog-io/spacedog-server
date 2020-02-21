@@ -9,30 +9,35 @@ public class Check {
 
 	public static <T> T notNull(T value, String valueName) {
 		if (value == null)
-			throw Exceptions.illegalArgument("[%s] is null", valueName);
+			throw Exceptions.illegalArgument("[%s] is null", valueName)//
+					.withCode("%s-null-empty", valueName);
 		return value;
 	}
 
 	public static void isNull(Object value, String valueName) {
 		if (value != null)
-			throw Exceptions.illegalArgument("[%s] is not null", valueName);
+			throw Exceptions.illegalArgument("[%s] is not null", valueName)//
+					.withCode("%s-not-null-empty", valueName);
 	}
 
 	public static String notNullOrEmpty(String value, String valueName) {
 		if (Utils.isNullOrEmpty(value))
-			throw Exceptions.illegalArgument("[%s] is null or empty", valueName);
+			throw Exceptions.illegalArgument("[%s] is null or empty", valueName)//
+					.withCode("%s-null-empty", valueName);
 		return value;
 	}
 
 	public static Collection<?> notNullOrEmpty(Collection<?> value, String valueName) {
 		if (Utils.isNullOrEmpty(value))
-			throw Exceptions.illegalArgument("[%s] is null or empty", valueName);
+			throw Exceptions.illegalArgument("[%s] is null or empty", valueName)//
+					.withCode("%s-null-empty", valueName);
 		return value;
 	}
 
 	public static <T> T[] notNullOrEmpty(T[] value, String valueName) {
 		if (Utils.isNullOrEmpty(value))
-			throw Exceptions.illegalArgument("[%s] is null or empty", valueName);
+			throw Exceptions.illegalArgument("[%s] is null or empty", valueName)//
+					.withCode("%s-null-empty", valueName);
 		return value;
 	}
 
@@ -49,6 +54,7 @@ public class Check {
 		notNull(value, valueName);
 		if (!Pattern.matches(regex, value))
 			throw Exceptions.illegalArgument(//
-					"[%s][%s] is invalid: doesn't comply [%s] regex", valueName, value, regex);
+					"[%s][%s] is invalid: doesn't comply [%s] regex", valueName, value, regex)//
+					.withCode("%s-invalid", valueName);
 	}
 }

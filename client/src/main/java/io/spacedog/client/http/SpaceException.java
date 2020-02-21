@@ -54,8 +54,8 @@ public class SpaceException extends RuntimeException {
 		return code;
 	}
 
-	public SpaceException withCode(String code) {
-		this.code = code;
+	public SpaceException withCode(String code, Object... args) {
+		this.code = String.format(code, args);
 		return this;
 	}
 
