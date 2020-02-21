@@ -298,6 +298,10 @@ public class Credentials implements SpaceFields {
 		return group;
 	}
 
+	public static String extractGroupOwner(String group) {
+		return group.substring(0, group.lastIndexOf('_'));
+	}
+
 	public boolean hasGroupAccessPermission(String group) {
 		return isAtLeastSuperAdmin() || hasGroup(group);
 	}
