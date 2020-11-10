@@ -1,5 +1,5 @@
 {  
-   "template":"*-data-*",
+   "index_patterns":"*-data-*",
    "settings":{
       "analysis":{
          "filter":{
