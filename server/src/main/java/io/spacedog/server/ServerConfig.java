@@ -19,14 +19,16 @@ public class ServerConfig {
 	private static final String HOME_PATH = "spacedog.server.home.path";
 	private static final String PRODUCTION = "spacedog.server.production";
 	private static final String OFFLINE = "spacedog.server.offline";
+	private static final String ELASTIC_SEARCH_HOST = "spacedog.server.elasticsearch.host";
+	private static final String ELASTIC_SEARCH_SCHEME = "spacedog.server.elasticsearch.scheme";
+	private static final String ELASTIC_SEARCH_PORT1 = "spacedog.server.elasticsearch.port1";
+	private static final String ELASTIC_SEARCH_PORT2 = "spacedog.server.elasticsearch.port2";
 	private static final String FILES_STORE_PATH = "spacedog.server.files.store.path";
 	private static final String GREEN_CHECK = "spacedog.server.green.check";
 	private static final String GREEN_TIMEOUT = "spacedog.server.green.timeout";
 	private static final String USER_AGENT = "spacedog.server.user.agent";
-	private static final String ELASTIC_CONFIG_PATH = "spacedog.server.elastic.config.path";
 	private static final String SNAPSHOTS_FILES_STORE_TYPE = "spacedog.server.snapshots.files.store.type";
 	private static final String SNAPSHOTS_ELASTIC_STORE_TYPE = "spacedog.server.snapshots.elastic.store.type";
-	private static final String SNAPSHOTS_FS_PATH = "spacedog.server.snapshots.fs.path";
 	private static final String SNAPSHOTS_S3_BUCKET = "spacedog.server.snapshots.s3.bucket";
 	private static final String MAIL_SMTP_DEBUG = "spacedog.server.mail.smtp.debug";
 	private static final String MAIL_DOMAIN = "spacedog.server.mail.domain";
@@ -39,17 +41,28 @@ public class ServerConfig {
 				: Paths.get(System.getProperty("user.home"), "spacedog");
 	}
 
-	public static Path elasticConfigPath() {
-		Optional<String> path = SpaceEnv.env().get(ELASTIC_CONFIG_PATH);
-		return path.isPresent() ? Paths.get(path.get()) : null;
-	}
-
 	public static boolean isProduction() {
 		return SpaceEnv.env().get(PRODUCTION, false);
 	}
 
 	public static boolean isOffline() {
 		return SpaceEnv.env().get(OFFLINE, false);
+	}
+
+	public static String elasticSearchHost() {
+		return SpaceEnv.env().get(ELASTIC_SEARCH_HOST, "localhost");
+	}
+
+	public static String elasticSearchScheme() {
+		return SpaceEnv.env().get(ELASTIC_SEARCH_SCHEME, "http");
+	}
+
+	public static int elasticSearchPort1() {
+		return SpaceEnv.env().get(ELASTIC_SEARCH_PORT1, 9200);
+	}
+
+	public static int elasticSearchPort2() {
+		return SpaceEnv.env().get(ELASTIC_SEARCH_PORT2, 9201);
 	}
 
 	public static SpaceBackend apiBackend() {
@@ -112,12 +125,6 @@ public class ServerConfig {
 
 	public static FileStoreType snapshotsFilesStoreType() {
 		return SpaceEnv.env().get(SNAPSHOTS_FILES_STORE_TYPE, FileStoreType.fs);
-	}
-
-	public static Path snapshotsFSPath() {
-		Optional<String> opt = SpaceEnv.env().get(SNAPSHOTS_FS_PATH);
-		return opt.isPresent() ? Paths.get(opt.get()) //
-				: homePath().resolve("snapshots");
 	}
 
 	public static String snapshotsS3Bucket() {

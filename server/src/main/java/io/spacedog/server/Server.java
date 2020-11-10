@@ -4,22 +4,12 @@
 package io.spacedog.server;
 
 import java.io.Closeable;
-import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
-import org.elasticsearch.analysis.common.CommonAnalysisPlugin;
-import org.elasticsearch.cli.Terminal;
-import org.elasticsearch.common.logging.LogConfigurator;
-import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.env.Environment;
-import org.elasticsearch.index.reindex.ReindexPlugin;
-import org.elasticsearch.node.InternalSettingsPreparer;
-import org.elasticsearch.node.NodeValidationException;
-import org.elasticsearch.repositories.s3.S3RepositoryPlugin;
+import org.apache.http.HttpHost;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.search.aggregations.Aggregation;
-import org.elasticsearch.transport.Netty4Plugin;
 import org.joda.time.DateTimeZone;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,7 +28,6 @@ import io.spacedog.services.data.AggregationSerializer;
 import io.spacedog.services.data.DataResty;
 import io.spacedog.services.data.SchemaResty;
 import io.spacedog.services.elastic.ElasticClient;
-import io.spacedog.services.elastic.ElasticNode;
 import io.spacedog.services.email.EmailResty;
 import io.spacedog.services.file.FileResty;
 import io.spacedog.services.file.WebResty;
@@ -67,20 +56,13 @@ import net.codestory.http.routes.Routes;
 @SuppressWarnings("serial")
 public class Server implements Extensions {
 
-	public static final String CLUSTER_NAME = "spacedog-elastic-cluster";
-
 	private long startTime;
-	private ElasticNode elasticNode;
 	private ElasticClient elasticClient;
 	private FluentServer fluent;
 	private Info info;
 
 	public ElasticClient elasticClient() {
 		return elasticClient;
-	}
-
-	public ElasticNode elasticNode() {
-		return elasticNode;
 	}
 
 	public static void main(String[] args) {
@@ -92,7 +74,7 @@ public class Server implements Extensions {
 
 		try {
 			init();
-			startElastic();
+			initElasticClient();
 			elasticIsStarted();
 			startFluent();
 			fluentIsStarted();
@@ -103,8 +85,6 @@ public class Server implements Extensions {
 			if (fluent != null)
 				fluent.stop();
 			if (elasticClient != null)
-				elasticClient.close();
-			if (elasticNode != null)
 				elasticClient.close();
 			System.exit(-1);
 		}
@@ -126,64 +106,18 @@ public class Server implements Extensions {
 		Json.mapper().registerModule(module);
 	}
 
-	protected void startElastic()
-			throws InterruptedException, ExecutionException, IOException, NodeValidationException {
+	protected void initElasticClient() {
 
-		Settings settings = Settings.builder()//
-				.put(Environment.PATH_HOME_SETTING.getKey(), //
-						ServerConfig.homePath().toAbsolutePath().toString())//
-				.build();
+		String host = ServerConfig.elasticSearchHost();
+		String scheme = ServerConfig.elasticSearchScheme();
+		int port1 = ServerConfig.elasticSearchPort1();
+		int port2 = ServerConfig.elasticSearchPort2();
 
-		// .put(Node.NODE_MASTER_SETTING.getKey(), true)//
-		// .put(Node.NODE_DATA_SETTING.getKey(), true)//
-		// .put(DiscoveryModule.DISCOVERY_TYPE_SETTING.getKey(), "single-node")//
-		// // .put(NetworkModule.TRANSPORT_TYPE_SETTING.getKey(), "netty4") //
-		// .put(ClusterName.CLUSTER_NAME_SETTING.getKey(), CLUSTER_NAME)//
-		// // disable automatic index creation
-		// .put(AutoCreateIndex.AUTO_CREATE_INDEX_SETTING.getKey(), false)//
-		// // disable dynamic indexing
-		// // .put("index.mapper.dynamic", false)//
-		// // .put("index.max_result_window", 5000)//
-		// // disable rebalance to avoid automatic rebalance
-		// // when a temporary second node appears
-		// .put("cluster.routing.rebalance.enable", "none")//
-		// .put(NetworkModule.HTTP_ENABLED.getKey(), //
-		// config.elasticIsHttpEnabled())//
-		// .put(NetworkService.GLOBAL_NETWORK_HOST_SETTING.getKey(), //
-		// config.elasticNetworkHost())//
-		// .put(Environment.PATH_LOGS_SETTING.getKey(), //
-		// config.elasticLogsPath().toAbsolutePath().toString())
-		// .put(Environment.PATH_DATA_SETTING.getKey(), //
-		// config.elasticDataPath().toAbsolutePath().toString());
-		//
-		// if (config.elasticSnapshotsPath().isPresent())
-		// builder.put(Environment.PATH_REPO_SETTING.getKey(), //
-		// config.elasticSnapshotsPath().get().toAbsolutePath().toString());
+		RestHighLevelClient client = new RestHighLevelClient(//
+				RestClient.builder(new HttpHost(host, port1, scheme), //
+						new HttpHost(host, port2, scheme)));
 
-		Environment environment = InternalSettingsPreparer.prepareEnvironment(//
-				settings, Terminal.DEFAULT, Collections.emptyMap(), //
-				ServerConfig.elasticConfigPath());
-
-		try {
-			LogConfigurator.configure(environment);
-		} catch (Exception e) {
-			throw Exceptions.runtime(e, "error configuring elastic log");
-		}
-
-		elasticNode = new ElasticNode(environment, //
-				Netty4Plugin.class, //
-				CommonAnalysisPlugin.class, //
-				ReindexPlugin.class, //
-				S3RepositoryPlugin.class);
-
-		elasticNode.start();
-		this.elasticClient = new ElasticClient(elasticNode.client());
-
-		// wait for cluster to fully initialize and turn asynchronously from
-		// RED status to GREEN before to initialize anything else
-		// wait for 60 seconds maximum by default
-		// configurable with spacedog.server.green.check and timeout properties
-		elasticClient.ensureAllIndicesAreAtLeastYellow();
+		this.elasticClient = new ElasticClient(client);
 	}
 
 	protected void elasticIsStarted() {
