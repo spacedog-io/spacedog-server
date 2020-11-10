@@ -39,6 +39,7 @@ import io.spacedog.services.JsonPayload;
 import io.spacedog.services.Services;
 import io.spacedog.services.SpaceService;
 import io.spacedog.services.data.DataResults;
+import io.spacedog.services.elastic.ElasticIndex;
 import io.spacedog.utils.Check;
 import io.spacedog.utils.Exceptions;
 import io.spacedog.utils.Json;
@@ -210,18 +211,18 @@ public class PushService extends SpaceService implements SpaceFields {
 
 		Services.data().refresh(request.refresh, DATA_TYPE);
 
+		SearchSourceBuilder source = SearchSourceBuilder.searchSource()//
+				.fetchSource(new String[] { OWNER_FIELD, ENDPOINT, PROTOCOL, BADGE }, null)//
+				.query(query)//
+				.from(0)//
+				.size(1000)//
+				.version(false);
+
 		// TODO use a scroll to push to all installations found
-		SearchHits hits = elastic()//
-				.prepareSearch(Services.data().index(DATA_TYPE))//
-				.setQuery(query)//
-				.setFrom(0)//
-				.setSize(1000)//
-				.setVersion(false)//
-				.setFetchSource(new String[] { OWNER_FIELD, ENDPOINT, PROTOCOL, BADGE }, null)//
-				.get()//
+		SearchHits hits = elastic().search(source, index())//
 				.getHits();
 
-		if (hits.getTotalHits() > 1000)
+		if (hits.getTotalHits().value > 1000)
 			throw Exceptions.forbidden(Server.context().credentials(), //
 					"push to [%s] installations is a premium feature", //
 					hits.getTotalHits());
@@ -311,6 +312,14 @@ public class PushService extends SpaceService implements SpaceFields {
 
 	public long deleteTags(String installationId) {
 		return Services.data().delete(DATA_TYPE, installationId, TAGS);
+	}
+
+	//
+	// Index help methods
+	//
+
+	public ElasticIndex index() {
+		return Services.data().index(DATA_TYPE);
 	}
 
 	//

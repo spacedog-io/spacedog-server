@@ -40,7 +40,7 @@ public class SettingsResty extends SpaceResty {
 	@Delete("/")
 	public void deleteIndex() {
 		Server.context().credentials().checkAtLeastSuperAdmin();
-		elastic().deleteIndex(Services.settings().index());
+		elastic().deleteIndices(Services.settings().index());
 	}
 
 	@Get("/:id")

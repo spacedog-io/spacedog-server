@@ -50,12 +50,13 @@ public class LogService extends SpaceService {
 				? QueryBuilders.matchAllQuery() //
 				: QueryBuilders.simpleQueryStringQuery(q);
 
-		SearchResponse response = elastic().prepareSearch(index())//
-				.setQuery(query)//
-				.addSort(RECEIVED_AT_FIELD, SortOrder.DESC)//
-				.setFrom(from)//
-				.setSize(size)//
-				.get();
+		SearchSourceBuilder source = SearchSourceBuilder.searchSource()//
+				.query(query)//
+				.sort(RECEIVED_AT_FIELD, SortOrder.DESC)//
+				.from(from)//
+				.size(size);
+
+		SearchResponse response = elastic().search(source, index());
 
 		return extractLogs(response);
 	}
@@ -67,9 +68,7 @@ public class LogService extends SpaceService {
 	public LogSearchResults search(SearchSourceBuilder builder, boolean refresh) {
 		elastic().refreshIndex(refresh, index());
 
-		SearchResponse response = elastic().prepareSearch(index())//
-				.setSource(builder)//
-				.get();
+		SearchResponse response = elastic().search(builder, index());
 
 		return extractLogs(response);
 	}
@@ -110,7 +109,7 @@ public class LogService extends SpaceService {
 	private LogSearchResults extractLogs(SearchResponse response) {
 
 		LogSearchResults results = new LogSearchResults();
-		results.total = response.getHits().getTotalHits();
+		results.total = response.getHits().getTotalHits().value;
 		results.results = Lists.newArrayList();
 
 		for (SearchHit hit : response.getHits().getHits())

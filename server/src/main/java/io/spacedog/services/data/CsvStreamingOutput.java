@@ -143,8 +143,7 @@ public class CsvStreamingOutput implements StreamingOutput {
 			for (SearchHit hit : response.getHits())
 				writer.writeRow(toRow(hit));
 
-			response = elastic.prepareSearchScroll(response.getScrollId())//
-					.setScroll(TimeValue.timeValueSeconds(60)).get();
+			response = elastic.scroll(response.getScrollId(), TimeValue.timeValueSeconds(60));
 
 		} while (response.getHits().getHits().length != 0);
 

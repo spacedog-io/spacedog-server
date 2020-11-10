@@ -10,9 +10,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.elasticsearch.common.lucene.uid.Versions;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -21,6 +26,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.joda.time.DateTime;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -128,7 +134,7 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 		return DataWrap.wrap(//
 				Json.toPojo(response.getSourceAsBytes(), sourceClass))//
 				.id(response.getId())//
-				.type(response.getType())//
+				.type(ElasticIndex.valueOf(response.getIndex()).type())//
 				.version(response.getVersion());
 	}
 
@@ -141,9 +147,9 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 
 	public Optional<DataWrap<DataObjectBase>> getMeta(String type, String id) {
 
-		GetResponse response = elastic().prepareGet(index(type), id)//
-				.setFetchSource(META_FIELDS, null)//
-				.get();
+		GetRequest request = elastic().prepareGet(index(type), id)//
+				.fetchSourceContext(new FetchSourceContext(true, META_FIELDS, null));
+		GetResponse response = elastic().get(request);
 
 		DataWrap<DataObjectBase> wrap = null;
 
@@ -214,12 +220,8 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 				|| Utils.atLeastOneIsNull(wrap.createdAt(), wrap.updatedAt()))
 			throw Exceptions.illegalArgument("meta fields are mandatory");
 
-		IndexResponse response = elastic()//
-				.prepareIndex(index(wrap.type()))//
-				.setSource(Json.toString(wrap.source()), XContentType.JSON)//
-				.setVersion(wrap.version())//
-				.setId(wrap.id())//
-				.get();
+		IndexResponse response = elastic().index(//
+				index(wrap.type()), wrap.id(), wrap.version(), wrap.source(), false);
 
 		return wrap.id(response.getId())//
 				.version(response.getVersion());
@@ -251,10 +253,11 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 
 		source.put(UPDATED_AT_FIELD, DateTime.now().toString());
 
-		elastic().prepareUpdate(index(wrap.type()), wrap.id())//
-				.setVersion(elasticVersion(wrap.version()))//
-				.setDoc(source.toString(), XContentType.JSON)//
-				.get();
+		UpdateRequest request = elastic().prepareUpdate(index(wrap.type()), wrap.id())//
+				.version(elasticVersion(wrap.version()))//
+				.doc(source.toString(), XContentType.JSON);
+
+		elastic().update(request);
 
 		return getWrapped(wrap.type(), wrap.id(), wrap.sourceClass());
 	}
@@ -345,7 +348,7 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 
 		SearchHits hits = response.getHits();
 		DataResults<K> results = DataResults.of(sourceClass);
-		results.total = hits.getTotalHits();
+		results.total = hits.getTotalHits().value;
 		results.objects = Lists.newArrayListWithCapacity(hits.getHits().length);
 		for (SearchHit hit : hits)
 			results.objects.add(wrap(hit, sourceClass));
@@ -357,7 +360,7 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 
 		return DataWrap.wrap(Json.toPojo(hit.getSourceAsString(), sourceClass))//
 				.id(hit.getId())//
-				.type(hit.getType())//
+				.type(ElasticIndex.valueOf(hit.getIndex()).type())//
 				.version(hit.getVersion())//
 				.score(extractScore(hit.getScore()))//
 				.sort(extractSortValues(hit.getSortValues()));
@@ -389,21 +392,20 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 	// CSV
 	//
 
-	public StreamingOutput csv(String type, CsvRequest request, Locale locale) {
+	public StreamingOutput csv(String type, CsvRequest csvRequest, Locale locale) {
 
-		Services.data().refresh(request.refresh, type);
+		Services.data().refresh(csvRequest.refresh, type);
 
 		SearchSourceBuilder builder = SearchSourceBuilder.searchSource()//
-				.query(QueryBuilders.wrapperQuery(request.query))//
-				.size(request.pageSize);
+				.query(QueryBuilders.wrapperQuery(csvRequest.query))//
+				.size(csvRequest.pageSize);
 
-		SearchResponse response = elastic()//
-				.prepareSearch(Services.data().index(type))//
-				.setSource(builder)//
-				.setScroll(TimeValue.timeValueSeconds(60))//
-				.get();
+		SearchRequest searchRequest = elastic().prepareSearch(index(type))//
+				.scroll(TimeValue.timeValueSeconds(60))//
+				.source(builder);
 
-		return new CsvStreamingOutput(request, response, locale);
+		SearchResponse response = elastic().search(searchRequest);
+		return new CsvStreamingOutput(csvRequest, response, locale);
 	}
 
 	//
@@ -411,13 +413,16 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 	//
 
 	public StreamingOutput exportNow(String type, QueryBuilder query) {
-		SearchResponse response = elastic()//
-				.prepareSearch(index(type))//
-				.setScroll(ElasticExportStreamingOutput.TIMEOUT)//
-				.setSize(ElasticExportStreamingOutput.SIZE)//
-				.setQuery(query)//
-				.get();
 
+		SearchSourceBuilder source = SearchSourceBuilder.searchSource()//
+				.size(ElasticExportStreamingOutput.SIZE)//
+				.query(query);
+
+		SearchRequest request = elastic().prepareSearch(index(type))//
+				.scroll(ElasticExportStreamingOutput.TIMEOUT)//
+				.source(source);
+
+		SearchResponse response = elastic().search(request);
 		return new ElasticExportStreamingOutput(response);
 	}
 
@@ -641,12 +646,17 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 	//
 
 	public void init() {
-		elastic().internal().admin().indices()//
-				.preparePutTemplate("data")//
-				.setSource(//
-						ClassResources.loadAsBytes(this, "data-template.json"), //
-						XContentType.JSON)//
-				.get();
+		try {
+
+			PutIndexTemplateRequest request = new PutIndexTemplateRequest("data")//
+					.source(ClassResources.loadAsBytes(this, "data-template.json"), //
+							XContentType.JSON);
+
+			elastic().internal().indices().putTemplate(request, RequestOptions.DEFAULT);
+
+		} catch (IOException e) {
+			Exceptions.runtime(e);
+		}
 	}
 
 	public DataSettings settings() {

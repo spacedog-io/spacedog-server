@@ -10,6 +10,7 @@ import java.util.Optional;
 
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -92,12 +93,10 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 
 	public Credentials.Results search(SearchSourceBuilder builder) {
 
-		SearchHits hits = elastic()//
-				.prepareSearch(index())//
-				.setSource(builder).get().getHits();
+		SearchHits hits = elastic().search(builder, index()).getHits();
 
 		Credentials.Results response = new Credentials.Results();
-		response.total = hits.getTotalHits();
+		response.total = hits.getTotalHits().value;
 		response.results = Lists.newArrayList();
 
 		for (SearchHit hit : hits)
@@ -397,12 +396,16 @@ public class CredentialsService extends SpaceService implements SpaceParams, Spa
 	//
 
 	public StreamingOutput exportNow(QueryBuilder query) {
-		SearchResponse response = elastic().prepareSearch(index())//
-				.setScroll(ElasticExportStreamingOutput.TIMEOUT)//
-				.setSize(ElasticExportStreamingOutput.SIZE)//
-				.setQuery(query)//
-				.get();
 
+		SearchSourceBuilder source = SearchSourceBuilder.searchSource()//
+				.size(ElasticExportStreamingOutput.SIZE)//
+				.query(query);
+
+		SearchRequest request = elastic().prepareSearch(index())//
+				.scroll(ElasticExportStreamingOutput.TIMEOUT)//
+				.source(source);
+
+		SearchResponse response = elastic().search(request);
 		return new ElasticExportStreamingOutput(response);
 	}
 

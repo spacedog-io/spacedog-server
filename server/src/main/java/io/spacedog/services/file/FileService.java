@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.unit.TimeValue;
@@ -76,21 +77,20 @@ public class FileService extends SpaceService {
 					.size(size)//
 					.sort(SortBuilders.fieldSort(PATH_FIELD));
 
-			response = elastic().prepareSearch(index(bucket))//
-					.setSource(source)//
-					.setScroll(TimeValue.timeValueMinutes(1))//
-					.get();
+			SearchRequest request = elastic().prepareSearch(index(bucket))//
+					.scroll(TimeValue.timeValueMinutes(1))//
+					.source(source);
+
+			response = elastic().search(request);
 
 		} else {
-			response = elastic().prepareSearchScroll(next)//
-					.setScroll(TimeValue.timeValueMinutes(1))//
-					.get();
+			response = elastic().scroll(next, TimeValue.timeValueMinutes(1));
 		}
 
 		SearchHits hits = response.getHits();
 		FileList fileList = new FileList();
 		fileList.next = hits.getHits().length == 0 ? null : response.getScrollId();
-		fileList.total = hits.getTotalHits();
+		fileList.total = hits.getTotalHits().value;
 		fileList.files = Lists.newArrayListWithCapacity(hits.getHits().length);
 		for (SearchHit hit : hits.getHits())
 			fileList.files.add(toSpaceFile(hit));
@@ -247,7 +247,7 @@ public class FileService extends SpaceService {
 	}
 
 	public void deleteBucket(String name) {
-		elastic().deleteIndex(index(name));
+		elastic().deleteIndices(index(name));
 		InternalFileSettings buckets = listBuckets();
 		FileBucket bucket = buckets.get(name);
 		store(bucket).deleteAll(Server.backend().id(), name);
@@ -318,11 +318,11 @@ public class FileService extends SpaceService {
 					.query(QueryBuilders.termQuery(SpaceFields.SNAPSHOT_FIELD, false))//
 					.size(1000);
 
-			SearchResponse response = elastic()//
-					.prepareSearch(indices)//
-					.setSource(builder)//
-					.setScroll(ONE_MINUTE)//
-					.get();
+			SearchRequest request = elastic().prepareSearch(indices)//
+					.source(builder)//
+					.scroll(ONE_MINUTE);
+
+			SearchResponse response = elastic().search(request);
 
 			do {
 				for (SearchHit hit : response.getHits()) {
@@ -330,8 +330,7 @@ public class FileService extends SpaceService {
 					snapshot(backup, hit.getType(), file);
 				}
 
-				response = elastic().prepareSearchScroll(response.getScrollId())//
-						.setScroll(ONE_MINUTE).get();
+				response = elastic().scroll(response.getScrollId(), ONE_MINUTE);
 
 			} while (response.getHits().getHits().length != 0);
 		}
@@ -364,11 +363,11 @@ public class FileService extends SpaceService {
 					.query(QueryBuilders.matchAllQuery())//
 					.size(1000);
 
-			SearchResponse response = elastic()//
-					.prepareSearch(indices)//
-					.setSource(builder)//
-					.setScroll(ONE_MINUTE)//
-					.get();
+			SearchRequest request = elastic().prepareSearch(indices)//
+					.source(builder)//
+					.scroll(ONE_MINUTE);
+
+			SearchResponse response = elastic().search(request);
 
 			do {
 				for (SearchHit hit : response.getHits()) {
@@ -376,8 +375,7 @@ public class FileService extends SpaceService {
 					restore(backup, hit.getType(), file);
 				}
 
-				response = elastic().prepareSearchScroll(response.getScrollId())//
-						.setScroll(ONE_MINUTE).get();
+				response = elastic().scroll(response.getScrollId(), ONE_MINUTE);
 
 			} while (response.getHits().getHits().length != 0);
 		}

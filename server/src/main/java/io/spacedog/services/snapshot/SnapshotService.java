@@ -1,17 +1,25 @@
 package io.spacedog.services.snapshot;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.admin.cluster.snapshots.create.CreateSnapshotRequestBuilder;
+import org.elasticsearch.action.admin.cluster.repositories.delete.DeleteRepositoryRequest;
+import org.elasticsearch.action.admin.cluster.repositories.get.GetRepositoriesRequest;
+import org.elasticsearch.action.admin.cluster.repositories.put.PutRepositoryRequest;
+import org.elasticsearch.action.admin.cluster.repositories.verify.VerifyRepositoryRequest;
+import org.elasticsearch.action.admin.cluster.repositories.verify.VerifyRepositoryResponse;
+import org.elasticsearch.action.admin.cluster.snapshots.create.CreateSnapshotRequest;
 import org.elasticsearch.action.admin.cluster.snapshots.create.CreateSnapshotResponse;
-import org.elasticsearch.action.admin.cluster.snapshots.restore.RestoreSnapshotRequestBuilder;
+import org.elasticsearch.action.admin.cluster.snapshots.get.GetSnapshotsRequest;
+import org.elasticsearch.action.admin.cluster.snapshots.restore.RestoreSnapshotRequest;
 import org.elasticsearch.action.admin.cluster.snapshots.restore.RestoreSnapshotResponse;
 import org.elasticsearch.action.support.IndicesOptions;
-import org.elasticsearch.cluster.metadata.RepositoryMetaData;
+import org.elasticsearch.action.support.master.AcknowledgedResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.cluster.metadata.RepositoryMetadata;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.repositories.RepositoryMissingException;
 import org.elasticsearch.snapshots.SnapshotInfo;
@@ -30,7 +38,6 @@ import io.spacedog.client.http.SpaceFields;
 import io.spacedog.client.http.SpaceParams;
 import io.spacedog.client.snapshot.SpaceRepository;
 import io.spacedog.client.snapshot.SpaceSnapshot;
-import io.spacedog.jobs.Internals;
 import io.spacedog.server.Server;
 import io.spacedog.server.ServerConfig;
 import io.spacedog.services.SpaceService;
@@ -46,10 +53,8 @@ public class SnapshotService extends SpaceService implements SpaceFields, SpaceP
 		List<SpaceSnapshot> snapshots = Lists.newArrayList();
 
 		for (SpaceRepository repo : repositories) {
-			Server.get().elasticClient().cluster()//
-					.prepareGetSnapshots(repo.id())//
-					.get()//
-					.getSnapshots()//
+
+			getSnapshots(repo.id())//
 					.stream()//
 					.filter(info -> info.snapshotId().getName().startsWith(backendId))//
 					.map(info -> toSpaceSnapshot(repo.id(), info))//
@@ -65,33 +70,49 @@ public class SnapshotService extends SpaceService implements SpaceFields, SpaceP
 
 	public Optional<SpaceSnapshot> get(String snapshotId) {
 		String repositoryId = toRepositoryId(snapshotId);
-		return Server.get().elasticClient().cluster()//
-				.prepareGetSnapshots(repositoryId)//
-				.get().getSnapshots().stream()//
+		return getSnapshots(repositoryId)//
+				.stream()//
 				.filter(info -> info.snapshotId().getName().equals(snapshotId))//
 				.findAny().map(info -> toSpaceSnapshot(repositoryId, info));
 	}
 
+	private List<SnapshotInfo> getSnapshots(String repoId) {
+		try {
+			return elastic().snapshot()//
+					.get(new GetSnapshotsRequest(repoId), RequestOptions.DEFAULT)//
+					.getSnapshots();
+
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
+		}
+	}
+
 	public SpaceSnapshot snapshot(boolean waitForCompletion) {
+
 		SpaceSnapshot snapshot = prepareSnapshot();
 
 		// TODO rename correctly the snapshot repository
-		CreateSnapshotRequestBuilder snapshotRequest = elastic().cluster()//
-				.prepareCreateSnapshot(snapshot.repositoryId, snapshot.id)//
-				.setIndicesOptions(IndicesOptions.fromOptions(true, true, true, true))//
-				.setWaitForCompletion(true)//
-				.setIncludeGlobalState(true)//
-				.setPartial(false);
+		CreateSnapshotRequest request = new CreateSnapshotRequest(snapshot.repositoryId, snapshot.id)//
+				.indicesOptions(IndicesOptions.fromOptions(true, true, true, true))//
+				.waitForCompletion(waitForCompletion)//
+				.includeGlobalState(true)//
+				.partial(false);
 
-		SnapshotListener listener = new SnapshotListener();
+		CreateSnapshotResponse response = snapshot(request);
 
 		if (waitForCompletion) {
-			CreateSnapshotResponse response = snapshotRequest.get();
-			listener.onResponse(response);
-			return toSpaceSnapshot(snapshot.repositoryId, response.getSnapshotInfo());
-		} else {
-			snapshotRequest.execute(listener);
-			return snapshot;
+			snapshot = toSpaceSnapshot(snapshot.repositoryId, response.getSnapshotInfo());
+		}
+
+		return snapshot;
+	}
+
+	private CreateSnapshotResponse snapshot(CreateSnapshotRequest request) {
+		try {
+			return elastic().snapshot()//
+					.create(request, RequestOptions.DEFAULT);
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
 		}
 	}
 
@@ -113,25 +134,27 @@ public class SnapshotService extends SpaceService implements SpaceFields, SpaceP
 		// because it remove indices not present in restored snapshot
 		elastic().deleteAbsolutelyAllIndices();
 
-		RestoreSnapshotRequestBuilder restoreRequest = elastic().cluster()//
-				.prepareRestoreSnapshot(snapshot.repositoryId, snapshot.id)//
-				.setWaitForCompletion(true)//
-				.setIndicesOptions(IndicesOptions.fromOptions(false, true, true, true))//
-				.setPartial(false)//
-				.setIncludeAliases(true)//
-				.setRestoreGlobalState(true);
+		RestoreSnapshotRequest request = new RestoreSnapshotRequest(snapshot.repositoryId, snapshot.id)//
+				.waitForCompletion(waitForCompletion)//
+				.indicesOptions(IndicesOptions.fromOptions(false, true, true, true))//
+				.partial(false)//
+				.includeAliases(true)//
+				.includeGlobalState(true);
 
-		RestoreListener listener = new RestoreListener();
+		restore(request);
+	}
 
-		if (waitForCompletion)
-			listener.onResponse(restoreRequest.get());
-		else
-			restoreRequest.execute(listener);
+	private RestoreSnapshotResponse restore(RestoreSnapshotRequest request) {
+		try {
+			return elastic().snapshot().restore(request, RequestOptions.DEFAULT);
+
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
+		}
 	}
 
 	public List<SpaceRepository> getRepositories() {
-		return elastic().cluster().prepareGetRepositories().get()//
-				.repositories()//
+		return getInternalRepositories()//
 				.stream()//
 				.map(repo -> toSpaceRepository(repo))//
 				.sorted().collect(Collectors.toList());
@@ -142,25 +165,25 @@ public class SnapshotService extends SpaceService implements SpaceFields, SpaceP
 		// check repository id format
 		SpaceRepository.toDateTime(repositoryId);
 
-		try {
-			SnapshotResty.elastic().cluster()//
-					.prepareGetRepositories(repositoryId)//
-					.get();
+		Optional<RepositoryMetadata> repository = getInternalRepository(repositoryId);
 
+		if (repository.isPresent())
 			return false;
 
-		} catch (RepositoryMissingException e) {
+		try {
+			RepositoryMetadata repo = newRepositoryMetadata(repositoryId);
 
-			RepositoryMetaData repo = newRepositoryMetadata(repositoryId);
+			PutRepositoryRequest request = new PutRepositoryRequest(repo.name())//
+					.type(repo.type())//
+					.settings(repo.settings());
 
-			SnapshotResty.elastic().cluster()//
-					.preparePutRepository(repo.name())//
-					.setType(repo.type())//
-					.setSettings(repo.settings())//
-					.get();
+			elastic().snapshot().createRepository(request, RequestOptions.DEFAULT);
 
-			return true;
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
 		}
+
+		return true;
 	}
 
 	public boolean closeRepository(String repositoryId) {
@@ -169,11 +192,13 @@ public class SnapshotService extends SpaceService implements SpaceFields, SpaceP
 		SpaceRepository.toDateTime(repositoryId);
 
 		try {
-			elastic().cluster().prepareDeleteRepository(repositoryId).get();
-			return true;
+			AcknowledgedResponse response = elastic().snapshot().deleteRepository(//
+					new DeleteRepositoryRequest(repositoryId), RequestOptions.DEFAULT);
 
-		} catch (RepositoryMissingException e) {
-			return false;
+			return response.isAcknowledged();
+
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
 		}
 	}
 
@@ -181,21 +206,48 @@ public class SnapshotService extends SpaceService implements SpaceFields, SpaceP
 
 		Utils.info("[SpaceDog] close missing repositories ...");
 
-		List<RepositoryMetaData> repositories = elastic().cluster()//
-				.prepareGetRepositories().get().repositories();
+		List<RepositoryMetadata> repositories = getInternalRepositories();
 
-		for (RepositoryMetaData repository : repositories) {
+		for (RepositoryMetadata repository : repositories) {
 			try {
-				elastic().cluster()//
-						.prepareVerifyRepository(repository.name()).get();
+				VerifyRepositoryResponse response = elastic().snapshot().verifyRepository(//
+						new VerifyRepositoryRequest(repository.name()), RequestOptions.DEFAULT);
 
 				Utils.info("[SpaceDog] repository [%s] OK", repository.name());
 
 			} catch (RepositoryMissingException e) {
-
 				closeRepository(repository.name());
 				Utils.info("[SpaceDog] repository [%s] closed because missing", repository.name());
+
+			} catch (IOException e) {
+				throw Exceptions.runtime(e);
 			}
+		}
+	}
+
+	private Optional<RepositoryMetadata> getInternalRepository(String repoId) {
+		try {
+			String[] repoIds = { repoId };
+
+			List<RepositoryMetadata> repositories = elastic().snapshot()//
+					.getRepository(new GetRepositoriesRequest(repoIds), RequestOptions.DEFAULT)//
+					.repositories();
+
+			return repositories.isEmpty() ? Optional.empty() : Optional.of(repositories.get(0));
+
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
+		}
+	}
+
+	private List<RepositoryMetadata> getInternalRepositories() {
+		try {
+			return elastic().snapshot()//
+					.getRepository(new GetRepositoriesRequest(), RequestOptions.DEFAULT)//
+					.repositories();
+
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
 		}
 	}
 
@@ -218,39 +270,42 @@ public class SnapshotService extends SpaceService implements SpaceFields, SpaceP
 	// Implementation for files
 	//
 
-	private class SnapshotListener implements ActionListener<CreateSnapshotResponse> {
-		@Override
-		public void onResponse(CreateSnapshotResponse response) {
-			// FileBackup fileBackup = new FileBackup(//
-			// Server.backend().id(), "backup", filesBackupStore());
-			// Services.files().snapshot(fileBackup);
-		}
+	// private class SnapshotListener implements
+	// ActionListener<CreateSnapshotResponse> {
+	// @Override
+	// public void onResponse(CreateSnapshotResponse response) {
+	// FileBackup fileBackup = new FileBackup(//
+	// Server.backend().id(), "backup", filesBackupStore());
+	// Services.files().snapshot(fileBackup);
+	// }
+	//
+	// @Override
+	// public void onFailure(Exception e) {
+	// notifyFailure(e, "snapshot");
+	// }
+	// }
 
-		@Override
-		public void onFailure(Exception e) {
-			notifyFailure(e, "snapshot");
-		}
-	}
+	// private class RestoreListener implements
+	// ActionListener<RestoreSnapshotResponse> {
+	// @Override
+	// public void onResponse(RestoreSnapshotResponse response) {
+	// FileBackup fileBackup = new FileBackup(//
+	// Server.backend().id(), "backup", filesBackupStore());
+	// Services.files().restore(fileBackup);
+	// }
+	//
+	// @Override
+	// public void onFailure(Exception e) {
+	// notifyFailure(e, "restore");
+	// }
+	// }
 
-	private class RestoreListener implements ActionListener<RestoreSnapshotResponse> {
-		@Override
-		public void onResponse(RestoreSnapshotResponse response) {
-			// FileBackup fileBackup = new FileBackup(//
-			// Server.backend().id(), "backup", filesBackupStore());
-			// Services.files().restore(fileBackup);
-		}
-
-		@Override
-		public void onFailure(Exception e) {
-			notifyFailure(e, "restore");
-		}
-	}
-
-	private void notifyFailure(Throwable t, String type) {
-		t.printStackTrace();
-		String title = String.format("backend [%s] %s error", Server.backend(), type);
-		Internals.get().notify(title, t);
-	}
+	// private void notifyFailure(Throwable t, String type) {
+	// t.printStackTrace();
+	// String title = String.format("backend [%s] %s error", Server.backend(),
+	// type);
+	// Internals.get().notify(title, t);
+	// }
 
 	// private FileStore filesBackupStore() {
 	// FileStoreType storeType = ServerConfig.filesSnapshotsStoreType();
@@ -273,7 +328,7 @@ public class SnapshotService extends SpaceService implements SpaceFields, SpaceP
 	private static final DateTimeFormatter SNAPSHOT_ID_FORMATTER = DateTimeFormat//
 			.forPattern("yyyy-MM-dd-HH-mm-ss-SSS").withZone(DateTimeZone.UTC);
 
-	private SpaceRepository toSpaceRepository(RepositoryMetaData repo) {
+	private SpaceRepository toSpaceRepository(RepositoryMetadata repo) {
 		Map<String, Object> settings = Maps.newHashMap();
 		for (String key : repo.settings().keySet())
 			settings.put(key, repo.settings().get(key));
@@ -319,7 +374,7 @@ public class SnapshotService extends SpaceService implements SpaceFields, SpaceP
 		return SpaceRepository.toRepositoryId(dateTime);
 	}
 
-	private static RepositoryMetaData newRepositoryMetadata(String repositoryId) {
+	private static RepositoryMetadata newRepositoryMetadata(String repositoryId) {
 
 		FileStoreType type = ServerConfig.snapshotsElasticStoreType();
 		String location = Server.backend().id() + "/elastic/" + repositoryId;
@@ -342,7 +397,7 @@ public class SnapshotService extends SpaceService implements SpaceFields, SpaceP
 		if (settings == null)
 			throw Exceptions.illegalArgument("snapshot repository type [%s] is invalid", type);
 
-		return new RepositoryMetaData(repositoryId, type.toElasticRepoType(), settings);
+		return new RepositoryMetadata(repositoryId, type.toElasticRepoType(), settings);
 	}
 
 }

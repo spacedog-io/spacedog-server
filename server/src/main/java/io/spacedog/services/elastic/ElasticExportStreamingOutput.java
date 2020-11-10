@@ -32,14 +32,9 @@ public class ElasticExportStreamingOutput implements StreamingOutput {
 		SearchHit[] hits = response.getHits().getHits();
 
 		if (hits.length > 0) {
-
 			writeHits(output, hits);
-
 			response = Server.get().elasticClient()//
-					.prepareSearchScroll(response.getScrollId())//
-					.setScroll(TIMEOUT)//
-					.get();
-
+					.scroll(response.getScrollId(), TIMEOUT);
 			write(output);
 		}
 	}

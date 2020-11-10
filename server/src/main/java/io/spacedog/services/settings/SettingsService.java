@@ -5,9 +5,9 @@ import java.util.Optional;
 
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -88,11 +88,12 @@ public class SettingsService extends SpaceService {
 
 		elastic().refreshIndex(refresh, index());
 
-		SearchResponse response = elastic().prepareSearch(index())//
-				.setFrom(from)//
-				.setSize(size)//
-				.setQuery(QueryBuilders.matchAllQuery())//
-				.get();
+		SearchSourceBuilder source = SearchSourceBuilder.searchSource()//
+				.query(QueryBuilders.matchAllQuery())//
+				.from(from)//
+				.size(size);
+
+		SearchResponse response = elastic().search(source, index());
 
 		for (SearchHit hit : response.getHits().getHits())
 			results.set(hit.getId(), Json.readNode(hit.getSourceAsString()));
@@ -189,9 +190,7 @@ public class SettingsService extends SpaceService {
 
 	private long doSave(String id, String settings) {
 		makeSureIndexIsCreated();
-		return elastic().prepareIndex(index(), id)//
-				.setSource(settings, XContentType.JSON)//
-				.get()//
+		return elastic().index(index(), id, settings)//
 				.getVersion();
 	}
 

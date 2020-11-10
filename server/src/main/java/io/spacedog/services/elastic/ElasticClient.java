@@ -1,39 +1,49 @@
 package io.spacedog.services.elastic;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
-import org.elasticsearch.action.Action;
-import org.elasticsearch.action.ActionFuture;
-import org.elasticsearch.action.ActionRequest;
-import org.elasticsearch.action.ActionRequestBuilder;
-import org.elasticsearch.action.ActionResponse;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.indices.alias.Alias;
-import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
-import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
+import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
-import org.elasticsearch.action.bulk.BulkRequestBuilder;
+import org.elasticsearch.action.admin.indices.settings.put.UpdateSettingsRequest;
+import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
-import org.elasticsearch.action.get.GetRequestBuilder;
+import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.get.MultiGetResponse;
-import org.elasticsearch.action.index.IndexRequestBuilder;
+import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchScrollRequestBuilder;
+import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.support.master.AcknowledgedResponse;
-import org.elasticsearch.action.update.UpdateRequestBuilder;
-import org.elasticsearch.client.Client;
-import org.elasticsearch.client.ClusterAdminClient;
+import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.action.update.UpdateResponse;
+import org.elasticsearch.client.ClusterClient;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.Requests;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.SnapshotClient;
+import org.elasticsearch.client.indices.CloseIndexRequest;
+import org.elasticsearch.client.indices.CloseIndexResponse;
+import org.elasticsearch.client.indices.CreateIndexRequest;
+import org.elasticsearch.client.indices.CreateIndexResponse;
+import org.elasticsearch.client.indices.GetIndexRequest;
+import org.elasticsearch.client.indices.GetMappingsRequest;
+import org.elasticsearch.client.indices.GetMappingsResponse;
+import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.common.Priority;
+import org.elasticsearch.common.lucene.uid.Versions;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.IndexNotFoundException;
@@ -41,11 +51,11 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
-import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -62,49 +72,33 @@ import joptsimple.internal.Strings;
 
 public class ElasticClient implements SpaceParams {
 
-	Client internalClient;
+	RestHighLevelClient internalClient;
 
-	public ElasticClient(Client client) {
+	public ElasticClient(RestHighLevelClient client) {
 		this.internalClient = client;
 	}
 
-	public Client internal() {
+	public RestHighLevelClient internal() {
 		return internalClient;
 	}
 
 	public void close() {
-		internalClient.close();
-	}
-
-	//
-	// prepare
-	//
-
-	public IndexRequestBuilder prepareIndex(ElasticIndex index) {
-		return internalClient.prepareIndex(index.alias(), index.type());
-	}
-
-	public IndexRequestBuilder prepareIndex(ElasticIndex index, String id) {
-		return internalClient.prepareIndex(index.alias(), index.type(), id);
-	}
-
-	public UpdateRequestBuilder prepareUpdate(ElasticIndex index, String id) {
-		return internalClient.prepareUpdate(index.alias(), index.type(), id);
-	}
-
-	public SearchRequestBuilder prepareSearch(ElasticIndex... indices) {
-		Check.notNullOrEmpty(indices, "indices");
-		return internalClient.prepareSearch(ElasticIndex.aliases(indices))//
-				.setIndicesOptions(IndicesOptions.fromOptions(false, false, false, false));
-	}
-
-	public SearchScrollRequestBuilder prepareSearchScroll(String scrollId) {
-		return internalClient.prepareSearchScroll(scrollId);
+		try {
+			internalClient.close();
+		} catch (IOException e) {
+			Utils.warn("closing elastic internal client failed", e);
+		}
 	}
 
 	//
 	// Search
 	//
+
+	public SearchRequest prepareSearch(ElasticIndex... indices) {
+		Check.notNullOrEmpty(indices, "indices");
+		return new SearchRequest(ElasticIndex.aliases(indices))//
+				.indicesOptions(IndicesOptions.fromOptions(false, false, false, false));
+	}
 
 	public SearchResponse search(ElasticIndex index, Object... terms) {
 
@@ -123,24 +117,48 @@ public class ElasticClient implements SpaceParams {
 	}
 
 	public SearchResponse search(SearchSourceBuilder source, ElasticIndex... indices) {
-		return prepareSearch(indices).setSource(source).get();
+		return search(prepareSearch(indices).source(source));
+	}
+
+	public SearchResponse search(SearchRequest request) {
+		try {
+			return internalClient.search(request, RequestOptions.DEFAULT);
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
+		}
+	}
+
+	public SearchResponse scroll(String scrollId, TimeValue keepAlive) {
+		try {
+			SearchScrollRequest request = new SearchScrollRequest(scrollId).scroll(keepAlive);
+			return internalClient.scroll(request, RequestOptions.DEFAULT);
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
+		}
 	}
 
 	//
 	// Index
 	//
 
+	public IndexRequest prepareIndex(ElasticIndex index) {
+		return new IndexRequest(index.alias());
+	}
+
+	public IndexResponse index(IndexRequest request) {
+		try {
+			return internalClient.index(request, RequestOptions.DEFAULT);
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
+		}
+	}
+
 	public IndexResponse index(ElasticIndex index, Object source) {
 		return index(index, source, false);
 	}
 
 	public IndexResponse index(ElasticIndex index, Object source, boolean refresh) {
-		String sourceString = source instanceof String //
-				? source.toString()
-				: Json.toString(source);
-
-		return prepareIndex(index).setSource(sourceString, XContentType.JSON)//
-				.setRefreshPolicy(ElasticUtils.toPolicy(refresh)).get();
+		return index(prepareIndex(index, null, null, source, refresh));
 	}
 
 	public IndexResponse index(ElasticIndex index, String id, Object source) {
@@ -148,12 +166,11 @@ public class ElasticClient implements SpaceParams {
 	}
 
 	public IndexResponse index(ElasticIndex index, String id, Object source, boolean refresh) {
-		String sourceString = source instanceof String //
-				? source.toString()
-				: Json.toString(source);
+		return index(prepareIndex(index, id, null, source, refresh));
+	}
 
-		return prepareIndex(index, id).setSource(sourceString, XContentType.JSON)//
-				.setRefreshPolicy(ElasticUtils.toPolicy(refresh)).get();
+	public IndexResponse index(ElasticIndex index, String id, long version, Object source, boolean refresh) {
+		return index(prepareIndex(index, id, version, source, refresh));
 	}
 
 	public IndexResponse index(ElasticIndex index, String id, byte[] source) {
@@ -161,8 +178,47 @@ public class ElasticClient implements SpaceParams {
 	}
 
 	public IndexResponse index(ElasticIndex index, String id, byte[] source, boolean refresh) {
-		return prepareIndex(index, id).setSource(source, XContentType.JSON)//
-				.setRefreshPolicy(ElasticUtils.toPolicy(refresh)).get();
+
+		IndexRequest request = prepareIndex(index, id, null, null, refresh)//
+				.source(source, XContentType.JSON);
+
+		return index(request);
+	}
+
+	private IndexRequest prepareIndex(ElasticIndex index, String id, Long version, Object source, Boolean refresh) {
+		String sourceString = source instanceof String //
+				? source.toString()
+				: Json.toString(source);
+
+		if (refresh == null) {
+			refresh = Boolean.FALSE;
+		}
+
+		if (version == null) {
+			version = Versions.MATCH_ANY;
+		}
+
+		return prepareIndex(index)//
+				.id(id)//
+				.version(version)//
+				.source(sourceString, XContentType.JSON)//
+				.setRefreshPolicy(ElasticUtils.toPolicy(refresh));
+	}
+
+	//
+	// Update
+	//
+
+	public UpdateRequest prepareUpdate(ElasticIndex index, String id) {
+		return new UpdateRequest(index.alias(), id);
+	}
+
+	public UpdateResponse update(UpdateRequest request) {
+		try {
+			return internalClient.update(request, RequestOptions.DEFAULT);
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
+		}
 	}
 
 	//
@@ -174,7 +230,7 @@ public class ElasticClient implements SpaceParams {
 	}
 
 	public GetResponse get(ElasticIndex index, String id, boolean throwNotFound) {
-		GetResponse response = prepareGet(index, id).get();
+		GetResponse response = get(prepareGet(index, id));
 
 		if (!response.isExists() && throwNotFound)
 			throw Exceptions.objectNotFound(index.type(), id);
@@ -182,21 +238,27 @@ public class ElasticClient implements SpaceParams {
 		return response;
 	}
 
-	public GetRequestBuilder prepareGet(ElasticIndex index, String id) {
-		return internalClient.prepareGet(index.alias(), index.type(), id);
+	public GetRequest prepareGet(ElasticIndex index, String id) {
+		return new GetRequest(index.alias(), id);
+	}
+
+	public GetResponse get(GetRequest request) {
+		try {
+			return internalClient.get(request, RequestOptions.DEFAULT);
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
+		}
 	}
 
 	public Optional<SearchHit> getUnique(ElasticIndex index, QueryBuilder query) {
 		try {
-			SearchHits hits = prepareSearch(index)//
-					.setQuery(query)//
-					.get()//
-					.getHits();
+			SearchSourceBuilder source = SearchSourceBuilder.searchSource().query(query);
+			SearchHits hits = search(source, index).getHits();
 
-			if (hits.getTotalHits() == 0)
+			if (hits.getTotalHits().value == 0)
 				return Optional.empty();
 
-			else if (hits.getTotalHits() == 1)
+			else if (hits.getTotalHits().value == 1)
 				return Optional.of(hits.getAt(0));
 
 			throw Exceptions.runtime(//
@@ -209,7 +271,13 @@ public class ElasticClient implements SpaceParams {
 	}
 
 	public MultiGetResponse getMulti(ElasticIndex index, Set<String> ids) {
-		return internalClient.prepareMultiGet().add(index.alias(), index.type(), ids).get();
+		try {
+			MultiGetRequest request = new MultiGetRequest();
+			ids.forEach(id -> request.add(index.alias(), id));
+			return internalClient.mget(request, RequestOptions.DEFAULT);
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
+		}
 	}
 
 	//
@@ -217,29 +285,36 @@ public class ElasticClient implements SpaceParams {
 	//
 
 	public boolean exists(ElasticIndex index, String id) {
-		return internalClient.prepareGet(index.alias(), index.type(), id)//
-				.setFetchSource(false).get().isExists();
+		return get(new GetRequest(index.alias(), id)//
+				.fetchSourceContext(FetchSourceContext.DO_NOT_FETCH_SOURCE)).isExists();
 	}
 
 	public boolean exists(QueryBuilder query, ElasticIndex... indices) {
-		return internalClient.prepareSearch(ElasticIndex.aliases(indices))//
-				.setSize(0)//
-				.setQuery(query)//
-				.setFetchSource(false)//
-				.get()//
-				.getHits()//
-				.getTotalHits() > 0;
+		SearchSourceBuilder source = SearchSourceBuilder.searchSource()//
+				.size(0)//
+				.query(query)//
+				.fetchSource(false);
+
+		return search(source, indices).getHits()//
+				.getTotalHits().value > 0;
 	}
 
 	//
 	// Delete
 	//
 
+	public DeleteResponse delete(DeleteRequest request) {
+		try {
+			return internalClient.delete(request, RequestOptions.DEFAULT);
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
+		}
+	}
+
 	public boolean delete(ElasticIndex index, String id, boolean refresh, boolean throwNotFound) {
-		DeleteResponse response = internalClient.prepareDelete(//
-				index.alias(), index.type(), id)//
-				.setRefreshPolicy(ElasticUtils.toPolicy(refresh))//
-				.get();
+		DeleteResponse response = delete(//
+				new DeleteRequest(index.alias(), id)//
+						.setRefreshPolicy(ElasticUtils.toPolicy(refresh)));
 
 		if (ElasticUtils.isDeleted(response))
 			return true;
@@ -248,6 +323,14 @@ public class ElasticClient implements SpaceParams {
 			throw Exceptions.objectNotFound(index.type(), id);
 
 		return false;
+	}
+
+	public BulkByScrollResponse deleteByQuery(DeleteByQueryRequest request) {
+		try {
+			return internalClient.deleteByQuery(request, RequestOptions.DEFAULT);
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
+		}
 	}
 
 	public BulkByScrollResponse deleteByQuery(String query, ElasticIndex... indices) {
@@ -263,28 +346,10 @@ public class ElasticClient implements SpaceParams {
 		if (query == null)//
 			query = QueryBuilders.matchAllQuery();
 
-		DeleteByQueryRequest delete = new DeleteByQueryRequest(ElasticIndex.aliases(indices))//
+		DeleteByQueryRequest request = new DeleteByQueryRequest(ElasticIndex.aliases(indices))//
 				.setQuery(query).setTimeout(new TimeValue(60000));
 
-		try {
-			return execute(DeleteByQueryAction.INSTANCE, delete).get();
-
-		} catch (ExecutionException | InterruptedException e) {
-			throw Exceptions.runtime(e);
-		}
-	}
-
-	//
-	// Others
-	//
-
-	public BulkRequestBuilder prepareBulk() {
-		return internalClient.prepareBulk();
-	}
-
-	public <Request extends ActionRequest, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>> ActionFuture<Response> execute(
-			Action<Request, Response, RequestBuilder> action, Request request) {
-		return internalClient.execute(action, request);
+		return deleteByQuery(request);
 	}
 
 	//
@@ -293,32 +358,35 @@ public class ElasticClient implements SpaceParams {
 
 	public boolean exists(ElasticIndex index) {
 		try {
-			return internalClient.admin().indices()//
-					.prepareExists(index.alias())//
-					.get()//
-					.isExists();
-
-		} catch (IndexNotFoundException e) {
-			return false;
+			return internalClient.indices()//
+					.exists(new GetIndexRequest(index.alias()), RequestOptions.DEFAULT);
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
 		}
 	}
 
 	public void createIndex(ElasticIndex index, Schema schema, boolean async) {
 
-		CreateIndexResponse createIndexResponse = internalClient.admin().indices()//
-				.prepareCreate(index.toString())//
-				.addMapping(index.type(), schema.mapping().toString(), XContentType.JSON)//
-				.setSettings(schema.settings(false).toString(), XContentType.JSON)//
-				.addAlias(new Alias(index.alias()))//
-				.get();
+		CreateIndexRequest request = new CreateIndexRequest(index.toString())//
+				.mapping(schema.mapping().toString(), XContentType.JSON)//
+				.settings(schema.settings(false).toString(), XContentType.JSON)//
+				.alias(new Alias(index.alias()));
 
-		if (!createIndexResponse.isAcknowledged())
-			throw Exceptions.runtime(//
-					"creation of index [%s] not acknowledged by the whole cluster", //
-					index);
+		try {
+			CreateIndexResponse createIndexResponse = internalClient.indices()//
+					.create(request, RequestOptions.DEFAULT);
 
-		if (!async)
-			ensureIndexIsGreen(index);
+			if (!createIndexResponse.isAcknowledged())
+				throw Exceptions.runtime(//
+						"creation of index [%s] not acknowledged by the whole cluster", //
+						index);
+
+			if (!async)
+				ensureIndexIsGreen(index);
+
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
+		}
 	}
 
 	public void ensureIndexIsGreen(ElasticIndex... indices) {
@@ -333,30 +401,35 @@ public class ElasticClient implements SpaceParams {
 		String indicesString = Arrays.toString(indices);
 		Utils.info("[SpaceDog] Ensure indices %s are at least yellow ...", indicesString);
 
-		ClusterHealthResponse response = this.internalClient.admin().cluster()
-				.health(Requests.clusterHealthRequest(indices)//
-						.timeout(TimeValue.timeValueSeconds(ServerConfig.greenTimeout()))//
-						.waitForGreenStatus()//
-						.waitForEvents(Priority.LOW)//
-						.waitForNoRelocatingShards(true))//
-				.actionGet();
+		try {
+			ClusterHealthResponse response = this.internalClient.cluster()//
+					.health(Requests.clusterHealthRequest(indices)//
+							.timeout(TimeValue.timeValueSeconds(ServerConfig.greenTimeout()))//
+							.waitForGreenStatus()//
+							.waitForEvents(Priority.LOW)//
+							.waitForNoRelocatingShards(true), RequestOptions.DEFAULT);
 
-		if (ServerConfig.greenCheck()) {
-			if (response.isTimedOut())
-				throw Exceptions.runtime("ensure indices %s status are at least yellow timed out", //
-						indicesString);
+			if (ServerConfig.greenCheck()) {
+				if (response.isTimedOut())
+					throw Exceptions.runtime("ensure indices %s status are at least yellow timed out", //
+							indicesString);
 
-			if (response.getStatus().equals(ClusterHealthStatus.RED))
-				throw Exceptions.runtime("indices %s failed to turn at least yellow", //
-						indicesString);
+				if (response.getStatus().equals(ClusterHealthStatus.RED))
+					throw Exceptions.runtime("indices %s failed to turn at least yellow", //
+							indicesString);
 
-			if (response.getStatus().equals(ClusterHealthStatus.YELLOW)) {
-				String message = String.format(//
-						"indices %s status are yellow", indicesString);
-				Internals.get().notify(message, message);
+				if (response.getStatus().equals(ClusterHealthStatus.YELLOW)) {
+					String message = String.format(//
+							"indices %s status are yellow", indicesString);
+					Internals.get().notify(message, message);
+				}
 			}
+			Utils.info("[SpaceDog] indices %s are [%s]", indicesString, response.getStatus());
+
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
 		}
-		Utils.info("[SpaceDog] indices %s are [%s]", indicesString, response.getStatus());
+
 	}
 
 	public void refreshIndex(ElasticIndex... indices) {
@@ -377,8 +450,7 @@ public class ElasticClient implements SpaceParams {
 		String[] indices = backendIndices();
 
 		if (!Utils.isNullOrEmpty(indices)) {
-			AcknowledgedResponse response = internalClient.admin()//
-					.indices().prepareDelete(indices).get();
+			AcknowledgedResponse response = deleteIndices(indices);
 
 			if (!response.isAcknowledged())
 				throw Exceptions.runtime(//
@@ -387,77 +459,125 @@ public class ElasticClient implements SpaceParams {
 		}
 	}
 
-	public void deleteIndex(ElasticIndex... indices) {
-		internalClient.admin().indices().prepareDelete(ElasticIndex.toString(indices)).get();
+	public void deleteIndices(ElasticIndex... indices) {
+		deleteIndices(ElasticIndex.toString(indices));
+	}
+
+	public AcknowledgedResponse deleteIndices(String... indices) {
+		try {
+			return internalClient.indices()//
+					.delete(new DeleteIndexRequest(indices), RequestOptions.DEFAULT);
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
+		}
+	}
+
+	public GetMappingsResponse getMappings(String... indices) {
+		try {
+			return internalClient.indices()//
+					.getMapping(new GetMappingsRequest().indices(indices), RequestOptions.DEFAULT);
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
+		}
 	}
 
 	public GetMappingsResponse getBackendMappings() {
-		return internalClient.admin().indices()//
-				.prepareGetMappings(backendIndices())//
-				.get();
+		return getMappings(backendIndices());
 	}
 
 	public GetMappingsResponse getMappings(ElasticIndex... indices) {
-		return internalClient.admin().indices()//
-				.prepareGetMappings(ElasticIndex.aliases(indices))//
-				.get();
+		return getMappings(ElasticIndex.aliases(indices));
 	}
 
 	public GetSettingsResponse getSettings(ElasticIndex... indices) {
-		return internalClient.admin().indices()//
-				.prepareGetSettings(ElasticIndex.aliases(indices))//
-				.get();
+		try {
+			return internalClient.indices()//
+					.getSettings(new GetSettingsRequest().indices(ElasticIndex.aliases(indices)),
+							RequestOptions.DEFAULT);
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
+		}
 	}
 
 	public void putMapping(ElasticIndex index, ObjectNode mapping) {
-		AcknowledgedResponse response = internalClient.admin().indices()//
-				.preparePutMapping(index.alias())//
-				.setType(index.type())//
-				.setSource(mapping.toString(), XContentType.JSON)//
-				.get();
 
-		if (!response.isAcknowledged())
-			throw Exceptions.runtime(//
-					"mapping [%s] update not acknowledged by cluster", //
-					index.type());
+		try {
+			PutMappingRequest request = new PutMappingRequest(index.alias())//
+					.source(mapping.toString(), XContentType.JSON);
+
+			AcknowledgedResponse response = internalClient.indices()//
+					.putMapping(request, RequestOptions.DEFAULT);
+
+			if (!response.isAcknowledged())
+				throw Exceptions.runtime(//
+						"mapping [%s] update not acknowledged by cluster", //
+						index.type());
+
+		} catch (Exception e) {
+			throw Exceptions.runtime(e);
+		}
 	}
 
 	public void putSettings(ElasticIndex index, ObjectNode settings) {
-		AcknowledgedResponse response = internalClient.admin().indices()//
-				.prepareUpdateSettings(index.alias())//
-				.setSettings(settings.toString(), XContentType.JSON)//
-				.get();
 
-		if (!response.isAcknowledged())
-			throw Exceptions.runtime(//
-					"mapping [%s] update not acknowledged by cluster", //
-					index.type());
+		try {
+			UpdateSettingsRequest request = new UpdateSettingsRequest(index.alias())//
+					.settings(settings.toString(), XContentType.JSON);
+
+			AcknowledgedResponse response = internalClient.indices()//
+					.putSettings(request, RequestOptions.DEFAULT);
+
+			if (!response.isAcknowledged())
+				throw Exceptions.runtime(//
+						"mapping [%s] update not acknowledged by cluster", //
+						index.type());
+
+		} catch (Exception e) {
+			throw Exceptions.runtime(e);
+		}
 	}
 
 	public void deleteAbsolutelyAllIndices() {
-		AcknowledgedResponse response = internalClient.admin().indices()//
-				.prepareDelete("_all")//
-				.setIndicesOptions(IndicesOptions.fromOptions(false, true, true, true))//
-				.get();
 
-		if (!response.isAcknowledged())
-			throw Exceptions.runtime(//
-					"delete all indices not acknowledged by cluster");
+		try {
+			DeleteIndexRequest request = new DeleteIndexRequest("_all")//
+					.indicesOptions(IndicesOptions.fromOptions(false, true, true, true));
+
+			AcknowledgedResponse response = internalClient.indices()//
+					.delete(request, RequestOptions.DEFAULT);
+
+			if (!response.isAcknowledged())
+				throw Exceptions.runtime(//
+						"delete all indices not acknowledged by cluster");
+
+		} catch (Exception e) {
+			throw Exceptions.runtime(e);
+		}
 	}
 
 	public void closeAbsolutelyAllIndices() {
-		AcknowledgedResponse response = internalClient.admin().indices()//
-				.prepareClose("_all")//
-				.setIndicesOptions(IndicesOptions.fromOptions(false, true, true, true))//
-				.get();
+		try {
+			CloseIndexRequest request = new CloseIndexRequest("_all")//
+					.indicesOptions(IndicesOptions.fromOptions(false, true, true, true));
 
-		if (!response.isAcknowledged())
-			throw Exceptions.runtime(//
-					"close all indices not acknowledged by cluster");
+			CloseIndexResponse response = internalClient.indices()//
+					.close(request, RequestOptions.DEFAULT);
+
+			if (!response.isAcknowledged())
+				throw Exceptions.runtime(//
+						"close all indices not acknowledged by cluster");
+
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
+		}
 	}
 
-	public ClusterAdminClient cluster() {
-		return internalClient.admin().cluster();
+	public ClusterClient cluster() {
+		return internalClient.cluster();
+	}
+
+	public SnapshotClient snapshot() {
+		return internalClient.snapshot();
 	}
 
 	//
@@ -467,8 +587,13 @@ public class ElasticClient implements SpaceParams {
 	public Stream<String> clusterIndexStream() {
 		// TODO if too many customers, my cluster might have too many indices
 		// for this to work correctly
-		return Arrays.stream(internalClient.admin().indices()//
-				.prepareGetIndex().get().indices());
+		try {
+			return Arrays.stream(internalClient.indices()//
+					.get(new GetIndexRequest("_all"), RequestOptions.DEFAULT)//
+					.getIndices());
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
+		}
 	}
 
 	// public Index[] allIndicesForSchema(String schemaName) {
@@ -531,6 +656,10 @@ public class ElasticClient implements SpaceParams {
 	//
 
 	private void refreshIndex(String... indices) {
-		internalClient.admin().indices().prepareRefresh(indices).get();
+		try {
+			internalClient.indices().refresh(new RefreshRequest(indices), RequestOptions.DEFAULT);
+		} catch (IOException e) {
+			throw Exceptions.runtime(e);
+		}
 	}
 }

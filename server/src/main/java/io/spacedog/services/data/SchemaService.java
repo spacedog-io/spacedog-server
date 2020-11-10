@@ -3,7 +3,7 @@ package io.spacedog.services.data;
 import java.util.Arrays;
 import java.util.Map;
 
-import org.elasticsearch.cluster.metadata.MappingMetaData;
+import org.elasticsearch.cluster.metadata.MappingMetadata;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.settings.Settings;
 
@@ -27,12 +27,12 @@ public class SchemaService extends SpaceService {
 	}
 
 	public void delete(String name) {
-		elastic().deleteIndex(Services.data().index(name));
+		elastic().deleteIndices(Services.data().index(name));
 	}
 
 	public void deleteAll() {
 		Arrays.stream(Services.data().indices())//
-				.forEach(index -> elastic().deleteIndex(index));
+				.forEach(index -> elastic().deleteIndices(index));
 	}
 
 	public void set(Schema schema) {
@@ -80,13 +80,13 @@ public class SchemaService extends SpaceService {
 		if (Utils.isNullOrEmpty(indices))
 			return schemas;
 
-		ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetaData>> mappingsMap = //
-				elastic().getMappings(indices).mappings();
+		Map<String, MappingMetadata> mappingMap = elastic().getMappings(indices).mappings();
+
 		ImmutableOpenMap<String, Settings> settingsMap = //
 				elastic().getSettings(indices).getIndexToSettings();
 
 		for (ElasticIndex index : indices) {
-			MappingMetaData mapping = mappingsMap.get(index.toString()).valuesIt().next();
+			MappingMetadata mapping = mappingMap.get(index.toString());
 			Settings settings = settingsMap.get(index.toString());
 			JsonNode node = Json.readObject(mapping.source().toString()).get(mapping.type());
 			schemas.put(mapping.type(), new Schema(index.type(), Json.checkObject(node), //
