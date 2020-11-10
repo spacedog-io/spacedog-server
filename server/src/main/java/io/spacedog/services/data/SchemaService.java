@@ -86,10 +86,11 @@ public class SchemaService extends SpaceService {
 				elastic().getSettings(indices).getIndexToSettings();
 
 		for (ElasticIndex index : indices) {
-			MappingMetadata mapping = mappingMap.get(index.toString());
-			Settings settings = settingsMap.get(index.toString());
-			JsonNode node = Json.readObject(mapping.source().toString()).get(mapping.type());
-			schemas.put(mapping.type(), new Schema(index.type(), Json.checkObject(node), //
+			String indexString = index.toString();
+			MappingMetadata mapping = mappingMap.get(indexString);
+			Settings settings = settingsMap.get(indexString);
+			JsonNode node = Json.readObject(mapping.source().toString());
+			schemas.put(index.type(), new Schema(index.type(), Json.checkObject(node), //
 					Json.readObject(settings.toString())));
 		}
 
