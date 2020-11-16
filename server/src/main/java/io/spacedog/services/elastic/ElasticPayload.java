@@ -18,7 +18,8 @@ public class ElasticPayload implements SpaceFields {
 
 	public static JsonPayload saved(String uriBase, IndexResponse response) {
 		final boolean created = ElasticUtils.isCreated(response);
-		return JsonPayload.saved(created, uriBase, response.getType(), //
+		return JsonPayload.saved(created, uriBase, //
+				ElasticIndex.valueOf(response.getIndex()).type(), //
 				response.getId()).withVersion(response.getVersion());
 	}
 }
