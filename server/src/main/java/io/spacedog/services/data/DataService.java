@@ -25,6 +25,7 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.joda.time.DateTime;
@@ -352,7 +353,8 @@ public class DataService extends SpaceService implements SpaceFields, SpaceParam
 		results.objects = Lists.newArrayListWithCapacity(hits.getHits().length);
 		for (SearchHit hit : hits)
 			results.objects.add(wrap(hit, sourceClass));
-		results.aggregations = J8.map(response.getAggregations(), aggs -> aggs.asMap());
+		Aggregations aggregations = response.getAggregations();
+		results.aggregations = aggregations == null ? null : aggregations.asMap();
 		return results;
 	}
 

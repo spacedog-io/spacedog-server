@@ -2,10 +2,12 @@ package io.spacedog.services.data;
 
 import java.io.IOException;
 
+import org.elasticsearch.common.Strings;
 import org.elasticsearch.search.aggregations.Aggregation;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
@@ -28,7 +30,9 @@ public class AggregationSerializer extends StdSerializer<Aggregation> {
 		// is also used to convert to a JsonTree.
 		// We should try to integrate both elastic and jackson denerators.
 		//
-		gen.writeTree(Json.readNode(aggregation.toString()).get(aggregation.getName()));
+		String elasticJson = Strings.toString(aggregation);
+		JsonNode node = Json.readObject(elasticJson).fields().next().getValue();		
+		gen.writeTree(node);
 	}
 
 }
