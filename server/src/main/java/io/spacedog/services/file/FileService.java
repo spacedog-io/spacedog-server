@@ -327,7 +327,8 @@ public class FileService extends SpaceService {
 			do {
 				for (SearchHit hit : response.getHits()) {
 					SpaceFile file = toSpaceFile(hit);
-					snapshot(backup, hit.getType(), file);
+					String bucket = ElasticIndex.valueOf(hit.getIndex()).type();
+					snapshot(backup, bucket, file);
 				}
 
 				response = elastic().scroll(response.getScrollId(), ONE_MINUTE);
